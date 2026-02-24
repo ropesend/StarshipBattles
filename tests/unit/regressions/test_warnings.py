@@ -21,7 +21,6 @@ def ship_with_registry(fresh_registries):
     yield ship, fresh_registries
 
     pygame.quit()
-    RegistryManager.instance().clear()
 
 
 @pytest.fixture

@@ -15,18 +15,18 @@
 |-------|--------|-----------|
 | 1. Delete Deprecated API | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Migrate Deprecated Function Callers | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Test .clear() Migration - Batch 1 | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Test .clear() Migration - Batch 1 | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Test .clear() Migration - Batch 2 | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Documentation Updates | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Full Verification | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete - migrated remaining simulation_tests callers
-**Next Action:** Begin Phase 3 - Test .clear() Migration Batch 1
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 complete - removed redundant .clear() calls from 9 test files
+**Next Action:** Begin Phase 4 - Test .clear() Migration Batch 2
 **Blockers:** None
-**Context for Next Agent:** Phase 2 complete. Migrated 3 simulation_tests files from get_default_registries() to provider pattern: test_smoke.py, test_engine_physics.py, scenarios/base.py. All 8 migrated tests pass. Grep confirms no actual code calls remain (only comments/regression tests). Tests: 12373 passed, 1 skipped. Phase 3: migrate test files using RegistryManager.instance().clear() to fixture patterns.
+**Context for Next Agent:** Phase 3 complete. Removed redundant RegistryManager.instance().clear() calls from 9 test files: test_ai.py (2 fixtures), test_movement_and_ai.py (1 fixture, updated get_component_clone to use create_component with registries), test_builder_logic.py, test_selection_refinements.py, test_multi_selection_logic.py, test_component_decoupling.py (3 fixtures), test_simulation_design_loader.py (2 fixtures), test_warnings.py, test_bug_13_clear_removes_hull.py (setup+teardown). Tests: 12373 passed, 1 skipped. Phase 4: continue .clear() migration for remaining test files.
 
 ## Overview
 PROJ-174 migrated all production code to `IRegistryProvider` DI but kept `get_default_registries()` and `set_default_registries()` alive with DeprecationWarnings. Per CLAUDE.md System Migration Policy ("ERADICATE the old system completely"), this project deletes those functions, updates all callers, fixes stale documentation, and migrates 24 test files from `RegistryManager.instance().clear()` boilerplate to the existing fixture pattern.

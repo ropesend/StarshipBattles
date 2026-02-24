@@ -53,8 +53,6 @@ class TestMultiSelectionLogic:
         # Cleanup
         patch.stopall()
         pygame.quit()
-        from game.core.registry import RegistryManager
-        RegistryManager.instance().clear()
 
     def test_toggle_behavior(self):
         """Test that Ctrl+Click toggles items in selection."""

@@ -13,7 +13,6 @@ import os
 from unittest.mock import MagicMock, patch
 
 from game.core.json_utils import save_json
-from game.core.registry import RegistryManager
 from game.simulation.components.component import load_components, load_modifiers
 from game.simulation.entities.ship_loader import load_vehicle_classes
 from tests.fixtures.paths import get_data_dir
@@ -36,7 +35,6 @@ class TestSimulationDesignLoader:
         yield
 
         shutil.rmtree(self.tmpdir)
-        RegistryManager.instance().clear()
 
     def test_load_ship_from_design_data_returns_ship(self, fresh_registries):
         """load_ship_from_design_data creates Ship from dict data."""
@@ -187,7 +185,6 @@ class TestSimulationDesignLoaderIntegration:
         yield
 
         shutil.rmtree(self.tmpdir)
-        RegistryManager.instance().clear()
 
     def test_loaded_ship_has_correct_stats(self, fresh_registries):
         """Loaded ship has stats calculated correctly."""

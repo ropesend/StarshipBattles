@@ -18,8 +18,6 @@ from game.simulation.entities.layer_data import LayerData
 @pytest.fixture
 def simple_ship_registry(fresh_registries):
     """Set up registry with minimal ship data for testing."""
-    RegistryManager.instance().clear()
-
     classes = {
         "Escort": {
             "type": "Ship",
@@ -49,9 +47,6 @@ def simple_ship_registry(fresh_registries):
         registry.components[comp_id] = Component(comp_data, registries=fresh_registries)
 
     yield classes, components, fresh_registries
-
-    # Cleanup
-    RegistryManager.instance().clear()
 
 
 def test_clear_design_removes_hull_logic_repro(simple_ship_registry):

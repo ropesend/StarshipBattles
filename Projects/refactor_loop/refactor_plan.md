@@ -8,23 +8,28 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-181 Phase 2 Complete
-**Current Status:** PROJ-181 in progress, Phase 3 next
+**Last Completed:** PROJ-181 Phase 3 Complete
+**Current Status:** PROJ-181 in progress, Phase 4 next
 **Current Project:** PROJ-181
-**Current Phase:** Phase 3
+**Current Phase:** Phase 4
 **Test Status:** 12373 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-181 Phase 2 COMPLETE:
-  - Migrated 3 simulation_tests files from get_default_registries() to provider pattern:
-    - simulation_tests/tests/test_smoke.py (2 usages)
-    - simulation_tests/tests/test_engine_physics.py (1 usage)
-    - simulation_tests/scenarios/base.py (1 usage)
-  - All 8 migrated tests pass
-  - Grep confirms zero code calls remain (only comments/regression tests)
-- Tasks 2.2-2.7 were already completed in Phase 1 expansion
-- Next: PROJ-181 Phase 3 - Test .clear() Migration Batch 1
+- PROJ-181 Phase 3 COMPLETE:
+  - Removed redundant RegistryManager.instance().clear() calls from 9 test files:
+    - tests/unit/ai/test_ai.py (2 fixtures)
+    - tests/unit/ai/test_movement_and_ai.py (1 fixture, also updated get_component_clone to use create_component)
+    - tests/unit/builder/test_builder_logic.py
+    - tests/unit/builder/test_selection_refinements.py
+    - tests/unit/builder/test_multi_selection_logic.py
+    - tests/unit/simulation/test_component_decoupling.py (3 fixtures)
+    - tests/unit/simulation/services/test_simulation_design_loader.py (2 fixtures)
+    - tests/unit/regressions/test_warnings.py
+    - tests/repro_issues/test_bug_13_clear_removes_hull.py (setup+teardown)
+  - Removed RegistryManager import from files where no longer needed
+  - All targeted tests pass: 3172 passed
+- Next: PROJ-181 Phase 4 - Test .clear() Migration Batch 2
 
 ---
 
@@ -129,7 +134,7 @@
 ---
 
 - [/] **PROJ-181: PROJ-174 Completion - Eradicate Deprecated Registry API**
-  - **Phases:** 6 | **Status:** Phase 2 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** Phase 3 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-181/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-181/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -220,6 +225,7 @@
 | 2026-02-24 | PROJ-180 | Audit 1 | PASSED | 12375 passed, 1 skipped | - | All objectives verified, project complete |
 | 2026-02-24 | PROJ-181 | Phase 1 | Complete | 12373 passed, 1 skipped | pending | Deleted deprecated API + updated 9 test files |
 | 2026-02-24 | PROJ-181 | Phase 2 | Complete | 12373 passed, 1 skipped | pending | Migrated 3 simulation_tests files to provider pattern |
+| 2026-02-24 | PROJ-181 | Phase 3 | Complete | 12373 passed, 1 skipped | pending | Removed redundant .clear() from 9 test files |
 
 ---
 
