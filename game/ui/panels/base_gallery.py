@@ -74,9 +74,7 @@ class BaseGallery(ABC):
         self._asset_loader = asset_loader or RaceAssetLoader()
 
         # UI element references
-        self.asset_buttons: List[
-            Tuple[pygame_gui.elements.UIButton, pygame_gui.elements.UIImage, str]
-        ] = []
+        self.asset_buttons: List[Tuple[pygame_gui.elements.UIButton, str]] = []
         self.scroll_container: Optional[
             pygame_gui.elements.UIScrollingContainer
         ] = None
@@ -199,7 +197,7 @@ class BaseGallery(ABC):
                 container=self.scroll_container,
             )
 
-            self.asset_buttons.append((btn, img, asset_id))
+            self.asset_buttons.append((btn, asset_id))
 
             col += 1
             if col >= cols:
@@ -230,7 +228,7 @@ class BaseGallery(ABC):
         self._update_preview(asset_id)
 
         # Update button highlights
-        for btn, img, aid in self.asset_buttons:
+        for btn, aid in self.asset_buttons:
             if aid == asset_id:
                 btn.select()
             else:
@@ -256,7 +254,7 @@ class BaseGallery(ABC):
         Returns:
             True if this gallery handled the event, False otherwise
         """
-        for btn, img, asset_id in self.asset_buttons:
+        for btn, asset_id in self.asset_buttons:
             if button == btn:
                 self.on_asset_selected(asset_id)
                 return True

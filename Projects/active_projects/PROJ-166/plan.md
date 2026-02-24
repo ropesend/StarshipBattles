@@ -13,17 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Normalize BaseGallery to 2-tuples | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Normalize BaseGallery to 2-tuples | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Refactor RaceThemeGallery to extend BaseGallery | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Update tests and verify | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-23
-**Active Phase:** Planning — Awaiting user approval
-**Last Action:** Plan written with full task breakdown
-**Next Action:** User approves plan → Begin Phase 1
+**Active Phase:** Phase 2 — Refactor RaceThemeGallery
+**Last Action:** Phase 1 complete — BaseGallery normalized to 2-tuples
+**Next Action:** Begin Phase 2 — Refactor RaceThemeGallery to extend BaseGallery
 **Blockers:** None
-**Context for Next Agent:** Baseline is 11994 passed, 1 skipped. Clean-sheet design approach: normalize asset_buttons to 2-tuples, make _create_content hookable, then RaceThemeGallery extends naturally. See design.md for full rationale.
+**Context for Next Agent:** BaseGallery.asset_buttons now stores 2-tuples (btn, asset_id) instead of 3-tuples. UIImage still created for visual rendering but not stored. All 30 gallery tests passing. Ready for Phase 2.
 
 ## Overview
 RaceThemeGallery was missed during PROJ-108 Phase 6 when RacePortraitGallery and RaceFlagGallery were refactored to extend BaseGallery. This project completes that work by normalizing BaseGallery's data model from 3-tuples `(btn, img, id)` to 2-tuples `(btn, id)`, making `_create_content()` hookable for layout variants, and then making RaceThemeGallery extend BaseGallery.

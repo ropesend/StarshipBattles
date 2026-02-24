@@ -216,8 +216,8 @@ class TestButtonHighlighting:
             btn1 = MagicMock()
             btn2 = MagicMock()
             gallery.asset_buttons = [
-                (btn1, MagicMock(), "portrait_001.png"),
-                (btn2, MagicMock(), "portrait_002.png"),
+                (btn1, "portrait_001.png"),
+                (btn2, "portrait_002.png"),
             ]
 
             gallery.on_asset_selected("portrait_001.png")
@@ -244,9 +244,9 @@ class TestButtonHighlighting:
             btn2 = MagicMock()
             btn3 = MagicMock()
             gallery.asset_buttons = [
-                (btn1, MagicMock(), "portrait_001.png"),
-                (btn2, MagicMock(), "portrait_002.png"),
-                (btn3, MagicMock(), "portrait_003.png"),
+                (btn1, "portrait_001.png"),
+                (btn2, "portrait_002.png"),
+                (btn3, "portrait_003.png"),
             ]
 
             gallery.on_asset_selected("portrait_002.png")

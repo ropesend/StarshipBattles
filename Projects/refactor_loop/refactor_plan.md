@@ -8,17 +8,18 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-165 COMPLETE (all 4 phases + audit passed)
-**Current Status:** PROJ-165 complete — ready for next project (PROJ-166)
+**Last Completed:** PROJ-166 Phase 1 — Normalize BaseGallery to 2-tuples
+**Current Status:** PROJ-166 Phase 1 complete — ready for Phase 2
 **Current Project:** PROJ-166
-**Current Phase:** Phase 1
+**Current Phase:** Phase 2
 **Test Status:** 12015 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-165 complete: `create_section_header()` helper created, 24 sites migrated across 7 files
-- Audit passed cycle 1: grep clean, all tests pass, imports verified
-- Next: PROJ-166 — Make RaceThemeGallery Extend BaseGallery
+- Phase 1 complete: BaseGallery.asset_buttons normalized from 3-tuples to 2-tuples
+- Modified: base_gallery.py, test_race_portrait_gallery.py, test_race_flag_gallery.py
+- All 30 gallery tests passing, 12015 total tests passing
+- Next: Phase 2 — Refactor RaceThemeGallery to extend BaseGallery
 
 ---
 
@@ -50,8 +51,8 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
-- [ ] **PROJ-166: Make RaceThemeGallery Extend BaseGallery**
-  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-166: Make RaceThemeGallery Extend BaseGallery**
+  - **Phases:** 3 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-166/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-166/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -98,6 +99,7 @@
 | 2026-02-23 | PROJ-165 | Phase 4 | Complete | 12015 pass | pending | Final verification passed |
 | 2026-02-23 | PROJ-165 | Audit 1 | PASSED | 12015 pass | - | No issues found |
 | 2026-02-23 | PROJ-165 | Close | COMPLETE | - | - | Project marked complete |
+| 2026-02-23 | PROJ-166 | Phase 1 | Complete | 12015 pass | pending | 2-tuple normalization complete |
 
 ---
 
