@@ -4,6 +4,9 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-186 | Exception Handling Polish - ErrorCode Consistency and Final Cleanup | Planning | 2026-02-24 | 2026-02-24 |
+| PROJ-185 | Post-PROJ-174 Backward Compatibility Eradication | Planning | 2026-02-24 | 2026-02-24 |
+| PROJ-184 | Type-Safe Spatial Query API | Planning | 2026-02-24 | 2026-02-24 |
 | PROJ-183 | PROJ-175 Post-Refactor Cleanup - Logging Pattern Completion | Planning | 2026-02-24 | 2026-02-24 |
 | PROJ-182 | PROJ-176 Post-Refactor Cleanup | Planning | 2026-02-24 | 2026-02-24 |
 | PROJ-181 | PROJ-174 Completion - Eradicate Deprecated Registry API | Planning | 2026-02-24 | 2026-02-24 |
