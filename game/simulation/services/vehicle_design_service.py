@@ -6,6 +6,7 @@ handling vehicle creation, component management, and design validation.
 
 PROJ-50: Removed fallback pattern - strict DI required.
 """
+import logging
 from dataclasses import dataclass, field
 from typing import List, Optional, Any, TYPE_CHECKING
 
@@ -14,7 +15,8 @@ from game.simulation.entities.ship_loader import get_or_create_validator
 from game.simulation.components.component import Component, create_component
 from game.core.constants import LayerType
 from game.core.registry import GameRegistries
-from game.core.logger import log_error, log_warning, log_info
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.core.validation import ValidationResult
@@ -119,7 +121,7 @@ class VehicleDesignService:
             )
 
         except (TypeError, ValueError, KeyError, AttributeError) as e:
-            log_error(f"Failed to create ship: {e}")
+            logger.error(f"Failed to create ship: {e}")
             errors.append(str(e))
             return DesignResult(
                 success=False,
@@ -325,7 +327,7 @@ class VehicleDesignService:
         # Delegate to Ship.change_class which handles all the migration logic
         ship.change_class(new_class, migrate_components=migrate_components)
 
-        log_info(f"Changed {ship.name} from {old_class} to {new_class} "
+        logger.info(f"Changed {ship.name} from {old_class} to {new_class} "
                  f"(migrate_components={migrate_components})")
 
         return DesignResult(

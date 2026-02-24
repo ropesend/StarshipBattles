@@ -15,8 +15,10 @@ from datetime import datetime
 import json
 import uuid
 
+import logging
 from game.core.constants import LayerType
-from game.core.logger import log_debug, log_warning
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -274,7 +276,7 @@ class ShipState:
             except KeyError:
                 # ERR-08/ERR-015: Log missing key with context before skipping
                 valid_layers = [lt.name for lt in LayerType]
-                log_warning(
+                logger.warning(
                     f"Unknown layer type '{layer_name}' while rebuilding ship '{self.ship_id}'. "
                     f"Valid layers: {valid_layers}. Skipping this layer."
                 )

@@ -1,3 +1,4 @@
+import logging
 import math
 from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Set, Iterator
 
@@ -6,8 +7,9 @@ from game.simulation.components.component import Component, create_component
 from game.core.constants import LayerType
 from game.simulation.entities.layer_data import LayerData
 from game.core.math import Vector2
-from game.core.logger import log_debug, log_info, log_warning, log_error
 from game.core.registry import GameRegistries
+
+logger = logging.getLogger(__name__)
 from game.core.constants import LayerDefaults, CombatConstants
 
 from .ship_stats import ShipStatsCalculator
@@ -76,7 +78,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
                 hull_component.layer_assigned = LayerType.HULL
                 hull_component.ship = self
             else:
-                log_warning(f"Ship '{name}': Failed to create default hull '{default_hull_id}'")
+                logger.warning(f"Ship '{name}': Failed to create default hull '{default_hull_id}'")
 
         # Stats - Cached values (populated by ShipStatsCalculator.calculate())
         self._cached_mass: float = 0.0
@@ -223,7 +225,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
     def die(self) -> None:
         """Handle ship destruction. Sets ship to dead state and resets velocity."""
-        log_info(f"{self.name} EXPLODED!")
+        logger.info(f"{self.name} EXPLODED!")
         self.is_alive = False
         self.velocity = Vector2(0, 0)
         self.recalculate_stats()
@@ -313,7 +315,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
             if not has_command:
                 if not self.is_derelict:
-                    log_info(f"{self.name} has become DERELICT (Command and Control lost)")
+                    logger.info(f"{self.name} has become DERELICT (Command and Control lost)")
                 self.is_derelict = True
                 self.bridge_destroyed = True
                 return
@@ -327,7 +329,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
             if crew_required > crew_capacity:
                 if not self.is_derelict:
-                    log_info(f"{self.name} has become DERELICT (Insufficient crew capacity)")
+                    logger.info(f"{self.name} has become DERELICT (Insufficient crew capacity)")
                 self.is_derelict = True
                 return
 
@@ -366,7 +368,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             except KeyError:
                 # PROJ-45: Enhanced logging with context for unknown layer types
                 valid_layers = [lt.name for lt in LayerType]
-                log_warning(
+                logger.warning(
                     f"Unknown LayerType '{l_type_str}' in ship class '{self.ship_class}'. "
                     f"Valid types: {valid_layers}. Skipping layer."
                 )
@@ -406,7 +408,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         """
         # PROJ-42: Use registries instead of provider
         if new_class not in self._registries.vehicle_classes:
-            log_error(f"Unknown class {new_class}")
+            logger.error(f"Unknown class {new_class}")
             return
 
         old_components = []
@@ -424,7 +426,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.ship_class = new_class
         class_def = self._registries.vehicle_classes.get(self.ship_class)
         if class_def is None:
-            log_error(f"Ship.change_class: Unknown vehicle class '{self.ship_class}', using defaults")
+            logger.error(f"Ship.change_class: Unknown vehicle class '{self.ship_class}', using defaults")
             class_def = {}
         self.base_mass = 0.0  # Hull component provides mass via ShipStatsCalculator
         self.vehicle_type = class_def.get('type', "Ship")
@@ -464,7 +466,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
                             break
                 
                 if not added:
-                    log_warning(f"Could not fit component {comp.name} during refit to {new_class}")
+                    logger.warning(f"Could not fit component {comp.name} during refit to {new_class}")
         
         # Finally recalculate stats
         self.recalculate_stats()
@@ -472,14 +474,14 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
     def add_component(self, component: Component, layer_type: LayerType) -> bool:
         """Validate and add a component to the specified layer."""
         if component is None:
-            log_error("Attempted to add None component to ship")
+            logger.error("Attempted to add None component to ship")
             return False
 
         result = get_or_create_validator().validate_addition(self, component, layer_type)
 
         if not result.is_valid:
             for err in result.errors:
-                log_error(err)
+                logger.error(err)
             return False
 
         self.layers[layer_type].components.append(component)
@@ -524,7 +526,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
                 if added_count == 0:
                     # If the very first one fails, log errors
                     for err in result.errors:
-                        log_error(err)
+                        logger.error(err)
                 break
                 
             self.layers[layer_type].components.append(new_comp)
@@ -551,7 +553,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             self._invalidate_components_cache()  # PROJ-49: Invalidate component cache
             self.recalculate_stats()
             return comp
-        log_warning(f"remove_component failed: index {index} out of range for layer {layer_type.name}")
+        logger.warning(f"remove_component failed: index {index} out of range for layer {layer_type.name}")
         return None
 
     def recalculate_stats(self) -> None:

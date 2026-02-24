@@ -14,17 +14,17 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. JSON Quick Wins | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Logger Core Migration (event system + core + simulation) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Logger Core Migration (event system + core + simulation) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Logger Remaining Migration (strategy + AI + UI + other) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Guardrails & Documentation | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-23
-**Active Phase:** Phase 1 Complete
-**Last Action:** Completed Phase 1 - JSON Quick Wins. Migrated 2 files to json_utils, cleaned up 3 exception-only imports, tightened json_utils error handling.
-**Next Action:** Begin Phase 2 (Logger Core Migration)
+**Active Phase:** Phase 2 Complete
+**Last Action:** Completed Phase 2 - Logger Core Migration. Created event_logging.py module (43 lines), migrated app.py with configure_logging(), migrated all core/ and simulation/ files (21 files total) to standard logging.getLogger(__name__). Updated conftest.py with session-scoped logging fixture and event_logging import. Fixed 5 test files that mocked old logger functions.
+**Next Action:** Begin Phase 3 (Logger Remaining Migration: strategy + AI + UI)
 **Blockers:** None
-**Context for Next Agent:** JSON standardization complete. Zero direct json.load/dump calls remain outside json_utils. Test baseline: 12023 passed, 1 skipped. Ready to begin logger migration in Phase 2.
+**Context for Next Agent:** Core and simulation layers now use standard logging. Event logging extracted to game/core/event_logging.py with log_event, set_event_handler, get_event_handler. Test baseline: 12030 passed, 1 skipped (added 7 event_logging tests). Ready for Phase 3 migration of strategy/AI/UI modules.
 
 ## Overview
 Standardize logging and JSON loading patterns across the codebase by migrating from the custom Logger singleton to Python's standard `logging` module, and completing the JSON utilities standardization.

@@ -42,10 +42,10 @@ class TestSaveHistoryErrorPaths:
 
         with patch("game.core.profiling.load_json", return_value=[]):
             with patch("game.core.profiling.save_json", return_value=False):
-                with patch("game.core.profiling.log_error") as mock_log_error:
+                with patch("game.core.profiling.logger") as mock_logger:
                     profiler.save_history("dummy.json")
-                    mock_log_error.assert_called_once()
-                    assert "Failed to save" in mock_log_error.call_args[0][0]
+                    mock_logger.error.assert_called_once()
+                    assert "Failed to save" in mock_logger.error.call_args[0][0]
 
     def test_save_history_appends_to_existing(self):
         """Existing history gets new session appended."""

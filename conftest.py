@@ -1,3 +1,4 @@
+import logging
 import os
 # Force headless mode BEFORE any imports happen during collection
 os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -89,9 +90,9 @@ def reset_game_state(monkeypatch, request):
         import game.core.registry as _reg_mod
         _reg_mod._default_registries = None
 
-        # Reset logger event handler to prevent test pollution
+        # Reset event handler to prevent test pollution
         try:
-            from game.core.logger import set_event_handler
+            from game.core.event_logging import set_event_handler
             set_event_handler(None)
         except Exception:
             pass
@@ -120,6 +121,12 @@ def reset_game_state(monkeypatch, request):
 
         from game.ui.renderer.sprites import SpriteManager
         SpriteManager.reset()
+
+@pytest.fixture(scope="session", autouse=True)
+def configure_test_logging():
+    """Set up logging for tests — NullHandler to suppress file I/O."""
+    logging.getLogger("game").addHandler(logging.NullHandler())
+
 
 @pytest.fixture(scope="session", autouse=True)
 def enforce_headless():

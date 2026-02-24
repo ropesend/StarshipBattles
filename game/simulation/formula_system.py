@@ -6,10 +6,12 @@ and other dynamic calculations using Python's eval() with a restricted sandbox.
 PROJ-45: Error handling updated to raise FormulaException for evaluation errors.
 """
 import ast
+import logging
 import math
 from typing import Dict, Any, Union, List, Optional
-from game.core.logger import log_warning
 from game.core.exceptions import FormulaException
+
+logger = logging.getLogger(__name__)
 
 # Whitelisted math functions that are allowed in formulas
 ALLOWED_MATH_FUNCTIONS = {
@@ -61,7 +63,7 @@ def validate_formula(formula: str, allowed_variables: List[str]) -> List[str]:
         if isinstance(node, ast.Name):
             name = node.id
             if name in DANGEROUS_NAMES:
-                log_warning(f"Dangerous function '{name}' detected in formula: {formula}")
+                logger.warning(f"Dangerous function '{name}' detected in formula: {formula}")
                 errors.append(f"Dangerous function not allowed: {name}")
             elif name not in allowed_names:
                 errors.append(f"Undefined variable: {name}")
@@ -70,7 +72,7 @@ def validate_formula(formula: str, allowed_variables: List[str]) -> List[str]:
             if isinstance(node.func, ast.Name):
                 func_name = node.func.id
                 if func_name in DANGEROUS_NAMES:
-                    log_warning(f"Dangerous function call '{func_name}' detected in formula: {formula}")
+                    logger.warning(f"Dangerous function call '{func_name}' detected in formula: {formula}")
                     errors.append(f"Dangerous function not allowed: {func_name}")
 
     return errors
@@ -167,5 +169,5 @@ def safe_evaluate_math_formula(
     try:
         return evaluate_math_formula(formula, context)
     except FormulaException as e:
-        log_warning(f"Formula evaluation failed for '{formula}': {e}")
+        logger.warning(f"Formula evaluation failed for '{formula}': {e}")
         return default

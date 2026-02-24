@@ -4,11 +4,13 @@ Handles to_dict() and from_dict() operations for Ship entities.
 
 PROJ-38: Added registries parameter for dependency injection.
 """
+import logging
 from typing import Dict, Any, Optional, TYPE_CHECKING
 
 from game.simulation.components.component import create_component
 from game.core.constants import LayerType
-from game.core.logger import log_warning
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -29,10 +31,10 @@ class ShipSerializer:
         Returns:
             Dictionary representation of the ship
         """
-        from game.core.logger import log_debug, log_error
+        # logger.debug and logger.error are available from module-level logger
 
         try:
-            log_debug(f"ShipSerializer.to_dict starting for ship: {ship.name}")
+            logger.debug(f"ShipSerializer.to_dict starting for ship: {ship.name}")
 
             data = {
                 "_format_version": "2.0",  # PROJ-42 Phase 4: Explicit format version
@@ -68,20 +70,20 @@ class ShipSerializer:
                 }
             }
 
-            log_debug(f"  vehicle_type: {data['vehicle_type']}")
+            logger.debug(f"  vehicle_type: {data['vehicle_type']}")
 
-            log_debug(f"Basic ship data created. Processing {len(ship.layers)} layers...")
+            logger.debug(f"Basic ship data created. Processing {len(ship.layers)} layers...")
 
             for ltype, layer_data in ship.layers.items():
-                log_debug(f"  Processing layer: {ltype.name}, type: {type(layer_data)}")
+                logger.debug(f"  Processing layer: {ltype.name}, type: {type(layer_data)}")
 
                 # Skip HULL layer from explicit serialization
                 if ltype == LayerType.HULL:
-                    log_debug(f"    Skipping HULL layer")
+                    logger.debug(f"    Skipping HULL layer")
                     continue
 
                 components = layer_data.components
-                log_debug(f"    Layer has {len(components)} components")
+                logger.debug(f"    Layer has {len(components)} components")
 
                 filter_comps = []
                 for comp in components:
@@ -95,15 +97,15 @@ class ShipSerializer:
                     filter_comps.append(c_obj)
 
                 data["layers"][ltype.name] = filter_comps
-                log_debug(f"    Serialized {len(filter_comps)} components for layer {ltype.name}")
+                logger.debug(f"    Serialized {len(filter_comps)} components for layer {ltype.name}")
 
-            log_debug(f"ShipSerializer.to_dict completed successfully")
+            logger.debug(f"ShipSerializer.to_dict completed successfully")
             return data
 
         except Exception as e:  # Intentional broad catch: diagnostic logging before re-raise
-            log_error(f"ShipSerializer.to_dict FAILED: {e}")
+            logger.error(f"ShipSerializer.to_dict FAILED: {e}")
             import traceback
-            log_error(traceback.format_exc())
+            logger.error(traceback.format_exc())
             raise
 
     # Data-driven stat verification table: (key, getter, tolerance)
@@ -191,7 +193,7 @@ class ShipSerializer:
                     if mid in mods:
                         new_comp.add_modifier(mid, m_dat['value'])
                     else:
-                        log_warning(f"ShipSerializer: Modifier '{mid}' not found in registry, skipping")
+                        logger.warning(f"ShipSerializer: Modifier '{mid}' not found in registry, skipping")
 
                 ship.add_component(new_comp, layer_type)
 
@@ -224,6 +226,6 @@ class ShipSerializer:
         ship._loading_warnings = mismatches
 
         if mismatches:
-            log_warning(f"Ship '{ship.name}' stats mismatch after loading!")
+            logger.warning(f"Ship '{ship.name}' stats mismatch after loading!")
             for m in mismatches:
-                log_warning(f"  - {m}")
+                logger.warning(f"  - {m}")

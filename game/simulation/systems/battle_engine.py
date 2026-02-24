@@ -50,13 +50,15 @@ Example:
     winner = engine.get_winner()
     engine.shutdown()
 """
+import logging
 import os
 import random
 from typing import List, Optional, Tuple, Dict, Any, TYPE_CHECKING
 
 from game.core.math import Vector2
-from game.core.logger import log_warning, log_info
 from game.core.paths import Paths
+
+logger = logging.getLogger(__name__)
 from game.engine.spatial import SpatialGrid
 from game.core.constants import AttackType
 from game.core.config import PhysicsConfig, BattleConfig
@@ -109,7 +111,7 @@ class BattleLogger:
                 new_file.write("=== BATTLE LOG STARTED ===\n")
                 self.file = new_file  # Only assign on success
             except IOError as e:
-                log_warning(f"Could not open battle log '{self.filename}': {e}")
+                logger.warning(f"Could not open battle log '{self.filename}': {e}")
                 self.enabled = False
                 if new_file:
                     try:
@@ -124,7 +126,7 @@ class BattleLogger:
                 self.file.write(f"{message}\n")
 
             except IOError as e:
-                log_warning(f"BattleLogger: Failed to write to '{self.filename}': {e}")
+                logger.warning(f"BattleLogger: Failed to write to '{self.filename}': {e}")
     
     def close(self):
         """Close the log file."""
@@ -133,7 +135,7 @@ class BattleLogger:
                 self.log("=== BATTLE LOG ENDED ===")
                 self.file.close()
             except IOError as e:
-                log_warning(f"BattleLogger: Failed to close '{self.filename}': {e}")
+                logger.warning(f"BattleLogger: Failed to close '{self.filename}': {e}")
             finally:
                 self.file = None
 
@@ -280,7 +282,7 @@ class BattleEngine:
             fuel = s.resources.get_value("fuel")
             status_msg = f"Ship '{s.name}' (Team {s.team_id}): HP={s.hp}/{s.max_hp} Mass={s.mass} Thrust={s.total_thrust} Fuel={fuel} TurnSpeed={s.turn_speed:.2f} MaxSpeed={s.max_speed:.2f}"
             self.logger.log(status_msg)
-            log_info(status_msg)
+            logger.info(status_msg)
             # Removed Derelict Warning
             if s.total_thrust <= 0:
                 self.logger.log(f"WARNING: {s.name} has NO THRUST!")
@@ -321,7 +323,7 @@ class BattleEngine:
             )
 
         self.logger.log(f"Reinforcement arrived: {ship.name} (Team {team_id})")
-        log_info(f"Reinforcement arrived: {ship.name} (Team {team_id})")
+        logger.info(f"Reinforcement arrived: {ship.name} (Team {team_id})")
 
     def remove_ship(self, ship: 'Ship') -> bool:
         """

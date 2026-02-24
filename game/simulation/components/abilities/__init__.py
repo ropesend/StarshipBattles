@@ -3,9 +3,10 @@ Abilities package - Component ability classes and registry.
 
 This package contains all ability classes that can be attached to components.
 """
-
+import logging
 from typing import Any, Optional
-from game.core.logger import log_warning
+
+logger = logging.getLogger(__name__)
 
 # Base class
 from .base import Ability
@@ -116,7 +117,7 @@ def create_ability(name: str, component, data: Any) -> Optional[Ability]:
             # Our constructors above handle `isinstance(data, (int, float))` checks.
             return ABILITY_REGISTRY[name](component, data)
         except (TypeError, ValueError, KeyError, AttributeError) as e:
-            log_warning(f"Failed to create ability '{name}': {e}")
+            logger.warning(f"Failed to create ability '{name}': {e}")
             return None
     return None
 

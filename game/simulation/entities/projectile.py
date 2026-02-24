@@ -1,7 +1,10 @@
+import logging
 from game.core.math import Vector2
 from game.engine.physics import PhysicsBody
-from game.core.logger import log_debug, log_event
+from game.core.event_logging import log_event
 from game.core.constants import AttackType
+
+logger = logging.getLogger(__name__)
 from game.core.config import PhysicsConfig
 from game.core.exceptions import ValidationException
 
@@ -184,4 +187,4 @@ class Projectile(PhysicsBody):
         if self.hp <= 0:
             self.is_alive = False
             self.status = 'destroyed'
-            log_debug(f"Projectile {self} destroyed by point defense!")
+            logger.debug(f"Projectile {self} destroyed by point defense!")

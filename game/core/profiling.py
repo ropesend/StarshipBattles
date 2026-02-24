@@ -1,3 +1,4 @@
+import logging
 import time
 import uuid
 from functools import wraps
@@ -6,8 +7,9 @@ from datetime import datetime
 from contextlib import contextmanager
 
 from game.core.json_utils import load_json, save_json
-from game.core.logger import log_error, log_info
 from game.core.paths import Paths
+
+logger = logging.getLogger(__name__)
 from game.core.singleton import SingletonMeta
 
 
@@ -34,7 +36,7 @@ class Profiler(metaclass=SingletonMeta):
         self.session_id = str(uuid.uuid4())
         self.records: List[Dict] = []
         self.start_time = None
-        log_info(f"Profiler initialized with session ID: {self.session_id}")
+        logger.info(f"Profiler initialized with session ID: {self.session_id}")
 
     def clear(self):
         """Reset all records. Used for test isolation."""
@@ -45,12 +47,12 @@ class Profiler(metaclass=SingletonMeta):
         """Enable profiling."""
         self.active = True
         self.start_time = time.time()
-        log_info("Profiling started")
+        logger.info("Profiling started")
 
     def stop(self):
         """Disable profiling."""
         self.active = False
-        log_info("Profiling stopped")
+        logger.info("Profiling stopped")
 
     def toggle(self):
         """Toggle profiling state."""
@@ -81,7 +83,7 @@ class Profiler(metaclass=SingletonMeta):
         if filename is None:
             filename = Paths.PROFILING_HISTORY
         if not self.records:
-            log_info("No records to save.")
+            logger.info("No records to save.")
             return
 
         # Load existing history using json_utils
@@ -97,9 +99,9 @@ class Profiler(metaclass=SingletonMeta):
 
         # Save using json_utils
         if save_json(filename, history):
-            log_info(f"Saved {len(self.records)} records to {filename}")
+            logger.info(f"Saved {len(self.records)} records to {filename}")
         else:
-            log_error(f"Failed to save profiling history to {filename}")
+            logger.error(f"Failed to save profiling history to {filename}")
 
 # Module-level decorators and context managers for convenient profiling
 def profile_action(name: str):

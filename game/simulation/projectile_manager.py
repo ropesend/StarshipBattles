@@ -1,8 +1,10 @@
+import logging
 from typing import List, Optional, Set, Any, TYPE_CHECKING
 from game.core.math import Vector2
 from game.core.constants import AttackType
 from game.core.config import BattleConfig
-from game.core.logger import log_debug
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.engine.spatial import SpatialGrid
@@ -104,7 +106,7 @@ class ProjectileManager:
             if dv_sq == 0:
                 if D0.length() < collision_radius:
                     hit = True
-                    log_debug(f"Hit (Static)! D0={D0.length()} Rad={collision_radius}")
+                    logger.debug(f"Hit (Static)! D0={D0.length()} Rad={collision_radius}")
             else:
                 t = -D0.dot(DV) / dv_sq
                 t_clamped = max(0, min(t, 1.0))
@@ -116,7 +118,7 @@ class ProjectileManager:
 
                 if dist < collision_radius:
                     hit = True
-                    log_debug(f"HIT! Ship={s.name} Dist={dist:.2f} < Rad={collision_radius} t={t_clamped:.4f}")
+                    logger.debug(f"HIT! Ship={s.name} Dist={dist:.2f} < Rad={collision_radius} t={t_clamped:.4f}")
 
             if hit:
                 return s

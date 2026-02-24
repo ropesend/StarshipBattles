@@ -12,12 +12,14 @@ PROJ-45: Added specific exception handling with exception chaining.
 PROJ-50: Added registries parameter for strict DI compliance.
 """
 import json
+import logging
 import os
 from typing import Optional, Tuple, TYPE_CHECKING
 
 from game.core.json_utils import load_json_required
-from game.core.logger import log_info, log_error
 from game.core.exceptions import PersistenceException, ValidationException
+
+logger = logging.getLogger(__name__)
 from game.core.math import Vector2
 from game.simulation.entities.ship import Ship
 
@@ -74,11 +76,11 @@ class SimulationDesignLoader:
             return ship
         except (KeyError, TypeError, ValueError) as e:
             # Data validation errors
-            log_error(f"SimulationDesignLoader: Invalid design data - {type(e).__name__}: {e}")
+            logger.error(f"SimulationDesignLoader: Invalid design data - {type(e).__name__}: {e}")
             return None
         except (AttributeError, ImportError, OSError) as e:
             # Unexpected errors - log with full context
-            log_error(f"SimulationDesignLoader: Failed to create Ship from data - {type(e).__name__}: {e}")
+            logger.error(f"SimulationDesignLoader: Failed to create Ship from data - {type(e).__name__}: {e}")
             return None
 
     def load_ship_from_file(
@@ -112,18 +114,18 @@ class SimulationDesignLoader:
             if ship is None:
                 return None, "Failed to create ship from design data"
 
-            log_info(f"SimulationDesignLoader: Loaded design '{ship.name}' from {file_path}")
+            logger.info(f"SimulationDesignLoader: Loaded design '{ship.name}' from {file_path}")
             return ship, f"Loaded design: {ship.name}"
 
         except json.JSONDecodeError as e:
             # Invalid JSON format
-            log_error(f"SimulationDesignLoader: Invalid JSON in {file_path}: {e}")
+            logger.error(f"SimulationDesignLoader: Invalid JSON in {file_path}: {e}")
             return None, f"Failed to load design: Invalid JSON format"
         except (KeyError, TypeError, ValueError) as e:
             # Data validation errors
-            log_error(f"SimulationDesignLoader: Invalid design data in {file_path} - {type(e).__name__}: {e}")
+            logger.error(f"SimulationDesignLoader: Invalid design data in {file_path} - {type(e).__name__}: {e}")
             return None, f"Failed to load design: Invalid design data"
         except OSError as e:
             # File I/O errors
-            log_error(f"SimulationDesignLoader: I/O error loading {file_path}: {e}")
+            logger.error(f"SimulationDesignLoader: I/O error loading {file_path}: {e}")
             return None, f"Failed to load design: {str(e)}"

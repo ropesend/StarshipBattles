@@ -8,21 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-175 Phase 1 Complete
-**Current Status:** PROJ-175 Phase 1 Complete - Ready for Phase 2
+**Last Completed:** PROJ-175 Phase 2 Complete
+**Current Status:** PROJ-175 Phase 2 Complete - Ready for Phase 3
 **Current Project:** PROJ-175
-**Current Phase:** Phase 2 (Not Started)
-**Test Status:** 12023 passed, 1 skipped
+**Current Phase:** Phase 3 (Not Started)
+**Test Status:** 12030 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-175 Phase 1 (JSON Quick Wins) complete
-- Migrated formation_editor.py and stats_config.py to json_utils
-- Cleaned up exception-only imports in save_game_service.py, design_library.py, workshop_data_loader.py
-- Tightened json_utils error handling (PermissionError, OSError)
-- Zero direct json.load/dump calls remain outside json_utils
-- Updated 2 unit tests that mocked json directly
-- Next session: Begin Phase 2 (Logger Core Migration)
+- PROJ-175 Phase 2 (Logger Core Migration) complete
+- Created game/core/event_logging.py with log_event, set_event_handler, get_event_handler
+- Migrated app.py with configure_logging() function
+- Migrated all game/core/ files (json_utils.py, profiling.py, resources.py)
+- Migrated all game/simulation/ files (17 files including ship.py, component.py, battle_engine.py)
+- Updated conftest.py: session-scoped logging fixture, event_logging import
+- Updated 5 test files to mock new logger pattern
+- Zero imports from game.core.logger in core/ or simulation/ (except __init__.py re-export)
+- Next session: Begin Phase 3 (strategy + AI + UI migration)
 - All tests passing
 
 ---
@@ -105,6 +107,7 @@
 | 2026-02-23 | PROJ-169 | Phase 4 | Complete | 12023 passed, 1 skipped | 4881b95b | Removed 14 unused imports, relocated test, deleted empty dirs |
 | 2026-02-23 | PROJ-169 | Audit 1 | PASSED | 12023 passed, 1 skipped | - | All verification checks passed, project complete |
 | 2026-02-23 | PROJ-175 | Phase 1 | Complete | 12023 passed, 1 skipped | a946c742 | JSON Quick Wins: 5 files migrated/cleaned, json_utils tightened |
+| 2026-02-23 | PROJ-175 | Phase 2 | Complete | 12030 passed, 1 skipped | pending | Logger Core Migration: event_logging.py created, 21 files migrated |
 
 ---
 

@@ -292,6 +292,9 @@ class TestLoadVehicleClasses:
 
     def test_logs_loaded_count(self, tmp_path, vehicle_classes_data, caplog):
         """Logs the number of loaded vehicle classes."""
+        import logging
+        caplog.set_level(logging.INFO, logger="game.simulation.entities.ship_loader")
+
         file_path = tmp_path / "vehicleclasses.json"
         file_path.write_text(json.dumps(vehicle_classes_data))
 
@@ -307,6 +310,9 @@ class TestLoadVehicleClasses:
 
     def test_logs_layer_configurations(self, tmp_path, classes_with_layer_config, vehicle_layers_data, caplog):
         """Logs layer configurations when present."""
+        import logging
+        caplog.set_level(logging.INFO, logger="game.simulation.entities.ship_loader")
+
         classes_file = tmp_path / "vehicleclasses.json"
         layers_file = tmp_path / "vehiclelayers.json"
         classes_file.write_text(json.dumps(classes_with_layer_config))
