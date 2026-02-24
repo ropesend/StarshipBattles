@@ -229,13 +229,14 @@ class TestShipRemoval:
 
                             window = FleetReportWindow(rect, manager, fleet, empire=empire)
                             window._update_detail_panel = Mock()
-                            window._update_remove_button = Mock()
-                            window._update_visible_rows = Mock()
-                            window._update_summary = Mock()
                             window.refresh_list = Mock()
                             window.view_model = Mock()
                             window.view_model.get_filtered_ships = Mock(return_value=list(ships))
                             window.view_model.update_ships = Mock()
+                            # Mock the sidebar component
+                            window.sidebar = Mock()
+                            window.sidebar.update_remove_button = Mock()
+                            window.sidebar.update_summary = Mock()
 
                             # Mock the _create_fleet_for_ships to avoid real Fleet import issues
                             original_create_fleet = window._create_fleet_for_ships
@@ -343,80 +344,85 @@ class TestShipRemoval:
         window, fleet, empire, ships = window_with_ships_and_empire
 
         window.selected_indices = {0}
+        # Mock sidebar for update_remove_button call
+        window.sidebar = Mock()
+        window.sidebar.update_remove_button = Mock()
 
         window._on_remove_selected_ships()
 
         # Verify UI refresh methods were called
         assert window._update_detail_panel.called
         assert window.refresh_list.called
-        assert window._update_summary.called
-        assert window._update_remove_button.called
+        # sidebar.update_remove_button is called instead of _update_remove_button
+        assert window.sidebar.update_remove_button.called
 
 
 class TestRemoveButtonState:
-    """Test Remove Selected button enable/disable behavior."""
+    """Test Remove Selected button enable/disable behavior via sidebar."""
 
     @pytest.fixture
-    def window_with_button(self):
-        """Create window with mocked button for state testing."""
-        ships = [create_mock_ship(f"ship-{i}", f"Ship {i}", i + 1) for i in range(3)]
-        fleet = create_mock_fleet(ships)
-        empire = create_mock_empire()
+    def sidebar_with_button(self):
+        """Create sidebar with mocked button for state testing."""
+        from unittest.mock import Mock, MagicMock
+        from game.ui.screens.fleet_report_sidebar import FleetReportSidebar
 
-        with patch('pygame.display.get_surface') as mock_display:
-            mock_display.return_value = Mock(get_size=Mock(return_value=(1920, 1080)))
-            with patch('pygame_gui.UIManager'):
-                with patch('game.ui.screens.fleet_report_window.UIWindow.__init__'):
-                    with patch('game.ui.screens.fleet_report_window.FleetReportWindow._init_layout'):
-                        with patch('game.ui.screens.fleet_report_window.FleetReportWindow.refresh_list'):
-                            from game.ui.screens.fleet_report_window import FleetReportWindow
-                            import pygame
+        # Create mock dependencies
+        mock_panel = Mock()
+        mock_panel.get_relative_rect.return_value = Mock(width=300)
+        mock_manager = Mock()
+        mock_view_model = Mock()
+        mock_view_model.is_filter_enabled.return_value = True
+        mock_view_model.get_filter_label.return_value = "Test"
+        mock_column_manager = Mock()
+        mock_column_manager.get_toggleable_columns.return_value = []
+        mock_empire = Mock()
 
-                            rect = pygame.Rect(0, 0, 1600, 900)
-                            manager = Mock()
+        # Patch pygame_gui elements
+        with patch('game.ui.screens.fleet_report_sidebar.UIPanel'):
+            with patch('game.ui.screens.fleet_report_sidebar.UILabel'):
+                with patch('game.ui.screens.fleet_report_sidebar.UIButton'):
+                    sidebar = FleetReportSidebar(
+                        panel=mock_panel,
+                        manager=mock_manager,
+                        view_model=mock_view_model,
+                        column_manager=mock_column_manager,
+                        empire=mock_empire
+                    )
+                    # Mock the button directly
+                    sidebar.btn_remove_selected = Mock()
+                    sidebar.btn_remove_selected.enable = Mock()
+                    sidebar.btn_remove_selected.disable = Mock()
+                    sidebar.btn_remove_selected.set_text = Mock()
 
-                            window = FleetReportWindow(rect, manager, fleet, empire=empire)
-                            window.btn_remove_selected = Mock()
-                            window.btn_remove_selected.enable = Mock()
-                            window.btn_remove_selected.disable = Mock()
-                            window.btn_remove_selected.set_text = Mock()
+                    return sidebar
 
-                            return window
-
-    def test_button_enabled_with_selection_and_empire(self, window_with_button):
+    def test_button_enabled_with_selection_and_empire(self, sidebar_with_button):
         """Button enabled when ships selected and empire available."""
-        window = window_with_button
-        window.selected_indices = {0, 1}
+        sidebar = sidebar_with_button
+        sidebar.update_remove_button(2)
 
-        window._update_remove_button()
+        sidebar.btn_remove_selected.enable.assert_called_once()
+        sidebar.btn_remove_selected.set_text.assert_called_with("Remove Selected (2)")
 
-        window.btn_remove_selected.enable.assert_called_once()
-        window.btn_remove_selected.set_text.assert_called_with("Remove Selected (2)")
-
-    def test_button_disabled_without_selection(self, window_with_button):
+    def test_button_disabled_without_selection(self, sidebar_with_button):
         """Button disabled when no ships selected."""
-        window = window_with_button
-        window.selected_indices = set()
+        sidebar = sidebar_with_button
+        sidebar.update_remove_button(0)
 
-        window._update_remove_button()
+        sidebar.btn_remove_selected.disable.assert_called_once()
 
-        window.btn_remove_selected.disable.assert_called_once()
-
-    def test_button_disabled_without_empire(self, window_with_button):
+    def test_button_disabled_without_empire(self, sidebar_with_button):
         """Button disabled when no empire reference."""
-        window = window_with_button
-        window.empire = None
-        window.selected_indices = {0}
+        sidebar = sidebar_with_button
+        sidebar.empire = None
 
-        window._update_remove_button()
+        sidebar.update_remove_button(1)
 
-        window.btn_remove_selected.disable.assert_called_once()
+        sidebar.btn_remove_selected.disable.assert_called_once()
 
-    def test_button_text_shows_selection_count(self, window_with_button):
+    def test_button_text_shows_selection_count(self, sidebar_with_button):
         """Button text shows number of selected ships."""
-        window = window_with_button
-        window.selected_indices = {0, 1, 2}
+        sidebar = sidebar_with_button
+        sidebar.update_remove_button(3)
 
-        window._update_remove_button()
-
-        window.btn_remove_selected.set_text.assert_called_with("Remove Selected (3)")
+        sidebar.btn_remove_selected.set_text.assert_called_with("Remove Selected (3)")
