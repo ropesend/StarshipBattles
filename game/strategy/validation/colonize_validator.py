@@ -77,7 +77,7 @@ class ColonizeValidator:
         """
         # 1. Base Validation: Fleet must exist
         if not fleet:
-            return ValidationResult(is_valid=False, errors=["Fleet does not exist."])
+            return ValidationResult.error("Fleet does not exist.")
 
         # 2. Get System/Location Context - Use O(1) spatial index
         # Get all planets at the fleet's global hex location
@@ -98,7 +98,10 @@ class ColonizeValidator:
         if target_planet is None:
             # "Any Planet"
             if not valid_candidates:
-                return ValidationResult(is_valid=False, errors=["No colonizable planets at this location."], error_code="NO_CANDIDATES")
+                return ValidationResult.error(
+                    "No colonizable planets at this location.",
+                    code="NO_CANDIDATES"
+                )
 
             # PROJ-140 Phase 2: When registry provided, check if ANY candidate matches available pods
             if component_registry is not None:
@@ -120,25 +123,30 @@ class ColonizeValidator:
                             break
 
                 if not found_match:
-                    return ValidationResult(
-                        is_valid=False,
-                        errors=["No matching colony pod for any planet at this location."],
-                        error_code="NO_COLONY_POD"
+                    return ValidationResult.error(
+                        "No matching colony pod for any planet at this location.",
+                        code="NO_COLONY_POD"
                     )
 
-            return ValidationResult()
+            return ValidationResult.success()
 
         else:
             # Specific Planet
             if target_planet.owner_id is not None:
-                return ValidationResult(is_valid=False, errors=[f"Planet {target_planet.name} is already owned."], error_code="ALREADY_OWNED")
+                return ValidationResult.error(
+                    f"Planet {target_planet.name} is already owned.",
+                    code="ALREADY_OWNED"
+                )
 
             # Check if planet is in valid candidates (verifies location)
             # We strictly check reference equality or ID equality if we had IDs
             if target_planet not in valid_candidates:
                 # Determine detailed reason for better feedback
                 # If owner is none (checked above), then it must be location.
-                return ValidationResult(is_valid=False, errors=[f"Planet {target_planet.name} is not at fleet location."], error_code="WRONG_LOCATION")
+                return ValidationResult.error(
+                    f"Planet {target_planet.name} is not at fleet location.",
+                    code="WRONG_LOCATION"
+                )
 
             # 4. Check for colony pod (PROJ-55)
             if component_registry is not None:
@@ -150,10 +158,9 @@ class ColonizeValidator:
                 )
 
                 if ship_with_pod is None:
-                    return ValidationResult(
-                        is_valid=False,
-                        errors=[f"No ship in fleet has {planet_type_str} colony pod"],
-                        error_code="NO_COLONY_POD"
+                    return ValidationResult.error(
+                        f"No ship in fleet has {planet_type_str} colony pod",
+                        code="NO_COLONY_POD"
                     )
 
                 # Check chain limits - ensure not over-committed
@@ -166,13 +173,12 @@ class ColonizeValidator:
                     committed_count = committed.get(planet_type_str, 0)
 
                     if committed_count >= available_count:
-                        return ValidationResult(
-                            is_valid=False,
-                            errors=[f"All {planet_type_str} colony pods already assigned"],
-                            error_code="COLONY_POD_EXHAUSTED"
+                        return ValidationResult.error(
+                            f"All {planet_type_str} colony pods already assigned",
+                            code="COLONY_POD_EXHAUSTED"
                         )
 
-            return ValidationResult()
+            return ValidationResult.success()
 
     @staticmethod
     def find_ship_with_colony_pod(

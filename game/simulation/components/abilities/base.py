@@ -123,7 +123,12 @@ class Ability:
         return requested_scope
 
     @staticmethod
-    def _parse_primary_value(data, key: str = 'value', default: float = 0.0) -> float:
+    def _parse_primary_value(
+        data,
+        key: str = 'value',
+        default: float = 0.0,
+        fallback_keys: tuple = ()
+    ) -> float:
         """
         Parse a primary numeric value from ability data.
 
@@ -136,6 +141,7 @@ class Ability:
             data: Raw ability data (dict, int, float, or other)
             key: Dict key to look up (default: 'value')
             default: Fallback value if key missing (default: 0.0)
+            fallback_keys: Additional keys to try if primary key not found
 
         Returns:
             Parsed float value
@@ -143,7 +149,12 @@ class Ability:
         if isinstance(data, (int, float)):
             return float(data)
         if isinstance(data, dict):
-            return float(data.get(key, default))
+            if key in data:
+                return float(data[key])
+            for fallback in fallback_keys:
+                if fallback in data:
+                    return float(data[fallback])
+            return float(default)
         return float(default)
 
     def applies_to_layer(self, layer: AbilityLayer) -> bool:

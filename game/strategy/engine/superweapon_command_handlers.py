@@ -34,12 +34,12 @@ class ImplodePlanetCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return ValidationResult(is_valid=False, errors=["Fleet not found."])
+            return ValidationResult.error("Fleet not found.")
 
         # 2. Resolve planet
         planet = session._get_planet_by_id(cmd.planet_id)
         if not planet:
-            return ValidationResult(is_valid=False, errors=["Planet not found."])
+            return ValidationResult.error("Planet not found.")
 
         # 3. Validate
         result = SuperweaponValidator.validate_implode_planet(
@@ -63,7 +63,7 @@ class StellerateStarCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return ValidationResult(is_valid=False, errors=["Fleet not found."])
+            return ValidationResult.error("Fleet not found.")
 
         # 2. Validate
         result = SuperweaponValidator.validate_stellerate_star(
@@ -87,7 +87,7 @@ class OpenWarpPointCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return ValidationResult(is_valid=False, errors=["Fleet not found."])
+            return ValidationResult.error("Fleet not found.")
 
         # 2. Validate
         result = SuperweaponValidator.validate_open_warp_point(
@@ -115,7 +115,7 @@ class CloseWarpPointCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return ValidationResult(is_valid=False, errors=["Fleet not found."])
+            return ValidationResult.error("Fleet not found.")
 
         # 2. Validate
         result = SuperweaponValidator.validate_close_warp_point(
@@ -139,7 +139,7 @@ class CreateDysonSphereCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return ValidationResult(is_valid=False, errors=["Fleet not found."])
+            return ValidationResult.error("Fleet not found.")
 
         # 2. Validate
         result = SuperweaponValidator.validate_create_dyson_sphere(
@@ -163,7 +163,7 @@ class SelfDestructCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return ValidationResult(is_valid=False, errors=["Fleet not found."])
+            return ValidationResult.error("Fleet not found.")
 
         # 2. Validate
         result = SuperweaponValidator.validate_self_destruct(fleet, cmd.ship_ids)
@@ -205,7 +205,7 @@ def _setup_mission_move(session: 'GameSession', fleet, target_hex) -> Validation
     # Calculate path
     path = find_hybrid_path(session.galaxy, start_hex, target_hex)
     if not path:
-        return ValidationResult(is_valid=False, errors=["No path found to target."])
+        return ValidationResult.error("No path found to target.")
 
     # Queue MOVE order if not already at target
     if start_hex != target_hex:
@@ -218,7 +218,7 @@ def _setup_mission_move(session: 'GameSession', fleet, target_hex) -> Validation
                 path = path[1:]
             fleet.path = path
 
-    return ValidationResult()
+    return ValidationResult.success()
 
 
 class ImplodePlanetMissionCommandHandler:
@@ -229,12 +229,12 @@ class ImplodePlanetMissionCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return ValidationResult(is_valid=False, errors=["Fleet not found."])
+            return ValidationResult.error("Fleet not found.")
 
         # 2. Resolve planet
         planet = session._get_planet_by_id(cmd.planet_id)
         if not planet:
-            return ValidationResult(is_valid=False, errors=["Planet not found."])
+            return ValidationResult.error("Planet not found.")
 
         # 3. Setup move
         move_result = _setup_mission_move(session, fleet, cmd.target_hex)
@@ -246,7 +246,7 @@ class ImplodePlanetMissionCommandHandler:
         fleet.add_order(action_order)
 
         logger.info(f"GameSession: Queued IMPLODE_PLANET mission for Fleet {fleet.id}")
-        return ValidationResult()
+        return ValidationResult.success()
 
 
 class StellerateStarMissionCommandHandler:
@@ -257,7 +257,7 @@ class StellerateStarMissionCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return ValidationResult(is_valid=False, errors=["Fleet not found."])
+            return ValidationResult.error("Fleet not found.")
 
         # 2. Setup move
         move_result = _setup_mission_move(session, fleet, cmd.target_hex)
@@ -269,7 +269,7 @@ class StellerateStarMissionCommandHandler:
         fleet.add_order(action_order)
 
         logger.info(f"GameSession: Queued STELLERATE_STAR mission for Fleet {fleet.id}")
-        return ValidationResult()
+        return ValidationResult.success()
 
 
 class OpenWarpPointMissionCommandHandler:
@@ -280,7 +280,7 @@ class OpenWarpPointMissionCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return ValidationResult(is_valid=False, errors=["Fleet not found."])
+            return ValidationResult.error("Fleet not found.")
 
         # 2. Setup move
         move_result = _setup_mission_move(session, fleet, cmd.target_hex)
@@ -296,7 +296,7 @@ class OpenWarpPointMissionCommandHandler:
         fleet.add_order(action_order)
 
         logger.info(f"GameSession: Queued OPEN_WARP_POINT mission for Fleet {fleet.id}")
-        return ValidationResult()
+        return ValidationResult.success()
 
 
 class CloseWarpPointMissionCommandHandler:
@@ -307,7 +307,7 @@ class CloseWarpPointMissionCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return ValidationResult(is_valid=False, errors=["Fleet not found."])
+            return ValidationResult.error("Fleet not found.")
 
         # 2. Setup move
         move_result = _setup_mission_move(session, fleet, cmd.target_hex)
@@ -319,7 +319,7 @@ class CloseWarpPointMissionCommandHandler:
         fleet.add_order(action_order)
 
         logger.info(f"GameSession: Queued CLOSE_WARP_POINT mission for Fleet {fleet.id}")
-        return ValidationResult()
+        return ValidationResult.success()
 
 
 class CreateDysonSphereMissionCommandHandler:
@@ -330,7 +330,7 @@ class CreateDysonSphereMissionCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return ValidationResult(is_valid=False, errors=["Fleet not found."])
+            return ValidationResult.error("Fleet not found.")
 
         # 2. Setup move
         move_result = _setup_mission_move(session, fleet, cmd.target_hex)
@@ -342,4 +342,4 @@ class CreateDysonSphereMissionCommandHandler:
         fleet.add_order(action_order)
 
         logger.info(f"GameSession: Queued CREATE_DYSON_SPHERE mission for Fleet {fleet.id}")
-        return ValidationResult()
+        return ValidationResult.success()

@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** In Progress
 **Objective:** Add ValidationResult factory methods and migrate all 83 call sites, fix last CrewRequired legacy pattern, create composable validator primitives
 **Priority:** Immediate
 **Estimated Time:** ~4-6 hours
@@ -19,15 +19,15 @@
 **File:** `game/core/validation.py`
 **Tests:** `pytest tests/unit/core/ -n 4`
 
-- [ ] Read `game/core/validation.py` to confirm current `ValidationResult` dataclass structure
-- [ ] Add `success()` static factory method returning `ValidationResult(is_valid=True)`
-- [ ] Add `error(message: str)` static factory method returning `ValidationResult(is_valid=False, errors=[message])`
-- [ ] Add `errors(messages: List[str])` static factory method returning `ValidationResult(is_valid=False, errors=list(messages))`
-- [ ] Write unit tests in `tests/unit/core/test_validation.py`:
+- [x] Read `game/core/validation.py` to confirm current `ValidationResult` dataclass structure
+- [x] Add `success()` static factory method returning `ValidationResult(is_valid=True)`
+- [x] Add `error(message: str)` static factory method returning `ValidationResult(is_valid=False, errors=[message])`
+- [x] Add `with_errors(messages: List[str])` static factory method (renamed from `errors()` to avoid shadowing dataclass field)
+- [x] Write unit tests in `tests/unit/core/test_validation.py`:
   - `test_validation_result_success()` — verify `is_valid=True`, `errors=[]`
   - `test_validation_result_error()` — verify `is_valid=False`, `errors=[msg]`
-  - `test_validation_result_errors()` — verify `is_valid=False`, `errors=[msg1, msg2]`
-- [ ] Verify: `pytest tests/unit/core/ -n 4` — all pass
+  - `test_validation_result_with_errors()` — verify `is_valid=False`, `errors=[msg1, msg2]`
+- [x] Verify: `pytest tests/unit/core/ -n 4` — all pass
 
 **Notes:** [Filled during implementation]
 
@@ -35,14 +35,11 @@
 **File:** `game/simulation/components/abilities/crew.py:73`
 **Tests:** `pytest tests/unit/simulation/components/abilities/ -n 4`
 
-- [ ] Grep all component JSON data for `"CrewRequired"` with `"amount"` key:
-  ```
-  grep -r '"amount"' game/data/ simulation_tests/data/ --include="*.json" | grep -i crew
-  ```
-- [ ] If NO `"amount"` usage found: replace line 73 with `self.amount = int(self._parse_primary_value(data))`
-- [ ] If `"amount"` usage IS found: add `fallback_keys` parameter to `_parse_primary_value()` in `base.py` and use `self.amount = int(self._parse_primary_value(data, fallback_keys=('amount',)))`
-- [ ] Verify: `pytest tests/unit/simulation/components/abilities/test_crew_abilities.py -v` — all pass
-- [ ] Verify: `pytest tests/ -k "crew" -n 4` — all pass
+- [x] Grep all component JSON data for `"CrewRequired"` with `"amount"` key — tests expect `amount` fallback support
+- [x] Added `fallback_keys` parameter to `_parse_primary_value()` in `base.py`
+- [x] Updated CrewRequired to use `self.amount = int(self._parse_primary_value(data, fallback_keys=('amount',)))`
+- [x] Verify: `pytest tests/unit/simulation/components/abilities/test_crew_abilities.py -v` — 55 passed
+- [x] Verify: `pytest tests/ -k "crew" -n 4` — all pass
 
 **Notes:** [Filled during implementation]
 
@@ -50,11 +47,10 @@
 **Files:** `game/strategy/validation/superweapon_validator.py` (24 calls), `game/strategy/validation/transfer_validator.py` (17 calls), `game/strategy/validation/colonize_validator.py` (9 calls)
 **Tests:** `pytest tests/unit/strategy/validation/ -n 4`
 
-- [ ] In `superweapon_validator.py`: Replace all `ValidationResult(is_valid=False, errors=[...])` with `ValidationResult.error(...)` or `.errors(...)` (24 sites)
-- [ ] In `superweapon_validator.py`: Replace all `ValidationResult()` or `ValidationResult(True)` with `ValidationResult.success()`
-- [ ] In `transfer_validator.py`: Replace all verbose constructor calls with factory methods (17 sites)
-- [ ] In `colonize_validator.py`: Replace all verbose constructor calls with factory methods (9 sites)
-- [ ] Verify: `pytest tests/unit/strategy/validation/ -n 4` — all pass
+- [x] In `superweapon_validator.py`: Replaced all verbose constructor calls with factory methods (24 error + 7 success)
+- [x] In `transfer_validator.py`: Replaced all verbose constructor calls with factory methods (17 sites)
+- [x] In `colonize_validator.py`: Replaced all verbose constructor calls with factory methods (9 sites)
+- [x] Verify: `pytest tests/unit/strategy/validation/ -n 4` — 72 passed
 
 **Notes:** [Filled during implementation]
 
@@ -62,11 +58,11 @@
 **Files:** `game/strategy/engine/command_handlers.py` (24 calls), `game/strategy/engine/superweapon_command_handlers.py` (20 calls)
 **Tests:** `pytest tests/unit/strategy/engine/ -n 4`
 
-- [ ] In `command_handlers.py`: Replace all verbose constructor calls with factory methods (24 sites)
-- [ ] In `superweapon_command_handlers.py`: Replace all verbose constructor calls with factory methods (20 sites)
-- [ ] Verify: `pytest tests/unit/strategy/engine/ -n 4` — all pass
+- [x] In `command_handlers.py`: Replaced all verbose constructor calls with factory methods (24 sites)
+- [x] In `superweapon_command_handlers.py`: Replaced all verbose constructor calls with factory methods (20 sites)
+- [x] Verify: `pytest tests/unit/strategy/engine/ -n 4` — 308 passed
 
-**Notes:** [Filled during implementation]
+**Notes:** Complete — all command handlers migrated
 
 ### Task 1.5: Migrate ValidationResult Call Sites — Remaining Files [Simple]
 **Files:** `game/simulation/validation/ship_validator.py` (10), `game/ui/screens/race_validator.py` (9), `game/strategy/facade/strategy_session_facade.py` (5), `game/simulation/validation/base.py` (2), `game/strategy/data/race_config.py` (1)

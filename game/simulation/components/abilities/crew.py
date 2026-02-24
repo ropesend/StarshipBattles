@@ -70,8 +70,7 @@ class CrewRequired(Ability):
 
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
-        val = data if isinstance(data, (int, float)) else data.get('value', data.get('amount', 0))
-        self.amount = int(val)
+        self.amount = int(self._parse_primary_value(data, fallback_keys=('amount',)))
         self._base_amount = self.amount
 
     def recalculate(self):

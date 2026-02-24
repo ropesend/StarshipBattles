@@ -298,3 +298,60 @@ class TestIValidationRuleProtocol:
         validator = ConformingValidator()
         result = validator.validate(None)
         assert isinstance(result, ValidationResult)
+
+
+class TestValidationResultFactoryMethods:
+    """Tests for ValidationResult factory methods.
+
+    PROJ-176 Phase 1: Factory methods for cleaner construction patterns.
+    """
+
+    def test_success_returns_valid_result(self):
+        """success() returns a valid result with no errors."""
+        result = ValidationResult.success()
+        assert result.is_valid is True
+        assert result.errors == []
+        assert result.warnings == []
+        assert result.error_code is None
+
+    def test_error_returns_invalid_result_with_message(self):
+        """error() returns an invalid result with single error message."""
+        result = ValidationResult.error("Something went wrong")
+        assert result.is_valid is False
+        assert result.errors == ["Something went wrong"]
+        assert result.warnings == []
+
+    def test_error_with_code(self):
+        """error() can include an error code."""
+        result = ValidationResult.error("Invalid input", code="V001")
+        assert result.is_valid is False
+        assert result.errors == ["Invalid input"]
+        assert result.error_code == "V001"
+
+    def test_error_with_error_code_enum(self):
+        """error() converts ErrorCode enum to string value."""
+        from game.core.error_codes import ErrorCode
+        result = ValidationResult.error("Test error", code=ErrorCode.VALIDATION_FAILED)
+        assert result.is_valid is False
+        assert result.error_code == ErrorCode.VALIDATION_FAILED.value
+
+    def test_with_errors_returns_invalid_result_with_multiple_messages(self):
+        """with_errors() returns an invalid result with multiple error messages."""
+        result = ValidationResult.with_errors(["Error 1", "Error 2", "Error 3"])
+        assert result.is_valid is False
+        assert result.errors == ["Error 1", "Error 2", "Error 3"]
+        assert result.warnings == []
+
+    def test_with_errors_with_empty_list_is_still_invalid(self):
+        """with_errors() with empty list returns invalid result."""
+        result = ValidationResult.with_errors([])
+        assert result.is_valid is False
+        assert result.errors == []
+
+    def test_with_errors_copies_input_list(self):
+        """with_errors() makes a copy of the input list to avoid mutation."""
+        original = ["Error A", "Error B"]
+        result = ValidationResult.with_errors(original)
+        original.append("Error C")
+        assert "Error C" not in result.errors
+        assert len(result.errors) == 2

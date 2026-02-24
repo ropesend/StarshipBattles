@@ -52,7 +52,7 @@ class SuperweaponValidator:
         """
         # Check target planet exists
         if target_planet is None:
-            return ValidationResult(is_valid=False, errors=["No target planet specified."])
+            return ValidationResult.error("No target planet specified.")
 
         # Check for DestroyPlanet ability
         if component_registry is not None:
@@ -60,12 +60,9 @@ class SuperweaponValidator:
                 fleet, "DestroyPlanet", component_registry
             )
             if ship is None:
-                return ValidationResult(
-                    is_valid=False,
-                    errors=["No ship in fleet has DestroyPlanet ability."]
-                )
+                return ValidationResult.error("No ship in fleet has DestroyPlanet ability.")
 
-        return ValidationResult()
+        return ValidationResult.success()
 
     @staticmethod
     def validate_stellerate_star(
@@ -89,27 +86,18 @@ class SuperweaponValidator:
                 fleet, "DestroyStar", component_registry
             )
             if ship is None:
-                return ValidationResult(
-                    is_valid=False,
-                    errors=["No ship in fleet has DestroyStar ability."]
-                )
+                return ValidationResult.error("No ship in fleet has DestroyStar ability.")
 
         # Check fleet is at a star system
         system = galaxy.get_system_at_location(fleet.location)
         if system is None:
-            return ValidationResult(
-                is_valid=False,
-                errors=["Fleet must be at a star system to destroy a star."]
-            )
+            return ValidationResult.error("Fleet must be at a star system to destroy a star.")
 
         # Check system has stars
         if not getattr(system, 'stars', []):
-            return ValidationResult(
-                is_valid=False,
-                errors=["System has no stars to destroy."]
-            )
+            return ValidationResult.error("System has no stars to destroy.")
 
-        return ValidationResult()
+        return ValidationResult.success()
 
     @staticmethod
     def validate_open_warp_point(
@@ -135,36 +123,24 @@ class SuperweaponValidator:
                 fleet, "OpenWarpPoint", component_registry
             )
             if ship is None:
-                return ValidationResult(
-                    is_valid=False,
-                    errors=["No ship in fleet has OpenWarpPoint ability."]
-                )
+                return ValidationResult.error("No ship in fleet has OpenWarpPoint ability.")
 
         # Check fleet is at a star system
         current_system = galaxy.get_system_at_location(fleet.location)
         if current_system is None:
-            return ValidationResult(
-                is_valid=False,
-                errors=["Fleet must be at a star system to open a warp point."]
-            )
+            return ValidationResult.error("Fleet must be at a star system to open a warp point.")
 
         # Check target system exists
         target_system = galaxy.name_map.get(target_system_name)
         if target_system is None:
-            return ValidationResult(
-                is_valid=False,
-                errors=[f"Target system '{target_system_name}' does not exist."]
-            )
+            return ValidationResult.error(f"Target system '{target_system_name}' does not exist.")
 
         # Check warp link doesn't already exist
         for wp in getattr(current_system, 'warp_points', []):
             if wp.destination_id == target_system_name:
-                return ValidationResult(
-                    is_valid=False,
-                    errors=[f"Warp link to '{target_system_name}' already exists."]
-                )
+                return ValidationResult.error(f"Warp link to '{target_system_name}' already exists.")
 
-        return ValidationResult()
+        return ValidationResult.success()
 
     @staticmethod
     def validate_close_warp_point(
@@ -190,18 +166,12 @@ class SuperweaponValidator:
                 fleet, "CloseWarpPoint", component_registry
             )
             if ship is None:
-                return ValidationResult(
-                    is_valid=False,
-                    errors=["No ship in fleet has CloseWarpPoint ability."]
-                )
+                return ValidationResult.error("No ship in fleet has CloseWarpPoint ability.")
 
         # Check fleet is at a star system
         current_system = galaxy.get_system_at_location(fleet.location)
         if current_system is None:
-            return ValidationResult(
-                is_valid=False,
-                errors=["Fleet must be at a star system to close a warp point."]
-            )
+            return ValidationResult.error("Fleet must be at a star system to close a warp point.")
 
         # Check warp point with matching destination exists at fleet's hex
         found_warp_point = False
@@ -213,12 +183,9 @@ class SuperweaponValidator:
                 break
 
         if not found_warp_point:
-            return ValidationResult(
-                is_valid=False,
-                errors=[f"No warp point to '{warp_point_dest_id}' at fleet location."]
-            )
+            return ValidationResult.error(f"No warp point to '{warp_point_dest_id}' at fleet location.")
 
-        return ValidationResult()
+        return ValidationResult.success()
 
     @staticmethod
     def validate_create_dyson_sphere(
@@ -242,27 +209,18 @@ class SuperweaponValidator:
                 fleet, "CreateDysonSphere", component_registry
             )
             if ship is None:
-                return ValidationResult(
-                    is_valid=False,
-                    errors=["No ship in fleet has CreateDysonSphere ability."]
-                )
+                return ValidationResult.error("No ship in fleet has CreateDysonSphere ability.")
 
         # Check fleet is at a star system
         current_system = galaxy.get_system_at_location(fleet.location)
         if current_system is None:
-            return ValidationResult(
-                is_valid=False,
-                errors=["Fleet must be at a star system to create a Dyson Sphere."]
-            )
+            return ValidationResult.error("Fleet must be at a star system to create a Dyson Sphere.")
 
         # Check system has stars
         if not getattr(current_system, 'stars', []):
-            return ValidationResult(
-                is_valid=False,
-                errors=["System must have stars to create a Dyson Sphere."]
-            )
+            return ValidationResult.error("System must have stars to create a Dyson Sphere.")
 
-        return ValidationResult()
+        return ValidationResult.success()
 
     @staticmethod
     def validate_self_destruct(
@@ -282,7 +240,7 @@ class SuperweaponValidator:
         """
         # Check ship list is not empty
         if not ship_ids:
-            return ValidationResult(is_valid=False, errors=["No ships specified for self-destruct."])
+            return ValidationResult.error("No ships specified for self-destruct.")
 
         # Build ship ID lookup
         ships_by_id = {ship.id: ship for ship in fleet.ships}
@@ -292,17 +250,11 @@ class SuperweaponValidator:
             # Check ship exists in fleet
             ship = ships_by_id.get(ship_id)
             if ship is None:
-                return ValidationResult(
-                    is_valid=False,
-                    errors=[f"Ship '{ship_id}' not found in fleet."]
-                )
+                return ValidationResult.error(f"Ship '{ship_id}' not found in fleet.")
 
             # Check ship has SelfDestruct ability
             if component_registry is not None:
                 if not ship_has_ability(ship, 'SelfDestruct', component_registry):
-                    return ValidationResult(
-                        is_valid=False,
-                        errors=[f"Ship '{ship_id}' does not have SelfDestruct ability."]
-                    )
+                    return ValidationResult.error(f"Ship '{ship_id}' does not have SelfDestruct ability.")
 
-        return ValidationResult()
+        return ValidationResult.success()
