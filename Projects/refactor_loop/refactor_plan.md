@@ -8,18 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-164 Phase 1 complete
-**Current Status:** PROJ-164 Phase 1 complete — Ready for Phase 2
+**Last Completed:** PROJ-164 Phase 2 complete
+**Current Status:** PROJ-164 Phase 2 complete — Ready for Phase 3 (final verification)
 **Current Project:** PROJ-164
-**Current Phase:** Phase 2
-**Test Status:** 102 passed in test_ability_base.py
+**Current Phase:** Phase 3
+**Test Status:** 604 passed (ability tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-164 Phase 1 complete: Added `_parse_primary_value()` helper to Ability base class
-- Added 12 unit tests for the new helper method
-- Files modified: game/simulation/components/abilities/base.py, tests/unit/simulation/components/abilities/test_ability_base.py
-- Next: Phase 2 - migrate 10 __init__ and 3 sync_data callers
+- PROJ-164 Phase 2 complete: Migrated all callers to use `_parse_primary_value()`
+- defense.py: 5 classes (ShieldProjection, ShieldRegeneration, ToHitAttackModifier, ToHitDefenseModifier, EmissiveArmor)
+- propulsion.py: 3 __init__ + 3 sync_data (CombatPropulsion, ManeuveringThruster, StrategicMovement)
+- crew.py: 2 classes (CrewCapacity, LifeSupportCapacity) — CrewRequired intentionally skipped
+- Next: Phase 3 - run full test suite + grep verification
 
 ---
 
@@ -89,6 +90,7 @@
 | 2026-02-23 | PROJ-162 | Audit 1 | PASSED | 11993 pass | - | No issues found |
 | 2026-02-23 | PROJ-162 | Close | COMPLETE | - | - | Project marked complete |
 | 2026-02-23 | PROJ-164 | Phase 1 | Complete | 102 pass | pending | _parse_primary_value helper + tests |
+| 2026-02-23 | PROJ-164 | Phase 2 | Complete | 604 pass | pending | Migrated 10 __init__ + 3 sync_data callers |
 
 ---
 

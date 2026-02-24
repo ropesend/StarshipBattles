@@ -13,15 +13,12 @@ class CombatPropulsion(Ability):
 
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
-        # Handle 'val' if primitive shortcut used, else explicit 'value'
-        val = data if isinstance(data, (int, float)) else data.get('value', 0)
-        self.base_thrust = float(val)
+        self.base_thrust = self._parse_primary_value(data)
         self.thrust_force = self.base_thrust
 
     def sync_data(self, data: Any):
         super().sync_data(data)
-        val = data if isinstance(data, (int, float)) else data.get('value', 0) if isinstance(data, dict) else 0
-        self.base_thrust = float(val)
+        self.base_thrust = self._parse_primary_value(data)
         self.thrust_force = self.base_thrust
 
     def recalculate(self):
@@ -43,14 +40,12 @@ class ManeuveringThruster(Ability):
 
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
-        val = data if isinstance(data, (int, float)) else data.get('value', 0)
-        self.base_turn_rate = float(val)
+        self.base_turn_rate = self._parse_primary_value(data)
         self.turn_rate = self.base_turn_rate
 
     def sync_data(self, data: Any):
         super().sync_data(data)
-        val = data if isinstance(data, (int, float)) else data.get('value', 0) if isinstance(data, dict) else 0
-        self.base_turn_rate = float(val)
+        self.base_turn_rate = self._parse_primary_value(data)
         self.turn_rate = self.base_turn_rate
 
     def recalculate(self):
@@ -90,14 +85,12 @@ class StrategicMovement(Ability):
 
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
-        val = data if isinstance(data, (int, float)) else data.get('value', 0)
-        self.base_movement_points = float(val)
+        self.base_movement_points = self._parse_primary_value(data)
         self.movement_points = self.base_movement_points
 
     def sync_data(self, data: Any):
         super().sync_data(data)
-        val = data if isinstance(data, (int, float)) else data.get('value', 0) if isinstance(data, dict) else 0
-        self.base_movement_points = float(val)
+        self.base_movement_points = self._parse_primary_value(data)
         self.movement_points = self.base_movement_points
 
     def recalculate(self):

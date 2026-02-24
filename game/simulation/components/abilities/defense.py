@@ -14,8 +14,7 @@ class ShieldProjection(Ability):
 
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
-        val = data if isinstance(data, (int, float)) else data.get('value', 0)
-        self.base_capacity = float(val)
+        self.base_capacity = self._parse_primary_value(data)
         self.capacity = self.base_capacity
 
     def recalculate(self):
@@ -39,8 +38,7 @@ class ShieldRegeneration(Ability):
 
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
-        val = data if isinstance(data, (int, float)) else data.get('value', 0)
-        self.base_rate = float(val)
+        self.base_rate = self._parse_primary_value(data)
         self.rate = self.base_rate
 
     def recalculate(self):
@@ -62,8 +60,7 @@ class ToHitAttackModifier(Ability):
 
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
-        val = data if isinstance(data, (int, float)) else data.get('value', 0)
-        self.value = float(val)
+        self.value = self._parse_primary_value(data)
         self._base_value = self.value
 
     def recalculate(self):
@@ -88,8 +85,7 @@ class ToHitDefenseModifier(Ability):
 
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
-        val = data if isinstance(data, (int, float)) else data.get('value', 0)
-        self.value = float(val)
+        self.value = self._parse_primary_value(data)
         self._base_value = self.value
 
     def recalculate(self):
@@ -111,8 +107,7 @@ class EmissiveArmor(Ability):
 
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
-        val = data if isinstance(data, (int, float)) else data.get('value', 0)
-        self.amount = int(val)
+        self.amount = int(self._parse_primary_value(data))
         self._base_amount = self.amount
 
     def recalculate(self):
