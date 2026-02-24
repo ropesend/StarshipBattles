@@ -17,6 +17,7 @@ from typing import Dict, Any, List, Optional
 import math
 import logging
 from game.core.exceptions import FormulaException
+from game.core.error_codes import ErrorCode
 
 logger = logging.getLogger(__name__)
 
@@ -160,25 +161,25 @@ class ModifierEffectEvaluator:
         except SyntaxError as e:
             raise FormulaException(
                 f"Syntax error in modifier formula '{original_formula}': {e.msg}",
-                code="F001",
+                code=ErrorCode.FORMULA_SYNTAX_ERROR.value,
                 context=error_context
             ) from e
         except NameError as e:
             raise FormulaException(
                 f"Undefined variable in modifier formula '{original_formula}': {e}",
-                code="F002",
+                code=ErrorCode.FORMULA_UNDEFINED_VAR.value,
                 context=error_context
             ) from e
         except (ZeroDivisionError, ValueError, ArithmeticError) as e:
             raise FormulaException(
                 f"Runtime error in modifier formula '{original_formula}': {e}",
-                code="F003",
+                code=ErrorCode.EVAL_ERROR.value,
                 context=error_context
             ) from e
         except Exception as e:  # Intentional broad catch: catch-and-convert to FormulaException for any eval() error
             raise FormulaException(
                 f"Cannot evaluate modifier formula '{original_formula}': {e}",
-                code="F004",
+                code=ErrorCode.FORMULA_GENERAL_ERROR.value,
                 context=error_context
             ) from e
 

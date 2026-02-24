@@ -271,6 +271,7 @@ class GameSession:
             TypeError: If data structures are invalid.
         """
         from game.core.exceptions import PersistenceException
+        from game.core.error_codes import ErrorCode
         from game.strategy.data.galaxy import Galaxy
         from game.strategy.data.empire import Empire
 
@@ -283,7 +284,7 @@ class GameSession:
         except KeyError as e:
             raise PersistenceException(
                 f"Missing required config field: {e}",
-                code="P001",
+                code=ErrorCode.SAVE_FAILED.value,
                 context={"section": "config", "missing_field": str(e)}
             ) from e
 
@@ -304,7 +305,7 @@ class GameSession:
         except KeyError as e:
             raise PersistenceException(
                 f"Missing required galaxy field: {e}",
-                code="P002",
+                code=ErrorCode.LOAD_FAILED.value,
                 context={"section": "galaxy", "missing_field": str(e)}
             ) from e
         session.systems = list(session.galaxy.systems.values())
@@ -318,7 +319,7 @@ class GameSession:
         except KeyError as e:
             raise PersistenceException(
                 f"Missing required empire field: {e}",
-                code="P003",
+                code=ErrorCode.CORRUPT_DATA.value,
                 context={"section": "empires", "missing_field": str(e)}
             ) from e
 

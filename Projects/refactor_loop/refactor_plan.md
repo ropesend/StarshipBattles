@@ -8,19 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-185 Complete (All 4 phases + Audit Passed)
-**Current Status:** PROJ-185 complete, ready for PROJ-186
+**Last Completed:** PROJ-186 Phase 1 (String codes → ErrorCode enums)
+**Current Status:** PROJ-186 Phase 1 complete, ready for Phase 2
 **Current Project:** PROJ-186
-**Current Phase:** Phase 1
+**Current Phase:** Phase 2
 **Test Status:** 12366 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-185 Complete:
-  - Phase 4: Removed single-select shim from ViewModel, updated Window facade properties
-  - Audit: Fixed 2 misleading "backward compatibility" comments (empire_build_queue_window.py, pathfinding.py)
-  - All backward compatibility shims from PROJ-174 audit eradicated
-- Next: PROJ-186 - Exception Handling Polish
+- PROJ-186 Phase 1 Complete:
+  - battle_controller.py: 2 sites → ErrorCode.STATE_FROZEN.value
+  - projectile.py: 3 sites → ErrorCode.OUT_OF_RANGE.value (V004, semantically correct for value validation)
+  - modifier_effects.py: 4 sites → ErrorCode F001-F004
+  - game_session.py: 3 sites → ErrorCode P001/P002/P003
+  - Updated 7 test assertions in test_projectile.py (V003→V004)
+  - Grep verified: no string codes remain in game/
+- Next: Phase 2 - Fix Stale Docstrings
 
 ---
 
@@ -164,8 +167,8 @@
 
 ---
 
-- [ ] **PROJ-186: Exception Handling Polish - ErrorCode Consistency and Final Cleanup**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-186: Exception Handling Polish - ErrorCode Consistency and Final Cleanup**
+  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-186/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-186/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -259,6 +262,7 @@
 | 2026-02-24 | PROJ-185 | Phase 3 | Complete | 12366 passed, 1 skipped | pending | Removed O(n) fallback, updated 16 integration tests |
 | 2026-02-24 | PROJ-185 | Phase 4 | Complete | 12366 passed, 1 skipped | pending | Removed single-select shim, updated facade properties |
 | 2026-02-24 | PROJ-185 | Audit 1 | PASSED | 12366 passed, 1 skipped | pending | Fixed 2 misleading comments |
+| 2026-02-24 | PROJ-186 | Phase 1 | Complete | 12366 passed, 1 skipped | pending | Converted 12 string codes to ErrorCode enums in 4 files |
 
 ---
 

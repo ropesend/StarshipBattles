@@ -13,16 +13,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Replace String Codes with ErrorCode Enums | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Replace String Codes with ErrorCode Enums | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Fix Stale Docstrings | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Fix Exception Chaining and Re-raise | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Fix Error Code Semantics | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-24 15:00
-**Active Phase:** Plan Approved - Ready for Implementation
-**Last Action:** User approved plan
-**Next Action:** Begin Phase 1 - Replace String Codes with ErrorCode Enums
+**Last Updated:** 2026-02-24
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete - all 12 string codes replaced with ErrorCode enums
+**Next Action:** Phase 2 - Fix Stale Docstrings
 **Blockers:** None
 **Baseline:** 12,366 passed, 1 skipped, 0 failures
 
@@ -83,7 +83,7 @@ PROJ-170/PROJ-177 successfully migrated exception handling to domain-specific ex
 
 ### Phase 1: Replace String Codes with ErrorCode Enums [Simple]
 **Objective:** Convert all 12 hard-coded string error codes to `ErrorCode.<ENUM>.value` references.
-**Status:** Not Started
+**Status:** Complete
 
 #### Task 1.1: Fix battle_controller.py string codes [Simple]
 **File:** `game/simulation/battle_controller.py`

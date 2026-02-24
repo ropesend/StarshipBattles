@@ -257,7 +257,7 @@ class BattleController:
         if not self._is_started:
             raise StateException(
                 "Battle not started - call start() first",
-                code="S001",
+                code=ErrorCode.STATE_FROZEN.value,
                 context={"operation": "run_headless"}
             )
 
@@ -443,7 +443,7 @@ class BattleController:
         if not self._is_started:
             raise StateException(
                 "Cannot save state - battle not started",
-                code="S001",
+                code=ErrorCode.STATE_FROZEN.value,
                 context={"operation": "save_state"}
             )
 

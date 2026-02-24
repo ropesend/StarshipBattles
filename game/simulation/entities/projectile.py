@@ -7,6 +7,7 @@ from game.core.constants import AttackType
 logger = logging.getLogger(__name__)
 from game.core.config import PhysicsConfig
 from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 # Guidance system constants
 # When the target is within this angle of 180° (directly behind), commit to turn direction
@@ -29,20 +30,20 @@ class Projectile(PhysicsBody):
         if damage is None or damage < 0:
             raise ValidationException(
                 f"Invalid projectile damage: {damage}",
-                code="V003",
+                code=ErrorCode.OUT_OF_RANGE.value,
                 context={"damage": damage, "owner": str(owner)}
             )
         if range_val is None or range_val <= 0:
             raise ValidationException(
                 f"Invalid projectile range: {range_val}",
-                code="V003",
+                code=ErrorCode.OUT_OF_RANGE.value,
                 context={"range": range_val, "owner": str(owner)}
             )
         # Note: endurance can be None for range-limited projectiles (non-seeking)
         if endurance is not None and endurance <= 0:
             raise ValidationException(
                 f"Invalid projectile endurance: {endurance}",
-                code="V003",
+                code=ErrorCode.OUT_OF_RANGE.value,
                 context={"endurance": endurance, "owner": str(owner)}
             )
 
