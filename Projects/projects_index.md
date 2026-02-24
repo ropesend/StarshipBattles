@@ -4,6 +4,13 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-183 | PROJ-175 Post-Refactor Cleanup - Logging Pattern Completion | Planning | 2026-02-24 | 2026-02-24 |
+| PROJ-182 | PROJ-176 Post-Refactor Cleanup | Planning | 2026-02-24 | 2026-02-24 |
+| PROJ-181 | PROJ-174 Completion - Eradicate Deprecated Registry API | Planning | 2026-02-24 | 2026-02-24 |
+| PROJ-180 | PROJ-172 Post-Refactor Cleanup | Planning | 2026-02-24 | 2026-02-24 |
+| PROJ-179 | PROJ-173 Post-Refactor Cleanup | Planning | 2026-02-24 | 2026-02-24 |
+| PROJ-178 | PROJ-171 Audit Remediation - Validation Consistency | Planning | 2026-02-24 | 2026-02-24 |
+| PROJ-177 | Exception Handling Cleanup | Planning | 2026-02-24 | 2026-02-24 |
 | PROJ-176 | Missing Abstractions & Duplication Elimination | Planning | 2026-02-23 | 2026-02-23 |
 | PROJ-175 | Logger & JSON Loading Pattern Standardization | Planning | 2026-02-23 | 2026-02-23 |
 | PROJ-174 | Registry Access Consolidation - Complete DI Migration | Planning | 2026-02-23 | 2026-02-23 |

@@ -92,6 +92,62 @@
 
 ---
 
+- [ ] **PROJ-177: Exception Handling Cleanup**
+  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-177/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-177/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-178: PROJ-171 Audit Remediation - Validation Consistency**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-178/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-178/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-179: PROJ-173 Post-Refactor Cleanup**
+  - **Phases:** 2 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-179/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-179/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-180: PROJ-172 Post-Refactor Cleanup**
+  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-180/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-180/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-181: PROJ-174 Completion - Eradicate Deprecated Registry API**
+  - **Phases:** 6 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-181/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-181/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-182: PROJ-176 Post-Refactor Cleanup**
+  - **Phases:** 1 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-182/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-182/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-183: PROJ-175 Post-Refactor Cleanup - Logging Pattern Completion**
+  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-183/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-183/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
 ## Execution Log
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
