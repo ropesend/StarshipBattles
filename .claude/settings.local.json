@@ -40,7 +40,8 @@
       "Read(//c/Dev/Starship Battles/**)",
       "Bash(claude:*)",
       "Bash(radon cc:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(git ls-files:*)"
     ],
     "additionalDirectories": []
   }

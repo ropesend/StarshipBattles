@@ -13,6 +13,9 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 ## Active Reviews
 | Date | Type | Description | Status | Link |
 |------|------|-------------|--------|------|
+| 2026-02-23 | Consistency Review | logger-json-pattern-standardization | Led to Project | [2026-02-23_195305_consistency_logger-json-pattern-standardization](results/2026-02-23_195305_consistency_logger-json-pattern-standardization/) |
+| 2026-02-23 | Technical Debt Review | missing-abstractions-duplication-elimination | Completed | [2026-02-23_194404_tech-debt_missing-abstractions-duplication-elimination](results/2026-02-23_194404_tech-debt_missing-abstractions-duplication-elimination/) |
+| 2026-02-23 | Technical Debt Review | protocol-gap-hasattr-migration | In Progress | [2026-02-23_193625_tech-debt_protocol-gap-hasattr-migration](results/2026-02-23_193625_tech-debt_protocol-gap-hasattr-migration/) |
 | 2026-02-23 | Focused Question Review | registry-consolidation-migration | In Progress | [2026-02-23_185804_focused_registry-consolidation-migration](results/2026-02-23_185804_focused_registry-consolidation-migration/) |
 | 2026-02-23 | Technical Debt Review | god-class-decomposition-planning | In Progress | [2026-02-23_182728_tech-debt_god-class-decomposition-planning](results/2026-02-23_182728_tech-debt_god-class-decomposition-planning/) |
 | 2026-02-23 | Focused Question Review | exception-handling-migration-audit | In Progress | [2026-02-23_180421_focused_exception-handling-migration-audit](results/2026-02-23_180421_focused_exception-handling-migration-audit/) |
@@ -80,6 +83,7 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 | 2026-02-10_sweep_full-codebase-sweep | PROJ-109 | Legacy Cleanup (48 findings) |
 | 2026-02-10_sweep_full-codebase-sweep | PROJ-110 | Test Coverage - Core Systems (54 findings) |
 | 2026-02-10_sweep_full-codebase-sweep | PROJ-111 | Test Coverage - UI & Framework (41 findings) |
+| 2026-02-23_195305_consistency_logger-json-pattern-standardization | PROJ-175 | Logger & JSON Pattern Standardization (15 findings) |
 
 ---
 

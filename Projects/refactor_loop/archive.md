@@ -611,3 +611,59 @@ Projects archived from the master refactor plan after user acceptance.
   - **Dependencies:** None
 
 ---
+
+- [x] **PROJ-161: Per-Tick Harvesting and Maintenance**
+  - **Phases:** 5 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-161/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-161/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-162: Extract CargoTransferService from UI Dialogs**
+  - **Phases:** 4 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-162/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-162/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-164: Extract Ability._parse_primary_value() Base Class Helper**
+  - **Phases:** 3 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-164/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-164/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-165: Create `create_section_header()` UI Helper**
+  - **Phases:** 4 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-165/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-165/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-166: Make RaceThemeGallery Extend BaseGallery**
+  - **Phases:** 3 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-166/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-166/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-167: Centralize UI Color Palette Constants**
+  - **Phases:** 5 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-167/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-167/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-168: Extract Hex-to-Cartesian Conversion Helper**
+  - **Phases:** 3 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-168/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-168/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---

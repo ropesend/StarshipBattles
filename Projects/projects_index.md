@@ -4,23 +4,27 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-176 | Missing Abstractions & Duplication Elimination | Planning | 2026-02-23 | 2026-02-23 |
+| PROJ-175 | Logger & JSON Loading Pattern Standardization | Planning | 2026-02-23 | 2026-02-23 |
+| PROJ-174 | Registry Access Consolidation - Complete DI Migration | Planning | 2026-02-23 | 2026-02-23 |
+| PROJ-173 | God Class Decomposition - Domain & Simulation Layer | Planning | 2026-02-23 | 2026-02-23 |
 | PROJ-172 | God Class Decomposition - MVVM Wave 1 (Re-Offenders + Quick Wins) | Planning | 2026-02-23 | 2026-02-23 |
 | PROJ-171 | Deserialization Input Validation | Planning | 2026-02-23 | 2026-02-23 |
 | PROJ-170 | Exception Handling Migration - Full Adoption of PROJ-45 Infrastructure | Planning | 2026-02-23 | 2026-02-23 |
 | PROJ-169 | Dead Code and Orphaned File Cleanup | Planning | 2026-02-23 | 2026-02-23 |
-| PROJ-168 | Extract Hex-to-Cartesian Conversion Helper | Planning | 2026-02-23 | 2026-02-23 |
-| PROJ-167 | Centralize UI Color Palette Constants | Planning | 2026-02-23 | 2026-02-23 |
-| PROJ-166 | Make RaceThemeGallery Extend BaseGallery | Planning | 2026-02-23 | 2026-02-23 |
-| PROJ-165 | Create `create_section_header()` UI Helper | Planning | 2026-02-23 | 2026-02-23 |
-| PROJ-164 | Extract Ability._parse_primary_value() Base Class Helper | Planning | 2026-02-23 | 2026-02-23 |
-| PROJ-163 | Move Automation Loops to Projects Directory | Planning | 2026-02-23 | 2026-02-23 |
-| PROJ-162 | Extract CargoTransferService from UI Dialogs | Planning | 2026-02-23 | 2026-02-23 |
-| PROJ-161 | Per-Tick Harvesting and Maintenance | Planning | 2026-02-23 | 2026-02-23 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-163 | Move Automation Loops to Projects Directory | Archived | 2026-02-23 | 2026-02-23 |
+| PROJ-168 | Extract Hex-to-Cartesian Conversion Helper | Archived | 2026-02-23 | 2026-02-23 |
+| PROJ-167 | Centralize UI Color Palette Constants | Archived | 2026-02-23 | 2026-02-23 |
+| PROJ-166 | Make RaceThemeGallery Extend BaseGallery | Archived | 2026-02-23 | 2026-02-23 |
+| PROJ-165 | Create `create_section_header()` UI Helper | Archived | 2026-02-23 | 2026-02-23 |
+| PROJ-164 | Extract Ability._parse_primary_value() Base Class Helper | Archived | 2026-02-23 | 2026-02-23 |
+| PROJ-162 | Extract CargoTransferService from UI Dialogs | Archived | 2026-02-23 | 2026-02-23 |
+| PROJ-161 | Per-Tick Harvesting and Maintenance | Archived | 2026-02-23 | 2026-02-23 |
 | PROJ-160 | Add Galaxy.get_planet_global_hex Method | Archived | 2026-02-22 | 2026-02-23 |
 | PROJ-159 | Rewrite Transfer Validator Tests as Integration Tests | Archived | 2026-02-22 | 2026-02-23 |
 | PROJ-153 | test_coverage_ui_builder | Archived | 2026-02-14 | 2026-02-23 |

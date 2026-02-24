@@ -9,17 +9,18 @@
 
 **Last Session:** 2026-02-23
 **Last Completed:** PROJ-168 COMPLETE — Phase 3 verified, Audit 1 passed
-**Current Status:** All projects in Master Task List complete
-**Current Project:** None — awaiting new projects
-**Current Phase:** N/A
+**Current Status:** 8 new projects queued
+**Current Project:** PROJ-169 (next to execute)
+**Current Phase:** Not Started
 **Test Status:** 12023 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-168 fully complete: hex_axial_to_cartesian() extracted, 5 call sites migrated
-- Audit verified remaining dq/dr patterns are hex-distance formula (different pattern, out of scope)
-- Full test suite verified: 12023 passed
-- Next: Add new projects to Master Task List or refactor loop complete
+- 8 projects added to Master Task List (PROJ-169 through PROJ-176)
+- Execution order optimized for dependency flow: cleanup → infrastructure → structural decomposition
+- PROJ-171 has soft dependency on PROJ-170 (exception patterns)
+- PROJ-174 shares 14+ files with PROJ-170/176 — scheduled before both to avoid double-touching
+- Begin with PROJ-169 (dead code cleanup — reduces codebase by ~4,200 lines)
 
 ---
 
@@ -27,46 +28,66 @@
 
 > **Note:** Each checkbox represents an entire project. Phase details are in the project's plan.md file.
 
-- [x] **PROJ-161: Per-Tick Harvesting and Maintenance**
-  - **Phases:** 5 | **Status:** COMPLETE | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-161/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-161/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
+- [ ] **PROJ-169: Dead Code and Orphaned File Cleanup**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-169/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-169/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
 
-- [x] **PROJ-162: Extract CargoTransferService from UI Dialogs**
-  - **Phases:** 4 | **Status:** COMPLETE | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-162/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-162/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
+---
+
+- [ ] **PROJ-175: Logger & JSON Loading Pattern Standardization**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-175/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-175/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
 
-- [x] **PROJ-164: Extract Ability._parse_primary_value() Base Class Helper**
-  - **Phases:** 3 | **Status:** COMPLETE | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-164/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-164/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
+---
+
+- [ ] **PROJ-174: Registry Access Consolidation - Complete DI Migration**
+  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-174/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-174/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
 
-- [x] **PROJ-165: Create `create_section_header()` UI Helper**
-  - **Phases:** 4 | **Status:** COMPLETE | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-165/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-165/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
+---
+
+- [ ] **PROJ-170: Exception Handling Migration — Full Adoption of PROJ-45 Infrastructure**
+  - **Phases:** 7 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-170/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-170/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
 
-- [x] **PROJ-166: Make RaceThemeGallery Extend BaseGallery**
-  - **Phases:** 3 | **Status:** COMPLETE | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-166/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-166/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
+---
+
+- [ ] **PROJ-171: Deserialization Input Validation**
+  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-171/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-171/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** PROJ-170 (soft — exception patterns)
+
+---
+
+- [ ] **PROJ-176: Missing Abstractions & Duplication Elimination**
+  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-176/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-176/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
 
-- [x] **PROJ-167: Centralize UI Color Palette Constants**
-  - **Phases:** 5 | **Status:** COMPLETE | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-167/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-167/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
+---
+
+- [ ] **PROJ-172: God Class Decomposition - MVVM Wave 1**
+  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-172/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-172/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
 
-- [x] **PROJ-168: Extract Hex-to-Cartesian Conversion Helper**
-  - **Phases:** 3 | **Status:** COMPLETE | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-168/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-168/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
+---
+
+- [ ] **PROJ-173: God Class Decomposition - Domain & Strategy Layer**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-173/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-173/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
 
 ---
@@ -75,47 +96,6 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
-| 2026-02-23 | PROJ-161 | Phase 1 | Complete | 32 pass | a0cf5ee5 | HarvestingEngine per-tick conversion |
-| 2026-02-23 | PROJ-161 | Phase 2 | Complete | 83 pass | ca97511d | MaintenanceEngine per-tick conversion |
-| 2026-02-23 | PROJ-161 | Phase 3 | Complete | 340 pass | 6d92147f | TurnEngine wiring, _apply_partial_harvest removal |
-| 2026-02-23 | PROJ-161 | Phase 4 | Complete | 11959 pass | 45d4ebff | Test updates for per-tick behavior |
-| 2026-02-23 | PROJ-161 | Phase 5 | Complete | 11958 pass | dc07673d | Cleanup & Legacy Removal |
-| 2026-02-23 | PROJ-161 | Audit 1 | PASSED | 80 pass | - | No issues found |
-| 2026-02-23 | PROJ-161 | Close | COMPLETE | - | - | Project marked complete |
-| 2026-02-23 | PROJ-162 | Phase 1 | Complete | 22 pass | pending | CargoTransferService created |
-| 2026-02-23 | PROJ-162 | Phase 2 | Complete | 19 pass | pending | Dialogs refactored to use service |
-| 2026-02-23 | PROJ-162 | Phase 3 | Complete | 106 pass | pending | Mock setup fixes for test files |
-| 2026-02-23 | PROJ-162 | Phase 4 | Complete | 11993 pass | pending | Cleanup & verification, fixed missing __init__.py |
-| 2026-02-23 | PROJ-162 | Audit 1 | PASSED | 11993 pass | - | No issues found |
-| 2026-02-23 | PROJ-162 | Close | COMPLETE | - | - | Project marked complete |
-| 2026-02-23 | PROJ-164 | Phase 1 | Complete | 102 pass | pending | _parse_primary_value helper + tests |
-| 2026-02-23 | PROJ-164 | Phase 2 | Complete | 604 pass | pending | Migrated 10 __init__ + 3 sync_data callers |
-| 2026-02-23 | PROJ-164 | Phase 3 | Complete | 12006 pass | pending | Full verification, duplication eliminated |
-| 2026-02-23 | PROJ-164 | Audit 1 | PASSED | 171 pass | - | No issues found |
-| 2026-02-23 | PROJ-164 | Close | COMPLETE | - | - | Project marked complete |
-| 2026-02-23 | PROJ-165 | Phase 1 | Complete | 2826 UI pass | pending | Helper + 9 tests added |
-| 2026-02-23 | PROJ-165 | Phase 2 | Complete | 2826 UI pass | pending | Migrated 18 race panel sites |
-| 2026-02-23 | PROJ-165 | Phase 3 | Complete | 2826 UI pass | pending | Migrated 6 empire panel sites |
-| 2026-02-23 | PROJ-165 | Phase 4 | Complete | 12015 pass | pending | Final verification passed |
-| 2026-02-23 | PROJ-165 | Audit 1 | PASSED | 12015 pass | - | No issues found |
-| 2026-02-23 | PROJ-165 | Close | COMPLETE | - | - | Project marked complete |
-| 2026-02-23 | PROJ-166 | Phase 1 | Complete | 12015 pass | pending | 2-tuple normalization complete |
-| 2026-02-23 | PROJ-166 | Phase 2 | Complete | 12016 pass | pending | RaceThemeGallery extends BaseGallery |
-| 2026-02-23 | PROJ-166 | Phase 3 | Complete | 12016 pass | pending | Final verification |
-| 2026-02-23 | PROJ-166 | Audit 1 | PASSED | 12016 pass | - | No issues found |
-| 2026-02-23 | PROJ-166 | Close | COMPLETE | - | - | Project marked complete |
-| 2026-02-23 | PROJ-167 | Phase 1 | Complete | 577 pass | pending | ui_colors.py created with 22 constants |
-| 2026-02-23 | PROJ-167 | Phase 2 | Complete | 12016 pass | pending | Migrated 11 ability files + detail_panel.py |
-| 2026-02-23 | PROJ-167 | Phase 3 | Complete | 336 pass | pending | Updated 8 test files to use constants |
-| 2026-02-23 | PROJ-167 | Phase 4 | Complete | 12016 pass | pending | 50+ UI color constants, 12 files migrated |
-| 2026-02-23 | PROJ-167 | Phase 5 | Complete | 12016 pass | pending | Verification & cleanup, detail_panel.py fix |
-| 2026-02-23 | PROJ-167 | Audit 1 | PASSED | 12016 pass | - | No issues found |
-| 2026-02-23 | PROJ-167 | Close | COMPLETE | - | - | Project marked complete |
-| 2026-02-23 | PROJ-168 | Phase 1 | Complete | 75 pass | pending | hex_axial_to_cartesian() + 7 tests |
-| 2026-02-23 | PROJ-168 | Phase 2 | Complete | 223 pass | pending | Updated 5 call sites |
-| 2026-02-23 | PROJ-168 | Phase 3 | Complete | 12023 pass | pending | Full verification passed |
-| 2026-02-23 | PROJ-168 | Audit 1 | PASSED | 12023 pass | - | No issues found |
-| 2026-02-23 | PROJ-168 | Close | COMPLETE | - | - | Project marked complete |
 
 ---
 
