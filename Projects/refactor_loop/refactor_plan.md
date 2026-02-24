@@ -8,24 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-181 Phase 5 Complete
-**Current Status:** PROJ-181 in progress, Phase 6 next
+**Last Completed:** PROJ-181 Phase 6 Complete
+**Current Status:** PROJ-181 all phases complete, audit ready
 **Current Project:** PROJ-181
-**Current Phase:** Phase 6
+**Current Phase:** Audit
 **Test Status:** 12373 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-181 Phase 5 COMPLETE:
-  - Updated docs/guides/component_system.md (lines 134-140) with correct provider pattern
-  - Updated docs/architecture/PATTERNS.md:
-    - Added "Access Pattern" column to Singletons table
-    - Added new "Registry Access Pattern" subsection with code example
-    - Clarified RegistryManager.instance() is internal-only for composition roots
-    - Added point 5 to Usage Guidelines about provider pattern
-    - Updated Testing Singletons example with registry_provider fixture note
-  - Verified no stale `get_default_registries` or `game.core.registries` references in docs
-- Next: PROJ-181 Phase 6 - Full Verification
+- PROJ-181 Phase 6 COMPLETE:
+  - Grep verification passed (all hits in comments/deprecation tests)
+  - Full test suite: 12373 passed, 1 skipped
+  - Simulation tests: 62 passed, 5 pre-existing failures, 4 skipped
+  - Discovered and fixed bug: test_framework/runner.py line 101 was using old AIControllerFactory(grid) API
+  - Fixed to use no-arg constructor (BattleEngine calls set_grid automatically)
+- All 6 phases complete, ready for audit
 
 ---
 
@@ -130,9 +127,9 @@
 ---
 
 - [/] **PROJ-181: PROJ-174 Completion - Eradicate Deprecated Registry API**
-  - **Phases:** 6 | **Status:** Phase 5 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** All Phases Complete - Audit Ready | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-181/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-181/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** Pending | **Cycles:** 0/5
   - **Dependencies:** None
 
 ---
@@ -224,6 +221,7 @@
 | 2026-02-24 | PROJ-181 | Phase 3 | Complete | 12373 passed, 1 skipped | pending | Removed redundant .clear() from 9 test files |
 | 2026-02-24 | PROJ-181 | Phase 4 | Complete | 12373 passed, 1 skipped | pending | Removed redundant .clear() from 15 test files |
 | 2026-02-24 | PROJ-181 | Phase 5 | Complete | 12373 passed, 1 skipped | pending | Documentation updates: component_system.md + PATTERNS.md |
+| 2026-02-24 | PROJ-181 | Phase 6 | Complete | 12373 passed, 1 skipped | pending | Full verification + runner.py bug fix |
 
 ---
 

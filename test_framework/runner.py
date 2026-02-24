@@ -96,9 +96,9 @@ class TestRunner:
         # 2. Setup Engine
         from game.simulation.systems.battle_engine import BattleLogger
         battle_logger = BattleLogger(enabled=True)
-        self.engine = BattleEngine(logger=battle_logger)  # Fresh engine with logging
-        # Inject ai_factory to support legacy scenarios (PROJ-106)
-        self.engine._ai_factory = AIControllerFactory(self.engine.grid)
+        # PROJ-126: Create AI factory, then inject into engine (engine calls set_grid automatically)
+        ai_factory = AIControllerFactory()
+        self.engine = BattleEngine(logger=battle_logger, ai_factory=ai_factory)
 
         # 3. Scenario Setup
         scenario.setup(self.engine)
