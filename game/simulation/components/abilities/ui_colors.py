@@ -1,29 +1,19 @@
-# Phase 1: Create Ability Color Hint Constants
+"""Centralized color constants for ability UI display hints (PROJ-167).
 
-> **BEFORE MARKING THIS PHASE COMPLETE:**
-> 1. Run `python Projects/scripts/validate_phase.py PROJ-167 1`
-> 2. Only proceed if output shows PASSED
-> 3. Update plan.md phase table AND Current State
+These hex color strings are used in ability get_ui_rows() methods to provide
+semantic color hints for UI rendering. The UI layer uses these hints to colorize
+ability information in component detail panels.
 
-**Status:** Complete
-**Objective:** Create `game/simulation/components/abilities/ui_colors.py` with all 25 named constants for ability display hints
+Color categories:
+- Weapons & Offense: Red/orange/yellow tones for damage-related values
+- Defense & Shields: Cyan/blue tones for protective capabilities
+- Propulsion: Green/blue tones for movement values
+- Crew & Support: Pale green/cyan for crew-related values
+- Cargo & Resources: Gold/green for storage and production
+- Special: Distinct colors for superweapons and requirements
+- Neutral/Default: Gray/white fallbacks
+"""
 
----
-
-## Tasks
-
-### Task 1.1: Create ui_colors.py [Simple]
-**File:** `game/simulation/components/abilities/ui_colors.py` (NEW)
-**Tests:** `pytest tests/unit/simulation/components/abilities/ -q` (should pass unchanged — no code using constants yet)
-
-- [x] Create new file `game/simulation/components/abilities/ui_colors.py`
-- [x] Add module docstring: `"""Centralized color constants for ability UI display hints (PROJ-167)."""`
-- [x] Define all 25 constants (hex strings) — see constant list below
-- [x] Add `__all__` export list with all constant names
-- [x] Verify: file imports cleanly with `python -c "from game.simulation.components.abilities.ui_colors import *"`
-
-**Constants to define:**
-```python
 # Weapons & Offense
 HINT_DAMAGE = '#FF6464'           # Red — damage values, targeting offense
 HINT_RANGE = '#FFA500'            # Orange — weapon range, fuel consumption
@@ -59,28 +49,36 @@ HINT_REQUIREMENT = '#FFCC66'      # Tan/light orange — requires C&C, requires 
 # Neutral / Default
 HINT_NEUTRAL = '#C8C8C8'          # Light gray — hangar, cycle time, fallback
 HINT_DEFAULT = '#FFFFFF'          # White — max tonnage, default resource types
-```
 
-**Notes:**
 
----
-
-### Task 1.2: Add to __init__.py exports (if applicable) [Simple]
-**File:** `game/simulation/components/abilities/__init__.py`
-**Tests:** No test changes needed
-
-- [x] Check if `__init__.py` re-exports submodules — if it uses explicit `__all__`, add `'ui_colors'`
-- [x] If `__init__.py` does NOT re-export submodules, skip this task (constants will be imported directly)
-- [x] Verify: no import errors in existing tests
-
-**Notes:**
-
----
-
-## Phase Completion Checklist
-When all tasks above are done:
-- [x] All task checkboxes above are checked
-- [x] `pytest tests/ --testmon -q` passes with no failures
-- [x] Update status at top of this file to `Complete`
-- [x] Update plan.md phase table row to `Complete`
-- [x] Update plan.md Current State to point to Phase 2
+__all__ = [
+    # Weapons & Offense
+    'HINT_DAMAGE',
+    'HINT_RANGE',
+    'HINT_RELOAD',
+    'HINT_PROJECTILE_SPEED',
+    'HINT_ACCURACY',
+    # Defense & Shields
+    'HINT_SHIELD_CAP',
+    'HINT_SHIELD_REGEN',
+    'HINT_EVASION',
+    # Propulsion
+    'HINT_THRUST',
+    'HINT_TURN_SPEED',
+    'HINT_STRATEGIC_MOBILITY',
+    'HINT_WARP_ENERGY',
+    # Crew & Support
+    'HINT_CREW_CAP',
+    'HINT_LIFE_SUPPORT',
+    'HINT_CREW_REQ',
+    # Cargo & Resources
+    'HINT_CARGO_PASSENGER',
+    'HINT_CARGO_GENERIC',
+    'HINT_COLONIZE',
+    # Special
+    'HINT_SUPERWEAPON',
+    'HINT_REQUIREMENT',
+    # Neutral / Default
+    'HINT_NEUTRAL',
+    'HINT_DEFAULT',
+]

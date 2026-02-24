@@ -13,19 +13,19 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Ability Color Hint Constants | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Ability Color Hint Constants | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Ability Files Migration | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Test Assertions Update | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. UI Layer Color Consolidation | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Verification & Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-23 17:40
-**Active Phase:** Planning
-**Last Action:** Plan finalized, awaiting user approval
-**Next Action:** Begin Phase 1 — create ui_colors.py
+**Last Updated:** 2026-02-23
+**Active Phase:** Phase 1 Complete
+**Last Action:** Created ui_colors.py with 22 named color constants
+**Next Action:** Begin Phase 2 — migrate ability files to use constants
 **Blockers:** None
-**Baseline:** 11,994 passed, 1 skipped
+**Baseline:** 12,016 passed, 1 skipped
 
 ## Overview
 Centralize all hardcoded color values across the codebase into named constants. This eliminates 51+ inline hex color strings in ability files and 200+ inline RGB tuples in UI panels/renderers. Two central files respect the layer boundary: ability hint colors in the simulation layer, UI rendering colors in the UI layer.

@@ -121,8 +121,13 @@ def create_ability(name: str, component, data: Any) -> Optional[Ability]:
     return None
 
 
+# Color constants for UI hints
+from . import ui_colors
+
 # Export all public names
 __all__ = [
+    # Color constants module
+    'ui_colors',
     # Base
     'Ability',
     # Colonization
