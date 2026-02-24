@@ -12,6 +12,7 @@ from datetime import datetime
 import os
 import warnings
 from game.core.json_utils import load_json_required, save_json
+from game.core.validation_helpers import require_keys
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +64,11 @@ class DesignMetadata:
 
         Required fields: design_id, name
         Optional fields: all others with sensible defaults
+
+        Raises:
+            PersistenceException: If required keys are missing
         """
+        require_keys(data, ['design_id', 'name'], 'DesignMetadata')
         return cls(
             design_id=data["design_id"],
             name=data["name"],

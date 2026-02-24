@@ -17,8 +17,11 @@ import uuid
 
 import logging
 from game.core.constants import LayerType
-from game.core.exceptions import ValidationException
+from game.core.exceptions import ValidationException, PersistenceException
 from game.core.error_codes import ErrorCode
+from game.core.validation_helpers import (
+    require_keys, validate_non_negative, validate_positive
+)
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +56,25 @@ class ComponentState:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ComponentState':
+        """Deserialize ComponentState from a dictionary.
+
+        Args:
+            data: Dictionary containing component state data
+
+        Returns:
+            ComponentState instance
+
+        Raises:
+            PersistenceException: If required keys are missing or values are invalid
+        """
+        require_keys(
+            data,
+            ['component_id', 'current_hp', 'max_hp', 'is_active', 'layer'],
+            'ComponentState'
+        )
+        validate_non_negative(data['current_hp'], 'current_hp', 'ComponentState')
+        validate_positive(data['max_hp'], 'max_hp', 'ComponentState')
+
         return cls(
             component_id=data['component_id'],
             current_hp=data['current_hp'],
@@ -149,9 +171,78 @@ class ShipState:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ShipState':
+        """Deserialize ShipState from a dictionary.
+
+        Args:
+            data: Dictionary containing ship state data
+
+        Returns:
+            ShipState instance
+
+        Raises:
+            PersistenceException: If required keys are missing or values are invalid
+        """
+        require_keys(
+            data,
+            ['ship_id', 'name', 'ship_class', 'theme_id', 'team_id', 'color',
+             'ai_strategy', 'position', 'velocity', 'angle', 'current_hp',
+             'max_hp', 'current_shields', 'max_shields'],
+            'ShipState'
+        )
+
+        # Validate color format (must be list/tuple with at least 3 elements)
+        color = data['color']
+        if not isinstance(color, (list, tuple)) or len(color) < 3:
+            raise PersistenceException(
+                f"ShipState: color must be a list/tuple with at least 3 elements, got {type(color).__name__}",
+                code=ErrorCode.CORRUPT_DATA.value,
+                context={
+                    "source": "ShipState",
+                    "field": "color",
+                    "value": str(color)[:100],
+                    "expected": "list or tuple with >= 3 elements"
+                }
+            )
+
+        # Validate position format
+        position = data['position']
+        if not isinstance(position, (list, tuple)) or len(position) < 2:
+            raise PersistenceException(
+                f"ShipState: position must be a list/tuple with at least 2 elements, got {type(position).__name__}",
+                code=ErrorCode.CORRUPT_DATA.value,
+                context={
+                    "source": "ShipState",
+                    "field": "position",
+                    "value": str(position)[:100],
+                    "expected": "list or tuple with >= 2 elements"
+                }
+            )
+
+        # Validate velocity format
+        velocity = data['velocity']
+        if not isinstance(velocity, (list, tuple)) or len(velocity) < 2:
+            raise PersistenceException(
+                f"ShipState: velocity must be a list/tuple with at least 2 elements, got {type(velocity).__name__}",
+                code=ErrorCode.CORRUPT_DATA.value,
+                context={
+                    "source": "ShipState",
+                    "field": "velocity",
+                    "value": str(velocity)[:100],
+                    "expected": "list or tuple with >= 2 elements"
+                }
+            )
+
+        # Deserialize components with resilient error handling
         components = {}
         for layer, comps in data.get('components', {}).items():
-            components[layer] = [ComponentState.from_dict(c) for c in comps]
+            components[layer] = []
+            for i, c in enumerate(comps):
+                try:
+                    components[layer].append(ComponentState.from_dict(c))
+                except (PersistenceException, KeyError, TypeError) as e:
+                    logger.warning(
+                        f"ShipState: skipping corrupt component at {layer}[{i}]: {e}"
+                    )
 
         return cls(
             ship_id=data['ship_id'],
@@ -159,10 +250,10 @@ class ShipState:
             ship_class=data['ship_class'],
             theme_id=data['theme_id'],
             team_id=data['team_id'],
-            color=tuple(data['color']),
+            color=tuple(color),
             ai_strategy=data['ai_strategy'],
-            position=tuple(data['position']),
-            velocity=tuple(data['velocity']),
+            position=tuple(position),
+            velocity=tuple(velocity),
             angle=data['angle'],
             current_hp=data['current_hp'],
             max_hp=data['max_hp'],

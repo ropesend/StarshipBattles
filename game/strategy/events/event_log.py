@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Union
 
 from game.strategy.events.event_types import EventCategory
+from game.core.validation_helpers import require_keys
 
 
 @dataclass
@@ -39,7 +40,22 @@ class Event:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Event':
-        """Reconstruct an Event from a serialized dictionary."""
+        """Reconstruct an Event from a serialized dictionary.
+
+        Args:
+            data: Dictionary containing event data
+
+        Returns:
+            Event instance
+
+        Raises:
+            PersistenceException: If required keys are missing
+        """
+        require_keys(
+            data,
+            ['event_type', 'category', 'turn', 'empire_id', 'message'],
+            'Event'
+        )
         return cls(
             event_type=data["event_type"],
             category=data["category"],
