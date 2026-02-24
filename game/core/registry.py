@@ -1,35 +1,35 @@
 """
-Registry Access Patterns
-========================
+Registry Access
+===============
 
-TIER 1 - Domain Services (Computed Access):
-    from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
-    stats = ShipStatsCalculator.calculate_ship_stats(design)
+Dependency Injection [RECOMMENDED]:
+    from game.core.registry import get_default_registry_provider
 
-TIER 2 - Dependency Injection (PROJ-27) [RECOMMENDED]:
-    from game.core.registry import get_default_registry_provider, TestRegistryProvider
-
-    # Production code - uses the shared singleton-backed provider
+    # Production - uses the shared singleton-backed provider
     provider = get_default_registry_provider()
     components = provider.get_components()
 
-    # Test code - uses isolated data
+    # Or receive via constructor (best):
+    def __init__(self, registry: IRegistryProvider):
+        self._registry = registry
+
+    # Test - uses isolated data
+    from game.core.registry import TestRegistryProvider
     provider = TestRegistryProvider(
-        components={"test_laser": {"id": "test_laser"}},
-        modifiers={}
+        components={"test_laser": {...}},
+        modifiers={},
+        resources={}
     )
-    service.calculate_stats(design, registry=provider)
 
-TIER 3 - Direct Singleton Access (for internal/low-level code):
-    # Use sparingly - prefer DI for better testability
-    RegistryManager.instance().components
-
+Lifecycle (composition roots only):
+    from game.core.registry import freeze_registry, clear_registry
+    freeze_registry()   # After initialization
+    clear_registry()    # Test cleanup
 """
 
 __all__ = [
     # Core containers
     'GameRegistries',
-    'RegistryManager',
     # DI providers (PROJ-27)
     'DefaultRegistryProvider',
     'TestRegistryProvider',
