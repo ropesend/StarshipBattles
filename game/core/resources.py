@@ -1,7 +1,7 @@
 """
 Resource Registry Loading
 
-Loads resource type definitions from data/resources.json into the RegistryManager.
+Loads resource type definitions from data/resources.json.
 
 Exceptions:
     FileNotFoundError: File not found (handled with fallback to defaults)
@@ -14,7 +14,6 @@ import json
 import logging
 import os
 from typing import Optional
-from game.core.registry import RegistryManager
 from game.core.json_utils import load_json_required
 from game.core.constants import ResourceType
 
