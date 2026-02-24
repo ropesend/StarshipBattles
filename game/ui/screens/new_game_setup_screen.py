@@ -23,6 +23,8 @@ logger = logging.getLogger(__name__)
 from game.core.paths import Paths
 from game.strategy.engine.game_config import GameConfig, PlayerConfig, THEME_DEFAULTS, VALID_GALAXY_TYPES
 from game.strategy.systems.race_library import RaceLibrary
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
@@ -578,10 +580,14 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             Configured GameConfig
 
         Raises:
-            ValueError: If player_count is invalid
+            ValidationException: If player_count is invalid
         """
         if player_count < 1 or player_count > 4:
-            raise ValueError(f"Invalid player count: {player_count} (must be 1-4)")
+            raise ValidationException(
+                f"Invalid player count: {player_count}",
+                code=ErrorCode.OUT_OF_RANGE.value,
+                context={"player_count": player_count, "valid_range": "1-4"}
+            )
 
         players = []
         for i in range(player_count):

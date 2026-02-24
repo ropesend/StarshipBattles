@@ -15,6 +15,8 @@ import pygame
 import pygame_gui
 
 from game.core.json_utils import load_json, save_json
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 import logging
 
 logger = logging.getLogger(__name__)
@@ -220,13 +222,17 @@ class FormationCore:
                     # PROJ-42 Phase 4: Removed legacy list format support
                     # Arrows must be dict format: {"pos": [x, y], "rotation_mode": "..."}
                     if not isinstance(item, dict):
-                        raise ValueError(f"Arrow must be dict format, got {type(item).__name__}")
+                        raise ValidationException(
+                            f"Arrow must be dict format, got {type(item).__name__}",
+                            code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                            context={"expected_type": "dict", "actual_type": type(item).__name__}
+                        )
                     self.arrows.append(item.get('pos', [0, 0]))
                     self.arrow_attrs.append({'rotation_mode': item.get('rotation_mode', 'relative')})
 
                 self.selected_indices = set()
                 logger.info(f"Formation loaded from {filename} ({len(self.arrows)} arrows)")
-        except (KeyError, ValueError) as e:
+        except (KeyError, ValueError, ValidationException) as e:
             logger.error(f"Invalid formation data in {filename}: {e}")
 
 class FormationEditorScreen:

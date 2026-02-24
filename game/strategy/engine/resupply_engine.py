@@ -19,6 +19,8 @@ import logging
 
 from game.core.constants import ResourceType
 from game.core.registry import GameRegistries
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 logger = logging.getLogger(__name__)
 from game.strategy.interfaces.engines import IResupplyEngine
@@ -60,10 +62,14 @@ class ResupplyEngine(IResupplyEngine):
             registries: GameRegistries container. Required - no fallback.
 
         Raises:
-            TypeError: If registries is None.
+            ValidationException: If registries is None.
         """
         if registries is None:
-            raise TypeError("registries is required for ResupplyEngine")
+            raise ValidationException(
+                "registries is required for ResupplyEngine",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "ResupplyEngine", "parameter": "registries"}
+            )
         self._registries = registries
 
     def process_fuel_generation(self, tick: int, empires) -> List[ResupplyEvent]:

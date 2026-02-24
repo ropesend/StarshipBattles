@@ -10,6 +10,7 @@ from unittest.mock import MagicMock
 
 from game.strategy.data.planet import PlanetaryFacility
 from game.strategy.engine.resupply_engine import ResupplyEngine, ResupplyEvent
+from game.core.exceptions import ValidationException
 
 
 # ===========================================================================
@@ -107,8 +108,8 @@ class TestResupplyEngineDI:
     """ResupplyEngine must enforce strict dependency injection."""
 
     def test_engine_requires_registries_strict_di(self):
-        """ResupplyEngine must raise TypeError if registries is None."""
-        with pytest.raises(TypeError):
+        """ResupplyEngine must raise ValidationException if registries is None."""
+        with pytest.raises(ValidationException):
             ResupplyEngine(registries=None)
 
     def test_engine_accepts_valid_registries(self):

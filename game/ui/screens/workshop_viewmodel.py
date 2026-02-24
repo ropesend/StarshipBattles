@@ -15,6 +15,8 @@ from typing import List, Tuple, Optional, TYPE_CHECKING
 
 from game.simulation.services.vehicle_design_service import VehicleDesignService
 from game.ui.screens.builder_utils import BuilderEvents
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 import logging
 
@@ -58,7 +60,7 @@ class WorkshopViewModel:
             context: WorkshopContext with registries for DI (required for proper operation)
 
         Raises:
-            ValueError: If context is None or context.registries is None
+            ValidationException: If context is None or context.registries is None
         """
         self.event_bus = event_bus
         self.screen_width = screen_width
@@ -66,9 +68,10 @@ class WorkshopViewModel:
 
         # PROJ-40: Require registries via context (no fallback)
         if context is None or context.registries is None:
-            raise ValueError(
-                "WorkshopViewModel requires a WorkshopContext with registries. "
-                "Pass context=WorkshopContext(mode=..., registries=...) to constructor."
+            raise ValidationException(
+                "WorkshopViewModel requires registries in context",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "WorkshopViewModel", "missing": "context.registries"}
             )
         self._registries: GameRegistries = context.registries
 
@@ -325,7 +328,7 @@ class WorkshopViewModel:
         PROJ-40: Removed fallback to direct Ship creation - service must succeed.
 
         Raises:
-            RuntimeError: If service fails to create ship
+            ValidationException: If service fails to create ship
         """
         result = self._ship_service.create_ship(
             name="Custom Ship",
@@ -341,9 +344,13 @@ class WorkshopViewModel:
             return result.ship
         else:
             # PROJ-40: No fallback - fail fast with clear error
-            error_msg = f"Service failed to create ship: {result.errors}"
+            error_msg = f"Failed to create ship: {result.errors}"
             logger.error(error_msg)
-            raise RuntimeError(error_msg)
+            raise ValidationException(
+                error_msg,
+                code=ErrorCode.VALIDATION_FAILED.value,
+                context={"operation": "create_ship", "errors": result.errors}
+            )
 
     def add_component(self, component_id: str, layer: LayerType) -> bool:
         """

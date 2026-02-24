@@ -15,6 +15,8 @@ from typing import List, Optional, TYPE_CHECKING
 import logging
 
 from game.core.registry import GameRegistries
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 logger = logging.getLogger(__name__)
 from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
@@ -50,10 +52,14 @@ class ResourceManagementEngine:
             registries: GameRegistries container. Required - no fallback.
 
         Raises:
-            TypeError: If registries is None.
+            ValidationException: If registries is None.
         """
         if registries is None:
-            raise TypeError("registries is required for ResourceManagementEngine")
+            raise ValidationException(
+                "registries is required for ResourceManagementEngine",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "ResourceManagementEngine", "parameter": "registries"}
+            )
         self._registries = registries
 
     def process_per_turn_consumption(self, tick: int, empires) -> List[ResourceDepletion]:

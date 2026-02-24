@@ -16,6 +16,8 @@ The service encapsulates:
 from typing import Any, Dict, List, Optional, Tuple
 
 from game.core.protocols import IRegistryProvider
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 
 class VehicleClassService:
@@ -41,10 +43,14 @@ class VehicleClassService:
                 PROJ-50: This parameter is now required (strict DI).
 
         Raises:
-            ValueError: If registry_provider is None.
+            ValidationException: If registry_provider is None.
         """
         if registry_provider is None:
-            raise ValueError("registry_provider is required (PROJ-50: strict DI)")
+            raise ValidationException(
+                "registry_provider is required",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"service": "VehicleClassService", "parameter": "registry_provider"}
+            )
         self._provider = registry_provider
 
     def _get_provider(self) -> IRegistryProvider:

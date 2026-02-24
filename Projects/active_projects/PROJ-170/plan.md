@@ -16,16 +16,16 @@
 | 1. Infrastructure — Error Codes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Strategy Loaders | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Simulation Core | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Game Config + UI | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Game Config + UI | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Caller Catch Updates | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Exception Chaining Fixes | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Catch Quality Cleanup | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-23
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete - Migrated 27 raises in 16 simulation files + ~50 tests
-**Next Action:** Begin Phase 4 - Game Config + UI Migration
+**Active Phase:** Phase 5
+**Last Action:** Phase 4 complete - Migrated 15 raises in 10 files (game_config, build_queue, vehicle_class, workshop_viewmodel, new_game_setup, formation_editor, asset_manager, resource_management, resupply, ship_stats) + 8 test files
+**Next Action:** Begin Phase 5 - Caller Catch Updates
 **Blockers:** None
 **Baseline:** 11,972 passed, 1 skipped, 0 failures
 

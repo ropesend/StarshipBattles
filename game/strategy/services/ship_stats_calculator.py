@@ -21,6 +21,8 @@ import logging
 from typing import Dict, Any, Optional, List, Tuple, TYPE_CHECKING
 from game.core.constants import ResourceType
 from game.core.registry import GameRegistries
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 logger = logging.getLogger(__name__)
 
@@ -66,10 +68,14 @@ class ShipStatsCalculator:
                        vehicle_classes. Required - no fallback.
 
         Raises:
-            TypeError: If registries is None.
+            ValidationException: If registries is None.
         """
         if registries is None:
-            raise TypeError("registries is required for ShipStatsCalculator")
+            raise ValidationException(
+                "registries is required for ShipStatsCalculator",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "ShipStatsCalculator", "parameter": "registries"}
+            )
         self._registries = registries
 
     def calculate_stats(

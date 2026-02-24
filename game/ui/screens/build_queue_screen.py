@@ -17,6 +17,8 @@ from game.ui.config import UIConfig
 from game.core.constants import PLANET_RESOURCES
 from game.core.input_actions import InputAction
 from game.ui.services.screenshot_manager import ScreenshotManager
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 logger = logging.getLogger(__name__)
 from game.ui.panels.planet_report_panel import PlanetReportPanel, compute_planet_production
@@ -76,11 +78,23 @@ class BuildQueueScreen:
         """
         # Validate required parameters
         if hex_coord is None:
-            raise ValueError("BuildQueueScreen requires hex_coord parameter")
+            raise ValidationException(
+                "BuildQueueScreen requires hex_coord parameter",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"screen": "BuildQueueScreen", "missing_param": "hex_coord"}
+            )
         if galaxy is None:
-            raise ValueError("BuildQueueScreen requires galaxy parameter")
+            raise ValidationException(
+                "BuildQueueScreen requires galaxy parameter",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"screen": "BuildQueueScreen", "missing_param": "galaxy"}
+            )
         if empire is None:
-            raise ValueError("BuildQueueScreen requires empire parameter")
+            raise ValidationException(
+                "BuildQueueScreen requires empire parameter",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"screen": "BuildQueueScreen", "missing_param": "empire"}
+            )
         self.manager = manager
         self.build_context = build_context
         self.session = session
@@ -108,7 +122,11 @@ class BuildQueueScreen:
 
         # Validate required attributes
         if not hasattr(build_context, 'owner_id'):
-            raise ValueError(f"BuildQueueScreen: build_context '{getattr(build_context, 'name', 'unknown')}' missing required 'owner_id' attribute")
+            raise ValidationException(
+                f"build_context '{getattr(build_context, 'name', 'unknown')}' missing required 'owner_id' attribute",
+                code=ErrorCode.INVALID_STATE.value,
+                context={"screen": "BuildQueueScreen", "missing_attr": "owner_id", "context_name": getattr(build_context, 'name', 'unknown')}
+            )
         if not hasattr(build_context, 'name'):
             logger.warning("BuildQueueScreen: build_context missing 'name' attribute")
 

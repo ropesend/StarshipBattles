@@ -3,6 +3,8 @@ import os
 import pygame
 from game.core.json_utils import load_json
 from game.core.paths import Paths
+from game.core.exceptions import ResourceException
+from game.core.error_codes import ErrorCode
 
 logger = logging.getLogger(__name__)
 from game.core.singleton import SingletonMeta
@@ -185,7 +187,7 @@ class AssetManager(metaclass=SingletonMeta):
             Full path to the resolution-specific folder
 
         Raises:
-            ValueError: If size is not a valid resolution
+            ResourceException: If size is not a valid resolution
         """
         size_to_path = {
             128: Paths.PLANETS_V3_128_DIR,
@@ -196,7 +198,11 @@ class AssetManager(metaclass=SingletonMeta):
         }
 
         if size not in size_to_path:
-            raise ValueError(f"Invalid planet image size: {size}. Must be one of {list(size_to_path.keys())}")
+            raise ResourceException(
+                f"Invalid planet image size: {size}",
+                code=ErrorCode.INVALID_FORMAT.value,
+                context={"requested_size": size, "valid_sizes": list(size_to_path.keys())}
+            )
 
         return size_to_path[size]
 

@@ -8,6 +8,8 @@ import os
 from unittest.mock import MagicMock, patch
 import re
 
+from game.core.exceptions import ValidationException
+
 
 class TestNewGameSetupValidation:
     """Tests for save name validation logic."""
@@ -212,14 +214,14 @@ class TestNewGameSetupPlayerCount:
         """Building config with invalid player count raises error."""
         from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidationException):
             NewGameSetupScreen.build_game_config(
                 save_name="Test",
                 player_count=5,  # Invalid
                 empire_names=["E1", "E2", "E3", "E4", "E5"]
             )
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidationException):
             NewGameSetupScreen.build_game_config(
                 save_name="Test",
                 player_count=0,  # Invalid

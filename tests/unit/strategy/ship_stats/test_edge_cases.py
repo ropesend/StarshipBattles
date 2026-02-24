@@ -14,6 +14,7 @@ Tests cover:
 import pytest
 from unittest.mock import MagicMock, PropertyMock
 
+from game.core.exceptions import ValidationException
 from .conftest import create_mock_registries, MockComponent, make_design_data
 
 
@@ -21,10 +22,10 @@ class TestConstructorValidation:
     """Tests for constructor parameter validation."""
 
     def test_registries_required(self):
-        """Should raise TypeError if registries is None."""
+        """Should raise ValidationException if registries is None."""
         from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
-        with pytest.raises(TypeError, match="registries is required"):
+        with pytest.raises(ValidationException, match="registries is required"):
             ShipStatsCalculator(registries=None)
 
     def test_valid_registries_accepted(self):

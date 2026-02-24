@@ -8,34 +8,27 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-170 Phase 3 - Simulation Core Migration
-**Current Status:** PROJ-170 Phase 3 Complete
+**Last Completed:** PROJ-170 Phase 4 - Game Config + UI Migration
+**Current Status:** PROJ-170 Phase 4 Complete
 **Current Project:** PROJ-170
-**Current Phase:** Phase 4
+**Current Phase:** Phase 5
 **Test Status:** 11972 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-170 Phase 3 complete - Migrated 27 raises in 16 simulation files
-- battle_engine.py: 3 ValueError → ValidationException
-- battle_state_manager.py: 1 RuntimeError → StateException, 1 ValueError → ValidationException
-- abilities/base.py: 2 ValueError → ValidationException
-- stat_keys.py: 1 ValueError → ValidationException
-- battle_mode_handler.py: 1 ValueError → ValidationException
-- ship_serialization.py: 1 TypeError + 1 ValueError → ValidationException
-- ship_loader.py: 1 RuntimeError → MissingResourceException
-- ship.py: 1 TypeError → ValidationException
-- component.py: 3 TypeError → ValidationException
-- battle_state.py: 1 TypeError → ValidationException
-- ship_validator.py: 2 TypeError → ValidationException
-- design_loader.py: 1 TypeError → ValidationException
-- vehicle_design_service.py: 1 TypeError → ValidationException
-- modifier_service.py: 1 TypeError → ValidationException
-- ai_factory.py: 1 RuntimeError → StateException
-- density_map.py: 4 ValueError → ValidationException
-- Updated battle_controller.py to catch ValidationException
-- Updated ~50 tests across simulation/abilities/strategy directories
-- Next: Phase 4 - Game Config + UI Migration (12 raises in 7 files)
+- PROJ-170 Phase 4 complete - Migrated 15 raises in 10 files
+- game_config.py: 3 ValueError → ValidationException
+- build_queue_screen.py: 4 ValueError → ValidationException
+- vehicle_class_service.py: 1 ValueError → ValidationException
+- workshop_viewmodel.py: 1 ValueError + 1 RuntimeError → ValidationException
+- new_game_setup_screen.py: 1 ValueError → ValidationException
+- formation_editor.py: 1 ValueError → ValidationException + updated except clause
+- asset_manager.py: 1 ValueError → ResourceException
+- resource_management_engine.py: 1 TypeError → ValidationException
+- resupply_engine.py: 1 TypeError → ValidationException
+- ship_stats_calculator.py: 1 TypeError → ValidationException
+- Updated 8 test files (test_game_config, test_new_game_setup, test_vehicle_class_service, test_asset_manager_resolutions, test_initialization, test_resupply_engine, test_edge_cases, test_service_injection)
+- Next: Phase 5 - Caller Catch Updates (36 except blocks in 12 files)
 
 ---
 
@@ -130,6 +123,7 @@
 | 2026-02-23 | PROJ-170 | Phase 1 | Complete | 11972 passed, 1 skipped | pending | Added 3 error codes (V002, V003, C003), updated guidelines |
 | 2026-02-23 | PROJ-170 | Phase 2 | Complete | 11972 passed, 1 skipped | pending | Migrated 24 ValueError in 3 strategy loader files |
 | 2026-02-23 | PROJ-170 | Phase 3 | Complete | 11972 passed, 1 skipped | pending | Migrated 27 raises in 16 simulation files + ~50 tests |
+| 2026-02-23 | PROJ-170 | Phase 4 | Complete | 11972 passed, 1 skipped | pending | Migrated 15 raises in 10 files + 8 test files |
 
 ---
 
