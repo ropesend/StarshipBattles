@@ -72,6 +72,10 @@ class IRegistryProvider(Protocol):
         """Get the vehicle classes dictionary."""
         ...
 
+    def get_resources(self) -> Dict[str, Any]:
+        """Get the resources registry dictionary."""
+        ...
+
 
 # =============================================================================
 # Base Protocols (Composable)

@@ -13,19 +13,19 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Complete IRegistryProvider Protocol | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Complete IRegistryProvider Protocol | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Internalize RegistryManager | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate TIER 2 Production Code | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate TIER 3 Non-Root Code | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Update Test Mocks & Deprecate | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-23 19:40
-**Active Phase:** Planning
-**Last Action:** Project created from review `2026-02-23_185804_focused_registry-consolidation-migration`
-**Next Action:** Await user approval, then begin Phase 1
+**Last Updated:** 2026-02-23
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete - added get_resources() to IRegistryProvider, DefaultRegistryProvider, and TestRegistryProvider
+**Next Action:** Begin Phase 2 - Internalize RegistryManager
 **Blockers:** None
-**Context for Next Agent:** Baseline is 12,023 passed, 1 skipped. Review report has full inventory of all call sites. This project completes the DI migration started in PROJ-27/38/50/58.
+**Context for Next Agent:** Tests: 11972 passed, 1 skipped (+4 new tests). IRegistryProvider protocol now has 4 methods (get_components, get_modifiers, get_vehicle_classes, get_resources). Both provider implementations updated.
 
 ## Overview
 Consolidate all registry access onto the single canonical IRegistryProvider DI pattern. The codebase currently has three access tiers: TIER 3 (direct singleton `RegistryManager.instance()`), TIER 2 (service locator `get_default_registries()`), and TIER 1 (DI provider `get_default_registry_provider()`). This project eliminates TIER 2 and TIER 3 from all non-composition-root code, completing the migration to DI that began in PROJ-27.

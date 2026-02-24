@@ -41,6 +41,8 @@ class TestIRegistryProviderProtocol:
                 return {}
             def get_vehicle_classes(self) -> Dict[str, Any]:
                 return {}
+            def get_resources(self) -> Dict[str, Any]:
+                return {}
 
         # This should work without error if protocol is runtime_checkable
         assert isinstance(MockProvider(), IRegistryProvider)
@@ -298,3 +300,68 @@ class TestGetDefaultRegistryProvider:
 
         provider = get_default_registry_provider()
         assert isinstance(provider, IRegistryProvider)
+
+
+# =============================================================================
+# Test: get_resources() Method (PROJ-174)
+# =============================================================================
+
+class TestGetResourcesMethod:
+    """Tests for get_resources() method on provider implementations."""
+
+    @pytest.fixture(autouse=True)
+    def reset_registry(self):
+        """Reset registry state before and after each test."""
+        from game.core.registry import RegistryManager
+        RegistryManager.reset()
+        yield
+        RegistryManager.reset()
+
+    def test_default_provider_get_resources_returns_registry_data(self):
+        """DefaultRegistryProvider.get_resources() should return RegistryManager.instance().resources."""
+        from game.core.registry import DefaultRegistryProvider, RegistryManager
+
+        # Add data to singleton resources
+        RegistryManager.instance().resources["fuel"] = {"id": "fuel", "max": 100}
+
+        provider = DefaultRegistryProvider()
+        result = provider.get_resources()
+
+        assert "fuel" in result
+        assert result is RegistryManager.instance().resources
+
+    def test_test_provider_get_resources_returns_custom_data(self):
+        """TestRegistryProvider(resources=...).get_resources() should return custom data."""
+        from game.core.registry import TestRegistryProvider
+
+        custom_resources = {"foo": "bar", "energy": {"id": "energy"}}
+        provider = TestRegistryProvider(resources=custom_resources)
+
+        result = provider.get_resources()
+
+        assert result == custom_resources
+        assert result["foo"] == "bar"
+
+    def test_test_provider_get_resources_defaults_to_empty(self):
+        """TestRegistryProvider().get_resources() should return empty dict by default."""
+        from game.core.registry import TestRegistryProvider
+
+        provider = TestRegistryProvider()
+        result = provider.get_resources()
+
+        assert result == {}
+
+    def test_protocol_requires_get_resources(self):
+        """IRegistryProvider should require get_resources() method."""
+        from game.core.protocols import IRegistryProvider
+
+        # A class missing get_resources should not satisfy the protocol
+        class IncompleteProvider:
+            def get_components(self) -> Dict[str, Any]:
+                return {}
+            def get_modifiers(self) -> Dict[str, Any]:
+                return {}
+            def get_vehicle_classes(self) -> Dict[str, Any]:
+                return {}
+
+        assert not isinstance(IncompleteProvider(), IRegistryProvider)

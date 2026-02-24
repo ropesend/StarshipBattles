@@ -328,6 +328,10 @@ class DefaultRegistryProvider:
         """Get the vehicle classes dictionary from singleton."""
         return RegistryManager.instance().vehicle_classes
 
+    def get_resources(self) -> Dict[str, Any]:
+        """Get the resources registry dictionary from singleton."""
+        return RegistryManager.instance().resources
+
 
 class TestRegistryProvider:
     """
@@ -349,7 +353,8 @@ class TestRegistryProvider:
         self,
         components: Optional[Dict[str, Any]] = None,
         modifiers: Optional[Dict[str, Any]] = None,
-        vehicle_classes: Optional[Dict[str, Any]] = None
+        vehicle_classes: Optional[Dict[str, Any]] = None,
+        resources: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize with optional custom data.
@@ -358,10 +363,12 @@ class TestRegistryProvider:
             components: Custom component definitions (default: empty dict)
             modifiers: Custom modifier definitions (default: empty dict)
             vehicle_classes: Custom vehicle class definitions (default: empty dict)
+            resources: Custom resource definitions (default: empty dict)
         """
         self._components = components if components is not None else {}
         self._modifiers = modifiers if modifiers is not None else {}
         self._vehicle_classes = vehicle_classes if vehicle_classes is not None else {}
+        self._resources = resources if resources is not None else {}
 
     def get_components(self) -> Dict[str, Any]:
         """Get the isolated component registry dictionary."""
@@ -374,6 +381,10 @@ class TestRegistryProvider:
     def get_vehicle_classes(self) -> Dict[str, Any]:
         """Get the isolated vehicle classes dictionary."""
         return self._vehicle_classes
+
+    def get_resources(self) -> Dict[str, Any]:
+        """Get the isolated resources registry dictionary."""
+        return self._resources
 
 
 # Singleton instance of DefaultRegistryProvider
