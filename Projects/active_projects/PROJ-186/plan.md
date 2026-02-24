@@ -16,13 +16,13 @@
 | 1. Replace String Codes with ErrorCode Enums | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Fix Stale Docstrings | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Fix Exception Chaining and Re-raise | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Fix Error Code Semantics | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Fix Error Code Semantics | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete - Added `from e` to ship_loader.py, fixed `raise e` to `raise` in app.py
-**Next Action:** Phase 4 - Fix Error Code Semantics
+**Active Phase:** All phases complete - Ready for Audit
+**Last Action:** Phase 4 complete - Fixed 5 error code semantics (3 in battle_engine, 1 in battle_state_manager, 1 in build_queue_screen)
+**Next Action:** Audit
 **Blockers:** None
 **Baseline:** 12,366 passed, 1 skipped, 0 failures
 

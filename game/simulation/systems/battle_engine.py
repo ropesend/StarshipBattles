@@ -270,7 +270,7 @@ class BattleEngine:
         else:
             raise ValidationException(
                 "BattleEngine requires AI configuration",
-                code=ErrorCode.NOT_INITIALIZED.value,
+                code=ErrorCode.MISSING_DEPENDENCY.value,
                 context={"missing": "ai_controllers and ai_factory", "operation": "start"}
             )
 
@@ -322,7 +322,7 @@ class BattleEngine:
         else:
             raise ValidationException(
                 "BattleEngine requires AI configuration",
-                code=ErrorCode.NOT_INITIALIZED.value,
+                code=ErrorCode.MISSING_DEPENDENCY.value,
                 context={"missing": "ai_controller and ai_factory", "operation": "add_ship_mid_battle"}
             )
 
@@ -470,7 +470,7 @@ class BattleEngine:
                 else:
                     raise ValidationException(
                         "BattleEngine requires AI configuration",
-                        code=ErrorCode.NOT_INITIALIZED.value,
+                        code=ErrorCode.MISSING_DEPENDENCY.value,
                         context={"missing": "ai_factory", "operation": "fighter_launch"}
                     )
 

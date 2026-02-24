@@ -177,7 +177,7 @@ class BuildQueueScreen:
         if not hasattr(build_context, 'owner_id'):
             raise ValidationException(
                 f"build_context '{getattr(build_context, 'name', 'unknown')}' missing 'owner_id' attribute",
-                code=ErrorCode.INVALID_STATE.value,
+                code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
                 context={"screen": "BuildQueueScreen", "missing_attr": "owner_id"}
             )
         if not hasattr(build_context, 'name'):

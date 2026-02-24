@@ -84,7 +84,7 @@ class BattleStateManager:
         except ValueError as e:
             raise ValidationException(
                 f"Invalid battle mode in state: {state.mode}",
-                code=ErrorCode.INVALID_STATE.value,
+                code=ErrorCode.VALIDATION_FAILED.value,
                 context={"mode_value": state.mode}
             ) from e
 
