@@ -84,8 +84,7 @@ class ShipFactory:
             A new Ship instance created from the design data.
 
         Raises:
-            KeyError: If required fields are missing from design_data.
-            ValueError: If component or modifier IDs are invalid.
+            ValidationException: If required fields are missing or component/modifier IDs are invalid.
         """
         from game.simulation.entities.ship import Ship
         return Ship.from_dict(design_data, registries=self._get_registries(registry_provider))

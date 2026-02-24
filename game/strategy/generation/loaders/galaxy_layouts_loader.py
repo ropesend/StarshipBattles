@@ -45,7 +45,7 @@ class GalaxyLayoutsLoader:
         Raises:
             FileNotFoundError: If file doesn't exist
             json.JSONDecodeError: If file is invalid JSON
-            ValueError: If required 'layouts' key is missing
+            ResourceException: If required 'layouts' key is missing
         """
         if file_path is None:
             file_path = GalaxyLayoutsLoader.DEFAULT_PATH
@@ -75,7 +75,7 @@ class GalaxyLayoutsLoader:
             Configuration dict for the specified layout
 
         Raises:
-            ValueError: If layout_type is not found
+            ValidationException: If layout_type is not found
         """
         layouts = layouts_data.get('layouts', {})
         if layout_type not in layouts:

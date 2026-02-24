@@ -780,7 +780,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             components, modifiers, and metadata.
 
         Raises:
-            TypeError: If component data cannot be serialized to JSON-compatible types.
+            ValidationException: If component data cannot be serialized to JSON-compatible types.
         """
         return ShipSerializer.to_dict(self)
 
@@ -804,9 +804,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             Reconstructed Ship instance with all components and stats.
 
         Raises:
-            KeyError: If required fields (name, ship_class, color) are missing.
-            TypeError: If data types are invalid or incompatible.
-            ValueError: If component or modifier IDs are invalid.
+            ValidationException: If required fields are missing, data types are invalid,
+                or component/modifier IDs are invalid.
         """
         return ShipSerializer.from_dict(data, registries=registries)
 

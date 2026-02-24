@@ -334,7 +334,7 @@ class ShipState:
             Ship instance with the stored state applied.
 
         Raises:
-            TypeError: If registries is None
+            ValidationException: If registries is None
 
         Note: This creates a new Ship with the stored state applied.
         Component damage and resource levels are restored.

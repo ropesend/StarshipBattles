@@ -8,18 +8,18 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-177 Phase 1 - Remove Redundant Generic Exceptions
+**Last Completed:** PROJ-177 Phase 2 - Fix Stale Docstrings
 **Current Status:** PROJ-177 in progress
 **Current Project:** PROJ-177
-**Current Phase:** Phase 2
+**Current Phase:** Phase 3
 **Test Status:** 12338 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-177 Phase 1 COMPLETE - Removed redundant generics from 9 except blocks in 7 files
-- Files modified: ship_io.py, battle_controller.py, save_game_service.py, race_library.py, design_library.py, formation_editor.py, battle_service.py
-- Updated 3 tests to use ValidationException instead of generic exceptions
-- Next: Phase 2 - Fix stale docstrings in 8 files
+- PROJ-177 Phase 2 COMPLETE - Updated 12 docstrings across 8 files to reference domain exceptions
+- Files modified: system_blueprints_loader.py, astrophysics_loader.py, galaxy_layouts_loader.py, battle_state.py, base.py, battle_mode_handler.py, ship.py, ship_factory.py
+- Docstrings now correctly reference ValidationException, ResourceException, PersistenceException
+- Next: Phase 3 - Migrate remaining builtin raises (4 sites)
 
 ---
 
@@ -198,6 +198,7 @@
 | 2026-02-24 | PROJ-173 | Phase 4 | Complete | 12338 passed, 1 skipped | pending | StrategyScreen: 827→538 lines, 2 new files (build_queue/game_state managers), +33 tests |
 | 2026-02-24 | PROJ-173 | Audit 1 | PASSED | 12338 passed, 1 skipped | pending | All 4 phases verified, no significant issues |
 | 2026-02-24 | PROJ-177 | Phase 1 | Complete | 12338 passed, 1 skipped | pending | Removed generics from 9 except blocks, 7 files, 3 tests updated |
+| 2026-02-24 | PROJ-177 | Phase 2 | Complete | 12338 passed, 1 skipped | pending | Fixed 12 stale docstrings across 8 files |
 
 ---
 

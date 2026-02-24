@@ -85,7 +85,7 @@ class Ability:
             AbilityScope value
 
         Raises:
-            ValueError: If requested scope is not in allowed_scopes
+            ValidationException: If requested scope is not in allowed_scopes
         """
         if not isinstance(data, dict):
             return self.default_scope

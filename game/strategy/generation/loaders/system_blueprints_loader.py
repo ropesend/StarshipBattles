@@ -42,7 +42,7 @@ class SystemBlueprintsLoader:
         Raises:
             FileNotFoundError: If file doesn't exist.
             json.JSONDecodeError: If file isn't valid JSON.
-            ValueError: If schema validation fails.
+            ValidationException: If schema validation fails.
         """
         data = load_json_required(str(self.file_path))
         self._validate_schema(data)
@@ -118,7 +118,7 @@ class SystemBlueprintsLoader:
             data: Loaded JSON data.
 
         Raises:
-            ValueError: If schema is invalid.
+            ValidationException: If schema is invalid.
         """
         if not isinstance(data, dict):
             raise ValidationException(
@@ -154,7 +154,7 @@ class SystemBlueprintsLoader:
             bp: Blueprint configuration.
 
         Raises:
-            ValueError: If blueprint is invalid.
+            ValidationException: If blueprint is invalid.
         """
         # Required fields
         if "star_count" not in bp:

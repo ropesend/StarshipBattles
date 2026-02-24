@@ -276,7 +276,7 @@ def get_handler_for_mode(mode: BattleMode) -> BattleModeHandler:
         The appropriate BattleModeHandler instance
 
     Raises:
-        ValueError: If mode is not recognized
+        ValidationException: If mode is not recognized
     """
     handlers = {
         BattleMode.MANUAL: ManualBattleModeHandler,
