@@ -14,17 +14,17 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Zero-Risk Deletes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Script & Tool Cleanup | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Script & Tool Cleanup | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Formation Editor Migration | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Polish | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-23
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete - deleted 15 files (10 legacy scripts + 5 formatimg.py), verified __pycache__ already untracked
-**Next Action:** Begin Phase 2 - Script & Tool Cleanup
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete - deleted 9 Tools/ files, 13 scripts/ files, and 2 planet_qc directories
+**Next Action:** Begin Phase 3 - Formation Editor Migration
 **Blockers:** None
-**Context for Next Agent:** Phase 1 removed legacy migration scripts from docs/_legacy_docs/Tools/ and duplicate formatimg.py from assets/. All tests passing (12023 passed, 1 skipped).
+**Context for Next Agent:** Phase 2 deleted dead Tools/ files (9), dead scripts/ files (13), and planet_qc/planet_qc_v2 directories. Kept Tools/formation_editor.py and Tools/README.md for Phase 3. All tests passing (12023 passed, 1 skipped).
 
 ## Overview
 Remove ~4,288 lines of confirmed dead Python code across 54 files, untrack 22.8MB of __pycache__ from git, consolidate a duplicate formation_editor.py, clean up 14 unused imports, and fix directory structure issues. All deletions verified for zero runtime dependencies.

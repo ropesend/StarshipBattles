@@ -8,17 +8,17 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-169 Phase 1 - Zero-Risk Deletes
-**Current Status:** PROJ-169 in progress (Phase 1 of 4 complete)
+**Last Completed:** PROJ-169 Phase 2 - Script & Tool Cleanup
+**Current Status:** PROJ-169 in progress (Phase 2 of 4 complete)
 **Current Project:** PROJ-169
-**Current Phase:** Phase 2 (Script & Tool Cleanup)
+**Current Phase:** Phase 3 (Formation Editor Migration)
 **Test Status:** 12023 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 1 deleted 15 files: 10 legacy migration scripts from docs/_legacy_docs/Tools/, 5 duplicate formatimg.py from assets/
-- __pycache__ already untracked in git (no action needed)
-- Next: Phase 2 - delete dead files from Tools/ and scripts/ directories
+- Phase 2 deleted 9 Tools/ files, 13 scripts/ files, and 2 planet_qc directories
+- Kept Tools/formation_editor.py and Tools/README.md for Phase 3
+- Next: Phase 3 - consolidate formation_editor.py, update imports, delete Tools/ directory
 - All tests passing
 
 ---
@@ -28,7 +28,7 @@
 > **Note:** Each checkbox represents an entire project. Phase details are in the project's plan.md file.
 
 - [/] **PROJ-169: Dead Code and Orphaned File Cleanup**
-  - **Phases:** 4 | **Status:** In Progress (Phase 1/4 Complete) | **Priority:** Medium
+  - **Phases:** 4 | **Status:** In Progress (Phase 2/4 Complete) | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-169/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-169/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -96,6 +96,7 @@
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
 | 2026-02-23 | PROJ-169 | Phase 1 | Complete | 12023 passed, 1 skipped | f40e531c | Deleted 15 dead files (legacy scripts + formatimg.py) |
+| 2026-02-23 | PROJ-169 | Phase 2 | Complete | 12023 passed, 1 skipped | 30ce645c | Deleted 24 files (9 Tools/ + 13 scripts/ + 2 dirs) |
 
 ---
 
