@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-171 Phase 2 - Galaxy Core Validation
-**Current Status:** PROJ-171 Phase 2 complete
+**Last Completed:** PROJ-171 Phase 3 - Celestial Bodies Validation
+**Current Status:** PROJ-171 Phase 3 complete
 **Current Project:** PROJ-171
-**Current Phase:** Phase 3 (next)
-**Test Status:** 12015 passed, 1 skipped
+**Current Phase:** Phase 4 (next)
+**Test Status:** 12082 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 2 complete: Added validation to WarpPoint, StarSystem, Galaxy from_dict methods
-- WarpPoint: require_keys + location validation with PersistenceException
-- StarSystem: require_keys + resilient child deserialization (skip bad children with warnings)
-- Galaxy: require_keys + validate_positive(radius) + resilient system deserialization
-- 22 new tests in tests/unit/strategy/galaxy/
-- Next: Phase 3 - Celestial Bodies validation (Star, Spectrum, Planet)
+- Phase 3 complete: Added validation to Spectrum, Star, Planet from_dict methods
+- Spectrum: require_keys for 9 bands + validate_non_negative for all
+- Star: require_keys + validate_enum(StarType) + validate_positive(mass, temp, luminosity) + safe_from_dict(Spectrum)
+- Planet: 14 required keys + validate_enum(PlanetType) + positive/non-negative checks + resilient facility/population deserialization
+- 67 new tests in tests/unit/strategy/stars/ and tests/unit/strategy/planet/
+- Next: Phase 4 - Empire & Fleet validation (ShipInstance, Fleet, Empire)
 
 ---
 
@@ -123,6 +123,7 @@
 | 2026-02-23 | PROJ-170 | Audit 1 | PASSED | 11972 passed, 1 skipped | pending | All verifications passed, project complete |
 | 2026-02-24 | PROJ-171 | Phase 1 | Complete | 11993 passed, 1 skipped | pending | Validation helpers module + 21 tests |
 | 2026-02-24 | PROJ-171 | Phase 2 | Complete | 12015 passed, 1 skipped | pending | Galaxy core validation + 22 tests |
+| 2026-02-24 | PROJ-171 | Phase 3 | Complete | 12082 passed, 1 skipped | pending | Celestial bodies validation + 67 tests |
 
 ---
 

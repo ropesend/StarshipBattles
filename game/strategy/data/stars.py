@@ -6,6 +6,9 @@ from dataclasses import dataclass, field
 from typing import Dict, Any
 from typing import FrozenSet
 from game.core.hex_math import HexCoord, hex_ring, hex_circle_filled
+from game.core.validation_helpers import (
+    require_keys, validate_enum, validate_positive, validate_non_negative, safe_from_dict
+)
 
 # Constants
 SOLAR_MASS_KG = 1.989e30
@@ -61,7 +64,27 @@ class Spectrum:
 
     @classmethod
     def from_dict(cls, data: dict) -> 'Spectrum':
-        """Deserialize Spectrum from dict."""
+        """Deserialize Spectrum from dict.
+
+        Args:
+            data: Dict with spectrum band values
+
+        Returns:
+            Spectrum instance
+
+        Raises:
+            PersistenceException: If required keys missing or values invalid
+        """
+        spectrum_keys = [
+            'gamma_ray', 'xray', 'ultraviolet', 'blue', 'green',
+            'red', 'infrared', 'microwave', 'radio'
+        ]
+        require_keys(data, spectrum_keys, 'Spectrum')
+
+        # Validate all spectrum values are non-negative
+        for key in spectrum_keys:
+            validate_non_negative(data[key], key, 'Spectrum')
+
         return cls(
             gamma_ray=data['gamma_ray'],
             xray=data['xray'],
@@ -122,19 +145,64 @@ class Star:
 
     @classmethod
     def from_dict(cls, data: dict) -> 'Star':
-        """Deserialize Star from dict."""
+        """Deserialize Star from dict.
+
+        Args:
+            data: Dict with star properties
+
+        Returns:
+            Star instance
+
+        Raises:
+            PersistenceException: If required keys missing or values invalid
+        """
         from game.core.hex_math import hex_from_dict
+        from game.core.exceptions import PersistenceException
+        from game.core.error_codes import ErrorCode
+
+        # Validate required keys
+        require_keys(data, [
+            'name', 'mass', 'diameter_hexes', 'temperature', 'luminosity',
+            'spectrum', 'star_type', 'color', 'age', 'location'
+        ], 'Star')
+
+        # Validate enum
+        star_type = validate_enum(data['star_type'], StarType, 'star_type', 'Star')
+
+        # Validate positive values
+        validate_positive(data['mass'], 'mass', 'Star')
+        validate_positive(data['temperature'], 'temperature', 'Star')
+        validate_positive(data['luminosity'], 'luminosity', 'Star')
+
+        # Wrap nested from_dict calls with context
+        spectrum = safe_from_dict(Spectrum.from_dict, data['spectrum'], 'Star.spectrum')
+
+        # Wrap hex_from_dict with context
+        try:
+            location = hex_from_dict(data['location'])
+        except (KeyError, TypeError) as e:
+            raise PersistenceException(
+                f"Star: invalid location data - {type(e).__name__}: {e}",
+                code=ErrorCode.CORRUPT_DATA.value,
+                context={
+                    "source": "Star",
+                    "field": "location",
+                    "error_type": type(e).__name__,
+                    "error": str(e),
+                }
+            ) from e
+
         return cls(
             name=data['name'],
             mass=data['mass'],
             diameter_hexes=data['diameter_hexes'],
             temperature=data['temperature'],
             luminosity=data['luminosity'],
-            spectrum=Spectrum.from_dict(data['spectrum']),
-            star_type=StarType[data['star_type']],  # String to enum
-            color=tuple(data['color']),  # List to tuple
+            spectrum=spectrum,
+            star_type=star_type,
+            color=tuple(data['color']),
             age=data['age'],
-            location=hex_from_dict(data['location'])
+            location=location
         )
 
 class StarGenerator:
