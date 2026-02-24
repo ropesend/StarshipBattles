@@ -80,13 +80,13 @@ def get_system_name(source: BuildQueueSource, galaxy: Any) -> str:
         if system:
             return str(system)
         # Try galaxy lookup
-        if galaxy and hasattr(galaxy, 'get_system_of_planet'):
+        if galaxy:
             sys_obj = galaxy.get_system_of_planet(entity)
             if sys_obj:
                 return getattr(sys_obj, 'name', '-')
     elif source.context_type == "fleet":
         location = getattr(entity, 'location', None)
-        if location and galaxy and hasattr(galaxy, 'get_system_at_hex'):
+        if location and galaxy:
             sys_obj = galaxy.get_system_at_hex(location)
             if sys_obj:
                 return getattr(sys_obj, 'name', '-')

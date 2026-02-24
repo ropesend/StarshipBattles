@@ -345,7 +345,7 @@ class EmpireBuildQueueWindow(UIWindow):
         if source.context_type == "fleet":
             return getattr(entity, 'location', None)
         if source.context_type == "planet":
-            if self.galaxy and hasattr(self.galaxy, 'get_system_of_planet'):
+            if self.galaxy:
                 system = self.galaxy.get_system_of_planet(entity)
                 if system is not None:
                     return system.global_location + entity.location

@@ -130,8 +130,6 @@ class GameSession:
 
     def _find_colony_at_fleet(self, fleet):
         """Find an empire colony at the fleet's current location (BUG-70)."""
-        if not hasattr(self.galaxy, 'get_system_of_object'):
-            return None
         for empire in self.empires:
             if any(f.id == fleet.id for f in empire.fleets):
                 system = self.galaxy.get_system_of_object(fleet)

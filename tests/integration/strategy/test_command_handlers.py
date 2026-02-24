@@ -64,6 +64,11 @@ class MockGalaxy:
         """Unregister a fleet."""
         self.fleets_by_id.pop(fleet.id, None)
 
+    def get_system_of_object(self, obj):
+        """Return the system at the object's location, or None."""
+        location = getattr(obj, 'location', None)
+        return self.systems.get(location)
+
 def test_preview_fleet_path():
     """Test that preview_fleet_path returns a path without modifying state."""
     config = GameConfig(system_count=0)
