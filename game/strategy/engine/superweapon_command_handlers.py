@@ -12,6 +12,7 @@ from typing import Any, TYPE_CHECKING
 import logging
 
 from game.core.validation import ValidationResult
+from game.strategy.engine.command_handlers import BaseCommandHandler
 
 logger = logging.getLogger(__name__)
 from game.strategy.data.fleet import FleetOrder, OrderType
@@ -26,20 +27,20 @@ if TYPE_CHECKING:
 # Direct Command Handlers
 # =============================================================================
 
-class ImplodePlanetCommandHandler:
+class ImplodePlanetCommandHandler(BaseCommandHandler):
     """Handler for IssueImplodePlanetCommand."""
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle IssueImplodePlanetCommand - creates IMPLODE_PLANET order."""
         # 1. Resolve fleet
-        fleet = session._get_fleet_by_id(cmd.fleet_id)
-        if not fleet:
-            return ValidationResult.error("Fleet not found.")
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
 
         # 2. Resolve planet
-        planet = session._get_planet_by_id(cmd.planet_id)
-        if not planet:
-            return ValidationResult.error("Planet not found.")
+        planet, error = self._resolve_planet(session, cmd.planet_id)
+        if error:
+            return error
 
         # 3. Validate
         result = SuperweaponValidator.validate_implode_planet(
@@ -55,15 +56,15 @@ class ImplodePlanetCommandHandler:
         return result
 
 
-class StellerateStarCommandHandler:
+class StellerateStarCommandHandler(BaseCommandHandler):
     """Handler for IssueStellerateStarCommand."""
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle IssueStellerateStarCommand - creates STELLERATE_STAR order."""
         # 1. Resolve fleet
-        fleet = session._get_fleet_by_id(cmd.fleet_id)
-        if not fleet:
-            return ValidationResult.error("Fleet not found.")
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
 
         # 2. Validate
         result = SuperweaponValidator.validate_stellerate_star(
@@ -79,15 +80,15 @@ class StellerateStarCommandHandler:
         return result
 
 
-class OpenWarpPointCommandHandler:
+class OpenWarpPointCommandHandler(BaseCommandHandler):
     """Handler for IssueOpenWarpPointCommand."""
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle IssueOpenWarpPointCommand - creates OPEN_WARP_POINT order."""
         # 1. Resolve fleet
-        fleet = session._get_fleet_by_id(cmd.fleet_id)
-        if not fleet:
-            return ValidationResult.error("Fleet not found.")
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
 
         # 2. Validate
         result = SuperweaponValidator.validate_open_warp_point(
@@ -107,15 +108,15 @@ class OpenWarpPointCommandHandler:
         return result
 
 
-class CloseWarpPointCommandHandler:
+class CloseWarpPointCommandHandler(BaseCommandHandler):
     """Handler for IssueCloseWarpPointCommand."""
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle IssueCloseWarpPointCommand - creates CLOSE_WARP_POINT order."""
         # 1. Resolve fleet
-        fleet = session._get_fleet_by_id(cmd.fleet_id)
-        if not fleet:
-            return ValidationResult.error("Fleet not found.")
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
 
         # 2. Validate
         result = SuperweaponValidator.validate_close_warp_point(
@@ -131,15 +132,15 @@ class CloseWarpPointCommandHandler:
         return result
 
 
-class CreateDysonSphereCommandHandler:
+class CreateDysonSphereCommandHandler(BaseCommandHandler):
     """Handler for IssueCreateDysonSphereCommand."""
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle IssueCreateDysonSphereCommand - creates CREATE_DYSON_SPHERE order."""
         # 1. Resolve fleet
-        fleet = session._get_fleet_by_id(cmd.fleet_id)
-        if not fleet:
-            return ValidationResult.error("Fleet not found.")
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
 
         # 2. Validate
         result = SuperweaponValidator.validate_create_dyson_sphere(
@@ -155,15 +156,15 @@ class CreateDysonSphereCommandHandler:
         return result
 
 
-class SelfDestructCommandHandler:
+class SelfDestructCommandHandler(BaseCommandHandler):
     """Handler for IssueSelfDestructCommand."""
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle IssueSelfDestructCommand - creates SELF_DESTRUCT order."""
         # 1. Resolve fleet
-        fleet = session._get_fleet_by_id(cmd.fleet_id)
-        if not fleet:
-            return ValidationResult.error("Fleet not found.")
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
 
         # 2. Validate
         result = SuperweaponValidator.validate_self_destruct(fleet, cmd.ship_ids)
@@ -221,20 +222,20 @@ def _setup_mission_move(session: 'GameSession', fleet, target_hex) -> Validation
     return ValidationResult.success()
 
 
-class ImplodePlanetMissionCommandHandler:
+class ImplodePlanetMissionCommandHandler(BaseCommandHandler):
     """Handler for QueueImplodePlanetMissionCommand."""
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle QueueImplodePlanetMissionCommand - queues MOVE + IMPLODE_PLANET."""
         # 1. Resolve fleet
-        fleet = session._get_fleet_by_id(cmd.fleet_id)
-        if not fleet:
-            return ValidationResult.error("Fleet not found.")
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
 
         # 2. Resolve planet
-        planet = session._get_planet_by_id(cmd.planet_id)
-        if not planet:
-            return ValidationResult.error("Planet not found.")
+        planet, error = self._resolve_planet(session, cmd.planet_id)
+        if error:
+            return error
 
         # 3. Setup move
         move_result = _setup_mission_move(session, fleet, cmd.target_hex)
@@ -249,15 +250,15 @@ class ImplodePlanetMissionCommandHandler:
         return ValidationResult.success()
 
 
-class StellerateStarMissionCommandHandler:
+class StellerateStarMissionCommandHandler(BaseCommandHandler):
     """Handler for QueueStellerateStarMissionCommand."""
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle QueueStellerateStarMissionCommand - queues MOVE + STELLERATE_STAR."""
         # 1. Resolve fleet
-        fleet = session._get_fleet_by_id(cmd.fleet_id)
-        if not fleet:
-            return ValidationResult.error("Fleet not found.")
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
 
         # 2. Setup move
         move_result = _setup_mission_move(session, fleet, cmd.target_hex)
@@ -272,15 +273,15 @@ class StellerateStarMissionCommandHandler:
         return ValidationResult.success()
 
 
-class OpenWarpPointMissionCommandHandler:
+class OpenWarpPointMissionCommandHandler(BaseCommandHandler):
     """Handler for QueueOpenWarpPointMissionCommand."""
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle QueueOpenWarpPointMissionCommand - queues MOVE + OPEN_WARP_POINT."""
         # 1. Resolve fleet
-        fleet = session._get_fleet_by_id(cmd.fleet_id)
-        if not fleet:
-            return ValidationResult.error("Fleet not found.")
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
 
         # 2. Setup move
         move_result = _setup_mission_move(session, fleet, cmd.target_hex)
@@ -299,15 +300,15 @@ class OpenWarpPointMissionCommandHandler:
         return ValidationResult.success()
 
 
-class CloseWarpPointMissionCommandHandler:
+class CloseWarpPointMissionCommandHandler(BaseCommandHandler):
     """Handler for QueueCloseWarpPointMissionCommand."""
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle QueueCloseWarpPointMissionCommand - queues MOVE + CLOSE_WARP_POINT."""
         # 1. Resolve fleet
-        fleet = session._get_fleet_by_id(cmd.fleet_id)
-        if not fleet:
-            return ValidationResult.error("Fleet not found.")
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
 
         # 2. Setup move
         move_result = _setup_mission_move(session, fleet, cmd.target_hex)
@@ -322,15 +323,15 @@ class CloseWarpPointMissionCommandHandler:
         return ValidationResult.success()
 
 
-class CreateDysonSphereMissionCommandHandler:
+class CreateDysonSphereMissionCommandHandler(BaseCommandHandler):
     """Handler for QueueCreateDysonSphereMissionCommand."""
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle QueueCreateDysonSphereMissionCommand - queues MOVE + CREATE_DYSON_SPHERE."""
         # 1. Resolve fleet
-        fleet = session._get_fleet_by_id(cmd.fleet_id)
-        if not fleet:
-            return ValidationResult.error("Fleet not found.")
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
 
         # 2. Setup move
         move_result = _setup_mission_move(session, fleet, cmd.target_hex)

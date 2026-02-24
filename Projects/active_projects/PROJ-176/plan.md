@@ -14,22 +14,23 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Quick Wins (ValidationResult + CrewRequired + Validator Primitives) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Foundation (BaseCommandHandler + UITheme) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Foundation (BaseCommandHandler + UITheme) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Simulation (SimpleMultiplierAbility + SuperweaponMarker) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 2 - Not Started
-**Last Action:** Completed Phase 1 - all ValidationResult migrations + primitives module
-**Next Action:** Start Phase 2 - BaseCommandHandler mixin
+**Active Phase:** Phase 3 - Not Started
+**Last Action:** Completed Phase 2 - BaseCommandHandler mixin with 19 handlers migrated
+**Next Action:** Start Phase 3 - SimpleMultiplierAbility base class
 **Blockers:** None
 **Context for Next Agent:**
-- Phase 1 COMPLETE: All 83+ ValidationResult call sites migrated to factory methods
-- Task 1.5: Migrated ship_validator.py, race_validator.py, strategy_session_facade.py, base.py, race_config.py
-- Task 1.6: Created primitives.py with require_fleet/planet/system_at_location + 7 tests
-- Task 1.7: SKIPPED - validators receive objects not IDs; primitives will be used in Phase 2 command handlers
-- Tests: 12153 passed, 1 skipped (+7 new tests)
-- Ready for Phase 2: BaseCommandHandler mixin with fleet/planet resolution helpers
+- Phase 2 COMPLETE: Created BaseCommandHandler mixin with _resolve_fleet and _resolve_planet
+- Task 2.1: Created BaseCommandHandler with 6 unit tests
+- Task 2.2: Migrated 8 core command handlers to BaseCommandHandler
+- Task 2.3: Migrated 11 superweapon command handlers to BaseCommandHandler
+- Task 2.4: Fixed 3 tests that needed mocks updated for new resolution pattern
+- Tests: 12159 passed, 1 skipped (+6 new tests)
+- Ready for Phase 3: SimpleMultiplierAbility base class for 7 ability classes
 
 ## Overview
 Systematic extraction of missing abstractions and elimination of code duplication across 6 clusters (of 11 investigated). Based on deep analysis by 7 review agents that produced concrete API designs with exact call site counts, type signatures, and before/after code examples.
