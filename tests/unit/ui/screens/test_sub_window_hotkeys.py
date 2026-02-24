@@ -191,8 +191,8 @@ class TestBuildQueueScreenHotkeys:
         """Delete key removes selected queue item."""
         from game.ui.screens.build_queue_screen import BuildQueueScreen
         screen = self._make_screen(mapper)
-        # Bind _handle_remove_hotkey and _get_active_queue since _handle_keydown delegates to them
-        screen._handle_remove_hotkey = BuildQueueScreen._handle_remove_hotkey.__get__(screen, BuildQueueScreen)
+        # Bind _handle_remove and _get_active_queue since _handle_keydown delegates to them
+        screen._handle_remove = BuildQueueScreen._handle_remove.__get__(screen, BuildQueueScreen)
         screen._get_active_queue = BuildQueueScreen._get_active_queue.__get__(screen, BuildQueueScreen)
         screen.selected_queue_index = 0
         screen.selected_queue_indices = set()  # Empty set for single selection mode
@@ -213,6 +213,15 @@ class TestBuildQueueScreenHotkeys:
         """Close button shows Esc tooltip."""
         from game.ui.screens.build_queue_screen import BuildQueueScreen
         screen = self._make_screen(mapper)
+        # PROJ-172: panels mock needed for refactored _apply_tooltips
+        screen.panels = MagicMock()
+        screen.panels.btn_close = screen.btn_close
+        screen.panels.btn_add_to_queue = screen.btn_add_to_queue
+        screen.panels.btn_remove_from_queue = screen.btn_remove_from_queue
+        screen.panels.btn_category_complex = screen.btn_category_complex
+        screen.panels.btn_category_ship = screen.btn_category_ship
+        screen.panels.btn_category_satellite = screen.btn_category_satellite
+        screen.panels.btn_category_fighter = screen.btn_category_fighter
         screen._apply_tooltips = BuildQueueScreen._apply_tooltips.__get__(screen, BuildQueueScreen)
         screen._apply_tooltips()
         tooltip_text = screen.btn_close.set_tooltip.call_args[0][0]
@@ -222,6 +231,15 @@ class TestBuildQueueScreenHotkeys:
         """Category buttons show 1-4 tooltips."""
         from game.ui.screens.build_queue_screen import BuildQueueScreen
         screen = self._make_screen(mapper)
+        # PROJ-172: panels mock needed for refactored _apply_tooltips
+        screen.panels = MagicMock()
+        screen.panels.btn_close = screen.btn_close
+        screen.panels.btn_add_to_queue = screen.btn_add_to_queue
+        screen.panels.btn_remove_from_queue = screen.btn_remove_from_queue
+        screen.panels.btn_category_complex = screen.btn_category_complex
+        screen.panels.btn_category_ship = screen.btn_category_ship
+        screen.panels.btn_category_satellite = screen.btn_category_satellite
+        screen.panels.btn_category_fighter = screen.btn_category_fighter
         screen._apply_tooltips = BuildQueueScreen._apply_tooltips.__get__(screen, BuildQueueScreen)
         screen._apply_tooltips()
         assert "1" in screen.btn_category_complex.set_tooltip.call_args[0][0]

@@ -319,15 +319,20 @@ class TestBuildQueueScreenshotSupport:
 
         mock_design_loader = MagicMock()
 
-        with patch('game.ui.screens.build_queue_screen.PlanetReportPanel'), \
-             patch('game.ui.screens.build_queue_screen.DesignReportPanel'), \
-             patch('game.ui.screens.build_queue_screen.ui.UIPanel'), \
-             patch('game.ui.screens.build_queue_screen.ui.UIButton'), \
-             patch('game.ui.screens.build_queue_screen.ui.UITextBox'), \
-             patch('game.ui.screens.build_queue_screen.ui.UILabel'), \
-             patch('game.ui.screens.build_queue_screen.ui.UIImage'), \
-             patch('game.ui.screens.build_queue_screen.ui.UIScrollingContainer'), \
-             patch('game.ui.screens.build_queue_screen.pygame_gui.windows.UIMessageWindow'):
+        # PROJ-172: Patches moved to panel factory module
+        with patch('game.ui.screens.build_queue_panel_factory.PlanetReportPanel'), \
+             patch('game.ui.screens.build_queue_panel_factory.DesignReportPanel'), \
+             patch('game.ui.screens.build_queue_panel_factory.ui.UIPanel'), \
+             patch('game.ui.screens.build_queue_panel_factory.ui.UIButton'), \
+             patch('game.ui.screens.build_queue_panel_factory.ui.UITextBox'), \
+             patch('game.ui.screens.build_queue_panel_factory.ui.UILabel'), \
+             patch('game.ui.screens.build_queue_panel_factory.ui.UIImage'), \
+             patch('game.ui.screens.build_queue_panel_factory.ui.UIScrollingContainer'), \
+             patch('game.ui.screens.build_queue_renderer.ui.UIPanel'), \
+             patch('game.ui.screens.build_queue_renderer.ui.UIButton'), \
+             patch('game.ui.screens.build_queue_renderer.ui.UITextBox'), \
+             patch('game.ui.screens.build_queue_renderer.ui.UILabel'), \
+             patch('game.ui.screens.build_queue_renderer.ui.UIImage'):
 
             # Create screen instance with injected dependencies
             screen = BuildQueueScreen(

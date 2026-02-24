@@ -81,8 +81,27 @@ def _make_build_queue_screen():
     screen.controller.get_designs.return_value = []
     screen.controller.get_filtered_designs.return_value = []
 
-    # UI elements
-    screen.queue_items = []
+    # PROJ-172: MVVM components
+    screen.panels = MagicMock()
+    screen.panels.filter_panel = MagicMock()
+    screen.panels.items_list_panel = MagicMock()
+    screen.panels.items_scrollable = MagicMock()
+    screen.panels.build_queue_panel = MagicMock()
+    screen.panels.queue_scrollable = MagicMock()
+    screen.panels.design_report = MagicMock()
+    screen.panels.background = MagicMock()
+    screen.panels.btn_close = MagicMock()
+    screen.panels.btn_category_complex = MagicMock()
+    screen.panels.btn_category_ship = MagicMock()
+    screen.panels.btn_category_satellite = MagicMock()
+    screen.panels.btn_category_fighter = MagicMock()
+    screen.panels.planet_report = MagicMock()
+    screen.panels.queue_selector = MagicMock()
+
+    screen.renderer = MagicMock()
+    screen.renderer.queue_items = []
+
+    # UI elements (legacy)
     screen.selected_queue_index = None
     screen.design_panel = MagicMock()
     screen.queue_panel = MagicMock()
@@ -94,7 +113,7 @@ def _make_build_queue_screen():
     screen.screenshot_manager = MagicMock()
 
     # Queue selector
-    screen.queue_selector = MagicMock()
+    screen._queue_selector = MagicMock()
 
     mocks = {
         'manager': screen.manager,
@@ -103,7 +122,7 @@ def _make_build_queue_screen():
         'design_library': screen.design_library,
         'design_loader': screen.design_loader,
         'controller': screen.controller,
-        'queue_selector': screen.queue_selector,
+        'queue_selector': screen._queue_selector,
     }
 
     return screen, mocks
