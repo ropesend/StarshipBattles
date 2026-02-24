@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-169 | Dead Code and Orphaned File Cleanup | Planning | 2026-02-23 | 2026-02-23 |
 | PROJ-168 | Extract Hex-to-Cartesian Conversion Helper | Planning | 2026-02-23 | 2026-02-23 |
 | PROJ-167 | Centralize UI Color Palette Constants | Planning | 2026-02-23 | 2026-02-23 |
 | PROJ-166 | Make RaceThemeGallery Extend BaseGallery | Planning | 2026-02-23 | 2026-02-23 |
