@@ -1,8 +1,8 @@
 """
 JSON utility functions for consistent file loading and saving.
 
-This module consolidates JSON loading/saving patterns used throughout the codebase,
-providing consistent error handling and logging.
+This module is the CANONICAL location for file-based JSON operations in game/.
+All JSON file I/O should use these functions for consistent error handling.
 
 Usage:
     from game.core.json_utils import load_json, save_json, load_json_required
@@ -22,6 +22,10 @@ Exceptions:
         json.JSONDecodeError: If JSON is invalid
 
     load_json and save_json return defaults/False on error (no exceptions raised)
+
+Note:
+    Do NOT use json.load/json.dump directly for file operations in game/.
+    Use these functions instead for consistent error handling and logging.
 """
 import json
 import logging

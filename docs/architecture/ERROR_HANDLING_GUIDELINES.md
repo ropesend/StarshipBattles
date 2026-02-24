@@ -128,58 +128,78 @@ except ComponentException as e:
 
 ## Logging Levels
 
-Use the appropriate logging level based on severity:
+Use the appropriate logging level based on severity. All production code uses Python's standard logging:
 
-### log_debug()
+```python
+import logging
+logger = logging.getLogger(__name__)
+```
+
+### logger.debug()
 **Detailed diagnostic information for development and debugging.**
 
 Use for:
-- State transitions: `log_debug(f"State changed from {old} to {new}")`
-- Method entry with parameters: `log_debug(f"scan_designs: pattern={pattern}")`
+- State transitions: `logger.debug(f"State changed from {old} to {new}")`
+- Method entry with parameters: `logger.debug(f"scan_designs: pattern={pattern}")`
 - Intermediate values during complex operations
 - Expected failures that don't require attention
 
 NOT for:
-- Errors or failures (use `log_error` or `log_warning`)
-- Information users need to see (use `log_info`)
+- Errors or failures (use `logger.error` or `logger.warning`)
+- Information users need to see (use `logger.info`)
 
-### log_info()
+### logger.info()
 **Notable events during normal operation.**
 
 Use for:
-- Successful initialization: `log_info(f"Loaded {count} vehicle classes.")`
-- Significant operations complete: `log_info(f"Saved game to {filepath}")`
-- System state changes: `log_info("Battle simulation started")`
+- Successful initialization: `logger.info(f"Loaded {count} vehicle classes.")`
+- Significant operations complete: `logger.info(f"Saved game to {filepath}")`
+- System state changes: `logger.info("Battle simulation started")`
 
 NOT for:
-- Debugging details (use `log_debug`)
-- Problems or failures (use `log_warning` or `log_error`)
+- Debugging details (use `logger.debug`)
+- Problems or failures (use `logger.warning` or `logger.error`)
 
-### log_warning()
+### logger.warning()
 **Recoverable problems where operation continues with fallback.**
 
 Use for:
-- Missing optional resources: `log_warning(f"Portrait not found, using default")`
-- Recoverable failures: `log_warning(f"Config load failed, using defaults: {e}")`
-- Validation warnings: `log_warning(f"Modifier validation failed, loading anyway")`
-- Performance issues: `log_warning(f"Slow frame: {elapsed}ms")`
+- Missing optional resources: `logger.warning(f"Portrait not found, using default")`
+- Recoverable failures: `logger.warning(f"Config load failed, using defaults: {e}")`
+- Validation warnings: `logger.warning(f"Modifier validation failed, loading anyway")`
+- Performance issues: `logger.warning(f"Slow frame: {elapsed}ms")`
 
 NOT for:
-- Fatal errors (use `log_error`)
-- Normal operation details (use `log_info`)
+- Fatal errors (use `logger.error`)
+- Normal operation details (use `logger.info`)
 
-### log_error()
+### logger.error()
 **Failures that prevent operation from completing.**
 
 Use for:
-- Required file not found: `log_error(f"Asset manifest missing: {path}")`
-- Critical operations failed: `log_error(f"Failed to save game: {e}")`
-- Data corruption: `log_error(f"Invalid JSON in {filepath}: {e}")`
-- Unexpected exceptions: `log_error(f"Unexpected error: {e}\n{traceback.format_exc()}")`
+- Required file not found: `logger.error(f"Asset manifest missing: {path}")`
+- Critical operations failed: `logger.error(f"Failed to save game: {e}")`
+- Data corruption: `logger.error(f"Invalid JSON in {filepath}: {e}")`
+- Unexpected exceptions: `logger.error(f"Unexpected error: {e}\n{traceback.format_exc()}")`
 
 NOT for:
-- Recoverable issues (use `log_warning`)
-- Debug information (use `log_debug`)
+- Recoverable issues (use `logger.warning`)
+- Debug information (use `logger.debug`)
+
+### log_event() (Event System)
+**Structured simulation events for callbacks.**
+
+Use for:
+- Simulation events: `log_event("damage", ship_id=42, amount=100)`
+- Turn events: `log_event("turn_start", turn=5)`
+- Combat events: `log_event("weapon_fired", weapon_id="laser", target_id=12)`
+
+This is NOT standard logging — events are typed callbacks used by test infrastructure and game session, separate from diagnostic logging.
+
+```python
+from game.core.event_logging import log_event
+log_event("damage", ship_id=42, amount=100)
+```
 
 ---
 
@@ -234,7 +254,7 @@ Never silently swallow exceptions. At minimum, log a warning.
 try:
     result = parse_data(data)
 except ValueError as e:
-    log_warning(f"Failed to parse data, using default: {e}")
+    logger.warning(f"Failed to parse data, using default: {e}")
     result = default_value
 ```
 
@@ -244,7 +264,7 @@ Error messages should include enough context to diagnose the problem.
 
 ```python
 # GOOD: Includes identifiers and context
-log_error(f"Failed to load design '{design_id}' from '{filepath}': {e}")
+logger.error(f"Failed to load design '{design_id}' from '{filepath}': {e}")
 
 # GOOD: Uses context dict for structured data
 raise ValidationException(
@@ -264,7 +284,7 @@ def get_image(self, category, key):
     try:
         return self._load_image(cache_key, file_path)
     except (FileNotFoundError, pygame.error) as e:
-        log_warning(f"Failed to load image {file_path}: {e}")
+        logger.warning(f"Failed to load image {file_path}: {e}")
         return self.get_missing_texture()
 ```
 
@@ -348,7 +368,42 @@ except Exception as e:
     log_error(f"Unexpected error: {e}\n{traceback.format_exc()}")
 ```
 
-### Anti-Pattern 6: Overly Broad Exception Handling
+### Anti-Pattern 6: Custom Logger Classes or Singletons
+
+```python
+# BAD: Custom logger wrapper (legacy pattern, now deleted)
+from game.core.logger import log_info, log_error  # DON'T
+
+# GOOD: Standard library logging
+import logging
+logger = logging.getLogger(__name__)
+logger.info("Message here")
+```
+
+### Anti-Pattern 7: Using print() for Diagnostics
+
+```python
+# BAD: Print statements for debugging
+print(f"DEBUG: processing {item}")
+
+# GOOD: Use proper logging
+logger.debug(f"Processing {item}")
+```
+
+### Anti-Pattern 8: Direct JSON File I/O
+
+```python
+# BAD: Bypasses json_utils error handling
+import json
+with open("file.json") as f:
+    data = json.load(f)
+
+# GOOD: Use json_utils
+from game.core.json_utils import load_json
+data = load_json("file.json", default={})
+```
+
+### Anti-Pattern 9: Overly Broad Exception Handling
 
 ```python
 # BAD: Catches too many exception types
@@ -393,13 +448,13 @@ def load_json(filepath: Path, default=None) -> Any:
         with open(filepath, 'r', encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
-        log_debug(f"JSON file not found: {filepath}")
+        logger.debug(f"JSON file not found: {filepath}")
         return default
     except json.JSONDecodeError as e:
-        log_error(f"Invalid JSON in {filepath}: {e}")
+        logger.error(f"Invalid JSON in {filepath}: {e}")
         return default
     except IOError as e:
-        log_error(f"Error reading {filepath}: {e}")
+        logger.error(f"Error reading {filepath}: {e}")
         return default
 ```
 
@@ -463,7 +518,7 @@ def get_ship_portrait(ship_id: str) -> Surface:
     try:
         return asset_manager.get_image("portraits", ship_id)
     except (FileNotFoundError, pygame.error) as e:
-        log_warning(f"Portrait not found for '{ship_id}', using default: {e}")
+        logger.warning(f"Portrait not found for '{ship_id}', using default: {e}")
         return asset_manager.get_default_portrait()
 ```
 
@@ -483,7 +538,7 @@ def evaluate_target(self, target: Ship) -> float:
         value_score = self._calculate_value(target)
         return threat_score * 0.6 + value_score * 0.4
     except AttributeError as e:
-        log_warning(f"Target evaluation failed for {target.id}: {e}")
+        logger.warning(f"Target evaluation failed for {target.id}: {e}")
         return 0.0  # Safe fallback score
 ```
 
@@ -522,16 +577,19 @@ Is it about AI decisions?
 
 ```
 Is it a fatal error preventing operation?
-  -> log_error()
+  -> logger.error()
 
 Is it a problem with automatic recovery/fallback?
-  -> log_warning()
+  -> logger.warning()
 
 Is it normal successful operation?
-  -> log_info()
+  -> logger.info()
 
 Is it diagnostic/debugging information?
-  -> log_debug()
+  -> logger.debug()
+
+Is it a structured simulation event (damage, movement, etc.)?
+  -> log_event()  # from game.core.event_logging
 ```
 
 ### Exception Handler Template
@@ -541,7 +599,7 @@ try:
     # Operation that may fail
     result = risky_operation()
 except SpecificException as e:
-    log_warning(f"Operation failed: {e}")
+    logger.warning(f"Operation failed: {e}")
     result = fallback_value
 except AnotherException as e:
     # Re-raise with more context

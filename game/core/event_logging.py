@@ -3,6 +3,13 @@
 Provides structured event callbacks used by simulation and test infrastructure.
 Separate from standard logging — events are typed callbacks, not log messages.
 
+This is NOT standard diagnostic logging. For diagnostic logging, use:
+    import logging
+    logger = logging.getLogger(__name__)
+
+Events are typed callback invocations for simulation observers (e.g., tests,
+replay systems, analytics). They carry structured data, not free-form messages.
+
 Usage:
     from game.core.event_logging import log_event, set_event_handler
 
@@ -11,6 +18,12 @@ Usage:
 
     # Fire events (from simulation code)
     log_event("damage", ship_id=42, amount=100)
+
+Lifecycle:
+    - Handler is set by GameSession during game startup
+    - Handler is cleared (set to None) in test fixtures via conftest.py
+    - When no handler is registered, log_event() is a no-op
+    - Handler exceptions are caught and logged to prevent simulation crashes
 """
 import logging
 from typing import Any, Callable, Optional
