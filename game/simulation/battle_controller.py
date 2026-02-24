@@ -170,7 +170,7 @@ class BattleController:
                     self._ship_id_map[id(ship)] = state.ship_id
                 else:
                     errors.extend(result.errors)
-            except (TypeError, ValueError, KeyError, AttributeError) as e:
+            except (TypeError, ValueError, KeyError, AttributeError, ValidationException) as e:
                 errors.append(f"Failed to create ship from state: {e}")
 
         return BattleServiceResult(success=len(errors) == 0, errors=errors)
@@ -387,7 +387,7 @@ class BattleController:
                 self._ship_id_map[id(ship)] = str(uuid.uuid4())
 
                 logger.info(f"Reinforcement arrived: {ship.name} for team {team_id}")
-            except (TypeError, ValueError, AttributeError) as e:
+            except (TypeError, ValueError, AttributeError, ValidationException) as e:
                 errors.append(f"Failed to add reinforcement {ship.name}: {e}")
 
         return BattleServiceResult(success=len(errors) == 0, errors=errors)
@@ -514,7 +514,7 @@ class BattleController:
 
             return BattleServiceResult(success=True, engine=engine)
 
-        except (TypeError, ValueError, KeyError, AttributeError, ValidationException) as e:
+        except (TypeError, ValueError, KeyError, AttributeError, ValidationException, StateException) as e:
             logger.warning(f"Failed to load battle state: {e}")
             return BattleServiceResult(success=False, errors=[str(e)])
 

@@ -14,6 +14,7 @@ from typing import List, Optional, Tuple
 
 from game.core.paths import Paths
 from game.strategy.data.race_config import RaceConfig
+from game.core.exceptions import ValidationException
 
 logger = logging.getLogger(__name__)
 
@@ -114,7 +115,7 @@ class RaceLibrary:
             except (PermissionError, OSError) as e:
                 logger.warning(f"Cannot read race file {filepath}: {e}")
                 continue
-            except (AttributeError, TypeError, ValueError) as e:
+            except (AttributeError, TypeError, ValueError, ValidationException) as e:
                 logger.warning(f"Unexpected error loading race from {filepath}: {e}")
                 continue
 
@@ -153,7 +154,7 @@ class RaceLibrary:
         except (PermissionError, OSError) as e:
             logger.error(f"Cannot read race '{race_id}' from {filepath}: {e}")
             return None
-        except (AttributeError, TypeError, ValueError) as e:
+        except (AttributeError, TypeError, ValueError, ValidationException) as e:
             logger.error(f"Unexpected error loading race '{race_id}': {e}")
             return None
 
@@ -193,7 +194,7 @@ class RaceLibrary:
         except OSError as e:
             logger.error(f"OS error saving race '{config.race_id}' to {filepath}: {e}")
             return False, f"Error saving race: {str(e)}"
-        except (TypeError, ValueError) as e:
+        except (TypeError, ValueError, ValidationException) as e:
             logger.error(f"Serialization error saving race '{config.race_id}': {e}")
             return False, "Error saving race: Invalid race data"
         except (AttributeError, KeyError) as e:

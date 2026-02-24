@@ -10,6 +10,7 @@ from typing import List, Optional, Any, Dict, TYPE_CHECKING
 
 from game.simulation.systems.battle_engine import BattleEngine, BattleLogger
 from game.simulation.systems.battle_end_conditions import BattleEndCondition, BattleEndMode
+from game.core.exceptions import ValidationException, StateException
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +88,7 @@ class BattleService:
                 engine=self._engine
             )
 
-        except (TypeError, ValueError, AttributeError) as e:
+        except (TypeError, ValueError, AttributeError, ValidationException, StateException) as e:
             logger.error(f"Failed to create battle: {e}")
             return BattleServiceResult(
                 success=False,

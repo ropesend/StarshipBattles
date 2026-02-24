@@ -16,6 +16,7 @@ import os
 from typing import Any, Optional, Tuple, TYPE_CHECKING
 
 from game.core.json_utils import load_json_required, save_json
+from game.core.exceptions import ValidationException, ComponentException
 import logging
 
 logger = logging.getLogger(__name__)
@@ -94,7 +95,7 @@ class ShipIO:
         except OSError as e:
             logger.error(f"ShipIO: OS error saving ship: {e}")
             return False, f"Save failed: {str(e)}"
-        except (TypeError, ValueError) as e:
+        except (TypeError, ValueError, ValidationException) as e:
             logger.error(f"ShipIO: Serialization error saving ship: {e}")
             return False, "Save failed: Invalid ship data"
 
@@ -157,6 +158,6 @@ class ShipIO:
         except OSError as e:
             logger.error(f"ShipIO: OS error loading ship: {e}")
             return None, f"Load failed: {str(e)}"
-        except (TypeError, ValueError) as e:
+        except (TypeError, ValueError, ValidationException, ComponentException) as e:
             logger.error(f"ShipIO: Unexpected error loading ship: {e}")
             return None, f"Load failed: {str(e)}"

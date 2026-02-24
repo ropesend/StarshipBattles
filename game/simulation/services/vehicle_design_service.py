@@ -126,7 +126,7 @@ class VehicleDesignService:
                 warnings=warnings
             )
 
-        except (TypeError, ValueError, KeyError, AttributeError) as e:
+        except (TypeError, ValueError, KeyError, AttributeError, ValidationException) as e:
             logger.error(f"Failed to create ship: {e}")
             errors.append(str(e))
             return DesignResult(

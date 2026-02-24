@@ -17,7 +17,7 @@ import os
 from typing import Optional, Tuple, TYPE_CHECKING
 
 from game.core.json_utils import load_json_required
-from game.core.exceptions import PersistenceException, ValidationException
+from game.core.exceptions import PersistenceException, ValidationException, ComponentException
 from game.core.error_codes import ErrorCode
 
 logger = logging.getLogger(__name__)
@@ -79,7 +79,7 @@ class SimulationDesignLoader:
             ship.position = Vector2(center_x, center_y)
             ship.recalculate_stats()
             return ship
-        except (KeyError, TypeError, ValueError) as e:
+        except (KeyError, TypeError, ValueError, ValidationException, ComponentException) as e:
             # Data validation errors
             logger.error(f"SimulationDesignLoader: Invalid design data - {type(e).__name__}: {e}")
             return None
@@ -126,7 +126,7 @@ class SimulationDesignLoader:
             # Invalid JSON format
             logger.error(f"SimulationDesignLoader: Invalid JSON in {file_path}: {e}")
             return None, f"Failed to load design: Invalid JSON format"
-        except (KeyError, TypeError, ValueError) as e:
+        except (KeyError, TypeError, ValueError, ValidationException, ComponentException) as e:
             # Data validation errors
             logger.error(f"SimulationDesignLoader: Invalid design data in {file_path} - {type(e).__name__}: {e}")
             return None, f"Failed to load design: Invalid design data"

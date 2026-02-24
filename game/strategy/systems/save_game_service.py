@@ -18,7 +18,7 @@ from datetime import datetime
 from typing import Optional, Tuple, List
 from game.core.json_utils import save_json, load_json_required, load_json
 from game.core.paths import Paths
-from game.core.exceptions import PersistenceException
+from game.core.exceptions import PersistenceException, ValidationException, StateException
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +105,7 @@ class SaveGameService:
         except OSError as e:
             logger.error(f"SaveGameService: OS error saving to {save_path} - {e}")
             return False, f"Save failed: {str(e)}", None
-        except (TypeError, ValueError) as e:
+        except (TypeError, ValueError, ValidationException) as e:
             logger.error(f"SaveGameService: Serialization error - {e}\n{traceback.format_exc()}")
             return False, f"Save failed: Unable to serialize game state", None
         except (KeyError, AttributeError, ImportError) as e:
@@ -201,10 +201,10 @@ class SaveGameService:
             except KeyError as e:
                 logger.error(f"SaveGameService: Missing required data field '{e}' in {turn_file}")
                 return None, f"Save file corrupted: Missing required data field"
-            except (TypeError, ValueError) as e:
+            except (TypeError, ValueError, ValidationException) as e:
                 logger.error(f"SaveGameService: Invalid data format in {turn_file} - {e}")
                 return None, f"Save file corrupted: Invalid data format"
-            except (AttributeError, ImportError, RuntimeError) as e:
+            except (AttributeError, ImportError, RuntimeError, StateException) as e:
                 logger.error(f"SaveGameService: Failed to reconstruct game session from {turn_file} - {e}")
                 return None, f"Save file corrupted: Failed to reconstruct game state"
 
@@ -220,7 +220,7 @@ class SaveGameService:
         except OSError as e:
             logger.error(f"SaveGameService: OS error loading {save_path} - {e}")
             return None, f"Failed to load save: {str(e)}"
-        except (KeyError, TypeError, ValueError, AttributeError, ImportError) as e:
+        except (KeyError, TypeError, ValueError, AttributeError, ImportError, ValidationException, StateException) as e:
             logger.error(f"SaveGameService: Unexpected load error from {save_path} - {e}\n{traceback.format_exc()}")
             return None, f"Unexpected error while loading save"
 

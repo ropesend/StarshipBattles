@@ -13,6 +13,7 @@ from typing import List, Optional, Tuple, Set
 from datetime import datetime
 from game.strategy.data.design_metadata import DesignMetadata
 from game.core.json_utils import load_json_required, save_json
+from game.core.exceptions import ValidationException
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +99,7 @@ class DesignLibrary:
             except (PermissionError, OSError) as e:
                 logger.error(f"scan_designs: Cannot read design file {filepath}: {e}")
                 continue
-            except (AttributeError, TypeError, ValueError) as e:
+            except (AttributeError, TypeError, ValueError, ValidationException) as e:
                 # Log unexpected errors but continue scanning
                 logger.error(f"scan_designs: Unexpected error loading design from {filepath}: {e}")
                 import traceback
@@ -181,7 +182,7 @@ class DesignLibrary:
         except OSError as e:
             logger.error(f"OS error saving design '{design_name}' to {filepath}: {e}")
             return False, f"Failed to save design: {str(e)}"
-        except (TypeError, ValueError) as e:
+        except (TypeError, ValueError, ValidationException) as e:
             logger.error(f"Serialization error saving design '{design_name}': {e}")
             import traceback
             logger.error(traceback.format_exc())

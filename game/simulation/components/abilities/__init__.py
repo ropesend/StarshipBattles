@@ -6,6 +6,8 @@ This package contains all ability classes that can be attached to components.
 import logging
 from typing import Any, Optional
 
+from game.core.exceptions import ValidationException, ComponentException
+
 logger = logging.getLogger(__name__)
 
 # Base class
@@ -116,7 +118,7 @@ def create_ability(name: str, component, data: Any) -> Optional[Ability]:
             # passed as 'data'. Constructor must handle it, or we normalize here.
             # Our constructors above handle `isinstance(data, (int, float))` checks.
             return ABILITY_REGISTRY[name](component, data)
-        except (TypeError, ValueError, KeyError, AttributeError) as e:
+        except (TypeError, ValueError, KeyError, AttributeError, ValidationException, ComponentException) as e:
             logger.warning(f"Failed to create ability '{name}': {e}")
             return None
     return None

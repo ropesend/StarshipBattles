@@ -529,7 +529,7 @@ def load_components_data(
                 # PROJ-50: Pass registries to Component
                 obj = Component(comp_def, registries=registries)
                 result[comp_id] = obj
-            except (KeyError, TypeError, ValueError) as e:
+            except (KeyError, TypeError, ValueError, ValidationException) as e:
                 # Schema/data issues - log and continue (collect errors)
                 logger.error(f"Component '{comp_id}': invalid data - {e}")
                 errors.append(comp_id)

@@ -8,27 +8,29 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-170 Phase 4 - Game Config + UI Migration
-**Current Status:** PROJ-170 Phase 4 Complete
+**Last Completed:** PROJ-170 Phase 5 - Caller Catch Updates
+**Current Status:** PROJ-170 Phase 5 Complete
 **Current Project:** PROJ-170
-**Current Phase:** Phase 5
+**Current Phase:** Phase 6
 **Test Status:** 11972 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-170 Phase 4 complete - Migrated 15 raises in 10 files
-- game_config.py: 3 ValueError → ValidationException
-- build_queue_screen.py: 4 ValueError → ValidationException
-- vehicle_class_service.py: 1 ValueError → ValidationException
-- workshop_viewmodel.py: 1 ValueError + 1 RuntimeError → ValidationException
-- new_game_setup_screen.py: 1 ValueError → ValidationException
-- formation_editor.py: 1 ValueError → ValidationException + updated except clause
-- asset_manager.py: 1 ValueError → ResourceException
-- resource_management_engine.py: 1 TypeError → ValidationException
-- resupply_engine.py: 1 TypeError → ValidationException
-- ship_stats_calculator.py: 1 TypeError → ValidationException
-- Updated 8 test files (test_game_config, test_new_game_setup, test_vehicle_class_service, test_asset_manager_resolutions, test_initialization, test_resupply_engine, test_edge_cases, test_service_injection)
-- Next: Phase 5 - Caller Catch Updates (36 except blocks in 12 files)
+- PROJ-170 Phase 5 complete - Updated 15 except blocks in 12 files
+- save_game_service.py: Added ValidationException, StateException to catches
+- design_library.py: Added ValidationException to catches
+- race_library.py: Added ValidationException to catches
+- ship_io.py: Added ValidationException, ComponentException to catches
+- component.py: Added ValidationException to component loading catch
+- design_loader.py: Added ValidationException, ComponentException to catches
+- vehicle_design_service.py: Added ValidationException to ship creation catch
+- battle_service.py: Added ValidationException, StateException to catches
+- battle_controller.py: Added ValidationException, StateException to catches
+- formation_editor.py: Added ValidationException to serialization catch
+- abilities/__init__.py: Added ValidationException, ComponentException to ability creation catch
+- strategy_session_facade.py: Added StateException alongside RuntimeError
+- ship_theme_manager.py: NO CHANGE (stdlib exceptions only)
+- Next: Phase 6 - Exception Chaining Fixes
 
 ---
 
@@ -61,7 +63,7 @@
 ---
 
 - [/] **PROJ-170: Exception Handling Migration — Full Adoption of PROJ-45 Infrastructure**
-  - **Phases:** 7 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 7 | **Status:** Phase 5 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-170/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-170/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -124,6 +126,7 @@
 | 2026-02-23 | PROJ-170 | Phase 2 | Complete | 11972 passed, 1 skipped | pending | Migrated 24 ValueError in 3 strategy loader files |
 | 2026-02-23 | PROJ-170 | Phase 3 | Complete | 11972 passed, 1 skipped | pending | Migrated 27 raises in 16 simulation files + ~50 tests |
 | 2026-02-23 | PROJ-170 | Phase 4 | Complete | 11972 passed, 1 skipped | pending | Migrated 15 raises in 10 files + 8 test files |
+| 2026-02-23 | PROJ-170 | Phase 5 | Complete | 11972 passed, 1 skipped | pending | Updated 15 except blocks in 12 files with domain exceptions |
 
 ---
 

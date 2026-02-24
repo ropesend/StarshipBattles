@@ -205,7 +205,7 @@ class FormationCore:
                 logger.error(f"Failed to save formation to {filename}")
         except OSError as e:
             logger.error(f"Error saving formation (file error): {e}")
-        except (TypeError, ValueError) as e:
+        except (TypeError, ValueError, ValidationException) as e:
             logger.error(f"Error saving formation (serialization error): {e}")
 
     def load_from_file(self, filename: str) -> None:

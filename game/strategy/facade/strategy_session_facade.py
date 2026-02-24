@@ -7,6 +7,7 @@ from typing import List, Optional, TYPE_CHECKING
 
 from game.core.hex_math import HexCoord
 from game.core.validation import ValidationResult
+from game.core.exceptions import StateException
 from game.strategy.facade.dto import (
     FleetInfo,
     SystemInfo,
@@ -500,7 +501,7 @@ class StrategySessionFacade:
         try:
             provider = get_default_registry_provider()
             component_registry = provider.get_components()
-        except (RuntimeError, AttributeError, ImportError):
+        except (RuntimeError, AttributeError, ImportError, StateException):
             # Defensive fallback - return empty dict if registry unavailable
             return {}
 
