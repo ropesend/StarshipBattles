@@ -22,6 +22,7 @@ import logging
 logger = logging.getLogger(__name__)
 from game.ui.screens.formation.input_handler import FormationInputHandler
 from game.ui.screens.formation.renderer import FormationRenderer
+from game.ui.screens.formation.toolbar_builder import FormationToolbarBuilder
 from game.ui.services.tkinter_utils import (
     is_tkinter_available,
     open_load_dialog,
@@ -272,152 +273,34 @@ class FormationEditorScreen:
         self._create_ui()
 
     def _create_ui(self):
-        btn_y = self.height - 70
-        btn_w = 110
-        btn_h = 30
-        spacing = 5
-        start_x = 10
-        
-        # Top Row of Toolbar
-        current_x = start_x
-        
-        self.clear_btn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(current_x, btn_y, btn_w, btn_h),
-            text="Clear All",
-            manager=self.ui_manager
+        """Create toolbar UI using the FormationToolbarBuilder."""
+        builder = FormationToolbarBuilder()
+        toolbar = builder.build_toolbar(
+            ui_manager=self.ui_manager,
+            screen_width=self.width,
+            screen_height=self.height,
+            toolbar_height=self.toolbar_height
         )
-        current_x += btn_w + spacing
-        
-        self.snap_btn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(current_x, btn_y, btn_w, btn_h),
-            text="Snap: ON",
-            manager=self.ui_manager
-        )
-        current_x += btn_w + spacing
 
-        self.clone_btn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(current_x, btn_y, btn_w, btn_h),
-            text="Clone Group",
-            manager=self.ui_manager
-        )
-        current_x += btn_w + spacing
-        
-        self.delete_btn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(current_x, btn_y, btn_w, btn_h),
-            text="Delete",
-            manager=self.ui_manager
-        )
-        current_x += btn_w + spacing
-        
-        self.save_btn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(current_x, btn_y, btn_w, btn_h),
-            text="Save",
-            manager=self.ui_manager
-        )
-        current_x += btn_w + spacing
-        
-        self.load_btn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(current_x, btn_y, btn_w, btn_h),
-            text="Load",
-            manager=self.ui_manager
-        )
-        current_x += btn_w + spacing
-        
-        self.rotation_mode_btn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(current_x, btn_y, 140, btn_h),
-            text="Rot: Relative",
-            manager=self.ui_manager
-        )
-        current_x += 140 + spacing
-        
-        self.info_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(current_x, btn_y, 250, btn_h),
-            text="Arrows: 0",
-            manager=self.ui_manager
-        )
-        
-        # Bottom Row of Toolbar (Shape generation)
-        btn_y += 35
-        current_x = start_x
-        
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(current_x, btn_y, 80, btn_h),
-            text="Shape Gen:",
-            manager=self.ui_manager
-        )
-        current_x += 80 + spacing
-
-        self.count_slider = pygame_gui.elements.UIHorizontalSlider(
-            relative_rect=pygame.Rect(current_x, btn_y, 150, btn_h),
-            start_value=5,
-            value_range=(2, 50),
-            manager=self.ui_manager
-        )
-        current_x += 150 + spacing
-        
-        self.count_entry = pygame_gui.elements.UITextEntryLine(
-            relative_rect=pygame.Rect(current_x, btn_y, 50, btn_h),
-            manager=self.ui_manager
-        )
-        self.count_entry.set_text("5")
-        current_x += 50 + spacing
-        
-        self.circle_btn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(current_x, btn_y, 80, btn_h),
-            text="Circle",
-            manager=self.ui_manager
-        )
-        current_x += 80 + spacing
-        
-        self.disc_btn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(current_x, btn_y, 80, btn_h),
-            text="Disc",
-            manager=self.ui_manager
-        )
-        current_x += 80 + spacing
-        
-        self.x_btn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(current_x, btn_y, 80, btn_h),
-            text="X Shape",
-            manager=self.ui_manager
-        )
-        current_x += 80 + spacing
-
-        self.line_btn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(current_x, btn_y, 80, btn_h),
-            text="Line",
-            manager=self.ui_manager
-        )
-        current_x += 80 + spacing
-
-        # Renumber Controls
-        self.renumber_mode_btn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(current_x, btn_y, 110, btn_h),
-            text="Renumber: OFF",
-            manager=self.ui_manager
-        )
-        current_x += 110 + spacing
-
-        self.renumber_slider = pygame_gui.elements.UIHorizontalSlider(
-            relative_rect=pygame.Rect(current_x, btn_y, 100, btn_h),
-            start_value=1,
-            value_range=(1, 50),
-            manager=self.ui_manager
-        )
-        current_x += 100 + spacing
-        
-        self.renumber_entry = pygame_gui.elements.UITextEntryLine(
-            relative_rect=pygame.Rect(current_x, btn_y, 40, btn_h),
-            manager=self.ui_manager
-        )
-        self.renumber_entry.set_text("1")
-        current_x += 40 + spacing
-
-        self.return_btn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(self.width - 120, btn_y, 110, btn_h),
-            text="Return",
-            manager=self.ui_manager
-        )
+        # Store references to all widgets for event handling
+        self.clear_btn = toolbar.clear_btn
+        self.snap_btn = toolbar.snap_btn
+        self.clone_btn = toolbar.clone_btn
+        self.delete_btn = toolbar.delete_btn
+        self.save_btn = toolbar.save_btn
+        self.load_btn = toolbar.load_btn
+        self.rotation_mode_btn = toolbar.rotation_mode_btn
+        self.info_label = toolbar.info_label
+        self.count_slider = toolbar.count_slider
+        self.count_entry = toolbar.count_entry
+        self.circle_btn = toolbar.circle_btn
+        self.disc_btn = toolbar.disc_btn
+        self.x_btn = toolbar.x_btn
+        self.line_btn = toolbar.line_btn
+        self.renumber_mode_btn = toolbar.renumber_mode_btn
+        self.renumber_slider = toolbar.renumber_slider
+        self.renumber_entry = toolbar.renumber_entry
+        self.return_btn = toolbar.return_btn
 
     @property
     def arrows(self) -> List[List[float]]:

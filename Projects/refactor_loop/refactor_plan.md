@@ -8,18 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-176 Audit Cycle 1 PASSED - Project Complete
-**Current Status:** PROJ-176 complete, ready for next project
+**Last Completed:** PROJ-172 Phase 1 - Quick Wins (BattleStateViewer + FormationEditor)
+**Current Status:** Phase 1 complete, ready for Phase 2
 **Current Project:** PROJ-172
-**Current Phase:** Phase 1
+**Current Phase:** Phase 2
 **Test Status:** 12178 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-176 COMPLETE - Audit passed with no issues
-- All 3 phases verified: ValidationResult factory methods, BaseCommandHandler mixin, SimpleMultiplierAbility + SuperweaponMarker base classes
+- PROJ-172 Phase 1 COMPLETE - BattleStateViewer and FormationEditor decomposition
+- Extracted: json_diff.py (111 lines), scrollable_json_panel.py (411 lines), toolbar_builder.py (290 lines)
+- Converted game/ui/utils.py to package (game/ui/utils/) with pygame_utils.py and json_diff.py
+- battle_state_viewer.py: 688 → 258 lines
+- formation_editor.py: 948 → 830 lines
 - Tests: 12178 passed, 1 skipped
-- Next project: PROJ-172 (God Class Decomposition - MVVM Wave 1)
+- Next: Phase 2 - WeaponsPanel MVVM Extraction
 
 ---
 
@@ -75,8 +78,8 @@
 
 ---
 
-- [ ] **PROJ-172: God Class Decomposition - MVVM Wave 1**
-  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-172: God Class Decomposition - MVVM Wave 1**
+  - **Phases:** 5 | **Status:** In Progress | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-172/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-172/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -130,6 +133,7 @@
 | 2026-02-24 | PROJ-176 | Phase 2 | Complete | 12159 passed, 1 skipped | pending | BaseCommandHandler mixin, 19 handlers migrated, +6 tests |
 | 2026-02-24 | PROJ-176 | Phase 3 | Complete | 12178 passed, 1 skipped | pending | SimpleMultiplierAbility + SuperweaponMarker, 13 classes migrated, +19 tests |
 | 2026-02-24 | PROJ-176 | Audit 1 | PASSED | 12178 passed, 1 skipped | pending | All verifications passed, project complete |
+| 2026-02-24 | PROJ-172 | Phase 1 | Complete | 12178 passed, 1 skipped | pending | Quick Wins: BattleStateViewer + FormationEditor decomposition |
 
 ---
 
