@@ -285,7 +285,7 @@ class RaceConfig:
         Returns:
             ValidationResult with is_valid, errors, and warnings.
         """
-        result = ValidationResult()
+        result = ValidationResult.success()
         for check in [
             self._validate_required_fields,
             self._validate_environment_ranges,

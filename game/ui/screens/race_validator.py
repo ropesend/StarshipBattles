@@ -50,44 +50,26 @@ class RaceValidator:
         # Name is required
         name = race_config.name
         if not name or (isinstance(name, str) and not name.strip()):
-            return ValidationResult(
-                is_valid=False,
-                errors=["Species name is required (set in Identity tab)"]
-            )
+            return ValidationResult.error("Species name is required (set in Identity tab)")
 
         # Flag selection required
         if not race_config.flag_id:
-            return ValidationResult(
-                is_valid=False,
-                errors=["Please select a flag (Visuals tab)"]
-            )
+            return ValidationResult.error("Please select a flag (Visuals tab)")
 
         # Portrait selection required
         if not race_config.portrait_id:
-            return ValidationResult(
-                is_valid=False,
-                errors=["Please select a portrait (Visuals tab)"]
-            )
+            return ValidationResult.error("Please select a portrait (Visuals tab)")
 
         # Theme selection required
         if not race_config.theme_id:
-            return ValidationResult(
-                is_valid=False,
-                errors=["Please select a ship theme (Ships tab)"]
-            )
+            return ValidationResult.error("Please select a ship theme (Ships tab)")
 
         # Validate water preferences in range
         if not (0.0 <= race_config.water_ideal <= 1.0):
-            return ValidationResult(
-                is_valid=False,
-                errors=["Water ideal must be between 0% and 100% (Environment tab)"]
-            )
+            return ValidationResult.error("Water ideal must be between 0% and 100% (Environment tab)")
 
         if not (0.0 <= race_config.water_tolerance <= 1.0):
-            return ValidationResult(
-                is_valid=False,
-                errors=["Water tolerance must be between 0% and 100% (Environment tab)"]
-            )
+            return ValidationResult.error("Water tolerance must be between 0% and 100% (Environment tab)")
 
         # Validate aptitudes in range (1-100)
         aptitude_fields = [
@@ -103,18 +85,14 @@ class RaceValidator:
         ]
         for apt_name, apt_value in aptitude_fields:
             if not (1 <= apt_value <= 100):
-                return ValidationResult(
-                    is_valid=False,
-                    errors=[f"Aptitude {apt_name} must be between 1 and 100 (Aptitudes tab)"]
-                )
+                return ValidationResult.error(f"Aptitude {apt_name} must be between 1 and 100 (Aptitudes tab)")
 
         # Validate budget
         if not self._budget.is_within_budget(race_config):
             remaining = self._budget.get_remaining_points(race_config)
-            return ValidationResult(
-                is_valid=False,
-                errors=[f"Species is over point budget by {abs(remaining)} points. "
-                        f"Reduce aptitudes or tolerance on the Aptitudes tab."]
+            return ValidationResult.error(
+                f"Species is over point budget by {abs(remaining)} points. "
+                f"Reduce aptitudes or tolerance on the Aptitudes tab."
             )
 
-        return ValidationResult(is_valid=True)
+        return ValidationResult.success()

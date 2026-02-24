@@ -56,7 +56,7 @@ class LayerConstraintRule(AdditionValidationRule):
     """Validates that a component can be placed in the target layer."""
 
     def _do_validate(self, ship, component: Optional[Component], layer_type: Optional[LayerType]) -> ValidationResult:
-        result = ValidationResult(True)
+        result = ValidationResult.success()
 
         if layer_type not in ship.layers:
             result.add_error(f"Layer {layer_type.name} does not exist on {ship.ship_class}", ErrorCode.VALIDATION_FAILED)
@@ -76,7 +76,7 @@ class UniqueComponentRule(AdditionValidationRule):
         return component is not None
 
     def _do_validate(self, ship, component: Optional[Component], layer_type: Optional[LayerType]) -> ValidationResult:
-        result = ValidationResult(True)
+        result = ValidationResult.success()
 
         if component.data.get('is_unique', False):
             for c in ship.get_all_components():
@@ -94,7 +94,7 @@ class ExclusiveGroupRule(AdditionValidationRule):
         return component is not None
 
     def _do_validate(self, ship, component: Optional[Component], layer_type: Optional[LayerType]) -> ValidationResult:
-        result = ValidationResult(True)
+        result = ValidationResult.success()
 
         ex_group = component.data.get('exclusive_group')
         if ex_group:
@@ -109,7 +109,7 @@ class MountDependencyRule(AdditionValidationRule):
     """Validates that required mounts are available for components."""
 
     def _do_validate(self, ship, component: Optional[Component], layer_type: Optional[LayerType]) -> ValidationResult:
-        result = ValidationResult(True)
+        result = ValidationResult.success()
 
         # Guard clause: Skip validation if layer doesn't exist on ship
         if layer_type not in ship.layers:
@@ -144,7 +144,7 @@ class LayerRestrictionDefinitionRule(AdditionValidationRule):
 
     def _do_validate(self, ship, component: Optional[Component], layer_type: Optional[LayerType]) -> ValidationResult:
         """Orchestrates block and allow rule validation."""
-        result = ValidationResult(True)
+        result = ValidationResult.success()
 
         # Guard clause: Skip validation if layer doesn't exist on ship
         if layer_type not in ship.layers:
@@ -241,7 +241,7 @@ class MassBudgetRule(DesignValidationRule):
     """
 
     def _do_validate(self, ship, component: Optional[Component], layer_type: Optional[LayerType]) -> ValidationResult:
-        result = ValidationResult(True)
+        result = ValidationResult.success()
 
         # Check overall ship mass
         current_total = ship.current_mass
@@ -291,7 +291,7 @@ class ClassRequirementsRule(DesignValidationRule):
         self._registries = registries
 
     def _do_validate(self, ship, component: Optional[Component], layer_type: Optional[LayerType]) -> ValidationResult:
-        result = ValidationResult(True)
+        result = ValidationResult.success()
 
         from game.simulation.entities.ship_stats import ShipStatsCalculator
 
@@ -337,7 +337,7 @@ class ResourceDependencyRule(DesignValidationRule):
     """Validates that resource consumers have corresponding storage."""
 
     def _do_validate(self, ship, component: Optional[Component], layer_type: Optional[LayerType]) -> ValidationResult:
-        result = ValidationResult(True)
+        result = ValidationResult.success()
         # Scan all components to determine needs vs sources
         needed_resources = set()
         stored_resources = set()
@@ -415,7 +415,7 @@ class ShipDesignValidator:
 
     def validate_addition(self, ship, component: Component, layer_type: LayerType) -> ValidationResult:
         """Validate adding a component to a ship."""
-        final_result = ValidationResult(True)
+        final_result = ValidationResult.success()
         for rule in self.addition_rules:
             res = rule.validate(ship, component, layer_type)
             if not res.is_valid:
@@ -425,7 +425,7 @@ class ShipDesignValidator:
 
     def validate_design(self, ship) -> ValidationResult:
         """Validate the complete ship design."""
-        final_result = ValidationResult(True)
+        final_result = ValidationResult.success()
         for rule in self.design_rules:
             res = rule.validate(ship)
             # Accumulate errors (don't stop on first)

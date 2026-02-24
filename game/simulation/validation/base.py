@@ -55,7 +55,7 @@ class ValidationRule(ABC):
             ValidationResult with errors/warnings from validation
         """
         if not self._should_validate(component, layer_type):
-            return ValidationResult(True)
+            return ValidationResult.success()
         return self._do_validate(ship, component, layer_type)
 
     def _should_validate(

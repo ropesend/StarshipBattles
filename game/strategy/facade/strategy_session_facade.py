@@ -441,13 +441,13 @@ class StrategySessionFacade:
         """
         fleet = self._get_fleet_by_id(fleet_id)
         if fleet is None:
-            return ValidationResult(is_valid=False, errors=["Fleet not found."])
+            return ValidationResult.error("Fleet not found.")
 
         planet = None
         if planet_id is not None:
             planet = self._get_planet_by_id(planet_id)
             if planet is None:
-                return ValidationResult(is_valid=False, errors=["Planet not found."])
+                return ValidationResult.error("Planet not found.")
 
         return self._session.turn_engine.validate_colonize_order(
             self._session.galaxy, fleet, planet
@@ -467,13 +467,13 @@ class StrategySessionFacade:
         """
         fleet = self._get_fleet_by_id(fleet_id)
         if fleet is None:
-            return ValidationResult(is_valid=False, errors=["Fleet not found."])
+            return ValidationResult.error("Fleet not found.")
 
         path = self._session.preview_fleet_path(fleet, target_hex)
         if path is None:
-            return ValidationResult(is_valid=False, errors=["No path to target hex."])
+            return ValidationResult.error("No path to target hex.")
 
-        return ValidationResult()
+        return ValidationResult.success()
 
     # --- Colony Pod Queries (PROJ-55) ---
 
