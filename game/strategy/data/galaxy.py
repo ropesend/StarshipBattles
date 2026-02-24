@@ -25,7 +25,6 @@ if TYPE_CHECKING:
     from game.strategy.generation.region_classifier import RegionClassifier
     from game.strategy.data.fleet import Fleet
 
-# Planet and PlanetType moved to game.strategy.data.planet
 
 class WarpPoint:
     def __init__(self, destination_id, location):
