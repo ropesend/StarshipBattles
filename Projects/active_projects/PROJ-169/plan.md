@@ -15,16 +15,16 @@
 |-------|--------|-----------|
 | 1. Zero-Risk Deletes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Script & Tool Cleanup | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Formation Editor Migration | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Formation Editor Migration | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Polish | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-23
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete - deleted 9 Tools/ files, 13 scripts/ files, and 2 planet_qc directories
-**Next Action:** Begin Phase 3 - Formation Editor Migration
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 complete - consolidated formation_editor.py, deleted entire Tools/ directory
+**Next Action:** Begin Phase 4 - Polish (unused imports, directory structure)
 **Blockers:** None
-**Context for Next Agent:** Phase 2 deleted dead Tools/ files (9), dead scripts/ files (13), and planet_qc/planet_qc_v2 directories. Kept Tools/formation_editor.py and Tools/README.md for Phase 3. All tests passing (12023 passed, 1 skipped).
+**Context for Next Agent:** Phase 3 updated game/app.py import, relocated test file to tests/unit/ui/screens/, fixed stale import in test_scene_protocol.py, updated pytest.ini, deleted entire Tools/ directory. All tests passing (12023 passed, 1 skipped).
 
 ## Overview
 Remove ~4,288 lines of confirmed dead Python code across 54 files, untrack 22.8MB of __pycache__ from git, consolidate a duplicate formation_editor.py, clean up 14 unused imports, and fix directory structure issues. All deletions verified for zero runtime dependencies.

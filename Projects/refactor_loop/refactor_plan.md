@@ -8,17 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-169 Phase 2 - Script & Tool Cleanup
-**Current Status:** PROJ-169 in progress (Phase 2 of 4 complete)
+**Last Completed:** PROJ-169 Phase 3 - Formation Editor Migration
+**Current Status:** PROJ-169 in progress (Phase 3 of 4 complete)
 **Current Project:** PROJ-169
-**Current Phase:** Phase 3 (Formation Editor Migration)
+**Current Phase:** Phase 4 (Polish)
 **Test Status:** 12023 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 2 deleted 9 Tools/ files, 13 scripts/ files, and 2 planet_qc directories
-- Kept Tools/formation_editor.py and Tools/README.md for Phase 3
-- Next: Phase 3 - consolidate formation_editor.py, update imports, delete Tools/ directory
+- Phase 3 consolidated formation_editor.py, deleted entire Tools/ directory
+- Updated game/app.py import to game.ui.screens.formation_editor
+- Relocated test to tests/unit/ui/screens/test_formation_editor_logic.py
+- Fixed stale import in tests/unit/ui/test_scene_protocol.py
+- Updated pytest.ini (removed --ignore=Tools and Tools from pythonpath)
+- Next: Phase 4 - unused imports, directory structure cleanup
 - All tests passing
 
 ---
@@ -97,6 +100,7 @@
 |-----------|---------|--------|--------|-------|--------|-------|
 | 2026-02-23 | PROJ-169 | Phase 1 | Complete | 12023 passed, 1 skipped | f40e531c | Deleted 15 dead files (legacy scripts + formatimg.py) |
 | 2026-02-23 | PROJ-169 | Phase 2 | Complete | 12023 passed, 1 skipped | 30ce645c | Deleted 24 files (9 Tools/ + 13 scripts/ + 2 dirs) |
+| 2026-02-23 | PROJ-169 | Phase 3 | Complete | 12023 passed, 1 skipped | pending | Deleted Tools/ dir, updated imports, relocated test |
 
 ---
 

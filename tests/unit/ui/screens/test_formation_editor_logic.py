@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, patch, mock_open
 import math
 import json
 
-# Tools directory is added to pythonpath via pytest.ini
-import formation_editor
+# Formation editor is in game.ui.screens
+from game.ui.screens import formation_editor
 
 
 class TestFormationCore:

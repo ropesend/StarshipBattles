@@ -19,7 +19,7 @@ from game.ui.screens.battle_screen import BattleScreen
 from game.ui.screens.setup_screen import BattleSetupScreen
 from game.ui.screens.strategy_screen import StrategyScreen
 from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
-from Tools.formation_editor import FormationEditorScreen
+from game.ui.screens.formation_editor import FormationEditorScreen
 from game.ui.screens.test_lab import TestLabScreen
 from game.ui.screens.galaxy_test import GalaxyTestScreen
 from game.ui.screens.menu_scene import MenuScene
