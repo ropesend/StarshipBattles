@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 
 from game.core.json_utils import load_json_required
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 
 class AstrophysicsLoader:
@@ -116,35 +118,63 @@ class AstrophysicsLoader:
 
         for section in required_sections:
             if section not in data:
-                raise ValueError(f"Missing required section: {section}")
+                raise ValidationException(
+                    f"Missing required section: {section}",
+                    code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                    context={"missing_section": section, "required_sections": required_sections}
+                )
 
         # Validate mass_distributions
         distributions = data["mass_distributions"]
         required_dist = ["rocky", "gas_giant", "ice_giant", "dwarf"]
         for name in required_dist:
             if name not in distributions:
-                raise ValueError(f"Missing mass distribution: {name}")
+                raise ValidationException(
+                    f"Missing mass distribution: {name}",
+                    code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                    context={"section": "mass_distributions", "missing_distribution": name, "required_distributions": required_dist}
+                )
 
         # Validate orbit_zones
         zones = data["orbit_zones"]
         required_zones = ["hot", "habitable", "cold", "outer"]
         for name in required_zones:
             if name not in zones:
-                raise ValueError(f"Missing orbit zone: {name}")
+                raise ValidationException(
+                    f"Missing orbit zone: {name}",
+                    code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                    context={"section": "orbit_zones", "missing_zone": name, "required_zones": required_zones}
+                )
 
         # Validate habitable_zone
         hz = data["habitable_zone"]
         if "inner_factor" not in hz or "outer_factor" not in hz:
-            raise ValueError("habitable_zone missing inner_factor or outer_factor")
+            raise ValidationException(
+                "habitable_zone missing inner_factor or outer_factor",
+                code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                context={"section": "habitable_zone", "reason": "missing_factors", "required_keys": ["inner_factor", "outer_factor"]}
+            )
 
         # Validate atmosphere_retention
         atm = data["atmosphere_retention"]
         if "thresholds" not in atm:
-            raise ValueError("atmosphere_retention missing thresholds")
+            raise ValidationException(
+                "atmosphere_retention missing thresholds",
+                code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                context={"section": "atmosphere_retention", "missing_key": "thresholds"}
+            )
 
         # Validate classification
         classification = data["classification"]
         if "mass_thresholds" not in classification:
-            raise ValueError("classification missing mass_thresholds")
+            raise ValidationException(
+                "classification missing mass_thresholds",
+                code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                context={"section": "classification", "missing_key": "mass_thresholds"}
+            )
         if "temperature_thresholds" not in classification:
-            raise ValueError("classification missing temperature_thresholds")
+            raise ValidationException(
+                "classification missing temperature_thresholds",
+                code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                context={"section": "classification", "missing_key": "temperature_thresholds"}
+            )

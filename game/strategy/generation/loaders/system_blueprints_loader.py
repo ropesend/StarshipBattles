@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 
 from game.core.json_utils import load_json_required
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 
 class SystemBlueprintsLoader:
@@ -91,7 +93,11 @@ class SystemBlueprintsLoader:
                 weights.append(weight)
 
         if not names:
-            raise ValueError("No blueprints with positive weight found")
+            raise ValidationException(
+                "No blueprints with positive weight found",
+                code=ErrorCode.VALIDATION_FAILED.value,
+                context={"reason": "no_positive_weights"}
+            )
 
         # Weighted random selection
         total = sum(weights)
@@ -115,14 +121,26 @@ class SystemBlueprintsLoader:
             ValueError: If schema is invalid.
         """
         if not isinstance(data, dict):
-            raise ValueError("Blueprints data must be a dict")
+            raise ValidationException(
+                "Blueprints data must be a dict",
+                code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                context={"expected_type": "dict", "actual_type": type(data).__name__}
+            )
 
         if "blueprints" not in data:
-            raise ValueError("Missing 'blueprints' key")
+            raise ValidationException(
+                "Missing 'blueprints' key",
+                code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                context={"missing_key": "blueprints"}
+            )
 
         blueprints = data["blueprints"]
         if not isinstance(blueprints, dict):
-            raise ValueError("'blueprints' must be a dict")
+            raise ValidationException(
+                "'blueprints' must be a dict",
+                code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                context={"key": "blueprints", "expected_type": "dict"}
+            )
 
         for name, bp in blueprints.items():
             self._validate_blueprint(name, bp)
@@ -140,35 +158,79 @@ class SystemBlueprintsLoader:
         """
         # Required fields
         if "star_count" not in bp:
-            raise ValueError(f"Blueprint '{name}' missing 'star_count'")
+            raise ValidationException(
+                f"Blueprint '{name}' missing required field",
+                code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                context={"blueprint": name, "missing_field": "star_count"}
+            )
         if "planet_count" not in bp:
-            raise ValueError(f"Blueprint '{name}' missing 'planet_count'")
+            raise ValidationException(
+                f"Blueprint '{name}' missing required field",
+                code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                context={"blueprint": name, "missing_field": "planet_count"}
+            )
         if "weight" not in bp:
-            raise ValueError(f"Blueprint '{name}' missing 'weight'")
+            raise ValidationException(
+                f"Blueprint '{name}' missing required field",
+                code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                context={"blueprint": name, "missing_field": "weight"}
+            )
 
         # Validate star_count
         star_count = bp["star_count"]
         if isinstance(star_count, int):
             if not 1 <= star_count <= 4:
-                raise ValueError(f"Blueprint '{name}' star_count must be 1-4")
+                raise ValidationException(
+                    f"Blueprint '{name}' star_count must be 1-4",
+                    code=ErrorCode.OUT_OF_RANGE.value,
+                    context={"blueprint": name, "field": "star_count", "value": star_count, "valid_range": "1-4"}
+                )
         elif isinstance(star_count, dict):
             if "min" in star_count:
                 if not (1 <= star_count["min"] <= star_count.get("max", 4) <= 4):
-                    raise ValueError(f"Blueprint '{name}' star_count range invalid")
+                    raise ValidationException(
+                        f"Blueprint '{name}' star_count range invalid",
+                        code=ErrorCode.OUT_OF_RANGE.value,
+                        context={"blueprint": name, "field": "star_count", "min": star_count.get("min"), "max": star_count.get("max")}
+                    )
             elif "distribution" not in star_count:
-                raise ValueError(f"Blueprint '{name}' star_count missing min or distribution")
+                raise ValidationException(
+                    f"Blueprint '{name}' star_count missing min or distribution",
+                    code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                    context={"blueprint": name, "field": "star_count", "reason": "missing_min_or_distribution"}
+                )
         else:
-            raise ValueError(f"Blueprint '{name}' star_count must be int or dict")
+            raise ValidationException(
+                f"Blueprint '{name}' star_count must be int or dict",
+                code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                context={"blueprint": name, "field": "star_count", "expected_type": "int or dict", "actual_type": type(star_count).__name__}
+            )
 
         # Validate planet_count
         planet_count = bp["planet_count"]
         if not isinstance(planet_count, dict):
-            raise ValueError(f"Blueprint '{name}' planet_count must be dict with min/max")
+            raise ValidationException(
+                f"Blueprint '{name}' planet_count must be dict with min/max",
+                code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                context={"blueprint": name, "field": "planet_count", "expected_type": "dict"}
+            )
         if "min" not in planet_count or "max" not in planet_count:
-            raise ValueError(f"Blueprint '{name}' planet_count missing min or max")
+            raise ValidationException(
+                f"Blueprint '{name}' planet_count missing min or max",
+                code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                context={"blueprint": name, "field": "planet_count", "reason": "missing_min_or_max"}
+            )
         if planet_count["min"] < 0 or planet_count["max"] < planet_count["min"]:
-            raise ValueError(f"Blueprint '{name}' planet_count range invalid")
+            raise ValidationException(
+                f"Blueprint '{name}' planet_count range invalid",
+                code=ErrorCode.OUT_OF_RANGE.value,
+                context={"blueprint": name, "field": "planet_count", "min": planet_count["min"], "max": planet_count["max"]}
+            )
 
         # Validate weight
         if bp["weight"] <= 0:
-            raise ValueError(f"Blueprint '{name}' weight must be positive")
+            raise ValidationException(
+                f"Blueprint '{name}' weight must be positive",
+                code=ErrorCode.OUT_OF_RANGE.value,
+                context={"blueprint": name, "field": "weight", "value": bp["weight"], "constraint": "must be positive"}
+            )

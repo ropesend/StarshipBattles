@@ -10,6 +10,8 @@ import os
 from typing import Dict, Any, List, Optional
 
 from game.core.json_utils import load_json_required
+from game.core.exceptions import ValidationException, ResourceException
+from game.core.error_codes import ErrorCode
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +54,11 @@ class GalaxyLayoutsLoader:
         data = load_json_required(file_path)
 
         if 'layouts' not in data:
-            raise ValueError(f"Galaxy layouts file must contain 'layouts' key: {file_path}")
+            raise ResourceException(
+                "Invalid galaxy layouts file format",
+                code=ErrorCode.INVALID_FORMAT.value,
+                context={"file_path": str(file_path), "missing_key": "layouts"}
+            )
 
         logger.info(f"Loaded {len(data['layouts'])} galaxy layout types")
         return data
@@ -74,9 +80,10 @@ class GalaxyLayoutsLoader:
         layouts = layouts_data.get('layouts', {})
         if layout_type not in layouts:
             available = list(layouts.keys())
-            raise ValueError(
-                f"Unknown layout type '{layout_type}'. "
-                f"Available types: {available}"
+            raise ValidationException(
+                f"Unknown layout type '{layout_type}'",
+                code=ErrorCode.MISSING_ENTITY.value,
+                context={"requested_type": layout_type, "available_types": available}
             )
         return layouts[layout_type]
 

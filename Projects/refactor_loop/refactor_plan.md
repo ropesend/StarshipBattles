@@ -8,19 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-170 Phase 1 - Infrastructure
-**Current Status:** PROJ-170 Phase 1 Complete
+**Last Completed:** PROJ-170 Phase 2 - Strategy Loaders Migration
+**Current Status:** PROJ-170 Phase 2 Complete
 **Current Project:** PROJ-170
-**Current Phase:** Phase 2
+**Current Phase:** Phase 3
 **Test Status:** 11972 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-170 Phase 1 complete - Added 3 new error codes
-- V002 (SCHEMA_VALIDATION_ERROR), V003 (MISSING_ENTITY), C003 (MISSING_DEPENDENCY)
-- Updated ERROR_HANDLING_GUIDELINES.md with full error code reference
-- Total error codes now: 24
-- Next: Phase 2 - Strategy Loaders Migration (24 ValueError → ValidationException)
+- PROJ-170 Phase 2 complete - Migrated 24 ValueError to domain exceptions
+- system_blueprints_loader.py: 15 ValueError → ValidationException
+- astrophysics_loader.py: 7 ValueError → ValidationException
+- galaxy_layouts_loader.py: 2 ValueError → ValidationException + ResourceException
+- Updated test_layout_loader.py to expect ValidationException
+- Next: Phase 3 - Simulation Core Migration (27 raises across 15 files)
 
 ---
 
@@ -113,6 +114,7 @@
 | 2026-02-23 | PROJ-174 | Phase 5 | Complete | 11972 passed, 1 skipped | pending | Deprecated old API, updated test mocks to DI |
 | 2026-02-23 | PROJ-174 | Audit 1 | PASSED | 11972 passed, 1 skipped | pending | Fixed orphaned import in resources.py |
 | 2026-02-23 | PROJ-170 | Phase 1 | Complete | 11972 passed, 1 skipped | pending | Added 3 error codes (V002, V003, C003), updated guidelines |
+| 2026-02-23 | PROJ-170 | Phase 2 | Complete | 11972 passed, 1 skipped | pending | Migrated 24 ValueError in 3 strategy loader files |
 
 ---
 
