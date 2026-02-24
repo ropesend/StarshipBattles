@@ -193,12 +193,15 @@ class Galaxy:
         return self.name_map.get(name)
 
     def get_system_of_object(self, obj: Any) -> Optional['StarSystem']:
-        """Find the system containing a given object (Fleet, Planet, etc).
+        """Find the system containing a Fleet (by its global location).
 
         Facade method delegating to GalaxySpatialIndex.
 
+        Note: For planets, use get_system_of_planet() instead. Planets have
+        local coordinates relative to their system, not global coordinates.
+
         Args:
-            obj: Object with a 'location' attribute (HexCoord).
+            obj: Object with a 'location' attribute (global HexCoord).
 
         Returns:
             StarSystem or None.
@@ -296,13 +299,15 @@ class Galaxy:
     def get_zones_at_global_hex(self, global_hex: 'HexCoord') -> list:
         """O(1) spatial lookup: get all zone objects at a global hex.
 
+        Facade method delegating to GalaxySpatialIndex.
+
         Args:
             global_hex: Global HexCoord to query.
 
         Returns:
             List of zone objects (stars, Dyson Spheres) at this hex, or empty list.
         """
-        return self._global_hex_zones.get(global_hex, [])
+        return self._spatial.get_zones_at_global_hex(global_hex)
 
     # --- Fleet Registry Methods (PROJ-87 Phase 6) ---
     # Facade methods delegating to GalaxyEntityRegistry

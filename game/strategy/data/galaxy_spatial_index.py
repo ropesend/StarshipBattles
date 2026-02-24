@@ -30,10 +30,13 @@ class GalaxySpatialIndex:
         self._galaxy = galaxy
 
     def get_system_of_object(self, obj: Any) -> Optional['StarSystem']:
-        """Find the system containing a given object (Fleet, Planet, etc).
+        """Find the system containing a Fleet (by its global location).
+
+        Note: For planets, use get_system_of_planet() instead. Planets have
+        local coordinates relative to their system, not global coordinates.
 
         Args:
-            obj: Object with a 'location' attribute (HexCoord).
+            obj: Object with a 'location' attribute (global HexCoord).
 
         Returns:
             StarSystem or None.

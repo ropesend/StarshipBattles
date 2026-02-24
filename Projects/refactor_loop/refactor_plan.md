@@ -8,20 +8,18 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-178 Audit PASSED - All 4 phases complete
-**Current Status:** PROJ-178 complete, next project is PROJ-179
+**Last Completed:** PROJ-179 Phase 1 - Delegation and docstring fixes
+**Current Status:** PROJ-179 Phase 1 complete, Phase 2 next
 **Current Project:** PROJ-179
-**Current Phase:** Phase 1
+**Current Phase:** Phase 2
 **Test Status:** 12358 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-178 COMPLETE: All 4 phases + audit passed
-  - Phase 1: ShipInstance validation + docstrings
-  - Phase 2: PlanetaryFacility/SpeciesPopulation from_dict extraction
-  - Phase 3: DesignMetadata calculation fix (major_classification + WeaponAbility)
-  - Phase 4: Ghost code cleanup (galaxy.py comment removed)
-- Next: PROJ-179 - PROJ-173 Post-Refactor Cleanup
+- PROJ-179 Phase 1 COMPLETE:
+  - Fixed Galaxy.get_zones_at_global_hex to delegate to GalaxySpatialIndex
+  - Updated get_system_of_object docstrings (both facade and delegate) to clarify Fleet-only usage
+- Next: PROJ-179 Phase 2 - restore_planet() method and O(1) get_system_at_location()
 
 ---
 
@@ -109,8 +107,8 @@
 
 ---
 
-- [ ] **PROJ-179: PROJ-173 Post-Refactor Cleanup**
-  - **Phases:** 2 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-179: PROJ-173 Post-Refactor Cleanup**
+  - **Phases:** 2 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-179/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-179/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -208,6 +206,7 @@
 | 2026-02-24 | PROJ-178 | Phase 3 | Complete | 12358 passed, 1 skipped | pending | Fixed _calculate_combat_power_from_ship, removed old layer warnings, +2 tests |
 | 2026-02-24 | PROJ-178 | Phase 4 | Complete | 12358 passed, 1 skipped | pending | Removed ghost comment in galaxy.py |
 | 2026-02-24 | PROJ-178 | Audit 1 | PASSED | 12358 passed, 1 skipped | - | All 4 phases verified, project complete |
+| 2026-02-24 | PROJ-179 | Phase 1 | Complete | 12358 passed, 1 skipped | pending | Delegation fix + docstring updates |
 
 ---
 
