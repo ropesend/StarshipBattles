@@ -16,6 +16,7 @@ from game.core.paths import Paths
 from game.strategy.engine.empire_economy_calculator import EmpireEconomyCalculator
 from game.ui.panels.empire_treasury_panel import EmpireTreasuryPanel, load_resource_icons
 from game.ui.screens.race_asset_loader import RaceAssetLoader
+from game.ui.utils import create_section_header
 
 
 # Tab constants
@@ -304,13 +305,7 @@ class EmpirePanelWindow(UIWindow):
     ) -> int:
         """Render identity section with faction/race info."""
         # Section header
-        UILabel(
-            relative_rect=pygame.Rect(10, y_offset, content_width, ROW_HEIGHT),
-            text="Identity",
-            manager=self.ui_manager,
-            container=container,
-            object_id="#section_header"
-        )
+        create_section_header("Identity", y_offset, content_width, self.ui_manager, container, height=ROW_HEIGHT)
         y_offset += ROW_HEIGHT + 5
 
         # Identity fields
@@ -345,13 +340,7 @@ class EmpirePanelWindow(UIWindow):
     ) -> int:
         """Render aptitudes in 3-column layout."""
         # Section header
-        UILabel(
-            relative_rect=pygame.Rect(10, y_offset, content_width, ROW_HEIGHT),
-            text="Aptitudes",
-            manager=self.ui_manager,
-            container=container,
-            object_id="#section_header"
-        )
+        create_section_header("Aptitudes", y_offset, content_width, self.ui_manager, container, height=ROW_HEIGHT)
         y_offset += ROW_HEIGHT + 5
 
         # Aptitude names and display labels
@@ -397,13 +386,7 @@ class EmpirePanelWindow(UIWindow):
     ) -> int:
         """Render environmental preferences."""
         # Section header
-        UILabel(
-            relative_rect=pygame.Rect(10, y_offset, content_width, ROW_HEIGHT),
-            text="Environmental Preferences",
-            manager=self.ui_manager,
-            container=container,
-            object_id="#section_header"
-        )
+        create_section_header("Environmental Preferences", y_offset, content_width, self.ui_manager, container, height=ROW_HEIGHT)
         y_offset += ROW_HEIGHT + 5
 
         # Environment fields
@@ -446,13 +429,7 @@ class EmpirePanelWindow(UIWindow):
 
         if bio:
             # Biology header
-            UILabel(
-                relative_rect=pygame.Rect(10, y_offset, content_width, ROW_HEIGHT),
-                text="Biology",
-                manager=self.ui_manager,
-                container=container,
-                object_id="#section_header"
-            )
+            create_section_header("Biology", y_offset, content_width, self.ui_manager, container, height=ROW_HEIGHT)
             y_offset += ROW_HEIGHT
 
             # Bio text box
@@ -466,13 +443,7 @@ class EmpirePanelWindow(UIWindow):
 
         if socio:
             # Society header
-            UILabel(
-                relative_rect=pygame.Rect(10, y_offset, content_width, ROW_HEIGHT),
-                text="Society",
-                manager=self.ui_manager,
-                container=container,
-                object_id="#section_header"
-            )
+            create_section_header("Society", y_offset, content_width, self.ui_manager, container, height=ROW_HEIGHT)
             y_offset += ROW_HEIGHT
 
             # Socio text box

@@ -15,14 +15,14 @@
 |-------|--------|-----------|
 | 1. Add helper + tests | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Migrate race editor panels (19 sites) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Migrate empire/other panels (5 sites) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Migrate empire/other panels (6 sites) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Final verification | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-23
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete — migrated 18 sites across 5 race panel files (identity, environment, aptitudes, description, summary)
-**Next Action:** Begin Phase 3 — migrate empire panel window and treasury panel (6 sites)
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 complete — migrated 6 sites across 2 files (empire_panel_window.py, empire_treasury_panel.py), fixed 12 test mocks
+**Next Action:** Begin Phase 4 — final verification (full test suite, grep for remaining #section_header)
 **Blockers:** None
 
 ## Overview

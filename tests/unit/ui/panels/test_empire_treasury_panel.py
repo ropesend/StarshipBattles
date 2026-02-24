@@ -122,20 +122,22 @@ class TestResourceAbbreviations:
 class TestValueFormatting:
     """Tests for _format_value method."""
 
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
     @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
     @patch('game.ui.panels.empire_treasury_panel.UILabel')
     @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_format_zero_returns_zero(self, mock_image, mock_label, mock_container,
+    def test_format_zero_returns_zero(self, mock_image, mock_label, mock_container, mock_header,
                                        mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
         """Zero values should format as '0'."""
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
         assert panel._format_value(0) == "0"
         assert panel._format_value(0.0) == "0"
 
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
     @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
     @patch('game.ui.panels.empire_treasury_panel.UILabel')
     @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_format_small_integers(self, mock_image, mock_label, mock_container,
+    def test_format_small_integers(self, mock_image, mock_label, mock_container, mock_header,
                                     mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
         """Small integers should format without commas."""
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
@@ -143,10 +145,11 @@ class TestValueFormatting:
         assert panel._format_value(100) == "100"
         assert panel._format_value(999) == "999"
 
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
     @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
     @patch('game.ui.panels.empire_treasury_panel.UILabel')
     @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_format_large_integers_with_commas(self, mock_image, mock_label, mock_container,
+    def test_format_large_integers_with_commas(self, mock_image, mock_label, mock_container, mock_header,
                                                 mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
         """Large integers should format with comma separators."""
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
@@ -154,10 +157,11 @@ class TestValueFormatting:
         assert panel._format_value(10000) == "10,000"
         assert panel._format_value(1000000) == "1,000,000"
 
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
     @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
     @patch('game.ui.panels.empire_treasury_panel.UILabel')
     @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_format_floats_rounds_to_integer(self, mock_image, mock_label, mock_container,
+    def test_format_floats_rounds_to_integer(self, mock_image, mock_label, mock_container, mock_header,
                                               mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
         """Float values should round to nearest integer."""
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
@@ -173,10 +177,11 @@ class TestValueFormatting:
 class TestRowData:
     """Tests for row data structure methods."""
 
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
     @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
     @patch('game.ui.panels.empire_treasury_panel.UILabel')
     @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_production_rows_structure(self, mock_image, mock_label, mock_container,
+    def test_production_rows_structure(self, mock_image, mock_label, mock_container, mock_header,
                                         mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
         """Production rows should have correct structure."""
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
@@ -191,10 +196,11 @@ class TestRowData:
         for i in range(5):
             assert rows[i][2] is False
 
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
     @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
     @patch('game.ui.panels.empire_treasury_panel.UILabel')
     @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_expense_rows_structure(self, mock_image, mock_label, mock_container,
+    def test_expense_rows_structure(self, mock_image, mock_label, mock_container, mock_header,
                                      mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
         """Expense rows should have correct structure."""
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
@@ -207,10 +213,11 @@ class TestRowData:
         assert rows[3][0] == "Total"
         assert rows[3][2] is True
 
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
     @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
     @patch('game.ui.panels.empire_treasury_panel.UILabel')
     @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_treasury_rows_structure(self, mock_image, mock_label, mock_container,
+    def test_treasury_rows_structure(self, mock_image, mock_label, mock_container, mock_header,
                                       mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
         """Treasury rows should have correct structure."""
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
@@ -225,10 +232,11 @@ class TestRowData:
         for row in rows:
             assert row[2] is False
 
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
     @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
     @patch('game.ui.panels.empire_treasury_panel.UILabel')
     @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_production_rows_use_snapshot_data(self, mock_image, mock_label, mock_container,
+    def test_production_rows_use_snapshot_data(self, mock_image, mock_label, mock_container, mock_header,
                                                 mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
         """Production rows should reference snapshot data."""
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
@@ -246,10 +254,11 @@ class TestRowData:
 class TestPanelConstruction:
     """Tests for panel initialization and construction."""
 
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
     @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
     @patch('game.ui.panels.empire_treasury_panel.UILabel')
     @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_panel_stores_references(self, mock_image, mock_label, mock_container,
+    def test_panel_stores_references(self, mock_image, mock_label, mock_container, mock_header,
                                       mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
         """Panel should store all constructor arguments."""
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
@@ -259,10 +268,11 @@ class TestPanelConstruction:
         assert panel.snapshot is sample_snapshot
         assert panel.resource_icons is mock_resource_icons
 
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
     @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
     @patch('game.ui.panels.empire_treasury_panel.UILabel')
     @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_scroll_container_created(self, mock_image, mock_label, mock_container,
+    def test_scroll_container_created(self, mock_image, mock_label, mock_container, mock_header,
                                        mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
         """Panel should create a scroll container."""
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
@@ -278,10 +288,11 @@ class TestPanelConstruction:
 class TestRefresh:
     """Tests for panel refresh functionality."""
 
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
     @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
     @patch('game.ui.panels.empire_treasury_panel.UILabel')
     @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_refresh_updates_snapshot(self, mock_image, mock_label, mock_container,
+    def test_refresh_updates_snapshot(self, mock_image, mock_label, mock_container, mock_header,
                                        mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
         """Refresh should update the stored snapshot."""
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
@@ -292,10 +303,11 @@ class TestRefresh:
 
         assert panel.snapshot is new_snapshot
 
+    @patch('game.ui.panels.empire_treasury_panel.create_section_header')
     @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')
     @patch('game.ui.panels.empire_treasury_panel.UILabel')
     @patch('game.ui.panels.empire_treasury_panel.UIImage')
-    def test_refresh_clears_old_elements(self, mock_image, mock_label, mock_container,
+    def test_refresh_clears_old_elements(self, mock_image, mock_label, mock_container, mock_header,
                                           mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons):
         """Refresh should kill old UI elements."""
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)

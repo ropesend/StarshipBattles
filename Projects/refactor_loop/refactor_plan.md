@@ -8,18 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-165 Phase 2 Complete
-**Current Status:** PROJ-165 Phase 2 done — migrated 18 race panel sites
+**Last Completed:** PROJ-165 Phase 3 Complete
+**Current Status:** PROJ-165 Phase 3 done — migrated 6 empire panel sites
 **Current Project:** PROJ-165
-**Current Phase:** Phase 3
+**Current Phase:** Phase 4
 **Test Status:** 2826 UI tests passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 2 Complete: Migrated 18 sites across 5 race panel files
-- Files modified: race_identity_panel.py (3), race_environment_panel.py (6), race_aptitudes_panel.py (3), race_description_panel.py (2), race_summary_panel.py (4)
-- Summary panel uses variable x positions (col1_x, col3_x) - passed `x=x` explicitly
-- Next: Phase 3 — migrate empire_panel_window.py (5 sites) and empire_treasury_panel.py (1 site)
+- Phase 3 Complete: Migrated 6 sites across 2 files
+- Files modified: empire_panel_window.py (5 sites), empire_treasury_panel.py (1 site)
+- Fixed 12 test methods in test_empire_treasury_panel.py (added mock for create_section_header)
+- Empire panels use ROW_HEIGHT (not 25) and container parameter (not self.panel)
+- Next: Phase 4 — final verification (full test suite, grep for remaining #section_header)
 
 ---
 
@@ -46,7 +47,7 @@
   - **Dependencies:** None
 
 - [/] **PROJ-165: Create `create_section_header()` UI Helper**
-  - **Phases:** 4 | **Status:** Phase 2 Complete | **Priority:** Medium
+  - **Phases:** 4 | **Status:** Phase 3 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-165/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-165/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -95,6 +96,7 @@
 | 2026-02-23 | PROJ-164 | Close | COMPLETE | - | - | Project marked complete |
 | 2026-02-23 | PROJ-165 | Phase 1 | Complete | 2826 UI pass | pending | Helper + 9 tests added |
 | 2026-02-23 | PROJ-165 | Phase 2 | Complete | 2826 UI pass | pending | Migrated 18 race panel sites |
+| 2026-02-23 | PROJ-165 | Phase 3 | Complete | 2826 UI pass | pending | Migrated 6 empire panel sites |
 
 ---
 

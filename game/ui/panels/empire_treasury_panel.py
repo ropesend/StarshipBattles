@@ -15,6 +15,7 @@ from pygame_gui.elements import UIPanel, UILabel, UIImage, UIScrollingContainer
 from game.core.constants import PLANET_RESOURCES
 from game.core.paths import Paths
 from game.strategy.engine.empire_economy_calculator import EmpireEconomySnapshot
+from game.ui.utils import create_section_header
 
 
 # Layout constants
@@ -166,12 +167,11 @@ class EmpireTreasuryPanel:
             New y offset after section
         """
         # Section title
-        title_label = UILabel(
-            relative_rect=pygame.Rect(LEFT_MARGIN, y, LABEL_COL_WIDTH + len(PLANET_RESOURCES) * RESOURCE_COL_WIDTH, ROW_HEIGHT),
-            text=title,
-            manager=self.ui_manager,
-            container=self._scroll_container,
-            object_id="#section_header"
+        title_label = create_section_header(
+            title, y,
+            LABEL_COL_WIDTH + len(PLANET_RESOURCES) * RESOURCE_COL_WIDTH,
+            self.ui_manager, self._scroll_container,
+            x=LEFT_MARGIN, height=ROW_HEIGHT
         )
         self._elements.append(title_label)
         y += ROW_HEIGHT
