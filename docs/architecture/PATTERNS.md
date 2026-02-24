@@ -271,9 +271,18 @@ from typing import List, Optional
 
 @dataclass
 class ValidationResult:
-    success: bool
+    is_valid: bool = True
     errors: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
+    error_code: Optional[str] = None
+
+    @classmethod
+    def success(cls) -> 'ValidationResult':
+        return cls(is_valid=True)
+
+    @classmethod
+    def error(cls, message: str, code: Optional[str] = None) -> 'ValidationResult':
+        return cls(is_valid=False, errors=[message], error_code=code)
 
 class ValidationRule(ABC):
     """Base class for validation rules using template method."""
@@ -282,7 +291,7 @@ class ValidationRule(ABC):
         """Template method - orchestrates validation."""
         # Guard clause handled once in base class
         if not self._should_validate(component, layer_type):
-            return ValidationResult(True)
+            return ValidationResult.success()
 
         # Delegate to subclass for actual validation
         return self._do_validate(ship, component, layer_type)
@@ -306,12 +315,12 @@ class LayerCapacityRule(ValidationRule):
     def _do_validate(self, ship, component, layer_type) -> ValidationResult:
         layer = ship.layers.get(layer_type)
         if not layer:
-            return ValidationResult(False, [f"Layer {layer_type} not found"])
+            return ValidationResult.error(f"Layer {layer_type} not found")
 
         if len(layer['components']) >= layer['max_capacity']:
-            return ValidationResult(False, [f"Layer {layer_type} at capacity"])
+            return ValidationResult.error(f"Layer {layer_type} at capacity")
 
-        return ValidationResult(True)
+        return ValidationResult.success()
 
 
 class UniqueComponentRule(ValidationRule):
@@ -324,8 +333,8 @@ class UniqueComponentRule(ValidationRule):
     def _do_validate(self, ship, component, layer_type) -> ValidationResult:
         existing = ship.get_component_by_id(component.id)
         if existing:
-            return ValidationResult(False, [f"{component.name} already installed"])
-        return ValidationResult(True)
+            return ValidationResult.error(f"{component.name} already installed")
+        return ValidationResult.success()
 ```
 
 ---

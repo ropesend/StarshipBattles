@@ -19,28 +19,29 @@ class TestValidationResult:
 
     def test_init_valid(self):
         """ValidationResult can be created as valid."""
-        result = ValidationResult(True)
+        result = ValidationResult.success()
         assert result.is_valid is True
         assert result.errors == []
         assert result.warnings == []
 
     def test_init_invalid_with_errors(self):
         """ValidationResult can be created as invalid with errors."""
-        result = ValidationResult(False, errors=["Error 1", "Error 2"])
+        result = ValidationResult.with_errors(["Error 1", "Error 2"])
         assert result.is_valid is False
         assert len(result.errors) == 2
         assert "Error 1" in result.errors
 
     def test_init_with_warnings(self):
         """ValidationResult can have warnings without being invalid."""
-        result = ValidationResult(True, warnings=["Warning 1"])
+        result = ValidationResult.success()
+        result.add_warning("Warning 1")
         assert result.is_valid is True
         assert len(result.warnings) == 1
         assert "Warning 1" in result.warnings
 
     def test_add_error_marks_invalid(self):
         """add_error() sets is_valid to False."""
-        result = ValidationResult(True)
+        result = ValidationResult.success()
         assert result.is_valid is True
 
         result.add_error("Something went wrong")
@@ -49,17 +50,17 @@ class TestValidationResult:
 
     def test_add_warning_preserves_validity(self):
         """add_warning() does not affect is_valid."""
-        result = ValidationResult(True)
+        result = ValidationResult.success()
         result.add_warning("Consider this")
         assert result.is_valid is True
         assert "Consider this" in result.warnings
 
     def test_merge_combines_errors(self):
         """merge() combines errors from both results."""
-        result1 = ValidationResult(True)
+        result1 = ValidationResult.success()
         result1.add_error("Error A")
 
-        result2 = ValidationResult(True)
+        result2 = ValidationResult.success()
         result2.add_error("Error B")
 
         result1.merge(result2)
@@ -69,8 +70,10 @@ class TestValidationResult:
 
     def test_merge_combines_warnings(self):
         """merge() combines warnings from both results."""
-        result1 = ValidationResult(True, warnings=["Warn A"])
-        result2 = ValidationResult(True, warnings=["Warn B"])
+        result1 = ValidationResult.success()
+        result1.add_warning("Warn A")
+        result2 = ValidationResult.success()
+        result2.add_warning("Warn B")
 
         result1.merge(result2)
         assert "Warn A" in result1.warnings
@@ -78,8 +81,8 @@ class TestValidationResult:
 
     def test_merge_propagates_invalid(self):
         """merge() sets is_valid to False if other is invalid."""
-        result1 = ValidationResult(True)
-        result2 = ValidationResult(False)
+        result1 = ValidationResult.success()
+        result2 = ValidationResult.error("Some error")
 
         result1.merge(result2)
         assert result1.is_valid is False
@@ -89,7 +92,7 @@ class ConcreteValidationRule(ValidationRule):
     """Concrete implementation for testing ValidationRule."""
 
     def __init__(self, validation_result=None):
-        self._test_result = validation_result or ValidationResult(True)
+        self._test_result = validation_result or ValidationResult.success()
         self.do_validate_called = False
         self.do_validate_args = None
 
@@ -111,7 +114,7 @@ class CustomShouldValidateRule(ValidationRule):
         return self._should_validate_return
 
     def _do_validate(self, ship, component, layer_type):
-        return ValidationResult(True)
+        return ValidationResult.success()
 
 
 class TestValidationRule:
@@ -173,7 +176,7 @@ class TestValidationRule:
 
     def test_validate_returns_do_validate_result(self):
         """validate() returns the result from _do_validate()."""
-        expected_result = ValidationResult(False, errors=["Test error"])
+        expected_result = ValidationResult.error("Test error")
         rule = ConcreteValidationRule(validation_result=expected_result)
         mock_ship = MagicMock()
         mock_component = MagicMock()
@@ -204,7 +207,7 @@ class ConcreteDesignRule(DesignValidationRule):
 
     def _do_validate(self, ship, component, layer_type):
         self.do_validate_called = True
-        return ValidationResult(True)
+        return ValidationResult.success()
 
 
 class TestDesignValidationRule:
@@ -239,7 +242,7 @@ class ConcreteAdditionRule(AdditionValidationRule):
 
     def _do_validate(self, ship, component, layer_type):
         self.do_validate_called = True
-        return ValidationResult(True)
+        return ValidationResult.success()
 
 
 class TestAdditionValidationRule:

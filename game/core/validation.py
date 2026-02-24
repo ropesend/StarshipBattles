@@ -68,8 +68,8 @@ class ValidationResult:
     by all layers (simulation, strategy, UI). It provides a unified
     interface for validation results across the codebase.
 
-    Construction:
-        result = ValidationResult(is_valid=False, errors=["Error 1", "Error 2"])
+    Factory Methods:
+        result = ValidationResult.with_errors(["Error 1", "Error 2"])
 
     Attributes:
         is_valid: True if validation passed, False otherwise.
@@ -78,7 +78,7 @@ class ValidationResult:
         error_code: Optional error code for programmatic handling.
 
     Example:
-        result = ValidationResult()
+        result = ValidationResult.success()
         if some_condition_fails:
             result.add_error("Validation failed", code=ErrorCode.VALIDATION_FAILED.value)
         return result
