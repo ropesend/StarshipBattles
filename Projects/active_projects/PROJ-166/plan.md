@@ -15,15 +15,15 @@
 |-------|--------|-----------|
 | 1. Normalize BaseGallery to 2-tuples | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Refactor RaceThemeGallery to extend BaseGallery | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Update tests and verify | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Update tests and verify | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-23
-**Active Phase:** Phase 3 — Update tests and verify
-**Last Action:** Phase 2 complete — RaceThemeGallery refactored to extend BaseGallery
-**Next Action:** Begin Phase 3 — Final verification (tests already updated in Phase 2)
+**Active Phase:** All phases complete — Ready for audit
+**Last Action:** Phase 3 complete — Final verification passed
+**Next Action:** Trigger audit (Protocol 04)
 **Blockers:** None
-**Context for Next Agent:** RaceThemeGallery now extends BaseGallery. Duplicate methods removed. Tests updated to use new API (asset_buttons, on_asset_selected). 12016 passed, 1 skipped. Phase 3 is essentially done - just needs final verification.
+**Context for Next Agent:** All 3 phases complete. RaceThemeGallery extends BaseGallery. 4 duplicate methods eliminated. 43 gallery tests passing, 12016 total tests passing.
 
 ## Overview
 RaceThemeGallery was missed during PROJ-108 Phase 6 when RacePortraitGallery and RaceFlagGallery were refactored to extend BaseGallery. This project completes that work by normalizing BaseGallery's data model from 3-tuples `(btn, img, id)` to 2-tuples `(btn, id)`, making `_create_content()` hookable for layout variants, and then making RaceThemeGallery extend BaseGallery.
@@ -104,14 +104,14 @@ See [phase_3_checklist.md](phase_3_checklist.md) for detailed tasks.
 - [x] Run full test suite: `pytest tests/ -n 12` — 11994 passed, 1 skipped (baseline established)
 
 ### After Each Phase
-- [ ] Run `pytest tests/unit/ui/test_race_portrait_gallery.py tests/unit/ui/test_race_flag_gallery.py tests/unit/ui/test_race_theme_gallery.py -v`
-- [ ] All gallery tests pass
+- [x] Run `pytest tests/unit/ui/test_race_portrait_gallery.py tests/unit/ui/test_race_flag_gallery.py tests/unit/ui/test_race_theme_gallery.py -v`
+- [x] All gallery tests pass (43 tests)
 
 ### Final Verification
-- [ ] Run full test suite: `pytest tests/ -n 12` — all tests pass
-- [ ] Verify RaceThemeGallery no longer has duplicate methods (_sanitize_object_id, handle_button_click, set_from_config)
-- [ ] Verify RaceThemeGallery extends BaseGallery
-- [ ] Verify public API unchanged (RaceSetupScreen still works without modification)
+- [x] Run full test suite: `pytest tests/ -n 12` — 12016 passed, 1 skipped
+- [x] Verify RaceThemeGallery no longer has duplicate methods (_sanitize_object_id, handle_button_click, set_from_config)
+- [x] Verify RaceThemeGallery extends BaseGallery
+- [x] Verify public API unchanged (RaceSetupScreen still works without modification)
 
 ---
 
