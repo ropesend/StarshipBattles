@@ -92,12 +92,12 @@ def load_vehicle_classes_data(
     # Load vehicle classes (required)
     try:
         data = load_json_required(file_path)
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         raise MissingResourceException(
             f"Vehicle class data file not found: {file_path}",
             code=ErrorCode.RESOURCE_NOT_FOUND.value,
             context={"file_path": str(file_path), "severity": "critical"}
-        )
+        ) from e
 
     raw_classes = data.get('classes', {})
 

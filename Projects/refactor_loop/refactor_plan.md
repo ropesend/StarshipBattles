@@ -8,18 +8,18 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-186 Phase 2 (Fix Stale Docstrings)
-**Current Status:** PROJ-186 Phase 2 complete, ready for Phase 3
+**Last Completed:** PROJ-186 Phase 3 (Fix Exception Chaining and Re-raise)
+**Current Status:** PROJ-186 Phase 3 complete, ready for Phase 4
 **Current Project:** PROJ-186
-**Current Phase:** Phase 3
+**Current Phase:** Phase 4
 **Test Status:** 12366 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-186 Phase 2 Complete:
-  - game_session.py: Updated from_dict() docstring - KeyError/TypeError → PersistenceException
-  - resources.py: Updated module docstring - "Exceptions:" → "Error Handling:" (clarifies these are caught, not raised)
-- Next: Phase 3 - Fix Exception Chaining and Re-raise (ship_loader.py from e, app.py bare raise)
+- PROJ-186 Phase 3 Complete:
+  - ship_loader.py: Added `as e` and `from e` to FileNotFoundError exception handling
+  - app.py: Changed `raise e` to bare `raise` in crash handler
+- Next: Phase 4 - Fix Error Code Semantics (3 files with wrong ErrorCodes)
 
 ---
 
@@ -260,6 +260,7 @@
 | 2026-02-24 | PROJ-185 | Audit 1 | PASSED | 12366 passed, 1 skipped | pending | Fixed 2 misleading comments |
 | 2026-02-24 | PROJ-186 | Phase 1 | Complete | 12366 passed, 1 skipped | pending | Converted 12 string codes to ErrorCode enums in 4 files |
 | 2026-02-24 | PROJ-186 | Phase 2 | Complete | 12366 passed, 1 skipped | pending | Fixed 2 stale docstrings (game_session.py, resources.py) |
+| 2026-02-24 | PROJ-186 | Phase 3 | Complete | 12366 passed, 1 skipped | pending | Added `from e` to ship_loader.py, fixed `raise e` → `raise` in app.py |
 
 ---
 

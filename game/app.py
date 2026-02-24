@@ -715,7 +715,7 @@ def main():
         logger.error(error_msg)
         with open(Paths.CRASH_LOG, "w") as f:
             f.write(error_msg)
-        raise e
+        raise
 
     Profiler.instance().save_history()
 
