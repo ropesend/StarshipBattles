@@ -3,11 +3,9 @@ Resource Registry Loading
 
 Loads resource type definitions from data/resources.json.
 
-Exceptions:
-    FileNotFoundError: File not found (handled with fallback to defaults)
-    json.JSONDecodeError: Invalid JSON (handled with fallback to defaults)
-    PermissionError: Cannot read file (handled with fallback to defaults)
-    TypeError: Malformed data structure (handled with fallback to defaults)
+Error Handling:
+    All loading errors (FileNotFoundError, JSONDecodeError, PermissionError,
+    TypeError) are caught and logged, with graceful fallback to default resources.
 """
 
 import json

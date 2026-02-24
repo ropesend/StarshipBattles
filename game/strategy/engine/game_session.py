@@ -267,8 +267,7 @@ class GameSession:
             Reconstructed GameSession with all state restored
 
         Raises:
-            KeyError: If required fields (config, galaxy, empires) are missing.
-            TypeError: If data structures are invalid.
+            PersistenceException: If required fields are missing or data structures are invalid.
         """
         from game.core.exceptions import PersistenceException
         from game.core.error_codes import ErrorCode

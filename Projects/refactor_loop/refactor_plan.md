@@ -8,22 +8,18 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-186 Phase 1 (String codes → ErrorCode enums)
-**Current Status:** PROJ-186 Phase 1 complete, ready for Phase 2
+**Last Completed:** PROJ-186 Phase 2 (Fix Stale Docstrings)
+**Current Status:** PROJ-186 Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-186
-**Current Phase:** Phase 2
+**Current Phase:** Phase 3
 **Test Status:** 12366 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-186 Phase 1 Complete:
-  - battle_controller.py: 2 sites → ErrorCode.STATE_FROZEN.value
-  - projectile.py: 3 sites → ErrorCode.OUT_OF_RANGE.value (V004, semantically correct for value validation)
-  - modifier_effects.py: 4 sites → ErrorCode F001-F004
-  - game_session.py: 3 sites → ErrorCode P001/P002/P003
-  - Updated 7 test assertions in test_projectile.py (V003→V004)
-  - Grep verified: no string codes remain in game/
-- Next: Phase 2 - Fix Stale Docstrings
+- PROJ-186 Phase 2 Complete:
+  - game_session.py: Updated from_dict() docstring - KeyError/TypeError → PersistenceException
+  - resources.py: Updated module docstring - "Exceptions:" → "Error Handling:" (clarifies these are caught, not raised)
+- Next: Phase 3 - Fix Exception Chaining and Re-raise (ship_loader.py from e, app.py bare raise)
 
 ---
 
@@ -263,6 +259,7 @@
 | 2026-02-24 | PROJ-185 | Phase 4 | Complete | 12366 passed, 1 skipped | pending | Removed single-select shim, updated facade properties |
 | 2026-02-24 | PROJ-185 | Audit 1 | PASSED | 12366 passed, 1 skipped | pending | Fixed 2 misleading comments |
 | 2026-02-24 | PROJ-186 | Phase 1 | Complete | 12366 passed, 1 skipped | pending | Converted 12 string codes to ErrorCode enums in 4 files |
+| 2026-02-24 | PROJ-186 | Phase 2 | Complete | 12366 passed, 1 skipped | pending | Fixed 2 stale docstrings (game_session.py, resources.py) |
 
 ---
 
