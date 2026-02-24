@@ -1,7 +1,7 @@
 """Tests for Planet.from_dict validation (PROJ-171 Phase 3)."""
 import pytest
 from game.core.exceptions import PersistenceException
-from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility, SpeciesPopulation
 
 
 def _valid_planet_data() -> dict:
@@ -163,3 +163,81 @@ class TestPlanetFromDictValidation:
 
         assert 'Planet' in str(exc_info.value)
         assert 'location' in str(exc_info.value).lower()
+
+
+class TestPlanetaryFacilityFromDictValidation:
+    """Tests for PlanetaryFacility.from_dict input validation (PROJ-178 Phase 2)."""
+
+    def test_valid_data_creates_facility(self):
+        """Valid facility data should create PlanetaryFacility instance."""
+        data = _valid_facility_data()
+        facility = PlanetaryFacility.from_dict(data)
+
+        assert facility.instance_id == 'facility-001'
+        assert facility.design_id == 'design-001'
+        assert facility.name == 'Test Facility'
+        assert facility.design_data == {'layers': {}}
+        assert facility.is_operational is True
+
+    @pytest.mark.parametrize('missing_key', [
+        'instance_id', 'design_id', 'name', 'design_data'
+    ])
+    def test_missing_required_key_raises_persistence_exception(self, missing_key):
+        """Missing required key should raise PersistenceException."""
+        data = _valid_facility_data()
+        del data[missing_key]
+
+        with pytest.raises(PersistenceException) as exc_info:
+            PlanetaryFacility.from_dict(data)
+
+        assert 'PlanetaryFacility' in str(exc_info.value)
+        assert missing_key in str(exc_info.value)
+
+    def test_optional_fields_default_correctly(self):
+        """Optional fields should default to expected values."""
+        data = {
+            'instance_id': 'fac-001',
+            'design_id': 'design-001',
+            'name': 'Minimal Facility',
+            'design_data': {'layers': {}}
+        }
+        facility = PlanetaryFacility.from_dict(data)
+
+        assert facility.is_operational is True
+        assert facility.construction_queue == []
+        assert facility.resource_levels == {}
+
+
+class TestSpeciesPopulationFromDictValidation:
+    """Tests for SpeciesPopulation.from_dict input validation (PROJ-178 Phase 2)."""
+
+    def test_valid_data_creates_population(self):
+        """Valid population data should create SpeciesPopulation instance."""
+        data = _valid_population_data()
+        population = SpeciesPopulation.from_dict(data)
+
+        assert population.race_id == 'humans'
+        assert population.count == 1000
+        assert population.happiness == 0.7
+
+    @pytest.mark.parametrize('missing_key', ['race_id', 'count'])
+    def test_missing_required_key_raises_persistence_exception(self, missing_key):
+        """Missing required key should raise PersistenceException."""
+        data = _valid_population_data()
+        del data[missing_key]
+
+        with pytest.raises(PersistenceException) as exc_info:
+            SpeciesPopulation.from_dict(data)
+
+        assert 'SpeciesPopulation' in str(exc_info.value)
+        assert missing_key in str(exc_info.value)
+
+    def test_happiness_defaults_to_half(self):
+        """Happiness should default to 0.5 when not provided."""
+        data = {
+            'race_id': 'aliens',
+            'count': 500
+        }
+        population = SpeciesPopulation.from_dict(data)
+
+        assert population.happiness == 0.5

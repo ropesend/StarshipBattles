@@ -14,18 +14,18 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. ShipInstance Validation & Docstrings | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. PlanetaryFacility & SpeciesPopulation from_dict | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. PlanetaryFacility & SpeciesPopulation from_dict | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. DesignMetadata Ship Calculation Fix | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Ghost Code Cleanup | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 2 - PlanetaryFacility & SpeciesPopulation from_dict
-**Last Action:** Phase 1 complete - added validate_non_negative to ShipInstance.from_dict, added Raises docstrings to ShipInstance/Empire/Fleet
-**Next Action:** Begin Phase 2 (extract from_dict methods for PlanetaryFacility and SpeciesPopulation)
+**Active Phase:** Phase 3 - DesignMetadata Ship Calculation Fix
+**Last Action:** Phase 2 complete - added PlanetaryFacility.from_dict and SpeciesPopulation.from_dict classmethods, updated Planet.from_dict to use them
+**Next Action:** Begin Phase 3 (fix _calculate_combat_power_from_ship and _calculate_resource_cost_from_ship)
 **Blockers:** None
-**Baseline:** 12338 passed, 1 skipped
-**Context for Next Agent:** Phase 1 added 8 new tests. All validation and docstring updates complete for ship_instance.py, empire.py, fleet.py.
+**Baseline:** 12356 passed, 1 skipped
+**Context for Next Agent:** Phase 2 added 10 new tests. Both dataclasses now have proper from_dict classmethods with require_keys validation.
 
 ## Overview
 Remediate all findings from the PROJ-171 post-refactor audit. This project addresses validation gaps, missing docstrings, inline deserialization inconsistencies, a broken combat power calculation path, and ghost code. All changes follow established `validation_helpers.py` patterns.

@@ -40,6 +40,31 @@ class PlanetaryFacility:
     construction_queue: List[Dict[str, Any]] = field(default_factory=list)
     resource_levels: Dict[str, float] = field(default_factory=dict)
 
+    @classmethod
+    def from_dict(cls, data: dict) -> 'PlanetaryFacility':
+        """
+        Deserialize facility from dict.
+
+        Args:
+            data: Dict with facility data
+
+        Returns:
+            Reconstructed PlanetaryFacility
+
+        Raises:
+            PersistenceException: If required keys missing
+        """
+        require_keys(data, ['instance_id', 'design_id', 'name', 'design_data'], 'PlanetaryFacility')
+        return cls(
+            instance_id=data['instance_id'],
+            design_id=data['design_id'],
+            name=data['name'],
+            design_data=data['design_data'],
+            is_operational=data.get('is_operational', True),
+            construction_queue=data.get('construction_queue', []),
+            resource_levels=data.get('resource_levels', {})
+        )
+
     def get_fuel_storage(self) -> float:
         """Get current fuel level in this facility."""
         return self.resource_levels.get(ResourceType.FUEL, 0.0)
@@ -138,6 +163,27 @@ class SpeciesPopulation:
     race_id: str  # References RaceConfig.race_id
     count: int = 0  # Population units (1 unit = 1,000 people)
     happiness: float = 0.5  # 0.0 (miserable) to 1.0 (ecstatic)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'SpeciesPopulation':
+        """
+        Deserialize population from dict.
+
+        Args:
+            data: Dict with population data
+
+        Returns:
+            Reconstructed SpeciesPopulation
+
+        Raises:
+            PersistenceException: If required keys missing
+        """
+        require_keys(data, ['race_id', 'count'], 'SpeciesPopulation')
+        return cls(
+            race_id=data['race_id'],
+            count=data['count'],
+            happiness=data.get('happiness', 0.5)
+        )
 
 
 @dataclass
@@ -419,17 +465,9 @@ class Planet:
         facilities = []
         for i, f in enumerate(data.get('facilities', [])):
             try:
-                facility = PlanetaryFacility(
-                    instance_id=f['instance_id'],
-                    design_id=f['design_id'],
-                    name=f['name'],
-                    design_data=f['design_data'],
-                    is_operational=f.get('is_operational', True),
-                    construction_queue=f.get('construction_queue', []),
-                    resource_levels=f.get('resource_levels', {})
-                )
+                facility = PlanetaryFacility.from_dict(f)
                 facilities.append(facility)
-            except (KeyError, TypeError) as e:
+            except (PersistenceException, KeyError, TypeError) as e:
                 logger.warning(
                     f"Planet '{data['name']}': skipping bad facility at index {i} - "
                     f"{type(e).__name__}: {e}"
@@ -439,13 +477,9 @@ class Planet:
         populations = []
         for i, p in enumerate(data.get('populations', [])):
             try:
-                population = SpeciesPopulation(
-                    race_id=p['race_id'],
-                    count=p['count'],
-                    happiness=p.get('happiness', 0.5)
-                )
+                population = SpeciesPopulation.from_dict(p)
                 populations.append(population)
-            except (KeyError, TypeError) as e:
+            except (PersistenceException, KeyError, TypeError) as e:
                 logger.warning(
                     f"Planet '{data['name']}': skipping bad population at index {i} - "
                     f"{type(e).__name__}: {e}"

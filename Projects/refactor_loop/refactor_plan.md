@@ -8,19 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-178 Phase 1 - ShipInstance Validation & Docstrings
-**Current Status:** PROJ-178 Phase 1 complete, Phase 2 next
+**Last Completed:** PROJ-178 Phase 2 - PlanetaryFacility & SpeciesPopulation from_dict
+**Current Status:** PROJ-178 Phase 2 complete, Phase 3 next
 **Current Project:** PROJ-178
-**Current Phase:** Phase 2
-**Test Status:** 12346 passed, 1 skipped (+8 new tests)
+**Current Phase:** Phase 3
+**Test Status:** 12356 passed, 1 skipped (+10 new tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-178 Phase 1 COMPLETE
-- Added validate_non_negative to ShipInstance.from_dict for 4 fields
-- Added Raises docstrings to ShipInstance, Empire, Fleet from_dict methods
-- Added 8 new tests (4 negative value, 4 zero boundary)
-- Next: Phase 2 - PlanetaryFacility/SpeciesPopulation from_dict extraction
+- PROJ-178 Phase 2 COMPLETE
+- Added PlanetaryFacility.from_dict classmethod with require_keys validation
+- Added SpeciesPopulation.from_dict classmethod with require_keys validation
+- Updated Planet.from_dict to use new classmethods (with PersistenceException in except blocks)
+- Added 10 new tests (6 for PlanetaryFacility, 4 for SpeciesPopulation)
+- Next: Phase 3 - DesignMetadata Ship Calculation Fix
 
 ---
 
@@ -203,6 +204,7 @@
 | 2026-02-24 | PROJ-177 | Phase 3 | Complete | 12338 passed, 1 skipped | pending | Migrated 4 builtin raises, updated 7 tests |
 | 2026-02-24 | PROJ-177 | Audit 1 | PASSED | 12338 passed, 1 skipped | 57363ddc | All objectives verified, project complete |
 | 2026-02-24 | PROJ-178 | Phase 1 | Complete | 12346 passed, 1 skipped | pending | validate_non_negative + docstrings, +8 tests |
+| 2026-02-24 | PROJ-178 | Phase 2 | Complete | 12356 passed, 1 skipped | pending | PlanetaryFacility/SpeciesPopulation from_dict extraction, +10 tests |
 
 ---
 
