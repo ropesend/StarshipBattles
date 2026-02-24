@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Rewrite RaceThemeGallery to inherit from BaseGallery, implementing the 9 abstract methods and overriding `_create_content` and `_populate_gallery` for its unique vertical-list layout.
 
 ---
@@ -16,12 +16,12 @@
 **File:** `game/ui/panels/race_theme_gallery.py`
 **Tests:** `pytest tests/unit/ui/test_race_theme_gallery.py -v` (will fail until Task 2.3 — that's expected)
 
-- [ ] Add import (after existing imports, ~line 16):
+- [x] Add import (after existing imports, ~line 16):
   ```python
   from game.ui.panels.base_gallery import BaseGallery
   from game.ui.screens.race_asset_loader import RaceAssetLoader
   ```
-- [ ] Change class declaration (line 22) from:
+- [x] Change class declaration (line 22) from:
   ```python
   class RaceThemeGallery:
   ```
@@ -29,14 +29,14 @@
   ```python
   class RaceThemeGallery(BaseGallery):
   ```
-- [ ] Update module docstring to note PROJ-166 refactoring
+- [x] Update module docstring to note PROJ-166 refactoring
 
-**Notes:**
+**Notes:** Complete. Also removed log_debug import (now inherited from BaseGallery).
 
 ### Task 2.2: Rewrite __init__ to call super().__init__() [Medium]
 **File:** `game/ui/panels/race_theme_gallery.py`
 
-- [ ] Rewrite `__init__` (lines 32-68). New version:
+- [x] Rewrite `__init__` (lines 32-68). New version:
   ```python
   def __init__(
       self,
@@ -58,18 +58,18 @@
           on_select_callback, asset_loader
       )
   ```
-- [ ] Remove old instance variable initialization that BaseGallery now handles:
+- [x] Remove old instance variable initialization that BaseGallery now handles:
   - `self.panel`, `self.ui_manager`, `self.race_config`, `self.on_select_callback` — handled by super
   - `self.theme_buttons` → replaced by `self.asset_buttons` from BaseGallery
   - `self.theme_scroll` → replaced by `self.scroll_container` from BaseGallery
   - `self.height` — no longer stored separately (was only used in __init__)
 
-**Notes:**
+**Notes:** Complete. Also removed SHIP_SIZE constant (unused).
 
 ### Task 2.3: Implement abstract methods [Medium]
 **File:** `game/ui/panels/race_theme_gallery.py`
 
-- [ ] Add all 9 abstract method implementations:
+- [x] Add all 9 abstract method implementations:
   ```python
   # --- BaseGallery abstract method implementations ---
 
@@ -98,12 +98,12 @@
       pass  # No preview panel — ship preview handled by RaceSetupScreen callback
   ```
 
-**Notes:**
+**Notes:** Complete.
 
 ### Task 2.4: Override _create_content for list layout [Medium]
 **File:** `game/ui/panels/race_theme_gallery.py`
 
-- [ ] Override `_create_content` (replacing old lines 70-125). The theme gallery uses a **full-height scroll container** with no label or preview panel:
+- [x] Override `_create_content` (replacing old lines 70-125). The theme gallery uses a **full-height scroll container** with no label or preview panel:
   ```python
   def _create_content(self, x: int, y: int, width: int, height: int):
       """Create theme gallery with vertical list layout (no label or preview)."""
@@ -124,14 +124,14 @@
       elif self.asset_buttons:
           self.on_asset_selected(self.asset_buttons[0][1])
   ```
-- [ ] Note: This skips the label and preview panel that BaseGallery's default `_create_content` creates — that's the whole point of the override
+- [x] Note: This skips the label and preview panel that BaseGallery's default `_create_content` creates — that's the whole point of the override
 
-**Notes:**
+**Notes:** Complete.
 
 ### Task 2.5: Override _populate_gallery for vertical list [Medium]
 **File:** `game/ui/panels/race_theme_gallery.py`
 
-- [ ] Override `_populate_gallery` (replacing old inline button creation). Uses vertical list buttons with ship preview thumbnails instead of image-grid:
+- [x] Override `_populate_gallery` (replacing old inline button creation). Uses vertical list buttons with ship preview thumbnails instead of image-grid:
   ```python
   def _populate_gallery(self, width: int):
       """Populate gallery with vertical list of theme buttons."""
@@ -175,51 +175,51 @@
       )
   ```
 
-**Notes:**
+**Notes:** Complete.
 
 ### Task 2.6: Refactor _discover_themes → _discover_assets [Simple]
 **File:** `game/ui/panels/race_theme_gallery.py`
 
-- [ ] Rename `_discover_themes` (line 127) to `_discover_assets`
-- [ ] Change cache reference from `self._theme_cache` to `self._theme_cache` (keep the cache name since it stores theme-specific Dict data, not a simple surface)
-- [ ] Existing logic stays the same — ShipThemeManager discovery is correct
-- [ ] Return type stays `List[Tuple[str, Dict[str, pygame.Surface]]]` — `_populate_gallery` is overridden so it handles this format directly
-- [ ] Note: BaseGallery's `_discover_assets` declares return `List[Tuple[str, pygame.Surface]]` — our override returns a slightly different type, but since `_populate_gallery` is also overridden, the type difference never causes issues. Add a type: ignore comment if needed.
+- [x] Rename `_discover_themes` (line 127) to `_discover_assets`
+- [x] Change cache reference from `self._theme_cache` to `self._theme_cache` (keep the cache name since it stores theme-specific Dict data, not a simple surface)
+- [x] Existing logic stays the same — ShipThemeManager discovery is correct
+- [x] Return type stays `List[Tuple[str, Dict[str, pygame.Surface]]]` — `_populate_gallery` is overridden so it handles this format directly
+- [x] Note: BaseGallery's `_discover_assets` declares return `List[Tuple[str, pygame.Surface]]` — our override returns a slightly different type, but since `_populate_gallery` is also overridden, the type difference never causes issues. Add a type: ignore comment if needed.
 
-**Notes:**
+**Notes:** Complete. Added `# type: ignore[override]` comment.
 
 ### Task 2.7: Delete duplicated methods [Simple]
 **File:** `game/ui/panels/race_theme_gallery.py`
 
-- [ ] Delete `_sanitize_object_id` method (lines 157-159) — inherited from BaseGallery
-- [ ] Delete `on_theme_selected` method (lines 161-180) — replaced by `on_asset_selected` from BaseGallery
-- [ ] Delete `set_from_config` method (lines 182-185) — inherited from BaseGallery
-- [ ] Delete `handle_button_click` method (lines 187-201) — inherited from BaseGallery
-- [ ] Remove unused imports: `from game.core.logger import log_debug` (if no longer used directly — BaseGallery handles the logging in on_asset_selected)
-- [ ] Verify: No references remain to `theme_buttons`, `theme_scroll`, `on_theme_selected`
+- [x] Delete `_sanitize_object_id` method (lines 157-159) — inherited from BaseGallery
+- [x] Delete `on_theme_selected` method (lines 161-180) — replaced by `on_asset_selected` from BaseGallery
+- [x] Delete `set_from_config` method (lines 182-185) — inherited from BaseGallery
+- [x] Delete `handle_button_click` method (lines 187-201) — inherited from BaseGallery
+- [x] Remove unused imports: `from game.core.logger import log_debug` (if no longer used directly — BaseGallery handles the logging in on_asset_selected)
+- [x] Verify: No references remain to `theme_buttons`, `theme_scroll`, `on_theme_selected`
 
-**Notes:**
+**Notes:** Complete. All duplicate methods removed.
 
 ### Task 2.8: Verify no caller changes needed [Simple]
 **File:** `game/ui/screens/race_setup_screen.py`
 
-- [ ] Verify line 354-363: Constructor call still works — `on_select_callback` is positional, `asset_loader` not passed (optional)
-- [ ] Verify line 822-824: `set_from_config()` — method exists in BaseGallery ✓
-- [ ] Verify line 901-903: `handle_button_click()` — method exists in BaseGallery ✓
-- [ ] Grep for `on_theme_selected` in race_setup_screen.py — should NOT be called directly (only via callback)
-- [ ] Grep for `theme_buttons` in race_setup_screen.py — should NOT be accessed directly
-- [ ] Grep for `theme_scroll` in race_setup_screen.py — should NOT be accessed directly
-- [ ] **No changes to race_setup_screen.py** — confirm this
+- [x] Verify line 354-363: Constructor call still works — `on_select_callback` is positional, `asset_loader` not passed (optional)
+- [x] Verify line 822-824: `set_from_config()` — method exists in BaseGallery ✓
+- [x] Verify line 901-903: `handle_button_click()` — method exists in BaseGallery ✓
+- [x] Grep for `on_theme_selected` in race_setup_screen.py — should NOT be called directly (only via callback)
+- [x] Grep for `theme_buttons` in race_setup_screen.py — should NOT be accessed directly
+- [x] Grep for `theme_scroll` in race_setup_screen.py — should NOT be accessed directly
+- [x] **No changes to race_setup_screen.py** — confirm this
 
-**Notes:**
+**Notes:** Complete. race_setup_screen.py unchanged — uses callback pattern, not direct method calls.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] RaceThemeGallery extends BaseGallery
-- [ ] No duplicate methods remain (_sanitize_object_id, handle_button_click, set_from_config)
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 3
+- [x] All task checkboxes above are checked
+- [x] RaceThemeGallery extends BaseGallery
+- [x] No duplicate methods remain (_sanitize_object_id, handle_button_click, set_from_config)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 3
