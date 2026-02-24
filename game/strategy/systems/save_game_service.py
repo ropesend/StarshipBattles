@@ -105,12 +105,9 @@ class SaveGameService:
         except OSError as e:
             logger.error(f"SaveGameService: OS error saving to {save_path} - {e}")
             return False, f"Save failed: {str(e)}", None
-        except (TypeError, ValueError, ValidationException) as e:
+        except ValidationException as e:
             logger.error(f"SaveGameService: Serialization error - {e}\n{traceback.format_exc()}")
             return False, f"Save failed: Unable to serialize game state", None
-        except (KeyError, AttributeError, ImportError) as e:
-            logger.error(f"SaveGameService: Unexpected save error - {e}\n{traceback.format_exc()}")
-            return False, f"Save failed: {str(e)}", None
 
     @staticmethod
     def load_game(save_path: str, turn_number: Optional[int] = None) -> Tuple[Optional[object], str]:

@@ -117,12 +117,13 @@ class TestSaveGameServiceErrorLogging:
     def test_save_error_logs_with_traceback(self, caplog):
         """Save errors should log full traceback, not print to stdout."""
         import logging
+        from game.core.exceptions import ValidationException
 
         session = MockGameSession()
 
-        # Mock to_dict to raise an exception
+        # Mock to_dict to raise a ValidationException (domain exception used for serialization errors)
         def raise_error():
-            raise ValueError("Test save error")
+            raise ValidationException("Test save error", code="V001")
 
         session.to_dict = raise_error
 

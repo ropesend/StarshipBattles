@@ -95,7 +95,7 @@ class ShipIO:
         except OSError as e:
             logger.error(f"ShipIO: OS error saving ship: {e}")
             return False, f"Save failed: {str(e)}"
-        except (TypeError, ValueError, ValidationException) as e:
+        except ValidationException as e:
             logger.error(f"ShipIO: Serialization error saving ship: {e}")
             return False, "Save failed: Invalid ship data"
 

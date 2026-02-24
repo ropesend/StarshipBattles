@@ -387,7 +387,7 @@ class BattleController:
                 self._ship_id_map[id(ship)] = str(uuid.uuid4())
 
                 logger.info(f"Reinforcement arrived: {ship.name} for team {team_id}")
-            except (TypeError, ValueError, AttributeError, ValidationException) as e:
+            except ValidationException as e:
                 errors.append(f"Failed to add reinforcement {ship.name}: {e}")
 
         return BattleServiceResult(success=len(errors) == 0, errors=errors)

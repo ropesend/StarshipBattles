@@ -194,7 +194,7 @@ class RaceLibrary:
         except OSError as e:
             logger.error(f"OS error saving race '{config.race_id}' to {filepath}: {e}")
             return False, f"Error saving race: {str(e)}"
-        except (TypeError, ValueError, ValidationException) as e:
+        except ValidationException as e:
             logger.error(f"Serialization error saving race '{config.race_id}': {e}")
             return False, "Error saving race: Invalid race data"
         except (AttributeError, KeyError) as e:

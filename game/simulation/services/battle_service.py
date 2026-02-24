@@ -88,7 +88,7 @@ class BattleService:
                 engine=self._engine
             )
 
-        except (TypeError, ValueError, AttributeError, ValidationException, StateException) as e:
+        except (ValidationException, StateException) as e:
             logger.error(f"Failed to create battle: {e}")
             return BattleServiceResult(
                 success=False,

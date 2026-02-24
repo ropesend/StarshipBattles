@@ -206,7 +206,7 @@ class FormationCore:
                 logger.error(f"Failed to save formation to {filename}")
         except OSError as e:
             logger.error(f"Error saving formation (file error): {e}")
-        except (TypeError, ValueError, ValidationException) as e:
+        except ValidationException as e:
             logger.error(f"Error saving formation (serialization error): {e}")
 
     def load_from_file(self, filename: str) -> None:
@@ -233,7 +233,7 @@ class FormationCore:
 
                 self.selected_indices = set()
                 logger.info(f"Formation loaded from {filename} ({len(self.arrows)} arrows)")
-        except (KeyError, ValueError, ValidationException) as e:
+        except ValidationException as e:
             logger.error(f"Invalid formation data in {filename}: {e}")
 
 class FormationEditorScreen:

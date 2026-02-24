@@ -99,9 +99,9 @@ class DesignLibrary:
             except (PermissionError, OSError) as e:
                 logger.error(f"scan_designs: Cannot read design file {filepath}: {e}")
                 continue
-            except (AttributeError, TypeError, ValueError, ValidationException) as e:
-                # Log unexpected errors but continue scanning
-                logger.error(f"scan_designs: Unexpected error loading design from {filepath}: {e}")
+            except ValidationException as e:
+                # Log validation errors but continue scanning
+                logger.error(f"scan_designs: Validation error loading design from {filepath}: {e}")
                 import traceback
                 logger.error(traceback.format_exc())
                 continue
@@ -182,7 +182,7 @@ class DesignLibrary:
         except OSError as e:
             logger.error(f"OS error saving design '{design_name}' to {filepath}: {e}")
             return False, f"Failed to save design: {str(e)}"
-        except (TypeError, ValueError, ValidationException) as e:
+        except ValidationException as e:
             logger.error(f"Serialization error saving design '{design_name}': {e}")
             import traceback
             logger.error(traceback.format_exc())
