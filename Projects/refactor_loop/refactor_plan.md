@@ -8,19 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-173 Phase 1 Complete
-**Current Status:** PROJ-173 Phase 1 complete, Phase 2 ready
+**Last Completed:** PROJ-173 Phase 2 Complete
+**Current Status:** PROJ-173 Phase 2 complete, Phase 3 ready
 **Current Project:** PROJ-173
-**Current Phase:** Phase 2 - Galaxy Internal Delegation
+**Current Phase:** Phase 3 - StrategyInputHandler Router Decomposition
 **Test Status:** 12312 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-173 Phase 1 COMPLETE - FleetReportWindow MVVM extraction
-- FleetReportWindow: 1,109 → 359 lines (68% reduction)
-- New files: FleetReportSidebar (554L), FleetListRenderer (425L)
+- PROJ-173 Phase 2 COMPLETE - Galaxy Internal Delegation
+- Galaxy: 928 → 585 lines (37% reduction)
+- New files: galaxy_warp_generator.py, galaxy_system_generator.py, galaxy_entity_registry.py, galaxy_spatial_index.py
 - All 12,312 tests passing
-- Next: Phase 2 - Galaxy Internal Delegation
+- Next: Phase 3 - StrategyInputHandler Router Decomposition
 
 ---
 
@@ -85,7 +85,7 @@
 ---
 
 - [/] **PROJ-173: God Class Decomposition - Domain & Strategy Layer**
-  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 4 | **Status:** Phase 2 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-173/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-173/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -138,6 +138,7 @@
 | 2026-02-24 | PROJ-172 | Phase 5 | Complete | 12312 passed, 1 skipped | pending | TestLabScreen MVVM: 1906→679 lines, +24 tests, 3 new files |
 | 2026-02-24 | PROJ-172 | Audit 1 | PASSED | 12312 passed, 1 skipped | pending | All 5 phases verified, no significant issues |
 | 2026-02-24 | PROJ-173 | Phase 1 | Complete | 12312 passed, 1 skipped | pending | FleetReportWindow MVVM: 1109→359 lines, 2 new files (sidebar+renderer) |
+| 2026-02-24 | PROJ-173 | Phase 2 | Complete | 12312 passed, 1 skipped | pending | Galaxy delegation: 928→585 lines, 4 new files (warp/sys/entity/spatial) |
 
 ---
 

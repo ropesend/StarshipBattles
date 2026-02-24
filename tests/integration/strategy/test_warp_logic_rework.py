@@ -69,19 +69,19 @@ class TestWarpLogicRework:
         # Add a warp point at 0 degrees (East) -> (10, 0)
         # Using hexes, (10, 0) is roughly 0 degrees.
         center.add_warp_point("EastTarget", HexCoord(10, 0))
-        
-        # We need to access the internal helper or simulate logic. 
+
+        # We need to access the internal helper or simulate logic.
         # Since the interface is protected, we can test it directly or via side effects.
-        # Let's test the helper directly as it will be a method on Galaxy class.
-        
+        # Test the helper directly via the warp generator delegate.
+
         # Target at 10 degrees (very close)
         # 10 degrees in radians ~ 0.17
         angle_fail = 0.1
-        assert galaxy._is_angle_clear(center, angle_fail, threshold_deg=30) is False
-        
+        assert galaxy._warp_gen._is_angle_clear(center, angle_fail, threshold_deg=30) is False
+
         # Target at 90 degrees (clear)
         angle_pass = math.pi / 2
-        assert galaxy._is_angle_clear(center, angle_pass, threshold_deg=30) is True
+        assert galaxy._warp_gen._is_angle_clear(center, angle_pass, threshold_deg=30) is True
 
     def test_min_distance_constraint(self, galaxy):
         """Verify warp points respect minimum distance regardless of star size."""

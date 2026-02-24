@@ -14,15 +14,15 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. FleetReportWindow Completion | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Galaxy Internal Delegation | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Galaxy Internal Delegation | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. StrategyInputHandler Router Decomposition | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. StrategyScreen Minimal Extraction | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-24 08:45
-**Active Phase:** Phase 1 Complete
-**Last Action:** Extracted FleetReportSidebar and FleetListRenderer from FleetReportWindow
-**Next Action:** Phase 2 - Galaxy Internal Delegation
+**Last Updated:** 2026-02-24
+**Active Phase:** Phase 2 Complete
+**Last Action:** Extracted 4 delegates from Galaxy (warp_generator, system_generator, entity_registry, spatial_index)
+**Next Action:** Phase 3 - StrategyInputHandler Router Decomposition
 **Blockers:** None
 **Test Baseline:** 12,312 passed, 1 skipped, 0 failures
 
@@ -30,6 +30,13 @@
 - FleetReportWindow: 1,109 → 359 lines (68% reduction)
 - New: FleetReportSidebar (554 lines) - sidebar widgets, filters, columns, summary
 - New: FleetListRenderer (425 lines) - virtual scrolling, headers, row pool, images
+
+### Phase 2 Results
+- Galaxy: 928 → 585 lines (37% reduction, includes WarpPoint+StarSystem classes)
+- New: galaxy_warp_generator.py (370 lines) - MST, density edges, angle validation
+- New: galaxy_system_generator.py (142 lines) - system placement, planet generation
+- New: galaxy_entity_registry.py (160 lines) - planet/fleet/zone lifecycle
+- New: galaxy_spatial_index.py (190 lines) - spatial queries, object location
 - All 12,312 tests passing
 
 ## Overview

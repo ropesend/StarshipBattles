@@ -58,6 +58,7 @@ class TestGalaxyUnregisterPlanet:
     @pytest.fixture
     def galaxy_with_planet(self):
         """Create a galaxy with a registered planet."""
+        from game.strategy.data.galaxy_entity_registry import GalaxyEntityRegistry
         with patch.object(Galaxy, '__init__', lambda self, radius=100: None):
             galaxy = Galaxy.__new__(Galaxy)
             galaxy.radius = 100
@@ -67,7 +68,9 @@ class TestGalaxyUnregisterPlanet:
             galaxy.planets_by_id = {}
             galaxy._planet_to_system = {}
             galaxy._global_hex_planets = {}
+            galaxy._global_hex_zones = {}
             galaxy.fleets_by_id = {}
+            galaxy._registry = GalaxyEntityRegistry(galaxy)
 
             # Create system and planet
             system = StarSystem("TestSys", HexCoord(10, 20))
