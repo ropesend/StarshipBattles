@@ -62,14 +62,31 @@ class StrategyManager:
 
 ### Singletons in Codebase
 
-| Class | Location | Purpose |
-|-------|----------|---------|
-| `RegistryManager` | `game/core/registry.py` | Component/modifier definitions |
-| `StrategyManager` | `game/ai/controller.py` | AI combat strategies |
-| `ShipThemeManager` | `game/ui/assets/ship_theme_manager.py` | Visual themes |
-| `ScreenshotManager` | `game/core/screenshot_manager.py` | Screenshot handling |
-| `SpriteManager` | `game/ui/renderer/sprites.py` | Sprite caching |
-| `SessionRegistryCache` | `tests/infrastructure/session_cache.py` | Test data caching |
+| Class | Location | Purpose | Access Pattern |
+|-------|----------|---------|----------------|
+| `RegistryManager` | `game/core/registry.py` | Component/modifier definitions | Via `get_default_registry_provider()` |
+| `StrategyManager` | `game/ai/controller.py` | AI combat strategies | Direct singleton |
+| `ShipThemeManager` | `game/ui/assets/ship_theme_manager.py` | Visual themes | Direct singleton |
+| `ScreenshotManager` | `game/core/screenshot_manager.py` | Screenshot handling | Direct singleton |
+| `SpriteManager` | `game/ui/renderer/sprites.py` | Sprite caching | Direct singleton |
+| `SessionRegistryCache` | `tests/infrastructure/session_cache.py` | Test data caching | Direct singleton |
+
+### Registry Access Pattern
+
+**For registry access, use the provider pattern instead of direct singleton access:**
+
+```python
+from game.core.registry import get_default_registry_provider
+
+# Recommended: Use the provider interface
+provider = get_default_registry_provider()
+components = provider.get_components()
+modifiers = provider.get_modifiers()
+ships = provider.get_ships()
+```
+
+`RegistryManager.instance()` is **internal-only** for composition roots (app startup, test fixtures).
+Consumer code should use `get_default_registry_provider()` or accept an `IRegistryProvider` via dependency injection.
 
 ### Usage Guidelines
 
@@ -77,6 +94,7 @@ class StrategyManager:
 2. **Implement `reset()`** - Required for test isolation
 3. **Implement `clear()`** - For resetting data without destroying instance
 4. **Test fixtures should reset** - Call `reset()` in teardown
+5. **Prefer provider pattern** - For registries, use `get_default_registry_provider()` instead of direct singleton access
 
 ### Testing Singletons
 
@@ -89,7 +107,10 @@ def reset_game_state():
     StrategyManager.instance().clear()
     ShipThemeManager.reset()
     SpriteManager.reset()
+    # Note: RegistryManager is handled separately via the registry_provider fixture
 ```
+
+For registry testing, use the `registry_provider` fixture which handles setup and teardown automatically.
 
 ---
 
