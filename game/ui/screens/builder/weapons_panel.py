@@ -4,9 +4,11 @@ WeaponsReportPanel - Weapons visualization panel for Design Workshop.
 Thin coordinator using MVVM architecture:
 - WeaponsViewModel: owns all state and calculations
 - WeaponsRenderer: handles all drawing operations
-- This class: routes events, manages UI components, delegates to VM/Renderer
+- WeaponsInputHandler: handles geometry calculations for tooltip hover detection
+- This class: routes events, manages UI components, delegates to VM/Renderer/InputHandler
 
 PROJ-172: Refactored from 1038 lines to MVVM pattern.
+PROJ-180: Extracted _check_tooltip_hover to WeaponsInputHandler.
 """
 import pygame
 import pygame_gui
@@ -15,6 +17,7 @@ from pygame_gui.elements import UIPanel, UILabel, UIButton, UIVerticalScrollBar
 from game.ui.screens.builder.event_bus import EventBus
 from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel, WeaponsEvents
 from game.ui.screens.builder.weapons_renderer import WeaponsRenderer
+from game.ui.screens.builder.weapons_input_handler import WeaponsInputHandler
 
 
 class WeaponsReportPanel:
@@ -41,6 +44,7 @@ class WeaponsReportPanel:
         self._event_bus = EventBus()
         self._viewmodel = WeaponsViewModel(self._event_bus)
         self._renderer = WeaponsRenderer(sprite_mgr)
+        self._input_handler = WeaponsInputHandler()
 
         # Subscribe to ViewModel events for refresh
         self._event_bus.subscribe(WeaponsEvents.WEAPONS_UPDATED, self._on_weapons_updated)
@@ -299,9 +303,9 @@ class WeaponsReportPanel:
                 self._viewmodel.set_hovered_weapon(weapon)
 
             # Check for tooltip hover
-            tooltip_data = self._check_tooltip_hover(
+            tooltip_data = self._input_handler.detect_tooltip_hover(
                 weapon, ship, bar_y, start_x, weapon_bar_width, bar_width,
-                weapon_range, content_rect, current_mouse_pos
+                weapon_range, content_rect, current_mouse_pos, self._viewmodel, max_range
             )
             if tooltip_data:
                 self._tooltip_data = tooltip_data
@@ -312,24 +316,3 @@ class WeaponsReportPanel:
         # Draw tooltip LAST so it's on top
         if self._tooltip_data:
             self._renderer.draw_tooltip(screen, self._tooltip_data, self._viewmodel.verbose_tooltip)
-
-    def _check_tooltip_hover(self, weapon, ship, bar_y, start_x, weapon_bar_width, bar_width, weapon_range, content_rect, mouse_pos):
-        """Check if mouse is hovering over weapon bar and calculate tooltip data."""
-        if not content_rect.collidepoint(mouse_pos):
-            return None
-
-        hit_rect = pygame.Rect(start_x, bar_y - 10, weapon_bar_width, WeaponsRenderer.BAR_HEIGHT + 20)
-        if not hit_rect.collidepoint(mouse_pos):
-            return None
-
-        # Calculate range at cursor
-        dist_px = mouse_pos[0] - start_x
-        dist_ratio = dist_px / bar_width
-        hover_range = dist_ratio * self._viewmodel.max_range
-        hover_range = max(0, min(hover_range, weapon_range))
-
-        # Get tooltip data from ViewModel
-        tooltip_data = self._viewmodel.calculate_tooltip_data(weapon, ship, hover_range)
-        if tooltip_data:
-            tooltip_data['pos'] = mouse_pos
-        return tooltip_data

@@ -15,15 +15,15 @@
 |-------|--------|-----------|
 | 1. Delete Ghost Code | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Eradicate Backward Compat Properties | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Extract WeaponsInputHandler | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Extract WeaponsInputHandler | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 3 - Extract WeaponsInputHandler
-**Last Action:** Phase 2 complete - deleted 14 backward-compat properties (79 lines), updated 6 test files
-**Next Action:** Begin Phase 3 Task 3.1 - create WeaponsInputHandler
+**Active Phase:** All phases complete - ready for audit
+**Last Action:** Phase 3 complete - extracted WeaponsInputHandler (96 lines), deleted _check_tooltip_hover, 17 new tests
+**Next Action:** Audit project
 **Blockers:** None
-**Baseline:** 12358 passed, 1 skipped, 0 failures
+**Baseline:** 12375 passed, 1 skipped, 0 failures
 
 ## Overview
 Clean up remaining issues from the PROJ-172 god-class MVVM decomposition. Three categories of work:
@@ -259,8 +259,8 @@ Independent code review by 5 parallel agents confirmed all audit findings:
 ## Completion Checklist
 - [x] Phase 1 complete (ghost code deleted)
 - [x] Phase 2 complete (backward-compat properties eradicated)
-- [ ] Phase 3 complete (WeaponsInputHandler extracted)
-- [ ] All tests passing
-- [ ] Regression tests passing
+- [x] Phase 3 complete (WeaponsInputHandler extracted)
+- [x] All tests passing
+- [x] Regression tests passing
 - [ ] Audit passed (no significant issues)
 - [ ] User verified

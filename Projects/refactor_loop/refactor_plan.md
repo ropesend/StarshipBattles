@@ -8,19 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-180 Phase 2 - Eradicate Backward Compat Properties
-**Current Status:** Phase 2 complete, ready for Phase 3
+**Last Completed:** PROJ-180 Phase 3 - Extract WeaponsInputHandler
+**Current Status:** All phases complete, ready for audit
 **Current Project:** PROJ-180
-**Current Phase:** Phase 3
-**Test Status:** 12358 passed, 1 skipped
+**Current Phase:** Audit
+**Test Status:** 12375 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-180 Phase 2 COMPLETE:
-  - Deleted 14 backward-compat properties from build_queue_screen.py (79 lines removed)
-  - Updated 6 test files to use `panels.*` and `renderer.*` directly
-  - Full test suite passes: 12358 passed, 1 skipped
-- Next: Phase 3 - Extract WeaponsInputHandler (move tooltip hover geometry to new class)
+- PROJ-180 Phase 3 COMPLETE:
+  - Created WeaponsInputHandler class (96 lines) in game/ui/screens/builder/weapons_input_handler.py
+  - Added 17 unit tests in tests/unit/ui/builder/test_weapons_input_handler.py
+  - Wired into WeaponsReportPanel, deleted _check_tooltip_hover method
+  - Updated module docstring to document MVVM components
+  - Full test suite passes: 12375 passed, 1 skipped
+- Next: Audit PROJ-180 (all 3 phases complete)
 
 ---
 
@@ -212,6 +214,7 @@
 | 2026-02-24 | PROJ-179 | Audit 1 | PASSED | 12358 passed, 1 skipped | pending | All objectives verified, project complete |
 | 2026-02-24 | PROJ-180 | Phase 1 | Complete | 12358 passed, 1 skipped | pending | Deleted ghost code (get_column_visibility_changed) |
 | 2026-02-24 | PROJ-180 | Phase 2 | Complete | 12358 passed, 1 skipped | pending | Eradicated 14 backward-compat properties, updated 6 test files |
+| 2026-02-24 | PROJ-180 | Phase 3 | Complete | 12375 passed, 1 skipped | pending | Extracted WeaponsInputHandler (96 lines), 17 tests, deleted _check_tooltip_hover |
 
 ---
 
