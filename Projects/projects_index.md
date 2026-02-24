@@ -4,6 +4,11 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-168 | Extract Hex-to-Cartesian Conversion Helper | Planning | 2026-02-23 | 2026-02-23 |
+| PROJ-167 | Centralize UI Color Palette Constants | Planning | 2026-02-23 | 2026-02-23 |
+| PROJ-166 | Make RaceThemeGallery Extend BaseGallery | Planning | 2026-02-23 | 2026-02-23 |
+| PROJ-165 | Create `create_section_header()` UI Helper | Planning | 2026-02-23 | 2026-02-23 |
+| PROJ-164 | Extract Ability._parse_primary_value() Base Class Helper | Planning | 2026-02-23 | 2026-02-23 |
 | PROJ-163 | Move Automation Loops to Projects Directory | Planning | 2026-02-23 | 2026-02-23 |
 | PROJ-162 | Extract CargoTransferService from UI Dialogs | Planning | 2026-02-23 | 2026-02-23 |
 | PROJ-161 | Per-Tick Harvesting and Maintenance | Planning | 2026-02-23 | 2026-02-23 |

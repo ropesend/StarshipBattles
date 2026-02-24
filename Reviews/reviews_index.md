@@ -13,6 +13,8 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 ## Active Reviews
 | Date | Type | Description | Status | Link |
 |------|------|-------------|--------|------|
+| 2026-02-23 | General Review | deliberate-design-debt-audit | Completed | [2026-02-23_160923_general_deliberate-design-debt-audit](results/2026-02-23_160923_general_deliberate-design-debt-audit/) |
+| 2026-02-23 | General Review | duplication-consolidation-analysis | In Progress | [2026-02-23_160413_general_duplication-consolidation-analysis](results/2026-02-23_160413_general_duplication-consolidation-analysis/) |
 | 2026-02-16 | General Review | test-suite-cleanup-v3 | In Progress | [2026-02-16_105410_general_test-suite-cleanup-v3](results/2026-02-16_105410_general_test-suite-cleanup-v3/) |
 | 2026-02-16 | General Review | test-suite-cleanup | In Progress | [2026-02-16_075913_general_test-suite-cleanup](results/2026-02-16_075913_general_test-suite-cleanup/) |
 | 2026-02-16 | General Review | test-suite-cleanup | In Progress | [2026-02-16_071059_general_test-suite-cleanup](results/2026-02-16_071059_general_test-suite-cleanup/) |

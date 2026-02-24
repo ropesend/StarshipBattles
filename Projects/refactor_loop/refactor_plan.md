@@ -41,6 +41,36 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
+- [ ] **PROJ-164: Extract Ability._parse_primary_value() Base Class Helper**
+  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-164/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-164/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+- [ ] **PROJ-165: Create `create_section_header()` UI Helper**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-165/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-165/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+- [ ] **PROJ-166: Make RaceThemeGallery Extend BaseGallery**
+  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-166/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-166/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+- [ ] **PROJ-167: Centralize UI Color Palette Constants**
+  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-167/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-167/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+- [ ] **PROJ-168: Extract Hex-to-Cartesian Conversion Helper**
+  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-168/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-168/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
 ---
 
 ## Execution Log
