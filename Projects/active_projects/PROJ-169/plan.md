@@ -16,15 +16,15 @@
 | 1. Zero-Risk Deletes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Script & Tool Cleanup | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Formation Editor Migration | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Polish | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Polish | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-23
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete - consolidated formation_editor.py, deleted entire Tools/ directory
-**Next Action:** Begin Phase 4 - Polish (unused imports, directory structure)
+**Active Phase:** PROJECT COMPLETE
+**Last Action:** Phase 4 complete - removed 14 unused imports, relocated tests/refactor/ to tests/regression/, deleted 2 empty directories
+**Next Action:** Audit project (all 4 phases complete)
 **Blockers:** None
-**Context for Next Agent:** Phase 3 updated game/app.py import, relocated test file to tests/unit/ui/screens/, fixed stale import in test_scene_protocol.py, updated pytest.ini, deleted entire Tools/ directory. All tests passing (12023 passed, 1 skipped).
+**Context for Next Agent:** All 4 phases complete. Project cleanup: removed 15 dead files (Phase 1), deleted 24 files in Tools/ and scripts/ (Phase 2), consolidated formation_editor.py (Phase 3), removed 14 unused imports and 2 empty directories (Phase 4). All tests passing (12023 passed, 1 skipped).
 
 ## Overview
 Remove ~4,288 lines of confirmed dead Python code across 54 files, untrack 22.8MB of __pycache__ from git, consolidate a duplicate formation_editor.py, clean up 14 unused imports, and fix directory structure issues. All deletions verified for zero runtime dependencies.
@@ -103,9 +103,9 @@ See [phase_4_checklist.md](phase_4_checklist.md) for detailed tasks.
 ---
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing: `pytest tests/ -n 12`
-- [ ] No imports broken (verified per-phase)
-- [ ] `pytest.ini` updated correctly
-- [ ] Tools/ directory fully removed
+- [x] All phase checklists complete
+- [x] All tests passing: `pytest tests/ -n 12`
+- [x] No imports broken (verified per-phase)
+- [x] `pytest.ini` updated correctly
+- [x] Tools/ directory fully removed
 - [ ] User verified

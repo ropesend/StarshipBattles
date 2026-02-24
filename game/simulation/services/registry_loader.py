@@ -14,7 +14,6 @@ Usage:
     success = reload_registries_from_directory(manager, "data/")
 """
 import json
-import os
 from pathlib import Path
 from typing import Union, TYPE_CHECKING
 

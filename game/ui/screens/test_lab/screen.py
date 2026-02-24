@@ -7,7 +7,6 @@ the Combat Lab interface for viewing and running test scenarios.
 import pygame
 import pygame_gui
 import os
-import sys
 
 from game.ui.colors import FONT_MAIN, TEST_PASS, TEST_FAIL
 from game.core.config import DisplayConfig

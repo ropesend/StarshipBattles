@@ -50,10 +50,8 @@ Example:
     winner = engine.get_winner()
     engine.shutdown()
 """
-import math
 import os
 import random
-import time
 from typing import List, Optional, Tuple, Dict, Any, TYPE_CHECKING
 
 from game.core.math import Vector2

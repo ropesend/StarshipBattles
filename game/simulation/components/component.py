@@ -58,7 +58,6 @@ Key Classes:
     ApplicationModifier: Applied modifier with value
 """
 import json
-import math
 import threading
 from game.simulation.formula_system import safe_evaluate_math_formula
 from typing import Optional, TYPE_CHECKING

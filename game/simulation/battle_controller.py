@@ -15,7 +15,6 @@ Handles:
 - Result collection and state extraction
 """
 from typing import List, Optional, Dict, Callable, Tuple, Any, TYPE_CHECKING
-import copy
 
 from game.core.exceptions import StateException
 from game.core.error_codes import ErrorCode

@@ -10,8 +10,6 @@ PROJ-40: Removed unused AIController import. BattleService is instantiated at
 runtime so must remain a runtime import.
 """
 import pygame
-import math
-import random
 import time
 from typing import Optional, List, TYPE_CHECKING
 

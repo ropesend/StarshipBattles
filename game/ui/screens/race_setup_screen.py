@@ -13,7 +13,6 @@ Cross-layer imports (acceptable for UI):
 - RaceConfig: Runtime - callback data and configuration state
 - RaceLibrary: Runtime - save/load race configurations
 """
-import os
 import pygame
 import pygame_gui
 from typing import Callable, Optional, List, Tuple

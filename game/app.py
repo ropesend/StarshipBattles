@@ -2,7 +2,6 @@
 import argparse
 import pygame
 import pygame_gui
-import os
 
 from game.core.logger import log_debug, log_info, log_error
 from game.core.config import DisplayConfig

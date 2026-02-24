@@ -4,7 +4,6 @@ EmpirePanelWindow - Multi-tab empire information panel.
 PROJ-99 Phase 3: Main window with Treasury, Population, and placeholder tabs.
 Provides empire-wide overview of economy, species data, and future features.
 """
-import os
 from typing import Callable, Dict, List, Optional
 
 import pygame
