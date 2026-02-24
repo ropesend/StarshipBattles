@@ -14,7 +14,7 @@ from game.core.constants import LayerType  # Canonical location for LayerType
 import json
 from game.core.logger import log_warning
 from .modifier_logic import ModifierLogic
-from game.simulation.components.abilities.ui_colors import HINT_NEUTRAL, HINT_CREW_CAP, HINT_CARGO_GENERIC
+from game.simulation.components.abilities.ui_colors import HINT_NEUTRAL, HINT_CREW_CAP, HINT_CARGO_GENERIC, HINT_DEFAULT
 from game.ui.colors import DETAIL_COMPONENT_NAME, DETAIL_COMPONENT_INFO, DETAIL_TEXT
 
 class ComponentDetailPanel:
@@ -121,9 +121,9 @@ class ComponentDetailPanel:
         # 2. Update Stats
         lines = []
         
-        def add_line(text, color='#FFFFFF'):
+        def add_line(text, color=HINT_DEFAULT):
             # Proper HTML formatting
-            if color != '#FFFFFF':
+            if color != HINT_DEFAULT:
                 lines.append(f"<font color='{color}'>{text}</font>")
             else:
                 lines.append(text)
