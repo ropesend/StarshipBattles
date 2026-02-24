@@ -68,6 +68,8 @@ def _make_strategy_screen():
     screen._fleet_ops = MagicMock()
     screen._colonization = MagicMock()
     screen._superweapons = MagicMock()
+    screen._build_queue = MagicMock()
+    screen._game_state = MagicMock()
     screen._input = MagicMock()
 
     # Assets
@@ -83,6 +85,8 @@ def _make_strategy_screen():
         'camera_nav': screen._camera_nav,
         'fleet_ops': screen._fleet_ops,
         'colonization': screen._colonization,
+        'build_queue': screen._build_queue,
+        'game_state': screen._game_state,
         'input_handler': screen._input,
     }
 
@@ -132,91 +136,32 @@ class TestStrategyScreenInitialization:
 # ===========================================================================
 
 class TestAdvanceTurn:
-    """Test advance_turn() method."""
+    """Test advance_turn() method delegates to GameStateManager."""
 
-    def test_advance_turn_increments_player_index(self):
-        """advance_turn() should increment current_player_index."""
-        screen, _ = _make_strategy_screen()
-        screen.current_player_index = 0
-        screen.session.human_player_ids = [0, 1]
-
-        screen.advance_turn()
-
-        assert screen.current_player_index == 1
-
-    def test_advance_turn_wraps_when_all_ready(self):
-        """advance_turn() should wrap and process turn when all players ready."""
+    def test_advance_turn_delegates_to_game_state_manager(self):
+        """advance_turn() should delegate to _game_state.advance_turn()."""
         screen, mocks = _make_strategy_screen()
-        screen.current_player_index = 0
-        screen.session.human_player_ids = [0]
-        screen._process_full_turn = MagicMock()
-        screen._update_player_label = MagicMock()
 
         screen.advance_turn()
 
-        assert screen.current_player_index == 0
-        screen._process_full_turn.assert_called_once()
-
-    def test_advance_turn_updates_player_label(self):
-        """advance_turn() should update player label after processing."""
-        screen, _ = _make_strategy_screen()
-        screen.current_player_index = 0
-        screen.session.human_player_ids = [0]
-        screen._process_full_turn = MagicMock()
-        screen._update_player_label = MagicMock()
-
-        screen.advance_turn()
-
-        screen._update_player_label.assert_called_once()
-
-    def test_advance_turn_switches_player_without_processing(self):
-        """advance_turn() should switch player without processing if more humans."""
-        screen, _ = _make_strategy_screen()
-        screen.current_player_index = 0
-        screen.session.human_player_ids = [0, 1]
-        screen._process_full_turn = MagicMock()
-        screen._update_player_label = MagicMock()
-
-        screen.advance_turn()
-
-        screen._process_full_turn.assert_not_called()
-        screen._update_player_label.assert_called_once()
+        mocks['game_state'].advance_turn.assert_called_once()
 
 
 class TestProcessFullTurn:
-    """Test _process_full_turn() method."""
+    """Test that turn processing is handled by GameStateManager.
 
-    def test_process_full_turn_sets_turn_processing(self):
-        """_process_full_turn() should set turn_processing flag."""
+    Note: _process_full_turn() has been moved to StrategyGameStateManager.
+    These tests verify the delegation pattern works correctly.
+    """
+
+    def test_advance_turn_delegates_turn_processing(self):
+        """advance_turn() should delegate turn processing to game_state manager."""
         screen, mocks = _make_strategy_screen()
-        screen._show_scuttle_notifications = MagicMock()
 
-        with patch('pygame.display.get_surface', return_value=None):
-            screen._process_full_turn()
+        screen.advance_turn()
 
-        # Flag should be False after processing completes
-        assert screen.turn_processing is False
-
-    def test_process_full_turn_calls_facade_process_turn(self):
-        """_process_full_turn() should call facade.process_turn()."""
-        screen, mocks = _make_strategy_screen()
-        screen._show_scuttle_notifications = MagicMock()
-
-        with patch('pygame.display.get_surface', return_value=None):
-            screen._process_full_turn()
-
-        mocks['facade'].process_turn.assert_called_once()
-
-    def test_process_full_turn_checks_turn_events(self):
-        """_process_full_turn() should check for turn events."""
-        screen, mocks = _make_strategy_screen()
-        screen._show_scuttle_notifications = MagicMock()
-        mocks['facade'].get_turn_events.return_value = []
-
-        with patch('pygame.display.get_surface', return_value=None):
-            screen._process_full_turn()
-
-        mocks['facade'].get_turn_events.assert_called()
+        # Verify delegation occurred
+        mocks['game_state'].advance_turn.assert_called_once()
 
 
 # ===========================================================================
@@ -293,104 +238,52 @@ class TestOnUiSelection:
 # ===========================================================================
 
 class TestOnBuildYardClick:
-    """Test on_build_yard_click() method."""
+    """Test on_build_yard_click() method delegates to BuildQueueManager."""
 
-    def test_on_build_yard_click_opens_build_queue(self):
-        """on_build_yard_click() should open BuildQueueScreen for owned planet."""
+    def test_on_build_yard_click_delegates_to_build_queue_manager(self):
+        """on_build_yard_click() should delegate to _build_queue.on_build_yard_click()."""
         screen, mocks = _make_strategy_screen()
-
-        # Create mock planet
-        from game.strategy.data.planet import Planet
-        mock_planet = MagicMock(spec=Planet)
-        mock_planet.owner_id = 0
-        mock_planet.name = "Test Planet"
-        screen.selected_object = mock_planet
-
-        # Setup human_player_ids and empires so current_empire property works
-        empire0 = MagicMock()
-        empire0.id = 0
-        screen.session.empires = [empire0]
-        screen.session.human_player_ids = [0]
-        screen.current_player_index = 0
-
-        # Mock dependencies
-        screen._get_object_asset = MagicMock(return_value=None)
-        mocks['session'].galaxy.get_system_of_planet.return_value = None
-
-        with patch('game.ui.screens.build_queue_screen.BuildQueueScreen') as MockBQS, \
-             patch('game.strategy.systems.design_library.DesignLibrary'), \
-             patch('game.ui.services.design_loader_adapter.DesignLoaderAdapter'):
-            screen.on_build_yard_click()
-
-        MockBQS.assert_called_once()
-        mocks['ui'].hide_ui.assert_called_once()
-
-    def test_on_build_yard_click_ignores_when_already_open(self):
-        """on_build_yard_click() should do nothing if build queue already open."""
-        screen, mocks = _make_strategy_screen()
-        screen.build_queue_screen = MagicMock()  # Already open
 
         screen.on_build_yard_click()
 
-        mocks['ui'].hide_ui.assert_not_called()
+        mocks['build_queue'].on_build_yard_click.assert_called_once()
 
-    def test_on_build_yard_click_requires_owned_planet(self):
-        """on_build_yard_click() should only open for player's own planet."""
+    def test_on_fleet_build_click_delegates_to_build_queue_manager(self):
+        """on_fleet_build_click() should delegate to _build_queue.on_fleet_build_click()."""
         screen, mocks = _make_strategy_screen()
 
-        # Create mock planet owned by enemy
-        from game.strategy.data.planet import Planet
-        mock_planet = MagicMock(spec=Planet)
-        mock_planet.owner_id = 1  # Enemy owns it
-        screen.selected_object = mock_planet
+        screen.on_fleet_build_click()
 
-        # Setup human_player_ids and empires so current_empire property works
-        empire0 = MagicMock()
-        empire0.id = 0
-        screen.session.empires = [empire0]
-        screen.session.human_player_ids = [0]
-        screen.current_player_index = 0
+        mocks['build_queue'].on_fleet_build_click.assert_called_once()
 
-        screen.on_build_yard_click()
+    def test_on_navigate_to_hex_build_delegates_to_build_queue_manager(self):
+        """on_navigate_to_hex_build() should delegate to _build_queue."""
+        screen, mocks = _make_strategy_screen()
+        mock_hex = MagicMock()
+        mock_source = MagicMock()
 
-        # Should not open build queue for enemy planet
-        assert screen.build_queue_screen is None
+        screen.on_navigate_to_hex_build(mock_hex, mock_source)
+
+        mocks['build_queue'].on_navigate_to_hex_build.assert_called_once_with(mock_hex, mock_source)
 
 
 class TestOnBuildQueueClose:
-    """Test _on_build_queue_close() method."""
+    """Test build queue closing is handled by BuildQueueManager.
 
-    def test_on_build_queue_close_clears_build_queue_screen(self):
-        """_on_build_queue_close() should set build_queue_screen to None."""
+    Note: _on_build_queue_close() has been moved to StrategyBuildQueueManager.
+    These tests verify the delegation pattern works correctly.
+    """
+
+    def test_build_queue_methods_delegate_correctly(self):
+        """Build queue operations should delegate to build_queue manager."""
         screen, mocks = _make_strategy_screen()
-        screen.build_queue_screen = MagicMock()
-        screen.build_queue_screen.queue_sources = []
 
-        screen._on_build_queue_close()
+        # Verify all build queue methods delegate
+        screen.on_build_yard_click()
+        screen.on_fleet_build_click()
 
-        assert screen.build_queue_screen is None
-
-    def test_on_build_queue_close_shows_ui(self):
-        """_on_build_queue_close() should call ui.show_ui()."""
-        screen, mocks = _make_strategy_screen()
-        screen.build_queue_screen = MagicMock()
-        screen.build_queue_screen.queue_sources = []
-
-        screen._on_build_queue_close()
-
-        mocks['ui'].show_ui.assert_called_once()
-
-    def test_on_build_queue_close_refreshes_selected_object(self):
-        """_on_build_queue_close() should refresh display for selected object."""
-        screen, mocks = _make_strategy_screen()
-        screen.build_queue_screen = MagicMock()
-        screen.build_queue_screen.queue_sources = []
-        screen.selected_object = MagicMock()
-        screen._get_object_asset = MagicMock(return_value=None)
-
-        screen._on_build_queue_close()
-
-        mocks['ui'].show_detailed_report.assert_called_once()
+        assert mocks['build_queue'].on_build_yard_click.called
+        assert mocks['build_queue'].on_fleet_build_click.called
 
 
 # ===========================================================================
@@ -759,28 +652,26 @@ class TestErrorHandlingPaths:
         screen.on_ui_selection.assert_not_called()
 
     def test_advance_turn_with_empty_human_player_ids(self):
-        """advance_turn() should handle empty human_player_ids."""
+        """advance_turn() should delegate to game_state manager (which handles edge cases)."""
         screen, mocks = _make_strategy_screen()
         screen.current_player_index = 0
         screen.session.human_player_ids = []  # Empty list
-        screen._process_full_turn = MagicMock()
-        screen._update_player_label = MagicMock()
 
-        # Should handle division/mod by zero gracefully
+        # Should delegate to game_state manager
         screen.advance_turn()
 
-        # Index should wrap to 0 even with empty list
-        assert screen.current_player_index == 0
+        # Delegation should occur regardless of state
+        mocks['game_state'].advance_turn.assert_called_once()
 
     def test_on_build_yard_click_no_selected_object(self):
-        """on_build_yard_click() should do nothing when no object selected."""
+        """on_build_yard_click() should delegate to build_queue manager."""
         screen, mocks = _make_strategy_screen()
         screen.selected_object = None
 
         screen.on_build_yard_click()
 
-        # No UI changes should happen
-        mocks['ui'].hide_ui.assert_not_called()
+        # Delegation should occur - the manager handles validation
+        mocks['build_queue'].on_build_yard_click.assert_called_once()
 
     def test_on_colonize_click_no_selected_fleet(self):
         """on_colonize_click() should handle no fleet gracefully."""
@@ -900,25 +791,18 @@ class TestEdgeCases:
         assert screen.hex_size == 100
 
     def test_current_player_index_wrapping(self):
-        """current_player_index should wrap correctly with multiple players."""
-        screen, _ = _make_strategy_screen()
+        """advance_turn() should delegate to game_state manager for player wrapping."""
+        screen, mocks = _make_strategy_screen()
         screen.session.human_player_ids = [0, 1, 2]
-        screen._process_full_turn = MagicMock()
-        screen._update_player_label = MagicMock()
 
-        # Start at 0, advance to 1
+        # Start at 0, advance 3 times
         screen.current_player_index = 0
         screen.advance_turn()
-        assert screen.current_player_index == 1
-
-        # Advance to 2
         screen.advance_turn()
-        assert screen.current_player_index == 2
-
-        # Advance wraps to 0 and processes turn
         screen.advance_turn()
-        assert screen.current_player_index == 0
-        screen._process_full_turn.assert_called_once()
+
+        # Should have delegated 3 times
+        assert mocks['game_state'].advance_turn.call_count == 3
 
 
 # ===========================================================================
