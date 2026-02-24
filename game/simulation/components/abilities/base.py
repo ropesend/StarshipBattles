@@ -1,6 +1,9 @@
 from typing import Dict, Any, List, Set, TYPE_CHECKING
 from enum import Enum, Flag, auto
 
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
+
 if TYPE_CHECKING:
     from .stat_keys import StatKey, AbilityStatBinding
 
@@ -94,17 +97,27 @@ class Ability:
         # Convert string to enum
         try:
             requested_scope = AbilityScope(scope_str)
-        except ValueError:
-            raise ValueError(
-                f"{self.__class__.__name__} received invalid scope '{scope_str}'. "
-                f"Valid scopes: {[s.value for s in AbilityScope]}"
-            )
+        except ValueError as e:
+            raise ValidationException(
+                f"{self.__class__.__name__} received invalid scope '{scope_str}'",
+                code=ErrorCode.VALIDATION_FAILED.value,
+                context={
+                    "ability_class": self.__class__.__name__,
+                    "scope": scope_str,
+                    "valid_scopes": [s.value for s in AbilityScope]
+                }
+            ) from e
 
         # Validate against allowed scopes
         if requested_scope not in self.allowed_scopes:
-            raise ValueError(
-                f"{self.__class__.__name__} does not support scope '{scope_str}'. "
-                f"Allowed scopes: {[s.value for s in self.allowed_scopes]}"
+            raise ValidationException(
+                f"{self.__class__.__name__} does not support scope '{scope_str}'",
+                code=ErrorCode.VALIDATION_FAILED.value,
+                context={
+                    "ability_class": self.__class__.__name__,
+                    "scope": scope_str,
+                    "allowed_scopes": [s.value for s in self.allowed_scopes]
+                }
             )
 
         return requested_scope

@@ -2,6 +2,8 @@ import logging
 import math
 from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Set, Iterator
 
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 from game.engine.physics import PhysicsBody
 from game.simulation.components.component import Component, create_component
 from game.core.constants import LayerType
@@ -44,10 +46,14 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             registries: GameRegistries for DI (required).
 
         Raises:
-            TypeError: If registries is None
+            ValidationException: If registries is None
         """
         if registries is None:
-            raise TypeError("registries is required for Ship initialization")
+            raise ValidationException(
+                "registries is required for Ship initialization",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "Ship", "parameter": "registries"}
+            )
         super().__init__(x, y)
         self.name: str = name
         self.color: Union[Tuple[int, int, int], List[int]] = color

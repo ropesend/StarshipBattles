@@ -11,6 +11,9 @@ from enum import Enum
 from dataclasses import dataclass, field
 from typing import Optional, List, Set
 
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
+
 
 class StatKey(Enum):
     """
@@ -127,7 +130,14 @@ class AbilityStatBinding:
         """Validate the binding configuration."""
         valid_operations = {'multiply', 'add', 'set'}
         if self.operation not in valid_operations:
-            raise ValueError(f"Invalid operation '{self.operation}'. Must be one of {valid_operations}")
+            raise ValidationException(
+                f"Invalid stat binding operation: '{self.operation}'",
+                code=ErrorCode.VALIDATION_FAILED.value,
+                context={
+                    "operation": self.operation,
+                    "valid_operations": list(valid_operations)
+                }
+            )
 
     def get_base_attribute_name(self) -> str:
         """Get the base attribute name (for recalculation)."""

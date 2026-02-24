@@ -12,6 +12,7 @@ import pytest
 from pathlib import Path
 from unittest.mock import MagicMock, patch, PropertyMock
 
+from game.core.exceptions import MissingResourceException
 from game.simulation.entities.ship_loader import (
     load_vehicle_classes_data,
     load_vehicle_classes,
@@ -114,11 +115,11 @@ class TestLoadVehicleClassesData:
         assert result["Frigate"]["base_hull"] == 100
         assert result["Cruiser"]["base_hull"] == 200
 
-    def test_raises_runtime_error_for_missing_file(self, tmp_path):
-        """Raises RuntimeError when vehicle classes file is not found."""
+    def test_raises_missing_resource_exception_for_missing_file(self, tmp_path):
+        """Raises MissingResourceException when vehicle classes file is not found."""
         nonexistent = tmp_path / "does_not_exist.json"
 
-        with pytest.raises(RuntimeError, match="Critical Error"):
+        with pytest.raises(MissingResourceException):
             load_vehicle_classes_data(str(nonexistent))
 
     def test_returns_deep_copy_of_data(self, tmp_path, vehicle_classes_data):
@@ -347,11 +348,11 @@ class TestInitializeShipData:
             mock_load.assert_called_once_with()
 
     def test_propagates_errors_from_load_vehicle_classes(self, tmp_path):
-        """Propagates RuntimeError from load_vehicle_classes."""
+        """Propagates MissingResourceException from load_vehicle_classes."""
         with patch('game.simulation.entities.ship_loader.load_vehicle_classes') as mock_load:
-            mock_load.side_effect = RuntimeError("Critical Error")
+            mock_load.side_effect = MissingResourceException("Critical Error")
 
-            with pytest.raises(RuntimeError, match="Critical Error"):
+            with pytest.raises(MissingResourceException):
                 initialize_ship_data(str(tmp_path))
 
 

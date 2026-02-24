@@ -15,6 +15,8 @@ from game.simulation.entities.ship_loader import get_or_create_validator
 from game.simulation.components.component import Component, create_component
 from game.core.constants import LayerType
 from game.core.registry import GameRegistries
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 logger = logging.getLogger(__name__)
 
@@ -62,10 +64,14 @@ class VehicleDesignService:
             registries: GameRegistries for dependency injection (required).
 
         Raises:
-            TypeError: If registries is None.
+            ValidationException: If registries is None.
         """
         if registries is None:
-            raise TypeError("registries is required")
+            raise ValidationException(
+                "registries is required for VehicleDesignService",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "VehicleDesignService", "parameter": "registries"}
+            )
         self._registries = registries
 
     def create_ship(

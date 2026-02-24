@@ -17,6 +17,8 @@ import uuid
 
 import logging
 from game.core.constants import LayerType
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 logger = logging.getLogger(__name__)
 
@@ -247,7 +249,11 @@ class ShipState:
         Component damage and resource levels are restored.
         """
         if registries is None:
-            raise TypeError("registries is required for ShipState.to_ship")
+            raise ValidationException(
+                "registries is required for ShipState.to_ship",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "ShipState", "method": "to_ship", "parameter": "registries"}
+            )
         from game.simulation.entities.ship import Ship
         from game.core.math import Vector2
 

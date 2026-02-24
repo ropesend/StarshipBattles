@@ -15,7 +15,7 @@
 |-------|--------|-----------|
 | 1. Infrastructure — Error Codes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Strategy Loaders | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Simulation Core | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Simulation Core | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Game Config + UI | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Caller Catch Updates | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Exception Chaining Fixes | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
@@ -23,9 +23,9 @@
 
 ## Current State
 **Last Updated:** 2026-02-23
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete - Migrated 24 ValueError to domain exceptions in 3 loader files
-**Next Action:** Begin Phase 3 - Simulation Core Migration
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 complete - Migrated 27 raises in 16 simulation files + ~50 tests
+**Next Action:** Begin Phase 4 - Game Config + UI Migration
 **Blockers:** None
 **Baseline:** 11,972 passed, 1 skipped, 0 failures
 

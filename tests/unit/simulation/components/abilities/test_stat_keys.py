@@ -6,6 +6,7 @@ Tests StatKey enum and AbilityStatBinding class.
 import pytest
 from unittest.mock import MagicMock
 
+from game.core.exceptions import ValidationException
 from game.simulation.components.abilities.stat_keys import StatKey, AbilityStatBinding
 
 
@@ -86,14 +87,14 @@ class TestAbilityStatBindingInit:
         assert binding.operation == 'multiply'
 
     def test_binding_invalid_operation_raises(self):
-        """ValueError for 'divide'."""
-        with pytest.raises(ValueError) as exc_info:
+        """ValidationException for 'divide'."""
+        with pytest.raises(ValidationException) as exc_info:
             AbilityStatBinding(
                 stat_key=StatKey.DAMAGE_MULT,
                 attribute_name='damage',
                 operation='divide'
             )
-        assert "divide" in str(exc_info.value)
+        assert exc_info.value.context.get("operation") == "divide"
 
     def test_binding_default_operation_is_multiply(self):
         """Default operation is 'multiply'."""

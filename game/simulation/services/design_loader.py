@@ -18,6 +18,7 @@ from typing import Optional, Tuple, TYPE_CHECKING
 
 from game.core.json_utils import load_json_required
 from game.core.exceptions import PersistenceException, ValidationException
+from game.core.error_codes import ErrorCode
 
 logger = logging.getLogger(__name__)
 from game.core.math import Vector2
@@ -49,7 +50,11 @@ class SimulationDesignLoader:
             registries: GameRegistries for DI (required).
         """
         if registries is None:
-            raise TypeError("registries is required for SimulationDesignLoader")
+            raise ValidationException(
+                "registries is required for SimulationDesignLoader",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "SimulationDesignLoader", "parameter": "registries"}
+            )
         self._registries = registries
 
     def load_ship_from_design_data(

@@ -68,6 +68,8 @@ from game.simulation.systems.battle_end_conditions import BattleEndCondition, Ba
 
 from game.simulation.entities.projectile import Projectile
 from game.simulation.entities.ship import Ship
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 if TYPE_CHECKING:
     # PROJ-132: Only import protocols from simulation layer, not concrete AI types
@@ -266,9 +268,10 @@ class BattleEngine:
             team2_controllers = self._ai_factory.create_for_ships(team2_ships, enemy_team_id=0)
             self.ai_controllers = team1_controllers + team2_controllers
         else:
-            raise ValueError(
-                "BattleEngine.start() requires ai_controllers or ai_factory. "
-                "Use BattleService.create_battle() or inject ai_factory after construction."
+            raise ValidationException(
+                "BattleEngine requires AI configuration",
+                code=ErrorCode.NOT_INITIALIZED.value,
+                context={"missing": "ai_controllers and ai_factory", "operation": "start"}
             )
 
         # Logging
@@ -317,9 +320,10 @@ class BattleEngine:
             ai = self._ai_factory.create_for_ship(ship, enemy_team)
             self.ai_controllers.append(ai)
         else:
-            raise ValueError(
-                "add_ship_mid_battle() requires ai_controller or ai_factory. "
-                "Use BattleService.create_battle() or inject ai_factory after construction."
+            raise ValidationException(
+                "BattleEngine requires AI configuration",
+                code=ErrorCode.NOT_INITIALIZED.value,
+                context={"missing": "ai_controller and ai_factory", "operation": "add_ship_mid_battle"}
             )
 
         self.logger.log(f"Reinforcement arrived: {ship.name} (Team {team_id})")
@@ -464,9 +468,10 @@ class BattleEngine:
                     ai = self._ai_factory.create_for_ship(new_ship, enemy_team)
                     self.ai_controllers.append(ai)
                 else:
-                    raise ValueError(
-                        "Fighter launch requires ai_factory on BattleEngine. "
-                        "Use BattleService.create_battle() or inject ai_factory after construction."
+                    raise ValidationException(
+                        "BattleEngine requires AI configuration",
+                        code=ErrorCode.NOT_INITIALIZED.value,
+                        context={"missing": "ai_factory", "operation": "fighter_launch"}
                     )
 
                 self.logger.log(f"LAUNCH: {new_name} launched from {source_ship.name}")

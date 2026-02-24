@@ -8,20 +8,34 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-170 Phase 2 - Strategy Loaders Migration
-**Current Status:** PROJ-170 Phase 2 Complete
+**Last Completed:** PROJ-170 Phase 3 - Simulation Core Migration
+**Current Status:** PROJ-170 Phase 3 Complete
 **Current Project:** PROJ-170
-**Current Phase:** Phase 3
+**Current Phase:** Phase 4
 **Test Status:** 11972 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-170 Phase 2 complete - Migrated 24 ValueError to domain exceptions
-- system_blueprints_loader.py: 15 ValueError → ValidationException
-- astrophysics_loader.py: 7 ValueError → ValidationException
-- galaxy_layouts_loader.py: 2 ValueError → ValidationException + ResourceException
-- Updated test_layout_loader.py to expect ValidationException
-- Next: Phase 3 - Simulation Core Migration (27 raises across 15 files)
+- PROJ-170 Phase 3 complete - Migrated 27 raises in 16 simulation files
+- battle_engine.py: 3 ValueError → ValidationException
+- battle_state_manager.py: 1 RuntimeError → StateException, 1 ValueError → ValidationException
+- abilities/base.py: 2 ValueError → ValidationException
+- stat_keys.py: 1 ValueError → ValidationException
+- battle_mode_handler.py: 1 ValueError → ValidationException
+- ship_serialization.py: 1 TypeError + 1 ValueError → ValidationException
+- ship_loader.py: 1 RuntimeError → MissingResourceException
+- ship.py: 1 TypeError → ValidationException
+- component.py: 3 TypeError → ValidationException
+- battle_state.py: 1 TypeError → ValidationException
+- ship_validator.py: 2 TypeError → ValidationException
+- design_loader.py: 1 TypeError → ValidationException
+- vehicle_design_service.py: 1 TypeError → ValidationException
+- modifier_service.py: 1 TypeError → ValidationException
+- ai_factory.py: 1 RuntimeError → StateException
+- density_map.py: 4 ValueError → ValidationException
+- Updated battle_controller.py to catch ValidationException
+- Updated ~50 tests across simulation/abilities/strategy directories
+- Next: Phase 4 - Game Config + UI Migration (12 raises in 7 files)
 
 ---
 
@@ -115,6 +129,7 @@
 | 2026-02-23 | PROJ-174 | Audit 1 | PASSED | 11972 passed, 1 skipped | pending | Fixed orphaned import in resources.py |
 | 2026-02-23 | PROJ-170 | Phase 1 | Complete | 11972 passed, 1 skipped | pending | Added 3 error codes (V002, V003, C003), updated guidelines |
 | 2026-02-23 | PROJ-170 | Phase 2 | Complete | 11972 passed, 1 skipped | pending | Migrated 24 ValueError in 3 strategy loader files |
+| 2026-02-23 | PROJ-170 | Phase 3 | Complete | 11972 passed, 1 skipped | pending | Migrated 27 raises in 16 simulation files + ~50 tests |
 
 ---
 

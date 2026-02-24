@@ -10,6 +10,8 @@ Factory now uses two-phase initialization (set_grid after construction).
 import pytest
 from unittest.mock import MagicMock, patch
 
+from game.core.exceptions import StateException
+
 
 class TestAIControllerFactory:
     """Tests for AIControllerFactory."""
@@ -62,7 +64,7 @@ class TestAIControllerFactory:
         factory = AIControllerFactory()
         # Don't call set_grid
 
-        with pytest.raises(RuntimeError, match="set_grid"):
+        with pytest.raises(StateException):
             factory.create_for_ship(ship, enemy_team_id=1)
 
     def test_create_for_ships_returns_list(self, fresh_registries):

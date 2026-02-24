@@ -9,6 +9,9 @@ PROJ-50: Removed fallback pattern - strict DI required.
 """
 from typing import Dict, Any
 
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
+
 
 class ModifierService:
     """Service for component modifier operations.
@@ -45,10 +48,14 @@ class ModifierService:
             modifier_registry: Dictionary of Modifier objects keyed by ID.
 
         Raises:
-            TypeError: If modifier_registry is None.
+            ValidationException: If modifier_registry is None.
         """
         if modifier_registry is None:
-            raise TypeError("modifier_registry is required")
+            raise ValidationException(
+                "modifier_registry is required for ModifierService",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "ModifierService", "parameter": "modifier_registry"}
+            )
         self._modifiers = modifier_registry
 
     def is_modifier_allowed(self, mod_id: str, component) -> bool:

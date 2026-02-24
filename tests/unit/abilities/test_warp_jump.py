@@ -7,6 +7,8 @@ TDD Phase 3, Step 3.1: Tests for the WarpJump ability class.
 import pytest
 from unittest.mock import MagicMock
 
+from game.core.exceptions import ValidationException
+
 
 class TestWarpJumpAbility:
     """Tests for the WarpJump ability class."""
@@ -105,7 +107,7 @@ class TestWarpJumpAbility:
 
         data = {'max_tonnage': 5000, 'scope': 'system'}
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidationException):
             WarpJump(mock_component, data)
 
 

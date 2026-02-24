@@ -7,6 +7,8 @@ PROJ-38: Added registries parameter for dependency injection.
 import logging
 from typing import Dict, Any, Optional, TYPE_CHECKING
 
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 from game.simulation.components.component import create_component
 from game.core.constants import LayerType
 
@@ -137,10 +139,14 @@ class ShipSerializer:
             New Ship instance populated from the dictionary
 
         Raises:
-            TypeError: If registries is None
+            ValidationException: If registries is None
         """
         if registries is None:
-            raise TypeError("registries is required for ShipSerializer.from_dict")
+            raise ValidationException(
+                "registries is required for ShipSerializer.from_dict",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "ShipSerializer", "method": "from_dict", "parameter": "registries"}
+            )
         # MUST remain a runtime import — ship.py imports ShipSerializer at module level
         from game.simulation.entities.ship import Ship
 
@@ -179,7 +185,11 @@ class ShipSerializer:
 
             for c_entry in comps_list:
                 if not isinstance(c_entry, dict):
-                    raise ValueError(f"Component entry must be dict, got {type(c_entry).__name__}")
+                    raise ValidationException(
+                        f"Component entry must be dict, got {type(c_entry).__name__}",
+                        code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                        context={"expected_type": "dict", "actual_type": type(c_entry).__name__}
+                    )
 
                 comp_id = c_entry.get("id", "")
                 if comp_id not in comps:

@@ -65,6 +65,8 @@ from typing import Optional, TYPE_CHECKING
 from game.core.registry import get_default_registry_provider
 from game.core.json_utils import load_json_required
 from game.core.constants import CombatConstants
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 logger = logging.getLogger(__name__)
 from .component_constants import ComponentStatus, Modifier, ApplicationModifier
@@ -89,10 +91,14 @@ class Component:
             registries: GameRegistries for DI (required).
 
         Raises:
-            TypeError: If registries is None
+            ValidationException: If registries is None
         """
         if registries is None:
-            raise TypeError("registries is required for Component initialization")
+            raise ValidationException(
+                "registries is required for Component initialization",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "Component", "parameter": "registries"}
+            )
         import copy
         # PERF-ANALYSIS: deepcopy required - data contains nested mutable structures
         # (abilities dict with lists and sub-dicts). Shallow copy would cause shared
@@ -690,10 +696,14 @@ def create_component(component_id, *, registries: 'GameRegistries'):
         Component clone or None if not found
 
     Raises:
-        TypeError: If registries is None
+        ValidationException: If registries is None
     """
     if registries is None:
-        raise TypeError("registries is required for create_component")
+        raise ValidationException(
+            "registries is required for create_component",
+            code=ErrorCode.MISSING_DEPENDENCY.value,
+            context={"function": "create_component", "parameter": "registries"}
+        )
     comps = registries.components
 
     if component_id in comps:
@@ -716,9 +726,13 @@ def get_all_components(*, registries: 'GameRegistries'):
         List of all Component instances in the registry.
 
     Raises:
-        TypeError: If registries is None
+        ValidationException: If registries is None
     """
     if registries is None:
-        raise TypeError("registries is required for get_all_components")
+        raise ValidationException(
+            "registries is required for get_all_components",
+            code=ErrorCode.MISSING_DEPENDENCY.value,
+            context={"function": "get_all_components", "parameter": "registries"}
+        )
     return list(registries.components.values())
 

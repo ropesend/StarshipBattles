@@ -10,6 +10,7 @@ from typing import List, Optional, TYPE_CHECKING
 from game.simulation.components.component import Component
 from game.core.constants import LayerType
 from game.core.error_codes import ErrorCode
+from game.core.exceptions import ValidationException
 
 # Import base classes from validation module (Phase 12 refactoring)
 from game.simulation.validation.base import (
@@ -278,10 +279,14 @@ class ClassRequirementsRule(DesignValidationRule):
             registries: GameRegistries for DI (required).
 
         Raises:
-            TypeError: If registries is None
+            ValidationException: If registries is None
         """
         if registries is None:
-            raise TypeError("registries is required for ClassRequirementsRule")
+            raise ValidationException(
+                "registries is required for ClassRequirementsRule",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "ClassRequirementsRule", "parameter": "registries"}
+            )
         super().__init__()
         self._registries = registries
 
@@ -385,10 +390,14 @@ class ShipDesignValidator:
             registries: GameRegistries for DI (required). Passed to ClassRequirementsRule.
 
         Raises:
-            TypeError: If registries is None
+            ValidationException: If registries is None
         """
         if registries is None:
-            raise TypeError("registries is required for ShipDesignValidator")
+            raise ValidationException(
+                "registries is required for ShipDesignValidator",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "ShipDesignValidator", "parameter": "registries"}
+            )
         self.addition_rules: List[ValidationRule] = [
             LayerConstraintRule(),
             UniqueComponentRule(),

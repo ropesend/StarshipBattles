@@ -20,6 +20,8 @@ Usage:
 """
 from typing import List, Optional, TYPE_CHECKING
 
+from game.core.exceptions import StateException
+from game.core.error_codes import ErrorCode
 from game.ai.controller import AIController
 from game.ai.interfaces import ShipControllableAdapter
 from game.simulation.interfaces.ai_controller import IAIController
@@ -73,11 +75,13 @@ class AIControllerFactory:
             An AIController instance that implements IAIController
 
         Raises:
-            RuntimeError: If set_grid() hasn't been called
+            StateException: If set_grid() hasn't been called
         """
         if self._grid is None:
-            raise RuntimeError(
-                "AIControllerFactory.set_grid() must be called before creating controllers"
+            raise StateException(
+                "AIControllerFactory grid not initialized",
+                code=ErrorCode.NOT_INITIALIZED.value,
+                context={"state": "grid_missing"}
             )
         adapter = ShipControllableAdapter(ship)
         return AIController(adapter, self._grid, enemy_team_id)

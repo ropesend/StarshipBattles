@@ -16,7 +16,7 @@ Handles:
 """
 from typing import List, Optional, Dict, Callable, Tuple, Any, TYPE_CHECKING
 
-from game.core.exceptions import StateException
+from game.core.exceptions import StateException, ValidationException
 from game.core.error_codes import ErrorCode
 from game.simulation.services.battle_service import BattleService, BattleServiceResult
 from game.simulation.battle_state import BattleState, BattleResults, ShipState
@@ -514,7 +514,7 @@ class BattleController:
 
             return BattleServiceResult(success=True, engine=engine)
 
-        except (TypeError, ValueError, KeyError, AttributeError) as e:
+        except (TypeError, ValueError, KeyError, AttributeError, ValidationException) as e:
             logger.warning(f"Failed to load battle state: {e}")
             return BattleServiceResult(success=False, errors=[str(e)])
 

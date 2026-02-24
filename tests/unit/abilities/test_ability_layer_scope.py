@@ -7,6 +7,8 @@ TDD Phase 1, Step 1.1: Foundation tests for layer/scope system.
 import pytest
 from unittest.mock import MagicMock
 
+from game.core.exceptions import ValidationException
+
 
 class TestAbilityLayerEnum:
     """Tests for the AbilityLayer Flag enum."""
@@ -171,7 +173,7 @@ class TestAbilityBaseClassLayerScope:
         # Try to use disallowed scope
         data = {'value': 100, 'scope': 'system'}
 
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValidationException) as exc_info:
             RestrictedAbility(mock_component, data)
 
         assert 'does not support scope' in str(exc_info.value)

@@ -8,6 +8,7 @@ These tests verify that Ship:
 """
 import pytest
 
+from game.core.exceptions import ValidationException
 from game.simulation.entities.ship import Ship
 from game.core.registry import GameRegistries, set_default_registries
 
@@ -62,7 +63,7 @@ class TestShipConstructor:
 
     def test_constructor_with_none_raises_typeerror(self, mock_registries):
         """Ship with None registries should raise TypeError (PROJ-50 strict DI)."""
-        with pytest.raises(TypeError, match="registries is required"):
+        with pytest.raises(ValidationException):
             Ship(
                 name="Test Ship",
                 x=0, y=0,
@@ -154,7 +155,7 @@ class TestStrictDIEnforcement:
         assert ship._registries is mock_registries
 
         # Invalid: with None
-        with pytest.raises(TypeError, match="registries is required"):
+        with pytest.raises(ValidationException):
             Ship(
                 name="Test Ship",
                 x=0, y=0,

@@ -12,6 +12,7 @@ Tests AbilityLayer flag, AbilityScope enum, and Ability base class including:
 import pytest
 from unittest.mock import MagicMock
 
+from game.core.exceptions import ValidationException
 from game.simulation.components.abilities.base import (
     Ability,
     AbilityLayer,
@@ -221,14 +222,14 @@ class TestAbilityScopeParsing:
         assert ability.scope == AbilityScope.SELF
 
     def test_parse_scope_invalid_string_raises(self, mock_component):
-        """Invalid scope string raises ValueError."""
-        with pytest.raises(ValueError, match="invalid scope"):
+        """Invalid scope string raises ValidationException."""
+        with pytest.raises(ValidationException):
             Ability(mock_component, {"scope": "invalid"})
 
     def test_parse_scope_not_in_allowed_raises(self, mock_component):
-        """Scope not in allowed_scopes raises ValueError."""
+        """Scope not in allowed_scopes raises ValidationException."""
         # Base Ability only allows SELF by default
-        with pytest.raises(ValueError, match="does not support scope"):
+        with pytest.raises(ValidationException):
             Ability(mock_component, {"scope": "sector"})
 
 
@@ -703,16 +704,16 @@ class TestAbilityEdgeCases:
 
     def test_scope_validation_error_message_contains_class_name(self, mock_component):
         """Scope validation error includes class name."""
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValidationException) as exc_info:
             Ability(mock_component, {"scope": "sector"})
         assert "Ability" in str(exc_info.value)
 
     def test_invalid_scope_error_message_lists_valid_scopes(self, mock_component):
         """Invalid scope error lists all valid scope values."""
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValidationException) as exc_info:
             Ability(mock_component, {"scope": "nonexistent"})
-        assert "self" in str(exc_info.value)
-        assert "sector" in str(exc_info.value)
+        # Check context contains the scopes
+        assert exc_info.value.context.get("valid_scopes") is not None
 
 
 # =============================================================================

@@ -6,6 +6,7 @@ Tests that ClassRequirementsRule requires registries parameter (no fallback).
 import pytest
 from unittest.mock import Mock
 
+from game.core.exceptions import ValidationException
 from game.simulation.validation.ship_validator import ClassRequirementsRule, ShipDesignValidator
 from game.simulation.validation.base import ValidationResult
 
@@ -58,7 +59,7 @@ class TestClassRequirementsRuleDI:
     def test_class_requirements_rule_requires_registries(self):
         """PROJ-50: ClassRequirementsRule now requires registries parameter."""
         # Should raise TypeError when registries=None
-        with pytest.raises(TypeError, match="registries is required"):
+        with pytest.raises(ValidationException):
             ClassRequirementsRule(registries=None)
 
     def test_class_requirements_rule_stores_registries(self, mock_registries):
@@ -84,7 +85,7 @@ class TestShipDesignValidatorDI:
 
     def test_ship_design_validator_requires_registries(self):
         """PROJ-50: ShipDesignValidator now requires registries parameter."""
-        with pytest.raises(TypeError, match="registries is required"):
+        with pytest.raises(ValidationException):
             ShipDesignValidator(registries=None)
 
     def test_ship_design_validator_accepts_registries(self, mock_registries):

@@ -7,6 +7,8 @@ import logging
 import os
 from typing import Optional
 
+from game.core.exceptions import MissingResourceException
+from game.core.error_codes import ErrorCode
 from game.core.json_utils import load_json, load_json_required
 
 logger = logging.getLogger(__name__)
@@ -91,7 +93,11 @@ def load_vehicle_classes_data(
     try:
         data = load_json_required(file_path)
     except FileNotFoundError:
-        raise RuntimeError(f"Critical Error: {file_path} not found. Vehicle class data is required for game operation.")
+        raise MissingResourceException(
+            f"Vehicle class data file not found: {file_path}",
+            code=ErrorCode.RESOURCE_NOT_FOUND.value,
+            context={"file_path": str(file_path), "severity": "critical"}
+        )
 
     raw_classes = data.get('classes', {})
 

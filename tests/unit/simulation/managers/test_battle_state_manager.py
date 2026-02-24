@@ -11,6 +11,7 @@ from unittest.mock import Mock, MagicMock, patch
 from dataclasses import dataclass
 
 from game.simulation.managers.battle_state_manager import BattleStateManager
+from game.core.exceptions import StateException, ValidationException
 
 
 # === Fixtures ===
@@ -50,7 +51,7 @@ class TestBattleStateManagerCapture:
 
     def test_capture_state_raises_without_engine(self, state_manager, mock_config):
         """capture_state raises when no engine provided."""
-        with pytest.raises(RuntimeError, match="No engine"):
+        with pytest.raises(StateException):
             state_manager.capture_state(None, mock_config)
 
     def test_capture_state_returns_battle_state(self, state_manager, mock_engine, mock_config):
@@ -140,7 +141,7 @@ class TestBattleStateManagerRestore:
         mock_state = Mock()
         mock_state.mode = "invalid_mode"
 
-        with pytest.raises(ValueError, match="Invalid"):
+        with pytest.raises(ValidationException):
             state_manager.restore_config_from_state(mock_state)
 
 

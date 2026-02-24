@@ -13,6 +13,7 @@ import json
 import tempfile
 from unittest.mock import MagicMock
 
+from game.core.exceptions import ValidationException
 from game.simulation.components.abilities.propulsion import StrategicMovement, WarpJump
 from game.simulation.components.abilities.base import AbilityLayer, AbilityScope
 from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
@@ -265,7 +266,7 @@ class TestAbilityScopeIntegration:
         mock_component.stats = {}
 
         # Attempting to use system scope should fail
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValidationException) as exc_info:
             WarpJump(mock_component, {'max_tonnage': 5000, 'scope': 'system'})
 
         assert 'does not support scope' in str(exc_info.value)

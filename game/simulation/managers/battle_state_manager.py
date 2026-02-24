@@ -9,6 +9,8 @@ Manages:
 """
 from typing import Dict, Optional, List, Tuple, Any, TYPE_CHECKING
 
+from game.core.exceptions import StateException, ValidationException
+from game.core.error_codes import ErrorCode
 from game.simulation.battle_state import BattleState
 from game.simulation.systems.battle_end_conditions import BattleEndMode
 from game.simulation.battle_config import BattleConfig, BattleMode
@@ -44,10 +46,14 @@ class BattleStateManager:
             BattleState with complete battle state
 
         Raises:
-            RuntimeError: If no engine available
+            StateException: If no engine available
         """
         if not engine:
-            raise RuntimeError("No engine available to capture state from")
+            raise StateException(
+                "No engine available to capture state from",
+                code=ErrorCode.INVALID_STATE.value,
+                context={"parameter": "engine"}
+            )
 
         return BattleState.capture_from_engine(
             engine,
@@ -71,12 +77,16 @@ class BattleStateManager:
             BattleConfig reconstructed from state
 
         Raises:
-            ValueError: If state has invalid mode
+            ValidationException: If state has invalid mode
         """
         try:
             mode = BattleMode(state.mode)
-        except ValueError:
-            raise ValueError(f"Invalid battle mode in state: {state.mode}")
+        except ValueError as e:
+            raise ValidationException(
+                f"Invalid battle mode in state: {state.mode}",
+                code=ErrorCode.INVALID_STATE.value,
+                context={"mode_value": state.mode}
+            ) from e
 
         return BattleConfig(
             mode=mode,

@@ -7,6 +7,7 @@ and SpaceShipyardAbility.
 import pytest
 from unittest.mock import MagicMock
 
+from game.core.exceptions import ValidationException
 from game.simulation.components.abilities.colonize import ColonizePlanet
 from game.simulation.components.abilities.harvester import (
     ResourceHarvesterAbility,
@@ -135,10 +136,11 @@ class TestColonizePlanet:
         """ColonizePlanet rejects scopes other than SELF."""
         data = {"planet_type": "CONTINENTAL", "scope": "sector"}
 
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValidationException) as exc_info:
             ColonizePlanet(mock_component, data)
 
-        assert "does not support scope 'sector'" in str(exc_info.value)
+        # Verify context contains scope info
+        assert exc_info.value.context.get("scope") == "sector"
 
 
 # =============================================================================
