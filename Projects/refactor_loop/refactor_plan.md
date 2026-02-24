@@ -8,21 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-172 Phase 1 - Quick Wins (BattleStateViewer + FormationEditor)
-**Current Status:** Phase 1 complete, ready for Phase 2
+**Last Completed:** PROJ-172 Phase 2 - WeaponsPanel MVVM Extraction
+**Current Status:** Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-172
-**Current Phase:** Phase 2
-**Test Status:** 12178 passed, 1 skipped
+**Current Phase:** Phase 3
+**Test Status:** 12205 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-172 Phase 1 COMPLETE - BattleStateViewer and FormationEditor decomposition
-- Extracted: json_diff.py (111 lines), scrollable_json_panel.py (411 lines), toolbar_builder.py (290 lines)
-- Converted game/ui/utils.py to package (game/ui/utils/) with pygame_utils.py and json_diff.py
-- battle_state_viewer.py: 688 → 258 lines
-- formation_editor.py: 948 → 830 lines
-- Tests: 12178 passed, 1 skipped
-- Next: Phase 2 - WeaponsPanel MVVM Extraction
+- PROJ-172 Phase 2 COMPLETE - WeaponsPanel MVVM extraction
+- Created: weapons_viewmodel.py (501 lines), weapons_renderer.py (530 lines)
+- weapons_panel.py: 1038 → 335 lines
+- Added 27 new ViewModel tests
+- Updated bug repro tests to use ViewModel
+- Tests: 12205 passed, 1 skipped
+- Next: Phase 3 - EmpireBuildQueueWindow MVVM
 
 ---
 
@@ -134,6 +134,7 @@
 | 2026-02-24 | PROJ-176 | Phase 3 | Complete | 12178 passed, 1 skipped | pending | SimpleMultiplierAbility + SuperweaponMarker, 13 classes migrated, +19 tests |
 | 2026-02-24 | PROJ-176 | Audit 1 | PASSED | 12178 passed, 1 skipped | pending | All verifications passed, project complete |
 | 2026-02-24 | PROJ-172 | Phase 1 | Complete | 12178 passed, 1 skipped | pending | Quick Wins: BattleStateViewer + FormationEditor decomposition |
+| 2026-02-24 | PROJ-172 | Phase 2 | Complete | 12205 passed, 1 skipped | pending | WeaponsPanel MVVM: 1038→335 lines, +27 tests |
 
 ---
 

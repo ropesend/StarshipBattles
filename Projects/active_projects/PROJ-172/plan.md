@@ -14,18 +14,18 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Quick Wins (BattleStateViewer + FormationEditor) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. WeaponsPanel MVVM Extraction | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. WeaponsPanel MVVM Extraction | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. EmpireBuildQueueWindow MVVM (Re-Offender Fix) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. BuildQueueScreen MVVM Extraction | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. TestLabScreen MVVM Extraction | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete - BattleStateViewer and FormationEditor decomposition
-**Next Action:** Begin Phase 2 - WeaponsPanel MVVM Extraction
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete - WeaponsPanel MVVM extraction (1038 -> 335 lines, +27 tests)
+**Next Action:** Begin Phase 3 - EmpireBuildQueueWindow MVVM
 **Blockers:** None
-**Test Baseline:** 12,178 passed, 1 skipped, 0 failures
+**Test Baseline:** 12,205 passed, 1 skipped, 0 failures
 
 ## Overview
 Decompose 6 god classes using the MVVM pattern, following the established WorkshopViewModel and FleetListViewModel conventions. This is Wave 1 of the god class decomposition effort, focusing on 3 re-offenders that grew back after PROJ-86/89, plus 3 high-value targets. Each file gets a ViewModel that owns all mutable state, with the screen/window becoming a pure event dispatcher.

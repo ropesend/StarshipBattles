@@ -1,3 +1,9 @@
+"""
+Bug 13 Regression Tests - Weapons Report Panel
+
+Tests for PROJ-172 MVVM refactoring of weapons panel.
+Now tests the ViewModel directly instead of panel internal methods.
+"""
 import os
 import pygame
 import pygame_gui
@@ -5,6 +11,9 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from game.ui.screens.builder.weapons_panel import WeaponsReportPanel
+from game.ui.screens.builder.weapons_viewmodel import WeaponsViewModel
+from game.ui.screens.builder.weapons_renderer import WeaponsRenderer
+from game.ui.screens.builder.event_bus import EventBus
 
 
 class TestBug13Fix:
@@ -20,8 +29,12 @@ class TestBug13Fix:
         self.sprite_mgr = MagicMock()
         self.rect = pygame.Rect(0, 0, 800, 600)
 
+        # Create ViewModel directly for testing calculations
+        self.event_bus = EventBus()
+        self.viewmodel = WeaponsViewModel(self.event_bus)
+
+        # Also create panel for integration tests
         self.panel = WeaponsReportPanel(self.builder, self.manager, self.rect, self.sprite_mgr)
-        self.panel._max_range = 1000
 
         yield
 
@@ -32,8 +45,11 @@ class TestBug13Fix:
         # fresh_registries fixture handles registry isolation - no manual clear needed
 
     def test_unified_drawing_structure(self):
-        """Verify the unified drawing method exists and old ones are gone."""
-        assert hasattr(self.panel, '_draw_unified_weapon_bar')
+        """Verify MVVM architecture is in place."""
+        # Panel should use ViewModel and Renderer
+        assert hasattr(self.panel, '_viewmodel')
+        assert hasattr(self.panel, '_renderer')
+        # Old internal methods should not exist on panel
         assert not hasattr(self.panel, '_draw_beam_weapon_bar')
         assert not hasattr(self.panel, '_draw_projectile_weapon_bar')
 
@@ -48,7 +64,8 @@ class TestBug13Fix:
         ab.damage = 50
         weapon.get_ability.return_value = ab
 
-        points = self.panel._get_points_of_interest(weapon, self.builder.ship)
+        # Use ViewModel directly
+        points = self.viewmodel.get_points_of_interest(weapon, self.builder.ship)
 
         # Should have 6 points from INTEREST_POINTS_RANGE (0.0 to 1.0)
         assert len(points) == 6
@@ -73,9 +90,8 @@ class TestBug13Fix:
 
         # Mock ship to return baseline sensor score
         self.builder.ship.get_total_sensor_score.return_value = 0.0
-        self.panel.target_defense_mod = 0.0
 
-        points = self.panel._get_points_of_interest(weapon, self.builder.ship)
+        points = self.viewmodel.get_points_of_interest(weapon, self.builder.ship)
 
         # Verify we have both types
         has_acc = any(p['type'] == 'accuracy' for p in points)
@@ -90,10 +106,6 @@ class TestBug13Fix:
 
     def test_prioritization_logic(self):
         """Verify that high priority points (0 and Max range) are kept even if crowded."""
-        # We can't easily test the drawing, but we can test the filtering logic if we extract it
-        # or mock the list of points.
-
-        # For now, let's just run the drawing method with a mock screen to ensure no crashes
         weapon = MagicMock()
         weapon.has_ability.side_effect = lambda a: a in ['BeamWeaponAbility', 'WeaponAbility']
         ab = MagicMock()
@@ -105,8 +117,20 @@ class TestBug13Fix:
 
         # Mock ship to return baseline sensor score
         self.builder.ship.get_total_sensor_score.return_value = 0.0
-        self.panel.target_defense_mod = 0.0
 
-        # This will test the collision logic path
-        # Use a real surface to avoid TypeError in pygame.draw
-        self.panel._draw_unified_weapon_bar(self.surface, weapon, self.builder.ship, 0, 0, 100, 10, 100)
+        # Test that ViewModel produces points with correct priorities
+        points = self.viewmodel.get_points_of_interest(weapon, self.builder.ship)
+
+        # Endpoints should have priority 0 (must show)
+        endpoints = [p for p in points if p['range'] in [0, 100]]
+        assert all(p['priority'] == 0 for p in endpoints), "Endpoints should have priority 0"
+
+        # Intermediate range points should have priority 2
+        intermediate_range = [p for p in points if p['type'] == 'range' and p['range'] not in [0, 100]]
+        if intermediate_range:
+            assert all(p['priority'] == 2 for p in intermediate_range), "Intermediate range points should have priority 2"
+
+        # Accuracy threshold points should have priority 1
+        accuracy_pts = [p for p in points if p['type'] == 'accuracy']
+        if accuracy_pts:
+            assert all(p['priority'] == 1 for p in accuracy_pts), "Accuracy points should have priority 1"
