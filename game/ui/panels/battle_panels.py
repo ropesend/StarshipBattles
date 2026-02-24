@@ -1,5 +1,8 @@
+import logging
 import pygame
 from game.core.profiling import profile_action
+
+logger = logging.getLogger(__name__)
 from game.ui.config import UIConfig
 from game.ui.colors import HP_HEALTHY, HP_DAMAGED, HP_CRITICAL, RESOURCE_FUEL
 from game.ui.panels.ship_stats_renderer import (
@@ -39,8 +42,8 @@ class BattlePanel:
                 # Verify it's actually a list (not a MagicMock auto-created result)
                 if isinstance(ships, list):
                     return ships
-            except (AttributeError, TypeError):
-                pass
+            except (AttributeError, TypeError) as e:
+                logger.debug("Failed to get ships from ui_service, using fallback: %s", e)
         # Fallback to direct ships access
         return getattr(self.scene, 'ships', [])
 

@@ -12,7 +12,10 @@ Provides UI controls for configuring:
 - Radiation tolerance
 - Atmosphere gas preferences
 """
+import logging
 import pygame
+
+logger = logging.getLogger(__name__)
 import pygame_gui
 from typing import Dict, List, Optional, TYPE_CHECKING
 
@@ -440,7 +443,8 @@ class RaceEnvironmentPanel:
             self.points_label.set_text(
                 f"Points: {remaining} / {total} remaining  |  Environment cost: {tolerance_cost}"
             )
-        except Exception:
+        except Exception as e:
+            logger.warning("Failed to update points display: %s", e)
             self.points_label.set_text("")
 
     def update_config(self):
