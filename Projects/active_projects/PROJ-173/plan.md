@@ -15,16 +15,23 @@
 |-------|--------|-----------|
 | 1. FleetReportWindow Completion | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Galaxy Internal Delegation | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. StrategyInputHandler Router Decomposition | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. StrategyInputHandler Router Decomposition | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. StrategyScreen Minimal Extraction | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 2 Complete
-**Last Action:** Extracted 4 delegates from Galaxy (warp_generator, system_generator, entity_registry, spatial_index)
-**Next Action:** Phase 3 - StrategyInputHandler Router Decomposition
+**Active Phase:** Phase 3 Complete
+**Last Action:** Extracted 3 sub-routers from StrategyInputHandler (fleet_command, click_dispatch, ui_action)
+**Next Action:** Phase 4 - StrategyScreen Minimal Extraction
 **Blockers:** None
 **Test Baseline:** 12,312 passed, 1 skipped, 0 failures
+
+### Phase 3 Results
+- StrategyInputHandler: 898 → 193 lines (78% reduction)
+- New: strategy_fleet_command_router.py (198 lines) - fleet commands, superweapons, detail panel
+- New: strategy_click_dispatcher.py (564 lines) - click mode handling, picking, hit testing
+- New: strategy_ui_action_router.py (115 lines) - zoom, screenshots, UI panel actions
+- All 12,312 tests passing
 
 ### Phase 1 Results
 - FleetReportWindow: 1,109 → 359 lines (68% reduction)

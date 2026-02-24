@@ -182,11 +182,11 @@ class TestClickHandling:
         """Left-click in SELECT mode should trigger picking."""
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
         handler.input_mode = 'SELECT'
-        handler._handle_picking = MagicMock()
+        handler._click_dispatch._handle_picking = MagicMock()
 
         handler.handle_click(100, 200, 1)
 
-        handler._handle_picking.assert_called_once_with(100, 200)
+        handler._click_dispatch._handle_picking.assert_called_once_with(100, 200)
 
     def test_click_in_move_mode_dispatches_move(self, mock_scene, mapper):
         """Left-click in MOVE mode should dispatch move command."""
@@ -566,7 +566,7 @@ class TestZoneSelection:
         mock_scene.ui.show_detailed_report = MagicMock()
         mock_scene.on_ui_selection = MagicMock()
 
-        handler._handle_picking(100, 200)
+        handler._click_dispatch._handle_picking(100, 200)
 
         # Verify star was included in sector_contents via zone lookup
         show_sector_call_args = mock_scene.ui.show_sector_info.call_args
@@ -602,7 +602,7 @@ class TestZoneSelection:
         mock_scene.ui.show_detailed_report = MagicMock()
         mock_scene.on_ui_selection = MagicMock()
 
-        handler._handle_picking(100, 200)
+        handler._click_dispatch._handle_picking(100, 200)
 
         show_sector_call_args = mock_scene.ui.show_sector_info.call_args
         sector_contents = show_sector_call_args[0][1]
@@ -636,7 +636,7 @@ class TestZoneSelection:
         mock_scene.ui.show_detailed_report = MagicMock()
         mock_scene.on_ui_selection = MagicMock()
 
-        handler._handle_picking(100, 200)
+        handler._click_dispatch._handle_picking(100, 200)
 
         show_sector_call_args = mock_scene.ui.show_sector_info.call_args
         sector_contents = show_sector_call_args[0][1]

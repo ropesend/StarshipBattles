@@ -8,19 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-173 Phase 2 Complete
-**Current Status:** PROJ-173 Phase 2 complete, Phase 3 ready
+**Last Completed:** PROJ-173 Phase 3 Complete
+**Current Status:** PROJ-173 Phase 3 complete, Phase 4 ready
 **Current Project:** PROJ-173
-**Current Phase:** Phase 3 - StrategyInputHandler Router Decomposition
+**Current Phase:** Phase 4 - StrategyScreen Minimal Extraction
 **Test Status:** 12312 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-173 Phase 2 COMPLETE - Galaxy Internal Delegation
-- Galaxy: 928 → 585 lines (37% reduction)
-- New files: galaxy_warp_generator.py, galaxy_system_generator.py, galaxy_entity_registry.py, galaxy_spatial_index.py
+- PROJ-173 Phase 3 COMPLETE - StrategyInputHandler Router Decomposition
+- StrategyInputHandler: 898 → 193 lines (78% reduction)
+- New files: strategy_fleet_command_router.py (198L), strategy_click_dispatcher.py (564L), strategy_ui_action_router.py (115L)
 - All 12,312 tests passing
-- Next: Phase 3 - StrategyInputHandler Router Decomposition
+- Next: Phase 4 - StrategyScreen Minimal Extraction
 
 ---
 
@@ -85,7 +85,7 @@
 ---
 
 - [/] **PROJ-173: God Class Decomposition - Domain & Strategy Layer**
-  - **Phases:** 4 | **Status:** Phase 2 Complete | **Priority:** Medium
+  - **Phases:** 4 | **Status:** Phase 3 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-173/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-173/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -139,6 +139,7 @@
 | 2026-02-24 | PROJ-172 | Audit 1 | PASSED | 12312 passed, 1 skipped | pending | All 5 phases verified, no significant issues |
 | 2026-02-24 | PROJ-173 | Phase 1 | Complete | 12312 passed, 1 skipped | pending | FleetReportWindow MVVM: 1109→359 lines, 2 new files (sidebar+renderer) |
 | 2026-02-24 | PROJ-173 | Phase 2 | Complete | 12312 passed, 1 skipped | pending | Galaxy delegation: 928→585 lines, 4 new files (warp/sys/entity/spatial) |
+| 2026-02-24 | PROJ-173 | Phase 3 | Complete | 12312 passed, 1 skipped | pending | StrategyInputHandler router: 898→193 lines, 3 new files (fleet/click/ui_router) |
 
 ---
 
