@@ -8,6 +8,7 @@ Uses a simple value noise implementation (no external dependencies).
 import math
 from dataclasses import dataclass, field
 
+from game.core.hex_math import hex_axial_to_cartesian
 from game.strategy.generation.density.primitives.density_primitive import clamp_density
 
 
@@ -89,9 +90,10 @@ class NoisePrimitive:
         if self.scale <= 0:
             return clamp_density(0.5 * self.peak_density)
 
-        # Convert hex to approximate Cartesian for more uniform noise
-        x = (q + self.offset_q + (r + self.offset_r) * 0.5) / self.scale
-        y = ((r + self.offset_r) * math.sqrt(3.0) / 2.0) / self.scale
+        # Convert hex to Cartesian for more uniform noise
+        x, y = hex_axial_to_cartesian(q, r, -self.offset_q, -self.offset_r)
+        x /= self.scale
+        y /= self.scale
 
         # Sum octaves
         total = 0.0

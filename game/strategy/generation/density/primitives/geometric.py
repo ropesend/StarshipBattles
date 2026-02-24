@@ -8,6 +8,7 @@ useful for diamond-shaped or polygonal galaxy layouts.
 import math
 from dataclasses import dataclass
 
+from game.core.hex_math import hex_axial_to_cartesian
 from game.strategy.generation.density.primitives.density_primitive import clamp_density
 
 
@@ -49,13 +50,8 @@ class GeometricPrimitive:
         Returns:
             Density value in range [0.0, 1.0]
         """
-        # Convert to Cartesian-like coordinates relative to center
-        dq = q - self.center_q
-        dr = r - self.center_r
-
-        # Convert hex axial to approximate Cartesian
-        x = dq + dr * 0.5
-        y = dr * math.sqrt(3.0) / 2.0
+        # Convert hex axial to Cartesian relative to center
+        x, y = hex_axial_to_cartesian(q, r, self.center_q, self.center_r)
 
         # Get distance and angle
         distance = math.sqrt(x * x + y * y)

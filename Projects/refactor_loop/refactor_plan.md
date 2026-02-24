@@ -8,18 +8,18 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-168 Phase 1 — hex_axial_to_cartesian() function + tests
-**Current Status:** PROJ-168 Phase 1 complete, Phase 2 ready
+**Last Completed:** PROJ-168 Phase 2 — Updated all 5 call sites
+**Current Status:** PROJ-168 Phase 2 complete, Phase 3 ready
 **Current Project:** PROJ-168
-**Current Phase:** Phase 2
-**Test Status:** 75 hex_math tests pass
+**Current Phase:** Phase 3
+**Test Status:** 223 strategy/generation tests pass
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 1 complete: hex_axial_to_cartesian() added to game/core/hex_math.py
-- 7 new unit tests in tests/unit/core/test_hex_math_core.py
-- Function takes q, r, center_q, center_r and returns (x, y) Cartesian
-- Next: Phase 2 — Update 5 call sites (spiral_arm, linear, geometric, noise, region_classifier)
+- Phase 2 complete: All 5 call sites updated to use hex_axial_to_cartesian()
+- Files modified: spiral_arm.py, linear.py, geometric.py, noise.py, region_classifier.py
+- Eliminated hardcoded 0.8660254037844386 constant in region_classifier.py
+- Next: Phase 3 — Final verification with full test suite
 
 ---
 
@@ -112,6 +112,7 @@
 | 2026-02-23 | PROJ-167 | Audit 1 | PASSED | 12016 pass | - | No issues found |
 | 2026-02-23 | PROJ-167 | Close | COMPLETE | - | - | Project marked complete |
 | 2026-02-23 | PROJ-168 | Phase 1 | Complete | 75 pass | pending | hex_axial_to_cartesian() + 7 tests |
+| 2026-02-23 | PROJ-168 | Phase 2 | Complete | 223 pass | pending | Updated 5 call sites |
 
 ---
 

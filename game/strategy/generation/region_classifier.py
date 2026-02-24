@@ -9,7 +9,7 @@ import math
 from dataclasses import dataclass
 from typing import Dict, Any, List, Optional, Tuple
 
-from game.core.hex_math import HexCoord
+from game.core.hex_math import HexCoord, hex_axial_to_cartesian
 
 
 @dataclass
@@ -169,13 +169,8 @@ class RegionClassifier:
             if dist_sq < cp['threshold_sq']:
                 return arm_count  # Core is the last region
 
-        # Determine which arm using spiral math
-        dq = q - sp['center_q']
-        dr = r - sp['center_r']
-
-        # Convert hex axial to approximate Cartesian
-        x = dq + dr * 0.5
-        y = dr * 0.8660254037844386  # sqrt(3)/2
+        # Convert hex axial to Cartesian for spiral math
+        x, y = hex_axial_to_cartesian(q, r, sp['center_q'], sp['center_r'])
 
         distance = math.sqrt(x * x + y * y)
         if distance < 1.0:
