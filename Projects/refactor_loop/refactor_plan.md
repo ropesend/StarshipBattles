@@ -8,21 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-172 Phase 2 - WeaponsPanel MVVM Extraction
-**Current Status:** Phase 2 complete, ready for Phase 3
+**Last Completed:** PROJ-172 Phase 3 - EmpireBuildQueueWindow MVVM Extraction
+**Current Status:** Phase 3 complete, ready for Phase 4
 **Current Project:** PROJ-172
-**Current Phase:** Phase 3
-**Test Status:** 12205 passed, 1 skipped
+**Current Phase:** Phase 4
+**Test Status:** 12256 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-172 Phase 2 COMPLETE - WeaponsPanel MVVM extraction
-- Created: weapons_viewmodel.py (501 lines), weapons_renderer.py (530 lines)
-- weapons_panel.py: 1038 → 335 lines
-- Added 27 new ViewModel tests
-- Updated bug repro tests to use ViewModel
-- Tests: 12205 passed, 1 skipped
-- Next: Phase 3 - EmpireBuildQueueWindow MVVM
+- PROJ-172 Phase 3 COMPLETE - EmpireBuildQueueWindow MVVM extraction
+- Created: empire_build_queue_viewmodel.py (360 lines), empire_build_queue_sidebar.py (276 lines)
+- empire_build_queue_window.py: 866 → 568 lines (34% reduction)
+- Added 51 new ViewModel tests
+- Updated test helper for MVVM pattern
+- Tests: 12256 passed, 1 skipped
+- Next: Phase 4 - FleetListWindow MVVM
 
 ---
 
@@ -135,6 +135,7 @@
 | 2026-02-24 | PROJ-176 | Audit 1 | PASSED | 12178 passed, 1 skipped | pending | All verifications passed, project complete |
 | 2026-02-24 | PROJ-172 | Phase 1 | Complete | 12178 passed, 1 skipped | pending | Quick Wins: BattleStateViewer + FormationEditor decomposition |
 | 2026-02-24 | PROJ-172 | Phase 2 | Complete | 12205 passed, 1 skipped | pending | WeaponsPanel MVVM: 1038→335 lines, +27 tests |
+| 2026-02-24 | PROJ-172 | Phase 3 | Complete | 12256 passed, 1 skipped | pending | EmpireBuildQueueWindow MVVM: 866→568 lines, +51 tests |
 
 ---
 

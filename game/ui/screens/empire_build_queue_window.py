@@ -9,6 +9,7 @@ Updated in Phase 3: Configurable column system with visibility toggles.
 Updated in Phase 4: Filtering (location type, queue status, capabilities, text search).
 Updated in Phase 5: Navigation (row click selects, re-click navigates to hex build screen).
 Updated in Phase 6: Multi-select (Ctrl+click) and batch add to selected queues.
+Updated in PROJ-172 Phase 3: MVVM extraction (ViewModel + Sidebar).
 """
 from __future__ import annotations
 
@@ -17,7 +18,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, TYPE_CHECKING
 
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIButton, UIWindow, UIPanel, UILabel, UIVerticalScrollBar, UITextEntryLine
+from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIVerticalScrollBar
 
 from game.ui.config import UIConfig
 import logging
@@ -27,34 +28,18 @@ from game.strategy.data.build_queue_source import (
     BuildQueueSource,
     collect_all_build_queues_for_empire,
 )
-from game.ui.screens.empire_build_queue_formatter import (
-    get_queue_summary,
-    get_first_item_text,
-    get_capabilities_text,
-    get_system_name,
-    get_sector_text,
-    get_turns_left_text,
-    get_resource_rate_text,
-    get_resource_total_text,
+from game.ui.screens.builder.event_bus import EventBus
+from game.ui.screens.empire_build_queue_viewmodel import (
+    EmpireBuildQueueViewModel,
+    BuildQueueWindowEvents,
 )
-
-# Resource column ID to resource name mappings
-RESOURCE_RATE_COLS = {
-    'res_metals_rate': 'Metals',
-    'res_organics_rate': 'Organics',
-    'res_vapors_rate': 'Vapors',
-    'res_radioactives_rate': 'Radioactives',
-    'res_exotics_rate': 'Exotics',
-}
-RESOURCE_TOTAL_COLS = {
-    'res_metals_total': 'Metals',
-    'res_organics_total': 'Organics',
-    'res_vapors_total': 'Vapors',
-    'res_radioactives_total': 'Radioactives',
-    'res_exotics_total': 'Exotics',
-}
+from game.ui.screens.empire_build_queue_sidebar import EmpireBuildQueueSidebar
 from game.ui.screens.empire_build_queue_filter_manager import BuildQueueFilterManager
 from game.ui.screens.planet_list_columns import ColumnManager
+from game.ui.screens.empire_build_queue_formatter import (
+    get_system_name,
+    get_sector_text,
+)
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
@@ -75,10 +60,8 @@ class BatchAddResult:
 class EmpireBuildQueueWindow(UIWindow):
     """Window showing all empire build queues in a scrollable list.
 
-    Displays every space yard (planet base queues, planetary shipyard
-    facilities, fleet space yards) with queue summary info. Clicking a
-    row selects it; navigation to the hex build screen is handled via
-    callback in a later phase.
+    Uses MVVM pattern: ViewModel owns state, Sidebar owns filter UI,
+    Window coordinates rendering and navigation.
 
     Args:
         rect: Window rectangle on screen.
@@ -115,38 +98,41 @@ class EmpireBuildQueueWindow(UIWindow):
         self.header_height = UIConfig.HEADER_HEIGHT
         self.row_height = UIConfig.ROW_HEIGHT_LARGE
 
-        # --- Filter Manager (owns column definitions and filter state) ---
+        # --- MVVM components ---
+        self._event_bus = EventBus()
+        sources = collect_all_build_queues_for_empire(empire)
+        self._viewmodel = EmpireBuildQueueViewModel(self._event_bus, sources)
+
+        # --- Filter Manager (for column definitions) ---
         self._filter_mgr = BuildQueueFilterManager()
-        # Expose filter state as direct references for sidebar builders
+
+        # Expose state for backward compatibility with tests
         self.columns = self._filter_mgr.columns
-        self.filter_location_type = self._filter_mgr.filter_location_type
-        self.filter_status = self._filter_mgr.filter_status
-        self.filter_capabilities = self._filter_mgr.filter_capabilities
-        self.search_text: str = ""  # Synced to filter manager on apply
-
-        # --- State ---
-        self.all_sources: List[BuildQueueSource] = collect_all_build_queues_for_empire(empire)
-        self.filtered_sources: List[BuildQueueSource] = list(self.all_sources)
-        self.selected_source: Optional[BuildQueueSource] = None
-        self.selected_index: int = -1
-        self.selected_indices: Set[int] = set()
         self.row_elements: list = []
-        self.column_toggle_buttons: Dict[str, UIButton] = {}
-
-        # --- UI Filter Elements ---
-        self.filter_toggle_buttons: Dict[str, UIButton] = {}
-        self.search_entry: Optional[UITextEntryLine] = None
 
         # --- UI Containers ---
-        # Sidebar (column toggles + filters placeholder)
+        # Sidebar panel
         self.sidebar_panel = UIPanel(
             relative_rect=pygame.Rect(0, 0, self.sidebar_width, rect.height - 50),
             manager=manager,
             container=self,
             anchors={'left': 'left', 'top': 'top', 'bottom': 'bottom'},
         )
-        self._build_sidebar_column_toggles(manager)
-        self._build_sidebar_filters(manager)
+
+        # Sidebar component (owns filter UI)
+        self._sidebar = EmpireBuildQueueSidebar(
+            ui_manager=manager,
+            parent_container=self.sidebar_panel,
+            viewmodel=self._viewmodel,
+            event_bus=self._event_bus,
+            columns=self.columns,
+        )
+
+        # Expose sidebar button dicts for test compatibility
+        self.column_toggle_buttons = self._sidebar.column_toggle_buttons
+        self.filter_toggle_buttons = self._sidebar.filter_toggle_buttons
+        self.search_entry = self._sidebar.search_entry
+        self.btn_apply_filters = self._sidebar.btn_apply_filters
 
         # Main content area
         main_w = rect.width - self.sidebar_width - 10
@@ -193,22 +179,117 @@ class EmpireBuildQueueWindow(UIWindow):
             anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'bottom'},
         )
 
+        # Subscribe to ViewModel events
+        self._event_bus.subscribe(
+            BuildQueueWindowEvents.FILTERS_APPLIED,
+            lambda _: self._on_filters_applied()
+        )
+        self._event_bus.subscribe(
+            BuildQueueWindowEvents.SELECTION_CHANGED,
+            lambda _: self._on_selection_changed()
+        )
+
         # Initial population
         self._refresh_list()
 
-    # -------------------------------------------------------------------
+    # -----------------------------------------------------------------------
+    # Properties for backward compatibility
+    # -----------------------------------------------------------------------
+
+    @property
+    def all_sources(self) -> List[BuildQueueSource]:
+        """All sources (unfiltered)."""
+        return self._viewmodel.all_sources
+
+    @property
+    def filtered_sources(self) -> List[BuildQueueSource]:
+        """Filtered sources."""
+        return self._viewmodel.filtered_sources
+
+    @property
+    def selected_source(self) -> Optional[BuildQueueSource]:
+        """Currently selected source."""
+        return self._viewmodel.selected_source
+
+    @property
+    def selected_index(self) -> int:
+        """Currently selected index."""
+        return self._viewmodel.selected_index
+
+    @property
+    def selected_indices(self) -> Set[int]:
+        """Set of selected indices."""
+        return self._viewmodel.selected_indices
+
+    @selected_indices.setter
+    def selected_indices(self, value: Set[int]) -> None:
+        """Set selected indices."""
+        self._viewmodel.selected_indices = value
+
+    @property
+    def filter_location_type(self) -> Dict[str, bool]:
+        """Location type filter state."""
+        return self._viewmodel.filter_location_type
+
+    @filter_location_type.setter
+    def filter_location_type(self, value: Dict[str, bool]) -> None:
+        """Set location type filter."""
+        self._viewmodel.filter_location_type = value
+
+    @property
+    def filter_status(self) -> Dict[str, bool]:
+        """Queue status filter state."""
+        return self._viewmodel.filter_status
+
+    @filter_status.setter
+    def filter_status(self, value: Dict[str, bool]) -> None:
+        """Set queue status filter."""
+        self._viewmodel.filter_status = value
+
+    @property
+    def filter_capabilities(self) -> Dict[str, bool]:
+        """Capabilities filter state."""
+        return self._viewmodel.filter_capabilities
+
+    @filter_capabilities.setter
+    def filter_capabilities(self, value: Dict[str, bool]) -> None:
+        """Set capabilities filter."""
+        self._viewmodel.filter_capabilities = value
+
+    @property
+    def search_text(self) -> str:
+        """Search text."""
+        return self._viewmodel.search_text
+
+    @search_text.setter
+    def search_text(self, value: str) -> None:
+        """Set search text."""
+        self._viewmodel.set_search_text(value)
+
+    # -----------------------------------------------------------------------
+    # Event Handlers
+    # -----------------------------------------------------------------------
+
+    def _on_filters_applied(self) -> None:
+        """Handle filters applied event."""
+        self._refresh_list()
+
+    def _on_selection_changed(self) -> None:
+        """Handle selection changed event."""
+        pass  # Could update UI indicators
+
+    # -----------------------------------------------------------------------
     # List Population
-    # -------------------------------------------------------------------
+    # -----------------------------------------------------------------------
 
     def _refresh_list(self) -> None:
         """Rebuild the visible row list from filtered_sources."""
-        # Kill existing row elements
         for elem in self.row_elements:
             elem.kill()
         self.row_elements.clear()
 
-        # Update scrollbar
-        total_h = len(self.filtered_sources) * self.row_height
+        sources = self.filtered_sources
+        total_h = len(sources) * self.row_height
         visible_h = self.list_view_rect.height
         percentage = min(1.0, visible_h / total_h) if total_h > 0 else 1.0
         self.scroll_bar.set_visible_percentage(percentage)
@@ -216,12 +297,10 @@ class EmpireBuildQueueWindow(UIWindow):
         self.scroll_bar.bottom_limit = max(visible_h, total_h)
         self.scroll_bar.redraw_scrollbar()
 
-        # Create row labels using column configuration
         visible_cols = self._get_visible_columns()
-        for i, source in enumerate(self.filtered_sources):
+        for i, source in enumerate(sources):
             y = i * self.row_height
             x = 10
-
             for col in visible_cols:
                 text = self._get_column_value(source, col['id'])
                 lbl = UILabel(
@@ -233,38 +312,35 @@ class EmpireBuildQueueWindow(UIWindow):
                 self.row_elements.append(lbl)
                 x += col['width'] + 10
 
-    # -------------------------------------------------------------------
-    # Selection
-    # -------------------------------------------------------------------
+    # -----------------------------------------------------------------------
+    # Selection (delegated to ViewModel)
+    # -----------------------------------------------------------------------
 
     def _select_source(self, index: int) -> None:
-        """Select a source by index in filtered_sources.
+        """Select a source by index."""
+        self._viewmodel.select_source(index, ctrl_held=False)
+        if self._viewmodel.selected_source:
+            logger.debug(f"Selected queue source: {self._viewmodel.selected_source.display_name}")
 
-        Args:
-            index: Index into filtered_sources. Invalid indices are ignored.
-        """
-        if index < 0 or index >= len(self.filtered_sources):
-            return
-        self.selected_index = index
-        self.selected_source = self.filtered_sources[index]
-        logger.debug(f"Selected queue source: {self.selected_source.display_name}")
+    def handle_row_click(self, index: int, ctrl_held: bool = False) -> None:
+        """Handle a row click with optional Ctrl modifier."""
+        self._viewmodel.select_source(index, ctrl_held=ctrl_held)
+        logger.debug(f"Selected {len(self._viewmodel.selected_indices)} queue(s)")
 
-    # -------------------------------------------------------------------
+    def get_selected_sources(self) -> List[BuildQueueSource]:
+        """Return selected sources."""
+        return self._viewmodel.get_selected_sources()
+
+    def get_selection_summary(self) -> str:
+        """Return selection summary."""
+        return self._viewmodel.get_selection_summary()
+
+    # -----------------------------------------------------------------------
     # Navigation
-    # -------------------------------------------------------------------
+    # -----------------------------------------------------------------------
 
     def get_hex_for_source(self, source: BuildQueueSource) -> Any:
-        """Resolve the global hex coordinate for a build queue source.
-
-        For planets, computes system.global_location + planet.location.
-        For fleets, returns fleet.location directly.
-
-        Args:
-            source: The build queue source to resolve.
-
-        Returns:
-            HexCoord for the source, or None if unresolvable.
-        """
+        """Resolve the global hex coordinate for a build queue source."""
         entity = source.owner_entity
         if source.context_type == "fleet":
             return getattr(entity, 'location', None)
@@ -277,194 +353,86 @@ class EmpireBuildQueueWindow(UIWindow):
         return None
 
     def navigate_to_source(self, source: BuildQueueSource) -> None:
-        """Navigate to the hex build screen for a source.
-
-        Resolves the hex coordinate, selects the source, and invokes
-        the on_navigate_to_hex callback with (hex_coord, source).
-        Does nothing if hex cannot be resolved or no callback is set.
-
-        Args:
-            source: The build queue source to navigate to.
-        """
+        """Navigate to the hex build screen for a source."""
         hex_coord = self.get_hex_for_source(source)
         if hex_coord is None:
             return
-
-        # Select the source in our list
         if source in self.filtered_sources:
             idx = self.filtered_sources.index(source)
             self._select_source(idx)
-
         if self.on_navigate_to_hex:
             logger.debug(f"Navigating to hex {hex_coord} for {source.display_name}")
             self.on_navigate_to_hex(hex_coord, source)
 
-    # -------------------------------------------------------------------
-    # Multi-Select
-    # -------------------------------------------------------------------
-
-    def handle_row_click(self, index: int, ctrl_held: bool = False) -> None:
-        """Handle a row click with optional Ctrl modifier for multi-select.
-
-        Single click: select only this index.
-        Ctrl+click: toggle this index in the selection set.
-        Prevents empty selection on Ctrl+click deselect of last item.
-
-        Args:
-            index: Index into filtered_sources.
-            ctrl_held: True if Ctrl key was held during click.
-        """
-        if index < 0 or index >= len(self.filtered_sources):
-            return
-
-        if ctrl_held:
-            if index in self.selected_indices:
-                # Don't allow deselecting the last item
-                if len(self.selected_indices) > 1:
-                    self.selected_indices.discard(index)
-            else:
-                self.selected_indices.add(index)
-        else:
-            self.selected_indices = {index}
-
-        # Update legacy single-selection fields
-        if len(self.selected_indices) == 1:
-            sole_idx = next(iter(self.selected_indices))
-            self.selected_index = sole_idx
-            self.selected_source = self.filtered_sources[sole_idx]
-        else:
-            self.selected_index = -1
-            self.selected_source = None
-
-        logger.debug(f"Selected {len(self.selected_indices)} queue(s)")
-
-    def get_selected_sources(self) -> List[BuildQueueSource]:
-        """Return the BuildQueueSource objects for all selected indices.
-
-        Returns:
-            List of selected sources, in index order.
-        """
-        return [
-            self.filtered_sources[i]
-            for i in sorted(self.selected_indices)
-            if 0 <= i < len(self.filtered_sources)
-        ]
-
-    def get_selection_summary(self) -> str:
-        """Return a human-readable summary of the current selection.
-
-        Returns:
-            Summary string describing what is selected.
-        """
-        count = len(self.selected_indices)
-        if count == 0:
-            return "No queues selected"
-        if count == 1:
-            idx = next(iter(self.selected_indices))
-            if 0 <= idx < len(self.filtered_sources):
-                name = self.filtered_sources[idx].display_name
-                return f"1 queue selected: {name}"
-            return "1 queue selected"
-        return f"{count} queues selected"
+    # -----------------------------------------------------------------------
+    # Batch Operations
+    # -----------------------------------------------------------------------
 
     def batch_add_to_selected(
         self, item: Dict[str, Any], item_type: str,
     ) -> BatchAddResult:
-        """Add an item to all selected compatible queues.
-
-        Checks each selected source for compatibility with the item type
-        before appending. Ships require can_build_ships, complexes require
-        can_build_complexes.
-
-        Args:
-            item: Dict with at least 'design_id' and 'turns_remaining'.
-            item_type: Either 'ship' or 'complex' to determine compatibility.
-
-        Returns:
-            BatchAddResult with added and skipped counts.
-        """
+        """Add an item to all selected compatible queues."""
         sources = self.get_selected_sources()
         added = 0
         skipped = 0
-
         for source in sources:
             if self._source_can_build_type(source, item_type):
-                # Append a copy so each queue has its own dict
                 source.construction_queue.append(dict(item))
                 added += 1
             else:
                 skipped += 1
-
         if added > 0:
             logger.debug(f"Batch add: added to {added}/{added + skipped} queues")
             self._refresh_list()
-
         return BatchAddResult(added=added, skipped=skipped)
 
     @staticmethod
     def _source_can_build_type(source: BuildQueueSource, item_type: str) -> bool:
-        """Check if a source can build the given item type.
-
-        Args:
-            source: The build queue source to check.
-            item_type: 'ship' or 'complex'.
-
-        Returns:
-            True if the source can build that type.
-        """
+        """Check if a source can build the given item type."""
         if item_type == "ship":
             return source.can_build_ships
         if item_type == "complex":
             return source.can_build_complexes
         return False
 
-    # -------------------------------------------------------------------
+    # -----------------------------------------------------------------------
     # Event Handling
-    # -------------------------------------------------------------------
+    # -----------------------------------------------------------------------
 
     def process_event(self, event: pygame.event.Event) -> bool:
         """Handle mouse clicks on rows, filter toggles, and apply button."""
         handled = super().process_event(event)
 
-        # UI button click handling
+        # UI button click handling - delegate to sidebar
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            ui_element = event.ui_element
-            # Check column toggles
-            self._handle_column_toggle_click(ui_element)
-            # Check filter toggles
-            self._handle_filter_toggle_click(ui_element)
-            # Check apply button
-            if hasattr(self, 'btn_apply_filters') and ui_element is self.btn_apply_filters:
-                self._handle_apply_filters_click()
+            if self._sidebar.handle_button_click(event.ui_element):
+                # Sidebar handled it - check if column toggle
+                for col_id in self._sidebar.column_toggle_buttons:
+                    if self._sidebar.column_toggle_buttons[col_id] is event.ui_element:
+                        self.column_mgr.rebuild_headers()
+                        self._refresh_list()
+                        break
                 return True
 
         # Row click detection
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             mouse_pos = event.pos
             list_abs_rect = self.list_panel.get_abs_rect()
-
             if list_abs_rect.collidepoint(mouse_pos):
-                # Calculate which row was clicked
                 scroll_offset = 0.0
                 total_h = len(self.filtered_sources) * self.row_height
                 if total_h > 0:
                     scroll_offset = self.scroll_bar.start_percentage * total_h
-
                 local_y = mouse_pos[1] - list_abs_rect.y + scroll_offset
                 clicked_index = int(local_y // self.row_height)
-
                 if 0 <= clicked_index < len(self.filtered_sources):
                     mods = pygame.key.get_mods()
                     ctrl_held = bool(mods & pygame.KMOD_CTRL)
-
                     if ctrl_held:
-                        # Ctrl+click: multi-select toggle
                         self.handle_row_click(clicked_index, ctrl_held=True)
                     elif clicked_index == self.selected_index:
-                        # Re-click on already-selected row → navigate
                         self.navigate_to_source(self.filtered_sources[clicked_index])
                     else:
-                        # Normal click: single select
                         self.handle_row_click(clicked_index, ctrl_held=False)
                     return True
 
@@ -486,352 +454,89 @@ class EmpireBuildQueueWindow(UIWindow):
     def update(self, time_delta: float) -> None:
         """Update loop - check scrollbar and header button changes."""
         super().update(time_delta)
-
-        # Check for column header clicks (sort/reorder)
         sort_changed, columns_changed = self.column_mgr.handle_header_clicks()
         if columns_changed or sort_changed:
             self._apply_sort_and_refresh()
-
         if self.scroll_bar.check_has_moved_recently():
-            # Future: update visible rows for virtual scrolling
             pass
 
-    # -------------------------------------------------------------------
-    # Data Formatters
-    # -------------------------------------------------------------------
+    # -----------------------------------------------------------------------
+    # Column System
+    # -----------------------------------------------------------------------
+
+    def _get_visible_columns(self) -> List[Dict[str, Any]]:
+        """Return list of currently visible columns."""
+        return self._filter_mgr.get_visible_columns()
+
+    def _get_column_value(self, source: BuildQueueSource, col_id: str) -> str:
+        """Return the display value for a column and source."""
+        # System and sector need galaxy reference
+        if col_id == 'system':
+            return get_system_name(source, self.galaxy)
+        if col_id == 'sector':
+            return get_sector_text(source)
+        # Delegate to ViewModel for other columns
+        return self._viewmodel.get_column_value(source, col_id)
+
+    def toggle_column_visibility(self, col_id: str) -> bool:
+        """Toggle visibility of a column by ID."""
+        return self._filter_mgr.toggle_column_visibility(col_id)
+
+    # -----------------------------------------------------------------------
+    # Filtering (delegated to ViewModel)
+    # -----------------------------------------------------------------------
+
+    def _filter_sources(
+        self, sources: List[BuildQueueSource],
+    ) -> List[BuildQueueSource]:
+        """Apply all active filters to a list of sources."""
+        # Sync state to ViewModel's filter manager
+        self._viewmodel._filter_mgr.filter_location_type = self.filter_location_type
+        self._viewmodel._filter_mgr.filter_status = self.filter_status
+        self._viewmodel._filter_mgr.filter_capabilities = self.filter_capabilities
+        self._viewmodel._filter_mgr.search_text = self.search_text
+        return self._viewmodel._filter_mgr.filter_sources(sources)
+
+    def apply_filters(self) -> None:
+        """Re-apply all filters and refresh display."""
+        # Sync state to ViewModel
+        self._viewmodel._filter_mgr.filter_location_type = self.filter_location_type
+        self._viewmodel._filter_mgr.filter_status = self.filter_status
+        self._viewmodel._filter_mgr.filter_capabilities = self.filter_capabilities
+        self._viewmodel._filter_mgr.search_text = self.search_text
+        self._viewmodel.apply_filters()
+
+    def _apply_sort_and_refresh(self) -> None:
+        """Apply current sort order and refresh display."""
+        self._viewmodel._filter_mgr.sort_sources(
+            self._viewmodel._filtered_sources,
+            self.column_mgr.sort_column_id,
+            self.column_mgr.sort_descending,
+            self._get_column_value,
+        )
+        self._refresh_list()
+
+    # -----------------------------------------------------------------------
+    # Data Formatters (backward compatibility)
+    # -----------------------------------------------------------------------
 
     @staticmethod
     def _get_queue_summary(source: BuildQueueSource) -> str:
         """Return a short summary of queue contents."""
+        from game.ui.screens.empire_build_queue_formatter import get_queue_summary
         return get_queue_summary(source)
 
     @staticmethod
     def _get_first_item_text(source: BuildQueueSource) -> str:
         """Return the name of the first item being built."""
+        from game.ui.screens.empire_build_queue_formatter import get_first_item_text
         return get_first_item_text(source)
 
     @staticmethod
     def _get_capabilities_text(source: BuildQueueSource) -> str:
         """Return human-readable capabilities string."""
+        from game.ui.screens.empire_build_queue_formatter import get_capabilities_text
         return get_capabilities_text(source)
-
-    # -------------------------------------------------------------------
-    # Column System
-    # -------------------------------------------------------------------
-
-    def _get_visible_columns(self) -> List[Dict[str, Any]]:
-        """Return list of currently visible columns.
-
-        Returns:
-            List of column dicts where visible is True.
-        """
-        return self._filter_mgr.get_visible_columns()
-
-    def _get_column_value(self, source: BuildQueueSource, col_id: str) -> str:
-        """Return the display value for a column and source.
-
-        Args:
-            source: The build queue source to extract data from.
-            col_id: Column identifier string.
-
-        Returns:
-            Human-readable string value for the cell.
-        """
-        if col_id == 'location':
-            return source.display_name
-        if col_id == 'system':
-            return self._get_system_name(source)
-        if col_id == 'sector':
-            return self._get_sector_text(source)
-        if col_id == 'queue_count':
-            return self._get_queue_summary(source)
-        if col_id == 'first_item':
-            return self._get_first_item_text(source)
-        if col_id == 'turns_left':
-            return self._get_turns_left_text(source)
-        if col_id == 'capabilities':
-            return self._get_capabilities_text(source)
-        if col_id == 'build_rate':
-            # Per-resource rates dict: show max rate (all rates are usually equal)
-            if source.build_rate:
-                max_rate = max(source.build_rate.values())
-                return f"{int(max_rate)}/turn"
-            return "N/A"
-        if col_id in RESOURCE_RATE_COLS:
-            return get_resource_rate_text(source, RESOURCE_RATE_COLS[col_id])
-        if col_id in RESOURCE_TOTAL_COLS:
-            return get_resource_total_text(source, RESOURCE_TOTAL_COLS[col_id])
-        return ""
-
-    def toggle_column_visibility(self, col_id: str) -> bool:
-        """Toggle visibility of a column by ID.
-
-        Args:
-            col_id: ID of the column to toggle.
-
-        Returns:
-            True if visibility was toggled, False if column not found.
-        """
-        return self._filter_mgr.toggle_column_visibility(col_id)
-
-    # -------------------------------------------------------------------
-    # Filtering
-    # -------------------------------------------------------------------
-
-    def _filter_sources(
-        self, sources: List[BuildQueueSource],
-    ) -> List[BuildQueueSource]:
-        """Apply all active filters to a list of sources.
-
-        Filters are combined with AND logic: a source must pass all
-        enabled filters to appear in the result.
-
-        Args:
-            sources: The full list of sources to filter.
-
-        Returns:
-            Filtered list of sources matching all criteria.
-        """
-        # Sync all filter state to filter manager before filtering
-        # (handles case where tests replace dict objects directly)
-        self._filter_mgr.filter_location_type = self.filter_location_type
-        self._filter_mgr.filter_status = self.filter_status
-        self._filter_mgr.filter_capabilities = self.filter_capabilities
-        self._filter_mgr.search_text = self.search_text
-        return self._filter_mgr.filter_sources(sources)
-
-    def apply_filters(self) -> None:
-        """Re-apply all filters to all_sources and refresh the display.
-
-        Clears the current selection and rebuilds the filtered list
-        and row display.
-        """
-        self.filtered_sources = self._filter_sources(self.all_sources)
-        # Apply current sort order
-        self._filter_mgr.sort_sources(
-            self.filtered_sources,
-            self.column_mgr.sort_column_id,
-            self.column_mgr.sort_descending,
-            self._get_column_value,
-        )
-        self.selected_source = None
-        self.selected_index = -1
-        self.selected_indices = set()
-        self._refresh_list()
-
-    def _apply_sort_and_refresh(self) -> None:
-        """Apply current sort order to filtered sources and refresh display."""
-        self._filter_mgr.sort_sources(
-            self.filtered_sources,
-            self.column_mgr.sort_column_id,
-            self.column_mgr.sort_descending,
-            self._get_column_value,
-        )
-        self._refresh_list()
-
-    # -------------------------------------------------------------------
-    # Sidebar Column Toggles
-    # -------------------------------------------------------------------
-
-    def _build_sidebar_column_toggles(self, manager: Any) -> None:
-        """Create column visibility toggle buttons in the sidebar.
-
-        Args:
-            manager: pygame_gui UIManager instance.
-        """
-        sidebar_w = self.sidebar_width - 20
-
-        UILabel(
-            relative_rect=pygame.Rect(10, 10, sidebar_w, 25),
-            text="COLUMNS",
-            manager=manager,
-            container=self.sidebar_panel,
-        )
-
-        y_off = 40
-        for col in self.columns:
-            prefix = "[x]" if col['visible'] else "[ ]"
-            label = col['title'] or col['id']
-            btn = UIButton(
-                relative_rect=pygame.Rect(10, y_off, sidebar_w, 30),
-                text=f"{prefix} {label}",
-                manager=manager,
-                container=self.sidebar_panel,
-            )
-            self.column_toggle_buttons[col['id']] = btn
-            y_off += 35
-
-    def _handle_column_toggle_click(self, button: UIButton) -> None:
-        """Handle a column toggle button click.
-
-        Finds which column the button corresponds to, toggles its
-        visibility, updates the button text, and rebuilds the display.
-
-        Args:
-            button: The UIButton that was clicked.
-        """
-        for col_id, btn in self.column_toggle_buttons.items():
-            if btn is button:
-                self.toggle_column_visibility(col_id)
-                col = next(c for c in self.columns if c['id'] == col_id)
-                prefix = "[x]" if col['visible'] else "[ ]"
-                label = col['title'] or col['id']
-                btn.set_text(f"{prefix} {label}")
-                # Rebuild header and list with new column visibility
-                self.column_mgr.rebuild_headers()
-                self._refresh_list()
-                return
-
-    # -------------------------------------------------------------------
-    # Sidebar Filter Controls
-    # -------------------------------------------------------------------
-
-    def _build_sidebar_filters(self, manager: Any) -> None:
-        """Create filter toggle buttons and search box in the sidebar.
-
-        Adds sections for Location Type, Queue Status, Capabilities,
-        and a text search entry below the column toggles.
-
-        Args:
-            manager: pygame_gui UIManager instance.
-        """
-        sidebar_w = self.sidebar_width - 20
-        # Start below column toggles: header(35) + 8 columns * 35 + gap
-        y_off = 40 + len(self.columns) * 35 + 15
-
-        # --- Location Type ---
-        UILabel(
-            relative_rect=pygame.Rect(10, y_off, sidebar_w, 25),
-            text="LOCATION TYPE",
-            manager=manager,
-            container=self.sidebar_panel,
-        )
-        y_off += 30
-        for key in ('Planet', 'Fleet'):
-            prefix = "[x]" if self.filter_location_type[key] else "[ ]"
-            btn = UIButton(
-                relative_rect=pygame.Rect(10, y_off, sidebar_w, 30),
-                text=f"{prefix} {key}",
-                manager=manager,
-                container=self.sidebar_panel,
-            )
-            self.filter_toggle_buttons[f"loc_{key}"] = btn
-            y_off += 35
-
-        y_off += 10
-
-        # --- Queue Status ---
-        UILabel(
-            relative_rect=pygame.Rect(10, y_off, sidebar_w, 25),
-            text="QUEUE STATUS",
-            manager=manager,
-            container=self.sidebar_panel,
-        )
-        y_off += 30
-        for key in ('Active', 'Empty'):
-            prefix = "[x]" if self.filter_status[key] else "[ ]"
-            btn = UIButton(
-                relative_rect=pygame.Rect(10, y_off, sidebar_w, 30),
-                text=f"{prefix} {key}",
-                manager=manager,
-                container=self.sidebar_panel,
-            )
-            self.filter_toggle_buttons[f"status_{key}"] = btn
-            y_off += 35
-
-        y_off += 10
-
-        # --- Capabilities ---
-        UILabel(
-            relative_rect=pygame.Rect(10, y_off, sidebar_w, 25),
-            text="CAPABILITIES",
-            manager=manager,
-            container=self.sidebar_panel,
-        )
-        y_off += 30
-        for key in ('Ships', 'Complexes'):
-            prefix = "[x]" if self.filter_capabilities[key] else "[ ]"
-            btn = UIButton(
-                relative_rect=pygame.Rect(10, y_off, sidebar_w, 30),
-                text=f"{prefix} {key}",
-                manager=manager,
-                container=self.sidebar_panel,
-            )
-            self.filter_toggle_buttons[f"cap_{key}"] = btn
-            y_off += 35
-
-        y_off += 10
-
-        # --- Text Search ---
-        UILabel(
-            relative_rect=pygame.Rect(10, y_off, sidebar_w, 25),
-            text="SEARCH",
-            manager=manager,
-            container=self.sidebar_panel,
-        )
-        y_off += 30
-        self.search_entry = UITextEntryLine(
-            relative_rect=pygame.Rect(10, y_off, sidebar_w, 30),
-            manager=manager,
-            container=self.sidebar_panel,
-        )
-        y_off += 40
-
-        # --- Apply Button ---
-        self.btn_apply_filters = UIButton(
-            relative_rect=pygame.Rect(10, y_off, sidebar_w, 35),
-            text="Apply Filters",
-            manager=manager,
-            container=self.sidebar_panel,
-        )
-
-    def _handle_filter_toggle_click(self, button: UIButton) -> None:
-        """Handle a filter toggle button click.
-
-        Identifies which filter the button controls, toggles its state,
-        updates the button text, and re-applies filters.
-
-        Args:
-            button: The UIButton that was clicked.
-        """
-        for filter_key, btn in self.filter_toggle_buttons.items():
-            if btn is not button:
-                continue
-
-            # Parse filter key: "loc_Planet", "status_Active", "cap_Ships"
-            parts = filter_key.split("_", 1)
-            category = parts[0]
-            value = parts[1]
-
-            if category == "loc":
-                self.filter_location_type[value] = not self.filter_location_type[value]
-                state = self.filter_location_type[value]
-            elif category == "status":
-                self.filter_status[value] = not self.filter_status[value]
-                state = self.filter_status[value]
-            elif category == "cap":
-                self.filter_capabilities[value] = not self.filter_capabilities[value]
-                state = self.filter_capabilities[value]
-            else:
-                return
-
-            prefix = "[x]" if state else "[ ]"
-            btn.set_text(f"{prefix} {value}")
-            self.apply_filters()
-            return
-
-    def _handle_apply_filters_click(self) -> None:
-        """Handle the Apply Filters button click.
-
-        Reads the search text entry and re-applies all filters.
-        """
-        if self.search_entry is not None:
-            self.search_text = self.search_entry.get_text()
-        self.apply_filters()
-
-    # -------------------------------------------------------------------
-    # Additional Data Formatters
-    # -------------------------------------------------------------------
 
     def _get_system_name(self, source: BuildQueueSource) -> str:
         """Return the system name for a queue source."""
@@ -845,21 +550,19 @@ class EmpireBuildQueueWindow(UIWindow):
     @staticmethod
     def _get_turns_left_text(source: BuildQueueSource) -> str:
         """Return turns remaining for the first item in queue."""
+        from game.ui.screens.empire_build_queue_formatter import get_turns_left_text
         return get_turns_left_text(source)
 
-    # -------------------------------------------------------------------
+    # -----------------------------------------------------------------------
     # Cleanup
-    # -------------------------------------------------------------------
+    # -----------------------------------------------------------------------
 
     def kill(self) -> None:
         """Clean up and invoke close callback."""
         for elem in self.row_elements:
             elem.kill()
         self.row_elements.clear()
-
         self.column_mgr.kill()
-
         if self.on_close_callback:
             self.on_close_callback()
-
         super().kill()
