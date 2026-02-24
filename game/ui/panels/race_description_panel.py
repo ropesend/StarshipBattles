@@ -11,6 +11,8 @@ import pygame
 import pygame_gui
 from typing import Optional, TYPE_CHECKING
 
+from game.ui.utils import create_section_header
+
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
 
@@ -62,13 +64,7 @@ class RaceDescriptionPanel:
         text_area_height = (panel_height - 100) // 2
 
         # Biological Description
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 300, 25),
-            text="Biological Description:",
-            manager=self.ui_manager,
-            container=self.panel,
-            object_id="#section_header"
-        )
+        create_section_header("Biological Description:", y, 300, self.ui_manager, self.panel)
         self.bio_char_label = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(panel_width - 80, y, 80, 25),
             text=f"{len(self.race_config.bio_description)}/{self.MAX_LENGTH}",
@@ -87,13 +83,7 @@ class RaceDescriptionPanel:
         y += text_area_height + 15
 
         # Sociological Description
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 300, 25),
-            text="Sociological Description:",
-            manager=self.ui_manager,
-            container=self.panel,
-            object_id="#section_header"
-        )
+        create_section_header("Sociological Description:", y, 300, self.ui_manager, self.panel)
         self.socio_char_label = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(panel_width - 80, y, 80, 25),
             text=f"{len(self.race_config.socio_description)}/{self.MAX_LENGTH}",

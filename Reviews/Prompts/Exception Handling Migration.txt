@@ -1,0 +1,154 @@
+!EXECUTE_PROTOCOL: Reviews\protocols\03_focused_question_review.md
+
+I want to conduct a Focused Review on **inconsistent exception handling** — the gap between the custom exception infrastructure (PROJ-45) and actual codebase adoption.
+
+1. LOAD the core protocol `Reviews/protocols/00_review_core.md`
+2. LOAD the specific protocol `Reviews/protocols/03_focused_question_review.md`
+3. ADOPT the 'Code Review Coordinator' persona
+4. EXECUTE all phases:
+   - Phase A: Scope Definition (pre-defined below — confirm and proceed)
+   - Phase B: Agent Planning (recommend and confirm agent configuration)
+   - Phase C: Review Swarm Launch (deploy review agents)
+   - Phase D: Findings Compilation (aggregate into report)
+   - Phase E: User Summary (present findings, discuss implications)
+
+**IMPORTANT:** This review is intended to **convert directly to a PROJ-XX project** for execution. Findings should be structured as actionable migration tasks with clear before/after examples, file lists, and effort estimates per task.
+
+<review_scope>
+
+## Problem Statement
+
+The codebase has a well-designed custom exception hierarchy (PROJ-45) with 10 exception classes, 19 error codes, and comprehensive documentation — but adoption is only **2.4%**. The ratio of generic ValueError to custom exceptions is **6.7:1**.
+
+### Exception Hierarchy (game/core/exceptions.py)
+```
+GameException (base)
+├── StateException - Object state errors
+│   └── FrozenStateException - Modifying frozen objects
+├── ValidationException - Input validation failures
+├── ResourceException - Resource loading errors
+│   └── MissingResourceException - Resource not found
+├── PersistenceException - Save/load failures
+└── SimulationException - Combat engine errors
+    ├── ComponentException - Component operation errors
+    └── FormulaException - Formula evaluation errors
+```
+
+### Error Codes (game/core/error_codes.py)
+- V001-V004: Validation (VALIDATION_FAILED, OUT_OF_RANGE)
+- S001-S003: State (STATE_FROZEN, NOT_INITIALIZED, INVALID_STATE)
+- R001-R003: Resource (RESOURCE_NOT_FOUND, INVALID_FORMAT, RESOURCE_LOAD_FAILED)
+- P001-P005: Persistence (SAVE_FAILED, LOAD_FAILED, CORRUPT_DATA, VERSION_MISMATCH, IO_ERROR)
+- F001-F004: Formula (FORMULA_SYNTAX_ERROR, FORMULA_UNDEFINED_VAR, EVAL_ERROR, FORMULA_GENERAL_ERROR)
+- C001-C005: Component (COMPONENT_NOT_FOUND, COMPONENT_INVALID, SLOT_OCCUPIED, INCOMPATIBLE_COMPONENT)
+
+### Documentation (already exists)
+- `docs/architecture/ERROR_HANDLING.md` — Quick reference
+- `docs/architecture/ERROR_HANDLING_GUIDELINES.md` — 563-line comprehensive guide with decision trees
+
+### Reference Implementations (already exists — model these)
+- `game/simulation/formula_system.py` — 5 FormulaException raises with error codes, chaining, context dicts
+- `game/core/registry.py` — StateException with error codes
+- `game/simulation/components/modifier_effects.py` — FormulaException with context
+- `game/simulation/entities/projectile.py` — ValidationException with error codes
+- `game/simulation/battle_controller.py` — StateException for state transitions
+
+### Current State (from previous review — finding IDs IH-005, ERR-001, ERR-002)
+- **60 files** raising ValueError (122 occurrences)
+- **22 files** raising RuntimeError (32 occurrences)
+- **44 files** raising TypeError (53 occurrences)
+- **18 files** raising Exception() (28 occurrences)
+- **5 files** raising KeyError (6 occurrences)
+- Only **9 production files** currently use custom exceptions (28 occurrences)
+- **111 files** catch ValueError (226 occurrences) — callers affected by migration
+- **629 try/except blocks** across 296 files
+- **46 `except Exception:` blocks** (some intentional, some too broad)
+
+### Known Worst Offenders
+1. `game/strategy/generation/loaders/system_blueprints_loader.py` — 15 ValueErrors (schema validation)
+2. `game/strategy/generation/loaders/astrophysics_loader.py` — 7 ValueErrors (schema validation)
+3. `game/strategy/generation/density/density_map.py` — 5 ValueErrors (weight/radius validation)
+4. `game/ui/screens/build_queue_screen.py` — 4 ValueErrors (UI validation)
+5. `game/strategy/engine/game_config.py` — 3 ValueErrors (config validation)
+
+### Related Issues from Previous Review
+- **ERR-001:** Missing input validation in core constructors (GameSession, Ship, DesignLibrary accept None)
+- **ERR-003:** Bare `except: pass` in scripts/apply_resource_costs.py
+- **ERR-004:** Silent fallback without logging in battle_panels.py, race_environment_panel.py
+- **ERR-005:** Overly broad `except Exception` catches (3 documented intentional, rest unaudited)
+- **ERR-006:** Incomplete error context in design_library.py
+- **ERR-009:** Error codes defined but ~5% adoption
+- **ERR-012:** Missing validation in deserialization (from_dict methods assume well-formed input)
+
+## Review Focus Areas
+
+### Agent 1: ValueError Migration Mapper
+- Catalog EVERY ValueError raise in game/ with: file, line, function, current message, appropriate replacement exception type, appropriate error code, and whether callers catch ValueError specifically (breaking change risk)
+- Group by module (core, simulation, strategy, ui, ai, engine)
+- Flag any ValueError that is genuinely correct (e.g., Python protocol methods like __init__ type guards)
+- Estimate effort per file (simple/medium/complex based on caller analysis)
+
+### Agent 2: RuntimeError & Other Generic Exception Mapper
+- Same analysis for RuntimeError (32 occurrences), TypeError (53 occurrences), Exception() (28 occurrences), KeyError (6 occurrences)
+- Many TypeError/KeyError may be legitimately correct (data structure operations) — distinguish carefully
+- Flag only those that should be semantic domain exceptions
+
+### Agent 3: Caller Impact Analyzer
+- For each file that CATCHES ValueError/RuntimeError: would migration break it?
+- Identify `except ValueError` blocks that would need updating
+- Identify `except (ValueError, TypeError)` combo catches
+- Identify `except Exception` blocks that implicitly catch these (no change needed)
+- Produce a dependency map: "if you change X.py's raises, you must update Y.py's catches"
+
+### Agent 4: Error Code Gap Analyzer
+- Current 19 error codes — are they sufficient for all the raises being migrated?
+- Propose NEW error codes needed (e.g., missing UI validation codes, strategy generation codes)
+- Check if existing error codes are used consistently where they exist
+- Propose the complete error code table needed post-migration
+
+### Agent 5: Exception Catch Quality Auditor
+- Audit ALL 629 try/except blocks for quality:
+  - Bare except (should be zero in production)
+  - except Exception without re-raise (flag unless commented)
+  - except without logging (silent swallowing)
+  - except with wrong exception type (catching too broad or too narrow)
+  - Missing exception chaining (raise X from e)
+- Categorize by: "fix during migration" vs "separate cleanup"
+
+### Agent 6: Deserialization Validation Auditor
+- Find ALL from_dict/to_dict/deserialize methods
+- Check which ones validate input vs assume well-formed data
+- For each that raises generic exceptions on bad input: map to appropriate custom exception
+- This is a high-value target since corrupt save data produces the worst user experience
+
+### Optional Agent 7: Test Impact Analyzer
+- How many tests explicitly assert ValueError/RuntimeError?
+- These tests MUST be updated during migration (breaking change)
+- List every test file and assertion that references generic exceptions
+- Group by: "test expects ValueError from production code" (must change) vs "test validates test infrastructure" (probably leave)
+
+## Output Requirements
+
+Each agent's report should be structured for **direct conversion to project phases**:
+
+### Per-Finding Format
+```
+**ID:** EXC-NNN
+**File:** relative/path.py:line
+**Function:** function_name()
+**Current:** raise ValueError("message")
+**Proposed:** raise ValidationException("message", code=ErrorCode.VALIDATION_FAILED, context={"field": value})
+**Callers Affected:** [list of files that catch this exception]
+**Breaking Change:** Yes/No
+**Effort:** Simple/Medium/Complex
+**Priority:** P1 (data corruption risk) / P2 (user-facing) / P3 (internal) / P4 (test/script only)
+```
+
+### Per-Module Summary
+For each module, provide:
+- Total raises to migrate
+- Estimated effort (hours)
+- Dependencies (must be done before/after other modules)
+- Suggested phase grouping
+
+</review_scope>

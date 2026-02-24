@@ -22,6 +22,7 @@ from game.strategy.data.homeworld_presets import (
     get_preset_id_from_name,
     load_homeworld_presets,
 )
+from game.ui.utils import create_section_header
 
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
@@ -132,13 +133,7 @@ class RaceEnvironmentPanel:
 
     def _create_homeworld_section(self, y: int, width: int) -> int:
         """Create homeworld type dropdown for preset selection."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 200, 25),
-            text="Homeworld Type:",
-            manager=self.ui_manager,
-            container=self.panel,
-            object_id="#section_header"
-        )
+        create_section_header("Homeworld Type:", y, 200, self.ui_manager, self.panel)
         y += 28
 
         # Build dropdown options: all planet types + Custom
@@ -166,13 +161,7 @@ class RaceEnvironmentPanel:
 
     def _create_gravity_section(self, y: int, width: int) -> int:
         """Create gravity preference controls."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 200, 25),
-            text="Gravity Preferences:",
-            manager=self.ui_manager,
-            container=self.panel,
-            object_id="#section_header"
-        )
+        create_section_header("Gravity Preferences:", y, 200, self.ui_manager, self.panel)
         y += 28
 
         # Ideal gravity: 0.1 - 3.0 g
@@ -225,13 +214,7 @@ class RaceEnvironmentPanel:
 
     def _create_temperature_section(self, y: int, width: int) -> int:
         """Create temperature preference controls."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 200, 25),
-            text="Temperature Preferences:",
-            manager=self.ui_manager,
-            container=self.panel,
-            object_id="#section_header"
-        )
+        create_section_header("Temperature Preferences:", y, 200, self.ui_manager, self.panel)
         y += 28
 
         # Ideal temperature: 200 - 400 K
@@ -284,13 +267,7 @@ class RaceEnvironmentPanel:
 
     def _create_radiation_section(self, y: int, width: int) -> int:
         """Create radiation tolerance control."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 200, 25),
-            text="Radiation Tolerance:",
-            manager=self.ui_manager,
-            container=self.panel,
-            object_id="#section_header"
-        )
+        create_section_header("Radiation Tolerance:", y, 200, self.ui_manager, self.panel)
         y += 28
 
         # Radiation: -100 (sensitive) to +100 (resistant)
@@ -320,13 +297,7 @@ class RaceEnvironmentPanel:
 
     def _create_water_section(self, y: int, width: int) -> int:
         """Create water preference controls."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 200, 25),
-            text="Water Preferences:",
-            manager=self.ui_manager,
-            container=self.panel,
-            object_id="#section_header"
-        )
+        create_section_header("Water Preferences:", y, 200, self.ui_manager, self.panel)
         y += 28
 
         # Ideal water: 0.0 - 1.0
@@ -379,12 +350,9 @@ class RaceEnvironmentPanel:
 
     def _create_atmosphere_section(self, y: int, width: int) -> int:
         """Create atmosphere preference controls."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, width, 25),
-            text="Atmosphere Preferences (-100 toxic to +100 beneficial):",
-            manager=self.ui_manager,
-            container=self.panel,
-            object_id="#section_header"
+        create_section_header(
+            "Atmosphere Preferences (-100 toxic to +100 beneficial):",
+            y, width, self.ui_manager, self.panel
         )
         y += 28
 

@@ -8,19 +8,18 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-165 Phase 1 Complete
-**Current Status:** PROJ-165 Phase 1 done — helper function and 9 unit tests added
+**Last Completed:** PROJ-165 Phase 2 Complete
+**Current Status:** PROJ-165 Phase 2 done — migrated 18 race panel sites
 **Current Project:** PROJ-165
-**Current Phase:** Phase 2
+**Current Phase:** Phase 3
 **Test Status:** 2826 UI tests passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 1 Complete: Added `create_section_header()` to `game/ui/utils.py` (lines 166-194)
-- Added 9 unit tests in `tests/unit/ui/test_utils.py::TestCreateSectionHeader`
-- Helper signature: `create_section_header(text, y, width, manager, container, x=10, height=25)`
-- Uses lazy import of pygame_gui to keep utils.py lightweight
-- Next: Phase 2 — migrate 19 race editor panel call sites
+- Phase 2 Complete: Migrated 18 sites across 5 race panel files
+- Files modified: race_identity_panel.py (3), race_environment_panel.py (6), race_aptitudes_panel.py (3), race_description_panel.py (2), race_summary_panel.py (4)
+- Summary panel uses variable x positions (col1_x, col3_x) - passed `x=x` explicitly
+- Next: Phase 3 — migrate empire_panel_window.py (5 sites) and empire_treasury_panel.py (1 site)
 
 ---
 
@@ -47,7 +46,7 @@
   - **Dependencies:** None
 
 - [/] **PROJ-165: Create `create_section_header()` UI Helper**
-  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 4 | **Status:** Phase 2 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-165/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-165/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -95,6 +94,7 @@
 | 2026-02-23 | PROJ-164 | Audit 1 | PASSED | 171 pass | - | No issues found |
 | 2026-02-23 | PROJ-164 | Close | COMPLETE | - | - | Project marked complete |
 | 2026-02-23 | PROJ-165 | Phase 1 | Complete | 2826 UI pass | pending | Helper + 9 tests added |
+| 2026-02-23 | PROJ-165 | Phase 2 | Complete | 2826 UI pass | pending | Migrated 18 race panel sites |
 
 ---
 

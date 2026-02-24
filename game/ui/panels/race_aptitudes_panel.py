@@ -14,6 +14,7 @@ import pygame_gui
 from typing import Dict, Optional, TYPE_CHECKING
 
 from game.strategy.data.race_point_budget import RacePointBudget
+from game.ui.utils import create_section_header
 
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
@@ -105,13 +106,7 @@ class RaceAptitudesPanel:
 
     def _create_budget_section(self, y: int, width: int) -> int:
         """Create budget display section."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 200, 25),
-            text="Point Budget:",
-            manager=self.ui_manager,
-            container=self.panel,
-            object_id="#section_header"
-        )
+        create_section_header("Point Budget:", y, 200, self.ui_manager, self.panel)
         y += 28
 
         # Large, prominent budget display
@@ -129,13 +124,7 @@ class RaceAptitudesPanel:
 
     def _create_aptitude_section(self, y: int, width: int) -> int:
         """Create aptitude slider controls."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 200, 25),
-            text="Aptitudes (1-100, base 50):",
-            manager=self.ui_manager,
-            container=self.panel,
-            object_id="#section_header"
-        )
+        create_section_header("Aptitudes (1-100, base 50):", y, 200, self.ui_manager, self.panel)
         y += 28
 
         # Create a slider row for each aptitude
@@ -188,13 +177,7 @@ class RaceAptitudesPanel:
 
     def _create_cost_breakdown_section(self, y: int, width: int) -> int:
         """Create cost breakdown display section."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 200, 25),
-            text="Cost Breakdown:",
-            manager=self.ui_manager,
-            container=self.panel,
-            object_id="#section_header"
-        )
+        create_section_header("Cost Breakdown:", y, 200, self.ui_manager, self.panel)
         y += 28
 
         # Aptitude cost total

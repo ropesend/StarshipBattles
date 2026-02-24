@@ -26,6 +26,7 @@ from game.strategy.data.race_config import (
     PHYSICAL_TYPES,
     SOCIETY_TYPES,
 )
+from game.ui.utils import create_section_header
 
 
 class RaceIdentityPanel:
@@ -98,13 +99,7 @@ class RaceIdentityPanel:
 
     def _create_race_section(self, y: int, width: int) -> int:
         """Create race identity controls."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 200, 25),
-            text="Species Identity:",
-            manager=self.ui_manager,
-            container=self.panel,
-            object_id="#section_header"
-        )
+        create_section_header("Species Identity:", y, 200, self.ui_manager, self.panel)
         y += 28
 
         # Race Name
@@ -163,13 +158,7 @@ class RaceIdentityPanel:
 
     def _create_government_section(self, y: int, width: int) -> int:
         """Create government controls."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 200, 25),
-            text="Government:",
-            manager=self.ui_manager,
-            container=self.panel,
-            object_id="#section_header"
-        )
+        create_section_header("Government:", y, 200, self.ui_manager, self.panel)
         y += 28
 
         # Government Type
@@ -265,13 +254,7 @@ class RaceIdentityPanel:
 
     def _create_faction_section(self, y: int, width: int) -> int:
         """Create faction name controls."""
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 200, 25),
-            text="Faction:",
-            manager=self.ui_manager,
-            container=self.panel,
-            object_id="#section_header"
-        )
+        create_section_header("Faction:", y, 200, self.ui_manager, self.panel)
         y += 28
 
         # Faction Name

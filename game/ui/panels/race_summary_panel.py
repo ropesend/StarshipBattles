@@ -17,6 +17,7 @@ from typing import Dict, List, Optional, Callable, TYPE_CHECKING
 
 from game.core.logger import log_debug
 from game.ui.assets import ShipThemeManager
+from game.ui.utils import create_section_header
 
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
@@ -127,12 +128,8 @@ class RaceSummaryPanel:
         PROJ-66 Phase 6: Updated to show faction name and identity fields.
         """
         # Faction Name (prominent at top)
-        self.summary_labels['faction_header'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, y, col_width, 25),
-            text="Faction:",
-            manager=self.ui_manager,
-            container=self.panel,
-            object_id="#section_header"
+        self.summary_labels['faction_header'] = create_section_header(
+            "Faction:", y, col_width, self.ui_manager, self.panel, x=x
         )
         self.summary_labels['faction_value'] = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(x, y + 25, col_width, 25),
@@ -226,13 +223,7 @@ class RaceSummaryPanel:
         PROJ-66 Phase 6: Added homeworld, water, aptitudes, and budget display.
         """
         # Environment header
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, y, col_width, 25),
-            text="Environment:",
-            manager=self.ui_manager,
-            container=self.panel,
-            object_id="#section_header"
-        )
+        create_section_header("Environment:", y, col_width, self.ui_manager, self.panel, x=x)
 
         env_y = y + 25
 
@@ -282,13 +273,7 @@ class RaceSummaryPanel:
         env_y += 28
 
         # Aptitudes section (NEW)
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 25),
-            text="Aptitudes:",
-            manager=self.ui_manager,
-            container=self.panel,
-            object_id="#section_header"
-        )
+        create_section_header("Aptitudes:", env_y, col_width, self.ui_manager, self.panel, x=x)
         env_y += 25
 
         # Budget status (NEW)
@@ -310,13 +295,7 @@ class RaceSummaryPanel:
         env_y += 72
 
         # Descriptions summary
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 25),
-            text="Descriptions:",
-            manager=self.ui_manager,
-            container=self.panel,
-            object_id="#section_header"
-        )
+        create_section_header("Descriptions:", env_y, col_width, self.ui_manager, self.panel, x=x)
         env_y += 25
 
         self.summary_labels['bio_status'] = pygame_gui.elements.UILabel(
