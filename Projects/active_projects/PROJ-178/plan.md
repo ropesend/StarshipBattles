@@ -13,19 +13,19 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. ShipInstance Validation & Docstrings | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. ShipInstance Validation & Docstrings | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. PlanetaryFacility & SpeciesPopulation from_dict | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. DesignMetadata Ship Calculation Fix | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Ghost Code Cleanup | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Planning - Awaiting Approval
-**Last Action:** Complete plan with 4 phases created from independent code review of PROJ-171 audit
-**Next Action:** User approval, then begin Phase 1 (ShipInstance validation & docstrings)
-**Blockers:** Awaiting user plan approval
+**Active Phase:** Phase 2 - PlanetaryFacility & SpeciesPopulation from_dict
+**Last Action:** Phase 1 complete - added validate_non_negative to ShipInstance.from_dict, added Raises docstrings to ShipInstance/Empire/Fleet
+**Next Action:** Begin Phase 2 (extract from_dict methods for PlanetaryFacility and SpeciesPopulation)
+**Blockers:** None
 **Baseline:** 12338 passed, 1 skipped
-**Context for Next Agent:** All findings independently verified by 5-agent swarm. New finding: DesignMetadata `_calculate_combat_power_from_ship` uses nonexistent `category` attribute (always returns 0.0) — this is a bug, not just style. Components use `major_classification` ("Weapons", "Armor") and `type_str`.
+**Context for Next Agent:** Phase 1 added 8 new tests. All validation and docstring updates complete for ship_instance.py, empire.py, fleet.py.
 
 ## Overview
 Remediate all findings from the PROJ-171 post-refactor audit. This project addresses validation gaps, missing docstrings, inline deserialization inconsistencies, a broken combat power calculation path, and ghost code. All changes follow established `validation_helpers.py` patterns.

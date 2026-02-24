@@ -181,6 +181,9 @@ class Empire:
 
         Returns:
             Reconstructed Empire with colonies resolved
+
+        Raises:
+            PersistenceException: If required keys missing
         """
         require_keys(data, ['id', 'name', 'color'], 'Empire')
 

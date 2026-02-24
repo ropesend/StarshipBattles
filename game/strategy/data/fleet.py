@@ -346,7 +346,18 @@ class Fleet:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Fleet':
-        """Deserialize from save game."""
+        """
+        Deserialize from save game.
+
+        Args:
+            data: Dict with fleet data
+
+        Returns:
+            Reconstructed Fleet
+
+        Raises:
+            PersistenceException: If required keys missing
+        """
         require_keys(data, ['id', 'owner_id'], 'Fleet')
         # ShipInstance imported at module level
 

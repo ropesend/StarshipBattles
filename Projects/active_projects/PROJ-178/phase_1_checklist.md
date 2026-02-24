@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Add `validate_non_negative` to ShipInstance.from_dict and add missing `Raises:` docstring blocks to ShipInstance, Empire, and Fleet.
 
 ---
@@ -16,8 +16,8 @@
 **File:** `game/strategy/data/ship_instance.py`
 **Tests:** `pytest tests/unit/strategy/ship_instance/test_validation.py`
 
-- [ ] Add `validate_non_negative` to import at line 21
-- [ ] After `require_keys` call (line 644), add validation:
+- [x] Add `validate_non_negative` to import at line 21
+- [x] After `require_keys` call (line 644), add validation:
   ```python
   if data.get('current_hp') is not None:
       validate_non_negative(data['current_hp'], 'current_hp', 'ShipInstance')
@@ -28,47 +28,47 @@
   if data.get('battles_survived') is not None:
       validate_non_negative(data['battles_survived'], 'battles_survived', 'ShipInstance')
   ```
-- [ ] Verify existing tests still pass
+- [x] Verify existing tests still pass
 
-**Notes:**
+**Notes:** Completed - 15 tests passing
 
 ### Task 1.2: Add tests for ShipInstance non-negative validation [Simple]
 **File:** `tests/unit/strategy/ship_instance/test_validation.py`
 **Tests:** `pytest tests/unit/strategy/ship_instance/test_validation.py`
 
-- [ ] Add parametrized test: negative `current_hp`, `experience`, `kills`, `battles_survived` each raises PersistenceException
-- [ ] Add test: zero values for those fields are accepted
-- [ ] Run tests — all pass
+- [x] Add parametrized test: negative `current_hp`, `experience`, `kills`, `battles_survived` each raises PersistenceException
+- [x] Add test: zero values for those fields are accepted
+- [x] Run tests — all pass
 
-**Notes:**
+**Notes:** Added 8 new test cases (4 negative, 4 zero boundary)
 
 ### Task 1.3: Add Raises docstring to ShipInstance.from_dict [Simple]
 **File:** `game/strategy/data/ship_instance.py`
 
-- [ ] Replace one-liner docstring (line 643) with full Args/Returns/Raises docstring
+- [x] Replace one-liner docstring (line 643) with full Args/Returns/Raises docstring
 
-**Notes:**
+**Notes:** Completed with full docstring block
 
 ### Task 1.4: Add Raises docstring to Empire.from_dict [Simple]
 **File:** `game/strategy/data/empire.py`
 
-- [ ] Add `Raises: PersistenceException: If required keys missing` to existing docstring (lines 175-184)
+- [x] Add `Raises: PersistenceException: If required keys missing` to existing docstring (lines 175-184)
 
-**Notes:**
+**Notes:** Added Raises block to existing docstring
 
 ### Task 1.5: Add Raises docstring to Fleet.from_dict [Simple]
 **File:** `game/strategy/data/fleet.py`
 
-- [ ] Replace one-liner docstring (line 349) with full Args/Returns/Raises docstring
+- [x] Replace one-liner docstring (line 349) with full Args/Returns/Raises docstring
 
-**Notes:**
+**Notes:** Completed with full docstring block
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] `pytest tests/unit/strategy/ship_instance/ tests/unit/strategy/empire/ tests/unit/strategy/fleet/` passes
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] `pytest tests/unit/strategy/ship_instance/ tests/unit/strategy/empire/ tests/unit/strategy/fleet/` passes
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

@@ -8,19 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-177 Complete - Exception Handling Cleanup
-**Current Status:** PROJ-177 complete, next project PROJ-178
+**Last Completed:** PROJ-178 Phase 1 - ShipInstance Validation & Docstrings
+**Current Status:** PROJ-178 Phase 1 complete, Phase 2 next
 **Current Project:** PROJ-178
-**Current Phase:** Not Started
-**Test Status:** 12338 passed, 1 skipped
+**Current Phase:** Phase 2
+**Test Status:** 12346 passed, 1 skipped (+8 new tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-177 COMPLETE - Audit Cycle 1 PASSED
-- Phase 1: Removed redundant generics from 9 except blocks
-- Phase 2: Fixed 12 stale docstrings across 8 files
-- Phase 3: Migrated 4 builtin raises, updated 7 tests
-- Next: Start PROJ-178 - PROJ-171 Audit Remediation
+- PROJ-178 Phase 1 COMPLETE
+- Added validate_non_negative to ShipInstance.from_dict for 4 fields
+- Added Raises docstrings to ShipInstance, Empire, Fleet from_dict methods
+- Added 8 new tests (4 negative value, 4 zero boundary)
+- Next: Phase 2 - PlanetaryFacility/SpeciesPopulation from_dict extraction
 
 ---
 
@@ -100,8 +100,8 @@
 
 ---
 
-- [ ] **PROJ-178: PROJ-171 Audit Remediation - Validation Consistency**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-178: PROJ-171 Audit Remediation - Validation Consistency**
+  - **Phases:** 4 | **Status:** In Progress | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-178/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-178/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -202,6 +202,7 @@
 | 2026-02-24 | PROJ-177 | Phase 2 | Complete | 12338 passed, 1 skipped | pending | Fixed 12 stale docstrings across 8 files |
 | 2026-02-24 | PROJ-177 | Phase 3 | Complete | 12338 passed, 1 skipped | pending | Migrated 4 builtin raises, updated 7 tests |
 | 2026-02-24 | PROJ-177 | Audit 1 | PASSED | 12338 passed, 1 skipped | 57363ddc | All objectives verified, project complete |
+| 2026-02-24 | PROJ-178 | Phase 1 | Complete | 12346 passed, 1 skipped | pending | validate_non_negative + docstrings, +8 tests |
 
 ---
 

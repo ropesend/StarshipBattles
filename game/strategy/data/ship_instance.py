@@ -18,7 +18,7 @@ import uuid
 import json
 
 from game.core.protocols import IPostBattleShip
-from game.core.validation_helpers import require_keys
+from game.core.validation_helpers import require_keys, validate_non_negative
 from game.strategy.data.ship_resource_manager import ShipResourceManager
 from game.strategy.data.ship_cargo_manager import ShipCargoManager
 from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
@@ -640,8 +640,30 @@ class ShipInstance:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ShipInstance':
-        """Deserialize from save game."""
+        """
+        Deserialize from save game.
+
+        Args:
+            data: Dict with ship instance data
+
+        Returns:
+            Reconstructed ShipInstance
+
+        Raises:
+            PersistenceException: If required keys missing or values invalid
+        """
         require_keys(data, ['instance_id', 'design_id', 'name', 'owner_id'], 'ShipInstance')
+
+        # Validate non-negative numeric fields (if present in data)
+        if data.get('current_hp') is not None:
+            validate_non_negative(data['current_hp'], 'current_hp', 'ShipInstance')
+        if data.get('experience') is not None:
+            validate_non_negative(data['experience'], 'experience', 'ShipInstance')
+        if data.get('kills') is not None:
+            validate_non_negative(data['kills'], 'kills', 'ShipInstance')
+        if data.get('battles_survived') is not None:
+            validate_non_negative(data['battles_survived'], 'battles_survived', 'ShipInstance')
+
         return cls(
             instance_id=data['instance_id'],
             design_id=data['design_id'],

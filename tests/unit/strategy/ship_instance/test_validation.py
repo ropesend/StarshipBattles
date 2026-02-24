@@ -101,3 +101,36 @@ class TestShipInstanceValidation:
         assert ship.battles_survived == 0
         assert ship.component_damage == {}
         assert ship.resource_levels == {}
+
+    @pytest.mark.parametrize("field_name", [
+        'current_hp',
+        'experience',
+        'kills',
+        'battles_survived',
+    ])
+    def test_negative_value_raises_persistence_exception(self, field_name):
+        """Negative values for numeric fields raise PersistenceException."""
+        data = make_valid_ship_data()
+        data[field_name] = -1
+
+        with pytest.raises(PersistenceException) as exc_info:
+            ShipInstance.from_dict(data)
+
+        assert field_name in str(exc_info.value)
+        assert 'ShipInstance' in str(exc_info.value)
+        assert 'non-negative' in str(exc_info.value).lower() or 'negative' in str(exc_info.value).lower()
+
+    @pytest.mark.parametrize("field_name", [
+        'current_hp',
+        'experience',
+        'kills',
+        'battles_survived',
+    ])
+    def test_zero_value_accepted(self, field_name):
+        """Zero values for numeric fields are accepted (boundary check)."""
+        data = make_valid_ship_data()
+        data[field_name] = 0
+
+        ship = ShipInstance.from_dict(data)
+
+        assert getattr(ship, field_name) == 0
