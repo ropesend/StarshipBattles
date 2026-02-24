@@ -571,7 +571,5 @@ class BuildQueueController:
             logger.debug(f"Design report updated: {ship.name}")
 
         except (OSError, ValueError, KeyError) as e:
-            logger.error(f"Error loading design {design_id}: {e}")
-            import traceback
-            logger.error(traceback.format_exc())
+            logger.exception(f"Error loading design {design_id}: {e}")
             self.design_report.show_placeholder()

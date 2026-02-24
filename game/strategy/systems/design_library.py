@@ -101,9 +101,7 @@ class DesignLibrary:
                 continue
             except ValidationException as e:
                 # Log validation errors but continue scanning
-                logger.error(f"scan_designs: Validation error loading design from {filepath}: {e}")
-                import traceback
-                logger.error(traceback.format_exc())
+                logger.exception(f"scan_designs: Validation error loading design from {filepath}: {e}")
                 continue
 
         logger.debug(f"scan_designs: Successfully loaded {len(designs)} designs")
@@ -183,14 +181,10 @@ class DesignLibrary:
             logger.error(f"OS error saving design '{design_name}' to {filepath}: {e}")
             return False, f"Failed to save design: {str(e)}"
         except ValidationException as e:
-            logger.error(f"Serialization error saving design '{design_name}': {e}")
-            import traceback
-            logger.error(traceback.format_exc())
+            logger.exception(f"Serialization error saving design '{design_name}': {e}")
             return False, f"Failed to save design: Invalid design data"
         except (AttributeError, KeyError) as e:
-            logger.error(f"Unexpected error saving design '{design_name}': {e}")
-            import traceback
-            logger.error(traceback.format_exc())
+            logger.exception(f"Unexpected error saving design '{design_name}': {e}")
             return False, f"Failed to save design: {str(e)}"
 
     def load_design_data(self, design_id: str) -> Optional[dict]:

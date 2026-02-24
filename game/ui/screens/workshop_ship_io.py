@@ -153,9 +153,7 @@ class WorkshopShipIO:
                     else:
                         logger.error(f"  Folder does not exist!")
             except (OSError, ValueError, KeyError) as e:
-                logger.error(f"Workshop Load: Exception during scan_designs(): {e}")
-                import traceback
-                logger.error(traceback.format_exc())
+                logger.exception(f"Workshop Load: Exception during scan_designs(): {e}")
 
             def on_design_selected(design_id: str):
                 logger.info(f"Workshop: User selected design_id='{design_id}'")

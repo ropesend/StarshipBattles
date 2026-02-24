@@ -152,8 +152,7 @@ class WorkshopDataReloader:
             self.show_error(f"Reloaded data from {os.path.basename(directory)}")
 
         except (OSError, ValueError, KeyError) as e:
-            import traceback
-            logger.error(f"Failed to reload data: {e}\n{traceback.format_exc()}")
+            logger.exception(f"Failed to reload data: {e}")
             self.show_error(f"Error reloading data: {e}")
 
     def _refresh_ui_after_data_reload(self, default_class: str):

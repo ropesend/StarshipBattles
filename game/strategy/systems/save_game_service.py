@@ -13,7 +13,6 @@ import logging
 from json import JSONDecodeError
 import os
 import shutil
-import traceback
 from datetime import datetime
 from typing import Optional, Tuple, List
 from game.core.json_utils import save_json, load_json_required, load_json
@@ -106,7 +105,7 @@ class SaveGameService:
             logger.error(f"SaveGameService: OS error saving to {save_path} - {e}")
             return False, f"Save failed: {str(e)}", None
         except ValidationException as e:
-            logger.error(f"SaveGameService: Serialization error - {e}\n{traceback.format_exc()}")
+            logger.exception(f"SaveGameService: Serialization error - {e}")
             return False, f"Save failed: Unable to serialize game state", None
 
     @staticmethod
@@ -218,7 +217,7 @@ class SaveGameService:
             logger.error(f"SaveGameService: OS error loading {save_path} - {e}")
             return None, f"Failed to load save: {str(e)}"
         except (KeyError, TypeError, ValueError, AttributeError, ImportError, ValidationException, StateException) as e:
-            logger.error(f"SaveGameService: Unexpected load error from {save_path} - {e}\n{traceback.format_exc()}")
+            logger.exception(f"SaveGameService: Unexpected load error from {save_path} - {e}")
             return None, f"Unexpected error while loading save"
 
     @staticmethod

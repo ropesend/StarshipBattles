@@ -106,8 +106,7 @@ class ShipSerializer:
 
         except Exception as e:  # Intentional broad catch: diagnostic logging before re-raise
             logger.error(f"ShipSerializer.to_dict FAILED: {e}")
-            import traceback
-            logger.error(traceback.format_exc())
+            logger.exception("Ship serialization error")
             raise
 
     # Data-driven stat verification table: (key, getter, tolerance)
