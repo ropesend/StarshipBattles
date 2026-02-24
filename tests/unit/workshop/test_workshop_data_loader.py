@@ -39,13 +39,11 @@ def temp_data_dirs():
 def data_loader_setup(temp_data_dirs):
     """Set up pygame and registry for each test."""
     pygame.init()
-    RegistryManager.instance().clear()
 
     temp_dir, custom_dir, default_dir = temp_data_dirs
 
     yield custom_dir, default_dir
 
-    RegistryManager.instance().clear()
     # NOTE: Do not call pygame.quit() here - the root conftest manages
     # pygame lifecycle at session scope. Calling quit() here would break
     # subsequent tests with "No video mode set" errors.
@@ -144,14 +142,12 @@ class TestWorkshopDataLoader:
 def integration_setup():
     """Set up for integration tests using real data files."""
     pygame.init()
-    RegistryManager.instance().clear()
     # Get the data directory using path fixture
     from tests.fixtures.paths import get_data_dir
     data_dir = str(get_data_dir())
 
     yield data_dir
 
-    RegistryManager.instance().clear()
     # NOTE: Do not call pygame.quit() here - the root conftest manages
     # pygame lifecycle at session scope. Calling quit() here would break
     # subsequent tests with "No video mode set" errors.

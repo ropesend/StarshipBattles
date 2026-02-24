@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Remove `RegistryManager.instance().clear()` from test files that don't currently use `fresh_registries`. These calls are redundant because the root conftest `reset_game_state` autouse fixture already handles clear+hydrate before every test.
 
 ---
@@ -19,10 +19,10 @@
 
 **Tests:** `pytest tests/unit/workshop/ -x`
 
-- [ ] `test_workshop_viewmodel.py:53` - Remove `.clear()` from `workshop_class_setup` fixture teardown
-- [ ] `test_workshop_data_loader.py:42,48` - Remove `.clear()` from `data_loader_setup` fixture setup/teardown
-- [ ] `test_workshop_data_loader.py:147,154` - Remove `.clear()` from `real_data_loader_setup` fixture setup/teardown
-- [ ] Remove `RegistryManager` import from each file if no longer used
+- [x] `test_workshop_viewmodel.py:53` - Remove `.clear()` from `workshop_class_setup` fixture teardown
+- [x] `test_workshop_data_loader.py:42,48` - Remove `.clear()` from `data_loader_setup` fixture setup/teardown
+- [x] `test_workshop_data_loader.py:147,154` - Remove `.clear()` from `real_data_loader_setup` fixture setup/teardown
+- [x] Remove `RegistryManager` import from each file if no longer used
 
 **Notes:**
 
@@ -35,12 +35,12 @@
 
 **Tests:** `pytest tests/unit/builder/ -x`
 
-- [ ] `test_builder_warning_logic.py:72` - Remove `.clear()` from fixture teardown
-- [ ] `test_builder_viewmodel.py:54` - Remove `.clear()` from `pygame_and_data` fixture teardown
-- [ ] `test_builder_drag_drop_real.py:135` - Remove `.clear()` from `setup_builder` fixture teardown
-- [ ] `test_builder_data_loader.py:50,52` - Remove `.clear()` from `setup_and_teardown` fixture setup/teardown
-- [ ] `test_builder_data_loader.py:143,148` - Remove `.clear()` from class-scoped `setup_and_teardown` fixture
-- [ ] Remove `RegistryManager` import from each file if no longer used
+- [x] `test_builder_warning_logic.py:72` - Remove `.clear()` from fixture teardown
+- [x] `test_builder_viewmodel.py:54` - Remove `.clear()` from `pygame_and_data` fixture teardown
+- [x] `test_builder_drag_drop_real.py:135` - Remove `.clear()` from `setup_builder` fixture teardown
+- [x] `test_builder_data_loader.py:50,52` - Remove `.clear()` from `setup_and_teardown` fixture setup/teardown
+- [x] `test_builder_data_loader.py:143,148` - Remove `.clear()` from class-scoped `setup_and_teardown` fixture
+- [x] Remove `RegistryManager` import from each file if no longer used
 
 **Notes:**
 
@@ -53,11 +53,11 @@
 
 **Tests:** `pytest tests/unit/entities/ tests/unit/systems/ -x`
 
-- [ ] `test_ability_interface.py:28,32` - Remove `.clear()` from `setup` fixture setup/teardown
-- [ ] `test_main_integration.py:20` - Remove `.clear()` from `cleanup` fixture teardown
-- [ ] `test_physics.py:15` - Remove `.clear()` from `pygame_init` fixture teardown
-- [ ] `test_spatial.py:25` - Remove `.clear()` from `pygame_init` fixture teardown
-- [ ] Remove `RegistryManager` import from each file if no longer used
+- [x] `test_ability_interface.py:28,32` - Remove `.clear()` from `setup` fixture setup/teardown
+- [x] `test_main_integration.py:20` - Remove `.clear()` from `cleanup` fixture teardown
+- [x] `test_physics.py:15` - Remove `.clear()` from `pygame_init` fixture teardown
+- [x] `test_spatial.py:25` - Remove `.clear()` from `pygame_init` fixture teardown
+- [x] Remove `RegistryManager` import from each file if no longer used
 
 **Notes:**
 
@@ -70,11 +70,11 @@
 
 **Tests:** `pytest tests/unit/ui/test_theme_discovery.py tests/unit/test_screenshot_manager.py tests/unit/regressions/test_regressions.py tests/unit/performance/reproduce_scaling.py -x`
 
-- [ ] `test_theme_discovery.py:64` - Remove `.clear()` from `setup` fixture teardown
-- [ ] `test_screenshot_manager.py:23` - Remove `.clear()` from `screenshot_manager` fixture teardown
-- [ ] `test_regressions.py:26` - Remove `.clear()` from `pygame_setup` fixture teardown
-- [ ] `reproduce_scaling.py:14,23` - Remove `.clear()` from `component_environment` fixture setup/teardown
-- [ ] Remove `RegistryManager` import from each file if no longer used
+- [x] `test_theme_discovery.py:64` - Remove `.clear()` from `setup` fixture teardown
+- [x] `test_screenshot_manager.py:23` - Remove `.clear()` from `screenshot_manager` fixture teardown
+- [x] `test_regressions.py:26` - Remove `.clear()` from `pygame_setup` fixture teardown
+- [x] `reproduce_scaling.py:14,23` - Remove `.clear()` from `component_environment` fixture setup/teardown
+- [x] Remove `RegistryManager` import from each file if no longer used (kept where still used for data access)
 
 **Notes:**
 
@@ -82,9 +82,9 @@
 **File:** `tests/integration/ai_strategy/conftest.py:37`
 **Tests:** `pytest tests/integration/ -x`
 
-- [ ] Remove `RegistryManager.instance().clear()` from `setup_game_data` fixture teardown (line 37)
-- [ ] Keep `StrategyManager.instance().clear()` (line 38) - different singleton, still needed
-- [ ] Remove `RegistryManager` import if no longer used
+- [x] Remove `RegistryManager.instance().clear()` from `setup_game_data` fixture teardown (line 37)
+- [x] Keep `StrategyManager.instance().clear()` (line 38) - different singleton, still needed
+- [x] Remove `RegistryManager` import if no longer used
 
 **Notes:** Root conftest handles RegistryManager cleanup between tests.
 
@@ -92,8 +92,8 @@
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Run `pytest tests/ -n 12` - full suite passes
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 5
+- [x] All task checkboxes above are checked
+- [x] Run `pytest tests/ -n 12` - full suite passes (12373 passed, 1 skipped)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 5

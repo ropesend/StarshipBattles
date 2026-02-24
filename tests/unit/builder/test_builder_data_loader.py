@@ -47,9 +47,7 @@ class TestBuilderDataLoader:
     @pytest.fixture(autouse=True)
     def setup_and_teardown(self):
         pygame.init()
-        RegistryManager.instance().clear()
         yield
-        RegistryManager.instance().clear()
         # NOTE: Do not call pygame.quit() here - the root conftest manages
         # pygame lifecycle at session scope. Calling quit() here would break
         # subsequent tests with "No video mode set" errors.
@@ -140,12 +138,10 @@ class TestBuilderDataLoaderIntegration:
     @pytest.fixture(autouse=True)
     def setup_and_teardown(self):
         pygame.init()
-        RegistryManager.instance().clear()
         # Get the data directory using path fixture
         from tests.fixtures.paths import get_data_dir
         self.data_dir = str(get_data_dir())
         yield
-        RegistryManager.instance().clear()
         # NOTE: Do not call pygame.quit() here - the root conftest manages
         # pygame lifecycle at session scope. Calling quit() here would break
         # subsequent tests with "No video mode set" errors.

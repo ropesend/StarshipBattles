@@ -8,7 +8,6 @@ from game.simulation.components.abilities import (
     ToHitAttackModifier, ToHitDefenseModifier, EmissiveArmor,
     WeaponAbility, CommandAndControl, VehicleLaunchAbility
 )
-from game.core.registry import RegistryManager
 
 
 class MockComponent:
@@ -25,11 +24,9 @@ class TestAbilityPrimaryValueInterface:
     @pytest.fixture(autouse=True)
     def setup(self):
         self.mock_comp = MockComponent()
-        RegistryManager.instance().clear()
 
         yield
 
-        RegistryManager.instance().clear()
         patch.stopall()
 
     # --- Base Ability ---

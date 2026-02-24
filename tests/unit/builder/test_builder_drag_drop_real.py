@@ -11,7 +11,6 @@ import pygame
 from game.ui.screens import workshop_screen
 from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
-from game.core.registry import RegistryManager
 from game.simulation.entities.ship import LayerType
 from game.simulation.entities.layer_data import LayerData
 
@@ -132,7 +131,6 @@ class TestBuilderDragDropReal:
         for p in patchers:
             p.stop()
         pygame.quit()
-        RegistryManager.instance().clear()
 
     def test_drag_start(self):
         """Verify starting a drag sets dragged_item."""

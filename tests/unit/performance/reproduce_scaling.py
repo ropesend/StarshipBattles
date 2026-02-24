@@ -2,16 +2,14 @@ import pytest
 import pygame
 
 from game.simulation.components.component import load_components, create_component, load_modifiers
-from game.core.registry import RegistryManager
 from game.core.paths import Paths
+from game.core.registry import RegistryManager
 
 
 @pytest.fixture
 def component_environment():
     """Set up pygame and load components/modifiers for testing."""
     pygame.init()
-    # Ensure clean state
-    RegistryManager.instance().clear()
 
     # Load data using centralized paths
     load_components(Paths.COMPONENTS_FILE)
@@ -20,14 +18,13 @@ def component_environment():
     yield
 
     pygame.quit()
-    RegistryManager.instance().clear()
 
 
 class TestComponentScaling:
 
     def test_crew_scaling(self, component_environment):
         # Create Crew Quarters
-        cq = create_component("crew_quarters")
+        cq = create_component("crew_quarters", registries=RegistryManager.instance())
         assert cq is not None, "Crew Quarters should exist"
 
         # New Ability System: Access via get_ability
@@ -45,7 +42,7 @@ class TestComponentScaling:
 
     def test_life_support_scaling(self, component_environment):
         # Create Life Support
-        ls = create_component("life_support")
+        ls = create_component("life_support", registries=RegistryManager.instance())
         assert ls is not None, "Life Support should exist"
 
         initial_capacity = ls.get_ability('LifeSupportCapacity').amount

@@ -23,7 +23,6 @@ def pygame_setup():
     patch.stopall()
 
     pygame.quit()
-    RegistryManager.instance().clear()
 
 
 class TestRegressions:

@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch, call
 
 import pygame
 
-from game.core.registry import RegistryManager, GameRegistries
+from game.core.registry import GameRegistries
 from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
 from tests.fixtures.paths import get_project_root, get_data_dir
 
@@ -50,7 +50,6 @@ def workshop_class_setup():
 
     yield
 
-    RegistryManager.instance().clear()
     pygame.quit()
 
 

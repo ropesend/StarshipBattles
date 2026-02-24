@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 
 import pygame
 
-from game.core.registry import RegistryManager, GameRegistries
+from game.core.registry import GameRegistries
 from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
 from game.simulation.entities.layer_data import LayerData
 from tests.fixtures.paths import get_project_root, get_data_dir
@@ -51,7 +51,6 @@ def pygame_and_data():
 
     yield
 
-    RegistryManager.instance().clear()
     pygame.quit()
 
 

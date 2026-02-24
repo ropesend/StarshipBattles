@@ -60,8 +60,6 @@ class TestNewThemes:
         # NOTE: Do not call pygame.quit() or pygame.display.quit() here - the root
         # conftest manages pygame lifecycle at session scope. Calling quit() here
         # would break subsequent tests with "No video mode set" errors.
-        from game.core.registry import RegistryManager
-        RegistryManager.instance().clear()
 
     def test_theme_discovery(self):
         """Verify themes are discovered."""

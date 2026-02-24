@@ -9,7 +9,6 @@ os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
-from game.core.registry import RegistryManager
 from game.simulation.entities.layer_data import LayerData
 
 
@@ -69,7 +68,6 @@ def builder_warning_setup():
     p4.stop()
 
     pygame.quit()
-    RegistryManager.instance().clear()
 
 
 class TestBuilderWarningLogic:
