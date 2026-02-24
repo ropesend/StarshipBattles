@@ -66,10 +66,16 @@ class WorkshopContext:
     def __post_init__(self):
         """PROJ-58: Set default registries if not provided via DI."""
         if self.registries is None:
-            from game.core.registry import get_default_registries
+            from game.core.registry import get_default_registry_provider, GameRegistries
             from game.core.exceptions import StateException
             try:
-                object.__setattr__(self, 'registries', get_default_registries())
+                provider = get_default_registry_provider()
+                object.__setattr__(self, 'registries', GameRegistries(
+                    components=provider.get_components(),
+                    modifiers=provider.get_modifiers(),
+                    vehicle_classes=provider.get_vehicle_classes(),
+                    resources=provider.get_resources(),
+                ))
             except (RuntimeError, StateException):
                 pass  # Registries not available; callers must provide via DI
 

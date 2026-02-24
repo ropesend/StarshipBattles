@@ -13,8 +13,8 @@ if TYPE_CHECKING:
 
 def _get_default_component_registry() -> Dict[str, Any]:
     """Get the default component registry for ability lookups."""
-    from game.core.registry import get_default_registries
-    return get_default_registries().components
+    from game.core.registry import get_default_registry_provider
+    return get_default_registry_provider().get_components()
 
 
 class FleetCapabilityCalculator:

@@ -42,7 +42,7 @@ class ShipFactory:
         """Initialize ShipFactory with optional registries.
 
         Args:
-            registry_provider: GameRegistries for DI. If None, uses get_default_registries()
+            registry_provider: GameRegistries for DI. If None, uses get_default_registry_provider()
                        at method call time.
         """
         self._registry_provider = registry_provider
@@ -53,8 +53,14 @@ class ShipFactory:
             return registry_provider
         if self._registry_provider is not None:
             return self._registry_provider
-        from game.core.registry import get_default_registries
-        return get_default_registries()
+        from game.core.registry import get_default_registry_provider, GameRegistries
+        provider = get_default_registry_provider()
+        return GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources=provider.get_resources(),
+        )
 
     def create_from_design(
         self,

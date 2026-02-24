@@ -51,7 +51,7 @@ Example:
     )
 """
 from game.core.validation import ValidationResult
-from game.core.registry import GameRegistries, get_default_registries
+from game.core.registry import GameRegistries, get_default_registry_provider
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -121,7 +121,7 @@ class TurnEngine:
             battle_resolver: Optional battle resolver implementation.
                            If None, defaults to SimulationBattleResolver.
             registries: Optional GameRegistries for DI. Falls back to
-                       get_default_registries() if None.
+                       get_default_registry_provider() if None.
             movement_engine: Optional movement engine (IMovementEngine).
                            If None, creates FleetMovementEngine.
             production_engine: Optional production engine (IProductionEngine).
@@ -152,7 +152,13 @@ class TurnEngine:
         if registries is not None:
             self._registries = registries
         else:
-            self._registries = get_default_registries()
+            provider = get_default_registry_provider()
+            self._registries = GameRegistries(
+                components=provider.get_components(),
+                modifiers=provider.get_modifiers(),
+                vehicle_classes=provider.get_vehicle_classes(),
+                resources=provider.get_resources(),
+            )
 
         # PROJ-43 Phase 4: Store injected engines or None for lazy init
         self._movement_engine: Optional['IMovementEngine'] = movement_engine

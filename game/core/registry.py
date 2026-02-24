@@ -132,13 +132,13 @@ class RegistryManager(metaclass=SingletonMeta):
         - For cross-registry transactions, external synchronization is required
 
     Usage:
-        # Preferred: Use GameRegistries via DI (PROJ-38)
-        from game.core.registry import get_default_registries
+        # Preferred: Use IRegistryProvider via DI (PROJ-27)
+        from game.core.registry import get_default_registry_provider
 
-        registries = get_default_registries()
-        components = registries.components
-        modifiers = registries.modifiers
-        classes = registries.vehicle_classes
+        provider = get_default_registry_provider()
+        components = provider.get_components()
+        modifiers = provider.get_modifiers()
+        classes = provider.get_vehicle_classes()
 
         # Alternative: Direct access (when needed for special operations)
         mgr = RegistryManager.instance()

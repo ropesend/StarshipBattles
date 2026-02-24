@@ -44,8 +44,8 @@ Physics Constants:
     These control how ship stats convert to gameplay behavior.
 
 Example:
-    from game.core.registry import get_default_registries
-    calculator = ShipStatsCalculator(get_default_registries().vehicle_classes)
+    from game.core.registry import get_default_registry_provider
+    calculator = ShipStatsCalculator(get_default_registry_provider().get_vehicle_classes())
     calculator.calculate(ship)
     # ship.max_speed, ship.turn_speed, etc. are now updated
 """

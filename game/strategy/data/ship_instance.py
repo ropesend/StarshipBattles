@@ -232,8 +232,14 @@ class ShipInstance:
             # INTENTIONAL LATE IMPORT: Lazy initialization pattern
             # See docs/ARCHITECTURE.md "Intentional Late Imports" section
             from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
-            from game.core.registry import get_default_registries
-            registries = get_default_registries()
+            from game.core.registry import get_default_registry_provider, GameRegistries
+            provider = get_default_registry_provider()
+            registries = GameRegistries(
+                components=provider.get_components(),
+                modifiers=provider.get_modifiers(),
+                vehicle_classes=provider.get_vehicle_classes(),
+                resources=provider.get_resources(),
+            )
             service = ShipStatsCalculator(registries=registries)
             self._cached_stats = service.calculate_stats(
                 self.design_data,

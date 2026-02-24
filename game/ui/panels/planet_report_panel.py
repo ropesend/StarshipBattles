@@ -465,8 +465,14 @@ def compute_planet_production(planet) -> Dict[str, float]:
     if getattr(planet, 'owner_id', None) is None:
         return {}
 
-    from game.core.registry import get_default_registries
-    registries = get_default_registries()
+    from game.core.registry import get_default_registry_provider, GameRegistries
+    provider = get_default_registry_provider()
+    registries = GameRegistries(
+        components=provider.get_components(),
+        modifiers=provider.get_modifiers(),
+        vehicle_classes=provider.get_vehicle_classes(),
+        resources=provider.get_resources(),
+    )
 
     rates: Dict[str, float] = {}
     for facility in getattr(planet, 'facilities', []):

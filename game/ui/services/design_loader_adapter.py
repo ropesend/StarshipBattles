@@ -12,7 +12,7 @@ The adapter encapsulates:
 from typing import Optional, Tuple, Any
 
 from game.simulation.services.design_loader import SimulationDesignLoader
-from game.core.registry import get_default_registries
+from game.core.registry import get_default_registry_provider, GameRegistries
 
 
 class DesignLoaderAdapter:
@@ -39,7 +39,13 @@ class DesignLoaderAdapter:
         """
         if design_loader is None:
             if registry_provider is None:
-                registry_provider = get_default_registries()
+                provider = get_default_registry_provider()
+                registry_provider = GameRegistries(
+                    components=provider.get_components(),
+                    modifiers=provider.get_modifiers(),
+                    vehicle_classes=provider.get_vehicle_classes(),
+                    resources=provider.get_resources(),
+                )
             design_loader = SimulationDesignLoader(registries=registry_provider)
         self._loader = design_loader
 

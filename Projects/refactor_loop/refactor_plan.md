@@ -8,21 +8,29 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-174 Phase 2
-**Current Status:** PROJ-174 Phase 2 COMPLETE, ready for Phase 3
+**Last Completed:** PROJ-174 Phase 3
+**Current Status:** PROJ-174 Phase 3 COMPLETE, ready for Phase 4
 **Current Project:** PROJ-174
-**Current Phase:** Phase 3
+**Current Phase:** Phase 4
 **Test Status:** 11972 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-174 Phase 2 complete: RegistryManager internalized
-- Modified files:
-  - game/core/registry.py - removed RegistryManager from __all__, updated module docstring
-- RegistryManager now internal-only (not exported via `import *`)
-- Module docstring updated to show single DI pattern (removed TIER 1/2/3 terminology)
-- Composition roots (app.py, conftest.py) still import RegistryManager by name - this is correct
-- Next session: Begin Phase 3 (Migrate TIER 2 Production Code - 11 files)
+- PROJ-174 Phase 3 complete: All TIER 2 production code migrated to provider pattern
+- Modified files (10 files):
+  - game/strategy/data/fleet_capability_calculator.py
+  - game/strategy/engine/turn_engine.py
+  - game/strategy/data/ship_instance.py
+  - game/simulation/entities/ship_stats.py (docstring only)
+  - game/strategy/engine/empire_economy_calculator.py (docstring only)
+  - game/ui/services/ship_factory.py
+  - game/ui/services/design_loader_adapter.py
+  - game/ui/panels/planet_report_panel.py
+  - game/ui/screens/empire_panel_window.py
+  - game/ui/screens/workshop_context.py
+  - game/core/registry.py (docstring updated)
+- Zero get_default_registries() calls in production code (only definition in registry.py)
+- Next session: Begin Phase 4 (Migrate TIER 3 Non-Root Code - ship_loader.py)
 - All tests passing: 11972 passed, 1 skipped
 
 ---
@@ -111,6 +119,7 @@
 | 2026-02-23 | PROJ-175 | Audit 1 | PASSED | 11968 passed, 1 skipped | - | All verification checks passed, project complete |
 | 2026-02-23 | PROJ-174 | Phase 1 | Complete | 11972 passed, 1 skipped | pending | Added get_resources() to IRegistryProvider, both providers |
 | 2026-02-23 | PROJ-174 | Phase 2 | Complete | 11972 passed, 1 skipped | pending | RegistryManager internalized, docstring updated |
+| 2026-02-23 | PROJ-174 | Phase 3 | Complete | 11972 passed, 1 skipped | pending | All TIER 2 production code migrated (10 files) |
 
 ---
 
