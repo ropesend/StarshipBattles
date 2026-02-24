@@ -7,7 +7,7 @@ Created as part of PROJ-172 Phase 3.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Any, Dict, List, Set
 
 from game.ui.screens.empire_build_queue_filter_manager import BuildQueueFilterManager
 from game.ui.screens.empire_build_queue_formatter import (
@@ -77,9 +77,7 @@ class EmpireBuildQueueViewModel:
         self._all_sources: List[BuildQueueSource] = list(sources) if sources else []
         self._filtered_sources: List[BuildQueueSource] = []
 
-        # Selection state
-        self._selected_index: int = -1
-        self._selected_source: Optional[BuildQueueSource] = None
+        # Selection state (multi-select)
         self._selected_indices: Set[int] = set()
 
         # Search state
@@ -110,16 +108,6 @@ class EmpireBuildQueueViewModel:
     # -----------------------------------------------------------------------
     # Properties - Selection State
     # -----------------------------------------------------------------------
-
-    @property
-    def selected_index(self) -> int:
-        """Currently selected index (-1 if none or multiple)."""
-        return self._selected_index
-
-    @property
-    def selected_source(self) -> Optional[BuildQueueSource]:
-        """Currently selected source (None if none or multiple)."""
-        return self._selected_source
 
     @property
     def selected_indices(self) -> Set[int]:
@@ -212,18 +200,8 @@ class EmpireBuildQueueViewModel:
         else:
             self._selected_indices = {index}
 
-        # Update single-selection fields for backward compatibility
-        if len(self._selected_indices) == 1:
-            sole_idx = next(iter(self._selected_indices))
-            self._selected_index = sole_idx
-            self._selected_source = self.filtered_sources[sole_idx]
-        else:
-            self._selected_index = -1
-            self._selected_source = None
-
         self._event_bus.emit(BuildQueueWindowEvents.SELECTION_CHANGED, {
             'selected_indices': self._selected_indices,
-            'selected_source': self._selected_source,
         })
 
     def get_selected_sources(self) -> List[BuildQueueSource]:
@@ -257,8 +235,6 @@ class EmpireBuildQueueViewModel:
 
     def _clear_selection(self) -> None:
         """Clear all selection state."""
-        self._selected_index = -1
-        self._selected_source = None
         self._selected_indices = set()
 
     # -----------------------------------------------------------------------

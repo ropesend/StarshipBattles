@@ -105,9 +105,6 @@ class EmpireBuildQueueWindow(UIWindow):
 
         # --- Filter Manager (for column definitions) ---
         self._filter_mgr = BuildQueueFilterManager()
-
-        # Expose state for backward compatibility with tests
-        self.columns = self._filter_mgr.columns
         self.row_elements: list = []
 
         # --- UI Containers ---
@@ -125,14 +122,8 @@ class EmpireBuildQueueWindow(UIWindow):
             parent_container=self.sidebar_panel,
             viewmodel=self._viewmodel,
             event_bus=self._event_bus,
-            columns=self.columns,
+            columns=self._filter_mgr.columns,
         )
-
-        # Expose sidebar button dicts for test compatibility
-        self.column_toggle_buttons = self._sidebar.column_toggle_buttons
-        self.filter_toggle_buttons = self._sidebar.filter_toggle_buttons
-        self.search_entry = self._sidebar.search_entry
-        self.btn_apply_filters = self._sidebar.btn_apply_filters
 
         # Main content area
         main_w = rect.width - self.sidebar_width - 10
@@ -208,13 +199,15 @@ class EmpireBuildQueueWindow(UIWindow):
 
     @property
     def selected_source(self) -> Optional[BuildQueueSource]:
-        """Currently selected source."""
-        return self._viewmodel.selected_source
+        """Single selected source, or None if zero/multiple selected."""
+        sources = self._viewmodel.get_selected_sources()
+        return sources[0] if len(sources) == 1 else None
 
     @property
     def selected_index(self) -> int:
-        """Currently selected index."""
-        return self._viewmodel.selected_index
+        """Single selected index, or -1 if zero/multiple selected."""
+        indices = self._viewmodel.selected_indices
+        return next(iter(indices)) if len(indices) == 1 else -1
 
     @property
     def selected_indices(self) -> Set[int]:
@@ -265,6 +258,31 @@ class EmpireBuildQueueWindow(UIWindow):
     def search_text(self, value: str) -> None:
         """Set search text."""
         self._viewmodel.set_search_text(value)
+
+    @property
+    def columns(self) -> List[Dict[str, Any]]:
+        """Column definitions (read-only access to filter manager's columns)."""
+        return self._filter_mgr.columns
+
+    @property
+    def column_toggle_buttons(self) -> Dict[str, Any]:
+        """Column toggle button dict from sidebar (read-only)."""
+        return self._sidebar.column_toggle_buttons
+
+    @property
+    def filter_toggle_buttons(self) -> Dict[str, Any]:
+        """Filter toggle button dict from sidebar (read-only)."""
+        return self._sidebar.filter_toggle_buttons
+
+    @property
+    def search_entry(self) -> Any:
+        """Search entry widget from sidebar (read-only)."""
+        return self._sidebar.search_entry
+
+    @property
+    def btn_apply_filters(self) -> Any:
+        """Apply filters button from sidebar (read-only)."""
+        return self._sidebar.btn_apply_filters
 
     # -----------------------------------------------------------------------
     # Event Handlers
@@ -319,8 +337,8 @@ class EmpireBuildQueueWindow(UIWindow):
     def _select_source(self, index: int) -> None:
         """Select a source by index."""
         self._viewmodel.select_source(index, ctrl_held=False)
-        if self._viewmodel.selected_source:
-            logger.debug(f"Selected queue source: {self._viewmodel.selected_source.display_name}")
+        if self.selected_source:
+            logger.debug(f"Selected queue source: {self.selected_source.display_name}")
 
     def handle_row_click(self, index: int, ctrl_held: bool = False) -> None:
         """Handle a row click with optional Ctrl modifier."""
@@ -517,7 +535,7 @@ class EmpireBuildQueueWindow(UIWindow):
         self._refresh_list()
 
     # -----------------------------------------------------------------------
-    # Data Formatters (backward compatibility)
+    # Data Formatters (delegates to formatter module)
     # -----------------------------------------------------------------------
 
     @staticmethod

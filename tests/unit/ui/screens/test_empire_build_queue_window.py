@@ -81,20 +81,14 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     # Filter manager (for column definitions)
     from game.ui.screens.empire_build_queue_filter_manager import BuildQueueFilterManager
     win._filter_mgr = BuildQueueFilterManager()
-    win.columns = win._filter_mgr.columns
 
-    # Mock sidebar with button dicts
+    # Mock sidebar with button dicts (Window properties delegate to _sidebar)
     win._sidebar = MagicMock()
     win._sidebar.column_toggle_buttons = {}
     win._sidebar.filter_toggle_buttons = {}
     win._sidebar.search_entry = None
     win._sidebar.btn_apply_filters = None
     win._sidebar.handle_button_click = MagicMock(return_value=False)
-
-    # Expose sidebar button dicts for test compatibility
-    win.column_toggle_buttons = win._sidebar.column_toggle_buttons
-    win.filter_toggle_buttons = win._sidebar.filter_toggle_buttons
-    win.search_entry = win._sidebar.search_entry
 
     # Mock UI elements
     win.scroll_bar = MagicMock()
@@ -1424,7 +1418,6 @@ class TestProcessEvent:
 
         # Configure sidebar to handle the button and identify it as column toggle
         win._sidebar.column_toggle_buttons = {'location': mock_btn}
-        win.column_toggle_buttons = win._sidebar.column_toggle_buttons
 
         # Sidebar returns True when it handles the button
         def handle_and_toggle(btn):
@@ -1477,7 +1470,6 @@ class TestProcessEvent:
 
         # Configure sidebar to handle the button
         win._sidebar.filter_toggle_buttons = {'loc_Planet': mock_btn}
-        win.filter_toggle_buttons = win._sidebar.filter_toggle_buttons
 
         # Sidebar toggles filter via ViewModel
         def handle_and_toggle(btn):
@@ -1516,13 +1508,11 @@ class TestProcessEvent:
         # Create mock apply button
         mock_btn = MagicMock()
         win._sidebar.btn_apply_filters = mock_btn
-        win.btn_apply_filters = mock_btn
 
         # Create mock search entry
         mock_search = MagicMock()
         mock_search.get_text = MagicMock(return_value="frigate")
         win._sidebar.search_entry = mock_search
-        win.search_entry = mock_search
 
         # Sidebar handles apply button
         def handle_apply(btn):
@@ -1619,7 +1609,6 @@ class TestColumnSortingAndReorder:
 
         # Configure sidebar to identify button as column toggle
         win._sidebar.column_toggle_buttons = {'location': mock_btn}
-        win.column_toggle_buttons = win._sidebar.column_toggle_buttons
         win._sidebar.handle_button_click = MagicMock(return_value=True)
 
         # Create toggle event

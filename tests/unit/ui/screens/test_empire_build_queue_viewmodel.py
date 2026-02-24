@@ -102,9 +102,8 @@ class TestViewModelInitialization:
     def test_no_initial_selection(self):
         """No source selected initially."""
         vm, _ = _make_viewmodel()
-        assert vm.selected_index == -1
-        assert vm.selected_source is None
-        assert len(vm.selected_indices) == 0
+        assert vm.selected_indices == set()
+        assert vm.get_selected_sources() == []
 
     def test_search_text_empty_initially(self):
         """Search text is empty string initially."""
@@ -146,8 +145,7 @@ class TestSourceLoading:
         vm, _ = _make_viewmodel()
         vm.select_source(0, ctrl_held=False)
         vm.update_sources([_make_source("new", "New")])
-        assert vm.selected_index == -1
-        assert len(vm.selected_indices) == 0
+        assert vm.selected_indices == set()
 
 
 # ===========================================================================
@@ -157,19 +155,19 @@ class TestSourceLoading:
 class TestSingleSelection:
     """Single selection (no Ctrl) behavior."""
 
-    def test_select_source_updates_index(self):
-        """select_source() updates selected_index."""
+    def test_select_source_updates_indices(self):
+        """select_source() updates selected_indices."""
         sources = [_make_source("p1", "Alpha"), _make_source("p2", "Beta")]
         vm, _ = _make_viewmodel(sources=sources)
         vm.select_source(1, ctrl_held=False)
-        assert vm.selected_index == 1
+        assert vm.selected_indices == {1}
 
-    def test_select_source_updates_selected_source(self):
-        """select_source() updates selected_source reference."""
+    def test_select_source_updates_get_selected_sources(self):
+        """select_source() makes source available via get_selected_sources()."""
         sources = [_make_source("p1", "Alpha"), _make_source("p2", "Beta")]
         vm, _ = _make_viewmodel(sources=sources)
         vm.select_source(1, ctrl_held=False)
-        assert vm.selected_source is sources[1]
+        assert vm.get_selected_sources() == [sources[1]]
 
     def test_select_source_sets_single_index_in_set(self):
         """Single select sets selected_indices to single value."""
@@ -189,14 +187,13 @@ class TestSingleSelection:
         sources = [_make_source("p1", "Alpha")]
         vm, _ = _make_viewmodel(sources=sources)
         vm.select_source(5, ctrl_held=False)
-        assert vm.selected_index == -1
-        assert len(vm.selected_indices) == 0
+        assert vm.selected_indices == set()
 
     def test_select_negative_index_ignored(self):
         """Selecting negative index is ignored."""
         vm, _ = _make_viewmodel()
         vm.select_source(-1, ctrl_held=False)
-        assert vm.selected_index == -1
+        assert vm.selected_indices == set()
 
 
 class TestMultiSelection:
@@ -224,13 +221,12 @@ class TestMultiSelection:
         vm.select_source(0, ctrl_held=True)
         assert vm.selected_indices == {0}
 
-    def test_multi_select_clears_single_selected_source(self):
-        """Multiple selections clear single selected_source."""
+    def test_multi_select_sets_multiple_indices(self):
+        """Multiple selections populate selected_indices with multiple values."""
         vm, _ = _make_viewmodel()
         vm.select_source(0, ctrl_held=False)
         vm.select_source(1, ctrl_held=True)
-        assert vm.selected_source is None
-        assert vm.selected_index == -1
+        assert vm.selected_indices == {0, 1}
 
 
 class TestSelectionHelpers:
@@ -300,8 +296,7 @@ class TestFilterApplication:
         vm, _ = _make_viewmodel()
         vm.select_source(0, ctrl_held=False)
         vm.apply_filters()
-        assert vm.selected_index == -1
-        assert len(vm.selected_indices) == 0
+        assert vm.selected_indices == set()
 
     def test_filter_by_queue_status(self):
         """Filter by active/empty queue status."""

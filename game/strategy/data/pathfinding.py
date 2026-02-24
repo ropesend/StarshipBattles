@@ -391,7 +391,7 @@ def calculate_intercept_point(
 
     Args:
         chaser: Fleet or NavigationState representing the pursuing fleet.
-                Supports both for backward compatibility and pure function usage.
+                Supports both types for caller convenience and pure function usage.
         target_fleet: Fleet object being pursued.
         galaxy: Galaxy object for pathfinding context.
 
