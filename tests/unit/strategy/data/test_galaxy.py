@@ -638,6 +638,67 @@ class TestRestorePlanet:
         assert planets[0].name == "TestPlanet"
 
 
+class TestGetSystemOfObject:
+    """Tests for get_system_of_object() (PROJ-184 Phase 1)."""
+
+    def test_get_system_of_object_autoroutes_planet(self):
+        """get_system_of_object() should auto-route Planet to get_system_of_planet()."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(100, 100))
+        galaxy.add_system(system)
+
+        planet = make_test_planet(name="TestPlanet", location=HexCoord(5, 5))
+        system.planets.append(planet)
+        galaxy.register_planet(system, planet)
+
+        # Call get_system_of_object with a Planet - should auto-route
+        result = galaxy.get_system_of_object(planet)
+
+        assert result is system
+
+    def test_get_system_of_object_returns_none_for_no_location(self):
+        """get_system_of_object() should return None for object without location."""
+        galaxy = Galaxy(radius=1000)
+
+        class NoLocationObject:
+            pass
+
+        obj = NoLocationObject()
+        result = galaxy.get_system_of_object(obj)
+
+        assert result is None
+
+    def test_get_system_of_object_returns_system_for_fleet_at_system(self):
+        """get_system_of_object() should return system for Fleet-like object at system coord."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(50, 50))
+        galaxy.add_system(system)
+
+        class MockFleet:
+            def __init__(self, loc):
+                self.location = loc
+
+        fleet = MockFleet(HexCoord(50, 50))  # At system's global_location
+        result = galaxy.get_system_of_object(fleet)
+
+        assert result is system
+
+    def test_get_system_of_object_returns_none_for_fleet_in_deep_space(self):
+        """get_system_of_object() should return None for Fleet-like object in deep space."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(50, 50))
+        galaxy.add_system(system)
+
+        class MockFleet:
+            def __init__(self, loc):
+                self.location = loc
+
+        fleet = MockFleet(HexCoord(999, 999))  # Deep space, not at any system
+        result = galaxy.get_system_of_object(fleet)
+
+        assert result is None
+
+
 class TestGetSystemAtLocationO1:
     """Tests for O(1) get_system_at_location() (PROJ-179 Phase 2)."""
 

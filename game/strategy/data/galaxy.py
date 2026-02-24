@@ -205,7 +205,7 @@ class Galaxy:
 
         Facade method delegating to GalaxySpatialIndex.
 
-        Note: For planets, use get_system_of_planet() instead. Planets have
+        Auto-routes Planet objects to get_system_of_planet(). Planets have
         local coordinates relative to their system, not global coordinates.
 
         Args:

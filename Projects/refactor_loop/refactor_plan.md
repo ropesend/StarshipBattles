@@ -8,20 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-183 Complete (All Phases + Audit)
-**Current Status:** PROJ-183 COMPLETE - All projects in queue complete
-**Current Project:** None - Queue empty
-**Current Phase:** N/A
+**Last Completed:** PROJ-184 Phase 1 (Type-Safety Guard)
+**Current Status:** PROJ-184 in progress - Phase 1 complete
+**Current Project:** PROJ-184
+**Current Phase:** Phase 2 - Remove legacy hasattr checks
 **Test Status:** 12366 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-183 Complete:
-  - Phase 3: Fixed 3 log level misuses (INFO -> WARNING for error/failure conditions)
-  - Files modified: validation_manager.py, system_mode.py
-  - Audit passed: zero traceback.format_exc() in game/ (except app.py), zero inline logging.getLogger()
+- PROJ-184 Phase 1 Complete:
+  - Added isinstance(obj, Planet) guard to get_system_of_object() with auto-route to get_system_of_planet()
+  - Updated docstrings in galaxy_spatial_index.py and galaxy.py
+  - Added 4 new tests in TestGetSystemOfObject class
+  - Files modified: galaxy_spatial_index.py, galaxy.py, test_galaxy.py
   - Tests: 12366 passed, 1 skipped
-- All projects in the refactor queue are now complete
+- Next: Phase 2 - remove 3 legacy hasattr checks
 
 ---
 
@@ -149,6 +150,30 @@
 
 ---
 
+- [/] **PROJ-184: Type-Safe Spatial Query API**
+  - **Phases:** 2 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-184/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-184/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-185: Post-PROJ-174 Backward Compatibility Eradication**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-185/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-185/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-186: Exception Handling Polish - ErrorCode Consistency and Final Cleanup**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-186/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-186/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
 ## Execution Log
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
@@ -228,6 +253,7 @@
 | 2026-02-24 | PROJ-183 | Phase 2 | Complete | 12366 passed, 1 skipped | pending | Replaced traceback.format_exc() with logger.exception() in 6 files |
 | 2026-02-24 | PROJ-183 | Phase 3 | Complete | 12366 passed, 1 skipped | pending | Fixed 3 log level misuses (INFO -> WARNING) |
 | 2026-02-24 | PROJ-183 | Audit 1 | PASSED | 12366 passed, 1 skipped | - | All verifications passed, project complete |
+| 2026-02-24 | PROJ-184 | Phase 1 | Complete | 12366 passed, 1 skipped | pending | isinstance guard + 4 tests |
 
 ---
 

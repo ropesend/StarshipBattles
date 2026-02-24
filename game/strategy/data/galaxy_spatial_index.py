@@ -32,7 +32,7 @@ class GalaxySpatialIndex:
     def get_system_of_object(self, obj: Any) -> Optional['StarSystem']:
         """Find the system containing a Fleet (by its global location).
 
-        Note: For planets, use get_system_of_planet() instead. Planets have
+        Auto-routes Planet objects to get_system_of_planet(). Planets have
         local coordinates relative to their system, not global coordinates.
 
         Args:
@@ -41,6 +41,11 @@ class GalaxySpatialIndex:
         Returns:
             StarSystem or None.
         """
+        # Auto-route planets to the correct lookup method (PROJ-184)
+        from game.strategy.data.planet import Planet
+        if isinstance(obj, Planet):
+            return self.get_system_of_planet(obj)
+
         if not hasattr(obj, 'location'):
             return None
 
