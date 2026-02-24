@@ -8,20 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-178 Phase 2 - PlanetaryFacility & SpeciesPopulation from_dict
-**Current Status:** PROJ-178 Phase 2 complete, Phase 3 next
+**Last Completed:** PROJ-178 Phase 3 - DesignMetadata Ship Calculation Fix
+**Current Status:** PROJ-178 Phase 3 complete, Phase 4 next
 **Current Project:** PROJ-178
-**Current Phase:** Phase 3
-**Test Status:** 12356 passed, 1 skipped (+10 new tests)
+**Current Phase:** Phase 4
+**Test Status:** 12358 passed, 1 skipped (+2 new tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-178 Phase 2 COMPLETE
-- Added PlanetaryFacility.from_dict classmethod with require_keys validation
-- Added SpeciesPopulation.from_dict classmethod with require_keys validation
-- Updated Planet.from_dict to use new classmethods (with PersistenceException in except blocks)
-- Added 10 new tests (6 for PlanetaryFacility, 4 for SpeciesPopulation)
-- Next: Phase 3 - DesignMetadata Ship Calculation Fix
+- PROJ-178 Phase 3 COMPLETE
+- Fixed _calculate_combat_power_from_ship: now uses major_classification='Weapons'/'Armor' and extracts damage/reload from WeaponAbility instances
+- Fixed _calculate_resource_cost_from_ship: removed unnecessary hasattr(comp, 'cost') guard
+- Removed "Old layer format" warnings from _calculate_combat_power and _calculate_resource_cost (per CLAUDE.md policy)
+- Updated all tests to use correct Component attributes (major_classification, max_hp, WeaponAbility mocks)
+- Added 2 new tests for edge cases
+- Next: Phase 4 - Ghost Code Cleanup (remove comment in galaxy.py, final verification)
 
 ---
 
@@ -205,6 +206,7 @@
 | 2026-02-24 | PROJ-177 | Audit 1 | PASSED | 12338 passed, 1 skipped | 57363ddc | All objectives verified, project complete |
 | 2026-02-24 | PROJ-178 | Phase 1 | Complete | 12346 passed, 1 skipped | pending | validate_non_negative + docstrings, +8 tests |
 | 2026-02-24 | PROJ-178 | Phase 2 | Complete | 12356 passed, 1 skipped | pending | PlanetaryFacility/SpeciesPopulation from_dict extraction, +10 tests |
+| 2026-02-24 | PROJ-178 | Phase 3 | Complete | 12358 passed, 1 skipped | pending | Fixed _calculate_combat_power_from_ship, removed old layer warnings, +2 tests |
 
 ---
 

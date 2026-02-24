@@ -15,17 +15,17 @@
 |-------|--------|-----------|
 | 1. ShipInstance Validation & Docstrings | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. PlanetaryFacility & SpeciesPopulation from_dict | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. DesignMetadata Ship Calculation Fix | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. DesignMetadata Ship Calculation Fix | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Ghost Code Cleanup | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 3 - DesignMetadata Ship Calculation Fix
-**Last Action:** Phase 2 complete - added PlanetaryFacility.from_dict and SpeciesPopulation.from_dict classmethods, updated Planet.from_dict to use them
-**Next Action:** Begin Phase 3 (fix _calculate_combat_power_from_ship and _calculate_resource_cost_from_ship)
+**Active Phase:** Phase 4 - Ghost Code Cleanup
+**Last Action:** Phase 3 complete - fixed _calculate_combat_power_from_ship to use major_classification/WeaponAbility, removed old layer format warnings
+**Next Action:** Begin Phase 4 (remove ghost comment in galaxy.py, final verification)
 **Blockers:** None
-**Baseline:** 12356 passed, 1 skipped
-**Context for Next Agent:** Phase 2 added 10 new tests. Both dataclasses now have proper from_dict classmethods with require_keys validation.
+**Baseline:** 12358 passed, 1 skipped (+2 tests from Phase 3)
+**Context for Next Agent:** Phase 3 was a bug fix. _calculate_combat_power_from_ship now correctly identifies weapons via major_classification=='Weapons' and extracts damage/reload from WeaponAbility instances. Old layer format warnings removed per CLAUDE.md policy.
 
 ## Overview
 Remediate all findings from the PROJ-171 post-refactor audit. This project addresses validation gaps, missing docstrings, inline deserialization inconsistencies, a broken combat power calculation path, and ghost code. All changes follow established `validation_helpers.py` patterns.
