@@ -161,6 +161,10 @@ class Galaxy:
 
         # Zone Registry (PROJ-139 Phase 2: multi-hex object lookup)
         self._global_hex_zones = {}    # HexCoord -> List[object] (stars, Dyson Spheres)
+        self._zone_to_system = {}      # object -> StarSystem (PROJ-179: O(1) zone lookup)
+
+        # Warp Point Index (PROJ-179 Phase 2: O(1) warp point lookup)
+        self._global_hex_warp_points = {}  # HexCoord -> StarSystem
 
         # Fleet Registry (PROJ-87 Phase 6: O(1) fleet lookup)
         self.fleets_by_id = {}  # int -> Fleet
@@ -187,6 +191,10 @@ class Galaxy:
         # Register star zones (PROJ-139)
         for star in system.stars:
             self.register_zone(system, star)
+        # Register warp points (PROJ-179: O(1) warp point lookup)
+        for wp in system.warp_points:
+            global_hex = system.global_location + wp.location
+            self._global_hex_warp_points[global_hex] = system
 
     def get_system_by_name(self, name: str) -> Optional['StarSystem']:
         """Get system by name."""
@@ -369,12 +377,22 @@ class Galaxy:
         system_b = self.name_map.get(system_b_name)
 
         if system_a is not None:
+            # Remove from warp point index (PROJ-179: O(1) lookup)
+            for wp in system_a.warp_points:
+                if wp.destination_id == system_b_name:
+                    global_hex = system_a.global_location + wp.location
+                    self._global_hex_warp_points.pop(global_hex, None)
             system_a.warp_points = [
                 wp for wp in system_a.warp_points
                 if wp.destination_id != system_b_name
             ]
 
         if system_b is not None:
+            # Remove from warp point index (PROJ-179: O(1) lookup)
+            for wp in system_b.warp_points:
+                if wp.destination_id == system_a_name:
+                    global_hex = system_b.global_location + wp.location
+                    self._global_hex_warp_points.pop(global_hex, None)
             system_b.warp_points = [
                 wp for wp in system_b.warp_points
                 if wp.destination_id != system_a_name
@@ -461,7 +479,21 @@ class Galaxy:
             sys_a: First system.
             sys_b: Second system.
         """
+        # Track warp point count before to detect new additions
+        wp_count_a = len(sys_a.warp_points)
+        wp_count_b = len(sys_b.warp_points)
+
         self._warp_gen.create_warp_link(sys_a, sys_b)
+
+        # Register any newly created warp points (PROJ-179: O(1) lookup)
+        if len(sys_a.warp_points) > wp_count_a:
+            wp = sys_a.warp_points[-1]  # Most recently added
+            global_hex = sys_a.global_location + wp.location
+            self._global_hex_warp_points[global_hex] = sys_a
+        if len(sys_b.warp_points) > wp_count_b:
+            wp = sys_b.warp_points[-1]
+            global_hex = sys_b.global_location + wp.location
+            self._global_hex_warp_points[global_hex] = sys_b
 
     def generate_warp_lanes(
         self,
@@ -491,6 +523,12 @@ class Galaxy:
         self._warp_gen.generate_warp_lanes(
             self, k_neighbors, region_classifier, inter_region_mode
         )
+        # Rebuild warp point index after generation (PROJ-179: O(1) lookup)
+        self._global_hex_warp_points.clear()
+        for system in self.systems.values():
+            for wp in system.warp_points:
+                global_hex = system.global_location + wp.location
+                self._global_hex_warp_points[global_hex] = system
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize Galaxy to dict."""
@@ -568,22 +606,13 @@ class Galaxy:
             for star in system.stars:
                 galaxy.register_zone(system, star)
 
-            # Rebuild indexes for all planets in this system
+            # Register warp points (PROJ-179: O(1) warp point lookup)
+            for wp in system.warp_points:
+                global_hex = coord + wp.location
+                galaxy._global_hex_warp_points[global_hex] = system
+
+            # Restore planet registrations (preserves existing IDs from saved data)
             for planet in system.planets:
-                # Add to ID registry
-                galaxy.planets_by_id[planet.id] = planet
-
-                # Add to reverse lookup
-                galaxy._planet_to_system[planet] = system
-
-                # Add to spatial index (global hex)
-                global_hex = system.global_location + planet.location
-                if global_hex not in galaxy._global_hex_planets:
-                    galaxy._global_hex_planets[global_hex] = []
-                galaxy._global_hex_planets[global_hex].append(planet)
-
-                # Register zone if planet has multi-hex footprint (PROJ-139)
-                if hasattr(planet, 'diameter_hexes') and planet.diameter_hexes > 0:
-                    galaxy.register_zone(system, planet)
+                galaxy._registry.restore_planet(system, planet)
 
         return galaxy

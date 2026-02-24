@@ -100,10 +100,10 @@ class GalaxySpatialIndex:
     def get_system_at_location(self, location: 'HexCoord') -> Optional['StarSystem']:
         """Find the star system containing a given global hex location.
 
-        Checks if the location is:
+        O(1) lookup using spatial indexes. Checks if the location is:
         - At a system's global_location
         - At a planet within a system
-        - At a star within a system
+        - At a zone (star, Dyson Sphere) within a system
         - At a warp point within a system
 
         Args:
@@ -112,34 +112,25 @@ class GalaxySpatialIndex:
         Returns:
             StarSystem if location is within a system, None if in deep space.
         """
-        # Direct system location check (fast path)
+        # O(1) direct system lookup
         if location in self._galaxy.systems:
             return self._galaxy.systems[location]
 
-        # Check if location is within a system (at a planet, star, or warp point)
-        for sys_location, system in self._galaxy.systems.items():
-            # Check planets
-            for planet in system.planets:
-                if sys_location + planet.location == location:
-                    return system
+        # O(1) planet lookup
+        planets = self._galaxy._global_hex_planets.get(location, [])
+        if planets:
+            return self._galaxy._planet_to_system.get(planets[0])
 
-            # Check stars
-            for star in system.stars:
-                if hasattr(star, 'location') and sys_location + star.location == location:
-                    return system
+        # O(1) zone lookup (stars, Dyson Spheres)
+        zones = self._galaxy._global_hex_zones.get(location, [])
+        if zones:
+            # Use id() because zone objects (Star, Planet) may not be hashable
+            return self._galaxy._zone_to_system.get(id(zones[0]))
 
-            # Check warp points
-            for wp in system.warp_points:
-                if sys_location + wp.location == location:
-                    return system
-
-        # Check zone registry for multi-hex objects (PROJ-139)
-        zone_objects = self._galaxy._global_hex_zones.get(location, [])
-        for zone_obj in zone_objects:
-            # Find which system owns this zone object
-            for sys_loc, sys in self._galaxy.systems.items():
-                if zone_obj in sys.stars or zone_obj in sys.planets:
-                    return sys
+        # O(1) warp point lookup
+        wp_system = self._galaxy._global_hex_warp_points.get(location)
+        if wp_system:
+            return wp_system
 
         return None
 

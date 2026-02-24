@@ -56,6 +56,32 @@ class GalaxyEntityRegistry:
         if hasattr(planet, 'diameter_hexes') and planet.diameter_hexes > 0:
             self.register_zone(system, planet)
 
+    def restore_planet(self, system: 'StarSystem', planet: 'Planet') -> None:
+        """Register a planet with pre-existing ID (for deserialization).
+
+        Unlike register_planet(), this does NOT assign a new ID.
+        The planet.id must already be set (from Planet.from_dict()).
+
+        Args:
+            system: StarSystem containing the planet.
+            planet: Planet to register (must have id already set).
+        """
+        # Add to ID registry (preserving existing ID)
+        self._galaxy.planets_by_id[planet.id] = planet
+
+        # Add to reverse lookup
+        self._galaxy._planet_to_system[planet] = system
+
+        # Add to spatial index (global hex)
+        global_hex = system.global_location + planet.location
+        if global_hex not in self._galaxy._global_hex_planets:
+            self._galaxy._global_hex_planets[global_hex] = []
+        self._galaxy._global_hex_planets[global_hex].append(planet)
+
+        # Register zone if planet has multi-hex footprint (PROJ-139)
+        if hasattr(planet, 'diameter_hexes') and planet.diameter_hexes > 0:
+            self.register_zone(system, planet)
+
     def get_planet_by_id(self, planet_id: int) -> Optional['Planet']:
         """O(1) lookup of planet by ID.
 
@@ -134,6 +160,9 @@ class GalaxyEntityRegistry:
         """
         if not hasattr(obj, 'occupied_hexes'):
             return
+        # Register in zone-to-system reverse lookup (PROJ-179: O(1) lookup)
+        # Use id() because Star objects are not hashable
+        self._galaxy._zone_to_system[id(obj)] = system
         for local_hex in obj.occupied_hexes:
             global_hex = system.global_location + local_hex
             if global_hex not in self._galaxy._global_hex_zones:
@@ -150,6 +179,8 @@ class GalaxyEntityRegistry:
         """
         if not hasattr(obj, 'occupied_hexes'):
             return
+        # Remove from zone-to-system reverse lookup (PROJ-179: O(1) lookup)
+        self._galaxy._zone_to_system.pop(id(obj), None)
         for local_hex in obj.occupied_hexes:
             global_hex = system.global_location + local_hex
             if global_hex in self._galaxy._global_hex_zones:
