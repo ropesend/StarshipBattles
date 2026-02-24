@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Delete Deprecated API | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Migrate Deprecated Function Callers | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Migrate Deprecated Function Callers | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Test .clear() Migration - Batch 1 | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Test .clear() Migration - Batch 2 | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Documentation Updates | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -22,11 +22,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete - deprecated API deleted
-**Next Action:** Begin Phase 2 - migrate remaining callers
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete - migrated remaining simulation_tests callers
+**Next Action:** Begin Phase 3 - Test .clear() Migration Batch 1
 **Blockers:** None
-**Context for Next Agent:** Phase 1 complete. Deleted `get_default_registries()`, `set_default_registries()`, and `_default_registries` from registry.py. Updated composition roots (conftest.py, app.py, simulation_tests/conftest.py). Fixed stale TYPE_CHECKING import. Updated 9 test files that referenced deprecated API. Tests: 12373 passed, 1 skipped (deleted 2 tests). Phase 2 should verify no remaining deprecated function callers exist (most were handled in Phase 1 expansion).
+**Context for Next Agent:** Phase 2 complete. Migrated 3 simulation_tests files from get_default_registries() to provider pattern: test_smoke.py, test_engine_physics.py, scenarios/base.py. All 8 migrated tests pass. Grep confirms no actual code calls remain (only comments/regression tests). Tests: 12373 passed, 1 skipped. Phase 3: migrate test files using RegistryManager.instance().clear() to fixture patterns.
 
 ## Overview
 PROJ-174 migrated all production code to `IRegistryProvider` DI but kept `get_default_registries()` and `set_default_registries()` alive with DeprecationWarnings. Per CLAUDE.md System Migration Policy ("ERADICATE the old system completely"), this project deletes those functions, updates all callers, fixes stale documentation, and migrates 24 test files from `RegistryManager.instance().clear()` boilerplate to the existing fixture pattern.

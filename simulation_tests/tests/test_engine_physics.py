@@ -12,7 +12,7 @@ import math
 
 from game.simulation.entities.ship import Ship
 from game.simulation.physics_constants import K_SPEED, K_THRUST
-from game.core.registry import get_default_registries
+from game.core.registry import get_default_registry_provider, GameRegistries
 
 
 @pytest.mark.simulation
@@ -29,7 +29,13 @@ class TestEnginePhysics:
         path = os.path.join(self.ships_dir, filename)
         with open(path, 'r') as f:
             data = json.load(f)
-        registries = get_default_registries()
+        provider = get_default_registry_provider()
+        registries = GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources=provider.get_resources(),
+        )
         ship = Ship.from_dict(data, registries=registries)
         ship.recalculate_stats()
         return ship

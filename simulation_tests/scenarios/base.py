@@ -353,12 +353,18 @@ class TestScenario(CombatScenario):
         logger.debug(f"Loading ship from dict: {data.get('name', 'Unknown')}")
         logger.debug(f"Ship has {len(data.get('layers', {}).get('CORE', []))} CORE components")
 
-        from game.core.registry import RegistryManager, get_default_registries
+        from game.core.registry import RegistryManager, get_default_registry_provider, GameRegistries
         reg = RegistryManager.instance()
         logger.debug(f"Registry frozen state before Ship.from_dict: {reg._frozen}")
 
-        # Get registries for ship deserialization (PROJ-50 strict DI)
-        registries = get_default_registries()
+        # Get registries for ship deserialization (PROJ-181: use provider pattern)
+        provider = get_default_registry_provider()
+        registries = GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources=provider.get_resources(),
+        )
         ship = Ship.from_dict(data, registries=registries)
         logger.debug("Ship loaded successfully")
 
