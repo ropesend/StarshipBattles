@@ -17,10 +17,12 @@ Key design decisions:
 - Stats cached on ShipInstance with invalidation on damage change
 """
 
+import logging
 from typing import Dict, Any, Optional, List, Tuple, TYPE_CHECKING
 from game.core.constants import ResourceType
 from game.core.registry import GameRegistries
-from game.core.logger import log_warning
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.core.protocols import IRegistryProvider
@@ -410,7 +412,7 @@ class ShipStatsCalculator:
                 comp_def = component_registry.get(comp_id)
 
                 if comp_def is None:
-                    log_warning(f"Component '{comp_id}' not found in registry, skipping")
+                    logger.warning(f"Component '{comp_id}' not found in registry, skipping")
                     continue
 
                 result.append((layer_name, comp_entry, comp_def))

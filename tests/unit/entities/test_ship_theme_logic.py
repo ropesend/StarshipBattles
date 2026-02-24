@@ -57,12 +57,12 @@ class TestShipThemeLogic:
         img = self.manager.load_image("NonExistentTheme", "AnyClass")
         assert img.get_size() == (100, 100)
 
-    @patch('game.ui.assets.ship_theme_manager.log_error')
+    @patch('game.ui.assets.ship_theme_manager.logger')
     @patch('game.ui.assets.ship_theme_manager.os.scandir')
     @patch('game.ui.assets.ship_theme_manager.os.path.exists')
     @patch('game.ui.assets.ship_theme_manager.load_json')
     @patch('game.ui.assets.ship_theme_manager.pygame.image.load')
-    def test_manual_scaling_and_loading(self, mock_load, mock_load_json, mock_exists, mock_scandir, mock_log):
+    def test_manual_scaling_and_loading(self, mock_load, mock_load_json, mock_exists, mock_scandir, mock_logger):
         """Test loading a theme with manual scaling configured."""
 
         # Setup mock file system structure
@@ -104,7 +104,7 @@ class TestShipThemeLogic:
         self.manager.initialize()
 
         # Verify no errors logged (e.g. convert_alpha failure)
-        mock_log.assert_not_called()
+        mock_logger.error.assert_not_called()
 
         # Verify scaling
         scale = self.manager.get_manual_scale(theme_name, ship_class)
@@ -114,12 +114,12 @@ class TestShipThemeLogic:
         scale_default = self.manager.get_manual_scale(theme_name, "OtherShip")
         assert scale_default == 1.0
 
-    @patch('game.ui.assets.ship_theme_manager.log_error')
+    @patch('game.ui.assets.ship_theme_manager.logger')
     @patch('game.ui.assets.ship_theme_manager.os.scandir')
     @patch('game.ui.assets.ship_theme_manager.os.path.exists')
     @patch('game.ui.assets.ship_theme_manager.load_json')
     @patch('game.ui.assets.ship_theme_manager.pygame.image.load')
-    def test_get_image_metrics(self, mock_load, mock_load_json, mock_exists, mock_scandir, mock_log):
+    def test_get_image_metrics(self, mock_load, mock_load_json, mock_exists, mock_scandir, mock_logger):
         """Test that bounding rect is correctly calculated and cached."""
 
         theme_name = "MetricsTheme"
@@ -154,7 +154,7 @@ class TestShipThemeLogic:
         self.manager.initialize()
 
         # Verify no errors logged
-        mock_log.assert_not_called()
+        mock_logger.error.assert_not_called()
 
         # Verify metrics
         rect = self.manager.get_image_metrics(theme_name, ship_class)

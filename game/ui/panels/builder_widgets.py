@@ -4,11 +4,13 @@ Builder Widgets - UI components for the Design Workshop.
 PROJ-38: Added registries parameter for dependency injection.
 PROJ-50: Made registries mandatory, removed fallback pattern.
 """
+import logging
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, UIScrollingContainer
 from typing import TYPE_CHECKING
-from game.core.logger import log_info, log_debug
+
+logger = logging.getLogger(__name__)
 
 from game.ui.screens.builder.modifier_logic import ModifierLogic
 from game.ui.screens.builder.modifier_config import MODIFIER_UI_CONFIG, DEFAULT_CONFIG

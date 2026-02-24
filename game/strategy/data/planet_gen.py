@@ -4,9 +4,12 @@ Planet generation system for star systems.
 Generates planetary bodies with realistic physical properties including
 mass distribution, moons, atmospheres, and resources.
 """
+import logging
 import random
 import math
 from typing import List, Dict
+
+logger = logging.getLogger(__name__)
 
 from game.core.constants import PLANET_RESOURCES
 from game.strategy.data.planet import Planet, PlanetType
@@ -328,7 +331,6 @@ class PlanetGenerator:
         Create a single Planet object with all physical properties.
         """
         from game.strategy.data.planet_physics import validate_planet_parameters
-        from game.core.logger import log_warning
 
         # Physical properties
         radius, density = calculate_radius_density_from_mass(mass)
@@ -338,7 +340,7 @@ class PlanetGenerator:
         # Validate physical parameters
         warnings = validate_planet_parameters(mass, radius, density)
         for warning in warnings:
-            log_warning(f"Planet at orbit {orbit_dist}: {warning}")
+            logger.warning(f"Planet at orbit {orbit_dist}: {warning}")
 
         # Atmosphere
         escape_vel = calculate_escape_velocity(mass, radius)

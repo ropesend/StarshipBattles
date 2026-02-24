@@ -6,13 +6,14 @@ PROJ-79: Added resource icon loading for column headers.
 """
 from __future__ import annotations
 
+import logging
 import os
 import re
 from typing import TYPE_CHECKING, Optional, Dict
 
 import pygame
 
-from game.core.logger import log_warning
+logger = logging.getLogger(__name__)
 
 # Resource portrait filenames in assets/Images/Resource Portraits/
 RESOURCE_PORTRAIT_FILES = {
@@ -113,7 +114,7 @@ class BuildQueuePortraitLoader:
                     loaded_img = pygame.image.load(path)
                     return pygame.transform.smoothscale(loaded_img, (size, size))
                 except pygame.error as e:
-                    log_warning(f"Failed to load portrait from '{path}': {e}")
+                    logger.warning(f"Failed to load portrait from '{path}': {e}")
                     continue
 
         # Fallback: Create a colored placeholder based on vehicle type
@@ -205,7 +206,7 @@ class BuildQueuePortraitLoader:
                 img = pygame.image.load(path)
                 icons[resource] = pygame.transform.smoothscale(img, (icon_size, icon_size))
             except (FileNotFoundError, pygame.error) as e:
-                log_warning(f"Failed to load resource portrait '{path}': {e}")
+                logger.warning(f"Failed to load resource portrait '{path}': {e}")
                 # Create fallback colored square
                 surf = pygame.Surface((icon_size, icon_size))
                 color = RESOURCE_FALLBACK_COLORS.get(resource, (128, 128, 128))

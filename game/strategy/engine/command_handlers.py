@@ -13,9 +13,11 @@ Usage:
     result = registry.dispatch('IssueColonizeCommand', session, command)
 """
 from typing import Protocol, Dict, Any, TYPE_CHECKING, runtime_checkable
+import logging
 
-from game.core.logger import log_info
 from game.core.validation import ValidationResult
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.engine.game_session import GameSession
@@ -127,7 +129,7 @@ class ColonizeCommandHandler:
             # Ensure we pass the OBJECT to rules
             order = FleetOrder(OrderType.COLONIZE, target=target_planet)
             fleet.add_order(order)
-            log_info(f"GameSession: Issued Colonize Order for Fleet {fleet.id}")
+            logger.info(f"GameSession: Issued Colonize Order for Fleet {fleet.id}")
 
         return result
 
@@ -201,7 +203,7 @@ class InterceptCommandHandler:
         order = FleetOrder(OrderType.MOVE_TO_FLEET, target=target_fleet)
         fleet.add_order(order)
 
-        log_info(f"GameSession: Issued Intercept Order for Fleet {fleet.id} -> Fleet {target_fleet.id}")
+        logger.info(f"GameSession: Issued Intercept Order for Fleet {fleet.id} -> Fleet {target_fleet.id}")
         return ValidationResult()
 
 
@@ -230,7 +232,7 @@ class JoinCommandHandler:
         join_order = FleetOrder(OrderType.JOIN_FLEET, target=target_fleet)
         fleet.add_order(join_order)
 
-        log_info(f"GameSession: Issued Join Fleet Order for Fleet {fleet.id} -> Fleet {target_fleet.id}")
+        logger.info(f"GameSession: Issued Join Fleet Order for Fleet {fleet.id} -> Fleet {target_fleet.id}")
         return ValidationResult()
 
 
@@ -336,7 +338,7 @@ class ColonizeMissionCommandHandler:
         fleet.add_order(colonize_order)
 
         planet_name = planet.name if planet else "Any Planet"
-        log_info(f"GameSession: Queued Colonize Mission for Fleet {fleet.id} -> {planet_name}")
+        logger.info(f"GameSession: Queued Colonize Mission for Fleet {fleet.id} -> {planet_name}")
         return ValidationResult()
 
 
@@ -354,7 +356,7 @@ class ClearOrdersCommandHandler:
         fleet.orders = []
         fleet.path = []
 
-        log_info(f"GameSession: Cleared orders for Fleet {fleet.id}")
+        logger.info(f"GameSession: Cleared orders for Fleet {fleet.id}")
         return ValidationResult()
 
 
@@ -366,14 +368,14 @@ class TransferCommandHandler:
         from game.strategy.data.fleet import FleetOrder, OrderType
         from game.strategy.validation import TransferValidator
 
-        log_info(f"DIAG TransferCommandHandler: cmd fleet_id={cmd.fleet_id}, planet_id={cmd.planet_id}, cargo_type={cmd.cargo_type}, direction={cmd.direction}, amount={cmd.amount}, species_id={cmd.species_id}")
+        logger.info(f"DIAG TransferCommandHandler: cmd fleet_id={cmd.fleet_id}, planet_id={cmd.planet_id}, cargo_type={cmd.cargo_type}, direction={cmd.direction}, amount={cmd.amount}, species_id={cmd.species_id}")
 
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            log_info(f"DIAG TransferCommandHandler: Fleet {cmd.fleet_id} NOT FOUND")
+            logger.info(f"DIAG TransferCommandHandler: Fleet {cmd.fleet_id} NOT FOUND")
             return ValidationResult(is_valid=False, errors=["Fleet not found."])
-        log_info(f"DIAG TransferCommandHandler: Fleet found, location={fleet.location}, ships={len(fleet.ships)}")
+        logger.info(f"DIAG TransferCommandHandler: Fleet found, location={fleet.location}, ships={len(fleet.ships)}")
 
         # 2. Find owning empire
         owning_empire = None
@@ -383,15 +385,15 @@ class TransferCommandHandler:
                 break
 
         if not owning_empire:
-            log_info(f"DIAG TransferCommandHandler: Fleet owner NOT FOUND")
+            logger.info(f"DIAG TransferCommandHandler: Fleet owner NOT FOUND")
             return ValidationResult(is_valid=False, errors=["Fleet owner not found."])
 
         # 3. Resolve planet
         planet = session._get_planet_by_id(cmd.planet_id)
         if not planet:
-            log_info(f"DIAG TransferCommandHandler: Planet {cmd.planet_id} NOT FOUND")
+            logger.info(f"DIAG TransferCommandHandler: Planet {cmd.planet_id} NOT FOUND")
             return ValidationResult(is_valid=False, errors=["Planet not found."])
-        log_info(f"DIAG TransferCommandHandler: Planet found: name={planet.name}, owner_id={planet.owner_id}, total_pop={planet.total_population}")
+        logger.info(f"DIAG TransferCommandHandler: Planet found: name={planet.name}, owner_id={planet.owner_id}, total_pop={planet.total_population}")
 
         # 4. Validate (skip location check — we'll auto-add a MOVE order)
         # Use projected cargo to account for earlier queued orders
@@ -399,13 +401,13 @@ class TransferCommandHandler:
         projected = FleetCargoProjector.get_projected_cargo(fleet, cmd.cargo_type)
         capacity = fleet.get_fleet_cargo_capacity(cmd.cargo_type)
         current = fleet.get_fleet_cargo_current(cmd.cargo_type)
-        log_info(f"DIAG TransferCommandHandler: cargo capacity={capacity}, current={current}, projected={projected}")
+        logger.info(f"DIAG TransferCommandHandler: cargo capacity={capacity}, current={current}, projected={projected}")
 
         result = TransferValidator.validate(
             session.galaxy, fleet, planet, cmd.cargo_type, cmd.direction, cmd.amount,
             cmd.species_id, skip_location_check=True, projected_cargo=projected
         )
-        log_info(f"DIAG TransferCommandHandler: validation result is_valid={result.is_valid}, errors={result.errors}, error_code={getattr(result, 'error_code', None)}")
+        logger.info(f"DIAG TransferCommandHandler: validation result is_valid={result.is_valid}, errors={result.errors}, error_code={getattr(result, 'error_code', None)}")
 
         # 5. Apply
         if result.is_valid:
@@ -416,7 +418,7 @@ class TransferCommandHandler:
             if planet_global_hex and fleet.location != planet_global_hex:
                 move_order = FleetOrder(OrderType.MOVE, target=planet_global_hex)
                 fleet.add_order(move_order)
-                log_info(f"GameSession: Auto-added MOVE order to {planet_global_hex} for Fleet {fleet.id}")
+                logger.info(f"GameSession: Auto-added MOVE order to {planet_global_hex} for Fleet {fleet.id}")
 
             # Create TRANSFER order with params dict
             transfer_params = {
@@ -428,9 +430,9 @@ class TransferCommandHandler:
             }
             order = FleetOrder(OrderType.TRANSFER, target=transfer_params)
             fleet.add_order(order)
-            log_info(f"GameSession: Issued TRANSFER order for Fleet {fleet.id}, orders now={len(fleet.orders)}")
+            logger.info(f"GameSession: Issued TRANSFER order for Fleet {fleet.id}, orders now={len(fleet.orders)}")
         else:
-            log_info(f"DIAG TransferCommandHandler: REJECTED - not adding order")
+            logger.info(f"DIAG TransferCommandHandler: REJECTED - not adding order")
 
         return result
 

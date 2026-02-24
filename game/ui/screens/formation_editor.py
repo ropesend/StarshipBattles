@@ -15,7 +15,9 @@ import pygame
 import pygame_gui
 
 from game.core.json_utils import load_json, save_json
-from game.core.logger import log_error, log_info
+import logging
+
+logger = logging.getLogger(__name__)
 from game.ui.screens.formation.input_handler import FormationInputHandler
 from game.ui.screens.formation.renderer import FormationRenderer
 from game.ui.services.tkinter_utils import (
@@ -196,19 +198,19 @@ class FormationCore:
 
             data = {'arrows': out_arrows}
             if save_json(filename, data, indent=4):
-                log_info(f"Formation saved to {filename}")
+                logger.info(f"Formation saved to {filename}")
             else:
-                log_error(f"Failed to save formation to {filename}")
+                logger.error(f"Failed to save formation to {filename}")
         except OSError as e:
-            log_error(f"Error saving formation (file error): {e}")
+            logger.error(f"Error saving formation (file error): {e}")
         except (TypeError, ValueError) as e:
-            log_error(f"Error saving formation (serialization error): {e}")
+            logger.error(f"Error saving formation (serialization error): {e}")
 
     def load_from_file(self, filename: str) -> None:
         try:
             data = load_json(filename)
             if data is None:
-                log_error(f"Formation file not found or unreadable: {filename}")
+                logger.error(f"Formation file not found or unreadable: {filename}")
                 return
             if 'arrows' in data:
                 raw_arrows = data['arrows']
@@ -223,9 +225,9 @@ class FormationCore:
                     self.arrow_attrs.append({'rotation_mode': item.get('rotation_mode', 'relative')})
 
                 self.selected_indices = set()
-                log_info(f"Formation loaded from {filename} ({len(self.arrows)} arrows)")
+                logger.info(f"Formation loaded from {filename} ({len(self.arrows)} arrows)")
         except (KeyError, ValueError) as e:
-            log_error(f"Invalid formation data in {filename}: {e}")
+            logger.error(f"Invalid formation data in {filename}: {e}")
 
 class FormationEditorScreen:
     """Main UI screen for the formation editor with canvas, toolbar, and event handling.

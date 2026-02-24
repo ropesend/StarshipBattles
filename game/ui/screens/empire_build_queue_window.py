@@ -20,7 +20,9 @@ import pygame_gui
 from pygame_gui.elements import UIButton, UIWindow, UIPanel, UILabel, UIVerticalScrollBar, UITextEntryLine
 
 from game.ui.config import UIConfig
-from game.core.logger import log_debug
+import logging
+
+logger = logging.getLogger(__name__)
 from game.strategy.data.build_queue_source import (
     BuildQueueSource,
     collect_all_build_queues_for_empire,
@@ -245,7 +247,7 @@ class EmpireBuildQueueWindow(UIWindow):
             return
         self.selected_index = index
         self.selected_source = self.filtered_sources[index]
-        log_debug(f"Selected queue source: {self.selected_source.display_name}")
+        logger.debug(f"Selected queue source: {self.selected_source.display_name}")
 
     # -------------------------------------------------------------------
     # Navigation
@@ -294,7 +296,7 @@ class EmpireBuildQueueWindow(UIWindow):
             self._select_source(idx)
 
         if self.on_navigate_to_hex:
-            log_debug(f"Navigating to hex {hex_coord} for {source.display_name}")
+            logger.debug(f"Navigating to hex {hex_coord} for {source.display_name}")
             self.on_navigate_to_hex(hex_coord, source)
 
     # -------------------------------------------------------------------
@@ -334,7 +336,7 @@ class EmpireBuildQueueWindow(UIWindow):
             self.selected_index = -1
             self.selected_source = None
 
-        log_debug(f"Selected {len(self.selected_indices)} queue(s)")
+        logger.debug(f"Selected {len(self.selected_indices)} queue(s)")
 
     def get_selected_sources(self) -> List[BuildQueueSource]:
         """Return the BuildQueueSource objects for all selected indices.
@@ -394,7 +396,7 @@ class EmpireBuildQueueWindow(UIWindow):
                 skipped += 1
 
         if added > 0:
-            log_debug(f"Batch add: added to {added}/{added + skipped} queues")
+            logger.debug(f"Batch add: added to {added}/{added + skipped} queues")
             self._refresh_list()
 
         return BatchAddResult(added=added, skipped=skipped)

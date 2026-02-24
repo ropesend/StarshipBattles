@@ -1,5 +1,7 @@
 """Event bus for decoupled communication between UI components."""
-from game.core.logger import log_error
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class EventBus:
@@ -53,4 +55,4 @@ class EventBus:
                 try:
                     callback(data)
                 except Exception as e:  # Intentional broad catch: event handler isolation prevents handler bugs from crashing callers
-                    log_error(f"Error in event handler for {event_type}: {e}")
+                    logger.error(f"Error in event handler for {event_type}: {e}")

@@ -12,9 +12,11 @@ Responsibilities:
 
 from dataclasses import dataclass
 from typing import List, Optional, TYPE_CHECKING
+import logging
 
-from game.core.logger import log_info
 from game.core.registry import GameRegistries
+
+logger = logging.getLogger(__name__)
 from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
 
@@ -136,6 +138,6 @@ class ResourceManagementEngine:
                         ability_data.get('resource') == resource_type):
                         ship.set_component_enabled(comp_id, False)
                         disabled_components.append(comp_id)
-                        log_info(f"Ship {ship.name}: Auto-disabled {comp_id} - insufficient {resource_type}")
+                        logger.info(f"Ship {ship.name}: Auto-disabled {comp_id} - insufficient {resource_type}")
 
         return disabled_components

@@ -14,9 +14,12 @@ Responsibilities:
 
 from dataclasses import dataclass
 from typing import Optional, List, Tuple, Dict, Any
+import logging
 
-from game.core.logger import log_debug, log_warning, log_info, log_event
+from game.core.event_logging import log_event
 from game.strategy.events.event_types import EventType, EventCategory
+
+logger = logging.getLogger(__name__)
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 
@@ -96,7 +99,7 @@ class FleetOrderProcessor:
         if not order:
             return None
 
-        log_debug(f"Fleet {fleet.id} order cancelled: {reason}")
+        logger.debug(f"Fleet {fleet.id} order cancelled: {reason}")
         fleet.pop_order()
         return order
 
@@ -110,7 +113,7 @@ class FleetOrderProcessor:
             fleet: Fleet whose orders are cancelled
             reason: Reason for cancellation (for logging)
         """
-        log_debug(f"Fleet {fleet.id} all orders cancelled: {reason}")
+        logger.debug(f"Fleet {fleet.id} all orders cancelled: {reason}")
         fleet.clear_orders()
 
     def process_join_fleet(
@@ -140,18 +143,18 @@ class FleetOrderProcessor:
 
         # Validation
         if not target_fleet or not hasattr(target_fleet, 'location'):
-            log_warning("FleetOrderProcessor: Join Fleet failed - Target invalid/destroyed.")
+            logger.warning("FleetOrderProcessor: Join Fleet failed - Target invalid/destroyed.")
             fleet.pop_order()
             return JoinFleetResult(merged=False, cancelled=True)
 
         if fleet.location == target_fleet.location:
-            log_debug(f"FleetOrderProcessor: Fleet {fleet.id} merging into {target_fleet.id}")
+            logger.debug(f"FleetOrderProcessor: Fleet {fleet.id} merging into {target_fleet.id}")
             fleet.merge_with(target_fleet)
             empire.remove_fleet(fleet)
             return JoinFleetResult(merged=True)
         else:
             # Not at location yet
-            log_warning("FleetOrderProcessor: Join Fleet failed - Not at same location.")
+            logger.warning("FleetOrderProcessor: Join Fleet failed - Not at same location.")
             fleet.pop_order()
             return JoinFleetResult(merged=False)
 
@@ -197,7 +200,7 @@ class FleetOrderProcessor:
             galaxy, fleet, target_planet, component_registry, skip_chain_check=True
         )
         if not validation.is_valid:
-            log_warning(f"FleetOrderProcessor: Colonize failed - {validation.message}")
+            logger.warning(f"FleetOrderProcessor: Colonize failed - {validation.message}")
             fleet.pop_order()
             return ColonizeResult(colonized=False)
 
@@ -223,7 +226,7 @@ class FleetOrderProcessor:
 
                 if final_planet is None:
                     # No matching pod for any candidate
-                    log_warning("FleetOrderProcessor: No matching pod for any candidate planet")
+                    logger.warning("FleetOrderProcessor: No matching pod for any candidate planet")
                     fleet.pop_order()
                     return ColonizeResult(colonized=False)
             else:
@@ -240,7 +243,7 @@ class FleetOrderProcessor:
             )
             if colony_ship is None:
                 # Defensive: shouldn't happen if validation passed, but fail safely
-                log_warning(f"FleetOrderProcessor: No matching colony pod for {planet_type_str}")
+                logger.warning(f"FleetOrderProcessor: No matching colony pod for {planet_type_str}")
                 fleet.pop_order()
                 return ColonizeResult(colonized=False)
 
@@ -254,17 +257,17 @@ class FleetOrderProcessor:
         # PROJ-55: Remove only colony ship when registry is provided
         if component_registry is not None and colony_ship is not None:
             fleet.remove_ship(colony_ship)
-            log_debug(f"FleetOrderProcessor: Removed colony ship '{colony_ship.name}' from fleet")
+            logger.debug(f"FleetOrderProcessor: Removed colony ship '{colony_ship.name}' from fleet")
 
             # If fleet now empty, remove it
             if len(fleet.ships) == 0:
                 empire.remove_fleet(fleet)
-                log_debug(f"FleetOrderProcessor: Fleet {fleet.id} removed (no ships remaining)")
+                logger.debug(f"FleetOrderProcessor: Fleet {fleet.id} removed (no ships remaining)")
         else:
             # Legacy behavior: remove entire fleet
             empire.remove_fleet(fleet)
 
-        log_info(f"FleetOrderProcessor: Colonization successful. {empire.name} claimed {final_planet.name}")
+        logger.info(f"FleetOrderProcessor: Colonization successful. {empire.name} claimed {final_planet.name}")
         log_event(
             EventType.COLONY_FOUNDED,
             category=EventCategory.COLONIES,
@@ -345,7 +348,7 @@ class FleetOrderProcessor:
         )
 
         if not validation.is_valid:
-            log_warning(f"FleetOrderProcessor: Transfer failed - {validation.message}")
+            logger.warning(f"FleetOrderProcessor: Transfer failed - {validation.message}")
             fleet.pop_order()
             return TransferResult(success=False, message=validation.message)
 
@@ -362,7 +365,7 @@ class FleetOrderProcessor:
             transferred = self._execute_fleet_transfer(fleet, target, cargo_type, direction, amount, species_id)
 
         fleet.pop_order()
-        log_info(f"FleetOrderProcessor: Transfer complete. {direction}ed {transferred} {cargo_type}")
+        logger.info(f"FleetOrderProcessor: Transfer complete. {direction}ed {transferred} {cargo_type}")
         return TransferResult(success=True, amount_transferred=transferred)
 
     def _execute_fleet_transfer(
@@ -566,7 +569,7 @@ class FleetOrderProcessor:
         )
         planet.populations.append(species_pop)
 
-        log_debug(f"Colonization: Seeded {founding_pop} {race_id} on {planet.name}")
+        logger.debug(f"Colonization: Seeded {founding_pop} {race_id} on {planet.name}")
         return founding_pop
 
     def process_end_turn_orders(
@@ -605,7 +608,7 @@ class FleetOrderProcessor:
             if not fleet.construction_queue:
                 # Queue is empty, auto-complete the BUILD order
                 fleet.pop_order()
-                log_debug(f"Fleet {fleet.id} BUILD order completed - queue empty")
+                logger.debug(f"Fleet {fleet.id} BUILD order completed - queue empty")
             # BUILD does not consume the fleet
             return False
 
@@ -684,7 +687,7 @@ class FleetOrderProcessor:
                     target_fleet = order.target
                     if target_fleet and hasattr(target_fleet, 'location'):
                         if fleet.location == target_fleet.location:
-                            log_debug(f"FleetOrderProcessor [Instant]: Fleet {fleet.id} merging into {target_fleet.id}")
+                            logger.debug(f"FleetOrderProcessor [Instant]: Fleet {fleet.id} merging into {target_fleet.id}")
                             fleet.merge_with(target_fleet)
                             fleets_to_remove.append((empire, fleet))
 

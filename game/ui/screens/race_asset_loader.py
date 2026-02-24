@@ -9,7 +9,9 @@ import os
 import pygame
 from typing import Dict, List, Optional
 
-from game.core.logger import log_error, log_warning
+import logging
+
+logger = logging.getLogger(__name__)
 from game.assets.asset_manager import get_asset_manager
 from game.core.paths import Paths
 
@@ -59,7 +61,7 @@ class RaceAssetLoader:
                     surf = pygame.image.load(shape_path).convert_alpha()
                     shapes.append(surf)
                 except (FileNotFoundError, OSError, pygame.error) as e:
-                    log_error(f"Failed to load flag shape {shape_path}: {e}")
+                    logger.error(f"Failed to load flag shape {shape_path}: {e}")
                     shapes.append(self.create_placeholder(256, 256))
             else:
                 shapes.append(self.create_placeholder(256, 256))
@@ -84,7 +86,7 @@ class RaceAssetLoader:
                 surf = pygame.image.load(portrait_path).convert_alpha()
                 return surf
             except (FileNotFoundError, OSError, pygame.error) as e:
-                log_error(f"Failed to load portrait {portrait_path}: {e}")
+                logger.error(f"Failed to load portrait {portrait_path}: {e}")
 
         return None
 
@@ -138,7 +140,7 @@ class RaceAssetLoader:
                     # Scale to preview size
                     return pygame.transform.smoothscale(surf, (preview_size, preview_size))
         except (FileNotFoundError, OSError, pygame.error) as e:
-            log_warning(f"Failed to load portrait preview: {e}")
+            logger.warning(f"Failed to load portrait preview: {e}")
 
         return None
 
@@ -181,7 +183,7 @@ class RaceAssetLoader:
                     surf = pygame.image.load(img_path).convert_alpha()
                     return pygame.transform.smoothscale(surf, (preview_size, preview_size))
         except (FileNotFoundError, OSError, pygame.error) as e:
-            log_warning(f"Failed to load flag preview: {e}")
+            logger.warning(f"Failed to load flag preview: {e}")
 
         return None
 
@@ -231,7 +233,7 @@ class RaceAssetLoader:
 
         theme_path = os.path.join(asset_base, theme_id)
         if not os.path.exists(theme_path):
-            log_warning(f"Theme directory not found: {theme_path}")
+            logger.warning(f"Theme directory not found: {theme_path}")
             return result
 
         am = get_asset_manager()

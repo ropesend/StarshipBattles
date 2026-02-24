@@ -13,9 +13,11 @@ Responsibilities:
 
 from dataclasses import dataclass
 from typing import Optional, List, Tuple, TYPE_CHECKING
+import logging
 
-from game.core.logger import log_debug, log_warning
 from game.strategy.data.fleet import Fleet, OrderType
+
+logger = logging.getLogger(__name__)
 from game.core.hex_math import HexCoord, hex_distance
 
 if TYPE_CHECKING:
@@ -98,7 +100,7 @@ class FleetMovementEngine:
         """
         # Check resources before moving
         if not fleet.has_resources_for_movement():
-            log_warning(f"Fleet {fleet.id} stranded - insufficient resources for movement")
+            logger.warning(f"Fleet {fleet.id} stranded - insufficient resources for movement")
             fleet.clear_orders()
             return MovementResult(moved=False, stranded=True)
 
@@ -109,17 +111,17 @@ class FleetMovementEngine:
         if is_warp:
             # Check warp CAPABILITY first
             if not fleet.can_use_warp():
-                log_debug(f"Fleet {fleet.id} warp blocked - no warp capability")
-                log_warning(f"Fleet {fleet.id} cannot warp - no warp capability")
+                logger.debug(f"Fleet {fleet.id} warp blocked - no warp capability")
+                logger.warning(f"Fleet {fleet.id} cannot warp - no warp capability")
                 fleet.clear_orders()
                 return MovementResult(moved=False, warp_blocked=True)
 
             if not fleet.has_resources_for_warp():
-                log_warning(f"Fleet {fleet.id} cannot warp - insufficient resources")
+                logger.warning(f"Fleet {fleet.id} cannot warp - insufficient resources")
                 fleet.clear_orders()
                 return MovementResult(moved=False, warp_blocked=False)
 
-            log_debug(f"Fleet {fleet.id} executing warp jump to {next_hex}")
+            logger.debug(f"Fleet {fleet.id} executing warp jump to {next_hex}")
             fleet.consume_warp_resources()
 
         # Consume movement resources for this hex

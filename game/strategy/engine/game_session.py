@@ -50,8 +50,12 @@ if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.empire import Empire
 
-from game.core.logger import log_info, log_debug, set_event_handler
+import logging
+
+from game.core.event_logging import set_event_handler
 from game.strategy.events import Event, EventLog
+
+logger = logging.getLogger(__name__)
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.engine.command_handlers import create_default_registry
@@ -140,7 +144,7 @@ class GameSession:
 
     def process_turn(self) -> None:
         """Advance the game simulation by one full turn."""
-        log_info(f"GameSession: Processing Turn {self.turn_number}...")
+        logger.info(f"GameSession: Processing Turn {self.turn_number}...")
         self.turn_engine.process_turn(self.empires, self.galaxy, self.save_path)
         self.turn_number += 1
 
@@ -168,7 +172,7 @@ class GameSession:
 
         # Log warp capability for debugging navigation issues (BUG-45)
         can_warp = fleet.can_use_warp() if hasattr(fleet, 'can_use_warp') else 'N/A'
-        log_debug(f"preview_fleet_path: fleet={fleet.id}, can_use_warp={can_warp}, target={target_hex}")
+        logger.debug(f"preview_fleet_path: fleet={fleet.id}, can_use_warp={can_warp}, target={target_hex}")
 
         path = find_hybrid_path(self.galaxy, fleet.location, target_hex, fleet=fleet)
 

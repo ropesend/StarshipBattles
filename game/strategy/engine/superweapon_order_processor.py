@@ -9,10 +9,13 @@ create Dyson Sphere, or self-destruct).
 """
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
+import logging
 
 from game.core.hex_math import HexCoord, hex_distance
-from game.core.logger import log_debug, log_event, log_info, log_warning
+from game.core.event_logging import log_event
 from game.strategy.data.fleet import Fleet, OrderType
+
+logger = logging.getLogger(__name__)
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
 from game.strategy.events.event_types import EventType, EventCategory
@@ -109,7 +112,7 @@ class SuperweaponOrderProcessor:
         # Check if fleet is now empty
         fleet_consumed = len(fleet.ships) == 0
 
-        log_info(f"Planet {target_planet.name} destroyed by fleet {fleet.id}")
+        logger.info(f"Planet {target_planet.name} destroyed by fleet {fleet.id}")
         log_event(
             EventType.PLANET_DESTROYED,
             category=EventCategory.SUPERWEAPONS,
@@ -184,7 +187,7 @@ class SuperweaponOrderProcessor:
         # 3. Remove all stars (but NOT warp points)
         system.stars = []
 
-        log_info(f"Star system {system_name} stellerated by fleet {fleet.id}")
+        logger.info(f"Star system {system_name} stellerated by fleet {fleet.id}")
         log_event(
             EventType.STAR_DESTROYED,
             category=EventCategory.SUPERWEAPONS,
@@ -287,7 +290,7 @@ class SuperweaponOrderProcessor:
 
         fleet_consumed = len(fleet.ships) == 0
 
-        log_info(f"Warp point opened between {current_system.name} and {target_system.name}")
+        logger.info(f"Warp point opened between {current_system.name} and {target_system.name}")
         log_event(
             EventType.WARP_POINT_OPENED,
             category=EventCategory.SUPERWEAPONS,
@@ -362,7 +365,7 @@ class SuperweaponOrderProcessor:
 
         fleet_consumed = len(fleet.ships) == 0
 
-        log_info(f"Warp point closed between {current_system.name} and {destination_id}")
+        logger.info(f"Warp point closed between {current_system.name} and {destination_id}")
         log_event(
             EventType.WARP_POINT_CLOSED,
             category=EventCategory.SUPERWEAPONS,
@@ -501,7 +504,7 @@ class SuperweaponOrderProcessor:
 
         fleet_consumed = len(fleet.ships) == 0
 
-        log_info(f"Dyson Sphere created in {system.name}")
+        logger.info(f"Dyson Sphere created in {system.name}")
         log_event(
             EventType.DYSON_SPHERE_CREATED,
             category=EventCategory.SUPERWEAPONS,
@@ -570,7 +573,7 @@ class SuperweaponOrderProcessor:
 
         fleet_consumed = len(fleet.ships) == 0
 
-        log_info(f"Ships self-destructed: {', '.join(ship_names)}")
+        logger.info(f"Ships self-destructed: {', '.join(ship_names)}")
         log_event(
             EventType.SHIPS_SELF_DESTRUCTED,
             category=EventCategory.SUPERWEAPONS,

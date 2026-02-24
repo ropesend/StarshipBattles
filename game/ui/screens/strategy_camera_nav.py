@@ -9,7 +9,9 @@ Cross-layer imports (acceptable for UI):
 - StarSystem: Runtime - isinstance check for selection cycling
 """
 import pygame
-from game.core.logger import log_debug
+import logging
+
+logger = logging.getLogger(__name__)
 from game.core.hex_math import hex_to_pixel, HexCoord
 from game.strategy.data.galaxy import StarSystem
 
@@ -51,9 +53,9 @@ class CameraNavigator:
             fx, fy = hex_to_pixel(target_hex, self.hex_size)
             self.camera.position.x = fx
             self.camera.position.y = fy
-            log_debug(f"Camera centered on {obj} at {target_hex}")
+            logger.debug(f"Camera centered on {obj} at {target_hex}")
         else:
-            log_debug(f"Could not center camera on {obj}")
+            logger.debug(f"Could not center camera on {obj}")
 
     def _resolve_global_hex(self, obj):
         """
@@ -119,7 +121,7 @@ class CameraNavigator:
         self.camera.target_zoom = max(self.camera.min_zoom, min(self.camera.max_zoom, fit_zoom))
         self.camera.zoom = self.camera.target_zoom
 
-        log_debug(f"Galaxy View: zoom={self.camera.zoom:.2f}")
+        logger.debug(f"Galaxy View: zoom={self.camera.zoom:.2f}")
 
     def zoom_to_system(self, target_sys=None):
         """
@@ -144,7 +146,7 @@ class CameraNavigator:
                 )
 
         if not target_sys:
-            log_debug("No system selected for Shift+S zoom")
+            logger.debug("No system selected for Shift+S zoom")
             return
 
         # Center on system
@@ -156,7 +158,7 @@ class CameraNavigator:
         self.camera.target_zoom = 2.0
         self.camera.zoom = 2.0
 
-        log_debug(f"System View: {target_sys.name} at zoom=2.0")
+        logger.debug(f"System View: {target_sys.name} at zoom=2.0")
 
     def cycle_selection(self, obj_type, direction):
         """
@@ -176,7 +178,7 @@ class CameraNavigator:
             targets = self.scene.current_empire.fleets
 
         if not targets:
-            log_debug(f"No {obj_type}s to cycle.")
+            logger.debug(f"No {obj_type}s to cycle.")
             return None
 
         # Find current index

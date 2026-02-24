@@ -9,12 +9,14 @@ Can optionally use BattleController for unified battle mode support
 PROJ-40: Removed unused AIController import. BattleService is instantiated at
 runtime so must remain a runtime import.
 """
+import logging
 import pygame
 import time
 from typing import Optional, List, TYPE_CHECKING
 
-from game.core.logger import log_debug, log_info, log_warning
 from game.core.config import PhysicsConfig
+
+logger = logging.getLogger(__name__)
 from game.ui.config import UIConfig
 from game.ui.renderer.game_renderer import draw_ship
 from game.ui.renderer.camera import Camera
@@ -178,7 +180,7 @@ class BattleScreen:
         if not self.headless_mode and self.ships:
             self.camera.fit_objects(self.ships)
 
-        log_info(f"Battle started via controller: {len(self.ships)} ships")
+        logger.info(f"Battle started via controller: {len(self.ships)} ships")
 
     @property
     def engine(self):
@@ -247,7 +249,7 @@ class BattleScreen:
         self.headless_start_time = None
         if headless:
             self.headless_start_time = time.time()
-            log_info("=== STARTING HEADLESS BATTLE ===")
+            logger.info("=== STARTING HEADLESS BATTLE ===")
 
         # Use BattleService to set up and start the battle
         # PROJ-126: Reuse same AI factory instance
@@ -286,22 +288,22 @@ class BattleScreen:
             fuel = s.resources.get_value("fuel")
             status_msg = f"Ship '{s.name}' (Team {s.team_id}): HP={s.hp}/{s.max_hp} Mass={s.mass} Thrust={s.total_thrust} Fuel={fuel} TurnSpeed={s.turn_speed:.2f} MaxSpeed={s.max_speed:.2f} Derelict={s.is_derelict}"
             self.engine.logger.log(status_msg)
-            log_info(status_msg)
+            logger.info(status_msg)
 
             if s.is_derelict:
                 warn_msg = f"CRITICAL WARNING: Ship {s.name} is DERELICT on start! (Bridge? Engines? LifeSupport? Power?)"
                 self.engine.logger.log(warn_msg)
-                log_warning(warn_msg)
+                logger.warning(warn_msg)
 
             if s.total_thrust <= 0:
                 warn_msg = f"WARNING: {s.name} has NO THRUST!"
                 self.engine.logger.log(warn_msg)
-                log_warning(warn_msg)
+                logger.warning(warn_msg)
 
             if s.turn_speed <= 0.01:
                 warn_msg = f"WARNING: {s.name} has LOW/NO TURN SPEED ({s.turn_speed:.4f})! Mass too high for thrusters?"
                 self.engine.logger.log(warn_msg)
-                log_warning(warn_msg)
+                logger.warning(warn_msg)
 
     def handle_event(self, event):
         """Handle a single pygame event (IScene protocol)."""
@@ -369,7 +371,7 @@ class BattleScreen:
                 self.headless_mode = False
 
                 if self.test_mode:
-                    log_debug("Headless test complete, returning to Combat Lab")
+                    logger.debug("Headless test complete, returning to Combat Lab")
                     self._trigger_return_to_test_lab()
                 else:
                     self._trigger_return_to_setup()
@@ -379,7 +381,7 @@ class BattleScreen:
         if self.sim_tick_counter % 10000 == 0:
             t1 = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
             t2 = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
-            log_debug(f"  Tick {self.sim_tick_counter}: Team1={t1}, Team2={t2}")
+            logger.debug(f"  Tick {self.sim_tick_counter}: Team1={t1}, Team2={t2}")
 
     def _update_visual(self, dt: float):
         """Update visual battle simulation with proper timing."""
@@ -402,7 +404,7 @@ class BattleScreen:
 
                 elapsed = t1 - t0
                 if elapsed > 0.05:
-                    log_warning(f"Slow Frame: {ticks_to_run} ticks took {elapsed*1000:.1f}ms")
+                    logger.warning(f"Slow Frame: {ticks_to_run} ticks took {elapsed*1000:.1f}ms")
 
                 self.tick_rate_count += ticks_to_run
             else:
@@ -436,7 +438,7 @@ class BattleScreen:
             # Check if test should end (engine handles all end conditions)
             if self.engine.is_battle_over():
                 # Test complete - verify results and populate results dict
-                log_debug(f"Test complete! ticks={self.test_tick_count}")
+                logger.debug(f"Test complete! ticks={self.test_tick_count}")
 
                 # Populate results dict (similar to headless mode)
                 if not hasattr(self.test_scenario, 'results') or not self.test_scenario.results:
@@ -446,8 +448,8 @@ class BattleScreen:
 
                 # Run verification (populates additional results)
                 self.test_scenario.passed = self.test_scenario.verify(self.engine)
-                log_debug(f"Test {'PASSED' if self.test_scenario.passed else 'FAILED'}")
-                log_debug(f"Results populated: {list(self.test_scenario.results.keys())}")
+                logger.debug(f"Test {'PASSED' if self.test_scenario.passed else 'FAILED'}")
+                logger.debug(f"Results populated: {list(self.test_scenario.results.keys())}")
 
                 # Log test execution (for UI vs headless comparison)
                 try:
@@ -455,7 +457,7 @@ class BattleScreen:
                     runner = TestRunner()
                     runner.log_test_execution(self.test_scenario, headless=False)
                 except (ImportError, AttributeError, OSError) as e:
-                    log_warning(f"Failed to log UI test execution: {e}")
+                    logger.warning(f"Failed to log UI test execution: {e}")
 
                 # Signal test completion (keep scenario reference for results retrieval)
                 self.test_completed = True
@@ -632,11 +634,11 @@ class BattleScreen:
         """Print summary of headless battle results."""
         # Skip summary for test mode - test framework handles results
         if self.test_mode:
-            log_info(f"Headless test complete: {self.sim_tick_counter} ticks")
+            logger.info(f"Headless test complete: {self.sim_tick_counter} ticks")
             return
 
         # For normal headless battles, print summary if UI supports it
         if hasattr(self.ui, 'print_headless_summary'):
             self.ui.print_headless_summary(self.headless_start_time, self.sim_tick_counter)
         else:
-            log_info(f"Headless battle complete: {self.sim_tick_counter} ticks")
+            logger.info(f"Headless battle complete: {self.sim_tick_counter} ticks")

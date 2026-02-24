@@ -13,7 +13,9 @@ import pygame
 import pygame_gui
 from typing import Callable, Optional, TYPE_CHECKING
 
-from game.core.logger import log_debug
+import logging
+
+logger = logging.getLogger(__name__)
 from game.ui.assets import ShipThemeManager
 from game.ui.screens.race_asset_loader import RaceAssetLoader
 

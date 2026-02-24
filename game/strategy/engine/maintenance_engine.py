@@ -20,8 +20,9 @@ Called by TurnEngine._process_tick() 100 times per turn.
 
 from dataclasses import dataclass
 from typing import List, Dict
+import logging
 
-from game.core.logger import log_info, log_warning
+logger = logging.getLogger(__name__)
 
 
 # Shared maintenance rate used by both MaintenanceEngine and EmpireEconomyCalculator
@@ -193,7 +194,7 @@ class MaintenanceEngine:
                     entity_name=facility.name,
                     location=f"Planet {colony.name}",
                 ))
-                log_warning(
+                logger.warning(
                     f"Maintenance failure: scuttling {facility.name} "
                     f"on {colony.name} (Empire {empire.id})"
                 )
@@ -236,7 +237,7 @@ class MaintenanceEngine:
                     entity_name=ship.name,
                     location=f"Fleet {fleet.id}",
                 ))
-                log_warning(
+                logger.warning(
                     f"Maintenance failure: scuttling {ship.name} "
                     f"in Fleet {fleet.id} (Empire {empire.id})"
                 )
@@ -285,4 +286,4 @@ class MaintenanceEngine:
         ]
         for fleet in to_remove:
             empire.remove_fleet(fleet)
-            log_info(f"Removed empty Fleet {fleet.id} (Empire {empire.id})")
+            logger.info(f"Removed empty Fleet {fleet.id} (Empire {empire.id})")

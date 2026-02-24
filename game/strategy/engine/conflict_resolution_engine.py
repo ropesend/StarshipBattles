@@ -9,12 +9,15 @@ Responsibilities:
 - Apply combat results to fleet rosters
 """
 
+import logging
 import random
 from dataclasses import dataclass
 from typing import Optional, List, TYPE_CHECKING
 
-from game.core.logger import log_debug, log_info, log_event
+from game.core.event_logging import log_event
 from game.strategy.events.event_types import EventType, EventCategory
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.interfaces.battle_resolver import IBattleResolver
@@ -175,7 +178,7 @@ class ConflictResolutionEngine:
             return self._resolve_combat_simulated(f1, f2)
 
         # Fallback to simple RNG for empty fleets
-        log_debug("Using RNG combat resolution (empty fleet)")
+        logger.debug("Using RNG combat resolution (empty fleet)")
         if random.random() > 0.5:
             winner, loser = f1, f2
         else:

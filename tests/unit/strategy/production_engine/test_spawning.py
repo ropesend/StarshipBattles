@@ -38,10 +38,10 @@ class TestShipSpawning:
         engine = ProductionEngine()
 
         # Should not crash, but should log warning
-        with patch('game.strategy.engine.production_engine.log_warning') as mock_log:
+        with patch('game.strategy.engine.production_engine.logger') as mock_logger:
             engine._spawn_ship(mock_planet, "Scout", mock_empire, mock_galaxy, save_path=None)
 
-            mock_log.assert_called()
+            mock_logger.warning.assert_called()
 
     def test_spawn_ship_creates_fleet(self, mock_planet, mock_empire, mock_galaxy):
         """Ship spawning creates a new fleet."""

@@ -15,10 +15,12 @@ Fits into TurnEngine's _process_tick() as Phase 0a (after resource consumption).
 
 from dataclasses import dataclass
 from typing import Dict, List, Optional, TYPE_CHECKING
+import logging
 
 from game.core.constants import ResourceType
-from game.core.logger import log_info
 from game.core.registry import GameRegistries
+
+logger = logging.getLogger(__name__)
 from game.strategy.interfaces.engines import IResupplyEngine
 from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 

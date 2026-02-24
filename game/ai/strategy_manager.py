@@ -7,12 +7,14 @@ Exception Handling
 - All policy lookups return defaults for missing keys (graceful degradation)
 """
 
+import logging
 import os
 import threading
 from typing import Any, Dict, Optional
 
-from game.core.logger import log_info
 from game.core.json_utils import load_json
+
+logger = logging.getLogger(__name__)
 from game.core.strategy_metadata import StrategyMetadataService
 from game.core.singleton import SingletonMeta
 
@@ -102,7 +104,7 @@ class StrategyManager(metaclass=SingletonMeta):
         # Populate metadata service for UI layer
         StrategyMetadataService.instance().set_strategies(self.strategies)
 
-        log_info(f"StrategyManager loaded: {len(self.strategies)} strategies, {len(self.targeting_policies)} targeting, {len(self.movement_policies)} movement")
+        logger.info(f"StrategyManager loaded: {len(self.strategies)} strategies, {len(self.targeting_policies)} targeting, {len(self.movement_policies)} movement")
 
     def get_strategy(self, strategy_id: str) -> Dict[str, Any]:
         """Get a strategy definition by ID. Triggers lazy loading if needed."""

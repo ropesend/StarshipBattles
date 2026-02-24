@@ -10,7 +10,9 @@ Cross-layer imports (acceptable for UI):
 - StrategySessionFacade: TYPE_CHECKING - used for type hints only
 """
 from typing import TYPE_CHECKING, List, Optional
-from game.core.logger import log_debug, log_info, log_warning
+import logging
+
+logger = logging.getLogger(__name__)
 from game.core.hex_math import pixel_to_hex
 from game.strategy.engine.commands import (
     IssueSelfDestructCommand,
@@ -72,7 +74,7 @@ class SuperweaponOperations:
 
         # Check fleet has DestroyPlanet ability
         if not fleet.capabilities.has_ability("DestroyPlanet"):
-            log_warning("Fleet has no Planet Imploder component.")
+            logger.warning("Fleet has no Planet Imploder component.")
             return {'type': 'error', 'message': 'Fleet has no Planet Imploder component'}
 
         world_pos = self.camera.screen_to_world((mx, my))
@@ -81,7 +83,7 @@ class SuperweaponOperations:
         # Find planets at hex
         planets = self.galaxy.get_planets_at_global_hex(target_hex)
         if not planets:
-            log_debug("No planet at target location.")
+            logger.debug("No planet at target location.")
             return {'type': 'error', 'message': 'No planet at target location'}
 
         if len(planets) == 1:
@@ -100,10 +102,10 @@ class SuperweaponOperations:
             cmd = QueueImplodePlanetMissionCommand(fleet.id, target_hex, planet.id)
             result = self.facade.handle_command(cmd)
             if result.is_valid:
-                log_info(f"Mission Queued: Implode Planet {planet.name}")
+                logger.info(f"Mission Queued: Implode Planet {planet.name}")
                 self.scene.on_ui_selection(fleet)
             else:
-                log_warning(f"Implode planet mission failed: {result.message}")
+                logger.warning(f"Implode planet mission failed: {result.message}")
 
         self._show_confirmation(
             "Destroy Planet",
@@ -128,7 +130,7 @@ class SuperweaponOperations:
 
         # Check fleet has DestroyStar ability
         if not fleet.capabilities.has_ability("DestroyStar"):
-            log_warning("Fleet has no Stellerator component.")
+            logger.warning("Fleet has no Stellerator component.")
             return {'type': 'error', 'message': 'Fleet has no Stellerator component'}
 
         world_pos = self.camera.screen_to_world((mx, my))
@@ -137,17 +139,17 @@ class SuperweaponOperations:
         # Find system at hex
         system = self._get_system_at_hex(target_hex)
         if not system:
-            log_debug("No star system at target location.")
+            logger.debug("No star system at target location.")
             return {'type': 'error', 'message': 'No star system at target location'}
 
         def on_confirm():
             cmd = QueueStellerateStarMissionCommand(fleet.id, target_hex)
             result = self.facade.handle_command(cmd)
             if result.is_valid:
-                log_info(f"Mission Queued: Stellerate {system.name}")
+                logger.info(f"Mission Queued: Stellerate {system.name}")
                 self.scene.on_ui_selection(fleet)
             else:
-                log_warning(f"Stellerate mission failed: {result.message}")
+                logger.warning(f"Stellerate mission failed: {result.message}")
 
         self._show_confirmation(
             "STELLERATE STAR",
@@ -174,7 +176,7 @@ class SuperweaponOperations:
 
         # Check fleet has OpenWarpPoint ability
         if not fleet.capabilities.has_ability("OpenWarpPoint"):
-            log_warning("Fleet has no Quantum Tunneling Inducer component.")
+            logger.warning("Fleet has no Quantum Tunneling Inducer component.")
             return {'type': 'error', 'message': 'Fleet has no Quantum Tunneling Inducer component'}
 
         world_pos = self.camera.screen_to_world((mx, my))
@@ -183,7 +185,7 @@ class SuperweaponOperations:
         # Get current system for filtering
         current_system = self._get_system_at_hex(target_hex)
         if not current_system:
-            log_debug("No star system at target location.")
+            logger.debug("No star system at target location.")
             return {'type': 'error', 'message': 'No star system at target location'}
 
         # Get all systems for selection
@@ -199,17 +201,17 @@ class SuperweaponOperations:
         ]
 
         if not available_systems:
-            log_debug("No available systems to link to.")
+            logger.debug("No available systems to link to.")
             return {'type': 'error', 'message': 'No available systems to link to'}
 
         def on_system_selected(system_name: str):
             cmd = QueueOpenWarpPointMissionCommand(fleet.id, target_hex, system_name)
             result = self.facade.handle_command(cmd)
             if result.is_valid:
-                log_info(f"Mission Queued: Open Warp Point to {system_name}")
+                logger.info(f"Mission Queued: Open Warp Point to {system_name}")
                 self.scene.on_ui_selection(fleet)
             else:
-                log_warning(f"Open warp point mission failed: {result.message}")
+                logger.warning(f"Open warp point mission failed: {result.message}")
 
         self._show_system_picker(available_systems, current_system, on_system_selected)
         return {'type': 'prompt'}
@@ -230,7 +232,7 @@ class SuperweaponOperations:
 
         # Check fleet has CloseWarpPoint ability
         if not fleet.capabilities.has_ability("CloseWarpPoint"):
-            log_warning("Fleet has no Quantum Tunneling Disruptor component.")
+            logger.warning("Fleet has no Quantum Tunneling Disruptor component.")
             return {'type': 'error', 'message': 'Fleet has no Quantum Tunneling Disruptor component'}
 
         world_pos = self.camera.screen_to_world((mx, my))
@@ -239,17 +241,17 @@ class SuperweaponOperations:
         # Find warp point at hex
         warp_point = self._get_warp_point_at_hex(target_hex)
         if not warp_point:
-            log_debug("No warp point at target location.")
+            logger.debug("No warp point at target location.")
             return {'type': 'error', 'message': 'No warp point at target location'}
 
         def on_confirm():
             cmd = QueueCloseWarpPointMissionCommand(fleet.id, target_hex, warp_point.destination_id)
             result = self.facade.handle_command(cmd)
             if result.is_valid:
-                log_info(f"Mission Queued: Close Warp Point to {warp_point.destination_id}")
+                logger.info(f"Mission Queued: Close Warp Point to {warp_point.destination_id}")
                 self.scene.on_ui_selection(fleet)
             else:
-                log_warning(f"Close warp point mission failed: {result.message}")
+                logger.warning(f"Close warp point mission failed: {result.message}")
 
         self._show_confirmation(
             "Close Warp Point",
@@ -274,7 +276,7 @@ class SuperweaponOperations:
 
         # Check fleet has CreateDysonSphere ability
         if not fleet.capabilities.has_ability("CreateDysonSphere"):
-            log_warning("Fleet has no Dyson Sphere Constructor component.")
+            logger.warning("Fleet has no Dyson Sphere Constructor component.")
             return {'type': 'error', 'message': 'Fleet has no Dyson Sphere Constructor component'}
 
         world_pos = self.camera.screen_to_world((mx, my))
@@ -283,17 +285,17 @@ class SuperweaponOperations:
         # Find system at hex
         system = self._get_system_at_hex(target_hex)
         if not system:
-            log_debug("No star system at target location.")
+            logger.debug("No star system at target location.")
             return {'type': 'error', 'message': 'No star system at target location'}
 
         def on_confirm():
             cmd = QueueCreateDysonSphereMissionCommand(fleet.id, target_hex)
             result = self.facade.handle_command(cmd)
             if result.is_valid:
-                log_info(f"Mission Queued: Create Dyson Sphere at {system.name}")
+                logger.info(f"Mission Queued: Create Dyson Sphere at {system.name}")
                 self.scene.on_ui_selection(fleet)
             else:
-                log_warning(f"Dyson Sphere mission failed: {result.message}")
+                logger.warning(f"Dyson Sphere mission failed: {result.message}")
 
         self._show_confirmation(
             "Create Dyson Sphere",
@@ -320,7 +322,7 @@ class SuperweaponOperations:
         # Get ships with SelfDestruct ability
         ships = fleet.capabilities.ships_with_ability("SelfDestruct")
         if not ships:
-            log_warning("No ships with Self-Destruct Device in fleet.")
+            logger.warning("No ships with Self-Destruct Device in fleet.")
             return {'type': 'error', 'message': 'No ships with Self-Destruct Device in fleet'}
 
         def on_ships_selected(ship_ids: List[int]):
@@ -329,10 +331,10 @@ class SuperweaponOperations:
             cmd = IssueSelfDestructCommand(fleet.id, ship_ids)
             result = self.facade.handle_command(cmd)
             if result.is_valid:
-                log_info(f"Self-destruct ordered for {len(ship_ids)} ships")
+                logger.info(f"Self-destruct ordered for {len(ship_ids)} ships")
                 self.scene.on_ui_selection(fleet)
             else:
-                log_warning(f"Self-destruct failed: {result.message}")
+                logger.warning(f"Self-destruct failed: {result.message}")
 
         self._show_ship_picker(ships, "SelfDestruct", on_ships_selected)
         return {'type': 'prompt'}
@@ -373,7 +375,7 @@ class SuperweaponOperations:
             self.scene.ui.show_confirmation_dialog(title, message, on_confirm, is_warning=is_warning)
         else:
             # Fallback: just execute (for testing without full UI)
-            log_warning(f"No confirmation dialog available. Executing: {title}")
+            logger.warning(f"No confirmation dialog available. Executing: {title}")
             on_confirm()
 
     def _show_system_picker(self, systems, current_system, on_selected):
@@ -390,7 +392,7 @@ class SuperweaponOperations:
         else:
             # Fallback: pick first system (for testing without full UI)
             if systems:
-                log_warning("No system picker available. Auto-selecting first system.")
+                logger.warning("No system picker available. Auto-selecting first system.")
                 on_selected(systems[0].name)
 
     def _show_ship_picker(self, ships, ability_name: str, on_selected):
@@ -406,5 +408,5 @@ class SuperweaponOperations:
             self.scene.ui.show_ship_picker(ships, ability_name, on_selected)
         else:
             # Fallback: select all (for testing without full UI)
-            log_warning("No ship picker available. Auto-selecting all ships.")
+            logger.warning("No ship picker available. Auto-selecting all ships.")
             on_selected([s.id for s in ships])

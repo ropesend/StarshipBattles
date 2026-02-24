@@ -9,7 +9,9 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel
 
-from game.core.logger import log_info
+import logging
+
+logger = logging.getLogger(__name__)
 from game.ui.renderer.camera import Camera
 from game.ui.screens.galaxy_test.constants import SIDEBAR_WIDTH
 from game.ui.screens.galaxy_test.galaxy_mode import GalaxyModeHelper
@@ -78,7 +80,7 @@ class GalaxyTestScreen:
         # Create initial menu UI
         self._create_menu_ui()
 
-        log_info("GalaxyTestScreen: Initialized")
+        logger.info("GalaxyTestScreen: Initialized")
 
     def _clear_ui(self):
         """Clear all UI elements."""
@@ -245,7 +247,7 @@ class GalaxyTestScreen:
 
     def _on_close(self):
         """Close the screen and return to main menu."""
-        log_info("GalaxyTestScreen: Closing")
+        logger.info("GalaxyTestScreen: Closing")
         if self.on_close_callback:
             self.on_close_callback()
 

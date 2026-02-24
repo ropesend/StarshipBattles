@@ -16,7 +16,9 @@ import os
 import pygame
 from typing import Dict, Optional, Tuple, TYPE_CHECKING
 
-from game.core.logger import log_warning
+import logging
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.data.design_metadata import DesignMetadata
@@ -71,7 +73,7 @@ def _load_portrait_thumbnail_uncached(design: DesignMetadata, size: int) -> pyga
                 loaded_img = pygame.image.load(path)
                 return pygame.transform.smoothscale(loaded_img, (size, size))
             except (FileNotFoundError, OSError, pygame.error) as e:
-                log_warning(f"Failed to load portrait '{path}' for design '{design.design_id}': {e}")
+                logger.warning(f"Failed to load portrait '{path}' for design '{design.design_id}': {e}")
                 continue
 
     # Fallback: Create placeholder with gradient
@@ -155,7 +157,7 @@ def _load_topdown_thumbnail_uncached(design: DesignMetadata, target_height: int)
                 loaded_img = pygame.image.load(path).convert_alpha()
                 break
             except (FileNotFoundError, OSError, pygame.error):
-                log_warning(f"Failed to load skin image: {path}")
+                logger.warning(f"Failed to load skin image: {path}")
                 continue
 
     if loaded_img is None:

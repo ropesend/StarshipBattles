@@ -19,7 +19,10 @@ from pygame_gui.elements import (
 )
 from typing import Optional, Callable, List, TYPE_CHECKING
 from game.strategy.systems.design_library import DesignLibrary
+import logging
 from game.ui.screens.design_image_helper import load_portrait_thumbnail, load_topdown_thumbnail
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.data.design_metadata import DesignMetadata
@@ -229,8 +232,6 @@ class DesignSelectorWindow(UIWindow):
 
     def _refresh_designs(self):
         """Refresh the design list based on current filters"""
-        from game.core.logger import log_info, log_debug
-
         # Get filter values
         # Note: pygame_gui dropdowns return tuples (current_value, previous_value)
         # We need to extract just the current value (first element)
@@ -250,12 +251,12 @@ class DesignSelectorWindow(UIWindow):
         if type_option != "All Types":
             type_filter = type_option
 
-        log_info(f"DesignSelector: Refreshing design list (mode={self.mode})")
-        log_debug(f"  design_library.designs_folder: {self.design_library.designs_folder}")
-        log_debug(f"  filter_name: '{self.filter_name}'")
-        log_debug(f"  class_filter: {class_filter}")
-        log_debug(f"  type_filter: {type_filter}")
-        log_debug(f"  show_obsolete: {self.show_obsolete}")
+        logger.info(f"DesignSelector: Refreshing design list (mode={self.mode})")
+        logger.debug(f"  design_library.designs_folder: {self.design_library.designs_folder}")
+        logger.debug(f"  filter_name: '{self.filter_name}'")
+        logger.debug(f"  class_filter: {class_filter}")
+        logger.debug(f"  type_filter: {type_filter}")
+        logger.debug(f"  show_obsolete: {self.show_obsolete}")
 
         # Search designs
         self.filtered_designs = self.design_library.search_designs(
@@ -267,10 +268,10 @@ class DesignSelectorWindow(UIWindow):
             }
         )
 
-        log_info(f"DesignSelector: Found {len(self.filtered_designs)} designs after filtering")
+        logger.info(f"DesignSelector: Found {len(self.filtered_designs)} designs after filtering")
         if self.filtered_designs:
             for d in self.filtered_designs[:5]:  # Log first 5
-                log_debug(f"    - {d.name} (class={d.ship_class}, type={d.vehicle_type})")
+                logger.debug(f"    - {d.name} (class={d.ship_class}, type={d.vehicle_type})")
 
         # Sort by name
         self.filtered_designs.sort(key=lambda d: d.name)
@@ -500,13 +501,12 @@ class DesignSelectorWindow(UIWindow):
             design_id: ID of design to toggle
             current_state: Current obsolete state (True = obsolete)
         """
-        from game.core.logger import log_info
         new_state = not current_state
-        log_info(f"DesignSelector: Toggling obsolete for {design_id}: {current_state} -> {new_state}")
+        logger.info(f"DesignSelector: Toggling obsolete for {design_id}: {current_state} -> {new_state}")
 
         # Call design library to mark obsolete
         success, message = self.design_library.mark_obsolete(design_id, new_state)
-        log_info(f"DesignSelector: mark_obsolete result: {success}, {message}")
+        logger.info(f"DesignSelector: mark_obsolete result: {success}, {message}")
 
         if success:
             # Refresh the list to show updated state
@@ -519,11 +519,10 @@ class DesignSelectorWindow(UIWindow):
         Args:
             design_id: ID of selected design
         """
-        from game.core.logger import log_info
-        log_info(f"DesignSelector: Design selected: {design_id}")
+        logger.info(f"DesignSelector: Design selected: {design_id}")
         self.selected_design_id = design_id
         self.select_button.enable()
-        log_info(f"DesignSelector: Main Select button enabled")
+        logger.info(f"DesignSelector: Main Select button enabled")
 
         # Immediately trigger selection (double-click behavior)
         # This makes it more user-friendly - clicking a row's Select button
@@ -532,14 +531,13 @@ class DesignSelectorWindow(UIWindow):
 
     def _on_select(self):
         """Handle main Select button click"""
-        from game.core.logger import log_info, log_warning
-        log_info(f"DesignSelector: Main Select button clicked")
+        logger.info(f"DesignSelector: Main Select button clicked")
         if self.selected_design_id and self.on_select_callback:
-            log_info(f"DesignSelector: Calling callback with design_id={self.selected_design_id}")
+            logger.info(f"DesignSelector: Calling callback with design_id={self.selected_design_id}")
             self.on_select_callback(self.selected_design_id)
             self.kill()
         else:
-            log_warning(f"DesignSelector: Cannot select - selected_design_id={self.selected_design_id}, callback={self.on_select_callback is not None}")
+            logger.warning(f"DesignSelector: Cannot select - selected_design_id={self.selected_design_id}, callback={self.on_select_callback is not None}")
 
     def update(self, time_delta: float):
         """

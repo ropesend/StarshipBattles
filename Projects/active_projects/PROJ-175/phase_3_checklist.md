@@ -6,166 +6,90 @@
 **Risk:** MEDIUM — largest file count (55+ files) but pattern is identical and mechanical
 
 ## Pre-Phase
-- [ ] Phase 2 must be complete
-- [ ] Run full test suite, record baseline: `pytest tests/ -n 12`
-- [ ] Verify core/ and simulation/ are already migrated: `grep -rn "from game.core.logger" game/core/ game/simulation/ --include="*.py"` returns nothing
+- [x] Phase 2 must be complete
+- [x] Run full test suite, record baseline: `pytest tests/ -n 12` → 12030 passed
+- [x] Verify core/ and simulation/ are already migrated
 
-## Task 1: Migrate game/strategy/ (~38 files)
-
-**Per-file pattern (same as Phase 2):**
-```python
-# BEFORE: from game.core.logger import log_info, log_error, ...
-# AFTER: import logging; logger = logging.getLogger(__name__)
-```
+## Task 1: Migrate game/strategy/ (~38 files) ✓
 
 **Strategy engine files:**
-- [ ] `game/strategy/adapters/simulation_adapter.py` (7 calls)
-- [ ] `game/strategy/engine/command_handlers.py` (16 calls)
-- [ ] `game/strategy/engine/fleet_order_processor.py` (17 calls)
-- [ ] `game/strategy/engine/superweapon_order_processor.py` (12 calls)
-- [ ] `game/strategy/engine/game_initializer.py` (6 calls)
-- [ ] `game/strategy/engine/game_session.py` (3 calls) — also check for `set_event_handler` → import from `event_logging`
-- [ ] `game/strategy/engine/conflict_resolution_engine.py` (3 calls)
-- [ ] `game/strategy/engine/fleet_movement_engine.py` (5 calls)
-- [ ] `game/strategy/engine/production_engine.py` (19 calls)
-- [ ] `game/strategy/engine/maintenance_engine.py` (3 calls)
-- [ ] `game/strategy/engine/harvesting_engine.py` (1 call)
-- [ ] `game/strategy/engine/superweapon_command_handlers.py` (11 calls)
-- [ ] `game/strategy/engine/resource_management_engine.py` (1 call)
+- [x] `game/strategy/adapters/simulation_adapter.py`
+- [x] `game/strategy/engine/command_handlers.py`
+- [x] `game/strategy/engine/fleet_order_processor.py`
+- [x] `game/strategy/engine/superweapon_order_processor.py`
+- [x] `game/strategy/engine/game_initializer.py`
+- [x] `game/strategy/engine/game_session.py`
+- [x] `game/strategy/engine/conflict_resolution_engine.py`
+- [x] `game/strategy/engine/fleet_movement_engine.py`
+- [x] `game/strategy/engine/production_engine.py`
+- [x] `game/strategy/engine/maintenance_engine.py`
+- [x] `game/strategy/engine/harvesting_engine.py`
+- [x] `game/strategy/engine/superweapon_command_handlers.py`
+- [x] `game/strategy/engine/resource_management_engine.py`
+- [x] `game/strategy/engine/resupply_engine.py`
 
 **Strategy services/systems:**
-- [ ] `game/strategy/services/ship_stats_calculator.py` (1 call)
-- [ ] `game/strategy/services/fleet_navigation_service.py` (2 calls)
-- [ ] `game/strategy/systems/save_game_service.py` (30 calls)
-- [ ] `game/strategy/systems/design_library.py` (53 calls)
-- [ ] `game/strategy/systems/race_library.py` (26 calls)
+- [x] `game/strategy/services/ship_stats_calculator.py`
+- [x] `game/strategy/services/fleet_navigation_service.py`
+- [x] `game/strategy/systems/save_game_service.py`
+- [x] `game/strategy/systems/design_library.py`
+- [x] `game/strategy/systems/race_library.py`
 
 **Strategy data/generation:**
-- [ ] `game/strategy/data/naming.py` (3 calls)
-- [ ] `game/strategy/data/design_metadata.py` (2 calls)
-- [ ] `game/strategy/data/pathfinding.py` (5 calls)
-- [ ] `game/strategy/data/planet_gen.py` (1 call)
-- [ ] `game/strategy/data/ship_instance.py` (2 calls)
-- [ ] `game/strategy/data/classification_config.py` (1 call)
-- [ ] `game/strategy/generation/placement_strategies.py` (2 calls)
-- [ ] `game/strategy/generation/density/density_map.py` (3 calls)
-- [ ] `game/strategy/generation/loaders/galaxy_layouts_loader.py` (2 calls)
-- [ ] `game/strategy/validation/transfer_validator.py` (5 calls)
-- [ ] `game/strategy/quickstart_builder.py` (13 calls)
+- [x] `game/strategy/data/naming.py`
+- [x] `game/strategy/data/design_metadata.py`
+- [x] `game/strategy/data/pathfinding.py`
+- [x] `game/strategy/data/planet_gen.py`
+- [x] `game/strategy/data/ship_instance.py`
+- [x] `game/strategy/data/classification_config.py`
+- [x] `game/strategy/generation/placement_strategies.py`
+- [x] `game/strategy/generation/density/density_map.py`
+- [x] `game/strategy/generation/loaders/galaxy_layouts_loader.py`
+- [x] `game/strategy/generation/planet_image_registry.py`
+- [x] `game/strategy/validation/transfer_validator.py`
+- [x] `game/strategy/quickstart_builder.py`
 
-- [ ] Run strategy tests: `pytest tests/unit/strategy/ tests/integration/ -n 4`
+## Task 2: Migrate game/ai/ (~4 files) ✓
 
-## Task 2: Migrate game/ai/ (~4 files)
+- [x] `game/ai/strategy_manager.py` — full migration
+- [x] `game/ai/__init__.py` — already using standard logging
+- [x] `game/ai/controller.py` — already using standard logging
+- [x] `game/ai/combat_utils.py` — already using standard logging
 
-**Dual-usage files (already have standard logging — just remove custom imports):**
-- [ ] `game/ai/controller.py` — remove `from game.core.logger import`, keep stdlib `logger`
-- [ ] `game/ai/combat_utils.py` — remove `from game.core.logger import`, keep stdlib `logger`
+## Task 3: Migrate game/ui/ (~43 files) ✓
 
-**Custom Logger only:**
-- [ ] `game/ai/strategy_manager.py` (1 call) — full migration
-- [ ] `game/ai/__init__.py` — check for logger imports, clean up
+All UI files migrated to standard logging pattern.
 
-- [ ] Run AI tests: `pytest tests/unit/ai/ -n 4`
+## Task 4: Migrate remaining files (~4 files) ✓
+- [x] `game/assets/asset_manager.py`
+- [x] `game/research/systems/research_service.py`
+- [x] `game/research/data/research_tracker.py`
+- [x] `game/research/data/tech_tree.py`
 
-## Task 3: Migrate game/ui/ (~43 files)
-
-**UI services:**
-- [ ] `game/ui/assets/ship_theme_manager.py` (9 calls)
-- [ ] `game/ui/services/tkinter_utils.py` (8 calls)
-- [ ] `game/ui/services/screenshot_manager.py` (10 calls)
-- [ ] `game/ui/services/ship_io.py` (8 calls)
-- [ ] `game/ui/services/input_mapper.py` (3 calls)
-
-**UI panels:**
-- [ ] `game/ui/panels/base_gallery.py` (1 call)
-- [ ] `game/ui/panels/build_queue_controller.py` (27 calls)
-- [ ] `game/ui/panels/build_queue_drag_handler.py` (5 calls)
-- [ ] `game/ui/panels/race_flag_gallery.py` (3 calls)
-- [ ] `game/ui/panels/race_portrait_gallery.py` (3 calls)
-- [ ] `game/ui/panels/race_summary_panel.py` (1 call)
-- [ ] `game/ui/panels/design_report_panel.py` (1 call)
-- [ ] `game/ui/panels/build_queue_portraits.py` (2 calls)
-- [ ] `game/ui/renderer/sprites.py` (4 calls)
-
-**UI screens (high call count):**
-- [ ] `game/ui/screens/battle_screen.py` (15 calls)
-- [ ] `game/ui/screens/battle_ui.py` (9 calls)
-- [ ] `game/ui/screens/new_game_setup_screen.py` (9 calls)
-- [ ] `game/ui/screens/race_setup_screen.py` (14 calls)
-- [ ] `game/ui/screens/keybindings_scene.py` (5 calls)
-- [ ] `game/ui/screens/strategy_input_handler.py` (31 calls)
-- [ ] `game/ui/screens/strategy_screen.py` (21 calls)
-- [ ] `game/ui/screens/strategy_superweapons.py` (27 calls)
-- [ ] `game/ui/screens/strategy_fleet_ops.py` (12 calls)
-- [ ] `game/ui/screens/strategy_colonization.py` (12 calls)
-- [ ] `game/ui/screens/strategy_camera_nav.py` (6 calls)
-- [ ] `game/ui/screens/strategy_event_router.py` (2 calls)
-- [ ] `game/ui/screens/strategy_renderer.py` (1 call)
-- [ ] `game/ui/screens/formation_editor.py` (8 calls)
-- [ ] `game/ui/screens/workshop_screen.py` (3 calls)
-- [ ] `game/ui/screens/workshop_viewmodel.py` (11 calls)
-- [ ] `game/ui/screens/workshop_ship_io.py` (30 calls)
-- [ ] `game/ui/screens/workshop_data_loader.py` (10 calls)
-- [ ] `game/ui/screens/workshop_data_reloader.py` (2 calls)
-- [ ] `game/ui/screens/workshop_event_router.py` (2 calls)
-- [ ] `game/ui/screens/build_queue_screen.py` (21 calls)
-- [ ] `game/ui/screens/build_queue_selector.py` (3 calls)
-- [ ] `game/ui/screens/planet_list_window.py` (3 calls)
-- [ ] `game/ui/screens/design_image_helper.py` (2 calls)
-- [ ] `game/ui/screens/race_asset_loader.py` (5 calls)
-- [ ] `game/ui/screens/planet_selection_window.py` (3 calls)
-- [ ] `game/ui/screens/save_selection_window.py` (8 calls)
-- [ ] `game/ui/screens/setup_screen.py` (1 call)
-- [ ] `game/ui/screens/empire_build_queue_window.py` (4 calls)
-- [ ] `game/ui/screens/planet_list_presets.py` (1 call)
-- [ ] `game/ui/screens/transfer_dialog.py` (7 calls)
-- [ ] `game/ui/screens/cargo_quick_dialog.py` (3 calls)
-- [ ] `game/ui/screens/setup_data_io.py` (7 calls)
-
-**UI builder/galaxy_test/research:**
-- [ ] `game/ui/screens/builder/detail_panel.py` (1 call)
-- [ ] `game/ui/screens/builder/right_panel.py` (1 call)
-- [ ] `game/ui/screens/builder/stats_config.py` (1 call)
-- [ ] `game/ui/screens/builder/event_bus.py` (1 call)
-- [ ] `game/ui/screens/galaxy_test/screen.py` (2 calls)
-- [ ] `game/ui/screens/galaxy_test/galaxy_mode.py` (7 calls)
-- [ ] `game/ui/screens/galaxy_test/system_mode.py` (3 calls)
-- [ ] `game/ui/research/research_scene.py` (9 calls)
-
-- [ ] Run UI tests: `pytest tests/unit/ui/ -n 4`
-
-## Task 4: Migrate remaining files (~4 files)
-- [ ] `game/assets/asset_manager.py` (13 calls)
-- [ ] `game/research/systems/research_service.py` (3 calls)
-- [ ] `game/research/data/research_tracker.py` (2 calls)
-- [ ] `game/research/data/tech_tree.py` (3 calls)
-
-## Task 5: Handle `set_logging(enabled)` callers
-- [ ] Search: `grep -rn "set_logging" game/ tests/ --include="*.py"`
-- [ ] For each caller, replace with `logging.getLogger("game").setLevel(logging.CRITICAL)` or equivalent
-- [ ] Remove `set_logging` import
+## Task 5: Handle `set_logging(enabled)` callers ✓
+- [x] Searched: only test files use `set_logging`, no production code
 
 ## Task 6: Delete game/core/logger.py
-- [ ] Verify zero imports remain: `grep -rn "from game.core.logger" game/ --include="*.py"` returns nothing
-- [ ] Verify zero imports in tests: `grep -rn "from game.core.logger" tests/ simulation_tests/ --include="*.py"` — update any test imports to event_logging
+- [ ] Verify zero imports remain in game/: DONE
+- [ ] Delete tests/unit/core/logger/ (tests the old Logger class)
+- [ ] Update tests/unit/core/test_logger.py (also tests old Logger)
+- [ ] Update tests/unit/systems/test_logger_system.py (also tests old Logger)
 - [ ] Delete `game/core/logger.py`
-- [ ] Update `game/core/__init__.py` if it re-exports logger symbols
-- [ ] Run full test suite: `pytest tests/ -n 12`
+- [ ] Run full test suite
 
-## Verification
-- [ ] Verify logger.py deleted: `ls game/core/logger.py` should fail
-- [ ] Verify zero imports: `grep -rn "game\.core\.logger" game/ tests/ simulation_tests/ --include="*.py"` returns nothing
-- [ ] Verify all files use standard logging: `grep -rn "logging.getLogger" game/ --include="*.py"` shows widespread usage
-- [ ] Run full test suite: `pytest tests/ -n 12`
-- [ ] Confirm zero regressions vs. baseline
+**Note:** Task 6 deferred to Phase 4 since it requires coordinated deletion of both the module AND its tests.
 
-## Completion Checklist
-- [ ] All game/strategy/ files migrated (38 files)
-- [ ] All game/ai/ files migrated and dual-usage cleaned up (4 files)
-- [ ] All game/ui/ files migrated (43 files)
-- [ ] All remaining files migrated (assets, research — 4 files)
-- [ ] `set_logging()` callers updated
-- [ ] `game/core/logger.py` DELETED
-- [ ] Zero references to `game.core.logger` anywhere in codebase
-- [ ] All tests pass
-- [ ] Update plan.md Phase 3 status to "Complete"
+## Verification (Partial)
+- [x] Verify zero imports in production code
+- [x] All tests pass: 12030 passed, 1 skipped
+
+## Completion (Partial)
+- [x] All game/strategy/ files migrated
+- [x] All game/ai/ files migrated
+- [x] All game/ui/ files migrated
+- [x] All remaining files migrated (assets, research)
+- [x] Updated game/core/__init__.py re-exports (event_logging instead of logger)
+- [x] Updated test mocks from patch('...log_xxx') to patch('...logger')
+- [x] All tests pass
+
+**Remaining:** Delete logger.py and its dedicated tests (coordinated in Phase 4)

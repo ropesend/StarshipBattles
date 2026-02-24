@@ -8,7 +8,9 @@ import pygame_gui
 from pygame_gui.elements import UIWindow, UISelectionList, UIButton, UILabel
 
 from game.assets.asset_manager import AssetManager
-from game.core.logger import log_debug
+import logging
+
+logger = logging.getLogger(__name__)
 from game.ui.panels.planet_report_panel import PlanetReportPanel
 
 class PlanetSelectionWindow(UIWindow):
@@ -146,16 +148,16 @@ class PlanetSelectionWindow(UIWindow):
         
         if self.btn_select.check_pressed():
             selected_name = self.selection_list.get_single_selection()
-            log_debug(f"PlanetSelectionWindow: Confirm Pressed. Selection: {selected_name}")
+            logger.debug(f"PlanetSelectionWindow: Confirm Pressed. Selection: {selected_name}")
             if selected_name:
                 # Find planet
                 choice = next((p for p in self.planets if p.name == selected_name), None)
                 if choice:
-                     log_debug(f"PlanetSelectionWindow: Calling callback with {choice.name}")
+                     logger.debug(f"PlanetSelectionWindow: Calling callback with {choice.name}")
                      self.callback(choice)
                      self.kill()
             else:
-                log_debug("PlanetSelectionWindow: No selection made.")
+                logger.debug("PlanetSelectionWindow: No selection made.")
 
         if self.btn_any and self.btn_any.check_pressed():
             # "Any Planet" -> Return None to defer selection to arrival

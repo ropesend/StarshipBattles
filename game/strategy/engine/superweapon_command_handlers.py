@@ -9,9 +9,11 @@ Usage:
     result = handler.execute(session, command)
 """
 from typing import Any, TYPE_CHECKING
+import logging
 
-from game.core.logger import log_info
 from game.core.validation import ValidationResult
+
+logger = logging.getLogger(__name__)
 from game.strategy.data.fleet import FleetOrder, OrderType
 from game.strategy.data.pathfinding import find_hybrid_path
 from game.strategy.validation import SuperweaponValidator
@@ -48,7 +50,7 @@ class ImplodePlanetCommandHandler:
         if result.is_valid:
             order = FleetOrder(OrderType.IMPLODE_PLANET, target=planet)
             fleet.add_order(order)
-            log_info(f"GameSession: Issued IMPLODE_PLANET order for Fleet {fleet.id}")
+            logger.info(f"GameSession: Issued IMPLODE_PLANET order for Fleet {fleet.id}")
 
         return result
 
@@ -72,7 +74,7 @@ class StellerateStarCommandHandler:
         if result.is_valid:
             order = FleetOrder(OrderType.STELLERATE_STAR, target=None)
             fleet.add_order(order)
-            log_info(f"GameSession: Issued STELLERATE_STAR order for Fleet {fleet.id}")
+            logger.info(f"GameSession: Issued STELLERATE_STAR order for Fleet {fleet.id}")
 
         return result
 
@@ -100,7 +102,7 @@ class OpenWarpPointCommandHandler:
             }
             order = FleetOrder(OrderType.OPEN_WARP_POINT, target=target_dict)
             fleet.add_order(order)
-            log_info(f"GameSession: Issued OPEN_WARP_POINT order for Fleet {fleet.id}")
+            logger.info(f"GameSession: Issued OPEN_WARP_POINT order for Fleet {fleet.id}")
 
         return result
 
@@ -124,7 +126,7 @@ class CloseWarpPointCommandHandler:
         if result.is_valid:
             order = FleetOrder(OrderType.CLOSE_WARP_POINT, target=cmd.warp_point_destination_id)
             fleet.add_order(order)
-            log_info(f"GameSession: Issued CLOSE_WARP_POINT order for Fleet {fleet.id}")
+            logger.info(f"GameSession: Issued CLOSE_WARP_POINT order for Fleet {fleet.id}")
 
         return result
 
@@ -148,7 +150,7 @@ class CreateDysonSphereCommandHandler:
         if result.is_valid:
             order = FleetOrder(OrderType.CREATE_DYSON_SPHERE, target=None)
             fleet.add_order(order)
-            log_info(f"GameSession: Issued CREATE_DYSON_SPHERE order for Fleet {fleet.id}")
+            logger.info(f"GameSession: Issued CREATE_DYSON_SPHERE order for Fleet {fleet.id}")
 
         return result
 
@@ -170,7 +172,7 @@ class SelfDestructCommandHandler:
         if result.is_valid:
             order = FleetOrder(OrderType.SELF_DESTRUCT, target=cmd.ship_ids)
             fleet.add_order(order)
-            log_info(f"GameSession: Issued SELF_DESTRUCT order for Fleet {fleet.id}")
+            logger.info(f"GameSession: Issued SELF_DESTRUCT order for Fleet {fleet.id}")
 
         return result
 
@@ -243,7 +245,7 @@ class ImplodePlanetMissionCommandHandler:
         action_order = FleetOrder(OrderType.IMPLODE_PLANET, target=planet)
         fleet.add_order(action_order)
 
-        log_info(f"GameSession: Queued IMPLODE_PLANET mission for Fleet {fleet.id}")
+        logger.info(f"GameSession: Queued IMPLODE_PLANET mission for Fleet {fleet.id}")
         return ValidationResult()
 
 
@@ -266,7 +268,7 @@ class StellerateStarMissionCommandHandler:
         action_order = FleetOrder(OrderType.STELLERATE_STAR, target=None)
         fleet.add_order(action_order)
 
-        log_info(f"GameSession: Queued STELLERATE_STAR mission for Fleet {fleet.id}")
+        logger.info(f"GameSession: Queued STELLERATE_STAR mission for Fleet {fleet.id}")
         return ValidationResult()
 
 
@@ -293,7 +295,7 @@ class OpenWarpPointMissionCommandHandler:
         action_order = FleetOrder(OrderType.OPEN_WARP_POINT, target=target_dict)
         fleet.add_order(action_order)
 
-        log_info(f"GameSession: Queued OPEN_WARP_POINT mission for Fleet {fleet.id}")
+        logger.info(f"GameSession: Queued OPEN_WARP_POINT mission for Fleet {fleet.id}")
         return ValidationResult()
 
 
@@ -316,7 +318,7 @@ class CloseWarpPointMissionCommandHandler:
         action_order = FleetOrder(OrderType.CLOSE_WARP_POINT, target=cmd.warp_point_destination_id)
         fleet.add_order(action_order)
 
-        log_info(f"GameSession: Queued CLOSE_WARP_POINT mission for Fleet {fleet.id}")
+        logger.info(f"GameSession: Queued CLOSE_WARP_POINT mission for Fleet {fleet.id}")
         return ValidationResult()
 
 
@@ -339,5 +341,5 @@ class CreateDysonSphereMissionCommandHandler:
         action_order = FleetOrder(OrderType.CREATE_DYSON_SPHERE, target=None)
         fleet.add_order(action_order)
 
-        log_info(f"GameSession: Queued CREATE_DYSON_SPHERE mission for Fleet {fleet.id}")
+        logger.info(f"GameSession: Queued CREATE_DYSON_SPHERE mission for Fleet {fleet.id}")
         return ValidationResult()

@@ -214,8 +214,9 @@ class DesignReportPanel:
                     portrait_surface = pygame.transform.smoothscale(loaded_img, (portrait_width, portrait_height))
                     break
                 except (FileNotFoundError, OSError, pygame.error) as e:
-                    from game.core.logger import log_warning
-                    log_warning(f"Failed to load portrait from {path}: {e}")
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.warning(f"Failed to load portrait from {path}: {e}")
                     continue
 
         # Fallback: Create placeholder portrait if no image found

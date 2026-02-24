@@ -652,8 +652,8 @@ class StrategyRenderer:
         for emp in self.empires:
             for f in emp.fleets:
                 if f.location is None:
-                    from game.core.logger import log_warning
-                    log_warning(f"Skipping render for Fleet {f.id} (Owner {f.owner_id}): Location is None")
+                    import logging
+                    logging.getLogger(__name__).warning(f"Skipping render for Fleet {f.id} (Owner {f.owner_id}): Location is None")
                     continue
 
                 fx, fy = hex_to_pixel(f.location, self.hex_size)

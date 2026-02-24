@@ -1,9 +1,10 @@
+import logging
 import os
 import yaml
 import random
 from typing import List, Optional, Set
 
-from game.core.logger import log_error, log_warning
+logger = logging.getLogger(__name__)
 
 
 class NameRegistry:
@@ -28,7 +29,7 @@ class NameRegistry:
             file_path: Path to YAML file containing a 'names' list.
         """
         if not os.path.exists(file_path):
-            log_error(f"Name data file not found: {file_path}")
+            logger.error(f"Name data file not found: {file_path}")
             return
 
         try:
@@ -40,10 +41,10 @@ class NameRegistry:
                 # Default behavior: shuffle for random selection
                 random.shuffle(self.available_names)
             else:
-                log_warning(f"Invalid format in {file_path}: 'names' list missing.")
+                logger.warning(f"Invalid format in {file_path}: 'names' list missing.")
 
         except (FileNotFoundError, OSError, yaml.YAMLError, KeyError, TypeError, UnicodeDecodeError) as e:
-            log_error(f"Failed to load name data: {e}")
+            logger.error(f"Failed to load name data: {e}")
 
     def get_system_name(self) -> str:
         """Get a unique system name.

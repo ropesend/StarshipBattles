@@ -9,12 +9,15 @@ from __future__ import annotations
 
 from typing import Optional
 
+import logging
+
 import pygame
 import pygame_gui
 from game.ui.config import UIConfig
 from game.core.input_actions import InputAction
-from game.core.logger import log_debug, log_info, log_warning
 from game.ui.services.screenshot_manager import ScreenshotManager
+
+logger = logging.getLogger(__name__)
 from game.core.hex_math import pixel_to_hex
 
 
@@ -134,49 +137,49 @@ class StrategyInputHandler:
         if action == InputAction.FLEET_MOVE:
             if self.scene.selected_fleet:
                 self.input_mode = 'MOVE'
-                log_debug("Input Mode: MOVE - Click destination for fleet.")
+                logger.debug("Input Mode: MOVE - Click destination for fleet.")
             else:
-                log_debug("Select a fleet first.")
+                logger.debug("Select a fleet first.")
             return True
 
         elif action == InputAction.FLEET_JOIN:
             if self.scene.selected_fleet:
                 self.input_mode = 'JOIN'
-                log_debug("Input Mode: JOIN - Select fleet to join.")
+                logger.debug("Input Mode: JOIN - Select fleet to join.")
             else:
-                log_debug("Select a fleet first.")
+                logger.debug("Select a fleet first.")
             return True
 
         elif action == InputAction.FLEET_COLONIZE:
             if self.scene.selected_fleet:
                 self.input_mode = 'COLONIZE_TARGET'
-                log_debug("Input Mode: COLONIZE - Select target planet.")
+                logger.debug("Input Mode: COLONIZE - Select target planet.")
             else:
-                log_debug("Select a fleet first.")
+                logger.debug("Select a fleet first.")
             return True
 
         elif action == InputAction.FLEET_TRANSFER:
             if self.scene.selected_fleet:
                 self.input_mode = 'TRANSFER'
-                log_debug("Input Mode: TRANSFER - Click destination hex for transfer.")
+                logger.debug("Input Mode: TRANSFER - Click destination hex for transfer.")
             else:
-                log_debug("Select a fleet first for transfer.")
+                logger.debug("Select a fleet first for transfer.")
             return True
 
         elif action == InputAction.FLEET_DROP_CARGO:
             if self.scene.selected_fleet:
                 self.input_mode = 'DROP_CARGO'
-                log_debug("Input Mode: DROP_CARGO - Click target hex.")
+                logger.debug("Input Mode: DROP_CARGO - Click target hex.")
             else:
-                log_debug("Select a fleet first.")
+                logger.debug("Select a fleet first.")
             return True
 
         elif action == InputAction.FLEET_LOAD_CARGO:
             if self.scene.selected_fleet:
                 self.input_mode = 'LOAD_CARGO'
-                log_debug("Input Mode: LOAD_CARGO - Click target hex.")
+                logger.debug("Input Mode: LOAD_CARGO - Click target hex.")
             else:
-                log_debug("Select a fleet first.")
+                logger.debug("Select a fleet first.")
             return True
 
         elif action == InputAction.FLEET_CANCEL_MODE:
@@ -184,7 +187,7 @@ class StrategyInputHandler:
                                    'IMPLODE_PLANET_TARGET', 'STELLERATE_STAR_TARGET', 'OPEN_WARP_TARGET',
                                    'CLOSE_WARP_TARGET', 'DYSON_SPHERE_TARGET'):
                 self.input_mode = 'SELECT'
-                log_debug("Input Mode: SELECT")
+                logger.debug("Input Mode: SELECT")
             return True
 
         return False
@@ -198,31 +201,31 @@ class StrategyInputHandler:
         if action == InputAction.FLEET_IMPLODE_PLANET:
             if self.scene.selected_fleet:
                 self.input_mode = 'IMPLODE_PLANET_TARGET'
-                log_debug("Input Mode: IMPLODE_PLANET - Select target planet.")
+                logger.debug("Input Mode: IMPLODE_PLANET - Select target planet.")
             return True
 
         elif action == InputAction.FLEET_STELLERATE_STAR:
             if self.scene.selected_fleet:
                 self.input_mode = 'STELLERATE_STAR_TARGET'
-                log_debug("Input Mode: STELLERATE_STAR - Select target star.")
+                logger.debug("Input Mode: STELLERATE_STAR - Select target star.")
             return True
 
         elif action == InputAction.FLEET_OPEN_WARP_POINT:
             if self.scene.selected_fleet:
                 self.input_mode = 'OPEN_WARP_TARGET'
-                log_debug("Input Mode: OPEN_WARP_POINT - Select hex for warp point.")
+                logger.debug("Input Mode: OPEN_WARP_POINT - Select hex for warp point.")
             return True
 
         elif action == InputAction.FLEET_CLOSE_WARP_POINT:
             if self.scene.selected_fleet:
                 self.input_mode = 'CLOSE_WARP_TARGET'
-                log_debug("Input Mode: CLOSE_WARP_POINT - Select warp point to close.")
+                logger.debug("Input Mode: CLOSE_WARP_POINT - Select warp point to close.")
             return True
 
         elif action == InputAction.FLEET_CREATE_DYSON_SPHERE:
             if self.scene.selected_fleet:
                 self.input_mode = 'DYSON_SPHERE_TARGET'
-                log_debug("Input Mode: DYSON_SPHERE - Select target star.")
+                logger.debug("Input Mode: DYSON_SPHERE - Select target star.")
             return True
 
         elif action == InputAction.FLEET_SELF_DESTRUCT:
@@ -386,7 +389,7 @@ class StrategyInputHandler:
 
         elif button == 3:  # Right click cancels
             self.input_mode = 'SELECT'
-            log_debug("Input Mode: SELECT")
+            logger.debug("Input Mode: SELECT")
             return True
 
         return False
@@ -404,7 +407,7 @@ class StrategyInputHandler:
 
         elif button == 3:  # Right click cancels
             self.input_mode = 'SELECT'
-            log_debug("Input Mode: SELECT")
+            logger.debug("Input Mode: SELECT")
             return True
 
         return False
@@ -437,7 +440,7 @@ class StrategyInputHandler:
 
         elif button == 3:  # Right click cancels
             self.input_mode = 'SELECT'
-            log_debug("Input Mode: SELECT")
+            logger.debug("Input Mode: SELECT")
             return True
 
         return False
@@ -452,7 +455,7 @@ class StrategyInputHandler:
             return True
         elif button == 3:  # Right click cancels
             self.input_mode = 'SELECT'
-            log_debug("Input Mode: SELECT")
+            logger.debug("Input Mode: SELECT")
             return True
         return False
 
@@ -466,7 +469,7 @@ class StrategyInputHandler:
             return True
         elif button == 3:  # Right click cancels
             self.input_mode = 'SELECT'
-            log_debug("Input Mode: SELECT")
+            logger.debug("Input Mode: SELECT")
             return True
         return False
 
@@ -480,7 +483,7 @@ class StrategyInputHandler:
             return True
         elif button == 3:  # Right click cancels
             self.input_mode = 'SELECT'
-            log_debug("Input Mode: SELECT")
+            logger.debug("Input Mode: SELECT")
             return True
         return False
 
@@ -495,7 +498,7 @@ class StrategyInputHandler:
             return True
         elif button == 3:  # Right click cancels
             self.input_mode = 'SELECT'
-            log_debug("Input Mode: SELECT")
+            logger.debug("Input Mode: SELECT")
             return True
         return False
 
@@ -510,7 +513,7 @@ class StrategyInputHandler:
             return True
         elif button == 3:  # Right click cancels
             self.input_mode = 'SELECT'
-            log_debug("Input Mode: SELECT")
+            logger.debug("Input Mode: SELECT")
             return True
         return False
 
@@ -525,7 +528,7 @@ class StrategyInputHandler:
             return True
         elif button == 3:  # Right click cancels
             self.input_mode = 'SELECT'
-            log_debug("Input Mode: SELECT")
+            logger.debug("Input Mode: SELECT")
             return True
         return False
 
@@ -540,7 +543,7 @@ class StrategyInputHandler:
             return True
         elif button == 3:  # Right click cancels
             self.input_mode = 'SELECT'
-            log_debug("Input Mode: SELECT")
+            logger.debug("Input Mode: SELECT")
             return True
         return False
 
@@ -555,7 +558,7 @@ class StrategyInputHandler:
             return True
         elif button == 3:  # Right click cancels
             self.input_mode = 'SELECT'
-            log_debug("Input Mode: SELECT")
+            logger.debug("Input Mode: SELECT")
             return True
         return False
 
@@ -885,7 +888,7 @@ class StrategyInputHandler:
         """Take a full screenshot of the strategy layer including UI."""
         sm = ScreenshotManager.instance()
         sm.capture_strategy_layer(self.scene, include_ui=True, label="strategy_full")
-        log_info("Screenshot: Full strategy layer captured (F12)")
+        logger.info("Screenshot: Full strategy layer captured (F12)")
         # DUP-UI1-001: Use consolidated toast from ScreenshotManager
         sm.show_toast(self.scene.ui.manager, self.scene.screen_width, "Screenshot saved (full view)")
 
@@ -893,6 +896,6 @@ class StrategyInputHandler:
         """Take a screenshot of only the galaxy viewport (no UI)."""
         sm = ScreenshotManager.instance()
         sm.capture_strategy_layer(self.scene, include_ui=False, label="strategy_viewport")
-        log_info("Screenshot: Galaxy viewport captured (F11)")
+        logger.info("Screenshot: Galaxy viewport captured (F11)")
         # DUP-UI1-001: Use consolidated toast from ScreenshotManager
         sm.show_toast(self.scene.ui.manager, self.scene.screen_width, "Screenshot saved (viewport only)")

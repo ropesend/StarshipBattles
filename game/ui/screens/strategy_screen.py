@@ -15,11 +15,14 @@ PROJ-40: Use protocol type guards instead of isinstance for cross-layer checks.
 """
 from __future__ import annotations
 
+import logging
+
 import pygame
 from typing import TYPE_CHECKING
 from game.ui.config import UIConfig
-from game.core.logger import log_debug, log_info, log_warning
 from game.core.protocols import is_star, is_planet, is_fleet, is_warp_point, is_star_system
+
+logger = logging.getLogger(__name__)
 from game.core.hex_math import hex_to_pixel
 from game.ui.renderer.camera import Camera
 from game.ui.screens.strategy_ui import StrategyUI
@@ -280,7 +283,7 @@ class StrategyScreen:
         else:
             # Switch to next human player's view
             next_player_id = self.human_player_ids[self.current_player_index]
-            log_info(f"Player {next_player_id + 1}'s turn to give orders.")
+            logger.info(f"Player {next_player_id + 1}'s turn to give orders.")
             self._update_player_label()
             # Center on their home colony
             next_empire = next((e for e in self.empires if e.id == next_player_id), None)
@@ -290,7 +293,7 @@ class StrategyScreen:
     def _process_full_turn(self):
         """Process the turn for all empires simultaneously."""
         self.turn_processing = True
-        log_info("Processing Turn...")
+        logger.info("Processing Turn...")
 
         # Capture turn number before processing (events are logged at this turn)
         processed_turn = self._facade.get_turn_number()
@@ -308,9 +311,9 @@ class StrategyScreen:
         if self.session.save_path:
             success, message, _ = SaveGameService.save_game(self.session)
             if success:
-                log_info(f"Auto-saved: {message}")
+                logger.info(f"Auto-saved: {message}")
             else:
-                log_warning(f"Auto-save failed: {message}")
+                logger.warning(f"Auto-save failed: {message}")
 
         # Re-center Camera on current player's home
         current_player_id = self.human_player_ids[self.current_player_index]
@@ -414,7 +417,7 @@ class StrategyScreen:
         """Open build queue screen for selected planet."""
         # Guard against double-open - if build queue is already open, ignore
         if hasattr(self, 'build_queue_screen') and self.build_queue_screen is not None:
-            log_info("Build queue already open, ignoring click")
+            logger.info("Build queue already open, ignoring click")
             return
 
         from game.strategy.data.planet import Planet
@@ -454,7 +457,7 @@ class StrategyScreen:
                     empire=self.current_empire,
                     input_mapper=self.input_mapper
                 )
-                log_info(f"Opened build queue for {planet.name}")
+                logger.info(f"Opened build queue for {planet.name}")
 
     def _on_build_queue_close(self):
         """Handle build queue screen closing.
@@ -462,7 +465,7 @@ class StrategyScreen:
         PROJ-69: Iterates all queue sources from the closing screen and
         manages BUILD orders for any fleet-type sources.
         """
-        log_info("_on_build_queue_close() CALLED")
+        logger.info("_on_build_queue_close() CALLED")
 
         # PROJ-69: Handle fleet BUILD orders for all fleet-type queue sources
         queue_sources = getattr(self.build_queue_screen, 'queue_sources', [])
@@ -483,12 +486,12 @@ class StrategyScreen:
         # Refresh planet details to show updated queue/facilities
         if self.selected_object:
             try:
-                log_info(f"  Refreshing display for selected_object: {self.selected_object}")
+                logger.info(f"  Refreshing display for selected_object: {self.selected_object}")
                 img = self._get_object_asset(self.selected_object)
                 self.ui.show_detailed_report(self.selected_object, img)
             except (FileNotFoundError, OSError, pygame.error, AttributeError, KeyError) as e:
-                log_warning(f"Could not refresh planet display after build queue close: {e}")
-        log_info("_on_build_queue_close() FINISHED")
+                logger.warning(f"Could not refresh planet display after build queue close: {e}")
+        logger.info("_on_build_queue_close() FINISHED")
 
     def _handle_fleet_build_queue_close(self, fleet):
         """Handle fleet build queue closing - auto-issue BUILD order if items in queue.
@@ -505,7 +508,7 @@ class StrategyScreen:
                 for order in fleet.orders
             )
             if not has_build_order:
-                log_info(f"Auto-issuing BUILD order to fleet {fleet.id} ({len(fleet.construction_queue)} items in queue)")
+                logger.info(f"Auto-issuing BUILD order to fleet {fleet.id} ({len(fleet.construction_queue)} items in queue)")
                 fleet.orders.insert(0, FleetOrder(OrderType.BUILD))
                 fleet.path = []  # Clear movement path
         else:
@@ -524,12 +527,12 @@ class StrategyScreen:
         """
         # Guard against double-open
         if hasattr(self, 'build_queue_screen') and self.build_queue_screen is not None:
-            log_info("Build queue already open, ignoring navigate")
+            logger.info("Build queue already open, ignoring navigate")
             return
 
         entity = source.owner_entity
         if entity is None:
-            log_warning("on_navigate_to_hex_build: source has no owner_entity")
+            logger.warning("on_navigate_to_hex_build: source has no owner_entity")
             return
 
         # Close the empire build queue window
@@ -564,13 +567,13 @@ class StrategyScreen:
             empire=self.current_empire,
             input_mapper=self.input_mapper
         )
-        log_info(f"Navigated to build queue for {source.display_name} at hex {hex_coord}")
+        logger.info(f"Navigated to build queue for {source.display_name} at hex {hex_coord}")
 
     def on_fleet_build_click(self):
         """Open build queue screen for selected fleet (PROJ-67: Fleet Space Yards)."""
         # Guard against double-open
         if hasattr(self, 'build_queue_screen') and self.build_queue_screen is not None:
-            log_info("Build queue already open, ignoring click")
+            logger.info("Build queue already open, ignoring click")
             return
 
         from game.strategy.data.fleet import Fleet
@@ -609,11 +612,11 @@ class StrategyScreen:
                     empire=self.current_empire,
                     input_mapper=self.input_mapper
                 )
-                log_info(f"Opened build queue for fleet {fleet.id}")
+                logger.info(f"Opened build queue for fleet {fleet.id}")
 
     def on_design_click(self):
         """Handle 'Design' button click - opens Design Workshop."""
-        log_debug("Design button clicked - opening Design Workshop")
+        logger.debug("Design button clicked - opening Design Workshop")
 
         # Gather context data for integrated mode
         context_data = {
@@ -709,7 +712,7 @@ class StrategyScreen:
         from game.strategy.systems.save_game_service import SaveGameService
         import pygame_gui.windows
 
-        log_info("Saving game...")
+        logger.info("Saving game...")
 
         # Save the game
         success, message, save_path = SaveGameService.save_game(self.session)
@@ -724,7 +727,7 @@ class StrategyScreen:
                 manager=self.ui.manager,
                 window_title="Save Game"
             )
-            log_info(f"Game saved: {message}")
+            logger.info(f"Game saved: {message}")
         else:
             dialog_rect = pygame.Rect(0, 0, UIConfig.CONFIRM_DIALOG_WIDTH, UIConfig.CONFIRM_DIALOG_HEIGHT)
             dialog_rect.center = (self.screen_width // 2, self.screen_height // 2)
@@ -734,7 +737,7 @@ class StrategyScreen:
                 manager=self.ui.manager,
                 window_title="Save Game Error"
             )
-            log_warning(f"Save failed: {message}")
+            logger.warning(f"Save failed: {message}")
 
     # =========================================================================
     # Pathfinding (for external access)
@@ -809,7 +812,7 @@ class StrategyScreen:
                         return img
                 except (FileNotFoundError, OSError, pygame.error, AttributeError) as e:
                     # Log error and fall through to None
-                    log_warning(f"Could not load planet image {obj.image_id}: {e}")
+                    logger.warning(f"Could not load planet image {obj.image_id}: {e}")
             return None  # PlanetReportPanel will create gradient placeholder
 
         elif is_warp_point(obj):

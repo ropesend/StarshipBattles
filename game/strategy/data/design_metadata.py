@@ -5,13 +5,15 @@ This module provides the DesignMetadata class for tracking ship design informati
 without loading the full ship data. Used by the design library system for filtering,
 sorting, and displaying designs in the UI.
 """
+import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
 from datetime import datetime
 import os
 import warnings
 from game.core.json_utils import load_json_required, save_json
-from game.core.logger import log_warning
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -174,7 +176,7 @@ class DesignMetadata:
                 components = layer_data
             else:
                 # Old format detected - warn but handle gracefully
-                log_warning(f"DesignMetadata: Old layer format in '{layer_name}'. Expected list, got {type(layer_data).__name__}.")
+                logger.warning(f"DesignMetadata: Old layer format in '{layer_name}'. Expected list, got {type(layer_data).__name__}.")
                 components = []
 
             for comp_data in components:
@@ -218,7 +220,7 @@ class DesignMetadata:
             if isinstance(layer_data, list):
                 components = layer_data
             else:
-                log_warning(f"DesignMetadata: Old layer format in '{layer_name}'. Expected list, got {type(layer_data).__name__}.")
+                logger.warning(f"DesignMetadata: Old layer format in '{layer_name}'. Expected list, got {type(layer_data).__name__}.")
                 components = []
 
             for comp_data in components:

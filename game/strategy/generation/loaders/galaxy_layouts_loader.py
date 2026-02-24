@@ -5,11 +5,13 @@ Loads and processes galaxy layout configurations from JSON,
 applying proper scaling for galaxy radius.
 """
 
+import logging
 import os
 from typing import Dict, Any, List, Optional
 
 from game.core.json_utils import load_json_required
-from game.core.logger import log_info
+
+logger = logging.getLogger(__name__)
 
 
 # Fields that should be scaled by galaxy radius
@@ -46,13 +48,13 @@ class GalaxyLayoutsLoader:
         if file_path is None:
             file_path = GalaxyLayoutsLoader.DEFAULT_PATH
 
-        log_info(f"Loading galaxy layouts from: {file_path}")
+        logger.info(f"Loading galaxy layouts from: {file_path}")
         data = load_json_required(file_path)
 
         if 'layouts' not in data:
             raise ValueError(f"Galaxy layouts file must contain 'layouts' key: {file_path}")
 
-        log_info(f"Loaded {len(data['layouts'])} galaxy layout types")
+        logger.info(f"Loaded {len(data['layouts'])} galaxy layout types")
         return data
 
     @staticmethod

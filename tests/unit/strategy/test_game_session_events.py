@@ -37,22 +37,22 @@ class TestGameSessionEventLog:
 
     def test_session_registers_event_handler(self):
         """GameSession registers a global event handler via set_event_handler."""
-        from game.core import logger as logger_mod
+        import game.core.event_logging as event_logging_mod
 
-        old_handler = logger_mod._event_handler
+        old_handler = event_logging_mod._event_handler
         try:
             session = GameSession(config=_make_minimal_config())
             # A handler should now be registered
-            assert logger_mod._event_handler is not None
+            assert event_logging_mod._event_handler is not None
         finally:
-            logger_mod._event_handler = old_handler
+            event_logging_mod._event_handler = old_handler
 
     def test_event_handler_creates_events(self):
         """log_event() calls route through to the session's EventLog."""
-        from game.core.logger import log_event, set_event_handler
-        import game.core.logger as logger_mod
+        from game.core.event_logging import log_event, set_event_handler
+        import game.core.event_logging as event_logging_mod
 
-        old_handler = logger_mod._event_handler
+        old_handler = event_logging_mod._event_handler
         try:
             session = GameSession(config=_make_minimal_config())
 
@@ -73,14 +73,14 @@ class TestGameSessionEventLog:
             assert events[0].empire_id == 0
             assert events[0].details == {"ship_name": "Scout"}
         finally:
-            logger_mod._event_handler = old_handler
+            event_logging_mod._event_handler = old_handler
 
     def test_event_handler_uses_current_turn_number(self):
         """Events created by the handler use the session's current turn number."""
-        import game.core.logger as logger_mod
-        from game.core.logger import log_event
+        import game.core.event_logging as event_logging_mod
+        from game.core.event_logging import log_event
 
-        old_handler = logger_mod._event_handler
+        old_handler = event_logging_mod._event_handler
         try:
             session = GameSession(config=_make_minimal_config())
             session.turn_number = 5
@@ -96,14 +96,14 @@ class TestGameSessionEventLog:
             assert len(events) == 1
             assert events[0].turn == 5
         finally:
-            logger_mod._event_handler = old_handler
+            event_logging_mod._event_handler = old_handler
 
     def test_event_handler_defaults_for_missing_kwargs(self):
         """Handler provides defaults when optional kwargs are missing."""
-        import game.core.logger as logger_mod
-        from game.core.logger import log_event
+        import game.core.event_logging as event_logging_mod
+        from game.core.event_logging import log_event
 
-        old_handler = logger_mod._event_handler
+        old_handler = event_logging_mod._event_handler
         try:
             session = GameSession(config=_make_minimal_config())
 
@@ -117,14 +117,14 @@ class TestGameSessionEventLog:
             assert events[0].message == ""
             assert events[0].empire_id == -1
         finally:
-            logger_mod._event_handler = old_handler
+            event_logging_mod._event_handler = old_handler
 
     def test_multiple_events_accumulate(self):
         """Multiple log_event calls accumulate in the EventLog."""
-        import game.core.logger as logger_mod
-        from game.core.logger import log_event
+        import game.core.event_logging as event_logging_mod
+        from game.core.event_logging import log_event
 
-        old_handler = logger_mod._event_handler
+        old_handler = event_logging_mod._event_handler
         try:
             session = GameSession(config=_make_minimal_config())
 
@@ -138,7 +138,7 @@ class TestGameSessionEventLog:
             events = session.event_log.get_all_events()
             assert len(events) == 3
         finally:
-            logger_mod._event_handler = old_handler
+            event_logging_mod._event_handler = old_handler
 
 
 class TestGameSessionEventPersistence:

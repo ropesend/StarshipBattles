@@ -10,7 +10,9 @@ import pygame
 import tkinter as tk
 from tkinter import filedialog
 
-from game.core.logger import log_error
+import logging
+
+logger = logging.getLogger(__name__)
 from game.ui.services.ship_factory import ShipFactory
 from game.core.strategy_metadata import StrategyMetadataService
 from game.core.json_utils import load_json_required
@@ -150,7 +152,7 @@ class BattleSetupScreen:
             design_entry = self._find_or_create_design(ship_path, ship_data)
             self._add_formation_entries(arrows, design_entry, diameter, formation['name'], team_idx)
         except (KeyError, TypeError, ValueError, AttributeError) as e:
-            log_error(f"Error adding formation: {e}")
+            logger.error(f"Error adding formation: {e}")
 
     def _find_or_create_design(self, ship_path, ship_data):
         """Find existing design entry or create new one."""

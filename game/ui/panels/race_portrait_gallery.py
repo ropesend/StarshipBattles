@@ -9,14 +9,16 @@ Provides UI controls for:
 - Portrait selection with visual feedback
 - Preview of selected portrait at full size
 """
+import logging
 import os
 from typing import Callable, List, Optional, Tuple, TYPE_CHECKING
 
 import pygame
 import pygame_gui
 
-from game.core.logger import log_debug, log_error, log_warning
 from game.core.paths import Paths
+
+logger = logging.getLogger(__name__)
 from game.ui.panels.base_gallery import BaseGallery
 from game.ui.screens.race_asset_loader import RaceAssetLoader
 
@@ -109,7 +111,7 @@ class RacePortraitGallery(BaseGallery):
         portraits_dir = os.path.join(Paths.ASSET_DIR, "Images", "Race Portraits")
 
         if not os.path.exists(portraits_dir):
-            log_warning(f"Portraits directory not found: {portraits_dir}")
+            logger.warning(f"Portraits directory not found: {portraits_dir}")
             return portraits
 
         for entry in os.scandir(portraits_dir):
@@ -122,11 +124,11 @@ class RacePortraitGallery(BaseGallery):
                     )
                     portraits.append((entry.name, scaled))
                 except (FileNotFoundError, OSError, pygame.error) as e:
-                    log_error(f"Failed to load portrait {entry.path}: {e}")
+                    logger.error(f"Failed to load portrait {entry.path}: {e}")
 
         portraits.sort(key=lambda x: x[0])
         self._asset_cache = portraits
-        log_debug(f"Discovered {len(portraits)} portraits")
+        logger.debug(f"Discovered {len(portraits)} portraits")
         return portraits
 
     def _update_preview(self, asset_id: str) -> None:

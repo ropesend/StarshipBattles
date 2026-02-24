@@ -7,12 +7,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
 
+import logging
+
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIWindow, UIButton, UILabel, UIDropDownMenu, UIHorizontalSlider
 from game.core.input_actions import InputAction
-from game.core.logger import log_debug, log_info
 from game.strategy.engine.commands import IssueTransferCommand
+
+logger = logging.getLogger(__name__)
 from game.strategy.services.cargo_transfer_service import CargoTransferService
 
 if TYPE_CHECKING:
@@ -162,7 +165,7 @@ class TransferDialog(UIWindow):
         self.available_sources = []
         
         # PROJ-FIX: Always add the source fleet to available sources, regardless of where we clicked
-        log_info(f"TransferDialog._populate_initial_data: Scanning hex {self.hex_coord}")
+        logger.info(f"TransferDialog._populate_initial_data: Scanning hex {self.hex_coord}")
         
         if self.source_fleet:
             # Check if already added (if clicked on fleet itself)
@@ -183,11 +186,11 @@ class TransferDialog(UIWindow):
                 label = f"Planet: {p.name} (Uncolonized)"
                 p_type = 'planet'
             
-            log_info(f"Adding source: {label} (Type: {p_type}, ID: {p.planet_id})")
+            logger.info(f"Adding source: {label} (Type: {p_type}, ID: {p.planet_id})")
             self.available_sources.append({'label': label, 'type': p_type, 'id': p.planet_id})
             
         source_labels = [s['label'] for s in self.available_sources]
-        log_info(f"Final Source Labels: {source_labels}")
+        logger.info(f"Final Source Labels: {source_labels}")
         
         # Default select source_fleet if possible
         starting_option = ""
@@ -383,7 +386,7 @@ class TransferDialog(UIWindow):
         item = next((c for c in self.available_cargo if c['label'] == item_label), None)
 
         if not source or not target or not item:
-            log_debug("TransferDialog: Selection incomplete.")
+            logger.debug("TransferDialog: Selection incomplete.")
             return
 
         amount = int(self.slider_amount.get_current_value())
@@ -405,7 +408,7 @@ class TransferDialog(UIWindow):
             fleet_id = source['id']
             target_fleet_id = target['id']
         else:
-            log_info(f"Transfer between {source['type']} and {target['type']} not supported.")
+            logger.info(f"Transfer between {source['type']} and {target['type']} not supported.")
             return
 
         # Build command - use service for fleet-to-planet, manual for fleet-to-fleet
@@ -435,10 +438,10 @@ class TransferDialog(UIWindow):
 
         result = self.facade.handle_command(cmd)
         if result.is_valid:
-            log_info("TransferDialog: Order issued successfully.")
+            logger.info("TransferDialog: Order issued successfully.")
             self.kill()
         else:
-            log_info(f"TransferDialog: Validation failed: {result.message}")
+            logger.info(f"TransferDialog: Validation failed: {result.message}")
             # Could show a popup error here
 
     def handle_external_selection(self, obj):

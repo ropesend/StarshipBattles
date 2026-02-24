@@ -5,14 +5,16 @@ Displays ship statistics and configuration options.
 PROJ-43: Now uses VehicleClassService instead of direct VEHICLE_CLASSES import.
 PROJ-80: Stats display delegated to shared DesignStatsPanel.
 """
+import logging
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIDropDownMenu, UITextBox, UIImage
 from pygame_gui.core import UIElement
 
 from game.core.strategy_metadata import StrategyMetadataService
-from game.core.logger import log_warning
 from game.ui.panels.design_stats_panel import DesignStatsPanel
+
+logger = logging.getLogger(__name__)
 
 class BuilderRightPanel:
     def __init__(self, builder, manager, rect, event_bus=None, viewmodel=None, vehicle_class_service=None, hide_theme_selector=False):
@@ -302,7 +304,7 @@ class BuilderRightPanel:
             )
             
         except (FileNotFoundError, OSError, pygame.error) as e:
-            log_warning(f"Failed to load portrait {full_path}: {e}")
+            logger.warning(f"Failed to load portrait {full_path}: {e}")
 
     def setup_stats(self):
         """Set up the stats panel using shared DesignStatsPanel."""

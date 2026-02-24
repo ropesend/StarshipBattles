@@ -9,9 +9,10 @@ Updated in PROJ-69 Phase 4 to support multi-queue operations via BuildQueueSourc
 """
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 
-from game.core.logger import log_info, log_warning, log_error, log_debug
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.data.build_context import BuildContext
@@ -105,7 +106,7 @@ class BuildQueueController:
         """
         self.active_queue_source = source
         self.selected_queue_sources = []
-        log_info(f"Controller: Active queue set to '{source.display_name}'")
+        logger.info(f"Controller: Active queue set to '{source.display_name}'")
 
     def set_selected_queues(self, sources: List['BuildQueueSource']) -> None:
         """Set multiple queue sources for multi-queue mode.
@@ -118,7 +119,7 @@ class BuildQueueController:
         """
         self.active_queue_source = None
         self.selected_queue_sources = list(sources)
-        log_info(f"Controller: Multi-select mode with {len(sources)} queues")
+        logger.info(f"Controller: Multi-select mode with {len(sources)} queues")
 
     def load_designs_by_category(self, category: str):
         """
@@ -131,7 +132,7 @@ class BuildQueueController:
             List of design objects matching the category
         """
         all_designs = self.design_library.scan_designs()
-        log_debug(f"BuildQueue: Scanned {len(all_designs)} total designs from {self.design_library.designs_folder}")
+        logger.debug(f"BuildQueue: Scanned {len(all_designs)} total designs from {self.design_library.designs_folder}")
 
         type_map = {
             "complex": "Planetary Complex",
@@ -141,14 +142,14 @@ class BuildQueueController:
         }
 
         target_type = type_map.get(category, "Ship")
-        log_debug(f"BuildQueue: Filtering for category '{category}' (vehicle_type='{target_type}')")
+        logger.debug(f"BuildQueue: Filtering for category '{category}' (vehicle_type='{target_type}')")
 
         filtered = [d for d in all_designs if d.vehicle_type == target_type]
-        log_debug(f"BuildQueue: Found {len(filtered)} designs matching category '{category}'")
+        logger.debug(f"BuildQueue: Found {len(filtered)} designs matching category '{category}'")
 
         if filtered:
             for d in filtered:
-                log_debug(f"  - {d.name} (vehicle_type={d.vehicle_type}, design_id={d.design_id})")
+                logger.debug(f"  - {d.name} (vehicle_type={d.vehicle_type}, design_id={d.design_id})")
 
         return filtered
 
@@ -161,7 +162,7 @@ class BuildQueueController:
         """
         self.selected_category = category
         self.on_queue_changed()
-        log_info(f"Build queue category changed to: {category}")
+        logger.info(f"Build queue category changed to: {category}")
 
     def _get_design_cost(self, design_id: str) -> Dict[str, int]:
         """Load design as ship and return its construction cost.
@@ -186,7 +187,7 @@ class BuildQueueController:
                 return {}
             return dict(ship.construction_cost) if ship.construction_cost else {}
         except (OSError, ValueError, KeyError) as e:
-            log_warning(f"Failed to load design cost for {design_id}: {e}")
+            logger.warning(f"Failed to load design cost for {design_id}: {e}")
             return {}
 
     def _calculate_build_turns(self, design_id: str, build_rate: Dict[str, float]) -> float:
@@ -257,7 +258,7 @@ class BuildQueueController:
         """
         cat = category if category is not None else self.selected_category
 
-        log_info(f"add_to_queue called: design_id={design_id}, category={cat}")
+        logger.info(f"add_to_queue called: design_id={design_id}, category={cat}")
 
         # Route to multi-queue, single-queue, or fallback
         if self.selected_queue_sources:
@@ -363,7 +364,7 @@ class BuildQueueController:
         """
         source = self.active_queue_source
         if not self._source_can_build_category(source, category):
-            log_warning(
+            logger.warning(
                 f"Cannot build {category} in queue '{source.display_name}': "
                 f"incompatible build type"
             )
@@ -387,7 +388,7 @@ class BuildQueueController:
                 self.on_planet_selection_needed(planets, on_planet_selected)
                 return  # Don't add directly - callback will do it
             else:
-                log_warning("Planet selection needed but no callback provided")
+                logger.warning("Planet selection needed but no callback provided")
                 return
 
         # Calculate build time if not provided
@@ -410,10 +411,10 @@ class BuildQueueController:
 
         if index is not None:
             source.construction_queue.insert(index, queue_item)
-            log_info(f"Inserted {design_id} into '{source.display_name}' at position {index}")
+            logger.info(f"Inserted {design_id} into '{source.display_name}' at position {index}")
         else:
             source.construction_queue.append(queue_item)
-            log_info(f"Added {design_id} to '{source.display_name}' ({turns} turns)")
+            logger.info(f"Added {design_id} to '{source.display_name}' ({turns} turns)")
 
     def _add_item_with_target_planet(
         self,
@@ -447,10 +448,10 @@ class BuildQueueController:
 
         if index is not None:
             source.construction_queue.insert(index, queue_item)
-            log_info(f"Inserted {design_id} into '{source.display_name}' at position {index} (target: planet {target_planet_id})")
+            logger.info(f"Inserted {design_id} into '{source.display_name}' at position {index} (target: planet {target_planet_id})")
         else:
             source.construction_queue.append(queue_item)
-            log_info(f"Added {design_id} to '{source.display_name}' ({turns} turns, target: planet {target_planet_id})")
+            logger.info(f"Added {design_id} to '{source.display_name}' ({turns} turns, target: planet {target_planet_id})")
 
     def _add_to_multiple_queues(self, design_id: str, turns: Optional[float], category: str) -> None:
         """Add item to all compatible selected queue sources.
@@ -468,7 +469,7 @@ class BuildQueueController:
 
         for source in self.selected_queue_sources:
             if not self._source_can_build_category(source, category):
-                log_warning(
+                logger.warning(
                     f"Skipping queue '{source.display_name}': "
                     f"cannot build {category}"
                 )
@@ -490,7 +491,7 @@ class BuildQueueController:
             source.construction_queue.append(queue_item)
             added_count += 1
 
-        log_info(
+        logger.info(
             f"Multi-queue add: {design_id} added to {added_count} queue(s), "
             f"{skipped_count} skipped"
         )
@@ -508,12 +509,12 @@ class BuildQueueController:
             category: Design category.
             index: Optional insertion index.
         """
-        log_info(f"  build_context.type = {self.build_context.context_type}")
-        log_info(f"  build_context.has_space_shipyard = {self.build_context.has_space_shipyard}")
+        logger.info(f"  build_context.type = {self.build_context.context_type}")
+        logger.info(f"  build_context.has_space_shipyard = {self.build_context.has_space_shipyard}")
 
         # Validate build capability using protocol method
         if not self.build_context.can_build_type(category):
-            log_warning(f"Cannot build {category}: build context cannot build this type")
+            logger.warning(f"Cannot build {category}: build context cannot build this type")
             return
 
         # Calculate build time if not provided
@@ -532,10 +533,10 @@ class BuildQueueController:
 
         if index is not None:
             self.build_context.construction_queue.insert(index, queue_item)
-            log_info(f"Inserted {design_id} into build queue at position {index}")
+            logger.info(f"Inserted {design_id} into build queue at position {index}")
         else:
             self.build_context.construction_queue.append(queue_item)
-            log_info(f"Added {design_id} to build queue ({turns} turns)")
+            logger.info(f"Added {design_id} to build queue ({turns} turns)")
 
     def refresh_design_report(self, design_id: str):
         """
@@ -549,7 +550,7 @@ class BuildQueueController:
             design_data = self.design_library.load_design_data(design_id)
 
             if design_data is None:
-                log_warning(f"Could not load design {design_id}: Design not found")
+                logger.warning(f"Could not load design {design_id}: Design not found")
                 self.design_report.show_placeholder()
                 return
 
@@ -561,16 +562,16 @@ class BuildQueueController:
             )
 
             if ship is None:
-                log_warning(f"Could not create ship from design {design_id}")
+                logger.warning(f"Could not create ship from design {design_id}")
                 self.design_report.show_placeholder()
                 return
 
             # Update design report panel with ship data
             self.design_report.update_design(ship)
-            log_debug(f"Design report updated: {ship.name}")
+            logger.debug(f"Design report updated: {ship.name}")
 
         except (OSError, ValueError, KeyError) as e:
-            log_error(f"Error loading design {design_id}: {e}")
+            logger.error(f"Error loading design {design_id}: {e}")
             import traceback
-            log_error(traceback.format_exc())
+            logger.error(traceback.format_exc())
             self.design_report.show_placeholder()

@@ -18,9 +18,11 @@ Called by TurnEngine._process_tick() 100 times per turn.
 """
 
 from typing import List, Optional, TYPE_CHECKING
+import logging
 
-from game.core.logger import log_debug
 from game.core.registry import GameRegistries
+
+logger = logging.getLogger(__name__)
 from game.strategy.interfaces.engines import IHarvestingEngine
 
 if TYPE_CHECKING:
@@ -338,7 +340,7 @@ class HarvestingEngine(IHarvestingEngine):
         # Add to empire pool
         empire.add_resources(resource_type, actual_harvest)
 
-        log_debug(
+        logger.debug(
             f"Harvested {actual_harvest:.1f} {resource_type} from "
             f"{getattr(colony, 'name', 'unknown')} (quality={quality:.2f}, "
             f"remaining={resource_data['quantity']:.1f}, tick_fraction={tick_fraction})"

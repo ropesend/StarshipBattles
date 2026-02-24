@@ -10,7 +10,9 @@ Cross-layer imports (acceptable for UI):
 - StrategySessionFacade: TYPE_CHECKING - used for type hints only
 """
 from typing import TYPE_CHECKING
-from game.core.logger import log_debug, log_info, log_warning
+import logging
+
+logger = logging.getLogger(__name__)
 from game.core.hex_math import pixel_to_hex
 from game.strategy.engine.commands import IssueColonizeCommand, QueueColonizeMissionCommand
 
@@ -100,7 +102,7 @@ class ColonizationSystem:
                 valid_planets.append(p)
 
         if not valid_planets:
-            log_debug("No colonizable planets at fleet location (Validation Failed).")
+            logger.debug("No colonizable planets at fleet location (Validation Failed).")
             return None
 
         # PROJ-55: Filter by available colony pods
@@ -108,7 +110,7 @@ class ColonizationSystem:
 
         # If no remaining pods, return informative message
         if not remaining_pods:
-            log_debug("No colony pods available in fleet.")
+            logger.debug("No colony pods available in fleet.")
             return {
                 'type': 'no_targets',
                 'message': 'No colony pods in fleet',
@@ -125,7 +127,7 @@ class ColonizationSystem:
         # If no planets match available pods
         if not pod_filtered_planets:
             pod_types = ", ".join(remaining_pods.keys())
-            log_debug(f"No colonizable planets for available pods ({pod_types}).")
+            logger.debug(f"No colonizable planets for available pods ({pod_types}).")
             return {
                 'type': 'no_targets',
                 'message': f'No colonizable planets for available pods ({pod_types})',
@@ -154,11 +156,11 @@ class ColonizationSystem:
             dict with result type and details
         """
         cmd = IssueColonizeCommand(fleet.id, planet.id)
-        log_info(f"Issued IssueColonizeCommand for {planet.name}")
+        logger.info(f"Issued IssueColonizeCommand for {planet.name}")
 
         result = self.facade.handle_command(cmd)
         if not result.is_valid:
-            log_warning(f"Command Failed: {result.message}")
+            logger.warning(f"Command Failed: {result.message}")
             return {'type': 'error', 'message': result.message}
 
         return {'type': 'success', 'fleet': fleet}
@@ -182,7 +184,7 @@ class ColonizationSystem:
 
         target_system = self._get_system_at_hex(target_hex)
         if not target_system:
-            log_debug("No system at target location.")
+            logger.debug("No system at target location.")
             return None
 
         local_hex = target_hex - target_system.global_location
@@ -201,7 +203,7 @@ class ColonizationSystem:
                                 candidates.append(zone_obj)
 
         if not candidates:
-            log_debug(f"No colonizable planets at hex {target_hex}.")
+            logger.debug(f"No colonizable planets at hex {target_hex}.")
             return None
 
         # PROJ-140: Filter by available colony pods (same pattern as on_colonize_click)
@@ -209,7 +211,7 @@ class ColonizationSystem:
 
         # If no remaining pods, return informative message
         if not remaining_pods:
-            log_debug("No colony pods available in fleet for designation.")
+            logger.debug("No colony pods available in fleet for designation.")
             return {
                 'type': 'no_targets',
                 'message': 'No colony pods in fleet',
@@ -222,7 +224,7 @@ class ColonizationSystem:
         # If no candidates match available pods
         if not pod_filtered:
             pod_types = ", ".join(remaining_pods.keys())
-            log_debug(f"No colonizable planets for available pods ({pod_types}) at designation.")
+            logger.debug(f"No colonizable planets for available pods ({pod_types}) at designation.")
             return {
                 'type': 'no_targets',
                 'message': f'No colonizable planets for available pods ({pod_types})',
@@ -261,10 +263,10 @@ class ColonizationSystem:
 
         if result.is_valid:
             p_name = planet.name if planet else "Any Planet"
-            log_info(f"Mission Queued: Colonize {p_name} at {target_hex}")
+            logger.info(f"Mission Queued: Colonize {p_name} at {target_hex}")
             return {'type': 'success', 'fleet': fleet}
         else:
-            log_warning(f"Colonize mission failed: {result.message}")
+            logger.warning(f"Colonize mission failed: {result.message}")
             return {'type': 'error', 'message': result.message}
 
     def request_colonize_order(self, fleet, planet):
@@ -284,7 +286,7 @@ class ColonizationSystem:
             if target_hex:
                 return self.queue_colonize_mission(target_hex, planet, fleet)
             else:
-                log_warning("Could not resolve system for planet.")
+                logger.warning("Could not resolve system for planet.")
                 return {'type': 'error', 'message': 'Could not resolve planet location'}
         else:
             return self.on_colonize_click(fleet)

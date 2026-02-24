@@ -2,13 +2,15 @@
 TechTree container class for loading and managing the tech tree structure.
 """
 from typing import Dict, List, Optional
+import logging
 import os
 import random
 
 from game.core.json_utils import load_json
 from game.core.paths import Paths
-from game.core.logger import log_info
 from .tech_node import TechNode, TechRequirement
+
+logger = logging.getLogger(__name__)
 
 
 class TechTree:
@@ -86,9 +88,9 @@ class TechTree:
             tree.nodes[node.id] = node
             loaded_count += 1
 
-        log_info(f"TechTree: Loaded {loaded_count} nodes from {file_path}")
+        logger.info(f"TechTree: Loaded {loaded_count} nodes from {file_path}")
         if skipped_count > 0:
-            log_info(f"TechTree: Skipped {skipped_count} comment/invalid entries")
+            logger.info(f"TechTree: Skipped {skipped_count} comment/invalid entries")
 
         return tree
 
@@ -105,7 +107,7 @@ class TechTree:
         rng = random.Random(seed)
         for node in self.nodes.values():
             node.resolve_requirements(rng)
-        log_info(f"TechTree: Resolved fuzzy requirements with seed {seed}")
+        logger.info(f"TechTree: Resolved fuzzy requirements with seed {seed}")
 
     def calculate_depth(self, node_id: str) -> int:
         """

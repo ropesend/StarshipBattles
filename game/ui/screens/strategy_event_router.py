@@ -13,7 +13,9 @@ from typing import TYPE_CHECKING
 import pygame
 import pygame_gui
 
-from game.core.logger import log_debug
+import logging
+
+logger = logging.getLogger(__name__)
 from game.core.protocols import is_fleet
 
 if TYPE_CHECKING:
@@ -192,7 +194,7 @@ class StrategyEventRouter:
         # Find System
         system = ui.scene.galaxy.get_system_of_object(obj)
         if not system:
-            log_debug("Colonize: Fleet not in system?")
+            logger.debug("Colonize: Fleet not in system?")
             return
 
         # Find planets at this location (SYSTEM)
@@ -203,7 +205,7 @@ class StrategyEventRouter:
                 candidates.append(p)
 
         if not candidates:
-            log_debug("No unowned planets at this location.")
+            logger.debug("No unowned planets at this location.")
             return
 
         if len(candidates) == 1:

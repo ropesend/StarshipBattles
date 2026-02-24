@@ -26,7 +26,9 @@ from game.core.input_actions import (
     KeyBinding,
 )
 from game.ui.services.input_mapper import InputMapper
-from game.core.logger import log_debug, log_info
+import logging
+
+logger = logging.getLogger(__name__)
 
 # ── Layout constants ────────────────────────────────────────────────
 _TITLE_HEIGHT = 60
@@ -300,7 +302,7 @@ class KeybindingsScene:
     def _start_capture(self, action: InputAction) -> None:
         """Enter key capture mode for the given action."""
         self._capturing_action = action
-        log_debug(f"KeybindingsScene: Capturing key for {action.value}")
+        logger.debug(f"KeybindingsScene: Capturing key for {action.value}")
 
     def _handle_key_capture(self, event: Any) -> None:
         """Process a KEYDOWN event during capture mode."""
@@ -377,7 +379,7 @@ class KeybindingsScene:
         self._mapper.set_binding(action, binding)
         self._has_unsaved_changes = True
         self._refresh_action_row(action)
-        log_debug(f"KeybindingsScene: Bound {action.value} -> {binding.display_text()}")
+        logger.debug(f"KeybindingsScene: Bound {action.value} -> {binding.display_text()}")
 
     def _refresh_action_row(self, action: InputAction) -> None:
         """Update the display for a single action row."""
@@ -470,7 +472,7 @@ class KeybindingsScene:
         """Save user overrides and close."""
         self._mapper.save_user_overrides()
         self._has_unsaved_changes = False
-        log_info("KeybindingsScene: Saved user keybinding overrides")
+        logger.info("KeybindingsScene: Saved user keybinding overrides")
         self._on_close_callback()
 
     def _on_reset_all_clicked(self) -> None:
@@ -492,7 +494,7 @@ class KeybindingsScene:
         self._mapper.reset_to_defaults()
         self._has_unsaved_changes = False
         self._refresh_all_rows()
-        log_info("KeybindingsScene: Reset all keybindings to defaults")
+        logger.info("KeybindingsScene: Reset all keybindings to defaults")
 
     def _on_close(self) -> None:
         """Close with unsaved-changes guard."""
@@ -517,7 +519,7 @@ class KeybindingsScene:
         self._mapper.set_binding(action, default_binding)
         self._has_unsaved_changes = True
         self._refresh_action_row(action)
-        log_debug(f"KeybindingsScene: Reset {action.value} to default")
+        logger.debug(f"KeybindingsScene: Reset {action.value} to default")
 
     def _refresh_all_rows(self) -> None:
         """Refresh every action row's display text and reset button."""

@@ -10,7 +10,9 @@ import pygame
 import pygame_gui.elements as ui
 from typing import TYPE_CHECKING, List, Callable, Set, Optional
 
-from game.core.logger import log_info
+import logging
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     import pygame_gui
@@ -153,7 +155,7 @@ class BuildQueueSelector:
         """
         self.selected_indices = {index}
         self.active_source = self.queue_sources[index]
-        log_info(f"BuildQueue: Selected queue '{self.active_source.display_name}'")
+        logger.info(f"BuildQueue: Selected queue '{self.active_source.display_name}'")
         self.refresh()
         self._on_selection_changed(self.active_source, self.selected_indices)
 
@@ -176,10 +178,10 @@ class BuildQueueSelector:
         if len(self.selected_indices) == 1:
             sole_idx = next(iter(self.selected_indices))
             self.active_source = self.queue_sources[sole_idx]
-            log_info(f"BuildQueue: Single queue selected: '{self.active_source.display_name}'")
+            logger.info(f"BuildQueue: Single queue selected: '{self.active_source.display_name}'")
         else:
             self.active_source = None
-            log_info(f"BuildQueue: Multi-select mode: {len(self.selected_indices)} queues")
+            logger.info(f"BuildQueue: Multi-select mode: {len(self.selected_indices)} queues")
 
         self.refresh()
         self._on_selection_changed(self.active_source, self.selected_indices)

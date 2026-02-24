@@ -4,12 +4,13 @@ breakthrough chances, and RP allocations.
 """
 from dataclasses import dataclass, field
 from typing import Dict, List, Any, Optional, TYPE_CHECKING
+import logging
 import random
-
-from game.core.logger import log_warning
 
 if TYPE_CHECKING:
     from game.research.data.tech_tree import TechTree
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -140,10 +141,10 @@ class ResearchTracker:
         # PROJ-40/NEW-RES-006: Log warning when value is clamped
         if new_allocation != rp:
             if rp < 0:
-                log_warning(f"ResearchTracker: Negative RP allocation ({rp}) "
+                logger.warning(f"ResearchTracker: Negative RP allocation ({rp}) "
                            f"for node '{node_id}' clamped to 0")
             else:
-                log_warning(f"ResearchTracker: RP allocation ({rp}) for node "
+                logger.warning(f"ResearchTracker: RP allocation ({rp}) for node "
                            f"'{node_id}' clamped to {new_allocation} (budget limit)")
 
         state.rp_allocation = new_allocation

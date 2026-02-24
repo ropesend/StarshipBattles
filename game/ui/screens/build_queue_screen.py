@@ -6,6 +6,7 @@ Updated in PROJ-69 Phase 3 to support multiple queue sources at a hex.
 """
 from __future__ import annotations
 
+import logging
 import pygame
 import pygame_gui
 import pygame_gui.elements as ui
@@ -15,8 +16,9 @@ from typing import TYPE_CHECKING, List, Optional, Callable, Set
 from game.ui.config import UIConfig
 from game.core.constants import PLANET_RESOURCES
 from game.core.input_actions import InputAction
-from game.core.logger import log_info, log_warning, log_debug
 from game.ui.services.screenshot_manager import ScreenshotManager
+
+logger = logging.getLogger(__name__)
 from game.ui.panels.planet_report_panel import PlanetReportPanel, compute_planet_production
 from game.ui.panels.design_report_panel import DesignReportPanel
 from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
@@ -108,7 +110,7 @@ class BuildQueueScreen:
         if not hasattr(build_context, 'owner_id'):
             raise ValueError(f"BuildQueueScreen: build_context '{getattr(build_context, 'name', 'unknown')}' missing required 'owner_id' attribute")
         if not hasattr(build_context, 'name'):
-            log_warning("BuildQueueScreen: build_context missing 'name' attribute")
+            logger.warning("BuildQueueScreen: build_context missing 'name' attribute")
 
         # PROJ-69: Populate queue sources from hex context
         self.queue_sources: List[BuildQueueSource] = collect_build_queues_at_hex(
@@ -122,10 +124,10 @@ class BuildQueueScreen:
         )
         self._queue_selector: Optional[BuildQueueSelector] = None  # Set in _create_queue_selector_panel
 
-        log_info(f"BuildQueue: Initialized for {build_context.context_type} '{build_context.name}' (owner_id={build_context.owner_id})")
-        log_info(f"BuildQueue: {len(self.queue_sources)} queue source(s) discovered")
+        logger.info(f"BuildQueue: Initialized for {build_context.context_type} '{build_context.name}' (owner_id={build_context.owner_id})")
+        logger.info(f"BuildQueue: {len(self.queue_sources)} queue source(s) discovered")
         if self.design_library:
-            log_info(f"BuildQueue: DesignLibrary with designs_folder: {self.design_library.designs_folder}")
+            logger.info(f"BuildQueue: DesignLibrary with designs_folder: {self.design_library.designs_folder}")
 
         # Get screen dimensions
         screen_size = manager.get_root_container().get_container().get_size()
@@ -845,17 +847,17 @@ class BuildQueueScreen:
     def _handle_remove_hotkey(self) -> None:
         """Handle remove-from-queue via hotkey."""
         if len(self.selected_queue_indices) > 1:
-            log_warning("Cannot remove items in multi-select mode")
+            logger.warning("Cannot remove items in multi-select mode")
             return
         remove_queue = self._get_active_queue()
         if self.selected_queue_index is not None and self.selected_queue_index < len(remove_queue):
             removed_item = remove_queue.pop(self.selected_queue_index)
             design_id = removed_item.get('design_id', 'Unknown')
-            log_info(f"Removed {design_id} from queue at index {self.selected_queue_index}")
+            logger.info(f"Removed {design_id} from queue at index {self.selected_queue_index}")
             self.selected_queue_index = None
             self._refresh_queue_display()
         else:
-            log_warning("No queue item selected to remove")
+            logger.warning("No queue item selected to remove")
 
     def _prompt_target_planet(self, planets, on_selected):
         """Open planet selection window for complex target planet.
@@ -876,7 +878,7 @@ class BuildQueueScreen:
             list_label="Colonies in sector:",
             show_any_button=False
         )
-        log_info(f"BuildQueue: Opened planet selection for {len(planets)} colonies")
+        logger.info(f"BuildQueue: Opened planet selection for {len(planets)} colonies")
 
     def _close(self):
         """Close the build queue screen."""
@@ -909,9 +911,9 @@ class BuildQueueScreen:
         """
         # BUG-15 DEBUG: Log all keyboard events to trace screenshot issue
         if event.type == pygame.KEYDOWN:
-            log_debug(f"BuildQueueScreen.handle_event: KEYDOWN received, key={event.key}, K_F12={pygame.K_F12}")
+            logger.debug(f"BuildQueueScreen.handle_event: KEYDOWN received, key={event.key}, K_F12={pygame.K_F12}")
             if event.key == pygame.K_F12:
-                log_info("BuildQueueScreen: F12 detected BEFORE manager.process_events()")
+                logger.info("BuildQueueScreen: F12 detected BEFORE manager.process_events()")
 
         # Pass event to UIManager first so it can process it
         self.manager.process_events(event)
@@ -962,17 +964,17 @@ class BuildQueueScreen:
         elif event.ui_element == self.btn_remove_from_queue:
             # PROJ-69: Disable remove in multi-select mode
             if len(self.selected_queue_indices) > 1:
-                log_warning("Cannot remove items in multi-select mode")
+                logger.warning("Cannot remove items in multi-select mode")
             else:
                 remove_queue = self._get_active_queue()
                 if self.selected_queue_index is not None and self.selected_queue_index < len(remove_queue):
                     removed_item = remove_queue.pop(self.selected_queue_index)
                     design_id = removed_item.get('design_id', 'Unknown')
-                    log_info(f"Removed {design_id} from queue at index {self.selected_queue_index}")
+                    logger.info(f"Removed {design_id} from queue at index {self.selected_queue_index}")
                     self.selected_queue_index = None
                     self._refresh_queue_display()
                 else:
-                    log_warning("No queue item selected to remove")
+                    logger.warning("No queue item selected to remove")
 
         # PROJ-69/PROJ-86: Queue selector button clicks (delegated to selector)
         elif self._queue_selector and self._queue_selector.handle_button_click(
@@ -1033,25 +1035,25 @@ class BuildQueueScreen:
         """
         if self._handle_keydown(event):
             return
-        log_debug(f"BuildQueueScreen: Reached keyboard handler section, key={event.key}")
+        logger.debug(f"BuildQueueScreen: Reached keyboard handler section, key={event.key}")
         if event.key == pygame.K_F12:
-            log_info("BuildQueueScreen: F12 matched, calling _take_screenshot()")
+            logger.info("BuildQueueScreen: F12 matched, calling _take_screenshot()")
             self._take_screenshot()
         elif event.key == pygame.K_F11:
-            log_info("BuildQueueScreen: F11 matched, calling _take_screenshot()")
+            logger.info("BuildQueueScreen: F11 matched, calling _take_screenshot()")
             self._take_screenshot()
 
     def _take_screenshot(self):
         """Take a screenshot of the current screen including the build queue."""
-        log_info("BuildQueueScreen._take_screenshot() ENTERED")
+        logger.info("BuildQueueScreen._take_screenshot() ENTERED")
         sm = ScreenshotManager.instance()
-        log_info(f"BuildQueueScreen: ScreenshotManager.enabled = {sm.enabled}")
-        log_info(f"BuildQueueScreen: ScreenshotManager.base_dir = {sm.base_dir}")
+        logger.info(f"BuildQueueScreen: ScreenshotManager.enabled = {sm.enabled}")
+        logger.info(f"BuildQueueScreen: ScreenshotManager.base_dir = {sm.base_dir}")
         sm.capture(label="build_queue")
-        log_info("BuildQueueScreen: sm.capture() completed")
+        logger.info("BuildQueueScreen: sm.capture() completed")
         # DUP-UI1-001: Use consolidated toast from ScreenshotManager
         sm.show_toast(self.manager, self.screen_width)
-        log_info("BuildQueueScreen._take_screenshot() EXITING")
+        logger.info("BuildQueueScreen._take_screenshot() EXITING")
 
     def update(self, time_delta: float):
         """

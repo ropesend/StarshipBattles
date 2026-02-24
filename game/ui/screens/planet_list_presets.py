@@ -5,7 +5,9 @@ Handles saving and loading of filter/column presets for the planet list window.
 import os
 from game.core.paths import Paths
 from game.core.json_utils import load_json, save_json
-from game.core.logger import log_info
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class PresetManager:
@@ -37,7 +39,7 @@ class PresetManager:
         """Save a preset with the given name and state."""
         self.presets[name] = state
         self.save_to_disk()
-        log_info(f"Saved Preset: {name}")
+        logger.info(f"Saved Preset: {name}")
 
     def get_preset(self, name):
         """Get a preset by name, or None if not found."""

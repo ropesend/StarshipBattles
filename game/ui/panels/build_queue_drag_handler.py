@@ -8,10 +8,11 @@ disable drag operations in multi-select mode.
 """
 from __future__ import annotations
 
+import logging
 import pygame
 from typing import TYPE_CHECKING, Dict, Optional, Callable, List, Any
 
-from game.core.logger import log_info, log_debug
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
@@ -125,7 +126,7 @@ class BuildQueueDragHandler:
                             'category': selected_category,
                             'portrait': portrait
                         }
-                    log_info(f"Started drag from mouse down: {self.selected_design}")
+                    logger.info(f"Started drag from mouse down: {self.selected_design}")
                     return True
 
         # Check if mouse is over a queue item panel - track for potential drag
@@ -188,7 +189,7 @@ class BuildQueueDragHandler:
                     'source': 'queue',
                     'portrait': portrait
                 }
-                log_info(f"Picked up {self.dragged_item['design_id']} from queue at pos {idx}")
+                logger.info(f"Picked up {self.dragged_item['design_id']} from queue at pos {idx}")
                 self.on_refresh_queue()
 
             # Clear pending state
@@ -236,7 +237,7 @@ class BuildQueueDragHandler:
         if self._pending_queue_index is not None and not self.dragged_item:
             # This was a click without dragging - select the item
             selected_queue_index = self._pending_queue_index
-            log_info(f"Selected queue item at index {selected_queue_index}")
+            logger.info(f"Selected queue item at index {selected_queue_index}")
             self.on_refresh_queue()  # Refresh to show selection highlight
 
         # Clear pending drag state
@@ -263,9 +264,9 @@ class BuildQueueDragHandler:
                     self.dragged_item['category'],
                     insert_idx
                 )
-                log_info(f"Dropped {self.dragged_item['design_id']} into queue at index {insert_idx}")
+                logger.info(f"Dropped {self.dragged_item['design_id']} into queue at index {insert_idx}")
             else:
-                log_info(f"Dropped {self.dragged_item['design_id']} outside - removed from queue or cancelled drag")
+                logger.info(f"Dropped {self.dragged_item['design_id']} outside - removed from queue or cancelled drag")
                 # If item came from queue and dropped outside, refresh to show removal
                 if came_from_queue:
                     self.on_refresh_queue()

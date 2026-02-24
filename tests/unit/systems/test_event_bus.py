@@ -131,8 +131,8 @@ class TestEventBusMultipleSubscribers:
 class TestEventBusErrorHandling:
     """Tests for error handling in event handlers."""
 
-    @patch('game.ui.screens.builder.event_bus.log_error')
-    def test_error_in_handler_uses_logger(self, mock_log_error):
+    @patch('game.ui.screens.builder.event_bus.logger')
+    def test_error_in_handler_uses_logger(self, mock_logger):
         """Handler exceptions are logged, not printed."""
         bus = EventBus()
         received = []
@@ -150,8 +150,8 @@ class TestEventBusErrorHandling:
         bus.emit("ERROR_TEST", "payload")
 
         # Bad handler logged error
-        mock_log_error.assert_called_once()
-        call_args = mock_log_error.call_args[0][0]
+        mock_logger.error.assert_called_once()
+        call_args = mock_logger.error.call_args[0][0]
         assert "ERROR_TEST" in call_args
         assert "Test error" in call_args
 
@@ -172,7 +172,7 @@ class TestEventBusErrorHandling:
         bus.subscribe("CONTINUE", failing_handler)
         bus.subscribe("CONTINUE", succeeding_handler)
 
-        with patch('game.ui.screens.builder.event_bus.log_error'):
+        with patch('game.ui.screens.builder.event_bus.logger'):
             bus.emit("CONTINUE", "value")
 
         assert results == ["value"]

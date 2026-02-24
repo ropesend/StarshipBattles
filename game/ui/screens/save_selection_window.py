@@ -10,7 +10,9 @@ Supports:
 import pygame
 import pygame_gui
 from game.ui.config import UIConfig
-from game.core.logger import log_debug, log_info, log_warning
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class SaveSelectionWindow(pygame_gui.elements.UIWindow):
@@ -147,7 +149,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
                 dt = datetime.fromisoformat(timestamp)
                 time_str = dt.strftime("%Y-%m-%d %H:%M")
             except ValueError as e:
-                log_warning(f"Failed to parse save timestamp '{timestamp}': {e}")
+                logger.warning(f"Failed to parse save timestamp '{timestamp}': {e}")
                 time_str = timestamp[:16] if len(timestamp) >= 16 else timestamp
 
             # Show empire count if > 1
@@ -171,7 +173,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
                         dt = datetime.fromisoformat(turn_time)
                         turn_time_str = dt.strftime("%m-%d %H:%M")
                     except ValueError as e:
-                        log_warning(f"Failed to parse turn timestamp '{turn_time}': {e}")
+                        logger.warning(f"Failed to parse turn timestamp '{turn_time}': {e}")
                         turn_time_str = ""
 
                     # Indent turn entries
@@ -267,7 +269,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
                 empires_str += "..."
 
             self.info_label.set_text(f"{save_name}: {empires_str} - Latest: Turn {latest_turn}")
-            log_debug(f"Selected save: {save_name}")
+            logger.debug(f"Selected save: {save_name}")
 
         elif mapping[0] == 'turn':
             # Selected a specific turn
@@ -285,7 +287,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
             # Update info
             save_name = self.selected_save.get('save_name', 'Unknown')
             self.info_label.set_text(f"Load {save_name} at Turn {turn_num}")
-            log_debug(f"Selected turn {turn_num} from {save_name}")
+            logger.debug(f"Selected turn {turn_num} from {save_name}")
 
     def _on_load_clicked(self):
         """Handle Load button click."""
@@ -293,7 +295,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
             return
 
         save_path = self.selected_save.get('save_path')
-        log_info(f"Loading game from: {save_path}, turn: {self.selected_turn}")
+        logger.info(f"Loading game from: {save_path}, turn: {self.selected_turn}")
 
         # Call with optional turn number
         self.on_load_callback(save_path, self.selected_turn)
@@ -345,7 +347,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
 
     def _on_cancel_clicked(self):
         """Handle Cancel button click."""
-        log_debug("Load game cancelled")
+        logger.debug("Load game cancelled")
         self.on_cancel_callback()
         self.kill()
 
@@ -362,7 +364,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
         success, message = SaveGameService.delete_save(save_path)
 
         if success:
-            log_info(f"Deleted save: {save_name}")
+            logger.info(f"Deleted save: {save_name}")
             # Reload saves list
             self.expanded_save_idx = None
             self._load_saves()
@@ -373,7 +375,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
             self.btn_delete.disable()
             self.info_label.set_text("Select a save to load")
         else:
-            log_debug(f"Failed to delete save: {message}")
+            logger.debug(f"Failed to delete save: {message}")
 
             # Show error dialog
             error_rect = pygame.Rect(0, 0, UIConfig.CONFIRM_DIALOG_WIDTH, UIConfig.CONFIRM_DIALOG_HEIGHT)

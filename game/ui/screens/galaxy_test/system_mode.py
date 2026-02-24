@@ -9,7 +9,9 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, UITextEntryLine, UIDropDownMenu
 
-from game.core.logger import log_info
+import logging
+
+logger = logging.getLogger(__name__)
 from game.core.hex_math import hex_to_pixel, HexCoord
 from game.strategy.data.planet import PlanetType
 from game.ui.screens.galaxy_test.constants import PLANET_TYPE_COLORS, SIDEBAR_WIDTH, HEX_SIZE
@@ -193,7 +195,7 @@ class SystemModeHelper:
             # Add "random" option at the start
             return ["random"] + sorted(blueprints)
         except (ImportError, FileNotFoundError, OSError, json.JSONDecodeError, KeyError) as e:
-            log_info(f"Failed to load blueprints: {e}")
+            logger.info(f"Failed to load blueprints: {e}")
             return ["random"]
 
     def generate(self):
@@ -233,7 +235,7 @@ class SystemModeHelper:
                 data = loader.load()
                 blueprint = loader.get_blueprint(self.selected_blueprint, data)
             except (ImportError, FileNotFoundError, OSError, json.JSONDecodeError, KeyError) as e:
-                log_info(f"Failed to load blueprint '{self.selected_blueprint}': {e}")
+                logger.info(f"Failed to load blueprint '{self.selected_blueprint}': {e}")
 
         # Generate stars
         star_gen = StarGenerator()
@@ -276,7 +278,7 @@ class SystemModeHelper:
         # Center camera on system and fit to view
         self._center_camera()
 
-        log_info(f"Generated system: {self.test_system.name}, blueprint={blueprint_name}, stars={len(self.test_system.stars)}, planets={len(self.test_system.planets)}")
+        logger.info(f"Generated system: {self.test_system.name}, blueprint={blueprint_name}, stars={len(self.test_system.stars)}, planets={len(self.test_system.planets)}")
 
     def _center_camera(self):
         """Center the camera on the generated star system."""

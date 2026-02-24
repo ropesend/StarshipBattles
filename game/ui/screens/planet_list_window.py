@@ -10,7 +10,9 @@ from pygame_gui.elements import UIWindow, UIPanel, UIButton, UIDropDownMenu, UIV
 from pygame_gui import UI_TEXT_ENTRY_FINISHED, UI_BUTTON_PRESSED
 
 from game.ui.config import UIConfig
-from game.core.logger import log_debug, log_info, log_warning
+import logging
+
+logger = logging.getLogger(__name__)
 from game.ui.services.screenshot_manager import ScreenshotManager
 from game.ui.screens.planet_list_filters import (
     gather_planets, filter_planets, sort_planets,
@@ -202,7 +204,7 @@ class PlanetListWindow(UIWindow):
         if event.type == UI_BUTTON_PRESSED:
             if event.ui_element == self.btn_build_queue:
                 if self.selected_planet:
-                    log_info(f"Build Queue button clicked for planet: {self.selected_planet.name}")
+                    logger.info(f"Build Queue button clicked for planet: {self.selected_planet.name}")
                 return True
 
         # Handle planet row clicks
@@ -218,7 +220,7 @@ class PlanetListWindow(UIWindow):
             if clicked_index >= 0:
                 planet = self.filtered_planets[clicked_index]
                 if planet != self.selected_planet:
-                    log_debug(f"Selecting planet: {planet.name}")
+                    logger.debug(f"Selecting planet: {planet.name}")
                     self._on_planet_selected(planet)
                 return True  # Consume the event
 
@@ -407,7 +409,7 @@ class PlanetListWindow(UIWindow):
         """Take a screenshot of the current screen including the planet list."""
         sm = ScreenshotManager.instance()
         sm.capture(label="planet_list")
-        log_info("Screenshot: Planet List window captured")
+        logger.info("Screenshot: Planet List window captured")
         # DUP-UI1-001: Use consolidated toast from ScreenshotManager
         sm.show_toast(self.ui_manager, self.rect.width)
 

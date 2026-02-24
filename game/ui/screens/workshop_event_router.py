@@ -14,11 +14,13 @@ import pygame_gui
 from pygame_gui.elements import UIDropDownMenu
 from pygame_gui.windows import UIConfirmationDialog
 
+import logging
+
 from game.core.profiling import profile_block
 # PROJ-50: Removed get_default_registry_provider - using strict DI
 from game.core.constants import LayerType  # Canonical location for LayerType
 
-from game.core.logger import log_error, log_info, log_warning, log_debug
+logger = logging.getLogger(__name__)
 
 
 class WorkshopEventRouter:
@@ -125,7 +127,7 @@ class WorkshopEventRouter:
                 gui.controller.selected_component = None
                 gui.on_selection_changed(None)
                 gui.rebuild_modifier_ui()
-                log_debug("Deselected component")
+                logger.debug("Deselected component")
                 
         elif act_type == 'toggle_layer':
             # Layer header toggle - already handled by callback
@@ -336,7 +338,7 @@ class WorkshopEventRouter:
             if gui.context.is_standalone():
                 gui.viewmodel.set_ship_theme(event.text)
                 gui.right_panel.update_portrait_image()
-                log_info(f"Changed theme to {event.text}")
+                logger.info(f"Changed theme to {event.text}")
             return True
         elif event.ui_element == gui.right_panel.ai_dropdown:
             return self._handle_ai_dropdown(event)

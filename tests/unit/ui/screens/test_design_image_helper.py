@@ -69,10 +69,10 @@ class TestLoadPortraitThumbnail:
 
         with patch('os.path.exists', side_effect=exists_side_effect):
             with patch('pygame.image.load', side_effect=pygame.error("Load failed")):
-                with patch('game.ui.screens.design_image_helper.log_warning') as mock_warning:
+                with patch('game.ui.screens.design_image_helper.logger') as mock_logger:
                     result = load_portrait_thumbnail(design)
 
-        assert mock_warning.called
+        assert mock_logger.warning.called
         assert isinstance(result, pygame.Surface)  # Falls back to placeholder
 
     def test_different_vehicle_types_produce_different_placeholder_colors(self):
@@ -196,10 +196,10 @@ class TestLoadTopdownThumbnail:
 
         with patch('os.path.exists', side_effect=exists_side_effect):
             with patch('pygame.image.load', side_effect=pygame.error("Load failed")):
-                with patch('game.ui.screens.design_image_helper.log_warning') as mock_warning:
+                with patch('game.ui.screens.design_image_helper.logger') as mock_logger:
                     result = load_topdown_thumbnail(design)
 
-        assert mock_warning.called
+        assert mock_logger.warning.called
         assert result is None
 
     def test_returns_none_for_fully_transparent_image(self):

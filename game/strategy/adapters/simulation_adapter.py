@@ -11,10 +11,12 @@ to the simulation layer's BattleController. It handles:
 """
 
 from typing import Optional, List, Any, TYPE_CHECKING
+import logging
 import random
 
-from game.core.logger import log_info, log_warning, log_debug
 from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
@@ -71,7 +73,7 @@ class SimulationBattleResolver(IBattleResolver):
         Returns:
             BattleResult containing winner, tick count, and survivors
         """
-        log_info(f"Simulating battle: Fleet {fleet1.id} vs Fleet {fleet2.id}")
+        logger.info(f"Simulating battle: Fleet {fleet1.id} vs Fleet {fleet2.id}")
 
         # Convert fleets to battle ships
         team1_ships = fleet1.to_battle_ships(team_id=0, registries=registries)
@@ -79,7 +81,7 @@ class SimulationBattleResolver(IBattleResolver):
 
         # Handle edge cases
         if not team1_ships and not team2_ships:
-            log_warning("Both fleets have no combat-capable ships")
+            logger.warning("Both fleets have no combat-capable ships")
             return BattleResult(
                 winner=None,
                 tick_count=0,
@@ -88,7 +90,7 @@ class SimulationBattleResolver(IBattleResolver):
             )
 
         if not team1_ships:
-            log_warning("Fleet 1 has no combat-capable ships, Fleet 2 wins")
+            logger.warning("Fleet 1 has no combat-capable ships, Fleet 2 wins")
             return BattleResult(
                 winner=1,
                 tick_count=0,
@@ -97,7 +99,7 @@ class SimulationBattleResolver(IBattleResolver):
             )
 
         if not team2_ships:
-            log_warning("Fleet 2 has no combat-capable ships, Fleet 1 wins")
+            logger.warning("Fleet 2 has no combat-capable ships, Fleet 1 wins")
             return BattleResult(
                 winner=0,
                 tick_count=0,
@@ -133,7 +135,7 @@ class SimulationBattleResolver(IBattleResolver):
         # Run headless battle
         results = controller.run_headless()
 
-        log_info(f"Battle complete: winner={results.winner}, ticks={results.tick_count}")
+        logger.info(f"Battle complete: winner={results.winner}, ticks={results.tick_count}")
 
         # Convert survivors
         # PROJ-50: Pass registries for strict DI compliance
@@ -147,8 +149,8 @@ class SimulationBattleResolver(IBattleResolver):
             else:
                 team1_survivors.append(ship)
 
-        log_info(f"  Team 0 survivors: {len(team0_survivors)}")
-        log_info(f"  Team 1 survivors: {len(team1_survivors)}")
+        logger.info(f"  Team 0 survivors: {len(team0_survivors)}")
+        logger.info(f"  Team 1 survivors: {len(team1_survivors)}")
 
         return BattleResult(
             winner=results.winner,

@@ -3,10 +3,12 @@ Battle UI - Handles all UI rendering and interaction for the BattleScreen.
 
 Provides HUD elements, ship stats panels, seeker monitors, and battle control panel.
 """
+import logging
 import pygame
 import math
-from game.core.logger import log_debug
 from game.core.constants import AttackType
+
+logger = logging.getLogger(__name__)
 from game.ui.config import UIConfig
 from game.ui.panels.battle_panels import ShipStatsPanel, SeekerMonitorPanel, BattleControlPanel
 
@@ -77,28 +79,28 @@ class BattleUI:
 
         # Draw "Return to Combat Lab" button if battle is over in test mode
         if self.scene.is_battle_over():
-            log_debug(f"Battle is over. test_mode={self.scene.test_mode}")
+            logger.debug(f"Battle is over. test_mode={self.scene.test_mode}")
             if self.scene.test_mode:
                 self._draw_return_button(screen)
             else:
-                log_debug(f"Not drawing Combat Lab button because test_mode=False")
+                logger.debug(f"Not drawing Combat Lab button because test_mode=False")
 
     def handle_click(self, mx, my, button):
         """Handle mouse clicks. Returns True if click was handled."""
 
-        log_debug(f"BattleUI.handle_click at ({mx}, {my})")
-        log_debug(f"test_mode={self.scene.test_mode}, battle_over={self.scene.is_battle_over()}")
+        logger.debug(f"BattleUI.handle_click at ({mx}, {my})")
+        logger.debug(f"test_mode={self.scene.test_mode}, battle_over={self.scene.is_battle_over()}")
 
         # Check "Return to Combat Lab" button first (highest priority)
         if self.scene.test_mode and self.scene.is_battle_over():
             button_rect = self._get_return_button_rect()
-            log_debug(f"Return button rect: {button_rect}")
+            logger.debug(f"Return button rect: {button_rect}")
             if button_rect.collidepoint(mx, my):
-                log_debug(f"Return to Combat Lab button clicked!")
+                logger.debug(f"Return to Combat Lab button clicked!")
                 self.scene.trigger_return_to_test_lab()
                 return True
             else:
-                log_debug(f"Click was not on return button")
+                logger.debug(f"Click was not on return button")
 
         # Control Panel (Buttons usually top priority or overlay)
         # Check control panel first (e.g. End Battle button)
@@ -217,7 +219,7 @@ class BattleUI:
                     pygame.draw.arc(screen, arc_col, rect, -r_end, -r_start, 1)
                 except (ValueError, pygame.error) as e:
                     # Arc drawing can fail with invalid rect dimensions (e.g., negative or zero)
-                    log_debug(f"Arc drawing failed for ship {s.name}: {e}")
+                    logger.debug(f"Arc drawing failed for ship {s.name}: {e}")
 
     def _get_return_button_rect(self):
         """Get the rect for the Return to Combat Lab button."""
@@ -229,7 +231,7 @@ class BattleUI:
 
     def _draw_return_button(self, screen):
         """Draw the Return to Combat Lab button (shown when test completes)."""
-        log_debug(f"Drawing Return to Combat Lab button (test_mode={self.scene.test_mode}, battle_over={self.scene.is_battle_over()})")
+        logger.debug(f"Drawing Return to Combat Lab button (test_mode={self.scene.test_mode}, battle_over={self.scene.is_battle_over()})")
         button_rect = self._get_return_button_rect()
 
         # Check hover state

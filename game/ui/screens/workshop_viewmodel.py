@@ -16,7 +16,9 @@ from typing import List, Tuple, Optional, TYPE_CHECKING
 from game.simulation.services.vehicle_design_service import VehicleDesignService
 from game.ui.screens.builder_utils import BuilderEvents
 
-from game.core.logger import log_error, log_info, log_warning
+import logging
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -340,7 +342,7 @@ class WorkshopViewModel:
         else:
             # PROJ-40: No fallback - fail fast with clear error
             error_msg = f"Service failed to create ship: {result.errors}"
-            log_error(error_msg)
+            logger.error(error_msg)
             raise RuntimeError(error_msg)
 
     def add_component(self, component_id: str, layer: LayerType) -> bool:
@@ -355,7 +357,7 @@ class WorkshopViewModel:
             True if successful, False otherwise
         """
         if not self._ship:
-            log_error("Cannot add component: no ship")
+            logger.error("Cannot add component: no ship")
             return False
 
         result = self._ship_service.add_component(self._ship, component_id, layer)
@@ -365,7 +367,7 @@ class WorkshopViewModel:
             self.notify_ship_changed()
             return True
         else:
-            log_warning(f"Failed to add component: {result.errors}")
+            logger.warning(f"Failed to add component: {result.errors}")
             return False
 
     def add_component_bulk(self, component_id: str, layer: LayerType, count: int) -> int:
@@ -381,7 +383,7 @@ class WorkshopViewModel:
             Number of components successfully added
         """
         if not self._ship:
-            log_error("Cannot add components: no ship")
+            logger.error("Cannot add components: no ship")
             return 0
 
         result = self._ship_service.add_component_bulk(
@@ -410,7 +412,7 @@ class WorkshopViewModel:
             True if successful, False otherwise
         """
         if not self._ship:
-            log_error("Cannot add component: no ship")
+            logger.error("Cannot add component: no ship")
             return False
 
         result = self._ship_service.add_component_instance(self._ship, component, layer)
@@ -420,7 +422,7 @@ class WorkshopViewModel:
             self.notify_ship_changed()
             return True
         else:
-            log_warning(f"Failed to add component instance: {result.errors}")
+            logger.warning(f"Failed to add component instance: {result.errors}")
             return False
 
     def remove_component(self, layer: LayerType, index: int) -> Optional[Component]:
@@ -435,7 +437,7 @@ class WorkshopViewModel:
             The removed component, or None if removal failed
         """
         if not self._ship:
-            log_error("Cannot remove component: no ship")
+            logger.error("Cannot remove component: no ship")
             return None
 
         result = self._ship_service.remove_component(self._ship, layer, index)
@@ -445,7 +447,7 @@ class WorkshopViewModel:
             self.notify_ship_changed()
             return result.removed_component
         else:
-            log_warning(f"Failed to remove component: {result.errors}")
+            logger.warning(f"Failed to remove component: {result.errors}")
             return None
 
     def change_ship_class(self, new_class: str, migrate_components: bool = True) -> bool:
@@ -461,7 +463,7 @@ class WorkshopViewModel:
             True if successful, False otherwise
         """
         if not self._ship:
-            log_error("Cannot change class: no ship")
+            logger.error("Cannot change class: no ship")
             return False
 
         result = self._ship_service.change_class(
@@ -474,7 +476,7 @@ class WorkshopViewModel:
             self.notify_ship_changed()
             return True
         else:
-            log_warning(f"Failed to change class: {result.errors}")
+            logger.warning(f"Failed to change class: {result.errors}")
             return False
 
     def validate_design(self):
@@ -518,7 +520,7 @@ class WorkshopViewModel:
         if not self._ship:
             return
 
-        log_info("Clearing ship design")
+        logger.info("Clearing ship design")
         self._ship.clear_non_hull_components()
 
         self._ship.ai_strategy = "standard_ranged"

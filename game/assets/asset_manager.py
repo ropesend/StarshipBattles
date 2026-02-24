@@ -1,8 +1,10 @@
+import logging
 import os
 import pygame
 from game.core.json_utils import load_json
-from game.core.logger import log_error, log_info, log_warning
 from game.core.paths import Paths
+
+logger = logging.getLogger(__name__)
 from game.core.singleton import SingletonMeta
 
 
@@ -40,15 +42,15 @@ class AssetManager(metaclass=SingletonMeta):
             self.manifest_path = path
             
         if not os.path.exists(self.manifest_path):
-            log_error(f"Asset Manifest not found: {self.manifest_path}")
+            logger.error(f"Asset Manifest not found: {self.manifest_path}")
             return
 
         data = load_json(self.manifest_path)
         if data:
             self.manifest = data
-            log_info(f"Loaded asset manifest from {self.manifest_path}")
+            logger.info(f"Loaded asset manifest from {self.manifest_path}")
         else:
-            log_error(f"Failed to load asset manifest from {self.manifest_path}")
+            logger.error(f"Failed to load asset manifest from {self.manifest_path}")
 
     def load_image(self, category, key):
         """Load a single image from the manifest. Returns cached copy if available."""
@@ -62,17 +64,17 @@ class AssetManager(metaclass=SingletonMeta):
         file_path = cat_data.get(key)
         
         if not file_path:
-            log_warning(f"Asset not found in manifest: {category}.{key}")
+            logger.warning(f"Asset not found in manifest: {category}.{key}")
             return self.get_missing_texture()
 
         # Load
         try:
             return self._load_image(cache_key, file_path)
         except FileNotFoundError as e:
-            log_error(f"Image file not found {file_path}: {e}")
+            logger.error(f"Image file not found {file_path}: {e}")
             return self.get_missing_texture()
         except pygame.error as e:
-            log_error(f"Failed to load image {file_path} (pygame error): {e}")
+            logger.error(f"Failed to load image {file_path} (pygame error): {e}")
             return self.get_missing_texture()
 
     def load_group(self, category, group_key):
@@ -85,7 +87,7 @@ class AssetManager(metaclass=SingletonMeta):
         file_paths = cat_data.get(group_key)
         
         if not file_paths or not isinstance(file_paths, list):
-            log_warning(f"Asset group not found in manifest: {category}.{group_key}")
+            logger.warning(f"Asset group not found in manifest: {category}.{group_key}")
             return [self.get_missing_texture()]
 
         images = []
@@ -94,9 +96,9 @@ class AssetManager(metaclass=SingletonMeta):
             try:
                 images.append(self._load_image(sub_key, path))
             except FileNotFoundError as e:
-                log_error(f"Group image file not found {path}: {e}")
+                logger.error(f"Group image file not found {path}: {e}")
             except pygame.error as e:
-                log_error(f"Failed to load group image {path} (pygame error): {e}")
+                logger.error(f"Failed to load group image {path} (pygame error): {e}")
         
         self.assets[cache_key] = images
         return images
@@ -166,10 +168,10 @@ class AssetManager(metaclass=SingletonMeta):
         try:
              return self._load_image(cache_key, norm_path)
         except FileNotFoundError as e:
-             log_error(f"External image file not found {path}: {e}")
+             logger.error(f"External image file not found {path}: {e}")
              return self.get_missing_texture()
         except pygame.error as e:
-             log_error(f"Failed to load external image {path} (pygame error): {e}")
+             logger.error(f"Failed to load external image {path} (pygame error): {e}")
              return self.get_missing_texture()
 
     def _get_planet_folder_for_size(self, size: int) -> str:
@@ -243,11 +245,11 @@ class AssetManager(metaclass=SingletonMeta):
 
             except (FileNotFoundError, pygame.error, ValueError) as e:
                 # Log warning but continue to next resolution
-                log_warning(f"Could not load planet image {image_filename} at {size}px: {e}")
+                logger.warning(f"Could not load planet image {image_filename} at {size}px: {e}")
                 continue
 
         # All resolutions failed - return missing texture
-        log_error(f"Could not load planet image {image_filename} at any resolution")
+        logger.error(f"Could not load planet image {image_filename} at any resolution")
         return self.get_missing_texture()
 
     def _load_image(self, cache_key, path):

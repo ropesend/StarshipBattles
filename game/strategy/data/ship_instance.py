@@ -11,16 +11,18 @@ separate from its design template.
 
 PROJ-40/NEW-STRAT-008: Added validation and warning for serial parameter.
 """
+import logging
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, Tuple, List, TYPE_CHECKING
 import uuid
 import json
 
-from game.core.logger import log_warning, log_debug
 from game.core.protocols import IPostBattleShip
 from game.strategy.data.ship_resource_manager import ShipResourceManager
 from game.strategy.data.ship_cargo_manager import ShipCargoManager
 from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
@@ -128,7 +130,7 @@ class ShipInstance:
             serial = empire.get_next_serial(actual_design_id)
         else:
             # PROJ-40/NEW-STRAT-008: Log warning when empire not provided
-            log_warning(f"ShipInstance.create() called without empire - "
+            logger.warning(f"ShipInstance.create() called without empire - "
                        f"serial will be None for '{actual_design_id}'")
 
         instance = cls(
@@ -515,7 +517,7 @@ class ShipInstance:
             # Calculate damage to distribute
             damage = ship.max_hp - self.current_hp
             if damage > 0:
-                log_debug(f"Ship {self.name} entering battle with {damage} damage pre-applied")
+                logger.debug(f"Ship {self.name} entering battle with {damage} damage pre-applied")
                 # Apply damage (this will distribute to components)
                 ship.combat_engine.take_damage(damage)
 

@@ -26,8 +26,8 @@ Constants (game.core.constants):
     GameState, LayerType, AttackType, LayerDefaults, CombatConstants,
     PLANET_RESOURCES
 
-Logging (game.core.logger):
-    log_debug, log_info, log_warning, log_error, set_logging
+Event Logging (game.core.event_logging):
+    log_event, set_event_handler, get_event_handler
 
 Validation (game.core.validation):
     ValidationResult, IValidationRule
@@ -85,13 +85,11 @@ from game.core.constants import (
     PLANET_RESOURCES,
 )
 
-# Logging
-from game.core.logger import (
-    log_debug,
-    log_info,
-    log_warning,
-    log_error,
-    set_logging,
+# Event Logging (PROJ-175)
+from game.core.event_logging import (
+    log_event,
+    set_event_handler,
+    get_event_handler,
 )
 
 # Validation
@@ -137,8 +135,8 @@ __all__ = [
     # Constants
     'GameState', 'LayerType', 'AttackType', 'LayerDefaults', 'CombatConstants',
     'PLANET_RESOURCES',
-    # Logging
-    'log_debug', 'log_info', 'log_warning', 'log_error', 'set_logging',
+    # Event Logging
+    'log_event', 'set_event_handler', 'get_event_handler',
     # Validation
     'ValidationResult', 'IValidationRule',
     # Configuration (UIConfig moved to game.ui.config - PROJ-113)

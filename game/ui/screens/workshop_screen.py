@@ -10,7 +10,9 @@ import pygame_gui
 from pygame_gui.elements import UIPanel, UIButton, UIWindow
 from pygame_gui.windows import UIConfirmationDialog
 
-from game.core.logger import log_info
+import logging
+
+logger = logging.getLogger(__name__)
 from game.core.profiling import profile_block
 from game.core.constants import LayerType
 from game.core.paths import Paths
@@ -34,7 +36,6 @@ from game.ui.screens.workshop_ship_io import WorkshopShipIO
 from game.ui.screens.workshop_data_reloader import WorkshopDataReloader
 from game.ui.colors import COLORS
 from game.ui.screens.builder.detail_panel import ComponentDetailPanel
-from game.core.logger import log_debug
 
 BG_COLOR = COLORS['bg_deep']
 
@@ -85,9 +86,9 @@ class DesignWorkshopScreen:
         # In integrated mode, set ship theme from empire
         if self.context.is_integrated() and self.context.empire_theme_id:
             self.viewmodel.set_ship_theme(self.context.empire_theme_id)
-            log_debug(f"Workshop set ship.theme_id to {self.viewmodel.ship.theme_id}")
+            logger.debug(f"Workshop set ship.theme_id to {self.viewmodel.ship.theme_id}")
         else:
-            log_debug(f"Workshop NOT setting theme - integrated={self.context.is_integrated()}, empire_theme_id={self.context.empire_theme_id}")
+            logger.debug(f"Workshop NOT setting theme - integrated={self.context.is_integrated()}, empire_theme_id={self.context.empire_theme_id}")
         
         # Managers
         self.viewmodel.refresh_available_components()
@@ -531,7 +532,7 @@ class DesignWorkshopScreen:
         self.layer_panel.rebuild()
         self.left_panel.update_component_list() # Update available components based on hull type
         self.rebuild_modifier_ui()
-        log_info(message)
+        logger.info(message)
 
     def show_clear_confirmation(self):
         self.pending_action = ('clear_design', None)

@@ -20,13 +20,15 @@ Architecture:
 - Execution (for TurnEngine):
   - calculate_fleet_next_hex(fleet, galaxy) → HexCoord?
 """
+import logging
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 from game.core.hex_math import HexCoord, hex_distance
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.pathfinding import find_hybrid_path
-from game.core.logger import log_warning
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -324,7 +326,7 @@ class FleetNavigationService:
         while (state.path or state.orders) and current_turn < max_turns:
             iterations += 1
             if iterations > max_steps:
-                log_warning("project_path exceeded max iterations")
+                logger.warning("project_path exceeded max iterations")
                 break
 
             # If no path but have orders, generate path for current order
@@ -447,7 +449,7 @@ class FleetNavigationService:
         if order and order.type == OrderType.MOVE_TO_FLEET:
             target_fleet = order.target
             if not target_fleet or not hasattr(target_fleet, 'location'):
-                log_warning("FleetNavigationService: Target fleet invalid. Order cancelled.")
+                logger.warning("FleetNavigationService: Target fleet invalid. Order cancelled.")
                 fleet.pop_order()
                 return None
 

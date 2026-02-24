@@ -1,9 +1,11 @@
 import heapq
+import logging
 from typing import List, Union, Optional, TYPE_CHECKING
 
-from game.core.logger import log_error, log_info, log_warning, log_debug
 from game.core.hex_math import hex_distance, hex_linedraw, HexCoord
 from game.strategy.data.fleet import OrderType
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
@@ -177,7 +179,7 @@ def find_hybrid_path(galaxy, start_hex, end_hex, fleet=None):
     can_use_warp = True
     if fleet is not None:
         can_use_warp = fleet.can_use_warp()
-        log_debug(f"find_hybrid_path: fleet={fleet.id}, can_use_warp={can_use_warp}")
+        logger.debug(f"find_hybrid_path: fleet={fleet.id}, can_use_warp={can_use_warp}")
 
     # 1. Identify Start/End Systems
     # If in deep space, find NEAREST system to enter/exit the network.
@@ -410,7 +412,7 @@ def calculate_intercept_point(
     chaser_location, chaser_speed, chaser_id, chaser_can_warp = _extract_chaser_info(chaser)
     chaser_proxy = _ChaserProxy(chaser_can_warp, chaser_id)
 
-    log_debug(f"Intercept: chaser={chaser_id} @ {chaser_location} (speed={chaser_speed}) -> "
+    logger.debug(f"Intercept: chaser={chaser_id} @ {chaser_location} (speed={chaser_speed}) -> "
               f"target={getattr(target_fleet, 'id', '?')} @ {target_fleet.location}")
 
     # Handle zero/negative speed
@@ -433,15 +435,15 @@ def calculate_intercept_point(
 
     # Determine result
     if best_intercept is not None:
-        log_debug(f"Intercept selected: {best_intercept} (chaser arrives turn {best_time:.1f}, "
+        logger.debug(f"Intercept selected: {best_intercept} (chaser arrives turn {best_time:.1f}, "
                   f"target at hex turn {best_turn})")
         return best_intercept
     elif target_path:
         result = target_path[-1]['hex']
-        log_debug(f"No intercept possible - chasing endpoint: {result}")
+        logger.debug(f"No intercept possible - chasing endpoint: {result}")
         return result
     else:
         result = fallback if fallback else target_fleet.location
-        log_debug(f"Intercept fallback: {result}")
+        logger.debug(f"Intercept fallback: {result}")
         return result
 
