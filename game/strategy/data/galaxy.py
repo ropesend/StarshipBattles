@@ -5,6 +5,10 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING
 # hex_to_pixel/pixel_to_hex: Used for geometric calculations (angles, distances),
 # not rendering. These convert hex coords to/from Cartesian for trigonometry.
 from game.core.hex_math import HexCoord, hex_distance, hex_to_pixel, hex_ring, pixel_to_hex, hex_to_dict, hex_from_dict
+from game.core.validation_helpers import require_keys, validate_positive
+from game.core.exceptions import PersistenceException
+from game.core.error_codes import ErrorCode
+import logging
 from game.strategy.data.naming import NameRegistry
 import os
 
@@ -34,10 +38,30 @@ class WarpPoint:
 
     @classmethod
     def from_dict(cls, data: dict) -> 'WarpPoint':
-        """Deserialize WarpPoint from dict."""
+        """Deserialize WarpPoint from dict.
+
+        Raises:
+            PersistenceException: If required keys missing or location is malformed.
+        """
+        require_keys(data, ['destination_id', 'location'], 'WarpPoint')
+
+        try:
+            location = hex_from_dict(data['location'])
+        except (KeyError, TypeError) as e:
+            raise PersistenceException(
+                f"WarpPoint: invalid location format - {type(e).__name__}: {e}",
+                code=ErrorCode.CORRUPT_DATA.value,
+                context={
+                    "source": "WarpPoint",
+                    "field": "location",
+                    "value": data.get('location'),
+                    "error": str(e),
+                }
+            ) from e
+
         return cls(
             destination_id=data['destination_id'],
-            location=hex_from_dict(data['location'])
+            location=location
         )
 
 class StarSystem:
@@ -76,19 +100,46 @@ class StarSystem:
 
     @classmethod
     def from_dict(cls, data: dict) -> 'StarSystem':
-        """Deserialize StarSystem from dict."""
+        """Deserialize StarSystem from dict.
+
+        Raises:
+            PersistenceException: If required keys missing.
+
+        Note:
+            Invalid children (stars, planets, warp points) are skipped with
+            a warning log to allow resilient degradation.
+        """
+        logger = logging.getLogger(__name__)
+        require_keys(data, ['name', 'global_location'], 'StarSystem')
+
+        # Deserialize stars with error isolation
+        stars = []
+        for i, s in enumerate(data.get('stars', [])):
+            try:
+                stars.append(Star.from_dict(s))
+            except (PersistenceException, KeyError, TypeError, ValueError) as e:
+                logger.warning(f"StarSystem '{data['name']}': skipping invalid star at index {i}: {e}")
+
         system = cls(
             name=data['name'],
             global_location=hex_from_dict(data['global_location']),
-            stars=[Star.from_dict(s) for s in data.get('stars', [])],
+            stars=stars,
             region_id=data.get('region_id')
         )
 
-        # Deserialize warp points
-        system.warp_points = [WarpPoint.from_dict(wp) for wp in data.get('warp_points', [])]
+        # Deserialize warp points with error isolation
+        for i, wp in enumerate(data.get('warp_points', [])):
+            try:
+                system.warp_points.append(WarpPoint.from_dict(wp))
+            except (PersistenceException, KeyError, TypeError, ValueError) as e:
+                logger.warning(f"StarSystem '{data['name']}': skipping invalid warp point at index {i}: {e}")
 
-        # Deserialize planets
-        system.planets = [Planet.from_dict(p) for p in data.get('planets', [])]
+        # Deserialize planets with error isolation
+        for i, p in enumerate(data.get('planets', [])):
+            try:
+                system.planets.append(Planet.from_dict(p))
+            except (PersistenceException, KeyError, TypeError, ValueError) as e:
+                logger.warning(f"StarSystem '{data['name']}': skipping invalid planet at index {i}: {e}")
 
         return system
 
@@ -887,17 +938,46 @@ class Galaxy:
 
         Returns:
             Reconstructed Galaxy with all indexes rebuilt
+
+        Raises:
+            PersistenceException: If required keys missing or radius is not positive.
+
+        Note:
+            Invalid systems are skipped with a warning log to allow
+            resilient degradation.
         """
+        logger = logging.getLogger(__name__)
+        require_keys(data, ['radius'], 'Galaxy')
+        validate_positive(data['radius'], 'radius', 'Galaxy')
+
         # Create empty galaxy
         galaxy = cls(radius=data['radius'])
 
         # Restore planet ID counter
         galaxy._next_planet_id = data.get('_next_planet_id', 1)
 
-        # Deserialize systems
-        for sys_entry in data.get('systems', []):
-            coord = hex_from_dict(sys_entry['coord'])
-            system = StarSystem.from_dict(sys_entry['system'])
+        # Deserialize systems with error isolation
+        for i, sys_entry in enumerate(data.get('systems', [])):
+            try:
+                # Validate system entry structure
+                if 'coord' not in sys_entry:
+                    raise PersistenceException(
+                        f"Galaxy: system entry {i} missing 'coord'",
+                        code=ErrorCode.CORRUPT_DATA.value,
+                        context={"source": "Galaxy", "index": i, "missing_key": "coord"}
+                    )
+                if 'system' not in sys_entry:
+                    raise PersistenceException(
+                        f"Galaxy: system entry {i} missing 'system'",
+                        code=ErrorCode.CORRUPT_DATA.value,
+                        context={"source": "Galaxy", "index": i, "missing_key": "system"}
+                    )
+
+                coord = hex_from_dict(sys_entry['coord'])
+                system = StarSystem.from_dict(sys_entry['system'])
+            except (PersistenceException, KeyError, TypeError, ValueError) as e:
+                logger.warning(f"Galaxy: skipping invalid system at index {i}: {e}")
+                continue
 
             # Add to galaxy maps
             galaxy.systems[coord] = system

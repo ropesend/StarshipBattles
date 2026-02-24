@@ -8,18 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-171 Phase 1 - Validation Helper Infrastructure
-**Current Status:** PROJ-171 Phase 1 complete
+**Last Completed:** PROJ-171 Phase 2 - Galaxy Core Validation
+**Current Status:** PROJ-171 Phase 2 complete
 **Current Project:** PROJ-171
-**Current Phase:** Phase 2 (next)
-**Test Status:** 11993 passed, 1 skipped
+**Current Phase:** Phase 3 (next)
+**Test Status:** 12015 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 1 complete: Created game/core/validation_helpers.py with 6 helpers
-- Helpers: require_keys, validate_enum, validate_positive, validate_non_negative, validate_range, safe_from_dict
-- 21 tests covering all helpers (tests/unit/core/test_validation_helpers.py)
-- Next: Phase 2 - Add validation to WarpPoint, StarSystem, Galaxy from_dict methods
+- Phase 2 complete: Added validation to WarpPoint, StarSystem, Galaxy from_dict methods
+- WarpPoint: require_keys + location validation with PersistenceException
+- StarSystem: require_keys + resilient child deserialization (skip bad children with warnings)
+- Galaxy: require_keys + validate_positive(radius) + resilient system deserialization
+- 22 new tests in tests/unit/strategy/galaxy/
+- Next: Phase 3 - Celestial Bodies validation (Star, Spectrum, Planet)
 
 ---
 
@@ -120,6 +122,7 @@
 | 2026-02-23 | PROJ-170 | Phase 7 | Complete | 11972 passed, 1 skipped | pending | Added logging to silent catches, final verification passed |
 | 2026-02-23 | PROJ-170 | Audit 1 | PASSED | 11972 passed, 1 skipped | pending | All verifications passed, project complete |
 | 2026-02-24 | PROJ-171 | Phase 1 | Complete | 11993 passed, 1 skipped | pending | Validation helpers module + 21 tests |
+| 2026-02-24 | PROJ-171 | Phase 2 | Complete | 12015 passed, 1 skipped | pending | Galaxy core validation + 22 tests |
 
 ---
 
