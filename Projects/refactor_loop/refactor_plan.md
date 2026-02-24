@@ -8,20 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-180 Audit PASSED - Project Complete
-**Current Status:** PROJ-180 complete, ready for PROJ-181
+**Last Completed:** PROJ-181 Phase 1 Complete
+**Current Status:** PROJ-181 in progress, Phase 2 next
 **Current Project:** PROJ-181
-**Current Phase:** Phase 1
-**Test Status:** 12375 passed, 1 skipped
+**Current Phase:** Phase 2
+**Test Status:** 12373 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-180 COMPLETE:
-  - Phase 1: Deleted ghost code (get_column_visibility_changed)
-  - Phase 2: Eradicated 14 backward-compat properties, updated 6 test files
-  - Phase 3: Extracted WeaponsInputHandler (96 lines), 17 tests
-  - Audit: PASSED - all objectives verified
-- Next: PROJ-181 Phase 1 - Registry API deprecation
+- PROJ-181 Phase 1 COMPLETE:
+  - Deleted `get_default_registries()`, `set_default_registries()`, `_default_registries`
+  - Updated composition roots: conftest.py, app.py, simulation_tests/conftest.py
+  - Fixed stale TYPE_CHECKING import in design_loader.py
+  - Updated 9 test files referencing deprecated API
+  - Deleted TestDefaultRegistries class (2 tests)
+  - Added regression tests for deprecated function removal
+- Next: PROJ-181 Phase 2 - verify no remaining deprecated callers
 
 ---
 
@@ -125,8 +127,8 @@
 
 ---
 
-- [ ] **PROJ-181: PROJ-174 Completion - Eradicate Deprecated Registry API**
-  - **Phases:** 6 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-181: PROJ-174 Completion - Eradicate Deprecated Registry API**
+  - **Phases:** 6 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-181/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-181/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -215,6 +217,7 @@
 | 2026-02-24 | PROJ-180 | Phase 2 | Complete | 12358 passed, 1 skipped | pending | Eradicated 14 backward-compat properties, updated 6 test files |
 | 2026-02-24 | PROJ-180 | Phase 3 | Complete | 12375 passed, 1 skipped | pending | Extracted WeaponsInputHandler (96 lines), 17 tests, deleted _check_tooltip_hover |
 | 2026-02-24 | PROJ-180 | Audit 1 | PASSED | 12375 passed, 1 skipped | - | All objectives verified, project complete |
+| 2026-02-24 | PROJ-181 | Phase 1 | Complete | 12373 passed, 1 skipped | pending | Deleted deprecated API + updated 9 test files |
 
 ---
 

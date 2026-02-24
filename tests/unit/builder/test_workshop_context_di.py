@@ -4,37 +4,20 @@ Tests for WorkshopContext dependency injection (PROJ-38).
 These tests verify that WorkshopContext:
 1. Accepts GameRegistries via constructor
 2. Passes registries through factory methods
-3. Falls back to get_default_registries() when None
+3. Falls back to get_default_registry_provider() when None
 
-PROJ-174: Uses deprecated set_default_registries() to test backward compatibility.
+PROJ-181: Removed deprecated set_default_registries() - WorkshopContext now
+          uses get_default_registry_provider() which reads from RegistryManager.
 """
 import pytest
-import warnings
 
 from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
-from game.core.registry import GameRegistries, set_default_registries
-
-
-# PROJ-174: Suppress deprecation warnings - this file tests deprecated patterns
-pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
+from game.core.registry import GameRegistries
 
 
 # =============================================================================
 # Fixtures
 # =============================================================================
-
-@pytest.fixture(autouse=True)
-def restore_default_registries():
-    """Restore _default_registries after each test to prevent pollution.
-
-    This fixture saves the original value before each test and restores it
-    after, ensuring that set_default_registries() calls don't affect other tests.
-    """
-    import game.core.registry as registry_module
-    original = registry_module._default_registries
-    yield
-    registry_module._default_registries = original
-
 
 @pytest.fixture
 def mock_registries():
@@ -67,10 +50,10 @@ class TestWorkshopContextConstructor:
         assert hasattr(context, 'registries')
         assert context.registries is mock_registries
 
-    def test_constructor_with_none_uses_default(self, mock_registries):
-        """WorkshopContext with None registries should fall back to default registries."""
-        set_default_registries(mock_registries)
-
+    def test_constructor_with_none_uses_default_provider(self):
+        """WorkshopContext with None registries should fall back to get_default_registry_provider()."""
+        # PROJ-181: Uses get_default_registry_provider() which reads from RegistryManager
+        # (hydrated by root conftest fixture)
         context = WorkshopContext(
             mode=WorkshopMode.STANDALONE,
             registries=None
@@ -78,11 +61,10 @@ class TestWorkshopContextConstructor:
 
         assert context.registries is not None
 
-    def test_constructor_without_registries_uses_default(self, mock_registries):
-        """WorkshopContext without registries arg should fall back to default registries."""
-        set_default_registries(mock_registries)
-
-        # Legacy pattern - no registries argument
+    def test_constructor_without_registries_uses_default_provider(self):
+        """WorkshopContext without registries arg should fall back to get_default_registry_provider()."""
+        # PROJ-181: Uses get_default_registry_provider() which reads from RegistryManager
+        # (hydrated by root conftest fixture)
         context = WorkshopContext(
             mode=WorkshopMode.STANDALONE
         )
@@ -107,10 +89,9 @@ class TestWorkshopContextFactoryMethods:
         assert context.registries is mock_registries
         assert context.mode == WorkshopMode.STANDALONE
 
-    def test_standalone_without_registries_uses_default(self, mock_registries):
-        """standalone() without registries should use default."""
-        set_default_registries(mock_registries)
-
+    def test_standalone_without_registries_uses_default_provider(self):
+        """standalone() without registries should use get_default_registry_provider()."""
+        # PROJ-181: Uses get_default_registry_provider() which reads from RegistryManager
         context = WorkshopContext.standalone(tech_preset_name="default")
 
         assert context.registries is not None
@@ -126,10 +107,9 @@ class TestWorkshopContextFactoryMethods:
         assert context.registries is mock_registries
         assert context.mode == WorkshopMode.INTEGRATED
 
-    def test_integrated_without_registries_uses_default(self, mock_registries):
-        """integrated() without registries should use default."""
-        set_default_registries(mock_registries)
-
+    def test_integrated_without_registries_uses_default_provider(self):
+        """integrated() without registries should use get_default_registry_provider()."""
+        # PROJ-181: Uses get_default_registry_provider() which reads from RegistryManager
         context = WorkshopContext.integrated(
             empire_id=1,
             savegame_path="saves/test"
@@ -145,21 +125,17 @@ class TestWorkshopContextFactoryMethods:
 class TestWorkshopContextBackwardCompatibility:
     """Tests ensuring backward compatibility with legacy interface."""
 
-    def test_standalone_works_without_registries_arg(self, mock_registries):
-        """standalone() should work without registries argument (legacy pattern)."""
-        # Set default registries as fallback
-        set_default_registries(mock_registries)
-
+    def test_standalone_works_without_registries_arg(self):
+        """standalone() should work without registries argument (uses provider fallback)."""
+        # PROJ-181: Uses get_default_registry_provider() which reads from RegistryManager
         context = WorkshopContext.standalone()
 
         assert context is not None
         assert context.mode == WorkshopMode.STANDALONE
 
-    def test_integrated_works_without_registries_arg(self, mock_registries):
-        """integrated() should work without registries argument (legacy pattern)."""
-        # Set default registries as fallback
-        set_default_registries(mock_registries)
-
+    def test_integrated_works_without_registries_arg(self):
+        """integrated() should work without registries argument (uses provider fallback)."""
+        # PROJ-181: Uses get_default_registry_provider() which reads from RegistryManager
         context = WorkshopContext.integrated(
             empire_id=1,
             savegame_path="saves/test"

@@ -35,8 +35,6 @@ __all__ = [
     'TestRegistryProvider',
     'get_default_registry_provider',
     # Lifecycle functions
-    'get_default_registries',
-    'set_default_registries',
     'freeze_registry',
     'clear_registry',
     'set_validator',
@@ -76,62 +74,6 @@ class GameRegistries:
     vehicle_classes: Dict[str, Any]
     resources: Dict[str, Any]
 
-
-# Module-level default registries (set by composition root at startup)
-_default_registries: Optional[GameRegistries] = None
-
-
-def set_default_registries(registries: GameRegistries) -> None:
-    """
-    Set the default GameRegistries instance.
-
-    DEPRECATED: Kept for conftest.py compatibility during transition.
-    New code should use IRegistryProvider pattern via DI.
-
-    Called by composition roots (app.py at startup, conftest.py in tests)
-    to make registries available via get_default_registries().
-
-    Args:
-        registries: The GameRegistries instance to use as default
-    """
-    import warnings
-    warnings.warn(
-        "set_default_registries() is deprecated. Use IRegistryProvider via DI instead.",
-        DeprecationWarning,
-        stacklevel=2
-    )
-    global _default_registries
-    _default_registries = registries
-
-
-def get_default_registries() -> GameRegistries:
-    """
-    Get the default GameRegistries instance.
-
-    DEPRECATED: Use get_default_registry_provider() instead.
-    This function remains for backward compatibility but will be removed.
-
-    Set by: app.py (production), conftest.py (tests)
-
-    Returns:
-        The default GameRegistries instance
-
-    Raises:
-        StateException: If set_default_registries() has not been called
-    """
-    import warnings
-    warnings.warn(
-        "get_default_registries() is deprecated. Use get_default_registry_provider() instead.",
-        DeprecationWarning,
-        stacklevel=2
-    )
-    if _default_registries is None:
-        raise StateException(
-            "Default registries not set. Call set_default_registries() first.",
-            code=ErrorCode.NOT_INITIALIZED.value,
-            context={"operation": "get_default_registries"}
-        )
-    return _default_registries
 
 class RegistryManager(metaclass=SingletonMeta):
     """

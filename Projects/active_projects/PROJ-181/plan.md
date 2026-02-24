@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Delete Deprecated API | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Delete Deprecated API | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Migrate Deprecated Function Callers | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Test .clear() Migration - Batch 1 | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Test .clear() Migration - Batch 2 | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -22,11 +22,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Planning
-**Last Action:** Independent verification swarm + full analysis complete
-**Next Action:** Await user plan approval, then begin Phase 1
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete - deprecated API deleted
+**Next Action:** Begin Phase 2 - migrate remaining callers
 **Blockers:** None
-**Context for Next Agent:** Baseline 12,338 passed, 1 skipped. All deprecated function callers identified with exact line numbers. Phase 1 removes the API, Phase 2 migrates callers, Phases 3-4 clean test boilerplate, Phase 5 fixes docs, Phase 6 verifies.
+**Context for Next Agent:** Phase 1 complete. Deleted `get_default_registries()`, `set_default_registries()`, and `_default_registries` from registry.py. Updated composition roots (conftest.py, app.py, simulation_tests/conftest.py). Fixed stale TYPE_CHECKING import. Updated 9 test files that referenced deprecated API. Tests: 12373 passed, 1 skipped (deleted 2 tests). Phase 2 should verify no remaining deprecated function callers exist (most were handled in Phase 1 expansion).
 
 ## Overview
 PROJ-174 migrated all production code to `IRegistryProvider` DI but kept `get_default_registries()` and `set_default_registries()` alive with DeprecationWarnings. Per CLAUDE.md System Migration Policy ("ERADICATE the old system completely"), this project deletes those functions, updates all callers, fixes stale documentation, and migrates 24 test files from `RegistryManager.instance().clear()` boilerplate to the existing fixture pattern.

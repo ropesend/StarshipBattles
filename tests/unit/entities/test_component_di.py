@@ -5,25 +5,14 @@ These tests verify that Component and related functions:
 1. Accept GameRegistries via constructor/parameter (required)
 2. Raise TypeError when registries is None
 3. Work with injected registries for all operations
+
+PROJ-181: Removed _default_registries cleanup - no longer exists.
 """
 import pytest
 
 from game.core.exceptions import ValidationException
 from game.simulation.components.component import Component, create_component
-from game.core.registry import GameRegistries, set_default_registries
-
-
-# =============================================================================
-# Fixtures
-# =============================================================================
-
-@pytest.fixture(autouse=True)
-def restore_default_registries():
-    """Restore _default_registries after each test to prevent pollution."""
-    import game.core.registry as registry_module
-    original = registry_module._default_registries
-    yield
-    registry_module._default_registries = original
+from game.core.registry import GameRegistries
 
 
 @pytest.fixture

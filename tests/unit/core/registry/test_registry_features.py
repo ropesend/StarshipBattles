@@ -292,77 +292,8 @@ class TestGameRegistries:
 
 
 # =============================================================================
-# Test: Default Registries Functions (PROJ-38)
+# PROJ-181: TestDefaultRegistries removed
 # =============================================================================
-
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
-class TestDefaultRegistries:
-    """
-    Tests for set_default_registries() and get_default_registries() functions.
-
-    PROJ-38/PROJ-174: These functions allow setting a global default GameRegistries
-    instance for transitional fallback. Now deprecated in favor of IRegistryProvider.
-    Tests filter DeprecationWarning since they test the deprecated API itself.
-    """
-
-    def test_get_default_registries_raises_when_not_set(self):
-        """get_default_registries() should raise StateException when not set."""
-        from game.core.registry import get_default_registries, GameRegistries
-        import game.core.registry as registry_module
-
-        # Ensure default is not set
-        registry_module._default_registries = None
-
-        with pytest.raises(StateException, match="not set"):
-            get_default_registries()
-
-    def test_set_default_registries_stores_instance(self):
-        """set_default_registries() should store the GameRegistries instance."""
-        from game.core.registry import (
-            GameRegistries,
-            set_default_registries,
-            get_default_registries
-        )
-        import game.core.registry as registry_module
-
-        # Reset state
-        registry_module._default_registries = None
-
-        gr = GameRegistries(
-            components={"a": 1},
-            modifiers={"b": 2},
-            vehicle_classes={"c": 3},
-            resources={"d": 4}
-        )
-
-        set_default_registries(gr)
-
-        result = get_default_registries()
-        assert result is gr
-
-    def test_get_default_registries_returns_same_instance(self):
-        """get_default_registries() should return the exact same instance."""
-        from game.core.registry import (
-            GameRegistries,
-            set_default_registries,
-            get_default_registries
-        )
-        import game.core.registry as registry_module
-
-        # Reset state
-        registry_module._default_registries = None
-
-        gr = GameRegistries(
-            components={},
-            modifiers={},
-            vehicle_classes={},
-            resources={}
-        )
-
-        set_default_registries(gr)
-
-        result1 = get_default_registries()
-        result2 = get_default_registries()
-
-        assert result1 is result2
-        assert result1 is gr
+# The get_default_registries() and set_default_registries() functions have been
+# deleted as part of PROJ-181. All consumers now use get_default_registry_provider()
+# which reads from RegistryManager.

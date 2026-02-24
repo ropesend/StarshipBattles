@@ -2,35 +2,16 @@
 
 PROJ-43: Uses ShipFactory mocking instead of direct Ship mocking.
 PROJ-50: Added fresh_registries fixture for strict DI compliance.
-PROJ-174: Uses deprecated set_default_registries() in fixture.
+PROJ-181: Removed deprecated set_default_registries() fixture - RegistryManager hydration
+          from root conftest.py now sufficient (get_default_registry_provider reads from it).
 """
 from unittest.mock import patch, MagicMock
 import os
 import pytest
 import pygame
-import warnings
 
 from game.ui.screens.setup_screen import BattleSetupScreen
 from game.ui.screens.setup_data_io import load_ships_from_entries, scan_ship_designs
-
-
-@pytest.fixture(autouse=True)
-def setup_default_registries(fresh_registries):
-    """Set up default registries for tests that use get_default_registries().
-
-    PROJ-50: This autouse fixture ensures that get_default_registries() works
-    for tests that exercise code paths using global registries (like ShipFactory).
-    PROJ-174: Uses deprecated set_default_registries() - suppress warning.
-    """
-    from game.core.registry import set_default_registries
-    import game.core.registry as registry_module
-
-    original = registry_module._default_registries
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", DeprecationWarning)
-        set_default_registries(fresh_registries)
-    yield
-    registry_module._default_registries = original
 
 
 class TestFleetComposition:

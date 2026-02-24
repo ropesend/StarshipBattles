@@ -71,8 +71,6 @@ from game.core.registry import (
     DefaultRegistryProvider,
     TestRegistryProvider,
     get_default_registry_provider,
-    get_default_registries,
-    set_default_registries,
 )
 
 # Constants
@@ -131,7 +129,7 @@ __all__ = [
     # Registry and DI
     'GameRegistries', 'RegistryManager',
     'DefaultRegistryProvider', 'TestRegistryProvider',
-    'get_default_registry_provider', 'get_default_registries', 'set_default_registries',
+    'get_default_registry_provider',
     # Constants
     'GameState', 'LayerType', 'AttackType', 'LayerDefaults', 'CombatConstants',
     'PLANET_RESOURCES',

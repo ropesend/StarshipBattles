@@ -2,7 +2,6 @@
 import argparse
 import logging
 import os
-import warnings
 import pygame
 import pygame_gui
 
@@ -27,7 +26,7 @@ def configure_logging():
 from game.ui.utils import create_centered_rect
 from game.simulation.components.component import load_components, load_modifiers
 from game.core.resources import load_resources_data
-from game.core.registry import GameRegistries, set_default_registries, RegistryManager
+from game.core.registry import GameRegistries, RegistryManager
 from pygame_gui.elements import UIButton
 from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
@@ -120,6 +119,9 @@ class Game:
         initialize_ship_data(Paths.ROOT_DIR)
 
         # Create GameRegistries container for DI (PROJ-38)
+        # PROJ-181: Deprecated set_default_registries() removed.
+        # All DI consumers now use get_default_registry_provider() which reads
+        # from RegistryManager (hydrated via load_components/load_modifiers above).
         registry = RegistryManager.instance()
         self.registries = GameRegistries(
             components=registry.components,
@@ -127,10 +129,6 @@ class Game:
             vehicle_classes=registry.vehicle_classes,
             resources=registry.resources
         )
-        # PROJ-174: app.py is the composition root - suppress deprecation warning
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", DeprecationWarning)
-            set_default_registries(self.registries)
 
         # Initialize input mapper (PROJ-71: centralized keybindings)
         self.input_mapper = InputMapper()

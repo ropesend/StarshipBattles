@@ -84,13 +84,8 @@ class TestGameStateAliasesRemoved:
             "SETTINGS alias should be removed - use GameState.SETTINGS"
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestNewPatternsWork:
-    """Verify new patterns work correctly as replacements.
-
-    PROJ-174: Some functions tested here are deprecated. Filter warnings
-    since we're testing they exist, not that they're non-deprecated.
-    """
+    """Verify new patterns work correctly as replacements."""
 
     def test_game_registries_accessible(self):
         """GameRegistries container should be importable and usable."""
@@ -109,10 +104,17 @@ class TestNewPatternsWork:
         )
         assert "test" in gr.components
 
-    def test_get_default_registries_function_exists(self):
-        """get_default_registries() should be the new way to access registries."""
-        from game.core.registry import get_default_registries
-        assert callable(get_default_registries)
+    def test_get_default_registries_function_removed(self):
+        """get_default_registries() should be removed (PROJ-181)."""
+        from game.core import registry
+        assert not hasattr(registry, 'get_default_registries'), \
+            "get_default_registries should be removed - use get_default_registry_provider()"
+
+    def test_set_default_registries_function_removed(self):
+        """set_default_registries() should be removed (PROJ-181)."""
+        from game.core import registry
+        assert not hasattr(registry, 'set_default_registries'), \
+            "set_default_registries should be removed - use IRegistryProvider via DI"
 
     def test_get_default_registry_provider_function_exists(self):
         """get_default_registry_provider() should exist for DI patterns."""

@@ -25,7 +25,7 @@ from game.core.math import Vector2
 from game.simulation.entities.ship import Ship
 
 if TYPE_CHECKING:
-    from game.core.registries import GameRegistries
+    from game.core.registry import GameRegistries
 
 
 class SimulationDesignLoader:

@@ -1,11 +1,10 @@
 import logging
 import os
-import warnings
 # Force headless mode BEFORE any imports happen during collection
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 import pytest
-from game.core.registry import RegistryManager, GameRegistries, set_default_registries
+from game.core.registry import RegistryManager
 from game.core.config import DisplayConfig
 
 @pytest.fixture(autouse=True)
@@ -54,19 +53,11 @@ def reset_game_state(monkeypatch, request):
             cache.get_vehicle_classes()
         )
 
-        # 4. Set default GameRegistries for DI consumers (PROJ-58)
-        # Code using get_default_registries() needs this to resolve registries
-        # PROJ-174: Suppress deprecation warning - conftest is a composition root
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", DeprecationWarning)
-            set_default_registries(GameRegistries(
-                components=mgr.components,
-                modifiers=mgr.modifiers,
-                vehicle_classes=mgr.vehicle_classes,
-                resources=mgr.resources,
-            ))
+        # PROJ-181: Deprecated set_default_registries() removed.
+        # All DI consumers now use get_default_registry_provider() which reads
+        # from RegistryManager (hydrated above).
 
-        # 5. Patch Loaders/Caches to prevent Disk I/O during test execution
+        # 4. Patch Loaders/Caches to prevent Disk I/O during test execution
 
         # A. Component Cache: Inject data so load_components() returns early
         from game.simulation.components.component import ComponentCacheManager
@@ -90,9 +81,7 @@ def reset_game_state(monkeypatch, request):
         # 1. Core singletons
         mgr.clear()
 
-        # Clear default registries (PROJ-58)
-        import game.core.registry as _reg_mod
-        _reg_mod._default_registries = None
+        # PROJ-181: _default_registries removed - no cleanup needed
 
         # Reset event handler to prevent test pollution
         try:

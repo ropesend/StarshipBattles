@@ -80,11 +80,7 @@ def isolated_registry():
     Clears all registries before loading test data, ensures no pollution
     from previous tests or production data.
     """
-    from game.core.registry import (
-        RegistryManager, GameRegistries,
-        set_default_registries,
-    )
-    import game.core.registry as _registry_module
+    from game.core.registry import RegistryManager
     from game.simulation.entities.ship_loader import load_vehicle_classes
     from game.simulation.components.component import load_components, load_modifiers
     from game.ai.strategy_manager import StrategyManager
@@ -98,14 +94,9 @@ def isolated_registry():
     load_components(DATA_DIR / 'components.json')
     load_modifiers(DATA_DIR / 'modifiers.json')
 
-    # Set default registries so code using get_default_registries() works
-    registries = GameRegistries(
-        components=mgr.components,
-        modifiers=mgr.modifiers,
-        vehicle_classes=mgr.vehicle_classes,
-        resources=mgr.resources,
-    )
-    set_default_registries(registries)
+    # PROJ-181: Deprecated set_default_registries() removed.
+    # All DI consumers now use get_default_registry_provider() which reads
+    # from RegistryManager (hydrated via load_* calls above).
 
     # Load combat strategies for AI
     manager = StrategyManager.instance()
@@ -117,7 +108,6 @@ def isolated_registry():
 
     # Cleanup after test class
     RegistryManager.instance().clear()
-    _registry_module._default_registries = None
 
 
 @pytest.fixture
