@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-171 Phase 3 - Celestial Bodies Validation
-**Current Status:** PROJ-171 Phase 3 complete
+**Last Completed:** PROJ-171 Phase 4 - Empire & Fleet Validation
+**Current Status:** PROJ-171 Phase 4 complete
 **Current Project:** PROJ-171
-**Current Phase:** Phase 4 (next)
-**Test Status:** 12082 passed, 1 skipped
+**Current Phase:** Phase 5 (next)
+**Test Status:** 12109 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 3 complete: Added validation to Spectrum, Star, Planet from_dict methods
-- Spectrum: require_keys for 9 bands + validate_non_negative for all
-- Star: require_keys + validate_enum(StarType) + validate_positive(mass, temp, luminosity) + safe_from_dict(Spectrum)
-- Planet: 14 required keys + validate_enum(PlanetType) + positive/non-negative checks + resilient facility/population deserialization
-- 67 new tests in tests/unit/strategy/stars/ and tests/unit/strategy/planet/
-- Next: Phase 4 - Empire & Fleet validation (ShipInstance, Fleet, Empire)
+- Phase 4 complete: Added validation to ShipInstance, Fleet, Empire from_dict methods
+- ShipInstance: require_keys for 4 fields (instance_id, design_id, name, owner_id)
+- Fleet: require_keys(id, owner_id) + validate_enum(OrderType) + resilient ship/order deserialization with warning logs
+- Empire: require_keys(id, name, color) + safe_from_dict for RaceConfig + resilient fleet deserialization with warning logs
+- 27 new tests in tests/unit/strategy/ship_instance/, fleet/, empire/
+- Next: Phase 5 - Simulation state validation (ShipState, ComponentState, Event, DesignMetadata)
 
 ---
 
@@ -124,6 +124,7 @@
 | 2026-02-24 | PROJ-171 | Phase 1 | Complete | 11993 passed, 1 skipped | pending | Validation helpers module + 21 tests |
 | 2026-02-24 | PROJ-171 | Phase 2 | Complete | 12015 passed, 1 skipped | pending | Galaxy core validation + 22 tests |
 | 2026-02-24 | PROJ-171 | Phase 3 | Complete | 12082 passed, 1 skipped | pending | Celestial bodies validation + 67 tests |
+| 2026-02-24 | PROJ-171 | Phase 4 | Complete | 12109 passed, 1 skipped | pending | Empire & Fleet validation + 27 tests |
 
 ---
 

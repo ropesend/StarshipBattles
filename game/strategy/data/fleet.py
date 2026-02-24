@@ -1,5 +1,9 @@
+import logging
 from game.core.hex_math import HexCoord
+from game.core.validation_helpers import require_keys, validate_enum
 from game.strategy.data.ship_instance import ShipInstance
+
+logger = logging.getLogger(__name__)
 from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
 from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
 from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
@@ -343,6 +347,7 @@ class Fleet:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Fleet':
         """Deserialize from save game."""
+        require_keys(data, ['id', 'owner_id'], 'Fleet')
         # ShipInstance imported at module level
 
         location = data.get('location')
@@ -358,9 +363,12 @@ class Fleet:
             speed=data.get('speed', 5.0),
         )
 
-        # Restore ships
-        for ship_data in data.get('ships', []):
-            fleet.ships.append(ShipInstance.from_dict(ship_data))
+        # Restore ships (skip corrupt entries with warning)
+        for i, ship_data in enumerate(data.get('ships', [])):
+            try:
+                fleet.ships.append(ShipInstance.from_dict(ship_data))
+            except Exception as e:
+                logger.warning(f"Fleet {data['id']}: skipping corrupt ship[{i}]: {e}")
 
         # Restore path
         for p in data.get('path', []):
@@ -371,7 +379,7 @@ class Fleet:
             else:
                 fleet.path.append(p)
 
-        # Restore orders
+        # Restore orders (skip corrupt entries with warning)
         # Note: Multiple target formats supported:
         # 1. {'q': x, 'r': y} - HexCoord.to_dict() format
         # 2. {'type': 'fleet_ref', 'id': xxx} - Fleet reference for MOVE_TO_FLEET orders
@@ -380,36 +388,39 @@ class Fleet:
         # 5. {'type': 'planet_ref', 'id': xxx} - Planet reference (PROJ-102)
         # 6. {'type': 'ship_id_list', 'value': [...]} - Ship IDs (PROJ-102)
         # 7. {'type': 'warp_params', 'value': {...}} - Warp parameters (PROJ-102)
-        for order_data in data.get('orders', []):
-            order_type = OrderType[order_data['type']]
-            target = None
+        for i, order_data in enumerate(data.get('orders', [])):
+            try:
+                order_type = validate_enum(order_data['type'], OrderType, 'type', f'Fleet order[{i}]')
+                target = None
 
-            target_data = order_data.get('target')
-            if target_data is not None:
-                if isinstance(target_data, dict):
-                    if 'q' in target_data and 'r' in target_data:
-                        # HexCoord.to_dict() format
-                        target = HexCoord(target_data['q'], target_data['r'])
-                    elif target_data.get('type') == 'fleet_ref':
-                        # Fleet reference - store ID for later resolution
-                        target = {'_fleet_ref': target_data['id']}
-                    elif target_data.get('type') == 'transfer':
-                        # TRANSFER order params dict (PROJ-68)
-                        target = target_data['value']
-                    elif target_data.get('type') == 'planet_ref':
-                        # Planet reference for IMPLODE_PLANET (PROJ-102)
-                        target = {'_planet_ref': target_data['id']}
-                    elif target_data.get('type') == 'ship_id_list':
-                        # Ship ID list for SELF_DESTRUCT (PROJ-102)
-                        target = target_data['value']
-                    elif target_data.get('type') == 'warp_params':
-                        # Warp parameters for OPEN_WARP_POINT (PROJ-102)
-                        target = target_data['value']
-                    elif target_data.get('type') == 'raw':
-                        # Raw string fallback
-                        target = target_data['value']
+                target_data = order_data.get('target')
+                if target_data is not None:
+                    if isinstance(target_data, dict):
+                        if 'q' in target_data and 'r' in target_data:
+                            # HexCoord.to_dict() format
+                            target = HexCoord(target_data['q'], target_data['r'])
+                        elif target_data.get('type') == 'fleet_ref':
+                            # Fleet reference - store ID for later resolution
+                            target = {'_fleet_ref': target_data['id']}
+                        elif target_data.get('type') == 'transfer':
+                            # TRANSFER order params dict (PROJ-68)
+                            target = target_data['value']
+                        elif target_data.get('type') == 'planet_ref':
+                            # Planet reference for IMPLODE_PLANET (PROJ-102)
+                            target = {'_planet_ref': target_data['id']}
+                        elif target_data.get('type') == 'ship_id_list':
+                            # Ship ID list for SELF_DESTRUCT (PROJ-102)
+                            target = target_data['value']
+                        elif target_data.get('type') == 'warp_params':
+                            # Warp parameters for OPEN_WARP_POINT (PROJ-102)
+                            target = target_data['value']
+                        elif target_data.get('type') == 'raw':
+                            # Raw string fallback
+                            target = target_data['value']
 
-            fleet.orders.append(FleetOrder(order_type, target))
+                fleet.orders.append(FleetOrder(order_type, target))
+            except Exception as e:
+                logger.warning(f"Fleet {data['id']}: skipping corrupt order[{i}]: {e}")
 
         # Restore construction queue
         fleet.construction_queue = data.get('construction_queue', [])

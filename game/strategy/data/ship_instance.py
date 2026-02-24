@@ -18,6 +18,7 @@ import uuid
 import json
 
 from game.core.protocols import IPostBattleShip
+from game.core.validation_helpers import require_keys
 from game.strategy.data.ship_resource_manager import ShipResourceManager
 from game.strategy.data.ship_cargo_manager import ShipCargoManager
 from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
@@ -640,6 +641,7 @@ class ShipInstance:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ShipInstance':
         """Deserialize from save game."""
+        require_keys(data, ['instance_id', 'design_id', 'name', 'owner_id'], 'ShipInstance')
         return cls(
             instance_id=data['instance_id'],
             design_id=data['design_id'],
