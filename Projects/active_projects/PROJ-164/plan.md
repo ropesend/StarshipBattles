@@ -13,15 +13,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Add helper + tests | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Add helper + tests | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Migrate `__init__` callers | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate `sync_data` callers + verify | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-23 17:25
-**Active Phase:** Planning
-**Last Action:** Project plan written
-**Next Action:** User approval, then begin Phase 1
+**Last Updated:** 2026-02-23
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete - helper method and 12 unit tests added
+**Next Action:** Begin Phase 2 - migrate __init__ callers in defense.py, propulsion.py, crew.py
 **Blockers:** None
 
 ## Overview

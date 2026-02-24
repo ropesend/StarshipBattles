@@ -860,3 +860,60 @@ class TestAbilityRecalculateBehavior:
         mock_component.stats["test_mult"] = 0.5
         ability.recalculate()
         assert ability.value == 5.0
+
+
+# =============================================================================
+# _parse_primary_value Tests
+# =============================================================================
+
+
+class TestParsePrimaryValue:
+    """Tests for Ability._parse_primary_value static method."""
+
+    def test_int_input(self):
+        """Integer input returns float equivalent."""
+        assert Ability._parse_primary_value(42) == 42.0
+
+    def test_float_input(self):
+        """Float input returns same float."""
+        assert Ability._parse_primary_value(3.14) == 3.14
+
+    def test_zero_int(self):
+        """Zero integer returns 0.0."""
+        assert Ability._parse_primary_value(0) == 0.0
+
+    def test_negative(self):
+        """Negative float returns same negative float."""
+        assert Ability._parse_primary_value(-5.5) == -5.5
+
+    def test_dict_with_value_key(self):
+        """Dict with 'value' key returns that value as float."""
+        assert Ability._parse_primary_value({'value': 100}) == 100.0
+
+    def test_dict_missing_key_returns_default(self):
+        """Dict without 'value' key returns default (0.0)."""
+        assert Ability._parse_primary_value({'other': 5}) == 0.0
+
+    def test_dict_custom_key(self):
+        """Dict with custom key parameter returns that key's value."""
+        assert Ability._parse_primary_value({'amount': 7}, key='amount') == 7.0
+
+    def test_dict_custom_default(self):
+        """Empty dict with custom default returns that default."""
+        assert Ability._parse_primary_value({}, default=99.0) == 99.0
+
+    def test_string_returns_default(self):
+        """String input returns default (0.0)."""
+        assert Ability._parse_primary_value("hello") == 0.0
+
+    def test_none_returns_default(self):
+        """None input returns default (0.0)."""
+        assert Ability._parse_primary_value(None) == 0.0
+
+    def test_bool_treated_as_int(self):
+        """Boolean True is treated as int(1) and returns 1.0."""
+        assert Ability._parse_primary_value(True) == 1.0
+
+    def test_dict_with_int_value(self):
+        """Dict with integer 'value' returns float."""
+        assert Ability._parse_primary_value({'value': 5}) == 5.0

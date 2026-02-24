@@ -109,6 +109,30 @@ class Ability:
 
         return requested_scope
 
+    @staticmethod
+    def _parse_primary_value(data, key: str = 'value', default: float = 0.0) -> float:
+        """
+        Parse a primary numeric value from ability data.
+
+        Handles three input formats:
+        - Primitive numeric (int/float): Returns float(data) directly
+        - Dict with key: Returns float(data[key]) or default
+        - Other (str, None, etc.): Returns default
+
+        Args:
+            data: Raw ability data (dict, int, float, or other)
+            key: Dict key to look up (default: 'value')
+            default: Fallback value if key missing (default: 0.0)
+
+        Returns:
+            Parsed float value
+        """
+        if isinstance(data, (int, float)):
+            return float(data)
+        if isinstance(data, dict):
+            return float(data.get(key, default))
+        return float(default)
+
     def applies_to_layer(self, layer: AbilityLayer) -> bool:
         """
         Check if this ability applies to a given game layer.
