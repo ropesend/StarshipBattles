@@ -2,14 +2,9 @@
 
 PROJ-90 Phase 4: Verifies that concrete types satisfy the IPostBattleShip
 and IResourceReader protocols, ensuring the boundary contracts are enforced.
-
-PROJ-174: Uses deprecated get_default_registries() in fixture.
 """
 
 import pytest
-
-# PROJ-174: Suppress deprecation warnings - fixture uses deprecated API
-pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 
 from game.core.protocols import (
     IPostBattleShip,
@@ -30,7 +25,6 @@ class TestIPostBattleShipConformance:
         from game.simulation.entities.ship import Ship
         from game.core.registry import get_default_registry_provider
 
-        # PROJ-181: Use IRegistryProvider instead of deprecated get_default_registries()
         provider = get_default_registry_provider()
         # Create GameRegistries from provider for Ship constructor
         from game.core.registry import GameRegistries

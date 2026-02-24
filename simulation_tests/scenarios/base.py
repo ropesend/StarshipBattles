@@ -67,7 +67,7 @@ logger = get_logger(__name__)
 # 'attrs' lists attributes to extract from the ability instance.
 ABILITY_EXTRACTION_MAP = {
     'BeamWeaponAbility': {
-        'key': 'weapon',  # backward compat: data['weapon'] for beam scenarios
+        'key': 'weapon',  # data['weapon'] for beam scenarios
         'attrs': ['damage', 'range', 'base_accuracy', 'accuracy_falloff', 'reload_time', 'firing_arc']
     },
     'ProjectileWeaponAbility': {

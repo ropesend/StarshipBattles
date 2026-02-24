@@ -333,7 +333,7 @@ class ProductionEngine:
             # Decrement capacity
             tick_capacity -= ticks_to_spend
             
-            # Update legacy "turns_remaining" for UI display (approximate)
+            # Calculate turns_remaining for UI display (approximate)
             # Remaining ticks / 100
             if max_ticks_needed > 0:
                  current_est_ticks = max_ticks_needed - ticks_to_spend

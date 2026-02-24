@@ -8,20 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-184 Complete (All Phases + Audit)
-**Current Status:** PROJ-184 complete, ready for next project
+**Last Completed:** PROJ-185 Phase 1 Complete
+**Current Status:** PROJ-185 Phase 1 complete, ready for Phase 2
 **Current Project:** PROJ-185
-**Current Phase:** Not started
+**Current Phase:** Phase 2
 **Test Status:** 12366 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-184 Complete:
-  - Phase 1: isinstance guard + 4 tests
-  - Phase 2: Removed 4 hasattr guards (game_session.py, empire_build_queue_window.py, empire_build_queue_formatter.py x2)
-  - Fixed MockGalaxy in test_command_handlers.py to add get_system_of_object method
-  - Audit PASSED: All spatial query hasattr guards eliminated
-- Next: PROJ-185
+- PROJ-185 Phase 1 Complete:
+  - Task 1.1: Removed stale DeprecationWarning filter + PROJ-174/181 comments from test_protocols_boundary.py
+  - Task 1.2: Fixed misleading comment in ui/utils/__init__.py
+  - Task 1.3: Fixed misleading comment in game_config.py
+  - Task 1.4: Fixed misleading comment in production_engine.py
+  - Task 1.5: Fixed misleading comment in scenarios/base.py
+  - Task 1.6: Fixed misleading comment in empire_build_queue_window.py
+- Next: Phase 2 - Remove legacy constant aliases in propulsion_scenarios.py
 
 ---
 
@@ -157,7 +159,7 @@
 
 ---
 
-- [ ] **PROJ-185: Post-PROJ-174 Backward Compatibility Eradication**
+- [/] **PROJ-185: Post-PROJ-174 Backward Compatibility Eradication**
   - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-185/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-185/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
@@ -255,6 +257,7 @@
 | 2026-02-24 | PROJ-184 | Phase 1 | Complete | 12366 passed, 1 skipped | pending | isinstance guard + 4 tests |
 | 2026-02-24 | PROJ-184 | Phase 2 | Complete | 12366 passed, 1 skipped | pending | Removed 4 hasattr guards, fixed test mock |
 | 2026-02-24 | PROJ-184 | Audit 1 | PASSED | 12366 passed, 1 skipped | pending | All objectives verified, project complete |
+| 2026-02-24 | PROJ-185 | Phase 1 | Complete | 12366 passed, 1 skipped | pending | 6 tasks: stale code + misleading comments fixed |
 
 ---
 

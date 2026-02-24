@@ -193,7 +193,7 @@ class EmpireBuildQueueWindow(UIWindow):
         self._refresh_list()
 
     # -----------------------------------------------------------------------
-    # Properties for backward compatibility
+    # Public API facade (delegates to ViewModel)
     # -----------------------------------------------------------------------
 
     @property

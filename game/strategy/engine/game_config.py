@@ -82,7 +82,7 @@ class PlayerConfig:
             'color': list(self.color),  # Tuple to list for JSON
             'is_human': self.is_human
         }
-        # Only include race fields if set (backwards compatibility)
+        # Only include optional race fields when set (sparse serialization)
         if self.race_id:
             data['race_id'] = self.race_id
         if self.flag_id:

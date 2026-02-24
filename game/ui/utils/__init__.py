@@ -5,7 +5,7 @@ This package provides reusable helpers for common UI operations:
 - pygame_utils: Pygame-specific utilities (scaling, rectangles, etc.)
 - json_diff: JSON structure comparison algorithm
 """
-# Re-export pygame utilities for backward compatibility
+# Public API - re-export pygame utilities from submodule
 from game.ui.utils.pygame_utils import (
     create_centered_rect,
     calculate_ship_image_scale,
