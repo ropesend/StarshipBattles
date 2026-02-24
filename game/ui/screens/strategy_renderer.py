@@ -9,6 +9,7 @@ Cross-layer imports (acceptable for UI rendering):
 - hex_to_pixel, pixel_to_hex, HexCoord: Runtime - coordinate conversions for rendering
 - OrderType: Runtime - move preview line styling based on order type
 """
+import logging
 import math
 import pygame
 from game.ui.config import UIConfig
@@ -17,6 +18,8 @@ from game.strategy.data.fleet import OrderType
 from game.strategy.data.planet import PlanetType
 from game.ui.colors import COLORS
 from game.ui.utils import scale_and_rotate_image
+
+logger = logging.getLogger(__name__)
 
 # Animation constants
 WARP_POINT_ROTATION_SPEED = 12.0  # degrees per second
@@ -652,8 +655,7 @@ class StrategyRenderer:
         for emp in self.empires:
             for f in emp.fleets:
                 if f.location is None:
-                    import logging
-                    logging.getLogger(__name__).warning(f"Skipping render for Fleet {f.id} (Owner {f.owner_id}): Location is None")
+                    logger.warning(f"Skipping render for Fleet {f.id} (Owner {f.owner_id}): Location is None")
                     continue
 
                 fx, fy = hex_to_pixel(f.location, self.hex_size)
