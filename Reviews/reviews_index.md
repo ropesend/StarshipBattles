@@ -13,6 +13,7 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 ## Active Reviews
 | Date | Type | Description | Status | Link |
 |------|------|-------------|--------|------|
+| 2026-02-23 | Technical Debt Review | god-class-decomposition-planning | In Progress | [2026-02-23_182728_tech-debt_god-class-decomposition-planning](results/2026-02-23_182728_tech-debt_god-class-decomposition-planning/) |
 | 2026-02-23 | Focused Question Review | exception-handling-migration-audit | In Progress | [2026-02-23_180421_focused_exception-handling-migration-audit](results/2026-02-23_180421_focused_exception-handling-migration-audit/) |
 | 2026-02-23 | Focused Question Review | dead-code-cleanup-audit | In Progress | [2026-02-23_180329_focused_dead-code-cleanup-audit](results/2026-02-23_180329_focused_dead-code-cleanup-audit/) |
 | 2026-02-23 | General Review | deliberate-design-debt-audit | Completed | [2026-02-23_160923_general_deliberate-design-debt-audit](results/2026-02-23_160923_general_deliberate-design-debt-audit/) |

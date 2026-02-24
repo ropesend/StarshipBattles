@@ -8,18 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-167 Phase 1 — ui_colors.py created
-**Current Status:** Phase 1 complete — ready for Phase 2
+**Last Completed:** PROJ-167 Phase 2 — ability files migrated to constants
+**Current Status:** Phase 2 complete — ready for Phase 3
 **Current Project:** PROJ-167
-**Current Phase:** Phase 2
+**Current Phase:** Phase 3
 **Test Status:** 12016 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Created game/simulation/components/abilities/ui_colors.py with 22 named constants
-- Added ui_colors module to abilities __init__.py exports
-- 577 ability tests passing
-- Next: Phase 2 — migrate 11 ability files to use constants
+- Migrated 11 ability files to use ui_colors constants: weapons.py, defense.py, propulsion.py, crew.py, cargo.py, resources.py, markers.py, harvester.py, superweapons.py, colonize.py
+- Migrated detail_panel.py to use ui_colors constants
+- Grep check: only base.py docstring contains hardcoded color (documentation example)
+- 577 ability tests passing, 4 detail panel tests passing
+- Next: Phase 3 — update test assertions to use imported constants
 
 ---
 
@@ -105,6 +106,7 @@
 | 2026-02-23 | PROJ-166 | Audit 1 | PASSED | 12016 pass | - | No issues found |
 | 2026-02-23 | PROJ-166 | Close | COMPLETE | - | - | Project marked complete |
 | 2026-02-23 | PROJ-167 | Phase 1 | Complete | 577 pass | pending | ui_colors.py created with 22 constants |
+| 2026-02-23 | PROJ-167 | Phase 2 | Complete | 12016 pass | pending | Migrated 11 ability files + detail_panel.py |
 
 ---
 

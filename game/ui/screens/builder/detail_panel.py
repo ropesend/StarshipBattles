@@ -14,6 +14,7 @@ from game.core.constants import LayerType  # Canonical location for LayerType
 import json
 from game.core.logger import log_warning
 from .modifier_logic import ModifierLogic
+from game.simulation.components.abilities.ui_colors import HINT_NEUTRAL, HINT_CREW_CAP, HINT_CARGO_GENERIC
 
 class ComponentDetailPanel:
     def __init__(self, manager, rect, image_base_path, event_bus=None):
@@ -141,7 +142,7 @@ class ComponentDetailPanel:
             for row in comp.get_ui_rows():
                 label = row.get('label', 'Unknown')
                 val = row.get('value', '')
-                color = row.get('color_hint', '#C8C8C8')
+                color = row.get('color_hint', HINT_NEUTRAL)
                 add_line(f"{label}: {val}", color)
 
         # Abilities (Unregistered / Custom Data / Fallback)
@@ -166,14 +167,14 @@ class ComponentDetailPanel:
             lines.append("<br>Modifiers:")
             for m in comp.modifiers:
                 is_mandatory = ModifierLogic.is_modifier_mandatory(m.definition.id, comp)
-                
+
                 name_str = m.definition.name
-                color = '#96FF96' # Green for optional
-                
+                color = HINT_CREW_CAP  # Green for optional
+
                 if is_mandatory:
                     name_str = f"{name_str} [A]" # Auto
-                    color = '#FFD700' # Gold
-                    
+                    color = HINT_CARGO_GENERIC  # Gold
+
                 add_line(f"• {name_str}: {m.value:.2f}", color)
         
         full_html = "<br>".join(lines)

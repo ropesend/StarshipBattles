@@ -14,16 +14,16 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Ability Color Hint Constants | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Ability Files Migration | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Ability Files Migration | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Test Assertions Update | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. UI Layer Color Consolidation | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Verification & Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-23
-**Active Phase:** Phase 1 Complete
-**Last Action:** Created ui_colors.py with 22 named color constants
-**Next Action:** Begin Phase 2 — migrate ability files to use constants
+**Active Phase:** Phase 2 Complete
+**Last Action:** Migrated 11 ability files + detail_panel.py to use ui_colors constants
+**Next Action:** Begin Phase 3 — update test assertions to use constants
 **Blockers:** None
 **Baseline:** 12,016 passed, 1 skipped
 

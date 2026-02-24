@@ -5,6 +5,7 @@ from game.core.logger import log_debug
 from game.core.config import PhysicsConfig
 from .base import Ability
 from .stat_keys import StatKey, AbilityStatBinding
+from .ui_colors import HINT_DAMAGE, HINT_RANGE, HINT_RELOAD, HINT_PROJECTILE_SPEED, HINT_ACCURACY
 
 
 class WeaponAbility(Ability):
@@ -207,9 +208,9 @@ class WeaponAbility(Ability):
 
     def get_ui_rows(self):
         return [
-            {'label': 'Damage', 'value': f"{self.damage:.0f}", 'color_hint': '#FF6464'},  # Red
-            {'label': 'Range', 'value': f"{self.range:.0f}", 'color_hint': '#FFA500'},  # Orange
-            {'label': 'Reload', 'value': f"{self.reload_time:.1f}s", 'color_hint': '#FFC864'}  # Gold
+            {'label': 'Damage', 'value': f"{self.damage:.0f}", 'color_hint': HINT_DAMAGE},
+            {'label': 'Range', 'value': f"{self.range:.0f}", 'color_hint': HINT_RANGE},
+            {'label': 'Reload', 'value': f"{self.reload_time:.1f}s", 'color_hint': HINT_RELOAD}
         ]
 
     def get_primary_value(self) -> float:
@@ -256,7 +257,7 @@ class ProjectileWeaponAbility(WeaponAbility):
 
     def get_ui_rows(self):
         rows = super().get_ui_rows()
-        rows.append({'label': 'Speed', 'value': f"{self.projectile_speed:.0f}", 'color_hint': '#C8C832'})  # Yellow-ish
+        rows.append({'label': 'Speed', 'value': f"{self.projectile_speed:.0f}", 'color_hint': HINT_PROJECTILE_SPEED})
         return rows
 
 
@@ -282,7 +283,7 @@ class BeamWeaponAbility(WeaponAbility):
 
     def get_ui_rows(self):
         rows = super().get_ui_rows()
-        rows.append({'label': 'Accuracy', 'value': f"{int(self.base_accuracy * 100)}%", 'color_hint': '#FFFF00'})
+        rows.append({'label': 'Accuracy', 'value': f"{int(self.base_accuracy * 100)}%", 'color_hint': HINT_ACCURACY})
         return rows
 
     def calculate_hit_chance(self, distance: float, attack_score_bonus: float = 0.0, defense_score_penalty: float = 0.0) -> float:

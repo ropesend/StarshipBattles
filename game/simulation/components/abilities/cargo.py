@@ -8,6 +8,7 @@ from typing import Any, Dict, List
 
 from .base import Ability, AbilityLayer
 from .stat_keys import AbilityStatBinding, StatKey
+from .ui_colors import HINT_CARGO_PASSENGER, HINT_CARGO_GENERIC
 
 
 class CargoStorage(Ability):
@@ -64,10 +65,10 @@ class CargoStorage(Ability):
         """Return UI display data for this ability."""
         # Color by cargo type
         if self.cargo_type == 'passengers':
-            color = '#98FB98'  # Pale green for passengers
+            color = HINT_CARGO_PASSENGER
             label = 'Passenger Cap'
         else:
-            color = '#FFD700'  # Gold for generic cargo
+            color = HINT_CARGO_GENERIC
             label = f'{self.cargo_type.title()} Cap'
 
         return [{'label': label, 'value': f"{self.capacity:.0f}", 'color_hint': color}]

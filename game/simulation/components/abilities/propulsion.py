@@ -2,6 +2,7 @@ from typing import Dict, Any, List
 
 from .base import Ability, AbilityLayer, AbilityScope
 from .stat_keys import StatKey, AbilityStatBinding
+from .ui_colors import HINT_THRUST, HINT_TURN_SPEED, HINT_STRATEGIC_MOBILITY, HINT_SHIELD_CAP, HINT_DEFAULT, HINT_WARP_ENERGY
 
 
 class CombatPropulsion(Ability):
@@ -25,7 +26,7 @@ class CombatPropulsion(Ability):
         self.thrust_force = self.base_thrust * self.get_effective_stat('thrust_mult', 1.0)
 
     def get_ui_rows(self):
-        return [{'label': 'Thrust', 'value': f"{self.thrust_force:.0f} N", 'color_hint': '#64FF64'}]  # Light Green
+        return [{'label': 'Thrust', 'value': f"{self.thrust_force:.0f} N", 'color_hint': HINT_THRUST}]
 
     def get_primary_value(self) -> float:
         return self.thrust_force
@@ -52,7 +53,7 @@ class ManeuveringThruster(Ability):
         self.turn_rate = self.base_turn_rate * self.get_effective_stat('turn_mult', 1.0)
 
     def get_ui_rows(self):
-        return [{'label': 'Turn Speed', 'value': f"{self.turn_rate:.1f} deg/s", 'color_hint': '#64FF96'}]  # Slightly different green
+        return [{'label': 'Turn Speed', 'value': f"{self.turn_rate:.1f} deg/s", 'color_hint': HINT_TURN_SPEED}]
 
     def get_primary_value(self) -> float:
         return self.turn_rate
@@ -97,7 +98,7 @@ class StrategicMovement(Ability):
         self.movement_points = self.base_movement_points * self.get_effective_stat('strategic_mult', 1.0)
 
     def get_ui_rows(self) -> List[Dict[str, str]]:
-        return [{'label': 'Strategic Mobility', 'value': f"{self.movement_points:.0f} MP", 'color_hint': '#6496FF'}]
+        return [{'label': 'Strategic Mobility', 'value': f"{self.movement_points:.0f} MP", 'color_hint': HINT_STRATEGIC_MOBILITY}]
 
     def get_primary_value(self) -> float:
         return self.movement_points
@@ -147,11 +148,11 @@ class WarpJump(Ability):
 
     def get_ui_rows(self) -> List[Dict[str, str]]:
         rows = [
-            {'label': 'Warp Capable', 'value': 'Yes', 'color_hint': '#00FFFF'},
-            {'label': 'Max Tonnage', 'value': f'{self.max_tonnage:,.0f} kg', 'color_hint': '#FFFFFF'},
+            {'label': 'Warp Capable', 'value': 'Yes', 'color_hint': HINT_SHIELD_CAP},
+            {'label': 'Max Tonnage', 'value': f'{self.max_tonnage:,.0f} kg', 'color_hint': HINT_DEFAULT},
         ]
         if self.energy_cost > 0:
-            rows.append({'label': 'Warp Energy', 'value': f'{self.energy_cost:,.0f}', 'color_hint': '#64C8FF'})
+            rows.append({'label': 'Warp Energy', 'value': f'{self.energy_cost:,.0f}', 'color_hint': HINT_WARP_ENERGY})
         return rows
 
     def get_primary_value(self) -> float:

@@ -18,6 +18,7 @@ All superweapons:
 from typing import Dict, Any, List
 
 from .base import Ability, AbilityLayer, AbilityScope
+from .ui_colors import HINT_SUPERWEAPON
 
 
 class DestroyPlanet(Ability):
@@ -41,7 +42,7 @@ class DestroyPlanet(Ability):
         return [{
             'label': 'Superweapon',
             'value': 'Planet Imploder',
-            'color_hint': '#FF4444',
+            'color_hint': HINT_SUPERWEAPON,
         }]
 
     def get_primary_value(self) -> float:
@@ -70,7 +71,7 @@ class DestroyStar(Ability):
         return [{
             'label': 'Superweapon',
             'value': 'Stellerator',
-            'color_hint': '#FF4444',
+            'color_hint': HINT_SUPERWEAPON,
         }]
 
     def get_primary_value(self) -> float:
@@ -99,7 +100,7 @@ class OpenWarpPoint(Ability):
         return [{
             'label': 'Superweapon',
             'value': 'Warp Point Creator',
-            'color_hint': '#FF4444',
+            'color_hint': HINT_SUPERWEAPON,
         }]
 
     def get_primary_value(self) -> float:
@@ -128,7 +129,7 @@ class CloseWarpPoint(Ability):
         return [{
             'label': 'Superweapon',
             'value': 'Warp Point Closer',
-            'color_hint': '#FF4444',
+            'color_hint': HINT_SUPERWEAPON,
         }]
 
     def get_primary_value(self) -> float:
@@ -158,7 +159,7 @@ class CreateDysonSphere(Ability):
         return [{
             'label': 'Superweapon',
             'value': 'Dyson Sphere Constructor',
-            'color_hint': '#FF4444',
+            'color_hint': HINT_SUPERWEAPON,
         }]
 
     def get_primary_value(self) -> float:
@@ -187,7 +188,7 @@ class SelfDestruct(Ability):
         return [{
             'label': 'Superweapon',
             'value': 'Self-Destruct Device',
-            'color_hint': '#FF4444',
+            'color_hint': HINT_SUPERWEAPON,
         }]
 
     def get_primary_value(self) -> float:

@@ -3,6 +3,7 @@ from typing import Dict, Any, List
 from game.core.config import PhysicsConfig
 from .base import Ability
 from .stat_keys import StatKey, AbilityStatBinding
+from .ui_colors import HINT_SHIELD_CAP, HINT_SHIELD_REGEN, HINT_DAMAGE, HINT_EVASION, HINT_ACCURACY
 
 
 class ShieldProjection(Ability):
@@ -23,7 +24,7 @@ class ShieldProjection(Ability):
         self.capacity = self.base_capacity * mult
 
     def get_ui_rows(self):
-        return [{'label': 'Shield Cap', 'value': f"{self.capacity:.0f}", 'color_hint': '#00FFFF'}]  # Cyan
+        return [{'label': 'Shield Cap', 'value': f"{self.capacity:.0f}", 'color_hint': HINT_SHIELD_CAP}]
 
     def get_primary_value(self) -> float:
         return self.capacity
@@ -47,7 +48,7 @@ class ShieldRegeneration(Ability):
         self.rate = self.base_rate * mult
 
     def get_ui_rows(self):
-        return [{'label': 'Regen', 'value': f"{self.rate:.1f}/s", 'color_hint': '#00C8FF'}]  # Deep Sky Blue
+        return [{'label': 'Regen', 'value': f"{self.rate:.1f}/s", 'color_hint': HINT_SHIELD_REGEN}]
 
     def get_primary_value(self) -> float:
         return self.rate
@@ -72,7 +73,7 @@ class ToHitAttackModifier(Ability):
     def get_ui_rows(self):
         val = self.value
         sign = "+" if val >= 0 else ""
-        return [{'label': 'Targeting', 'value': f"{sign}{val:.1f}", 'color_hint': '#FF6464'}]
+        return [{'label': 'Targeting', 'value': f"{sign}{val:.1f}", 'color_hint': HINT_DAMAGE}]
 
     def get_primary_value(self) -> float:
         return self.value
@@ -94,7 +95,7 @@ class ToHitDefenseModifier(Ability):
     def get_ui_rows(self):
         val = self.value
         sign = "+" if val >= 0 else ""
-        return [{'label': 'Evasion', 'value': f"{sign}{val:.1f}", 'color_hint': '#64FFFF'}]
+        return [{'label': 'Evasion', 'value': f"{sign}{val:.1f}", 'color_hint': HINT_EVASION}]
 
     def get_primary_value(self) -> float:
         return self.value
@@ -114,7 +115,7 @@ class EmissiveArmor(Ability):
         pass
 
     def get_ui_rows(self):
-        return [{'label': 'Dmg Ignore', 'value': f"{self.amount}", 'color_hint': '#FFFF00'}]
+        return [{'label': 'Dmg Ignore', 'value': f"{self.amount}", 'color_hint': HINT_ACCURACY}]
 
     def get_primary_value(self) -> float:
         return float(self.amount)

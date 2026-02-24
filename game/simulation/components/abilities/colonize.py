@@ -11,6 +11,7 @@ matching the pod's planet_type.
 from typing import Dict, Any, List
 
 from .base import Ability, AbilityLayer, AbilityScope
+from .ui_colors import HINT_COLONIZE
 
 
 class ColonizePlanet(Ability):
@@ -64,7 +65,7 @@ class ColonizePlanet(Ability):
         return [{
             'label': 'Colonizes',
             'value': formatted_type,
-            'color_hint': '#00FF00',  # Green for colonization ability
+            'color_hint': HINT_COLONIZE,
         }]
 
     def get_primary_value(self) -> float:

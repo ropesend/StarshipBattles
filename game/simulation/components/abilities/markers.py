@@ -3,6 +3,7 @@ from typing import Dict, Any, List
 from game.core.config import PhysicsConfig
 from .base import Ability
 from .stat_keys import StatKey, AbilityStatBinding
+from .ui_colors import HINT_NEUTRAL, HINT_CREW_CAP, HINT_REQUIREMENT
 
 
 class VehicleLaunchAbility(Ability):
@@ -37,8 +38,8 @@ class VehicleLaunchAbility(Ability):
 
     def get_ui_rows(self):
         return [
-            {'label': 'Hangar', 'value': f"{self.fighter_class}", 'color_hint': '#C8C8C8'},
-            {'label': 'Cycle', 'value': f"{self.cycle_time}s", 'color_hint': '#C8C8C8'}
+            {'label': 'Hangar', 'value': f"{self.fighter_class}", 'color_hint': HINT_NEUTRAL},
+            {'label': 'Cycle', 'value': f"{self.cycle_time}s", 'color_hint': HINT_NEUTRAL}
         ]
 
     def get_primary_value(self) -> float:
@@ -51,7 +52,7 @@ class CommandAndControl(Ability):
     STAT_BINDINGS: List[AbilityStatBinding] = []  # Marker ability
 
     def get_ui_rows(self):
-        return [{'label': 'Command', 'value': 'Active', 'color_hint': '#96FF96'}]
+        return [{'label': 'Command', 'value': 'Active', 'color_hint': HINT_CREW_CAP}]
 
     def get_primary_value(self) -> float:
         return 1.0
@@ -63,7 +64,7 @@ class RequiresCommandAndControl(Ability):
     STAT_BINDINGS: List[AbilityStatBinding] = []  # Marker ability
 
     def get_ui_rows(self):
-        return [{'label': 'Requires C&C', 'value': 'Yes', 'color_hint': '#FFCC66'}]
+        return [{'label': 'Requires C&C', 'value': 'Yes', 'color_hint': HINT_REQUIREMENT}]
 
     def get_primary_value(self) -> float:
         return 1.0
@@ -75,7 +76,7 @@ class RequiresCombatMovement(Ability):
     STAT_BINDINGS: List[AbilityStatBinding] = []  # Marker ability
 
     def get_ui_rows(self):
-        return [{'label': 'Requires Propulsion', 'value': 'Yes', 'color_hint': '#FFCC66'}]
+        return [{'label': 'Requires Propulsion', 'value': 'Yes', 'color_hint': HINT_REQUIREMENT}]
 
     def get_primary_value(self) -> float:
         return 1.0
@@ -87,4 +88,4 @@ class StructuralIntegrity(Ability):
     STAT_BINDINGS: List[AbilityStatBinding] = []  # Marker ability
 
     def get_ui_rows(self):
-        return [{'label': 'Structural Integrity', 'value': 'Yes', 'color_hint': '#96FF96'}]
+        return [{'label': 'Structural Integrity', 'value': 'Yes', 'color_hint': HINT_CREW_CAP}]

@@ -3,6 +3,7 @@ from typing import Dict, Any, List
 
 from .base import Ability
 from .stat_keys import StatKey, AbilityStatBinding
+from .ui_colors import HINT_CREW_CAP, HINT_LIFE_SUPPORT, HINT_CREW_REQ
 
 
 class CrewCapacity(Ability):
@@ -20,7 +21,7 @@ class CrewCapacity(Ability):
         self.amount = int(self._base_amount * self.get_effective_stat('crew_capacity_mult', 1.0))
 
     def get_ui_rows(self):
-        return [{'label': 'Crew Cap', 'value': f"{self.amount}", 'color_hint': '#96FF96'}]
+        return [{'label': 'Crew Cap', 'value': f"{self.amount}", 'color_hint': HINT_CREW_CAP}]
 
     def get_primary_value(self) -> float:
         return float(self.amount)
@@ -41,7 +42,7 @@ class LifeSupportCapacity(Ability):
         self.amount = int(self._base_amount * self.get_effective_stat('life_support_capacity_mult', 1.0))
 
     def get_ui_rows(self):
-        return [{'label': 'Life Support', 'value': f"{self.amount}", 'color_hint': '#96FFFF'}]
+        return [{'label': 'Life Support', 'value': f"{self.amount}", 'color_hint': HINT_LIFE_SUPPORT}]
 
     def get_primary_value(self) -> float:
         return float(self.amount)
@@ -83,7 +84,7 @@ class CrewRequired(Ability):
         self.amount = int(math.ceil(self._base_amount * crew_mult * self.get_effective_stat('crew_req_mult', 1.0)))
 
     def get_ui_rows(self):
-        return [{'label': 'Crew Req', 'value': f"{self.amount}", 'color_hint': '#FF9696'}]
+        return [{'label': 'Crew Req', 'value': f"{self.amount}", 'color_hint': HINT_CREW_REQ}]
 
     def get_primary_value(self) -> float:
         return float(self.amount)

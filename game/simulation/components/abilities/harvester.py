@@ -5,6 +5,7 @@ Harvester, Storage, and Production abilities for planetary complexes.
 from typing import Dict, Any, List
 from .base import Ability
 from .stat_keys import AbilityStatBinding
+from .ui_colors import HINT_COLONIZE, HINT_ACCURACY, HINT_SHIELD_CAP, HINT_DEFAULT
 
 
 class ResourceHarvesterAbility(Ability):
@@ -32,12 +33,12 @@ class ResourceHarvesterAbility(Ability):
             {
                 'label': 'Resource Type',
                 'value': self.resource_type,
-                'color_hint': '#00FF00'
+                'color_hint': HINT_COLONIZE
             },
             {
                 'label': 'Harvest Rate',
                 'value': f'{self.base_harvest_rate:.1f}/turn',
-                'color_hint': '#FFFF00'
+                'color_hint': HINT_ACCURACY
             }
         ]
 
@@ -82,12 +83,12 @@ class EmpireStorageAbility(Ability):
             {
                 'label': 'Resource Type',
                 'value': self.resource_type,
-                'color_hint': '#00FF00'
+                'color_hint': HINT_COLONIZE
             },
             {
                 'label': 'Storage Capacity',
                 'value': f'{self.capacity:,.0f}',
-                'color_hint': '#FFFF00'
+                'color_hint': HINT_ACCURACY
             }
         ]
 
@@ -119,12 +120,12 @@ class SpaceShipyardAbility(Ability):
             {
                 'label': 'Construction Bonus',
                 'value': f'{self.construction_speed_bonus:.1f}x',
-                'color_hint': '#00FFFF'
+                'color_hint': HINT_SHIELD_CAP
             },
             {
                 'label': 'Max Ship Mass',
                 'value': f'{self.max_ship_mass:,} kg',
-                'color_hint': '#FFFFFF'
+                'color_hint': HINT_DEFAULT
             }
         ]
         if self.production_rates:
@@ -134,12 +135,12 @@ class SpaceShipyardAbility(Ability):
                 rows.append({
                     'label': 'Production Rate',
                     'value': f'{int(rates[0]):,}/turn',
-                    'color_hint': '#00FF00'
+                    'color_hint': HINT_COLONIZE
                 })
             else:
                 rows.append({
                     'label': 'Production Rate',
                     'value': f'{int(min(rates)):,}-{int(max(rates)):,}/turn',
-                    'color_hint': '#00FF00'
+                    'color_hint': HINT_COLONIZE
                 })
         return rows

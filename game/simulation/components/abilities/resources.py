@@ -4,6 +4,7 @@ from game.core.config import PhysicsConfig
 from game.core.constants import ResourceType
 from .base import Ability
 from .stat_keys import StatKey, AbilityStatBinding
+from .ui_colors import HINT_DEFAULT, HINT_RANGE, HINT_WARP_ENERGY, HINT_PROJECTILE_SPEED, HINT_EVASION, HINT_SHIELD_CAP, HINT_ACCURACY
 
 
 class ResourceConsumption(Ability):
@@ -129,13 +130,13 @@ class ResourceConsumption(Ability):
             trigger_str = "/use"
 
         # Color mapping based on resource type
-        color = '#FFFFFF'
+        color = HINT_DEFAULT
         if self.resource_type == ResourceType.FUEL:
-            color = '#FFA500'  # Orange
+            color = HINT_RANGE
         elif self.resource_type == ResourceType.ENERGY:
-            color = '#64C8FF'  # Light Blue
+            color = HINT_WARP_ENERGY
         elif self.resource_type == ResourceType.AMMO:
-            color = '#C8C832'  # Dirty Yellow
+            color = HINT_PROJECTILE_SPEED
 
         label_text = f"{self.resource_type.title()} {'Cost' if self.trigger != 'constant' else 'Use'}"
         # Handle both numeric and formula string amounts
@@ -179,9 +180,9 @@ class ResourceStorage(Ability):
         self.max_amount = self._base_max_amount * self.get_effective_stat('capacity_mult', 1.0)
 
     def get_ui_rows(self):
-        color = '#64FFFF'  # Cyan default for caps
+        color = HINT_EVASION  # Cyan default for caps
         if self.resource_type == 'shield':
-            color = '#00FFFF'  # Standard Shield Cyan
+            color = HINT_SHIELD_CAP  # Standard Shield Cyan
 
         return [{'label': f"{self.resource_type.title()} Cap", 'value': f"{self.max_amount:.0f}", 'color_hint': color}]
 
@@ -219,9 +220,9 @@ class ResourceGeneration(Ability):
         self.rate = self._base_rate * self.get_effective_stat('energy_gen_mult', 1.0)
 
     def get_ui_rows(self):
-        color = '#FFFFFF'
+        color = HINT_DEFAULT
         if self.resource_type == ResourceType.ENERGY:
-            color = '#FFFF00'  # Yellow
+            color = HINT_ACCURACY
 
         return [{'label': f"{self.resource_type.title()} Gen", 'value': f"{self.rate:.1f}/s", 'color_hint': color}]
 
