@@ -117,9 +117,9 @@ def test_queue_display_updates(build_queue_screen):
     # Refresh display
     build_queue_screen._refresh_queue_display()
 
+    # PROJ-180: Access via renderer.*
     # Verify queue panel has items (implementation-dependent check)
-    # This will be refined when BuildQueueScreen is implemented
-    assert hasattr(build_queue_screen, 'queue_items')
+    assert hasattr(build_queue_screen.renderer, 'queue_items')
 
 
 def test_close_callback_fires(build_queue_screen):
@@ -133,32 +133,36 @@ def test_close_callback_fires(build_queue_screen):
 
 def test_planet_report_panel_exists(build_queue_screen):
     """Test that planet report panel is created."""
-    assert hasattr(build_queue_screen, 'planet_report')
-    assert build_queue_screen.planet_report is not None
+    # PROJ-180: Access via panels.*
+    assert hasattr(build_queue_screen.panels, 'planet_report')
+    assert build_queue_screen.panels.planet_report is not None
 
 
 def test_items_list_panel_exists(build_queue_screen):
     """Test that items list panel is created."""
-    assert hasattr(build_queue_screen, 'items_list_panel')
-    assert build_queue_screen.items_list_panel is not None
+    # PROJ-180: Access via panels.*
+    assert hasattr(build_queue_screen.panels, 'items_list_panel')
+    assert build_queue_screen.panels.items_list_panel is not None
 
 
 def test_filter_panel_exists(build_queue_screen):
     """Test that filter panel with category buttons exists."""
-    assert hasattr(build_queue_screen, 'filter_panel')
-    assert build_queue_screen.filter_panel is not None
+    # PROJ-180: Access via panels.*
+    assert hasattr(build_queue_screen.panels, 'filter_panel')
+    assert build_queue_screen.panels.filter_panel is not None
 
     # Verify category buttons exist
-    assert hasattr(build_queue_screen, 'btn_category_complex')
-    assert hasattr(build_queue_screen, 'btn_category_ship')
-    assert hasattr(build_queue_screen, 'btn_category_satellite')
-    assert hasattr(build_queue_screen, 'btn_category_fighter')
+    assert hasattr(build_queue_screen.panels, 'btn_category_complex')
+    assert hasattr(build_queue_screen.panels, 'btn_category_ship')
+    assert hasattr(build_queue_screen.panels, 'btn_category_satellite')
+    assert hasattr(build_queue_screen.panels, 'btn_category_fighter')
 
 
 def test_bottom_bar_exists(build_queue_screen):
     """Test that bottom bar with close button exists."""
-    assert hasattr(build_queue_screen, 'btn_close')
-    assert build_queue_screen.btn_close is not None
+    # PROJ-180: Access via panels.*
+    assert hasattr(build_queue_screen.panels, 'btn_close')
+    assert build_queue_screen.panels.btn_close is not None
 
 
 def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_loader):

@@ -370,8 +370,9 @@ def test_queue_display_shows_active_source_items():
     })
     bq._refresh_queue_display()
 
+    # PROJ-180: Access via renderer.*
     # Should have 1 queue item displayed
-    assert len(bq.queue_items) == 1
+    assert len(bq.renderer.queue_items) == 1
 
     pygame.quit()
 

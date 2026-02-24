@@ -8,19 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-180 Phase 1 - Delete Ghost Code
-**Current Status:** Phase 1 complete, ready for Phase 2
+**Last Completed:** PROJ-180 Phase 2 - Eradicate Backward Compat Properties
+**Current Status:** Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-180
-**Current Phase:** Phase 2
+**Current Phase:** Phase 3
 **Test Status:** 12358 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-180 Phase 1 COMPLETE:
-  - Deleted `get_column_visibility_changed()` ghost code from empire_build_queue_sidebar.py
-  - Removed section comment + method (16 lines)
-  - 118 unit tests pass
-- Next: Phase 2 - Eradicate backward-compat properties (14 properties, 6 test files to update)
+- PROJ-180 Phase 2 COMPLETE:
+  - Deleted 14 backward-compat properties from build_queue_screen.py (79 lines removed)
+  - Updated 6 test files to use `panels.*` and `renderer.*` directly
+  - Full test suite passes: 12358 passed, 1 skipped
+- Next: Phase 3 - Extract WeaponsInputHandler (move tooltip hover geometry to new class)
 
 ---
 
@@ -211,6 +211,7 @@
 | 2026-02-24 | PROJ-179 | Phase 2 | Complete | 12358 passed, 1 skipped | pending | restore_planet() + O(1) get_system_at_location() + 17 tests |
 | 2026-02-24 | PROJ-179 | Audit 1 | PASSED | 12358 passed, 1 skipped | pending | All objectives verified, project complete |
 | 2026-02-24 | PROJ-180 | Phase 1 | Complete | 12358 passed, 1 skipped | pending | Deleted ghost code (get_column_visibility_changed) |
+| 2026-02-24 | PROJ-180 | Phase 2 | Complete | 12358 passed, 1 skipped | pending | Eradicated 14 backward-compat properties, updated 6 test files |
 
 ---
 

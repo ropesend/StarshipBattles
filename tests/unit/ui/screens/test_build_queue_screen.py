@@ -465,14 +465,14 @@ class TestBuildQueueScreenErrorHandling:
     def test_empty_build_queue(self):
         """BuildQueueScreen should handle empty build queue."""
         screen, mocks = _make_build_queue_screen()
-        screen.queue_items = []
+        screen.renderer.queue_items = []
 
-        assert len(screen.queue_items) == 0
+        assert len(screen.renderer.queue_items) == 0
 
     def test_selected_queue_index_out_of_bounds(self):
         """Should handle selected_queue_index pointing to nonexistent item."""
         screen, mocks = _make_build_queue_screen()
-        screen.queue_items = []  # Empty
+        screen.renderer.queue_items = []  # Empty
         screen.selected_queue_index = 5  # Out of bounds
 
         # This is a state that shouldn't occur but should be handled
@@ -530,16 +530,16 @@ class TestBuildQueueScreenEdgeCases:
     def test_queue_with_zero_items(self):
         """BuildQueueScreen should handle queue with zero items."""
         screen, mocks = _make_build_queue_screen()
-        screen.queue_items = []
+        screen.renderer.queue_items = []
 
-        assert len(screen.queue_items) == 0
+        assert len(screen.renderer.queue_items) == 0
 
     def test_queue_with_many_items(self):
         """BuildQueueScreen should handle queue with many items."""
         screen, mocks = _make_build_queue_screen()
-        screen.queue_items = [MagicMock() for _ in range(50)]
+        screen.renderer.queue_items = [MagicMock() for _ in range(50)]
 
-        assert len(screen.queue_items) == 50
+        assert len(screen.renderer.queue_items) == 50
 
     def test_selected_queue_indices_single(self):
         """BuildQueueScreen should handle single selected queue index."""
