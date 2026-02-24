@@ -8,19 +8,18 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-164 Phase 2 complete
-**Current Status:** PROJ-164 Phase 2 complete — Ready for Phase 3 (final verification)
-**Current Project:** PROJ-164
-**Current Phase:** Phase 3
-**Test Status:** 604 passed (ability tests)
+**Last Completed:** PROJ-164 COMPLETE (all phases + audit passed)
+**Current Status:** PROJ-164 Complete — Ready to start PROJ-165
+**Current Project:** PROJ-165
+**Current Phase:** Phase 1
+**Test Status:** 12006 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-164 Phase 2 complete: Migrated all callers to use `_parse_primary_value()`
-- defense.py: 5 classes (ShieldProjection, ShieldRegeneration, ToHitAttackModifier, ToHitDefenseModifier, EmissiveArmor)
-- propulsion.py: 3 __init__ + 3 sync_data (CombatPropulsion, ManeuveringThruster, StrategicMovement)
-- crew.py: 2 classes (CrewCapacity, LifeSupportCapacity) — CrewRequired intentionally skipped
-- Next: Phase 3 - run full test suite + grep verification
+- PROJ-164 Complete: Extracted `_parse_primary_value()` helper to Ability base class
+- Phase 3 verified: Full test suite (12006 passed), duplication eliminated
+- Audit Cycle 1 PASSED: 171 targeted tests, helper implementation verified
+- Next: Start PROJ-165 (Create `create_section_header()` UI Helper)
 
 ---
 
@@ -40,10 +39,10 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
-- [/] **PROJ-164: Extract Ability._parse_primary_value() Base Class Helper**
-  - **Phases:** 3 | **Status:** Phase 1 Complete | **Priority:** Medium
+- [x] **PROJ-164: Extract Ability._parse_primary_value() Base Class Helper**
+  - **Phases:** 3 | **Status:** COMPLETE | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-164/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-164/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
 - [ ] **PROJ-165: Create `create_section_header()` UI Helper**
@@ -91,6 +90,9 @@
 | 2026-02-23 | PROJ-162 | Close | COMPLETE | - | - | Project marked complete |
 | 2026-02-23 | PROJ-164 | Phase 1 | Complete | 102 pass | pending | _parse_primary_value helper + tests |
 | 2026-02-23 | PROJ-164 | Phase 2 | Complete | 604 pass | pending | Migrated 10 __init__ + 3 sync_data callers |
+| 2026-02-23 | PROJ-164 | Phase 3 | Complete | 12006 pass | pending | Full verification, duplication eliminated |
+| 2026-02-23 | PROJ-164 | Audit 1 | PASSED | 171 pass | - | No issues found |
+| 2026-02-23 | PROJ-164 | Close | COMPLETE | - | - | Project marked complete |
 
 ---
 
