@@ -61,11 +61,12 @@ class TestSystemBlueprintsLoader:
     def test_get_blueprint_invalid_raises(self):
         """Verify get_blueprint() raises for unknown blueprint."""
         from game.strategy.generation.loaders.system_blueprints_loader import SystemBlueprintsLoader
+        from game.core.exceptions import ValidationException
 
         loader = SystemBlueprintsLoader()
         data = loader.load()
 
-        with pytest.raises(KeyError):
+        with pytest.raises(ValidationException, match="Unknown blueprint"):
             loader.get_blueprint("nonexistent_blueprint", data)
 
 

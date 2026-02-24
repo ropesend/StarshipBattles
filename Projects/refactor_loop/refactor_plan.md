@@ -8,18 +8,18 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-177 Phase 2 - Fix Stale Docstrings
-**Current Status:** PROJ-177 in progress
+**Last Completed:** PROJ-177 Phase 3 - Migrate Remaining Builtin Raises
+**Current Status:** PROJ-177 all phases complete, ready for audit
 **Current Project:** PROJ-177
-**Current Phase:** Phase 3
+**Current Phase:** Audit
 **Test Status:** 12338 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-177 Phase 2 COMPLETE - Updated 12 docstrings across 8 files to reference domain exceptions
-- Files modified: system_blueprints_loader.py, astrophysics_loader.py, galaxy_layouts_loader.py, battle_state.py, base.py, battle_mode_handler.py, ship.py, ship_factory.py
-- Docstrings now correctly reference ValidationException, ResourceException, PersistenceException
-- Next: Phase 3 - Migrate remaining builtin raises (4 sites)
+- PROJ-177 Phase 3 COMPLETE - Migrated 4 builtin raises to ValidationException
+- Files modified: component_health_manager.py, astrophysics_loader.py, system_blueprints_loader.py, event_bus.py
+- Tests updated: test_component_health_manager.py (3), test_system_blueprints.py (1), test_event_bus.py (3)
+- All 3 phases complete, ready for audit cycle
 
 ---
 
@@ -199,6 +199,7 @@
 | 2026-02-24 | PROJ-173 | Audit 1 | PASSED | 12338 passed, 1 skipped | pending | All 4 phases verified, no significant issues |
 | 2026-02-24 | PROJ-177 | Phase 1 | Complete | 12338 passed, 1 skipped | pending | Removed generics from 9 except blocks, 7 files, 3 tests updated |
 | 2026-02-24 | PROJ-177 | Phase 2 | Complete | 12338 passed, 1 skipped | pending | Fixed 12 stale docstrings across 8 files |
+| 2026-02-24 | PROJ-177 | Phase 3 | Complete | 12338 passed, 1 skipped | pending | Migrated 4 builtin raises, updated 7 tests |
 
 ---
 

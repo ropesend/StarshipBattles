@@ -11,6 +11,8 @@ PROJ-88: God Class Decomposition - Simulation Core Tier
 from typing import TYPE_CHECKING
 
 from game.simulation.components.component_constants import ComponentStatus
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 if TYPE_CHECKING:
     from game.simulation.components.component import Component
@@ -46,10 +48,14 @@ class ComponentHealthManager:
             True if the component was destroyed (HP <= 0), False otherwise.
 
         Raises:
-            TypeError: If amount is not numeric.
+            ValidationException: If amount is not numeric.
         """
         if not isinstance(amount, (int, float)):
-            raise TypeError(f"amount must be numeric, got {type(amount).__name__}")
+            raise ValidationException(
+                f"amount must be numeric, got {type(amount).__name__}",
+                code=ErrorCode.VALIDATION_FAILED.value,
+                context={"expected_type": "numeric", "actual_type": type(amount).__name__}
+            )
 
         component = self._component
         component.current_hp -= amount

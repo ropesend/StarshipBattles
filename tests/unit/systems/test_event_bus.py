@@ -40,24 +40,27 @@ class TestEventBus:
 class TestEventBusValidation:
     """Tests for callback validation."""
 
-    def test_subscribe_non_callable_raises_type_error(self):
-        """Subscribing with non-callable raises TypeError."""
+    def test_subscribe_non_callable_raises_validation_exception(self):
+        """Subscribing with non-callable raises ValidationException."""
+        from game.core.exceptions import ValidationException
         bus = EventBus()
-        with pytest.raises(TypeError) as exc_info:
+        with pytest.raises(ValidationException) as exc_info:
             bus.subscribe("TEST", "not a callback")
         assert "callable" in str(exc_info.value)
         assert "str" in str(exc_info.value)
 
-    def test_subscribe_none_raises_type_error(self):
-        """Subscribing with None raises TypeError."""
+    def test_subscribe_none_raises_validation_exception(self):
+        """Subscribing with None raises ValidationException."""
+        from game.core.exceptions import ValidationException
         bus = EventBus()
-        with pytest.raises(TypeError):
+        with pytest.raises(ValidationException):
             bus.subscribe("TEST", None)
 
-    def test_subscribe_integer_raises_type_error(self):
-        """Subscribing with integer raises TypeError."""
+    def test_subscribe_integer_raises_validation_exception(self):
+        """Subscribing with integer raises ValidationException."""
+        from game.core.exceptions import ValidationException
         bus = EventBus()
-        with pytest.raises(TypeError):
+        with pytest.raises(ValidationException):
             bus.subscribe("TEST", 42)
 
     def test_subscribe_callable_class_instance_works(self):

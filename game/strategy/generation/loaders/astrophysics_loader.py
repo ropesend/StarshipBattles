@@ -65,7 +65,11 @@ class AstrophysicsLoader:
         """
         distributions = data.get("mass_distributions", {})
         if category not in distributions:
-            raise KeyError(f"Unknown mass distribution: {category}")
+            raise ValidationException(
+                f"Unknown mass distribution: {category}",
+                code=ErrorCode.VALIDATION_FAILED.value,
+                context={"category": category, "available": list(distributions.keys())}
+            )
         return distributions[category]
 
     def get_orbit_zone(self, zone: str, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -81,7 +85,11 @@ class AstrophysicsLoader:
         """
         zones = data.get("orbit_zones", {})
         if zone not in zones:
-            raise KeyError(f"Unknown orbit zone: {zone}")
+            raise ValidationException(
+                f"Unknown orbit zone: {zone}",
+                code=ErrorCode.VALIDATION_FAILED.value,
+                context={"zone": zone, "available": list(zones.keys())}
+            )
         return zones[zone]
 
     def get_habitable_zone_factors(self, data: Dict[str, Any]) -> tuple:

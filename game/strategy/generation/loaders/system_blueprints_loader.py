@@ -60,11 +60,15 @@ class SystemBlueprintsLoader:
             Blueprint configuration dict.
 
         Raises:
-            KeyError: If blueprint name not found.
+            ValidationException: If blueprint name not found.
         """
         blueprints = data.get("blueprints", {})
         if name not in blueprints:
-            raise KeyError(f"Unknown blueprint: {name}. Available: {list(blueprints.keys())}")
+            raise ValidationException(
+                f"Unknown blueprint: {name}",
+                code=ErrorCode.VALIDATION_FAILED.value,
+                context={"blueprint_name": name, "available": list(blueprints.keys())}
+            )
         return blueprints[name]
 
     def select_random_blueprint(self, data: Dict[str, Any], rng: Optional[random.Random] = None) -> str:
