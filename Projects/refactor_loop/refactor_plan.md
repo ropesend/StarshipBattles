@@ -8,21 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-174 Audit Cycle 1 PASSED
-**Current Status:** PROJ-174 COMPLETE - Awaiting user verification
-**Current Project:** PROJ-174
-**Current Phase:** Audit PASSED
+**Last Completed:** PROJ-170 Phase 1 - Infrastructure
+**Current Status:** PROJ-170 Phase 1 Complete
+**Current Project:** PROJ-170
+**Current Phase:** Phase 2
 **Test Status:** 11972 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-174 Audit Cycle 1 PASSED
-- Minor fix applied: Removed orphaned RegistryManager import from game/core/resources.py
-- All verification requirements met:
-  - Zero get_default_registries() calls in game/ except registry.py
-  - RegistryManager not in __all__
-  - Only composition roots use RegistryManager.instance()
-- Project is audit-complete. Next: User verification, then mark [x] and move to PROJ-170
+- PROJ-170 Phase 1 complete - Added 3 new error codes
+- V002 (SCHEMA_VALIDATION_ERROR), V003 (MISSING_ENTITY), C003 (MISSING_DEPENDENCY)
+- Updated ERROR_HANDLING_GUIDELINES.md with full error code reference
+- Total error codes now: 24
+- Next: Phase 2 - Strategy Loaders Migration (24 ValueError → ValidationException)
 
 ---
 
@@ -54,8 +52,8 @@
 
 ---
 
-- [ ] **PROJ-170: Exception Handling Migration — Full Adoption of PROJ-45 Infrastructure**
-  - **Phases:** 7 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-170: Exception Handling Migration — Full Adoption of PROJ-45 Infrastructure**
+  - **Phases:** 7 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-170/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-170/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -114,6 +112,7 @@
 | 2026-02-23 | PROJ-174 | Phase 4 | Complete | 11972 passed, 1 skipped | pending | ship_loader.py migrated to provider pattern |
 | 2026-02-23 | PROJ-174 | Phase 5 | Complete | 11972 passed, 1 skipped | pending | Deprecated old API, updated test mocks to DI |
 | 2026-02-23 | PROJ-174 | Audit 1 | PASSED | 11972 passed, 1 skipped | pending | Fixed orphaned import in resources.py |
+| 2026-02-23 | PROJ-170 | Phase 1 | Complete | 11972 passed, 1 skipped | pending | Added 3 error codes (V002, V003, C003), updated guidelines |
 
 ---
 

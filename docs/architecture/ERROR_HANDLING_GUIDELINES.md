@@ -88,38 +88,99 @@ Error codes are defined in `game/core/error_codes.py` using the `ErrorCode` enum
 
 ### Common Error Codes
 
+#### Validation Codes (V001-V099)
+
 | Code | Name | Description |
 |------|------|-------------|
 | V001 | VALIDATION_FAILED | General validation failure |
-| V002 | INVALID_COMPONENT | Component configuration invalid |
-| V003 | MISSING_REQUIRED | Required field missing |
+| V002 | SCHEMA_VALIDATION_ERROR | Schema or structural validation error (missing fields, invalid data structure) |
+| V003 | MISSING_ENTITY | Referenced entity does not exist |
+| V004 | OUT_OF_RANGE | Value is outside allowed range |
+
+#### State Codes (S001-S099)
+
+| Code | Name | Description |
+|------|------|-------------|
 | S001 | STATE_FROZEN | Object frozen, cannot modify |
 | S002 | NOT_INITIALIZED | Object not properly initialized |
+| S003 | INVALID_STATE | Object is in an invalid or unexpected state |
+
+#### Resource Codes (R001-R099)
+
+| Code | Name | Description |
+|------|------|-------------|
 | R001 | RESOURCE_NOT_FOUND | Resource doesn't exist |
+| R002 | INVALID_FORMAT | Resource has invalid or unsupported format |
+| R003 | RESOURCE_LOAD_FAILED | Failed to load resource |
+
+#### Persistence Codes (P001-P099)
+
+| Code | Name | Description |
+|------|------|-------------|
 | P001 | SAVE_FAILED | Failed to save data |
 | P002 | LOAD_FAILED | Failed to load data |
 | P003 | CORRUPT_DATA | Data corrupted or malformed |
-| F001 | SYNTAX_ERROR | Formula syntax error |
+| P004 | VERSION_MISMATCH | Save file version is incompatible |
+| P005 | IO_ERROR | File system I/O error occurred |
+
+#### Formula Codes (F001-F099)
+
+| Code | Name | Description |
+|------|------|-------------|
+| F001 | FORMULA_SYNTAX_ERROR | Formula syntax error |
+| F002 | FORMULA_UNDEFINED_VAR | Undefined variable in formula |
+| F003 | EVAL_ERROR | Formula runtime evaluation error |
+| F004 | FORMULA_GENERAL_ERROR | General formula evaluation failure |
+
+#### Component Codes (C001-C099)
+
+| Code | Name | Description |
+|------|------|-------------|
 | C001 | COMPONENT_NOT_FOUND | Component doesn't exist |
+| C002 | COMPONENT_INVALID | Component configuration is invalid |
+| C003 | MISSING_DEPENDENCY | Required dependency injection parameter not provided |
+| C004 | SLOT_OCCUPIED | Component slot is already occupied |
+| C005 | INCOMPATIBLE_COMPONENT | Component is not compatible with target |
 
 ### Using Error Codes
 
 ```python
-from game.core.exceptions import ValidationException
+from game.core.exceptions import ValidationException, ComponentException
 from game.core.error_codes import ErrorCode
 
-# Raising with error code
+# V001 - General validation failure
 raise ValidationException(
     "Invalid damage value",
     code=ErrorCode.VALIDATION_FAILED.value,
     context={"field": "damage", "value": -5}
 )
 
+# V002 - Schema/structural validation error
+raise ValidationException(
+    "Missing required fields in ship data",
+    code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+    context={"missing_fields": ["hull_id", "components"], "data": data}
+)
+
+# V003 - Referenced entity does not exist
+raise ValidationException(
+    f"Component '{component_id}' not found in registry",
+    code=ErrorCode.MISSING_ENTITY.value,
+    context={"component_id": component_id, "registry": "components"}
+)
+
+# C003 - Missing dependency injection parameter
+raise ComponentException(
+    "Required 'registry_provider' parameter not provided",
+    code=ErrorCode.MISSING_DEPENDENCY.value,
+    context={"expected": "registry_provider", "caller": "ShipLoader"}
+)
+
 # Programmatic handling
 try:
     load_component(data)
 except ComponentException as e:
-    if e.code == ErrorCode.INVALID_COMPONENT.value:
+    if e.code == ErrorCode.COMPONENT_INVALID.value:
         # Handle specific error type
         use_default_component()
 ```
