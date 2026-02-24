@@ -13,16 +13,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Add helper + tests | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Add helper + tests | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Migrate race editor panels (19 sites) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate empire/other panels (5 sites) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Final verification | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-23
-**Active Phase:** Planning
-**Last Action:** Project plan written
-**Next Action:** User approval, then begin Phase 1
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete — `create_section_header()` helper and 9 unit tests added
+**Next Action:** Begin Phase 2 — migrate race editor panels
 **Blockers:** None
 
 ## Overview

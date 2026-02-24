@@ -8,18 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-164 COMPLETE (all phases + audit passed)
-**Current Status:** PROJ-164 Complete — Ready to start PROJ-165
+**Last Completed:** PROJ-165 Phase 1 Complete
+**Current Status:** PROJ-165 Phase 1 done — helper function and 9 unit tests added
 **Current Project:** PROJ-165
-**Current Phase:** Phase 1
-**Test Status:** 12006 passed, 1 skipped
+**Current Phase:** Phase 2
+**Test Status:** 2826 UI tests passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-164 Complete: Extracted `_parse_primary_value()` helper to Ability base class
-- Phase 3 verified: Full test suite (12006 passed), duplication eliminated
-- Audit Cycle 1 PASSED: 171 targeted tests, helper implementation verified
-- Next: Start PROJ-165 (Create `create_section_header()` UI Helper)
+- Phase 1 Complete: Added `create_section_header()` to `game/ui/utils.py` (lines 166-194)
+- Added 9 unit tests in `tests/unit/ui/test_utils.py::TestCreateSectionHeader`
+- Helper signature: `create_section_header(text, y, width, manager, container, x=10, height=25)`
+- Uses lazy import of pygame_gui to keep utils.py lightweight
+- Next: Phase 2 — migrate 19 race editor panel call sites
 
 ---
 
@@ -45,8 +46,8 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
-- [ ] **PROJ-165: Create `create_section_header()` UI Helper**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-165: Create `create_section_header()` UI Helper**
+  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-165/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-165/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -93,6 +94,7 @@
 | 2026-02-23 | PROJ-164 | Phase 3 | Complete | 12006 pass | pending | Full verification, duplication eliminated |
 | 2026-02-23 | PROJ-164 | Audit 1 | PASSED | 171 pass | - | No issues found |
 | 2026-02-23 | PROJ-164 | Close | COMPLETE | - | - | Project marked complete |
+| 2026-02-23 | PROJ-165 | Phase 1 | Complete | 2826 UI pass | pending | Helper + 9 tests added |
 
 ---
 

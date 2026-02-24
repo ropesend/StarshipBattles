@@ -162,6 +162,43 @@ def scale_image_by_visible_portion(
     return pygame.transform.smoothscale(cropped, (new_width, target_height))
 
 
+def create_section_header(
+    text: str,
+    y: int,
+    width: int,
+    manager,
+    container,
+    x: int = 10,
+    height: int = 25
+) -> 'pygame_gui.elements.UILabel':
+    """
+    Create a standard section header UILabel.
+
+    Consolidates the repeated pattern of creating section header labels
+    with consistent styling across UI panels.
+
+    Args:
+        text: Header text to display
+        y: Vertical position
+        width: Label width
+        manager: pygame_gui UIManager instance
+        container: Parent UI container
+        x: Horizontal position (default: 10)
+        height: Label height (default: 25)
+
+    Returns:
+        The created UILabel element
+    """
+    import pygame_gui
+    return pygame_gui.elements.UILabel(
+        relative_rect=pygame.Rect(x, y, width, height),
+        text=text,
+        manager=manager,
+        container=container,
+        object_id="#section_header"
+    )
+
+
 def scale_image_to_fit(
     surface: pygame.Surface,
     target_size: Tuple[int, int],

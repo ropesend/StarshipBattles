@@ -401,3 +401,92 @@ class TestCalculateShipImageScaleEdgeCases:
 
         # target 100 / visible 50 = 2.0, * manual_scale 2.0 = 4.0
         assert result == 4.0
+
+
+class TestCreateSectionHeader:
+    """Tests for create_section_header() helper (PROJ-165)."""
+
+    @pytest.fixture
+    def ui_manager(self):
+        """Create a real pygame_gui UIManager for testing."""
+        import pygame_gui
+        # Ensure pygame is initialized (session fixture handles this)
+        if not pygame.get_init():
+            pygame.init()
+        manager = pygame_gui.UIManager((800, 600))
+        yield manager
+        manager.clear_and_reset()
+
+    def test_returns_uilabel(self, ui_manager):
+        """Should return a pygame_gui UILabel instance."""
+        import pygame_gui
+        from game.ui.utils import create_section_header
+
+        result = create_section_header("Test:", 100, 200, ui_manager, None)
+
+        assert isinstance(result, pygame_gui.elements.UILabel)
+
+    def test_default_x_position(self, ui_manager):
+        """Default x position should be 10."""
+        from game.ui.utils import create_section_header
+
+        result = create_section_header("Test:", 100, 200, ui_manager, None)
+
+        assert result.relative_rect.x == 10
+
+    def test_default_height(self, ui_manager):
+        """Default height should be 25."""
+        from game.ui.utils import create_section_header
+
+        result = create_section_header("Test:", 100, 200, ui_manager, None)
+
+        assert result.relative_rect.height == 25
+
+    def test_custom_x(self, ui_manager):
+        """Custom x parameter should be respected."""
+        from game.ui.utils import create_section_header
+
+        result = create_section_header("Test:", 100, 200, ui_manager, None, x=20)
+
+        assert result.relative_rect.x == 20
+
+    def test_custom_height(self, ui_manager):
+        """Custom height parameter should be respected."""
+        from game.ui.utils import create_section_header
+
+        result = create_section_header("Test:", 100, 200, ui_manager, None, height=30)
+
+        assert result.relative_rect.height == 30
+
+    def test_object_id_is_section_header(self, ui_manager):
+        """Object ID should include #section_header."""
+        from game.ui.utils import create_section_header
+
+        result = create_section_header("Test:", 100, 200, ui_manager, None)
+
+        # The object_id is stored in combined_element_ids or most_specific_combined_id
+        assert "#section_header" in str(result.most_specific_combined_id)
+
+    def test_text_set(self, ui_manager):
+        """Label text should match input."""
+        from game.ui.utils import create_section_header
+
+        result = create_section_header("Species Identity:", 50, 200, ui_manager, None)
+
+        assert result.text == "Species Identity:"
+
+    def test_width_matches(self, ui_manager):
+        """Rect width should match passed width argument."""
+        from game.ui.utils import create_section_header
+
+        result = create_section_header("Test:", 100, 300, ui_manager, None)
+
+        assert result.relative_rect.width == 300
+
+    def test_y_position_matches(self, ui_manager):
+        """Y position should match passed y argument."""
+        from game.ui.utils import create_section_header
+
+        result = create_section_header("Test:", 150, 200, ui_manager, None)
+
+        assert result.relative_rect.y == 150
