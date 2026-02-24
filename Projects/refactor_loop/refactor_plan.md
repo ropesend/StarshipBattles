@@ -8,22 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-185 Phase 1 Complete
-**Current Status:** PROJ-185 Phase 1 complete, ready for Phase 2
+**Last Completed:** PROJ-185 Phase 2 Complete
+**Current Status:** PROJ-185 Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-185
-**Current Phase:** Phase 2
+**Current Phase:** Phase 3
 **Test Status:** 12366 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-185 Phase 1 Complete:
-  - Task 1.1: Removed stale DeprecationWarning filter + PROJ-174/181 comments from test_protocols_boundary.py
-  - Task 1.2: Fixed misleading comment in ui/utils/__init__.py
-  - Task 1.3: Fixed misleading comment in game_config.py
-  - Task 1.4: Fixed misleading comment in production_engine.py
-  - Task 1.5: Fixed misleading comment in scenarios/base.py
-  - Task 1.6: Fixed misleading comment in empire_build_queue_window.py
-- Next: Phase 2 - Remove legacy constant aliases in propulsion_scenarios.py
+- PROJ-185 Phase 2 Complete:
+  - Removed legacy aliases block (lines 257-280) from propulsion_scenarios.py
+  - Plan incorrectly stated "zero consumers" - aliases WERE used internally by PropThrustMassRatioScenario
+  - Migrated usages to PROP002_/PROP001B_ prefixed constants
+  - Pre-existing simulation_tests failures unrelated to this change
+- Next: Phase 3 - Remove Fleet Lookup O(n) Fallback in game_session.py
 
 ---
 
@@ -258,6 +256,7 @@
 | 2026-02-24 | PROJ-184 | Phase 2 | Complete | 12366 passed, 1 skipped | pending | Removed 4 hasattr guards, fixed test mock |
 | 2026-02-24 | PROJ-184 | Audit 1 | PASSED | 12366 passed, 1 skipped | pending | All objectives verified, project complete |
 | 2026-02-24 | PROJ-185 | Phase 1 | Complete | 12366 passed, 1 skipped | pending | 6 tasks: stale code + misleading comments fixed |
+| 2026-02-24 | PROJ-185 | Phase 2 | Complete | 12366 passed, 1 skipped | pending | Removed legacy aliases, migrated to PROP002_/PROP001B_ constants |
 
 ---
 

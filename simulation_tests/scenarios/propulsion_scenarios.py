@@ -254,31 +254,6 @@ PROP005_HIGH_EXPECTED_ANGLE_CHANGE = PROP005_HIGH_DEGREES_PER_TICK * PROP005_MAX
 PROP005_LOW_EXPECTED_FINAL_ANGLE = PROP005_STARTING_ANGLE + PROP005_LOW_EXPECTED_ANGLE_CHANGE  # 7.8125 (CW)
 PROP005_HIGH_EXPECTED_FINAL_ANGLE = PROP005_STARTING_ANGLE + PROP005_HIGH_EXPECTED_ANGLE_CHANGE  # 0.3804 (CW)
 
-# =============================================================================
-# LEGACY ALIASES (for backward compatibility during transition)
-# These are used by other scenarios until they are updated to use PROP*_ prefixed constants
-# =============================================================================
-LOW_MASS = PROP001_TOTAL_MASS           # 400
-LOW_MASS_THRUST = PROP001_ENGINE_THRUST  # 500
-LOW_MASS_MAX_SPEED = PROP001_MAX_SPEED   # 31.25
-
-MED_MASS = PROP002_MED_MASS              # 3000
-MED_MASS_THRUST = PROP002_THRUST         # 500
-MED_MASS_MAX_SPEED = PROP002_MED_MAX_SPEED  # 4.1667
-
-HIGH_MASS = PROP002_HIGH_MASS            # 11000
-HIGH_MASS_THRUST = PROP002_THRUST        # 500
-HIGH_MASS_MAX_SPEED = PROP002_HIGH_MAX_SPEED  # 1.1364
-
-THRUSTER_MASS = PROP003_TOTAL_MASS       # 400
-THRUSTER_RAW_TURN_RATE = PROP003_RAW_TURN_RATE  # 5.0
-THRUSTER_EXPECTED_TURN_SPEED = PROP003_TURN_SPEED  # 15.625
-
-NO_ENGINE_MASS = PROP001B_TOTAL_MASS     # 400
-
-THRUSTER_ONLY_MASS = PROP003B_TOTAL_MASS  # 400
-THRUSTER_ONLY_TURN_SPEED = PROP003B_TURN_SPEED  # 15.625
-
 
 class PropEngineAccelerationScenario(PropulsionScenario):
     """
@@ -645,7 +620,7 @@ class PropThrustMassRatioScenario(TestScenario):
             "Test 3 ships: LowMass (40), MedMass (2220), HighMass (10220)",
             "All ships have same engine thrust: 500",
             "Formula: max_speed = (500 * 25) / mass",
-            f"Expected speeds: {LOW_MASS_MAX_SPEED:.2f}, {MED_MASS_MAX_SPEED:.4f}, {HIGH_MASS_MAX_SPEED:.4f} px/s",
+            f"Expected speeds: {PROP002_LOW_MAX_SPEED:.2f}, {PROP002_MED_MAX_SPEED:.4f}, {PROP002_HIGH_MAX_SPEED:.4f} px/s",
             "Speed should scale inversely with mass"
         ],
         edge_cases=[
@@ -664,58 +639,58 @@ class PropThrustMassRatioScenario(TestScenario):
             ExactMatchRule(
                 name='Low Mass Ship - Mass',
                 path='low_mass_ship.mass',
-                expected=LOW_MASS
+                expected=PROP002_LOW_MASS
             ),
             ExactMatchRule(
                 name='Low Mass Ship - Thrust',
                 path='low_mass_ship.total_thrust',
-                expected=LOW_MASS_THRUST
+                expected=PROP002_THRUST
             ),
             DeterministicMatchRule(
                 name='Low Mass Ship - Max Speed',
                 path='low_mass_ship.max_speed',
-                expected=LOW_MASS_MAX_SPEED,
-                description='max_speed = (500 * 25) / 40 = 312.5'
+                expected=PROP002_LOW_MAX_SPEED,
+                description='max_speed = (500 * 25) / 400 = 31.25'
             ),
             # Medium mass ship configuration
             ExactMatchRule(
                 name='Med Mass Ship - Mass',
                 path='med_mass_ship.mass',
-                expected=MED_MASS
+                expected=PROP002_MED_MASS
             ),
             ExactMatchRule(
                 name='Med Mass Ship - Thrust',
                 path='med_mass_ship.total_thrust',
-                expected=MED_MASS_THRUST
+                expected=PROP002_THRUST
             ),
             DeterministicMatchRule(
                 name='Med Mass Ship - Max Speed',
                 path='med_mass_ship.max_speed',
-                expected=MED_MASS_MAX_SPEED,
-                description=f'max_speed = (500 * 25) / {MED_MASS}'
+                expected=PROP002_MED_MAX_SPEED,
+                description=f'max_speed = (500 * 25) / {PROP002_MED_MASS}'
             ),
             # High mass ship configuration
             ExactMatchRule(
                 name='High Mass Ship - Mass',
                 path='high_mass_ship.mass',
-                expected=HIGH_MASS
+                expected=PROP002_HIGH_MASS
             ),
             ExactMatchRule(
                 name='High Mass Ship - Thrust',
                 path='high_mass_ship.total_thrust',
-                expected=HIGH_MASS_THRUST
+                expected=PROP002_THRUST
             ),
             DeterministicMatchRule(
                 name='High Mass Ship - Max Speed',
                 path='high_mass_ship.max_speed',
-                expected=HIGH_MASS_MAX_SPEED,
-                description=f'max_speed = (500 * 25) / {HIGH_MASS}'
+                expected=PROP002_HIGH_MAX_SPEED,
+                description=f'max_speed = (500 * 25) / {PROP002_HIGH_MASS}'
             ),
             # Speed ratio validation (inverse mass ratio)
             DeterministicMatchRule(
                 name='Speed Ratio (Low/Med)',
                 path='results.speed_ratio_low_med',
-                expected=MED_MASS / LOW_MASS,  # Should equal mass ratio
+                expected=PROP002_MED_MASS / PROP002_LOW_MASS,  # Should equal mass ratio
                 description='speed_ratio = low_speed / med_speed = med_mass / low_mass'
             ),
         ]
@@ -1259,7 +1234,7 @@ class PropNoEngineStationaryScenario(PropulsionScenario):
             ExactMatchRule(
                 name='Ship Mass',
                 path='ship.mass',
-                expected=NO_ENGINE_MASS
+                expected=PROP001B_TOTAL_MASS
             ),
             ExactMatchRule(
                 name='Total Thrust (Should be 0)',

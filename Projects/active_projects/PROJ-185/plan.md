@@ -14,17 +14,17 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Ghost Code & Comment Cleanup | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Remove Legacy Constant Aliases | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Remove Legacy Constant Aliases | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Remove Fleet Lookup Fallback | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Build Queue Single-Select Shim Removal | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 2 - Remove Legacy Constant Aliases
-**Last Action:** Phase 1 Complete - All 6 tasks done (stale code + misleading comments fixed)
-**Next Action:** Execute Phase 2
+**Active Phase:** Phase 3 - Remove Fleet Lookup Fallback
+**Last Action:** Phase 2 Complete - Removed legacy aliases, migrated usages to PROP002_/PROP001B_ constants
+**Next Action:** Execute Phase 3
 **Blockers:** None
-**Context for Next Agent:** Baseline is 12366 passed, 1 skipped, 0 failures
+**Context for Next Agent:** Baseline is 12366 passed, 1 skipped. Pre-existing simulation_tests failures exist (unrelated to this project).
 
 ## Overview
 Comprehensive cleanup of backward compatibility layers, ghost code, and misleading comments
