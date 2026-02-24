@@ -70,26 +70,28 @@ All UI files migrated to standard logging pattern.
 - [x] Searched: only test files use `set_logging`, no production code
 
 ## Task 6: Delete game/core/logger.py
-- [ ] Verify zero imports remain in game/: DONE
-- [ ] Delete tests/unit/core/logger/ (tests the old Logger class)
-- [ ] Update tests/unit/core/test_logger.py (also tests old Logger)
-- [ ] Update tests/unit/systems/test_logger_system.py (also tests old Logger)
-- [ ] Delete `game/core/logger.py`
-- [ ] Run full test suite
+- [x] Verify zero imports remain in game/: DONE
+- [x] Delete tests/unit/core/logger/ (tests the old Logger class)
+- [x] Delete tests/unit/core/test_logger.py (old Logger tests)
+- [x] Delete tests/unit/systems/test_logger_system.py (old Logger tests)
+- [x] Delete `game/core/logger.py`
+- [x] Migrate test_framework/battle_state_capture.py to standard logging
+- [x] Update tests/unit/core/test_asset_manager.py assertions for new logger pattern
+- [x] Run full test suite: 11968 passed, 1 skipped
 
-**Note:** Task 6 deferred to Phase 4 since it requires coordinated deletion of both the module AND its tests.
+## Verification (Complete)
+- [x] Verify zero imports of old logger in production code
+- [x] Verify zero imports of old logger in test_framework/
+- [x] All tests pass: 11968 passed, 1 skipped
 
-## Verification (Partial)
-- [x] Verify zero imports in production code
-- [x] All tests pass: 12030 passed, 1 skipped
-
-## Completion (Partial)
+## Completion (Complete)
 - [x] All game/strategy/ files migrated
 - [x] All game/ai/ files migrated
 - [x] All game/ui/ files migrated
-- [x] All remaining files migrated (assets, research)
+- [x] All remaining files migrated (assets, research, test_framework)
 - [x] Updated game/core/__init__.py re-exports (event_logging instead of logger)
 - [x] Updated test mocks from patch('...log_xxx') to patch('...logger')
+- [x] Deleted old logger.py and 62 associated tests
 - [x] All tests pass
 
-**Remaining:** Delete logger.py and its dedicated tests (coordinated in Phase 4)
+**Phase 3 Complete:** Logger fully migrated, old logger.py eradicated.

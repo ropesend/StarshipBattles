@@ -15,16 +15,16 @@
 |-------|--------|-----------|
 | 1. JSON Quick Wins | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Logger Core Migration (event system + core + simulation) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Logger Remaining Migration (strategy + AI + UI + other) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Logger Remaining Migration (strategy + AI + UI + other) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Guardrails & Documentation | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-23
-**Active Phase:** Phase 2 Complete
-**Last Action:** Completed Phase 2 - Logger Core Migration. Created event_logging.py module (43 lines), migrated app.py with configure_logging(), migrated all core/ and simulation/ files (21 files total) to standard logging.getLogger(__name__). Updated conftest.py with session-scoped logging fixture and event_logging import. Fixed 5 test files that mocked old logger functions.
-**Next Action:** Begin Phase 3 (Logger Remaining Migration: strategy + AI + UI)
+**Active Phase:** Phase 3 Complete
+**Last Action:** Completed Phase 3 - Deleted game/core/logger.py and 62 associated tests. Migrated test_framework/battle_state_capture.py to standard logging. Updated test_asset_manager.py assertions for new logger pattern.
+**Next Action:** Begin Phase 4 (Guardrails & Documentation)
 **Blockers:** None
-**Context for Next Agent:** Core and simulation layers now use standard logging. Event logging extracted to game/core/event_logging.py with log_event, set_event_handler, get_event_handler. Test baseline: 12030 passed, 1 skipped (added 7 event_logging tests). Ready for Phase 3 migration of strategy/AI/UI modules.
+**Context for Next Agent:** Logger migration COMPLETE. Old logger.py and all its tests eradicated. All production code uses standard logging.getLogger(__name__). Event logging in game/core/event_logging.py. Test baseline: 11968 passed, 1 skipped. Ready for Phase 4 (guardrails and documentation).
 
 ## Overview
 Standardize logging and JSON loading patterns across the codebase by migrating from the custom Logger singleton to Python's standard `logging` module, and completing the JSON utilities standardization.

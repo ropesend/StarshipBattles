@@ -16,17 +16,19 @@ class TestAssetManagerLogging:
         yield
         AssetManager.reset()
 
-    def test_asset_manager_does_not_import_logging_directly(self):
-        """AssetManager should not use direct 'import logging' for its log calls."""
+    def test_asset_manager_uses_standard_logging_pattern(self):
+        """AssetManager should use standard logging.getLogger(__name__) pattern."""
         import game.assets.asset_manager as am_module
         import inspect
         source = inspect.getsource(am_module)
 
-        # The file should import from game.core.logger, not use logging.error/info/warning
-        # We check that logging.error, logging.info, logging.warning are NOT called
-        assert "logging.error" not in source, "Should use log_error from game.core.logger"
-        assert "logging.info" not in source, "Should use log_info from game.core.logger"
-        assert "logging.warning" not in source, "Should use log_warning from game.core.logger"
+        # The file should use logging.getLogger(__name__) pattern
+        # We check that the module has the standard logger setup
+        assert "import logging" in source, "Should import logging"
+        assert "logging.getLogger(__name__)" in source, "Should use logging.getLogger(__name__)"
+        # Should use logger.error, logger.info, etc. (not logging.error directly)
+        assert "logger.error" in source or "logger.warning" in source or "logger.info" in source, \
+            "Should use logger instance methods"
 
     @patch("game.assets.asset_manager.logger")
     def test_load_manifest_file_not_found_uses_log_error(self, mock_logger):

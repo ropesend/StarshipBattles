@@ -5,13 +5,15 @@ This module provides utilities to capture and save battle states (initial and fi
 when running combat tests. The saved JSON files can be viewed side-by-side in the
 Combat Lab UI to understand what happened during a test.
 """
+import logging
 import os
 import json
 from datetime import datetime
 from typing import Optional, Tuple, TYPE_CHECKING
 
 from game.simulation.battle_state import BattleState
-from game.core.logger import log_debug, log_warning
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.simulation.systems.battle_engine import BattleEngine
@@ -85,11 +87,11 @@ def capture_battle_state(
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(state.to_json(indent=2))
 
-        log_debug(f"Saved {state_type} battle state to {filepath}")
+        logger.debug(f"Saved {state_type} battle state to {filepath}")
         return filepath
 
     except Exception as e:
-        log_warning(f"Failed to capture {state_type} battle state: {e}")
+        logger.warning(f"Failed to capture {state_type} battle state: {e}")
         return None
 
 
@@ -140,7 +142,7 @@ def load_battle_state(filepath: str) -> Optional[BattleState]:
     """
     try:
         if not os.path.exists(filepath):
-            log_warning(f"Battle state file not found: {filepath}")
+            logger.warning(f"Battle state file not found: {filepath}")
             return None
 
         with open(filepath, 'r', encoding='utf-8') as f:
@@ -149,7 +151,7 @@ def load_battle_state(filepath: str) -> Optional[BattleState]:
         return BattleState.from_json(json_str)
 
     except Exception as e:
-        log_warning(f"Failed to load battle state from {filepath}: {e}")
+        logger.warning(f"Failed to load battle state from {filepath}: {e}")
         return None
 
 
@@ -171,7 +173,7 @@ def load_battle_state_json(filepath: str) -> Optional[str]:
             return f.read()
 
     except Exception as e:
-        log_warning(f"Failed to load battle state JSON from {filepath}: {e}")
+        logger.warning(f"Failed to load battle state JSON from {filepath}: {e}")
         return None
 
 
@@ -203,15 +205,15 @@ def cleanup_old_states(max_age_days: int = 7) -> int:
             if file_age > max_age_seconds:
                 os.remove(filepath)
                 removed += 1
-                log_debug(f"Removed old battle state file: {filename}")
+                logger.debug(f"Removed old battle state file: {filename}")
 
         if removed > 0:
-            log_debug(f"Cleaned up {removed} old battle state files")
+            logger.debug(f"Cleaned up {removed} old battle state files")
 
         return removed
 
     except Exception as e:
-        log_warning(f"Failed to cleanup old battle states: {e}")
+        logger.warning(f"Failed to cleanup old battle states: {e}")
         return 0
 
 
@@ -273,11 +275,11 @@ class BattleStateCapture:
             with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(state.to_json(indent=2))
 
-            log_debug(f"Captured {state_type} state: {filepath}")
+            logger.debug(f"Captured {state_type} state: {filepath}")
             return filepath
 
         except Exception as e:
-            log_warning(f"Failed to capture {state_type} state: {e}")
+            logger.warning(f"Failed to capture {state_type} state: {e}")
             return None
 
     def get_results_dict(self) -> dict:
