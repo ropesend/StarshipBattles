@@ -1,51 +1,41 @@
 import math
 from typing import Dict, Any, List
 
-from .base import Ability
+from .base import Ability, SimpleMultiplierAbility
 from .stat_keys import StatKey, AbilityStatBinding
 from .ui_colors import HINT_CREW_CAP, HINT_LIFE_SUPPORT, HINT_CREW_REQ
 
 
-class CrewCapacity(Ability):
+class CrewCapacity(SimpleMultiplierAbility):
+    """Provides crew capacity."""
+
+    stat_key = 'crew_capacity_mult'
+    value_attr = 'amount'
+    base_attr = '_base_amount'
+    ui_label = 'Crew Cap'
+    ui_format = '{}'
+    ui_color = HINT_CREW_CAP
+    int_result = True
 
     STAT_BINDINGS: List[AbilityStatBinding] = [
         AbilityStatBinding(StatKey.CREW_CAPACITY_MULT, 'amount', 'multiply', '_base_amount'),
     ]
 
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
-        self.amount = int(self._parse_primary_value(data))
-        self._base_amount = self.amount
 
-    def recalculate(self):
-        self.amount = int(self._base_amount * self.get_effective_stat('crew_capacity_mult', 1.0))
+class LifeSupportCapacity(SimpleMultiplierAbility):
+    """Provides life support capacity."""
 
-    def get_ui_rows(self):
-        return [{'label': 'Crew Cap', 'value': f"{self.amount}", 'color_hint': HINT_CREW_CAP}]
-
-    def get_primary_value(self) -> float:
-        return float(self.amount)
-
-
-class LifeSupportCapacity(Ability):
+    stat_key = 'life_support_capacity_mult'
+    value_attr = 'amount'
+    base_attr = '_base_amount'
+    ui_label = 'Life Support'
+    ui_format = '{}'
+    ui_color = HINT_LIFE_SUPPORT
+    int_result = True
 
     STAT_BINDINGS: List[AbilityStatBinding] = [
         AbilityStatBinding(StatKey.LIFE_SUPPORT_CAPACITY_MULT, 'amount', 'multiply', '_base_amount'),
     ]
-
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
-        self.amount = int(self._parse_primary_value(data))
-        self._base_amount = self.amount
-
-    def recalculate(self):
-        self.amount = int(self._base_amount * self.get_effective_stat('life_support_capacity_mult', 1.0))
-
-    def get_ui_rows(self):
-        return [{'label': 'Life Support', 'value': f"{self.amount}", 'color_hint': HINT_LIFE_SUPPORT}]
-
-    def get_primary_value(self) -> float:
-        return float(self.amount)
 
 
 class CrewRequired(Ability):

@@ -1,65 +1,41 @@
 from typing import Dict, Any, List
 
-from .base import Ability, AbilityLayer, AbilityScope
+from .base import Ability, AbilityLayer, AbilityScope, SimpleMultiplierAbility
 from .stat_keys import StatKey, AbilityStatBinding
 from .ui_colors import HINT_THRUST, HINT_TURN_SPEED, HINT_STRATEGIC_MOBILITY, HINT_SHIELD_CAP, HINT_DEFAULT, HINT_WARP_ENERGY
 
 
-class CombatPropulsion(Ability):
+class CombatPropulsion(SimpleMultiplierAbility):
     """Provides Thrust."""
+
+    stat_key = 'thrust_mult'
+    value_attr = 'thrust_force'
+    base_attr = 'base_thrust'
+    ui_label = 'Thrust'
+    ui_format = '{:.0f} N'
+    ui_color = HINT_THRUST
 
     STAT_BINDINGS: List[AbilityStatBinding] = [
         AbilityStatBinding(StatKey.THRUST_MULT, 'thrust_force', 'multiply', 'base_thrust'),
     ]
 
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
-        self.base_thrust = self._parse_primary_value(data)
-        self.thrust_force = self.base_thrust
 
-    def sync_data(self, data: Any):
-        super().sync_data(data)
-        self.base_thrust = self._parse_primary_value(data)
-        self.thrust_force = self.base_thrust
-
-    def recalculate(self):
-        self.thrust_force = self.base_thrust * self.get_effective_stat('thrust_mult', 1.0)
-
-    def get_ui_rows(self):
-        return [{'label': 'Thrust', 'value': f"{self.thrust_force:.0f} N", 'color_hint': HINT_THRUST}]
-
-    def get_primary_value(self) -> float:
-        return self.thrust_force
-
-
-class ManeuveringThruster(Ability):
+class ManeuveringThruster(SimpleMultiplierAbility):
     """Provides Rotation."""
+
+    stat_key = 'turn_mult'
+    value_attr = 'turn_rate'
+    base_attr = 'base_turn_rate'
+    ui_label = 'Turn Speed'
+    ui_format = '{:.1f} deg/s'
+    ui_color = HINT_TURN_SPEED
 
     STAT_BINDINGS: List[AbilityStatBinding] = [
         AbilityStatBinding(StatKey.TURN_MULT, 'turn_rate', 'multiply', 'base_turn_rate'),
     ]
 
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
-        self.base_turn_rate = self._parse_primary_value(data)
-        self.turn_rate = self.base_turn_rate
 
-    def sync_data(self, data: Any):
-        super().sync_data(data)
-        self.base_turn_rate = self._parse_primary_value(data)
-        self.turn_rate = self.base_turn_rate
-
-    def recalculate(self):
-        self.turn_rate = self.base_turn_rate * self.get_effective_stat('turn_mult', 1.0)
-
-    def get_ui_rows(self):
-        return [{'label': 'Turn Speed', 'value': f"{self.turn_rate:.1f} deg/s", 'color_hint': HINT_TURN_SPEED}]
-
-    def get_primary_value(self) -> float:
-        return self.turn_rate
-
-
-class StrategicMovement(Ability):
+class StrategicMovement(SimpleMultiplierAbility):
     """
     Provides strategic map movement points.
 
@@ -80,28 +56,16 @@ class StrategicMovement(Ability):
     allowed_scopes = [AbilityScope.SELF, AbilityScope.ALLIED_SECTOR, AbilityScope.ALLIED_SYSTEM]
     default_scope = AbilityScope.SELF
 
+    stat_key = 'strategic_mult'
+    value_attr = 'movement_points'
+    base_attr = 'base_movement_points'
+    ui_label = 'Strategic Mobility'
+    ui_format = '{:.0f} MP'
+    ui_color = HINT_STRATEGIC_MOBILITY
+
     STAT_BINDINGS: List[AbilityStatBinding] = [
         AbilityStatBinding(StatKey.STRATEGIC_MULT, 'movement_points', 'multiply', 'base_movement_points'),
     ]
-
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
-        self.base_movement_points = self._parse_primary_value(data)
-        self.movement_points = self.base_movement_points
-
-    def sync_data(self, data: Any):
-        super().sync_data(data)
-        self.base_movement_points = self._parse_primary_value(data)
-        self.movement_points = self.base_movement_points
-
-    def recalculate(self):
-        self.movement_points = self.base_movement_points * self.get_effective_stat('strategic_mult', 1.0)
-
-    def get_ui_rows(self) -> List[Dict[str, str]]:
-        return [{'label': 'Strategic Mobility', 'value': f"{self.movement_points:.0f} MP", 'color_hint': HINT_STRATEGIC_MOBILITY}]
-
-    def get_primary_value(self) -> float:
-        return self.movement_points
 
 
 class WarpJump(Ability):

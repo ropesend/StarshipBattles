@@ -338,3 +338,70 @@ class Ability:
             })
 
         return summary
+
+
+class SimpleMultiplierAbility(Ability):
+    """Base class for abilities with a single numeric value modified by one multiplier.
+
+    Subclasses configure behavior via class attributes:
+        stat_key:    The modifier stat key string (e.g. 'thrust_mult')
+        value_attr:  Name of the current-value attribute (e.g. 'thrust_force')
+        base_attr:   Name of the base-value attribute (e.g. 'base_thrust')
+        ui_label:    Display label for get_ui_rows() (e.g. 'Thrust')
+        ui_format:   Format string for the value (e.g. '{:.0f} N')
+        ui_color:    Color hint constant (e.g. HINT_THRUST)
+        int_result:  If True, cast result to int (default: False)
+
+    PROJ-176: Extracted to eliminate duplication across 7 ability classes.
+    """
+    stat_key: str = ''
+    value_attr: str = ''
+    base_attr: str = ''
+    ui_label: str = ''
+    ui_format: str = '{:.0f}'
+    ui_color: str = '#FFFFFF'
+    int_result: bool = False
+
+    def __init_subclass__(cls, **kwargs):
+        """Validate that all required class attributes are set."""
+        super().__init_subclass__(**kwargs)
+        required = ('stat_key', 'value_attr', 'base_attr', 'ui_label')
+        for attr in required:
+            val = getattr(cls, attr, '')
+            if not val and cls.__name__ != 'SimpleMultiplierAbility':
+                raise TypeError(f"{cls.__name__} must set class attribute '{attr}'")
+
+    def __init__(self, component, data):
+        super().__init__(component, data)
+        base_val = self._parse_primary_value(data)
+        if self.int_result:
+            base_val = int(base_val)
+        setattr(self, self.base_attr, base_val)
+        setattr(self, self.value_attr, base_val)
+
+    def sync_data(self, data):
+        """Update internal state when component data changes."""
+        super().sync_data(data)
+        base_val = self._parse_primary_value(data)
+        if self.int_result:
+            base_val = int(base_val)
+        setattr(self, self.base_attr, base_val)
+        setattr(self, self.value_attr, base_val)
+
+    def recalculate(self):
+        """Apply stat multiplier to base value."""
+        base = getattr(self, self.base_attr)
+        mult = self.get_effective_stat(self.stat_key, 1.0)
+        result = base * mult
+        if self.int_result:
+            result = int(result)
+        setattr(self, self.value_attr, result)
+
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
+        """Return UI row with label, formatted value, and color hint."""
+        val = getattr(self, self.value_attr)
+        return [{'label': self.ui_label, 'value': self.ui_format.format(val), 'color_hint': self.ui_color}]
+
+    def get_primary_value(self) -> float:
+        """Return current value as float for aggregation."""
+        return float(getattr(self, self.value_attr))
