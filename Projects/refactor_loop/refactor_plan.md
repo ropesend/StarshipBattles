@@ -8,21 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-181 Phase 6 Complete
-**Current Status:** PROJ-181 all phases complete, audit ready
-**Current Project:** PROJ-181
-**Current Phase:** Audit
+**Last Completed:** PROJ-181 Complete
+**Current Status:** PROJ-181 COMPLETE, next project: PROJ-182
+**Current Project:** PROJ-182
+**Current Phase:** Phase 1
 **Test Status:** 12373 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-181 Phase 6 COMPLETE:
-  - Grep verification passed (all hits in comments/deprecation tests)
-  - Full test suite: 12373 passed, 1 skipped
-  - Simulation tests: 62 passed, 5 pre-existing failures, 4 skipped
-  - Discovered and fixed bug: test_framework/runner.py line 101 was using old AIControllerFactory(grid) API
-  - Fixed to use no-arg constructor (BattleEngine calls set_grid automatically)
-- All 6 phases complete, ready for audit
+- PROJ-181 COMPLETE:
+  - All 6 phases completed
+  - Audit Cycle 1 PASSED: Found and fixed missed TYPE_CHECKING import in test_formation_flight.py
+  - All deprecated registry API functions eradicated
+  - Tests: 12373 passed, 1 skipped
+- Next: PROJ-182 Phase 1
 
 ---
 
@@ -126,10 +125,10 @@
 
 ---
 
-- [/] **PROJ-181: PROJ-174 Completion - Eradicate Deprecated Registry API**
-  - **Phases:** 6 | **Status:** All Phases Complete - Audit Ready | **Priority:** Medium
+- [x] **PROJ-181: PROJ-174 Completion - Eradicate Deprecated Registry API**
+  - **Phases:** 6 | **Status:** COMPLETE | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-181/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-181/plan.md)
-  - **Audit:** Pending | **Cycles:** 0/5
+  - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
 ---
@@ -222,6 +221,7 @@
 | 2026-02-24 | PROJ-181 | Phase 4 | Complete | 12373 passed, 1 skipped | pending | Removed redundant .clear() from 15 test files |
 | 2026-02-24 | PROJ-181 | Phase 5 | Complete | 12373 passed, 1 skipped | pending | Documentation updates: component_system.md + PATTERNS.md |
 | 2026-02-24 | PROJ-181 | Phase 6 | Complete | 12373 passed, 1 skipped | pending | Full verification + runner.py bug fix |
+| 2026-02-24 | PROJ-181 | Audit 1 | PASSED | 12373 passed, 1 skipped | pending | Fixed missed TYPE_CHECKING import in test_formation_flight.py |
 
 ---
 
