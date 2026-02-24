@@ -195,7 +195,7 @@ class SystemModeHelper:
             # Add "random" option at the start
             return ["random"] + sorted(blueprints)
         except (ImportError, FileNotFoundError, OSError, json.JSONDecodeError, KeyError) as e:
-            logger.info(f"Failed to load blueprints: {e}")
+            logger.warning(f"Failed to load blueprints: {e}")
             return ["random"]
 
     def generate(self):
@@ -235,7 +235,7 @@ class SystemModeHelper:
                 data = loader.load()
                 blueprint = loader.get_blueprint(self.selected_blueprint, data)
             except (ImportError, FileNotFoundError, OSError, json.JSONDecodeError, KeyError) as e:
-                logger.info(f"Failed to load blueprint '{self.selected_blueprint}': {e}")
+                logger.warning(f"Failed to load blueprint '{self.selected_blueprint}': {e}")
 
         # Generate stars
         star_gen = StarGenerator()
