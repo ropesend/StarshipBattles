@@ -5,8 +5,8 @@ Defines stat definitions, formatters, and validators for ship statistics display
 Cross-layer imports (acceptable for builder UI):
 - LayerType: Runtime - layer stat organization
 """
-import json
 from game.core.constants import LayerType, ResourceType  # Canonical location for LayerType
+from game.core.json_utils import load_json
 from game.core.logger import log_warning
 
 
@@ -287,19 +287,12 @@ UNITS = {
 
 def load_stats_config():
     """Load stats configuration from data/stats_layout.json."""
-    import json
     import os
-    
-    path = os.path.join(os.getcwd(), 'data', 'stats_layout.json')
-    if not os.path.exists(path):
-        print(f"Warning: {path} not found. Using empty config.")
-        return {}
 
-    try:
-        with open(path, 'r') as f:
-            data = json.load(f)
-    except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
-        log_warning(f"Error loading stats config: {e}")
+    path = os.path.join(os.getcwd(), 'data', 'stats_layout.json')
+    data = load_json(path, default={})
+    if not data:
+        log_warning(f"Stats config not found or empty: {path}")
         return {}
         
     loaded_groups = {}

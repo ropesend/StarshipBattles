@@ -9,7 +9,7 @@ Save Format Version 2.0.0:
 - Per-empire design folders: designs/empire_N/
 - Strict version checking (rejects all old saves)
 """
-import json
+from json import JSONDecodeError
 import os
 import shutil
 import traceback
@@ -136,7 +136,7 @@ class SaveGameService:
             metadata_path = os.path.join(save_path, "save_metadata.json")
             try:
                 metadata = load_json_required(metadata_path)
-            except json.JSONDecodeError as e:
+            except JSONDecodeError as e:
                 log_error(f"SaveGameService: Corrupt metadata JSON at {metadata_path} - {e}")
                 return None, f"Save file corrupted: Metadata file contains invalid JSON"
             except FileNotFoundError as e:
@@ -173,7 +173,7 @@ class SaveGameService:
 
             try:
                 game_state = load_json_required(turn_file)
-            except json.JSONDecodeError as e:
+            except JSONDecodeError as e:
                 log_error(f"SaveGameService: Corrupt turn JSON at {turn_file} - {e}")
                 return None, f"Save file corrupted: Turn {turn_number} contains invalid JSON"
             except FileNotFoundError as e:

@@ -7,7 +7,6 @@ DUP-UI2-001: Tkinter initialization now uses shared tkinter_utils module.
 """
 from __future__ import annotations
 
-import json
 import math
 import os
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set, Tuple
@@ -15,6 +14,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set, Tupl
 import pygame
 import pygame_gui
 
+from game.core.json_utils import load_json, save_json
 from game.core.logger import log_error, log_info
 from game.ui.screens.formation.input_handler import FormationInputHandler
 from game.ui.screens.formation.renderer import FormationRenderer
@@ -195,8 +195,10 @@ class FormationCore:
                 })
 
             data = {'arrows': out_arrows}
-            with open(filename, 'w') as f: json.dump(data, f, indent=4)
-            log_info(f"Formation saved to {filename}")
+            if save_json(filename, data, indent=4):
+                log_info(f"Formation saved to {filename}")
+            else:
+                log_error(f"Failed to save formation to {filename}")
         except OSError as e:
             log_error(f"Error saving formation (file error): {e}")
         except (TypeError, ValueError) as e:
@@ -204,30 +206,26 @@ class FormationCore:
 
     def load_from_file(self, filename: str) -> None:
         try:
-            with open(filename, 'r') as f:
-                data = json.load(f)
-                if 'arrows' in data:
-                    raw_arrows = data['arrows']
-                    self.arrows = []
-                    self.arrow_attrs = []
-                    for item in raw_arrows:
-                        # PROJ-42 Phase 4: Removed legacy list format support
-                        # Arrows must be dict format: {"pos": [x, y], "rotation_mode": "..."}
-                        if not isinstance(item, dict):
-                            raise ValueError(f"Arrow must be dict format, got {type(item).__name__}")
-                        self.arrows.append(item.get('pos', [0, 0]))
-                        self.arrow_attrs.append({'rotation_mode': item.get('rotation_mode', 'relative')})
+            data = load_json(filename)
+            if data is None:
+                log_error(f"Formation file not found or unreadable: {filename}")
+                return
+            if 'arrows' in data:
+                raw_arrows = data['arrows']
+                self.arrows = []
+                self.arrow_attrs = []
+                for item in raw_arrows:
+                    # PROJ-42 Phase 4: Removed legacy list format support
+                    # Arrows must be dict format: {"pos": [x, y], "rotation_mode": "..."}
+                    if not isinstance(item, dict):
+                        raise ValueError(f"Arrow must be dict format, got {type(item).__name__}")
+                    self.arrows.append(item.get('pos', [0, 0]))
+                    self.arrow_attrs.append({'rotation_mode': item.get('rotation_mode', 'relative')})
 
-                    self.selected_indices = set()
-                    log_info(f"Formation loaded from {filename} ({len(self.arrows)} arrows)")
-        except FileNotFoundError:
-            log_error(f"Formation file not found: {filename}")
-        except json.JSONDecodeError as e:
-            log_error(f"Invalid JSON in formation file {filename}: {e}")
+                self.selected_indices = set()
+                log_info(f"Formation loaded from {filename} ({len(self.arrows)} arrows)")
         except (KeyError, ValueError) as e:
             log_error(f"Invalid formation data in {filename}: {e}")
-        except OSError as e:
-            log_error(f"Error reading formation file {filename}: {e}")
 
 class FormationEditorScreen:
     """Main UI screen for the formation editor with canvas, toolbar, and event handling.

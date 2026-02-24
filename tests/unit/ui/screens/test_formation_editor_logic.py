@@ -121,21 +121,21 @@ class TestFormationCore:
         assert avg_y == pytest.approx(0, abs=5.0)
 
     def test_save_to_file(self):
-        """Test saving logic using mock file."""
+        """Test saving logic using mock save_json."""
         self.core.arrows = [[10, 20]]
         self.core.arrow_attrs = [{'rotation_mode': 'fixed'}]
 
-        with patch('builtins.open', mock_open()) as mock_file:
-            with patch('json.dump') as mock_dump:
-                self.core.save_to_file("test.json")
+        with patch('game.ui.screens.formation_editor.save_json', return_value=True) as mock_save:
+            self.core.save_to_file("test.json")
 
-                mock_file.assert_called_with("test.json", 'w')
-                mock_dump.assert_called()
-                args, _ = mock_dump.call_args
-                expected_data = {
-                    'arrows': [{'pos': [10, 20], 'rotation_mode': 'fixed'}]
-                }
-                assert args[0] == expected_data
+            mock_save.assert_called_once()
+            args, kwargs = mock_save.call_args
+            assert args[0] == "test.json"
+            expected_data = {
+                'arrows': [{'pos': [10, 20], 'rotation_mode': 'fixed'}]
+            }
+            assert args[1] == expected_data
+            assert kwargs.get('indent') == 4
 
     def test_load_from_file(self):
         """Test loading logic using mock file."""
@@ -146,7 +146,7 @@ class TestFormationCore:
             ]
         }
 
-        with patch('builtins.open', mock_open(read_data=json.dumps(sample_data))):
+        with patch('game.ui.screens.formation_editor.load_json', return_value=sample_data):
             self.core.load_from_file("test.json")
 
             assert len(self.core.arrows) == 2

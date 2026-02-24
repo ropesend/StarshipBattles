@@ -62,7 +62,10 @@ def load_json(
     except json.JSONDecodeError as e:
         log_error(f"Invalid JSON in {file_path}: {e}")
         return default
-    except IOError as e:
+    except PermissionError as e:
+        log_error(f"Permission denied reading {file_path}: {e}")
+        return default
+    except OSError as e:
         log_error(f"Error reading {file_path}: {e}")
         return default
 
@@ -135,7 +138,10 @@ def save_json(
 
         log_debug(f"Saved JSON to {file_path}")
         return True
-    except IOError as e:
+    except PermissionError as e:
+        log_error(f"Permission denied writing to {file_path}: {e}")
+        return False
+    except OSError as e:
         log_error(f"Failed to save JSON to {file_path}: {e}")
         return False
     except TypeError as e:

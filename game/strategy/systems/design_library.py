@@ -5,7 +5,7 @@ This module provides the DesignLibrary class for managing ship designs in
 integrated mode, including saving, loading, filtering, and marking designs
 as obsolete. Designs are stored in the savegame's designs folder.
 """
-import json
+from json import JSONDecodeError
 import os
 import glob
 from typing import List, Optional, Tuple, Set
@@ -87,7 +87,7 @@ class DesignLibrary:
                 metadata = DesignMetadata.from_design_file(filepath, design_id)
                 log_debug(f"scan_designs: Loaded design '{metadata.name}' (vehicle_type={metadata.vehicle_type}, design_id={design_id})")
                 designs.append(metadata)
-            except json.JSONDecodeError as e:
+            except JSONDecodeError as e:
                 log_error(f"scan_designs: Corrupt JSON in design file {filepath}: {e}")
                 continue
             except KeyError as e:
@@ -213,7 +213,7 @@ class DesignLibrary:
 
         try:
             return load_json_required(filepath)
-        except json.JSONDecodeError as e:
+        except JSONDecodeError as e:
             log_warning(f"DesignLibrary: Corrupt JSON in design '{design_id}' at '{filepath}': {e}")
             return None
         except (PermissionError, OSError) as e:
@@ -254,7 +254,7 @@ class DesignLibrary:
             status = "obsolete" if is_obsolete else "active"
             return True, f"Marked design as {status}"
 
-        except json.JSONDecodeError as e:
+        except JSONDecodeError as e:
             return False, f"Design file is corrupted"
         except (PermissionError, OSError) as e:
             return False, f"Failed to update design: {str(e)}"
@@ -293,7 +293,7 @@ class DesignLibrary:
 
             return True
 
-        except json.JSONDecodeError as e:
+        except JSONDecodeError as e:
             log_warning(f"DesignLibrary: Corrupt JSON in design '{design_id}': {e}")
             return False
         except (PermissionError, OSError) as e:

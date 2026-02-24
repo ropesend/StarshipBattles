@@ -396,9 +396,10 @@ class TestSaveGameServiceExceptionHandling:
 
     def test_get_save_info_returns_none_on_error(self, setup_tmpdir):
         """get_save_info should return None on errors, not raise."""
-        # Mock load_json to raise
+        # load_json catches exceptions and returns None, so mock it to return None
+        # to simulate a read failure (PermissionError, etc.)
         with patch('game.strategy.systems.save_game_service.load_json',
-                   side_effect=PermissionError("Cannot read")):
+                   return_value=None):
             info = SaveGameService.get_save_info("SomeSave")
 
         assert info is None
