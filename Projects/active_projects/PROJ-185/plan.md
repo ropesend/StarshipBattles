@@ -15,14 +15,14 @@
 |-------|--------|-----------|
 | 1. Ghost Code & Comment Cleanup | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Remove Legacy Constant Aliases | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Remove Fleet Lookup Fallback | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Remove Fleet Lookup Fallback | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Build Queue Single-Select Shim Removal | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 3 - Remove Fleet Lookup Fallback
-**Last Action:** Phase 2 Complete - Removed legacy aliases, migrated usages to PROP002_/PROP001B_ constants
-**Next Action:** Execute Phase 3
+**Active Phase:** Phase 4 - Build Queue Single-Select Shim Removal
+**Last Action:** Phase 3 Complete - Removed O(n) fallback in game_session.py, updated integration tests
+**Next Action:** Execute Phase 4
 **Blockers:** None
 **Context for Next Agent:** Baseline is 12366 passed, 1 skipped. Pre-existing simulation_tests failures exist (unrelated to this project).
 

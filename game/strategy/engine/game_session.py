@@ -209,11 +209,7 @@ class GameSession:
 
     def _get_fleet_by_id(self, fleet_id: int):
         """
-        Find fleet by ID, using Galaxy registry for O(1) lookup with fallback.
-
-        PROJ-87 Phase 6: Tries galaxy.get_fleet_by_id() first for O(1) performance.
-        Falls back to O(n) empire iteration for backward compatibility with tests
-        that don't register fleets with the galaxy.
+        Find fleet by ID via Galaxy registry (O(1) lookup).
 
         Args:
             fleet_id: Fleet ID to find.
@@ -221,17 +217,8 @@ class GameSession:
         Returns:
             Fleet if found, None otherwise.
         """
-        # Try O(1) registry lookup first
-        fleet = self.galaxy.get_fleet_by_id(fleet_id)
-        if fleet is not None:
-            return fleet
-
-        # Fallback to O(n) iteration (for backward compatibility)
-        for emp in self.empires:
-            for f in emp.fleets:
-                if f.id == fleet_id:
-                    return f
-        return None
+        # O(1) Galaxy registry lookup
+        return self.galaxy.get_fleet_by_id(fleet_id)
 
     def _get_planet_by_id(self, planet_id: int):
         """

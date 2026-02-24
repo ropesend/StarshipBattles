@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-185 Phase 2 Complete
-**Current Status:** PROJ-185 Phase 2 complete, ready for Phase 3
+**Last Completed:** PROJ-185 Phase 3 Complete
+**Current Status:** PROJ-185 Phase 3 complete, ready for Phase 4
 **Current Project:** PROJ-185
-**Current Phase:** Phase 3
+**Current Phase:** Phase 4
 **Test Status:** 12366 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-185 Phase 2 Complete:
-  - Removed legacy aliases block (lines 257-280) from propulsion_scenarios.py
-  - Plan incorrectly stated "zero consumers" - aliases WERE used internally by PropThrustMassRatioScenario
-  - Migrated usages to PROP002_/PROP001B_ prefixed constants
-  - Pre-existing simulation_tests failures unrelated to this change
-- Next: Phase 3 - Remove Fleet Lookup O(n) Fallback in game_session.py
+- PROJ-185 Phase 3 Complete:
+  - Removed O(n) fallback in game_session.py _get_fleet_by_id()
+  - Simplified method to single-line delegation to galaxy.get_fleet_by_id()
+  - Fixed 16 integration tests that relied on fallback (added galaxy.register_fleet() calls)
+  - Files: game_session.py, test_command_handlers.py, test_facade_integration.py
+- Next: Phase 4 - Build Queue Single-Select Shim Removal
 
 ---
 
@@ -257,6 +257,7 @@
 | 2026-02-24 | PROJ-184 | Audit 1 | PASSED | 12366 passed, 1 skipped | pending | All objectives verified, project complete |
 | 2026-02-24 | PROJ-185 | Phase 1 | Complete | 12366 passed, 1 skipped | pending | 6 tasks: stale code + misleading comments fixed |
 | 2026-02-24 | PROJ-185 | Phase 2 | Complete | 12366 passed, 1 skipped | pending | Removed legacy aliases, migrated to PROP002_/PROP001B_ constants |
+| 2026-02-24 | PROJ-185 | Phase 3 | Complete | 12366 passed, 1 skipped | pending | Removed O(n) fallback, updated 16 integration tests |
 
 ---
 
