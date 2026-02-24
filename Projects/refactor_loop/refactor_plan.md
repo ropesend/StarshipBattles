@@ -8,20 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-179 Audit Cycle 1 - PASSED
-**Current Status:** PROJ-179 complete, ready for PROJ-180
+**Last Completed:** PROJ-180 Phase 1 - Delete Ghost Code
+**Current Status:** Phase 1 complete, ready for Phase 2
 **Current Project:** PROJ-180
-**Current Phase:** Phase 1
+**Current Phase:** Phase 2
 **Test Status:** 12358 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-179 AUDIT PASSED:
-  - All 4 objectives verified complete
-  - Phase 1: Delegation + docstring fixes
-  - Phase 2: restore_planet(), O(1) get_system_at_location(), new indexes
-  - 17 new tests, all passing
-- Next: Start PROJ-180 (PROJ-172 Post-Refactor Cleanup)
+- PROJ-180 Phase 1 COMPLETE:
+  - Deleted `get_column_visibility_changed()` ghost code from empire_build_queue_sidebar.py
+  - Removed section comment + method (16 lines)
+  - 118 unit tests pass
+- Next: Phase 2 - Eradicate backward-compat properties (14 properties, 6 test files to update)
 
 ---
 
@@ -117,8 +116,8 @@
 
 ---
 
-- [ ] **PROJ-180: PROJ-172 Post-Refactor Cleanup**
-  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-180: PROJ-172 Post-Refactor Cleanup**
+  - **Phases:** 3 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-180/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-180/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -211,6 +210,7 @@
 | 2026-02-24 | PROJ-179 | Phase 1 | Complete | 12358 passed, 1 skipped | pending | Delegation fix + docstring updates |
 | 2026-02-24 | PROJ-179 | Phase 2 | Complete | 12358 passed, 1 skipped | pending | restore_planet() + O(1) get_system_at_location() + 17 tests |
 | 2026-02-24 | PROJ-179 | Audit 1 | PASSED | 12358 passed, 1 skipped | pending | All objectives verified, project complete |
+| 2026-02-24 | PROJ-180 | Phase 1 | Complete | 12358 passed, 1 skipped | pending | Deleted ghost code (get_column_visibility_changed) |
 
 ---
 

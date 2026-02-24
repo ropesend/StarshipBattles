@@ -258,19 +258,3 @@ class EmpireBuildQueueSidebar:
             self.viewmodel.set_search_text(self.search_entry.get_text())
         self.viewmodel.apply_filters()
 
-    # -----------------------------------------------------------------------
-    # Column State Access (for window to rebuild headers)
-    # -----------------------------------------------------------------------
-
-    def get_column_visibility_changed(self) -> bool:
-        """Check if column visibility needs UI rebuild.
-
-        Note: This is a simple flag check - window calls this after
-        handle_button_click returns True for a column toggle.
-
-        Returns:
-            True if column visibility was toggled in last button click.
-        """
-        # Currently handled synchronously - window rebuilds immediately
-        # after handle_button_click returns True for column toggle
-        return False

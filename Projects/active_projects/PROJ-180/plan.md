@@ -13,17 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Delete Ghost Code | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Delete Ghost Code | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Eradicate Backward Compat Properties | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract WeaponsInputHandler | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Planning - Awaiting Approval
-**Last Action:** Plan created from PROJ-172 audit findings + independent code review
-**Next Action:** User approval, then begin Phase 1
+**Active Phase:** Phase 2 - Eradicate Backward Compat Properties
+**Last Action:** Phase 1 complete - deleted ghost code (get_column_visibility_changed)
+**Next Action:** Begin Phase 2 Task 2.1 - update test_build_queue_screen.py
 **Blockers:** None
-**Baseline:** 12338 passed, 1 skipped, 0 failures
+**Baseline:** 12358 passed, 1 skipped, 0 failures
 
 ## Overview
 Clean up remaining issues from the PROJ-172 god-class MVVM decomposition. Three categories of work:
@@ -257,7 +257,7 @@ Independent code review by 5 parallel agents confirmed all audit findings:
 | 1 | | | |
 
 ## Completion Checklist
-- [ ] Phase 1 complete (ghost code deleted)
+- [x] Phase 1 complete (ghost code deleted)
 - [ ] Phase 2 complete (backward-compat properties eradicated)
 - [ ] Phase 3 complete (WeaponsInputHandler extracted)
 - [ ] All tests passing
