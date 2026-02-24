@@ -16,16 +16,16 @@
 | 1. Complete IRegistryProvider Protocol | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Internalize RegistryManager | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate TIER 2 Production Code | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Migrate TIER 3 Non-Root Code | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Migrate TIER 3 Non-Root Code | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Update Test Mocks & Deprecate | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-23
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete - Migrated all TIER 2 production code to use get_default_registry_provider()
-**Next Action:** Begin Phase 4 - Migrate TIER 3 Non-Root Code (ship_loader.py)
+**Active Phase:** Phase 5
+**Last Action:** Phase 4 complete - Migrated ship_loader.py to provider pattern
+**Next Action:** Begin Phase 5 - Update Test Mocks & Deprecate
 **Blockers:** None
-**Context for Next Agent:** Tests: 11972 passed, 1 skipped. All production get_default_registries() calls migrated to provider pattern. grep verification passed - only definition remains in registry.py. Files modified: fleet_capability_calculator.py, turn_engine.py, ship_instance.py, ship_stats.py (docstring), empire_economy_calculator.py (docstring), ship_factory.py, design_loader_adapter.py, planet_report_panel.py, empire_panel_window.py, workshop_context.py.
+**Context for Next Agent:** Tests: 11972 passed, 1 skipped. ship_loader.py migrated: get_or_create_validator() and load_vehicle_classes() now use provider pattern with optional registry_provider param. One RegistryManager.instance() call remains for validator storage (lifecycle concern, acceptable). Test file updated to use DI pattern. Files modified: ship_loader.py, test_ship_loader.py.
 
 ## Overview
 Consolidate all registry access onto the single canonical IRegistryProvider DI pattern. The codebase currently has three access tiers: TIER 3 (direct singleton `RegistryManager.instance()`), TIER 2 (service locator `get_default_registries()`), and TIER 1 (DI provider `get_default_registry_provider()`). This project eliminates TIER 2 and TIER 3 from all non-composition-root code, completing the migration to DI that began in PROJ-27.
