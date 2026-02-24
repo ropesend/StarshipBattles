@@ -133,6 +133,35 @@ def hex_to_pixel(hex_coord: HexCoord, size: float) -> Tuple[float, float]:
     return x, y
 
 
+def hex_axial_to_cartesian(
+    q: float,
+    r: float,
+    center_q: float = 0.0,
+    center_r: float = 0.0
+) -> Tuple[float, float]:
+    """
+    Convert axial hex coordinates to approximate Cartesian (x, y).
+
+    Maps flat-topped hexagonal axial coordinates to a 2D Cartesian plane.
+    This is a raw coordinate conversion without pixel scaling - for UI
+    rendering, use hex_to_pixel() instead.
+
+    Args:
+        q: Axial q coordinate
+        r: Axial r coordinate
+        center_q: Center q to compute relative offset (default 0.0)
+        center_r: Center r to compute relative offset (default 0.0)
+
+    Returns:
+        Tuple (x, y) in Cartesian coordinates
+    """
+    dq = q - center_q
+    dr = r - center_r
+    x = dq + dr * 0.5
+    y = dr * (math.sqrt(3.0) / 2.0)
+    return x, y
+
+
 def pixel_to_hex(x: float, y: float, size: float) -> 'HexCoord':
     """
     Convert pixel coordinates back to axial hex coords.

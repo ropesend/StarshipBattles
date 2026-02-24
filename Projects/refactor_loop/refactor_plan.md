@@ -8,19 +8,18 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-167 Complete — UI color palette centralization
-**Current Status:** PROJ-167 complete, audit passed — ready for PROJ-168
+**Last Completed:** PROJ-168 Phase 1 — hex_axial_to_cartesian() function + tests
+**Current Status:** PROJ-168 Phase 1 complete, Phase 2 ready
 **Current Project:** PROJ-168
-**Current Phase:** Phase 1
-**Test Status:** 12016 passed, 1 skipped
+**Current Phase:** Phase 2
+**Test Status:** 75 hex_math tests pass
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-167 fully complete: 22 ability HINT_* constants, 39 UI semantic constants
-- Fixed detail_panel.py default color parameter in Phase 5
-- Audit cycle 1 passed with no issues
-- 12016 tests passing
-- Next: PROJ-168 — Extract Hex-to-Cartesian Conversion Helper
+- Phase 1 complete: hex_axial_to_cartesian() added to game/core/hex_math.py
+- 7 new unit tests in tests/unit/core/test_hex_math_core.py
+- Function takes q, r, center_q, center_r and returns (x, y) Cartesian
+- Next: Phase 2 — Update 5 call sites (spiral_arm, linear, geometric, noise, region_classifier)
 
 ---
 
@@ -64,8 +63,8 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
-- [ ] **PROJ-168: Extract Hex-to-Cartesian Conversion Helper**
-  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-168: Extract Hex-to-Cartesian Conversion Helper**
+  - **Phases:** 3 | **Status:** In Progress | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-168/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-168/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -112,6 +111,7 @@
 | 2026-02-23 | PROJ-167 | Phase 5 | Complete | 12016 pass | pending | Verification & cleanup, detail_panel.py fix |
 | 2026-02-23 | PROJ-167 | Audit 1 | PASSED | 12016 pass | - | No issues found |
 | 2026-02-23 | PROJ-167 | Close | COMPLETE | - | - | Project marked complete |
+| 2026-02-23 | PROJ-168 | Phase 1 | Complete | 75 pass | pending | hex_axial_to_cartesian() + 7 tests |
 
 ---
 

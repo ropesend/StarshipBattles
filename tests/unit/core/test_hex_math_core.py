@@ -11,6 +11,7 @@ from game.core.hex_math import (
     HexCoord,
     hex_distance,
     hex_to_pixel,
+    hex_axial_to_cartesian,
     pixel_to_hex,
     hex_ring,
     hex_circle_filled,
@@ -345,6 +346,55 @@ class TestHexToPixel:
         # y = 10 * (sqrt(3)/2 * 1 + sqrt(3) * 0) = 10 * sqrt(3)/2
         expected_y = 10 * (math.sqrt(3) / 2)
         assert abs(y - expected_y) < 0.001
+
+
+class TestHexAxialToCartesian:
+    """Tests for hex_axial_to_cartesian function."""
+
+    def test_origin_returns_zero(self):
+        """(0, 0) with default center returns (0.0, 0.0)."""
+        x, y = hex_axial_to_cartesian(0, 0)
+        assert x == 0.0
+        assert y == 0.0
+
+    def test_q_only_offset(self):
+        """(1, 0) maps to (1.0, 0.0) — pure q movement."""
+        x, y = hex_axial_to_cartesian(1, 0)
+        assert x == 1.0
+        assert y == 0.0
+
+    def test_r_only_offset(self):
+        """(0, 1) maps to (0.5, sqrt(3)/2)."""
+        x, y = hex_axial_to_cartesian(0, 1)
+        assert abs(x - 0.5) < 1e-10
+        assert abs(y - math.sqrt(3.0) / 2.0) < 1e-10
+
+    def test_with_center_offset(self):
+        """center_q=5, center_r=3 produces correct delta."""
+        x, y = hex_axial_to_cartesian(5, 3, center_q=5, center_r=3)
+        assert x == 0.0
+        assert y == 0.0
+
+    def test_matches_hardcoded_constant(self):
+        """Result matches the hardcoded 0.8660254037844386 constant."""
+        _, y = hex_axial_to_cartesian(0, 1)
+        assert abs(y - 0.8660254037844386) < 1e-15
+
+    def test_negative_coords(self):
+        """Negative coordinates produce correct signs."""
+        x, y = hex_axial_to_cartesian(-2, -3)
+        expected_x = -2 + (-3) * 0.5  # -3.5
+        expected_y = -3 * math.sqrt(3.0) / 2.0
+        assert abs(x - expected_x) < 1e-10
+        assert abs(y - expected_y) < 1e-10
+
+    def test_float_inputs(self):
+        """Float q, r inputs work correctly."""
+        x, y = hex_axial_to_cartesian(1.5, 2.5)
+        expected_x = 1.5 + 2.5 * 0.5  # 2.75
+        expected_y = 2.5 * math.sqrt(3.0) / 2.0
+        assert abs(x - expected_x) < 1e-10
+        assert abs(y - expected_y) < 1e-10
 
 
 class TestPixelToHex:
