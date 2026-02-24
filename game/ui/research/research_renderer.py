@@ -15,6 +15,11 @@ from typing import Dict, Tuple, Optional, TYPE_CHECKING
 from game.core.protocols import ICamera
 from game.research.data.tech_tree import TechTree
 from game.research.data.research_tracker import ResearchTracker
+from game.ui.colors import (
+    RESEARCH_LOCKED, RESEARCH_AVAILABLE, RESEARCH_COMPLETED, RESEARCH_SELECTED,
+    RESEARCH_LINE_UNMET, RESEARCH_LINE_MET, RESEARCH_LINE_NEGATED, RESEARCH_LINE_NEGATED_MET,
+    RESEARCH_TEXT, RESEARCH_CHANCE, RESEARCH_ALLOCATION
+)
 
 if TYPE_CHECKING:
     from game.research.data.tech_node import TechNode
@@ -28,19 +33,19 @@ class ResearchRenderer:
     Uses the Camera for coordinate transformations and viewport culling.
     """
 
-    # Colors
-    COLOR_LOCKED = (80, 80, 90)        # Grey
-    COLOR_AVAILABLE = (50, 100, 180)   # Blue
-    COLOR_COMPLETED = (50, 140, 60)    # Green
-    COLOR_SELECTED = (200, 180, 50)    # Yellow/Gold border
-    COLOR_LINE = (60, 65, 75)          # Dependency lines
-    COLOR_LINE_MET = (80, 120, 80)     # Met dependency lines
+    # Colors - imported from game.ui.colors for centralization
+    COLOR_LOCKED = RESEARCH_LOCKED
+    COLOR_AVAILABLE = RESEARCH_AVAILABLE
+    COLOR_COMPLETED = RESEARCH_COMPLETED
+    COLOR_SELECTED = RESEARCH_SELECTED
+    COLOR_LINE = RESEARCH_LINE_UNMET
+    COLOR_LINE_MET = RESEARCH_LINE_MET
     # PROJ-40/NEW-RES-007: Visual indicator for negated requirements
-    COLOR_LINE_NEGATED = (180, 80, 80)      # Red for negated (NOT) dependencies
-    COLOR_LINE_NEGATED_MET = (100, 60, 60)  # Darker red when met (tech is below level)
-    COLOR_TEXT = (220, 220, 230)       # Node text
-    COLOR_CHANCE = (255, 220, 100)     # Chance percentage
-    COLOR_ALLOCATION = (255, 255, 0)   # RP allocation - bright yellow for visibility
+    COLOR_LINE_NEGATED = RESEARCH_LINE_NEGATED
+    COLOR_LINE_NEGATED_MET = RESEARCH_LINE_NEGATED_MET
+    COLOR_TEXT = RESEARCH_TEXT
+    COLOR_CHANCE = RESEARCH_CHANCE
+    COLOR_ALLOCATION = RESEARCH_ALLOCATION
 
     def __init__(self, tech_tree: TechTree, tracker: ResearchTracker,
                  node_positions: Dict[str, Tuple[float, float]],

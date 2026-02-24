@@ -11,16 +11,17 @@ import pygame
 from game.simulation.components.component_constants import ComponentStatus
 from game.core.strategy_metadata import StrategyMetadataService
 from game.ui.config import UIConfig
+from game.ui.colors import RESOURCE_FUEL, RESOURCE_ENERGY, RESOURCE_AMMO, RESOURCE_SHIELD, HP_HEALTHY, HP_DAMAGED, HP_CRITICAL
 from game.core.constants import CombatConstants, LayerType, ResourceType
 
 
 # Define standard colors for known resources (fallback to gray)
 RESOURCE_COLORS = {
-    ResourceType.FUEL: (255, 165, 0),      # Orange
-    ResourceType.ENERGY: (100, 200, 255),  # Blue
-    ResourceType.AMMO: (200, 200, 100),    # Yellow-ish
-    'biomass': (100, 255, 100), # Green
-    'shield': (0, 200, 255)     # Cyan
+    ResourceType.FUEL: RESOURCE_FUEL,
+    ResourceType.ENERGY: RESOURCE_ENERGY,
+    ResourceType.AMMO: RESOURCE_AMMO,
+    'biomass': (100, 255, 100),  # Green (domain-specific, not in palette)
+    'shield': RESOURCE_SHIELD
 }
 
 # Resource display order priority
@@ -268,12 +269,12 @@ def draw_ship_vitals(surface, ship, x_indent, y, bar_w, bar_h, font):
         shield_pct = ship.current_shields / ship.max_shields
         text = font.render(f"Shield: {int(ship.current_shields)}/{int(ship.max_shields)}", True, (180, 180, 180))
         surface.blit(text, (x_indent, y))
-        draw_stat_bar(surface, x_indent + 100, y, bar_w, bar_h, shield_pct, (0, 200, 255))
+        draw_stat_bar(surface, x_indent + 100, y, bar_w, bar_h, shield_pct, RESOURCE_SHIELD)
         y += UIConfig.ELEMENT_SPACING
 
     # HP
     hp_pct = ship.hp / ship.max_hp if ship.max_hp > 0 else 0
-    hp_color = (0, 255, 0) if hp_pct > 0.5 else ((255, 200, 0) if hp_pct > 0.2 else (255, 50, 50))
+    hp_color = HP_HEALTHY if hp_pct > 0.5 else (HP_DAMAGED if hp_pct > 0.2 else HP_CRITICAL)
     text = font.render(f"HP: {int(ship.hp)}/{int(ship.max_hp)}", True, (180, 180, 180))
     surface.blit(text, (x_indent, y))
     draw_stat_bar(surface, x_indent + 100, y, bar_w, bar_h, hp_pct, hp_color)

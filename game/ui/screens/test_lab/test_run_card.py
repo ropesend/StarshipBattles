@@ -5,7 +5,7 @@ Displays a single test run in collapsed card form.
 
 import pygame
 
-from game.ui.colors import FONT_MAIN
+from game.ui.colors import FONT_MAIN, TEST_PASS, TEST_FAIL
 from game.ui.screens.test_lab.formatting_utils import format_value
 
 
@@ -38,12 +38,12 @@ class TestRunCard:
         self.bg_hover_color = (45, 45, 50)
         self.bg_selected_color = (55, 100, 150)  # Blue tint for selected
         self.latest_bg_color = (40, 45, 50)  # Slightly different for latest
-        self.pass_color = (80, 255, 120)
-        self.fail_color = (255, 80, 80)
+        self.pass_color = TEST_PASS
+        self.fail_color = TEST_FAIL
         self.text_color = (220, 220, 220)
         self.border_color = (100, 100, 120)
-        self.border_pass_color = (80, 255, 120)
-        self.border_fail_color = (255, 80, 80)
+        self.border_pass_color = TEST_PASS
+        self.border_fail_color = TEST_FAIL
         self.border_selected_color = (100, 150, 255)
 
         # Fonts

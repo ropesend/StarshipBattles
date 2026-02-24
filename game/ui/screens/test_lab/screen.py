@@ -9,7 +9,7 @@ import pygame_gui
 import os
 import sys
 
-from game.ui.colors import FONT_MAIN
+from game.ui.colors import FONT_MAIN, TEST_PASS, TEST_FAIL
 from game.core.config import DisplayConfig
 WIDTH, HEIGHT = DisplayConfig.DEFAULT_WIDTH, DisplayConfig.DEFAULT_HEIGHT
 from game.core.json_utils import load_json
@@ -1548,7 +1548,7 @@ class TestLabScreen:
                 # Check if this item is verified by validation results
                 if validation_results and self._is_condition_verified(item, validation_results):
                     # Draw green "V" on right edge
-                    v_surf = self.body_font.render("V", True, (80, 255, 120))  # Green
+                    v_surf = self.body_font.render("V", True, TEST_PASS)
                     v_x = x + self.metadata_width - 40  # Right edge with padding
                     screen.blit(v_surf, (v_x, y - 2))
 
@@ -1687,13 +1687,13 @@ class TestLabScreen:
 
         # Determine overall status color
         if fail_count > 0:
-            summary_color = (255, 80, 80)  # Red
+            summary_color = TEST_FAIL
             status_symbol = "X"
         elif warn_count > 0:
-            summary_color = (255, 200, 80)  # Yellow/Orange
+            summary_color = (255, 200, 80)  # Yellow/Orange (unique)
             status_symbol = "!"
         else:
-            summary_color = (80, 255, 120)  # Green
+            summary_color = TEST_PASS
             status_symbol = "V"
 
         # Summary line
@@ -1712,10 +1712,10 @@ class TestLabScreen:
 
             # Status color
             if status == 'PASS':
-                status_color = (80, 255, 120)
+                status_color = TEST_PASS
                 symbol = "V"
             elif status == 'FAIL':
-                status_color = (255, 80, 80)
+                status_color = TEST_FAIL
                 symbol = "X"
             elif status == 'WARN':
                 status_color = (255, 200, 80)
@@ -1824,15 +1824,15 @@ class TestLabScreen:
 
             if fail_count > 0:
                 # Failures - red circle with X
-                color = (255, 80, 80)
+                color = TEST_FAIL
                 symbol = "X"
             elif warn_count > 0:
                 # Warnings - yellow circle with !
-                color = (255, 200, 80)
+                color = (255, 200, 80)  # Yellow/Orange (unique)
                 symbol = "!"
             else:
                 # All passed - green circle with checkmark
-                color = (80, 255, 120)
+                color = TEST_PASS
                 symbol = "V"
 
         # Draw circle

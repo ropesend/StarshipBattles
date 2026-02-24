@@ -1,6 +1,7 @@
 import pygame
 from game.core.profiling import profile_action
 from game.ui.config import UIConfig
+from game.ui.colors import HP_HEALTHY, HP_DAMAGED, HP_CRITICAL, RESOURCE_FUEL
 from game.ui.panels.ship_stats_renderer import (
     draw_stat_bar, draw_ship_info_header, draw_ship_vitals,
     draw_ship_resources, draw_ship_combat_stats, draw_ship_weapons,
@@ -402,7 +403,7 @@ class SeekerMonitorPanel(BattlePanel):
         hp = getattr(proj, 'hp', 0)
         max_hp = getattr(proj, 'max_hp', hp) if getattr(proj, 'max_hp', 0) > 0 else max(hp, 1)
         hp_pct = hp / max_hp if max_hp > 0 else 0
-        hp_color = (0, 255, 0) if hp_pct > 0.5 else ((255, 200, 0) if hp_pct > 0.2 else (255, 50, 50))
+        hp_color = HP_HEALTHY if hp_pct > 0.5 else (HP_DAMAGED if hp_pct > 0.2 else HP_CRITICAL)
         
         txt = font.render(f"HP: {hp:.0f}/{max_hp:.0f}", True, (180, 180, 180))
         surface.blit(txt, (x_indent, y))
@@ -413,7 +414,7 @@ class SeekerMonitorPanel(BattlePanel):
         endurance = getattr(proj, 'endurance', 0)
         max_endurance = getattr(proj, 'max_endurance', endurance) if getattr(proj, 'max_endurance', 0) > 0 else max(endurance, 1)
         fuel_pct = endurance / max_endurance if max_endurance > 0 else 0
-        fuel_color = (255, 165, 0) if fuel_pct > 0.3 else (255, 50, 50)
+        fuel_color = RESOURCE_FUEL if fuel_pct > 0.3 else HP_CRITICAL
         
         txt = font.render(f"Fuel: {endurance:.1f}s", True, (180, 180, 180))
         surface.blit(txt, (x_indent, y))

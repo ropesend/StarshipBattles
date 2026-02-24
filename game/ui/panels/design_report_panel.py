@@ -15,6 +15,10 @@ import pygame_gui
 from pygame_gui.elements import UIImage, UILabel, UIPanel, UITextBox
 from typing import Optional, TYPE_CHECKING
 from game.ui.panels.design_stats_panel import DesignStatsPanel
+from game.ui.colors import (
+    SHIP_CLASS_FIGHTER, SHIP_CLASS_CORVETTE, SHIP_CLASS_ESCORT, SHIP_CLASS_DESTROYER,
+    SHIP_CLASS_CRUISER, SHIP_CLASS_BATTLESHIP, SHIP_CLASS_CARRIER, SHIP_CLASS_DEFAULT
+)
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -220,17 +224,17 @@ class DesignReportPanel:
 
             # Simple gradient based on ship class
             class_colors = {
-                'Fighter': (255, 150, 50),
-                'Corvette': (100, 200, 100),
-                'Escort': (100, 150, 255),
-                'Frigate': (100, 150, 255),
-                'Destroyer': (255, 100, 100),
-                'Cruiser': (200, 100, 255),
-                'Battleship': (255, 200, 50),
-                'Carrier': (150, 255, 200)
+                'Fighter': SHIP_CLASS_FIGHTER,
+                'Corvette': SHIP_CLASS_CORVETTE,
+                'Escort': SHIP_CLASS_ESCORT,
+                'Frigate': SHIP_CLASS_ESCORT,  # Same as Escort
+                'Destroyer': SHIP_CLASS_DESTROYER,
+                'Cruiser': SHIP_CLASS_CRUISER,
+                'Battleship': SHIP_CLASS_BATTLESHIP,
+                'Carrier': SHIP_CLASS_CARRIER
             }
 
-            base_color = class_colors.get(ship_class, (150, 150, 150))
+            base_color = class_colors.get(ship_class, SHIP_CLASS_DEFAULT)
 
             # Gradient fill
             for y in range(portrait_height):

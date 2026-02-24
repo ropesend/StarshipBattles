@@ -5,7 +5,7 @@ Displays detailed information for a selected test run.
 
 import pygame
 
-from game.ui.colors import FONT_MAIN
+from game.ui.colors import FONT_MAIN, TEST_PASS, TEST_FAIL
 from game.ui.screens.test_lab.formatting_utils import format_value
 
 
@@ -23,8 +23,8 @@ class TestRunDetailsPanel:
         self.bg_color = (30, 30, 35)
         self.border_color = (80, 80, 90)
         self.text_color = (220, 220, 220)
-        self.pass_color = (80, 255, 120)
-        self.fail_color = (255, 80, 80)
+        self.pass_color = TEST_PASS
+        self.fail_color = TEST_FAIL
         self.header_color = (150, 200, 255)
         self.button_color = (60, 100, 160)
         self.button_hover_color = (80, 120, 180)

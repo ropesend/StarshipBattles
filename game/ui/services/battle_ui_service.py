@@ -20,6 +20,7 @@ from game.ui.interfaces.battle_ui import (
 )
 from game.core.math import Vector2
 from game.core.constants import AttackType
+from game.ui.colors import PROJECTILE_STANDARD, PROJECTILE_MISSILE, PROJECTILE_BEAM
 
 if TYPE_CHECKING:
     from game.simulation.services import BattleService
@@ -28,11 +29,11 @@ if TYPE_CHECKING:
 # PROJ-113: Projectile color mapping moved from simulation to UI layer
 # Maps AttackType to RGB color tuple
 PROJECTILE_COLORS: Dict[AttackType, Tuple[int, int, int]] = {
-    AttackType.PROJECTILE: (255, 200, 50),   # Golden yellow for standard projectiles
-    AttackType.MISSILE: (255, 50, 50),       # Red for missiles/seekers
-    AttackType.BEAM: (100, 200, 255),        # Light blue for beams
+    AttackType.PROJECTILE: PROJECTILE_STANDARD,
+    AttackType.MISSILE: PROJECTILE_MISSILE,
+    AttackType.BEAM: PROJECTILE_BEAM,
 }
-DEFAULT_PROJECTILE_COLOR: Tuple[int, int, int] = (255, 200, 50)
+DEFAULT_PROJECTILE_COLOR: Tuple[int, int, int] = PROJECTILE_STANDARD
 
 
 class BattleUIService:

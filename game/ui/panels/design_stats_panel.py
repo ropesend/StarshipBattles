@@ -23,6 +23,7 @@ from pygame_gui.elements import UILabel, UIScrollingContainer, UITextBox
 from typing import TYPE_CHECKING, Optional
 
 from game.core.constants import LayerType
+from game.ui.colors import DESIGN_MISSING_REQ, DESIGN_REQS_MET, DESIGN_WARNING, DESIGN_NO_RECS
 
 
 if TYPE_CHECKING:
@@ -389,10 +390,10 @@ class DesignStatsPanel:
 
         full_list_req = []
         for req in missing_reqs:
-            full_list_req.append(f"<font color='#ffaa55'>{req}</font>")
+            full_list_req.append(f"<font color='{DESIGN_MISSING_REQ}'>{req}</font>")
 
         if not full_list_req:
-            html_left = "<font color='#88ff88'>✓ All met</font>"
+            html_left = f"<font color='{DESIGN_REQS_MET}'>✓ All met</font>"
         else:
             html_left = "<br>".join(full_list_req)
 
@@ -403,10 +404,10 @@ class DesignStatsPanel:
         warnings = ship.get_validation_warnings()
         full_list_warn = []
         for warn in warnings:
-            full_list_warn.append(f"<font color='#ffff88'>⚠ {warn}</font>")
+            full_list_warn.append(f"<font color='{DESIGN_WARNING}'>⚠ {warn}</font>")
 
         if not full_list_warn:
-            html_right = "<font color='#888888'>No recommendations</font>"
+            html_right = f"<font color='{DESIGN_NO_RECS}'>No recommendations</font>"
         else:
             html_right = "<br>".join(full_list_warn)
 

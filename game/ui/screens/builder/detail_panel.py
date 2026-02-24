@@ -15,6 +15,7 @@ import json
 from game.core.logger import log_warning
 from .modifier_logic import ModifierLogic
 from game.simulation.components.abilities.ui_colors import HINT_NEUTRAL, HINT_CREW_CAP, HINT_CARGO_GENERIC
+from game.ui.colors import DETAIL_COMPONENT_NAME, DETAIL_COMPONENT_INFO, DETAIL_TEXT
 
 class ComponentDetailPanel:
     def __init__(self, manager, rect, image_base_path, event_bus=None):
@@ -128,10 +129,10 @@ class ComponentDetailPanel:
                 lines.append(text)
             
         # Header
-        add_line(f"<b>{comp.name}</b>", '#FFFF64')
-        add_line(f"{comp.type_str}", '#C8C8C8')
-        add_line(f"Mass: {comp.mass:.1f}t", '#C8C8C8')
-        add_line(f"HP: {comp.max_hp:.0f}", '#C8C8C8')
+        add_line(f"<b>{comp.name}</b>", DETAIL_COMPONENT_NAME)
+        add_line(f"{comp.type_str}", DETAIL_COMPONENT_INFO)
+        add_line(f"Mass: {comp.mass:.1f}t", DETAIL_COMPONENT_INFO)
+        add_line(f"HP: {comp.max_hp:.0f}", DETAIL_COMPONENT_INFO)
         lines.append("<br>") # Spacer
         
         # --- Dynamic Ability Stats (The Refactor) ---
@@ -160,7 +161,7 @@ class ComponentDetailPanel:
                     lines.append("<br>Abilities:")
                     shown_header = True
 
-                add_line(f"• {k}: {v}", '#C8C8C8')
+                add_line(f"• {k}: {v}", DETAIL_COMPONENT_INFO)
                     
         # Modifiers
         if comp.modifiers:
@@ -207,7 +208,7 @@ class ComponentDetailPanel:
         )
         
         text_box = UITextBox(
-            html_text=f"<font face='consolas, monospace' size=4 color='#E0E0E0'>{html_str}</font>",
+            html_text=f"<font face='consolas, monospace' size=4 color='{DETAIL_TEXT}'>{html_str}</font>",
             relative_rect=pygame.Rect(10, 10, win_size[0]-20, win_size[1]-50),
             manager=self.manager,
             container=window,

@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Optional
 import pygame
+from game.ui.colors import BUILDER_ITEM_BG, BUILDER_GROUP_BG, BUILDER_TREE_LINE
 
 
 @dataclass
@@ -52,20 +53,11 @@ class StructurePanelLayoutConfig:
     MASS_WIDTH: int = 60
     PCT_WIDTH: int = 50
     
-    # Colors
-    # Colors
-    BG_COLOR_INDIVIDUAL: str = "#1a1e26" 
-    BG_COLOR_GROUP: str = "#202530" # Slightly lighter than individual? No, usually group headers are darker or distinct. Let's use #14181f (Dark) for group background or keep it distinct. 
-    # Actually, style guide says: "Dark Background: Panel interiors". 
-    # Let's use Base (#1a1e26) for Individual (standard panel items).
-    # And Dark (#14181f) for Group/Layer headers? Or Elevated (#1e2530)?
-    # Existing was Individual #151515 (Darker), Group #202020 (Lighter).
-    # Let's try: Individual: #1a1e26 (Base), Group: #1e2530 (Elevated) or #14181f (Deep).
-    # Let's use #14181f for Individual (deeper) and #1a1e26 for Group (base).
-    BG_COLOR_INDIVIDUAL: str = "#14181f" 
-    BG_COLOR_GROUP: str = "#1a1e26"
-    SELECTION_COLOR: tuple = (68, 136, 221, 50) # Primary Accent with alpha
-    TREE_LINE_COLOR: str = "#2a3545" # Normal Border
+    # Colors - imported from game.ui.colors for centralization
+    BG_COLOR_INDIVIDUAL: str = BUILDER_ITEM_BG
+    BG_COLOR_GROUP: str = BUILDER_GROUP_BG
+    SELECTION_COLOR: tuple = (68, 136, 221, 50)  # Primary Accent with alpha
+    TREE_LINE_COLOR: str = BUILDER_TREE_LINE
     
     # Panel Anchors (Standardized)
     ANCHOR_TOP_LEFT: dict = None

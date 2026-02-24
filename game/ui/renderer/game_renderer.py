@@ -9,6 +9,7 @@ import math
 from game.core.constants import LayerType, LayerDefaults  # Canonical location for LayerType
 from game.ui.utils import calculate_ship_image_scale, scale_and_rotate_image
 from game.ui.assets import ShipThemeManager
+from game.ui.colors import LAYER_ARMOR, LAYER_OUTER, LAYER_INNER, LAYER_CORE
 
 
 # === Rendering Constants ===
@@ -35,10 +36,10 @@ FALLBACK_DOT_MIN_SIZE = 2      # Minimum pixel size for fallback dot
 
 # Layer color constants
 LAYER_COLORS = {
-    LayerType.ARMOR: (100, 100, 100),
-    LayerType.OUTER: (200, 50, 50),
-    LayerType.INNER: (50, 50, 200),
-    LayerType.CORE: (220, 220, 220)
+    LayerType.ARMOR: LAYER_ARMOR,
+    LayerType.OUTER: LAYER_OUTER,
+    LayerType.INNER: LAYER_INNER,
+    LayerType.CORE: LAYER_CORE
 }
 
 
