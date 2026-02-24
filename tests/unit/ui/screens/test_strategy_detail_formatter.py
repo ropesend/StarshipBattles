@@ -279,8 +279,14 @@ class TestComputePlanetProduction:
         }
         planet.facilities = [facility]
 
-        with patch('game.core.registry.get_default_registries') as mock_get_registries:
-            mock_get_registries.return_value = Mock()
+        # PROJ-174: Mock registry provider (DI pattern)
+        mock_provider = Mock()
+        mock_provider.get_components.return_value = {}
+        mock_provider.get_modifiers.return_value = {}
+        mock_provider.get_vehicle_classes.return_value = {}
+        mock_provider.get_resources.return_value = {}
+
+        with patch('game.core.registry.get_default_registry_provider', return_value=mock_provider):
             result = formatter.compute_planet_production(planet)
 
         assert 'metal' in result
@@ -311,8 +317,14 @@ class TestComputePlanetProduction:
         }
         planet.facilities = [facility]
 
-        with patch('game.core.registry.get_default_registries') as mock_get_registries:
-            mock_get_registries.return_value = Mock()
+        # PROJ-174: Mock registry provider (DI pattern)
+        mock_provider = Mock()
+        mock_provider.get_components.return_value = {}
+        mock_provider.get_modifiers.return_value = {}
+        mock_provider.get_vehicle_classes.return_value = {}
+        mock_provider.get_resources.return_value = {}
+
+        with patch('game.core.registry.get_default_registry_provider', return_value=mock_provider):
             result = formatter.compute_planet_production(planet)
 
         assert result == {}

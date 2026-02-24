@@ -295,12 +295,14 @@ class TestGameRegistries:
 # Test: Default Registries Functions (PROJ-38)
 # =============================================================================
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestDefaultRegistries:
     """
     Tests for set_default_registries() and get_default_registries() functions.
 
-    PROJ-38: These functions allow setting a global default GameRegistries
-    instance for transitional fallback during incremental migration.
+    PROJ-38/PROJ-174: These functions allow setting a global default GameRegistries
+    instance for transitional fallback. Now deprecated in favor of IRegistryProvider.
+    Tests filter DeprecationWarning since they test the deprecated API itself.
     """
 
     def test_get_default_registries_raises_when_not_set(self):

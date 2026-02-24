@@ -17,15 +17,15 @@
 | 2. Internalize RegistryManager | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate TIER 2 Production Code | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate TIER 3 Non-Root Code | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Update Test Mocks & Deprecate | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Update Test Mocks & Deprecate | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-23
-**Active Phase:** Phase 5
-**Last Action:** Phase 4 complete - Migrated ship_loader.py to provider pattern
-**Next Action:** Begin Phase 5 - Update Test Mocks & Deprecate
+**Active Phase:** Complete - Awaiting Audit
+**Last Action:** Phase 5 complete - Deprecated old API, updated test mocks
+**Next Action:** Audit
 **Blockers:** None
-**Context for Next Agent:** Tests: 11972 passed, 1 skipped. ship_loader.py migrated: get_or_create_validator() and load_vehicle_classes() now use provider pattern with optional registry_provider param. One RegistryManager.instance() call remains for validator storage (lifecycle concern, acceptable). Test file updated to use DI pattern. Files modified: ship_loader.py, test_ship_loader.py.
+**Context for Next Agent:** Tests: 11972 passed, 1 skipped. All phases complete. Deprecation warnings added to get_default_registries() and set_default_registries(). Composition roots (conftest.py, app.py) suppress warnings. Test files updated to use DI pattern or filter deprecation warnings. Zero get_default_registries() calls in game/ except registry.py definition. Only composition roots use RegistryManager.instance().
 
 ## Overview
 Consolidate all registry access onto the single canonical IRegistryProvider DI pattern. The codebase currently has three access tiers: TIER 3 (direct singleton `RegistryManager.instance()`), TIER 2 (service locator `get_default_registries()`), and TIER 1 (DI provider `get_default_registry_provider()`). This project eliminates TIER 2 and TIER 3 from all non-composition-root code, completing the migration to DI that began in PROJ-27.

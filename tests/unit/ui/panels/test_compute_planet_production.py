@@ -74,8 +74,8 @@ class TestComputePlanetProduction:
         planet.facilities = [facility]
         planet.resources = {'Metals': {'quality': 0.8, 'quantity': 5000}}
 
-        # Mock registry
-        mock_registries = Mock()
+        # PROJ-174: Mock registry provider (DI pattern)
+        mock_provider = Mock()
         comp_def = Mock()
         comp_def.abilities = {
             'ResourceHarvester': {
@@ -83,10 +83,14 @@ class TestComputePlanetProduction:
                 'base_harvest_rate': 100.0
             }
         }
-        mock_registries.components.get.return_value = comp_def
+        # The function calls provider.get_components() which returns a dict
+        mock_provider.get_components.return_value = {'metal_harvester': comp_def}
+        mock_provider.get_modifiers.return_value = {}
+        mock_provider.get_vehicle_classes.return_value = {}
+        mock_provider.get_resources.return_value = {}
 
-        with patch('game.core.registry.get_default_registries',
-                   return_value=mock_registries):
+        with patch('game.core.registry.get_default_registry_provider',
+                   return_value=mock_provider):
             result = compute_planet_production(planet)
 
         assert result['Metals'] == pytest.approx(80.0)  # 100.0 * 0.8

@@ -2,9 +2,12 @@
 
 PROJ-43: Tests for the DesignLoaderAdapter that decouples UI from direct
 SimulationDesignLoader usage.
+
+PROJ-174: Uses deprecated set_default_registries() to test fallback behavior.
 """
 from unittest.mock import MagicMock, patch
 import pytest
+import warnings
 
 
 class TestDesignLoaderAdapter:
@@ -80,8 +83,10 @@ class TestDesignLoaderAdapter:
         from game.simulation.services.design_loader import SimulationDesignLoader
         from game.core.registry import set_default_registries
 
-        # Set default registries so adapter can create a real loader
-        set_default_registries(fresh_registries)
+        # PROJ-174: Suppress deprecation warning - testing backward compatibility
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            set_default_registries(fresh_registries)
 
         adapter = DesignLoaderAdapter()
 

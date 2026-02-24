@@ -1,5 +1,6 @@
 import logging
 import os
+import warnings
 # Force headless mode BEFORE any imports happen during collection
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
@@ -55,12 +56,15 @@ def reset_game_state(monkeypatch, request):
 
         # 4. Set default GameRegistries for DI consumers (PROJ-58)
         # Code using get_default_registries() needs this to resolve registries
-        set_default_registries(GameRegistries(
-            components=mgr.components,
-            modifiers=mgr.modifiers,
-            vehicle_classes=mgr.vehicle_classes,
-            resources=mgr.resources,
-        ))
+        # PROJ-174: Suppress deprecation warning - conftest is a composition root
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            set_default_registries(GameRegistries(
+                components=mgr.components,
+                modifiers=mgr.modifiers,
+                vehicle_classes=mgr.vehicle_classes,
+                resources=mgr.resources,
+            ))
 
         # 5. Patch Loaders/Caches to prevent Disk I/O during test execution
 

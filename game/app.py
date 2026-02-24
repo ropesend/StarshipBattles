@@ -2,6 +2,7 @@
 import argparse
 import logging
 import os
+import warnings
 import pygame
 import pygame_gui
 
@@ -126,7 +127,10 @@ class Game:
             vehicle_classes=registry.vehicle_classes,
             resources=registry.resources
         )
-        set_default_registries(self.registries)
+        # PROJ-174: app.py is the composition root - suppress deprecation warning
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            set_default_registries(self.registries)
 
         # Initialize input mapper (PROJ-71: centralized keybindings)
         self.input_mapper = InputMapper()

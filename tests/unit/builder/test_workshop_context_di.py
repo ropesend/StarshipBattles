@@ -5,11 +5,18 @@ These tests verify that WorkshopContext:
 1. Accepts GameRegistries via constructor
 2. Passes registries through factory methods
 3. Falls back to get_default_registries() when None
+
+PROJ-174: Uses deprecated set_default_registries() to test backward compatibility.
 """
 import pytest
+import warnings
 
 from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
 from game.core.registry import GameRegistries, set_default_registries
+
+
+# PROJ-174: Suppress deprecation warnings - this file tests deprecated patterns
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 
 
 # =============================================================================

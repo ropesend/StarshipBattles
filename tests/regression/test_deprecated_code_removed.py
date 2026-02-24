@@ -84,8 +84,13 @@ class TestGameStateAliasesRemoved:
             "SETTINGS alias should be removed - use GameState.SETTINGS"
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestNewPatternsWork:
-    """Verify new patterns work correctly as replacements."""
+    """Verify new patterns work correctly as replacements.
+
+    PROJ-174: Some functions tested here are deprecated. Filter warnings
+    since we're testing they exist, not that they're non-deprecated.
+    """
 
     def test_game_registries_accessible(self):
         """GameRegistries container should be importable and usable."""

@@ -85,12 +85,21 @@ def set_default_registries(registries: GameRegistries) -> None:
     """
     Set the default GameRegistries instance.
 
+    DEPRECATED: Kept for conftest.py compatibility during transition.
+    New code should use IRegistryProvider pattern via DI.
+
     Called by composition roots (app.py at startup, conftest.py in tests)
     to make registries available via get_default_registries().
 
     Args:
         registries: The GameRegistries instance to use as default
     """
+    import warnings
+    warnings.warn(
+        "set_default_registries() is deprecated. Use IRegistryProvider via DI instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     global _default_registries
     _default_registries = registries
 
@@ -99,9 +108,8 @@ def get_default_registries() -> GameRegistries:
     """
     Get the default GameRegistries instance.
 
-    Service locator for callers that cannot receive registries via
-    constructor injection (e.g., dataclass methods, lazy init).
-    Prefer constructor injection where possible.
+    DEPRECATED: Use get_default_registry_provider() instead.
+    This function remains for backward compatibility but will be removed.
 
     Set by: app.py (production), conftest.py (tests)
 
@@ -111,6 +119,12 @@ def get_default_registries() -> GameRegistries:
     Raises:
         StateException: If set_default_registries() has not been called
     """
+    import warnings
+    warnings.warn(
+        "get_default_registries() is deprecated. Use get_default_registry_provider() instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     if _default_registries is None:
         raise StateException(
             "Default registries not set. Call set_default_registries() first.",
