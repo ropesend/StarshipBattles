@@ -15,6 +15,11 @@ from game.simulation.components.abilities.crew import (
     CrewRequired,
 )
 from game.simulation.components.abilities.stat_keys import StatKey
+from game.simulation.components.abilities.ui_colors import (
+    HINT_CREW_CAP,
+    HINT_LIFE_SUPPORT,
+    HINT_CREW_REQ,
+)
 
 
 # =============================================================================
@@ -151,7 +156,7 @@ class TestCrewCapacity:
         assert len(rows) == 1
         assert rows[0]['label'] == 'Crew Cap'
         assert rows[0]['value'] == '15'
-        assert rows[0]['color_hint'] == '#96FF96'
+        assert rows[0]['color_hint'] == HINT_CREW_CAP
 
     def test_get_ui_rows_zero(self, mock_component):
         """get_ui_rows displays zero correctly."""
@@ -283,7 +288,7 @@ class TestLifeSupportCapacity:
         assert len(rows) == 1
         assert rows[0]['label'] == 'Life Support'
         assert rows[0]['value'] == '40'
-        assert rows[0]['color_hint'] == '#96FFFF'
+        assert rows[0]['color_hint'] == HINT_LIFE_SUPPORT
 
     def test_get_primary_value(self, mock_component):
         """get_primary_value returns amount as float."""
@@ -432,7 +437,7 @@ class TestCrewRequired:
         assert len(rows) == 1
         assert rows[0]['label'] == 'Crew Req'
         assert rows[0]['value'] == '8'
-        assert rows[0]['color_hint'] == '#FF9696'
+        assert rows[0]['color_hint'] == HINT_CREW_REQ
 
     def test_get_ui_rows_zero(self, mock_component):
         """get_ui_rows displays zero correctly."""

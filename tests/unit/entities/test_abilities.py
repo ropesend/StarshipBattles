@@ -11,6 +11,7 @@ from game.simulation.components.abilities import (
     ProjectileWeaponAbility,
     VehicleLaunchAbility
 )
+from game.simulation.components.abilities.ui_colors import HINT_THRUST
 
 
 @pytest.fixture
@@ -119,7 +120,7 @@ class TestAbilities:
         rows = ab.get_ui_rows()
         assert rows[0]['label'] == 'Thrust'
         assert rows[0]['value'] == '100 N'
-        assert rows[0]['color_hint'] == '#64FF64'
+        assert rows[0]['color_hint'] == HINT_THRUST
 
     def test_beam_weapon_ability(self, mock_component):
         from game.simulation.components.abilities import BeamWeaponAbility

@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 
 from game.simulation.components.abilities import CargoStorage, create_ability, ABILITY_REGISTRY
 from game.simulation.components.abilities.cargo import CargoStorage as CargoStorageClass
+from game.simulation.components.abilities.ui_colors import HINT_CARGO_PASSENGER, HINT_CARGO_GENERIC
 
 
 class TestCargoStorageCreation:
@@ -145,7 +146,7 @@ class TestCargoStorageUIRows:
         assert len(rows) == 1
         assert rows[0]['label'] == 'Passenger Cap'
         assert rows[0]['value'] == '5000'
-        assert rows[0]['color_hint'] == '#98FB98'  # Pale green
+        assert rows[0]['color_hint'] == HINT_CARGO_PASSENGER  # Pale green
 
     def test_cargo_storage_ui_rows_generic(self):
         """get_ui_rows returns generic-styled row."""
@@ -157,7 +158,7 @@ class TestCargoStorageUIRows:
         assert len(rows) == 1
         assert rows[0]['label'] == 'Goods Cap'
         assert rows[0]['value'] == '3000'
-        assert rows[0]['color_hint'] == '#FFD700'  # Gold
+        assert rows[0]['color_hint'] == HINT_CARGO_GENERIC  # Gold
 
 
 class TestCargoStoragePrimaryValue:

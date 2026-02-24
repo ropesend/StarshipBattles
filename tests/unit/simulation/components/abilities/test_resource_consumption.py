@@ -19,6 +19,12 @@ from game.simulation.components.abilities.resources import (
 )
 from game.simulation.systems.resource_manager import ResourceRegistry, ResourceState
 from game.core.config import PhysicsConfig
+from game.simulation.components.abilities.ui_colors import (
+    HINT_RANGE,
+    HINT_WARP_ENERGY,
+    HINT_PROJECTILE_SPEED,
+    HINT_DEFAULT,
+)
 
 
 # =============================================================================
@@ -950,7 +956,7 @@ class TestResourceConsumptionUIColors:
         ability = ResourceConsumption(mock_component, data)
 
         rows = ability.get_ui_rows()
-        assert rows[0]['color_hint'] == '#FFA500'  # Orange
+        assert rows[0]['color_hint'] == HINT_RANGE  # Orange
 
     def test_energy_resource_has_blue_color(self, mock_component):
         """Energy resource shows light blue color hint."""
@@ -960,7 +966,7 @@ class TestResourceConsumptionUIColors:
         ability = ResourceConsumption(mock_component, data)
 
         rows = ability.get_ui_rows()
-        assert rows[0]['color_hint'] == '#64C8FF'  # Light Blue
+        assert rows[0]['color_hint'] == HINT_WARP_ENERGY  # Light Blue
 
     def test_ammo_resource_has_yellow_color(self, mock_component):
         """Ammo resource shows dirty yellow color hint."""
@@ -970,7 +976,7 @@ class TestResourceConsumptionUIColors:
         ability = ResourceConsumption(mock_component, data)
 
         rows = ability.get_ui_rows()
-        assert rows[0]['color_hint'] == '#C8C832'  # Dirty Yellow
+        assert rows[0]['color_hint'] == HINT_PROJECTILE_SPEED  # Dirty Yellow
 
     def test_unknown_resource_has_white_color(self, mock_component):
         """Unknown resource shows white color hint."""
@@ -978,7 +984,7 @@ class TestResourceConsumptionUIColors:
         ability = ResourceConsumption(mock_component, data)
 
         rows = ability.get_ui_rows()
-        assert rows[0]['color_hint'] == '#FFFFFF'  # White
+        assert rows[0]['color_hint'] == HINT_DEFAULT  # White
 
 
 class TestResourceConsumptionStringAmounts:

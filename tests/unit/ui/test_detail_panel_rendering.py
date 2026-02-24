@@ -5,6 +5,8 @@ from unittest.mock import MagicMock, patch, PropertyMock
 import pygame
 import pygame_gui
 
+from game.simulation.components.abilities.ui_colors import HINT_CARGO_GENERIC, HINT_CREW_CAP
+
 
 class TestDetailPanelRendering:
 
@@ -244,8 +246,8 @@ class TestDetailPanelRendering:
 
         # Mandatory: Gold + [A]
         assert "Turbo [A]" in html
-        assert "color='#FFD700'" in html  # Gold
+        assert f"color='{HINT_CARGO_GENERIC}'" in html  # Gold
 
         # Optional: Green
         assert "Plating" in html
-        assert "color='#96FF96'" in html  # Green
+        assert f"color='{HINT_CREW_CAP}'" in html  # Green

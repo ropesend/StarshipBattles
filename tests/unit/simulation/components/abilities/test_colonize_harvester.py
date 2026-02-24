@@ -14,6 +14,12 @@ from game.simulation.components.abilities.harvester import (
     SpaceShipyardAbility,
 )
 from game.simulation.components.abilities.base import AbilityLayer, AbilityScope
+from game.simulation.components.abilities.ui_colors import (
+    HINT_COLONIZE,
+    HINT_ACCURACY,
+    HINT_SHIELD_CAP,
+    HINT_DEFAULT,
+)
 
 
 # =============================================================================
@@ -91,7 +97,7 @@ class TestColonizePlanet:
         assert len(rows) == 1
         assert rows[0]["label"] == "Colonizes"
         assert rows[0]["value"] == "Ice Dwarf"
-        assert rows[0]["color_hint"] == "#00FF00"
+        assert rows[0]["color_hint"] == HINT_COLONIZE
 
     def test_get_ui_rows_simple_planet_type(self, mock_component):
         """UI rows format single-word planet types correctly."""
@@ -209,10 +215,10 @@ class TestResourceHarvesterAbility:
         assert len(rows) == 2
         assert rows[0]["label"] == "Resource Type"
         assert rows[0]["value"] == "Metals"
-        assert rows[0]["color_hint"] == "#00FF00"
+        assert rows[0]["color_hint"] == HINT_COLONIZE
         assert rows[1]["label"] == "Harvest Rate"
         assert rows[1]["value"] == "15.0/turn"
-        assert rows[1]["color_hint"] == "#FFFF00"
+        assert rows[1]["color_hint"] == HINT_ACCURACY
 
     def test_get_ui_rows_formats_decimal_rate(self, mock_component):
         """UI rows format decimal harvest rates correctly."""
@@ -340,10 +346,10 @@ class TestEmpireStorageAbility:
         assert len(rows) == 2
         assert rows[0]["label"] == "Resource Type"
         assert rows[0]["value"] == "Metals"
-        assert rows[0]["color_hint"] == "#00FF00"
+        assert rows[0]["color_hint"] == HINT_COLONIZE
         assert rows[1]["label"] == "Storage Capacity"
         assert rows[1]["value"] == "10,000"
-        assert rows[1]["color_hint"] == "#FFFF00"
+        assert rows[1]["color_hint"] == HINT_ACCURACY
 
     def test_get_ui_rows_formats_large_capacity(self, mock_component):
         """UI rows format large capacities with thousands separator."""
@@ -430,10 +436,10 @@ class TestSpaceShipyardAbility:
         assert len(rows) == 2
         assert rows[0]["label"] == "Construction Bonus"
         assert rows[0]["value"] == "1.5x"
-        assert rows[0]["color_hint"] == "#00FFFF"
+        assert rows[0]["color_hint"] == HINT_SHIELD_CAP
         assert rows[1]["label"] == "Max Ship Mass"
         assert rows[1]["value"] == "150,000 kg"
-        assert rows[1]["color_hint"] == "#FFFFFF"
+        assert rows[1]["color_hint"] == HINT_DEFAULT
 
     def test_get_ui_rows_with_uniform_production_rates(self, mock_component):
         """UI rows show single rate when all production rates are equal."""
@@ -449,7 +455,7 @@ class TestSpaceShipyardAbility:
         assert len(rows) == 3
         assert rows[2]["label"] == "Production Rate"
         assert rows[2]["value"] == "200/turn"
-        assert rows[2]["color_hint"] == "#00FF00"
+        assert rows[2]["color_hint"] == HINT_COLONIZE
 
     def test_get_ui_rows_with_varying_production_rates(self, mock_component):
         """UI rows show range when production rates differ."""

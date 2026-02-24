@@ -18,6 +18,13 @@ from game.simulation.components.abilities.defense import (
     EmissiveArmor,
 )
 from game.simulation.components.abilities.stat_keys import StatKey
+from game.simulation.components.abilities.ui_colors import (
+    HINT_SHIELD_CAP,
+    HINT_SHIELD_REGEN,
+    HINT_DAMAGE,
+    HINT_EVASION,
+    HINT_ACCURACY,
+)
 
 
 # =============================================================================
@@ -158,7 +165,7 @@ class TestShieldProjection:
         assert len(rows) == 1
         assert rows[0]['label'] == 'Shield Cap'
         assert rows[0]['value'] == '100'
-        assert rows[0]['color_hint'] == '#00FFFF'
+        assert rows[0]['color_hint'] == HINT_SHIELD_CAP
 
     def test_get_ui_rows_rounds_value(self, mock_component):
         """get_ui_rows displays integer for capacity."""
@@ -273,7 +280,7 @@ class TestShieldRegeneration:
         assert len(rows) == 1
         assert rows[0]['label'] == 'Regen'
         assert rows[0]['value'] == '10.0/s'
-        assert rows[0]['color_hint'] == '#00C8FF'
+        assert rows[0]['color_hint'] == HINT_SHIELD_REGEN
 
     def test_get_ui_rows_shows_decimal(self, mock_component):
         """get_ui_rows displays one decimal place."""
@@ -357,7 +364,7 @@ class TestToHitAttackModifier:
         assert len(rows) == 1
         assert rows[0]['label'] == 'Targeting'
         assert rows[0]['value'] == '+5.0'
-        assert rows[0]['color_hint'] == '#FF6464'
+        assert rows[0]['color_hint'] == HINT_DAMAGE
 
     def test_get_ui_rows_negative_value(self, mock_component):
         """get_ui_rows shows - sign for negative values."""
@@ -438,7 +445,7 @@ class TestToHitDefenseModifier:
         assert len(rows) == 1
         assert rows[0]['label'] == 'Evasion'
         assert rows[0]['value'] == '+10.0'
-        assert rows[0]['color_hint'] == '#64FFFF'
+        assert rows[0]['color_hint'] == HINT_EVASION
 
     def test_get_ui_rows_negative_value(self, mock_component):
         """get_ui_rows shows - sign for negative values."""
@@ -527,7 +534,7 @@ class TestEmissiveArmor:
         assert len(rows) == 1
         assert rows[0]['label'] == 'Dmg Ignore'
         assert rows[0]['value'] == '8'
-        assert rows[0]['color_hint'] == '#FFFF00'
+        assert rows[0]['color_hint'] == HINT_ACCURACY
 
     def test_get_ui_rows_zero(self, mock_component):
         """get_ui_rows displays zero correctly."""

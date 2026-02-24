@@ -12,6 +12,7 @@ from game.simulation.components.abilities import (
     create_ability,
 )
 from game.simulation.components.abilities.base import AbilityLayer, AbilityScope
+from game.simulation.components.abilities.ui_colors import HINT_SUPERWEAPON
 
 
 # Mapping of ability class names to their expected UI values
@@ -122,7 +123,7 @@ class TestSuperweaponAbilityUIRows:
         assert row['label'] == 'Superweapon'
         assert row['value'] == expected_value
         assert 'color_hint' in row
-        assert row['color_hint'] == '#FF4444'  # Red for superweapons
+        assert row['color_hint'] == HINT_SUPERWEAPON  # Red for superweapons
 
 
 class TestSuperweaponRegistryPresence:
