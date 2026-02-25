@@ -8,13 +8,19 @@ Cross-layer imports (acceptable for UI):
 - OrderType: Runtime - formats order type display strings
 - Protocols: Runtime - duck typing for object identification
 """
+from __future__ import annotations
+
 from collections import Counter
+from typing import TYPE_CHECKING
 
 from game.strategy.data.fleet import OrderType
 from game.core.protocols import (
     is_star_system, is_star, is_planet, is_fleet,
     is_warp_point, is_sector_environment, is_storm
 )
+
+if TYPE_CHECKING:
+    from game.core.protocols import IPlanet, IFleet, IFacility, IShipInstance
 
 
 def format_spectrum_html(star) -> str:
@@ -57,12 +63,12 @@ def format_atmosphere_raw(planet) -> str:
     return html
 
 
-def format_planet_info(planet) -> str:
+def format_planet_info(planet: IPlanet) -> str:
     """
     Format comprehensive planet information as HTML.
 
     Args:
-        planet: Planet object
+        planet: Planet object (IPlanet protocol)
 
     Returns:
         HTML string with planet details
@@ -89,13 +95,14 @@ def format_planet_info(planet) -> str:
     text += f"<b>Pressure:</b> {planet.total_pressure_atm:.2f} atm<br>"
 
     # Colony status and facilities (BUG-19 fix)
-    if hasattr(planet, 'owner_id') and planet.owner_id is not None:
+    # IPlanet.owner_id is always present (Optional[int])
+    if planet.owner_id is not None:
         text += f"<br><b>Colony Status:</b> Owned<br>"
 
-        # Population section
-        populations = getattr(planet, 'populations', [])
+        # Population section - IPlanet.populations is always present (List)
+        populations = planet.populations
         total_pop = sum(p.count for p in populations) if populations else 0
-        max_pop = getattr(planet, 'max_population', 0)
+        max_pop = planet.max_population
 
         if total_pop > 0 or max_pop > 0:
             # Format population with K/M suffixes
@@ -133,13 +140,14 @@ def format_planet_info(planet) -> str:
 
                     text += f" - {pop.race_id}: {cnt_str} [{h_icon}]<br>"
 
-        # Show facilities/complexes list
-        facilities = getattr(planet, 'facilities', [])
+        # Show facilities/complexes list - IPlanet.facilities is always present (List)
+        facilities = planet.facilities
         if facilities:
             text += "<br><b>Complexes:</b><br>"
             for facility in facilities:
-                f_name = getattr(facility, 'name', getattr(facility, 'design_id', 'Unknown'))
-                f_status = getattr(facility, 'status', 'Active')
+                f: IFacility = facility
+                f_name = f.name if f.name else f.design_id
+                f_status = "Active" if f.is_operational else "Offline"
                 text += f" - {f_name} ({f_status})<br>"
         else:
             text += "<br><b>Complexes:</b> None<br>"
@@ -189,12 +197,12 @@ def format_star_info(star) -> str:
     return text
 
 
-def _format_ship_groups(fleet) -> str:
+def _format_ship_groups(fleet: IFleet) -> str:
     """
     Format ship list grouped by design, sorted by mass descending.
 
     Args:
-        fleet: Fleet object with ships list
+        fleet: Fleet object (IFleet protocol)
 
     Returns:
         HTML string with grouped ship list
@@ -208,11 +216,13 @@ def _format_ship_groups(fleet) -> str:
     # Collect display info per unique design (name + mass from first ship)
     design_info: dict[str, tuple[str, float]] = {}
     for ship in fleet.ships:
-        did = ship.design_id
+        s: IShipInstance = ship
+        did = s.design_id
         if did not in design_info:
-            data = getattr(ship, 'design_data', None) or {}
+            # IShipInstance.design_data is always present (Dict)
+            data = s.design_data or {}
             name = data.get('name', str(did)) if isinstance(data, dict) else str(did)
-            stats = ship.get_calculated_stats()
+            stats = s.get_calculated_stats()
             raw_mass = stats.get('mass', 0) if isinstance(stats, dict) else 0
             mass = float(raw_mass) if isinstance(raw_mass, (int, float)) else 0.0
             design_info[did] = (name, mass)
@@ -236,19 +246,21 @@ def _format_ship_groups(fleet) -> str:
     return text
 
 
-def _format_cargo_summary(fleet) -> str:
+def _format_cargo_summary(fleet: IFleet) -> str:
     """
     Format aggregated cargo summary across all ships in the fleet.
 
     Args:
-        fleet: Fleet object with ships list
+        fleet: Fleet object (IFleet protocol)
 
     Returns:
         HTML string with cargo summary, or empty string if no cargo
     """
     totals: dict[str, int] = {}
     for ship in fleet.ships:
-        for cargo_type, amount in getattr(ship, 'cargo_contents', {}).items():
+        s: IShipInstance = ship
+        # IShipInstance.cargo_contents is always present (Dict)
+        for cargo_type, amount in s.cargo_contents.items():
             if amount > 0:
                 totals[cargo_type] = totals.get(cargo_type, 0) + amount
 
@@ -263,14 +275,14 @@ def _format_cargo_summary(fleet) -> str:
     return text
 
 
-def _format_orders(fleet) -> str:
+def _format_orders(fleet: IFleet) -> str:
     """
     Format fleet orders as numbered HTML list.
 
     Handles MOVE, COLONIZE, BUILD, TRANSFER, and generic order types.
 
     Args:
-        fleet: Fleet object with orders list
+        fleet: Fleet object (IFleet protocol)
 
     Returns:
         HTML string with formatted orders
@@ -316,14 +328,14 @@ def _format_orders(fleet) -> str:
     return text
 
 
-def format_fleet_info(fleet) -> str:
+def format_fleet_info(fleet: IFleet) -> str:
     """
     Format comprehensive fleet information as HTML.
 
     Includes header, travel range, ship groups, cargo summary, and orders.
 
     Args:
-        fleet: Fleet object
+        fleet: Fleet object (IFleet protocol)
 
     Returns:
         HTML string with fleet details

@@ -8,21 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-193 Phase 3 - Empire Panel + Race Config Typing Complete
-**Current Status:** PROJ-193 In Progress - Phase 3 complete, moving to Phase 4
+**Last Completed:** PROJ-193 Phase 4 - Strategy Detail Formatters Complete
+**Current Status:** PROJ-193 In Progress - Phase 4 complete, moving to Phase 5
 **Current Project:** PROJ-193
-**Current Phase:** Phase 4
+**Current Phase:** Phase 5
 **Test Status:** 12711 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-193 Phase 3 COMPLETE - Empire Panel + Race Config Typing
-- Added TYPE_CHECKING imports for RaceConfig and IEmpire to empire_panel_window.py
-- Typed self.empire as IEmpire, typed race_config params in 6 render methods
-- Replaced 28 getattr calls with direct property access (portrait_id, flag_id, identity, aptitudes, environment, descriptions)
-- Race panels already had proper RaceConfig typing from previous work
+- PROJ-193 Phase 4 COMPLETE - Strategy Detail Formatters
+- strategy_detail_fmt.py: Added TYPE_CHECKING imports, typed format_planet_info/fleet/ship funcs with IPlanet/IFleet/IShipInstance/IFacility
+- Replaced ~8 getattr/hasattr patterns with direct Protocol access
+- Added get_calculated_stats() method to IShipInstance protocol
+- Added storms property to IStarSystem protocol
+- Audited 10+ strategy screen files, documented intentional patterns (scene/self guards)
+- Fixed test_facilities_display to use is_operational instead of status
 - Tests: 12711 passed, 1 skipped
-- Next: Start PROJ-193 Phase 4 - Strategy Detail Formatters
+- Next: Start PROJ-193 Phase 5 - Planet Report + Ship Stats Renderer
 
 ---
 
@@ -144,6 +146,7 @@
 | 2026-02-25 | PROJ-193 | Phase 1 | Complete | 12712 passed | - | 4 protocols + 4 TypeGuards + IPlanet/IFleet extended + mock fixes |
 | 2026-02-25 | PROJ-193 | Phase 2 | Complete | 12711 passed | - | ~12 hasattr/isinstance → TypeGuards in 5 files, -1 test |
 | 2026-02-25 | PROJ-193 | Phase 3 | Complete | 12711 passed | - | 28 getattr → direct access in empire_panel_window.py |
+| 2026-02-25 | PROJ-193 | Phase 4 | Complete | 12711 passed | - | ~8 hasattr/getattr → Protocol access, +IShipInstance.get_calculated_stats, +IStarSystem.storms |
 
 ---
 

@@ -742,14 +742,17 @@ class TestFormatPlanetInfo:
         mock_planet.populations = []
         mock_planet.max_population = 0
 
+        # Facility with proper name and operational status
         facility1 = Mock()
         facility1.name = "Mining Complex"
-        facility1.status = "Active"
+        facility1.design_id = "mining_01"
+        facility1.is_operational = True
 
+        # Facility with empty name (falls back to design_id) and offline status
         facility2 = Mock()
+        facility2.name = ""  # Empty name triggers fallback to design_id
         facility2.design_id = "factory_01"
-        facility2.status = "Building"
-        del facility2.name  # Force fallback to design_id
+        facility2.is_operational = False  # Offline
 
         mock_planet.facilities = [facility1, facility2]
 
@@ -757,6 +760,9 @@ class TestFormatPlanetInfo:
 
         assert "Complexes:" in result
         assert "Mining Complex" in result
+        assert "(Active)" in result
+        assert "factory_01" in result
+        assert "(Offline)" in result
 
 
 # =============================================================================

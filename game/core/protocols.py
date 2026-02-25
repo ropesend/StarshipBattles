@@ -136,6 +136,11 @@ class IStarSystem(Protocol):
     def name(self) -> str:
         ...
 
+    @property
+    def storms(self) -> List[Any]:
+        """List of Storm objects in this system."""
+        ...
+
 
 @runtime_checkable
 class IStar(Protocol):
@@ -523,6 +528,10 @@ class IShipInstance(Protocol):
     @property
     def serial_number(self) -> Optional[int]:
         """Serial number unique per design within empire."""
+        ...
+
+    def get_calculated_stats(self, force_refresh: bool = False) -> Dict[str, Any]:
+        """Get calculated stats from components, respecting damage state."""
         ...
 
 

@@ -15,6 +15,7 @@ import pygame
 if TYPE_CHECKING:
     from game.ui.screens.strategy_screen import StrategyScreen
     from game.strategy.data.fleet import Fleet
+    from game.core.protocols import IFleet
 
 logger = logging.getLogger(__name__)
 
@@ -97,8 +98,8 @@ class StrategyBuildQueueManager:
         processed_fleets = set()
         for source in queue_sources:
             if source.context_type == 'fleet':
-                fleet = source.owner_entity
-                fleet_id = getattr(fleet, 'id', id(fleet))
+                fleet: IFleet = source.owner_entity
+                fleet_id = fleet.id  # IFleet.id is always present
                 if fleet_id not in processed_fleets:
                     processed_fleets.add(fleet_id)
                     self._handle_fleet_build_queue_close(fleet)

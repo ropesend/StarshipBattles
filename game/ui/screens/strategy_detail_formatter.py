@@ -203,6 +203,7 @@ class StrategyDetailFormatter:
             self.detail_text.show()
 
         # Determine Current Player
+        # NOTE: hasattr check is intentional - scene may or may not have current_empire
         current_empire_id = -1
         if hasattr(self.scene, 'current_empire'):
             current_empire_id = self.scene.current_empire.id
@@ -341,6 +342,7 @@ class StrategyDetailFormatter:
                 self.btn_build_fleet.show()
 
             # Check if we can colonize
+            # NOTE: hasattr check is intentional - scene may or may not have turn_engine
             if hasattr(self.scene, 'turn_engine'):
                 res = self.scene.turn_engine.validate_colonize_order(self.scene.galaxy, obj, None)
                 if res.is_valid:

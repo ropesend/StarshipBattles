@@ -518,8 +518,8 @@ class StrategyRenderer:
             if planet.planet_type != PlanetType.DYSON_SPHERE:
                 continue
 
-            # Get diameter from planet (default to 11 if not set)
-            diameter_hexes = getattr(planet, 'diameter_hexes', 11.0)
+            # Get diameter from planet - IPlanet.diameter_hexes is always present
+            diameter_hexes = planet.diameter_hexes
             if diameter_hexes <= 0:
                 diameter_hexes = 11.0  # Dyson Sphere standard size
 
@@ -581,7 +581,8 @@ class StrategyRenderer:
         Each storm uses a nebulae image scaled to cover its hex extent.
         """
         # Skip if system has no storms
-        if not hasattr(sys, 'storms') or not sys.storms:
+        # IStarSystem.storms is always present (List)
+        if not sys.storms:
             return
 
         # Skip detailed rendering at low zoom - just draw colored hex fills

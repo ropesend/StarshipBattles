@@ -13,7 +13,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 from game.core.hex_math import hex_to_pixel, HexCoord
-from game.core.protocols import is_planet, is_fleet, is_star_system
+from game.core.protocols import is_planet, is_fleet, is_star_system, is_warp_point
 
 
 class CameraNavigator:
@@ -136,7 +136,8 @@ class CameraNavigator:
         if not target_sys and self.scene.selected_object:
             if is_star_system(self.scene.selected_object):
                 target_sys = self.scene.selected_object
-            elif hasattr(self.scene.selected_object, 'location'):
+            elif is_planet(self.scene.selected_object) or is_warp_point(self.scene.selected_object):
+                # Planets and warp points have location - find their containing system
                 target_sys = next(
                     (s for s in self.systems
                      if self.scene.selected_object in s.planets

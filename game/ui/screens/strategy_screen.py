@@ -289,7 +289,8 @@ class StrategyScreen:
         # Track last selected system - PROJ-40: Use protocol type guard
         if is_star_system(obj):
             self.last_selected_system = obj
-        elif hasattr(obj, 'location'):
+        elif is_planet(obj) or is_warp_point(obj):
+            # Planets and warp points have location - find their containing system
             parent_sys = next((s for s in self.systems if obj in s.planets or obj in s.warp_points), None)
             if parent_sys:
                 self.last_selected_system = parent_sys
