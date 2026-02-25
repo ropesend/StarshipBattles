@@ -8,7 +8,10 @@ from typing import Tuple, Optional, TYPE_CHECKING
 from game.core.hex_math import HexCoord
 
 if TYPE_CHECKING:
-    from game.strategy.data.fleet import Fleet
+    from game.strategy.data.fleet import Fleet as FleetType
+
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.planet import Planet
 
 
 @dataclass(frozen=True)
@@ -121,18 +124,17 @@ class FleetInfo:
             target_description = ""
 
             if order.type.name in ("MOVE", "COLONIZE"):
-                # Target is a HexCoord
+                # Target is a HexCoord or Planet
                 if isinstance(order.target, HexCoord):
                     target_hex = order.target
                     target_description = f"({order.target.q}, {order.target.r})"
-                elif hasattr(order.target, "name"):
-                    # Planet or other named object
+                elif isinstance(order.target, Planet):
+                    # Planet target - has name and location
                     target_description = order.target.name
-                    if hasattr(order.target, "location"):
-                        target_hex = order.target.location
+                    target_hex = order.target.location
             elif order.type.name in ("MOVE_TO_FLEET", "JOIN_FLEET"):
                 # Target is a Fleet
-                if hasattr(order.target, "id"):
+                if isinstance(order.target, Fleet):
                     target_id = order.target.id
                     target_description = f"Fleet {order.target.id}"
             elif order.type.name == "BUILD":

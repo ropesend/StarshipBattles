@@ -8,24 +8,29 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-191 Phase 3 - Update Test Mocks
+**Last Completed:** PROJ-191 Phase 4 - Replace hasattr Type Discrimination
 **Current Status:** PROJ-191 In Progress
 **Current Project:** PROJ-191
-**Current Phase:** Phase 3 Complete
-**Test Status:** 12702 passed, 1 skipped
+**Current Phase:** Phase 4 Complete
+**Test Status:** 12701 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-191 Phase 3 COMPLETE - Updated test mocks to use spec= for type safety
-- Files modified:
-  - test_empire_economy_calculator.py: 15 Mock() → Mock(spec=Empire/Planet/Fleet/etc.)
-  - test_harvesting_engine.py: _make_empire() and _make_planet() use spec=
-  - test_maintenance_engine.py: _make_colony() uses Mock(spec=Planet)
-  - test_production_refactor.py: mock_empire and mock_colony use spec=
-  - test_fleet_movement_engine.py: create_mock_fleet() uses Mock(spec=Fleet)
-  - test_population_engine.py: TurnEngine integration test empire uses spec=
-- All 12702 tests pass, 1 skipped
-- Next: Phase 4 - Replace hasattr Type Discrimination
+- PROJ-191 Phase 4 COMPLETE - Replaced ~25 hasattr patterns with isinstance/protocol checks
+- Key changes:
+  - galaxy_entity_registry.py: Direct access to Planet.diameter_hexes, is_zone_occupant() for occupied_hexes
+  - galaxy_spatial_index.py: Direct star.location access, is_zone_occupant(star)
+  - colonize_validator.py: isinstance(zone_obj, Planet), is_planet(target) for order.target
+  - fleet_order_processor.py: isinstance(candidate, Planet), target_fleet is not None
+  - superweapon_order_processor.py: Removed 7 hasattr guards
+  - fleet.py: isinstance(target, Planet/Fleet) for serialization
+  - fleet_dto.py: isinstance checks for order target conversion
+- Updated 8+ test files:
+  - Added get_zones_at_global_hex() to MockGalaxy classes
+  - Added resources={} to mock planets for IPlanet protocol
+  - Used MagicMock(spec=Planet) with required attributes
+- All 12701 tests pass, 1 skipped
+- Next: Phase 5 - Miscellaneous Cleanup
 
 ---
 
@@ -58,7 +63,7 @@
   - **Dependencies:** None
 
 - [/] **PROJ-191: Strategy Layer Duck Typing Elimination**
-  - **Phases:** 6 | **Status:** Phase 2 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** Phase 4 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-191/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-191/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -133,7 +138,8 @@
 | 2026-02-24 | PROJ-190 | Audit 1 | PASSED | 12704 passed | - | 18 protocols, 24 TypeGuards, all goals met |
 | 2026-02-24 | PROJ-191 | Phase 1 | Complete | 12704 passed | c6666fb8 | TYPE_CHECKING imports + type hints on 7 files |
 | 2026-02-24 | PROJ-191 | Phase 2 | Complete | 12702 passed | b54c86a6 | Replaced ~53 getattr with direct access, deleted 2 obsolete tests |
-| 2026-02-24 | PROJ-191 | Phase 3 | Complete | 12702 passed | - | Updated test mocks to use spec= for type safety |
+| 2026-02-24 | PROJ-191 | Phase 3 | Complete | 12702 passed | a22fd961 | Updated test mocks to use spec= for type safety |
+| 2026-02-24 | PROJ-191 | Phase 4 | Complete | 12701 passed | e1f46004 | Replaced ~25 hasattr with isinstance/protocol checks |
 
 ---
 

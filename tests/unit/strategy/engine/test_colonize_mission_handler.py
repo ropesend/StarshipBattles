@@ -35,10 +35,14 @@ def make_colony_ship(planet_type: str, owner_id: int, instance_id: str = "colony
 
 def make_mock_planet(planet_type_name: str, planet_id: int = 1):
     """Create a mock planet with specified type."""
-    planet = MagicMock()
+    from game.strategy.data.planet import Planet
+
+    planet = MagicMock(spec=Planet)
     planet.id = planet_id
     planet.name = f"Test Planet {planet_id}"
     planet.location = HexCoord(0, 0)
+    planet.owner_id = None
+    planet.resources = {}  # Required for IPlanet protocol
 
     # Create planet_type mock
     planet_type = MagicMock()

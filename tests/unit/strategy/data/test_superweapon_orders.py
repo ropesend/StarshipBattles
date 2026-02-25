@@ -60,12 +60,12 @@ class TestFleetOrderSerialization:
 
     def test_implode_planet_order_round_trip(self):
         """IMPLODE_PLANET order serializes with planet_ref target."""
-        # Create mock planet-like target with .id
-        class MockPlanet:
-            def __init__(self, pid):
-                self.id = pid
+        from unittest.mock import MagicMock
+        from game.strategy.data.planet import Planet
 
-        planet = MockPlanet(42)
+        # Use MagicMock with spec=Planet to pass isinstance check
+        planet = MagicMock(spec=Planet)
+        planet.id = 42
         order = FleetOrder(OrderType.IMPLODE_PLANET, planet)
         data = order.to_dict()
 

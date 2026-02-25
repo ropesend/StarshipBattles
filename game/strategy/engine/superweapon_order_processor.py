@@ -97,9 +97,9 @@ class SuperweaponOrderProcessor:
             ship = fleet.ships[0] if fleet.ships else None
 
         # Remove planet from colony list if owned
-        if hasattr(target_planet, 'owner_id') and target_planet.owner_id is not None:
+        if target_planet.owner_id is not None:
             # Find owning empire and remove from colonies
-            if hasattr(empire, 'colonies') and target_planet in empire.colonies:
+            if target_planet in empire.colonies:
                 empire.colonies.remove(target_planet)
             # Note: For enemy planets, we'd need to iterate empires
 
@@ -172,18 +172,17 @@ class SuperweaponOrderProcessor:
         # 1. Remove all planets from system and galaxy
         for planet in list(system.planets):
             # Remove from empire colonies if owned
-            if hasattr(planet, 'owner_id') and planet.owner_id is not None:
+            if planet.owner_id is not None:
                 for emp in empires:
-                    if hasattr(emp, 'colonies') and planet in emp.colonies:
+                    if planet in emp.colonies:
                         emp.colonies.remove(planet)
             galaxy.unregister_planet(planet)
 
         # 2. Collect and destroy ALL fleets in the system (including actor)
         all_fleets_in_system = galaxy.get_all_fleets_in_system(system, empires)
         for (owner_empire, victim_fleet) in all_fleets_in_system:
-            # Unregister from galaxy
-            if hasattr(galaxy, 'unregister_fleet'):
-                galaxy.unregister_fleet(victim_fleet)
+            # Unregister from galaxy (Galaxy always has unregister_fleet)
+            galaxy.unregister_fleet(victim_fleet)
             # Remove from empire
             owner_empire.remove_fleet(victim_fleet)
 
@@ -444,9 +443,9 @@ class SuperweaponOrderProcessor:
                 planets_to_remove.append(planet)
 
         for planet in planets_to_remove:
-            # Remove from empire colonies if owned
-            if hasattr(planet, 'owner_id') and planet.owner_id is not None:
-                if hasattr(empire, 'colonies') and planet in empire.colonies:
+            # Remove from empire colonies if owned (Planet always has owner_id)
+            if planet.owner_id is not None:
+                if planet in empire.colonies:
                     empire.colonies.remove(planet)
             galaxy.unregister_planet(planet)
 

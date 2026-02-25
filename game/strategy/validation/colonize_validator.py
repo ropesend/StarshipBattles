@@ -12,8 +12,10 @@ from game.strategy.services.component_inspector import iterate_design_components
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.galaxy import Galaxy
-    from game.strategy.data.planet import Planet
     from game.strategy.data.ship_instance import ShipInstance
+
+from game.strategy.data.planet import Planet
+from game.core.protocols import is_planet
 
 
 def _iterate_colony_pods(
@@ -89,12 +91,11 @@ class ColonizeValidator:
 
         # PROJ-139: Also check zone registry for multi-hex planets (Dyson Spheres)
         # Fleet may be in a planet's zone but not at its center
-        if hasattr(galaxy, 'get_zones_at_global_hex'):
-            zone_objects = galaxy.get_zones_at_global_hex(fleet.location)
-            for zone_obj in zone_objects:
-                # Check if zone object is a planet (has planet_type)
-                if hasattr(zone_obj, 'planet_type') and zone_obj not in all_planets_at_hex:
-                    all_planets_at_hex.append(zone_obj)
+        zone_objects = galaxy.get_zones_at_global_hex(fleet.location)
+        for zone_obj in zone_objects:
+            # Check if zone object is a planet
+            if isinstance(zone_obj, Planet) and zone_obj not in all_planets_at_hex:
+                all_planets_at_hex.append(zone_obj)
 
         valid_candidates = [p for p in all_planets_at_hex if p.owner_id is None]
 
@@ -118,7 +119,7 @@ class ColonizeValidator:
                 # Check if any valid candidate planet matches an available (uncommitted) pod
                 found_match = False
                 for candidate in valid_candidates:
-                    if hasattr(candidate, 'planet_type'):
+                    if isinstance(candidate, Planet):
                         planet_type_str = candidate.planet_type.name
                         available_count = available.get(planet_type_str, 0)
                         committed_count = committed.get(planet_type_str, 0)
@@ -249,7 +250,8 @@ class ColonizeValidator:
             if order.type == OrderType.COLONIZE and order.target is not None:
                 # Get planet type from the target planet
                 target = order.target
-                if hasattr(target, 'planet_type'):
+                # Use is_planet protocol for flexibility with test mocks
+                if is_planet(target):
                     planet_type_str = target.planet_type.name
                     committed[planet_type_str] = committed.get(planet_type_str, 0) + 1
 

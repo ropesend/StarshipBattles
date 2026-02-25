@@ -16,24 +16,26 @@
 | 1. Type Hints on Signatures | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Replace getattr in Engines | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Update Test Mocks | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Replace hasattr Type Discrimination | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Replace hasattr Type Discrimination | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Miscellaneous Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Document & Audit | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 3 Complete
-**Last Action:** Updated test mocks to use spec= parameter for type safety
-**Next Action:** Phase 4 — Replace hasattr Type Discrimination
+**Active Phase:** Phase 4 Complete
+**Last Action:** Replaced ~25 hasattr patterns with isinstance/protocol checks
+**Next Action:** Phase 5 — Miscellaneous Cleanup
 **Blockers:** None
-**Context for Next Agent:** Phase 3 complete. Updated test mocks in:
-- test_empire_economy_calculator.py: 15 Mock() calls → Mock(spec=Empire/Planet/Fleet/etc.)
-- test_harvesting_engine.py: _make_empire() and _make_planet() helpers use spec=
-- test_maintenance_engine.py: _make_colony() uses Mock(spec=Planet)
-- test_production_refactor.py: mock_empire and mock_colony fixtures use spec=
-- test_fleet_movement_engine.py: create_mock_fleet() uses Mock(spec=Fleet), empire uses Mock(spec=Empire)
-- test_population_engine.py: TurnEngine integration test empire uses Mock(spec=Empire)
-All 12702 tests pass (1 skipped).
+**Context for Next Agent:** Phase 4 complete. Key changes:
+- galaxy_entity_registry.py: Replaced hasattr(planet, 'diameter_hexes') with direct access, hasattr(obj, 'occupied_hexes') with is_zone_occupant(obj)
+- galaxy_spatial_index.py: Direct star.location access, is_zone_occupant(star)
+- colonize_validator.py: isinstance(zone_obj, Planet), is_planet(target) for order.target checks
+- fleet_order_processor.py: isinstance(candidate, Planet), target_fleet is not None checks
+- superweapon_order_processor.py: Removed 7 hasattr guards for owner_id/colonies/unregister_fleet
+- fleet.py: isinstance(target, Planet) and isinstance(target, Fleet) for serialization
+- fleet_dto.py: isinstance checks for order target conversion
+- Updated 8+ test files to add get_zones_at_global_hex() to MockGalaxy and resources={} to mock planets
+All 12701 tests pass (1 skipped).
 
 ## Overview
 Replace ~93 implicit duck typing patterns (`hasattr()`/`getattr()`) in the `game/strategy/` layer with direct attribute access, explicit `isinstance` checks, and proper type annotations. Retain ~12 intentional `getattr` patterns at external data boundaries (JSON component definitions, save file deserialization).

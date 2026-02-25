@@ -277,30 +277,34 @@ class TestColonizeValidatorColonyPods:
     def mock_planet_ice_dwarf(self):
         """Create a mock ICE_DWARF planet."""
         from enum import Enum
+        from game.strategy.data.planet import Planet
 
         class MockPlanetType(Enum):
             ICE_DWARF = "ICE_DWARF"
 
-        planet = MagicMock()
+        planet = MagicMock(spec=Planet)
         planet.name = "Frostworld"
         planet.owner_id = None
         planet.location = HexCoord(0, 0)
         planet.planet_type = MockPlanetType.ICE_DWARF
+        planet.resources = {}  # Required for IPlanet protocol
         return planet
 
     @pytest.fixture
     def mock_planet_continental(self):
         """Create a mock CONTINENTAL planet."""
         from enum import Enum
+        from game.strategy.data.planet import Planet
 
         class MockPlanetType(Enum):
             CONTINENTAL = "CONTINENTAL"
 
-        planet = MagicMock()
+        planet = MagicMock(spec=Planet)
         planet.name = "Earth-like"
         planet.owner_id = None
         planet.location = HexCoord(0, 0)
         planet.planet_type = MockPlanetType.CONTINENTAL
+        planet.resources = {}  # Required for IPlanet protocol
         return planet
 
     @pytest.fixture
@@ -594,13 +598,14 @@ class TestColonizeValidatorZoneColonization:
     def test_validate_colonize_dyson_sphere_from_zone_hex(self, mock_galaxy, mock_fleet):
         """Fleet in Dyson Sphere's zone can colonize it."""
         from game.strategy.validation import ColonizeValidator
+        from game.strategy.data.planet import Planet
         from enum import Enum
 
         class MockPlanetType(Enum):
             DYSON_SPHERE = "DYSON_SPHERE"
 
         # Create a Dyson Sphere at center (0,0) with zone extending to fleet hex (2,0)
-        mock_dyson = MagicMock()
+        mock_dyson = MagicMock(spec=Planet)
         mock_dyson.name = "Dyson Sphere"
         mock_dyson.owner_id = None
         mock_dyson.location = HexCoord(0, 0)
@@ -729,16 +734,18 @@ class TestColonizeValidatorAnyPlanetPods:
     def _make_planet(self, planet_type_name: str, name: str = "Test Planet"):
         """Create a mock planet of the given type."""
         from enum import Enum
+        from game.strategy.data.planet import Planet
 
         class MockPlanetType(Enum):
             ICE_DWARF = "ICE_DWARF"
             CONTINENTAL = "CONTINENTAL"
 
-        planet = MagicMock()
+        planet = MagicMock(spec=Planet)
         planet.name = name
         planet.owner_id = None
         planet.location = HexCoord(0, 0)
         planet.planet_type = MockPlanetType[planet_type_name]
+        planet.resources = {}  # Required for IPlanet protocol
         return planet
 
     def _make_ship_with_pod(self, pod_type: str):
@@ -881,16 +888,18 @@ class TestColonizeValidatorAdvancedEdgeCases:
     def _make_planet(self, planet_type_name: str, name: str = "Test Planet"):
         """Create a mock planet of the given type."""
         from enum import Enum
+        from game.strategy.data.planet import Planet
 
         class MockPlanetType(Enum):
             ICE_DWARF = "ICE_DWARF"
             CONTINENTAL = "CONTINENTAL"
 
-        planet = MagicMock()
+        planet = MagicMock(spec=Planet)
         planet.name = name
         planet.owner_id = None
         planet.location = HexCoord(0, 0)
         planet.planet_type = MockPlanetType[planet_type_name]
+        planet.resources = {}  # Required for IPlanet protocol
         return planet
 
     def test_skip_chain_check_allows_overcommit(self, mock_component_registry):
@@ -1171,30 +1180,12 @@ class TestColonizeValidatorAdvancedEdgeCases:
         # Should succeed because CONTINENTAL pod is still available for cont_planet
         assert result.is_valid is True
 
-    def test_galaxy_without_zone_registry(self):
-        """Validation works when galaxy has no get_zones_at_global_hex method."""
-        from game.strategy.validation import ColonizeValidator
-
-        galaxy = MagicMock()
-        planet = MagicMock()
-        planet.name = "Normal Planet"
-        planet.owner_id = None
-
-        galaxy.get_planets_at_global_hex = MagicMock(return_value=[planet])
-        # Remove zone method
-        del galaxy.get_zones_at_global_hex
-
-        fleet = MagicMock()
-        fleet.id = 1
-        fleet.location = HexCoord(0, 0)
-
-        result = ColonizeValidator.validate(galaxy, fleet, planet)
-
-        assert result.is_valid is True
+    # PROJ-191: test_galaxy_without_zone_registry deleted - Galaxy always has get_zones_at_global_hex
 
     def test_zone_objects_deduplication(self):
         """Zone objects already in planets list are not duplicated."""
         from game.strategy.validation import ColonizeValidator
+        from game.strategy.data.planet import Planet
         from enum import Enum
 
         class MockPlanetType(Enum):
@@ -1202,7 +1193,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
         galaxy = MagicMock()
 
-        dyson = MagicMock()
+        dyson = MagicMock(spec=Planet)
         dyson.name = "Dyson Sphere"
         dyson.owner_id = None
         dyson.planet_type = MockPlanetType.DYSON_SPHERE

@@ -5,6 +5,8 @@ This module handles spatial queries for locating systems and entities.
 """
 from typing import Any, List, Optional, TYPE_CHECKING
 
+from game.core.protocols import is_zone_occupant
+
 if TYPE_CHECKING:
     from game.strategy.data.galaxy import Galaxy, StarSystem
     from game.strategy.data.planet import Planet
@@ -161,10 +163,10 @@ class GalaxySpatialIndex:
 
         # Add star locations and star zone hexes (PROJ-139)
         for star in system.stars:
-            if hasattr(star, 'location'):
-                system_hexes.add(system.global_location + star.location)
-            # Add star zone hexes
-            if hasattr(star, 'occupied_hexes'):
+            # Star always has location attribute
+            system_hexes.add(system.global_location + star.location)
+            # Add star zone hexes if it occupies multiple hexes
+            if is_zone_occupant(star):
                 for local_hex in star.occupied_hexes:
                     system_hexes.add(system.global_location + local_hex)
 

@@ -30,7 +30,8 @@ from game.core.hex_math import HexCoord
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
     from game.strategy.data.galaxy import Galaxy
-    from game.strategy.data.planet import Planet
+
+from game.strategy.data.planet import Planet
 
 
 @dataclass
@@ -150,8 +151,8 @@ class FleetOrderProcessor:
 
         target_fleet = order.target
 
-        # Validation
-        if not target_fleet or not hasattr(target_fleet, 'location'):
+        # Validation: target must be a valid Fleet (Fleet always has location)
+        if target_fleet is None:
             logger.warning("FleetOrderProcessor: Join Fleet failed - Target invalid/destroyed.")
             fleet.pop_order()
             return JoinFleetResult(merged=False, cancelled=True)
@@ -224,7 +225,7 @@ class FleetOrderProcessor:
             if component_registry is not None:
                 final_planet = None
                 for candidate in valid_candidates:
-                    if hasattr(candidate, 'planet_type'):
+                    if isinstance(candidate, Planet):
                         planet_type_str = candidate.planet_type.name
                         ship_with_pod = ColonizeValidator.find_ship_with_colony_pod(
                             fleet, planet_type_str, component_registry
@@ -695,7 +696,8 @@ class FleetOrderProcessor:
                 order = fleet.get_current_order()
                 if order and order.type == OrderType.JOIN_FLEET:
                     target_fleet = order.target
-                    if target_fleet and hasattr(target_fleet, 'location'):
+                    # Fleet always has location; None check suffices
+                    if target_fleet is not None:
                         if fleet.location == target_fleet.location:
                             logger.debug(f"FleetOrderProcessor [Instant]: Fleet {fleet.id} merging into {target_fleet.id}")
                             fleet.merge_with(target_fleet)

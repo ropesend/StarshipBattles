@@ -48,6 +48,10 @@ class MockGalaxy:
                     result.append(p)
         return result
 
+    def get_zones_at_global_hex(self, global_hex):
+        """Return zone objects at location (empty for these tests)."""
+        return []
+
 
 def make_colony_ship(name: str, owner_id: int, pod_type: str = "ICE_DWARF") -> ShipInstance:
     """Create a ship with a colony pod component for testing."""

@@ -14,6 +14,7 @@ from game.core.protocols import IPostBattleShip
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
+    from game.strategy.data.planet import Planet
 
 
 class OrderType(Enum):
@@ -73,12 +74,15 @@ class FleetOrder:
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize for save game."""
+        # Import at runtime to avoid circular import
+        from game.strategy.data.planet import Planet
+
         target_data = None
         if self.target is not None:
             if self.type in (OrderType.TRANSFER, OrderType.LOAD_POPULATION, OrderType.UNLOAD_POPULATION):
                 # TRANSFER and population orders store a dict with direction, cargo_type, amount, planet_id
                 target_data = {'type': 'transfer', 'value': self.target}
-            elif self.type == OrderType.IMPLODE_PLANET and hasattr(self.target, 'id'):
+            elif self.type == OrderType.IMPLODE_PLANET and isinstance(self.target, Planet):
                 # Planet reference for IMPLODE_PLANET (PROJ-102)
                 target_data = {'type': 'planet_ref', 'id': self.target.id}
             elif self.type == OrderType.SELF_DESTRUCT and isinstance(self.target, list):
@@ -90,9 +94,10 @@ class FleetOrder:
             elif isinstance(self.target, HexCoord):
                 # HexCoord for MOVE, WARP targets
                 target_data = {'q': self.target.q, 'r': self.target.r}
-            elif hasattr(self.target, 'to_dict'):
+            elif isinstance(self.target, Planet):
+                # Planet target (COLONIZE etc.) - serialize full planet
                 target_data = self.target.to_dict()
-            elif hasattr(self.target, 'id'):
+            elif isinstance(self.target, Fleet):
                 # Fleet reference - store ID
                 target_data = {'type': 'fleet_ref', 'id': self.target.id}
             else:

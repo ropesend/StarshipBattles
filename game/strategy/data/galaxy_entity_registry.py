@@ -5,6 +5,8 @@ This module handles entity lifecycle management (planets, fleets, zones).
 """
 from typing import Optional, TYPE_CHECKING
 
+from game.core.protocols import is_zone_occupant
+
 if TYPE_CHECKING:
     from game.strategy.data.galaxy import Galaxy, StarSystem
     from game.strategy.data.planet import Planet
@@ -53,7 +55,7 @@ class GalaxyEntityRegistry:
         self._galaxy._global_hex_planets[global_hex].append(planet)
 
         # Register zone if planet has multi-hex footprint (PROJ-139)
-        if hasattr(planet, 'diameter_hexes') and planet.diameter_hexes > 0:
+        if planet.diameter_hexes > 0:
             self.register_zone(system, planet)
 
     def restore_planet(self, system: 'StarSystem', planet: 'Planet') -> None:
@@ -79,7 +81,7 @@ class GalaxyEntityRegistry:
         self._galaxy._global_hex_planets[global_hex].append(planet)
 
         # Register zone if planet has multi-hex footprint (PROJ-139)
-        if hasattr(planet, 'diameter_hexes') and planet.diameter_hexes > 0:
+        if planet.diameter_hexes > 0:
             self.register_zone(system, planet)
 
     def get_planet_by_id(self, planet_id: int) -> Optional['Planet']:
@@ -108,7 +110,7 @@ class GalaxyEntityRegistry:
         # Remove from spatial index and zone registry
         if system is not None:
             # Unregister zone if planet has multi-hex footprint (PROJ-139)
-            if hasattr(planet, 'diameter_hexes') and planet.diameter_hexes > 0:
+            if planet.diameter_hexes > 0:
                 self.unregister_zone(system, planet)
 
             global_hex = system.global_location + planet.location
@@ -158,7 +160,7 @@ class GalaxyEntityRegistry:
             system: The StarSystem containing the object.
             obj: Object with an occupied_hexes property (IZoneOccupant).
         """
-        if not hasattr(obj, 'occupied_hexes'):
+        if not is_zone_occupant(obj):
             return
         # Register in zone-to-system reverse lookup (PROJ-179: O(1) lookup)
         # Use id() because Star objects are not hashable
@@ -177,7 +179,7 @@ class GalaxyEntityRegistry:
             system: The StarSystem containing the object.
             obj: Object with an occupied_hexes property (IZoneOccupant).
         """
-        if not hasattr(obj, 'occupied_hexes'):
+        if not is_zone_occupant(obj):
             return
         # Remove from zone-to-system reverse lookup (PROJ-179: O(1) lookup)
         self._galaxy._zone_to_system.pop(id(obj), None)
