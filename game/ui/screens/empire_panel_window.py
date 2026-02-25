@@ -4,13 +4,17 @@ EmpirePanelWindow - Multi-tab empire information panel.
 PROJ-99 Phase 3: Main window with Treasury, Population, and placeholder tabs.
 Provides empire-wide overview of economy, species data, and future features.
 """
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, TYPE_CHECKING
 
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIWindow, UIPanel, UIButton, UILabel, UIImage, UITextBox, UIScrollingContainer
 
 from game.core.constants import PLANET_RESOURCES
+
+if TYPE_CHECKING:
+    from game.strategy.data.race_config import RaceConfig
+    from game.core.protocols import IEmpire
 from game.core.paths import Paths
 from game.strategy.engine.empire_economy_calculator import EmpireEconomyCalculator
 from game.ui.panels.empire_treasury_panel import EmpireTreasuryPanel, load_resource_icons
@@ -48,7 +52,7 @@ class EmpirePanelWindow(UIWindow):
         self,
         rect: pygame.Rect,
         manager: pygame_gui.UIManager,
-        empire,
+        empire: 'IEmpire',
         on_close_callback: Optional[Callable[[], None]] = None
     ):
         """
@@ -67,7 +71,7 @@ class EmpirePanelWindow(UIWindow):
             resizable=False
         )
 
-        self.empire = empire
+        self.empire: 'IEmpire' = empire
         self.on_close_callback = on_close_callback
 
         # Tab state
@@ -209,8 +213,8 @@ class EmpirePanelWindow(UIWindow):
             container=panel
         )
 
-        # Get race config
-        race_config = getattr(self.empire, 'race_config', None)
+        # Get race config (IEmpire protocol guarantees race_config property exists)
+        race_config = self.empire.race_config
 
         if race_config is None:
             # No species data
@@ -233,7 +237,7 @@ class EmpirePanelWindow(UIWindow):
     def _render_species_card(
         self,
         container: UIScrollingContainer,
-        race_config,
+        race_config: 'RaceConfig',
         y_offset: int,
         content_width: int
     ) -> int:
@@ -269,12 +273,12 @@ class EmpirePanelWindow(UIWindow):
     def _render_portrait_flag_row(
         self,
         container: UIScrollingContainer,
-        race_config,
+        race_config: 'RaceConfig',
         y_offset: int
     ) -> int:
         """Render portrait and flag images."""
-        # Portrait (128x128)
-        portrait_id = getattr(self.empire, 'portrait_id', None) or getattr(race_config, 'portrait_id', None)
+        # Portrait (128x128) - IEmpire has portrait_id, RaceConfig has portrait_id as fallback
+        portrait_id = self.empire.portrait_id or race_config.portrait_id
         if portrait_id:
             portrait_surf = self._asset_loader.load_portrait_full(portrait_id)
             if portrait_surf:
@@ -286,8 +290,8 @@ class EmpirePanelWindow(UIWindow):
                     container=container
                 )
 
-        # Flag (96x64) - rectangle shape
-        flag_id = getattr(self.empire, 'flag_id', None) or getattr(race_config, 'flag_id', None)
+        # Flag (96x64) - rectangle shape - IEmpire has flag_id, RaceConfig has flag_id as fallback
+        flag_id = self.empire.flag_id or race_config.flag_id
         if flag_id:
             shapes = self._asset_loader.load_flag_full(flag_id)
             if shapes and len(shapes) > 0:
@@ -305,7 +309,7 @@ class EmpirePanelWindow(UIWindow):
     def _render_identity_section(
         self,
         container: UIScrollingContainer,
-        race_config,
+        race_config: 'RaceConfig',
         y_offset: int,
         content_width: int
     ) -> int:
@@ -314,15 +318,15 @@ class EmpirePanelWindow(UIWindow):
         create_section_header("Identity", y_offset, content_width, self.ui_manager, container, height=ROW_HEIGHT)
         y_offset += ROW_HEIGHT + 5
 
-        # Identity fields
+        # Identity fields - RaceConfig dataclass guarantees all fields exist with defaults
         identity_fields = [
-            ("Faction Name", getattr(race_config, 'faction_name', '')),
-            ("Race Name", getattr(race_config, 'race_name', '')),
-            ("Government Type", getattr(race_config, 'government_type', '')),
-            ("Government Organization", getattr(race_config, 'government_organization', '')),
-            ("Leader", f"{getattr(race_config, 'leader_title', '')} {getattr(race_config, 'leader_name', '')}".strip()),
-            ("Physical Type", getattr(race_config, 'physical_type', '')),
-            ("Society Type", getattr(race_config, 'society_type', '')),
+            ("Faction Name", race_config.faction_name),
+            ("Race Name", race_config.race_name),
+            ("Government Type", race_config.government_type),
+            ("Government Organization", race_config.government_organization),
+            ("Leader", f"{race_config.leader_title} {race_config.leader_name}".strip()),
+            ("Physical Type", race_config.physical_type),
+            ("Society Type", race_config.society_type),
         ]
 
         for label, value in identity_fields:
@@ -340,7 +344,7 @@ class EmpirePanelWindow(UIWindow):
     def _render_aptitudes_section(
         self,
         container: UIScrollingContainer,
-        race_config,
+        race_config: 'RaceConfig',
         y_offset: int,
         content_width: int
     ) -> int:
@@ -349,17 +353,17 @@ class EmpirePanelWindow(UIWindow):
         create_section_header("Aptitudes", y_offset, content_width, self.ui_manager, container, height=ROW_HEIGHT)
         y_offset += ROW_HEIGHT + 5
 
-        # Aptitude names and display labels
+        # Aptitude names and display labels - RaceConfig dataclass has defaults
         aptitudes = [
-            ("Strength", getattr(race_config, 'aptitude_strength', 50)),
-            ("Intelligence", getattr(race_config, 'aptitude_intelligence', 50)),
-            ("Constitution", getattr(race_config, 'aptitude_constitution', 50)),
-            ("Dexterity", getattr(race_config, 'aptitude_dexterity', 50)),
-            ("Species Tolerance", getattr(race_config, 'aptitude_tolerance_other_species', 50)),
-            ("Cooperation", getattr(race_config, 'aptitude_cooperation', 50)),
-            ("Happiness", getattr(race_config, 'aptitude_happiness', 50)),
-            ("Pop Growth", getattr(race_config, 'aptitude_population_growth', 50)),
-            ("Conflict Tolerance", getattr(race_config, 'aptitude_conflict_tolerance', 50)),
+            ("Strength", race_config.aptitude_strength),
+            ("Intelligence", race_config.aptitude_intelligence),
+            ("Constitution", race_config.aptitude_constitution),
+            ("Dexterity", race_config.aptitude_dexterity),
+            ("Species Tolerance", race_config.aptitude_tolerance_other_species),
+            ("Cooperation", race_config.aptitude_cooperation),
+            ("Happiness", race_config.aptitude_happiness),
+            ("Pop Growth", race_config.aptitude_population_growth),
+            ("Conflict Tolerance", race_config.aptitude_conflict_tolerance),
         ]
 
         # 3 columns layout
@@ -386,7 +390,7 @@ class EmpirePanelWindow(UIWindow):
     def _render_environment_section(
         self,
         container: UIScrollingContainer,
-        race_config,
+        race_config: 'RaceConfig',
         y_offset: int,
         content_width: int
     ) -> int:
@@ -395,14 +399,14 @@ class EmpirePanelWindow(UIWindow):
         create_section_header("Environmental Preferences", y_offset, content_width, self.ui_manager, container, height=ROW_HEIGHT)
         y_offset += ROW_HEIGHT + 5
 
-        # Environment fields
-        gravity_ideal = getattr(race_config, 'gravity_ideal', 1.0)
-        gravity_tol = getattr(race_config, 'gravity_tolerance', 0.3)
-        temp_ideal = getattr(race_config, 'temperature_ideal', 293.0)
-        temp_tol = getattr(race_config, 'temperature_tolerance', 50.0)
-        water_ideal = getattr(race_config, 'water_ideal', 0.5)
-        water_tol = getattr(race_config, 'water_tolerance', 0.2)
-        radiation = getattr(race_config, 'radiation_tolerance', 0.0)
+        # Environment fields - RaceConfig dataclass has defaults
+        gravity_ideal = race_config.gravity_ideal
+        gravity_tol = race_config.gravity_tolerance
+        temp_ideal = race_config.temperature_ideal
+        temp_tol = race_config.temperature_tolerance
+        water_ideal = race_config.water_ideal
+        water_tol = race_config.water_tolerance
+        radiation = race_config.radiation_tolerance
 
         env_fields = [
             f"Gravity: {gravity_ideal:.1f}g (+/- {gravity_tol:.1f}g)",
@@ -425,13 +429,13 @@ class EmpirePanelWindow(UIWindow):
     def _render_descriptions_section(
         self,
         container: UIScrollingContainer,
-        race_config,
+        race_config: 'RaceConfig',
         y_offset: int,
         content_width: int
     ) -> int:
         """Render bio and socio descriptions."""
-        bio = getattr(race_config, 'bio_description', '')
-        socio = getattr(race_config, 'socio_description', '')
+        bio = race_config.bio_description
+        socio = race_config.socio_description
 
         if bio:
             # Biology header

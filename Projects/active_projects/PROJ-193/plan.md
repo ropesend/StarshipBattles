@@ -15,7 +15,7 @@
 |-------|--------|-----------|
 | 1. Foundation — Protocol Extensions + New Protocols + Mock Fixes | ✅ Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Type Discrimination Replacements | ✅ Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Empire Panel + Race Config Typing | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Empire Panel + Race Config Typing | ✅ Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Strategy Detail Formatters | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Planet Report + Ship Stats Renderer | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Battle Panels | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
@@ -24,11 +24,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 3 — Empire Panel + Race Config Typing
-**Last Action:** Phase 2 complete — replaced ~12 hasattr/isinstance type discriminations with TypeGuards in 5 files
-**Next Action:** Begin Phase 3 — fix empire_panel_window.py and race_config typing
+**Active Phase:** Phase 4 — Strategy Detail Formatters
+**Last Action:** Phase 3 complete — replaced 28 getattr calls with direct property access in empire_panel_window.py
+**Next Action:** Begin Phase 4 — fix strategy_detail_fmt.py and related formatters
 **Blockers:** None
-**Context for Next Agent:** Phase 2 complete. Replaced duck typing patterns with is_planet, is_fleet, is_star_system, is_star TypeGuards in strategy_camera_nav.py, strategy_colonization.py, fleet_orders_window.py, planet_report_panel.py, strategy_widgets.py. Deleted 1 obsolete test. 12711 passed, 1 skipped.
+**Context for Next Agent:** Phase 3 complete. Added TYPE_CHECKING imports, typed empire as IEmpire and race_config as RaceConfig. Replaced 28 getattr calls with direct access in empire_panel_window.py. Race panels were already typed from previous work. 12711 passed, 1 skipped.
 
 ## Overview
 Eliminate ~155 of ~224 `hasattr()`/`getattr()` calls in `game/ui/` by replacing duck typing with explicit Protocol interfaces. This gives the UI layer proper type contracts, IDE intelligence, and interface definitions that map cleanly to C++ abstract classes, C# interfaces, and Rust traits for future porting.
