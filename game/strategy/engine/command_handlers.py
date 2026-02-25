@@ -295,15 +295,10 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
                 return error
 
             # PROJ-140 Phase 4: Validate pod match for specific planet targets
-            # Get component registry from turn_engine
-            component_registry = None
-            turn_engine = getattr(session, 'turn_engine', None)
-            if turn_engine is not None:
-                registries = getattr(turn_engine, '_registries', None)
-                if registries is not None:
-                    component_registry = getattr(registries, 'components', None)
+            # Get component registry from turn_engine (always available after init)
+            component_registry = session.turn_engine._registries.components
 
-            if component_registry is not None:
+            if component_registry:
                 planet_type_str = planet.planet_type.name
 
                 # Check if fleet has a matching colony pod

@@ -7,30 +7,28 @@
 
 ## Agent Context
 
-**Last Session:** 2026-02-24
-**Last Completed:** PROJ-191 Phase 4 - Replace hasattr Type Discrimination
+**Last Session:** 2026-02-25
+**Last Completed:** PROJ-191 Phase 5 - Miscellaneous Cleanup
 **Current Status:** PROJ-191 In Progress
 **Current Project:** PROJ-191
-**Current Phase:** Phase 4 Complete
-**Test Status:** 12701 passed, 1 skipped
+**Current Phase:** Phase 5 Complete
+**Test Status:** 12697 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-191 Phase 4 COMPLETE - Replaced ~25 hasattr patterns with isinstance/protocol checks
+- PROJ-191 Phase 5 COMPLETE - Replaced ~12 hasattr/getattr patterns with direct access
 - Key changes:
-  - galaxy_entity_registry.py: Direct access to Planet.diameter_hexes, is_zone_occupant() for occupied_hexes
-  - galaxy_spatial_index.py: Direct star.location access, is_zone_occupant(star)
-  - colonize_validator.py: isinstance(zone_obj, Planet), is_planet(target) for order.target
-  - fleet_order_processor.py: isinstance(candidate, Planet), target_fleet is not None
-  - superweapon_order_processor.py: Removed 7 hasattr guards
-  - fleet.py: isinstance(target, Planet/Fleet) for serialization
-  - fleet_dto.py: isinstance checks for order target conversion
-- Updated 8+ test files:
-  - Added get_zones_at_global_hex() to MockGalaxy classes
-  - Added resources={} to mock planets for IPlanet protocol
-  - Used MagicMock(spec=Planet) with required attributes
-- All 12701 tests pass, 1 skipped
-- Next: Phase 5 - Miscellaneous Cleanup
+  - command_handlers.py: Direct access `session.turn_engine._registries.components`
+  - game_session.py: Direct `fleet.can_use_warp()` call
+  - area_effect_manager.py: Direct `galaxy.get_zones_at_global_hex()`
+  - fleet_navigation_service.py: 3 patterns → direct access, `target_fleet is not None`
+  - cargo_transfer_service.py: 5 patterns → direct access, isinstance(FleetInfo/PlanetInfo)
+- Updated tests:
+  - Deleted 4 obsolete tests (testing "target lacking location" - Fleet always has location)
+  - Added get_zones_at_global_hex() to 2 MockGalaxy classes in integration tests
+  - Updated cargo transfer tests to use actual FleetInfo/PlanetInfo dataclass instances
+- All 12697 tests pass, 1 skipped
+- Next: Phase 6 - Document & Audit
 
 ---
 
@@ -63,7 +61,7 @@
   - **Dependencies:** None
 
 - [/] **PROJ-191: Strategy Layer Duck Typing Elimination**
-  - **Phases:** 6 | **Status:** Phase 4 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** Phase 5 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-191/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-191/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -140,6 +138,7 @@
 | 2026-02-24 | PROJ-191 | Phase 2 | Complete | 12702 passed | b54c86a6 | Replaced ~53 getattr with direct access, deleted 2 obsolete tests |
 | 2026-02-24 | PROJ-191 | Phase 3 | Complete | 12702 passed | a22fd961 | Updated test mocks to use spec= for type safety |
 | 2026-02-24 | PROJ-191 | Phase 4 | Complete | 12701 passed | e1f46004 | Replaced ~25 hasattr with isinstance/protocol checks |
+| 2026-02-25 | PROJ-191 | Phase 5 | Complete | 12697 passed | - | Replaced ~12 hasattr/getattr, deleted 4 obsolete tests |
 
 ---
 

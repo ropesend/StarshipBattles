@@ -109,6 +109,10 @@ class MockGalaxy:
     def get_planets_at_global_hex(self, global_hex):
         return self._planet_map.get(global_hex, [])
 
+    def get_zones_at_global_hex(self, global_hex):
+        """Return empty list - no storms in this mock."""
+        return []
+
 
 def _make_mock_ship(
     fuel_capacity=500.0,

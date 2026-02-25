@@ -169,8 +169,8 @@ class GameSession:
         from game.strategy.data.pathfinding import find_hybrid_path
 
         # Log warp capability for debugging navigation issues (BUG-45)
-        can_warp = fleet.can_use_warp() if hasattr(fleet, 'can_use_warp') else 'N/A'
-        logger.debug(f"preview_fleet_path: fleet={fleet.id}, can_use_warp={can_warp}, target={target_hex}")
+        # Fleet always has can_use_warp() method
+        logger.debug(f"preview_fleet_path: fleet={fleet.id}, can_use_warp={fleet.can_use_warp()}, target={target_hex}")
 
         path = find_hybrid_path(self.galaxy, fleet.location, target_hex, fleet=fleet)
 

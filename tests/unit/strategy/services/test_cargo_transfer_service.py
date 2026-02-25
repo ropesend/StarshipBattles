@@ -6,8 +6,11 @@ PROJ-162: Tests for cargo transfer business logic extracted from UI dialogs.
 import pytest
 from unittest.mock import MagicMock, PropertyMock
 
+from game.core.hex_math import HexCoord
 from game.strategy.services.cargo_transfer_service import CargoTransferService
 from game.strategy.engine.commands import IssueTransferCommand
+from game.strategy.facade.dto.fleet_dto import FleetInfo
+from game.strategy.facade.dto.planet_dto import PlanetInfo
 
 
 class TestResolveColonies:
@@ -79,21 +82,8 @@ class TestResolveColonies:
         # Assert
         assert len(result) == 0
 
-    def test_resolve_colonies_no_fallback_if_fleet_has_no_location(self):
-        """If fleet has no location attribute, doesn't try fallback."""
-        # Arrange
-        facade = MagicMock()
-        fleet = MagicMock(spec=[])  # No attributes
-        hex_coord = (1, 2)
-
-        facade.get_planets_at_hex.return_value = []
-
-        # Act
-        result = CargoTransferService.resolve_colonies(facade, hex_coord, fleet)
-
-        # Assert
-        assert len(result) == 0
-        facade.get_planets_at_hex.assert_called_once_with(hex_coord)
+    # NOTE: test_resolve_colonies_no_fallback_if_fleet_has_no_location removed
+    # Fleet always has location attribute - testing "fleet without location" is obsolete
 
 
 class TestGetUnloadItems:
@@ -208,7 +198,9 @@ class TestGetLoadItems:
         colony.planet_id = 10
         colony.name = "Beta Colony"
 
-        planet_info = MagicMock(spec=['total_population'])
+        # PlanetInfo always has population_details (empty tuple means fallback to total_population)
+        planet_info = MagicMock()
+        planet_info.population_details = ()  # Empty - triggers fallback
         planet_info.total_population = 5000
         facade.get_planet.return_value = planet_info
 
@@ -284,10 +276,12 @@ class TestGetInventoryItems:
     """Tests for CargoTransferService.get_inventory_items()"""
 
     def test_get_inventory_items_fleet(self):
-        """Fleet object (has passengers_current) returns passenger items."""
+        """FleetInfo with passengers returns passenger items."""
         # Arrange
-        fleet_info = MagicMock()
-        fleet_info.passengers_current = 2500
+        fleet_info = FleetInfo(
+            fleet_id=1, owner_id=1, location=HexCoord(0, 0),
+            speed=5.0, ship_count=1, passengers_current=2500
+        )
 
         # Act
         result = CargoTransferService.get_inventory_items(fleet_info)
@@ -300,16 +294,19 @@ class TestGetInventoryItems:
         assert result[0]['max_amount'] == 2500
 
     def test_get_inventory_items_colony(self):
-        """Colony object (has population_details) returns population items."""
+        """PlanetInfo with population_details returns population items."""
         # Arrange
-        colony_info = MagicMock(spec=['population_details'])
-        colony_info.population_details = [
-            ("Human", 4000, 75),
-            ("Mrrshan", 2000, 85),
-        ]
+        planet_info = PlanetInfo(
+            planet_id=1, name="Test", planet_type="TERRESTRIAL",
+            location=HexCoord(0, 0), orbit_distance=1,
+            population_details=(
+                ("Human", 4000, 75.0),
+                ("Mrrshan", 2000, 85.0),
+            )
+        )
 
         # Act
-        result = CargoTransferService.get_inventory_items(colony_info)
+        result = CargoTransferService.get_inventory_items(planet_info)
 
         # Assert
         assert len(result) == 2
@@ -321,10 +318,13 @@ class TestGetInventoryItems:
         assert result[1]['species_id'] == "Mrrshan"
 
     def test_get_inventory_items_planet_fallback(self):
-        """Planet without population_details uses total_population."""
+        """PlanetInfo without population_details uses total_population."""
         # Arrange
-        planet_info = MagicMock(spec=['total_population'])
-        planet_info.total_population = 7500
+        planet_info = PlanetInfo(
+            planet_id=1, name="Test", planet_type="TERRESTRIAL",
+            location=HexCoord(0, 0), orbit_distance=1,
+            total_population=7500  # No population_details
+        )
 
         # Act
         result = CargoTransferService.get_inventory_items(planet_info)
@@ -344,10 +344,12 @@ class TestGetInventoryItems:
         assert len(result) == 0
 
     def test_get_inventory_items_fleet_zero_passengers(self):
-        """Fleet with zero passengers returns empty list."""
+        """FleetInfo with zero passengers returns empty list."""
         # Arrange
-        fleet_info = MagicMock()
-        fleet_info.passengers_current = 0
+        fleet_info = FleetInfo(
+            fleet_id=1, owner_id=1, location=HexCoord(0, 0),
+            speed=5.0, ship_count=1, passengers_current=0
+        )
 
         # Act
         result = CargoTransferService.get_inventory_items(fleet_info)

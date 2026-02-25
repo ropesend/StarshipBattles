@@ -17,25 +17,24 @@
 | 2. Replace getattr in Engines | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Update Test Mocks | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Replace hasattr Type Discrimination | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Miscellaneous Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Miscellaneous Cleanup | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Document & Audit | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 4 Complete
-**Last Action:** Replaced ~25 hasattr patterns with isinstance/protocol checks
-**Next Action:** Phase 5 — Miscellaneous Cleanup
+**Active Phase:** Phase 5 Complete
+**Last Action:** Replaced ~12 hasattr/getattr patterns with direct access and isinstance checks
+**Next Action:** Phase 6 — Document & Audit
 **Blockers:** None
-**Context for Next Agent:** Phase 4 complete. Key changes:
-- galaxy_entity_registry.py: Replaced hasattr(planet, 'diameter_hexes') with direct access, hasattr(obj, 'occupied_hexes') with is_zone_occupant(obj)
-- galaxy_spatial_index.py: Direct star.location access, is_zone_occupant(star)
-- colonize_validator.py: isinstance(zone_obj, Planet), is_planet(target) for order.target checks
-- fleet_order_processor.py: isinstance(candidate, Planet), target_fleet is not None checks
-- superweapon_order_processor.py: Removed 7 hasattr guards for owner_id/colonies/unregister_fleet
-- fleet.py: isinstance(target, Planet) and isinstance(target, Fleet) for serialization
-- fleet_dto.py: isinstance checks for order target conversion
-- Updated 8+ test files to add get_zones_at_global_hex() to MockGalaxy and resources={} to mock planets
-All 12701 tests pass (1 skipped).
+**Context for Next Agent:** Phase 5 complete. Key changes:
+- command_handlers.py: Direct access `session.turn_engine._registries.components` (6 lines → 2 lines)
+- game_session.py: Direct `fleet.can_use_warp()` call (removed hasattr guard)
+- area_effect_manager.py: Direct `galaxy.get_zones_at_global_hex()` (Galaxy always has this)
+- fleet_navigation_service.py: 3 hasattr/getattr → direct access, `target_fleet is not None`
+- cargo_transfer_service.py: 5 hasattr/getattr → direct access, isinstance(FleetInfo/PlanetInfo)
+- Deleted 4 obsolete tests that tested "target lacking location" - Fleet always has location
+- Added get_zones_at_global_hex() to 2 MockGalaxy classes in integration tests
+All 12697 tests pass (1 skipped).
 
 ## Overview
 Replace ~93 implicit duck typing patterns (`hasattr()`/`getattr()`) in the `game/strategy/` layer with direct attribute access, explicit `isinstance` checks, and proper type annotations. Retain ~12 intentional `getattr` patterns at external data boundaries (JSON component definitions, save file deserialization).

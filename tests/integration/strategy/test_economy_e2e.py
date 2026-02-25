@@ -229,6 +229,10 @@ class MockGalaxy:
     def get_system_of_planet(self, planet):
         return None
 
+    def get_zones_at_global_hex(self, global_hex):
+        """Return empty list - no storms in this mock."""
+        return []
+
 
 # ===========================================================================
 # E2E Tests

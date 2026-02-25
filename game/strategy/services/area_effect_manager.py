@@ -70,10 +70,7 @@ class AreaEffectManager:
         from game.strategy.data.storm import Storm
 
         # Query all zones at this hex using O(1) spatial index
-        # Handle galaxies that don't have storms (mock galaxies in tests)
-        if not hasattr(galaxy, 'get_zones_at_global_hex'):
-            return EnvironmentalEffects()
-
+        # Galaxy always has get_zones_at_global_hex() since PROJ-189
         zones = galaxy.get_zones_at_global_hex(global_hex)
 
         # Filter to storms only

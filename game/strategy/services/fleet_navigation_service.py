@@ -148,7 +148,8 @@ class FleetNavigationService:
             return order.target
         elif order.type == OrderType.MOVE_TO_FLEET:
             target_fleet = order.target
-            if not target_fleet or not hasattr(target_fleet, 'location'):
+            # Fleet always has location, just check target exists
+            if target_fleet is None:
                 return None
             # Use intercept calculation with NavigationState directly
             # (PROJ-35 Phase 3: calculate_intercept_point now accepts NavigationState)
@@ -449,9 +450,8 @@ class FleetNavigationService:
 
         # Track execution progress for first order (if any)
         # This is needed to account for partial progress on current action
-        first_order_progress = 0
-        if fleet.orders:
-            first_order_progress = getattr(fleet.orders[0], 'execution_progress', 0)
+        # FleetOrder always has execution_progress (default 0)
+        first_order_progress = fleet.orders[0].execution_progress if fleet.orders else 0
         is_first_order = True
 
         # Safety limit to prevent infinite loops
@@ -628,12 +628,13 @@ class FleetNavigationService:
         Returns:
             Next hex coordinate to move to, or None if no movement
         """
-        # Handle invalid MOVE_TO_FLEET orders (target is None or lacks location)
+        # Handle invalid MOVE_TO_FLEET orders (target is None)
+        # Fleet always has location, just check target exists
         # This must be checked before compute_next_step since it needs to pop the order
         order = fleet.get_current_order()
         if order and order.type == OrderType.MOVE_TO_FLEET:
             target_fleet = order.target
-            if not target_fleet or not hasattr(target_fleet, 'location'):
+            if target_fleet is None:
                 logger.warning("FleetNavigationService: Target fleet invalid. Order cancelled.")
                 fleet.pop_order()
                 return None
