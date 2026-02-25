@@ -97,6 +97,8 @@ class TestBuilderImprovements:
         mock_ship.ammo_consumption = 0.0
         mock_ship.max_targets = 1
         mock_ship.construction_cost = {}
+        # PROJ-194: Add typed resource stat accessor
+        mock_ship.get_resource_stat.return_value = 0.0
 
         # PROJ-43: Mock the adapter's load_ship method (not ShipIO directly)
         builder._ship_io_adapter.load_ship = MagicMock(return_value=(mock_ship, "Success"))

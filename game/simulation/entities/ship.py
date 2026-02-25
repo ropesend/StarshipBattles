@@ -630,6 +630,24 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         """Calculate total Targeting Score from all active sensors."""
         return self.stat_querier.get_total_sensor_score()
 
+    def get_resource_stat(self, resource_name: str, stat_type: str) -> float:
+        """Get a resource-related stat by name and type.
+
+        Provides typed accessor for dynamic resource attributes (e.g., fuel_consumption,
+        ammo_endurance). This method replaces direct f-string getattr patterns for
+        portability to statically-typed languages (C#/Rust).
+
+        Args:
+            resource_name: Resource name (e.g., 'fuel', 'ammo', 'energy')
+            stat_type: Stat suffix (e.g., 'consumption', 'endurance', 'recharge',
+                       'potential_consumption', 'net', 'max_usage')
+
+        Returns:
+            The stat value, or 0.0 if the attribute doesn't exist.
+        """
+        attr_name = f'{resource_name}_{stat_type}'
+        return getattr(self, attr_name, 0.0)
+
     def get_total_ecm_score(self) -> float:
         """Calculate total Evasion/Defense Score from all active ECM/Electronics."""
         return self.stat_querier.get_total_ecm_score()

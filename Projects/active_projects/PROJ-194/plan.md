@@ -16,14 +16,14 @@
 | 1. Direct Attribute Access (Ship Properties) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Weapon & Ability Duck Typing | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Workshop Init-Order & Self-Checks | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Resource Accessor Method | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Resource Accessor Method | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Remaining Scattered Instances | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 4 - Resource Accessor Method
-**Last Action:** Phase 3 complete. Pre-declared 12 button attrs + pending_action in workshop_screen.__init__. Replaced ~16 hasattr(self/gui, ...) checks with None checks or direct access. Fixed 2 test mocks.
-**Next Action:** Begin Phase 4
+**Active Phase:** Phase 5 - Remaining Scattered Instances
+**Last Action:** Phase 4 complete. Added Ship.get_resource_stat() typed accessor. Replaced ~6 hasattr/getattr patterns in stats_config.py with typed accessor calls. Fixed 3 test mocks. 12721 passed.
+**Next Action:** Begin Phase 5
 **Blockers:** None
 
 ## Overview

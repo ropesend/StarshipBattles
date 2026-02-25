@@ -186,11 +186,10 @@ def get_resource_consumption(ship, res_name):
     calculating constant consumption from component abilities.
     """
     # First check ship-level consumption attribute (includes activation-based consumption)
-    attr_name = f'{res_name}_consumption'
-    if hasattr(ship, attr_name):
-        val = getattr(ship, attr_name, 0)
-        if val > 0:
-            return val
+    # PROJ-194: Use typed accessor instead of dynamic f-string getattr
+    val = ship.get_resource_stat(res_name, 'consumption')
+    if val > 0:
+        return val
 
     # Fallback: Calculate constant consumption from component abilities
     from game.simulation.components.abilities.resources import ResourceConsumption
@@ -225,24 +224,23 @@ def get_resource_max_usage(ship, res_name):
     Get maximum resource usage (constant + max activation rate).
     Uses 'potential' stats to ensure UI shows component load even if currently inactive (e.g. no crew).
     """
-    attr_map = {
-        ResourceType.FUEL: 'potential_fuel_consumption',
-        ResourceType.AMMO: 'potential_ammo_consumption',
-        ResourceType.ENERGY: 'potential_energy_consumption'
+    # PROJ-194: Use typed accessor instead of dynamic attr lookup
+    # Try potential consumption first (e.g., 'potential_fuel' + '_consumption')
+    potential_map = {
+        ResourceType.FUEL: 'potential_fuel',
+        ResourceType.AMMO: 'potential_ammo',
+        ResourceType.ENERGY: 'potential_energy'
     }
-    attr = attr_map.get(res_name)
-    if attr and hasattr(ship, attr):
-        return getattr(ship, attr, 0)
+    potential_res = potential_map.get(res_name)
+    if potential_res:
+        val = ship.get_resource_stat(potential_res, 'consumption')
+        if val > 0:
+            return val
 
     # Fallback to standard consumption if potential not calculated
-    fallback_map = {
-        ResourceType.FUEL: 'fuel_consumption',
-        ResourceType.AMMO: 'ammo_consumption',
-        ResourceType.ENERGY: 'energy_consumption'
-    }
-    attr = fallback_map.get(res_name)
-    if attr:
-         return getattr(ship, attr, 0)
+    val = ship.get_resource_stat(res_name, 'consumption')
+    if val > 0:
+        return val
 
     return 0
 
@@ -413,12 +411,12 @@ def _discover_resources(ship):
 
     # Also discover resources from consumption/generation attributes
     # This handles the case where a weapon consumes a resource but no storage exists
-    for attr_suffix in ['_consumption', '_generation']:
+    # PROJ-194: Use typed accessor instead of dynamic f-string getattr
+    for stat_type in ['consumption', 'generation']:
         for res in resource_order:
-            if hasattr(ship, f'{res}{attr_suffix}'):
-                val = getattr(ship, f'{res}{attr_suffix}', 0)
-                if val > 0:
-                    res_names.add(res)
+            val = ship.get_resource_stat(res, stat_type)
+            if val > 0:
+                res_names.add(res)
 
     res_names = list(res_names)
 
