@@ -18,15 +18,15 @@
 | 3. Migrate Planet List | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate Empire Build Queue | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Migrate Event Log | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Cleanup | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. Cleanup | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 5 Complete
-**Last Action:** Migrated EventLogWindow to VirtualTable + EventLogDataSource + NoSelect. Created EventLogDataSource with 40 tests. Event log now has virtual scrolling and column headers.
-**Next Action:** Begin Phase 6: Cleanup (delete old renderers and column managers)
+**Active Phase:** All Phases Complete - Ready for Audit
+**Last Action:** Deleted old renderers and column managers (1,084 lines). Updated imports, deleted stale tests.
+**Next Action:** Trigger audit (Protocol 04)
 **Blockers:** None
-**Context for Next Agent:** 12,667 tests passing (+40 new from EventLogDataSource). All 4 windows now use VirtualTable. Ready for Phase 6 cleanup: delete FleetListRenderer (426 lines), VirtualListRenderer (227 lines), column_manager.py (234 lines), planet_list_columns.py (201 lines).
+**Context for Next Agent:** All 6 phases complete. 12,623 tests passing. 1,084 lines of old code deleted (fleet_list_renderer.py, column_manager.py, planet_list_renderer.py, planet_list_columns.py). All 4 windows migrated to VirtualTable. Ready for audit.
 
 ## Overview
 Consolidates 4 duplicated list/table UI implementations (Planet List, Fleet Report, Empire Build Queue, Event Log) into a single generic `VirtualTable` component system under `game/ui/components/table/`, with domain-specific `ITableDataSource` adapters. Eliminates ~1,088 lines of duplicated rendering code while giving all lists virtual scrolling, sortable/reorderable columns, and a consistent architecture.
@@ -98,10 +98,10 @@ Consolidates 4 duplicated list/table UI implementations (Planet List, Fleet Repo
 | 2026-02-24 | Delete old renderers after migration | System Migration Policy: eradicate old system completely |
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing: `pytest tests/ -n 12`
-- [ ] No imports reference deleted files
-- [ ] All 4 windows use VirtualTable
-- [ ] Test count >= 12,366 (plus new tests)
+- [x] All phase checklists complete
+- [x] All tests passing: `pytest tests/ -n 12`
+- [x] No imports reference deleted files
+- [x] All 4 windows use VirtualTable
+- [x] Test count >= 12,366 (plus new tests) - 12,623 passed
 - [ ] Audit passed
 - [ ] User verified

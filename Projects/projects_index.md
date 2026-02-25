@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-189 | Storms Environmental Hazards | Planning | 2026-02-24 | 2026-02-24 |
 | PROJ-188 | Strategy Layer List UI Consolidation | Planning | 2026-02-24 | 2026-02-24 |
 | PROJ-187 | Strategy Orders Tick-Based Action System | Planning | 2026-02-24 | 2026-02-24 |
 
