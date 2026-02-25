@@ -7,6 +7,7 @@ import pygame
 
 from game.ui.colors import TEST_PASS, TEST_FAIL
 from game.ui.fonts import get_font
+from game.ui.screens.test_lab import theme
 from game.ui.screens.test_lab.formatting_utils import format_value
 
 
@@ -35,17 +36,17 @@ class TestRunCard:
         self.is_selected = False
 
         # Colors
-        self.bg_color = (35, 35, 40)
-        self.bg_hover_color = (45, 45, 50)
-        self.bg_selected_color = (55, 100, 150)  # Blue tint for selected
+        self.bg_color = theme.BG_CATEGORY
+        self.bg_hover_color = (45, 45, 50)  # Unique hover state
+        self.bg_selected_color = theme.SELECTED_CARD_BG
         self.latest_bg_color = (40, 45, 50)  # Slightly different for latest
         self.pass_color = TEST_PASS
         self.fail_color = TEST_FAIL
-        self.text_color = (220, 220, 220)
-        self.border_color = (100, 100, 120)
+        self.text_color = theme.TEXT
+        self.border_color = theme.BORDER_ACTIVE
         self.border_pass_color = TEST_PASS
         self.border_fail_color = TEST_FAIL
-        self.border_selected_color = (100, 150, 255)
+        self.border_selected_color = theme.SELECTED_BORDER
 
         # Fonts
         self.title_font = get_font(16)
@@ -160,9 +161,9 @@ class TestRunCard:
                 name_surf = self.body_font.render(f"{name}:", True, self.text_color)
                 surface.blit(name_surf, (self.x + 10, self.y + 35))
 
-                exp_label = self.small_font.render("Exp:", True, (140, 140, 160))
-                exp_value = self.small_font.render(exp_str, True, (180, 200, 255))
-                act_label = self.small_font.render("Act:", True, (140, 140, 160))
+                exp_label = self.small_font.render("Exp:", True, theme.TEXT_LABEL)
+                exp_value = self.small_font.render(exp_str, True, theme.TEXT_EXPECTED)
+                act_label = self.small_font.render("Act:", True, theme.TEXT_LABEL)
                 act_value = self.small_font.render(act_str, True, actual_color)
 
                 # Position: Name: | Exp: X | Act: Y
@@ -189,7 +190,7 @@ class TestRunCard:
                 hit_surf = self.body_font.render(hit_text, True, self.text_color)
                 surface.blit(hit_surf, (self.x + 10, self.y + 35))
 
-                exp_surf = self.body_font.render(exp_text, True, (180, 180, 180))
+                exp_surf = self.body_font.render(exp_text, True, theme.TEXT_MUTED)
                 surface.blit(exp_surf, (self.x + 260, self.y + 35))
 
         # Validation summary on bottom right
@@ -199,7 +200,7 @@ class TestRunCard:
             fail_count = val_summary.get('fail', 0)
             warn_count = val_summary.get('warn', 0)
             summary_text = f"{pass_count}P {fail_count}F {warn_count}W"
-            summary_surf = self.body_font.render(summary_text, True, (180, 180, 180))
+            summary_surf = self.body_font.render(summary_text, True, theme.TEXT_MUTED)
             summary_x = self.x + self.width - summary_surf.get_width() - 10
             surface.blit(summary_surf, (summary_x, self.y + 57))
 
@@ -239,7 +240,7 @@ class TestRunCard:
                 act_color = self.pass_color if angle_match else self.fail_color
                 exp_text = f"Exp: {expected_change:.2f}"
                 act_text = f"Act: {actual_change:.2f}"
-                exp_surf = self.small_font.render(exp_text, True, (180, 200, 255))
+                exp_surf = self.small_font.render(exp_text, True, theme.TEXT_EXPECTED)
                 act_surf = self.small_font.render(act_text, True, act_color)
                 surface.blit(exp_surf, (self.x + 10, self.y + 55))
                 surface.blit(act_surf, (self.x + 100, self.y + 55))
@@ -260,7 +261,7 @@ class TestRunCard:
 
             # Distance line
             dist_text = f"Distance: {distance:.1f} px"
-            dist_surf = self.small_font.render(dist_text, True, (180, 180, 180))
+            dist_surf = self.small_font.render(dist_text, True, theme.TEXT_MUTED)
             surface.blit(dist_surf, (self.x + 10, self.y + 55))
 
         else:
@@ -271,7 +272,7 @@ class TestRunCard:
 
             distance = metrics.get('distance_traveled', 0)
             dist_text = f"Distance: {distance:.1f} px"
-            dist_surf = self.small_font.render(dist_text, True, (180, 180, 180))
+            dist_surf = self.small_font.render(dist_text, True, theme.TEXT_MUTED)
             surface.blit(dist_surf, (self.x + 10, self.y + 55))
 
         # Validation summary on bottom right
@@ -281,7 +282,7 @@ class TestRunCard:
             fail_count = val_summary.get('fail', 0)
             warn_count = val_summary.get('warn', 0)
             summary_text = f"{pass_count}P {fail_count}F {warn_count}W"
-            summary_surf = self.body_font.render(summary_text, True, (180, 180, 180))
+            summary_surf = self.body_font.render(summary_text, True, theme.TEXT_MUTED)
             summary_x = self.x + self.width - summary_surf.get_width() - 10
             surface.blit(summary_surf, (summary_x, self.y + 57))
 
@@ -308,7 +309,7 @@ class TestRunCard:
                 vel_color = self.pass_color
             else:
                 vel_text = "Velocity: 0 (stopped)"
-                vel_color = (255, 200, 100) if test_id == 'RESOURCE-002' else self.fail_color
+                vel_color = theme.STATUS_WARNING if test_id == 'RESOURCE-002' else self.fail_color
             vel_surf = self.small_font.render(vel_text, True, vel_color)
             surface.blit(vel_surf, (self.x + 10, self.y + 55))
 
@@ -328,7 +329,7 @@ class TestRunCard:
 
             # Shots/Hits line
             shots_text = f"Shots: {shots_fired}, Damage: {damage_dealt:.0f}"
-            shots_surf = self.small_font.render(shots_text, True, (180, 180, 180))
+            shots_surf = self.small_font.render(shots_text, True, theme.TEXT_MUTED)
             surface.blit(shots_surf, (self.x + 10, self.y + 55))
 
         else:
@@ -351,7 +352,7 @@ class TestRunCard:
             else:
                 damage_dealt = metrics.get('damage_dealt', 0)
                 shots_text = f"Shots: {shots_fired}, Damage: {damage_dealt:.0f}"
-            shots_surf = self.small_font.render(shots_text, True, (180, 180, 180))
+            shots_surf = self.small_font.render(shots_text, True, theme.TEXT_MUTED)
             surface.blit(shots_surf, (self.x + 10, self.y + 55))
 
         # Validation summary on bottom right
@@ -361,6 +362,6 @@ class TestRunCard:
             fail_count = val_summary.get('fail', 0)
             warn_count = val_summary.get('warn', 0)
             summary_text = f"{pass_count}P {fail_count}F {warn_count}W"
-            summary_surf = self.body_font.render(summary_text, True, (180, 180, 180))
+            summary_surf = self.body_font.render(summary_text, True, theme.TEXT_MUTED)
             summary_x = self.x + self.width - summary_surf.get_width() - 10
             surface.blit(summary_surf, (summary_x, self.y + 57))

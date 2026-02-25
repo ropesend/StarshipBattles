@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Replace inline color tuples in all 9 Test Lab files with `theme.*` constants.
 
 ---
@@ -16,8 +16,8 @@
 **File:** `game/ui/screens/test_lab/renderer.py`
 **Tests:** `pytest tests/unit/ui/test_lab_scene/ -v`
 
-- [ ] Add `from game.ui.screens.test_lab import theme`
-- [ ] Replace 8 class-level constants (lines 31-38):
+- [x] Add `from game.ui.screens.test_lab import theme`
+- [x] Replace 8 class-level constants (lines 31-38):
   - `BG_COLOR = (20, 20, 25)` → `BG_COLOR = theme.BG_PRIMARY`
   - `PANEL_BG = (25, 25, 30)` → `PANEL_BG = theme.BG_PANEL`
   - `BORDER_COLOR = (80, 80, 90)` → `BORDER_COLOR = theme.BORDER`
@@ -26,10 +26,10 @@
   - `SELECTED_COLOR = (0, 100, 200)` → `SELECTED_COLOR = theme.SELECTED_BG`
   - `HOVER_COLOR = (150, 150, 150)` → `HOVER_COLOR = theme.TEXT_DIM`
   - `CATEGORY_BG = (35, 35, 40)` → `CATEGORY_BG = theme.BG_CATEGORY`
-- [ ] Replace inline tuples matching theme constants throughout methods
-- [ ] Run tests
+- [x] Replace inline tuples matching theme constants throughout methods
+- [x] Run tests
 
-**Notes:** This is the largest file (~80 inline colors). Replace where exact matches exist; leave unique one-off colors that don't have theme equivalents.
+**Notes:** Migrated ~40 inline color tuples to theme constants including seed colors, tag filter colors, status colors, section header colors, buttons, scrollbars, and more.
 
 ---
 
@@ -37,18 +37,18 @@
 **File:** `game/ui/screens/test_lab/test_run_details.py`
 **Tests:** `pytest tests/unit/ui/test_lab_scene/ -v`
 
-- [ ] Add `from game.ui.screens.test_lab import theme`
-- [ ] Replace instance color attributes (lines 23-30):
+- [x] Add `from game.ui.screens.test_lab import theme`
+- [x] Replace instance color attributes (lines 23-30):
   - `self.bg_color = (30, 30, 35)` → `theme.BG_CONTENT`
   - `self.border_color = (80, 80, 90)` → `theme.BORDER`
   - `self.text_color = (220, 220, 220)` → `theme.TEXT`
   - `self.header_color = (150, 200, 255)` → `theme.TEXT_HEADER`
   - `self.button_color` → `theme.BUTTON_BLUE`
   - `self.button_hover_color` → `theme.BUTTON_BLUE_HOVER`
-- [ ] Replace inline tuples: `(140, 140, 160)` → `theme.TEXT_LABEL`, `(180, 200, 255)` → `theme.TEXT_EXPECTED`, etc.
-- [ ] Run tests
+- [x] Replace inline tuples: `(140, 140, 160)` → `theme.TEXT_LABEL`, `(180, 200, 255)` → `theme.TEXT_EXPECTED`, etc.
+- [x] Run tests
 
-**Notes:**
+**Notes:** Migrated ~20 inline color tuples.
 
 ---
 
@@ -56,16 +56,16 @@
 **File:** `game/ui/screens/test_lab/test_run_card.py`
 **Tests:** `pytest tests/unit/ui/test_lab_scene/ -v`
 
-- [ ] Add `from game.ui.screens.test_lab import theme`
-- [ ] Replace instance color attributes:
+- [x] Add `from game.ui.screens.test_lab import theme`
+- [x] Replace instance color attributes:
   - `self.bg_color = (35, 35, 40)` → `theme.BG_CATEGORY`
   - `self.text_color = (220, 220, 220)` → `theme.TEXT`
   - `self.border_color = (100, 100, 120)` → `theme.BORDER_ACTIVE`
   - `self.border_selected_color = (100, 150, 255)` → `theme.SELECTED_BORDER`
-- [ ] Replace inline `(140, 140, 160)` → `theme.TEXT_LABEL`, `(180, 200, 255)` → `theme.TEXT_EXPECTED`
-- [ ] Run tests
+- [x] Replace inline `(140, 140, 160)` → `theme.TEXT_LABEL`, `(180, 200, 255)` → `theme.TEXT_EXPECTED`
+- [x] Run tests
 
-**Notes:**
+**Notes:** Migrated ~12 inline color tuples.
 
 ---
 
@@ -73,8 +73,8 @@
 **File:** `game/ui/screens/test_lab/ship_panels.py`
 **Tests:** `pytest tests/unit/ui/test_lab_scene/ -v`
 
-- [ ] Add `from game.ui.screens.test_lab import theme`
-- [ ] Replace 7 instance color attributes:
+- [x] Add `from game.ui.screens.test_lab import theme`
+- [x] Replace 7 instance color attributes:
   - `self.bg_color` → `theme.BG_CONTENT`
   - `self.border_color` → `theme.BORDER`
   - `self.header_color` → `theme.TEXT_HEADER`
@@ -82,7 +82,7 @@
   - `self.tab_selected_color` → `theme.TAB_SELECTED`
   - `self.tab_hover_color` → `theme.TAB_HOVER`
   - `self.text_color` → `theme.TEXT`
-- [ ] Run tests
+- [x] Run tests
 
 **Notes:**
 
@@ -92,13 +92,13 @@
 **File:** `game/ui/screens/test_lab/json_viewer.py`
 **Tests:** `pytest tests/unit/ui/test_lab_scene/ -v`
 
-- [ ] Add `from game.ui.screens.test_lab import theme`
-- [ ] Replace instance colors:
+- [x] Add `from game.ui.screens.test_lab import theme`
+- [x] Replace instance colors:
   - `self.bg_color = (30, 30, 35)` → `theme.BG_CONTENT`
   - `self.text_color = (220, 220, 220)` → `theme.TEXT`
   - `self.title_color = (255, 255, 255)` → `theme.TEXT_WHITE`
   - `self.border_color = (100, 100, 120)` → `theme.BORDER_ACTIVE`
-- [ ] Run tests
+- [x] Run tests
 
 **Notes:**
 
@@ -108,15 +108,15 @@
 **File:** `game/ui/screens/test_lab/results_panel.py`
 **Tests:** `pytest tests/unit/ui/test_lab_scene/ -v`
 
-- [ ] Add `from game.ui.screens.test_lab import theme`
-- [ ] Replace instance colors:
+- [x] Add `from game.ui.screens.test_lab import theme`
+- [x] Replace instance colors:
   - `self.bg_color` → `theme.BG_CONTENT`
   - `self.border_color` → `theme.BORDER_ACTIVE`
   - `self.title_color` → `theme.TEXT_WHITE`
   - `self.button_color` → `theme.BUTTON_BLUE`
   - `self.button_hover_color` → `theme.BUTTON_BLUE_HOVER`
-- [ ] Replace inline scrollbar color → `theme.SCROLLBAR_THUMB`
-- [ ] Run tests
+- [x] Replace inline scrollbar color → `theme.SCROLLBAR_THUMB`
+- [x] Run tests
 
 **Notes:**
 
@@ -126,11 +126,11 @@
 **File:** `game/ui/screens/test_lab/component_dropdown.py`
 **Tests:** `pytest tests/unit/ui/test_lab_scene/ -v`
 
-- [ ] Add `from game.ui.screens.test_lab import theme`
-- [ ] Replace: `self.text_color` → `theme.TEXT_WHITE`, `self.border_color` → `theme.BORDER_ACTIVE`
-- [ ] Run tests
+- [x] Add `from game.ui.screens.test_lab import theme`
+- [x] Replace: `self.text_color` → `theme.TEXT_WHITE`, `self.border_color` → `theme.BORDER_ACTIVE`
+- [x] Run tests
 
-**Notes:** `self.bg_color = (50, 50, 60)` is unique to dropdown — leave as-is or add to theme if warranted.
+**Notes:** `self.bg_color = (50, 50, 60)` is unique to dropdown — replaced with theme.TAG_NORMAL_BG.
 
 ---
 
@@ -138,15 +138,15 @@
 **File:** `game/ui/screens/test_lab/dialogs.py`
 **Tests:** `pytest tests/unit/ui/test_lab_scene/ -v`
 
-- [ ] Add `from game.ui.screens.test_lab import theme`
-- [ ] Replace inline colors:
+- [x] Add `from game.ui.screens.test_lab import theme`
+- [x] Replace inline colors:
   - `(30, 30, 35)` → `theme.BG_CONTENT`
   - `(100, 100, 120)` → `theme.BORDER_ACTIVE`
   - `(220, 220, 220)` → `theme.TEXT`
   - `(150, 200, 255)` → `theme.TEXT_HEADER`
   - `(255, 100, 100)` → `theme.STATUS_FAIL`
   - `(100, 255, 150)` → `theme.SECTION_OUTCOME`
-- [ ] Run tests
+- [x] Run tests
 
 **Notes:**
 
@@ -156,15 +156,15 @@
 **File:** `game/ui/screens/test_lab/screen.py`
 **Tests:** `pytest tests/unit/ui/test_lab_scene/ -v`
 
-- [ ] Add `from game.ui.screens.test_lab import theme`
-- [ ] Replace `_render_progress` colors:
+- [x] Add `from game.ui.screens.test_lab import theme`
+- [x] Replace `_render_progress` colors:
   - `(40, 40, 45)` → `theme.BG_OVERLAY`
   - `(100, 100, 120)` → `theme.BORDER_ACTIVE`
   - `(255, 255, 255)` → `theme.TEXT_WHITE`
   - `(200, 200, 200)` → `theme.TEXT_MUTED`
   - `(150, 150, 150)` → `theme.TEXT_DIM`
   - `(20, 20, 25)` → `theme.BG_PRIMARY`
-- [ ] Run tests
+- [x] Run tests
 
 **Notes:**
 
@@ -173,7 +173,7 @@
 ### Task 4.10: Run full test suite [Simple]
 **Tests:** `pytest tests/ -n 12`
 
-- [ ] All 12,718 tests pass
+- [x] All 12,734 tests pass
 
 **Notes:**
 
@@ -181,8 +181,8 @@
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] `pytest tests/ -n 12` passes
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 5
+- [x] All task checkboxes above are checked
+- [x] `pytest tests/ -n 12` passes
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 5

@@ -11,6 +11,7 @@ import pygame_gui
 import os
 
 from game.ui.fonts import get_font, FONT_MONO
+from game.ui.screens.test_lab import theme
 from game.core.config import DisplayConfig
 WIDTH, HEIGHT = DisplayConfig.DEFAULT_WIDTH, DisplayConfig.DEFAULT_HEIGHT
 from game.core.json_utils import load_json
@@ -375,16 +376,16 @@ class TestLabScreen:
     def _render_progress(self, title, subtitle, detail):
         """Render a progress overlay for headless test execution."""
         overlay = pygame.Surface((600, 200))
-        overlay.fill((40, 40, 45))
-        pygame.draw.rect(overlay, (100, 100, 120), overlay.get_rect(), 3)
+        overlay.fill(theme.BG_OVERLAY)
+        pygame.draw.rect(overlay, theme.BORDER_ACTIVE, overlay.get_rect(), 3)
 
         header_font = get_font(24, FONT_MONO)
         body_font = get_font(18, FONT_MONO)
         small_font = get_font(14, FONT_MONO)
 
-        title_text = header_font.render(title, True, (255, 255, 255))
-        sub_text = body_font.render(subtitle, True, (200, 200, 200))
-        detail_text = small_font.render(detail, True, (150, 150, 150))
+        title_text = header_font.render(title, True, theme.TEXT_WHITE)
+        sub_text = body_font.render(subtitle, True, theme.TEXT_MUTED)
+        detail_text = small_font.render(detail, True, theme.TEXT_DIM)
 
         overlay.blit(title_text, (300 - title_text.get_width()//2, 50))
         overlay.blit(sub_text, (300 - sub_text.get_width()//2, 90))
@@ -396,7 +397,7 @@ class TestLabScreen:
 
     def _draw_and_flip(self):
         """Draw current screen state with progress overlay and flip display."""
-        self.game.screen.fill((20, 20, 25))
+        self.game.screen.fill(theme.BG_PRIMARY)
         self.draw(self.game.screen)
         pygame.display.flip()
 

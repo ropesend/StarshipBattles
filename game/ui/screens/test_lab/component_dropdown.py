@@ -6,6 +6,7 @@ Provides a dropdown menu for selecting ship components.
 import pygame
 
 from game.ui.fonts import get_font
+from game.ui.screens.test_lab import theme
 
 
 class ComponentDropdown:
@@ -33,11 +34,11 @@ class ComponentDropdown:
 
         # Fonts & Colors
         self.font = get_font(16)
-        self.bg_color = (50, 50, 60)
-        self.selected_bg_color = (70, 70, 85)
-        self.hover_bg_color = (60, 60, 75)
-        self.text_color = (255, 255, 255)
-        self.border_color = (100, 100, 120)
+        self.bg_color = theme.TAG_NORMAL_BG  # (50, 50, 60)
+        self.selected_bg_color = (70, 70, 85)  # Unique
+        self.hover_bg_color = (60, 60, 75)  # Unique
+        self.text_color = theme.TEXT_WHITE
+        self.border_color = theme.BORDER_ACTIVE
 
         self.hovered_index = -1
 

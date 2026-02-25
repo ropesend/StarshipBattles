@@ -7,6 +7,7 @@ import json
 import pygame
 
 from game.ui.fonts import get_font
+from game.ui.screens.test_lab import theme
 
 
 class ScrollableJSONViewer:
@@ -45,11 +46,11 @@ class ScrollableJSONViewer:
         self.title_font = get_font(18)
 
         # Colors
-        self.bg_color = (30, 30, 35)
-        self.title_bg_color = (45, 45, 50)
-        self.text_color = (220, 220, 220)
-        self.title_color = (255, 255, 255)
-        self.border_color = (100, 100, 120)
+        self.bg_color = theme.BG_CONTENT
+        self.title_bg_color = (45, 45, 50)  # Unique for title bar
+        self.text_color = theme.TEXT
+        self.title_color = theme.TEXT_WHITE
+        self.border_color = theme.BORDER_ACTIVE
 
     def update_json(self, json_data):
         """Update displayed JSON data."""

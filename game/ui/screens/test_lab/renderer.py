@@ -12,6 +12,7 @@ from typing import Tuple, List, Dict, Any, Optional
 
 from game.ui.colors import TEST_PASS, TEST_FAIL
 from game.ui.fonts import get_font
+from game.ui.screens.test_lab import theme
 from game.core.config import DisplayConfig
 
 WIDTH, HEIGHT = DisplayConfig.DEFAULT_WIDTH, DisplayConfig.DEFAULT_HEIGHT
@@ -28,15 +29,15 @@ class TestLabRenderer:
     This renderer does NOT mutate business state - only rect positions in ViewModel.
     """
 
-    # Color scheme (matches original)
-    BG_COLOR = (20, 20, 25)
-    PANEL_BG = (25, 25, 30)
-    BORDER_COLOR = (80, 80, 90)
-    TEXT_COLOR = (220, 220, 220)
-    HEADER_COLOR = (100, 200, 255)
-    SELECTED_COLOR = (0, 100, 200)
-    HOVER_COLOR = (150, 150, 150)
-    CATEGORY_BG = (35, 35, 40)
+    # Color scheme - from theme module
+    BG_COLOR = theme.BG_PRIMARY
+    PANEL_BG = theme.BG_PANEL
+    BORDER_COLOR = theme.BORDER
+    TEXT_COLOR = theme.TEXT
+    HEADER_COLOR = theme.TEXT_HEADER
+    SELECTED_COLOR = theme.SELECTED_BG
+    HOVER_COLOR = theme.TEXT_DIM
+    CATEGORY_BG = theme.BG_CATEGORY
 
     def __init__(self):
         """Initialize the renderer with fonts."""
@@ -133,7 +134,7 @@ class TestLabRenderer:
         y = 15
 
         # Seed label
-        seed_label = self.body_font.render("Seed Mode:", True, (180, 180, 180))
+        seed_label = self.body_font.render("Seed Mode:", True, theme.TEXT_MUTED)
         screen.blit(seed_label, (x, y))
 
         # Seed mode buttons
@@ -162,13 +163,13 @@ class TestLabRenderer:
                 border_color = (80, 140, 200)
                 text_color = (200, 220, 255)
             elif is_hovered:
-                bg_color = (50, 50, 60)
-                border_color = (100, 100, 110)
+                bg_color = theme.TAB_HOVER
+                border_color = theme.TAG_NORMAL_BORDER
                 text_color = self.TEXT_COLOR
             else:
                 bg_color = self.CATEGORY_BG
                 border_color = self.BORDER_COLOR
-                text_color = (150, 150, 150)
+                text_color = theme.TEXT_DIM
 
             pygame.draw.rect(screen, bg_color, rect, border_radius=3)
             pygame.draw.rect(screen, border_color, rect, 1, border_radius=3)
@@ -189,7 +190,7 @@ class TestLabRenderer:
 
         if current_mode == "random":
             seed_text = "(new each run)"
-            seed_color = (100, 100, 100)
+            seed_color = theme.SEED_RANDOM
         elif current_mode == "metadata":
             # Show the metadata seed if we have a selected test
             if selected_test_id:
@@ -200,14 +201,14 @@ class TestLabRenderer:
                     seed_text = "(select test)"
             else:
                 seed_text = "(select test)"
-            seed_color = (100, 140, 100)
+            seed_color = theme.SEED_FIXED
         else:  # custom
             if custom_seed is not None:
                 seed_text = f"= {custom_seed}"
-                seed_color = (100, 180, 255)
+                seed_color = theme.SEED_CUSTOM
             else:
                 seed_text = "[click to enter]"
-                seed_color = (180, 140, 100)
+                seed_color = theme.SEED_CUSTOM_PENDING
 
         # Draw seed value/input area as clickable region for custom mode
         seed_surf = self.small_font.render(seed_text, True, seed_color)
@@ -251,7 +252,7 @@ class TestLabRenderer:
         if selected_category is None:
             color = self.SELECTED_COLOR
         elif category_hover == "ALL":
-            color = (50, 50, 60)
+            color = theme.TAB_HOVER
         else:
             color = self.CATEGORY_BG
 
@@ -270,7 +271,7 @@ class TestLabRenderer:
             if selected_category == category:
                 color = self.SELECTED_COLOR
             elif category_hover == category:
-                color = (50, 50, 60)
+                color = theme.TAB_HOVER
             else:
                 color = self.CATEGORY_BG
 
@@ -327,24 +328,24 @@ class TestLabRenderer:
             is_hovered = rect.collidepoint(mx, my)
 
             if is_excluded:
-                bg_color = (100, 40, 40)  # Red for excluded
-                border_color = (180, 80, 80)
-                text_color = (255, 150, 150)
+                bg_color = theme.TAG_EXCLUDED_BG
+                border_color = theme.TAG_EXCLUDED_BORDER
+                text_color = theme.TAG_EXCLUDED_TEXT
                 prefix = "X "
             elif is_active:
-                bg_color = (40, 80, 40)  # Green for active
-                border_color = (80, 150, 80)
-                text_color = (150, 255, 150)
+                bg_color = theme.TAG_ACTIVE_BG
+                border_color = theme.TAG_ACTIVE_BORDER
+                text_color = theme.TAG_ACTIVE_TEXT
                 prefix = "V "
             elif is_hovered:
-                bg_color = (50, 50, 60)
-                border_color = (100, 100, 110)
+                bg_color = theme.TAB_HOVER
+                border_color = theme.TAG_NORMAL_BORDER
                 text_color = self.TEXT_COLOR
                 prefix = ""
             else:
                 bg_color = self.CATEGORY_BG
                 border_color = self.BORDER_COLOR
-                text_color = (180, 180, 180)
+                text_color = theme.TAG_NORMAL_TEXT
                 prefix = ""
 
             pygame.draw.rect(screen, bg_color, rect, border_radius=3)
@@ -385,7 +386,7 @@ class TestLabRenderer:
             viewmodel.tag_clear_rect = clear_rect
 
             # Filter count display
-            count_text = self.small_font.render(filter_text, True, (150, 150, 150))
+            count_text = self.small_font.render(filter_text, True, theme.TEXT_DIM)
             screen.blit(count_text, (x + 90, filter_y + 3))
         else:
             viewmodel.tag_clear_rect = None
@@ -428,10 +429,10 @@ class TestLabRenderer:
             text_color = (255, 255, 150)
         else:
             btn_hover = run_all_btn_rect.collidepoint(mouse_pos)
-            btn_color = (60, 80, 60) if btn_hover else (40, 60, 40)
-            btn_border = (80, 120, 80)
+            btn_color = theme.BUTTON_GREEN_HOVER if btn_hover else theme.BUTTON_GREEN
+            btn_border = theme.BUTTON_GREEN_BORDER
             progress_text = "Run Tests"
-            text_color = (150, 200, 150)
+            text_color = theme.BUTTON_GREEN_TEXT
 
         pygame.draw.rect(screen, btn_color, run_all_btn_rect, border_radius=4)
         pygame.draw.rect(screen, btn_border, run_all_btn_rect, 1, border_radius=4)
@@ -440,7 +441,7 @@ class TestLabRenderer:
         screen.blit(btn_text, text_rect)
 
         if not sorted_test_ids:
-            no_tests_text = self.body_font.render("No tests available", True, (150, 150, 150))
+            no_tests_text = self.body_font.render("No tests available", True, theme.TEXT_DIM)
             screen.blit(no_tests_text, (x + 20, y + 20))
             return
 
@@ -478,9 +479,9 @@ class TestLabRenderer:
             if selected_test_id == test_id:
                 color = self.SELECTED_COLOR
             elif test_hover == test_id:
-                color = (40, 40, 50)
+                color = theme.BG_ITEM_HOVER
             else:
-                color = (30, 30, 35)
+                color = theme.BG_CONTENT
 
             pygame.draw.rect(screen, color, rect, border_radius=3)
             pygame.draw.rect(screen, self.BORDER_COLOR, rect, 1, border_radius=3)
@@ -524,7 +525,7 @@ class TestLabRenderer:
 
         # Draw track
         track_rect = pygame.Rect(scrollbar_x, scrollbar_y, scrollbar_width, scrollbar_height)
-        pygame.draw.rect(screen, (40, 40, 50), track_rect, border_radius=4)
+        pygame.draw.rect(screen, theme.SCROLLBAR_TRACK, track_rect, border_radius=4)
 
         # Calculate thumb size and position
         content_height = max_scroll + visible_height
@@ -534,7 +535,7 @@ class TestLabRenderer:
 
         # Draw thumb
         thumb_rect = pygame.Rect(scrollbar_x, thumb_y, scrollbar_width, thumb_height)
-        pygame.draw.rect(screen, (100, 100, 120), thumb_rect, border_radius=4)
+        pygame.draw.rect(screen, theme.SCROLLBAR_THUMB, thumb_rect, border_radius=4)
 
     def _draw_metadata_panel(self, screen, controller, registry, viewmodel) -> None:
         """Draw the metadata panel showing rich test information."""
@@ -590,7 +591,7 @@ class TestLabRenderer:
         y += 40
 
         if selected_test_id is None:
-            hint_text = self.body_font.render("Select a test to view details", True, (150, 150, 150))
+            hint_text = self.body_font.render("Select a test to view details", True, theme.TEXT_DIM)
             screen.blit(hint_text, (x + 20, y + 20))
             return
 
@@ -607,11 +608,11 @@ class TestLabRenderer:
 
         # Category
         category_text = f"{metadata.category} > {metadata.subcategory}"
-        y = self._draw_section(screen, x, y, "Category", category_text, (200, 150, 100))
+        y = self._draw_section(screen, x, y, "Category", category_text, theme.SECTION_CATEGORY)
         y += 10
 
         # Summary
-        y = self._draw_section_wrapped(screen, x, y, "Summary", metadata.summary, (100, 200, 150))
+        y = self._draw_section_wrapped(screen, x, y, "Summary", metadata.summary, theme.SECTION_SUMMARY)
         y += 15
 
         # Get validation results if available
@@ -621,23 +622,23 @@ class TestLabRenderer:
 
         # Conditions (with validation indicators)
         y = self._draw_bullet_list(
-            screen, x, y, "Conditions", metadata.conditions, (150, 200, 255), validation_results
+            screen, x, y, "Conditions", metadata.conditions, theme.SECTION_CONDITIONS, validation_results
         )
         y += 15
 
         # Edge Cases
-        y = self._draw_bullet_list(screen, x, y, "Edge Cases", metadata.edge_cases, (255, 200, 100))
+        y = self._draw_bullet_list(screen, x, y, "Edge Cases", metadata.edge_cases, theme.SECTION_EDGE_CASES)
         y += 15
 
         # Expected Outcome
         y = self._draw_section_wrapped(
-            screen, x, y, "Expected Outcome", metadata.expected_outcome, (100, 255, 150)
+            screen, x, y, "Expected Outcome", metadata.expected_outcome, theme.SECTION_OUTCOME
         )
         y += 15
 
         # Pass Criteria
         y = self._draw_section_wrapped(
-            screen, x, y, "Pass Criteria", metadata.pass_criteria, (255, 150, 150)
+            screen, x, y, "Pass Criteria", metadata.pass_criteria, theme.SECTION_CRITERIA
         )
         y += 15
 
@@ -847,7 +848,7 @@ class TestLabRenderer:
     ) -> int:
         """Draw validation results section with color-coded status."""
         # Section header
-        header_surf = self.body_font.render("Validation Results:", True, (255, 200, 100))
+        header_surf = self.body_font.render("Validation Results:", True, theme.STATUS_HIGHLIGHT)
         screen.blit(header_surf, (x, y))
         y += 25
 
@@ -869,7 +870,7 @@ class TestLabRenderer:
             summary_color = TEST_FAIL
             status_symbol = "X"
         elif warn_count > 0:
-            summary_color = (255, 200, 80)  # Yellow/Orange (unique)
+            summary_color = theme.STATUS_WARNING
             status_symbol = "!"
         else:
             summary_color = TEST_PASS
@@ -897,10 +898,10 @@ class TestLabRenderer:
                 status_color = TEST_FAIL
                 symbol = "X"
             elif status == 'WARN':
-                status_color = (255, 200, 80)
+                status_color = theme.STATUS_WARNING
                 symbol = "!"
             else:
-                status_color = (120, 120, 200)
+                status_color = theme.STATUS_INFO
                 symbol = "i"
 
             # Validation name with symbol
@@ -922,7 +923,7 @@ class TestLabRenderer:
                     act_str = str(actual)
 
                 exp_act_text = f"Expected: {exp_str} | Actual: {act_str}"
-                exp_act_surf = self.small_font.render(exp_act_text, True, (180, 180, 180))
+                exp_act_surf = self.small_font.render(exp_act_text, True, theme.TEXT_MUTED)
                 screen.blit(exp_act_surf, (x + 25, y))
                 y += 18
 
@@ -955,8 +956,8 @@ class TestLabRenderer:
             viewmodel.update_expected_button_visible = True
 
             # Draw button
-            button_color = (60, 120, 200)  # Blue
-            button_hover_color = (80, 140, 220)
+            button_color = theme.BUTTON_BLUE
+            button_hover_color = theme.BUTTON_BLUE_HOVER
 
             # Check if mouse is over button
             mouse_pos = pygame.mouse.get_pos()
@@ -966,12 +967,12 @@ class TestLabRenderer:
             # Draw button background
             pygame.draw.rect(screen, current_color, viewmodel.update_expected_button_rect)
             pygame.draw.rect(
-                screen, (100, 140, 200), viewmodel.update_expected_button_rect, 2
+                screen, theme.BUTTON_BLUE_BORDER, viewmodel.update_expected_button_rect, 2
             )
 
             # Draw button text
             button_text = "Update Expected Values"
-            button_surf = self.small_font.render(button_text, True, (255, 255, 255))
+            button_surf = self.small_font.render(button_text, True, theme.TEXT_WHITE)
             text_x = button_x + (button_width - button_surf.get_width()) // 2
             text_y = button_y + (button_height - button_surf.get_height()) // 2
             screen.blit(button_surf, (text_x, text_y))
@@ -1000,7 +1001,7 @@ class TestLabRenderer:
 
         if not last_run_results or 'validation_results' not in last_run_results:
             # No validation data - gray circle
-            color = (100, 100, 100)
+            color = theme.SEED_RANDOM
             symbol = None
         else:
             validation_summary = last_run_results.get('validation_summary', {})
@@ -1013,7 +1014,7 @@ class TestLabRenderer:
                 symbol = "X"
             elif warn_count > 0:
                 # Warnings - yellow circle with !
-                color = (255, 200, 80)  # Yellow/Orange (unique)
+                color = theme.STATUS_WARNING
                 symbol = "!"
             else:
                 # All passed - green circle with checkmark
@@ -1034,6 +1035,6 @@ class TestLabRenderer:
         """Draw the output log at the bottom."""
         y = HEIGHT - 90
         for i, msg in enumerate(output_log[-3:]):
-            color = (255, 100, 100) if "ERROR" in msg else (150, 150, 150)
+            color = theme.STATUS_FAIL if "ERROR" in msg else theme.TEXT_DIM
             txt = self.small_font.render(msg, True, color)
             screen.blit(txt, (20, y + i * 20))

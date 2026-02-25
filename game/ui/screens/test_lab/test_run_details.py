@@ -7,6 +7,7 @@ import pygame
 
 from game.ui.colors import TEST_PASS, TEST_FAIL
 from game.ui.fonts import get_font
+from game.ui.screens.test_lab import theme
 from game.ui.screens.test_lab.formatting_utils import format_value
 
 
@@ -21,14 +22,14 @@ class TestRunDetailsPanel:
         self.height = height
 
         # Colors
-        self.bg_color = (30, 30, 35)
-        self.border_color = (80, 80, 90)
-        self.text_color = (220, 220, 220)
+        self.bg_color = theme.BG_CONTENT
+        self.border_color = theme.BORDER
+        self.text_color = theme.TEXT
         self.pass_color = TEST_PASS
         self.fail_color = TEST_FAIL
-        self.header_color = (150, 200, 255)
-        self.button_color = (60, 100, 160)
-        self.button_hover_color = (80, 120, 180)
+        self.header_color = theme.TEXT_HEADER
+        self.button_color = theme.BUTTON_BLUE
+        self.button_hover_color = theme.BUTTON_BLUE_HOVER
 
         # Fonts
         self.title_font = get_font(20)
@@ -120,7 +121,7 @@ class TestRunDetailsPanel:
         surface.blit(panel_title, (self.x + 10, self.y + 10))
 
         if not self.selected_run:
-            msg = self.body_font.render("Select a test run to view details", True, (150, 150, 150))
+            msg = self.body_font.render("Select a test run to view details", True, theme.TEXT_DIM)
             msg_x = self.x + (self.width - msg.get_width()) // 2
             msg_y = self.y + self.height // 2
             surface.blit(msg, (msg_x, msg_y))
@@ -189,13 +190,13 @@ class TestRunDetailsPanel:
         """
         if run_record.seed is not None:
             seed_text = f"Seed: {run_record.seed}"
-            seed_surf = self.small_font.render(seed_text, True, (150, 150, 160))
+            seed_surf = self.small_font.render(seed_text, True, theme.TEXT_SECONDARY)
             surface.blit(seed_surf, (self.x + 15, y_offset))
 
         ticks_run = run_record.metrics.get('ticks_run')
         if ticks_run is not None:
             ticks_text = f"Ticks: {ticks_run}"
-            ticks_surf = self.small_font.render(ticks_text, True, (150, 150, 160))
+            ticks_surf = self.small_font.render(ticks_text, True, theme.TEXT_SECONDARY)
             # Position ticks to the right of seed (or at start if no seed)
             ticks_x = self.x + 180 if run_record.seed is not None else self.x + 15
             surface.blit(ticks_surf, (ticks_x, y_offset))
@@ -228,7 +229,7 @@ class TestRunDetailsPanel:
                 pygame.draw.rect(surface, btn_color, self.view_states_button_rect, border_radius=4)
                 pygame.draw.rect(surface, (100, 130, 180), self.view_states_button_rect, 1, border_radius=4)
 
-                btn_text = self.small_font.render("View States", True, (255, 255, 255))
+                btn_text = self.small_font.render("View States", True, theme.TEXT_WHITE)
                 text_x = button_x + (button_width - btn_text.get_width()) // 2
                 text_y = button_y + (button_height - btn_text.get_height()) // 2
                 surface.blit(btn_text, (text_x, text_y))
@@ -256,7 +257,7 @@ class TestRunDetailsPanel:
                 pygame.draw.rect(surface, btn_color, self.use_seed_button_rect, border_radius=4)
                 pygame.draw.rect(surface, (100, 150, 100), self.use_seed_button_rect, 1, border_radius=4)
 
-                btn_text = self.small_font.render("Use Seed", True, (255, 255, 255))
+                btn_text = self.small_font.render("Use Seed", True, theme.TEXT_WHITE)
                 text_x = button_x + (button_width - btn_text.get_width()) // 2
                 text_y = button_y + (button_height - btn_text.get_height()) // 2
                 surface.blit(btn_text, (text_x, text_y))
@@ -285,7 +286,7 @@ class TestRunDetailsPanel:
             pygame.draw.rect(surface, btn_color, self.copy_results_button_rect, border_radius=4)
             pygame.draw.rect(surface, (150, 130, 100), self.copy_results_button_rect, 1, border_radius=4)
 
-            btn_text = self.small_font.render("Copy Results", True, (255, 255, 255))
+            btn_text = self.small_font.render("Copy Results", True, theme.TEXT_WHITE)
             text_x = button_x + (button_width - btn_text.get_width()) // 2
             text_y = button_y + (button_height - btn_text.get_height()) // 2
             surface.blit(btn_text, (text_x, text_y))
@@ -362,9 +363,9 @@ class TestRunDetailsPanel:
             symbol = "FAIL"
             actual_color = self.fail_color
         else:
-            status_color = (255, 200, 100)
+            status_color = theme.STATUS_WARNING
             symbol = "WARN"
-            actual_color = (255, 200, 100)
+            actual_color = theme.STATUS_WARNING
 
         # Validation name with symbol (color-coded)
         val_line = f"{symbol} {name}"
@@ -373,8 +374,8 @@ class TestRunDetailsPanel:
         y_offset += 18
 
         # Define layout constants
-        label_color = (140, 140, 160)
-        expected_color = (180, 200, 255)
+        label_color = theme.TEXT_LABEL
+        expected_color = theme.TEXT_EXPECTED
         indent = 30
         label_width = 75
 
@@ -404,7 +405,7 @@ class TestRunDetailsPanel:
 
         # P-value (for statistical tests)
         if p_value is not None:
-            label_color = (140, 140, 160)
+            label_color = theme.TEXT_LABEL
             p_color = self.pass_color if p_value < 0.05 else self.fail_color
             p_str = f"{p_value:.6f}"
             if p_value < 0.05:
@@ -433,7 +434,7 @@ class TestRunDetailsPanel:
         if not (isinstance(expected, (int, float)) and isinstance(actual, (int, float))):
             return y_offset
 
-        label_color = (140, 140, 160)
+        label_color = theme.TEXT_LABEL
         diff = actual - expected
         abs_diff = abs(diff)
 
@@ -492,9 +493,9 @@ class TestRunDetailsPanel:
         y_offset += 8
 
         # Define colors
-        label_color = (140, 140, 160)
-        value_color = (180, 200, 255)
-        highlight_color = (255, 220, 100)
+        label_color = theme.TEXT_LABEL
+        value_color = theme.TEXT_EXPECTED
+        highlight_color = theme.STATUS_HIGHLIGHT
         indent = 15
         label_width = 100
 
@@ -574,7 +575,7 @@ class TestRunDetailsPanel:
             vel_color = self.pass_color
         else:
             vel_text = "0 (stopped)"
-            vel_color = (255, 200, 100)
+            vel_color = theme.STATUS_WARNING
         value = self.small_font.render(vel_text, True, vel_color)
         surface.blit(label, (self.x + indent, y_offset))
         surface.blit(value, (self.x + indent + label_width, y_offset))
@@ -602,7 +603,7 @@ class TestRunDetailsPanel:
         label = self.small_font.render("Final Energy:", True, label_color)
         if final_energy <= 0:
             energy_text = "0 (depleted)"
-            energy_color = (255, 200, 100)
+            energy_color = theme.STATUS_WARNING
         else:
             energy_text = f"{final_energy:.1f} units"
             energy_color = value_color
@@ -664,7 +665,7 @@ class TestRunDetailsPanel:
         label = self.small_font.render("Final Ammo:", True, label_color)
         if final_ammo <= 0:
             ammo_text = "0 (depleted)"
-            ammo_color = (255, 200, 100)
+            ammo_color = theme.STATUS_WARNING
         else:
             ammo_text = f"{final_ammo:.0f} units"
             ammo_color = value_color
@@ -732,9 +733,9 @@ class TestRunDetailsPanel:
         has_motion = metrics.get('final_velocity_magnitude', 0) > 0.1
 
         # Define colors
-        label_color = (140, 140, 160)
-        value_color = (180, 200, 255)
-        highlight_color = (255, 220, 100)
+        label_color = theme.TEXT_LABEL
+        value_color = theme.TEXT_EXPECTED
+        highlight_color = theme.STATUS_HIGHLIGHT
 
         if is_turn_test:
             # Turn test outcomes
@@ -891,4 +892,4 @@ class TestRunDetailsPanel:
         scrollbar_track_height = visible_height - 10
         thumb_height = max(30, int(visible_height * (visible_height / total_content_height)))
         thumb_y = scrollbar_track_y + int((self.scroll_offset / self.max_scroll) * (scrollbar_track_height - thumb_height))
-        pygame.draw.rect(surface, (100, 100, 120), (scrollbar_x, thumb_y, scrollbar_width, thumb_height), border_radius=4)
+        pygame.draw.rect(surface, theme.SCROLLBAR_THUMB, (scrollbar_x, thumb_y, scrollbar_width, thumb_height), border_radius=4)
