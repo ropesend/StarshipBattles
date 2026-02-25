@@ -13,19 +13,19 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. AI Protocols (Foundation) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. AI Protocols (Foundation) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Controller + Target Evaluator Cleanup | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Formation + Adapter Cleanup | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. combat_utils.py Refactoring | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Final Audit + Type Annotations | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-24 21:10
-**Active Phase:** Planning
-**Last Action:** Plan created and approved
-**Next Action:** Begin Phase 1 — create `game/ai/protocols.py`
+**Last Updated:** 2026-02-25
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete - created game/ai/protocols.py with 4 protocols and TypeGuards
+**Next Action:** Begin Phase 2 — replace duck typing in controller.py and target_evaluator.py
 **Blockers:** None
-**Context for Next Agent:** Baseline is 12705 passed, 1 skipped. The `game/core/protocols.py` file has the established pattern to follow (`@runtime_checkable` + `TypeGuard`). Bug confirmed: `target_evaluator.py:184` uses `getattr(c, 'hp', 0)` but Component has no `.hp` — fix to `c.current_hp` in Phase 2.
+**Context for Next Agent:** Created IGridEntity, IProjectile, IFormationMaster, IComponentHealth protocols in game/ai/protocols.py. 20 new tests in test_ai_protocols.py. Tests: 12713 passed, 1 skipped. Bug to fix in Phase 2: target_evaluator.py:184 uses `getattr(c, 'hp', 0)` but Component has no `.hp` — use `c.current_hp`.
 
 ## Overview
 Eliminate ~45 `hasattr()`/`getattr()` duck typing instances across 5 files in `game/ai/` by introducing explicit `@runtime_checkable` Protocol types. This makes AI type contracts visible to developers and static checkers, fixes one confirmed bug, and follows the established protocol patterns in `game/core/protocols.py`.
