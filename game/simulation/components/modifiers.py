@@ -139,6 +139,7 @@ def get_default_stat_multipliers():
         'strategic_mult': 1.0,
         'energy_gen_mult': 1.0,
         'capacity_mult': 1.0,
+        'shield_capacity_mult': 1.0,
         'crew_capacity_mult': 1.0,
         'life_support_capacity_mult': 1.0,
         'consumption_mult': 1.0,

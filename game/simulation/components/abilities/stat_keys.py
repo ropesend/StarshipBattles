@@ -41,6 +41,7 @@ class StatKey(Enum):
     STRATEGIC_MULT = "strategic_mult"
     ENERGY_GEN_MULT = "energy_gen_mult"
     CAPACITY_MULT = "capacity_mult"
+    SHIELD_CAPACITY_MULT = "shield_capacity_mult"
     CREW_CAPACITY_MULT = "crew_capacity_mult"
     LIFE_SUPPORT_CAPACITY_MULT = "life_support_capacity_mult"
     CONSUMPTION_MULT = "consumption_mult"

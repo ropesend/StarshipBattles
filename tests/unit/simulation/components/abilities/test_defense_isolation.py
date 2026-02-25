@@ -191,12 +191,62 @@ class TestShieldProjection:
         assert ability.get_primary_value() == 150.0
 
     def test_stat_bindings_defined(self):
-        """STAT_BINDINGS contains capacity_mult binding."""
-        assert len(ShieldProjection.STAT_BINDINGS) == 1
+        """STAT_BINDINGS contains both capacity_mult and shield_capacity_mult bindings."""
+        assert len(ShieldProjection.STAT_BINDINGS) == 2
+        # First binding: capacity_mult
         binding = ShieldProjection.STAT_BINDINGS[0]
         assert binding.stat_key == StatKey.CAPACITY_MULT
         assert binding.attribute_name == 'capacity'
         assert binding.operation == 'multiply'
+        # Second binding: shield_capacity_mult
+        binding2 = ShieldProjection.STAT_BINDINGS[1]
+        assert binding2.stat_key == StatKey.SHIELD_CAPACITY_MULT
+        assert binding2.attribute_name == 'capacity'
+        assert binding2.operation == 'multiply'
+
+    def test_recalculate_with_shield_capacity_mult(self, mock_component_with_stats):
+        """recalculate applies shield_capacity_mult from component stats."""
+        component = mock_component_with_stats(stats={'shield_capacity_mult': 0.5})
+        ability = ShieldProjection(component, 100)
+
+        ability.recalculate()
+
+        assert ability.capacity == 50.0
+
+    def test_recalculate_with_both_capacity_mults(self, mock_component_with_stats):
+        """recalculate applies both capacity_mult and shield_capacity_mult multiplicatively."""
+        component = mock_component_with_stats(stats={
+            'capacity_mult': 1.5,
+            'shield_capacity_mult': 0.5
+        })
+        ability = ShieldProjection(component, 100)
+
+        ability.recalculate()
+
+        # 100 * 1.5 * 0.5 = 75
+        assert ability.capacity == 75.0
+
+    def test_recalculate_shield_capacity_mult_default_no_effect(self, mock_component_with_stats):
+        """shield_capacity_mult at default 1.0 has no effect on capacity."""
+        component = mock_component_with_stats(stats={'shield_capacity_mult': 1.0})
+        ability = ShieldProjection(component, 100)
+
+        ability.recalculate()
+
+        assert ability.capacity == 100.0
+
+    def test_recalculate_both_mults_double_reduction(self, mock_component_with_stats):
+        """Both capacity_mult and shield_capacity_mult reducing together stacks."""
+        component = mock_component_with_stats(stats={
+            'capacity_mult': 0.5,
+            'shield_capacity_mult': 0.5
+        })
+        ability = ShieldProjection(component, 100)
+
+        ability.recalculate()
+
+        # 100 * 0.5 * 0.5 = 25
+        assert ability.capacity == 25.0
 
 
 # =============================================================================
