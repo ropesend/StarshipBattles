@@ -8,10 +8,9 @@ the simulation-specific loader imports are legal.
 
 Usage:
     from game.simulation.services.registry_loader import reload_registries_from_directory
-    from game.core.registry import RegistryManager
 
-    manager = RegistryManager.instance()
-    success = reload_registries_from_directory(manager, "data/")
+    # PROJ-195: Pass registry_manager via dependency injection
+    success = reload_registries_from_directory(registry_manager, "data/")
 """
 import json
 import logging

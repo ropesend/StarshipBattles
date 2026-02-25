@@ -8,21 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-194 Audit Cycle 1 - PASSED
-**Current Status:** PROJ-194 complete, audit passed
-**Current Project:** PROJ-194
-**Current Phase:** Complete
-**Test Status:** 12721 passed, 1 skipped
+**Last Completed:** PROJ-195 Phase 1 - Production Code Cleanup
+**Current Status:** PROJ-195 Phase 1 complete, ready for Phase 2
+**Current Project:** PROJ-195
+**Current Phase:** Phase 2 - Entity & UI Test Migration
+**Test Status:** 12720 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-194 COMPLETE - Builder & Workshop Duck Typing Elimination
-- Phase 5 complete: Replaced 6 hasattr/getattr patterns in 4 files
-- Added suppress_toggle() to DropTarget protocol
-- Fixed MockDropTarget in test_builder_interaction.py
-- Audit Cycle 1 PASSED: All 4 goals verified, ~60+ duck typing patterns eliminated
-- Remaining ~8 patterns are intentional (StatDefinition.get_value) or out-of-scope
-- Next: Mark PROJ-194 [x] complete, move to PROJ-195
+- PROJ-195 Phase 1 COMPLETE - Production code singleton leaks fixed
+- Created get_validator() module-level wrapper in game/core/registry.py
+- Updated ship_loader.py to use get_validator() instead of RegistryManager.instance()
+- Updated registry_loader.py docstring to show DI pattern
+- Fixed 4 tests in test_ship_loader.py (patched get_validator instead of RegistryManager)
+- Removed obsolete regression test test_get_validator_global_removed
+- Next: Phase 2 - Migrate test_ship.py and test_ship_factory.py away from singleton hydration
 
 ---
 
@@ -78,8 +78,8 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
-- [ ] **PROJ-195: Eradicate RegistryManager Singleton from Non-Root Code**
-  - **Phases:** 9 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-195: Eradicate RegistryManager Singleton from Non-Root Code**
+  - **Phases:** 9 | **Status:** In Progress | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-195/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-195/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -156,6 +156,7 @@
 | 2026-02-25 | PROJ-194 | Phase 4 | Complete | 12721 passed | - | Ship.get_resource_stat() + ~6 stats_config.py patterns + 3 mocks |
 | 2026-02-25 | PROJ-194 | Phase 5 | Complete | 12721 passed | - | 6 duck typing→direct, DropTarget.suppress_toggle(), 1 mock fix |
 | 2026-02-25 | PROJ-194 | Audit 1 | PASSED | 12721 passed | - | All 4 goals verified, ~60+ patterns eliminated |
+| 2026-02-25 | PROJ-195 | Phase 1 | Complete | 12720 passed | - | Production code cleanup: get_validator(), 4 tests fixed |
 
 ---
 

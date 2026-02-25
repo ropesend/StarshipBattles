@@ -12,10 +12,9 @@ from game.core.error_codes import ErrorCode
 from game.core.json_utils import load_json, load_json_required
 
 logger = logging.getLogger(__name__)
-from game.core.registry import set_validator, get_default_registry_provider
+from game.core.registry import set_validator, get_default_registry_provider, get_validator
 from game.simulation.validation.ship_validator import ShipDesignValidator
 from game.core.paths import Paths
-from game.core.registry import RegistryManager  # For validator storage only
 
 
 def get_or_create_validator(registry_provider=None):
@@ -31,7 +30,8 @@ def get_or_create_validator(registry_provider=None):
         ShipDesignValidator instance.
     """
     # Validator storage is on RegistryManager (singleton lifecycle)
-    val = RegistryManager.instance().get_validator()
+    # PROJ-195: Use module-level wrapper instead of direct singleton access
+    val = get_validator()
     if not val:
         if registry_provider is None:
             registry_provider = get_default_registry_provider()

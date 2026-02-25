@@ -367,10 +367,9 @@ class TestGetOrCreateValidator:
         """Returns existing validator if already set."""
         mock_validator = MagicMock()
 
-        with patch('game.simulation.entities.ship_loader.RegistryManager') as MockRM:
-            mock_registry = MagicMock()
-            mock_registry.get_validator.return_value = mock_validator
-            MockRM.instance.return_value = mock_registry
+        # PROJ-195: Patch the module-level get_validator function instead of RegistryManager
+        with patch('game.simulation.entities.ship_loader.get_validator') as mock_get_val:
+            mock_get_val.return_value = mock_validator
 
             result = get_or_create_validator()
 
@@ -378,14 +377,9 @@ class TestGetOrCreateValidator:
 
     def test_creates_validator_when_none_exists(self):
         """Creates new ShipDesignValidator when none exists."""
-        with patch('game.simulation.entities.ship_loader.RegistryManager') as MockRM:
-            mock_registry = MagicMock()
-            mock_registry.get_validator.return_value = None
-            mock_registry.components = {}
-            mock_registry.modifiers = {}
-            mock_registry.vehicle_classes = {}
-            mock_registry.resources = {}
-            MockRM.instance.return_value = mock_registry
+        # PROJ-195: Patch the module-level get_validator function
+        with patch('game.simulation.entities.ship_loader.get_validator') as mock_get_val:
+            mock_get_val.return_value = None
 
             with patch('game.simulation.entities.ship_loader.ShipDesignValidator') as MockValidator:
                 mock_new_validator = MagicMock()
@@ -409,10 +403,9 @@ class TestGetOrCreateValidator:
         mock_provider.get_vehicle_classes.return_value = {"class1": {}}
         mock_provider.get_resources.return_value = {"res1": {}}
 
-        with patch('game.simulation.entities.ship_loader.RegistryManager') as MockRM:
-            mock_registry = MagicMock()
-            mock_registry.get_validator.return_value = None
-            MockRM.instance.return_value = mock_registry
+        # PROJ-195: Patch the module-level get_validator function
+        with patch('game.simulation.entities.ship_loader.get_validator') as mock_get_val:
+            mock_get_val.return_value = None
 
             with patch('game.simulation.entities.ship_loader.ShipDesignValidator') as MockValidator:
                 with patch('game.simulation.entities.ship_loader.set_validator'):
@@ -709,11 +702,10 @@ class TestValidatorCaching:
         """Multiple calls return the same validator instance."""
         mock_validator = MagicMock()
 
-        with patch('game.simulation.entities.ship_loader.RegistryManager') as MockRM:
-            mock_registry = MagicMock()
-            # First call: no validator, subsequent calls: return cached
-            mock_registry.get_validator.return_value = mock_validator
-            MockRM.instance.return_value = mock_registry
+        # PROJ-195: Patch the module-level get_validator function
+        with patch('game.simulation.entities.ship_loader.get_validator') as mock_get_val:
+            # Both calls return the same cached validator
+            mock_get_val.return_value = mock_validator
 
             result1 = get_or_create_validator()
             result2 = get_or_create_validator()

@@ -242,6 +242,20 @@ def set_validator(validator) -> None:
     """
     RegistryManager.instance().set_validator(validator)
 
+
+def get_validator():
+    """
+    Get the ship design validator.
+
+    PROJ-195: Module-level wrapper for singleton access.
+    Encapsulates the singleton reference so non-root code doesn't need direct access.
+
+    Returns:
+        ShipDesignValidator instance or None if not set
+    """
+    return RegistryManager.instance().get_validator()
+
+
 def clear_registry() -> None:
     """
     Clear all registries to empty state.

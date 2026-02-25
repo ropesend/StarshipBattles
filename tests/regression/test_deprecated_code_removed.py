@@ -43,17 +43,10 @@ class TestDeprecatedRegistryFunctionsRemoved:
         assert not hasattr(registry, 'get_resource_registry'), \
             "get_resource_registry should be removed - use GameRegistries.resources"
 
-    def test_get_validator_global_removed(self):
-        """Global get_validator() function should not exist in registry module.
-
-        Note: RegistryManager.instance().get_validator() is still valid.
-        """
-        from game.core import registry
-        # get_validator as a module-level function was removed
-        # Only RegistryManager.get_validator() instance method remains
-        assert not hasattr(registry, 'get_validator') or \
-            not callable(getattr(registry, 'get_validator', None)), \
-            "Global get_validator() should be removed - use RegistryManager.instance().get_validator()"
+    # PROJ-195: test_get_validator_global_removed REMOVED
+    # The get_validator() module-level function was intentionally added in PROJ-195
+    # to encapsulate RegistryManager.instance().get_validator() access in one place.
+    # This enables non-root code to access the validator without direct singleton calls.
 
 
 class TestGameStateAliasesRemoved:
