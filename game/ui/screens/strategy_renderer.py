@@ -18,6 +18,7 @@ from game.strategy.data.fleet import OrderType
 from game.strategy.data.planet import PlanetType
 from game.ui.colors import COLORS
 from game.ui.utils import scale_and_rotate_image
+from game.ui.fonts import get_font
 
 logger = logging.getLogger(__name__)
 
@@ -41,9 +42,6 @@ class StrategyRenderer:
         from game.assets.asset_manager import get_asset_manager
         self._asset_manager = get_asset_manager()
 
-        # Cache commonly used fonts
-        self._font_cache = {}
-
         # Animation state
         self._elapsed_time = 0.0
 
@@ -56,11 +54,8 @@ class StrategyRenderer:
         self._elapsed_time += dt
 
     def _get_font(self, size, bold=False):
-        """Get a cached font by size and style."""
-        key = (size, bold)
-        if key not in self._font_cache:
-            self._font_cache[key] = pygame.font.SysFont("arial", size, bold=bold)
-        return self._font_cache[key]
+        """Get a cached font by size and style (uses central font cache)."""
+        return get_font(size, bold=bold)
 
     # --- Property Accessors (delegate to scene) ---
     @property

@@ -6,7 +6,7 @@ Displays formatted JSON data with scrolling support.
 import json
 import pygame
 
-from game.ui.colors import FONT_MAIN
+from game.ui.fonts import get_font
 
 
 class ScrollableJSONViewer:
@@ -41,8 +41,8 @@ class ScrollableJSONViewer:
         self.max_scroll = max(0, len(self.lines) - self.visible_lines)
 
         # Fonts (match Test Details panel style)
-        self.body_font = pygame.font.SysFont(FONT_MAIN, 14)
-        self.title_font = pygame.font.SysFont(FONT_MAIN, 18)
+        self.body_font = get_font(14)
+        self.title_font = get_font(18)
 
         # Colors
         self.bg_color = (30, 30, 35)

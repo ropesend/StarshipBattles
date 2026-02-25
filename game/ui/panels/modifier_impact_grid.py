@@ -13,6 +13,8 @@ import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel
 from typing import Dict, Any, List, Optional, TYPE_CHECKING
 
+from game.ui.fonts import get_font
+
 if TYPE_CHECKING:
     from game.simulation.components.component import Component
 
@@ -83,9 +85,9 @@ class ModifierImpactGrid:
         self._stat_summary: Optional[Dict[str, Any]] = None
 
         # Fonts (reduced 10% from 17/15 for tighter rows)
-        self.font = pygame.font.SysFont("Arial", 15)
-        self.header_font = pygame.font.SysFont("Arial", 14)
-        self.net_font = pygame.font.SysFont("Arial", 15, bold=True)
+        self.font = get_font(15)
+        self.header_font = get_font(14)
+        self.net_font = get_font(15, bold=True)
 
         # Cached surfaces for headers (rotated text)
         self._header_cache: Dict[str, pygame.Surface] = {}

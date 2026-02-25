@@ -16,10 +16,7 @@ from typing import Optional
 
 from game.ui.utils.json_diff import compute_json_diff, DiffResult
 from game.ui.widgets.scrollable_json_panel import ScrollableJsonPanel
-
-
-# Font constants
-FONT_MAIN = 'Consolas'
+from game.ui.fonts import get_font, FONT_MONO
 
 
 class BattleStateViewer:
@@ -77,9 +74,9 @@ class BattleStateViewer:
         )
 
         # Fonts
-        self.header_font = pygame.font.SysFont(FONT_MAIN, 24)
-        self.button_font = pygame.font.SysFont(FONT_MAIN, 16)
-        self.legend_font = pygame.font.SysFont(FONT_MAIN, 14)
+        self.header_font = get_font(24, FONT_MONO)
+        self.button_font = get_font(16, FONT_MONO)
+        self.legend_font = get_font(14, FONT_MONO)
 
         # Colors
         self.overlay_color = (0, 0, 0, 200)

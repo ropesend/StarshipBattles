@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Font Module + Per-Frame Fixes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Cached Font Migration | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Cached Font Migration | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Color Constants + TestLabTheme | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Test Lab Theme Migration | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Non-Test-Lab Color Migration | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -22,11 +22,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete — created `game/ui/fonts.py` with cache invalidation, fixed 16 per-frame font bugs
-**Next Action:** Begin Phase 2 — migrate remaining SysFont/Font(None) calls to cached functions
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete — migrated 15 files to get_font(), removed FONT_MAIN from colors.py, deleted private font caches
+**Next Action:** Begin Phase 3 — color constants and TestLabTheme module
 **Blockers:** None
-**Context for Next Agent:** 12,736 tests passed. Font cache includes automatic invalidation when pygame.font is quit/re-init. See fonts.py for implementation.
+**Context for Next Agent:** 12,734 tests passed. All font instantiations now use central get_font(). FONT_MAIN removed from colors.py (use fonts.FONT_MAIN). Private _font_cache removed from research_renderer and strategy_renderer.
 
 ## Overview
 Consolidate three categories of duplicated boilerplate: font instantiations (81 instances, many per-frame performance bugs), inline color tuples (253 instances, Test Lab alone has ~80), and ValidationResult constructor calls in tests (7 instances). Creates `game/ui/fonts.py` for cached font management, `game/ui/screens/test_lab/theme.py` for Test Lab color theming, and adds 6 common color constants to `game/ui/colors.py`.

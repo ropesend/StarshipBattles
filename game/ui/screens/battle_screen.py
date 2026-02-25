@@ -25,6 +25,7 @@ from game.simulation.services import BattleService
 from game.ui.services.battle_ui_service import BattleUIService
 # PROJ-126: Import AI factory from AI layer (UI can depend on AI)
 from game.ai.ai_factory import AIControllerFactory
+from game.ui.fonts import get_font
 
 if TYPE_CHECKING:
     from game.simulation.battle_controller import BattleController
@@ -111,8 +112,8 @@ class BattleScreen:
         self.test_tick_count = 0  # Track ticks for max_ticks limit
         self.test_completed = False  # Flag indicating test has finished
 
-        # Font for HUD (passed in or created)
-        self._hud_font = None
+        # Font for HUD (no lazy-init needed - get_font() is cached)
+        self._hud_font = get_font(20)
 
     # === Controller Integration ===
 
@@ -589,8 +590,6 @@ class BattleScreen:
             profiler_active: Whether profiler is active
         """
         if font is None:
-            if self._hud_font is None:
-                self._hud_font = pygame.font.SysFont("arial", 20)
             font = self._hud_font
 
         width = screen.get_width()

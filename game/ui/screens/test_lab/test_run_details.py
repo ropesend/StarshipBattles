@@ -5,7 +5,8 @@ Displays detailed information for a selected test run.
 
 import pygame
 
-from game.ui.colors import FONT_MAIN, TEST_PASS, TEST_FAIL
+from game.ui.colors import TEST_PASS, TEST_FAIL
+from game.ui.fonts import get_font
 from game.ui.screens.test_lab.formatting_utils import format_value
 
 
@@ -30,10 +31,10 @@ class TestRunDetailsPanel:
         self.button_hover_color = (80, 120, 180)
 
         # Fonts
-        self.title_font = pygame.font.SysFont(FONT_MAIN, 20)
-        self.header_font = pygame.font.SysFont(FONT_MAIN, 16)
-        self.body_font = pygame.font.SysFont(FONT_MAIN, 14)
-        self.small_font = pygame.font.SysFont(FONT_MAIN, 12)
+        self.title_font = get_font(20)
+        self.header_font = get_font(16)
+        self.body_font = get_font(14)
+        self.small_font = get_font(12)
 
         self.selected_run = None
         self.scroll_offset = 0

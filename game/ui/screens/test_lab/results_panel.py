@@ -5,7 +5,7 @@ Displays test run history with run selection.
 
 import pygame
 
-from game.ui.colors import FONT_MAIN
+from game.ui.fonts import get_font
 from .test_run_card import TestRunCard
 
 
@@ -35,9 +35,9 @@ class ResultsPanel:
         self.details_panel = None  # Reference to TestRunDetailsPanel
 
         # Fonts
-        self.title_font = pygame.font.SysFont(FONT_MAIN, 20)
-        self.body_font = pygame.font.SysFont(FONT_MAIN, 14)
-        self.small_font = pygame.font.SysFont(FONT_MAIN, 12)
+        self.title_font = get_font(20)
+        self.body_font = get_font(14)
+        self.small_font = get_font(12)
 
         # Colors
         self.bg_color = (30, 30, 35)

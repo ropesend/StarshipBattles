@@ -38,50 +38,18 @@ def renderer_module():
     yield module
 
 
-class TestRendererFontCacheBounds:
-    """Tests for font cache bounds in ResearchRenderer.
+class TestRendererFontQuantization:
+    """Tests for font size quantization in ResearchRenderer.
 
-    PROJ-40/NEW-RES-002: Font cache should not grow unbounded.
+    PROJ-40/NEW-RES-002: Font sizes should be quantized to bound cache growth.
+    PROJ-196: Private font cache removed - now uses central get_font().
     """
 
-    def test_font_cache_bounded_with_many_sizes(self, renderer_module):
-        """Font cache should not exceed reasonable size with many zoom levels.
-
-        PROJ-40/NEW-RES-002: Requesting fonts at many different sizes
-        should not create unbounded cache growth.
-        """
-        ResearchRenderer = renderer_module.ResearchRenderer
-
-        # Create minimal mocks
-        mock_tree = MagicMock()
-        mock_tree.nodes = {}
-        mock_tracker = MagicMock()
-        mock_camera = MagicMock()
-        mock_camera.zoom = 1.0
-
-        renderer = ResearchRenderer(
-            tech_tree=mock_tree,
-            tracker=mock_tracker,
-            node_positions={},
-            camera=mock_camera,
-            node_width=100,
-            node_height=60
-        )
-
-        # Request fonts at many different sizes (simulating continuous zoom)
-        for i in range(1, 200):
-            renderer._get_font(i)
-
-        # Cache should be bounded (quantization limits unique entries)
-        # With quantization to nearest 2, max would be ~100 entries
-        assert len(renderer._font_cache) <= 100, \
-            f"Font cache grew to {len(renderer._font_cache)} entries, should be bounded"
-
-    def test_font_cache_quantizes_similar_sizes(self, renderer_module):
-        """Similar font sizes should map to the same cached font.
+    def test_font_quantizes_similar_sizes(self, renderer_module):
+        """Similar font sizes should map to the same quantized font.
 
         PROJ-40/NEW-RES-002: Sizes 14 and 15 should both use the same
-        quantized font entry.
+        quantized font entry (quantization to nearest 2).
         """
         ResearchRenderer = renderer_module.ResearchRenderer
 

@@ -8,7 +8,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton
 
-from game.ui.colors import FONT_MAIN
+from game.ui.fonts import get_font
 
 
 class JSONPopup:
@@ -38,8 +38,8 @@ class JSONPopup:
         self.y = (screen_height - self.height) // 2
 
         # Fonts
-        self.title_font = pygame.font.SysFont(FONT_MAIN, 24)
-        self.body_font = pygame.font.SysFont('Courier New', 14)  # Monospace for JSON
+        self.title_font = get_font(24)
+        self.body_font = get_font(14, "Courier New")  # Monospace for JSON
 
         # Scrolling
         self.scroll_offset = 0
@@ -147,9 +147,9 @@ class ConfirmationDialog:
         self.y = (screen_height - self.height) // 2
 
         # Fonts
-        self.title_font = pygame.font.SysFont(FONT_MAIN, 24)
-        self.body_font = pygame.font.SysFont(FONT_MAIN, 16)
-        self.small_font = pygame.font.SysFont(FONT_MAIN, 14)
+        self.title_font = get_font(24)
+        self.body_font = get_font(16)
+        self.small_font = get_font(14)
 
         # Buttons (pygame_gui UIButton)
         button_y = self.y + self.height - 60

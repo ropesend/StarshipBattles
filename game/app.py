@@ -46,6 +46,7 @@ from game.core.input_actions import InputAction
 from game.exit_dialog import (
     draw_exit_dialog, handle_exit_dialog_click, handle_exit_dialog_cancel
 )
+from game.ui.fonts import get_font
 
 # Constants
 DEFAULT_WIDTH, DEFAULT_HEIGHT = DisplayConfig.default_resolution()
@@ -73,9 +74,9 @@ class Game:
 
         # Initialize fonts
         pygame.font.init()
-        self.font_small = pygame.font.SysFont("arial", 12)
-        self.font_med = pygame.font.SysFont("arial", 20)
-        self.font_large = pygame.font.SysFont("arial", 32)
+        self.font_small = get_font(12)
+        self.font_med = get_font(20)
+        self.font_large = get_font(32)
 
         # Monitor detection and resolution setup
         info = pygame.display.Info()

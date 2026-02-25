@@ -14,11 +14,7 @@ import json
 from typing import Optional, Tuple, Dict
 
 from game.ui.utils.json_diff import DiffResult
-
-
-# Font constants
-FONT_MAIN = 'Consolas'
-FONT_MONO = 'Consolas'
+from game.ui.fonts import get_font, FONT_MONO
 
 
 class ScrollableJsonPanel:
@@ -64,8 +60,8 @@ class ScrollableJsonPanel:
         self.diff_paths: Dict[str, str] = {}
 
         # Fonts
-        self.title_font = pygame.font.SysFont(FONT_MAIN, 18)
-        self.content_font = pygame.font.SysFont(FONT_MONO, 13)
+        self.title_font = get_font(18, FONT_MONO)
+        self.content_font = get_font(13, FONT_MONO)
 
         # Colors
         self.bg_color = (25, 25, 30)

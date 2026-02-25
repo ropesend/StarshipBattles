@@ -13,6 +13,7 @@ import pygame
 from typing import List, Dict, Any, Optional, TYPE_CHECKING
 
 from game.ui.colors import COLORS
+from game.ui.fonts import get_font
 
 if TYPE_CHECKING:
     pass
@@ -89,7 +90,6 @@ class WeaponsRenderer:
     TOOLTIP_BORDER_COLOR = COLORS['border_active']
 
     # === Font Configuration ===
-    FONT_NAME = "Arial"
     FONT_SIZE_NORMAL = 16
     FONT_SIZE_SMALL = 14
 
@@ -103,9 +103,9 @@ class WeaponsRenderer:
         self.sprite_mgr = sprite_mgr
 
         # Cached fonts
-        self.font = pygame.font.SysFont(self.FONT_NAME, self.FONT_SIZE_NORMAL)
-        self.small_font = pygame.font.SysFont(self.FONT_NAME, self.FONT_SIZE_SMALL)
-        self.target_font = pygame.font.SysFont(self.FONT_NAME, self.FONT_SIZE_NORMAL)
+        self.font = get_font(self.FONT_SIZE_NORMAL)
+        self.small_font = get_font(self.FONT_SIZE_SMALL)
+        self.target_font = get_font(self.FONT_SIZE_NORMAL)
 
         # Caches
         self._name_cache: Dict[str, pygame.Surface] = {}

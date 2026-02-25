@@ -10,7 +10,8 @@ import pygame
 import re
 from typing import Tuple, List, Dict, Any, Optional
 
-from game.ui.colors import FONT_MAIN, TEST_PASS, TEST_FAIL
+from game.ui.colors import TEST_PASS, TEST_FAIL
+from game.ui.fonts import get_font
 from game.core.config import DisplayConfig
 
 WIDTH, HEIGHT = DisplayConfig.DEFAULT_WIDTH, DisplayConfig.DEFAULT_HEIGHT
@@ -39,10 +40,10 @@ class TestLabRenderer:
 
     def __init__(self):
         """Initialize the renderer with fonts."""
-        self.title_font = pygame.font.SysFont(FONT_MAIN, 48)
-        self.header_font = pygame.font.SysFont(FONT_MAIN, 24)
-        self.body_font = pygame.font.SysFont(FONT_MAIN, 18)
-        self.small_font = pygame.font.SysFont(FONT_MAIN, 14)
+        self.title_font = get_font(48)
+        self.header_font = get_font(24)
+        self.body_font = get_font(18)
+        self.small_font = get_font(14)
 
         # Layout dimensions
         self.category_width = 220
