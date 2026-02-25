@@ -8,21 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-193 Phase 5 - Planet Report + Ship Stats Renderer Complete
-**Current Status:** PROJ-193 In Progress - Phase 5 complete, moving to Phase 6
+**Last Completed:** PROJ-193 Phase 6 - Battle Panels Complete
+**Current Status:** PROJ-193 In Progress - Phase 6 complete, moving to Phase 7
 **Current Project:** PROJ-193
-**Current Phase:** Phase 6
+**Current Phase:** Phase 7
 **Test Status:** 12711 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-193 Phase 5 COMPLETE - Planet Report + Ship Stats Renderer
-- planet_report_panel.py: Added TYPE_CHECKING imports for IPlanet/IFacility, typed compute_planet_production
-- ship_stats_renderer.py: Added TYPE_CHECKING import for ICombatShip, typed 6 draw_ship_* functions
-- Replaced ~6 getattr/hasattr with direct Protocol access (secondary_targets, max_targets, resources check, owner_id, facilities access)
-- Kept dynamically-injected getattr (crew_onboard, crew_required, shots_fired, shots_hit)
+- PROJ-193 Phase 6 COMPLETE - Battle Panels
+- battle_panels.py: Replaced 6 `getattr(s, 'is_derelict', False)` with direct `s.is_derelict` access
+- battle_ui_service.py: Added TYPE_CHECKING import for ICombatShip, typed _convert_ship parameter
+- Kept intentional getattr for: ship.id (not in Protocol), dynamically-injected attrs (crew_onboard, crew_required)
+- Kept hasattr checks on target.name (targets are Optional[Any])
 - Tests: 12711 passed, 1 skipped
-- Next: Start PROJ-193 Phase 6 - Battle Panels
+- Next: Start PROJ-193 Phase 7 - Builder Screens
 
 ---
 
@@ -146,6 +146,7 @@
 | 2026-02-25 | PROJ-193 | Phase 3 | Complete | 12711 passed | - | 28 getattr → direct access in empire_panel_window.py |
 | 2026-02-25 | PROJ-193 | Phase 4 | Complete | 12711 passed | - | ~8 hasattr/getattr → Protocol access, +IShipInstance.get_calculated_stats, +IStarSystem.storms |
 | 2026-02-25 | PROJ-193 | Phase 5 | Complete | 12711 passed | - | ~6 hasattr/getattr → Protocol access, typed planet_report_panel + ship_stats_renderer |
+| 2026-02-25 | PROJ-193 | Phase 6 | Complete | 12711 passed | - | 6 is_derelict getattr → direct, ICombatShip TYPE_CHECKING in battle_ui_service |
 
 ---
 

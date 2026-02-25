@@ -25,6 +25,7 @@ from game.ui.colors import PROJECTILE_STANDARD, PROJECTILE_MISSILE, PROJECTILE_B
 if TYPE_CHECKING:
     from game.simulation.services import BattleService
     from game.simulation.entities.ship import Ship
+    from game.core.protocols import ICombatShip
 
 # PROJ-113: Projectile color mapping moved from simulation to UI layer
 # Maps AttackType to RGB color tuple
@@ -139,11 +140,11 @@ class BattleUIService:
             return 0
         return engine.tick_counter
 
-    def _convert_ship(self, ship: 'Ship') -> ShipDTO:
+    def _convert_ship(self, ship: 'ICombatShip') -> ShipDTO:
         """Convert a Ship domain object to ShipDTO.
 
         Args:
-            ship: The Ship object to convert
+            ship: The Ship object (satisfies ICombatShip Protocol) to convert
 
         Returns:
             ShipDTO with all ship data

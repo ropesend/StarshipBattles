@@ -112,7 +112,7 @@ class ShipStatsPanel(BattlePanel):
 
         # Team 1
         team1_ships = [s for s in ships if s.team_id == 0]
-        team1_alive = sum(1 for s in team1_ships if s.is_alive and not getattr(s, 'is_derelict', False))
+        team1_alive = sum(1 for s in team1_ships if s.is_alive and not s.is_derelict)
 
         title = font_title.render(f"TEAM 1 ({team1_alive}/{len(team1_ships)})", True, (100, 200, 255))
         self.surface.blit(title, (10, y))
@@ -125,7 +125,7 @@ class ShipStatsPanel(BattlePanel):
 
         # Team 2
         team2_ships = [s for s in ships if s.team_id == 1]
-        team2_alive = sum(1 for s in team2_ships if s.is_alive and not getattr(s, 'is_derelict', False))
+        team2_alive = sum(1 for s in team2_ships if s.is_alive and not s.is_derelict)
 
         title = font_title.render(f"TEAM 2 ({team2_alive}/{len(team2_ships)})", True, (255, 100, 100))
         self.surface.blit(title, (10, y))
@@ -146,13 +146,13 @@ class ShipStatsPanel(BattlePanel):
         status = ""
         if not ship.is_alive:
             status = " [DEAD]"
-        elif getattr(ship, 'is_derelict', False):
+        elif ship.is_derelict:
             status = " [DERELICT]"
 
         color = (200, 200, 200)
         if not ship.is_alive:
             color = (100, 100, 100)
-        elif getattr(ship, 'is_derelict', False):
+        elif ship.is_derelict:
             color = (255, 165, 0)
         bg_color = banner_color if ship.is_alive else (40, 40, 40)
 
@@ -486,8 +486,8 @@ class BattleControlPanel(BattlePanel):
     def draw(self, screen):
         # PROJ-43: Use _get_ships() for DTO-based access
         ships = self._get_ships()
-        team1_alive = sum(1 for s in ships if s.team_id == 0 and s.is_alive and not getattr(s, 'is_derelict', False))
-        team2_alive = sum(1 for s in ships if s.team_id == 1 and s.is_alive and not getattr(s, 'is_derelict', False))
+        team1_alive = sum(1 for s in ships if s.team_id == 0 and s.is_alive and not s.is_derelict)
+        team2_alive = sum(1 for s in ships if s.team_id == 1 and s.is_alive and not s.is_derelict)
         sw, sh = screen.get_size()
 
         # In test mode, defer to the engine's is_battle_over() which respects TIME_BASED mode
