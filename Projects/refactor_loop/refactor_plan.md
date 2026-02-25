@@ -8,23 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-192 Phase 2 - Controller + Target Evaluator Cleanup
-**Current Status:** PROJ-192 Phase 2 Complete - Ready for Phase 3
+**Last Completed:** PROJ-192 Phase 3 - Formation + Adapter Cleanup
+**Current Status:** PROJ-192 Phase 3 Complete - Ready for Phase 4
 **Current Project:** PROJ-192
-**Current Phase:** Phase 3
-**Test Status:** 12710 passed, 1 skipped
+**Current Phase:** Phase 4
+**Test Status:** 12706 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-192 Phase 2 COMPLETE - Controller + Target Evaluator Cleanup
-- Replaced ~13 duck typing instances across controller.py and target_evaluator.py:
-  - controller.py: is_projectile() for missile detection, direct attribute access for position/radius/hp
-  - target_evaluator.py: direct access for mass/velocity, is_projectile() for PDC arc rules
-- **BUG FIXED:** _eval_least_armor_rule() was always returning 0 (used .hp instead of .current_hp)
-- Updated Ship identifier from .id to .name across all usages and test mocks
-- Deleted 3 obsolete tests (tested invalid getattr fallback patterns)
-- Tests: 12710 passed, 1 skipped
-- Next: Phase 3 - Replace duck typing in behaviors.py and controllable.py
+- PROJ-192 Phase 3 COMPLETE - Formation + Adapter Cleanup
+- Replaced ~9 duck typing instances across behaviors.py and controllable.py:
+  - behaviors.py: FormationBehavior now uses IFormationMaster protocol (is_derelict, is_thrusting, max_speed, engine_throttle)
+  - controllable.py: Removed defensive getattr for max_targets, ai_strategy, vehicle_type (Ship always has these)
+  - controllable.py: Removed hasattr checks in leave_formation() (Ship always has .formation.members)
+- Deleted 4 obsolete tests (tested impossible fallback scenarios for attributes Ship always has)
+- Tests: 12706 passed, 1 skipped
+- Next: Phase 4 - Refactor combat_utils.py
 
 ---
 
@@ -139,6 +138,7 @@
 | 2026-02-25 | PROJ-191 | Audit 1 | PASSED | 12693 passed | - | All goals met, 20 remaining patterns documented |
 | 2026-02-25 | PROJ-192 | Phase 1 | Complete | 12713 passed | - | 4 protocols + TypeGuards + 20 tests |
 | 2026-02-25 | PROJ-192 | Phase 2 | Complete | 12710 passed | - | ~13 duck typing → direct access, bug fix, -3 tests |
+| 2026-02-25 | PROJ-192 | Phase 3 | Complete | 12706 passed | - | ~9 duck typing → IFormationMaster protocol, -4 tests |
 
 ---
 

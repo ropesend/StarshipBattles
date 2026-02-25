@@ -126,21 +126,9 @@ class TestStrategyResolution:
         assert 'targeting' in resolved
         assert 'movement' in resolved
 
-    def test_default_strategy_if_not_set(self, spatial_grid, create_test_ship):
-        """AI uses default strategy if not explicitly set."""
-        ship1 = create_test_ship("Ally", 0, 0, team_id=0)
-
-        spatial_grid.insert(ship1)
-
-        # Don't set ai_strategy
-        if hasattr(ship1, 'ai_strategy'):
-            delattr(ship1, 'ai_strategy')
-
-        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
-        resolved = ai_controller.get_resolved_strategy()
-
-        # Should still resolve to some strategy
-        assert resolved is not None
+    # NOTE: test_default_strategy_if_not_set was deleted in PROJ-192 Phase 3.
+    # Ship ALWAYS has ai_strategy (set in __init__), so testing fallback behavior
+    # for missing attribute was testing an impossible scenario.
 
     def test_engage_distance_multiplier(self, spatial_grid, create_test_ship):
         """AI calculates engage distance correctly."""

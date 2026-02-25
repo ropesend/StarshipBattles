@@ -76,38 +76,12 @@ class TestAdapterInitialization:
         assert isinstance(adapter, IControllable)
 
 
-class TestMissingOptionalAttributes:
-    """Tests for ships with missing optional attributes."""
+class TestOptionalAttributeDefaults:
+    """Tests for attributes with special default handling."""
 
-    def test_get_ai_strategy_missing(self):
-        """Missing ai_strategy returns default 'standard_ranged'."""
-        ship = MagicMock(spec=['position', 'velocity', 'angle'])
-        # ai_strategy not in spec
-
-        adapter = ShipControllableAdapter(ship)
-
-        result = adapter.get_ai_strategy()
-        assert result == 'standard_ranged'
-
-    def test_get_vehicle_type_missing(self):
-        """Missing vehicle_type returns default 'Ship'."""
-        ship = MagicMock(spec=['position', 'velocity', 'angle'])
-        # vehicle_type not in spec
-
-        adapter = ShipControllableAdapter(ship)
-
-        result = adapter.get_vehicle_type()
-        assert result == 'Ship'
-
-    def test_get_max_targets_missing(self):
-        """Missing max_targets returns DEFAULT_MAX_TARGETS."""
-        ship = MagicMock(spec=['position', 'velocity', 'angle'])
-        # max_targets not in spec
-
-        adapter = ShipControllableAdapter(ship)
-
-        result = adapter.get_max_targets()
-        assert result == CombatConstants.DEFAULT_MAX_TARGETS
+    # NOTE: Tests for missing ai_strategy, vehicle_type, and max_targets were deleted
+    # in PROJ-192 Phase 3. Ship ALWAYS has these attributes (set in __init__), so
+    # testing fallback behavior for missing attributes was testing an impossible scenario.
 
     def test_get_secondary_targets_none(self, mock_ship):
         """secondary_targets = None returns empty list."""

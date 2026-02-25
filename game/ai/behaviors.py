@@ -61,10 +61,11 @@ Example:
     behavior.update(target, strategy={'engage_distance': 0.8})
 """
 import random
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from game.core.config import AIConfig, PhysicsConfig
 from game.core.math import Vector2, angle_diff as calc_angle_diff
+from game.ai.protocols import IFormationMaster
 
 
 def _flee_direction(from_pos: Vector2, away_from_pos: Vector2) -> Vector2:
@@ -278,7 +279,9 @@ class FormationBehavior(AIBehavior):
         # formation_master returns a raw Ship, not adapter
         master = ship.get_formation_master()
 
-        if not master or not master.is_alive or getattr(master, 'is_derelict', False):
+        # Type narrow: master implements IFormationMaster protocol
+        formation_master: Optional[IFormationMaster] = master
+        if not formation_master or not formation_master.is_alive or formation_master.is_derelict:
             ship.set_in_formation(False)
             return
 
@@ -288,16 +291,16 @@ class FormationBehavior(AIBehavior):
         if rotation_mode == 'fixed':
             current_rel_offset = formation_offset
         else:
-            current_rel_offset = formation_offset.rotate(master.angle)
+            current_rel_offset = formation_offset.rotate(formation_master.angle)
 
-        target_pos = master.position + current_rel_offset
+        target_pos = formation_master.position + current_rel_offset
 
         ship_pos = ship.get_position()
         dist = ship_pos.distance_to(target_pos)
         diameter = ship.get_radius() * 2
 
         # Match Master's rotation
-        angle_diff = calc_angle_diff(ship.get_rotation(), master.angle)
+        angle_diff = calc_angle_diff(ship.get_rotation(), formation_master.angle)
 
         # Decision: Drift or Turn
         # Use a larger threshold for drift to allow agile ships to snap into position
@@ -319,7 +322,7 @@ class FormationBehavior(AIBehavior):
             # but we can infer from master.current_speed/angle change or just match angle.
 
             if abs(angle_diff) < turn_speed_per_tick * self.TURN_PREDICT_FACTOR:
-                ship.set_rotation(master.angle)
+                ship.set_rotation(formation_master.angle)
             else:
                 direction = 1 if angle_diff > 0 else -1
                 ship.rotate(direction)
@@ -329,11 +332,11 @@ class FormationBehavior(AIBehavior):
 
             # A) Velocity Sync (Physics Feed-Forward)
             # Match master's target speed setting so Physics updates us by the same amount.
-            # master is raw Ship - access attributes directly
+            # formation_master implements IFormationMaster - access attributes directly
             master_target_speed = 0
-            if getattr(master, 'is_thrusting', False):
+            if formation_master.is_thrusting:
                 # Calculate what speed the master is trying to reach
-                master_target_speed = getattr(master, 'max_speed', 0) * getattr(master, 'engine_throttle', 1.0)
+                master_target_speed = formation_master.max_speed * formation_master.engine_throttle
 
             # Apply to self
             ship_max_speed = ship.get_max_speed()
@@ -352,13 +355,13 @@ class FormationBehavior(AIBehavior):
             # Prediction Factor = 0.0 (Target current master position)
 
             # Calculate where we SHOULD be right now
-            # master is raw Ship - access position directly
-            future_master_pos = master.position  # No prediction needed if velocity matched
+            # formation_master implements IFormationMaster - access position directly
+            future_master_pos = formation_master.position  # No prediction needed if velocity matched
 
             if rotation_mode == 'fixed':
                 future_offset = formation_offset
             else:
-                future_offset = formation_offset.rotate(master.angle)
+                future_offset = formation_offset.rotate(formation_master.angle)
 
             future_target_pos = future_master_pos + future_offset
 
@@ -385,14 +388,14 @@ class FormationBehavior(AIBehavior):
             # Out of position > Threshold
             # Navigate to FUTURE spot (Anticipation)
             # Predict where master will be in X ticks based on current speed
-            # master is raw Ship - access attributes directly
+            # formation_master implements IFormationMaster - access attributes directly
             prediction_ticks = self.PREDICTION_TICKS
-            predicted_master_pos = master.position + (Vector2(0, -1).rotate(-master.angle) * master.current_speed * prediction_ticks * self.TICK_DURATION)
-            # Re-calculate offset based on master's current angle
+            predicted_master_pos = formation_master.position + (Vector2(0, -1).rotate(-formation_master.angle) * formation_master.current_speed * prediction_ticks * self.TICK_DURATION)
+            # Re-calculate offset based on formation_master's current angle
             if rotation_mode == 'fixed':
                 pred_offset = formation_offset
             else:
-                pred_offset = formation_offset.rotate(master.angle)
+                pred_offset = formation_offset.rotate(formation_master.angle)
 
             target_pos = predicted_master_pos + pred_offset
 
