@@ -22,17 +22,8 @@ from game.core.math import Vector2
 class TestGetEntityId:
     """Tests for get_entity_id helper function."""
 
-    def test_with_id_attribute(self):
-        """get_entity_id returns id attribute when present."""
-        entity = Mock()
-        entity.id = "ship_001"
-
-        result = get_entity_id(entity)
-
-        assert result == "ship_001"
-
-    def test_with_name_fallback(self):
-        """get_entity_id falls back to name when id not present."""
+    def test_with_name_attribute(self):
+        """get_entity_id returns name attribute when present (Ships)."""
         entity = Mock(spec=['name'])
         entity.name = "Destroyer"
 
@@ -40,9 +31,9 @@ class TestGetEntityId:
 
         assert result == "Destroyer"
 
-    def test_with_object_id_fallback(self):
-        """get_entity_id falls back to id() when no id or name."""
-        entity = Mock(spec=[])  # No id or name attributes
+    def test_without_name_falls_back_to_object_id(self):
+        """get_entity_id falls back to id() when no name (Projectiles)."""
+        entity = Mock(spec=[])  # No name attribute
 
         result = get_entity_id(entity)
 
@@ -75,67 +66,53 @@ class TestIsVector2Like:
 class TestGetPosition:
     """Tests for get_position function."""
 
-    def test_with_interface_method(self):
-        """get_position uses get_position() interface when available."""
-        entity = Mock()
-        entity.get_position = Mock(return_value=Vector2(100, 200))
-
-        result = get_position(entity)
-
-        assert result.x == 100
-        assert result.y == 200
-        entity.get_position.assert_called_once()
-
-    def test_with_direct_attribute_fallback(self):
-        """get_position falls back to .position attribute."""
-        entity = Mock(spec=['position', 'id'])
+    def test_with_direct_attribute(self):
+        """get_position reads .position attribute for raw entities."""
+        entity = Mock(spec=['position', 'name'])
         entity.position = Vector2(50, 75)
-        entity.id = "test_entity"
+        entity.name = "test_entity"
 
         result = get_position(entity)
 
         assert result.x == 50
         assert result.y == 75
 
-    def test_interface_returns_mock_uses_fallback(self):
-        """get_position uses fallback when interface returns mock."""
-        entity = Mock()
-        entity.get_position = Mock(return_value=MagicMock())  # Returns mock, not real Vector2
-        entity.position = Vector2(30, 40)
+    def test_returns_none_when_no_position(self):
+        """get_position returns None when entity has no position."""
+        entity = Mock(spec=['name'])
+        entity.name = "no_pos_entity"
 
         result = get_position(entity)
 
-        assert result.x == 30
-        assert result.y == 40
+        assert result is None
 
 
 class TestGetRotation:
     """Tests for get_rotation function."""
 
-    def test_with_interface_method(self):
-        """get_rotation uses get_rotation() interface when available."""
-        entity = Mock()
-        entity.get_rotation = Mock(return_value=45.0)
-
-        result = get_rotation(entity)
-
-        assert result == 45.0
-        entity.get_rotation.assert_called_once()
-
-    def test_with_direct_attribute_fallback(self):
-        """get_rotation falls back to .angle attribute."""
-        entity = Mock(spec=['angle', 'id'])
+    def test_with_direct_attribute(self):
+        """get_rotation reads .angle attribute for raw entities."""
+        entity = Mock(spec=['angle', 'name'])
         entity.angle = 90.0
-        entity.id = "test_entity"
+        entity.name = "test_entity"
 
         result = get_rotation(entity)
 
         assert result == 90.0
 
+    def test_returns_zero_when_no_angle(self):
+        """get_rotation returns 0.0 when entity has no angle."""
+        entity = Mock(spec=['name'])
+        entity.name = "no_angle_entity"
+
+        result = get_rotation(entity)
+
+        assert result == 0.0
+
     def test_returns_float(self):
         """get_rotation always returns float."""
-        entity = Mock()
-        entity.get_rotation = Mock(return_value=45)  # int
+        entity = Mock(spec=['angle'])
+        entity.angle = 45  # int
 
         result = get_rotation(entity)
 
@@ -171,11 +148,11 @@ class TestSafeDistance:
 
     def test_with_valid_positions(self):
         """safe_distance calculates distance correctly."""
-        entity1 = Mock()
-        entity1.get_position = Mock(return_value=Vector2(0, 0))
+        entity1 = Mock(spec=['position'])
+        entity1.position = Vector2(0, 0)
 
-        entity2 = Mock()
-        entity2.get_position = Mock(return_value=Vector2(3, 4))
+        entity2 = Mock(spec=['position'])
+        entity2.position = Vector2(3, 4)
 
         result = safe_distance(entity1, entity2)
 
@@ -183,11 +160,11 @@ class TestSafeDistance:
 
     def test_returns_inf_when_position_none(self):
         """safe_distance returns inf when position is None."""
-        entity1 = Mock(spec=['id'])
-        entity1.id = "e1"
+        entity1 = Mock(spec=['name'])
+        entity1.name = "e1"
 
-        entity2 = Mock(spec=['id'])
-        entity2.id = "e2"
+        entity2 = Mock(spec=['name'])
+        entity2.name = "e2"
 
         result = safe_distance(entity1, entity2)
 
@@ -253,15 +230,15 @@ class TestIsInPdcArc:
         pdc_comp.has_pdc_ability = Mock(return_value=True)
         pdc_comp.get_ability = Mock(return_value=weapon_ability)
 
-        # Create ship
-        ship = Mock()
-        ship.get_position = Mock(return_value=Vector2(0, 0))
-        ship.get_rotation = Mock(return_value=0)
+        # Create ship with direct attributes
+        ship = Mock(spec=['position', 'angle', 'get_components_by_ability'])
+        ship.position = Vector2(0, 0)
+        ship.angle = 0
         ship.get_components_by_ability = Mock(return_value=[pdc_comp])
 
         # Create target in front of ship
-        target = Mock()
-        target.get_position = Mock(return_value=Vector2(50, 0))
+        target = Mock(spec=['position'])
+        target.position = Vector2(50, 0)
 
         result = is_in_pdc_arc(ship, target)
 
@@ -278,14 +255,14 @@ class TestIsInPdcArc:
         pdc_comp.has_pdc_ability = Mock(return_value=True)
         pdc_comp.get_ability = Mock(return_value=weapon_ability)
 
-        ship = Mock()
-        ship.get_position = Mock(return_value=Vector2(0, 0))
-        ship.get_rotation = Mock(return_value=0)
+        ship = Mock(spec=['position', 'angle', 'get_components_by_ability'])
+        ship.position = Vector2(0, 0)
+        ship.angle = 0
         ship.get_components_by_ability = Mock(return_value=[pdc_comp])
 
         # Target too far
-        target = Mock()
-        target.get_position = Mock(return_value=Vector2(100, 0))
+        target = Mock(spec=['position'])
+        target.position = Vector2(100, 0)
 
         result = is_in_pdc_arc(ship, target)
 
@@ -293,12 +270,12 @@ class TestIsInPdcArc:
 
     def test_no_pdc_components_returns_false(self):
         """is_in_pdc_arc returns False when ship has no PDC components."""
-        ship = Mock()
-        ship.get_position = Mock(return_value=Vector2(0, 0))
+        ship = Mock(spec=['position', 'get_components_by_ability'])
+        ship.position = Vector2(0, 0)
         ship.get_components_by_ability = Mock(return_value=[])
 
-        target = Mock()
-        target.get_position = Mock(return_value=Vector2(10, 0))
+        target = Mock(spec=['position'])
+        target.position = Vector2(10, 0)
 
         result = is_in_pdc_arc(ship, target)
 
@@ -306,11 +283,11 @@ class TestIsInPdcArc:
 
     def test_no_position_returns_false(self):
         """is_in_pdc_arc returns False when positions unavailable."""
-        ship = Mock(spec=['id'])
-        ship.id = "ship1"
+        ship = Mock(spec=['name'])
+        ship.name = "ship1"
 
-        target = Mock(spec=['id'])
-        target.id = "target1"
+        target = Mock(spec=['name'])
+        target.name = "target1"
 
         result = is_in_pdc_arc(ship, target)
 
@@ -331,7 +308,7 @@ class TestIsInPdcArcEdgeCases:
     """
 
     def _create_pdc_ship(self, position, rotation, pdc_range, facing_angle, firing_arc):
-        """Helper to create a ship with PDC weapon."""
+        """Helper to create a ship with PDC weapon using direct attributes."""
         weapon_ability = Mock()
         weapon_ability.range = pdc_range
         weapon_ability.facing_angle = facing_angle
@@ -341,12 +318,18 @@ class TestIsInPdcArcEdgeCases:
         pdc_comp.has_pdc_ability = Mock(return_value=True)
         pdc_comp.get_ability = Mock(return_value=weapon_ability)
 
-        ship = Mock()
-        ship.get_position = Mock(return_value=position)
-        ship.get_rotation = Mock(return_value=rotation)
+        ship = Mock(spec=['position', 'angle', 'get_components_by_ability'])
+        ship.position = position
+        ship.angle = rotation
         ship.get_components_by_ability = Mock(return_value=[pdc_comp])
 
         return ship
+
+    def _create_target(self, position):
+        """Helper to create a target with direct position attribute."""
+        target = Mock(spec=['position'])
+        target.position = position
+        return target
 
     def test_target_at_same_position_returns_false(self):
         """Target at same position as ship returns False (zero-length vector).
@@ -362,8 +345,7 @@ class TestIsInPdcArcEdgeCases:
         )
 
         # Target at exact same position as ship
-        target = Mock()
-        target.get_position = Mock(return_value=Vector2(100, 100))
+        target = self._create_target(Vector2(100, 100))
 
         result = is_in_pdc_arc(ship, target)
 
@@ -381,8 +363,7 @@ class TestIsInPdcArcEdgeCases:
         )
 
         # Target directly behind ship (negative X)
-        target = Mock()
-        target.get_position = Mock(return_value=Vector2(-50, 0))
+        target = self._create_target(Vector2(-50, 0))
 
         result = is_in_pdc_arc(ship, target)
 
@@ -405,8 +386,7 @@ class TestIsInPdcArcEdgeCases:
         dist = 50
         x = dist * math.cos(math.radians(45))
         y = dist * math.sin(math.radians(45))
-        target = Mock()
-        target.get_position = Mock(return_value=Vector2(x, y))
+        target = self._create_target(Vector2(x, y))
 
         result = is_in_pdc_arc(ship, target)
 
@@ -428,8 +408,7 @@ class TestIsInPdcArcEdgeCases:
         dist = 50
         x = dist * math.cos(math.radians(50))
         y = dist * math.sin(math.radians(50))
-        target = Mock()
-        target.get_position = Mock(return_value=Vector2(x, y))
+        target = self._create_target(Vector2(x, y))
 
         result = is_in_pdc_arc(ship, target)
 
@@ -447,8 +426,7 @@ class TestIsInPdcArcEdgeCases:
         )
 
         # Target behind the ship
-        target = Mock()
-        target.get_position = Mock(return_value=Vector2(-50, 0))
+        target = self._create_target(Vector2(-50, 0))
 
         result = is_in_pdc_arc(ship, target)
 
@@ -466,8 +444,7 @@ class TestIsInPdcArcEdgeCases:
         )
 
         # Target above ship (in front when ship faces up)
-        target = Mock()
-        target.get_position = Mock(return_value=Vector2(0, 50))
+        target = self._create_target(Vector2(0, 50))
 
         result = is_in_pdc_arc(ship, target)
 
@@ -485,8 +462,7 @@ class TestIsInPdcArcEdgeCases:
         )
 
         # Target below ship (behind when ship faces up)
-        target = Mock()
-        target.get_position = Mock(return_value=Vector2(0, -50))
+        target = self._create_target(Vector2(0, -50))
 
         result = is_in_pdc_arc(ship, target)
 
@@ -508,8 +484,7 @@ class TestIsInPdcArcEdgeCases:
         dist = 50
         x = dist * math.cos(math.radians(89))
         y = dist * math.sin(math.radians(89))
-        target = Mock()
-        target.get_position = Mock(return_value=Vector2(x, y))
+        target = self._create_target(Vector2(x, y))
 
         result = is_in_pdc_arc(ship, target)
 
@@ -526,8 +501,7 @@ class TestIsInPdcArcEdgeCases:
         )
 
         # Target directly in front (0 degrees)
-        target = Mock()
-        target.get_position = Mock(return_value=Vector2(50, 0))
+        target = self._create_target(Vector2(50, 0))
 
         result = is_in_pdc_arc(ship, target)
 
@@ -544,8 +518,7 @@ class TestIsInPdcArcEdgeCases:
         )
 
         # Target at exactly 100 units away (the max range)
-        target = Mock()
-        target.get_position = Mock(return_value=Vector2(100, 0))
+        target = self._create_target(Vector2(100, 0))
 
         result = is_in_pdc_arc(ship, target)
 
@@ -563,8 +536,7 @@ class TestIsInPdcArcEdgeCases:
         )
 
         # Target at 100.1 units away (just past max range)
-        target = Mock()
-        target.get_position = Mock(return_value=Vector2(100.1, 0))
+        target = self._create_target(Vector2(100.1, 0))
 
         result = is_in_pdc_arc(ship, target)
 

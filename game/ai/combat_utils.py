@@ -15,6 +15,7 @@ import math
 from typing import Any, List, Optional
 
 from game.core.math import Vector2
+from game.ai.interfaces.controllable import IControllable
 
 logger = logging.getLogger(__name__)
 
@@ -32,109 +33,92 @@ __all__ = [
 
 
 def is_vector2_like(obj: Any) -> bool:
-    """Check if object is a real Vector2-like object (not a MagicMock).
+    """Check if object is a real Vector2 (not a MagicMock).
 
     Args:
         obj: Object to check
 
     Returns:
-        True if obj has Vector2 interface (x, y, distance_to) and is not a mock
+        True if obj is a Vector2 instance, False if mock or other type
     """
     # Check for MagicMock by looking for tell-tale attributes
     if hasattr(obj, '_mock_name') or hasattr(obj, 'assert_called'):
         return False
-    # Check for Vector2-like interface
-    return hasattr(obj, 'x') and hasattr(obj, 'y') and hasattr(obj, 'distance_to')
+    # Check for actual Vector2 type (codebase always uses game.core.math.Vector2)
+    return isinstance(obj, Vector2)
 
 
 def get_entity_id(entity: Any) -> str:
-    """Get a string identifier for an entity, trying id, name, then object id.
+    """Get a string identifier for an entity for logging purposes.
 
-    This provides a consistent way to identify entities in log messages and
-    error handling, supporting various entity types that may have different
-    identifier attributes.
+    Ships have .name, Projectiles don't have .id or .name, so we fall back
+    to the Python object id for those cases.
 
     Args:
         entity: Any entity object (ship, projectile, etc.)
 
     Returns:
-        String identifier: entity.id, entity.name, or str(id(entity))
+        String identifier: entity.name if present, else str(id(entity))
     """
-    return getattr(entity, 'id', getattr(entity, 'name', str(id(entity))))
+    # Ships have .name attribute; Projectiles and other entities may not
+    if hasattr(entity, 'name'):
+        return entity.name
+    return str(id(entity))
 
 
 def get_position(entity: Any) -> Optional[Vector2]:
-    """Get position from entity, supporting both interface and direct access.
+    """Get position from entity, supporting both IControllable and direct access.
 
-    Uses interface method get_position() if available and returns a real Vector2,
-    otherwise falls back to direct .position attribute.
+    Uses interface method get_position() for IControllable entities,
+    otherwise accesses .position attribute directly.
 
     Args:
-        entity: Ship or entity object with position data
+        entity: Ship, IControllable adapter, or entity with position
 
     Returns:
         Vector2 position of the entity, or None if unavailable
-
-    Note:
-        Logs warnings on interface failures but continues with fallback
-        to maintain combat continuity.
     """
-    # Check for interface method first (ShipControllableAdapter case)
-    get_pos = getattr(entity, 'get_position', None)
-    if get_pos is not None and callable(get_pos):
-        try:
-            result = get_pos()
-            # Verify it's a real Vector2-like object (not a MagicMock)
-            if is_vector2_like(result):
-                return result
-        except (AttributeError, TypeError) as e:
-            logger.warning(
-                "get_position() failed for entity %s: %s. Using fallback.",
-                get_entity_id(entity), e
-            )
-    # Fall back to direct attribute access (raw Ship or mock with .position)
+    # IControllable interface provides get_position() method
+    if isinstance(entity, IControllable):
+        result = entity.get_position()
+        # Verify it's a real Vector2 (not a MagicMock in tests)
+        if is_vector2_like(result):
+            return result
+        # Fall through to try .position if get_position returned mock
+    # Direct attribute access for raw Ships, Projectiles, etc.
     return getattr(entity, 'position', None)
 
 
 def get_rotation(entity: Any) -> float:
-    """Get rotation from entity, supporting both interface and direct access.
+    """Get rotation from entity, supporting both IControllable and direct access.
 
     Args:
-        entity: Ship or entity object with rotation data
+        entity: Ship, IControllable adapter, or entity with angle
 
     Returns:
         Rotation angle in degrees (defaults to 0.0 if unavailable)
-
-    Note:
-        Logs warnings on interface failures but continues with fallback
-        to maintain combat continuity.
     """
-    # Check for interface method first
-    get_rot = getattr(entity, 'get_rotation', None)
-    if get_rot is not None and callable(get_rot):
-        try:
-            result = get_rot()
-            if isinstance(result, (int, float)):
-                return float(result)
-        except (AttributeError, TypeError) as e:
-            logger.warning(
-                "get_rotation() failed for entity %s: %s. Using fallback.",
-                get_entity_id(entity), e
-            )
-    # Fall back to direct attribute access
+    # IControllable interface provides get_rotation() method
+    if isinstance(entity, IControllable):
+        return float(entity.get_rotation())
+    # Direct attribute access for raw Ships, Projectiles, etc.
     return float(getattr(entity, 'angle', 0.0))
 
 
 def get_all_components(entity: Any) -> List[Any]:
-    """Get all components from entity, supporting both interface and direct access.
+    """Get all components from entity (Ship or IControllable).
 
     Args:
-        entity: Ship or entity object with components
+        entity: Ship or IControllable adapter with components
 
     Returns:
-        List of components, or empty list if unavailable
+        List of components, or empty list if method unavailable
     """
-    if hasattr(entity, 'get_all_components') and callable(getattr(entity, 'get_all_components', None)):
+    # IControllable adapters and Ships both have get_all_components()
+    if isinstance(entity, IControllable):
+        return entity.get_all_components()
+    # Raw Ship direct access
+    if hasattr(entity, 'get_all_components'):
         return entity.get_all_components()
     return []
 
@@ -177,8 +161,9 @@ def get_hp_percent(ship: Any) -> float:
     if not components:
         return 1.0
 
-    total_max = sum(getattr(c, 'max_hp', 0) for c in components)
-    total_current = sum(getattr(c, 'current_hp', getattr(c, 'max_hp', 0)) for c in components)
+    # All components have max_hp and current_hp attributes
+    total_max = sum(c.max_hp for c in components)
+    total_current = sum(c.current_hp for c in components)
 
     return total_current / total_max if total_max > 0 else 1.0
 
@@ -203,14 +188,17 @@ def is_in_pdc_arc(ship: Any, target: Any) -> bool:
         )
         return False
 
-    # Get PDC components
-    get_by_ability = getattr(ship, 'get_components_by_ability', None)
-    if get_by_ability is None or not callable(get_by_ability):
+    # Get PDC components - Ships and IControllable adapters have get_components_by_ability
+    if isinstance(ship, IControllable):
+        pdc_components = ship.get_components_by_ability('WeaponAbility', operational_only=True)
+    elif hasattr(ship, 'get_components_by_ability'):
+        pdc_components = ship.get_components_by_ability('WeaponAbility', operational_only=True)
+    else:
         return False
 
-    for comp in get_by_ability('WeaponAbility', operational_only=True):
-        has_pdc = getattr(comp, 'has_pdc_ability', None)
-        if has_pdc is None or not callable(has_pdc) or not has_pdc():
+    for comp in pdc_components:
+        # Components always have has_pdc_ability method
+        if not comp.has_pdc_ability():
             continue
 
         weapon_ab = comp.get_ability('WeaponAbility')

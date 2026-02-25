@@ -8,22 +8,26 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-192 Phase 3 - Formation + Adapter Cleanup
-**Current Status:** PROJ-192 Phase 3 Complete - Ready for Phase 4
+**Last Completed:** PROJ-192 Phase 4 - combat_utils.py Refactoring
+**Current Status:** PROJ-192 Phase 4 Complete - Ready for Phase 5
 **Current Project:** PROJ-192
-**Current Phase:** Phase 4
-**Test Status:** 12706 passed, 1 skipped
+**Current Phase:** Phase 5
+**Test Status:** 12704 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-192 Phase 3 COMPLETE - Formation + Adapter Cleanup
-- Replaced ~9 duck typing instances across behaviors.py and controllable.py:
-  - behaviors.py: FormationBehavior now uses IFormationMaster protocol (is_derelict, is_thrusting, max_speed, engine_throttle)
-  - controllable.py: Removed defensive getattr for max_targets, ai_strategy, vehicle_type (Ship always has these)
-  - controllable.py: Removed hasattr checks in leave_formation() (Ship always has .formation.members)
-- Deleted 4 obsolete tests (tested impossible fallback scenarios for attributes Ship always has)
-- Tests: 12706 passed, 1 skipped
-- Next: Phase 4 - Refactor combat_utils.py
+- PROJ-192 Phase 4 COMPLETE - combat_utils.py Refactoring
+- Refactored ~12 duck typing instances in combat_utils.py:
+  - is_vector2_like(): Now uses isinstance(obj, Vector2) instead of hasattr checks
+  - get_position()/get_rotation(): isinstance(entity, IControllable) checks instead of getattr/callable chains
+  - get_entity_id(): Simplified to check .name then fallback to id() (removed .id check)
+  - get_all_components(): isinstance(entity, IControllable) check
+  - get_hp_percent(): Direct c.max_hp/c.current_hp access
+  - is_in_pdc_arc(): isinstance(ship, IControllable) check + direct comp.has_pdc_ability()
+- Updated 32 tests to use Mock(spec=[...]) with direct attributes
+- Removed 2 obsolete tests (test_with_id_attribute, test_with_object_id_fallback)
+- Tests: 12704 passed, 1 skipped
+- Next: Phase 5 - Final Audit + Type Annotations
 
 ---
 
@@ -139,6 +143,7 @@
 | 2026-02-25 | PROJ-192 | Phase 1 | Complete | 12713 passed | - | 4 protocols + TypeGuards + 20 tests |
 | 2026-02-25 | PROJ-192 | Phase 2 | Complete | 12710 passed | - | ~13 duck typing → direct access, bug fix, -3 tests |
 | 2026-02-25 | PROJ-192 | Phase 3 | Complete | 12706 passed | - | ~9 duck typing → IFormationMaster protocol, -4 tests |
+| 2026-02-25 | PROJ-192 | Phase 4 | Complete | 12704 passed | - | ~12 duck typing → isinstance(IControllable), -2 tests |
 
 ---
 

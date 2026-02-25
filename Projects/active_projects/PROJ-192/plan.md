@@ -16,16 +16,16 @@
 | 1. AI Protocols (Foundation) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Controller + Target Evaluator Cleanup | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Formation + Adapter Cleanup | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. combat_utils.py Refactoring | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. combat_utils.py Refactoring | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Final Audit + Type Annotations | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete - replaced duck typing in behaviors.py and controllable.py
-**Next Action:** Begin Phase 4 — refactor combat_utils.py
+**Active Phase:** Phase 5
+**Last Action:** Phase 4 complete - refactored combat_utils.py
+**Next Action:** Begin Phase 5 — Final Audit + Type Annotations
 **Blockers:** None
-**Context for Next Agent:** Phase 3 complete. Replaced ~9 duck typing instances in behaviors.py (FormationBehavior) and controllable.py. Introduced IFormationMaster protocol usage. Deleted 4 obsolete tests (tested impossible fallback scenarios for Ship attributes that always exist). Tests: 12706 passed, 1 skipped.
+**Context for Next Agent:** Phase 4 complete. Refactored combat_utils.py: replaced ~12 duck typing instances with isinstance(IControllable) checks and direct attribute access. Added IControllable import. Updated 32 tests with direct attribute mocks (removed method mocking for get_position/get_rotation). Removed 2 obsolete tests (get_entity_id no longer checks .id). Tests: 12704 passed, 1 skipped.
 
 ## Overview
 Eliminate ~45 `hasattr()`/`getattr()` duck typing instances across 5 files in `game/ai/` by introducing explicit `@runtime_checkable` Protocol types. This makes AI type contracts visible to developers and static checkers, fixes one confirmed bug, and follows the established protocol patterns in `game/core/protocols.py`.
