@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-195 Phase 6 - Conftest & Infrastructure Migration
-**Current Status:** PROJ-195 Phase 6 complete, ready for Phase 7
+**Last Completed:** PROJ-195 Phase 7 - Regression & Repro Test Migration
+**Current Status:** PROJ-195 Phase 7 complete, ready for Phase 8
 **Current Project:** PROJ-195
-**Current Phase:** Phase 7 - Regression & Repro Test Migration
+**Current Phase:** Phase 8 - Final Audit & Verification
 **Test Status:** 12720 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-195 Phase 6 COMPLETE - Conftest fixtures migrated/documented
-- tests/unit/strategy/conftest.py: `custom_resource_registry` now uses `fresh_registries` parameter; `reset_resource_registry` documented as legitimate isolation fixture
-- tests/unit/core/resources_registry/conftest.py: `clean_registry` documented as legitimate isolation fixture
-- tests/integration/resource_system/conftest.py: `loaded_registry` kept as singleton (documented why: integration tests need singleton for ShipInstance internal reads)
-- test_resource_pipeline.py: Removed direct RegistryManager import, now uses `loaded_registry` fixture
-- Next: Phase 7 - Migrate regression and bug repro tests
+- PROJ-195 Phase 7 COMPLETE - Regression and repro tests migrated
+- test_regressions.py: Added PROJ-195 comment documenting as legitimate singleton test (tests in-place dict identity)
+- test_warnings.py: Removed RegistryManager import, now uses fresh_registries.vehicle_classes in fixture
+- test_bug_13_clear_removes_hull.py: Removed RegistryManager import, fixture populates fresh_registries directly, GameRegistries created from fresh_registries.components
+- All 12720 tests passing
+- Next: Phase 8 - Final audit and verification (grep audit, full suite, regression guard)
 
 ---
 
@@ -162,6 +162,7 @@
 | 2026-02-25 | PROJ-195 | Phase 4 | Complete | 12720 passed | - | 4 test files migrated, ~32 tests → pure/DI pattern |
 | 2026-02-25 | PROJ-195 | Phase 5 | Complete | 12720 passed | - | Converted TestBackwardCompatibility → TestLoaderPureFunctions |
 | 2026-02-25 | PROJ-195 | Phase 6 | Complete | 12720 passed | - | Conftest fixtures migrated/documented |
+| 2026-02-25 | PROJ-195 | Phase 7 | Complete | 12720 passed | - | Regression/repro tests migrated |
 
 ---
 
