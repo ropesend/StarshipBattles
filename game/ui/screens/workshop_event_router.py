@@ -372,7 +372,7 @@ class WorkshopEventRouter:
         """Handle vehicle type dropdown change."""
         gui = self.gui
         new_type = event.text
-        if new_type == getattr(gui.ship, 'vehicle_type', "Ship"):
+        if new_type == gui.ship.vehicle_type:
             return True
         
         # Determine default class for this type

@@ -8,23 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-193 Audit PASSED - Project Complete
-**Current Status:** Ready for next project (PROJ-194)
-**Current Project:** None (PROJ-193 complete, next is PROJ-194)
-**Current Phase:** N/A
+**Last Completed:** PROJ-194 Phase 1 - Direct Attribute Access
+**Current Status:** PROJ-194 in progress, Phase 1 complete
+**Current Project:** PROJ-194
+**Current Phase:** Phase 2 - Weapon & Ability Duck Typing
 **Test Status:** 12711 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-193 COMPLETE - UI Data Binding Duck Typing Elimination
-- Audit PASSED - all 5 goals verified:
-  1. ~155+ duck typing instances replaced with Protocol typing
-  2. IPlanet/IFleet extended with UI-required properties
-  3. 4 new Protocols created: IEmpire, ICombatShip, IShipInstance, IFacility
-  4. All mock test objects fixed
-  5. Tests passing: 12711 passed, 1 skipped
-- Remaining hasattr/getattr are INTENTIONAL patterns
-- Next: Start PROJ-194 (Builder & Workshop Duck Typing Elimination)
+- PROJ-194 Phase 1 COMPLETE - Direct Attribute Access (Ship Properties)
+- Replaced ~15 getattr/hasattr with direct attribute access across 5 files
+- Initialized missing Ship attributes in __init__: total_maneuver_points, fuel_consumption, ammo_consumption, energy_consumption, potential_*_consumption
+- Fixed 3 test mocks that were missing required attributes (vehicle_type, theme_id, etc.)
+- Some tasks were already done by PROJ-193 (design_report_panel.py, weapons_viewmodel.py)
+- Next: Phase 2 - Weapon & Ability Duck Typing
 
 ---
 
@@ -74,8 +71,8 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
-- [ ] **PROJ-194: Builder & Workshop Duck Typing Elimination**
-  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-194: Builder & Workshop Duck Typing Elimination**
+  - **Phases:** 5 | **Status:** In Progress (Phase 1 Complete) | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-194/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-194/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -152,6 +149,7 @@
 | 2026-02-25 | PROJ-193 | Phase 7 | Complete | 12711 passed | - | weapons_viewmodel: ICombatShip typing, 3 hasattr → direct. stats_config docstring. |
 | 2026-02-25 | PROJ-193 | Phase 8 | Complete | 12711 passed | - | IPlanet +image_rotation, planet_selection_window, design_report_panel typed. Full audit done. |
 | 2026-02-25 | PROJ-193 | Audit 1 | PASSED | 12711 passed | - | All 5 goals verified. 4 protocols, IPlanet/IFleet extended, ~155+ duck typing eliminated. |
+| 2026-02-25 | PROJ-194 | Phase 1 | Complete | 12711 passed | - | ~15 getattr→direct access, Ship init attrs, 3 mock fixes |
 
 ---
 

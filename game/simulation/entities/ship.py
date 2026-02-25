@@ -177,6 +177,17 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.warp_max_tonnage: float = 0.0
         self.warp_energy_cost: float = 0.0
 
+        # Combat stats (computed by ShipStatsCalculator, initialized here for safety)
+        self.total_maneuver_points: int = 0  # Raw turning/thrust capability
+
+        # Resource consumption (computed by combat_endurance.py, initialized here for safety)
+        self.fuel_consumption: float = 0.0
+        self.ammo_consumption: float = 0.0
+        self.energy_consumption: float = 0.0
+        self.potential_fuel_consumption: float = 0.0
+        self.potential_ammo_consumption: float = 0.0
+        self.potential_energy_consumption: float = 0.0
+
         # Initialize helpers (lazy)
         self.stats_calculator: Optional[ShipStatsCalculator] = None
         self._stat_querier: Optional[ShipStatQuerier] = None

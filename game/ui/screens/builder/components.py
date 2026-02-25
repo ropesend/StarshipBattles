@@ -80,16 +80,8 @@ class ComponentListItem:
                 def __init__(self, mass_budget):
                     self.max_mass_budget = mass_budget
             
-            # Use real ship or mock
-            budget = getattr(ship_context, 'base_mass', 1000)
-            if hasattr(ship_context, 'max_mass_budget'):
-                budget = ship_context.max_mass_budget
-            elif hasattr(ship_context, 'base_mass'):
-                 # Approximation if max_mass_budget not set (base_mass often = budget for calculation)
-                 # Actually base_mass IS hull mass. max_mass_budget depends on hull mass.
-                 # In ship.py: max_mass_budget = base_mass (roughly, often same or scaled).
-                 # Let's use base_mass if max_budget not available.
-                 budget = ship_context.base_mass
+            # Use real ship's max_mass_budget (always present on Ship after __init__)
+            budget = ship_context.max_mass_budget
 
             temp_comp.ship = MockShip(budget)
             temp_comp.recalculate_stats()

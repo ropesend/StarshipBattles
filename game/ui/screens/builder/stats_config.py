@@ -122,7 +122,7 @@ def get_life_support(ship):
     return ship.get_ability_total('LifeSupportCapacity')
 
 def get_max_targets(ship):
-    return getattr(ship, 'max_targets', 1)
+    return ship.max_targets
 
 def fmt_targeting(val):
     return "Single" if val == 1 else f"Multi ({val})"
@@ -135,7 +135,7 @@ def get_armor_hp(ship):
     return 0
 
 def get_maneuver_points(ship):
-    return getattr(ship, 'total_maneuver_points', 0)
+    return ship.total_maneuver_points
 
 def get_strategic_speed(ship):
     """Calculate strategic speed (hexes per turn) from movement points and mass."""
@@ -144,8 +144,8 @@ def get_strategic_speed(ship):
     MAX_HEXES = 10
     MIN_HEXES = 0
 
-    mass = getattr(ship, 'mass', 0)
-    movement_points = getattr(ship, 'total_strategic_movement', 0)
+    mass = ship.mass
+    movement_points = ship.total_strategic_movement
 
     if mass <= 0 or movement_points <= 0:
         return 0
@@ -154,13 +154,13 @@ def get_strategic_speed(ship):
     return max(MIN_HEXES, min(MAX_HEXES, int(raw_hexes)))
 
 def get_fuel_consumption(ship):
-    return getattr(ship, 'fuel_consumption', 0)
+    return ship.fuel_consumption
 
 def get_ammo_consumption(ship):
-    return getattr(ship, 'ammo_consumption', 0)
+    return ship.ammo_consumption
 
 def get_energy_consumption(ship):
-    return getattr(ship, 'energy_consumption', 0)
+    return ship.energy_consumption
 
 
 # --- New Generic Getters (Dynamic Resource System) ---
@@ -581,16 +581,14 @@ def get_logistics_rows(ship):
     6. Endurance at max load ({resource}_max_endurance)
     """
     # Generate dynamic resource rows based on ship's resources
-    if hasattr(ship, 'resources'):
-        res_names = _discover_resources(ship)
+    # ship.resources is always present (initialized as ResourceRegistry() in Ship.__init__)
+    res_names = _discover_resources(ship)
 
-        dynamic_rows = []
-        for r_name in res_names:
-            dynamic_rows.extend(_build_resource_rows(ship, r_name))
+    dynamic_rows = []
+    for r_name in res_names:
+        dynamic_rows.extend(_build_resource_rows(ship, r_name))
 
-        return dynamic_rows
-
-    return []
+    return dynamic_rows
 
 
 def get_construction_rows(ship):
@@ -613,8 +611,9 @@ def get_construction_rows(ship):
     # Construction costs from ship.construction_cost
     for res in PLANET_RESOURCES:
         # Use a closure to capture res
+        # ship.construction_cost is always present (initialized as {} in Ship.__init__)
         def res_getter(ship, r=res):
-            return ship.construction_cost.get(r, 0) if hasattr(ship, 'construction_cost') else 0
+            return ship.construction_cost.get(r, 0)
 
         row = StatDefinition(
             id=f"cost_{res.lower()}",

@@ -76,7 +76,7 @@ class BuilderRightPanel:
         if not self.hide_theme_selector:
             UILabel(pygame.Rect(10, y, 60, 25), "Theme:", manager=self.manager, container=self.panel)
             theme_options = self.builder.theme_manager.get_available_themes()
-            curr_theme = getattr(self.builder.ship, 'theme_id', 'Federation')
+            curr_theme = self.builder.ship.theme_id
             if theme_options and curr_theme not in theme_options: curr_theme = theme_options[0]
 
             self.theme_dropdown = UIDropDownMenu(theme_options, curr_theme, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
@@ -88,7 +88,7 @@ class BuilderRightPanel:
         if not types:
             types = ["Ship"]
 
-        curr_type = getattr(self.builder.ship, 'vehicle_type', "Ship")
+        curr_type = self.builder.ship.vehicle_type
         if curr_type not in types:
             curr_type = types[0]
 
@@ -169,7 +169,7 @@ class BuilderRightPanel:
             theme_rect = self.theme_dropdown.relative_rect
             self.theme_dropdown.kill()
             theme_options = self.builder.theme_manager.get_available_themes()
-            curr_theme = getattr(s, 'theme_id', 'Federation')
+            curr_theme = s.theme_id
             if theme_options and curr_theme not in theme_options: curr_theme = theme_options[0]
             self.theme_dropdown = UIDropDownMenu(theme_options, curr_theme, theme_rect, manager=self.manager, container=self.panel)
         
@@ -178,7 +178,7 @@ class BuilderRightPanel:
         if not types:
             types = ["Ship"]
 
-        curr_type = getattr(s, 'vehicle_type', "Ship")
+        curr_type = s.vehicle_type
         # Ensure consistency from class if vehicle_type not set or mismatched
         class_def = self._vehicle_class_service.get_class_definition(s.ship_class)
         if class_def:
@@ -238,7 +238,7 @@ class BuilderRightPanel:
         import re
         
         # Determine paths
-        theme = getattr(self.builder.ship, 'theme_id', 'Federation')
+        theme = self.builder.ship.theme_id
         ship_class = self.builder.ship.ship_class
         
         match = re.match(r"(.*)\s+\((.*)\)", ship_class)

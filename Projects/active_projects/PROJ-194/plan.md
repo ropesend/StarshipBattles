@@ -13,17 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Direct Attribute Access (Ship Properties) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Direct Attribute Access (Ship Properties) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Weapon & Ability Duck Typing | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Workshop Init-Order & Self-Checks | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Resource Accessor Method | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Remaining Scattered Instances | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-24 23:30
-**Active Phase:** Plan Ready — Awaiting user approval
-**Last Action:** Detailed 5-phase plan created with all checklist files
-**Next Action:** User approval, then begin Phase 1
+**Last Updated:** 2026-02-25
+**Active Phase:** Phase 2 - Weapon & Ability Duck Typing
+**Last Action:** Phase 1 complete. Replaced ~15 getattr/hasattr with direct access. Initialized missing Ship attributes. Fixed 3 test mocks.
+**Next Action:** Begin Phase 2
 **Blockers:** None
 
 ## Overview

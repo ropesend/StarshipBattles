@@ -96,8 +96,8 @@ class WorkshopShipIO:
 
             logger.info(f"Workshop Save: Saving design as '{design_name}'")
 
-            # Get built designs from context (will be set by strategy layer)
-            built_designs = getattr(self.context, 'built_designs', set())
+            # Get built designs from context (always present, default_factory=set)
+            built_designs = self.context.built_designs
             logger.debug(f"  built_designs count: {len(built_designs)}")
 
             success, message = library.save_design(
