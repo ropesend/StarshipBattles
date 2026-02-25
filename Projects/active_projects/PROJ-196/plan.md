@@ -17,16 +17,16 @@
 | 2. Cached Font Migration | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Color Constants + TestLabTheme | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Test Lab Theme Migration | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Non-Test-Lab Color Migration | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Non-Test-Lab Color Migration | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. ValidationResult Cleanup + Audit | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 5
-**Last Action:** Phase 4 complete — migrated 9 Test Lab files to use theme.py constants (~100+ inline colors replaced)
-**Next Action:** Begin Phase 5 — migrate non-Test-Lab color uses in game/ui/
+**Active Phase:** Phase 6
+**Last Action:** Phase 5 complete — migrated 10 inline colors across 7 non-Test-Lab files to use colors.py constants
+**Next Action:** Begin Phase 6 — ValidationResult cleanup + final audit
 **Blockers:** None
-**Context for Next Agent:** 12,734 tests passed. All Test Lab files now use theme.py for colors. Remaining inline colors are in non-Test-Lab game/ui/ files.
+**Context for Next Agent:** 12,734 tests passed. TEXT_LIGHT (2), TEXT_MUTED (6), BORDER_LIGHT (2) replacements done. Many (100,100,100) uses skipped as they're armor/default colors not TEXT_DIM.
 
 ## Overview
 Consolidate three categories of duplicated boilerplate: font instantiations (81 instances, many per-frame performance bugs), inline color tuples (253 instances, Test Lab alone has ~80), and ValidationResult constructor calls in tests (7 instances). Creates `game/ui/fonts.py` for cached font management, `game/ui/screens/test_lab/theme.py` for Test Lab color theming, and adds 6 common color constants to `game/ui/colors.py`.

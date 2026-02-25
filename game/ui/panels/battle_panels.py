@@ -4,7 +4,7 @@ from game.core.profiling import profile_action
 
 logger = logging.getLogger(__name__)
 from game.ui.config import UIConfig
-from game.ui.colors import HP_HEALTHY, HP_DAMAGED, HP_CRITICAL, RESOURCE_FUEL
+from game.ui.colors import HP_HEALTHY, HP_DAMAGED, HP_CRITICAL, RESOURCE_FUEL, TEXT_MUTED
 from game.ui.fonts import get_default_font
 from game.ui.panels.ship_stats_renderer import (
     draw_stat_bar, draw_ship_info_header, draw_ship_vitals,
@@ -357,7 +357,7 @@ class SeekerMonitorPanel(BattlePanel):
             status_str = "[HIT]"
             bg_color = (40, 40, 40)
         elif status == 'miss':
-            color = (150, 150, 150)
+            color = TEXT_MUTED
             status_str = "[MISS]"
             bg_color = (40, 40, 40)
         elif status == 'destroyed':

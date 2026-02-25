@@ -12,6 +12,7 @@ from pygame_gui.elements import UIButton, UILabel, UITextEntryLine, UIDropDownMe
 import logging
 
 from game.ui.fonts import get_font
+from game.ui.colors import TEXT_LIGHT
 
 logger = logging.getLogger(__name__)
 from game.core.hex_math import hex_to_pixel, HexCoord
@@ -530,7 +531,7 @@ class SystemModeHelper:
 
             # Star name label
             font = get_font(12)
-            text = font.render(star.name, True, (220, 220, 220))
+            text = font.render(star.name, True, TEXT_LIGHT)
             screen_surface.blit(text, (screen_pos.x + radius + 5, screen_pos.y - 6))
 
         # Draw planets

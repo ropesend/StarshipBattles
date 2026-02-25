@@ -3,6 +3,7 @@ import math
 
 from game.core.protocols import is_star
 from game.ui.fonts import get_font
+from game.ui.colors import TEXT_MUTED
 
 class DataGraph:
     """Base class for data visualization widgets."""
@@ -82,7 +83,7 @@ class SpectrumGraph(DataGraph):
             pygame.draw.rect(self.surface, color, rect)
             
             # Label
-            lbl = font.render(label, True, (150, 150, 150))
+            lbl = font.render(label, True, TEXT_MUTED)
             
             if vertical:
                  # Rotate +90 (Reads Bottom-to-Top)
@@ -172,7 +173,7 @@ class AtmosphereGraph(DataGraph):
             elif pressure > 100:
                 val_str = f"{int(pressure)}"
                 
-            val_txt = font.render(val_str, True, (150, 150, 150))
+            val_txt = font.render(val_str, True, TEXT_MUTED)
             if vertical: val_txt = pygame.transform.rotate(val_txt, 90)
             
             val_rect = val_txt.get_rect(center=(x + bar_width/2, y - 8))

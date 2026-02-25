@@ -12,7 +12,7 @@ import math
 import pygame
 from typing import List, Dict, Any, Optional, TYPE_CHECKING
 
-from game.ui.colors import COLORS
+from game.ui.colors import COLORS, BORDER_LIGHT
 from game.ui.fonts import get_font
 
 if TYPE_CHECKING:
@@ -207,7 +207,7 @@ class WeaponsRenderer:
         """
         RADIUS = 8
         COLOR_BG = (30, 30, 40)
-        COLOR_OUTLINE = (100, 100, 120)
+        COLOR_OUTLINE = BORDER_LIGHT
         COLOR_ARC = (200, 150, 50)
         COLOR_ARROW = (255, 255, 255)
 

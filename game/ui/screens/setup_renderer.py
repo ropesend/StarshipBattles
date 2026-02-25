@@ -9,6 +9,7 @@ Cross-layer imports (acceptable for UI):
 import pygame
 from game.core.strategy_metadata import StrategyMetadataService
 from game.ui.fonts import get_default_font
+from game.ui.colors import TEXT_LIGHT
 
 
 def draw_title(screen, sw):
@@ -197,6 +198,6 @@ def draw_ai_dropdown(screen, ai_strategies, team_idx, display_idx, col2_x, col3_
     for idx, strat_id in enumerate(ai_strategies):
         strat_name = StrategyMetadataService.instance().strategies.get(strat_id, {}).get('name', strat_id)
         opt_y = ship_y + idx * 22
-        text_color = (220, 220, 220)
+        text_color = TEXT_LIGHT
         opt_text = item_font.render(strat_name, True, text_color)
         screen.blit(opt_text, (col_x + 5, opt_y + 3))

@@ -15,6 +15,7 @@ from typing import Optional, Tuple, Dict
 
 from game.ui.utils.json_diff import DiffResult
 from game.ui.fonts import get_font, FONT_MONO
+from game.ui.colors import BORDER_LIGHT
 
 
 class ScrollableJsonPanel:
@@ -403,5 +404,5 @@ class ScrollableJsonPanel:
 
         # Thumb
         thumb_rect = self._get_scrollbar_thumb_rect()
-        thumb_color = (100, 100, 120) if not self.scrollbar_dragging else (120, 120, 140)
+        thumb_color = BORDER_LIGHT if not self.scrollbar_dragging else (120, 120, 140)
         pygame.draw.rect(surface, thumb_color, thumb_rect, border_radius=3)

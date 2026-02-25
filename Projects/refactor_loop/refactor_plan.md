@@ -8,19 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-196 Phase 4 - Test Lab Theme Migration
-**Current Status:** PROJ-196 Phase 4 complete, ready for Phase 5
+**Last Completed:** PROJ-196 Phase 5 - Non-Test-Lab Color Migration
+**Current Status:** PROJ-196 Phase 5 complete, ready for Phase 6
 **Current Project:** PROJ-196
-**Current Phase:** Phase 5
+**Current Phase:** Phase 6
 **Test Status:** 12734 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-196 Phase 4 COMPLETE - Test Lab theme migration done
-- Migrated 9 Test Lab files to use theme.py constants
-- ~100+ inline color tuples replaced with theme references
-- Files updated: renderer.py, test_run_details.py, test_run_card.py, ship_panels.py, json_viewer.py, results_panel.py, component_dropdown.py, dialogs.py, screen.py
-- Next: Start PROJ-196 Phase 5 (Non-Test-Lab Color Migration)
+- PROJ-196 Phase 5 COMPLETE - Non-Test-Lab color migration done
+- Migrated 10 inline colors across 7 files to use colors.py constants
+- TEXT_LIGHT: system_mode.py, setup_renderer.py
+- TEXT_MUTED: battle_panels.py, ship_stats_renderer.py (3), strategy_widgets.py (2)
+- BORDER_LIGHT: scrollable_json_panel.py, weapons_renderer.py
+- BORDER_DARK/PANEL_BG had no matches; (100,100,100) mostly armor/default colors (skipped)
+- Next: Start PROJ-196 Phase 6 (ValidationResult Cleanup + Audit)
 
 ---
 
@@ -168,6 +170,7 @@
 | 2026-02-25 | PROJ-196 | Phase 2 | Complete | 12734 passed | - | 15 files migrated to get_font(), FONT_MAIN removed from colors.py |
 | 2026-02-25 | PROJ-196 | Phase 3 | Complete | 12734 passed | - | 6 colors in colors.py + 54 colors in test_lab/theme.py |
 | 2026-02-25 | PROJ-196 | Phase 4 | Complete | 12734 passed | - | Migrated 9 Test Lab files to theme.py (~100+ colors) |
+| 2026-02-25 | PROJ-196 | Phase 5 | Complete | 12734 passed | - | 10 inline colors → constants in 7 non-Test-Lab files |
 
 ---
 

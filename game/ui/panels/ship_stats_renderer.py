@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from game.core.protocols import ICombatShip
 from game.core.strategy_metadata import StrategyMetadataService
 from game.ui.config import UIConfig
-from game.ui.colors import RESOURCE_FUEL, RESOURCE_ENERGY, RESOURCE_AMMO, RESOURCE_SHIELD, HP_HEALTHY, HP_DAMAGED, HP_CRITICAL
+from game.ui.colors import RESOURCE_FUEL, RESOURCE_ENERGY, RESOURCE_AMMO, RESOURCE_SHIELD, HP_HEALTHY, HP_DAMAGED, HP_CRITICAL, TEXT_MUTED
 from game.core.constants import CombatConstants, LayerType, ResourceType
 
 
@@ -203,7 +203,7 @@ def draw_component_entry(surface, comp, x_indent, y, font):
         Updated Y position after drawing
     """
     hp_pct = comp.current_hp / comp.max_hp if comp.max_hp > 0 else 1.0
-    color = (150, 150, 150)
+    color = TEXT_MUTED
     bar_color = get_hp_bar_color(hp_pct, comp.is_active)
 
     if not comp.is_active:
@@ -336,14 +336,14 @@ def draw_ship_combat_stats(surface, ship: 'ICombatShip', x_indent, y, font):
         for i, st in enumerate(sec_targets):
             if st.is_alive:
                 st_name = getattr(st, 'name', getattr(st, 'type', 'Target').title())
-                text = font.render(f"  T{i+2}: {st_name}", True, (150, 150, 150))
+                text = font.render(f"  T{i+2}: {st_name}", True, TEXT_MUTED)
                 surface.blit(text, (x_indent, y))
                 y += UIConfig.ELEMENT_SPACING
 
     # Targeting Cap
     max_targets = ship.max_targets
     cap_text = "Single" if max_targets == CombatConstants.DEFAULT_MAX_TARGETS else f"Multi ({max_targets})"
-    text = font.render(f"Sys: {cap_text}", True, (150, 150, 150))
+    text = font.render(f"Sys: {cap_text}", True, TEXT_MUTED)
     surface.blit(text, (x_indent + 200, y - 18))
 
     return y
