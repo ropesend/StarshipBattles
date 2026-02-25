@@ -106,7 +106,7 @@ class AIController:
             return float(val)
         return 1.0
 
-    def _find_enemies_in_radius(self, exclude=None, include_missiles=False):
+    def _find_enemies_in_radius(self, exclude: Optional[Any] = None, include_missiles: bool = False) -> List[Any]:
         """Find alive enemy entities within targeting radius.
 
         Args:
@@ -133,7 +133,7 @@ class AIController:
 
         return enemies
 
-    def _build_capabilities_cache(self, ships):
+    def _build_capabilities_cache(self, ships: List[Any]) -> Dict[str, Dict[str, Any]]:
         """Pre-compute expensive capability checks for all ships.
 
         PERF: Builds capability data once per ship instead of repeatedly during
@@ -156,8 +156,8 @@ class AIController:
         """
         cache = {}
         for ship in ships:
-            # Ships use .name as identifier (not .id)
-            ship_id = getattr(ship, 'name', None)
+            # Ships have .name; getattr for defensive handling of malformed entities
+            ship_id = getattr(ship, 'name', None)  # INTENTIONAL: defensive for cache building
             if ship_id is None:
                 continue
 
@@ -176,7 +176,7 @@ class AIController:
 
         return cache
 
-    def _score_and_sort_enemies(self, enemies, rules):
+    def _score_and_sort_enemies(self, enemies: List[Any], rules: List[Dict[str, Any]]) -> List[Any]:
         """Score enemies using targeting rules and return sorted list (highest first).
 
         Args:

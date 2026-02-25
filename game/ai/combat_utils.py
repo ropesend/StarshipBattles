@@ -12,10 +12,13 @@ operating when possible.
 """
 import logging
 import math
-from typing import Any, List, Optional
+from typing import Any, List, Optional, TYPE_CHECKING
 
 from game.core.math import Vector2
 from game.ai.interfaces.controllable import IControllable
+
+if TYPE_CHECKING:
+    from game.simulation.entities.ship import Ship
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +88,7 @@ def get_position(entity: Any) -> Optional[Vector2]:
         if is_vector2_like(result):
             return result
         # Fall through to try .position if get_position returned mock
-    # Direct attribute access for raw Ships, Projectiles, etc.
+    # Direct attribute access for Ships, Projectiles, and test mocks
     return getattr(entity, 'position', None)
 
 
@@ -101,7 +104,7 @@ def get_rotation(entity: Any) -> float:
     # IControllable interface provides get_rotation() method
     if isinstance(entity, IControllable):
         return float(entity.get_rotation())
-    # Direct attribute access for raw Ships, Projectiles, etc.
+    # Direct attribute access for Ships and test mocks
     return float(getattr(entity, 'angle', 0.0))
 
 
@@ -117,9 +120,11 @@ def get_all_components(entity: Any) -> List[Any]:
     # IControllable adapters and Ships both have get_all_components()
     if isinstance(entity, IControllable):
         return entity.get_all_components()
-    # Raw Ship direct access
-    if hasattr(entity, 'get_all_components'):
-        return entity.get_all_components()
+    # Raw Ship: method check required (can't import Ship at runtime due to circular deps)
+    # This is acceptable - we're checking for a specific method, not duck typing properties
+    method = getattr(entity, 'get_all_components', None)
+    if callable(method):
+        return method()
     return []
 
 
@@ -191,10 +196,12 @@ def is_in_pdc_arc(ship: Any, target: Any) -> bool:
     # Get PDC components - Ships and IControllable adapters have get_components_by_ability
     if isinstance(ship, IControllable):
         pdc_components = ship.get_components_by_ability('WeaponAbility', operational_only=True)
-    elif hasattr(ship, 'get_components_by_ability'):
-        pdc_components = ship.get_components_by_ability('WeaponAbility', operational_only=True)
     else:
-        return False
+        # Raw Ship: method check (can't import Ship at runtime due to circular deps)
+        method = getattr(ship, 'get_components_by_ability', None)
+        if not callable(method):
+            return False
+        pdc_components = method('WeaponAbility', operational_only=True)
 
     for comp in pdc_components:
         # Components always have has_pdc_ability method

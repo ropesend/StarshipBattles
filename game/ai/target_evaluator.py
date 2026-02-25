@@ -15,6 +15,8 @@ operating when possible:
 
 For fatal errors that indicate programming bugs, TargetingException is raised.
 """
+from typing import Any, Dict, List, Optional, Tuple
+
 from game.core.math import Vector2
 from game.core.constants import AttackType, LayerType
 from game.ai.protocols import is_projectile
@@ -166,8 +168,8 @@ class TargetEvaluator:
         required = rule.get('required', False)
 
         # PERF: Use cached capability check if available
-        # Ships use .name as identifier (not .id); keep getattr for Projectiles which may lack .name
-        candidate_id = getattr(candidate, 'name', None)
+        # Ships have .name; Projectiles don't - safe access required
+        candidate_id = getattr(candidate, 'name', None)  # INTENTIONAL: Projectiles lack .name
         if ship_capabilities_cache and candidate_id in ship_capabilities_cache:
             has_wpns = ship_capabilities_cache[candidate_id]['has_weapons']
         else:
@@ -239,7 +241,14 @@ class TargetEvaluator:
             return TargetEvaluator._eval_pdc_arc_rule(ship, candidate, rule, stat_helpers)
 
     @staticmethod
-    def evaluate(ship, candidate, rules, stat_helpers=None, distance_cache=None, ship_capabilities_cache=None):
+    def evaluate(
+        ship: Any,
+        candidate: Any,
+        rules: List[Dict[str, Any]],
+        stat_helpers: Optional[Dict[str, Any]] = None,
+        distance_cache: Optional[Dict[Any, float]] = None,
+        ship_capabilities_cache: Optional[Dict[str, Dict[str, Any]]] = None
+    ) -> float:
         """Evaluate a candidate target based on targeting rules.
 
         Args:
