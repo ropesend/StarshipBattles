@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Create architectural documentation for the orders system.
 
 ---
@@ -15,29 +15,33 @@
 ### Task 8.1: Write docs/architecture/orders_system.md [Simple]
 **File:** `docs/architecture/orders_system.md` (new)
 
-- [ ] Document: Order lifecycle (queue -> tick progress -> execute -> pop)
-- [ ] Document: Action tick mechanics (alignment with movement ticks, interval formula)
-- [ ] Document: OrderType categories (MOVEMENT_ORDER_TYPES, ACTION_ORDER_TYPES, BUILD)
-- [ ] Document: action_time moddability via component abilities in components.json
-- [ ] Document: execution_progress serialization
-- [ ] Document: The Tick Contract — how to add a new order type:
+- [x] Document: Order lifecycle (queue -> tick progress -> execute -> pop)
+- [x] Document: Action tick mechanics (alignment with movement ticks, interval formula)
+- [x] Document: OrderType categories (MOVEMENT_ORDER_TYPES, ACTION_ORDER_TYPES, BUILD)
+- [x] Document: action_time moddability via component abilities in components.json
+- [x] Document: execution_progress serialization
+- [x] Document: The Tick Contract — how to add a new order type:
   1. Add to OrderType enum
   2. Categorize as MOVEMENT or ACTION
   3. Define action_time in component ability (or default 1)
   4. Add processing method to FleetOrderProcessor or SuperweaponOrderProcessor
   5. Add command handler and register in CommandHandlerRegistry
-- [ ] Document: WARP vs MOVE distinction
-- [ ] Include timing diagram examples showing tick-by-tick execution
+- [x] Document: WARP vs MOVE distinction
+- [x] Include timing diagram examples showing tick-by-tick execution
 
 **Notes:**
+- Created comprehensive documentation at `docs/architecture/orders_system.md`
+- Includes ASCII diagrams for order lifecycle and timing examples
+- Documents all order types, categories, and action_time values
+- Provides step-by-step guide for adding new order types
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Documentation is clear and comprehensive
-- [ ] `pytest tests/ -n 12` — full suite passes (final verification)
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to "Project Complete"
+- [x] All task checkboxes above are checked
+- [x] Documentation is clear and comprehensive
+- [x] `pytest tests/ -n 12` — full suite passes (final verification)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to "Project Complete"
