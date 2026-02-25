@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Clean up the remaining scattered hasattr/getattr instances across builder files. Run full test suite for final verification.
 
 ---
@@ -16,11 +16,11 @@
 **File:** `game/ui/screens/builder/interaction_controller.py`
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Line 146: `if hasattr(self.builder.left_panel, 'get_add_count'):` → remove check (BuilderLeftPanel always has get_add_count at left_panel.py:452)
-- [ ] Line 152: `if hasattr(target, 'suppress_toggle'):` → remove check (LayerPanel always has suppress_toggle at layer_panel.py:368; it's the only drop target)
-- [ ] Verify: Run tests
+- [x] Line 146: `if hasattr(self.builder.left_panel, 'get_add_count'):` → remove check (BuilderLeftPanel always has get_add_count at left_panel.py:452)
+- [x] Line 152: `if hasattr(target, 'suppress_toggle'):` → remove check (LayerPanel always has suppress_toggle at layer_panel.py:368; it's the only drop target)
+- [x] Verify: Run tests
 
-**Notes:** Both methods are defined on the concrete classes always used.
+**Notes:** Both methods are defined on the concrete classes always used. Added suppress_toggle() to DropTarget protocol.
 
 ---
 
@@ -28,9 +28,9 @@
 **File:** `game/ui/screens/builder/layer_panel.py`
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Line 349: `if hasattr(item, 'handle_event'):` → remove check (all item types — IndividualComponentItem, LayerComponentItem, LayerHeaderItem — define handle_event)
-- [ ] Line 377: `if getattr(item, 'is_selected', False):` → `if item.is_selected:` (already guarded by isinstance check on line 376 for types that have is_selected)
-- [ ] Verify: Run tests
+- [x] Line 349: `if hasattr(item, 'handle_event'):` → remove check (all item types — IndividualComponentItem, LayerComponentItem, LayerHeaderItem — define handle_event)
+- [x] Line 377: `if getattr(item, 'is_selected', False):` → `if item.is_selected:` (already guarded by isinstance check on line 376 for types that have is_selected)
+- [x] Verify: Run tests
 
 **Notes:** Line 377 is inside `isinstance(item, (LayerComponentItem, IndividualComponentItem))` guard, so is_selected is always present.
 
@@ -40,10 +40,10 @@
 **File:** `game/ui/screens/builder/grouping_strategies.py`
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Line 42: `if getattr(m.definition, 'readonly', False):` → check if ModifierDefinition always has `readonly` attribute. If yes, replace with `if m.definition.readonly:`. If no, keep getattr (legitimate optional attr).
-- [ ] Verify: Run tests
+- [x] Line 42: `if getattr(m.definition, 'readonly', False):` → replaced with `if m.definition.readonly:`. Modifier class always has `readonly` attribute (component_constants.py:35).
+- [x] Verify: Run tests
 
-**Notes:** Check ModifierDefinition class to confirm.
+**Notes:** ModifierDefinition (Modifier class) always sets self.readonly in __init__.
 
 ---
 
@@ -51,36 +51,43 @@
 **File:** `game/ui/screens/builder/structure_list_items.py`
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Line 434: `if getattr(self.event_handler, 'toggle_suppress_timer', 0) > 0:` → check if event_handler (LayerPanel) always has toggle_suppress_timer. If yes, replace with `if self.event_handler.toggle_suppress_timer > 0:`.
-- [ ] Verify: Run tests
+- [x] Line 434: `if getattr(self.event_handler, 'toggle_suppress_timer', 0) > 0:` → replaced with `if self.event_handler.toggle_suppress_timer > 0:`.
+- [x] Verify: Run tests
 
-**Notes:** LayerPanel.suppress_toggle() sets toggle_suppress_timer, and it's initialized in LayerPanel.__init__ (check to confirm).
+**Notes:** LayerPanel.toggle_suppress_timer is initialized in LayerPanel.__init__ (line 58).
 
 ---
 
 ### Task 5.5: Full test suite verification [Simple]
 **Tests:** `pytest tests/ -n 12`
 
-- [ ] Run full test suite (not --testmon) to verify no regressions
-- [ ] Confirm baseline: 12,718+ passed, 0 failures
-- [ ] Verify: All tests pass
+- [x] Run full test suite (not --testmon) to verify no regressions
+- [x] Confirm baseline: 12721 passed, 1 skipped
+- [x] Verify: All tests pass
 
-**Notes:**
+**Notes:** Fixed MockDropTarget in test_builder_interaction.py to include suppress_toggle() method.
 
 ---
 
 ### Task 5.6: Final grep audit [Simple]
-- [ ] Run `grep -rn "getattr\|hasattr" game/ui/screens/builder/ game/ui/screens/workshop_*.py game/ui/panels/design_report_panel.py game/ui/panels/modifier_impact_grid.py` to confirm all in-scope instances are addressed
-- [ ] Document any remaining instances with justification (e.g., StatDefinition.get_value intentional dispatch)
-- [ ] Verify: Only intentionally-kept instances remain
+- [x] Run `grep -rn "getattr\|hasattr" game/ui/screens/builder/ game/ui/screens/workshop_*.py game/ui/panels/design_report_panel.py game/ui/panels/modifier_impact_grid.py` to confirm all in-scope instances are addressed
+- [x] Document any remaining instances with justification (e.g., StatDefinition.get_value intentional dispatch)
+- [x] Verify: Only intentionally-kept instances remain
 
-**Notes:**
+**Notes:** Remaining instances documented below:
+- `stats_config.py:42,44` - INTENTIONAL: StatDefinition.get_value() generic dispatch
+- `modifier_row.py:269` - Pygame event boundary (out of scope)
+- `modifier_impact_grid.py:175` - Legitimate class feature check (STAT_BINDINGS)
+- `detail_panel.py:94,144` - Type checking for Union types
+- `left_panel.py:214,254,352` - Optional attrs / init-order patterns
+- `schematic_view.py:70` - Optional attr
+- `workshop_viewmodel.py:166` - Type checking for Union type
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

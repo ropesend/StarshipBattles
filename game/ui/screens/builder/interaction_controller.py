@@ -142,16 +142,13 @@ class InteractionController:
         comp = self.dragged_item
         
         # Check bulk add count
-        count = 1
-        if hasattr(self.builder.left_panel, 'get_add_count'):
-            count = self.builder.left_panel.get_add_count()
+        count = self.builder.left_panel.get_add_count()
 
         handled = False
         for target in self.drop_targets:
             if target.can_accept_drop(pos):
-                if hasattr(target, 'suppress_toggle'):
-                    target.suppress_toggle()
-                    
+                target.suppress_toggle()
+
                 if target.accept_drop(pos, comp, count):
                     handled = True
                     break

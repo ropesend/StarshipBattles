@@ -346,10 +346,9 @@ class LayerPanel(DropTarget):
                 return True
         
         for item in self.items:
-            if hasattr(item, 'handle_event'):
-                result = item.handle_event(event)
-                if result:
-                    return result
+            result = item.handle_event(event)
+            if result:
+                return result
         return False
 
     def update(self, dt):
@@ -374,7 +373,7 @@ class LayerPanel(DropTarget):
         container_rect = self.scroll_container.get_abs_rect()
         for item in self.items:
             if isinstance(item, (LayerComponentItem, IndividualComponentItem)):
-                if getattr(item, 'is_selected', False):
+                if item.is_selected:
                     # Get the absolute rect of the item
                     abs_rect = item.get_abs_rect()
                     # Check if it's visible in the scroll container
