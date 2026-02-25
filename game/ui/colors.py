@@ -87,6 +87,14 @@ BG_BATTLE = (10, 10, 20)        # Nearly black (battle + app)
 BG_GALAXY = (15, 20, 30)        # Deep dark blue
 BG_MENU = (20, 20, 30)          # Dark blue-gray
 
+# === Common UI Colors ===
+TEXT_LIGHT = (220, 220, 220)    # Primary text
+TEXT_MUTED = (150, 150, 150)    # Muted/hint text
+TEXT_DIM = (100, 100, 100)      # Dim/disabled text
+PANEL_BG = (30, 30, 35)         # Popup/dialog background
+BORDER_LIGHT = (100, 100, 120)  # Active borders
+BORDER_DARK = (80, 80, 90)      # Standard borders
+
 # === Ship Class Colors (Design Reports) ===
 SHIP_CLASS_FIGHTER = (255, 150, 50)   # Orange
 SHIP_CLASS_CORVETTE = (100, 200, 100)  # Green
