@@ -4,6 +4,13 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-196 | Consolidate Duplicated Code | Planning | 2026-02-24 | 2026-02-24 |
+| PROJ-195 | Eradicate RegistryManager Singleton from Non-Root Code | Planning | 2026-02-24 | 2026-02-24 |
+| PROJ-194 | Builder & Workshop Duck Typing Elimination | Plan Ready | 2026-02-24 | 2026-02-24 |
+| PROJ-193 | UI Data Binding Duck Typing Elimination | Plan Ready | 2026-02-24 | 2026-02-24 |
+| PROJ-192 | AI Behavior Protocols - Duck Typing Elimination | Planning | 2026-02-24 | 2026-02-24 |
+| PROJ-191 | Strategy Layer Duck Typing Elimination | Plan Ready | 2026-02-24 | 2026-02-24 |
+| PROJ-190 | Core Simulation Duck Typing Elimination | Planning | 2026-02-24 | 2026-02-24 |
 | PROJ-189 | Storms Environmental Hazards | Planning | 2026-02-24 | 2026-02-24 |
 | PROJ-188 | Strategy Layer List UI Consolidation | Planning | 2026-02-24 | 2026-02-24 |
 | PROJ-187 | Strategy Orders Tick-Based Action System | Planning | 2026-02-24 | 2026-02-24 |

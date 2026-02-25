@@ -49,6 +49,48 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
+- [ ] **PROJ-190: Core Simulation Duck Typing Elimination**
+  - **Phases:** 6 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-190/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-190/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+- [ ] **PROJ-191: Strategy Layer Duck Typing Elimination**
+  - **Phases:** 6 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-191/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-191/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+- [ ] **PROJ-192: AI Behavior Protocols - Duck Typing Elimination**
+  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-192/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-192/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+- [ ] **PROJ-193: UI Data Binding Duck Typing Elimination**
+  - **Phases:** 8 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-193/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-193/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+- [ ] **PROJ-194: Builder & Workshop Duck Typing Elimination**
+  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-194/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-194/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+- [ ] **PROJ-195: Eradicate RegistryManager Singleton from Non-Root Code**
+  - **Phases:** 9 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-195/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-195/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+- [ ] **PROJ-196: Consolidate Duplicated Code**
+  - **Phases:** 6 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-196/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-196/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
 ---
 
 ## Execution Log

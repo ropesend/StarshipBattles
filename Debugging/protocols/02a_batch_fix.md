@@ -6,7 +6,7 @@
 **CRITICAL CONSTRAINTS:**
 - You do NOT have the authority to mark a bug as [Solved].
 - You do NOT have the authority to move files to `archived_tickets/`.
-- Your authority ends at [Awaiting Confirmation].
+- Your authority ends at [Awaiting Confirmation] or [Needs Clarification].
 
 ---
 
@@ -35,6 +35,7 @@ WHILE true:
 ### Step 2: Queue Selection
 * Read `Debugging/debug_plan.md`.
 * Select the first bug with status `[Pending]` or `[In-Progress]`.
+* **Skip** any bugs with status `[Needs Clarification]` — these require user answers before work can proceed.
 * **If no Pending/In-Progress bugs remain:**
     * STOP.
     * Output summary: "Queue cleared. Bugs awaiting confirmation: [list BUG-IDs]. Please verify fixes."
@@ -43,10 +44,11 @@ WHILE true:
 Follow [PROTOCOL 02: Bug Resolution (TDD)](02_fix_bug.md) for the selected bug:
 
 1. **Context Loading:** Read ticket, set status to `[In-Progress]`.
-2. **Phase 1 - Reproduction (Red):** Create failing test.
-3. **Phase 2 - The Fix (Green):** Modify code to pass test, run regression.
-4. **Phase 3 - Documentation:** Update Work Log with approach and files modified.
-5. **Phase 4 - Status Update:** Set status to `[Awaiting Confirmation]`.
+2. **Phase 0 - Deep Review & Ambiguity Check:** Review code and assess if fix is clearcut. If ambiguous, post questions in ticket, set `[Needs Clarification]`, and move to next bug (do not attempt fix).
+3. **Phase 1 - Reproduction (Red):** Create failing test.
+4. **Phase 2 - The Fix (Green):** Modify code to pass test, run regression.
+5. **Phase 3 - Documentation:** Update Work Log with approach and files modified.
+6. **Phase 4 - Status Update:** Set status to `[Awaiting Confirmation]`.
 
 ### Step 4: Handle Blocked Bugs
 * **If stuck after 3+ failed fix attempts:**
@@ -67,6 +69,7 @@ Follow [PROTOCOL 02: Bug Resolution (TDD)](02_fix_bug.md) for the selected bug:
 | Context >= 80% | Stop, output summary of all bugs worked |
 | No Pending bugs | Stop, output summary of awaiting confirmation |
 | Bug is Blocked | Log findings, move to next bug |
+| Bug Needs Clarification | Log in summary, move to next bug |
 
 ---
 
@@ -81,13 +84,16 @@ Follow [PROTOCOL 02: Bug Resolution (TDD)](02_fix_bug.md) for the selected bug:
 - BUG-XX: [title] - ready for verification
 - BUG-YY: [title] - ready for verification
 
+### Bugs Needing Clarification:
+- BUG-WW: [title] - questions posted in ticket
+
 ### Bugs Blocked (need human input):
 - BUG-ZZ: [title] - [brief reason]
 
 ### Bugs Still Pending:
 - BUG-AA: [title]
 
-Please verify fixes or provide guidance on blocked items.
+Please verify fixes, answer clarification questions, or provide guidance on blocked items.
 ```
 
 ---

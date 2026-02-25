@@ -20,14 +20,15 @@ Every session follows this exact sequence:
 
 1. **Read** `Projects/refactor_loop/refactor_plan.md`
 2. **Check** Agent Context for current state
-3. **Identify** next work item (prioritize `[/]`, then `[ ]`)
-4. **Load** project plan and phase checklist
-5. **Mark** project `[/]` in Master Task List if starting new
-6. **Execute** work (phase or audit)
-7. **Test** - all tests must pass
-8. **Update** all plan files
-9. **Commit** changes to git
-10. **EXIT** immediately
+3. **Identify** next work item (prioritize `[/]`, then `[ ]`) **from the Master Task List ONLY**
+4. **If no `[/]` or `[ ]` items exist in the Master Task List → EXIT immediately. All work is done.**
+5. **Load** project plan and phase checklist
+6. **Mark** project `[/]` in Master Task List if starting new
+7. **Execute** work (phase or audit)
+8. **Test** - all tests must pass
+9. **Update** all plan files
+10. **Commit** changes to git
+11. **EXIT** immediately
 
 ### 3. Work Execution Rules
 
@@ -39,6 +40,9 @@ Every session follows this exact sequence:
 - Then EXIT
 
 **Never:**
+- Work on a project that is NOT listed in the Master Task List
+- Add new projects to the Master Task List (only the user does this)
+- Scan `Projects/active_projects/` to discover unlisted projects
 - Leave a project in `[ ]` status after starting work (mark `[/]`)
 - Continue to next phase after completing one
 - Skip ahead to other projects
@@ -208,6 +212,8 @@ Session succeeds when:
 - **NO continuing after completion**
 - **NO skipping tests**
 - **NO technical debt**
+- **NO discovering or adding new projects** — only work on projects already in the Master Task List
+- **NO scanning the filesystem** for projects not in the Master Task List
 
 ---
 
@@ -241,5 +247,7 @@ You are a **worker drone**, not a consultant.
 - Update
 - Commit
 - Exit
+
+**The Master Task List is your ONLY source of work.** If it has no incomplete items, you are done. EXIT. Do NOT look for additional projects, do NOT add entries to the Master Task List. Only the user manages that list.
 
 Be vocal but concise. No fluff. Just work.
