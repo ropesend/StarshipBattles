@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Production Code Cleanup | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Entity & UI Test Migration | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Entity & UI Test Migration | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 2.5. Ship Internal Singleton Investigation & Fix | Not Started | [phase_2_5_checklist.md](phase_2_5_checklist.md) |
 | 3. Data Loader Test Migration | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Combat & Modifier Test Migration | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -25,9 +25,9 @@
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 2 - Entity & UI Test Migration
-**Last Action:** Phase 1 complete - Production code singleton leaks fixed
-**Next Action:** Execute Phase 2 - Migrate test_ship.py and test_ship_factory.py
+**Active Phase:** Phase 2.5 - Ship Internal Singleton Investigation & Fix
+**Last Action:** Phase 2 complete - Migrated test_ship.py, test_ship_factory.py, test_builder_ui_sync.py away from singleton hydration
+**Next Action:** Execute Phase 2.5 - Investigate if Ship internal methods still access singleton
 **Blockers:** None
 
 ## Overview

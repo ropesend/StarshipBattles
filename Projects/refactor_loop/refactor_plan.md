@@ -8,21 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-195 Phase 1 - Production Code Cleanup
-**Current Status:** PROJ-195 Phase 1 complete, ready for Phase 2
+**Last Completed:** PROJ-195 Phase 2 - Entity & UI Test Migration
+**Current Status:** PROJ-195 Phase 2 complete, ready for Phase 2.5
 **Current Project:** PROJ-195
-**Current Phase:** Phase 2 - Entity & UI Test Migration
-**Test Status:** 12720 passed, 1 skipped
+**Current Phase:** Phase 2.5 - Ship Internal Singleton Investigation & Fix
+**Test Status:** 606 passed (affected dirs), full suite pending
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-195 Phase 1 COMPLETE - Production code singleton leaks fixed
-- Created get_validator() module-level wrapper in game/core/registry.py
-- Updated ship_loader.py to use get_validator() instead of RegistryManager.instance()
-- Updated registry_loader.py docstring to show DI pattern
-- Fixed 4 tests in test_ship_loader.py (patched get_validator instead of RegistryManager)
-- Removed obsolete regression test test_get_validator_global_removed
-- Next: Phase 2 - Migrate test_ship.py and test_ship_factory.py away from singleton hydration
+- PROJ-195 Phase 2 COMPLETE - Migrated 3 test files away from singleton hydration
+- test_ship.py: Removed 4 `mgr.hydrate()` calls from TestShip, TestShipClassMutation, TestChangeClassInvalidInput, TestTotalDefenseScoreInitialization
+- test_ship_factory.py: Removed 3 `mgr.hydrate()` calls from TestShipFactory, TestShipFactoryStaticMethods, TestSetupFormationEdgeCases
+- test_builder_ui_sync.py: Removed hydration, added `self.registries` storage, replaced 3 singleton reads with `self.registries`
+- Removed RegistryManager imports from all 3 files
+- All 26 tests pass - Ship internal methods correctly use stored `registries` reference
+- Next: Phase 2.5 - Investigate if Ship internal methods still access singleton (likely already clean)
 
 ---
 
@@ -157,6 +157,7 @@
 | 2026-02-25 | PROJ-194 | Phase 5 | Complete | 12721 passed | - | 6 duck typing→direct, DropTarget.suppress_toggle(), 1 mock fix |
 | 2026-02-25 | PROJ-194 | Audit 1 | PASSED | 12721 passed | - | All 4 goals verified, ~60+ patterns eliminated |
 | 2026-02-25 | PROJ-195 | Phase 1 | Complete | 12720 passed | - | Production code cleanup: get_validator(), 4 tests fixed |
+| 2026-02-25 | PROJ-195 | Phase 2 | Complete | 606 passed | - | 3 test files migrated, singleton hydration removed, 26 tests pass |
 
 ---
 

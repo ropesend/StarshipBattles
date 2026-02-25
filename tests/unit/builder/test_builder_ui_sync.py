@@ -9,7 +9,6 @@ import pygame_gui
 from unittest.mock import MagicMock, patch
 
 from game.simulation.entities.ship import Ship
-from game.core.registry import RegistryManager
 
 
 class TestBuilderUISync:
@@ -18,21 +17,14 @@ class TestBuilderUISync:
     def setup_ui(self, fresh_registries):
         """Set up the UI components for testing.
 
-        PROJ-38: Uses fresh_registries fixture for data, then hydrates singleton
-        for UI components that still use the global pattern.
+        PROJ-195: Pure DI pattern - uses fresh_registries directly, no singleton hydration.
         """
         from game.ai.strategy_manager import StrategyManager
         from game.core.strategy_metadata import StrategyMetadataService
         from tests.infrastructure.session_cache import SessionRegistryCache
 
-        # PROJ-38: Hydrate registry singleton from fresh_registries fixture data
-        # This is needed because UI components still use RegistryManager.instance()
-        mgr = RegistryManager.instance()
-        mgr.hydrate(
-            fresh_registries.components,
-            fresh_registries.modifiers,
-            fresh_registries.vehicle_classes
-        )
+        # Store registries for use in test methods
+        self.registries = fresh_registries
 
         # Load strategy data from session cache (strategies not in GameRegistries yet)
         cache = SessionRegistryCache.instance()
@@ -105,7 +97,7 @@ class TestBuilderUISync:
 
         # Ensure we pick a class that definitely exists and isn't Escort
         target_class = "Cruiser"
-        classes = RegistryManager.instance().vehicle_classes
+        classes = self.registries.vehicle_classes
         if target_class not in classes:
             target_class = list(classes.keys())[-1]
 
@@ -148,7 +140,7 @@ class TestBuilderUISync:
 
         # Group classes by type
         type_map = {}
-        for name, data in RegistryManager.instance().vehicle_classes.items():
+        for name, data in self.registries.vehicle_classes.items():
             ctype = data.get('type', 'Ship')
             if ctype not in type_map:
                 type_map[ctype] = []
@@ -192,7 +184,7 @@ class TestBuilderUISync:
             # Check if option is a valid class of this type
             # option might be tuple
             opt_val = self._get_option_value(option)
-            c_def = RegistryManager.instance().vehicle_classes.get(opt_val)
+            c_def = self.registries.vehicle_classes.get(opt_val)
             if c_def:
                 assert c_def.get('type', 'Ship') == target_type, f"Class {opt_val} should be type {target_type}"
 
