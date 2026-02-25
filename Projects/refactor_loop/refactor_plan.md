@@ -8,23 +8,26 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-187 Phase 1 - Data Model
-**Current Status:** PROJ-187 Phase 1 complete, Phase 2 next
+**Last Completed:** PROJ-187 Phase 2 - action_time on Component Abilities
+**Current Status:** PROJ-187 Phase 2 complete, Phase 3 next
 **Current Project:** PROJ-187
-**Current Phase:** Phase 1 Complete
-**Test Status:** 12379 passed, 1 skipped
+**Current Phase:** Phase 2 Complete
+**Test Status:** 12415 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-187 Phase 1 Complete:
-  - Added `OrderType.WARP` enum value for explicit warp traversal
-  - Added `FleetOrder.execution_progress` field (int, defaults to 0)
-  - Updated `FleetOrder.__repr__()` to show progress when > 0
-  - Updated `FleetOrder.to_dict()` to serialize progress when > 0
-  - Updated `Fleet.from_dict()` to restore progress (backward compat: defaults to 0)
-  - Added explicit HexCoord serialization in `to_dict()` (was falling through to raw)
-  - Added 13 new tests in `test_serialization.py`
-- Next: Phase 2 - action_time on Component Abilities
+- PROJ-187 Phase 2 Complete:
+  - Added `action_time` field to `ColonizePlanet` ability (default 1, configurable via dict)
+  - Added `action_time` field to `SuperweaponMarker` base class (all 6 superweapons inherit)
+  - Updated `components.json` with action_time values:
+    - planet_imploder: DestroyPlanet action_time=3
+    - stellerator: DestroyStar action_time=5
+    - quantum_tunneling_inverter: OpenWarpPoint action_time=3
+    - quantum_tunneling_diverter: CloseWarpPoint action_time=3
+    - dyson_sphere_constructor: CreateDysonSphere action_time=5
+  - Created `ActionTimeResolver` service at `game/strategy/services/action_time_resolver.py`
+  - Added 36 new tests (4 ColonizePlanet, 18 SuperweaponMarker, 14 ActionTimeResolver)
+- Next: Phase 3 - ActionExecutionEngine
 
 ---
 
@@ -44,7 +47,8 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
-| 2026-02-24 | PROJ-187 | Phase 1 | Complete | 12379 passed | pending | Data model: WARP, execution_progress |
+| 2026-02-24 | PROJ-187 | Phase 1 | Complete | 12379 passed | 03c51f35 | Data model: WARP, execution_progress |
+| 2026-02-24 | PROJ-187 | Phase 2 | Complete | 12415 passed | b414e937 | action_time on abilities + ActionTimeResolver |
 
 ---
 

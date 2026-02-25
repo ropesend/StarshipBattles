@@ -41,6 +41,12 @@ class SuperweaponMarker(Ability):
 
     weapon_name: str = ''
 
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        # PROJ-187: Parse action_time for tick-based execution
+        # Boolean marker (True) defaults to 1, dict format supports action_time
+        self.action_time = data.get('action_time', 1) if isinstance(data, dict) else 1
+
     def get_ui_rows(self) -> List[Dict[str, str]]:
         """Return UI row showing superweapon capability."""
         return [{

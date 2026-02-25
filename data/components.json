@@ -2340,7 +2340,7 @@
             "allowed_vehicle_types": ["Ship"],
             "sprite_index": 230,
             "abilities": {
-                "DestroyPlanet": true
+                "DestroyPlanet": {"action_time": 3}
             },
             "major_classification": "Superweapon",
             "resource_cost": {
@@ -2358,7 +2358,7 @@
             "allowed_vehicle_types": ["Ship"],
             "sprite_index": 230,
             "abilities": {
-                "DestroyStar": true
+                "DestroyStar": {"action_time": 5}
             },
             "major_classification": "Superweapon",
             "resource_cost": {
@@ -2376,7 +2376,7 @@
             "allowed_vehicle_types": ["Ship"],
             "sprite_index": 230,
             "abilities": {
-                "OpenWarpPoint": true
+                "OpenWarpPoint": {"action_time": 3}
             },
             "major_classification": "Superweapon",
             "resource_cost": {
@@ -2394,7 +2394,7 @@
             "allowed_vehicle_types": ["Ship"],
             "sprite_index": 230,
             "abilities": {
-                "CloseWarpPoint": true
+                "CloseWarpPoint": {"action_time": 3}
             },
             "major_classification": "Superweapon",
             "resource_cost": {
@@ -2412,7 +2412,7 @@
             "allowed_vehicle_types": ["Ship"],
             "sprite_index": 230,
             "abilities": {
-                "CreateDysonSphere": true
+                "CreateDysonSphere": {"action_time": 5}
             },
             "major_classification": "Superweapon",
             "resource_cost": {

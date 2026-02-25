@@ -47,10 +47,13 @@ class ColonizePlanet(Ability):
         # Handle both string shorthand and dict format
         if isinstance(data, str):
             self.planet_type = data
+            self.action_time = 1  # Default for string shorthand
         elif isinstance(data, dict):
             self.planet_type = data.get('planet_type', '')
+            self.action_time = data.get('action_time', 1)  # PROJ-187: Tick-based actions
         else:
             self.planet_type = str(data)
+            self.action_time = 1  # Default for non-dict data
 
     def get_ui_rows(self) -> List[Dict[str, str]]:
         """

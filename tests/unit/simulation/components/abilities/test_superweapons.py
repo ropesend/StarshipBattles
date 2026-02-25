@@ -141,3 +141,31 @@ class TestSuperweaponRegistryPresence:
 
         # Verify count
         assert len(SUPERWEAPON_ABILITIES) == 6
+
+
+class TestSuperweaponActionTime:
+    """PROJ-187: Test action_time field on superweapon abilities."""
+
+    @pytest.mark.parametrize("ability_name", SUPERWEAPON_ABILITIES.keys())
+    def test_action_time_default_with_boolean_marker(self, mock_component, ability_name):
+        """Boolean marker data (True) defaults action_time to 1."""
+        ability_class = ABILITY_REGISTRY[ability_name]
+        ability = ability_class(mock_component, True)
+
+        assert ability.action_time == 1
+
+    @pytest.mark.parametrize("ability_name", SUPERWEAPON_ABILITIES.keys())
+    def test_action_time_from_dict(self, mock_component, ability_name):
+        """Dict with action_time sets the value."""
+        ability_class = ABILITY_REGISTRY[ability_name]
+        ability = ability_class(mock_component, {"action_time": 5})
+
+        assert ability.action_time == 5
+
+    @pytest.mark.parametrize("ability_name", SUPERWEAPON_ABILITIES.keys())
+    def test_action_time_default_with_dict_missing_key(self, mock_component, ability_name):
+        """Dict without action_time key defaults to 1."""
+        ability_class = ABILITY_REGISTRY[ability_name]
+        ability = ability_class(mock_component, {})
+
+        assert ability.action_time == 1
