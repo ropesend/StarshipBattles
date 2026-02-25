@@ -11,7 +11,6 @@ from unittest.mock import patch, MagicMock
 
 import pygame
 
-from game.core.registry import RegistryManager
 from game.core.json_utils import save_json
 
 
@@ -45,7 +44,9 @@ class TestBuilderDataLoader:
     """Test BuilderDataLoader file discovery and data loading."""
 
     @pytest.fixture(autouse=True)
-    def setup_and_teardown(self):
+    def setup_and_teardown(self, fresh_registries):
+        # PROJ-195: Use DI-injected registries instead of singleton
+        self.registries = fresh_registries
         pygame.init()
         yield
         # NOTE: Do not call pygame.quit() here - the root conftest manages
@@ -56,9 +57,9 @@ class TestBuilderDataLoader:
         """find_file returns direct path when file exists in custom directory."""
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
-        # PROJ-50: Pass registries (required)
+        # PROJ-195: Use DI-injected registries instead of singleton
         loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"],
-                                  registries=RegistryManager.instance())
+                                  registries=self.registries)
         path, is_fallback = loader.find_file("components.json")
 
         assert path is not None
@@ -70,9 +71,9 @@ class TestBuilderDataLoader:
         """find_file tries test_ prefixed filenames when direct match fails."""
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
-        # PROJ-50: Pass registries (required)
+        # PROJ-195: Use DI-injected registries instead of singleton
         loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"],
-                                  registries=RegistryManager.instance())
+                                  registries=self.registries)
         # modifiers.json doesn't exist directly, but test_modifiers.json does
         path, is_fallback = loader.find_file("modifiers.json")
 
@@ -84,9 +85,9 @@ class TestBuilderDataLoader:
         """find_file falls back to default data directory when custom fails."""
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
-        # PROJ-50: Pass registries (required)
+        # PROJ-195: Use DI-injected registries instead of singleton
         loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"],
-                                  registries=RegistryManager.instance())
+                                  registries=self.registries)
         # vehicleclasses.json only exists in default_dir
         path, is_fallback = loader.find_file("vehicleclasses.json")
 
@@ -98,9 +99,9 @@ class TestBuilderDataLoader:
         """find_file returns None when no file found anywhere."""
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
-        # PROJ-50: Pass registries (required)
+        # PROJ-195: Use DI-injected registries instead of singleton
         loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"],
-                                  registries=RegistryManager.instance())
+                                  registries=self.registries)
         path, is_fallback = loader.find_file("nonexistent_file.json", allow_default=True)
 
         assert path is None
@@ -110,9 +111,9 @@ class TestBuilderDataLoader:
         """find_file accepts list of alternative filenames."""
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
-        # PROJ-50: Pass registries (required)
+        # PROJ-195: Use DI-injected registries instead of singleton
         loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"],
-                                  registries=RegistryManager.instance())
+                                  registries=self.registries)
         # Try multiple names, first should match
         path, _ = loader.find_file(["components.json", "test_components.json"])
 
@@ -120,14 +121,19 @@ class TestBuilderDataLoader:
         assert path.endswith("components.json")
 
     def test_clear_registries_clears_registry_manager(self, temp_test_dirs):
-        """clear_registries calls RegistryManager.clear()."""
+        """clear_registries calls the clear_registry() function.
+
+        Note: PROJ-195 - This tests singleton behavior since clear_registries()
+        delegates to clear_registry() which operates on the singleton.
+        We patch where the function is used (workshop_data_loader module).
+        """
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
-        # PROJ-50: Pass registries (required)
-        loader = BuilderDataLoader(temp_test_dirs["custom_dir"], registries=RegistryManager.instance())
+        # PROJ-195: Use DI-injected registries for loader construction
+        loader = BuilderDataLoader(temp_test_dirs["custom_dir"], registries=self.registries)
 
-        # Use mock to verify clear was called
-        with patch.object(RegistryManager.instance(), 'clear') as mock_clear:
+        # PROJ-195: Patch clear_registry where it's imported (in workshop_data_loader)
+        with patch('game.ui.screens.workshop_data_loader.clear_registry') as mock_clear:
             loader.clear_registries()
             mock_clear.assert_called_once()
 
@@ -136,7 +142,9 @@ class TestBuilderDataLoaderIntegration:
     """Integration tests using real data files."""
 
     @pytest.fixture(autouse=True)
-    def setup_and_teardown(self):
+    def setup_and_teardown(self, fresh_registries):
+        # PROJ-195: Use DI-injected registries instead of singleton
+        self.registries = fresh_registries
         pygame.init()
         # Get the data directory using path fixture
         from tests.fixtures.paths import get_data_dir
@@ -151,8 +159,8 @@ class TestBuilderDataLoaderIntegration:
         """load_all successfully loads from real data directory."""
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
-        # PROJ-50: Pass registries (required)
-        loader = BuilderDataLoader(self.data_dir, registries=RegistryManager.instance())
+        # PROJ-195: Use DI-injected registries instead of singleton
+        loader = BuilderDataLoader(self.data_dir, registries=self.registries)
         result = loader.load_all()
 
         assert result.success, f"Load failed with errors: {result.errors}"
@@ -168,8 +176,8 @@ class TestBuilderDataLoaderIntegration:
         """
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
-        # PROJ-50: Pass registries (required)
-        loader = BuilderDataLoader(self.data_dir, registries=RegistryManager.instance())
+        # PROJ-195: Use DI-injected registries instead of singleton
+        loader = BuilderDataLoader(self.data_dir, registries=self.registries)
         result = loader.load_all()
 
         # Primary assertion: load succeeded

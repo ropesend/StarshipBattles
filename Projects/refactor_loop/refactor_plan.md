@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-195 Phase 2.5 - Ship Internal Singleton Investigation & Fix
-**Current Status:** PROJ-195 Phase 2.5 complete, ready for Phase 3
+**Last Completed:** PROJ-195 Phase 3 - Data Loader Test Migration
+**Current Status:** PROJ-195 Phase 3 complete, ready for Phase 4
 **Current Project:** PROJ-195
-**Current Phase:** Phase 3 - Data Loader Test Migration
-**Test Status:** 482 passed (affected dirs)
+**Current Phase:** Phase 4 - Combat & Modifier Test Migration
+**Test Status:** 12720 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-195 Phase 2.5 COMPLETE - Investigation confirmed Ship internals are clean
-- ship.py: NO singleton access - uses injected `registries` parameter throughout
-- component.py: 3 `get_default_registry_provider()` calls in loader functions (composition-root paths, legitimate)
-- game/simulation/services/: NO singleton access
-- All 26 Phase 2 tests pass - confirms Phase 2 cleanup was complete
-- Next: Phase 3 - Migrate test_builder_data_loader.py and test_workshop_data_loader.py
+- PROJ-195 Phase 3 COMPLETE - Data loader tests migrated to DI pattern
+- test_builder_data_loader.py: 8 tests migrated, `RegistryManager` import removed
+- test_workshop_data_loader.py: 8 tests migrated, `RegistryManager` import removed
+- Key pattern: `clear_registries()` test now patches `game.ui.screens.workshop_data_loader.clear_registry` (where it's imported)
+- Both fixtures now yield `fresh_registries` for DI injection
+- Next: Phase 4 - Migrate combat, modifier, and performance tests
 
 ---
 
@@ -158,6 +158,7 @@
 | 2026-02-25 | PROJ-195 | Phase 1 | Complete | 12720 passed | - | Production code cleanup: get_validator(), 4 tests fixed |
 | 2026-02-25 | PROJ-195 | Phase 2 | Complete | 606 passed | - | 3 test files migrated, singleton hydration removed, 26 tests pass |
 | 2026-02-25 | PROJ-195 | Phase 2.5 | Complete | 482 passed | - | Ship internals clean, no singleton access in Ship methods |
+| 2026-02-25 | PROJ-195 | Phase 3 | Complete | 12720 passed | - | 2 test files migrated, 16 tests → DI pattern |
 
 ---
 

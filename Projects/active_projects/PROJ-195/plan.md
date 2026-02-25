@@ -16,7 +16,7 @@
 | 1. Production Code Cleanup | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Entity & UI Test Migration | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 2.5. Ship Internal Singleton Investigation & Fix | Complete | [phase_2_5_checklist.md](phase_2_5_checklist.md) |
-| 3. Data Loader Test Migration | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Data Loader Test Migration | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Combat & Modifier Test Migration | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Core Test: Convert Impure Loader Tests to Pure | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Conftest & Infrastructure Migration | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
@@ -25,9 +25,9 @@
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 3 - Data Loader Test Migration
-**Last Action:** Phase 2.5 complete - Investigated Ship/Component internals, confirmed no singleton access in Ship methods, all 26 Phase 2 tests pass
-**Next Action:** Execute Phase 3 - Migrate BuilderDataLoader and WorkshopDataLoader tests
+**Active Phase:** Phase 4 - Combat & Modifier Test Migration
+**Last Action:** Phase 3 complete - Migrated test_builder_data_loader.py and test_workshop_data_loader.py (16 tests) from singleton to fresh_registries DI pattern
+**Next Action:** Execute Phase 4 - Migrate combat, modifier, and performance tests
 **Blockers:** None
 
 ## Overview
