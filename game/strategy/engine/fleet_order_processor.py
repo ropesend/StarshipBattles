@@ -3,13 +3,17 @@ FleetOrderProcessor - Centralized order lifecycle management.
 
 PROJ-12 Phase 3: Extracted from TurnEngine to decompose the god class.
 STRAT-006: Centralize order lifecycle management.
+PROJ-187: process_end_turn_orders() now called by ActionExecutionEngine during ticks,
+          not by TurnEngine at end-of-turn.
 
 Responsibilities:
 - Order completion (pop_order in single location)
 - Order cancellation (with reason tracking)
-- JOIN_FLEET processing (instant and end-of-turn)
-- COLONIZE processing
-- Instant order processing during ticks
+- JOIN_FLEET processing (instant during ticks)
+- COLONIZE processing (via ActionExecutionEngine)
+- TRANSFER processing (via ActionExecutionEngine)
+- Superweapon processing (via ActionExecutionEngine)
+- Instant order processing during ticks (JOIN_FLEET when co-located)
 """
 
 from dataclasses import dataclass
@@ -581,11 +585,13 @@ class FleetOrderProcessor:
         empires: Optional[List] = None
     ) -> bool:
         """
-        Process static orders at end of turn (COLONIZE, JOIN_FLEET, TRANSFER, superweapons).
+        Process action orders (COLONIZE, JOIN_FLEET, TRANSFER, superweapons).
 
         PROJ-55: Added component_registry for colony pod ship removal.
         PROJ-68: Added TRANSFER order processing.
         PROJ-102: Added superweapon order processing.
+        PROJ-187: Now called by ActionExecutionEngine during tick loop,
+                  not by TurnEngine at end-of-turn. Name retained for compatibility.
 
         Args:
             fleet: Fleet to process

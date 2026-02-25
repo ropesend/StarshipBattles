@@ -1,13 +1,17 @@
 """
 Tests for turn processing structure and phases.
 
+PROJ-187: Updated to reflect tick-based action processing.
+Action orders (COLONIZE, TRANSFER, superweapons) are now processed via
+ActionExecutionEngine in Phase 1.5 of each tick, not at end-of-turn.
+
 This test file covers:
-- Turn processing structure (100 ticks, end-turn orders, production)
+- Turn processing structure (100 ticks)
 - Production processing delegation
-- End-turn order execution
+- ActionExecutionEngine integration
 """
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, PropertyMock
 
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.data.fleet import FleetOrder, OrderType
@@ -23,8 +27,7 @@ class TestTurnProcessing:
     """Tests for process_turn method structure."""
 
     @patch.object(TurnEngine, '_process_tick')
-    @patch.object(TurnEngine, '_process_end_turn_orders')
-    def test_process_turn_calls_subticks(self, mock_end_turn, mock_tick,
+    def test_process_turn_calls_subticks(self, mock_tick,
                                          turn_engine, mock_empire, mock_galaxy):
         """process_turn calls _process_tick 100 times."""
         mock_empire.fleets = []
@@ -33,108 +36,125 @@ class TestTurnProcessing:
 
         assert mock_tick.call_count == 100
 
-    @patch.object(TurnEngine, '_process_tick')
-    @patch.object(TurnEngine, '_process_end_turn_orders')
-    def test_process_turn_processes_end_turn_orders(self, mock_end_turn, mock_tick,
-                                                     turn_engine, mock_empire, mock_fleet, mock_galaxy):
-        """process_turn calls end-turn order processing for each fleet."""
-        mock_empire.fleets = [mock_fleet]
+    def test_process_turn_calls_population_growth(self, turn_engine, mock_empire, mock_galaxy):
+        """process_turn calls population growth at end of turn."""
+        mock_empire.fleets = []
+        mock_pop_engine = MagicMock()
+        turn_engine._population_engine = mock_pop_engine
 
         turn_engine.process_turn([mock_empire], mock_galaxy)
 
-        mock_end_turn.assert_called()
+        mock_pop_engine.process_population_growth.assert_called_once_with([mock_empire])
 
 
 # =============================================================================
-# Test: End-Turn Order Processing
+# Test: Tick Processing Phases
 # =============================================================================
 
 
-class TestEndTurnOrders:
-    """Tests for _process_end_turn_orders method."""
+class TestTickProcessing:
+    """Tests for _process_tick method phases."""
 
-    def test_no_order_returns_false(self, turn_engine, mock_fleet, mock_empire, mock_galaxy):
-        """Fleet with no order returns False."""
-        mock_fleet.get_current_order.return_value = None
+    def test_tick_calls_action_engine(self, turn_engine, mock_empire, mock_galaxy):
+        """_process_tick calls ActionExecutionEngine.process_action_ticks."""
+        mock_action_engine = MagicMock()
+        turn_engine._action_engine = mock_action_engine
+        mock_empire.fleets = []
 
-        result = turn_engine._process_end_turn_orders(mock_fleet, mock_empire, mock_galaxy)
+        # Process one tick
+        turn_engine._process_tick(50, [mock_empire], mock_galaxy)
 
-        assert result is False
+        mock_action_engine.process_action_ticks.assert_called_once()
 
-    def test_colonize_order_executes(self, turn_engine, mock_fleet, mock_empire, mock_galaxy, mock_planet):
-        """COLONIZE order transfers planet ownership."""
-        order = FleetOrder(OrderType.COLONIZE, mock_planet)
-        mock_fleet.get_current_order.return_value = order
-        mock_fleet.location = mock_planet.location
-        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
+    def test_tick_calls_phases_in_order(self, turn_engine, mock_empire, mock_galaxy):
+        """_process_tick calls phases in correct order."""
+        # Track call order
+        call_order = []
 
-        result = turn_engine._process_end_turn_orders(mock_fleet, mock_empire, mock_galaxy)
+        def make_tracker(name, return_val=None):
+            def tracker(*args, **kwargs):
+                call_order.append(name)
+                return return_val
+            return tracker
 
-        assert result is True
-        mock_empire.add_colony.assert_called_with(mock_planet)
-        mock_empire.remove_fleet.assert_called_with(mock_fleet)
+        turn_engine._harvesting_engine = MagicMock()
+        turn_engine._harvesting_engine.process_harvesting_tick = MagicMock(side_effect=make_tracker('harvest'))
+        turn_engine._maintenance_engine = MagicMock()
+        turn_engine._maintenance_engine.process_maintenance_tick = MagicMock(side_effect=make_tracker('maint', []))
+        turn_engine._resource_engine = MagicMock()
+        turn_engine._resource_engine.process_per_turn_consumption = MagicMock(side_effect=make_tracker('resource', []))
+        turn_engine._resupply_engine = MagicMock()
+        turn_engine._resupply_engine.process_fuel_generation = MagicMock(side_effect=make_tracker('fuel_gen', []))
+        turn_engine._resupply_engine.process_fleet_resupply = MagicMock(side_effect=make_tracker('resupply', []))
+        turn_engine._production_engine = MagicMock()
+        turn_engine._production_engine.process_construction_tick = MagicMock(side_effect=make_tracker('construct'))
+        turn_engine._order_processor = MagicMock()
+        turn_engine._order_processor.process_instant_orders = MagicMock(side_effect=make_tracker('instant', []))
+        turn_engine._action_engine = MagicMock()
+        turn_engine._action_engine.process_action_ticks = MagicMock(side_effect=make_tracker('action', []))
+        turn_engine._movement_engine = MagicMock()
+        turn_engine._movement_engine.collect_movements = MagicMock(side_effect=make_tracker('collect', []))
+        turn_engine._movement_engine.apply_movements = MagicMock(side_effect=make_tracker('apply', []))
+        turn_engine._conflict_engine = MagicMock()
+        turn_engine._conflict_engine.resolve_all_conflicts = MagicMock(side_effect=make_tracker('combat'))
 
-    def test_colonize_any_finds_planet(self, turn_engine, mock_fleet, mock_empire, mock_galaxy, mock_planet):
-        """COLONIZE with None target finds valid planet."""
-        order = FleetOrder(OrderType.COLONIZE, None)  # "Any"
-        mock_fleet.get_current_order.return_value = order
-        mock_fleet.location = mock_planet.location
-        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
+        mock_empire.fleets = []
 
-        result = turn_engine._process_end_turn_orders(mock_fleet, mock_empire, mock_galaxy)
+        turn_engine._process_tick(50, [mock_empire], mock_galaxy)
 
-        assert result is True
-        mock_empire.add_colony.assert_called_with(mock_planet)
-
-    def test_colonize_invalid_pops_order(self, turn_engine, mock_fleet, mock_empire, mock_galaxy):
-        """Invalid COLONIZE pops order and returns False."""
-        order = FleetOrder(OrderType.COLONIZE, None)
-        mock_fleet.get_current_order.return_value = order
-        mock_galaxy.get_planets_at_global_hex.return_value = []  # No planets
-
-        result = turn_engine._process_end_turn_orders(mock_fleet, mock_empire, mock_galaxy)
-
-        assert result is False
-        mock_fleet.pop_order.assert_called()
-
-    def test_join_fleet_at_location(self, turn_engine, mock_fleet, mock_empire, mock_galaxy):
-        """JOIN_FLEET merges when at same location."""
-        target_fleet = MagicMock()
-        target_fleet.location = HexCoord(0, 0)
-
-        order = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
-        mock_fleet.get_current_order.return_value = order
-        mock_fleet.location = HexCoord(0, 0)
-        mock_fleet.merge_with = MagicMock()
-
-        result = turn_engine._process_end_turn_orders(mock_fleet, mock_empire, mock_galaxy)
-
-        assert result is True
-        mock_fleet.merge_with.assert_called_with(target_fleet)
-        mock_empire.remove_fleet.assert_called_with(mock_fleet)
-
-    def test_join_fleet_wrong_location(self, turn_engine, mock_fleet, mock_empire, mock_galaxy):
-        """JOIN_FLEET fails when not at target location."""
-        target_fleet = MagicMock()
-        target_fleet.location = HexCoord(100, 100)
-
-        order = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
-        mock_fleet.get_current_order.return_value = order
-        mock_fleet.location = HexCoord(0, 0)  # Different location
-
-        result = turn_engine._process_end_turn_orders(mock_fleet, mock_empire, mock_galaxy)
-
-        assert result is False
-        mock_fleet.pop_order.assert_called()
-
-    def test_join_fleet_invalid_target(self, turn_engine, mock_fleet, mock_empire, mock_galaxy):
-        """JOIN_FLEET with invalid target pops order."""
-        order = FleetOrder(OrderType.JOIN_FLEET, None)
-        mock_fleet.get_current_order.return_value = order
-
-        result = turn_engine._process_end_turn_orders(mock_fleet, mock_empire, mock_galaxy)
-
-        assert result is False
-        mock_fleet.pop_order.assert_called()
+        # Verify phase order
+        expected_order = [
+            'harvest', 'maint', 'resource', 'fuel_gen', 'resupply',
+            'construct', 'instant', 'action', 'collect', 'apply', 'combat'
+        ]
+        assert call_order == expected_order
 
 
+# =============================================================================
+# Test: Action Engine Integration
+# =============================================================================
+
+
+class TestActionEngineIntegration:
+    """Tests for ActionExecutionEngine integration in TurnEngine."""
+
+    def test_action_engine_property_creates_default(self, turn_engine):
+        """action_engine property lazily creates ActionExecutionEngine."""
+        from game.strategy.engine.action_execution_engine import ActionExecutionEngine
+
+        engine = turn_engine.action_engine
+
+        assert isinstance(engine, ActionExecutionEngine)
+
+    def test_action_engine_uses_injected(self):
+        """Injected action_engine is used instead of creating default."""
+        mock_action_engine = MagicMock()
+
+        turn_engine = TurnEngine(action_engine=mock_action_engine)
+
+        assert turn_engine.action_engine is mock_action_engine
+
+    def test_action_engine_receives_component_registry(self, turn_engine, mock_empire, mock_galaxy):
+        """ActionExecutionEngine receives component_registry."""
+        mock_action_engine = MagicMock()
+        turn_engine._action_engine = mock_action_engine
+        mock_empire.fleets = []
+
+        turn_engine._process_tick(50, [mock_empire], mock_galaxy)
+
+        # Check that component_registry was passed
+        call_kwargs = mock_action_engine.process_action_ticks.call_args
+        assert 'component_registry' in call_kwargs.kwargs
+
+    def test_action_engine_receives_all_empires(self, turn_engine, mock_empire, mock_galaxy):
+        """ActionExecutionEngine receives all_empires for superweapons."""
+        mock_action_engine = MagicMock()
+        turn_engine._action_engine = mock_action_engine
+        mock_empire.fleets = []
+        empires = [mock_empire]
+
+        turn_engine._process_tick(50, empires, mock_galaxy)
+
+        # Check that all_empires was passed
+        call_kwargs = mock_action_engine.process_action_ticks.call_args
+        assert call_kwargs.kwargs.get('all_empires') == empires

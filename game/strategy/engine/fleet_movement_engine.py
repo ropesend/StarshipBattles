@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import Optional, List, Tuple, TYPE_CHECKING
 import logging
 
-from game.strategy.data.fleet import Fleet, OrderType
+from game.strategy.data.fleet import Fleet, OrderType, ACTION_ORDER_TYPES
 
 logger = logging.getLogger(__name__)
 from game.core.hex_math import HexCoord, hex_distance
@@ -173,8 +173,13 @@ class FleetMovementEngine:
                     interval = 1  # Safety
 
                 if tick % interval == 0:
-                    # Skip fleets with BUILD order - they are stationary
+                    # Skip fleets with action orders - they are handled by ActionExecutionEngine
+                    # PROJ-187: Action orders (COLONIZE, TRANSFER, superweapons) don't move
                     current_order = fleet.get_current_order()
+                    if current_order and current_order.type in ACTION_ORDER_TYPES:
+                        continue
+
+                    # Skip fleets with BUILD order - they are stationary
                     if current_order and current_order.type == OrderType.BUILD:
                         continue
 

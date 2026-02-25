@@ -16,7 +16,7 @@
 | 1. Data Model (FleetOrder + OrderType.WARP) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. action_time on Component Abilities | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. ActionExecutionEngine | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Wire Into Turn Loop + Eradicate End-of-Turn | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Wire Into Turn Loop + Eradicate End-of-Turn | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Test Migration | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. WARP Order Implementation | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Command Handler Review + Path Projection | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
@@ -24,11 +24,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 4 (Wire Into Turn Loop + Eradicate End-of-Turn)
-**Last Action:** Phase 3 complete - Created ActionExecutionEngine with IActionExecutionEngine interface, ActionTickResult dataclass, ACTION_ORDER_TYPES and MOVEMENT_ORDER_TYPES constants, 31 unit tests
-**Next Action:** Begin Phase 4 - Wire ActionExecutionEngine into TurnEngine tick loop
+**Active Phase:** Phase 5 (Test Migration)
+**Last Action:** Phase 4 complete - ActionExecutionEngine wired into TurnEngine as Phase 1.5, _process_end_turn_orders removed, FleetMovementEngine skips action orders, tests updated
+**Next Action:** Begin Phase 5 - Test migration and validation
 **Blockers:** None
-**Baseline:** 12,446 passed, 1 skipped, 0 failures
+**Baseline:** 12,445 passed, 1 skipped, 0 failures
 
 ## Overview
 Convert the strategy layer's order execution from a split model (tick-based movement + instant end-of-turn actions) into a unified tick-based action system where every strategic action (COLONIZE, TRANSFER, superweapons, LOAD/UNLOAD) consumes "action ticks" at the same rate as movement. Also adds explicit WARP order primitive and moddable `action_time` on component abilities.

@@ -1,8 +1,16 @@
+"""
+Tests for advanced fleet order operations.
+
+PROJ-187: Updated join fleet tests to use FleetOrderProcessor directly
+instead of TurnEngine._process_end_turn_orders (which was removed when
+action orders moved to tick-based processing).
+"""
 import pytest
 from unittest.mock import MagicMock, patch
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.engine.turn_engine import TurnEngine
+from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
 from game.strategy.data.empire import Empire
 from game.strategy.data.ship_instance import ShipInstance
 
@@ -27,6 +35,13 @@ def turn_engine():
     """Create a fresh TurnEngine for each test."""
     engine = TurnEngine()
     yield engine
+
+
+@pytest.fixture
+def order_processor():
+    """Create a fresh FleetOrderProcessor for each test."""
+    processor = FleetOrderProcessor()
+    yield processor
 
 
 @pytest.fixture
@@ -212,8 +227,11 @@ class TestAdvancedFleetOrders:
         # Now correctly intercepts at (7,0) - 1 turn earlier than old buggy result!
         assert result == HexCoord(7, 0)
 
-    def test_join_fleet_execution(self, turn_engine, test_empire, galaxy_mock):
-        """Verify JOIN_FLEET order merges fleets."""
+    def test_join_fleet_execution(self, order_processor, test_empire, galaxy_mock):
+        """Verify JOIN_FLEET order merges fleets.
+
+        PROJ-187: Uses FleetOrderProcessor.process_end_turn_orders directly.
+        """
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
         f2 = Fleet(2, 0, HexCoord(10, 0), speed=10.0)
 
@@ -231,9 +249,8 @@ class TestAdvancedFleetOrders:
         order = FleetOrder(OrderType.JOIN_FLEET, f2)
         f1.add_order(order)
 
-        # Execute End Turn Orders
-        # We need to pass [empire] usually, method is _process_end_turn_orders(fleet, empire, galaxy)
-        result = turn_engine._process_end_turn_orders(f1, test_empire, galaxy_mock)
+        # Execute via FleetOrderProcessor (PROJ-187)
+        result = order_processor.process_end_turn_orders(f1, test_empire, galaxy_mock)
 
         assert result is True  # Should return True (fleet consumed)
 
@@ -243,8 +260,11 @@ class TestAdvancedFleetOrders:
         # Verify Empire state
         assert f1 not in test_empire.fleets
 
-    def test_join_fleet_fail_distance(self, turn_engine, test_empire, galaxy_mock):
-        """Verify JOIN_FLEET fails if not at location."""
+    def test_join_fleet_fail_distance(self, order_processor, test_empire, galaxy_mock):
+        """Verify JOIN_FLEET fails if not at location.
+
+        PROJ-187: Uses FleetOrderProcessor.process_end_turn_orders directly.
+        """
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
         f2 = Fleet(2, 0, HexCoord(10, 0), speed=10.0)
 
@@ -257,9 +277,8 @@ class TestAdvancedFleetOrders:
         order = FleetOrder(OrderType.JOIN_FLEET, f2)
         f1.add_order(order)
 
-        # Execute
-        # Capturing print output is tricky, but we check state
-        result = turn_engine._process_end_turn_orders(f1, test_empire, galaxy_mock)
+        # Execute via FleetOrderProcessor (PROJ-187)
+        result = order_processor.process_end_turn_orders(f1, test_empire, galaxy_mock)
 
         assert result is False  # Did not consume fleet
         assert f1 in test_empire.fleets

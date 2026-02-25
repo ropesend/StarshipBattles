@@ -164,14 +164,19 @@ class IOrderProcessor(ABC):
     """
     Abstract interface for fleet order processing.
 
+    PROJ-187: Order processing is now split between:
+    - process_instant_orders(): Called every tick for JOIN_FLEET co-location
+    - process_end_turn_orders(): Called by ActionExecutionEngine when action completes
+
     Implementations handle:
     - Instant order processing (JOIN_FLEET when co-located)
-    - End-of-turn order processing (COLONIZE, JOIN_FLEET)
+    - Action order execution (COLONIZE, TRANSFER, superweapons) via ActionExecutionEngine
     - Order completion and cancellation
 
     Example usage:
         processor = FleetOrderProcessor()  # or MockOrderProcessor for tests
         removed = processor.process_instant_orders(empires)
+        # process_end_turn_orders now called by ActionExecutionEngine, not TurnEngine
         consumed = processor.process_end_turn_orders(fleet, empire, galaxy)
     """
 
@@ -197,12 +202,15 @@ class IOrderProcessor(ABC):
         fleet: 'Fleet',
         empire: Any,
         galaxy: Any,
-        component_registry: Optional[Dict[str, Any]] = None
+        component_registry: Optional[Dict[str, Any]] = None,
+        empires: Optional[List] = None
     ) -> bool:
         """
-        Process static orders at end of turn (COLONIZE, JOIN_FLEET).
+        Process action orders (COLONIZE, TRANSFER, JOIN_FLEET, superweapons).
 
         PROJ-55: Added component_registry for colony pod ship removal.
+        PROJ-187: Now called by ActionExecutionEngine during tick loop,
+                  not by TurnEngine at end-of-turn. Name retained for compatibility.
 
         Args:
             fleet: Fleet to process
@@ -210,6 +218,7 @@ class IOrderProcessor(ABC):
             galaxy: Galaxy for validation
             component_registry: Optional component registry for colony pod lookup.
                                When provided, only the colony ship is removed.
+            empires: Optional list of all empires (for superweapons like STELLERATE_STAR)
 
         Returns:
             True if fleet was consumed/deleted by the order, False otherwise

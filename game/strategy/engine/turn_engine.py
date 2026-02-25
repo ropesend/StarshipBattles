@@ -10,23 +10,24 @@ PROJ-161: Moved harvesting and maintenance into per-tick processing.
 
 Turn Phases:
     1. SUBTURN LOOP (100 ticks):
-       - Phase 0:  Harvesting (via HarvestingEngine) - 1/100th per tick
-       - Phase 0a: Maintenance (via MaintenanceEngine) - 1/100th per tick, immediate scuttle
-       - Phase 0b: Per-turn resources (via ResourceManagementEngine)
-       - Phase 0c: Fuel generation at facilities (via ResupplyEngine)
-       - Phase 0d: Fleet resupply from facilities (via ResupplyEngine)
-       - Phase 0e: Construction resource consumption (via ProductionEngine)
-       - Phase 1:  Instant orders (via FleetOrderProcessor)
-       - Phase 2:  Calculate moves (via FleetMovementEngine)
-       - Phase 3:  Apply moves (via FleetMovementEngine)
-       - Phase 4:  Combat (via ConflictResolutionEngine)
-    2. END-OF-TURN ORDERS (via FleetOrderProcessor)
-    3. POPULATION GROWTH (via PopulationEngine)
+       - Phase 0:   Harvesting (via HarvestingEngine) - 1/100th per tick
+       - Phase 0a:  Maintenance (via MaintenanceEngine) - 1/100th per tick, immediate scuttle
+       - Phase 0b:  Per-turn resources (via ResourceManagementEngine)
+       - Phase 0c:  Fuel generation at facilities (via ResupplyEngine)
+       - Phase 0d:  Fleet resupply from facilities (via ResupplyEngine)
+       - Phase 0e:  Construction resource consumption (via ProductionEngine)
+       - Phase 1:   Instant orders (via FleetOrderProcessor)
+       - Phase 1.5: Action orders (via ActionExecutionEngine) - COLONIZE, TRANSFER, superweapons
+       - Phase 2:   Calculate moves (via FleetMovementEngine)
+       - Phase 3:   Apply moves (via FleetMovementEngine)
+       - Phase 4:   Combat (via ConflictResolutionEngine)
+    2. POPULATION GROWTH (via PopulationEngine)
 
 Delegated Engines:
     - FleetMovementEngine: Movement calculation and application
     - ProductionEngine: Construction queue processing
-    - FleetOrderProcessor: Order lifecycle management
+    - FleetOrderProcessor: Order lifecycle management (instant orders only)
+    - ActionExecutionEngine: Tick-based action order execution
     - ConflictResolutionEngine: Combat detection and resolution
     - ResourceManagementEngine: Per-turn resource consumption
     - ResupplyEngine: Fuel generation and fleet resupply
@@ -174,6 +175,7 @@ class TurnEngine:
         self._resupply_engine: Optional['IResupplyEngine'] = resupply_engine
         self._harvesting_engine: Optional['IHarvestingEngine'] = harvesting_engine
         self._maintenance_engine: Optional['IMaintenanceEngine'] = maintenance_engine
+        self._action_engine: Optional['IActionExecutionEngine'] = action_engine
 
         # PROJ-75 Phase 6: Scuttle event storage for UI notification
         self.last_scuttle_events: list = []
@@ -254,6 +256,18 @@ class TurnEngine:
             self._maintenance_engine = MaintenanceEngine()
         return self._maintenance_engine
 
+    @property
+    def action_engine(self) -> 'IActionExecutionEngine':
+        """Return action execution engine, lazily creating default if not injected."""
+        if self._action_engine is None:
+            from game.strategy.engine.action_execution_engine import ActionExecutionEngine
+            from game.strategy.services.action_time_resolver import ActionTimeResolver
+            self._action_engine = ActionExecutionEngine(
+                order_processor=self.order_processor,
+                action_time_resolver=ActionTimeResolver()
+            )
+        return self._action_engine
+
     def process_turn(self, empires, galaxy, save_path=None):
         """
         Execute one full turn (100 sub-ticks).
@@ -269,18 +283,13 @@ class TurnEngine:
         # PROJ-161: Initialize scuttle event accumulator (cleared each turn)
         self.last_scuttle_events = []
 
-        # 1. Subturn Loop (Movement & Combat)
+        # 1. Subturn Loop (Movement, Actions & Combat)
+        # PROJ-187: Action orders (COLONIZE, TRANSFER, superweapons) now processed
+        # in Phase 1.5 of each tick via ActionExecutionEngine
         for tick in range(1, 101):
             self._process_tick(tick, empires, galaxy, save_path)
 
-        # 2. End-of-Turn Orders (Static actions like Colonize, superweapons)
-        for empire in empires:
-            # Iterate copy since fleets may be modified during processing
-            # (e.g., colonization can remove/dissolve fleets)
-            for fleet in list(empire.fleets):
-                self._process_end_turn_orders(fleet, empire, galaxy, empires)
-
-        # 3. Population Growth Phase (PROJ-68)
+        # 2. Population Growth Phase (PROJ-68)
         self.population_engine.process_population_growth(empires)
         
     def validate_colonize_order(self, galaxy, fleet, target_planet) -> ValidationResult:
@@ -312,17 +321,18 @@ class TurnEngine:
         PROJ-79 Phase 2: Added save_path for mid-turn spawning.
         PROJ-161: Added per-tick harvesting and maintenance.
 
-        Ten-phase processing:
-        Phase 0:  Harvesting (1/100th of per-turn extraction)
-        Phase 0a: Maintenance (1/100th of per-turn cost, immediate scuttle)
-        Phase 0b: Per-turn resource consumption (1/100th of per_turn costs)
-        Phase 0c: Fuel generation at facilities (via ResupplyEngine)
-        Phase 0d: Fleet resupply from facilities (via ResupplyEngine)
-        Phase 0e: Construction resource consumption + mid-turn completion (via ProductionEngine)
-        Phase 1:  Execute JOIN_FLEET for any co-located fleets (instant, no movement cost)
-        Phase 2:  Calculate paths/next moves for all fleets (based on current positions)
-        Phase 3:  Apply all movements simultaneously
-        Phase 4:  Combat
+        Eleven-phase processing:
+        Phase 0:   Harvesting (1/100th of per-turn extraction)
+        Phase 0a:  Maintenance (1/100th of per-turn cost, immediate scuttle)
+        Phase 0b:  Per-turn resource consumption (1/100th of per_turn costs)
+        Phase 0c:  Fuel generation at facilities (via ResupplyEngine)
+        Phase 0d:  Fleet resupply from facilities (via ResupplyEngine)
+        Phase 0e:  Construction resource consumption + mid-turn completion (via ProductionEngine)
+        Phase 1:   Execute JOIN_FLEET for any co-located fleets (instant, no movement cost)
+        Phase 1.5: Execute action orders (COLONIZE, TRANSFER, superweapons) via ActionExecutionEngine
+        Phase 2:   Calculate paths/next moves for all fleets (based on current positions)
+        Phase 3:   Apply all movements simultaneously
+        Phase 4:   Combat
         """
 
         # --- Phase 0: Harvesting (1/100th per tick) ---
@@ -357,6 +367,14 @@ class TurnEngine:
         # PROJ-12: Delegate to FleetOrderProcessor
         self.order_processor.process_instant_orders(empires)
 
+        # --- Phase 1.5: Action Orders (COLONIZE, TRANSFER, superweapons) ---
+        # PROJ-187: Tick-based action execution for non-movement, non-BUILD orders
+        self.action_engine.process_action_ticks(
+            empires, galaxy, tick,
+            component_registry=getattr(self._registries, 'components', None),
+            all_empires=empires
+        )
+
         # --- Phase 2: Calculate Moves ---
         # PROJ-12: Delegate to FleetMovementEngine
         move_queue = self.movement_engine.collect_movements(empires, galaxy, tick)
@@ -368,24 +386,6 @@ class TurnEngine:
         # --- Phase 4: Combat ---
         # PROJ-36: Delegate to ConflictResolutionEngine
         self.conflict_engine.resolve_all_conflicts(empires)
-
-    def _process_end_turn_orders(self, fleet, empire, galaxy, empires=None):
-        """Process static orders like COLONIZE and superweapon orders.
-
-        PROJ-12 Phase 3: Delegates to FleetOrderProcessor.
-        PROJ-55: Passes component_registry for colony pod ship removal.
-        PROJ-102: Passes empires for superweapon orders (e.g., STELLERATE_STAR).
-
-        Returns:
-            True if fleet was consumed/deleted by the order, False otherwise.
-        """
-        # PROJ-55: Pass component registry for colony pod ship removal
-        component_registry = getattr(self._registries, 'components', None)
-        return self.order_processor.process_end_turn_orders(
-            fleet, empire, galaxy,
-            component_registry=component_registry,
-            empires=empires
-        )
 
 
 def create_default_turn_engine() -> TurnEngine:

@@ -8,24 +8,28 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-187 Phase 3 - ActionExecutionEngine
-**Current Status:** PROJ-187 Phase 3 complete, Phase 4 next
+**Last Completed:** PROJ-187 Phase 4 - Wire Into Turn Loop + Eradicate End-of-Turn
+**Current Status:** PROJ-187 Phase 4 complete, Phase 5 next
 **Current Project:** PROJ-187
-**Current Phase:** Phase 3 Complete
-**Test Status:** 12446 passed, 1 skipped
+**Current Phase:** Phase 4 Complete
+**Test Status:** 12445 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-187 Phase 3 Complete:
-  - Added `IActionExecutionEngine` interface to `game/strategy/interfaces/engines.py`
-  - Added `ACTION_ORDER_TYPES` and `MOVEMENT_ORDER_TYPES` frozensets to `game/strategy/data/fleet.py`
-  - Created `ActionExecutionEngine` class at `game/strategy/engine/action_execution_engine.py`:
-    - `ActionTickResult` dataclass for tracking action progress
-    - Tick-based action execution based on fleet speed
-    - Delegates to FleetOrderProcessor when action completes
-    - Handles BUILD order auto-pop when queue empty
-  - Added 31 new tests at `tests/unit/strategy/engine/test_action_execution_engine.py`
-- Next: Phase 4 - Wire Into Turn Loop + Eradicate End-of-Turn
+- PROJ-187 Phase 4 Complete:
+  - Added `action_engine` property to TurnEngine with lazy-init pattern
+  - Integrated ActionExecutionEngine as Phase 1.5 in `_process_tick()`
+  - Removed `_process_end_turn_orders()` method from TurnEngine entirely
+  - Removed end-of-turn order loop from `process_turn()`
+  - Updated FleetMovementEngine to skip ACTION_ORDER_TYPES in collect_movements()
+  - Updated FleetOrderProcessor docstrings (method retained for ActionExecutionEngine)
+  - Updated IOrderProcessor interface with empires parameter
+  - Migrated tests from TurnEngine._process_end_turn_orders to FleetOrderProcessor:
+    - tests/unit/strategy/turn_engine/test_turn_processing.py - rewrote for new architecture
+    - tests/unit/strategy/turn_engine/test_dependency_injection.py - updated
+    - tests/integration/strategy/test_colonize_logic.py - now uses FleetOrderProcessor
+    - tests/unit/test_advanced_fleet_orders.py - now uses FleetOrderProcessor
+- Next: Phase 5 - Test Migration (verify all test coverage is adequate)
 
 ---
 
@@ -53,11 +57,8 @@
 |-----------|---------|--------|--------|-------|--------|-------|
 | 2026-02-24 | PROJ-187 | Phase 1 | Complete | 12379 passed | 03c51f35 | Data model: WARP, execution_progress |
 | 2026-02-24 | PROJ-187 | Phase 2 | Complete | 12415 passed | b414e937 | action_time on abilities + ActionTimeResolver |
-<<<<<<< HEAD
 | 2026-02-24 | PROJ-187 | Phase 3 | Complete | 12446 passed | 211b18a7 | ActionExecutionEngine + 31 tests |
-=======
-| 2026-02-24 | PROJ-187 | Phase 3 | Complete | 12446 passed | pending | ActionExecutionEngine + 31 tests |
->>>>>>> 211b18a705beae6e0f7b0ecb7dad39366f4ca992
+| 2026-02-24 | PROJ-187 | Phase 4 | Complete | 12445 passed | d737b376 | Wire into turn loop, eradicate end-of-turn |
 
 ---
 
