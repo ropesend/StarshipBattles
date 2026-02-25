@@ -8,23 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-189 Phase 1 - Storm Data Model & Serialization
-**Current Status:** PROJ-189 Phase 1 Complete
+**Last Completed:** PROJ-189 Phase 2 - Hex Cluster Generation & Storm Placement
+**Current Status:** PROJ-189 Phase 2 Complete
 **Current Project:** PROJ-189
-**Current Phase:** Phase 2 pending
-**Test Status:** 12623 passed, 1 skipped
+**Current Phase:** Phase 3 pending
+**Test Status:** 12649 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-189 Phase 1 Complete:
-  - Created `game/strategy/data/storm.py` with Storm and StormEffect dataclasses
-  - StormEffect: shield_capacity_mult, thrust_mult, strategic_mult, damage_per_tick, fuel_drain_per_tick
-  - Storm: name, storm_type, location, hex_offsets, effects, image_variant, intensity
-  - Integrated storms into StarSystem (storms list, serialization)
-  - Registered storms as zones in Galaxy.add_system() and Galaxy.from_dict()
-  - 26 new tests in tests/unit/strategy/data/test_storm.py
-  - All 12,623 tests passing
-- Next: Phase 2 - Hex Cluster Generation & Storm Placement
+- PROJ-189 Phase 2 Complete:
+  - Created `hex_random_cluster()` in `game/core/hex_math.py` for irregular hex shapes
+  - Created `data/storms.json` with 5 storm types (ion_storm, plasma_storm, gravitational_anomaly, radiation_belt, dark_nebula)
+  - Created `game/strategy/generation/storm_generator.py` with StormGenerator class
+  - Integrated StormGenerator into GalaxySystemGenerator with optional storm_generator param
+  - Galaxy.__init__ now loads storms.json and creates StormGenerator
+  - Added storm configs to all 8 blueprints in system_blueprints.json
+  - Storms now generate automatically during galaxy creation (0-3 per system)
+  - 9 new tests in TestHexRandomCluster, 17 new tests in test_storm_generator.py
+  - All 12,649 tests passing
+- Next: Phase 3 - SHIELD_CAPACITY_MULT Stat Key
 
 ---
 
@@ -72,7 +74,8 @@
 | 2026-02-24 | PROJ-188 | Phase 5 | Complete | 12667 passed | dce4d7b6 | EventLogDataSource + VirtualTable migration |
 | 2026-02-24 | PROJ-188 | Phase 6 | Complete | 12623 passed | cd8e6524 | Cleanup: deleted 1,084 lines old code |
 | 2026-02-24 | PROJ-188 | Audit 1 | PASSED | 12623 passed | - | All implementations verified |
-| 2026-02-24 | PROJ-189 | Phase 1 | Complete | 12623 passed | pending | Storm data model + StarSystem + Galaxy zone |
+| 2026-02-24 | PROJ-189 | Phase 1 | Complete | 12623 passed | 19a21f33 | Storm data model + StarSystem + Galaxy zone |
+| 2026-02-24 | PROJ-189 | Phase 2 | Complete | 12649 passed | 457fa4b5 | hex_random_cluster + StormGenerator + Galaxy integration |
 
 ---
 

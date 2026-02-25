@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Storm Data Model & Serialization | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Hex Cluster Generation & Storm Placement | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Hex Cluster Generation & Storm Placement | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. SHIELD_CAPACITY_MULT Stat Key | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. AreaEffectManager Service | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. EnvironmentalHazardEngine (Turn Integration) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -24,11 +24,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete - Storm data model, StarSystem integration, Galaxy zone registration
-**Next Action:** Begin Phase 2 - Hex Cluster Generation & Storm Placement
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete - Hex cluster generation, StormGenerator, Galaxy integration, blueprint configs
+**Next Action:** Begin Phase 3 - SHIELD_CAPACITY_MULT Stat Key
 **Blockers:** None
-**Context for Next Agent:** 12,623 tests passing, 1 skipped. Created storm.py with Storm and StormEffect dataclasses. Integrated storms into StarSystem and Galaxy zone registry. 26 new tests.
+**Context for Next Agent:** 12,649 tests passing, 1 skipped. Created hex_random_cluster() in hex_math.py. Created data/storms.json with 5 storm types. Created StormGenerator class. Integrated into GalaxySystemGenerator and Galaxy. Added storm configs to all system blueprints. Storms now generate during galaxy creation.
 
 ## Overview
 Implement "Storms" as environmental hazards in star systems. Storms occupy 1-10 hexes (irregular shapes) and apply effects (shield interference, propulsion interference, environmental damage, fuel drain) to all ships in those hexes. Effects use data-driven multipliers that feed into the same stat pipeline as the component system. Storms are static entities generated during system creation and rendered using existing nebulae assets.

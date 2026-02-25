@@ -16,10 +16,12 @@ from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.storm import Storm
 from game.strategy.data.planet_gen import PlanetGenerator
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry
+from game.strategy.generation.storm_generator import StormGenerator
 from game.strategy.data.galaxy_warp_generator import GalaxyWarpGenerator
 from game.strategy.data.galaxy_system_generator import GalaxySystemGenerator
 from game.strategy.data.galaxy_entity_registry import GalaxyEntityRegistry
 from game.strategy.data.galaxy_spatial_index import GalaxySpatialIndex
+from game.core.json_utils import load_json
 
 if TYPE_CHECKING:
     from game.strategy.generation.placement_strategies import ISystemPlacementStrategy
@@ -186,10 +188,16 @@ class Galaxy:
         self.image_registry = PlanetImageRegistry()
         self.planet_generator = PlanetGenerator(self.image_registry)
 
+        # Load storm definitions and create storm generator (PROJ-189)
+        storms_path = os.path.join(os.getcwd(), 'data', 'storms.json')
+        storm_defs = load_json(storms_path, default={})
+        self.storm_generator = StormGenerator(storm_defs) if storm_defs else None
+
         # Internal delegates (PROJ-173 Phase 2)
         self._warp_gen = GalaxyWarpGenerator()
         self._sys_gen = GalaxySystemGenerator(
-            self.star_generator, self.planet_generator, self.naming, self.image_registry
+            self.star_generator, self.planet_generator, self.naming, self.image_registry,
+            storm_generator=self.storm_generator
         )
         self._registry = GalaxyEntityRegistry(self)
         self._spatial = GalaxySpatialIndex(self)

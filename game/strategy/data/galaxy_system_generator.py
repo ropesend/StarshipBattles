@@ -1,10 +1,10 @@
 """Galaxy system generation module.
 
 Extracted from Galaxy as part of PROJ-173 Phase 2 (internal delegation pattern).
-This module handles star system placement and planet generation.
+This module handles star system placement, planet generation, and storm generation.
 """
 import random
-from typing import List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.strategy.data.galaxy import Galaxy, StarSystem
@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from game.strategy.data.planet_gen import PlanetGenerator
     from game.strategy.data.naming import NameRegistry
     from game.strategy.generation.planet_image_registry import PlanetImageRegistry
+    from game.strategy.generation.storm_generator import StormGenerator
 
 
 class GalaxySystemGenerator:
@@ -21,6 +22,7 @@ class GalaxySystemGenerator:
     Handles:
     - Star system placement using configurable strategies
     - Planet generation for newly created systems
+    - Storm generation for environmental hazards (PROJ-189)
     - Spatial index management for efficient distance checks
     """
 
@@ -29,7 +31,8 @@ class GalaxySystemGenerator:
         star_generator: 'StarGenerator',
         planet_generator: 'PlanetGenerator',
         naming: 'NameRegistry',
-        image_registry: 'PlanetImageRegistry'
+        image_registry: 'PlanetImageRegistry',
+        storm_generator: Optional['StormGenerator'] = None
     ):
         """Initialize the system generator.
 
@@ -38,11 +41,13 @@ class GalaxySystemGenerator:
             planet_generator: Generator for creating planets.
             naming: Name registry for system names.
             image_registry: Registry for planet images.
+            storm_generator: Optional generator for environmental storms (PROJ-189).
         """
         self._star_gen = star_generator
         self._planet_gen = planet_generator
         self._naming = naming
         self._image_registry = image_registry
+        self._storm_gen = storm_generator
 
     def generate_planets(self, galaxy: 'Galaxy', system: 'StarSystem') -> None:
         """Generate planets for a system based on its star type.
@@ -63,13 +68,33 @@ class GalaxySystemGenerator:
         for planet in system.planets:
             galaxy.register_planet(system, planet)
 
+    def generate_storms(
+        self,
+        system: 'StarSystem',
+        blueprint_config: Dict[str, Any],
+        rng: random.Random
+    ) -> None:
+        """Generate storms for a system based on blueprint configuration.
+
+        Args:
+            system: StarSystem to generate storms for.
+            blueprint_config: Blueprint configuration with storms section.
+            rng: Random number generator.
+        """
+        if self._storm_gen is None:
+            return
+
+        storms = self._storm_gen.generate_storms(system, blueprint_config, rng)
+        system.storms = storms
+
     def generate_systems(
         self,
         galaxy: 'Galaxy',
         count: int,
         min_dist: int = 10,
         placement_strategy: Optional['ISystemPlacementStrategy'] = None,
-        rng: Optional[random.Random] = None
+        rng: Optional[random.Random] = None,
+        storm_blueprint_config: Optional[Dict[str, Any]] = None
     ) -> List['StarSystem']:
         """Generate star systems ensuring minimum distance and assigning Star Types.
 
@@ -81,6 +106,8 @@ class GalaxySystemGenerator:
                 RandomPlacementStrategy for uniform random placement.
             rng: Random number generator for deterministic generation.
                 If None, uses global random state.
+            storm_blueprint_config: Optional blueprint config for storm generation.
+                If None and storm_generator is set, uses default config.
 
         Returns:
             List of generated StarSystem objects.
@@ -92,6 +119,15 @@ class GalaxySystemGenerator:
 
         if placement_strategy is None:
             placement_strategy = RandomPlacementStrategy()
+
+        # Default storm blueprint config if storm generator exists but no config given
+        if storm_blueprint_config is None and self._storm_gen is not None:
+            storm_blueprint_config = {
+                "storms": {
+                    "count": {"min": 0, "max": 2}
+                    # No allowed_types = use all types (handled by storm_generator)
+                }
+            }
 
         generated: List['StarSystem'] = []
 
@@ -105,6 +141,14 @@ class GalaxySystemGenerator:
         # Track consecutive failures to detect saturation
         consecutive_failures = 0
         max_consecutive_failures = 10  # Stop after 10 consecutive failed placements
+
+        # Create separate RNG for storms to avoid consuming main RNG state
+        # This preserves determinism of system placement
+        if rng is not None:
+            storm_seed = rng.randint(0, 2**32 - 1)
+            storm_rng = random.Random(storm_seed)
+        else:
+            storm_rng = random.Random()
 
         while len(generated) < count:
             # Use strategy to sample a valid location
@@ -132,6 +176,11 @@ class GalaxySystemGenerator:
 
             sys = StarSystem(name, coord, stars=stars)
             self.generate_planets(galaxy, sys)
+
+            # Generate storms after planets (PROJ-189)
+            if storm_blueprint_config is not None:
+                self.generate_storms(sys, storm_blueprint_config, storm_rng)
+
             galaxy.add_system(sys)
             generated.append(sys)
 

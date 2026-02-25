@@ -63,7 +63,8 @@ Example:
     px, py = hex_to_pixel(dest, size=50)
 """
 import math
-from typing import FrozenSet, List, Tuple
+import random
+from typing import FrozenSet, List, Set, Tuple
 
 
 class HexCoord:
@@ -304,3 +305,62 @@ def hex_from_dict(data: dict) -> HexCoord:
         Reconstructed HexCoord
     """
     return HexCoord(data['q'], data['r'])
+
+
+def hex_random_cluster(
+    center: HexCoord,
+    target_size: int,
+    rng: random.Random,
+    avoid: FrozenSet[HexCoord] = frozenset()
+) -> FrozenSet[HexCoord]:
+    """
+    Generate a random connected cluster of hexes around a center point.
+
+    Uses a frontier expansion algorithm to grow an irregular connected shape.
+    Returns the cluster as offsets relative to center (not absolute coordinates).
+
+    Args:
+        center: The center hex for the cluster (absolute coordinates)
+        target_size: Desired number of hexes in the cluster
+        rng: Random number generator for deterministic results
+        avoid: Set of absolute hex coordinates to exclude from the cluster
+
+    Returns:
+        FrozenSet of HexCoord offsets relative to center (includes (0,0) for center)
+
+    Example:
+        rng = random.Random(42)
+        offsets = hex_random_cluster(HexCoord(5, 3), target_size=7, rng=rng)
+        # offsets might be {HexCoord(0,0), HexCoord(1,0), HexCoord(0,1), ...}
+        # To get absolute positions: {center + offset for offset in offsets}
+    """
+    if target_size <= 0:
+        return frozenset()
+
+    # Work in absolute coordinates during generation
+    cluster: Set[HexCoord] = {center}
+
+    # Initialize frontier with valid neighbors (not in avoid, not already in cluster)
+    frontier: Set[HexCoord] = set()
+    for neighbor in center.neighbors():
+        if neighbor not in avoid and neighbor not in cluster:
+            frontier.add(neighbor)
+
+    # Grow cluster by adding random frontier hexes
+    while len(cluster) < target_size and frontier:
+        # Pick random hex from frontier
+        frontier_list = list(frontier)
+        chosen = rng.choice(frontier_list)
+
+        # Add to cluster
+        cluster.add(chosen)
+        frontier.remove(chosen)
+
+        # Add chosen's neighbors to frontier (if valid)
+        for neighbor in chosen.neighbors():
+            if neighbor not in avoid and neighbor not in cluster and neighbor not in frontier:
+                frontier.add(neighbor)
+
+    # Convert to offsets relative to center
+    offsets = frozenset({h - center for h in cluster})
+    return offsets

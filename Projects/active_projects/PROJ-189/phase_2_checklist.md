@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Implement irregular hex cluster generation and integrate storm creation into the galaxy system generator.
 
 ---
@@ -14,10 +14,10 @@
 
 ### Task 2.1: Add hex random cluster utility [Simple]
 **File:** `game/core/hex_math.py`
-**Tests:** `pytest tests/unit/core/test_hex_math.py`
+**Tests:** `pytest tests/unit/core/test_hex_math_core.py::TestHexRandomCluster`
 
-- [ ] Add `import random` at top if not present
-- [ ] Add function `hex_random_cluster(center: HexCoord, target_size: int, rng: random.Random, avoid: FrozenSet[HexCoord] = frozenset()) -> FrozenSet[HexCoord]`:
+- [x] Add `import random` at top if not present
+- [x] Add function `hex_random_cluster(center: HexCoord, target_size: int, rng: random.Random, avoid: FrozenSet[HexCoord] = frozenset()) -> FrozenSet[HexCoord]`:
   - Start with `cluster = {center}`, `frontier = set(hex_neighbors(center)) - avoid - cluster`
   - While `len(cluster) < target_size` and `frontier` not empty:
     - Pick random hex from frontier (via `rng.choice(list(frontier))`)
@@ -25,20 +25,20 @@
     - Add its neighbors to frontier (excluding avoid, cluster)
   - Convert cluster to offsets relative to center: `frozenset({h - center for h in cluster})`
   - Return frozenset of offsets (includes HexCoord(0,0) for center)
-- [ ] Write tests:
-  - [ ] Produces connected hex set of target_size (when possible)
-  - [ ] Avoids excluded hexes (pass avoid set, verify no intersection)
-  - [ ] Single-hex cluster (target_size=1) returns just `{HexCoord(0,0)}`
-  - [ ] Deterministic with seeded RNG
-  - [ ] Gracefully handles target_size larger than available frontier (returns smaller cluster)
+- [x] Write tests:
+  - [x] Produces connected hex set of target_size (when possible)
+  - [x] Avoids excluded hexes (pass avoid set, verify no intersection)
+  - [x] Single-hex cluster (target_size=1) returns just `{HexCoord(0,0)}`
+  - [x] Deterministic with seeded RNG
+  - [x] Gracefully handles target_size larger than available frontier (returns smaller cluster)
 
-**Notes:**
+**Notes:** 9 tests in TestHexRandomCluster class. All passing.
 
 ### Task 2.2: Create storm type definitions [Simple]
 **File:** `data/storms.json` (NEW)
 **Tests:** Manual validation
 
-- [ ] Create JSON file with structure:
+- [x] Create JSON file with structure:
   ```json
   {
     "version": "1.0",
@@ -57,17 +57,17 @@
     }
   }
   ```
-- [ ] Define 5 storm types with balanced effects (see plan.md Phase 2 for values)
-- [ ] Ensure no storm type has damage_per_tick * 100 > reasonable ship HP (not immediately lethal)
-- [ ] Ensure all strategic_mult >= 0.2 (fleets can always escape)
+- [x] Define 5 storm types with balanced effects (see plan.md Phase 2 for values)
+- [x] Ensure no storm type has damage_per_tick * 100 > reasonable ship HP (not immediately lethal)
+- [x] Ensure all strategic_mult >= 0.2 (fleets can always escape)
 
-**Notes:**
+**Notes:** Created data/storms.json with 5 storm types. Effects are balanced.
 
 ### Task 2.3: Create StormGenerator [Medium]
 **File:** `game/strategy/generation/storm_generator.py` (NEW)
 **Tests:** `pytest tests/unit/strategy/generation/test_storm_generator.py`
 
-- [ ] Create `StormGenerator` class:
+- [x] Create `StormGenerator` class:
   - `__init__(self, storm_defs: dict)` - accepts parsed storms.json data
   - `generate_storms(self, system: StarSystem, blueprint_config: dict, rng: random.Random) -> List[Storm]`:
     - Read `count` range from `blueprint_config.get('storms', {}).get('count', {'min': 0, 'max': 0})`
@@ -89,53 +89,62 @@
     - Define search radius based on system size (e.g., max star orbital distance + margin)
     - Try up to 50 random hexes in range
     - Return first hex not in occupied set, or None if all attempts fail
-- [ ] Write tests:
-  - [ ] Generates correct number of storms per blueprint config
-  - [ ] Storms avoid star occupied hexes
-  - [ ] Storms avoid planet hexes
-  - [ ] Storms don't overlap each other
-  - [ ] Cluster sizes within type definition bounds
-  - [ ] Returns empty list when blueprint has no storm config
-  - [ ] Seeded RNG produces deterministic results
+- [x] Write tests:
+  - [x] Generates correct number of storms per blueprint config
+  - [x] Storms avoid star occupied hexes
+  - [x] Storms avoid planet hexes
+  - [x] Storms don't overlap each other
+  - [x] Cluster sizes within type definition bounds
+  - [x] Returns empty list when blueprint has no storm config
+  - [x] Seeded RNG produces deterministic results
 
-**Notes:**
+**Notes:** 17 tests in test_storm_generator.py. All passing.
 
 ### Task 2.4: Integrate storm generation into galaxy system generator [Simple]
 **File:** `game/strategy/data/galaxy_system_generator.py`
 **Tests:** `pytest tests/unit/strategy/data/ tests/integration/strategy/`
 
-- [ ] Add `StormGenerator` import
-- [ ] Load storms.json data once (cached on generator or passed in)
-- [ ] After planet generation, call `storm_generator.generate_storms(system, blueprint_config, rng)`
-- [ ] Assign generated storms to `system.storms`
-- [ ] Verify storm zones get registered via `Galaxy.add_system()` (which loops `system.storms`)
-- [ ] Run existing galaxy generation tests to verify no regressions
+- [x] Add `StormGenerator` import
+- [x] Load storms.json data once (cached on generator or passed in)
+- [x] After planet generation, call `storm_generator.generate_storms(system, blueprint_config, rng)`
+- [x] Assign generated storms to `system.storms`
+- [x] Verify storm zones get registered via `Galaxy.add_system()` (which loops `system.storms`)
+- [x] Run existing galaxy generation tests to verify no regressions
 
-**Notes:** May need to pass blueprint config through to the generation method.
+**Notes:**
+- Added `storm_generator` parameter to `GalaxySystemGenerator.__init__`
+- Added `generate_storms()` method
+- Updated `generate_systems()` to call storm generation after planet generation
+- Used separate RNG for storms to preserve system placement determinism
+- Galaxy.__init__ now loads storms.json and creates StormGenerator
+- All 14 galaxy_gen integration tests pass
 
 ### Task 2.5: Add storm config to system blueprints [Simple]
 **File:** `data/system_blueprints.json`
 **File:** `game/strategy/generation/loaders/system_blueprints_loader.py`
 **Tests:** `pytest tests/unit/strategy/generation/test_system_blueprints_loader.py`
 
-- [ ] Add `"storms"` section to each blueprint:
+- [x] Add `"storms"` section to each blueprint:
   - `solar_like`: `{"count": {"min": 0, "max": 2}, "allowed_types": ["ion_storm", "plasma_storm", "dark_nebula"]}`
   - `red_dwarf_pack`: `{"count": {"min": 1, "max": 3}, "allowed_types": ["radiation_belt", "plasma_storm"]}`
   - `binary_no_planets`: `{"count": {"min": 0, "max": 1}, "allowed_types": ["gravitational_anomaly"]}`
   - `empty_warp_hub`: `{"count": {"min": 0, "max": 3}, "allowed_types": ["dark_nebula", "ion_storm"]}`
   - Other blueprints: sensible defaults per star environment
-- [ ] Update `SystemBlueprintsLoader` if it validates schema (add `storms` to allowed keys)
-- [ ] Run blueprint loader tests
+- [x] Update `SystemBlueprintsLoader` if it validates schema (add `storms` to allowed keys)
+- [x] Run blueprint loader tests
 
 **Notes:**
+- Added storms config to all 8 blueprints in system_blueprints.json
+- SystemBlueprintsLoader does not validate storms field (not part of required schema)
+- Blueprints load successfully
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] All tests pass: `pytest tests/ --testmon`
-- [ ] Generate a galaxy and verify storms exist in systems (manual or integration test)
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 3
+- [x] All task checkboxes above are checked
+- [x] All tests pass: `pytest tests/ -n 12` (12649 passed, 1 skipped)
+- [x] Generate a galaxy and verify storms exist in systems (manual or integration test)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 3
