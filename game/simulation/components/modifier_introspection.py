@@ -138,21 +138,24 @@ class ModifierIntrospection:
             mod_value = app_mod.value
 
             # Evaluate effects for this modifier
+            # ModifierDefinition.evaluate_effects() is a standard method
             effects = mod_def.evaluate_effects(mod_value) if hasattr(mod_def, 'evaluate_effects') else []
             effect_descriptions = [e.describe() for e in effects] if effects else []
 
             applied_modifiers.append({
                 'id': mod_def.id,
-                'name': mod_def.display_name if hasattr(mod_def, 'display_name') else mod_def.id,
+                'name': getattr(mod_def, 'display_name', mod_def.id),
                 'param_value': mod_value,
                 'effects': effect_descriptions,
             })
 
         return {
             'component_id': component.id,
-            'component_name': component.display_name if hasattr(component, 'display_name') else component.id,
+            # IComponent protocol: use 'name' attribute
+            'component_name': component.name,
             'applied_modifiers': applied_modifiers,
-            'total_stats': dict(component.stats) if hasattr(component, 'stats') else {},
+            # IComponent protocol guarantees stats exists
+            'total_stats': dict(component.stats),
         }
 
     @staticmethod
@@ -181,8 +184,8 @@ class ModifierIntrospection:
                 ]
             }
         """
-        # Use the ability's built-in get_effect_summary() if available
-        summary = ability.get_effect_summary() if hasattr(ability, 'get_effect_summary') else []
+        # All ability instances have get_effect_summary() (defined in Ability base class)
+        summary = ability.get_effect_summary()
 
         return {
             'ability_class': ability.__class__.__name__,
@@ -267,8 +270,8 @@ class ModifierIntrospection:
         """
         display_entries: List[Dict[str, Any]] = []
 
-        # Get effect summary from the ability
-        summary = ability.get_effect_summary() if hasattr(ability, 'get_effect_summary') else []
+        # All ability instances have get_effect_summary() (defined in Ability base class)
+        summary = ability.get_effect_summary()
 
         for stat_info in summary:
             attribute = stat_info.get('attribute', 'unknown')

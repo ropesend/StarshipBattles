@@ -2,6 +2,7 @@
 AbilityManager - Centralized ability handling for components.
 
 PROJ-44 Phase 4: Extracted from Component god class to reduce complexity.
+PROJ-190: Updated to use IAbility protocol for type-safe checks.
 
 This module provides utility functions for:
 - Instantiating abilities from component data
@@ -117,7 +118,8 @@ class AbilityManager:
             True if PDC ability found, False otherwise
         """
         for ab in instances:
-            if hasattr(ab, 'tags') and 'pdc' in ab.tags:
+            # All ability instances have tags (set attribute in Ability base class)
+            if ab.tags and 'pdc' in ab.tags:
                 return True
         return False
 
@@ -137,8 +139,8 @@ class AbilityManager:
         """
         rows = []
         for ab in instances:
-            if hasattr(ab, 'get_ui_rows'):
-                rows.extend(ab.get_ui_rows())
+            # All ability instances have get_ui_rows (defined in Ability base class)
+            rows.extend(ab.get_ui_rows())
         return rows
 
     @staticmethod
@@ -191,9 +193,8 @@ class AbilityManager:
                 found_existing = False
                 if match_name in existing_map and existing_map[match_name]:
                     ab = existing_map[match_name].pop(0)
-                    # Support live data sync if ability supports it
-                    if hasattr(ab, 'sync_data'):
-                        ab.sync_data(item)
+                    # All ability instances have sync_data (defined in Ability base class)
+                    ab.sync_data(item)
                     new_instances.append(ab)
                     found_existing = True
 

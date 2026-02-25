@@ -7,6 +7,8 @@ Tests focus on behavior verification with mocked dependencies:
 - Resource consumption tracking
 - Boundary conditions (zero, max values)
 - Edge cases
+
+PROJ-190: Updated to use protocol-compatible mocks for duck typing elimination.
 """
 import pytest
 from unittest.mock import MagicMock, PropertyMock
@@ -16,6 +18,7 @@ from game.simulation.entities.combat_endurance import (
     _calculate_cached_summary,
 )
 from game.core.constants import ResourceType
+from game.simulation.interfaces import IResourceConsumptionAbility, IWeaponAbility
 
 
 # ============================================================================
@@ -110,25 +113,41 @@ def mock_component():
 
 @pytest.fixture
 def mock_resource_consumption_ability():
-    """Create a mock ResourceConsumption ability."""
+    """Create a mock ResourceConsumption ability.
+
+    PROJ-190: Uses spec=IResourceConsumptionAbility to satisfy protocol checks.
+    """
     def _create(resource_name, amount, trigger='constant'):
-        ability = MagicMock()
-        ability.__class__.__name__ = 'ResourceConsumption'
+        # Use spec to make isinstance(ability, IResourceConsumptionAbility) work
+        ability = MagicMock(spec=IResourceConsumptionAbility)
         ability.resource_type = resource_name
         ability.amount = amount
         ability.trigger = trigger
+        # Protocol also requires these methods
+        ability.stack_group = None
+        ability.tags = set()
+        ability.check_available = MagicMock(return_value=True)
         return ability
     return _create
 
 
 @pytest.fixture
 def mock_weapon_ability():
-    """Create a mock WeaponAbility."""
+    """Create a mock WeaponAbility.
+
+    PROJ-190: Uses spec=IWeaponAbility to satisfy protocol checks.
+    """
     def _create(reload_time=1.0, damage=100):
-        ability = MagicMock()
-        ability.__class__.__name__ = 'WeaponAbility'
+        # Use spec to make isinstance(ability, IWeaponAbility) work
+        ability = MagicMock(spec=IWeaponAbility)
         ability.reload_time = reload_time
         ability.damage = damage
+        ability.range = 1000
+        ability.firing_arc = 360
+        # Protocol also requires these
+        ability.trigger = 'activation'
+        ability.stack_group = None
+        ability.tags = set()
         return ability
     return _create
 
@@ -530,12 +549,17 @@ class TestBoundaryConditions:
         assert ship.ammo_endurance == float('inf')
         assert ship.energy_endurance == float('inf')
 
-    def test_component_without_ability_instances(self, mock_ship):
-        """Component without ability_instances attribute is handled gracefully."""
+    def test_component_with_empty_ability_instances(self, mock_ship):
+        """Component with empty ability_instances list is handled gracefully.
+
+        PROJ-190: Components must have ability_instances (IComponent protocol).
+        This test verifies empty ability lists work correctly.
+        """
         ship = mock_ship()
 
-        component = MagicMock(spec=['is_active'])  # No ability_instances
+        component = MagicMock()
         component.is_active = True
+        component.ability_instances = []  # Empty list, not missing
 
         # Should not crash
         calculate_combat_endurance(ship, [component])

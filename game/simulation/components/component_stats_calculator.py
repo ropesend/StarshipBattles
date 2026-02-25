@@ -78,9 +78,9 @@ class ComponentStatsCalculator:
             old_max_hp: Previous max HP for current_hp adjustment
         """
         # Apply specific property overrides
+        # These are dynamic properties from modifier definitions (arc, facing_angle, etc.)
         for prop, val in stats['properties'].items():
-            if hasattr(component, prop):
-                setattr(component, prop, val)
+            setattr(component, prop, val)
 
         # Apply Base Multipliers
         component.mass = (component.base_mass + stats['mass_add']) * stats['mass_mult']
@@ -88,8 +88,8 @@ class ComponentStatsCalculator:
         # Note: old_max_hp is passed in, captured before base formula reset
         component.max_hp = int(component.base_max_hp * stats['hp_mult'])
 
-        if hasattr(component, 'cost'):
-            component.cost = int(component.data.get('cost', 0) * stats['cost_mult'])
+        # IComponent protocol guarantees cost attribute exists
+        component.cost = int(component.data.get('cost', 0) * stats['cost_mult'])
 
         # Handle HP update (healing/new component logic)
         hp_changed = False
@@ -144,6 +144,7 @@ class ComponentStatsCalculator:
         if context and 'ship_class_mass' in context:
             eval_context['ship_class_mass'] = context['ship_class_mass']
         elif component.ship:
+            # Ships have max_mass_budget set by ShipStatsCalculator
             eval_context['ship_class_mass'] = getattr(component.ship, 'max_mass_budget', 1000)
 
         # Evaluate Formulas for attributes
@@ -156,11 +157,12 @@ class ComponentStatsCalculator:
                 component.base_max_hp = int(val)
                 component.max_hp = component.base_max_hp  # Reset to base
             else:
-                if hasattr(component, attr):
-                    if isinstance(getattr(component, attr), int):
-                        setattr(component, attr, int(val))
-                    else:
-                        setattr(component, attr, val)
+                # Dynamic formula attributes (not mass/hp) - set directly
+                current = getattr(component, attr, None)
+                if current is not None and isinstance(current, int):
+                    setattr(component, attr, int(val))
+                else:
+                    setattr(component, attr, val)
 
         # Evaluate formulas in abilities
         ComponentStatsCalculator._evaluate_formulas_in_abilities(

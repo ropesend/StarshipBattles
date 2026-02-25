@@ -8,10 +8,12 @@ Extracted from Component class to handle resource-related operations:
 - get_resource_cost: Calculate resource costs with formulas/multipliers
 
 PROJ-88: God Class Decomposition - Simulation Core Tier
+PROJ-190: Updated to use IResourceConsumptionAbility protocol.
 """
 from typing import TYPE_CHECKING, Optional
 
 from game.simulation.formula_system import safe_evaluate_math_formula
+from game.simulation.interfaces import is_resource_consumption
 
 if TYPE_CHECKING:
     from game.simulation.components.component import Component
@@ -47,11 +49,9 @@ class ComponentResourceManager:
             True if all activation costs can be afforded, False otherwise.
         """
         for ability in self._component.ability_instances:
-            # Use duck typing to check for activation-triggered resource consumption
-            trigger = getattr(ability, 'trigger', None)
-            check_fn = getattr(ability, 'check_available', None)
-            if trigger == 'activation' and check_fn is not None:
-                if not check_fn():
+            # Use IResourceConsumptionAbility protocol for type-safe check
+            if is_resource_consumption(ability) and ability.trigger == 'activation':
+                if not ability.check_available():
                     return False
         return True
 
@@ -92,10 +92,9 @@ class ComponentResourceManager:
             Dict mapping resource type to integer cost.
         """
         component = self._component
-        base_costs = (
-            getattr(component, 'evaluated_resource_cost', None)
-            or component.data.get("resource_cost", {})
-        )
+        # evaluated_resource_cost is initialized by ComponentStatsCalculator.reset_and_evaluate_formulas()
+        # Fall back to raw data if not yet evaluated
+        base_costs = getattr(component, 'evaluated_resource_cost', None) or component.data.get("resource_cost", {})
         multiplier = component.stats.get('cost_mult', 1.0)
 
         # Build context for formula evaluation
@@ -104,6 +103,7 @@ class ComponentResourceManager:
         if context and 'ship_class_mass' in context:
             eval_context['ship_class_mass'] = context['ship_class_mass']
         elif component.ship:
+            # Ships have max_mass_budget set by ShipStatsCalculator
             eval_context['ship_class_mass'] = getattr(
                 component.ship, 'max_mass_budget', 1000
             )

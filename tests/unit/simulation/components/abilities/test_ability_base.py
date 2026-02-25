@@ -464,9 +464,15 @@ class TestAbilityGetEffectiveStat:
         result = ability.get_effective_stat("damage_mult")
         assert result == 3.0
 
-    def test_get_effective_stat_component_without_stats(self):
-        """Handles component without stats attribute gracefully."""
-        component = MagicMock(spec=[])  # No stats attribute
+    def test_get_effective_stat_component_with_empty_stats(self):
+        """Handles component with empty stats dict gracefully.
+
+        PROJ-190: Components must have stats per IComponent protocol.
+        This test verifies empty stats work correctly.
+        """
+        component = MagicMock()
+        component.stats = {}
+        component.ability_stats = {}
         ability = Ability(component, {})
 
         result = ability.get_effective_stat("damage_mult")

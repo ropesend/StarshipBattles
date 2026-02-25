@@ -15,18 +15,18 @@
 |-------|--------|-----------|
 | 1. Define Protocols | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Initialize Lazy Fields | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Replace Ability Duck Typing | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Replace Ability Duck Typing | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Replace Combat/Entity Duck Typing | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Update Test Mocks | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Final Verification | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete. Replaced hasattr(self, '_field') patterns with direct access.
-**Next Action:** Begin Phase 3 - Replace ability duck typing.
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 complete. Replaced ~35 ability duck typing instances across 8 files.
+**Next Action:** Begin Phase 4 - Replace Combat/Entity duck typing.
 **Blockers:** None
-**Context for Next Agent:** Phase 2 completed: added `_combat_engine` init to Ship, removed 3 hasattr guards from Component, replaced 5 getattr calls in ship_stats.py with direct access. All 2594 simulation unit tests passing.
+**Context for Next Agent:** Phase 3 completed: Updated combat_endurance.py, ship_stats.py, ability_aggregator.py, abilities/base.py, ability_manager.py, modifier_introspection.py, abilities/weapons.py, component_stats_calculator.py, component_resource_manager.py. Used is_resource_consumption, is_resource_storage, is_resource_generation, is_warp_jump, is_weapon TypeGuards. All 2594 simulation unit tests passing.
 
 ## Overview
 Replace all implicit duck typing (`hasattr`/`getattr`) in `game/simulation/` with explicit `typing.Protocol` definitions. This makes every object contract visible to type checkers, enables IDE autocomplete, and creates a direct mapping to C# interfaces / Rust traits for future language portability.

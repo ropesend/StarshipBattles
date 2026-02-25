@@ -233,14 +233,15 @@ class Ability:
                 default = None  # Return None for unknown keys (like 'arc_set')
 
         # Check ability-specific stats first (for targeted modifier effects)
-        ability_stats = getattr(self.component, 'ability_stats', {})
+        # IComponent protocol guarantees ability_stats and stats exist
+        ability_stats = self.component.ability_stats
         class_name = self.__class__.__name__
         if class_name in ability_stats:
             if stat_key in ability_stats[class_name]:
                 return ability_stats[class_name][stat_key]
 
         # Fall back to global component stats
-        stats = getattr(self.component, 'stats', {})
+        stats = self.component.stats
         return stats.get(stat_key, default)
 
     def get_primary_value(self) -> float:
@@ -308,7 +309,8 @@ class Ability:
             Only includes stats that are actually modified (not default values).
         """
         summary = []
-        stats = getattr(self.component, 'stats', {})
+        # IComponent protocol guarantees stats exists
+        stats = self.component.stats
 
         for binding in self.STAT_BINDINGS:
             stat_value = stats.get(binding.stat_key.value)

@@ -56,6 +56,16 @@ from game.simulation.entities.ability_aggregator import calculate_ability_totals
 from game.simulation.entities.combat_endurance import calculate_combat_endurance
 from game.core.config import PhysicsConfig
 from game.core.constants import CombatConstants
+from game.simulation.interfaces import (
+    IResourceStorageAbility,
+    IResourceGenerationAbility,
+    IResourceConsumptionAbility,
+    IWarpJumpAbility,
+    is_resource_storage,
+    is_resource_generation,
+    is_resource_consumption,
+    is_warp_jump,
+)
 import math
 
 class ShipStatsCalculator:
@@ -278,27 +288,21 @@ class ShipStatsCalculator:
 
     def _aggregate_resource_abilities(self, comp, acc) -> None:
         """Aggregate ResourceStorage and ResourceGeneration abilities."""
-        # Guard for non-Component objects (e.g., mocks in tests)
-        abilities = getattr(comp, 'ability_instances', [])
-        for ability in abilities:
-                ab_cls = ability.__class__.__name__
-                if ab_cls == 'ResourceStorage':
-                    res_type = getattr(ability, 'resource_type', '')
-                    max_amt = getattr(ability, 'max_amount', 0.0)
-                    if res_type == ResourceType.FUEL:
-                        acc['max_fuel'] += max_amt
-                    elif res_type == ResourceType.AMMO:
-                        acc['max_ammo'] += max_amt
-                    elif res_type == ResourceType.ENERGY:
-                        acc['max_energy'] += max_amt
+        for ability in comp.ability_instances:
+            # Use protocol checks instead of class name introspection
+            if is_resource_storage(ability):
+                if ability.resource_type == ResourceType.FUEL:
+                    acc['max_fuel'] += ability.max_amount
+                elif ability.resource_type == ResourceType.AMMO:
+                    acc['max_ammo'] += ability.max_amount
+                elif ability.resource_type == ResourceType.ENERGY:
+                    acc['max_energy'] += ability.max_amount
 
-                elif ab_cls == 'ResourceGeneration':
-                    res_type = getattr(ability, 'resource_type', '')
-                    rate = getattr(ability, 'rate', 0.0)
-                    if res_type == ResourceType.ENERGY:
-                        acc['energy_gen'] += rate
-                    elif res_type == ResourceType.AMMO:
-                        acc['ammo_gen'] += rate
+            elif is_resource_generation(ability):
+                if ability.resource_type == ResourceType.ENERGY:
+                    acc['energy_gen'] += ability.rate
+                elif ability.resource_type == ResourceType.AMMO:
+                    acc['ammo_gen'] += ability.rate
 
     def _aggregate_propulsion_abilities(self, comp, acc) -> None:
         """Aggregate CombatPropulsion, StrategicMovement, WarpJump, ManeuveringThruster."""
@@ -312,11 +316,12 @@ class ShipStatsCalculator:
 
         # WarpJump capability - use the largest warp drive
         for ab in comp.get_abilities('WarpJump'):
-            tonnage = getattr(ab, 'max_tonnage', 0)
-            if tonnage > acc['warp_max_tonnage']:
-                acc['warp_max_tonnage'] = tonnage
-            # Accumulate energy costs from all warp drives
-            acc['warp_energy_cost'] += getattr(ab, 'energy_cost', 0)
+            # WarpJump abilities implement IWarpJumpAbility protocol
+            if is_warp_jump(ab):
+                if ab.max_tonnage > acc['warp_max_tonnage']:
+                    acc['warp_max_tonnage'] = ab.max_tonnage
+                # Accumulate energy costs from all warp drives
+                acc['warp_energy_cost'] += ab.energy_cost
 
         # Turn speed from ManeuveringThruster abilities
         for ab in comp.get_abilities('ManeuveringThruster'):
@@ -341,8 +346,8 @@ class ShipStatsCalculator:
         # Shield energy cost from ResourceConsumption(energy) abilities on shield regen components
         if comp.has_ability('ShieldRegeneration'):
             for ab in comp.ability_instances:
-                if ab.__class__.__name__ == 'ResourceConsumption' and getattr(ab, 'resource_type', '') == ResourceType.ENERGY:
-                    acc['shield_cost'] += getattr(ab, 'amount', 0.0)
+                if is_resource_consumption(ab) and ab.resource_type == ResourceType.ENERGY:
+                    acc['shield_cost'] += ab.amount
                     break
 
     def _aggregate_hangar_abilities(self, ship, comp) -> None:
