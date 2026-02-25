@@ -13,6 +13,7 @@ import os
 
 from game.strategy.data.stars import StarGenerator, Star
 from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.storm import Storm
 from game.strategy.data.planet_gen import PlanetGenerator
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry
 from game.strategy.data.galaxy_warp_generator import GalaxyWarpGenerator
@@ -73,6 +74,7 @@ class StarSystem:
         self.stars = stars if stars else []
         self.warp_points = []
         self.planets = [] # List[Planet]
+        self.storms = []  # List[Storm] - environmental hazards (PROJ-189)
         self.region_id = region_id  # Optional[int] - which arm/cluster this belongs to
 
     @property
@@ -94,7 +96,8 @@ class StarSystem:
             'global_location': hex_to_dict(self.global_location),
             'stars': [star.to_dict() for star in self.stars],
             'warp_points': [wp.to_dict() for wp in self.warp_points],
-            'planets': [planet.to_dict() for planet in self.planets]
+            'planets': [planet.to_dict() for planet in self.planets],
+            'storms': [s.to_dict() for s in self.storms]
         }
         if self.region_id is not None:
             result['region_id'] = self.region_id
@@ -142,6 +145,13 @@ class StarSystem:
                 system.planets.append(Planet.from_dict(p))
             except (PersistenceException, KeyError, TypeError, ValueError) as e:
                 logger.warning(f"StarSystem '{data['name']}': skipping invalid planet at index {i}: {e}")
+
+        # Deserialize storms with error isolation (PROJ-189)
+        for i, s in enumerate(data.get('storms', [])):
+            try:
+                system.storms.append(Storm.from_dict(s))
+            except (PersistenceException, KeyError, TypeError, ValueError) as e:
+                logger.warning(f"StarSystem '{data['name']}': skipping invalid storm at index {i}: {e}")
 
         return system
 
@@ -191,6 +201,9 @@ class Galaxy:
         # Register star zones (PROJ-139)
         for star in system.stars:
             self.register_zone(system, star)
+        # Register storm zones (PROJ-189)
+        for storm in system.storms:
+            self.register_zone(system, storm)
         # Register warp points (PROJ-179: O(1) warp point lookup)
         for wp in system.warp_points:
             global_hex = system.global_location + wp.location
@@ -605,6 +618,10 @@ class Galaxy:
             # Register star zones (PROJ-139)
             for star in system.stars:
                 galaxy.register_zone(system, star)
+
+            # Register storm zones (PROJ-189)
+            for storm in system.storms:
+                galaxy.register_zone(system, storm)
 
             # Register warp points (PROJ-179: O(1) warp point lookup)
             for wp in system.warp_points:
