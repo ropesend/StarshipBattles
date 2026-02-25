@@ -17,16 +17,16 @@
 | 2. Migrate Fleet Report | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate Planet List | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate Empire Build Queue | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Migrate Event Log | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Migrate Event Log | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Cleanup | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 4 Complete
-**Last Action:** Migrated EmpireBuildQueueWindow to VirtualTable + BuildQueueDataSource + MultiSelect. Created BuildQueueDataSource with 27 tests. Preserved EventBus/MVVM pattern.
-**Next Action:** Begin Phase 5: Migrate Event Log
+**Active Phase:** Phase 5 Complete
+**Last Action:** Migrated EventLogWindow to VirtualTable + EventLogDataSource + NoSelect. Created EventLogDataSource with 40 tests. Event log now has virtual scrolling and column headers.
+**Next Action:** Begin Phase 6: Cleanup (delete old renderers and column managers)
 **Blockers:** None
-**Context for Next Agent:** 12,628 tests passing (+27 new from BuildQueueDataSource). EmpireBuildQueueWindow now uses VirtualTable. Build queue now has virtual scrolling. planet_list_columns.ColumnManager has 0 reverse dependencies (ready for Phase 6 deletion). Ready for Phase 5 (EventLogDataSource + EventLogWindow migration).
+**Context for Next Agent:** 12,667 tests passing (+40 new from EventLogDataSource). All 4 windows now use VirtualTable. Ready for Phase 6 cleanup: delete FleetListRenderer (426 lines), VirtualListRenderer (227 lines), column_manager.py (234 lines), planet_list_columns.py (201 lines).
 
 ## Overview
 Consolidates 4 duplicated list/table UI implementations (Planet List, Fleet Report, Empire Build Queue, Event Log) into a single generic `VirtualTable` component system under `game/ui/components/table/`, with domain-specific `ITableDataSource` adapters. Eliminates ~1,088 lines of duplicated rendering code while giving all lists virtual scrolling, sortable/reorderable columns, and a consistent architecture.
