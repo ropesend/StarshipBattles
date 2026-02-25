@@ -4,6 +4,7 @@ Design Workshop Screen - MVVM-based ship design editor.
 Production version of the ship builder with dependency injection and MVVM architecture.
 """
 import os
+from typing import Optional
 
 import pygame
 import pygame_gui
@@ -124,6 +125,21 @@ class DesignWorkshopScreen:
 
         # Event Router (composition pattern for event handling)
         self.event_router = WorkshopEventRouter(self)
+
+        # Pre-declare all button attributes (mode-dependent buttons may not be created)
+        self.clear_btn: Optional[UIButton] = None
+        self.save_btn: Optional[UIButton] = None
+        self.load_btn: Optional[UIButton] = None
+        self.arc_toggle_btn: Optional[UIButton] = None
+        self.target_btn: Optional[UIButton] = None
+        self.hull_toggle_btn: Optional[UIButton] = None
+        self.std_data_btn: Optional[UIButton] = None
+        self.test_data_btn: Optional[UIButton] = None
+        self.select_data_btn: Optional[UIButton] = None
+        self.verbose_btn: Optional[UIButton] = None
+        self.obsolete_btn: Optional[UIButton] = None
+        self.start_btn: Optional[UIButton] = None
+        self.pending_action = None
 
         self._create_ui()
 
@@ -396,7 +412,7 @@ class DesignWorkshopScreen:
 
     def execute_pending_action(self):
         """Execute the action stored in self.pending_action."""
-        if hasattr(self, 'pending_action') and self.pending_action:
+        if self.pending_action:
             act, data = self.pending_action
             if act == 'clear_design':
                 self._clear_design()
@@ -436,8 +452,7 @@ class DesignWorkshopScreen:
             
         self.left_panel.update(dt)
         self.layer_panel.update(dt)
-        if hasattr(self.modifier_panel, 'update'):
-            self.modifier_panel.update(dt)
+        self.modifier_panel.update(dt)
             
         self.weapons_report_panel.update()
         self.controller.update()
@@ -480,8 +495,7 @@ class DesignWorkshopScreen:
                      hovered = hovered_item.component
         
         # Also check if hovering a weapon in the weapons report panel
-        if not hovered and hasattr(self, 'weapons_report_panel'):
-            if self.weapons_report_panel.hovered_weapon:
+        if not hovered and self.weapons_report_panel.hovered_weapon:
                 hovered = self.weapons_report_panel.hovered_weapon
                      
         self.view.draw(screen, self.viewmodel.ship, self.show_firing_arcs, self.controller.selected_component, hovered)
@@ -594,8 +608,7 @@ class DesignWorkshopScreen:
         self.controller.selected_component = None
         self.on_selection_changed(None)
 
-        if hasattr(self, 'weapons_report_panel'):
-            self.weapons_report_panel.clear_target()
+        self.weapons_report_panel.clear_target()
 
     def on_select_target_pressed(self):
         """Select target ship (delegates to WorkshopShipIO)."""
@@ -609,6 +622,6 @@ class DesignWorkshopScreen:
         UI remnants from appearing in other screens.
         """
         # Clear the UI manager to remove all pygame_gui elements
-        if hasattr(self, 'ui_manager') and self.ui_manager:
+        if self.ui_manager:
             self.ui_manager.clear_and_reset()
 

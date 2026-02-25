@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Fix init-order issues by declaring all instance attributes in __init__ before they are used. Eliminate hasattr(self, ...) and hasattr(gui, ...) defensive checks.
 
 ---
@@ -18,7 +18,7 @@
 
 The `_get_button_definitions()` method (line 546) returns button names that are set via `setattr(self, attr_name, btn)` at line 286. This means mode-dependent buttons may not exist. Fix by pre-declaring all possible button attrs as `None` in `__init__` before `_create_ui()` is called.
 
-- [ ] In `__init__` (after line 123, before `self._create_ui()` at line 128), add declarations:
+- [x] In `__init__` (after line 123, before `self._create_ui()` at line 128), add declarations:
   ```python
   # Pre-declare all button attributes (mode-dependent buttons may not be created)
   self.clear_btn: Optional[UIButton] = None
@@ -35,8 +35,8 @@ The `_get_button_definitions()` method (line 546) returns button names that are 
   self.start_btn: Optional[UIButton] = None
   self.pending_action = None
   ```
-- [ ] Add `Optional` import if not already present
-- [ ] Verify: Run tests
+- [x] Add `Optional` import if not already present
+- [x] Verify: Run tests
 
 **Notes:** The `setattr` at line 286 will still overwrite these defaults for buttons that are created. This just ensures the attrs exist even for mode-dependent buttons not created.
 
@@ -47,12 +47,12 @@ The `_get_button_definitions()` method (line 546) returns button names that are 
 **Tests:** `pytest tests/ --testmon`
 
 After Task 3.1, all button attrs are always present (None when not created). Replace hasattr checks with None checks:
-- [ ] Line 307: `hasattr(gui, 'hull_toggle_btn') and event.ui_element == gui.hull_toggle_btn` → `gui.hull_toggle_btn is not None and event.ui_element == gui.hull_toggle_btn`
-- [ ] Line 313: `hasattr(gui, 'std_data_btn') and ...` → `gui.std_data_btn is not None and ...`
-- [ ] Line 315: `hasattr(gui, 'test_data_btn') and ...` → `gui.test_data_btn is not None and ...`
-- [ ] Line 317: `hasattr(gui, 'select_data_btn') and ...` → `gui.select_data_btn is not None and ...`
-- [ ] Line 319: `hasattr(gui, 'verbose_btn') and ...` → `gui.verbose_btn is not None and ...`
-- [ ] Verify: Run tests
+- [x] Line 307: `hasattr(gui, 'hull_toggle_btn') and event.ui_element == gui.hull_toggle_btn` → `gui.hull_toggle_btn is not None and event.ui_element == gui.hull_toggle_btn`
+- [x] Line 313: `hasattr(gui, 'std_data_btn') and ...` → `gui.std_data_btn is not None and ...`
+- [x] Line 315: `hasattr(gui, 'test_data_btn') and ...` → `gui.test_data_btn is not None and ...`
+- [x] Line 317: `hasattr(gui, 'select_data_btn') and ...` → `gui.select_data_btn is not None and ...`
+- [x] Line 319: `hasattr(gui, 'verbose_btn') and ...` → `gui.verbose_btn is not None and ...`
+- [x] Verify: Run tests
 
 **Notes:**
 
@@ -63,13 +63,13 @@ After Task 3.1, all button attrs are always present (None when not created). Rep
 **Tests:** `pytest tests/ --testmon`
 
 These panels are always created in `_create_ui()`:
-- [ ] Line 76: `if hasattr(gui, 'component_modifier_grid_panel'):` → remove check (always created at workshop_screen.py line 253)
-- [ ] Line 334: `hasattr(gui, 'right_panel')` → remove check (always created at line 200)
-- [ ] Line 334: `hasattr(gui.right_panel, 'vehicle_type_dropdown')` → keep or remove based on whether vehicle_type_dropdown is always created in right_panel.__init__
-- [ ] Line 336: `hasattr(gui.right_panel, 'theme_dropdown')` → keep or remove (check if always created)
-- [ ] Verify: Run tests
+- [x] Line 76: `if hasattr(gui, 'component_modifier_grid_panel'):` → remove check (always created at workshop_screen.py line 253)
+- [x] Line 334: `hasattr(gui, 'right_panel')` → remove check (always created at line 200)
+- [x] Line 334: `hasattr(gui.right_panel, 'vehicle_type_dropdown')` → removed (always created in right_panel.setup_controls())
+- [x] Line 336: `hasattr(gui.right_panel, 'theme_dropdown')` → changed to `is not None` (conditionally created, pre-declared as None)
+- [x] Verify: Run tests
 
-**Notes:** Verify right_panel dropdowns are always created before removing those hasattr checks.
+**Notes:** vehicle_type_dropdown is always created; theme_dropdown is conditionally created but pre-declared as None.
 
 ---
 
@@ -78,12 +78,12 @@ These panels are always created in `_create_ui()`:
 **Tests:** `pytest tests/ --testmon`
 
 After Task 3.1 (pending_action pre-declared):
-- [ ] Line 399: `if hasattr(self, 'pending_action') and self.pending_action:` → `if self.pending_action:`
-- [ ] Line 439: `if hasattr(self.modifier_panel, 'update'):` → remove check (ModifierEditorPanel always has update method)
-- [ ] Line 483: `if not hovered and hasattr(self, 'weapons_report_panel'):` → `if not hovered:` (weapons_report_panel always created in _create_ui at line 240)
-- [ ] Line 597: `if hasattr(self, 'weapons_report_panel'):` → remove check (always exists)
-- [ ] Line 612: `if hasattr(self, 'ui_manager') and self.ui_manager:` → `if self.ui_manager:` (always set in __init__)
-- [ ] Verify: Run tests
+- [x] Line 399: `if hasattr(self, 'pending_action') and self.pending_action:` → `if self.pending_action:`
+- [x] Line 439: `if hasattr(self.modifier_panel, 'update'):` → remove check (ModifierEditorPanel always has update method)
+- [x] Line 483: `if not hovered and hasattr(self, 'weapons_report_panel'):` → `if not hovered:` (weapons_report_panel always created in _create_ui at line 240)
+- [x] Line 597: `if hasattr(self, 'weapons_report_panel'):` → remove check (always exists)
+- [x] Line 612: `if hasattr(self, 'ui_manager') and self.ui_manager:` → `if self.ui_manager:` (always set in __init__)
+- [x] Verify: Run tests
 
 **Notes:**
 
@@ -93,11 +93,11 @@ After Task 3.1 (pending_action pre-declared):
 **File:** `game/ui/screens/builder/right_panel.py`
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Line 56: `if hasattr(self, 'stats_panel') and self.stats_panel.needs_rebuild(ship):` → ensure stats_panel is declared in __init__, then remove hasattr
-- [ ] Line 332: `if hasattr(self, 'stats_panel'):` → remove check (ensure declared in __init__)
-- [ ] Verify: Run tests
+- [x] Line 56: `if hasattr(self, 'stats_panel') and self.stats_panel.needs_rebuild(ship):` → stats_panel always created in setup_stats() called from __init__; removed hasattr
+- [x] Line 332: `if hasattr(self, 'stats_panel'):` → removed check (always declared in __init__ via setup_stats())
+- [x] Verify: Run tests
 
-**Notes:** Check right_panel.__init__ — if stats_panel is created inside a method called from __init__, it may need to be pre-declared as None.
+**Notes:** stats_panel is always created in setup_stats() which is called from __init__.
 
 ---
 
@@ -105,12 +105,12 @@ After Task 3.1 (pending_action pre-declared):
 **File:** `game/ui/panels/design_report_panel.py`
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Line 102: `if hasattr(self, 'name_label'):` → ensure name_label is declared in __init__, remove hasattr
-- [ ] Line 104: `if hasattr(self, 'type_class_label'):` → ensure type_class_label is declared in __init__, remove hasattr
-- [ ] Line 287: `if hasattr(self, 'panel'):` → ensure panel is declared in __init__, remove hasattr
-- [ ] Verify: Run tests
+- [x] Line 102: `if hasattr(self, 'name_label'):` → removed (always created in __init__)
+- [x] Line 104: `if hasattr(self, 'type_class_label'):` → removed (always created in __init__)
+- [x] Line 287: `if hasattr(self, 'panel'):` → removed (always created in __init__)
+- [x] Verify: Run tests
 
-**Notes:** These are likely created in a `_build_ui()` method. Pre-declare as None in __init__.
+**Notes:** All labels and panel are created unconditionally in __init__ before show_placeholder() is called.
 
 ---
 
@@ -118,16 +118,16 @@ After Task 3.1 (pending_action pre-declared):
 **File:** `game/ui/panels/modifier_impact_grid.py`
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Line 438: `if hasattr(self, '_stat_summary'):` → ensure _stat_summary is declared in __init__ (as None), remove hasattr
-- [ ] Verify: Run tests
+- [x] Line 438: `if hasattr(self, '_stat_summary'):` → pre-declared _stat_summary as None in __init__, changed to `is not None` check
+- [x] Verify: Run tests
 
-**Notes:**
+**Notes:** _stat_summary is set in update() and may not exist if update() was never called; pre-declare as None.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

@@ -48,6 +48,7 @@ def builder_warning_setup():
     builder.modifier_panel = MagicMock()
     builder.weapons_report_panel = MagicMock()
     builder.detail_panel = MagicMock()
+    builder.component_modifier_grid_panel = MagicMock()
 
     builder.left_panel.get_add_count.return_value = 1
     builder.left_panel.handle_event.return_value = None

@@ -79,6 +79,9 @@ class ModifierImpactGrid:
         # UI elements for cleanup
         self._ui_elements: List = []
 
+        # Stat summary (set by update())
+        self._stat_summary: Optional[Dict[str, Any]] = None
+
         # Fonts (reduced 10% from 17/15 for tighter rows)
         self.font = pygame.font.SysFont("Arial", 15)
         self.header_font = pygame.font.SysFont("Arial", 14)
@@ -436,7 +439,7 @@ class ModifierImpactGrid:
         screen.set_clip(old_clip)
 
         # Draw net values footer (at bottom of grid, outside clip area)
-        if hasattr(self, '_stat_summary'):
+        if self._stat_summary is not None:
             # Footer position - at bottom of panel (use absolute position)
             footer_y = abs_rect.y + abs_rect.height - self.ROW_HEIGHT
             footer_rect = pygame.Rect(base_x, footer_y, abs_rect.width, self.ROW_HEIGHT)

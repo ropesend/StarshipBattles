@@ -8,20 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-194 Phase 2 - Weapon & Ability Duck Typing
-**Current Status:** PROJ-194 in progress, Phase 2 complete
+**Last Completed:** PROJ-194 Phase 3 - Workshop Init-Order & Self-Checks
+**Current Status:** PROJ-194 in progress, Phase 3 complete
 **Current Project:** PROJ-194
-**Current Phase:** Phase 3 - Workshop Init-Order & Self-Checks
+**Current Phase:** Phase 4 - Resource Accessor Method
 **Test Status:** 12711 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-194 Phase 2 COMPLETE - Weapon & Ability Duck Typing
-- weapons_viewmodel.py: 6 getattr(ab, 'base_accuracy/accuracy_falloff') → direct access; 1 hasattr(ab, 'get_damage') removed
-- components.py: hasattr(ab, 'base_accuracy') → has_ability('BeamWeaponAbility'); hasattr(ab, 'reload_time') removed
-- stats_config.py: 2 hasattr(comp, 'ability_instances') checks removed (always initialized)
-- modifier_impact_grid.py: hasattr(component, 'ability_instances') removed; hasattr(ability_class, 'STAT_BINDINGS') → getattr with None
-- Next: Phase 3 - Workshop Init-Order & Self-Checks
+- PROJ-194 Phase 3 COMPLETE - Workshop Init-Order & Self-Checks
+- workshop_screen.py: Pre-declared 12 button attrs + pending_action in __init__. Removed 5 hasattr(self, ...) checks.
+- workshop_event_router.py: 5 button hasattr → `is not None`; 2 panel hasattr removed; 1 theme_dropdown hasattr → `is not None`.
+- right_panel.py: 2 stats_panel hasattr removed (always initialized in __init__).
+- design_report_panel.py: 3 hasattr(self, ...) removed (name_label, type_class_label, panel always created).
+- modifier_impact_grid.py: Pre-declared _stat_summary = None; hasattr → `is not None`.
+- Fixed 2 test mocks (component_modifier_grid_panel, weapons_report_panel).
+- Next: Phase 4 - Resource Accessor Method
 
 ---
 
@@ -151,6 +153,7 @@
 | 2026-02-25 | PROJ-193 | Audit 1 | PASSED | 12711 passed | - | All 5 goals verified. 4 protocols, IPlanet/IFleet extended, ~155+ duck typing eliminated. |
 | 2026-02-25 | PROJ-194 | Phase 1 | Complete | 12711 passed | - | ~15 getattr→direct access, Ship init attrs, 3 mock fixes |
 | 2026-02-25 | PROJ-194 | Phase 2 | Complete | 12711 passed | - | ~10 weapon/ability duck typing→direct access in 4 files |
+| 2026-02-25 | PROJ-194 | Phase 3 | Complete | 12711 passed | - | ~16 init-order hasattr→None checks/removed, 12 button pre-decls |
 
 ---
 

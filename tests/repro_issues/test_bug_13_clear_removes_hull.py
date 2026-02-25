@@ -94,6 +94,7 @@ def test_clear_design_removes_hull_logic_repro(simple_ship_registry):
     gui.right_panel = MagicMock()
     gui.modifier_panel = MagicMock()
     gui.layer_panel = MagicMock()
+    gui.weapons_report_panel = MagicMock()
 
     # Verify initial hull exists (added by Ship.__init__ for Escort class)
     hull_comps = gui.viewmodel.ship.layers[LayerType.HULL].components

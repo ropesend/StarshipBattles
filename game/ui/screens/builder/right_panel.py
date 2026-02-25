@@ -53,7 +53,7 @@ class BuilderRightPanel:
 
     def on_ship_updated(self, ship):
         """Handle ship update event - rebuild if needed, then update stats."""
-        if hasattr(self, 'stats_panel') and self.stats_panel.needs_rebuild(ship):
+        if self.stats_panel.needs_rebuild(ship):
             self.stats_panel.rebuild(ship)
             self._sync_from_stats_panel()
         # BUG-04 Fix: Always call update_stats_display to populate values
@@ -329,11 +329,8 @@ class BuilderRightPanel:
 
     def rebuild_stats(self):
         """Completely rebuild the stats scroll container (e.g. after ship load)."""
-        if hasattr(self, 'stats_panel'):
-            self.stats_panel.rebuild(self.builder.ship)
-            self._sync_from_stats_panel()
-        else:
-            self.setup_stats()
+        self.stats_panel.rebuild(self.builder.ship)
+        self._sync_from_stats_panel()
 
     def update_class_dropdown(self, new_class: str, valid_classes: list):
         """Kill existing class dropdown and recreate with new options.

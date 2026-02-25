@@ -99,10 +99,8 @@ class DesignReportPanel:
         self.rows_map = {}
 
         # PROJ-81: Clear identity labels
-        if hasattr(self, 'name_label'):
-            self.name_label.set_text("")
-        if hasattr(self, 'type_class_label'):
-            self.type_class_label.set_text("")
+        self.name_label.set_text("")
+        self.type_class_label.set_text("")
 
         # Show placeholder message
         if self.placeholder_text:
@@ -282,5 +280,4 @@ class DesignReportPanel:
         if self._stats_panel is not None:
             self._stats_panel.kill()
             self._stats_panel = None
-        if hasattr(self, 'panel'):
-            self.panel.kill()
+        self.panel.kill()

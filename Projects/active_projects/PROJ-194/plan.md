@@ -15,15 +15,15 @@
 |-------|--------|-----------|
 | 1. Direct Attribute Access (Ship Properties) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Weapon & Ability Duck Typing | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Workshop Init-Order & Self-Checks | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Workshop Init-Order & Self-Checks | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Resource Accessor Method | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Remaining Scattered Instances | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 3 - Workshop Init-Order & Self-Checks
-**Last Action:** Phase 2 complete. Replaced ~10 getattr/hasattr on weapon abilities with direct access. Changed hasattr(ab, 'base_accuracy') → has_ability('BeamWeaponAbility'). Removed ability_instances hasattr checks.
-**Next Action:** Begin Phase 3
+**Active Phase:** Phase 4 - Resource Accessor Method
+**Last Action:** Phase 3 complete. Pre-declared 12 button attrs + pending_action in workshop_screen.__init__. Replaced ~16 hasattr(self/gui, ...) checks with None checks or direct access. Fixed 2 test mocks.
+**Next Action:** Begin Phase 4
 **Blockers:** None
 
 ## Overview
