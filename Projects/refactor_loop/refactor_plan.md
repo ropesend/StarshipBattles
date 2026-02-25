@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-194 Phase 1 - Direct Attribute Access
-**Current Status:** PROJ-194 in progress, Phase 1 complete
+**Last Completed:** PROJ-194 Phase 2 - Weapon & Ability Duck Typing
+**Current Status:** PROJ-194 in progress, Phase 2 complete
 **Current Project:** PROJ-194
-**Current Phase:** Phase 2 - Weapon & Ability Duck Typing
+**Current Phase:** Phase 3 - Workshop Init-Order & Self-Checks
 **Test Status:** 12711 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-194 Phase 1 COMPLETE - Direct Attribute Access (Ship Properties)
-- Replaced ~15 getattr/hasattr with direct attribute access across 5 files
-- Initialized missing Ship attributes in __init__: total_maneuver_points, fuel_consumption, ammo_consumption, energy_consumption, potential_*_consumption
-- Fixed 3 test mocks that were missing required attributes (vehicle_type, theme_id, etc.)
-- Some tasks were already done by PROJ-193 (design_report_panel.py, weapons_viewmodel.py)
-- Next: Phase 2 - Weapon & Ability Duck Typing
+- PROJ-194 Phase 2 COMPLETE - Weapon & Ability Duck Typing
+- weapons_viewmodel.py: 6 getattr(ab, 'base_accuracy/accuracy_falloff') → direct access; 1 hasattr(ab, 'get_damage') removed
+- components.py: hasattr(ab, 'base_accuracy') → has_ability('BeamWeaponAbility'); hasattr(ab, 'reload_time') removed
+- stats_config.py: 2 hasattr(comp, 'ability_instances') checks removed (always initialized)
+- modifier_impact_grid.py: hasattr(component, 'ability_instances') removed; hasattr(ability_class, 'STAT_BINDINGS') → getattr with None
+- Next: Phase 3 - Workshop Init-Order & Self-Checks
 
 ---
 
@@ -150,6 +150,7 @@
 | 2026-02-25 | PROJ-193 | Phase 8 | Complete | 12711 passed | - | IPlanet +image_rotation, planet_selection_window, design_report_panel typed. Full audit done. |
 | 2026-02-25 | PROJ-193 | Audit 1 | PASSED | 12711 passed | - | All 5 goals verified. 4 protocols, IPlanet/IFleet extended, ~155+ duck typing eliminated. |
 | 2026-02-25 | PROJ-194 | Phase 1 | Complete | 12711 passed | - | ~15 getattr→direct access, Ship init attrs, 3 mock fixes |
+| 2026-02-25 | PROJ-194 | Phase 2 | Complete | 12711 passed | - | ~10 weapon/ability duck typing→direct access in 4 files |
 
 ---
 

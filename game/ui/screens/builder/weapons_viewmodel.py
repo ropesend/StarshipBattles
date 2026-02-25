@@ -295,8 +295,8 @@ class WeaponsViewModel:
         if not ab:
             return []
 
-        base_acc = getattr(ab, 'base_accuracy', 2.0)
-        falloff = getattr(ab, 'accuracy_falloff', 0.001)
+        base_acc = ab.base_accuracy
+        falloff = ab.accuracy_falloff
         max_range = ab.range
         damage = ab.damage
 
@@ -374,8 +374,8 @@ class WeaponsViewModel:
         is_beam = weapon.has_ability('BeamWeaponAbility')
 
         # Accuracy parameters for beam weapons
-        base_acc = getattr(ab, 'base_accuracy', 2.0) if is_beam else None
-        falloff = getattr(ab, 'accuracy_falloff', 0.001) if is_beam else None
+        base_acc = ab.base_accuracy if is_beam else None
+        falloff = ab.accuracy_falloff if is_beam else None
 
         # Ship sensor score
         attack_score = ship.get_total_sensor_score()
@@ -390,9 +390,7 @@ class WeaponsViewModel:
             return 1.0 / (1.0 + math.exp(-clamped))
 
         def calc_damage_at_range(r):
-            if hasattr(ab, 'get_damage'):
-                return ab.get_damage(r)
-            return base_damage
+            return ab.get_damage(r)
 
         # 1. Add range percentage breakpoints
         for pct in self.INTEREST_POINTS_RANGE:
@@ -464,8 +462,8 @@ class WeaponsViewModel:
         damage = ab.damage
 
         if weapon.has_ability('BeamWeaponAbility'):
-            base_acc = getattr(ab, 'base_accuracy', 1.0)
-            falloff = getattr(ab, 'accuracy_falloff', 0.0)
+            base_acc = ab.base_accuracy
+            falloff = ab.accuracy_falloff
 
             attack_score = ship.get_total_sensor_score()
 

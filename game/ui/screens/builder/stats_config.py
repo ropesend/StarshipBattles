@@ -198,11 +198,10 @@ def get_resource_consumption(ship, res_name):
     # Iterate all components in all layers
     for layer in ship.layers.values():
         for comp in layer.components:
-            if hasattr(comp, 'ability_instances'):
-                for ability in comp.ability_instances:
-                    if isinstance(ability, ResourceConsumption):
-                        if ability.resource_type == res_name and ability.trigger == 'constant':
-                            total += ability.amount
+            for ability in comp.ability_instances:
+                if isinstance(ability, ResourceConsumption):
+                    if ability.resource_type == res_name and ability.trigger == 'constant':
+                        total += ability.amount
     return total
 
 def get_resource_endurance(ship, res_name):
@@ -373,11 +372,10 @@ def _get_constant_consumption(ship, res_name):
     try:
         for layer in ship.layers.values():
             for comp in layer.components:
-                if hasattr(comp, 'ability_instances'):
-                    for ability in comp.ability_instances:
-                        if isinstance(ability, ResourceConsumption):
-                            if ability.resource_type == res_name and ability.trigger == 'constant':
-                                total += ability.amount
+                for ability in comp.ability_instances:
+                    if isinstance(ability, ResourceConsumption):
+                        if ability.resource_type == res_name and ability.trigger == 'constant':
+                            total += ability.amount
     except (TypeError, AttributeError):
         # Handle mock objects or missing attributes
         pass

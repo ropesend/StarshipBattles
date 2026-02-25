@@ -162,15 +162,16 @@ class ModifierImpactGrid:
         # Start with universal stats that all components have
         stat_keys = set(self.UNIVERSAL_STATS)
 
-        if not hasattr(component, 'ability_instances') or not component.ability_instances:
+        if not component.ability_instances:
             # Component has no abilities - only show universal stats if affected
             return stat_keys
 
         # Add ability-specific stats from STAT_BINDINGS
         for ability in component.ability_instances:
             ability_class = ability.__class__
-            if hasattr(ability_class, 'STAT_BINDINGS'):
-                for binding in ability_class.STAT_BINDINGS:
+            stat_bindings = getattr(ability_class, 'STAT_BINDINGS', None)
+            if stat_bindings:
+                for binding in stat_bindings:
                     stat_keys.add(binding.stat_key.value)
 
         return stat_keys

@@ -112,10 +112,10 @@ class ComponentListItem:
             ab = c.get_ability('WeaponAbility')
             lines.append(f"Damage: {ab.damage}")
             lines.append(f"Range: {ab.range}")
-            if hasattr(ab, 'base_accuracy'):
-                lines.append(f"Acc: {ab.base_accuracy*100:.0f}%")
-            if hasattr(ab, 'reload_time'):
-                lines.append(f"Reload: {ab.reload_time}s")
+            if c.has_ability('BeamWeaponAbility'):
+                beam_ab = c.get_ability('BeamWeaponAbility')
+                lines.append(f"Acc: {beam_ab.base_accuracy*100:.0f}%")
+            lines.append(f"Reload: {ab.reload_time}s")
         
         # Propulsion
         if c.has_ability('CombatPropulsion'):
