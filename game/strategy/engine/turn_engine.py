@@ -66,6 +66,7 @@ if TYPE_CHECKING:
         IResupplyEngine,
         IHarvestingEngine,
         IMaintenanceEngine,
+        IActionExecutionEngine,
     )
     from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
     from game.strategy.engine.production_engine import ProductionEngine
@@ -108,6 +109,7 @@ class TurnEngine:
         resupply_engine: Optional['IResupplyEngine'] = None,
         harvesting_engine: Optional['IHarvestingEngine'] = None,
         maintenance_engine: Optional['IMaintenanceEngine'] = None,
+        action_engine: Optional['IActionExecutionEngine'] = None,
     ):
         """
         Initialize the turn engine.
@@ -140,6 +142,8 @@ class TurnEngine:
                            If None, creates HarvestingEngine.
             maintenance_engine: Optional maintenance engine (IMaintenanceEngine).
                            If None, creates MaintenanceEngine.
+            action_engine: Optional action execution engine (IActionExecutionEngine).
+                           If None, creates ActionExecutionEngine.
         """
         # PROJ-11: Inject battle resolver for clean layer separation
         if battle_resolver is None:

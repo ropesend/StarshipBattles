@@ -53,7 +53,11 @@
 |-----------|---------|--------|--------|-------|--------|-------|
 | 2026-02-24 | PROJ-187 | Phase 1 | Complete | 12379 passed | 03c51f35 | Data model: WARP, execution_progress |
 | 2026-02-24 | PROJ-187 | Phase 2 | Complete | 12415 passed | b414e937 | action_time on abilities + ActionTimeResolver |
+<<<<<<< HEAD
 | 2026-02-24 | PROJ-187 | Phase 3 | Complete | 12446 passed | 211b18a7 | ActionExecutionEngine + 31 tests |
+=======
+| 2026-02-24 | PROJ-187 | Phase 3 | Complete | 12446 passed | pending | ActionExecutionEngine + 31 tests |
+>>>>>>> 211b18a705beae6e0f7b0ecb7dad39366f4ca992
 
 ---
 
