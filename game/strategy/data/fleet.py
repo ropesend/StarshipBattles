@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 
 class OrderType(Enum):
     MOVE = auto()
+    WARP = auto()  # PROJ-187: Explicit warp point traversal
     COLONIZE = auto()
     MOVE_TO_FLEET = auto()
     JOIN_FLEET = auto()
@@ -37,9 +38,12 @@ class OrderType(Enum):
 class FleetOrder:
     def __init__(self, order_type, target=None):
         self.type = order_type
-        self.target = target  # HexCoord for MOVE, Planet for COLONIZE, Fleet for MOVE_TO_FLEET/JOIN_FLEET
+        self.target = target  # HexCoord for MOVE/WARP, Planet for COLONIZE, Fleet for MOVE_TO_FLEET/JOIN_FLEET
+        self.execution_progress: int = 0  # PROJ-187: Ticks spent executing this order
 
     def __repr__(self):
+        if self.execution_progress > 0:
+            return f"FleetOrder({self.type.name}, {self.target}, progress={self.execution_progress})"
         return f"FleetOrder({self.type.name}, {self.target})"
 
     def to_dict(self) -> Dict[str, Any]:
@@ -58,6 +62,9 @@ class FleetOrder:
             elif self.type == OrderType.OPEN_WARP_POINT and isinstance(self.target, dict):
                 # Warp parameters for OPEN_WARP_POINT (PROJ-102)
                 target_data = {'type': 'warp_params', 'value': self.target}
+            elif isinstance(self.target, HexCoord):
+                # HexCoord for MOVE, WARP targets
+                target_data = {'q': self.target.q, 'r': self.target.r}
             elif hasattr(self.target, 'to_dict'):
                 target_data = self.target.to_dict()
             elif hasattr(self.target, 'id'):
@@ -66,10 +73,14 @@ class FleetOrder:
             else:
                 target_data = {'type': 'raw', 'value': str(self.target)}
 
-        return {
+        result = {
             'type': self.type.name,
             'target': target_data,
         }
+        # PROJ-187: Only serialize execution_progress when > 0 (keeps saves clean)
+        if self.execution_progress > 0:
+            result['execution_progress'] = self.execution_progress
+        return result
 
 
 class Fleet:
@@ -429,7 +440,10 @@ class Fleet:
                             # Raw string fallback
                             target = target_data['value']
 
-                fleet.orders.append(FleetOrder(order_type, target))
+                order = FleetOrder(order_type, target)
+                # PROJ-187: Restore execution_progress (default 0 for backward compat)
+                order.execution_progress = order_data.get('execution_progress', 0)
+                fleet.orders.append(order)
             except Exception as e:
                 logger.warning(f"Fleet {data['id']}: skipping corrupt order[{i}]: {e}")
 
