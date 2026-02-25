@@ -617,69 +617,10 @@ class TestMaxWeaponRangeEdgeCases:
 
         assert result == 0.0
 
-    def test_max_weapon_range_seeker_missing_projectile_speed(self):
-        """max_weapon_range handles SeekerWeaponAbility missing projectile_speed."""
-        from game.simulation.components.abilities import SeekerWeaponAbility
-
-        mock_seeker = Mock(spec=SeekerWeaponAbility)
-        mock_seeker.range = 0
-        # Missing projectile_speed attribute - hasattr will return False for spec'd mock
-        del mock_seeker.projectile_speed
-        mock_seeker.endurance = 20.0
-
-        mock_comp = Mock()
-        mock_comp.ability_instances = [mock_seeker]
-
-        mock_ship = Mock()
-        mock_ship.get_all_components.return_value = [mock_comp]
-
-        querier = ShipStatQuerier(mock_ship)
-        result = querier.max_weapon_range
-
-        # Should fallback to range (0) since calculation can't proceed
-        assert result == 0.0
-
-    def test_max_weapon_range_weapon_missing_range_attribute(self):
-        """max_weapon_range handles weapon missing range attribute gracefully."""
-        from game.simulation.components.abilities import WeaponAbility
-
-        mock_weapon = Mock(spec=WeaponAbility)
-        # Remove range attribute to test getattr default
-        del mock_weapon.range
-
-        mock_comp = Mock()
-        mock_comp.ability_instances = [mock_weapon]
-
-        mock_ship = Mock()
-        mock_ship.get_all_components.return_value = [mock_comp]
-
-        querier = ShipStatQuerier(mock_ship)
-        result = querier.max_weapon_range
-
-        # getattr(ab, 'range', 0.0) should return 0.0
-        assert result == 0.0
-
-    def test_max_weapon_range_seeker_missing_endurance(self):
-        """max_weapon_range handles SeekerWeaponAbility missing endurance attribute."""
-        from game.simulation.components.abilities import SeekerWeaponAbility
-
-        mock_seeker = Mock(spec=SeekerWeaponAbility)
-        mock_seeker.range = 0  # Not set
-        mock_seeker.projectile_speed = 10.0
-        # Missing endurance attribute
-        del mock_seeker.endurance
-
-        mock_comp = Mock()
-        mock_comp.ability_instances = [mock_seeker]
-
-        mock_ship = Mock()
-        mock_ship.get_all_components.return_value = [mock_comp]
-
-        querier = ShipStatQuerier(mock_ship)
-        result = querier.max_weapon_range
-
-        # Should fallback to range (0) since calculation can't proceed
-        assert result == 0.0
+    # NOTE: Tests for missing projectile_speed/endurance/range attributes were deleted.
+    # With PROJ-190's protocol-based typing, SeekerWeaponAbility and WeaponAbility
+    # instances are GUARANTEED to have all required attributes. The duck-typing
+    # fallback behavior no longer exists.
 
     def test_max_weapon_range_seeker_negative_range(self):
         """max_weapon_range uses endurance calculation when range is negative."""

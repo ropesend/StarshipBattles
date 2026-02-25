@@ -44,6 +44,7 @@ class TestProjectileWeaponAbilityRecalculate:
         class MockComponent:
             def __init__(self):
                 self.stats = {'damage_mult': 2.0}
+                self.ability_stats = {}
                 self.data = {}
 
         component = MockComponent()
@@ -64,6 +65,7 @@ class TestProjectileWeaponAbilityRecalculate:
         class MockComponent:
             def __init__(self):
                 self.stats = {'range_mult': 4.0}
+                self.ability_stats = {}
                 self.data = {}
 
         component = MockComponent()

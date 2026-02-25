@@ -36,6 +36,7 @@ class TestCombatPropulsionBindings:
         class MockComponent:
             def __init__(self):
                 self.stats = {'thrust_mult': 2.0}
+                self.ability_stats = {}
 
         component = MockComponent()
         ability = CombatPropulsion(component, {'value': 1000})
@@ -73,6 +74,7 @@ class TestManeuveringThrusterBindings:
         class MockComponent:
             def __init__(self):
                 self.stats = {'turn_mult': 3.0}
+                self.ability_stats = {}
 
         component = MockComponent()
         ability = ManeuveringThruster(component, {'value': 30})
@@ -110,6 +112,7 @@ class TestStrategicMovementBindings:
         class MockComponent:
             def __init__(self):
                 self.stats = {'strategic_mult': 4.0}
+                self.ability_stats = {}
 
         component = MockComponent()
         ability = StrategicMovement(component, {'value': 10})

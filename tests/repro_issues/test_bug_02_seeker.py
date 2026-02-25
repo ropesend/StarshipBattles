@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 class MockComponent:
     def __init__(self):
         self.stats = {}
+        self.ability_stats = {}
         self.ship = None
 
 def test_seeker_range_calculation():

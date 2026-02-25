@@ -50,13 +50,8 @@ class IAbility(Protocol):
     - Defense abilities (shields, armor, repair)
 
     All abilities implement this base interface with common properties
-    for trigger timing, stacking, tagging, and UI introspection.
+    for stacking, tagging, and UI introspection.
     """
-
-    @property
-    def trigger(self) -> str:
-        """When this ability activates: 'constant', 'activation', 'strategic_per_hex'."""
-        ...
 
     @property
     def stack_group(self) -> Optional[str]:
@@ -104,6 +99,11 @@ class IResourceConsumptionAbility(IAbility, Protocol):
 
     Examples: fuel consumption, energy drain, ammo usage.
     """
+
+    @property
+    def trigger(self) -> str:
+        """When this ability activates: 'constant', 'activation', 'strategic_per_hex'."""
+        ...
 
     @property
     def resource_type(self) -> str:
