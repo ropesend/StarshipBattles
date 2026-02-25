@@ -18,16 +18,16 @@
 | 2.5. Ship Internal Singleton Investigation & Fix | Complete | [phase_2_5_checklist.md](phase_2_5_checklist.md) |
 | 3. Data Loader Test Migration | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Combat & Modifier Test Migration | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Core Test: Convert Impure Loader Tests to Pure | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Core Test: Convert Impure Loader Tests to Pure | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Conftest & Infrastructure Migration | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Regression & Repro Test Migration | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. Final Audit & Verification | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 5 - Core Test: Convert Impure Loader Tests to Pure
-**Last Action:** Phase 4 complete - Migrated test_combat.py, test_formula_validation.py, test_modifier_loader_v2.py, reproduce_scaling.py (4 files, ~32 tests)
-**Next Action:** Execute Phase 5 - Convert backward-compat loader tests to pure function tests
+**Active Phase:** Phase 6 - Conftest & Infrastructure Migration
+**Last Action:** Phase 5 complete - Converted TestBackwardCompatibility to TestLoaderPureFunctions using pure functions (no singleton). Added PROJ-195 comment to test_registry_manager_reload.py.
+**Next Action:** Execute Phase 6 - Migrate conftest.py files with singleton fixtures
 **Blockers:** None
 
 ## Overview

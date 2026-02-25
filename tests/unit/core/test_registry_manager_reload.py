@@ -23,6 +23,10 @@ def fresh_registry():
 
     Unlike the default setup, this clears all existing data to test
     that reload_registries_from_directory properly populates empty registries.
+
+    PROJ-195: Legitimate — testing reload_registries_from_directory on singleton.
+    This fixture must use RegistryManager.instance() because the reload function
+    is specifically designed to operate on the global singleton registry.
     """
     reg = RegistryManager.instance()
     # Clear to test loading into empty registries
