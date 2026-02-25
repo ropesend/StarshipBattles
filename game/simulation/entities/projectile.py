@@ -20,7 +20,8 @@ class Projectile(PhysicsBody):
         super().__init__(position.x, position.y)
         self.velocity = velocity
         self.owner = owner
-        self.team_id = getattr(owner, 'team_id', -1)
+        # Owner may be None for orphaned projectiles, default team_id to -1
+        self.team_id = owner.team_id if owner is not None else -1
         self.damage = damage
         self.max_range = range_val
         self.endurance = endurance # in seconds
@@ -139,8 +140,9 @@ class Projectile(PhysicsBody):
             # t = owner.solve_lead(...)
             
             # Let's try to use the owner's solver if available, else direct
+            # Ship.combat_engine is a property (lazy initialized, always accessible)
             t = 0
-            if hasattr(self.owner, 'combat_engine'):
+            if self.owner is not None and self.owner.combat_engine is not None:
                  t = self.owner.combat_engine.solve_lead(p_pos, Vector2(0,0), target.position, target.velocity, self.max_speed)
             
             aim_pos = target.position

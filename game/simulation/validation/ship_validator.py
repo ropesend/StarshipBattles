@@ -358,8 +358,8 @@ class ResourceDependencyRule(DesignValidationRule):
                 # Check Storage
                 elif isinstance(ab, ResourceStorage):
                     res_name = ab.resource_type
-                    # Use max_amount for capacity check (V2 standard)
-                    capacity = getattr(ab, 'max_amount', 0)
+                    # ResourceStorage.max_amount is always initialized
+                    capacity = ab.max_amount
 
                     if capacity > 0 and res_name:
                         stored_resources.add(res_name)

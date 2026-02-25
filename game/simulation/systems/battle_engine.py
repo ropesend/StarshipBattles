@@ -422,7 +422,9 @@ class BattleEngine:
                     if attack_type == AttackType.PROJECTILE:
                         self.logger.log(f"Projectile fired at {attack.position}")
                     else:
-                        self.logger.log(f"Missile fired at {getattr(attack, 'target', 'unknown')}")
+                        # Projectile.target is always initialized (None by default)
+                        target_name = attack.target.name if attack.target else 'unknown'
+                        self.logger.log(f"Missile fired at {target_name}")
             elif attack_type == AttackType.BEAM:
                 self.collision_system.process_beam_attack(attack, self.recent_beams)
             elif attack_type == AttackType.LAUNCH:

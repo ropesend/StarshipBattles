@@ -10,10 +10,16 @@ This class handles all targeting-related operations:
 Part of PROJ-44 Phase 5: ShipCombatEngine Decomposition.
 """
 import math
-from typing import TYPE_CHECKING, List, Optional, Tuple, Any
+from typing import TYPE_CHECKING, List, Optional, Tuple, Any, Union
 
 from game.core.math import Vector2
 from game.core.constants import AttackType, SimulationConstants
+from game.simulation.interfaces import (
+    ICombatShip,
+    IProjectile,
+    is_combat_ship,
+    is_projectile,
+)
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -80,8 +86,8 @@ class TargetingSystem:
     def select_target(
         self,
         ship: 'Ship',
-        candidates: List[Any]
-    ) -> Optional[Any]:
+        candidates: List[Union[ICombatShip, IProjectile]]
+    ) -> Optional[Union[ICombatShip, IProjectile]]:
         """
         Select the best target from a list of candidates.
 
@@ -89,7 +95,7 @@ class TargetingSystem:
 
         Args:
             ship: The ship doing the targeting
-            candidates: List of potential targets
+            candidates: List of potential targets (ships or projectiles)
 
         Returns:
             Best target or None if no valid targets
@@ -97,11 +103,11 @@ class TargetingSystem:
         valid_targets = []
 
         for candidate in candidates:
-            # Skip dead ships
-            if not getattr(candidate, 'is_alive', True):
+            # Skip dead ships/projectiles
+            if not candidate.is_alive:
                 continue
             # Skip friendlies
-            if getattr(candidate, 'team_id', -1) == ship.team_id:
+            if candidate.team_id == ship.team_id:
                 continue
             valid_targets.append(candidate)
 
@@ -117,11 +123,11 @@ class TargetingSystem:
     def find_valid_target(
         self,
         ship: 'Ship',
-        primary_target: Optional[Any],
-        secondary_targets: List[Any],
+        primary_target: Optional[Union[ICombatShip, IProjectile]],
+        secondary_targets: List[Union[ICombatShip, IProjectile]],
         comp: 'Component',
         weapon_ab: Any
-    ) -> Optional[Any]:
+    ) -> Optional[Union[ICombatShip, IProjectile]]:
         """
         Find a valid target for the weapon.
 
@@ -139,7 +145,7 @@ class TargetingSystem:
             Valid target or None
         """
         # Build candidate list
-        potential_targets = []
+        potential_targets: List[Union[ICombatShip, IProjectile]] = []
         if primary_target:
             potential_targets.append(primary_target)
         potential_targets.extend(secondary_targets)
@@ -149,15 +155,15 @@ class TargetingSystem:
                 continue
 
             # Skip dead or friendly
-            if not getattr(candidate, 'is_alive', True):
+            if not candidate.is_alive:
                 continue
-            if getattr(candidate, 'team_id', -1) == ship.team_id:
+            if candidate.team_id == ship.team_id:
                 continue
 
             # PDC check - non-PDC weapons should not fire at missiles
             is_pdc = comp.has_pdc_ability()
-            t_type = getattr(candidate, 'type', None)
-            if t_type == AttackType.MISSILE and not is_pdc:
+            # Check if candidate is a projectile with MISSILE type
+            if is_projectile(candidate) and candidate.type == AttackType.MISSILE and not is_pdc:
                 continue
 
             # Validate firing solution
@@ -178,7 +184,7 @@ class TargetingSystem:
         self,
         ship: 'Ship',
         comp: 'Component',
-        target: Any
+        target: Union[ICombatShip, IProjectile]
     ) -> Tuple[Vector2, Vector2]:
         """
         Calculate aim position and vector for firing at a target.
@@ -189,15 +195,15 @@ class TargetingSystem:
         Args:
             ship: The ship firing
             comp: The weapon component
-            target: The target to fire at
+            target: The target to fire at (implements ICombatShip or IProjectile)
 
         Returns:
             Tuple of (aim_position, aim_vector)
         """
         aim_pos = target.position
 
-        # Determine target velocity
-        t_vel = getattr(target, 'velocity', Vector2(0, 0))
+        # Determine target velocity (ICombatShip and IProjectile both have velocity)
+        t_vel = target.velocity
 
         if comp.has_ability('ProjectileWeaponAbility') or comp.has_ability('SeekerWeaponAbility'):
             # Get projectile speed from the appropriate ability

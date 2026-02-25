@@ -325,7 +325,8 @@ class Component:
         for ability in self.ability_instances:
             if not ability.update():
                 # Check if this is a constant resource consumption ability
-                # Use duck typing to avoid importing from systems layer
+                # ResourceConsumption has trigger attr; other abilities don't
+                # Using safe access since trigger is not on IAbility protocol
                 trigger = getattr(ability, 'trigger', None)
                 if trigger == 'constant':
                     all_satisfied = False

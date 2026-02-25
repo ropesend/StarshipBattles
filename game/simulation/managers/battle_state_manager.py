@@ -133,10 +133,11 @@ class BattleStateManager:
         if state is None:
             return False
 
-        # Check required attributes
-        if not hasattr(state, 'mode'):
+        # BattleState is a dataclass - mode and ships are always defined
+        # Check for valid values rather than attribute existence
+        if not state.mode:
             return False
-        if not hasattr(state, 'ships'):
+        if state.ships is None:
             return False
 
         return True

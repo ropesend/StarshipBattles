@@ -8,26 +8,32 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-190 Phase 3 - Replace Ability Duck Typing
-**Current Status:** PROJ-190 Phase 3 Complete
+**Last Completed:** PROJ-190 Phase 4 - Replace Combat/Entity Duck Typing
+**Current Status:** PROJ-190 Phase 4 Complete
 **Current Project:** PROJ-190
-**Current Phase:** Phase 4 - Replace Combat/Entity Duck Typing
-**Test Status:** 2594 simulation unit tests passing (12,718+ total)
+**Current Phase:** Phase 5 - Update Test Mocks
+**Test Status:** 2564 sim unit passing, 30 failing (mock issues)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-190 Phase 3 Complete (8 tasks):
-  - combat_endurance.py: Added is_resource_consumption, is_weapon protocol checks
-  - ship_stats.py: Added is_resource_storage, is_resource_generation, is_warp_jump checks
-  - ability_aggregator.py: Direct ab.stack_group, comp.ability_instances access
-  - abilities/base.py: Direct self.component.ability_stats, self.component.stats access
-  - ability_manager.py: Direct ab.tags, ab.get_ui_rows(), ab.sync_data() calls
-  - modifier_introspection.py: component.name, direct get_effect_summary() calls
-  - abilities/weapons.py: Updated facing_angle check
-  - component_stats_calculator.py, component_resource_manager.py: Protocol checks
-  - Updated ~15 test files with IComponent-compliant mocks
-- Next: Phase 4 replaces combat/entity duck typing
-- See phase_4_checklist.md for specific tasks
+- PROJ-190 Phase 4 Complete (~35 duck typing instances replaced):
+  - targeting_system.py: Protocol-typed candidates (ICombatShip, IProjectile)
+  - battle_state.py: Direct attribute access for component, ship, projectile fields
+  - weapon_firing_system.py: Direct shots_fired, weapon_ab.facing_angle access
+  - ship_physics.py: Direct is_thrusting, engine_throttle, turn_throttle access
+  - ship_formation.py: is_formation_host() TypeGuard for formation checks
+  - ship_serialization.py: Direct strategic stat access (added fields to Ship.__init__)
+  - ship_combat_engine.py: Direct resources/repair_rate access
+  - ship_stat_querier.py: Direct ab.range access for weapons
+  - projectile_manager.py: Direct source_weapon access
+  - battle_engine.py: Direct attack.target access
+  - ship_validator.py: Direct ab.max_amount for ResourceStorage
+  - battle_state_manager.py: Direct state.mode/state.ships access
+  - projectile.py: Direct owner.team_id, owner.combat_engine access
+  - ship.py: Direct comp.ship access
+- 30 test failures from mocks missing required attributes (Phase 5)
+- 26 remaining getattr/hasattr are legitimate meta-programming
+- Next: Phase 5 updates test mocks with protocol-compliant attributes
 
 ---
 
@@ -129,6 +135,7 @@
 | 2026-02-24 | PROJ-190 | Phase 1 | Complete | 2594 sim unit | - | 15 protocols + 14 TypeGuards in 3 files |
 | 2026-02-24 | PROJ-190 | Phase 2 | Complete | 2594 sim unit | - | Removed hasattr/getattr patterns for lazy fields |
 | 2026-02-24 | PROJ-190 | Phase 3 | Complete | 2594 sim unit | - | Replaced ~35 ability duck typing instances |
+| 2026-02-24 | PROJ-190 | Phase 4 | Complete | 2564 sim (30 fail) | - | Replaced ~35 combat/entity duck typing (14 files) |
 
 ---
 

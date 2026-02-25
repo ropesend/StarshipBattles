@@ -172,6 +172,11 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.total_defense_score: float = 1.0
         self.baseline_to_hit_offense: float = 1.0  # Offensive multiplier (sensor strength)
         
+        # Strategic layer stats (computed by ShipStatsCalculator, initialized here for safety)
+        self.total_strategic_movement: float = 0.0
+        self.warp_max_tonnage: float = 0.0
+        self.warp_energy_cost: float = 0.0
+
         # Initialize helpers (lazy)
         self.stats_calculator: Optional[ShipStatsCalculator] = None
         self._stat_querier: Optional[ShipStatQuerier] = None
@@ -573,8 +578,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         # 1. Update components with current ship context
         for layer_data in self.layers.values():
             for comp in layer_data.components:
-                # Ensure ship ref is set
-                if not getattr(comp, 'ship', None): comp.ship = self
+                # Ensure ship ref is set (Component.ship is always initialized, may be None)
+                if comp.ship is None:
+                    comp.ship = self
                 comp.recalculate_stats()
 
         if not self.stats_calculator:

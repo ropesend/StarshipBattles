@@ -135,10 +135,12 @@ class ProjectileManager:
         hit_dist = p.distance_traveled
 
         # Evaluate damage at hit distance if source weapon has ability with formula
+        # Projectile.source_weapon is always initialized (None by default)
         damage = p.damage
-        if hasattr(p, 'source_weapon') and p.source_weapon:
+        if p.source_weapon is not None:
             weapon_ab = p.source_weapon.get_ability('WeaponAbility')
-            if weapon_ab and hasattr(weapon_ab, 'get_damage'):
+            # WeaponAbility always has get_damage method
+            if weapon_ab is not None:
                 damage = weapon_ab.get_damage(hit_dist)
 
         target_ship.combat_engine.take_damage(damage)
@@ -171,6 +173,7 @@ class ProjectileManager:
         """Mark projectile as hit and update source weapon stats."""
         p.is_alive = False
         p.status = 'hit'
-        if hasattr(p, 'source_weapon') and p.source_weapon:
+        # Projectile.source_weapon is always initialized (None by default)
+        if p.source_weapon is not None:
             # shots_hit initialized in Component.__init__
             p.source_weapon.shots_hit += 1

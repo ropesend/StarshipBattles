@@ -16,17 +16,17 @@
 | 1. Define Protocols | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Initialize Lazy Fields | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Replace Ability Duck Typing | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Replace Combat/Entity Duck Typing | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Replace Combat/Entity Duck Typing | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Update Test Mocks | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Final Verification | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete. Replaced ~35 ability duck typing instances across 8 files.
-**Next Action:** Begin Phase 4 - Replace Combat/Entity duck typing.
+**Active Phase:** Phase 5
+**Last Action:** Phase 4 complete. Replaced ~35 combat/entity duck typing instances across 14 files.
+**Next Action:** Begin Phase 5 - Update test mocks to include required protocol attributes.
 **Blockers:** None
-**Context for Next Agent:** Phase 3 completed: Updated combat_endurance.py, ship_stats.py, ability_aggregator.py, abilities/base.py, ability_manager.py, modifier_introspection.py, abilities/weapons.py, component_stats_calculator.py, component_resource_manager.py. Used is_resource_consumption, is_resource_storage, is_resource_generation, is_warp_jump, is_weapon TypeGuards. All 2594 simulation unit tests passing.
+**Context for Next Agent:** Phase 4 completed. Updated targeting_system.py, battle_state.py, weapon_firing_system.py, ship_physics.py, ship_formation.py, ship_serialization.py, ship_combat_engine.py, ship_stat_querier.py, projectile_manager.py, battle_engine.py, ship_validator.py, battle_state_manager.py, projectile.py, ship.py. Added total_strategic_movement, warp_max_tonnage, warp_energy_cost to Ship.__init__. 30 test failures due to mocks missing required attributes - fixed in Phase 5. 26 remaining getattr/hasattr calls are legitimate meta-programming.
 
 ## Overview
 Replace all implicit duck typing (`hasattr`/`getattr`) in `game/simulation/` with explicit `typing.Protocol` definitions. This makes every object contract visible to type checkers, enables IDE autocomplete, and creates a direct mapping to C# interfaces / Rust traits for future language portability.

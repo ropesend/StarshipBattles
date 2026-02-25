@@ -12,11 +12,12 @@ PROJ-38: Added registries parameter for dependency injection.
 from dataclasses import dataclass, field
 from typing import Dict, List, Any, Optional, Tuple, TYPE_CHECKING
 from datetime import datetime
+from enum import Enum
 import json
 import uuid
 
 import logging
-from game.core.constants import LayerType
+from game.core.constants import LayerType, AttackType
 from game.core.exceptions import ValidationException, PersistenceException
 from game.core.error_codes import ErrorCode
 from game.core.validation_helpers import (
@@ -88,7 +89,8 @@ class ComponentState:
     def from_component(cls, component: 'Any') -> 'ComponentState':
         """Create ComponentState from a live Component object."""
         modifiers = []
-        for mod in getattr(component, 'modifiers', []):
+        # Component.modifiers is always initialized as a list
+        for mod in component.modifiers:
             modifiers.append({
                 'id': mod.definition.id,
                 'value': mod.value
@@ -292,10 +294,11 @@ class ShipState:
                 resource_max[name] = ship.resources.get_max_value(name)
 
         # Get current target ID if available
+        # Ship.current_target is always initialized (None by default)
         current_target_id = None
-        if hasattr(ship, 'current_target') and ship.current_target:
+        if ship.current_target is not None:
             # We'll resolve this by ship name for now (should use proper IDs)
-            current_target_id = getattr(ship.current_target, 'name', None)
+            current_target_id = ship.current_target.name
 
         return cls(
             ship_id=ship_id,
@@ -496,15 +499,17 @@ class ProjectileState:
         if proj.owner:
             owner_ship_id = ship_id_map.get(id(proj.owner))
 
+        # Projectile.target is always initialized (None by default)
         target_ship_id = None
-        if hasattr(proj, 'target') and proj.target:
+        if proj.target is not None:
             target_ship_id = ship_id_map.get(id(proj.target))
 
-        # Get projectile type as string
+        # Get projectile type as string - AttackType is always an Enum
         proj_type = proj.type
-        if hasattr(proj_type, 'value'):
+        if isinstance(proj_type, Enum):
             proj_type = proj_type.value
 
+        # All Projectile fields are initialized in __init__
         return cls(
             projectile_id=str(uuid.uuid4()),
             owner_ship_id=owner_ship_id,
@@ -514,14 +519,14 @@ class ProjectileState:
             damage=proj.damage,
             max_range=proj.max_range or 0,
             endurance=proj.endurance or 0,
-            max_endurance=getattr(proj, 'max_endurance', proj.endurance or 0),
+            max_endurance=proj.max_endurance,
             projectile_type=str(proj_type),
-            turn_rate=getattr(proj, 'turn_rate', 0),
-            max_speed=getattr(proj, 'max_speed', 0),
+            turn_rate=proj.turn_rate,
+            max_speed=proj.max_speed,
             target_ship_id=target_ship_id,
-            hp=getattr(proj, 'hp', 1),
-            max_hp=getattr(proj, 'max_hp', 1),
-            distance_traveled=getattr(proj, 'distance_traveled', 0),
+            hp=proj.hp,
+            max_hp=proj.max_hp,
+            distance_traveled=proj.distance_traveled,
             is_alive=proj.is_alive,
         )
 
@@ -692,13 +697,13 @@ class BattleState:
             if proj.is_alive:
                 projectiles.append(ProjectileState.from_projectile(proj, ship_id_map))
 
-        # Get end mode
+        # Get end mode - BattleEngine.end_condition is always initialized
         end_mode = "HP_BASED"
-        if hasattr(engine, 'end_condition') and engine.end_condition:
+        if engine.end_condition is not None:
             end_mode = engine.end_condition.mode.name
 
         max_ticks = None
-        if hasattr(engine, 'end_condition') and engine.end_condition:
+        if engine.end_condition is not None:
             max_ticks = engine.end_condition.max_ticks
 
         return cls(

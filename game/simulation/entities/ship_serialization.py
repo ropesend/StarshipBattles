@@ -62,13 +62,12 @@ class ShipSerializer:
                     "acceleration_rate": ship.acceleration_rate,
                     "turn_speed": ship.turn_speed,
                     "total_thrust": ship.total_thrust,
-                    # PROJ-42 Phase 4: Strategic stats use getattr because they're set during
-                    # recalculate_stats(), not in __init__. Default 0 is correct for uncalculated ships.
-                    "strategic_movement": getattr(ship, 'total_strategic_movement', 0),
+                    # PROJ-190: All strategic stats initialized in Ship.__init__
+                    "strategic_movement": ship.total_strategic_movement,
                     "mass": ship.mass,
                     "armor_hp_pool": ship.layers[LayerType.ARMOR].max_hp_pool if LayerType.ARMOR in ship.layers else 0,
-                    "warp_max_tonnage": getattr(ship, 'warp_max_tonnage', 0),
-                    "warp_energy_cost": getattr(ship, 'warp_energy_cost', 0),
+                    "warp_max_tonnage": ship.warp_max_tonnage,
+                    "warp_energy_cost": ship.warp_energy_cost,
                 }
             }
 
