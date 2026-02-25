@@ -14,6 +14,7 @@ from typing import List, Dict, Any, Optional, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.ui.screens.builder.event_bus import EventBus
+    from game.core.protocols import ICombatShip
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +137,7 @@ class WeaponsViewModel:
     # Target Management
     # ─────────────────────────────────────────────────────────────────
 
-    def set_target(self, ship) -> None:
+    def set_target(self, ship: 'ICombatShip') -> None:
         """
         Set a target ship for accuracy calculations.
 
@@ -144,7 +145,7 @@ class WeaponsViewModel:
             ship: Target ship with name and total_defense_score attributes
         """
         self._target_name = ship.name
-        self._target_defense_mod = getattr(ship, 'total_defense_score', 0.0)
+        self._target_defense_mod = ship.total_defense_score
         self.event_bus.emit(WeaponsEvents.TARGET_CHANGED, {
             'name': self._target_name,
             'defense_mod': self._target_defense_mod
@@ -174,7 +175,7 @@ class WeaponsViewModel:
     # Weapon Loading
     # ─────────────────────────────────────────────────────────────────
 
-    def load_weapons(self, ship) -> None:
+    def load_weapons(self, ship: 'ICombatShip') -> None:
         """
         Load and process weapons from a ship.
 
@@ -201,7 +202,7 @@ class WeaponsViewModel:
             'max_range': self._max_range
         })
 
-    def _get_all_weapons(self, ship) -> List:
+    def _get_all_weapons(self, ship: 'ICombatShip') -> List:
         """
         Get list of all weapon components from ship, filtered by type.
 
@@ -273,7 +274,7 @@ class WeaponsViewModel:
     # Threshold Calculation
     # ─────────────────────────────────────────────────────────────────
 
-    def calculate_threshold_ranges(self, weapon, ship) -> List[Tuple[float, Optional[float], int]]:
+    def calculate_threshold_ranges(self, weapon, ship: 'ICombatShip') -> List[Tuple[float, Optional[float], int]]:
         """
         Calculate the range at which each hit probability threshold is reached.
 
@@ -300,9 +301,7 @@ class WeaponsViewModel:
         damage = ab.damage
 
         # Ship sensor score
-        attack_score = 0.0
-        if hasattr(ship, 'get_total_sensor_score'):
-            attack_score = ship.get_total_sensor_score()
+        attack_score = ship.get_total_sensor_score()
 
         defense_score = self._target_defense_mod
         net_starting_score = (base_acc + attack_score) - defense_score
@@ -345,7 +344,7 @@ class WeaponsViewModel:
     # Points of Interest
     # ─────────────────────────────────────────────────────────────────
 
-    def get_points_of_interest(self, weapon, ship) -> List[Dict[str, Any]]:
+    def get_points_of_interest(self, weapon, ship: 'ICombatShip') -> List[Dict[str, Any]]:
         """
         Generate unified points of interest for weapon bar visualization.
 
@@ -379,9 +378,7 @@ class WeaponsViewModel:
         falloff = getattr(ab, 'accuracy_falloff', 0.001) if is_beam else None
 
         # Ship sensor score
-        attack_score = 0.0
-        if hasattr(ship, 'get_total_sensor_score'):
-            attack_score = ship.get_total_sensor_score()
+        attack_score = ship.get_total_sensor_score()
         defense_score = self._target_defense_mod
 
         def calc_accuracy_at_range(r):
@@ -445,7 +442,7 @@ class WeaponsViewModel:
     # Tooltip Calculation
     # ─────────────────────────────────────────────────────────────────
 
-    def calculate_tooltip_data(self, weapon, ship, hover_range: float) -> Optional[Dict[str, Any]]:
+    def calculate_tooltip_data(self, weapon, ship: 'ICombatShip', hover_range: float) -> Optional[Dict[str, Any]]:
         """
         Calculate tooltip data for a specific range on a weapon bar.
 
@@ -470,9 +467,7 @@ class WeaponsViewModel:
             base_acc = getattr(ab, 'base_accuracy', 1.0)
             falloff = getattr(ab, 'accuracy_falloff', 0.0)
 
-            attack_score = 0.0
-            if hasattr(ship, 'get_total_sensor_score'):
-                attack_score = ship.get_total_sensor_score()
+            attack_score = ship.get_total_sensor_score()
 
             defense_score = self._target_defense_mod
             range_penalty = hover_range * falloff

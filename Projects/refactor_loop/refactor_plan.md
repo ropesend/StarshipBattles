@@ -8,21 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-193 Phase 6 - Battle Panels Complete
-**Current Status:** PROJ-193 In Progress - Phase 6 complete, moving to Phase 7
+**Last Completed:** PROJ-193 Phase 7 - Builder Screens Complete
+**Current Status:** PROJ-193 In Progress - Phase 7 complete, moving to Phase 8
 **Current Project:** PROJ-193
-**Current Phase:** Phase 7
+**Current Phase:** Phase 8
 **Test Status:** 12711 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-193 Phase 6 COMPLETE - Battle Panels
-- battle_panels.py: Replaced 6 `getattr(s, 'is_derelict', False)` with direct `s.is_derelict` access
-- battle_ui_service.py: Added TYPE_CHECKING import for ICombatShip, typed _convert_ship parameter
-- Kept intentional getattr for: ship.id (not in Protocol), dynamically-injected attrs (crew_onboard, crew_required)
-- Kept hasattr checks on target.name (targets are Optional[Any])
+- PROJ-193 Phase 7 COMPLETE - Builder Screens
+- weapons_viewmodel.py: Added ICombatShip TYPE_CHECKING, typed 6 methods, replaced 3 hasattr → direct calls, 1 getattr → direct access
+- stats_config.py: Added comprehensive docstring documenting INTENTIONAL dynamic dispatch pattern
+- Audited 10 other builder files - ALL remaining patterns are intentional:
+  - Self-init guards (right_panel, left_panel)
+  - Framework checks (modifier_row pygame_gui events)
+  - Polymorphic interfaces (layer_panel, detail_panel, interaction_controller)
+  - Optional attributes with fallbacks (theme_id, vehicle_type, etc.)
 - Tests: 12711 passed, 1 skipped
-- Next: Start PROJ-193 Phase 7 - Builder Screens
+- Next: Start PROJ-193 Phase 8 - Remaining Scattered Instances
 
 ---
 
@@ -147,6 +150,7 @@
 | 2026-02-25 | PROJ-193 | Phase 4 | Complete | 12711 passed | - | ~8 hasattr/getattr → Protocol access, +IShipInstance.get_calculated_stats, +IStarSystem.storms |
 | 2026-02-25 | PROJ-193 | Phase 5 | Complete | 12711 passed | - | ~6 hasattr/getattr → Protocol access, typed planet_report_panel + ship_stats_renderer |
 | 2026-02-25 | PROJ-193 | Phase 6 | Complete | 12711 passed | - | 6 is_derelict getattr → direct, ICombatShip TYPE_CHECKING in battle_ui_service |
+| 2026-02-25 | PROJ-193 | Phase 7 | Complete | 12711 passed | - | weapons_viewmodel: ICombatShip typing, 3 hasattr → direct. stats_config docstring. |
 
 ---
 

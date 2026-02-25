@@ -19,16 +19,16 @@
 | 4. Strategy Detail Formatters | ✅ Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Planet Report + Ship Stats Renderer | ✅ Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Battle Panels | ✅ Complete | [phase_6_checklist.md](phase_6_checklist.md) |
-| 7. Builder Screens | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
+| 7. Builder Screens | ✅ Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. Remaining Scattered Instances | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 7 — Builder Screens
-**Last Action:** Phase 6 complete — fixed duck typing in battle_panels.py and battle_ui_service.py
-**Next Action:** Begin Phase 7 — fix builder screens (weapons_viewmodel.py, etc.)
+**Active Phase:** Phase 8 — Remaining Scattered Instances
+**Last Action:** Phase 7 complete — typed weapons_viewmodel.py with ICombatShip, documented stats_config.py dynamic dispatch
+**Next Action:** Begin Phase 8 — fix remaining scattered hasattr/getattr instances
 **Blockers:** None
-**Context for Next Agent:** Phase 6 complete. Replaced 6 `getattr(s, 'is_derelict', False)` with direct `s.is_derelict` in battle_panels.py. Added ICombatShip TYPE_CHECKING import and typed _convert_ship parameter in battle_ui_service.py. Kept intentional getattr for dynamically-injected attrs and projectile DTO compatibility. 12711 passed, 1 skipped.
+**Context for Next Agent:** Phase 7 complete. In weapons_viewmodel.py: added ICombatShip TYPE_CHECKING import, typed 6 methods with ICombatShip, replaced 3 hasattr(ship, 'get_total_sensor_score') with direct calls, replaced getattr(ship, 'total_defense_score', 0.0) with direct access. In stats_config.py: added comprehensive docstring documenting intentional dynamic dispatch. Audited all builder files - all remaining patterns are intentional (self-guards, framework checks, polymorphic interfaces, optional fallbacks). 12711 passed, 1 skipped.
 
 ## Overview
 Eliminate ~155 of ~224 `hasattr()`/`getattr()` calls in `game/ui/` by replacing duck typing with explicit Protocol interfaces. This gives the UI layer proper type contracts, IDE intelligence, and interface definitions that map cleanly to C++ abstract classes, C# interfaces, and Rust traits for future porting.
