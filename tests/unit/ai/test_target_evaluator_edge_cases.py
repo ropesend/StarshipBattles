@@ -199,8 +199,11 @@ class TestEvaluateCapabilitiesCache:
         """Pre-computed capabilities cache is used for has_weapons check."""
         rules = [{'type': 'has_weapons', 'weight': 100}]
 
+        # PROJ-192: Ship uses .name as identifier (not .id)
+        mock_target.name = 'target_1'
+
         # Provide cached has_weapons = True
-        capabilities_cache = {mock_target.id: {'has_weapons': True}}
+        capabilities_cache = {mock_target.name: {'has_weapons': True}}
 
         score = TargetEvaluator.evaluate(
             mock_ship, mock_target, rules,
@@ -230,29 +233,41 @@ class TestEvaluateMissileRules:
         assert score == 0
         assert score != float('-inf')
 
-    def test_pdc_arc_missile_in_arc(self, mock_ship, mock_target, mock_stat_helpers):
+    def test_pdc_arc_missile_in_arc(self, mock_ship, mock_stat_helpers):
         """PDC arc rule scores missile in arc."""
-        mock_target.type = 'missile'
+        # PROJ-192: Mock must satisfy IProjectile protocol for is_projectile() check
+        missile = MagicMock()
+        missile.position = Vector2(100, 0)
+        missile.is_alive = True
+        missile.team_id = 1
+        missile.radius = 5.0
+        missile.type = AttackType.MISSILE
         mock_stat_helpers['is_in_pdc_arc'] = lambda ship, target: True
 
         rules = [{'type': 'pdc_arc', 'weight': 500}]
 
         score = TargetEvaluator.evaluate(
-            mock_ship, mock_target, rules,
+            mock_ship, missile, rules,
             stat_helpers=mock_stat_helpers
         )
 
         assert score == pytest.approx(500.0)
 
-    def test_pdc_arc_missile_not_in_arc_required(self, mock_ship, mock_target, mock_stat_helpers):
+    def test_pdc_arc_missile_not_in_arc_required(self, mock_ship, mock_stat_helpers):
         """PDC arc required rule rejects missile not in arc."""
-        mock_target.type = 'missile'
+        # PROJ-192: Mock must satisfy IProjectile protocol for is_projectile() check
+        missile = MagicMock()
+        missile.position = Vector2(100, 0)
+        missile.is_alive = True
+        missile.team_id = 1
+        missile.radius = 5.0
+        missile.type = AttackType.MISSILE
         mock_stat_helpers['is_in_pdc_arc'] = lambda ship, target: False
 
         rules = [{'type': 'pdc_arc', 'weight': 500, 'required': True}]
 
         score = TargetEvaluator.evaluate(
-            mock_ship, mock_target, rules,
+            mock_ship, missile, rules,
             stat_helpers=mock_stat_helpers
         )
 
@@ -345,8 +360,12 @@ class TestCustomStatHelpersMigrated:
 
     def test_custom_is_in_pdc_arc(self, mock_ship, mock_stat_helpers):
         """Custom PDC arc function should be used."""
+        # PROJ-192: Mock must satisfy IProjectile protocol for is_projectile() check
         missile = MagicMock()
         missile.position = Vector2(-1000, -1000)  # Very far away
+        missile.is_alive = True
+        missile.team_id = 1
+        missile.radius = 5.0
         missile.type = AttackType.MISSILE
 
         custom_helpers = {

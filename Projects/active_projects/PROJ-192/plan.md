@@ -14,18 +14,18 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. AI Protocols (Foundation) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Controller + Target Evaluator Cleanup | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Controller + Target Evaluator Cleanup | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Formation + Adapter Cleanup | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. combat_utils.py Refactoring | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Final Audit + Type Annotations | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete - created game/ai/protocols.py with 4 protocols and TypeGuards
-**Next Action:** Begin Phase 2 — replace duck typing in controller.py and target_evaluator.py
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete - replaced duck typing in controller.py and target_evaluator.py
+**Next Action:** Begin Phase 3 — replace duck typing in behaviors.py and controllable.py
 **Blockers:** None
-**Context for Next Agent:** Created IGridEntity, IProjectile, IFormationMaster, IComponentHealth protocols in game/ai/protocols.py. 20 new tests in test_ai_protocols.py. Tests: 12713 passed, 1 skipped. Bug to fix in Phase 2: target_evaluator.py:184 uses `getattr(c, 'hp', 0)` but Component has no `.hp` — use `c.current_hp`.
+**Context for Next Agent:** Phase 2 complete. Replaced ~13 duck typing instances in controller.py and target_evaluator.py. Fixed bug in _eval_least_armor_rule (used .hp instead of .current_hp). Updated test mocks to use .name instead of .id. Deleted 3 obsolete tests. Tests: 12710 passed, 1 skipped.
 
 ## Overview
 Eliminate ~45 `hasattr()`/`getattr()` duck typing instances across 5 files in `game/ai/` by introducing explicit `@runtime_checkable` Protocol types. This makes AI type contracts visible to developers and static checkers, fixes one confirmed bug, and follows the established protocol patterns in `game/core/protocols.py`.

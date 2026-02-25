@@ -59,7 +59,8 @@ def ai_controller(mock_ship, mock_grid):
 def create_mock_enemy(enemy_id, has_weapons=True, has_pdc=False):
     """Helper to create mock enemy ships."""
     enemy = MagicMock()
-    enemy.id = enemy_id
+    # PROJ-192: Ship uses .name as identifier, not .id
+    enemy.name = enemy_id
     enemy.position = pygame.math.Vector2(100, 0)
     enemy.is_alive = True
     enemy.team_id = 1

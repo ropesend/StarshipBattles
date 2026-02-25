@@ -8,26 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-192 Phase 1 - AI Protocols (Foundation)
-**Current Status:** PROJ-192 Phase 1 Complete - Ready for Phase 2
+**Last Completed:** PROJ-192 Phase 2 - Controller + Target Evaluator Cleanup
+**Current Status:** PROJ-192 Phase 2 Complete - Ready for Phase 3
 **Current Project:** PROJ-192
-**Current Phase:** Phase 2
-**Test Status:** 12713 passed, 1 skipped
+**Current Phase:** Phase 3
+**Test Status:** 12710 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-192 Phase 1 COMPLETE - AI Protocols (Foundation)
-- Created game/ai/protocols.py with 4 protocols:
-  - IGridEntity (position, is_alive, team_id, radius)
-  - IProjectile (extends IGridEntity, adds type)
-  - IFormationMaster (formation leader attributes)
-  - IComponentHealth (current_hp, max_hp)
-- Created 4 TypeGuard functions
-- Added 20 protocol compliance tests in test_ai_protocols.py
-- Exported from game/ai/interfaces/__init__.py
-- Tests: 12713 passed (12693 baseline + 20 new)
-- Next: Phase 2 - Replace duck typing in controller.py and target_evaluator.py
-- Bug to fix: target_evaluator.py:184 uses getattr(c, 'hp', 0) but Component has no .hp — use c.current_hp
+- PROJ-192 Phase 2 COMPLETE - Controller + Target Evaluator Cleanup
+- Replaced ~13 duck typing instances across controller.py and target_evaluator.py:
+  - controller.py: is_projectile() for missile detection, direct attribute access for position/radius/hp
+  - target_evaluator.py: direct access for mass/velocity, is_projectile() for PDC arc rules
+- **BUG FIXED:** _eval_least_armor_rule() was always returning 0 (used .hp instead of .current_hp)
+- Updated Ship identifier from .id to .name across all usages and test mocks
+- Deleted 3 obsolete tests (tested invalid getattr fallback patterns)
+- Tests: 12710 passed, 1 skipped
+- Next: Phase 3 - Replace duck typing in behaviors.py and controllable.py
 
 ---
 
@@ -141,6 +138,7 @@
 | 2026-02-25 | PROJ-191 | Phase 6 | Complete | 12693 passed | f939287e | Documentation + ~10 more direct access, deleted 4 tests |
 | 2026-02-25 | PROJ-191 | Audit 1 | PASSED | 12693 passed | - | All goals met, 20 remaining patterns documented |
 | 2026-02-25 | PROJ-192 | Phase 1 | Complete | 12713 passed | - | 4 protocols + TypeGuards + 20 tests |
+| 2026-02-25 | PROJ-192 | Phase 2 | Complete | 12710 passed | - | ~13 duck typing → direct access, bug fix, -3 tests |
 
 ---
 

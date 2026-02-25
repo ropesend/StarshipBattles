@@ -36,7 +36,7 @@ def ship():
 def target_with_weapons():
     """Create a target with weapon components."""
     t = MagicMock()
-    t.id = 'target_armed'
+    t.name = 'target_armed'  # PROJ-192: Ship uses .name as identifier
     t.position = pygame.math.Vector2(100, 0)
     t.mass = 1000
     t.type = 'ship'
@@ -53,7 +53,7 @@ def target_with_weapons():
 def target_without_weapons():
     """Create a target without weapon components."""
     t = MagicMock()
-    t.id = 'target_unarmed'
+    t.name = 'target_unarmed'  # PROJ-192: Ship uses .name as identifier
     t.position = pygame.math.Vector2(100, 0)
     t.mass = 1000
     t.type = 'ship'
@@ -98,7 +98,7 @@ class TestHasWeaponsCacheUsage:
 
         # Pre-populate cache
         cache = {
-            target_with_weapons.id: {
+            target_with_weapons.name: {
                 'has_weapons': True,
                 'weapon_components': [MagicMock()],
                 'has_pdc': False,
@@ -140,7 +140,7 @@ class TestHasWeaponsCacheUsage:
 
         # Cache indicates no weapons
         cache = {
-            target_without_weapons.id: {
+            target_without_weapons.name: {
                 'has_weapons': False,
                 'weapon_components': [],
                 'has_pdc': False,
@@ -163,7 +163,7 @@ class TestHasWeaponsCacheUsage:
 
         # Cache indicates no weapons
         cache = {
-            target_without_weapons.id: {
+            target_without_weapons.name: {
                 'has_weapons': False,
                 'weapon_components': [],
                 'has_pdc': False,
@@ -188,7 +188,7 @@ class TestCachePerformanceBenefit:
         targets = []
         for i in range(5):
             t = MagicMock()
-            t.id = f'target_{i}'
+            t.name = f'target_{i}'
             t.position = pygame.math.Vector2(100 * (i + 1), 0)
             t.mass = 1000
             t.type = 'ship'
@@ -199,11 +199,11 @@ class TestCachePerformanceBenefit:
 
         rules = [{'type': 'has_weapons', 'weight': 100}]
 
-        # Build capabilities cache once
+        # Build capabilities cache once (PROJ-192: Ship uses .name as identifier)
         cache = {}
         for t in targets:
             weapons = t.get_components_by_ability('WeaponAbility', operational_only=False)
-            cache[t.id] = {
+            cache[t.name] = {
                 'has_weapons': len(weapons) > 0,
                 'weapon_components': weapons,
                 'has_pdc': False,

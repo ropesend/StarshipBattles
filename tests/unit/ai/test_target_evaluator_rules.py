@@ -503,8 +503,11 @@ class TestCapabilityRules:
         # Target has no weapons according to get_components_by_ability
         mock_target.get_components_by_ability = MagicMock(return_value=[])
 
-        # But cache says it has weapons
-        cache = {mock_target.id: {'has_weapons': True}}
+        # Give target a .name attribute (Ships use .name as identifier, not .id)
+        mock_target.name = 'target_ship'
+
+        # But cache says it has weapons (keyed by .name)
+        cache = {mock_target.name: {'has_weapons': True}}
 
         rules = [{'type': 'has_weapons', 'weight': 100}]
 
@@ -526,7 +529,7 @@ class TestCapabilityRules:
         heavy_armor.id = 'heavy'
         heavy_armor.position = Vector2(100, 0)
         armor_comp = MagicMock()
-        armor_comp.hp = 500
+        armor_comp.current_hp = 500  # Fixed: Component uses current_hp, not hp
         heavy_armor.get_components_by_layer = MagicMock(return_value=[armor_comp])
         heavy_armor.get_components_by_ability = MagicMock(return_value=[])
 
@@ -534,7 +537,7 @@ class TestCapabilityRules:
         light_armor.id = 'light'
         light_armor.position = Vector2(100, 0)
         light_comp = MagicMock()
-        light_comp.hp = 100
+        light_comp.current_hp = 100  # Fixed: Component uses current_hp, not hp
         light_armor.get_components_by_layer = MagicMock(return_value=[light_comp])
         light_armor.get_components_by_ability = MagicMock(return_value=[])
 
@@ -553,12 +556,20 @@ class TestCapabilityRules:
 class TestPDCArcRules:
     """Tests for PDC arc rules."""
 
+    @staticmethod
+    def _make_mock_missile(position, missile_type=AttackType.MISSILE):
+        """Create a mock missile that satisfies IProjectile protocol."""
+        missile = MagicMock()
+        missile.position = position
+        missile.is_alive = True
+        missile.team_id = 1
+        missile.radius = 5.0
+        missile.type = missile_type
+        return missile
+
     def test_pdc_arc_missile_in_arc(self, mock_ship, mock_stat_helpers):
         """pdc_arc rule scores missiles in arc highly."""
-        missile = MagicMock()
-        missile.id = 'missile_1'
-        missile.position = Vector2(100, 0)
-        missile.type = 'missile'
+        missile = self._make_mock_missile(Vector2(100, 0))
 
         rules = [{'type': 'pdc_arc', 'weight': 500}]
 
@@ -571,10 +582,7 @@ class TestPDCArcRules:
 
     def test_pdc_arc_missile_not_in_arc(self, mock_ship):
         """pdc_arc rule penalizes missiles not in arc."""
-        missile = MagicMock()
-        missile.id = 'missile_1'
-        missile.position = Vector2(100, 0)
-        missile.type = 'missile'
+        missile = self._make_mock_missile(Vector2(100, 0))
 
         # Not in arc
         helpers = {
@@ -622,10 +630,7 @@ class TestPDCArcRules:
 
     def test_pdc_arc_attack_type_enum(self, mock_ship, mock_stat_helpers):
         """pdc_arc rule handles AttackType.MISSILE enum."""
-        missile = MagicMock()
-        missile.id = 'missile_1'
-        missile.position = Vector2(100, 0)
-        missile.type = AttackType.MISSILE
+        missile = self._make_mock_missile(Vector2(100, 0), AttackType.MISSILE)
 
         rules = [{'type': 'pdc_arc', 'weight': 500}]
 
@@ -638,10 +643,7 @@ class TestPDCArcRules:
 
     def test_missiles_in_pdc_arc_same_as_pdc_arc(self, mock_ship, mock_stat_helpers):
         """missiles_in_pdc_arc behaves same as pdc_arc."""
-        missile = MagicMock()
-        missile.id = 'missile_1'
-        missile.position = Vector2(100, 0)
-        missile.type = 'missile'
+        missile = self._make_mock_missile(Vector2(100, 0))
 
         rules = [{'type': 'missiles_in_pdc_arc', 'weight': 500}]
 
@@ -717,39 +719,13 @@ class TestEvaluatorEdgeCases:
         # Unknown rule contributes 0
         assert score == pytest.approx(-100.0)
 
-    def test_missing_velocity_attribute(self, mock_ship, mock_stat_helpers):
-        """Speed rules handle missing velocity with default."""
-        no_velocity = MagicMock(spec=['id', 'position'])
-        no_velocity.id = 'no_vel'
-        no_velocity.position = Vector2(100, 0)
-        # No velocity attribute
+    # DELETED: test_missing_velocity_attribute
+    # PROJ-192: This test was invalid - PhysicsBody always has velocity attribute.
+    # The getattr fallback pattern has been replaced with direct attribute access.
 
-        rules = [{'type': 'fastest', 'weight': 1}]
-
-        # Should use default Vector2(0, 0), giving speed 0
-        score = TargetEvaluator.evaluate(
-            mock_ship, no_velocity, rules,
-            stat_helpers=mock_stat_helpers
-        )
-
-        assert score == pytest.approx(0.0)
-
-    def test_missing_mass_attribute(self, mock_ship, mock_stat_helpers):
-        """Mass rules handle missing mass with default 100."""
-        no_mass = MagicMock(spec=['id', 'position'])
-        no_mass.id = 'no_mass'
-        no_mass.position = Vector2(100, 0)
-        # No mass attribute
-
-        rules = [{'type': 'mass', 'weight': 1}]
-
-        # Should use default mass 100
-        score = TargetEvaluator.evaluate(
-            mock_ship, no_mass, rules,
-            stat_helpers=mock_stat_helpers
-        )
-
-        assert score == pytest.approx(100.0)
+    # DELETED: test_missing_mass_attribute
+    # PROJ-192: This test was invalid - PhysicsBody always has mass attribute.
+    # The getattr fallback pattern has been replaced with direct attribute access.
 
 
 # =============================================================================
