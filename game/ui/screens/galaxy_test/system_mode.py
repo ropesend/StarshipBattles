@@ -11,6 +11,8 @@ from pygame_gui.elements import UIButton, UILabel, UITextEntryLine, UIDropDownMe
 
 import logging
 
+from game.ui.fonts import get_font
+
 logger = logging.getLogger(__name__)
 from game.core.hex_math import hex_to_pixel, HexCoord
 from game.strategy.data.planet import PlanetType
@@ -527,7 +529,7 @@ class SystemModeHelper:
                 pygame.draw.circle(screen_surface, (255, 255, 0), (int(screen_pos.x), int(screen_pos.y)), radius + 6, 2)
 
             # Star name label
-            font = pygame.font.SysFont("arial", 12)
+            font = get_font(12)
             text = font.render(star.name, True, (220, 220, 220))
             screen_surface.blit(text, (screen_pos.x + radius + 5, screen_pos.y - 6))
 
@@ -558,7 +560,7 @@ class SystemModeHelper:
 
             # Planet name label (only if zoomed in enough)
             if self.screen.camera.zoom >= 0.3:
-                font = pygame.font.SysFont("arial", 10)
+                font = get_font(10)
                 text = font.render(planet.name, True, (180, 180, 180))
                 screen_surface.blit(text, (screen_pos.x + radius + 3, screen_pos.y - 5))
 

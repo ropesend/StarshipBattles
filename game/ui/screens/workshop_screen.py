@@ -13,6 +13,8 @@ from pygame_gui.windows import UIConfirmationDialog
 
 import logging
 
+from game.ui.fonts import get_font
+
 logger = logging.getLogger(__name__)
 from game.core.profiling import profile_block
 from game.core.constants import LayerType
@@ -522,7 +524,7 @@ class DesignWorkshopScreen:
                 screen.blit(sprite, (mx - 16, my - 16))
                 
         if self.error_timer > 0:
-            font = pygame.font.SysFont("Arial", 18)
+            font = get_font(18)
             err_surf = font.render(self.error_message, True, COLORS['text_error'])
             x = (self.width - err_surf.get_width()) // 2
             screen.blit(err_surf, (x, 50))

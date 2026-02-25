@@ -19,6 +19,8 @@ import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, UIPanel
 from pygame_gui.windows import UIConfirmationDialog
 
+from game.ui.fonts import get_font
+
 from game.core.input_actions import (
     ACTION_DISPLAY_NAMES,
     ACTION_GROUPS,
@@ -407,7 +409,7 @@ class KeybindingsScene:
         screen.blit(overlay, (0, 0))
 
         action_name = ACTION_DISPLAY_NAMES.get(self._capturing_action, self._capturing_action.value)
-        font = pygame.font.SysFont("arial", 28)
+        font = get_font(28)
         text = font.render(
             f"Press a key for '{action_name}'...  (ESC to cancel)",
             True, (255, 255, 255),

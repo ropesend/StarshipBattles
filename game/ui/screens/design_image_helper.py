@@ -18,6 +18,8 @@ from typing import Dict, Optional, Tuple, TYPE_CHECKING
 
 import logging
 
+from game.ui.fonts import get_font
+
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
@@ -95,7 +97,7 @@ def _load_portrait_thumbnail_uncached(design: DesignMetadata, size: int) -> pyga
         pygame.draw.line(surface, color, (0, y), (size, y))
 
     # Add class initial
-    font = pygame.font.SysFont("arial", int(size * 0.5), bold=True)
+    font = get_font(int(size * 0.5), bold=True)
     initial = ship_class[0] if ship_class else "?"
     text = font.render(initial, True, (200, 200, 200))
     text_rect = text.get_rect(center=(size // 2, size // 2))

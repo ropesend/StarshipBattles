@@ -8,11 +8,12 @@ Cross-layer imports (acceptable for UI):
 """
 import pygame
 from game.core.strategy_metadata import StrategyMetadataService
+from game.ui.fonts import get_default_font
 
 
 def draw_title(screen, sw):
     """Draw the battle setup title."""
-    title_font = pygame.font.Font(None, 64)
+    title_font = get_default_font(64)
     title = title_font.render("BATTLE SETUP", True, (200, 200, 255))
     screen.blit(title, (sw // 2 - title.get_width() // 2, 30))
 

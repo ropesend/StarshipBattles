@@ -12,6 +12,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIImage, UITextBox, UIPanel, UIScrollingContainer, UILabel
 from game.ui.screens.strategy_detail_fmt import format_planet_info
+from game.ui.fonts import get_font
 
 if TYPE_CHECKING:
     from game.core.protocols import IPlanet, IFacility
@@ -222,7 +223,7 @@ class PlanetReportPanel:
                 pygame.draw.line(portrait_surf, color, (0, y), (150, y))
 
             # Add planet name text
-            font = pygame.font.SysFont("arial", 16, bold=True)
+            font = get_font(16, bold=True)
             text = font.render(self.planet.name[:20], True, (255, 255, 255))
             text_rect = text.get_rect(center=(75, 75))
 

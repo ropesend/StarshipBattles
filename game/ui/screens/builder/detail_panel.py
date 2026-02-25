@@ -14,6 +14,7 @@ import os
 from pygame_gui.elements import UIPanel, UILabel, UIImage, UIButton, UIWindow, UITextBox
 from game.core.constants import LayerType  # Canonical location for LayerType
 from .modifier_logic import ModifierLogic
+from game.ui.fonts import get_font
 
 logger = logging.getLogger(__name__)
 from game.simulation.components.abilities.ui_colors import HINT_NEUTRAL, HINT_CREW_CAP, HINT_CARGO_GENERIC, HINT_DEFAULT
@@ -259,7 +260,7 @@ class ComponentDetailPanel:
             # Placeholder
             empty = pygame.Surface((self.image_rect.width, self.image_rect.height))
             empty.fill((50, 50, 60))
-            font = pygame.font.SysFont("Arial", 14)
+            font = get_font(14)
             text = font.render(f"No Image\n{filename}", True, (200, 200, 200))
             empty.blit(text, (10, 10))
             

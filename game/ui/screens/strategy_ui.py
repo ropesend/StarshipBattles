@@ -17,6 +17,7 @@ from typing import Optional
 import pygame
 import pygame_gui
 from game.ui.config import UIConfig
+from game.ui.fonts import get_font
 from game.core.paths import Paths
 from game.core.constants import PLANET_RESOURCES
 from game.ui.screens.build_queue_helpers import RESOURCE_ABBREVS
@@ -313,7 +314,7 @@ class StrategyUI:
 
         # Only draw zoom indicator if strategy layer has focus (no sub-panels open)
         if not self._has_modal_open():
-            font = pygame.font.SysFont("arial", 20)
+            font = get_font(20)
             mode_text = font.render(f"Strategy Layer | Zoom: {self.scene.camera.zoom:.2f}", True, (255, 255, 255))
             screen.blit(mode_text, (20, self.height - 30))
 

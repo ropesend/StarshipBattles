@@ -15,6 +15,7 @@ import pygame_gui
 from pygame_gui.elements import UIImage, UILabel, UIPanel, UITextBox
 from typing import Optional, TYPE_CHECKING
 from game.ui.panels.design_stats_panel import DesignStatsPanel
+from game.ui.fonts import get_font
 from game.ui.colors import (
     SHIP_CLASS_FIGHTER, SHIP_CLASS_CORVETTE, SHIP_CLASS_ESCORT, SHIP_CLASS_DESTROYER,
     SHIP_CLASS_CRUISER, SHIP_CLASS_BATTLESHIP, SHIP_CLASS_CARRIER, SHIP_CLASS_DEFAULT
@@ -242,8 +243,8 @@ class DesignReportPanel:
             # Add ship name and class
             # Scale font sizes based on portrait size
             font_scale = portrait_width / 200.0  # 200 was original portrait size
-            font_large = pygame.font.SysFont("arial", int(18 * font_scale), bold=True)
-            font_small = pygame.font.SysFont("arial", int(14 * font_scale))
+            font_large = get_font(int(18 * font_scale), bold=True)
+            font_small = get_font(int(14 * font_scale))
 
             # Ship name
             name_text = font_large.render(ship.name[:25], True, (255, 255, 255))

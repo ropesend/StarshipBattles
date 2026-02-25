@@ -5,6 +5,7 @@ from game.core.profiling import profile_action
 logger = logging.getLogger(__name__)
 from game.ui.config import UIConfig
 from game.ui.colors import HP_HEALTHY, HP_DAMAGED, HP_CRITICAL, RESOURCE_FUEL
+from game.ui.fonts import get_default_font
 from game.ui.panels.ship_stats_renderer import (
     draw_stat_bar, draw_ship_info_header, draw_ship_vitals,
     draw_ship_resources, draw_ship_combat_stats, draw_ship_weapons,
@@ -100,9 +101,9 @@ class ShipStatsPanel(BattlePanel):
         self.surface.fill((0, 0, 0, 0))
         self.surface.fill((20, 25, 35, UIConfig.PANEL_ALPHA))
 
-        font_title = pygame.font.Font(None, UIConfig.FONT_TITLE)
-        font_name = pygame.font.Font(None, UIConfig.FONT_NAME)
-        font_stat = pygame.font.Font(None, UIConfig.FONT_STAT)
+        font_title = get_default_font(UIConfig.FONT_TITLE)
+        font_name = get_default_font(UIConfig.FONT_NAME)
+        font_stat = get_default_font(UIConfig.FONT_STAT)
 
         y = 10 - self.scroll_offset
         panel_w = self.rect.width
@@ -308,9 +309,9 @@ class SeekerMonitorPanel(BattlePanel):
         # Draw line on Right edge
         pygame.draw.line(self.surface, (60, 60, 80), (self.rect.width - 1, 0), (self.rect.width - 1, self.rect.height), 2)
         
-        font_title = pygame.font.Font(None, 28)
-        font_name = pygame.font.Font(None, 22)
-        font_stat = pygame.font.Font(None, 18)
+        font_title = get_default_font(28)
+        font_name = get_default_font(22)
+        font_stat = get_default_font(18)
         
         y = 10 - self.scroll_offset
         panel_w = self.rect.width
@@ -515,12 +516,12 @@ class BattleControlPanel(BattlePanel):
             self.surface.fill((0, 0, 0, 150)) 
             screen.blit(self.surface, self.rect.topleft)
             
-            win_font = pygame.font.Font(None, 72)
+            win_font = get_default_font(72)
             win_surf = win_font.render(winner_text, True, winner_color)
             center_x = self.rect.centerx
             screen.blit(win_surf, (center_x - win_surf.get_width() // 2, sh // 2 - 80))
             
-            btn_font = pygame.font.Font(None, 36)
+            btn_font = get_default_font(36)
             btn_w, btn_h = 250, 50
             btn_x = center_x - btn_w // 2
             btn_y = sh // 2
@@ -538,7 +539,7 @@ class BattleControlPanel(BattlePanel):
             # We can treat this panel as "fullscreen overlay" or just manage the button.
             # Let's draw it directly on screen.
             
-            btn_font = pygame.font.Font(None, 24)
+            btn_font = get_default_font(24)
             btn_w, btn_h = 120, 30
             btn_x, btn_y = 10, 70
             

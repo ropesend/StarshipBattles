@@ -9,6 +9,7 @@ import math
 from game.core.constants import LayerType  # Canonical location for LayerType
 from game.ui.utils import calculate_ship_image_scale
 from game.ui.renderer.game_renderer import LAYER_COLORS
+from game.ui.fonts import get_font
 
 from game.ui.colors import COLORS
 SHIP_VIEW_BG = COLORS['bg_deep']
@@ -96,7 +97,7 @@ class SchematicView:
                 screen.blit(scaled_img, rect)
             
         # Draw structure rings
-        font = pygame.font.SysFont("Arial", 10)
+        font = get_font(10)
         sorted_layers = sorted(ship.layers.items(), key=lambda x: x[1].radius_pct, reverse=True)
         
         for ltype, data in sorted_layers:
@@ -172,7 +173,7 @@ class SchematicView:
             pygame.draw.lines(arc_surface, color[:3], True, points, 2)
             
             # Label
-            font = pygame.font.SysFont("Arial", 10)
+            font = get_font(10)
             mid_angle = (start_angle + end_angle) / 2
             label_x = cx + math.cos(mid_angle) * (display_range + 15)
             label_y = cy - math.sin(mid_angle) * (display_range + 15)

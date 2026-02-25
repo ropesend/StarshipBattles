@@ -8,18 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-195 Audit Cycle 1 - PASSED
-**Current Status:** PROJ-195 COMPLETE, ready to start PROJ-196
+**Last Completed:** PROJ-196 Phase 1 - Font Module + Per-Frame Fixes
+**Current Status:** PROJ-196 Phase 1 complete, ready for Phase 2
 **Current Project:** PROJ-196
-**Current Phase:** Not started
-**Test Status:** 12722 passed, 1 skipped
+**Current Phase:** Phase 2
+**Test Status:** 12736 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-195 COMPLETE - Audit cycle 1 passed, all 4 goals verified
-- All RegistryManager.instance() references now legitimate (composition root, singleton def, test infrastructure)
-- Regression guard installed (TestSingletonUsageCount)
-- Next: Start PROJ-196 Phase 1 (Consolidate Duplicated Code)
+- PROJ-196 Phase 1 COMPLETE - Created game/ui/fonts.py with cached font management
+- Fixed 16 per-frame font creation bugs across 16 files
+- Font cache includes automatic invalidation when pygame.font is quit/re-initialized
+- Added 14 new unit tests for fonts module
+- Next: Start PROJ-196 Phase 2 (Cached Font Migration - remaining files)
 
 ---
 
@@ -81,7 +82,7 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
-- [ ] **PROJ-196: Consolidate Duplicated Code**
+- [/] **PROJ-196: Consolidate Duplicated Code**
   - **Phases:** 6 | **Status:** Ready | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-196/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-196/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
@@ -163,6 +164,7 @@
 | 2026-02-25 | PROJ-195 | Phase 7 | Complete | 12720 passed | - | Regression/repro tests migrated |
 | 2026-02-25 | PROJ-195 | Phase 8 | Complete | 12722 passed | - | Final audit: 88 refs legitimate, regression guard added |
 | 2026-02-25 | PROJ-195 | Audit 1 | PASSED | 12722 passed | - | All 4 goals verified, project complete |
+| 2026-02-25 | PROJ-196 | Phase 1 | Complete | 12736 passed | - | Font module + 16 per-frame fixes + cache invalidation |
 
 ---
 

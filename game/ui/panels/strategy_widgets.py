@@ -2,6 +2,7 @@ import pygame
 import math
 
 from game.core.protocols import is_star
+from game.ui.fonts import get_font
 
 class DataGraph:
     """Base class for data visualization widgets."""
@@ -55,7 +56,7 @@ class SpectrumGraph(DataGraph):
         bottom_y = self.height - 10 
         max_h = self.height - 20 
         
-        font = pygame.font.SysFont("arial", 8) 
+        font = get_font(8)
         
         # Logarithmic Scale Calculation
         # Use log10(value + 1) to handle zeros and scaling
@@ -115,7 +116,7 @@ class AtmosphereGraph(DataGraph):
         self.clear()
         # atmosphere is always present via IPlanet protocol
         if not planet.atmosphere:
-            font = pygame.font.SysFont("arial", 12)
+            font = get_font(12)
             txt = font.render("Trace / None", True, (100, 100, 100))
             if vertical: txt = pygame.transform.rotate(txt, 90)
             self.surface.blit(txt, (10, self.height/2))
@@ -138,8 +139,8 @@ class AtmosphereGraph(DataGraph):
         bottom_y = self.height - 10
         max_h = self.height - 20 
         
-        font = pygame.font.SysFont("arial", 8)
-        
+        font = get_font(8)
+
         for i, (gas, pressure) in enumerate(top_items):
             # Normalize to Max (Relative composition view)
             ratio = pressure / max_p

@@ -12,6 +12,8 @@ from tkinter import filedialog
 
 import logging
 
+from game.ui.fonts import get_default_font
+
 logger = logging.getLogger(__name__)
 from game.ui.services.ship_factory import ShipFactory
 from game.core.strategy_metadata import StrategyMetadataService
@@ -368,8 +370,8 @@ class BattleSetupScreen:
         screen.fill((20, 25, 35))
         sw, sh = screen.get_size()
 
-        label_font = pygame.font.Font(None, 36)
-        item_font = pygame.font.Font(None, 28)
+        label_font = get_default_font(36)
+        item_font = get_default_font(28)
         col1_x, col2_x, col3_x = 50, sw // 3 + 50, 2 * sw // 3 + 50
         btn_y = sh - 80
 

@@ -10,6 +10,8 @@ import math
 import pygame
 from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple
 
+from game.ui.fonts import get_font
+
 if TYPE_CHECKING:
     from pygame import Rect, Surface
 
@@ -257,7 +259,7 @@ class FormationRenderer:
         selected_indices: Set[int]
     ) -> None:
         """Draw all arrow markers."""
-        font = pygame.font.SysFont("Arial", 14, bold=True)
+        font = get_font(14, bold=True)
         scale = 20 * self.camera_zoom
         canvas_rect = self.get_canvas_rect()
 

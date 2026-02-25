@@ -10,6 +10,7 @@ import pygame
 import pygame_gui
 import os
 
+from game.ui.fonts import get_font, FONT_MONO
 from game.core.config import DisplayConfig
 WIDTH, HEIGHT = DisplayConfig.DEFAULT_WIDTH, DisplayConfig.DEFAULT_HEIGHT
 from game.core.json_utils import load_json
@@ -377,9 +378,9 @@ class TestLabScreen:
         overlay.fill((40, 40, 45))
         pygame.draw.rect(overlay, (100, 100, 120), overlay.get_rect(), 3)
 
-        header_font = pygame.font.SysFont("consolas", 24)
-        body_font = pygame.font.SysFont("consolas", 18)
-        small_font = pygame.font.SysFont("consolas", 14)
+        header_font = get_font(24, FONT_MONO)
+        body_font = get_font(18, FONT_MONO)
+        small_font = get_font(14, FONT_MONO)
 
         title_text = header_font.render(title, True, (255, 255, 255))
         sub_text = body_font.render(subtitle, True, (200, 200, 200))

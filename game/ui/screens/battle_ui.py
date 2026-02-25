@@ -10,6 +10,7 @@ from game.core.constants import AttackType
 
 logger = logging.getLogger(__name__)
 from game.ui.config import UIConfig
+from game.ui.fonts import get_font
 from game.ui.panels.battle_panels import ShipStatsPanel, SeekerMonitorPanel, BattleControlPanel
 
 class BattleUI:
@@ -244,13 +245,13 @@ class BattleUI:
         pygame.draw.rect(screen, (255, 255, 255), button_rect, 3, border_radius=8)
 
         # Draw text
-        font = pygame.font.SysFont("Arial", 28, bold=True)
+        font = get_font(28, bold=True)
         text = font.render("Return to Combat Lab", True, (255, 255, 255))
         text_rect = text.get_rect(center=button_rect.center)
         screen.blit(text, text_rect)
 
         # Draw "TEST COMPLETE" indicator above button
-        complete_font = pygame.font.SysFont("Arial", 56, bold=True)
+        complete_font = get_font(56, bold=True)
 
         # Color based on test pass/fail
         if hasattr(self.scene, 'test_scenario') and self.scene.test_scenario:
@@ -287,7 +288,7 @@ class BattleUI:
             result_text = "DRAW!"
             result_color = (255, 255, 0)
 
-        result_font = pygame.font.SysFont("Arial", 48, bold=True)
+        result_font = get_font(48, bold=True)
         result_surface = result_font.render(result_text, True, result_color)
         result_rect = result_surface.get_rect(center=(button_rect.centerx, button_rect.top - 60))
         screen.blit(result_surface, result_rect)
