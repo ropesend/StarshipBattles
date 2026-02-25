@@ -3,6 +3,7 @@ Tests for HarvestingEngine - planetary resource harvesting to empire pool.
 
 PROJ-75 Phase 2: TDD tests for HarvestingEngine.
 PROJ-161: Now per-tick only via process_harvesting_tick().
+PROJ-191 Phase 3: Updated mocks to use spec= for type safety.
 
 Covers single/multiple harvesters, planet depletion, storage overflow,
 non-operational facilities, empty colonies, quality-scaled extraction,
@@ -11,6 +12,7 @@ and per-tick (1/100th) harvesting.
 import pytest
 from unittest.mock import MagicMock
 
+from game.strategy.data.empire import Empire
 from game.strategy.data.planet import Planet, PlanetaryFacility
 from game.core.hex_math import HexCoord
 
@@ -21,7 +23,7 @@ from game.core.hex_math import HexCoord
 
 def _make_empire(colonies=None, resource_pool=None, max_storage=None):
     """Create a mock empire with colonies and resource pool."""
-    empire = MagicMock()
+    empire = MagicMock(spec=Empire)
     empire.colonies = colonies or []
     empire.resource_pool = resource_pool or {}
     empire.max_storage = max_storage or {}
@@ -43,7 +45,7 @@ def _make_empire(colonies=None, resource_pool=None, max_storage=None):
 
 def _make_planet(resources=None, facilities=None, name="Test Planet"):
     """Create a minimal Planet-like object for harvesting tests."""
-    planet = MagicMock()
+    planet = MagicMock(spec=Planet)
     planet.name = name
     planet.resources = resources or {}
     planet.facilities = facilities or []

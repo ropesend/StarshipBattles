@@ -8,27 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-191 Phase 2 - Replace getattr in Engines
+**Last Completed:** PROJ-191 Phase 3 - Update Test Mocks
 **Current Status:** PROJ-191 In Progress
 **Current Project:** PROJ-191
-**Current Phase:** Phase 2 Complete
+**Current Phase:** Phase 3 Complete
 **Test Status:** 12702 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-191 Phase 2 COMPLETE - Replaced ~53 getattr() patterns with direct attribute access
+- PROJ-191 Phase 3 COMPLETE - Updated test mocks to use spec= for type safety
 - Files modified:
-  - empire_economy_calculator.py: 14 getattr → direct access
-  - harvesting_engine.py: 10 getattr → direct access (preserved comp_def dual-format)
-  - population_engine.py: 5 getattr → direct access
-  - superweapon_order_processor.py: 10 getattr → direct access
-  - fleet_order_processor.py: 2 getattr → direct access + simplified isinstance
-  - component_inspector.py: 2 getattr → direct access (preserved comp_def dual-format)
-  - colonize_validator.py: 2 getattr → direct access
-  - action_time_resolver.py: 1 getattr → direct access
-- Deleted 2 obsolete duck typing tests (no design_data, no orders edge cases)
-- All 12702 tests pass
-- Next: Phase 3 - Update Test Mocks
+  - test_empire_economy_calculator.py: 15 Mock() → Mock(spec=Empire/Planet/Fleet/etc.)
+  - test_harvesting_engine.py: _make_empire() and _make_planet() use spec=
+  - test_maintenance_engine.py: _make_colony() uses Mock(spec=Planet)
+  - test_production_refactor.py: mock_empire and mock_colony use spec=
+  - test_fleet_movement_engine.py: create_mock_fleet() uses Mock(spec=Fleet)
+  - test_population_engine.py: TurnEngine integration test empire uses spec=
+- All 12702 tests pass, 1 skipped
+- Next: Phase 4 - Replace hasattr Type Discrimination
 
 ---
 
@@ -136,6 +133,7 @@
 | 2026-02-24 | PROJ-190 | Audit 1 | PASSED | 12704 passed | - | 18 protocols, 24 TypeGuards, all goals met |
 | 2026-02-24 | PROJ-191 | Phase 1 | Complete | 12704 passed | c6666fb8 | TYPE_CHECKING imports + type hints on 7 files |
 | 2026-02-24 | PROJ-191 | Phase 2 | Complete | 12702 passed | b54c86a6 | Replaced ~53 getattr with direct access, deleted 2 obsolete tests |
+| 2026-02-24 | PROJ-191 | Phase 3 | Complete | 12702 passed | - | Updated test mocks to use spec= for type safety |
 
 ---
 

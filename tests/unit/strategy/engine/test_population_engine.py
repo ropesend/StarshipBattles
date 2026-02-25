@@ -342,8 +342,9 @@ class TestTurnEngineIntegration:
         )
 
         # Create minimal test data
-        empire = MagicMock()
+        empire = MagicMock(spec=Empire)
         empire.fleets = []
+        empire.colonies = []  # Required for harvesting_engine
         empires = [empire]
         galaxy = MagicMock()
 

@@ -3,6 +3,7 @@ Tests for EmpireEconomyCalculator.
 
 PROJ-99 Phase 1: Verifies production aggregation, maintenance calculation,
 and economic snapshot generation.
+PROJ-191 Phase 3: Updated mocks to use spec= for type safety.
 """
 
 import pytest
@@ -12,6 +13,10 @@ from game.strategy.engine.empire_economy_calculator import (
     EmpireEconomyCalculator,
     EmpireEconomySnapshot,
 )
+from game.strategy.data.empire import Empire
+from game.strategy.data.planet import Planet, PlanetaryFacility
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.ship_instance import ShipInstance
 from game.core.constants import PLANET_RESOURCES
 
 
@@ -42,7 +47,7 @@ class TestEmpireEconomyCalculator:
 
     def test_empty_empire_returns_zeros(self):
         """Empty empire (no colonies, no fleets) returns 0.0 for each resource."""
-        empire = Mock()
+        empire = Mock(spec=Empire)
         empire.colonies = []
         empire.fleets = []
         empire.resource_pool = {}
@@ -61,7 +66,7 @@ class TestEmpireEconomyCalculator:
     def test_single_colony_with_resource_harvester(self):
         """Single colony with one facility having ResourceHarvester returns correct production."""
         # Set up facility with ResourceHarvester ability
-        facility = Mock()
+        facility = Mock(spec=PlanetaryFacility)
         facility.is_operational = True
         facility.design_data = {
             'layers': {
@@ -81,13 +86,13 @@ class TestEmpireEconomyCalculator:
         }
 
         # Set up colony with resource quality
-        colony = Mock()
+        colony = Mock(spec=Planet)
         colony.facilities = [facility]
         colony.resources = {
             'Metals': {'quality': 0.8, 'quantity': 1000}
         }
 
-        empire = Mock()
+        empire = Mock(spec=Empire)
         empire.colonies = [colony]
         empire.fleets = []
         empire.resource_pool = {}
@@ -102,7 +107,7 @@ class TestEmpireEconomyCalculator:
 
     def test_facility_maintenance_cost_is_5_percent(self):
         """Facility maintenance is 5% of resource_cost."""
-        facility = Mock()
+        facility = Mock(spec=PlanetaryFacility)
         facility.is_operational = True
         facility.design_data = {
             'layers': {
@@ -119,11 +124,11 @@ class TestEmpireEconomyCalculator:
             }
         }
 
-        colony = Mock()
+        colony = Mock(spec=Planet)
         colony.facilities = [facility]
         colony.resources = {}
 
-        empire = Mock()
+        empire = Mock(spec=Empire)
         empire.colonies = [colony]
         empire.fleets = []
         empire.resource_pool = {}
@@ -138,7 +143,7 @@ class TestEmpireEconomyCalculator:
 
     def test_ship_maintenance_cost_is_5_percent(self):
         """Ship maintenance is 5% of resource_cost."""
-        ship = Mock()
+        ship = Mock(spec=ShipInstance)
         ship.design_data = {
             'layers': {
                 'HULL': [
@@ -156,10 +161,10 @@ class TestEmpireEconomyCalculator:
             }
         }
 
-        fleet = Mock()
+        fleet = Mock(spec=Fleet)
         fleet.ships = [ship]
 
-        empire = Mock()
+        empire = Mock(spec=Empire)
         empire.colonies = []
         empire.fleets = [fleet]
         empire.resource_pool = {}
@@ -175,7 +180,7 @@ class TestEmpireEconomyCalculator:
     def test_net_resources_equals_production_minus_expenses(self):
         """net_resources = total_production - total_expenses."""
         # Facility with harvester and maintenance cost
-        facility = Mock()
+        facility = Mock(spec=PlanetaryFacility)
         facility.is_operational = True
         facility.design_data = {
             'layers': {
@@ -194,11 +199,11 @@ class TestEmpireEconomyCalculator:
             }
         }
 
-        colony = Mock()
+        colony = Mock(spec=Planet)
         colony.facilities = [facility]
         colony.resources = {'Metals': {'quality': 1.0, 'quantity': 1000}}
 
-        empire = Mock()
+        empire = Mock(spec=Empire)
         empire.colonies = [colony]
         empire.fleets = []
         empire.resource_pool = {}
@@ -216,7 +221,7 @@ class TestEmpireEconomyCalculator:
 
     def test_current_storage_and_max_storage_copied_from_empire(self):
         """current_storage and max_storage are copied from empire."""
-        empire = Mock()
+        empire = Mock(spec=Empire)
         empire.colonies = []
         empire.fleets = []
         empire.resource_pool = {'Metals': 500.0, 'Organics': 300.0}
@@ -230,7 +235,7 @@ class TestEmpireEconomyCalculator:
 
     def test_non_operational_facility_is_skipped(self):
         """Non-operational facilities contribute neither production nor maintenance."""
-        facility = Mock()
+        facility = Mock(spec=PlanetaryFacility)
         facility.is_operational = False
         facility.design_data = {
             'layers': {
@@ -249,11 +254,11 @@ class TestEmpireEconomyCalculator:
             }
         }
 
-        colony = Mock()
+        colony = Mock(spec=Planet)
         colony.facilities = [facility]
         colony.resources = {'Metals': {'quality': 1.0, 'quantity': 5000}}
 
-        empire = Mock()
+        empire = Mock(spec=Empire)
         empire.colonies = [colony]
         empire.fleets = []
         empire.resource_pool = {}
@@ -268,7 +273,7 @@ class TestEmpireEconomyCalculator:
 
     def test_dict_format_layer_with_components_key(self):
         """Handles dict-format layer: {'components': [...]}."""
-        facility = Mock()
+        facility = Mock(spec=PlanetaryFacility)
         facility.is_operational = True
         facility.design_data = {
             'layers': {
@@ -283,11 +288,11 @@ class TestEmpireEconomyCalculator:
             }
         }
 
-        colony = Mock()
+        colony = Mock(spec=Planet)
         colony.facilities = [facility]
         colony.resources = {}
 
-        empire = Mock()
+        empire = Mock(spec=Empire)
         empire.colonies = [colony]
         empire.fleets = []
         empire.resource_pool = {}
@@ -301,7 +306,7 @@ class TestEmpireEconomyCalculator:
 
     def test_list_format_layer_direct(self):
         """Handles list-format layer: [component1, component2, ...]."""
-        facility = Mock()
+        facility = Mock(spec=PlanetaryFacility)
         facility.is_operational = True
         facility.design_data = {
             'layers': {
@@ -318,11 +323,11 @@ class TestEmpireEconomyCalculator:
             }
         }
 
-        colony = Mock()
+        colony = Mock(spec=Planet)
         colony.facilities = [facility]
         colony.resources = {}
 
-        empire = Mock()
+        empire = Mock(spec=Empire)
         empire.colonies = [colony]
         empire.fleets = []
         empire.resource_pool = {}
@@ -337,7 +342,7 @@ class TestEmpireEconomyCalculator:
     def test_multiple_colonies_and_fleets_aggregate(self):
         """Multiple colonies and fleets aggregate correctly."""
         # Colony 1: Metals production
-        facility1 = Mock()
+        facility1 = Mock(spec=PlanetaryFacility)
         facility1.is_operational = True
         facility1.design_data = {
             'layers': {
@@ -355,12 +360,12 @@ class TestEmpireEconomyCalculator:
                 ]
             }
         }
-        colony1 = Mock()
+        colony1 = Mock(spec=Planet)
         colony1.facilities = [facility1]
         colony1.resources = {'Metals': {'quality': 1.0, 'quantity': 1000}}
 
         # Colony 2: Organics production
-        facility2 = Mock()
+        facility2 = Mock(spec=PlanetaryFacility)
         facility2.is_operational = True
         facility2.design_data = {
             'layers': {
@@ -378,21 +383,21 @@ class TestEmpireEconomyCalculator:
                 ]
             }
         }
-        colony2 = Mock()
+        colony2 = Mock(spec=Planet)
         colony2.facilities = [facility2]
         colony2.resources = {'Organics': {'quality': 0.5, 'quantity': 1000}}
 
         # Fleet with ship
-        ship = Mock()
+        ship = Mock(spec=ShipInstance)
         ship.design_data = {
             'layers': {
                 'HULL': [{'id': 'hull', 'resource_cost': {'Vapors': 100.0}}]
             }
         }
-        fleet = Mock()
+        fleet = Mock(spec=Fleet)
         fleet.ships = [ship]
 
-        empire = Mock()
+        empire = Mock(spec=Empire)
         empire.colonies = [colony1, colony2]
         empire.fleets = [fleet]
         empire.resource_pool = {}
@@ -412,7 +417,7 @@ class TestEmpireEconomyCalculator:
 
     def test_missing_resource_quality_defaults_to_zero(self):
         """If colony lacks a resource entry, quality defaults to 0.0 (no production)."""
-        facility = Mock()
+        facility = Mock(spec=PlanetaryFacility)
         facility.is_operational = True
         facility.design_data = {
             'layers': {
@@ -431,11 +436,11 @@ class TestEmpireEconomyCalculator:
             }
         }
 
-        colony = Mock()
+        colony = Mock(spec=Planet)
         colony.facilities = [facility]
         colony.resources = {}  # No Exotics resource data
 
-        empire = Mock()
+        empire = Mock(spec=Empire)
         empire.colonies = [colony]
         empire.fleets = []
         empire.resource_pool = {}
@@ -449,7 +454,7 @@ class TestEmpireEconomyCalculator:
 
     def test_placeholder_sources_are_zero(self):
         """Placeholder production sources (ship, trade, tribute, mining) are zero."""
-        empire = Mock()
+        empire = Mock(spec=Empire)
         empire.colonies = []
         empire.fleets = []
         empire.resource_pool = {}
@@ -473,7 +478,7 @@ class TestEmpireEconomyCalculator:
         without inline abilities. The calculator must fall back to registry lookup.
         """
         # Facility with component ID but NO inline abilities (matches real design files)
-        facility = Mock()
+        facility = Mock(spec=PlanetaryFacility)
         facility.is_operational = True
         facility.design_data = {
             'layers': {
@@ -486,11 +491,11 @@ class TestEmpireEconomyCalculator:
             }
         }
 
-        colony = Mock()
+        colony = Mock(spec=Planet)
         colony.facilities = [facility]
         colony.resources = {'Metals': {'quality': 0.8, 'quantity': 5000}}
 
-        empire = Mock()
+        empire = Mock(spec=Empire)
         empire.colonies = [colony]
         empire.fleets = []
         empire.resource_pool = {}
@@ -516,7 +521,7 @@ class TestEmpireEconomyCalculator:
 
     def test_registry_fallback_with_no_registries_returns_zero(self):
         """Without registries, components lacking inline abilities produce nothing (BUG-87)."""
-        facility = Mock()
+        facility = Mock(spec=PlanetaryFacility)
         facility.is_operational = True
         facility.design_data = {
             'layers': {
@@ -526,11 +531,11 @@ class TestEmpireEconomyCalculator:
             }
         }
 
-        colony = Mock()
+        colony = Mock(spec=Planet)
         colony.facilities = [facility]
         colony.resources = {'Metals': {'quality': 0.8, 'quantity': 5000}}
 
-        empire = Mock()
+        empire = Mock(spec=Empire)
         empire.colonies = [colony]
         empire.fleets = []
         empire.resource_pool = {}

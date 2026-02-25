@@ -1,6 +1,7 @@
 """Tests for FleetMovementEngine (PROJ-189 Phase 5).
 
 Test environmental effect integration for storm speed reduction.
+PROJ-191 Phase 3: Updated mocks to use spec= for type safety.
 """
 
 import pytest
@@ -8,13 +9,14 @@ from unittest.mock import MagicMock, patch
 
 from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
 from game.strategy.services.area_effect_manager import AreaEffectManager, EnvironmentalEffects
-from game.strategy.data.fleet import OrderType
+from game.strategy.data.fleet import Fleet, OrderType
+from game.strategy.data.empire import Empire
 from game.core.hex_math import HexCoord
 
 
 def create_mock_fleet(fleet_id=1, speed=5.0, location=HexCoord(0, 0)):
     """Create a mock fleet with configurable properties."""
-    fleet = MagicMock()
+    fleet = MagicMock(spec=Fleet)
     fleet.id = fleet_id
     fleet.speed = speed
     fleet.location = location
@@ -37,7 +39,7 @@ class TestFleetMovementEngineEnvironmentalEffects:
 
         # Create fleet with speed 5
         fleet = create_mock_fleet(speed=5.0)
-        empire = MagicMock()
+        empire = MagicMock(spec=Empire)
         empire.fleets = [fleet]
         galaxy = MagicMock()
 
@@ -66,7 +68,7 @@ class TestFleetMovementEngineEnvironmentalEffects:
 
         # Create fleet with base speed 4
         fleet = create_mock_fleet(speed=4.0)
-        empire = MagicMock()
+        empire = MagicMock(spec=Empire)
         empire.fleets = [fleet]
         galaxy = MagicMock()
 
@@ -95,7 +97,7 @@ class TestFleetMovementEngineEnvironmentalEffects:
         engine = FleetMovementEngine(area_effect_manager=mock_area_manager)
 
         fleet = create_mock_fleet(speed=5.0)
-        empire = MagicMock()
+        empire = MagicMock(spec=Empire)
         empire.fleets = [fleet]
         galaxy = MagicMock()
 
@@ -111,7 +113,7 @@ class TestFleetMovementEngineEnvironmentalEffects:
 
         # Access through collect_movements to trigger lazy init
         fleet = create_mock_fleet(speed=5.0)
-        empire = MagicMock()
+        empire = MagicMock(spec=Empire)
         empire.fleets = [fleet]
 
         # Create a mock galaxy that returns empty zones
@@ -139,7 +141,7 @@ class TestFleetMovementEngineEnvironmentalEffects:
 
         # Create fleet with base speed 5
         fleet = create_mock_fleet(speed=5.0)
-        empire = MagicMock()
+        empire = MagicMock(spec=Empire)
         empire.fleets = [fleet]
         galaxy = MagicMock()
 
@@ -178,7 +180,7 @@ class TestFleetMovementEngineEnvironmentalEffects:
         # Fleet 2: speed 4, in storm with 0.5 mult, effective speed 2, moves every 50 ticks
         fleet2 = create_mock_fleet(fleet_id=2, speed=4.0, location=HexCoord(5, 5))
 
-        empire = MagicMock()
+        empire = MagicMock(spec=Empire)
         empire.fleets = [fleet1, fleet2]
         galaxy = MagicMock()
 

@@ -1,8 +1,12 @@
-
+"""
+PROJ-191 Phase 3: Updated mocks to use spec= for type safety.
+"""
 import pytest
 from unittest.mock import MagicMock
 from game.strategy.engine.production_engine import ProductionEngine
 from game.strategy.data.build_queue_source import BuildQueueSource
+from game.strategy.data.empire import Empire
+from game.strategy.data.planet import Planet
 
 class TestProductionEngineRefactor:
     @pytest.fixture
@@ -11,7 +15,7 @@ class TestProductionEngineRefactor:
 
     @pytest.fixture
     def mock_empire(self):
-        emp = MagicMock()
+        emp = MagicMock(spec=Empire)
         emp.id = "emp1"
         emp.has_resources.return_value = True
         emp.consume_resources = MagicMock()
@@ -19,7 +23,7 @@ class TestProductionEngineRefactor:
 
     @pytest.fixture
     def mock_colony(self, mock_empire):
-        colony = MagicMock()
+        colony = MagicMock(spec=Planet)
         colony.construction_queue = []
         colony.facilities = []
         return colony

@@ -2,6 +2,7 @@
 
 PROJ-75 Phase 5: Maintenance System.
 PROJ-161: Now per-tick only via process_maintenance_tick().
+PROJ-191 Phase 3: Updated mocks to use spec= for type safety.
 
 MaintenanceEngine deducts 5% of build cost per turn for each facility and ship
 (1/100th per tick = 0.05% per tick). If the empire cannot afford maintenance
@@ -12,7 +13,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.data.empire import Empire
-from game.strategy.data.planet import PlanetaryFacility
+from game.strategy.data.planet import Planet, PlanetaryFacility
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.ship_instance import ShipInstance
 from game.core.hex_math import HexCoord
@@ -31,7 +32,7 @@ def _make_empire(resources: dict = None, empire_id: int = 0) -> Empire:
 
 def _make_colony(facilities=None, name="Test Colony", planet_id=1):
     """Create a mock colony with facilities."""
-    colony = MagicMock()
+    colony = MagicMock(spec=Planet)
     colony.name = name
     colony.id = planet_id
     colony.facilities = list(facilities) if facilities else []

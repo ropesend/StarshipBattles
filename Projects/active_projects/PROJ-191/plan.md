@@ -15,27 +15,25 @@
 |-------|--------|-----------|
 | 1. Type Hints on Signatures | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Replace getattr in Engines | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Update Test Mocks | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Update Test Mocks | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Replace hasattr Type Discrimination | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Miscellaneous Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Document & Audit | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 2 Complete
-**Last Action:** Replaced ~53 getattr() patterns with direct attribute access
-**Next Action:** Phase 3 — Update Test Mocks
+**Active Phase:** Phase 3 Complete
+**Last Action:** Updated test mocks to use spec= parameter for type safety
+**Next Action:** Phase 4 — Replace hasattr Type Discrimination
 **Blockers:** None
-**Context for Next Agent:** Phase 2 complete. Replaced getattr patterns in:
-- empire_economy_calculator.py: 14 instances (empire.colonies, colony.facilities, etc.)
-- harvesting_engine.py: 10 instances (empire.colonies, facility.design_data, etc.)
-- population_engine.py: 5 instances (empire.colonies, race_config.aptitude_population_growth, etc.)
-- superweapon_order_processor.py: 10 instances (empire.id, primary_star.location, etc.)
-- fleet_order_processor.py: 2 instances (empire.race_config, simplified isinstance check)
-- component_inspector.py: 2 instances (ship.design_data)
-- colonize_validator.py: 2 instances (ship.design_data, fleet.orders)
-- action_time_resolver.py: 1 instance (ship.design_data)
-Deleted 2 obsolete duck typing tests. Tests: 12702 passed, 1 skipped.
+**Context for Next Agent:** Phase 3 complete. Updated test mocks in:
+- test_empire_economy_calculator.py: 15 Mock() calls → Mock(spec=Empire/Planet/Fleet/etc.)
+- test_harvesting_engine.py: _make_empire() and _make_planet() helpers use spec=
+- test_maintenance_engine.py: _make_colony() uses Mock(spec=Planet)
+- test_production_refactor.py: mock_empire and mock_colony fixtures use spec=
+- test_fleet_movement_engine.py: create_mock_fleet() uses Mock(spec=Fleet), empire uses Mock(spec=Empire)
+- test_population_engine.py: TurnEngine integration test empire uses Mock(spec=Empire)
+All 12702 tests pass (1 skipped).
 
 ## Overview
 Replace ~93 implicit duck typing patterns (`hasattr()`/`getattr()`) in the `game/strategy/` layer with direct attribute access, explicit `isinstance` checks, and proper type annotations. Retain ~12 intentional `getattr` patterns at external data boundaries (JSON component definitions, save file deserialization).
