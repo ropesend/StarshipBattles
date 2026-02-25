@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Generic Components (Foundation) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Generic Components (Foundation) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Migrate Fleet Report | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate Planet List | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate Empire Build Queue | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -21,12 +21,12 @@
 | 6. Cleanup | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-24 17:30
-**Active Phase:** Planning — Awaiting Approval
-**Last Action:** Deep code review complete, 6-agent swarm analysis, detailed plan with 6 phases created
-**Next Action:** User approval → Begin Phase 1 implementation
+**Last Updated:** 2026-02-24
+**Active Phase:** Phase 1 Complete
+**Last Action:** Implemented all generic table components (VirtualTable, TableHeader, TableColumnManager, ITableDataSource, selection strategies)
+**Next Action:** Begin Phase 2: Migrate Fleet Report
 **Blockers:** None
-**Context for Next Agent:** Baseline 12,366 tests passing. Design doc and decisions log written. All architecture decisions confirmed with user.
+**Context for Next Agent:** 12,531 tests passing (+65 new). All table components in `game/ui/components/table/` with full test coverage. Ready for Phase 2 (FleetDataSource + FleetReportWindow migration).
 
 ## Overview
 Consolidates 4 duplicated list/table UI implementations (Planet List, Fleet Report, Empire Build Queue, Event Log) into a single generic `VirtualTable` component system under `game/ui/components/table/`, with domain-specific `ITableDataSource` adapters. Eliminates ~1,088 lines of duplicated rendering code while giving all lists virtual scrolling, sortable/reorderable columns, and a consistent architecture.
