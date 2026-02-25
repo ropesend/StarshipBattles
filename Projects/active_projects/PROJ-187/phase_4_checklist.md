@@ -115,7 +115,7 @@ When all tasks above are done:
 - [x] FleetMovementEngine skips action-order fleets
 - [x] Tests updated to reflect new architecture
 - [x] All tests passing (12445 passed, 1 skipped)
-- [ ] Proceed immediately to Phase 5 (test migration)
+- [x] Proceed immediately to Phase 5 (test migration)
 - [x] Update status at top of this file to `Complete`
 - [x] Update plan.md phase table row to `Complete`
 - [x] Update plan.md Current State to point to next phase
