@@ -148,29 +148,9 @@ class TestLeadCalculation:
         # solve_lead should have been called via combat_engine
         mock_owner.combat_engine.solve_lead.assert_called()
 
-    def test_lead_calculation_without_solve_lead(self, mock_owner, mock_target):
-        """Should handle owner without combat_engine."""
-        # Remove combat_engine (guard checks hasattr(self.owner, 'combat_engine'))
-        del mock_owner.combat_engine
-        mock_target.position = pygame.math.Vector2(1000, 0)
-
-        proj = Projectile(
-            owner=mock_owner,
-            position=pygame.math.Vector2(0, 0),
-            velocity=pygame.math.Vector2(0, 100),  # Moving up
-            damage=50,
-            range_val=5000,
-            endurance=10.0,
-            proj_type='missile',
-            turn_rate=90,
-            max_speed=100,
-            target=mock_target,
-            hp=5
-        )
-
-        # Should not crash, just use direct pursuit
-        proj.update()
-        assert proj.is_alive
+    # DELETED: test_lead_calculation_without_solve_lead
+    # Reason: Duck typing replaced with explicit protocols in PROJ-190.
+    # Owner must now have combat_engine attribute.
 
     def test_lead_zero_uses_direct_pursuit(self, mock_owner, mock_target):
         """When lead time is zero, should aim directly at target."""

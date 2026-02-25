@@ -747,45 +747,10 @@ class TestEdgeCasesAndBoundaries:
         with pytest.raises(AttributeError):
             system.select_target(ship, [None, enemy])
 
-    def test_select_target_handles_missing_is_alive_attribute(self):
-        """select_target handles candidates without is_alive attribute."""
-        from game.simulation.combat.targeting_system import TargetingSystem
-
-        system = TargetingSystem()
-
-        ship = MagicMock()
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-
-        # Enemy without is_alive attribute (defaults to True via getattr)
-        enemy = MagicMock(spec=['team_id', 'position'])
-        enemy.team_id = 1
-        enemy.position = Vector2(100, 0)
-        del enemy.is_alive  # Ensure attribute doesn't exist
-
-        target = system.select_target(ship, [enemy])
-        # Should use default (True) and include target
-        assert target is enemy
-
-    def test_select_target_handles_missing_team_id(self):
-        """select_target handles candidates without team_id attribute."""
-        from game.simulation.combat.targeting_system import TargetingSystem
-
-        system = TargetingSystem()
-
-        ship = MagicMock()
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-
-        # Enemy without team_id (defaults to -1 which != 0)
-        enemy = MagicMock(spec=['is_alive', 'position'])
-        enemy.is_alive = True
-        enemy.position = Vector2(100, 0)
-        del enemy.team_id
-
-        target = system.select_target(ship, [enemy])
-        # team_id defaults to -1, which != 0 (ship's team), so should be valid
-        assert target is enemy
+    # DELETED: test_select_target_handles_missing_is_alive_attribute
+    # DELETED: test_select_target_handles_missing_team_id
+    # Reason: Duck typing replaced with explicit protocols in PROJ-190.
+    # Objects must now have is_alive and team_id attributes.
 
     def test_solve_lead_zero_projectile_speed(self):
         """solve_lead handles zero projectile speed gracefully."""
@@ -818,26 +783,9 @@ class TestEdgeCasesAndBoundaries:
         # Distance is 0, so should return 0 or near-instant intercept
         assert result >= 0
 
-    def test_calculate_firing_solution_target_no_velocity_attribute(self):
-        """calculate_firing_solution handles target without velocity attribute."""
-        from game.simulation.combat.targeting_system import TargetingSystem
-
-        system = TargetingSystem()
-
-        ship = MagicMock()
-        ship.position = Vector2(0, 0)
-        ship.velocity = Vector2(0, 0)
-
-        target = MagicMock(spec=['position'])
-        target.position = Vector2(100, 0)
-        # No velocity attribute
-
-        comp = MagicMock()
-        comp.has_ability = lambda name: name == 'BeamWeaponAbility'
-
-        aim_pos, aim_vec = system.calculate_firing_solution(ship, comp, target)
-        # Should default to Vector2(0,0) velocity and aim at position
-        assert aim_pos == target.position
+    # DELETED: test_calculate_firing_solution_target_no_velocity_attribute
+    # Reason: Duck typing replaced with explicit protocols in PROJ-190.
+    # Target objects must now have velocity attribute.
 
     def test_find_valid_target_with_none_primary(self):
         """find_valid_target handles None primary gracefully."""

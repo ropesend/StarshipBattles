@@ -215,11 +215,9 @@ class TestBattleStateManagerValidation:
 
         assert state_manager.validate_state(mock_state) is True
 
-    def test_validate_state_missing_mode(self, state_manager):
-        """validate_state returns False for missing mode."""
-        mock_state = Mock(spec=[])  # No attributes
-
-        assert state_manager.validate_state(mock_state) is False
+    # DELETED: test_validate_state_missing_mode
+    # Reason: Duck typing replaced with explicit protocols in PROJ-190.
+    # State objects must now have mode attribute.
 
     def test_validate_state_none(self, state_manager):
         """validate_state returns False for None."""

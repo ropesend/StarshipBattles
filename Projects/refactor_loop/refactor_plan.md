@@ -8,32 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-190 Phase 4 - Replace Combat/Entity Duck Typing
-**Current Status:** PROJ-190 Phase 4 Complete
+**Last Completed:** PROJ-190 Phase 5 - Update Test Mocks
+**Current Status:** PROJ-190 Phase 5 Complete
 **Current Project:** PROJ-190
-**Current Phase:** Phase 5 - Update Test Mocks
-**Test Status:** 2564 sim unit passing, 30 failing (mock issues)
+**Current Phase:** Phase 6 - Final Verification
+**Test Status:** 2583 sim unit passing
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-190 Phase 4 Complete (~35 duck typing instances replaced):
-  - targeting_system.py: Protocol-typed candidates (ICombatShip, IProjectile)
-  - battle_state.py: Direct attribute access for component, ship, projectile fields
-  - weapon_firing_system.py: Direct shots_fired, weapon_ab.facing_angle access
-  - ship_physics.py: Direct is_thrusting, engine_throttle, turn_throttle access
-  - ship_formation.py: is_formation_host() TypeGuard for formation checks
-  - ship_serialization.py: Direct strategic stat access (added fields to Ship.__init__)
-  - ship_combat_engine.py: Direct resources/repair_rate access
-  - ship_stat_querier.py: Direct ab.range access for weapons
-  - projectile_manager.py: Direct source_weapon access
-  - battle_engine.py: Direct attack.target access
-  - ship_validator.py: Direct ab.max_amount for ResourceStorage
-  - battle_state_manager.py: Direct state.mode/state.ships access
-  - projectile.py: Direct owner.team_id, owner.combat_engine access
-  - ship.py: Direct comp.ship access
-- 30 test failures from mocks missing required attributes (Phase 5)
+- PROJ-190 Phase 5 Complete (30 test failures fixed):
+  - Deleted 11 obsolete tests that verified duck-typed fallback behavior
+  - Updated projectile guidance conftest: added combat_engine to mock_owner
+  - Fixed weapon firing tests: set facing_angle on weapon_ab (not component)
+  - Files modified: test_targeting_system.py, test_weapon_firing_system.py,
+    test_projectile.py, test_ship_physics.py, test_battle_state_manager.py,
+    conftest.py (guidance), test_guidance_behavior.py, test_cooldowns.py,
+    test_projectile_manager.py
+- simulation_tests has 12 pre-existing failures (resource test data issues, not PROJ-190)
 - 26 remaining getattr/hasattr are legitimate meta-programming
-- Next: Phase 5 updates test mocks with protocol-compliant attributes
+- Next: Phase 6 final verification
 
 ---
 
@@ -136,6 +129,7 @@
 | 2026-02-24 | PROJ-190 | Phase 2 | Complete | 2594 sim unit | - | Removed hasattr/getattr patterns for lazy fields |
 | 2026-02-24 | PROJ-190 | Phase 3 | Complete | 2594 sim unit | - | Replaced ~35 ability duck typing instances |
 | 2026-02-24 | PROJ-190 | Phase 4 | Complete | 2564 sim (30 fail) | - | Replaced ~35 combat/entity duck typing (14 files) |
+| 2026-02-24 | PROJ-190 | Phase 5 | Complete | 2583 sim unit | - | Deleted 11 obsolete tests, fixed 3 mock issues |
 
 ---
 

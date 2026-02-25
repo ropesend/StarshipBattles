@@ -240,6 +240,7 @@ class TestSeekerWeaponFiring:
         weapon_ab.damage = 100
         weapon_ab.range = 2000
         weapon_ab.firing_arc = 90
+        weapon_ab.facing_angle = 0  # PROJ-190: Now on ability, not component
         weapon_ab.check_firing_solution = MagicMock(return_value=True)
 
         seeker_ab = MagicMock()
@@ -259,7 +260,6 @@ class TestSeekerWeaponFiring:
         weapon.can_afford_activation = MagicMock(return_value=True)
         weapon.has_pdc_ability = MagicMock(return_value=False)
         weapon.shots_fired = 0
-        weapon.facing_angle = 0
 
         ship.iter_components = MagicMock(return_value=[(LayerType.OUTER, weapon)])
 
@@ -1197,6 +1197,7 @@ class TestSeekerProjectileCreation:
         weapon_ab.damage = 100
         weapon_ab.range = 2000
         weapon_ab.firing_arc = 90
+        weapon_ab.facing_angle = 0  # PROJ-190: Now on ability, not component
         weapon_ab.check_firing_solution = MagicMock(return_value=True)
 
         seeker_ab = MagicMock()
@@ -1216,7 +1217,6 @@ class TestSeekerProjectileCreation:
         weapon.can_afford_activation = MagicMock(return_value=True)
         weapon.has_pdc_ability = MagicMock(return_value=False)
         weapon.shots_fired = 0
-        weapon.facing_angle = 0
 
         ship.iter_components = MagicMock(return_value=[(LayerType.OUTER, weapon)])
 
@@ -1262,6 +1262,7 @@ class TestSeekerProjectileCreation:
         weapon_ab.damage = 100
         weapon_ab.range = 2000
         weapon_ab.firing_arc = 90  # 45 degrees each side
+        weapon_ab.facing_angle = 0  # PROJ-190: Now on ability, not component
         weapon_ab.check_firing_solution = MagicMock(return_value=True)
 
         seeker_ab = MagicMock()
@@ -1281,7 +1282,6 @@ class TestSeekerProjectileCreation:
         weapon.can_afford_activation = MagicMock(return_value=True)
         weapon.has_pdc_ability = MagicMock(return_value=False)
         weapon.shots_fired = 0
-        weapon.facing_angle = 0
 
         ship.iter_components = MagicMock(return_value=[(LayerType.OUTER, weapon)])
 
