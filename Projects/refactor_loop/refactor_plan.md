@@ -8,21 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-195 Phase 2 - Entity & UI Test Migration
-**Current Status:** PROJ-195 Phase 2 complete, ready for Phase 2.5
+**Last Completed:** PROJ-195 Phase 2.5 - Ship Internal Singleton Investigation & Fix
+**Current Status:** PROJ-195 Phase 2.5 complete, ready for Phase 3
 **Current Project:** PROJ-195
-**Current Phase:** Phase 2.5 - Ship Internal Singleton Investigation & Fix
-**Test Status:** 606 passed (affected dirs), full suite pending
+**Current Phase:** Phase 3 - Data Loader Test Migration
+**Test Status:** 482 passed (affected dirs)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-195 Phase 2 COMPLETE - Migrated 3 test files away from singleton hydration
-- test_ship.py: Removed 4 `mgr.hydrate()` calls from TestShip, TestShipClassMutation, TestChangeClassInvalidInput, TestTotalDefenseScoreInitialization
-- test_ship_factory.py: Removed 3 `mgr.hydrate()` calls from TestShipFactory, TestShipFactoryStaticMethods, TestSetupFormationEdgeCases
-- test_builder_ui_sync.py: Removed hydration, added `self.registries` storage, replaced 3 singleton reads with `self.registries`
-- Removed RegistryManager imports from all 3 files
-- All 26 tests pass - Ship internal methods correctly use stored `registries` reference
-- Next: Phase 2.5 - Investigate if Ship internal methods still access singleton (likely already clean)
+- PROJ-195 Phase 2.5 COMPLETE - Investigation confirmed Ship internals are clean
+- ship.py: NO singleton access - uses injected `registries` parameter throughout
+- component.py: 3 `get_default_registry_provider()` calls in loader functions (composition-root paths, legitimate)
+- game/simulation/services/: NO singleton access
+- All 26 Phase 2 tests pass - confirms Phase 2 cleanup was complete
+- Next: Phase 3 - Migrate test_builder_data_loader.py and test_workshop_data_loader.py
 
 ---
 
@@ -158,6 +157,7 @@
 | 2026-02-25 | PROJ-194 | Audit 1 | PASSED | 12721 passed | - | All 4 goals verified, ~60+ patterns eliminated |
 | 2026-02-25 | PROJ-195 | Phase 1 | Complete | 12720 passed | - | Production code cleanup: get_validator(), 4 tests fixed |
 | 2026-02-25 | PROJ-195 | Phase 2 | Complete | 606 passed | - | 3 test files migrated, singleton hydration removed, 26 tests pass |
+| 2026-02-25 | PROJ-195 | Phase 2.5 | Complete | 482 passed | - | Ship internals clean, no singleton access in Ship methods |
 
 ---
 
