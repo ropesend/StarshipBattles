@@ -176,6 +176,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.stats_calculator: Optional[ShipStatsCalculator] = None
         self._stat_querier: Optional[ShipStatQuerier] = None
         self._validator_helper: Optional[ShipValidatorHelper] = None
+        self._combat_engine: Optional[ShipCombatEngine] = None
 
 
 
@@ -225,7 +226,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
         Lazy initialization ensures ship is fully initialized before engine creation.
         """
-        if not hasattr(self, '_combat_engine') or self._combat_engine is None:
+        if self._combat_engine is None:
             self._combat_engine = ShipCombatEngine(self)
         return self._combat_engine
 

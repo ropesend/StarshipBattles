@@ -204,7 +204,7 @@ class Component:
         PERF: Uses indexed lookup when available, falls back to AbilityManager.
         """
         # Fast path: use pre-built index (includes MRO for polymorphism)
-        if hasattr(self, '_ability_index') and ability_name in self._ability_index:
+        if ability_name in self._ability_index:
             return list(self._ability_index[ability_name])  # Return copy
 
         # Fallback: delegate to AbilityManager (for edge cases)
@@ -213,7 +213,7 @@ class Component:
     def get_ability(self, ability_name: str):
         """Get first ability of type. Uses indexed lookup when available."""
         # Fast path: use pre-built index
-        if hasattr(self, '_ability_index') and ability_name in self._ability_index:
+        if ability_name in self._ability_index:
             abilities = self._ability_index[ability_name]
             return abilities[0] if abilities else None
 
@@ -223,7 +223,7 @@ class Component:
     def has_ability(self, ability_name: str):
         """Check if component has ability. Uses indexed lookup when available."""
         # Fast path: use pre-built index
-        if hasattr(self, '_ability_index') and ability_name in self._ability_index:
+        if ability_name in self._ability_index:
             return len(self._ability_index[ability_name]) > 0
 
         # Fallback: delegate to AbilityManager

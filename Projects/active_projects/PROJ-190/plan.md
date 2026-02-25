@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Define Protocols | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Initialize Lazy Fields | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Initialize Lazy Fields | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Replace Ability Duck Typing | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Replace Combat/Entity Duck Typing | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Update Test Mocks | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -22,11 +22,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete. Created 15 protocols (9 ability, 1 component, 5 entity) + 14 TypeGuards across 3 new files.
-**Next Action:** Begin Phase 2 - Initialize lazy fields.
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete. Replaced hasattr(self, '_field') patterns with direct access.
+**Next Action:** Begin Phase 3 - Replace ability duck typing.
 **Blockers:** None
-**Context for Next Agent:** Phase 1 created ability_protocols.py, component_protocols.py, entity_protocols.py. All 2594 simulation unit tests passing. Next phase addresses lazy init patterns (hasattr self guards) to use direct initialization.
+**Context for Next Agent:** Phase 2 completed: added `_combat_engine` init to Ship, removed 3 hasattr guards from Component, replaced 5 getattr calls in ship_stats.py with direct access. All 2594 simulation unit tests passing.
 
 ## Overview
 Replace all implicit duck typing (`hasattr`/`getattr`) in `game/simulation/` with explicit `typing.Protocol` definitions. This makes every object contract visible to type checkers, enables IDE autocomplete, and creates a direct mapping to C# interfaces / Rust traits for future language portability.

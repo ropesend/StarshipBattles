@@ -493,17 +493,18 @@ class ShipStatsCalculator:
 
     def _initialize_resources(self, ship) -> None:
         # Resource Initialization (Auto-fill on first load only, or when capacity increases)
-        prev_max_fuel = getattr(ship, '_prev_max_fuel', 0)
-        prev_max_ammo = getattr(ship, '_prev_max_ammo', 0)
-        prev_max_energy = getattr(ship, '_prev_max_energy', 0)
-        prev_max_shields = getattr(ship, '_prev_max_shields', 0)
-        
+        # PROJ-190: Direct attribute access - fields initialized in Ship.__init__
+        prev_max_fuel = ship._prev_max_fuel
+        prev_max_ammo = ship._prev_max_ammo
+        prev_max_energy = ship._prev_max_energy
+        prev_max_shields = ship._prev_max_shields
+
         # Get current max values directly from registry
         curr_max_fuel = ship.resources.get_max_value(ResourceType.FUEL)
         curr_max_ammo = ship.resources.get_max_value(ResourceType.AMMO)
         curr_max_energy = ship.resources.get_max_value(ResourceType.ENERGY)
 
-        if not getattr(ship, '_resources_initialized', False):
+        if not ship._resources_initialized:
             # First init - fill to max
             if curr_max_fuel > 0:
                 ship.resources.set_value(ResourceType.FUEL, curr_max_fuel)
