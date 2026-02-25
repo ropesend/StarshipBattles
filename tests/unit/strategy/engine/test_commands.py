@@ -31,6 +31,7 @@ from game.strategy.engine.commands import (
     QueueOpenWarpPointMissionCommand,
     QueueCloseWarpPointMissionCommand,
     QueueCreateDysonSphereMissionCommand,
+    IssueWarpCommand,  # PROJ-187
 )
 
 
@@ -380,6 +381,23 @@ class TestSuperweaponMissionCommands:
         assert cmd.fleet_id == 16
         assert cmd.target_hex == target
         assert cmd.type == CommandType.ISSUE_ORDER
+
+
+class TestIssueWarpCommand:
+    """Tests for IssueWarpCommand (PROJ-187)."""
+
+    def test_create_warp_command(self):
+        """IssueWarpCommand should store fleet_id and warp_point_hex."""
+        warp_hex = HexCoord(10, 5)
+        cmd = IssueWarpCommand(fleet_id=7, warp_point_hex=warp_hex)
+        assert cmd.fleet_id == 7
+        assert cmd.warp_point_hex == warp_hex
+        assert cmd.type == CommandType.ISSUE_ORDER
+
+    def test_warp_command_name(self):
+        """IssueWarpCommand should have correct name property."""
+        cmd = IssueWarpCommand(fleet_id=1, warp_point_hex=HexCoord(0, 0))
+        assert cmd.name == "IssueWarpCommand"
 
 
 class TestCommandEquality:

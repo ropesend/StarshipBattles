@@ -138,6 +138,9 @@ class FleetNavigationService:
         """
         if order.type == OrderType.MOVE:
             return order.target
+        elif order.type == OrderType.WARP:
+            # PROJ-187: WARP order target is the warp point hex to enter
+            return order.target
         elif order.type == OrderType.MOVE_TO_FLEET:
             target_fleet = order.target
             if not target_fleet or not hasattr(target_fleet, 'location'):
@@ -208,6 +211,93 @@ class FleetNavigationService:
             return True
         return state.path[-1] != destination
 
+    def compute_path_for_warp(
+        self,
+        state: NavigationState,
+        warp_point_hex: HexCoord,
+        galaxy
+    ) -> list:
+        """
+        Compute path for explicit WARP order.
+
+        PROJ-187: Calculates path to warp point, then appends the exit hex
+        on the other side of the warp connection.
+
+        Args:
+            state: Current navigation state
+            warp_point_hex: The global hex of the warp point to enter
+            galaxy: Galaxy object with warp point index
+
+        Returns:
+            List of HexCoords: path to warp point + exit hex after transit
+        """
+        path = []
+
+        # 1. If not at warp point, compute path to it
+        if state.location != warp_point_hex:
+            path_to_wp = find_hybrid_path(galaxy, state.location, warp_point_hex)
+            if path_to_wp:
+                # Remove start if matches current location
+                if path_to_wp and path_to_wp[0] == state.location:
+                    path_to_wp = path_to_wp[1:]
+                path.extend(path_to_wp)
+
+        # 2. Look up warp point and resolve exit hex
+        exit_hex = self._resolve_warp_exit(warp_point_hex, galaxy)
+        if exit_hex:
+            path.append(exit_hex)
+
+        return path
+
+    def _resolve_warp_exit(
+        self,
+        warp_point_hex: HexCoord,
+        galaxy
+    ) -> Optional[HexCoord]:
+        """
+        Resolve the exit hex for a warp point.
+
+        Args:
+            warp_point_hex: Global hex of the warp point entry
+            galaxy: Galaxy with warp point index
+
+        Returns:
+            Global HexCoord of the exit warp point, or None if not found
+        """
+        # Look up source system from warp point index
+        source_system = galaxy._global_hex_warp_points.get(warp_point_hex)
+        if not source_system:
+            logger.warning(f"No warp point found at {warp_point_hex}")
+            return None
+
+        # Find the warp point at this hex within the system
+        local_offset = warp_point_hex - source_system.global_location
+        source_wp = None
+        for wp in source_system.warp_points:
+            if wp.location == local_offset:
+                source_wp = wp
+                break
+
+        if not source_wp:
+            logger.warning(f"Warp point not found at local offset {local_offset} in {source_system.name}")
+            return None
+
+        # Get destination system
+        dest_system = galaxy.get_system_by_name(source_wp.destination_id)
+        if not dest_system:
+            logger.warning(f"Destination system '{source_wp.destination_id}' not found")
+            return None
+
+        # Find reciprocal warp point in destination system
+        for wp in dest_system.warp_points:
+            if wp.destination_id == source_system.name:
+                exit_hex = dest_system.global_location + wp.location
+                return exit_hex
+
+        # Fallback: use destination system center
+        logger.warning(f"No reciprocal warp point found, using system center")
+        return dest_system.global_location
+
     def compute_next_step(
         self,
         state: NavigationState,
@@ -244,6 +334,29 @@ class FleetNavigationService:
 
         # Calculate path if needed
         if not current_path:
+            # PROJ-187: Special handling for WARP orders at warp point
+            if order.type == OrderType.WARP and state.location == destination:
+                # Fleet is at warp point - resolve exit and execute warp
+                exit_hex = self._resolve_warp_exit(destination, galaxy)
+                if exit_hex:
+                    # Warp transit: move directly to exit hex
+                    new_orders = state.orders[1:]
+                    new_state = NavigationState(
+                        location=exit_hex,
+                        path=(),
+                        orders=new_orders,
+                        speed=state.speed,
+                        can_warp=state.can_warp
+                    )
+                    return NavigationStep(
+                        next_hex=exit_hex,
+                        new_state=new_state,
+                        order_complete=True
+                    )
+                else:
+                    # Warp point invalid - order fails
+                    return NavigationStep(next_hex=None, new_state=state, order_complete=False)
+
             if state.location == destination:
                 # Already at destination, complete order
                 new_orders = state.orders[1:]
@@ -256,7 +369,11 @@ class FleetNavigationService:
                 )
                 return NavigationStep(next_hex=None, new_state=new_state, order_complete=True)
 
-            current_path = self.compute_path(state, destination, galaxy)
+            # PROJ-187: Use specialized path for WARP orders
+            if order.type == OrderType.WARP:
+                current_path = self.compute_path_for_warp(state, destination, galaxy)
+            else:
+                current_path = self.compute_path(state, destination, galaxy)
 
             if not current_path:
                 # No path found, cannot move
@@ -333,7 +450,8 @@ class FleetNavigationService:
             if not state.path and state.orders:
                 order = state.orders[0]
 
-                if order.type not in (OrderType.MOVE, OrderType.MOVE_TO_FLEET):
+                # PROJ-187: Handle WARP orders for path projection
+                if order.type not in (OrderType.MOVE, OrderType.MOVE_TO_FLEET, OrderType.WARP):
                     # Skip non-movement orders
                     state = NavigationState(
                         location=state.location,
@@ -348,7 +466,11 @@ class FleetNavigationService:
                 if destination is None:
                     break
 
-                new_path = self.compute_path(state, destination, galaxy)
+                # PROJ-187: Use specialized path for WARP orders
+                if order.type == OrderType.WARP:
+                    new_path = self.compute_path_for_warp(state, destination, galaxy)
+                else:
+                    new_path = self.compute_path(state, destination, galaxy)
                 if not new_path:
                     break
 

@@ -146,6 +146,28 @@ class TestFleetSerialization:
         assert fleet.orders[0].type == OrderType.COLONIZE
         assert fleet.orders[0].target is None
 
+    def test_warp_order_serialization_roundtrip(self):
+        """Test that WARP orders are properly serialized and restored (PROJ-187)."""
+        warp_target = HexCoord(10, 5)
+        fleet = Fleet("f1", 0, HexCoord(0, 0), speed=5.0)
+        fleet.orders.append(FleetOrder(OrderType.WARP, target=warp_target))
+
+        # Serialize
+        d = fleet.to_dict()
+
+        # Verify serialized format
+        assert len(d['orders']) == 1
+        assert d['orders'][0]['type'] == 'WARP'
+        assert d['orders'][0]['target'] == {'q': 10, 'r': 5}
+
+        # Deserialize
+        restored = Fleet.from_dict(d)
+
+        # Verify restored order
+        assert len(restored.orders) == 1
+        assert restored.orders[0].type == OrderType.WARP
+        assert restored.orders[0].target == warp_target
+
     def test_roundtrip_orders_preserved(self):
         """Test that orders survive serialization roundtrip."""
         original = Fleet("test", 0, HexCoord(0, 0))

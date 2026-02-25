@@ -283,6 +283,9 @@ def _format_orders(fleet) -> str:
     for i, order in enumerate(fleet.orders):
         if order.type == OrderType.MOVE:
             text += f" {i+1}. MOVE {order.target}<br>"
+        elif order.type == OrderType.WARP:
+            # PROJ-187: Display WARP order with target warp point hex
+            text += f" {i+1}. WARP through {order.target}<br>"
         elif order.type == OrderType.COLONIZE:
             p_name = getattr(order.target, 'name', 'Unknown')
             text += f" {i+1}. COLONIZE {p_name}<br>"

@@ -472,6 +472,49 @@ class TransferCommandHandler(BaseCommandHandler):
         return result
 
 
+class WarpCommandHandler(BaseCommandHandler):
+    """Handler for IssueWarpCommand (PROJ-187)."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle IssueWarpCommand - creates WARP order with optional MOVE prefix."""
+        from game.strategy.data.fleet import FleetOrder, OrderType
+
+        # 1. Resolve fleet
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
+
+        # 2. Validate fleet can use warp
+        if not fleet.can_use_warp():
+            limiting_ship = fleet.get_warp_limiting_ship()
+            if limiting_ship:
+                return ValidationResult.error(
+                    f"Fleet cannot use warp - {limiting_ship.name} lacks warp capability."
+                )
+            return ValidationResult.error("Fleet cannot use warp points.")
+
+        # 3. Validate warp point exists at target hex
+        warp_point_hex = cmd.warp_point_hex
+        source_system = session.galaxy._global_hex_warp_points.get(warp_point_hex)
+        if not source_system:
+            return ValidationResult.error(
+                f"No warp point at {warp_point_hex}."
+            )
+
+        # 4. If fleet is not at warp point, auto-queue MOVE first
+        if fleet.location != warp_point_hex:
+            move_order = FleetOrder(OrderType.MOVE, target=warp_point_hex)
+            fleet.add_order(move_order)
+            logger.info(f"GameSession: Auto-added MOVE to warp point at {warp_point_hex}")
+
+        # 5. Queue WARP order
+        warp_order = FleetOrder(OrderType.WARP, target=warp_point_hex)
+        fleet.add_order(warp_order)
+
+        logger.info(f"GameSession: Issued WARP order for Fleet {fleet.id} -> {warp_point_hex}")
+        return ValidationResult.success()
+
+
 def create_default_registry() -> CommandHandlerRegistry:
     """Create a registry with all standard command handlers registered.
 
@@ -503,6 +546,7 @@ def create_default_registry() -> CommandHandlerRegistry:
     registry.register('QueueColonizeMissionCommand', ColonizeMissionCommandHandler())
     registry.register('ClearFleetOrdersCommand', ClearOrdersCommandHandler())
     registry.register('IssueTransferCommand', TransferCommandHandler())
+    registry.register('IssueWarpCommand', WarpCommandHandler())  # PROJ-187
 
     # Superweapon direct handlers (PROJ-102)
     registry.register('IssueImplodePlanetCommand', ImplodePlanetCommandHandler())

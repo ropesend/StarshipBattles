@@ -8,22 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-187 Phase 5 - Test Migration
-**Current Status:** PROJ-187 Phase 5 complete, Phase 6 next
+**Last Completed:** PROJ-187 Phase 6 - WARP Order Implementation
+**Current Status:** PROJ-187 Phase 6 complete, Phase 7 next
 **Current Project:** PROJ-187
-**Current Phase:** Phase 5 Complete
-**Test Status:** 12445 passed, 1 skipped
+**Current Phase:** Phase 6 Complete
+**Test Status:** 12459 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-187 Phase 5 Complete:
-  - Verified all test migration was completed in Phase 4
-  - Grepped for `process_end_turn_orders` - all calls to FleetOrderProcessor (still exists)
-  - No tests call deleted `TurnEngine._process_end_turn_orders`
-  - Full test suite: 12,445 passed, 1 skipped (baseline maintained)
-  - Integration tests verified: turn_engine, colonization, gameplay_loop all pass
-  - Test count increased from baseline (12,366 -> 12,445) due to ActionExecutionEngine tests
-- Next: Phase 6 - WARP Order Implementation
+- PROJ-187 Phase 6 Complete:
+  - Added WARP handling to FleetNavigationService (`get_destination`, `compute_path_for_warp`, `_resolve_warp_exit`, `compute_next_step`)
+  - WARP already in MOVEMENT_ORDER_TYPES from Phase 1
+  - Created IssueWarpCommand and WarpCommandHandler with validation
+  - Handler validates warp capability and warp point existence, auto-queues MOVE if needed
+  - WARP serialization works via existing HexCoord path
+  - Added WARP display formatting in strategy_detail_fmt.py
+  - Created tests/integration/strategy/test_warp_orders.py with 8 integration tests
+  - Full test suite: 12,459 passed, 1 skipped
+- Next: Phase 7 - Command Handler Review + Path Projection
 
 ---
 
@@ -54,6 +56,7 @@
 | 2026-02-24 | PROJ-187 | Phase 3 | Complete | 12446 passed | 211b18a7 | ActionExecutionEngine + 31 tests |
 | 2026-02-24 | PROJ-187 | Phase 4 | Complete | 12445 passed | d737b376 | Wire into turn loop, eradicate end-of-turn |
 | 2026-02-24 | PROJ-187 | Phase 5 | Complete | 12445 passed | 06fbecb1 | Test migration verified, all tests passing |
+| 2026-02-24 | PROJ-187 | Phase 6 | Complete | 12459 passed | 2d6b0e68 | WARP order implementation complete |
 
 ---
 
