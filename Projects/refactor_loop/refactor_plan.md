@@ -8,26 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-187 Phase 2 - action_time on Component Abilities
-**Current Status:** PROJ-187 Phase 2 complete, Phase 3 next
+**Last Completed:** PROJ-187 Phase 3 - ActionExecutionEngine
+**Current Status:** PROJ-187 Phase 3 complete, Phase 4 next
 **Current Project:** PROJ-187
-**Current Phase:** Phase 2 Complete
-**Test Status:** 12415 passed, 1 skipped
+**Current Phase:** Phase 3 Complete
+**Test Status:** 12446 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-187 Phase 2 Complete:
-  - Added `action_time` field to `ColonizePlanet` ability (default 1, configurable via dict)
-  - Added `action_time` field to `SuperweaponMarker` base class (all 6 superweapons inherit)
-  - Updated `components.json` with action_time values:
-    - planet_imploder: DestroyPlanet action_time=3
-    - stellerator: DestroyStar action_time=5
-    - quantum_tunneling_inverter: OpenWarpPoint action_time=3
-    - quantum_tunneling_diverter: CloseWarpPoint action_time=3
-    - dyson_sphere_constructor: CreateDysonSphere action_time=5
-  - Created `ActionTimeResolver` service at `game/strategy/services/action_time_resolver.py`
-  - Added 36 new tests (4 ColonizePlanet, 18 SuperweaponMarker, 14 ActionTimeResolver)
-- Next: Phase 3 - ActionExecutionEngine
+- PROJ-187 Phase 3 Complete:
+  - Added `IActionExecutionEngine` interface to `game/strategy/interfaces/engines.py`
+  - Added `ACTION_ORDER_TYPES` and `MOVEMENT_ORDER_TYPES` frozensets to `game/strategy/data/fleet.py`
+  - Created `ActionExecutionEngine` class at `game/strategy/engine/action_execution_engine.py`:
+    - `ActionTickResult` dataclass for tracking action progress
+    - Tick-based action execution based on fleet speed
+    - Delegates to FleetOrderProcessor when action completes
+    - Handles BUILD order auto-pop when queue empty
+  - Added 31 new tests at `tests/unit/strategy/engine/test_action_execution_engine.py`
+- Next: Phase 4 - Wire Into Turn Loop + Eradicate End-of-Turn
 
 ---
 
@@ -55,6 +53,7 @@
 |-----------|---------|--------|--------|-------|--------|-------|
 | 2026-02-24 | PROJ-187 | Phase 1 | Complete | 12379 passed | 03c51f35 | Data model: WARP, execution_progress |
 | 2026-02-24 | PROJ-187 | Phase 2 | Complete | 12415 passed | b414e937 | action_time on abilities + ActionTimeResolver |
+| 2026-02-24 | PROJ-187 | Phase 3 | Complete | 12446 passed | 211b18a7 | ActionExecutionEngine + 31 tests |
 
 ---
 
