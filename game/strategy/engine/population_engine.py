@@ -49,8 +49,7 @@ class PopulationEngine(IPopulationEngine):
         Args:
             empire: Empire to process
         """
-        colonies = getattr(empire, 'colonies', [])
-        for colony in colonies:
+        for colony in empire.colonies:
             self._process_colony(colony, empire)
 
     def _process_colony(self, colony: 'Planet', empire: 'Empire') -> None:
@@ -61,8 +60,7 @@ class PopulationEngine(IPopulationEngine):
             colony: Planet (colony) to process
             empire: Empire that owns the colony
         """
-        populations = getattr(colony, 'populations', [])
-        for population in populations:
+        for population in colony.populations:
             self._grow_species(population, colony, empire)
 
     def _grow_species(
@@ -92,16 +90,14 @@ class PopulationEngine(IPopulationEngine):
         habitability = score_planet_for_race(colony, race_config)
 
         # Effective carrying capacity = max_population * habitability
-        max_pop = getattr(colony, 'max_population', 0)
-        effective_capacity = int(max_pop * habitability)
+        effective_capacity = int(colony.max_population * habitability)
 
         # Avoid division by zero
         if effective_capacity <= 0:
             effective_capacity = 1
 
         # Get growth rate from aptitude
-        aptitude = getattr(race_config, 'aptitude_population_growth', 50)
-        base_rate = self._aptitude_to_growth_rate(aptitude)
+        base_rate = self._aptitude_to_growth_rate(race_config.aptitude_population_growth)
 
         # Logistic growth: r * P * (1 - P/K)
         current_pop = pop.count
@@ -138,12 +134,12 @@ class PopulationEngine(IPopulationEngine):
         Returns:
             RaceConfig or None if not found
         """
-        race_config = getattr(empire, 'race_config', None)
+        race_config = empire.race_config
         if race_config is None:
             return None
 
         # If race_id matches empire's race, return it
-        if getattr(race_config, 'race_id', '') == race_id:
+        if race_config.race_id == race_id:
             return race_config
 
         # Fallback: return empire's race_config for now

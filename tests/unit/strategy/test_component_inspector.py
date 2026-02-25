@@ -160,14 +160,6 @@ class TestShipHasAbility:
         result = ship_has_ability(ship, "DestroyPlanet", registry)
         assert result is False
 
-    def test_handles_ship_without_design_data(self):
-        """ship_has_ability handles ship with no design_data attribute."""
-        ship = Mock(spec=['name'])  # No design_data attribute
-
-        result = ship_has_ability(ship, "SomeAbility", {})
-        assert result is False
-
-
 class TestFindShipWithAbility:
     """Tests for find_ship_with_ability function."""
 

@@ -985,17 +985,6 @@ class TestColonizeValidatorAdvancedEdgeCases:
         assert result.is_valid is False
         assert result.error_code == "NO_COLONY_POD"
 
-    def test_get_committed_no_orders_attribute(self):
-        """get_committed_colony_pods handles fleet without orders attribute."""
-        from game.strategy.validation import ColonizeValidator
-
-        fleet = MagicMock(spec=[])  # No attributes by default
-        del fleet.orders  # Ensure no orders attribute
-
-        result = ColonizeValidator.get_committed_colony_pods(fleet)
-
-        assert result == {}
-
     def test_get_committed_empty_orders_list(self):
         """get_committed_colony_pods handles empty orders list."""
         from game.strategy.validation import ColonizeValidator

@@ -107,10 +107,8 @@ def ship_has_ability(
     Returns:
         True if any component on the ship has the specified ability
     """
-    design_data = getattr(ship, 'design_data', {})
-
     for _comp_entry, _comp_def, abilities in iterate_design_components(
-        design_data, component_registry
+        ship.design_data, component_registry
     ):
         if ability_name in abilities:
             return True
@@ -154,11 +152,10 @@ def count_ability(
     Returns:
         Number of components with the specified ability
     """
-    design_data = getattr(ship, 'design_data', {})
     count = 0
 
     for _comp_entry, _comp_def, abilities in iterate_design_components(
-        design_data, component_registry
+        ship.design_data, component_registry
     ):
         if ability_name in abilities:
             count += 1

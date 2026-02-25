@@ -546,12 +546,11 @@ class FleetOrderProcessor:
         founding_pop = passengers if isinstance(passengers, int) else 0
 
         # If no passengers but empire has race_config, seed minimum
-        race_config = getattr(empire, 'race_config', None)
+        race_config = empire.race_config
         # Check for actual RaceConfig (not MagicMock) - RaceConfig has race_id attribute
         has_race_config = (
             race_config is not None
-            and hasattr(race_config, 'race_id')
-            and isinstance(getattr(race_config, 'race_id', None), str)
+            and isinstance(race_config.race_id, str)
         )
 
         # if founding_pop == 0 and has_race_config:

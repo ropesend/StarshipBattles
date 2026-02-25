@@ -119,10 +119,8 @@ class ActionTimeResolver:
             action_time from ability, or 1 if not found/specified
         """
         for ship in fleet.ships:
-            design_data = getattr(ship, 'design_data', {})
-
             for _comp_entry, _comp_def, abilities in iterate_design_components(
-                design_data, component_registry
+                ship.design_data, component_registry
             ):
                 if ability_name in abilities:
                     ability_data = abilities[ability_name]

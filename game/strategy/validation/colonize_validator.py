@@ -32,10 +32,8 @@ def _iterate_colony_pods(
         Tuple of (ship object, planet_type string).
     """
     for ship in fleet.ships:
-        design_data = getattr(ship, 'design_data', {})
-
         for _comp_entry, _comp_def, abilities in iterate_design_components(
-            design_data, component_registry
+            ship.design_data, component_registry
         ):
             if 'ColonizePlanet' in abilities:
                 ability_data = abilities['ColonizePlanet']
@@ -247,7 +245,7 @@ class ColonizeValidator:
 
         committed: Dict[str, int] = {}
 
-        for order in getattr(fleet, 'orders', []):
+        for order in fleet.orders:
             if order.type == OrderType.COLONIZE and order.target is not None:
                 # Get planet type from the target planet
                 target = order.target

@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Type Hints on Signatures | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Replace getattr in Engines | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Replace getattr in Engines | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Update Test Mocks | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Replace hasattr Type Discrimination | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Miscellaneous Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -22,19 +22,20 @@
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 1 Complete
-**Last Action:** Added TYPE_CHECKING imports and type hints to 7 files
-**Next Action:** Phase 2 — Replace getattr patterns in engine files
+**Active Phase:** Phase 2 Complete
+**Last Action:** Replaced ~53 getattr() patterns with direct attribute access
+**Next Action:** Phase 3 — Update Test Mocks
 **Blockers:** None
-**Context for Next Agent:** Phase 1 complete. Added type hints to:
-- empire_economy_calculator.py: Empire type on calculate/aggregate methods
-- maintenance_engine.py: Empire/Planet/Fleet types on _process methods
-- fleet_order_processor.py: Empire/Galaxy/Planet types on all process methods
-- superweapon_order_processor.py: Empire types on all process methods
-- component_inspector.py: ShipInstance types on ship functions
-- colonize_validator.py: Galaxy/Fleet/Planet/ShipInstance types
-- cargo_transfer_service.py: FleetInfo/PlanetInfo Union types
-Tests: 2198 strategy unit tests passing. Full test run pending.
+**Context for Next Agent:** Phase 2 complete. Replaced getattr patterns in:
+- empire_economy_calculator.py: 14 instances (empire.colonies, colony.facilities, etc.)
+- harvesting_engine.py: 10 instances (empire.colonies, facility.design_data, etc.)
+- population_engine.py: 5 instances (empire.colonies, race_config.aptitude_population_growth, etc.)
+- superweapon_order_processor.py: 10 instances (empire.id, primary_star.location, etc.)
+- fleet_order_processor.py: 2 instances (empire.race_config, simplified isinstance check)
+- component_inspector.py: 2 instances (ship.design_data)
+- colonize_validator.py: 2 instances (ship.design_data, fleet.orders)
+- action_time_resolver.py: 1 instance (ship.design_data)
+Deleted 2 obsolete duck typing tests. Tests: 12702 passed, 1 skipped.
 
 ## Overview
 Replace ~93 implicit duck typing patterns (`hasattr()`/`getattr()`) in the `game/strategy/` layer with direct attribute access, explicit `isinstance` checks, and proper type annotations. Retain ~12 intentional `getattr` patterns at external data boundaries (JSON component definitions, save file deserialization).

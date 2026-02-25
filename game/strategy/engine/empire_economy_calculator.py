@@ -126,10 +126,8 @@ class EmpireEconomyCalculator:
             snapshot.net_resources[r] = prod - exp
 
         # Current treasury state
-        resource_pool = getattr(empire, 'resource_pool', {})
-        max_storage = getattr(empire, 'max_storage', {})
-        snapshot.current_storage = resource_pool.copy()
-        snapshot.max_storage = max_storage.copy()
+        snapshot.current_storage = empire.resource_pool.copy()
+        snapshot.max_storage = empire.max_storage.copy()
 
         return snapshot
 
@@ -148,15 +146,13 @@ class EmpireEconomyCalculator:
         """
         totals = {r: 0.0 for r in PLANET_RESOURCES}
 
-        colonies = getattr(empire, 'colonies', [])
-        for colony in colonies:
-            facilities = getattr(colony, 'facilities', [])
-            for facility in facilities:
+        for colony in empire.colonies:
+            for facility in colony.facilities:
                 # Skip non-operational facilities
-                if not getattr(facility, 'is_operational', True):
+                if not facility.is_operational:
                     continue
 
-                design_data = getattr(facility, 'design_data', {})
+                design_data = facility.design_data
                 layers = design_data.get('layers', {})
 
                 for layer_data in layers.values():
@@ -176,8 +172,7 @@ class EmpireEconomyCalculator:
                             continue
 
                         # Get planet quality for this resource
-                        planet_resources = getattr(colony, 'resources', {})
-                        resource_data = planet_resources.get(resource_type, {})
+                        resource_data = colony.resources.get(resource_type, {})
                         quality = resource_data.get('quality', 0.0)
 
                         # Accumulate production
@@ -201,26 +196,22 @@ class EmpireEconomyCalculator:
         totals = {r: 0.0 for r in PLANET_RESOURCES}
 
         # Facility maintenance
-        colonies = getattr(empire, 'colonies', [])
-        for colony in colonies:
-            facilities = getattr(colony, 'facilities', [])
-            for facility in facilities:
+        for colony in empire.colonies:
+            for facility in colony.facilities:
                 # Skip non-operational facilities
-                if not getattr(facility, 'is_operational', True):
+                if not facility.is_operational:
                     continue
 
-                design_data = getattr(facility, 'design_data', {})
+                design_data = facility.design_data
                 cost = self._calculate_maintenance_cost(design_data)
                 for r, amount in cost.items():
                     if r in totals:
                         totals[r] += amount
 
         # Ship maintenance
-        fleets = getattr(empire, 'fleets', [])
-        for fleet in fleets:
-            ships = getattr(fleet, 'ships', [])
-            for ship in ships:
-                design_data = getattr(ship, 'design_data', {})
+        for fleet in empire.fleets:
+            for ship in fleet.ships:
+                design_data = ship.design_data
                 cost = self._calculate_maintenance_cost(design_data)
                 for r, amount in cost.items():
                     if r in totals:

@@ -119,9 +119,9 @@ class SuperweaponOrderProcessor:
         log_event(
             EventType.PLANET_DESTROYED,
             category=EventCategory.SUPERWEAPONS,
-            empire_id=getattr(empire, 'id', 0),
+            empire_id=empire.id,
             message=f"Planet {target_planet.name} destroyed",
-            planet_id=getattr(target_planet, 'id', None),
+            planet_id=target_planet.id,
             planet_name=target_planet.name,
             fleet_id=fleet.id,
         )
@@ -194,7 +194,7 @@ class SuperweaponOrderProcessor:
         log_event(
             EventType.STAR_DESTROYED,
             category=EventCategory.SUPERWEAPONS,
-            empire_id=getattr(empire, 'id', 0),
+            empire_id=empire.id,
             message=f"Star system {system_name} destroyed",
             fleet_id=fleet.id,
             system_name=system_name,
@@ -297,7 +297,7 @@ class SuperweaponOrderProcessor:
         log_event(
             EventType.WARP_POINT_OPENED,
             category=EventCategory.SUPERWEAPONS,
-            empire_id=getattr(empire, 'id', 0),
+            empire_id=empire.id,
             message=f"Warp point opened to {target_system.name}",
             fleet_id=fleet.id,
             source_system=current_system.name,
@@ -372,7 +372,7 @@ class SuperweaponOrderProcessor:
         log_event(
             EventType.WARP_POINT_CLOSED,
             category=EventCategory.SUPERWEAPONS,
-            empire_id=getattr(empire, 'id', 0),
+            empire_id=empire.id,
             message=f"Warp point to {destination_id} closed",
             fleet_id=fleet.id,
             source_system=current_system.name,
@@ -423,7 +423,7 @@ class SuperweaponOrderProcessor:
 
         # Get primary star location for distance calculations
         primary_star = system.stars[0]
-        star_loc = getattr(primary_star, 'location', HexCoord(0, 0))
+        star_loc = primary_star.location
 
         # Find ship with CreateDysonSphere ability
         ship = None
@@ -454,7 +454,7 @@ class SuperweaponOrderProcessor:
         system.stars = []
 
         # Extract environmental conditions from creator's race_config
-        race = getattr(empire, 'race_config', None) if empire else None
+        race = empire.race_config if empire else None
         if race:
             # Use race's ideal conditions for perfect habitability
             gravity = race.gravity_ideal * 9.81  # Convert g to m/s^2
@@ -511,7 +511,7 @@ class SuperweaponOrderProcessor:
         log_event(
             EventType.DYSON_SPHERE_CREATED,
             category=EventCategory.SUPERWEAPONS,
-            empire_id=getattr(empire, 'id', 0),
+            empire_id=empire.id,
             message=f"Dyson Sphere created in {system.name}",
             fleet_id=fleet.id,
             system_name=system.name,
@@ -562,10 +562,8 @@ class SuperweaponOrderProcessor:
             ship = ships_by_id.get(ship_id)
             if ship:
                 ships_to_remove.append(ship)
-                # Get name, handling mock objects gracefully
-                name = getattr(ship, 'name', None)
-                if name is None or not isinstance(name, str):
-                    name = str(ship_id)
+                # Get name - ship.name always exists on ShipInstance
+                name = ship.name if isinstance(ship.name, str) else str(ship_id)
                 ship_names.append(name)
 
         # Remove ships
@@ -580,7 +578,7 @@ class SuperweaponOrderProcessor:
         log_event(
             EventType.SHIPS_SELF_DESTRUCTED,
             category=EventCategory.SUPERWEAPONS,
-            empire_id=getattr(empire, 'id', 0),
+            empire_id=empire.id,
             message=f"{len(ships_to_remove)} ships self-destructed",
             fleet_id=fleet.id,
             ship_count=len(ships_to_remove),
