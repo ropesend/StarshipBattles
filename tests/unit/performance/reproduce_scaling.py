@@ -1,30 +1,14 @@
 import pytest
 import pygame
 
-from game.simulation.components.component import load_components, create_component, load_modifiers
-from game.core.paths import Paths
-from game.core.registry import RegistryManager
-
-
-@pytest.fixture
-def component_environment():
-    """Set up pygame and load components/modifiers for testing."""
-    pygame.init()
-
-    # Load data using centralized paths
-    load_components(Paths.COMPONENTS_FILE)
-    load_modifiers(Paths.MODIFIERS_FILE)
-
-    yield
-
-    pygame.quit()
+from game.simulation.components.component import create_component
 
 
 class TestComponentScaling:
 
-    def test_crew_scaling(self, component_environment):
-        # Create Crew Quarters
-        cq = create_component("crew_quarters", registries=RegistryManager.instance())
+    def test_crew_scaling(self, fresh_registries):
+        # Create Crew Quarters (fresh_registries already has components/modifiers loaded)
+        cq = create_component("crew_quarters", registries=fresh_registries)
         assert cq is not None, "Crew Quarters should exist"
 
         # New Ability System: Access via get_ability
@@ -40,9 +24,9 @@ class TestComponentScaling:
 
         assert scaled_capacity == initial_capacity * 2, "Crew Capacity should scale linearly with size"
 
-    def test_life_support_scaling(self, component_environment):
-        # Create Life Support
-        ls = create_component("life_support", registries=RegistryManager.instance())
+    def test_life_support_scaling(self, fresh_registries):
+        # Create Life Support (fresh_registries already has components/modifiers loaded)
+        ls = create_component("life_support", registries=fresh_registries)
         assert ls is not None, "Life Support should exist"
 
         initial_capacity = ls.get_ability('LifeSupportCapacity').amount

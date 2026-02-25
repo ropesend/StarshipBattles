@@ -17,7 +17,7 @@
 | 2. Entity & UI Test Migration | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 2.5. Ship Internal Singleton Investigation & Fix | Complete | [phase_2_5_checklist.md](phase_2_5_checklist.md) |
 | 3. Data Loader Test Migration | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Combat & Modifier Test Migration | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Combat & Modifier Test Migration | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Core Test: Convert Impure Loader Tests to Pure | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Conftest & Infrastructure Migration | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Regression & Repro Test Migration | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
@@ -25,9 +25,9 @@
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 4 - Combat & Modifier Test Migration
-**Last Action:** Phase 3 complete - Migrated test_builder_data_loader.py and test_workshop_data_loader.py (16 tests) from singleton to fresh_registries DI pattern
-**Next Action:** Execute Phase 4 - Migrate combat, modifier, and performance tests
+**Active Phase:** Phase 5 - Core Test: Convert Impure Loader Tests to Pure
+**Last Action:** Phase 4 complete - Migrated test_combat.py, test_formula_validation.py, test_modifier_loader_v2.py, reproduce_scaling.py (4 files, ~32 tests)
+**Next Action:** Execute Phase 5 - Convert backward-compat loader tests to pure function tests
 **Blockers:** None
 
 ## Overview

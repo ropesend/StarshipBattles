@@ -25,10 +25,9 @@ class TestDamageLayerLogic:
         self.ship.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
         self.ship.add_component(create_component('armor_plate', registries=fresh_registries), LayerType.ARMOR)
 
-        # Ensure TestShip class exists in RegistryManager with correct layers
+        # Ensure TestShip class exists in registries with correct layers
         # Note: Post-Phase 5, hull_mass is removed; Hull component provides mass
-        from game.core.registry import RegistryManager
-        RegistryManager.instance().vehicle_classes["TestShip"] = {
+        self.registries.vehicle_classes["TestShip"] = {
             "max_mass": 1000,
             "layers": [
                 {"type": "CORE", "radius_pct": 0.5, "max_mass_pct": 0.5},
@@ -103,8 +102,7 @@ class TestDamageLayerLogic:
         If no operational component has CommandAndControl, ship becomes derelict.
         The ship needs a hull component with RequiresCommandAndControl for this to work.
         """
-        from game.core.registry import RegistryManager
-        RegistryManager.instance().vehicle_classes["TestShip"] = {
+        self.registries.vehicle_classes["TestShip"] = {
             "max_mass": 1000,
             "layers": [
                 {"type": "CORE", "radius_pct": 0.5, "max_mass_pct": 0.5},
