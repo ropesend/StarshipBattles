@@ -8,24 +8,26 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-187 Phase 6 - WARP Order Implementation
-**Current Status:** PROJ-187 Phase 6 complete, Phase 7 next
+**Last Completed:** PROJ-187 Phase 7 - Command Handler Review + Path Projection
+**Current Status:** PROJ-187 Phase 7 complete, Phase 8 (Documentation) next
 **Current Project:** PROJ-187
-**Current Phase:** Phase 6 Complete
-**Test Status:** 12459 passed, 1 skipped
+**Current Phase:** Phase 7 Complete
+**Test Status:** 12466 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-187 Phase 6 Complete:
-  - Added WARP handling to FleetNavigationService (`get_destination`, `compute_path_for_warp`, `_resolve_warp_exit`, `compute_next_step`)
-  - WARP already in MOVEMENT_ORDER_TYPES from Phase 1
-  - Created IssueWarpCommand and WarpCommandHandler with validation
-  - Handler validates warp capability and warp point existence, auto-queues MOVE if needed
-  - WARP serialization works via existing HexCoord path
-  - Added WARP display formatting in strategy_detail_fmt.py
-  - Created tests/integration/strategy/test_warp_orders.py with 8 integration tests
-  - Full test suite: 12,459 passed, 1 skipped
-- Next: Phase 7 - Command Handler Review + Path Projection
+- PROJ-187 Phase 7 Complete:
+  - Task 7.1: Verified ColonizeMissionCommandHandler queues LOAD_POPULATION -> MOVE -> COLONIZE correctly
+  - Task 7.2: Verified all 5 superweapon mission handlers use `_setup_mission_move()` for MOVE -> ACTION queuing
+  - Task 7.3: Verified ClearOrdersCommandHandler discards execution_progress; added test `test_clear_orders_discards_execution_progress`
+  - Task 7.4: Updated `FleetNavigationService.project_path()` for action timing:
+    - Consumes action_time ticks for non-movement orders
+    - Accounts for execution_progress on current order
+    - Added `_get_action_time_for_projection()` helper
+    - Added optional `component_registry` parameter
+  - Task 7.5: Created `tests/unit/strategy/services/test_fleet_navigation_action_timing.py` with 6 tests
+  - Full test suite: 12,466 passed, 1 skipped
+- Next: Phase 8 - Documentation
 
 ---
 
@@ -57,6 +59,7 @@
 | 2026-02-24 | PROJ-187 | Phase 4 | Complete | 12445 passed | d737b376 | Wire into turn loop, eradicate end-of-turn |
 | 2026-02-24 | PROJ-187 | Phase 5 | Complete | 12445 passed | 06fbecb1 | Test migration verified, all tests passing |
 | 2026-02-24 | PROJ-187 | Phase 6 | Complete | 12459 passed | 2d6b0e68 | WARP order implementation complete |
+| 2026-02-24 | PROJ-187 | Phase 7 | Complete | 12466 passed | 03bbaa32 | Command handler review, path projection timing |
 
 ---
 

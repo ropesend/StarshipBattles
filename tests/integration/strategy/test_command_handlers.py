@@ -512,3 +512,33 @@ class TestClearFleetOrdersCommandHandler:
         assert result.is_valid is False
         assert "Fleet not found" in result.message
 
+    def test_clear_orders_discards_execution_progress(self):
+        """Clear orders discards FleetOrder execution_progress (PROJ-187).
+
+        Multi-tick actions accumulate execution_progress on the FleetOrder.
+        When orders are cleared, the entire FleetOrder object is removed,
+        so execution_progress is naturally discarded.
+        """
+        from game.strategy.engine.commands import ClearFleetOrdersCommand
+
+        config = GameConfig(system_count=0)
+        session = GameSession(config=config)
+        session.galaxy = MockGalaxy()
+
+        # Fleet with an order that has accumulated execution_progress
+        fleet = Fleet(101, 0, HexCoord(0, 0))
+        colonize_order = FleetOrder(OrderType.COLONIZE, MagicMock())
+        colonize_order.execution_progress = 3  # Simulating partial progress
+        fleet.orders = [colonize_order]
+        session.player_empire.fleets = [fleet]
+        session.galaxy.register_fleet(fleet)
+
+        # Verify progress exists before clear
+        assert fleet.orders[0].execution_progress == 3
+
+        cmd = ClearFleetOrdersCommand(fleet_id=101)
+        result = session.handle_command(cmd)
+
+        assert result.is_valid is True
+        assert len(fleet.orders) == 0  # Order with progress is gone
+

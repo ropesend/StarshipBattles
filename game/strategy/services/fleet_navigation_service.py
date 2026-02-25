@@ -19,13 +19,18 @@ Architecture:
   - project_path_as_dicts(fleet, galaxy) → [dict]
 - Execution (for TurnEngine):
   - calculate_fleet_next_hex(fleet, galaxy) → HexCoord?
+
+PROJ-187: Path projection accounts for action_time on non-movement orders.
 """
 import logging
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 from game.core.hex_math import HexCoord, hex_distance
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import (
+    Fleet, FleetOrder, OrderType,
+    MOVEMENT_ORDER_TYPES, ACTION_ORDER_TYPES,
+)
 from game.strategy.data.pathfinding import find_hybrid_path
 
 logger = logging.getLogger(__name__)
@@ -410,7 +415,8 @@ class FleetNavigationService:
         self,
         fleet: Fleet,
         galaxy,
-        max_turns: int = 10
+        max_turns: int = 10,
+        component_registry=None
     ) -> list:
         """
         Project fleet movement over multiple turns.
@@ -418,10 +424,15 @@ class FleetNavigationService:
         Simulates future movement based on current orders and speed,
         returning a list of path segments for UI visualization.
 
+        PROJ-187: Accounts for action_time on non-movement orders. When
+        an action order is encountered, the projection consumes the
+        appropriate number of ticks before advancing to the next order.
+
         Args:
             fleet: The fleet to project
             galaxy: Galaxy object for pathfinding
             max_turns: Maximum turns to project
+            component_registry: Optional component registry for action_time lookup
 
         Returns:
             List of PathSegment objects
@@ -436,6 +447,13 @@ class FleetNavigationService:
         moves_left_in_turn = moves_per_turn
         current_turn = 0
 
+        # Track execution progress for first order (if any)
+        # This is needed to account for partial progress on current action
+        first_order_progress = 0
+        if fleet.orders:
+            first_order_progress = getattr(fleet.orders[0], 'execution_progress', 0)
+        is_first_order = True
+
         # Safety limit to prevent infinite loops
         max_steps = max_turns * moves_per_turn + 100
         iterations = 0
@@ -446,13 +464,32 @@ class FleetNavigationService:
                 logger.warning("project_path exceeded max iterations")
                 break
 
-            # If no path but have orders, generate path for current order
+            # If no path but have orders, handle current order
             if not state.path and state.orders:
                 order = state.orders[0]
 
-                # PROJ-187: Handle WARP orders for path projection
-                if order.type not in (OrderType.MOVE, OrderType.MOVE_TO_FLEET, OrderType.WARP):
-                    # Skip non-movement orders
+                # PROJ-187: Handle action orders (non-movement)
+                if order.type not in MOVEMENT_ORDER_TYPES:
+                    # Calculate action_time for this order
+                    action_time = self._get_action_time_for_projection(
+                        fleet, order, component_registry
+                    )
+
+                    # Account for existing execution_progress on first order
+                    if is_first_order and first_order_progress > 0:
+                        action_time = max(0, action_time - first_order_progress)
+
+                    # Consume action_time ticks
+                    while action_time > 0 and current_turn < max_turns:
+                        ticks_to_consume = min(action_time, moves_left_in_turn)
+                        action_time -= ticks_to_consume
+                        moves_left_in_turn -= ticks_to_consume
+
+                        if moves_left_in_turn <= 0:
+                            current_turn += 1
+                            moves_left_in_turn = moves_per_turn
+
+                    # Advance to next order
                     state = NavigationState(
                         location=state.location,
                         path=(),
@@ -460,6 +497,7 @@ class FleetNavigationService:
                         speed=state.speed,
                         can_warp=state.can_warp
                     )
+                    is_first_order = False
                     continue
 
                 destination = self.get_destination(state, order, galaxy)
@@ -481,6 +519,7 @@ class FleetNavigationService:
                     speed=state.speed,
                     can_warp=state.can_warp
                 )
+                is_first_order = False
 
             if not state.path:
                 break
@@ -524,11 +563,34 @@ class FleetNavigationService:
 
         return segments
 
+    def _get_action_time_for_projection(
+        self,
+        fleet: Fleet,
+        order: FleetOrder,
+        component_registry
+    ) -> int:
+        """
+        Get action_time for an order during path projection.
+
+        PROJ-187: Uses ActionTimeResolver to look up action_time from abilities.
+
+        Args:
+            fleet: The fleet executing the order
+            order: The order to get action_time for
+            component_registry: Component registry for ability lookup
+
+        Returns:
+            Integer action_time (ticks), defaults to 1 for unknown orders
+        """
+        from game.strategy.services.action_time_resolver import ActionTimeResolver
+        return ActionTimeResolver.resolve_action_time(fleet, order, component_registry)
+
     def project_path_as_dicts(
         self,
         fleet: Fleet,
         galaxy,
-        max_turns: int = 10
+        max_turns: int = 10,
+        component_registry=None
     ) -> list:
         """
         Project fleet path and return as list of dicts for backward compatibility.
@@ -539,11 +601,12 @@ class FleetNavigationService:
             fleet: The fleet to project
             galaxy: Galaxy object for pathfinding
             max_turns: Maximum turns to project
+            component_registry: Optional component registry for action_time lookup
 
         Returns:
             List of dicts with path segment data
         """
-        segments = self.project_path(fleet, galaxy, max_turns)
+        segments = self.project_path(fleet, galaxy, max_turns, component_registry)
         return [seg.to_dict() for seg in segments]
 
     def calculate_fleet_next_hex(

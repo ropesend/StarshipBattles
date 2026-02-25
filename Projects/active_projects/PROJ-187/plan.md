@@ -19,16 +19,16 @@
 | 4. Wire Into Turn Loop + Eradicate End-of-Turn | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Test Migration | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. WARP Order Implementation | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
-| 7. Command Handler Review + Path Projection | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
+| 7. Command Handler Review + Path Projection | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. Documentation | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 7 (Command Handler Review + Path Projection)
-**Last Action:** Phase 6 complete - WARP order implementation with IssueWarpCommand, WarpCommandHandler, navigation service updates
-**Next Action:** Begin Phase 7 - Review command handlers and path projection for WARP
+**Active Phase:** Phase 8 (Documentation)
+**Last Action:** Phase 7 complete - Command handler review confirmed, path projection updated for action timing
+**Next Action:** Begin Phase 8 - Documentation
 **Blockers:** None
-**Baseline:** 12,459 passed, 1 skipped, 0 failures
+**Baseline:** 12,466 passed, 1 skipped, 0 failures
 
 ## Overview
 Convert the strategy layer's order execution from a split model (tick-based movement + instant end-of-turn actions) into a unified tick-based action system where every strategic action (COLONIZE, TRANSFER, superweapons, LOAD/UNLOAD) consumes "action ticks" at the same rate as movement. Also adds explicit WARP order primitive and moddable `action_time` on component abilities.
