@@ -8,23 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-188 Phase 3 - Migrate Planet List
-**Current Status:** PROJ-188 Phase 3 Complete
+**Last Completed:** PROJ-188 Phase 4 - Migrate Empire Build Queue
+**Current Status:** PROJ-188 Phase 4 Complete
 **Current Project:** PROJ-188
-**Current Phase:** Phase 3 Complete (3 phases remaining)
-**Test Status:** 12601 passed, 1 skipped
+**Current Phase:** Phase 4 Complete (2 phases remaining)
+**Test Status:** 12628 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-188 Phase 3 Complete:
-  - Created `game/ui/screens/planet_data_source.py` (PlanetDataSource with func/attr/fmt extraction)
-  - Created `tests/unit/ui/screens/test_planet_data_source.py` (29 tests)
-  - Updated `game/ui/screens/planet_list_window.py` to use VirtualTable + PlanetDataSource + SingleSelect
-  - Removed imports of VirtualListRenderer and old ColumnManager
-  - VirtualListRenderer (planet_list_renderer.py) now has 0 reverse dependencies
-  - planet_list_columns.ColumnManager only imported by empire_build_queue_window.py (Phase 4 target)
-  - Full test suite: 12,601 passed, 1 skipped (+29 new tests)
-- Next: Phase 4 - Migrate Empire Build Queue to use VirtualTable
+- PROJ-188 Phase 4 Complete:
+  - Created `game/ui/screens/empire_build_queue_data_source.py` (BuildQueueDataSource)
+  - Created `tests/unit/ui/screens/test_build_queue_data_source.py` (27 tests)
+  - Updated `game/ui/screens/empire_build_queue_window.py` to use VirtualTable + BuildQueueDataSource + MultiSelect
+  - Removed imports of planet_list_columns.ColumnManager
+  - Build queue now has virtual scrolling
+  - EventBus/MVVM pattern preserved
+  - planet_list_columns.ColumnManager now has 0 reverse dependencies (ready for Phase 6 deletion)
+  - Full test suite: 12,628 passed, 1 skipped (+27 new tests)
+- Next: Phase 5 - Migrate Event Log to use VirtualTable
 
 ---
 
@@ -39,7 +40,7 @@
   - **Dependencies:** None
 
 - [/] **PROJ-188: Strategy Layer List UI Consolidation**
-  - **Phases:** 6 | **Status:** Phase 3 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** Phase 4 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-188/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-188/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -62,6 +63,7 @@
 | 2026-02-24 | PROJ-188 | Phase 1 | Complete | 12531 passed | f0c7a9a4 | Generic table components + 65 tests |
 | 2026-02-24 | PROJ-188 | Phase 2 | Complete | 12572 passed | 0d38008d | FleetDataSource + VirtualTable migration |
 | 2026-02-24 | PROJ-188 | Phase 3 | Complete | 12601 passed | 8154b85b | PlanetDataSource + VirtualTable migration |
+| 2026-02-24 | PROJ-188 | Phase 4 | Complete | 12628 passed | 53b9bc83 | BuildQueueDataSource + VirtualTable migration |
 
 ---
 

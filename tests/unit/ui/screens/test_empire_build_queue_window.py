@@ -102,11 +102,30 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     win.sidebar_panel = MagicMock()
     win.row_elements = []
 
-    # Column manager (Phase 3 sorting/reordering)
-    win.column_mgr = MagicMock()
-    win.column_mgr.sort_column_id = None
-    win.column_mgr.sort_descending = False
+    # Column manager (Phase 3 sorting/reordering) - now TableColumnManager
+    win._column_manager = MagicMock()
+    win._column_manager.sort_column_id = None
+    win._column_manager.sort_descending = False
+
+    # Alias for backward compatibility
+    win.column_mgr = win._column_manager
     win.column_mgr.handle_header_clicks = MagicMock(return_value=(False, False))
+    win.column_mgr.rebuild_headers = MagicMock()
+
+    # VirtualTable components (PROJ-188 Phase 4)
+    win._selection = MagicMock()
+    win._selection.get_selected_indices = MagicMock(return_value=set())
+    win._selection.set_selected = MagicMock()
+
+    win._data_source = MagicMock()
+    win._virtual_table = MagicMock()
+    win._virtual_table.scroll_bar = win.scroll_bar
+    win._virtual_table.update_scroll_bar = MagicMock()
+    win._virtual_table.update_visible_rows = MagicMock()
+    win._virtual_table.force_update = MagicMock()
+    win._virtual_table.rebuild_headers = MagicMock()
+    win._virtual_table.rebuild_row_pool = MagicMock()
+    win._virtual_table.kill = MagicMock()
 
     return win
 
@@ -1452,8 +1471,8 @@ class TestProcessEvent:
         assert col['visible'] is False
         # Button text should be updated
         mock_btn.set_text.assert_called()
-        # Headers should be rebuilt via ColumnManager
-        win.column_mgr.rebuild_headers.assert_called()
+        # Headers should be rebuilt via VirtualTable
+        win._virtual_table.rebuild_headers.assert_called()
 
     def test_filter_toggle_button_click_toggles_filter(self):
         """Clicking a filter toggle button toggles that filter's state.
@@ -1596,7 +1615,7 @@ class TestColumnSortingAndReorder:
         assert win.filtered_sources is not None
 
     def test_column_toggle_rebuilds_headers(self):
-        """Toggling a column via sidebar calls column_mgr.rebuild_headers()."""
+        """Toggling a column via sidebar calls VirtualTable.rebuild_headers()."""
         import pygame_gui
         from pygame_gui.elements import UIWindow
 
@@ -1619,4 +1638,4 @@ class TestColumnSortingAndReorder:
         with patch.object(UIWindow, 'process_event', return_value=False):
             win.process_event(event)
 
-        win.column_mgr.rebuild_headers.assert_called()
+        win._virtual_table.rebuild_headers.assert_called()

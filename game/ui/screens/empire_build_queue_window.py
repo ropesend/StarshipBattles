@@ -18,7 +18,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, TYPE_CHECKING
 
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIVerticalScrollBar
+from pygame_gui.elements import UIWindow, UIPanel
 
 from game.ui.config import UIConfig
 import logging
@@ -35,7 +35,8 @@ from game.ui.screens.empire_build_queue_viewmodel import (
 )
 from game.ui.screens.empire_build_queue_sidebar import EmpireBuildQueueSidebar
 from game.ui.screens.empire_build_queue_filter_manager import BuildQueueFilterManager
-from game.ui.screens.planet_list_columns import ColumnManager
+from game.ui.screens.empire_build_queue_data_source import BuildQueueDataSource
+from game.ui.components.table import VirtualTable, TableColumnManager, MultiSelect
 from game.ui.screens.empire_build_queue_formatter import (
     get_system_name,
     get_sector_text,
@@ -105,7 +106,6 @@ class EmpireBuildQueueWindow(UIWindow):
 
         # --- Filter Manager (for column definitions) ---
         self._filter_mgr = BuildQueueFilterManager()
-        self.row_elements: list = []
 
         # --- UI Containers ---
         # Sidebar panel
@@ -134,41 +134,25 @@ class EmpireBuildQueueWindow(UIWindow):
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'},
         )
 
-        # Header row for column titles
-        self.header_container = UIPanel(
-            relative_rect=pygame.Rect(0, 0, main_w, self.header_height),
-            manager=manager,
-            container=self.main_panel,
-            anchors={'left': 'left', 'right': 'right', 'top': 'top'},
+        # --- VirtualTable components ---
+        self._data_source = BuildQueueDataSource(
+            self._viewmodel, self._filter_mgr, self.galaxy
         )
-        self.column_mgr = ColumnManager(
-            self._filter_mgr.columns, manager,
-            self.header_container, self.header_height
-        )
-        self.column_mgr.rebuild_headers()
-
-        # Scrollable list area
-        self.list_view_rect = pygame.Rect(
-            0, self.header_height,
-            main_w - 20, rect.height - 50 - self.header_height,
-        )
-        self.list_panel = UIPanel(
-            relative_rect=self.list_view_rect,
-            manager=manager,
-            container=self.main_panel,
-            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'},
+        self._column_manager = TableColumnManager(self._filter_mgr.columns)
+        self._selection = MultiSelect()
+        self._virtual_table = VirtualTable(
+            self.main_panel,
+            manager,
+            self._data_source,
+            self._column_manager,
+            self._selection,
+            row_height=self.row_height,
+            header_height=self.header_height,
         )
 
-        # Vertical scrollbar
-        self.scroll_bar = UIVerticalScrollBar(
-            relative_rect=pygame.Rect(
-                -20, self.header_height, 20, self.list_view_rect.height,
-            ),
-            visible_percentage=1.0,
-            manager=manager,
-            container=self.main_panel,
-            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'bottom'},
-        )
+        # Store references for backward compatibility with tests
+        self.scroll_bar = self._virtual_table.scroll_bar
+        self.column_mgr = self._column_manager  # Alias for tests
 
         # Subscribe to ViewModel events
         self._event_bus.subscribe(
@@ -301,34 +285,14 @@ class EmpireBuildQueueWindow(UIWindow):
     # -----------------------------------------------------------------------
 
     def _refresh_list(self) -> None:
-        """Rebuild the visible row list from filtered_sources."""
-        for elem in self.row_elements:
-            elem.kill()
-        self.row_elements.clear()
+        """Update VirtualTable scroll and visible rows."""
+        # Sync selection from ViewModel to VirtualTable's selection strategy
+        self._selection.set_selected(self._viewmodel.selected_indices)
 
-        sources = self.filtered_sources
-        total_h = len(sources) * self.row_height
-        visible_h = self.list_view_rect.height
-        percentage = min(1.0, visible_h / total_h) if total_h > 0 else 1.0
-        self.scroll_bar.set_visible_percentage(percentage)
-        self.scroll_bar.scroll_position = 0.0
-        self.scroll_bar.bottom_limit = max(visible_h, total_h)
-        self.scroll_bar.redraw_scrollbar()
-
-        visible_cols = self._get_visible_columns()
-        for i, source in enumerate(sources):
-            y = i * self.row_height
-            x = 10
-            for col in visible_cols:
-                text = self._get_column_value(source, col['id'])
-                lbl = UILabel(
-                    relative_rect=pygame.Rect(x, y, col['width'], self.row_height),
-                    text=text,
-                    manager=self.ui_manager,
-                    container=self.list_panel,
-                )
-                self.row_elements.append(lbl)
-                x += col['width'] + 10
+        # Update table
+        self._virtual_table.update_scroll_bar()
+        self._virtual_table.force_update()
+        self._virtual_table.update_visible_rows()
 
     # -----------------------------------------------------------------------
     # Selection (delegated to ViewModel)
@@ -427,37 +391,36 @@ class EmpireBuildQueueWindow(UIWindow):
                 # Sidebar handled it - check if column toggle
                 for col_id in self._sidebar.column_toggle_buttons:
                     if self._sidebar.column_toggle_buttons[col_id] is event.ui_element:
-                        self.column_mgr.rebuild_headers()
+                        self._virtual_table.rebuild_headers()
+                        self._virtual_table.rebuild_row_pool()
                         self._refresh_list()
                         break
                 return True
 
-        # Row click detection
+        # Row click detection via VirtualTable
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             mouse_pos = event.pos
-            list_abs_rect = self.list_panel.get_abs_rect()
-            if list_abs_rect.collidepoint(mouse_pos):
-                scroll_offset = 0.0
-                total_h = len(self.filtered_sources) * self.row_height
-                if total_h > 0:
-                    scroll_offset = self.scroll_bar.start_percentage * total_h
-                local_y = mouse_pos[1] - list_abs_rect.y + scroll_offset
-                clicked_index = int(local_y // self.row_height)
-                if 0 <= clicked_index < len(self.filtered_sources):
-                    mods = pygame.key.get_mods()
-                    ctrl_held = bool(mods & pygame.KMOD_CTRL)
-                    if ctrl_held:
-                        self.handle_row_click(clicked_index, ctrl_held=True)
-                    elif clicked_index == self.selected_index:
-                        self.navigate_to_source(self.filtered_sources[clicked_index])
-                    else:
-                        self.handle_row_click(clicked_index, ctrl_held=False)
-                    return True
+            clicked_index = self._virtual_table.find_clicked_row(mouse_pos)
+            if clicked_index >= 0:
+                mods = pygame.key.get_mods()
+                ctrl_held = bool(mods & pygame.KMOD_CTRL)
+                prev_selected = self.selected_index
+                # Handle click via ViewModel (syncs to VirtualTable)
+                self.handle_row_click(clicked_index, ctrl_held=ctrl_held)
+                # Sync selection to VirtualTable
+                self._selection.set_selected(self._viewmodel.selected_indices)
+                self._virtual_table.update_visible_rows()
+                # Re-click on same row = navigate
+                if not ctrl_held and clicked_index == prev_selected:
+                    self.navigate_to_source(self.filtered_sources[clicked_index])
+                return True
 
-        # Mouse wheel scrolling
+        # Mouse wheel scrolling - handled by VirtualTable's scroll bar
         if event.type == pygame.MOUSEWHEEL:
             m_pos = pygame.mouse.get_pos()
-            if self.list_panel.get_abs_rect().collidepoint(m_pos):
+            # Check if within table area
+            table_rect = self.main_panel.get_abs_rect()
+            if table_rect.collidepoint(m_pos):
                 total_h = len(self.filtered_sources) * self.row_height
                 if total_h > 0:
                     row_percent = self.row_height / total_h
@@ -465,6 +428,7 @@ class EmpireBuildQueueWindow(UIWindow):
                     new_pct = current_pct - (event.y * row_percent)
                     new_pct = max(0.0, min(1.0 - self.scroll_bar.visible_percentage, new_pct))
                     self.scroll_bar.set_scroll_from_start_percentage(new_pct)
+                    self._virtual_table.update_visible_rows()
                 return True
 
         return handled
@@ -472,11 +436,20 @@ class EmpireBuildQueueWindow(UIWindow):
     def update(self, time_delta: float) -> None:
         """Update loop - check scrollbar and header button changes."""
         super().update(time_delta)
-        sort_changed, columns_changed = self.column_mgr.handle_header_clicks()
-        if columns_changed or sort_changed:
+
+        # Check header buttons for sort/swap changes
+        header_result = self._virtual_table.check_header_presses()
+        sort_col = header_result.get('sort_column')
+        swap_col = header_result.get('swap_column')
+
+        if sort_col or swap_col:
+            if sort_col:
+                self._column_manager.set_sort(sort_col)
             self._apply_sort_and_refresh()
+
+        # Update visible rows if scroll position changed
         if self.scroll_bar.check_has_moved_recently():
-            pass
+            self._virtual_table.update_visible_rows()
 
     # -----------------------------------------------------------------------
     # Column System
@@ -528,8 +501,8 @@ class EmpireBuildQueueWindow(UIWindow):
         """Apply current sort order and refresh display."""
         self._viewmodel._filter_mgr.sort_sources(
             self._viewmodel._filtered_sources,
-            self.column_mgr.sort_column_id,
-            self.column_mgr.sort_descending,
+            self._column_manager.sort_column_id,
+            self._column_manager.sort_descending,
             self._get_column_value,
         )
         self._refresh_list()
@@ -577,10 +550,7 @@ class EmpireBuildQueueWindow(UIWindow):
 
     def kill(self) -> None:
         """Clean up and invoke close callback."""
-        for elem in self.row_elements:
-            elem.kill()
-        self.row_elements.clear()
-        self.column_mgr.kill()
+        self._virtual_table.kill()
         if self.on_close_callback:
             self.on_close_callback()
         super().kill()

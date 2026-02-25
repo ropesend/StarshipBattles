@@ -16,17 +16,17 @@
 | 1. Generic Components (Foundation) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Migrate Fleet Report | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate Planet List | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Migrate Empire Build Queue | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Migrate Empire Build Queue | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Migrate Event Log | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Cleanup | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 3 Complete
-**Last Action:** Migrated PlanetListWindow to VirtualTable + PlanetDataSource + SingleSelect. Created PlanetDataSource with 29 tests. VirtualListRenderer has 0 reverse dependencies.
-**Next Action:** Begin Phase 4: Migrate Empire Build Queue
+**Active Phase:** Phase 4 Complete
+**Last Action:** Migrated EmpireBuildQueueWindow to VirtualTable + BuildQueueDataSource + MultiSelect. Created BuildQueueDataSource with 27 tests. Preserved EventBus/MVVM pattern.
+**Next Action:** Begin Phase 5: Migrate Event Log
 **Blockers:** None
-**Context for Next Agent:** 12,601 tests passing (+29 new from PlanetDataSource). PlanetListWindow now uses VirtualTable. Old VirtualListRenderer (planet_list_renderer.py) ready for Phase 6 deletion. ColumnManager (planet_list_columns.py) still used by empire_build_queue_window.py (Phase 4 target). Ready for Phase 4 (BuildQueueDataSource + EmpireBuildQueueWindow migration).
+**Context for Next Agent:** 12,628 tests passing (+27 new from BuildQueueDataSource). EmpireBuildQueueWindow now uses VirtualTable. Build queue now has virtual scrolling. planet_list_columns.ColumnManager has 0 reverse dependencies (ready for Phase 6 deletion). Ready for Phase 5 (EventLogDataSource + EventLogWindow migration).
 
 ## Overview
 Consolidates 4 duplicated list/table UI implementations (Planet List, Fleet Report, Empire Build Queue, Event Log) into a single generic `VirtualTable` component system under `game/ui/components/table/`, with domain-specific `ITableDataSource` adapters. Eliminates ~1,088 lines of duplicated rendering code while giving all lists virtual scrolling, sortable/reorderable columns, and a consistent architecture.
