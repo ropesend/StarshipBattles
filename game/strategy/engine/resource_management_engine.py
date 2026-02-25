@@ -137,7 +137,7 @@ class ResourceManagementEngine:
                 comp_def = registry.get(comp_id)
                 if comp_def is None:
                     continue
-
+                # comp_def may be dict (JSON) or Component object
                 abilities = getattr(comp_def, 'abilities', {}) or {}
                 for ability_data in ShipStatsCalculator._get_ability_list(abilities, 'ResourceConsumption'):
                     if (ability_data.get('trigger') == 'per_turn' and

@@ -114,7 +114,7 @@ class GameSession:
             category = kwargs.pop('category', 'other')
             message = kwargs.pop('message', '')
             empire_id = kwargs.pop('empire_id', -1)
-            # Coerce enum values to their string representation
+            # Coerce enum values to string (hasattr checks if Enum or str)
             cat_value = category.value if hasattr(category, 'value') else category
             etype_value = event_type.value if hasattr(event_type, 'value') else event_type
             event = Event(

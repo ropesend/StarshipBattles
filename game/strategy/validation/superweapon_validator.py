@@ -93,8 +93,8 @@ class SuperweaponValidator:
         if system is None:
             return ValidationResult.error("Fleet must be at a star system to destroy a star.")
 
-        # Check system has stars
-        if not getattr(system, 'stars', []):
+        # Check system has stars (stars is always [] or populated)
+        if not system.stars:
             return ValidationResult.error("System has no stars to destroy.")
 
         return ValidationResult.success()
@@ -135,8 +135,8 @@ class SuperweaponValidator:
         if target_system is None:
             return ValidationResult.error(f"Target system '{target_system_name}' does not exist.")
 
-        # Check warp link doesn't already exist
-        for wp in getattr(current_system, 'warp_points', []):
+        # Check warp link doesn't already exist (warp_points always exists)
+        for wp in current_system.warp_points:
             if wp.destination_id == target_system_name:
                 return ValidationResult.error(f"Warp link to '{target_system_name}' already exists.")
 
@@ -175,7 +175,7 @@ class SuperweaponValidator:
 
         # Check warp point with matching destination exists at fleet's hex
         found_warp_point = False
-        for wp in getattr(current_system, 'warp_points', []):
+        for wp in current_system.warp_points:
             # Check if fleet is at this warp point's location
             wp_global = current_system.global_location + wp.location
             if fleet.location == wp_global and wp.destination_id == warp_point_dest_id:
@@ -216,8 +216,8 @@ class SuperweaponValidator:
         if current_system is None:
             return ValidationResult.error("Fleet must be at a star system to create a Dyson Sphere.")
 
-        # Check system has stars
-        if not getattr(current_system, 'stars', []):
+        # Check system has stars (stars always exists on StarSystem)
+        if not current_system.stars:
             return ValidationResult.error("System must have stars to create a Dyson Sphere.")
 
         return ValidationResult.success()

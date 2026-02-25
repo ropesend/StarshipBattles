@@ -48,6 +48,7 @@ class GalaxySpatialIndex:
         if isinstance(obj, Planet):
             return self.get_system_of_planet(obj)
 
+        # obj may be any type - check for location attribute
         if not hasattr(obj, 'location'):
             return None
 
@@ -172,8 +173,8 @@ class GalaxySpatialIndex:
 
         # Add planet zone hexes for Dyson Spheres (PROJ-139)
         for planet in system.planets:
-            diameter = getattr(planet, 'diameter_hexes', 0)
-            if isinstance(diameter, (int, float)) and diameter > 0:
+            # Planet always has diameter_hexes (default 0.0)
+            if planet.diameter_hexes > 0:
                 for local_hex in planet.occupied_hexes:
                     system_hexes.add(system.global_location + local_hex)
 

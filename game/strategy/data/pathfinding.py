@@ -312,10 +312,11 @@ def _extract_chaser_info(chaser: Union['Fleet', 'NavigationState']) -> tuple:
     if isinstance(chaser, NavigationState):
         return (chaser.location, chaser.speed, -1, chaser.can_warp)
     else:
+        # Fleet always has id
         return (
             chaser.location,
             chaser.speed,
-            getattr(chaser, 'id', 'unknown'),
+            chaser.id,
             chaser.can_use_warp()
         )
 
@@ -412,8 +413,9 @@ def calculate_intercept_point(
     chaser_location, chaser_speed, chaser_id, chaser_can_warp = _extract_chaser_info(chaser)
     chaser_proxy = _ChaserProxy(chaser_can_warp, chaser_id)
 
+    # Fleet always has id
     logger.debug(f"Intercept: chaser={chaser_id} @ {chaser_location} (speed={chaser_speed}) -> "
-              f"target={getattr(target_fleet, 'id', '?')} @ {target_fleet.location}")
+              f"target={target_fleet.id} @ {target_fleet.location}")
 
     # Handle zero/negative speed
     if chaser_speed <= 0:

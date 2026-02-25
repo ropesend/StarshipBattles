@@ -90,6 +90,7 @@ class PlanetaryFacility:
                 comp_def = registries.components.get(comp_id)
                 if not comp_def:
                     continue
+                # comp_def may be dict (JSON) or Component object
                 abilities = getattr(comp_def, 'abilities', {}) or {}
                 for storage in (abilities.get('ResourceStorage') or []):
                     if isinstance(storage, dict) and storage.get('resource') == ResourceType.FUEL:

@@ -41,6 +41,7 @@ class MockPlanet:
 
     Implements IPlanet protocol attributes for isinstance checks.
     """
+    _next_id = 1
 
     def __init__(self, name: str, relative_loc: HexCoord, planet_type: MockPlanetType):
         self.name = name
@@ -49,6 +50,8 @@ class MockPlanet:
         self.owner_id = None
         self.construction_queue = []
         self.resources = {}  # Required by IPlanet protocol
+        self.id = MockPlanet._next_id  # PROJ-191: Planet always has id
+        MockPlanet._next_id += 1
 
 
 class MockSystem:

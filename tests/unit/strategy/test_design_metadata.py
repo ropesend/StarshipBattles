@@ -336,29 +336,8 @@ class TestDesignMetadataFromDesignFile:
 class TestDesignMetadataFromShip:
     """Tests for DesignMetadata.from_ship edge cases."""
 
-    def test_from_ship_missing_vehicle_type(self):
-        """from_ship handles ship without vehicle_type attribute."""
-        ship = MagicMock(spec=['name', 'ship_class', 'mass', 'layers'])
-        ship.name = "Legacy Ship"
-        ship.ship_class = "Destroyer"
-        ship.mass = 2000.0
-        ship.layers = {}
-
-        metadata = DesignMetadata.from_ship(ship, "legacy_ship")
-
-        assert metadata.vehicle_type == "Ship"
-
-    def test_from_ship_missing_theme_id(self):
-        """from_ship handles ship without theme_id attribute."""
-        ship = MagicMock(spec=['name', 'ship_class', 'mass', 'layers'])
-        ship.name = "No Theme Ship"
-        ship.ship_class = "Frigate"
-        ship.mass = 1500.0
-        ship.layers = {}
-
-        metadata = DesignMetadata.from_ship(ship, "no_theme")
-
-        assert metadata.theme_id == ""
+    # PROJ-191: Deleted test_from_ship_missing_vehicle_type - Ship always has vehicle_type
+    # PROJ-191: Deleted test_from_ship_missing_theme_id - Ship always has theme_id
 
     def test_from_ship_empty_layers(self):
         """from_ship handles empty layers."""
@@ -666,19 +645,8 @@ class TestDesignMetadataCombatPowerFromShip:
         # 1000 * 0.5 = 500
         assert power == 500.0
 
-    def test_calculate_combat_power_from_ship_no_classification(self):
-        """Combat power from ship handles components without major_classification."""
-        ship = MagicMock()
-        comp = MagicMock(spec=['name'])  # No major_classification attribute
-        comp.name = "generic_component"
-
-        ship.layers = {
-            "core": LayerData(components=[comp])
-        }
-
-        power = DesignMetadata._calculate_combat_power_from_ship(ship)
-
-        assert power == 0.0
+    # PROJ-191: Deleted test_calculate_combat_power_from_ship_no_classification
+    # - Component always has major_classification attribute
 
     def test_calculate_combat_power_from_ship_empty_layers(self):
         """Combat power from ship with empty layers is 0."""
@@ -859,33 +827,8 @@ class TestDesignMetadataEdgeCasesExtended:
 
         assert metadata.resource_cost.get("minerals", 0) == 75
 
-    def test_from_ship_weapon_missing_damage(self):
-        """from_ship handles weapon ability without damage attribute."""
-        ship = MagicMock()
-        ship.name = "No Damage Weapon"
-        ship.ship_class = "Fighter"
-        ship.mass = 100.0
-        ship.vehicle_type = "Fighter"
-        ship.theme_id = ""
-
-        weapon_comp = MagicMock()
-        weapon_comp.major_classification = "Weapons"
-        weapon_comp.cost = 0
-        # WeaponAbility without damage but with reload_time
-        weapon_ability = MagicMock(spec=['reload_time'])
-        weapon_ability.reload_time = 0.25  # rate_of_fire = 4
-        weapon_comp.get_abilities = MagicMock(return_value=[weapon_ability])
-
-        ship.layers = {
-            "core": LayerData(components=[weapon_comp])
-        }
-
-        # Should not crash
-        metadata = DesignMetadata.from_ship(ship, "no_damage")
-
-        # rate_of_fire contribution: 4 * 5 = 20
-        # getattr returns 0 for missing damage
-        assert metadata.combat_power == 20.0
+    # PROJ-191: Deleted test_from_ship_weapon_missing_damage
+    # - WeaponAbility always has damage attribute
 
     def test_embed_in_ship_data_preserves_existing_data(self):
         """embed_in_ship_data preserves existing ship data."""

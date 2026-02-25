@@ -192,11 +192,10 @@ class SimulationBattleResolver(IBattleResolver):
             shield_mult: Multiplier for shield capacity (0.0 to 1.0)
         """
         for ship in ships:
-            if hasattr(ship, 'max_shields') and ship.max_shields > 0:
+            # Ship always has max_shields and current_shields
+            if ship.max_shields > 0:
                 # Reduce max shields
                 new_max = int(ship.max_shields * shield_mult)
                 ship.max_shields = new_max
-
                 # Cap current shields to new max
-                if hasattr(ship, 'current_shields'):
-                    ship.current_shields = min(ship.current_shields, new_max)
+                ship.current_shields = min(ship.current_shields, new_max)

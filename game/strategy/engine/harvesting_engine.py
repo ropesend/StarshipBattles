@@ -71,6 +71,7 @@ def get_harvester_from_registry(comp_id: str, registries: GameRegistries) -> Opt
     comp_def = registries.components.get(comp_id)
     if comp_def is None:
         return None
+    # comp_def may be dict (JSON) or Component object
     abilities = getattr(comp_def, 'abilities', {}) or {}
     harvester_data = abilities.get('ResourceHarvester')
     if isinstance(harvester_data, dict):
@@ -208,6 +209,7 @@ class HarvestingEngine(IHarvestingEngine):
         comp_def = self._registries.components.get(comp_id)
         if comp_def is None:
             return None
+        # comp_def may be dict (JSON) or Component object
         abilities = getattr(comp_def, 'abilities', {}) or {}
         storage_data = abilities.get('EmpireStorage')
         if isinstance(storage_data, dict):

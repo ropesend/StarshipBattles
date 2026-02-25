@@ -332,8 +332,8 @@ class TurnEngine:
         """
         from game.strategy.validation import ColonizeValidator
         # PROJ-55: Pass component registry for colony pod validation
-        component_registry = getattr(self._registries, 'components', None)
-        return ColonizeValidator.validate(galaxy, fleet, target_planet, component_registry)
+        # GameRegistries always has components attribute
+        return ColonizeValidator.validate(galaxy, fleet, target_planet, self._registries.components)
 
     def _process_tick(self, tick, empires, galaxy, save_path=None):
         """Process 1 sub-tick of movement and combat.
@@ -398,9 +398,10 @@ class TurnEngine:
 
         # --- Phase 1.5: Action Orders (COLONIZE, TRANSFER, superweapons) ---
         # PROJ-187: Tick-based action execution for non-movement, non-BUILD orders
+        # GameRegistries always has components attribute
         self.action_engine.process_action_ticks(
             empires, galaxy, tick,
-            component_registry=getattr(self._registries, 'components', None),
+            component_registry=self._registries.components,
             all_empires=empires
         )
 

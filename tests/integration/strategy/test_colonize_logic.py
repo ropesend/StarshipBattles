@@ -27,13 +27,17 @@ class MockSystem:
         self.name = "MockSystem"
 
 class MockPlanet:
+    _next_id = 1
+
     def __init__(self, name, relative_loc, owner_id=None):
         self.name = name
         self.location = relative_loc # Relative to system
         self.owner_id = owner_id
         self.construction_queue = [] # Required by Engine
         self.planet_type = MockPlanetType.ICE_DWARF
-        self.populations = [] 
+        self.populations = []
+        self.id = MockPlanet._next_id  # PROJ-191: Planet always has id
+        MockPlanet._next_id += 1 
 
 class MockGalaxy:
     def __init__(self):

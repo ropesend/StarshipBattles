@@ -153,7 +153,7 @@ class DesignMetadata:
             design_id=design_id,
             name=ship.name,
             ship_class=ship.ship_class,
-            vehicle_type=getattr(ship, 'vehicle_type', 'Ship'),
+            vehicle_type=ship.vehicle_type,  # Ship always has vehicle_type
             mass=ship.mass,
             combat_power=combat_power,
             resource_cost=resource_cost,
@@ -161,7 +161,7 @@ class DesignMetadata:
             last_modified=now,
             is_obsolete=False,
             times_built=0,
-            theme_id=getattr(ship, 'theme_id', '')
+            theme_id=ship.theme_id  # Ship always has theme_id
         )
 
     @staticmethod
@@ -203,28 +203,23 @@ class DesignMetadata:
         """
         power = 0.0
 
-        # Sum weapon damage
+        # Sum weapon damage (Component always has major_classification, get_abilities, max_hp)
         for layer_type, layer_data in ship.layers.items():
             for comp in layer_data.components:
                 # Weapon components: use major_classification and WeaponAbility
-                if getattr(comp, 'major_classification', None) == 'Weapons':
-                    # Get weapon abilities for damage/reload stats
-                    weapon_abilities = []
-                    if hasattr(comp, 'get_abilities'):
-                        weapon_abilities = comp.get_abilities('WeaponAbility')
-
-                    if weapon_abilities:
-                        for weapon in weapon_abilities:
-                            damage = getattr(weapon, 'damage', 0)
-                            reload_time = getattr(weapon, 'reload_time', 1.0)
-                            # Convert reload_time to rate_of_fire: faster reload = higher rate
-                            rate_of_fire = 1.0 / reload_time if reload_time > 0 else 0
-                            power += damage * 10
-                            power += rate_of_fire * 5
+                if comp.major_classification == 'Weapons':
+                    weapon_abilities = comp.get_abilities('WeaponAbility')
+                    for weapon in weapon_abilities:
+                        # WeaponAbility always has damage, reload_time
+                        damage = weapon.damage
+                        reload_time = weapon.reload_time if weapon.reload_time > 0 else 1.0
+                        rate_of_fire = 1.0 / reload_time
+                        power += damage * 10
+                        power += rate_of_fire * 5
 
                 # Armor components: use major_classification and max_hp
-                if getattr(comp, 'major_classification', None) == 'Armor':
-                    power += getattr(comp, 'max_hp', 0) * 0.5
+                if comp.major_classification == 'Armor':
+                    power += comp.max_hp * 0.5
 
         return power
 

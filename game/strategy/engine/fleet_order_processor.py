@@ -283,7 +283,7 @@ class FleetOrderProcessor:
             category=EventCategory.COLONIES,
             empire_id=empire.id,
             message=f"Founded colony on {final_planet.name}",
-            planet_id=getattr(final_planet, 'id', None),
+            planet_id=final_planet.id,  # Planet always has id
             planet_name=final_planet.name,
             fleet_id=fleet.id,
         )
@@ -338,7 +338,8 @@ class FleetOrderProcessor:
             # but we can look through the empire's fleets or all empires.
             from game.core.protocols import is_planet, is_fleet
             # Search all empires for the target fleet
-            for emp in getattr(galaxy, 'empires', []): # This depends on how galaxy is structured
+            # NOTE: galaxy may not have 'empires' attr - depends on context
+            for emp in getattr(galaxy, 'empires', []):
                 for f in emp.fleets:
                     if f.id == target_fleet_id:
                         target = f

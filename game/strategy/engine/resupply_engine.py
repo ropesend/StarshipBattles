@@ -155,7 +155,7 @@ class ResupplyEngine(IResupplyEngine):
                 comp_def = registry.get(comp_id)
                 if not comp_def:
                     continue
-
+                # comp_def may be dict (JSON) or Component object
                 abilities = getattr(comp_def, 'abilities', {}) or {}
                 for gen_data in ShipStatsCalculator._get_ability_list(abilities, 'ResourceGeneration'):
                     if gen_data.get('resource') == ResourceType.FUEL:

@@ -332,6 +332,7 @@ class RaceConfig:
         return True, ""
 
     def _validate_environment_ranges(self) -> tuple[bool, str]:
+        # Intentional getattr - iterating over attr names from _ENVIRONMENT_RANGES
         for attr, lo, hi, msg in self._ENVIRONMENT_RANGES:
             if not (lo <= getattr(self, attr) <= hi):
                 return False, msg
@@ -355,6 +356,7 @@ class RaceConfig:
         return True, ""
 
     def _validate_identity_enums(self) -> tuple[bool, str]:
+        # Intentional getattr - iterating over attr names from _IDENTITY_ENUM_CHECKS
         for attr, valid_list, label in self._IDENTITY_ENUM_CHECKS:
             value = getattr(self, attr)
             if value and value not in valid_list:

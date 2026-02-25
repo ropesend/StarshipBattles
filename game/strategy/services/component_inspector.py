@@ -33,11 +33,9 @@ def get_component_abilities(comp_def: Any) -> Dict[str, Any]:
     if comp_def is None:
         return {}
 
-    # Try dict access first (test mocks, raw JSON)
+    # comp_def may be dict (JSON registry, test mocks) or Component object
     if isinstance(comp_def, dict):
         return comp_def.get('abilities', {})
-
-    # Try Component object access
     return getattr(comp_def, 'abilities', {})
 
 

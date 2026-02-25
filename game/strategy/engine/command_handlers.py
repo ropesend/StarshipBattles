@@ -437,7 +437,8 @@ class TransferCommandHandler(BaseCommandHandler):
             session.galaxy, fleet, planet, cmd.cargo_type, cmd.direction, cmd.amount,
             cmd.species_id, skip_location_check=True, projected_cargo=projected
         )
-        logger.info(f"DIAG TransferCommandHandler: validation result is_valid={result.is_valid}, errors={result.errors}, error_code={getattr(result, 'error_code', None)}")
+        # ValidationResult always has error_code attribute
+        logger.info(f"DIAG TransferCommandHandler: validation result is_valid={result.is_valid}, errors={result.errors}, error_code={result.error_code}")
 
         # 5. Apply
         if result.is_valid:
