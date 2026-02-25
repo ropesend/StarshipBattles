@@ -17,16 +17,16 @@
 | 2. action_time on Component Abilities | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. ActionExecutionEngine | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Wire Into Turn Loop + Eradicate End-of-Turn | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Test Migration | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Test Migration | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. WARP Order Implementation | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Command Handler Review + Path Projection | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. Documentation | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 5 (Test Migration)
-**Last Action:** Phase 4 complete - ActionExecutionEngine wired into TurnEngine as Phase 1.5, _process_end_turn_orders removed, FleetMovementEngine skips action orders, tests updated
-**Next Action:** Begin Phase 5 - Test migration and validation
+**Active Phase:** Phase 6 (WARP Order Implementation)
+**Last Action:** Phase 5 complete - verified all test migration was completed in Phase 4, 12,445 tests passing
+**Next Action:** Begin Phase 6 - Implement OrderType.WARP primitive
 **Blockers:** None
 **Baseline:** 12,445 passed, 1 skipped, 0 failures
 

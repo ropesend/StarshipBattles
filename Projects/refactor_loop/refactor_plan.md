@@ -8,28 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-187 Phase 4 - Wire Into Turn Loop + Eradicate End-of-Turn
-**Current Status:** PROJ-187 Phase 4 complete, Phase 5 next
+**Last Completed:** PROJ-187 Phase 5 - Test Migration
+**Current Status:** PROJ-187 Phase 5 complete, Phase 6 next
 **Current Project:** PROJ-187
-**Current Phase:** Phase 4 Complete
+**Current Phase:** Phase 5 Complete
 **Test Status:** 12445 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-187 Phase 4 Complete:
-  - Added `action_engine` property to TurnEngine with lazy-init pattern
-  - Integrated ActionExecutionEngine as Phase 1.5 in `_process_tick()`
-  - Removed `_process_end_turn_orders()` method from TurnEngine entirely
-  - Removed end-of-turn order loop from `process_turn()`
-  - Updated FleetMovementEngine to skip ACTION_ORDER_TYPES in collect_movements()
-  - Updated FleetOrderProcessor docstrings (method retained for ActionExecutionEngine)
-  - Updated IOrderProcessor interface with empires parameter
-  - Migrated tests from TurnEngine._process_end_turn_orders to FleetOrderProcessor:
-    - tests/unit/strategy/turn_engine/test_turn_processing.py - rewrote for new architecture
-    - tests/unit/strategy/turn_engine/test_dependency_injection.py - updated
-    - tests/integration/strategy/test_colonize_logic.py - now uses FleetOrderProcessor
-    - tests/unit/test_advanced_fleet_orders.py - now uses FleetOrderProcessor
-- Next: Phase 5 - Test Migration (verify all test coverage is adequate)
+- PROJ-187 Phase 5 Complete:
+  - Verified all test migration was completed in Phase 4
+  - Grepped for `process_end_turn_orders` - all calls to FleetOrderProcessor (still exists)
+  - No tests call deleted `TurnEngine._process_end_turn_orders`
+  - Full test suite: 12,445 passed, 1 skipped (baseline maintained)
+  - Integration tests verified: turn_engine, colonization, gameplay_loop all pass
+  - Test count increased from baseline (12,366 -> 12,445) due to ActionExecutionEngine tests
+- Next: Phase 6 - WARP Order Implementation
 
 ---
 
@@ -59,6 +53,7 @@
 | 2026-02-24 | PROJ-187 | Phase 2 | Complete | 12415 passed | b414e937 | action_time on abilities + ActionTimeResolver |
 | 2026-02-24 | PROJ-187 | Phase 3 | Complete | 12446 passed | 211b18a7 | ActionExecutionEngine + 31 tests |
 | 2026-02-24 | PROJ-187 | Phase 4 | Complete | 12445 passed | d737b376 | Wire into turn loop, eradicate end-of-turn |
+| 2026-02-24 | PROJ-187 | Phase 5 | Complete | 12445 passed | 06fbecb1 | Test migration verified, all tests passing |
 
 ---
 
