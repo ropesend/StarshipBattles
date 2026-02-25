@@ -16,7 +16,7 @@
 | 1. Storm Data Model & Serialization | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Hex Cluster Generation & Storm Placement | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. SHIELD_CAPACITY_MULT Stat Key | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. AreaEffectManager Service | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. AreaEffectManager Service | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. EnvironmentalHazardEngine (Turn Integration) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Rendering | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Combat Layer Integration | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
@@ -24,11 +24,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete - SHIELD_CAPACITY_MULT stat key added
-**Next Action:** Begin Phase 4 - AreaEffectManager Service
+**Active Phase:** Phase 5
+**Last Action:** Phase 4 complete - AreaEffectManager Service
+**Next Action:** Begin Phase 5 - EnvironmentalHazardEngine (Turn Integration)
 **Blockers:** None
-**Context for Next Agent:** 12,653 tests passing, 1 skipped. Added SHIELD_CAPACITY_MULT to StatKey enum and get_default_stat_multipliers(). Updated ShieldProjection to apply both capacity_mult and shield_capacity_mult multiplicatively. 4 new tests in test_defense_isolation.py. Environmental effects can now reduce shield capacity via shield_capacity_mult stat.
+**Context for Next Agent:** 12,667 tests passing, 1 skipped. Created AreaEffectManager service with EnvironmentalEffects dataclass. Aggregates storm effects at hex locations (multiplicative stacking for mults, additive for damage/fuel). Added calculate_fleet_speed_with_environment() method to FleetSpeedCalculator. 10 new tests for AreaEffectManager, 4 new tests for fleet speed with environmental effects.
 
 ## Overview
 Implement "Storms" as environmental hazards in star systems. Storms occupy 1-10 hexes (irregular shapes) and apply effects (shield interference, propulsion interference, environmental damage, fuel drain) to all ships in those hexes. Effects use data-driven multipliers that feed into the same stat pipeline as the component system. Storms are static entities generated during system creation and rendered using existing nebulae assets.

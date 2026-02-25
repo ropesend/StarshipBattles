@@ -8,23 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-189 Phase 3 - SHIELD_CAPACITY_MULT Stat Key
-**Current Status:** PROJ-189 Phase 3 Complete
+**Last Completed:** PROJ-189 Phase 4 - AreaEffectManager Service
+**Current Status:** PROJ-189 Phase 4 Complete
 **Current Project:** PROJ-189
-**Current Phase:** Phase 4 pending
-**Test Status:** 12653 passed, 1 skipped
+**Current Phase:** Phase 5 pending
+**Test Status:** 12667 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-189 Phase 3 Complete:
-  - Added `SHIELD_CAPACITY_MULT = "shield_capacity_mult"` to StatKey enum
-  - Added `'shield_capacity_mult': 1.0` to get_default_stat_multipliers() in modifiers.py
-  - Updated ShieldProjection with second STAT_BINDING for SHIELD_CAPACITY_MULT
-  - Overrode ShieldProjection.recalculate() to apply both capacity_mult and shield_capacity_mult multiplicatively
-  - Added 4 new tests in test_defense_isolation.py
-  - Updated test_defense_integration.py to expect 2 consumed stats
-  - All 12,653 tests passing
-- Next: Phase 4 - AreaEffectManager Service
+- PROJ-189 Phase 4 Complete:
+  - Created `game/strategy/services/area_effect_manager.py` with EnvironmentalEffects dataclass and AreaEffectManager service
+  - EnvironmentalEffects: shield_capacity_mult, thrust_mult, strategic_mult, damage_per_tick, fuel_drain_per_tick, in_storm, storm_names
+  - AreaEffectManager.get_effects_at_global_hex(): Queries zones at hex, filters to Storm instances, aggregates effects (mult stacking for mults, additive for damage/fuel)
+  - Added FleetSpeedCalculator.calculate_fleet_speed_with_environment() method
+  - 10 new tests in tests/unit/strategy/services/test_area_effect_manager.py
+  - 4 new tests in tests/unit/strategy/test_fleet_speed_calculator.py
+  - All 12,667 tests passing
+- Next: Phase 5 - EnvironmentalHazardEngine (Turn Integration)
 
 ---
 
@@ -75,6 +75,7 @@
 | 2026-02-24 | PROJ-189 | Phase 1 | Complete | 12623 passed | 19a21f33 | Storm data model + StarSystem + Galaxy zone |
 | 2026-02-24 | PROJ-189 | Phase 2 | Complete | 12649 passed | 457fa4b5 | hex_random_cluster + StormGenerator + Galaxy integration |
 | 2026-02-24 | PROJ-189 | Phase 3 | Complete | 12653 passed | fd1623a9 | SHIELD_CAPACITY_MULT stat key + ShieldProjection wiring |
+| 2026-02-24 | PROJ-189 | Phase 4 | Complete | 12667 passed | bb504650 | AreaEffectManager + FleetSpeedCalculator integration |
 
 ---
 
