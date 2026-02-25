@@ -46,7 +46,7 @@ class MockShip:
         self.name = "Test Frigate"
         self.ship_class = "Frigate"
         self.vehicle_type = "Ship"
-        self.theme = "default"
+        self.theme_id = "Federation"
 
         # Basic stats
         self.max_mass_budget = 1200

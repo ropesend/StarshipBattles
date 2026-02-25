@@ -247,6 +247,11 @@ class IPlanet(Protocol):
         """Filename for planet image."""
         ...
 
+    @property
+    def image_rotation(self) -> float:
+        """Rotation angle in degrees (0.0 to 360.0) for visual variety."""
+        ...
+
 
 @runtime_checkable
 class IZoneOccupant(Protocol):

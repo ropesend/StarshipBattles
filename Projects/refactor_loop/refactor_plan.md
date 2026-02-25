@@ -8,24 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-193 Phase 7 - Builder Screens Complete
-**Current Status:** PROJ-193 In Progress - Phase 7 complete, moving to Phase 8
+**Last Completed:** PROJ-193 Phase 8 - All Phases Complete
+**Current Status:** PROJ-193 All phases complete — ready for audit
 **Current Project:** PROJ-193
-**Current Phase:** Phase 8
+**Current Phase:** Audit required
 **Test Status:** 12711 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-193 Phase 7 COMPLETE - Builder Screens
-- weapons_viewmodel.py: Added ICombatShip TYPE_CHECKING, typed 6 methods, replaced 3 hasattr → direct calls, 1 getattr → direct access
-- stats_config.py: Added comprehensive docstring documenting INTENTIONAL dynamic dispatch pattern
-- Audited 10 other builder files - ALL remaining patterns are intentional:
-  - Self-init guards (right_panel, left_panel)
-  - Framework checks (modifier_row pygame_gui events)
-  - Polymorphic interfaces (layer_panel, detail_panel, interaction_controller)
-  - Optional attributes with fallbacks (theme_id, vehicle_type, etc.)
+- PROJ-193 Phase 8 COMPLETE - Remaining Scattered Instances
+- IPlanet protocol: Added image_rotation property
+- planet_selection_window.py: Added IPlanet TYPE_CHECKING, typed planet variable, replaced 2 hasattr with direct access
+- design_report_panel.py: Replaced 4 getattr(ship, 'vehicle_type'/'ship_class'/'theme_id') with direct access
+- Fixed MockShip (theme_id) and MockPlanet (image_rotation) in tests
+- Full audit of all UI files - all remaining hasattr/getattr patterns are INTENTIONAL
 - Tests: 12711 passed, 1 skipped
-- Next: Start PROJ-193 Phase 8 - Remaining Scattered Instances
+- Next: Run PROJ-193 Audit
 
 ---
 
@@ -151,6 +149,7 @@
 | 2026-02-25 | PROJ-193 | Phase 5 | Complete | 12711 passed | - | ~6 hasattr/getattr → Protocol access, typed planet_report_panel + ship_stats_renderer |
 | 2026-02-25 | PROJ-193 | Phase 6 | Complete | 12711 passed | - | 6 is_derelict getattr → direct, ICombatShip TYPE_CHECKING in battle_ui_service |
 | 2026-02-25 | PROJ-193 | Phase 7 | Complete | 12711 passed | - | weapons_viewmodel: ICombatShip typing, 3 hasattr → direct. stats_config docstring. |
+| 2026-02-25 | PROJ-193 | Phase 8 | Complete | 12711 passed | - | IPlanet +image_rotation, planet_selection_window, design_report_panel typed. Full audit done. |
 
 ---
 

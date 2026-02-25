@@ -3,15 +3,22 @@ Planet Selection Window - Simple planet selection dialog.
 
 Used for selecting a planet from a list, typically for targeting or transfer operations.
 """
+from __future__ import annotations
+
+import logging
+from typing import TYPE_CHECKING
+
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIWindow, UISelectionList, UIButton, UILabel
 
 from game.assets.asset_manager import AssetManager
-import logging
+from game.ui.panels.planet_report_panel import PlanetReportPanel
+
+if TYPE_CHECKING:
+    from game.core.protocols import IPlanet
 
 logger = logging.getLogger(__name__)
-from game.ui.panels.planet_report_panel import PlanetReportPanel
 
 class PlanetSelectionWindow(UIWindow):
     def __init__(
@@ -106,7 +113,7 @@ class PlanetSelectionWindow(UIWindow):
             self.current_selection_name = selected_name
 
             # Find planet object
-            planet = None
+            planet: 'IPlanet | None' = None
             if selected_name:
                 planet = next((p for p in self.planets if p.name == selected_name), None)
 
@@ -128,11 +135,11 @@ class PlanetSelectionWindow(UIWindow):
 
                     # Load planet portrait image
                     portrait_surface = None
-                    if hasattr(planet, 'image_id') and planet.image_id:
+                    if planet.image_id:
                         am = AssetManager.instance()
                         portrait_surface = am.load_planet_image(planet.image_id, requested_size=512)
                         # Apply rotation if specified
-                        if portrait_surface and hasattr(planet, 'image_rotation') and planet.image_rotation:
+                        if portrait_surface and planet.image_rotation:
                             portrait_surface = pygame.transform.rotate(portrait_surface, planet.image_rotation)
 
                     self.planet_detail_panel = PlanetReportPanel(

@@ -63,6 +63,7 @@ class MockPlanet:
         self.orbit_distance = 1
         self.diameter_hexes = 0.0
         self.image_id = ""
+        self.image_rotation = 0.0
 
 
 class MockSystem:

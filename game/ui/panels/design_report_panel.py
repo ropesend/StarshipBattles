@@ -140,9 +140,7 @@ class DesignReportPanel:
 
         # PROJ-81 Phase 4: Populate design identity labels
         self.name_label.set_text(ship.name)
-        vehicle_type = getattr(ship, 'vehicle_type', 'Unknown')
-        ship_class = getattr(ship, 'ship_class', 'Unknown')
-        self.type_class_label.set_text(f"{vehicle_type} - {ship_class}")
+        self.type_class_label.set_text(f"{ship.vehicle_type} - {ship.ship_class}")
 
         # Kill old stats panel
         if self._stats_panel is not None:
@@ -180,8 +178,8 @@ class DesignReportPanel:
         portrait_height = portrait_rect.height
 
         # Determine portrait file path
-        theme = getattr(ship, 'theme_id', 'Federation')
-        ship_class = getattr(ship, 'ship_class', 'Unknown')
+        theme = ship.theme_id
+        ship_class = ship.ship_class
 
         # Ensure ship_class is a string
         if not isinstance(ship_class, str):
