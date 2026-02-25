@@ -217,9 +217,13 @@ class TurnEngine:
         """Return conflict engine, lazily creating default if not injected."""
         if self._conflict_engine is None:
             from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
+            from game.strategy.services.area_effect_manager import AreaEffectManager
             # PROJ-50: Pass registries for strict DI compliance
+            # PROJ-189: Pass AreaEffectManager for storm shield interference
             self._conflict_engine = ConflictResolutionEngine(
-                self._battle_resolver, registries=self._registries
+                self._battle_resolver,
+                registries=self._registries,
+                area_effect_manager=AreaEffectManager()
             )
         return self._conflict_engine
 
@@ -410,7 +414,8 @@ class TurnEngine:
 
         # --- Phase 4: Combat ---
         # PROJ-36: Delegate to ConflictResolutionEngine
-        self.conflict_engine.resolve_all_conflicts(empires)
+        # PROJ-189: Pass galaxy for storm effect lookup during combat
+        self.conflict_engine.resolve_all_conflicts(empires, galaxy=galaxy)
 
 
 def create_default_turn_engine() -> TurnEngine:

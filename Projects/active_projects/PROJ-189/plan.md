@@ -19,24 +19,26 @@
 | 4. AreaEffectManager Service | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. EnvironmentalHazardEngine (Turn Integration) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Rendering | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
-| 7. Combat Layer Integration | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
+| 7. Combat Layer Integration | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. Integration Testing & Balance | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 7
-**Last Action:** Phase 6 complete - Rendering (storms, tooltips)
-**Next Action:** Begin Phase 7 - Combat Layer Integration
+**Active Phase:** Phase 8
+**Last Action:** Phase 7 complete - Combat Layer Integration
+**Next Action:** Begin Phase 8 - Integration Testing & Balance
 **Blockers:** None
-**Context for Next Agent:** 12,693 tests passing, 1 skipped. Phase 6 complete:
-- Added nebulae assets to asset_manifest.json (6 transparent PNGs)
-- Implemented `_draw_storms()` in strategy_renderer.py with nebulae images, color tints, alpha, viewport culling
-- Implemented `_draw_storms_low_detail()` for low zoom rendering
-- Added `IStorm` protocol and `is_storm()` TypeGuard to protocols.py
-- Added storm label formatting to strategy_detail_fmt.py
-- Added `_format_storm()` method to strategy_detail_formatter.py for detailed storm info
-- Updated tests for new is_storm checker
-Next: Phase 7 - Combat Layer Integration (shield interference in tactical combat)
+**Context for Next Agent:** 12,705 tests passing, 1 skipped. Phase 7 complete:
+- Added `area_effect_manager` parameter to ConflictResolutionEngine constructor
+- Added `galaxy` parameter to `resolve_all_conflicts()` and IConflictEngine interface
+- Updated `_resolve_combat_simulated()` to query environmental effects at conflict location
+- Added `environmental_effects` parameter to IBattleResolver.resolve_battle()
+- Implemented `_apply_shield_interference()` in SimulationBattleResolver
+- Ships fighting in storm hexes now have reduced max_shields (shield_capacity_mult applied)
+- Updated TurnEngine to inject AreaEffectManager and pass galaxy to conflict resolution
+- Updated all mock resolvers in tests to accept new parameter
+- 12 new tests added for storm combat integration
+Next: Phase 8 - Integration Testing & Balance
 
 ## Overview
 Implement "Storms" as environmental hazards in star systems. Storms occupy 1-10 hexes (irregular shapes) and apply effects (shield interference, propulsion interference, environmental damage, fuel drain) to all ships in those hexes. Effects use data-driven multipliers that feed into the same stat pipeline as the component system. Storms are static entities generated during system creation and rendered using existing nebulae assets.

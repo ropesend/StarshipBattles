@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from game.strategy.engine.fleet_movement_engine import MovementResult
     from game.strategy.engine.conflict_resolution_engine import ConflictResult
     from game.strategy.engine.resource_management_engine import ResourceDepletion
+    from game.strategy.data.galaxy import Galaxy
 
 
 __all__ = [
@@ -244,13 +245,16 @@ class IConflictEngine(ABC):
     @abstractmethod
     def resolve_all_conflicts(
         self,
-        empires: List
+        empires: List,
+        galaxy: Optional['Galaxy'] = None
     ) -> 'ConflictResult':
         """
         Resolve all conflicts between empires.
 
         Args:
             empires: List of Empire objects to check for conflicts
+            galaxy: Optional Galaxy for environmental effect lookup (PROJ-189).
+                   When provided, storm effects are applied to combat.
 
         Returns:
             ConflictResult with combat statistics

@@ -375,7 +375,7 @@ class TestConcreteImplementations:
         from game.strategy.interfaces.engines import IConflictEngine
 
         class MockConflictEngine(IConflictEngine):
-            def resolve_all_conflicts(self, empires):
+            def resolve_all_conflicts(self, empires, galaxy=None):
                 return MagicMock()
 
         engine = MockConflictEngine()

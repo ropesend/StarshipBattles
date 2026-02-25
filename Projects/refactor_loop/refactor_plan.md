@@ -8,28 +8,28 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-189 Phase 6 - Rendering
-**Current Status:** PROJ-189 Phase 6 Complete
+**Last Completed:** PROJ-189 Phase 7 - Combat Layer Integration
+**Current Status:** PROJ-189 Phase 7 Complete
 **Current Project:** PROJ-189
-**Current Phase:** Phase 7 pending
-**Test Status:** 12693 passed, 1 skipped
+**Current Phase:** Phase 8 pending
+**Test Status:** 12705 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-189 Phase 6 Complete:
-  - Added nebulae assets to `assets/asset_manifest.json` (6 transparent PNGs)
-  - Implemented `_draw_storms()` in `game/ui/screens/strategy_renderer.py`:
-    - Nebulae images scaled to storm hex extent
-    - Color tints per storm type (ion=blue, plasma=red, gravity=purple, radiation=yellow, nebula=grey)
-    - Alpha based on storm.intensity (max 180 = ~70% opacity)
-    - Viewport culling for performance
-  - Implemented `_draw_storms_low_detail()` for low zoom rendering (colored circles)
-  - Added `IStorm` protocol and `is_storm()` TypeGuard to `game/core/protocols.py`
-  - Added storm label formatting to `game/ui/screens/strategy_detail_fmt.py`
-  - Added `_format_storm()` to `game/ui/screens/strategy_detail_formatter.py` for detail panel
-  - Updated tests for new is_storm checker (2 test files updated)
-  - All 12,693 tests passing
-- Next: Phase 7 - Combat Layer Integration
+- PROJ-189 Phase 7 Complete:
+  - Added `area_effect_manager` parameter to `ConflictResolutionEngine` constructor
+  - Added `galaxy` parameter to `resolve_all_conflicts()` and `IConflictEngine` interface
+  - Updated `_resolve_combat_simulated()` to query environmental effects at conflict location
+  - Added `environmental_effects` parameter to `IBattleResolver.resolve_battle()` interface
+  - Implemented `_apply_shield_interference()` in `SimulationBattleResolver`:
+    - Reduces `ship.max_shields` by `shield_capacity_mult` factor
+    - Caps `current_shields` to new max
+  - Updated `TurnEngine.conflict_engine` property to inject `AreaEffectManager`
+  - Updated `TurnEngine._process_tick()` to pass galaxy to `resolve_all_conflicts()`
+  - Fixed all mock resolvers in tests to accept new `environmental_effects` parameter
+  - Added 12 new tests for storm combat integration
+  - All 12,705 tests passing
+- Next: Phase 8 - Integration Testing & Balance
 
 ---
 
@@ -50,7 +50,7 @@
   - **Dependencies:** None
 
 - [/] **PROJ-189: Storms Environmental Hazards**
-  - **Phases:** 8 | **Status:** Phase 6 Complete | **Priority:** Medium
+  - **Phases:** 8 | **Status:** Phase 7 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-189/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-189/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -83,6 +83,7 @@
 | 2026-02-24 | PROJ-189 | Phase 4 | Complete | 12667 passed | bb504650 | AreaEffectManager + FleetSpeedCalculator integration |
 | 2026-02-24 | PROJ-189 | Phase 5 | Complete | 12692 passed | 6f85653a | EnvironmentalHazardEngine + TurnEngine Phase 0f |
 | 2026-02-24 | PROJ-189 | Phase 6 | Complete | 12693 passed | - | Storm rendering, tooltips, IStorm protocol |
+| 2026-02-24 | PROJ-189 | Phase 7 | Complete | 12705 passed | - | Combat shield interference in storm hexes |
 
 ---
 

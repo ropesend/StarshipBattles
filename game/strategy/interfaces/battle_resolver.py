@@ -20,6 +20,7 @@ from game.core.protocols import IPostBattleShip
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
     from game.core.registry import GameRegistries
+    from game.strategy.services.area_effect_manager import EnvironmentalEffects
 
 
 @dataclass
@@ -70,7 +71,8 @@ class IBattleResolver(ABC):
         fleet1: 'Fleet',
         fleet2: 'Fleet',
         seed: Optional[int] = None,
-        registries: Optional['GameRegistries'] = None
+        registries: Optional['GameRegistries'] = None,
+        environmental_effects: Optional['EnvironmentalEffects'] = None
     ) -> BattleResult:
         """
         Resolve a battle between two fleets.
@@ -80,6 +82,9 @@ class IBattleResolver(ABC):
             fleet2: Second fleet (assigned to team 1)
             seed: Optional random seed for deterministic battles
             registries: Optional GameRegistries for DI (PROJ-50)
+            environmental_effects: Optional environmental effects from storms (PROJ-189).
+                                   If provided with shield_capacity_mult < 1.0, ships
+                                   will have reduced shield capacity during combat.
 
         Returns:
             BattleResult containing winner, tick count, and survivors
