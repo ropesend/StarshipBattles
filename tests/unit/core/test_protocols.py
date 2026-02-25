@@ -25,6 +25,11 @@ class TestProtocolExistence:
             ISectorEnvironment,
             ICombatant,
             IDamageable,
+            # PROJ-193: New Protocols
+            IEmpire,
+            IFacility,
+            IShipInstance,
+            ICombatShip,
         )
         # If we get here, all imports succeeded
         assert IStarSystem is not None
@@ -34,6 +39,11 @@ class TestProtocolExistence:
         assert IWarpPoint is not None
         assert ISectorEnvironment is not None
         assert ICombatant is not None
+        # PROJ-193: New Protocols
+        assert IEmpire is not None
+        assert IFacility is not None
+        assert IShipInstance is not None
+        assert ICombatShip is not None
 
     def test_import_all_typeguards(self):
         """All TypeGuard functions should be importable."""
@@ -45,6 +55,11 @@ class TestProtocolExistence:
             is_warp_point,
             is_sector_environment,
             is_combatant,
+            # PROJ-193: New TypeGuards
+            is_empire,
+            is_facility,
+            is_ship_instance,
+            is_combat_ship,
         )
         assert callable(is_star_system)
         assert callable(is_star)
@@ -53,6 +68,11 @@ class TestProtocolExistence:
         assert callable(is_warp_point)
         assert callable(is_sector_environment)
         assert callable(is_combatant)
+        # PROJ-193: New TypeGuards
+        assert callable(is_empire)
+        assert callable(is_facility)
+        assert callable(is_ship_instance)
+        assert callable(is_combat_ship)
 
 
 class TestProtocolsWithRealClasses:
@@ -463,3 +483,160 @@ class TestICameraProtocol:
         assert screen_pos is not None
         world_pos = camera.screen_to_world((400, 300))
         assert world_pos is not None
+
+
+# =============================================================================
+# PROJ-193: New Protocol Satisfaction Tests
+# =============================================================================
+
+
+class TestPROJ193ProtocolImports:
+    """Verify PROJ-193 Protocols and TypeGuards are importable."""
+
+    def test_import_new_protocols(self):
+        """All PROJ-193 Protocols should be importable."""
+        from game.core.protocols import (
+            IEmpire,
+            IFacility,
+            IShipInstance,
+            ICombatShip,
+        )
+        assert IEmpire is not None
+        assert IFacility is not None
+        assert IShipInstance is not None
+        assert ICombatShip is not None
+
+    def test_import_new_typeguards(self):
+        """All PROJ-193 TypeGuard functions should be importable."""
+        from game.core.protocols import (
+            is_empire,
+            is_facility,
+            is_ship_instance,
+            is_combat_ship,
+        )
+        assert callable(is_empire)
+        assert callable(is_facility)
+        assert callable(is_ship_instance)
+        assert callable(is_combat_ship)
+
+
+class TestPROJ193ProtocolSatisfaction:
+    """Test that real game classes satisfy PROJ-193 Protocols."""
+
+    def test_empire_satisfies_iempire(self):
+        """Empire class should satisfy IEmpire Protocol."""
+        from game.core.protocols import IEmpire, is_empire
+        from game.strategy.data.empire import Empire
+
+        empire = Empire(empire_id=1, name="Test Empire", color=(255, 0, 0))
+        assert isinstance(empire, IEmpire)
+        assert is_empire(empire) is True
+
+    def test_ship_instance_satisfies_ishipinstance(self):
+        """ShipInstance class should satisfy IShipInstance Protocol."""
+        from game.core.protocols import IShipInstance, is_ship_instance
+        from game.strategy.data.ship_instance import ShipInstance
+
+        ship = ShipInstance(
+            instance_id="ship-001",
+            design_id="frigate_001",
+            name="USS Enterprise",
+            owner_id=1,
+            design_data={'name': 'Frigate', 'ship_class': 'Frigate'},
+        )
+        assert isinstance(ship, IShipInstance)
+        assert is_ship_instance(ship) is True
+
+    def test_facility_satisfies_ifacility(self):
+        """PlanetaryFacility class should satisfy IFacility Protocol."""
+        from game.core.protocols import IFacility, is_facility
+        from game.strategy.data.planet import PlanetaryFacility
+
+        # Create minimal facility for protocol test
+        facility = PlanetaryFacility(
+            instance_id="facility-001",
+            design_id="test_facility",
+            name="Test Factory",
+            design_data={'id': 'test_facility'},
+        )
+        assert isinstance(facility, IFacility)
+        assert is_facility(facility) is True
+
+    def test_combat_ship_satisfies_icombatship(self, fresh_registries):
+        """Simulation Ship class should satisfy ICombatShip Protocol."""
+        from game.core.protocols import ICombatShip, is_combat_ship
+        from game.simulation.entities.ship import Ship
+
+        ship = Ship(
+            name="Test Fighter",
+            x=100,
+            y=100,
+            color=(255, 0, 0),
+            team_id=1,
+            ship_class="Frigate",
+            registries=fresh_registries,
+        )
+        ship.recalculate_stats()
+        assert isinstance(ship, ICombatShip)
+        assert is_combat_ship(ship) is True
+
+
+class TestPROJ193ExtendedIPlanet:
+    """Test extended IPlanet Protocol properties."""
+
+    def test_planet_has_extended_properties(self):
+        """Planet should have all extended IPlanet properties."""
+        from game.core.protocols import IPlanet
+        from game.strategy.data.planet import Planet, PlanetType
+        from game.core.hex_math import HexCoord
+
+        planet = Planet(
+            name="Extended Test",
+            location=HexCoord(0, 0),
+            orbit_distance=3,
+            mass=1e24,
+            radius=6e6,
+            surface_area=5e14,
+            density=5000,
+            surface_gravity=9.8,
+            surface_pressure=100000,
+            surface_temperature=288,
+            surface_water=0.5,
+            tectonic_activity=0.5,
+            magnetic_field=1.0,
+            planet_type=PlanetType.CONTINENTAL,
+        )
+
+        # Check PROJ-193 extended properties exist
+        assert isinstance(planet, IPlanet)
+        assert hasattr(planet, 'id')
+        assert hasattr(planet, 'populations')
+        assert hasattr(planet, 'max_population')
+        assert hasattr(planet, 'facilities')
+        assert hasattr(planet, 'atmosphere')
+        assert hasattr(planet, 'surface_gravity')
+        assert hasattr(planet, 'surface_temperature')
+        assert hasattr(planet, 'orbit_distance')
+        assert hasattr(planet, 'diameter_hexes')
+        assert hasattr(planet, 'image_id')
+
+
+class TestPROJ193ExtendedIFleet:
+    """Test extended IFleet Protocol properties."""
+
+    def test_fleet_has_extended_properties(self):
+        """Fleet should have all extended IFleet properties."""
+        from game.core.protocols import IFleet
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
+
+        # Check PROJ-193 extended properties exist
+        assert isinstance(fleet, IFleet)
+        assert hasattr(fleet, 'speed')
+        assert hasattr(fleet, 'path')
+        assert hasattr(fleet, 'construction_queue')
+        assert hasattr(fleet, 'name')
+        assert hasattr(fleet, 'is_building')
+        assert hasattr(fleet, 'has_space_shipyard')

@@ -40,6 +40,7 @@ class MockPlanet:
     """Mock planet with planet_type attribute.
 
     Implements IPlanet protocol attributes for isinstance checks.
+    PROJ-193: Extended with all IPlanet protocol properties.
     """
     _next_id = 1
 
@@ -49,9 +50,19 @@ class MockPlanet:
         self.planet_type = planet_type
         self.owner_id = None
         self.construction_queue = []
-        self.resources = {}  # Required by IPlanet protocol
-        self.id = MockPlanet._next_id  # PROJ-191: Planet always has id
+        self.resources = {}
+        self.id = MockPlanet._next_id
         MockPlanet._next_id += 1
+        # PROJ-193: Required IPlanet properties
+        self.populations = []
+        self.max_population = 1000
+        self.facilities = []
+        self.atmosphere = {}
+        self.surface_gravity = 9.8
+        self.surface_temperature = 300.0
+        self.orbit_distance = 1
+        self.diameter_hexes = 0.0
+        self.image_id = ""
 
 
 class MockSystem:

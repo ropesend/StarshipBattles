@@ -191,6 +191,57 @@ class IPlanet(Protocol):
         """HexCoord (local to system)."""
         ...
 
+    # PROJ-193: Extended properties for UI data binding
+    @property
+    def id(self) -> int:
+        """Unique planet ID assigned by Galaxy registry."""
+        ...
+
+    @property
+    def populations(self) -> List[Any]:
+        """List of SpeciesPopulation objects."""
+        ...
+
+    @property
+    def max_population(self) -> int:
+        """Maximum population capacity based on surface area."""
+        ...
+
+    @property
+    def facilities(self) -> List[Any]:
+        """List of PlanetaryFacility objects."""
+        ...
+
+    @property
+    def atmosphere(self) -> Dict[str, float]:
+        """Atmosphere composition: gas name -> partial pressure (Pa)."""
+        ...
+
+    @property
+    def surface_gravity(self) -> float:
+        """Surface gravity in m/s^2."""
+        ...
+
+    @property
+    def surface_temperature(self) -> float:
+        """Surface temperature in Kelvin."""
+        ...
+
+    @property
+    def orbit_distance(self) -> int:
+        """Orbit ring number from system center."""
+        ...
+
+    @property
+    def diameter_hexes(self) -> float:
+        """Diameter in hexes for multi-hex objects (0 for normal planets)."""
+        ...
+
+    @property
+    def image_id(self) -> str:
+        """Filename for planet image."""
+        ...
+
 
 @runtime_checkable
 class IZoneOccupant(Protocol):
@@ -240,6 +291,37 @@ class IFleet(Protocol):
 
     @property
     def id(self) -> int:
+        ...
+
+    # PROJ-193: Extended properties for UI data binding
+    @property
+    def speed(self) -> float:
+        """Fleet movement speed (limited by slowest ship)."""
+        ...
+
+    @property
+    def path(self) -> List[Any]:
+        """Current movement path (list of HexCoord)."""
+        ...
+
+    @property
+    def construction_queue(self) -> List[Any]:
+        """Production queue for fleets with shipyards."""
+        ...
+
+    @property
+    def name(self) -> str:
+        """Display name for the fleet."""
+        ...
+
+    @property
+    def is_building(self) -> bool:
+        """True if fleet is currently executing a BUILD order."""
+        ...
+
+    @property
+    def has_space_shipyard(self) -> bool:
+        """True if fleet has an operational space shipyard."""
         ...
 
 
@@ -299,6 +381,152 @@ class IStorm(Protocol):
 
 
 # =============================================================================
+# Strategy Domain Protocols (PROJ-193)
+# =============================================================================
+
+@runtime_checkable
+class IEmpire(Protocol):
+    """Protocol for Empire entities (PROJ-193)."""
+    @property
+    def id(self) -> int:
+        """Unique empire identifier."""
+        ...
+
+    @property
+    def name(self) -> str:
+        """Empire name."""
+        ...
+
+    @property
+    def color(self) -> Any:
+        """Empire color (RGB tuple)."""
+        ...
+
+    @property
+    def flag_id(self) -> str:
+        """Custom flag directory."""
+        ...
+
+    @property
+    def portrait_id(self) -> str:
+        """Race portrait filename."""
+        ...
+
+    @property
+    def empire_theme_id(self) -> str:
+        """Ship theme for this empire's designs."""
+        ...
+
+    @property
+    def race_config(self) -> Optional[Any]:
+        """Full race configuration (RaceConfig or None)."""
+        ...
+
+    @property
+    def colonies(self) -> List[Any]:
+        """List of owned Planet objects."""
+        ...
+
+    @property
+    def fleets(self) -> List[Any]:
+        """List of Fleet objects."""
+        ...
+
+    @property
+    def resource_pool(self) -> Dict[str, float]:
+        """Current resource amounts by type."""
+        ...
+
+    @property
+    def max_storage(self) -> Dict[str, float]:
+        """Storage capacity per resource type."""
+        ...
+
+    @property
+    def built_ship_designs(self) -> Any:
+        """Set of design_ids that were ever built."""
+        ...
+
+
+@runtime_checkable
+class IFacility(Protocol):
+    """Protocol for PlanetaryFacility entities (PROJ-193)."""
+    @property
+    def instance_id(self) -> str:
+        """Unique facility ID (uuid)."""
+        ...
+
+    @property
+    def design_id(self) -> str:
+        """Reference to design file."""
+        ...
+
+    @property
+    def name(self) -> str:
+        """Facility name."""
+        ...
+
+    @property
+    def design_data(self) -> Dict[str, Any]:
+        """Full complex design (from JSON)."""
+        ...
+
+    @property
+    def is_operational(self) -> bool:
+        """True if facility is operational."""
+        ...
+
+    @property
+    def construction_queue(self) -> List[Any]:
+        """Facility's construction queue."""
+        ...
+
+    @property
+    def resource_levels(self) -> Dict[str, float]:
+        """Resource levels stored in this facility."""
+        ...
+
+
+@runtime_checkable
+class IShipInstance(Protocol):
+    """Protocol for ShipInstance entities (PROJ-193)."""
+    @property
+    def design_id(self) -> str:
+        """Reference to ship design file/name."""
+        ...
+
+    @property
+    def design_name(self) -> str:
+        """Design name (may be same as design_id)."""
+        ...
+
+    @property
+    def design_data(self) -> Dict[str, Any]:
+        """Full serialized ship template."""
+        ...
+
+    @property
+    def hull_class(self) -> str:
+        """Ship's hull class (from design_data)."""
+        ...
+
+    @property
+    def cargo_contents(self) -> Dict[str, int]:
+        """Cargo contents (cargo_type -> current amount)."""
+        ...
+
+    @property
+    def ship_name(self) -> str:
+        """Instance name (alias for name property)."""
+        ...
+
+    @property
+    def serial_number(self) -> Optional[int]:
+        """Serial number unique per design within empire."""
+        ...
+
+
+# =============================================================================
 # Combat Entity Protocols
 # =============================================================================
 
@@ -334,6 +562,84 @@ class IDamageable(Protocol):
     @property
     def is_derelict(self) -> bool:
         """True if destroyed but still present on battlefield (hulk/wreckage)."""
+        ...
+
+
+@runtime_checkable
+class ICombatShip(Protocol):
+    """
+    Protocol for simulation Ship entities in combat (PROJ-193).
+
+    NOTE: Do NOT add crew_onboard, crew_required, shots_fired, shots_hit —
+    these are dynamically injected by battle tracking systems.
+    """
+    @property
+    def name(self) -> str:
+        """Ship name."""
+        ...
+
+    @property
+    def team_id(self) -> int:
+        """Team identifier."""
+        ...
+
+    @property
+    def is_alive(self) -> bool:
+        """True if ship can participate in combat."""
+        ...
+
+    @property
+    def is_derelict(self) -> bool:
+        """True if destroyed but still present on battlefield."""
+        ...
+
+    @property
+    def hp(self) -> int:
+        """Current hull points."""
+        ...
+
+    @property
+    def max_hp(self) -> int:
+        """Maximum hull points."""
+        ...
+
+    @property
+    def position(self) -> Any:
+        """Vector2 position."""
+        ...
+
+    @property
+    def layers(self) -> Dict[Any, Any]:
+        """Ship layers containing components."""
+        ...
+
+    @property
+    def resources(self) -> Optional[Any]:
+        """Resource registry (None for ships without consumables)."""
+        ...
+
+    @property
+    def current_target(self) -> Optional[Any]:
+        """Current combat target."""
+        ...
+
+    @property
+    def secondary_targets(self) -> List[Any]:
+        """List of secondary combat targets."""
+        ...
+
+    @property
+    def max_targets(self) -> int:
+        """Maximum number of targets this ship can engage."""
+        ...
+
+    @property
+    def total_defense_score(self) -> float:
+        """Total defensive score for to-hit calculations."""
+        ...
+
+    def get_total_sensor_score(self) -> float:
+        """Calculate total targeting/sensor score."""
         ...
 
 
@@ -384,6 +690,26 @@ def is_zone_occupant(obj: Any) -> TypeGuard[IZoneOccupant]:
 def is_combatant(obj: Any) -> TypeGuard[ICombatant]:
     """Check if obj satisfies the ICombatant Protocol."""
     return isinstance(obj, ICombatant)
+
+
+def is_empire(obj: Any) -> TypeGuard[IEmpire]:
+    """Check if obj satisfies the IEmpire Protocol."""
+    return isinstance(obj, IEmpire)
+
+
+def is_facility(obj: Any) -> TypeGuard[IFacility]:
+    """Check if obj satisfies the IFacility Protocol."""
+    return isinstance(obj, IFacility)
+
+
+def is_ship_instance(obj: Any) -> TypeGuard[IShipInstance]:
+    """Check if obj satisfies the IShipInstance Protocol."""
+    return isinstance(obj, IShipInstance)
+
+
+def is_combat_ship(obj: Any) -> TypeGuard[ICombatShip]:
+    """Check if obj satisfies the ICombatShip Protocol."""
+    return isinstance(obj, ICombatShip)
 
 
 # =============================================================================

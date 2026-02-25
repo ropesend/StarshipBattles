@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Foundation — Protocol Extensions + New Protocols + Mock Fixes | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Foundation — Protocol Extensions + New Protocols + Mock Fixes | ✅ Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Type Discrimination Replacements | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Empire Panel + Race Config Typing | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Strategy Detail Formatters | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -23,12 +23,12 @@
 | 8. Remaining Scattered Instances | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-24 22:30
-**Active Phase:** Planning — Approved, ready for implementation
-**Last Action:** Plan finalized with Protocols-first approach for C++/C#/Rust portability
-**Next Action:** Begin Phase 1 — extend IPlanet/IFleet, create IEmpire/ICombatShip/IShipInstance/IFacility, fix mock objects
+**Last Updated:** 2026-02-25 00:15
+**Active Phase:** Phase 2 — Type Discrimination Replacements
+**Last Action:** Phase 1 complete — extended IPlanet/IFleet, created IEmpire/IFacility/IShipInstance/ICombatShip protocols, fixed mock objects, added 8 new protocol tests
+**Next Action:** Begin Phase 2 — replace hasattr()/isinstance() type discrimination with TypeGuard functions
 **Blockers:** None
-**Context for Next Agent:** User wants maximum maintainability/extensibility. Code will be ported to C++/C#/Rust. Protocols (interfaces) are the priority. We accept breaking 31+ mock test files as a one-time cost. See design.md for full swarm findings and decisions.md for rationale.
+**Context for Next Agent:** Phase 1 foundation complete. 4 new Protocols (IEmpire, IFacility, IShipInstance, ICombatShip), 4 new TypeGuards. IPlanet/IFleet extended with UI properties. 3 test files fixed for Protocol compatibility (spec=Planet mocks need all IPlanet props). All 12712 tests passing.
 
 ## Overview
 Eliminate ~155 of ~224 `hasattr()`/`getattr()` calls in `game/ui/` by replacing duck typing with explicit Protocol interfaces. This gives the UI layer proper type contracts, IDE intelligence, and interface definitions that map cleanly to C++ abstract classes, C# interfaces, and Rust traits for future porting.

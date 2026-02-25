@@ -37,17 +37,29 @@ def make_mock_planet(planet_type_name: str, planet_id: int = 1):
     """Create a mock planet with specified type."""
     from game.strategy.data.planet import Planet
 
+    # PROJ-193: Set all IPlanet protocol properties for spec=Planet mocks
     planet = MagicMock(spec=Planet)
     planet.id = planet_id
     planet.name = f"Test Planet {planet_id}"
     planet.location = HexCoord(0, 0)
     planet.owner_id = None
-    planet.resources = {}  # Required for IPlanet protocol
+    planet.resources = {}
 
     # Create planet_type mock
     planet_type = MagicMock()
     planet_type.name = planet_type_name
     planet.planet_type = planet_type
+
+    # PROJ-193: Required IPlanet properties
+    planet.populations = []
+    planet.max_population = 1000
+    planet.facilities = []
+    planet.atmosphere = {}
+    planet.surface_gravity = 9.8
+    planet.surface_temperature = 300.0
+    planet.orbit_distance = 1
+    planet.diameter_hexes = 0.0
+    planet.image_id = ""
 
     return planet
 

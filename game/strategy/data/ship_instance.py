@@ -85,6 +85,27 @@ class ShipInstance:
         self._cargo_mgr = ShipCargoManager(self)
         self._display_fmt = ShipDisplayFormatter(self)
 
+    # PROJ-193: Property aliases for IShipInstance Protocol compliance
+    @property
+    def design_name(self) -> str:
+        """Design name from design_data (IShipInstance Protocol)."""
+        return self.design_data.get('name', self.design_id)
+
+    @property
+    def hull_class(self) -> str:
+        """Ship's hull class from design_data (IShipInstance Protocol)."""
+        return self.design_data.get('ship_class', 'Unknown')
+
+    @property
+    def ship_name(self) -> str:
+        """Instance name alias (IShipInstance Protocol)."""
+        return self.name
+
+    @property
+    def serial_number(self) -> Optional[int]:
+        """Serial number alias (IShipInstance Protocol)."""
+        return self.serial
+
     def __hash__(self) -> int:
         return hash(self.instance_id)
 
