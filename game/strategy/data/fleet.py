@@ -35,6 +35,31 @@ class OrderType(Enum):
     UNLOAD_POPULATION = auto()
 
 
+# PROJ-187: Order type categorization for ActionExecutionEngine
+# Movement orders are handled by FleetMovementEngine
+MOVEMENT_ORDER_TYPES: frozenset = frozenset({
+    OrderType.MOVE,
+    OrderType.MOVE_TO_FLEET,
+    OrderType.WARP,
+})
+
+# Action orders are handled by ActionExecutionEngine (tick-based execution)
+# Excludes BUILD (persistent, handled by ProductionEngine)
+ACTION_ORDER_TYPES: frozenset = frozenset({
+    OrderType.COLONIZE,
+    OrderType.TRANSFER,
+    OrderType.LOAD_POPULATION,
+    OrderType.UNLOAD_POPULATION,
+    OrderType.JOIN_FLEET,
+    OrderType.IMPLODE_PLANET,
+    OrderType.STELLERATE_STAR,
+    OrderType.OPEN_WARP_POINT,
+    OrderType.CLOSE_WARP_POINT,
+    OrderType.CREATE_DYSON_SPHERE,
+    OrderType.SELF_DESTRUCT,
+})
+
+
 class FleetOrder:
     def __init__(self, order_type, target=None):
         self.type = order_type

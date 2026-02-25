@@ -35,6 +35,7 @@ __all__ = [
     'IResupplyEngine',
     'IHarvestingEngine',
     'IMaintenanceEngine',
+    'IActionExecutionEngine',
 ]
 
 
@@ -449,5 +450,51 @@ class IPopulationEngine(ABC):
 
         Args:
             empires: List of Empire objects to process
+        """
+        pass
+
+
+class IActionExecutionEngine(ABC):
+    """
+    Abstract interface for tick-based action order execution.
+
+    PROJ-187: Strategy Orders Tick-Based Action System.
+
+    Implementations handle:
+    - Processing action orders (COLONIZE, TRANSFER, superweapons, etc.)
+    - Tracking execution_progress across ticks
+    - Delegating to order processor when action completes
+    - Respecting fleet speed for action tick timing
+
+    Example usage:
+        engine = ActionExecutionEngine(order_processor, action_time_resolver)
+        results = engine.process_action_ticks(empires, galaxy, tick, component_registry)
+    """
+
+    @abstractmethod
+    def process_action_ticks(
+        self,
+        empires: List,
+        galaxy: Any,
+        tick: int,
+        component_registry: Optional[Dict[str, Any]] = None,
+        all_empires: Optional[List] = None
+    ) -> List:
+        """
+        Process action ticks for all fleets with action orders.
+
+        Iterates through all empires' fleets, increments execution_progress
+        for fleets with action orders when their speed-based interval fires,
+        and delegates to order processor when action completes.
+
+        Args:
+            empires: List of Empire objects to process
+            galaxy: Galaxy object for order execution
+            tick: Current tick number (1-100)
+            component_registry: Optional component registry for ability lookup
+            all_empires: Optional list of all empires (for superweapons)
+
+        Returns:
+            List of ActionTickResult records for completed/progressed actions
         """
         pass
