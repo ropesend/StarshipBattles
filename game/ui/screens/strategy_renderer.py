@@ -375,7 +375,10 @@ class StrategyRenderer:
 
     def _draw_system_details(self, screen, sys, sys_world_pos):
         """Draw planets and warp points for a system."""
-        # Render Dyson Spheres first (behind normal planets)
+        # Render storms first (behind Dyson Spheres and planets)
+        self._draw_storms(screen, sys, sys_world_pos)
+
+        # Render Dyson Spheres (behind normal planets)
         self._draw_dyson_spheres(screen, sys, sys_world_pos)
 
         # Group normal planets by hex (excluding Dyson Spheres)
@@ -570,6 +573,164 @@ class StrategyRenderer:
                         # Fallback: colored circle
                         pygame.draw.circle(screen, owner_emp.color, marker_pos, max(3, screen_diameter // 10))
                         pygame.draw.circle(screen, (255, 255, 255), marker_pos, max(3, screen_diameter // 10) + 1, 1)
+
+    def _draw_storms(self, screen, sys, sys_world_pos):
+        """Draw storm nebulae overlays for a star system.
+
+        Storms are rendered BEFORE Dyson Spheres and planets so they appear behind them.
+        Each storm uses a nebulae image scaled to cover its hex extent.
+        """
+        # Skip if system has no storms
+        if not hasattr(sys, 'storms') or not sys.storms:
+            return
+
+        # Skip detailed rendering at low zoom - just draw colored hex fills
+        if self.camera.zoom < 0.3:
+            self._draw_storms_low_detail(screen, sys, sys_world_pos)
+            return
+
+        # Color tints per storm type (RGBA tint applied via colorkey/blend)
+        storm_tints = {
+            'ion_storm': (100, 150, 255),      # Blue
+            'plasma_storm': (255, 100, 100),   # Red
+            'gravitational_anomaly': (180, 100, 255),  # Purple
+            'radiation_belt': (255, 255, 100), # Yellow
+            'dark_nebula': (150, 150, 150),    # Grey
+        }
+
+        for storm in sys.storms:
+            # Get storm hexes (local coordinates)
+            occupied = storm.occupied_hexes
+            if not occupied:
+                continue
+
+            # Calculate bounding box in world coordinates
+            min_q = min(h.q for h in occupied)
+            max_q = max(h.q for h in occupied)
+            min_r = min(h.r for h in occupied)
+            max_r = max(h.r for h in occupied)
+
+            # Convert bounding box corners to pixel positions
+            from game.core.hex_math import HexCoord
+            corner_hexes = [
+                HexCoord(min_q, min_r),
+                HexCoord(max_q, min_r),
+                HexCoord(min_q, max_r),
+                HexCoord(max_q, max_r),
+            ]
+
+            # Calculate bounding box in world pixels
+            pixel_coords = []
+            for h in corner_hexes:
+                px, py = hex_to_pixel(h, self.hex_size)
+                pixel_coords.append((sys_world_pos.x + px, sys_world_pos.y + py))
+
+            world_min_x = min(p[0] for p in pixel_coords) - self.hex_size
+            world_max_x = max(p[0] for p in pixel_coords) + self.hex_size
+            world_min_y = min(p[1] for p in pixel_coords) - self.hex_size
+            world_max_y = max(p[1] for p in pixel_coords) + self.hex_size
+
+            # Viewport culling
+            screen_tl = self.camera.world_to_screen(pygame.math.Vector2(world_min_x, world_min_y))
+            screen_br = self.camera.world_to_screen(pygame.math.Vector2(world_max_x, world_max_y))
+
+            if screen_br.x < 0 or screen_tl.x > self.screen_width:
+                continue
+            if screen_br.y < 0 or screen_tl.y > self.screen_height:
+                continue
+
+            # Calculate center position for rendering
+            center_x = (world_min_x + world_max_x) / 2
+            center_y = (world_min_y + world_max_y) / 2
+            center_screen = self.camera.world_to_screen(pygame.math.Vector2(center_x, center_y))
+
+            # Calculate screen dimensions
+            screen_width = int((world_max_x - world_min_x) * self.camera.zoom)
+            screen_height = int((world_max_y - world_min_y) * self.camera.zoom)
+
+            # Ensure minimum size
+            screen_width = max(20, screen_width)
+            screen_height = max(20, screen_height)
+
+            # Load nebulae image using image_variant as seed
+            img = self._asset_manager.get_random_from_group(
+                'nebulae', 'default', seed_id=storm.image_variant
+            )
+
+            if img:
+                # Scale image to cover storm extent
+                scaled = pygame.transform.smoothscale(img, (screen_width, screen_height))
+
+                # Apply alpha based on intensity (max 180 = ~70% opacity)
+                alpha = int(storm.intensity * 180)
+                scaled.set_alpha(alpha)
+
+                # Apply color tint if available
+                tint = storm_tints.get(storm.storm_type)
+                if tint:
+                    # Create tinted version using per-pixel multiply
+                    tinted = scaled.copy()
+                    tinted.fill(tint + (0,), special_flags=pygame.BLEND_RGB_MULT)
+                    scaled = tinted
+
+                # Blit to screen
+                dest = scaled.get_rect(center=(int(center_screen.x), int(center_screen.y)))
+                screen.blit(scaled, dest)
+            else:
+                # Fallback: draw semi-transparent colored polygon
+                tint = storm_tints.get(storm.storm_type, (100, 100, 100))
+                for h in occupied:
+                    hx, hy = hex_to_pixel(h, self.hex_size)
+                    h_world = pygame.math.Vector2(sys_world_pos.x + hx, sys_world_pos.y + hy)
+                    h_screen = self.camera.world_to_screen(h_world)
+
+                    # Draw hex fill
+                    corners = []
+                    for i in range(6):
+                        angle_deg = 60 * i
+                        angle_rad = math.radians(angle_deg)
+                        corner_x = h_screen.x + self.hex_size * self.camera.zoom * math.cos(angle_rad)
+                        corner_y = h_screen.y + self.hex_size * self.camera.zoom * math.sin(angle_rad)
+                        corners.append((corner_x, corner_y))
+
+                    # Create transparent surface for hex
+                    hex_surf = pygame.Surface((int(self.hex_size * 2 * self.camera.zoom + 4),
+                                              int(self.hex_size * 2 * self.camera.zoom + 4)),
+                                              pygame.SRCALPHA)
+                    offset_corners = [(c[0] - h_screen.x + self.hex_size * self.camera.zoom + 2,
+                                      c[1] - h_screen.y + self.hex_size * self.camera.zoom + 2)
+                                     for c in corners]
+                    pygame.draw.polygon(hex_surf, tint + (int(storm.intensity * 100),), offset_corners)
+                    dest = hex_surf.get_rect(center=(int(h_screen.x), int(h_screen.y)))
+                    screen.blit(hex_surf, dest)
+
+    def _draw_storms_low_detail(self, screen, sys, sys_world_pos):
+        """Draw storm zones at low zoom using simple colored hex fills."""
+        storm_tints = {
+            'ion_storm': (100, 150, 255, 80),
+            'plasma_storm': (255, 100, 100, 80),
+            'gravitational_anomaly': (180, 100, 255, 80),
+            'radiation_belt': (255, 255, 100, 80),
+            'dark_nebula': (150, 150, 150, 80),
+        }
+
+        for storm in sys.storms:
+            tint = storm_tints.get(storm.storm_type, (100, 100, 100, 80))
+
+            for h in storm.occupied_hexes:
+                hx, hy = hex_to_pixel(h, self.hex_size)
+                h_world = pygame.math.Vector2(sys_world_pos.x + hx, sys_world_pos.y + hy)
+                h_screen = self.camera.world_to_screen(h_world)
+
+                # Skip if off-screen
+                if h_screen.x < -50 or h_screen.x > self.screen_width + 50:
+                    continue
+                if h_screen.y < -50 or h_screen.y > self.screen_height + 50:
+                    continue
+
+                # Draw simple colored circle at hex center
+                radius = max(2, int(self.hex_size * self.camera.zoom * 0.5))
+                pygame.draw.circle(screen, tint[:3], (int(h_screen.x), int(h_screen.y)), radius)
 
     def _draw_planet_sprite(self, screen, planet, center_pos, size):
         """Draw a single planet sprite with colony marker if owned."""

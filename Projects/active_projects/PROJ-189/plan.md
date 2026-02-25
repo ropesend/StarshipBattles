@@ -18,17 +18,25 @@
 | 3. SHIELD_CAPACITY_MULT Stat Key | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. AreaEffectManager Service | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. EnvironmentalHazardEngine (Turn Integration) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Rendering | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. Rendering | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Combat Layer Integration | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. Integration Testing & Balance | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 6
-**Last Action:** Phase 5 complete - EnvironmentalHazardEngine (Turn Integration)
-**Next Action:** Begin Phase 6 - Rendering
+**Active Phase:** Phase 7
+**Last Action:** Phase 6 complete - Rendering (storms, tooltips)
+**Next Action:** Begin Phase 7 - Combat Layer Integration
 **Blockers:** None
-**Context for Next Agent:** 12,692 tests passing, 1 skipped. Created EnvironmentalHazardEngine with EnvironmentalEvent dataclass. Wired into TurnEngine as Phase 0f. Added IEnvironmentalHazardEngine interface. Integrated AreaEffectManager with FleetMovementEngine for storm speed reduction. Fleet speed now considers environmental effects (strategic_mult). Tests: 17 new for EnvironmentalHazardEngine, 8 new for FleetMovementEngine environmental effects. Made AreaEffectManager resilient to galaxies without get_zones_at_global_hex method (returns neutral effects).
+**Context for Next Agent:** 12,693 tests passing, 1 skipped. Phase 6 complete:
+- Added nebulae assets to asset_manifest.json (6 transparent PNGs)
+- Implemented `_draw_storms()` in strategy_renderer.py with nebulae images, color tints, alpha, viewport culling
+- Implemented `_draw_storms_low_detail()` for low zoom rendering
+- Added `IStorm` protocol and `is_storm()` TypeGuard to protocols.py
+- Added storm label formatting to strategy_detail_fmt.py
+- Added `_format_storm()` method to strategy_detail_formatter.py for detailed storm info
+- Updated tests for new is_storm checker
+Next: Phase 7 - Combat Layer Integration (shield interference in tactical combat)
 
 ## Overview
 Implement "Storms" as environmental hazards in star systems. Storms occupy 1-10 hexes (irregular shapes) and apply effects (shield interference, propulsion interference, environmental damage, fuel drain) to all ships in those hexes. Effects use data-driven multipliers that feed into the same stat pipeline as the component system. Storms are static entities generated during system creation and rendered using existing nebulae assets.

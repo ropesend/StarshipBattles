@@ -13,7 +13,7 @@ from collections import Counter
 from game.strategy.data.fleet import OrderType
 from game.core.protocols import (
     is_star_system, is_star, is_planet, is_fleet,
-    is_warp_point, is_sector_environment
+    is_warp_point, is_sector_environment, is_storm
 )
 
 
@@ -376,4 +376,6 @@ def get_label_for_object(obj) -> str:
         return f"Fleet {obj.id} ({len(obj.ships)})"
     elif is_sector_environment(obj):
         return "Local Radiation Analysis"
+    elif is_storm(obj):
+        return f"Storm: {obj.name}"
     return "Unknown Object"

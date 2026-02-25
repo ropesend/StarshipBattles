@@ -276,6 +276,7 @@ class TestGetLabelForObject:
             m.setattr(strategy_detail_fmt, 'is_fleet', lambda x: False)
             m.setattr(strategy_detail_fmt, 'is_warp_point', lambda x: False)
             m.setattr(strategy_detail_fmt, 'is_sector_environment', lambda x: False)
+            m.setattr(strategy_detail_fmt, 'is_storm', lambda x: False)
 
             result = get_label_for_object(unknown)
             assert result == "Unknown Object"
@@ -292,9 +293,29 @@ class TestGetLabelForObject:
             m.setattr(strategy_detail_fmt, 'is_fleet', lambda x: False)
             m.setattr(strategy_detail_fmt, 'is_warp_point', lambda x: False)
             m.setattr(strategy_detail_fmt, 'is_sector_environment', lambda x: True)
+            m.setattr(strategy_detail_fmt, 'is_storm', lambda x: False)
 
             result = get_label_for_object(env)
             assert "Radiation Analysis" in result
+
+    def test_storm_label(self):
+        """Test with storm object."""
+        storm = Mock()
+        storm.name = "Ion Storm Alpha"
+
+        with pytest.MonkeyPatch().context() as m:
+            from game.ui.screens import strategy_detail_fmt
+            m.setattr(strategy_detail_fmt, 'is_star_system', lambda x: False)
+            m.setattr(strategy_detail_fmt, 'is_star', lambda x: False)
+            m.setattr(strategy_detail_fmt, 'is_planet', lambda x: False)
+            m.setattr(strategy_detail_fmt, 'is_fleet', lambda x: False)
+            m.setattr(strategy_detail_fmt, 'is_warp_point', lambda x: False)
+            m.setattr(strategy_detail_fmt, 'is_sector_environment', lambda x: False)
+            m.setattr(strategy_detail_fmt, 'is_storm', lambda x: True)
+
+            result = get_label_for_object(storm)
+            assert "Storm:" in result
+            assert "Ion Storm Alpha" in result
 
 
 # =============================================================================

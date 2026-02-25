@@ -8,28 +8,28 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-189 Phase 5 - EnvironmentalHazardEngine (Turn Integration)
-**Current Status:** PROJ-189 Phase 5 Complete
+**Last Completed:** PROJ-189 Phase 6 - Rendering
+**Current Status:** PROJ-189 Phase 6 Complete
 **Current Project:** PROJ-189
-**Current Phase:** Phase 6 pending
-**Test Status:** 12692 passed, 1 skipped
+**Current Phase:** Phase 7 pending
+**Test Status:** 12693 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-189 Phase 5 Complete:
-  - Created `game/strategy/engine/environmental_hazard_engine.py` with EnvironmentalEvent dataclass
-  - EnvironmentalHazardEngine: process_environmental_tick() applies storm damage and fuel drain
-  - Added IEnvironmentalHazardEngine interface to `game/strategy/interfaces/engines.py`
-  - Wired into TurnEngine as Phase 0f (after Phase 0e construction)
-  - Added last_environmental_events accumulator to TurnEngine
-  - Integrated AreaEffectManager with FleetMovementEngine:
-    - Added _get_effective_fleet_speed() method using fleet.speed and storm strategic_mult
-    - Fleet speed now respects storm speed reduction in collect_movements()
-  - Made AreaEffectManager resilient to galaxies without get_zones_at_global_hex (returns neutral effects)
-  - 17 new tests in tests/unit/strategy/engine/test_environmental_hazard_engine.py
-  - 8 new tests in tests/unit/strategy/engine/test_fleet_movement_engine.py
-  - All 12,692 tests passing
-- Next: Phase 6 - Rendering
+- PROJ-189 Phase 6 Complete:
+  - Added nebulae assets to `assets/asset_manifest.json` (6 transparent PNGs)
+  - Implemented `_draw_storms()` in `game/ui/screens/strategy_renderer.py`:
+    - Nebulae images scaled to storm hex extent
+    - Color tints per storm type (ion=blue, plasma=red, gravity=purple, radiation=yellow, nebula=grey)
+    - Alpha based on storm.intensity (max 180 = ~70% opacity)
+    - Viewport culling for performance
+  - Implemented `_draw_storms_low_detail()` for low zoom rendering (colored circles)
+  - Added `IStorm` protocol and `is_storm()` TypeGuard to `game/core/protocols.py`
+  - Added storm label formatting to `game/ui/screens/strategy_detail_fmt.py`
+  - Added `_format_storm()` to `game/ui/screens/strategy_detail_formatter.py` for detail panel
+  - Updated tests for new is_storm checker (2 test files updated)
+  - All 12,693 tests passing
+- Next: Phase 7 - Combat Layer Integration
 
 ---
 
@@ -50,7 +50,7 @@
   - **Dependencies:** None
 
 - [/] **PROJ-189: Storms Environmental Hazards**
-  - **Phases:** 8 | **Status:** Phase 5 Complete | **Priority:** Medium
+  - **Phases:** 8 | **Status:** Phase 6 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-189/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-189/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -82,6 +82,7 @@
 | 2026-02-24 | PROJ-189 | Phase 3 | Complete | 12653 passed | fd1623a9 | SHIELD_CAPACITY_MULT stat key + ShieldProjection wiring |
 | 2026-02-24 | PROJ-189 | Phase 4 | Complete | 12667 passed | bb504650 | AreaEffectManager + FleetSpeedCalculator integration |
 | 2026-02-24 | PROJ-189 | Phase 5 | Complete | 12692 passed | 6f85653a | EnvironmentalHazardEngine + TurnEngine Phase 0f |
+| 2026-02-24 | PROJ-189 | Phase 6 | Complete | 12693 passed | - | Storm rendering, tooltips, IStorm protocol |
 
 ---
 

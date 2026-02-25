@@ -203,5 +203,15 @@
     "vapors": "assets/Images/Resource Portraits/resource_vapors_portrait.png",
     "radioactives": "assets/Images/Resource Portraits/resource_radioactives_portrait.png",
     "exotics": "assets/Images/Resource Portraits/resource_exotics_portrait.png"
+  },
+  "nebulae": {
+    "default": [
+      "assets/Images/Stellar Objects/Nebulae/Nebulae_01_transparent.png",
+      "assets/Images/Stellar Objects/Nebulae/Nebulae_02_transparent.png",
+      "assets/Images/Stellar Objects/Nebulae/Nebulae_03_transparent.png",
+      "assets/Images/Stellar Objects/Nebulae/Nebulae_04_transparent.png",
+      "assets/Images/Stellar Objects/Nebulae/Nebulae_05_transparent.png",
+      "assets/Images/Stellar Objects/Nebulae/Nebulae_06_transparent.png"
+    ]
   }
 }

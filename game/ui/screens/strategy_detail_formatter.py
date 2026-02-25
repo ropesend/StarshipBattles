@@ -15,7 +15,7 @@ import pygame_gui.windows
 
 from game.core.protocols import (
     is_star_system, is_star, is_planet, is_fleet,
-    is_warp_point, is_sector_environment
+    is_warp_point, is_sector_environment, is_storm
 )
 from game.ui.panels.planet_report_panel import PlanetReportPanel, compute_planet_production
 from game.ui.screens.strategy_detail_fmt import (
@@ -234,6 +234,8 @@ class StrategyDetailFormatter:
             text = self._format_fleet(obj, current_empire_id)
         elif is_warp_point(obj):
             text = self._format_warp_point(obj)
+        elif is_storm(obj):
+            text = self._format_storm(obj)
 
         self.detail_text.html_text = text
         self.detail_text.rebuild()
@@ -351,6 +353,54 @@ class StrategyDetailFormatter:
         text = f"<b>Warp Point</b><br>"
         text += f"<b>To:</b> {obj.destination_id}<br>"
         text += f"<b>Local Loc:</b> {obj.location}<br>"
+        return text
+
+    def _format_storm(self, obj) -> str:
+        """Format storm details (PROJ-189).
+
+        Displays storm name, type, and environmental effects as
+        percentage reductions and per-turn damage/drain values.
+        """
+        # Storm type display names
+        type_names = {
+            'ion_storm': 'Ion Storm',
+            'plasma_storm': 'Plasma Storm',
+            'gravitational_anomaly': 'Gravitational Anomaly',
+            'radiation_belt': 'Radiation Belt',
+            'dark_nebula': 'Dark Nebula',
+        }
+        type_display = type_names.get(obj.storm_type, obj.storm_type)
+
+        text = f"<b>Storm:</b> {obj.name}<br>"
+        text += f"<b>Type:</b> {type_display}<br>"
+        text += f"<b>Size:</b> {len(obj.occupied_hexes)} hexes<br>"
+        text += f"<br><b>Effects:</b><br>"
+
+        effects = obj.effects
+
+        # Format multipliers as percentage reductions
+        if effects.shield_capacity_mult < 1.0:
+            reduction = int((1.0 - effects.shield_capacity_mult) * 100)
+            text += f"  Shields: -{reduction}%<br>"
+
+        if effects.strategic_mult < 1.0:
+            reduction = int((1.0 - effects.strategic_mult) * 100)
+            text += f"  Speed: -{reduction}%<br>"
+
+        if effects.thrust_mult < 1.0:
+            reduction = int((1.0 - effects.thrust_mult) * 100)
+            text += f"  Thrust: -{reduction}%<br>"
+
+        # Format damage/drain as per-turn rates
+        if effects.damage_per_tick > 0:
+            # 100 ticks per turn
+            damage_per_turn = effects.damage_per_tick * 100
+            text += f"  Damage: {damage_per_turn:.0f}/turn<br>"
+
+        if effects.fuel_drain_per_tick > 0:
+            drain_per_turn = effects.fuel_drain_per_tick * 100
+            text += f"  Fuel Drain: {drain_per_turn:.0f}/turn<br>"
+
         return text
 
     # =========================================================================

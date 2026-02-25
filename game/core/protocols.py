@@ -274,6 +274,30 @@ class ISectorEnvironment(Protocol):
         ...
 
 
+@runtime_checkable
+class IStorm(Protocol):
+    """Protocol for Storm entities (PROJ-189)."""
+    @property
+    def name(self) -> str:
+        """Storm display name."""
+        ...
+
+    @property
+    def storm_type(self) -> str:
+        """Storm type ID (e.g., 'ion_storm')."""
+        ...
+
+    @property
+    def effects(self) -> Any:
+        """StormEffect with multipliers and rates."""
+        ...
+
+    @property
+    def occupied_hexes(self) -> FrozenSet:
+        """Hexes occupied by this storm (local coordinates)."""
+        ...
+
+
 # =============================================================================
 # Combat Entity Protocols
 # =============================================================================
@@ -345,6 +369,11 @@ def is_warp_point(obj: Any) -> TypeGuard[IWarpPoint]:
 def is_sector_environment(obj: Any) -> TypeGuard[ISectorEnvironment]:
     """Check if obj satisfies the ISectorEnvironment Protocol."""
     return isinstance(obj, ISectorEnvironment)
+
+
+def is_storm(obj: Any) -> TypeGuard[IStorm]:
+    """Check if obj satisfies the IStorm Protocol."""
+    return isinstance(obj, IStorm)
 
 
 def is_zone_occupant(obj: Any) -> TypeGuard[IZoneOccupant]:

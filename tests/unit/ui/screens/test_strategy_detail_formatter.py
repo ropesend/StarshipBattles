@@ -210,7 +210,8 @@ class TestShowDetailedReport:
                     with patch('game.ui.screens.strategy_detail_formatter.is_fleet', return_value=False):
                         with patch('game.ui.screens.strategy_detail_formatter.is_warp_point', return_value=False):
                             with patch('game.ui.screens.strategy_detail_formatter.is_sector_environment', return_value=False):
-                                formatter.show_detailed_report(obj)
+                                with patch('game.ui.screens.strategy_detail_formatter.is_storm', return_value=False):
+                                    formatter.show_detailed_report(obj)
 
         assert formatter.current_selection is obj
 
