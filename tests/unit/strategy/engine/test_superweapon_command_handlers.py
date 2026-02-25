@@ -122,8 +122,8 @@ class TestImplodePlanetCommandHandler:
         handler = ImplodePlanetCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_implode_planet.return_value = ValidationResult(
-                is_valid=False, errors=["No ship in fleet has DestroyPlanet ability."]
+            mock_validator.validate_implode_planet.return_value = ValidationResult.error(
+                "No ship in fleet has DestroyPlanet ability."
             )
             result = handler.execute(mock_session, cmd)
 

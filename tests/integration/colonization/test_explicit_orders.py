@@ -49,7 +49,7 @@ class TestExplicitColonizeOrders(unittest.TestCase):
         self.fleet.add_order(FleetOrder(OrderType.LOAD_POPULATION, {'direction': 'load', 'cargo_type': 'passengers', 'amount': 100, 'planet_id': 10}))
         
         from game.core.validation import ValidationResult
-        with patch('game.strategy.validation.TransferValidator.validate', return_value=ValidationResult(is_valid=True)):
+        with patch('game.strategy.validation.TransferValidator.validate', return_value=ValidationResult.success()):
             with patch.object(self.processor, '_execute_load', return_value=100):
                 result = self.processor.process_transfer(self.fleet, self.empire, self.galaxy)
                 self.assertTrue(result.success)

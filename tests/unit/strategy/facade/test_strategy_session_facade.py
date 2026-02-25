@@ -557,7 +557,7 @@ class TestValidationQueries:
         session.galaxy.systems = {HexCoord(0, 0): system}
         session.turn_engine = Mock()
         session.turn_engine.validate_colonize_order = Mock(
-            return_value=ValidationResult(is_valid=True)
+            return_value=ValidationResult.success()
         )
 
         facade = StrategySessionFacade(session)

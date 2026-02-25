@@ -160,7 +160,7 @@ class TestIssueColonizeOrder:
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.handle_command.return_value = ValidationResult(is_valid=False, errors=["Already owned"])
+        mock_facade.handle_command.return_value = ValidationResult.error("Already owned")
 
         system = ColonizationSystem(mock_scene, mock_facade)
 
@@ -240,7 +240,7 @@ class TestQueueColonizeMission:
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.handle_command.return_value = ValidationResult(is_valid=False, errors=["No path found"])
+        mock_facade.handle_command.return_value = ValidationResult.error("No path found")
 
         system = ColonizationSystem(mock_scene, mock_facade)
 

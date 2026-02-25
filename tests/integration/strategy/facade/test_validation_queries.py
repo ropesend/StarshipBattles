@@ -65,8 +65,8 @@ class TestCanColonize:
         mock_galaxy.systems = {HexCoord(5, 5): mock_system}
 
         mock_turn_engine = Mock()
-        mock_turn_engine.validate_colonize_order.return_value = ValidationResult(
-            is_valid=False, errors=["Planet already owned."], error_code="ALREADY_OWNED"
+        mock_turn_engine.validate_colonize_order.return_value = ValidationResult.error(
+            "Planet already owned.", code="ALREADY_OWNED"
         )
 
         mock_session = create_mock_session_with_fleet_lookup(
