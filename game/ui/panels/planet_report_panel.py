@@ -6,12 +6,15 @@ showing planet portrait, comprehensive stats, and atmosphere composition graph.
 """
 
 import os
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TYPE_CHECKING
 
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIImage, UITextBox, UIPanel, UIScrollingContainer, UILabel
 from game.ui.screens.strategy_detail_fmt import format_planet_info
+
+if TYPE_CHECKING:
+    from game.core.protocols import IPlanet, IFacility
 from game.ui.panels.strategy_widgets import AtmosphereGraph
 from game.ui.panels.build_queue_portraits import RESOURCE_PORTRAIT_FILES, RESOURCE_FALLBACK_COLORS
 from game.core.constants import PLANET_RESOURCES
@@ -333,7 +336,7 @@ class PlanetReportPanel:
             self._resource_grid_items.append(label)
 
         # Resource columns
-        planet_resources = getattr(self.planet, 'resources', {}) or {}
+        planet_resources = self.planet.resources or {}
 
         for i, resource_name in enumerate(PLANET_RESOURCES):
             col_x = label_col_width + 10 + i * col_w
@@ -444,7 +447,7 @@ class PlanetReportPanel:
             self.panel.kill()
 
 
-def compute_planet_production(planet) -> Dict[str, float]:
+def compute_planet_production(planet: 'IPlanet') -> Dict[str, float]:
     """Compute per-resource production rates for a colony planet.
 
     Scans the planet's facilities for ResourceHarvester abilities and calculates
@@ -459,7 +462,7 @@ def compute_planet_production(planet) -> Dict[str, float]:
     Returns:
         Dict mapping resource name to production rate per turn.
     """
-    if getattr(planet, 'owner_id', None) is None:
+    if planet.owner_id is None:
         return {}
 
     from game.core.registry import get_default_registry_provider, GameRegistries
@@ -472,10 +475,11 @@ def compute_planet_production(planet) -> Dict[str, float]:
     )
 
     rates: Dict[str, float] = {}
-    for facility in getattr(planet, 'facilities', []):
-        if not getattr(facility, 'is_operational', True):
+    facility: 'IFacility'
+    for facility in planet.facilities:
+        if not facility.is_operational:
             continue
-        design_data = getattr(facility, 'design_data', {})
+        design_data = facility.design_data
         for layer_data in design_data.get('layers', {}).values():
             if not isinstance(layer_data, list):
                 continue
@@ -485,8 +489,7 @@ def compute_planet_production(planet) -> Dict[str, float]:
                     res_type = harvester.get('resource_type', '')
                     base_rate = harvester.get('base_harvest_rate', 0.0)
                     if res_type and base_rate > 0:
-                        planet_resources = getattr(planet, 'resources', {})
-                        quality = planet_resources.get(res_type, {}).get('quality', 0.0)
+                        quality = planet.resources.get(res_type, {}).get('quality', 0.0)
                         rates[res_type] = rates.get(res_type, 0.0) + base_rate * quality
     return rates
 

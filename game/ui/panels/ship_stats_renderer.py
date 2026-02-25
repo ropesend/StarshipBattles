@@ -7,8 +7,13 @@ PROJ-40: Import LayerType from core/constants (canonical location).
 ComponentStatus import from simulation layer is acceptable for status display.
 StrategyMetadataService is used for strategy name display - core layer access.
 """
+from typing import TYPE_CHECKING
+
 import pygame
 from game.simulation.components.component_constants import ComponentStatus
+
+if TYPE_CHECKING:
+    from game.core.protocols import ICombatShip
 from game.core.strategy_metadata import StrategyMetadataService
 from game.ui.config import UIConfig
 from game.ui.colors import RESOURCE_FUEL, RESOURCE_ENERGY, RESOURCE_AMMO, RESOURCE_SHIELD, HP_HEALTHY, HP_DAMAGED, HP_CRITICAL
@@ -94,7 +99,7 @@ def get_hp_bar_color(hp_pct, is_active=True):
     return (200, 50, 50)
 
 
-def draw_ship_resources(surface, ship, x_indent, y, bar_w, bar_h, font):
+def draw_ship_resources(surface, ship: 'ICombatShip', x_indent, y, bar_w, bar_h, font):
     """Draw resource bars for a ship.
 
     Args:
@@ -109,7 +114,8 @@ def draw_ship_resources(surface, ship, x_indent, y, bar_w, bar_h, font):
     Returns:
         Updated Y position after drawing
     """
-    if not hasattr(ship, 'resources') or not ship.resources:
+    # ICombatShip.resources can be None for ships without consumables
+    if not ship.resources:
         return y
 
     # Get all resources via public API
@@ -249,7 +255,7 @@ def draw_ship_info_header(surface, ship, x_indent, y, font):
     return y
 
 
-def draw_ship_vitals(surface, ship, x_indent, y, bar_w, bar_h, font):
+def draw_ship_vitals(surface, ship: 'ICombatShip', x_indent, y, bar_w, bar_h, font):
     """Draw ship vital stats (shield, HP).
 
     Args:
@@ -283,7 +289,7 @@ def draw_ship_vitals(surface, ship, x_indent, y, bar_w, bar_h, font):
     return y
 
 
-def draw_ship_combat_stats(surface, ship, x_indent, y, font):
+def draw_ship_combat_stats(surface, ship: 'ICombatShip', x_indent, y, font):
     """Draw ship combat stats (speed, shots, crew, target).
 
     Args:
@@ -325,7 +331,7 @@ def draw_ship_combat_stats(surface, ship, x_indent, y, font):
     y += 18
 
     # Secondary Targets
-    sec_targets = getattr(ship, 'secondary_targets', [])
+    sec_targets = ship.secondary_targets
     if sec_targets:
         for i, st in enumerate(sec_targets):
             if st.is_alive:
@@ -335,7 +341,7 @@ def draw_ship_combat_stats(surface, ship, x_indent, y, font):
                 y += UIConfig.ELEMENT_SPACING
 
     # Targeting Cap
-    max_targets = getattr(ship, 'max_targets', CombatConstants.DEFAULT_MAX_TARGETS)
+    max_targets = ship.max_targets
     cap_text = "Single" if max_targets == CombatConstants.DEFAULT_MAX_TARGETS else f"Multi ({max_targets})"
     text = font.render(f"Sys: {cap_text}", True, (150, 150, 150))
     surface.blit(text, (x_indent + 200, y - 18))
@@ -343,7 +349,7 @@ def draw_ship_combat_stats(surface, ship, x_indent, y, font):
     return y
 
 
-def draw_ship_weapons(surface, ship, x_indent, y, panel_w, font):
+def draw_ship_weapons(surface, ship: 'ICombatShip', x_indent, y, panel_w, font):
     """Draw all weapon components for a ship.
 
     Args:
@@ -373,7 +379,7 @@ def draw_ship_weapons(surface, ship, x_indent, y, panel_w, font):
     return y + 8
 
 
-def draw_ship_components(surface, ship, x_indent, y, font):
+def draw_ship_components(surface, ship: 'ICombatShip', x_indent, y, font):
     """Draw all non-weapon components for a ship.
 
     Args:

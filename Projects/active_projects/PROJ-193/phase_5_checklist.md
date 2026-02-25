@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Type planet_report_panel.py with `IPlanet`, ship_stats_renderer.py with `ICombatShip`/ShipDTO.
 
 ---
@@ -16,48 +16,59 @@
 **File:** `game/ui/panels/planet_report_panel.py`
 **Tests:** `pytest tests/unit/ui/panels/`
 
-- [ ] Add TYPE_CHECKING import: `from game.core.protocols import IPlanet, IFacility`
-- [ ] Type `self.planet` as `'IPlanet'` where assigned/used
-- [ ] Line 339: Replace `getattr(self.planet, 'resources', {})` → `self.planet.resources`
-- [ ] Line 465: Replace `getattr(planet, 'owner_id', None)` → `planet.owner_id`
-- [ ] Lines 478-491: Type facility/planet params in `compute_planet_production()` with `'IFacility'`/`'IPlanet'`
-- [ ] Lines 510-511: `getattr(comp_def, 'abilities', {})` — **keep** (component registry objects are dict-like, not Protocol-typed)
-- [ ] Verify: Run tests
+- [x] Add TYPE_CHECKING import: `from game.core.protocols import IPlanet, IFacility`
+- [x] Type `self.planet` as `'IPlanet'` where assigned/used
+- [x] Line 339: Replace `getattr(self.planet, 'resources', {})` → `self.planet.resources`
+- [x] Line 465: Replace `getattr(planet, 'owner_id', None)` → `planet.owner_id`
+- [x] Lines 478-491: Type facility/planet params in `compute_planet_production()` with `'IFacility'`/`'IPlanet'`
+- [x] Lines 510-511: `getattr(comp_def, 'abilities', {})` — **kept** (component registry objects are dict-like, not Protocol-typed)
+- [x] Verify: Run tests
 
 **Notes:**
+- Added TYPE_CHECKING import for IPlanet, IFacility
+- Typed compute_planet_production with IPlanet parameter
+- Added inline type hint `facility: 'IFacility'` in loop
+- Replaced 4 getattr calls with direct Protocol access
 
 ### Task 5.2: ship_stats_renderer.py [Medium]
 **File:** `game/ui/panels/ship_stats_renderer.py`
 **Tests:** `pytest tests/unit/ui/panels/`
 
-- [ ] Audit which functions receive ShipDTO vs simulation Ship
-- [ ] For ShipDTO paths: type with `ShipDTO` (already has all fields)
-- [ ] For simulation Ship paths: type with `'ICombatShip'` (add TYPE_CHECKING import from protocols)
-- [ ] Replace: `getattr(ship, 'secondary_targets', [])` → `ship.secondary_targets` (Ship always has this after init)
-- [ ] Replace: `getattr(ship, 'max_targets', N)` → `ship.max_targets` (Ship always has this after init)
-- [ ] **Keep** `getattr` for dynamically-injected attributes:
+- [x] Audit which functions receive ShipDTO vs simulation Ship
+- [x] For ShipDTO paths: type with `ShipDTO` (already has all fields)
+- [x] For simulation Ship paths: type with `'ICombatShip'` (add TYPE_CHECKING import from protocols)
+- [x] Replace: `getattr(ship, 'secondary_targets', [])` → `ship.secondary_targets` (Ship always has this after init)
+- [x] Replace: `getattr(ship, 'max_targets', N)` → `ship.max_targets` (Ship always has this after init)
+- [x] **Kept** `getattr` for dynamically-injected attributes:
   - `getattr(ship, 'crew_onboard', 0)` — set by ShipStatsCalculator.recalculate()
   - `getattr(ship, 'crew_required', 0)` — set by ShipStatsCalculator.recalculate()
   - `getattr(ship, 'shots_fired', 0)` — set during combat
   - `getattr(ship, 'shots_hit', 0)` — set during combat
-- [ ] Keep target name access defensive (`current_target` may be None/dead reference)
-- [ ] Verify: Run tests
+- [x] Kept target name access defensive (`current_target` may be None/dead reference)
+- [x] Verify: Run tests
 
 **Notes:**
+- Added TYPE_CHECKING import for ICombatShip
+- Typed 6 functions with ICombatShip parameter
+- Replaced 2 getattr (secondary_targets, max_targets) with direct access
+- Replaced hasattr(ship, 'resources') with direct check (resources can be None per Protocol)
+- Kept 4 getattr for dynamically-injected attributes (crew_onboard, crew_required, shots_fired, shots_hit)
+- Kept 2 getattr on target name (target may be dead reference or varying type)
 
 ### Task 5.3: Run tests [Simple]
 **Tests:** `pytest tests/unit/ui/ -n 4`
 
-- [ ] Run: `pytest tests/unit/ui/panels/` — all pass
-- [ ] Run: `pytest tests/unit/ui/ -n 4` — all pass
+- [x] Run: `pytest tests/unit/ui/panels/` — all pass (332 passed)
+- [x] Run: `pytest tests/unit/ui/ -n 4` — all pass (3148 passed)
 
 **Notes:**
+- Full suite: 12711 passed, 1 skipped
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

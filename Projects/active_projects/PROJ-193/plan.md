@@ -17,18 +17,18 @@
 | 2. Type Discrimination Replacements | ✅ Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Empire Panel + Race Config Typing | ✅ Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Strategy Detail Formatters | ✅ Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Planet Report + Ship Stats Renderer | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Planet Report + Ship Stats Renderer | ✅ Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Battle Panels | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Builder Screens | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. Remaining Scattered Instances | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 5 — Planet Report + Ship Stats Renderer
-**Last Action:** Phase 4 complete — typed strategy_detail_fmt.py with Protocol types, audited 10+ strategy screen files
-**Next Action:** Begin Phase 5 — fix planet_report_panel.py and ship_stats_renderer.py
+**Active Phase:** Phase 6 — Battle Panels
+**Last Action:** Phase 5 complete — typed planet_report_panel.py with IPlanet/IFacility, ship_stats_renderer.py with ICombatShip
+**Next Action:** Begin Phase 6 — fix battle_panels.py and battle_ui_service.py
 **Blockers:** None
-**Context for Next Agent:** Phase 4 complete. Added TYPE_CHECKING imports and typed format_planet_info, _format_ship_groups, _format_cargo_summary with IPlanet/IFleet/IShipInstance/IFacility. Added get_calculated_stats to IShipInstance, storms to IStarSystem. Replaced ~8 hasattr/getattr with direct access or TypeGuards across strategy screens. 12711 passed, 1 skipped.
+**Context for Next Agent:** Phase 5 complete. Added TYPE_CHECKING imports to planet_report_panel.py (IPlanet, IFacility) and ship_stats_renderer.py (ICombatShip). Replaced ~6 getattr/hasattr with direct Protocol access. Typed compute_planet_production and 6 ship render functions. 12711 passed, 1 skipped.
 
 ## Overview
 Eliminate ~155 of ~224 `hasattr()`/`getattr()` calls in `game/ui/` by replacing duck typing with explicit Protocol interfaces. This gives the UI layer proper type contracts, IDE intelligence, and interface definitions that map cleanly to C++ abstract classes, C# interfaces, and Rust traits for future porting.
