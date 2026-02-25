@@ -9,7 +9,10 @@ from game.core.registry import RegistryManager
 
 @pytest.fixture(autouse=True)
 def clean_registry():
-    """Ensure clean registry state before and after each test."""
+    """Ensure clean registry state before and after each test.
+
+    # PROJ-195: Legitimate — isolation fixture for singleton resource registry tests
+    """
     registry = RegistryManager.instance()
     # Unfreeze if frozen
     registry._frozen = False

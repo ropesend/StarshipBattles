@@ -8,19 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-195 Phase 5 - Core Test: Convert Impure Loader Tests to Pure
-**Current Status:** PROJ-195 Phase 5 complete, ready for Phase 6
+**Last Completed:** PROJ-195 Phase 6 - Conftest & Infrastructure Migration
+**Current Status:** PROJ-195 Phase 6 complete, ready for Phase 7
 **Current Project:** PROJ-195
-**Current Phase:** Phase 6 - Conftest & Infrastructure Migration
+**Current Phase:** Phase 7 - Regression & Repro Test Migration
 **Test Status:** 12720 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-195 Phase 5 COMPLETE - Impure loader tests converted to pure function tests
-- test_pure_loaders.py: Renamed `TestBackwardCompatibility` to `TestLoaderPureFunctions`, now tests pure functions directly
-- test_registry_manager_reload.py: Added PROJ-195 comment documenting legitimate singleton usage
-- "does not modify registry" tests kept as guards (legitimate singleton checks)
-- Next: Phase 6 - Migrate conftest.py files with singleton fixtures
+- PROJ-195 Phase 6 COMPLETE - Conftest fixtures migrated/documented
+- tests/unit/strategy/conftest.py: `custom_resource_registry` now uses `fresh_registries` parameter; `reset_resource_registry` documented as legitimate isolation fixture
+- tests/unit/core/resources_registry/conftest.py: `clean_registry` documented as legitimate isolation fixture
+- tests/integration/resource_system/conftest.py: `loaded_registry` kept as singleton (documented why: integration tests need singleton for ShipInstance internal reads)
+- test_resource_pipeline.py: Removed direct RegistryManager import, now uses `loaded_registry` fixture
+- Next: Phase 7 - Migrate regression and bug repro tests
 
 ---
 
@@ -160,6 +161,7 @@
 | 2026-02-25 | PROJ-195 | Phase 3 | Complete | 12720 passed | - | 2 test files migrated, 16 tests → DI pattern |
 | 2026-02-25 | PROJ-195 | Phase 4 | Complete | 12720 passed | - | 4 test files migrated, ~32 tests → pure/DI pattern |
 | 2026-02-25 | PROJ-195 | Phase 5 | Complete | 12720 passed | - | Converted TestBackwardCompatibility → TestLoaderPureFunctions |
+| 2026-02-25 | PROJ-195 | Phase 6 | Complete | 12720 passed | - | Conftest fixtures migrated/documented |
 
 ---
 

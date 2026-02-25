@@ -19,15 +19,15 @@
 | 3. Data Loader Test Migration | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Combat & Modifier Test Migration | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Core Test: Convert Impure Loader Tests to Pure | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Conftest & Infrastructure Migration | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. Conftest & Infrastructure Migration | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Regression & Repro Test Migration | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. Final Audit & Verification | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 6 - Conftest & Infrastructure Migration
-**Last Action:** Phase 5 complete - Converted TestBackwardCompatibility to TestLoaderPureFunctions using pure functions (no singleton). Added PROJ-195 comment to test_registry_manager_reload.py.
-**Next Action:** Execute Phase 6 - Migrate conftest.py files with singleton fixtures
+**Active Phase:** Phase 7 - Regression & Repro Test Migration
+**Last Action:** Phase 6 complete - Migrated conftest fixtures. custom_resource_registry now uses fresh_registries. Added PROJ-195 comments to legitimate singleton usages (reset_resource_registry, clean_registry, loaded_registry for integration tests).
+**Next Action:** Execute Phase 7 - Migrate regression and bug repro tests
 **Blockers:** None
 
 ## Overview
