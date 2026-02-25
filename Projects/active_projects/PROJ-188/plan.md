@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Generic Components (Foundation) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Migrate Fleet Report | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Migrate Fleet Report | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Migrate Planet List | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate Empire Build Queue | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Migrate Event Log | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -22,11 +22,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 1 Complete
-**Last Action:** Implemented all generic table components (VirtualTable, TableHeader, TableColumnManager, ITableDataSource, selection strategies)
-**Next Action:** Begin Phase 2: Migrate Fleet Report
+**Active Phase:** Phase 2 Complete
+**Last Action:** Migrated FleetReportWindow to VirtualTable + FleetDataSource + MultiSelect. Created FleetDataSource with 41 tests. Updated multi-select tests.
+**Next Action:** Begin Phase 3: Migrate Planet List
 **Blockers:** None
-**Context for Next Agent:** 12,531 tests passing (+65 new). All table components in `game/ui/components/table/` with full test coverage. Ready for Phase 2 (FleetDataSource + FleetReportWindow migration).
+**Context for Next Agent:** 12,572 tests passing (+41 new from FleetDataSource). FleetReportWindow now uses VirtualTable. Old FleetListRenderer and column_manager.py ready for Phase 6 deletion. Ready for Phase 3 (PlanetDataSource + PlanetListWindow migration).
 
 ## Overview
 Consolidates 4 duplicated list/table UI implementations (Planet List, Fleet Report, Empire Build Queue, Event Log) into a single generic `VirtualTable` component system under `game/ui/components/table/`, with domain-specific `ITableDataSource` adapters. Eliminates ~1,088 lines of duplicated rendering code while giving all lists virtual scrolling, sortable/reorderable columns, and a consistent architecture.

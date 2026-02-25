@@ -4,15 +4,16 @@ Fleet Report Window - Displays detailed fleet information, ship lists, and indiv
 PROJ-03: Fleet Report Window feature implementation.
 PROJ-44: Refactored to use FleetListViewModel, ColumnManager, and image scaling utilities.
 PROJ-173 Phase 1: Extracted FleetReportSidebar and FleetListRenderer for god class decomposition.
+PROJ-188 Phase 2: Migrated to VirtualTable + FleetDataSource + MultiSelect.
 """
 import pygame
 from pygame_gui.elements import UIWindow, UIPanel
 
 from game.ui.config import UIConfig
 from game.ui.screens.fleet_report_view_model import FleetListViewModel
-from game.ui.screens.column_manager import ColumnManager
+from game.ui.components.table import VirtualTable, TableColumnManager, MultiSelect
+from game.ui.screens.fleet_data_source import FleetDataSource, DEFAULT_FLEET_COLUMNS
 from game.ui.screens.fleet_report_sidebar import FleetReportSidebar
-from game.ui.screens.fleet_list_renderer import FleetListRenderer
 from game.ui.panels.ship_detail_panel import ShipDetailPanel
 
 
@@ -54,10 +55,9 @@ class FleetReportWindow(UIWindow):
 
         # --- State Managers ---
         self.view_model = FleetListViewModel(fleet.ships)
-        self.column_manager = ColumnManager()
-        # Selection state - multi-select support
-        self.selected_indices: set = set()  # Indices into filtered_ships
-        self.selected_ship = None  # For detail panel (single ship when len(selected_indices) == 1)
+        self.column_manager = TableColumnManager(DEFAULT_FLEET_COLUMNS)
+        self.selection = MultiSelect()
+        self.selected_ship = None  # For detail panel (single ship when 1 selected)
 
         # --- Build UI ---
         self._init_layout()
@@ -94,13 +94,17 @@ class FleetReportWindow(UIWindow):
             container=self,
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
         )
-        self.list_renderer = FleetListRenderer(
+
+        # Create data source and VirtualTable
+        self.data_source = FleetDataSource(self.view_model)
+        self.virtual_table = VirtualTable(
             panel=self.list_panel,
             manager=self.ui_manager,
+            data_source=self.data_source,
             column_manager=self.column_manager,
-            view_model=self.view_model,
-            header_height=self.header_height,
-            row_height=self.row_height
+            selection_strategy=self.selection,
+            row_height=self.row_height,
+            header_height=self.header_height
         )
 
         # 3. Right Detail Panel
@@ -126,10 +130,11 @@ class FleetReportWindow(UIWindow):
 
     def _swap_columns(self, col, direction):
         """Swap a column with its neighbor in the given direction."""
-        if self.column_manager.swap_column(col, direction):
-            # Rebuild UI via renderer
-            self.list_renderer.rebuild_headers()
-            self.list_renderer.rebuild_row_pool()
+        col_id = col['id']
+        if self.column_manager.swap_column(col_id, direction):
+            # Rebuild UI via VirtualTable
+            self.virtual_table.rebuild_headers()
+            self.virtual_table.rebuild_row_pool()
             self.refresh_list()
 
     def refresh_list(self):
@@ -140,10 +145,10 @@ class FleetReportWindow(UIWindow):
         # Update sidebar summary
         self.sidebar.update_summary(self.fleet)
 
-        # Update scroll bar and visible rows via renderer
-        filtered_ships = self.view_model.get_filtered_ships()
-        self.list_renderer.update_scroll_bar(filtered_ships)
-        self.list_renderer.update_visible_rows(filtered_ships, self.selected_indices)
+        # Update scroll bar and visible rows via VirtualTable
+        self.virtual_table.update_scroll_bar()
+        self.virtual_table.force_update()
+        self.virtual_table.update_visible_rows()
 
     def process_event(self, event):
         """Handle UI events."""
@@ -164,9 +169,8 @@ class FleetReportWindow(UIWindow):
 
         # Handle scroll events
         if hasattr(event, 'user_type') and event.user_type == 'ui_vertical_scroll_bar_moved':
-            if event.ui_element == self.list_renderer.scroll_bar:
-                filtered_ships = self.view_model.get_filtered_ships()
-                self.list_renderer.update_visible_rows(filtered_ships, self.selected_indices)
+            if event.ui_element == self.virtual_table.scroll_bar:
+                self.virtual_table.update_visible_rows()
                 handled = True
 
         # Handle mouse clicks on ship rows
@@ -178,46 +182,32 @@ class FleetReportWindow(UIWindow):
 
     def _handle_row_click(self, pos):
         """Handle click on a ship row with Ctrl+click multi-select support."""
-        # Use renderer to find clicked row
-        ship_index = self.list_renderer.find_clicked_row(pos)
-        if ship_index < 0:
-            return False
-
-        filtered_ships = self.view_model.get_filtered_ships()
-        if ship_index >= len(filtered_ships):
-            return False
-
         mods = pygame.key.get_mods()
         ctrl_held = bool(mods & pygame.KMOD_CTRL)
 
-        if ctrl_held:
-            # Ctrl+click: toggle selection
-            if ship_index in self.selected_indices:
-                # Don't deselect if it's the last selected ship
-                if len(self.selected_indices) > 1:
-                    self.selected_indices.discard(ship_index)
-            else:
-                self.selected_indices.add(ship_index)
-        else:
-            # Normal click: replace selection
-            self.selected_indices = {ship_index}
+        # Use VirtualTable to handle click (updates selection strategy)
+        ship_index = self.virtual_table.handle_click(pos, ctrl_held)
+        if ship_index < 0:
+            return False
 
         # Update detail panel based on selection
-        if len(self.selected_indices) == 1:
-            sole_idx = next(iter(self.selected_indices))
-            self.selected_ship = filtered_ships[sole_idx]
+        selected_indices = self.selection.get_selected_indices()
+        if len(selected_indices) == 1:
+            sole_idx = next(iter(selected_indices))
+            self.selected_ship = self.data_source.get_ship_at_index(sole_idx)
         else:
             self.selected_ship = None
 
         self._update_detail_panel()
-        self.sidebar.update_remove_button(len(self.selected_indices))
-        self.list_renderer.update_visible_rows(filtered_ships, self.selected_indices)
+        self.sidebar.update_remove_button(len(selected_indices))
         return True
 
     def _handle_header_click(self, col_id):
         """Handle clicking on a column header for sorting."""
+        # Update sort state in both column_manager (for header display) and view_model (for sorting)
+        self.column_manager.set_sort(col_id)
         self.view_model.set_sort(col_id)
-        self.list_renderer.rebuild_headers()
+        self.virtual_table.rebuild_headers()
         self.refresh_list()
 
     def select_ship(self, ship):
@@ -226,16 +216,17 @@ class FleetReportWindow(UIWindow):
         filtered_ships = self.view_model.get_filtered_ships()
         for i, s in enumerate(filtered_ships):
             if s is ship:
-                self.selected_indices = {i}
+                self.selection.clear()
+                self.selection.handle_click(i, ctrl_held=False)
                 break
         else:
-            self.selected_indices.clear()
+            self.selection.clear()
 
         self.selected_ship = ship
         self._update_detail_panel()
-        self.sidebar.update_remove_button(len(self.selected_indices))
-        filtered_ships = self.view_model.get_filtered_ships()
-        self.list_renderer.update_visible_rows(filtered_ships, self.selected_indices)
+        self.sidebar.update_remove_button(len(self.selection.get_selected_indices()))
+        self.virtual_table.force_update()
+        self.virtual_table.update_visible_rows()
 
     def _update_detail_panel(self):
         """Update the detail panel with selected ship instance."""
@@ -258,12 +249,16 @@ class FleetReportWindow(UIWindow):
 
     def _on_remove_selected_ships(self):
         """Remove all selected ships and create a new fleet with them."""
-        if not self.empire or not self.selected_indices:
+        if not self.empire:
+            return
+
+        selected_indices = self.selection.get_selected_indices()
+        if not selected_indices:
             return
 
         filtered_ships = self.view_model.get_filtered_ships()
         ships_to_remove = [
-            filtered_ships[i] for i in sorted(self.selected_indices)
+            filtered_ships[i] for i in sorted(selected_indices)
             if 0 <= i < len(filtered_ships)
         ]
         if not ships_to_remove:
@@ -292,12 +287,12 @@ class FleetReportWindow(UIWindow):
 
     def _post_removal_refresh(self):
         """Refresh UI state after ships have been removed."""
-        self.selected_indices.clear()
+        self.selection.clear()
         self.selected_ship = None
         self.view_model.update_ships(self.fleet.ships)
         self._update_detail_panel()
         self.refresh_list()
-        self.sidebar.update_remove_button(len(self.selected_indices))
+        self.sidebar.update_remove_button(len(self.selection.get_selected_indices()))
 
     def update(self, time_delta: float):
         """Update UI elements and handle toggle button clicks."""
@@ -313,15 +308,16 @@ class FleetReportWindow(UIWindow):
         elif sidebar_actions['remove_selected']:
             self._on_remove_selected_ships()
 
-        # Handle header arrows and sort clicks via renderer
-        header_actions = self.list_renderer.check_header_presses()
+        # Handle header arrows and sort clicks via VirtualTable
+        header_actions = self.virtual_table.check_header_presses()
         if header_actions['swap_column']:
             col, direction = header_actions['swap_column']
             self._swap_columns(col, direction)
         elif header_actions['sort_column']:
             col_id = header_actions['sort_column']
+            self.column_manager.set_sort(col_id)
             self.view_model.set_sort(col_id)
-            self.list_renderer.rebuild_headers()
+            self.virtual_table.rebuild_headers()
             self.refresh_list()
 
     def _toggle_filter(self, filter_id: str):
@@ -332,24 +328,34 @@ class FleetReportWindow(UIWindow):
         # Update sidebar button appearance
         self.sidebar.update_filter_button(filter_id, new_state)
 
+        # Selection may now reference invalid indices, clear it
+        self.selection.clear()
+        self.selected_ship = None
+        self._update_detail_panel()
+        self.sidebar.update_remove_button(0)
+
         # Refresh the list with new filters
         self.refresh_list()
 
     def _toggle_column(self, col_id: str):
         """Toggle a column's visibility and update UI."""
-        # Toggle visibility via ColumnManager
+        # Toggle visibility via TableColumnManager
         is_visible = self.column_manager.toggle_column(col_id)
 
         # Update sidebar button appearance
         self.sidebar.update_column_button(col_id, is_visible)
 
         # Rebuild headers and rows to reflect column changes
-        self.list_renderer.rebuild_headers()
-        self.list_renderer.rebuild_row_pool()
+        self.virtual_table.rebuild_headers()
+        self.virtual_table.rebuild_row_pool()
         self.refresh_list()
 
     def kill(self):
         """Clean up when window is closed."""
+        # Clean up VirtualTable
+        if hasattr(self, 'virtual_table') and self.virtual_table:
+            self.virtual_table.kill()
+
         # Clean up ship detail panel
         if hasattr(self, 'ship_detail_panel') and self.ship_detail_panel:
             self.ship_detail_panel.kill()

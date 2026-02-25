@@ -2,6 +2,7 @@
 Tests for FleetReportWindow multi-select and ship removal features.
 
 PROJ-101 Phase 4: Multi-select + Remove Ships functionality.
+PROJ-188 Phase 2: Updated for VirtualTable migration (selection -> MultiSelect).
 """
 import pytest
 from unittest.mock import Mock, MagicMock, patch
@@ -108,8 +109,8 @@ class TestFleetReportWindowInit:
 
                             assert window.empire is None
 
-    def test_init_creates_selected_indices_set(self, mock_fleet, mock_empire):
-        """Window initializes selected_indices as empty set."""
+    def test_init_creates_selection_strategy(self, mock_fleet, mock_empire):
+        """Window initializes selection as MultiSelect with no selected indices."""
         with patch('pygame.display.get_surface') as mock_display:
             mock_display.return_value = Mock(get_size=Mock(return_value=(1920, 1080)))
             with patch('pygame_gui.UIManager'):
@@ -117,6 +118,7 @@ class TestFleetReportWindowInit:
                     with patch('game.ui.screens.fleet_report_window.FleetReportWindow._init_layout'):
                         with patch('game.ui.screens.fleet_report_window.FleetReportWindow.refresh_list'):
                             from game.ui.screens.fleet_report_window import FleetReportWindow
+                            from game.ui.components.table import MultiSelect
                             import pygame
 
                             rect = pygame.Rect(0, 0, 1600, 900)
@@ -124,8 +126,8 @@ class TestFleetReportWindowInit:
 
                             window = FleetReportWindow(rect, manager, mock_fleet, empire=mock_empire)
 
-                            assert isinstance(window.selected_indices, set)
-                            assert len(window.selected_indices) == 0
+                            assert isinstance(window.selection, MultiSelect)
+                            assert len(window.selection.get_selected_indices()) == 0
 
 
 class TestMultiSelectBehavior:
@@ -257,8 +259,8 @@ class TestShipRemoval:
         """Removing ships creates a new fleet at the source fleet's location."""
         window, fleet, empire, ships = window_with_ships_and_empire
 
-        window.selected_indices = {1, 2}
-        ships_to_remove = [ships[1], ships[2]]
+        # Set selection using the selection strategy
+        window.selection._selected = {1, 2}
 
         window._on_remove_selected_ships()
 
@@ -271,7 +273,8 @@ class TestShipRemoval:
         """Removed ships are no longer in the source fleet."""
         window, fleet, empire, ships = window_with_ships_and_empire
 
-        window.selected_indices = {0, 1}
+        # Set selection using the selection strategy
+        window.selection._selected = {0, 1}
         original_ships = list(ships)
 
         window._on_remove_selected_ships()
@@ -285,8 +288,8 @@ class TestShipRemoval:
         """Removed ships are added to the new fleet."""
         window, fleet, empire, ships = window_with_ships_and_empire
 
-        window.selected_indices = {2, 3}
-        original_ships = [ships[2], ships[3]]
+        # Set selection using the selection strategy
+        window.selection._selected = {2, 3}
 
         window._on_remove_selected_ships()
 
@@ -299,7 +302,8 @@ class TestShipRemoval:
         """New fleet is added to the empire's fleet list."""
         window, fleet, empire, ships = window_with_ships_and_empire
 
-        window.selected_indices = {0}
+        # Set selection using the selection strategy
+        window.selection._selected = {0}
 
         window._on_remove_selected_ships()
 
@@ -310,18 +314,20 @@ class TestShipRemoval:
         """Selection is cleared after removal operation."""
         window, fleet, empire, ships = window_with_ships_and_empire
 
-        window.selected_indices = {0, 1, 2}
+        # Set selection using the selection strategy
+        window.selection._selected = {0, 1, 2}
 
         window._on_remove_selected_ships()
 
-        assert len(window.selected_indices) == 0
+        assert len(window.selection.get_selected_indices()) == 0
 
     def test_remove_does_nothing_without_empire(self, window_with_ships_and_empire):
         """Removal operation does nothing if no empire reference."""
         window, fleet, empire, ships = window_with_ships_and_empire
 
         window.empire = None
-        window.selected_indices = {0, 1}
+        # Set selection using the selection strategy
+        window.selection._selected = {0, 1}
 
         window._on_remove_selected_ships()
 
@@ -332,7 +338,8 @@ class TestShipRemoval:
         """Removal operation does nothing if no ships selected."""
         window, fleet, empire, ships = window_with_ships_and_empire
 
-        window.selected_indices = set()
+        # Selection is already empty by default
+        window.selection.clear()
 
         window._on_remove_selected_ships()
 
@@ -343,7 +350,8 @@ class TestShipRemoval:
         """UI is properly refreshed after removal."""
         window, fleet, empire, ships = window_with_ships_and_empire
 
-        window.selected_indices = {0}
+        # Set selection using the selection strategy
+        window.selection._selected = {0}
         # Mock sidebar for update_remove_button call
         window.sidebar = Mock()
         window.sidebar.update_remove_button = Mock()

@@ -136,6 +136,16 @@ class TableColumnManager:
             return False
         return col.get("type") == "image"
 
+    def get_toggleable_columns(self) -> List[Dict[str, Any]]:
+        """Get columns that can have visibility toggled.
+
+        Returns columns that are not image-type columns.
+
+        Returns:
+            List of toggleable column dicts.
+        """
+        return [c for c in self._columns if c.get("type") != "image"]
+
     def set_sort(self, column_id: str) -> None:
         """Set the sort column.
 
