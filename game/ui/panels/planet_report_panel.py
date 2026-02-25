@@ -199,21 +199,18 @@ class PlanetReportPanel:
             # Create placeholder portrait (gradient based on planet type)
             portrait_surf = pygame.Surface((150, 150))
 
-            # Color based on planet type
-            if hasattr(self.planet, 'planet_type'):
-                type_colors = {
-                    'TERRESTRIAL': (100, 150, 200),
-                    'GAS_GIANT': (200, 150, 100),
-                    'ICE_GIANT': (150, 200, 255),
-                    'ROCKY': (150, 100, 80),
-                    'OCEANIC': (50, 100, 200)
-                }
-                base_color = type_colors.get(
-                    self.planet.planet_type.name,
-                    (100, 100, 100)
-                )
-            else:
-                base_color = (100, 100, 100)
+            # Color based on planet type (planet_type always present via IPlanet)
+            type_colors = {
+                'TERRESTRIAL': (100, 150, 200),
+                'GAS_GIANT': (200, 150, 100),
+                'ICE_GIANT': (150, 200, 255),
+                'ROCKY': (150, 100, 80),
+                'OCEANIC': (50, 100, 200)
+            }
+            base_color = type_colors.get(
+                self.planet.planet_type.name,
+                (100, 100, 100)
+            )
 
             # Simple gradient fill
             for y in range(150):
@@ -259,8 +256,8 @@ class PlanetReportPanel:
             item.kill()
         self.complex_items = []
 
-        # Check if planet has facilities
-        if not hasattr(self.planet, 'facilities') or not self.planet.facilities:
+        # Check if planet has facilities (facilities always present via IPlanet)
+        if not self.planet.facilities:
             # Show "None" message
             no_complexes_label = UILabel(
                 relative_rect=pygame.Rect(5, 35, 190, 25),

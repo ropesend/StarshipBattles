@@ -13,7 +13,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 from game.core.hex_math import hex_to_pixel, HexCoord
-from game.strategy.data.galaxy import StarSystem
+from game.core.protocols import is_planet, is_fleet, is_star_system
 
 
 class CameraNavigator:
@@ -67,18 +67,17 @@ class CameraNavigator:
         Returns:
             HexCoord or None if resolution failed
         """
-        if hasattr(obj, 'location'):
-            # Planet: location is local to system
-            if hasattr(obj, 'planet_type'):
-                sys = next((s for s in self.systems if obj in s.planets), None)
-                if sys:
-                    return sys.global_location + obj.location
-            # Fleet: location is global
-            elif hasattr(obj, 'ships'):
-                return obj.location
-            # System: has global_location
-            elif hasattr(obj, 'global_location'):
-                return obj.global_location
+        # Planet: location is local to system
+        if is_planet(obj):
+            sys = next((s for s in self.systems if obj in s.planets), None)
+            if sys:
+                return sys.global_location + obj.location
+        # Fleet: location is global
+        elif is_fleet(obj):
+            return obj.location
+        # System: has global_location
+        elif is_star_system(obj):
+            return obj.global_location
         return None
 
     def zoom_to_galaxy(self):
@@ -135,7 +134,7 @@ class CameraNavigator:
 
         # Fallback: infer from selected object
         if not target_sys and self.scene.selected_object:
-            if isinstance(self.scene.selected_object, StarSystem):
+            if is_star_system(self.scene.selected_object):
                 target_sys = self.scene.selected_object
             elif hasattr(self.scene.selected_object, 'location'):
                 target_sys = next(

@@ -266,17 +266,6 @@ class TestAtmosphereGraphRender:
 
         assert isinstance(result, pygame.Surface)
 
-    def test_render_handles_no_atmosphere(self, init_pygame):
-        """AtmosphereGraph.render handles planet without atmosphere."""
-        from game.ui.panels.strategy_widgets import AtmosphereGraph
-
-        graph = AtmosphereGraph(200, 150)
-        planet = MagicMock(spec=[])  # No atmosphere attribute
-
-        result = graph.render(planet)
-
-        assert isinstance(result, pygame.Surface)
-
     def test_render_handles_empty_atmosphere(self, init_pygame):
         """AtmosphereGraph.render handles empty atmosphere dict."""
         from game.ui.panels.strategy_widgets import AtmosphereGraph

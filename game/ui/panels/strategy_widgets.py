@@ -1,6 +1,8 @@
 import pygame
 import math
 
+from game.core.protocols import is_star
+
 class DataGraph:
     """Base class for data visualization widgets."""
     def __init__(self, width, height, bg_color=(20, 24, 30)):
@@ -30,7 +32,7 @@ class SpectrumGraph(DataGraph):
     
     def render(self, star, vertical=False):
         self.clear()
-        if not hasattr(star, 'spectrum'):
+        if not is_star(star):
             return self.surface
             
         s = star.spectrum
@@ -111,7 +113,8 @@ class AtmosphereGraph(DataGraph):
     
     def render(self, planet, vertical=False):
         self.clear()
-        if not hasattr(planet, 'atmosphere') or not planet.atmosphere:
+        # atmosphere is always present via IPlanet protocol
+        if not planet.atmosphere:
             font = pygame.font.SysFont("arial", 12)
             txt = font.render("Trace / None", True, (100, 100, 100))
             if vertical: txt = pygame.transform.rotate(txt, 90)

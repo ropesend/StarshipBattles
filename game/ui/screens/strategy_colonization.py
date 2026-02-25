@@ -14,6 +14,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 from game.core.hex_math import pixel_to_hex
+from game.core.protocols import is_planet
 from game.strategy.engine.commands import IssueColonizeCommand, QueueColonizeMissionCommand
 
 if TYPE_CHECKING:
@@ -84,7 +85,7 @@ class ColonizationSystem:
                     zone_objects = zone_lookup(fleet.location)
                     if isinstance(zone_objects, list):
                         for zone_obj in zone_objects:
-                            if hasattr(zone_obj, 'planet_type') and zone_obj not in potential_planets:
+                            if is_planet(zone_obj) and zone_obj not in potential_planets:
                                 potential_planets.append(zone_obj)
         else:
             # Full scan (rare - fleet in deep space)
@@ -198,8 +199,8 @@ class ColonizationSystem:
                 zone_objects = zone_lookup(target_hex)
                 if isinstance(zone_objects, list):
                     for zone_obj in zone_objects:
-                        if hasattr(zone_obj, 'planet_type') and zone_obj not in candidates:
-                            if getattr(zone_obj, 'owner_id', None) is None:
+                        if is_planet(zone_obj) and zone_obj not in candidates:
+                            if zone_obj.owner_id is None:
                                 candidates.append(zone_obj)
 
         if not candidates:
