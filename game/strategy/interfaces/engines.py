@@ -36,6 +36,7 @@ __all__ = [
     'IHarvestingEngine',
     'IMaintenanceEngine',
     'IActionExecutionEngine',
+    'IEnvironmentalHazardEngine',
 ]
 
 
@@ -505,5 +506,46 @@ class IActionExecutionEngine(ABC):
 
         Returns:
             List of ActionTickResult records for completed/progressed actions
+        """
+        pass
+
+
+class IEnvironmentalHazardEngine(ABC):
+    """
+    Abstract interface for environmental hazard processing.
+
+    PROJ-189: Storms Environmental Hazards.
+
+    Implementations handle:
+    - Processing storm effects (damage, fuel drain) each tick
+    - Querying AreaEffectManager for effects at fleet locations
+    - Applying damage and fuel drain to ships in storm hexes
+    - Tracking environmental events for logging/UI
+
+    Example usage:
+        engine = EnvironmentalHazardEngine(area_effect_manager)
+        events = engine.process_environmental_tick(tick, empires, galaxy)
+    """
+
+    @abstractmethod
+    def process_environmental_tick(
+        self,
+        tick: int,
+        empires: List,
+        galaxy: Any
+    ) -> List:
+        """
+        Process environmental effects for one tick.
+
+        For each fleet in each empire, queries storm effects at the
+        fleet's location and applies damage and fuel drain if in storm.
+
+        Args:
+            tick: Current tick number (1-100)
+            empires: List of Empire objects to process
+            galaxy: Galaxy object for spatial queries
+
+        Returns:
+            List of EnvironmentalEvent records for affected fleets
         """
         pass

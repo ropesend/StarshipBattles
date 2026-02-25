@@ -68,6 +68,7 @@ if TYPE_CHECKING:
         IHarvestingEngine,
         IMaintenanceEngine,
         IActionExecutionEngine,
+        IEnvironmentalHazardEngine,
     )
     from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
     from game.strategy.engine.production_engine import ProductionEngine
@@ -111,6 +112,7 @@ class TurnEngine:
         harvesting_engine: Optional['IHarvestingEngine'] = None,
         maintenance_engine: Optional['IMaintenanceEngine'] = None,
         action_engine: Optional['IActionExecutionEngine'] = None,
+        environmental_engine: Optional['IEnvironmentalHazardEngine'] = None,
     ):
         """
         Initialize the turn engine.
@@ -145,6 +147,8 @@ class TurnEngine:
                            If None, creates MaintenanceEngine.
             action_engine: Optional action execution engine (IActionExecutionEngine).
                            If None, creates ActionExecutionEngine.
+            environmental_engine: Optional environmental hazard engine (IEnvironmentalHazardEngine).
+                           If None, creates EnvironmentalHazardEngine.
         """
         # PROJ-11: Inject battle resolver for clean layer separation
         if battle_resolver is None:
@@ -176,9 +180,13 @@ class TurnEngine:
         self._harvesting_engine: Optional['IHarvestingEngine'] = harvesting_engine
         self._maintenance_engine: Optional['IMaintenanceEngine'] = maintenance_engine
         self._action_engine: Optional['IActionExecutionEngine'] = action_engine
+        self._environmental_engine: Optional['IEnvironmentalHazardEngine'] = environmental_engine
 
         # PROJ-75 Phase 6: Scuttle event storage for UI notification
         self.last_scuttle_events: list = []
+
+        # PROJ-189: Environmental event storage for UI notification
+        self.last_environmental_events: list = []
 
     @property
     def movement_engine(self) -> 'IMovementEngine':
@@ -268,6 +276,14 @@ class TurnEngine:
             )
         return self._action_engine
 
+    @property
+    def environmental_engine(self) -> 'IEnvironmentalHazardEngine':
+        """Return environmental hazard engine, lazily creating default if not injected."""
+        if self._environmental_engine is None:
+            from game.strategy.engine.environmental_hazard_engine import EnvironmentalHazardEngine
+            self._environmental_engine = EnvironmentalHazardEngine()
+        return self._environmental_engine
+
     def process_turn(self, empires, galaxy, save_path=None):
         """
         Execute one full turn (100 sub-ticks).
@@ -282,6 +298,9 @@ class TurnEngine:
 
         # PROJ-161: Initialize scuttle event accumulator (cleared each turn)
         self.last_scuttle_events = []
+
+        # PROJ-189: Initialize environmental event accumulator (cleared each turn)
+        self.last_environmental_events = []
 
         # 1. Subturn Loop (Movement, Actions & Combat)
         # PROJ-187: Action orders (COLONIZE, TRANSFER, superweapons) now processed
@@ -321,13 +340,14 @@ class TurnEngine:
         PROJ-79 Phase 2: Added save_path for mid-turn spawning.
         PROJ-161: Added per-tick harvesting and maintenance.
 
-        Eleven-phase processing:
+        Twelve-phase processing:
         Phase 0:   Harvesting (1/100th of per-turn extraction)
         Phase 0a:  Maintenance (1/100th of per-turn cost, immediate scuttle)
         Phase 0b:  Per-turn resource consumption (1/100th of per_turn costs)
         Phase 0c:  Fuel generation at facilities (via ResupplyEngine)
         Phase 0d:  Fleet resupply from facilities (via ResupplyEngine)
         Phase 0e:  Construction resource consumption + mid-turn completion (via ProductionEngine)
+        Phase 0f:  Environmental hazards (storm damage, fuel drain) via EnvironmentalHazardEngine
         Phase 1:   Execute JOIN_FLEET for any co-located fleets (instant, no movement cost)
         Phase 1.5: Execute action orders (COLONIZE, TRANSFER, superweapons) via ActionExecutionEngine
         Phase 2:   Calculate paths/next moves for all fleets (based on current positions)
@@ -362,6 +382,11 @@ class TurnEngine:
             tick, empires, galaxy,
             save_path=save_path,
         )
+
+        # --- Phase 0f: Environmental Hazards (storm damage, fuel drain) ---
+        # PROJ-189: Apply storm effects to fleets in hazard hexes
+        env_events = self.environmental_engine.process_environmental_tick(tick, empires, galaxy)
+        self.last_environmental_events.extend(env_events)
 
         # --- Phase 1: Instant Orders (JOIN_FLEET) ---
         # PROJ-12: Delegate to FleetOrderProcessor

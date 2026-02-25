@@ -3,12 +3,14 @@ FleetMovementEngine - Handles fleet movement calculations and resource consumpti
 
 PROJ-12 Phase 3: Extracted from TurnEngine to decompose the god class.
 PROJ-40/NEW-STRAT-007: Added constructor injection for FleetNavigationService.
+PROJ-189: Added environmental effect integration for storm speed reduction.
 
 Responsibilities:
 - Calculate next hex for fleet movement (MOVE and MOVE_TO_FLEET orders)
 - Path management and recalculation
 - Movement resource consumption
 - Warp travel handling
+- Environmental effect integration (storm speed reduction)
 """
 
 from dataclasses import dataclass
@@ -22,6 +24,7 @@ from game.core.hex_math import HexCoord, hex_distance
 
 if TYPE_CHECKING:
     from game.strategy.services.fleet_navigation_service import FleetNavigationService
+    from game.strategy.services.area_effect_manager import AreaEffectManager
 
 
 @dataclass
@@ -48,15 +51,22 @@ class FleetMovementEngine:
       (injected via constructor or lazily initialized)
     """
 
-    def __init__(self, nav_service: Optional['FleetNavigationService'] = None):
+    def __init__(
+        self,
+        nav_service: Optional['FleetNavigationService'] = None,
+        area_effect_manager: Optional['AreaEffectManager'] = None,
+    ):
         """
         Initialize the fleet movement engine.
 
         Args:
             nav_service: Optional FleetNavigationService for dependency injection.
                          If None, service is lazily initialized on first use.
+            area_effect_manager: Optional AreaEffectManager for environmental effects.
+                         If None, creates default instance lazily.
         """
         self._nav_service = nav_service
+        self._area_effect_manager = area_effect_manager
 
     def calculate_next_hex(self, fleet: Fleet, galaxy) -> Optional[HexCoord]:
         """
@@ -80,6 +90,44 @@ class FleetMovementEngine:
             self._nav_service = FleetNavigationService()
 
         return self._nav_service.calculate_fleet_next_hex(fleet, galaxy)
+
+    def _get_effective_fleet_speed(self, fleet: Fleet, galaxy) -> float:
+        """
+        Calculate effective fleet speed considering environmental effects.
+
+        PROJ-189: Storms can reduce fleet speed via strategic_mult.
+
+        Uses the fleet's stored .speed attribute (already set by FleetSpeedCalculator
+        when ships are added/removed) and applies environmental multipliers.
+
+        Args:
+            fleet: Fleet to calculate speed for
+            galaxy: Galaxy for zone lookup
+
+        Returns:
+            Effective speed (hexes per turn), >= 0.0
+        """
+        # Use fleet's stored speed (maintained by FleetSpeedCalculator)
+        base_speed = fleet.speed
+
+        if base_speed <= 0:
+            return 0.0
+
+        # If no area_effect_manager, use base speed
+        if self._area_effect_manager is None:
+            # Lazy-initialize default AreaEffectManager
+            from game.strategy.services.area_effect_manager import AreaEffectManager
+            self._area_effect_manager = AreaEffectManager()
+
+        # Query environmental effects at fleet location
+        effects = self._area_effect_manager.get_effects_at_global_hex(galaxy, fleet.location)
+
+        # Apply strategic movement multiplier from storms
+        if effects.in_storm:
+            modified_speed = base_speed * effects.strategic_mult
+            return max(0.0, float(int(modified_speed)))
+
+        return base_speed
 
     def apply_movement(
         self,
@@ -153,6 +201,10 @@ class FleetMovementEngine:
         Calculates which fleets should move based on speed and tick,
         and determines their next hex.
 
+        PROJ-189: Environmental effects (storms) can reduce fleet speed via
+        strategic_mult. A fleet in a storm with strategic_mult=0.5 moves at
+        half speed (double interval between moves).
+
         Args:
             empires: List of Empire objects
             galaxy: Galaxy object for pathfinding
@@ -168,7 +220,12 @@ class FleetMovementEngine:
                 if fleet.speed <= 0:
                     continue
 
-                interval = int(100 // fleet.speed)
+                # PROJ-189: Calculate effective speed with environmental effects
+                effective_speed = self._get_effective_fleet_speed(fleet, galaxy)
+                if effective_speed <= 0:
+                    continue  # Fleet cannot move (stuck in storm or immobile)
+
+                interval = int(100 // effective_speed)
                 if interval <= 0:
                     interval = 1  # Safety
 

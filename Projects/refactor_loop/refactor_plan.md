@@ -8,23 +8,28 @@
 ## Agent Context
 
 **Last Session:** 2026-02-24
-**Last Completed:** PROJ-189 Phase 4 - AreaEffectManager Service
-**Current Status:** PROJ-189 Phase 4 Complete
+**Last Completed:** PROJ-189 Phase 5 - EnvironmentalHazardEngine (Turn Integration)
+**Current Status:** PROJ-189 Phase 5 Complete
 **Current Project:** PROJ-189
-**Current Phase:** Phase 5 pending
-**Test Status:** 12667 passed, 1 skipped
+**Current Phase:** Phase 6 pending
+**Test Status:** 12692 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-189 Phase 4 Complete:
-  - Created `game/strategy/services/area_effect_manager.py` with EnvironmentalEffects dataclass and AreaEffectManager service
-  - EnvironmentalEffects: shield_capacity_mult, thrust_mult, strategic_mult, damage_per_tick, fuel_drain_per_tick, in_storm, storm_names
-  - AreaEffectManager.get_effects_at_global_hex(): Queries zones at hex, filters to Storm instances, aggregates effects (mult stacking for mults, additive for damage/fuel)
-  - Added FleetSpeedCalculator.calculate_fleet_speed_with_environment() method
-  - 10 new tests in tests/unit/strategy/services/test_area_effect_manager.py
-  - 4 new tests in tests/unit/strategy/test_fleet_speed_calculator.py
-  - All 12,667 tests passing
-- Next: Phase 5 - EnvironmentalHazardEngine (Turn Integration)
+- PROJ-189 Phase 5 Complete:
+  - Created `game/strategy/engine/environmental_hazard_engine.py` with EnvironmentalEvent dataclass
+  - EnvironmentalHazardEngine: process_environmental_tick() applies storm damage and fuel drain
+  - Added IEnvironmentalHazardEngine interface to `game/strategy/interfaces/engines.py`
+  - Wired into TurnEngine as Phase 0f (after Phase 0e construction)
+  - Added last_environmental_events accumulator to TurnEngine
+  - Integrated AreaEffectManager with FleetMovementEngine:
+    - Added _get_effective_fleet_speed() method using fleet.speed and storm strategic_mult
+    - Fleet speed now respects storm speed reduction in collect_movements()
+  - Made AreaEffectManager resilient to galaxies without get_zones_at_global_hex (returns neutral effects)
+  - 17 new tests in tests/unit/strategy/engine/test_environmental_hazard_engine.py
+  - 8 new tests in tests/unit/strategy/engine/test_fleet_movement_engine.py
+  - All 12,692 tests passing
+- Next: Phase 6 - Rendering
 
 ---
 
@@ -45,7 +50,7 @@
   - **Dependencies:** None
 
 - [/] **PROJ-189: Storms Environmental Hazards**
-  - **Phases:** 8 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 8 | **Status:** Phase 5 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-189/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-189/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -76,6 +81,7 @@
 | 2026-02-24 | PROJ-189 | Phase 2 | Complete | 12649 passed | 457fa4b5 | hex_random_cluster + StormGenerator + Galaxy integration |
 | 2026-02-24 | PROJ-189 | Phase 3 | Complete | 12653 passed | fd1623a9 | SHIELD_CAPACITY_MULT stat key + ShieldProjection wiring |
 | 2026-02-24 | PROJ-189 | Phase 4 | Complete | 12667 passed | bb504650 | AreaEffectManager + FleetSpeedCalculator integration |
+| 2026-02-24 | PROJ-189 | Phase 5 | Complete | 12692 passed | 6f85653a | EnvironmentalHazardEngine + TurnEngine Phase 0f |
 
 ---
 
@@ -84,7 +90,7 @@
 ### Workflow Overview
 
 1. **Read this file first** - Understand current state from Agent Context
-2. **Find next incomplete project** - First `[ ]` in Master Task List
+2. **Find next incomplete project** - First `[/]` or `[ ]` in the Master Task List above. **ONLY projects listed in the Master Task List may be worked on. If no incomplete projects exist, EXIT immediately. NEVER discover, add, or start projects not already listed here.**
 3. **Load project plan:** `Projects/active_projects/PROJ-XX/plan.md`
 4. **Execute work loop:**
    - Find next incomplete phase in project plan
@@ -131,6 +137,7 @@
 
 ## Notes
 
+- **The Master Task List is the ONLY source of work.** Never scan the filesystem for unlisted projects. Never add entries to the Master Task List. Only the user manages that list.
 - Each project must complete all phases before moving to next project
 - Audit runs automatically after all phases complete
 - Maximum 5 audit cycles per project before moving on

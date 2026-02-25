@@ -17,18 +17,18 @@
 | 2. Hex Cluster Generation & Storm Placement | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. SHIELD_CAPACITY_MULT Stat Key | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. AreaEffectManager Service | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. EnvironmentalHazardEngine (Turn Integration) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. EnvironmentalHazardEngine (Turn Integration) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Rendering | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Combat Layer Integration | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. Integration Testing & Balance | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-24
-**Active Phase:** Phase 5
-**Last Action:** Phase 4 complete - AreaEffectManager Service
-**Next Action:** Begin Phase 5 - EnvironmentalHazardEngine (Turn Integration)
+**Active Phase:** Phase 6
+**Last Action:** Phase 5 complete - EnvironmentalHazardEngine (Turn Integration)
+**Next Action:** Begin Phase 6 - Rendering
 **Blockers:** None
-**Context for Next Agent:** 12,667 tests passing, 1 skipped. Created AreaEffectManager service with EnvironmentalEffects dataclass. Aggregates storm effects at hex locations (multiplicative stacking for mults, additive for damage/fuel). Added calculate_fleet_speed_with_environment() method to FleetSpeedCalculator. 10 new tests for AreaEffectManager, 4 new tests for fleet speed with environmental effects.
+**Context for Next Agent:** 12,692 tests passing, 1 skipped. Created EnvironmentalHazardEngine with EnvironmentalEvent dataclass. Wired into TurnEngine as Phase 0f. Added IEnvironmentalHazardEngine interface. Integrated AreaEffectManager with FleetMovementEngine for storm speed reduction. Fleet speed now considers environmental effects (strategic_mult). Tests: 17 new for EnvironmentalHazardEngine, 8 new for FleetMovementEngine environmental effects. Made AreaEffectManager resilient to galaxies without get_zones_at_global_hex method (returns neutral effects).
 
 ## Overview
 Implement "Storms" as environmental hazards in star systems. Storms occupy 1-10 hexes (irregular shapes) and apply effects (shield interference, propulsion interference, environmental damage, fuel drain) to all ships in those hexes. Effects use data-driven multipliers that feed into the same stat pipeline as the component system. Storms are static entities generated during system creation and rendered using existing nebulae assets.
