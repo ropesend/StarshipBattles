@@ -133,3 +133,83 @@ class TestLegacyCrewRequirementRemoved:
         from game.simulation.components.component import Component
         assert not hasattr(Component, '_get_legacy_crew_requirement'), \
             "_get_legacy_crew_requirement should be removed - no components use negative CrewCapacity"
+
+
+class TestSingletonUsageCount:
+    """
+    PROJ-195: Regression guard for RegistryManager.instance() usage.
+
+    This test ensures singleton usage doesn't creep back into non-root code.
+    All remaining references should be in legitimate locations:
+    - game/app.py (composition root)
+    - game/core/registry.py (singleton definition & helpers)
+    - Test infrastructure (conftest, session_cache)
+    - Tests that specifically test singleton behavior
+    """
+
+    # Expected counts from PROJ-195 audit (2026-02-25)
+    # game/: 11 (app.py: 2, registry.py: 9)
+    # tests/: 77 (all legitimate singleton/isolation tests)
+    EXPECTED_GAME_COUNT = 11
+    EXPECTED_TESTS_COUNT = 77
+
+    def test_singleton_usage_count_game(self):
+        """RegistryManager.instance() count in game/ should not increase."""
+        import subprocess
+        import os
+
+        game_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'game')
+        result = subprocess.run(
+            ['grep', '-r', 'RegistryManager.instance()', '--include=*.py', '-c'],
+            cwd=game_dir,
+            capture_output=True,
+            text=True
+        )
+
+        # Count total matches from grep output
+        total = 0
+        for line in result.stdout.strip().split('\n'):
+            if line and ':' in line:
+                try:
+                    count = int(line.split(':')[-1])
+                    total += count
+                except ValueError:
+                    pass
+
+        assert total <= self.EXPECTED_GAME_COUNT, (
+            f"RegistryManager.instance() count in game/ increased from "
+            f"{self.EXPECTED_GAME_COUNT} to {total}. "
+            f"If this is legitimate (composition root or singleton definition), "
+            f"update EXPECTED_GAME_COUNT in this test."
+        )
+
+    def test_singleton_usage_count_tests(self):
+        """RegistryManager.instance() count in tests/ should not increase."""
+        import subprocess
+        import os
+
+        # Navigate from tests/regression/ up to tests/
+        tests_dir = os.path.join(os.path.dirname(__file__), '..')
+        result = subprocess.run(
+            ['grep', '-r', 'RegistryManager.instance()', '--include=*.py', '-c'],
+            cwd=tests_dir,
+            capture_output=True,
+            text=True
+        )
+
+        # Count total matches from grep output
+        total = 0
+        for line in result.stdout.strip().split('\n'):
+            if line and ':' in line:
+                try:
+                    count = int(line.split(':')[-1])
+                    total += count
+                except ValueError:
+                    pass
+
+        assert total <= self.EXPECTED_TESTS_COUNT, (
+            f"RegistryManager.instance() count in tests/ increased from "
+            f"{self.EXPECTED_TESTS_COUNT} to {total}. "
+            f"New tests should use fresh_registries fixture instead of singleton. "
+            f"If this is a legitimate singleton test, update EXPECTED_TESTS_COUNT."
+        )

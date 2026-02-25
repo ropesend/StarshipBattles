@@ -8,20 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-195 Phase 7 - Regression & Repro Test Migration
-**Current Status:** PROJ-195 Phase 7 complete, ready for Phase 8
+**Last Completed:** PROJ-195 Phase 8 - Final Audit & Verification
+**Current Status:** PROJ-195 ALL PHASES COMPLETE - Ready for Protocol 04 Audit
 **Current Project:** PROJ-195
-**Current Phase:** Phase 8 - Final Audit & Verification
-**Test Status:** 12720 passed, 1 skipped
+**Current Phase:** Audit Cycle 1
+**Test Status:** 12722 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-195 Phase 7 COMPLETE - Regression and repro tests migrated
-- test_regressions.py: Added PROJ-195 comment documenting as legitimate singleton test (tests in-place dict identity)
-- test_warnings.py: Removed RegistryManager import, now uses fresh_registries.vehicle_classes in fixture
-- test_bug_13_clear_removes_hull.py: Removed RegistryManager import, fixture populates fresh_registries directly, GameRegistries created from fresh_registries.components
-- All 12720 tests passing
-- Next: Phase 8 - Final audit and verification (grep audit, full suite, regression guard)
+- PROJ-195 Phase 8 COMPLETE - Final audit and verification
+- Grep audit: 88 total singleton references (11 game/, 77 tests/) - ALL LEGITIMATE
+- game/: app.py (composition root) + registry.py (singleton definition)
+- tests/: Singleton-specific tests, isolation fixtures, registry tests
+- Regression guard added: TestSingletonUsageCount in test_deprecated_code_removed.py
+- All 12722 tests passing (+2 new regression guard tests)
+- Next: Run Protocol 04 Audit to complete PROJ-195
 
 ---
 
@@ -163,6 +164,7 @@
 | 2026-02-25 | PROJ-195 | Phase 5 | Complete | 12720 passed | - | Converted TestBackwardCompatibility → TestLoaderPureFunctions |
 | 2026-02-25 | PROJ-195 | Phase 6 | Complete | 12720 passed | - | Conftest fixtures migrated/documented |
 | 2026-02-25 | PROJ-195 | Phase 7 | Complete | 12720 passed | - | Regression/repro tests migrated |
+| 2026-02-25 | PROJ-195 | Phase 8 | Complete | 12722 passed | - | Final audit: 88 refs legitimate, regression guard added |
 
 ---
 
