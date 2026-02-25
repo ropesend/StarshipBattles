@@ -17,7 +17,7 @@ Responsibilities:
 """
 
 from dataclasses import dataclass
-from typing import Optional, List, Tuple, Dict, Any
+from typing import Optional, List, Tuple, Dict, Any, TYPE_CHECKING
 import logging
 
 from game.core.event_logging import log_event
@@ -26,6 +26,11 @@ from game.strategy.events.event_types import EventType, EventCategory
 logger = logging.getLogger(__name__)
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.core.hex_math import HexCoord
+
+if TYPE_CHECKING:
+    from game.strategy.data.empire import Empire
+    from game.strategy.data.galaxy import Galaxy
+    from game.strategy.data.planet import Planet
 
 
 @dataclass
@@ -123,8 +128,8 @@ class FleetOrderProcessor:
     def process_join_fleet(
         self,
         fleet: Fleet,
-        empire,
-        galaxy
+        empire: 'Empire',
+        galaxy: 'Galaxy'
     ) -> JoinFleetResult:
         """
         Process a JOIN_FLEET order.
@@ -165,8 +170,8 @@ class FleetOrderProcessor:
     def process_colonize(
         self,
         fleet: Fleet,
-        empire,
-        galaxy,
+        empire: 'Empire',
+        galaxy: 'Galaxy',
         component_registry: Optional[Dict[str, Any]] = None
     ) -> ColonizeResult:
         """
@@ -286,8 +291,8 @@ class FleetOrderProcessor:
     def process_transfer(
         self,
         fleet: Fleet,
-        empire,
-        galaxy
+        empire: 'Empire',
+        galaxy: 'Galaxy'
     ) -> TransferResult:
         """
         Process a TRANSFER order.
@@ -414,10 +419,10 @@ class FleetOrderProcessor:
     def _execute_load(
         self,
         fleet: Fleet,
-        planet,
+        planet: 'Planet',
         cargo_type: str,
         amount: int,
-        empire,
+        empire: 'Empire',
         species_id: str = None
     ) -> int:
         """Execute a load operation (colony → fleet)."""
@@ -462,10 +467,10 @@ class FleetOrderProcessor:
     def _execute_unload(
         self,
         fleet: Fleet,
-        planet,
+        planet: 'Planet',
         cargo_type: str,
         amount: int,
-        empire,
+        empire: 'Empire',
         species_id: str = None
     ) -> int:
         """Execute an unload operation (fleet → colony)."""
@@ -511,8 +516,8 @@ class FleetOrderProcessor:
     def _transfer_founding_population(
         self,
         fleet: Fleet,
-        planet,
-        empire
+        planet: 'Planet',
+        empire: 'Empire'
     ) -> int:
         """
         Transfer passengers from fleet to colony as founding population.
@@ -579,10 +584,10 @@ class FleetOrderProcessor:
     def process_end_turn_orders(
         self,
         fleet: Fleet,
-        empire,
-        galaxy,
+        empire: 'Empire',
+        galaxy: 'Galaxy',
         component_registry: Optional[Dict[str, Any]] = None,
-        empires: Optional[List] = None
+        empires: Optional[List['Empire']] = None
     ) -> bool:
         """
         Process action orders (COLONIZE, JOIN_FLEET, TRANSFER, superweapons).
@@ -670,8 +675,8 @@ class FleetOrderProcessor:
 
     def process_instant_orders(
         self,
-        empires: List
-    ) -> List[Tuple]:
+        empires: List['Empire']
+    ) -> List[Tuple['Empire', Fleet]]:
         """
         Process instant orders during tick (JOIN_FLEET when co-located).
 

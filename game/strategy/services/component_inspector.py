@@ -4,7 +4,10 @@ ComponentInspector - Utility for inspecting ship/facility design components.
 PROJ-108 Phase 3: Consolidates duplicated component/ability iteration patterns
 from ColonizeValidator, SuperweaponValidator, and other strategy layer code.
 """
-from typing import Any, Dict, Iterator, List, Optional, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.strategy.data.ship_instance import ShipInstance
 
 
 __all__ = [
@@ -90,7 +93,7 @@ def iterate_design_components(
 
 
 def ship_has_ability(
-    ship: Any,
+    ship: 'ShipInstance',
     ability_name: str,
     component_registry: Dict[str, Any]
 ) -> bool:
@@ -116,10 +119,10 @@ def ship_has_ability(
 
 
 def find_ship_with_ability(
-    fleet_ships: List[Any],
+    fleet_ships: List['ShipInstance'],
     ability_name: str,
     component_registry: Dict[str, Any]
-) -> Optional[Any]:
+) -> Optional['ShipInstance']:
     """Find the first ship in a list that has a specific ability.
 
     Args:
@@ -137,7 +140,7 @@ def find_ship_with_ability(
 
 
 def count_ability(
-    ship: Any,
+    ship: 'ShipInstance',
     ability_name: str,
     component_registry: Dict[str, Any]
 ) -> int:

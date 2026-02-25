@@ -7,9 +7,15 @@ from UI dialogs (CargoQuickDialog, TransferDialog) into a testable service.
 PROJ-162: Extract CargoTransferService from UI Dialogs
 """
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, TYPE_CHECKING, Union
 
 from game.strategy.engine.commands import IssueTransferCommand
+
+if TYPE_CHECKING:
+    from game.core.hex_math import HexCoord
+    from game.strategy.facade.dto.fleet_dto import FleetInfo
+    from game.strategy.facade.dto.planet_dto import PlanetInfo
+    from game.strategy.data.fleet import Fleet
 
 
 class CargoTransferService:
@@ -22,7 +28,7 @@ class CargoTransferService:
     """
 
     @staticmethod
-    def resolve_colonies(facade, hex_coord, fleet) -> List[Any]:
+    def resolve_colonies(facade, hex_coord: 'HexCoord', fleet: 'Fleet') -> List['PlanetInfo']:
         """Resolve colonies at a hex, with fallback to fleet location.
 
         Args:
@@ -45,7 +51,7 @@ class CargoTransferService:
         return colonies
 
     @staticmethod
-    def get_unload_items(facade, fleet_id: int, colonies: List[Any]) -> List[Dict[str, Any]]:
+    def get_unload_items(facade, fleet_id: int, colonies: List['PlanetInfo']) -> List[Dict[str, Any]]:
         """Get items that can be unloaded (dropped) from a fleet.
 
         Args:
@@ -79,7 +85,7 @@ class CargoTransferService:
         return items
 
     @staticmethod
-    def get_load_items(facade, colonies: List[Any]) -> List[Dict[str, Any]]:
+    def get_load_items(facade, colonies: List['PlanetInfo']) -> List[Dict[str, Any]]:
         """Get items that can be loaded from colonies.
 
         Args:
@@ -122,7 +128,7 @@ class CargoTransferService:
         return items
 
     @staticmethod
-    def get_inventory_items(obj_info) -> List[Dict[str, Any]]:
+    def get_inventory_items(obj_info: Union['FleetInfo', 'PlanetInfo', None]) -> List[Dict[str, Any]]:
         """Extract inventory items from a fleet or planet object via duck typing.
 
         Args:

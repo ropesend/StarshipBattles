@@ -9,11 +9,12 @@ This is a read-only calculation - it doesn't modify any game state.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict
-
-from typing import Optional
+from typing import Dict, Optional, TYPE_CHECKING
 
 from game.core.constants import PLANET_RESOURCES
+
+if TYPE_CHECKING:
+    from game.strategy.data.empire import Empire
 from game.core.registry import GameRegistries
 from game.strategy.engine.maintenance_engine import (
     MAINTENANCE_RATE,
@@ -83,7 +84,7 @@ class EmpireEconomyCalculator:
         """
         self._registries: Optional[GameRegistries] = registries
 
-    def calculate(self, empire) -> EmpireEconomySnapshot:
+    def calculate(self, empire: 'Empire') -> EmpireEconomySnapshot:
         """Calculate complete economic snapshot for an empire.
 
         Args:
@@ -132,7 +133,7 @@ class EmpireEconomyCalculator:
 
         return snapshot
 
-    def _aggregate_colony_production(self, empire) -> Dict[str, float]:
+    def _aggregate_colony_production(self, empire: 'Empire') -> Dict[str, float]:
         """Calculate total production from all colony facilities.
 
         Scans colonies -> facilities -> components for ResourceHarvester abilities.
@@ -186,7 +187,7 @@ class EmpireEconomyCalculator:
 
         return totals
 
-    def _aggregate_maintenance(self, empire) -> Dict[str, float]:
+    def _aggregate_maintenance(self, empire: 'Empire') -> Dict[str, float]:
         """Calculate total maintenance costs for facilities and ships.
 
         Maintenance is 5% of the sum of all resource_cost values.

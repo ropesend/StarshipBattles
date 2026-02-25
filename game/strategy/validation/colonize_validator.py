@@ -5,15 +5,21 @@ PROJ-36: Extracted from TurnEngine to centralize validation.
 PROJ-55: Added colony pod detection and chain validation.
 PROJ-127: Extracted _iterate_colony_pods helper to reduce duplication.
 """
-from typing import Dict, Any, Iterator, Optional, Tuple
+from typing import Dict, Any, Iterator, Optional, Tuple, TYPE_CHECKING
 from game.core.validation import ValidationResult
 from game.strategy.services.component_inspector import iterate_design_components
 
+if TYPE_CHECKING:
+    from game.strategy.data.fleet import Fleet
+    from game.strategy.data.galaxy import Galaxy
+    from game.strategy.data.planet import Planet
+    from game.strategy.data.ship_instance import ShipInstance
+
 
 def _iterate_colony_pods(
-    fleet,
+    fleet: 'Fleet',
     component_registry: Dict[str, Any]
-) -> Iterator[Tuple[Any, str]]:
+) -> Iterator[Tuple['ShipInstance', str]]:
     """Iterate over colony pod abilities in a fleet's ships.
 
     Yields (ship, planet_type_str) tuples for each ColonizePlanet ability found.
@@ -49,9 +55,9 @@ class ColonizeValidator:
 
     @staticmethod
     def validate(
-        galaxy,
-        fleet,
-        target_planet,
+        galaxy: 'Galaxy',
+        fleet: 'Fleet',
+        target_planet: Optional['Planet'],
         component_registry: Optional[Dict[str, Any]] = None,
         skip_chain_check: bool = False
     ) -> ValidationResult:
@@ -182,10 +188,10 @@ class ColonizeValidator:
 
     @staticmethod
     def find_ship_with_colony_pod(
-        fleet,
+        fleet: 'Fleet',
         planet_type_str: str,
         component_registry: Dict[str, Any]
-    ) -> Optional[Any]:
+    ) -> Optional['ShipInstance']:
         """
         Find a ship in the fleet with a colony pod matching the planet type.
 
@@ -204,7 +210,7 @@ class ColonizeValidator:
 
     @staticmethod
     def get_available_colony_pods(
-        fleet,
+        fleet: 'Fleet',
         component_registry: Dict[str, Any]
     ) -> Dict[str, int]:
         """
@@ -226,7 +232,7 @@ class ColonizeValidator:
         return pod_counts
 
     @staticmethod
-    def get_committed_colony_pods(fleet) -> Dict[str, int]:
+    def get_committed_colony_pods(fleet: 'Fleet') -> Dict[str, int]:
         """
         Count colony pods committed to existing COLONIZE orders.
 

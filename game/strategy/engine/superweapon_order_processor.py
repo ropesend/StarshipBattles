@@ -8,7 +8,7 @@ a galaxy-altering effect (destroy planet, destroy star, open/close warp points,
 create Dyson Sphere, or self-destruct).
 """
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 import logging
 
 from game.core.hex_math import HexCoord, hex_distance
@@ -21,6 +21,9 @@ from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
 from game.strategy.events.event_types import EventType, EventCategory
 from game.strategy.validation.superweapon_validator import SuperweaponValidator
 from game.strategy.data.pathfinding import get_system_at_hex
+
+if TYPE_CHECKING:
+    from game.strategy.data.empire import Empire
 
 
 @dataclass
@@ -51,7 +54,7 @@ class SuperweaponOrderProcessor:
     def process_implode_planet(
         self,
         fleet: Fleet,
-        empire,
+        empire: 'Empire',
         galaxy: Galaxy,
         component_registry: Optional[Dict[str, Any]] = None
     ) -> SuperweaponResult:
@@ -132,9 +135,9 @@ class SuperweaponOrderProcessor:
     def process_stellerate_star(
         self,
         fleet: Fleet,
-        empire,
+        empire: 'Empire',
         galaxy: Galaxy,
-        empires: List,
+        empires: List['Empire'],
         component_registry: Optional[Dict[str, Any]] = None
     ) -> SuperweaponResult:
         """
@@ -206,7 +209,7 @@ class SuperweaponOrderProcessor:
     def process_open_warp_point(
         self,
         fleet: Fleet,
-        empire,
+        empire: 'Empire',
         galaxy: Galaxy,
         component_registry: Optional[Dict[str, Any]] = None
     ) -> SuperweaponResult:
@@ -310,7 +313,7 @@ class SuperweaponOrderProcessor:
     def process_close_warp_point(
         self,
         fleet: Fleet,
-        empire,
+        empire: 'Empire',
         galaxy: Galaxy,
         component_registry: Optional[Dict[str, Any]] = None
     ) -> SuperweaponResult:
@@ -385,7 +388,7 @@ class SuperweaponOrderProcessor:
     def process_create_dyson_sphere(
         self,
         fleet: Fleet,
-        empire,
+        empire: 'Empire',
         galaxy: Galaxy,
         component_registry: Optional[Dict[str, Any]] = None
     ) -> SuperweaponResult:
@@ -523,7 +526,7 @@ class SuperweaponOrderProcessor:
     def process_self_destruct(
         self,
         fleet: Fleet,
-        empire,
+        empire: 'Empire',
         galaxy: Galaxy
     ) -> SuperweaponResult:
         """
