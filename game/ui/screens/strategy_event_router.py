@@ -129,6 +129,9 @@ class StrategyEventRouter:
         if event.type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
             if event.ui_element == self.ui.scene._quit_confirm_dialog:
                 self.ui.scene._handle_quit_confirmed()
+            # PROJ-198: Route superweapon confirmations via window manager
+            elif self.ui.window_manager.process_confirmation_event(event):
+                pass
 
         # PROJ-86: Handle window close via window manager
         if event.type == pygame_gui.UI_WINDOW_CLOSE:

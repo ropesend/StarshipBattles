@@ -370,13 +370,8 @@ class SuperweaponOperations:
             on_confirm: Callback when user confirms
             is_warning: If True, use warning styling (for dangerous actions)
         """
-        # Use the UI's confirmation dialog system
-        if hasattr(self.scene.ui, 'show_confirmation_dialog'):
-            self.scene.ui.show_confirmation_dialog(title, message, on_confirm, is_warning=is_warning)
-        else:
-            # Fallback: just execute (for testing without full UI)
-            logger.warning(f"No confirmation dialog available. Executing: {title}")
-            on_confirm()
+        # PROJ-198: Direct call - show_confirmation_dialog is always available
+        self.scene.ui.show_confirmation_dialog(title, message, on_confirm, is_warning=is_warning)
 
     def _show_system_picker(self, systems, current_system, on_selected):
         """
@@ -387,13 +382,8 @@ class SuperweaponOperations:
             current_system: The current system (for distance calculation)
             on_selected: Callback with selected system name
         """
-        if hasattr(self.scene.ui, 'show_system_picker'):
-            self.scene.ui.show_system_picker(systems, current_system, on_selected)
-        else:
-            # Fallback: pick first system (for testing without full UI)
-            if systems:
-                logger.warning("No system picker available. Auto-selecting first system.")
-                on_selected(systems[0].name)
+        # PROJ-198: Direct call - show_system_picker is always available
+        self.scene.ui.show_system_picker(systems, current_system, on_selected)
 
     def _show_ship_picker(self, ships, ability_name: str, on_selected):
         """
@@ -404,9 +394,5 @@ class SuperweaponOperations:
             ability_name: Ability name (for display)
             on_selected: Callback with list of selected ship IDs
         """
-        if hasattr(self.scene.ui, 'show_ship_picker'):
-            self.scene.ui.show_ship_picker(ships, ability_name, on_selected)
-        else:
-            # Fallback: select all (for testing without full UI)
-            logger.warning("No ship picker available. Auto-selecting all ships.")
-            on_selected([s.id for s in ships])
+        # PROJ-198: Direct call - show_ship_picker is always available
+        self.scene.ui.show_ship_picker(ships, ability_name, on_selected)

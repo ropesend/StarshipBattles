@@ -395,3 +395,31 @@ class StrategyUI:
     def open_empire_panel(self):
         """Open the Empire Panel Window."""
         self.window_manager.open_empire_panel()
+
+    def show_confirmation_dialog(
+        self, title: str, message: str, on_confirm, is_warning: bool = False
+    ):
+        """Show a confirmation dialog for dangerous actions.
+
+        PROJ-198: Used by superweapons for planet/star destruction confirmation.
+
+        Args:
+            title: Dialog window title.
+            message: Message to display (can be multi-line).
+            on_confirm: Callback when user confirms.
+            is_warning: If True, indicates a dangerous/irreversible action.
+        """
+        self.window_manager.show_confirmation_dialog(title, message, on_confirm, is_warning)
+
+    def show_ship_picker(self, ships, ability_name: str, on_selected):
+        """Show ship picker dialog for multi-select.
+
+        PROJ-198: Used by superweapons for self-destruct ship selection.
+        Currently auto-selects all ships; full picker dialog is a future enhancement.
+
+        Args:
+            ships: List of ships to pick from.
+            ability_name: Ability name (for display).
+            on_selected: Callback with list of selected ship IDs.
+        """
+        self.window_manager.show_ship_picker(ships, ability_name, on_selected)
