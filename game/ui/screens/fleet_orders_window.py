@@ -90,8 +90,8 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
         """Clear and rebuild the order list rows."""
         # Clear existing rows
         for row in self.rows:
-            for element in row.values():
-                if hasattr(element, 'kill'):
+            for key, element in row.items():
+                if key != 'order_ref':  # order_ref is the Order object, not a UI element
                     element.kill()
         self.rows.clear()
         

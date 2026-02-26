@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-198 Phase 2 complete
-**Current Status:** PROJ-198 in progress, Phase 3 next
+**Last Completed:** PROJ-198 Phase 3 complete
+**Current Status:** PROJ-198 in progress, Phase 4 next
 **Current Project:** PROJ-198 - UI Layer Duck Typing Elimination
-**Current Phase:** Phase 3
+**Current Phase:** Phase 4
 **Test Status:** 12728 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-198 Phase 2 complete: ~20 init declarations + guard removals across 12 files
-- Added init for: build_queue_screen, crew_onboard/crew_required, id (Ship/Projectile), is_hovered, design_rows, _dropdown_expanded
-- Removed ~20 hasattr/getattr guards that checked for these attributes
-- Deleted 5 obsolete tests that tested fallback behavior no longer needed
-- Updated mock fixtures to include .id attribute
-- Next: Phase 3 - Monkey-Patch Elimination
+- PROJ-198 Phase 3 complete: Monkey-patch elimination in 3 files
+- DesignSelectorWindow: Added 3 dicts (_button_design_map, _obsolete_buttons, _obsolete_state_map) to replace button attribute monkey-patching
+- BuildQueueSelector: Added _button_index_map dict to replace btn.queue_source_index monkey-patching
+- FleetOrdersWindow: Replaced hasattr(element, 'kill') with key exclusion (if key != 'order_ref')
+- Updated test helper _make_selector_window() and 1 integration test
+- Next: Phase 4 - Bug Fixes & Dead Code Removal
 
 ---
 
@@ -194,6 +194,7 @@
 | 2026-02-25 | PROJ-197 | Audit 1 | PASSED | 12734 passed | - | All 5 goals verified, project complete |
 | 2026-02-25 | PROJ-198 | Phase 1 | Complete | 12732 passed | - | ~75 trivial guard removals, 24 files, 4 test fixes |
 | 2026-02-25 | PROJ-198 | Phase 2 | Complete | 12728 passed | - | ~20 init declarations, 12 files, 5 obsolete tests deleted |
+| 2026-02-25 | PROJ-198 | Phase 3 | Complete | 12728 passed | - | 3 monkey-patch eliminations, 3 files, 1 test updated |
 
 ---
 

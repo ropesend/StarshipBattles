@@ -378,7 +378,8 @@ def test_queue_display_shows_active_source_items():
 
 
 def test_queue_selector_has_queue_source_index_tags(build_queue_screen):
-    """Test that queue selector buttons are tagged with queue_source_index."""
-    for idx, btn in enumerate(build_queue_screen._queue_selector.buttons):
-        assert hasattr(btn, 'queue_source_index')
-        assert btn.queue_source_index == idx
+    """Test that queue selector buttons have index mappings."""
+    selector = build_queue_screen._queue_selector
+    for idx, btn in enumerate(selector.buttons):
+        assert btn in selector._button_index_map
+        assert selector._button_index_map[btn] == idx

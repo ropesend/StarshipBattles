@@ -17,7 +17,7 @@ from pygame_gui.elements import (
     UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer,
     UITextEntryLine, UIDropDownMenu, UIImage
 )
-from typing import Optional, Callable, List, TYPE_CHECKING
+from typing import Optional, Callable, List, Dict, Set, TYPE_CHECKING
 from game.strategy.systems.design_library import DesignLibrary
 import logging
 from game.ui.screens.design_image_helper import load_portrait_thumbnail, load_topdown_thumbnail
@@ -71,6 +71,11 @@ class DesignSelectorWindow(UIWindow):
 
         # Design row UI elements (populated by _rebuild_design_list)
         self.design_rows = []
+
+        # Button-to-data mappings (replaces monkey-patching on UIButton objects)
+        self._button_design_map: Dict[UIButton, str] = {}
+        self._obsolete_buttons: Set[UIButton] = set()
+        self._obsolete_state_map: Dict[UIButton, bool] = {}
 
         # Create UI
         self._create_sidebar()
@@ -289,6 +294,11 @@ class DesignSelectorWindow(UIWindow):
             row.kill()
         self.design_rows = []
 
+        # Clear button-to-data mappings
+        self._button_design_map.clear()
+        self._obsolete_buttons.clear()
+        self._obsolete_state_map.clear()
+
         # Create rows for each design
         y_offset = 10
         # Use list container width minus scrollbar width (20px) and margins
@@ -401,9 +411,9 @@ class DesignSelectorWindow(UIWindow):
             container=row,
             object_id=f"#obsolete_{design.design_id}"
         )
-        obsolete_btn.design_id = design.design_id
-        obsolete_btn.is_obsolete_button = True
-        obsolete_btn.current_obsolete_state = design.is_obsolete
+        self._button_design_map[obsolete_btn] = design.design_id
+        self._obsolete_buttons.add(obsolete_btn)
+        self._obsolete_state_map[obsolete_btn] = design.is_obsolete
 
         # Select button
         select_btn = UIButton(
@@ -414,8 +424,8 @@ class DesignSelectorWindow(UIWindow):
             object_id=f"#select_{design.design_id}"
         )
 
-        # Store design_id on button for event handling
-        select_btn.design_id = design.design_id
+        # Store design_id in map for event handling
+        self._button_design_map[select_btn] = design.design_id
 
         return row
 
@@ -457,13 +467,15 @@ class DesignSelectorWindow(UIWindow):
                 return True
 
             # Check if it's an obsolete toggle button
-            elif hasattr(event.ui_element, 'is_obsolete_button') and event.ui_element.is_obsolete_button:
-                self._on_toggle_obsolete(event.ui_element.design_id, event.ui_element.current_obsolete_state)
+            elif event.ui_element in self._obsolete_buttons:
+                design_id = self._button_design_map[event.ui_element]
+                current_state = self._obsolete_state_map[event.ui_element]
+                self._on_toggle_obsolete(design_id, current_state)
                 return True
 
             # Check if it's a design row select button
-            elif hasattr(event.ui_element, 'design_id'):
-                self._on_design_selected(event.ui_element.design_id)
+            elif event.ui_element in self._button_design_map:
+                self._on_design_selected(self._button_design_map[event.ui_element])
                 return True
 
         elif event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:

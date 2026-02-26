@@ -142,6 +142,11 @@ def _make_selector_window(design_library=None, mode="load", on_select_callback=N
     # Design rows
     window.design_rows = []
 
+    # Button-to-data mappings (replaces monkey-patching on UIButton objects)
+    window._button_design_map = {}
+    window._obsolete_buttons = set()
+    window._obsolete_state_map = {}
+
     # Mock kill method
     window.kill = MagicMock()
 
