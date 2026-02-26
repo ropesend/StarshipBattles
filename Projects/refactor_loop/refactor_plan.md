@@ -101,6 +101,12 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
+- [ ] **PROJ-199: Duck Typing Cleanup - Lazy Init and CompDef Centralization**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-199/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-199/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
 ---
 
 ## Execution Log
