@@ -87,6 +87,73 @@ SEED_CUSTOM = (100, 180, 255)       # Custom seed indicator (blue)
 SEED_CUSTOM_PENDING = (180, 140, 100)  # Custom seed pending (orange)
 
 
+# === Seed Button States ===
+SEED_BUTTON_ACTIVE = (40, 80, 120)         # Active seed button background
+SEED_BUTTON_ACTIVE_BORDER = (80, 140, 200) # Active seed button border
+SEED_BUTTON_ACTIVE_TEXT = (200, 220, 255)  # Active seed button text
+SEED_INPUT_HOVER_BG = (40, 50, 60)         # Seed input hover background
+SEED_INPUT_HOVER_BORDER = (80, 100, 120)   # Seed input hover border
+
+
+# === Clear Filters Button ===
+CLEAR_BUTTON_BG = (60, 50, 50)             # Clear button background (red tint)
+CLEAR_BUTTON_HOVER = (80, 60, 60)          # Clear button hover
+CLEAR_BUTTON_BORDER = (120, 80, 80)        # Clear button border
+CLEAR_BUTTON_TEXT = (255, 180, 180)        # Clear button text
+
+
+# === Progress Button State ===
+BUTTON_PROGRESS_BG = (80, 80, 50)          # Progress button background (gold)
+BUTTON_PROGRESS_BORDER = (150, 150, 80)    # Progress button border
+BUTTON_PROGRESS_TEXT = (255, 255, 150)     # Progress button text
+
+
+# === Headless Run Button ===
+BUTTON_HEADLESS_BG = (50, 50, 80)          # Headless button background (purple)
+BUTTON_HEADLESS_HOVER = (70, 70, 100)      # Headless button hover
+BUTTON_HEADLESS_BORDER = (100, 100, 150)   # Headless button border
+BUTTON_HEADLESS_TEXT = (200, 200, 255)     # Headless button text
+
+
+# === Visual Run Button ===
+BUTTON_RUN_BG = (50, 80, 50)               # Run button background (green)
+BUTTON_RUN_HOVER = (70, 100, 70)           # Run button hover
+BUTTON_RUN_BORDER = (100, 150, 100)        # Run button border
+BUTTON_RUN_TEXT = (200, 255, 200)          # Run button text
+
+
+# === Misc ===
+TEXT_VERY_DIM = (120, 120, 120)            # Very dim text (ticks, 'none')
+TEXT_DIM_BLUE = (120, 120, 140)            # Dim blue text for notes
+
+
+# === Component Dropdown ===
+DROPDOWN_SELECTED_BG = (70, 70, 85)        # Selected dropdown item background
+DROPDOWN_HOVER_BG = (60, 60, 75)           # Hovered dropdown item background
+
+
+# === JSON Viewer ===
+JSON_TITLE_BG = (45, 45, 50)               # JSON viewer title bar background
+JSON_SCROLLBAR_TRACK = (60, 60, 70)        # Scrollbar track
+JSON_SCROLLBAR_THUMB = (120, 120, 140)     # Scrollbar thumb
+
+
+# === Test Run Card ===
+CARD_HOVER_BG = (45, 45, 50)               # Card hover background
+CARD_LATEST_BG = (40, 45, 50)              # Latest run card background
+
+
+# === Button Borders (unique per button type) ===
+BUTTON_VIEW_STATES_BORDER = (100, 130, 180)   # Blue tint for View States
+BUTTON_USE_SEED_BORDER = (100, 150, 100)      # Green tint for Use Seed
+BUTTON_COPY_BORDER = (150, 130, 100)          # Orange tint for Copy
+
+
+# === Validation Separator ===
+SEPARATOR_LINE = (60, 60, 70)              # Separator line between sections
+SEPARATOR_SUBTLE = (45, 45, 55)            # Subtle separator between items
+
+
 # === Section Headers (test info panel) ===
 SECTION_CATEGORY = (200, 150, 100)  # Category section (orange)
 SECTION_SUMMARY = (100, 200, 150)   # Summary section (green)

@@ -227,7 +227,7 @@ class TestRunDetailsPanel:
                 btn_color = self.button_hover_color if is_hovered else self.button_color
 
                 pygame.draw.rect(surface, btn_color, self.view_states_button_rect, border_radius=4)
-                pygame.draw.rect(surface, (100, 130, 180), self.view_states_button_rect, 1, border_radius=4)
+                pygame.draw.rect(surface, theme.BUTTON_VIEW_STATES_BORDER, self.view_states_button_rect, 1, border_radius=4)
 
                 btn_text = self.small_font.render("View States", True, theme.TEXT_WHITE)
                 text_x = button_x + (button_width - btn_text.get_width()) // 2
@@ -255,7 +255,7 @@ class TestRunDetailsPanel:
                 btn_color = self.button_hover_color if is_hovered else self.button_color
 
                 pygame.draw.rect(surface, btn_color, self.use_seed_button_rect, border_radius=4)
-                pygame.draw.rect(surface, (100, 150, 100), self.use_seed_button_rect, 1, border_radius=4)
+                pygame.draw.rect(surface, theme.BUTTON_USE_SEED_BORDER, self.use_seed_button_rect, 1, border_radius=4)
 
                 btn_text = self.small_font.render("Use Seed", True, theme.TEXT_WHITE)
                 text_x = button_x + (button_width - btn_text.get_width()) // 2
@@ -284,7 +284,7 @@ class TestRunDetailsPanel:
             btn_color = self.button_hover_color if is_hovered else self.button_color
 
             pygame.draw.rect(surface, btn_color, self.copy_results_button_rect, border_radius=4)
-            pygame.draw.rect(surface, (150, 130, 100), self.copy_results_button_rect, 1, border_radius=4)
+            pygame.draw.rect(surface, theme.BUTTON_COPY_BORDER, self.copy_results_button_rect, 1, border_radius=4)
 
             btn_text = self.small_font.render("Copy Results", True, theme.TEXT_WHITE)
             text_x = button_x + (button_width - btn_text.get_width()) // 2
@@ -333,7 +333,7 @@ class TestRunDetailsPanel:
         y_offset += 25
 
         # Draw separator line
-        pygame.draw.line(surface, (60, 60, 70),
+        pygame.draw.line(surface, theme.SEPARATOR_LINE,
                        (self.x + 10, y_offset), (self.x + self.width - 20, y_offset))
         y_offset += 8
 
@@ -421,7 +421,7 @@ class TestRunDetailsPanel:
         y_offset += 10  # Space between validation items
 
         # Draw subtle separator between validation items
-        pygame.draw.line(surface, (45, 45, 55),
+        pygame.draw.line(surface, theme.SEPARATOR_SUBTLE,
                        (self.x + 20, y_offset - 5), (self.x + self.width - 30, y_offset - 5))
 
         return y_offset
@@ -488,7 +488,7 @@ class TestRunDetailsPanel:
         y_offset += 25
 
         # Draw separator line
-        pygame.draw.line(surface, (60, 60, 70),
+        pygame.draw.line(surface, theme.SEPARATOR_LINE,
                         (self.x + 10, y_offset), (self.x + self.width - 20, y_offset))
         y_offset += 8
 
@@ -690,7 +690,7 @@ class TestRunDetailsPanel:
             y_offset += 18
 
             # Note about seeker hits
-            note = self.small_font.render("(Hits not tracked - seekers in flight)", True, (120, 120, 140))
+            note = self.small_font.render("(Hits not tracked - seekers in flight)", True, theme.TEXT_DIM_BLUE)
             surface.blit(note, (self.x + indent, y_offset))
             y_offset += 18
         else:
@@ -721,7 +721,7 @@ class TestRunDetailsPanel:
         y_offset += 25
 
         # Draw separator line
-        pygame.draw.line(surface, (60, 60, 70),
+        pygame.draw.line(surface, theme.SEPARATOR_LINE,
                         (self.x + 10, y_offset), (self.x + self.width - 20, y_offset))
         y_offset += 8
 

@@ -10,7 +10,7 @@ import pygame
 import re
 from typing import Tuple, List, Dict, Any, Optional
 
-from game.ui.colors import TEST_PASS, TEST_FAIL
+from game.ui.colors import TEST_PASS, TEST_FAIL, BLACK
 from game.ui.fonts import get_font
 from game.ui.screens.test_lab import theme
 from game.core.config import DisplayConfig
@@ -159,9 +159,9 @@ class TestLabRenderer:
             is_hovered = rect.collidepoint(mx, my)
 
             if is_active:
-                bg_color = (40, 80, 120)
-                border_color = (80, 140, 200)
-                text_color = (200, 220, 255)
+                bg_color = theme.SEED_BUTTON_ACTIVE
+                border_color = theme.SEED_BUTTON_ACTIVE_BORDER
+                text_color = theme.SEED_BUTTON_ACTIVE_TEXT
             elif is_hovered:
                 bg_color = theme.TAB_HOVER
                 border_color = theme.TAG_NORMAL_BORDER
@@ -218,8 +218,8 @@ class TestLabRenderer:
             # Make it look clickable
             is_hovered = seed_rect.collidepoint(mx, my)
             if is_hovered:
-                pygame.draw.rect(screen, (40, 50, 60), seed_rect, border_radius=3)
-            pygame.draw.rect(screen, (80, 100, 120), seed_rect, 1, border_radius=3)
+                pygame.draw.rect(screen, theme.SEED_INPUT_HOVER_BG, seed_rect, border_radius=3)
+            pygame.draw.rect(screen, theme.SEED_INPUT_HOVER_BORDER, seed_rect, 1, border_radius=3)
             viewmodel.seed_input_rect = seed_rect
         else:
             viewmodel.seed_input_rect = None
@@ -376,10 +376,10 @@ class TestLabRenderer:
             # Clear filters button
             clear_rect = pygame.Rect(x, filter_y, 80, 20)
             is_clear_hovered = clear_rect.collidepoint(mx, my)
-            clear_bg = (80, 60, 60) if is_clear_hovered else (60, 50, 50)
+            clear_bg = theme.CLEAR_BUTTON_HOVER if is_clear_hovered else theme.CLEAR_BUTTON_BG
             pygame.draw.rect(screen, clear_bg, clear_rect, border_radius=3)
-            pygame.draw.rect(screen, (120, 80, 80), clear_rect, 1, border_radius=3)
-            clear_text = self.small_font.render("Clear", True, (255, 180, 180))
+            pygame.draw.rect(screen, theme.CLEAR_BUTTON_BORDER, clear_rect, 1, border_radius=3)
+            clear_text = self.small_font.render("Clear", True, theme.CLEAR_BUTTON_TEXT)
             screen.blit(clear_text, (clear_rect.x + 22, clear_rect.y + 3))
 
             # Store for click handling
@@ -424,9 +424,9 @@ class TestLabRenderer:
         if executor.batch_running:
             # Show progress during batch execution
             progress_text = f"{executor.batch_current_index + 1}/{executor.batch_total}"
-            btn_color = (80, 80, 50)
-            btn_border = (150, 150, 80)
-            text_color = (255, 255, 150)
+            btn_color = theme.BUTTON_PROGRESS_BG
+            btn_border = theme.BUTTON_PROGRESS_BORDER
+            text_color = theme.BUTTON_PROGRESS_TEXT
         else:
             btn_hover = run_all_btn_rect.collidepoint(mouse_pos)
             btn_color = theme.BUTTON_GREEN_HOVER if btn_hover else theme.BUTTON_GREEN
@@ -566,10 +566,10 @@ class TestLabRenderer:
             run_test_btn_rect = pygame.Rect(visual_btn_x, header_btn_y, visual_btn_width, btn_height)
             viewmodel.run_test_btn_rect = run_test_btn_rect
             run_test_hover = run_test_btn_rect.collidepoint(mouse_pos)
-            run_test_color = (70, 100, 70) if run_test_hover else (50, 80, 50)
+            run_test_color = theme.BUTTON_RUN_HOVER if run_test_hover else theme.BUTTON_RUN_BG
             pygame.draw.rect(screen, run_test_color, run_test_btn_rect, border_radius=4)
-            pygame.draw.rect(screen, (100, 150, 100), run_test_btn_rect, 1, border_radius=4)
-            run_text = self.small_font.render("Visual Run", True, (200, 255, 200))
+            pygame.draw.rect(screen, theme.BUTTON_RUN_BORDER, run_test_btn_rect, 1, border_radius=4)
+            run_text = self.small_font.render("Visual Run", True, theme.BUTTON_RUN_TEXT)
             text_rect = run_text.get_rect(center=run_test_btn_rect.center)
             screen.blit(run_text, text_rect)
 
@@ -581,10 +581,10 @@ class TestLabRenderer:
             )
             viewmodel.run_headless_btn_rect = run_headless_btn_rect
             run_headless_hover = run_headless_btn_rect.collidepoint(mouse_pos)
-            run_headless_color = (70, 70, 100) if run_headless_hover else (50, 50, 80)
+            run_headless_color = theme.BUTTON_HEADLESS_HOVER if run_headless_hover else theme.BUTTON_HEADLESS_BG
             pygame.draw.rect(screen, run_headless_color, run_headless_btn_rect, border_radius=4)
-            pygame.draw.rect(screen, (100, 100, 150), run_headless_btn_rect, 1, border_radius=4)
-            headless_text = self.small_font.render("Headless Run", True, (200, 200, 255))
+            pygame.draw.rect(screen, theme.BUTTON_HEADLESS_BORDER, run_headless_btn_rect, 1, border_radius=4)
+            headless_text = self.small_font.render("Headless Run", True, theme.BUTTON_HEADLESS_TEXT)
             text_rect = headless_text.get_rect(center=run_headless_btn_rect.center)
             screen.blit(headless_text, text_rect)
 
@@ -653,7 +653,7 @@ class TestLabRenderer:
 
         # Metadata footer - just show max ticks (seed controls are now in header)
         ticks_text = f"Max Ticks: {metadata.max_ticks}    |    Test Seed: {metadata.seed}"
-        ticks_surf = self.small_font.render(ticks_text, True, (120, 120, 120))
+        ticks_surf = self.small_font.render(ticks_text, True, theme.TEXT_VERY_DIM)
         screen.blit(ticks_surf, (x, y))
 
     def _draw_section(
@@ -705,7 +705,7 @@ class TestLabRenderer:
 
         # Items
         if not items:
-            none_surf = self.small_font.render("None", True, (120, 120, 120))
+            none_surf = self.small_font.render("None", True, theme.TEXT_VERY_DIM)
             screen.blit(none_surf, (x + 20, y))
             y += 22
         else:
@@ -856,7 +856,7 @@ class TestLabRenderer:
         validation_summary = results.get('validation_summary', {})
 
         if not validation_results:
-            no_val_surf = self.small_font.render("No validation rules defined", True, (120, 120, 120))
+            no_val_surf = self.small_font.render("No validation rules defined", True, theme.TEXT_VERY_DIM)
             screen.blit(no_val_surf, (x + 10, y))
             return y + 22
 
@@ -931,9 +931,9 @@ class TestLabRenderer:
             if p_value is not None:
                 p_text = f"p-value: {p_value:.4f}"
                 if p_value < 0.05:
-                    p_color = (100, 255, 150)  # Green - proven equivalent (PASS)
+                    p_color = TEST_PASS  # Green - proven equivalent (PASS)
                 else:
-                    p_color = (255, 100, 100)  # Red - not proven equivalent (FAIL)
+                    p_color = TEST_FAIL  # Red - not proven equivalent (FAIL)
 
                 p_surf = self.small_font.render(p_text, True, p_color)
                 screen.blit(p_surf, (x + 25, y))
@@ -1023,11 +1023,11 @@ class TestLabRenderer:
 
         # Draw circle
         pygame.draw.circle(screen, color, (x, y), radius)
-        pygame.draw.circle(screen, (0, 0, 0), (x, y), radius, 2)  # Black outline
+        pygame.draw.circle(screen, BLACK, (x, y), radius, 2)  # Black outline
 
         # Draw symbol if present
         if symbol:
-            symbol_surf = self.small_font.render(symbol, True, (0, 0, 0))
+            symbol_surf = self.small_font.render(symbol, True, BLACK)
             symbol_rect = symbol_surf.get_rect(center=(x, y))
             screen.blit(symbol_surf, symbol_rect)
 

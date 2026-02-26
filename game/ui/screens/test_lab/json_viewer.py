@@ -47,7 +47,7 @@ class ScrollableJSONViewer:
 
         # Colors
         self.bg_color = theme.BG_CONTENT
-        self.title_bg_color = (45, 45, 50)  # Unique for title bar
+        self.title_bg_color = theme.JSON_TITLE_BG
         self.text_color = theme.TEXT
         self.title_color = theme.TEXT_WHITE
         self.border_color = theme.BORDER_ACTIVE
@@ -113,11 +113,11 @@ class ScrollableJSONViewer:
             scrollbar_height = self.content_height - 10
 
             # Scrollbar track
-            pygame.draw.rect(surface, (60, 60, 70),
+            pygame.draw.rect(surface, theme.JSON_SCROLLBAR_TRACK,
                            (scrollbar_x, scrollbar_y, 10, scrollbar_height))
 
             # Scrollbar thumb
             thumb_height = max(20, int(scrollbar_height * self.visible_lines / len(self.lines)))
             thumb_y = scrollbar_y + int((scrollbar_height - thumb_height) * (self.scroll_offset / self.max_scroll))
-            pygame.draw.rect(surface, (120, 120, 140),
+            pygame.draw.rect(surface, theme.JSON_SCROLLBAR_THUMB,
                            (scrollbar_x, thumb_y, 10, thumb_height))

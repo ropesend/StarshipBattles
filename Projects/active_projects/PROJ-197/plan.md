@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Expand colors.py palette | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Test Lab renderer fix | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Test Lab renderer fix | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Battle UI files | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Setup & strategy files | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Ship panels & widgets | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -23,11 +23,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete - Added ~140 semantic color constants to colors.py
-**Next Action:** Phase 2 - Fix test lab renderer.py to use theme.py constants
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete - Fixed test lab files (renderer.py + 4 others) to use theme.py constants
+**Next Action:** Phase 3 - Battle UI files consolidation
 **Blockers:** None
-**Context for Next Agent:** colors.py now has all constants needed. Proceed with Phase 2 to substitute tuples in renderer.py.
+**Context for Next Agent:** All test lab files now use theme.py constants. Proceed with Phase 3 to consolidate battle UI files.
 
 ## Overview
 Complete the color tuple consolidation that was left incomplete by the previous agent.
@@ -144,7 +144,7 @@ Quick win — theme.py already has most constants, just needs substitution in re
 
 ## Completion Checklist
 - [x] Phase 1 complete — colors.py expanded
-- [ ] Phase 2 complete — test lab renderer fixed
+- [x] Phase 2 complete — test lab renderer fixed
 - [ ] Phase 3 complete — battle files consolidated
 - [ ] Phase 4 complete — setup & strategy files consolidated
 - [ ] Phase 5 complete — ship panels & widgets consolidated

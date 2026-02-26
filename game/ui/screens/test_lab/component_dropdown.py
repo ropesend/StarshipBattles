@@ -35,8 +35,8 @@ class ComponentDropdown:
         # Fonts & Colors
         self.font = get_font(16)
         self.bg_color = theme.TAG_NORMAL_BG  # (50, 50, 60)
-        self.selected_bg_color = (70, 70, 85)  # Unique
-        self.hover_bg_color = (60, 60, 75)  # Unique
+        self.selected_bg_color = theme.DROPDOWN_SELECTED_BG
+        self.hover_bg_color = theme.DROPDOWN_HOVER_BG
         self.text_color = theme.TEXT_WHITE
         self.border_color = theme.BORDER_ACTIVE
 

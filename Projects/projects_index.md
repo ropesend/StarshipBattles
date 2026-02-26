@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-198 | UI Layer Duck Typing Elimination - Strategy Screens & Services | Planning | 2026-02-25 | 2026-02-25 |
 | PROJ-197 | Duplication Consolidation Completion | Planning | 2026-02-25 | 2026-02-25 |
 | PROJ-196 | Consolidate Duplicated Code | Planning | 2026-02-24 | 2026-02-24 |
 | PROJ-195 | Eradicate RegistryManager Singleton from Non-Root Code | Planning | 2026-02-24 | 2026-02-24 |

@@ -37,9 +37,9 @@ class TestRunCard:
 
         # Colors
         self.bg_color = theme.BG_CATEGORY
-        self.bg_hover_color = (45, 45, 50)  # Unique hover state
+        self.bg_hover_color = theme.CARD_HOVER_BG
         self.bg_selected_color = theme.SELECTED_CARD_BG
-        self.latest_bg_color = (40, 45, 50)  # Slightly different for latest
+        self.latest_bg_color = theme.CARD_LATEST_BG
         self.pass_color = TEST_PASS
         self.fail_color = TEST_FAIL
         self.text_color = theme.TEXT
