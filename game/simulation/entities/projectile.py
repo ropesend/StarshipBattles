@@ -18,6 +18,7 @@ TURN_COMMITMENT_THRESHOLD_DEG = 45
 class Projectile(PhysicsBody):
     def __init__(self, owner, position, velocity, damage, range_val, endurance, proj_type, source_weapon=None, **kwargs):
         super().__init__(position.x, position.y)
+        self.id: str = str(id(self))
         self.velocity = velocity
         self.owner = owner
         # Owner may be None for orphaned projectiles, default team_id to -1

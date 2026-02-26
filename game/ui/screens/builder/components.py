@@ -31,6 +31,7 @@ class ComponentListItem:
         self.component = component
         self.height = 40
         self.rect = pygame.Rect(0, y_pos, width, self.height)
+        self.is_hovered: bool = False
         
         # Container panel for the item
         self.panel = UIPanel(

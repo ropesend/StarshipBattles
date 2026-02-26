@@ -41,7 +41,7 @@ class StrategyBuildQueueManager:
     def on_build_yard_click(self) -> None:
         """Open build queue screen for selected planet."""
         # Guard against double-open - if build queue is already open, ignore
-        if hasattr(self._screen, 'build_queue_screen') and self._screen.build_queue_screen is not None:
+        if self._screen.build_queue_screen is not None:
             logger.info("Build queue already open, ignoring click")
             return
 
@@ -152,7 +152,7 @@ class StrategyBuildQueueManager:
             source: BuildQueueSource identifying the entity to open.
         """
         # Guard against double-open
-        if hasattr(self._screen, 'build_queue_screen') and self._screen.build_queue_screen is not None:
+        if self._screen.build_queue_screen is not None:
             logger.info("Build queue already open, ignoring navigate")
             return
 
@@ -199,7 +199,7 @@ class StrategyBuildQueueManager:
     def on_fleet_build_click(self) -> None:
         """Open build queue screen for selected fleet (PROJ-67: Fleet Space Yards)."""
         # Guard against double-open
-        if hasattr(self._screen, 'build_queue_screen') and self._screen.build_queue_screen is not None:
+        if self._screen.build_queue_screen is not None:
             logger.info("Build queue already open, ignoring click")
             return
 

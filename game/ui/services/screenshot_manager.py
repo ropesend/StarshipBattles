@@ -152,7 +152,7 @@ class ScreenshotManager(metaclass=SingletonMeta):
                 # Draw sub-windows if requested
                 if include_subwindows:
                     # Check for active sub-window screens
-                    if hasattr(scene, 'build_queue_screen') and scene.build_queue_screen:
+                    if scene.build_queue_screen:
                         scene.build_queue_screen.draw(capture_surface)
 
                 self.capture(surface=capture_surface, label=label)

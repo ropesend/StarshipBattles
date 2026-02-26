@@ -55,7 +55,7 @@ class StrategyEventRouter:
             return True
 
         # Check for build queue screen
-        if hasattr(self.ui.scene, 'build_queue_screen') and self.ui.scene.build_queue_screen is not None:
+        if self.ui.scene.build_queue_screen is not None:
             return True
 
         # Check window manager for open windows (PROJ-86)

@@ -109,6 +109,7 @@ class StrategyScreen:
         self.turn_processing = False
         self.current_player_index = 0
         self._quit_confirm_dialog = None
+        self.build_queue_screen = None
 
         # Assets
         self.empire_assets = {}
@@ -200,7 +201,7 @@ class StrategyScreen:
         self.ui.draw(screen)
 
         # Draw build queue screen overlay (including drag preview)
-        if hasattr(self, 'build_queue_screen') and self.build_queue_screen is not None:
+        if self.build_queue_screen is not None:
             self.build_queue_screen.draw(screen)
 
     def handle_resize(self, width, height):

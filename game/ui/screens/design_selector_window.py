@@ -69,6 +69,9 @@ class DesignSelectorWindow(UIWindow):
         self.sidebar_width = 250
         self.row_height = 60
 
+        # Design row UI elements (populated by _rebuild_design_list)
+        self.design_rows = []
+
         # Create UI
         self._create_sidebar()
         self._create_main_list()
@@ -282,10 +285,8 @@ class DesignSelectorWindow(UIWindow):
     def _rebuild_design_list(self):
         """Rebuild the design list UI"""
         # Clear existing rows
-        if hasattr(self, 'design_rows'):
-            for row in self.design_rows:
-                row.kill()
-
+        for row in self.design_rows:
+            row.kill()
         self.design_rows = []
 
         # Create rows for each design

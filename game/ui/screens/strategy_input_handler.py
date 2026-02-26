@@ -53,7 +53,7 @@ class StrategyInputHandler:
             event: Pygame event to process
         """
         # If build queue screen is open, route events to it first
-        if hasattr(self.scene, 'build_queue_screen') and self.scene.build_queue_screen is not None:
+        if self.scene.build_queue_screen is not None:
             self.scene.build_queue_screen.handle_event(event)
             return
 

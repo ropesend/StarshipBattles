@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-198 Phase 1 complete
-**Current Status:** PROJ-198 in progress, Phase 2 next
+**Last Completed:** PROJ-198 Phase 2 complete
+**Current Status:** PROJ-198 in progress, Phase 3 next
 **Current Project:** PROJ-198 - UI Layer Duck Typing Elimination
-**Current Phase:** Phase 2
-**Test Status:** 12732 passed, 1 skipped
+**Current Phase:** Phase 3
+**Test Status:** 12728 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-198 Phase 1 complete: ~75 trivial guard removals across 24 files
-- Removed hasattr/getattr guards where attributes always exist
-- Fixed 4 test mocks to use proper attribute values
-- Deleted 2 dead-code tests (system_name, global_hex)
-- Kept 1 init-order hasattr guard in strategy_ui.py (current_player_index)
-- Next: Phase 2 - Init Declarations & Guard Removal
+- PROJ-198 Phase 2 complete: ~20 init declarations + guard removals across 12 files
+- Added init for: build_queue_screen, crew_onboard/crew_required, id (Ship/Projectile), is_hovered, design_rows, _dropdown_expanded
+- Removed ~20 hasattr/getattr guards that checked for these attributes
+- Deleted 5 obsolete tests that tested fallback behavior no longer needed
+- Updated mock fixtures to include .id attribute
+- Next: Phase 3 - Monkey-Patch Elimination
 
 ---
 
@@ -193,6 +193,7 @@
 | 2026-02-25 | PROJ-197 | Phase 7 | Complete | 12734 passed | b4236973 | Final audit cleanup, ~15 tuples fixed |
 | 2026-02-25 | PROJ-197 | Audit 1 | PASSED | 12734 passed | - | All 5 goals verified, project complete |
 | 2026-02-25 | PROJ-198 | Phase 1 | Complete | 12732 passed | - | ~75 trivial guard removals, 24 files, 4 test fixes |
+| 2026-02-25 | PROJ-198 | Phase 2 | Complete | 12728 passed | - | ~20 init declarations, 12 files, 5 obsolete tests deleted |
 
 ---
 

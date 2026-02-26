@@ -70,22 +70,12 @@ class ShipStatsPanel(BattlePanel):
         self.scroll_offset = 0
         self.content_height = 0
 
-    def _get_ship_id(self, ship):
+    def _get_ship_id(self, ship) -> str:
         """Get the ship ID for expansion tracking.
 
-        PROJ-43: Supports both ShipDTO (has .id) and domain Ship objects
-        (use .name as fallback identifier).
+        Both ShipDTO and domain Ship objects have .id (str).
         """
-        # Try to get .id first (for ShipDTO)
-        ship_id = getattr(ship, 'id', None)
-        if isinstance(ship_id, str):
-            return ship_id
-        # Fallback to .name (for domain Ship objects and mocks)
-        ship_name = getattr(ship, 'name', None)
-        if isinstance(ship_name, str):
-            return ship_name
-        # Last resort: use Python object id
-        return str(id(ship))
+        return ship.id
 
     def _is_expanded(self, ship):
         """Check if a ship is expanded by its ID."""
@@ -274,18 +264,12 @@ class SeekerMonitorPanel(BattlePanel):
         self.clear_btn_rect = None
         self.content_height = 0
 
-    def _get_projectile_id(self, proj):
+    def _get_projectile_id(self, proj) -> str:
         """Get the projectile ID for expansion tracking.
 
-        PROJ-43: Supports both ProjectileDTO (has .id) and domain Projectile
-        objects (use Python object id as fallback).
+        Both ProjectileDTO and domain Projectile objects have .id (str).
         """
-        # Try to get .id first (for ProjectileDTO)
-        proj_id = getattr(proj, 'id', None)
-        if isinstance(proj_id, str):
-            return proj_id
-        # Last resort: use Python object id
-        return str(id(proj))
+        return proj.id
 
     def _is_seeker_expanded(self, proj):
         """Check if a projectile is expanded by its ID."""

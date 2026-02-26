@@ -55,6 +55,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
                 context={"class": "Ship", "parameter": "registries"}
             )
         super().__init__(x, y)
+        self.id: str = str(id(self))
         self.name: str = name
         self.color: Union[Tuple[int, int, int], List[int]] = color
         self.team_id: int = team_id
@@ -187,6 +188,10 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.potential_fuel_consumption: float = 0.0
         self.potential_ammo_consumption: float = 0.0
         self.potential_energy_consumption: float = 0.0
+
+        # Crew stats (computed by ShipStatsCalculator, initialized here for safety)
+        self.crew_onboard: int = 0
+        self.crew_required: int = 0
 
         # Initialize helpers (lazy)
         self.stats_calculator: Optional[ShipStatsCalculator] = None

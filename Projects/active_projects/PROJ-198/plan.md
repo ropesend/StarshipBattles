@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Trivial Guard Removal - Direct Access | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Init Declarations & Guard Removal | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Init Declarations & Guard Removal | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Monkey-Patch Elimination | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Bug Fixes & Dead Code Removal | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Type Annotations & Protocol Fixes | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -22,11 +22,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Current Phase:** Phase 1 Complete
-**Last Agent Action:** Phase 1 executed - ~75 trivial guard removals across 24 files
-**Next Action:** Execute Phase 2 - Init Declarations & Guard Removal
+**Current Phase:** Phase 2 Complete
+**Last Agent Action:** Phase 2 executed - ~20 init declarations + guard removals across 12 files
+**Next Action:** Execute Phase 3 - Monkey-Patch Elimination
 **Blockers:** None
-**Context for Next Agent:** Phase 1 complete. Removed hasattr/getattr guards where attributes always exist. Fixed 4 test mocks, deleted 2 dead-code tests. Also kept 1 init-order hasattr guard in strategy_ui.py (current_player_index check).
+**Context for Next Agent:** Phase 2 complete. Added init declarations for: build_queue_screen, crew_onboard/crew_required, id (Ship/Projectile), is_hovered, design_rows, _dropdown_expanded. Removed ~20 hasattr/getattr guards. Deleted 5 obsolete tests. Tests: 12728 passed.
 
 ## Overview
 Eliminate ~223 remaining actionable `hasattr()`/`getattr()` duck typing instances across the UI layer (strategy screens, services, panels). This is the final phase of the duck typing elimination initiative that began with PROJ-190 (Core Simulation), continued through PROJ-191 (Strategy), PROJ-192 (AI), PROJ-193 (UI Data Binding), and PROJ-194 (Builder/Workshop).

@@ -176,8 +176,7 @@ class BattleUIService:
             if hasattr(target, 'name'):
                 secondary_target_names.append(target.name)
 
-        # Get ship id - use object id if no explicit id
-        ship_id = str(getattr(ship, 'id', id(ship)))
+        ship_id = ship.id
 
         # Ship uses 'angle' internally (from PhysicsBody), DTO exposes as 'heading'
         heading = ship.angle
@@ -201,9 +200,8 @@ class BattleUIService:
             total_thrust=ship.total_thrust,
             turn_speed=ship.turn_speed,
             total_shots_fired=ship.total_shots_fired,
-            # crew_onboard/crew_required are dynamically set by ShipStatsCalculator, not in __init__
-            crew_onboard=getattr(ship, 'crew_onboard', 0),
-            crew_required=getattr(ship, 'crew_required', 0),
+            crew_onboard=ship.crew_onboard,
+            crew_required=ship.crew_required,
             current_target_name=current_target_name,
             secondary_target_names=secondary_target_names,
             max_targets=ship.max_targets,
@@ -256,8 +254,7 @@ class BattleUIService:
         if target and hasattr(target, 'name'):
             target_name = target.name
 
-        # Get projectile id
-        proj_id = str(getattr(proj, 'id', id(proj)))
+        proj_id = proj.id
 
         # PROJ-113: Get color from type mapping (UI concern, not simulation)
         proj_type = proj.type
