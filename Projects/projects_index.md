@@ -4,6 +4,34 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-227 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-226 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-225 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-224 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-223 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-222 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-221 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-220 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-219 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-218 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-217 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-216 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-215 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-214 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-213 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-212 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-211 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-210 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-209 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-208 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-207 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-206 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-205 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-204 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-203 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-202 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-201 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
+| PROJ-200 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-25 | 2026-02-25 |
 | PROJ-199 | Duck Typing Cleanup - Lazy Init and CompDef Centralization | Plan Ready | 2026-02-25 | 2026-02-25 |
 
 ## Archived Projects
