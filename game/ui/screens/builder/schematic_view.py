@@ -74,7 +74,7 @@ class SchematicView:
         max_r = self._calculate_max_r(ship)
         
         # Draw Theme Image
-        theme_id = getattr(ship, 'theme_id', 'Federation')
+        theme_id = ship.theme_id
         ship_img = self.theme_manager.load_image(theme_id, ship.ship_class)
         
         if ship_img:

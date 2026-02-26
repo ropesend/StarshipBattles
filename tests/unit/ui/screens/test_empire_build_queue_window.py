@@ -1005,7 +1005,8 @@ class TestGetHexForSource:
 
     def test_fleet_source_no_location_returns_none(self):
         """Fleet source returns None when fleet has no location."""
-        fleet_entity = MagicMock(spec=[])
+        fleet_entity = MagicMock()
+        fleet_entity.location = None  # Explicit None location
         source = BuildQueueSource(
             queue_id="fleet_1", display_name="Fleet Yard",
             owner_entity=fleet_entity, construction_queue=[],

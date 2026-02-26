@@ -67,7 +67,7 @@ def filter_planets(planets, search_lower, filter_types, min_g, max_g, min_t, max
 
         # Owner filtering (BUG-27)
         if filter_owner is not None:
-            owner_id = getattr(p, 'owner_id', None)
+            owner_id = p.owner_id
 
             if owner_id is None:
                 owner_cat = 'Unowned'
@@ -199,14 +199,11 @@ def compute_planet_ranges(all_planets):
 
     for p in all_planets:
         # Gravity in g (Earth = 9.81 m/s^2)
-        if hasattr(p, 'surface_gravity'):
-            gravities.append(p.surface_gravity / 9.81)
+        gravities.append(p.surface_gravity / 9.81)
         # Temperature in Kelvin
-        if hasattr(p, 'surface_temperature'):
-            temps.append(p.surface_temperature)
+        temps.append(p.surface_temperature)
         # Mass in Earth masses
-        if hasattr(p, 'mass'):
-            masses.append(p.mass / m_earth)
+        masses.append(p.mass / m_earth)
 
     # Compute ranges with small padding
     if gravities:
@@ -294,7 +291,7 @@ def get_resource_str(planet, resource_name):
     Returns:
         Formatted string like "100k (Q80)" or "-" if no resource
     """
-    if hasattr(planet, 'resources') and resource_name in planet.resources:
+    if resource_name in planet.resources:
         resource = planet.resources[resource_name]
         quantity = resource['quantity']
         # Format k/M

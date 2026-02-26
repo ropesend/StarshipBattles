@@ -521,7 +521,7 @@ class ClickModeDispatcher:
 
         # PROJ-139: Check zone registry for multi-hex objects (stars, Dyson Spheres)
         # Zone objects may be found even without a clicked_system match
-        if hasattr(self.scene, 'galaxy') and self.scene.galaxy:
+        if self.scene.galaxy:
             zone_objects = self.scene.galaxy.get_zones_at_global_hex(hex_clicked)
             for zone_obj in zone_objects:
                 if zone_obj not in sector_contents:

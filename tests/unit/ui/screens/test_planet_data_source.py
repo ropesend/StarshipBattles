@@ -415,10 +415,11 @@ class TestPlanetDataSourceCellImage:
             assert isinstance(result, pygame.Surface)
 
     def test_get_cell_image_no_image_id_returns_blank(self):
-        """get_cell_image returns blank surface when no image_id."""
+        """get_cell_image returns blank surface when image_id is empty."""
         from game.ui.screens.planet_data_source import PlanetDataSource
 
-        planet = Mock(spec=["name"])  # No image_id attribute
+        planet = Mock(spec=["name", "image_id"])
+        planet.image_id = None  # Empty image_id
 
         columns = [
             {"id": "icon", "width": 50, "title": "", "type": "image", "visible": True},

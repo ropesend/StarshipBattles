@@ -76,20 +76,17 @@ def get_system_name(source: BuildQueueSource, galaxy: Any) -> str:
     """
     entity = source.owner_entity
     if source.context_type == "planet":
-        system = getattr(entity, 'system_name', None)
-        if system:
-            return str(system)
         # Try galaxy lookup
         if galaxy:
             sys_obj = galaxy.get_system_of_planet(entity)
             if sys_obj:
-                return getattr(sys_obj, 'name', '-')
+                return sys_obj.name
     elif source.context_type == "fleet":
-        location = getattr(entity, 'location', None)
+        location = entity.location
         if location and galaxy:
             sys_obj = galaxy.get_system_at_hex(location)
             if sys_obj:
-                return getattr(sys_obj, 'name', '-')
+                return sys_obj.name
     return "-"
 
 
@@ -104,12 +101,12 @@ def get_sector_text(source: BuildQueueSource) -> str:
     """
     entity = source.owner_entity
     if source.context_type == "fleet":
-        location = getattr(entity, 'location', None)
+        location = entity.location
         if location is not None:
             return str(location)
     elif source.context_type == "planet":
-        # Planets may have hex or relative location
-        hex_loc = getattr(entity, 'global_hex', None) or getattr(entity, 'location', None)
+        # Planets have local location within their system
+        hex_loc = entity.location
         if hex_loc is not None:
             return str(hex_loc)
     return "-"

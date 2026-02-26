@@ -141,9 +141,8 @@ class ComponentDetailPanel:
         # --- Dynamic Ability Stats (The Refactor) ---
         # Instead of manually checking attributes, we ask the component.
         # This covers: Weapons, Engines, Shields, Resources, Hangars
-        
-        if hasattr(comp, 'get_ui_rows'):
-            for row in comp.get_ui_rows():
+
+        for row in comp.get_ui_rows():
                 label = row.get('label', 'Unknown')
                 val = row.get('value', '')
                 color = row.get('color_hint', HINT_NEUTRAL)

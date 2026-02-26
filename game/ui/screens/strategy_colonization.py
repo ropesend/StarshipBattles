@@ -79,14 +79,12 @@ class ColonizationSystem:
                     potential_planets.append(p)
 
             # PROJ-139: Also check zone registry for multi-hex planets (Dyson Spheres)
-            if hasattr(self.scene, 'galaxy') and self.scene.galaxy:
-                zone_lookup = getattr(self.scene.galaxy, 'get_zones_at_global_hex', None)
-                if zone_lookup and callable(zone_lookup):
-                    zone_objects = zone_lookup(fleet.location)
-                    if isinstance(zone_objects, list):
-                        for zone_obj in zone_objects:
-                            if is_planet(zone_obj) and zone_obj not in potential_planets:
-                                potential_planets.append(zone_obj)
+            if self.scene.galaxy:
+                zone_objects = self.scene.galaxy.get_zones_at_global_hex(fleet.location)
+                if isinstance(zone_objects, list):
+                    for zone_obj in zone_objects:
+                        if is_planet(zone_obj) and zone_obj not in potential_planets:
+                            potential_planets.append(zone_obj)
         else:
             # Full scan (rare - fleet in deep space)
             for sys in self.systems:
@@ -193,15 +191,13 @@ class ColonizationSystem:
                       if p.owner_id is None and p.location == local_hex]
 
         # PROJ-139: Also check zone registry for multi-hex planets
-        if hasattr(self.scene, 'galaxy') and self.scene.galaxy:
-            zone_lookup = getattr(self.scene.galaxy, 'get_zones_at_global_hex', None)
-            if zone_lookup and callable(zone_lookup):
-                zone_objects = zone_lookup(target_hex)
-                if isinstance(zone_objects, list):
-                    for zone_obj in zone_objects:
-                        if is_planet(zone_obj) and zone_obj not in candidates:
-                            if zone_obj.owner_id is None:
-                                candidates.append(zone_obj)
+        if self.scene.galaxy:
+            zone_objects = self.scene.galaxy.get_zones_at_global_hex(target_hex)
+            if isinstance(zone_objects, list):
+                for zone_obj in zone_objects:
+                    if is_planet(zone_obj) and zone_obj not in candidates:
+                        if zone_obj.owner_id is None:
+                            candidates.append(zone_obj)
 
         if not candidates:
             logger.debug(f"No colonizable planets at hex {target_hex}.")

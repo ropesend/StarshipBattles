@@ -251,7 +251,7 @@ class BuilderLeftPanel:
         self.items = []
         
         # 1. Filter by Vehicle Type (Implicit)
-        v_type = getattr(self.builder.ship, 'vehicle_type', "Ship")
+        v_type = self.builder.ship.vehicle_type
         filtered = [c for c in self.builder.available_components if v_type in c.allowed_vehicle_types]
 
         # 2. Filter out Hull components (managed by ship class, not user-selectable)

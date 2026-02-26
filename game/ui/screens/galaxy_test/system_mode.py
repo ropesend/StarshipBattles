@@ -517,7 +517,7 @@ class SystemModeHelper:
             radius = max(8, int(star.diameter_hexes * HEX_SIZE * self.screen.camera.zoom * 0.5))
 
             # Star color
-            color = star.color if hasattr(star, 'color') else STAR_FALLBACK
+            color = star.color
 
             # Draw glow effect
             glow_radius = radius + 4

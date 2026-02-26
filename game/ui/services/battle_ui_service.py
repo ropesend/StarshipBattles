@@ -224,14 +224,10 @@ class BattleUIService:
             ComponentDTO with component data
         """
         # Determine status string
-        status = "active"
-        if hasattr(comp, 'status') and hasattr(comp.status, 'name'):
-            status = comp.status.name.lower()
+        status = comp.status.name.lower()
 
         # Check if it's a weapon
-        has_weapon = False
-        if hasattr(comp, 'has_ability'):
-            has_weapon = comp.has_ability('WeaponAbility')
+        has_weapon = comp.has_ability('WeaponAbility')
 
         return ComponentDTO(
             name=comp.name,
@@ -241,8 +237,8 @@ class BattleUIService:
             is_active=comp.is_active,
             status=status,
             has_weapon=has_weapon,
-            shots_fired=getattr(comp, 'shots_fired', 0),
-            shots_hit=getattr(comp, 'shots_hit', 0)
+            shots_fired=comp.shots_fired,
+            shots_hit=comp.shots_hit
         )
 
     def _convert_projectile(self, proj) -> ProjectileDTO:
@@ -256,7 +252,7 @@ class BattleUIService:
         """
         # Get target name
         target_name = None
-        target = getattr(proj, 'target', None)
+        target = proj.target
         if target and hasattr(target, 'name'):
             target_name = target.name
 
@@ -264,7 +260,7 @@ class BattleUIService:
         proj_id = str(getattr(proj, 'id', id(proj)))
 
         # PROJ-113: Get color from type mapping (UI concern, not simulation)
-        proj_type = getattr(proj, 'type', None)
+        proj_type = proj.type
         color = PROJECTILE_COLORS.get(proj_type, DEFAULT_PROJECTILE_COLOR)
 
         return ProjectileDTO(
@@ -272,15 +268,15 @@ class BattleUIService:
             position=Vector2(proj.position.x, proj.position.y),
             velocity=Vector2(proj.velocity.x, proj.velocity.y),
             color=color,
-            radius=getattr(proj, 'radius', 4.0),
+            radius=proj.radius,
             damage=proj.damage,
-            hp=getattr(proj, 'hp', 0.0),
-            max_hp=getattr(proj, 'max_hp', 0.0),
-            status=getattr(proj, 'status', 'active'),
-            endurance=getattr(proj, 'endurance', 0.0),
-            max_endurance=getattr(proj, 'max_endurance', 0.0),
+            hp=proj.hp,
+            max_hp=proj.max_hp,
+            status=proj.status,
+            endurance=proj.endurance,
+            max_endurance=proj.max_endurance,
             target_name=target_name,
-            max_speed=getattr(proj, 'max_speed', 0.0)
+            max_speed=proj.max_speed
         )
 
     def _convert_beam(self, beam: dict) -> BeamDTO:

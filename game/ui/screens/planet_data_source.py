@@ -182,11 +182,11 @@ class PlanetDataSource(ITableDataSource):
             40x40 pygame Surface.
         """
         # Check for image_id
-        if not hasattr(planet, "image_id") or not planet.image_id:
+        if not planet.image_id:
             return self._get_blank_icon()
 
         # Build cache key with rotation
-        rotation = getattr(planet, "image_rotation", 0) or 0
+        rotation = planet.image_rotation or 0
         cache_key = f"icon_{planet.image_id}_{rotation}"
 
         if cache_key in self._icon_cache:

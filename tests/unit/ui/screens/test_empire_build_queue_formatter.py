@@ -111,15 +111,6 @@ class TestGetCapabilitiesText:
 class TestGetSystemName:
     """Tests for get_system_name function."""
 
-    def test_planet_with_system_name_attribute(self):
-        """Planet with system_name attribute returns it."""
-        entity = MagicMock()
-        entity.system_name = "Alpha Centauri"
-        source = _make_source(context_type="planet", owner_entity=entity)
-
-        result = get_system_name(source, galaxy=None)
-        assert result == "Alpha Centauri"
-
     def test_planet_with_galaxy_lookup(self):
         """Planet with galaxy lookup returns system name."""
         entity = MagicMock()
@@ -202,19 +193,6 @@ class TestGetSectorText:
 
         result = get_sector_text(source)
         assert result == "(3, 7)"
-
-    def test_planet_with_global_hex_prefers_it(self):
-        """Planet with global_hex uses it over location."""
-        entity = MagicMock()
-        entity.global_hex = MagicMock()
-        entity.global_hex.__str__ = lambda self: "(10, 20)"
-        entity.location = MagicMock()
-        entity.location.__str__ = lambda self: "(1, 2)"
-
-        source = _make_source(context_type="planet", owner_entity=entity)
-
-        result = get_sector_text(source)
-        assert result == "(10, 20)"
 
     def test_no_location_returns_dash(self):
         """No location returns '-'."""

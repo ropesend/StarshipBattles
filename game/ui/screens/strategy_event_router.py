@@ -85,8 +85,7 @@ class StrategyEventRouter:
         Args:
             obj: The selected object (Planet, Fleet, etc.).
         """
-        if hasattr(self.ui.scene, 'on_ui_selection'):
-            self.ui.scene.on_ui_selection(obj)
+        self.ui.scene.on_ui_selection(obj)
 
     def route_event(self, event) -> None:
         """Route an event through the StrategyUI event handling chain.
@@ -128,7 +127,7 @@ class StrategyEventRouter:
 
         # Handle quit-to-menu confirmation (PROJ-72)
         if event.type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
-            if hasattr(self.ui.scene, '_quit_confirm_dialog') and event.ui_element == self.ui.scene._quit_confirm_dialog:
+            if event.ui_element == self.ui.scene._quit_confirm_dialog:
                 self.ui.scene._handle_quit_confirmed()
 
         # PROJ-86: Handle window close via window manager
@@ -146,8 +145,7 @@ class StrategyEventRouter:
         if event.ui_element == ui.btn_planets:
             ui.open_planet_list()
         elif event.ui_element == ui.btn_design:
-            if hasattr(ui.scene, 'on_design_click'):
-                ui.scene.on_design_click()
+            ui.scene.on_design_click()
         elif event.ui_element == ui.btn_build_queues:
             ui.open_build_queue_list()
         elif event.ui_element == ui.btn_all_queues:
@@ -188,7 +186,7 @@ class StrategyEventRouter:
         # Find Uncolonized Planets at Fleet Location
         from game.core.hex_math import hex_distance  # noqa: F401
 
-        if not hasattr(ui.scene, 'galaxy'):
+        if not ui.scene.galaxy:
             return
 
         # Find System
@@ -210,13 +208,11 @@ class StrategyEventRouter:
 
         if len(candidates) == 1:
             # Single candidate, order directly
-            if hasattr(ui.scene, 'request_colonize_order'):
-                ui.scene.request_colonize_order(obj, candidates[0])
+            ui.scene.request_colonize_order(obj, candidates[0])
         else:
             # Multiple -> Dialog
             def on_planet_selected(planet):
-                if hasattr(ui.scene, 'request_colonize_order'):
-                    ui.scene.request_colonize_order(obj, planet)
+                ui.scene.request_colonize_order(obj, planet)
 
             ui.prompt_planet_selection(candidates, on_planet_selected)
 

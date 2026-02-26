@@ -60,7 +60,7 @@ class StrategyBuildQueueManager:
                 portrait_surface = self._screen._get_object_asset(planet)
 
                 # PROJ-40: Create dependencies for DI injection
-                savegame_path = getattr(self._screen.session, 'save_path', None)
+                savegame_path = self._screen.session.save_path
                 empire_id = planet.owner_id
                 design_library = DesignLibrary(savegame_path, empire_id)
                 design_loader = DesignLoaderAdapter()
@@ -94,7 +94,7 @@ class StrategyBuildQueueManager:
         logger.info("_on_build_queue_close() CALLED")
 
         # PROJ-69: Handle fleet BUILD orders for all fleet-type queue sources
-        queue_sources = getattr(self._screen.build_queue_screen, 'queue_sources', [])
+        queue_sources = self._screen.build_queue_screen.queue_sources
         processed_fleets = set()
         for source in queue_sources:
             if source.context_type == 'fleet':
@@ -175,7 +175,7 @@ class StrategyBuildQueueManager:
         portrait_surface = self._screen._get_object_asset(entity)
 
         # Create dependencies for DI injection
-        savegame_path = getattr(self._screen.session, 'save_path', None)
+        savegame_path = self._screen.session.save_path
         empire_id = self._screen.current_empire.id
         design_library = DesignLibrary(savegame_path, empire_id)
         design_loader = DesignLoaderAdapter()
@@ -218,7 +218,7 @@ class StrategyBuildQueueManager:
                 portrait_surface = self._screen._get_object_asset(fleet)
 
                 # Create dependencies for DI injection
-                savegame_path = getattr(self._screen.session, 'save_path', None)
+                savegame_path = self._screen.session.save_path
                 empire_id = fleet.owner_id
                 design_library = DesignLibrary(savegame_path, empire_id)
                 design_loader = DesignLoaderAdapter()

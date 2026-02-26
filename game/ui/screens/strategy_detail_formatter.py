@@ -203,9 +203,8 @@ class StrategyDetailFormatter:
             self.detail_text.show()
 
         # Determine Current Player
-        # NOTE: hasattr check is intentional - scene may or may not have current_empire
         current_empire_id = -1
-        if hasattr(self.scene, 'current_empire'):
+        if self.scene.current_empire:
             current_empire_id = self.scene.current_empire.id
 
         self.current_raw_data = ""

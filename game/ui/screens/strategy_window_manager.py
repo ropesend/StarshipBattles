@@ -197,11 +197,7 @@ class StrategyWindowManager:
         if self.event_log_window:
             self.event_log_window.kill()
 
-        events = (
-            self.scene.facade.get_all_events()
-            if hasattr(self.scene, "facade")
-            else []
-        )
+        events = self.scene.facade.get_all_events()
 
         w, h = int(self.width * 0.7), int(self.height * 0.7)
         rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)

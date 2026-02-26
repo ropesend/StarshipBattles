@@ -299,10 +299,10 @@ def _format_orders(fleet: IFleet) -> str:
             # PROJ-187: Display WARP order with target warp point hex
             text += f" {i+1}. WARP through {order.target}<br>"
         elif order.type == OrderType.COLONIZE:
-            p_name = getattr(order.target, 'name', 'Unknown')
+            p_name = order.target.name if order.target else 'Unknown'
             text += f" {i+1}. COLONIZE {p_name}<br>"
         elif order.type == OrderType.BUILD:
-            queue = getattr(fleet, 'construction_queue', [])
+            queue = fleet.construction_queue
             text += f" {i+1}. BUILDING ({len(queue)} items)<br>"
         elif order.type == OrderType.TRANSFER:
             if isinstance(order.target, dict):

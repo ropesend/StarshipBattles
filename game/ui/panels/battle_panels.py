@@ -359,7 +359,7 @@ class SeekerMonitorPanel(BattlePanel):
     def draw_seeker_entry(self, surface, proj, y, panel_w, font_name, font_stat):
         # PROJ-43: Use _is_seeker_expanded() for ID-based expansion tracking
         arrow = "▼" if self._is_seeker_expanded(proj) else "►"
-        status = getattr(proj, 'status', 'active')
+        status = proj.status
 
         if status == 'hit':
             color = STATUS_HIT_TEXT
@@ -404,48 +404,48 @@ class SeekerMonitorPanel(BattlePanel):
         x_indent = 20
         bar_w = 80
         bar_h = 8
-        
+
         # Speed
         p_vel_len = proj.velocity.length() * 100.0
-        max_speed = getattr(proj, 'max_speed', p_vel_len) * 100.0 if getattr(proj, 'max_speed', 0) > 0 else p_vel_len
+        max_speed = proj.max_speed * 100.0 if proj.max_speed > 0 else p_vel_len
         txt = font.render(f"Speed: {p_vel_len:.0f} px/s", True, TEXT_SECONDARY)
         surface.blit(txt, (x_indent, y))
         y += 14
-        
+
         # HP
-        hp = getattr(proj, 'hp', 0)
-        max_hp = getattr(proj, 'max_hp', hp) if getattr(proj, 'max_hp', 0) > 0 else max(hp, 1)
+        hp = proj.hp
+        max_hp = proj.max_hp if proj.max_hp > 0 else max(hp, 1)
         hp_pct = hp / max_hp if max_hp > 0 else 0
         hp_color = HP_HEALTHY if hp_pct > 0.5 else (HP_DAMAGED if hp_pct > 0.2 else HP_CRITICAL)
-        
+
         txt = font.render(f"HP: {hp:.0f}/{max_hp:.0f}", True, TEXT_SECONDARY)
         surface.blit(txt, (x_indent, y))
         self.draw_stat_bar(surface, x_indent + 80, y, bar_w, bar_h, hp_pct, hp_color)
         y += 14
-        
+
         # Fuel
-        endurance = getattr(proj, 'endurance', 0)
-        max_endurance = getattr(proj, 'max_endurance', endurance) if getattr(proj, 'max_endurance', 0) > 0 else max(endurance, 1)
+        endurance = proj.endurance
+        max_endurance = proj.max_endurance if proj.max_endurance > 0 else max(endurance, 1)
         fuel_pct = endurance / max_endurance if max_endurance > 0 else 0
         fuel_color = RESOURCE_FUEL if fuel_pct > 0.3 else HP_CRITICAL
-        
+
         txt = font.render(f"Fuel: {endurance:.1f}s", True, TEXT_SECONDARY)
         surface.blit(txt, (x_indent, y))
         self.draw_stat_bar(surface, x_indent + 80, y, bar_w, bar_h, fuel_pct, fuel_color)
         y += 14
-        
+
         # Damage
         txt = font.render(f"Damage: {proj.damage}", True, DAMAGE_TEXT)
         surface.blit(txt, (x_indent, y))
         y += 14
-        
+
         # Target
-        target = getattr(proj, 'target', None)
-        t_name = target.name if target and hasattr(target, 'name') else "None"
+        target = proj.target
+        t_name = target.name if target else "None"
         txt = font.render(f"Target: {t_name}", True, TARGET_TEXT)
         surface.blit(txt, (x_indent, y))
         y += UIConfig.ELEMENT_SPACING
-        
+
         return y
     
     @profile_action("Battle: SeekerPanel Click")

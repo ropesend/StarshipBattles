@@ -254,9 +254,7 @@ class StrategyUI:
 
     def _get_object_asset(self, obj):
         """Proxy to scene for asset resolution."""
-        if hasattr(self.scene, '_get_object_asset'):
-            return self.scene._get_object_asset(obj)
-        return None
+        return self.scene._get_object_asset(obj)
         
     def _format_spectrum(self, star):
         return self._detail_formatter._format_spectrum(star)
@@ -283,11 +281,12 @@ class StrategyUI:
         
     def _update_resource_display(self):
         """Update the empire resource bar with current pool values."""
-        if not hasattr(self.scene, 'current_empire'):
+        # Guard: current_player_index may not be set during init
+        if not hasattr(self.scene, 'current_player_index'):
+            return
+        if not self.scene.current_empire:
             return
         empire = self.scene.current_empire
-        if empire is None:
-            return
 
         parts = []
         for res in PLANET_RESOURCES:

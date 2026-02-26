@@ -212,17 +212,17 @@ class GalaxyTestScreen:
 
     def _handle_button_click(self, button):
         """Handle UI button clicks."""
-        if button == getattr(self, 'btn_galaxy', None):
+        if button == self.btn_galaxy:
             self._go_to_galaxy_mode()
-        elif button == getattr(self, 'btn_system', None):
+        elif button == self.btn_system:
             self._go_to_system_mode()
-        elif button == getattr(self, 'btn_close', None):
+        elif button == self.btn_close:
             self._on_close()
-        elif button == getattr(self.system_helper, 'btn_back', None) or button == getattr(self.galaxy_helper, 'btn_back', None):
+        elif button == self.system_helper.btn_back or button == self.galaxy_helper.btn_back:
             self._go_to_menu()
-        elif button == getattr(self.galaxy_helper, 'btn_generate', None):
+        elif button == self.galaxy_helper.btn_generate:
             self.galaxy_helper.generate()
-        elif button == getattr(self.system_helper, 'btn_generate_system', None):
+        elif button == self.system_helper.btn_generate_system:
             self.system_helper.generate()
 
     def _go_to_menu(self):

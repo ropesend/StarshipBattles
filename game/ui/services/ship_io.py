@@ -139,7 +139,7 @@ class ShipIO:
                     return None, "Load failed: Could not create ship from design"
 
                 msg = f"Loaded ship from {os.path.basename(filename)}"
-                if getattr(new_ship, '_loading_warnings', []):
+                if new_ship._loading_warnings:
                     warn_count = len(new_ship._loading_warnings)
                     msg += f"\nSafe Loaded with {warn_count} stat mismatches (auto-corrected)."
 

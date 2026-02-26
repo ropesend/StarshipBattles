@@ -325,7 +325,7 @@ class EmpireBuildQueueWindow(UIWindow):
         """Resolve the global hex coordinate for a build queue source."""
         entity = source.owner_entity
         if source.context_type == "fleet":
-            return getattr(entity, 'location', None)
+            return entity.location
         if source.context_type == "planet":
             if self.galaxy:
                 system = self.galaxy.get_system_of_planet(entity)

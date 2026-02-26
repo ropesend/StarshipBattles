@@ -405,13 +405,15 @@ class TestEmpireAssetLoading:
 
         assert result['colony'] == theme_surface
 
-    def test_load_all_empire_assets_handles_missing_attributes(self):
-        """load_all_empire_assets handles empire objects missing flag_id/theme_id."""
+    def test_load_all_empire_assets_handles_empty_attributes(self):
+        """load_all_empire_assets handles empire objects with empty flag_id/theme_id."""
         from game.ui.screens.race_asset_loader import RaceAssetLoader
 
         loader = RaceAssetLoader()
-        # Empire without flag_id or empire_theme_id attributes
-        mock_empire = MagicMock(spec=[])  # Empty spec means no attributes
+        # Empire with empty flag_id and empire_theme_id (falsy values)
+        mock_empire = MagicMock()
+        mock_empire.empire_theme_id = ""
+        mock_empire.flag_id = ""
 
         result = loader.load_all_empire_assets(mock_empire, "/assets/themes")
 

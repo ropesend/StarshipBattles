@@ -267,12 +267,12 @@ class RaceAssetLoader:
         result = {}
 
         # Load theme assets first (lower priority)
-        if hasattr(empire, 'empire_theme_id') and empire.empire_theme_id:
+        if empire.empire_theme_id:
             theme_assets = self.load_empire_theme_assets(empire.empire_theme_id, asset_base)
             result.update(theme_assets)
 
         # Load race assets second (higher priority - overwrites theme 'colony')
-        if hasattr(empire, 'flag_id') and empire.flag_id:
+        if empire.flag_id:
             race_assets = self.load_empire_race_assets(empire.flag_id)
             result.update(race_assets)
 

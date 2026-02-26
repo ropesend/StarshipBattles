@@ -107,10 +107,10 @@ class StrategyGameStateManager:
         PROJ-75 Phase 6: Display a popup listing entities scuttled due to
         maintenance failure, filtered to the current player's empire.
         """
-        turn_engine = getattr(self._screen.session, 'turn_engine', None)
+        turn_engine = self._screen.session.turn_engine
         if turn_engine is None:
             return
-        events = getattr(turn_engine, 'last_scuttle_events', [])
+        events = turn_engine.last_scuttle_events
         if not events:
             return
 
