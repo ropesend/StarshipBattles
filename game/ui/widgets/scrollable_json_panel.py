@@ -16,7 +16,7 @@ from typing import Optional, Tuple, Dict
 from game.ui.utils.json_diff import DiffResult
 from game.ui.fonts import get_font, FONT_MONO
 from game.ui.colors import (
-    BORDER_LIGHT, TEXT_ITEM,
+    BORDER_LIGHT, TEXT_ITEM, TEXT_ERROR,
     JSON_BG, JSON_BORDER, JSON_TITLE_BG, JSON_TITLE_TEXT,
     JSON_KEY, JSON_STRING, JSON_NUMBER, JSON_BOOL, JSON_NULL, JSON_BRACKET,
     DIFF_CHANGED_BG, DIFF_CHANGED_TEXT, DIFF_ADDED_BG, DIFF_ADDED_TEXT,
@@ -120,7 +120,7 @@ class ScrollableJsonPanel:
             data = json.loads(json_str)
             self._format_json_with_diff(data, indent=0, path="")
         except json.JSONDecodeError as e:
-            self.json_lines.append((0, f"Error parsing JSON: {e}", (255, 100, 100), None))
+            self.json_lines.append((0, f"Error parsing JSON: {e}", TEXT_ERROR, None))
             for line in json_str.split('\n'):
                 self.json_lines.append((0, line, self.text_color, None))
 

@@ -3,6 +3,7 @@ import pygame
 import os
 from typing import Optional
 from game.core.singleton import SingletonMeta
+from game.ui.colors import BLACK
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +82,7 @@ class SpriteManager(metaclass=SingletonMeta):
                 
                 full_path = os.path.join(directory, f)
                 image = pygame.image.load(full_path).convert()
-                image.set_colorkey((0, 0, 0))
+                image.set_colorkey(BLACK)
                 
                 loaded_sprites[index] = image
                 if index > max_index:

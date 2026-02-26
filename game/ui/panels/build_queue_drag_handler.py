@@ -13,7 +13,8 @@ import pygame
 from typing import TYPE_CHECKING, Dict, Optional, Callable, List, Any
 
 from game.ui.colors import (
-    VEHICLE_SHIP, VEHICLE_FIGHTER, VEHICLE_STATION, VEHICLE_COMPLEX, TEXT_DIM
+    VEHICLE_SHIP, VEHICLE_FIGHTER, VEHICLE_STATION, VEHICLE_COMPLEX, TEXT_DIM,
+    DRAG_HIGHLIGHT
 )
 
 logger = logging.getLogger(__name__)
@@ -309,7 +310,7 @@ class BuildQueueDragHandler:
 
             # Draw bright border around icon
             icon_rect = pygame.Rect(icon_x, icon_y, icon_size, icon_size)
-            pygame.draw.rect(screen, (150, 220, 255), icon_rect, 2)
+            pygame.draw.rect(screen, DRAG_HIGHLIGHT, icon_rect, 2)
         else:
             # Fallback: simple colored square with name if no portrait
             icon_size = 48
@@ -331,4 +332,4 @@ class BuildQueueDragHandler:
 
             # Draw border
             icon_rect = pygame.Rect(icon_x, icon_y, icon_size, icon_size)
-            pygame.draw.rect(screen, (150, 220, 255), icon_rect, 2)
+            pygame.draw.rect(screen, DRAG_HIGHLIGHT, icon_rect, 2)

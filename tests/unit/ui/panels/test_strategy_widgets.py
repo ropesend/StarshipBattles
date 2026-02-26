@@ -86,7 +86,8 @@ class TestDataGraphInit:
 
         graph = DataGraph(200, 150)
 
-        assert graph.bg_color == (20, 24, 30)
+        from game.ui.colors import BG_PANEL_DARK
+        assert graph.bg_color == BG_PANEL_DARK
 
     def test_graph_creates_surface(self, init_pygame):
         """DataGraph creates surface of correct size."""

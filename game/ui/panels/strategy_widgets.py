@@ -5,7 +5,7 @@ from game.core.protocols import is_star
 from game.ui.fonts import get_font
 from game.ui.colors import (
     TEXT_MUTED, TEXT_ITEM, TEXT_DIM, WHITE,
-    BORDER_DARK,
+    BORDER_DARK, BG_PANEL_DARK,
     SPECTRUM_GAMMA, SPECTRUM_XRAY, SPECTRUM_UV, SPECTRUM_BLUE, SPECTRUM_GREEN,
     SPECTRUM_RED, SPECTRUM_INFRARED, SPECTRUM_MICROWAVE, SPECTRUM_RADIO,
     GAS_N2, GAS_O2, GAS_CO2, GAS_H2O, GAS_CH4, GAS_H2, GAS_HE, GAS_AR, GAS_SO2,
@@ -14,7 +14,7 @@ from game.ui.colors import (
 
 class DataGraph:
     """Base class for data visualization widgets."""
-    def __init__(self, width, height, bg_color=(20, 24, 30)):
+    def __init__(self, width, height, bg_color=BG_PANEL_DARK):
         self.width = width
         self.height = height
         self.bg_color = bg_color

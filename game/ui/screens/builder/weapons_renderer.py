@@ -16,7 +16,7 @@ from game.ui.colors import (
     COLORS, BORDER_LIGHT, WHITE, GRID_BG,
     WEAPON_BAR_BEAM, WEAPON_BAR_PROJECTILE, WEAPON_BAR_SEEKER,
     WEAPON_ACCURACY_HIGH, WEAPON_ACCURACY_MED, WEAPON_ACCURACY_LOW,
-    WEAPON_LABEL, WEAPON_RANGE_LABEL, WEAPON_ARC
+    WEAPON_LABEL, WEAPON_RANGE_LABEL, WEAPON_ARC, DAMAGE_GRADIENT
 )
 from game.ui.fonts import get_font
 
@@ -59,14 +59,7 @@ class WeaponsRenderer:
     SCALE_MARKERS = [0.25, 0.5, 0.75]
 
     # === Color Gradients ===
-    DAMAGE_GRADIENT_COLORS = [
-        (50, 255, 50),   # 0% (max damage - bright green)
-        (100, 220, 50),  # 20%
-        (150, 180, 50),  # 40%
-        (200, 140, 50),  # 60%
-        (230, 100, 50),  # 80%
-        (255, 60, 50),   # 100% (min damage - red)
-    ]
+    DAMAGE_GRADIENT_COLORS = DAMAGE_GRADIENT
 
     # === Bar Base Colors ===
     BEAM_BAR_COLOR = WEAPON_BAR_BEAM

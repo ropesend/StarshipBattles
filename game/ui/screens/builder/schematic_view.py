@@ -11,14 +11,14 @@ from game.ui.utils import calculate_ship_image_scale
 from game.ui.renderer.game_renderer import LAYER_COLORS
 from game.ui.fonts import get_font
 
-from game.ui.colors import COLORS, TEXT_DIM
+from game.ui.colors import COLORS, TEXT_DIM, LAYER_LABEL
 SHIP_VIEW_BG = COLORS['bg_deep']
 
 # Firing arc colors (with alpha)
 ARC_BEAM_COLOR = (100, 255, 255, 100)
 ARC_PROJECTILE_COLOR = (255, 200, 100, 100)
 # Layer label text
-LAYER_LABEL_COLOR = (80, 80, 80)
+LAYER_LABEL_COLOR = LAYER_LABEL
 
 
 class SchematicView:

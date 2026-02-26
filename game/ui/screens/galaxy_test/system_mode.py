@@ -12,7 +12,7 @@ from pygame_gui.elements import UIButton, UILabel, UITextEntryLine, UIDropDownMe
 import logging
 
 from game.ui.fonts import get_font
-from game.ui.colors import TEXT_LIGHT, TEXT_MUTED, FLEET_SELECTED, GRID_LINE, PLANET_TERRESTRIAL
+from game.ui.colors import TEXT_LIGHT, TEXT_MUTED, FLEET_SELECTED, GRID_LINE, PLANET_TERRESTRIAL, STAR_FALLBACK
 
 logger = logging.getLogger(__name__)
 from game.core.hex_math import hex_to_pixel, HexCoord
@@ -517,7 +517,7 @@ class SystemModeHelper:
             radius = max(8, int(star.diameter_hexes * HEX_SIZE * self.screen.camera.zoom * 0.5))
 
             # Star color
-            color = star.color if hasattr(star, 'color') else (255, 255, 200)
+            color = star.color if hasattr(star, 'color') else STAR_FALLBACK
 
             # Draw glow effect
             glow_radius = radius + 4

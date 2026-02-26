@@ -12,7 +12,7 @@ from game.ui.colors import (
     STATUS_DESTROYED_TEXT, STATUS_ACTIVE_TEXT, STATUS_ACTIVE_BG,
     DAMAGE_TEXT, TARGET_TEXT, BTN_DANGER_BG, BTN_DANGER_HOVER,
     BTN_DANGER_BORDER, BTN_DANGER_TEXT, BTN_VICTORY_BG, BTN_VICTORY_BORDER,
-    BTN_END_BG, BTN_END_BORDER, BTN_END_TEXT, WHITE
+    BTN_END_BG, BTN_END_BORDER, BTN_END_TEXT, WHITE, BTN_DANGER_HOVER_BORDER
 )
 from game.ui.fonts import get_default_font
 from game.ui.panels.ship_stats_renderer import (
@@ -347,7 +347,7 @@ class SeekerMonitorPanel(BattlePanel):
         mouse_pos = pygame.mouse.get_pos()
         hover = self.clear_btn_rect.collidepoint(mouse_pos)
         col = BTN_DANGER_HOVER if hover else BTN_DANGER_BG
-        border = (150, 80, 80) if hover else BTN_DANGER_BORDER
+        border = BTN_DANGER_HOVER_BORDER if hover else BTN_DANGER_BORDER
         
         pygame.draw.rect(screen, col, self.clear_btn_rect)
         pygame.draw.rect(screen, border, self.clear_btn_rect, 1)

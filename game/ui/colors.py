@@ -372,3 +372,45 @@ MODIFIER_NEUTRAL = (180, 180, 180)      # Gray for neutral
 WEAPON_INACTIVE = (150, 50, 50)         # Inactive weapon text
 WEAPON_INACTIVE_STATUS = (255, 100, 100)  # Inactive weapon status
 CREW_LOW = (255, 100, 100)              # Low crew warning
+
+# === Drag & Drop ===
+DRAG_HIGHLIGHT = (150, 220, 255)        # Bright cyan for drag borders
+
+# === Fallback & Placeholder Colors ===
+PLACEHOLDER_BORDER = (80, 80, 80)       # Placeholder image border
+PLACEHOLDER_DEFAULT = (80, 80, 80)      # Default placeholder color
+SWATCH_BORDER = (100, 100, 100)         # Color swatch border in legends
+
+# === Design Thumbnail Fallback Colors ===
+THUMB_SHIP = (60, 80, 120)              # Ship thumbnail background
+THUMB_FIGHTER = (80, 100, 60)           # Fighter thumbnail background
+THUMB_SATELLITE = (100, 80, 100)        # Satellite thumbnail background
+THUMB_COMPLEX = (90, 70, 50)            # Planetary Complex thumbnail background
+THUMB_TEXT = (200, 200, 200)            # Thumbnail text color
+
+# === Damage Gradient (6-step) ===
+DAMAGE_GRADIENT = [
+    (50, 255, 50),   # 0% (max damage - bright green)
+    (100, 220, 50),  # 20%
+    (150, 180, 50),  # 40%
+    (200, 140, 50),  # 60%
+    (230, 100, 50),  # 80%
+    (255, 60, 50),   # 100% (min damage - red)
+]
+
+# === Schematic View ===
+LAYER_LABEL = (80, 80, 80)              # Layer label text color
+
+# === Projectile Effects ===
+PROJECTILE_GLOW = (255, 255, 100)       # Projectile endpoint glow
+
+# === Profiling/Debug Overlay ===
+PROFILING_TEXT = (255, 50, 50)          # Profiling indicator text
+
+# === Strategy Map (additional) ===
+ZONE_HIGHLIGHT = (100, 255, 100)        # Zone selection highlight
+STAR_FALLBACK = (255, 255, 200)         # Default star color
+STORM_FALLBACK = (100, 100, 100)        # Default storm tint
+
+# === Button Hover (danger) ===
+BTN_DANGER_HOVER_BORDER = (150, 80, 80) # Danger button hover border

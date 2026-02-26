@@ -20,7 +20,7 @@ from game.ui.fonts import get_font, FONT_MONO
 from game.ui.colors import (
     WHITE, DIFF_CHANGED_BG, DIFF_CHANGED_TEXT, DIFF_ADDED_BG, DIFF_ADDED_TEXT,
     DIFF_REMOVED_BG, DIFF_REMOVED_TEXT, VIEWER_BTN_BG, VIEWER_BTN_HOVER,
-    VIEWER_BTN_BORDER
+    VIEWER_BTN_BORDER, SWATCH_BORDER
 )
 
 
@@ -251,7 +251,7 @@ class BattleStateViewer:
             # Color swatch
             swatch_rect = pygame.Rect(x, legend_y + 2, 20, 16)
             pygame.draw.rect(surface, bg_color, swatch_rect)
-            pygame.draw.rect(surface, (100, 100, 100), swatch_rect, 1)
+            pygame.draw.rect(surface, SWATCH_BORDER, swatch_rect, 1)
 
             # Label
             label_surf = self.legend_font.render(label, True, text_color)

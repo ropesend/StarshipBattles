@@ -19,6 +19,10 @@ from typing import Dict, Optional, Tuple, TYPE_CHECKING
 import logging
 
 from game.ui.fonts import get_font
+from game.ui.colors import (
+    THUMB_SHIP, THUMB_FIGHTER, THUMB_SATELLITE, THUMB_COMPLEX,
+    THUMB_TEXT, PLACEHOLDER_DEFAULT, SWATCH_BORDER
+)
 
 logger = logging.getLogger(__name__)
 
@@ -83,12 +87,12 @@ def _load_portrait_thumbnail_uncached(design: DesignMetadata, size: int) -> pyga
 
     # Color based on vehicle type
     type_colors = {
-        "Ship": (60, 80, 120),
-        "Fighter": (80, 100, 60),
-        "Satellite": (100, 80, 100),
-        "Planetary Complex": (90, 70, 50)
+        "Ship": THUMB_SHIP,
+        "Fighter": THUMB_FIGHTER,
+        "Satellite": THUMB_SATELLITE,
+        "Planetary Complex": THUMB_COMPLEX
     }
-    base_color = type_colors.get(design.vehicle_type, (80, 80, 80))
+    base_color = type_colors.get(design.vehicle_type, PLACEHOLDER_DEFAULT)
 
     # Gradient fill
     for y in range(size):
@@ -99,12 +103,12 @@ def _load_portrait_thumbnail_uncached(design: DesignMetadata, size: int) -> pyga
     # Add class initial
     font = get_font(int(size * 0.5), bold=True)
     initial = ship_class[0] if ship_class else "?"
-    text = font.render(initial, True, (200, 200, 200))
+    text = font.render(initial, True, THUMB_TEXT)
     text_rect = text.get_rect(center=(size // 2, size // 2))
     surface.blit(text, text_rect)
 
     # Border
-    pygame.draw.rect(surface, (100, 100, 100), (0, 0, size, size), 1)
+    pygame.draw.rect(surface, SWATCH_BORDER, (0, 0, size, size), 1)
 
     return surface
 

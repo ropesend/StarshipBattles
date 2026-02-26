@@ -28,7 +28,8 @@ from game.ai.ai_factory import AIControllerFactory
 from game.ui.fonts import get_font
 from game.ui.colors import (
     BG_BATTLE, PROJECTILE_STANDARD, HUD_TEXT, HUD_ZOOM_TEXT,
-    SPEED_PAUSED, SPEED_SLOWMO, SPEED_FAST, TEXT_ITEM
+    SPEED_PAUSED, SPEED_SLOWMO, SPEED_FAST, TEXT_ITEM, PROJECTILE_GLOW,
+    PROFILING_TEXT
 )
 
 if TYPE_CHECKING:
@@ -558,7 +559,7 @@ class BattleScreen:
             
             color = getattr(p, 'color', PROJECTILE_STANDARD)
             pygame.draw.line(screen, color, start, end, 3)
-            pygame.draw.circle(screen, (255, 255, 100), (int(end[0]), int(end[1])), int(getattr(p, 'radius', 4)))
+            pygame.draw.circle(screen, PROJECTILE_GLOW, (int(end[0]), int(end[1])), int(getattr(p, 'radius', 4)))
         
         # Draw ships
         self.camera.show_overlay = self.ui.show_overlay # Hack to pass state to renderer
@@ -630,7 +631,7 @@ class BattleScreen:
 
         # Profiler indicator
         if profiler_active:
-            prof_text = font.render("PROFILING ACTIVE", True, (255, 50, 50))
+            prof_text = font.render("PROFILING ACTIVE", True, PROFILING_TEXT)
             screen.blit(prof_text, (width - 180, 10))
 
     def print_headless_summary(self):

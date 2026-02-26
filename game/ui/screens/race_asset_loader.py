@@ -14,6 +14,7 @@ import logging
 logger = logging.getLogger(__name__)
 from game.assets.asset_manager import get_asset_manager
 from game.core.paths import Paths
+from game.ui.colors import PLACEHOLDER_BORDER
 
 
 class RaceAssetLoader:
@@ -102,9 +103,9 @@ class RaceAssetLoader:
             A placeholder surface with crossed lines
         """
         surf = pygame.Surface((width, height), pygame.SRCALPHA)
-        pygame.draw.rect(surf, (80, 80, 80), surf.get_rect(), 2)
-        pygame.draw.line(surf, (80, 80, 80), (0, 0), (width, height), 1)
-        pygame.draw.line(surf, (80, 80, 80), (width, 0), (0, height), 1)
+        pygame.draw.rect(surf, PLACEHOLDER_BORDER, surf.get_rect(), 2)
+        pygame.draw.line(surf, PLACEHOLDER_BORDER, (0, 0), (width, height), 1)
+        pygame.draw.line(surf, PLACEHOLDER_BORDER, (width, 0), (0, height), 1)
         return surf
 
     def load_portrait_preview(

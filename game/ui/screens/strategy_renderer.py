@@ -22,6 +22,7 @@ from game.ui.colors import (
     FLEET_SELECTED, PATH_MOVE, PATH_WARP, PATH_LABEL,
     OVERLAY_PROCESSING, WARPPOINT_FALLBACK, DYSON_FALLBACK, PLANET_FALLBACK,
     STORM_ION, STORM_PLASMA, STORM_GRAVITATIONAL, STORM_RADIATION, STORM_DARK_NEBULA,
+    ZONE_HIGHLIGHT, STORM_FALLBACK,
 )
 from game.ui.utils import scale_and_rotate_image
 from game.ui.fonts import get_font
@@ -167,7 +168,7 @@ class StrategyRenderer:
             py = cy + self.hex_size * math.sin(angle_rad)
             corners_px.append(self.camera.world_to_screen(pygame.math.Vector2(px, py)))
 
-        pygame.draw.lines(screen, (100, 255, 100), True, corners_px, 2)
+        pygame.draw.lines(screen, ZONE_HIGHLIGHT, True, corners_px, 2)
 
     def _draw_grid(self, screen):
         """Draw the hex grid with optimized snake lines."""
@@ -680,7 +681,7 @@ class StrategyRenderer:
                 screen.blit(scaled, dest)
             else:
                 # Fallback: draw semi-transparent colored polygon
-                tint = storm_tints.get(storm.storm_type, (100, 100, 100))
+                tint = storm_tints.get(storm.storm_type, STORM_FALLBACK)
                 for h in occupied:
                     hx, hy = hex_to_pixel(h, self.hex_size)
                     h_world = pygame.math.Vector2(sys_world_pos.x + hx, sys_world_pos.y + hy)
