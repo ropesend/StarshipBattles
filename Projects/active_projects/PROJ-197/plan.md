@@ -16,18 +16,18 @@
 | 1. Expand colors.py palette | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Test Lab renderer fix | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Battle UI files | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Setup & strategy files | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Setup & strategy files | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Ship panels & widgets | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Builder, formation & remaining files | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Final audit & cleanup | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete - All 4 battle files consolidated (battle_panels.py, battle_screen.py, battle_ui.py, battle_state_viewer.py)
-**Next Action:** Phase 4 - Setup & strategy files consolidation
+**Active Phase:** Phase 5
+**Last Action:** Phase 4 complete - All 4 setup/strategy files consolidated
+**Next Action:** Phase 5 - Ship panels & widgets consolidation
 **Blockers:** None
-**Context for Next Agent:** Added ~15 new constants to colors.py (HUD_ZOOM_TEXT, GRID_BG_BATTLE, DEBUG_*, TEST_COMPLETE_*, RESULT_*, VIEWER_BTN_*). Proceed with Phase 4 to consolidate setup_renderer.py, setup_screen.py, strategy_renderer.py, strategy_widgets.py.
+**Context for Next Agent:** Phase 4 consolidated setup_renderer.py (~25 tuples), setup_screen.py (3 tuples), strategy_renderer.py (~25 tuples), strategy_widgets.py (~23 tuples). All using existing constants from colors.py. Proceed with Phase 5 to consolidate ship_stats_renderer.py, ship_detail_panel.py, scrollable_json_panel.py, modifier_impact_grid.py.
 
 ## Overview
 Complete the color tuple consolidation that was left incomplete by the previous agent.
@@ -146,7 +146,7 @@ Quick win — theme.py already has most constants, just needs substitution in re
 - [x] Phase 1 complete — colors.py expanded
 - [x] Phase 2 complete — test lab renderer fixed
 - [x] Phase 3 complete — battle files consolidated
-- [ ] Phase 4 complete — setup & strategy files consolidated
+- [x] Phase 4 complete — setup & strategy files consolidated
 - [ ] Phase 5 complete — ship panels & widgets consolidated
 - [ ] Phase 6 complete — remaining files consolidated
 - [ ] Phase 7 complete — audit passed, zero raw tuples

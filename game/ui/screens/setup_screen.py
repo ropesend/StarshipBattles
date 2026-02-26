@@ -13,6 +13,7 @@ from tkinter import filedialog
 import logging
 
 from game.ui.fonts import get_default_font
+from game.ui.colors import BG_PANEL_DARK, TEAM_1_TEXT, TEAM_2_TEXT
 
 logger = logging.getLogger(__name__)
 from game.ui.services.ship_factory import ShipFactory
@@ -367,7 +368,7 @@ class BattleSetupScreen:
 
     def draw(self, screen):
         """Draw the battle setup screen."""
-        screen.fill((20, 25, 35))
+        screen.fill(BG_PANEL_DARK)
         sw, sh = screen.get_size()
 
         label_font = get_default_font(36)
@@ -378,8 +379,8 @@ class BattleSetupScreen:
         draw_title(screen, sw)
         draw_available_ships(screen, col1_x, self.available_ship_designs, self.available_formations, label_font, item_font)
         draw_load_save_buttons(screen, btn_y, label_font)
-        draw_team(screen, self.get_team_display_groups(self.team1), col2_x, "Team 1", (100, 200, 255), label_font, item_font)
-        draw_team(screen, self.get_team_display_groups(self.team2), col3_x, "Team 2", (255, 100, 100), label_font, item_font)
+        draw_team(screen, self.get_team_display_groups(self.team1), col2_x, "Team 1", TEAM_1_TEXT, label_font, item_font)
+        draw_team(screen, self.get_team_display_groups(self.team2), col3_x, "Team 2", TEAM_2_TEXT, label_font, item_font)
         draw_action_buttons(screen, sw, btn_y, bool(self.team1 and self.team2), label_font)
 
         if self.ai_dropdown_open is not None:

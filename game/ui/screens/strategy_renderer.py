@@ -16,7 +16,13 @@ from game.ui.config import UIConfig
 from game.core.hex_math import hex_to_pixel, pixel_to_hex, HexCoord
 from game.strategy.data.fleet import OrderType
 from game.strategy.data.planet import PlanetType
-from game.ui.colors import COLORS
+from game.ui.colors import (
+    COLORS, WHITE,
+    WARP_LANE, STAR_LABEL, HP_HEALTHY,
+    FLEET_SELECTED, PATH_MOVE, PATH_WARP, PATH_LABEL,
+    OVERLAY_PROCESSING, WARPPOINT_FALLBACK, DYSON_FALLBACK, PLANET_FALLBACK,
+    STORM_ION, STORM_PLASMA, STORM_GRAVITATIONAL, STORM_RADIATION, STORM_DARK_NEBULA,
+)
 from game.ui.utils import scale_and_rotate_image
 from game.ui.fonts import get_font
 
@@ -148,7 +154,7 @@ class StrategyRenderer:
 
         mx, my = pygame.mouse.get_pos()
 
-        pygame.draw.line(screen, (0, 255, 0), f_pos, (mx, my), 2)
+        pygame.draw.line(screen, HP_HEALTHY, f_pos, (mx, my), 2)
 
     def _draw_hover_hex(self, screen):
         """Draw highlight around the currently hovered hex."""
@@ -279,7 +285,7 @@ class StrategyRenderer:
                             continue
                         drawn_pairs.add(pair_key)
 
-                        pygame.draw.line(screen, (50, 50, 100), scr_a, scr_b, 1)
+                        pygame.draw.line(screen, WARP_LANE, scr_a, scr_b, 1)
                     else:
                         ts_x, ts_y = hex_to_pixel(target_sys.global_location, self.hex_size)
                         world_b = pygame.math.Vector2(ts_x, ts_y)
@@ -294,7 +300,7 @@ class StrategyRenderer:
                         if not is_on_screen(scr_a) and not is_on_screen(scr_b):
                             continue
 
-                        pygame.draw.line(screen, (50, 50, 100), scr_a, scr_b, 1)
+                        pygame.draw.line(screen, WARP_LANE, scr_a, scr_b, 1)
 
     def _draw_systems(self, screen):
         """Draw all star systems with stars, planets, and warp points."""
@@ -326,7 +332,7 @@ class StrategyRenderer:
                         marker_screen = self.camera.world_to_screen(marker_world)
 
                         pygame.draw.circle(screen, owner_emp.color, (int(marker_screen.x), int(marker_screen.y)), 5)
-                        pygame.draw.circle(screen, (255, 255, 255), (int(marker_screen.x), int(marker_screen.y)), 6, 1)
+                        pygame.draw.circle(screen, WHITE, (int(marker_screen.x), int(marker_screen.y)), 6, 1)
 
             primary = sys.primary_star
             if primary:
@@ -350,7 +356,7 @@ class StrategyRenderer:
                     screen_star_r = max(3, int(star.diameter_hexes * self.hex_size * self.camera.zoom))
 
                     if self.scene.selected_object == sys and star == primary:
-                        pygame.draw.circle(screen, (255, 255, 255), star_screen_pos, screen_star_r + 4, 1)
+                        pygame.draw.circle(screen, WHITE, star_screen_pos, screen_star_r + 4, 1)
 
                     if star_img:
                         scaled_img = pygame.transform.smoothscale(star_img, (screen_star_r * 2, screen_star_r * 2))
@@ -362,7 +368,7 @@ class StrategyRenderer:
                     if self.camera.zoom >= 0.5:
                         font_size = 12 if star == primary else 10
                         font = self._get_font(font_size)
-                        text = font.render(star.name if star != primary else sys.name, True, (200, 200, 200))
+                        text = font.render(star.name if star != primary else sys.name, True, STAR_LABEL)
                         screen.blit(text, (star_screen_pos.x + 10, star_screen_pos.y))
 
             if self.camera.zoom >= 0.5:
@@ -458,7 +464,7 @@ class StrategyRenderer:
                 for p in draw_order:
                     self._draw_planet_sprite(screen, p, p._temp_screen_pos, p._temp_draw_r)
                     if self.scene.selected_object == p:
-                        pygame.draw.circle(screen, (255, 255, 255),
+                        pygame.draw.circle(screen, WHITE,
                                            (int(p._temp_screen_pos.x), int(p._temp_screen_pos.y)),
                                            int(p._temp_draw_r) + 4, 1)
 
@@ -471,7 +477,7 @@ class StrategyRenderer:
                 self._draw_planet_sprite(screen, largest, hex_center_screen, int(base_r))
 
                 if self.scene.selected_object == largest:
-                    pygame.draw.circle(screen, (255, 255, 255),
+                    pygame.draw.circle(screen, WHITE,
                                        (int(hex_center_screen.x), int(hex_center_screen.y)),
                                        int(base_r) + 4, 1)
 
@@ -481,7 +487,7 @@ class StrategyRenderer:
             w_screen = self.camera.world_to_screen(w_world)
 
             if self.scene.selected_object == wp:
-                pygame.draw.circle(screen, (255, 255, 255), w_screen, max(12, int(12 * self.camera.zoom)), 1)
+                pygame.draw.circle(screen, WHITE, w_screen, max(12, int(12 * self.camera.zoom)), 1)
 
             img = self._asset_manager.get_random_from_group('warp_points', 'default', seed_id=hash(wp))
 
@@ -501,7 +507,7 @@ class StrategyRenderer:
                 dest = rotated.get_rect(center=(int(w_screen.x), int(w_screen.y)))
                 screen.blit(rotated, dest, special_flags=pygame.BLEND_ADD)
             else:
-                pygame.draw.circle(screen, (200, 0, 255), w_screen, max(2, int(5 * self.camera.zoom)))
+                pygame.draw.circle(screen, WARPPOINT_FALLBACK, w_screen, max(2, int(5 * self.camera.zoom)))
 
     def _draw_dyson_spheres(self, screen, sys, sys_world_pos):
         """Draw Dyson Sphere planets at their full multi-hex size.
@@ -531,7 +537,7 @@ class StrategyRenderer:
 
             # Draw selection circle if selected
             if self.scene.selected_object == planet:
-                pygame.draw.circle(screen, (255, 255, 255),
+                pygame.draw.circle(screen, WHITE,
                                    (int(center_screen.x), int(center_screen.y)),
                                    screen_diameter // 2 + 4, 1)
 
@@ -542,7 +548,7 @@ class StrategyRenderer:
                 screen.blit(scaled, dest)
             else:
                 # Fallback: draw a cyan circle
-                pygame.draw.circle(screen, (0, 200, 200),
+                pygame.draw.circle(screen, DYSON_FALLBACK,
                                    (int(center_screen.x), int(center_screen.y)),
                                    screen_diameter // 2)
 
@@ -567,7 +573,7 @@ class StrategyRenderer:
                     else:
                         # Fallback: colored circle
                         pygame.draw.circle(screen, owner_emp.color, marker_pos, max(3, screen_diameter // 10))
-                        pygame.draw.circle(screen, (255, 255, 255), marker_pos, max(3, screen_diameter // 10) + 1, 1)
+                        pygame.draw.circle(screen, WHITE, marker_pos, max(3, screen_diameter // 10) + 1, 1)
 
     def _draw_storms(self, screen, sys, sys_world_pos):
         """Draw storm nebulae overlays for a star system.
@@ -587,11 +593,11 @@ class StrategyRenderer:
 
         # Color tints per storm type (RGBA tint applied via colorkey/blend)
         storm_tints = {
-            'ion_storm': (100, 150, 255),      # Blue
-            'plasma_storm': (255, 100, 100),   # Red
-            'gravitational_anomaly': (180, 100, 255),  # Purple
-            'radiation_belt': (255, 255, 100), # Yellow
-            'dark_nebula': (150, 150, 150),    # Grey
+            'ion_storm': STORM_ION,
+            'plasma_storm': STORM_PLASMA,
+            'gravitational_anomaly': STORM_GRAVITATIONAL,
+            'radiation_belt': STORM_RADIATION,
+            'dark_nebula': STORM_DARK_NEBULA,
         }
 
         for storm in sys.storms:
@@ -703,11 +709,11 @@ class StrategyRenderer:
     def _draw_storms_low_detail(self, screen, sys, sys_world_pos):
         """Draw storm zones at low zoom using simple colored hex fills."""
         storm_tints = {
-            'ion_storm': (100, 150, 255, 80),
-            'plasma_storm': (255, 100, 100, 80),
-            'gravitational_anomaly': (180, 100, 255, 80),
-            'radiation_belt': (255, 255, 100, 80),
-            'dark_nebula': (150, 150, 150, 80),
+            'ion_storm': STORM_ION + (80,),
+            'plasma_storm': STORM_PLASMA + (80,),
+            'gravitational_anomaly': STORM_GRAVITATIONAL + (80,),
+            'radiation_belt': STORM_RADIATION + (80,),
+            'dark_nebula': STORM_DARK_NEBULA + (80,),
         }
 
         for storm in sys.storms:
@@ -742,7 +748,7 @@ class StrategyRenderer:
             screen.blit(scaled, dest)
         else:
             # Fallback: gray circle if no image_id (should not happen for new planets)
-            pygame.draw.circle(screen, (100, 100, 100), (int(center_pos.x), int(center_pos.y)), size)
+            pygame.draw.circle(screen, PLANET_FALLBACK, (int(center_pos.x), int(center_pos.y)), size)
 
         # Owner Marker (Colony Flag)
         if planet.owner_id is not None:
@@ -765,7 +771,7 @@ class StrategyRenderer:
                     screen.blit(scaled_flag, flag_rect)
                 else:
                     pygame.draw.circle(screen, owner_emp.color, marker_pos, max(3, int(size / 3)))
-                    pygame.draw.circle(screen, (255, 255, 255), marker_pos, max(3, int(size / 3)) + 1, 1)
+                    pygame.draw.circle(screen, WHITE, marker_pos, max(3, int(size / 3)) + 1, 1)
 
     def _load_planet_v3_image(self, image_id):
         """Load a planet image from the Planets_V3 directory.
@@ -848,7 +854,7 @@ class StrategyRenderer:
                             screen.blit(scaled_flag, flag_dest)
 
                         if self.scene.selected_fleet == f:
-                            pygame.draw.rect(screen, (255, 255, 0), dest.inflate(4, 4), 1)
+                            pygame.draw.rect(screen, FLEET_SELECTED, dest.inflate(4, 4), 1)
                     else:
                         size = 10 * self.camera.zoom
                         if size < 8:
@@ -864,7 +870,7 @@ class StrategyRenderer:
 
                         color = emp.color
                         if self.scene.selected_fleet == f:
-                            color = (255, 255, 0)
+                            color = FLEET_SELECTED
 
                         pygame.draw.polygon(screen, color, points)
 
@@ -896,16 +902,16 @@ class StrategyRenderer:
                 start_screen = end_screen
                 continue
 
-            color = (0, 255, 100)
+            color = PATH_MOVE
             width = 2
             if is_warp:
-                color = (255, 50, 50)
+                color = PATH_WARP
                 width = 1
 
             pygame.draw.line(screen, color, start_screen, end_screen, width)
 
             if font and not is_warp and end_on:
-                txt = font.render(str(turn_idx), True, (200, 200, 255))
+                txt = font.render(str(turn_idx), True, PATH_LABEL)
                 tr = txt.get_rect(center=(end_screen.x, end_screen.y))
                 screen.blit(txt, tr)
 
@@ -918,6 +924,6 @@ class StrategyRenderer:
         screen.blit(overlay, (0, 0))
 
         font = self._get_font(48, bold=True)
-        text = font.render("PROCESSING TURN...", True, (255, 200, 0))
+        text = font.render("PROCESSING TURN...", True, OVERLAY_PROCESSING)
         rect = text.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
         screen.blit(text, rect)
