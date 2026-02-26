@@ -155,26 +155,19 @@ class TestSingletonUsageCount:
 
     def test_singleton_usage_count_game(self):
         """RegistryManager.instance() count in game/ should not increase."""
-        import subprocess
         import os
 
         game_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'game')
-        result = subprocess.run(
-            ['grep', '-r', 'RegistryManager.instance()', '--include=*.py', '-c'],
-            cwd=game_dir,
-            capture_output=True,
-            text=True
-        )
-
-        # Count total matches from grep output
         total = 0
-        for line in result.stdout.strip().split('\n'):
-            if line and ':' in line:
-                try:
-                    count = int(line.split(':')[-1])
-                    total += count
-                except ValueError:
-                    pass
+        for root, _, files in os.walk(game_dir):
+            for file in files:
+                if file.endswith('.py'):
+                    try:
+                        with open(os.path.join(root, file), 'r', encoding='utf-8') as f:
+                            content = f.read()
+                            total += content.count('RegistryManager.instance()')
+                    except UnicodeDecodeError:
+                        pass # Ignore non-text or differently encoded files just in case
 
         assert total <= self.EXPECTED_GAME_COUNT, (
             f"RegistryManager.instance() count in game/ increased from "
@@ -185,27 +178,20 @@ class TestSingletonUsageCount:
 
     def test_singleton_usage_count_tests(self):
         """RegistryManager.instance() count in tests/ should not increase."""
-        import subprocess
         import os
 
         # Navigate from tests/regression/ up to tests/
         tests_dir = os.path.join(os.path.dirname(__file__), '..')
-        result = subprocess.run(
-            ['grep', '-r', 'RegistryManager.instance()', '--include=*.py', '-c'],
-            cwd=tests_dir,
-            capture_output=True,
-            text=True
-        )
-
-        # Count total matches from grep output
         total = 0
-        for line in result.stdout.strip().split('\n'):
-            if line and ':' in line:
-                try:
-                    count = int(line.split(':')[-1])
-                    total += count
-                except ValueError:
-                    pass
+        for root, _, files in os.walk(tests_dir):
+            for file in files:
+                if file.endswith('.py'):
+                    try:
+                        with open(os.path.join(root, file), 'r', encoding='utf-8') as f:
+                            content = f.read()
+                            total += content.count('RegistryManager.instance()')
+                    except UnicodeDecodeError:
+                        pass
 
         assert total <= self.EXPECTED_TESTS_COUNT, (
             f"RegistryManager.instance() count in tests/ increased from "

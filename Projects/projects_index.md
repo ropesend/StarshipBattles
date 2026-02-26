@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-197 | Duplication Consolidation Completion | Planning | 2026-02-25 | 2026-02-25 |
 | PROJ-196 | Consolidate Duplicated Code | Planning | 2026-02-24 | 2026-02-24 |
 | PROJ-195 | Eradicate RegistryManager Singleton from Non-Root Code | Planning | 2026-02-24 | 2026-02-24 |
 | PROJ-194 | Builder & Workshop Duck Typing Elimination | Plan Ready | 2026-02-24 | 2026-02-24 |
