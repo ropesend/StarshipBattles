@@ -17,16 +17,25 @@
 | 2. Init Declarations & Guard Removal | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Monkey-Patch Elimination | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Bug Fixes & Dead Code Removal | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Type Annotations & Protocol Fixes | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Type Annotations & Protocol Fixes | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Superweapon Stub Methods & Final Cleanup | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Current Phase:** Phase 4 Complete
-**Last Agent Action:** Phase 4 executed - Bug fixes & dead code removal in 5 files
-**Next Action:** Execute Phase 5 - Type Annotations & Protocol Fixes
+**Current Phase:** Phase 5 Complete
+**Last Agent Action:** Phase 5 executed - Type annotations & protocol fixes in 7 files
+**Next Action:** Execute Phase 6 - Superweapon Stub Methods & Final Cleanup
 **Blockers:** None
-**Context for Next Agent:** Phase 4 complete. Fixed 3 attribute path bugs (hasattr always returning False): turn_engine→session.turn_engine, planet_list_window→window_manager.planet_list_window, galaxy.empires→empires param. Eliminated _temp_system_ref monkey-patch (now _cached_system_name). Updated 5 test fixtures (3 mock_scene fixtures, 2 MockScene classes). Task 4.4 already clean from prior work. Tests: 12728 passed, 1 skipped.
+**Context for Next Agent:** Phase 5 complete. Removed ~10 hasattr/getattr patterns:
+- battle_ui_service.py: 3 hasattr(target, 'name') → direct access (targets are always Ships)
+- battle_panels.py: 2 getattr/hasattr for ui_service/test_mode/is_battle_over → direct access
+- screenshot_manager.py: 2 hasattr/getattr for scene.ui and SIDEBAR_WIDTH/TOP_BAR_HEIGHT → direct
+- strategy_input_handler.py: 1 double hasattr for _has_modal_open → direct call
+- input_mapper.py: 1 getattr(event, "type") → event.type with proper typing
+- builder_selection.py: Added _is_component_like() helper with documented duck type rationale
+- workshop_viewmodel.py: Documented duck type for component selection
+- detail_panel.py: Documented duck type for component selection
+Note: Some hasattr checks intentionally kept for test mock compatibility (builder selection) and interface validation (build_queue_screen). Tests: 12728 passed, 1 skipped.
 
 ## Overview
 Eliminate ~223 remaining actionable `hasattr()`/`getattr()` duck typing instances across the UI layer (strategy screens, services, panels). This is the final phase of the duck typing elimination initiative that began with PROJ-190 (Core Simulation), continued through PROJ-191 (Strategy), PROJ-192 (AI), PROJ-193 (UI Data Binding), and PROJ-194 (Builder/Workshop).

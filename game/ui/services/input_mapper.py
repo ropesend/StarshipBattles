@@ -181,7 +181,7 @@ class InputMapper:
 
     def resolve(
         self,
-        event: object,
+        event: pygame.event.Event,
         contexts: Optional[List[str]] = None,
     ) -> Optional[InputAction]:
         """Resolve a pygame event to an InputAction.
@@ -201,7 +201,7 @@ class InputMapper:
         Returns:
             The matching InputAction, or None if no match found.
         """
-        if getattr(event, "type", None) != pygame.KEYDOWN:
+        if event.type != pygame.KEYDOWN:
             return None
 
         key_int = event.key

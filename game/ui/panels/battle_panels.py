@@ -42,9 +42,11 @@ class BattlePanel:
         draw_stat_bar(surface, x, y, width, height, pct, color)
 
     def _get_ships(self):
-        """Get ships from ui_service if available, otherwise fallback to scene.ships."""
-        # Check if ui_service is explicitly set and has get_ships method
-        ui_service = getattr(self.scene, 'ui_service', None)
+        """Get ships from ui_service if available, otherwise fallback to scene.ships.
+
+        BattleScreen always has ui_service; this fallback is for test mocks.
+        """
+        ui_service = self.scene.ui_service
         if ui_service is not None:
             try:
                 # Try to get ships from ui_service
@@ -54,7 +56,7 @@ class BattlePanel:
                     return ships
             except (AttributeError, TypeError) as e:
                 logger.debug("Failed to get ships from ui_service, using fallback: %s", e)
-        # Fallback to direct ships access
+        # Fallback to direct ships access (for test mocks)
         return getattr(self.scene, 'ships', [])
 
 class ShipStatsPanel(BattlePanel):
@@ -486,9 +488,10 @@ class BattleControlPanel(BattlePanel):
 
         # In test mode, defer to the engine's is_battle_over() which respects TIME_BASED mode
         # This prevents showing victory screen for single-ship tests that need to run for N ticks
-        if hasattr(self.scene, 'test_mode') and self.scene.test_mode:
+        # BattleScreen always has test_mode (bool) and is_battle_over() method
+        if self.scene.test_mode:
             # Test mode - use engine's is_battle_over() which handles TIME_BASED correctly
-            is_over = self.scene.is_battle_over() if hasattr(self.scene, 'is_battle_over') else False
+            is_over = self.scene.is_battle_over()
         else:
             # Normal battle - use HP-based check
             is_over = team1_alive == 0 or team2_alive == 0

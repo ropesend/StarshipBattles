@@ -159,12 +159,16 @@ class WorkshopViewModel:
         self._emit_selection_changed()
         
     def _normalize_selection(self, items: List) -> List[Tuple[LayerType, int, Component]]:
-        """Convert various selection formats to normalized tuples."""
+        """Convert various selection formats to normalized tuples.
+
+        Uses duck typing (hasattr check for 'id') because selection logic accepts
+        both real Component instances and mock objects in tests.
+        """
         norm_selection = []
         for item in items:
             if isinstance(item, tuple) and len(item) == 3:
                 norm_selection.append(item)
-            elif hasattr(item, 'id'):  # It's a component
+            elif hasattr(item, 'id'):  # Component-like object
                 # Find it in ship
                 found = False
                 if self._ship:

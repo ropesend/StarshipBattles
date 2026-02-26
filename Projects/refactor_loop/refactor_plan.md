@@ -8,22 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-198 Phase 4 complete
-**Current Status:** PROJ-198 in progress, Phase 5 next
+**Last Completed:** PROJ-198 Phase 5 complete
+**Current Status:** PROJ-198 in progress, Phase 6 next
 **Current Project:** PROJ-198 - UI Layer Duck Typing Elimination
-**Current Phase:** Phase 5
+**Current Phase:** Phase 6
 **Test Status:** 12728 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-198 Phase 4 complete: Bug fixes & dead code removal in 5 files
-- Fixed turn_engine path: `hasattr(scene, 'turn_engine')` → `scene.session.turn_engine`
-- Fixed planet_list_window path: `scene.ui.planet_list_window` → `scene.ui.window_manager.planet_list_window`
-- Fixed empires lookup: Changed `get_owner_name(planet, galaxy, empire)` to accept `empires` param instead
-- Eliminated _temp_system_ref monkey-patch: Now uses `_cached_system_name` string
-- Updated 5 test fixtures (3 mock_scene, 2 MockScene classes) with correct attribute paths
-- Task 4.4 (empire_build_queue_formatter dead code) was already clean
-- Next: Phase 5 - Type Annotations & Protocol Fixes
+- PROJ-198 Phase 5 complete: Type annotations & protocol fixes in 7 files
+- Removed ~10 hasattr/getattr patterns:
+  - battle_ui_service.py: 3 hasattr(target, 'name') → direct (targets always Ships)
+  - battle_panels.py: 2 patterns for ui_service/test_mode/is_battle_over → direct
+  - screenshot_manager.py: 2 for scene.ui and constants → direct
+  - strategy_input_handler.py: 1 double hasattr for _has_modal_open → direct
+  - input_mapper.py: getattr(event, "type") → event.type with proper typing
+- Added _is_component_like() helper in builder_selection.py with documented rationale
+- Some hasattr intentionally kept: test mock compatibility (builder), interface validation (build_queue)
+- Next: Phase 6 - Superweapon Stub Methods & Final Cleanup
 
 ---
 
@@ -198,6 +200,7 @@
 | 2026-02-25 | PROJ-198 | Phase 2 | Complete | 12728 passed | - | ~20 init declarations, 12 files, 5 obsolete tests deleted |
 | 2026-02-25 | PROJ-198 | Phase 3 | Complete | 12728 passed | - | 3 monkey-patch eliminations, 3 files, 1 test updated |
 | 2026-02-25 | PROJ-198 | Phase 4 | Complete | 12728 passed | - | 3 path bugs fixed, 5 test fixtures updated, _temp_system_ref eliminated |
+| 2026-02-25 | PROJ-198 | Phase 5 | Complete | 12728 passed | - | ~10 hasattr/getattr → direct access in 7 files, typed input_mapper |
 
 ---
 

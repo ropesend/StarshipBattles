@@ -160,9 +160,8 @@ class StrategyInputHandler:
         over_topbar = (my < self.scene.TOP_BAR_HEIGHT)
 
         # Check if modal sub-panel is open (blocks scroll)
-        modal_open = False
-        if hasattr(self.scene, 'ui') and hasattr(self.scene.ui, '_has_modal_open'):
-            modal_open = self.scene.ui._has_modal_open()
+        # StrategyScreen.ui always has _has_modal_open method
+        modal_open = self.scene.ui._has_modal_open()
 
         # Block scroll over UI elements or when modal is open
         if over_sidebar or over_topbar or modal_open:

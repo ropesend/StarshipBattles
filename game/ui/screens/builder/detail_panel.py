@@ -84,7 +84,7 @@ class ComponentDetailPanel:
         Args:
             selection_data: One of:
                 - tuple: (layer, idx, component) format from viewmodel
-                - Component: Direct component object
+                - Component: Direct component object (or mock with 'id' attribute)
                 - None: No selection
         """
         if selection_data is None:
@@ -93,7 +93,7 @@ class ComponentDetailPanel:
             # Standard (layer, idx, component) format from viewmodel
             self.show_component(selection_data[2])
         elif hasattr(selection_data, 'id'):
-            # Direct component object
+            # Component-like object (has 'id' attribute)
             self.show_component(selection_data)
         else:
             self.show_component(None)

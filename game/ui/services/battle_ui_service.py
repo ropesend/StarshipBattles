@@ -166,15 +166,16 @@ class BattleUIService:
                 components.append(self._convert_component(comp, layer_name))
 
         # Get target name - current_target is always initialized (may be None)
+        # Target is always a Ship if present (ICombatShip protocol)
         current_target_name = None
-        if ship.current_target and hasattr(ship.current_target, 'name'):
+        if ship.current_target:
             current_target_name = ship.current_target.name
 
         # Get secondary target names - secondary_targets is always initialized (may be empty)
+        # All targets are Ships (ICombatShip protocol)
         secondary_target_names = []
         for target in ship.secondary_targets:
-            if hasattr(target, 'name'):
-                secondary_target_names.append(target.name)
+            secondary_target_names.append(target.name)
 
         ship_id = ship.id
 
@@ -248,10 +249,10 @@ class BattleUIService:
         Returns:
             ProjectileDTO with projectile data
         """
-        # Get target name
+        # Get target name - target is always a Ship if present
         target_name = None
         target = proj.target
-        if target and hasattr(target, 'name'):
+        if target:
             target_name = target.name
 
         proj_id = proj.id

@@ -145,8 +145,8 @@ class ScreenshotManager(metaclass=SingletonMeta):
                 # Draw the base strategy layer (galaxy map)
                 scene._renderer.draw(capture_surface)
 
-                # Draw UI layer
-                if hasattr(scene, 'ui') and scene.ui:
+                # Draw UI layer - StrategyScreen always has .ui
+                if scene.ui:
                     scene.ui.draw(capture_surface)
 
                 # Draw sub-windows if requested
@@ -158,8 +158,9 @@ class ScreenshotManager(metaclass=SingletonMeta):
                 self.capture(surface=capture_surface, label=label)
             else:
                 # Capture viewport only (exclude sidebar and top bar)
-                sidebar_width = getattr(scene, 'SIDEBAR_WIDTH', 300)
-                top_bar_height = getattr(scene, 'TOP_BAR_HEIGHT', 40)
+                # StrategyScreen always has these class constants
+                sidebar_width = scene.SIDEBAR_WIDTH
+                top_bar_height = scene.TOP_BAR_HEIGHT
 
                 viewport_width = screen_width - sidebar_width
                 viewport_height = screen_height - top_bar_height
