@@ -811,3 +811,99 @@ Projects archived from the master refactor plan after user acceptance.
   - **Dependencies:** None
 
 ---
+
+- [x] **PROJ-187: Strategy Orders Tick-Based Action System**
+  - **Phases:** 8 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-187/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-187/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-188: Strategy Layer List UI Consolidation**
+  - **Phases:** 6 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-188/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-188/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-189: Storms Environmental Hazards**
+  - **Phases:** 8 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-189/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-189/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-190: Core Simulation Duck Typing Elimination**
+  - **Phases:** 6 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-190/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-190/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-191: Strategy Layer Duck Typing Elimination**
+  - **Phases:** 6 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-191/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-191/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-192: AI Behavior Protocols - Duck Typing Elimination**
+  - **Phases:** 5 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-192/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-192/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-193: UI Data Binding Duck Typing Elimination**
+  - **Phases:** 8 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-193/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-193/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-194: Builder & Workshop Duck Typing Elimination**
+  - **Phases:** 5 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-194/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-194/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-195: Eradicate RegistryManager Singleton from Non-Root Code**
+  - **Phases:** 9 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-195/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-195/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-196: Consolidate Duplicated Code**
+  - **Phases:** 6 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-196/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-196/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-197: Duplication Consolidation Completion**
+  - **Phases:** 7 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-197/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-197/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-198: UI Layer Duck Typing Elimination - Strategy Screens & Services**
+  - **Phases:** 6 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-198/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-198/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
