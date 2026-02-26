@@ -26,7 +26,8 @@ def mock_scene():
     scene = MagicMock()
     scene.ui = MagicMock()
     scene.ui.manager = MagicMock()
-    scene.ui.planet_list_window = None
+    scene.ui.window_manager = MagicMock()  # PROJ-198: planet_list_window moved here
+    scene.ui.window_manager.planet_list_window = None
     scene.ui.handle_click = MagicMock(return_value=False)
     scene.ui._has_modal_open = MagicMock(return_value=False)
     scene.selected_fleet = None
@@ -397,7 +398,8 @@ class TestEdgeCases:
     def test_handle_event_with_planet_list_open(self, mock_scene, mapper):
         """Events should route to UI when planet list window is open."""
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        mock_scene.ui.planet_list_window = MagicMock()
+        # PROJ-198: planet_list_window is now on window_manager
+        mock_scene.ui.window_manager.planet_list_window = MagicMock()
 
         event = _keydown(pygame.K_F12)
         handler.handle_event(event)

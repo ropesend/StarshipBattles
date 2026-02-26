@@ -27,7 +27,7 @@ from game.ui.screens.planet_data_source import PlanetDataSource
 from game.ui.panels.planet_report_panel import PlanetReportPanel, compute_planet_production
 
 class PlanetListWindow(UIWindow):
-    def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None):
+    def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None, empires=None):
         # Initialize state that set_dimensions() depends on before super().__init__(),
         # since UIWindow.__init__ triggers rebuild() -> set_dimensions().
         self.selected_planet = None
@@ -38,6 +38,7 @@ class PlanetListWindow(UIWindow):
 
         self.galaxy = galaxy
         self.empire = empire # Current player empire for "Owner" context
+        self.empires = empires or []  # PROJ-198: All empires for owner name lookup
         self.on_close_callback = on_close_callback
         self.asset_resolver = asset_resolver  # Function to get image for planet
 
@@ -80,7 +81,7 @@ class PlanetListWindow(UIWindow):
             {'id': 'name', 'width': 150, 'title': 'Name', 'attr': 'name', 'visible': True},
             {'id': 'type', 'width': 100, 'title': 'Type', 'attr': 'planet_type.name', 'visible': True},
             {'id': 'system', 'width': 120, 'title': 'System', 'func': get_system_name, 'visible': True},
-            {'id': 'owner', 'width': 140, 'title': 'Owner', 'func': lambda p: get_owner_name(p, self.galaxy, self.empire), 'visible': True},
+            {'id': 'owner', 'width': 140, 'title': 'Owner', 'func': lambda p: get_owner_name(p, self.empires, self.empire), 'visible': True},
             {'id': 'mass', 'width': 100, 'title': 'Mass (M_E)', 'func': get_mass_earth, 'visible': True},
             {'id': 'grav', 'width': 90, 'title': 'Grav (g)', 'func': lambda p: f"{p.surface_gravity/9.81:.2f}", 'visible': True},
             {'id': 'temp', 'width': 90, 'title': 'Temp (K)', 'attr': 'surface_temperature', 'fmt': "{:.0f}", 'visible': True},

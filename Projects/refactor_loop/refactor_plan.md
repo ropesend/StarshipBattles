@@ -8,20 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-198 Phase 3 complete
-**Current Status:** PROJ-198 in progress, Phase 4 next
+**Last Completed:** PROJ-198 Phase 4 complete
+**Current Status:** PROJ-198 in progress, Phase 5 next
 **Current Project:** PROJ-198 - UI Layer Duck Typing Elimination
-**Current Phase:** Phase 4
+**Current Phase:** Phase 5
 **Test Status:** 12728 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-198 Phase 3 complete: Monkey-patch elimination in 3 files
-- DesignSelectorWindow: Added 3 dicts (_button_design_map, _obsolete_buttons, _obsolete_state_map) to replace button attribute monkey-patching
-- BuildQueueSelector: Added _button_index_map dict to replace btn.queue_source_index monkey-patching
-- FleetOrdersWindow: Replaced hasattr(element, 'kill') with key exclusion (if key != 'order_ref')
-- Updated test helper _make_selector_window() and 1 integration test
-- Next: Phase 4 - Bug Fixes & Dead Code Removal
+- PROJ-198 Phase 4 complete: Bug fixes & dead code removal in 5 files
+- Fixed turn_engine path: `hasattr(scene, 'turn_engine')` → `scene.session.turn_engine`
+- Fixed planet_list_window path: `scene.ui.planet_list_window` → `scene.ui.window_manager.planet_list_window`
+- Fixed empires lookup: Changed `get_owner_name(planet, galaxy, empire)` to accept `empires` param instead
+- Eliminated _temp_system_ref monkey-patch: Now uses `_cached_system_name` string
+- Updated 5 test fixtures (3 mock_scene, 2 MockScene classes) with correct attribute paths
+- Task 4.4 (empire_build_queue_formatter dead code) was already clean
+- Next: Phase 5 - Type Annotations & Protocol Fixes
 
 ---
 
@@ -195,6 +197,7 @@
 | 2026-02-25 | PROJ-198 | Phase 1 | Complete | 12732 passed | - | ~75 trivial guard removals, 24 files, 4 test fixes |
 | 2026-02-25 | PROJ-198 | Phase 2 | Complete | 12728 passed | - | ~20 init declarations, 12 files, 5 obsolete tests deleted |
 | 2026-02-25 | PROJ-198 | Phase 3 | Complete | 12728 passed | - | 3 monkey-patch eliminations, 3 files, 1 test updated |
+| 2026-02-25 | PROJ-198 | Phase 4 | Complete | 12728 passed | - | 3 path bugs fixed, 5 test fixtures updated, _temp_system_ref eliminated |
 
 ---
 

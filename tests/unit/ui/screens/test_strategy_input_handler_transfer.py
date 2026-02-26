@@ -20,7 +20,8 @@ def mock_scene():
     scene = MagicMock()
     scene.ui = MagicMock()
     scene.ui.manager = MagicMock()
-    scene.ui.planet_list_window = None
+    scene.ui.window_manager = MagicMock()  # PROJ-198: planet_list_window moved here
+    scene.ui.window_manager.planet_list_window = None
     scene.selected_fleet = None
     scene.build_queue_screen = None
     scene.camera = MagicMock()

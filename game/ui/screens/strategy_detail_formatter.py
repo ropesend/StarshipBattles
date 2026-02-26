@@ -340,10 +340,9 @@ class StrategyDetailFormatter:
             if obj.has_space_shipyard:
                 self.btn_build_fleet.show()
 
-            # Check if we can colonize
-            # NOTE: hasattr check is intentional - scene may or may not have turn_engine
-            if hasattr(self.scene, 'turn_engine'):
-                res = self.scene.turn_engine.validate_colonize_order(self.scene.galaxy, obj, None)
+            # Check if we can colonize (BUG FIX PROJ-198 Phase 4: turn_engine is on session, not scene)
+            if self.scene.session and self.scene.session.turn_engine:
+                res = self.scene.session.turn_engine.validate_colonize_order(self.scene.galaxy, obj, None)
                 if res.is_valid:
                     self.btn_colonize.show()
 

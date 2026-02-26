@@ -118,6 +118,7 @@ class StrategyWindowManager:
             empire,
             on_close_callback=self._on_planet_list_closed,
             asset_resolver=self._asset_resolver,
+            empires=self.scene.session.empires,  # PROJ-198: Pass empires for owner name lookup
         )
 
     def _on_planet_list_closed(self) -> None:

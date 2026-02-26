@@ -58,7 +58,8 @@ class StrategyInputHandler:
             return
 
         # If planet list window is open, let pygame_gui handle it (skip our F11/F12)
-        if hasattr(self.scene, 'ui') and hasattr(self.scene.ui, 'planet_list_window') and self.scene.ui.planet_list_window is not None:
+        # BUG FIX PROJ-198 Phase 4: planet_list_window is on window_manager, not ui
+        if self.scene.ui.window_manager.planet_list_window is not None:
             self.scene.ui.handle_event(event)
             return
 
