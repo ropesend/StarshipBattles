@@ -378,6 +378,7 @@ while ($state.current_cycle -lt $MAX_CYCLES) {
     Clear-ClaudeTempFiles
 
     $analysisSuccess = $false
+    $analysisSkipped = $false
     $analysisRetries = 0
 
     while (-not $analysisSuccess -and $analysisRetries -lt 3) {
@@ -428,7 +429,7 @@ while ($state.current_cycle -lt $MAX_CYCLES) {
                 Save-CycleState $state
 
                 # Skip to next cycle iteration
-                $analysisSuccess = "SKIPPED"
+                $analysisSkipped = $true
             }
         }
         elseif (Test-RateLimit $analysisOutput) {
@@ -445,7 +446,7 @@ while ($state.current_cycle -lt $MAX_CYCLES) {
         }
     }
 
-    if ($analysisSuccess -eq "SKIPPED") {
+    if ($analysisSkipped) {
         Write-Info "Sleeping ${INTER_CYCLE_SLEEP_SECONDS}s before next cycle..."
         Start-Sleep -Seconds $INTER_CYCLE_SLEEP_SECONDS
         continue

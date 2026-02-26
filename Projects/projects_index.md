@@ -4,6 +4,28 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-249 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-248 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-247 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-246 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-245 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-244 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-243 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-242 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-241 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-240 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-239 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-238 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-237 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-236 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-235 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-234 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-233 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-232 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-231 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-230 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-229 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
+| PROJ-228 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
 | PROJ-227 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
 | PROJ-226 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
 | PROJ-225 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-26 | 2026-02-26 |
