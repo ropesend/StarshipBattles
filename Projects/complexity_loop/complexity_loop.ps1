@@ -683,7 +683,7 @@ while ($state.current_cycle -lt $MAX_CYCLES) {
     Save-CycleState $state
 
     git checkout main
-    git merge $branchName --no-ff -m "Merge $branchName: $targetFunc CC $targetCC -> $newCC"
+    git merge $branchName --no-ff -m "Merge ${branchName} - ${targetFunc} CC ${targetCC} to ${newCC}"
 
     if ($LASTEXITCODE -ne 0) {
         Write-ErrorLog "Merge conflict! Manual intervention required."
