@@ -18,7 +18,7 @@ from game.research.data.research_tracker import ResearchTracker
 from game.ui.colors import (
     RESEARCH_LOCKED, RESEARCH_AVAILABLE, RESEARCH_COMPLETED, RESEARCH_SELECTED,
     RESEARCH_LINE_UNMET, RESEARCH_LINE_MET, RESEARCH_LINE_NEGATED, RESEARCH_LINE_NEGATED_MET,
-    RESEARCH_TEXT, RESEARCH_CHANCE, RESEARCH_ALLOCATION
+    RESEARCH_TEXT, RESEARCH_CHANCE, RESEARCH_ALLOCATION, TEXT_MUTED
 )
 from game.ui.fonts import get_font
 
@@ -301,7 +301,7 @@ class ResearchRenderer:
         # RP allocation (always show, bottom of node)
         rp_text = f"{state.rp_allocation} RP"
         # Use different color based on whether RP is allocated
-        rp_color = self.COLOR_ALLOCATION if state.rp_allocation > 0 else (160, 160, 170)
+        rp_color = self.COLOR_ALLOCATION if state.rp_allocation > 0 else TEXT_MUTED
         rp_surf = small_font.render(rp_text, True, rp_color)
         rp_x = rect.left + padding
         rp_y = rect.bottom - rp_surf.get_height() - padding - int(4 * self.camera.zoom)

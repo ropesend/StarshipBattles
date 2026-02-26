@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import pygame
 from pygame_gui.elements import UIImage, UILabel, UIPanel, UIVerticalScrollBar
 
+from game.ui.colors import TABLE_SELECTED, TABLE_UNSELECTED
 from game.ui.components.table.column_manager import TableColumnManager
 from game.ui.components.table.data_source import ITableDataSource
 from game.ui.components.table.header import TableHeader
@@ -27,8 +28,8 @@ class VirtualTable:
     """
 
     # Selection highlighting colors
-    SELECTED_COLOR = pygame.Color(60, 80, 120)  # Blue tint
-    UNSELECTED_COLOR = pygame.Color(35, 35, 35)  # Dark grey
+    SELECTED_COLOR = pygame.Color(*TABLE_SELECTED)  # Blue tint
+    UNSELECTED_COLOR = pygame.Color(*TABLE_UNSELECTED)  # Dark grey
 
     def __init__(
         self,

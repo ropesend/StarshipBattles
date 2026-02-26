@@ -21,6 +21,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 from game.core.paths import Paths
+from game.ui.colors import TEXT_ERROR
 from game.strategy.engine.game_config import GameConfig, PlayerConfig, THEME_DEFAULTS, VALID_GALAXY_TYPES
 from game.strategy.systems.race_library import RaceLibrary
 from game.core.exceptions import ValidationException
@@ -199,7 +200,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             manager=self.ui_manager,
             container=container
         )
-        self.error_label.text_colour = pygame.Color(255, 100, 100)
+        self.error_label.text_colour = pygame.Color(*TEXT_ERROR)
 
     def _create_empire_inputs(self):
         """Create empire name input fields with race selection for each player slot."""

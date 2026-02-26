@@ -20,6 +20,7 @@ from pygame_gui.elements import UIButton, UILabel, UIPanel
 from pygame_gui.windows import UIConfirmationDialog
 
 from game.ui.fonts import get_font
+from game.ui.colors import BG_PANEL_DARK, WHITE
 
 from game.core.input_actions import (
     ACTION_DISPLAY_NAMES,
@@ -281,7 +282,7 @@ class KeybindingsScene:
 
     def draw(self, screen: Any) -> None:
         """Draw the scene."""
-        screen.fill((20, 25, 35))
+        screen.fill(BG_PANEL_DARK)
 
         # Draw UI elements
         self._ui_manager.draw_ui(screen)
@@ -412,7 +413,7 @@ class KeybindingsScene:
         font = get_font(28)
         text = font.render(
             f"Press a key for '{action_name}'...  (ESC to cancel)",
-            True, (255, 255, 255),
+            True, WHITE,
         )
         text_rect = text.get_rect(center=(self._width // 2, self._height // 2))
         screen.blit(text, text_rect)

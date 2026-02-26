@@ -3,6 +3,7 @@ import os
 import pygame
 import threading
 from game.core.json_utils import load_json
+from game.ui.colors import OVERLAY_FALLBACK
 
 logger = logging.getLogger(__name__)
 from game.core.profiling import profile_block
@@ -209,9 +210,9 @@ class ShipThemeManager(metaclass=SingletonMeta):
         """Generate a placeholder image."""
         # Simple colored rectangle with text
         surf = pygame.Surface((100, 100), pygame.SRCALPHA)
-        pygame.draw.rect(surf, (100, 100, 100), surf.get_rect(), 2)
-        pygame.draw.line(surf, (100, 100, 100), (50, 20), (50, 80), 2)
-        pygame.draw.line(surf, (100, 100, 100), (20, 50), (80, 50), 2)
+        pygame.draw.rect(surf, OVERLAY_FALLBACK, surf.get_rect(), 2)
+        pygame.draw.line(surf, OVERLAY_FALLBACK, (50, 20), (50, 80), 2)
+        pygame.draw.line(surf, OVERLAY_FALLBACK, (20, 50), (80, 50), 2)
         return surf
 
     def get_available_themes(self):

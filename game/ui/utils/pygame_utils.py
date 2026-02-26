@@ -6,6 +6,7 @@ eliminate duplicate code (DRY principle).
 """
 from typing import Optional, Tuple
 import pygame
+from game.ui.colors import TEXT_DIM, GRID_BG
 
 
 def create_centered_rect(width: int, height: int, screen_width: int, screen_height: int) -> pygame.Rect:
@@ -117,7 +118,7 @@ def scale_image_by_visible_portion(
     surface: pygame.Surface,
     target_height: int,
     placeholder_width: int = 40,
-    placeholder_color: Tuple[int, int, int] = (50, 50, 50)
+    placeholder_color: Tuple[int, int, int] = TEXT_DIM
 ) -> pygame.Surface:
     """
     Scale an image based on its visible (non-transparent) portion, then crop
@@ -202,7 +203,7 @@ def create_section_header(
 def scale_image_to_fit(
     surface: pygame.Surface,
     target_size: Tuple[int, int],
-    background_color: Tuple[int, int, int] = (30, 30, 30)
+    background_color: Tuple[int, int, int] = GRID_BG
 ) -> pygame.Surface:
     """
     Scale an image to fit within target size, centered on background.

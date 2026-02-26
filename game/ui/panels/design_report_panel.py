@@ -18,7 +18,8 @@ from game.ui.panels.design_stats_panel import DesignStatsPanel
 from game.ui.fonts import get_font
 from game.ui.colors import (
     SHIP_CLASS_FIGHTER, SHIP_CLASS_CORVETTE, SHIP_CLASS_ESCORT, SHIP_CLASS_DESTROYER,
-    SHIP_CLASS_CRUISER, SHIP_CLASS_BATTLESHIP, SHIP_CLASS_CARRIER, SHIP_CLASS_DEFAULT
+    SHIP_CLASS_CRUISER, SHIP_CLASS_BATTLESHIP, SHIP_CLASS_CARRIER, SHIP_CLASS_DEFAULT,
+    WHITE, BLACK, TEXT_ITEM
 )
 
 if TYPE_CHECKING:
@@ -247,22 +248,22 @@ class DesignReportPanel:
             font_small = get_font(int(14 * font_scale))
 
             # Ship name
-            name_text = font_large.render(ship.name[:25], True, (255, 255, 255))
+            name_text = font_large.render(ship.name[:25], True, WHITE)
             name_rect = name_text.get_rect(center=(portrait_width // 2, int(portrait_height * 0.45)))
             # Shadow
-            shadow = font_large.render(ship.name[:25], True, (0, 0, 0))
+            shadow = font_large.render(ship.name[:25], True, BLACK)
             shadow_rect = shadow.get_rect(center=(portrait_width // 2 + 1, int(portrait_height * 0.45) + 1))
             portrait_surface.blit(shadow, shadow_rect)
             portrait_surface.blit(name_text, name_rect)
 
             # Ship class
             if ship_class:
-                class_text = font_small.render(str(ship_class), True, (200, 200, 200))
+                class_text = font_small.render(str(ship_class), True, TEXT_ITEM)
                 class_rect = class_text.get_rect(center=(portrait_width // 2, int(portrait_height * 0.55)))
                 portrait_surface.blit(class_text, class_rect)
 
             # Border
-            pygame.draw.rect(portrait_surface, (200, 200, 200), (0, 0, portrait_width, portrait_height), 2)
+            pygame.draw.rect(portrait_surface, TEXT_ITEM, (0, 0, portrait_width, portrait_height), 2)
 
         # Update UIImage
         self.portrait_image.set_image(portrait_surface)

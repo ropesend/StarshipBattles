@@ -15,6 +15,7 @@ from typing import List, Tuple, Optional, TYPE_CHECKING
 
 from game.simulation.services.vehicle_design_service import VehicleDesignService
 from game.ui.screens.builder_utils import BuilderEvents
+from game.ui.colors import VEHICLE_DEFAULT
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
 
@@ -335,7 +336,7 @@ class WorkshopViewModel:
             ship_class=ship_class,
             x=self.screen_width // 2,
             y=self.screen_height // 2,
-            color=(100, 100, 255)
+            color=VEHICLE_DEFAULT
         )
         self._last_result = result
 

@@ -92,9 +92,14 @@ BG_MENU = (20, 20, 30)          # Dark blue-gray
 TEXT_LIGHT = (220, 220, 220)    # Primary text
 TEXT_MUTED = (150, 150, 150)    # Muted/hint text
 TEXT_DIM = (100, 100, 100)      # Dim/disabled text
+TEXT_ERROR = (255, 100, 100)    # Error text
 PANEL_BG = (30, 30, 35)         # Popup/dialog background
 BORDER_LIGHT = (100, 100, 120)  # Active borders
 BORDER_DARK = (80, 80, 90)      # Standard borders
+
+# === Table Selection Colors ===
+TABLE_SELECTED = (60, 80, 120)  # Selected row highlight (blue tint)
+TABLE_UNSELECTED = (35, 35, 35) # Unselected row background
 
 # === Ship Class Colors (Design Reports) ===
 SHIP_CLASS_FIGHTER = (255, 150, 50)   # Orange
@@ -266,6 +271,7 @@ PLANET_ROCKY = (150, 100, 80)
 PLANET_OCEANIC = (50, 100, 200)
 
 # === Vehicle Types ===
+VEHICLE_DEFAULT = (100, 100, 255)   # Default ship color for new designs
 VEHICLE_SHIP = (80, 100, 180)
 VEHICLE_FIGHTER = (180, 180, 80)
 VEHICLE_STATION = (180, 100, 80)
@@ -291,6 +297,15 @@ DEBUG_TARGET_LINE = (0, 0, 255)         # Target indicator line (blue)
 DEBUG_WEAPON_RANGE = (100, 100, 100)    # Weapon range circle
 DEBUG_AIM_POINT = (0, 100, 255)         # Aim point indicator
 DEBUG_FIRING_ARC = (255, 165, 0)        # Firing arc lines (orange)
+DEBUG_COLLISION = (100, 255, 100)       # Collision radius circle (light green)
+DEBUG_DIRECTION = (255, 255, 0)         # Direction indicator (yellow)
+
+# === Component Overlay ===
+OVERLAY_COMPONENT = (200, 200, 200)     # Default component dot
+OVERLAY_WEAPON = (255, 50, 50)          # Weapon component (red)
+OVERLAY_PROPULSION = (50, 255, 100)     # Propulsion component (green)
+OVERLAY_ARMOR = (100, 100, 100)         # Armor component (gray)
+OVERLAY_FALLBACK = (100, 100, 100)      # Fallback for missing images
 
 # === Test Complete UI ===
 TEST_COMPLETE_PASSED = (80, 255, 120)   # Green for passed

@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress
+**Status:** Complete
 **Objective:** Consolidate all remaining ~30 files
 
 ---
@@ -97,54 +97,53 @@
 - [x] Replace all with appropriate constants (`BG_BATTLE`, `WHITE`, `GRID_BG`, `BORDER_LIGHT`)
 
 **research/research_scene.py** (3 tuples), **research/research_renderer.py** (1 tuple):
-- [ ] Replace all with appropriate constants
+- [x] Replace all with appropriate constants (`BG_PANEL_DARK`, `BG_GALAXY`, `PANEL_BG`, `TEXT_MUTED`)
 
-- [ ] Run `pytest tests/ --testmon`
+- [x] Run `pytest tests/ --testmon`
 
-**Notes:** Strategy files done, research files pending
+**Notes:** Complete
 
 ### Task 6.6: Design & Misc Files [Simple]
 **Tests:** `pytest tests/ --testmon`
 
 **design_image_helper.py** (7 tuples):
-- [ ] Replace vehicle type colors → `VEHICLE_SHIP/FIGHTER`, etc.
-- [ ] Replace text/border → `TEXT_ITEM`, `TEXT_DIM`
+- [x] Does not exist in current codebase - removed from scope
 
 **design_report_panel.py** (4 tuples):
-- [ ] Replace `WHITE`, `BLACK`, `TEXT_ITEM`
+- [x] Replace `WHITE`, `BLACK`, `TEXT_ITEM`
 
 **keybindings_scene.py** (2), **menu_scene.py** (1), **new_game_setup_screen.py** (1), **workshop_viewmodel.py** (1):
-- [ ] Replace all with appropriate constants
+- [x] Replace all with appropriate constants (`BG_PANEL_DARK`, `WHITE`, `BG_MENU`, `TEXT_ERROR`, `VEHICLE_DEFAULT`)
 
-- [ ] Run `pytest tests/ --testmon`
+- [x] Run `pytest tests/ --testmon`
 
-**Notes:**
+**Notes:** Complete - Added `TEXT_ERROR`, `VEHICLE_DEFAULT` constants
 
 ### Task 6.7: Utility & Component Files [Simple]
 **Tests:** `pytest tests/ --testmon`
 
 **utils/pygame_utils.py** (2), **components/table/virtual_table.py** (2):
-- [ ] Replace with appropriate constants
+- [x] Replace with appropriate constants (`TEXT_DIM`, `GRID_BG`, `TABLE_SELECTED`, `TABLE_UNSELECTED`)
 
-**services/battle_ui_service.py** (1), **renderer/sprites.py** (1):
-- [ ] Replace with appropriate constants
+**services/battle_ui_service.py** (1), **renderer/sprites.py** (0):
+- [x] Replace with appropriate constants (`WHITE`). sprites.py had no raw tuples.
 
 **renderer/game_renderer.py** (6 tuples):
-- [ ] Replace range circle, component, direction colors
+- [x] Replace range circle, component, direction colors (`DEBUG_COLLISION`, `DEBUG_DIRECTION`, `OVERLAY_COMPONENT`, `OVERLAY_WEAPON`, `OVERLAY_PROPULSION`, `OVERLAY_ARMOR`)
 
 **assets/ship_theme_manager.py** (3 tuples):
-- [ ] Replace with appropriate constants
+- [x] Replace with appropriate constants (`OVERLAY_FALLBACK`)
 
-- [ ] Run `pytest tests/ --testmon`
+- [x] Run `pytest tests/` - 12734 passed
 
-**Notes:**
+**Notes:** Complete - Added `TABLE_SELECTED`, `TABLE_UNSELECTED`, `DEBUG_COLLISION`, `DEBUG_DIRECTION`, `OVERLAY_COMPONENT`, `OVERLAY_WEAPON`, `OVERLAY_PROPULSION`, `OVERLAY_ARMOR`, `OVERLAY_FALLBACK` constants
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] All remaining files consolidated
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] All remaining files consolidated
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

@@ -23,6 +23,7 @@ from game.research.data.tech_tree import TechTree
 from game.research.data.research_tracker import ResearchTracker
 from game.research.systems.research_service import ResearchService
 from game.ui.renderer.camera import Camera
+from game.ui.colors import BG_PANEL_DARK, BG_GALAXY, PANEL_BG
 from .research_renderer import ResearchRenderer
 from .research_controls import ResearchControlPanel
 
@@ -194,18 +195,18 @@ class ResearchTreeScene:
             screen: pygame surface to draw on
         """
         # Clear background
-        screen.fill((20, 25, 35))
+        screen.fill(BG_PANEL_DARK)
 
         # Draw canvas area background
         canvas_rect = pygame.Rect(0, 0, self.canvas_width, self.canvas_height)
-        pygame.draw.rect(screen, (15, 20, 30), canvas_rect)
+        pygame.draw.rect(screen, BG_GALAXY, canvas_rect)
 
         # Draw tech tree on canvas
         self.renderer.draw(screen, self.selected_node_id, canvas_rect)
 
         # Draw sidebar background
         sidebar_rect = pygame.Rect(self.canvas_width, 0, self.SIDEBAR_WIDTH, self.screen_height)
-        pygame.draw.rect(screen, (30, 35, 45), sidebar_rect)
+        pygame.draw.rect(screen, PANEL_BG, sidebar_rect)
 
         # Draw pygame_gui elements
         self.ui_manager.draw_ui(screen)

@@ -20,7 +20,7 @@ from game.ui.interfaces.battle_ui import (
 )
 from game.core.math import Vector2
 from game.core.constants import AttackType
-from game.ui.colors import PROJECTILE_STANDARD, PROJECTILE_MISSILE, PROJECTILE_BEAM
+from game.ui.colors import PROJECTILE_STANDARD, PROJECTILE_MISSILE, PROJECTILE_BEAM, WHITE
 
 if TYPE_CHECKING:
     from game.simulation.services import BattleService
@@ -298,5 +298,5 @@ class BattleUIService:
         return BeamDTO(
             start=Vector2(start.x, start.y),
             end=Vector2(end.x, end.y),
-            color=beam.get('color', (255, 255, 255))
+            color=beam.get('color', WHITE)
         )

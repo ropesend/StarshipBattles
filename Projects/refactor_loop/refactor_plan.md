@@ -8,33 +8,29 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-197 Phase 6 - Tasks 6.1-6.5 partially (builder, formation, build queue, planets, strategy files)
-**Current Status:** PROJ-197 Phase 6 in progress, Tasks 6.5-6.7 remaining
+**Last Completed:** PROJ-197 Phase 6 complete - All remaining files consolidated
+**Current Status:** PROJ-197 Phase 7 ready
 **Current Project:** PROJ-197 - Duplication Consolidation Completion
-**Current Phase:** Phase 6 - Builder, formation & remaining files (in progress)
+**Current Phase:** Phase 7 - Final audit & cleanup
 **Test Status:** 12734 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 6 progress: Tasks 6.1-6.4 complete, Task 6.5 partially complete
-- Completed files:
-  - weapons_renderer.py: WEAPON_BAR_*, WEAPON_ACCURACY_*, WEAPON_LABEL/RANGE_LABEL/ARC
-  - detail_panel.py: GRID_BG, TEXT_ITEM
-  - schematic_view.py: TEXT_DIM, local ARC_*_COLOR constants
-  - formation/renderer.py: All FORMATION_* colors, GRID_BG, WHITE, BLACK, TEXT_ITEM, BG_MENU
-  - build_queue_portraits.py: VEHICLE_*, RESOURCE_*, TEXT_DIM, WHITE
-  - build_queue_drag_handler.py: VEHICLE_*, TEXT_DIM
-  - build_queue_renderer.py: TEAM_1_TEXT
-  - planet_report_panel.py: PLANET_*, WHITE, BLACK, TEXT_LIGHT, TEXT_DIM
-  - galaxy_test/constants.py: All PLANET_* constants for planet types
-  - galaxy_test/system_mode.py: FLEET_SELECTED, GRID_LINE, TEXT_*, PLANET_TERRESTRIAL
-  - galaxy_test/screen.py: BG_GALAXY, PANEL_BG
-  - galaxy_test/galaxy_mode.py: WARP_LANE, STAR_LABEL
-  - strategy_screen.py: BG_BATTLE
-  - strategy_ui.py: WHITE
-  - fleet_data_source.py: GRID_BG, BORDER_LIGHT
-- Remaining: Tasks 6.5 (research files), 6.6 (design files), 6.7 (utility files)
-- Next agent continues with research_scene.py, research_renderer.py, then design files
+- Phase 6 completed all remaining files:
+  - research_scene.py: BG_PANEL_DARK, BG_GALAXY, PANEL_BG
+  - research_renderer.py: TEXT_MUTED
+  - design_report_panel.py: WHITE, BLACK, TEXT_ITEM
+  - keybindings_scene.py: BG_PANEL_DARK, WHITE
+  - menu_scene.py: BG_MENU
+  - new_game_setup_screen.py: TEXT_ERROR
+  - workshop_viewmodel.py: VEHICLE_DEFAULT
+  - pygame_utils.py: TEXT_DIM, GRID_BG
+  - virtual_table.py: TABLE_SELECTED, TABLE_UNSELECTED
+  - battle_ui_service.py: WHITE
+  - game_renderer.py: DEBUG_COLLISION, DEBUG_DIRECTION, OVERLAY_*
+  - ship_theme_manager.py: OVERLAY_FALLBACK
+- Added ~15 new constants to colors.py
+- Next: Phase 7 final audit - verify zero raw tuples remain
 
 ---
 
@@ -202,6 +198,7 @@
 | 2026-02-25 | PROJ-197 | Phase 3 | Complete | 3161 UI passed | - | Battle UI files → colors.py constants |
 | 2026-02-25 | PROJ-197 | Phase 4 | Complete | 4022 passed | - | Setup & strategy files → colors.py constants |
 | 2026-02-25 | PROJ-197 | Phase 5 | Complete | 12734 passed | - | Ship panels & widgets → colors.py constants |
+| 2026-02-25 | PROJ-197 | Phase 6 | Complete | 12734 passed | - | All remaining files → colors.py constants |
 
 ---
 

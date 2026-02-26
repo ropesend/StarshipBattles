@@ -9,7 +9,11 @@ import math
 from game.core.constants import LayerType, LayerDefaults  # Canonical location for LayerType
 from game.ui.utils import calculate_ship_image_scale, scale_and_rotate_image
 from game.ui.assets import ShipThemeManager
-from game.ui.colors import LAYER_ARMOR, LAYER_OUTER, LAYER_INNER, LAYER_CORE
+from game.ui.colors import (
+    LAYER_ARMOR, LAYER_OUTER, LAYER_INNER, LAYER_CORE,
+    DEBUG_COLLISION, DEBUG_DIRECTION,
+    OVERLAY_COMPONENT, OVERLAY_WEAPON, OVERLAY_PROPULSION, OVERLAY_ARMOR
+)
 
 
 # === Rendering Constants ===
@@ -101,7 +105,7 @@ def draw_ship(surface, ship, camera):
     show_overlay = getattr(camera, 'show_overlay', False) 
     
     if show_overlay:
-        pygame.draw.circle(surface, (100, 255, 100), (cx, cy), scale(base_radius), 1)
+        pygame.draw.circle(surface, DEBUG_COLLISION, (cx, cy), scale(base_radius), 1)
         
         # Draw Layers (from large to small)
         pygame.draw.circle(surface, LAYER_COLORS[LayerType.ARMOR], (cx, cy), scale(base_radius), 1)
@@ -144,10 +148,10 @@ def draw_ship(surface, ship, camera):
                     comp_world_pos = ship.position + pygame.math.Vector2(off_x, off_y)
                     comp_screen = camera.world_to_screen(comp_world_pos)
                     
-                    color = (200, 200, 200)
-                    if comp.has_ability('WeaponAbility'): color = (255, 50, 50)
-                    elif comp.has_ability('CombatPropulsion'): color = (50, 255, 100)
-                    elif comp.has_ability('ArmorAbility') or comp.major_classification == 'Armor': color = (100, 100, 100)
+                    color = OVERLAY_COMPONENT
+                    if comp.has_ability('WeaponAbility'): color = OVERLAY_WEAPON
+                    elif comp.has_ability('CombatPropulsion'): color = OVERLAY_PROPULSION
+                    elif comp.has_ability('ArmorAbility') or comp.major_classification == 'Armor': color = OVERLAY_ARMOR
                     
                     pygame.draw.circle(surface, color, (int(comp_screen.x), int(comp_screen.y)), max(1, scale(COMPONENT_DOT_RADIUS)))
                     current_angle += angle_step
@@ -155,7 +159,7 @@ def draw_ship(surface, ship, camera):
         # Draw Direction indicator
         dir_vec = ship.forward_vector()
         end_pos_screen = camera.world_to_screen(ship.position + dir_vec * (base_radius + DIRECTION_LINE_OFFSET))
-        pygame.draw.line(surface, (255, 255, 0), (cx, cy), (int(end_pos_screen.x), int(end_pos_screen.y)), max(1, scale(DIRECTION_LINE_WIDTH)))
+        pygame.draw.line(surface, DEBUG_DIRECTION, (cx, cy), (int(end_pos_screen.x), int(end_pos_screen.y)), max(1, scale(DIRECTION_LINE_WIDTH)))
 
     
     if not drawn_image:
