@@ -17,6 +17,11 @@ from typing import Optional
 from game.ui.utils.json_diff import compute_json_diff, DiffResult
 from game.ui.widgets.scrollable_json_panel import ScrollableJsonPanel
 from game.ui.fonts import get_font, FONT_MONO
+from game.ui.colors import (
+    WHITE, DIFF_CHANGED_BG, DIFF_CHANGED_TEXT, DIFF_ADDED_BG, DIFF_ADDED_TEXT,
+    DIFF_REMOVED_BG, DIFF_REMOVED_TEXT, VIEWER_BTN_BG, VIEWER_BTN_HOVER,
+    VIEWER_BTN_BORDER
+)
 
 
 class BattleStateViewer:
@@ -80,9 +85,9 @@ class BattleStateViewer:
 
         # Colors
         self.overlay_color = (0, 0, 0, 200)
-        self.header_color = (255, 255, 255)
-        self.button_color = (80, 80, 100)
-        self.button_hover_color = (100, 100, 130)
+        self.header_color = WHITE
+        self.button_color = VIEWER_BTN_BG
+        self.button_hover_color = VIEWER_BTN_HOVER
 
         # State info
         self.test_id = None
@@ -220,9 +225,9 @@ class BattleStateViewer:
         button_color = self.button_hover_color if button_hover else self.button_color
 
         pygame.draw.rect(surface, button_color, self.close_button_rect, border_radius=5)
-        pygame.draw.rect(surface, (120, 120, 140), self.close_button_rect, 2, border_radius=5)
+        pygame.draw.rect(surface, VIEWER_BTN_BORDER, self.close_button_rect, 2, border_radius=5)
 
-        button_text = self.button_font.render("Close (ESC)", True, (255, 255, 255))
+        button_text = self.button_font.render("Close (ESC)", True, WHITE)
         text_x = self.close_button_rect.x + (self.close_button_rect.width - button_text.get_width()) // 2
         text_y = self.close_button_rect.y + (self.close_button_rect.height - button_text.get_height()) // 2
         surface.blit(button_text, (text_x, text_y))
@@ -233,9 +238,9 @@ class BattleStateViewer:
 
         # Legend items
         items = [
-            ((60, 50, 20), (255, 220, 100), f"Changed ({self.diff_stats['changed']})"),
-            ((20, 50, 30), (100, 255, 150), f"Added ({self.diff_stats['added']})"),
-            ((50, 20, 20), (255, 120, 120), f"Removed ({self.diff_stats['removed']})"),
+            (DIFF_CHANGED_BG, DIFF_CHANGED_TEXT, f"Changed ({self.diff_stats['changed']})"),
+            (DIFF_ADDED_BG, DIFF_ADDED_TEXT, f"Added ({self.diff_stats['added']})"),
+            (DIFF_REMOVED_BG, DIFF_REMOVED_TEXT, f"Removed ({self.diff_stats['removed']})"),
         ]
 
         total_width = sum(100 + self.legend_font.size(text)[0] for _, _, text in items) + 40

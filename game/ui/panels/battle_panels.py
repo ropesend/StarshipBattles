@@ -4,7 +4,16 @@ from game.core.profiling import profile_action
 
 logger = logging.getLogger(__name__)
 from game.ui.config import UIConfig
-from game.ui.colors import HP_HEALTHY, HP_DAMAGED, HP_CRITICAL, RESOURCE_FUEL, TEXT_MUTED
+from game.ui.colors import (
+    HP_HEALTHY, HP_DAMAGED, HP_CRITICAL, RESOURCE_FUEL, TEXT_MUTED,
+    TEAM_1_TEXT, TEAM_1_BANNER_BG, TEAM_2_TEXT, TEAM_2_BANNER_BG,
+    TEXT_ITEM, TEXT_DIM, TEXT_SECONDARY, STATUS_DERELICT, BAR_BG,
+    BG_PANEL_DARK, BORDER_PANEL, SEEKER_TITLE, STATUS_HIT_TEXT,
+    STATUS_DESTROYED_TEXT, STATUS_ACTIVE_TEXT, STATUS_ACTIVE_BG,
+    DAMAGE_TEXT, TARGET_TEXT, BTN_DANGER_BG, BTN_DANGER_HOVER,
+    BTN_DANGER_BORDER, BTN_DANGER_TEXT, BTN_VICTORY_BG, BTN_VICTORY_BORDER,
+    BTN_END_BG, BTN_END_BORDER, BTN_END_TEXT, WHITE
+)
 from game.ui.fonts import get_default_font
 from game.ui.panels.ship_stats_renderer import (
     draw_stat_bar, draw_ship_info_header, draw_ship_vitals,
@@ -99,7 +108,7 @@ class ShipStatsPanel(BattlePanel):
 
         # Draw to surface
         self.surface.fill((0, 0, 0, 0))
-        self.surface.fill((20, 25, 35, UIConfig.PANEL_ALPHA))
+        self.surface.fill((*BG_PANEL_DARK, UIConfig.PANEL_ALPHA))
 
         font_title = get_default_font(UIConfig.FONT_TITLE)
         font_name = get_default_font(UIConfig.FONT_NAME)
@@ -115,12 +124,12 @@ class ShipStatsPanel(BattlePanel):
         team1_ships = [s for s in ships if s.team_id == 0]
         team1_alive = sum(1 for s in team1_ships if s.is_alive and not s.is_derelict)
 
-        title = font_title.render(f"TEAM 1 ({team1_alive}/{len(team1_ships)})", True, (100, 200, 255))
+        title = font_title.render(f"TEAM 1 ({team1_alive}/{len(team1_ships)})", True, TEAM_1_TEXT)
         self.surface.blit(title, (10, y))
         y += 30
 
         for ship in team1_ships:
-            y = self.draw_ship_entry(self.surface, ship, y, panel_w, font_name, font_stat, (40, 60, 80))
+            y = self.draw_ship_entry(self.surface, ship, y, panel_w, font_name, font_stat, TEAM_1_BANNER_BG)
 
         y += 15
 
@@ -128,17 +137,17 @@ class ShipStatsPanel(BattlePanel):
         team2_ships = [s for s in ships if s.team_id == 1]
         team2_alive = sum(1 for s in team2_ships if s.is_alive and not s.is_derelict)
 
-        title = font_title.render(f"TEAM 2 ({team2_alive}/{len(team2_ships)})", True, (255, 100, 100))
+        title = font_title.render(f"TEAM 2 ({team2_alive}/{len(team2_ships)})", True, TEAM_2_TEXT)
         self.surface.blit(title, (10, y))
         y += 30
 
         for ship in team2_ships:
-            y = self.draw_ship_entry(self.surface, ship, y, panel_w, font_name, font_stat, (80, 40, 40))
+            y = self.draw_ship_entry(self.surface, ship, y, panel_w, font_name, font_stat, TEAM_2_BANNER_BG)
 
         self.content_height = y + self.scroll_offset
 
         screen.blit(self.surface, self.rect.topleft)
-        pygame.draw.line(screen, (60, 60, 80), self.rect.topleft, self.rect.bottomleft, 2)
+        pygame.draw.line(screen, BORDER_PANEL, self.rect.topleft, self.rect.bottomleft, 2)
         
     def draw_ship_entry(self, surface, ship, y, panel_w, font_name, font_stat, banner_color):
         """Draw a single ship entry."""
@@ -150,12 +159,12 @@ class ShipStatsPanel(BattlePanel):
         elif ship.is_derelict:
             status = " [DERELICT]"
 
-        color = (200, 200, 200)
+        color = TEXT_ITEM
         if not ship.is_alive:
-            color = (100, 100, 100)
+            color = TEXT_DIM
         elif ship.is_derelict:
-            color = (255, 165, 0)
-        bg_color = banner_color if ship.is_alive else (40, 40, 40)
+            color = STATUS_DERELICT
+        bg_color = banner_color if ship.is_alive else BAR_BG
 
         pygame.draw.rect(surface, bg_color, (5, y, panel_w - 10, UIConfig.BANNER_HEIGHT))
         name_text = font_name.render(f"{arrow} {ship.name}{status}", True, color)
@@ -304,10 +313,10 @@ class SeekerMonitorPanel(BattlePanel):
             self.surface = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
             
         self.surface.fill((0, 0, 0, 0))
-        self.surface.fill((20, 25, 35, 230))
+        self.surface.fill((*BG_PANEL_DARK, 230))
         
         # Draw line on Right edge
-        pygame.draw.line(self.surface, (60, 60, 80), (self.rect.width - 1, 0), (self.rect.width - 1, self.rect.height), 2)
+        pygame.draw.line(self.surface, BORDER_PANEL, (self.rect.width - 1, 0), (self.rect.width - 1, self.rect.height), 2)
         
         font_title = get_default_font(28)
         font_name = get_default_font(22)
@@ -318,7 +327,7 @@ class SeekerMonitorPanel(BattlePanel):
         
         active_count = sum(1 for p in self.tracked_seekers if p.status == 'active')
         total_count = len(self.tracked_seekers)
-        title = font_title.render(f"SEEKER MONITOR ({active_count}/{total_count})", True, (255, 200, 100))
+        title = font_title.render(f"SEEKER MONITOR ({active_count}/{total_count})", True, SEEKER_TITLE)
         self.surface.blit(title, (10, y))
         y += 30
         
@@ -337,13 +346,13 @@ class SeekerMonitorPanel(BattlePanel):
         
         mouse_pos = pygame.mouse.get_pos()
         hover = self.clear_btn_rect.collidepoint(mouse_pos)
-        col = (60, 40, 40) if hover else (50, 30, 30)
-        border = (150, 80, 80) if hover else (100, 60, 60)
+        col = BTN_DANGER_HOVER if hover else BTN_DANGER_BG
+        border = (150, 80, 80) if hover else BTN_DANGER_BORDER
         
         pygame.draw.rect(screen, col, self.clear_btn_rect)
         pygame.draw.rect(screen, border, self.clear_btn_rect, 1)
         
-        text = font_name.render("Clear Inactive", True, (255, 150, 150))
+        text = font_name.render("Clear Inactive", True, BTN_DANGER_TEXT)
         text_rect = text.get_rect(center=self.clear_btn_rect.center)
         screen.blit(text, text_rect)
     
@@ -353,21 +362,21 @@ class SeekerMonitorPanel(BattlePanel):
         status = getattr(proj, 'status', 'active')
 
         if status == 'hit':
-            color = (50, 255, 50)
+            color = STATUS_HIT_TEXT
             status_str = "[HIT]"
-            bg_color = (40, 40, 40)
+            bg_color = BAR_BG
         elif status == 'miss':
             color = TEXT_MUTED
             status_str = "[MISS]"
-            bg_color = (40, 40, 40)
+            bg_color = BAR_BG
         elif status == 'destroyed':
-            color = (255, 50, 50)
+            color = STATUS_DESTROYED_TEXT
             status_str = "[DEAD]"
-            bg_color = (40, 40, 40)
+            bg_color = BAR_BG
         else:
-            color = (255, 255, 100)
+            color = STATUS_ACTIVE_TEXT
             status_str = "[ACT]"
-            bg_color = (50, 50, 60)
+            bg_color = STATUS_ACTIVE_BG
 
         pygame.draw.rect(surface, bg_color, (5, y, panel_w - 35, 22))
 
@@ -378,9 +387,9 @@ class SeekerMonitorPanel(BattlePanel):
         # X button
         if status != 'active':
             x_rect = pygame.Rect(panel_w - 25, y, 20, 22)
-            pygame.draw.rect(surface, (60, 30, 30), x_rect)
-            pygame.draw.rect(surface, (100, 50, 50), x_rect, 1)
-            x_text = font_name.render("X", True, (255, 100, 100))
+            pygame.draw.rect(surface, BTN_DANGER_BG, x_rect)
+            pygame.draw.rect(surface, BTN_DANGER_BORDER, x_rect, 1)
+            x_text = font_name.render("X", True, TEAM_2_TEXT)
             x_rect_center = x_rect.center
             surface.blit(x_text, (x_rect_center[0] - x_text.get_width()//2, x_rect_center[1] - x_text.get_height()//2))
 
@@ -399,7 +408,7 @@ class SeekerMonitorPanel(BattlePanel):
         # Speed
         p_vel_len = proj.velocity.length() * 100.0
         max_speed = getattr(proj, 'max_speed', p_vel_len) * 100.0 if getattr(proj, 'max_speed', 0) > 0 else p_vel_len
-        txt = font.render(f"Speed: {p_vel_len:.0f} px/s", True, (180, 180, 180))
+        txt = font.render(f"Speed: {p_vel_len:.0f} px/s", True, TEXT_SECONDARY)
         surface.blit(txt, (x_indent, y))
         y += 14
         
@@ -409,7 +418,7 @@ class SeekerMonitorPanel(BattlePanel):
         hp_pct = hp / max_hp if max_hp > 0 else 0
         hp_color = HP_HEALTHY if hp_pct > 0.5 else (HP_DAMAGED if hp_pct > 0.2 else HP_CRITICAL)
         
-        txt = font.render(f"HP: {hp:.0f}/{max_hp:.0f}", True, (180, 180, 180))
+        txt = font.render(f"HP: {hp:.0f}/{max_hp:.0f}", True, TEXT_SECONDARY)
         surface.blit(txt, (x_indent, y))
         self.draw_stat_bar(surface, x_indent + 80, y, bar_w, bar_h, hp_pct, hp_color)
         y += 14
@@ -420,20 +429,20 @@ class SeekerMonitorPanel(BattlePanel):
         fuel_pct = endurance / max_endurance if max_endurance > 0 else 0
         fuel_color = RESOURCE_FUEL if fuel_pct > 0.3 else HP_CRITICAL
         
-        txt = font.render(f"Fuel: {endurance:.1f}s", True, (180, 180, 180))
+        txt = font.render(f"Fuel: {endurance:.1f}s", True, TEXT_SECONDARY)
         surface.blit(txt, (x_indent, y))
         self.draw_stat_bar(surface, x_indent + 80, y, bar_w, bar_h, fuel_pct, fuel_color)
         y += 14
         
         # Damage
-        txt = font.render(f"Damage: {proj.damage}", True, (255, 150, 150))
+        txt = font.render(f"Damage: {proj.damage}", True, DAMAGE_TEXT)
         surface.blit(txt, (x_indent, y))
         y += 14
         
         # Target
         target = getattr(proj, 'target', None)
         t_name = target.name if target and hasattr(target, 'name') else "None"
-        txt = font.render(f"Target: {t_name}", True, (150, 200, 150))
+        txt = font.render(f"Target: {t_name}", True, TARGET_TEXT)
         surface.blit(txt, (x_indent, y))
         y += UIConfig.ELEMENT_SPACING
         
@@ -503,11 +512,11 @@ class BattleControlPanel(BattlePanel):
         if is_over:
             # Battle Over
             if team1_alive > 0:
-                winner_text, winner_color = "TEAM 1 WINS!", (100, 200, 255)
+                winner_text, winner_color = "TEAM 1 WINS!", TEAM_1_TEXT
             elif team2_alive > 0:
-                winner_text, winner_color = "TEAM 2 WINS!", (255, 100, 100)
+                winner_text, winner_color = "TEAM 2 WINS!", TEAM_2_TEXT
             else:
-                winner_text, winner_color = "DRAW!", (200, 200, 200)
+                winner_text, winner_color = "DRAW!", TEXT_ITEM
             
             # Draw semi-transparent overlay
             if self.surface is None or self.surface.get_size() != self.rect.size:
@@ -526,9 +535,9 @@ class BattleControlPanel(BattlePanel):
             btn_x = center_x - btn_w // 2
             btn_y = sh // 2
             
-            pygame.draw.rect(screen, (50, 80, 120), (btn_x, btn_y, btn_w, btn_h))
-            pygame.draw.rect(screen, (100, 150, 200), (btn_x, btn_y, btn_w, btn_h), 2)
-            btn_text = btn_font.render("Return to Battle Setup", True, (255, 255, 255))
+            pygame.draw.rect(screen, BTN_VICTORY_BG, (btn_x, btn_y, btn_w, btn_h))
+            pygame.draw.rect(screen, BTN_VICTORY_BORDER, (btn_x, btn_y, btn_w, btn_h), 2)
+            btn_text = btn_font.render("Return to Battle Setup", True, WHITE)
             screen.blit(btn_text, (btn_x + btn_w // 2 - btn_text.get_width() // 2, btn_y + 12))
             
             self.battle_end_button_rect = pygame.Rect(btn_x, btn_y, btn_w, btn_h)
@@ -554,9 +563,9 @@ class BattleControlPanel(BattlePanel):
             # We should probably put this button in SeekerPanel? Or keep it separate.
             # Requirement: "Create BattleControlPanel".
             
-            pygame.draw.rect(screen, (80, 40, 40), (btn_x, btn_y, btn_w, btn_h))
-            pygame.draw.rect(screen, (150, 80, 80), (btn_x, btn_y, btn_w, btn_h), 1)
-            btn_text = btn_font.render("End Battle", True, (255, 200, 200))
+            pygame.draw.rect(screen, BTN_END_BG, (btn_x, btn_y, btn_w, btn_h))
+            pygame.draw.rect(screen, BTN_END_BORDER, (btn_x, btn_y, btn_w, btn_h), 1)
+            btn_text = btn_font.render("End Battle", True, BTN_END_TEXT)
             screen.blit(btn_text, (btn_x + btn_w // 2 - btn_text.get_width() // 2, btn_y + 7))
             
             self.end_battle_early_rect = pygame.Rect(btn_x, btn_y, btn_w, btn_h)

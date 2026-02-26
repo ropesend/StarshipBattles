@@ -15,7 +15,7 @@
 |-------|--------|-----------|
 | 1. Expand colors.py palette | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Test Lab renderer fix | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Battle UI files | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Battle UI files | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Setup & strategy files | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Ship panels & widgets | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Builder, formation & remaining files | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
@@ -23,11 +23,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete - Fixed test lab files (renderer.py + 4 others) to use theme.py constants
-**Next Action:** Phase 3 - Battle UI files consolidation
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 complete - All 4 battle files consolidated (battle_panels.py, battle_screen.py, battle_ui.py, battle_state_viewer.py)
+**Next Action:** Phase 4 - Setup & strategy files consolidation
 **Blockers:** None
-**Context for Next Agent:** All test lab files now use theme.py constants. Proceed with Phase 3 to consolidate battle UI files.
+**Context for Next Agent:** Added ~15 new constants to colors.py (HUD_ZOOM_TEXT, GRID_BG_BATTLE, DEBUG_*, TEST_COMPLETE_*, RESULT_*, VIEWER_BTN_*). Proceed with Phase 4 to consolidate setup_renderer.py, setup_screen.py, strategy_renderer.py, strategy_widgets.py.
 
 ## Overview
 Complete the color tuple consolidation that was left incomplete by the previous agent.
@@ -145,7 +145,7 @@ Quick win — theme.py already has most constants, just needs substitution in re
 ## Completion Checklist
 - [x] Phase 1 complete — colors.py expanded
 - [x] Phase 2 complete — test lab renderer fixed
-- [ ] Phase 3 complete — battle files consolidated
+- [x] Phase 3 complete — battle files consolidated
 - [ ] Phase 4 complete — setup & strategy files consolidated
 - [ ] Phase 5 complete — ship panels & widgets consolidated
 - [ ] Phase 6 complete — remaining files consolidated

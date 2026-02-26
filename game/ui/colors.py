@@ -282,6 +282,21 @@ SPEED_PAUSED = (255, 100, 100)
 SPEED_SLOWMO = (255, 200, 100)
 SPEED_FAST = (100, 255, 100)
 HUD_TEXT = (180, 180, 180)
+HUD_ZOOM_TEXT = (150, 200, 255)
+
+# === Battle Grid/Overlay ===
+GRID_BG_BATTLE = (30, 30, 50)           # Battle grid lines
+DEBUG_TARGET_LINE = (0, 0, 255)         # Target indicator line (blue)
+DEBUG_WEAPON_RANGE = (100, 100, 100)    # Weapon range circle
+DEBUG_AIM_POINT = (0, 100, 255)         # Aim point indicator
+DEBUG_FIRING_ARC = (255, 165, 0)        # Firing arc lines (orange)
+
+# === Test Complete UI ===
+TEST_COMPLETE_PASSED = (80, 255, 120)   # Green for passed
+TEST_COMPLETE_FAILED = (255, 80, 80)    # Red for failed
+TEST_COMPLETE_NEUTRAL = (255, 200, 100) # Yellow for neutral
+RESULT_WIN = (0, 255, 0)                # Win result text
+RESULT_DRAW = (255, 255, 0)             # Draw result text
 
 # === Diff Viewer ===
 DIFF_CHANGED_BG = (60, 50, 20)
@@ -290,6 +305,9 @@ DIFF_ADDED_BG = (20, 50, 30)
 DIFF_ADDED_TEXT = (100, 255, 150)
 DIFF_REMOVED_BG = (50, 20, 20)
 DIFF_REMOVED_TEXT = (255, 120, 120)
+VIEWER_BTN_BG = (80, 80, 100)
+VIEWER_BTN_HOVER = (100, 100, 130)
+VIEWER_BTN_BORDER = (120, 120, 140)
 
 # === Formation Editor ===
 FORMATION_GRID = (45, 45, 55)

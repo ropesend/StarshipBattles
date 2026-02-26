@@ -26,6 +26,10 @@ from game.ui.services.battle_ui_service import BattleUIService
 # PROJ-126: Import AI factory from AI layer (UI can depend on AI)
 from game.ai.ai_factory import AIControllerFactory
 from game.ui.fonts import get_font
+from game.ui.colors import (
+    BG_BATTLE, PROJECTILE_STANDARD, HUD_TEXT, HUD_ZOOM_TEXT,
+    SPEED_PAUSED, SPEED_SLOWMO, SPEED_FAST, TEXT_ITEM
+)
 
 if TYPE_CHECKING:
     from game.simulation.battle_controller import BattleController
@@ -537,7 +541,7 @@ class BattleScreen:
     
     def draw(self, screen):
         """Draw the battle scene."""
-        screen.fill((10, 10, 20))
+        screen.fill(BG_BATTLE)
         
         # 1. Background Grid (UI)
         self.ui.draw_grid(screen)
@@ -552,7 +556,7 @@ class BattleScreen:
             start = self.camera.world_to_screen(start_pos)
             end = self.camera.world_to_screen(end_pos)
             
-            color = getattr(p, 'color', (255, 200, 50))
+            color = getattr(p, 'color', PROJECTILE_STANDARD)
             pygame.draw.line(screen, color, start, end, 3)
             pygame.draw.circle(screen, (255, 255, 100), (int(end[0]), int(end[1])), int(getattr(p, 'radius', 4)))
         
@@ -601,9 +605,9 @@ class BattleScreen:
 
         # Draw to the right of seeker panel
         panel_offset = self.ui.seeker_panel.rect.width + 10
-        screen.blit(font.render(tick_text, True, (180, 180, 180)), (panel_offset, 10))
-        screen.blit(font.render(rate_text, True, (180, 180, 180)), (panel_offset, 35))
-        screen.blit(font.render(zoom_text, True, (150, 200, 255)), (panel_offset, 60))
+        screen.blit(font.render(tick_text, True, HUD_TEXT), (panel_offset, 10))
+        screen.blit(font.render(rate_text, True, HUD_TEXT), (panel_offset, 35))
+        screen.blit(font.render(zoom_text, True, HUD_ZOOM_TEXT), (panel_offset, 60))
 
         # Speed indicator
         if self.sim_speed_multiplier >= 10.0:
@@ -616,11 +620,11 @@ class BattleScreen:
         else:
             speed_text = f"Speed: {speed_val_text}"
 
-        speed_color = (255, 100, 100) if self.sim_paused else (200, 200, 200)
+        speed_color = SPEED_PAUSED if self.sim_paused else TEXT_ITEM
         if self.sim_speed_multiplier < 1.0:
-            speed_color = (255, 200, 100)
+            speed_color = SPEED_SLOWMO
         elif self.sim_speed_multiplier > 1.0:
-            speed_color = (100, 255, 100)
+            speed_color = SPEED_FAST
 
         screen.blit(font.render(speed_text, True, speed_color), (width // 2 - 50, 10))
 
