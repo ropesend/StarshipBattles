@@ -23,6 +23,7 @@ from game.core.constants import ResourceType
 from game.core.registry import GameRegistries
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
+from game.strategy.services.component_inspector import get_component_abilities
 
 logger = logging.getLogger(__name__)
 
@@ -185,11 +186,7 @@ class ShipStatsCalculator:
             comp_hp *= multipliers.get('hp_mult', 1.0)
             total_hp += comp_hp * effectiveness
 
-            # comp_def may be a dict (JSON registry) or Component object (simulation)
-            if isinstance(comp_def, dict):
-                abilities = comp_def.get('abilities', {}) or {}
-            else:
-                abilities = getattr(comp_def, 'abilities', {}) or {}
+            abilities = get_component_abilities(comp_def)
 
             # Get capacity multiplier for storage abilities
             capacity_mult = multipliers.get('capacity_mult', 1.0)
@@ -333,10 +330,7 @@ class ShipStatsCalculator:
             return 1.0
 
         # Check for 'Armor' ability marker
-        if isinstance(comp_def, dict):
-            abilities = comp_def.get('abilities', {}) or {}
-        else:
-            abilities = getattr(comp_def, 'abilities', {}) or {}
+        abilities = get_component_abilities(comp_def)
         if abilities.get('Armor'):
             return 1.0
 

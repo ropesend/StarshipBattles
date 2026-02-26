@@ -21,6 +21,7 @@ from typing import List, Optional, TYPE_CHECKING
 import logging
 
 from game.core.registry import GameRegistries
+from game.strategy.services.component_inspector import get_component_abilities
 
 logger = logging.getLogger(__name__)
 from game.strategy.interfaces.engines import IHarvestingEngine
@@ -71,8 +72,7 @@ def get_harvester_from_registry(comp_id: str, registries: GameRegistries) -> Opt
     comp_def = registries.components.get(comp_id)
     if comp_def is None:
         return None
-    # comp_def may be dict (JSON) or Component object
-    abilities = getattr(comp_def, 'abilities', {}) or {}
+    abilities = get_component_abilities(comp_def)
     harvester_data = abilities.get('ResourceHarvester')
     if isinstance(harvester_data, dict):
         return harvester_data
@@ -209,8 +209,7 @@ class HarvestingEngine(IHarvestingEngine):
         comp_def = self._registries.components.get(comp_id)
         if comp_def is None:
             return None
-        # comp_def may be dict (JSON) or Component object
-        abilities = getattr(comp_def, 'abilities', {}) or {}
+        abilities = get_component_abilities(comp_def)
         storage_data = abilities.get('EmpireStorage')
         if isinstance(storage_data, dict):
             return storage_data

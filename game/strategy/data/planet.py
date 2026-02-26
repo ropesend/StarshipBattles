@@ -8,6 +8,7 @@ from game.core.hex_math import HexCoord, hex_circle_filled
 from game.core.validation_helpers import (
     require_keys, validate_enum, validate_positive, validate_non_negative
 )
+from game.strategy.services.component_inspector import get_component_abilities
 
 logger = logging.getLogger(__name__)
 
@@ -90,8 +91,7 @@ class PlanetaryFacility:
                 comp_def = registries.components.get(comp_id)
                 if not comp_def:
                     continue
-                # comp_def may be dict (JSON) or Component object
-                abilities = getattr(comp_def, 'abilities', {}) or {}
+                abilities = get_component_abilities(comp_def)
                 for storage in (abilities.get('ResourceStorage') or []):
                     if isinstance(storage, dict) and storage.get('resource') == ResourceType.FUEL:
                         total += storage.get('amount', 0)

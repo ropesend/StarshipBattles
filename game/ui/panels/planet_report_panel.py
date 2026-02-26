@@ -16,6 +16,7 @@ from game.ui.fonts import get_font
 
 if TYPE_CHECKING:
     from game.core.protocols import IPlanet, IFacility
+from game.strategy.services.component_inspector import get_component_abilities
 from game.ui.panels.strategy_widgets import AtmosphereGraph
 from game.ui.panels.build_queue_portraits import RESOURCE_PORTRAIT_FILES, RESOURCE_FALLBACK_COLORS
 from game.core.constants import PLANET_RESOURCES
@@ -513,7 +514,7 @@ def _get_harvester_info(comp, registries) -> Optional[dict]:
         if comp_id and registries is not None:
             comp_def = registries.components.get(comp_id)
             if comp_def is not None:
-                abilities = getattr(comp_def, 'abilities', {}) or {}
+                abilities = get_component_abilities(comp_def)
                 harvester = abilities.get('ResourceHarvester')
                 if isinstance(harvester, dict):
                     return harvester

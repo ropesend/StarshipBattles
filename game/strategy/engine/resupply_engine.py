@@ -21,6 +21,7 @@ from game.core.constants import ResourceType
 from game.core.registry import GameRegistries
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
+from game.strategy.services.component_inspector import get_component_abilities
 
 logger = logging.getLogger(__name__)
 from game.strategy.interfaces.engines import IResupplyEngine
@@ -155,8 +156,7 @@ class ResupplyEngine(IResupplyEngine):
                 comp_def = registry.get(comp_id)
                 if not comp_def:
                     continue
-                # comp_def may be dict (JSON) or Component object
-                abilities = getattr(comp_def, 'abilities', {}) or {}
+                abilities = get_component_abilities(comp_def)
                 for gen_data in ShipStatsCalculator._get_ability_list(abilities, 'ResourceGeneration'):
                     if gen_data.get('resource') == ResourceType.FUEL:
                         total_rate += gen_data.get('amount', 0.0)

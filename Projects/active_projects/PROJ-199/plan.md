@@ -15,16 +15,16 @@
 |-------|--------|-----------|
 | 1. Lazy Init — True Missing Inits | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Lazy Init — Unnecessary Guards | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. CompDef Abilities Centralization | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. CompDef Abilities Centralization | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. ShipStatsCalculator Dual-Format Cleanup | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 2 Complete → Phase 3 Next
-**Last Action:** Phase 2 complete: 18 unnecessary hasattr guards removed from 10 files
-**Next Action:** Execute Phase 3 (CompDef Abilities Centralization)
+**Active Phase:** Phase 3 Complete → Phase 4 Next
+**Last Action:** Phase 3 complete: 8 getattr(comp_def, 'abilities') patterns → get_component_abilities() in 6 files
+**Next Action:** Execute Phase 4 (ShipStatsCalculator Dual-Format Helpers)
 **Blockers:** None
-**Context for Next Agent:** Phase 2 removed hasattr checks from formation_editor, planet_report_panel, fleet_report_window, planet_list_window, strategy_screen, strategy_ui, strategy_window_manager, dialogs, transfer_dialog. Tests: 12724 passed, 1 skipped.
+**Context for Next Agent:** Phase 3 added import and routed abilities access through get_component_abilities() helper. Files: harvesting_engine.py (2), resource_management_engine.py (1), resupply_engine.py (1), planet.py (1), planet_report_panel.py (1), ship_stats_calculator.py (2). Tests: 12724 passed, 1 skipped.
 
 ## Overview
 Follow-up to PROJ-198 (UI Layer Duck Typing Elimination). Addresses two specific remaining categories that PROJ-198's audit flagged as legitimate but which have clean mechanical fixes:
