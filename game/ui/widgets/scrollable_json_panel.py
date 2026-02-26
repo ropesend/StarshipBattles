@@ -15,7 +15,13 @@ from typing import Optional, Tuple, Dict
 
 from game.ui.utils.json_diff import DiffResult
 from game.ui.fonts import get_font, FONT_MONO
-from game.ui.colors import BORDER_LIGHT
+from game.ui.colors import (
+    BORDER_LIGHT, TEXT_ITEM,
+    JSON_BG, JSON_BORDER, JSON_TITLE_BG, JSON_TITLE_TEXT,
+    JSON_KEY, JSON_STRING, JSON_NUMBER, JSON_BOOL, JSON_NULL, JSON_BRACKET,
+    DIFF_CHANGED_BG, DIFF_CHANGED_TEXT, DIFF_ADDED_BG, DIFF_ADDED_TEXT,
+    DIFF_REMOVED_BG, DIFF_REMOVED_TEXT, SCROLLBAR_TRACK, SCROLLBAR_THUMB_ACTIVE
+)
 
 
 class ScrollableJsonPanel:
@@ -65,29 +71,29 @@ class ScrollableJsonPanel:
         self.content_font = get_font(13, FONT_MONO)
 
         # Colors
-        self.bg_color = (25, 25, 30)
-        self.border_color = (80, 80, 100)
-        self.title_bg_color = (40, 40, 50)
-        self.title_color = (220, 220, 255)
-        self.text_color = (200, 200, 200)
+        self.bg_color = JSON_BG
+        self.border_color = JSON_BORDER
+        self.title_bg_color = JSON_TITLE_BG
+        self.title_color = JSON_TITLE_TEXT
+        self.text_color = TEXT_ITEM
 
         # JSON syntax colors
-        self.key_color = (156, 220, 254)      # Light blue for keys
-        self.string_color = (206, 145, 120)   # Orange-brown for strings
-        self.number_color = (181, 206, 168)   # Green for numbers
-        self.bool_color = (86, 156, 214)      # Blue for booleans
-        self.null_color = (86, 156, 214)      # Blue for null
-        self.bracket_color = (180, 180, 180)  # Gray for brackets
+        self.key_color = JSON_KEY
+        self.string_color = JSON_STRING
+        self.number_color = JSON_NUMBER
+        self.bool_color = JSON_BOOL
+        self.null_color = JSON_NULL
+        self.bracket_color = JSON_BRACKET
 
         # Diff highlight colors (background)
-        self.changed_bg = (60, 50, 20)        # Yellow-ish for changed
-        self.added_bg = (20, 50, 30)          # Green-ish for added
-        self.removed_bg = (50, 20, 20)        # Red-ish for removed
+        self.changed_bg = DIFF_CHANGED_BG
+        self.added_bg = DIFF_ADDED_BG
+        self.removed_bg = DIFF_REMOVED_BG
 
         # Diff highlight colors (text) - brighter versions
-        self.changed_text = (255, 220, 100)   # Bright yellow for changed values
-        self.added_text = (100, 255, 150)     # Bright green for added
-        self.removed_text = (255, 120, 120)   # Bright red for removed
+        self.changed_text = DIFF_CHANGED_TEXT
+        self.added_text = DIFF_ADDED_TEXT
+        self.removed_text = DIFF_REMOVED_TEXT
 
         # Scrollbar
         self.scrollbar_width = 12
@@ -398,11 +404,11 @@ class ScrollableJsonPanel:
         scrollbar_height = self.height - 40
 
         # Track
-        pygame.draw.rect(surface, (50, 50, 60),
+        pygame.draw.rect(surface, SCROLLBAR_TRACK,
                         (scrollbar_x, scrollbar_y, self.scrollbar_width, scrollbar_height),
                         border_radius=3)
 
         # Thumb
         thumb_rect = self._get_scrollbar_thumb_rect()
-        thumb_color = BORDER_LIGHT if not self.scrollbar_dragging else (120, 120, 140)
+        thumb_color = BORDER_LIGHT if not self.scrollbar_dragging else SCROLLBAR_THUMB_ACTIVE
         pygame.draw.rect(surface, thumb_color, thumb_rect, border_radius=3)

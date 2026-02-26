@@ -8,21 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-197 Phase 4 - Setup & strategy files consolidation
-**Current Status:** PROJ-197 Phase 4 complete, Phase 5 ready
+**Last Completed:** PROJ-197 Phase 5 - Ship panels & widgets consolidation
+**Current Status:** PROJ-197 Phase 5 complete, Phase 6 ready
 **Current Project:** PROJ-197 - Duplication Consolidation Completion
-**Current Phase:** Phase 5 - Ship panels & widgets
-**Test Status:** 4022 passed, 1 skipped
+**Current Phase:** Phase 6 - Builder, formation & remaining files
+**Test Status:** 12734 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 4 complete: Consolidated all 4 setup/strategy files
-- setup_renderer.py: ~25 tuples replaced (titles, labels, buttons, dropdowns)
-- setup_screen.py: 3 tuples replaced (BG_PANEL_DARK, TEAM_1_TEXT, TEAM_2_TEXT)
-- strategy_renderer.py: ~25 tuples replaced (WARP_LANE, STAR_LABEL, storm tints, paths, etc.)
-- strategy_widgets.py: ~23 tuples replaced (SPECTRUM_*, GAS_*, TEXT_ITEM, etc.)
-- All constants already existed in colors.py - no new constants needed
-- Next: Phase 5 - Consolidate ship_stats_renderer.py, ship_detail_panel.py, scrollable_json_panel.py, modifier_impact_grid.py
+- Phase 5 complete: Consolidated all 4 ship/panel files
+- ship_stats_renderer.py: ~31 tuples replaced (HP colors, resource colors, component status)
+- ship_detail_panel.py: ~11 tuples replaced (damage colors, placeholder drawing)
+- scrollable_json_panel.py: ~20 tuples replaced (JSON syntax colors, diff colors, scrollbar)
+- modifier_impact_grid.py: ~8 tuples replaced (row/header bg, buff/debuff colors)
+- Added ~25 new constants: RESOURCE_BIOMASS, JSON_*, SCROLLBAR_*, MODIFIER_*, WEAPON_INACTIVE, CREW_LOW
+- Updated 3 test files to use palette constants instead of hardcoded values
+- Next: Phase 6 - Builder, formation & remaining files (~30 files)
 
 ---
 
@@ -93,6 +94,12 @@
 - [/] **PROJ-197: Duplication Consolidation Completion**
   - **Phases:** 7 | **Status:** Ready | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-197/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-197/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+- [ ] **PROJ-198: UI Layer Duck Typing Elimination - Strategy Screens & Services**
+  - **Phases:** 6 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-198/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-198/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
 
@@ -183,6 +190,7 @@
 | 2026-02-25 | PROJ-197 | Phase 2 | Complete | 3161 UI passed | - | Test lab files → theme.py constants |
 | 2026-02-25 | PROJ-197 | Phase 3 | Complete | 3161 UI passed | - | Battle UI files → colors.py constants |
 | 2026-02-25 | PROJ-197 | Phase 4 | Complete | 4022 passed | - | Setup & strategy files → colors.py constants |
+| 2026-02-25 | PROJ-197 | Phase 5 | Complete | 12734 passed | - | Ship panels & widgets → colors.py constants |
 
 ---
 

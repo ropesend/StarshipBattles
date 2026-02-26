@@ -64,6 +64,7 @@ RESOURCE_FUEL = (255, 165, 0)    # Orange
 RESOURCE_ENERGY = (100, 200, 255)  # Light blue
 RESOURCE_AMMO = (200, 200, 100)  # Yellowish
 RESOURCE_SHIELD = (0, 200, 255)  # Cyan
+RESOURCE_BIOMASS = (100, 255, 100)  # Green (domain-specific)
 
 # === Research Tree Nodes ===
 RESEARCH_LOCKED = (80, 80, 90)       # Gray
@@ -327,3 +328,32 @@ WEAPON_ACCURACY_LOW = (200, 50, 50)
 WEAPON_LABEL = (200, 200, 100)
 WEAPON_RANGE_LABEL = (150, 150, 200)
 WEAPON_ARC = (200, 150, 50)
+
+# === JSON Viewer / Scrollable Panel ===
+JSON_BG = (25, 25, 30)                  # Panel background
+JSON_BORDER = (80, 80, 100)             # Panel border
+JSON_TITLE_BG = (40, 40, 50)            # Title bar background
+JSON_TITLE_TEXT = (220, 220, 255)       # Title text
+JSON_KEY = (156, 220, 254)              # Key names (light blue)
+JSON_STRING = (206, 145, 120)           # String values (orange-brown)
+JSON_NUMBER = (181, 206, 168)           # Number values (green)
+JSON_BOOL = (86, 156, 214)              # Boolean values (blue)
+JSON_NULL = (86, 156, 214)              # Null values (blue)
+JSON_BRACKET = (180, 180, 180)          # Brackets/braces (gray)
+SCROLLBAR_TRACK = (50, 50, 60)          # Scrollbar track
+SCROLLBAR_THUMB = (100, 100, 120)       # Scrollbar thumb (same as BORDER_LIGHT)
+SCROLLBAR_THUMB_ACTIVE = (120, 120, 140)  # Scrollbar thumb when dragging
+
+# === Modifier Impact Grid ===
+MODIFIER_HEADER_BG = (40, 40, 50)       # Column header background
+MODIFIER_ROW_BG = (30, 30, 40)          # Row background
+MODIFIER_ROW_ALT_BG = (35, 35, 45)      # Alternating row background
+MODIFIER_FOOTER_BG = (50, 50, 60)       # Footer (net values) background
+MODIFIER_BUFF = (100, 255, 100)         # Green for positive effects
+MODIFIER_DEBUFF = (255, 100, 100)       # Red for negative effects
+MODIFIER_NEUTRAL = (180, 180, 180)      # Gray for neutral
+
+# === Ship Stats Renderer ===
+WEAPON_INACTIVE = (150, 50, 50)         # Inactive weapon text
+WEAPON_INACTIVE_STATUS = (255, 100, 100)  # Inactive weapon status
+CREW_LOW = (255, 100, 100)              # Low crew warning

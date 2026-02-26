@@ -14,6 +14,10 @@ from pygame_gui.elements import UIPanel, UILabel
 from typing import Dict, Any, List, Optional, TYPE_CHECKING
 
 from game.ui.fonts import get_font
+from game.ui.colors import (
+    MODIFIER_HEADER_BG, MODIFIER_ROW_BG, MODIFIER_ROW_ALT_BG, MODIFIER_FOOTER_BG,
+    MODIFIER_BUFF, MODIFIER_DEBUFF, MODIFIER_NEUTRAL, TEXT_ITEM
+)
 
 if TYPE_CHECKING:
     from game.simulation.components.component import Component
@@ -39,14 +43,14 @@ class ModifierImpactGrid:
     TITLE_HEIGHT = 0  # No title - more room for column headers
 
     # Colors
-    COLOR_HEADER_BG = (40, 40, 50)
-    COLOR_ROW_BG = (30, 30, 40)
-    COLOR_ROW_ALT_BG = (35, 35, 45)
-    COLOR_FOOTER_BG = (50, 50, 60)
-    COLOR_TEXT = (200, 200, 200)
-    COLOR_BUFF = (100, 255, 100)  # Green for positive
-    COLOR_DEBUFF = (255, 100, 100)  # Red for negative
-    COLOR_NEUTRAL = (180, 180, 180)  # Gray for neutral
+    COLOR_HEADER_BG = MODIFIER_HEADER_BG
+    COLOR_ROW_BG = MODIFIER_ROW_BG
+    COLOR_ROW_ALT_BG = MODIFIER_ROW_ALT_BG
+    COLOR_FOOTER_BG = MODIFIER_FOOTER_BG
+    COLOR_TEXT = TEXT_ITEM
+    COLOR_BUFF = MODIFIER_BUFF
+    COLOR_DEBUFF = MODIFIER_DEBUFF
+    COLOR_NEUTRAL = MODIFIER_NEUTRAL
 
     def __init__(self, manager: pygame_gui.UIManager, container, rect: pygame.Rect):
         """
