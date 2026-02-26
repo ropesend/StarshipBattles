@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-199 | Duck Typing Cleanup - Lazy Init and CompDef Centralization | Planning | 2026-02-25 | 2026-02-25 |
 | PROJ-198 | UI Layer Duck Typing Elimination - Strategy Screens & Services | Planning | 2026-02-25 | 2026-02-25 |
 | PROJ-197 | Duplication Consolidation Completion | Planning | 2026-02-25 | 2026-02-25 |
 | PROJ-196 | Consolidate Duplicated Code | Planning | 2026-02-24 | 2026-02-24 |
