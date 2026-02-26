@@ -155,8 +155,7 @@ class TransferDialog(UIWindow):
                 sys_name = "Failed"
 
         debug_msg = f"Sys: {sys_name} | Plts: {len(planets)} | Hex: {self.hex_coord}"
-        if hasattr(self, 'lbl_debug'):
-            self.lbl_debug.set_text(debug_msg)
+        self.lbl_debug.set_text(debug_msg)
         
         # Filter for colonized planets
         colonies = [p for p in planets if p.owner_id is not None]

@@ -528,7 +528,7 @@ class StrategyWindowManager:
         """
         if event.type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
             if (
-                hasattr(self, "_pending_confirmation_dialog")
+                self._pending_confirmation_dialog is not None
                 and event.ui_element == self._pending_confirmation_dialog
             ):
                 callback = self._pending_confirmation_callback

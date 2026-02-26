@@ -335,8 +335,8 @@ class StrategyScreen:
 
         # Gather context data for integrated mode
         context_data = {
-            'empire': self.session.player_empire if hasattr(self, 'session') else None,
-            'game_session': self.session if hasattr(self, 'session') else None
+            'empire': self.session.player_empire,
+            'game_session': self.session
         }
 
         if self.scene_callback:

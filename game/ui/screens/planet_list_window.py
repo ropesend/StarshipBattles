@@ -439,7 +439,7 @@ class PlanetListWindow(UIWindow):
 
         # Get portrait surface (use asset_resolver if available)
         portrait_surface = None
-        if hasattr(self, 'asset_resolver') and self.asset_resolver:
+        if self.asset_resolver:
             portrait_surface = self.asset_resolver(planet)
 
         # Calculate panel position and dynamic height (right side of window)
@@ -494,7 +494,7 @@ class PlanetListWindow(UIWindow):
 
     def kill(self):
         # Clean up VirtualTable
-        if hasattr(self, 'virtual_table'):
+        if self.virtual_table:
             self.virtual_table.kill()
 
         if self.planet_detail_panel:

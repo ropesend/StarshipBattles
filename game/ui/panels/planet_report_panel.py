@@ -445,11 +445,11 @@ class PlanetReportPanel:
         self._resource_grid_items = []
 
         # Clean up resource panel
-        if hasattr(self, 'resource_panel') and self.resource_panel:
+        if self.resource_panel:
             self.resource_panel.kill()
 
         # Clean up main panel (contains all other elements)
-        if hasattr(self, 'panel'):
+        if self.panel:
             self.panel.kill()
 
 

@@ -775,7 +775,7 @@ class FormationEditorScreen:
         self.info_label.set_text(f"Arrows: {count}{sel_str}")
         
         # Update Rotation Btn text based on selection
-        if hasattr(self, 'rotation_mode_btn'):
+        if self.rotation_mode_btn:
             if not self.selected_indices:
                 self.rotation_mode_btn.set_text("Rot: -")
                 self.rotation_mode_btn.disable()
@@ -794,7 +794,7 @@ class FormationEditorScreen:
                     self.rotation_mode_btn.set_text("Rot: Relative")
         
         # Manually update slider range if possible, or just clamp input
-        if hasattr(self, 'renumber_slider'):
+        if self.renumber_slider:
              # Pygame_gui doesn't easy exposure of range adjustment without rebuilding, 
              # but we can try setting the value range directly if accessible, or rebuild.
              # Rebuilding is expensive in update loop.

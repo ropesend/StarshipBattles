@@ -155,7 +155,7 @@ class FleetReportWindow(UIWindow):
         handled = super().process_event(event)
 
         # Forward events to ship detail panel (remove button, layer toggles)
-        if hasattr(self, 'ship_detail_panel') and self.ship_detail_panel.process_event(event):
+        if self.ship_detail_panel and self.ship_detail_panel.process_event(event):
             return True
 
         if event.type == pygame.USEREVENT:
@@ -353,11 +353,11 @@ class FleetReportWindow(UIWindow):
     def kill(self):
         """Clean up when window is closed."""
         # Clean up VirtualTable
-        if hasattr(self, 'virtual_table') and self.virtual_table:
+        if self.virtual_table:
             self.virtual_table.kill()
 
         # Clean up ship detail panel
-        if hasattr(self, 'ship_detail_panel') and self.ship_detail_panel:
+        if self.ship_detail_panel:
             self.ship_detail_panel.kill()
 
         if self.on_close_callback:

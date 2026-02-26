@@ -58,7 +58,7 @@ class JSONPopup:
     def close(self):
         """Close the popup."""
         self.is_open = False
-        if hasattr(self, 'close_button') and self.close_button:
+        if self.close_button:
             self.close_button.kill()
 
     def handle_event(self, event):
@@ -191,9 +191,9 @@ class ConfirmationDialog:
 
     def _kill_buttons(self):
         """Kill UIButtons when dialog closes."""
-        if hasattr(self, 'confirm_button') and self.confirm_button:
+        if self.confirm_button:
             self.confirm_button.kill()
-        if hasattr(self, 'cancel_button') and self.cancel_button:
+        if self.cancel_button:
             self.cancel_button.kill()
 
     def handle_event(self, event):

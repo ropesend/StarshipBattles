@@ -14,17 +14,17 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Lazy Init — True Missing Inits | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Lazy Init — Unnecessary Guards | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Lazy Init — Unnecessary Guards | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. CompDef Abilities Centralization | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. ShipStatsCalculator Dual-Format Cleanup | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Phase 1 Complete → Phase 2 Next
-**Last Action:** Phase 1 complete: 6 true lazy inits fixed (7 hasattr → direct access)
-**Next Action:** Execute Phase 2 (unnecessary guards)
+**Active Phase:** Phase 2 Complete → Phase 3 Next
+**Last Action:** Phase 2 complete: 18 unnecessary hasattr guards removed from 10 files
+**Next Action:** Execute Phase 3 (CompDef Abilities Centralization)
 **Blockers:** None
-**Context for Next Agent:** Phase 1 added __init__ declarations for 6 attributes and replaced hasattr with direct access. Task 1.4 (FormationEditor) was misclassified — those are unnecessary guards, moved to Phase 2. Tests: 12724 passed, 1 skipped.
+**Context for Next Agent:** Phase 2 removed hasattr checks from formation_editor, planet_report_panel, fleet_report_window, planet_list_window, strategy_screen, strategy_ui, strategy_window_manager, dialogs, transfer_dialog. Tests: 12724 passed, 1 skipped.
 
 ## Overview
 Follow-up to PROJ-198 (UI Layer Duck Typing Elimination). Addresses two specific remaining categories that PROJ-198's audit flagged as legitimate but which have clean mechanical fixes:
