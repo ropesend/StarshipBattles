@@ -132,6 +132,10 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         # Visual selection UI elements (flag/portrait/theme UI moved to respective galleries)
         self.name_input = None
 
+        # PROJ-199: Lazy init elimination - ship preview elements
+        self._ship_preview_elements: list = []
+        self.ship_preview_scroll = None
+
         self._create_ui()
         self._show_step(self.current_step)
 
@@ -381,12 +385,11 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         logger.debug(f"_refresh_ship_preview called with theme_id: {theme_id}")
 
         # Clear existing ship previews
-        if hasattr(self, '_ship_preview_elements'):
-            for elem in self._ship_preview_elements:
-                elem.kill()
+        for elem in self._ship_preview_elements:
+            elem.kill()
         self._ship_preview_elements = []
 
-        if not hasattr(self, 'ship_preview_scroll'):
+        if self.ship_preview_scroll is None:
             logger.debug("ship_preview_scroll not found, returning")
             return
 
@@ -886,7 +889,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
                 elif event.ui_element == self.btn_save:
                     self._on_save()
                     handled = True
-                elif hasattr(self, 'btn_load') and self.btn_load and event.ui_element == self.btn_load:
+                elif self.btn_load and event.ui_element == self.btn_load:
                     self._on_load_race()
                     handled = True
                 else:

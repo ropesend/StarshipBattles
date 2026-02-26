@@ -54,6 +54,7 @@ class ModifierEditorPanel:
         self._panel_height = 300  # Default, updated by layout()
 
         # UI Elements
+        self.clear_settings_btn = None  # PROJ-199: Lazy init elimination
         self.extra_ui_elements = []  # Headers, global buttons
         self.modifier_rows = {}  # mod_id -> ModifierControlRow
         self.scroll_container = None  # UIScrollingContainer for modifier rows
@@ -270,7 +271,7 @@ class ModifierEditorPanel:
         """Processes events."""
         # 1. Check Global Buttons
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if hasattr(self, 'clear_settings_btn') and event.ui_element == self.clear_settings_btn:
+            if self.clear_settings_btn and event.ui_element == self.clear_settings_btn:
                 return ('clear_settings', None)
 
         # 2. Delegate to Rows (only when editing a component)

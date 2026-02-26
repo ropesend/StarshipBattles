@@ -2,6 +2,8 @@
 import argparse
 import logging
 import os
+from typing import Optional
+
 import pygame
 import pygame_gui
 
@@ -105,6 +107,8 @@ class Game:
         self.show_exit_dialog = False
         self.showing_load_menu = False
         self.showing_race_setup = False
+        self.showing_new_game_setup: bool = False  # PROJ-199: Lazy init elimination
+        self.return_state: Optional[GameState] = None  # PROJ-199: Lazy init elimination
         self.race_setup_window = None
         self.state = GameState.MENU
 
@@ -562,7 +566,7 @@ class Game:
         """Forward event to the current active scene (PROJ-65: unified dispatch)."""
         # Handle overlay dialogs on menu - these use the menu's ui_manager
         if self.state == GameState.MENU:
-            if hasattr(self, 'showing_new_game_setup') and self.showing_new_game_setup:
+            if self.showing_new_game_setup:
                 self.menu_ui_manager.process_events(event)
                 return
             if self.showing_load_menu:
@@ -595,7 +599,7 @@ class Game:
             self.start_test_lab()
         elif action == "return_to_setup":
             logger.debug("Returning to battle setup")
-            if hasattr(self, 'return_state') and self.return_state == GameState.TEST_LAB:
+            if self.return_state == GameState.TEST_LAB:
                 self.start_test_lab()
             else:
                 self.start_battle_setup(preserve_teams=True)

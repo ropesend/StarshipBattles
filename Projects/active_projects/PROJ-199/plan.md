@@ -13,18 +13,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Lazy Init — True Missing Inits | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Lazy Init — True Missing Inits | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Lazy Init — Unnecessary Guards | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. CompDef Abilities Centralization | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. ShipStatsCalculator Dual-Format Cleanup | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-25
-**Active Phase:** Planning
-**Last Action:** Deep code review complete — all instances verified with line numbers
-**Next Action:** User approval of plan
+**Active Phase:** Phase 1 Complete → Phase 2 Next
+**Last Action:** Phase 1 complete: 6 true lazy inits fixed (7 hasattr → direct access)
+**Next Action:** Execute Phase 2 (unnecessary guards)
 **Blockers:** None
-**Context for Next Agent:** PROJ-198 eliminated ~110+ duck typing patterns. This project handles 2 leftover categories: (1) hasattr(self, ...) lazy init patterns, (2) getattr(comp_def, 'abilities', {}) not routed through component_inspector.
+**Context for Next Agent:** Phase 1 added __init__ declarations for 6 attributes and replaced hasattr with direct access. Task 1.4 (FormationEditor) was misclassified — those are unnecessary guards, moved to Phase 2. Tests: 12724 passed, 1 skipped.
 
 ## Overview
 Follow-up to PROJ-198 (UI Layer Duck Typing Elimination). Addresses two specific remaining categories that PROJ-198's audit flagged as legitimate but which have clean mechanical fixes:

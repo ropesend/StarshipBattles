@@ -33,6 +33,7 @@ class PlanetListWindow(UIWindow):
         self.selected_planet = None
         self.planet_detail_panel = None
         self.btn_build_queue = None
+        self.last_preset_selection = None  # PROJ-199: Lazy init elimination
 
         super().__init__(rect, manager, window_display_title="Galactic Planet Registry", resizable=True)
 
@@ -363,7 +364,7 @@ class PlanetListWindow(UIWindow):
     def _handle_preset_changes(self):
         """Handle preset dropdown selection and save button."""
         # Lazy init tracker
-        if not hasattr(self, 'last_preset_selection'):
+        if self.last_preset_selection is None:
             self.last_preset_selection = self.dd_presets.selected_option
 
         if self.dd_presets.selected_option != self.last_preset_selection:

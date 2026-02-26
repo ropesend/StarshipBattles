@@ -12,6 +12,15 @@
 
 ## Tasks
 
+### Task 2.0: FormationEditor — rotation_mode_btn & renumber_slider [MOVED FROM PHASE 1]
+**File:** `game/ui/screens/formation_editor.py`
+**Tests:** `pytest tests/unit/ui/screens/ -k formation --testmon`
+
+- [ ] L778: Replace `if hasattr(self, 'rotation_mode_btn'):` with `if self.rotation_mode_btn:`
+- [ ] L797: Replace `if hasattr(self, 'renumber_slider'):` with `if self.renumber_slider:`
+
+**Notes:** Code review showed these are NOT true lazy inits — they're assigned unconditionally at L292 and L301 from toolbar builder. The hasattr checks are unnecessary guards.
+
 ### Task 2.1: PlanetReportPanel [Simple]
 **File:** `game/ui/panels/planet_report_panel.py`
 **Tests:** `pytest tests/unit/ui/panels/ --testmon`
