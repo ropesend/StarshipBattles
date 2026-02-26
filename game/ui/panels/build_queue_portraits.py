@@ -13,6 +13,13 @@ from typing import TYPE_CHECKING, Optional, Dict
 
 import pygame
 
+from game.ui.colors import (
+    RESOURCE_METALS, RESOURCE_ORGANICS, RESOURCE_VAPORS,
+    RESOURCE_RADIOACTIVES, RESOURCE_EXOTICS,
+    VEHICLE_SHIP, VEHICLE_FIGHTER, VEHICLE_STATION, VEHICLE_COMPLEX,
+    TEXT_DIM, WHITE
+)
+
 logger = logging.getLogger(__name__)
 
 # Resource portrait filenames in assets/Images/Resource Portraits/
@@ -26,11 +33,11 @@ RESOURCE_PORTRAIT_FILES = {
 
 # Fallback colors if portrait not found
 RESOURCE_FALLBACK_COLORS = {
-    "Metals": (192, 192, 192),       # Silver
-    "Organics": (80, 180, 80),       # Green
-    "Vapors": (100, 150, 220),       # Light blue
-    "Radioactives": (220, 180, 50),  # Yellow
-    "Exotics": (180, 80, 200),       # Purple
+    "Metals": RESOURCE_METALS,
+    "Organics": RESOURCE_ORGANICS,
+    "Vapors": RESOURCE_VAPORS,
+    "Radioactives": RESOURCE_RADIOACTIVES,
+    "Exotics": RESOURCE_EXOTICS,
 }
 
 if TYPE_CHECKING:
@@ -40,12 +47,12 @@ if TYPE_CHECKING:
 # Vehicle type color map for placeholder generation
 # Used when no portrait image is found
 VEHICLE_TYPE_COLORS = {
-    'ship': (80, 100, 180),           # Blue for ships
-    'complex': (80, 180, 100),        # Green for complexes/facilities
-    'planetary complex': (80, 180, 100),  # Green (alternate key)
-    'station': (180, 100, 80),        # Red for stations
-    'satellite': (180, 100, 80),      # Red for satellites
-    'fighter': (180, 180, 80),        # Yellow for fighters
+    'ship': VEHICLE_SHIP,
+    'complex': VEHICLE_COMPLEX,
+    'planetary complex': VEHICLE_COMPLEX,
+    'station': VEHICLE_STATION,
+    'satellite': VEHICLE_STATION,
+    'fighter': VEHICLE_FIGHTER,
 }
 
 
@@ -158,10 +165,10 @@ class BuildQueuePortraitLoader:
 
         # Normalize for lookup
         type_key = vehicle_type.lower() if vehicle_type else 'ship'
-        color = VEHICLE_TYPE_COLORS.get(type_key, (100, 100, 100))
+        color = VEHICLE_TYPE_COLORS.get(type_key, TEXT_DIM)
 
         placeholder.fill(color)
-        pygame.draw.rect(placeholder, (255, 255, 255), placeholder.get_rect(), 1)
+        pygame.draw.rect(placeholder, WHITE, placeholder.get_rect(), 1)
 
         return placeholder
 
@@ -178,10 +185,10 @@ class BuildQueuePortraitLoader:
         """
         placeholder = pygame.Surface((size, size))
         type_lower = item_type.lower() if item_type else 'unknown'
-        color = VEHICLE_TYPE_COLORS.get(type_lower, (100, 100, 100))
+        color = VEHICLE_TYPE_COLORS.get(type_lower, TEXT_DIM)
 
         placeholder.fill(color)
-        pygame.draw.rect(placeholder, (255, 255, 255), placeholder.get_rect(), 1)
+        pygame.draw.rect(placeholder, WHITE, placeholder.get_rect(), 1)
 
         return placeholder
 
@@ -209,9 +216,9 @@ class BuildQueuePortraitLoader:
                 logger.warning(f"Failed to load resource portrait '{path}': {e}")
                 # Create fallback colored square
                 surf = pygame.Surface((icon_size, icon_size))
-                color = RESOURCE_FALLBACK_COLORS.get(resource, (128, 128, 128))
+                color = RESOURCE_FALLBACK_COLORS.get(resource, TEXT_DIM)
                 surf.fill(color)
-                pygame.draw.rect(surf, (255, 255, 255), surf.get_rect(), 1)
+                pygame.draw.rect(surf, WHITE, surf.get_rect(), 1)
                 icons[resource] = surf
 
         return icons

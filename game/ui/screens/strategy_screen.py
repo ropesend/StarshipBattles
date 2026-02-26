@@ -43,6 +43,7 @@ from game.ui.screens.strategy_game_state_manager import StrategyGameStateManager
 from game.strategy.systems.save_game_service import SaveGameService
 from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 from game.ui.screens.race_asset_loader import RaceAssetLoader
+from game.ui.colors import BG_BATTLE
 
 
 class StrategyScreen:
@@ -189,7 +190,7 @@ class StrategyScreen:
     def draw(self, screen):
         """Render the scene."""
         # Always fill entire screen first to prevent remnants from other screens
-        screen.fill((10, 10, 20))
+        screen.fill(BG_BATTLE)
 
         self._renderer.draw(screen)
 

@@ -30,6 +30,7 @@ from game.ui.screens.strategy_panel_manager import (
     apply_hotkey_tooltips,
 )
 from game.ui.screens.strategy_event_router import StrategyEventRouter
+from game.ui.colors import WHITE
 
 class StrategyUI:
     """Handles all UI rendering and interaction for the StrategyScreen.
@@ -315,7 +316,7 @@ class StrategyUI:
         # Only draw zoom indicator if strategy layer has focus (no sub-panels open)
         if not self._has_modal_open():
             font = get_font(20)
-            mode_text = font.render(f"Strategy Layer | Zoom: {self.scene.camera.zoom:.2f}", True, (255, 255, 255))
+            mode_text = font.render(f"Strategy Layer | Zoom: {self.scene.camera.zoom:.2f}", True, WHITE)
             screen.blit(mode_text, (20, self.height - 30))
 
     def _has_modal_open(self) -> bool:

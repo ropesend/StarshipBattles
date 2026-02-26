@@ -12,7 +12,7 @@ from pygame_gui.elements import UIButton, UILabel, UITextEntryLine, UIDropDownMe
 import logging
 
 from game.ui.fonts import get_font
-from game.ui.colors import TEXT_LIGHT
+from game.ui.colors import TEXT_LIGHT, TEXT_MUTED, FLEET_SELECTED, GRID_LINE, PLANET_TERRESTRIAL
 
 logger = logging.getLogger(__name__)
 from game.core.hex_math import hex_to_pixel, HexCoord
@@ -501,7 +501,7 @@ class SystemModeHelper:
             if orbit_radius > 5:  # Only draw if visible
                 pygame.draw.circle(
                     screen_surface,
-                    (40, 45, 55),  # Dark grey orbit ring
+                    GRID_LINE,  # Dark grey orbit ring
                     (int(center_screen.x), int(center_screen.y)),
                     int(orbit_radius),
                     1  # Line width
@@ -527,7 +527,7 @@ class SystemModeHelper:
 
             # Selection highlight
             if self.selected_object == star:
-                pygame.draw.circle(screen_surface, (255, 255, 0), (int(screen_pos.x), int(screen_pos.y)), radius + 6, 2)
+                pygame.draw.circle(screen_surface, FLEET_SELECTED, (int(screen_pos.x), int(screen_pos.y)), radius + 6, 2)
 
             # Star name label
             font = get_font(12)
@@ -552,17 +552,17 @@ class SystemModeHelper:
             radius = max(3, int(base_size * self.screen.camera.zoom))
 
             # Planet color from type
-            color = PLANET_TYPE_COLORS.get(planet.planet_type, (100, 150, 200))
+            color = PLANET_TYPE_COLORS.get(planet.planet_type, PLANET_TERRESTRIAL)
             pygame.draw.circle(screen_surface, color, (int(screen_pos.x), int(screen_pos.y)), radius)
 
             # Selection highlight
             if self.selected_object == planet:
-                pygame.draw.circle(screen_surface, (255, 255, 0), (int(screen_pos.x), int(screen_pos.y)), radius + 4, 2)
+                pygame.draw.circle(screen_surface, FLEET_SELECTED, (int(screen_pos.x), int(screen_pos.y)), radius + 4, 2)
 
             # Planet name label (only if zoomed in enough)
             if self.screen.camera.zoom >= 0.3:
                 font = get_font(10)
-                text = font.render(planet.name, True, (180, 180, 180))
+                text = font.render(planet.name, True, TEXT_MUTED)
                 screen_surface.blit(text, (screen_pos.x + radius + 3, screen_pos.y - 5))
 
         # Remove clip

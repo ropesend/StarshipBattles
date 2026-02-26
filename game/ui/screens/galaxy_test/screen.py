@@ -16,6 +16,7 @@ from game.ui.renderer.camera import Camera
 from game.ui.screens.galaxy_test.constants import SIDEBAR_WIDTH
 from game.ui.screens.galaxy_test.galaxy_mode import GalaxyModeHelper
 from game.ui.screens.galaxy_test.system_mode import SystemModeHelper
+from game.ui.colors import BG_GALAXY, PANEL_BG
 
 
 class GalaxyTestScreen:
@@ -157,7 +158,7 @@ class GalaxyTestScreen:
         self.fps_clock.tick()
 
         # Clear background
-        screen.fill((15, 20, 30))
+        screen.fill(BG_GALAXY)
 
         if self.mode == self.MODE_MENU:
             # Just draw UI for menu
@@ -170,7 +171,7 @@ class GalaxyTestScreen:
         # Draw sidebar background for non-menu modes
         if self.mode != self.MODE_MENU:
             sidebar_rect = pygame.Rect(self.canvas_width, 0, SIDEBAR_WIDTH, self.screen_height)
-            pygame.draw.rect(screen, (30, 35, 45), sidebar_rect)
+            pygame.draw.rect(screen, PANEL_BG, sidebar_rect)
 
         # Draw UI
         self.ui_manager.draw_ui(screen)

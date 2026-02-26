@@ -11,6 +11,7 @@ from game.core.constants import ResourceType
 from game.ui.components.table.data_source import ITableDataSource
 from game.ui.config import UIConfig
 from game.ui.utils import scale_image_by_visible_portion, scale_image_to_fit
+from game.ui.colors import GRID_BG, BORDER_LIGHT
 
 if TYPE_CHECKING:
     from game.ui.screens.fleet_report_view_model import FleetListViewModel
@@ -288,6 +289,6 @@ class FleetDataSource(ITableDataSource):
             Placeholder pygame surface.
         """
         result = pygame.Surface(size)
-        result.fill((50, 50, 50))
-        pygame.draw.rect(result, (80, 80, 80), (5, 10, 30, 20), 1)
+        result.fill(GRID_BG)
+        pygame.draw.rect(result, BORDER_LIGHT, (5, 10, 30, 20), 1)
         return result

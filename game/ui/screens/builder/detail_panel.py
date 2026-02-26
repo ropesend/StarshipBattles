@@ -18,7 +18,7 @@ from game.ui.fonts import get_font
 
 logger = logging.getLogger(__name__)
 from game.simulation.components.abilities.ui_colors import HINT_NEUTRAL, HINT_CREW_CAP, HINT_CARGO_GENERIC, HINT_DEFAULT
-from game.ui.colors import DETAIL_COMPONENT_NAME, DETAIL_COMPONENT_INFO, DETAIL_TEXT
+from game.ui.colors import DETAIL_COMPONENT_NAME, DETAIL_COMPONENT_INFO, DETAIL_TEXT, GRID_BG, TEXT_ITEM
 
 class ComponentDetailPanel:
     def __init__(self, manager, rect, image_base_path, event_bus=None):
@@ -259,9 +259,9 @@ class ComponentDetailPanel:
         else:
             # Placeholder
             empty = pygame.Surface((self.image_rect.width, self.image_rect.height))
-            empty.fill((50, 50, 60))
+            empty.fill(GRID_BG)
             font = get_font(14)
-            text = font.render(f"No Image\n{filename}", True, (200, 200, 200))
+            text = font.render(f"No Image\n{filename}", True, TEXT_ITEM)
             empty.blit(text, (10, 10))
             
             self.image_element = UIImage(

@@ -13,6 +13,7 @@ import pygame_gui.elements as ui
 
 from game.core.constants import PLANET_RESOURCES
 from game.ui.screens.build_queue_helpers import format_resource_cost
+from game.ui.colors import TEAM_1_TEXT
 
 if TYPE_CHECKING:
     from game.ui.screens.build_queue_panel_factory import BuildQueuePanels
@@ -274,5 +275,5 @@ class BuildQueueRenderer:
         for item_panel in self.queue_items:
             if getattr(item_panel, 'queue_index', -1) == selected_queue_index:
                 abs_rect = item_panel.get_abs_rect()
-                pygame.draw.rect(screen, (100, 180, 255), abs_rect, 3)
+                pygame.draw.rect(screen, TEAM_1_TEXT, abs_rect, 3)
                 break

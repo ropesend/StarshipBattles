@@ -12,6 +12,10 @@ import logging
 import pygame
 from typing import TYPE_CHECKING, Dict, Optional, Callable, List, Any
 
+from game.ui.colors import (
+    VEHICLE_SHIP, VEHICLE_FIGHTER, VEHICLE_STATION, VEHICLE_COMPLEX, TEXT_DIM
+)
+
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
@@ -314,12 +318,12 @@ class BuildQueueDragHandler:
 
             # Draw colored placeholder
             color_map = {
-                'ship': (80, 100, 180),
-                'complex': (80, 180, 100),
-                'satellite': (180, 100, 80),
-                'fighter': (180, 180, 80),
+                'ship': VEHICLE_SHIP,
+                'complex': VEHICLE_COMPLEX,
+                'satellite': VEHICLE_STATION,
+                'fighter': VEHICLE_FIGHTER,
             }
-            color = color_map.get(self.dragged_item.get('category', 'ship'), (100, 100, 100))
+            color = color_map.get(self.dragged_item.get('category', 'ship'), TEXT_DIM)
 
             placeholder = pygame.Surface((icon_size, icon_size), pygame.SRCALPHA)
             placeholder.fill(color)

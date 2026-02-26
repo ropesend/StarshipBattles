@@ -19,6 +19,10 @@ if TYPE_CHECKING:
 from game.ui.panels.strategy_widgets import AtmosphereGraph
 from game.ui.panels.build_queue_portraits import RESOURCE_PORTRAIT_FILES, RESOURCE_FALLBACK_COLORS
 from game.core.constants import PLANET_RESOURCES
+from game.ui.colors import (
+    PLANET_TERRESTRIAL, PLANET_GAS_GIANT, PLANET_ICE, PLANET_ROCKY, PLANET_OCEANIC,
+    TEXT_DIM, WHITE, TEXT_LIGHT
+)
 from collections import Counter
 
 
@@ -205,15 +209,15 @@ class PlanetReportPanel:
 
             # Color based on planet type (planet_type always present via IPlanet)
             type_colors = {
-                'TERRESTRIAL': (100, 150, 200),
-                'GAS_GIANT': (200, 150, 100),
-                'ICE_GIANT': (150, 200, 255),
-                'ROCKY': (150, 100, 80),
-                'OCEANIC': (50, 100, 200)
+                'TERRESTRIAL': PLANET_TERRESTRIAL,
+                'GAS_GIANT': PLANET_GAS_GIANT,
+                'ICE_GIANT': PLANET_ICE,
+                'ROCKY': PLANET_ROCKY,
+                'OCEANIC': PLANET_OCEANIC
             }
             base_color = type_colors.get(
                 self.planet.planet_type.name,
-                (100, 100, 100)
+                TEXT_DIM
             )
 
             # Simple gradient fill
@@ -224,17 +228,18 @@ class PlanetReportPanel:
 
             # Add planet name text
             font = get_font(16, bold=True)
-            text = font.render(self.planet.name[:20], True, (255, 255, 255))
+            text = font.render(self.planet.name[:20], True, WHITE)
             text_rect = text.get_rect(center=(75, 75))
 
             # Add shadow for readability
-            shadow = font.render(self.planet.name[:20], True, (0, 0, 0))
+            from game.ui.colors import BLACK
+            shadow = font.render(self.planet.name[:20], True, BLACK)
             shadow_rect = shadow.get_rect(center=(76, 76))
             portrait_surf.blit(shadow, shadow_rect)
             portrait_surf.blit(text, text_rect)
 
             # Add border
-            pygame.draw.rect(portrait_surf, (200, 200, 200), (0, 0, 150, 150), 2)
+            pygame.draw.rect(portrait_surf, TEXT_LIGHT, (0, 0, 150, 150), 2)
 
             # Update UIImage
             self.portrait_image.set_image(portrait_surf)
@@ -412,15 +417,15 @@ class PlanetReportPanel:
                 except (FileNotFoundError, pygame.error):
                     # Create fallback colored square
                     surf = pygame.Surface((icon_size, icon_size))
-                    color = RESOURCE_FALLBACK_COLORS.get(resource, (128, 128, 128))
+                    color = RESOURCE_FALLBACK_COLORS.get(resource, TEXT_DIM)
                     surf.fill(color)
-                    pygame.draw.rect(surf, (255, 255, 255), surf.get_rect(), 1)
+                    pygame.draw.rect(surf, WHITE, surf.get_rect(), 1)
                     self._resource_icons[resource] = surf
             else:
                 # No filename mapped, create gray placeholder
                 surf = pygame.Surface((icon_size, icon_size))
-                surf.fill((128, 128, 128))
-                pygame.draw.rect(surf, (255, 255, 255), surf.get_rect(), 1)
+                surf.fill(TEXT_DIM)
+                pygame.draw.rect(surf, WHITE, surf.get_rect(), 1)
                 self._resource_icons[resource] = surf
 
     def get_height_required(self):

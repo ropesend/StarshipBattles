@@ -11,8 +11,14 @@ from game.ui.utils import calculate_ship_image_scale
 from game.ui.renderer.game_renderer import LAYER_COLORS
 from game.ui.fonts import get_font
 
-from game.ui.colors import COLORS
+from game.ui.colors import COLORS, TEXT_DIM
 SHIP_VIEW_BG = COLORS['bg_deep']
+
+# Firing arc colors (with alpha)
+ARC_BEAM_COLOR = (100, 255, 255, 100)
+ARC_PROJECTILE_COLOR = (255, 200, 100, 100)
+# Layer label text
+LAYER_LABEL_COLOR = (80, 80, 80)
 
 
 class SchematicView:
@@ -103,12 +109,12 @@ class SchematicView:
         for ltype, data in sorted_layers:
             pct = data.radius_pct
             r = int(max_r * pct)
-            color = LAYER_COLORS.get(ltype, (100, 100, 100))
+            color = LAYER_COLORS.get(ltype, TEXT_DIM)
 
             pygame.draw.circle(screen, color, (cx, cy), r, 2)
 
             # Label
-            surf = font.render(ltype.name, True, (80, 80, 80))
+            surf = font.render(ltype.name, True, LAYER_LABEL_COLOR)
             screen.blit(surf, (cx - surf.get_width() // 2, cy - r - 12))
 
         # Draw Components - DISABLED
@@ -155,9 +161,9 @@ class SchematicView:
         end_angle = math.radians(90 - facing + (arc_degrees / 2))
         
         if weapon.has_ability('BeamWeaponAbility'):
-            color = (100, 255, 255, 100)
+            color = ARC_BEAM_COLOR
         else:
-            color = (255, 200, 100, 100)
+            color = ARC_PROJECTILE_COLOR
             
         points = [(cx, cy)]
         for angle in range(int(math.degrees(start_angle)), int(math.degrees(end_angle)) + 1, 2):

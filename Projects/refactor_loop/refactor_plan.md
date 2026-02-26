@@ -8,22 +8,33 @@
 ## Agent Context
 
 **Last Session:** 2026-02-25
-**Last Completed:** PROJ-197 Phase 5 - Ship panels & widgets consolidation
-**Current Status:** PROJ-197 Phase 5 complete, Phase 6 ready
+**Last Completed:** PROJ-197 Phase 6 - Tasks 6.1-6.5 partially (builder, formation, build queue, planets, strategy files)
+**Current Status:** PROJ-197 Phase 6 in progress, Tasks 6.5-6.7 remaining
 **Current Project:** PROJ-197 - Duplication Consolidation Completion
-**Current Phase:** Phase 6 - Builder, formation & remaining files
+**Current Phase:** Phase 6 - Builder, formation & remaining files (in progress)
 **Test Status:** 12734 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 5 complete: Consolidated all 4 ship/panel files
-- ship_stats_renderer.py: ~31 tuples replaced (HP colors, resource colors, component status)
-- ship_detail_panel.py: ~11 tuples replaced (damage colors, placeholder drawing)
-- scrollable_json_panel.py: ~20 tuples replaced (JSON syntax colors, diff colors, scrollbar)
-- modifier_impact_grid.py: ~8 tuples replaced (row/header bg, buff/debuff colors)
-- Added ~25 new constants: RESOURCE_BIOMASS, JSON_*, SCROLLBAR_*, MODIFIER_*, WEAPON_INACTIVE, CREW_LOW
-- Updated 3 test files to use palette constants instead of hardcoded values
-- Next: Phase 6 - Builder, formation & remaining files (~30 files)
+- Phase 6 progress: Tasks 6.1-6.4 complete, Task 6.5 partially complete
+- Completed files:
+  - weapons_renderer.py: WEAPON_BAR_*, WEAPON_ACCURACY_*, WEAPON_LABEL/RANGE_LABEL/ARC
+  - detail_panel.py: GRID_BG, TEXT_ITEM
+  - schematic_view.py: TEXT_DIM, local ARC_*_COLOR constants
+  - formation/renderer.py: All FORMATION_* colors, GRID_BG, WHITE, BLACK, TEXT_ITEM, BG_MENU
+  - build_queue_portraits.py: VEHICLE_*, RESOURCE_*, TEXT_DIM, WHITE
+  - build_queue_drag_handler.py: VEHICLE_*, TEXT_DIM
+  - build_queue_renderer.py: TEAM_1_TEXT
+  - planet_report_panel.py: PLANET_*, WHITE, BLACK, TEXT_LIGHT, TEXT_DIM
+  - galaxy_test/constants.py: All PLANET_* constants for planet types
+  - galaxy_test/system_mode.py: FLEET_SELECTED, GRID_LINE, TEXT_*, PLANET_TERRESTRIAL
+  - galaxy_test/screen.py: BG_GALAXY, PANEL_BG
+  - galaxy_test/galaxy_mode.py: WARP_LANE, STAR_LABEL
+  - strategy_screen.py: BG_BATTLE
+  - strategy_ui.py: WHITE
+  - fleet_data_source.py: GRID_BG, BORDER_LIGHT
+- Remaining: Tasks 6.5 (research files), 6.6 (design files), 6.7 (utility files)
+- Next agent continues with research_scene.py, research_renderer.py, then design files
 
 ---
 

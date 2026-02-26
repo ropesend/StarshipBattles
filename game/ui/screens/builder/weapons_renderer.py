@@ -12,7 +12,12 @@ import math
 import pygame
 from typing import List, Dict, Any, Optional, TYPE_CHECKING
 
-from game.ui.colors import COLORS, BORDER_LIGHT
+from game.ui.colors import (
+    COLORS, BORDER_LIGHT, WHITE, GRID_BG,
+    WEAPON_BAR_BEAM, WEAPON_BAR_PROJECTILE, WEAPON_BAR_SEEKER,
+    WEAPON_ACCURACY_HIGH, WEAPON_ACCURACY_MED, WEAPON_ACCURACY_LOW,
+    WEAPON_LABEL, WEAPON_RANGE_LABEL, WEAPON_ARC
+)
 from game.ui.fonts import get_font
 
 if TYPE_CHECKING:
@@ -64,13 +69,13 @@ class WeaponsRenderer:
     ]
 
     # === Bar Base Colors ===
-    BEAM_BAR_COLOR = (40, 80, 40)
-    PROJECTILE_BAR_COLOR = (80, 60, 40)
-    SEEKER_BAR_COLOR = (80, 40, 80)
+    BEAM_BAR_COLOR = WEAPON_BAR_BEAM
+    PROJECTILE_BAR_COLOR = WEAPON_BAR_PROJECTILE
+    SEEKER_BAR_COLOR = WEAPON_BAR_SEEKER
 
     # === Text Colors ===
     COLOR_WEAPON_NAME = COLORS['text_bright']
-    COLOR_DAMAGE_LABEL = (200, 200, 100)
+    COLOR_DAMAGE_LABEL = WEAPON_LABEL
     COLOR_RANGE_LABEL = COLORS['text_normal']
     COLOR_RANGE_SCALE = COLORS['text_subtle']
     COLOR_SCALE_LINE = COLORS['border_subtle']
@@ -79,9 +84,9 @@ class WeaponsRenderer:
     COLOR_TARGET_INFO = COLORS['text_highlight']
 
     # === Accuracy Label Colors ===
-    COLOR_ACC_HIGH = (0, 200, 0)
-    COLOR_ACC_MEDIUM = (200, 100, 0)
-    COLOR_ACC_LOW = (200, 50, 50)
+    COLOR_ACC_HIGH = WEAPON_ACCURACY_HIGH
+    COLOR_ACC_MEDIUM = WEAPON_ACCURACY_MED
+    COLOR_ACC_LOW = WEAPON_ACCURACY_LOW
 
     # === Tooltip Constants ===
     TOOLTIP_PADDING = 10
@@ -206,10 +211,10 @@ class WeaponsRenderer:
             weapon: Weapon component with WeaponAbility
         """
         RADIUS = 8
-        COLOR_BG = (30, 30, 40)
+        COLOR_BG = GRID_BG
         COLOR_OUTLINE = BORDER_LIGHT
-        COLOR_ARC = (200, 150, 50)
-        COLOR_ARROW = (255, 255, 255)
+        COLOR_ARC = WEAPON_ARC
+        COLOR_ARROW = WHITE
 
         # Draw background circle
         pygame.draw.circle(screen, COLOR_BG, (cx, cy), RADIUS)
@@ -277,7 +282,7 @@ class WeaponsRenderer:
         )
 
         # Max range label
-        range_label = self.small_font.render(f"{int(max_range)}", True, (150, 150, 200))
+        range_label = self.small_font.render(f"{int(max_range)}", True, WEAPON_RANGE_LABEL)
         screen.blit(range_label, (max_range_x - range_label.get_width() // 2, draw_start_y - self.SCALE_LABEL_OFFSET))
 
         # Intermediate scale markers
@@ -441,7 +446,7 @@ class WeaponsRenderer:
         surfs = []
 
         for line in lines:
-            s = self.small_font.render(line, True, (255, 255, 255))
+            s = self.small_font.render(line, True, WHITE)
             surfs.append(s)
             max_w = max(max_w, s.get_width())
 

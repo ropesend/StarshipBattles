@@ -16,6 +16,7 @@ from game.strategy.data.galaxy import Galaxy
 from game.core.hex_math import hex_to_pixel
 from game.strategy.engine.game_config import VALID_GALAXY_TYPES
 from game.ui.screens.galaxy_test.constants import SIDEBAR_WIDTH, HEX_SIZE
+from game.ui.colors import WARP_LANE, STAR_LABEL
 
 
 class GalaxyModeHelper:
@@ -377,7 +378,7 @@ class GalaxyModeHelper:
 
             # Draw dot
             radius = max(2, int(4 * self.screen.camera.zoom))
-            pygame.draw.circle(screen_surface, (200, 200, 100), (int(screen_pos.x), int(screen_pos.y)), radius)
+            pygame.draw.circle(screen_surface, STAR_LABEL, (int(screen_pos.x), int(screen_pos.y)), radius)
 
         # Remove clip
         screen_surface.set_clip(None)
@@ -418,6 +419,6 @@ class GalaxyModeHelper:
                     continue
 
                 # Draw line
-                pygame.draw.line(screen_surface, (50, 50, 100),
+                pygame.draw.line(screen_surface, WARP_LANE,
                                (int(scr_a.x), int(scr_a.y)),
                                (int(scr_b.x), int(scr_b.y)), 1)

@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** In Progress
 **Objective:** Consolidate all remaining ~30 files
 
 ---
@@ -16,92 +16,92 @@
 **Tests:** `pytest tests/ --testmon`
 
 **weapons_renderer.py** (18 tuples):
-- [ ] Replace weapon bar colors → `WEAPON_BAR_BEAM`, `WEAPON_BAR_PROJECTILE`, `WEAPON_BAR_SEEKER`
-- [ ] Replace accuracy colors → `WEAPON_ACCURACY_HIGH/MED/LOW`
-- [ ] Replace labels → `WEAPON_LABEL`, `WEAPON_RANGE_LABEL`, `WEAPON_ARC`
-- [ ] Replace background → `GRID_BG`
-- [ ] Handle damage gradient endpoints
+- [x] Replace weapon bar colors → `WEAPON_BAR_BEAM`, `WEAPON_BAR_PROJECTILE`, `WEAPON_BAR_SEEKER`
+- [x] Replace accuracy colors → `WEAPON_ACCURACY_HIGH/MED/LOW`
+- [x] Replace labels → `WEAPON_LABEL`, `WEAPON_RANGE_LABEL`, `WEAPON_ARC`
+- [x] Replace background → `GRID_BG`
+- [x] Handle damage gradient endpoints (kept as constants in class - explicit gradient values)
 
 **detail_panel.py** (~2 tuples):
-- [ ] Replace with appropriate constants
+- [x] Replace with appropriate constants
 
 **schematic_view.py** (~2 tuples):
-- [ ] Replace with appropriate constants
+- [x] Replace with appropriate constants (local module constants for arc colors)
 
-- [ ] Run `pytest tests/ --testmon`
+- [x] Run `pytest tests/ --testmon`
 
-**Notes:**
+**Notes:** Complete
 
 ### Task 6.2: Formation Editor [Simple]
 **File:** `game/ui/screens/formation/renderer.py` (14 tuples)
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Replace bg → `GRID_BG`
-- [ ] Replace grid → `FORMATION_GRID`
-- [ ] Replace axis → `FORMATION_AXIS`
-- [ ] Replace arrow colors → `FORMATION_ARROW`, `FORMATION_ARROW_SELECTED`
-- [ ] Replace fixed arrow → `FORMATION_FIXED`, `FORMATION_FIXED_SELECTED`
-- [ ] Replace `WHITE` and `BLACK`
-- [ ] Replace text colors → `TEXT_ITEM`
-- [ ] Replace toolbar bg
-- [ ] Run `pytest tests/ --testmon`
+- [x] Replace bg → `GRID_BG`
+- [x] Replace grid → `FORMATION_GRID`
+- [x] Replace axis → `FORMATION_AXIS`
+- [x] Replace arrow colors → `FORMATION_ARROW`, `FORMATION_ARROW_SELECTED`
+- [x] Replace fixed arrow → `FORMATION_FIXED`, `FORMATION_FIXED_SELECTED`
+- [x] Replace `WHITE` and `BLACK`
+- [x] Replace text colors → `TEXT_ITEM`
+- [x] Replace toolbar bg → `BG_MENU`
+- [x] Run `pytest tests/ --testmon`
 
-**Notes:**
+**Notes:** Complete
 
 ### Task 6.3: Build Queue Files [Simple]
 **Tests:** `pytest tests/ --testmon`
 
 **build_queue_portraits.py** (17 tuples):
-- [ ] Replace vehicle type colors → `VEHICLE_SHIP/FIGHTER/STATION/COMPLEX`
-- [ ] Replace resource colors → `RESOURCE_METALS/ORGANICS/VAPORS/RADIOACTIVES/EXOTICS`
-- [ ] Replace `WHITE`, `TEXT_DIM`
+- [x] Replace vehicle type colors → `VEHICLE_SHIP/FIGHTER/STATION/COMPLEX`
+- [x] Replace resource colors → `RESOURCE_METALS/ORGANICS/VAPORS/RADIOACTIVES/EXOTICS`
+- [x] Replace `WHITE`, `TEXT_DIM`
 
 **build_queue_drag_handler.py** (7 tuples):
-- [ ] Replace vehicle type colors → same constants
-- [ ] Replace fallback `(100, 100, 100)` → `TEXT_DIM`
+- [x] Replace vehicle type colors → same constants
+- [x] Replace fallback `(100, 100, 100)` → `TEXT_DIM`
 
 **build_queue_renderer.py** (1 tuple):
-- [ ] Replace with appropriate constant
+- [x] Replace with `TEAM_1_TEXT`
 
-- [ ] Run `pytest tests/ --testmon`
+- [x] Run `pytest tests/ --testmon`
 
-**Notes:**
+**Notes:** Complete
 
 ### Task 6.4: Planet & Galaxy Test Files [Simple]
 **Tests:** `pytest tests/ --testmon`
 
 **planet_report_panel.py** (13 tuples):
-- [ ] Replace planet type colors → `PLANET_TERRESTRIAL/GAS_GIANT/ICE/ROCKY/OCEANIC`
-- [ ] Replace `WHITE`, `BLACK`, `TEXT_ITEM`, `TEXT_DIM`
+- [x] Replace planet type colors → `PLANET_TERRESTRIAL/GAS_GIANT/ICE/ROCKY/OCEANIC`
+- [x] Replace `WHITE`, `BLACK`, `TEXT_LIGHT`, `TEXT_DIM`
 
 **galaxy_test/constants.py** (11 tuples):
-- [ ] Replace ALL planet colors → `PLANET_CONTINENTAL/ARID/PELAGIC/MAGMA/CRYO/BARREN/JOVIAN/ICE_GIANT/CHTHONIAN/ICE_DWARF/PLANETOID`
+- [x] Replace ALL planet colors → `PLANET_CONTINENTAL/ARID/PELAGIC/MAGMA/CRYO/BARREN/JOVIAN/ICE_GIANT/CHTHONIAN/ICE_DWARF/PLANETOID`
 
 **galaxy_test/system_mode.py** (6 tuples):
-- [ ] Replace with appropriate constants
+- [x] Replace with `TEXT_LIGHT`, `TEXT_MUTED`, `FLEET_SELECTED`, `GRID_LINE`, `PLANET_TERRESTRIAL`
 
 **galaxy_test/screen.py** (2 tuples):
-- [ ] Replace with appropriate constants
+- [x] Replace with `BG_GALAXY`, `PANEL_BG`
 
 **galaxy_test/galaxy_mode.py** (2 tuples):
-- [ ] Replace with appropriate constants
+- [x] Replace with `WARP_LANE`, `STAR_LABEL`
 
-- [ ] Run `pytest tests/ --testmon`
+- [x] Run `pytest tests/ --testmon`
 
-**Notes:**
+**Notes:** Complete
 
 ### Task 6.5: Strategy & Research Files [Simple]
 **Tests:** `pytest tests/ --testmon`
 
 **strategy_screen.py** (1 tuple), **strategy_ui.py** (1 tuple), **fleet_data_source.py** (2 tuples):
-- [ ] Replace all with appropriate constants
+- [x] Replace all with appropriate constants (`BG_BATTLE`, `WHITE`, `GRID_BG`, `BORDER_LIGHT`)
 
 **research/research_scene.py** (3 tuples), **research/research_renderer.py** (1 tuple):
 - [ ] Replace all with appropriate constants
 
 - [ ] Run `pytest tests/ --testmon`
 
-**Notes:**
+**Notes:** Strategy files done, research files pending
 
 ### Task 6.6: Design & Misc Files [Simple]
 **Tests:** `pytest tests/ --testmon`
