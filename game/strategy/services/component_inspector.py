@@ -12,6 +12,8 @@ if TYPE_CHECKING:
 
 __all__ = [
     "get_component_abilities",
+    "get_component_type",
+    "get_component_threshold",
     "iterate_design_components",
     "ship_has_ability",
     "find_ship_with_ability",
@@ -37,6 +39,43 @@ def get_component_abilities(comp_def: Any) -> Dict[str, Any]:
     if isinstance(comp_def, dict):
         return comp_def.get('abilities', {})
     return getattr(comp_def, 'abilities', {})
+
+
+def get_component_type(comp_def: Any) -> str:
+    """Extract component type string from a component definition.
+
+    Handles both dict format ('type' key) and Component objects ('type_str' attr).
+
+    Args:
+        comp_def: Either a dict with 'type' key or Component object, or None
+
+    Returns:
+        Component type string (empty string if None or no type)
+    """
+    if comp_def is None:
+        return ''
+    if isinstance(comp_def, dict):
+        return comp_def.get('type', '')
+    return getattr(comp_def, 'type_str', '')
+
+
+def get_component_threshold(comp_def: Any, default: float) -> float:
+    """Extract damage threshold from a component definition.
+
+    Handles both dict format ('damage_threshold' key) and Component objects.
+
+    Args:
+        comp_def: Either a dict with 'damage_threshold' key or Component object, or None
+        default: Default value to return if threshold not found
+
+    Returns:
+        Damage threshold value, or default if not found
+    """
+    if comp_def is None:
+        return default
+    if isinstance(comp_def, dict):
+        return comp_def.get('damage_threshold', default)
+    return getattr(comp_def, 'damage_threshold', default)
 
 
 def iterate_design_components(

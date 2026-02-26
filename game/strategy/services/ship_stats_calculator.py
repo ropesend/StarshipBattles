@@ -23,7 +23,11 @@ from game.core.constants import ResourceType
 from game.core.registry import GameRegistries
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
-from game.strategy.services.component_inspector import get_component_abilities
+from game.strategy.services.component_inspector import (
+    get_component_abilities,
+    get_component_type,
+    get_component_threshold,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -321,11 +325,7 @@ class ShipStatsCalculator:
             component_damage = {}
 
         # Check if this is armor (never degrades)
-        # comp_def may be a dict (JSON) or Component object (simulation)
-        if isinstance(comp_def, dict):
-            comp_type = comp_def.get('type', '')
-        else:
-            comp_type = getattr(comp_def, 'type_str', '')
+        comp_type = get_component_type(comp_def)
         if comp_type in NON_DEGRADING_TYPES:
             return 1.0
 
@@ -346,10 +346,7 @@ class ShipStatsCalculator:
         hp_pct = current_hp / max_hp
 
         # Get damage threshold (default 30%)
-        if isinstance(comp_def, dict):
-            threshold = comp_def.get('damage_threshold', DEFAULT_DAMAGE_THRESHOLD)
-        else:
-            threshold = getattr(comp_def, 'damage_threshold', DEFAULT_DAMAGE_THRESHOLD)
+        threshold = get_component_threshold(comp_def, DEFAULT_DAMAGE_THRESHOLD)
 
         # Below threshold = inactive
         if hp_pct <= threshold:

@@ -1,0 +1,2 @@
+{"timestamp": "2026-02-25T21:44:27", "threshold": 20, "total_above_threshold": 44, "worst_cc": 36, "worst_function": "game/ui/screens/fleet_report_filters.py:filter_ships", "distribution": {"extreme_40plus": 0, "very_high_30_39": 1, "high_20_29": 41, "elevated_15_19": 0}}
+{"timestamp": "2026-02-25T21:44:32", "threshold": 20, "total_above_threshold": 44, "worst_cc": 36, "worst_function": "game/ui/screens/fleet_report_filters.py:filter_ships", "distribution": {"extreme_40plus": 0, "very_high_30_39": 1, "high_20_29": 41, "elevated_15_19": 0}}
