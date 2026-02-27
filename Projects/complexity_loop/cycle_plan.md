@@ -6,20 +6,21 @@
 
 ## Agent Context
 
-**Last Session:** 2026-02-27 04:00
-**Last Completed:** Phase 1 - Test Fortification
-**Current Status:** Ready for Phase 2
+**Last Session:** 2026-02-27 04:45
+**Last Completed:** Phase 2 - Extract Helpers
+**Current Status:** Ready for Phase 3
 **Current Project:** PROJ-200
-**Current Phase:** Phase 2
-**Test Status:** 59 passed (49 original + 10 new)
+**Current Phase:** Phase 3
+**Test Status:** 12734 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 1 complete: Added 10 new tests for filter coverage
-- Tests added: 3 combination tests, 4 special capability tests, 2 edge case tests, 1 status precedence test
-- All tests passing (59 total)
-- Ready to begin Phase 2: Extract helper functions
-- Next: Extract `_should_exclude_by_*` helpers from `filter_ships`
+- Phase 2 complete: Extracted 5 helper functions
+- Functions created: `_should_exclude_by_warp`, `_should_exclude_by_spaceyard`, `_should_exclude_by_cargo`, `_should_exclude_by_special_capabilities`, `_should_exclude_by_status`
+- CC reduced: `filter_ships` 36 -> 7 (exceeds target of <20)
+- All 59 filter tests passing
+- Full suite: 12734 passed, 1 skipped
+- Ready for Phase 3: Verify & Cleanup
 
 ---
 
@@ -37,6 +38,7 @@
 |-----------|---------|--------|--------|-------|--------|-------|
 | 2026-02-27 03:21 | PROJ-200 | Plan generated | Ready | - | - | Automated complexity loop |
 | 2026-02-27 04:00 | PROJ-200 | Phase 1 | Complete | 59 pass | pending | Test fortification complete |
+| 2026-02-27 04:45 | PROJ-200 | Phase 2 | Complete | 12734 pass | pending | Extract helpers: CC 36->7 |
 
 ---
 

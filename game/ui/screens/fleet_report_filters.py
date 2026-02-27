@@ -121,6 +121,102 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
     }
 
 
+def _should_exclude_by_warp(ship: 'ShipInstance', filter_state: Dict[str, bool]) -> bool:
+    """Check if ship should be excluded based on warp capability filters."""
+    show_warp = filter_state.get('show_warp_capable', True)
+    show_not_warp = filter_state.get('show_not_warp_capable', True)
+
+    # If both filters are on, no exclusion needed
+    if show_warp and show_not_warp:
+        return False
+
+    is_warp_capable = ShipStatsCalculator.has_warp_capability(ship)
+    if is_warp_capable and not show_warp:
+        return True
+    if not is_warp_capable and not show_not_warp:
+        return True
+    return False
+
+
+def _should_exclude_by_spaceyard(ship: 'ShipInstance', filter_state: Dict[str, bool]) -> bool:
+    """Check if ship should be excluded based on spaceyard capability filters."""
+    show_has_yard = filter_state.get('show_has_spaceyard', True)
+    show_no_yard = filter_state.get('show_no_spaceyard', True)
+
+    # If both filters are on, no exclusion needed
+    if show_has_yard and show_no_yard:
+        return False
+
+    # INTENTIONAL LATE IMPORT: Avoid circular import with strategy data
+    from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+    has_yard = FleetCapabilityCalculator.ship_has_spaceyard(ship)
+    if has_yard and not show_has_yard:
+        return True
+    if not has_yard and not show_no_yard:
+        return True
+    return False
+
+
+def _should_exclude_by_cargo(ship: 'ShipInstance', filter_state: Dict[str, bool]) -> bool:
+    """Check if ship should be excluded based on cargo content filters."""
+    show_has_cargo = filter_state.get('show_has_cargo', True)
+    show_no_cargo = filter_state.get('show_no_cargo', True)
+
+    # If both filters are on, no exclusion needed
+    if show_has_cargo and show_no_cargo:
+        return False
+
+    has_cargo = bool(ship.cargo_contents) and sum(ship.cargo_contents.values()) > 0
+    if has_cargo and not show_has_cargo:
+        return True
+    if not has_cargo and not show_no_cargo:
+        return True
+    return False
+
+
+def _should_exclude_by_special_capabilities(ship: 'ShipInstance', filter_state: Dict[str, bool]) -> bool:
+    """Check if ship should be excluded based on special capability filters."""
+    for col_id, ability_name in SPECIAL_CAPABILITY_COLUMNS.items():
+        # Derive filter keys from column id: 'can_destroy_planet' -> show_can_destroy_planet / show_no_destroy_planet
+        # The "no" variant strips the "can_" prefix
+        show_has = filter_state.get(f'show_{col_id}', True)
+        no_key = col_id.replace('can_', 'no_', 1)
+        show_not = filter_state.get(f'show_{no_key}', True)
+
+        if not show_has or not show_not:
+            # INTENTIONAL LATE IMPORT: Avoid circular import with strategy data
+            from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+            has_ability = FleetCapabilityCalculator.ship_has_ability(ship, ability_name)
+            if has_ability and not show_has:
+                return True
+            if not has_ability and not show_not:
+                return True
+    return False
+
+
+def _should_exclude_by_status(ship: 'ShipInstance', filter_state: Dict[str, bool]) -> bool:
+    """
+    Check if ship should be excluded based on status filters.
+
+    CRITICAL: Order matters. Check destroyed -> derelict -> damaged -> undamaged.
+    A derelict ship is also damaged, so derelict must be checked first.
+    """
+    # Destroyed ships
+    if not ship.is_alive:
+        return not filter_state.get('show_destroyed', True)
+
+    # Derelict ships (checked before damaged since derelict implies damaged)
+    if ship.is_derelict:
+        return not filter_state.get('show_derelict', True)
+
+    # Damaged ships
+    if ship.is_damaged():
+        return not filter_state.get('show_damaged', True)
+
+    # Undamaged (healthy) ships
+    return not filter_state.get('show_undamaged', True)
+
+
 def filter_ships(ships: List[ShipInstance], filter_state: Dict[str, bool]) -> List[ShipInstance]:
     """
     Filter ships based on status filter state.
@@ -140,83 +236,26 @@ def filter_ships(ships: List[ShipInstance], filter_state: Dict[str, bool]) -> Li
     """
     result = []
     for ship in ships:
-        # Warp capability filter (if either warp filter is specified)
-        show_warp = filter_state.get('show_warp_capable', True)
-        show_not_warp = filter_state.get('show_not_warp_capable', True)
-
-        # If either filter is off, we need to check warp capability
-        if not show_warp or not show_not_warp:
-            is_warp_capable = ShipStatsCalculator.has_warp_capability(ship)
-            if is_warp_capable and not show_warp:
-                continue
-            if not is_warp_capable and not show_not_warp:
-                continue
+        # Warp capability filter
+        if _should_exclude_by_warp(ship, filter_state):
+            continue
 
         # Spaceyard capability filter
-        show_has_yard = filter_state.get('show_has_spaceyard', True)
-        show_no_yard = filter_state.get('show_no_spaceyard', True)
-        if not show_has_yard or not show_no_yard:
-            from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
-            has_yard = FleetCapabilityCalculator.ship_has_spaceyard(ship)
-            if has_yard and not show_has_yard:
-                continue
-            if not has_yard and not show_no_yard:
-                continue
+        if _should_exclude_by_spaceyard(ship, filter_state):
+            continue
 
         # Cargo filter (includes population)
-        show_has_cargo = filter_state.get('show_has_cargo', True)
-        show_no_cargo = filter_state.get('show_no_cargo', True)
-        if not show_has_cargo or not show_no_cargo:
-            has_cargo = bool(ship.cargo_contents) and sum(ship.cargo_contents.values()) > 0
-            if has_cargo and not show_has_cargo:
-                continue
-            if not has_cargo and not show_no_cargo:
-                continue
+        if _should_exclude_by_cargo(ship, filter_state):
+            continue
 
         # Special capability filters
-        _skip = False
-        for col_id, ability_name in SPECIAL_CAPABILITY_COLUMNS.items():
-            # Derive filter keys from column id: 'can_destroy_planet' -> show_can_destroy_planet / show_no_destroy_planet
-            # The "no" variant strips the "can_" prefix
-            show_has = filter_state.get(f'show_{col_id}', True)
-            no_key = col_id.replace('can_', 'no_', 1)
-            show_not = filter_state.get(f'show_{no_key}', True)
-            if not show_has or not show_not:
-                from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
-                has_ability = FleetCapabilityCalculator.ship_has_ability(ship, ability_name)
-                if has_ability and not show_has:
-                    _skip = True
-                    break
-                if not has_ability and not show_not:
-                    _skip = True
-                    break
-        if _skip:
+        if _should_exclude_by_special_capabilities(ship, filter_state):
             continue
 
-        # Destroyed filter
-        if not ship.is_alive:
-            if not filter_state.get('show_destroyed', True):
-                continue
-            result.append(ship)
+        # Status filters (destroyed, derelict, damaged, undamaged)
+        if _should_exclude_by_status(ship, filter_state):
             continue
 
-        # Derelict filter (checked before damaged since derelict implies damaged)
-        if ship.is_derelict:
-            if not filter_state.get('show_derelict', True):
-                continue
-            result.append(ship)
-            continue
-
-        # Damaged filter
-        if ship.is_damaged():
-            if not filter_state.get('show_damaged', True):
-                continue
-            result.append(ship)
-            continue
-
-        # Undamaged (healthy) ships
-        if not filter_state.get('show_undamaged', True):
-            continue
         result.append(ship)
 
     return result
