@@ -1,0 +1,82 @@
+{
+    "name": "Thoraliens",
+    "description": "Dark industrial metallic ships with cyan glowing highlights.",
+    "assets": {
+        "Escort": {
+            "skin": "Skins/escort.png",
+            "portrait": "Portraits/escort.png"
+        },
+        "Frigate": {
+            "skin": "Skins/frigate.png",
+            "portrait": "Portraits/frigate.png"
+        },
+        "Destroyer": {
+            "skin": "Skins/destroyer.png",
+            "portrait": "Portraits/destroyer.png"
+        },
+        "LightCruiser": {
+            "skin": "Skins/light_cruiser.png",
+            "portrait": "Portraits/light_cruiser.png"
+        },
+        "Cruiser": {
+            "skin": "Skins/cruiser.png",
+            "portrait": "Portraits/cruiser.png"
+        },
+        "HeavyCruiser": {
+            "skin": "Skins/heavy_cruiser.png",
+            "portrait": "Portraits/heavy_cruiser.png"
+        },
+        "BattleCruiser": {
+            "skin": "Skins/battlecruiser.png",
+            "portrait": "Portraits/battlecruiser.png"
+        },
+        "Battleship": {
+            "skin": "Skins/battleship.png",
+            "portrait": "Portraits/battleship.png"
+        },
+        "Dreadnought": {
+            "skin": "Skins/dreadnaught.png",
+            "portrait": "Portraits/dreadnaught.png"
+        },
+        "SuperDreadnought": {
+            "skin": "Skins/super_dread_naught.png",
+            "portrait": "Portraits/super_dread_naught.png"
+        },
+        "Monitor": {
+            "skin": "Skins/monitor.png",
+            "portrait": "Portraits/monitor.png"
+        },
+        "SmallFighter": {
+            "skin": "Skins/small_fighter.png",
+            "portrait": "Portraits/small_fighter.png"
+        },
+        "MediumFighter": {
+            "skin": "Skins/medium_fighter.png",
+            "portrait": "Portraits/medium_fighter.png"
+        },
+        "LargeFighter": {
+            "skin": "Skins/large_fighter.png",
+            "portrait": "Portraits/large_fighter.png"
+        },
+        "HeavyFighter": {
+            "skin": "Skins/heavy_fighter.png",
+            "portrait": "Portraits/heavy_fighter.png"
+        },
+        "SmallSatellite": {
+            "skin": "Skins/small_satellite.png",
+            "portrait": "Portraits/small_satellite.png"
+        },
+        "MediumSatellite": {
+            "skin": "Skins/medium_satellite.png",
+            "portrait": "Portraits/medium_satellite.png"
+        },
+        "LargeSatellite": {
+            "skin": "Skins/large_satellite.png",
+            "portrait": "Portraits/large_satellite.png"
+        },
+        "HeavySatellite": {
+            "skin": "Skins/heavy_satellite.png",
+            "portrait": "Portraits/heavy_satellite.png"
+        }
+    }
+}
