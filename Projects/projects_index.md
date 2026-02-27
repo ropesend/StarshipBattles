@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-200 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-27 | 2026-02-27 |
 | PROJ-199 | Duck Typing Cleanup - Lazy Init and CompDef Centralization | Plan Ready | 2026-02-25 | 2026-02-25 |
 
 ## Archived Projects
