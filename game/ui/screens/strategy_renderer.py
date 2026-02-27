@@ -327,31 +327,9 @@ class StrategyRenderer:
             primary = sys.primary_star
             if primary:
                 for star in sys.stars:
-                    local_pixel_x, local_pixel_y = hex_to_pixel(star.location, self.hex_size)
-                    star_screen_pos = self.camera.world_to_screen(pygame.math.Vector2(hx + local_pixel_x, hy + local_pixel_y))
-
-                    color = star.color
-                    asset_key = self._get_star_asset_key(color)
-
-                    star_img = self._asset_manager.load_image('stars', asset_key)
-
-                    screen_star_r = max(3, int(star.diameter_hexes * self.hex_size * self.camera.zoom))
-
-                    if self.scene.selected_object == sys and star == primary:
-                        pygame.draw.circle(screen, WHITE, star_screen_pos, screen_star_r + 4, 1)
-
-                    if star_img:
-                        scaled_img = pygame.transform.smoothscale(star_img, (screen_star_r * 2, screen_star_r * 2))
-                        dest_rect = scaled_img.get_rect(center=(int(star_screen_pos.x), int(star_screen_pos.y)))
-                        screen.blit(scaled_img, dest_rect)
-                    else:
-                        pygame.draw.circle(screen, color, star_screen_pos, screen_star_r)
-
-                    if self.camera.zoom >= 0.5:
-                        font_size = 12 if star == primary else 10
-                        font = self._get_font(font_size)
-                        text = font.render(star.name if star != primary else sys.name, True, STAR_LABEL)
-                        screen.blit(text, (star_screen_pos.x + 10, star_screen_pos.y))
+                    is_primary = star == primary
+                    is_selected = self.scene.selected_object == sys
+                    self._draw_star(screen, star, (hx, hy), sys.name, is_primary, is_selected)
 
             if self.camera.zoom >= 0.5:
                 self._draw_system_details(screen, sys, world_pos)
@@ -408,6 +386,47 @@ class StrategyRenderer:
 
         pygame.draw.circle(screen, owner_emp.color, (int(marker_screen.x), int(marker_screen.y)), 5)
         pygame.draw.circle(screen, WHITE, (int(marker_screen.x), int(marker_screen.y)), 6, 1)
+
+    def _draw_star(self, screen, star, system_center: tuple, system_name: str, is_primary: bool, is_selected_system: bool):
+        """Render a single star with image, selection highlight, and label.
+
+        Args:
+            screen: pygame.Surface to draw on
+            star: Star object to render
+            system_center: (hx, hy) tuple - system center in world pixels
+            system_name: str - name of the parent system (for primary star label)
+            is_primary: bool - whether this is the primary star
+            is_selected_system: bool - whether the parent system is selected
+        """
+        hx, hy = system_center
+        local_pixel_x, local_pixel_y = hex_to_pixel(star.location, self.hex_size)
+        star_screen_pos = self.camera.world_to_screen(
+            pygame.math.Vector2(hx + local_pixel_x, hy + local_pixel_y)
+        )
+
+        asset_key = self._get_star_asset_key(star.color)
+        star_img = self._asset_manager.load_image('stars', asset_key)
+        screen_star_r = max(3, int(star.diameter_hexes * self.hex_size * self.camera.zoom))
+
+        # Selection highlight (before star image)
+        if is_selected_system and is_primary:
+            pygame.draw.circle(screen, WHITE, star_screen_pos, screen_star_r + 4, 1)
+
+        # Star image or fallback
+        if star_img:
+            scaled_img = pygame.transform.smoothscale(star_img, (screen_star_r * 2, screen_star_r * 2))
+            dest_rect = scaled_img.get_rect(center=(int(star_screen_pos.x), int(star_screen_pos.y)))
+            screen.blit(scaled_img, dest_rect)
+        else:
+            pygame.draw.circle(screen, star.color, star_screen_pos, screen_star_r)
+
+        # Label at high zoom
+        if self.camera.zoom >= 0.5:
+            font_size = 12 if is_primary else 10
+            font = self._get_font(font_size)
+            label_text = system_name if is_primary else star.name
+            text = font.render(label_text, True, STAR_LABEL)
+            screen.blit(text, (star_screen_pos.x + 10, star_screen_pos.y))
 
     def _draw_system_details(self, screen, sys, sys_world_pos):
         """Draw planets and warp points for a system."""
