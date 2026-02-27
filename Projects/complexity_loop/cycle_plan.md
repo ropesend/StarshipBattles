@@ -6,20 +6,22 @@
 
 ## Agent Context
 
-**Last Session:** 2026-02-27 04:30
-**Last Completed:** Phase 1 - Extract Complex Handlers
-**Current Status:** Phase 1 complete, ready for Phase 2
+**Last Session:** 2026-02-27 05:00
+**Last Completed:** Phase 2 - Extract Remaining Handlers
+**Current Status:** Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-201
-**Current Phase:** Phase 2
-**Test Status:** 41/41 tests passing
+**Current Phase:** Phase 3
+**Test Status:** 12734 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 1 complete: extracted `_format_status` and `_format_resources` handlers
-- CC reduced from 29 to 22 (7 points)
-- All tests passing
-- Next: Phase 2 - extract remaining column handlers
-- See phase_2_checklist.md for tasks
+- Phase 2 complete: extracted 11 handler methods (_format_serial, _format_design, _format_name, _format_hp_pct, _format_tonnage, _format_speed, _format_warp, _format_spaceyard, _format_transport, _format_cargo, _format_capability)
+- CC reduced from 22 to 15 (7 more points)
+- Total CC reduction so far: 29 -> 15 (14 points)
+- All 41 unit tests + 12734 full suite passing
+- `_get_column_value` now CC=15 (below 20 target!)
+- Next: Phase 3 - implement dispatch dict for final cleanup
+- See phase_3_checklist.md for tasks
 
 ---
 
@@ -36,7 +38,8 @@
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
 | 2026-02-27 03:45 | PROJ-201 | Plan generated | Ready | - | - | Automated complexity loop |
-| 2026-02-27 04:30 | PROJ-201 | Phase 1 | Complete | 41/41 | pending | CC 29->22, extracted _format_status, _format_resources |
+| 2026-02-27 04:30 | PROJ-201 | Phase 1 | Complete | 41/41 | 7fbe350f | CC 29->22, extracted _format_status, _format_resources |
+| 2026-02-27 05:00 | PROJ-201 | Phase 2 | Complete | 12734/1 | 12916e34 | CC 22->15, extracted 11 handlers |
 
 ---
 

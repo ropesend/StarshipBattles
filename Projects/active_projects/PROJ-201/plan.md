@@ -14,16 +14,16 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Extract Complex Handlers | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Extract Remaining Handlers | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Extract Remaining Handlers | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Implement Dispatch & Verify | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-27 04:30
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete - extracted _format_status and _format_resources handlers
-**Next Action:** Begin Phase 2 - extract remaining column handlers
+**Last Updated:** 2026-02-27 05:00
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete - extracted 11 more handler methods
+**Next Action:** Begin Phase 3 - implement dispatch dict and verify
 **Blockers:** None
-**CC Progress:** 29 -> 22 (7 points reduction)
+**CC Progress:** 29 -> 22 -> 15 (14 points total reduction)
 
 ## Overview
 

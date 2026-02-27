@@ -139,79 +139,32 @@ class FleetDataSource(ITableDataSource):
         """
         if col_id in ("portrait", "topdown"):
             return ""  # Images handled separately
-
         elif col_id == "serial":
-            display_id = ship.get_display_id()
-            return display_id if display_id else ship.instance_id[:8]
-
+            return self._format_serial(ship)
         elif col_id == "design":
-            return ship.design_data.get("name", ship.design_id)
-
+            return self._format_design(ship)
         elif col_id == "name":
-            return ship.name
-
+            return self._format_name(ship)
         elif col_id == "hp_pct":
-            return f"{ship.get_hp_percentage() * 100:.0f}%"
-
+            return self._format_hp_pct(ship)
         elif col_id == "status":
             return self._format_status(ship)
-
         elif col_id == "speed":
-            # INTENTIONAL LATE IMPORT: Avoid circular import
-            from game.strategy.services.fleet_speed_calculator import (
-                FleetSpeedCalculator,
-            )
-
-            speed = FleetSpeedCalculator.calculate_ship_speed(ship)
-            return str(speed)
-
+            return self._format_speed(ship)
         elif col_id == "tonnage":
-            mass = ship.get_calculated_stats().get("mass", 0)
-            return f"{mass:,.0f}"
-
+            return self._format_tonnage(ship)
         elif col_id == "warp":
-            # INTENTIONAL LATE IMPORT: Avoid circular import
-            from game.strategy.services.ship_stats_calculator import (
-                ShipStatsCalculator,
-            )
-
-            return "Yes" if ShipStatsCalculator.has_warp_capability(ship) else "No"
-
+            return self._format_warp(ship)
         elif col_id == "spaceyard":
-            # INTENTIONAL LATE IMPORT: Avoid circular import
-            from game.strategy.data.fleet_capability_calculator import (
-                FleetCapabilityCalculator,
-            )
-
-            return (
-                "Yes" if FleetCapabilityCalculator.ship_has_spaceyard(ship) else "No"
-            )
-
+            return self._format_spaceyard(ship)
         elif col_id == "transport":
-            capacity = ship.get_cargo_capacity("passengers")
-            current = ship.get_current_cargo("passengers")
-            return f"{current}/{capacity}" if capacity > 0 else "--"
-
+            return self._format_transport(ship)
         elif col_id == "resources":
             return self._format_resources(ship)
-
         elif col_id == "cargo":
-            total = sum(ship.cargo_contents.values()) if ship.cargo_contents else 0
-            return str(total) if total > 0 else "--"
-
+            return self._format_cargo(ship)
         elif col_id in SPECIAL_CAPABILITY_COLUMNS:
-            # INTENTIONAL LATE IMPORT: Avoid circular import
-            from game.strategy.data.fleet_capability_calculator import (
-                FleetCapabilityCalculator,
-            )
-
-            ability_name = SPECIAL_CAPABILITY_COLUMNS[col_id]
-            return (
-                "Yes"
-                if FleetCapabilityCalculator.ship_has_ability(ship, ability_name)
-                else "No"
-            )
-
+            return self._format_capability(ship, col_id)
         return ""
 
     def _format_status(self, ship: "ShipInstance") -> str:
@@ -238,6 +191,75 @@ class FleetDataSource(ITableDataSource):
             if pct is not None and pct >= 0:
                 parts.append(f"{abbrev}:{int(pct * 100)}")
         return " ".join(parts) if parts else "--"
+
+    def _format_serial(self, ship: "ShipInstance") -> str:
+        """Format ship serial ID for display."""
+        display_id = ship.get_display_id()
+        return display_id if display_id else ship.instance_id[:8]
+
+    def _format_design(self, ship: "ShipInstance") -> str:
+        """Format ship design name for display."""
+        return ship.design_data.get("name", ship.design_id)
+
+    def _format_name(self, ship: "ShipInstance") -> str:
+        """Format ship name for display."""
+        return ship.name
+
+    def _format_hp_pct(self, ship: "ShipInstance") -> str:
+        """Format HP percentage for display."""
+        return f"{ship.get_hp_percentage() * 100:.0f}%"
+
+    def _format_tonnage(self, ship: "ShipInstance") -> str:
+        """Format ship tonnage for display."""
+        mass = ship.get_calculated_stats().get("mass", 0)
+        return f"{mass:,.0f}"
+
+    def _format_speed(self, ship: "ShipInstance") -> str:
+        """Format ship speed for display."""
+        # INTENTIONAL LATE IMPORT: Avoid circular import
+        from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
+
+        speed = FleetSpeedCalculator.calculate_ship_speed(ship)
+        return str(speed)
+
+    def _format_warp(self, ship: "ShipInstance") -> str:
+        """Format warp capability for display."""
+        # INTENTIONAL LATE IMPORT: Avoid circular import
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+
+        return "Yes" if ShipStatsCalculator.has_warp_capability(ship) else "No"
+
+    def _format_spaceyard(self, ship: "ShipInstance") -> str:
+        """Format spaceyard capability for display."""
+        # INTENTIONAL LATE IMPORT: Avoid circular import
+        from game.strategy.data.fleet_capability_calculator import (
+            FleetCapabilityCalculator,
+        )
+
+        return "Yes" if FleetCapabilityCalculator.ship_has_spaceyard(ship) else "No"
+
+    def _format_transport(self, ship: "ShipInstance") -> str:
+        """Format passenger transport capacity for display."""
+        capacity = ship.get_cargo_capacity("passengers")
+        current = ship.get_current_cargo("passengers")
+        return f"{current}/{capacity}" if capacity > 0 else "--"
+
+    def _format_cargo(self, ship: "ShipInstance") -> str:
+        """Format total cargo for display."""
+        total = sum(ship.cargo_contents.values()) if ship.cargo_contents else 0
+        return str(total) if total > 0 else "--"
+
+    def _format_capability(self, ship: "ShipInstance", col_id: str) -> str:
+        """Format special capability for display."""
+        # INTENTIONAL LATE IMPORT: Avoid circular import
+        from game.strategy.data.fleet_capability_calculator import (
+            FleetCapabilityCalculator,
+        )
+
+        ability_name = SPECIAL_CAPABILITY_COLUMNS[col_id]
+        return (
+            "Yes" if FleetCapabilityCalculator.ship_has_ability(ship, ability_name) else "No"
+        )
 
     def _get_ship_image(
         self, ship: "ShipInstance", image_type: str
