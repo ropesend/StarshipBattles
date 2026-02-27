@@ -8,7 +8,7 @@
 
 ## Implementation
 
-- [ ] **4.1** Add new method `_draw_star` to `StrategyRenderer` class
+- [x] **4.1** Add new method `_draw_star` to `StrategyRenderer` class
   - Location: After `_draw_colony_marker` (from Phase 3)
   - Signature: `def _draw_star(self, screen, star, system_center, system_name, is_primary, is_selected_system):`
   ```python
@@ -54,7 +54,7 @@
           screen.blit(text, (star_screen_pos.x + 10, star_screen_pos.y))
   ```
 
-- [ ] **4.2** Replace star loop body in `_draw_systems` with method call
+- [x] **4.2** Replace star loop body in `_draw_systems` with method call
   - Keep the `for star in sys.stars:` loop
   - Replace loop body (lines 341-373) with:
   ```python
@@ -106,10 +106,10 @@ def _draw_systems(self, screen):
 
 ## Verification
 
-- [ ] **4.3** Run star tests: `pytest tests/unit/ui/screens/test_strategy_renderer.py -v -k "star"`
-- [ ] **4.4** Run full renderer tests: `pytest tests/unit/ui/screens/test_strategy_renderer.py -v`
-- [ ] **4.5** Run full test suite: `pytest tests/ -n 12`
-- [ ] **4.6** Measure final complexity: `radon cc game/ui/screens/strategy_renderer.py -s -a`
+- [x] **4.3** Run star tests: `pytest tests/unit/ui/screens/test_strategy_renderer.py -v -k "star"` (3 passed)
+- [x] **4.4** Run full renderer tests: `pytest tests/unit/ui/screens/test_strategy_renderer.py -v` (47 passed)
+- [x] **4.5** Run full test suite: `pytest tests/ -n 12` (12743 passed, 1 skipped)
+- [x] **4.6** Measure final complexity: CC 7 (target was <20)
   - **Required:** `_draw_systems` CC below 20
   - Expected: CC 16-18
 
@@ -117,9 +117,9 @@ def _draw_systems(self, screen):
 
 ## Final Verification
 
-- [ ] **4.7** Verify all new methods have correct signatures
-- [ ] **4.8** Verify no behavioral changes (same render output)
-- [ ] **4.9** Commit with message: `[PROJ-203] Reduce _draw_systems complexity: CC 29 -> <final>`
+- [x] **4.7** Verify all new methods have correct signatures
+- [x] **4.8** Verify no behavioral changes (same render output) - all tests pass
+- [x] **4.9** Commit with message: `[PROJ-203] Phase 4: Extract _draw_star() helper - CC 29 -> 7` (b07b7c8f)
 
 ---
 
