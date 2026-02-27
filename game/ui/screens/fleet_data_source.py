@@ -3,7 +3,7 @@
 PROJ-188 Phase 2: FleetDataSource provides ship data for the fleet report table.
 """
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 import pygame
 
@@ -127,6 +127,27 @@ class FleetDataSource(ITableDataSource):
             return ships[row_index]
         return None
 
+    def _get_column_handlers(self) -> Dict[str, Callable[["ShipInstance"], str]]:
+        """Return mapping of column IDs to handler methods.
+
+        Returns:
+            Dict mapping column ID to handler function.
+        """
+        return {
+            "serial": self._format_serial,
+            "design": self._format_design,
+            "name": self._format_name,
+            "hp_pct": self._format_hp_pct,
+            "status": self._format_status,
+            "speed": self._format_speed,
+            "tonnage": self._format_tonnage,
+            "warp": self._format_warp,
+            "spaceyard": self._format_spaceyard,
+            "transport": self._format_transport,
+            "resources": self._format_resources,
+            "cargo": self._format_cargo,
+        }
+
     def _get_column_value(self, ship: "ShipInstance", col_id: str) -> str:
         """Get display value for a column.
 
@@ -137,34 +158,21 @@ class FleetDataSource(ITableDataSource):
         Returns:
             String value to display.
         """
+        # Image columns handled separately
         if col_id in ("portrait", "topdown"):
-            return ""  # Images handled separately
-        elif col_id == "serial":
-            return self._format_serial(ship)
-        elif col_id == "design":
-            return self._format_design(ship)
-        elif col_id == "name":
-            return self._format_name(ship)
-        elif col_id == "hp_pct":
-            return self._format_hp_pct(ship)
-        elif col_id == "status":
-            return self._format_status(ship)
-        elif col_id == "speed":
-            return self._format_speed(ship)
-        elif col_id == "tonnage":
-            return self._format_tonnage(ship)
-        elif col_id == "warp":
-            return self._format_warp(ship)
-        elif col_id == "spaceyard":
-            return self._format_spaceyard(ship)
-        elif col_id == "transport":
-            return self._format_transport(ship)
-        elif col_id == "resources":
-            return self._format_resources(ship)
-        elif col_id == "cargo":
-            return self._format_cargo(ship)
-        elif col_id in SPECIAL_CAPABILITY_COLUMNS:
+            return ""
+
+        # Special capability columns need col_id parameter
+        if col_id in SPECIAL_CAPABILITY_COLUMNS:
             return self._format_capability(ship, col_id)
+
+        # Dispatch to handler
+        handlers = self._get_column_handlers()
+        handler = handlers.get(col_id)
+        if handler:
+            return handler(ship)
+
+        # Unknown column
         return ""
 
     def _format_status(self, ship: "ShipInstance") -> str:
