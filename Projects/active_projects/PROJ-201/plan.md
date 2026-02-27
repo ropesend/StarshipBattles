@@ -13,16 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Extract Complex Handlers | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Extract Complex Handlers | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Extract Remaining Handlers | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Implement Dispatch & Verify | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-27 04:15
-**Active Phase:** Phase 1
-**Last Action:** Analysis complete - plan ready for implementation
-**Next Action:** Extract `_format_status(ship)` handler
+**Last Updated:** 2026-02-27 04:30
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete - extracted _format_status and _format_resources handlers
+**Next Action:** Begin Phase 2 - extract remaining column handlers
 **Blockers:** None
+**CC Progress:** 29 -> 22 (7 points reduction)
 
 ## Overview
 

@@ -154,14 +154,7 @@ class FleetDataSource(ITableDataSource):
             return f"{ship.get_hp_percentage() * 100:.0f}%"
 
         elif col_id == "status":
-            if not ship.is_alive:
-                return "DESTROYED"
-            elif ship.is_derelict:
-                return "DERELICT"
-            elif ship.is_damaged():
-                return "DAMAGED"
-            else:
-                return "OK"
+            return self._format_status(ship)
 
         elif col_id == "speed":
             # INTENTIONAL LATE IMPORT: Avoid circular import
@@ -200,18 +193,7 @@ class FleetDataSource(ITableDataSource):
             return f"{current}/{capacity}" if capacity > 0 else "--"
 
         elif col_id == "resources":
-            # Build compact string: "E:80 F:90 A:100"
-            parts = []
-            resource_abbrevs = [
-                (ResourceType.ENERGY, "E"),
-                (ResourceType.FUEL, "F"),
-                (ResourceType.AMMO, "A"),
-            ]
-            for res_type, abbrev in resource_abbrevs:
-                pct = ship.get_resource_percentage(res_type)
-                if pct is not None and pct >= 0:
-                    parts.append(f"{abbrev}:{int(pct * 100)}")
-            return " ".join(parts) if parts else "--"
+            return self._format_resources(ship)
 
         elif col_id == "cargo":
             total = sum(ship.cargo_contents.values()) if ship.cargo_contents else 0
@@ -231,6 +213,31 @@ class FleetDataSource(ITableDataSource):
             )
 
         return ""
+
+    def _format_status(self, ship: "ShipInstance") -> str:
+        """Format ship status for display."""
+        if not ship.is_alive:
+            return "DESTROYED"
+        elif ship.is_derelict:
+            return "DERELICT"
+        elif ship.is_damaged():
+            return "DAMAGED"
+        else:
+            return "OK"
+
+    def _format_resources(self, ship: "ShipInstance") -> str:
+        """Format resource percentages for display."""
+        parts = []
+        resource_abbrevs = [
+            (ResourceType.ENERGY, "E"),
+            (ResourceType.FUEL, "F"),
+            (ResourceType.AMMO, "A"),
+        ]
+        for res_type, abbrev in resource_abbrevs:
+            pct = ship.get_resource_percentage(res_type)
+            if pct is not None and pct >= 0:
+                parts.append(f"{abbrev}:{int(pct * 100)}")
+        return " ".join(parts) if parts else "--"
 
     def _get_ship_image(
         self, ship: "ShipInstance", image_type: str

@@ -5,10 +5,11 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Extract the two highest-complexity branches (status, resources) into dedicated handler methods.
 
 **Expected CC reduction:** ~8-10 points (removing nested conditionals and loop)
+**Actual CC reduction:** 7 points (29 -> 22)
 
 ---
 
@@ -18,7 +19,7 @@
 **File:** `game/ui/screens/fleet_data_source.py`
 **Tests:** `pytest tests/unit/ui/screens/test_fleet_data_source.py -v -k status`
 
-- [ ] Add method `_format_status(self, ship: "ShipInstance") -> str` after line 233:
+- [x] Add method `_format_status(self, ship: "ShipInstance") -> str` after line 233:
   ```python
   def _format_status(self, ship: "ShipInstance") -> str:
       """Format ship status for display."""
@@ -32,14 +33,14 @@
           return "OK"
   ```
 
-- [ ] Update `_get_column_value` status branch (lines 156-164) to call handler:
+- [x] Update `_get_column_value` status branch (lines 156-164) to call handler:
   ```python
   elif col_id == "status":
       return self._format_status(ship)
   ```
 
-- [ ] Run tests: `pytest tests/unit/ui/screens/test_fleet_data_source.py -v -k status`
-- [ ] Verify: All 4 status tests pass
+- [x] Run tests: `pytest tests/unit/ui/screens/test_fleet_data_source.py -v -k status`
+- [x] Verify: All 4 status tests pass
 
 **Notes:** Status priority must be preserved: DESTROYED > DERELICT > DAMAGED > OK
 
@@ -49,7 +50,7 @@
 **File:** `game/ui/screens/fleet_data_source.py`
 **Tests:** `pytest tests/unit/ui/screens/test_fleet_data_source.py -v -k resources`
 
-- [ ] Add method `_format_resources(self, ship: "ShipInstance") -> str` after `_format_status`:
+- [x] Add method `_format_resources(self, ship: "ShipInstance") -> str` after `_format_status`:
   ```python
   def _format_resources(self, ship: "ShipInstance") -> str:
       """Format resource percentages for display."""
@@ -66,14 +67,14 @@
       return " ".join(parts) if parts else "--"
   ```
 
-- [ ] Update `_get_column_value` resources branch (lines 202-214) to call handler:
+- [x] Update `_get_column_value` resources branch (lines 202-214) to call handler:
   ```python
   elif col_id == "resources":
       return self._format_resources(ship)
   ```
 
-- [ ] Run tests: `pytest tests/unit/ui/screens/test_fleet_data_source.py -v -k resources`
-- [ ] Verify: All 2 resources tests pass
+- [x] Run tests: `pytest tests/unit/ui/screens/test_fleet_data_source.py -v -k resources`
+- [x] Verify: All 2 resources tests pass
 
 **Notes:** Format must be "E:XX F:XX A:XX" with "--" fallback
 
@@ -83,17 +84,17 @@
 **File:** N/A
 **Tests:** `pytest tests/unit/ui/screens/test_fleet_data_source.py -v`
 
-- [ ] Run full test file: `pytest tests/unit/ui/screens/test_fleet_data_source.py -v`
-- [ ] Verify: All 37+ tests pass
-- [ ] Check CC: `radon cc game/ui/screens/fleet_data_source.py -s -a` (should show reduction)
+- [x] Run full test file: `pytest tests/unit/ui/screens/test_fleet_data_source.py -v`
+- [x] Verify: All 41 tests pass
+- [x] Check CC: `radon cc game/ui/screens/fleet_data_source.py -s -a` (CC 29 -> 22)
 
-**Notes:** Document CC change in decisions.md
+**Notes:** CC reduced by 7 points. Target function now at CC=22.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 2
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 2
