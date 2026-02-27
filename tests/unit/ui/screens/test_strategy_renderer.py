@@ -413,6 +413,337 @@ class TestDrawSystems:
 
 
 # ===========================================================================
+# Draw Systems - Colony Marker Tests (PROJ-203 Phase 1)
+# ===========================================================================
+
+class TestDrawSystemsColonyMarker:
+    """Test _draw_systems colony marker behavior at low zoom."""
+
+    def test_colony_marker_appears_at_low_zoom(self, renderer, mock_scene):
+        """Colony marker should appear when zoom < 0.5 and planet is owned."""
+        screen = MagicMock()
+        mock_scene.camera.zoom = 0.4  # Below 0.5 threshold
+
+        # Create owned planet
+        planet = MagicMock()
+        planet.owner_id = 'empire1'
+
+        # Create empire with matching ID
+        empire = MagicMock()
+        empire.id = 'empire1'
+        empire.color = (255, 0, 0)  # Red
+        mock_scene.empires = [empire]
+
+        # Create system at origin (visible)
+        mock_system = MagicMock()
+        mock_system.global_location = MagicMock(q=0, r=0)
+        mock_system.planets = [planet]
+        mock_system.primary_star = None
+        mock_system.stars = []
+        mock_scene.galaxy.systems = {'sys1': mock_system}
+
+        with patch('pygame.draw.circle') as mock_circle:
+            renderer._draw_systems(screen)
+
+            # Verify pygame.draw.circle was called (colony marker)
+            assert mock_circle.call_count >= 1
+            # First call should be with owner's color (red)
+            call_args = mock_circle.call_args_list[0]
+            assert call_args[0][1] == (255, 0, 0)  # Owner empire color
+
+    def test_no_colony_marker_at_high_zoom(self, renderer, mock_scene):
+        """Colony marker should NOT appear when zoom >= 0.5."""
+        screen = MagicMock()
+        mock_scene.camera.zoom = 0.6  # At or above 0.5 threshold
+
+        # Create owned planet
+        planet = MagicMock()
+        planet.owner_id = 'empire1'
+
+        # Create empire
+        empire = MagicMock()
+        empire.id = 'empire1'
+        empire.color = (255, 0, 0)
+        mock_scene.empires = [empire]
+
+        # Create system with no stars (so no star rendering)
+        mock_system = MagicMock()
+        mock_system.global_location = MagicMock(q=0, r=0)
+        mock_system.planets = [planet]
+        mock_system.primary_star = None
+        mock_system.stars = []
+        mock_scene.galaxy.systems = {'sys1': mock_system}
+
+        # Mock _draw_system_details to prevent it from doing work
+        renderer._draw_system_details = MagicMock()
+
+        with patch('pygame.draw.circle') as mock_circle:
+            renderer._draw_systems(screen)
+
+            # At high zoom, no colony marker should be drawn
+            # (No circles because no stars and no colony marker)
+            mock_circle.assert_not_called()
+
+    def test_colony_marker_uses_first_owner_color(self, renderer, mock_scene):
+        """When multiple planets owned by different empires, use first owner's color."""
+        screen = MagicMock()
+        mock_scene.camera.zoom = 0.4
+
+        # Create planets owned by different empires
+        planet1 = MagicMock()
+        planet1.owner_id = 'empire1'
+        planet2 = MagicMock()
+        planet2.owner_id = 'empire2'
+
+        # Create empires
+        empire1 = MagicMock()
+        empire1.id = 'empire1'
+        empire1.color = (255, 0, 0)  # Red - should be used
+        empire2 = MagicMock()
+        empire2.id = 'empire2'
+        empire2.color = (0, 0, 255)  # Blue - should NOT be used
+        mock_scene.empires = [empire1, empire2]
+
+        # System with both planets (owned first comes first)
+        mock_system = MagicMock()
+        mock_system.global_location = MagicMock(q=0, r=0)
+        mock_system.planets = [planet1, planet2]
+        mock_system.primary_star = None
+        mock_system.stars = []
+        mock_scene.galaxy.systems = {'sys1': mock_system}
+
+        with patch('pygame.draw.circle') as mock_circle:
+            renderer._draw_systems(screen)
+
+            # Verify first call uses first owner's color (red)
+            assert mock_circle.call_count >= 1
+            call_args = mock_circle.call_args_list[0]
+            assert call_args[0][1] == (255, 0, 0)
+
+    def test_colony_marker_handles_orphaned_owner(self, renderer, mock_scene):
+        """When planet.owner_id not in empires list, skip marker gracefully."""
+        screen = MagicMock()
+        mock_scene.camera.zoom = 0.4
+
+        # Create planet with owner that doesn't exist in empires
+        planet = MagicMock()
+        planet.owner_id = 'nonexistent_empire'
+
+        # Empires list doesn't have this ID
+        empire = MagicMock()
+        empire.id = 'some_other_empire'
+        empire.color = (0, 255, 0)
+        mock_scene.empires = [empire]
+
+        mock_system = MagicMock()
+        mock_system.global_location = MagicMock(q=0, r=0)
+        mock_system.planets = [planet]
+        mock_system.primary_star = None
+        mock_system.stars = []
+        mock_scene.galaxy.systems = {'sys1': mock_system}
+
+        # Should not raise and should not draw marker
+        with patch('pygame.draw.circle') as mock_circle:
+            renderer._draw_systems(screen)  # No exception
+            mock_circle.assert_not_called()
+
+
+# ===========================================================================
+# Draw Systems - Star Rendering Tests (PROJ-203 Phase 1)
+# ===========================================================================
+
+class TestDrawSystemsStar:
+    """Test _draw_systems star rendering edge cases."""
+
+    def test_star_fallback_circle_when_no_image(self, renderer, mock_scene):
+        """When asset manager returns None, fallback circle should be drawn."""
+        screen = MagicMock()
+        mock_scene.camera.zoom = 0.6  # Above detail threshold
+
+        # Create star
+        star = MagicMock()
+        star.color = (255, 255, 0)  # Yellow
+        star.diameter_hexes = 1.0
+        star.location = MagicMock(q=0, r=0)
+        star.name = "Test Star"
+
+        mock_system = MagicMock()
+        mock_system.global_location = MagicMock(q=0, r=0)
+        mock_system.planets = []
+        mock_system.primary_star = star
+        mock_system.stars = [star]
+        mock_system.name = "Test System"
+        mock_scene.galaxy.systems = {'sys1': mock_system}
+        mock_scene.selected_object = None
+
+        # Force asset manager to return None for star image
+        renderer._asset_manager.load_image.return_value = None
+
+        # Mock _draw_system_details
+        renderer._draw_system_details = MagicMock()
+
+        with patch('pygame.draw.circle') as mock_circle:
+            renderer._draw_systems(screen)
+
+            # Verify fallback circle drawn with star color
+            assert mock_circle.call_count >= 1
+            # Find the call with star color (yellow)
+            found_fallback = False
+            for call in mock_circle.call_args_list:
+                if call[0][1] == (255, 255, 0):
+                    found_fallback = True
+                    break
+            assert found_fallback, "Fallback circle with star color not found"
+
+    def test_star_minimum_radius_is_3(self, renderer, mock_scene):
+        """Star radius should never be less than 3 pixels."""
+        screen = MagicMock()
+        mock_scene.camera.zoom = 0.1  # Very low zoom
+
+        # Create tiny star
+        star = MagicMock()
+        star.color = (255, 255, 0)
+        star.diameter_hexes = 0.001  # Very small
+        star.location = MagicMock(q=0, r=0)
+        star.name = "Tiny Star"
+
+        mock_system = MagicMock()
+        mock_system.global_location = MagicMock(q=0, r=0)
+        mock_system.planets = []
+        mock_system.primary_star = star
+        mock_system.stars = [star]
+        mock_system.name = "Test System"
+        mock_scene.galaxy.systems = {'sys1': mock_system}
+        mock_scene.selected_object = None
+
+        # Force fallback circle rendering
+        renderer._asset_manager.load_image.return_value = None
+
+        with patch('pygame.draw.circle') as mock_circle:
+            renderer._draw_systems(screen)
+
+            # Find the fallback circle call
+            for call in mock_circle.call_args_list:
+                if call[0][1] == (255, 255, 0):  # Star color
+                    radius = call[0][3]  # 4th positional arg is radius
+                    assert radius >= 3, f"Star radius {radius} is less than minimum 3"
+                    break
+
+    def test_star_selection_highlight_on_primary(self, renderer, mock_scene):
+        """Selected system's primary star should have white outline."""
+        screen = MagicMock()
+        mock_scene.camera.zoom = 0.6
+
+        # Create star
+        star = MagicMock()
+        star.color = (255, 255, 0)
+        star.diameter_hexes = 1.0
+        star.location = MagicMock(q=0, r=0)
+        star.name = "Primary Star"
+
+        mock_system = MagicMock()
+        mock_system.global_location = MagicMock(q=0, r=0)
+        mock_system.planets = []
+        mock_system.primary_star = star
+        mock_system.stars = [star]
+        mock_system.name = "Test System"
+        mock_scene.galaxy.systems = {'sys1': mock_system}
+
+        # Select this system
+        mock_scene.selected_object = mock_system
+
+        # Force fallback rendering
+        renderer._asset_manager.load_image.return_value = None
+        renderer._draw_system_details = MagicMock()
+
+        with patch('pygame.draw.circle') as mock_circle:
+            renderer._draw_systems(screen)
+
+            # Should have at least 2 circle calls: selection highlight + star
+            assert mock_circle.call_count >= 2
+            # Find call with WHITE color (255, 255, 255)
+            found_highlight = False
+            for call in mock_circle.call_args_list:
+                # WHITE constant is (255, 255, 255)
+                if call[0][1] == (255, 255, 255):
+                    found_highlight = True
+                    # Verify it has outline (width parameter > 0)
+                    assert len(call[0]) >= 5 or 'width' in call[1] or call[0][-1] == 1
+                    break
+            assert found_highlight, "Selection highlight circle not found"
+
+
+# ===========================================================================
+# Draw Systems - Viewport Culling Tests (PROJ-203 Phase 1)
+# ===========================================================================
+
+class TestDrawSystemsViewportCulling:
+    """Test _draw_systems viewport culling behavior."""
+
+    def test_system_beyond_margin_not_rendered(self, renderer, mock_scene):
+        """Systems > 600 units outside viewport should not be rendered."""
+        screen = MagicMock()
+        mock_scene.camera.zoom = 0.5
+
+        # Camera centered at origin, viewport ~1920x1080 in screen coords
+        # World coords from mock: screen_to_world returns screen - 960/540
+        # So visible world area is roughly -960 to +960 x, -540 to +540 y
+        # Margin is 600, so cutoff is roughly at ~1560 world units
+
+        star = MagicMock()
+        star.color = (255, 255, 0)
+        star.diameter_hexes = 1.0
+        star.location = MagicMock(q=0, r=0)
+        star.name = "Star"
+
+        # Create system very far away (beyond margin)
+        mock_system = MagicMock()
+        mock_system.global_location = MagicMock(q=10000, r=10000)
+        mock_system.planets = []
+        mock_system.primary_star = star
+        mock_system.stars = [star]
+        mock_scene.galaxy.systems = {'distant': mock_system}
+        mock_scene.selected_object = None
+
+        renderer._asset_manager.load_image.return_value = None
+        renderer._draw_system_details = MagicMock()
+
+        with patch('pygame.draw.circle') as mock_circle:
+            renderer._draw_systems(screen)
+
+            # System should be culled - no circles drawn
+            mock_circle.assert_not_called()
+
+    def test_system_within_margin_rendered(self, renderer, mock_scene):
+        """Systems within 600 units of viewport edge should be rendered."""
+        screen = MagicMock()
+        mock_scene.camera.zoom = 0.4  # Below 0.5 to skip label rendering
+
+        star = MagicMock()
+        star.color = (255, 255, 0)
+        star.diameter_hexes = 1.0
+        star.location = MagicMock(q=0, r=0)
+        star.name = "Star"
+
+        # Create system at origin (well within viewport)
+        mock_system = MagicMock()
+        mock_system.global_location = MagicMock(q=0, r=0)
+        mock_system.planets = []
+        mock_system.primary_star = star
+        mock_system.stars = [star]
+        mock_scene.galaxy.systems = {'nearby': mock_system}
+        mock_scene.selected_object = None
+
+        renderer._asset_manager.load_image.return_value = None
+
+        with patch('pygame.draw.circle') as mock_circle:
+            renderer._draw_systems(screen)
+
+            # System should be rendered - at least one circle drawn
+            assert mock_circle.call_count >= 1
+
+
+# ===========================================================================
 # Draw Fleets Tests
 # ===========================================================================
 
