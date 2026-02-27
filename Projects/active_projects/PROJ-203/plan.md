@@ -14,15 +14,15 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Test Fortification | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Extract Star Color Mapping | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Extract Star Color Mapping | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract Colony Marker | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Extract Star Rendering & Verify | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-27
-**Active Phase:** 2 - Extract Star Color Mapping
-**Last Action:** Phase 1 complete - Added 9 new tests for colony markers, star rendering, and viewport culling
-**Next Action:** Begin Phase 2 - Extract `_get_star_asset_key()` helper
+**Active Phase:** 3 - Extract Colony Marker
+**Last Action:** Phase 2 complete - Extracted `_get_star_asset_key()` helper, CC 29→20
+**Next Action:** Begin Phase 3 - Extract `_draw_colony_marker()` helper
 **Blockers:** None
 
 ## Overview

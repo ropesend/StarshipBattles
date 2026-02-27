@@ -341,16 +341,8 @@ class StrategyRenderer:
                     local_pixel_x, local_pixel_y = hex_to_pixel(star.location, self.hex_size)
                     star_screen_pos = self.camera.world_to_screen(pygame.math.Vector2(hx + local_pixel_x, hy + local_pixel_y))
 
-                    asset_key = 'yellow'
                     color = star.color
-                    if color[0] > 200 and color[1] < 100:
-                        asset_key = 'red'
-                    elif color[2] > 200 and color[0] < 100:
-                        asset_key = 'blue'
-                    elif color[0] > 200 and color[1] > 200 and color[2] > 200:
-                        asset_key = 'white'
-                    elif color[0] > 200 and color[1] > 150:
-                        asset_key = 'orange'
+                    asset_key = self._get_star_asset_key(color)
 
                     star_img = self._asset_manager.load_image('stars', asset_key)
 
@@ -374,6 +366,29 @@ class StrategyRenderer:
 
             if self.camera.zoom >= 0.5:
                 self._draw_system_details(screen, sys, world_pos)
+
+    def _get_star_asset_key(self, color: tuple) -> str:
+        """Map star RGB color to asset key for star image loading.
+
+        IMPORTANT: Evaluation order matters - conditions overlap.
+        White check must come before orange check.
+
+        Args:
+            color: RGB tuple (r, g, b) with values 0-255
+
+        Returns:
+            Asset key: 'yellow', 'red', 'blue', 'white', or 'orange'
+        """
+        r, g, b = color[0], color[1], color[2]
+        if r > 200 and g < 100:
+            return 'red'
+        elif b > 200 and r < 100:
+            return 'blue'
+        elif r > 200 and g > 200 and b > 200:
+            return 'white'
+        elif r > 200 and g > 150:
+            return 'orange'
+        return 'yellow'
 
     def _draw_system_details(self, screen, sys, sys_world_pos):
         """Draw planets and warp points for a system."""
