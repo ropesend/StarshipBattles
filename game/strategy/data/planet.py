@@ -5,6 +5,7 @@ from enum import Enum, auto
 from typing import Dict, FrozenSet, List, Optional, Any
 from game.core.constants import ResourceType
 from game.core.hex_math import HexCoord, hex_circle_filled
+from game.core.patterns.layer_iterator import iter_components, get_component_id
 from game.core.validation_helpers import (
     require_keys, validate_enum, validate_positive, validate_non_negative
 )
@@ -83,18 +84,15 @@ class PlanetaryFacility:
             Total fuel storage capacity.
         """
         total = 0.0
-        for layer_data in self.design_data.get("layers", {}).values():
-            if not isinstance(layer_data, list):
+        for comp in iter_components(self.design_data):
+            comp_id = get_component_id(comp)
+            comp_def = registries.components.get(comp_id)
+            if not comp_def:
                 continue
-            for comp in layer_data:
-                comp_id = comp.get("id") if isinstance(comp, dict) else comp
-                comp_def = registries.components.get(comp_id)
-                if not comp_def:
-                    continue
-                abilities = get_component_abilities(comp_def)
-                for storage in (abilities.get('ResourceStorage') or []):
-                    if isinstance(storage, dict) and storage.get('resource') == ResourceType.FUEL:
-                        total += storage.get('amount', 0)
+            abilities = get_component_abilities(comp_def)
+            for storage in (abilities.get('ResourceStorage') or []):
+                if isinstance(storage, dict) and storage.get('resource') == ResourceType.FUEL:
+                    total += storage.get('amount', 0)
         return total
 
     def add_fuel(self, amount: float, registries) -> float:
@@ -141,15 +139,12 @@ class PlanetaryFacility:
         if not self.is_operational:
             return False
 
-        for layer_data in self.design_data.get("layers", {}).values():
-            if not isinstance(layer_data, list):
-                continue
-            for comp in layer_data:
-                if isinstance(comp, dict):
-                    if comp.get("id") == "space_shipyard":
-                        return True
-                    if "SpaceShipyard" in comp.get("abilities", {}):
-                        return True
+        for comp in iter_components(self.design_data):
+            if isinstance(comp, dict):
+                if comp.get("id") == "space_shipyard":
+                    return True
+                if "SpaceShipyard" in comp.get("abilities", {}):
+                    return True
         return False
 
 

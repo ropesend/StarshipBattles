@@ -22,6 +22,7 @@ from typing import Optional, List, Dict, Any
 
 from game.core.event_logging import log_event
 from game.strategy.events.event_types import EventType, EventCategory
+from game.strategy.services.design_cost_calculator import DesignCostCalculator
 
 logger = logging.getLogger(__name__)
 from game.strategy.data.build_queue_source import _facility_is_shipyard
@@ -61,8 +62,8 @@ class ProductionEngine:
     def _calculate_design_cost(self, design_data: Dict) -> Dict[str, float]:
         """Calculate total resource cost from all components in a design.
 
-        Iterates through all layers and components, summing their resource_cost
-        fields. The result is cached as 'total_resource_cost' in design_data
+        Delegates to DesignCostCalculator for centralized cost calculation.
+        The result is cached as 'total_resource_cost' in design_data
         to avoid recalculation.
 
         Args:
@@ -74,13 +75,7 @@ class ProductionEngine:
         if 'total_resource_cost' in design_data:
             return design_data['total_resource_cost']
 
-        total_cost: Dict[str, float] = {}
-        for layer in design_data.get('layers', {}).values():
-            for component in layer.get('components', []):
-                comp_cost = component.get('resource_cost', {})
-                for res, amount in comp_cost.items():
-                    total_cost[res] = total_cost.get(res, 0) + amount
-
+        total_cost = DesignCostCalculator.calculate_total_cost(design_data)
         design_data['total_resource_cost'] = total_cost
         return total_cost
 

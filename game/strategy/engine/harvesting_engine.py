@@ -21,6 +21,7 @@ from typing import List, Optional, TYPE_CHECKING
 import logging
 
 from game.core.registry import GameRegistries
+from game.core.patterns.layer_iterator import iter_components
 from game.strategy.services.component_inspector import get_component_abilities
 
 logger = logging.getLogger(__name__)
@@ -155,21 +156,15 @@ class HarvestingEngine(IHarvestingEngine):
         storage_totals: dict,
     ) -> None:
         """Scan a facility's components for EmpireStorage abilities."""
-        design_data = facility.design_data
-        layers = design_data.get('layers', {})
-
-        for layer_data in layers.values():
-            if not isinstance(layer_data, list):
-                continue
-            for comp in layer_data:
-                storage_info = self._get_storage_info(comp)
-                if storage_info is not None:
-                    resource_type = storage_info.get('resource_type', '')
-                    capacity = storage_info.get('capacity', 0.0)
-                    if resource_type and capacity > 0:
-                        storage_totals[resource_type] = (
-                            storage_totals.get(resource_type, 0.0) + capacity
-                        )
+        for comp in iter_components(facility.design_data):
+            storage_info = self._get_storage_info(comp)
+            if storage_info is not None:
+                resource_type = storage_info.get('resource_type', '')
+                capacity = storage_info.get('capacity', 0.0)
+                if resource_type and capacity > 0:
+                    storage_totals[resource_type] = (
+                        storage_totals.get(resource_type, 0.0) + capacity
+                    )
 
     def _get_storage_info(self, comp) -> Optional[dict]:
         """Extract EmpireStorage info from a component entry.
@@ -253,18 +248,12 @@ class HarvestingEngine(IHarvestingEngine):
             empire: Empire receiving resources
             tick_fraction: Fraction of per-turn harvest to extract
         """
-        design_data = facility.design_data
-        layers = design_data.get('layers', {})
-
-        for layer_data in layers.values():
-            if not isinstance(layer_data, list):
-                continue
-            for comp in layer_data:
-                harvester_info = get_harvester_info(comp, self._registries)
-                if harvester_info is not None:
-                    self._harvest_resource(
-                        harvester_info, colony, empire, tick_fraction
-                    )
+        for comp in iter_components(facility.design_data):
+            harvester_info = get_harvester_info(comp, self._registries)
+            if harvester_info is not None:
+                self._harvest_resource(
+                    harvester_info, colony, empire, tick_fraction
+                )
 
     def _get_harvester_info(self, comp) -> Optional[dict]:
         """Extract ResourceHarvester info from a component entry.

@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Optional, TYPE_CHECKING
 
 from game.core.constants import PLANET_RESOURCES
+from game.core.patterns.layer_iterator import iter_components
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
@@ -152,33 +153,25 @@ class EmpireEconomyCalculator:
                 if not facility.is_operational:
                     continue
 
-                design_data = facility.design_data
-                layers = design_data.get('layers', {})
-
-                for layer_data in layers.values():
-                    # Only handle list-format layers
-                    if not isinstance(layer_data, list):
+                for comp in iter_components(facility.design_data):
+                    harvester = get_harvester_info(comp, self._registries)
+                    if harvester is None:
                         continue
 
-                    for comp in layer_data:
-                        harvester = get_harvester_info(comp, self._registries)
-                        if harvester is None:
-                            continue
+                    resource_type = harvester.get('resource_type', '')
+                    base_rate = harvester.get('base_harvest_rate', 0.0)
 
-                        resource_type = harvester.get('resource_type', '')
-                        base_rate = harvester.get('base_harvest_rate', 0.0)
+                    if not resource_type or base_rate <= 0:
+                        continue
 
-                        if not resource_type or base_rate <= 0:
-                            continue
+                    # Get planet quality for this resource
+                    resource_data = colony.resources.get(resource_type, {})
+                    quality = resource_data.get('quality', 0.0)
 
-                        # Get planet quality for this resource
-                        resource_data = colony.resources.get(resource_type, {})
-                        quality = resource_data.get('quality', 0.0)
-
-                        # Accumulate production
-                        production = base_rate * quality
-                        if resource_type in totals:
-                            totals[resource_type] += production
+                    # Accumulate production
+                    production = base_rate * quality
+                    if resource_type in totals:
+                        totals[resource_type] += production
 
         return totals
 

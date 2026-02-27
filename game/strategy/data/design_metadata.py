@@ -12,6 +12,7 @@ from datetime import datetime
 import os
 import warnings
 from game.core.json_utils import load_json_required, save_json
+from game.core.patterns.layer_iterator import iter_layers_and_components
 from game.core.validation_helpers import require_keys
 
 logger = logging.getLogger(__name__)
@@ -171,26 +172,21 @@ class DesignMetadata:
 
         This is a rough estimate for sorting/filtering purposes.
         """
+        from game.core.patterns.layer_iterator import iter_components
+
         power = 0.0
 
-        # Add component contributions
-        layers = data.get("layers", {})
-        for layer_name, layer_data in layers.items():
-            # Only support new format: layers[layer_name] = [comp1, comp2, ...]
-            if not isinstance(layer_data, list):
-                components = []
-            else:
-                components = layer_data
+        for comp_data in iter_components(data):
+            if not isinstance(comp_data, dict):
+                continue
+            # Weapon components contribute heavily
+            if comp_data.get("category") == "weapon":
+                power += comp_data.get("damage", 0) * 10
+                power += comp_data.get("rate_of_fire", 0) * 5
 
-            for comp_data in components:
-                # Weapon components contribute heavily
-                if comp_data.get("category") == "weapon":
-                    power += comp_data.get("damage", 0) * 10
-                    power += comp_data.get("rate_of_fire", 0) * 5
-
-                # Defensive components
-                if comp_data.get("category") == "armor":
-                    power += comp_data.get("hp", 0) * 0.5
+            # Defensive components
+            if comp_data.get("category") == "armor":
+                power += comp_data.get("hp", 0) * 0.5
 
         return power
 
@@ -226,21 +222,16 @@ class DesignMetadata:
     @staticmethod
     def _calculate_resource_cost(data: dict) -> Dict[str, int]:
         """Calculate resource costs from ship data dict"""
+        from game.core.patterns.layer_iterator import iter_components
+
         costs = {}
 
-        # Sum component costs
-        layers = data.get("layers", {})
-        for layer_name, layer_data in layers.items():
-            # Only support new format: layers[layer_name] = [comp1, comp2, ...]
-            if not isinstance(layer_data, list):
-                components = []
-            else:
-                components = layer_data
-
-            for comp_data in components:
-                comp_cost = comp_data.get("cost", {})
-                for resource, amount in comp_cost.items():
-                    costs[resource] = costs.get(resource, 0) + amount
+        for comp_data in iter_components(data):
+            if not isinstance(comp_data, dict):
+                continue
+            comp_cost = comp_data.get("cost", {})
+            for resource, amount in comp_cost.items():
+                costs[resource] = costs.get(resource, 0) + amount
 
         return costs
 

@@ -23,6 +23,7 @@ from game.core.constants import ResourceType
 from game.core.registry import GameRegistries
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
+from game.core.patterns.layer_iterator import iter_layers_and_components, get_component_id
 from game.strategy.services.component_inspector import (
     get_component_abilities,
     get_component_type,
@@ -396,23 +397,17 @@ class ShipStatsCalculator:
             where component_def is the registry definition or None if not found
         """
         result = []
-        layers = design_data.get('layers', {})
         component_registry = self._registries.components
 
-        for layer_name, layer_components in layers.items():
-            # Direct list format: layers[layer_name] = [comp1, comp2, ...]
-            if not isinstance(layer_components, list):
+        for layer_name, comp_entry in iter_layers_and_components(design_data):
+            comp_id = get_component_id(comp_entry)
+            comp_def = component_registry.get(comp_id)
+
+            if comp_def is None:
+                logger.warning(f"Component '{comp_id}' not found in registry, skipping")
                 continue
 
-            for comp_entry in layer_components:
-                comp_id = comp_entry.get('id', '')
-                comp_def = component_registry.get(comp_id)
-
-                if comp_def is None:
-                    logger.warning(f"Component '{comp_id}' not found in registry, skipping")
-                    continue
-
-                result.append((layer_name, comp_entry, comp_def))
+            result.append((layer_name, comp_entry, comp_def))
 
         return result
 

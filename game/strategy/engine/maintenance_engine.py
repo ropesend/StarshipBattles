@@ -22,6 +22,11 @@ from dataclasses import dataclass
 from typing import List, Dict, TYPE_CHECKING
 import logging
 
+from game.strategy.services.design_cost_calculator import (
+    DesignCostCalculator,
+    DEFAULT_MAINTENANCE_RATE,
+)
+
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
     from game.strategy.data.planet import Planet, PlanetaryFacility
@@ -31,19 +36,15 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-# Shared maintenance rate used by both MaintenanceEngine and EmpireEconomyCalculator
-MAINTENANCE_RATE = 0.05  # 5% per turn
+# Re-export for backward compatibility with existing imports
+MAINTENANCE_RATE = DEFAULT_MAINTENANCE_RATE
 
 
 def calculate_maintenance_cost(design_data: Dict, rate: float = MAINTENANCE_RATE) -> Dict[str, float]:
     """Calculate maintenance cost from a design's resource costs.
 
-    Maintenance is a percentage of the total build cost, which is
-    the sum of resource_cost across all layers and components.
-
-    Handles two layer formats:
-    - Dict format: {"CORE": {"components": [...]}}
-    - List format: {"HULL": [{"id": "comp_a", ...}]}
+    PROJ-204: Delegates to DesignCostCalculator for centralized calculation.
+    This function is kept for backward compatibility.
 
     Args:
         design_data: Design data dict containing layers with components.
@@ -52,30 +53,7 @@ def calculate_maintenance_cost(design_data: Dict, rate: float = MAINTENANCE_RATE
     Returns:
         Dict mapping resource type to maintenance cost amount.
     """
-    total_build_cost: Dict[str, float] = {}
-
-    for layer in design_data.get('layers', {}).values():
-        # Handle both formats: dict with "components" key, or direct list
-        if isinstance(layer, dict):
-            components = layer.get('components', [])
-        elif isinstance(layer, list):
-            components = layer
-        else:
-            continue
-
-        for component in components:
-            if not isinstance(component, dict):
-                continue
-            comp_cost = component.get('resource_cost', {})
-            for res, amount in comp_cost.items():
-                total_build_cost[res] = total_build_cost.get(res, 0) + amount
-
-    # Apply maintenance rate
-    maintenance: Dict[str, float] = {}
-    for res, amount in total_build_cost.items():
-        maintenance[res] = amount * rate
-
-    return maintenance
+    return DesignCostCalculator.calculate_maintenance_cost(design_data, rate)
 
 
 @dataclass
