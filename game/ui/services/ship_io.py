@@ -16,7 +16,10 @@ import os
 from typing import Any, Optional, Tuple, TYPE_CHECKING
 
 from game.core.json_utils import load_json_required, save_json
-from game.core.logger import log_error
+from game.core.exceptions import ValidationException, ComponentException
+import logging
+
+logger = logging.getLogger(__name__)
 from game.ui.services.design_loader_adapter import DesignLoaderAdapter
 from game.ui.services.tkinter_utils import (
     is_tkinter_available,
@@ -87,13 +90,13 @@ class ShipIO:
             return False, None  # Cancelled
 
         except PermissionError as e:
-            log_error(f"ShipIO: Permission denied saving ship: {e}")
+            logger.error(f"ShipIO: Permission denied saving ship: {e}")
             return False, "Save failed: Permission denied"
         except OSError as e:
-            log_error(f"ShipIO: OS error saving ship: {e}")
+            logger.error(f"ShipIO: OS error saving ship: {e}")
             return False, f"Save failed: {str(e)}"
-        except (TypeError, ValueError) as e:
-            log_error(f"ShipIO: Serialization error saving ship: {e}")
+        except ValidationException as e:
+            logger.error(f"ShipIO: Serialization error saving ship: {e}")
             return False, "Save failed: Invalid ship data"
 
     @classmethod
@@ -136,7 +139,7 @@ class ShipIO:
                     return None, "Load failed: Could not create ship from design"
 
                 msg = f"Loaded ship from {os.path.basename(filename)}"
-                if getattr(new_ship, '_loading_warnings', []):
+                if new_ship._loading_warnings:
                     warn_count = len(new_ship._loading_warnings)
                     msg += f"\nSafe Loaded with {warn_count} stat mismatches (auto-corrected)."
 
@@ -144,17 +147,17 @@ class ShipIO:
             return None, None  # Cancelled
 
         except json.JSONDecodeError as e:
-            log_error(f"ShipIO: Corrupt JSON in ship file: {e}")
+            logger.error(f"ShipIO: Corrupt JSON in ship file: {e}")
             return None, "Load failed: File contains invalid JSON"
         except KeyError as e:
-            log_error(f"ShipIO: Missing required field in ship file: {e}")
+            logger.error(f"ShipIO: Missing required field in ship file: {e}")
             return None, f"Load failed: Missing required field"
         except PermissionError as e:
-            log_error(f"ShipIO: Permission denied loading ship: {e}")
+            logger.error(f"ShipIO: Permission denied loading ship: {e}")
             return None, "Load failed: Permission denied"
         except OSError as e:
-            log_error(f"ShipIO: OS error loading ship: {e}")
+            logger.error(f"ShipIO: OS error loading ship: {e}")
             return None, f"Load failed: {str(e)}"
-        except (TypeError, ValueError) as e:
-            log_error(f"ShipIO: Unexpected error loading ship: {e}")
+        except (TypeError, ValueError, ValidationException, ComponentException) as e:
+            logger.error(f"ShipIO: Unexpected error loading ship: {e}")
             return None, f"Load failed: {str(e)}"

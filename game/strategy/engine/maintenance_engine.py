@@ -19,9 +19,16 @@ Called by TurnEngine._process_tick() 100 times per turn.
 """
 
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import List, Dict, TYPE_CHECKING
+import logging
 
-from game.core.logger import log_info, log_warning
+if TYPE_CHECKING:
+    from game.strategy.data.empire import Empire
+    from game.strategy.data.planet import Planet, PlanetaryFacility
+    from game.strategy.data.fleet import Fleet
+    from game.strategy.data.ship_instance import ShipInstance
+
+logger = logging.getLogger(__name__)
 
 
 # Shared maintenance rate used by both MaintenanceEngine and EmpireEconomyCalculator
@@ -123,7 +130,7 @@ class MaintenanceEngine:
             events.extend(self._process_empire(empire, tick_fraction=0.01))
         return events
 
-    def _process_empire(self, empire, tick_fraction: float = 1.0) -> List[ScuttleEvent]:
+    def _process_empire(self, empire: 'Empire', tick_fraction: float = 1.0) -> List[ScuttleEvent]:
         """Process maintenance for a single empire.
 
         Args:
@@ -154,7 +161,7 @@ class MaintenanceEngine:
         return events
 
     def _process_colony_facilities(
-        self, colony, empire, tick_fraction: float = 1.0
+        self, colony: 'Planet', empire: 'Empire', tick_fraction: float = 1.0
     ) -> List[ScuttleEvent]:
         """Process maintenance for all facilities on a colony.
 
@@ -193,7 +200,7 @@ class MaintenanceEngine:
                     entity_name=facility.name,
                     location=f"Planet {colony.name}",
                 ))
-                log_warning(
+                logger.warning(
                     f"Maintenance failure: scuttling {facility.name} "
                     f"on {colony.name} (Empire {empire.id})"
                 )
@@ -205,7 +212,7 @@ class MaintenanceEngine:
         return events
 
     def _process_fleet_ships(
-        self, fleet, empire, tick_fraction: float = 1.0
+        self, fleet: 'Fleet', empire: 'Empire', tick_fraction: float = 1.0
     ) -> List[ScuttleEvent]:
         """Process maintenance for all ships in a fleet.
 
@@ -236,7 +243,7 @@ class MaintenanceEngine:
                     entity_name=ship.name,
                     location=f"Fleet {fleet.id}",
                 ))
-                log_warning(
+                logger.warning(
                     f"Maintenance failure: scuttling {ship.name} "
                     f"in Fleet {fleet.id} (Empire {empire.id})"
                 )
@@ -268,7 +275,7 @@ class MaintenanceEngine:
             return full_cost
         return {res: amount * tick_fraction for res, amount in full_cost.items()}
 
-    def _cleanup_empty_fleets(self, empire, fleets_with_scuttles: set) -> None:
+    def _cleanup_empty_fleets(self, empire: 'Empire', fleets_with_scuttles: set) -> None:
         """Remove fleets that became empty due to maintenance scuttling.
 
         Only removes fleets that had ships scuttled AND now have no ships.
@@ -285,4 +292,4 @@ class MaintenanceEngine:
         ]
         for fleet in to_remove:
             empire.remove_fleet(fleet)
-            log_info(f"Removed empty Fleet {fleet.id} (Empire {empire.id})")
+            logger.info(f"Removed empty Fleet {fleet.id} (Empire {empire.id})")

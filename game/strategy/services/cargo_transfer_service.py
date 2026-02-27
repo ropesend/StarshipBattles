@@ -7,9 +7,15 @@ from UI dialogs (CargoQuickDialog, TransferDialog) into a testable service.
 PROJ-162: Extract CargoTransferService from UI Dialogs
 """
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, TYPE_CHECKING, Union
 
 from game.strategy.engine.commands import IssueTransferCommand
+
+if TYPE_CHECKING:
+    from game.core.hex_math import HexCoord
+    from game.strategy.facade.dto.fleet_dto import FleetInfo
+    from game.strategy.facade.dto.planet_dto import PlanetInfo
+    from game.strategy.data.fleet import Fleet
 
 
 class CargoTransferService:
@@ -22,7 +28,7 @@ class CargoTransferService:
     """
 
     @staticmethod
-    def resolve_colonies(facade, hex_coord, fleet) -> List[Any]:
+    def resolve_colonies(facade, hex_coord: 'HexCoord', fleet: 'Fleet') -> List['PlanetInfo']:
         """Resolve colonies at a hex, with fallback to fleet location.
 
         Args:
@@ -37,7 +43,8 @@ class CargoTransferService:
 
         # Fallback: if no planets at clicked hex, try fleet's location
         # This handles relative hex from system view
-        if not planets and hasattr(fleet, 'location') and fleet.location:
+        # Fleet always has location attribute
+        if not planets and fleet.location:
             planets = facade.get_planets_at_hex(fleet.location)
 
         # Filter to only colonized planets
@@ -45,7 +52,7 @@ class CargoTransferService:
         return colonies
 
     @staticmethod
-    def get_unload_items(facade, fleet_id: int, colonies: List[Any]) -> List[Dict[str, Any]]:
+    def get_unload_items(facade, fleet_id: int, colonies: List['PlanetInfo']) -> List[Dict[str, Any]]:
         """Get items that can be unloaded (dropped) from a fleet.
 
         Args:
@@ -66,8 +73,8 @@ class CargoTransferService:
         if not fleet_info:
             return items
 
-        # Get fleet passengers
-        passengers = getattr(fleet_info, 'passengers_current', 0)
+        # Get fleet passengers (FleetInfo always has passengers_current, default 0)
+        passengers = fleet_info.passengers_current
         if passengers > 0:
             items.append({
                 'label': f"Passengers ({passengers})",
@@ -79,7 +86,7 @@ class CargoTransferService:
         return items
 
     @staticmethod
-    def get_load_items(facade, colonies: List[Any]) -> List[Dict[str, Any]]:
+    def get_load_items(facade, colonies: List['PlanetInfo']) -> List[Dict[str, Any]]:
         """Get items that can be loaded from colonies.
 
         Args:
@@ -97,7 +104,8 @@ class CargoTransferService:
                 continue
 
             # Population details: tuple of (race_id, count, happiness)
-            if hasattr(planet_info, 'population_details') and planet_info.population_details:
+            # PlanetInfo always has population_details (default empty tuple)
+            if planet_info.population_details:
                 for race_id, count, happiness in planet_info.population_details:
                     if count > 0:
                         items.append({
@@ -108,8 +116,8 @@ class CargoTransferService:
                             'planet_id': colony.planet_id
                         })
             else:
-                # Fallback to total_population
-                pop = getattr(planet_info, 'total_population', 0)
+                # Fallback to total_population (PlanetInfo always has this, default 0)
+                pop = planet_info.total_population
                 if pop > 0:
                     items.append({
                         'label': f"{colony.name}: Population ({pop})",
@@ -122,22 +130,26 @@ class CargoTransferService:
         return items
 
     @staticmethod
-    def get_inventory_items(obj_info) -> List[Dict[str, Any]]:
-        """Extract inventory items from a fleet or planet object via duck typing.
+    def get_inventory_items(obj_info: Union['FleetInfo', 'PlanetInfo', None]) -> List[Dict[str, Any]]:
+        """Extract inventory items from a fleet or planet info object.
 
         Args:
-            obj_info: A fleet info or planet info object
+            obj_info: A FleetInfo or PlanetInfo object
 
         Returns:
             List of item dicts with keys: label, cargo_type, species_id, max_amount
         """
+        # Import here to avoid circular imports at module level
+        from game.strategy.facade.dto.fleet_dto import FleetInfo
+        from game.strategy.facade.dto.planet_dto import PlanetInfo
+
         items = []
         if not obj_info:
             return items
 
-        # Fleet: has passengers_current
-        if hasattr(obj_info, 'passengers_current'):
-            passengers = getattr(obj_info, 'passengers_current', 0)
+        # FleetInfo: has passengers_current
+        if isinstance(obj_info, FleetInfo):
+            passengers = obj_info.passengers_current
             if passengers > 0:
                 items.append({
                     'label': f"Passengers ({passengers})",
@@ -145,25 +157,24 @@ class CargoTransferService:
                     'species_id': None,
                     'max_amount': passengers
                 })
-        # Colony/Planet: has population_details
-        elif hasattr(obj_info, 'population_details') and obj_info.population_details:
-            for race_id, count, happiness in obj_info.population_details:
-                if count > 0:
-                    items.append({
-                        'label': f"Population: {race_id} ({count})",
-                        'cargo_type': 'passengers',
-                        'species_id': race_id,
-                        'max_amount': count
-                    })
-        # Planet fallback: has total_population
-        elif hasattr(obj_info, 'total_population'):
-            passengers = getattr(obj_info, 'total_population', 0)
-            if passengers > 0:
+        # PlanetInfo: has population_details and total_population
+        elif isinstance(obj_info, PlanetInfo):
+            if obj_info.population_details:
+                for race_id, count, happiness in obj_info.population_details:
+                    if count > 0:
+                        items.append({
+                            'label': f"Population: {race_id} ({count})",
+                            'cargo_type': 'passengers',
+                            'species_id': race_id,
+                            'max_amount': count
+                        })
+            elif obj_info.total_population > 0:
+                # Fallback to total_population if no details
                 items.append({
-                    'label': f"Population ({passengers})",
+                    'label': f"Population ({obj_info.total_population})",
                     'cargo_type': 'passengers',
                     'species_id': None,
-                    'max_amount': passengers
+                    'max_amount': obj_info.total_population
                 })
 
         return items

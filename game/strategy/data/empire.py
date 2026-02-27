@@ -1,4 +1,9 @@
+import logging
 from typing import Dict, Any
+
+from game.core.validation_helpers import require_keys, safe_from_dict
+
+logger = logging.getLogger(__name__)
 
 
 class Empire:
@@ -176,14 +181,19 @@ class Empire:
 
         Returns:
             Reconstructed Empire with colonies resolved
+
+        Raises:
+            PersistenceException: If required keys missing
         """
+        require_keys(data, ['id', 'name', 'color'], 'Empire')
+
         from game.strategy.data.fleet import Fleet
         from game.strategy.data.race_config import RaceConfig
 
-        # Deserialize race_config if present
+        # Deserialize race_config if present (with error handling)
         race_config = None
         if 'race_config' in data:
-            race_config = RaceConfig.from_dict(data['race_config'])
+            race_config = safe_from_dict(RaceConfig.from_dict, data['race_config'], 'Empire.race_config')
 
         empire = cls(
             empire_id=data['id'],
@@ -209,10 +219,15 @@ class Empire:
         empire.resource_pool = data.get('resource_pool', {})
         empire.max_storage = data.get('max_storage', {})
 
-        # Restore fleets
-        empire.fleets = [Fleet.from_dict(f) for f in data.get('fleets', [])]
-        for fleet in empire.fleets:
-            fleet.owner_id = empire.id
+        # Restore fleets (skip corrupt entries with warning)
+        empire.fleets = []
+        for i, fleet_data in enumerate(data.get('fleets', [])):
+            try:
+                fleet = Fleet.from_dict(fleet_data)
+                fleet.owner_id = empire.id
+                empire.fleets.append(fleet)
+            except Exception as e:
+                logger.warning(f"Empire {data['id']}: skipping corrupt fleet[{i}]: {e}")
 
         # Resolve colony references via galaxy
         if galaxy is not None:

@@ -6,6 +6,12 @@ as well as DPS and other combat-related statistics.
 from typing import TYPE_CHECKING, List
 
 from game.core.constants import ResourceType
+from game.simulation.interfaces import (
+    IResourceConsumptionAbility,
+    IWeaponAbility,
+    is_resource_consumption,
+    is_weapon,
+)
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -39,43 +45,36 @@ def calculate_combat_endurance(ship: 'Ship', component_pool: List['Component']) 
         c_energy = 0.0
 
         # Iterate Abilities for Source of Truth
-        # Guard for non-Component objects (e.g., mocks in tests)
-        abilities = getattr(c, 'ability_instances', [])
-        for ab in abilities:
-                ab_cls = ab.__class__.__name__
+        for ab in c.ability_instances:
+            # Use protocol check instead of class name introspection
+            if is_resource_consumption(ab):
+                # Constant Consumption (Generic)
+                if ab.trigger == 'constant':
+                    if ab.resource_type == ResourceType.FUEL:
+                        c_fuel += ab.amount
+                    elif ab.resource_type == ResourceType.ENERGY:
+                        c_energy += ab.amount
+                    elif ab.resource_type == ResourceType.AMMO:
+                        c_ammo += ab.amount
 
-                if ab_cls == 'ResourceConsumption':
-                    # Constant Consumption (Generic)
-                    trigger = getattr(ab, 'trigger', 'constant')
-                    resource_type = getattr(ab, 'resource_type', '')
-                    amount = getattr(ab, 'amount', 0.0)
+                # Activation Costs (Energy/Ammo) -> Convert to Rate
+                elif ab.trigger == 'activation':
+                    # Get fire rate (1/reload)
+                    # Look for associated WeaponAbility to get accurate reload time
+                    reload_t = 1.0
 
-                    if trigger == 'constant':
-                        if resource_type == ResourceType.FUEL:
-                            c_fuel += amount
-                        elif resource_type == ResourceType.ENERGY:
-                            c_energy += amount
-                        elif resource_type == ResourceType.AMMO:
-                            c_ammo += amount
+                    # Find WeaponAbility on component using protocol check
+                    for inst in c.ability_instances:
+                        if is_weapon(inst):
+                            reload_t = inst.reload_time
+                            break
 
-                    # Activation Costs (Energy/Ammo) -> Convert to Rate
-                    elif trigger == 'activation':
-                        # Get fire rate (1/reload)
-                        # Look for associated WeaponAbility to get accurate reload time
-                        reload_t = 1.0
-
-                        # Find WeaponAbility on component (all components have ability_instances)
-                        for inst in c.ability_instances:
-                            if inst.__class__.__name__ in ['WeaponAbility', 'ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility']:
-                                reload_t = getattr(inst, 'reload_time', 1.0)
-                                break
-
-                        if reload_t > 0:
-                            rate = ab.amount / reload_t
-                            if ab.resource_type == ResourceType.AMMO:
-                                c_ammo += rate
-                            elif ab.resource_type == ResourceType.ENERGY:
-                                c_energy += rate
+                    if reload_t > 0:
+                        rate = ab.amount / reload_t
+                        if ab.resource_type == ResourceType.AMMO:
+                            c_ammo += rate
+                        elif ab.resource_type == ResourceType.ENERGY:
+                            c_energy += rate
 
         # Add to Potentials (Always)
         potential_fuel += c_fuel

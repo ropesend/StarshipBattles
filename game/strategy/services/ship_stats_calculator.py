@@ -17,10 +17,19 @@ Key design decisions:
 - Stats cached on ShipInstance with invalidation on damage change
 """
 
+import logging
 from typing import Dict, Any, Optional, List, Tuple, TYPE_CHECKING
 from game.core.constants import ResourceType
 from game.core.registry import GameRegistries
-from game.core.logger import log_warning
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
+from game.strategy.services.component_inspector import (
+    get_component_abilities,
+    get_component_type,
+    get_component_threshold,
+)
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.core.protocols import IRegistryProvider
@@ -64,10 +73,14 @@ class ShipStatsCalculator:
                        vehicle_classes. Required - no fallback.
 
         Raises:
-            TypeError: If registries is None.
+            ValidationException: If registries is None.
         """
         if registries is None:
-            raise TypeError("registries is required for ShipStatsCalculator")
+            raise ValidationException(
+                "registries is required for ShipStatsCalculator",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "ShipStatsCalculator", "parameter": "registries"}
+            )
         self._registries = registries
 
     def calculate_stats(
@@ -177,11 +190,7 @@ class ShipStatsCalculator:
             comp_hp *= multipliers.get('hp_mult', 1.0)
             total_hp += comp_hp * effectiveness
 
-            # comp_def may be a dict (JSON registry) or Component object (simulation)
-            if isinstance(comp_def, dict):
-                abilities = comp_def.get('abilities', {}) or {}
-            else:
-                abilities = getattr(comp_def, 'abilities', {}) or {}
+            abilities = get_component_abilities(comp_def)
 
             # Get capacity multiplier for storage abilities
             capacity_mult = multipliers.get('capacity_mult', 1.0)
@@ -316,19 +325,12 @@ class ShipStatsCalculator:
             component_damage = {}
 
         # Check if this is armor (never degrades)
-        # comp_def may be a dict (JSON) or Component object (simulation)
-        if isinstance(comp_def, dict):
-            comp_type = comp_def.get('type', '')
-        else:
-            comp_type = getattr(comp_def, 'type_str', '')
+        comp_type = get_component_type(comp_def)
         if comp_type in NON_DEGRADING_TYPES:
             return 1.0
 
         # Check for 'Armor' ability marker
-        if isinstance(comp_def, dict):
-            abilities = comp_def.get('abilities', {}) or {}
-        else:
-            abilities = getattr(comp_def, 'abilities', {}) or {}
+        abilities = get_component_abilities(comp_def)
         if abilities.get('Armor'):
             return 1.0
 
@@ -344,10 +346,7 @@ class ShipStatsCalculator:
         hp_pct = current_hp / max_hp
 
         # Get damage threshold (default 30%)
-        if isinstance(comp_def, dict):
-            threshold = comp_def.get('damage_threshold', DEFAULT_DAMAGE_THRESHOLD)
-        else:
-            threshold = getattr(comp_def, 'damage_threshold', DEFAULT_DAMAGE_THRESHOLD)
+        threshold = get_component_threshold(comp_def, DEFAULT_DAMAGE_THRESHOLD)
 
         # Below threshold = inactive
         if hp_pct <= threshold:
@@ -410,7 +409,7 @@ class ShipStatsCalculator:
                 comp_def = component_registry.get(comp_id)
 
                 if comp_def is None:
-                    log_warning(f"Component '{comp_id}' not found in registry, skipping")
+                    logger.warning(f"Component '{comp_id}' not found in registry, skipping")
                     continue
 
                 result.append((layer_name, comp_entry, comp_def))

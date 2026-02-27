@@ -1,36 +1,47 @@
 import pygame
 import math
 
+from game.core.protocols import is_star
+from game.ui.fonts import get_font
+from game.ui.colors import (
+    TEXT_MUTED, TEXT_ITEM, TEXT_DIM, WHITE,
+    BORDER_DARK, BG_PANEL_DARK,
+    SPECTRUM_GAMMA, SPECTRUM_XRAY, SPECTRUM_UV, SPECTRUM_BLUE, SPECTRUM_GREEN,
+    SPECTRUM_RED, SPECTRUM_INFRARED, SPECTRUM_MICROWAVE, SPECTRUM_RADIO,
+    GAS_N2, GAS_O2, GAS_CO2, GAS_H2O, GAS_CH4, GAS_H2, GAS_HE, GAS_AR, GAS_SO2,
+    GAS_UNKNOWN,
+)
+
 class DataGraph:
     """Base class for data visualization widgets."""
-    def __init__(self, width, height, bg_color=(20, 24, 30)):
+    def __init__(self, width, height, bg_color=BG_PANEL_DARK):
         self.width = width
         self.height = height
         self.bg_color = bg_color
         self.surface = pygame.Surface((width, height))
-    
+
     def clear(self):
         self.surface.fill(self.bg_color)
-        pygame.draw.rect(self.surface, (50, 60, 70), (0, 0, self.width, self.height), 1)
+        pygame.draw.rect(self.surface, BORDER_DARK, (0, 0, self.width, self.height), 1)
 
 class SpectrumGraph(DataGraph):
     """Visualizes Star Energy Spectrum."""
     
     BANDS = [
-        ('gamma_ray', (200, 0, 255), "Gamma"),
-        ('xray', (148, 0, 211), "X-Ray"),
-        ('ultraviolet', (75, 0, 130), "UV"),
-        ('blue', (0, 0, 255), "Blue"),
-        ('green', (0, 255, 0), "Green"),
-        ('red', (255, 0, 0), "Red"),
-        ('infrared', (139, 0, 0), "IR"),
-        ('microwave', (160, 82, 45), "Micro"),
-        ('radio', (128, 128, 128), "Radio")
+        ('gamma_ray', SPECTRUM_GAMMA, "Gamma"),
+        ('xray', SPECTRUM_XRAY, "X-Ray"),
+        ('ultraviolet', SPECTRUM_UV, "UV"),
+        ('blue', SPECTRUM_BLUE, "Blue"),
+        ('green', SPECTRUM_GREEN, "Green"),
+        ('red', SPECTRUM_RED, "Red"),
+        ('infrared', SPECTRUM_INFRARED, "IR"),
+        ('microwave', SPECTRUM_MICROWAVE, "Micro"),
+        ('radio', SPECTRUM_RADIO, "Radio")
     ]
     
     def render(self, star, vertical=False):
         self.clear()
-        if not hasattr(star, 'spectrum'):
+        if not is_star(star):
             return self.surface
             
         s = star.spectrum
@@ -53,7 +64,7 @@ class SpectrumGraph(DataGraph):
         bottom_y = self.height - 10 
         max_h = self.height - 20 
         
-        font = pygame.font.SysFont("arial", 8) 
+        font = get_font(8)
         
         # Logarithmic Scale Calculation
         # Use log10(value + 1) to handle zeros and scaling
@@ -79,7 +90,7 @@ class SpectrumGraph(DataGraph):
             pygame.draw.rect(self.surface, color, rect)
             
             # Label
-            lbl = font.render(label, True, (150, 150, 150))
+            lbl = font.render(label, True, TEXT_MUTED)
             
             if vertical:
                  # Rotate +90 (Reads Bottom-to-Top)
@@ -98,22 +109,23 @@ class AtmosphereGraph(DataGraph):
     """Visualizes Planet Atmosphere Composition."""
     
     GAS_COLORS = {
-        'N2': (173, 216, 230), # Light Blue
-        'O2': (0, 0, 255),     # Blue
-        'CO2': (100, 100, 100),# Grey
-        'H2O': (0, 0, 139),    # Dark Blue
-        'CH4': (255, 165, 0),  # Orange
-        'H2': (255, 192, 203), # Pink
-        'He': (255, 255, 255), # White
-        'Ar': (128, 0, 128),   # Purple
-        'SO2': (255, 255, 0)   # Yellow
+        'N2': GAS_N2,
+        'O2': GAS_O2,
+        'CO2': GAS_CO2,
+        'H2O': GAS_H2O,
+        'CH4': GAS_CH4,
+        'H2': GAS_H2,
+        'He': GAS_HE,
+        'Ar': GAS_AR,
+        'SO2': GAS_SO2,
     }
     
     def render(self, planet, vertical=False):
         self.clear()
-        if not hasattr(planet, 'atmosphere') or not planet.atmosphere:
-            font = pygame.font.SysFont("arial", 12)
-            txt = font.render("Trace / None", True, (100, 100, 100))
+        # atmosphere is always present via IPlanet protocol
+        if not planet.atmosphere:
+            font = get_font(12)
+            txt = font.render("Trace / None", True, TEXT_DIM)
             if vertical: txt = pygame.transform.rotate(txt, 90)
             self.surface.blit(txt, (10, self.height/2))
             return self.surface
@@ -135,8 +147,8 @@ class AtmosphereGraph(DataGraph):
         bottom_y = self.height - 10
         max_h = self.height - 20 
         
-        font = pygame.font.SysFont("arial", 8)
-        
+        font = get_font(8)
+
         for i, (gas, pressure) in enumerate(top_items):
             # Normalize to Max (Relative composition view)
             ratio = pressure / max_p
@@ -145,13 +157,13 @@ class AtmosphereGraph(DataGraph):
             x = margin_x + i * bar_width
             y = bottom_y - bar_h
             
-            color = self.GAS_COLORS.get(gas, (100, 150, 100))
+            color = self.GAS_COLORS.get(gas, GAS_UNKNOWN)
             
             rect = pygame.Rect(x + 4, y, bar_width - 8, bar_h)
             pygame.draw.rect(self.surface, color, rect)
             
             # Label (Gas Name)
-            lbl = font.render(gas, True, (200, 200, 200))
+            lbl = font.render(gas, True, TEXT_ITEM)
             if vertical: lbl = pygame.transform.rotate(lbl, 90)
             
             if vertical:
@@ -168,7 +180,7 @@ class AtmosphereGraph(DataGraph):
             elif pressure > 100:
                 val_str = f"{int(pressure)}"
                 
-            val_txt = font.render(val_str, True, (150, 150, 150))
+            val_txt = font.render(val_str, True, TEXT_MUTED)
             if vertical: val_txt = pygame.transform.rotate(val_txt, 90)
             
             val_rect = val_txt.get_rect(center=(x + bar_width/2, y - 8))

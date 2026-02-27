@@ -99,10 +99,10 @@ class TestScreenshotCapture:
 
         with patch('game.ui.services.screenshot_manager.pygame') as mock_pygame:
             mock_pygame.display.get_surface.return_value = None
-            with patch('game.ui.services.screenshot_manager.log_warning') as mock_log:
+            with patch('game.ui.services.screenshot_manager.logger') as mock_log:
                 mock_manager.capture(surface=None)
 
-        mock_log.assert_called()
+        mock_log.warning.assert_called()
 
     def test_capture_with_label_includes_label(self, mock_manager):
         """Filename contains label."""
@@ -111,7 +111,7 @@ class TestScreenshotCapture:
         mock_surface.get_rect.return_value = Mock(width=100, height=100)
 
         with patch('game.ui.services.screenshot_manager.pygame') as mock_pygame:
-            with patch('game.ui.services.screenshot_manager.log_info'):
+            with patch('game.ui.services.screenshot_manager.logger'):
                 with patch.object(mock_manager, '_copy_to_clipboard'):
                     mock_manager.capture(surface=mock_surface, label="test_label")
 
@@ -140,7 +140,7 @@ class TestScreenshotCapture:
         mock_surface.subsurface.return_value = mock_sub
 
         with patch('game.ui.services.screenshot_manager.pygame') as mock_pygame:
-            with patch('game.ui.services.screenshot_manager.log_info'):
+            with patch('game.ui.services.screenshot_manager.logger'):
                 with patch.object(mock_manager, '_copy_to_clipboard'):
                     mock_manager.capture(surface=mock_surface, region=region)
 
@@ -160,10 +160,10 @@ class TestScreenshotCapture:
         region.clip.return_value = Mock(width=0, height=0)
 
         with patch('game.ui.services.screenshot_manager.pygame'):
-            with patch('game.ui.services.screenshot_manager.log_warning') as mock_log:
+            with patch('game.ui.services.screenshot_manager.logger') as mock_log:
                 mock_manager.capture(surface=mock_surface, region=region)
 
-        mock_log.assert_called()
+        mock_log.warning.assert_called()
 
     def test_capture_io_error_handled(self, mock_manager):
         """IOError caught, no crash."""
@@ -173,11 +173,11 @@ class TestScreenshotCapture:
         mock_surface.get_rect.return_value = Mock(width=100, height=100)
 
         with patch('game.ui.services.screenshot_manager.pygame.image.save', side_effect=IOError("test error")):
-            with patch('game.ui.services.screenshot_manager.log_error') as mock_log:
+            with patch('game.ui.services.screenshot_manager.logger') as mock_log:
                 # Should not raise
                 mock_manager.capture(surface=mock_surface)
 
-        mock_log.assert_called()
+        mock_log.error.assert_called()
 
 
 class TestClipboardOperations:
@@ -289,7 +289,7 @@ class TestCaptureStrategyLayer:
             mock_surface = Mock()
             mock_pygame.Surface.return_value = mock_surface
 
-            with patch('game.ui.services.screenshot_manager.log_info'):
+            with patch('game.ui.services.screenshot_manager.logger'):
                 with patch.object(mock_manager, '_copy_to_clipboard'):
                     mock_manager.capture_strategy_layer(
                         mock_scene,
@@ -315,7 +315,7 @@ class TestCaptureStrategyLayer:
             mock_pygame.Surface.return_value = mock_surface
             mock_pygame.Rect = Mock(return_value=Mock())
 
-            with patch('game.ui.services.screenshot_manager.log_info'):
+            with patch('game.ui.services.screenshot_manager.logger'):
                 with patch.object(mock_manager, '_copy_to_clipboard'):
                     mock_manager.capture_strategy_layer(
                         mock_scene,
@@ -338,7 +338,7 @@ class TestCaptureStrategyLayer:
             mock_surface = Mock()
             mock_pygame.Surface.return_value = mock_surface
 
-            with patch('game.ui.services.screenshot_manager.log_info'):
+            with patch('game.ui.services.screenshot_manager.logger'):
                 with patch.object(mock_manager, '_copy_to_clipboard'):
                     mock_manager.capture_strategy_layer(
                         mock_scene,
@@ -366,12 +366,12 @@ class TestCaptureStrategyLayer:
             mock_pygame.Surface.return_value = mock_surface
             mock_pygame.Rect = Mock()
 
-            with patch('game.ui.services.screenshot_manager.log_warning') as mock_log:
+            with patch('game.ui.services.screenshot_manager.logger') as mock_log:
                 # Should not raise even with invalid dimensions
                 mock_manager.capture_strategy_layer(scene, include_ui=False)
 
             # Should log warning about invalid dimensions
-            mock_log.assert_called()
+            mock_log.warning.assert_called()
 
 
 class TestShowToast:
@@ -436,12 +436,12 @@ class TestShowToast:
         mock_ui_manager = Mock()
 
         with patch('pygame_gui.windows.UIMessageWindow', side_effect=RuntimeError("UI error")):
-            with patch('game.ui.services.screenshot_manager.log_warning') as mock_log:
+            with patch('game.ui.services.screenshot_manager.logger') as mock_log:
                 # Should not raise
                 mock_manager.show_toast(mock_ui_manager, screen_width=1920)
 
         # Should log warning
-        mock_log.assert_called()
+        mock_log.warning.assert_called()
 
     def test_show_toast_centers_toast_horizontally(self, mock_manager):
         """show_toast centers the toast at screen_width // 2."""
@@ -489,13 +489,13 @@ class TestScreenshotManagerLogging:
         mock_surface.get_rect.return_value = Mock(width=100, height=100)
 
         with patch('game.ui.services.screenshot_manager.pygame') as mock_pygame:
-            with patch('game.ui.services.screenshot_manager.log_info') as mock_log:
+            with patch('game.ui.services.screenshot_manager.logger') as mock_log:
                 with patch.object(mock_manager, '_copy_to_clipboard'):
                     mock_manager.capture(surface=mock_surface)
 
         # Should log info with file path
-        mock_log.assert_called()
-        call_args = mock_log.call_args[0][0]
+        mock_log.info.assert_called()
+        call_args = mock_log.info.call_args[0][0]
         assert "Screenshot saved" in call_args
 
     def test_directory_creation_logs_info(self):
@@ -509,11 +509,11 @@ class TestScreenshotManagerLogging:
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=False):
             with patch('game.ui.services.screenshot_manager.os.makedirs'):
-                with patch('game.ui.services.screenshot_manager.log_info') as mock_log:
+                with patch('game.ui.services.screenshot_manager.logger') as mock_log:
                     manager = ScreenshotManager.instance()
 
         # Should log info about directory creation
-        mock_log.assert_called()
+        mock_log.info.assert_called()
 
         # Cleanup
         if ScreenshotManager in SingletonMeta._instances:
@@ -530,11 +530,11 @@ class TestScreenshotManagerLogging:
 
         with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=False):
             with patch('game.ui.services.screenshot_manager.os.makedirs', side_effect=OSError("Permission denied")):
-                with patch('game.ui.services.screenshot_manager.log_error') as mock_log:
+                with patch('game.ui.services.screenshot_manager.logger') as mock_log:
                     manager = ScreenshotManager.instance()
 
         # Should log error
-        mock_log.assert_called()
+        mock_log.error.assert_called()
         # Manager should be disabled
         assert manager.enabled is False
 
@@ -547,11 +547,11 @@ class TestScreenshotManagerLogging:
         with patch('game.ui.services.screenshot_manager.copy_to_clipboard', return_value=False):
             with patch('game.ui.services.screenshot_manager.os.name', 'nt'):
                 with patch('game.ui.services.screenshot_manager.subprocess.run', side_effect=Exception("Clipboard error")):
-                    with patch('game.ui.services.screenshot_manager.log_warning') as mock_log:
+                    with patch('game.ui.services.screenshot_manager.logger') as mock_log:
                         mock_manager._copy_to_clipboard("/path/to/file.png")
 
         # Should log warning, not error
-        mock_log.assert_called()
+        mock_log.warning.assert_called()
 
     def test_strategy_layer_capture_error_logs_error(self, mock_manager):
         """Error during strategy layer capture should log error."""
@@ -568,8 +568,8 @@ class TestScreenshotManagerLogging:
             import pygame
             mock_pygame.error = pygame.error
             mock_pygame.Surface.return_value = Mock()
-            with patch('game.ui.services.screenshot_manager.log_error') as mock_log:
+            with patch('game.ui.services.screenshot_manager.logger') as mock_log:
                 mock_manager.capture_strategy_layer(scene)
 
         # Should log error
-        mock_log.assert_called()
+        mock_log.error.assert_called()

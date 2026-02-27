@@ -46,7 +46,7 @@ class MockShip:
         self.name = "Test Frigate"
         self.ship_class = "Frigate"
         self.vehicle_type = "Ship"
-        self.theme = "default"
+        self.theme_id = "Federation"
 
         # Basic stats
         self.max_mass_budget = 1200
@@ -128,6 +128,11 @@ class MockShip:
 
     def get_validation_warnings(self):
         return []
+
+    def get_resource_stat(self, resource_name, stat_type):
+        """PROJ-194: Typed accessor for resource stats."""
+        attr_name = f'{resource_name}_{stat_type}'
+        return getattr(self, attr_name, 0.0)
 
 
 @pytest.fixture

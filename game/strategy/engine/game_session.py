@@ -50,8 +50,12 @@ if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.empire import Empire
 
-from game.core.logger import log_info, log_debug, set_event_handler
+import logging
+
+from game.core.event_logging import set_event_handler
 from game.strategy.events import Event, EventLog
+
+logger = logging.getLogger(__name__)
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.engine.command_handlers import create_default_registry
@@ -110,7 +114,7 @@ class GameSession:
             category = kwargs.pop('category', 'other')
             message = kwargs.pop('message', '')
             empire_id = kwargs.pop('empire_id', -1)
-            # Coerce enum values to their string representation
+            # Coerce enum values to string (hasattr checks if Enum or str)
             cat_value = category.value if hasattr(category, 'value') else category
             etype_value = event_type.value if hasattr(event_type, 'value') else event_type
             event = Event(
@@ -126,8 +130,6 @@ class GameSession:
 
     def _find_colony_at_fleet(self, fleet):
         """Find an empire colony at the fleet's current location (BUG-70)."""
-        if not hasattr(self.galaxy, 'get_system_of_object'):
-            return None
         for empire in self.empires:
             if any(f.id == fleet.id for f in empire.fleets):
                 system = self.galaxy.get_system_of_object(fleet)
@@ -140,7 +142,7 @@ class GameSession:
 
     def process_turn(self) -> None:
         """Advance the game simulation by one full turn."""
-        log_info(f"GameSession: Processing Turn {self.turn_number}...")
+        logger.info(f"GameSession: Processing Turn {self.turn_number}...")
         self.turn_engine.process_turn(self.empires, self.galaxy, self.save_path)
         self.turn_number += 1
 
@@ -167,8 +169,8 @@ class GameSession:
         from game.strategy.data.pathfinding import find_hybrid_path
 
         # Log warp capability for debugging navigation issues (BUG-45)
-        can_warp = fleet.can_use_warp() if hasattr(fleet, 'can_use_warp') else 'N/A'
-        log_debug(f"preview_fleet_path: fleet={fleet.id}, can_use_warp={can_warp}, target={target_hex}")
+        # Fleet always has can_use_warp() method
+        logger.debug(f"preview_fleet_path: fleet={fleet.id}, can_use_warp={fleet.can_use_warp()}, target={target_hex}")
 
         path = find_hybrid_path(self.galaxy, fleet.location, target_hex, fleet=fleet)
 
@@ -207,11 +209,7 @@ class GameSession:
 
     def _get_fleet_by_id(self, fleet_id: int):
         """
-        Find fleet by ID, using Galaxy registry for O(1) lookup with fallback.
-
-        PROJ-87 Phase 6: Tries galaxy.get_fleet_by_id() first for O(1) performance.
-        Falls back to O(n) empire iteration for backward compatibility with tests
-        that don't register fleets with the galaxy.
+        Find fleet by ID via Galaxy registry (O(1) lookup).
 
         Args:
             fleet_id: Fleet ID to find.
@@ -219,17 +217,8 @@ class GameSession:
         Returns:
             Fleet if found, None otherwise.
         """
-        # Try O(1) registry lookup first
-        fleet = self.galaxy.get_fleet_by_id(fleet_id)
-        if fleet is not None:
-            return fleet
-
-        # Fallback to O(n) iteration (for backward compatibility)
-        for emp in self.empires:
-            for f in emp.fleets:
-                if f.id == fleet_id:
-                    return f
-        return None
+        # O(1) Galaxy registry lookup
+        return self.galaxy.get_fleet_by_id(fleet_id)
 
     def _get_planet_by_id(self, planet_id: int):
         """
@@ -278,10 +267,10 @@ class GameSession:
             Reconstructed GameSession with all state restored
 
         Raises:
-            KeyError: If required fields (config, galaxy, empires) are missing.
-            TypeError: If data structures are invalid.
+            PersistenceException: If required fields are missing or data structures are invalid.
         """
         from game.core.exceptions import PersistenceException
+        from game.core.error_codes import ErrorCode
         from game.strategy.data.galaxy import Galaxy
         from game.strategy.data.empire import Empire
 
@@ -294,7 +283,7 @@ class GameSession:
         except KeyError as e:
             raise PersistenceException(
                 f"Missing required config field: {e}",
-                code="P001",
+                code=ErrorCode.SAVE_FAILED.value,
                 context={"section": "config", "missing_field": str(e)}
             ) from e
 
@@ -315,7 +304,7 @@ class GameSession:
         except KeyError as e:
             raise PersistenceException(
                 f"Missing required galaxy field: {e}",
-                code="P002",
+                code=ErrorCode.LOAD_FAILED.value,
                 context={"section": "galaxy", "missing_field": str(e)}
             ) from e
         session.systems = list(session.galaxy.systems.values())
@@ -329,7 +318,7 @@ class GameSession:
         except KeyError as e:
             raise PersistenceException(
                 f"Missing required empire field: {e}",
-                code="P003",
+                code=ErrorCode.CORRUPT_DATA.value,
                 context={"section": "empires", "missing_field": str(e)}
             ) from e
 

@@ -12,6 +12,7 @@ class BuilderLeftPanel:
         self.items = []
         self.selected_item = None
         self.event_bus = event_bus
+        self._dropdown_expanded: bool = False
 
         if event_bus:
             event_bus.subscribe("REGISTRY_RELOADED", self.on_registry_reloaded)
@@ -209,9 +210,9 @@ class BuilderLeftPanel:
             if item != self.selected_item:
                 item.set_hovered(item == hovered_item)
                  
-    def is_dropdown_expanded(self):
+    def is_dropdown_expanded(self) -> bool:
         """Check if any filter/sort dropdown is currently expanded."""
-        return getattr(self, '_dropdown_expanded', False)
+        return self._dropdown_expanded
         
     def get_hovered_list_item(self, mx, my):
         """
@@ -251,7 +252,7 @@ class BuilderLeftPanel:
         self.items = []
         
         # 1. Filter by Vehicle Type (Implicit)
-        v_type = getattr(self.builder.ship, 'vehicle_type', "Ship")
+        v_type = self.builder.ship.vehicle_type
         filtered = [c for c in self.builder.available_components if v_type in c.allowed_vehicle_types]
 
         # 2. Filter out Hull components (managed by ship class, not user-selectable)
@@ -349,7 +350,7 @@ class BuilderLeftPanel:
     def draw(self, screen):
         # Draw hover highlight overlay for hovered items
         for item in self.items:
-            if getattr(item, 'is_hovered', False) and item != self.selected_item:
+            if item.is_hovered and item != self.selected_item:
                 # Get the absolute rect of the item
                 abs_rect = item.get_abs_rect()
                 # Check if it's visible in the scroll container

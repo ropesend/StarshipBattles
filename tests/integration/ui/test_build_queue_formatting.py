@@ -132,19 +132,20 @@ def build_queue_screen(mock_design_library, mock_design_loader):
 
 def test_planet_report_panel_exists(build_queue_screen):
     """Test that planet report panel widget is present."""
-    # Planet report should now be a PlanetReportPanel widget
-    assert hasattr(build_queue_screen, 'planet_report'), \
-        "BuildQueueScreen should have planet_report attribute"
+    # PROJ-180: Access via panels.*
+    assert hasattr(build_queue_screen.panels, 'planet_report'), \
+        "BuildQueueScreen should have panels.planet_report attribute"
 
     # Should be a PlanetReportPanel instance
     from game.ui.panels.planet_report_panel import PlanetReportPanel
-    assert isinstance(build_queue_screen.planet_report, PlanetReportPanel), \
-        f"planet_report should be PlanetReportPanel, got {type(build_queue_screen.planet_report)}"
+    assert isinstance(build_queue_screen.panels.planet_report, PlanetReportPanel), \
+        f"planet_report should be PlanetReportPanel, got {type(build_queue_screen.panels.planet_report)}"
 
 
 def test_available_designs_header_uses_textbox(build_queue_screen):
     """Test that 'Available Designs' header uses UITextBox for bold formatting."""
-    items_list_elements = build_queue_screen.items_list_panel.get_container().elements
+    # PROJ-180: Access via panels.*
+    items_list_elements = build_queue_screen.panels.items_list_panel.get_container().elements
 
     # Find header element (should be first non-scrolling element)
     header_elements = [e for e in items_list_elements
@@ -160,7 +161,8 @@ def test_available_designs_header_uses_textbox(build_queue_screen):
 
 def test_build_queue_header_uses_textbox(build_queue_screen):
     """Test that 'Build Queue' header uses UITextBox for bold formatting."""
-    queue_panel_elements = build_queue_screen.build_queue_panel.get_container().elements
+    # PROJ-180: Access via panels.*
+    queue_panel_elements = build_queue_screen.panels.build_queue_panel.get_container().elements
 
     # Find header element
     header_elements = [e for e in queue_panel_elements
@@ -176,7 +178,8 @@ def test_build_queue_header_uses_textbox(build_queue_screen):
 
 def test_categories_header_uses_textbox(build_queue_screen):
     """Test that 'Categories' header uses UITextBox for bold formatting."""
-    filter_panel_elements = build_queue_screen.filter_panel.get_container().elements
+    # PROJ-180: Access via panels.*
+    filter_panel_elements = build_queue_screen.panels.filter_panel.get_container().elements
 
     # Find the Categories header (first element before buttons)
     non_button_elements = [e for e in filter_panel_elements
@@ -194,7 +197,8 @@ def test_categories_header_uses_textbox(build_queue_screen):
 
 def test_actions_header_uses_textbox(build_queue_screen):
     """Test that 'Actions' header uses UITextBox for bold formatting."""
-    filter_panel_elements = build_queue_screen.filter_panel.get_container().elements
+    # PROJ-180: Access via panels.*
+    filter_panel_elements = build_queue_screen.panels.filter_panel.get_container().elements
 
     # Find non-button elements
     non_button_elements = [e for e in filter_panel_elements
@@ -212,8 +216,8 @@ def test_actions_header_uses_textbox(build_queue_screen):
 
 def test_html_text_contains_bold_tags(build_queue_screen):
     """Test that headers actually contain HTML bold tags in their html_text."""
-    # Check Available Designs header
-    items_list_elements = build_queue_screen.items_list_panel.get_container().elements
+    # PROJ-180: Access via panels.*
+    items_list_elements = build_queue_screen.panels.items_list_panel.get_container().elements
     header_elements = [e for e in items_list_elements
                       if not isinstance(e, pygame_gui.elements.UIScrollingContainer)]
 
@@ -224,11 +228,11 @@ def test_html_text_contains_bold_tags(build_queue_screen):
 
 def test_design_report_panel_exists(build_queue_screen):
     """Test that design report panel widget is present."""
-    # Design report should be a DesignReportPanel widget
-    assert hasattr(build_queue_screen, 'design_report'), \
-        "BuildQueueScreen should have design_report attribute"
+    # PROJ-180: Access via panels.*
+    assert hasattr(build_queue_screen.panels, 'design_report'), \
+        "BuildQueueScreen should have panels.design_report attribute"
 
     # Should be a DesignReportPanel instance
     from game.ui.panels.design_report_panel import DesignReportPanel
-    assert isinstance(build_queue_screen.design_report, DesignReportPanel), \
-        f"design_report should be DesignReportPanel, got {type(build_queue_screen.design_report)}"
+    assert isinstance(build_queue_screen.panels.design_report, DesignReportPanel), \
+        f"design_report should be DesignReportPanel, got {type(build_queue_screen.panels.design_report)}"

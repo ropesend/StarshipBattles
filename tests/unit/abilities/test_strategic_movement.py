@@ -7,6 +7,8 @@ TDD Phase 2, Step 2.1: Tests for the StrategicMovement ability class.
 import pytest
 from unittest.mock import MagicMock
 
+from game.core.exceptions import ValidationException
+
 
 class TestStrategicMovementAbility:
     """Tests for the StrategicMovement ability class."""
@@ -120,7 +122,7 @@ class TestStrategicMovementAbility:
 
         data = {'value': 100, 'scope': 'planet'}
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidationException):
             StrategicMovement(mock_component, data)
 
 

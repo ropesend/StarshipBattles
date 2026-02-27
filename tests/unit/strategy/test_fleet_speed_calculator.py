@@ -254,3 +254,103 @@ class TestFleetSpeedCalculatorFleetSpeed:
         # Check that fleet.speed was updated
         expected = float(FleetSpeedCalculator.calculate_ship_speed(ship))
         assert fleet.speed == expected
+
+
+class TestFleetSpeedCalculatorEnvironmentalEffects:
+    """Tests for environmental effects integration (PROJ-189 Phase 4)."""
+
+    def test_strategic_mult_half_halves_speed(self):
+        """Fleet with strategic_mult=0.5 has half the speed."""
+        from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
+        from game.strategy.services.area_effect_manager import EnvironmentalEffects
+
+        # Create ship with base speed of 6 hexes/turn
+        # mass=1000, strategic_movement=250 -> (250 * 25) / 1000 = 6.25 -> 6
+        stats = {'mass': 1000, 'strategic_movement': 250}
+        ship = MagicMock()
+        ship.design_data = {'vehicle_type': 'Ship', 'expected_stats': stats}
+        ship.get_calculated_stats.return_value = stats
+        ship.is_combat_capable.return_value = True
+
+        fleet = MagicMock()
+        fleet.ships = [ship]
+
+        # Base speed (no storm)
+        base_speed = FleetSpeedCalculator.calculate_fleet_speed(fleet)
+        assert base_speed == 6.0
+
+        # Speed with 50% storm penalty
+        env_effects = EnvironmentalEffects(strategic_mult=0.5)
+        storm_speed = FleetSpeedCalculator.calculate_fleet_speed_with_environment(
+            fleet, env_effects
+        )
+
+        # 6 * 0.5 = 3
+        assert storm_speed == 3.0
+
+    def test_strategic_mult_one_unchanged_speed(self):
+        """Fleet with strategic_mult=1.0 (no storm) has unchanged speed."""
+        from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
+        from game.strategy.services.area_effect_manager import EnvironmentalEffects
+
+        stats = {'mass': 1000, 'strategic_movement': 200}
+        ship = MagicMock()
+        ship.design_data = {'vehicle_type': 'Ship', 'expected_stats': stats}
+        ship.get_calculated_stats.return_value = stats
+        ship.is_combat_capable.return_value = True
+
+        fleet = MagicMock()
+        fleet.ships = [ship]
+
+        base_speed = FleetSpeedCalculator.calculate_fleet_speed(fleet)
+
+        env_effects = EnvironmentalEffects(strategic_mult=1.0)
+        storm_speed = FleetSpeedCalculator.calculate_fleet_speed_with_environment(
+            fleet, env_effects
+        )
+
+        assert storm_speed == base_speed
+
+    def test_strategic_mult_extreme_still_clamps_to_zero(self):
+        """Fleet with strategic_mult=0.1 still has at least speed 0 (clamping works)."""
+        from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
+        from game.strategy.services.area_effect_manager import EnvironmentalEffects
+
+        # Create ship with base speed of 2 hexes/turn
+        stats = {'mass': 1000, 'strategic_movement': 100}
+        ship = MagicMock()
+        ship.design_data = {'vehicle_type': 'Ship', 'expected_stats': stats}
+        ship.get_calculated_stats.return_value = stats
+        ship.is_combat_capable.return_value = True
+
+        fleet = MagicMock()
+        fleet.ships = [ship]
+
+        # With extreme reduction, speed should still be >= 0
+        env_effects = EnvironmentalEffects(strategic_mult=0.1)
+        storm_speed = FleetSpeedCalculator.calculate_fleet_speed_with_environment(
+            fleet, env_effects
+        )
+
+        # 2 * 0.1 = 0.2 -> floors to 0
+        assert storm_speed >= 0.0
+
+    def test_none_environmental_effects_same_as_base(self):
+        """When environmental_effects is None, use base calculation."""
+        from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
+
+        stats = {'mass': 1000, 'strategic_movement': 200}
+        ship = MagicMock()
+        ship.design_data = {'vehicle_type': 'Ship', 'expected_stats': stats}
+        ship.get_calculated_stats.return_value = stats
+        ship.is_combat_capable.return_value = True
+
+        fleet = MagicMock()
+        fleet.ships = [ship]
+
+        base_speed = FleetSpeedCalculator.calculate_fleet_speed(fleet)
+        env_speed = FleetSpeedCalculator.calculate_fleet_speed_with_environment(
+            fleet, None
+        )
+
+        assert env_speed == base_speed

@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Dict, Any, List
 
 from game.core.constants import ResourceType
 from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
-from game.ui.screens.column_manager import SPECIAL_CAPABILITY_COLUMNS
+from game.ui.screens.fleet_data_source import SPECIAL_CAPABILITY_COLUMNS
 
 if TYPE_CHECKING:
     from game.strategy.data.ship_instance import ShipInstance

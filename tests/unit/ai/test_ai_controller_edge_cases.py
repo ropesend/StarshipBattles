@@ -22,7 +22,7 @@ from game.core.math import Vector2
 def mock_ship():
     """Create a mock ship for controller tests."""
     ship = MagicMock()
-    ship.id = 'test_ship'
+    ship.name = 'test_ship'  # PROJ-192: Ship uses .name as identifier
     ship.get_position = MagicMock(return_value=Vector2(0, 0))
     ship.position = Vector2(0, 0)
     ship.get_rotation = MagicMock(return_value=0.0)
@@ -153,7 +153,7 @@ class TestAIControllerShipCapabilities:
 
         # Create mock enemy
         enemy = MagicMock()
-        enemy.id = 'enemy_1'
+        enemy.name = 'enemy_1'
         enemy.is_alive = True
         enemy.team_id = 1
         enemy.position = Vector2(100, 0)
@@ -288,9 +288,9 @@ class TestAIControllerCapabilitiesCache:
         """Cache correctly identifies ships with weapons."""
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
-        # Ship with weapons
+        # Ship with weapons (PROJ-192: Ship uses .name as identifier)
         armed_ship = MagicMock()
-        armed_ship.id = 'armed_1'
+        armed_ship.name = 'armed_1'
         weapon = MagicMock()
         weapon.has_ability = MagicMock(return_value=False)  # Not PDC
         armed_ship.get_components_by_ability = MagicMock(return_value=[weapon])
@@ -305,9 +305,9 @@ class TestAIControllerCapabilitiesCache:
         """Cache correctly identifies ships with PDC."""
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
-        # Ship with PDC weapon
+        # Ship with PDC weapon (PROJ-192: Ship uses .name as identifier)
         pdc_ship = MagicMock()
-        pdc_ship.id = 'pdc_ship'
+        pdc_ship.name = 'pdc_ship'
         pdc_weapon = MagicMock()
         pdc_weapon.has_ability = MagicMock(return_value=True)  # Is PDC
         pdc_ship.get_components_by_ability = MagicMock(return_value=[pdc_weapon])
@@ -372,13 +372,13 @@ class TestAIControllerScoreAndSort:
         """Enemies that fail evaluation are skipped with warning."""
         controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
 
-        # Create an enemy that will fail evaluation
+        # Create an enemy that will fail evaluation (PROJ-192: Ship uses .name)
         bad_enemy = MagicMock()
-        bad_enemy.id = 'bad_enemy'
+        bad_enemy.name = 'bad_enemy'
         bad_enemy.position = None  # Will cause evaluation to fail
 
         good_enemy = MagicMock()
-        good_enemy.id = 'good_enemy'
+        good_enemy.name = 'good_enemy'
         good_enemy.position = Vector2(100, 0)
         good_enemy.velocity = Vector2(0, 0)
         good_enemy.mass = 100

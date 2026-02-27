@@ -60,6 +60,7 @@ class TestBuilderImprovements:
         mock_ship.name = "LoadedShip"
         mock_ship.ship_class = "Escort"
         mock_ship.theme_id = "Federation"
+        mock_ship.vehicle_type = "Ship"
         mock_ship.ai_strategy = "aggressive"
         mock_ship.layers = {}
         mock_ship.mass_limits_ok = True
@@ -90,6 +91,14 @@ class TestBuilderImprovements:
         mock_ship.get_ability_total.return_value = 100
         mock_ship.total_defense_score = 1.0
         mock_ship.baseline_to_hit_offense = 1.0
+        mock_ship.total_strategic_movement = 0.0
+        mock_ship.total_maneuver_points = 0
+        mock_ship.fuel_consumption = 0.0
+        mock_ship.ammo_consumption = 0.0
+        mock_ship.max_targets = 1
+        mock_ship.construction_cost = {}
+        # PROJ-194: Add typed resource stat accessor
+        mock_ship.get_resource_stat.return_value = 0.0
 
         # PROJ-43: Mock the adapter's load_ship method (not ShipIO directly)
         builder._ship_io_adapter.load_ship = MagicMock(return_value=(mock_ship, "Success"))

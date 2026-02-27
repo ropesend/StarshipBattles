@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component
 from game.core.constants import LayerType
-from game.core.registry import RegistryManager, GameRegistries
+from game.core.registry import GameRegistries
 from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
 from game.simulation.entities.layer_data import LayerData
@@ -18,8 +18,6 @@ from game.simulation.entities.layer_data import LayerData
 @pytest.fixture
 def simple_ship_registry(fresh_registries):
     """Set up registry with minimal ship data for testing."""
-    RegistryManager.instance().clear()
-
     classes = {
         "Escort": {
             "type": "Ship",
@@ -42,16 +40,12 @@ def simple_ship_registry(fresh_registries):
         }
     }
 
-    # Set up registry with test data
-    registry = RegistryManager.instance()
-    registry.vehicle_classes.update(classes)
+    # Set up fresh_registries with test data (DI pattern - PROJ-195)
+    fresh_registries.vehicle_classes.update(classes)
     for comp_id, comp_data in components.items():
-        registry.components[comp_id] = Component(comp_data, registries=fresh_registries)
+        fresh_registries.components[comp_id] = Component(comp_data, registries=fresh_registries)
 
     yield classes, components, fresh_registries
-
-    # Cleanup
-    RegistryManager.instance().clear()
 
 
 def test_clear_design_removes_hull_logic_repro(simple_ship_registry):
@@ -71,10 +65,9 @@ def test_clear_design_removes_hull_logic_repro(simple_ship_registry):
     from game.ui.screens.builder.event_bus import EventBus
     from game.ui.screens.workshop_viewmodel import WorkshopViewModel
 
-    # Create registries for DI
+    # Create registries for DI - use fresh_registries components (PROJ-195)
     registries = GameRegistries(
-        components={k: Component(v, registries=fresh_registries) if isinstance(v, dict) else v
-                   for k, v in RegistryManager.instance().components.items()},
+        components={k: v for k, v in fresh_registries.components.items()},
         modifiers={},
         vehicle_classes=classes,
         resources={}
@@ -99,6 +92,7 @@ def test_clear_design_removes_hull_logic_repro(simple_ship_registry):
     gui.right_panel = MagicMock()
     gui.modifier_panel = MagicMock()
     gui.layer_panel = MagicMock()
+    gui.weapons_report_panel = MagicMock()
 
     # Verify initial hull exists (added by Ship.__init__ for Escort class)
     hull_comps = gui.viewmodel.ship.layers[LayerType.HULL].components

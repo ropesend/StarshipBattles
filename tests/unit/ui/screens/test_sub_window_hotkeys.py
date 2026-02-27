@@ -122,13 +122,15 @@ class TestBuildQueueScreenHotkeys:
         screen = MagicMock(spec=BuildQueueScreen)
         screen._mapper = mapper
         screen.on_close = MagicMock()
-        screen.btn_close = MagicMock()
-        screen.btn_add_to_queue = MagicMock()
-        screen.btn_remove_from_queue = MagicMock()
-        screen.btn_category_complex = MagicMock()
-        screen.btn_category_ship = MagicMock()
-        screen.btn_category_satellite = MagicMock()
-        screen.btn_category_fighter = MagicMock()
+        # PROJ-180: Use panels.* directly (eradicate backward-compat properties)
+        screen.panels = MagicMock()
+        screen.panels.btn_close = MagicMock()
+        screen.panels.btn_add_to_queue = MagicMock()
+        screen.panels.btn_remove_from_queue = MagicMock()
+        screen.panels.btn_category_complex = MagicMock()
+        screen.panels.btn_category_ship = MagicMock()
+        screen.panels.btn_category_satellite = MagicMock()
+        screen.panels.btn_category_fighter = MagicMock()
         screen.controller = MagicMock()
         screen.drag_handler = MagicMock()
         screen.drag_handler.selected_design = None
@@ -191,8 +193,8 @@ class TestBuildQueueScreenHotkeys:
         """Delete key removes selected queue item."""
         from game.ui.screens.build_queue_screen import BuildQueueScreen
         screen = self._make_screen(mapper)
-        # Bind _handle_remove_hotkey and _get_active_queue since _handle_keydown delegates to them
-        screen._handle_remove_hotkey = BuildQueueScreen._handle_remove_hotkey.__get__(screen, BuildQueueScreen)
+        # Bind _handle_remove and _get_active_queue since _handle_keydown delegates to them
+        screen._handle_remove = BuildQueueScreen._handle_remove.__get__(screen, BuildQueueScreen)
         screen._get_active_queue = BuildQueueScreen._get_active_queue.__get__(screen, BuildQueueScreen)
         screen.selected_queue_index = 0
         screen.selected_queue_indices = set()  # Empty set for single selection mode
@@ -213,21 +215,23 @@ class TestBuildQueueScreenHotkeys:
         """Close button shows Esc tooltip."""
         from game.ui.screens.build_queue_screen import BuildQueueScreen
         screen = self._make_screen(mapper)
+        # PROJ-180: panels already set up in _make_screen
         screen._apply_tooltips = BuildQueueScreen._apply_tooltips.__get__(screen, BuildQueueScreen)
         screen._apply_tooltips()
-        tooltip_text = screen.btn_close.set_tooltip.call_args[0][0]
+        tooltip_text = screen.panels.btn_close.set_tooltip.call_args[0][0]
         assert "Esc" in tooltip_text
 
     def test_category_button_tooltips(self, mapper):
         """Category buttons show 1-4 tooltips."""
         from game.ui.screens.build_queue_screen import BuildQueueScreen
         screen = self._make_screen(mapper)
+        # PROJ-180: panels already set up in _make_screen
         screen._apply_tooltips = BuildQueueScreen._apply_tooltips.__get__(screen, BuildQueueScreen)
         screen._apply_tooltips()
-        assert "1" in screen.btn_category_complex.set_tooltip.call_args[0][0]
-        assert "2" in screen.btn_category_ship.set_tooltip.call_args[0][0]
-        assert "3" in screen.btn_category_satellite.set_tooltip.call_args[0][0]
-        assert "4" in screen.btn_category_fighter.set_tooltip.call_args[0][0]
+        assert "1" in screen.panels.btn_category_complex.set_tooltip.call_args[0][0]
+        assert "2" in screen.panels.btn_category_ship.set_tooltip.call_args[0][0]
+        assert "3" in screen.panels.btn_category_satellite.set_tooltip.call_args[0][0]
+        assert "4" in screen.panels.btn_category_fighter.set_tooltip.call_args[0][0]
 
 
 # =======================================================================

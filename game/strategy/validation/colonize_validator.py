@@ -5,15 +5,23 @@ PROJ-36: Extracted from TurnEngine to centralize validation.
 PROJ-55: Added colony pod detection and chain validation.
 PROJ-127: Extracted _iterate_colony_pods helper to reduce duplication.
 """
-from typing import Dict, Any, Iterator, Optional, Tuple
+from typing import Dict, Any, Iterator, Optional, Tuple, TYPE_CHECKING
 from game.core.validation import ValidationResult
 from game.strategy.services.component_inspector import iterate_design_components
 
+if TYPE_CHECKING:
+    from game.strategy.data.fleet import Fleet
+    from game.strategy.data.galaxy import Galaxy
+    from game.strategy.data.ship_instance import ShipInstance
+
+from game.strategy.data.planet import Planet
+from game.core.protocols import is_planet
+
 
 def _iterate_colony_pods(
-    fleet,
+    fleet: 'Fleet',
     component_registry: Dict[str, Any]
-) -> Iterator[Tuple[Any, str]]:
+) -> Iterator[Tuple['ShipInstance', str]]:
     """Iterate over colony pod abilities in a fleet's ships.
 
     Yields (ship, planet_type_str) tuples for each ColonizePlanet ability found.
@@ -26,10 +34,8 @@ def _iterate_colony_pods(
         Tuple of (ship object, planet_type string).
     """
     for ship in fleet.ships:
-        design_data = getattr(ship, 'design_data', {})
-
         for _comp_entry, _comp_def, abilities in iterate_design_components(
-            design_data, component_registry
+            ship.design_data, component_registry
         ):
             if 'ColonizePlanet' in abilities:
                 ability_data = abilities['ColonizePlanet']
@@ -49,9 +55,9 @@ class ColonizeValidator:
 
     @staticmethod
     def validate(
-        galaxy,
-        fleet,
-        target_planet,
+        galaxy: 'Galaxy',
+        fleet: 'Fleet',
+        target_planet: Optional['Planet'],
         component_registry: Optional[Dict[str, Any]] = None,
         skip_chain_check: bool = False
     ) -> ValidationResult:
@@ -77,7 +83,7 @@ class ColonizeValidator:
         """
         # 1. Base Validation: Fleet must exist
         if not fleet:
-            return ValidationResult(is_valid=False, errors=["Fleet does not exist."])
+            return ValidationResult.error("Fleet does not exist.")
 
         # 2. Get System/Location Context - Use O(1) spatial index
         # Get all planets at the fleet's global hex location
@@ -85,12 +91,11 @@ class ColonizeValidator:
 
         # PROJ-139: Also check zone registry for multi-hex planets (Dyson Spheres)
         # Fleet may be in a planet's zone but not at its center
-        if hasattr(galaxy, 'get_zones_at_global_hex'):
-            zone_objects = galaxy.get_zones_at_global_hex(fleet.location)
-            for zone_obj in zone_objects:
-                # Check if zone object is a planet (has planet_type)
-                if hasattr(zone_obj, 'planet_type') and zone_obj not in all_planets_at_hex:
-                    all_planets_at_hex.append(zone_obj)
+        zone_objects = galaxy.get_zones_at_global_hex(fleet.location)
+        for zone_obj in zone_objects:
+            # Check if zone object is a planet
+            if isinstance(zone_obj, Planet) and zone_obj not in all_planets_at_hex:
+                all_planets_at_hex.append(zone_obj)
 
         valid_candidates = [p for p in all_planets_at_hex if p.owner_id is None]
 
@@ -98,7 +103,10 @@ class ColonizeValidator:
         if target_planet is None:
             # "Any Planet"
             if not valid_candidates:
-                return ValidationResult(is_valid=False, errors=["No colonizable planets at this location."], error_code="NO_CANDIDATES")
+                return ValidationResult.error(
+                    "No colonizable planets at this location.",
+                    code="NO_CANDIDATES"
+                )
 
             # PROJ-140 Phase 2: When registry provided, check if ANY candidate matches available pods
             if component_registry is not None:
@@ -111,7 +119,7 @@ class ColonizeValidator:
                 # Check if any valid candidate planet matches an available (uncommitted) pod
                 found_match = False
                 for candidate in valid_candidates:
-                    if hasattr(candidate, 'planet_type'):
+                    if isinstance(candidate, Planet):
                         planet_type_str = candidate.planet_type.name
                         available_count = available.get(planet_type_str, 0)
                         committed_count = committed.get(planet_type_str, 0)
@@ -120,25 +128,30 @@ class ColonizeValidator:
                             break
 
                 if not found_match:
-                    return ValidationResult(
-                        is_valid=False,
-                        errors=["No matching colony pod for any planet at this location."],
-                        error_code="NO_COLONY_POD"
+                    return ValidationResult.error(
+                        "No matching colony pod for any planet at this location.",
+                        code="NO_COLONY_POD"
                     )
 
-            return ValidationResult()
+            return ValidationResult.success()
 
         else:
             # Specific Planet
             if target_planet.owner_id is not None:
-                return ValidationResult(is_valid=False, errors=[f"Planet {target_planet.name} is already owned."], error_code="ALREADY_OWNED")
+                return ValidationResult.error(
+                    f"Planet {target_planet.name} is already owned.",
+                    code="ALREADY_OWNED"
+                )
 
             # Check if planet is in valid candidates (verifies location)
             # We strictly check reference equality or ID equality if we had IDs
             if target_planet not in valid_candidates:
                 # Determine detailed reason for better feedback
                 # If owner is none (checked above), then it must be location.
-                return ValidationResult(is_valid=False, errors=[f"Planet {target_planet.name} is not at fleet location."], error_code="WRONG_LOCATION")
+                return ValidationResult.error(
+                    f"Planet {target_planet.name} is not at fleet location.",
+                    code="WRONG_LOCATION"
+                )
 
             # 4. Check for colony pod (PROJ-55)
             if component_registry is not None:
@@ -150,10 +163,9 @@ class ColonizeValidator:
                 )
 
                 if ship_with_pod is None:
-                    return ValidationResult(
-                        is_valid=False,
-                        errors=[f"No ship in fleet has {planet_type_str} colony pod"],
-                        error_code="NO_COLONY_POD"
+                    return ValidationResult.error(
+                        f"No ship in fleet has {planet_type_str} colony pod",
+                        code="NO_COLONY_POD"
                     )
 
                 # Check chain limits - ensure not over-committed
@@ -166,20 +178,19 @@ class ColonizeValidator:
                     committed_count = committed.get(planet_type_str, 0)
 
                     if committed_count >= available_count:
-                        return ValidationResult(
-                            is_valid=False,
-                            errors=[f"All {planet_type_str} colony pods already assigned"],
-                            error_code="COLONY_POD_EXHAUSTED"
+                        return ValidationResult.error(
+                            f"All {planet_type_str} colony pods already assigned",
+                            code="COLONY_POD_EXHAUSTED"
                         )
 
-            return ValidationResult()
+            return ValidationResult.success()
 
     @staticmethod
     def find_ship_with_colony_pod(
-        fleet,
+        fleet: 'Fleet',
         planet_type_str: str,
         component_registry: Dict[str, Any]
-    ) -> Optional[Any]:
+    ) -> Optional['ShipInstance']:
         """
         Find a ship in the fleet with a colony pod matching the planet type.
 
@@ -198,7 +209,7 @@ class ColonizeValidator:
 
     @staticmethod
     def get_available_colony_pods(
-        fleet,
+        fleet: 'Fleet',
         component_registry: Dict[str, Any]
     ) -> Dict[str, int]:
         """
@@ -220,7 +231,7 @@ class ColonizeValidator:
         return pod_counts
 
     @staticmethod
-    def get_committed_colony_pods(fleet) -> Dict[str, int]:
+    def get_committed_colony_pods(fleet: 'Fleet') -> Dict[str, int]:
         """
         Count colony pods committed to existing COLONIZE orders.
 
@@ -235,11 +246,12 @@ class ColonizeValidator:
 
         committed: Dict[str, int] = {}
 
-        for order in getattr(fleet, 'orders', []):
+        for order in fleet.orders:
             if order.type == OrderType.COLONIZE and order.target is not None:
                 # Get planet type from the target planet
                 target = order.target
-                if hasattr(target, 'planet_type'):
+                # Use is_planet protocol for flexibility with test mocks
+                if is_planet(target):
                     planet_type_str = target.planet_type.name
                     committed[planet_type_str] = committed.get(planet_type_str, 0) + 1
 

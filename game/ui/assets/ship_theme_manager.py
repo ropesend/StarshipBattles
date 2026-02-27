@@ -1,8 +1,11 @@
+import logging
 import os
 import pygame
 import threading
-from game.core.logger import log_info, log_error
 from game.core.json_utils import load_json
+from game.ui.colors import OVERLAY_FALLBACK
+
+logger = logging.getLogger(__name__)
 from game.core.profiling import profile_block
 from game.core.paths import Paths
 from game.core.singleton import SingletonMeta
@@ -51,7 +54,7 @@ class ShipThemeManager(metaclass=SingletonMeta):
                 self.image_metrics = {}
                 self.portraits = {}
                 self.discovery_complete = False
-                log_info("ShipThemeManager caches cleared.")
+                logger.info("ShipThemeManager caches cleared.")
 
     def initialize(self):
         """Discover all themes from assets/ShipThemes without loading images."""
@@ -62,7 +65,7 @@ class ShipThemeManager(metaclass=SingletonMeta):
             themes_dir = os.path.join(Paths.ASSET_DIR, "ShipThemes")
             
             if not os.path.exists(themes_dir):
-                log_error(f"ShipThemes directory not found: {themes_dir}")
+                logger.error(f"ShipThemes directory not found: {themes_dir}")
                 return
                 
             # Walk directories (Fast discovery)
@@ -74,7 +77,7 @@ class ShipThemeManager(metaclass=SingletonMeta):
                         self._discover_theme(entry.path)
                     
             self.discovery_complete = True
-            log_info(f"Discovered {len(self.theme_data)} ship themes: {list(self.theme_data.keys())}")
+            logger.info(f"Discovered {len(self.theme_data)} ship themes: {list(self.theme_data.keys())}")
 
     def _discover_theme(self, theme_dir):
         """Read theme.json and store paths/metadata."""
@@ -109,10 +112,10 @@ class ShipThemeManager(metaclass=SingletonMeta):
                         'scale': manual_scale
                     }
                 else:
-                    log_error(f"Image not found for {theme_name}/{ship_class}: {filename}")
+                    logger.error(f"Image not found for {theme_name}/{ship_class}: {filename}")
                     
         except (KeyError, TypeError, ValueError) as e:
-            log_error(f"Failed to discover theme {theme_dir}: {e}")
+            logger.error(f"Failed to discover theme {theme_dir}: {e}")
 
     def load_image(self, theme_name, ship_class):
         """Load the image surface for a specific theme and class. Returns cached copy if available."""
@@ -158,10 +161,10 @@ class ShipThemeManager(metaclass=SingletonMeta):
                     
                     return surf
             except FileNotFoundError as e:
-                log_error(f"Lazy load failed - file not found {path}: {e}")
+                logger.error(f"Lazy load failed - file not found {path}: {e}")
                 return self._create_fallback_image(ship_class)
             except pygame.error as e:
-                log_error(f"Lazy load failed for {path} (pygame error): {e}")
+                logger.error(f"Lazy load failed for {path} (pygame error): {e}")
                 return self._create_fallback_image(ship_class)
 
     def get_image_metrics(self, theme_name, ship_class):
@@ -207,9 +210,9 @@ class ShipThemeManager(metaclass=SingletonMeta):
         """Generate a placeholder image."""
         # Simple colored rectangle with text
         surf = pygame.Surface((100, 100), pygame.SRCALPHA)
-        pygame.draw.rect(surf, (100, 100, 100), surf.get_rect(), 2)
-        pygame.draw.line(surf, (100, 100, 100), (50, 20), (50, 80), 2)
-        pygame.draw.line(surf, (100, 100, 100), (20, 50), (80, 50), 2)
+        pygame.draw.rect(surf, OVERLAY_FALLBACK, surf.get_rect(), 2)
+        pygame.draw.line(surf, OVERLAY_FALLBACK, (50, 20), (50, 80), 2)
+        pygame.draw.line(surf, OVERLAY_FALLBACK, (20, 50), (80, 50), 2)
         return surf
 
     def get_available_themes(self):
@@ -284,9 +287,9 @@ class ShipThemeManager(metaclass=SingletonMeta):
 
                     return surf
                 except FileNotFoundError as e:
-                    log_error(f"Portrait file not found {portrait_path}: {e}")
+                    logger.error(f"Portrait file not found {portrait_path}: {e}")
                 except pygame.error as e:
-                    log_error(f"Failed to load portrait {portrait_path} (pygame error): {e}")
+                    logger.error(f"Failed to load portrait {portrait_path} (pygame error): {e}")
 
             return None
 

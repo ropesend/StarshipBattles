@@ -39,7 +39,7 @@ def get_component_group_key(component):
     mod_list = []
     for m in component.modifiers:
         # Ignore readonly modifiers (like Mass Scaling) for grouping keys
-        if getattr(m.definition, 'readonly', False):
+        if m.definition.readonly:
             continue
         mod_list.append((m.definition.id, m.value))
     mod_list.sort()

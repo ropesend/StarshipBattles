@@ -403,7 +403,7 @@ class ShipControllableAdapter(IControllable):
 
     def get_max_targets(self) -> int:
         """Get the maximum number of simultaneous targets."""
-        return getattr(self._ship, 'max_targets', CombatConstants.DEFAULT_MAX_TARGETS)
+        return self._ship.max_targets
 
     def get_secondary_targets(self) -> List[Any]:
         """Get the list of secondary targets."""
@@ -423,11 +423,11 @@ class ShipControllableAdapter(IControllable):
 
     def get_ai_strategy(self) -> str:
         """Get the AI strategy identifier for this ship."""
-        return getattr(self._ship, 'ai_strategy', 'standard_ranged')
+        return self._ship.ai_strategy
 
     def get_vehicle_type(self) -> str:
         """Get the vehicle type (Ship, Satellite, etc.)."""
-        return getattr(self._ship, 'vehicle_type', 'Ship')
+        return self._ship.vehicle_type
 
     def get_all_components(self) -> List[Any]:
         """Get all components across all layers."""
@@ -466,12 +466,15 @@ class ShipControllableAdapter(IControllable):
         self._ship.formation.master = master
 
     def leave_formation(self) -> None:
-        """Remove this ship from its current formation."""
+        """Remove this ship from its current formation.
+
+        Note: The master is always a Ship with .formation (ShipFormation) which has .members.
+        This is guaranteed by the formation system - no defensive hasattr needed.
+        """
         try:
             master = self._ship.formation.master
-            if master and hasattr(master, 'formation') and hasattr(master.formation, 'members'):
-                if self._ship in master.formation.members:
-                    master.formation.members.remove(self._ship)
+            if master and self._ship in master.formation.members:
+                master.formation.members.remove(self._ship)
         except (AttributeError, ValueError):
             # Formation structure already broken or ship not in members
             pass

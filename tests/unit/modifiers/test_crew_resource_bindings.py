@@ -101,6 +101,7 @@ class TestResourceConsumptionBindings:
         class MockComponent:
             def __init__(self):
                 self.stats = {'consumption_mult': 0.5}  # 50% reduction
+                self.ability_stats = {}
                 self.ship = None
 
         component = MockComponent()
@@ -133,6 +134,7 @@ class TestResourceStorageBindings:
         class MockComponent:
             def __init__(self):
                 self.stats = {'capacity_mult': 2.0}
+                self.ability_stats = {}
 
         component = MockComponent()
         ability = ResourceStorage(component, {'resource': 'fuel', 'amount': 100.0})
@@ -163,6 +165,7 @@ class TestResourceGenerationBindings:
         class MockComponent:
             def __init__(self):
                 self.stats = {'energy_gen_mult': 3.0}
+                self.ability_stats = {}
 
         component = MockComponent()
         ability = ResourceGeneration(component, {'resource': 'energy', 'amount': 10.0})

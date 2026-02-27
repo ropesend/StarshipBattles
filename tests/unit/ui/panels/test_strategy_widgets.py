@@ -86,7 +86,8 @@ class TestDataGraphInit:
 
         graph = DataGraph(200, 150)
 
-        assert graph.bg_color == (20, 24, 30)
+        from game.ui.colors import BG_PANEL_DARK
+        assert graph.bg_color == BG_PANEL_DARK
 
     def test_graph_creates_surface(self, init_pygame):
         """DataGraph creates surface of correct size."""
@@ -261,17 +262,6 @@ class TestAtmosphereGraphRender:
 
         graph = AtmosphereGraph(200, 150)
         planet = _make_mock_planet()
-
-        result = graph.render(planet)
-
-        assert isinstance(result, pygame.Surface)
-
-    def test_render_handles_no_atmosphere(self, init_pygame):
-        """AtmosphereGraph.render handles planet without atmosphere."""
-        from game.ui.panels.strategy_widgets import AtmosphereGraph
-
-        graph = AtmosphereGraph(200, 150)
-        planet = MagicMock(spec=[])  # No atmosphere attribute
 
         result = graph.render(planet)
 

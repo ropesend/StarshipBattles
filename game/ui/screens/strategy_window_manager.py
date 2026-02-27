@@ -118,6 +118,7 @@ class StrategyWindowManager:
             empire,
             on_close_callback=self._on_planet_list_closed,
             asset_resolver=self._asset_resolver,
+            empires=self.scene.session.empires,  # PROJ-198: Pass empires for owner name lookup
         )
 
     def _on_planet_list_closed(self) -> None:
@@ -197,11 +198,7 @@ class StrategyWindowManager:
         if self.event_log_window:
             self.event_log_window.kill()
 
-        events = (
-            self.scene.facade.get_all_events()
-            if hasattr(self.scene, "facade")
-            else []
-        )
+        events = self.scene.facade.get_all_events()
 
         w, h = int(self.width * 0.7), int(self.height * 0.7)
         rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
@@ -484,3 +481,84 @@ class StrategyWindowManager:
                 del self.ui_callbacks[event.ui_element]
                 return True
         return False
+
+    # =========================================================================
+    # Confirmation Dialog (PROJ-198)
+    # =========================================================================
+
+    def show_confirmation_dialog(
+        self, title: str, message: str, on_confirm, is_warning: bool = False
+    ) -> None:
+        """Show a confirmation dialog for dangerous actions.
+
+        Uses pygame_gui's UIConfirmationDialog. The on_confirm callback is stored
+        and called when UI_CONFIRMATION_DIALOG_CONFIRMED event is received.
+
+        Args:
+            title: Dialog window title.
+            message: Message to display.
+            on_confirm: Callback when user confirms.
+            is_warning: If True, indicates a dangerous/irreversible action (for styling).
+        """
+        import pygame_gui.windows
+
+        dialog_rect = pygame.Rect(0, 0, 400, 200)
+        dialog_rect.center = (self.width // 2, self.height // 2)
+
+        dialog = pygame_gui.windows.UIConfirmationDialog(
+            rect=dialog_rect,
+            action_long_desc=message,
+            manager=self.manager,
+            window_title=title,
+        )
+        # Store callback keyed by dialog element for event routing
+        self._pending_confirmation_callback = on_confirm
+        self._pending_confirmation_dialog = dialog
+
+    def process_confirmation_event(self, event) -> bool:
+        """Process UI_CONFIRMATION_DIALOG_CONFIRMED events.
+
+        Called by StrategyEventRouter to route confirmation events.
+
+        Args:
+            event: The pygame_gui event.
+
+        Returns:
+            True if a confirmation callback was executed, False otherwise.
+        """
+        if event.type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
+            if (
+                self._pending_confirmation_dialog is not None
+                and event.ui_element == self._pending_confirmation_dialog
+            ):
+                callback = self._pending_confirmation_callback
+                self._pending_confirmation_dialog = None
+                self._pending_confirmation_callback = None
+                if callback:
+                    callback()
+                return True
+        return False
+
+    # =========================================================================
+    # Ship Picker (PROJ-198)
+    # =========================================================================
+
+    def show_ship_picker(self, ships, ability_name: str, on_selected) -> None:
+        """Show ship picker dialog for multi-select.
+
+        PROJ-198: Currently auto-selects all ships for simplicity.
+        A full ship picker dialog with individual selection is a future enhancement.
+
+        Args:
+            ships: List of ships to pick from.
+            ability_name: Ability name (for display/logging).
+            on_selected: Callback with list of selected ship IDs.
+        """
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.info(
+            f"Ship picker ({ability_name}): Auto-selecting all {len(ships)} ships"
+        )
+        # Auto-select all ships - full picker UI is a future enhancement
+        on_selected([s.id for s in ships])

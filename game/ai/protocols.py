@@ -1,0 +1,186 @@
+"""
+AI-layer Protocol definitions for type-safe duck typing replacement.
+
+PROJ-192: This module provides @runtime_checkable Protocol classes and TypeGuard
+functions to replace hasattr/getattr patterns in the AI layer with proper type checking.
+
+These protocols are specific to AI concerns (combat entities, formation masters,
+targeting). For core/strategy protocols, see game/core/protocols.py.
+
+Usage:
+    from game.ai.protocols import is_grid_entity, is_projectile, IGridEntity
+
+    if is_grid_entity(obj):
+        # obj is now typed as IGridEntity
+        dist = obj.position.distance_to(target.position)
+"""
+
+from typing import (
+    Protocol,
+    runtime_checkable,
+    Optional,
+    Any,
+    TYPE_CHECKING,
+    TypeGuard,
+)
+
+
+# =============================================================================
+# Grid Entity Protocol (Combat entities with position and team)
+# =============================================================================
+
+@runtime_checkable
+class IGridEntity(Protocol):
+    """
+    Protocol for combat entities with position on the battle grid.
+
+    This covers Ships, Projectiles, and any other entity that participates
+    in spatial combat calculations (distance, targeting, collision).
+    """
+    @property
+    def position(self) -> Any:
+        """Entity's position (Vector2)."""
+        ...
+
+    @property
+    def is_alive(self) -> bool:
+        """True if entity is active in combat."""
+        ...
+
+    @property
+    def team_id(self) -> int:
+        """Team identifier for friend/foe determination."""
+        ...
+
+    @property
+    def radius(self) -> float:
+        """Collision radius for spatial calculations."""
+        ...
+
+
+# =============================================================================
+# Projectile Protocol (extends IGridEntity with attack type)
+# =============================================================================
+
+@runtime_checkable
+class IProjectile(IGridEntity, Protocol):
+    """
+    Protocol for projectile entities (missiles, beams, kinetic rounds).
+
+    Extends IGridEntity with attack type for damage classification.
+    Used by targeting systems to identify interceptable projectiles.
+    """
+    @property
+    def type(self) -> Any:
+        """AttackType enum indicating projectile category."""
+        ...
+
+
+# =============================================================================
+# Formation Master Protocol (Ship leading a formation)
+# =============================================================================
+
+@runtime_checkable
+class IFormationMaster(Protocol):
+    """
+    Protocol for entities that can lead formations.
+
+    Formation members follow their master's position, angle, and movement.
+    This protocol captures the properties needed for formation following logic.
+    """
+    @property
+    def position(self) -> Any:
+        """Master's position (Vector2)."""
+        ...
+
+    @property
+    def angle(self) -> float:
+        """Master's facing angle in degrees."""
+        ...
+
+    @property
+    def is_alive(self) -> bool:
+        """True if master is active (formation disbands if False)."""
+        ...
+
+    @property
+    def is_derelict(self) -> bool:
+        """True if master is destroyed but hull remains."""
+        ...
+
+    @property
+    def is_thrusting(self) -> bool:
+        """True if master is actively accelerating."""
+        ...
+
+    @property
+    def max_speed(self) -> float:
+        """Master's maximum speed capability."""
+        ...
+
+    @property
+    def engine_throttle(self) -> float:
+        """Current throttle setting (0.0 to 1.0)."""
+        ...
+
+    @property
+    def current_speed(self) -> float:
+        """Master's current velocity magnitude."""
+        ...
+
+    @property
+    def formation(self) -> Any:
+        """ShipFormation object for member coordination."""
+        ...
+
+    @property
+    def current_target(self) -> Optional[Any]:
+        """Master's current combat target (if any)."""
+        ...
+
+
+# =============================================================================
+# Component Health Protocol (for damage/armor calculations)
+# =============================================================================
+
+@runtime_checkable
+class IComponentHealth(Protocol):
+    """
+    Protocol for components with HP that can be damaged.
+
+    Used by targeting evaluators to assess component damage state
+    for target prioritization (e.g., least-armor targeting rule).
+    """
+    @property
+    def current_hp(self) -> float:
+        """Current hit points."""
+        ...
+
+    @property
+    def max_hp(self) -> float:
+        """Maximum hit points."""
+        ...
+
+
+# =============================================================================
+# TypeGuard Functions
+# =============================================================================
+
+def is_grid_entity(obj: Any) -> TypeGuard[IGridEntity]:
+    """Check if obj satisfies the IGridEntity Protocol."""
+    return isinstance(obj, IGridEntity)
+
+
+def is_projectile(obj: Any) -> TypeGuard[IProjectile]:
+    """Check if obj satisfies the IProjectile Protocol."""
+    return isinstance(obj, IProjectile)
+
+
+def is_formation_master(obj: Any) -> TypeGuard[IFormationMaster]:
+    """Check if obj satisfies the IFormationMaster Protocol."""
+    return isinstance(obj, IFormationMaster)
+
+
+def is_component_health(obj: Any) -> TypeGuard[IComponentHealth]:
+    """Check if obj satisfies the IComponentHealth Protocol."""
+    return isinstance(obj, IComponentHealth)

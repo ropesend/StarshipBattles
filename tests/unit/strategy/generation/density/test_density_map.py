@@ -5,6 +5,7 @@ Tests for DensityMap composite class.
 import pytest
 import random
 
+from game.core.exceptions import ValidationException
 from game.core.hex_math import HexCoord
 from game.strategy.generation.density.density_map import DensityMap
 from game.strategy.generation.density.primitives.radial import RadialPrimitive
@@ -21,8 +22,9 @@ class TestDensityMapBasics:
 
     def test_empty_map_raises_on_sample(self, empty_density_map):
         """Empty map should raise when sampling."""
-        with pytest.raises(ValueError, match="empty DensityMap"):
+        with pytest.raises(ValidationException) as exc_info:
             empty_density_map.sample()
+        assert "empty density map" in str(exc_info.value)
 
     def test_single_primitive_works(self, simple_density_map):
         """Map with single primitive should work."""
@@ -170,14 +172,16 @@ class TestDensityMapFromConfig:
                 {'type': 'unknown_type', 'weight': 1.0}
             ]
         }
-        with pytest.raises(ValueError, match="Unknown primitive type"):
+        with pytest.raises(ValidationException) as exc_info:
             DensityMap.from_config(config, radius=1000)
+        assert "Unknown primitive type" in str(exc_info.value)
 
     def test_from_config_empty_primitives_raises(self):
         """from_config should raise for empty primitives list."""
         config = {'primitives': []}
-        with pytest.raises(ValueError, match="must contain"):
+        with pytest.raises(ValidationException) as exc_info:
             DensityMap.from_config(config, radius=1000)
+        assert "must contain" in str(exc_info.value)
 
     def test_from_config_missing_type_raises(self):
         """from_config should raise for primitive without type."""
@@ -186,8 +190,9 @@ class TestDensityMapFromConfig:
                 {'sigma': 100, 'weight': 1.0}  # Missing 'type'
             ]
         }
-        with pytest.raises(ValueError, match="must have a 'type'"):
+        with pytest.raises(ValidationException) as exc_info:
             DensityMap.from_config(config, radius=1000)
+        assert "must have a 'type'" in str(exc_info.value)
 
 
 class TestDensityMapCoverage:

@@ -116,6 +116,7 @@ class TestWeaponAbilityEffectSummary:
         class MockComponent:
             def __init__(self):
                 self.stats = {'damage_mult': 2.0}
+                self.ability_stats = {}
                 self.data = {}
 
         component = MockComponent()
@@ -141,6 +142,7 @@ class TestWeaponAbilityEffectSummary:
         class MockComponent:
             def __init__(self):
                 self.stats = {'damage_mult': 1.0}  # Default, should not appear
+                self.ability_stats = {}
                 self.data = {}
 
         component = MockComponent()
@@ -164,6 +166,7 @@ class TestWeaponAbilityEffectSummary:
                     'range_mult': 1.5,
                     'reload_mult': 0.5,
                 }
+                self.ability_stats = {}
                 self.data = {}
 
         component = MockComponent()
@@ -194,6 +197,7 @@ class TestWeaponAbilityRecalculateWithBindings:
         class MockComponent:
             def __init__(self):
                 self.stats = {'damage_mult': 3.0}
+                self.ability_stats = {}
                 self.data = {}
 
         component = MockComponent()
@@ -210,6 +214,7 @@ class TestWeaponAbilityRecalculateWithBindings:
         class MockComponent:
             def __init__(self):
                 self.stats = {'range_mult': 2.0}
+                self.ability_stats = {}
                 self.data = {}
 
         component = MockComponent()
@@ -225,6 +230,7 @@ class TestWeaponAbilityRecalculateWithBindings:
         class MockComponent:
             def __init__(self):
                 self.stats = {'reload_mult': 0.5}
+                self.ability_stats = {}
                 self.data = {}
 
         component = MockComponent()
@@ -240,6 +246,7 @@ class TestWeaponAbilityRecalculateWithBindings:
         class MockComponent:
             def __init__(self):
                 self.stats = {'arc_set': 90}
+                self.ability_stats = {}
                 self.data = {}
 
         component = MockComponent()
@@ -256,6 +263,7 @@ class TestWeaponAbilityRecalculateWithBindings:
         class MockComponent:
             def __init__(self):
                 self.stats = {'arc_add': 15}  # No arc_set
+                self.ability_stats = {}
                 self.data = {}
 
         component = MockComponent()
@@ -271,6 +279,7 @@ class TestWeaponAbilityRecalculateWithBindings:
         class MockComponent:
             def __init__(self):
                 self.stats = {'arc_set': 90, 'arc_add': 15}
+                self.ability_stats = {}
                 self.data = {}
 
         component = MockComponent()

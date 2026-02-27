@@ -1,42 +1,40 @@
 """
-Registry Access Patterns
-========================
+Registry Access
+===============
 
-TIER 1 - Domain Services (Computed Access):
-    from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
-    stats = ShipStatsCalculator.calculate_ship_stats(design)
+Dependency Injection [RECOMMENDED]:
+    from game.core.registry import get_default_registry_provider
 
-TIER 2 - Dependency Injection (PROJ-27) [RECOMMENDED]:
-    from game.core.registry import get_default_registry_provider, TestRegistryProvider
-
-    # Production code - uses the shared singleton-backed provider
+    # Production - uses the shared singleton-backed provider
     provider = get_default_registry_provider()
     components = provider.get_components()
 
-    # Test code - uses isolated data
+    # Or receive via constructor (best):
+    def __init__(self, registry: IRegistryProvider):
+        self._registry = registry
+
+    # Test - uses isolated data
+    from game.core.registry import TestRegistryProvider
     provider = TestRegistryProvider(
-        components={"test_laser": {"id": "test_laser"}},
-        modifiers={}
+        components={"test_laser": {...}},
+        modifiers={},
+        resources={}
     )
-    service.calculate_stats(design, registry=provider)
 
-TIER 3 - Direct Singleton Access (for internal/low-level code):
-    # Use sparingly - prefer DI for better testability
-    RegistryManager.instance().components
-
+Lifecycle (composition roots only):
+    from game.core.registry import freeze_registry, clear_registry
+    freeze_registry()   # After initialization
+    clear_registry()    # Test cleanup
 """
 
 __all__ = [
     # Core containers
     'GameRegistries',
-    'RegistryManager',
     # DI providers (PROJ-27)
     'DefaultRegistryProvider',
     'TestRegistryProvider',
     'get_default_registry_provider',
     # Lifecycle functions
-    'get_default_registries',
-    'set_default_registries',
     'freeze_registry',
     'clear_registry',
     'set_validator',
@@ -77,48 +75,6 @@ class GameRegistries:
     resources: Dict[str, Any]
 
 
-# Module-level default registries (set by composition root at startup)
-_default_registries: Optional[GameRegistries] = None
-
-
-def set_default_registries(registries: GameRegistries) -> None:
-    """
-    Set the default GameRegistries instance.
-
-    Called by composition roots (app.py at startup, conftest.py in tests)
-    to make registries available via get_default_registries().
-
-    Args:
-        registries: The GameRegistries instance to use as default
-    """
-    global _default_registries
-    _default_registries = registries
-
-
-def get_default_registries() -> GameRegistries:
-    """
-    Get the default GameRegistries instance.
-
-    Service locator for callers that cannot receive registries via
-    constructor injection (e.g., dataclass methods, lazy init).
-    Prefer constructor injection where possible.
-
-    Set by: app.py (production), conftest.py (tests)
-
-    Returns:
-        The default GameRegistries instance
-
-    Raises:
-        StateException: If set_default_registries() has not been called
-    """
-    if _default_registries is None:
-        raise StateException(
-            "Default registries not set. Call set_default_registries() first.",
-            code=ErrorCode.NOT_INITIALIZED.value,
-            context={"operation": "get_default_registries"}
-        )
-    return _default_registries
-
 class RegistryManager(metaclass=SingletonMeta):
     """
     Central singleton for managing global game state registries.
@@ -132,13 +88,13 @@ class RegistryManager(metaclass=SingletonMeta):
         - For cross-registry transactions, external synchronization is required
 
     Usage:
-        # Preferred: Use GameRegistries via DI (PROJ-38)
-        from game.core.registry import get_default_registries
+        # Preferred: Use IRegistryProvider via DI (PROJ-27)
+        from game.core.registry import get_default_registry_provider
 
-        registries = get_default_registries()
-        components = registries.components
-        modifiers = registries.modifiers
-        classes = registries.vehicle_classes
+        provider = get_default_registry_provider()
+        components = provider.get_components()
+        modifiers = provider.get_modifiers()
+        classes = provider.get_vehicle_classes()
 
         # Alternative: Direct access (when needed for special operations)
         mgr = RegistryManager.instance()
@@ -286,6 +242,20 @@ def set_validator(validator) -> None:
     """
     RegistryManager.instance().set_validator(validator)
 
+
+def get_validator():
+    """
+    Get the ship design validator.
+
+    PROJ-195: Module-level wrapper for singleton access.
+    Encapsulates the singleton reference so non-root code doesn't need direct access.
+
+    Returns:
+        ShipDesignValidator instance or None if not set
+    """
+    return RegistryManager.instance().get_validator()
+
+
 def clear_registry() -> None:
     """
     Clear all registries to empty state.
@@ -328,6 +298,10 @@ class DefaultRegistryProvider:
         """Get the vehicle classes dictionary from singleton."""
         return RegistryManager.instance().vehicle_classes
 
+    def get_resources(self) -> Dict[str, Any]:
+        """Get the resources registry dictionary from singleton."""
+        return RegistryManager.instance().resources
+
 
 class TestRegistryProvider:
     """
@@ -349,7 +323,8 @@ class TestRegistryProvider:
         self,
         components: Optional[Dict[str, Any]] = None,
         modifiers: Optional[Dict[str, Any]] = None,
-        vehicle_classes: Optional[Dict[str, Any]] = None
+        vehicle_classes: Optional[Dict[str, Any]] = None,
+        resources: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize with optional custom data.
@@ -358,10 +333,12 @@ class TestRegistryProvider:
             components: Custom component definitions (default: empty dict)
             modifiers: Custom modifier definitions (default: empty dict)
             vehicle_classes: Custom vehicle class definitions (default: empty dict)
+            resources: Custom resource definitions (default: empty dict)
         """
         self._components = components if components is not None else {}
         self._modifiers = modifiers if modifiers is not None else {}
         self._vehicle_classes = vehicle_classes if vehicle_classes is not None else {}
+        self._resources = resources if resources is not None else {}
 
     def get_components(self) -> Dict[str, Any]:
         """Get the isolated component registry dictionary."""
@@ -374,6 +351,10 @@ class TestRegistryProvider:
     def get_vehicle_classes(self) -> Dict[str, Any]:
         """Get the isolated vehicle classes dictionary."""
         return self._vehicle_classes
+
+    def get_resources(self) -> Dict[str, Any]:
+        """Get the isolated resources registry dictionary."""
+        return self._resources
 
 
 # Singleton instance of DefaultRegistryProvider

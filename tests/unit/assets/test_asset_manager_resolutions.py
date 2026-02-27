@@ -13,6 +13,7 @@ from unittest.mock import patch, MagicMock
 
 from game.assets.asset_manager import AssetManager
 from game.core.paths import Paths
+from game.core.exceptions import ResourceException
 
 
 @pytest.fixture
@@ -55,8 +56,8 @@ class TestGetPlanetFolderForSize:
         assert result == Paths.PLANETS_V3_2048_DIR
 
     def test_invalid_size_raises_error(self, asset_manager):
-        """Test that invalid size raises ValueError."""
-        with pytest.raises(ValueError, match="Invalid planet image size: 999"):
+        """Test that invalid size raises ResourceException."""
+        with pytest.raises(ResourceException, match="Invalid planet image size"):
             asset_manager._get_planet_folder_for_size(999)
 
 

@@ -5,7 +5,8 @@ Provides ship display panels: simple, tabbed, and component panels.
 
 import pygame
 
-from game.ui.colors import FONT_MAIN
+from game.ui.fonts import get_font
+from game.ui.screens.test_lab import theme
 from .json_viewer import ScrollableJSONViewer
 from .component_dropdown import ComponentDropdown
 
@@ -71,17 +72,17 @@ class TabbedShipPanel:
         self.selected_tab = 0
 
         # Fonts
-        self.tab_font = pygame.font.SysFont(FONT_MAIN, 12)
-        self.header_font = pygame.font.SysFont(FONT_MAIN, 16)
+        self.tab_font = get_font(12)
+        self.header_font = get_font(16)
 
         # Colors
-        self.bg_color = (30, 30, 35)
-        self.border_color = (80, 80, 90)
-        self.header_color = (150, 200, 255)
-        self.tab_color = (40, 40, 50)
-        self.tab_selected_color = (60, 80, 120)
-        self.tab_hover_color = (50, 50, 60)
-        self.text_color = (220, 220, 220)
+        self.bg_color = theme.BG_CONTENT
+        self.border_color = theme.BORDER
+        self.header_color = theme.TEXT_HEADER
+        self.tab_color = theme.TAB_NORMAL
+        self.tab_selected_color = theme.TAB_SELECTED
+        self.tab_hover_color = theme.TAB_HOVER
+        self.text_color = theme.TEXT
 
         # Tab dimensions
         self.header_height = 30

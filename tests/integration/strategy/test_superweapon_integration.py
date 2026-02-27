@@ -530,8 +530,10 @@ class TestSuperweaponOrderSerialization:
 
     def test_implode_planet_order_round_trip(self):
         """Test Fleet with IMPLODE_PLANET order: to_dict -> from_dict -> order preserved."""
-        # Create a mock planet with ID
-        planet = MagicMock()
+        from game.strategy.data.planet import Planet
+
+        # Create a mock planet with ID (use spec=Planet for isinstance check)
+        planet = MagicMock(spec=Planet)
         planet.id = 42
 
         # Create fleet with order

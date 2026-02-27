@@ -175,7 +175,8 @@ class TestScreenshotInputHandler:
 
     def test_input_handler_has_screenshot_methods(self):
         """
-        The strategy input handler should have screenshot methods wired to F11/F12.
+        The strategy input handler should have screenshot methods via _ui_router.
+        PROJ-173: Methods moved to UIActionRouter.
         """
         from game.ui.screens.strategy_input_handler import StrategyInputHandler
 
@@ -188,11 +189,11 @@ class TestScreenshotInputHandler:
 
         handler = StrategyInputHandler(mock_scene)
 
-        # Verify screenshot methods exist
-        assert hasattr(handler, '_take_screenshot_full')
-        assert hasattr(handler, '_take_screenshot_viewport')
+        # Verify screenshot methods exist on the UI router
+        assert hasattr(handler._ui_router, 'take_screenshot_full')
+        assert hasattr(handler._ui_router, 'take_screenshot_viewport')
 
-    @patch('game.ui.screens.strategy_input_handler.ScreenshotManager')
+    @patch('game.ui.screens.strategy_ui_action_router.ScreenshotManager')
     def test_f12_triggers_full_screenshot(self, mock_sm_class):
         """F12 should trigger full screenshot capture."""
         from game.ui.screens.strategy_input_handler import StrategyInputHandler
@@ -207,14 +208,13 @@ class TestScreenshotInputHandler:
         mock_scene.screen_height = 720
 
         handler = StrategyInputHandler(mock_scene)
-        handler._show_screenshot_toast = MagicMock()
-        handler._take_screenshot_full()
+        handler._ui_router.take_screenshot_full()
 
         mock_sm.capture_strategy_layer.assert_called_once()
         args, kwargs = mock_sm.capture_strategy_layer.call_args
         assert kwargs.get('include_ui') is True
 
-    @patch('game.ui.screens.strategy_input_handler.ScreenshotManager')
+    @patch('game.ui.screens.strategy_ui_action_router.ScreenshotManager')
     def test_f11_triggers_viewport_screenshot(self, mock_sm_class):
         """F11 should trigger viewport-only screenshot capture."""
         from game.ui.screens.strategy_input_handler import StrategyInputHandler
@@ -229,8 +229,7 @@ class TestScreenshotInputHandler:
         mock_scene.screen_height = 720
 
         handler = StrategyInputHandler(mock_scene)
-        handler._show_screenshot_toast = MagicMock()
-        handler._take_screenshot_viewport()
+        handler._ui_router.take_screenshot_viewport()
 
         mock_sm.capture_strategy_layer.assert_called_once()
         args, kwargs = mock_sm.capture_strategy_layer.call_args
@@ -319,15 +318,20 @@ class TestBuildQueueScreenshotSupport:
 
         mock_design_loader = MagicMock()
 
-        with patch('game.ui.screens.build_queue_screen.PlanetReportPanel'), \
-             patch('game.ui.screens.build_queue_screen.DesignReportPanel'), \
-             patch('game.ui.screens.build_queue_screen.ui.UIPanel'), \
-             patch('game.ui.screens.build_queue_screen.ui.UIButton'), \
-             patch('game.ui.screens.build_queue_screen.ui.UITextBox'), \
-             patch('game.ui.screens.build_queue_screen.ui.UILabel'), \
-             patch('game.ui.screens.build_queue_screen.ui.UIImage'), \
-             patch('game.ui.screens.build_queue_screen.ui.UIScrollingContainer'), \
-             patch('game.ui.screens.build_queue_screen.pygame_gui.windows.UIMessageWindow'):
+        # PROJ-172: Patches moved to panel factory module
+        with patch('game.ui.screens.build_queue_panel_factory.PlanetReportPanel'), \
+             patch('game.ui.screens.build_queue_panel_factory.DesignReportPanel'), \
+             patch('game.ui.screens.build_queue_panel_factory.ui.UIPanel'), \
+             patch('game.ui.screens.build_queue_panel_factory.ui.UIButton'), \
+             patch('game.ui.screens.build_queue_panel_factory.ui.UITextBox'), \
+             patch('game.ui.screens.build_queue_panel_factory.ui.UILabel'), \
+             patch('game.ui.screens.build_queue_panel_factory.ui.UIImage'), \
+             patch('game.ui.screens.build_queue_panel_factory.ui.UIScrollingContainer'), \
+             patch('game.ui.screens.build_queue_renderer.ui.UIPanel'), \
+             patch('game.ui.screens.build_queue_renderer.ui.UIButton'), \
+             patch('game.ui.screens.build_queue_renderer.ui.UITextBox'), \
+             patch('game.ui.screens.build_queue_renderer.ui.UILabel'), \
+             patch('game.ui.screens.build_queue_renderer.ui.UIImage'):
 
             # Create screen instance with injected dependencies
             screen = BuildQueueScreen(

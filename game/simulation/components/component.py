@@ -58,14 +58,17 @@ Key Classes:
     ApplicationModifier: Applied modifier with value
 """
 import json
-import math
+import logging
 import threading
 from game.simulation.formula_system import safe_evaluate_math_formula
 from typing import Optional, TYPE_CHECKING
 from game.core.registry import get_default_registry_provider
 from game.core.json_utils import load_json_required
-from game.core.logger import log_warning, log_error
 from game.core.constants import CombatConstants
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
+
+logger = logging.getLogger(__name__)
 from .component_constants import ComponentStatus, Modifier, ApplicationModifier
 from .ability_manager import AbilityManager
 from .modifier_manager import ModifierManager
@@ -88,10 +91,14 @@ class Component:
             registries: GameRegistries for DI (required).
 
         Raises:
-            TypeError: If registries is None
+            ValidationException: If registries is None
         """
         if registries is None:
-            raise TypeError("registries is required for Component initialization")
+            raise ValidationException(
+                "registries is required for Component initialization",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "Component", "parameter": "registries"}
+            )
         import copy
         # PERF-ANALYSIS: deepcopy required - data contains nested mutable structures
         # (abilities dict with lists and sub-dicts). Shallow copy would cause shared
@@ -170,7 +177,7 @@ class Component:
                     mod_def = mods[mod_id]
                     self.modifiers.append(mod_def.create_modifier(val))
                 else:
-                    log_warning(f"Component '{self.id}': Modifier '{mod_id}' not found in registry, skipping")
+                    logger.warning(f"Component '{self.id}': Modifier '{mod_id}' not found in registry, skipping")
                     
         # Parse Formulas
         self.formulas = {}
@@ -197,7 +204,7 @@ class Component:
         PERF: Uses indexed lookup when available, falls back to AbilityManager.
         """
         # Fast path: use pre-built index (includes MRO for polymorphism)
-        if hasattr(self, '_ability_index') and ability_name in self._ability_index:
+        if ability_name in self._ability_index:
             return list(self._ability_index[ability_name])  # Return copy
 
         # Fallback: delegate to AbilityManager (for edge cases)
@@ -206,7 +213,7 @@ class Component:
     def get_ability(self, ability_name: str):
         """Get first ability of type. Uses indexed lookup when available."""
         # Fast path: use pre-built index
-        if hasattr(self, '_ability_index') and ability_name in self._ability_index:
+        if ability_name in self._ability_index:
             abilities = self._ability_index[ability_name]
             return abilities[0] if abilities else None
 
@@ -216,7 +223,7 @@ class Component:
     def has_ability(self, ability_name: str):
         """Check if component has ability. Uses indexed lookup when available."""
         # Fast path: use pre-built index
-        if hasattr(self, '_ability_index') and ability_name in self._ability_index:
+        if ability_name in self._ability_index:
             return len(self._ability_index[ability_name]) > 0
 
         # Fallback: delegate to AbilityManager
@@ -318,7 +325,8 @@ class Component:
         for ability in self.ability_instances:
             if not ability.update():
                 # Check if this is a constant resource consumption ability
-                # Use duck typing to avoid importing from systems layer
+                # ResourceConsumption has trigger attr; other abilities don't
+                # Using safe access since trigger is not on IAbility protocol
                 trigger = getattr(ability, 'trigger', None)
                 if trigger == 'constant':
                     all_satisfied = False
@@ -498,7 +506,7 @@ def load_components_data(
         if os.path.exists(abs_path):
             file_path = abs_path
         else:
-            log_error(f"components file not found at {abs_path}")
+            logger.error(f"components file not found at {abs_path}")
             return {}
 
     # Build registries from provider if not provided
@@ -522,28 +530,28 @@ def load_components_data(
                 # PROJ-50: Pass registries to Component
                 obj = Component(comp_def, registries=registries)
                 result[comp_id] = obj
-            except (KeyError, TypeError, ValueError) as e:
+            except (KeyError, TypeError, ValueError, ValidationException) as e:
                 # Schema/data issues - log and continue (collect errors)
-                log_error(f"Component '{comp_id}': invalid data - {e}")
+                logger.error(f"Component '{comp_id}': invalid data - {e}")
                 errors.append(comp_id)
             except (AttributeError, ImportError) as e:
                 # Unexpected error - log with full context
-                log_error(f"Component '{comp_id}': unexpected error - {type(e).__name__}: {e}")
+                logger.error(f"Component '{comp_id}': unexpected error - {type(e).__name__}: {e}")
                 errors.append(comp_id)
 
         if errors:
-            log_warning(f"Loaded {len(result)} components, {len(errors)} failed: {errors[:5]}{'...' if len(errors) > 5 else ''}")
+            logger.warning(f"Loaded {len(result)} components, {len(errors)} failed: {errors[:5]}{'...' if len(errors) > 5 else ''}")
 
         return result
 
     except KeyError as e:
-        log_error(f"Missing required key in components JSON: {e}")
+        logger.error(f"Missing required key in components JSON: {e}")
         return {}
     except json.JSONDecodeError as e:
-        log_error(f"Invalid JSON in components file: {e}")
+        logger.error(f"Invalid JSON in components file: {e}")
         return {}
     except (FileNotFoundError, OSError, KeyError, TypeError, ValueError) as e:
-        log_error(f"loading/parsing components json: {type(e).__name__}: {e}")
+        logger.error(f"loading/parsing components json: {type(e).__name__}: {e}")
         return {}
 
 
@@ -610,7 +618,7 @@ def load_modifiers_data(file_path: str = "data/modifiers.json") -> dict:
         if os.path.exists(abs_path):
             file_path = abs_path
         else:
-            log_error(f"modifiers file not found at {abs_path}")
+            logger.error(f"modifiers file not found at {abs_path}")
             return {}
 
     try:
@@ -622,27 +630,27 @@ def load_modifiers_data(file_path: str = "data/modifiers.json") -> dict:
             mod_id = mod_def.get('id', 'unknown')
             # Validate modifier schema (graceful degradation - warn but continue)
             if not validate_modifier_v2(mod_def):
-                log_warning(f"Modifier '{mod_id}' failed schema validation, loading anyway")
+                logger.warning(f"Modifier '{mod_id}' failed schema validation, loading anyway")
             try:
                 mod = Modifier(mod_def)
                 result[mod.id] = copy.deepcopy(mod)
             except (KeyError, TypeError, ValueError) as e:
-                log_error(f"Modifier '{mod_id}': invalid data - {e}")
+                logger.error(f"Modifier '{mod_id}': invalid data - {e}")
                 errors.append(mod_id)
 
         if errors:
-            log_warning(f"Loaded {len(result)} modifiers, {len(errors)} failed: {errors[:5]}{'...' if len(errors) > 5 else ''}")
+            logger.warning(f"Loaded {len(result)} modifiers, {len(errors)} failed: {errors[:5]}{'...' if len(errors) > 5 else ''}")
 
         return result
 
     except KeyError as e:
-        log_error(f"Missing required key in modifiers JSON: {e}")
+        logger.error(f"Missing required key in modifiers JSON: {e}")
         return {}
     except json.JSONDecodeError as e:
-        log_error(f"Invalid JSON in modifiers file: {e}")
+        logger.error(f"Invalid JSON in modifiers file: {e}")
         return {}
     except (FileNotFoundError, OSError, KeyError, TypeError, ValueError) as e:
-        log_error(f"loading modifiers: {type(e).__name__}: {e}")
+        logger.error(f"loading modifiers: {type(e).__name__}: {e}")
         return {}
 
 
@@ -689,10 +697,14 @@ def create_component(component_id, *, registries: 'GameRegistries'):
         Component clone or None if not found
 
     Raises:
-        TypeError: If registries is None
+        ValidationException: If registries is None
     """
     if registries is None:
-        raise TypeError("registries is required for create_component")
+        raise ValidationException(
+            "registries is required for create_component",
+            code=ErrorCode.MISSING_DEPENDENCY.value,
+            context={"function": "create_component", "parameter": "registries"}
+        )
     comps = registries.components
 
     if component_id in comps:
@@ -700,7 +712,7 @@ def create_component(component_id, *, registries: 'GameRegistries'):
         # PROJ-50: Ensure clone has correct registries
         clone._registries = registries
         return clone
-    log_error(f"Component ID {component_id} not found in registry.")
+    logger.error(f"Component ID {component_id} not found in registry.")
     return None
 
 def get_all_components(*, registries: 'GameRegistries'):
@@ -715,9 +727,13 @@ def get_all_components(*, registries: 'GameRegistries'):
         List of all Component instances in the registry.
 
     Raises:
-        TypeError: If registries is None
+        ValidationException: If registries is None
     """
     if registries is None:
-        raise TypeError("registries is required for get_all_components")
+        raise ValidationException(
+            "registries is required for get_all_components",
+            code=ErrorCode.MISSING_DEPENDENCY.value,
+            context={"function": "get_all_components", "parameter": "registries"}
+        )
     return list(registries.components.values())
 

@@ -6,6 +6,9 @@ import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
+
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
 
@@ -79,7 +82,7 @@ class PlayerConfig:
             'color': list(self.color),  # Tuple to list for JSON
             'is_human': self.is_human
         }
-        # Only include race fields if set (backwards compatibility)
+        # Only include optional race fields when set (sparse serialization)
         if self.race_id:
             data['race_id'] = self.race_id
         if self.flag_id:
@@ -156,13 +159,22 @@ class GameConfig:
     def __post_init__(self):
         """Validate configuration after initialization."""
         if len(self.players) < 1:
-            raise ValueError("GameConfig requires at least 1 player")
+            raise ValidationException(
+                "Player count below minimum",
+                code=ErrorCode.OUT_OF_RANGE.value,
+                context={"field": "player_count", "value": len(self.players), "minimum": 1}
+            )
         if len(self.players) > 4:
-            raise ValueError("GameConfig supports at most 4 players")
+            raise ValidationException(
+                "Player count above maximum",
+                code=ErrorCode.OUT_OF_RANGE.value,
+                context={"field": "player_count", "value": len(self.players), "maximum": 4}
+            )
         if self.galaxy_type not in VALID_GALAXY_TYPES:
-            raise ValueError(
-                f"Invalid galaxy_type '{self.galaxy_type}'. "
-                f"Valid types: {sorted(VALID_GALAXY_TYPES)}"
+            raise ValidationException(
+                f"Invalid galaxy type '{self.galaxy_type}'",
+                code=ErrorCode.VALIDATION_FAILED.value,
+                context={"galaxy_type": self.galaxy_type, "valid_types": sorted(VALID_GALAXY_TYPES)}
             )
 
     def get_player_theme_path(self, player_index: int) -> Optional[str]:

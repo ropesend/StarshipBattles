@@ -6,7 +6,6 @@ import pytest
 import pygame
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import load_components, create_component
-from game.core.registry import RegistryManager
 from game.ai.strategy_manager import StrategyManager
 from game.engine.spatial import SpatialGrid
 from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
@@ -34,7 +33,6 @@ def setup_game_data():
 
     yield
 
-    RegistryManager.instance().clear()
     StrategyManager.instance().clear()
 
 

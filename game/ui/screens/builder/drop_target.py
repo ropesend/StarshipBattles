@@ -9,3 +9,7 @@ class DropTarget(Protocol):
     def accept_drop(self, pos, component, count=1) -> bool:
         """Handle the drop of a component. Returns True if successful."""
         ...
+
+    def suppress_toggle(self) -> None:
+        """Suppress toggle events for a short duration after drop."""
+        ...

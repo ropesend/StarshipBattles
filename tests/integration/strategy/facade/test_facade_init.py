@@ -33,7 +33,7 @@ class TestCommandDelegation:
         from game.core.validation import ValidationResult
 
         mock_session = Mock()
-        mock_result = ValidationResult(is_valid=True)
+        mock_result = ValidationResult.success()
         mock_session.handle_command.return_value = mock_result
 
         facade = StrategySessionFacade(mock_session)

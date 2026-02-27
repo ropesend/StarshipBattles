@@ -44,8 +44,8 @@ Physics Constants:
     These control how ship stats convert to gameplay behavior.
 
 Example:
-    from game.core.registry import get_default_registries
-    calculator = ShipStatsCalculator(get_default_registries().vehicle_classes)
+    from game.core.registry import get_default_registry_provider
+    calculator = ShipStatsCalculator(get_default_registry_provider().get_vehicle_classes())
     calculator.calculate(ship)
     # ship.max_speed, ship.turn_speed, etc. are now updated
 """
@@ -56,6 +56,16 @@ from game.simulation.entities.ability_aggregator import calculate_ability_totals
 from game.simulation.entities.combat_endurance import calculate_combat_endurance
 from game.core.config import PhysicsConfig
 from game.core.constants import CombatConstants
+from game.simulation.interfaces import (
+    IResourceStorageAbility,
+    IResourceGenerationAbility,
+    IResourceConsumptionAbility,
+    IWarpJumpAbility,
+    is_resource_storage,
+    is_resource_generation,
+    is_resource_consumption,
+    is_warp_jump,
+)
 import math
 
 class ShipStatsCalculator:
@@ -278,27 +288,21 @@ class ShipStatsCalculator:
 
     def _aggregate_resource_abilities(self, comp, acc) -> None:
         """Aggregate ResourceStorage and ResourceGeneration abilities."""
-        # Guard for non-Component objects (e.g., mocks in tests)
-        abilities = getattr(comp, 'ability_instances', [])
-        for ability in abilities:
-                ab_cls = ability.__class__.__name__
-                if ab_cls == 'ResourceStorage':
-                    res_type = getattr(ability, 'resource_type', '')
-                    max_amt = getattr(ability, 'max_amount', 0.0)
-                    if res_type == ResourceType.FUEL:
-                        acc['max_fuel'] += max_amt
-                    elif res_type == ResourceType.AMMO:
-                        acc['max_ammo'] += max_amt
-                    elif res_type == ResourceType.ENERGY:
-                        acc['max_energy'] += max_amt
+        for ability in comp.ability_instances:
+            # Use protocol checks instead of class name introspection
+            if is_resource_storage(ability):
+                if ability.resource_type == ResourceType.FUEL:
+                    acc['max_fuel'] += ability.max_amount
+                elif ability.resource_type == ResourceType.AMMO:
+                    acc['max_ammo'] += ability.max_amount
+                elif ability.resource_type == ResourceType.ENERGY:
+                    acc['max_energy'] += ability.max_amount
 
-                elif ab_cls == 'ResourceGeneration':
-                    res_type = getattr(ability, 'resource_type', '')
-                    rate = getattr(ability, 'rate', 0.0)
-                    if res_type == ResourceType.ENERGY:
-                        acc['energy_gen'] += rate
-                    elif res_type == ResourceType.AMMO:
-                        acc['ammo_gen'] += rate
+            elif is_resource_generation(ability):
+                if ability.resource_type == ResourceType.ENERGY:
+                    acc['energy_gen'] += ability.rate
+                elif ability.resource_type == ResourceType.AMMO:
+                    acc['ammo_gen'] += ability.rate
 
     def _aggregate_propulsion_abilities(self, comp, acc) -> None:
         """Aggregate CombatPropulsion, StrategicMovement, WarpJump, ManeuveringThruster."""
@@ -312,11 +316,12 @@ class ShipStatsCalculator:
 
         # WarpJump capability - use the largest warp drive
         for ab in comp.get_abilities('WarpJump'):
-            tonnage = getattr(ab, 'max_tonnage', 0)
-            if tonnage > acc['warp_max_tonnage']:
-                acc['warp_max_tonnage'] = tonnage
-            # Accumulate energy costs from all warp drives
-            acc['warp_energy_cost'] += getattr(ab, 'energy_cost', 0)
+            # WarpJump abilities implement IWarpJumpAbility protocol
+            if is_warp_jump(ab):
+                if ab.max_tonnage > acc['warp_max_tonnage']:
+                    acc['warp_max_tonnage'] = ab.max_tonnage
+                # Accumulate energy costs from all warp drives
+                acc['warp_energy_cost'] += ab.energy_cost
 
         # Turn speed from ManeuveringThruster abilities
         for ab in comp.get_abilities('ManeuveringThruster'):
@@ -341,8 +346,8 @@ class ShipStatsCalculator:
         # Shield energy cost from ResourceConsumption(energy) abilities on shield regen components
         if comp.has_ability('ShieldRegeneration'):
             for ab in comp.ability_instances:
-                if ab.__class__.__name__ == 'ResourceConsumption' and getattr(ab, 'resource_type', '') == ResourceType.ENERGY:
-                    acc['shield_cost'] += getattr(ab, 'amount', 0.0)
+                if is_resource_consumption(ab) and ab.resource_type == ResourceType.ENERGY:
+                    acc['shield_cost'] += ab.amount
                     break
 
     def _aggregate_hangar_abilities(self, ship, comp) -> None:
@@ -493,17 +498,18 @@ class ShipStatsCalculator:
 
     def _initialize_resources(self, ship) -> None:
         # Resource Initialization (Auto-fill on first load only, or when capacity increases)
-        prev_max_fuel = getattr(ship, '_prev_max_fuel', 0)
-        prev_max_ammo = getattr(ship, '_prev_max_ammo', 0)
-        prev_max_energy = getattr(ship, '_prev_max_energy', 0)
-        prev_max_shields = getattr(ship, '_prev_max_shields', 0)
-        
+        # PROJ-190: Direct attribute access - fields initialized in Ship.__init__
+        prev_max_fuel = ship._prev_max_fuel
+        prev_max_ammo = ship._prev_max_ammo
+        prev_max_energy = ship._prev_max_energy
+        prev_max_shields = ship._prev_max_shields
+
         # Get current max values directly from registry
         curr_max_fuel = ship.resources.get_max_value(ResourceType.FUEL)
         curr_max_ammo = ship.resources.get_max_value(ResourceType.AMMO)
         curr_max_energy = ship.resources.get_max_value(ResourceType.ENERGY)
 
-        if not getattr(ship, '_resources_initialized', False):
+        if not ship._resources_initialized:
             # First init - fill to max
             if curr_max_fuel > 0:
                 ship.resources.set_value(ResourceType.FUEL, curr_max_fuel)

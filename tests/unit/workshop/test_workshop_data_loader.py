@@ -11,7 +11,6 @@ from unittest.mock import patch, MagicMock
 
 import pygame
 
-from game.core.registry import RegistryManager
 from game.core.json_utils import save_json
 
 
@@ -36,16 +35,15 @@ def temp_data_dirs():
 
 
 @pytest.fixture
-def data_loader_setup(temp_data_dirs):
+def data_loader_setup(temp_data_dirs, fresh_registries):
     """Set up pygame and registry for each test."""
     pygame.init()
-    RegistryManager.instance().clear()
 
     temp_dir, custom_dir, default_dir = temp_data_dirs
 
-    yield custom_dir, default_dir
+    # PROJ-195: Yield registries for DI instead of using singleton
+    yield custom_dir, default_dir, fresh_registries
 
-    RegistryManager.instance().clear()
     # NOTE: Do not call pygame.quit() here - the root conftest manages
     # pygame lifecycle at session scope. Calling quit() here would break
     # subsequent tests with "No video mode set" errors.
@@ -56,12 +54,12 @@ class TestWorkshopDataLoader:
 
     def test_find_file_direct_match(self, data_loader_setup):
         """find_file returns direct path when file exists in custom directory."""
-        custom_dir, default_dir = data_loader_setup
+        custom_dir, default_dir, registries = data_loader_setup
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 
-        # PROJ-50: Pass registries (required)
+        # PROJ-195: Use DI-injected registries instead of singleton
         loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir,
-                                   registries=RegistryManager.instance())
+                                   registries=registries)
         path, is_fallback = loader.find_file("components.json")
 
         assert path is not None
@@ -71,12 +69,12 @@ class TestWorkshopDataLoader:
 
     def test_find_file_test_prefix_fallback(self, data_loader_setup):
         """find_file tries test_ prefixed filenames when direct match fails."""
-        custom_dir, default_dir = data_loader_setup
+        custom_dir, default_dir, registries = data_loader_setup
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 
-        # PROJ-50: Pass registries (required)
+        # PROJ-195: Use DI-injected registries instead of singleton
         loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir,
-                                   registries=RegistryManager.instance())
+                                   registries=registries)
         # modifiers.json doesn't exist directly, but test_modifiers.json does
         path, is_fallback = loader.find_file("modifiers.json")
 
@@ -86,12 +84,12 @@ class TestWorkshopDataLoader:
 
     def test_find_file_default_fallback(self, data_loader_setup):
         """find_file falls back to default data directory when custom fails."""
-        custom_dir, default_dir = data_loader_setup
+        custom_dir, default_dir, registries = data_loader_setup
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 
-        # PROJ-50: Pass registries (required)
+        # PROJ-195: Use DI-injected registries instead of singleton
         loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir,
-                                   registries=RegistryManager.instance())
+                                   registries=registries)
         # vehicleclasses.json only exists in default_dir
         path, is_fallback = loader.find_file("vehicleclasses.json")
 
@@ -101,12 +99,12 @@ class TestWorkshopDataLoader:
 
     def test_find_file_not_found(self, data_loader_setup):
         """find_file returns None when no file found anywhere."""
-        custom_dir, default_dir = data_loader_setup
+        custom_dir, default_dir, registries = data_loader_setup
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 
-        # PROJ-50: Pass registries (required)
+        # PROJ-195: Use DI-injected registries instead of singleton
         loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir,
-                                   registries=RegistryManager.instance())
+                                   registries=registries)
         path, is_fallback = loader.find_file("nonexistent_file.json", allow_default=True)
 
         assert path is None
@@ -114,12 +112,12 @@ class TestWorkshopDataLoader:
 
     def test_find_file_multiple_names(self, data_loader_setup):
         """find_file accepts list of alternative filenames."""
-        custom_dir, default_dir = data_loader_setup
+        custom_dir, default_dir, registries = data_loader_setup
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 
-        # PROJ-50: Pass registries (required)
+        # PROJ-195: Use DI-injected registries instead of singleton
         loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir,
-                                   registries=RegistryManager.instance())
+                                   registries=registries)
         # Try multiple names, first should match
         path, _ = loader.find_file(["components.json", "test_components.json"])
 
@@ -127,31 +125,35 @@ class TestWorkshopDataLoader:
         assert path.endswith("components.json")
 
     def test_clear_registries_clears_registry_manager(self, data_loader_setup):
-        """clear_registries calls RegistryManager.clear()."""
-        custom_dir, default_dir = data_loader_setup
+        """clear_registries calls the clear_registry() function.
+
+        Note: PROJ-195 - This tests singleton behavior since clear_registries()
+        delegates to clear_registry() which operates on the singleton.
+        We patch where the function is used (workshop_data_loader module).
+        """
+        custom_dir, default_dir, registries = data_loader_setup
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 
-        # PROJ-50: Pass registries (required)
-        loader = WorkshopDataLoader(custom_dir, registries=RegistryManager.instance())
+        # PROJ-195: Use DI-injected registries for loader construction
+        loader = WorkshopDataLoader(custom_dir, registries=registries)
 
-        # Use mock to verify clear was called
-        with patch.object(RegistryManager.instance(), 'clear') as mock_clear:
+        # PROJ-195: Patch clear_registry where it's imported (in workshop_data_loader)
+        with patch('game.ui.screens.workshop_data_loader.clear_registry') as mock_clear:
             loader.clear_registries()
             mock_clear.assert_called_once()
 
 
 @pytest.fixture
-def integration_setup():
+def integration_setup(fresh_registries):
     """Set up for integration tests using real data files."""
     pygame.init()
-    RegistryManager.instance().clear()
     # Get the data directory using path fixture
     from tests.fixtures.paths import get_data_dir
     data_dir = str(get_data_dir())
 
-    yield data_dir
+    # PROJ-195: Yield registries for DI instead of using singleton
+    yield data_dir, fresh_registries
 
-    RegistryManager.instance().clear()
     # NOTE: Do not call pygame.quit() here - the root conftest manages
     # pygame lifecycle at session scope. Calling quit() here would break
     # subsequent tests with "No video mode set" errors.
@@ -163,11 +165,11 @@ class TestWorkshopDataLoaderIntegration:
 
     def test_load_all_with_real_data(self, integration_setup):
         """load_all successfully loads from real data directory."""
-        data_dir = integration_setup
+        data_dir, registries = integration_setup
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 
-        # PROJ-50: Pass registries (required)
-        loader = WorkshopDataLoader(data_dir, registries=RegistryManager.instance())
+        # PROJ-195: Use DI-injected registries instead of singleton
+        loader = WorkshopDataLoader(data_dir, registries=registries)
         result = loader.load_all()
 
         assert result.success, f"Load failed with errors: {result.errors}"
@@ -181,11 +183,11 @@ class TestWorkshopDataLoaderIntegration:
         Registry state verification is done via LoadResult.default_class
         which requires vehicle classes to have loaded successfully.
         """
-        data_dir = integration_setup
+        data_dir, registries = integration_setup
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 
-        # PROJ-50: Pass registries (required)
-        loader = WorkshopDataLoader(data_dir, registries=RegistryManager.instance())
+        # PROJ-195: Use DI-injected registries instead of singleton
+        loader = WorkshopDataLoader(data_dir, registries=registries)
         result = loader.load_all()
 
         # Primary assertion: load succeeded

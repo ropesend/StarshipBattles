@@ -10,7 +10,6 @@ from game.ai.strategy_manager import StrategyManager
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.engine.spatial import SpatialGrid
 from game.simulation.components.component import load_components, create_component
-from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
 
 
@@ -69,7 +68,6 @@ def ai_setup(fresh_registries):
     }
 
     # Cleanup
-    RegistryManager.instance().clear()
     StrategyManager.instance().clear()
 
 
@@ -198,7 +196,6 @@ def strategy_setup(fresh_registries):
     }
 
     # Cleanup
-    RegistryManager.instance().clear()
     StrategyManager.instance().clear()
 
 

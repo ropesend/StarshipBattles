@@ -5,13 +5,16 @@ This module provides the DesignMetadata class for tracking ship design informati
 without loading the full ship data. Used by the design library system for filtering,
 sorting, and displaying designs in the UI.
 """
+import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
 from datetime import datetime
 import os
 import warnings
 from game.core.json_utils import load_json_required, save_json
-from game.core.logger import log_warning
+from game.core.validation_helpers import require_keys
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -61,7 +64,11 @@ class DesignMetadata:
 
         Required fields: design_id, name
         Optional fields: all others with sensible defaults
+
+        Raises:
+            PersistenceException: If required keys are missing
         """
+        require_keys(data, ['design_id', 'name'], 'DesignMetadata')
         return cls(
             design_id=data["design_id"],
             name=data["name"],
@@ -146,7 +153,7 @@ class DesignMetadata:
             design_id=design_id,
             name=ship.name,
             ship_class=ship.ship_class,
-            vehicle_type=getattr(ship, 'vehicle_type', 'Ship'),
+            vehicle_type=ship.vehicle_type,  # Ship always has vehicle_type
             mass=ship.mass,
             combat_power=combat_power,
             resource_cost=resource_cost,
@@ -154,7 +161,7 @@ class DesignMetadata:
             last_modified=now,
             is_obsolete=False,
             times_built=0,
-            theme_id=getattr(ship, 'theme_id', '')
+            theme_id=ship.theme_id  # Ship always has theme_id
         )
 
     @staticmethod
@@ -169,13 +176,11 @@ class DesignMetadata:
         # Add component contributions
         layers = data.get("layers", {})
         for layer_name, layer_data in layers.items():
-            # New format: layers[layer_name] = [comp1, comp2, ...]
-            if isinstance(layer_data, list):
-                components = layer_data
-            else:
-                # Old format detected - warn but handle gracefully
-                log_warning(f"DesignMetadata: Old layer format in '{layer_name}'. Expected list, got {type(layer_data).__name__}.")
+            # Only support new format: layers[layer_name] = [comp1, comp2, ...]
+            if not isinstance(layer_data, list):
                 components = []
+            else:
+                components = layer_data
 
             for comp_data in components:
                 # Weapon components contribute heavily
@@ -191,18 +196,30 @@ class DesignMetadata:
 
     @staticmethod
     def _calculate_combat_power_from_ship(ship) -> float:
-        """Calculate combat power from Ship instance"""
+        """Calculate combat power from Ship instance.
+
+        Uses Component.major_classification to identify weapon/armor components.
+        Weapon damage is extracted from WeaponAbility instances.
+        """
         power = 0.0
 
-        # Sum weapon damage
+        # Sum weapon damage (Component always has major_classification, get_abilities, max_hp)
         for layer_type, layer_data in ship.layers.items():
             for comp in layer_data.components:
-                if hasattr(comp, 'category') and comp.category == 'weapon':
-                    power += getattr(comp, 'damage', 0) * 10
-                    power += getattr(comp, 'rate_of_fire', 0) * 5
+                # Weapon components: use major_classification and WeaponAbility
+                if comp.major_classification == 'Weapons':
+                    weapon_abilities = comp.get_abilities('WeaponAbility')
+                    for weapon in weapon_abilities:
+                        # WeaponAbility always has damage, reload_time
+                        damage = weapon.damage
+                        reload_time = weapon.reload_time if weapon.reload_time > 0 else 1.0
+                        rate_of_fire = 1.0 / reload_time
+                        power += damage * 10
+                        power += rate_of_fire * 5
 
-                if hasattr(comp, 'category') and comp.category == 'armor':
-                    power += getattr(comp, 'hp', 0) * 0.5
+                # Armor components: use major_classification and max_hp
+                if comp.major_classification == 'Armor':
+                    power += comp.max_hp * 0.5
 
         return power
 
@@ -214,12 +231,11 @@ class DesignMetadata:
         # Sum component costs
         layers = data.get("layers", {})
         for layer_name, layer_data in layers.items():
-            # New format: layers[layer_name] = [comp1, comp2, ...]
-            if isinstance(layer_data, list):
-                components = layer_data
-            else:
-                log_warning(f"DesignMetadata: Old layer format in '{layer_name}'. Expected list, got {type(layer_data).__name__}.")
+            # Only support new format: layers[layer_name] = [comp1, comp2, ...]
+            if not isinstance(layer_data, list):
                 components = []
+            else:
+                components = layer_data
 
             for comp_data in components:
                 comp_cost = comp_data.get("cost", {})
@@ -230,22 +246,24 @@ class DesignMetadata:
 
     @staticmethod
     def _calculate_resource_cost_from_ship(ship) -> Dict[str, int]:
-        """Calculate resource costs from Ship instance"""
+        """Calculate resource costs from Ship instance.
+
+        Component.cost always exists (defaults to 0 in Component.__init__).
+        """
         costs = {}
 
         for layer_type, layer_data in ship.layers.items():
             for comp in layer_data.components:
-                if hasattr(comp, 'cost'):
-                    comp_cost = comp.cost
+                comp_cost = comp.cost
 
-                    # Handle both integer costs and dictionary costs
-                    if isinstance(comp_cost, dict):
-                        # Dictionary of resource: amount
-                        for resource, amount in comp_cost.items():
-                            costs[resource] = costs.get(resource, 0) + amount
-                    elif isinstance(comp_cost, (int, float)):
-                        # Single integer cost (assume it's "minerals" or generic cost)
-                        costs['minerals'] = costs.get('minerals', 0) + int(comp_cost)
+                # Handle both integer costs and dictionary costs
+                if isinstance(comp_cost, dict):
+                    # Dictionary of resource: amount
+                    for resource, amount in comp_cost.items():
+                        costs[resource] = costs.get(resource, 0) + amount
+                elif isinstance(comp_cost, (int, float)):
+                    # Single integer cost (assume it's "minerals" or generic cost)
+                    costs['minerals'] = costs.get('minerals', 0) + int(comp_cost)
 
         return costs
 

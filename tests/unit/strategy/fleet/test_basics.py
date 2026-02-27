@@ -29,19 +29,18 @@ class TestFleetOrder:
 
     def test_to_dict_with_coord_target(self):
         """Test serializing order with coordinate target."""
-        # Use a mock that has to_dict method since HexCoord uses __slots__
-        mock_coord = MagicMock()
-        mock_coord.to_dict.return_value = {'q': 2, 'r': 4}
-        order = FleetOrder(OrderType.MOVE, mock_coord)
+        # Use real HexCoord for isinstance check
+        coord = HexCoord(2, 4)
+        order = FleetOrder(OrderType.MOVE, coord)
         d = order.to_dict()
         assert d['type'] == 'MOVE'
         assert d['target'] == {'q': 2, 'r': 4}
 
     def test_to_dict_with_fleet_ref(self):
         """Test serializing order with fleet reference target."""
-        mock_fleet = MagicMock()
+        # Use MagicMock with spec=Fleet for isinstance check
+        mock_fleet = MagicMock(spec=Fleet)
         mock_fleet.id = "fleet_123"
-        del mock_fleet.to_dict  # Ensure it doesn't have to_dict
         order = FleetOrder(OrderType.JOIN_FLEET, mock_fleet)
         d = order.to_dict()
         assert d['target']['type'] == 'fleet_ref'

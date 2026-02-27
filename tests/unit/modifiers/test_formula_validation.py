@@ -66,13 +66,10 @@ class TestFormulaValidation:
             errors = ModifierEffectEvaluator.validate_formula(formula)
             assert errors == [], f"Formula '{formula}' should be valid, got {errors}"
 
-    def test_validate_all_modifiers_on_load(self):
+    def test_validate_all_modifiers_on_load(self, fresh_registries):
         """All modifiers in modifiers.json should pass validation."""
-        from game.simulation.components.component import load_modifiers
-        from game.core.registry import RegistryManager
-
-        load_modifiers("data/modifiers.json")
-        modifier_registry = RegistryManager.instance().modifiers
+        # fresh_registries is already hydrated with modifiers by the autouse fixture
+        modifier_registry = fresh_registries.modifiers
 
         validation_errors = []
         for mod_id, mod_def in modifier_registry.items():

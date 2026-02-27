@@ -6,6 +6,7 @@ PROJ-50: Updated to use strict DI (registries required).
 
 import pytest
 from game.core.registry import GameRegistries
+from game.core.exceptions import ValidationException
 
 
 @pytest.fixture
@@ -34,8 +35,8 @@ class TestResourceManagementEngineInit:
         """ResourceManagementEngine should require registries (strict DI)."""
         from game.strategy.engine.resource_management_engine import ResourceManagementEngine
 
-        # PROJ-50: Should raise TypeError when registries is None
-        with pytest.raises(TypeError) as exc_info:
+        # PROJ-50: Should raise ValidationException when registries is None
+        with pytest.raises(ValidationException) as exc_info:
             ResourceManagementEngine(registries=None)
         assert "registries is required" in str(exc_info.value)
 

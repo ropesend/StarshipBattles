@@ -6,6 +6,7 @@ Uses composition pattern: ship.formation = ShipFormation(self)
 """
 from typing import Optional, List, TYPE_CHECKING
 from game.core.math import Vector2
+from game.simulation.interfaces import IFormationHost, is_formation_host
 
 if TYPE_CHECKING:
     from .ship import Ship
@@ -58,21 +59,21 @@ class ShipFormation:
         self.master = master
         self.offset = offset
         self.active = True
-        
-        # Also register with master's formation
-        if master and hasattr(master, 'formation'):
+
+        # Also register with master's formation (IFormationHost protocol)
+        if master is not None and is_formation_host(master):
             if self.ship not in master.formation.members:
                 master.formation.members.append(self.ship)
     
     def leave(self) -> None:
         """Leave the current formation."""
-        # Unregister from master
-        if self.master and hasattr(self.master, 'formation'):
+        # Unregister from master (IFormationHost protocol)
+        if self.master is not None and is_formation_host(self.master):
             try:
                 self.master.formation.members.remove(self.ship)
             except ValueError:
                 pass  # Not in members list
-        
+
         self.master = None
         self.active = False
     
@@ -86,9 +87,9 @@ class ShipFormation:
         """
         if ship not in self.members:
             self.members.append(ship)
-        
-        # Set up the follower's formation state
-        if hasattr(ship, 'formation'):
+
+        # Set up the follower's formation state (IFormationHost protocol)
+        if is_formation_host(ship):
             ship.formation.master = self.ship
             ship.formation.offset = offset
             ship.formation.active = True
@@ -104,8 +105,8 @@ class ShipFormation:
             self.members.remove(ship)
         except ValueError:
             pass  # Not in list
-        
-        # Clear the follower's formation state
-        if hasattr(ship, 'formation'):
+
+        # Clear the follower's formation state (IFormationHost protocol)
+        if is_formation_host(ship):
             ship.formation.master = None
             ship.formation.active = False

@@ -26,7 +26,8 @@ def mock_scene():
     scene = MagicMock()
     scene.ui = MagicMock()
     scene.ui.manager = MagicMock()
-    scene.ui.planet_list_window = None
+    scene.ui.window_manager = MagicMock()  # PROJ-198: planet_list_window moved here
+    scene.ui.window_manager.planet_list_window = None
     scene.ui.handle_click = MagicMock(return_value=False)
     scene.ui._has_modal_open = MagicMock(return_value=False)
     scene.selected_fleet = None
@@ -182,11 +183,11 @@ class TestClickHandling:
         """Left-click in SELECT mode should trigger picking."""
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
         handler.input_mode = 'SELECT'
-        handler._handle_picking = MagicMock()
+        handler._click_dispatch._handle_picking = MagicMock()
 
         handler.handle_click(100, 200, 1)
 
-        handler._handle_picking.assert_called_once_with(100, 200)
+        handler._click_dispatch._handle_picking.assert_called_once_with(100, 200)
 
     def test_click_in_move_mode_dispatches_move(self, mock_scene, mapper):
         """Left-click in MOVE mode should dispatch move command."""
@@ -397,7 +398,8 @@ class TestEdgeCases:
     def test_handle_event_with_planet_list_open(self, mock_scene, mapper):
         """Events should route to UI when planet list window is open."""
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        mock_scene.ui.planet_list_window = MagicMock()
+        # PROJ-198: planet_list_window is now on window_manager
+        mock_scene.ui.window_manager.planet_list_window = MagicMock()
 
         event = _keydown(pygame.K_F12)
         handler.handle_event(event)
@@ -566,7 +568,7 @@ class TestZoneSelection:
         mock_scene.ui.show_detailed_report = MagicMock()
         mock_scene.on_ui_selection = MagicMock()
 
-        handler._handle_picking(100, 200)
+        handler._click_dispatch._handle_picking(100, 200)
 
         # Verify star was included in sector_contents via zone lookup
         show_sector_call_args = mock_scene.ui.show_sector_info.call_args
@@ -602,7 +604,7 @@ class TestZoneSelection:
         mock_scene.ui.show_detailed_report = MagicMock()
         mock_scene.on_ui_selection = MagicMock()
 
-        handler._handle_picking(100, 200)
+        handler._click_dispatch._handle_picking(100, 200)
 
         show_sector_call_args = mock_scene.ui.show_sector_info.call_args
         sector_contents = show_sector_call_args[0][1]
@@ -636,7 +638,7 @@ class TestZoneSelection:
         mock_scene.ui.show_detailed_report = MagicMock()
         mock_scene.on_ui_selection = MagicMock()
 
-        handler._handle_picking(100, 200)
+        handler._click_dispatch._handle_picking(100, 200)
 
         show_sector_call_args = mock_scene.ui.show_sector_info.call_args
         sector_contents = show_sector_call_args[0][1]

@@ -3,7 +3,6 @@ import os
 import importlib
 import pygame
 from unittest.mock import patch, MagicMock
-from game.core.registry import RegistryManager
 
 # Ensure we use dummy video driver to prevent window opening
 os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -17,7 +16,6 @@ def cleanup():
     patch.stopall()
 
     pygame.quit()
-    RegistryManager.instance().clear()
 
 
 class TestMainIntegration:

@@ -1,6 +1,9 @@
 from typing import Dict, Any, List, Set, TYPE_CHECKING
 from enum import Enum, Flag, auto
 
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
+
 if TYPE_CHECKING:
     from .stat_keys import StatKey, AbilityStatBinding
 
@@ -82,7 +85,7 @@ class Ability:
             AbilityScope value
 
         Raises:
-            ValueError: If requested scope is not in allowed_scopes
+            ValidationException: If requested scope is not in allowed_scopes
         """
         if not isinstance(data, dict):
             return self.default_scope
@@ -94,23 +97,38 @@ class Ability:
         # Convert string to enum
         try:
             requested_scope = AbilityScope(scope_str)
-        except ValueError:
-            raise ValueError(
-                f"{self.__class__.__name__} received invalid scope '{scope_str}'. "
-                f"Valid scopes: {[s.value for s in AbilityScope]}"
-            )
+        except ValueError as e:
+            raise ValidationException(
+                f"{self.__class__.__name__} received invalid scope '{scope_str}'",
+                code=ErrorCode.VALIDATION_FAILED.value,
+                context={
+                    "ability_class": self.__class__.__name__,
+                    "scope": scope_str,
+                    "valid_scopes": [s.value for s in AbilityScope]
+                }
+            ) from e
 
         # Validate against allowed scopes
         if requested_scope not in self.allowed_scopes:
-            raise ValueError(
-                f"{self.__class__.__name__} does not support scope '{scope_str}'. "
-                f"Allowed scopes: {[s.value for s in self.allowed_scopes]}"
+            raise ValidationException(
+                f"{self.__class__.__name__} does not support scope '{scope_str}'",
+                code=ErrorCode.VALIDATION_FAILED.value,
+                context={
+                    "ability_class": self.__class__.__name__,
+                    "scope": scope_str,
+                    "allowed_scopes": [s.value for s in self.allowed_scopes]
+                }
             )
 
         return requested_scope
 
     @staticmethod
-    def _parse_primary_value(data, key: str = 'value', default: float = 0.0) -> float:
+    def _parse_primary_value(
+        data,
+        key: str = 'value',
+        default: float = 0.0,
+        fallback_keys: tuple = ()
+    ) -> float:
         """
         Parse a primary numeric value from ability data.
 
@@ -123,6 +141,7 @@ class Ability:
             data: Raw ability data (dict, int, float, or other)
             key: Dict key to look up (default: 'value')
             default: Fallback value if key missing (default: 0.0)
+            fallback_keys: Additional keys to try if primary key not found
 
         Returns:
             Parsed float value
@@ -130,7 +149,12 @@ class Ability:
         if isinstance(data, (int, float)):
             return float(data)
         if isinstance(data, dict):
-            return float(data.get(key, default))
+            if key in data:
+                return float(data[key])
+            for fallback in fallback_keys:
+                if fallback in data:
+                    return float(data[fallback])
+            return float(default)
         return float(default)
 
     def applies_to_layer(self, layer: AbilityLayer) -> bool:
@@ -209,14 +233,15 @@ class Ability:
                 default = None  # Return None for unknown keys (like 'arc_set')
 
         # Check ability-specific stats first (for targeted modifier effects)
-        ability_stats = getattr(self.component, 'ability_stats', {})
+        # IComponent protocol guarantees ability_stats and stats exist
+        ability_stats = self.component.ability_stats
         class_name = self.__class__.__name__
         if class_name in ability_stats:
             if stat_key in ability_stats[class_name]:
                 return ability_stats[class_name][stat_key]
 
         # Fall back to global component stats
-        stats = getattr(self.component, 'stats', {})
+        stats = self.component.stats
         return stats.get(stat_key, default)
 
     def get_primary_value(self) -> float:
@@ -284,7 +309,8 @@ class Ability:
             Only includes stats that are actually modified (not default values).
         """
         summary = []
-        stats = getattr(self.component, 'stats', {})
+        # IComponent protocol guarantees stats exists
+        stats = self.component.stats
 
         for binding in self.STAT_BINDINGS:
             stat_value = stats.get(binding.stat_key.value)
@@ -314,3 +340,70 @@ class Ability:
             })
 
         return summary
+
+
+class SimpleMultiplierAbility(Ability):
+    """Base class for abilities with a single numeric value modified by one multiplier.
+
+    Subclasses configure behavior via class attributes:
+        stat_key:    The modifier stat key string (e.g. 'thrust_mult')
+        value_attr:  Name of the current-value attribute (e.g. 'thrust_force')
+        base_attr:   Name of the base-value attribute (e.g. 'base_thrust')
+        ui_label:    Display label for get_ui_rows() (e.g. 'Thrust')
+        ui_format:   Format string for the value (e.g. '{:.0f} N')
+        ui_color:    Color hint constant (e.g. HINT_THRUST)
+        int_result:  If True, cast result to int (default: False)
+
+    PROJ-176: Extracted to eliminate duplication across 7 ability classes.
+    """
+    stat_key: str = ''
+    value_attr: str = ''
+    base_attr: str = ''
+    ui_label: str = ''
+    ui_format: str = '{:.0f}'
+    ui_color: str = '#FFFFFF'
+    int_result: bool = False
+
+    def __init_subclass__(cls, **kwargs):
+        """Validate that all required class attributes are set."""
+        super().__init_subclass__(**kwargs)
+        required = ('stat_key', 'value_attr', 'base_attr', 'ui_label')
+        for attr in required:
+            val = getattr(cls, attr, '')
+            if not val and cls.__name__ != 'SimpleMultiplierAbility':
+                raise TypeError(f"{cls.__name__} must set class attribute '{attr}'")
+
+    def __init__(self, component, data):
+        super().__init__(component, data)
+        base_val = self._parse_primary_value(data)
+        if self.int_result:
+            base_val = int(base_val)
+        setattr(self, self.base_attr, base_val)
+        setattr(self, self.value_attr, base_val)
+
+    def sync_data(self, data):
+        """Update internal state when component data changes."""
+        super().sync_data(data)
+        base_val = self._parse_primary_value(data)
+        if self.int_result:
+            base_val = int(base_val)
+        setattr(self, self.base_attr, base_val)
+        setattr(self, self.value_attr, base_val)
+
+    def recalculate(self):
+        """Apply stat multiplier to base value."""
+        base = getattr(self, self.base_attr)
+        mult = self.get_effective_stat(self.stat_key, 1.0)
+        result = base * mult
+        if self.int_result:
+            result = int(result)
+        setattr(self, self.value_attr, result)
+
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
+        """Return UI row with label, formatted value, and color hint."""
+        val = getattr(self, self.value_attr)
+        return [{'label': self.ui_label, 'value': self.ui_format.format(val), 'color_hint': self.ui_color}]
+
+    def get_primary_value(self) -> float:
+        """Return current value as float for aggregation."""
+        return float(getattr(self, self.value_attr))

@@ -139,13 +139,13 @@ class TestLoadResourcesData:
     def test_file_not_found_returns_defaults(self):
         """Missing file returns default resources."""
         with patch('game.core.resources._resolve_resource_path', return_value=None):
-            with patch('game.core.resources.log_warning') as mock_log:
+            with patch('game.core.resources.logger') as mock_log:
                 result = load_resources_data("nonexistent.json")
 
         assert ResourceType.FUEL in result
         assert ResourceType.ENERGY in result
         assert ResourceType.AMMO in result
-        mock_log.assert_called()
+        mock_log.warning.assert_called()
 
     def test_json_decode_error_returns_defaults(self, tmp_path):
         """Invalid JSON returns default resources."""
@@ -153,12 +153,12 @@ class TestLoadResourcesData:
         test_file.write_text("not valid json {{{")
 
         with patch('game.core.resources._resolve_resource_path', return_value=str(test_file)):
-            with patch('game.core.resources.log_warning') as mock_log:
+            with patch('game.core.resources.logger') as mock_log:
                 result = load_resources_data(str(test_file))
 
         assert ResourceType.FUEL in result
-        mock_log.assert_called()
-        assert 'Invalid JSON' in str(mock_log.call_args)
+        mock_log.warning.assert_called()
+        assert 'Invalid JSON' in str(mock_log.warning.call_args)
 
     def test_permission_error_returns_defaults(self, tmp_path):
         """Permission error returns default resources."""
@@ -167,11 +167,11 @@ class TestLoadResourcesData:
 
         with patch('game.core.resources._resolve_resource_path', return_value=str(test_file)):
             with patch('game.core.resources.load_json_required', side_effect=PermissionError("Access denied")):
-                with patch('game.core.resources.log_warning') as mock_log:
+                with patch('game.core.resources.logger') as mock_log:
                     result = load_resources_data(str(test_file))
 
         assert ResourceType.FUEL in result
-        mock_log.assert_called()
+        mock_log.warning.assert_called()
 
     def test_os_error_returns_defaults(self, tmp_path):
         """OS error returns default resources."""
@@ -180,11 +180,11 @@ class TestLoadResourcesData:
 
         with patch('game.core.resources._resolve_resource_path', return_value=str(test_file)):
             with patch('game.core.resources.load_json_required', side_effect=OSError("Disk error")):
-                with patch('game.core.resources.log_warning') as mock_log:
+                with patch('game.core.resources.logger') as mock_log:
                     result = load_resources_data(str(test_file))
 
         assert ResourceType.FUEL in result
-        mock_log.assert_called()
+        mock_log.warning.assert_called()
 
     def test_malformed_data_returns_defaults(self, tmp_path):
         """Malformed data structure returns defaults."""
@@ -193,7 +193,7 @@ class TestLoadResourcesData:
         test_file.write_text('{"resources": "not a list"}')
 
         with patch('game.core.resources._resolve_resource_path', return_value=str(test_file)):
-            with patch('game.core.resources.log_warning') as mock_log:
+            with patch('game.core.resources.logger') as mock_log:
                 result = load_resources_data(str(test_file))
 
         # Should fall back to defaults due to TypeError when iterating
@@ -247,7 +247,7 @@ class TestLoadResourcesData:
     def test_default_file_path(self):
         """Default path is data/resources.json."""
         with patch('game.core.resources._resolve_resource_path', return_value=None) as mock_resolve:
-            with patch('game.core.resources.log_warning'):
+            with patch('game.core.resources.logger'):
                 load_resources_data()
 
         mock_resolve.assert_called_with("data/resources.json")

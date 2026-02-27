@@ -40,24 +40,27 @@ class TestEventBus:
 class TestEventBusValidation:
     """Tests for callback validation."""
 
-    def test_subscribe_non_callable_raises_type_error(self):
-        """Subscribing with non-callable raises TypeError."""
+    def test_subscribe_non_callable_raises_validation_exception(self):
+        """Subscribing with non-callable raises ValidationException."""
+        from game.core.exceptions import ValidationException
         bus = EventBus()
-        with pytest.raises(TypeError) as exc_info:
+        with pytest.raises(ValidationException) as exc_info:
             bus.subscribe("TEST", "not a callback")
         assert "callable" in str(exc_info.value)
         assert "str" in str(exc_info.value)
 
-    def test_subscribe_none_raises_type_error(self):
-        """Subscribing with None raises TypeError."""
+    def test_subscribe_none_raises_validation_exception(self):
+        """Subscribing with None raises ValidationException."""
+        from game.core.exceptions import ValidationException
         bus = EventBus()
-        with pytest.raises(TypeError):
+        with pytest.raises(ValidationException):
             bus.subscribe("TEST", None)
 
-    def test_subscribe_integer_raises_type_error(self):
-        """Subscribing with integer raises TypeError."""
+    def test_subscribe_integer_raises_validation_exception(self):
+        """Subscribing with integer raises ValidationException."""
+        from game.core.exceptions import ValidationException
         bus = EventBus()
-        with pytest.raises(TypeError):
+        with pytest.raises(ValidationException):
             bus.subscribe("TEST", 42)
 
     def test_subscribe_callable_class_instance_works(self):
@@ -131,8 +134,8 @@ class TestEventBusMultipleSubscribers:
 class TestEventBusErrorHandling:
     """Tests for error handling in event handlers."""
 
-    @patch('game.ui.screens.builder.event_bus.log_error')
-    def test_error_in_handler_uses_logger(self, mock_log_error):
+    @patch('game.ui.screens.builder.event_bus.logger')
+    def test_error_in_handler_uses_logger(self, mock_logger):
         """Handler exceptions are logged, not printed."""
         bus = EventBus()
         received = []
@@ -150,8 +153,8 @@ class TestEventBusErrorHandling:
         bus.emit("ERROR_TEST", "payload")
 
         # Bad handler logged error
-        mock_log_error.assert_called_once()
-        call_args = mock_log_error.call_args[0][0]
+        mock_logger.error.assert_called_once()
+        call_args = mock_logger.error.call_args[0][0]
         assert "ERROR_TEST" in call_args
         assert "Test error" in call_args
 
@@ -172,7 +175,7 @@ class TestEventBusErrorHandling:
         bus.subscribe("CONTINUE", failing_handler)
         bus.subscribe("CONTINUE", succeeding_handler)
 
-        with patch('game.ui.screens.builder.event_bus.log_error'):
+        with patch('game.ui.screens.builder.event_bus.logger'):
             bus.emit("CONTINUE", "value")
 
         assert results == ["value"]

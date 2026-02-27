@@ -1,0 +1,466 @@
+"""Panel factory for BuildQueueScreen.
+
+Creates all UI panels for the build queue screen. Extracted from build_queue_screen.py
+as part of PROJ-172 Phase 4 MVVM refactoring.
+"""
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, List, Optional, Dict
+
+import pygame
+import pygame_gui
+import pygame_gui.elements as ui
+
+from game.core.constants import PLANET_RESOURCES
+from game.ui.panels.planet_report_panel import PlanetReportPanel, compute_planet_production
+from game.ui.panels.design_report_panel import DesignReportPanel
+from game.ui.screens.build_queue_selector import BuildQueueSelector
+
+if TYPE_CHECKING:
+    from game.strategy.data.build_queue_source import BuildQueueSource
+    from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class BuildQueuePanels:
+    """Container for all BuildQueueScreen panels."""
+
+    background: ui.UIPanel
+    context_report: ui.UIPanel  # PlanetReportPanel or fleet info panel
+    planet_report: Optional[PlanetReportPanel]  # Only set for planet contexts
+    queue_selector: BuildQueueSelector
+    design_report: DesignReportPanel
+    items_list_panel: ui.UIPanel
+    items_scrollable: ui.UIScrollingContainer
+    build_queue_panel: ui.UIPanel
+    queue_header_text: ui.UITextBox
+    queue_scrollable: ui.UIScrollingContainer
+    filter_panel: ui.UIPanel
+    bottom_bar: ui.UIPanel
+    btn_close: ui.UIButton
+    btn_add_to_queue: ui.UIButton
+    btn_remove_from_queue: ui.UIButton
+    btn_category_complex: ui.UIButton
+    btn_category_ship: ui.UIButton
+    btn_category_satellite: ui.UIButton
+    btn_category_fighter: ui.UIButton
+    resource_icons: Dict[str, pygame.Surface]
+    queue_column_positions: Dict[str, int]
+
+
+class BuildQueuePanelFactory:
+    """Factory for creating BuildQueueScreen panels.
+
+    Creates and positions all UI elements for the build queue screen.
+    Does not manage state - that's handled by the ViewModel.
+    """
+
+    def __init__(
+        self,
+        manager: pygame_gui.UIManager,
+        build_context,
+        session,
+        queue_sources: List['BuildQueueSource'],
+        portrait_loader: 'BuildQueuePortraitLoader',
+        on_queue_selection_changed,
+    ):
+        """Initialize the panel factory.
+
+        Args:
+            manager: pygame_gui UIManager.
+            build_context: Planet or Fleet whose build queue is being managed.
+            session: Game session with current_empire and turn info.
+            queue_sources: List of BuildQueueSource objects at this hex.
+            portrait_loader: BuildQueuePortraitLoader for resource icons.
+            on_queue_selection_changed: Callback for queue selector changes.
+        """
+        self.manager = manager
+        self.build_context = build_context
+        self.session = session
+        self.queue_sources = queue_sources
+        self.portrait_loader = portrait_loader
+        self.on_queue_selection_changed = on_queue_selection_changed
+
+        # Get screen dimensions
+        screen_size = manager.get_root_container().get_container().get_size()
+        self.screen_width = screen_size[0]
+        self.screen_height = screen_size[1]
+
+        # Resource icons loaded once
+        self.resource_icons = portrait_loader.load_resource_icons(icon_size=20)
+
+    def create_all_panels(self, format_empire_resources) -> BuildQueuePanels:
+        """Create all panels for the build queue screen.
+
+        Args:
+            format_empire_resources: Function to format empire resource display.
+
+        Returns:
+            BuildQueuePanels containing all created panels.
+        """
+        background = self._create_background()
+        context_report, planet_report = self._create_context_report_panel(background)
+        queue_selector = self._create_queue_selector_panel(background)
+        design_report = self._create_design_report_panel(background)
+        items_panel, items_scrollable = self._create_items_list_panel(background)
+        queue_panel, queue_header, queue_scrollable, col_positions = self._create_build_queue_panel(background)
+        filter_panel, btn_complex, btn_ship, btn_sat, btn_fighter, btn_add, btn_remove = (
+            self._create_filter_panel(background)
+        )
+        bottom_bar, btn_close = self._create_bottom_bar(background, format_empire_resources)
+
+        return BuildQueuePanels(
+            background=background,
+            context_report=context_report,
+            planet_report=planet_report,
+            queue_selector=queue_selector,
+            design_report=design_report,
+            items_list_panel=items_panel,
+            items_scrollable=items_scrollable,
+            build_queue_panel=queue_panel,
+            queue_header_text=queue_header,
+            queue_scrollable=queue_scrollable,
+            filter_panel=filter_panel,
+            bottom_bar=bottom_bar,
+            btn_close=btn_close,
+            btn_add_to_queue=btn_add,
+            btn_remove_from_queue=btn_remove,
+            btn_category_complex=btn_complex,
+            btn_category_ship=btn_ship,
+            btn_category_satellite=btn_sat,
+            btn_category_fighter=btn_fighter,
+            resource_icons=self.resource_icons,
+            queue_column_positions=col_positions,
+        )
+
+    def _create_background(self) -> ui.UIPanel:
+        """Create semi-transparent background overlay."""
+        return ui.UIPanel(
+            relative_rect=pygame.Rect(0, 0, self.screen_width, self.screen_height),
+            manager=self.manager
+        )
+
+    def _create_context_report_panel(self, container: ui.UIPanel):
+        """Create context report panel (planet or fleet info).
+
+        Returns:
+            Tuple of (context_report panel, planet_report or None).
+        """
+        report_width = 480
+        report_height = int((self.screen_height - 20) / 3)
+        if report_height < 350:
+            report_height = 350
+
+        if self.build_context.context_type == "planet":
+            planet_report = PlanetReportPanel(
+                manager=self.manager,
+                rect=pygame.Rect(10, 10, report_width, report_height),
+                planet=self.build_context,
+                container=container,
+                portrait_surface=None,  # Portrait handled separately
+                show_complexes=False,
+                production_rates=compute_planet_production(self.build_context)
+            )
+            return planet_report, planet_report
+        else:
+            # Fleet context: create simple info panel
+            fleet_panel = self._create_fleet_info_panel(container, report_width, report_height)
+            return fleet_panel, None
+
+    def _create_fleet_info_panel(
+        self, container: ui.UIPanel, width: int, height: int
+    ) -> ui.UIPanel:
+        """Create simple info panel for fleet context."""
+        panel = ui.UIPanel(
+            relative_rect=pygame.Rect(10, 10, width, height),
+            manager=self.manager,
+            container=container
+        )
+
+        ui.UITextBox(
+            relative_rect=pygame.Rect(10, 10, width - 20, 40),
+            html_text=f"<b>{self.build_context.name}</b>",
+            manager=self.manager,
+            container=panel
+        )
+
+        ship_count = len(self.build_context.ships) if hasattr(self.build_context, 'ships') else 0
+        has_yard = self.build_context.has_space_shipyard
+        queue_size = len(self.build_context.construction_queue)
+
+        info_text = f"""
+        <b>Ships:</b> {ship_count}<br>
+        <b>Space Yard:</b> {'Yes' if has_yard else 'No'}<br>
+        <b>Queue Size:</b> {queue_size} items<br>
+        """
+
+        ui.UITextBox(
+            relative_rect=pygame.Rect(10, 60, width - 20, height - 80),
+            html_text=info_text,
+            manager=self.manager,
+            container=panel
+        )
+
+        return panel
+
+    def _create_queue_selector_panel(self, container: ui.UIPanel) -> BuildQueueSelector:
+        """Create queue selector column."""
+        panel_x = 10 + 480 + 10
+        panel_y = 10
+        panel_width = 700
+        panel_height = self.screen_height - 10 - 80
+
+        return BuildQueueSelector(
+            manager=self.manager,
+            container=container,
+            rect=pygame.Rect(panel_x, panel_y, panel_width, panel_height),
+            queue_sources=self.queue_sources,
+            on_selection_changed=self.on_queue_selection_changed,
+        )
+
+    def _create_design_report_panel(self, container: ui.UIPanel) -> DesignReportPanel:
+        """Create design report panel."""
+        design_report_width = 750
+        design_report_x = self.screen_width - design_report_width - 10
+        design_report_height = self.screen_height - 90
+
+        return DesignReportPanel(
+            manager=self.manager,
+            rect=pygame.Rect(design_report_x, 10, design_report_width, design_report_height),
+            container=container
+        )
+
+    def _create_items_list_panel(self, container: ui.UIPanel):
+        """Create available designs panel.
+
+        Returns:
+            Tuple of (panel, scrollable_container).
+        """
+        categories_width = 200
+        panel_left = 10 + categories_width + 10
+        panel_width = 280
+
+        planet_report_height = int((self.screen_height - 20) / 3)
+        if planet_report_height < 350:
+            planet_report_height = 350
+        panel_top = 10 + planet_report_height + 10
+        panel_height = self.screen_height - panel_top - 80
+
+        panel = ui.UIPanel(
+            relative_rect=pygame.Rect(panel_left, panel_top, panel_width, panel_height),
+            manager=self.manager,
+            container=container
+        )
+
+        ui.UITextBox(
+            relative_rect=pygame.Rect(10, 10, panel_width - 20, 30),
+            html_text="<b>Available Designs</b>",
+            manager=self.manager,
+            container=panel
+        )
+
+        scrollable = ui.UIScrollingContainer(
+            relative_rect=pygame.Rect(10, 45, panel_width - 20, panel_height - 55),
+            manager=self.manager,
+            container=panel
+        )
+
+        return panel, scrollable
+
+    def _create_build_queue_panel(self, container: ui.UIPanel):
+        """Create build queue panel.
+
+        Returns:
+            Tuple of (panel, header_text, scrollable_container, column_positions).
+        """
+        panel_left = 10 + 480 + 10 + 700 + 10
+        design_details_width = 750
+        panel_width = self.screen_width - panel_left - design_details_width - 20
+        if panel_width < 250:
+            panel_width = 250
+
+        panel_top = 10
+        panel_height = self.screen_height - panel_top - 80
+
+        panel = ui.UIPanel(
+            relative_rect=pygame.Rect(panel_left, panel_top, panel_width, panel_height),
+            manager=self.manager,
+            container=container
+        )
+
+        header_text = ui.UITextBox(
+            relative_rect=pygame.Rect(10, 10, panel_width - 20, 30),
+            html_text="<b>Build Queue</b>",
+            manager=self.manager,
+            container=panel
+        )
+
+        # Column header row
+        header_y = 42
+        header_height = 22
+        col_x = 10
+
+        ui.UILabel(
+            relative_rect=pygame.Rect(col_x, header_y, 450, header_height),
+            text="Item",
+            manager=self.manager,
+            container=panel
+        )
+        col_x += 455
+
+        ui.UILabel(
+            relative_rect=pygame.Rect(col_x, header_y, 45, header_height),
+            text="Turns",
+            manager=self.manager,
+            container=panel
+        )
+        col_x += 50
+
+        column_positions = {"Item": 10, "Turns": 465}
+        for resource in PLANET_RESOURCES:
+            icon = self.resource_icons.get(resource)
+            if icon:
+                ui.UIImage(
+                    relative_rect=pygame.Rect(col_x, header_y + 1, 20, 20),
+                    image_surface=icon,
+                    manager=self.manager,
+                    container=panel
+                )
+            column_positions[resource] = col_x
+            col_x += 55
+
+        scrollable = ui.UIScrollingContainer(
+            relative_rect=pygame.Rect(10, 68, panel_width - 20, panel_height - 78),
+            manager=self.manager,
+            container=panel
+        )
+
+        return panel, header_text, scrollable, column_positions
+
+    def _create_filter_panel(self, container: ui.UIPanel):
+        """Create categories/filter panel.
+
+        Returns:
+            Tuple of (panel, btn_complex, btn_ship, btn_satellite, btn_fighter, btn_add, btn_remove).
+        """
+        panel_width = 200
+        panel_left = 10
+
+        planet_report_height = int((self.screen_height - 20) / 3)
+        if planet_report_height < 350:
+            planet_report_height = 350
+        panel_top = 10 + planet_report_height + 10
+        panel_height = self.screen_height - panel_top - 80
+
+        panel = ui.UIPanel(
+            relative_rect=pygame.Rect(panel_left, panel_top, panel_width, panel_height),
+            manager=self.manager,
+            container=container
+        )
+
+        ui.UITextBox(
+            relative_rect=pygame.Rect(10, 10, panel_width - 20, 30),
+            html_text="<b>Categories</b>",
+            manager=self.manager,
+            container=panel
+        )
+
+        btn_complex = ui.UIButton(
+            relative_rect=pygame.Rect(10, 45, panel_width - 20, 40),
+            text="Complexes",
+            manager=self.manager,
+            container=panel
+        )
+
+        btn_ship = ui.UIButton(
+            relative_rect=pygame.Rect(10, 95, panel_width - 20, 40),
+            text="Ships",
+            manager=self.manager,
+            container=panel
+        )
+
+        btn_satellite = ui.UIButton(
+            relative_rect=pygame.Rect(10, 145, panel_width - 20, 40),
+            text="Satellites",
+            manager=self.manager,
+            container=panel
+        )
+
+        btn_fighter = ui.UIButton(
+            relative_rect=pygame.Rect(10, 195, panel_width - 20, 40),
+            text="Fighters",
+            manager=self.manager,
+            container=panel
+        )
+
+        ui.UITextBox(
+            relative_rect=pygame.Rect(10, 260, panel_width - 20, 30),
+            html_text="<b>Actions</b>",
+            manager=self.manager,
+            container=panel
+        )
+
+        btn_add = ui.UIButton(
+            relative_rect=pygame.Rect(10, 295, panel_width - 20, 40),
+            text="Add to Queue",
+            manager=self.manager,
+            container=panel
+        )
+
+        btn_remove = ui.UIButton(
+            relative_rect=pygame.Rect(10, 345, panel_width - 20, 40),
+            text="Remove Selected",
+            manager=self.manager,
+            container=panel
+        )
+
+        return panel, btn_complex, btn_ship, btn_satellite, btn_fighter, btn_add, btn_remove
+
+    def _create_bottom_bar(self, container: ui.UIPanel, format_empire_resources):
+        """Create bottom bar with close button and info.
+
+        Returns:
+            Tuple of (bar_panel, btn_close).
+        """
+        bar_height = 60
+        bar_top = self.screen_height - bar_height - 10
+
+        bar = ui.UIPanel(
+            relative_rect=pygame.Rect(10, bar_top, self.screen_width - 20, bar_height),
+            manager=self.manager,
+            container=container
+        )
+
+        btn_close = ui.UIButton(
+            relative_rect=pygame.Rect(10, 10, 120, 40),
+            text="Close",
+            manager=self.manager,
+            container=bar
+        )
+
+        empire = getattr(self.session, 'current_empire', None)
+        if empire and hasattr(empire, 'resource_pool'):
+            resource_text = format_empire_resources(empire)
+        else:
+            resource_text = ""
+
+        ui.UILabel(
+            relative_rect=pygame.Rect(150, 10, self.screen_width - 400, 40),
+            text=resource_text,
+            manager=self.manager,
+            container=bar
+        )
+
+        turn_number = getattr(self.session, 'turn', 0)
+        ui.UILabel(
+            relative_rect=pygame.Rect(self.screen_width - 200, 10, 180, 40),
+            text=f"Turn: {turn_number}",
+            manager=self.manager,
+            container=bar
+        )
+
+        return bar, btn_close

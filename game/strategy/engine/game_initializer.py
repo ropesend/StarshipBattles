@@ -6,11 +6,13 @@ logic from session management.
 
 Provides a single entry point for creating new game galaxies with empires.
 """
+import logging
 import random
 from typing import List, Optional, Tuple
 
-from game.core.logger import log_info
 from game.strategy.data.empire import Empire
+
+logger = logging.getLogger(__name__)
 from game.strategy.data.galaxy import Galaxy
 from game.strategy.data.planet import SpeciesPopulation
 from game.strategy.engine.game_config import GameConfig
@@ -64,7 +66,7 @@ class GameInitializer:
         empires = []
         for i, player_cfg in enumerate(config.players):
             theme_path = config.get_player_theme_path(i)
-            log_info(f"GameInitializer: Creating empire {i} with theme={player_cfg.theme}")
+            logger.info(f"GameInitializer: Creating empire {i} with theme={player_cfg.theme}")
 
             # Ensure every empire has a race_config (BUG-88)
             race_config = player_cfg.race_config
@@ -112,7 +114,7 @@ class GameInitializer:
         galaxy_type = config.galaxy_type
         galaxy_seed = config.galaxy_seed
 
-        log_info(f"GameInitializer: Generating Galaxy (type={galaxy_type}, seed={galaxy_seed})...")
+        logger.info(f"GameInitializer: Generating Galaxy (type={galaxy_type}, seed={galaxy_seed})...")
 
         # Set up RNG for deterministic generation
         rng: Optional[random.Random] = None
@@ -142,7 +144,7 @@ class GameInitializer:
         )
         galaxy.generate_warp_lanes()
 
-        log_info(f"GameInitializer: Generated {len(systems)} systems.")
+        logger.info(f"GameInitializer: Generated {len(systems)} systems.")
         return systems
 
     @staticmethod
@@ -193,9 +195,9 @@ class GameInitializer:
                             happiness=0.7
                         )
                         home_planet.populations.append(initial_pop)
-                        log_info(f"GameInitializer: Seeded {initial_pop.count} population on {home_planet.name}")
+                        logger.info(f"GameInitializer: Seeded {initial_pop.count} population on {home_planet.name}")
 
-                    log_info(f"GameInitializer: Empire '{empire.name}' home at system {home_indices[i]}")
+                    logger.info(f"GameInitializer: Empire '{empire.name}' home at system {home_indices[i]}")
 
     @staticmethod
     def _adjust_homeworld_to_race(planet, race_config) -> None:
@@ -231,6 +233,6 @@ class GameInitializer:
             planet.atmosphere = {}
             planet.surface_pressure = 0.0
 
-        log_info(f"GameInitializer: Adjusted {planet.name} to match species preferences "
+        logger.info(f"GameInitializer: Adjusted {planet.name} to match species preferences "
                  f"(type={planet.planet_type.name}, gravity={planet.surface_gravity/9.81:.1f}g, "
                  f"temp={planet.surface_temperature:.0f}K, water={planet.surface_water:.0%})")

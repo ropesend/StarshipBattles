@@ -4,7 +4,6 @@ import pygame
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, create_component
-from game.core.registry import RegistryManager
 from game.simulation.entities.layer_data import LayerData
 from tests.fixtures.paths import get_project_root, get_data_dir
 
@@ -21,7 +20,6 @@ class TestBuilderLogic:
         self.ship = Ship("BuilderTarget", 0, 0, (255,255,255), ship_class="Escort", registries=fresh_registries)
         yield
         pygame.quit()
-        RegistryManager.instance().clear()
 
     def test_mass_limit_validation(self):
         """Verify mass_limits_ok is false if mass exceeds budget or layer limits."""

@@ -20,7 +20,8 @@ def mock_scene():
     scene = MagicMock()
     scene.ui = MagicMock()
     scene.ui.manager = MagicMock()
-    scene.ui.planet_list_window = None
+    scene.ui.window_manager = MagicMock()  # PROJ-198: planet_list_window moved here
+    scene.ui.window_manager.planet_list_window = None
     scene.selected_fleet = None
     scene.build_queue_screen = None
     scene.camera = MagicMock()
@@ -81,7 +82,7 @@ class TestStrategyInputHandlerTransfer:
         # Mock camera and hex resolution
         mock_scene.camera.screen_to_world.return_value = pygame.math.Vector2(100, 100)
 
-        with patch('game.ui.screens.strategy_input_handler.pixel_to_hex') as mock_pixel_to_hex:
+        with patch('game.ui.screens.strategy_click_dispatcher.pixel_to_hex') as mock_pixel_to_hex:
             target_hex = HexCoord(3, 4)
             mock_pixel_to_hex.return_value = target_hex
 
@@ -159,7 +160,7 @@ class TestDropCargoMode:
         # Mock camera and hex resolution
         mock_scene.camera.screen_to_world.return_value = pygame.math.Vector2(100, 100)
 
-        with patch('game.ui.screens.strategy_input_handler.pixel_to_hex') as mock_pixel_to_hex:
+        with patch('game.ui.screens.strategy_click_dispatcher.pixel_to_hex') as mock_pixel_to_hex:
             target_hex = HexCoord(3, 4)
             mock_pixel_to_hex.return_value = target_hex
 
@@ -238,7 +239,7 @@ class TestLoadCargoMode:
         # Mock camera and hex resolution
         mock_scene.camera.screen_to_world.return_value = pygame.math.Vector2(100, 100)
 
-        with patch('game.ui.screens.strategy_input_handler.pixel_to_hex') as mock_pixel_to_hex:
+        with patch('game.ui.screens.strategy_click_dispatcher.pixel_to_hex') as mock_pixel_to_hex:
             target_hex = HexCoord(5, 6)
             mock_pixel_to_hex.return_value = target_hex
 

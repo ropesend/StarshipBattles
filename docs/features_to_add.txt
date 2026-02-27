@@ -1,7 +1,7 @@
 Features to add:
 ================
 
-
+All ocupied sectors (hexes) should be also have a second red colored hex just inside of the current hex grid,  for a planet in a single sector, it should jest be a single hex, for a larger star or sphere world, every hext that the object occupies should have the extas hex drawn.  The image files should be drawn over the gexes, so the view from teh user will normally just be the outline of the outer hexes, but internally all occupied hexes should be drawm with teh red color.  This includes all stars, planets, ships, warp  points.
 
 ================
 

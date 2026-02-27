@@ -1,14 +1,17 @@
-import random
+import logging
 import math
 from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Set, Iterator
 
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 from game.engine.physics import PhysicsBody
 from game.simulation.components.component import Component, create_component
 from game.core.constants import LayerType
 from game.simulation.entities.layer_data import LayerData
 from game.core.math import Vector2
-from game.core.logger import log_debug, log_info, log_warning, log_error
 from game.core.registry import GameRegistries
+
+logger = logging.getLogger(__name__)
 from game.core.constants import LayerDefaults, CombatConstants
 
 from .ship_stats import ShipStatsCalculator
@@ -43,11 +46,16 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             registries: GameRegistries for DI (required).
 
         Raises:
-            TypeError: If registries is None
+            ValidationException: If registries is None
         """
         if registries is None:
-            raise TypeError("registries is required for Ship initialization")
+            raise ValidationException(
+                "registries is required for Ship initialization",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "Ship", "parameter": "registries"}
+            )
         super().__init__(x, y)
+        self.id: str = str(id(self))
         self.name: str = name
         self.color: Union[Tuple[int, int, int], List[int]] = color
         self.team_id: int = team_id
@@ -77,7 +85,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
                 hull_component.layer_assigned = LayerType.HULL
                 hull_component.ship = self
             else:
-                log_warning(f"Ship '{name}': Failed to create default hull '{default_hull_id}'")
+                logger.warning(f"Ship '{name}': Failed to create default hull '{default_hull_id}'")
 
         # Stats - Cached values (populated by ShipStatsCalculator.calculate())
         self._cached_mass: float = 0.0
@@ -165,10 +173,31 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.total_defense_score: float = 1.0
         self.baseline_to_hit_offense: float = 1.0  # Offensive multiplier (sensor strength)
         
+        # Strategic layer stats (computed by ShipStatsCalculator, initialized here for safety)
+        self.total_strategic_movement: float = 0.0
+        self.warp_max_tonnage: float = 0.0
+        self.warp_energy_cost: float = 0.0
+
+        # Combat stats (computed by ShipStatsCalculator, initialized here for safety)
+        self.total_maneuver_points: int = 0  # Raw turning/thrust capability
+
+        # Resource consumption (computed by combat_endurance.py, initialized here for safety)
+        self.fuel_consumption: float = 0.0
+        self.ammo_consumption: float = 0.0
+        self.energy_consumption: float = 0.0
+        self.potential_fuel_consumption: float = 0.0
+        self.potential_ammo_consumption: float = 0.0
+        self.potential_energy_consumption: float = 0.0
+
+        # Crew stats (computed by ShipStatsCalculator, initialized here for safety)
+        self.crew_onboard: int = 0
+        self.crew_required: int = 0
+
         # Initialize helpers (lazy)
         self.stats_calculator: Optional[ShipStatsCalculator] = None
         self._stat_querier: Optional[ShipStatQuerier] = None
         self._validator_helper: Optional[ShipValidatorHelper] = None
+        self._combat_engine: Optional[ShipCombatEngine] = None
 
 
 
@@ -218,13 +247,13 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
         Lazy initialization ensures ship is fully initialized before engine creation.
         """
-        if not hasattr(self, '_combat_engine') or self._combat_engine is None:
+        if self._combat_engine is None:
             self._combat_engine = ShipCombatEngine(self)
         return self._combat_engine
 
     def die(self) -> None:
         """Handle ship destruction. Sets ship to dead state and resets velocity."""
-        log_info(f"{self.name} EXPLODED!")
+        logger.info(f"{self.name} EXPLODED!")
         self.is_alive = False
         self.velocity = Vector2(0, 0)
         self.recalculate_stats()
@@ -314,7 +343,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
             if not has_command:
                 if not self.is_derelict:
-                    log_info(f"{self.name} has become DERELICT (Command and Control lost)")
+                    logger.info(f"{self.name} has become DERELICT (Command and Control lost)")
                 self.is_derelict = True
                 self.bridge_destroyed = True
                 return
@@ -328,7 +357,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
             if crew_required > crew_capacity:
                 if not self.is_derelict:
-                    log_info(f"{self.name} has become DERELICT (Insufficient crew capacity)")
+                    logger.info(f"{self.name} has become DERELICT (Insufficient crew capacity)")
                 self.is_derelict = True
                 return
 
@@ -367,7 +396,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             except KeyError:
                 # PROJ-45: Enhanced logging with context for unknown layer types
                 valid_layers = [lt.name for lt in LayerType]
-                log_warning(
+                logger.warning(
                     f"Unknown LayerType '{l_type_str}' in ship class '{self.ship_class}'. "
                     f"Valid types: {valid_layers}. Skipping layer."
                 )
@@ -407,7 +436,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         """
         # PROJ-42: Use registries instead of provider
         if new_class not in self._registries.vehicle_classes:
-            log_error(f"Unknown class {new_class}")
+            logger.error(f"Unknown class {new_class}")
             return
 
         old_components = []
@@ -425,7 +454,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.ship_class = new_class
         class_def = self._registries.vehicle_classes.get(self.ship_class)
         if class_def is None:
-            log_error(f"Ship.change_class: Unknown vehicle class '{self.ship_class}', using defaults")
+            logger.error(f"Ship.change_class: Unknown vehicle class '{self.ship_class}', using defaults")
             class_def = {}
         self.base_mass = 0.0  # Hull component provides mass via ShipStatsCalculator
         self.vehicle_type = class_def.get('type', "Ship")
@@ -465,7 +494,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
                             break
                 
                 if not added:
-                    log_warning(f"Could not fit component {comp.name} during refit to {new_class}")
+                    logger.warning(f"Could not fit component {comp.name} during refit to {new_class}")
         
         # Finally recalculate stats
         self.recalculate_stats()
@@ -473,14 +502,14 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
     def add_component(self, component: Component, layer_type: LayerType) -> bool:
         """Validate and add a component to the specified layer."""
         if component is None:
-            log_error("Attempted to add None component to ship")
+            logger.error("Attempted to add None component to ship")
             return False
 
         result = get_or_create_validator().validate_addition(self, component, layer_type)
 
         if not result.is_valid:
             for err in result.errors:
-                log_error(err)
+                logger.error(err)
             return False
 
         self.layers[layer_type].components.append(component)
@@ -525,7 +554,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
                 if added_count == 0:
                     # If the very first one fails, log errors
                     for err in result.errors:
-                        log_error(err)
+                        logger.error(err)
                 break
                 
             self.layers[layer_type].components.append(new_comp)
@@ -552,7 +581,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             self._invalidate_components_cache()  # PROJ-49: Invalidate component cache
             self.recalculate_stats()
             return comp
-        log_warning(f"remove_component failed: index {index} out of range for layer {layer_type.name}")
+        logger.warning(f"remove_component failed: index {index} out of range for layer {layer_type.name}")
         return None
 
     def recalculate_stats(self) -> None:
@@ -565,8 +594,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         # 1. Update components with current ship context
         for layer_data in self.layers.values():
             for comp in layer_data.components:
-                # Ensure ship ref is set
-                if not getattr(comp, 'ship', None): comp.ship = self
+                # Ensure ship ref is set (Component.ship is always initialized, may be None)
+                if comp.ship is None:
+                    comp.ship = self
                 comp.recalculate_stats()
 
         if not self.stats_calculator:
@@ -604,6 +634,24 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
     def get_total_sensor_score(self) -> float:
         """Calculate total Targeting Score from all active sensors."""
         return self.stat_querier.get_total_sensor_score()
+
+    def get_resource_stat(self, resource_name: str, stat_type: str) -> float:
+        """Get a resource-related stat by name and type.
+
+        Provides typed accessor for dynamic resource attributes (e.g., fuel_consumption,
+        ammo_endurance). This method replaces direct f-string getattr patterns for
+        portability to statically-typed languages (C#/Rust).
+
+        Args:
+            resource_name: Resource name (e.g., 'fuel', 'ammo', 'energy')
+            stat_type: Stat suffix (e.g., 'consumption', 'endurance', 'recharge',
+                       'potential_consumption', 'net', 'max_usage')
+
+        Returns:
+            The stat value, or 0.0 if the attribute doesn't exist.
+        """
+        attr_name = f'{resource_name}_{stat_type}'
+        return getattr(self, attr_name, 0.0)
 
     def get_total_ecm_score(self) -> float:
         """Calculate total Evasion/Defense Score from all active ECM/Electronics."""
@@ -773,7 +821,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             components, modifiers, and metadata.
 
         Raises:
-            TypeError: If component data cannot be serialized to JSON-compatible types.
+            ValidationException: If component data cannot be serialized to JSON-compatible types.
         """
         return ShipSerializer.to_dict(self)
 
@@ -797,9 +845,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             Reconstructed Ship instance with all components and stats.
 
         Raises:
-            KeyError: If required fields (name, ship_class, color) are missing.
-            TypeError: If data types are invalid or incompatible.
-            ValueError: If component or modifier IDs are invalid.
+            ValidationException: If required fields are missing, data types are invalid,
+                or component/modifier IDs are invalid.
         """
         return ShipSerializer.from_dict(data, registries=registries)
 

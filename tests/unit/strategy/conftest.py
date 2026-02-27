@@ -13,7 +13,10 @@ from game.core.registry import RegistryManager
 
 @pytest.fixture
 def reset_resource_registry():
-    """Clear and reset resource registry between tests."""
+    """Clear and reset resource registry between tests.
+
+    # PROJ-195: Legitimate — test isolation fixture that clears singleton
+    """
     registry = RegistryManager.instance()
     registry.resources.clear()
     yield
@@ -32,8 +35,11 @@ def temp_resources_json(tmp_path):
 
 
 @pytest.fixture
-def custom_resource_registry(reset_resource_registry, temp_resources_json):
-    """Registry with custom 'glag' resource loaded."""
+def custom_resource_registry(fresh_registries, reset_resource_registry, temp_resources_json):
+    """Registry with custom 'glag' resource loaded.
+
+    Uses DI pattern: populates fresh_registries instead of singleton.
+    """
     from game.core.resources import load_resources_data
 
     filepath = temp_resources_json([
@@ -42,9 +48,8 @@ def custom_resource_registry(reset_resource_registry, temp_resources_json):
         {"id": "ammo"},
         {"id": "glag", "display_name": "Glag Units"},
     ])
-    registry = RegistryManager.instance()
-    registry.resources.update(load_resources_data(filepath))
-    return registry
+    fresh_registries.resources.update(load_resources_data(filepath))
+    return fresh_registries
 
 
 class MockComponent:

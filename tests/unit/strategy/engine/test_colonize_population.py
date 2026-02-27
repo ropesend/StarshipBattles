@@ -98,6 +98,10 @@ class MockGalaxy:
     def get_planets_at_global_hex(self, location: HexCoord):
         return self._planets_by_loc.get(location, [])
 
+    def get_zones_at_global_hex(self, location: HexCoord):
+        """Return zone objects at location (empty for these tests)."""
+        return []
+
 
 class MockRaceConfig:
     """Mock race config with just race_id."""

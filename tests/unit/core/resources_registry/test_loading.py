@@ -312,13 +312,13 @@ class TestEdgeCases:
             ]
         }))
 
-        with patch('game.core.resources.log_warning') as mock_warning:
+        with patch('game.core.resources.logger') as mock_logger:
             load_resources_data(str(filepath))
 
             # Currently no warning is issued for duplicates
             # This documents the current behavior (potential bug)
             duplicate_warnings = [
-                call for call in mock_warning.call_args_list
+                call for call in mock_logger.warning.call_args_list
                 if 'duplicate' in str(call).lower()
             ]
             # BUG: No duplicate warning is issued
@@ -334,21 +334,21 @@ class TestLogging:
 
     def test_load_resources_no_info_log_on_success(self, sample_resources_file):
         """Successful load does not log info (pure function)."""
-        with patch('game.core.resources.log_info') as mock_info:
+        with patch('game.core.resources.logger') as mock_logger:
             result = load_resources_data(sample_resources_file)
 
             # Pure function should not log success (caller handles that)
-            mock_info.assert_not_called()
+            mock_logger.info.assert_not_called()
             # But should still return data
             assert len(result) == 3
 
     def test_load_resources_logs_missing_file_warning(self):
         """Missing file logs a warning message."""
-        with patch('game.core.resources.log_warning') as mock_warning:
+        with patch('game.core.resources.logger') as mock_logger:
             load_resources_data("nonexistent_file_xyz.json")
 
-            mock_warning.assert_called_once()
-            call_args = str(mock_warning.call_args)
+            mock_logger.warning.assert_called_once()
+            call_args = str(mock_logger.warning.call_args)
             assert "not found" in call_args.lower() or "defaults" in call_args.lower()
 
     def test_load_resources_logs_parse_failure_warning(self, tmp_path):
@@ -356,9 +356,9 @@ class TestLogging:
         malformed_file = tmp_path / "malformed.json"
         malformed_file.write_text("{ invalid }")
 
-        with patch('game.core.resources.log_warning') as mock_warning:
+        with patch('game.core.resources.logger') as mock_logger:
             load_resources_data(str(malformed_file))
 
-            mock_warning.assert_called_once()
-            call_args = str(mock_warning.call_args)
+            mock_logger.warning.assert_called_once()
+            call_args = str(mock_logger.warning.call_args)
             assert "failed" in call_args.lower() or "error" in call_args.lower() or "load" in call_args.lower()

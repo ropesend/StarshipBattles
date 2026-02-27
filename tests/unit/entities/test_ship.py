@@ -10,7 +10,6 @@ from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.entities.ship_serialization import ShipSerializer
 from game.simulation.components.component import Component, load_components, create_component
-from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_project_root, get_data_dir
 
 
@@ -19,16 +18,8 @@ class TestShip:
     def setup_and_teardown(self, fresh_registries):
         """Set up registry data for tests.
 
-        PROJ-38: Uses fresh_registries fixture for data, then hydrates singleton.
+        PROJ-195: Pure DI pattern - uses fresh_registries directly, no singleton hydration.
         """
-        # Hydrate registry singleton from fresh_registries fixture data
-        mgr = RegistryManager.instance()
-        mgr.hydrate(
-            fresh_registries.components,
-            fresh_registries.modifiers,
-            fresh_registries.vehicle_classes
-        )
-
         yield
 
         # Note: reset_singletons fixture in conftest.py handles cleanup
@@ -146,18 +137,10 @@ class TestShipClassMutation:
     def setup_and_teardown(self, fresh_registries):
         """Set up registry data for class mutation tests.
 
-        PROJ-38: Uses fresh_registries fixture for data, then hydrates singleton.
+        PROJ-195: Pure DI pattern - uses fresh_registries directly, no singleton hydration.
         """
         if not pygame.get_init():
             pygame.init()
-
-        # Hydrate registry singleton from fresh_registries fixture data
-        mgr = RegistryManager.instance()
-        mgr.hydrate(
-            fresh_registries.components,
-            fresh_registries.modifiers,
-            fresh_registries.vehicle_classes
-        )
 
         self.registries = fresh_registries
         self.ship = Ship("Mutation Test", 0, 0, (255, 255, 255), ship_class="Frigate", registries=fresh_registries)
@@ -362,18 +345,10 @@ class TestChangeClassInvalidInput:
     def setup_and_teardown(self, fresh_registries):
         """Set up registry data for invalid input tests.
 
-        PROJ-38: Uses fresh_registries fixture for data, then hydrates singleton.
+        PROJ-195: Pure DI pattern - uses fresh_registries directly, no singleton hydration.
         """
         if not pygame.get_init():
             pygame.init()
-
-        # Hydrate registry singleton from fresh_registries fixture data
-        mgr = RegistryManager.instance()
-        mgr.hydrate(
-            fresh_registries.components,
-            fresh_registries.modifiers,
-            fresh_registries.vehicle_classes
-        )
 
         yield
 
@@ -401,13 +376,10 @@ class TestTotalDefenseScoreInitialization:
 
     @pytest.fixture(autouse=True)
     def setup_and_teardown(self, fresh_registries):
-        """Set up registry data for tests."""
-        mgr = RegistryManager.instance()
-        mgr.hydrate(
-            fresh_registries.components,
-            fresh_registries.modifiers,
-            fresh_registries.vehicle_classes
-        )
+        """Set up registry data for tests.
+
+        PROJ-195: Pure DI pattern - uses fresh_registries directly, no singleton hydration.
+        """
         yield
         if pygame.get_init():
             pygame.quit()

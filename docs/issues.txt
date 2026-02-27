@@ -1,3 +1,11 @@
+5) There are a lot of lists that require filters, a lot of filters should have a true or false or don't care options, currently we handl this with two buttons that can be independently pressed: For example: C:\Dev\Starship Battles\output\screenshots\screenshot_20260215_062104_398890_strategy_viewport.png warp capable and Not Warp Capabll,  All of these filters should be handled differently, by usine 3 nutually exclusive buttons.  It should show the statement "Warp Capable", then to the right there should be three buttons T (true) F (false) X (don't care) buttons.   This approach should be used for all of the True/Fals options, reducing the total number of lines on the lists.  Lets work with the Fleet Report first and get it working like this, I want all of the Tru/False combos to be identified an consiolidated into single rows.
+
+6) Stars hex diameter should be radius instad with Radius 1 being the center hex, radius 2 being the center hex plus the 1st ring around them, radius 2 goes to the 2nd ring etc...  We need to modify the star creation to calculate radius instead of diameter.
+
+7) move orders should start with a load all passengers order
+
+8)Loading, Droping, and transfering cargo should only cost 1 movement point, it should occur during one of the 100 ticks during the turn, currently it seems to take an entire turn, it should occur instead of 1 movement point.
+
 1) The planet details window in teh Planets List should eb the same dimaensions as the planet details panel on the main strategy layer.  currently the 1st is much shorter than the latter.  Also when the planets window is resized, the planet details panel should move with it.
 
 2) On the Species Setup Window the Load Saved Species from the summary tab does not actually load anything, it opens a dialog that lets me see the various species to load, but wht I actuually select one and click load , the dialog closes and nothing is loaded.

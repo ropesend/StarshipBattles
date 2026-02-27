@@ -27,7 +27,7 @@ class ValidationRule(ABC):
     Example usage:
         class MyRule(ValidationRule):
             def _do_validate(self, ship, component, layer_type):
-                result = ValidationResult(True)
+                result = ValidationResult.success()
                 if some_condition_fails:
                     result.add_error("Validation failed")
                 return result
@@ -55,7 +55,7 @@ class ValidationRule(ABC):
             ValidationResult with errors/warnings from validation
         """
         if not self._should_validate(component, layer_type):
-            return ValidationResult(True)
+            return ValidationResult.success()
         return self._do_validate(ship, component, layer_type)
 
     def _should_validate(

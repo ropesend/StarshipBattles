@@ -177,7 +177,8 @@ class ShipCombatEngine:
             cost_amount = ship.shield_regen_cost / 100.0
 
             has_energy = True
-            if cost_amount > 0 and hasattr(ship, 'resources'):
+            # Ship.resources is always initialized in __init__
+            if cost_amount > 0 and ship.resources is not None:
                 energy_res = ship.resources.get_resource(ResourceType.ENERGY)
                 if energy_res:
                     if energy_res.current_value >= cost_amount:
@@ -190,8 +191,8 @@ class ShipCombatEngine:
                 if ship.current_shields > ship.max_shields:
                     ship.current_shields = ship.max_shields
 
-        # Apply Ship Repair
-        if getattr(ship, 'repair_rate', 0) > 0:
+        # Apply Ship Repair (repair_rate initialized in Ship.__init__)
+        if ship.repair_rate > 0:
             self._apply_repair(ship.repair_rate / 100.0)
 
     def _apply_repair(self, repair_amount: float) -> None:

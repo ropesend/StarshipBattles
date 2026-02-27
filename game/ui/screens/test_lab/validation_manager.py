@@ -100,7 +100,7 @@ class TestLabValidationManager:
                     logger.info(f"  {test_id}: {pass_count} pass, {fail_count} fail, {warn_count} warn")
 
             except (OSError, ValueError, KeyError, json.JSONDecodeError) as e:
-                logger.info(f"  {test_id}: Validation error - {e}")
+                logger.warning(f"  {test_id}: Validation error - {e}")
 
         logger.info("=== Static Validation Complete ===\n")
 

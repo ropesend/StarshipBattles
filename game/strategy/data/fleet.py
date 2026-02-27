@@ -1,5 +1,9 @@
+import logging
 from game.core.hex_math import HexCoord
+from game.core.validation_helpers import require_keys, validate_enum
 from game.strategy.data.ship_instance import ShipInstance
+
+logger = logging.getLogger(__name__)
 from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
 from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
 from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
@@ -10,10 +14,12 @@ from game.core.protocols import IPostBattleShip
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
+    from game.strategy.data.planet import Planet
 
 
 class OrderType(Enum):
     MOVE = auto()
+    WARP = auto()  # PROJ-187: Explicit warp point traversal
     COLONIZE = auto()
     MOVE_TO_FLEET = auto()
     JOIN_FLEET = auto()
@@ -30,22 +36,53 @@ class OrderType(Enum):
     UNLOAD_POPULATION = auto()
 
 
+# PROJ-187: Order type categorization for ActionExecutionEngine
+# Movement orders are handled by FleetMovementEngine
+MOVEMENT_ORDER_TYPES: frozenset = frozenset({
+    OrderType.MOVE,
+    OrderType.MOVE_TO_FLEET,
+    OrderType.WARP,
+})
+
+# Action orders are handled by ActionExecutionEngine (tick-based execution)
+# Excludes BUILD (persistent, handled by ProductionEngine)
+ACTION_ORDER_TYPES: frozenset = frozenset({
+    OrderType.COLONIZE,
+    OrderType.TRANSFER,
+    OrderType.LOAD_POPULATION,
+    OrderType.UNLOAD_POPULATION,
+    OrderType.JOIN_FLEET,
+    OrderType.IMPLODE_PLANET,
+    OrderType.STELLERATE_STAR,
+    OrderType.OPEN_WARP_POINT,
+    OrderType.CLOSE_WARP_POINT,
+    OrderType.CREATE_DYSON_SPHERE,
+    OrderType.SELF_DESTRUCT,
+})
+
+
 class FleetOrder:
     def __init__(self, order_type, target=None):
         self.type = order_type
-        self.target = target  # HexCoord for MOVE, Planet for COLONIZE, Fleet for MOVE_TO_FLEET/JOIN_FLEET
+        self.target = target  # HexCoord for MOVE/WARP, Planet for COLONIZE, Fleet for MOVE_TO_FLEET/JOIN_FLEET
+        self.execution_progress: int = 0  # PROJ-187: Ticks spent executing this order
 
     def __repr__(self):
+        if self.execution_progress > 0:
+            return f"FleetOrder({self.type.name}, {self.target}, progress={self.execution_progress})"
         return f"FleetOrder({self.type.name}, {self.target})"
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize for save game."""
+        # Import at runtime to avoid circular import
+        from game.strategy.data.planet import Planet
+
         target_data = None
         if self.target is not None:
             if self.type in (OrderType.TRANSFER, OrderType.LOAD_POPULATION, OrderType.UNLOAD_POPULATION):
                 # TRANSFER and population orders store a dict with direction, cargo_type, amount, planet_id
                 target_data = {'type': 'transfer', 'value': self.target}
-            elif self.type == OrderType.IMPLODE_PLANET and hasattr(self.target, 'id'):
+            elif self.type == OrderType.IMPLODE_PLANET and isinstance(self.target, Planet):
                 # Planet reference for IMPLODE_PLANET (PROJ-102)
                 target_data = {'type': 'planet_ref', 'id': self.target.id}
             elif self.type == OrderType.SELF_DESTRUCT and isinstance(self.target, list):
@@ -54,18 +91,26 @@ class FleetOrder:
             elif self.type == OrderType.OPEN_WARP_POINT and isinstance(self.target, dict):
                 # Warp parameters for OPEN_WARP_POINT (PROJ-102)
                 target_data = {'type': 'warp_params', 'value': self.target}
-            elif hasattr(self.target, 'to_dict'):
+            elif isinstance(self.target, HexCoord):
+                # HexCoord for MOVE, WARP targets
+                target_data = {'q': self.target.q, 'r': self.target.r}
+            elif isinstance(self.target, Planet):
+                # Planet target (COLONIZE etc.) - serialize full planet
                 target_data = self.target.to_dict()
-            elif hasattr(self.target, 'id'):
+            elif isinstance(self.target, Fleet):
                 # Fleet reference - store ID
                 target_data = {'type': 'fleet_ref', 'id': self.target.id}
             else:
                 target_data = {'type': 'raw', 'value': str(self.target)}
 
-        return {
+        result = {
             'type': self.type.name,
             'target': target_data,
         }
+        # PROJ-187: Only serialize execution_progress when > 0 (keeps saves clean)
+        if self.execution_progress > 0:
+            result['execution_progress'] = self.execution_progress
+        return result
 
 
 class Fleet:
@@ -342,7 +387,19 @@ class Fleet:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Fleet':
-        """Deserialize from save game."""
+        """
+        Deserialize from save game.
+
+        Args:
+            data: Dict with fleet data
+
+        Returns:
+            Reconstructed Fleet
+
+        Raises:
+            PersistenceException: If required keys missing
+        """
+        require_keys(data, ['id', 'owner_id'], 'Fleet')
         # ShipInstance imported at module level
 
         location = data.get('location')
@@ -358,9 +415,12 @@ class Fleet:
             speed=data.get('speed', 5.0),
         )
 
-        # Restore ships
-        for ship_data in data.get('ships', []):
-            fleet.ships.append(ShipInstance.from_dict(ship_data))
+        # Restore ships (skip corrupt entries with warning)
+        for i, ship_data in enumerate(data.get('ships', [])):
+            try:
+                fleet.ships.append(ShipInstance.from_dict(ship_data))
+            except Exception as e:
+                logger.warning(f"Fleet {data['id']}: skipping corrupt ship[{i}]: {e}")
 
         # Restore path
         for p in data.get('path', []):
@@ -371,7 +431,7 @@ class Fleet:
             else:
                 fleet.path.append(p)
 
-        # Restore orders
+        # Restore orders (skip corrupt entries with warning)
         # Note: Multiple target formats supported:
         # 1. {'q': x, 'r': y} - HexCoord.to_dict() format
         # 2. {'type': 'fleet_ref', 'id': xxx} - Fleet reference for MOVE_TO_FLEET orders
@@ -380,36 +440,42 @@ class Fleet:
         # 5. {'type': 'planet_ref', 'id': xxx} - Planet reference (PROJ-102)
         # 6. {'type': 'ship_id_list', 'value': [...]} - Ship IDs (PROJ-102)
         # 7. {'type': 'warp_params', 'value': {...}} - Warp parameters (PROJ-102)
-        for order_data in data.get('orders', []):
-            order_type = OrderType[order_data['type']]
-            target = None
+        for i, order_data in enumerate(data.get('orders', [])):
+            try:
+                order_type = validate_enum(order_data['type'], OrderType, 'type', f'Fleet order[{i}]')
+                target = None
 
-            target_data = order_data.get('target')
-            if target_data is not None:
-                if isinstance(target_data, dict):
-                    if 'q' in target_data and 'r' in target_data:
-                        # HexCoord.to_dict() format
-                        target = HexCoord(target_data['q'], target_data['r'])
-                    elif target_data.get('type') == 'fleet_ref':
-                        # Fleet reference - store ID for later resolution
-                        target = {'_fleet_ref': target_data['id']}
-                    elif target_data.get('type') == 'transfer':
-                        # TRANSFER order params dict (PROJ-68)
-                        target = target_data['value']
-                    elif target_data.get('type') == 'planet_ref':
-                        # Planet reference for IMPLODE_PLANET (PROJ-102)
-                        target = {'_planet_ref': target_data['id']}
-                    elif target_data.get('type') == 'ship_id_list':
-                        # Ship ID list for SELF_DESTRUCT (PROJ-102)
-                        target = target_data['value']
-                    elif target_data.get('type') == 'warp_params':
-                        # Warp parameters for OPEN_WARP_POINT (PROJ-102)
-                        target = target_data['value']
-                    elif target_data.get('type') == 'raw':
-                        # Raw string fallback
-                        target = target_data['value']
+                target_data = order_data.get('target')
+                if target_data is not None:
+                    if isinstance(target_data, dict):
+                        if 'q' in target_data and 'r' in target_data:
+                            # HexCoord.to_dict() format
+                            target = HexCoord(target_data['q'], target_data['r'])
+                        elif target_data.get('type') == 'fleet_ref':
+                            # Fleet reference - store ID for later resolution
+                            target = {'_fleet_ref': target_data['id']}
+                        elif target_data.get('type') == 'transfer':
+                            # TRANSFER order params dict (PROJ-68)
+                            target = target_data['value']
+                        elif target_data.get('type') == 'planet_ref':
+                            # Planet reference for IMPLODE_PLANET (PROJ-102)
+                            target = {'_planet_ref': target_data['id']}
+                        elif target_data.get('type') == 'ship_id_list':
+                            # Ship ID list for SELF_DESTRUCT (PROJ-102)
+                            target = target_data['value']
+                        elif target_data.get('type') == 'warp_params':
+                            # Warp parameters for OPEN_WARP_POINT (PROJ-102)
+                            target = target_data['value']
+                        elif target_data.get('type') == 'raw':
+                            # Raw string fallback
+                            target = target_data['value']
 
-            fleet.orders.append(FleetOrder(order_type, target))
+                order = FleetOrder(order_type, target)
+                # PROJ-187: Restore execution_progress (default 0 for backward compat)
+                order.execution_progress = order_data.get('execution_progress', 0)
+                fleet.orders.append(order)
+            except Exception as e:
+                logger.warning(f"Fleet {data['id']}: skipping corrupt order[{i}]: {e}")
 
         # Restore construction queue
         fleet.construction_queue = data.get('construction_queue', [])

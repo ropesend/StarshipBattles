@@ -17,11 +17,12 @@ Example calculation:
 - hexes = (200 * 25) / 1000 = 5 hexes/turn
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.ship_instance import ShipInstance
+    from game.strategy.services.area_effect_manager import EnvironmentalEffects
 
 
 # Constants
@@ -133,3 +134,33 @@ class FleetSpeedCalculator:
             fleet: The Fleet to update
         """
         fleet.speed = FleetSpeedCalculator.calculate_fleet_speed(fleet)
+
+    @staticmethod
+    def calculate_fleet_speed_with_environment(
+        fleet: 'Fleet',
+        environmental_effects: Optional['EnvironmentalEffects'] = None,
+    ) -> float:
+        """
+        Calculate fleet speed with optional environmental modifiers.
+
+        The fleet base speed is calculated normally (slowest ship), then the
+        environmental strategic_mult is applied BEFORE the final floor/clamp.
+
+        Args:
+            fleet: The Fleet to calculate speed for
+            environmental_effects: Optional environmental effects to apply.
+                If None or strategic_mult==1.0, returns base speed unchanged.
+
+        Returns:
+            Float speed value (hexes per turn), >= 0.0
+        """
+        base_speed = FleetSpeedCalculator.calculate_fleet_speed(fleet)
+
+        if environmental_effects is None:
+            return base_speed
+
+        # Apply strategic movement multiplier from storms
+        modified_speed = base_speed * environmental_effects.strategic_mult
+
+        # Clamp to minimum of 0
+        return max(0.0, float(int(modified_speed)))

@@ -83,7 +83,8 @@ class TestComputePlanetProduction:
             facilities=[facility]
         )
 
-        # Mock the registry to return a component with ResourceHarvester ability
+        # PROJ-174: Mock registry provider (DI pattern)
+        mock_provider = MagicMock()
         mock_comp_def = MagicMock()
         mock_comp_def.abilities = {
             'ResourceHarvester': {
@@ -91,11 +92,13 @@ class TestComputePlanetProduction:
                 'base_harvest_rate': 100.0
             }
         }
-        mock_registries = MagicMock()
-        mock_registries.components.get.return_value = mock_comp_def
+        mock_provider.get_components.return_value = {'metal_harvester': mock_comp_def}
+        mock_provider.get_modifiers.return_value = {}
+        mock_provider.get_vehicle_classes.return_value = {}
+        mock_provider.get_resources.return_value = {}
 
-        with patch('game.core.registry.get_default_registries',
-                   return_value=mock_registries):
+        with patch('game.core.registry.get_default_registry_provider',
+                   return_value=mock_provider):
             result = formatter.compute_planet_production(planet)
 
         assert 'Metals' in result

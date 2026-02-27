@@ -60,19 +60,9 @@ class TestProjectileInitialization:
         )
         assert proj.team_id == 3
 
-    def test_projectile_handles_owner_without_team(self):
-        """Projectile should use -1 for owner without team_id."""
-        owner = MagicMock(spec=[])  # No team_id attribute
-        proj = Projectile(
-            owner=owner,
-            position=Vector2(0, 0),
-            velocity=Vector2(1, 0),
-            damage=10,
-            range_val=100,
-            endurance=1.0,
-            proj_type='projectile'
-        )
-        assert proj.team_id == -1
+    # DELETED: test_projectile_handles_owner_without_team
+    # Reason: Duck typing replaced with explicit protocols in PROJ-190.
+    # Owner must now have team_id attribute.
 
     def test_projectile_stores_source_weapon(self, mock_owner):
         """Projectile should store reference to source weapon."""
@@ -229,7 +219,7 @@ class TestProjectileValidation:
                 endurance=1.0,
                 proj_type='projectile'
             )
-        assert exc_info.value.code == "V003"
+        assert exc_info.value.code == "V004"
         assert "damage" in exc_info.value.context
 
     def test_none_damage_raises_validation_error(self, mock_owner):
@@ -244,7 +234,7 @@ class TestProjectileValidation:
                 endurance=1.0,
                 proj_type='projectile'
             )
-        assert exc_info.value.code == "V003"
+        assert exc_info.value.code == "V004"
 
     def test_zero_damage_allowed(self, mock_owner):
         """Zero damage should be allowed (for utility projectiles)."""
@@ -271,7 +261,7 @@ class TestProjectileValidation:
                 endurance=1.0,
                 proj_type='projectile'
             )
-        assert exc_info.value.code == "V003"
+        assert exc_info.value.code == "V004"
         assert "range" in exc_info.value.context
 
     def test_negative_range_raises_validation_error(self, mock_owner):
@@ -286,7 +276,7 @@ class TestProjectileValidation:
                 endurance=1.0,
                 proj_type='projectile'
             )
-        assert exc_info.value.code == "V003"
+        assert exc_info.value.code == "V004"
 
     def test_none_range_raises_validation_error(self, mock_owner):
         """None range should raise ValidationException."""
@@ -300,7 +290,7 @@ class TestProjectileValidation:
                 endurance=1.0,
                 proj_type='projectile'
             )
-        assert exc_info.value.code == "V003"
+        assert exc_info.value.code == "V004"
 
     def test_none_endurance_allowed(self, mock_owner):
         """None endurance should be allowed (range-limited projectiles)."""
@@ -327,7 +317,7 @@ class TestProjectileValidation:
                 endurance=0,
                 proj_type='projectile'
             )
-        assert exc_info.value.code == "V003"
+        assert exc_info.value.code == "V004"
         assert "endurance" in exc_info.value.context
 
     def test_negative_endurance_raises_validation_error(self, mock_owner):
@@ -342,7 +332,7 @@ class TestProjectileValidation:
                 endurance=-1.0,
                 proj_type='projectile'
             )
-        assert exc_info.value.code == "V003"
+        assert exc_info.value.code == "V004"
 
 
 class TestProjectileMovement:

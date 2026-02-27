@@ -370,7 +370,7 @@ class TestSaveSelectionTimestampParsing:
             }]
             mock_svc.list_turns.return_value = []
 
-            with patch('game.ui.screens.save_selection_window.log_warning') as mock_log:
+            with patch('game.ui.screens.save_selection_window.logger') as mock_log:
                 window = SaveSelectionWindow(
                     rect=pygame.Rect(100, 100, 600, 500),
                     manager=self.manager,
@@ -383,8 +383,8 @@ class TestSaveSelectionTimestampParsing:
                 assert len(window.saves_list) == 1
 
                 # Should have logged a warning about the malformed timestamp
-                mock_log.assert_called()
-                call_args = str(mock_log.call_args)
+                mock_log.warning.assert_called()
+                call_args = str(mock_log.warning.call_args)
                 assert 'timestamp' in call_args.lower() or 'date' in call_args.lower()
 
                 window.kill()
@@ -411,7 +411,7 @@ class TestSaveSelectionTimestampParsing:
                 {'turn_number': 2, 'timestamp': '2026-01-24T12:30:00'}
             ]
 
-            with patch('game.ui.screens.save_selection_window.log_warning') as mock_log:
+            with patch('game.ui.screens.save_selection_window.logger') as mock_log:
                 window = SaveSelectionWindow(
                     rect=pygame.Rect(100, 100, 600, 500),
                     manager=self.manager,
@@ -424,7 +424,7 @@ class TestSaveSelectionTimestampParsing:
                 window._refresh_list_display()
 
                 # Should have logged a warning about the malformed timestamp
-                mock_log.assert_called()
+                mock_log.warning.assert_called()
 
                 window.kill()
 
@@ -445,7 +445,7 @@ class TestSaveSelectionTimestampParsing:
             }]
             mock_svc.list_turns.return_value = []
 
-            with patch('game.ui.screens.save_selection_window.log_warning') as mock_log:
+            with patch('game.ui.screens.save_selection_window.logger') as mock_log:
                 window = SaveSelectionWindow(
                     rect=pygame.Rect(100, 100, 600, 500),
                     manager=self.manager,
@@ -456,7 +456,7 @@ class TestSaveSelectionTimestampParsing:
                 # With valid timestamp, no warning should be logged for timestamp parsing
                 # (other warnings may occur, so we check the call args specifically)
                 timestamp_warning_logged = False
-                for call in mock_log.call_args_list:
+                for call in mock_log.warning.call_args_list:
                     if 'timestamp' in str(call).lower():
                         timestamp_warning_logged = True
                         break

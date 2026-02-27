@@ -5,15 +5,18 @@ This module provides the RaceLibrary class for saving, loading, listing,
 and deleting race configuration files stored in the races/ folder.
 """
 import json
+import logging
 import os
 import glob
 import re
 import uuid
 from typing import List, Optional, Tuple
 
-from game.core.logger import log_info, log_debug, log_error, log_warning
 from game.core.paths import Paths
 from game.strategy.data.race_config import RaceConfig
+from game.core.exceptions import ValidationException
+
+logger = logging.getLogger(__name__)
 
 
 def _slugify(text: str) -> str:
@@ -60,7 +63,7 @@ class RaceLibrary:
         else:
             self.races_folder = races_folder
 
-        log_debug(f"RaceLibrary initialized with folder: {self.races_folder}")
+        logger.debug(f"RaceLibrary initialized with folder: {self.races_folder}")
 
     def _ensure_folder_exists(self) -> bool:
         """
@@ -73,10 +76,10 @@ class RaceLibrary:
             os.makedirs(self.races_folder, exist_ok=True)
             return True
         except PermissionError as e:
-            log_error(f"Permission denied creating races folder '{self.races_folder}': {e}")
+            logger.error(f"Permission denied creating races folder '{self.races_folder}': {e}")
             return False
         except OSError as e:
-            log_error(f"OS error creating races folder '{self.races_folder}': {e}")
+            logger.error(f"OS error creating races folder '{self.races_folder}': {e}")
             return False
 
     def get_all_races(self) -> List[RaceConfig]:
@@ -87,12 +90,12 @@ class RaceLibrary:
             List of RaceConfig objects, sorted by name
         """
         if not os.path.exists(self.races_folder):
-            log_debug(f"Races folder does not exist: {self.races_folder}")
+            logger.debug(f"Races folder does not exist: {self.races_folder}")
             return []
 
         races = []
         pattern = os.path.join(self.races_folder, "*.json")
-        log_debug(f"Scanning for races: {pattern}")
+        logger.debug(f"Scanning for races: {pattern}")
 
         for filepath in glob.glob(pattern):
             try:
@@ -102,23 +105,23 @@ class RaceLibrary:
                     if not race.race_id:
                         race.race_id = os.path.splitext(os.path.basename(filepath))[0]
                     races.append(race)
-                    log_debug(f"Loaded race: {race.name} ({race.race_id})")
+                    logger.debug(f"Loaded race: {race.name} ({race.race_id})")
             except json.JSONDecodeError as e:
-                log_warning(f"Corrupt JSON in race file {filepath}: {e}")
+                logger.warning(f"Corrupt JSON in race file {filepath}: {e}")
                 continue
             except KeyError as e:
-                log_warning(f"Missing required field in race file {filepath}: {e}")
+                logger.warning(f"Missing required field in race file {filepath}: {e}")
                 continue
             except (PermissionError, OSError) as e:
-                log_warning(f"Cannot read race file {filepath}: {e}")
+                logger.warning(f"Cannot read race file {filepath}: {e}")
                 continue
-            except (AttributeError, TypeError, ValueError) as e:
-                log_warning(f"Unexpected error loading race from {filepath}: {e}")
+            except (AttributeError, TypeError, ValueError, ValidationException) as e:
+                logger.warning(f"Unexpected error loading race from {filepath}: {e}")
                 continue
 
         # Sort by name
         races.sort(key=lambda r: r.name.lower())
-        log_info(f"Loaded {len(races)} races from library")
+        logger.info(f"Loaded {len(races)} races from library")
         return races
 
     def get_race(self, race_id: str) -> Optional[RaceConfig]:
@@ -134,7 +137,7 @@ class RaceLibrary:
         filepath = os.path.join(self.races_folder, f"{race_id}.json")
 
         if not os.path.exists(filepath):
-            log_warning(f"Race not found: {race_id}")
+            logger.warning(f"Race not found: {race_id}")
             return None
 
         try:
@@ -143,16 +146,16 @@ class RaceLibrary:
                 race.race_id = race_id
             return race
         except json.JSONDecodeError as e:
-            log_error(f"Corrupt JSON in race '{race_id}' at {filepath}: {e}")
+            logger.error(f"Corrupt JSON in race '{race_id}' at {filepath}: {e}")
             return None
         except KeyError as e:
-            log_error(f"Missing required field in race '{race_id}': {e}")
+            logger.error(f"Missing required field in race '{race_id}': {e}")
             return None
         except (PermissionError, OSError) as e:
-            log_error(f"Cannot read race '{race_id}' from {filepath}: {e}")
+            logger.error(f"Cannot read race '{race_id}' from {filepath}: {e}")
             return None
-        except (AttributeError, TypeError, ValueError) as e:
-            log_error(f"Unexpected error loading race '{race_id}': {e}")
+        except (AttributeError, TypeError, ValueError, ValidationException) as e:
+            logger.error(f"Unexpected error loading race '{race_id}': {e}")
             return None
 
     def save_race(self, config: RaceConfig) -> Tuple[bool, str]:
@@ -181,21 +184,21 @@ class RaceLibrary:
         # Save the configuration
         try:
             if config.save(filepath):
-                log_info(f"Saved race: {config.name} ({config.race_id})")
+                logger.info(f"Saved race: {config.name} ({config.race_id})")
                 return True, f"Race '{config.name}' saved successfully"
             else:
                 return False, "Failed to write race file"
         except PermissionError as e:
-            log_error(f"Permission denied saving race '{config.race_id}' to {filepath}")
+            logger.error(f"Permission denied saving race '{config.race_id}' to {filepath}")
             return False, "Error saving race: Permission denied"
         except OSError as e:
-            log_error(f"OS error saving race '{config.race_id}' to {filepath}: {e}")
+            logger.error(f"OS error saving race '{config.race_id}' to {filepath}: {e}")
             return False, f"Error saving race: {str(e)}"
-        except (TypeError, ValueError) as e:
-            log_error(f"Serialization error saving race '{config.race_id}': {e}")
+        except ValidationException as e:
+            logger.error(f"Serialization error saving race '{config.race_id}': {e}")
             return False, "Error saving race: Invalid race data"
         except (AttributeError, KeyError) as e:
-            log_error(f"Unexpected error saving race '{config.race_id}': {e}")
+            logger.error(f"Unexpected error saving race '{config.race_id}': {e}")
             return False, f"Error saving race: {str(e)}"
 
     def delete_race(self, race_id: str) -> bool:
@@ -211,21 +214,21 @@ class RaceLibrary:
         filepath = os.path.join(self.races_folder, f"{race_id}.json")
 
         if not os.path.exists(filepath):
-            log_warning(f"Cannot delete - race not found: {race_id}")
+            logger.warning(f"Cannot delete - race not found: {race_id}")
             return False
 
         try:
             os.remove(filepath)
-            log_info(f"Deleted race: {race_id}")
+            logger.info(f"Deleted race: {race_id}")
             return True
         except PermissionError as e:
-            log_error(f"Permission denied deleting race '{race_id}' at {filepath}")
+            logger.error(f"Permission denied deleting race '{race_id}' at {filepath}")
             return False
         except OSError as e:
-            log_error(f"OS error deleting race '{race_id}' at {filepath}: {e}")
+            logger.error(f"OS error deleting race '{race_id}' at {filepath}: {e}")
             return False
         except (RuntimeError, IOError) as e:
-            log_error(f"Unexpected error deleting race '{race_id}': {e}")
+            logger.error(f"Unexpected error deleting race '{race_id}': {e}")
             return False
 
     def _generate_race_id(self, name: str) -> str:

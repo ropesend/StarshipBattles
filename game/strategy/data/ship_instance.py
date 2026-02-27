@@ -11,16 +11,19 @@ separate from its design template.
 
 PROJ-40/NEW-STRAT-008: Added validation and warning for serial parameter.
 """
+import logging
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, Tuple, List, TYPE_CHECKING
 import uuid
 import json
 
-from game.core.logger import log_warning, log_debug
 from game.core.protocols import IPostBattleShip
+from game.core.validation_helpers import require_keys, validate_non_negative
 from game.strategy.data.ship_resource_manager import ShipResourceManager
 from game.strategy.data.ship_cargo_manager import ShipCargoManager
 from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
@@ -82,6 +85,27 @@ class ShipInstance:
         self._cargo_mgr = ShipCargoManager(self)
         self._display_fmt = ShipDisplayFormatter(self)
 
+    # PROJ-193: Property aliases for IShipInstance Protocol compliance
+    @property
+    def design_name(self) -> str:
+        """Design name from design_data (IShipInstance Protocol)."""
+        return self.design_data.get('name', self.design_id)
+
+    @property
+    def hull_class(self) -> str:
+        """Ship's hull class from design_data (IShipInstance Protocol)."""
+        return self.design_data.get('ship_class', 'Unknown')
+
+    @property
+    def ship_name(self) -> str:
+        """Instance name alias (IShipInstance Protocol)."""
+        return self.name
+
+    @property
+    def serial_number(self) -> Optional[int]:
+        """Serial number alias (IShipInstance Protocol)."""
+        return self.serial
+
     def __hash__(self) -> int:
         return hash(self.instance_id)
 
@@ -128,7 +152,7 @@ class ShipInstance:
             serial = empire.get_next_serial(actual_design_id)
         else:
             # PROJ-40/NEW-STRAT-008: Log warning when empire not provided
-            log_warning(f"ShipInstance.create() called without empire - "
+            logger.warning(f"ShipInstance.create() called without empire - "
                        f"serial will be None for '{actual_design_id}'")
 
         instance = cls(
@@ -230,8 +254,14 @@ class ShipInstance:
             # INTENTIONAL LATE IMPORT: Lazy initialization pattern
             # See docs/ARCHITECTURE.md "Intentional Late Imports" section
             from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
-            from game.core.registry import get_default_registries
-            registries = get_default_registries()
+            from game.core.registry import get_default_registry_provider, GameRegistries
+            provider = get_default_registry_provider()
+            registries = GameRegistries(
+                components=provider.get_components(),
+                modifiers=provider.get_modifiers(),
+                vehicle_classes=provider.get_vehicle_classes(),
+                resources=provider.get_resources(),
+            )
             service = ShipStatsCalculator(registries=registries)
             self._cached_stats = service.calculate_stats(
                 self.design_data,
@@ -515,7 +545,7 @@ class ShipInstance:
             # Calculate damage to distribute
             damage = ship.max_hp - self.current_hp
             if damage > 0:
-                log_debug(f"Ship {self.name} entering battle with {damage} damage pre-applied")
+                logger.debug(f"Ship {self.name} entering battle with {damage} damage pre-applied")
                 # Apply damage (this will distribute to components)
                 ship.combat_engine.take_damage(damage)
 
@@ -631,7 +661,30 @@ class ShipInstance:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ShipInstance':
-        """Deserialize from save game."""
+        """
+        Deserialize from save game.
+
+        Args:
+            data: Dict with ship instance data
+
+        Returns:
+            Reconstructed ShipInstance
+
+        Raises:
+            PersistenceException: If required keys missing or values invalid
+        """
+        require_keys(data, ['instance_id', 'design_id', 'name', 'owner_id'], 'ShipInstance')
+
+        # Validate non-negative numeric fields (if present in data)
+        if data.get('current_hp') is not None:
+            validate_non_negative(data['current_hp'], 'current_hp', 'ShipInstance')
+        if data.get('experience') is not None:
+            validate_non_negative(data['experience'], 'experience', 'ShipInstance')
+        if data.get('kills') is not None:
+            validate_non_negative(data['kills'], 'kills', 'ShipInstance')
+        if data.get('battles_survived') is not None:
+            validate_non_negative(data['battles_survived'], 'battles_survived', 'ShipInstance')
+
         return cls(
             instance_id=data['instance_id'],
             design_id=data['design_id'],

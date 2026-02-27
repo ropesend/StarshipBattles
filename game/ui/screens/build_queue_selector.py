@@ -8,9 +8,11 @@ from __future__ import annotations
 
 import pygame
 import pygame_gui.elements as ui
-from typing import TYPE_CHECKING, List, Callable, Set, Optional
+from typing import TYPE_CHECKING, List, Callable, Set, Optional, Dict
 
-from game.core.logger import log_info
+import logging
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     import pygame_gui
@@ -79,6 +81,9 @@ class BuildQueueSelector:
         # Store buttons for event handling
         self.buttons: List[ui.UIButton] = []
 
+        # Button-to-index mapping (replaces monkey-patching on UIButton objects)
+        self._button_index_map: Dict[ui.UIButton, int] = {}
+
         self.refresh()
 
     def refresh(self) -> None:
@@ -88,6 +93,7 @@ class BuildQueueSelector:
         for element in elements_to_kill:
             element.kill()
         self.buttons.clear()
+        self._button_index_map.clear()
 
         row_height = 30
         row_width = self.panel.get_relative_rect().width - 20
@@ -112,7 +118,7 @@ class BuildQueueSelector:
                 container=self.scrollable,
                 object_id=object_id
             )
-            btn.queue_source_index = idx  # Tag button with source index
+            self._button_index_map[btn] = idx  # Store index in map instead of on button
 
             self.buttons.append(btn)
             y_offset += row_height + 5
@@ -135,10 +141,10 @@ class BuildQueueSelector:
         Returns:
             True if the button was handled, False if not a selector button
         """
-        if not hasattr(button, 'queue_source_index'):
+        if button not in self._button_index_map:
             return False
 
-        idx = button.queue_source_index
+        idx = self._button_index_map[button]
         if ctrl_held:
             self._on_queue_toggled(idx)
         else:
@@ -153,7 +159,7 @@ class BuildQueueSelector:
         """
         self.selected_indices = {index}
         self.active_source = self.queue_sources[index]
-        log_info(f"BuildQueue: Selected queue '{self.active_source.display_name}'")
+        logger.info(f"BuildQueue: Selected queue '{self.active_source.display_name}'")
         self.refresh()
         self._on_selection_changed(self.active_source, self.selected_indices)
 
@@ -176,10 +182,10 @@ class BuildQueueSelector:
         if len(self.selected_indices) == 1:
             sole_idx = next(iter(self.selected_indices))
             self.active_source = self.queue_sources[sole_idx]
-            log_info(f"BuildQueue: Single queue selected: '{self.active_source.display_name}'")
+            logger.info(f"BuildQueue: Single queue selected: '{self.active_source.display_name}'")
         else:
             self.active_source = None
-            log_info(f"BuildQueue: Multi-select mode: {len(self.selected_indices)} queues")
+            logger.info(f"BuildQueue: Multi-select mode: {len(self.selected_indices)} queues")
 
         self.refresh()
         self._on_selection_changed(self.active_source, self.selected_indices)

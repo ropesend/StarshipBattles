@@ -117,12 +117,13 @@ class TestSaveGameServiceErrorLogging:
     def test_save_error_logs_with_traceback(self, caplog):
         """Save errors should log full traceback, not print to stdout."""
         import logging
+        from game.core.exceptions import ValidationException
 
         session = MockGameSession()
 
-        # Mock to_dict to raise an exception
+        # Mock to_dict to raise a ValidationException (domain exception used for serialization errors)
         def raise_error():
-            raise ValueError("Test save error")
+            raise ValidationException("Test save error", code="V001")
 
         session.to_dict = raise_error
 
@@ -396,9 +397,10 @@ class TestSaveGameServiceExceptionHandling:
 
     def test_get_save_info_returns_none_on_error(self, setup_tmpdir):
         """get_save_info should return None on errors, not raise."""
-        # Mock load_json to raise
+        # load_json catches exceptions and returns None, so mock it to return None
+        # to simulate a read failure (PermissionError, etc.)
         with patch('game.strategy.systems.save_game_service.load_json',
-                   side_effect=PermissionError("Cannot read")):
+                   return_value=None):
             info = SaveGameService.get_save_info("SomeSave")
 
         assert info is None

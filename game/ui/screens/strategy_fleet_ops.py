@@ -9,9 +9,11 @@ Cross-layer imports (acceptable for UI):
 - IssueMoveCommand, IssueInterceptCommand, IssueJoinFleetCommand: Runtime (local) - UI issues commands
 - StrategySessionFacade: TYPE_CHECKING - used for type hints only
 """
+import logging
 from typing import TYPE_CHECKING
-from game.core.logger import log_debug, log_warning
 from game.core.hex_math import pixel_to_hex
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.facade.strategy_session_facade import StrategySessionFacade
@@ -79,7 +81,7 @@ class FleetOperations:
 
         # PROJ-67: Block movement while fleet is building
         if selected_fleet.is_building:
-            log_warning("Fleet is building - cancel BUILD order first to move.")
+            logger.warning("Fleet is building - cancel BUILD order first to move.")
             return {'type': 'error', 'message': 'Fleet is building - cancel BUILD order first'}
 
         world_pos = self.camera.screen_to_world((mx, my))
@@ -108,12 +110,12 @@ class FleetOperations:
         Returns:
             dict with result type and details
         """
-        log_debug(f"Calculating path to {target_hex}...")
+        logger.debug(f"Calculating path to {target_hex}...")
 
         preview_path = self.facade.get_fleet_path_preview(fleet.id, target_hex)
 
         if preview_path:
-            log_debug(f"Path confirmed: {len(preview_path)} steps.")
+            logger.debug(f"Path confirmed: {len(preview_path)} steps.")
 
             from game.strategy.engine.commands import IssueMoveCommand
             cmd = IssueMoveCommand(fleet.id, target_hex)
@@ -124,10 +126,10 @@ class FleetOperations:
                 return {'type': 'success', 'fleet': fleet}
             else:
                 msg = result.message if result else 'Unknown'
-                log_warning(f"Move Failed: {msg}")
+                logger.warning(f"Move Failed: {msg}")
                 return {'type': 'error', 'message': msg}
         else:
-            log_warning("Cannot find path to target (Unreachable).")
+            logger.warning("Cannot find path to target (Unreachable).")
             return {'type': 'error', 'message': 'Unreachable'}
 
     def execute_intercept(self, fleet, target_fleet):
@@ -141,7 +143,7 @@ class FleetOperations:
         Returns:
             dict with result type and details
         """
-        log_debug(f"Intercepting Fleet {target_fleet.id}...")
+        logger.debug(f"Intercepting Fleet {target_fleet.id}...")
 
         from game.strategy.engine.commands import IssueInterceptCommand
         cmd = IssueInterceptCommand(fleet.id, target_fleet.id)
@@ -151,7 +153,7 @@ class FleetOperations:
             return {'type': 'success', 'fleet': fleet}
         else:
             msg = result.message if result else 'Unknown'
-            log_warning(f"Intercept Failed: {msg}")
+            logger.warning(f"Intercept Failed: {msg}")
             return {'type': 'error', 'message': msg}
 
     def handle_join_designation(self, mx, my, selected_fleet):
@@ -174,18 +176,18 @@ class FleetOperations:
         target_fleet = self.get_fleet_at_hex(target_hex)
 
         if not target_fleet:
-            log_debug("No fleet at target location.")
+            logger.debug("No fleet at target location.")
             return None
 
         if target_fleet == selected_fleet:
-            log_debug("Cannot join self.")
+            logger.debug("Cannot join self.")
             return None
 
         if target_fleet.owner_id != selected_fleet.owner_id:
-            log_debug("Cannot join enemy fleet.")
+            logger.debug("Cannot join enemy fleet.")
             return None
 
-        log_debug(f"Queueing Join Order with Fleet {target_fleet.id}...")
+        logger.debug(f"Queueing Join Order with Fleet {target_fleet.id}...")
 
         from game.strategy.engine.commands import IssueJoinFleetCommand
         cmd = IssueJoinFleetCommand(selected_fleet.id, target_fleet.id)
@@ -195,5 +197,5 @@ class FleetOperations:
             return {'type': 'success', 'fleet': selected_fleet}
         else:
             msg = result.message if result else 'Unknown'
-            log_warning(f"Join Fleet Failed: {msg}")
+            logger.warning(f"Join Fleet Failed: {msg}")
             return {'type': 'error', 'message': msg}

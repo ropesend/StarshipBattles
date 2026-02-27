@@ -2,15 +2,19 @@
 Planet List Window - Displays a filterable, sortable list of planets.
 
 Provides comprehensive planet management with filtering, sorting, and presets.
+
+PROJ-188 Phase 3: Migrated to VirtualTable + PlanetDataSource + SingleSelect.
 """
 import pygame
 import pygame_gui.windows
 from game.core.constants import PLANET_RESOURCES
-from pygame_gui.elements import UIWindow, UIPanel, UIButton, UIDropDownMenu, UIVerticalScrollBar
+from pygame_gui.elements import UIWindow, UIPanel, UIButton, UIDropDownMenu
 from pygame_gui import UI_TEXT_ENTRY_FINISHED, UI_BUTTON_PRESSED
 
 from game.ui.config import UIConfig
-from game.core.logger import log_debug, log_info, log_warning
+import logging
+
+logger = logging.getLogger(__name__)
 from game.ui.services.screenshot_manager import ScreenshotManager
 from game.ui.screens.planet_list_filters import (
     gather_planets, filter_planets, sort_planets,
@@ -18,22 +22,24 @@ from game.ui.screens.planet_list_filters import (
 )
 from game.ui.screens.planet_list_presets import PresetManager, capture_planet_list_state, apply_planet_list_state
 from game.ui.screens.planet_list_sidebar import build_sidebar
-from game.ui.screens.planet_list_columns import ColumnManager
-from game.ui.screens.planet_list_renderer import VirtualListRenderer
+from game.ui.components.table import VirtualTable, TableColumnManager, SingleSelect
+from game.ui.screens.planet_data_source import PlanetDataSource
 from game.ui.panels.planet_report_panel import PlanetReportPanel, compute_planet_production
 
 class PlanetListWindow(UIWindow):
-    def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None):
+    def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None, empires=None):
         # Initialize state that set_dimensions() depends on before super().__init__(),
         # since UIWindow.__init__ triggers rebuild() -> set_dimensions().
         self.selected_planet = None
         self.planet_detail_panel = None
         self.btn_build_queue = None
+        self.last_preset_selection = None  # PROJ-199: Lazy init elimination
 
         super().__init__(rect, manager, window_display_title="Galactic Planet Registry", resizable=True)
 
         self.galaxy = galaxy
         self.empire = empire # Current player empire for "Owner" context
+        self.empires = empires or []  # PROJ-198: All empires for owner name lookup
         self.on_close_callback = on_close_callback
         self.asset_resolver = asset_resolver  # Function to get image for planet
 
@@ -76,7 +82,7 @@ class PlanetListWindow(UIWindow):
             {'id': 'name', 'width': 150, 'title': 'Name', 'attr': 'name', 'visible': True},
             {'id': 'type', 'width': 100, 'title': 'Type', 'attr': 'planet_type.name', 'visible': True},
             {'id': 'system', 'width': 120, 'title': 'System', 'func': get_system_name, 'visible': True},
-            {'id': 'owner', 'width': 140, 'title': 'Owner', 'func': lambda p: get_owner_name(p, self.galaxy, self.empire), 'visible': True},
+            {'id': 'owner', 'width': 140, 'title': 'Owner', 'func': lambda p: get_owner_name(p, self.empires, self.empire), 'visible': True},
             {'id': 'mass', 'width': 100, 'title': 'Mass (M_E)', 'func': get_mass_earth, 'visible': True},
             {'id': 'grav', 'width': 90, 'title': 'Grav (g)', 'func': lambda p: f"{p.surface_gravity/9.81:.2f}", 'visible': True},
             {'id': 'temp', 'width': 90, 'title': 'Temp (K)', 'attr': 'surface_temperature', 'fmt': "{:.0f}", 'visible': True},
@@ -100,7 +106,7 @@ class PlanetListWindow(UIWindow):
             container=self,
             anchors={'left': 'left', 'top': 'top', 'bottom': 'bottom'}
         )
-        
+
         # Build sidebar using extracted function
         sidebar_widgets = build_sidebar(
             manager=manager,
@@ -124,32 +130,33 @@ class PlanetListWindow(UIWindow):
         self.dd_presets = sidebar_widgets['dd_presets']
         self.ui_filters = sidebar_widgets['ui_filters']
 
-        # Main Content Area
+        # Main Content Area - Panel for VirtualTable
         main_w = rect.width - self.sidebar_width - self.detail_panel_width - self.panel_margin - 10
         self.main_panel = UIPanel(
             relative_rect=pygame.Rect(self.sidebar_width, 0, main_w, rect.height - 50),
             manager=manager, container=self,
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'})
-        self.header_container = UIPanel(
-            relative_rect=pygame.Rect(0, 0, main_w, self.header_height),
-            manager=manager, container=self.main_panel,
-            anchors={'left': 'left', 'right': 'right', 'top': 'top'})
-        self.column_mgr = ColumnManager(self.columns, manager, self.header_container, self.header_height)
 
-        # Virtual List Panel
-        self.list_view_rect = pygame.Rect(0, self.header_height, main_w - 20, rect.height - 50 - self.header_height)
-        self.list_panel = UIPanel(
-            relative_rect=self.list_view_rect, manager=manager, container=self.main_panel,
-            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'})
-        self.scroll_bar = UIVerticalScrollBar(
-            relative_rect=pygame.Rect(-20, self.header_height, 20, self.list_view_rect.height),
-            visible_percentage=1.0, manager=manager, container=self.main_panel,
-            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'bottom'})
-        self.renderer = VirtualListRenderer(self.list_panel, self.row_height, manager)
+        # PROJ-188: Use new table infrastructure
+        self.column_manager = TableColumnManager(self.columns)
+        # Set default sort by owner name as per BUG-23
+        self.column_manager.sort_column_id = 'owner'
+        self.column_manager.sort_descending = False
+
+        self.data_source = PlanetDataSource(self.columns, self.galaxy, self.empire)
+        self.selection = SingleSelect()
+
+        self.virtual_table = VirtualTable(
+            panel=self.main_panel,
+            manager=manager,
+            data_source=self.data_source,
+            column_manager=self.column_manager,
+            selection_strategy=self.selection,
+            row_height=self.row_height,
+            header_height=self.header_height,
+        )
 
         # Initial Population
-        self.column_mgr.rebuild_headers()
-        self.renderer.rebuild_row_pool(self.column_mgr.get_visible_columns())
         self.refresh_list()
 
     def refresh_list(self):
@@ -174,27 +181,17 @@ class PlanetListWindow(UIWindow):
             filter_owner=self.filter_owner, empire=self.empire
         )
 
-        # 1b. Sort using extracted function
-        sort_planets(self.filtered_planets, self.column_mgr.sort_column_id, self.column_mgr.sort_descending, self.columns)
-                
-        # 2. Update Scrollbar
-        total_h = len(self.filtered_planets) * self.row_height
-        visible_h = self.list_view_rect.height
-        
-        if total_h > 0:
-            percentage = min(1.0, visible_h / total_h)
-        else:
-            percentage = 1.0
-            
-        self.scroll_bar.set_visible_percentage(percentage)
-        self.scroll_bar.scroll_position = 0.0
-        self.scroll_bar.bottom_limit = max(visible_h, total_h)
-        self.scroll_bar.redraw_scrollbar()
-        
-        # 3. Update Visible Rows (force update by resetting dirty state)
-        self.renderer.force_update()
-        self.renderer.update_visible_rows(self.filtered_planets, self.scroll_bar)
-        
+        # 1b. Sort using extracted function (use TableColumnManager state)
+        sort_planets(self.filtered_planets, self.column_manager.sort_column_id, self.column_manager.sort_descending, self.columns)
+
+        # 2. Update DataSource with filtered planets
+        self.data_source.update_data(self.filtered_planets)
+
+        # 3. Update scrollbar and visible rows
+        self.virtual_table.update_scroll_bar()
+        self.virtual_table.force_update()
+        self.virtual_table.update_visible_rows()
+
     def process_event(self, event):
         handled = super().process_event(event)
 
@@ -202,23 +199,20 @@ class PlanetListWindow(UIWindow):
         if event.type == UI_BUTTON_PRESSED:
             if event.ui_element == self.btn_build_queue:
                 if self.selected_planet:
-                    log_info(f"Build Queue button clicked for planet: {self.selected_planet.name}")
+                    logger.info(f"Build Queue button clicked for planet: {self.selected_planet.name}")
                 return True
 
         # Handle planet row clicks
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:  # Left click
             mouse_pos = event.pos
-            list_abs_rect = self.list_panel.get_abs_rect()
 
-            # Use renderer to calculate clicked index
-            clicked_index = self.renderer.get_clicked_planet_index(
-                mouse_pos, list_abs_rect, self.scroll_bar, len(self.filtered_planets)
-            )
+            # Use VirtualTable to handle click
+            clicked_index = self.virtual_table.handle_click(mouse_pos)
 
             if clicked_index >= 0:
-                planet = self.filtered_planets[clicked_index]
-                if planet != self.selected_planet:
-                    log_debug(f"Selecting planet: {planet.name}")
+                planet = self.data_source.get_planet_at_index(clicked_index)
+                if planet and planet != self.selected_planet:
+                    logger.debug(f"Selecting planet: {planet.name}")
                     self._on_planet_selected(planet)
                 return True  # Consume the event
 
@@ -228,12 +222,12 @@ class PlanetListWindow(UIWindow):
                 f = self.ui_filters[key]
                 val = 0.0
                 target_slider = None
-                
+
                 if event.ui_element == f['min_txt']:
                     target_slider = f['min']
                 elif event.ui_element == f['max_txt']:
                     target_slider = f['max']
-                    
+
                 if target_slider:
                     try:
                         val = float(event.text)
@@ -252,25 +246,26 @@ class PlanetListWindow(UIWindow):
                 self._take_screenshot()
                 return True
 
-        # Wheel Handling - Use scrollbar's official API
+        # Wheel Handling - Use VirtualTable's scrollbar
         if event.type == pygame.MOUSEWHEEL:
             m_pos = pygame.mouse.get_pos()
             # Check if mouse is over the list area
-            if self.list_panel.get_abs_rect().collidepoint(m_pos):
+            if self.virtual_table._list_view_panel.get_abs_rect().collidepoint(m_pos):
                 # Calculate scroll amount as percentage of total
                 total_h = len(self.filtered_planets) * self.row_height
                 if total_h > 0:
+                    scroll_bar = self.virtual_table.scroll_bar
                     # One row per wheel tick
                     row_percent = self.row_height / total_h
                     # Get current percentage
-                    current_pct = self.scroll_bar.start_percentage
+                    current_pct = scroll_bar.start_percentage
                     # Calculate new (wheel up = negative y = scroll up = lower percentage)
                     new_pct = current_pct - (event.y * row_percent)
                     # Clamp to valid range
-                    new_pct = max(0.0, min(1.0 - self.scroll_bar.visible_percentage, new_pct))
+                    new_pct = max(0.0, min(1.0 - scroll_bar.visible_percentage, new_pct))
                     # Apply using official method
-                    self.scroll_bar.set_scroll_from_start_percentage(new_pct)
-                    self.renderer.update_visible_rows(self.filtered_planets, self.scroll_bar)
+                    scroll_bar.set_scroll_from_start_percentage(new_pct)
+                    self.virtual_table.update_visible_rows()
                 return True  # Consume event
 
         return handled
@@ -283,8 +278,8 @@ class PlanetListWindow(UIWindow):
             self.refresh_list()
 
         # Handle scrollbar changes
-        if self.scroll_bar.check_has_moved_recently():
-            self.renderer.update_visible_rows(self.filtered_planets, self.scroll_bar)
+        if self.virtual_table.scroll_bar.check_has_moved_recently():
+            self.virtual_table.update_visible_rows()
 
         # Sync slider values to text boxes
         self._handle_slider_sync()
@@ -296,17 +291,20 @@ class PlanetListWindow(UIWindow):
         # Handle column visibility toggles
         self._handle_column_toggles()
 
-        # Handle header sort clicks
-        sort_changed, columns_changed = self.column_mgr.handle_header_clicks()
-        if columns_changed:
-            self.renderer.rebuild_row_pool(self.column_mgr.get_visible_columns())
+        # Handle header sort/swap clicks via VirtualTable
+        header_result = self.virtual_table.check_header_presses()
+        if header_result.get('swap_column'):
+            # Column was swapped - rebuild everything
+            self.virtual_table.rebuild_headers()
+            self.virtual_table.rebuild_row_pool()
             self.refresh_list()
-        elif sort_changed:
+        elif header_result.get('sort_column'):
+            # Sort changed - just refresh
             self.refresh_list()
 
         # Handle preset selection and save
         self._handle_preset_changes()
-            
+
     def _handle_filter_toggles(self, filter_dict, btn_all, btn_none, ui_key):
         """Handle All/None buttons and individual toggles for a filter category."""
         buttons = self.ui_filters.get(ui_key, {})
@@ -349,18 +347,24 @@ class PlanetListWindow(UIWindow):
         for col_id, btn in self.ui_filters.get('columns', {}).items():
             if btn.check_pressed():
                 col = btn.col_ref
-                self.column_mgr.toggle_visibility(col['id'])
-                t = f"[x] {col['title'] or col['id']}" if col['visible'] else f"[ ] {col['title'] or col['id']}"
-                btn.set_text(t)
-                self.column_mgr.rebuild_headers()
-                self.renderer.rebuild_row_pool(self.column_mgr.get_visible_columns())
-                self.refresh_list()
+                # Use TableColumnManager to toggle
+                new_visible = self.column_manager.toggle_column(col['id'])
+                if new_visible is not None:
+                    # Update button text
+                    t = f"[x] {col['title'] or col['id']}" if new_visible else f"[ ] {col['title'] or col['id']}"
+                    btn.set_text(t)
+                    # Update the column list reference for presets
+                    col['visible'] = new_visible
+                    # Rebuild table
+                    self.virtual_table.rebuild_headers()
+                    self.virtual_table.rebuild_row_pool()
+                    self.refresh_list()
                 return
 
     def _handle_preset_changes(self):
         """Handle preset dropdown selection and save button."""
         # Lazy init tracker
-        if not hasattr(self, 'last_preset_selection'):
+        if self.last_preset_selection is None:
             self.last_preset_selection = self.dd_presets.selected_option
 
         if self.dd_presets.selected_option != self.last_preset_selection:
@@ -399,15 +403,21 @@ class PlanetListWindow(UIWindow):
             state, self.columns, self.txt_name_filter,
             self.filter_types, self.ui_filters
         )
-        self.column_mgr.rebuild_headers()
-        self.renderer.rebuild_row_pool(self.column_mgr.get_visible_columns())
+        # Re-sync TableColumnManager with updated columns
+        self.column_manager = TableColumnManager(self.columns)
+        # Also update data source column reference
+        self.data_source._columns = self.columns
+        # Rebuild VirtualTable components
+        self.virtual_table._column_manager = self.column_manager
+        self.virtual_table.rebuild_headers()
+        self.virtual_table.rebuild_row_pool()
         self.refresh_list()
 
     def _take_screenshot(self):
         """Take a screenshot of the current screen including the planet list."""
         sm = ScreenshotManager.instance()
         sm.capture(label="planet_list")
-        log_info("Screenshot: Planet List window captured")
+        logger.info("Screenshot: Planet List window captured")
         # DUP-UI1-001: Use consolidated toast from ScreenshotManager
         sm.show_toast(self.ui_manager, self.rect.width)
 
@@ -429,7 +439,7 @@ class PlanetListWindow(UIWindow):
 
         # Get portrait surface (use asset_resolver if available)
         portrait_surface = None
-        if hasattr(self, 'asset_resolver') and self.asset_resolver:
+        if self.asset_resolver:
             portrait_surface = self.asset_resolver(planet)
 
         # Calculate panel position and dynamic height (right side of window)
@@ -483,13 +493,9 @@ class PlanetListWindow(UIWindow):
             self._on_planet_selected(self.selected_planet)
 
     def kill(self):
-        # Clean up renderer
-        if hasattr(self, 'renderer'):
-            self.renderer.kill()
-
-        # Clean up column manager
-        if hasattr(self, 'column_mgr'):
-            self.column_mgr.kill()
+        # Clean up VirtualTable
+        if self.virtual_table:
+            self.virtual_table.kill()
 
         if self.planet_detail_panel:
             self.planet_detail_panel.kill()

@@ -5,6 +5,8 @@
 
 **Trigger:** Manual - user explicitly requests deep investigation via prompt.
 
+**Also useful for:** Bugs in `[Needs Clarification]` status where user has answered the posted questions — a deep dive may be appropriate to resolve remaining uncertainties before attempting a standard fix.
+
 **CRITICAL CONSTRAINT:** You do NOT have the authority to mark a bug as [Solved]. Your authority ends at [Awaiting Confirmation] or [Needs Human Debug].
 
 ---
@@ -180,4 +182,5 @@ For each hypothesis:
 This protocol uses these statuses in `debug_plan.md`:
 - `[Deep Investigation]` - Bug is undergoing thorough investigation
 - `[Awaiting Confirmation]` - Fix applied, waiting for user verification
+- `[Needs Clarification]` - Ambiguous fix, questions posted in ticket awaiting user answers
 - `[Needs Human Debug]` - Investigation exhausted, requires human intervention

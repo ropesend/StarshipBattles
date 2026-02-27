@@ -8,7 +8,6 @@ import pytest
 import pygame
 import os
 
-from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_project_root, get_data_dir
 
 
@@ -17,13 +16,10 @@ class TestShipFactory:
 
     @pytest.fixture(autouse=True)
     def setup(self, fresh_registries):
-        """Set up registry data for tests."""
-        mgr = RegistryManager.instance()
-        mgr.hydrate(
-            fresh_registries.components,
-            fresh_registries.modifiers,
-            fresh_registries.vehicle_classes
-        )
+        """Set up registry data for tests.
+
+        PROJ-195: Pure DI pattern - uses fresh_registries directly, no singleton hydration.
+        """
         yield
 
     def test_create_from_design_returns_ship(self, fresh_registries):
@@ -172,13 +168,10 @@ class TestShipFactoryStaticMethods:
 
     @pytest.fixture(autouse=True)
     def setup(self, fresh_registries):
-        """Set up registry data for tests."""
-        mgr = RegistryManager.instance()
-        mgr.hydrate(
-            fresh_registries.components,
-            fresh_registries.modifiers,
-            fresh_registries.vehicle_classes
-        )
+        """Set up registry data for tests.
+
+        PROJ-195: Pure DI pattern - uses fresh_registries directly, no singleton hydration.
+        """
         yield
 
     def test_factory_can_be_used_without_instance(self, fresh_registries):
@@ -210,13 +203,10 @@ class TestSetupFormationEdgeCases:
 
     @pytest.fixture(autouse=True)
     def setup(self, fresh_registries):
-        """Set up registry data for tests."""
-        mgr = RegistryManager.instance()
-        mgr.hydrate(
-            fresh_registries.components,
-            fresh_registries.modifiers,
-            fresh_registries.vehicle_classes
-        )
+        """Set up registry data for tests.
+
+        PROJ-195: Pure DI pattern - uses fresh_registries directly, no singleton hydration.
+        """
         yield
 
     def _create_ship(self, fresh_registries, x=0, y=0):

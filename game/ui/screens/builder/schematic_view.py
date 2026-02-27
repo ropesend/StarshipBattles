@@ -9,9 +9,16 @@ import math
 from game.core.constants import LayerType  # Canonical location for LayerType
 from game.ui.utils import calculate_ship_image_scale
 from game.ui.renderer.game_renderer import LAYER_COLORS
+from game.ui.fonts import get_font
 
-from game.ui.colors import COLORS
+from game.ui.colors import COLORS, TEXT_DIM, LAYER_LABEL
 SHIP_VIEW_BG = COLORS['bg_deep']
+
+# Firing arc colors (with alpha)
+ARC_BEAM_COLOR = (100, 255, 255, 100)
+ARC_PROJECTILE_COLOR = (255, 200, 100, 100)
+# Layer label text
+LAYER_LABEL_COLOR = LAYER_LABEL
 
 
 class SchematicView:
@@ -67,7 +74,7 @@ class SchematicView:
         max_r = self._calculate_max_r(ship)
         
         # Draw Theme Image
-        theme_id = getattr(ship, 'theme_id', 'Federation')
+        theme_id = ship.theme_id
         ship_img = self.theme_manager.load_image(theme_id, ship.ship_class)
         
         if ship_img:
@@ -96,18 +103,18 @@ class SchematicView:
                 screen.blit(scaled_img, rect)
             
         # Draw structure rings
-        font = pygame.font.SysFont("Arial", 10)
+        font = get_font(10)
         sorted_layers = sorted(ship.layers.items(), key=lambda x: x[1].radius_pct, reverse=True)
         
         for ltype, data in sorted_layers:
             pct = data.radius_pct
             r = int(max_r * pct)
-            color = LAYER_COLORS.get(ltype, (100, 100, 100))
+            color = LAYER_COLORS.get(ltype, TEXT_DIM)
 
             pygame.draw.circle(screen, color, (cx, cy), r, 2)
 
             # Label
-            surf = font.render(ltype.name, True, (80, 80, 80))
+            surf = font.render(ltype.name, True, LAYER_LABEL_COLOR)
             screen.blit(surf, (cx - surf.get_width() // 2, cy - r - 12))
 
         # Draw Components - DISABLED
@@ -154,9 +161,9 @@ class SchematicView:
         end_angle = math.radians(90 - facing + (arc_degrees / 2))
         
         if weapon.has_ability('BeamWeaponAbility'):
-            color = (100, 255, 255, 100)
+            color = ARC_BEAM_COLOR
         else:
-            color = (255, 200, 100, 100)
+            color = ARC_PROJECTILE_COLOR
             
         points = [(cx, cy)]
         for angle in range(int(math.degrees(start_angle)), int(math.degrees(end_angle)) + 1, 2):
@@ -172,7 +179,7 @@ class SchematicView:
             pygame.draw.lines(arc_surface, color[:3], True, points, 2)
             
             # Label
-            font = pygame.font.SysFont("Arial", 10)
+            font = get_font(10)
             mid_angle = (start_angle + end_angle) / 2
             label_x = cx + math.cos(mid_angle) * (display_range + 15)
             label_y = cy - math.sin(mid_angle) * (display_range + 15)

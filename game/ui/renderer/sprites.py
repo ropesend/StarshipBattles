@@ -1,8 +1,11 @@
+import logging
 import pygame
 import os
 from typing import Optional
-from game.core.logger import log_info, log_error
 from game.core.singleton import SingletonMeta
+from game.ui.colors import BLACK
+
+logger = logging.getLogger(__name__)
 
 
 class SpriteManager(metaclass=SingletonMeta):
@@ -40,7 +43,7 @@ class SpriteManager(metaclass=SingletonMeta):
         elif os.path.exists(components_dir):
             self._load_from_directory(components_dir)
         else:
-            log_error(f"No sprite directory found at {tiles_dir} or {components_dir}")
+            logger.error(f"No sprite directory found at {tiles_dir} or {components_dir}")
 
     def _load_from_directory(self, directory: str) -> None:
         """Load sprites from a specific directory.
@@ -48,7 +51,7 @@ class SpriteManager(metaclass=SingletonMeta):
         Args:
             directory: Path to directory containing sprite files.
         """
-        log_info(f"Loading sprites from {directory}")
+        logger.info(f"Loading sprites from {directory}")
         # Reset sprites
         self.sprites = []
         
@@ -79,7 +82,7 @@ class SpriteManager(metaclass=SingletonMeta):
                 
                 full_path = os.path.join(directory, f)
                 image = pygame.image.load(full_path).convert()
-                image.set_colorkey((0, 0, 0))
+                image.set_colorkey(BLACK)
                 
                 loaded_sprites[index] = image
                 if index > max_index:
@@ -88,7 +91,7 @@ class SpriteManager(metaclass=SingletonMeta):
             except ValueError:
                 continue
             except (FileNotFoundError, OSError, pygame.error) as e:
-                log_error(f"loading {f}: {e}")
+                logger.error(f"loading {f}: {e}")
                 continue
         
         # Populate self.sprites list
@@ -97,7 +100,7 @@ class SpriteManager(metaclass=SingletonMeta):
             for idx, img in loaded_sprites.items():
                 self.sprites[idx] = img
                 
-        log_info(f"Loaded {len(loaded_sprites)} sprites from directory (max index {max_index})")
+        logger.info(f"Loaded {len(loaded_sprites)} sprites from directory (max index {max_index})")
 
     def get_sprite(self, index: int) -> Optional[pygame.Surface]:
         """Get a sprite by its index.

@@ -23,10 +23,14 @@ def pygame_setup():
     patch.stopall()
 
     pygame.quit()
-    RegistryManager.instance().clear()
 
 
 class TestRegressions:
+    # PROJ-195: This test class specifically tests singleton behavior.
+    # test_ship_classes_update_in_place validates that the loader updates
+    # the singleton dict in-place (preserving reference identity).
+    # This is a legitimate singleton test - do not migrate to DI.
+
     def test_ship_classes_update_in_place(self, pygame_setup):
         """
         Regression Test for Builder Dropdown Bug:

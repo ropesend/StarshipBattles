@@ -15,6 +15,11 @@ def loaded_registry():
     """
     Registry with real component data loaded.
 
+    # PROJ-195: Legitimate — integration tests that add test components to singleton
+    # for full-pipeline testing. ShipInstance.get_calculated_stats() internally uses
+    # get_default_registry_provider() which reads from the singleton, so these tests
+    # must add components there.
+
     Relies on reset_game_state (autouse) for isolation.
     That fixture clears, hydrates from SessionRegistryCache,
     and cleans up after each test automatically.

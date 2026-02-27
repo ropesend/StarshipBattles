@@ -77,7 +77,7 @@ class TestColonizeCommandHandler:
         """Returns failure when fleet not found."""
         handler = ColonizeCommandHandler()
         mock_session = Mock()
-        mock_session.empires = []
+        mock_session._get_fleet_by_id.return_value = None
         mock_cmd = Mock(fleet_id=999, planet_id=1)
 
         result = handler.execute(mock_session, mock_cmd)
@@ -95,16 +95,13 @@ class TestColonizeCommandHandler:
         mock_fleet.orders = []
         mock_fleet.add_order = Mock()
 
-        mock_empire = Mock()
-        mock_empire.fleets = [mock_fleet]
-
         mock_planet = Mock()
         mock_planet.id = 10
         mock_planet.populations = []
 
         mock_session = Mock()
-        mock_session.empires = [mock_empire]
-        mock_session.galaxy.get_planet_by_id.return_value = mock_planet
+        mock_session._get_fleet_by_id.return_value = mock_fleet
+        mock_session._get_planet_by_id.return_value = mock_planet
         mock_session.galaxy.get_planet_global_hex.return_value = HexCoord(0, 0)
         mock_session.turn_engine.validate_colonize_order.return_value = ValidationResult()
         mock_session._find_colony_at_fleet.return_value = None

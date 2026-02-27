@@ -1,6 +1,7 @@
 """Event Log Window - Displays game events with category filter tabs.
 
 PROJ-77 Phase 4: Modal window showing turn events (production, colonies, combat).
+PROJ-188 Phase 5: Migrated to VirtualTable with EventLogDataSource.
 Supports filter tabs and scrollable event list sorted newest first.
 """
 from __future__ import annotations
@@ -9,7 +10,13 @@ from typing import Any, Callable, Optional
 
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIVerticalScrollBar
+from pygame_gui.elements import UIWindow, UIPanel, UIButton
+
+from game.ui.components.table import VirtualTable, TableColumnManager, NoSelect
+from game.ui.screens.event_log_data_source import (
+    EventLogDataSource,
+    EVENT_LOG_COLUMNS,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -17,16 +24,10 @@ from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIVertical
 # ---------------------------------------------------------------------------
 HEADER_HEIGHT = 50
 ROW_HEIGHT = 28
+TABLE_HEADER_HEIGHT = 30
 FILTER_BTN_WIDTH = 100
 FILTER_BTN_HEIGHT = 32
 FILTER_GAP = 8
-
-# Category icons (text prefix for each category)
-CATEGORY_ICONS = {
-    "combat": "[Combat]",
-    "production": "[Prod]",
-    "colonies": "[Colony]",
-}
 
 
 class EventLogWindow(UIWindow):
@@ -59,6 +60,11 @@ class EventLogWindow(UIWindow):
         self.current_filter = "all"
         self.on_close_callback = on_close_callback
 
+        # VirtualTable components
+        self.data_source: Optional[EventLogDataSource] = None
+        self.column_manager: Optional[TableColumnManager] = None
+        self.virtual_table: Optional[VirtualTable] = None
+
         # --- Build UI ---
         self._init_layout()
         self._rebuild_list()
@@ -68,7 +74,7 @@ class EventLogWindow(UIWindow):
     # ------------------------------------------------------------------
 
     def _init_layout(self) -> None:
-        """Create filter header and scrollable list panels."""
+        """Create filter header and table panel with VirtualTable."""
         window_rect = self.get_container().get_rect()
         content_height = window_rect.height - 50  # title bar offset
 
@@ -81,12 +87,10 @@ class EventLogWindow(UIWindow):
         )
         self._create_filter_buttons()
 
-        # List panel below header
-        list_height = content_height - HEADER_HEIGHT
-        self.list_panel = UIPanel(
-            relative_rect=pygame.Rect(
-                0, HEADER_HEIGHT, window_rect.width - 20, list_height
-            ),
+        # Table panel below header (contains VirtualTable)
+        table_height = content_height - HEADER_HEIGHT
+        self.table_panel = UIPanel(
+            relative_rect=pygame.Rect(0, HEADER_HEIGHT, window_rect.width, table_height),
             manager=self.ui_manager,
             container=self,
             anchors={
@@ -97,21 +101,18 @@ class EventLogWindow(UIWindow):
             },
         )
 
-        # Scrollbar
-        self.scroll_bar = UIVerticalScrollBar(
-            relative_rect=pygame.Rect(-20, HEADER_HEIGHT, 20, list_height),
-            visible_percentage=1.0,
-            manager=self.ui_manager,
-            container=self,
-            anchors={
-                "left": "right",
-                "right": "right",
-                "top": "top",
-                "bottom": "bottom",
-            },
+        # Create VirtualTable components
+        self.data_source = EventLogDataSource(self.all_events, self.current_filter)
+        self.column_manager = TableColumnManager(EVENT_LOG_COLUMNS)
+        self.virtual_table = VirtualTable(
+            self.table_panel,
+            self.ui_manager,
+            self.data_source,
+            self.column_manager,
+            NoSelect(),
+            row_height=ROW_HEIGHT,
+            header_height=TABLE_HEADER_HEIGHT,
         )
-
-        self.row_labels: list[UILabel] = []
 
     def _create_filter_buttons(self) -> None:
         """Create filter tab buttons in the header."""
@@ -166,16 +167,25 @@ class EventLogWindow(UIWindow):
     def get_filtered_events(self) -> list[dict]:
         """Return events matching current filter, sorted newest first.
 
+        Delegates to DataSource for consistency.
+
         Returns:
             Filtered and sorted list of event dicts.
         """
+        if self.data_source:
+            # Delegate to data source's filtered list
+            return [
+                self.data_source.get_event_at_index(i)
+                for i in range(self.data_source.get_row_count())
+            ]
+
+        # Fallback for tests without VirtualTable
         if self.current_filter == "all":
             filtered = list(self.all_events)
         else:
             filtered = [
                 e for e in self.all_events if e.get("category") == self.current_filter
             ]
-        # Sort newest first (descending by turn)
         filtered.sort(key=lambda e: e.get("turn", 0), reverse=True)
         return filtered
 
@@ -186,43 +196,21 @@ class EventLogWindow(UIWindow):
             category: One of 'all', 'combat', 'production', 'colonies'.
         """
         self.current_filter = category
+        if self.data_source:
+            self.data_source.set_filter(category)
 
     # ------------------------------------------------------------------
     # List Rendering
     # ------------------------------------------------------------------
 
     def _rebuild_list(self) -> None:
-        """Clear and repopulate the event row labels."""
-        # Clear existing rows
-        for lbl in self.row_labels:
-            lbl.kill()
-        self.row_labels.clear()
-
-        events = self.get_filtered_events()
-        panel_rect = self.list_panel.get_relative_rect()
-        row_width = panel_rect.width - 10
-
-        for i, evt in enumerate(events):
-            y = i * ROW_HEIGHT
-            category = evt.get("category", "")
-            icon = CATEGORY_ICONS.get(category, "")
-            turn = evt.get("turn", "?")
-            message = evt.get("message", "")
-            text = f" {icon} Turn {turn}: {message}"
-
-            lbl = UILabel(
-                relative_rect=pygame.Rect(5, y, row_width, ROW_HEIGHT),
-                text=text,
-                manager=self.ui_manager,
-                container=self.list_panel,
-            )
-            self.row_labels.append(lbl)
-
-        # Update scrollbar
-        total_height = max(1, len(events) * ROW_HEIGHT)
-        visible_height = panel_rect.height
-        visible_pct = min(1.0, visible_height / total_height)
-        self.scroll_bar.set_visible_percentage(visible_pct)
+        """Update VirtualTable with current filter."""
+        if self.data_source:
+            self.data_source.set_filter(self.current_filter)
+        if self.virtual_table:
+            self.virtual_table.update_scroll_bar()
+            self.virtual_table.force_update()
+            self.virtual_table.update_visible_rows()
 
     def _update_filter_buttons(self) -> None:
         """Highlight the currently active filter button."""
@@ -258,6 +246,8 @@ class EventLogWindow(UIWindow):
 
     def kill(self) -> None:
         """Clean up and invoke close callback."""
+        if self.virtual_table:
+            self.virtual_table.kill()
         if self.on_close_callback:
             self.on_close_callback()
         super().kill()

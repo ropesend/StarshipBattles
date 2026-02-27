@@ -13,12 +13,13 @@ Cross-layer imports (acceptable for UI):
 - RaceConfig: Runtime - callback data and configuration state
 - RaceLibrary: Runtime - save/load race configurations
 """
-import os
 import pygame
 import pygame_gui
 from typing import Callable, Optional, List, Tuple
 
-from game.core.logger import log_debug, log_info, log_warning, log_error
+import logging
+
+logger = logging.getLogger(__name__)
 from game.core.paths import Paths
 from game.strategy.data.race_config import RaceConfig
 from game.strategy.systems.race_library import RaceLibrary
@@ -130,6 +131,10 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
 
         # Visual selection UI elements (flag/portrait/theme UI moved to respective galleries)
         self.name_input = None
+
+        # PROJ-199: Lazy init elimination - ship preview elements
+        self._ship_preview_elements: list = []
+        self.ship_preview_scroll = None
 
         self._create_ui()
         self._show_step(self.current_step)
@@ -320,7 +325,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         This method is called via on_select_callback from the gallery.
         """
         self.race_config.theme_id = theme_id
-        log_debug(f"Theme selected: {theme_id}")
+        logger.debug(f"Theme selected: {theme_id}")
 
         # Refresh ship preview in Ships panel
         self._refresh_ship_preview(theme_id)
@@ -377,22 +382,21 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
 
     def _refresh_ship_preview(self, theme_id: str):
         """Refresh the ship preview area with ships from the selected theme."""
-        log_debug(f"_refresh_ship_preview called with theme_id: {theme_id}")
+        logger.debug(f"_refresh_ship_preview called with theme_id: {theme_id}")
 
         # Clear existing ship previews
-        if hasattr(self, '_ship_preview_elements'):
-            for elem in self._ship_preview_elements:
-                elem.kill()
+        for elem in self._ship_preview_elements:
+            elem.kill()
         self._ship_preview_elements = []
 
-        if not hasattr(self, 'ship_preview_scroll'):
-            log_debug("ship_preview_scroll not found, returning")
+        if self.ship_preview_scroll is None:
+            logger.debug("ship_preview_scroll not found, returning")
             return
 
         # Use the scrolling container directly for adding elements
         container = self.ship_preview_scroll
         container_width = container.get_relative_rect().width - 30
-        log_debug(f"Container width: {container_width}")
+        logger.debug(f"Container width: {container_width}")
 
         # Representative ship classes to display (3x3 grid = 9 ships)
         ship_classes = [
@@ -440,7 +444,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             # Get top-down (skin) image with smart scaling using visible bounding rect
             skin_surf = theme_manager.load_image(theme_id, ship_class)
             scaled_skin = None
-            log_debug(f"Ship {ship_class}: skin_surf={skin_surf is not None}")
+            logger.debug(f"Ship {ship_class}: skin_surf={skin_surf is not None}")
             if skin_surf:
                 img_width, img_height = skin_surf.get_size()
                 metrics = theme_manager.get_image_metrics(theme_id, ship_class)
@@ -470,7 +474,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             # Get portrait image using ShipThemeManager API
             portrait_surf = theme_manager.get_portrait_image(theme_id, ship_class)
             scaled_portrait = None
-            log_debug(f"Ship {ship_class}: portrait_surf={portrait_surf is not None}")
+            logger.debug(f"Ship {ship_class}: portrait_surf={portrait_surf is not None}")
             if portrait_surf:
                 p_w, p_h = portrait_surf.get_size()
                 p_scale = min(portrait_size / p_w, portrait_size / p_h)
@@ -615,7 +619,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
 
         PROJ-44 Phase 7: Delegates to RaceSummaryPanel.
         """
-        log_debug("Refreshing race summary")
+        logger.debug("Refreshing race summary")
 
         # Update text descriptions from text boxes before showing summary
         self._update_descriptions_from_text()
@@ -663,7 +667,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         step_num = max(0, min(step_num, len(self.step_panels) - 1))
         self.current_step = step_num
 
-        log_debug(f"Showing race setup tab {step_num}: {self.TAB_NAMES[step_num]}")
+        logger.debug(f"Showing race setup tab {step_num}: {self.TAB_NAMES[step_num]}")
 
         # Hide all panels, show current
         for i, panel in enumerate(self.step_panels):
@@ -751,7 +755,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
 
     def _on_load_race(self):
         """Handle Load Race button click - open in-game race browser dialog."""
-        log_debug("Opening race browser dialog")
+        logger.debug("Opening race browser dialog")
 
         # Get window position for dialog placement
         window_rect = self.get_abs_rect()
@@ -775,7 +779,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
 
     def _on_race_selected(self, loaded_config: RaceConfig):
         """Handle race selection from browser dialog."""
-        log_info(f"Loaded race: {loaded_config.name}")
+        logger.info(f"Loaded race: {loaded_config.name}")
         self.race_config = loaded_config
         self.is_editing = True
 
@@ -791,7 +795,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
 
     def _on_race_browser_cancelled(self):
         """Handle race browser cancellation."""
-        log_debug("Race browser cancelled")
+        logger.debug("Race browser cancelled")
 
     def _populate_ui_from_config(self):
         """Populate all UI elements from the current race_config.
@@ -837,7 +841,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
 
     def _on_cancel(self):
         """Handle Cancel button click."""
-        log_debug("Race setup cancelled")
+        logger.debug("Race setup cancelled")
         self.on_cancel_callback()
         self.kill()
 
@@ -852,12 +856,12 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         # Full validation (may have warnings for missing env preferences)
         validation_result = self.race_config.validate()
         if not validation_result.is_valid:
-            log_warning(f"Saving race with validation warnings: {validation_result.first_error}")
+            logger.warning(f"Saving race with validation warnings: {validation_result.first_error}")
 
         # Save to library
         success, message = self.race_library.save_race(self.race_config)
         if success:
-            log_info(f"Race saved: {self.race_config.name}")
+            logger.info(f"Race saved: {self.race_config.name}")
             self.on_complete_callback(self.race_config)
             self.kill()
         else:
@@ -885,7 +889,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
                 elif event.ui_element == self.btn_save:
                     self._on_save()
                     handled = True
-                elif hasattr(self, 'btn_load') and self.btn_load and event.ui_element == self.btn_load:
+                elif self.btn_load and event.ui_element == self.btn_load:
                     self._on_load_race()
                     handled = True
                 else:

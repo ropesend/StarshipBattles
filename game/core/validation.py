@@ -68,8 +68,8 @@ class ValidationResult:
     by all layers (simulation, strategy, UI). It provides a unified
     interface for validation results across the codebase.
 
-    Construction:
-        result = ValidationResult(is_valid=False, errors=["Error 1", "Error 2"])
+    Factory Methods:
+        result = ValidationResult.with_errors(["Error 1", "Error 2"])
 
     Attributes:
         is_valid: True if validation passed, False otherwise.
@@ -78,7 +78,7 @@ class ValidationResult:
         error_code: Optional error code for programmatic handling.
 
     Example:
-        result = ValidationResult()
+        result = ValidationResult.success()
         if some_condition_fails:
             result.add_error("Validation failed", code=ErrorCode.VALIDATION_FAILED.value)
         return result
@@ -142,5 +142,57 @@ class ValidationResult:
             self.is_valid = False
         self.errors.extend(other.errors)
         self.warnings.extend(other.warnings)
+
+    @staticmethod
+    def success() -> 'ValidationResult':
+        """Create a successful validation result.
+
+        Factory method for the common pattern of returning a valid result.
+
+        Returns:
+            A valid ValidationResult with no errors.
+
+        Example:
+            return ValidationResult.success()
+        """
+        return ValidationResult(is_valid=True)
+
+    @staticmethod
+    def error(message: str, code: Optional[Union[str, 'ErrorCode']] = None) -> 'ValidationResult':
+        """Create a failed validation result with a single error.
+
+        Factory method for the common pattern of returning a single error.
+
+        Args:
+            message: Error message describing the validation failure.
+            code: Optional error code for programmatic handling.
+
+        Returns:
+            An invalid ValidationResult with the specified error.
+
+        Example:
+            return ValidationResult.error("Fleet not found")
+        """
+        error_code_value = None
+        if code is not None:
+            error_code_value = code.value if isinstance(code, ErrorCode) else code
+        return ValidationResult(is_valid=False, errors=[message], error_code=error_code_value)
+
+    @staticmethod
+    def with_errors(messages: List[str]) -> 'ValidationResult':
+        """Create a failed validation result with multiple errors.
+
+        Factory method for the common pattern of returning multiple errors.
+
+        Args:
+            messages: List of error messages.
+
+        Returns:
+            An invalid ValidationResult with all specified errors.
+
+        Example:
+            return ValidationResult.with_errors(["Error 1", "Error 2"])
+        """
+        return ValidationResult(is_valid=False, errors=list(messages))
 
 

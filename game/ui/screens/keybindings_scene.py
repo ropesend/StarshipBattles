@@ -19,6 +19,9 @@ import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, UIPanel
 from pygame_gui.windows import UIConfirmationDialog
 
+from game.ui.fonts import get_font
+from game.ui.colors import BG_PANEL_DARK, WHITE
+
 from game.core.input_actions import (
     ACTION_DISPLAY_NAMES,
     ACTION_GROUPS,
@@ -26,7 +29,9 @@ from game.core.input_actions import (
     KeyBinding,
 )
 from game.ui.services.input_mapper import InputMapper
-from game.core.logger import log_debug, log_info
+import logging
+
+logger = logging.getLogger(__name__)
 
 # ── Layout constants ────────────────────────────────────────────────
 _TITLE_HEIGHT = 60
@@ -277,7 +282,7 @@ class KeybindingsScene:
 
     def draw(self, screen: Any) -> None:
         """Draw the scene."""
-        screen.fill((20, 25, 35))
+        screen.fill(BG_PANEL_DARK)
 
         # Draw UI elements
         self._ui_manager.draw_ui(screen)
@@ -300,7 +305,7 @@ class KeybindingsScene:
     def _start_capture(self, action: InputAction) -> None:
         """Enter key capture mode for the given action."""
         self._capturing_action = action
-        log_debug(f"KeybindingsScene: Capturing key for {action.value}")
+        logger.debug(f"KeybindingsScene: Capturing key for {action.value}")
 
     def _handle_key_capture(self, event: Any) -> None:
         """Process a KEYDOWN event during capture mode."""
@@ -377,7 +382,7 @@ class KeybindingsScene:
         self._mapper.set_binding(action, binding)
         self._has_unsaved_changes = True
         self._refresh_action_row(action)
-        log_debug(f"KeybindingsScene: Bound {action.value} -> {binding.display_text()}")
+        logger.debug(f"KeybindingsScene: Bound {action.value} -> {binding.display_text()}")
 
     def _refresh_action_row(self, action: InputAction) -> None:
         """Update the display for a single action row."""
@@ -405,10 +410,10 @@ class KeybindingsScene:
         screen.blit(overlay, (0, 0))
 
         action_name = ACTION_DISPLAY_NAMES.get(self._capturing_action, self._capturing_action.value)
-        font = pygame.font.SysFont("arial", 28)
+        font = get_font(28)
         text = font.render(
             f"Press a key for '{action_name}'...  (ESC to cancel)",
-            True, (255, 255, 255),
+            True, WHITE,
         )
         text_rect = text.get_rect(center=(self._width // 2, self._height // 2))
         screen.blit(text, text_rect)
@@ -470,7 +475,7 @@ class KeybindingsScene:
         """Save user overrides and close."""
         self._mapper.save_user_overrides()
         self._has_unsaved_changes = False
-        log_info("KeybindingsScene: Saved user keybinding overrides")
+        logger.info("KeybindingsScene: Saved user keybinding overrides")
         self._on_close_callback()
 
     def _on_reset_all_clicked(self) -> None:
@@ -492,7 +497,7 @@ class KeybindingsScene:
         self._mapper.reset_to_defaults()
         self._has_unsaved_changes = False
         self._refresh_all_rows()
-        log_info("KeybindingsScene: Reset all keybindings to defaults")
+        logger.info("KeybindingsScene: Reset all keybindings to defaults")
 
     def _on_close(self) -> None:
         """Close with unsaved-changes guard."""
@@ -517,7 +522,7 @@ class KeybindingsScene:
         self._mapper.set_binding(action, default_binding)
         self._has_unsaved_changes = True
         self._refresh_action_row(action)
-        log_debug(f"KeybindingsScene: Reset {action.value} to default")
+        logger.debug(f"KeybindingsScene: Reset {action.value} to default")
 
     def _refresh_all_rows(self) -> None:
         """Refresh every action row's display text and reset button."""

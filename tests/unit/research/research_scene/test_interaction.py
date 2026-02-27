@@ -320,11 +320,11 @@ class TestCycleDetectionCall:
             "Cycle detected: C -> D -> E -> C"
         ]
 
-        with patch('game.ui.research.research_scene.log_info') as mock_log:
+        with patch('game.ui.research.research_scene.logger') as mock_logger:
             # Simulate the expected behavior after our fix
             cycle_errors = mock_tree.detect_cycles()
             for err in cycle_errors[:5]:
-                mock_log(f"TechTree validation: {err}")
+                mock_logger.info(f"TechTree validation: {err}")
 
             # Verify logging was called for cycle errors
-            assert mock_log.call_count == 2
+            assert mock_logger.info.call_count == 2

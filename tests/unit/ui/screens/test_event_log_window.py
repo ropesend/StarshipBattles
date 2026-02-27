@@ -58,6 +58,11 @@ def _make_window(events=None, on_close=None):
     win.on_close_callback = on_close
     win.ui_manager = MagicMock()
 
+    # PROJ-188 Phase 5: VirtualTable components (None for fallback path in tests)
+    win.data_source = None
+    win.column_manager = None
+    win.virtual_table = None
+
     # Mock UI elements (filter buttons)
     win.btn_all = MagicMock()
     win.btn_combat = MagicMock()
@@ -69,12 +74,6 @@ def _make_window(events=None, on_close=None):
         "production": win.btn_production,
         "colonies": win.btn_colonies,
     }
-
-    # Mock list container for row display
-    win.row_labels = []
-    win.list_panel = MagicMock()
-    win.scroll_bar = MagicMock()
-    win.scroll_bar.start_percentage = 0.0
 
     return win
 

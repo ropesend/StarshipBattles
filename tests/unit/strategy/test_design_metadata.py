@@ -122,20 +122,23 @@ class TestDesignMetadata:
         ship.mass = 3000.0
         ship.theme_id = "Alliance"
 
-        # Mock layers with components
-        weapon = MagicMock()
-        weapon.category = "weapon"
-        weapon.damage = 200
-        weapon.rate_of_fire = 1
-        weapon.cost = {"metal": 50, "energy": 25}
+        # Mock weapon component with WeaponAbility
+        weapon_comp = MagicMock()
+        weapon_comp.major_classification = "Weapons"
+        weapon_comp.cost = {"metal": 50, "energy": 25}
+        weapon_ability = MagicMock()
+        weapon_ability.damage = 200
+        weapon_ability.reload_time = 1.0  # rate_of_fire = 1
+        weapon_comp.get_abilities = MagicMock(return_value=[weapon_ability])
 
+        # Mock armor component
         armor = MagicMock()
-        armor.category = "armor"
-        armor.hp = 1000
+        armor.major_classification = "Armor"
+        armor.max_hp = 1000
         armor.cost = {"metal": 100}
 
         ship.layers = {
-            "outer": LayerData(components=[weapon, armor])
+            "outer": LayerData(components=[weapon_comp, armor])
         }
 
         # Create metadata
@@ -333,29 +336,8 @@ class TestDesignMetadataFromDesignFile:
 class TestDesignMetadataFromShip:
     """Tests for DesignMetadata.from_ship edge cases."""
 
-    def test_from_ship_missing_vehicle_type(self):
-        """from_ship handles ship without vehicle_type attribute."""
-        ship = MagicMock(spec=['name', 'ship_class', 'mass', 'layers'])
-        ship.name = "Legacy Ship"
-        ship.ship_class = "Destroyer"
-        ship.mass = 2000.0
-        ship.layers = {}
-
-        metadata = DesignMetadata.from_ship(ship, "legacy_ship")
-
-        assert metadata.vehicle_type == "Ship"
-
-    def test_from_ship_missing_theme_id(self):
-        """from_ship handles ship without theme_id attribute."""
-        ship = MagicMock(spec=['name', 'ship_class', 'mass', 'layers'])
-        ship.name = "No Theme Ship"
-        ship.ship_class = "Frigate"
-        ship.mass = 1500.0
-        ship.layers = {}
-
-        metadata = DesignMetadata.from_ship(ship, "no_theme")
-
-        assert metadata.theme_id == ""
+    # PROJ-191: Deleted test_from_ship_missing_vehicle_type - Ship always has vehicle_type
+    # PROJ-191: Deleted test_from_ship_missing_theme_id - Ship always has theme_id
 
     def test_from_ship_empty_layers(self):
         """from_ship handles empty layers."""
@@ -370,8 +352,8 @@ class TestDesignMetadataFromShip:
         assert metadata.combat_power == 0.0
         assert metadata.resource_cost == {}
 
-    def test_from_ship_component_without_cost(self):
-        """from_ship handles components without cost attribute."""
+    def test_from_ship_component_zero_cost(self):
+        """from_ship handles components with zero/default cost."""
         ship = MagicMock()
         ship.name = "No Cost Ship"
         ship.ship_class = "Fighter"
@@ -379,9 +361,10 @@ class TestDesignMetadataFromShip:
         ship.vehicle_type = "Fighter"
         ship.theme_id = "Test"
 
-        # Component without cost
-        comp = MagicMock(spec=['category'])
-        comp.category = "engine"
+        # Component with default zero cost (Component always has .cost)
+        comp = MagicMock()
+        comp.major_classification = "Engines"
+        comp.cost = 0  # Default cost
 
         ship.layers = {
             "core": LayerData(components=[comp])
@@ -389,8 +372,8 @@ class TestDesignMetadataFromShip:
 
         metadata = DesignMetadata.from_ship(ship, "no_cost")
 
-        # Should not crash, just skip the component
-        assert metadata.resource_cost == {}
+        # Zero cost adds minerals: 0 entry (int/float cost path)
+        assert metadata.resource_cost == {"minerals": 0}
 
     def test_from_ship_integer_cost(self):
         """from_ship handles integer cost (single value) on components."""
@@ -402,7 +385,7 @@ class TestDesignMetadataFromShip:
         ship.theme_id = ""
 
         comp = MagicMock()
-        comp.category = "engine"
+        comp.major_classification = "Engines"
         comp.cost = 50  # Integer, not dict
 
         ship.layers = {
@@ -577,10 +560,10 @@ class TestDesignMetadataSerialization:
 
 
 class TestDesignMetadataOldLayerFormat:
-    """Tests for old layer format handling and warnings."""
+    """Tests for old layer format handling (silently ignored, no warnings)."""
 
-    def test_calculate_combat_power_old_layer_format_logs_warning(self, caplog):
-        """Old layer format (dict instead of list) logs warning."""
+    def test_calculate_combat_power_old_layer_format_silently_ignored(self, caplog):
+        """Old layer format (dict instead of list) is silently ignored."""
         import logging
         caplog.set_level(logging.WARNING)
 
@@ -595,10 +578,11 @@ class TestDesignMetadataOldLayerFormat:
         power = DesignMetadata._calculate_combat_power(design_data)
 
         assert power == 0.0  # Old format not processed
-        assert "Old layer format" in caplog.text
+        # No warning logged - per CLAUDE.md, old formats are eradicated not warned
+        assert "Old layer format" not in caplog.text
 
-    def test_calculate_resource_cost_old_layer_format_logs_warning(self, caplog):
-        """Old layer format in resource cost calculation logs warning."""
+    def test_calculate_resource_cost_old_layer_format_silently_ignored(self, caplog):
+        """Old layer format in resource cost calculation is silently ignored."""
         import logging
         caplog.set_level(logging.WARNING)
 
@@ -613,22 +597,31 @@ class TestDesignMetadataOldLayerFormat:
         costs = DesignMetadata._calculate_resource_cost(design_data)
 
         assert costs == {}  # Old format not processed
-        assert "Old layer format" in caplog.text
+        # No warning logged - per CLAUDE.md, old formats are eradicated not warned
+        assert "Old layer format" not in caplog.text
 
 
 class TestDesignMetadataCombatPowerFromShip:
-    """Tests for _calculate_combat_power_from_ship method."""
+    """Tests for _calculate_combat_power_from_ship method.
+
+    These tests use proper Component attributes (major_classification, max_hp)
+    and mock WeaponAbility instances for weapon damage/reload.
+    """
 
     def test_calculate_combat_power_from_ship_weapon(self):
         """Combat power from ship correctly calculates weapon contribution."""
         ship = MagicMock()
-        weapon = MagicMock()
-        weapon.category = "weapon"
-        weapon.damage = 100
-        weapon.rate_of_fire = 2
+        weapon_comp = MagicMock()
+        weapon_comp.major_classification = "Weapons"
+
+        # Mock WeaponAbility with damage and reload_time
+        weapon_ability = MagicMock()
+        weapon_ability.damage = 100
+        weapon_ability.reload_time = 0.5  # rate_of_fire = 2
+        weapon_comp.get_abilities = MagicMock(return_value=[weapon_ability])
 
         ship.layers = {
-            "core": LayerData(components=[weapon])
+            "core": LayerData(components=[weapon_comp])
         }
 
         power = DesignMetadata._calculate_combat_power_from_ship(ship)
@@ -640,8 +633,8 @@ class TestDesignMetadataCombatPowerFromShip:
         """Combat power from ship correctly calculates armor contribution."""
         ship = MagicMock()
         armor = MagicMock()
-        armor.category = "armor"
-        armor.hp = 1000
+        armor.major_classification = "Armor"
+        armor.max_hp = 1000
 
         ship.layers = {
             "outer": LayerData(components=[armor])
@@ -652,19 +645,8 @@ class TestDesignMetadataCombatPowerFromShip:
         # 1000 * 0.5 = 500
         assert power == 500.0
 
-    def test_calculate_combat_power_from_ship_no_category(self):
-        """Combat power from ship handles components without category."""
-        ship = MagicMock()
-        comp = MagicMock(spec=['name'])  # No category attribute
-        comp.name = "generic_component"
-
-        ship.layers = {
-            "core": LayerData(components=[comp])
-        }
-
-        power = DesignMetadata._calculate_combat_power_from_ship(ship)
-
-        assert power == 0.0
+    # PROJ-191: Deleted test_calculate_combat_power_from_ship_no_classification
+    # - Component always has major_classification attribute
 
     def test_calculate_combat_power_from_ship_empty_layers(self):
         """Combat power from ship with empty layers is 0."""
@@ -679,23 +661,27 @@ class TestDesignMetadataCombatPowerFromShip:
         """Combat power from ship aggregates across multiple layers."""
         ship = MagicMock()
 
-        weapon1 = MagicMock()
-        weapon1.category = "weapon"
-        weapon1.damage = 50
-        weapon1.rate_of_fire = 1
+        weapon_comp1 = MagicMock()
+        weapon_comp1.major_classification = "Weapons"
+        weapon_ability1 = MagicMock()
+        weapon_ability1.damage = 50
+        weapon_ability1.reload_time = 1.0  # rate_of_fire = 1
+        weapon_comp1.get_abilities = MagicMock(return_value=[weapon_ability1])
 
-        weapon2 = MagicMock()
-        weapon2.category = "weapon"
-        weapon2.damage = 100
-        weapon2.rate_of_fire = 0
+        weapon_comp2 = MagicMock()
+        weapon_comp2.major_classification = "Weapons"
+        weapon_ability2 = MagicMock()
+        weapon_ability2.damage = 100
+        weapon_ability2.reload_time = float('inf')  # rate_of_fire ≈ 0
+        weapon_comp2.get_abilities = MagicMock(return_value=[weapon_ability2])
 
         armor = MagicMock()
-        armor.category = "armor"
-        armor.hp = 200
+        armor.major_classification = "Armor"
+        armor.max_hp = 200
 
         ship.layers = {
-            "core": LayerData(components=[weapon1]),
-            "outer": LayerData(components=[weapon2, armor])
+            "core": LayerData(components=[weapon_comp1]),
+            "outer": LayerData(components=[weapon_comp2, armor])
         }
 
         power = DesignMetadata._calculate_combat_power_from_ship(ship)
@@ -705,6 +691,39 @@ class TestDesignMetadataCombatPowerFromShip:
         # armor: 200*0.5 = 100
         # Total: 1605
         assert power == 1605.0
+
+    def test_calculate_combat_power_from_ship_weapon_no_ability(self):
+        """Combat power from ship handles weapon component without WeaponAbility."""
+        ship = MagicMock()
+        weapon_comp = MagicMock()
+        weapon_comp.major_classification = "Weapons"
+        weapon_comp.get_abilities = MagicMock(return_value=[])  # No weapon abilities
+
+        ship.layers = {
+            "core": LayerData(components=[weapon_comp])
+        }
+
+        power = DesignMetadata._calculate_combat_power_from_ship(ship)
+
+        # No weapon abilities = 0 contribution
+        assert power == 0.0
+
+    def test_calculate_combat_power_from_ship_non_weapon_classification(self):
+        """Combat power from ship ignores non-weapon/armor classifications."""
+        ship = MagicMock()
+        engine = MagicMock()
+        engine.major_classification = "Engines"
+
+        sensor = MagicMock()
+        sensor.major_classification = "Sensors"
+
+        ship.layers = {
+            "core": LayerData(components=[engine, sensor])
+        }
+
+        power = DesignMetadata._calculate_combat_power_from_ship(ship)
+
+        assert power == 0.0
 
 
 class TestDesignMetadataMultipleLayers:
@@ -797,7 +816,7 @@ class TestDesignMetadataEdgeCasesExtended:
         ship.theme_id = ""
 
         comp = MagicMock()
-        comp.category = "engine"
+        comp.major_classification = "Engines"
         comp.cost = 75.5  # Float cost
 
         ship.layers = {
@@ -808,31 +827,8 @@ class TestDesignMetadataEdgeCasesExtended:
 
         assert metadata.resource_cost.get("minerals", 0) == 75
 
-    def test_from_ship_weapon_missing_damage(self):
-        """from_ship handles weapon without damage attribute."""
-        ship = MagicMock()
-        ship.name = "No Damage Weapon"
-        ship.ship_class = "Fighter"
-        ship.mass = 100.0
-        ship.vehicle_type = "Fighter"
-        ship.theme_id = ""
-
-        weapon = MagicMock()
-        weapon.category = "weapon"
-        # No damage attribute, only rate_of_fire
-        del weapon.damage
-        weapon.rate_of_fire = 4
-
-        ship.layers = {
-            "core": LayerData(components=[weapon])
-        }
-
-        # Should not crash
-        metadata = DesignMetadata.from_ship(ship, "no_damage")
-
-        # rate_of_fire contribution: 4 * 5 = 20
-        # getattr returns 0 for missing damage
-        assert metadata.combat_power == 20.0
+    # PROJ-191: Deleted test_from_ship_weapon_missing_damage
+    # - WeaponAbility always has damage attribute
 
     def test_embed_in_ship_data_preserves_existing_data(self):
         """embed_in_ship_data preserves existing ship data."""

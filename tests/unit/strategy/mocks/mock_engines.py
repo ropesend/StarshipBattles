@@ -168,8 +168,8 @@ class MockConflictEngine(IConflictEngine):
     def resolve_all_conflicts_called(self) -> bool:
         return len(self.resolve_all_conflicts_calls) > 0
 
-    def resolve_all_conflicts(self, empires):
-        self.resolve_all_conflicts_calls.append((empires,))
+    def resolve_all_conflicts(self, empires, galaxy=None):
+        self.resolve_all_conflicts_calls.append((empires, galaxy))
         return self.resolve_all_conflicts_result
 
 

@@ -9,11 +9,14 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, UITextEntryLine, UIDropDownMenu, UIHorizontalSlider
 
-from game.core.logger import log_info
+import logging
+
+logger = logging.getLogger(__name__)
 from game.strategy.data.galaxy import Galaxy
 from game.core.hex_math import hex_to_pixel
 from game.strategy.engine.game_config import VALID_GALAXY_TYPES
 from game.ui.screens.galaxy_test.constants import SIDEBAR_WIDTH, HEX_SIZE
+from game.ui.colors import WARP_LANE, STAR_LABEL
 
 
 class GalaxyModeHelper:
@@ -237,7 +240,7 @@ class GalaxyModeHelper:
         self.galaxy_radius = int(self.galaxy_radius_slider.get_current_value())
         self.galaxy_type = self.galaxy_type_dropdown.selected_option[0]
 
-        log_info(f"Generating galaxy: type={self.galaxy_type}, count={self.system_count}, radius={self.galaxy_radius}, seed={self.galaxy_seed}")
+        logger.info(f"Generating galaxy: type={self.galaxy_type}, count={self.system_count}, radius={self.galaxy_radius}, seed={self.galaxy_seed}")
 
         # Create galaxy
         start_time = time.perf_counter()
@@ -264,7 +267,7 @@ class GalaxyModeHelper:
             density_map = DensityMap.from_config(scaled_config, self.galaxy.radius)
             strategy = DensityBasedPlacementStrategy(density_map)
         t2 = time.perf_counter()
-        log_info(f"  Strategy setup: {t2-t1:.3f}s")
+        logger.info(f"  Strategy setup: {t2-t1:.3f}s")
 
         # Generate systems (positions only, no stars/planets yet)
         # min_dist=400 matches production GameSession (star systems are ~101 hexes across)
@@ -275,15 +278,15 @@ class GalaxyModeHelper:
             rng=rng
         )
         t3 = time.perf_counter()
-        log_info(f"  System placement: {t3-t2:.3f}s")
+        logger.info(f"  System placement: {t3-t2:.3f}s")
 
         # Generate warp lanes
         self.galaxy.generate_warp_lanes()
         t4 = time.perf_counter()
-        log_info(f"  Warp lane generation: {t4-t3:.3f}s")
+        logger.info(f"  Warp lane generation: {t4-t3:.3f}s")
 
         self.generation_time = time.perf_counter() - start_time
-        log_info(f"  Total generation: {self.generation_time:.3f}s")
+        logger.info(f"  Total generation: {self.generation_time:.3f}s")
 
         # Count warp connections
         warp_count = sum(len(sys.warp_points) for sys in self.galaxy.systems.values()) // 2
@@ -301,9 +304,9 @@ class GalaxyModeHelper:
         t5 = time.perf_counter()
         self._center_camera()
         t6 = time.perf_counter()
-        log_info(f"  Camera centering: {t6-t5:.3f}s")
+        logger.info(f"  Camera centering: {t6-t5:.3f}s")
 
-        log_info(f"Galaxy generated: {len(self.galaxy.systems)} systems, {warp_count} warp lanes in {self.generation_time:.2f}s")
+        logger.info(f"Galaxy generated: {len(self.galaxy.systems)} systems, {warp_count} warp lanes in {self.generation_time:.2f}s")
 
     def _center_camera(self):
         """Center the camera on the generated galaxy."""
@@ -375,7 +378,7 @@ class GalaxyModeHelper:
 
             # Draw dot
             radius = max(2, int(4 * self.screen.camera.zoom))
-            pygame.draw.circle(screen_surface, (200, 200, 100), (int(screen_pos.x), int(screen_pos.y)), radius)
+            pygame.draw.circle(screen_surface, STAR_LABEL, (int(screen_pos.x), int(screen_pos.y)), radius)
 
         # Remove clip
         screen_surface.set_clip(None)
@@ -416,6 +419,6 @@ class GalaxyModeHelper:
                     continue
 
                 # Draw line
-                pygame.draw.line(screen_surface, (50, 50, 100),
+                pygame.draw.line(screen_surface, WARP_LANE,
                                (int(scr_a.x), int(scr_a.y)),
                                (int(scr_b.x), int(scr_b.y)), 1)

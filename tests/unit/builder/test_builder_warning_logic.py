@@ -9,7 +9,6 @@ os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
-from game.core.registry import RegistryManager
 from game.simulation.entities.layer_data import LayerData
 
 
@@ -31,7 +30,11 @@ def builder_warning_setup():
     p3.start()
     p4.start()
 
-    context = WorkshopContext.standalone(tech_preset_name="default")
+    # PROJ-174: Create mock registries for DI injection
+    mock_registries = MagicMock()
+    mock_registries.vehicle_classes = {}  # Will be populated per-test if needed
+
+    context = WorkshopContext.standalone(tech_preset_name="default", registries=mock_registries)
     context.on_return = MagicMock()
     builder = DesignWorkshopScreen(800, 600, context)
 
@@ -45,6 +48,7 @@ def builder_warning_setup():
     builder.modifier_panel = MagicMock()
     builder.weapons_report_panel = MagicMock()
     builder.detail_panel = MagicMock()
+    builder.component_modifier_grid_panel = MagicMock()
 
     builder.left_panel.get_add_count.return_value = 1
     builder.left_panel.handle_event.return_value = None
@@ -65,7 +69,6 @@ def builder_warning_setup():
     p4.stop()
 
     pygame.quit()
-    RegistryManager.instance().clear()
 
 
 class TestBuilderWarningLogic:
@@ -119,17 +122,17 @@ class TestBuilderWarningLogic:
         event.ui_element = builder.right_panel.vehicle_type_dropdown
         event.text = "Station"
 
-        # Mock getattr for checking current type
-        from game.core.registry import RegistryManager
-        with patch.object(RegistryManager.instance(), 'vehicle_classes', {'Station': {'type': 'Station', 'max_mass': 5000}}):
-            with patch.object(builder, 'execute_pending_action') as mock_execute:
-                builder.handle_event(event)
+        # PROJ-174: Populate registries via DI (injected in fixture)
+        builder.context.registries.vehicle_classes = {'Station': {'type': 'Station', 'max_mass': 5000}}
 
-                # Should find a pending action and execute it
-                assert builder.pending_action is not None
-                assert builder.pending_action[0] == 'change_type'
-                mock_execute.assert_called_once()
-                assert builder.confirm_dialog is None
+        with patch.object(builder, 'execute_pending_action') as mock_execute:
+            builder.handle_event(event)
+
+            # Should find a pending action and execute it
+            assert builder.pending_action is not None
+            assert builder.pending_action[0] == 'change_type'
+            mock_execute.assert_called_once()
+            assert builder.confirm_dialog is None
 
     def test_change_type_non_empty_ship(self, builder_warning_setup):
         """Test changing type WITH components triggers warning."""
@@ -141,11 +144,12 @@ class TestBuilderWarningLogic:
         event.ui_element = builder.right_panel.vehicle_type_dropdown
         event.text = "Station"
 
-        from game.core.registry import RegistryManager
-        with patch.object(RegistryManager.instance(), 'vehicle_classes', {'Station': {'type': 'Station', 'max_mass': 5000}}):
-            with patch.object(builder, 'execute_pending_action') as mock_execute:
-                builder.handle_event(event)
+        # PROJ-174: Populate registries via DI (injected in fixture)
+        builder.context.registries.vehicle_classes = {'Station': {'type': 'Station', 'max_mass': 5000}}
 
-                assert builder.pending_action is not None
-                mock_execute.assert_not_called()
-                assert builder.confirm_dialog is not None
+        with patch.object(builder, 'execute_pending_action') as mock_execute:
+            builder.handle_event(event)
+
+            assert builder.pending_action is not None
+            mock_execute.assert_not_called()
+            assert builder.confirm_dialog is not None

@@ -4,8 +4,11 @@ Classification configuration for planet type determination.
 Loads classification thresholds from astrophysics.json and provides
 convenient accessor methods for the planet generation system.
 """
+import logging
 from typing import Dict, Any, Optional
 from functools import lru_cache
+
+logger = logging.getLogger(__name__)
 
 
 class ClassificationConfig:
@@ -139,6 +142,5 @@ def get_classification_config() -> ClassificationConfig:
         return ClassificationConfig(data)
     except (ImportError, FileNotFoundError, OSError, KeyError, TypeError, ValueError) as e:
         # Fall back to defaults if loading fails
-        from game.core.logger import log_warning
-        log_warning(f"Failed to load classification config: {e}")
+        logger.warning(f"Failed to load classification config: {e}")
         return ClassificationConfig(None)

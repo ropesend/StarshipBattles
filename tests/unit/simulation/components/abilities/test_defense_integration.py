@@ -337,11 +337,12 @@ class TestDefenseStatBindingIntrospection:
     """Test stat binding introspection for defense abilities."""
 
     def test_shield_projection_consumed_stats(self):
-        """ShieldProjection should declare capacity_mult as consumed."""
+        """ShieldProjection should declare capacity_mult and shield_capacity_mult as consumed."""
         consumed = ShieldProjection.get_consumed_stats()
 
         assert StatKey.CAPACITY_MULT in consumed
-        assert len(consumed) == 1
+        assert StatKey.SHIELD_CAPACITY_MULT in consumed
+        assert len(consumed) == 2
 
     def test_shield_regeneration_consumed_stats(self):
         """ShieldRegeneration should declare energy_gen_mult as consumed."""

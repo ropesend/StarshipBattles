@@ -297,3 +297,27 @@ class QueueCreateDysonSphereMissionCommand(Command):
         self.type = CommandType.ISSUE_ORDER
         self.fleet_id = fleet_id
         self.target_hex = target_hex
+
+
+# =============================================================================
+# WARP Commands (PROJ-187)
+# =============================================================================
+
+@dataclass
+class IssueWarpCommand(Command):
+    """Command to issue a WARP order to traverse a specific warp point.
+
+    PROJ-187: Explicit warp point traversal. If the fleet is not at the
+    warp point, automatically queues a MOVE order first.
+
+    Args:
+        fleet_id: The fleet to issue the warp order to
+        warp_point_hex: The global hex coordinate of the warp point to enter
+    """
+    fleet_id: int
+    warp_point_hex: HexCoord
+
+    def __init__(self, fleet_id: int, warp_point_hex: HexCoord):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+        self.warp_point_hex = warp_point_hex

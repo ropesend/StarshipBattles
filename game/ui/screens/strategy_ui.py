@@ -17,6 +17,7 @@ from typing import Optional
 import pygame
 import pygame_gui
 from game.ui.config import UIConfig
+from game.ui.fonts import get_font
 from game.core.paths import Paths
 from game.core.constants import PLANET_RESOURCES
 from game.ui.screens.build_queue_helpers import RESOURCE_ABBREVS
@@ -29,6 +30,7 @@ from game.ui.screens.strategy_panel_manager import (
     apply_hotkey_tooltips,
 )
 from game.ui.screens.strategy_event_router import StrategyEventRouter
+from game.ui.colors import WHITE
 
 class StrategyUI:
     """Handles all UI rendering and interaction for the StrategyScreen.
@@ -207,9 +209,9 @@ class StrategyUI:
             panel.show()
 
         # BUG-26: Re-layout tree panels to ensure proper positioning after hide/show
-        if hasattr(self, 'system_tree'):
+        if self.system_tree:
             self.system_tree.layout()
-        if hasattr(self, 'sector_tree'):
+        if self.sector_tree:
             self.sector_tree.layout()
 
 
@@ -252,9 +254,7 @@ class StrategyUI:
 
     def _get_object_asset(self, obj):
         """Proxy to scene for asset resolution."""
-        if hasattr(self.scene, '_get_object_asset'):
-            return self.scene._get_object_asset(obj)
-        return None
+        return self.scene._get_object_asset(obj)
         
     def _format_spectrum(self, star):
         return self._detail_formatter._format_spectrum(star)
@@ -281,11 +281,12 @@ class StrategyUI:
         
     def _update_resource_display(self):
         """Update the empire resource bar with current pool values."""
-        if not hasattr(self.scene, 'current_empire'):
+        # Guard: current_player_index may not be set during init
+        if not hasattr(self.scene, 'current_player_index'):
+            return
+        if not self.scene.current_empire:
             return
         empire = self.scene.current_empire
-        if empire is None:
-            return
 
         parts = []
         for res in PLANET_RESOURCES:
@@ -313,8 +314,8 @@ class StrategyUI:
 
         # Only draw zoom indicator if strategy layer has focus (no sub-panels open)
         if not self._has_modal_open():
-            font = pygame.font.SysFont("arial", 20)
-            mode_text = font.render(f"Strategy Layer | Zoom: {self.scene.camera.zoom:.2f}", True, (255, 255, 255))
+            font = get_font(20)
+            mode_text = font.render(f"Strategy Layer | Zoom: {self.scene.camera.zoom:.2f}", True, WHITE)
             screen.blit(mode_text, (20, self.height - 30))
 
     def _has_modal_open(self) -> bool:
@@ -394,3 +395,31 @@ class StrategyUI:
     def open_empire_panel(self):
         """Open the Empire Panel Window."""
         self.window_manager.open_empire_panel()
+
+    def show_confirmation_dialog(
+        self, title: str, message: str, on_confirm, is_warning: bool = False
+    ):
+        """Show a confirmation dialog for dangerous actions.
+
+        PROJ-198: Used by superweapons for planet/star destruction confirmation.
+
+        Args:
+            title: Dialog window title.
+            message: Message to display (can be multi-line).
+            on_confirm: Callback when user confirms.
+            is_warning: If True, indicates a dangerous/irreversible action.
+        """
+        self.window_manager.show_confirmation_dialog(title, message, on_confirm, is_warning)
+
+    def show_ship_picker(self, ships, ability_name: str, on_selected):
+        """Show ship picker dialog for multi-select.
+
+        PROJ-198: Used by superweapons for self-destruct ship selection.
+        Currently auto-selects all ships; full picker dialog is a future enhancement.
+
+        Args:
+            ships: List of ships to pick from.
+            ability_name: Ability name (for display).
+            on_selected: Callback with list of selected ship IDs.
+        """
+        self.window_manager.show_ship_picker(ships, ability_name, on_selected)

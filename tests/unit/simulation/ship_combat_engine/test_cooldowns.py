@@ -203,24 +203,9 @@ class TestShieldRegenEnergyCost:
         # Shield should NOT regenerate
         assert ship.current_shields == 50
 
-    def test_shield_regen_works_without_resources_attribute(self):
-        """Shield regeneration works when ship has no resources attribute."""
-        from game.simulation.entities.ship_combat_engine import ShipCombatEngine
-
-        ship = MagicMock(spec=['is_alive', 'current_shields', 'max_shields',
-                                'shield_regen_rate', 'shield_regen_cost', 'repair_rate'])
-        ship.is_alive = True
-        ship.current_shields = 50
-        ship.max_shields = 100
-        ship.shield_regen_rate = 100.0
-        ship.shield_regen_cost = 50.0  # Cost exists but no resources
-        ship.repair_rate = 0
-
-        engine = ShipCombatEngine(ship)
-        engine.update_combat_cooldowns()
-
-        # Should still regenerate since hasattr check fails
-        assert ship.current_shields == pytest.approx(51.0)
+    # DELETED: test_shield_regen_works_without_resources_attribute
+    # Reason: Duck typing replaced with explicit protocols in PROJ-190.
+    # Ships must now have resources attribute.
 
     def test_shield_regen_with_zero_cost_skips_energy_check(self):
         """Zero cost skips energy consumption entirely."""
@@ -528,26 +513,9 @@ class TestCooldownEdgeCases:
         assert ship.current_shields > initial_shields
         assert target_comp.current_hp > initial_hp
 
-    def test_missing_repair_rate_attribute(self):
-        """Handles missing repair_rate attribute gracefully."""
-        from game.simulation.entities.ship_combat_engine import ShipCombatEngine
-
-        # Ship without repair_rate attribute
-        ship = MagicMock(spec=['is_alive', 'current_shields', 'max_shields',
-                                'shield_regen_rate', 'shield_regen_cost'])
-        ship.is_alive = True
-        ship.current_shields = 50
-        ship.max_shields = 100
-        ship.shield_regen_rate = 0.0
-        ship.shield_regen_cost = 0.0
-
-        engine = ShipCombatEngine(ship)
-
-        # Should not raise even without repair_rate
-        engine.update_combat_cooldowns()
-
-        # Shields unchanged (rate is 0)
-        assert ship.current_shields == 50
+    # DELETED: test_missing_repair_rate_attribute
+    # Reason: Duck typing replaced with explicit protocols in PROJ-190.
+    # Ships must now have repair_rate attribute.
 
 
 class TestApplyRepairPrivateMethod:

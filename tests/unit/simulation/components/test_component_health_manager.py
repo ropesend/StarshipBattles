@@ -94,19 +94,22 @@ class TestTakeDamage:
         health_manager.take_damage(40)
         assert mock_component.status == original_status
 
-    def test_raises_typeerror_for_string_input(self, health_manager):
-        """TypeError raised for string damage amount."""
-        with pytest.raises(TypeError, match="amount must be numeric"):
+    def test_raises_validation_exception_for_string_input(self, health_manager):
+        """ValidationException raised for string damage amount."""
+        from game.core.exceptions import ValidationException
+        with pytest.raises(ValidationException, match="amount must be numeric"):
             health_manager.take_damage("50")
 
-    def test_raises_typeerror_for_none_input(self, health_manager):
-        """TypeError raised for None damage amount."""
-        with pytest.raises(TypeError, match="amount must be numeric"):
+    def test_raises_validation_exception_for_none_input(self, health_manager):
+        """ValidationException raised for None damage amount."""
+        from game.core.exceptions import ValidationException
+        with pytest.raises(ValidationException, match="amount must be numeric"):
             health_manager.take_damage(None)
 
-    def test_raises_typeerror_for_list_input(self, health_manager):
-        """TypeError raised for list damage amount."""
-        with pytest.raises(TypeError, match="amount must be numeric"):
+    def test_raises_validation_exception_for_list_input(self, health_manager):
+        """ValidationException raised for list damage amount."""
+        from game.core.exceptions import ValidationException
+        with pytest.raises(ValidationException, match="amount must be numeric"):
             health_manager.take_damage([10])
 
     def test_accepts_integer_damage(self, health_manager, mock_component):

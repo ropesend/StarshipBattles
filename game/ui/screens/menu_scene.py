@@ -8,6 +8,7 @@ from pygame_gui.elements import UIButton
 
 from game.core.paths import Paths
 from game.core.protocols import IScene
+from game.ui.colors import BG_MENU
 
 
 class MenuScene:
@@ -19,7 +20,7 @@ class MenuScene:
     """
 
     # Background color for menu
-    BG_COLOR = (20, 20, 30)
+    BG_COLOR = BG_MENU
 
     def __init__(
         self,

@@ -6,15 +6,24 @@ showing planet portrait, comprehensive stats, and atmosphere composition graph.
 """
 
 import os
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TYPE_CHECKING
 
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIImage, UITextBox, UIPanel, UIScrollingContainer, UILabel
 from game.ui.screens.strategy_detail_fmt import format_planet_info
+from game.ui.fonts import get_font
+
+if TYPE_CHECKING:
+    from game.core.protocols import IPlanet, IFacility
+from game.strategy.services.component_inspector import get_component_abilities
 from game.ui.panels.strategy_widgets import AtmosphereGraph
 from game.ui.panels.build_queue_portraits import RESOURCE_PORTRAIT_FILES, RESOURCE_FALLBACK_COLORS
 from game.core.constants import PLANET_RESOURCES
+from game.ui.colors import (
+    PLANET_TERRESTRIAL, PLANET_GAS_GIANT, PLANET_ICE, PLANET_ROCKY, PLANET_OCEANIC,
+    TEXT_DIM, WHITE, TEXT_LIGHT
+)
 from collections import Counter
 
 
@@ -199,21 +208,18 @@ class PlanetReportPanel:
             # Create placeholder portrait (gradient based on planet type)
             portrait_surf = pygame.Surface((150, 150))
 
-            # Color based on planet type
-            if hasattr(self.planet, 'planet_type'):
-                type_colors = {
-                    'TERRESTRIAL': (100, 150, 200),
-                    'GAS_GIANT': (200, 150, 100),
-                    'ICE_GIANT': (150, 200, 255),
-                    'ROCKY': (150, 100, 80),
-                    'OCEANIC': (50, 100, 200)
-                }
-                base_color = type_colors.get(
-                    self.planet.planet_type.name,
-                    (100, 100, 100)
-                )
-            else:
-                base_color = (100, 100, 100)
+            # Color based on planet type (planet_type always present via IPlanet)
+            type_colors = {
+                'TERRESTRIAL': PLANET_TERRESTRIAL,
+                'GAS_GIANT': PLANET_GAS_GIANT,
+                'ICE_GIANT': PLANET_ICE,
+                'ROCKY': PLANET_ROCKY,
+                'OCEANIC': PLANET_OCEANIC
+            }
+            base_color = type_colors.get(
+                self.planet.planet_type.name,
+                TEXT_DIM
+            )
 
             # Simple gradient fill
             for y in range(150):
@@ -222,18 +228,19 @@ class PlanetReportPanel:
                 pygame.draw.line(portrait_surf, color, (0, y), (150, y))
 
             # Add planet name text
-            font = pygame.font.SysFont("arial", 16, bold=True)
-            text = font.render(self.planet.name[:20], True, (255, 255, 255))
+            font = get_font(16, bold=True)
+            text = font.render(self.planet.name[:20], True, WHITE)
             text_rect = text.get_rect(center=(75, 75))
 
             # Add shadow for readability
-            shadow = font.render(self.planet.name[:20], True, (0, 0, 0))
+            from game.ui.colors import BLACK
+            shadow = font.render(self.planet.name[:20], True, BLACK)
             shadow_rect = shadow.get_rect(center=(76, 76))
             portrait_surf.blit(shadow, shadow_rect)
             portrait_surf.blit(text, text_rect)
 
             # Add border
-            pygame.draw.rect(portrait_surf, (200, 200, 200), (0, 0, 150, 150), 2)
+            pygame.draw.rect(portrait_surf, TEXT_LIGHT, (0, 0, 150, 150), 2)
 
             # Update UIImage
             self.portrait_image.set_image(portrait_surf)
@@ -259,8 +266,8 @@ class PlanetReportPanel:
             item.kill()
         self.complex_items = []
 
-        # Check if planet has facilities
-        if not hasattr(self.planet, 'facilities') or not self.planet.facilities:
+        # Check if planet has facilities (facilities always present via IPlanet)
+        if not self.planet.facilities:
             # Show "None" message
             no_complexes_label = UILabel(
                 relative_rect=pygame.Rect(5, 35, 190, 25),
@@ -336,7 +343,7 @@ class PlanetReportPanel:
             self._resource_grid_items.append(label)
 
         # Resource columns
-        planet_resources = getattr(self.planet, 'resources', {}) or {}
+        planet_resources = self.planet.resources or {}
 
         for i, resource_name in enumerate(PLANET_RESOURCES):
             col_x = label_col_width + 10 + i * col_w
@@ -411,15 +418,15 @@ class PlanetReportPanel:
                 except (FileNotFoundError, pygame.error):
                     # Create fallback colored square
                     surf = pygame.Surface((icon_size, icon_size))
-                    color = RESOURCE_FALLBACK_COLORS.get(resource, (128, 128, 128))
+                    color = RESOURCE_FALLBACK_COLORS.get(resource, TEXT_DIM)
                     surf.fill(color)
-                    pygame.draw.rect(surf, (255, 255, 255), surf.get_rect(), 1)
+                    pygame.draw.rect(surf, WHITE, surf.get_rect(), 1)
                     self._resource_icons[resource] = surf
             else:
                 # No filename mapped, create gray placeholder
                 surf = pygame.Surface((icon_size, icon_size))
-                surf.fill((128, 128, 128))
-                pygame.draw.rect(surf, (255, 255, 255), surf.get_rect(), 1)
+                surf.fill(TEXT_DIM)
+                pygame.draw.rect(surf, WHITE, surf.get_rect(), 1)
                 self._resource_icons[resource] = surf
 
     def get_height_required(self):
@@ -439,15 +446,15 @@ class PlanetReportPanel:
         self._resource_grid_items = []
 
         # Clean up resource panel
-        if hasattr(self, 'resource_panel') and self.resource_panel:
+        if self.resource_panel:
             self.resource_panel.kill()
 
         # Clean up main panel (contains all other elements)
-        if hasattr(self, 'panel'):
+        if self.panel:
             self.panel.kill()
 
 
-def compute_planet_production(planet) -> Dict[str, float]:
+def compute_planet_production(planet: 'IPlanet') -> Dict[str, float]:
     """Compute per-resource production rates for a colony planet.
 
     Scans the planet's facilities for ResourceHarvester abilities and calculates
@@ -462,17 +469,24 @@ def compute_planet_production(planet) -> Dict[str, float]:
     Returns:
         Dict mapping resource name to production rate per turn.
     """
-    if getattr(planet, 'owner_id', None) is None:
+    if planet.owner_id is None:
         return {}
 
-    from game.core.registry import get_default_registries
-    registries = get_default_registries()
+    from game.core.registry import get_default_registry_provider, GameRegistries
+    provider = get_default_registry_provider()
+    registries = GameRegistries(
+        components=provider.get_components(),
+        modifiers=provider.get_modifiers(),
+        vehicle_classes=provider.get_vehicle_classes(),
+        resources=provider.get_resources(),
+    )
 
     rates: Dict[str, float] = {}
-    for facility in getattr(planet, 'facilities', []):
-        if not getattr(facility, 'is_operational', True):
+    facility: 'IFacility'
+    for facility in planet.facilities:
+        if not facility.is_operational:
             continue
-        design_data = getattr(facility, 'design_data', {})
+        design_data = facility.design_data
         for layer_data in design_data.get('layers', {}).values():
             if not isinstance(layer_data, list):
                 continue
@@ -482,8 +496,7 @@ def compute_planet_production(planet) -> Dict[str, float]:
                     res_type = harvester.get('resource_type', '')
                     base_rate = harvester.get('base_harvest_rate', 0.0)
                     if res_type and base_rate > 0:
-                        planet_resources = getattr(planet, 'resources', {})
-                        quality = planet_resources.get(res_type, {}).get('quality', 0.0)
+                        quality = planet.resources.get(res_type, {}).get('quality', 0.0)
                         rates[res_type] = rates.get(res_type, 0.0) + base_rate * quality
     return rates
 
@@ -501,7 +514,7 @@ def _get_harvester_info(comp, registries) -> Optional[dict]:
         if comp_id and registries is not None:
             comp_def = registries.components.get(comp_id)
             if comp_def is not None:
-                abilities = getattr(comp_def, 'abilities', {}) or {}
+                abilities = get_component_abilities(comp_def)
                 harvester = abilities.get('ResourceHarvester')
                 if isinstance(harvester, dict):
                     return harvester

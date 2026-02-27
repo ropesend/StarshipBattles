@@ -13,6 +13,8 @@ scattered throughout BattleController (CQ-024 Open/Closed violation fix).
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Optional, Tuple
 
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 from game.simulation.battle_config import BattleConfig, BattleMode
 
 if TYPE_CHECKING:
@@ -274,7 +276,7 @@ def get_handler_for_mode(mode: BattleMode) -> BattleModeHandler:
         The appropriate BattleModeHandler instance
 
     Raises:
-        ValueError: If mode is not recognized
+        ValidationException: If mode is not recognized
     """
     handlers = {
         BattleMode.MANUAL: ManualBattleModeHandler,
@@ -285,6 +287,10 @@ def get_handler_for_mode(mode: BattleMode) -> BattleModeHandler:
 
     handler_class = handlers.get(mode)
     if handler_class is None:
-        raise ValueError(f"Unknown battle mode: {mode}")
+        raise ValidationException(
+            f"Unknown battle mode: {mode}",
+            code=ErrorCode.VALIDATION_FAILED.value,
+            context={"mode": str(mode)}
+        )
 
     return handler_class()

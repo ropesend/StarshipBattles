@@ -9,11 +9,12 @@ This is a read-only calculation - it doesn't modify any game state.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict
-
-from typing import Optional
+from typing import Dict, Optional, TYPE_CHECKING
 
 from game.core.constants import PLANET_RESOURCES
+
+if TYPE_CHECKING:
+    from game.strategy.data.empire import Empire
 from game.core.registry import GameRegistries
 from game.strategy.engine.maintenance_engine import (
     MAINTENANCE_RATE,
@@ -55,7 +56,15 @@ class EmpireEconomyCalculator:
     """Calculator for empire-wide production and expense aggregation.
 
     Usage:
-        calculator = EmpireEconomyCalculator(registries=get_default_registries())
+        from game.core.registry import get_default_registry_provider, GameRegistries
+        provider = get_default_registry_provider()
+        registries = GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources=provider.get_resources(),
+        )
+        calculator = EmpireEconomyCalculator(registries=registries)
         snapshot = calculator.calculate(empire)
         # Access snapshot.colony_production, snapshot.maintenance_expenses, etc.
 
@@ -75,7 +84,7 @@ class EmpireEconomyCalculator:
         """
         self._registries: Optional[GameRegistries] = registries
 
-    def calculate(self, empire) -> EmpireEconomySnapshot:
+    def calculate(self, empire: 'Empire') -> EmpireEconomySnapshot:
         """Calculate complete economic snapshot for an empire.
 
         Args:
@@ -117,14 +126,12 @@ class EmpireEconomyCalculator:
             snapshot.net_resources[r] = prod - exp
 
         # Current treasury state
-        resource_pool = getattr(empire, 'resource_pool', {})
-        max_storage = getattr(empire, 'max_storage', {})
-        snapshot.current_storage = resource_pool.copy()
-        snapshot.max_storage = max_storage.copy()
+        snapshot.current_storage = empire.resource_pool.copy()
+        snapshot.max_storage = empire.max_storage.copy()
 
         return snapshot
 
-    def _aggregate_colony_production(self, empire) -> Dict[str, float]:
+    def _aggregate_colony_production(self, empire: 'Empire') -> Dict[str, float]:
         """Calculate total production from all colony facilities.
 
         Scans colonies -> facilities -> components for ResourceHarvester abilities.
@@ -139,15 +146,13 @@ class EmpireEconomyCalculator:
         """
         totals = {r: 0.0 for r in PLANET_RESOURCES}
 
-        colonies = getattr(empire, 'colonies', [])
-        for colony in colonies:
-            facilities = getattr(colony, 'facilities', [])
-            for facility in facilities:
+        for colony in empire.colonies:
+            for facility in colony.facilities:
                 # Skip non-operational facilities
-                if not getattr(facility, 'is_operational', True):
+                if not facility.is_operational:
                     continue
 
-                design_data = getattr(facility, 'design_data', {})
+                design_data = facility.design_data
                 layers = design_data.get('layers', {})
 
                 for layer_data in layers.values():
@@ -167,8 +172,7 @@ class EmpireEconomyCalculator:
                             continue
 
                         # Get planet quality for this resource
-                        planet_resources = getattr(colony, 'resources', {})
-                        resource_data = planet_resources.get(resource_type, {})
+                        resource_data = colony.resources.get(resource_type, {})
                         quality = resource_data.get('quality', 0.0)
 
                         # Accumulate production
@@ -178,7 +182,7 @@ class EmpireEconomyCalculator:
 
         return totals
 
-    def _aggregate_maintenance(self, empire) -> Dict[str, float]:
+    def _aggregate_maintenance(self, empire: 'Empire') -> Dict[str, float]:
         """Calculate total maintenance costs for facilities and ships.
 
         Maintenance is 5% of the sum of all resource_cost values.
@@ -192,26 +196,22 @@ class EmpireEconomyCalculator:
         totals = {r: 0.0 for r in PLANET_RESOURCES}
 
         # Facility maintenance
-        colonies = getattr(empire, 'colonies', [])
-        for colony in colonies:
-            facilities = getattr(colony, 'facilities', [])
-            for facility in facilities:
+        for colony in empire.colonies:
+            for facility in colony.facilities:
                 # Skip non-operational facilities
-                if not getattr(facility, 'is_operational', True):
+                if not facility.is_operational:
                     continue
 
-                design_data = getattr(facility, 'design_data', {})
+                design_data = facility.design_data
                 cost = self._calculate_maintenance_cost(design_data)
                 for r, amount in cost.items():
                     if r in totals:
                         totals[r] += amount
 
         # Ship maintenance
-        fleets = getattr(empire, 'fleets', [])
-        for fleet in fleets:
-            ships = getattr(fleet, 'ships', [])
-            for ship in ships:
-                design_data = getattr(ship, 'design_data', {})
+        for fleet in empire.fleets:
+            for ship in fleet.ships:
+                design_data = ship.design_data
                 cost = self._calculate_maintenance_cost(design_data)
                 for r, amount in cost.items():
                     if r in totals:

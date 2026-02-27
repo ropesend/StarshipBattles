@@ -316,41 +316,37 @@ class TestLoadResourcesData:
 
 
 # =============================================================================
-# Test: Backward Compatibility with Existing load_* Functions
+# Test: Pure Loader Functions Return Correct Data
 # =============================================================================
 
-class TestBackwardCompatibility:
-    """Verify existing load_components() and load_modifiers() still work."""
+class TestLoaderPureFunctions:
+    """PROJ-195: Tests for pure loader functions (no singleton access).
 
-    def test_load_components_populates_registry(self):
-        """load_components() should still populate the global registry."""
-        from game.simulation.components.component import load_components
-        from game.core.registry import RegistryManager
+    These tests verify that the pure loading functions return the expected data
+    without any side effects. This pattern is portable to C#/C++/Rust where
+    global singletons are not idiomatic.
+    """
 
-        # Ensure registry is empty
-        registry = RegistryManager.instance().components
-        assert len(registry) == 0
+    def test_load_components_data_returns_expected_components(self):
+        """load_components_data() should return components including 'bridge'."""
+        from game.simulation.components.component import load_components_data
 
-        # Call wrapper function
-        load_components("data/components.json")
+        # Call pure function - no singleton access
+        result = load_components_data("data/components.json")
 
-        # Registry should now have data
-        assert len(registry) > 0
-        assert "bridge" in registry
+        # Verify data is returned correctly
+        assert len(result) > 0
+        assert "bridge" in result
+        assert result["bridge"].name == "Bridge"
 
-    def test_load_modifiers_populates_registry(self):
-        """load_modifiers() should still populate the global registry."""
-        from game.simulation.components.component import load_modifiers
-        from game.core.registry import RegistryManager
+    def test_load_modifiers_data_returns_expected_modifiers(self):
+        """load_modifiers_data() should return modifiers including 'simple_size_mount'."""
+        from game.simulation.components.component import load_modifiers_data
 
-        # Ensure registry is empty
-        registry = RegistryManager.instance().modifiers
-        assert len(registry) == 0
+        # Call pure function - no singleton access
+        result = load_modifiers_data("data/modifiers.json")
 
-        # Call wrapper function
-        load_modifiers("data/modifiers.json")
-
-        # Registry should now have data
-        assert len(registry) > 0
-        assert "simple_size_mount" in registry
+        # Verify data is returned correctly
+        assert len(result) > 0
+        assert "simple_size_mount" in result
 

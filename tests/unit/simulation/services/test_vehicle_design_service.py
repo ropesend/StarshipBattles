@@ -13,6 +13,7 @@ Tests cover:
 import pytest
 from unittest.mock import Mock, MagicMock, patch
 
+from game.core.exceptions import ValidationException
 from game.simulation.services.vehicle_design_service import VehicleDesignService, DesignResult
 from game.core.constants import LayerType
 from game.core.registry import GameRegistries
@@ -142,8 +143,8 @@ class TestVehicleDesignServiceConstructor:
     """Tests for VehicleDesignService constructor and DI requirements."""
 
     def test_constructor_requires_registries(self):
-        """Constructor raises TypeError when registries is None."""
-        with pytest.raises(TypeError, match="registries is required"):
+        """Constructor raises ValidationException when registries is None."""
+        with pytest.raises(ValidationException):
             VehicleDesignService(registries=None)
 
     def test_constructor_stores_registries(self, real_registries):

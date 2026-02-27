@@ -365,19 +365,9 @@ class TestFleetNavigationServiceEdgeCases:
         dest = service.get_destination(state, order, mock_galaxy)
         assert dest is None
 
-    def test_get_destination_move_to_fleet_target_without_location(self, service, mock_galaxy):
-        """MOVE_TO_FLEET with target lacking location should return None."""
-        invalid_target = MagicMock(spec=[])  # No 'location' attribute
-        order = FleetOrder(order_type=OrderType.MOVE_TO_FLEET, target=invalid_target)
-        state = NavigationState(
-            location=HexCoord(0, 0),
-            path=(),
-            orders=(order,),
-            speed=5.0,
-            can_warp=False
-        )
-        dest = service.get_destination(state, order, mock_galaxy)
-        assert dest is None
+    # NOTE: test_get_destination_move_to_fleet_target_without_location removed
+    # Fleet always has location attribute - testing "target lacking location" is obsolete
+    # test_get_destination_move_to_fleet_no_target covers the None target case
 
     def test_compute_path_already_at_destination(self, service, mock_galaxy):
         """compute_path at destination should return empty list."""
@@ -516,23 +506,6 @@ class TestCalculateFleetNextHex:
         assert result is None
         fleet.pop_order.assert_called_once()
 
-    def test_move_to_fleet_target_without_location_pops_order(self, service):
-        """MOVE_TO_FLEET target without location should pop order."""
-        target_without_location = MagicMock(spec=[])  # No 'location'
-        order = MagicMock()
-        order.type = OrderType.MOVE_TO_FLEET
-        order.target = target_without_location
-
-        fleet = MagicMock()
-        fleet.get_current_order.return_value = order
-        fleet.location = HexCoord(0, 0)
-        fleet.path = []
-        fleet.orders = [order]
-        fleet.speed = 5.0
-        fleet.can_use_warp.return_value = False
-
-        galaxy = MagicMock()
-        result = service.calculate_fleet_next_hex(fleet, galaxy)
-
-        assert result is None
-        fleet.pop_order.assert_called_once()
+    # NOTE: test_move_to_fleet_target_without_location_pops_order removed
+    # Fleet always has location attribute - testing "target lacking location" is obsolete
+    # test_move_to_fleet_invalid_target_pops_order covers the None target case

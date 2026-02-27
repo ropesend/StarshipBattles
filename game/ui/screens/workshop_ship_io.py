@@ -5,10 +5,12 @@ PROJ-61 Phase 1.
 
 DUP-UI2-001: Tkinter initialization now uses shared tkinter_utils module.
 """
+import logging
 import os
 
-from game.core.logger import log_debug, log_error, log_info, log_warning
 from game.core.profiling import profile_action
+
+logger = logging.getLogger(__name__)
 from game.strategy.systems.design_library import DesignLibrary
 from game.ui.screens.design_selector_window import DesignSelectorWindow
 from game.ui.screens.workshop_context import WorkshopMode
@@ -69,34 +71,34 @@ class WorkshopShipIO:
             # Use adapter for file-based I/O
             success, message = self._ship_io_adapter.save_ship(self.viewmodel.ship)
             if success:
-                log_info(message)
+                logger.info(message)
             elif message:
                 self._show_error(message)
         else:
             # Use integrated design library
-            log_info("Workshop: Initiating SAVE operation")
-            log_debug(f"  context.savegame_path: {self.context.savegame_path}")
-            log_debug(f"  context.empire_id: {self.context.empire_id}")
-            log_debug(f"  context.mode: {self.context.mode}")
+            logger.info("Workshop: Initiating SAVE operation")
+            logger.debug(f"  context.savegame_path: {self.context.savegame_path}")
+            logger.debug(f"  context.empire_id: {self.context.empire_id}")
+            logger.debug(f"  context.mode: {self.context.mode}")
 
             library = DesignLibrary(
                 self.context.savegame_path,
                 self.context.empire_id
             )
 
-            log_debug(f"  library.designs_folder: {library.designs_folder}")
+            logger.debug(f"  library.designs_folder: {library.designs_folder}")
 
             # Show save dialog to get design name
             design_name = self._prompt_design_name(self.viewmodel.ship.name)
             if not design_name:
-                log_info("Workshop Save: User cancelled design name prompt")
+                logger.info("Workshop Save: User cancelled design name prompt")
                 return  # Cancelled
 
-            log_info(f"Workshop Save: Saving design as '{design_name}'")
+            logger.info(f"Workshop Save: Saving design as '{design_name}'")
 
-            # Get built designs from context (will be set by strategy layer)
-            built_designs = getattr(self.context, 'built_designs', set())
-            log_debug(f"  built_designs count: {len(built_designs)}")
+            # Get built designs from context (always present, default_factory=set)
+            built_designs = self.context.built_designs
+            logger.debug(f"  built_designs count: {len(built_designs)}")
 
             success, message = library.save_design(
                 self.viewmodel.ship,
@@ -106,9 +108,9 @@ class WorkshopShipIO:
 
             if message:
                 if success:
-                    log_info(f"Workshop Save: SUCCESS - {message}")
+                    logger.info(f"Workshop Save: SUCCESS - {message}")
                 else:
-                    log_error(f"Workshop Save: FAILED - {message}")
+                    logger.error(f"Workshop Save: FAILED - {message}")
                     self._show_error(message)
 
     @profile_action("Builder: Load Ship")
@@ -123,40 +125,38 @@ class WorkshopShipIO:
                 self._show_error(message)
         else:
             # Show design selector window
-            log_info("Workshop: Opening design selector for LOAD operation")
-            log_debug(f"  context.savegame_path: {self.context.savegame_path}")
-            log_debug(f"  context.empire_id: {self.context.empire_id}")
-            log_debug(f"  context.mode: {self.context.mode}")
+            logger.info("Workshop: Opening design selector for LOAD operation")
+            logger.debug(f"  context.savegame_path: {self.context.savegame_path}")
+            logger.debug(f"  context.empire_id: {self.context.empire_id}")
+            logger.debug(f"  context.mode: {self.context.mode}")
 
             library = DesignLibrary(
                 self.context.savegame_path,
                 self.context.empire_id
             )
 
-            log_debug(f"  library.designs_folder: {library.designs_folder}")
+            logger.debug(f"  library.designs_folder: {library.designs_folder}")
 
             # Immediate scan to diagnose
             try:
                 designs = library.scan_designs()
-                log_info(f"Workshop Load: DesignLibrary scanned {len(designs)} designs")
+                logger.info(f"Workshop Load: DesignLibrary scanned {len(designs)} designs")
                 if designs:
                     for d in designs[:5]:  # Log first 5 designs
-                        log_debug(f"    - {d.name} (design_id={d.design_id})")
+                        logger.debug(f"    - {d.name} (design_id={d.design_id})")
                 else:
-                    log_warning("Workshop Load: scan_designs() returned an empty list!")
-                    log_warning(f"  Checked folder: {library.designs_folder}")
+                    logger.warning("Workshop Load: scan_designs() returned an empty list!")
+                    logger.warning(f"  Checked folder: {library.designs_folder}")
                     if os.path.exists(library.designs_folder):
                         files = os.listdir(library.designs_folder)
-                        log_warning(f"  Folder exists with {len(files)} files: {files}")
+                        logger.warning(f"  Folder exists with {len(files)} files: {files}")
                     else:
-                        log_error(f"  Folder does not exist!")
+                        logger.error(f"  Folder does not exist!")
             except (OSError, ValueError, KeyError) as e:
-                log_error(f"Workshop Load: Exception during scan_designs(): {e}")
-                import traceback
-                log_error(traceback.format_exc())
+                logger.exception(f"Workshop Load: Exception during scan_designs(): {e}")
 
             def on_design_selected(design_id: str):
-                log_info(f"Workshop: User selected design_id='{design_id}'")
+                logger.info(f"Workshop: User selected design_id='{design_id}'")
                 design_data = library.load_design_data(design_id)
                 if design_data:
                     # Use adapter to create ship from design data
@@ -164,13 +164,13 @@ class WorkshopShipIO:
                         design_data, self.width // 2, self.height // 2
                     )
                     if ship:
-                        log_info(f"Workshop: Successfully loaded design '{ship.name}'")
+                        logger.info(f"Workshop: Successfully loaded design '{ship.name}'")
                         self._apply_loaded_ship(ship, f"Loaded design: {ship.name}")
                     else:
-                        log_error(f"Workshop: Failed to create ship from design '{design_id}'")
+                        logger.error(f"Workshop: Failed to create ship from design '{design_id}'")
                         self._show_error("Failed to create ship from design data")
                 else:
-                    log_error(f"Workshop: Failed to load design '{design_id}'")
+                    logger.error(f"Workshop: Failed to load design '{design_id}'")
                     self._show_error(f"Design not found: {design_id}")
 
             # Open design selector window
@@ -190,7 +190,7 @@ class WorkshopShipIO:
             target_ship, message = self._ship_io_adapter.load_ship(self.width, self.height)
             if target_ship:
                 self._get_weapons_report_panel().set_target(target_ship)
-                log_info(f"Selected target: {target_ship.name}")
+                logger.info(f"Selected target: {target_ship.name}")
             elif message and "Cancelled" not in message:
                 self._show_error(message)
         else:
@@ -209,7 +209,7 @@ class WorkshopShipIO:
                     )
                     if ship:
                         self._weapons_report_panel_ref.set_target(ship)
-                        log_info(f"Selected target: {ship.name}")
+                        logger.info(f"Selected target: {ship.name}")
                     else:
                         self._show_error("Failed to create ship from design data")
                 else:

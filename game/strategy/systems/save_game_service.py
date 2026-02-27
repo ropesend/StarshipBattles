@@ -9,16 +9,17 @@ Save Format Version 2.0.0:
 - Per-empire design folders: designs/empire_N/
 - Strict version checking (rejects all old saves)
 """
-import json
+import logging
+from json import JSONDecodeError
 import os
 import shutil
-import traceback
 from datetime import datetime
 from typing import Optional, Tuple, List
 from game.core.json_utils import save_json, load_json_required, load_json
-from game.core.logger import log_info, log_error, log_debug
 from game.core.paths import Paths
-from game.core.exceptions import PersistenceException
+from game.core.exceptions import PersistenceException, ValidationException, StateException
+
+logger = logging.getLogger(__name__)
 
 
 class SaveGameService:
@@ -94,21 +95,18 @@ class SaveGameService:
             if not save_json(metadata_path, metadata, indent=4):
                 return False, "Failed to save metadata", None
 
-            log_info(f"SaveGameService: Saved turn {game_session.turn_number} to {os.path.basename(save_path)}")
+            logger.info(f"SaveGameService: Saved turn {game_session.turn_number} to {os.path.basename(save_path)}")
             return True, f"Game saved: Turn {game_session.turn_number}", save_path
 
         except PermissionError as e:
-            log_error(f"SaveGameService: Permission denied saving to {save_path} - {e}")
+            logger.error(f"SaveGameService: Permission denied saving to {save_path} - {e}")
             return False, f"Save failed: Permission denied", None
         except OSError as e:
-            log_error(f"SaveGameService: OS error saving to {save_path} - {e}")
+            logger.error(f"SaveGameService: OS error saving to {save_path} - {e}")
             return False, f"Save failed: {str(e)}", None
-        except (TypeError, ValueError) as e:
-            log_error(f"SaveGameService: Serialization error - {e}\n{traceback.format_exc()}")
+        except ValidationException as e:
+            logger.exception(f"SaveGameService: Serialization error - {e}")
             return False, f"Save failed: Unable to serialize game state", None
-        except (KeyError, AttributeError, ImportError) as e:
-            log_error(f"SaveGameService: Unexpected save error - {e}\n{traceback.format_exc()}")
-            return False, f"Save failed: {str(e)}", None
 
     @staticmethod
     def load_game(save_path: str, turn_number: Optional[int] = None) -> Tuple[Optional[object], str]:
@@ -136,17 +134,17 @@ class SaveGameService:
             metadata_path = os.path.join(save_path, "save_metadata.json")
             try:
                 metadata = load_json_required(metadata_path)
-            except json.JSONDecodeError as e:
-                log_error(f"SaveGameService: Corrupt metadata JSON at {metadata_path} - {e}")
+            except JSONDecodeError as e:
+                logger.error(f"SaveGameService: Corrupt metadata JSON at {metadata_path} - {e}")
                 return None, f"Save file corrupted: Metadata file contains invalid JSON"
             except FileNotFoundError as e:
-                log_error(f"SaveGameService: Missing metadata at {metadata_path}")
+                logger.error(f"SaveGameService: Missing metadata at {metadata_path}")
                 return None, f"Save file corrupted: Metadata file not found"
             except PermissionError as e:
-                log_error(f"SaveGameService: Permission denied reading {metadata_path}")
+                logger.error(f"SaveGameService: Permission denied reading {metadata_path}")
                 return None, f"Cannot read save: Permission denied"
             except OSError as e:
-                log_error(f"SaveGameService: OS error reading metadata - {e}")
+                logger.error(f"SaveGameService: OS error reading metadata - {e}")
                 return None, f"Save file corrupted: Cannot read metadata file"
 
             # Validate metadata
@@ -173,17 +171,17 @@ class SaveGameService:
 
             try:
                 game_state = load_json_required(turn_file)
-            except json.JSONDecodeError as e:
-                log_error(f"SaveGameService: Corrupt turn JSON at {turn_file} - {e}")
+            except JSONDecodeError as e:
+                logger.error(f"SaveGameService: Corrupt turn JSON at {turn_file} - {e}")
                 return None, f"Save file corrupted: Turn {turn_number} contains invalid JSON"
             except FileNotFoundError as e:
-                log_error(f"SaveGameService: Missing turn file at {turn_file}")
+                logger.error(f"SaveGameService: Missing turn file at {turn_file}")
                 return None, f"Save file corrupted: Turn {turn_number} file not found"
             except PermissionError as e:
-                log_error(f"SaveGameService: Permission denied reading {turn_file}")
+                logger.error(f"SaveGameService: Permission denied reading {turn_file}")
                 return None, f"Cannot read save: Permission denied"
             except OSError as e:
-                log_error(f"SaveGameService: OS error reading turn {turn_number} - {e}")
+                logger.error(f"SaveGameService: OS error reading turn {turn_number} - {e}")
                 return None, f"Save file corrupted: Cannot read turn {turn_number}"
 
             # Validate game state
@@ -197,29 +195,29 @@ class SaveGameService:
                 from game.strategy.engine.game_session import GameSession
                 game_session = GameSession.from_dict(game_state)
             except KeyError as e:
-                log_error(f"SaveGameService: Missing required data field '{e}' in {turn_file}")
+                logger.error(f"SaveGameService: Missing required data field '{e}' in {turn_file}")
                 return None, f"Save file corrupted: Missing required data field"
-            except (TypeError, ValueError) as e:
-                log_error(f"SaveGameService: Invalid data format in {turn_file} - {e}")
+            except (TypeError, ValueError, ValidationException) as e:
+                logger.error(f"SaveGameService: Invalid data format in {turn_file} - {e}")
                 return None, f"Save file corrupted: Invalid data format"
-            except (AttributeError, ImportError, RuntimeError) as e:
-                log_error(f"SaveGameService: Failed to reconstruct game session from {turn_file} - {e}")
+            except (AttributeError, ImportError, RuntimeError, StateException) as e:
+                logger.error(f"SaveGameService: Failed to reconstruct game session from {turn_file} - {e}")
                 return None, f"Save file corrupted: Failed to reconstruct game state"
 
             # Restore save_path reference
             game_session.save_path = save_path
 
-            log_info(f"SaveGameService: Loaded turn {turn_number} from {os.path.basename(save_path)}")
+            logger.info(f"SaveGameService: Loaded turn {turn_number} from {os.path.basename(save_path)}")
             return game_session, f"Game loaded: Turn {turn_number}"
 
         except PermissionError as e:
-            log_error(f"SaveGameService: Permission denied loading {save_path} - {e}")
+            logger.error(f"SaveGameService: Permission denied loading {save_path} - {e}")
             return None, f"Cannot load save: Permission denied"
         except OSError as e:
-            log_error(f"SaveGameService: OS error loading {save_path} - {e}")
+            logger.error(f"SaveGameService: OS error loading {save_path} - {e}")
             return None, f"Failed to load save: {str(e)}"
-        except (KeyError, TypeError, ValueError, AttributeError, ImportError) as e:
-            log_error(f"SaveGameService: Unexpected load error from {save_path} - {e}\n{traceback.format_exc()}")
+        except (KeyError, TypeError, ValueError, AttributeError, ImportError, ValidationException, StateException) as e:
+            logger.exception(f"SaveGameService: Unexpected load error from {save_path} - {e}")
             return None, f"Unexpected error while loading save"
 
     @staticmethod
@@ -264,9 +262,9 @@ class SaveGameService:
                         continue
 
         except PermissionError as e:
-            log_error(f"SaveGameService: Permission denied listing turns in {turns_folder}")
+            logger.error(f"SaveGameService: Permission denied listing turns in {turns_folder}")
         except OSError as e:
-            log_error(f"SaveGameService: Error listing turns in {turns_folder} - {e}")
+            logger.error(f"SaveGameService: Error listing turns in {turns_folder} - {e}")
 
         # Sort by turn number
         turns.sort(key=lambda x: x['turn_number'])
@@ -302,9 +300,9 @@ class SaveGameService:
                     saves.append(metadata)
 
         except PermissionError as e:
-            log_error(f"SaveGameService: Permission denied listing saves in {Paths.SAVES_DIR}")
+            logger.error(f"SaveGameService: Permission denied listing saves in {Paths.SAVES_DIR}")
         except OSError as e:
-            log_error(f"SaveGameService: Error listing saves - {e}")
+            logger.error(f"SaveGameService: Error listing saves - {e}")
 
         # Sort by timestamp (newest first)
         saves.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
@@ -331,17 +329,17 @@ class SaveGameService:
 
             shutil.rmtree(save_path)
 
-            log_info(f"SaveGameService: Deleted save {os.path.basename(save_path)}")
+            logger.info(f"SaveGameService: Deleted save {os.path.basename(save_path)}")
             return True, "Save deleted successfully"
 
         except PermissionError as e:
-            log_error(f"SaveGameService: Permission denied deleting {save_path} - {e}")
+            logger.error(f"SaveGameService: Permission denied deleting {save_path} - {e}")
             return False, f"Delete failed: Permission denied"
         except OSError as e:
-            log_error(f"SaveGameService: OS error deleting {save_path} - {e}")
+            logger.error(f"SaveGameService: OS error deleting {save_path} - {e}")
             return False, f"Delete failed: {str(e)}"
         except shutil.Error as e:
-            log_error(f"SaveGameService: Unexpected error deleting {save_path} - {e}")
+            logger.error(f"SaveGameService: Unexpected error deleting {save_path} - {e}")
             return False, f"Delete failed: {str(e)}"
 
     @staticmethod
@@ -404,8 +402,8 @@ class SaveGameService:
             return metadata
 
         except (PermissionError, OSError, json.JSONDecodeError) as e:
-            log_error(f"SaveGameService: Error reading save info from {save_path} - {e}")
+            logger.error(f"SaveGameService: Error reading save info from {save_path} - {e}")
             return None
         except (KeyError, TypeError, ValueError) as e:
-            log_error(f"SaveGameService: Unexpected error reading save info from {save_path} - {e}")
+            logger.error(f"SaveGameService: Unexpected error reading save info from {save_path} - {e}")
             return None

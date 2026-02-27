@@ -51,6 +51,7 @@ class TestBeamWeaponAbilityRecalculate:
         class MockComponent:
             def __init__(self):
                 self.stats = {'accuracy_add': 0.5}
+                self.ability_stats = {}
                 self.data = {}
 
         component = MockComponent()
@@ -75,6 +76,7 @@ class TestBeamWeaponAbilityRecalculate:
                     'damage_mult': 2.0,
                     'accuracy_add': 0.25
                 }
+                self.ability_stats = {}
                 self.data = {}
 
         component = MockComponent()
@@ -100,6 +102,7 @@ class TestBeamWeaponAbilityEffectSummary:
         class MockComponent:
             def __init__(self):
                 self.stats = {'accuracy_add': 0.5}
+                self.ability_stats = {}
                 self.data = {}
 
         component = MockComponent()

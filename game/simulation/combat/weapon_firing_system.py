@@ -146,10 +146,8 @@ class WeaponFiringSystem:
         if not weapon_ab.fire(target):
             return None
 
-        # Update stats
+        # Update stats (both fields initialized in __init__)
         ship.total_shots_fired += 1
-        if not hasattr(comp, 'shots_fired'):
-            comp.shots_fired = 0
         comp.shots_fired += 1
 
         # Create attack based on weapon type
@@ -245,8 +243,8 @@ class WeaponFiringSystem:
         """Create a seeker/missile projectile."""
         seeker_ab = comp.get_ability('SeekerWeaponAbility')
 
-        # Calculate launch direction
-        comp_facing = ship.angle + getattr(comp, 'facing_angle', 0)
+        # Calculate launch direction - facing_angle is on the weapon ability
+        comp_facing = ship.angle + weapon_ab.facing_angle
         rad = math.radians(comp_facing)
         launch_vec = Vector2(math.cos(rad), math.sin(rad))
 

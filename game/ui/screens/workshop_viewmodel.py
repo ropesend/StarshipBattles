@@ -15,8 +15,13 @@ from typing import List, Tuple, Optional, TYPE_CHECKING
 
 from game.simulation.services.vehicle_design_service import VehicleDesignService
 from game.ui.screens.builder_utils import BuilderEvents
+from game.ui.colors import VEHICLE_DEFAULT
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
-from game.core.logger import log_error, log_info, log_warning
+import logging
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -56,7 +61,7 @@ class WorkshopViewModel:
             context: WorkshopContext with registries for DI (required for proper operation)
 
         Raises:
-            ValueError: If context is None or context.registries is None
+            ValidationException: If context is None or context.registries is None
         """
         self.event_bus = event_bus
         self.screen_width = screen_width
@@ -64,9 +69,10 @@ class WorkshopViewModel:
 
         # PROJ-40: Require registries via context (no fallback)
         if context is None or context.registries is None:
-            raise ValueError(
-                "WorkshopViewModel requires a WorkshopContext with registries. "
-                "Pass context=WorkshopContext(mode=..., registries=...) to constructor."
+            raise ValidationException(
+                "WorkshopViewModel requires registries in context",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "WorkshopViewModel", "missing": "context.registries"}
             )
         self._registries: GameRegistries = context.registries
 
@@ -153,12 +159,16 @@ class WorkshopViewModel:
         self._emit_selection_changed()
         
     def _normalize_selection(self, items: List) -> List[Tuple[LayerType, int, Component]]:
-        """Convert various selection formats to normalized tuples."""
+        """Convert various selection formats to normalized tuples.
+
+        Uses duck typing (hasattr check for 'id') because selection logic accepts
+        both real Component instances and mock objects in tests.
+        """
         norm_selection = []
         for item in items:
             if isinstance(item, tuple) and len(item) == 3:
                 norm_selection.append(item)
-            elif hasattr(item, 'id'):  # It's a component
+            elif hasattr(item, 'id'):  # Component-like object
                 # Find it in ship
                 found = False
                 if self._ship:
@@ -323,14 +333,14 @@ class WorkshopViewModel:
         PROJ-40: Removed fallback to direct Ship creation - service must succeed.
 
         Raises:
-            RuntimeError: If service fails to create ship
+            ValidationException: If service fails to create ship
         """
         result = self._ship_service.create_ship(
             name="Custom Ship",
             ship_class=ship_class,
             x=self.screen_width // 2,
             y=self.screen_height // 2,
-            color=(100, 100, 255)
+            color=VEHICLE_DEFAULT
         )
         self._last_result = result
 
@@ -339,9 +349,13 @@ class WorkshopViewModel:
             return result.ship
         else:
             # PROJ-40: No fallback - fail fast with clear error
-            error_msg = f"Service failed to create ship: {result.errors}"
-            log_error(error_msg)
-            raise RuntimeError(error_msg)
+            error_msg = f"Failed to create ship: {result.errors}"
+            logger.error(error_msg)
+            raise ValidationException(
+                error_msg,
+                code=ErrorCode.VALIDATION_FAILED.value,
+                context={"operation": "create_ship", "errors": result.errors}
+            )
 
     def add_component(self, component_id: str, layer: LayerType) -> bool:
         """
@@ -355,7 +369,7 @@ class WorkshopViewModel:
             True if successful, False otherwise
         """
         if not self._ship:
-            log_error("Cannot add component: no ship")
+            logger.error("Cannot add component: no ship")
             return False
 
         result = self._ship_service.add_component(self._ship, component_id, layer)
@@ -365,7 +379,7 @@ class WorkshopViewModel:
             self.notify_ship_changed()
             return True
         else:
-            log_warning(f"Failed to add component: {result.errors}")
+            logger.warning(f"Failed to add component: {result.errors}")
             return False
 
     def add_component_bulk(self, component_id: str, layer: LayerType, count: int) -> int:
@@ -381,7 +395,7 @@ class WorkshopViewModel:
             Number of components successfully added
         """
         if not self._ship:
-            log_error("Cannot add components: no ship")
+            logger.error("Cannot add components: no ship")
             return 0
 
         result = self._ship_service.add_component_bulk(
@@ -410,7 +424,7 @@ class WorkshopViewModel:
             True if successful, False otherwise
         """
         if not self._ship:
-            log_error("Cannot add component: no ship")
+            logger.error("Cannot add component: no ship")
             return False
 
         result = self._ship_service.add_component_instance(self._ship, component, layer)
@@ -420,7 +434,7 @@ class WorkshopViewModel:
             self.notify_ship_changed()
             return True
         else:
-            log_warning(f"Failed to add component instance: {result.errors}")
+            logger.warning(f"Failed to add component instance: {result.errors}")
             return False
 
     def remove_component(self, layer: LayerType, index: int) -> Optional[Component]:
@@ -435,7 +449,7 @@ class WorkshopViewModel:
             The removed component, or None if removal failed
         """
         if not self._ship:
-            log_error("Cannot remove component: no ship")
+            logger.error("Cannot remove component: no ship")
             return None
 
         result = self._ship_service.remove_component(self._ship, layer, index)
@@ -445,7 +459,7 @@ class WorkshopViewModel:
             self.notify_ship_changed()
             return result.removed_component
         else:
-            log_warning(f"Failed to remove component: {result.errors}")
+            logger.warning(f"Failed to remove component: {result.errors}")
             return None
 
     def change_ship_class(self, new_class: str, migrate_components: bool = True) -> bool:
@@ -461,7 +475,7 @@ class WorkshopViewModel:
             True if successful, False otherwise
         """
         if not self._ship:
-            log_error("Cannot change class: no ship")
+            logger.error("Cannot change class: no ship")
             return False
 
         result = self._ship_service.change_class(
@@ -474,7 +488,7 @@ class WorkshopViewModel:
             self.notify_ship_changed()
             return True
         else:
-            log_warning(f"Failed to change class: {result.errors}")
+            logger.warning(f"Failed to change class: {result.errors}")
             return False
 
     def validate_design(self):
@@ -518,7 +532,7 @@ class WorkshopViewModel:
         if not self._ship:
             return
 
-        log_info("Clearing ship design")
+        logger.info("Clearing ship design")
         self._ship.clear_non_hull_components()
 
         self._ship.ai_strategy = "standard_ranged"

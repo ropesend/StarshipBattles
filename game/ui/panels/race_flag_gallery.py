@@ -9,14 +9,16 @@ Provides UI controls for:
 - Flag selection with visual feedback
 - Preview of selected flag in all three shapes
 """
+import logging
 import os
 from typing import Callable, List, Optional, Tuple, TYPE_CHECKING
 
 import pygame
 import pygame_gui
 
-from game.core.logger import log_debug, log_error, log_warning
 from game.core.paths import Paths
+
+logger = logging.getLogger(__name__)
 from game.ui.panels.base_gallery import BaseGallery
 from game.ui.screens.race_asset_loader import RaceAssetLoader
 
@@ -109,7 +111,7 @@ class RaceFlagGallery(BaseGallery):
         flags_dir = os.path.join(Paths.ASSET_DIR, "Images", "Flags", "Processed")
 
         if not os.path.exists(flags_dir):
-            log_warning(f"Flags directory not found: {flags_dir}")
+            logger.warning(f"Flags directory not found: {flags_dir}")
             return flags
 
         for entry in os.scandir(flags_dir):
@@ -129,11 +131,11 @@ class RaceFlagGallery(BaseGallery):
                         )
                         flags.append((entry.name, scaled))
                     except (FileNotFoundError, OSError, pygame.error) as e:
-                        log_error(f"Failed to load flag thumbnail {thumb_path}: {e}")
+                        logger.error(f"Failed to load flag thumbnail {thumb_path}: {e}")
 
         flags.sort(key=lambda x: x[0])
         self._asset_cache = flags
-        log_debug(f"Discovered {len(flags)} flags")
+        logger.debug(f"Discovered {len(flags)} flags")
         return flags
 
     def _update_preview(self, asset_id: str) -> None:

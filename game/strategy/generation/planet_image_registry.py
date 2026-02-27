@@ -5,13 +5,15 @@ This module provides a registry for assigning persistent planet images during
 galaxy generation. Each planet type has a set of available images, and the
 registry handles random selection and fallbacks for types with no images.
 """
+import logging
 import random
 from typing import Dict, List, Optional
 
 from game.core.paths import Paths
 from game.core.json_utils import load_json
-from game.core.logger import log_info, log_warning, log_error
 from game.strategy.data.planet import PlanetType
+
+logger = logging.getLogger(__name__)
 
 
 # Type-specific fallbacks for missing/sparse image types
@@ -42,7 +44,7 @@ class PlanetImageRegistry:
 
         data = load_json(classifications_path)
         if data is None:
-            log_error(f"Failed to load planet classifications from {classifications_path}")
+            logger.error(f"Failed to load planet classifications from {classifications_path}")
             return
 
         # Build reverse index: PlanetType -> List[filename]
@@ -51,14 +53,14 @@ class PlanetImageRegistry:
                 planet_type = PlanetType[type_name]
                 self._type_to_images[planet_type].append(filename)
             except KeyError:
-                log_warning(f"Unknown planet type '{type_name}' for image '{filename}'")
+                logger.warning(f"Unknown planet type '{type_name}' for image '{filename}'")
 
         # Dyson Sphere has a dedicated image (not in classifications JSON)
         self._type_to_images[PlanetType.DYSON_SPHERE] = ["Sphereworld_Portrait.png"]
 
         # Log distribution
         total = sum(len(imgs) for imgs in self._type_to_images.values())
-        log_info(f"Loaded {total} planet images across {len(PlanetType)} types")
+        logger.info(f"Loaded {total} planet images across {len(PlanetType)} types")
 
     def get_random_image(self, planet_type: PlanetType, rng: Optional[random.Random] = None) -> str:
         """Get a random image filename for the given planet type.
@@ -88,7 +90,7 @@ class PlanetImageRegistry:
             images = self._type_to_images.get(PlanetType.BARREN, [])
 
         if not images:
-            log_warning(f"No images available for planet type {planet_type.name}")
+            logger.warning(f"No images available for planet type {planet_type.name}")
             return ""
 
         return rng.choice(images)

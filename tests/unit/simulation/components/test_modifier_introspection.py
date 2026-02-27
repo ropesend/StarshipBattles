@@ -22,10 +22,14 @@ from game.simulation.components.abilities.stat_keys import StatKey
 
 @pytest.fixture
 def mock_component():
-    """Create a mock component with abilities for testing."""
+    """Create a mock component with abilities for testing.
+
+    PROJ-190: Added 'name' to match IComponent protocol.
+    """
     comp = Mock()
     comp.id = 'test_component'
-    comp.display_name = 'Test Component'
+    comp.name = 'Test Component'  # IComponent protocol uses 'name'
+    comp.display_name = 'Test Component'  # Keep for backward compat
     comp.ability_instances = []
     comp.modifiers = []
     comp.stats = {}
@@ -295,17 +299,20 @@ class TestGetComponentModifierSummary:
         assert result['total_stats']['damage_mult'] == 1.5
         assert result['total_stats']['mass_mult'] == 2.0
 
-    def test_handles_component_without_display_name(self):
-        """Falls back to id if display_name not present."""
-        comp = Mock(spec=['id', 'modifiers', 'stats'])  # Specify only what exists
-        comp.id = 'fallback_id'
+    def test_handles_component_with_name_attribute(self):
+        """Uses name attribute per IComponent protocol.
+
+        PROJ-190: Components now use 'name' attribute instead of 'display_name'.
+        """
+        comp = Mock()
+        comp.id = 'test_id'
+        comp.name = 'Actual Name'
         comp.modifiers = []
         comp.stats = {}
 
         result = ModifierIntrospection.get_component_modifier_summary(comp)
 
-        # Without display_name attribute, should use id as fallback
-        assert result['component_name'] == 'fallback_id'
+        assert result['component_name'] == 'Actual Name'
 
     def test_handles_definition_without_evaluate_effects(self, mock_component):
         """Handles modifier definitions without evaluate_effects method."""
@@ -352,14 +359,19 @@ class TestGetAbilityModifierSummary:
         assert result['stats'][0]['base'] == 100.0
         assert result['stats'][0]['current'] == 150.0
 
-    def test_handles_ability_without_get_effect_summary(self):
-        """Handles abilities without get_effect_summary method."""
-        ability = Mock(spec=['__class__'])
-        ability.__class__ = type('NoSummaryAbility', (), {'__name__': 'NoSummaryAbility'})
+    def test_handles_ability_with_empty_effect_summary(self):
+        """Handles abilities that return empty get_effect_summary.
+
+        PROJ-190: All abilities have get_effect_summary (defined in base class).
+        Test verifies empty return is handled correctly.
+        """
+        ability = Mock()
+        ability.__class__ = type('EmptySummaryAbility', (), {'__name__': 'EmptySummaryAbility'})
+        ability.get_effect_summary = Mock(return_value=[])
 
         result = ModifierIntrospection.get_ability_modifier_summary(ability)
 
-        assert result['ability_class'] == 'NoSummaryAbility'
+        assert result['ability_class'] == 'EmptySummaryAbility'
         assert result['stats'] == []
 
 

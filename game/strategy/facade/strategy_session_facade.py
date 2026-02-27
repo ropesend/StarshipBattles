@@ -7,6 +7,7 @@ from typing import List, Optional, TYPE_CHECKING
 
 from game.core.hex_math import HexCoord
 from game.core.validation import ValidationResult
+from game.core.exceptions import StateException
 from game.strategy.facade.dto import (
     FleetInfo,
     SystemInfo,
@@ -440,13 +441,13 @@ class StrategySessionFacade:
         """
         fleet = self._get_fleet_by_id(fleet_id)
         if fleet is None:
-            return ValidationResult(is_valid=False, errors=["Fleet not found."])
+            return ValidationResult.error("Fleet not found.")
 
         planet = None
         if planet_id is not None:
             planet = self._get_planet_by_id(planet_id)
             if planet is None:
-                return ValidationResult(is_valid=False, errors=["Planet not found."])
+                return ValidationResult.error("Planet not found.")
 
         return self._session.turn_engine.validate_colonize_order(
             self._session.galaxy, fleet, planet
@@ -466,13 +467,13 @@ class StrategySessionFacade:
         """
         fleet = self._get_fleet_by_id(fleet_id)
         if fleet is None:
-            return ValidationResult(is_valid=False, errors=["Fleet not found."])
+            return ValidationResult.error("Fleet not found.")
 
         path = self._session.preview_fleet_path(fleet, target_hex)
         if path is None:
-            return ValidationResult(is_valid=False, errors=["No path to target hex."])
+            return ValidationResult.error("No path to target hex.")
 
-        return ValidationResult()
+        return ValidationResult.success()
 
     # --- Colony Pod Queries (PROJ-55) ---
 
@@ -500,7 +501,7 @@ class StrategySessionFacade:
         try:
             provider = get_default_registry_provider()
             component_registry = provider.get_components()
-        except (RuntimeError, AttributeError, ImportError):
+        except (RuntimeError, AttributeError, ImportError, StateException):
             # Defensive fallback - return empty dict if registry unavailable
             return {}
 

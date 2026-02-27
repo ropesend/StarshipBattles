@@ -135,12 +135,15 @@ class TestShowShipsJson:
     def mock_test_lab_screen(self):
         """Create a minimal TestLabScreen for testing."""
         from game.ui.screens.test_lab import TestLabScreen
+        from game.ui.screens.test_lab.viewmodel import TestLabViewModel
 
         with patch.object(TestLabScreen, '__init__', lambda self, game, w, h: None):
             screen = TestLabScreen.__new__(TestLabScreen)
             screen.registry = Mock()
             screen.ui_manager = Mock()
-            screen.json_popup = None
+            # PROJ-172: json_popup is now a property delegating to viewmodel
+            screen._viewmodel = Mock(spec=TestLabViewModel)
+            screen._viewmodel.json_popup = None
             return screen
 
     def test_show_ships_json_uses_correct_path(self, mock_test_lab_screen):
@@ -181,11 +184,14 @@ class TestShowComponentsJson:
     def mock_test_lab_screen(self):
         """Create a minimal TestLabScreen for testing."""
         from game.ui.screens.test_lab import TestLabScreen
+        from game.ui.screens.test_lab.viewmodel import TestLabViewModel
 
         with patch.object(TestLabScreen, '__init__', lambda self, game, w, h: None):
             screen = TestLabScreen.__new__(TestLabScreen)
             screen.ui_manager = Mock()
-            screen.json_popup = None
+            # PROJ-172: json_popup is now a property delegating to viewmodel
+            screen._viewmodel = Mock(spec=TestLabViewModel)
+            screen._viewmodel.json_popup = None
             return screen
 
     def test_show_components_json_uses_correct_path(self, mock_test_lab_screen):

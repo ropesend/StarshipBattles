@@ -70,6 +70,7 @@ class TestBattlePanels:
 
     def create_mock_ship(self, team_id, name="Ship"):
         ship = MagicMock()
+        ship.id = name  # Use name as ID for test clarity
         ship.team_id = team_id
         ship.name = name
         ship.is_alive = True
@@ -184,6 +185,7 @@ class TestBattlePanels:
         panel = self.module.SeekerMonitorPanel(self.mock_scene, 100, 100, 300, 600)
 
         s1 = MagicMock()
+        s1.id = "seeker_1"
         s1.status = 'active'
         s1.velocity = MagicMock()
         s1.velocity.length.return_value = 0
@@ -203,9 +205,7 @@ class TestBattlePanels:
 
         handled = panel.handle_click(150, 140)
         assert handled is True
-        # PROJ-43: expanded_seekers now tracks projectile IDs (Python id used as fallback)
-        s1_id = str(id(s1))
-        assert s1_id in panel.expanded_seekers
+        assert s1.id in panel.expanded_seekers
 
         # Test clicking X button (Inactive seeker)
         s1.status = 'hit'

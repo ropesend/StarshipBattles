@@ -1,5 +1,10 @@
 """Event bus for decoupled communication between UI components."""
-from game.core.logger import log_error
+import logging
+
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
+
+logger = logging.getLogger(__name__)
 
 
 class EventBus:
@@ -16,10 +21,14 @@ class EventBus:
             callback: Function to call when event is emitted (receives data arg)
 
         Raises:
-            TypeError: If callback is not callable
+            ValidationException: If callback is not callable
         """
         if not callable(callback):
-            raise TypeError(f"Callback must be callable, got {type(callback).__name__}")
+            raise ValidationException(
+                f"Callback must be callable, got {type(callback).__name__}",
+                code=ErrorCode.VALIDATION_FAILED.value,
+                context={"expected": "callable", "actual_type": type(callback).__name__}
+            )
         if event_type not in self._subscribers:
             self._subscribers[event_type] = []
         self._subscribers[event_type].append(callback)
@@ -53,4 +62,4 @@ class EventBus:
                 try:
                     callback(data)
                 except Exception as e:  # Intentional broad catch: event handler isolation prevents handler bugs from crashing callers
-                    log_error(f"Error in event handler for {event_type}: {e}")
+                    logger.error(f"Error in event handler for {event_type}: {e}")

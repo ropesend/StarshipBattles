@@ -4,19 +4,42 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-176 | Missing Abstractions & Duplication Elimination | Planning | 2026-02-23 | 2026-02-23 |
-| PROJ-175 | Logger & JSON Loading Pattern Standardization | Planning | 2026-02-23 | 2026-02-23 |
-| PROJ-174 | Registry Access Consolidation - Complete DI Migration | Planning | 2026-02-23 | 2026-02-23 |
-| PROJ-173 | God Class Decomposition - Domain & Simulation Layer | Planning | 2026-02-23 | 2026-02-23 |
-| PROJ-172 | God Class Decomposition - MVVM Wave 1 (Re-Offenders + Quick Wins) | Planning | 2026-02-23 | 2026-02-23 |
-| PROJ-171 | Deserialization Input Validation | Planning | 2026-02-23 | 2026-02-23 |
-| PROJ-170 | Exception Handling Migration - Full Adoption of PROJ-45 Infrastructure | Planning | 2026-02-23 | 2026-02-23 |
-| PROJ-169 | Dead Code and Orphaned File Cleanup | Planning | 2026-02-23 | 2026-02-23 |
+| PROJ-199 | Duck Typing Cleanup - Lazy Init and CompDef Centralization | Plan Ready | 2026-02-25 | 2026-02-25 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-198 | UI Layer Duck Typing Elimination - Strategy Screens & Services | Archived | 2026-02-25 | 2026-02-25 |
+| PROJ-197 | Duplication Consolidation Completion | Archived | 2026-02-25 | 2026-02-25 |
+| PROJ-196 | Consolidate Duplicated Code | Archived | 2026-02-24 | 2026-02-25 |
+| PROJ-195 | Eradicate RegistryManager Singleton from Non-Root Code | Archived | 2026-02-24 | 2026-02-25 |
+| PROJ-194 | Builder & Workshop Duck Typing Elimination | Archived | 2026-02-24 | 2026-02-25 |
+| PROJ-193 | UI Data Binding Duck Typing Elimination | Archived | 2026-02-24 | 2026-02-25 |
+| PROJ-192 | AI Behavior Protocols - Duck Typing Elimination | Archived | 2026-02-24 | 2026-02-25 |
+| PROJ-191 | Strategy Layer Duck Typing Elimination | Archived | 2026-02-24 | 2026-02-25 |
+| PROJ-190 | Core Simulation Duck Typing Elimination | Archived | 2026-02-24 | 2026-02-25 |
+| PROJ-189 | Storms Environmental Hazards | Archived | 2026-02-24 | 2026-02-25 |
+| PROJ-188 | Strategy Layer List UI Consolidation | Archived | 2026-02-24 | 2026-02-25 |
+| PROJ-187 | Strategy Orders Tick-Based Action System | Archived | 2026-02-24 | 2026-02-25 |
+| PROJ-186 | Exception Handling Polish - ErrorCode Consistency and Final Cleanup | Archived | 2026-02-24 | 2026-02-24 |
+| PROJ-185 | Post-PROJ-174 Backward Compatibility Eradication | Archived | 2026-02-24 | 2026-02-24 |
+| PROJ-184 | Type-Safe Spatial Query API | Archived | 2026-02-24 | 2026-02-24 |
+| PROJ-183 | PROJ-175 Post-Refactor Cleanup - Logging Pattern Completion | Archived | 2026-02-24 | 2026-02-24 |
+| PROJ-182 | PROJ-176 Post-Refactor Cleanup | Archived | 2026-02-24 | 2026-02-24 |
+| PROJ-181 | PROJ-174 Completion - Eradicate Deprecated Registry API | Archived | 2026-02-24 | 2026-02-24 |
+| PROJ-180 | PROJ-172 Post-Refactor Cleanup | Archived | 2026-02-24 | 2026-02-24 |
+| PROJ-179 | PROJ-173 Post-Refactor Cleanup | Archived | 2026-02-24 | 2026-02-24 |
+| PROJ-178 | PROJ-171 Audit Remediation - Validation Consistency | Archived | 2026-02-24 | 2026-02-24 |
+| PROJ-177 | Exception Handling Cleanup | Archived | 2026-02-24 | 2026-02-24 |
+| PROJ-176 | Missing Abstractions & Duplication Elimination | Archived | 2026-02-23 | 2026-02-24 |
+| PROJ-175 | Logger & JSON Loading Pattern Standardization | Archived | 2026-02-23 | 2026-02-24 |
+| PROJ-174 | Registry Access Consolidation - Complete DI Migration | Archived | 2026-02-23 | 2026-02-24 |
+| PROJ-173 | God Class Decomposition - Domain & Simulation Layer | Archived | 2026-02-23 | 2026-02-24 |
+| PROJ-172 | God Class Decomposition - MVVM Wave 1 (Re-Offenders + Quick Wins) | Archived | 2026-02-23 | 2026-02-24 |
+| PROJ-171 | Deserialization Input Validation | Archived | 2026-02-23 | 2026-02-24 |
+| PROJ-170 | Exception Handling Migration - Full Adoption of PROJ-45 Infrastructure | Archived | 2026-02-23 | 2026-02-24 |
+| PROJ-169 | Dead Code and Orphaned File Cleanup | Archived | 2026-02-23 | 2026-02-24 |
 | PROJ-163 | Move Automation Loops to Projects Directory | Archived | 2026-02-23 | 2026-02-23 |
 | PROJ-168 | Extract Hex-to-Cartesian Conversion Helper | Archived | 2026-02-23 | 2026-02-23 |
 | PROJ-167 | Centralize UI Color Palette Constants | Archived | 2026-02-23 | 2026-02-23 |

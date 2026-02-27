@@ -46,6 +46,10 @@ class MockGalaxy:
                     result.append(p)
         return result
 
+    def get_zones_at_global_hex(self, global_hex):
+        """Return zone objects at location (empty for these tests)."""
+        return []
+
 
 @pytest.fixture
 def turn_engine():

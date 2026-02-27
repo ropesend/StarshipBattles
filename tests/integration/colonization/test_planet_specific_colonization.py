@@ -37,7 +37,12 @@ class MockPlanetType(Enum):
 
 
 class MockPlanet:
-    """Mock planet with planet_type attribute."""
+    """Mock planet with planet_type attribute.
+
+    Implements IPlanet protocol attributes for isinstance checks.
+    PROJ-193: Extended with all IPlanet protocol properties.
+    """
+    _next_id = 1
 
     def __init__(self, name: str, relative_loc: HexCoord, planet_type: MockPlanetType):
         self.name = name
@@ -45,6 +50,20 @@ class MockPlanet:
         self.planet_type = planet_type
         self.owner_id = None
         self.construction_queue = []
+        self.resources = {}
+        self.id = MockPlanet._next_id
+        MockPlanet._next_id += 1
+        # PROJ-193: Required IPlanet properties
+        self.populations = []
+        self.max_population = 1000
+        self.facilities = []
+        self.atmosphere = {}
+        self.surface_gravity = 9.8
+        self.surface_temperature = 300.0
+        self.orbit_distance = 1
+        self.diameter_hexes = 0.0
+        self.image_id = ""
+        self.image_rotation = 0.0
 
 
 class MockSystem:
@@ -70,6 +89,10 @@ class MockGalaxy:
                 if (sys.global_location + p.location) == global_hex:
                     result.append(p)
         return result
+
+    def get_zones_at_global_hex(self, global_hex: HexCoord):
+        """Return zone objects at location (empty for these tests)."""
+        return []
 
 
 def make_colony_ship(name: str, owner_id: int, pod_type: str) -> ShipInstance:

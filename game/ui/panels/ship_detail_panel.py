@@ -17,6 +17,7 @@ from typing import Dict, Optional, Tuple, List, TYPE_CHECKING
 
 from game.core.constants import LayerType, ResourceType  # Canonical location for LayerType
 from game.ui.assets import ShipThemeManager
+from game.ui.colors import HP_HEALTHY, HP_DAMAGED, HP_CRITICAL, HP_DESTROYED, BAR_BG, BAR_BORDER
 
 if TYPE_CHECKING:
     from game.strategy.data.ship_instance import ShipInstance
@@ -31,19 +32,19 @@ def get_damage_color(hp_percentage: float) -> Tuple[int, int, int]:
 
     Returns:
         RGB tuple for damage visualization:
-        - Green (100, 200, 100) for >75%
-        - Yellow (200, 200, 100) for 50-75%
-        - Red (200, 100, 100) for 1-50%
-        - Gray (100, 100, 100) for 0% (destroyed)
+        - Green for >75%
+        - Yellow for 50-75%
+        - Red for 1-50%
+        - Gray for 0% (destroyed)
     """
     if hp_percentage <= 0:
-        return (100, 100, 100)  # Gray - destroyed
+        return HP_DESTROYED
     elif hp_percentage < 0.5:
-        return (200, 100, 100)  # Red - critical
+        return HP_CRITICAL
     elif hp_percentage < 0.75:
-        return (200, 200, 100)  # Yellow - damaged
+        return HP_DAMAGED
     else:
-        return (100, 200, 100)  # Green - healthy
+        return HP_HEALTHY
 
 
 class ShipDetailPanel:
@@ -134,7 +135,7 @@ class ShipDetailPanel:
             Scaled surface centered on a target_size x target_size background
         """
         result = pygame.Surface((target_size, target_size), pygame.SRCALPHA)
-        result.fill((40, 40, 40))  # Dark background
+        result.fill(BAR_BG)  # Dark background
 
         if raw_surf:
             w, h = raw_surf.get_size()
@@ -148,10 +149,10 @@ class ShipDetailPanel:
             result.blit(scaled, (x_off, y_off))
         else:
             # Draw placeholder icon
-            pygame.draw.rect(result, (60, 60, 60), (10, 10, target_size - 20, target_size - 20), 2)
+            pygame.draw.rect(result, BAR_BORDER, (10, 10, target_size - 20, target_size - 20), 2)
             # Simple ship silhouette
             center = target_size // 2
-            pygame.draw.polygon(result, (80, 80, 80), [
+            pygame.draw.polygon(result, BAR_BORDER, [
                 (center, 20),
                 (center + 30, target_size - 30),
                 (center - 30, target_size - 30)

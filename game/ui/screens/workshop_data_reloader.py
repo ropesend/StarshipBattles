@@ -3,12 +3,14 @@
 This module extracts data reload logic from DesignWorkshopScreen to reduce
 its line count and improve separation of concerns.
 """
+import logging
 import os
 from tkinter import filedialog
 
 from game.core.profiling import profile_block
-from game.core.logger import log_error
 from game.ui.screens.workshop_data_loader import WorkshopDataLoader
+
+logger = logging.getLogger(__name__)
 from game.ui.screens.builder_utils import BuilderEvents
 
 
@@ -139,7 +141,7 @@ class WorkshopDataReloader:
 
             if not result.success:
                 for error in result.errors:
-                    log_error(error)
+                    logger.error(error)
                 self.show_error(f"Data loading failed: {result.errors[0] if result.errors else 'Unknown error'}")
                 return
 
@@ -150,8 +152,7 @@ class WorkshopDataReloader:
             self.show_error(f"Reloaded data from {os.path.basename(directory)}")
 
         except (OSError, ValueError, KeyError) as e:
-            import traceback
-            log_error(f"Failed to reload data: {e}\n{traceback.format_exc()}")
+            logger.exception(f"Failed to reload data: {e}")
             self.show_error(f"Error reloading data: {e}")
 
     def _refresh_ui_after_data_reload(self, default_class: str):

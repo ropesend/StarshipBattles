@@ -16,11 +16,14 @@ Responsibilities:
 - Per-tick resource consumption from empire pool during construction
 """
 
+import logging
 import uuid
 from typing import Optional, List, Dict, Any
 
-from game.core.logger import log_info, log_warning, log_event
+from game.core.event_logging import log_event
 from game.strategy.events.event_types import EventType, EventCategory
+
+logger = logging.getLogger(__name__)
 from game.strategy.data.build_queue_source import _facility_is_shipyard
 from game.strategy.data.fleet import Fleet, OrderType
 from game.strategy.data.planet import PlanetaryFacility
@@ -330,7 +333,7 @@ class ProductionEngine:
             # Decrement capacity
             tick_capacity -= ticks_to_spend
             
-            # Update legacy "turns_remaining" for UI display (approximate)
+            # Calculate turns_remaining for UI display (approximate)
             # Remaining ticks / 100
             if max_ticks_needed > 0:
                  current_est_ticks = max_ticks_needed - ticks_to_spend
@@ -364,7 +367,7 @@ class ProductionEngine:
         queue.pop(0)
 
         # Log
-        log_info(f"Production Complete (tick {tick}): {design_id} ({vehicle_type})")
+        logger.info(f"Production Complete (tick {tick}): {design_id} ({vehicle_type})")
 
         # Spawn
         if isinstance(colony_or_fleet, Fleet):
@@ -404,9 +407,9 @@ class ProductionEngine:
             if loaded_data:
                 design_data = loaded_data
             else:
-                log_warning(f"Could not load design: {design_id}")
+                logger.warning(f"Could not load design: {design_id}")
         else:
-            log_warning(f"No savegame path - creating empty facility for {design_id}")
+            logger.warning(f"No savegame path - creating empty facility for {design_id}")
 
         # Create facility instance
         facility = PlanetaryFacility(
@@ -418,7 +421,7 @@ class ProductionEngine:
         )
 
         planet.facilities.append(facility)
-        log_info(f"Built {facility.name} on {planet.name}")
+        logger.info(f"Built {facility.name} on {planet.name}")
         log_event(
             EventType.COMPLEX_BUILT,
             category=EventCategory.PRODUCTION,
@@ -455,14 +458,14 @@ class ProductionEngine:
 
         # Load design data
         if not save_path:
-            log_warning(f"Cannot spawn {design_id}: no save_path provided")
+            logger.warning(f"Cannot spawn {design_id}: no save_path provided")
             return
 
         design_library = DesignLibrary(save_path, empire.id)
         design_data = design_library.load_design_data(design_id)
 
         if not design_data:
-            log_warning(f"Cannot spawn {design_id}: design data not found")
+            logger.warning(f"Cannot spawn {design_id}: design data not found")
             return
 
         # Create ShipInstance (with serial number)
@@ -483,7 +486,7 @@ class ProductionEngine:
         # Increment design's times_built counter
         design_library.increment_built_count(design_id)
 
-        log_info(f"Spawned {design_data.get('name', design_id)} at {spawn_loc} (Fleet {new_fleet.id})")
+        logger.info(f"Spawned {design_data.get('name', design_id)} at {spawn_loc} (Fleet {new_fleet.id})")
         log_event(
             EventType.SHIP_BUILT,
             category=EventCategory.PRODUCTION,
@@ -514,14 +517,14 @@ class ProductionEngine:
         """
         # Load design data
         if not save_path:
-            log_warning(f"Cannot spawn {design_id}: no save_path provided")
+            logger.warning(f"Cannot spawn {design_id}: no save_path provided")
             return
 
         design_library = DesignLibrary(save_path, empire.id)
         design_data = design_library.load_design_data(design_id)
 
         if not design_data:
-            log_warning(f"Cannot spawn {design_id}: design data not found")
+            logger.warning(f"Cannot spawn {design_id}: design data not found")
             return
 
         # Create ShipInstance (with serial number)
@@ -539,7 +542,7 @@ class ProductionEngine:
         # Increment design's times_built counter
         design_library.increment_built_count(design_id)
 
-        log_info(f"Fleet {fleet.id} built {design_data.get('name', design_id)}")
+        logger.info(f"Fleet {fleet.id} built {design_data.get('name', design_id)}")
         log_event(
             EventType.SHIP_BUILT,
             category=EventCategory.PRODUCTION,
@@ -575,12 +578,12 @@ class ProductionEngine:
         """
         # Find planet at fleet's location
         if galaxy is None:
-            log_warning(f"Cannot spawn complex {design_id}: no galaxy provided")
+            logger.warning(f"Cannot spawn complex {design_id}: no galaxy provided")
             return
 
         planets_at_hex = galaxy.get_planets_at_global_hex(fleet.location)
         if not planets_at_hex:
-            log_warning(f"Cannot spawn complex {design_id}: fleet not at planet hex")
+            logger.warning(f"Cannot spawn complex {design_id}: fleet not at planet hex")
             return
 
         # PROJ-79: Use target_planet_id if specified, otherwise fall back to first planet
@@ -600,9 +603,9 @@ class ProductionEngine:
             if loaded_data:
                 design_data = loaded_data
             else:
-                log_warning(f"Could not load design: {design_id}")
+                logger.warning(f"Could not load design: {design_id}")
         else:
-            log_warning(f"No savegame path - creating empty facility for {design_id}")
+            logger.warning(f"No savegame path - creating empty facility for {design_id}")
 
         # Create facility instance
         facility = PlanetaryFacility(
@@ -614,7 +617,7 @@ class ProductionEngine:
         )
 
         planet.facilities.append(facility)
-        log_info(f"Fleet {fleet.id} built {facility.name} on {planet.name}")
+        logger.info(f"Fleet {fleet.id} built {facility.name} on {planet.name}")
         log_event(
             EventType.COMPLEX_BUILT,
             category=EventCategory.PRODUCTION,

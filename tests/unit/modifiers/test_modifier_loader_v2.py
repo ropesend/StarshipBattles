@@ -90,23 +90,19 @@ class TestModifierLoaderV2:
         """Should load modifiers.json file correctly.
 
         Note: modifiers_v2.json was consolidated into modifiers.json in Phase 9 (PROJ-40).
+        PROJ-195: Converted to pure function (no singleton access).
         """
-        from game.simulation.components.component import load_modifiers
-        from game.core.registry import RegistryManager
+        from game.simulation.components.component import load_modifiers_data
 
-        # Clear registry first
-        reg = RegistryManager.instance().modifiers
-        reg.clear()
-
-        # Load canonical modifiers file (V2 format)
-        load_modifiers('data/modifiers.json')
+        # Load canonical modifiers file (V2 format) using pure function
+        modifiers = load_modifiers_data('data/modifiers.json')
 
         # Verify some modifiers loaded
-        assert 'hardened_mount' in reg
-        assert 'range_mount' in reg
+        assert 'hardened_mount' in modifiers
+        assert 'range_mount' in modifiers
 
         # Verify V2 format
-        hardened = reg['hardened_mount']
+        hardened = modifiers['hardened_mount']
         assert isinstance(hardened.effects, list)
 
     def test_v2_modifier_default_param_values(self):

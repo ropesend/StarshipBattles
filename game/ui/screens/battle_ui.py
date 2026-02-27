@@ -3,12 +3,21 @@ Battle UI - Handles all UI rendering and interaction for the BattleScreen.
 
 Provides HUD elements, ship stats panels, seeker monitors, and battle control panel.
 """
+import logging
 import pygame
 import math
-from game.core.logger import log_debug
 from game.core.constants import AttackType
+
+logger = logging.getLogger(__name__)
 from game.ui.config import UIConfig
+from game.ui.fonts import get_font
 from game.ui.panels.battle_panels import ShipStatsPanel, SeekerMonitorPanel, BattleControlPanel
+from game.ui.colors import (
+    GRID_BG_BATTLE, DEBUG_TARGET_LINE, DEBUG_WEAPON_RANGE, DEBUG_AIM_POINT,
+    DEBUG_FIRING_ARC, BTN_RETURN_BG, BTN_RETURN_HOVER, WHITE,
+    TEST_COMPLETE_PASSED, TEST_COMPLETE_FAILED, TEST_COMPLETE_NEUTRAL,
+    RESULT_WIN, RESULT_DRAW, BLACK
+)
 
 class BattleUI:
     """Handles all UI rendering and interaction for the BattleScreen."""
@@ -77,28 +86,28 @@ class BattleUI:
 
         # Draw "Return to Combat Lab" button if battle is over in test mode
         if self.scene.is_battle_over():
-            log_debug(f"Battle is over. test_mode={self.scene.test_mode}")
+            logger.debug(f"Battle is over. test_mode={self.scene.test_mode}")
             if self.scene.test_mode:
                 self._draw_return_button(screen)
             else:
-                log_debug(f"Not drawing Combat Lab button because test_mode=False")
+                logger.debug(f"Not drawing Combat Lab button because test_mode=False")
 
     def handle_click(self, mx, my, button):
         """Handle mouse clicks. Returns True if click was handled."""
 
-        log_debug(f"BattleUI.handle_click at ({mx}, {my})")
-        log_debug(f"test_mode={self.scene.test_mode}, battle_over={self.scene.is_battle_over()}")
+        logger.debug(f"BattleUI.handle_click at ({mx}, {my})")
+        logger.debug(f"test_mode={self.scene.test_mode}, battle_over={self.scene.is_battle_over()}")
 
         # Check "Return to Combat Lab" button first (highest priority)
         if self.scene.test_mode and self.scene.is_battle_over():
             button_rect = self._get_return_button_rect()
-            log_debug(f"Return button rect: {button_rect}")
+            logger.debug(f"Return button rect: {button_rect}")
             if button_rect.collidepoint(mx, my):
-                log_debug(f"Return to Combat Lab button clicked!")
+                logger.debug(f"Return to Combat Lab button clicked!")
                 self.scene.trigger_return_to_test_lab()
                 return True
             else:
-                log_debug(f"Click was not on return button")
+                logger.debug(f"Click was not on return button")
 
         # Control Panel (Buttons usually top priority or overlay)
         # Check control panel first (e.g. End Battle button)
@@ -133,7 +142,7 @@ class BattleUI:
         start_y = int(tl.y // grid_spacing) * grid_spacing
         end_y = int(br.y // grid_spacing + 1) * grid_spacing
         
-        grid_color = (30, 30, 50)
+        grid_color = GRID_BG_BATTLE
         
         for x in range(start_x, end_x + grid_spacing, grid_spacing):
             p1 = camera.world_to_screen(pygame.math.Vector2(x, start_y))
@@ -162,7 +171,7 @@ class BattleUI:
             if s.current_target and s.current_target.is_alive:
                 start = camera.world_to_screen(s.position)
                 end = camera.world_to_screen(s.current_target.position)
-                pygame.draw.line(screen, (0, 0, 255), start, end, 1)
+                pygame.draw.line(screen, DEBUG_TARGET_LINE, start, end, 1)
             
             # Weapon range
             max_range = 0
@@ -175,16 +184,15 @@ class BattleUI:
                 r_screen = int(max_range * camera.zoom)
                 if r_screen > 0:
                     center = camera.world_to_screen(s.position)
-                    pygame.draw.circle(screen, (100, 100, 100), (int(center.x), int(center.y)), r_screen, 1)
+                    pygame.draw.circle(screen, DEBUG_WEAPON_RANGE, (int(center.x), int(center.y)), r_screen, 1)
             
             # Aim point
             if hasattr(s, 'aim_point') and s.aim_point:
                 aim_pos_screen = camera.world_to_screen(s.aim_point)
                 length = 5
-                color = (0, 100, 255)
-                pygame.draw.line(screen, color, (aim_pos_screen.x - length, aim_pos_screen.y - length), 
+                pygame.draw.line(screen, DEBUG_AIM_POINT, (aim_pos_screen.x - length, aim_pos_screen.y - length),
                                (aim_pos_screen.x + length, aim_pos_screen.y + length), 2)
-                pygame.draw.line(screen, color, (aim_pos_screen.x - length, aim_pos_screen.y + length), 
+                pygame.draw.line(screen, DEBUG_AIM_POINT, (aim_pos_screen.x - length, aim_pos_screen.y + length),
                                (aim_pos_screen.x + length, aim_pos_screen.y - length), 2)
             
             # Firing arcs
@@ -206,18 +214,17 @@ class BattleUI:
                 x2 = center.x + math.cos(end_angle) * rng
                 y2 = center.y + math.sin(end_angle) * rng
 
-                arc_col = (255, 165, 0)
-                pygame.draw.line(screen, arc_col, center, (x1, y1), 1)
-                pygame.draw.line(screen, arc_col, center, (x2, y2), 1)
+                pygame.draw.line(screen, DEBUG_FIRING_ARC, center, (x1, y1), 1)
+                pygame.draw.line(screen, DEBUG_FIRING_ARC, center, (x2, y2), 1)
 
                 try:
                     rect = pygame.Rect(center.x - rng, center.y - rng, rng*2, rng*2)
                     r_start = math.radians(ship_angle + facing - arc)
                     r_end = math.radians(ship_angle + facing + arc)
-                    pygame.draw.arc(screen, arc_col, rect, -r_end, -r_start, 1)
+                    pygame.draw.arc(screen, DEBUG_FIRING_ARC, rect, -r_end, -r_start, 1)
                 except (ValueError, pygame.error) as e:
                     # Arc drawing can fail with invalid rect dimensions (e.g., negative or zero)
-                    log_debug(f"Arc drawing failed for ship {s.name}: {e}")
+                    logger.debug(f"Arc drawing failed for ship {s.name}: {e}")
 
     def _get_return_button_rect(self):
         """Get the rect for the Return to Combat Lab button."""
@@ -229,7 +236,7 @@ class BattleUI:
 
     def _draw_return_button(self, screen):
         """Draw the Return to Combat Lab button (shown when test completes)."""
-        log_debug(f"Drawing Return to Combat Lab button (test_mode={self.scene.test_mode}, battle_over={self.scene.is_battle_over()})")
+        logger.debug(f"Drawing Return to Combat Lab button (test_mode={self.scene.test_mode}, battle_over={self.scene.is_battle_over()})")
         button_rect = self._get_return_button_rect()
 
         # Check hover state
@@ -237,55 +244,55 @@ class BattleUI:
         is_hovered = button_rect.collidepoint(mx, my)
 
         # Draw button
-        color = (0, 150, 200) if is_hovered else (0, 100, 150)
+        color = BTN_RETURN_HOVER if is_hovered else BTN_RETURN_BG
         pygame.draw.rect(screen, color, button_rect, border_radius=8)
-        pygame.draw.rect(screen, (255, 255, 255), button_rect, 3, border_radius=8)
+        pygame.draw.rect(screen, WHITE, button_rect, 3, border_radius=8)
 
         # Draw text
-        font = pygame.font.SysFont("Arial", 28, bold=True)
-        text = font.render("Return to Combat Lab", True, (255, 255, 255))
+        font = get_font(28, bold=True)
+        text = font.render("Return to Combat Lab", True, WHITE)
         text_rect = text.get_rect(center=button_rect.center)
         screen.blit(text, text_rect)
 
         # Draw "TEST COMPLETE" indicator above button
-        complete_font = pygame.font.SysFont("Arial", 56, bold=True)
+        complete_font = get_font(56, bold=True)
 
         # Color based on test pass/fail
         if hasattr(self.scene, 'test_scenario') and self.scene.test_scenario:
             if self.scene.test_scenario.passed:
                 complete_text = "TEST COMPLETE - PASSED"
-                complete_color = (80, 255, 120)  # Green
+                complete_color = TEST_COMPLETE_PASSED
             else:
                 complete_text = "TEST COMPLETE - FAILED"
-                complete_color = (255, 80, 80)  # Red
+                complete_color = TEST_COMPLETE_FAILED
         else:
             complete_text = "TEST COMPLETE"
-            complete_color = (255, 200, 100)  # Yellow
+            complete_color = TEST_COMPLETE_NEUTRAL
 
         complete_surface = complete_font.render(complete_text, True, complete_color)
         complete_rect = complete_surface.get_rect(center=(button_rect.centerx, button_rect.top - 120))
 
         # Draw background for text
         bg_rect = complete_rect.inflate(40, 20)
-        pygame.draw.rect(screen, (0, 0, 0, 200), bg_rect, border_radius=10)
+        pygame.draw.rect(screen, (*BLACK, 200), bg_rect, border_radius=10)
         pygame.draw.rect(screen, complete_color, bg_rect, 3, border_radius=10)
         screen.blit(complete_surface, complete_rect)
 
         # Draw battle result above button
         winner = self.scene.get_winner()
         result_text = ""
-        result_color = (255, 255, 255)
+        result_color = WHITE
         if winner == 0:
             result_text = "TEAM 0 WINS!"
-            result_color = (0, 255, 0)
+            result_color = RESULT_WIN
         elif winner == 1:
             result_text = "TEAM 1 WINS!"
-            result_color = (0, 255, 0)
+            result_color = RESULT_WIN
         else:
             result_text = "DRAW!"
-            result_color = (255, 255, 0)
+            result_color = RESULT_DRAW
 
-        result_font = pygame.font.SysFont("Arial", 48, bold=True)
+        result_font = get_font(48, bold=True)
         result_surface = result_font.render(result_text, True, result_color)
         result_rect = result_surface.get_rect(center=(button_rect.centerx, button_rect.top - 60))
         screen.blit(result_surface, result_rect)

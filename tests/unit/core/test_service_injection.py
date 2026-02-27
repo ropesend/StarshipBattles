@@ -12,6 +12,7 @@ from typing import Dict, Any
 from unittest.mock import MagicMock
 
 from game.core.registry import GameRegistries
+from game.core.exceptions import ValidationException
 
 
 # =============================================================================
@@ -120,8 +121,8 @@ class TestShipStatsCalculatorInjection:
         """ShipStatsCalculator should require registries (strict DI)."""
         from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
-        # PROJ-50: Should raise TypeError when registries is None
-        with pytest.raises(TypeError) as exc_info:
+        # PROJ-50: Should raise ValidationException when registries is None
+        with pytest.raises(ValidationException) as exc_info:
             ShipStatsCalculator(registries=None)
         assert "registries is required" in str(exc_info.value)
 

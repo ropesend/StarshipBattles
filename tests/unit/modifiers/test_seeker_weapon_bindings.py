@@ -107,6 +107,7 @@ class TestSeekerWeaponAbilityRecalculate:
         class MockComponent:
             def __init__(self):
                 self.stats = {'endurance_mult': 2.0}
+                self.ability_stats = {}
                 self.data = {}
 
         component = MockComponent()
@@ -129,6 +130,7 @@ class TestSeekerWeaponAbilityRecalculate:
         class MockComponent:
             def __init__(self):
                 self.stats = {'projectile_damage_mult': 3.0}
+                self.ability_stats = {}
                 self.data = {}
 
         component = MockComponent()
@@ -151,6 +153,7 @@ class TestSeekerWeaponAbilityRecalculate:
         class MockComponent:
             def __init__(self):
                 self.stats = {'projectile_hp_mult': 5.0}
+                self.ability_stats = {}
                 self.data = {}
 
         component = MockComponent()
@@ -173,6 +176,7 @@ class TestSeekerWeaponAbilityRecalculate:
         class MockComponent:
             def __init__(self):
                 self.stats = {'projectile_stealth_level': 3}
+                self.ability_stats = {}
                 self.data = {}
 
         component = MockComponent()

@@ -62,14 +62,31 @@ class StrategyManager:
 
 ### Singletons in Codebase
 
-| Class | Location | Purpose |
-|-------|----------|---------|
-| `RegistryManager` | `game/core/registry.py` | Component/modifier definitions |
-| `StrategyManager` | `game/ai/controller.py` | AI combat strategies |
-| `ShipThemeManager` | `game/ui/assets/ship_theme_manager.py` | Visual themes |
-| `ScreenshotManager` | `game/core/screenshot_manager.py` | Screenshot handling |
-| `SpriteManager` | `game/ui/renderer/sprites.py` | Sprite caching |
-| `SessionRegistryCache` | `tests/infrastructure/session_cache.py` | Test data caching |
+| Class | Location | Purpose | Access Pattern |
+|-------|----------|---------|----------------|
+| `RegistryManager` | `game/core/registry.py` | Component/modifier definitions | Via `get_default_registry_provider()` |
+| `StrategyManager` | `game/ai/controller.py` | AI combat strategies | Direct singleton |
+| `ShipThemeManager` | `game/ui/assets/ship_theme_manager.py` | Visual themes | Direct singleton |
+| `ScreenshotManager` | `game/core/screenshot_manager.py` | Screenshot handling | Direct singleton |
+| `SpriteManager` | `game/ui/renderer/sprites.py` | Sprite caching | Direct singleton |
+| `SessionRegistryCache` | `tests/infrastructure/session_cache.py` | Test data caching | Direct singleton |
+
+### Registry Access Pattern
+
+**For registry access, use the provider pattern instead of direct singleton access:**
+
+```python
+from game.core.registry import get_default_registry_provider
+
+# Recommended: Use the provider interface
+provider = get_default_registry_provider()
+components = provider.get_components()
+modifiers = provider.get_modifiers()
+ships = provider.get_ships()
+```
+
+`RegistryManager.instance()` is **internal-only** for composition roots (app startup, test fixtures).
+Consumer code should use `get_default_registry_provider()` or accept an `IRegistryProvider` via dependency injection.
 
 ### Usage Guidelines
 
@@ -77,6 +94,7 @@ class StrategyManager:
 2. **Implement `reset()`** - Required for test isolation
 3. **Implement `clear()`** - For resetting data without destroying instance
 4. **Test fixtures should reset** - Call `reset()` in teardown
+5. **Prefer provider pattern** - For registries, use `get_default_registry_provider()` instead of direct singleton access
 
 ### Testing Singletons
 
@@ -89,7 +107,10 @@ def reset_game_state():
     StrategyManager.instance().clear()
     ShipThemeManager.reset()
     SpriteManager.reset()
+    # Note: RegistryManager is handled separately via the registry_provider fixture
 ```
+
+For registry testing, use the `registry_provider` fixture which handles setup and teardown automatically.
 
 ---
 
@@ -250,9 +271,18 @@ from typing import List, Optional
 
 @dataclass
 class ValidationResult:
-    success: bool
+    is_valid: bool = True
     errors: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
+    error_code: Optional[str] = None
+
+    @classmethod
+    def success(cls) -> 'ValidationResult':
+        return cls(is_valid=True)
+
+    @classmethod
+    def error(cls, message: str, code: Optional[str] = None) -> 'ValidationResult':
+        return cls(is_valid=False, errors=[message], error_code=code)
 
 class ValidationRule(ABC):
     """Base class for validation rules using template method."""
@@ -261,7 +291,7 @@ class ValidationRule(ABC):
         """Template method - orchestrates validation."""
         # Guard clause handled once in base class
         if not self._should_validate(component, layer_type):
-            return ValidationResult(True)
+            return ValidationResult.success()
 
         # Delegate to subclass for actual validation
         return self._do_validate(ship, component, layer_type)
@@ -285,12 +315,12 @@ class LayerCapacityRule(ValidationRule):
     def _do_validate(self, ship, component, layer_type) -> ValidationResult:
         layer = ship.layers.get(layer_type)
         if not layer:
-            return ValidationResult(False, [f"Layer {layer_type} not found"])
+            return ValidationResult.error(f"Layer {layer_type} not found")
 
         if len(layer['components']) >= layer['max_capacity']:
-            return ValidationResult(False, [f"Layer {layer_type} at capacity"])
+            return ValidationResult.error(f"Layer {layer_type} at capacity")
 
-        return ValidationResult(True)
+        return ValidationResult.success()
 
 
 class UniqueComponentRule(ValidationRule):
@@ -303,8 +333,8 @@ class UniqueComponentRule(ValidationRule):
     def _do_validate(self, ship, component, layer_type) -> ValidationResult:
         existing = ship.get_component_by_id(component.id)
         if existing:
-            return ValidationResult(False, [f"{component.name} already installed"])
-        return ValidationResult(True)
+            return ValidationResult.error(f"{component.name} already installed")
+        return ValidationResult.success()
 ```
 
 ---

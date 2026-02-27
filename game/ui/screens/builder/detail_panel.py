@@ -6,16 +6,19 @@ Cross-layer imports (acceptable for builder UI):
 - LayerType: Runtime - layer display and component filtering
 - ABILITY_REGISTRY: Runtime (local import) - displays component abilities
 """
+import json
+import logging
 import pygame
 import pygame_gui
 import os
 from pygame_gui.elements import UIPanel, UILabel, UIImage, UIButton, UIWindow, UITextBox
 from game.core.constants import LayerType  # Canonical location for LayerType
-import json
-from game.core.logger import log_warning
 from .modifier_logic import ModifierLogic
+from game.ui.fonts import get_font
+
+logger = logging.getLogger(__name__)
 from game.simulation.components.abilities.ui_colors import HINT_NEUTRAL, HINT_CREW_CAP, HINT_CARGO_GENERIC, HINT_DEFAULT
-from game.ui.colors import DETAIL_COMPONENT_NAME, DETAIL_COMPONENT_INFO, DETAIL_TEXT
+from game.ui.colors import DETAIL_COMPONENT_NAME, DETAIL_COMPONENT_INFO, DETAIL_TEXT, GRID_BG, TEXT_ITEM
 
 class ComponentDetailPanel:
     def __init__(self, manager, rect, image_base_path, event_bus=None):
@@ -81,7 +84,7 @@ class ComponentDetailPanel:
         Args:
             selection_data: One of:
                 - tuple: (layer, idx, component) format from viewmodel
-                - Component: Direct component object
+                - Component: Direct component object (or mock with 'id' attribute)
                 - None: No selection
         """
         if selection_data is None:
@@ -90,7 +93,7 @@ class ComponentDetailPanel:
             # Standard (layer, idx, component) format from viewmodel
             self.show_component(selection_data[2])
         elif hasattr(selection_data, 'id'):
-            # Direct component object
+            # Component-like object (has 'id' attribute)
             self.show_component(selection_data)
         else:
             self.show_component(None)
@@ -138,9 +141,8 @@ class ComponentDetailPanel:
         # --- Dynamic Ability Stats (The Refactor) ---
         # Instead of manually checking attributes, we ask the component.
         # This covers: Weapons, Engines, Shields, Resources, Hangars
-        
-        if hasattr(comp, 'get_ui_rows'):
-            for row in comp.get_ui_rows():
+
+        for row in comp.get_ui_rows():
                 label = row.get('label', 'Unknown')
                 val = row.get('value', '')
                 color = row.get('color_hint', HINT_NEUTRAL)
@@ -244,7 +246,7 @@ class ComponentDetailPanel:
                     surf = pygame.transform.scale(loaded, (self.image_rect.width, self.image_rect.height))
                     self.portrait_cache[full_path] = surf
                  except (FileNotFoundError, OSError, pygame.error) as e:
-                     log_warning(f"Failed to load portrait {full_path}: {e}")
+                     logger.warning(f"Failed to load portrait {full_path}: {e}")
         
         if surf:
             self.image_element = UIImage(
@@ -256,9 +258,9 @@ class ComponentDetailPanel:
         else:
             # Placeholder
             empty = pygame.Surface((self.image_rect.width, self.image_rect.height))
-            empty.fill((50, 50, 60))
-            font = pygame.font.SysFont("Arial", 14)
-            text = font.render(f"No Image\n{filename}", True, (200, 200, 200))
+            empty.fill(GRID_BG)
+            font = get_font(14)
+            text = font.render(f"No Image\n{filename}", True, TEXT_ITEM)
             empty.blit(text, (10, 10))
             
             self.image_element = UIImage(

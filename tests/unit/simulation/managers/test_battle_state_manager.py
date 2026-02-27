@@ -11,6 +11,7 @@ from unittest.mock import Mock, MagicMock, patch
 from dataclasses import dataclass
 
 from game.simulation.managers.battle_state_manager import BattleStateManager
+from game.core.exceptions import StateException, ValidationException
 
 
 # === Fixtures ===
@@ -50,7 +51,7 @@ class TestBattleStateManagerCapture:
 
     def test_capture_state_raises_without_engine(self, state_manager, mock_config):
         """capture_state raises when no engine provided."""
-        with pytest.raises(RuntimeError, match="No engine"):
+        with pytest.raises(StateException):
             state_manager.capture_state(None, mock_config)
 
     def test_capture_state_returns_battle_state(self, state_manager, mock_engine, mock_config):
@@ -140,7 +141,7 @@ class TestBattleStateManagerRestore:
         mock_state = Mock()
         mock_state.mode = "invalid_mode"
 
-        with pytest.raises(ValueError, match="Invalid"):
+        with pytest.raises(ValidationException):
             state_manager.restore_config_from_state(mock_state)
 
 
@@ -214,11 +215,9 @@ class TestBattleStateManagerValidation:
 
         assert state_manager.validate_state(mock_state) is True
 
-    def test_validate_state_missing_mode(self, state_manager):
-        """validate_state returns False for missing mode."""
-        mock_state = Mock(spec=[])  # No attributes
-
-        assert state_manager.validate_state(mock_state) is False
+    # DELETED: test_validate_state_missing_mode
+    # Reason: Duck typing replaced with explicit protocols in PROJ-190.
+    # State objects must now have mode attribute.
 
     def test_validate_state_none(self, state_manager):
         """validate_state returns False for None."""

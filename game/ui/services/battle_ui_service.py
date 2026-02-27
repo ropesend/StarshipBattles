@@ -20,11 +20,12 @@ from game.ui.interfaces.battle_ui import (
 )
 from game.core.math import Vector2
 from game.core.constants import AttackType
-from game.ui.colors import PROJECTILE_STANDARD, PROJECTILE_MISSILE, PROJECTILE_BEAM
+from game.ui.colors import PROJECTILE_STANDARD, PROJECTILE_MISSILE, PROJECTILE_BEAM, WHITE
 
 if TYPE_CHECKING:
     from game.simulation.services import BattleService
     from game.simulation.entities.ship import Ship
+    from game.core.protocols import ICombatShip
 
 # PROJ-113: Projectile color mapping moved from simulation to UI layer
 # Maps AttackType to RGB color tuple
@@ -139,11 +140,11 @@ class BattleUIService:
             return 0
         return engine.tick_counter
 
-    def _convert_ship(self, ship: 'Ship') -> ShipDTO:
+    def _convert_ship(self, ship: 'ICombatShip') -> ShipDTO:
         """Convert a Ship domain object to ShipDTO.
 
         Args:
-            ship: The Ship object to convert
+            ship: The Ship object (satisfies ICombatShip Protocol) to convert
 
         Returns:
             ShipDTO with all ship data
@@ -165,18 +166,18 @@ class BattleUIService:
                 components.append(self._convert_component(comp, layer_name))
 
         # Get target name - current_target is always initialized (may be None)
+        # Target is always a Ship if present (ICombatShip protocol)
         current_target_name = None
-        if ship.current_target and hasattr(ship.current_target, 'name'):
+        if ship.current_target:
             current_target_name = ship.current_target.name
 
         # Get secondary target names - secondary_targets is always initialized (may be empty)
+        # All targets are Ships (ICombatShip protocol)
         secondary_target_names = []
         for target in ship.secondary_targets:
-            if hasattr(target, 'name'):
-                secondary_target_names.append(target.name)
+            secondary_target_names.append(target.name)
 
-        # Get ship id - use object id if no explicit id
-        ship_id = str(getattr(ship, 'id', id(ship)))
+        ship_id = ship.id
 
         # Ship uses 'angle' internally (from PhysicsBody), DTO exposes as 'heading'
         heading = ship.angle
@@ -200,9 +201,8 @@ class BattleUIService:
             total_thrust=ship.total_thrust,
             turn_speed=ship.turn_speed,
             total_shots_fired=ship.total_shots_fired,
-            # crew_onboard/crew_required are dynamically set by ShipStatsCalculator, not in __init__
-            crew_onboard=getattr(ship, 'crew_onboard', 0),
-            crew_required=getattr(ship, 'crew_required', 0),
+            crew_onboard=ship.crew_onboard,
+            crew_required=ship.crew_required,
             current_target_name=current_target_name,
             secondary_target_names=secondary_target_names,
             max_targets=ship.max_targets,
@@ -223,14 +223,10 @@ class BattleUIService:
             ComponentDTO with component data
         """
         # Determine status string
-        status = "active"
-        if hasattr(comp, 'status') and hasattr(comp.status, 'name'):
-            status = comp.status.name.lower()
+        status = comp.status.name.lower()
 
         # Check if it's a weapon
-        has_weapon = False
-        if hasattr(comp, 'has_ability'):
-            has_weapon = comp.has_ability('WeaponAbility')
+        has_weapon = comp.has_ability('WeaponAbility')
 
         return ComponentDTO(
             name=comp.name,
@@ -240,8 +236,8 @@ class BattleUIService:
             is_active=comp.is_active,
             status=status,
             has_weapon=has_weapon,
-            shots_fired=getattr(comp, 'shots_fired', 0),
-            shots_hit=getattr(comp, 'shots_hit', 0)
+            shots_fired=comp.shots_fired,
+            shots_hit=comp.shots_hit
         )
 
     def _convert_projectile(self, proj) -> ProjectileDTO:
@@ -253,17 +249,16 @@ class BattleUIService:
         Returns:
             ProjectileDTO with projectile data
         """
-        # Get target name
+        # Get target name - target is always a Ship if present
         target_name = None
-        target = getattr(proj, 'target', None)
-        if target and hasattr(target, 'name'):
+        target = proj.target
+        if target:
             target_name = target.name
 
-        # Get projectile id
-        proj_id = str(getattr(proj, 'id', id(proj)))
+        proj_id = proj.id
 
         # PROJ-113: Get color from type mapping (UI concern, not simulation)
-        proj_type = getattr(proj, 'type', None)
+        proj_type = proj.type
         color = PROJECTILE_COLORS.get(proj_type, DEFAULT_PROJECTILE_COLOR)
 
         return ProjectileDTO(
@@ -271,15 +266,15 @@ class BattleUIService:
             position=Vector2(proj.position.x, proj.position.y),
             velocity=Vector2(proj.velocity.x, proj.velocity.y),
             color=color,
-            radius=getattr(proj, 'radius', 4.0),
+            radius=proj.radius,
             damage=proj.damage,
-            hp=getattr(proj, 'hp', 0.0),
-            max_hp=getattr(proj, 'max_hp', 0.0),
-            status=getattr(proj, 'status', 'active'),
-            endurance=getattr(proj, 'endurance', 0.0),
-            max_endurance=getattr(proj, 'max_endurance', 0.0),
+            hp=proj.hp,
+            max_hp=proj.max_hp,
+            status=proj.status,
+            endurance=proj.endurance,
+            max_endurance=proj.max_endurance,
             target_name=target_name,
-            max_speed=getattr(proj, 'max_speed', 0.0)
+            max_speed=proj.max_speed
         )
 
     def _convert_beam(self, beam: dict) -> BeamDTO:
@@ -297,5 +292,5 @@ class BattleUIService:
         return BeamDTO(
             start=Vector2(start.x, start.y),
             end=Vector2(end.x, end.y),
-            color=beam.get('color', (255, 255, 255))
+            color=beam.get('color', WHITE)
         )

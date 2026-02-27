@@ -23,7 +23,8 @@ def mock_scene():
     scene = MagicMock()
     scene.ui = MagicMock()
     scene.ui.manager = MagicMock()
-    scene.ui.planet_list_window = None
+    scene.ui.window_manager = MagicMock()  # PROJ-198: planet_list_window moved here
+    scene.ui.window_manager.planet_list_window = None
     scene.selected_fleet = None
     scene.build_queue_screen = None
     scene._camera_nav = MagicMock()
@@ -151,20 +152,24 @@ class TestZoomAndScreenshotViaMapper:
         mock_scene._camera_nav.zoom_to_system.assert_called_once()
         mock_scene.ui.handle_event.assert_called()
 
-    @patch.object(StrategyInputHandler, '_take_screenshot_full')
-    def test_f12_takes_full_screenshot(self, mock_screenshot, mock_scene, mapper):
-        """F12 triggers full screenshot."""
+    @patch('game.ui.screens.strategy_ui_action_router.ScreenshotManager')
+    def test_f12_takes_full_screenshot(self, mock_sm_class, mock_scene, mapper):
+        """F12 triggers full screenshot via UIActionRouter."""
+        mock_sm = MagicMock()
+        mock_sm_class.instance.return_value = mock_sm
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
         result = handler.handle_event(_keydown(pygame.K_F12))
-        mock_screenshot.assert_called_once()
+        mock_sm.capture_strategy_layer.assert_called_once()
         mock_scene.ui.handle_event.assert_called()
 
-    @patch.object(StrategyInputHandler, '_take_screenshot_viewport')
-    def test_f11_takes_viewport_screenshot(self, mock_screenshot, mock_scene, mapper):
-        """F11 triggers viewport screenshot."""
+    @patch('game.ui.screens.strategy_ui_action_router.ScreenshotManager')
+    def test_f11_takes_viewport_screenshot(self, mock_sm_class, mock_scene, mapper):
+        """F11 triggers viewport screenshot via UIActionRouter."""
+        mock_sm = MagicMock()
+        mock_sm_class.instance.return_value = mock_sm
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
         result = handler.handle_event(_keydown(pygame.K_F11))
-        mock_screenshot.assert_called_once()
+        mock_sm.capture_strategy_layer.assert_called_once()
         mock_scene.ui.handle_event.assert_called()
 
 

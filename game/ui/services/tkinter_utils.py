@@ -18,7 +18,9 @@ import tkinter
 from tkinter import filedialog, simpledialog
 from typing import Optional, List, Tuple
 
-from game.core.logger import log_warning
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # Module-level state for lazy initialization
@@ -49,7 +51,7 @@ def get_tk_root() -> Optional[tkinter.Tk]:
 
     # Check for headless/dummy display mode
     if os.environ.get("SDL_VIDEODRIVER") == "dummy":
-        log_warning("Tkinter disabled: SDL_VIDEODRIVER=dummy")
+        logger.warning("Tkinter disabled: SDL_VIDEODRIVER=dummy")
         _available = False
         return None
 
@@ -58,15 +60,15 @@ def get_tk_root() -> Optional[tkinter.Tk]:
         _tk_root.withdraw()
         return _tk_root
     except tkinter.TclError as e:
-        log_warning(f"Tkinter TCL error, dialogs will be unavailable: {e}")
+        logger.warning(f"Tkinter TCL error, dialogs will be unavailable: {e}")
         _available = False
         _tk_root = None
     except RuntimeError as e:
-        log_warning(f"Tkinter runtime error, dialogs will be unavailable: {e}")
+        logger.warning(f"Tkinter runtime error, dialogs will be unavailable: {e}")
         _available = False
         _tk_root = None
     except Exception as e:  # Intentional broad catch: Tkinter init is platform-dependent
-        log_warning(f"Tkinter initialization failed, dialogs will be unavailable: {e}")
+        logger.warning(f"Tkinter initialization failed, dialogs will be unavailable: {e}")
         _available = False
         _tk_root = None
 
@@ -139,7 +141,7 @@ def open_save_dialog(
             title=title
         )
     except Exception as e:  # Intentional: file dialog is platform-dependent
-        log_warning(f"Save dialog failed: {e}")
+        logger.warning(f"Save dialog failed: {e}")
         return None
 
 
@@ -172,7 +174,7 @@ def open_load_dialog(
             title=title
         )
     except Exception as e:  # Intentional: file dialog is platform-dependent
-        log_warning(f"Open dialog failed: {e}")
+        logger.warning(f"Open dialog failed: {e}")
         return None
 
 
@@ -203,7 +205,7 @@ def prompt_string(
             parent=root
         )
     except Exception as e:  # Intentional: dialog is platform-dependent
-        log_warning(f"String prompt failed: {e}")
+        logger.warning(f"String prompt failed: {e}")
         return initialvalue if initialvalue else None
 
 
@@ -226,5 +228,5 @@ def copy_to_clipboard(text: str) -> bool:
         root.update()  # Required to finalize clipboard
         return True
     except Exception as e:  # Intentional: clipboard is platform-dependent
-        log_warning(f"Clipboard copy failed (Tkinter): {e}")
+        logger.warning(f"Clipboard copy failed (Tkinter): {e}")
         return False

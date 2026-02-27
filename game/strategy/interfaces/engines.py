@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from game.strategy.engine.fleet_movement_engine import MovementResult
     from game.strategy.engine.conflict_resolution_engine import ConflictResult
     from game.strategy.engine.resource_management_engine import ResourceDepletion
+    from game.strategy.data.galaxy import Galaxy
 
 
 __all__ = [
@@ -35,6 +36,8 @@ __all__ = [
     'IResupplyEngine',
     'IHarvestingEngine',
     'IMaintenanceEngine',
+    'IActionExecutionEngine',
+    'IEnvironmentalHazardEngine',
 ]
 
 
@@ -163,14 +166,19 @@ class IOrderProcessor(ABC):
     """
     Abstract interface for fleet order processing.
 
+    PROJ-187: Order processing is now split between:
+    - process_instant_orders(): Called every tick for JOIN_FLEET co-location
+    - process_end_turn_orders(): Called by ActionExecutionEngine when action completes
+
     Implementations handle:
     - Instant order processing (JOIN_FLEET when co-located)
-    - End-of-turn order processing (COLONIZE, JOIN_FLEET)
+    - Action order execution (COLONIZE, TRANSFER, superweapons) via ActionExecutionEngine
     - Order completion and cancellation
 
     Example usage:
         processor = FleetOrderProcessor()  # or MockOrderProcessor for tests
         removed = processor.process_instant_orders(empires)
+        # process_end_turn_orders now called by ActionExecutionEngine, not TurnEngine
         consumed = processor.process_end_turn_orders(fleet, empire, galaxy)
     """
 
@@ -196,12 +204,15 @@ class IOrderProcessor(ABC):
         fleet: 'Fleet',
         empire: Any,
         galaxy: Any,
-        component_registry: Optional[Dict[str, Any]] = None
+        component_registry: Optional[Dict[str, Any]] = None,
+        empires: Optional[List] = None
     ) -> bool:
         """
-        Process static orders at end of turn (COLONIZE, JOIN_FLEET).
+        Process action orders (COLONIZE, TRANSFER, JOIN_FLEET, superweapons).
 
         PROJ-55: Added component_registry for colony pod ship removal.
+        PROJ-187: Now called by ActionExecutionEngine during tick loop,
+                  not by TurnEngine at end-of-turn. Name retained for compatibility.
 
         Args:
             fleet: Fleet to process
@@ -209,6 +220,7 @@ class IOrderProcessor(ABC):
             galaxy: Galaxy for validation
             component_registry: Optional component registry for colony pod lookup.
                                When provided, only the colony ship is removed.
+            empires: Optional list of all empires (for superweapons like STELLERATE_STAR)
 
         Returns:
             True if fleet was consumed/deleted by the order, False otherwise
@@ -233,13 +245,16 @@ class IConflictEngine(ABC):
     @abstractmethod
     def resolve_all_conflicts(
         self,
-        empires: List
+        empires: List,
+        galaxy: Optional['Galaxy'] = None
     ) -> 'ConflictResult':
         """
         Resolve all conflicts between empires.
 
         Args:
             empires: List of Empire objects to check for conflicts
+            galaxy: Optional Galaxy for environmental effect lookup (PROJ-189).
+                   When provided, storm effects are applied to combat.
 
         Returns:
             ConflictResult with combat statistics
@@ -449,5 +464,92 @@ class IPopulationEngine(ABC):
 
         Args:
             empires: List of Empire objects to process
+        """
+        pass
+
+
+class IActionExecutionEngine(ABC):
+    """
+    Abstract interface for tick-based action order execution.
+
+    PROJ-187: Strategy Orders Tick-Based Action System.
+
+    Implementations handle:
+    - Processing action orders (COLONIZE, TRANSFER, superweapons, etc.)
+    - Tracking execution_progress across ticks
+    - Delegating to order processor when action completes
+    - Respecting fleet speed for action tick timing
+
+    Example usage:
+        engine = ActionExecutionEngine(order_processor, action_time_resolver)
+        results = engine.process_action_ticks(empires, galaxy, tick, component_registry)
+    """
+
+    @abstractmethod
+    def process_action_ticks(
+        self,
+        empires: List,
+        galaxy: Any,
+        tick: int,
+        component_registry: Optional[Dict[str, Any]] = None,
+        all_empires: Optional[List] = None
+    ) -> List:
+        """
+        Process action ticks for all fleets with action orders.
+
+        Iterates through all empires' fleets, increments execution_progress
+        for fleets with action orders when their speed-based interval fires,
+        and delegates to order processor when action completes.
+
+        Args:
+            empires: List of Empire objects to process
+            galaxy: Galaxy object for order execution
+            tick: Current tick number (1-100)
+            component_registry: Optional component registry for ability lookup
+            all_empires: Optional list of all empires (for superweapons)
+
+        Returns:
+            List of ActionTickResult records for completed/progressed actions
+        """
+        pass
+
+
+class IEnvironmentalHazardEngine(ABC):
+    """
+    Abstract interface for environmental hazard processing.
+
+    PROJ-189: Storms Environmental Hazards.
+
+    Implementations handle:
+    - Processing storm effects (damage, fuel drain) each tick
+    - Querying AreaEffectManager for effects at fleet locations
+    - Applying damage and fuel drain to ships in storm hexes
+    - Tracking environmental events for logging/UI
+
+    Example usage:
+        engine = EnvironmentalHazardEngine(area_effect_manager)
+        events = engine.process_environmental_tick(tick, empires, galaxy)
+    """
+
+    @abstractmethod
+    def process_environmental_tick(
+        self,
+        tick: int,
+        empires: List,
+        galaxy: Any
+    ) -> List:
+        """
+        Process environmental effects for one tick.
+
+        For each fleet in each empire, queries storm effects at the
+        fleet's location and applies damage and fuel drain if in storm.
+
+        Args:
+            tick: Current tick number (1-100)
+            empires: List of Empire objects to process
+            galaxy: Galaxy object for spatial queries
+
+        Returns:
+            List of EnvironmentalEvent records for affected fleets
         """
         pass

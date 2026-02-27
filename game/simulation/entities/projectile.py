@@ -1,9 +1,13 @@
+import logging
 from game.core.math import Vector2
 from game.engine.physics import PhysicsBody
-from game.core.logger import log_debug, log_event
+from game.core.event_logging import log_event
 from game.core.constants import AttackType
+
+logger = logging.getLogger(__name__)
 from game.core.config import PhysicsConfig
 from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 # Guidance system constants
 # When the target is within this angle of 180° (directly behind), commit to turn direction
@@ -14,9 +18,11 @@ TURN_COMMITMENT_THRESHOLD_DEG = 45
 class Projectile(PhysicsBody):
     def __init__(self, owner, position, velocity, damage, range_val, endurance, proj_type, source_weapon=None, **kwargs):
         super().__init__(position.x, position.y)
+        self.id: str = str(id(self))
         self.velocity = velocity
         self.owner = owner
-        self.team_id = getattr(owner, 'team_id', -1)
+        # Owner may be None for orphaned projectiles, default team_id to -1
+        self.team_id = owner.team_id if owner is not None else -1
         self.damage = damage
         self.max_range = range_val
         self.endurance = endurance # in seconds
@@ -26,20 +32,20 @@ class Projectile(PhysicsBody):
         if damage is None or damage < 0:
             raise ValidationException(
                 f"Invalid projectile damage: {damage}",
-                code="V003",
+                code=ErrorCode.OUT_OF_RANGE.value,
                 context={"damage": damage, "owner": str(owner)}
             )
         if range_val is None or range_val <= 0:
             raise ValidationException(
                 f"Invalid projectile range: {range_val}",
-                code="V003",
+                code=ErrorCode.OUT_OF_RANGE.value,
                 context={"range": range_val, "owner": str(owner)}
             )
         # Note: endurance can be None for range-limited projectiles (non-seeking)
         if endurance is not None and endurance <= 0:
             raise ValidationException(
                 f"Invalid projectile endurance: {endurance}",
-                code="V003",
+                code=ErrorCode.OUT_OF_RANGE.value,
                 context={"endurance": endurance, "owner": str(owner)}
             )
 
@@ -135,8 +141,9 @@ class Projectile(PhysicsBody):
             # t = owner.solve_lead(...)
             
             # Let's try to use the owner's solver if available, else direct
+            # Ship.combat_engine is a property (lazy initialized, always accessible)
             t = 0
-            if hasattr(self.owner, 'combat_engine'):
+            if self.owner is not None and self.owner.combat_engine is not None:
                  t = self.owner.combat_engine.solve_lead(p_pos, Vector2(0,0), target.position, target.velocity, self.max_speed)
             
             aim_pos = target.position
@@ -184,4 +191,4 @@ class Projectile(PhysicsBody):
         if self.hp <= 0:
             self.is_alive = False
             self.status = 'destroyed'
-            log_debug(f"Projectile {self} destroyed by point defense!")
+            logger.debug(f"Projectile {self} destroyed by point defense!")

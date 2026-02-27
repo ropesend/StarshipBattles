@@ -42,7 +42,10 @@ This protocol defines how Claude CLI operates in automated loop mode, executing 
    # File: <your system prompt's plan file>
    ```
    - Check Agent Context for current state
-   - Identify current project (or find next incomplete project)
+   - Identify current project (or find next incomplete `[/]` or `[ ]` project) **from the Master Task List ONLY**
+   - **If no incomplete projects exist in the Master Task List → EXIT immediately**
+   - **NEVER** scan `Projects/active_projects/` for unlisted projects
+   - **NEVER** add new project entries to the Master Task List — only the user does this
    - Note audit status and cycle count
 
 2. **Load Project Context**

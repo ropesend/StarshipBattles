@@ -14,8 +14,8 @@ from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.game_config import GameConfig, PlayerConfig
 from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 from game.strategy.events import Event, EventLog, EventType, EventCategory
-import game.core.logger as logger_mod
-from game.core.logger import log_event
+import game.core.event_logging as event_logging_mod
+from game.core.event_logging import log_event
 
 
 # ---------------------------------------------------------------------------
@@ -38,11 +38,11 @@ class _EventHandlerGuard:
     """Context manager to save/restore the global event handler."""
 
     def __enter__(self):
-        self._old_handler = logger_mod._event_handler
+        self._old_handler = event_logging_mod._event_handler
         return self
 
     def __exit__(self, *exc):
-        logger_mod._event_handler = self._old_handler
+        event_logging_mod._event_handler = self._old_handler
 
 
 # ---------------------------------------------------------------------------

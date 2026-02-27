@@ -8,12 +8,14 @@ Implements the "Leaky Bucket" algorithm:
 4. Roll: Random float 0.0-1.0, if < Current_Chance, level up
 5. Reset: On level up, Current_Chance = 0
 """
+import logging
 import math
 import random
 from typing import List, Dict, Any
 
-from game.core.logger import log_info, log_debug
 from game.research.data.tech_tree import TechTree
+
+logger = logging.getLogger(__name__)
 from game.research.data.research_tracker import ResearchTracker
 
 
@@ -62,7 +64,7 @@ class ResearchService:
         tracker.increment_turn()
         turn_num = tracker.turn_number
 
-        log_debug(f"ResearchService: Processing turn {turn_num}")
+        logger.debug(f"ResearchService: Processing turn {turn_num}")
 
         # Process all nodes that have allocation or accumulated chance
         for node in tech_tree.nodes.values():
@@ -155,7 +157,7 @@ class ResearchService:
                 # Update tech_levels for subsequent nodes in same turn
                 tech_levels[node.id] = state.current_level
 
-                log_info(f"Research Breakthrough: {node.name} -> Level {state.current_level}/{node.max_levels}")
+                logger.info(f"Research Breakthrough: {node.name} -> Level {state.current_level}/{node.max_levels}")
             else:
                 # No breakthrough, but progress accumulated
                 events.append({
@@ -179,7 +181,7 @@ class ResearchService:
         # Store events in tracker for UI access
         tracker.set_turn_log(events)
 
-        log_debug(f"ResearchService: Turn {turn_num} complete, {len(events)} events")
+        logger.debug(f"ResearchService: Turn {turn_num} complete, {len(events)} events")
         return events
 
     @classmethod

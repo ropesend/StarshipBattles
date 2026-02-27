@@ -1,22 +1,21 @@
 """
 Resource Registry Loading
 
-Loads resource type definitions from data/resources.json into the RegistryManager.
+Loads resource type definitions from data/resources.json.
 
-Exceptions:
-    FileNotFoundError: File not found (handled with fallback to defaults)
-    json.JSONDecodeError: Invalid JSON (handled with fallback to defaults)
-    PermissionError: Cannot read file (handled with fallback to defaults)
-    TypeError: Malformed data structure (handled with fallback to defaults)
+Error Handling:
+    All loading errors (FileNotFoundError, JSONDecodeError, PermissionError,
+    TypeError) are caught and logged, with graceful fallback to default resources.
 """
 
 import json
+import logging
 import os
 from typing import Optional
-from game.core.registry import RegistryManager
 from game.core.json_utils import load_json_required
-from game.core.logger import log_warning, log_info
 from game.core.constants import ResourceType
+
+logger = logging.getLogger(__name__)
 from game.core.paths import Paths
 
 
@@ -68,7 +67,7 @@ def load_resources_data(file_path: str = "data/resources.json") -> dict:
 
     resolved_path = _resolve_resource_path(file_path)
     if resolved_path is None:
-        log_warning(f"Resources file not found at {file_path}, using defaults")
+        logger.warning(f"Resources file not found at {file_path}, using defaults")
         return copy.deepcopy(_get_default_resources())
 
     try:
@@ -84,15 +83,15 @@ def load_resources_data(file_path: str = "data/resources.json") -> dict:
         return result
 
     except FileNotFoundError:
-        log_warning(f"Resources file not found: {resolved_path}, using defaults")
+        logger.warning(f"Resources file not found: {resolved_path}, using defaults")
         return copy.deepcopy(_get_default_resources())
     except json.JSONDecodeError as e:
-        log_warning(f"Invalid JSON in resources file {resolved_path}: {e}, using defaults")
+        logger.warning(f"Invalid JSON in resources file {resolved_path}: {e}, using defaults")
         return copy.deepcopy(_get_default_resources())
     except (PermissionError, OSError) as e:
-        log_warning(f"Cannot read resources file {resolved_path}: {e}, using defaults")
+        logger.warning(f"Cannot read resources file {resolved_path}: {e}, using defaults")
         return copy.deepcopy(_get_default_resources())
     except (TypeError, AttributeError) as e:
         # Malformed data structure (e.g., resources is not a list)
-        log_warning(f"Malformed resources data in {resolved_path}: {e}, using defaults")
+        logger.warning(f"Malformed resources data in {resolved_path}: {e}, using defaults")
         return copy.deepcopy(_get_default_resources())

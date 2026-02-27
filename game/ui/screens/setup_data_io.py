@@ -11,7 +11,9 @@ import glob
 import json
 import pygame
 
-from game.core.logger import log_info, log_warning, log_error
+import logging
+
+logger = logging.getLogger(__name__)
 from game.ui.services.ship_factory import ShipFactory
 from game.core.json_utils import load_json, load_json_required, save_json
 from game.core.paths import Paths
@@ -48,7 +50,7 @@ def scan_ship_designs():
                     'ai_strategy': data.get('ai_strategy', 'standard_ranged')
                 })
         except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
-            log_warning(f"Failed to load ship design from '{filepath}': {e}")
+            logger.warning(f"Failed to load ship design from '{filepath}': {e}")
     return designs
 
 
@@ -76,7 +78,7 @@ def scan_formations():
                     'arrows': data['arrows']
                 })
         except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
-            log_warning(f"Failed to load formation from '{filepath}': {e}")
+            logger.warning(f"Failed to load formation from '{filepath}': {e}")
     return formations
 
 
@@ -174,10 +176,10 @@ def save_battle_setup(file_path, team1, team2):
     serialize_team(team2, data["team2"])
 
     if save_json(file_path, data):
-        log_info(f"Saved battle setup to {file_path}")
+        logger.info(f"Saved battle setup to {file_path}")
         return True
     else:
-        log_error(f"Error saving setup to {file_path}")
+        logger.error(f"Error saving setup to {file_path}")
         return False
 
 
@@ -220,14 +222,14 @@ def load_battle_setup(file_path, available_designs):
                         entry['rotation_mode'] = item['rotation_mode']
                     out_list.append(entry)
                 else:
-                    log_warning(f"Design {item['design_file']} not found")
+                    logger.warning(f"Design {item['design_file']} not found")
 
         load_team(data.get('team1', []), new_team1)
         load_team(data.get('team2', []), new_team2)
 
-        log_info(f"Loaded setup from {file_path}")
+        logger.info(f"Loaded setup from {file_path}")
         return new_team1, new_team2
 
     except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
-        log_error(f"Error loading setup: {e}")
+        logger.error(f"Error loading setup: {e}")
         return None, None

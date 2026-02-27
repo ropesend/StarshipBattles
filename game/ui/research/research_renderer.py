@@ -18,8 +18,9 @@ from game.research.data.research_tracker import ResearchTracker
 from game.ui.colors import (
     RESEARCH_LOCKED, RESEARCH_AVAILABLE, RESEARCH_COMPLETED, RESEARCH_SELECTED,
     RESEARCH_LINE_UNMET, RESEARCH_LINE_MET, RESEARCH_LINE_NEGATED, RESEARCH_LINE_NEGATED_MET,
-    RESEARCH_TEXT, RESEARCH_CHANCE, RESEARCH_ALLOCATION
+    RESEARCH_TEXT, RESEARCH_CHANCE, RESEARCH_ALLOCATION, TEXT_MUTED
 )
+from game.ui.fonts import get_font
 
 if TYPE_CHECKING:
     from game.research.data.tech_node import TechNode
@@ -68,21 +69,16 @@ class ResearchRenderer:
         self.node_width = node_width
         self.node_height = node_height
 
-        # Cache fonts at different sizes for zoom levels
-        # PROJ-40/NEW-RES-002: Bounded cache via size quantization
-        self._font_cache = {}
-
     def _get_font(self, size: int) -> pygame.font.Font:
         """Get or create a font at the given size.
 
         PROJ-40/NEW-RES-002: Sizes are quantized to nearest 2 pixels to
         prevent unbounded cache growth during continuous zoom operations.
+        Central get_font() handles actual caching.
         """
         # Quantize size to nearest 2 to bound cache growth
         quantized_size = max(8, (size // 2) * 2)
-        if quantized_size not in self._font_cache:
-            self._font_cache[quantized_size] = pygame.font.SysFont("Arial", quantized_size)
-        return self._font_cache[quantized_size]
+        return get_font(quantized_size)
 
     def draw(self, screen: pygame.Surface, selected_node_id: Optional[str],
              canvas_rect: pygame.Rect):
@@ -305,7 +301,7 @@ class ResearchRenderer:
         # RP allocation (always show, bottom of node)
         rp_text = f"{state.rp_allocation} RP"
         # Use different color based on whether RP is allocated
-        rp_color = self.COLOR_ALLOCATION if state.rp_allocation > 0 else (160, 160, 170)
+        rp_color = self.COLOR_ALLOCATION if state.rp_allocation > 0 else TEXT_MUTED
         rp_surf = small_font.render(rp_text, True, rp_color)
         rp_x = rect.left + padding
         rp_y = rect.bottom - rp_surf.get_height() - padding - int(4 * self.camera.zoom)

@@ -1,0 +1,93 @@
+c:\Dev\Starship Battles\game\app.py:115: resources_registry = RegistryManager.instance().resources
+c:\Dev\Starship Battles\game\app.py:126: registry = RegistryManager.instance()
+c:\Dev\Starship Battles\game\core\registry.py:100: mgr = RegistryManager.instance()
+c:\Dev\Starship Battles\game\core\registry.py:231: RegistryManager.instance().freeze()
+c:\Dev\Starship Battles\game\core\registry.py:243: RegistryManager.instance().set_validator(validator)
+c:\Dev\Starship Battles\game\core\registry.py:256: return RegistryManager.instance().get_validator()
+c:\Dev\Starship Battles\game\core\registry.py:269: RegistryManager.instance().clear()
+c:\Dev\Starship Battles\game\core\registry.py:291: return RegistryManager.instance().components
+c:\Dev\Starship Battles\game\core\registry.py:295: return RegistryManager.instance().modifiers
+c:\Dev\Starship Battles\game\core\registry.py:299: return RegistryManager.instance().vehicle_classes
+c:\Dev\Starship Battles\game\core\registry.py:303: return RegistryManager.instance().resources
+c:\Dev\Starship Battles\tests\infrastructure\session_cache.py:49: mgr = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\integration\resource_system\conftest.py:27: return RegistryManager.instance()
+c:\Dev\Starship Battles\tests\regression\test_deprecated_code_removed.py:48: # to encapsulate RegistryManager.instance().get_validator() access in one place.
+c:\Dev\Starship Battles\tests\regression\test_deprecated_code_removed.py:101: """get_default_registries() should be removed (PROJ-181)."""
+c:\Dev\Starship Battles\tests\regression\test_deprecated_code_removed.py:118: """RegistryManager.instance().components should work for direct access."""
+c:\Dev\Starship Battles\tests\regression\test_deprecated_code_removed.py:121: mgr = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\regression\test_deprecated_code_removed.py:140: PROJ-195: Regression guard for RegistryManager.instance() usage.
+c:\Dev\Starship Battles\tests\regression\test_deprecated_code_removed.py:157: """RegistryManager.instance() count in game/ should not increase."""
+c:\Dev\Starship Battles\tests\regression\test_deprecated_code_removed.py:163: ['grep', '-r', 'RegistryManager.instance()', '--include=*.py', '-c'],
+c:\Dev\Starship Battles\tests\regression\test_deprecated_code_removed.py:180: f"RegistryManager.instance() count in game/ increased from "
+c:\Dev\Starship Battles\tests\regression\test_deprecated_code_removed.py:187: """RegistryManager.instance() count in tests/ should not increase."""
+c:\Dev\Starship Battles\tests\regression\test_deprecated_code_removed.py:194: ['grep', '-r', 'RegistryManager.instance()', '--include=*.py', '-c'],
+c:\Dev\Starship Battles\tests\regression\test_deprecated_code_removed.py:211: f"RegistryManager.instance() count in tests/ increased from "
+c:\Dev\Starship Battles\tests\unit\core\test_isolation.py:29: mgr = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\test_isolation.py:49: mgr = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\test_pure_loaders.py:58: registry = RegistryManager.instance().components
+c:\Dev\Starship Battles\tests\unit\core\test_pure_loaders.py:127: registry = RegistryManager.instance().modifiers
+c:\Dev\Starship Battles\tests\unit\core\test_pure_loaders.py:192: registry = RegistryManager.instance().vehicle_classes
+c:\Dev\Starship Battles\tests\unit\core\test_pure_loaders.py:271: registry = RegistryManager.instance().resources
+c:\Dev\Starship Battles\tests\unit\core\test_registry_manager_reload.py:28: This fixture must use RegistryManager.instance() because the reload function
+c:\Dev\Starship Battles\tests\unit\core\test_registry_manager_reload.py:31: reg = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\test_registry_provider.py:121: RegistryManager.instance().components["test_comp"] = {"id": "test_comp"}
+c:\Dev\Starship Battles\tests\unit\core\test_registry_provider.py:127: assert result is RegistryManager.instance().components
+c:\Dev\Starship Battles\tests\unit\core\test_registry_provider.py:133: RegistryManager.instance().modifiers["test_mod"] = {"id": "test_mod"}
+c:\Dev\Starship Battles\tests\unit\core\test_registry_provider.py:139: assert result is RegistryManager.instance().modifiers
+c:\Dev\Starship Battles\tests\unit\core\test_registry_provider.py:145: RegistryManager.instance().vehicle_classes["Cruiser"] = {"name": "Cruiser"}
+c:\Dev\Starship Battles\tests\unit\core\test_registry_provider.py:151: assert result is RegistryManager.instance().vehicle_classes
+c:\Dev\Starship Battles\tests\unit\core\test_registry_provider.py:163: RegistryManager.instance().components["new"] = {"id": "new"}
+c:\Dev\Starship Battles\tests\unit\core\test_registry_provider.py:235: RegistryManager.instance().components["singleton_data"] = {"id": "singleton_data"}
+c:\Dev\Starship Battles\tests\unit\core\test_registry_provider.py:321: """DefaultRegistryProvider.get_resources() should return RegistryManager.instance().resources."""
+c:\Dev\Starship Battles\tests\unit\core\test_registry_provider.py:325: RegistryManager.instance().resources["fuel"] = {"id": "fuel", "max": 100}
+c:\Dev\Starship Battles\tests\unit\core\test_registry_provider.py:331: assert result is RegistryManager.instance().resources
+c:\Dev\Starship Battles\tests\unit\core\test_service_injection.py:148: assert "UniqueTestClass" not in RegistryManager.instance().vehicle_classes
+c:\Dev\Starship Battles\tests\unit\core\test_service_injection.py:221: singleton_modifiers = RegistryManager.instance().modifiers
+c:\Dev\Starship Battles\tests\unit\core\test_service_injection.py:225: assert "unique_injected_mod" not in RegistryManager.instance().modifiers
+c:\Dev\Starship Battles\tests\unit\core\test_service_injection.py:258: assert "unique_default_mod" not in RegistryManager.instance().modifiers
+c:\Dev\Starship Battles\tests\unit\core\test_service_injection.py:382: singleton_components = RegistryManager.instance().components
+c:\Dev\Starship Battles\tests\unit\core\registry\conftest.py:67: return RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\registry\test_registry_features.py:21: """RegistryManager.instance().components should return components dict."""
+c:\Dev\Starship Battles\tests\unit\core\registry\test_registry_features.py:24: result = RegistryManager.instance().components
+c:\Dev\Starship Battles\tests\unit\core\registry\test_registry_features.py:30: """RegistryManager.instance().modifiers should return modifiers dict."""
+c:\Dev\Starship Battles\tests\unit\core\registry\test_registry_features.py:33: result = RegistryManager.instance().modifiers
+c:\Dev\Starship Battles\tests\unit\core\registry\test_registry_features.py:39: """RegistryManager.instance().vehicle_classes should return vehicle_classes dict."""
+c:\Dev\Starship Battles\tests\unit\core\registry\test_registry_features.py:42: result = RegistryManager.instance().vehicle_classes
+c:\Dev\Starship Battles\tests\unit\core\registry\test_registry_features.py:48: """RegistryManager.instance().resources should return resources dict."""
+c:\Dev\Starship Battles\tests\unit\core\registry\test_registry_features.py:51: result = RegistryManager.instance().resources
+c:\Dev\Starship Battles\tests\unit\core\registry\test_registry_features.py:57: """RegistryManager.instance().get_validator() should return the validator."""
+c:\Dev\Starship Battles\tests\unit\core\registry\test_registry_features.py:61: result = RegistryManager.instance().get_validator()
+c:\Dev\Starship Battles\tests\unit\core\registry\test_registry_features.py:66: """RegistryManager.instance().get_validator() should return None when not set."""
+c:\Dev\Starship Battles\tests\unit\core\registry\test_registry_features.py:67: result = RegistryManager.instance().get_validator()
+c:\Dev\Starship Battles\tests\unit\core\registry\test_registry_features.py:297: # The get_default_registries() and set_default_registries() functions have been
+c:\Dev\Starship Battles\tests\unit\core\registry\test_singleton_and_thread.py:24: r1 = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\registry\test_singleton_and_thread.py:25: r2 = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\registry\test_singleton_and_thread.py:41: r1 = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\registry\test_singleton_and_thread.py:46: r2 = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\registry\test_singleton_and_thread.py:64: RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\registry\test_singleton_and_thread.py:88: results.append(RegistryManager.instance())
+c:\Dev\Starship Battles\tests\unit\core\registry\test_singleton_and_thread.py:168: r1 = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\registry\test_singleton_and_thread.py:180: r2 = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\registry\test_singleton_and_thread.py:209: r1 = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\registry\test_singleton_and_thread.py:215: r2 = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\registry\test_singleton_and_thread.py:249: r1 = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\registry\test_singleton_and_thread.py:253: r2 = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\resources_registry\conftest.py:16: registry = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\resources_registry\test_integration.py:50: registry = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\resources_registry\test_integration.py:83: registry = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\resources_registry\test_integration.py:105: """RegistryManager.instance().resources returns the resource dict."""
+c:\Dev\Starship Battles\tests\unit\core\resources_registry\test_integration.py:107: registry = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\resources_registry\test_integration.py:118: registry = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\resources_registry\test_integration.py:149: registry = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\resources_registry\test_integration.py:162: registry = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\resources_registry\test_integration.py:217: registry = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\core\resources_registry\test_integration.py:223: registries.append(RegistryManager.instance())
+c:\Dev\Starship Battles\tests\unit\core\resources_registry\test_integration.py:247: registry = RegistryManager.instance()
+c:\Dev\Starship Battles\tests\unit\regressions\test_regressions.py:41: original_ref = RegistryManager.instance().vehicle_classes
+c:\Dev\Starship Battles\tests\unit\regressions\test_regressions.py:48: assert id(RegistryManager.instance().vehicle_classes) == original_id, \
+c:\Dev\Starship Battles\tests\unit\regressions\test_regressions.py:50: assert RegistryManager.instance().vehicle_classes is original_ref
+c:\Dev\Starship Battles\tests\unit\regressions\test_regressions.py:53: assert len(RegistryManager.instance().vehicle_classes) > 0, "vehicle_classes should not be empty"
+c:\Dev\Starship Battles\tests\unit\strategy\conftest.py:20: registry = RegistryManager.instance()
+c:\Dev\Starship Battles\simulation_tests\conftest.py:89: mgr = RegistryManager.instance()
+c:\Dev\Starship Battles\simulation_tests\conftest.py:110: RegistryManager.instance().clear()
+c:\Dev\Starship Battles\simulation_tests\scenarios\base.py:357: reg = RegistryManager.instance()

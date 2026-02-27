@@ -11,16 +11,19 @@ PROJ-147: Moved from game/research/ui/ to game/ui/research/ to fix architecture
 layer violation. This module now correctly lives under the UI layer and can
 import Camera directly without the late import workaround.
 """
+import logging
 from typing import Optional
 import pygame
 import pygame_gui
 
-from game.core.logger import log_info, log_debug
 from game.core.protocols import ICamera
+
+logger = logging.getLogger(__name__)
 from game.research.data.tech_tree import TechTree
 from game.research.data.research_tracker import ResearchTracker
 from game.research.systems.research_service import ResearchService
 from game.ui.renderer.camera import Camera
+from game.ui.colors import BG_PANEL_DARK, BG_GALAXY, PANEL_BG
 from .research_renderer import ResearchRenderer
 from .research_controls import ResearchControlPanel
 
@@ -82,13 +85,13 @@ class ResearchTreeScene:
         errors = self.tech_tree.validate_requirements()
         if errors:
             for err in errors[:5]:  # Log first 5 errors
-                log_info(f"TechTree validation: {err}")
+                logger.info(f"TechTree validation: {err}")
 
         # PROJ-40/NEW-RES-005: Check for cycles in tech tree
         cycle_errors = self.tech_tree.detect_cycles()
         if cycle_errors:
             for err in cycle_errors[:5]:  # Log first 5 cycle errors
-                log_info(f"TechTree validation: {err}")
+                logger.info(f"TechTree validation: {err}")
 
         # Calculate node positions for layout
         self.node_positions = {}  # node_id -> (world_x, world_y)
@@ -139,7 +142,7 @@ class ResearchTreeScene:
             on_auto_spread_changed=self._on_auto_spread_changed
         )
 
-        log_info(f"ResearchTreeScene: Initialized with {len(self.tech_tree.nodes)} nodes")
+        logger.info(f"ResearchTreeScene: Initialized with {len(self.tech_tree.nodes)} nodes")
 
     def _calculate_layout(self):
         """Calculate world positions for all nodes (left-to-right by depth)."""
@@ -156,7 +159,7 @@ class ResearchTreeScene:
                 y = i * self.ROW_SPACING + 100
                 self.node_positions[node.id] = (x, y)
 
-        log_debug(f"ResearchTreeScene: Layout calculated for {len(self.node_positions)} nodes")
+        logger.debug(f"ResearchTreeScene: Layout calculated for {len(self.node_positions)} nodes")
 
     def _center_camera(self):
         """Center the camera on the tech tree."""
@@ -192,18 +195,18 @@ class ResearchTreeScene:
             screen: pygame surface to draw on
         """
         # Clear background
-        screen.fill((20, 25, 35))
+        screen.fill(BG_PANEL_DARK)
 
         # Draw canvas area background
         canvas_rect = pygame.Rect(0, 0, self.canvas_width, self.canvas_height)
-        pygame.draw.rect(screen, (15, 20, 30), canvas_rect)
+        pygame.draw.rect(screen, BG_GALAXY, canvas_rect)
 
         # Draw tech tree on canvas
         self.renderer.draw(screen, self.selected_node_id, canvas_rect)
 
         # Draw sidebar background
         sidebar_rect = pygame.Rect(self.canvas_width, 0, self.SIDEBAR_WIDTH, self.screen_height)
-        pygame.draw.rect(screen, (30, 35, 45), sidebar_rect)
+        pygame.draw.rect(screen, PANEL_BG, sidebar_rect)
 
         # Draw pygame_gui elements
         self.ui_manager.draw_ui(screen)
@@ -299,7 +302,7 @@ class ResearchTreeScene:
             node = self.tech_tree.get_node(clicked_node_id)
             if node:
                 self.control_panel.update_selected_node(node, self.tracker)
-                log_debug(f"Selected node: {node.name}")
+                logger.debug(f"Selected node: {node.name}")
         else:
             # Clicked empty space - deselect
             self.selected_node_id = None
@@ -346,17 +349,17 @@ class ResearchTreeScene:
             if node:
                 self.control_panel.update_selected_node(node, self.tracker)
 
-        log_info(f"Turn {self.tracker.turn_number}: {len(events)} events")
+        logger.info(f"Turn {self.tracker.turn_number}: {len(events)} events")
 
     def _on_close(self):
         """Close the scene."""
-        log_info("ResearchTreeScene: Closing")
+        logger.info("ResearchTreeScene: Closing")
         if self.on_close_callback:
             self.on_close_callback()
 
     def _on_reset(self):
         """Reset the research session."""
-        log_info("ResearchTreeScene: Resetting session")
+        logger.info("ResearchTreeScene: Resetting session")
 
         # Generate new session seed
         self.tracker = ResearchTracker()
@@ -372,7 +375,7 @@ class ResearchTreeScene:
 
     def _on_auto_spread_changed(self, enabled: bool):
         """Handle auto-spread toggle change."""
-        log_debug(f"Auto-spread {'enabled' if enabled else 'disabled'}")
+        logger.debug(f"Auto-spread {'enabled' if enabled else 'disabled'}")
 
         # Update selected node display if one is selected
         if self.selected_node_id:

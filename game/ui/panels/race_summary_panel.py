@@ -11,12 +11,14 @@ Provides a summary view of the current race configuration including:
 - Environmental preferences summary
 - Description status
 """
+import logging
 import pygame
 import pygame_gui
 from typing import Dict, List, Optional, Callable, TYPE_CHECKING
 
-from game.core.logger import log_debug
 from game.ui.assets import ShipThemeManager
+
+logger = logging.getLogger(__name__)
 from game.ui.utils import create_section_header
 
 if TYPE_CHECKING:
@@ -438,7 +440,7 @@ class RaceSummaryPanel:
 
         PROJ-66 Phase 6: Added identity, homeworld, water, aptitudes, budget.
         """
-        log_debug("Refreshing race summary panel")
+        logger.debug("Refreshing race summary panel")
 
         # PROJ-66: Update identity fields
         if 'faction_value' in self.summary_labels:

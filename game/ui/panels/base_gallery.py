@@ -10,14 +10,16 @@ Provides common functionality for:
 - Button click handling
 - Selection highlighting
 """
+import logging
 from abc import ABC, abstractmethod
 from typing import Callable, List, Optional, Tuple, TYPE_CHECKING
 
 import pygame
 import pygame_gui
 
-from game.core.logger import log_debug
 from game.ui.screens.race_asset_loader import RaceAssetLoader
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
@@ -222,7 +224,7 @@ class BaseGallery(ABC):
             asset_id: ID of selected asset
         """
         self._set_selection(asset_id)
-        log_debug(f"{self._get_object_id_prefix().capitalize()} selected: {asset_id}")
+        logger.debug(f"{self._get_object_id_prefix().capitalize()} selected: {asset_id}")
 
         # Update preview area (subclass-specific)
         self._update_preview(asset_id)

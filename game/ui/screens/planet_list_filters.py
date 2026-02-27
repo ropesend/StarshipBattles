@@ -22,13 +22,12 @@ def gather_planets(galaxy, empire):
     if galaxy and galaxy.systems:
         for s in galaxy.systems.values():
             for p in s.planets:
-                # Attach system ref for cached access
-                p._temp_system_ref = s
-
                 # Pre-compute expensive filter values (avoids per-filter-iteration cost)
                 p._cached_gravity_g = p.surface_gravity / g_const
                 p._cached_mass_earth = p.mass / m_earth_const
                 p._cached_name_lower = p.name.lower()
+                # Cache system name directly (PROJ-198 Phase 4: eliminated _temp_system_ref monkey-patch)
+                p._cached_system_name = s.name
 
                 # Pre-compute type category
                 # Use title case of the enum name (e.g. "Ice Giant", "Continental")
@@ -67,7 +66,7 @@ def filter_planets(planets, search_lower, filter_types, min_g, max_g, min_t, max
 
         # Owner filtering (BUG-27)
         if filter_owner is not None:
-            owner_id = getattr(p, 'owner_id', None)
+            owner_id = p.owner_id
 
             if owner_id is None:
                 owner_cat = 'Unowned'
@@ -199,14 +198,11 @@ def compute_planet_ranges(all_planets):
 
     for p in all_planets:
         # Gravity in g (Earth = 9.81 m/s^2)
-        if hasattr(p, 'surface_gravity'):
-            gravities.append(p.surface_gravity / 9.81)
+        gravities.append(p.surface_gravity / 9.81)
         # Temperature in Kelvin
-        if hasattr(p, 'surface_temperature'):
-            temps.append(p.surface_temperature)
+        temps.append(p.surface_temperature)
         # Mass in Earth masses
-        if hasattr(p, 'mass'):
-            masses.append(p.mass / m_earth)
+        masses.append(p.mass / m_earth)
 
     # Compute ranges with small padding
     if gravities:
@@ -231,23 +227,27 @@ def compute_planet_ranges(all_planets):
 def get_system_name(planet):
     """Get the system name for a planet.
 
+    Uses cached system name attached during gather_planets().
+
     Args:
-        planet: Planet object with optional _temp_system_ref
+        planet: Planet object with _cached_system_name from gather_planets()
 
     Returns:
         System name string or "?" if not available
     """
-    if hasattr(planet, '_temp_system_ref'):
-        return planet._temp_system_ref.name
-    return "?"
+    # PROJ-198 Phase 4: Use cached string directly instead of object reference
+    return getattr(planet, '_cached_system_name', "?")
 
 
-def get_owner_name(planet, galaxy, empire):
+def get_owner_name(planet, empires, empire):
     """Get the owner name for a planet, with proper empire lookup.
+
+    PROJ-198 Phase 4: Changed signature from (planet, galaxy, empire) to (planet, empires, empire)
+    since Galaxy does not have an 'empires' attribute - empires come from session.empires.
 
     Args:
         planet: Planet object
-        galaxy: Galaxy object containing empires list
+        empires: List of all Empire objects for name lookup
         empire: Current player's empire for context
 
     Returns:
@@ -256,16 +256,16 @@ def get_owner_name(planet, galaxy, empire):
     if planet.owner_id is None:
         return "— None —"
 
-    # Try to get empire name from galaxy's empires list
-    if galaxy and hasattr(galaxy, 'empires'):
-        for emp in galaxy.empires:
+    # Look up empire name from empires list
+    if empires:
+        for emp in empires:
             if emp.id == planet.owner_id:
                 # Add indicator if it's the player's empire
                 if planet.owner_id == empire.id:
                     return f"★ {emp.name}"
                 return emp.name
 
-    # Fallback to simple labels
+    # Fallback to simple labels (when empires list not available)
     if planet.owner_id == empire.id:
         return "★ Player"
     return "Enemy"
@@ -294,7 +294,7 @@ def get_resource_str(planet, resource_name):
     Returns:
         Formatted string like "100k (Q80)" or "-" if no resource
     """
-    if hasattr(planet, 'resources') and resource_name in planet.resources:
+    if resource_name in planet.resources:
         resource = planet.resources[resource_name]
         quantity = resource['quantity']
         # Format k/M

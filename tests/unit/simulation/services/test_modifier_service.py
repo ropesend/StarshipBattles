@@ -12,6 +12,7 @@ PROJ-118: Phase 2 comprehensive test coverage for simulation services.
 import pytest
 from unittest.mock import MagicMock, PropertyMock
 
+from game.core.exceptions import ValidationException
 from game.simulation.services.modifier_service import ModifierService
 from game.simulation.components.component_constants import Modifier
 
@@ -263,9 +264,9 @@ class TestModifierServiceInit:
         service = ModifierService(modifier_registry=basic_registry)
         assert service._modifiers is basic_registry
 
-    def test_init_with_none_raises_type_error(self):
-        """Service raises TypeError when registry is None."""
-        with pytest.raises(TypeError, match="modifier_registry is required"):
+    def test_init_with_none_raises_validation_exception(self):
+        """Service raises ValidationException when registry is None."""
+        with pytest.raises(ValidationException):
             ModifierService(modifier_registry=None)
 
     def test_init_with_empty_registry(self):

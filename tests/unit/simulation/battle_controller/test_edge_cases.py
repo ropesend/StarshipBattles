@@ -101,6 +101,8 @@ class TestAddReinforcementsEdgeCases:
 
     def test_add_reinforcements_handles_ship_setup_error(self, controller, mock_service):
         """add_reinforcements handles errors during ship positioning."""
+        from game.core.exceptions import ValidationException
+
         config = BattleConfig(mode=BattleMode.STRATEGY)
         controller.configure(config)
         controller.start()
@@ -108,10 +110,11 @@ class TestAddReinforcementsEdgeCases:
         mock_engine = Mock()
         mock_service.get_engine.return_value = mock_engine
 
-        # Create ship that raises error when positioned
+        # Create ship that raises ValidationException when positioned
+        # (domain exception used instead of AttributeError per PROJ-177)
         bad_ship = Mock()
         bad_ship.name = "Bad Ship"
-        type(bad_ship).x = property(lambda s: 0, Mock(side_effect=AttributeError("Cannot set x")))
+        type(bad_ship).x = property(lambda s: 0, Mock(side_effect=ValidationException("Cannot set x", code="V001")))
 
         result = controller.add_reinforcements([bad_ship], team_id=0, entry_point=(100, 200))
 
@@ -120,6 +123,8 @@ class TestAddReinforcementsEdgeCases:
 
     def test_add_reinforcements_partial_success(self, controller, mock_service):
         """add_reinforcements reports partial success correctly."""
+        from game.core.exceptions import ValidationException
+
         config = BattleConfig(mode=BattleMode.STRATEGY)
         controller.configure(config)
         controller.start()
@@ -130,10 +135,11 @@ class TestAddReinforcementsEdgeCases:
         good_ship = Mock()
         good_ship.name = "Good Ship"
 
-        # Ship that fails on add_ship_mid_battle
+        # Ship that fails on add_ship_mid_battle with ValidationException
+        # (domain exception used instead of ValueError per PROJ-177)
         bad_ship = Mock()
         bad_ship.name = "Bad Ship"
-        mock_engine.add_ship_mid_battle.side_effect = [None, ValueError("Ship rejected")]
+        mock_engine.add_ship_mid_battle.side_effect = [None, ValidationException("Ship rejected", code="V001")]
 
         result = controller.add_reinforcements([good_ship, bad_ship], team_id=0, entry_point=(0, 0))
 

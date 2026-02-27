@@ -15,9 +15,8 @@ Handles:
 - Result collection and state extraction
 """
 from typing import List, Optional, Dict, Callable, Tuple, Any, TYPE_CHECKING
-import copy
 
-from game.core.exceptions import StateException
+from game.core.exceptions import StateException, ValidationException
 from game.core.error_codes import ErrorCode
 from game.simulation.services.battle_service import BattleService, BattleServiceResult
 from game.simulation.battle_state import BattleState, BattleResults, ShipState
@@ -32,7 +31,9 @@ from game.simulation.combat.battle_mode_handler import (
     get_handler_for_mode,
 )
 from game.simulation.battle_config import BattleConfig, BattleMode
-from game.core.logger import log_debug, log_info, log_warning
+import logging
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -169,7 +170,7 @@ class BattleController:
                     self._ship_id_map[id(ship)] = state.ship_id
                 else:
                     errors.extend(result.errors)
-            except (TypeError, ValueError, KeyError, AttributeError) as e:
+            except (TypeError, ValueError, KeyError, AttributeError, ValidationException) as e:
                 errors.append(f"Failed to create ship from state: {e}")
 
         return BattleServiceResult(success=len(errors) == 0, errors=errors)
@@ -210,7 +211,7 @@ class BattleController:
                 allow_reinforcements=self._config.allow_reinforcements,
             )
 
-            log_info(f"Battle started: mode={self._config.mode.value}, "
+            logger.info(f"Battle started: mode={self._config.mode.value}, "
                     f"ships={len(self._service.get_all_ships())}")
 
         return result
@@ -256,7 +257,7 @@ class BattleController:
         if not self._is_started:
             raise StateException(
                 "Battle not started - call start() first",
-                code="S001",
+                code=ErrorCode.STATE_FROZEN.value,
                 context={"operation": "run_headless"}
             )
 
@@ -278,7 +279,7 @@ class BattleController:
 
             # Safety limit
             if tick >= max_ticks:
-                log_warning(f"Battle reached max ticks limit: {max_ticks}")
+                logger.warning(f"Battle reached max ticks limit: {max_ticks}")
                 break
 
         return self.get_results()
@@ -385,8 +386,8 @@ class BattleController:
                 import uuid
                 self._ship_id_map[id(ship)] = str(uuid.uuid4())
 
-                log_info(f"Reinforcement arrived: {ship.name} for team {team_id}")
-            except (TypeError, ValueError, AttributeError) as e:
+                logger.info(f"Reinforcement arrived: {ship.name} for team {team_id}")
+            except ValidationException as e:
                 errors.append(f"Failed to add reinforcement {ship.name}: {e}")
 
         return BattleServiceResult(success=len(errors) == 0, errors=errors)
@@ -442,7 +443,7 @@ class BattleController:
         if not self._is_started:
             raise StateException(
                 "Cannot save state - battle not started",
-                code="S001",
+                code=ErrorCode.STATE_FROZEN.value,
                 context={"operation": "save_state"}
             )
 
@@ -507,14 +508,14 @@ class BattleController:
                         proj = proj_state.to_projectile(ship_lookup)
                         engine.projectiles.append(proj)
 
-                log_info(f"Restored {len(state.projectiles)} projectiles")
+                logger.info(f"Restored {len(state.projectiles)} projectiles")
 
-            log_info(f"Battle state restored at tick {state.tick_count}")
+            logger.info(f"Battle state restored at tick {state.tick_count}")
 
             return BattleServiceResult(success=True, engine=engine)
 
-        except (TypeError, ValueError, KeyError, AttributeError) as e:
-            log_warning(f"Failed to load battle state: {e}")
+        except (TypeError, ValueError, KeyError, AttributeError, ValidationException, StateException) as e:
+            logger.warning(f"Failed to load battle state: {e}")
             return BattleServiceResult(success=False, errors=[str(e)])
 
     # === Query Methods ===
@@ -621,7 +622,7 @@ class BattleController:
 
         # Delegate to mode handler (always set after configure())
         self._mode_handler.apply_results(self, results)
-        log_info("Battle results applied to fleets via mode handler")
+        logger.info("Battle results applied to fleets via mode handler")
 
     # === Callbacks ===
 

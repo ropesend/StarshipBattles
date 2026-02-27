@@ -478,36 +478,10 @@ class TestHelperMethods:
 
         assert result is warp_point
 
-    def test_show_confirmation_fallback_without_ui(self, superweapon_ops, mock_scene):
-        """Test _show_confirmation fallback when no dialog available."""
-        del mock_scene.ui.show_confirmation_dialog  # Remove the method
-        callback = Mock()
-
-        # Should execute callback directly as fallback
-        superweapon_ops._show_confirmation("Test", "Message", callback)
-
-        callback.assert_called_once()
-
-    def test_show_system_picker_fallback(self, superweapon_ops, mock_scene):
-        """Test _show_system_picker fallback when no picker available."""
-        del mock_scene.ui.show_system_picker
-        systems = [Mock(name="Alpha"), Mock(name="Beta")]
-        systems[0].name = "Alpha"
-        callback = Mock()
-
-        superweapon_ops._show_system_picker(systems, Mock(), callback)
-
-        callback.assert_called_once_with("Alpha")
-
-    def test_show_ship_picker_fallback(self, superweapon_ops, mock_scene):
-        """Test _show_ship_picker fallback when no picker available."""
-        del mock_scene.ui.show_ship_picker
-        ships = [Mock(id=1), Mock(id=2)]
-        callback = Mock()
-
-        superweapon_ops._show_ship_picker(ships, "SelfDestruct", callback)
-
-        callback.assert_called_once_with([1, 2])
+    # PROJ-198: Fallback tests removed - methods are now always available on StrategyUI
+    # test_show_confirmation_fallback_without_ui - deleted (duck typing eliminated)
+    # test_show_system_picker_fallback - deleted (duck typing eliminated)
+    # test_show_ship_picker_fallback - deleted (duck typing eliminated)
 
 
 # =============================================================================

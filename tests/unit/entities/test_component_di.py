@@ -5,24 +5,14 @@ These tests verify that Component and related functions:
 1. Accept GameRegistries via constructor/parameter (required)
 2. Raise TypeError when registries is None
 3. Work with injected registries for all operations
+
+PROJ-181: Removed _default_registries cleanup - no longer exists.
 """
 import pytest
 
+from game.core.exceptions import ValidationException
 from game.simulation.components.component import Component, create_component
-from game.core.registry import GameRegistries, set_default_registries
-
-
-# =============================================================================
-# Fixtures
-# =============================================================================
-
-@pytest.fixture(autouse=True)
-def restore_default_registries():
-    """Restore _default_registries after each test to prevent pollution."""
-    import game.core.registry as registry_module
-    original = registry_module._default_registries
-    yield
-    registry_module._default_registries = original
+from game.core.registry import GameRegistries
 
 
 @pytest.fixture
@@ -70,7 +60,7 @@ class TestComponentConstructor:
 
     def test_constructor_with_none_raises_typeerror(self, minimal_component_data):
         """Component with None registries should raise TypeError (PROJ-50 strict DI)."""
-        with pytest.raises(TypeError, match="registries is required"):
+        with pytest.raises(ValidationException):
             Component(minimal_component_data, registries=None)
 
     def test_constructor_stores_registries(self, mock_registries, minimal_component_data):
@@ -140,7 +130,7 @@ class TestCreateComponentFunction:
 
     def test_create_component_without_registries_raises_typeerror(self):
         """create_component without registries should raise TypeError (PROJ-50 strict DI)."""
-        with pytest.raises(TypeError, match="registries is required"):
+        with pytest.raises(ValidationException):
             create_component('bridge', registries=None)
 
 
@@ -158,7 +148,7 @@ class TestStrictDIEnforcement:
         assert component._registries is mock_registries
 
         # Invalid: with None
-        with pytest.raises(TypeError, match="registries is required"):
+        with pytest.raises(ValidationException):
             Component(minimal_component_data, registries=None)
 
     def test_create_component_requires_registries_parameter(self, mock_registries):
@@ -168,5 +158,5 @@ class TestStrictDIEnforcement:
         assert component is not None
 
         # Invalid: with None
-        with pytest.raises(TypeError, match="registries is required"):
+        with pytest.raises(ValidationException):
             create_component('bridge', registries=None)

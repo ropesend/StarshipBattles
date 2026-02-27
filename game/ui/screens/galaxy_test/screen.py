@@ -9,11 +9,14 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel
 
-from game.core.logger import log_info
+import logging
+
+logger = logging.getLogger(__name__)
 from game.ui.renderer.camera import Camera
 from game.ui.screens.galaxy_test.constants import SIDEBAR_WIDTH
 from game.ui.screens.galaxy_test.galaxy_mode import GalaxyModeHelper
 from game.ui.screens.galaxy_test.system_mode import SystemModeHelper
+from game.ui.colors import BG_GALAXY, PANEL_BG
 
 
 class GalaxyTestScreen:
@@ -78,7 +81,7 @@ class GalaxyTestScreen:
         # Create initial menu UI
         self._create_menu_ui()
 
-        log_info("GalaxyTestScreen: Initialized")
+        logger.info("GalaxyTestScreen: Initialized")
 
     def _clear_ui(self):
         """Clear all UI elements."""
@@ -155,7 +158,7 @@ class GalaxyTestScreen:
         self.fps_clock.tick()
 
         # Clear background
-        screen.fill((15, 20, 30))
+        screen.fill(BG_GALAXY)
 
         if self.mode == self.MODE_MENU:
             # Just draw UI for menu
@@ -168,7 +171,7 @@ class GalaxyTestScreen:
         # Draw sidebar background for non-menu modes
         if self.mode != self.MODE_MENU:
             sidebar_rect = pygame.Rect(self.canvas_width, 0, SIDEBAR_WIDTH, self.screen_height)
-            pygame.draw.rect(screen, (30, 35, 45), sidebar_rect)
+            pygame.draw.rect(screen, PANEL_BG, sidebar_rect)
 
         # Draw UI
         self.ui_manager.draw_ui(screen)
@@ -209,17 +212,17 @@ class GalaxyTestScreen:
 
     def _handle_button_click(self, button):
         """Handle UI button clicks."""
-        if button == getattr(self, 'btn_galaxy', None):
+        if button == self.btn_galaxy:
             self._go_to_galaxy_mode()
-        elif button == getattr(self, 'btn_system', None):
+        elif button == self.btn_system:
             self._go_to_system_mode()
-        elif button == getattr(self, 'btn_close', None):
+        elif button == self.btn_close:
             self._on_close()
-        elif button == getattr(self.system_helper, 'btn_back', None) or button == getattr(self.galaxy_helper, 'btn_back', None):
+        elif button == self.system_helper.btn_back or button == self.galaxy_helper.btn_back:
             self._go_to_menu()
-        elif button == getattr(self.galaxy_helper, 'btn_generate', None):
+        elif button == self.galaxy_helper.btn_generate:
             self.galaxy_helper.generate()
-        elif button == getattr(self.system_helper, 'btn_generate_system', None):
+        elif button == self.system_helper.btn_generate_system:
             self.system_helper.generate()
 
     def _go_to_menu(self):
@@ -245,7 +248,7 @@ class GalaxyTestScreen:
 
     def _on_close(self):
         """Close the screen and return to main menu."""
-        log_info("GalaxyTestScreen: Closing")
+        logger.info("GalaxyTestScreen: Closing")
         if self.on_close_callback:
             self.on_close_callback()
 

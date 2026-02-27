@@ -7,6 +7,7 @@ Covers all rule logic, edge cases, and error handling.
 import pytest
 from unittest.mock import Mock, MagicMock, PropertyMock, patch
 
+from game.core.exceptions import ValidationException
 from game.simulation.validation.ship_validator import (
     LayerConstraintRule,
     UniqueComponentRule,
@@ -557,7 +558,7 @@ class TestClassRequirementsRule:
 
     def test_requires_registries(self):
         """Should require registries parameter."""
-        with pytest.raises(TypeError, match="registries is required"):
+        with pytest.raises(ValidationException):
             ClassRequirementsRule(registries=None)
 
     def test_valid_design_passes(self, mock_registries, mock_ship):
@@ -718,7 +719,7 @@ class TestShipDesignValidator:
 
     def test_requires_registries(self):
         """Should require registries parameter."""
-        with pytest.raises(TypeError, match="registries is required"):
+        with pytest.raises(ValidationException):
             ShipDesignValidator(registries=None)
 
     def test_has_addition_rules(self, mock_registries):

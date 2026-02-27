@@ -15,9 +15,11 @@ import pygame_gui
 from pygame_gui.elements import UIImage, UILabel, UIPanel, UITextBox
 from typing import Optional, TYPE_CHECKING
 from game.ui.panels.design_stats_panel import DesignStatsPanel
+from game.ui.fonts import get_font
 from game.ui.colors import (
     SHIP_CLASS_FIGHTER, SHIP_CLASS_CORVETTE, SHIP_CLASS_ESCORT, SHIP_CLASS_DESTROYER,
-    SHIP_CLASS_CRUISER, SHIP_CLASS_BATTLESHIP, SHIP_CLASS_CARRIER, SHIP_CLASS_DEFAULT
+    SHIP_CLASS_CRUISER, SHIP_CLASS_BATTLESHIP, SHIP_CLASS_CARRIER, SHIP_CLASS_DEFAULT,
+    WHITE, BLACK, TEXT_ITEM
 )
 
 if TYPE_CHECKING:
@@ -99,10 +101,8 @@ class DesignReportPanel:
         self.rows_map = {}
 
         # PROJ-81: Clear identity labels
-        if hasattr(self, 'name_label'):
-            self.name_label.set_text("")
-        if hasattr(self, 'type_class_label'):
-            self.type_class_label.set_text("")
+        self.name_label.set_text("")
+        self.type_class_label.set_text("")
 
         # Show placeholder message
         if self.placeholder_text:
@@ -140,9 +140,7 @@ class DesignReportPanel:
 
         # PROJ-81 Phase 4: Populate design identity labels
         self.name_label.set_text(ship.name)
-        vehicle_type = getattr(ship, 'vehicle_type', 'Unknown')
-        ship_class = getattr(ship, 'ship_class', 'Unknown')
-        self.type_class_label.set_text(f"{vehicle_type} - {ship_class}")
+        self.type_class_label.set_text(f"{ship.vehicle_type} - {ship.ship_class}")
 
         # Kill old stats panel
         if self._stats_panel is not None:
@@ -180,8 +178,8 @@ class DesignReportPanel:
         portrait_height = portrait_rect.height
 
         # Determine portrait file path
-        theme = getattr(ship, 'theme_id', 'Federation')
-        ship_class = getattr(ship, 'ship_class', 'Unknown')
+        theme = ship.theme_id
+        ship_class = ship.ship_class
 
         # Ensure ship_class is a string
         if not isinstance(ship_class, str):
@@ -214,8 +212,9 @@ class DesignReportPanel:
                     portrait_surface = pygame.transform.smoothscale(loaded_img, (portrait_width, portrait_height))
                     break
                 except (FileNotFoundError, OSError, pygame.error) as e:
-                    from game.core.logger import log_warning
-                    log_warning(f"Failed to load portrait from {path}: {e}")
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.warning(f"Failed to load portrait from {path}: {e}")
                     continue
 
         # Fallback: Create placeholder portrait if no image found
@@ -245,26 +244,26 @@ class DesignReportPanel:
             # Add ship name and class
             # Scale font sizes based on portrait size
             font_scale = portrait_width / 200.0  # 200 was original portrait size
-            font_large = pygame.font.SysFont("arial", int(18 * font_scale), bold=True)
-            font_small = pygame.font.SysFont("arial", int(14 * font_scale))
+            font_large = get_font(int(18 * font_scale), bold=True)
+            font_small = get_font(int(14 * font_scale))
 
             # Ship name
-            name_text = font_large.render(ship.name[:25], True, (255, 255, 255))
+            name_text = font_large.render(ship.name[:25], True, WHITE)
             name_rect = name_text.get_rect(center=(portrait_width // 2, int(portrait_height * 0.45)))
             # Shadow
-            shadow = font_large.render(ship.name[:25], True, (0, 0, 0))
+            shadow = font_large.render(ship.name[:25], True, BLACK)
             shadow_rect = shadow.get_rect(center=(portrait_width // 2 + 1, int(portrait_height * 0.45) + 1))
             portrait_surface.blit(shadow, shadow_rect)
             portrait_surface.blit(name_text, name_rect)
 
             # Ship class
             if ship_class:
-                class_text = font_small.render(str(ship_class), True, (200, 200, 200))
+                class_text = font_small.render(str(ship_class), True, TEXT_ITEM)
                 class_rect = class_text.get_rect(center=(portrait_width // 2, int(portrait_height * 0.55)))
                 portrait_surface.blit(class_text, class_rect)
 
             # Border
-            pygame.draw.rect(portrait_surface, (200, 200, 200), (0, 0, portrait_width, portrait_height), 2)
+            pygame.draw.rect(portrait_surface, TEXT_ITEM, (0, 0, portrait_width, portrait_height), 2)
 
         # Update UIImage
         self.portrait_image.set_image(portrait_surface)
@@ -283,5 +282,4 @@ class DesignReportPanel:
         if self._stats_panel is not None:
             self._stats_panel.kill()
             self._stats_panel = None
-        if hasattr(self, 'panel'):
-            self.panel.kill()
+        self.panel.kill()

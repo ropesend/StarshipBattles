@@ -9,9 +9,12 @@ import os
 import pygame
 from typing import Dict, List, Optional
 
-from game.core.logger import log_error, log_warning
+import logging
+
+logger = logging.getLogger(__name__)
 from game.assets.asset_manager import get_asset_manager
 from game.core.paths import Paths
+from game.ui.colors import PLACEHOLDER_BORDER
 
 
 class RaceAssetLoader:
@@ -59,7 +62,7 @@ class RaceAssetLoader:
                     surf = pygame.image.load(shape_path).convert_alpha()
                     shapes.append(surf)
                 except (FileNotFoundError, OSError, pygame.error) as e:
-                    log_error(f"Failed to load flag shape {shape_path}: {e}")
+                    logger.error(f"Failed to load flag shape {shape_path}: {e}")
                     shapes.append(self.create_placeholder(256, 256))
             else:
                 shapes.append(self.create_placeholder(256, 256))
@@ -84,7 +87,7 @@ class RaceAssetLoader:
                 surf = pygame.image.load(portrait_path).convert_alpha()
                 return surf
             except (FileNotFoundError, OSError, pygame.error) as e:
-                log_error(f"Failed to load portrait {portrait_path}: {e}")
+                logger.error(f"Failed to load portrait {portrait_path}: {e}")
 
         return None
 
@@ -100,9 +103,9 @@ class RaceAssetLoader:
             A placeholder surface with crossed lines
         """
         surf = pygame.Surface((width, height), pygame.SRCALPHA)
-        pygame.draw.rect(surf, (80, 80, 80), surf.get_rect(), 2)
-        pygame.draw.line(surf, (80, 80, 80), (0, 0), (width, height), 1)
-        pygame.draw.line(surf, (80, 80, 80), (width, 0), (0, height), 1)
+        pygame.draw.rect(surf, PLACEHOLDER_BORDER, surf.get_rect(), 2)
+        pygame.draw.line(surf, PLACEHOLDER_BORDER, (0, 0), (width, height), 1)
+        pygame.draw.line(surf, PLACEHOLDER_BORDER, (width, 0), (0, height), 1)
         return surf
 
     def load_portrait_preview(
@@ -138,7 +141,7 @@ class RaceAssetLoader:
                     # Scale to preview size
                     return pygame.transform.smoothscale(surf, (preview_size, preview_size))
         except (FileNotFoundError, OSError, pygame.error) as e:
-            log_warning(f"Failed to load portrait preview: {e}")
+            logger.warning(f"Failed to load portrait preview: {e}")
 
         return None
 
@@ -181,7 +184,7 @@ class RaceAssetLoader:
                     surf = pygame.image.load(img_path).convert_alpha()
                     return pygame.transform.smoothscale(surf, (preview_size, preview_size))
         except (FileNotFoundError, OSError, pygame.error) as e:
-            log_warning(f"Failed to load flag preview: {e}")
+            logger.warning(f"Failed to load flag preview: {e}")
 
         return None
 
@@ -231,7 +234,7 @@ class RaceAssetLoader:
 
         theme_path = os.path.join(asset_base, theme_id)
         if not os.path.exists(theme_path):
-            log_warning(f"Theme directory not found: {theme_path}")
+            logger.warning(f"Theme directory not found: {theme_path}")
             return result
 
         am = get_asset_manager()
@@ -264,12 +267,12 @@ class RaceAssetLoader:
         result = {}
 
         # Load theme assets first (lower priority)
-        if hasattr(empire, 'empire_theme_id') and empire.empire_theme_id:
+        if empire.empire_theme_id:
             theme_assets = self.load_empire_theme_assets(empire.empire_theme_id, asset_base)
             result.update(theme_assets)
 
         # Load race assets second (higher priority - overwrites theme 'colony')
-        if hasattr(empire, 'flag_id') and empire.flag_id:
+        if empire.flag_id:
             race_assets = self.load_empire_race_assets(empire.flag_id)
             result.update(race_assets)
 

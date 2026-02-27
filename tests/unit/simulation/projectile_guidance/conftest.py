@@ -18,11 +18,14 @@ def init_pygame():
 
 @pytest.fixture
 def mock_owner():
-    """Create a minimal owner mock without solve_lead."""
+    """Create a minimal owner mock with required protocol attributes."""
     owner = MagicMock(spec=[])  # Empty spec prevents auto-creating attributes
     owner.team_id = 0
     owner.is_alive = True
     owner.position = pygame.math.Vector2(0, 0)
+    # combat_engine with solve_lead (required for projectile guidance)
+    owner.combat_engine = MagicMock()
+    owner.combat_engine.solve_lead = MagicMock(return_value=0)  # Default: no lead
     return owner
 
 

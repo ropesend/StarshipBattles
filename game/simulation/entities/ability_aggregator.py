@@ -2,11 +2,14 @@
 
 This module provides functions for calculating total ability values
 across ship components, supporting stacking groups and redundancy.
+
+PROJ-190: Updated to use IAbility and IComponent protocols.
 """
 
 from typing import Dict, Any, List, Optional, Iterator, Tuple
 
 from game.simulation.components.abilities.base import AbilityLayer, AbilityScope
+from game.simulation.interfaces import IAbility, is_ability
 
 
 # Abilities that should multiply instead of sum
@@ -98,45 +101,45 @@ def calculate_ability_totals(
         # Track which abilities are handled to avoid double counting from dict
         handled_abilities = set()
 
-        # Guard for non-Component objects (e.g., mocks in tests)
-        ability_instances = getattr(comp, 'ability_instances', None)
-        if isinstance(ability_instances, list):
-            for ab in ability_instances:
-                    # Layer filtering (when layer is specified)
-                    if layer is not None:
-                        if not ab.applies_to_layer(layer):
-                            continue
-                        # Scope filtering (only when layer is specified)
-                        if scope_filter is not None and ab.scope != scope_filter:
-                            continue
+        # IComponent protocol guarantees ability_instances exists
+        for ab in comp.ability_instances:
+            # Layer filtering (when layer is specified)
+            if layer is not None:
+                if not ab.applies_to_layer(layer):
+                    continue
+                # Scope filtering (only when layer is specified)
+                if scope_filter is not None and ab.scope != scope_filter:
+                    continue
 
-                    ability_name = ab.__class__.__name__
-                    handled_abilities.add(ability_name)
+            ability_name = ab.__class__.__name__
+            handled_abilities.add(ability_name)
 
-                    # Extract value using polymorphic interface
-                    value = ab.get_primary_value()
+            # Extract value using polymorphic interface
+            value = ab.get_primary_value()
 
-                    # Marker abilities (no numeric value) return 0.0 from get_primary_value()
-                    # For class requirements, these need boolean True semantics
-                    if ability_name in MARKER_ABILITIES:
-                        value = True
+            # Marker abilities (no numeric value) return 0.0 from get_primary_value()
+            # For class requirements, these need boolean True semantics
+            if ability_name in MARKER_ABILITIES:
+                value = True
 
-                    stack_group = getattr(ab, 'stack_group', None)
-                    group_key = stack_group if stack_group else comp
+            # IAbility protocol guarantees stack_group exists
+            stack_group = ab.stack_group
+            group_key = stack_group if stack_group else comp
 
-                    if ability_name not in ability_groups:
-                        ability_groups[ability_name] = {}
-                    if group_key not in ability_groups[ability_name]:
-                        ability_groups[ability_name][group_key] = []
+            if ability_name not in ability_groups:
+                ability_groups[ability_name] = {}
+            if group_key not in ability_groups[ability_name]:
+                ability_groups[ability_name][group_key] = []
 
-                    ability_groups[ability_name][group_key].append(value)
+            ability_groups[ability_name][group_key].append(value)
 
         # 2. Process Raw Dictionary (skipped when layer filtering is active)
         # Layer filtering requires ability instances with applies_to_layer() method
         if layer is not None:
             continue
 
-        abilities = getattr(comp, 'abilities', {})
+        # IComponent protocol guarantees abilities exists
+        abilities = comp.abilities
         if isinstance(abilities, dict):
             for ability_name, raw_value in abilities.items():
                 # Check handled
@@ -203,11 +206,9 @@ def get_ability_instances_by_class(
             # Process the ability...
     """
     for comp in components:
-        # Guard for non-Component objects (e.g., mocks in tests)
-        instances = getattr(comp, 'ability_instances', None)
-        if isinstance(instances, list):
-            for ab in instances:
-                if ab.__class__.__name__ == class_name:
-                    yield comp, ab
+        # IComponent protocol guarantees ability_instances exists
+        for ab in comp.ability_instances:
+            if ab.__class__.__name__ == class_name:
+                yield comp, ab
 
 

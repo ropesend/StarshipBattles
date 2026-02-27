@@ -7,6 +7,7 @@ and SpaceShipyardAbility.
 import pytest
 from unittest.mock import MagicMock
 
+from game.core.exceptions import ValidationException
 from game.simulation.components.abilities.colonize import ColonizePlanet
 from game.simulation.components.abilities.harvester import (
     ResourceHarvesterAbility,
@@ -135,10 +136,40 @@ class TestColonizePlanet:
         """ColonizePlanet rejects scopes other than SELF."""
         data = {"planet_type": "CONTINENTAL", "scope": "sector"}
 
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValidationException) as exc_info:
             ColonizePlanet(mock_component, data)
 
-        assert "does not support scope 'sector'" in str(exc_info.value)
+        # Verify context contains scope info
+        assert exc_info.value.context.get("scope") == "sector"
+
+    # --- PROJ-187: action_time tests ---
+
+    def test_action_time_default_with_string_shorthand(self, mock_component):
+        """String shorthand defaults action_time to 1."""
+        ability = ColonizePlanet(mock_component, "ICE_DWARF")
+
+        assert ability.action_time == 1
+
+    def test_action_time_default_with_dict_missing_key(self, mock_component):
+        """Dict without action_time key defaults to 1."""
+        data = {"planet_type": "CONTINENTAL"}
+        ability = ColonizePlanet(mock_component, data)
+
+        assert ability.action_time == 1
+
+    def test_action_time_from_dict(self, mock_component):
+        """Dict with action_time sets the value."""
+        data = {"planet_type": "CONTINENTAL", "action_time": 3}
+        ability = ColonizePlanet(mock_component, data)
+
+        assert ability.action_time == 3
+        assert ability.planet_type == "CONTINENTAL"
+
+    def test_action_time_with_non_dict_data(self, mock_component):
+        """Non-string, non-dict data defaults action_time to 1."""
+        ability = ColonizePlanet(mock_component, 123)
+
+        assert ability.action_time == 1
 
 
 # =============================================================================

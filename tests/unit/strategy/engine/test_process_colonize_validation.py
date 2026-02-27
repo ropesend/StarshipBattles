@@ -14,37 +14,41 @@ These tests verify:
 """
 
 import pytest
-from enum import Enum
 from unittest.mock import Mock
 
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.ship_instance import ShipInstance
+from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
 
 
 # =============================================================================
-# Test Fixtures (copied from test_planet_specific_colonization.py)
+# Test Fixtures
 # =============================================================================
 
-class MockPlanetType(Enum):
-    """Mock planet types for testing."""
-    ICE_DWARF = "ICE_DWARF"
-    CONTINENTAL = "CONTINENTAL"
-    ARID = "ARID"
-
-
-class MockPlanet:
-    """Mock planet with planet_type attribute."""
-
-    def __init__(self, name: str, relative_loc: HexCoord, planet_type: MockPlanetType):
-        self.name = name
-        self.location = relative_loc
-        self.planet_type = planet_type
-        self.owner_id = None
-        self.construction_queue = []
-        self.populations = []
+def _make_planet(name: str, relative_loc: HexCoord, planet_type_name: str) -> Planet:
+    """Create a real Planet object for testing."""
+    return Planet.from_dict({
+        'name': name,
+        'location': {'q': relative_loc.q, 'r': relative_loc.r},
+        'orbit_distance': 5,
+        'mass': 5.97e24,
+        'radius': 6.371e6,
+        'surface_area': 5.1e14,
+        'density': 5514.0,
+        'surface_gravity': 9.81,
+        'surface_pressure': 101325.0,
+        'surface_temperature': 288.0,
+        'surface_water': 0.71,
+        'tectonic_activity': 0.5,
+        'magnetic_field': 1.0,
+        'planet_type': planet_type_name,
+        'atmosphere': {'N2': 79000, 'O2': 21000},
+        'facilities': [],
+        'populations': []
+    })
 
 
 class MockSystem:
@@ -70,6 +74,10 @@ class MockGalaxy:
                 if (sys.global_location + p.location) == global_hex:
                     result.append(p)
         return result
+
+    def get_zones_at_global_hex(self, global_hex: HexCoord):
+        """Return zone objects at the given global hex (empty for these tests)."""
+        return []
 
 
 def make_colony_ship(name: str, owner_id: int, pod_type: str) -> ShipInstance:
@@ -140,7 +148,7 @@ def galaxy_with_ice_planet():
     """Galaxy with a single Ice Dwarf planet at (10, 10)."""
     galaxy = MockGalaxy()
 
-    ice_planet = MockPlanet("Ice World", HexCoord(0, 0), MockPlanetType.ICE_DWARF)
+    ice_planet = _make_planet("Ice World", HexCoord(0, 0), "ICE_DWARF")
     system = MockSystem(HexCoord(10, 10), [ice_planet])
     galaxy.systems[HexCoord(10, 10)] = system
 
@@ -347,8 +355,8 @@ class TestProcessColonizeAnyPlanet:
         """Galaxy with CONTINENTAL and ICE_DWARF planets at same location."""
         galaxy = MockGalaxy()
 
-        continental = MockPlanet("Green World", HexCoord(0, 0), MockPlanetType.CONTINENTAL)
-        ice_dwarf = MockPlanet("Ice World", HexCoord(0, 0), MockPlanetType.ICE_DWARF)
+        continental = _make_planet("Green World", HexCoord(0, 0), "CONTINENTAL")
+        ice_dwarf = _make_planet("Ice World", HexCoord(0, 0), "ICE_DWARF")
 
         system = MockSystem(HexCoord(10, 10), [continental, ice_dwarf])
         galaxy.systems[HexCoord(10, 10)] = system
@@ -360,8 +368,8 @@ class TestProcessColonizeAnyPlanet:
         """Galaxy with only ICE_DWARF planets at location."""
         galaxy = MockGalaxy()
 
-        ice_1 = MockPlanet("Ice World 1", HexCoord(0, 0), MockPlanetType.ICE_DWARF)
-        ice_2 = MockPlanet("Ice World 2", HexCoord(0, 0), MockPlanetType.ICE_DWARF)
+        ice_1 = _make_planet("Ice World 1", HexCoord(0, 0), "ICE_DWARF")
+        ice_2 = _make_planet("Ice World 2", HexCoord(0, 0), "ICE_DWARF")
 
         system = MockSystem(HexCoord(10, 10), [ice_1, ice_2])
         galaxy.systems[HexCoord(10, 10)] = system

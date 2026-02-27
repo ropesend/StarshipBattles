@@ -569,23 +569,34 @@ class TestGetAbilityInstancesByClass:
         assert pairs[0][0] is comp1
         assert pairs[1][0] is comp2
 
-    def test_handles_component_without_ability_instances(self):
-        """Gracefully handles components without ability_instances attribute."""
-        class BareComponent:
-            pass
+    def test_handles_component_with_empty_ability_instances(self):
+        """Handles components with empty ability_instances list.
 
-        comp = BareComponent()
+        PROJ-190: Components must have ability_instances (IComponent protocol).
+        This test verifies empty lists work correctly.
+        """
+        class EmptyComponent:
+            ability_instances = []
+
+        comp = EmptyComponent()
         pairs = list(get_ability_instances_by_class([comp], "CombatPropulsion"))
 
         assert len(pairs) == 0
 
-    def test_handles_non_list_ability_instances(self):
-        """Handles ability_instances that is not a list."""
-        class WeirdComponent:
-            ability_instances = "not a list"
+    def test_handles_no_matching_abilities(self):
+        """Handles components with abilities that don't match the requested type.
 
-        comp = WeirdComponent()
-        pairs = list(get_ability_instances_by_class([comp], "CombatPropulsion"))
+        PROJ-190: Updated from non-list test to valid component test.
+        """
+        class MockAbility:
+            pass
+
+        class ComponentWithAbility:
+            ability_instances = [MockAbility()]
+
+        comp = ComponentWithAbility()
+        # Request type that doesn't exist
+        pairs = list(get_ability_instances_by_class([comp], "NonExistentAbility"))
 
         assert len(pairs) == 0
 
@@ -808,26 +819,37 @@ class TestAbilityAggregatorAdditionalEdgeCases:
         result = calculate_ability_totals([comp])
         assert result == {}
 
-    def test_component_with_none_ability_instances(self):
-        """Component with None ability_instances attribute."""
-        class NoneInstancesComponent:
-            ability_instances = None
-            abilities = {}
+    def test_component_with_multiple_abilities_different_types(self):
+        """Component with multiple abilities of different types.
 
-        comp = NoneInstancesComponent()
+        PROJ-190: Replaced None ability_instances test with valid component test.
+        Components must have ability_instances list per IComponent protocol.
+        """
+        abilities = [
+            MockAbility("CombatPropulsion", 100.0),
+            MockAbility("ShieldProjection", 50.0),
+        ]
+        comp = MockComponent(ability_instances=abilities, abilities={})
         result = calculate_ability_totals([comp])
-        assert result == {}
 
-    def test_ability_instances_not_iterable(self):
-        """Component with non-iterable ability_instances."""
-        class BadComponent:
-            ability_instances = 12345  # Not iterable
-            abilities = {}
+        assert result["CombatPropulsion"] == 100.0
+        assert result["ShieldProjection"] == 50.0
 
-        comp = BadComponent()
+    def test_abilities_dict_with_non_dict_entries(self):
+        """Test abilities dict with various value types.
+
+        PROJ-190: Replaced non-iterable ability_instances test with valid test.
+        Components must have valid ability_instances per IComponent protocol.
+        """
+        # Component with no ability instances but has raw abilities dict
+        comp = MockComponent(ability_instances=[], abilities={
+            "SimpleAbility": 42,
+            "DictAbility": {"value": 100, "stack_group": "group1"},
+        })
         result = calculate_ability_totals([comp])
-        # Should gracefully handle non-list
-        assert result == {}
+
+        assert result["SimpleAbility"] == 42
+        assert result["DictAbility"] == 100
 
     def test_get_ability_instances_by_class_empty_list(self):
         """get_ability_instances_by_class with empty component list."""

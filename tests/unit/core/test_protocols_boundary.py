@@ -23,9 +23,17 @@ class TestIPostBattleShipConformance:
     def simple_ship(self):
         """Create a simple ship for testing."""
         from game.simulation.entities.ship import Ship
-        from game.core.registry import get_default_registries
+        from game.core.registry import get_default_registry_provider
 
-        registries = get_default_registries()
+        provider = get_default_registry_provider()
+        # Create GameRegistries from provider for Ship constructor
+        from game.core.registry import GameRegistries
+        registries = GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources=provider.get_resources()
+        )
         ship = Ship(
             name="Test Ship",
             x=0.0,

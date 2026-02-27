@@ -8,6 +8,8 @@ PROJ-55: Data-Driven Planet-Specific Colonization System
 import pytest
 from unittest.mock import MagicMock
 
+from game.core.exceptions import ValidationException
+
 
 # All 11 planet types as defined in the planet system
 ALL_PLANET_TYPES = [
@@ -132,7 +134,7 @@ class TestColonizePlanetAbility:
 
         data = {"planet_type": "CONTINENTAL", "scope": "planet"}
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidationException):
             ColonizePlanet(mock_component, data)
 
     def test_colonize_planet_get_primary_value_returns_zero(self, mock_component):

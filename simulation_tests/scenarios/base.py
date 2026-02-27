@@ -67,7 +67,7 @@ logger = get_logger(__name__)
 # 'attrs' lists attributes to extract from the ability instance.
 ABILITY_EXTRACTION_MAP = {
     'BeamWeaponAbility': {
-        'key': 'weapon',  # backward compat: data['weapon'] for beam scenarios
+        'key': 'weapon',  # data['weapon'] for beam scenarios
         'attrs': ['damage', 'range', 'base_accuracy', 'accuracy_falloff', 'reload_time', 'firing_arc']
     },
     'ProjectileWeaponAbility': {
@@ -353,12 +353,18 @@ class TestScenario(CombatScenario):
         logger.debug(f"Loading ship from dict: {data.get('name', 'Unknown')}")
         logger.debug(f"Ship has {len(data.get('layers', {}).get('CORE', []))} CORE components")
 
-        from game.core.registry import RegistryManager, get_default_registries
+        from game.core.registry import RegistryManager, get_default_registry_provider, GameRegistries
         reg = RegistryManager.instance()
         logger.debug(f"Registry frozen state before Ship.from_dict: {reg._frozen}")
 
-        # Get registries for ship deserialization (PROJ-50 strict DI)
-        registries = get_default_registries()
+        # Get registries for ship deserialization (PROJ-181: use provider pattern)
+        provider = get_default_registry_provider()
+        registries = GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources=provider.get_resources(),
+        )
         ship = Ship.from_dict(data, registries=registries)
         logger.debug("Ship loaded successfully")
 

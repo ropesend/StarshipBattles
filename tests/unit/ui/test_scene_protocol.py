@@ -138,7 +138,7 @@ class TestISceneProtocolCompliance:
     def test_formation_editor_screen_implements_iscene(self):
         """FormationEditorScreen implements IScene protocol."""
         from game.core.protocols import IScene
-        from Tools.formation_editor import FormationEditorScreen
+        from game.ui.screens.formation_editor import FormationEditorScreen
 
         scene = FormationEditorScreen(800, 600, on_return_menu=lambda: None)
         assert isinstance(scene, IScene), "FormationEditorScreen should implement IScene"

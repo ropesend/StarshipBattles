@@ -120,16 +120,9 @@ class TestShipPhysicsMixinRotation:
 
         assert ship.angle == pytest.approx(45.0, abs=0.001)
 
-    def test_rotate_without_turn_throttle_attribute(self):
-        """Missing turn_throttle should default to 1.0."""
-        ship = MockShipWithPhysics(angle=0)
-        ship.turn_speed = 100.0
-        delattr(ship, 'turn_throttle')  # Remove attribute
-
-        ship.rotate(1)
-
-        expected = 100.0 / 100.0  # 1.0 degrees (throttle defaults to 1.0)
-        assert ship.angle == pytest.approx(expected, abs=0.001)
+    # DELETED: test_rotate_without_turn_throttle_attribute
+    # Reason: Duck typing replaced with explicit protocols in PROJ-190.
+    # Ships must now have turn_throttle attribute.
 
 
 class TestUpdatePhysicsMovementThrusting:
@@ -198,21 +191,9 @@ class TestUpdatePhysicsMovementThrusting:
 
         assert ship.current_speed == pytest.approx(expected_target, abs=0.01)
 
-    def test_missing_engine_throttle_defaults_to_one(self):
-        """Missing engine_throttle attribute should default to 1.0."""
-        ship = MockShipWithPhysics()
-        ship._total_thrust = 1000.0
-        ship.mass = 100.0
-        delattr(ship, 'engine_throttle')
-
-        expected_max_speed = (ship._total_thrust * K_SPEED) / ship.mass
-
-        # Run many updates to reach max speed
-        for _ in range(1000):
-            ship.is_thrusting = True
-            ship.update_physics_movement()
-
-        assert ship.current_speed == pytest.approx(expected_max_speed, abs=0.01)
+    # DELETED: test_missing_engine_throttle_defaults_to_one
+    # Reason: Duck typing replaced with explicit protocols in PROJ-190.
+    # Ships must now have engine_throttle attribute.
 
     def test_zero_thrust_no_acceleration(self):
         """Zero thrust should result in no acceleration."""

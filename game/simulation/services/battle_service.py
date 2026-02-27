@@ -4,12 +4,15 @@ BattleService - Abstraction layer between UI and BattleEngine.
 This service handles battle creation, ship management, and simulation control,
 providing a clean interface for battle screens.
 """
+import logging
 from dataclasses import dataclass, field
 from typing import List, Optional, Any, Dict, TYPE_CHECKING
 
 from game.simulation.systems.battle_engine import BattleEngine, BattleLogger
 from game.simulation.systems.battle_end_conditions import BattleEndCondition, BattleEndMode
-from game.core.logger import log_error, log_info
+from game.core.exceptions import ValidationException, StateException
+
+logger = logging.getLogger(__name__)
 
 # TYPE_CHECKING imports to avoid simulation->ai import at runtime
 # The actual factory is injected by callers from higher layers (UI, strategy)
@@ -85,8 +88,8 @@ class BattleService:
                 engine=self._engine
             )
 
-        except (TypeError, ValueError, AttributeError) as e:
-            log_error(f"Failed to create battle: {e}")
+        except (ValidationException, StateException) as e:
+            logger.error(f"Failed to create battle: {e}")
             return BattleServiceResult(
                 success=False,
                 errors=[str(e)]
@@ -208,7 +211,7 @@ class BattleService:
         )
         self._is_started = True
 
-        log_info(f"Battle started: {len(self._team0_ships)} vs {len(self._team1_ships)} ships")
+        logger.info(f"Battle started: {len(self._team0_ships)} vs {len(self._team1_ships)} ships")
 
         return BattleServiceResult(success=True, engine=self._engine)
 

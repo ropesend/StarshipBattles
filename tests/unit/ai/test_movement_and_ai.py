@@ -8,9 +8,8 @@ from game.ui.screens.battle_screen import BattleScreen
 from game.ai.controller import AIController
 from game.ai.strategy_manager import StrategyManager
 from game.ai.interfaces.controllable import ShipControllableAdapter
-from game.simulation.components.component import load_components, load_modifiers
+from game.simulation.components.component import load_components, load_modifiers, create_component
 from game.core.constants import LayerType
-from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
 
 
@@ -51,15 +50,7 @@ def movement_ai_setup(fresh_registries):
     }
 
     pygame.quit()
-    RegistryManager.instance().clear()
     StrategyManager.instance().clear()
-
-
-def get_component_clone(component_id):
-    comps = RegistryManager.instance().components
-    if component_id in comps:
-        return comps[component_id].clone()
-    return None
 
 
 class TestMovementAndAI:
@@ -96,26 +87,26 @@ class TestMovementAndAI:
         registries = movement_ai_setup['registries']
         # Build a valid ship with all required components
         # Bridge (CORE) - CommandAndControl
-        bridge = get_component_clone("bridge")
+        bridge = create_component("bridge", registries=registries)
         attacker.add_component(bridge, LayerType.CORE)
 
         # Generator (CORE)
-        gen = get_component_clone("generator")
+        gen = create_component("generator", registries=registries)
         attacker.add_component(gen, LayerType.CORE)
 
         # Engine (OUTER) - CombatPropulsion
-        engine = get_component_clone("standard_engine")
+        engine = create_component("standard_engine", registries=registries)
         attacker.add_component(engine, LayerType.OUTER)
 
         # Fuel (INNER) - FuelStorage
-        fuel = get_component_clone("fuel_tank")
+        fuel = create_component("fuel_tank", registries=registries)
         attacker.add_component(fuel, LayerType.INNER)
 
         # Life Support + Crew for operational ship (need multiple for Cruiser crew requirements)
         for _ in range(4):
-            ls = get_component_clone("life_support")
+            ls = create_component("life_support", registries=registries)
             attacker.add_component(ls, LayerType.INNER)
-            cq = get_component_clone("crew_quarters")
+            cq = create_component("crew_quarters", registries=registries)
             attacker.add_component(cq, LayerType.INNER)
 
         attacker.recalculate_stats()

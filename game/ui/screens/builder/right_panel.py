@@ -5,14 +5,16 @@ Displays ship statistics and configuration options.
 PROJ-43: Now uses VehicleClassService instead of direct VEHICLE_CLASSES import.
 PROJ-80: Stats display delegated to shared DesignStatsPanel.
 """
+import logging
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIDropDownMenu, UITextBox, UIImage
 from pygame_gui.core import UIElement
 
 from game.core.strategy_metadata import StrategyMetadataService
-from game.core.logger import log_warning
 from game.ui.panels.design_stats_panel import DesignStatsPanel
+
+logger = logging.getLogger(__name__)
 
 class BuilderRightPanel:
     def __init__(self, builder, manager, rect, event_bus=None, viewmodel=None, vehicle_class_service=None, hide_theme_selector=False):
@@ -51,7 +53,7 @@ class BuilderRightPanel:
 
     def on_ship_updated(self, ship):
         """Handle ship update event - rebuild if needed, then update stats."""
-        if hasattr(self, 'stats_panel') and self.stats_panel.needs_rebuild(ship):
+        if self.stats_panel.needs_rebuild(ship):
             self.stats_panel.rebuild(ship)
             self._sync_from_stats_panel()
         # BUG-04 Fix: Always call update_stats_display to populate values
@@ -74,7 +76,7 @@ class BuilderRightPanel:
         if not self.hide_theme_selector:
             UILabel(pygame.Rect(10, y, 60, 25), "Theme:", manager=self.manager, container=self.panel)
             theme_options = self.builder.theme_manager.get_available_themes()
-            curr_theme = getattr(self.builder.ship, 'theme_id', 'Federation')
+            curr_theme = self.builder.ship.theme_id
             if theme_options and curr_theme not in theme_options: curr_theme = theme_options[0]
 
             self.theme_dropdown = UIDropDownMenu(theme_options, curr_theme, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
@@ -86,7 +88,7 @@ class BuilderRightPanel:
         if not types:
             types = ["Ship"]
 
-        curr_type = getattr(self.builder.ship, 'vehicle_type', "Ship")
+        curr_type = self.builder.ship.vehicle_type
         if curr_type not in types:
             curr_type = types[0]
 
@@ -167,7 +169,7 @@ class BuilderRightPanel:
             theme_rect = self.theme_dropdown.relative_rect
             self.theme_dropdown.kill()
             theme_options = self.builder.theme_manager.get_available_themes()
-            curr_theme = getattr(s, 'theme_id', 'Federation')
+            curr_theme = s.theme_id
             if theme_options and curr_theme not in theme_options: curr_theme = theme_options[0]
             self.theme_dropdown = UIDropDownMenu(theme_options, curr_theme, theme_rect, manager=self.manager, container=self.panel)
         
@@ -176,7 +178,7 @@ class BuilderRightPanel:
         if not types:
             types = ["Ship"]
 
-        curr_type = getattr(s, 'vehicle_type', "Ship")
+        curr_type = s.vehicle_type
         # Ensure consistency from class if vehicle_type not set or mismatched
         class_def = self._vehicle_class_service.get_class_definition(s.ship_class)
         if class_def:
@@ -236,7 +238,7 @@ class BuilderRightPanel:
         import re
         
         # Determine paths
-        theme = getattr(self.builder.ship, 'theme_id', 'Federation')
+        theme = self.builder.ship.theme_id
         ship_class = self.builder.ship.ship_class
         
         match = re.match(r"(.*)\s+\((.*)\)", ship_class)
@@ -302,7 +304,7 @@ class BuilderRightPanel:
             )
             
         except (FileNotFoundError, OSError, pygame.error) as e:
-            log_warning(f"Failed to load portrait {full_path}: {e}")
+            logger.warning(f"Failed to load portrait {full_path}: {e}")
 
     def setup_stats(self):
         """Set up the stats panel using shared DesignStatsPanel."""
@@ -327,11 +329,8 @@ class BuilderRightPanel:
 
     def rebuild_stats(self):
         """Completely rebuild the stats scroll container (e.g. after ship load)."""
-        if hasattr(self, 'stats_panel'):
-            self.stats_panel.rebuild(self.builder.ship)
-            self._sync_from_stats_panel()
-        else:
-            self.setup_stats()
+        self.stats_panel.rebuild(self.builder.ship)
+        self._sync_from_stats_panel()
 
     def update_class_dropdown(self, new_class: str, valid_classes: list):
         """Kill existing class dropdown and recreate with new options.

@@ -8,16 +8,22 @@ a galaxy-altering effect (destroy planet, destroy star, open/close warp points,
 create Dyson Sphere, or self-destruct).
 """
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
+import logging
 
 from game.core.hex_math import HexCoord, hex_distance
-from game.core.logger import log_debug, log_event, log_info, log_warning
+from game.core.event_logging import log_event
 from game.strategy.data.fleet import Fleet, OrderType
+
+logger = logging.getLogger(__name__)
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
 from game.strategy.events.event_types import EventType, EventCategory
 from game.strategy.validation.superweapon_validator import SuperweaponValidator
 from game.strategy.data.pathfinding import get_system_at_hex
+
+if TYPE_CHECKING:
+    from game.strategy.data.empire import Empire
 
 
 @dataclass
@@ -48,7 +54,7 @@ class SuperweaponOrderProcessor:
     def process_implode_planet(
         self,
         fleet: Fleet,
-        empire,
+        empire: 'Empire',
         galaxy: Galaxy,
         component_registry: Optional[Dict[str, Any]] = None
     ) -> SuperweaponResult:
@@ -91,9 +97,9 @@ class SuperweaponOrderProcessor:
             ship = fleet.ships[0] if fleet.ships else None
 
         # Remove planet from colony list if owned
-        if hasattr(target_planet, 'owner_id') and target_planet.owner_id is not None:
+        if target_planet.owner_id is not None:
             # Find owning empire and remove from colonies
-            if hasattr(empire, 'colonies') and target_planet in empire.colonies:
+            if target_planet in empire.colonies:
                 empire.colonies.remove(target_planet)
             # Note: For enemy planets, we'd need to iterate empires
 
@@ -109,13 +115,13 @@ class SuperweaponOrderProcessor:
         # Check if fleet is now empty
         fleet_consumed = len(fleet.ships) == 0
 
-        log_info(f"Planet {target_planet.name} destroyed by fleet {fleet.id}")
+        logger.info(f"Planet {target_planet.name} destroyed by fleet {fleet.id}")
         log_event(
             EventType.PLANET_DESTROYED,
             category=EventCategory.SUPERWEAPONS,
-            empire_id=getattr(empire, 'id', 0),
+            empire_id=empire.id,
             message=f"Planet {target_planet.name} destroyed",
-            planet_id=getattr(target_planet, 'id', None),
+            planet_id=target_planet.id,
             planet_name=target_planet.name,
             fleet_id=fleet.id,
         )
@@ -129,9 +135,9 @@ class SuperweaponOrderProcessor:
     def process_stellerate_star(
         self,
         fleet: Fleet,
-        empire,
+        empire: 'Empire',
         galaxy: Galaxy,
-        empires: List,
+        empires: List['Empire'],
         component_registry: Optional[Dict[str, Any]] = None
     ) -> SuperweaponResult:
         """
@@ -166,29 +172,28 @@ class SuperweaponOrderProcessor:
         # 1. Remove all planets from system and galaxy
         for planet in list(system.planets):
             # Remove from empire colonies if owned
-            if hasattr(planet, 'owner_id') and planet.owner_id is not None:
+            if planet.owner_id is not None:
                 for emp in empires:
-                    if hasattr(emp, 'colonies') and planet in emp.colonies:
+                    if planet in emp.colonies:
                         emp.colonies.remove(planet)
             galaxy.unregister_planet(planet)
 
         # 2. Collect and destroy ALL fleets in the system (including actor)
         all_fleets_in_system = galaxy.get_all_fleets_in_system(system, empires)
         for (owner_empire, victim_fleet) in all_fleets_in_system:
-            # Unregister from galaxy
-            if hasattr(galaxy, 'unregister_fleet'):
-                galaxy.unregister_fleet(victim_fleet)
+            # Unregister from galaxy (Galaxy always has unregister_fleet)
+            galaxy.unregister_fleet(victim_fleet)
             # Remove from empire
             owner_empire.remove_fleet(victim_fleet)
 
         # 3. Remove all stars (but NOT warp points)
         system.stars = []
 
-        log_info(f"Star system {system_name} stellerated by fleet {fleet.id}")
+        logger.info(f"Star system {system_name} stellerated by fleet {fleet.id}")
         log_event(
             EventType.STAR_DESTROYED,
             category=EventCategory.SUPERWEAPONS,
-            empire_id=getattr(empire, 'id', 0),
+            empire_id=empire.id,
             message=f"Star system {system_name} destroyed",
             fleet_id=fleet.id,
             system_name=system_name,
@@ -203,7 +208,7 @@ class SuperweaponOrderProcessor:
     def process_open_warp_point(
         self,
         fleet: Fleet,
-        empire,
+        empire: 'Empire',
         galaxy: Galaxy,
         component_registry: Optional[Dict[str, Any]] = None
     ) -> SuperweaponResult:
@@ -287,11 +292,11 @@ class SuperweaponOrderProcessor:
 
         fleet_consumed = len(fleet.ships) == 0
 
-        log_info(f"Warp point opened between {current_system.name} and {target_system.name}")
+        logger.info(f"Warp point opened between {current_system.name} and {target_system.name}")
         log_event(
             EventType.WARP_POINT_OPENED,
             category=EventCategory.SUPERWEAPONS,
-            empire_id=getattr(empire, 'id', 0),
+            empire_id=empire.id,
             message=f"Warp point opened to {target_system.name}",
             fleet_id=fleet.id,
             source_system=current_system.name,
@@ -307,7 +312,7 @@ class SuperweaponOrderProcessor:
     def process_close_warp_point(
         self,
         fleet: Fleet,
-        empire,
+        empire: 'Empire',
         galaxy: Galaxy,
         component_registry: Optional[Dict[str, Any]] = None
     ) -> SuperweaponResult:
@@ -362,11 +367,11 @@ class SuperweaponOrderProcessor:
 
         fleet_consumed = len(fleet.ships) == 0
 
-        log_info(f"Warp point closed between {current_system.name} and {destination_id}")
+        logger.info(f"Warp point closed between {current_system.name} and {destination_id}")
         log_event(
             EventType.WARP_POINT_CLOSED,
             category=EventCategory.SUPERWEAPONS,
-            empire_id=getattr(empire, 'id', 0),
+            empire_id=empire.id,
             message=f"Warp point to {destination_id} closed",
             fleet_id=fleet.id,
             source_system=current_system.name,
@@ -382,7 +387,7 @@ class SuperweaponOrderProcessor:
     def process_create_dyson_sphere(
         self,
         fleet: Fleet,
-        empire,
+        empire: 'Empire',
         galaxy: Galaxy,
         component_registry: Optional[Dict[str, Any]] = None
     ) -> SuperweaponResult:
@@ -417,7 +422,7 @@ class SuperweaponOrderProcessor:
 
         # Get primary star location for distance calculations
         primary_star = system.stars[0]
-        star_loc = getattr(primary_star, 'location', HexCoord(0, 0))
+        star_loc = primary_star.location
 
         # Find ship with CreateDysonSphere ability
         ship = None
@@ -438,9 +443,9 @@ class SuperweaponOrderProcessor:
                 planets_to_remove.append(planet)
 
         for planet in planets_to_remove:
-            # Remove from empire colonies if owned
-            if hasattr(planet, 'owner_id') and planet.owner_id is not None:
-                if hasattr(empire, 'colonies') and planet in empire.colonies:
+            # Remove from empire colonies if owned (Planet always has owner_id)
+            if planet.owner_id is not None:
+                if planet in empire.colonies:
                     empire.colonies.remove(planet)
             galaxy.unregister_planet(planet)
 
@@ -448,7 +453,7 @@ class SuperweaponOrderProcessor:
         system.stars = []
 
         # Extract environmental conditions from creator's race_config
-        race = getattr(empire, 'race_config', None) if empire else None
+        race = empire.race_config if empire else None
         if race:
             # Use race's ideal conditions for perfect habitability
             gravity = race.gravity_ideal * 9.81  # Convert g to m/s^2
@@ -501,11 +506,11 @@ class SuperweaponOrderProcessor:
 
         fleet_consumed = len(fleet.ships) == 0
 
-        log_info(f"Dyson Sphere created in {system.name}")
+        logger.info(f"Dyson Sphere created in {system.name}")
         log_event(
             EventType.DYSON_SPHERE_CREATED,
             category=EventCategory.SUPERWEAPONS,
-            empire_id=getattr(empire, 'id', 0),
+            empire_id=empire.id,
             message=f"Dyson Sphere created in {system.name}",
             fleet_id=fleet.id,
             system_name=system.name,
@@ -520,7 +525,7 @@ class SuperweaponOrderProcessor:
     def process_self_destruct(
         self,
         fleet: Fleet,
-        empire,
+        empire: 'Empire',
         galaxy: Galaxy
     ) -> SuperweaponResult:
         """
@@ -556,10 +561,8 @@ class SuperweaponOrderProcessor:
             ship = ships_by_id.get(ship_id)
             if ship:
                 ships_to_remove.append(ship)
-                # Get name, handling mock objects gracefully
-                name = getattr(ship, 'name', None)
-                if name is None or not isinstance(name, str):
-                    name = str(ship_id)
+                # Get name - ship.name always exists on ShipInstance
+                name = ship.name if isinstance(ship.name, str) else str(ship_id)
                 ship_names.append(name)
 
         # Remove ships
@@ -570,11 +573,11 @@ class SuperweaponOrderProcessor:
 
         fleet_consumed = len(fleet.ships) == 0
 
-        log_info(f"Ships self-destructed: {', '.join(ship_names)}")
+        logger.info(f"Ships self-destructed: {', '.join(ship_names)}")
         log_event(
             EventType.SHIPS_SELF_DESTRUCTED,
             category=EventCategory.SUPERWEAPONS,
-            empire_id=getattr(empire, 'id', 0),
+            empire_id=empire.id,
             message=f"{len(ships_to_remove)} ships self-destructed",
             fleet_id=fleet.id,
             ship_count=len(ships_to_remove),

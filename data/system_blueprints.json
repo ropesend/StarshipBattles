@@ -17,6 +17,10 @@
                 "description": "Any mass range for binary stars",
                 "min": 0.1,
                 "max": 100.0
+            },
+            "storms": {
+                "count": {"min": 0, "max": 1},
+                "allowed_types": ["gravitational_anomaly"]
             }
         },
         "solar_like": {
@@ -37,6 +41,10 @@
                 "distribution": "log_normal",
                 "mu": 24.5,
                 "sigma": 1.5
+            },
+            "storms": {
+                "count": {"min": 0, "max": 2},
+                "allowed_types": ["ion_storm", "plasma_storm", "dark_nebula"]
             }
         },
         "red_dwarf_pack": {
@@ -61,6 +69,10 @@
             "orbital_spacing": {
                 "description": "Closer orbital spacing than normal",
                 "factor": 0.6
+            },
+            "storms": {
+                "count": {"min": 1, "max": 3},
+                "allowed_types": ["radiation_belt", "plasma_storm"]
             }
         },
         "empty_warp_hub": {
@@ -75,6 +87,10 @@
                 "description": "Any mass range",
                 "min": 0.1,
                 "max": 10.0
+            },
+            "storms": {
+                "count": {"min": 0, "max": 3},
+                "allowed_types": ["dark_nebula", "ion_storm"]
             }
         },
         "gas_giant_system": {
@@ -95,6 +111,10 @@
                 "bias": "large",
                 "min": 1e25,
                 "max": 2e28
+            },
+            "storms": {
+                "count": {"min": 0, "max": 2},
+                "allowed_types": ["radiation_belt", "gravitational_anomaly"]
             }
         },
         "trinary_system": {
@@ -109,6 +129,10 @@
                 "description": "Any mass range",
                 "min": 0.1,
                 "max": 50.0
+            },
+            "storms": {
+                "count": {"min": 0, "max": 2},
+                "allowed_types": ["gravitational_anomaly", "plasma_storm"]
             }
         },
         "quad_system": {
@@ -123,6 +147,10 @@
                 "description": "Any mass range",
                 "min": 0.1,
                 "max": 50.0
+            },
+            "storms": {
+                "count": {"min": 1, "max": 2},
+                "allowed_types": ["gravitational_anomaly"]
             }
         },
         "hot_jupiter": {
@@ -146,6 +174,10 @@
             "orbital_zones": {
                 "description": "Force at least one planet in hot zone",
                 "hot_required": true
+            },
+            "storms": {
+                "count": {"min": 0, "max": 2},
+                "allowed_types": ["plasma_storm", "radiation_belt"]
             }
         }
     }

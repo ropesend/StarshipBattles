@@ -15,6 +15,7 @@ from game.core.hex_math import (
     pixel_to_hex,
     hex_ring,
     hex_circle_filled,
+    hex_random_cluster,
     hex_lerp,
     hex_linedraw,
     hex_to_dict,
@@ -706,3 +707,159 @@ class TestHexCircleFilled:
             # frozenset already guarantees no duplicates, but verify count
             result_list = list(result)
             assert len(result_list) == len(set(result_list))
+
+
+# =============================================================================
+# hex_random_cluster Tests
+# =============================================================================
+
+class TestHexRandomCluster:
+    """Tests for hex_random_cluster function."""
+
+    def test_cluster_returns_target_size(self):
+        """Cluster returns target_size hexes when space available."""
+        from game.core.hex_math import hex_random_cluster
+        import random
+
+        rng = random.Random(42)
+        center = HexCoord(0, 0)
+        result = hex_random_cluster(center, target_size=5, rng=rng)
+
+        assert len(result) == 5
+        # Result should be offsets relative to center
+        assert HexCoord(0, 0) in result  # Center is always included
+
+    def test_cluster_contains_center(self):
+        """Cluster always contains the center hex (as offset 0,0)."""
+        from game.core.hex_math import hex_random_cluster
+        import random
+
+        rng = random.Random(123)
+        center = HexCoord(5, -3)
+        result = hex_random_cluster(center, target_size=7, rng=rng)
+
+        # Returns offsets, so (0, 0) should be present
+        assert HexCoord(0, 0) in result
+
+    def test_single_hex_cluster(self):
+        """target_size=1 returns just {HexCoord(0,0)}."""
+        from game.core.hex_math import hex_random_cluster
+        import random
+
+        rng = random.Random(0)
+        result = hex_random_cluster(HexCoord(0, 0), target_size=1, rng=rng)
+
+        assert result == frozenset({HexCoord(0, 0)})
+
+    def test_cluster_is_connected(self):
+        """All hexes in cluster are connected (form contiguous region)."""
+        from game.core.hex_math import hex_random_cluster, hex_distance
+        import random
+
+        rng = random.Random(999)
+        center = HexCoord(0, 0)
+        offsets = hex_random_cluster(center, target_size=10, rng=rng)
+
+        # Convert offsets to absolute positions for connectivity check
+        absolute_hexes = {center + offset for offset in offsets}
+
+        # Connectivity check: BFS from any hex should reach all others
+        start = next(iter(absolute_hexes))
+        visited = {start}
+        frontier = [start]
+
+        while frontier:
+            current = frontier.pop()
+            for neighbor in current.neighbors():
+                if neighbor in absolute_hexes and neighbor not in visited:
+                    visited.add(neighbor)
+                    frontier.append(neighbor)
+
+        assert visited == absolute_hexes, "Cluster is not connected"
+
+    def test_cluster_avoids_excluded_hexes(self):
+        """Cluster does not include hexes in avoid set."""
+        from game.core.hex_math import hex_random_cluster
+        import random
+
+        rng = random.Random(42)
+        center = HexCoord(0, 0)
+        # Avoid all neighbors of the center
+        avoid = frozenset({HexCoord(1, 0), HexCoord(0, 1), HexCoord(-1, 1),
+                          HexCoord(-1, 0), HexCoord(0, -1), HexCoord(1, -1)})
+
+        result = hex_random_cluster(center, target_size=5, rng=rng, avoid=avoid)
+
+        # Result is offsets - convert to absolute to check
+        absolute_hexes = {center + offset for offset in result}
+
+        # Should not overlap with avoid set
+        assert absolute_hexes.isdisjoint(avoid)
+        # Can only return center since all neighbors blocked
+        assert result == frozenset({HexCoord(0, 0)})
+
+    def test_cluster_deterministic_with_seeded_rng(self):
+        """Same seed produces same cluster."""
+        from game.core.hex_math import hex_random_cluster
+        import random
+
+        center = HexCoord(0, 0)
+
+        rng1 = random.Random(12345)
+        result1 = hex_random_cluster(center, target_size=8, rng=rng1)
+
+        rng2 = random.Random(12345)
+        result2 = hex_random_cluster(center, target_size=8, rng=rng2)
+
+        assert result1 == result2
+
+    def test_cluster_returns_smaller_when_constrained(self):
+        """When frontier runs out, returns smaller cluster than requested."""
+        from game.core.hex_math import hex_random_cluster, hex_circle_filled
+        import random
+
+        rng = random.Random(42)
+        center = HexCoord(0, 0)
+        # Block everything except a small pocket - only allow hexes within radius 2
+        # But mark radius 1 as the "allowed" area and everything else as blocked
+        allowed = hex_circle_filled(center, 1)  # 7 hexes total
+
+        # Avoid everything NOT in allowed (block outside the pocket)
+        # Create a large ring of blocked hexes around the allowed area
+        avoid = hex_circle_filled(center, 10) - allowed
+
+        # Request 50 hexes but only 7 are available
+        result = hex_random_cluster(center, target_size=50, rng=rng, avoid=avoid)
+
+        # Should get exactly 7 (all of allowed area)
+        assert len(result) == 7
+        assert len(result) < 50  # Less than requested
+
+    def test_cluster_returns_frozenset(self):
+        """hex_random_cluster returns a frozenset."""
+        from game.core.hex_math import hex_random_cluster
+        import random
+
+        rng = random.Random(0)
+        result = hex_random_cluster(HexCoord(0, 0), target_size=3, rng=rng)
+
+        assert isinstance(result, frozenset)
+
+    def test_cluster_with_offset_center(self):
+        """Cluster works correctly with non-origin center."""
+        from game.core.hex_math import hex_random_cluster
+        import random
+
+        rng = random.Random(42)
+        center = HexCoord(10, -5)
+        result = hex_random_cluster(center, target_size=5, rng=rng)
+
+        assert len(result) == 5
+        # Result should be offsets relative to center, so (0,0) is included
+        assert HexCoord(0, 0) in result
+
+        # Converting back to absolute should give hexes near center
+        absolute_hexes = {center + offset for offset in result}
+        for h in absolute_hexes:
+            # All should be within reasonable distance of center
+            assert hex_distance(center, h) <= 5  # Can't be farther than cluster size

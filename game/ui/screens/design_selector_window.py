@@ -17,9 +17,12 @@ from pygame_gui.elements import (
     UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer,
     UITextEntryLine, UIDropDownMenu, UIImage
 )
-from typing import Optional, Callable, List, TYPE_CHECKING
+from typing import Optional, Callable, List, Dict, Set, TYPE_CHECKING
 from game.strategy.systems.design_library import DesignLibrary
+import logging
 from game.ui.screens.design_image_helper import load_portrait_thumbnail, load_topdown_thumbnail
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.data.design_metadata import DesignMetadata
@@ -65,6 +68,14 @@ class DesignSelectorWindow(UIWindow):
         # Layout constants
         self.sidebar_width = 250
         self.row_height = 60
+
+        # Design row UI elements (populated by _rebuild_design_list)
+        self.design_rows = []
+
+        # Button-to-data mappings (replaces monkey-patching on UIButton objects)
+        self._button_design_map: Dict[UIButton, str] = {}
+        self._obsolete_buttons: Set[UIButton] = set()
+        self._obsolete_state_map: Dict[UIButton, bool] = {}
 
         # Create UI
         self._create_sidebar()
@@ -229,8 +240,6 @@ class DesignSelectorWindow(UIWindow):
 
     def _refresh_designs(self):
         """Refresh the design list based on current filters"""
-        from game.core.logger import log_info, log_debug
-
         # Get filter values
         # Note: pygame_gui dropdowns return tuples (current_value, previous_value)
         # We need to extract just the current value (first element)
@@ -250,12 +259,12 @@ class DesignSelectorWindow(UIWindow):
         if type_option != "All Types":
             type_filter = type_option
 
-        log_info(f"DesignSelector: Refreshing design list (mode={self.mode})")
-        log_debug(f"  design_library.designs_folder: {self.design_library.designs_folder}")
-        log_debug(f"  filter_name: '{self.filter_name}'")
-        log_debug(f"  class_filter: {class_filter}")
-        log_debug(f"  type_filter: {type_filter}")
-        log_debug(f"  show_obsolete: {self.show_obsolete}")
+        logger.info(f"DesignSelector: Refreshing design list (mode={self.mode})")
+        logger.debug(f"  design_library.designs_folder: {self.design_library.designs_folder}")
+        logger.debug(f"  filter_name: '{self.filter_name}'")
+        logger.debug(f"  class_filter: {class_filter}")
+        logger.debug(f"  type_filter: {type_filter}")
+        logger.debug(f"  show_obsolete: {self.show_obsolete}")
 
         # Search designs
         self.filtered_designs = self.design_library.search_designs(
@@ -267,10 +276,10 @@ class DesignSelectorWindow(UIWindow):
             }
         )
 
-        log_info(f"DesignSelector: Found {len(self.filtered_designs)} designs after filtering")
+        logger.info(f"DesignSelector: Found {len(self.filtered_designs)} designs after filtering")
         if self.filtered_designs:
             for d in self.filtered_designs[:5]:  # Log first 5
-                log_debug(f"    - {d.name} (class={d.ship_class}, type={d.vehicle_type})")
+                logger.debug(f"    - {d.name} (class={d.ship_class}, type={d.vehicle_type})")
 
         # Sort by name
         self.filtered_designs.sort(key=lambda d: d.name)
@@ -281,11 +290,14 @@ class DesignSelectorWindow(UIWindow):
     def _rebuild_design_list(self):
         """Rebuild the design list UI"""
         # Clear existing rows
-        if hasattr(self, 'design_rows'):
-            for row in self.design_rows:
-                row.kill()
-
+        for row in self.design_rows:
+            row.kill()
         self.design_rows = []
+
+        # Clear button-to-data mappings
+        self._button_design_map.clear()
+        self._obsolete_buttons.clear()
+        self._obsolete_state_map.clear()
 
         # Create rows for each design
         y_offset = 10
@@ -399,9 +411,9 @@ class DesignSelectorWindow(UIWindow):
             container=row,
             object_id=f"#obsolete_{design.design_id}"
         )
-        obsolete_btn.design_id = design.design_id
-        obsolete_btn.is_obsolete_button = True
-        obsolete_btn.current_obsolete_state = design.is_obsolete
+        self._button_design_map[obsolete_btn] = design.design_id
+        self._obsolete_buttons.add(obsolete_btn)
+        self._obsolete_state_map[obsolete_btn] = design.is_obsolete
 
         # Select button
         select_btn = UIButton(
@@ -412,8 +424,8 @@ class DesignSelectorWindow(UIWindow):
             object_id=f"#select_{design.design_id}"
         )
 
-        # Store design_id on button for event handling
-        select_btn.design_id = design.design_id
+        # Store design_id in map for event handling
+        self._button_design_map[select_btn] = design.design_id
 
         return row
 
@@ -455,13 +467,15 @@ class DesignSelectorWindow(UIWindow):
                 return True
 
             # Check if it's an obsolete toggle button
-            elif hasattr(event.ui_element, 'is_obsolete_button') and event.ui_element.is_obsolete_button:
-                self._on_toggle_obsolete(event.ui_element.design_id, event.ui_element.current_obsolete_state)
+            elif event.ui_element in self._obsolete_buttons:
+                design_id = self._button_design_map[event.ui_element]
+                current_state = self._obsolete_state_map[event.ui_element]
+                self._on_toggle_obsolete(design_id, current_state)
                 return True
 
             # Check if it's a design row select button
-            elif hasattr(event.ui_element, 'design_id'):
-                self._on_design_selected(event.ui_element.design_id)
+            elif event.ui_element in self._button_design_map:
+                self._on_design_selected(self._button_design_map[event.ui_element])
                 return True
 
         elif event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
@@ -500,13 +514,12 @@ class DesignSelectorWindow(UIWindow):
             design_id: ID of design to toggle
             current_state: Current obsolete state (True = obsolete)
         """
-        from game.core.logger import log_info
         new_state = not current_state
-        log_info(f"DesignSelector: Toggling obsolete for {design_id}: {current_state} -> {new_state}")
+        logger.info(f"DesignSelector: Toggling obsolete for {design_id}: {current_state} -> {new_state}")
 
         # Call design library to mark obsolete
         success, message = self.design_library.mark_obsolete(design_id, new_state)
-        log_info(f"DesignSelector: mark_obsolete result: {success}, {message}")
+        logger.info(f"DesignSelector: mark_obsolete result: {success}, {message}")
 
         if success:
             # Refresh the list to show updated state
@@ -519,11 +532,10 @@ class DesignSelectorWindow(UIWindow):
         Args:
             design_id: ID of selected design
         """
-        from game.core.logger import log_info
-        log_info(f"DesignSelector: Design selected: {design_id}")
+        logger.info(f"DesignSelector: Design selected: {design_id}")
         self.selected_design_id = design_id
         self.select_button.enable()
-        log_info(f"DesignSelector: Main Select button enabled")
+        logger.info(f"DesignSelector: Main Select button enabled")
 
         # Immediately trigger selection (double-click behavior)
         # This makes it more user-friendly - clicking a row's Select button
@@ -532,14 +544,13 @@ class DesignSelectorWindow(UIWindow):
 
     def _on_select(self):
         """Handle main Select button click"""
-        from game.core.logger import log_info, log_warning
-        log_info(f"DesignSelector: Main Select button clicked")
+        logger.info(f"DesignSelector: Main Select button clicked")
         if self.selected_design_id and self.on_select_callback:
-            log_info(f"DesignSelector: Calling callback with design_id={self.selected_design_id}")
+            logger.info(f"DesignSelector: Calling callback with design_id={self.selected_design_id}")
             self.on_select_callback(self.selected_design_id)
             self.kill()
         else:
-            log_warning(f"DesignSelector: Cannot select - selected_design_id={self.selected_design_id}, callback={self.on_select_callback is not None}")
+            logger.warning(f"DesignSelector: Cannot select - selected_design_id={self.selected_design_id}, callback={self.on_select_callback is not None}")
 
     def update(self, time_delta: float):
         """

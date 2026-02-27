@@ -15,6 +15,7 @@ import pygame
 from game.simulation.systems.battle_engine import BattleEngine
 from game.simulation.systems.battle_end_conditions import BattleEndMode, BattleEndCondition
 from game.core.constants import AttackType
+from game.core.exceptions import ValidationException
 
 
 # =============================================================================
@@ -985,7 +986,7 @@ class TestFighterLaunchProcessing:
         source_ship.just_fired_projectiles = [launch_attack]
 
         with patch('game.simulation.systems.battle_engine.Ship'):
-            with pytest.raises(ValueError, match="ai_factory"):
+            with pytest.raises(ValidationException):
                 engine.update()
 
     def test_launch_attack_fighter_velocity_boosted(self, battle_engine_with_ships):

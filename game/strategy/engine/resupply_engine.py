@@ -15,10 +15,15 @@ Fits into TurnEngine's _process_tick() as Phase 0a (after resource consumption).
 
 from dataclasses import dataclass
 from typing import Dict, List, Optional, TYPE_CHECKING
+import logging
 
 from game.core.constants import ResourceType
-from game.core.logger import log_info
 from game.core.registry import GameRegistries
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
+from game.strategy.services.component_inspector import get_component_abilities
+
+logger = logging.getLogger(__name__)
 from game.strategy.interfaces.engines import IResupplyEngine
 from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
@@ -58,10 +63,14 @@ class ResupplyEngine(IResupplyEngine):
             registries: GameRegistries container. Required - no fallback.
 
         Raises:
-            TypeError: If registries is None.
+            ValidationException: If registries is None.
         """
         if registries is None:
-            raise TypeError("registries is required for ResupplyEngine")
+            raise ValidationException(
+                "registries is required for ResupplyEngine",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "ResupplyEngine", "parameter": "registries"}
+            )
         self._registries = registries
 
     def process_fuel_generation(self, tick: int, empires) -> List[ResupplyEvent]:
@@ -147,8 +156,7 @@ class ResupplyEngine(IResupplyEngine):
                 comp_def = registry.get(comp_id)
                 if not comp_def:
                     continue
-
-                abilities = getattr(comp_def, 'abilities', {}) or {}
+                abilities = get_component_abilities(comp_def)
                 for gen_data in ShipStatsCalculator._get_ability_list(abilities, 'ResourceGeneration'):
                     if gen_data.get('resource') == ResourceType.FUEL:
                         total_rate += gen_data.get('amount', 0.0)

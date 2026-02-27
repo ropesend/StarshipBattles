@@ -9,17 +9,22 @@ Responsibilities:
 - Apply combat results to fleet rosters
 """
 
+import logging
 import random
 from dataclasses import dataclass
 from typing import Optional, List, TYPE_CHECKING
 
-from game.core.logger import log_debug, log_info, log_event
+from game.core.event_logging import log_event
 from game.strategy.events.event_types import EventType, EventCategory
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.interfaces.battle_resolver import IBattleResolver
     from game.strategy.data.fleet import Fleet
     from game.core.registry import GameRegistries
+    from game.strategy.services.area_effect_manager import AreaEffectManager
+    from game.strategy.data.galaxy import Galaxy
 
 
 @dataclass
@@ -45,7 +50,8 @@ class ConflictResolutionEngine:
         self,
         battle_resolver: Optional['IBattleResolver'] = None,
         *,
-        registries: Optional['GameRegistries'] = None
+        registries: Optional['GameRegistries'] = None,
+        area_effect_manager: Optional['AreaEffectManager'] = None
     ):
         """
         Initialize the conflict resolution engine.
@@ -55,12 +61,19 @@ class ConflictResolutionEngine:
                            If None, defaults to SimulationBattleResolver.
             registries: Optional GameRegistries for DI. Required for strict DI
                        compliance in PROJ-50.
+            area_effect_manager: Optional AreaEffectManager for environmental
+                                effects (PROJ-189). When provided, storm effects
+                                are applied to ships during combat.
         """
         # Battle seed counter for deterministic battles
         self._battle_seed_counter = 0
 
         # PROJ-50: Store registries for passing to battle resolver
         self._registries = registries
+
+        # PROJ-189: Store area effect manager for storm integration
+        self._area_effect_manager: Optional['AreaEffectManager'] = area_effect_manager
+        self._galaxy: Optional['Galaxy'] = None  # Set during resolve_all_conflicts
 
         # PROJ-11: Inject battle resolver for clean layer separation
         if battle_resolver is None:
@@ -74,7 +87,11 @@ class ConflictResolutionEngine:
         self._battle_seed_counter += 1
         return self._battle_seed_counter
 
-    def resolve_all_conflicts(self, empires) -> ConflictResult:
+    def resolve_all_conflicts(
+        self,
+        empires,
+        galaxy: Optional['Galaxy'] = None
+    ) -> ConflictResult:
         """
         Resolve all conflicts between empires.
 
@@ -83,10 +100,15 @@ class ConflictResolutionEngine:
 
         Args:
             empires: List of Empire objects to check for conflicts
+            galaxy: Optional Galaxy for environmental effect lookup (PROJ-189).
+                   Required when area_effect_manager is set.
 
         Returns:
             ConflictResult with combat statistics
         """
+        # PROJ-189: Store galaxy reference for effect lookup in combat resolution
+        self._galaxy = galaxy
+
         # Track stats during resolution
         self._combats_resolved = 0
         self._fleets_destroyed: List[int] = []
@@ -175,7 +197,7 @@ class ConflictResolutionEngine:
             return self._resolve_combat_simulated(f1, f2)
 
         # Fallback to simple RNG for empty fleets
-        log_debug("Using RNG combat resolution (empty fleet)")
+        logger.debug("Using RNG combat resolution (empty fleet)")
         if random.random() > 0.5:
             winner, loser = f1, f2
         else:
@@ -198,6 +220,9 @@ class ConflictResolutionEngine:
         PROJ-11 Phase 4: Uses IBattleResolver interface for clean
         separation between strategy and simulation layers.
 
+        PROJ-189: Queries environmental effects at combat location and passes
+        them to the battle resolver for shield interference in storms.
+
         Args:
             f1: First fleet (team 0)
             f2: Second fleet (team 1)
@@ -205,11 +230,21 @@ class ConflictResolutionEngine:
         Returns:
             The winning fleet
         """
+        # PROJ-189: Query environmental effects at combat location
+        environmental_effects = None
+        if self._area_effect_manager is not None and self._galaxy is not None:
+            # Use f1's location (should be same as f2's since they're in conflict)
+            environmental_effects = self._area_effect_manager.get_effects_at_global_hex(
+                self._galaxy, f1.location
+            )
+
         # Use the injected battle resolver
         # PROJ-50: Pass registries for strict DI compliance
+        # PROJ-189: Pass environmental effects for storm shield interference
         seed = self._generate_battle_seed()
         result = self._battle_resolver.resolve_battle(
-            f1, f2, seed=seed, registries=self._registries
+            f1, f2, seed=seed, registries=self._registries,
+            environmental_effects=environmental_effects
         )
 
         # Apply results to fleets

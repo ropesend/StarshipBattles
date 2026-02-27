@@ -13,6 +13,7 @@ PROJ-118 Phase 2: Foundation test coverage.
 import pytest
 from unittest.mock import MagicMock, patch
 
+from game.core.exceptions import ValidationException
 from game.simulation.entities.ship_serialization import ShipSerializer
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import create_component
@@ -231,8 +232,8 @@ class TestFromDictDeserialization:
     """Tests for ShipSerializer.from_dict() method."""
 
     def test_from_dict_requires_registries(self, minimal_ship_dict):
-        """from_dict should raise TypeError if registries is None."""
-        with pytest.raises(TypeError, match="registries is required"):
+        """from_dict should raise ValidationException if registries is None."""
+        with pytest.raises(ValidationException):
             ShipSerializer.from_dict(minimal_ship_dict, registries=None)
 
     def test_from_dict_creates_ship(self, minimal_ship_dict, registries):
@@ -482,7 +483,7 @@ class TestEdgeCases:
             }
         }
 
-        with pytest.raises(ValueError, match="Component entry must be dict"):
+        with pytest.raises(ValidationException):
             ShipSerializer.from_dict(data, registries=registries)
 
     def test_from_dict_empty_resources(self, registries):

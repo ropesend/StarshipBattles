@@ -4,7 +4,7 @@ Quickstart Builder - Creates pre-configured game sessions for quick-play testing
 This module provides factory functions for creating standardized game configurations
 that bypass the normal NewGameSetupScreen flow, enabling rapid iteration and testing.
 """
-import os
+import logging
 import shutil
 import uuid
 from datetime import datetime
@@ -16,7 +16,8 @@ from game.strategy.data.race_config import RaceConfig
 from game.strategy.data.planet import PlanetaryFacility
 from game.strategy.systems.design_library import DesignLibrary
 from game.core.json_utils import load_json
-from game.core.logger import log_info, log_error, log_debug, log_warning
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.engine.game_session import GameSession
@@ -67,12 +68,12 @@ class QuickstartBuilder:
         """
         race_path = get_quickstart_races_dir() / race_filename
         if not race_path.exists():
-            log_error(f"Quickstart race not found: {race_path}")
+            logger.error(f"Quickstart race not found: {race_path}")
             return None
 
         data = load_json(str(race_path))
         if data is None:
-            log_error(f"Failed to load quickstart race: {race_path}")
+            logger.error(f"Failed to load quickstart race: {race_path}")
             return None
 
         return RaceConfig.from_dict(data)
@@ -100,7 +101,7 @@ class QuickstartBuilder:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         save_name = f"{prefix}_{timestamp}"
 
-        log_info(f"Building 1P quickstart: {save_name}")
+        logger.info(f"Building 1P quickstart: {save_name}")
 
         # Try to load test race fixture
         race = QuickstartBuilder.load_test_race("test_emp1.json")
@@ -118,7 +119,7 @@ class QuickstartBuilder:
             )
         else:
             # Fallback if fixture not found
-            log_debug("Using fallback player config (fixture not found)")
+            logger.debug("Using fallback player config (fixture not found)")
             player = PlayerConfig(
                 name="TestEmp1",
                 theme=THEME_DEFAULTS[0][0],
@@ -157,7 +158,7 @@ class QuickstartBuilder:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         save_name = f"{prefix}_{timestamp}"
 
-        log_info(f"Building 2P quickstart: {save_name}")
+        logger.info(f"Building 2P quickstart: {save_name}")
 
         players = []
 
@@ -225,12 +226,12 @@ class QuickstartBuilder:
         """
         designs_source = get_quickstart_designs_dir()
         if not designs_source.exists():
-            log_error(f"Quickstart designs directory not found: {designs_source}")
+            logger.error(f"Quickstart designs directory not found: {designs_source}")
             return False
 
         design_files = list(designs_source.glob("*.json"))
         if not design_files:
-            log_error(f"No quickstart design files found in: {designs_source}")
+            logger.error(f"No quickstart design files found in: {designs_source}")
             return False
 
         success = True
@@ -242,13 +243,13 @@ class QuickstartBuilder:
                 dest_path = dest_folder / design_file.name
                 try:
                     shutil.copy2(design_file, dest_path)
-                    log_debug(f"Copied design {design_file.name} to empire_{empire_id}")
+                    logger.debug(f"Copied design {design_file.name} to empire_{empire_id}")
                 except (OSError, PermissionError, shutil.Error) as e:
-                    log_error(f"Failed to copy design {design_file.name}: {e}")
+                    logger.error(f"Failed to copy design {design_file.name}: {e}")
                     success = False
 
         if success:
-            log_info(f"Copied {len(design_files)} designs to {len(empire_ids)} empires")
+            logger.info(f"Copied {len(design_files)} designs to {len(empire_ids)} empires")
 
         return success
 
@@ -271,7 +272,7 @@ class QuickstartBuilder:
         for empire in session.empires:
             # Get home planet (first colony)
             if not empire.colonies:
-                log_warning(f"Empire {empire.id} has no colonies - skipping complex spawn")
+                logger.warning(f"Empire {empire.id} has no colonies - skipping complex spawn")
                 continue
 
             home_planet = empire.colonies[0]
@@ -281,7 +282,7 @@ class QuickstartBuilder:
                 design_data = library.load_design_data(design_id)
 
                 if not design_data:
-                    log_warning(f"Could not load design {design_id} for empire {empire.id}")
+                    logger.warning(f"Could not load design {design_id} for empire {empire.id}")
                     success = False
                     continue
 
@@ -294,6 +295,6 @@ class QuickstartBuilder:
                 )
 
                 home_planet.facilities.append(facility)
-                log_info(f"Spawned {facility.name} on {home_planet.name} (Empire {empire.id})")
+                logger.info(f"Spawned {facility.name} on {home_planet.name} (Empire {empire.id})")
 
         return success

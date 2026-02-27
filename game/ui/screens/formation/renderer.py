@@ -10,6 +10,14 @@ import math
 import pygame
 from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple
 
+from game.ui.fonts import get_font
+from game.ui.colors import (
+    GRID_BG, FORMATION_GRID, FORMATION_AXIS,
+    FORMATION_ARROW, FORMATION_ARROW_SELECTED,
+    FORMATION_FIXED, FORMATION_FIXED_SELECTED,
+    WHITE, BLACK, TEXT_ITEM, BG_MENU
+)
+
 if TYPE_CHECKING:
     from pygame import Rect, Surface
 
@@ -47,14 +55,14 @@ class FormationRenderer:
         self.show_grid = True
 
         # Colors
-        self.col_bg = (30, 30, 40)
-        self.col_grid = (45, 45, 55)
-        self.col_axis = (60, 60, 70)
-        self.col_arrow = (100, 200, 255)
-        self.col_arrow_sel = (255, 255, 100)
-        self.col_box = (100, 255, 100)
-        self.col_arrow_fixed = (100, 255, 100)
-        self.col_arrow_fixed_sel = (200, 255, 200)
+        self.col_bg = GRID_BG
+        self.col_grid = FORMATION_GRID
+        self.col_axis = FORMATION_AXIS
+        self.col_arrow = FORMATION_ARROW
+        self.col_arrow_sel = FORMATION_ARROW_SELECTED
+        self.col_box = FORMATION_FIXED
+        self.col_arrow_fixed = FORMATION_FIXED
+        self.col_arrow_fixed_sel = FORMATION_FIXED_SELECTED
 
     def get_canvas_rect(self) -> pygame.Rect:
         """Get the drawable canvas area (excludes toolbar)."""
@@ -257,7 +265,7 @@ class FormationRenderer:
         selected_indices: Set[int]
     ) -> None:
         """Draw all arrow markers."""
-        font = pygame.font.SysFont("Arial", 14, bold=True)
+        font = get_font(14, bold=True)
         scale = 20 * self.camera_zoom
         canvas_rect = self.get_canvas_rect()
 
@@ -282,7 +290,7 @@ class FormationRenderer:
             else:
                 color = self.col_arrow_sel if is_selected else self.col_arrow
 
-            border_col = (255, 255, 255) if is_selected else (0, 0, 0)
+            border_col = WHITE if is_selected else BLACK
 
             # Draw triangle pointing up
             points = [
@@ -295,7 +303,7 @@ class FormationRenderer:
 
             # Draw number label
             if scale > 10:
-                txt = font.render(str(i + 1), True, (0, 0, 0))
+                txt = font.render(str(i + 1), True, BLACK)
                 screen.blit(txt, (int(sx) - txt.get_width() // 2, int(sy)))
 
     def _draw_single_selection_controls(
@@ -324,7 +332,7 @@ class FormationRenderer:
             (sx - 10, sy - scale - 10),
             (sx + 10, sy - scale - 10)
         ]
-        pygame.draw.polygon(screen, (200, 200, 200), up_poly)
+        pygame.draw.polygon(screen, TEXT_ITEM, up_poly)
 
         # Down arrow (increase index)
         down_poly = [
@@ -332,7 +340,7 @@ class FormationRenderer:
             (sx - 10, sy + scale + 10),
             (sx + 10, sy + scale + 10)
         ]
-        pygame.draw.polygon(screen, (200, 200, 200), down_poly)
+        pygame.draw.polygon(screen, TEXT_ITEM, down_poly)
 
     def _draw_selection_box(
         self,
@@ -382,15 +390,15 @@ class FormationRenderer:
 
         if state == 'BOX_SELECT':
             surf = pygame.Surface(rect.size, pygame.SRCALPHA)
-            surf.fill((100, 255, 100, 50))
+            surf.fill((*FORMATION_FIXED, 50))
             screen.blit(surf, rect.topleft)
-            pygame.draw.rect(screen, (100, 255, 100), rect, 1)
+            pygame.draw.rect(screen, FORMATION_FIXED, rect, 1)
 
     def _draw_toolbar_background(self, screen: pygame.Surface) -> None:
         """Draw the toolbar background area."""
         pygame.draw.rect(
             screen,
-            (20, 20, 30),
+            BG_MENU,
             (0, self.height - self.toolbar_height, self.width, self.toolbar_height)
         )
 

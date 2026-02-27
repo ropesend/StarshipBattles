@@ -9,7 +9,12 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, UITextEntryLine, UIDropDownMenu
 
-from game.core.logger import log_info
+import logging
+
+from game.ui.fonts import get_font
+from game.ui.colors import TEXT_LIGHT, TEXT_MUTED, FLEET_SELECTED, GRID_LINE, PLANET_TERRESTRIAL, STAR_FALLBACK
+
+logger = logging.getLogger(__name__)
 from game.core.hex_math import hex_to_pixel, HexCoord
 from game.strategy.data.planet import PlanetType
 from game.ui.screens.galaxy_test.constants import PLANET_TYPE_COLORS, SIDEBAR_WIDTH, HEX_SIZE
@@ -193,7 +198,7 @@ class SystemModeHelper:
             # Add "random" option at the start
             return ["random"] + sorted(blueprints)
         except (ImportError, FileNotFoundError, OSError, json.JSONDecodeError, KeyError) as e:
-            log_info(f"Failed to load blueprints: {e}")
+            logger.warning(f"Failed to load blueprints: {e}")
             return ["random"]
 
     def generate(self):
@@ -233,7 +238,7 @@ class SystemModeHelper:
                 data = loader.load()
                 blueprint = loader.get_blueprint(self.selected_blueprint, data)
             except (ImportError, FileNotFoundError, OSError, json.JSONDecodeError, KeyError) as e:
-                log_info(f"Failed to load blueprint '{self.selected_blueprint}': {e}")
+                logger.warning(f"Failed to load blueprint '{self.selected_blueprint}': {e}")
 
         # Generate stars
         star_gen = StarGenerator()
@@ -276,7 +281,7 @@ class SystemModeHelper:
         # Center camera on system and fit to view
         self._center_camera()
 
-        log_info(f"Generated system: {self.test_system.name}, blueprint={blueprint_name}, stars={len(self.test_system.stars)}, planets={len(self.test_system.planets)}")
+        logger.info(f"Generated system: {self.test_system.name}, blueprint={blueprint_name}, stars={len(self.test_system.stars)}, planets={len(self.test_system.planets)}")
 
     def _center_camera(self):
         """Center the camera on the generated star system."""
@@ -496,7 +501,7 @@ class SystemModeHelper:
             if orbit_radius > 5:  # Only draw if visible
                 pygame.draw.circle(
                     screen_surface,
-                    (40, 45, 55),  # Dark grey orbit ring
+                    GRID_LINE,  # Dark grey orbit ring
                     (int(center_screen.x), int(center_screen.y)),
                     int(orbit_radius),
                     1  # Line width
@@ -512,7 +517,7 @@ class SystemModeHelper:
             radius = max(8, int(star.diameter_hexes * HEX_SIZE * self.screen.camera.zoom * 0.5))
 
             # Star color
-            color = star.color if hasattr(star, 'color') else (255, 255, 200)
+            color = star.color
 
             # Draw glow effect
             glow_radius = radius + 4
@@ -522,11 +527,11 @@ class SystemModeHelper:
 
             # Selection highlight
             if self.selected_object == star:
-                pygame.draw.circle(screen_surface, (255, 255, 0), (int(screen_pos.x), int(screen_pos.y)), radius + 6, 2)
+                pygame.draw.circle(screen_surface, FLEET_SELECTED, (int(screen_pos.x), int(screen_pos.y)), radius + 6, 2)
 
             # Star name label
-            font = pygame.font.SysFont("arial", 12)
-            text = font.render(star.name, True, (220, 220, 220))
+            font = get_font(12)
+            text = font.render(star.name, True, TEXT_LIGHT)
             screen_surface.blit(text, (screen_pos.x + radius + 5, screen_pos.y - 6))
 
         # Draw planets
@@ -547,17 +552,17 @@ class SystemModeHelper:
             radius = max(3, int(base_size * self.screen.camera.zoom))
 
             # Planet color from type
-            color = PLANET_TYPE_COLORS.get(planet.planet_type, (100, 150, 200))
+            color = PLANET_TYPE_COLORS.get(planet.planet_type, PLANET_TERRESTRIAL)
             pygame.draw.circle(screen_surface, color, (int(screen_pos.x), int(screen_pos.y)), radius)
 
             # Selection highlight
             if self.selected_object == planet:
-                pygame.draw.circle(screen_surface, (255, 255, 0), (int(screen_pos.x), int(screen_pos.y)), radius + 4, 2)
+                pygame.draw.circle(screen_surface, FLEET_SELECTED, (int(screen_pos.x), int(screen_pos.y)), radius + 4, 2)
 
             # Planet name label (only if zoomed in enough)
             if self.screen.camera.zoom >= 0.3:
-                font = pygame.font.SysFont("arial", 10)
-                text = font.render(planet.name, True, (180, 180, 180))
+                font = get_font(10)
+                text = font.render(planet.name, True, TEXT_MUTED)
                 screen_surface.blit(text, (screen_pos.x + radius + 3, screen_pos.y - 5))
 
         # Remove clip

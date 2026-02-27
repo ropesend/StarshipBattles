@@ -6,6 +6,7 @@ import pytest
 import os
 
 from game.strategy.generation.loaders.galaxy_layouts_loader import GalaxyLayoutsLoader
+from game.core.exceptions import ValidationException
 
 
 class TestGalaxyLayoutsLoader:
@@ -39,7 +40,7 @@ class TestGalaxyLayoutsLoader:
 
     def test_get_layout_config_unknown_raises(self, layouts_data):
         """get_layout_config should raise for unknown type."""
-        with pytest.raises(ValueError, match="Unknown layout type"):
+        with pytest.raises(ValidationException, match="Unknown layout type"):
             GalaxyLayoutsLoader.get_layout_config('nonexistent', layouts_data)
 
     def test_get_available_layouts_returns_list(self, layouts_data):

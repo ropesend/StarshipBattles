@@ -919,34 +919,9 @@ class TestProjectileManagerAdditionalEdgeCases:
         mock_ship.combat_engine.take_damage.assert_called_with(25)
         assert weapon.shots_hit == 1
 
-    def test_weapon_ability_without_get_damage_method(self, manager, mock_ship, mock_grid):
-        """Handles weapon ability without get_damage method (uses static damage)."""
-        proj = MagicMock()
-        proj.position = Vector2(95, 0)
-        proj.velocity = Vector2(10, 0)
-        proj.is_alive = True
-        proj.team_id = 0
-        proj.type = AttackType.PROJECTILE
-        proj.damage = 30
-        proj.distance_traveled = 50
-        proj.target = None
-
-        # Weapon ability exists but lacks get_damage method
-        weapon = MagicMock()
-        weapon_ability = MagicMock(spec=[])  # Empty spec = no get_damage
-        del weapon_ability.get_damage  # Ensure no get_damage attr
-        weapon.get_ability.return_value = weapon_ability
-        weapon.shots_hit = 0
-        proj.source_weapon = weapon
-
-        mock_ship.position = Vector2(100, 0)
-        mock_grid.query_radius.return_value = [mock_ship]
-
-        manager.add_projectile(proj)
-        manager.update(mock_grid)
-
-        # Should use static damage since ability lacks get_damage
-        mock_ship.combat_engine.take_damage.assert_called_with(30)
+    # DELETED: test_weapon_ability_without_get_damage_method
+    # Reason: Duck typing replaced with explicit protocols in PROJ-190.
+    # Weapon abilities must now have get_damage method.
 
     def test_missile_with_none_target(self, manager, mock_grid):
         """Missile projectile with None target does not crash."""

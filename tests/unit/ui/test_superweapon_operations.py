@@ -356,19 +356,8 @@ class TestConfirmationDialogs:
             "Title", "Message", callback, is_warning=True
         )
 
-    def test_show_confirmation_fallback_executes_callback(self):
-        """_show_confirmation executes callback if no dialog available."""
-        from game.ui.screens.strategy_superweapons import SuperweaponOperations
-
-        scene = make_mock_scene()
-        del scene.ui.show_confirmation_dialog  # Remove method
-        facade = make_mock_facade()
-        ops = SuperweaponOperations(scene, facade)
-
-        callback = MagicMock()
-        ops._show_confirmation("Title", "Message", callback)
-
-        callback.assert_called_once()
+    # PROJ-198: test_show_confirmation_fallback_executes_callback deleted
+    # Fallback behavior removed - show_confirmation_dialog is now always available on StrategyUI
 
     def test_show_system_picker_calls_ui_method(self):
         """_show_system_picker calls UI's show_system_picker."""

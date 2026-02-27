@@ -13,12 +13,15 @@ class TestBug04Display:
         builder.ship = MagicMock(spec=Ship)
         builder.ship.name = "Test Ship"
         builder.ship.ship_class = "Frigate"
+        builder.ship.theme_id = "Federation"
+        builder.ship.vehicle_type = "Ship"
         builder.ship.layers = {}
         builder.ship.mass_limits_ok = True
         builder.ship.get_missing_requirements.return_value = []
         builder.ship.get_validation_warnings.return_value = []
         builder.ship.ai_strategy = "standard_ranged"
         builder.ship.mass = 1000
+        builder.ship.max_mass_budget = 2000
 
         # Mock theme manager
         builder.theme_manager = MagicMock()

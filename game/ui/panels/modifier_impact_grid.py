@@ -13,6 +13,12 @@ import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel
 from typing import Dict, Any, List, Optional, TYPE_CHECKING
 
+from game.ui.fonts import get_font
+from game.ui.colors import (
+    MODIFIER_HEADER_BG, MODIFIER_ROW_BG, MODIFIER_ROW_ALT_BG, MODIFIER_FOOTER_BG,
+    MODIFIER_BUFF, MODIFIER_DEBUFF, MODIFIER_NEUTRAL, TEXT_ITEM
+)
+
 if TYPE_CHECKING:
     from game.simulation.components.component import Component
 
@@ -37,14 +43,14 @@ class ModifierImpactGrid:
     TITLE_HEIGHT = 0  # No title - more room for column headers
 
     # Colors
-    COLOR_HEADER_BG = (40, 40, 50)
-    COLOR_ROW_BG = (30, 30, 40)
-    COLOR_ROW_ALT_BG = (35, 35, 45)
-    COLOR_FOOTER_BG = (50, 50, 60)
-    COLOR_TEXT = (200, 200, 200)
-    COLOR_BUFF = (100, 255, 100)  # Green for positive
-    COLOR_DEBUFF = (255, 100, 100)  # Red for negative
-    COLOR_NEUTRAL = (180, 180, 180)  # Gray for neutral
+    COLOR_HEADER_BG = MODIFIER_HEADER_BG
+    COLOR_ROW_BG = MODIFIER_ROW_BG
+    COLOR_ROW_ALT_BG = MODIFIER_ROW_ALT_BG
+    COLOR_FOOTER_BG = MODIFIER_FOOTER_BG
+    COLOR_TEXT = TEXT_ITEM
+    COLOR_BUFF = MODIFIER_BUFF
+    COLOR_DEBUFF = MODIFIER_DEBUFF
+    COLOR_NEUTRAL = MODIFIER_NEUTRAL
 
     def __init__(self, manager: pygame_gui.UIManager, container, rect: pygame.Rect):
         """
@@ -79,10 +85,13 @@ class ModifierImpactGrid:
         # UI elements for cleanup
         self._ui_elements: List = []
 
+        # Stat summary (set by update())
+        self._stat_summary: Optional[Dict[str, Any]] = None
+
         # Fonts (reduced 10% from 17/15 for tighter rows)
-        self.font = pygame.font.SysFont("Arial", 15)
-        self.header_font = pygame.font.SysFont("Arial", 14)
-        self.net_font = pygame.font.SysFont("Arial", 15, bold=True)
+        self.font = get_font(15)
+        self.header_font = get_font(14)
+        self.net_font = get_font(15, bold=True)
 
         # Cached surfaces for headers (rotated text)
         self._header_cache: Dict[str, pygame.Surface] = {}
@@ -162,15 +171,16 @@ class ModifierImpactGrid:
         # Start with universal stats that all components have
         stat_keys = set(self.UNIVERSAL_STATS)
 
-        if not hasattr(component, 'ability_instances') or not component.ability_instances:
+        if not component.ability_instances:
             # Component has no abilities - only show universal stats if affected
             return stat_keys
 
         # Add ability-specific stats from STAT_BINDINGS
         for ability in component.ability_instances:
             ability_class = ability.__class__
-            if hasattr(ability_class, 'STAT_BINDINGS'):
-                for binding in ability_class.STAT_BINDINGS:
+            stat_bindings = getattr(ability_class, 'STAT_BINDINGS', None)
+            if stat_bindings:
+                for binding in stat_bindings:
                     stat_keys.add(binding.stat_key.value)
 
         return stat_keys
@@ -435,7 +445,7 @@ class ModifierImpactGrid:
         screen.set_clip(old_clip)
 
         # Draw net values footer (at bottom of grid, outside clip area)
-        if hasattr(self, '_stat_summary'):
+        if self._stat_summary is not None:
             # Footer position - at bottom of panel (use absolute position)
             footer_y = abs_rect.y + abs_rect.height - self.ROW_HEIGHT
             footer_rect = pygame.Rect(base_x, footer_y, abs_rect.width, self.ROW_HEIGHT)

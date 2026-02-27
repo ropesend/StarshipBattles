@@ -8,7 +8,8 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton
 
-from game.ui.colors import FONT_MAIN
+from game.ui.fonts import get_font
+from game.ui.screens.test_lab import theme
 
 
 class JSONPopup:
@@ -38,8 +39,8 @@ class JSONPopup:
         self.y = (screen_height - self.height) // 2
 
         # Fonts
-        self.title_font = pygame.font.SysFont(FONT_MAIN, 24)
-        self.body_font = pygame.font.SysFont('Courier New', 14)  # Monospace for JSON
+        self.title_font = get_font(24)
+        self.body_font = get_font(14, "Courier New")  # Monospace for JSON
 
         # Scrolling
         self.scroll_offset = 0
@@ -57,7 +58,7 @@ class JSONPopup:
     def close(self):
         """Close the popup."""
         self.is_open = False
-        if hasattr(self, 'close_button') and self.close_button:
+        if self.close_button:
             self.close_button.kill()
 
     def handle_event(self, event):
@@ -89,11 +90,11 @@ class JSONPopup:
 
         # Popup background
         popup_rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        pygame.draw.rect(screen, (30, 30, 35), popup_rect, border_radius=10)
-        pygame.draw.rect(screen, (100, 100, 120), popup_rect, 3, border_radius=10)
+        pygame.draw.rect(screen, theme.BG_CONTENT, popup_rect, border_radius=10)
+        pygame.draw.rect(screen, theme.BORDER_ACTIVE, popup_rect, 3, border_radius=10)
 
         # Title
-        title_surf = self.title_font.render(self.title, True, (150, 200, 255))
+        title_surf = self.title_font.render(self.title, True, theme.TEXT_HEADER)
         screen.blit(title_surf, (self.x + 20, self.y + 15))
 
         # Close button is drawn by UIManager in the main draw loop
@@ -105,7 +106,7 @@ class JSONPopup:
 
         # Draw JSON lines (with scrolling)
         for i, line in enumerate(self.lines[self.scroll_offset:self.scroll_offset + max_visible_lines]):
-            line_surf = self.body_font.render(line, True, (220, 220, 220))
+            line_surf = self.body_font.render(line, True, theme.TEXT)
             screen.blit(line_surf, (self.x + 20, content_y + i * self.line_height))
 
         # Scrollbar indicator (if needed)
@@ -113,7 +114,7 @@ class JSONPopup:
             scrollbar_height = max(30, int(content_height * (max_visible_lines / len(self.lines))))
             scrollbar_y = content_y + int(content_height * (self.scroll_offset / len(self.lines)))
             scrollbar_rect = pygame.Rect(self.x + self.width - 20, scrollbar_y, 10, scrollbar_height)
-            pygame.draw.rect(screen, (100, 100, 120), scrollbar_rect, border_radius=5)
+            pygame.draw.rect(screen, theme.SCROLLBAR_THUMB, scrollbar_rect, border_radius=5)
 
 
 class ConfirmationDialog:
@@ -147,9 +148,9 @@ class ConfirmationDialog:
         self.y = (screen_height - self.height) // 2
 
         # Fonts
-        self.title_font = pygame.font.SysFont(FONT_MAIN, 24)
-        self.body_font = pygame.font.SysFont(FONT_MAIN, 16)
-        self.small_font = pygame.font.SysFont(FONT_MAIN, 14)
+        self.title_font = get_font(24)
+        self.body_font = get_font(16)
+        self.small_font = get_font(14)
 
         # Buttons (pygame_gui UIButton)
         button_y = self.y + self.height - 60
@@ -190,9 +191,9 @@ class ConfirmationDialog:
 
     def _kill_buttons(self):
         """Kill UIButtons when dialog closes."""
-        if hasattr(self, 'confirm_button') and self.confirm_button:
+        if self.confirm_button:
             self.confirm_button.kill()
-        if hasattr(self, 'cancel_button') and self.cancel_button:
+        if self.cancel_button:
             self.cancel_button.kill()
 
     def handle_event(self, event):
@@ -222,17 +223,17 @@ class ConfirmationDialog:
 
         # Dialog background
         dialog_rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        pygame.draw.rect(screen, (30, 30, 35), dialog_rect, border_radius=10)
-        pygame.draw.rect(screen, (100, 100, 120), dialog_rect, 3, border_radius=10)
+        pygame.draw.rect(screen, theme.BG_CONTENT, dialog_rect, border_radius=10)
+        pygame.draw.rect(screen, theme.BORDER_ACTIVE, dialog_rect, 3, border_radius=10)
 
         # Title
-        title_surf = self.title_font.render(self.title, True, (255, 200, 100))
+        title_surf = self.title_font.render(self.title, True, theme.STATUS_HIGHLIGHT)
         screen.blit(title_surf, (self.x + 20, self.y + 15))
 
         # Description
         desc_y = self.y + 60
         desc_text = "The following changes will be made to the test metadata:"
-        desc_surf = self.body_font.render(desc_text, True, (220, 220, 220))
+        desc_surf = self.body_font.render(desc_text, True, theme.TEXT)
         screen.blit(desc_surf, (self.x + 20, desc_y))
 
         # Changes list
@@ -244,23 +245,23 @@ class ConfirmationDialog:
 
             # Field name
             field_text = f"• {change['field']}:"
-            field_surf = self.body_font.render(field_text, True, (150, 200, 255))
+            field_surf = self.body_font.render(field_text, True, theme.TEXT_HEADER)
             screen.blit(field_surf, (self.x + 30, change_y))
 
             # Old value (strikethrough)
             old_text = f"  Old: {change['old_value']}"
-            old_surf = self.small_font.render(old_text, True, (255, 100, 100))
+            old_surf = self.small_font.render(old_text, True, theme.STATUS_FAIL)
             screen.blit(old_surf, (self.x + 50, change_y + line_height))
 
             # Draw strikethrough line over old value
             text_width = old_surf.get_width()
-            pygame.draw.line(screen, (255, 100, 100),
+            pygame.draw.line(screen, theme.STATUS_FAIL,
                            (self.x + 50, change_y + line_height + 8),
                            (self.x + 50 + text_width, change_y + line_height + 8), 2)
 
             # New value
             new_text = f"  New: {change['new_value']}"
-            new_surf = self.small_font.render(new_text, True, (100, 255, 150))
+            new_surf = self.small_font.render(new_text, True, theme.SECTION_OUTCOME)
             screen.blit(new_surf, (self.x + 50, change_y + line_height * 2))
 
         # Buttons are drawn by UIManager in the main draw loop

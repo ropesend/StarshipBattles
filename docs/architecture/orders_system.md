@@ -1,0 +1,414 @@
+# Strategy Orders System Architecture
+
+> **PROJ-187**: Strategy Orders Tick-Based Action System
+
+This document describes the unified tick-based orders system for the strategy layer. All fleet orders—movement, colonization, transfers, and superweapons—execute through a consistent tick-based mechanism.
+
+---
+
+## Order Lifecycle
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      ORDER LIFECYCLE                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  1. QUEUE         User issues order via command handler         │
+│       │           → Creates FleetOrder with type and target     │
+│       │           → Adds to fleet.orders queue                  │
+│       ▼                                                         │
+│  2. WAIT          Order sits in queue until it's first          │
+│       │           → Earlier orders must complete first          │
+│       ▼                                                         │
+│  3. TICK          Engine processes order each tick interval     │
+│       │           → Movement: move one hex                      │
+│       │           → Actions: increment execution_progress       │
+│       ▼                                                         │
+│  4. COMPLETE      Order finishes when:                          │
+│       │           → Movement: path exhausted                    │
+│       │           → Actions: execution_progress >= action_time  │
+│       ▼                                                         │
+│  5. POP           Order removed from queue                      │
+│                   → Next order becomes active                   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### FleetOrder Data Structure
+
+```python
+class FleetOrder:
+    type: OrderType           # MOVE, COLONIZE, etc.
+    target: Any               # HexCoord, Planet, Fleet, or params dict
+    execution_progress: int   # Ticks spent executing (0 at start)
+```
+
+**Serialization**: Only non-zero `execution_progress` is saved to keep save files clean. Orders load with `execution_progress=0` by default for backward compatibility.
+
+---
+
+## Turn Loop & Tick Mechanics
+
+Each turn consists of 100 ticks. Fleet speed determines how often a fleet acts:
+
+```
+Tick Interval = 100 / fleet.speed
+
+Examples:
+- Speed 5.0 → acts every 20 ticks (ticks 20, 40, 60, 80, 100)
+- Speed 10.0 → acts every 10 ticks (ticks 10, 20, 30, ...)
+- Speed 2.0 → acts every 50 ticks (ticks 50, 100)
+```
+
+### Engine Responsibilities
+
+| Engine | Orders Handled | Mechanism |
+|--------|---------------|-----------|
+| **FleetMovementEngine** | MOVE, MOVE_TO_FLEET, WARP | Move one hex per tick interval |
+| **ActionExecutionEngine** | COLONIZE, TRANSFER, superweapons | Increment progress per tick interval |
+| **ProductionEngine** | BUILD | Persistent until queue empty |
+
+---
+
+## Order Type Categories
+
+Orders are categorized in `game/strategy/data/fleet.py`:
+
+### Movement Orders (`MOVEMENT_ORDER_TYPES`)
+
+Handled by `FleetMovementEngine`. One hex movement per tick interval.
+
+| OrderType | Target | Behavior |
+|-----------|--------|----------|
+| `MOVE` | HexCoord | Path to destination, stop at warp points |
+| `MOVE_TO_FLEET` | Fleet | Path to fleet's current location |
+| `WARP` | HexCoord (warp exit) | Single-tick warp traversal |
+
+### Action Orders (`ACTION_ORDER_TYPES`)
+
+Handled by `ActionExecutionEngine`. Progress accumulates until `action_time` reached.
+
+| OrderType | Target | action_time Source |
+|-----------|--------|-------------------|
+| `COLONIZE` | Planet | ColonizePlanet ability |
+| `TRANSFER` | params dict | Default (1) |
+| `LOAD_POPULATION` | params dict | Default (1) |
+| `UNLOAD_POPULATION` | params dict | Default (1) |
+| `JOIN_FLEET` | Fleet | Default (1) |
+| `IMPLODE_PLANET` | Planet | DestroyPlanet ability |
+| `STELLERATE_STAR` | (none) | DestroyStar ability |
+| `OPEN_WARP_POINT` | warp params | OpenWarpPoint ability |
+| `CLOSE_WARP_POINT` | WarpPoint | CloseWarpPoint ability |
+| `CREATE_DYSON_SPHERE` | (none) | CreateDysonSphere ability |
+| `SELF_DESTRUCT` | ship IDs | SelfDestruct ability |
+
+### Special: BUILD Order
+
+- **Not** in either category
+- Handled by `ProductionEngine` independently
+- Persists until `fleet.construction_queue` is empty
+- Auto-pops when queue empties
+
+---
+
+## Action Time Resolution
+
+`ActionTimeResolver` looks up `action_time` from component abilities:
+
+```python
+# Mapping from OrderType to ability name
+OrderType.COLONIZE       → 'ColonizePlanet'
+OrderType.IMPLODE_PLANET → 'DestroyPlanet'
+OrderType.STELLERATE_STAR → 'DestroyStar'
+OrderType.OPEN_WARP_POINT → 'OpenWarpPoint'
+OrderType.CLOSE_WARP_POINT → 'CloseWarpPoint'
+OrderType.CREATE_DYSON_SPHERE → 'CreateDysonSphere'
+OrderType.SELF_DESTRUCT → 'SelfDestruct'
+```
+
+### Resolution Algorithm
+
+1. Get ability name for OrderType
+2. Search fleet ships for first component with that ability
+3. Extract `action_time` from ability data
+4. Default to 1 if not found
+
+### Ability Data Formats
+
+```json
+// Dict with action_time (superweapons)
+"DestroyPlanet": {"action_time": 3}
+
+// String shorthand (colony pods) → defaults to 1
+"ColonizePlanet": "CONTINENTAL"
+
+// Boolean marker → defaults to 1
+"SomeAbility": true
+```
+
+---
+
+## Moddability via components.json
+
+Action times are defined on component abilities in `data/components.json`:
+
+```json
+{
+    "id": "stellar_converter",
+    "name": "Stellar Converter",
+    "abilities": {
+        "DestroyStar": {"action_time": 5}
+    }
+}
+```
+
+**Current action_time values:**
+
+| Ability | action_time | Ticks at Speed 5 |
+|---------|-------------|------------------|
+| ColonizePlanet | 1 (default) | 20 ticks |
+| DestroyPlanet | 3 | 60 ticks |
+| DestroyStar | 5 | 100 ticks |
+| OpenWarpPoint | 3 | 60 ticks |
+| CloseWarpPoint | 3 | 60 ticks |
+| CreateDysonSphere | 5 | 100 ticks |
+| TRANSFER/JOIN | 1 (default) | 20 ticks |
+
+---
+
+## Execution Progress Tracking
+
+`execution_progress` on `FleetOrder` tracks ticks spent on current action:
+
+```
+Turn 1, Tick 20: COLONIZE order, progress 0 → 1
+Turn 1, Tick 40: COLONIZE order, progress 1 → 2
+Turn 1, Tick 60: COLONIZE order, progress 2 >= action_time(2) → EXECUTE
+```
+
+### Progress Persistence
+
+- Only saved when `> 0` (keeps saves clean)
+- Loads with default `0` for backward compatibility
+- **Discarded** when orders cleared (`ClearOrdersCommandHandler`)
+
+---
+
+## WARP vs MOVE Distinction
+
+| Aspect | MOVE | WARP |
+|--------|------|------|
+| Purpose | General pathfinding | Explicit warp traversal |
+| Stops at warp? | Yes, auto-stops | No, executes traversal |
+| Path length | Multi-hex | Single step |
+| Resource cost | Per-hex fuel | Per-jump warp cost |
+| When generated | User destination | Manual or auto-queued |
+
+### Auto-Queuing WARP
+
+When a MOVE order's path reaches a warp point, the movement engine:
+1. Stops at the warp point hex
+2. Completes the MOVE order
+3. Command handlers may auto-queue: `WARP` → `MOVE` to continue
+
+---
+
+## Timing Diagrams
+
+### Example: Colonization with Speed 5 Fleet
+
+```
+Turn 1:
+  Tick  0: Turn starts
+  Tick 20: LOAD_POPULATION (progress 0→1, action_time=1) → COMPLETE
+  Tick 40: MOVE (move 1 hex)
+  Tick 60: MOVE (move 1 hex)
+  Tick 80: MOVE (move 1 hex)
+  Tick 100: MOVE (move 1 hex)
+
+Turn 2:
+  Tick 20: MOVE (arrive at planet)
+  Tick 40: COLONIZE (progress 0→1, action_time=1) → COMPLETE → Colony founded!
+```
+
+### Example: Superweapon with Speed 5 Fleet
+
+```
+Turn 1:
+  Tick 20: STELLERATE_STAR (progress 0→1, action_time=5)
+  Tick 40: STELLERATE_STAR (progress 1→2)
+  Tick 60: STELLERATE_STAR (progress 2→3)
+  Tick 80: STELLERATE_STAR (progress 3→4)
+  Tick 100: STELLERATE_STAR (progress 4→5) → COMPLETE → Star explodes!
+```
+
+### Example: Cancelled Mid-Progress
+
+```
+Turn 1:
+  Tick 20: STELLERATE_STAR (progress 0→1)
+  Tick 40: STELLERATE_STAR (progress 1→2)
+
+User clears orders → execution_progress DISCARDED
+
+Turn 2:
+  (Fleet has no orders, star survives)
+```
+
+---
+
+## Adding a New Order Type
+
+Follow these steps to add a new order type to the system:
+
+### 1. Add to OrderType Enum
+
+```python
+# game/strategy/data/fleet.py
+class OrderType(Enum):
+    MOVE = auto()
+    # ... existing types ...
+    YOUR_NEW_ORDER = auto()  # Add here
+```
+
+### 2. Categorize as Movement or Action
+
+```python
+# Movement orders (one hex per tick)
+MOVEMENT_ORDER_TYPES: frozenset = frozenset({
+    OrderType.MOVE,
+    OrderType.MOVE_TO_FLEET,
+    OrderType.WARP,
+    # OrderType.YOUR_NEW_ORDER,  # If movement-based
+})
+
+# Action orders (progress-based)
+ACTION_ORDER_TYPES: frozenset = frozenset({
+    OrderType.COLONIZE,
+    # ... existing ...
+    # OrderType.YOUR_NEW_ORDER,  # If progress-based
+})
+```
+
+### 3. Define action_time (for Action Orders)
+
+Option A: Default (1 tick interval)
+- No changes needed, defaults to 1
+
+Option B: Ability-based
+```python
+# game/strategy/services/action_time_resolver.py
+def _get_order_to_ability_map() -> Dict[Any, str]:
+    return {
+        # ... existing ...
+        OrderType.YOUR_NEW_ORDER: 'YourAbilityName',
+    }
+```
+
+Then in `data/components.json`:
+```json
+{
+    "id": "your_component",
+    "abilities": {
+        "YourAbilityName": {"action_time": 2}
+    }
+}
+```
+
+### 4. Add Processing Method
+
+For action orders, add to `FleetOrderProcessor` or `SuperweaponOrderProcessor`:
+
+```python
+def process_your_new_order(self, fleet, empire, galaxy, ...):
+    """Process YOUR_NEW_ORDER."""
+    order = fleet.get_current_order()
+    if not order or order.type != OrderType.YOUR_NEW_ORDER:
+        return YourResult(success=False)
+
+    # Validate
+    # Execute
+    # Pop order
+    fleet.pop_order()
+    return YourResult(success=True)
+```
+
+Wire into `process_end_turn_orders()`:
+```python
+elif order.type == OrderType.YOUR_NEW_ORDER:
+    result = self.process_your_new_order(fleet, empire, galaxy)
+    return result.some_consumed_flag
+```
+
+### 5. Add Command Handler
+
+```python
+# game/strategy/engine/command_handlers.py
+class YourNewOrderCommandHandler(ICommandHandler):
+    @staticmethod
+    def execute(session, params):
+        fleet = session.get_fleet(params['fleet_id'])
+        # Validate
+        # Create order
+        order = FleetOrder(OrderType.YOUR_NEW_ORDER, target=...)
+        fleet.add_order(order)
+        return CommandResult(success=True)
+```
+
+Register in `CommandHandlerRegistry`:
+```python
+_handlers = {
+    # ... existing ...
+    "your_new_order": YourNewOrderCommandHandler,
+}
+```
+
+### 6. Add Tests
+
+- Unit tests for the processing method
+- Integration tests for command handler
+- Tick timing tests if complex action_time
+
+---
+
+## Key Files
+
+| Component | File |
+|-----------|------|
+| OrderType enum | `game/strategy/data/fleet.py` |
+| FleetOrder class | `game/strategy/data/fleet.py` |
+| Order categories | `game/strategy/data/fleet.py` |
+| ActionExecutionEngine | `game/strategy/engine/action_execution_engine.py` |
+| ActionTimeResolver | `game/strategy/services/action_time_resolver.py` |
+| FleetOrderProcessor | `game/strategy/engine/fleet_order_processor.py` |
+| FleetMovementEngine | `game/strategy/engine/fleet_movement_engine.py` |
+| SuperweaponOrderProcessor | `game/strategy/engine/superweapon_order_processor.py` |
+| Command Handlers | `game/strategy/engine/command_handlers.py` |
+| Superweapon Handlers | `game/strategy/engine/superweapon_command_handlers.py` |
+| Component abilities | `data/components.json` |
+
+---
+
+## Design Rationale
+
+### Why Unified Tick-Based Execution?
+
+1. **Predictability**: All actions follow the same timing model
+2. **Moddability**: Action durations controlled via data files
+3. **Fairness**: Same fleet acts at same intervals regardless of order type
+4. **Interruptibility**: Multi-tick actions can be cancelled mid-progress
+5. **Simplicity**: One loop, one model, one set of rules
+
+### Why execution_progress on FleetOrder?
+
+1. **State locality**: Progress belongs to the order being executed
+2. **Clean cancellation**: Clearing orders discards progress automatically
+3. **Serialization**: Progress survives save/load
+4. **UI feedback**: Can show progress bars for long actions
+
+### Why Separate Movement and Action Engines?
+
+1. **Different mechanics**: Movement consumes path hexes; actions consume progress
+2. **Different resources**: Movement uses fuel; actions may use nothing
+3. **Single responsibility**: Each engine does one thing well
+4. **Testability**: Can test movement and action logic independently

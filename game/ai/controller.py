@@ -61,6 +61,8 @@ from game.ai.behaviors import (RamBehavior, FleeBehavior, KiteBehavior, AttackRu
                           RotateOnlyBehavior, ErraticBehavior, OrbitBehavior, StationaryFireBehavior)
 from game.core.constants import AttackType, CombatConstants
 from game.core.protocols import is_combatant
+from game.ai.protocols import is_projectile, IGridEntity
+from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.ai.target_evaluator import TargetEvaluator
 from game.ai.strategy_manager import StrategyManager
 from game.ai.combat_utils import get_entity_id, get_hp_percent, is_in_pdc_arc
@@ -104,7 +106,7 @@ class AIController:
             return float(val)
         return 1.0
 
-    def _find_enemies_in_radius(self, exclude=None, include_missiles=False):
+    def _find_enemies_in_radius(self, exclude: Optional[Any] = None, include_missiles: bool = False) -> List[Any]:
         """Find alive enemy entities within targeting radius.
 
         Args:
@@ -122,15 +124,16 @@ class AIController:
 
         if include_missiles:
             missiles = [obj for obj in self.grid.query_radius(self.ship.get_position(), BattleConfig.MISSILE_QUERY_RADIUS)
-                        if (getattr(obj, 'type', '') == 'missile' or getattr(obj, 'type', '') == AttackType.MISSILE)
+                        if is_projectile(obj)
+                        and obj.type == AttackType.MISSILE
                         and obj.is_alive
-                        and getattr(obj, 'team_id', -1) != self.ship.get_team_id()
+                        and obj.team_id != self.ship.get_team_id()
                         and obj != exclude]
             enemies.extend(missiles)
 
         return enemies
 
-    def _build_capabilities_cache(self, ships):
+    def _build_capabilities_cache(self, ships: List[Any]) -> Dict[str, Dict[str, Any]]:
         """Pre-compute expensive capability checks for all ships.
 
         PERF: Builds capability data once per ship instead of repeatedly during
@@ -153,7 +156,8 @@ class AIController:
         """
         cache = {}
         for ship in ships:
-            ship_id = getattr(ship, 'id', None)
+            # Ships have .name; getattr for defensive handling of malformed entities
+            ship_id = getattr(ship, 'name', None)  # INTENTIONAL: defensive for cache building
             if ship_id is None:
                 continue
 
@@ -172,7 +176,7 @@ class AIController:
 
         return cache
 
-    def _score_and_sort_enemies(self, enemies, rules):
+    def _score_and_sort_enemies(self, enemies: List[Any], rules: List[Dict[str, Any]]) -> List[Any]:
         """Score enemies using targeting rules and return sorted list (highest first).
 
         Args:
@@ -196,9 +200,8 @@ class AIController:
         distance_cache = {}
         for e in enemies:
             try:
-                e_pos = getattr(e, 'position', None)
-                if e_pos is not None:
-                    distance_cache[e] = ship_pos.distance_to(e_pos)
+                # IGridEntity guarantees .position attribute
+                distance_cache[e] = ship_pos.distance_to(e.position)
             except (AttributeError, TypeError):
                 pass  # Will fall back to _safe_distance in evaluate()
 
@@ -388,7 +391,8 @@ class AIController:
             self.ship.get_components_by_ability('ManeuveringThruster', operational_only=False)
         )
         for comp in propulsion_comps:
-            if getattr(comp, 'current_hp', 1) < getattr(comp, 'max_hp', 1):
+            # Component always has current_hp and max_hp attributes
+            if comp.current_hp < comp.max_hp:
                 dmg = True
                 break
 
@@ -408,7 +412,7 @@ class AIController:
         for obj in nearby:
             # Skip self: self.ship may be ShipControllableAdapter wrapping the raw ship
             # Grid contains raw Ship objects, so compare via .ship property if adapter
-            own_ship = getattr(self.ship, 'ship', self.ship)
+            own_ship = self.ship.ship if isinstance(self.ship, ShipControllableAdapter) else self.ship
             if obj == own_ship:
                 continue
             if not obj.is_alive:
@@ -417,7 +421,8 @@ class AIController:
                 continue
 
             d = self.ship.get_position().distance_to(obj.position)
-            thresh = self.ship.get_radius() + getattr(obj, 'radius', 40) + BattleConfig.COLLISION_BUFFER
+            # IGridEntity guarantees .radius attribute
+            thresh = self.ship.get_radius() + obj.radius + BattleConfig.COLLISION_BUFFER
 
             if d < thresh:
                 if d < min_d:

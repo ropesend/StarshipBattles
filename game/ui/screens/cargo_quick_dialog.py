@@ -10,7 +10,9 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIWindow, UIButton, UILabel, UIHorizontalSlider
 from game.core.input_actions import InputAction
-from game.core.logger import log_info
+import logging
+
+logger = logging.getLogger(__name__)
 from game.strategy.engine.commands import IssueTransferCommand
 from game.strategy.services.cargo_transfer_service import CargoTransferService
 
@@ -278,11 +280,11 @@ class CargoQuickDialog(UIWindow):
             result = self.facade.handle_command(cmd)
             if result.is_valid:
                 orders_issued += 1
-                log_info(f"CargoQuickDialog: Order issued for {item['label']}")
+                logger.info(f"CargoQuickDialog: Order issued for {item['label']}")
             else:
-                log_info(f"CargoQuickDialog: Validation failed: {result.message}")
+                logger.info(f"CargoQuickDialog: Validation failed: {result.message}")
 
         if orders_issued > 0:
-            log_info(f"CargoQuickDialog: {orders_issued} order(s) issued.")
+            logger.info(f"CargoQuickDialog: {orders_issued} order(s) issued.")
 
         self.kill()

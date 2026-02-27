@@ -118,50 +118,56 @@ class TestGetHpBarColor:
     def test_high_hp_returns_green(self):
         """High HP (>50%) returns green color."""
         from game.ui.panels.ship_stats_renderer import get_hp_bar_color
+        from game.ui.colors import HP_HEALTHY
 
         color = get_hp_bar_color(0.8, is_active=True)
 
-        assert color == (0, 200, 0)
+        assert color == HP_HEALTHY
 
     def test_medium_hp_returns_yellow(self):
         """Medium HP (20-50%) returns yellow color."""
         from game.ui.panels.ship_stats_renderer import get_hp_bar_color
+        from game.ui.colors import HP_DAMAGED
 
         color = get_hp_bar_color(0.35, is_active=True)
 
-        assert color == (200, 200, 0)
+        assert color == HP_DAMAGED
 
     def test_low_hp_returns_red(self):
         """Low HP (<20%) returns red color."""
         from game.ui.panels.ship_stats_renderer import get_hp_bar_color
+        from game.ui.colors import HP_CRITICAL
 
         color = get_hp_bar_color(0.1, is_active=True)
 
-        assert color == (200, 50, 50)
+        assert color == HP_CRITICAL
 
     def test_inactive_component_returns_dim_red(self):
         """Inactive component returns dim red regardless of HP."""
         from game.ui.panels.ship_stats_renderer import get_hp_bar_color
+        from game.ui.colors import COMPONENT_INACTIVE_BG
 
         color = get_hp_bar_color(1.0, is_active=False)
 
-        assert color == (100, 50, 50)
+        assert color == COMPONENT_INACTIVE_BG
 
     def test_boundary_fifty_percent(self):
         """Exactly 50% returns yellow (not green)."""
         from game.ui.panels.ship_stats_renderer import get_hp_bar_color
+        from game.ui.colors import HP_DAMAGED
 
         color = get_hp_bar_color(0.5, is_active=True)
 
-        assert color == (200, 200, 0)
+        assert color == HP_DAMAGED
 
     def test_boundary_twenty_percent(self):
         """Exactly 20% returns red (not yellow)."""
         from game.ui.panels.ship_stats_renderer import get_hp_bar_color
+        from game.ui.colors import HP_CRITICAL
 
         color = get_hp_bar_color(0.2, is_active=True)
 
-        assert color == (200, 50, 50)
+        assert color == HP_CRITICAL
 
 
 # --- get_component_status_display Tests ---

@@ -25,13 +25,14 @@ class ShipPhysicsMixin:
 
         Uses arcade-style physics: velocity always matches heading direction.
         """
-        if getattr(self, 'is_thrusting', False):
+        # is_thrusting and engine_throttle initialized in Ship.__init__
+        if self.is_thrusting:
             current_total_thrust = self.get_total_ability_value('CombatPropulsion', operational_only=True)
 
             if self.mass > 0:
                 current_accel = (current_total_thrust * K_THRUST) / (self.mass * self.mass)
                 potential_max_speed = (current_total_thrust * K_SPEED) / self.mass
-                target_v = potential_max_speed * getattr(self, 'engine_throttle', 1.0)
+                target_v = potential_max_speed * self.engine_throttle
                 step = current_accel
 
                 diff = target_v - self.current_speed
@@ -79,7 +80,8 @@ class ShipPhysicsMixin:
         Args:
             direction: -1 for left (counter-clockwise), 1 for right (clockwise)
         """
-        turn_per_tick = (self.turn_speed * getattr(self, 'turn_throttle', 1.0)) / 100.0
+        # turn_throttle initialized in Ship.__init__
+        turn_per_tick = (self.turn_speed * self.turn_throttle) / 100.0
         self.angle += direction * turn_per_tick
         
 

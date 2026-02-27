@@ -15,8 +15,11 @@ operating when possible:
 
 For fatal errors that indicate programming bugs, TargetingException is raised.
 """
+from typing import Any, Dict, List, Optional, Tuple
+
 from game.core.math import Vector2
 from game.core.constants import AttackType, LayerType
+from game.ai.protocols import is_projectile
 from game.ai.combat_utils import (
     get_position,
     get_rotation,
@@ -84,7 +87,8 @@ class TargetEvaluator:
         r_type = rule.get('type')
         weight = rule.get('weight', 0)
         factor = rule.get('factor', 1)
-        mass = getattr(candidate, 'mass', 100)
+        # PhysicsBody always has .mass attribute
+        mass = candidate.mass
 
         if r_type in ('mass', 'largest', 'strongest'):
             # Larger/stronger is better
@@ -115,7 +119,8 @@ class TargetEvaluator:
         r_type = rule.get('type')
         weight = rule.get('weight', 0)
         factor = rule.get('factor', 1)
-        speed = getattr(candidate, 'velocity', Vector2(0, 0)).length()
+        # PhysicsBody always has .velocity attribute
+        speed = candidate.velocity.length()
 
         if r_type == 'fastest':
             val = speed * (weight if weight > 0 else factor)
@@ -163,7 +168,8 @@ class TargetEvaluator:
         required = rule.get('required', False)
 
         # PERF: Use cached capability check if available
-        candidate_id = getattr(candidate, 'id', None)
+        # Ships have .name; Projectiles don't - safe access required
+        candidate_id = getattr(candidate, 'name', None)  # INTENTIONAL: Projectiles lack .name
         if ship_capabilities_cache and candidate_id in ship_capabilities_cache:
             has_wpns = ship_capabilities_cache[candidate_id]['has_weapons']
         else:
@@ -181,7 +187,8 @@ class TargetEvaluator:
         factor = rule.get('factor', 1)
 
         armor_comps = candidate.get_components_by_layer(LayerType.ARMOR)
-        armor_hp = sum(getattr(c, 'hp', 0) for c in armor_comps)
+        # BUG FIX: Component has .current_hp, not .hp (getattr(c, 'hp', 0) always returned 0)
+        armor_hp = sum(c.current_hp for c in armor_comps)
         val = -armor_hp * (weight if weight > 0 else -factor)
         return (val, True)
 
@@ -191,8 +198,8 @@ class TargetEvaluator:
         weight = rule.get('weight', 0)
         required = rule.get('required', False)
 
-        e_type = getattr(candidate, 'type', '')
-        is_missile = e_type == 'missile' or e_type == AttackType.MISSILE
+        # Use protocol check instead of getattr for type detection
+        is_missile = is_projectile(candidate) and candidate.type == AttackType.MISSILE
 
         if not is_missile:
             # Rule is specific to missiles, target is not a missile - pass through
@@ -234,7 +241,14 @@ class TargetEvaluator:
             return TargetEvaluator._eval_pdc_arc_rule(ship, candidate, rule, stat_helpers)
 
     @staticmethod
-    def evaluate(ship, candidate, rules, stat_helpers=None, distance_cache=None, ship_capabilities_cache=None):
+    def evaluate(
+        ship: Any,
+        candidate: Any,
+        rules: List[Dict[str, Any]],
+        stat_helpers: Optional[Dict[str, Any]] = None,
+        distance_cache: Optional[Dict[Any, float]] = None,
+        ship_capabilities_cache: Optional[Dict[str, Dict[str, Any]]] = None
+    ) -> float:
         """Evaluate a candidate target based on targeting rules.
 
         Args:

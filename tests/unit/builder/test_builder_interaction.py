@@ -22,6 +22,10 @@ class MockDropTarget(DropTarget):
             return True
         return False
 
+    def suppress_toggle(self):
+        """Suppress toggle events for a short duration."""
+        pass
+
 
 @pytest.fixture
 def pygame_init():

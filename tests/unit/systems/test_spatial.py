@@ -21,8 +21,6 @@ def pygame_init():
     pygame.init()
     yield
     pygame.quit()
-    from game.core.registry import RegistryManager
-    RegistryManager.instance().clear()
 
 
 class TestSpatialGridBasics:

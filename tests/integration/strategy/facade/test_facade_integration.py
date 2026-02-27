@@ -53,6 +53,7 @@ class TestMoveCommandIntegration:
         home_location = session.systems[0].global_location if session.systems else HexCoord(0, 0)
         fleet = Fleet(fleet_id=101, owner_id=player_empire.id, location=home_location)
         player_empire.fleets.append(fleet)
+        session.galaxy.register_fleet(fleet)
 
         facade = StrategySessionFacade(session)
         return session, facade, fleet
@@ -133,6 +134,7 @@ class TestColonizeCommandIntegration:
         if uncolonized_planet:
             fleet.ships = [make_colony_ship_for_planet(uncolonized_planet, player_empire.id)]
         player_empire.fleets.append(fleet)
+        session.galaxy.register_fleet(fleet)
 
         facade = StrategySessionFacade(session)
         return session, facade, fleet, uncolonized_planet
@@ -190,12 +192,14 @@ class TestInterceptCommandIntegration:
         player_location = session.systems[0].global_location if session.systems else HexCoord(0, 0)
         player_fleet = Fleet(fleet_id=103, owner_id=player_empire.id, location=player_location)
         player_empire.fleets.append(player_fleet)
+        session.galaxy.register_fleet(player_fleet)
 
         enemy_fleet = None
         if enemy_empire:
             enemy_location = session.systems[-1].global_location if session.systems else HexCoord(10, 10)
             enemy_fleet = Fleet(fleet_id=104, owner_id=enemy_empire.id, location=enemy_location)
             enemy_empire.fleets.append(enemy_fleet)
+            session.galaxy.register_fleet(enemy_fleet)
 
         facade = StrategySessionFacade(session)
         return session, facade, player_fleet, enemy_fleet
@@ -237,6 +241,8 @@ class TestJoinCommandIntegration:
         fleet2 = Fleet(fleet_id=106, owner_id=player_empire.id, location=HexCoord(location.q + 5, location.r + 5))
 
         player_empire.fleets.extend([fleet1, fleet2])
+        session.galaxy.register_fleet(fleet1)
+        session.galaxy.register_fleet(fleet2)
 
         facade = StrategySessionFacade(session)
         return session, facade, fleet1, fleet2
@@ -274,6 +280,7 @@ class TestColonizeMissionIntegration:
         start_location = session.systems[0].global_location if session.systems else HexCoord(0, 0)
         fleet = Fleet(fleet_id=107, owner_id=player_empire.id, location=start_location)
         player_empire.fleets.append(fleet)
+        session.galaxy.register_fleet(fleet)
 
         # Find a distant uncolonized planet (not at fleet's current system)
         uncolonized_planet = None

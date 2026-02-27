@@ -8,12 +8,14 @@ Manages:
 - Ship escape detection
 - Escape callbacks
 """
+import logging
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, Optional, Callable, Tuple, List, Any, TYPE_CHECKING
 
-from game.core.logger import log_debug, log_info
 from game.core.constants import SimulationConstants
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -94,7 +96,7 @@ class RetreatManager:
                 method=RetreatMethod.EDGE,
                 target=target,
             )
-            log_debug(f"Ship {ship.name} retreating to edge at {target}")
+            logger.debug(f"Ship {ship.name} retreating to edge at {target}")
 
         elif method == RetreatMethod.WARP:
             self.retreating_ships[ship_id] = RetreatState(
@@ -103,7 +105,7 @@ class RetreatManager:
                 required_ticks=SimulationConstants.WARP_CHARGE_TICKS,
                 interruptible=True,
             )
-            log_debug(f"Ship {ship.name} charging warp drive")
+            logger.debug(f"Ship {ship.name} charging warp drive")
 
         return True, None
 
@@ -125,7 +127,7 @@ class RetreatManager:
         ship_id = ship_id_map.get(id(ship))
         if ship_id and ship_id in self.retreating_ships:
             del self.retreating_ships[ship_id]
-            log_debug(f"Ship {ship.name} retreat cancelled")
+            logger.debug(f"Ship {ship.name} retreat cancelled")
             return True, None
         return False, "Ship not retreating"
 
@@ -171,7 +173,7 @@ class RetreatManager:
 
         self.escaped_ships.append(ship_id)
 
-        log_info(f"Ship {ship.name} escaped via retreat")
+        logger.info(f"Ship {ship.name} escaped via retreat")
 
         if self._on_ship_escaped:
             self._on_ship_escaped(ship)

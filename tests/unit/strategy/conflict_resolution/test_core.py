@@ -119,7 +119,7 @@ class TestBattleSeedGeneration:
             def __init__(self):
                 self.received_seeds = []
 
-            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None):
+            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None, environmental_effects=None):
                 self.received_seeds.append(seed)
                 # Return deterministic result based on seed
                 return BattleResult(

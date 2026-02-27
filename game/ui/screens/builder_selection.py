@@ -5,6 +5,16 @@ append, toggle, and homogeneity enforcement.
 """
 
 
+def _is_component_like(item) -> bool:
+    """Check if item is a component-like object (has 'id' attribute).
+
+    This is an intentional duck-type check because selection logic accepts
+    both real Component instances and mock objects in tests. The selection
+    logic only needs the 'id' attribute to function correctly.
+    """
+    return hasattr(item, 'id')
+
+
 def normalize_selection(new_selection, ship):
     """Normalize selection items to (layer, index, component) tuples.
 
@@ -19,7 +29,7 @@ def normalize_selection(new_selection, ship):
     for item in new_selection:
         if isinstance(item, tuple) and len(item) == 3:
             norm_selection.append(item)
-        elif hasattr(item, 'id'):  # It's a component
+        elif _is_component_like(item):
             # Find it in ship
             found = False
             for l_type, l_data in ship.layers.items():

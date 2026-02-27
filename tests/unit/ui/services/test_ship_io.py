@@ -161,10 +161,12 @@ class TestShipIOSaveOperations:
 
     def test_save_ship_handles_serialization_error(self, ship_io_with_tkroot, tmp_path):
         """Save should return error on serialization failure."""
-        # Create a mock ship with broken to_dict
+        from game.core.exceptions import ValidationException
+
+        # Create a mock ship with broken to_dict that raises ValidationException
         mock_ship = MagicMock()
         mock_ship.name = "BrokenShip"
-        mock_ship.to_dict.side_effect = TypeError("Cannot serialize")
+        mock_ship.to_dict.side_effect = ValidationException("Cannot serialize", code="V001")
 
         save_file = str(tmp_path / "test_ship.json")
 

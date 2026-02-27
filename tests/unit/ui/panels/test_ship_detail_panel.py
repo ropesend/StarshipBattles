@@ -53,66 +53,74 @@ class TestGetDamageColor:
     def test_full_health_returns_green(self):
         """HP > 75% returns green color."""
         from game.ui.panels.ship_detail_panel import get_damage_color
+        from game.ui.colors import HP_HEALTHY
 
         color = get_damage_color(1.0)
 
-        assert color == (100, 200, 100)
+        assert color == HP_HEALTHY
 
     def test_high_health_returns_green(self):
         """HP at 76% returns green color."""
         from game.ui.panels.ship_detail_panel import get_damage_color
+        from game.ui.colors import HP_HEALTHY
 
         color = get_damage_color(0.76)
 
-        assert color == (100, 200, 100)
+        assert color == HP_HEALTHY
 
     def test_moderate_damage_returns_yellow(self):
         """HP at 50-75% returns yellow color."""
         from game.ui.panels.ship_detail_panel import get_damage_color
+        from game.ui.colors import HP_DAMAGED
 
         color = get_damage_color(0.60)
 
-        assert color == (200, 200, 100)
+        assert color == HP_DAMAGED
 
     def test_boundary_50_returns_yellow(self):
         """HP at exactly 50% returns yellow (boundary test)."""
         from game.ui.panels.ship_detail_panel import get_damage_color
+        from game.ui.colors import HP_DAMAGED
 
         color = get_damage_color(0.50)
 
-        assert color == (200, 200, 100)
+        assert color == HP_DAMAGED
 
     def test_critical_damage_returns_red(self):
         """HP at 1-50% returns red color."""
         from game.ui.panels.ship_detail_panel import get_damage_color
+        from game.ui.colors import HP_CRITICAL
 
         color = get_damage_color(0.25)
 
-        assert color == (200, 100, 100)
+        assert color == HP_CRITICAL
 
     def test_nearly_destroyed_returns_red(self):
         """HP at 1% returns red color."""
         from game.ui.panels.ship_detail_panel import get_damage_color
+        from game.ui.colors import HP_CRITICAL
 
         color = get_damage_color(0.01)
 
-        assert color == (200, 100, 100)
+        assert color == HP_CRITICAL
 
     def test_destroyed_returns_gray(self):
         """HP at 0% returns gray color."""
         from game.ui.panels.ship_detail_panel import get_damage_color
+        from game.ui.colors import HP_DESTROYED
 
         color = get_damage_color(0.0)
 
-        assert color == (100, 100, 100)
+        assert color == HP_DESTROYED
 
     def test_negative_returns_gray(self):
         """Negative HP returns gray color."""
         from game.ui.panels.ship_detail_panel import get_damage_color
+        from game.ui.colors import HP_DESTROYED
 
         color = get_damage_color(-0.1)
 
-        assert color == (100, 100, 100)
+        assert color == HP_DESTROYED
 
 
 # --- ShipDetailPanel Initialization Tests ---

@@ -50,15 +50,15 @@ Example:
     winner = engine.get_winner()
     engine.shutdown()
 """
-import math
+import logging
 import os
 import random
-import time
 from typing import List, Optional, Tuple, Dict, Any, TYPE_CHECKING
 
 from game.core.math import Vector2
-from game.core.logger import log_warning, log_info
 from game.core.paths import Paths
+
+logger = logging.getLogger(__name__)
 from game.engine.spatial import SpatialGrid
 from game.core.constants import AttackType
 from game.core.config import PhysicsConfig, BattleConfig
@@ -68,6 +68,8 @@ from game.simulation.systems.battle_end_conditions import BattleEndCondition, Ba
 
 from game.simulation.entities.projectile import Projectile
 from game.simulation.entities.ship import Ship
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 if TYPE_CHECKING:
     # PROJ-132: Only import protocols from simulation layer, not concrete AI types
@@ -111,7 +113,7 @@ class BattleLogger:
                 new_file.write("=== BATTLE LOG STARTED ===\n")
                 self.file = new_file  # Only assign on success
             except IOError as e:
-                log_warning(f"Could not open battle log '{self.filename}': {e}")
+                logger.warning(f"Could not open battle log '{self.filename}': {e}")
                 self.enabled = False
                 if new_file:
                     try:
@@ -126,7 +128,7 @@ class BattleLogger:
                 self.file.write(f"{message}\n")
 
             except IOError as e:
-                log_warning(f"BattleLogger: Failed to write to '{self.filename}': {e}")
+                logger.warning(f"BattleLogger: Failed to write to '{self.filename}': {e}")
     
     def close(self):
         """Close the log file."""
@@ -135,7 +137,7 @@ class BattleLogger:
                 self.log("=== BATTLE LOG ENDED ===")
                 self.file.close()
             except IOError as e:
-                log_warning(f"BattleLogger: Failed to close '{self.filename}': {e}")
+                logger.warning(f"BattleLogger: Failed to close '{self.filename}': {e}")
             finally:
                 self.file = None
 
@@ -266,9 +268,10 @@ class BattleEngine:
             team2_controllers = self._ai_factory.create_for_ships(team2_ships, enemy_team_id=0)
             self.ai_controllers = team1_controllers + team2_controllers
         else:
-            raise ValueError(
-                "BattleEngine.start() requires ai_controllers or ai_factory. "
-                "Use BattleService.create_battle() or inject ai_factory after construction."
+            raise ValidationException(
+                "BattleEngine requires AI configuration",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"missing": "ai_controllers and ai_factory", "operation": "start"}
             )
 
         # Logging
@@ -282,7 +285,7 @@ class BattleEngine:
             fuel = s.resources.get_value("fuel")
             status_msg = f"Ship '{s.name}' (Team {s.team_id}): HP={s.hp}/{s.max_hp} Mass={s.mass} Thrust={s.total_thrust} Fuel={fuel} TurnSpeed={s.turn_speed:.2f} MaxSpeed={s.max_speed:.2f}"
             self.logger.log(status_msg)
-            log_info(status_msg)
+            logger.info(status_msg)
             # Removed Derelict Warning
             if s.total_thrust <= 0:
                 self.logger.log(f"WARNING: {s.name} has NO THRUST!")
@@ -317,13 +320,14 @@ class BattleEngine:
             ai = self._ai_factory.create_for_ship(ship, enemy_team)
             self.ai_controllers.append(ai)
         else:
-            raise ValueError(
-                "add_ship_mid_battle() requires ai_controller or ai_factory. "
-                "Use BattleService.create_battle() or inject ai_factory after construction."
+            raise ValidationException(
+                "BattleEngine requires AI configuration",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"missing": "ai_controller and ai_factory", "operation": "add_ship_mid_battle"}
             )
 
         self.logger.log(f"Reinforcement arrived: {ship.name} (Team {team_id})")
-        log_info(f"Reinforcement arrived: {ship.name} (Team {team_id})")
+        logger.info(f"Reinforcement arrived: {ship.name} (Team {team_id})")
 
     def remove_ship(self, ship: 'Ship') -> bool:
         """
@@ -418,7 +422,9 @@ class BattleEngine:
                     if attack_type == AttackType.PROJECTILE:
                         self.logger.log(f"Projectile fired at {attack.position}")
                     else:
-                        self.logger.log(f"Missile fired at {getattr(attack, 'target', 'unknown')}")
+                        # Projectile.target is always initialized (None by default)
+                        target_name = attack.target.name if attack.target else 'unknown'
+                        self.logger.log(f"Missile fired at {target_name}")
             elif attack_type == AttackType.BEAM:
                 self.collision_system.process_beam_attack(attack, self.recent_beams)
             elif attack_type == AttackType.LAUNCH:
@@ -464,9 +470,10 @@ class BattleEngine:
                     ai = self._ai_factory.create_for_ship(new_ship, enemy_team)
                     self.ai_controllers.append(ai)
                 else:
-                    raise ValueError(
-                        "Fighter launch requires ai_factory on BattleEngine. "
-                        "Use BattleService.create_battle() or inject ai_factory after construction."
+                    raise ValidationException(
+                        "BattleEngine requires AI configuration",
+                        code=ErrorCode.MISSING_DEPENDENCY.value,
+                        context={"missing": "ai_factory", "operation": "fighter_launch"}
                     )
 
                 self.logger.log(f"LAUNCH: {new_name} launched from {source_ship.name}")

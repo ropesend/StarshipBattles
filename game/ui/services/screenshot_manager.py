@@ -11,7 +11,9 @@ import pygame
 
 from game.core.constants import ENABLE_SCREENSHOTS
 from game.core.paths import Paths
-from game.core.logger import log_error, log_info, log_warning
+import logging
+
+logger = logging.getLogger(__name__)
 from game.core.singleton import SingletonMeta
 from game.ui.services.tkinter_utils import copy_to_clipboard
 
@@ -40,9 +42,9 @@ class ScreenshotManager(metaclass=SingletonMeta):
         if self.enabled and not os.path.exists(self.base_dir):
             try:
                 os.makedirs(self.base_dir)
-                log_info(f"Created screenshot directory: {self.base_dir}")
+                logger.info(f"Created screenshot directory: {self.base_dir}")
             except OSError as e:
-                log_error(f"Failed to create screenshot directory: {e}")
+                logger.error(f"Failed to create screenshot directory: {e}")
                 self.enabled = False
 
     def capture(self, surface=None, region=None, label=None):
@@ -60,7 +62,7 @@ class ScreenshotManager(metaclass=SingletonMeta):
             surface = pygame.display.get_surface()
 
         if surface is None:
-            log_warning("Screenshot failed: No display surface found.")
+            logger.warning("Screenshot failed: No display surface found.")
             return
 
         try:
@@ -82,17 +84,17 @@ class ScreenshotManager(metaclass=SingletonMeta):
                     sub_surface = surface.subsurface(clip_rect)
                     pygame.image.save(sub_surface, filepath)
                 else:
-                    log_warning(f"Screenshot region {region} is outside surface bounds {surf_rect}.")
+                    logger.warning(f"Screenshot region {region} is outside surface bounds {surf_rect}.")
                     return
             else:
                 pygame.image.save(surface, filepath)
 
             abs_path = os.path.abspath(filepath)
-            log_info(f"Screenshot saved: {abs_path}")
+            logger.info(f"Screenshot saved: {abs_path}")
             self._copy_to_clipboard(abs_path)
 
         except (pygame.error, IOError, OSError) as e:
-            log_error(f"Error saving screenshot to {filepath}: {e}")
+            logger.error(f"Error saving screenshot to {filepath}: {e}")
 
     def _copy_to_clipboard(self, text: str) -> None:
         """Copy text to clipboard using Tkinter or Windows clip.
@@ -115,7 +117,7 @@ class ScreenshotManager(metaclass=SingletonMeta):
                     check=False
                 )
             except Exception as clip_err:  # Intentional broad catch: subprocess clipboard fallback, platform-dependent
-                log_warning(f"Clipboard copy failed (clip): {clip_err}")
+                logger.warning(f"Clipboard copy failed (clip): {clip_err}")
 
     def capture_strategy_layer(self, scene, include_ui=True, include_subwindows=True, label=None):
         """Capture a screenshot of the strategy layer with control over which layers are included.
@@ -143,21 +145,22 @@ class ScreenshotManager(metaclass=SingletonMeta):
                 # Draw the base strategy layer (galaxy map)
                 scene._renderer.draw(capture_surface)
 
-                # Draw UI layer
-                if hasattr(scene, 'ui') and scene.ui:
+                # Draw UI layer - StrategyScreen always has .ui
+                if scene.ui:
                     scene.ui.draw(capture_surface)
 
                 # Draw sub-windows if requested
                 if include_subwindows:
                     # Check for active sub-window screens
-                    if hasattr(scene, 'build_queue_screen') and scene.build_queue_screen:
+                    if scene.build_queue_screen:
                         scene.build_queue_screen.draw(capture_surface)
 
                 self.capture(surface=capture_surface, label=label)
             else:
                 # Capture viewport only (exclude sidebar and top bar)
-                sidebar_width = getattr(scene, 'SIDEBAR_WIDTH', 300)
-                top_bar_height = getattr(scene, 'TOP_BAR_HEIGHT', 40)
+                # StrategyScreen always has these class constants
+                sidebar_width = scene.SIDEBAR_WIDTH
+                top_bar_height = scene.TOP_BAR_HEIGHT
 
                 viewport_width = screen_width - sidebar_width
                 viewport_height = screen_height - top_bar_height
@@ -175,10 +178,10 @@ class ScreenshotManager(metaclass=SingletonMeta):
 
                     self.capture(surface=capture_surface, label=label)
                 else:
-                    log_warning("Cannot capture viewport: invalid dimensions")
+                    logger.warning("Cannot capture viewport: invalid dimensions")
 
         except (pygame.error, IOError, OSError, AttributeError) as e:
-            log_error(f"Error capturing strategy layer: {e}")
+            logger.error(f"Error capturing strategy layer: {e}")
 
     def show_toast(
         self,
@@ -211,4 +214,4 @@ class ScreenshotManager(metaclass=SingletonMeta):
                 window_title="Screenshot"
             )
         except Exception as e:  # Intentional broad catch: UI toast is informational, any failure is non-critical
-            log_warning(f"Failed to show screenshot toast: {e}")
+            logger.warning(f"Failed to show screenshot toast: {e}")

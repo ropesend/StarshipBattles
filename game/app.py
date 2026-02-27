@@ -1,16 +1,34 @@
 """Main game entry point - coordinates scenes and game loop."""
 import argparse
+import logging
+import os
+from typing import Optional
+
 import pygame
 import pygame_gui
-import os
 
-from game.core.logger import log_debug, log_info, log_error
 from game.core.config import DisplayConfig
 from game.core.paths import Paths
+
+logger = logging.getLogger(__name__)
+
+
+def configure_logging():
+    """Set up application logging. Called once at app startup."""
+    os.makedirs(os.path.dirname(Paths.BATTLE_LOG), exist_ok=True)
+
+    root_logger = logging.getLogger("game")
+    root_logger.setLevel(logging.DEBUG)
+
+    fh = logging.FileHandler(Paths.BATTLE_LOG, mode='w')
+    fh.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    root_logger.addHandler(fh)
 from game.ui.utils import create_centered_rect
 from game.simulation.components.component import load_components, load_modifiers
 from game.core.resources import load_resources_data
-from game.core.registry import GameRegistries, set_default_registries, RegistryManager
+from game.core.registry import GameRegistries, RegistryManager
 from pygame_gui.elements import UIButton
 from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
@@ -19,7 +37,7 @@ from game.ui.screens.battle_screen import BattleScreen
 from game.ui.screens.setup_screen import BattleSetupScreen
 from game.ui.screens.strategy_screen import StrategyScreen
 from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
-from Tools.formation_editor import FormationEditorScreen
+from game.ui.screens.formation_editor import FormationEditorScreen
 from game.ui.screens.test_lab import TestLabScreen
 from game.ui.screens.galaxy_test import GalaxyTestScreen
 from game.ui.screens.menu_scene import MenuScene
@@ -30,6 +48,7 @@ from game.core.input_actions import InputAction
 from game.exit_dialog import (
     draw_exit_dialog, handle_exit_dialog_click, handle_exit_dialog_cancel
 )
+from game.ui.fonts import get_font
 
 # Constants
 DEFAULT_WIDTH, DEFAULT_HEIGHT = DisplayConfig.default_resolution()
@@ -57,9 +76,9 @@ class Game:
 
         # Initialize fonts
         pygame.font.init()
-        self.font_small = pygame.font.SysFont("arial", 12)
-        self.font_med = pygame.font.SysFont("arial", 20)
-        self.font_large = pygame.font.SysFont("arial", 32)
+        self.font_small = get_font(12)
+        self.font_med = get_font(20)
+        self.font_large = get_font(32)
 
         # Monitor detection and resolution setup
         info = pygame.display.Info()
@@ -88,6 +107,8 @@ class Game:
         self.show_exit_dialog = False
         self.showing_load_menu = False
         self.showing_race_setup = False
+        self.showing_new_game_setup: bool = False  # PROJ-199: Lazy init elimination
+        self.return_state: Optional[GameState] = None  # PROJ-199: Lazy init elimination
         self.race_setup_window = None
         self.state = GameState.MENU
 
@@ -103,6 +124,9 @@ class Game:
         initialize_ship_data(Paths.ROOT_DIR)
 
         # Create GameRegistries container for DI (PROJ-38)
+        # PROJ-181: Deprecated set_default_registries() removed.
+        # All DI consumers now use get_default_registry_provider() which reads
+        # from RegistryManager (hydrated via load_components/load_modifiers above).
         registry = RegistryManager.instance()
         self.registries = GameRegistries(
             components=registry.components,
@@ -110,7 +134,6 @@ class Game:
             vehicle_classes=registry.vehicle_classes,
             resources=registry.resources
         )
-        set_default_registries(self.registries)
 
         # Initialize input mapper (PROJ-71: centralized keybindings)
         self.input_mapper = InputMapper()
@@ -200,7 +223,7 @@ class Game:
         """Show new game setup screen."""
         import pygame_gui
 
-        log_info("Opening new game setup")
+        logger.info("Opening new game setup")
 
         # Font preloading is handled in MenuScene/StrategyUI UIManager init
 
@@ -222,7 +245,7 @@ class Game:
         from game.strategy.engine.game_session import GameSession
         from game.strategy.systems.save_game_service import SaveGameService
 
-        log_info(f"Starting new game: {config.save_name} with {len(config.players)} players")
+        logger.info(f"Starting new game: {config.save_name} with {len(config.players)} players")
 
         # Create game session
         session = GameSession(config=config)
@@ -232,7 +255,7 @@ class Game:
 
         if success:
             session.save_path = save_path
-            log_info(f"Initial save created: {save_path}")
+            logger.info(f"Initial save created: {save_path}")
 
             # Pre-build homeworld complexes (same as quickstart)
             from game.strategy.quickstart_builder import QuickstartBuilder
@@ -245,7 +268,7 @@ class Game:
             self._switch_scene(GameState.STRATEGY, self.strategy_scene)
             self.showing_new_game_setup = False
         else:
-            log_error(f"Failed to create initial save: {message}")
+            logger.error(f"Failed to create initial save: {message}")
             # Show error dialog
             import pygame_gui.windows
             error_rect = pygame.Rect(0, 0, 400, 200)
@@ -260,7 +283,7 @@ class Game:
     def _on_new_game_cancel(self):
         """Cancel new game setup."""
         self.showing_new_game_setup = False
-        log_debug("New game setup cancelled")
+        logger.debug("New game setup cancelled")
 
     def _start_quickstart(self, player_count: int):
         """
@@ -273,7 +296,7 @@ class Game:
         from game.strategy.engine.game_session import GameSession
         from game.strategy.systems.save_game_service import SaveGameService
 
-        log_info(f"Starting Quickstart {player_count}P")
+        logger.info(f"Starting Quickstart {player_count}P")
 
         # Build config based on player count
         if player_count == 1:
@@ -289,7 +312,7 @@ class Game:
 
         if success:
             session.save_path = save_path
-            log_info(f"Quickstart {player_count}P save created: {save_path}")
+            logger.info(f"Quickstart {player_count}P save created: {save_path}")
 
             # Copy quickstart designs for empires
             QuickstartBuilder.copy_quickstart_designs(save_path, empire_ids)
@@ -300,7 +323,7 @@ class Game:
             self.strategy_scene = StrategyScreen(self.width, self.height, session=session, scene_callback=self._handle_strategy_action, input_mapper=self.input_mapper)
             self._switch_scene(GameState.STRATEGY, self.strategy_scene)
         else:
-            log_error(f"Quickstart {player_count}P failed: {message}")
+            logger.error(f"Quickstart {player_count}P failed: {message}")
 
     def start_quickstart_1p(self):
         """Start a single-player quickstart game."""
@@ -315,7 +338,7 @@ class Game:
         from game.ui.screens.save_selection_window import SaveSelectionWindow
         import pygame_gui
 
-        log_info("Opening load game menu")
+        logger.info("Opening load game menu")
 
         # Font preloading is handled in MenuScene/StrategyUI UIManager init
 
@@ -336,7 +359,7 @@ class Game:
         """Load the selected save game."""
         from game.strategy.systems.save_game_service import SaveGameService
 
-        log_info(f"Loading game from: {save_path}, turn: {turn_number}")
+        logger.info(f"Loading game from: {save_path}, turn: {turn_number}")
 
         # Load game session (optionally at specific turn)
         game_session, message = SaveGameService.load_game(save_path, turn_number=turn_number)
@@ -346,9 +369,9 @@ class Game:
             self.strategy_scene = StrategyScreen(self.width, self.height, session=game_session, scene_callback=self._handle_strategy_action, input_mapper=self.input_mapper)
             self._switch_scene(GameState.STRATEGY, self.strategy_scene)
             self.showing_load_menu = False
-            log_info(f"Game loaded successfully: {message}")
+            logger.info(f"Game loaded successfully: {message}")
         else:
-            log_error(f"Failed to load game: {message}")
+            logger.error(f"Failed to load game: {message}")
             # Show error dialog
             import pygame_gui.windows
             error_rect = pygame.Rect(0, 0, 400, 200)
@@ -363,7 +386,7 @@ class Game:
     def _on_load_cancel(self):
         """Cancel load game."""
         self.showing_load_menu = False
-        log_debug("Load game cancelled")
+        logger.debug("Load game cancelled")
 
     @profile_action("App: Start Formation Editor")
     def start_formation_editor(self):
@@ -384,7 +407,7 @@ class Game:
         """Enter Research Tree sandbox."""
         from game.ui.research.research_scene import ResearchTreeScene
 
-        log_info("Starting Research Tree sandbox")
+        logger.info("Starting Research Tree sandbox")
         self.research_tree_scene = ResearchTreeScene(
             self.width, self.height,
             on_close_callback=self.on_research_tree_return
@@ -398,7 +421,7 @@ class Game:
 
     def start_galaxy_test(self):
         """Enter Galaxy Test screen."""
-        log_info("Starting Galaxy Test screen")
+        logger.info("Starting Galaxy Test screen")
         self.galaxy_test_scene = GalaxyTestScreen(
             self.width, self.height,
             on_close_callback=self.on_galaxy_test_return
@@ -414,7 +437,7 @@ class Game:
         """Open the keybindings editor scene (PROJ-71 Phase 4)."""
         from game.ui.screens.keybindings_scene import KeybindingsScene
 
-        log_info("Opening keybindings editor")
+        logger.info("Opening keybindings editor")
         self._keybindings_return_state = self.state
         self.keybindings_scene = KeybindingsScene(
             self.width, self.height,
@@ -425,7 +448,7 @@ class Game:
 
     def on_keybindings_return(self):
         """Return from keybindings editor to previous scene."""
-        log_info("Returning from keybindings editor")
+        logger.info("Returning from keybindings editor")
         return_state = getattr(self, '_keybindings_return_state', GameState.MENU)
 
         if return_state == GameState.STRATEGY:
@@ -442,7 +465,7 @@ class Game:
         """Open race setup wizard."""
         import pygame_gui
 
-        log_info("Opening race setup wizard")
+        logger.info("Opening race setup wizard")
 
         # Font preloading is handled in MenuScene/StrategyUI UIManager init
 
@@ -463,7 +486,7 @@ class Game:
 
     def _on_race_setup_complete(self, race_config):
         """Handle race setup completion."""
-        log_info(f"Race setup complete: {race_config.name}")
+        logger.info(f"Race setup complete: {race_config.name}")
         self.showing_race_setup = False
         self.race_setup_window = None
 
@@ -471,7 +494,7 @@ class Game:
         """Cancel race setup."""
         self.showing_race_setup = False
         self.race_setup_window = None
-        log_debug("Race setup cancelled")
+        logger.debug("Race setup cancelled")
 
     def start_battle(self, team1_ships, team2_ships, headless=False):
         """Start a battle with the given ships."""
@@ -528,13 +551,13 @@ class Game:
                     self.show_exit_dialog = True
                 elif action == InputAction.GLOBAL_TOGGLE_PROFILER:
                     active = Profiler.instance().toggle()
-                    log_info(f"Profiling {'ENABLED' if active else 'DISABLED'}")
+                    logger.info(f"Profiling {'ENABLED' if active else 'DISABLED'}")
             elif event.type == pygame.VIDEORESIZE:
                 self._handle_resize(event.w, event.h)
 
             # Forward events to current scene only if state didn't change
             if self.state != state_before:
-                log_debug(f"State changed from {state_before} to {self.state}")
+                logger.debug(f"State changed from {state_before} to {self.state}")
                 continue
 
             self._forward_event_to_scene(event)
@@ -543,7 +566,7 @@ class Game:
         """Forward event to the current active scene (PROJ-65: unified dispatch)."""
         # Handle overlay dialogs on menu - these use the menu's ui_manager
         if self.state == GameState.MENU:
-            if hasattr(self, 'showing_new_game_setup') and self.showing_new_game_setup:
+            if self.showing_new_game_setup:
                 self.menu_ui_manager.process_events(event)
                 return
             if self.showing_load_menu:
@@ -570,13 +593,13 @@ class Game:
     def _handle_battle_action(self, action: str, **kwargs):
         """Handle scene actions from BattleScreen."""
         if action == "return_to_test_lab":
-            log_debug("Returning to Combat Lab from test")
+            logger.debug("Returning to Combat Lab from test")
             self.battle_scene.test_mode = False
             self.test_lab_scene.reset_selection()
             self.start_test_lab()
         elif action == "return_to_setup":
-            log_debug("Returning to battle setup")
-            if hasattr(self, 'return_state') and self.return_state == GameState.TEST_LAB:
+            logger.debug("Returning to battle setup")
+            if self.return_state == GameState.TEST_LAB:
                 self.start_test_lab()
             else:
                 self.start_battle_setup(preserve_teams=True)
@@ -595,10 +618,10 @@ class Game:
         elif action == "open_keybindings":
             self.start_keybindings()
         elif action == "quit_to_menu":
-            log_info("Returning to main menu from strategy")
+            logger.info("Returning to main menu from strategy")
             self._switch_scene(GameState.MENU, self._menu_scene)
         elif action == "quit_game":
-            log_info("Quitting game from strategy menu")
+            logger.info("Quitting game from strategy menu")
             self.running = False
 
     def _create_workshop_context(self, context_data: dict):
@@ -619,7 +642,7 @@ class Game:
 
         # Get empire theme
         empire_theme_id = empire.empire_theme_id if hasattr(empire, 'empire_theme_id') else None
-        log_debug(f"Creating WorkshopContext with empire_theme_id={empire_theme_id}")
+        logger.debug(f"Creating WorkshopContext with empire_theme_id={empire_theme_id}")
 
         # Create integrated context regardless of save_path
         return WorkshopContext.integrated(
@@ -672,15 +695,16 @@ class Game:
             self.start_battle(kwargs["team1"], kwargs["team2"])
         elif action == "start_headless":
             team1, team2 = kwargs["team1"], kwargs["team2"]
-            log_info(f"Team 1: {len(team1)} ships ({sum(s.max_hp for s in team1):.0f} total HP)")
-            log_info(f"Team 2: {len(team2)} ships ({sum(s.max_hp for s in team2):.0f} total HP)")
-            log_info("Running simulation...")
+            logger.info(f"Team 1: {len(team1)} ships ({sum(s.max_hp for s in team1):.0f} total HP)")
+            logger.info(f"Team 2: {len(team2)} ships ({sum(s.max_hp for s in team2):.0f} total HP)")
+            logger.info("Running simulation...")
             self.start_battle(team1, team2, headless=True)
         elif action == "return_to_menu":
             self._switch_scene(GameState.MENU, self._menu_scene)
 
 
 def main():
+    configure_logging()
     args = parse_args()
     game = Game(args)
 
@@ -692,11 +716,11 @@ def main():
     except Exception as e:  # Intentional broad catch: top-level crash handler, logs and re-raises
         import traceback
         error_msg = traceback.format_exc()
-        log_error("CRITICAL CRASH CAUGHT:")
-        log_error(error_msg)
+        logger.error("CRITICAL CRASH CAUGHT:")
+        logger.error(error_msg)
         with open(Paths.CRASH_LOG, "w") as f:
             f.write(error_msg)
-        raise e
+        raise
 
     Profiler.instance().save_history()
 

@@ -5,12 +5,14 @@ Combines multiple density primitives with weights to create
 complex galaxy layouts.
 """
 
+import logging
 import random
 from dataclasses import dataclass, field
 from typing import List, Tuple, Optional, Dict, Any
 
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 from game.core.hex_math import HexCoord
-from game.core.logger import log_info, log_warning
 from game.strategy.generation.density.primitives.density_primitive import (
     DensityPrimitive,
     clamp_density,
@@ -21,6 +23,8 @@ from game.strategy.generation.density.primitives.spiral_arm import SpiralArmPrim
 from game.strategy.generation.density.primitives.linear import LinearPrimitive
 from game.strategy.generation.density.primitives.noise import NoisePrimitive
 from game.strategy.generation.density.primitives.geometric import GeometricPrimitive
+
+logger = logging.getLogger(__name__)
 
 
 # Mapping from primitive type names to classes
@@ -60,7 +64,7 @@ class DensityMap:
             weight: Weight for this primitive (default 1.0)
         """
         if weight <= 0:
-            log_warning(f"Ignoring primitive with non-positive weight: {weight}")
+            logger.warning(f"Ignoring primitive with non-positive weight: {weight}")
             return
         self._primitives.append((primitive, weight))
         self._total_weight += weight
@@ -106,10 +110,14 @@ class DensityMap:
             HexCoord in high-density region, or None if sampling fails
 
         Raises:
-            ValueError: If no primitives have been added
+            ValidationException: If no primitives have been added
         """
         if not self._primitives:
-            raise ValueError("Cannot sample from empty DensityMap - add primitives first")
+            raise ValidationException(
+                "Cannot sample from empty density map",
+                code=ErrorCode.NOT_INITIALIZED.value,
+                context={"reason": "no_primitives_added"}
+            )
 
         if rng is None:
             rng = random.Random()
@@ -131,7 +139,7 @@ class DensityMap:
             if rng.random() < density:
                 return HexCoord(q, r)
 
-        log_warning(f"DensityMap.sample() failed after {max_attempts} attempts")
+        logger.warning(f"DensityMap.sample() failed after {max_attempts} attempts")
         return None
 
     def get_coverage_estimate(self, sample_count: int = 1000, rng: Optional[random.Random] = None) -> float:
@@ -177,21 +185,33 @@ class DensityMap:
             Configured DensityMap instance
 
         Raises:
-            ValueError: If configuration is invalid
+            ValidationException: If configuration is invalid
         """
         density_map = cls(radius=radius)
 
         primitives_config = layout_config.get('primitives', [])
         if not primitives_config:
-            raise ValueError("Layout config must contain 'primitives' list")
+            raise ValidationException(
+                "Layout config must contain 'primitives' list",
+                code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                context={"missing_key": "primitives"}
+            )
 
         for prim_config in primitives_config:
             primitive_type = prim_config.get('type')
             if not primitive_type:
-                raise ValueError("Each primitive must have a 'type' field")
+                raise ValidationException(
+                    "Each primitive must have a 'type' field",
+                    code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                    context={"primitive_config": prim_config}
+                )
 
             if primitive_type not in PRIMITIVE_REGISTRY:
-                raise ValueError(f"Unknown primitive type: {primitive_type}")
+                raise ValidationException(
+                    f"Unknown primitive type: {primitive_type}",
+                    code=ErrorCode.MISSING_ENTITY.value,
+                    context={"primitive_type": primitive_type, "valid_types": list(PRIMITIVE_REGISTRY.keys())}
+                )
 
             # Extract weight (default 1.0)
             weight = prim_config.get('weight', 1.0)
@@ -205,11 +225,15 @@ class DensityMap:
             try:
                 primitive = primitive_class(**kwargs)
             except TypeError as e:
-                raise ValueError(f"Invalid parameters for {primitive_type}: {e}")
+                raise ValidationException(
+                    f"Invalid parameters for {primitive_type}",
+                    code=ErrorCode.VALIDATION_FAILED.value,
+                    context={"primitive_type": primitive_type, "kwargs": kwargs}
+                ) from e
 
             density_map.add_primitive(primitive, weight)
 
-        log_info(f"Created DensityMap with {len(density_map._primitives)} primitives")
+        logger.info(f"Created DensityMap with {len(density_map._primitives)} primitives")
         return density_map
 
     def __len__(self) -> int:

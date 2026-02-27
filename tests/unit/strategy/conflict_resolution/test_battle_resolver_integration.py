@@ -22,7 +22,7 @@ class TestBattleResolverIntegration:
         last_fleets = []
 
         class TrackingResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None):
+            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None, environmental_effects=None):
                 nonlocal call_count, last_fleets
                 call_count += 1
                 last_fleets = [fleet1, fleet2]
@@ -57,7 +57,7 @@ class TestBattleResolverIntegration:
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
         class AlwaysFleet1WinsResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None):
+            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None, environmental_effects=None):
                 return BattleResult(
                     winner=0,  # Team 0 (fleet1) wins
                     tick_count=50,
@@ -94,7 +94,7 @@ class TestBattleResolverIntegration:
         survivor1 = MagicMock()
 
         class ResultResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None):
+            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None, environmental_effects=None):
                 return BattleResult(
                     winner=0,
                     tick_count=100,
@@ -126,7 +126,7 @@ class TestBattleResolverIntegration:
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
         class DrawResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None):
+            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None, environmental_effects=None):
                 return BattleResult(
                     winner=None,  # Draw
                     tick_count=1000,
@@ -159,7 +159,7 @@ class TestBattleResolverIntegration:
         received_seed = None
 
         class SeedCapturingResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None):
+            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None, environmental_effects=None):
                 nonlocal received_seed
                 received_seed = seed
                 return BattleResult(
@@ -209,7 +209,7 @@ class TestResolveAllConflicts:
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
         class QuickResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None):
+            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None, environmental_effects=None):
                 return BattleResult(winner=0, tick_count=10, team0_survivors=[], team1_survivors=[])
 
         engine = ConflictResolutionEngine(battle_resolver=QuickResolver())
@@ -247,7 +247,7 @@ class TestResolveAllConflicts:
 
         # Resolver where the first fleet passed always wins (winner=0)
         class FirstFleetWinsResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None):
+            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None, environmental_effects=None):
                 return BattleResult(winner=0, tick_count=10, team0_survivors=[MagicMock()], team1_survivors=[])
 
         engine = ConflictResolutionEngine(battle_resolver=FirstFleetWinsResolver())

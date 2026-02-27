@@ -127,10 +127,12 @@ class ShipStatQuerier:
                 if not isinstance(ab, WeaponAbility):
                     continue
 
-                rng = getattr(ab, 'range', 0.0)
+                # WeaponAbility.range is always initialized
+                rng = ab.range
                 # For SeekerWeapons, calculate range from endurance if not set
+                # SeekerWeaponAbility always has projectile_speed and endurance
                 if isinstance(ab, SeekerWeaponAbility):
-                    if rng <= 0 and hasattr(ab, 'projectile_speed') and hasattr(ab, 'endurance'):
+                    if rng <= 0:
                         rng = ab.projectile_speed * ab.endurance
 
                 if rng > max_rng:

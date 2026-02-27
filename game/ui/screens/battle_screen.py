@@ -9,14 +9,14 @@ Can optionally use BattleController for unified battle mode support
 PROJ-40: Removed unused AIController import. BattleService is instantiated at
 runtime so must remain a runtime import.
 """
+import logging
 import pygame
-import math
-import random
 import time
 from typing import Optional, List, TYPE_CHECKING
 
-from game.core.logger import log_debug, log_info, log_warning
 from game.core.config import PhysicsConfig
+
+logger = logging.getLogger(__name__)
 from game.ui.config import UIConfig
 from game.ui.renderer.game_renderer import draw_ship
 from game.ui.renderer.camera import Camera
@@ -25,6 +25,12 @@ from game.simulation.services import BattleService
 from game.ui.services.battle_ui_service import BattleUIService
 # PROJ-126: Import AI factory from AI layer (UI can depend on AI)
 from game.ai.ai_factory import AIControllerFactory
+from game.ui.fonts import get_font
+from game.ui.colors import (
+    BG_BATTLE, PROJECTILE_STANDARD, HUD_TEXT, HUD_ZOOM_TEXT,
+    SPEED_PAUSED, SPEED_SLOWMO, SPEED_FAST, TEXT_ITEM, PROJECTILE_GLOW,
+    PROFILING_TEXT
+)
 
 if TYPE_CHECKING:
     from game.simulation.battle_controller import BattleController
@@ -111,8 +117,8 @@ class BattleScreen:
         self.test_tick_count = 0  # Track ticks for max_ticks limit
         self.test_completed = False  # Flag indicating test has finished
 
-        # Font for HUD (passed in or created)
-        self._hud_font = None
+        # Font for HUD (no lazy-init needed - get_font() is cached)
+        self._hud_font = get_font(20)
 
     # === Controller Integration ===
 
@@ -180,7 +186,7 @@ class BattleScreen:
         if not self.headless_mode and self.ships:
             self.camera.fit_objects(self.ships)
 
-        log_info(f"Battle started via controller: {len(self.ships)} ships")
+        logger.info(f"Battle started via controller: {len(self.ships)} ships")
 
     @property
     def engine(self):
@@ -249,7 +255,7 @@ class BattleScreen:
         self.headless_start_time = None
         if headless:
             self.headless_start_time = time.time()
-            log_info("=== STARTING HEADLESS BATTLE ===")
+            logger.info("=== STARTING HEADLESS BATTLE ===")
 
         # Use BattleService to set up and start the battle
         # PROJ-126: Reuse same AI factory instance
@@ -288,22 +294,22 @@ class BattleScreen:
             fuel = s.resources.get_value("fuel")
             status_msg = f"Ship '{s.name}' (Team {s.team_id}): HP={s.hp}/{s.max_hp} Mass={s.mass} Thrust={s.total_thrust} Fuel={fuel} TurnSpeed={s.turn_speed:.2f} MaxSpeed={s.max_speed:.2f} Derelict={s.is_derelict}"
             self.engine.logger.log(status_msg)
-            log_info(status_msg)
+            logger.info(status_msg)
 
             if s.is_derelict:
                 warn_msg = f"CRITICAL WARNING: Ship {s.name} is DERELICT on start! (Bridge? Engines? LifeSupport? Power?)"
                 self.engine.logger.log(warn_msg)
-                log_warning(warn_msg)
+                logger.warning(warn_msg)
 
             if s.total_thrust <= 0:
                 warn_msg = f"WARNING: {s.name} has NO THRUST!"
                 self.engine.logger.log(warn_msg)
-                log_warning(warn_msg)
+                logger.warning(warn_msg)
 
             if s.turn_speed <= 0.01:
                 warn_msg = f"WARNING: {s.name} has LOW/NO TURN SPEED ({s.turn_speed:.4f})! Mass too high for thrusters?"
                 self.engine.logger.log(warn_msg)
-                log_warning(warn_msg)
+                logger.warning(warn_msg)
 
     def handle_event(self, event):
         """Handle a single pygame event (IScene protocol)."""
@@ -371,7 +377,7 @@ class BattleScreen:
                 self.headless_mode = False
 
                 if self.test_mode:
-                    log_debug("Headless test complete, returning to Combat Lab")
+                    logger.debug("Headless test complete, returning to Combat Lab")
                     self._trigger_return_to_test_lab()
                 else:
                     self._trigger_return_to_setup()
@@ -381,7 +387,7 @@ class BattleScreen:
         if self.sim_tick_counter % 10000 == 0:
             t1 = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
             t2 = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
-            log_debug(f"  Tick {self.sim_tick_counter}: Team1={t1}, Team2={t2}")
+            logger.debug(f"  Tick {self.sim_tick_counter}: Team1={t1}, Team2={t2}")
 
     def _update_visual(self, dt: float):
         """Update visual battle simulation with proper timing."""
@@ -404,7 +410,7 @@ class BattleScreen:
 
                 elapsed = t1 - t0
                 if elapsed > 0.05:
-                    log_warning(f"Slow Frame: {ticks_to_run} ticks took {elapsed*1000:.1f}ms")
+                    logger.warning(f"Slow Frame: {ticks_to_run} ticks took {elapsed*1000:.1f}ms")
 
                 self.tick_rate_count += ticks_to_run
             else:
@@ -438,7 +444,7 @@ class BattleScreen:
             # Check if test should end (engine handles all end conditions)
             if self.engine.is_battle_over():
                 # Test complete - verify results and populate results dict
-                log_debug(f"Test complete! ticks={self.test_tick_count}")
+                logger.debug(f"Test complete! ticks={self.test_tick_count}")
 
                 # Populate results dict (similar to headless mode)
                 if not hasattr(self.test_scenario, 'results') or not self.test_scenario.results:
@@ -448,8 +454,8 @@ class BattleScreen:
 
                 # Run verification (populates additional results)
                 self.test_scenario.passed = self.test_scenario.verify(self.engine)
-                log_debug(f"Test {'PASSED' if self.test_scenario.passed else 'FAILED'}")
-                log_debug(f"Results populated: {list(self.test_scenario.results.keys())}")
+                logger.debug(f"Test {'PASSED' if self.test_scenario.passed else 'FAILED'}")
+                logger.debug(f"Results populated: {list(self.test_scenario.results.keys())}")
 
                 # Log test execution (for UI vs headless comparison)
                 try:
@@ -457,7 +463,7 @@ class BattleScreen:
                     runner = TestRunner()
                     runner.log_test_execution(self.test_scenario, headless=False)
                 except (ImportError, AttributeError, OSError) as e:
-                    log_warning(f"Failed to log UI test execution: {e}")
+                    logger.warning(f"Failed to log UI test execution: {e}")
 
                 # Signal test completion (keep scenario reference for results retrieval)
                 self.test_completed = True
@@ -536,7 +542,7 @@ class BattleScreen:
     
     def draw(self, screen):
         """Draw the battle scene."""
-        screen.fill((10, 10, 20))
+        screen.fill(BG_BATTLE)
         
         # 1. Background Grid (UI)
         self.ui.draw_grid(screen)
@@ -551,9 +557,9 @@ class BattleScreen:
             start = self.camera.world_to_screen(start_pos)
             end = self.camera.world_to_screen(end_pos)
             
-            color = getattr(p, 'color', (255, 200, 50))
+            color = getattr(p, 'color', PROJECTILE_STANDARD)
             pygame.draw.line(screen, color, start, end, 3)
-            pygame.draw.circle(screen, (255, 255, 100), (int(end[0]), int(end[1])), int(getattr(p, 'radius', 4)))
+            pygame.draw.circle(screen, PROJECTILE_GLOW, (int(end[0]), int(end[1])), int(getattr(p, 'radius', 4)))
         
         # Draw ships
         self.camera.show_overlay = self.ui.show_overlay # Hack to pass state to renderer
@@ -589,8 +595,6 @@ class BattleScreen:
             profiler_active: Whether profiler is active
         """
         if font is None:
-            if self._hud_font is None:
-                self._hud_font = pygame.font.SysFont("arial", 20)
             font = self._hud_font
 
         width = screen.get_width()
@@ -602,9 +606,9 @@ class BattleScreen:
 
         # Draw to the right of seeker panel
         panel_offset = self.ui.seeker_panel.rect.width + 10
-        screen.blit(font.render(tick_text, True, (180, 180, 180)), (panel_offset, 10))
-        screen.blit(font.render(rate_text, True, (180, 180, 180)), (panel_offset, 35))
-        screen.blit(font.render(zoom_text, True, (150, 200, 255)), (panel_offset, 60))
+        screen.blit(font.render(tick_text, True, HUD_TEXT), (panel_offset, 10))
+        screen.blit(font.render(rate_text, True, HUD_TEXT), (panel_offset, 35))
+        screen.blit(font.render(zoom_text, True, HUD_ZOOM_TEXT), (panel_offset, 60))
 
         # Speed indicator
         if self.sim_speed_multiplier >= 10.0:
@@ -617,28 +621,28 @@ class BattleScreen:
         else:
             speed_text = f"Speed: {speed_val_text}"
 
-        speed_color = (255, 100, 100) if self.sim_paused else (200, 200, 200)
+        speed_color = SPEED_PAUSED if self.sim_paused else TEXT_ITEM
         if self.sim_speed_multiplier < 1.0:
-            speed_color = (255, 200, 100)
+            speed_color = SPEED_SLOWMO
         elif self.sim_speed_multiplier > 1.0:
-            speed_color = (100, 255, 100)
+            speed_color = SPEED_FAST
 
         screen.blit(font.render(speed_text, True, speed_color), (width // 2 - 50, 10))
 
         # Profiler indicator
         if profiler_active:
-            prof_text = font.render("PROFILING ACTIVE", True, (255, 50, 50))
+            prof_text = font.render("PROFILING ACTIVE", True, PROFILING_TEXT)
             screen.blit(prof_text, (width - 180, 10))
 
     def print_headless_summary(self):
         """Print summary of headless battle results."""
         # Skip summary for test mode - test framework handles results
         if self.test_mode:
-            log_info(f"Headless test complete: {self.sim_tick_counter} ticks")
+            logger.info(f"Headless test complete: {self.sim_tick_counter} ticks")
             return
 
         # For normal headless battles, print summary if UI supports it
         if hasattr(self.ui, 'print_headless_summary'):
             self.ui.print_headless_summary(self.headless_start_time, self.sim_tick_counter)
         else:
-            log_info(f"Headless battle complete: {self.sim_tick_counter} ticks")
+            logger.info(f"Headless battle complete: {self.sim_tick_counter} ticks")

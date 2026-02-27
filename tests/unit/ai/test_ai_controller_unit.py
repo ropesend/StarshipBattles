@@ -777,23 +777,9 @@ class TestCheckFormationIntegrity:
         # Should trigger dropout due to damaged component
         mock_ship.set_in_formation.assert_called_with(False)
 
-    def test_component_missing_hp_attributes(self, mock_ship, mock_grid, mock_strategy_manager):
-        """Component without HP attributes uses defaults (stays in formation)."""
-        from game.ai.controller import AIController
-
-        # Component with no current_hp or max_hp attributes
-        comp = Mock(spec=[])  # Empty spec means no attributes
-
-        mock_ship.get_components_by_ability.return_value = [comp]
-        mock_ship.is_in_formation.return_value = True
-        mock_ship.get_formation_master.return_value = Mock()
-
-        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
-        controller._check_formation_integrity()
-
-        # Default: getattr(comp, 'current_hp', 1) = 1, getattr(comp, 'max_hp', 1) = 1
-        # 1 < 1 is False, so no damage detected
-        mock_ship.set_in_formation.assert_not_called()
+    # DELETED: test_component_missing_hp_attributes
+    # PROJ-192: This test was invalid - Component always has current_hp/max_hp attributes.
+    # The getattr fallback pattern has been replaced with direct attribute access.
 
 
 class TestCheckAvoidance:
@@ -813,17 +799,21 @@ class TestCheckAvoidance:
     def test_avoidance_skips_self_via_adapter(self, mock_ship, mock_grid, mock_strategy_manager):
         """Self is excluded via adapter unwrapping."""
         from game.ai.controller import AIController
+        from game.ai.interfaces.controllable import ShipControllableAdapter
 
-        # The ship adapter wraps a raw ship
+        # The ship adapter wraps a raw ship - use spec to pass isinstance check
         raw_ship = Mock()
-        mock_ship.ship = raw_ship  # Adapter pattern
+        mock_adapter = Mock(spec=ShipControllableAdapter)
+        mock_adapter.ship = raw_ship
+        mock_adapter.get_position.return_value = Vector2(100, 100)
+        mock_adapter.get_radius.return_value = 10.0
 
         # Grid returns the raw ship (which should be skipped as self)
         raw_ship.is_alive = True
         raw_ship.position = Vector2(100.0, 100.0)
         mock_grid.query_radius.return_value = [raw_ship]
 
-        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller = AIController(mock_adapter, mock_grid, enemy_team_id=1)
         result = controller.check_avoidance()
 
         # Should return None because raw_ship is self

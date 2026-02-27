@@ -3,6 +3,7 @@ Tests for GameConfig and PlayerConfig
 """
 import pytest
 from game.strategy.engine.game_config import PlayerConfig, GameConfig
+from game.core.exceptions import ValidationException
 
 
 class TestPlayerConfig:
@@ -124,17 +125,17 @@ class TestGameConfig:
             for i in range(5)
         ]
 
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValidationException) as exc_info:
             GameConfig(players=players)
 
-        assert "4" in str(exc_info.value)
+        assert "maximum" in str(exc_info.value).lower()
 
     def test_game_config_rejects_empty_players(self):
         """GameConfig requires at least 1 player"""
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValidationException) as exc_info:
             GameConfig(players=[])
 
-        assert "1" in str(exc_info.value)
+        assert "minimum" in str(exc_info.value).lower()
 
     def test_game_config_galaxy_settings(self):
         """GameConfig preserves galaxy generation settings"""
@@ -216,10 +217,10 @@ class TestGameConfigGalaxyGeneration:
 
     def test_galaxy_type_rejects_invalid_type(self):
         """galaxy_type should reject invalid types"""
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValidationException) as exc_info:
             GameConfig(galaxy_type="invalid_galaxy")
 
-        assert "galaxy_type" in str(exc_info.value).lower()
+        assert "galaxy" in str(exc_info.value).lower()
 
     def test_galaxy_seed_accepts_integer(self):
         """galaxy_seed should accept integer values"""

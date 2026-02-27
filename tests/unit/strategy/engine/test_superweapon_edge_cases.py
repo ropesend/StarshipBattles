@@ -650,7 +650,7 @@ class TestSelfDestructShipNames:
 
         # Should not raise, should use ship_id as name fallback
         with patch('game.strategy.engine.superweapon_order_processor.log_event'):
-            with patch('game.strategy.engine.superweapon_order_processor.log_info'):
+            with patch('game.strategy.engine.superweapon_order_processor.logger'):
                 result = processor.process_self_destruct(fleet, empire, Mock())
 
         assert result.success
@@ -676,7 +676,7 @@ class TestSelfDestructShipNames:
         empire.id = 0
 
         with patch('game.strategy.engine.superweapon_order_processor.log_event'):
-            with patch('game.strategy.engine.superweapon_order_processor.log_info'):
+            with patch('game.strategy.engine.superweapon_order_processor.logger'):
                 result = processor.process_self_destruct(fleet, empire, Mock())
 
         assert result.success
@@ -703,7 +703,7 @@ class TestSelfDestructShipNames:
         empire = Mock()
 
         with patch('game.strategy.engine.superweapon_order_processor.log_event'):
-            with patch('game.strategy.engine.superweapon_order_processor.log_info'):
+            with patch('game.strategy.engine.superweapon_order_processor.logger'):
                 result = processor.process_self_destruct(fleet, empire, Mock())
 
         assert result.success

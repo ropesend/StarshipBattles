@@ -12,6 +12,7 @@ import pytest
 from pathlib import Path
 from unittest.mock import MagicMock, patch, PropertyMock
 
+from game.core.exceptions import MissingResourceException
 from game.simulation.entities.ship_loader import (
     load_vehicle_classes_data,
     load_vehicle_classes,
@@ -114,11 +115,11 @@ class TestLoadVehicleClassesData:
         assert result["Frigate"]["base_hull"] == 100
         assert result["Cruiser"]["base_hull"] == 200
 
-    def test_raises_runtime_error_for_missing_file(self, tmp_path):
-        """Raises RuntimeError when vehicle classes file is not found."""
+    def test_raises_missing_resource_exception_for_missing_file(self, tmp_path):
+        """Raises MissingResourceException when vehicle classes file is not found."""
         nonexistent = tmp_path / "does_not_exist.json"
 
-        with pytest.raises(RuntimeError, match="Critical Error"):
+        with pytest.raises(MissingResourceException):
             load_vehicle_classes_data(str(nonexistent))
 
     def test_returns_deep_copy_of_data(self, tmp_path, vehicle_classes_data):
@@ -238,87 +239,88 @@ class TestLoadVehicleClasses:
     """Tests for load_vehicle_classes function."""
 
     def test_populates_registry_with_loaded_data(self, tmp_path, vehicle_classes_data):
-        """Loads data and populates RegistryManager.vehicle_classes."""
+        """Loads data and populates registry via provider."""
         file_path = tmp_path / "vehicleclasses.json"
         file_path.write_text(json.dumps(vehicle_classes_data))
 
-        mock_registry = MagicMock()
-        mock_registry.vehicle_classes = {}
+        # PROJ-174: Use provider pattern via DI
+        vehicle_classes = {}
+        mock_provider = MagicMock()
+        mock_provider.get_vehicle_classes.return_value = vehicle_classes
 
-        with patch('game.simulation.entities.ship_loader.RegistryManager') as MockRM:
-            MockRM.instance.return_value = mock_registry
+        load_vehicle_classes(str(file_path), registry_provider=mock_provider)
 
-            load_vehicle_classes(str(file_path))
-
-        assert "Frigate" in mock_registry.vehicle_classes
-        assert "Cruiser" in mock_registry.vehicle_classes
+        assert "Frigate" in vehicle_classes
+        assert "Cruiser" in vehicle_classes
 
     def test_clears_existing_registry_before_loading(self, tmp_path, vehicle_classes_data):
         """Clears existing vehicle_classes before populating."""
         file_path = tmp_path / "vehicleclasses.json"
         file_path.write_text(json.dumps(vehicle_classes_data))
 
-        mock_registry = MagicMock()
+        # PROJ-174: Use provider pattern via DI
         existing_classes = {"OldClass": {"id": "old"}}
-        mock_registry.vehicle_classes = existing_classes
+        mock_provider = MagicMock()
+        mock_provider.get_vehicle_classes.return_value = existing_classes
 
-        with patch('game.simulation.entities.ship_loader.RegistryManager') as MockRM:
-            MockRM.instance.return_value = mock_registry
-
-            load_vehicle_classes(str(file_path))
+        load_vehicle_classes(str(file_path), registry_provider=mock_provider)
 
         # OldClass should be gone, only new classes present
-        assert "OldClass" not in mock_registry.vehicle_classes
-        assert "Frigate" in mock_registry.vehicle_classes
+        assert "OldClass" not in existing_classes
+        assert "Frigate" in existing_classes
 
     def test_uses_default_path_when_none_provided(self):
         """Uses Paths.VEHICLE_CLASSES_FILE when no path provided."""
         with patch('game.simulation.entities.ship_loader.load_vehicle_classes_data') as mock_load:
             mock_load.return_value = {"Test": {"id": "test"}}
 
-            with patch('game.simulation.entities.ship_loader.RegistryManager') as MockRM:
-                mock_registry = MagicMock()
-                mock_registry.vehicle_classes = {}
-                MockRM.instance.return_value = mock_registry
+            # PROJ-174: Use provider pattern via DI
+            vehicle_classes = {}
+            mock_provider = MagicMock()
+            mock_provider.get_vehicle_classes.return_value = vehicle_classes
 
-                with patch('game.simulation.entities.ship_loader.load_json', return_value={}):
-                    with patch('game.simulation.entities.ship_loader.Paths') as mock_paths:
-                        mock_paths.VEHICLE_CLASSES_FILE = "/default/path.json"
+            with patch('game.simulation.entities.ship_loader.load_json', return_value={}):
+                with patch('game.simulation.entities.ship_loader.Paths') as mock_paths:
+                    mock_paths.VEHICLE_CLASSES_FILE = "/default/path.json"
 
-                        load_vehicle_classes()
+                    load_vehicle_classes(registry_provider=mock_provider)
 
-                        # Verify default path was used
-                        mock_load.assert_called()
+                    # Verify default path was used
+                    mock_load.assert_called()
 
     def test_logs_loaded_count(self, tmp_path, vehicle_classes_data, caplog):
         """Logs the number of loaded vehicle classes."""
+        import logging
+        caplog.set_level(logging.INFO, logger="game.simulation.entities.ship_loader")
+
         file_path = tmp_path / "vehicleclasses.json"
         file_path.write_text(json.dumps(vehicle_classes_data))
 
-        mock_registry = MagicMock()
-        mock_registry.vehicle_classes = {}
+        # PROJ-174: Use provider pattern via DI
+        vehicle_classes = {}
+        mock_provider = MagicMock()
+        mock_provider.get_vehicle_classes.return_value = vehicle_classes
 
-        with patch('game.simulation.entities.ship_loader.RegistryManager') as MockRM:
-            MockRM.instance.return_value = mock_registry
-
-            load_vehicle_classes(str(file_path))
+        load_vehicle_classes(str(file_path), registry_provider=mock_provider)
 
         assert "Loaded 2 vehicle classes" in caplog.text
 
     def test_logs_layer_configurations(self, tmp_path, classes_with_layer_config, vehicle_layers_data, caplog):
         """Logs layer configurations when present."""
+        import logging
+        caplog.set_level(logging.INFO, logger="game.simulation.entities.ship_loader")
+
         classes_file = tmp_path / "vehicleclasses.json"
         layers_file = tmp_path / "vehiclelayers.json"
         classes_file.write_text(json.dumps(classes_with_layer_config))
         layers_file.write_text(json.dumps(vehicle_layers_data))
 
-        mock_registry = MagicMock()
-        mock_registry.vehicle_classes = {}
+        # PROJ-174: Use provider pattern via DI
+        vehicle_classes = {}
+        mock_provider = MagicMock()
+        mock_provider.get_vehicle_classes.return_value = vehicle_classes
 
-        with patch('game.simulation.entities.ship_loader.RegistryManager') as MockRM:
-            MockRM.instance.return_value = mock_registry
-
-            load_vehicle_classes(str(classes_file))
+        load_vehicle_classes(str(classes_file), registry_provider=mock_provider)
 
         assert "layer configurations" in caplog.text
 
@@ -346,11 +348,11 @@ class TestInitializeShipData:
             mock_load.assert_called_once_with()
 
     def test_propagates_errors_from_load_vehicle_classes(self, tmp_path):
-        """Propagates RuntimeError from load_vehicle_classes."""
+        """Propagates MissingResourceException from load_vehicle_classes."""
         with patch('game.simulation.entities.ship_loader.load_vehicle_classes') as mock_load:
-            mock_load.side_effect = RuntimeError("Critical Error")
+            mock_load.side_effect = MissingResourceException("Critical Error")
 
-            with pytest.raises(RuntimeError, match="Critical Error"):
+            with pytest.raises(MissingResourceException):
                 initialize_ship_data(str(tmp_path))
 
 
@@ -365,10 +367,9 @@ class TestGetOrCreateValidator:
         """Returns existing validator if already set."""
         mock_validator = MagicMock()
 
-        with patch('game.simulation.entities.ship_loader.RegistryManager') as MockRM:
-            mock_registry = MagicMock()
-            mock_registry.get_validator.return_value = mock_validator
-            MockRM.instance.return_value = mock_registry
+        # PROJ-195: Patch the module-level get_validator function instead of RegistryManager
+        with patch('game.simulation.entities.ship_loader.get_validator') as mock_get_val:
+            mock_get_val.return_value = mock_validator
 
             result = get_or_create_validator()
 
@@ -376,14 +377,9 @@ class TestGetOrCreateValidator:
 
     def test_creates_validator_when_none_exists(self):
         """Creates new ShipDesignValidator when none exists."""
-        with patch('game.simulation.entities.ship_loader.RegistryManager') as MockRM:
-            mock_registry = MagicMock()
-            mock_registry.get_validator.return_value = None
-            mock_registry.components = {}
-            mock_registry.modifiers = {}
-            mock_registry.vehicle_classes = {}
-            mock_registry.resources = {}
-            MockRM.instance.return_value = mock_registry
+        # PROJ-195: Patch the module-level get_validator function
+        with patch('game.simulation.entities.ship_loader.get_validator') as mock_get_val:
+            mock_get_val.return_value = None
 
             with patch('game.simulation.entities.ship_loader.ShipDesignValidator') as MockValidator:
                 mock_new_validator = MagicMock()
@@ -399,27 +395,30 @@ class TestGetOrCreateValidator:
                     assert result is mock_new_validator
 
     def test_creates_validator_with_game_registries(self):
-        """Creates validator using GameRegistries from RegistryManager."""
-        with patch('game.simulation.entities.ship_loader.RegistryManager') as MockRM:
-            mock_registry = MagicMock()
-            mock_registry.get_validator.return_value = None
-            mock_registry.components = {"comp1": {}}
-            mock_registry.modifiers = {"mod1": {}}
-            mock_registry.vehicle_classes = {"class1": {}}
-            mock_registry.resources = {"res1": {}}
-            MockRM.instance.return_value = mock_registry
+        """Creates validator using GameRegistries from provider."""
+        # PROJ-174: Use provider pattern via DI
+        mock_provider = MagicMock()
+        mock_provider.get_components.return_value = {"comp1": {}}
+        mock_provider.get_modifiers.return_value = {"mod1": {}}
+        mock_provider.get_vehicle_classes.return_value = {"class1": {}}
+        mock_provider.get_resources.return_value = {"res1": {}}
+
+        # PROJ-195: Patch the module-level get_validator function
+        with patch('game.simulation.entities.ship_loader.get_validator') as mock_get_val:
+            mock_get_val.return_value = None
 
             with patch('game.simulation.entities.ship_loader.ShipDesignValidator') as MockValidator:
                 with patch('game.simulation.entities.ship_loader.set_validator'):
+                    # GameRegistries is imported inside the function from game.core.registry
                     with patch('game.core.registry.GameRegistries') as MockGameReg:
-                        get_or_create_validator()
+                        get_or_create_validator(registry_provider=mock_provider)
 
-                        # Verify GameRegistries was created with correct data
+                        # Verify GameRegistries was created with provider data
                         MockGameReg.assert_called_once_with(
-                            components=mock_registry.components,
-                            modifiers=mock_registry.modifiers,
-                            vehicle_classes=mock_registry.vehicle_classes,
-                            resources=mock_registry.resources
+                            components={"comp1": {}},
+                            modifiers={"mod1": {}},
+                            vehicle_classes={"class1": {}},
+                            resources={"res1": {}}
                         )
 
 
@@ -593,16 +592,15 @@ class TestLoadVehicleClassesWithLayersPath:
         classes_file.write_text(json.dumps(classes_with_layer_config))
         layers_file.write_text(json.dumps(vehicle_layers_data))
 
-        mock_registry = MagicMock()
-        mock_registry.vehicle_classes = {}
+        # PROJ-174: Use provider pattern via DI
+        vehicle_classes = {}
+        mock_provider = MagicMock()
+        mock_provider.get_vehicle_classes.return_value = vehicle_classes
 
-        with patch('game.simulation.entities.ship_loader.RegistryManager') as MockRM:
-            MockRM.instance.return_value = mock_registry
-
-            load_vehicle_classes(str(classes_file), str(layers_file))
+        load_vehicle_classes(str(classes_file), str(layers_file), registry_provider=mock_provider)
 
         # Verify layers were resolved
-        assert "layers" in mock_registry.vehicle_classes.get("Frigate", {})
+        assert "layers" in vehicle_classes.get("Frigate", {})
 
 
 class TestLoadVehicleClassesDataLayerEdgeCases:
@@ -704,11 +702,10 @@ class TestValidatorCaching:
         """Multiple calls return the same validator instance."""
         mock_validator = MagicMock()
 
-        with patch('game.simulation.entities.ship_loader.RegistryManager') as MockRM:
-            mock_registry = MagicMock()
-            # First call: no validator, subsequent calls: return cached
-            mock_registry.get_validator.return_value = mock_validator
-            MockRM.instance.return_value = mock_registry
+        # PROJ-195: Patch the module-level get_validator function
+        with patch('game.simulation.entities.ship_loader.get_validator') as mock_get_val:
+            # Both calls return the same cached validator
+            mock_get_val.return_value = mock_validator
 
             result1 = get_or_create_validator()
             result2 = get_or_create_validator()

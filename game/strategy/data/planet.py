@@ -1,9 +1,16 @@
+import logging
 import math
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Dict, FrozenSet, List, Optional, Any
 from game.core.constants import ResourceType
 from game.core.hex_math import HexCoord, hex_circle_filled
+from game.core.validation_helpers import (
+    require_keys, validate_enum, validate_positive, validate_non_negative
+)
+from game.strategy.services.component_inspector import get_component_abilities
+
+logger = logging.getLogger(__name__)
 
 class PlanetType(Enum):
     """
@@ -34,6 +41,31 @@ class PlanetaryFacility:
     construction_queue: List[Dict[str, Any]] = field(default_factory=list)
     resource_levels: Dict[str, float] = field(default_factory=dict)
 
+    @classmethod
+    def from_dict(cls, data: dict) -> 'PlanetaryFacility':
+        """
+        Deserialize facility from dict.
+
+        Args:
+            data: Dict with facility data
+
+        Returns:
+            Reconstructed PlanetaryFacility
+
+        Raises:
+            PersistenceException: If required keys missing
+        """
+        require_keys(data, ['instance_id', 'design_id', 'name', 'design_data'], 'PlanetaryFacility')
+        return cls(
+            instance_id=data['instance_id'],
+            design_id=data['design_id'],
+            name=data['name'],
+            design_data=data['design_data'],
+            is_operational=data.get('is_operational', True),
+            construction_queue=data.get('construction_queue', []),
+            resource_levels=data.get('resource_levels', {})
+        )
+
     def get_fuel_storage(self) -> float:
         """Get current fuel level in this facility."""
         return self.resource_levels.get(ResourceType.FUEL, 0.0)
@@ -59,7 +91,7 @@ class PlanetaryFacility:
                 comp_def = registries.components.get(comp_id)
                 if not comp_def:
                     continue
-                abilities = getattr(comp_def, 'abilities', {}) or {}
+                abilities = get_component_abilities(comp_def)
                 for storage in (abilities.get('ResourceStorage') or []):
                     if isinstance(storage, dict) and storage.get('resource') == ResourceType.FUEL:
                         total += storage.get('amount', 0)
@@ -132,6 +164,27 @@ class SpeciesPopulation:
     race_id: str  # References RaceConfig.race_id
     count: int = 0  # Population units (1 unit = 1,000 people)
     happiness: float = 0.5  # 0.0 (miserable) to 1.0 (ecstatic)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'SpeciesPopulation':
+        """
+        Deserialize population from dict.
+
+        Args:
+            data: Dict with population data
+
+        Returns:
+            Reconstructed SpeciesPopulation
+
+        Raises:
+            PersistenceException: If required keys missing
+        """
+        require_keys(data, ['race_id', 'count'], 'SpeciesPopulation')
+        return cls(
+            race_id=data['race_id'],
+            count=data['count'],
+            happiness=data.get('happiness', 0.5)
+        )
 
 
 @dataclass
@@ -364,32 +417,74 @@ class Planet:
 
         Returns:
             Reconstructed Planet instance
+
+        Raises:
+            PersistenceException: If required keys missing or values invalid
         """
         from game.core.hex_math import hex_from_dict
+        from game.core.exceptions import PersistenceException
+        from game.core.error_codes import ErrorCode
 
-        location = hex_from_dict(data['location'])
-        planet_type = PlanetType[data['planet_type']]
+        # Validate required keys
+        require_keys(data, [
+            'name', 'location', 'orbit_distance', 'mass', 'radius', 'surface_area',
+            'density', 'surface_gravity', 'surface_pressure', 'surface_temperature',
+            'surface_water', 'tectonic_activity', 'magnetic_field', 'planet_type'
+        ], 'Planet')
 
-        facilities = [
-            PlanetaryFacility(
-                instance_id=f['instance_id'],
-                design_id=f['design_id'],
-                name=f['name'],
-                design_data=f['design_data'],
-                is_operational=f.get('is_operational', True),
-                construction_queue=f.get('construction_queue', []),
-                resource_levels=f.get('resource_levels', {})
-            ) for f in data.get('facilities', [])
-        ]
+        # Validate enum
+        planet_type = validate_enum(data['planet_type'], PlanetType, 'planet_type', 'Planet')
 
-        # Deserialize populations (default empty for backward compat)
-        populations = [
-            SpeciesPopulation(
-                race_id=p['race_id'],
-                count=p['count'],
-                happiness=p.get('happiness', 0.5)
-            ) for p in data.get('populations', [])
-        ]
+        # Validate positive values
+        validate_positive(data['mass'], 'mass', 'Planet')
+        validate_positive(data['radius'], 'radius', 'Planet')
+        validate_positive(data['surface_area'], 'surface_area', 'Planet')
+        validate_positive(data['density'], 'density', 'Planet')
+        validate_positive(data['surface_gravity'], 'surface_gravity', 'Planet')
+
+        # Validate non-negative values
+        validate_non_negative(data['orbit_distance'], 'orbit_distance', 'Planet')
+        validate_non_negative(data['surface_pressure'], 'surface_pressure', 'Planet')
+        validate_non_negative(data['surface_water'], 'surface_water', 'Planet')
+
+        # Validate location with context
+        try:
+            location = hex_from_dict(data['location'])
+        except (KeyError, TypeError) as e:
+            raise PersistenceException(
+                f"Planet: invalid location data - {type(e).__name__}: {e}",
+                code=ErrorCode.CORRUPT_DATA.value,
+                context={
+                    "source": "Planet",
+                    "field": "location",
+                    "error_type": type(e).__name__,
+                    "error": str(e),
+                }
+            ) from e
+
+        # Deserialize facilities with resilient error handling (skip bad, log warning)
+        facilities = []
+        for i, f in enumerate(data.get('facilities', [])):
+            try:
+                facility = PlanetaryFacility.from_dict(f)
+                facilities.append(facility)
+            except (PersistenceException, KeyError, TypeError) as e:
+                logger.warning(
+                    f"Planet '{data['name']}': skipping bad facility at index {i} - "
+                    f"{type(e).__name__}: {e}"
+                )
+
+        # Deserialize populations with resilient error handling (skip bad, log warning)
+        populations = []
+        for i, p in enumerate(data.get('populations', [])):
+            try:
+                population = SpeciesPopulation.from_dict(p)
+                populations.append(population)
+            except (PersistenceException, KeyError, TypeError) as e:
+                logger.warning(
+                    f"Planet '{data['name']}': skipping bad population at index {i} - "
+                    f"{type(e).__name__}: {e}"
+                )
 
         return cls(
             name=data['name'],

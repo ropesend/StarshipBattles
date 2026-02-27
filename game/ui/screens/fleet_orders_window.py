@@ -12,7 +12,9 @@ import pygame_gui
 from pygame_gui.windows import UIConfirmationDialog
 
 from game.ui.config import UIConfig
+from game.core.hex_math import HexCoord
 from game.core.input_actions import InputAction
+from game.core.protocols import is_planet, is_fleet
 from game.strategy.data.fleet import OrderType
 
 if TYPE_CHECKING:
@@ -88,8 +90,8 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
         """Clear and rebuild the order list rows."""
         # Clear existing rows
         for row in self.rows:
-            for element in row.values():
-                if hasattr(element, 'kill'):
+            for key, element in row.items():
+                if key != 'order_ref':  # order_ref is the Order object, not a UI element
                     element.kill()
         self.rows.clear()
         
@@ -164,18 +166,18 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
     def _get_order_description(self, order):
         if order.type == OrderType.MOVE:
              t = order.target
-             if hasattr(t, 'q') and hasattr(t, 'r'):
+             if isinstance(t, HexCoord):
                  return f"MOVE ({t.q}, {t.r})"
              return f"MOVE {t}"
         elif order.type == OrderType.COLONIZE:
              # target is Planet object
-             p_name = order.target.name if hasattr(order.target, 'name') else "Unknown"
+             p_name = order.target.name if is_planet(order.target) else "Unknown"
              return f"COLONIZE {p_name}"
         elif order.type == OrderType.MOVE_TO_FLEET:
-             f_id = order.target.id if hasattr(order.target, 'id') else "?"
+             f_id = order.target.id if is_fleet(order.target) else "?"
              return f"INTERCEPT Fleet {f_id}"
         elif order.type == OrderType.JOIN_FLEET:
-             f_id = order.target.id if hasattr(order.target, 'id') else "?"
+             f_id = order.target.id if is_fleet(order.target) else "?"
              return f"JOIN Fleet {f_id}"
         elif order.type == OrderType.BUILD:
              # PROJ-67: Show queue size for BUILD orders

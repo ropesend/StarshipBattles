@@ -67,6 +67,7 @@ class TestShipStatsPanelExtended:
     def create_mock_ship(self, team_id, name="Ship"):
         """Create a mock ship object."""
         ship = MagicMock()
+        ship.id = name  # Use name as ID for test clarity
         ship.team_id = team_id
         ship.name = name
         ship.is_alive = True
@@ -177,30 +178,6 @@ class TestShipStatsPanelExtended:
 
         assert ship_id == "dto_id_123"
 
-    def test_get_ship_id_fallback_to_name(self):
-        """Test _get_ship_id() falls back to .name for domain objects."""
-        panel = self.module.ShipStatsPanel(self.mock_scene, 800, 0, 200, 600)
-
-        ship = MagicMock()
-        ship.id = None
-        ship.name = "Domain Ship"
-
-        ship_id = panel._get_ship_id(ship)
-
-        assert ship_id == "Domain Ship"
-
-    def test_get_ship_id_fallback_to_python_id(self):
-        """Test _get_ship_id() falls back to Python id as last resort."""
-        panel = self.module.ShipStatsPanel(self.mock_scene, 800, 0, 200, 600)
-
-        obj = MagicMock()
-        obj.id = None
-        obj.name = None
-
-        ship_id = panel._get_ship_id(obj)
-
-        assert ship_id == str(id(obj))
-
     def test_is_expanded_uses_id(self):
         """Test _is_expanded() uses ID-based lookup."""
         panel = self.module.ShipStatsPanel(self.mock_scene, 800, 0, 200, 600)
@@ -268,9 +245,10 @@ class TestSeekerMonitorPanelExtended:
 
         modules_patcher.stop()
 
-    def create_mock_seeker(self, status='active'):
+    def create_mock_seeker(self, status='active', seeker_id=None):
         """Create a mock seeker/projectile."""
         seeker = MagicMock()
+        seeker.id = seeker_id if seeker_id else str(id(seeker))
         seeker.status = status
         seeker.velocity = MagicMock()
         seeker.velocity.length.return_value = 100
@@ -342,31 +320,19 @@ class TestSeekerMonitorPanelExtended:
 
         assert proj_id == "proj_123"
 
-    def test_get_projectile_id_fallback_to_python_id(self):
-        """Test _get_projectile_id() falls back to Python id."""
-        panel = self.module.SeekerMonitorPanel(self.mock_scene, 0, 0, 300, 600)
-
-        obj = MagicMock()
-        obj.id = None
-
-        proj_id = panel._get_projectile_id(obj)
-
-        assert proj_id == str(id(obj))
-
     def test_seeker_expansion_toggle(self):
         """Test seeker expansion toggle via _toggle_seeker_expanded."""
         panel = self.module.SeekerMonitorPanel(self.mock_scene, 0, 0, 300, 600)
 
-        seeker = self.create_mock_seeker('active')
+        seeker = self.create_mock_seeker('active', seeker_id='seeker_001')
 
         # Toggle on
         panel._toggle_seeker_expanded(seeker)
-        seeker_id = str(id(seeker))
-        assert seeker_id in panel.expanded_seekers
+        assert seeker.id in panel.expanded_seekers
 
         # Toggle off
         panel._toggle_seeker_expanded(seeker)
-        assert seeker_id not in panel.expanded_seekers
+        assert seeker.id not in panel.expanded_seekers
 
     def test_is_seeker_expanded_uses_id(self):
         """Test _is_seeker_expanded() uses ID-based lookup."""

@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 import pygame
 
 from game.ui.services.screenshot_manager import ScreenshotManager
-from game.core.registry import RegistryManager
 
 
 @pytest.fixture
@@ -20,7 +19,6 @@ def screenshot_manager():
     yield manager
 
     patch.stopall()
-    RegistryManager.instance().clear()
     # NOTE: Do not call pygame.quit() here - the root conftest manages
     # pygame lifecycle at session scope. Calling quit() here would break
     # subsequent tests with "No video mode set" errors.

@@ -6,6 +6,7 @@ handling vehicle creation, component management, and design validation.
 
 PROJ-50: Removed fallback pattern - strict DI required.
 """
+import logging
 from dataclasses import dataclass, field
 from typing import List, Optional, Any, TYPE_CHECKING
 
@@ -14,7 +15,10 @@ from game.simulation.entities.ship_loader import get_or_create_validator
 from game.simulation.components.component import Component, create_component
 from game.core.constants import LayerType
 from game.core.registry import GameRegistries
-from game.core.logger import log_error, log_warning, log_info
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.core.validation import ValidationResult
@@ -60,10 +64,14 @@ class VehicleDesignService:
             registries: GameRegistries for dependency injection (required).
 
         Raises:
-            TypeError: If registries is None.
+            ValidationException: If registries is None.
         """
         if registries is None:
-            raise TypeError("registries is required")
+            raise ValidationException(
+                "registries is required for VehicleDesignService",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "VehicleDesignService", "parameter": "registries"}
+            )
         self._registries = registries
 
     def create_ship(
@@ -118,8 +126,8 @@ class VehicleDesignService:
                 warnings=warnings
             )
 
-        except (TypeError, ValueError, KeyError, AttributeError) as e:
-            log_error(f"Failed to create ship: {e}")
+        except (TypeError, ValueError, KeyError, AttributeError, ValidationException) as e:
+            logger.error(f"Failed to create ship: {e}")
             errors.append(str(e))
             return DesignResult(
                 success=False,
@@ -325,7 +333,7 @@ class VehicleDesignService:
         # Delegate to Ship.change_class which handles all the migration logic
         ship.change_class(new_class, migrate_components=migrate_components)
 
-        log_info(f"Changed {ship.name} from {old_class} to {new_class} "
+        logger.info(f"Changed {ship.name} from {old_class} to {new_class} "
                  f"(migrate_components={migrate_components})")
 
         return DesignResult(

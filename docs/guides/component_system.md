@@ -132,10 +132,10 @@ For detailed modifier documentation, see [modifier_system.md](modifier_system.md
 ### Creating a Component
 
 ```python
-from game.core.registries import get_default_registries
+from game.core.registry import get_default_registry_provider
 
-registries = get_default_registries()
-comp_data = registries.components.get('laser_mk1')
+provider = get_default_registry_provider()
+comp_data = provider.get_components().get('laser_mk1')
 component = Component(comp_data)
 ```
 

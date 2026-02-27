@@ -56,21 +56,9 @@ class TestMoveToFleetIntercept:
         mock_fleet.pop_order.assert_called()
         assert result is None
 
-    def test_target_fleet_without_location_cancels_order(self, mock_fleet, mock_galaxy):
-        """MOVE_TO_FLEET with target lacking location cancels order."""
-        from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
-
-        engine = FleetMovementEngine()
-        target_fleet = MagicMock(spec=[])  # No location attribute
-        order = FleetOrder(OrderType.MOVE_TO_FLEET, target_fleet)
-        mock_fleet.get_current_order.return_value = order
-        mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
-        mock_fleet.path = []
-
-        result = engine.calculate_next_hex(mock_fleet, mock_galaxy)
-
-        mock_fleet.pop_order.assert_called()
-        assert result is None
+    # NOTE: test_target_fleet_without_location_cancels_order removed
+    # Fleet always has location attribute - testing "target lacking location" is obsolete
+    # test_move_to_fleet_no_target_cancels_order covers the None target case
 
 
 # =============================================================================

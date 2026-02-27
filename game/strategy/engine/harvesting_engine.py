@@ -18,9 +18,12 @@ Called by TurnEngine._process_tick() 100 times per turn.
 """
 
 from typing import List, Optional, TYPE_CHECKING
+import logging
 
-from game.core.logger import log_debug
 from game.core.registry import GameRegistries
+from game.strategy.services.component_inspector import get_component_abilities
+
+logger = logging.getLogger(__name__)
 from game.strategy.interfaces.engines import IHarvestingEngine
 
 if TYPE_CHECKING:
@@ -69,7 +72,7 @@ def get_harvester_from_registry(comp_id: str, registries: GameRegistries) -> Opt
     comp_def = registries.components.get(comp_id)
     if comp_def is None:
         return None
-    abilities = getattr(comp_def, 'abilities', {}) or {}
+    abilities = get_component_abilities(comp_def)
     harvester_data = abilities.get('ResourceHarvester')
     if isinstance(harvester_data, dict):
         return harvester_data
@@ -139,11 +142,9 @@ class HarvestingEngine(IHarvestingEngine):
     def _aggregate_empire_storage(self, empire: 'Empire') -> None:
         """Aggregate storage capacity for a single empire."""
         new_storage = {}
-        colonies = getattr(empire, 'colonies', [])
-        for colony in colonies:
-            facilities = getattr(colony, 'facilities', [])
-            for facility in facilities:
-                if not getattr(facility, 'is_operational', True):
+        for colony in empire.colonies:
+            for facility in colony.facilities:
+                if not facility.is_operational:
                     continue
                 self._collect_storage_from_facility(facility, new_storage)
         empire.max_storage = new_storage
@@ -154,7 +155,7 @@ class HarvestingEngine(IHarvestingEngine):
         storage_totals: dict,
     ) -> None:
         """Scan a facility's components for EmpireStorage abilities."""
-        design_data = getattr(facility, 'design_data', {})
+        design_data = facility.design_data
         layers = design_data.get('layers', {})
 
         for layer_data in layers.values():
@@ -208,7 +209,7 @@ class HarvestingEngine(IHarvestingEngine):
         comp_def = self._registries.components.get(comp_id)
         if comp_def is None:
             return None
-        abilities = getattr(comp_def, 'abilities', {}) or {}
+        abilities = get_component_abilities(comp_def)
         storage_data = abilities.get('EmpireStorage')
         if isinstance(storage_data, dict):
             return storage_data
@@ -221,8 +222,7 @@ class HarvestingEngine(IHarvestingEngine):
             empire: Empire to process
             tick_fraction: Fraction of per-turn harvest to extract (1.0 = full turn, 0.01 = one tick)
         """
-        colonies = getattr(empire, 'colonies', [])
-        for colony in colonies:
+        for colony in empire.colonies:
             self._process_colony(colony, empire, tick_fraction)
 
     def _process_colony(self, colony: 'Planet', empire: 'Empire', tick_fraction: float = 1.0) -> None:
@@ -233,9 +233,8 @@ class HarvestingEngine(IHarvestingEngine):
             empire: Empire receiving resources
             tick_fraction: Fraction of per-turn harvest to extract
         """
-        facilities = getattr(colony, 'facilities', [])
-        for facility in facilities:
-            if not getattr(facility, 'is_operational', True):
+        for facility in colony.facilities:
+            if not facility.is_operational:
                 continue
             self._process_facility(facility, colony, empire, tick_fraction)
 
@@ -254,7 +253,7 @@ class HarvestingEngine(IHarvestingEngine):
             empire: Empire receiving resources
             tick_fraction: Fraction of per-turn harvest to extract
         """
-        design_data = getattr(facility, 'design_data', {})
+        design_data = facility.design_data
         layers = design_data.get('layers', {})
 
         for layer_data in layers.values():
@@ -317,8 +316,7 @@ class HarvestingEngine(IHarvestingEngine):
             return
 
         # Check planet has this resource
-        planet_resources = getattr(colony, 'resources', {})
-        resource_data = planet_resources.get(resource_type)
+        resource_data = colony.resources.get(resource_type)
         if resource_data is None:
             return
 
@@ -338,8 +336,8 @@ class HarvestingEngine(IHarvestingEngine):
         # Add to empire pool
         empire.add_resources(resource_type, actual_harvest)
 
-        log_debug(
+        logger.debug(
             f"Harvested {actual_harvest:.1f} {resource_type} from "
-            f"{getattr(colony, 'name', 'unknown')} (quality={quality:.2f}, "
+            f"{colony.name} (quality={quality:.2f}, "
             f"remaining={resource_data['quantity']:.1f}, tick_fraction={tick_fraction})"
         )

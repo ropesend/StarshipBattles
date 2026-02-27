@@ -5,6 +5,8 @@ TDD: Write tests FIRST, then implement to make them pass.
 """
 import pytest
 
+from game.core.exceptions import ValidationException
+
 
 class TestAbilityStatBinding:
     """Tests for the AbilityStatBinding dataclass."""
@@ -77,7 +79,7 @@ class TestAbilityStatBinding:
         """Invalid operation should raise ValueError."""
         from game.simulation.components.abilities.stat_keys import StatKey, AbilityStatBinding
 
-        with pytest.raises(ValueError, match="Invalid operation"):
+        with pytest.raises(ValidationException):
             AbilityStatBinding(StatKey.DAMAGE_MULT, 'damage', 'invalid')
 
     def test_binding_describe(self):

@@ -667,3 +667,243 @@ Projects archived from the master refactor plan after user acceptance.
   - **Dependencies:** None
 
 ---
+
+- [x] **PROJ-169: Dead Code and Orphaned File Cleanup**
+  - **Phases:** 4 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-169/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-169/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-170: Exception Handling Migration — Full Adoption of PROJ-45 Infrastructure**
+  - **Phases:** 7 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-170/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-170/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-171: Deserialization Input Validation**
+  - **Phases:** 5 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-171/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-171/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** PROJ-170 (soft — exception patterns)
+
+---
+
+- [x] **PROJ-172: God Class Decomposition - MVVM Wave 1**
+  - **Phases:** 5 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-172/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-172/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-173: God Class Decomposition - Domain & Strategy Layer**
+  - **Phases:** 4 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-173/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-173/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-174: Registry Access Consolidation - Complete DI Migration**
+  - **Phases:** 5 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-174/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-174/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-175: Logger & JSON Loading Pattern Standardization**
+  - **Phases:** 4 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-175/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-175/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-176: Missing Abstractions & Duplication Elimination**
+  - **Phases:** 3 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-176/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-176/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-177: Exception Handling Cleanup**
+  - **Phases:** 3 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-177/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-177/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-178: PROJ-171 Audit Remediation - Validation Consistency**
+  - **Phases:** 4 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-178/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-178/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-179: PROJ-173 Post-Refactor Cleanup**
+  - **Phases:** 2 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-179/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-179/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-180: PROJ-172 Post-Refactor Cleanup**
+  - **Phases:** 3 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-180/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-180/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-181: PROJ-174 Completion - Eradicate Deprecated Registry API**
+  - **Phases:** 6 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-181/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-181/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-182: PROJ-176 Post-Refactor Cleanup**
+  - **Phases:** 1 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-182/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-182/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-183: PROJ-175 Post-Refactor Cleanup - Logging Pattern Completion**
+  - **Phases:** 3 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-183/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-183/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-184: Type-Safe Spatial Query API**
+  - **Phases:** 2 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-184/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-184/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-185: Post-PROJ-174 Backward Compatibility Eradication**
+  - **Phases:** 4 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-185/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-185/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-186: Exception Handling Polish - ErrorCode Consistency and Final Cleanup**
+  - **Phases:** 4 | **Status:** COMPLETE | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-186/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-186/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-187: Strategy Orders Tick-Based Action System**
+  - **Phases:** 8 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-187/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-187/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-188: Strategy Layer List UI Consolidation**
+  - **Phases:** 6 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-188/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-188/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-189: Storms Environmental Hazards**
+  - **Phases:** 8 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-189/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-189/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-190: Core Simulation Duck Typing Elimination**
+  - **Phases:** 6 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-190/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-190/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-191: Strategy Layer Duck Typing Elimination**
+  - **Phases:** 6 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-191/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-191/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-192: AI Behavior Protocols - Duck Typing Elimination**
+  - **Phases:** 5 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-192/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-192/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-193: UI Data Binding Duck Typing Elimination**
+  - **Phases:** 8 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-193/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-193/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-194: Builder & Workshop Duck Typing Elimination**
+  - **Phases:** 5 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-194/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-194/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-195: Eradicate RegistryManager Singleton from Non-Root Code**
+  - **Phases:** 9 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-195/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-195/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-196: Consolidate Duplicated Code**
+  - **Phases:** 6 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-196/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-196/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-197: Duplication Consolidation Completion**
+  - **Phases:** 7 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-197/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-197/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-198: UI Layer Duck Typing Elimination - Strategy Screens & Services**
+  - **Phases:** 6 | **Status:** Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-198/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-198/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---

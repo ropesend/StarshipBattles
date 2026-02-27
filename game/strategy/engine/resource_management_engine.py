@@ -12,9 +12,14 @@ Responsibilities:
 
 from dataclasses import dataclass
 from typing import List, Optional, TYPE_CHECKING
+import logging
 
-from game.core.logger import log_info
 from game.core.registry import GameRegistries
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
+from game.strategy.services.component_inspector import get_component_abilities
+
+logger = logging.getLogger(__name__)
 from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
 
@@ -48,10 +53,14 @@ class ResourceManagementEngine:
             registries: GameRegistries container. Required - no fallback.
 
         Raises:
-            TypeError: If registries is None.
+            ValidationException: If registries is None.
         """
         if registries is None:
-            raise TypeError("registries is required for ResourceManagementEngine")
+            raise ValidationException(
+                "registries is required for ResourceManagementEngine",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "ResourceManagementEngine", "parameter": "registries"}
+            )
         self._registries = registries
 
     def process_per_turn_consumption(self, tick: int, empires) -> List[ResourceDepletion]:
@@ -129,13 +138,12 @@ class ResourceManagementEngine:
                 comp_def = registry.get(comp_id)
                 if comp_def is None:
                     continue
-
-                abilities = getattr(comp_def, 'abilities', {}) or {}
+                abilities = get_component_abilities(comp_def)
                 for ability_data in ShipStatsCalculator._get_ability_list(abilities, 'ResourceConsumption'):
                     if (ability_data.get('trigger') == 'per_turn' and
                         ability_data.get('resource') == resource_type):
                         ship.set_component_enabled(comp_id, False)
                         disabled_components.append(comp_id)
-                        log_info(f"Ship {ship.name}: Auto-disabled {comp_id} - insufficient {resource_type}")
+                        logger.info(f"Ship {ship.name}: Auto-disabled {comp_id} - insufficient {resource_type}")
 
         return disabled_components

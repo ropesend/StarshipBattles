@@ -1,0 +1,56 @@
+{
+    "version": "1.0",
+    "description": "Storm type definitions for environmental hazards in star systems.",
+    "storm_types": {
+        "ion_storm": {
+            "name": "Ion Storm",
+            "description": "Electromagnetic disturbance that disrupts shields and sensors. Common near active stars.",
+            "effects": {
+                "shield_capacity_mult": 0.5,
+                "strategic_mult": 0.8
+            },
+            "size": {"min": 2, "max": 5},
+            "image_variants": [1, 2, 3]
+        },
+        "plasma_storm": {
+            "name": "Plasma Storm",
+            "description": "Superheated plasma ejected from stellar activity. Damages unshielded hulls.",
+            "effects": {
+                "shield_capacity_mult": 0.7,
+                "damage_per_tick": 0.5
+            },
+            "size": {"min": 3, "max": 7},
+            "image_variants": [2, 4, 6]
+        },
+        "gravitational_anomaly": {
+            "name": "Gravitational Anomaly",
+            "description": "Spacetime distortion causing thrust inefficiency. Common in binary systems.",
+            "effects": {
+                "thrust_mult": 0.6,
+                "strategic_mult": 0.5
+            },
+            "size": {"min": 2, "max": 4},
+            "image_variants": [3, 5]
+        },
+        "radiation_belt": {
+            "name": "Radiation Belt",
+            "description": "Intense radiation zone causing gradual hull damage. Often found near gas giants.",
+            "effects": {
+                "damage_per_tick": 0.8,
+                "fuel_drain_per_tick": 0.1
+            },
+            "size": {"min": 4, "max": 10},
+            "image_variants": [1, 4, 5]
+        },
+        "dark_nebula": {
+            "name": "Dark Nebula",
+            "description": "Dense gas cloud that slows travel but provides cover. Minimal direct harm.",
+            "effects": {
+                "strategic_mult": 0.4,
+                "thrust_mult": 0.8
+            },
+            "size": {"min": 5, "max": 10},
+            "image_variants": [2, 3, 6]
+        }
+    }
+}

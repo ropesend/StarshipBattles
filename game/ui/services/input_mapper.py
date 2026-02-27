@@ -27,7 +27,9 @@ import pygame
 
 from game.core.input_actions import InputAction, KeyBinding
 from game.core.json_utils import load_json, save_json
-from game.core.logger import log_debug, log_error
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # Mapping of pygame modifier bitmask flags to canonical modifier names.
@@ -120,7 +122,7 @@ class InputMapper:
             try:
                 action = InputAction(action_value)
             except ValueError:
-                log_debug(f"Unknown action in keybindings file: {action_value}")
+                logger.debug(f"Unknown action in keybindings file: {action_value}")
                 continue
             target[action] = KeyBinding.from_dict(binding_data)
 
@@ -156,7 +158,7 @@ class InputMapper:
         value = getattr(pygame, key_name, None)
         if isinstance(value, int):
             return value
-        log_error(f"Unknown pygame key name: {key_name}")
+        logger.error(f"Unknown pygame key name: {key_name}")
         return None
 
     @staticmethod
@@ -179,7 +181,7 @@ class InputMapper:
 
     def resolve(
         self,
-        event: object,
+        event: pygame.event.Event,
         contexts: Optional[List[str]] = None,
     ) -> Optional[InputAction]:
         """Resolve a pygame event to an InputAction.
@@ -199,7 +201,7 @@ class InputMapper:
         Returns:
             The matching InputAction, or None if no match found.
         """
-        if getattr(event, "type", None) != pygame.KEYDOWN:
+        if event.type != pygame.KEYDOWN:
             return None
 
         key_int = event.key
@@ -357,7 +359,7 @@ class InputMapper:
                 diffs[action.value] = current.to_dict() if current else {}
 
         if not diffs:
-            log_debug("No keybinding overrides to save")
+            logger.debug("No keybinding overrides to save")
             return True
 
         data = {"bindings": diffs}

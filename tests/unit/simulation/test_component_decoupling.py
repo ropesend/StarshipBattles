@@ -11,7 +11,6 @@ from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import Component, load_components, create_component
 from game.simulation.systems.resource_manager import ResourceRegistry
-from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_data_dir
 
 
@@ -32,7 +31,6 @@ class TestComponentContextInjection:
         initialize_ship_data()
         load_components(str(get_data_dir() / "components.json"))
         yield
-        RegistryManager.instance().clear()
 
     def test_component_get_resource_cost_with_context(self, fresh_registries):
         """Component.get_resource_cost() should work with context instead of ship reference."""
@@ -99,7 +97,6 @@ class TestResourceConsumptionDecoupling:
         initialize_ship_data()
         load_components(str(get_data_dir() / "components.json"))
         yield
-        RegistryManager.instance().clear()
 
     def test_resource_consumption_with_injected_registry(self, fresh_registries):
         """ResourceConsumption should work with injected ResourceRegistry."""
@@ -180,7 +177,6 @@ class TestComponentShipReferenceDeprecation:
         initialize_ship_data()
         load_components(str(get_data_dir() / "components.json"))
         yield
-        RegistryManager.instance().clear()
 
     def test_component_works_without_ship_reference(self, fresh_registries):
         """Components should be fully functional without ship reference when context provided."""

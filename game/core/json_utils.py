@@ -1,8 +1,8 @@
 """
 JSON utility functions for consistent file loading and saving.
 
-This module consolidates JSON loading/saving patterns used throughout the codebase,
-providing consistent error handling and logging.
+This module is the CANONICAL location for file-based JSON operations in game/.
+All JSON file I/O should use these functions for consistent error handling.
 
 Usage:
     from game.core.json_utils import load_json, save_json, load_json_required
@@ -22,12 +22,17 @@ Exceptions:
         json.JSONDecodeError: If JSON is invalid
 
     load_json and save_json return defaults/False on error (no exceptions raised)
+
+Note:
+    Do NOT use json.load/json.dump directly for file operations in game/.
+    Use these functions instead for consistent error handling and logging.
 """
 import json
+import logging
 from pathlib import Path
 from typing import Any, Optional, Union
 
-from game.core.logger import log_error, log_debug
+logger = logging.getLogger(__name__)
 
 
 def load_json(
@@ -57,13 +62,16 @@ def load_json(
         with open(file_path, 'r', encoding=encoding) as f:
             return json.load(f)
     except FileNotFoundError:
-        log_debug(f"JSON file not found: {file_path}")
+        logger.debug(f"JSON file not found: {file_path}")
         return default
     except json.JSONDecodeError as e:
-        log_error(f"Invalid JSON in {file_path}: {e}")
+        logger.error(f"Invalid JSON in {file_path}: {e}")
         return default
-    except IOError as e:
-        log_error(f"Error reading {file_path}: {e}")
+    except PermissionError as e:
+        logger.error(f"Permission denied reading {file_path}: {e}")
+        return default
+    except OSError as e:
+        logger.error(f"Error reading {file_path}: {e}")
         return default
 
 
@@ -133,11 +141,14 @@ def save_json(
         with open(file_path, 'w', encoding=encoding) as f:
             json.dump(data, f, indent=indent, ensure_ascii=ensure_ascii)
 
-        log_debug(f"Saved JSON to {file_path}")
+        logger.debug(f"Saved JSON to {file_path}")
         return True
-    except IOError as e:
-        log_error(f"Failed to save JSON to {file_path}: {e}")
+    except PermissionError as e:
+        logger.error(f"Permission denied writing to {file_path}: {e}")
+        return False
+    except OSError as e:
+        logger.error(f"Failed to save JSON to {file_path}: {e}")
         return False
     except TypeError as e:
-        log_error(f"Failed to serialize data to JSON for {file_path}: {e}")
+        logger.error(f"Failed to serialize data to JSON for {file_path}: {e}")
         return False

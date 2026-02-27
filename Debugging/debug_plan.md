@@ -25,3 +25,14 @@
 
 ## 3. Current Focus: Batch complete
 **Status:** All bugs in queue fixed or blocked. BUG-46/63/68 reworked (previously rejected). BUG-84 blocked (needs runtime debugging). All others awaiting confirmation. Full test suite: 9772 passed, 0 failures.
+
+## 4. Status Reference
+| Status | Meaning |
+| :--- | :--- |
+| Pending | Not yet started |
+| In-Progress | Currently being worked on |
+| Needs Clarification | Ambiguous fix — questions posted in ticket, awaiting user answers |
+| Awaiting Confirmation | Fix applied, awaiting user verification |
+| Deep Investigation | Undergoing thorough investigation (Protocol 02b) |
+| Blocked | Stuck after 3+ attempts, needs human input |
+| Needs Human Debug | Investigation exhausted, requires manual debugging |

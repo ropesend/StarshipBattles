@@ -24,11 +24,14 @@ class TestExplicitColonizeOrders(unittest.TestCase):
         colony = MagicMock()
         colony.id = 10
         colony.populations = [MagicMock(race_id="human")]
-        
+
+        # Mock fleet resolution via BaseCommandHandler._resolve_fleet
+        self.session._get_fleet_by_id.return_value = self.fleet
+        self.session._get_planet_by_id.return_value = colony  # planet_id=10 resolves to colony
         self.session._find_colony_at_fleet.return_value = colony
         self.session.turn_engine.validate_colonize_order.return_value = MagicMock(is_valid=True)
         self.session.galaxy.get_planet_global_hex.return_value = HexCoord(0, 0)
-        
+
         handler = ColonizeCommandHandler()
         from game.strategy.engine.commands import IssueColonizeCommand
         cmd = IssueColonizeCommand(fleet_id=1, planet_id=10)
@@ -46,7 +49,7 @@ class TestExplicitColonizeOrders(unittest.TestCase):
         self.fleet.add_order(FleetOrder(OrderType.LOAD_POPULATION, {'direction': 'load', 'cargo_type': 'passengers', 'amount': 100, 'planet_id': 10}))
         
         from game.core.validation import ValidationResult
-        with patch('game.strategy.validation.TransferValidator.validate', return_value=ValidationResult(is_valid=True)):
+        with patch('game.strategy.validation.TransferValidator.validate', return_value=ValidationResult.success()):
             with patch.object(self.processor, '_execute_load', return_value=100):
                 result = self.processor.process_transfer(self.fleet, self.empire, self.galaxy)
                 self.assertTrue(result.success)

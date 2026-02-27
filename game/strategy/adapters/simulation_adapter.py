@@ -11,14 +11,17 @@ to the simulation layer's BattleController. It handles:
 """
 
 from typing import Optional, List, Any, TYPE_CHECKING
+import logging
 import random
 
-from game.core.logger import log_info, log_warning, log_debug
 from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
     from game.core.registry import GameRegistries
+    from game.strategy.services.area_effect_manager import EnvironmentalEffects
 
 
 # Import simulation layer components
@@ -57,7 +60,8 @@ class SimulationBattleResolver(IBattleResolver):
         fleet1: 'Fleet',
         fleet2: 'Fleet',
         seed: Optional[int] = None,
-        registries: Optional['GameRegistries'] = None
+        registries: Optional['GameRegistries'] = None,
+        environmental_effects: Optional['EnvironmentalEffects'] = None
     ) -> BattleResult:
         """
         Resolve a battle between two fleets using the battle simulation.
@@ -67,19 +71,28 @@ class SimulationBattleResolver(IBattleResolver):
             fleet2: Second fleet (assigned to team 1)
             seed: Optional random seed for deterministic battles
             registries: Optional GameRegistries for DI. If None, uses global provider.
+            environmental_effects: Optional environmental effects from storms (PROJ-189).
+                                   If provided with shield_capacity_mult < 1.0, ships
+                                   will have reduced shield capacity during combat.
 
         Returns:
             BattleResult containing winner, tick count, and survivors
         """
-        log_info(f"Simulating battle: Fleet {fleet1.id} vs Fleet {fleet2.id}")
+        logger.info(f"Simulating battle: Fleet {fleet1.id} vs Fleet {fleet2.id}")
 
         # Convert fleets to battle ships
         team1_ships = fleet1.to_battle_ships(team_id=0, registries=registries)
         team2_ships = fleet2.to_battle_ships(team_id=1, registries=registries)
 
+        # PROJ-189: Apply storm shield interference before combat
+        if environmental_effects is not None and environmental_effects.shield_capacity_mult < 1.0:
+            self._apply_shield_interference(team1_ships, environmental_effects.shield_capacity_mult)
+            self._apply_shield_interference(team2_ships, environmental_effects.shield_capacity_mult)
+            logger.info(f"Storm shield interference applied: {environmental_effects.shield_capacity_mult}")
+
         # Handle edge cases
         if not team1_ships and not team2_ships:
-            log_warning("Both fleets have no combat-capable ships")
+            logger.warning("Both fleets have no combat-capable ships")
             return BattleResult(
                 winner=None,
                 tick_count=0,
@@ -88,7 +101,7 @@ class SimulationBattleResolver(IBattleResolver):
             )
 
         if not team1_ships:
-            log_warning("Fleet 1 has no combat-capable ships, Fleet 2 wins")
+            logger.warning("Fleet 1 has no combat-capable ships, Fleet 2 wins")
             return BattleResult(
                 winner=1,
                 tick_count=0,
@@ -97,7 +110,7 @@ class SimulationBattleResolver(IBattleResolver):
             )
 
         if not team2_ships:
-            log_warning("Fleet 2 has no combat-capable ships, Fleet 1 wins")
+            logger.warning("Fleet 2 has no combat-capable ships, Fleet 1 wins")
             return BattleResult(
                 winner=0,
                 tick_count=0,
@@ -133,7 +146,7 @@ class SimulationBattleResolver(IBattleResolver):
         # Run headless battle
         results = controller.run_headless()
 
-        log_info(f"Battle complete: winner={results.winner}, ticks={results.tick_count}")
+        logger.info(f"Battle complete: winner={results.winner}, ticks={results.tick_count}")
 
         # Convert survivors
         # PROJ-50: Pass registries for strict DI compliance
@@ -147,8 +160,8 @@ class SimulationBattleResolver(IBattleResolver):
             else:
                 team1_survivors.append(ship)
 
-        log_info(f"  Team 0 survivors: {len(team0_survivors)}")
-        log_info(f"  Team 1 survivors: {len(team1_survivors)}")
+        logger.info(f"  Team 0 survivors: {len(team0_survivors)}")
+        logger.info(f"  Team 1 survivors: {len(team1_survivors)}")
 
         return BattleResult(
             winner=results.winner,
@@ -166,3 +179,23 @@ class SimulationBattleResolver(IBattleResolver):
         # For ships that never entered battle, just return them as-is
         # They're already in the format we need
         return list(ships)
+
+    def _apply_shield_interference(self, ships: List[Any], shield_mult: float) -> None:
+        """
+        Apply storm shield interference to ships.
+
+        PROJ-189: Reduces max_shields and caps current_shields accordingly.
+        This affects shields for the duration of the battle.
+
+        Args:
+            ships: List of Ship objects to modify
+            shield_mult: Multiplier for shield capacity (0.0 to 1.0)
+        """
+        for ship in ships:
+            # Ship always has max_shields and current_shields
+            if ship.max_shields > 0:
+                # Reduce max shields
+                new_max = int(ship.max_shields * shield_mult)
+                ship.max_shields = new_max
+                # Cap current shields to new max
+                ship.current_shields = min(ship.current_shields, new_max)

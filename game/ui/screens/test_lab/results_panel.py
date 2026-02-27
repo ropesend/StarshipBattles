@@ -5,7 +5,8 @@ Displays test run history with run selection.
 
 import pygame
 
-from game.ui.colors import FONT_MAIN
+from game.ui.fonts import get_font
+from game.ui.screens.test_lab import theme
 from .test_run_card import TestRunCard
 
 
@@ -35,16 +36,16 @@ class ResultsPanel:
         self.details_panel = None  # Reference to TestRunDetailsPanel
 
         # Fonts
-        self.title_font = pygame.font.SysFont(FONT_MAIN, 20)
-        self.body_font = pygame.font.SysFont(FONT_MAIN, 14)
-        self.small_font = pygame.font.SysFont(FONT_MAIN, 12)
+        self.title_font = get_font(20)
+        self.body_font = get_font(14)
+        self.small_font = get_font(12)
 
         # Colors
-        self.bg_color = (30, 30, 35)
-        self.border_color = (100, 100, 120)
-        self.title_color = (255, 255, 255)
-        self.button_color = (60, 120, 200)
-        self.button_hover_color = (80, 140, 220)
+        self.bg_color = theme.BG_CONTENT
+        self.border_color = theme.BORDER_ACTIVE
+        self.title_color = theme.TEXT_WHITE
+        self.button_color = theme.BUTTON_BLUE
+        self.button_hover_color = theme.BUTTON_BLUE_HOVER
 
         # Buttons
         self.clear_test_button_rect = None
@@ -190,7 +191,7 @@ class ResultsPanel:
         if self.current_test_id:
             run_count = self.test_history.get_run_count(self.current_test_id)
             count_text = f"{run_count} run{'s' if run_count != 1 else ''}"
-            count_surf = self.body_font.render(count_text, True, (180, 180, 180))
+            count_surf = self.body_font.render(count_text, True, theme.TEXT_MUTED)
             surface.blit(count_surf, (self.x + 10, self.y + 38))
 
         # Clear buttons
@@ -206,7 +207,7 @@ class ResultsPanel:
         button1_color = self.button_hover_color if button1_hover else self.button_color
 
         pygame.draw.rect(surface, button1_color, self.clear_test_button_rect, border_radius=3)
-        button1_text = self.small_font.render("Clear This Test", True, (255, 255, 255))
+        button1_text = self.small_font.render("Clear This Test", True, theme.TEXT_WHITE)
         text1_x = self.clear_test_button_rect.x + (button1_width - button1_text.get_width()) // 2
         text1_y = self.clear_test_button_rect.y + (button_height - button1_text.get_height()) // 2
         surface.blit(button1_text, (text1_x, text1_y))
@@ -219,7 +220,7 @@ class ResultsPanel:
         button2_color = self.button_hover_color if button2_hover else self.button_color
 
         pygame.draw.rect(surface, button2_color, self.clear_all_button_rect, border_radius=3)
-        button2_text = self.small_font.render("Clear All", True, (255, 255, 255))
+        button2_text = self.small_font.render("Clear All", True, theme.TEXT_WHITE)
         text2_x = self.clear_all_button_rect.x + (button2_width - button2_text.get_width()) // 2
         text2_y = self.clear_all_button_rect.y + (button_height - button2_text.get_height()) // 2
         surface.blit(button2_text, (text2_x, text2_y))
@@ -251,6 +252,6 @@ class ResultsPanel:
         thumb_y = scrollbar_track_y + int((self.scroll_offset / self.max_scroll) * (scrollbar_track_height - thumb_height))
 
         # Draw thumb
-        pygame.draw.rect(surface, (100, 100, 120),
+        pygame.draw.rect(surface, theme.SCROLLBAR_THUMB,
                         (scrollbar_x, thumb_y, scrollbar_width, thumb_height),
                         border_radius=4)

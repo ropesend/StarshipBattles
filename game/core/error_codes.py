@@ -59,6 +59,12 @@ class ErrorCode(Enum):
     VALIDATION_FAILED = "V001"
     """General validation failure."""
 
+    SCHEMA_VALIDATION_ERROR = "V002"
+    """Schema or structural validation error (missing fields, invalid data structure)."""
+
+    MISSING_ENTITY = "V003"
+    """Referenced entity does not exist."""
+
     OUT_OF_RANGE = "V004"
     """Value is outside allowed range."""
 
@@ -132,6 +138,9 @@ class ErrorCode(Enum):
 
     COMPONENT_INVALID = "C002"
     """Component configuration is invalid."""
+
+    MISSING_DEPENDENCY = "C003"
+    """Required dependency injection parameter not provided."""
 
     SLOT_OCCUPIED = "C004"
     """Component slot is already occupied."""

@@ -1,33 +1,46 @@
 """
 Ship Loader - Functions for loading vehicle class data and initializing ship data.
 
-PROJ-50: Removed get_default_registry_provider import - use RegistryManager instead.
+PROJ-174: Migrated to IRegistryProvider pattern for registry access.
 """
-
+import logging
 import os
 from typing import Optional
 
-from game.core.logger import log_info, log_warning
+from game.core.exceptions import MissingResourceException
+from game.core.error_codes import ErrorCode
 from game.core.json_utils import load_json, load_json_required
-from game.core.registry import RegistryManager, set_validator
+
+logger = logging.getLogger(__name__)
+from game.core.registry import set_validator, get_default_registry_provider, get_validator
 from game.simulation.validation.ship_validator import ShipDesignValidator
 from game.core.paths import Paths
 
 
-def get_or_create_validator():
+def get_or_create_validator(registry_provider=None):
     """Get the ship design validator, creating it if necessary.
 
-    PROJ-50: Creates validator with GameRegistries from RegistryManager.
+    PROJ-174: Uses IRegistryProvider pattern for registry access.
+    Validator storage remains on RegistryManager (lifecycle concern).
+
+    Args:
+        registry_provider: Optional IRegistryProvider. If None, uses default.
+
+    Returns:
+        ShipDesignValidator instance.
     """
-    val = RegistryManager.instance().get_validator()
+    # Validator storage is on RegistryManager (singleton lifecycle)
+    # PROJ-195: Use module-level wrapper instead of direct singleton access
+    val = get_validator()
     if not val:
+        if registry_provider is None:
+            registry_provider = get_default_registry_provider()
         from game.core.registry import GameRegistries
-        mgr = RegistryManager.instance()
         registries = GameRegistries(
-            components=mgr.components,
-            modifiers=mgr.modifiers,
-            vehicle_classes=mgr.vehicle_classes,
-            resources=mgr.resources
+            components=registry_provider.get_components(),
+            modifiers=registry_provider.get_modifiers(),
+            vehicle_classes=registry_provider.get_vehicle_classes(),
+            resources=registry_provider.get_resources()
         )
         val = ShipDesignValidator(registries=registries)
         set_validator(val)
@@ -79,8 +92,12 @@ def load_vehicle_classes_data(
     # Load vehicle classes (required)
     try:
         data = load_json_required(file_path)
-    except FileNotFoundError:
-        raise RuntimeError(f"Critical Error: {file_path} not found. Vehicle class data is required for game operation.")
+    except FileNotFoundError as e:
+        raise MissingResourceException(
+            f"Vehicle class data file not found: {file_path}",
+            code=ErrorCode.RESOURCE_NOT_FOUND.value,
+            context={"file_path": str(file_path), "severity": "critical"}
+        ) from e
 
     raw_classes = data.get('classes', {})
 
@@ -97,11 +114,22 @@ def load_vehicle_classes_data(
     return result
 
 
-def load_vehicle_classes(file_path: str = None, layers_file_path: Optional[str] = None) -> None:
+def load_vehicle_classes(
+    file_path: str = None,
+    layers_file_path: Optional[str] = None,
+    registry_provider=None
+) -> None:
     """
     Load vehicle class definitions from JSON and populate the global registry.
 
     Wrapper around load_vehicle_classes_data() that also populates the registry.
+
+    PROJ-174: Uses IRegistryProvider pattern for registry access.
+
+    Args:
+        file_path: Path to vehicle classes JSON. Defaults to Paths.VEHICLE_CLASSES_FILE.
+        layers_file_path: Optional path to layer definitions JSON.
+        registry_provider: Optional IRegistryProvider. If None, uses default.
     """
     if file_path is None:
         file_path = Paths.VEHICLE_CLASSES_FILE
@@ -118,14 +146,16 @@ def load_vehicle_classes(file_path: str = None, layers_file_path: Optional[str] 
     layer_data = load_json(layers_path, default={})
     if layer_data:
         layer_definitions = layer_data.get('definitions', {})
-        log_info(f"Loaded {len(layer_definitions)} layer configurations from {os.path.basename(layers_path)}.")
+        logger.info(f"Loaded {len(layer_definitions)} layer configurations from {os.path.basename(layers_path)}.")
 
-    # PROJ-50: Update registry in place using RegistryManager (not provider)
-    classes = RegistryManager.instance().vehicle_classes
+    # PROJ-174: Use provider pattern for registry access
+    if registry_provider is None:
+        registry_provider = get_default_registry_provider()
+    classes = registry_provider.get_vehicle_classes()
     classes.clear()
     classes.update(result)
 
-    log_info(f"Loaded {len(classes)} vehicle classes.")
+    logger.info(f"Loaded {len(classes)} vehicle classes.")
 
 
 def initialize_ship_data(base_path: Optional[str] = None) -> None:

@@ -14,11 +14,13 @@ import pygame_gui
 from pygame_gui.elements import UIDropDownMenu
 from pygame_gui.windows import UIConfirmationDialog
 
+import logging
+
 from game.core.profiling import profile_block
 # PROJ-50: Removed get_default_registry_provider - using strict DI
 from game.core.constants import LayerType  # Canonical location for LayerType
 
-from game.core.logger import log_error, log_info, log_warning, log_debug
+logger = logging.getLogger(__name__)
 
 
 class WorkshopEventRouter:
@@ -70,9 +72,8 @@ class WorkshopEventRouter:
         # Pass to weapons panel
         gui.weapons_report_panel.handle_event(event)
 
-        # Pass to component modifier grid panel (if it exists)
-        if hasattr(gui, 'component_modifier_grid_panel'):
-            gui.component_modifier_grid_panel.handle_event(event)
+        # Pass to component modifier grid panel
+        gui.component_modifier_grid_panel.handle_event(event)
 
         # Pass to detail panel
         gui.detail_panel.handle_event(event)
@@ -125,7 +126,7 @@ class WorkshopEventRouter:
                 gui.controller.selected_component = None
                 gui.on_selection_changed(None)
                 gui.rebuild_modifier_ui()
-                log_debug("Deselected component")
+                logger.debug("Deselected component")
                 
         elif act_type == 'toggle_layer':
             # Layer header toggle - already handled by callback
@@ -302,19 +303,19 @@ class WorkshopEventRouter:
         elif event.ui_element == gui.arc_toggle_btn:
             gui.show_firing_arcs = not gui.show_firing_arcs
             gui.arc_toggle_btn.set_text("Hide Firing Arcs" if gui.show_firing_arcs else "Show Firing Arcs")
-        elif hasattr(gui, 'hull_toggle_btn') and event.ui_element == gui.hull_toggle_btn:
+        elif gui.hull_toggle_btn is not None and event.ui_element == gui.hull_toggle_btn:
             showing = gui.viewmodel.toggle_hull_layer()
             gui.hull_toggle_btn.set_text("Hide Hull" if showing else "Show Hull")
             gui.layer_panel.rebuild()
         elif event.ui_element == gui.target_btn:
             gui.on_select_target_pressed()
-        elif hasattr(gui, 'std_data_btn') and event.ui_element == gui.std_data_btn:
+        elif gui.std_data_btn is not None and event.ui_element == gui.std_data_btn:
             gui.data_reloader.load_standard_data()
-        elif hasattr(gui, 'test_data_btn') and event.ui_element == gui.test_data_btn:
+        elif gui.test_data_btn is not None and event.ui_element == gui.test_data_btn:
             gui.data_reloader.load_test_data()
-        elif hasattr(gui, 'select_data_btn') and event.ui_element == gui.select_data_btn:
+        elif gui.select_data_btn is not None and event.ui_element == gui.select_data_btn:
             gui.data_reloader.on_select_data_pressed()
-        elif hasattr(gui, 'verbose_btn') and event.ui_element == gui.verbose_btn:
+        elif gui.verbose_btn is not None and event.ui_element == gui.verbose_btn:
             gui.weapons_report_panel.verbose_tooltip = not gui.weapons_report_panel.verbose_tooltip
         elif event.ui_element == gui.detail_panel.details_btn:
             gui.detail_panel.show_details_popup()
@@ -329,14 +330,14 @@ class WorkshopEventRouter:
         
         if event.ui_element == gui.right_panel.class_dropdown:
             return self._handle_class_dropdown(event)
-        elif hasattr(gui, 'right_panel') and hasattr(gui.right_panel, 'vehicle_type_dropdown') and event.ui_element == gui.right_panel.vehicle_type_dropdown:
+        elif event.ui_element == gui.right_panel.vehicle_type_dropdown:
             return self._handle_vehicle_type_dropdown(event)
-        elif hasattr(gui.right_panel, 'theme_dropdown') and event.ui_element == gui.right_panel.theme_dropdown:
+        elif gui.right_panel.theme_dropdown is not None and event.ui_element == gui.right_panel.theme_dropdown:
             # Only allow theme change in standalone mode (integrated mode locks to empire theme)
             if gui.context.is_standalone():
                 gui.viewmodel.set_ship_theme(event.text)
                 gui.right_panel.update_portrait_image()
-                log_info(f"Changed theme to {event.text}")
+                logger.info(f"Changed theme to {event.text}")
             return True
         elif event.ui_element == gui.right_panel.ai_dropdown:
             return self._handle_ai_dropdown(event)
@@ -370,7 +371,7 @@ class WorkshopEventRouter:
         """Handle vehicle type dropdown change."""
         gui = self.gui
         new_type = event.text
-        if new_type == getattr(gui.ship, 'vehicle_type', "Ship"):
+        if new_type == gui.ship.vehicle_type:
             return True
         
         # Determine default class for this type

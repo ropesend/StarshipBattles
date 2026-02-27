@@ -21,7 +21,7 @@ from game.ai.interfaces.controllable import ShipControllableAdapter
 from tests.fixtures.paths import get_project_root
 
 if TYPE_CHECKING:
-    from game.core.registries.game_registries import GameRegistries
+    from game.core.registry import GameRegistries
 
 
 # Maximum acceptable deviation from ideal formation position (in world units)

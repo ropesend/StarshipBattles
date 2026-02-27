@@ -17,10 +17,15 @@ import pygame
 import pygame_gui
 from typing import Callable, Optional, Tuple, List, TYPE_CHECKING
 
-from game.core.logger import log_debug, log_info
+import logging
+
+logger = logging.getLogger(__name__)
 from game.core.paths import Paths
+from game.ui.colors import TEXT_ERROR
 from game.strategy.engine.game_config import GameConfig, PlayerConfig, THEME_DEFAULTS, VALID_GALAXY_TYPES
 from game.strategy.systems.race_library import RaceLibrary
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
@@ -195,7 +200,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             manager=self.ui_manager,
             container=container
         )
-        self.error_label.text_colour = pygame.Color(255, 100, 100)
+        self.error_label.text_colour = pygame.Color(*TEXT_ERROR)
 
     def _create_empire_inputs(self):
         """Create empire name input fields with race selection for each player slot."""
@@ -392,7 +397,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
 
     def _on_load_race_clicked(self, player_index: int):
         """Handle Load Race button click - open race browser dialog."""
-        log_debug(f"Opening race browser for player {player_index + 1}")
+        logger.debug(f"Opening race browser for player {player_index + 1}")
 
         # Import here to avoid circular imports
         from game.ui.screens.race_setup_screen import RaceBrowserDialog
@@ -420,7 +425,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
 
     def _on_setup_race_clicked(self, player_index: int):
         """Handle Setup Race button click - open race setup screen."""
-        log_debug(f"Opening race setup for player {player_index + 1}")
+        logger.debug(f"Opening race setup for player {player_index + 1}")
 
         # Import here to avoid circular imports
         from game.ui.screens.race_setup_screen import RaceSetupScreen
@@ -452,7 +457,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
 
     def _on_race_selected(self, player_index: int, race_config: RaceConfig):
         """Handle race selection from browser dialog."""
-        log_info(f"Player {player_index + 1} selected race: {race_config.name}")
+        logger.info(f"Player {player_index + 1} selected race: {race_config.name}")
         self.player_races[player_index] = race_config
         self._update_race_display(player_index)
         self.active_race_modal = None
@@ -460,7 +465,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
 
     def _on_race_created(self, player_index: int, race_config: RaceConfig):
         """Handle race creation from setup screen."""
-        log_info(f"Player {player_index + 1} created race: {race_config.name}")
+        logger.info(f"Player {player_index + 1} created race: {race_config.name}")
         self.player_races[player_index] = race_config
         self._update_race_display(player_index)
         self.active_race_modal = None
@@ -468,7 +473,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
 
     def _on_race_dialog_cancelled(self):
         """Handle race dialog cancellation."""
-        log_debug("Race dialog cancelled")
+        logger.debug("Race dialog cancelled")
         self.active_race_modal = None
         self.race_modal_player_index = -1
 
@@ -509,13 +514,13 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             self.error_label.set_text(str(e))
             return
 
-        log_info(f"Starting new game: {save_name} with {self.player_count} players")
+        logger.info(f"Starting new game: {save_name} with {self.player_count} players")
         self.on_start_callback(config)
         self.kill()
 
     def _on_cancel_clicked(self):
         """Handle Cancel button click."""
-        log_debug("New game setup cancelled")
+        logger.debug("New game setup cancelled")
         self.on_cancel_callback()
         self.kill()
 
@@ -576,10 +581,14 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             Configured GameConfig
 
         Raises:
-            ValueError: If player_count is invalid
+            ValidationException: If player_count is invalid
         """
         if player_count < 1 or player_count > 4:
-            raise ValueError(f"Invalid player count: {player_count} (must be 1-4)")
+            raise ValidationException(
+                f"Invalid player count: {player_count}",
+                code=ErrorCode.OUT_OF_RANGE.value,
+                context={"player_count": player_count, "valid_range": "1-4"}
+            )
 
         players = []
         for i in range(player_count):
@@ -596,10 +605,10 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             # Get theme and color: from race if available, otherwise defaults
             if race and race.theme_id:
                 theme = race.theme_id
-                log_debug(f"Player {i} using race theme: {theme}")
+                logger.debug(f"Player {i} using race theme: {theme}")
             else:
                 theme = THEME_DEFAULTS[i][0]
-                log_debug(f"Player {i} using default theme: {theme}")
+                logger.debug(f"Player {i} using default theme: {theme}")
 
             color = THEME_DEFAULTS[i][1]  # Color still comes from defaults
 

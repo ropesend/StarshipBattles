@@ -493,3 +493,346 @@ class TestZoneSerializationRoundTrip:
         dyson_zone_hex = restored_system.global_location + HexCoord(20 + 3, 0)
         dyson_zones = restored.get_zones_at_global_hex(dyson_zone_hex)
         assert any(p.name == "Dyson" for p in dyson_zones), "Dyson zone not rebuilt"
+
+
+class TestRestorePlanet:
+    """Tests for restore_planet() method (PROJ-179 Phase 2)."""
+
+    def test_restore_planet_preserves_existing_id(self):
+        """restore_planet() should preserve planet's existing ID, not reassign."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(0, 0))
+        galaxy.add_system(system)
+
+        planet = make_test_planet(name="Preserved", location=HexCoord(3, 0))
+        planet.id = 42  # Pre-set ID (simulating deserialization)
+        system.planets.append(planet)
+
+        galaxy._registry.restore_planet(system, planet)
+
+        # ID should be preserved, not changed
+        assert planet.id == 42
+        assert galaxy.planets_by_id[42] is planet
+
+    def test_restore_planet_registers_in_spatial_index(self):
+        """restore_planet() should register planet in spatial index."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(10, 20))
+        galaxy.add_system(system)
+
+        planet = make_test_planet(name="Indexed", location=HexCoord(5, 5))
+        planet.id = 100
+        system.planets.append(planet)
+
+        galaxy._registry.restore_planet(system, planet)
+
+        # Should be in spatial index
+        global_hex = HexCoord(15, 25)  # system(10,20) + planet(5,5)
+        assert planet in galaxy.get_planets_at_global_hex(global_hex)
+
+    def test_restore_planet_enables_get_system_of_planet(self):
+        """restore_planet() should enable get_system_of_planet() lookup."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(0, 0))
+        galaxy.add_system(system)
+
+        planet = make_test_planet(name="Findable", location=HexCoord(2, 3))
+        planet.id = 200
+        system.planets.append(planet)
+
+        galaxy._registry.restore_planet(system, planet)
+
+        assert galaxy.get_system_of_planet(planet) is system
+
+    def test_restore_planet_registers_multi_hex_zones(self):
+        """restore_planet() should register zones for multi-hex planets."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(0, 0))
+        galaxy.add_system(system)
+
+        dyson = make_test_planet(
+            name="Restored Dyson",
+            planet_type=PlanetType.DYSON_SPHERE,
+            location=HexCoord(0, 0),
+            diameter_hexes=11.0
+        )
+        dyson.id = 300
+        system.planets.append(dyson)
+
+        galaxy._registry.restore_planet(system, dyson)
+
+        # Zone should be registered
+        for local_hex in dyson.occupied_hexes:
+            global_hex = system.global_location + local_hex
+            assert dyson in galaxy.get_zones_at_global_hex(global_hex)
+
+    def test_from_dict_preserves_planet_ids(self):
+        """Galaxy.from_dict() should preserve planet IDs (not reassign)."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(0, 0))
+        galaxy.add_system(system)
+
+        # Register planets with known IDs
+        planet1 = make_test_planet(name="Planet1", location=HexCoord(1, 0))
+        planet2 = make_test_planet(name="Planet2", location=HexCoord(2, 0))
+        planet3 = make_test_planet(name="Planet3", location=HexCoord(3, 0))
+        system.planets.extend([planet1, planet2, planet3])
+        galaxy.register_planet(system, planet1)
+        galaxy.register_planet(system, planet2)
+        galaxy.register_planet(system, planet3)
+
+        # Record original IDs
+        original_ids = {p.name: p.id for p in system.planets}
+
+        # Serialize and deserialize
+        data = galaxy.to_dict()
+        restored = Galaxy.from_dict(data)
+
+        # Verify IDs preserved
+        restored_system = restored.get_system_by_name("Test")
+        for planet in restored_system.planets:
+            assert planet.id == original_ids[planet.name], \
+                f"Planet {planet.name} ID changed from {original_ids[planet.name]} to {planet.id}"
+
+    def test_from_dict_enables_get_system_of_planet_for_all(self):
+        """After from_dict(), get_system_of_planet() should work for all planets."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(50, 50))
+        galaxy.add_system(system)
+
+        # Add multiple planets
+        for i in range(5):
+            planet = make_test_planet(name=f"Planet{i}", location=HexCoord(i * 2, 0))
+            system.planets.append(planet)
+            galaxy.register_planet(system, planet)
+
+        # Serialize and deserialize
+        data = galaxy.to_dict()
+        restored = Galaxy.from_dict(data)
+
+        # All planets should be findable
+        restored_system = restored.get_system_by_name("Test")
+        for planet in restored_system.planets:
+            found_system = restored.get_system_of_planet(planet)
+            assert found_system is restored_system, \
+                f"get_system_of_planet() failed for {planet.name}"
+
+    def test_from_dict_enables_get_planets_at_global_hex(self):
+        """After from_dict(), get_planets_at_global_hex() should return correct planets."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(100, 100))
+        galaxy.add_system(system)
+
+        planet = make_test_planet(name="TestPlanet", location=HexCoord(5, 5))
+        system.planets.append(planet)
+        galaxy.register_planet(system, planet)
+
+        # Serialize and deserialize
+        data = galaxy.to_dict()
+        restored = Galaxy.from_dict(data)
+
+        # Query at global hex
+        global_hex = HexCoord(105, 105)  # system(100,100) + planet(5,5)
+        planets = restored.get_planets_at_global_hex(global_hex)
+        assert len(planets) == 1
+        assert planets[0].name == "TestPlanet"
+
+
+class TestGetSystemOfObject:
+    """Tests for get_system_of_object() (PROJ-184 Phase 1)."""
+
+    def test_get_system_of_object_autoroutes_planet(self):
+        """get_system_of_object() should auto-route Planet to get_system_of_planet()."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(100, 100))
+        galaxy.add_system(system)
+
+        planet = make_test_planet(name="TestPlanet", location=HexCoord(5, 5))
+        system.planets.append(planet)
+        galaxy.register_planet(system, planet)
+
+        # Call get_system_of_object with a Planet - should auto-route
+        result = galaxy.get_system_of_object(planet)
+
+        assert result is system
+
+    def test_get_system_of_object_returns_none_for_no_location(self):
+        """get_system_of_object() should return None for object without location."""
+        galaxy = Galaxy(radius=1000)
+
+        class NoLocationObject:
+            pass
+
+        obj = NoLocationObject()
+        result = galaxy.get_system_of_object(obj)
+
+        assert result is None
+
+    def test_get_system_of_object_returns_system_for_fleet_at_system(self):
+        """get_system_of_object() should return system for Fleet-like object at system coord."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(50, 50))
+        galaxy.add_system(system)
+
+        class MockFleet:
+            def __init__(self, loc):
+                self.location = loc
+
+        fleet = MockFleet(HexCoord(50, 50))  # At system's global_location
+        result = galaxy.get_system_of_object(fleet)
+
+        assert result is system
+
+    def test_get_system_of_object_returns_none_for_fleet_in_deep_space(self):
+        """get_system_of_object() should return None for Fleet-like object in deep space."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(50, 50))
+        galaxy.add_system(system)
+
+        class MockFleet:
+            def __init__(self, loc):
+                self.location = loc
+
+        fleet = MockFleet(HexCoord(999, 999))  # Deep space, not at any system
+        result = galaxy.get_system_of_object(fleet)
+
+        assert result is None
+
+
+class TestGetSystemAtLocationO1:
+    """Tests for O(1) get_system_at_location() (PROJ-179 Phase 2)."""
+
+    def test_finds_system_via_planet_global_hex(self):
+        """get_system_at_location() should find system via planet hex."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(100, 100))
+        galaxy.add_system(system)
+
+        planet = make_test_planet(name="TestPlanet", location=HexCoord(5, 5))
+        system.planets.append(planet)
+        galaxy.register_planet(system, planet)
+
+        # Query at planet's global hex
+        global_hex = HexCoord(105, 105)  # system(100,100) + planet(5,5)
+        result = galaxy.get_system_at_location(global_hex)
+
+        assert result is system
+
+    def test_finds_system_via_star_zone_global_hex(self):
+        """get_system_at_location() should find system via star zone hex."""
+        galaxy = Galaxy(radius=1000)
+        star = make_test_star(name="BigStar", diameter_hexes=5.0)  # radius 3
+        system = StarSystem(name="Test", global_location=HexCoord(50, 50), stars=[star])
+        galaxy.add_system(system)
+
+        # Query at star zone hex (2 hexes from center)
+        zone_hex = HexCoord(52, 50)
+        result = galaxy.get_system_at_location(zone_hex)
+
+        assert result is system
+
+    def test_finds_system_via_warp_point_global_hex(self):
+        """get_system_at_location() should find system via warp point hex."""
+        galaxy = Galaxy(radius=1000)
+        system_a = StarSystem(name="Alpha", global_location=HexCoord(0, 0))
+        system_b = StarSystem(name="Beta", global_location=HexCoord(100, 0))
+        galaxy.add_system(system_a)
+        galaxy.add_system(system_b)
+
+        # Create warp link
+        galaxy.create_vars_link(system_a, system_b)
+
+        # Get the warp point location
+        wp = system_a.warp_points[0]
+        wp_global_hex = system_a.global_location + wp.location
+
+        result = galaxy.get_system_at_location(wp_global_hex)
+
+        assert result is system_a
+
+    def test_returns_none_for_deep_space_hex(self):
+        """get_system_at_location() should return None for deep space."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(0, 0))
+        galaxy.add_system(system)
+
+        # Query at distant hex
+        deep_space = HexCoord(500, 500)
+        result = galaxy.get_system_at_location(deep_space)
+
+        assert result is None
+
+    def test_finds_system_at_system_global_location(self):
+        """get_system_at_location() should find system at its global_location."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(25, 75))
+        galaxy.add_system(system)
+
+        result = galaxy.get_system_at_location(HexCoord(25, 75))
+
+        assert result is system
+
+    def test_finds_system_via_dyson_sphere_zone(self):
+        """get_system_at_location() should find system via Dyson Sphere zone."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(200, 200))
+        galaxy.add_system(system)
+
+        dyson = make_test_planet(
+            name="Dyson Sphere",
+            planet_type=PlanetType.DYSON_SPHERE,
+            location=HexCoord(10, 0),
+            diameter_hexes=11.0  # radius 6
+        )
+        system.planets.append(dyson)
+        galaxy.register_planet(system, dyson)
+
+        # Query at zone hex (5 hexes from dyson center, within radius)
+        # Dyson center is at 200+10=210, 200
+        zone_hex = HexCoord(215, 200)
+        result = galaxy.get_system_at_location(zone_hex)
+
+        assert result is system
+
+    def test_warp_point_index_updated_on_remove_warp_link(self):
+        """remove_warp_link() should remove warp points from index."""
+        galaxy = Galaxy(radius=1000)
+        system_a = StarSystem(name="Alpha", global_location=HexCoord(0, 0))
+        system_b = StarSystem(name="Beta", global_location=HexCoord(100, 0))
+        galaxy.add_system(system_a)
+        galaxy.add_system(system_b)
+
+        # Create warp link
+        galaxy.create_vars_link(system_a, system_b)
+        wp = system_a.warp_points[0]
+        wp_global_hex = system_a.global_location + wp.location
+
+        # Verify it's findable
+        assert galaxy.get_system_at_location(wp_global_hex) is system_a
+
+        # Remove warp link
+        galaxy.remove_warp_link("Alpha", "Beta")
+
+        # Should no longer find system via old warp point location
+        assert galaxy.get_system_at_location(wp_global_hex) is None
+
+    def test_from_dict_rebuilds_warp_point_index(self):
+        """Galaxy.from_dict() should rebuild warp point index."""
+        galaxy = Galaxy(radius=1000)
+        system_a = StarSystem(name="Alpha", global_location=HexCoord(0, 0))
+        system_b = StarSystem(name="Beta", global_location=HexCoord(100, 0))
+        galaxy.add_system(system_a)
+        galaxy.add_system(system_b)
+        galaxy.create_vars_link(system_a, system_b)
+
+        wp = system_a.warp_points[0]
+        wp_global_hex = system_a.global_location + wp.location
+
+        # Serialize and deserialize
+        data = galaxy.to_dict()
+        restored = Galaxy.from_dict(data)
+
+        # Should find system via warp point
+        result = restored.get_system_at_location(wp_global_hex)
+        assert result is not None
+        assert result.name == "Alpha"

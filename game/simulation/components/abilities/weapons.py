@@ -1,8 +1,10 @@
+import logging
 import math
 from typing import Dict, Any, List
 
-from game.core.logger import log_debug
 from game.core.config import PhysicsConfig
+
+logger = logging.getLogger(__name__)
 from .base import Ability
 from .stat_keys import StatKey, AbilityStatBinding
 from .ui_colors import HINT_DAMAGE, HINT_RANGE, HINT_RELOAD, HINT_PROJECTILE_SPEED, HINT_ACCURACY
@@ -164,9 +166,12 @@ class WeaponAbility(Ability):
             self.firing_arc = self._base_firing_arc + self.get_effective_stat('arc_add', 0.0)
 
         # Sync facing_angle from properties (if not already overridden)
-        if 'facing_angle' in self.component.stats.get('properties', {}):
-            if not hasattr(self.component, 'facing_angle'):
-                self.facing_angle = self.component.stats['properties']['facing_angle']
+        # IComponent.stats is guaranteed to exist by the protocol
+        properties = self.component.stats.get('properties', {})
+        if 'facing_angle' in properties:
+            # Check if component-level facing_angle was set (overrides properties)
+            if getattr(self.component, 'facing_angle', None) is None:
+                self.facing_angle = properties['facing_angle']
 
     def update(self) -> bool:
         if self.cooldown_timer > 0:
@@ -224,7 +229,7 @@ class WeaponAbility(Ability):
         # 1. Range Check
         dist = ship_pos.distance_to(target_pos)
         if dist > self.range:
-            log_debug(f"check_firing_solution Range FAIL: dist {dist} > range {self.range}")
+            logger.debug(f"check_firing_solution Range FAIL: dist {dist} > range {self.range}")
             return False
 
         # 2. Arc Check
@@ -242,7 +247,7 @@ class WeaponAbility(Ability):
         if abs(diff) <= (self.firing_arc / 2) + 0.01:
             return True
 
-        log_debug(f"check_firing_solution Arc FAIL: diff {abs(diff)} > {self.firing_arc / 2}")
+        logger.debug(f"check_firing_solution Arc FAIL: diff {abs(diff)} > {self.firing_arc / 2}")
         return False
 
 
