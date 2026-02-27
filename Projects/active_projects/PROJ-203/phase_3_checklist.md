@@ -8,7 +8,7 @@
 
 ## Implementation
 
-- [ ] **3.1** Add new method `_draw_colony_marker` to `StrategyRenderer` class
+- [x] **3.1** Add new method `_draw_colony_marker` to `StrategyRenderer` class
   - Location: After `_get_star_asset_key` (from Phase 2)
   - Signature: `def _draw_colony_marker(self, screen, sys, world_pos):`
   - Use early returns to flatten nesting
@@ -44,7 +44,7 @@
       pygame.draw.circle(screen, WHITE, (int(marker_screen.x), int(marker_screen.y)), 6, 1)
   ```
 
-- [ ] **3.2** Replace inline code in `_draw_systems` with method call
+- [x] **3.2** Replace inline code in `_draw_systems` with method call
   - Remove lines 325-336 (the nested if block)
   - Replace with: `self._draw_colony_marker(screen, sys, world_pos)`
   - Place call right after the viewport culling continue (line 321)
@@ -53,10 +53,10 @@
 
 ## Verification
 
-- [ ] **3.3** Run colony marker tests: `pytest tests/unit/ui/screens/test_strategy_renderer.py -v -k "colony_marker"`
-- [ ] **3.4** Run full renderer tests: `pytest tests/unit/ui/screens/test_strategy_renderer.py -v`
-- [ ] **3.5** Measure complexity: `radon cc game/ui/screens/strategy_renderer.py -s -a`
-  - Expected `_draw_systems` CC: ~22 (down from ~25)
+- [x] **3.3** Run colony marker tests: `pytest tests/unit/ui/screens/test_strategy_renderer.py -v -k "colony_marker"`
+- [x] **3.4** Run full renderer tests: `pytest tests/unit/ui/screens/test_strategy_renderer.py -v`
+- [x] **3.5** Measure complexity: `radon cc game/ui/screens/strategy_renderer.py -s -a`
+  - Actual `_draw_systems` CC: 13 (down from 20, better than expected!)
 
 ---
 

@@ -322,18 +322,7 @@ class StrategyRenderer:
             screen_pos = self.camera.world_to_screen(world_pos)
 
             # Draw Colony Marker when zoomed out
-            if self.camera.zoom < 0.5:
-                owned_planets = [p for p in sys.planets if p.owner_id is not None]
-                if owned_planets:
-                    first_owner_id = owned_planets[0].owner_id
-                    owner_emp = next((e for e in self.empires if e.id == first_owner_id), None)
-                    if owner_emp:
-                        offset_world = pygame.math.Vector2(-0.75 * self.hex_size, -0.75 * self.hex_size)
-                        marker_world = world_pos + offset_world
-                        marker_screen = self.camera.world_to_screen(marker_world)
-
-                        pygame.draw.circle(screen, owner_emp.color, (int(marker_screen.x), int(marker_screen.y)), 5)
-                        pygame.draw.circle(screen, WHITE, (int(marker_screen.x), int(marker_screen.y)), 6, 1)
+            self._draw_colony_marker(screen, sys, world_pos)
 
             primary = sys.primary_star
             if primary:
@@ -389,6 +378,36 @@ class StrategyRenderer:
         elif r > 200 and g > 150:
             return 'orange'
         return 'yellow'
+
+    def _draw_colony_marker(self, screen, sys, world_pos):
+        """Draw colony ownership marker at low zoom levels.
+
+        Only draws when zoom < 0.5 and system has owned planets.
+        Uses first owned planet's owner color.
+
+        Args:
+            screen: pygame.Surface to draw on
+            sys: StarSystem object
+            world_pos: pygame.math.Vector2 - system center in world coords
+        """
+        if self.camera.zoom >= 0.5:
+            return
+
+        owned_planets = [p for p in sys.planets if p.owner_id is not None]
+        if not owned_planets:
+            return
+
+        first_owner_id = owned_planets[0].owner_id
+        owner_emp = next((e for e in self.empires if e.id == first_owner_id), None)
+        if not owner_emp:
+            return
+
+        offset_world = pygame.math.Vector2(-0.75 * self.hex_size, -0.75 * self.hex_size)
+        marker_world = world_pos + offset_world
+        marker_screen = self.camera.world_to_screen(marker_world)
+
+        pygame.draw.circle(screen, owner_emp.color, (int(marker_screen.x), int(marker_screen.y)), 5)
+        pygame.draw.circle(screen, WHITE, (int(marker_screen.x), int(marker_screen.y)), 6, 1)
 
     def _draw_system_details(self, screen, sys, sys_world_pos):
         """Draw planets and warp points for a system."""
