@@ -1,16 +1,50 @@
 import heapq
 import logging
-from typing import List, Union, Optional, TYPE_CHECKING
+from typing import List, Union, Optional, Sequence, TypeVar, TYPE_CHECKING
 
 from game.core.hex_math import hex_distance, hex_linedraw, HexCoord
 from game.strategy.data.fleet import OrderType
 
 logger = logging.getLogger(__name__)
 
+# Type variable for path sequences (list or tuple)
+PathT = TypeVar('PathT', List[HexCoord], tuple)
+
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.galaxy import Galaxy, StarSystem
     from game.strategy.services.fleet_navigation_service import NavigationState
+
+
+def strip_start_hex(current_location: HexCoord, path: Optional[PathT]) -> Optional[PathT]:
+    """
+    Remove the starting hex from a path if it matches the current location.
+
+    This is a common operation when setting fleet paths: pathfinding returns
+    a path including the start hex, but movement logic expects the path to
+    begin with the NEXT hex to move to.
+
+    PROJ-204 Phase 2: Consolidates duplicated path stripping logic (CQ-42).
+
+    Args:
+        current_location: The fleet's current hex position.
+        path: The calculated path (list or tuple of HexCoords), or None.
+
+    Returns:
+        The path with the first hex removed if it matches current_location,
+        otherwise the original path. Returns None if path is None.
+        Preserves the original sequence type (list or tuple).
+    """
+    if path is None:
+        return None
+    if not path:
+        return path
+    if path[0] == current_location:
+        if isinstance(path, tuple):
+            return path[1:]
+        return list(path[1:])
+    return path
+
 
 def find_path_deep_space(start: HexCoord, end: HexCoord) -> List[HexCoord]:
     """

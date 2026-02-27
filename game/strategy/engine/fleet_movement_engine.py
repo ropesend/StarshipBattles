@@ -18,6 +18,7 @@ from typing import Optional, List, Tuple, TYPE_CHECKING
 import logging
 
 from game.strategy.data.fleet import Fleet, OrderType, ACTION_ORDER_TYPES
+from game.strategy.services.fleet_speed_calculator import get_tick_interval
 
 logger = logging.getLogger(__name__)
 from game.core.hex_math import HexCoord, hex_distance
@@ -225,9 +226,8 @@ class FleetMovementEngine:
                 if effective_speed <= 0:
                     continue  # Fleet cannot move (stuck in storm or immobile)
 
-                interval = int(100 // effective_speed)
-                if interval <= 0:
-                    interval = 1  # Safety
+                # PROJ-204: Use shared tick interval calculation
+                interval = get_tick_interval(effective_speed)
 
                 if tick % interval == 0:
                     # Skip fleets with action orders - they are handled by ActionExecutionEngine

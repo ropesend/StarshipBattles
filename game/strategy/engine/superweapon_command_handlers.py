@@ -16,7 +16,7 @@ from game.strategy.engine.command_handlers import BaseCommandHandler
 
 logger = logging.getLogger(__name__)
 from game.strategy.data.fleet import FleetOrder, OrderType
-from game.strategy.data.pathfinding import find_hybrid_path
+from game.strategy.data.pathfinding import find_hybrid_path, strip_start_hex
 from game.strategy.validation import SuperweaponValidator
 
 if TYPE_CHECKING:
@@ -213,11 +213,9 @@ def _setup_mission_move(session: 'GameSession', fleet, target_hex) -> Validation
         move_order = FleetOrder(OrderType.MOVE, target=target_hex)
         fleet.add_order(move_order)
 
-        # Set path immediately if it's the first order
+        # PROJ-204: Set path immediately if it's the first order
         if len(fleet.orders) == 1:
-            if path and path[0] == fleet.location:
-                path = path[1:]
-            fleet.path = path
+            fleet.path = strip_start_hex(fleet.location, path)
 
     return ValidationResult.success()
 

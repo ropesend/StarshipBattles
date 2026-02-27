@@ -4,11 +4,12 @@ Extracted from Fleet class (PROJ-87 Phase 3) to consolidate
 fleet-wide resource calculation and consumption logic.
 """
 
-from typing import Dict, Any, TYPE_CHECKING
+from typing import Callable, Dict, Any, TYPE_CHECKING
 from game.core.constants import ResourceType
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
+    from game.strategy.data.ship_instance import ShipInstance
 
 
 class FleetResourceAggregator:
@@ -28,6 +29,29 @@ class FleetResourceAggregator:
         """
         self._fleet = fleet
 
+    # --- Helper Methods (PROJ-204) ---
+
+    def _accumulate_ship_costs(
+        self, cost_getter: Callable[['ShipInstance'], Dict[str, float]]
+    ) -> Dict[str, float]:
+        """
+        Accumulate resource costs from all combat-capable ships.
+
+        PROJ-204 Phase 2: Consolidates duplicated cost accumulation (CQ-07).
+
+        Args:
+            cost_getter: Function that returns a dict of costs for a ship.
+
+        Returns:
+            Dict mapping resource type to total fleet cost.
+        """
+        total_costs: Dict[str, float] = {}
+        for ship in self._fleet.get_combat_capable_ships():
+            ship_costs = cost_getter(ship)
+            for resource_type, cost in ship_costs.items():
+                total_costs[resource_type] = total_costs.get(resource_type, 0) + cost
+        return total_costs
+
     # --- Generic Movement Resource Methods ---
 
     def get_movement_resource_costs(self) -> Dict[str, float]:
@@ -37,12 +61,7 @@ class FleetResourceAggregator:
         Returns:
             Dict mapping resource type to total fleet cost per hex.
         """
-        total_costs: Dict[str, float] = {}
-        for ship in self._fleet.get_combat_capable_ships():
-            ship_costs = ship.get_all_resource_costs_per_hex()
-            for resource_type, cost in ship_costs.items():
-                total_costs[resource_type] = total_costs.get(resource_type, 0) + cost
-        return total_costs
+        return self._accumulate_ship_costs(lambda ship: ship.get_all_resource_costs_per_hex())
 
     def has_resources_for_movement(self) -> bool:
         """
@@ -105,12 +124,7 @@ class FleetResourceAggregator:
         Returns:
             Dict mapping resource type to total fleet cost per warp jump.
         """
-        total_costs: Dict[str, float] = {}
-        for ship in self._fleet.get_combat_capable_ships():
-            ship_costs = ship.get_warp_resource_costs()
-            for resource_type, cost in ship_costs.items():
-                total_costs[resource_type] = total_costs.get(resource_type, 0) + cost
-        return total_costs
+        return self._accumulate_ship_costs(lambda ship: ship.get_warp_resource_costs())
 
     def has_resources_for_warp(self) -> bool:
         """

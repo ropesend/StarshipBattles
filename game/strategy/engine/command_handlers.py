@@ -279,7 +279,7 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle QueueColonizeMissionCommand - queues MOVE and COLONIZE orders."""
         from game.strategy.data.fleet import FleetOrder, OrderType
-        from game.strategy.data.pathfinding import find_hybrid_path
+        from game.strategy.data.pathfinding import find_hybrid_path, strip_start_hex
         from game.strategy.validation import ColonizeValidator
 
         # 1. Resolve fleet
@@ -358,10 +358,8 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
 
             # Set path immediately if it's the active order (and no load order was inserted)
             if len(fleet.orders) == 1:
-                # Remove start hex from path before assigning
-                if path and path[0] == fleet.location:
-                    path = path[1:]
-                fleet.path = path
+                # PROJ-204: Remove start hex from path before assigning
+                fleet.path = strip_start_hex(fleet.location, path)
 
         # 7. Queue COLONIZE order (target=None means "any available planet")
         colonize_order = FleetOrder(OrderType.COLONIZE, target=planet)
@@ -407,16 +405,11 @@ class TransferCommandHandler(BaseCommandHandler):
             return error
         logger.info(f"DIAG TransferCommandHandler: Fleet found, location={fleet.location}, ships={len(fleet.ships)}")
 
-        # 2. Find owning empire
-        owning_empire = None
-        for emp in session.empires:
-            if fleet in emp.fleets:
-                owning_empire = emp
-                break
-
-        if not owning_empire:
+        # 2. Find owning empire (PROJ-204: O(1) lookup via owner_id instead of O(N) loop)
+        if fleet.owner_id < 0 or fleet.owner_id >= len(session.empires):
             logger.info(f"DIAG TransferCommandHandler: Fleet owner NOT FOUND")
             return ValidationResult.error("Fleet owner not found.")
+        owning_empire = session.empires[fleet.owner_id]
 
         # 3. Resolve planet
         planet, error = self._resolve_planet(session, cmd.planet_id)

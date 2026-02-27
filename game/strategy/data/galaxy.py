@@ -206,16 +206,44 @@ class Galaxy:
         """Add a system to the galaxy map."""
         self.systems[system.global_location] = system
         self.name_map[system.name] = system
-        # Register star zones (PROJ-139)
+        # PROJ-204: Shared zone and warp point registration
+        self._register_zones_from_system(system)
+        self._rebuild_warp_point_index(system)
+
+    def _register_zones_from_system(self, system: 'StarSystem') -> None:
+        """Register all star and storm zones from a system.
+
+        PROJ-204 Phase 2: Consolidates duplicated zone registration (CQ-26).
+
+        Args:
+            system: The StarSystem whose zones to register.
+        """
         for star in system.stars:
             self.register_zone(system, star)
-        # Register storm zones (PROJ-189)
         for storm in system.storms:
             self.register_zone(system, storm)
-        # Register warp points (PROJ-179: O(1) warp point lookup)
+
+    def _rebuild_warp_point_index(self, system: 'StarSystem') -> None:
+        """Add warp points from a system to the global hex index.
+
+        PROJ-204 Phase 2: Consolidates duplicated warp point indexing (CQ-27).
+
+        Args:
+            system: The StarSystem whose warp points to index.
+        """
         for wp in system.warp_points:
             global_hex = system.global_location + wp.location
             self._global_hex_warp_points[global_hex] = system
+
+    def _rebuild_all_warp_point_indices(self) -> None:
+        """Rebuild the warp point index for all systems.
+
+        PROJ-204 Phase 2: Consolidates full rebuild after warp generation (CQ-27).
+        Call after bulk warp point changes (e.g., generate_warp_lanes).
+        """
+        self._global_hex_warp_points.clear()
+        for system in self.systems.values():
+            self._rebuild_warp_point_index(system)
 
     def get_system_by_name(self, name: str) -> Optional['StarSystem']:
         """Get system by name."""
@@ -544,12 +572,8 @@ class Galaxy:
         self._warp_gen.generate_warp_lanes(
             self, k_neighbors, region_classifier, inter_region_mode
         )
-        # Rebuild warp point index after generation (PROJ-179: O(1) lookup)
-        self._global_hex_warp_points.clear()
-        for system in self.systems.values():
-            for wp in system.warp_points:
-                global_hex = system.global_location + wp.location
-                self._global_hex_warp_points[global_hex] = system
+        # PROJ-204: Rebuild warp point index after generation
+        self._rebuild_all_warp_point_indices()
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize Galaxy to dict."""
@@ -623,18 +647,9 @@ class Galaxy:
             galaxy.systems[coord] = system
             galaxy.name_map[system.name] = system
 
-            # Register star zones (PROJ-139)
-            for star in system.stars:
-                galaxy.register_zone(system, star)
-
-            # Register storm zones (PROJ-189)
-            for storm in system.storms:
-                galaxy.register_zone(system, storm)
-
-            # Register warp points (PROJ-179: O(1) warp point lookup)
-            for wp in system.warp_points:
-                global_hex = coord + wp.location
-                galaxy._global_hex_warp_points[global_hex] = system
+            # PROJ-204: Shared zone and warp point registration
+            galaxy._register_zones_from_system(system)
+            galaxy._rebuild_warp_point_index(system)
 
             # Restore planet registrations (preserves existing IDs from saved data)
             for planet in system.planets:

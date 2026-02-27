@@ -32,6 +32,32 @@ K_STRATEGIC = 25  # Movement point to hex conversion factor
 MAX_HEXES_PER_TURN = 10
 MIN_HEXES_PER_TURN = 0
 
+# Tick interval constant: base ticks for speed-to-interval conversion
+# Speed 5 = acts every 20 ticks, Speed 1 = acts every 100 ticks
+BASE_TICKS_PER_MOVEMENT = 100
+
+
+def get_tick_interval(speed: float) -> int:
+    """
+    Calculate the tick interval for a given speed value.
+
+    Fleets act at intervals determined by their speed:
+    - Speed 10 = acts every 10 ticks (fast)
+    - Speed 5 = acts every 20 ticks
+    - Speed 1 = acts every 100 ticks (slow)
+
+    PROJ-204 Phase 2: Consolidates duplicated tick interval logic (CQ-44).
+
+    Args:
+        speed: Fleet speed value (hexes per turn)
+
+    Returns:
+        Number of ticks between actions. Minimum 1.
+    """
+    if speed <= 0:
+        return BASE_TICKS_PER_MOVEMENT  # Maximum interval for immobile
+    return max(1, int(BASE_TICKS_PER_MOVEMENT // speed))
+
 # Vehicle types that cannot move independently
 IMMOBILE_VEHICLE_TYPES = {'Planetary Complex', 'Satellite', 'Station'}
 

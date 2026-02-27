@@ -375,6 +375,7 @@ class TestTransferCommandHandler:
         mock_fleet.id = 1
         mock_fleet.ships = []
         mock_fleet.location = (0, 0)
+        mock_fleet.owner_id = 99  # Invalid owner_id
 
         mock_empire = Mock()
         mock_empire.fleets = []  # Fleet not in any empire
@@ -398,6 +399,7 @@ class TestTransferCommandHandler:
         mock_fleet.id = 1
         mock_fleet.ships = []
         mock_fleet.location = (0, 0)
+        mock_fleet.owner_id = 0  # Valid owner_id
 
         mock_empire = Mock()
         mock_empire.fleets = [mock_fleet]
@@ -424,6 +426,7 @@ class TestTransferCommandHandler:
         mock_fleet.location = HexCoord(0, 0)  # Fleet already at planet location
         mock_fleet.orders = []
         mock_fleet.add_order = Mock()
+        mock_fleet.owner_id = 0  # Valid owner_id
 
         mock_empire = Mock()
         mock_empire.fleets = [mock_fleet]

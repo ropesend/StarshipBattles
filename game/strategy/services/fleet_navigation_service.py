@@ -31,7 +31,7 @@ from game.strategy.data.fleet import (
     Fleet, FleetOrder, OrderType,
     MOVEMENT_ORDER_TYPES, ACTION_ORDER_TYPES,
 )
-from game.strategy.data.pathfinding import find_hybrid_path
+from game.strategy.data.pathfinding import find_hybrid_path, strip_start_hex
 
 logger = logging.getLogger(__name__)
 
@@ -192,11 +192,9 @@ class FleetNavigationService:
         if not path:
             return []
 
-        # Remove start hex if it matches current location
-        if path and path[0] == state.location:
-            path = path[1:]
-
-        return path if path else []
+        # PROJ-204: Remove start hex if it matches current location
+        stripped = strip_start_hex(state.location, path)
+        return stripped if stripped else []
 
     def _needs_path_recalculation(
         self,

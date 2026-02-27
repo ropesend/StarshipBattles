@@ -166,7 +166,7 @@ class GameSession:
             list[HexCoord] or None if no path found.
         """
         # Avoid circular imports if possible, or lazy import
-        from game.strategy.data.pathfinding import find_hybrid_path
+        from game.strategy.data.pathfinding import find_hybrid_path, strip_start_hex
 
         # Log warp capability for debugging navigation issues (BUG-45)
         # Fleet always has can_use_warp() method
@@ -174,10 +174,8 @@ class GameSession:
 
         path = find_hybrid_path(self.galaxy, fleet.location, target_hex, fleet=fleet)
 
-        # Consistent with Engine: remove start hex if it matches current location
-        if path and path[0] == fleet.location:
-             return path[1:]
-        return path
+        # PROJ-204: Consistent with Engine - remove start hex if it matches current location
+        return strip_start_hex(fleet.location, path)
 
     def get_fleet_path_projection(self, fleet: 'Fleet', max_turns: int = 50) -> List[Dict[str, Any]]:
         """

@@ -8,20 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-27
-**Last Completed:** PROJ-204 Phase 1 - Foundation Utilities
-**Current Status:** PROJ-204 Phase 1 Complete - Phases 2-5 remain
+**Last Completed:** PROJ-204 Phase 2 - Quick Wins & Bug Fixes
+**Current Status:** PROJ-204 Phase 2 Complete - Phases 3-5 remain
 **Current Project:** PROJ-204
-**Current Phase:** Phase 1 Complete
-**Test Status:** 12778 passed, 1 skipped
+**Current Phase:** Phase 2 Complete
+**Test Status:** 12795 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Created `game/core/patterns/layer_iterator.py` (iter_components, iter_layers_and_components, get_component_id, iter_components_with_ids)
-- Created `game/strategy/services/design_cost_calculator.py` (calculate_total_cost, calculate_maintenance_cost)
-- Refactored 8 files to use new utilities
-- Added 35 new unit tests
-- All tests passing: 12778 passed, 1 skipped
-- Next: Phase 2 - Quick Wins & Bug Fixes
+- Created `strip_start_hex()` in `pathfinding.py` (fixes path stripping bug CQ-42)
+- Created `get_tick_interval()` in `fleet_speed_calculator.py` (centralizes tick formula CQ-44)
+- Fixed O(N) empire lookup in `TransferCommandHandler` (CQ-50)
+- Added zone/warp helpers to Galaxy (CQ-26, CQ-27)
+- Added `_accumulate_ship_costs()` to FleetResourceAggregator (CQ-07)
+- Added 17 new unit tests
+- All tests passing: 12795 passed, 1 skipped
+- Next: Phase 3 - Command Handler Consolidation
 
 ---
 
@@ -38,7 +40,7 @@
 ---
 
 - [/] **PROJ-204: Strategy & Workshop Duplication Consolidation**
-  - **Phases:** 5 | **Status:** Phase 1/5 Complete | **Priority:** Medium
+  - **Phases:** 5 | **Status:** Phase 2/5 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-204/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-204/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -63,6 +65,7 @@
 | 2026-02-25 | PROJ-199 | Phase 4 | Complete | 12724 passed | - | +get_component_type(), +get_component_threshold() helpers |
 | 2026-02-25 | PROJ-199 | Audit 1 | PASSED | 12724 passed | - | All getattr patterns centralized in component_inspector.py |
 | 2026-02-27 | PROJ-204 | Phase 1 | Complete | 12778 passed | - | LayerIterator + DesignCostCalculator, 8 files refactored, +35 tests |
+| 2026-02-27 | PROJ-204 | Phase 2 | Complete | 12795 passed | - | strip_start_hex, get_tick_interval, O(1) lookup, zone helpers, +17 tests |
 
 ---
 

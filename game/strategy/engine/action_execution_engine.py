@@ -26,6 +26,7 @@ from game.strategy.data.fleet import (
     ACTION_ORDER_TYPES,
 )
 from game.strategy.services.action_time_resolver import ActionTimeResolver
+from game.strategy.services.fleet_speed_calculator import get_tick_interval
 
 logger = logging.getLogger(__name__)
 
@@ -119,9 +120,8 @@ class ActionExecutionEngine(IActionExecutionEngine):
         if fleet.speed <= 0:
             return None
 
-        # Calculate tick interval based on speed
-        # Speed 5 = acts every 20 ticks, Speed 1 = acts every 100 ticks
-        interval = max(1, int(100 // fleet.speed))
+        # PROJ-204: Use shared tick interval calculation
+        interval = get_tick_interval(fleet.speed)
 
         # Check if this fleet acts this tick
         if tick % interval != 0:

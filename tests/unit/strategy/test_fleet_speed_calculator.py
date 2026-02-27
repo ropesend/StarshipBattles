@@ -354,3 +354,81 @@ class TestFleetSpeedCalculatorEnvironmentalEffects:
         )
 
         assert env_speed == base_speed
+
+
+class TestGetTickInterval:
+    """Tests for get_tick_interval() function (PROJ-204 Phase 2, CQ-44)."""
+
+    def test_speed_ten_gives_interval_ten(self):
+        """Speed 10 should give tick interval of 10 (fastest)."""
+        from game.strategy.services.fleet_speed_calculator import get_tick_interval
+
+        interval = get_tick_interval(10.0)
+
+        assert interval == 10
+
+    def test_speed_five_gives_interval_twenty(self):
+        """Speed 5 should give tick interval of 20 (medium)."""
+        from game.strategy.services.fleet_speed_calculator import get_tick_interval
+
+        interval = get_tick_interval(5.0)
+
+        assert interval == 20
+
+    def test_speed_one_gives_interval_hundred(self):
+        """Speed 1 should give tick interval of 100 (slow)."""
+        from game.strategy.services.fleet_speed_calculator import get_tick_interval
+
+        interval = get_tick_interval(1.0)
+
+        assert interval == 100
+
+    def test_speed_two_gives_interval_fifty(self):
+        """Speed 2 should give tick interval of 50."""
+        from game.strategy.services.fleet_speed_calculator import get_tick_interval
+
+        interval = get_tick_interval(2.0)
+
+        assert interval == 50
+
+    def test_speed_zero_gives_maximum_interval(self):
+        """Speed 0 (immobile) should give maximum interval of 100."""
+        from game.strategy.services.fleet_speed_calculator import get_tick_interval, BASE_TICKS_PER_MOVEMENT
+
+        interval = get_tick_interval(0.0)
+
+        assert interval == BASE_TICKS_PER_MOVEMENT
+
+    def test_negative_speed_gives_maximum_interval(self):
+        """Negative speed should give maximum interval (safety case)."""
+        from game.strategy.services.fleet_speed_calculator import get_tick_interval, BASE_TICKS_PER_MOVEMENT
+
+        interval = get_tick_interval(-5.0)
+
+        assert interval == BASE_TICKS_PER_MOVEMENT
+
+    def test_interval_minimum_is_one(self):
+        """Very high speed should still give minimum interval of 1."""
+        from game.strategy.services.fleet_speed_calculator import get_tick_interval
+
+        # Speed 1000 would give 100 // 1000 = 0, but clamped to 1
+        interval = get_tick_interval(1000.0)
+
+        assert interval == 1
+
+    def test_fractional_speed_rounds_down_interval(self):
+        """Fractional speed should round interval properly."""
+        from game.strategy.services.fleet_speed_calculator import get_tick_interval
+
+        # Speed 3.0 -> 100 // 3 = 33
+        interval = get_tick_interval(3.0)
+
+        assert interval == 33
+
+    def test_returns_integer(self):
+        """Interval should always be an integer."""
+        from game.strategy.services.fleet_speed_calculator import get_tick_interval
+
+        interval = get_tick_interval(7.5)
+
+        assert isinstance(interval, int)
