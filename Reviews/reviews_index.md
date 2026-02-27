@@ -13,6 +13,9 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 ## Active Reviews
 | Date | Type | Description | Status | Link |
 |------|------|-------------|--------|------|
+| 2026-02-27 | General Review | legacy-code-audit | In Progress | [2026-02-27_141504_general_legacy-code-audit](results/2026-02-27_141504_general_legacy-code-audit/) |
+| 2026-02-27 | General Review | dead-code-elimination | In Progress | [2026-02-27_141459_general_dead-code-elimination](results/2026-02-27_141459_general_dead-code-elimination/) |
+| 2026-02-27 | General Review | strategy-workshop-duplication | In Progress | [2026-02-27_141256_general_strategy-workshop-duplication](results/2026-02-27_141256_general_strategy-workshop-duplication/) |
 | 2026-02-23 | Consistency Review | logger-json-pattern-standardization | Led to Project | [2026-02-23_195305_consistency_logger-json-pattern-standardization](results/2026-02-23_195305_consistency_logger-json-pattern-standardization/) |
 | 2026-02-23 | Technical Debt Review | missing-abstractions-duplication-elimination | Completed | [2026-02-23_194404_tech-debt_missing-abstractions-duplication-elimination](results/2026-02-23_194404_tech-debt_missing-abstractions-duplication-elimination/) |
 | 2026-02-23 | Technical Debt Review | protocol-gap-hasattr-migration | In Progress | [2026-02-23_193625_tech-debt_protocol-gap-hasattr-migration](results/2026-02-23_193625_tech-debt_protocol-gap-hasattr-migration/) |
