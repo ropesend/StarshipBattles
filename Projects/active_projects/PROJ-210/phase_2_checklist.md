@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** ~80% (40 test failures remaining)
 **Objective:** Remove zero-value pass-through facade methods, expose delegates via properties
 **Priority:** Critical — removes ~120 lines of maintenance burden, clarifies API
 **Findings:** CQ-01, CQ-02, AR-001, ROF-006, DC-004
@@ -19,19 +19,29 @@
 **Files:** `game/strategy/data/fleet.py`, all callers of Fleet pass-through methods
 **Tests:** `pytest tests/ -n 12`
 
-- [ ] Inventory all pass-through methods on Fleet (expected: ~28)
-- [ ] Expose `_resource_agg` as public `resources` property
-- [ ] Expose `_capabilities` as public `capabilities` property (already partially done)
-- [ ] Expose `_battle` as public `battle` property
-- [ ] Search codebase for all callers of each pass-through method
-- [ ] Update callers: `fleet.can_use_warp()` → `fleet.capabilities.can_use_warp()`
-- [ ] Update callers: `fleet.get_fleet_cargo_capacity()` → `fleet.resources.get_fleet_cargo_capacity()`
-- [ ] Update callers: `fleet.to_battle_ships()` → `fleet.battle.to_battle_ships()`
-- [ ] Remove all pass-through methods from Fleet class
-- [ ] Run full suite: `pytest tests/ -n 12`
+- [x] Inventory all pass-through methods on Fleet (expected: ~28) — Found 20+
+- [x] Expose `_resource_agg` as public `resources` property
+- [x] Expose `_capabilities` as public `capabilities` property (already partially done)
+- [x] Expose `_battle` as public `battle` property
+- [x] Search codebase for all callers of each pass-through method
+- [x] Update callers: `fleet.can_use_warp()` → `fleet.capabilities.can_use_warp()`
+- [x] Update callers: `fleet.get_fleet_cargo_capacity()` → `fleet.resources.get_fleet_cargo_capacity()`
+- [x] Update callers: `fleet.to_battle_ships()` → `fleet.battle.to_battle_ships()`
+- [x] Remove all pass-through methods from Fleet class
+- [/] Run full suite: `pytest tests/ -n 12` — **40 test failures remaining**
 - [ ] Verify: Fleet.py line count reduced by ~120 lines
 
-**Notes:** This is the highest-impact single change. Will touch many files but each change is mechanical (find-replace on call sites).
+**Remaining Test Failures (40):**
+- `test_hybrid_and_intercept.py` (6): Mock fleet needs `capabilities.can_use_warp()`
+- `test_simulation_adapter*.py` (3): Mock fleet needs `battle.to_battle_ships()`
+- `test_fleet_navigation*.py` (3): NavigationState/intercept mocks need update
+- `test_strategy_detail_fmt.py` (2): Mock fleet needs `resources.fuel_endurance()`
+- `test_fleet_production_e2e.py` (4): Fleet mock needs `capabilities.has_space_shipyard`
+- `test_warp_orders.py` (4): Fleet mock needs `capabilities.can_use_warp()`
+- `test_*_transfer*.py` (4): Fleet mock needs `resources.*`
+- Various UI/repro tests (14): Various mock updates needed
+
+**Notes:** Core implementation complete. 51 files modified. Remaining work is test mock updates.
 
 ### Task 2.2: Decouple Delegates from Fleet Internals [Medium]
 **Findings:** AR-001 (delegates store `_fleet` reference, access internals directly)
