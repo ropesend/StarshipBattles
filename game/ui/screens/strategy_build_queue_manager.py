@@ -12,6 +12,10 @@ from typing import TYPE_CHECKING
 
 import pygame
 
+from game.ui.screens.build_queue_screen import BuildQueueScreen
+from game.strategy.systems.design_library import DesignLibrary
+from game.ui.services.design_loader_adapter import DesignLoaderAdapter
+
 if TYPE_CHECKING:
     from game.ui.screens.strategy_screen import StrategyScreen
     from game.strategy.data.fleet import Fleet
@@ -49,10 +53,6 @@ class StrategyBuildQueueManager:
         if isinstance(self._screen.selected_object, Planet):
             planet = self._screen.selected_object
             if planet.owner_id == self._screen.current_empire.id:
-                from game.ui.screens.build_queue_screen import BuildQueueScreen
-                from game.strategy.systems.design_library import DesignLibrary
-                from game.ui.services.design_loader_adapter import DesignLoaderAdapter
-
                 # Hide main UI
                 self._screen.ui.hide_ui()
 
@@ -139,11 +139,11 @@ class StrategyBuildQueueManager:
             if not has_build_order:
                 logger.info(f"Auto-issuing BUILD order to fleet {fleet.id} ({len(fleet.construction_queue)} items in queue)")
                 cmd = IssueBuildOrderCommand(fleet_id=fleet.id)
-                self._screen.session.handle_command(cmd)
+                self._screen.facade.handle_command(cmd)
         else:
             # Queue is empty - remove BUILD order if present via command pipeline
             cmd = RemoveBuildOrderCommand(fleet_id=fleet.id)
-            self._screen.session.handle_command(cmd)
+            self._screen.facade.handle_command(cmd)
 
     def on_navigate_to_hex_build(self, hex_coord, source) -> None:
         """Navigate to the build queue screen for a specific hex and source.
@@ -167,10 +167,6 @@ class StrategyBuildQueueManager:
 
         # Close the empire build queue window
         self._screen.ui.close_empire_build_queue_window()
-
-        from game.ui.screens.build_queue_screen import BuildQueueScreen
-        from game.strategy.systems.design_library import DesignLibrary
-        from game.ui.services.design_loader_adapter import DesignLoaderAdapter
 
         # Hide main UI
         self._screen.ui.hide_ui()
@@ -211,10 +207,6 @@ class StrategyBuildQueueManager:
         if isinstance(self._screen.selected_object, Fleet):
             fleet = self._screen.selected_object
             if fleet.owner_id == self._screen.current_empire.id and fleet.has_space_shipyard:
-                from game.ui.screens.build_queue_screen import BuildQueueScreen
-                from game.strategy.systems.design_library import DesignLibrary
-                from game.ui.services.design_loader_adapter import DesignLoaderAdapter
-
                 # Hide main UI
                 self._screen.ui.hide_ui()
 

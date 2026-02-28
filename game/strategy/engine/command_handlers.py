@@ -17,6 +17,7 @@ import logging
 
 from game.core.validation import ValidationResult
 from game.strategy.data.pathfinding import find_hybrid_path, strip_start_hex
+from game.strategy.data.fleet import FleetOrder, OrderType
 
 logger = logging.getLogger(__name__)
 
@@ -47,8 +48,6 @@ def add_move_order_if_needed(
     Returns:
         ValidationResult - invalid if no path found, valid otherwise.
     """
-    from game.strategy.data.fleet import FleetOrder, OrderType
-
     # Determine start hex (chain-aware)
     if start_hex is None:
         start_hex = fleet.location
@@ -90,8 +89,6 @@ def create_auto_load_population_order(origin_colony) -> 'FleetOrder':
     Returns:
         FleetOrder for LOAD_POPULATION, or None if colony has no populations.
     """
-    from game.strategy.data.fleet import FleetOrder, OrderType
-
     if not origin_colony or not origin_colony.populations:
         return None
 
@@ -260,8 +257,6 @@ class ColonizeCommandHandler(BaseCommandHandler):
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle IssueColonizeCommand."""
-        from game.strategy.data.fleet import FleetOrder, OrderType
-
         # 1. Resolve Fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
         if error:
@@ -304,8 +299,6 @@ class MoveCommandHandler(BaseCommandHandler):
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle IssueMoveCommand."""
-        from game.strategy.data.fleet import FleetOrder, OrderType
-
         # 1. Resolve Fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
         if error:
@@ -352,8 +345,6 @@ class InterceptCommandHandler(BaseCommandHandler):
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle IssueInterceptCommand - creates a MOVE_TO_FLEET order."""
-        from game.strategy.data.fleet import FleetOrder, OrderType
-
         # 1. Resolve source fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
         if error:
@@ -377,8 +368,6 @@ class JoinCommandHandler(BaseCommandHandler):
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle IssueJoinFleetCommand - creates MOVE_TO_FLEET and JOIN_FLEET orders."""
-        from game.strategy.data.fleet import FleetOrder, OrderType
-
         # 1. Resolve source fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
         if error:
@@ -406,7 +395,6 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle QueueColonizeMissionCommand - queues MOVE and COLONIZE orders."""
-        from game.strategy.data.fleet import FleetOrder, OrderType
         from game.strategy.validation import ColonizeValidator
 
         # 1. Resolve fleet
@@ -497,7 +485,6 @@ class TransferCommandHandler(BaseCommandHandler):
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle IssueTransferCommand - creates TRANSFER order for cargo operations."""
-        from game.strategy.data.fleet import FleetOrder, OrderType
         from game.strategy.validation import TransferValidator
 
         logger.info(f"DIAG TransferCommandHandler: cmd fleet_id={cmd.fleet_id}, planet_id={cmd.planet_id}, cargo_type={cmd.cargo_type}, direction={cmd.direction}, amount={cmd.amount}, species_id={cmd.species_id}")
@@ -575,8 +562,6 @@ class BuildOrderCommandHandler(BaseCommandHandler):
         Inserts BUILD order at position 0 (front of queue) so it executes first.
         Clears the fleet path since fleet must stay stationary to build.
         """
-        from game.strategy.data.fleet import FleetOrder, OrderType
-
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
         if error:
@@ -598,8 +583,6 @@ class RemoveBuildOrderCommandHandler(BaseCommandHandler):
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle RemoveBuildOrderCommand - removes BUILD orders from fleet."""
-        from game.strategy.data.fleet import OrderType
-
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
         if error:
@@ -617,8 +600,6 @@ class WarpCommandHandler(BaseCommandHandler):
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle IssueWarpCommand - creates WARP order with optional MOVE prefix."""
-        from game.strategy.data.fleet import FleetOrder, OrderType
-
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
         if error:

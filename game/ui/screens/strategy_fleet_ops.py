@@ -12,6 +12,7 @@ Cross-layer imports (acceptable for UI):
 import logging
 from typing import TYPE_CHECKING
 from game.core.hex_math import pixel_to_hex
+from game.strategy.engine.commands import IssueMoveCommand, IssueInterceptCommand, IssueJoinFleetCommand
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +118,6 @@ class FleetOperations:
         if preview_path:
             logger.debug(f"Path confirmed: {len(preview_path)} steps.")
 
-            from game.strategy.engine.commands import IssueMoveCommand
             cmd = IssueMoveCommand(fleet.id, target_hex)
 
             result = self.facade.handle_command(cmd)
@@ -145,7 +145,6 @@ class FleetOperations:
         """
         logger.debug(f"Intercepting Fleet {target_fleet.id}...")
 
-        from game.strategy.engine.commands import IssueInterceptCommand
         cmd = IssueInterceptCommand(fleet.id, target_fleet.id)
         result = self.facade.handle_command(cmd)
 
@@ -189,7 +188,6 @@ class FleetOperations:
 
         logger.debug(f"Queueing Join Order with Fleet {target_fleet.id}...")
 
-        from game.strategy.engine.commands import IssueJoinFleetCommand
         cmd = IssueJoinFleetCommand(selected_fleet.id, target_fleet.id)
         result = self.facade.handle_command(cmd)
 

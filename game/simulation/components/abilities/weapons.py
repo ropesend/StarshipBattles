@@ -3,6 +3,7 @@ import math
 from typing import Dict, Any, List
 
 from game.core.config import PhysicsConfig
+from game.simulation.formula_system import safe_evaluate_math_formula
 
 logger = logging.getLogger(__name__)
 from .base import Ability
@@ -60,7 +61,6 @@ class WeaponAbility(Ability):
                 raw_damage = self.component.data.get('base_damage', 0)
 
         if isinstance(raw_damage, str) and raw_damage.startswith('='):
-            from game.simulation.formula_system import safe_evaluate_math_formula
             self.damage_formula = raw_damage[1:]  # Store without '='
             # Evaluate at range 0 for base value
             self.damage = float(max(0, safe_evaluate_math_formula(self.damage_formula, {'range_to_target': 0})))
@@ -78,7 +78,6 @@ class WeaponAbility(Ability):
                 raw_range = self.component.data.get('base_range', 0)
 
         if isinstance(raw_range, str) and raw_range.startswith('='):
-            from game.simulation.formula_system import safe_evaluate_math_formula
             self.range = float(max(0, safe_evaluate_math_formula(raw_range[1:], {})))
         else:
             self.range = float(raw_range) if raw_range else 0.0
@@ -93,7 +92,6 @@ class WeaponAbility(Ability):
                 raw_reload = self.component.data.get('base_reload', 1.0)
 
         if isinstance(raw_reload, str) and raw_reload.startswith('='):
-            from game.simulation.formula_system import safe_evaluate_math_formula
             self.reload_time = float(max(0.0, safe_evaluate_math_formula(raw_reload[1:], {})))
         else:
             self.reload_time = float(raw_reload) if raw_reload is not None else 1.0
@@ -129,7 +127,6 @@ class WeaponAbility(Ability):
         if 'damage' in data:
             raw = data['damage']
             if isinstance(raw, str) and raw.startswith('='):
-                from game.simulation.formula_system import safe_evaluate_math_formula
                 self._base_damage = float(max(0, safe_evaluate_math_formula(raw[1:], {})))
             else:
                 self._base_damage = float(raw)
@@ -137,7 +134,6 @@ class WeaponAbility(Ability):
         if 'range' in data:
             raw = data['range']
             if isinstance(raw, str) and raw.startswith('='):
-                from game.simulation.formula_system import safe_evaluate_math_formula
                 self._base_range = float(max(0, safe_evaluate_math_formula(raw[1:], {})))
             else:
                 self._base_range = float(raw)
@@ -145,7 +141,6 @@ class WeaponAbility(Ability):
         if 'reload' in data:
             raw = data['reload']
             if isinstance(raw, str) and raw.startswith('='):
-                from game.simulation.formula_system import safe_evaluate_math_formula
                 self._base_reload = float(max(0.0, safe_evaluate_math_formula(raw[1:], {})))
             else:
                 self._base_reload = float(raw)
@@ -206,7 +201,6 @@ class WeaponAbility(Ability):
             Calculated damage value, minimum 0.0
         """
         if self.damage_formula:
-            from game.simulation.formula_system import safe_evaluate_math_formula
             context = {'range_to_target': range_to_target}
             return max(0.0, safe_evaluate_math_formula(self.damage_formula, context))
         return self.damage

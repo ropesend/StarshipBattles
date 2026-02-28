@@ -15,6 +15,7 @@ def _make_build_queue_manager():
     mock_screen = MagicMock()
     mock_screen.session = MagicMock()
     mock_screen.session.galaxy = MagicMock()
+    mock_screen.facade = MagicMock()  # PROJ-212: facade for command dispatch
     mock_screen.ui = MagicMock()
     mock_screen.ui.manager = MagicMock()
     mock_screen.selected_object = None
@@ -88,9 +89,9 @@ class TestOnBuildYardClick:
         screen._get_object_asset = MagicMock(return_value=None)
         screen.session.galaxy.get_system_of_planet.return_value = None
 
-        with patch('game.ui.screens.build_queue_screen.BuildQueueScreen') as MockBQS, \
-             patch('game.strategy.systems.design_library.DesignLibrary'), \
-             patch('game.ui.services.design_loader_adapter.DesignLoaderAdapter'):
+        with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'):
             manager.on_build_yard_click()
 
         MockBQS.assert_called_once()
@@ -154,8 +155,8 @@ class TestHandleFleetBuildQueueClose:
         manager._handle_fleet_build_queue_close(fleet)
 
         # Should have dispatched IssueBuildOrderCommand
-        screen.session.handle_command.assert_called_once()
-        cmd = screen.session.handle_command.call_args[0][0]
+        screen.facade.handle_command.assert_called_once()
+        cmd = screen.facade.handle_command.call_args[0][0]
         assert isinstance(cmd, IssueBuildOrderCommand)
         assert cmd.fleet_id == 42
 
@@ -174,7 +175,7 @@ class TestHandleFleetBuildQueueClose:
         manager._handle_fleet_build_queue_close(fleet)
 
         # Should NOT dispatch command
-        screen.session.handle_command.assert_not_called()
+        screen.facade.handle_command.assert_not_called()
 
     def test_dispatches_remove_command_when_queue_empty(self):
         """Should dispatch RemoveBuildOrderCommand when construction queue is empty."""
@@ -189,8 +190,8 @@ class TestHandleFleetBuildQueueClose:
         manager._handle_fleet_build_queue_close(fleet)
 
         # Should have dispatched RemoveBuildOrderCommand
-        screen.session.handle_command.assert_called_once()
-        cmd = screen.session.handle_command.call_args[0][0]
+        screen.facade.handle_command.assert_called_once()
+        cmd = screen.facade.handle_command.call_args[0][0]
         assert isinstance(cmd, RemoveBuildOrderCommand)
         assert cmd.fleet_id == 99
 
@@ -229,9 +230,9 @@ class TestOnFleetBuildClick:
         screen.selected_object = mock_fleet
         screen._get_object_asset = MagicMock(return_value=None)
 
-        with patch('game.ui.screens.build_queue_screen.BuildQueueScreen') as MockBQS, \
-             patch('game.strategy.systems.design_library.DesignLibrary'), \
-             patch('game.ui.services.design_loader_adapter.DesignLoaderAdapter'):
+        with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'):
             manager.on_fleet_build_click()
 
         MockBQS.assert_called_once()
@@ -275,9 +276,9 @@ class TestOnNavigateToHexBuild:
         mock_source.owner_entity = MagicMock()
         mock_source.display_name = "Test Planet"
 
-        with patch('game.ui.screens.build_queue_screen.BuildQueueScreen') as MockBQS, \
-             patch('game.strategy.systems.design_library.DesignLibrary'), \
-             patch('game.ui.services.design_loader_adapter.DesignLoaderAdapter'):
+        with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'):
             manager.on_navigate_to_hex_build(mock_hex, mock_source)
 
         MockBQS.assert_called_once()
