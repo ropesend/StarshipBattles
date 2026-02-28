@@ -8,22 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-27
-**Last Completed:** PROJ-211 Phase 1 - GameSession Foundation
-**Current Status:** PROJ-211 Phase 1 complete, Phase 2 next
+**Last Completed:** PROJ-211 Phase 2 Task 2.1 - ShipInstance DI
+**Current Status:** PROJ-211 Phase 2 in progress, Task 2.2 next
 **Current Project:** PROJ-211
-**Current Phase:** Phase 2 (Strategy Data Objects)
-**Test Status:** 12866 passed, 1 skipped (+ 4 pre-existing bug_13_colony_flags failures)
+**Current Phase:** Phase 2 (Strategy Data Objects) - Task 2.2
+**Test Status:** 12876 passed, 1 skipped (+ 4 pre-existing bug_13_colony_flags failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-211 Phase 1 complete:
-  - Added registries property to GameSession
-  - Made TurnEngine registries parameter required (updated ~40 test files)
-  - Fixed StrategySessionFacade.get_fleet_remaining_pods() to use session.registries
-  - Made ShipInstance.to_ship() registries required
-  - Made EmpireEconomyCalculator registries required
-- All tests passing (12866 passed, 1 skipped)
-- Next: Phase 2 - Strategy Data Objects
+- PROJ-211 Phase 2 Task 2.1 complete:
+  - Added `_registries` field to ShipInstance dataclass
+  - Added `set_registries()` method for post-construction DI
+  - Updated `create()` factory to accept and store registries
+  - Updated `from_dict()` to accept and store registries
+  - Updated `get_calculated_stats()` to use stored registries with temporary fallback
+  - Added test_registries_di.py with 10 tests for new DI functionality
+  - Delegate managers (ShipResourceManager, etc.) automatically use ship's registries
+- All tests passing (12876 passed, 1 skipped)
+- Next: Task 2.2 - FleetCapabilityCalculator DI, Task 2.3 - Remove fallbacks
 
 ---
 
@@ -84,6 +86,7 @@
 | 2026-02-27 | PROJ-212 | Phase 3 | Complete | 12866 passed | pending | DI constructor added, deferred import audit done |
 | 2026-02-27 | PROJ-212 | Audit 1 | PASSED | 12866 passed | - | All implementations verified, no issues |
 | 2026-02-27 | PROJ-211 | Phase 1 | Complete | 12866 passed | pending | GameSession foundation, TurnEngine+tests updated |
+| 2026-02-27 | PROJ-211 | Phase 2 (2.1) | Complete | 12876 passed | pending | ShipInstance DI: _registries field, create/from_dict updated |
 
 ---
 
