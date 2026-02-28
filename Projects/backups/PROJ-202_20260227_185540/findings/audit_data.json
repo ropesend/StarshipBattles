@@ -1,0 +1,50 @@
+{
+  "target": {
+    "file": "game/ui/screens/strategy_renderer.py",
+    "function": "_draw_systems",
+    "line": 306,
+    "end_line": 376,
+    "cc": 29,
+    "grade": "E",
+    "class_name": "StrategyRenderer",
+    "type": "method",
+    "length": 71
+  },
+  "threshold": 20,
+  "total_above_threshold": 42,
+  "same_file_findings": [
+    {
+      "file": "game/ui/screens/strategy_renderer.py",
+      "function": "_draw_systems",
+      "line": 306,
+      "end_line": 376,
+      "cc": 29,
+      "grade": "E",
+      "class_name": "StrategyRenderer",
+      "type": "method",
+      "length": 71
+    },
+    {
+      "file": "game/ui/screens/strategy_renderer.py",
+      "function": "_draw_system_details",
+      "line": 378,
+      "end_line": 511,
+      "cc": 24,
+      "grade": "E",
+      "class_name": "StrategyRenderer",
+      "type": "method",
+      "length": 134
+    },
+    {
+      "file": "game/ui/screens/strategy_renderer.py",
+      "function": "_draw_storms",
+      "line": 579,
+      "end_line": 708,
+      "cc": 23,
+      "grade": "E",
+      "class_name": "StrategyRenderer",
+      "type": "method",
+      "length": 130
+    }
+  ]
+}

@@ -8,19 +8,17 @@
 ## Agent Context
 
 **Last Session:** 2026-02-27
-**Last Completed:** PROJ-205 Audit Cycle 1 - PASSED
-**Current Status:** PROJ-205 Complete - Audit Passed
-**Current Project:** PROJ-205
-**Current Phase:** Complete
+**Last Completed:** PROJ-199/204/205 archived, PROJ-200/201/202/203/206 archived
+**Current Status:** Ready for PROJ-207
+**Current Project:** PROJ-207
+**Current Phase:** Not Started
 **Test Status:** 12831 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- All 3 phases complete
-- Phase 3: Restructured AbilityManager branching (elif target_class is not None), moved import to module level, renamed comment
-- Audit Cycle 1 PASSED - all tasks verified by Explore agent
-- PROJ-205 ready for user verification and archival
-- No more items in Master Task List - all work complete
+- PROJ-199, 204, 205 archived from plan (completed + audited)
+- PROJ-200, 201, 202, 203, 206 archived from active_projects (not in refactor plan)
+- PROJ-207 (Fleet Order System Unification) is the next project - 5 phases, Ready
 
 ---
 
@@ -28,26 +26,10 @@
 
 > **Note:** Each checkbox represents an entire project. Phase details are in the project's plan.md file.
 
-- [x] **PROJ-199: Duck Typing Cleanup - Lazy Init and CompDef Centralization**
-  - **Phases:** 4 | **Status:** Complete | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-199/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-199/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-204: Strategy & Workshop Duplication Consolidation**
-  - **Phases:** 5 | **Status:** Complete | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-204/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-204/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-205: Legacy Code Elimination - Verified Findings**
-  - **Phases:** 3 | **Status:** Complete | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-205/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-205/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
+- [ ] **PROJ-207: Fleet Order System Unification**
+  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-207/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-207/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
 
 ---
@@ -56,21 +38,6 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
-| 2026-02-25 | PROJ-199 | Phase 1 | Complete | 12724 passed | - | 6 true lazy inits fixed, 7 hasattr→direct, Task 1.4 moved to P2 |
-| 2026-02-25 | PROJ-199 | Phase 2 | Complete | 12724 passed | - | 18 hasattr guards removed from 10 files |
-| 2026-02-25 | PROJ-199 | Phase 3 | Complete | 12724 passed | - | 8 getattr→get_component_abilities() in 6 files |
-| 2026-02-25 | PROJ-199 | Phase 4 | Complete | 12724 passed | - | +get_component_type(), +get_component_threshold() helpers |
-| 2026-02-25 | PROJ-199 | Audit 1 | PASSED | 12724 passed | - | All getattr patterns centralized in component_inspector.py |
-| 2026-02-27 | PROJ-204 | Phase 1 | Complete | 12778 passed | - | LayerIterator + DesignCostCalculator, 8 files refactored, +35 tests |
-| 2026-02-27 | PROJ-204 | Phase 2 | Complete | 12795 passed | - | strip_start_hex, get_tick_interval, O(1) lookup, zone helpers, +17 tests |
-| 2026-02-27 | PROJ-204 | Phase 3 | Complete | 12804 passed | - | _resolve_fleet_required, _resolve_planet_optional, add_move_order_if_needed, +9 tests |
-| 2026-02-27 | PROJ-204 | Phase 4 | Complete | 12815 passed | - | _verify_and_consume_resources, deserialize_list, +20 tests, CQ-23/CQ-06 deferred |
-| 2026-02-27 | PROJ-204 | Phase 5 | Complete | 12837 passed | - | _get_local_bounds, _set_controls_enabled, PanelFactory, UIElementRegistry, +22 tests |
-| 2026-02-27 | PROJ-204 | Audit 1 | PASSED | 12837 passed | - | All 12 verification items confirmed |
-| 2026-02-27 | PROJ-205 | Phase 1 | Complete | 12835 passed | - | Removed sprite_preview placeholder field + 2 tests |
-| 2026-02-27 | PROJ-205 | Phase 2 | Complete | 12831 passed | - | Removed legacy colonize path, column_mgr alias, updated 63+ tests |
-| 2026-02-27 | PROJ-205 | Phase 3 | Complete | 12831 passed | f8b5f16f | AbilityManager branching, module import, comment rename |
-| 2026-02-27 | PROJ-205 | Audit 1 | PASSED | 12831 passed | - | All tasks verified complete |
 
 ---
 

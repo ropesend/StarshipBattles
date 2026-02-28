@@ -4,18 +4,19 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-205 | Legacy Code Elimination - Verified Findings | Plan Ready | 2026-02-27 | 2026-02-27 |
-| PROJ-204 | Strategy & Workshop Duplication Consolidation | Planning | 2026-02-27 | 2026-02-27 |
-| PROJ-203 | Reduce complexity: StrategyRenderer._draw_systems (CC 29) | Planning | 2026-02-27 | 2026-02-27 |
-| PROJ-202 | Reduce complexity: StrategyRenderer._draw_systems (CC 29) | Planning | 2026-02-27 | 2026-02-27 |
-| PROJ-201 | Reduce complexity: FleetDataSource._get_column_value (CC 29) | Planning | 2026-02-27 | 2026-02-27 |
-| PROJ-200 | Reduce complexity: filter_ships (CC 36) | Planning | 2026-02-27 | 2026-02-27 |
-| PROJ-199 | Duck Typing Cleanup - Lazy Init and CompDef Centralization | Plan Ready | 2026-02-25 | 2026-02-25 |
+| PROJ-207 | Fleet Order System Unification | Planning | 2026-02-27 | 2026-02-27 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-205 | Legacy Code Elimination - Verified Findings | Archived | 2026-02-27 | 2026-02-27 |
+| PROJ-204 | Strategy & Workshop Duplication Consolidation | Archived | 2026-02-27 | 2026-02-27 |
+| PROJ-203 | Reduce complexity: StrategyRenderer._draw_systems (CC 29) | Archived | 2026-02-27 | 2026-02-27 |
+| PROJ-202 | Reduce complexity: StrategyRenderer._draw_systems (CC 29) | Archived | 2026-02-27 | 2026-02-27 |
+| PROJ-201 | Reduce complexity: FleetDataSource._get_column_value (CC 29) | Archived | 2026-02-27 | 2026-02-27 |
+| PROJ-200 | Reduce complexity: filter_ships (CC 36) | Archived | 2026-02-27 | 2026-02-27 |
+| PROJ-199 | Duck Typing Cleanup - Lazy Init and CompDef Centralization | Archived | 2026-02-25 | 2026-02-27 |
 | PROJ-198 | UI Layer Duck Typing Elimination - Strategy Screens & Services | Archived | 2026-02-25 | 2026-02-25 |
 | PROJ-197 | Duplication Consolidation Completion | Archived | 2026-02-25 | 2026-02-25 |
 | PROJ-196 | Consolidate Duplicated Code | Archived | 2026-02-24 | 2026-02-25 |

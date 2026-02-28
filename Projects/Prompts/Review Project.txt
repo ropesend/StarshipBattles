@@ -1,0 +1,46 @@
+!EXECUTE_PROTOCOL: Projects\protocols\09_review_project.md
+
+I want to review and validate a project plan against the current codebase.
+
+**Project:** PROJ-XX
+
+---
+
+1. LOAD the protocol file `protocols/09_review_project.md`.
+2. ADOPT the 'Project Review Coordinator' persona.
+3. LOAD the project plan: `Projects/active_projects/PROJ-XX/plan.md`
+4. LOAD all phase checklists, design.md, and decisions.md
+
+5. EXECUTE Phase 1: Load & Prepare
+   - Run `python Projects/scripts/project_status.py PROJ-XX` for status overview
+   - Extract scope (Key Files + Scope sections from plan)
+   - Verify project is active and has incomplete work
+
+6. EXECUTE Phase 2: Deep Code Review
+   - Launch 5 general-purpose analysis agents in parallel
+   - Each agent receives full plan content, checklist contents, and design.md
+   - Agents write timestamped reports to project's `findings/` directory
+   - **VERIFY** all 5 reports exist and are non-empty before proceeding
+
+7. EXECUTE Phase 3: Synthesis
+   - Read all agent reports
+   - Compile categorized findings (Stale References, Already Done, Obsolete,
+     Scope Gaps, Design Drift, Unclear/Ambiguous, Goal Misalignment)
+   - Prioritize by implementation impact (High/Medium/Low)
+   - De-duplicate findings flagged by multiple agents
+
+8. EXECUTE Phase 4: Interactive Discussion
+   - Walk through findings batched by category, highest impact first
+   - Propose resolutions, get user approval via AskUserQuestion
+   - Apply approved changes to plan files immediately
+   - Add new phases if scope gaps warrant it (numbered sequentially)
+
+9. EXECUTE Phase 5: Plan Update & Summary
+   - Update Current State in plan.md
+   - Append review decisions to decisions.md
+   - Present change summary with counts by category
+   - Confirm plan readiness for implementation
+
+MINDSET: Be thorough but practical. The goal is to align the plan with reality,
+not to re-plan the project from scratch. Focus on what would actually block or
+misdirect implementation.
