@@ -19,10 +19,12 @@ class MockGalaxy:
 
 
 class MockSession:
-    def __init__(self, galaxy=None, empire=None):
+    def __init__(self, galaxy=None, empire=None, registries=None):
         self.save_path = "test_savegame"
         self.current_empire = empire or Empire(1, "Test Empire", (255, 0, 0))
         self.galaxy = galaxy or MockGalaxy()
+        # PROJ-211: Add registries for DI
+        self.registries = registries
 
 @pytest.fixture
 def mock_design_library():
@@ -56,11 +58,12 @@ def mock_design_loader():
 
 
 @pytest.fixture
-def build_queue_screen(mock_design_library, mock_design_loader):
+def build_queue_screen(mock_design_library, mock_design_loader, mock_registries):
     """Create BuildQueueScreen for testing.
 
     PROJ-40: Updated to use DI injection.
     PROJ-109: Updated to provide required hex_coord, galaxy, empire parameters.
+    PROJ-211: Updated to pass registries for DI.
     """
     pygame.init()
     screen = pygame.display.set_mode((1024, 768))
@@ -90,7 +93,7 @@ def build_queue_screen(mock_design_library, mock_design_loader):
     galaxy = MockGalaxy()
     galaxy._global_hex_planets[hex_coord] = [planet]
 
-    session = MockSession(galaxy=galaxy, empire=empire)
+    session = MockSession(galaxy=galaxy, empire=empire, registries=mock_registries)
     on_close = MagicMock()
 
     bq_screen = BuildQueueScreen(

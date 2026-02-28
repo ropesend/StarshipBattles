@@ -15,6 +15,7 @@ from unittest.mock import MagicMock
 
 from game.simulation.entities.ship import Ship
 from game.ui.screens.builder.right_panel import BuilderRightPanel
+from game.ui.services.vehicle_class_service import VehicleClassService
 
 
 class TestUIDynamicUpdate:
@@ -34,6 +35,9 @@ class TestUIDynamicUpdate:
         builder.theme_manager.get_available_themes.return_value = ["Federation"]
         self.builder = builder
 
+        # PROJ-211: Create VehicleClassService for DI
+        self.vehicle_class_service = VehicleClassService(fresh_registries)
+
         yield
 
         pygame.quit()
@@ -42,7 +46,11 @@ class TestUIDynamicUpdate:
         """Adding a resource triggers a UI rebuild to show the new row."""
         # Create panel with NO resources
         self.ship.resources.reset_stats()
-        panel = BuilderRightPanel(self.builder, self.manager, pygame.Rect(0, 0, 500, 800))
+        # PROJ-211: Pass VehicleClassService for DI
+        panel = BuilderRightPanel(
+            self.builder, self.manager, pygame.Rect(0, 0, 500, 800),
+            vehicle_class_service=self.vehicle_class_service
+        )
 
         # Confirm no fuel rows initially
         assert 'max_fuel' not in panel.rows_map

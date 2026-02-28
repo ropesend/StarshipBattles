@@ -4,6 +4,7 @@ import pygame
 import pygame_gui
 
 from game.simulation.entities.ship import Ship
+from game.ui.services.vehicle_class_service import VehicleClassService
 
 
 class TestBug04Display:
@@ -29,12 +30,13 @@ class TestBug04Display:
 
         return builder
 
-    def test_stats_rebuild_leaves_hashes(self, mock_builder):
+    def test_stats_rebuild_leaves_hashes(self, mock_builder, mock_registries):
         """
         Reproduce BUG-04: When `rebuild_stats` is called (due to new resource keys),
         the stats display remains at "--" because update is not called.
 
         PROJ-80: Stats logic now delegated to DesignStatsPanel.needs_rebuild().
+        PROJ-211: Updated to pass VehicleClassService for DI.
         """
         # All patches applied inside the test to avoid circular import at decorator time
         # The circular import chain is: ui.builder -> game.ui -> builder_screen -> ui.builder
@@ -66,7 +68,9 @@ class TestBug04Display:
             row_mock.key = "power"  # Pretend we always have power
             mock_get_inv.return_value = [row_mock]
 
-            panel = BuilderRightPanel(mock_builder, manager, rect)
+            # PROJ-211: Create VehicleClassService for DI
+            vehicle_class_service = VehicleClassService(mock_registries)
+            panel = BuilderRightPanel(mock_builder, manager, rect, vehicle_class_service=vehicle_class_service)
 
             # Let's spy on update_stats_display
             with patch.object(panel, 'update_stats_display') as spy_update:

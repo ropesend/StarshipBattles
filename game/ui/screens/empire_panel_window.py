@@ -15,6 +15,7 @@ from game.core.constants import PLANET_RESOURCES
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
     from game.core.protocols import IEmpire
+    from game.core.registry import GameRegistries
 from game.core.paths import Paths
 from game.strategy.engine.empire_economy_calculator import EmpireEconomyCalculator
 from game.ui.panels.empire_treasury_panel import EmpireTreasuryPanel, load_resource_icons
@@ -53,7 +54,8 @@ class EmpirePanelWindow(UIWindow):
         rect: pygame.Rect,
         manager: pygame_gui.UIManager,
         empire: 'IEmpire',
-        on_close_callback: Optional[Callable[[], None]] = None
+        on_close_callback: Optional[Callable[[], None]] = None,
+        registries: 'GameRegistries' = None
     ):
         """
         Create empire panel window.
@@ -63,6 +65,7 @@ class EmpirePanelWindow(UIWindow):
             manager: pygame_gui UIManager
             empire: Empire object with race_config, resource_pool, etc.
             on_close_callback: Optional callback when window closes
+            registries: GameRegistries for DI (required)
         """
         super().__init__(
             rect,
@@ -73,6 +76,7 @@ class EmpirePanelWindow(UIWindow):
 
         self.empire: 'IEmpire' = empire
         self.on_close_callback = on_close_callback
+        self._registries = registries  # PROJ-211: Injected registries
 
         # Tab state
         self.tab_buttons: List[UIButton] = []
@@ -182,15 +186,7 @@ class EmpirePanelWindow(UIWindow):
 
     def _build_treasury_tab(self, panel: UIPanel):
         """Build Treasury tab content using EmpireTreasuryPanel."""
-        from game.core.registry import get_default_registry_provider, GameRegistries
-        provider = get_default_registry_provider()
-        registries = GameRegistries(
-            components=provider.get_components(),
-            modifiers=provider.get_modifiers(),
-            vehicle_classes=provider.get_vehicle_classes(),
-            resources=provider.get_resources(),
-        )
-        calculator = EmpireEconomyCalculator(registries=registries)
+        calculator = EmpireEconomyCalculator(registries=self._registries)
         snapshot = calculator.calculate(self.empire)
         self._treasury_panel = EmpireTreasuryPanel(
             panel,

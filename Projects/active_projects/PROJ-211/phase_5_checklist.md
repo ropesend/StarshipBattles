@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** In Progress
 **Objective:** Fix remaining UI screen violations, clean up docstrings, remove all fallbacks
 **Priority:** Low - Display-only code + test fixture updates
 **Risk:** Medium - Test fixture updates affect ~200 tests
@@ -19,34 +19,37 @@
 **Files:** `game/ui/panels/planet_report_panel.py`
 **Tests:** `pytest tests/unit/ui/panels/`
 
-- [ ] Add `registries: Optional[GameRegistries] = None` parameter
-- [ ] Update callers (strategy detail panel, build queue, planets list) to pass registries
-- [ ] Remove fallback once all callers provide registries
-- [ ] Verify: all tests pass
+- [x] Add `registries: GameRegistries` parameter (now required)
+- [x] Update callers (strategy detail panel, build queue, planets list) to pass registries
+- [x] Remove fallback - no `get_default_registry_provider()` calls
+- [x] Update test fixtures to pass registries
+- [x] Verify: all tests pass
 
 ### Task 5.2: Fix EmpirePanelWindow [DI-UI-006]
 **Files:** `game/ui/screens/empire_panel_window.py`
 **Tests:** `pytest tests/unit/ui/screens/`
 
-- [ ] Add `registries` parameter to `__init__()`
-- [ ] Use stored registries in `_build_treasury_tab()` instead of inline resolution
-- [ ] Update StrategyScreen to pass registries when opening the panel
-- [ ] Remove `get_default_registry_provider` import
-- [ ] Verify: all tests pass
+- [x] Add `registries` parameter to `__init__()`
+- [x] Use stored registries in `_build_treasury_tab()` instead of inline resolution
+- [x] Update StrategyScreen to pass registries when opening the panel
+- [x] Remove `get_default_registry_provider` import
+- [x] Verify: all tests pass
 
 ### Task 5.3: Fix builder sub-panels [DI-UI-007, DI-UI-008, AR-013]
 **Files:** `game/ui/screens/builder/schematic_view.py`, `game/ui/screens/builder/right_panel.py`
 **Tests:** `pytest tests/unit/ui/screens/builder/`
 
-- [ ] Ensure DesignWorkshopScreen passes VehicleClassService to both sub-panels
-- [ ] Remove fallback to `get_default_registry_provider()` in both constructors
-- [ ] Verify: all tests pass
+- [x] Ensure DesignWorkshopScreen passes VehicleClassService to both sub-panels
+- [x] Remove fallback to `get_default_registry_provider()` in both constructors
+- [x] Add IRegistryProvider methods to GameRegistries (allows direct use as provider)
+- [x] Update test fixtures to pass VehicleClassService
+- [x] Verify: all tests pass
 
 ### Task 5.4: Update empire_economy_calculator docstring [DI-S-006]
 **Files:** `game/strategy/engine/empire_economy_calculator.py`
 
-- [ ] Update docstring "Usage" example to show proper DI from session context
-- [ ] Remove example calling `get_default_registry_provider()` directly
+- [x] Docstring already shows proper DI from session context (done in Phase 4)
+- [x] No `get_default_registry_provider()` calls in file
 
 ### Task 5.5: Update test fixtures to inject registries (MOVED FROM PHASE 2)
 **Files:** Test files using ShipInstance.create() / from_dict() without registries

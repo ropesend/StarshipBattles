@@ -2,6 +2,7 @@
 Tests for Builder UI synchronization with Ship state.
 
 PROJ-38: Migrated to use fresh_registries fixture for cleaner test setup.
+PROJ-211: Updated to pass VehicleClassService to BuilderRightPanel.
 """
 import pytest
 import pygame
@@ -9,6 +10,7 @@ import pygame_gui
 from unittest.mock import MagicMock, patch
 
 from game.simulation.entities.ship import Ship
+from game.ui.services.vehicle_class_service import VehicleClassService
 
 
 class TestBuilderUISync:
@@ -56,11 +58,17 @@ class TestBuilderUISync:
         # Mock Theme Manager
         mock_builder.theme_manager.get_available_themes.return_value = ["Federation", "Klingon"]
 
+        # PROJ-211: Create VehicleClassService for DI
+        vehicle_class_service = VehicleClassService(fresh_registries)
+
         # Mock image loading to avoid file IO errors during refresh_controls -> update_portrait_image
         with patch('pygame.image.load'):
             with patch('game.ui.screens.builder.right_panel.BuilderRightPanel.update_portrait_image'):
                 from game.ui.screens.builder.right_panel import BuilderRightPanel
-                panel = BuilderRightPanel(mock_builder, manager, pygame.Rect(0, 0, 300, 600))
+                panel = BuilderRightPanel(
+                    mock_builder, manager, pygame.Rect(0, 0, 300, 600),
+                    vehicle_class_service=vehicle_class_service
+                )
 
         # Store for use in tests
         self.manager = manager

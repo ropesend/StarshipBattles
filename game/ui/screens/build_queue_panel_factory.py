@@ -163,7 +163,9 @@ class BuildQueuePanelFactory:
                 container=container,
                 portrait_surface=None,  # Portrait handled separately
                 show_complexes=False,
-                production_rates=compute_planet_production(self.build_context)
+                production_rates=compute_planet_production(
+                    self.build_context, self.session.registries
+                )
             )
             return planet_report, planet_report
         else:

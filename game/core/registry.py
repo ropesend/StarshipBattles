@@ -59,6 +59,9 @@ class GameRegistries:
     PROJ-38: This container enables Dependency Injection by bundling all
     registries together as an immutable package that can be passed to consumers.
 
+    PROJ-211: Added IRegistryProvider methods so GameRegistries can be passed
+    directly to services expecting a registry provider.
+
     The container itself is frozen (immutable), but the dictionaries inside
     can still be modified. This ensures registry references cannot be swapped
     after initialization while still allowing data to be loaded.
@@ -73,6 +76,23 @@ class GameRegistries:
     modifiers: Dict[str, Any]
     vehicle_classes: Dict[str, Any]
     resources: Dict[str, Any]
+
+    # PROJ-211: IRegistryProvider interface methods
+    def get_components(self) -> Dict[str, Any]:
+        """Get the component registry dictionary."""
+        return self.components
+
+    def get_modifiers(self) -> Dict[str, Any]:
+        """Get the modifier registry dictionary."""
+        return self.modifiers
+
+    def get_vehicle_classes(self) -> Dict[str, Any]:
+        """Get the vehicle classes dictionary."""
+        return self.vehicle_classes
+
+    def get_resources(self) -> Dict[str, Any]:
+        """Get the resources registry dictionary."""
+        return self.resources
 
 
 class RegistryManager(metaclass=SingletonMeta):

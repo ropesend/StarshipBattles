@@ -24,10 +24,12 @@ class MockGalaxy:
 
 
 class MockSession:
-    def __init__(self, galaxy=None, empire=None):
+    def __init__(self, galaxy=None, empire=None, registries=None):
         self.savegame_path = "test_savegame"
         self.current_empire = empire or Empire(1, "Test Empire", (255, 0, 0))
         self.galaxy = galaxy or MockGalaxy()
+        # PROJ-211: Add registries for DI
+        self.registries = registries
 
     def handle_command(self, cmd):
         """Mock command handler."""
@@ -165,11 +167,12 @@ def test_bottom_bar_exists(build_queue_screen):
     assert build_queue_screen.panels.btn_close is not None
 
 
-def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_loader):
+def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_loader, mock_registries):
     """Test that BuildQueueScreen handles None savegame_path without crashing.
 
     PROJ-40: Updated to use DI injection for dependencies.
     PROJ-109: Updated to provide required hex_coord, galaxy, empire parameters.
+    PROJ-211: Updated to pass registries for DI.
     """
     pygame.init()
     screen = pygame.display.set_mode((1024, 768))
@@ -202,8 +205,8 @@ def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_lo
     galaxy = MockGalaxy()
     galaxy._global_hex_planets[hex_coord] = [planet]
 
-    # Create session with None savegame_path
-    session = MockSession(galaxy=galaxy, empire=empire)
+    # Create session with None savegame_path and registries
+    session = MockSession(galaxy=galaxy, empire=empire, registries=mock_registries)
     session.savegame_path = None
 
     # Should not crash - pass injected dependencies
@@ -259,7 +262,7 @@ def test_drag_item_uses_1_turn_default(build_queue_screen):
     assert turns == 1
 
 
-def test_add_ship_to_queue_with_shipyard(mock_design_library, mock_design_loader):
+def test_add_ship_to_queue_with_shipyard(mock_design_library, mock_design_loader, mock_registries):
     """Test that ships can be added when planet has a shipyard facility.
 
     Regression test for BUG-24: Ships couldn't be added to build queue
@@ -267,6 +270,7 @@ def test_add_ship_to_queue_with_shipyard(mock_design_library, mock_design_loader
 
     PROJ-109: Test creates screen with shipyard already present so queue source
     for ships is created at initialization time.
+    PROJ-211: Updated to pass registries for DI.
     """
     import pygame
     import pygame_gui
@@ -318,7 +322,7 @@ def test_add_ship_to_queue_with_shipyard(mock_design_library, mock_design_loader
     galaxy = MockGalaxy()
     galaxy._global_hex_planets[hex_coord] = [planet]
 
-    session = MockSession(galaxy=galaxy, empire=empire)
+    session = MockSession(galaxy=galaxy, empire=empire, registries=mock_registries)
 
     bq_screen = BuildQueueScreen(
         manager,

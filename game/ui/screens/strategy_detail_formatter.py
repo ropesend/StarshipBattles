@@ -148,7 +148,7 @@ class StrategyDetailFormatter:
         Returns:
             Dict mapping resource name to production rate per turn
         """
-        return compute_planet_production(planet)
+        return compute_planet_production(planet, self.scene.session.registries)
 
     # =========================================================================
     # Raw Data Popup

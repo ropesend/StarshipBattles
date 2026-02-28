@@ -458,14 +458,14 @@ class TestPanelKill:
 class TestComputePlanetProduction:
     """Tests for compute_planet_production function."""
 
-    def test_unowned_planet_returns_empty(self):
+    def test_unowned_planet_returns_empty(self, mock_registries):
         """Unowned planet returns empty dict."""
         from game.ui.panels.planet_report_panel import compute_planet_production
 
         planet = _make_mock_planet()
         planet.owner_id = None
 
-        result = compute_planet_production(planet)
+        result = compute_planet_production(planet, mock_registries)
 
         assert result == {}
 
@@ -475,7 +475,7 @@ class TestComputePlanetProduction:
 
         assert callable(compute_planet_production)
 
-    def test_function_accepts_planet(self):
+    def test_function_accepts_planet(self, mock_registries):
         """compute_planet_production accepts planet argument."""
         from game.ui.panels.planet_report_panel import compute_planet_production
 
@@ -483,7 +483,7 @@ class TestComputePlanetProduction:
         planet.owner_id = None
 
         # Should not raise
-        result = compute_planet_production(planet)
+        result = compute_planet_production(planet, mock_registries)
 
         assert isinstance(result, dict)
 

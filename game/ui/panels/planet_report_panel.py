@@ -16,6 +16,7 @@ from game.ui.fonts import get_font
 
 if TYPE_CHECKING:
     from game.core.protocols import IPlanet, IFacility
+    from game.core.registry import GameRegistries
 from game.strategy.services.component_inspector import get_component_abilities
 from game.ui.panels.strategy_widgets import AtmosphereGraph
 from game.ui.panels.build_queue_portraits import RESOURCE_PORTRAIT_FILES, RESOURCE_FALLBACK_COLORS
@@ -454,7 +455,10 @@ class PlanetReportPanel:
             self.panel.kill()
 
 
-def compute_planet_production(planet: 'IPlanet') -> Dict[str, float]:
+def compute_planet_production(
+    planet: 'IPlanet',
+    registries: 'GameRegistries'
+) -> Dict[str, float]:
     """Compute per-resource production rates for a colony planet.
 
     Scans the planet's facilities for ResourceHarvester abilities and calculates
@@ -465,21 +469,13 @@ def compute_planet_production(planet: 'IPlanet') -> Dict[str, float]:
 
     Args:
         planet: Planet object with facilities and resources.
+        registries: GameRegistries for component lookups (required).
 
     Returns:
         Dict mapping resource name to production rate per turn.
     """
     if planet.owner_id is None:
         return {}
-
-    from game.core.registry import get_default_registry_provider, GameRegistries
-    provider = get_default_registry_provider()
-    registries = GameRegistries(
-        components=provider.get_components(),
-        modifiers=provider.get_modifiers(),
-        vehicle_classes=provider.get_vehicle_classes(),
-        resources=provider.get_resources(),
-    )
 
     rates: Dict[str, float] = {}
     facility: 'IFacility'

@@ -119,6 +119,7 @@ class StrategyWindowManager:
             on_close_callback=self._on_planet_list_closed,
             asset_resolver=self._asset_resolver,
             empires=self.scene.session.empires,  # PROJ-198: Pass empires for owner name lookup
+            registries=self.scene.session.registries,  # PROJ-211: Pass registries for DI
         )
 
     def _on_planet_list_closed(self) -> None:
@@ -254,6 +255,7 @@ class StrategyWindowManager:
             self.manager,
             empire,
             on_close_callback=self._on_empire_panel_closed,
+            registries=self.scene.session.registries,  # PROJ-211: Pass registries for DI
         )
 
     def _on_empire_panel_closed(self) -> None:
