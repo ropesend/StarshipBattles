@@ -256,6 +256,86 @@ class TestSaveGameServiceUserFriendlyErrors:
         assert "Internal processing error" not in message, f"Should not expose internal error details: {message}"
 
 
+class TestSaveGameServicePathResolution:
+    """Tests for relative path resolution (TC-006)."""
+
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
+        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
+        tmpdir = tempfile.mkdtemp()
+        saves_dir = os.path.join(tmpdir, "saves")
+        os.makedirs(saves_dir, exist_ok=True)
+        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
+            yield tmpdir, saves_dir
+        shutil.rmtree(tmpdir)
+
+    def test_load_resolves_relative_path_from_saves_dir(self, setup_tmpdir):
+        """TC-006: Passing relative path resolves via SAVES_DIR."""
+        tmpdir, saves_dir = setup_tmpdir
+
+        # Create a valid save at SAVES_DIR/my_save
+        save_name = "my_save"
+        save_path = os.path.join(saves_dir, save_name)
+        os.makedirs(os.path.join(save_path, "turns"), exist_ok=True)
+
+        # Valid metadata and game state
+        metadata = {
+            "version": "2.0.0",
+            "timestamp": "2026-01-24T12:00:00",
+            "player_name": "Test",
+            "latest_turn_number": 1
+        }
+        save_json(os.path.join(save_path, "save_metadata.json"), metadata)
+
+        game_state = {
+            "turn_number": 1,
+            "config": GameConfig().to_dict(),
+            "galaxy": {"systems": {}, "warp_lanes": [], "radius": 4000},
+            "empires": [],
+            "human_player_ids": []
+        }
+        save_json(os.path.join(save_path, "turns", "turn_1.json"), game_state)
+
+        # Load using relative path (just the save name)
+        result, message = SaveGameService.load_game(save_name)
+
+        # Should succeed because it resolved "my_save" to SAVES_DIR/my_save
+        assert result is not None, f"Expected load to succeed with relative path, got: {message}"
+
+
+class TestSaveGameServiceHelperErrorHandling:
+    """Tests for helper method error handling (TC-007).
+
+    After PROJ-209 Phase 1 decomposition, the redundant outer exception
+    handler was removed (DS-010). Each helper now handles its own errors.
+    These tests verify the helper methods properly handle all error cases.
+    """
+
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
+        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
+        tmpdir = tempfile.mkdtemp()
+        saves_dir = os.path.join(tmpdir, "saves")
+        os.makedirs(saves_dir, exist_ok=True)
+        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
+            yield tmpdir, saves_dir
+        shutil.rmtree(tmpdir)
+
+    def test_load_json_safe_handles_permission_error(self, setup_tmpdir):
+        """_load_json_safe returns error tuple for PermissionError."""
+        tmpdir, _ = setup_tmpdir
+        test_file = os.path.join(tmpdir, "test.json")
+
+        # Mock load_json_required to raise PermissionError
+        with patch('game.strategy.systems.save_game_service.load_json_required',
+                   side_effect=PermissionError("Permission denied")):
+            result, error = SaveGameService._load_json_safe(test_file, "test")
+
+        assert result is None
+        assert error is not None
+        assert "permission" in error.lower()
+
+
 class TestSaveGameServiceExceptionHandling:
     """Tests for PROJ-45: Proper exception handling with PersistenceException."""
 

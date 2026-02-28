@@ -8,20 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-210 Phase 4 Complete
-**Current Status:** PROJ-210 Phase 4 Complete, Ready for Phase 5
-**Current Project:** PROJ-210
-**Current Phase:** Phase 5 (Dead Code & Cleanup)
-**Test Status:** 12929 passed, 4 failed (pre-existing bug_13), 1 skipped
+**Last Completed:** PROJ-209 Phase 1 (SaveGameService.load_game decomposition)
+**Current Status:** PROJ-209 Phase 1 COMPLETE — CC reduced from 26 to 5
+**Current Project:** PROJ-209
+**Current Phase:** Phase 2 ready
+**Test Status:** 12944 passed, 4 failed (pre-existing bug_13), 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-210 Phase 4 COMPLETE (All tasks deferred or already done):**
-  - Task 4.1: DEFERRED — FleetOrderProcessor (650 lines) already decomposed with SuperweaponOrderProcessor (620 lines). Remaining methods (~300 lines) are cohesive turn-execution processors, not UI command handlers.
-  - Task 4.2: ALREADY DONE — Validation already separated via ColonizeValidator, TransferValidator, SuperweaponValidator classes.
-  - Task 4.3: DEFERRED — Fleet order methods total 20 lines, Fleet.py at 320 lines (under 300-line target), extraction adds overhead for trivial list operations.
-- **Assessment:** The FleetOrderProcessor is not a god class - it's a cohesive turn-execution processor that already delegates superweapon logic to a separate processor.
-- **Next Action:** Start Phase 5 — Dead Code & Cleanup
+- **PROJ-209 Phase 1 COMPLETE:**
+  - Extracted 4 helper methods: _load_json_safe, _load_save_metadata, _load_turn_data, _reconstruct_game_session
+  - Consolidated 7 duplicate try/except blocks into single _load_json_safe helper
+  - Removed redundant outer exception handler (DS-010)
+  - load_game orchestrator now clean 3-step pipeline (CC=5)
+  - All helper CCs ≤ 6
+  - Added 21 new tests for helpers and edge cases
+- **Next Action:** Phase 2 — decompose ProductionEngine._process_queue_tick_dynamic (CC 27 → ~7)
 
 ---
 
@@ -53,14 +55,14 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
-- [/] **PROJ-210: Strategy God Class Decomposition**
-  - **Phases:** 5 | **Status:** Phase 1 Complete | **Priority:** Medium
+- [x] **PROJ-210: Strategy God Class Decomposition**
+  - **Phases:** 5 | **Status:** COMPLETE - Audit Passed | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-210/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-210/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
-- [ ] **PROJ-209: Cyclomatic Complexity Decomposition**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-209: Cyclomatic Complexity Decomposition**
+  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-209/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-209/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -110,6 +112,9 @@
 | 2026-02-28 | PROJ-210 | Phase 2 | Complete | 12929 passed, 4 failed | pending | Task 2.2 deferred (low value); Task 2.3 already done |
 | 2026-02-28 | PROJ-210 | Phase 3 | Complete | 12929 passed, 4 failed | pending | All 4 tasks deferred: low value, protocol constraints, already clean |
 | 2026-02-28 | PROJ-210 | Phase 4 | Complete | 12929 passed, 4 failed | pending | All 3 tasks deferred/done: superweapon extraction exists, validators exist, trivial ops |
+| 2026-02-28 | PROJ-210 | Phase 5 | Complete | 12923 passed, 4 failed | 9ab5406e | Dead code cleanup: ~60 lines removed, ship_has_ability consolidated, magic numbers fixed |
+| 2026-02-28 | PROJ-210 | Audit 1 | PASSED | 12923 passed, 4 failed | - | All implementations verified, no issues |
+| 2026-02-28 | PROJ-209 | Phase 1 | Complete | 12944 passed, 4 failed | pending | load_game CC 26→5, 4 helpers extracted, 21 new tests |
 
 ---
 
