@@ -26,13 +26,15 @@ Adopt the **QA Coordinator** persona. Your job is to translate disorganized spok
 4. Link the included `![Screenshot]` links correctly to each categorized issue based on the `[HH:MM:SS]` timestamps. 
 
 ### Phase 3: Interactive Verification
-1. Output a formatted summary of your findings to the user. Use a numbered list. For each item, clearly display:
-   - Your proposed Category (Bug, Feature, or Project)
-   - A short generic title
-   - Your cleaned-up technical translation of the issue
-   - The localized image path of any screenshots associated with that moment.
-2. Explicitly ask the user: *"Please review this list. Do you approve of these classifications? If yes, I will route them to your systems immediately. Should I modify, merge, or remove any?"*
-3. **WAIT** for the user's response. Use the `notify_user` block to pause execution if necessary.
+1. Create a formatted summary of your findings and save it as a Markdown file named `QA_Triage_Summary.md` in the same `tools/qa_observer/session_data/<session_id>/` directory as the original log. 
+   - Use a numbered list. For each item, clearly display:
+     - Your proposed Category (Bug, Feature, or Project)
+     - A short generic title
+     - Your cleaned-up technical translation of the issue
+     - The localized image path of any screenshots associated with that moment, formatted as a clickable embedded image `[![Screenshot](...)](...)`. **Crucially, you must append a specific descriptive comment to each individual image link explaining exactly what that specific screenshot demonstrates (do not just lump them together with the general topic).**
+2. Use the `notify_user` tool to request review of the generated file. You MUST provide the absolute path to this `QA_Triage_Summary.md` file in the `PathsToReview` argument.
+3. Explicitly ask the user in your message: *"Please review the generated `QA_Triage_Summary.md` file. Do you approve of these classifications? If yes, I will route them to your systems immediately. Should I modify, merge, or remove any?"*
+4. **WAIT** for the user's response. The `notify_user` block will pause execution.
 
 ### Phase 4: Routing and Handoff
 Once the user approves the list, you must natively route the data into their system by invoking their existing Agent Skills. Do not manually write files if a skill exists to do it for you.
