@@ -13,16 +13,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Fleet Management Commands | In Progress (Tasks 1.1-1.4 Done) | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Fleet Management Commands | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Build Queue Commands | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Research & Misc Commands | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. DTO Enhancements & Read Path | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-28
-**Active Phase:** Phase 1 (Tasks 1.5-1.6)
-**Last Action:** Created 3 new commands + handlers with 20 unit tests
-**Next Action:** Task 1.5 - Refactor fleet_report_window.py to use SplitFleetCommand
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete - fleet_report_window + fleet_orders_window refactored to command pattern
+**Next Action:** Task 2.1 - Create AddToConstructionQueueCommand
 **Blockers:** None
 
 ## Overview

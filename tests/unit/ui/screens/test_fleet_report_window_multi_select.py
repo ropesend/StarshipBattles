@@ -208,14 +208,20 @@ class TestMultiSelectBehavior:
 
 
 class TestShipRemoval:
-    """Test ship removal to new fleet functionality."""
+    """Test ship removal to new fleet functionality.
+
+    PROJ-208: Tests refactored to verify command callback dispatch pattern.
+    The window now calls split_fleet_callback(fleet_id, ship_instance_ids)
+    instead of directly manipulating fleets.
+    """
 
     @pytest.fixture
     def window_with_ships_and_empire(self):
-        """Create window with ships and empire for removal testing."""
+        """Create window with ships, empire, and command callback for removal testing."""
         ships = [create_mock_ship(f"ship-{i}", f"Ship {i}", i + 1) for i in range(5)]
         fleet = create_mock_fleet(ships)
         empire = create_mock_empire()
+        split_fleet_callback = Mock()
 
         with patch('pygame.display.get_surface') as mock_display:
             mock_display.return_value = Mock(get_size=Mock(return_value=(1920, 1080)))
@@ -229,7 +235,10 @@ class TestShipRemoval:
                             rect = pygame.Rect(0, 0, 1600, 900)
                             manager = Mock()
 
-                            window = FleetReportWindow(rect, manager, fleet, empire=empire)
+                            window = FleetReportWindow(
+                                rect, manager, fleet, empire=empire,
+                                split_fleet_callback=split_fleet_callback
+                            )
                             window._update_detail_panel = Mock()
                             window.refresh_list = Mock()
                             window.view_model = Mock()
@@ -240,79 +249,57 @@ class TestShipRemoval:
                             window.sidebar.update_remove_button = Mock()
                             window.sidebar.update_summary = Mock()
 
-                            # Mock the _create_fleet_for_ships to avoid real Fleet import issues
-                            original_create_fleet = window._create_fleet_for_ships
+                            return window, fleet, empire, ships, split_fleet_callback
 
-                            def mock_create_fleet(ships_list):
-                                mock_new_fleet = Mock()
-                                mock_new_fleet.ships = list(ships_list)
-                                mock_new_fleet.location = fleet.location
-                                mock_new_fleet.owner_id = fleet.owner_id
-                                mock_new_fleet.id = empire.get_next_fleet_id()
-                                return mock_new_fleet
-
-                            window._create_fleet_for_ships = mock_create_fleet
-
-                            return window, fleet, empire, ships
-
-    def test_remove_creates_new_fleet_at_same_location(self, window_with_ships_and_empire):
-        """Removing ships creates a new fleet at the source fleet's location."""
-        window, fleet, empire, ships = window_with_ships_and_empire
+    def test_remove_dispatches_command_with_correct_fleet_id(self, window_with_ships_and_empire):
+        """Removing ships dispatches SplitFleetCommand with correct fleet_id."""
+        window, fleet, empire, ships, callback = window_with_ships_and_empire
 
         # Set selection using the selection strategy
         window.selection._selected = {1, 2}
 
         window._on_remove_selected_ships()
 
-        # New fleet should be added to empire
-        assert empire.add_fleet.called
-        new_fleet = empire.add_fleet.call_args[0][0]
-        assert new_fleet.location == fleet.location
+        # Command callback should be called with fleet ID
+        callback.assert_called_once()
+        call_args = callback.call_args[0]
+        assert call_args[0] == fleet.id
 
-    def test_removed_ships_not_in_source_fleet(self, window_with_ships_and_empire):
-        """Removed ships are no longer in the source fleet."""
-        window, fleet, empire, ships = window_with_ships_and_empire
+    def test_remove_dispatches_command_with_selected_ship_ids(self, window_with_ships_and_empire):
+        """Removing ships dispatches command with correct ship_instance_ids."""
+        window, fleet, empire, ships, callback = window_with_ships_and_empire
 
         # Set selection using the selection strategy
-        window.selection._selected = {0, 1}
-        original_ships = list(ships)
+        window.selection._selected = {0, 2}
 
         window._on_remove_selected_ships()
 
-        # Ships should have been removed from source fleet
-        assert fleet.remove_ship.call_count == 2
-        assert fleet.remove_ship.call_args_list[0][0][0] == original_ships[0]
-        assert fleet.remove_ship.call_args_list[1][0][0] == original_ships[1]
+        # Command callback should be called with ship instance IDs
+        callback.assert_called_once()
+        call_args = callback.call_args[0]
+        ship_ids = call_args[1]
+        assert ships[0].instance_id in ship_ids
+        assert ships[2].instance_id in ship_ids
+        assert len(ship_ids) == 2
 
-    def test_removed_ships_in_new_fleet(self, window_with_ships_and_empire):
-        """Removed ships are added to the new fleet."""
-        window, fleet, empire, ships = window_with_ships_and_empire
+    def test_remove_dispatches_single_ship_removal(self, window_with_ships_and_empire):
+        """Single ship selection dispatches command correctly."""
+        window, fleet, empire, ships, callback = window_with_ships_and_empire
 
         # Set selection using the selection strategy
-        window.selection._selected = {2, 3}
+        window.selection._selected = {3}
 
         window._on_remove_selected_ships()
 
-        # New fleet should contain the removed ships
-        new_fleet = empire.add_fleet.call_args[0][0]
-        assert ships[2] in new_fleet.ships
-        assert ships[3] in new_fleet.ships
-
-    def test_new_fleet_added_to_empire(self, window_with_ships_and_empire):
-        """New fleet is added to the empire's fleet list."""
-        window, fleet, empire, ships = window_with_ships_and_empire
-
-        # Set selection using the selection strategy
-        window.selection._selected = {0}
-
-        window._on_remove_selected_ships()
-
-        assert empire.add_fleet.called
-        assert len(empire.fleets) == 1
+        # Command callback should be called with single ship
+        callback.assert_called_once()
+        call_args = callback.call_args[0]
+        ship_ids = call_args[1]
+        assert ship_ids == [ships[3].instance_id]
 
     def test_selection_cleared_after_removal(self, window_with_ships_and_empire):
         """Selection is cleared after removal operation."""
-        window, fleet, empire, ships = window_with_ships_and_empire
+        window, fleet, empire, ships, callback = window_with_ships_and_empire
 
         # Set selection using the selection strategy
         window.selection._selected = {0, 1, 2}
@@ -323,7 +310,7 @@ class TestShipRemoval:
 
     def test_remove_does_nothing_without_empire(self, window_with_ships_and_empire):
         """Removal operation does nothing if no empire reference."""
-        window, fleet, empire, ships = window_with_ships_and_empire
+        window, fleet, empire, ships, callback = window_with_ships_and_empire
 
         window.empire = None
         # Set selection using the selection strategy
@@ -331,24 +318,37 @@ class TestShipRemoval:
 
         window._on_remove_selected_ships()
 
-        # No fleet should be added
-        assert not empire.add_fleet.called
+        # Callback should not be called
+        callback.assert_not_called()
+
+    def test_remove_does_nothing_without_callback(self, window_with_ships_and_empire):
+        """Removal operation does nothing if no callback provided."""
+        window, fleet, empire, ships, callback = window_with_ships_and_empire
+
+        window._split_fleet_callback = None
+        # Set selection using the selection strategy
+        window.selection._selected = {0, 1}
+
+        window._on_remove_selected_ships()
+
+        # Original callback should not be called
+        callback.assert_not_called()
 
     def test_remove_does_nothing_with_empty_selection(self, window_with_ships_and_empire):
         """Removal operation does nothing if no ships selected."""
-        window, fleet, empire, ships = window_with_ships_and_empire
+        window, fleet, empire, ships, callback = window_with_ships_and_empire
 
         # Selection is already empty by default
         window.selection.clear()
 
         window._on_remove_selected_ships()
 
-        # No fleet should be added
-        assert not empire.add_fleet.called
+        # Callback should not be called
+        callback.assert_not_called()
 
     def test_ui_refreshed_after_removal(self, window_with_ships_and_empire):
         """UI is properly refreshed after removal."""
-        window, fleet, empire, ships = window_with_ships_and_empire
+        window, fleet, empire, ships, callback = window_with_ships_and_empire
 
         # Set selection using the selection strategy
         window.selection._selected = {0}

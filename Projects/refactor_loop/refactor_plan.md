@@ -8,23 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-208 Phase 1 Tasks 1.1-1.4 (command infrastructure)
-**Current Status:** PROJ-208 Phase 1 In Progress - UI refactoring remaining
+**Last Completed:** PROJ-208 Phase 1 COMPLETE
+**Current Status:** PROJ-208 Phase 2 Ready
 **Current Project:** PROJ-208
-**Current Phase:** Phase 1 (Tasks 1.5-1.6)
-**Test Status:** 12904 passed, 1 skipped (4 pre-existing bug_13 failures)
+**Current Phase:** Phase 2
+**Test Status:** 12902 passed, 1 skipped (4 pre-existing bug_13 failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-208 Phase 1 Command Infrastructure COMPLETE:**
-  - SplitFleetCommand + handler: splits ships into new fleet
-  - DeleteFleetOrderCommand + handler: removes order from queue, invalidates path if active
-  - ReorderFleetOrderCommand + handler: swaps order positions, invalidates path if active
-  - All handlers registered in create_default_registry()
-  - 20 new unit tests in test_command_handlers.py
-- **Next Actions (Tasks 1.5-1.6):**
-  - Task 1.5: Refactor fleet_report_window.py to use SplitFleetCommand
-  - Task 1.6: Refactor fleet_orders_window.py to use order commands
+- **PROJ-208 Phase 1 COMPLETE:**
+  - Task 1.5: fleet_report_window.py refactored - added split_fleet_callback, removed _create_fleet_for_ships, no more direct Fleet mutation
+  - Task 1.6: fleet_orders_window.py refactored - added delete_order_callback + reorder_order_callback, removed undo feature (command-level undo is future work), removed clear_orders fallback
+  - strategy_window_manager.py creates callback closures that dispatch commands via session.handle_command()
+  - Tests updated to verify callback dispatch pattern
+- **Next Actions (Phase 2):**
+  - Task 2.1: Create AddToConstructionQueueCommand
+  - Task 2.2: Create RemoveFromConstructionQueueCommand
+  - Task 2.3: Create ReorderConstructionQueueCommand
 - Note: 4 bug_13 tests fail due to missing asset files (pre-existing, unrelated)
 
 ---
@@ -100,7 +100,8 @@
 | 2026-02-28 | PROJ-211 | Phase 5 (5.5.1+5.6) | Complete | 12884 passed, 1 skipped | 3fd28e70 | FALLBACK REMOVED: ShipInstance + 18 test files updated |
 | 2026-02-28 | PROJ-211 | Phase 5 (5.7+5.8) | Complete | 12884 passed, 1 skipped | 7f1e8e25 | FleetCapabilityCalculator fallbacks REMOVED + 5 test files updated |
 | 2026-02-28 | PROJ-211 | Audit 1 | PASSED | 12884 passed, 1 skipped | - | All implementations verified, no issues |
-| 2026-02-28 | PROJ-208 | Phase 1 (1.1-1.4) | In Progress | 12904 passed, 1 skipped | pending | 3 commands + handlers + 20 tests |
+| 2026-02-28 | PROJ-208 | Phase 1 (1.1-1.4) | Complete | 12904 passed, 1 skipped | pending | 3 commands + handlers + 20 tests |
+| 2026-02-28 | PROJ-208 | Phase 1 (1.5-1.6) | Complete | 12902 passed, 1 skipped | pending | UI refactoring: fleet_report + fleet_orders windows |
 
 ---
 

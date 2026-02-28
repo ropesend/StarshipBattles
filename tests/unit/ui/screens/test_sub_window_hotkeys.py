@@ -65,15 +65,6 @@ class TestFleetOrdersWindowHotkeys:
         win = self._make_window(mapper)
         assert win._mapper is mapper
 
-    def test_ctrl_z_calls_undo(self, mapper):
-        """Ctrl+Z triggers undo_delete via InputMapper."""
-        win = self._make_window(mapper)
-        win.undo_delete = MagicMock()
-        # Simulate Ctrl+Z keydown
-        event = _keydown(pygame.K_z, mod=pygame.KMOD_LCTRL)
-        win._handle_keydown(event)
-        win.undo_delete.assert_called_once()
-
     def test_delete_calls_clear_confirmation(self, mapper):
         """Delete triggers show_clear_confirmation via InputMapper."""
         win = self._make_window(mapper)
@@ -85,20 +76,10 @@ class TestFleetOrdersWindowHotkeys:
     def test_no_mapper_ignores_hotkeys(self):
         """Without mapper, _handle_keydown does nothing."""
         win = self._make_window(None)
-        win.undo_delete = MagicMock()
         win.show_clear_confirmation = MagicMock()
-        event = _keydown(pygame.K_z, mod=pygame.KMOD_LCTRL)
+        event = _keydown(pygame.K_DELETE)
         win._handle_keydown(event)
-        win.undo_delete.assert_not_called()
         win.show_clear_confirmation.assert_not_called()
-
-    def test_undo_button_tooltip(self, mapper):
-        """btn_undo tooltip shows Ctrl+Z hint."""
-        win = self._make_window(mapper)
-        win._apply_tooltips()
-        # Check that set_tooltip was called with Ctrl+Z text
-        tooltip_text = win.btn_undo.set_tooltip.call_args[0][0]
-        assert "Ctrl+Z" in tooltip_text
 
     def test_clear_button_tooltip(self, mapper):
         """btn_clear tooltip shows Del hint."""

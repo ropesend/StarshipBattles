@@ -87,8 +87,8 @@ def test_clear_orders_uses_callback(manager, fleet):
     assert callback_calls[0] == 1  # fleet.id
 
 
-def test_clear_orders_fallback_without_callback(manager, fleet):
-    """Without callback, should fall back to direct fleet.clear_orders()."""
+def test_clear_orders_requires_callback(manager, fleet):
+    """Without callback, clear orders does nothing (PROJ-208: fallback removed)."""
     window = FleetOrdersWindow(
         pygame.Rect(0, 0, 400, 500), manager, fleet
         # No callback provided
@@ -107,8 +107,9 @@ def test_clear_orders_fallback_without_callback(manager, fleet):
 
     result = window.handle_global_event(mock_event)
 
-    assert result is True
-    assert len(fleet.orders) == 0  # Fleet orders cleared directly
+    # Without callback, event is not handled and orders remain
+    assert result is False
+    assert len(fleet.orders) == 1  # Orders NOT cleared - callback required
 
 
 if __name__ == "__main__":

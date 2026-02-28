@@ -5,7 +5,10 @@ PROJ-03: Fleet Report Window feature implementation.
 PROJ-44: Refactored to use FleetListViewModel, ColumnManager, and image scaling utilities.
 PROJ-173 Phase 1: Extracted FleetReportSidebar and FleetListRenderer for god class decomposition.
 PROJ-188 Phase 2: Migrated to VirtualTable + FleetDataSource + MultiSelect.
+PROJ-208 Phase 1: Refactored to use SplitFleetCommand via command pipeline.
 """
+from typing import Callable, Optional
+
 import pygame
 from pygame_gui.elements import UIWindow, UIPanel
 
@@ -15,6 +18,7 @@ from game.ui.components.table import VirtualTable, TableColumnManager, MultiSele
 from game.ui.screens.fleet_data_source import FleetDataSource, DEFAULT_FLEET_COLUMNS
 from game.ui.screens.fleet_report_sidebar import FleetReportSidebar
 from game.ui.panels.ship_detail_panel import ShipDetailPanel
+from game.strategy.engine.commands import SplitFleetCommand
 
 
 class FleetReportWindow(UIWindow):
@@ -25,7 +29,15 @@ class FleetReportWindow(UIWindow):
     - Individual ship details with damage (right panel)
     """
 
-    def __init__(self, rect, manager, fleet, empire=None, on_close_callback=None):
+    def __init__(
+        self,
+        rect,
+        manager,
+        fleet,
+        empire=None,
+        on_close_callback=None,
+        split_fleet_callback: Optional[Callable[[int, list], None]] = None
+    ):
         """
         Initialize the Fleet Report Window.
 
@@ -33,8 +45,10 @@ class FleetReportWindow(UIWindow):
             rect: Window position and size (pygame.Rect)
             manager: pygame_gui UIManager
             fleet: Fleet object to display
-            empire: Empire object for fleet management operations
+            empire: Empire object for fleet management operations (used for remove button visibility)
             on_close_callback: Function to call when window is closed
+            split_fleet_callback: Callback to dispatch SplitFleetCommand(fleet_id, ship_instance_ids).
+                When provided, ship removal goes through command pipeline.
         """
         super().__init__(
             rect=rect,
@@ -46,6 +60,7 @@ class FleetReportWindow(UIWindow):
         self.fleet = fleet
         self.empire = empire
         self.on_close_callback = on_close_callback
+        self._split_fleet_callback = split_fleet_callback
 
         # --- Layout Constants ---
         self.sidebar_width = 300  # Left panel for summary + filters
@@ -233,23 +248,25 @@ class FleetReportWindow(UIWindow):
         self.ship_detail_panel.update_ship(self.selected_ship)
 
     def _on_remove_ship(self, ship):
-        """Handle remove single ship from fleet via ShipDetailPanel callback."""
-        if not self.empire:
-            # No empire, just remove ship without creating new fleet
-            if self.fleet.remove_ship(ship):
-                self._post_removal_refresh()
+        """Handle remove single ship from fleet via ShipDetailPanel callback.
+
+        PROJ-208: Routes through SplitFleetCommand via command pipeline.
+        """
+        if not self.empire or not self._split_fleet_callback:
+            # No command callback - cannot split fleet
             return
 
-        # Create a new fleet with the removed ship
+        # Dispatch through command pipeline (handler creates new fleet)
         if ship in self.fleet.ships:
-            self.fleet.remove_ship(ship)
-            new_fleet = self._create_fleet_for_ships([ship])
-            self.empire.add_fleet(new_fleet)
+            self._split_fleet_callback(self.fleet.id, [ship.instance_id])
             self._post_removal_refresh()
 
     def _on_remove_selected_ships(self):
-        """Remove all selected ships and create a new fleet with them."""
-        if not self.empire:
+        """Remove all selected ships and create a new fleet with them.
+
+        PROJ-208: Routes through SplitFleetCommand via command pipeline.
+        """
+        if not self.empire or not self._split_fleet_callback:
             return
 
         selected_indices = self.selection.get_selected_indices()
@@ -264,26 +281,10 @@ class FleetReportWindow(UIWindow):
         if not ships_to_remove:
             return
 
-        # Remove ships from source fleet
-        for ship in ships_to_remove:
-            self.fleet.remove_ship(ship)
-
-        # Create one new fleet with all removed ships
-        new_fleet = self._create_fleet_for_ships(ships_to_remove)
-        self.empire.add_fleet(new_fleet)
+        # Dispatch through command pipeline (handler creates new fleet)
+        ship_ids = [ship.instance_id for ship in ships_to_remove]
+        self._split_fleet_callback(self.fleet.id, ship_ids)
         self._post_removal_refresh()
-
-    def _create_fleet_for_ships(self, ships):
-        """Create a new fleet containing the given ships at the source fleet's location."""
-        from game.strategy.data.fleet import Fleet
-
-        new_fleet_id = self.empire.get_next_fleet_id()
-        new_fleet = Fleet(new_fleet_id, self.fleet.owner_id, self.fleet.location, speed=0)
-
-        for ship in ships:
-            new_fleet.add_ship(ship)
-
-        return new_fleet
 
     def _post_removal_refresh(self):
         """Refresh UI state after ships have been removed."""
