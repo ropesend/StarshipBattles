@@ -49,6 +49,6 @@ Add inner hex outlines on the strategy map to visually indicate occupied hexes. 
 
 ## Verification
 - [x] All phase checklists complete
-- [x] All tests passing (13,021 passed, +16 new)
-- [ ] Audit passed
+- [x] All tests passing (13,022 passed, +16 new)
+- [x] Audit passed (Cycle 1)
 - [ ] User verified
