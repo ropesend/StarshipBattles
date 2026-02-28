@@ -4,7 +4,14 @@ Handles validation, mandatory checks, and default value calculations.
 
 PROJ-43: Now uses ComponentService for modifier registry access instead of
 direct MODIFIER_REGISTRY import. Uses class-level service injection.
+
+PROJ-211: ComponentService now requires registry_provider. Use init_service()
+to initialize with a provider before use.
 """
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.core.protocols import IRegistryProvider
 
 
 class ModifierLogic:
@@ -22,21 +29,35 @@ class ModifierLogic:
     adding builder-specific business logic on top.
 
     PROJ-43: Uses a class-level ComponentService for registry access.
-    Service is lazily initialized on first use. Use set_service() for testing.
+    PROJ-211: Must call init_service(provider) before first use.
     """
 
-    # Class-level service instance (lazily initialized)
+    # Class-level service instance (must be initialized via init_service)
     _component_service = None
 
     # Modifiers that cannot be removed by the user
     MANDATORY_MODIFIERS = ['simple_size_mount', 'range_mount', 'facing', 'turret_mount']
 
     @classmethod
+    def init_service(cls, registry_provider: 'IRegistryProvider') -> None:
+        """Initialize the ComponentService with a registry provider.
+
+        PROJ-211: Must be called before any other methods are used.
+
+        Args:
+            registry_provider: Registry provider for DI.
+        """
+        from game.ui.services.component_service import ComponentService
+        cls._component_service = ComponentService(registry_provider)
+
+    @classmethod
     def _get_service(cls):
-        """Get or create the ComponentService instance."""
+        """Get the ComponentService instance."""
         if cls._component_service is None:
-            from game.ui.services.component_service import ComponentService
-            cls._component_service = ComponentService()
+            raise RuntimeError(
+                "ModifierLogic.init_service() must be called before use. "
+                "Call init_service(registry_provider) from the builder/workshop."
+            )
         return cls._component_service
 
     @classmethod

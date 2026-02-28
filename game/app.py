@@ -153,7 +153,8 @@ class Game:
         self.active_scene: IScene = self._menu_scene
 
         # Scene objects
-        context = WorkshopContext.standalone(tech_preset_name="default")
+        # PROJ-211: Pass registries explicitly (no fallback)
+        context = WorkshopContext.standalone(tech_preset_name="default", registries=self.registries)
         context.on_return = self.on_builder_return
         self.builder_scene = DesignWorkshopScreen(self.width, self.height, context)
         self.battle_setup = BattleSetupScreen(self.width, self.height, self._handle_battle_setup_action)
@@ -194,8 +195,9 @@ class Game:
         """
         self.builder_return_state = return_to
         # Use provided context or create default standalone context
+        # PROJ-211: Pass registries explicitly (no fallback)
         if context is None:
-            context = WorkshopContext.standalone(tech_preset_name="default")
+            context = WorkshopContext.standalone(tech_preset_name="default", registries=self.registries)
         context.on_return = self.on_builder_return
         self.builder_scene = DesignWorkshopScreen(self.width, self.height, context)
         self._switch_scene(GameState.BUILDER, self.builder_scene)
@@ -646,13 +648,15 @@ class Game:
         empire_theme_id = empire.empire_theme_id if hasattr(empire, 'empire_theme_id') else None
         logger.debug(f"Creating WorkshopContext with empire_theme_id={empire_theme_id}")
 
+        # PROJ-211: Pass registries explicitly (no fallback)
         # Create integrated context regardless of save_path
         return WorkshopContext.integrated(
             empire_id=empire.id,
             savegame_path=savegame_path,
             available_tech_ids=available_tech_ids,
             built_designs=empire.built_ship_designs if hasattr(empire, 'built_ship_designs') else set(),
-            empire_theme_id=empire_theme_id
+            empire_theme_id=empire_theme_id,
+            registries=self.registries
         )
 
     def _handle_test_lab_action(self, action: str, **kwargs):

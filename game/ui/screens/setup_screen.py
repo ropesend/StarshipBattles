@@ -3,6 +3,9 @@
 PROJ-43: Uses ShipFactory facade instead of direct Ship import.
 - ShipFactory: Creates and configures Ship instances via UI services layer
 - StrategyMetadataService: Core layer - populates AI strategy dropdown options
+
+PROJ-211: ShipFactory now requires registry_provider. Uses lazy initialization
+to get registries from get_default_registry_provider() when first needed.
 """
 import os
 import uuid
@@ -29,8 +32,24 @@ from game.ui.screens.setup_renderer import (
 )
 
 
-# Module-level factory instance for convenience
-_ship_factory = ShipFactory()
+# PROJ-211: Lazy factory initialization (registries not available at import time)
+_ship_factory = None
+
+
+def _get_ship_factory() -> ShipFactory:
+    """Get or create the module-level ShipFactory with DI."""
+    global _ship_factory
+    if _ship_factory is None:
+        from game.core.registry import get_default_registry_provider, GameRegistries
+        provider = get_default_registry_provider()
+        registries = GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources=provider.get_resources(),
+        )
+        _ship_factory = ShipFactory(registry_provider=registries)
+    return _ship_factory
 
 
 class BattleSetupScreen:
@@ -149,7 +168,8 @@ class BattleSetupScreen:
 
             ship_data = load_json_required(ship_path)
             # PROJ-43: Use factory to get radius without direct Ship import
-            radius = _ship_factory.get_ship_radius(ship_data)
+            # PROJ-211: Use getter for lazy-initialized factory
+            radius = _get_ship_factory().get_ship_radius(ship_data)
             diameter = radius * 2
 
             design_entry = self._find_or_create_design(ship_path, ship_data)

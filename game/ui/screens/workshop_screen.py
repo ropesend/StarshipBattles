@@ -39,6 +39,7 @@ from game.ui.screens.workshop_ship_io import WorkshopShipIO
 from game.ui.screens.workshop_data_reloader import WorkshopDataReloader
 from game.ui.colors import COLORS
 from game.ui.screens.builder.detail_panel import ComponentDetailPanel
+from game.ui.screens.builder.modifier_logic import ModifierLogic
 
 BG_COLOR = COLORS['bg_deep']
 
@@ -66,6 +67,9 @@ class DesignWorkshopScreen:
 
         self.event_bus = EventBus()
         self.screenshot_manager = ScreenshotManager.instance()
+
+        # PROJ-211: Initialize ModifierLogic with registry provider
+        ModifierLogic.init_service(context.registries)
 
         # PROJ-43: UI service adapters for ship I/O and design loading
         self._ship_io_adapter = ShipIOAdapter()

@@ -63,25 +63,10 @@ class WorkshopContext:
     # PROJ-38: Dependency injection for registries
     registries: Optional['GameRegistries'] = None
 
-    def __post_init__(self):
-        """PROJ-58: Set default registries if not provided via DI."""
-        if self.registries is None:
-            from game.core.registry import get_default_registry_provider, GameRegistries
-            from game.core.exceptions import StateException
-            try:
-                provider = get_default_registry_provider()
-                object.__setattr__(self, 'registries', GameRegistries(
-                    components=provider.get_components(),
-                    modifiers=provider.get_modifiers(),
-                    vehicle_classes=provider.get_vehicle_classes(),
-                    resources=provider.get_resources(),
-                ))
-            except (RuntimeError, StateException):
-                pass  # Registries not available; callers must provide via DI
 
     @classmethod
     def standalone(cls, tech_preset_name: str = "default",
-                   *, registries: Optional['GameRegistries'] = None) -> 'WorkshopContext':
+                   *, registries: 'GameRegistries') -> 'WorkshopContext':
         """
         Create standalone workshop context for development/testing.
 
@@ -114,7 +99,7 @@ class WorkshopContext:
                    available_tech_ids: Optional[List[str]] = None,
                    built_designs: Optional[set] = None,
                    empire_theme_id: Optional[str] = None,
-                   *, registries: Optional['GameRegistries'] = None) -> 'WorkshopContext':
+                   *, registries: 'GameRegistries') -> 'WorkshopContext':
         """
         Create integrated workshop context for strategy layer.
 

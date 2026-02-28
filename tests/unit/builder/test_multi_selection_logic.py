@@ -17,7 +17,8 @@ class TestMultiSelectionLogic:
         pygame.display.set_mode((800, 600), flags=pygame.HIDDEN)
 
         # Mocking Builder with minimal dependencies
-        context = WorkshopContext.standalone(tech_preset_name="default")
+        # PROJ-211: registries is now required
+        context = WorkshopContext.standalone(tech_preset_name="default", registries=fresh_registries)
         self.builder = DesignWorkshopScreen(800, 600, context)
         self.builder.viewmodel._ship = MagicMock()
         self.builder.viewmodel._ship.layers = {}

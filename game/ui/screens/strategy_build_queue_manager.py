@@ -4,6 +4,8 @@ StrategyBuildQueueManager - Manages build queue screen operations for StrategySc
 Extracted from StrategyScreen as part of PROJ-173 Phase 4 to reduce StrategyScreen
 to ~530 lines. Handles all build queue screen creation, closing, and fleet BUILD order
 management.
+
+PROJ-211: DesignLoaderAdapter now requires registry_provider. Uses lazy initialization.
 """
 from __future__ import annotations
 
@@ -21,8 +23,28 @@ if TYPE_CHECKING:
     from game.ui.screens.strategy_screen import StrategyScreen
     from game.strategy.data.fleet import Fleet
     from game.core.protocols import IFleet
+    from game.core.registry import GameRegistries
 
 logger = logging.getLogger(__name__)
+
+
+# PROJ-211: Lazy registries initialization (not available at import time)
+_cached_registries = None
+
+
+def _get_registries() -> 'GameRegistries':
+    """Get or create registries for DesignLoaderAdapter."""
+    global _cached_registries
+    if _cached_registries is None:
+        from game.core.registry import get_default_registry_provider, GameRegistries
+        provider = get_default_registry_provider()
+        _cached_registries = GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources=provider.get_resources(),
+        )
+    return _cached_registries
 
 
 class StrategyBuildQueueManager:
@@ -64,7 +86,8 @@ class StrategyBuildQueueManager:
                 savegame_path = self._screen.session.save_path
                 empire_id = planet.owner_id
                 design_library = DesignLibrary(savegame_path, empire_id)
-                design_loader = DesignLoaderAdapter()
+                # PROJ-211: Pass registries explicitly
+                design_loader = DesignLoaderAdapter(registry_provider=_get_registries())
 
                 # PROJ-69: Calculate hex coord for multi-queue discovery
                 parent_sys = self._screen.session.galaxy.get_system_of_planet(planet)
@@ -178,7 +201,8 @@ class StrategyBuildQueueManager:
         savegame_path = self._screen.session.save_path
         empire_id = self._screen.current_empire.id
         design_library = DesignLibrary(savegame_path, empire_id)
-        design_loader = DesignLoaderAdapter()
+        # PROJ-211: Pass registries explicitly
+        design_loader = DesignLoaderAdapter(registry_provider=_get_registries())
 
         # Create build queue screen with hex context
         self._screen.build_queue_screen = BuildQueueScreen(
@@ -217,7 +241,8 @@ class StrategyBuildQueueManager:
                 savegame_path = self._screen.session.save_path
                 empire_id = fleet.owner_id
                 design_library = DesignLibrary(savegame_path, empire_id)
-                design_loader = DesignLoaderAdapter()
+                # PROJ-211: Pass registries explicitly
+                design_loader = DesignLoaderAdapter(registry_provider=_get_registries())
 
                 # PROJ-69: Use fleet.location as hex_coord for multi-queue discovery
                 hex_coord = fleet.location

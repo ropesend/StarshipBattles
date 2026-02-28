@@ -3,6 +3,7 @@ Tests for ShipFactory - UI facade for Ship creation.
 
 PROJ-43: ShipFactory provides UI layer with Ship creation capabilities
 without directly importing from game.simulation.entities.ship.
+PROJ-211: ShipFactory now requires registry_provider (no fallback).
 """
 import pytest
 import pygame
@@ -20,6 +21,7 @@ class TestShipFactory:
 
         PROJ-195: Pure DI pattern - uses fresh_registries directly, no singleton hydration.
         """
+        self._registries = fresh_registries
         yield
 
     def test_create_from_design_returns_ship(self, fresh_registries):
@@ -34,8 +36,9 @@ class TestShipFactory:
             "layers": {}
         }
 
-        factory = ShipFactory()
-        ship = factory.create_from_design(design_data, registry_provider=fresh_registries)
+        # PROJ-211: registry_provider is now required
+        factory = ShipFactory(registry_provider=fresh_registries)
+        ship = factory.create_from_design(design_data)
 
         assert ship is not None
         assert ship.name == "Test Ship"
@@ -53,8 +56,8 @@ class TestShipFactory:
             "layers": {}
         }
 
-        factory = ShipFactory()
-        radius = factory.get_ship_radius(design_data, registry_provider=fresh_registries)
+        factory = ShipFactory(registry_provider=fresh_registries)
+        radius = factory.get_ship_radius(design_data)
 
         assert radius > 0
         assert isinstance(radius, float)
@@ -72,8 +75,8 @@ class TestShipFactory:
             "layers": {}
         }
 
-        factory = ShipFactory()
-        ship = factory.create_from_design(design_data, registry_provider=fresh_registries)
+        factory = ShipFactory(registry_provider=fresh_registries)
+        ship = factory.create_from_design(design_data)
 
         factory.configure_ship(
             ship,
@@ -104,15 +107,15 @@ class TestShipFactory:
             "layers": {}
         }
 
-        factory = ShipFactory()
-        master = factory.create_from_design(design_data, registry_provider=fresh_registries)
+        factory = ShipFactory(registry_provider=fresh_registries)
+        master = factory.create_from_design(design_data)
         master.position = pygame.math.Vector2(0, 0)
         master.angle = 0
 
-        follower1 = factory.create_from_design(design_data, registry_provider=fresh_registries)
+        follower1 = factory.create_from_design(design_data)
         follower1.position = pygame.math.Vector2(100, 0)
 
-        follower2 = factory.create_from_design(design_data, registry_provider=fresh_registries)
+        follower2 = factory.create_from_design(design_data)
         follower2.position = pygame.math.Vector2(0, 100)
 
         ships = [master, follower1, follower2]
@@ -146,8 +149,8 @@ class TestShipFactory:
             "layers": {}
         }
 
-        factory = ShipFactory()
-        ship = factory.create_from_design(design_data, registry_provider=fresh_registries)
+        factory = ShipFactory(registry_provider=fresh_registries)
+        ship = factory.create_from_design(design_data)
         factory.configure_ship(
             ship,
             position=pygame.math.Vector2(500, 500),
@@ -162,6 +165,16 @@ class TestShipFactory:
         assert ship.team_id == 0
         assert ship.position.x == 500
 
+    def test_raises_when_none_provider(self, fresh_registries):
+        """PROJ-211: Test ShipFactory raises ValidationException when None provider."""
+        from game.ui.services.ship_factory import ShipFactory
+        from game.core.exceptions import ValidationException
+
+        with pytest.raises(ValidationException) as exc_info:
+            ShipFactory(registry_provider=None)
+
+        assert "registry_provider is required" in str(exc_info.value)
+
 
 class TestShipFactoryStaticMethods:
     """Tests for any static or class methods on ShipFactory."""
@@ -172,14 +185,15 @@ class TestShipFactoryStaticMethods:
 
         PROJ-195: Pure DI pattern - uses fresh_registries directly, no singleton hydration.
         """
+        self._registries = fresh_registries
         yield
 
     def test_factory_can_be_used_without_instance(self, fresh_registries):
         """Factory methods can be called on instance without requiring singleton."""
         from game.ui.services.ship_factory import ShipFactory
 
-        factory1 = ShipFactory()
-        factory2 = ShipFactory()
+        factory1 = ShipFactory(registry_provider=fresh_registries)
+        factory2 = ShipFactory(registry_provider=fresh_registries)
 
         design_data = {
             "name": "Test",
@@ -189,8 +203,8 @@ class TestShipFactoryStaticMethods:
             "layers": {}
         }
 
-        ship1 = factory1.create_from_design(design_data, registry_provider=fresh_registries)
-        ship2 = factory2.create_from_design(design_data, registry_provider=fresh_registries)
+        ship1 = factory1.create_from_design(design_data)
+        ship2 = factory2.create_from_design(design_data)
 
         # Both should work independently
         assert ship1 is not None
@@ -207,6 +221,7 @@ class TestSetupFormationEdgeCases:
 
         PROJ-195: Pure DI pattern - uses fresh_registries directly, no singleton hydration.
         """
+        self._registries = fresh_registries
         yield
 
     def _create_ship(self, fresh_registries, x=0, y=0):
@@ -221,8 +236,8 @@ class TestSetupFormationEdgeCases:
             "color": [255, 255, 255],
             "layers": {}
         }
-        factory = ShipFactory()
-        ship = factory.create_from_design(design_data, registry_provider=fresh_registries)
+        factory = ShipFactory(registry_provider=fresh_registries)
+        ship = factory.create_from_design(design_data)
         ship.position = pygame.math.Vector2(x, y)
         ship.angle = 0
         return ship
@@ -231,7 +246,7 @@ class TestSetupFormationEdgeCases:
         """setup_formation handles empty formation_data list."""
         from game.ui.services.ship_factory import ShipFactory
 
-        factory = ShipFactory()
+        factory = ShipFactory(registry_provider=fresh_registries)
         ship1 = self._create_ship(fresh_registries, 0, 0)
         ship2 = self._create_ship(fresh_registries, 100, 0)
         ships = [ship1, ship2]
@@ -248,7 +263,7 @@ class TestSetupFormationEdgeCases:
         """setup_formation skips entries with formation_id=None."""
         from game.ui.services.ship_factory import ShipFactory
 
-        factory = ShipFactory()
+        factory = ShipFactory(registry_provider=fresh_registries)
         ship1 = self._create_ship(fresh_registries, 0, 0)
         ship2 = self._create_ship(fresh_registries, 100, 0)
         ships = [ship1, ship2]
@@ -268,7 +283,7 @@ class TestSetupFormationEdgeCases:
         """setup_formation correctly handles multiple independent formation groups."""
         from game.ui.services.ship_factory import ShipFactory
 
-        factory = ShipFactory()
+        factory = ShipFactory(registry_provider=fresh_registries)
         ship1 = self._create_ship(fresh_registries, 0, 0)
         ship2 = self._create_ship(fresh_registries, 100, 0)
         ship3 = self._create_ship(fresh_registries, 200, 0)
@@ -300,7 +315,7 @@ class TestSetupFormationEdgeCases:
         """Single ship in formation becomes master with no followers."""
         from game.ui.services.ship_factory import ShipFactory
 
-        factory = ShipFactory()
+        factory = ShipFactory(registry_provider=fresh_registries)
         ship1 = self._create_ship(fresh_registries, 0, 0)
         ships = [ship1]
 
@@ -318,7 +333,7 @@ class TestSetupFormationEdgeCases:
         """Missing rotation_mode in formation data defaults to 'relative'."""
         from game.ui.services.ship_factory import ShipFactory
 
-        factory = ShipFactory()
+        factory = ShipFactory(registry_provider=fresh_registries)
         ship1 = self._create_ship(fresh_registries, 0, 0)
         ship2 = self._create_ship(fresh_registries, 100, 0)
         ships = [ship1, ship2]

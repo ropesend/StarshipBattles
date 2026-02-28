@@ -5,6 +5,8 @@ PROJ-43: This adapter provides a facade for ship design loading operations,
 allowing UI code to create Ship objects from design data without directly
 importing from game.simulation.services.design_loader.
 
+PROJ-211: Strict DI - registry_provider is now required (no fallback).
+
 The adapter encapsulates:
 - Loading Ship objects from design data dictionaries
 - Loading Ship objects from design files
@@ -12,7 +14,9 @@ The adapter encapsulates:
 from typing import Optional, Tuple, Any
 
 from game.simulation.services.design_loader import SimulationDesignLoader
-from game.core.registry import get_default_registry_provider, GameRegistries
+from game.core.registry import GameRegistries
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 
 class DesignLoaderAdapter:
@@ -23,28 +27,30 @@ class DesignLoaderAdapter:
     simulation layer.
 
     Usage:
-        adapter = DesignLoaderAdapter()
+        # PROJ-211: Strict DI - registry_provider is required
+        adapter = DesignLoaderAdapter(registry_provider=registries)
         ship = adapter.load_ship_from_design_data(design_data, center_x, center_y)
         ship, message = adapter.load_ship_from_file(filepath, width, height)
     """
 
-    def __init__(self, design_loader: Optional[Any] = None, *, registry_provider: Optional[Any] = None):
+    def __init__(self, design_loader: Optional[Any] = None, *, registry_provider: Any):
         """Initialize the DesignLoaderAdapter.
 
         Args:
             design_loader: Optional SimulationDesignLoader instance for dependency
                 injection. If None, creates a new SimulationDesignLoader.
-            registry_provider: Optional GameRegistries for DI (keyword-only).
-                       Required if design_loader is None.
+            registry_provider: GameRegistries for DI (keyword-only).
+                PROJ-211: This parameter is now required (strict DI).
+
+        Raises:
+            ValidationException: If registry_provider is None and design_loader is None.
         """
         if design_loader is None:
             if registry_provider is None:
-                provider = get_default_registry_provider()
-                registry_provider = GameRegistries(
-                    components=provider.get_components(),
-                    modifiers=provider.get_modifiers(),
-                    vehicle_classes=provider.get_vehicle_classes(),
-                    resources=provider.get_resources(),
+                raise ValidationException(
+                    "registry_provider is required",
+                    code=ErrorCode.MISSING_DEPENDENCY.value,
+                    context={"service": "DesignLoaderAdapter", "parameter": "registry_provider"}
                 )
             design_loader = SimulationDesignLoader(registries=registry_provider)
         self._loader = design_loader

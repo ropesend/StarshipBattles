@@ -172,17 +172,19 @@ class TestComponentService:
 
         assert result is False
 
-    def test_service_uses_default_registries_when_none_provided(self):
-        """Test service falls back to default registry provider when none injected."""
-        with patch('game.ui.services.component_service.get_default_registry_provider') as mock_get:
-            mock_provider = MagicMock()
-            mock_provider.get_components.return_value = {}
-            mock_get.return_value = mock_provider
+    def test_service_raises_when_none_provider(self):
+        """PROJ-211: Test service raises ValidationException when None provider."""
+        from game.core.exceptions import ValidationException
 
-            service = ComponentService()
-            service.get_all_components()
+        with pytest.raises(ValidationException) as exc_info:
+            ComponentService(registry_provider=None)
 
-            mock_get.assert_called()
+        assert "registry_provider is required" in str(exc_info.value)
+
+    def test_service_raises_when_no_provider_arg(self):
+        """PROJ-211: Test service raises TypeError when no provider argument."""
+        with pytest.raises(TypeError):
+            ComponentService()
 
 
 class TestIsModifierAllowedEdgeCases:
