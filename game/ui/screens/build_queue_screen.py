@@ -122,6 +122,7 @@ class BuildQueueScreen:
         )
 
         # Controller for queue business logic
+        # PROJ-208: Create callback for AddToConstructionQueueCommand dispatch
         self.controller = BuildQueueController(
             build_context=self.build_context,
             design_library=self.design_library,
@@ -131,7 +132,8 @@ class BuildQueueScreen:
             hex_coord=self.hex_coord,
             galaxy=self.galaxy,
             empire=self.empire,
-            on_planet_selection_needed=self._prompt_target_planet
+            on_planet_selection_needed=self._prompt_target_planet,
+            add_to_queue_callback=self._dispatch_add_to_queue_command,
         )
 
         # Sync controller with initial queue selection
@@ -210,6 +212,45 @@ class BuildQueueScreen:
         if self.active_queue_source is not None:
             return self.active_queue_source.construction_queue
         return self.build_context.construction_queue
+
+    # -----------------------------------------------------------------------
+    # Command Dispatch (PROJ-208)
+    # -----------------------------------------------------------------------
+
+    def _dispatch_add_to_queue_command(
+        self,
+        entity_id: int,
+        entity_type: str,
+        design_id: str,
+        category: str,
+        index: Optional[int],
+        target_planet_id: Optional[int],
+        queue_id: Optional[str],
+    ) -> None:
+        """Dispatch AddToConstructionQueueCommand through command pipeline.
+
+        PROJ-208: Routes build queue additions through CQRS command system.
+
+        Args:
+            entity_id: Planet or fleet ID.
+            entity_type: "planet" or "fleet".
+            design_id: ID of the design to build.
+            category: Design category ("complex", "ship", "satellite", "fighter").
+            index: Optional insertion index. None = append.
+            target_planet_id: For complexes built at fleet yards, the target planet.
+            queue_id: Optional queue identifier for multi-queue entities (e.g., shipyard facility ID).
+        """
+        from game.strategy.engine.commands import AddToConstructionQueueCommand
+        cmd = AddToConstructionQueueCommand(
+            entity_id=entity_id,
+            entity_type=entity_type,
+            design_id=design_id,
+            category=category,
+            index=index,
+            target_planet_id=target_planet_id,
+            queue_id=queue_id,
+        )
+        self.session.handle_command(cmd)
 
     # -----------------------------------------------------------------------
     # Refresh Methods (delegate to renderer)

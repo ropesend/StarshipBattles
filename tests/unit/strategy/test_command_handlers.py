@@ -1077,7 +1077,8 @@ class TestAddToConstructionQueueCommandHandler:
             design_id="scout",
             category="ship",
             index=None,
-            target_planet_id=None
+            target_planet_id=None,
+            queue_id=None  # PROJ-208: Required for _resolve_queue
         )
 
         result = handler.execute(mock_session, mock_cmd)
@@ -1096,7 +1097,8 @@ class TestAddToConstructionQueueCommandHandler:
             design_id="scout",
             category="ship",
             index=None,
-            target_planet_id=None
+            target_planet_id=None,
+            queue_id=None  # PROJ-208: Required for _resolve_queue
         )
 
         result = handler.execute(mock_session, mock_cmd)
@@ -1114,7 +1116,8 @@ class TestAddToConstructionQueueCommandHandler:
             design_id="scout",
             category="ship",
             index=None,
-            target_planet_id=None
+            target_planet_id=None,
+            queue_id=None  # PROJ-208: Required for _resolve_queue
         )
 
         result = handler.execute(mock_session, mock_cmd)
@@ -1128,6 +1131,7 @@ class TestAddToConstructionQueueCommandHandler:
 
         mock_planet = Mock()
         mock_planet.construction_queue = []
+        mock_planet.facilities = []  # PROJ-208: Required for _resolve_queue
 
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = mock_planet
@@ -1138,7 +1142,8 @@ class TestAddToConstructionQueueCommandHandler:
             design_id="scout",
             category="ship",
             index=-1,
-            target_planet_id=None
+            target_planet_id=None,
+            queue_id=None  # PROJ-208: Required for _resolve_queue
         )
 
         result = handler.execute(mock_session, mock_cmd)
@@ -1152,6 +1157,7 @@ class TestAddToConstructionQueueCommandHandler:
 
         mock_planet = Mock()
         mock_planet.construction_queue = [{"design_id": "existing"}]
+        mock_planet.facilities = []  # PROJ-208: Required for _resolve_queue
 
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = mock_planet
@@ -1162,7 +1168,8 @@ class TestAddToConstructionQueueCommandHandler:
             design_id="scout",
             category="ship",
             index=5,
-            target_planet_id=None
+            target_planet_id=None,
+            queue_id=None  # PROJ-208: Required for _resolve_queue
         )
 
         result = handler.execute(mock_session, mock_cmd)
@@ -1176,6 +1183,7 @@ class TestAddToConstructionQueueCommandHandler:
 
         mock_planet = Mock()
         mock_planet.construction_queue = []
+        mock_planet.facilities = []  # PROJ-208: Required for _resolve_queue
 
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = mock_planet
@@ -1186,7 +1194,8 @@ class TestAddToConstructionQueueCommandHandler:
             design_id="scout",
             category="ship",
             index=None,
-            target_planet_id=None
+            target_planet_id=None,
+            queue_id=None  # PROJ-208: Required for _resolve_queue
         )
 
         result = handler.execute(mock_session, mock_cmd)
@@ -1203,6 +1212,7 @@ class TestAddToConstructionQueueCommandHandler:
         existing_item = {"design_id": "cruiser", "type": "ship"}
         mock_planet = Mock()
         mock_planet.construction_queue = [existing_item]
+        mock_planet.facilities = []  # PROJ-208: Required for _resolve_queue
 
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = mock_planet
@@ -1213,7 +1223,8 @@ class TestAddToConstructionQueueCommandHandler:
             design_id="scout",
             category="ship",
             index=0,
-            target_planet_id=None
+            target_planet_id=None,
+            queue_id=None  # PROJ-208: Required for _resolve_queue
         )
 
         result = handler.execute(mock_session, mock_cmd)
@@ -1229,6 +1240,7 @@ class TestAddToConstructionQueueCommandHandler:
 
         mock_fleet = Mock()
         mock_fleet.construction_queue = []
+        mock_fleet.facilities = []  # PROJ-208: Required for _resolve_queue
 
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
@@ -1239,7 +1251,8 @@ class TestAddToConstructionQueueCommandHandler:
             design_id="research_lab",
             category="complex",
             index=None,
-            target_planet_id=42
+            target_planet_id=42,
+            queue_id=None  # PROJ-208: Required for _resolve_queue
         )
 
         result = handler.execute(mock_session, mock_cmd)
@@ -1253,6 +1266,7 @@ class TestAddToConstructionQueueCommandHandler:
 
         mock_planet = Mock()
         mock_planet.construction_queue = []
+        mock_planet.facilities = []  # PROJ-208: Required for _resolve_queue
 
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = mock_planet
@@ -1263,7 +1277,8 @@ class TestAddToConstructionQueueCommandHandler:
             design_id="scout",
             category="ship",
             index=None,
-            target_planet_id=None
+            target_planet_id=None,
+            queue_id=None  # PROJ-208: Required for _resolve_queue
         )
 
         result = handler.execute(mock_session, mock_cmd)

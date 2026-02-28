@@ -8,22 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-208 Phase 2 Tasks 2.1-2.3 (Commands + Handlers)
-**Current Status:** PROJ-208 Phase 2 In Progress (UI refactoring remaining)
+**Last Completed:** PROJ-208 Phase 2 Task 2.4 (build_queue_controller.py)
+**Current Status:** PROJ-208 Phase 2 In Progress (Tasks 2.5-2.8 remaining)
 **Current Project:** PROJ-208
-**Current Phase:** Phase 2 (Tasks 2.4-2.8)
+**Current Phase:** Phase 2 (Tasks 2.5-2.8)
 **Test Status:** 12923 passed, 1 skipped (4 pre-existing bug_13 failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-208 Phase 2 Tasks 2.1-2.3 COMPLETE:**
-  - AddToConstructionQueueCommand: entity_type (planet/fleet), design_id, category, index, target_planet_id
-  - RemoveFromConstructionQueueCommand: entity_type, entity_id, item_index
-  - ReorderConstructionQueueCommand: entity_type, entity_id, from_index, to_index
-  - All 3 handlers registered in create_default_registry()
-  - 26 new unit tests covering all handlers
+- **PROJ-208 Phase 2 Task 2.4 COMPLETE:**
+  - BuildQueueController now routes all queue additions through AddToConstructionQueueCommand
+  - Callback injection pattern: `add_to_queue_callback` parameter
+  - Added `queue_id` parameter to AddToConstructionQueueCommand for multi-queue support
+  - Updated command handler with `_resolve_queue()` method for shipyard facilities
+  - Updated test files: test_controller_multi_queue.py, test_command_handlers.py, test_production_repro.py, conftest.py, test_basics.py, test_build_queue_drag_drop.py
 - **Next Actions (Phase 2 remaining):**
-  - Task 2.4: Refactor build_queue_controller.py to use commands
   - Task 2.5: Refactor build_queue_drag_handler.py to use commands
   - Task 2.6: Refactor build_queue_screen.py to use commands
   - Task 2.7: Refactor empire_build_queue_window.py batch add
@@ -106,6 +105,7 @@
 | 2026-02-28 | PROJ-208 | Phase 1 (1.1-1.4) | Complete | 12904 passed, 1 skipped | pending | 3 commands + handlers + 20 tests |
 | 2026-02-28 | PROJ-208 | Phase 1 (1.5-1.6) | Complete | 12902 passed, 1 skipped | pending | UI refactoring: fleet_report + fleet_orders windows |
 | 2026-02-28 | PROJ-208 | Phase 2 (2.1-2.3) | Complete | 12923 passed, 1 skipped | pending | 3 commands + handlers + 26 tests |
+| 2026-02-28 | PROJ-208 | Phase 2 (2.4) | Complete | 12923 passed, 1 skipped | pending | build_queue_controller.py uses commands, queue_id param |
 
 ---
 

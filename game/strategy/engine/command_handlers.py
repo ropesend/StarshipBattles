@@ -12,7 +12,7 @@ Usage:
     registry.register('IssueColonizeCommand', ColonizeCommandHandler())
     result = registry.dispatch('IssueColonizeCommand', session, command)
 """
-from typing import Protocol, Dict, Any, TYPE_CHECKING, runtime_checkable
+from typing import Protocol, Dict, Any, TYPE_CHECKING, runtime_checkable, Optional
 import logging
 
 from game.core.validation import ValidationResult
@@ -788,12 +788,12 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
         if entity is None:
             return ValidationResult.error(f"{cmd.entity_type.capitalize()} not found.")
 
-        # 2. Validate entity has construction_queue
-        if not hasattr(entity, 'construction_queue'):
-            return ValidationResult.error(f"{cmd.entity_type.capitalize()} cannot build.")
+        # 2. Find the correct queue - may be entity.construction_queue or a facility queue
+        queue = self._resolve_queue(entity, cmd.queue_id)
+        if queue is None:
+            return ValidationResult.error(f"Construction queue not found.")
 
         # 3. Validate index if specified
-        queue = entity.construction_queue
         if cmd.index is not None:
             if cmd.index < 0 or cmd.index > len(queue):
                 return ValidationResult.error(f"Invalid queue index: {cmd.index}")
@@ -820,6 +820,36 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
             logger.info(f"GameSession: Appended {cmd.design_id} to {cmd.entity_type} {cmd.entity_id} queue")
 
         return ValidationResult.success()
+
+    def _resolve_queue(self, entity, queue_id: Optional[str]) -> Optional[list]:
+        """Find the correct construction queue for the entity.
+
+        PROJ-208: Supports multi-queue entities (e.g., planets with shipyard facilities).
+
+        Args:
+            entity: Planet or Fleet entity.
+            queue_id: Optional queue identifier. If None, uses entity.construction_queue.
+
+        Returns:
+            The construction queue list, or None if not found.
+        """
+        # If no queue_id specified, use entity's main queue
+        if queue_id is None:
+            return getattr(entity, 'construction_queue', None)
+
+        # For planets, check if queue_id matches a facility's instance_id
+        if hasattr(entity, 'facilities'):
+            for facility in entity.facilities:
+                if getattr(facility, 'instance_id', None) == queue_id:
+                    return getattr(facility, 'construction_queue', None)
+
+        # Check if queue_id matches base queue pattern (e.g., "planet_100_base")
+        base_queue_pattern = f"planet_{getattr(entity, 'id', '')}_base"
+        if queue_id == base_queue_pattern:
+            return getattr(entity, 'construction_queue', None)
+
+        # Fallback to entity's main queue
+        return getattr(entity, 'construction_queue', None)
 
     def _resolve_build_entity(self, session: 'GameSession', entity_id: int, entity_type: str):
         """Resolve a planet or fleet by ID and type.

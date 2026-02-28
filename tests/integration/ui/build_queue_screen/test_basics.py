@@ -30,10 +30,65 @@ class MockSession:
         self.galaxy = galaxy or MockGalaxy()
         # PROJ-211: Add registries for DI
         self.registries = registries
+        # PROJ-208: Track commands for test verification
+        self.commands_handled = []
 
     def handle_command(self, cmd):
-        """Mock command handler."""
+        """Mock command handler that executes AddToConstructionQueueCommand.
+
+        PROJ-208: Enables queue mutation tests to work with command pattern.
+        """
+        self.commands_handled.append(cmd)
+
+        # Execute AddToConstructionQueueCommand to maintain queue behavior
+        from game.strategy.engine.commands import AddToConstructionQueueCommand
+        if isinstance(cmd, AddToConstructionQueueCommand):
+            queue = self._resolve_queue(cmd.entity_id, cmd.entity_type, getattr(cmd, 'queue_id', None))
+            if queue is not None:
+                queue_item = {
+                    "design_id": cmd.design_id,
+                    "type": cmd.category,
+                    "turns_remaining": 1.0,
+                    "total_cost": {},
+                    "resources_consumed": {},
+                }
+                if cmd.target_planet_id is not None:
+                    queue_item["target_planet_id"] = cmd.target_planet_id
+                if cmd.index is not None:
+                    queue.insert(cmd.index, queue_item)
+                else:
+                    queue.append(queue_item)
+
         return ValidationResult()
+
+    def _resolve_entity(self, entity_id, entity_type):
+        """Resolve entity by ID and type."""
+        if entity_type == "planet":
+            for planets in self.galaxy._global_hex_planets.values():
+                for planet in planets:
+                    if getattr(planet, 'id', None) == entity_id:
+                        return planet
+        elif entity_type == "fleet":
+            return self.galaxy.fleets_by_id.get(entity_id)
+        return None
+
+    def _resolve_queue(self, entity_id, entity_type, queue_id):
+        """Resolve the construction queue, handling multi-queue entities."""
+        entity = self._resolve_entity(entity_id, entity_type)
+        if entity is None:
+            return None
+
+        if queue_id is None:
+            return getattr(entity, 'construction_queue', None)
+
+        # Check if queue_id matches a facility's instance_id
+        if hasattr(entity, 'facilities'):
+            for facility in entity.facilities:
+                if getattr(facility, 'instance_id', None) == queue_id:
+                    return getattr(facility, 'construction_queue', None)
+
+        # Fallback to entity's main queue
+        return getattr(entity, 'construction_queue', None)
 
 
 def test_build_queue_screen_initializes(build_queue_screen):
@@ -86,14 +141,19 @@ def test_switch_category_filter(build_queue_screen):
 
 
 def test_add_to_queue(build_queue_screen):
-    """Test that selected design is added to planet construction queue."""
+    """Test that selected design is added to planet construction queue.
+
+    PROJ-208: Build queue additions now route through AddToConstructionQueueCommand.
+    The command handler creates items with default turns_remaining (1.0).
+    ProductionEngine recalculates actual turns dynamically during production.
+    """
     initial_queue_length = len(build_queue_screen.build_context.construction_queue)
 
     # Mock design selection
     build_queue_screen.drag_handler.selected_design = "mining_complex_mk1"
     build_queue_screen.controller.selected_category = "complex"
 
-    # Add to queue
+    # Add to queue - turns param is no longer used (handler sets default)
     build_queue_screen.controller.add_to_queue("mining_complex_mk1", 5)
 
     # Verify queue updated
@@ -104,7 +164,8 @@ def test_add_to_queue(build_queue_screen):
     assert isinstance(item, dict)
     assert item["design_id"] == "mining_complex_mk1"
     assert item["type"] == "complex"
-    assert item["turns_remaining"] == 5
+    # PROJ-208: Handler uses default turns_remaining (1.0)
+    assert item["turns_remaining"] == 1.0
 
 
 def test_queue_display_updates(build_queue_screen):

@@ -436,6 +436,7 @@ class AddToConstructionQueueCommand(Command):
         category: Design category ("complex", "ship", "satellite", "fighter").
         index: Optional insertion index. None = append to end.
         target_planet_id: For complexes built at fleet yards, the target planet.
+        queue_id: Optional queue identifier for multi-queue entities (e.g., shipyard facility ID).
     """
     entity_id: int
     entity_type: str
@@ -443,6 +444,7 @@ class AddToConstructionQueueCommand(Command):
     category: str
     index: Optional[int] = None
     target_planet_id: Optional[int] = None
+    queue_id: Optional[str] = None
 
     def __init__(
         self,
@@ -451,7 +453,8 @@ class AddToConstructionQueueCommand(Command):
         design_id: str,
         category: str,
         index: Optional[int] = None,
-        target_planet_id: Optional[int] = None
+        target_planet_id: Optional[int] = None,
+        queue_id: Optional[str] = None
     ):
         self.type = CommandType.ISSUE_ORDER
         self.entity_id = entity_id
@@ -460,6 +463,7 @@ class AddToConstructionQueueCommand(Command):
         self.category = category
         self.index = index
         self.target_planet_id = target_planet_id
+        self.queue_id = queue_id
 
 
 @dataclass

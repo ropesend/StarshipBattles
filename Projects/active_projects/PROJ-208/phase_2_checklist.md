@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress (Tasks 2.1-2.3 Complete)
+**Status:** In Progress (Tasks 2.1-2.4 Complete)
 **Objective:** Create build queue commands and route all queue mutations through facade
 **Priority:** Critical/Major — second most severe violation cluster
 **Findings Addressed:** AR2-001, AR2-002, AR-014, AR-015, CGA-04, CGA-06, CGA-07, CGA-08, CGA-14, DCA-003
@@ -49,17 +49,17 @@
 
 **Notes:** Handler performs atomic pop+insert. Tests verify forward/backward reordering works correctly.
 
-### Task 2.4: Refactor build_queue_controller.py to use commands [Complex]
+### Task 2.4: Refactor build_queue_controller.py to use commands [Complex] ✅
 **File:** `game/ui/panels/build_queue_controller.py`
 **Addresses:** AR2-001, CGA-04, DCA-003
 
-- [ ] Replace all `source.construction_queue.insert()` with `facade.handle_command(AddToConstructionQueueCommand(...))`
-- [ ] Replace all `source.construction_queue.append()` with command dispatch
-- [ ] Ensure controller receives facade reference
-- [ ] Handle the multi-queue distribution logic (batch add to multiple planets)
-- [ ] Verify: `pytest tests/ -n 12`
+- [x] Replace all `source.construction_queue.insert()` with `facade.handle_command(AddToConstructionQueueCommand(...))`
+- [x] Replace all `source.construction_queue.append()` with command dispatch
+- [x] Ensure controller receives facade reference (via callback injection)
+- [x] Handle the multi-queue distribution logic (batch add to multiple planets)
+- [x] Verify: `pytest tests/ -n 12`
 
-**Notes:** The controller has complex routing logic (_add_to_single_queue, _add_item_with_target_planet, _add_to_multiple_queues, _add_to_fallback). Each path needs to construct and dispatch commands instead of direct list manipulation.
+**Notes:** Implemented via callback injection pattern. Controller receives `add_to_queue_callback` which dispatches AddToConstructionQueueCommand through session. Added `queue_id` parameter to command for multi-queue support (shipyard facilities). Tests updated to inject callbacks. 12923 tests passing.
 
 ### Task 2.5: Refactor build_queue_drag_handler.py to use commands [Medium]
 **File:** `game/ui/panels/build_queue_drag_handler.py`
