@@ -8,19 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-211 Audit Cycle 1 PASSED - Project complete
-**Current Status:** PROJ-211 COMPLETE - Moving to next project
+**Last Completed:** PROJ-208 Phase 1 Tasks 1.1-1.4 (command infrastructure)
+**Current Status:** PROJ-208 Phase 1 In Progress - UI refactoring remaining
 **Current Project:** PROJ-208
-**Current Phase:** Phase 1
-**Test Status:** 12884 passed, 1 skipped (4 pre-existing bug_13 failures)
+**Current Phase:** Phase 1 (Tasks 1.5-1.6)
+**Test Status:** 12904 passed, 1 skipped (4 pre-existing bug_13 failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-211 AUDIT PASSED** - All targets verified:
-  - ShipInstance.get_calculated_stats() - raises ValueError if no registries
-  - FleetCapabilityCalculator - all fallbacks removed, raises ValueError
-  - Zero fallback calls in core strategy data objects
-- Next project: PROJ-208 (CQRS Facade Bypass Remediation)
+- **PROJ-208 Phase 1 Command Infrastructure COMPLETE:**
+  - SplitFleetCommand + handler: splits ships into new fleet
+  - DeleteFleetOrderCommand + handler: removes order from queue, invalidates path if active
+  - ReorderFleetOrderCommand + handler: swaps order positions, invalidates path if active
+  - All handlers registered in create_default_registry()
+  - 20 new unit tests in test_command_handlers.py
+- **Next Actions (Tasks 1.5-1.6):**
+  - Task 1.5: Refactor fleet_report_window.py to use SplitFleetCommand
+  - Task 1.6: Refactor fleet_orders_window.py to use order commands
 - Note: 4 bug_13 tests fail due to missing asset files (pre-existing, unrelated)
 
 ---
@@ -47,8 +51,8 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
-- [ ] **PROJ-208: CQRS Facade Bypass Remediation**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-208: CQRS Facade Bypass Remediation**
+  - **Phases:** 4 | **Status:** Phase 1 In Progress | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-208/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-208/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -96,6 +100,7 @@
 | 2026-02-28 | PROJ-211 | Phase 5 (5.5.1+5.6) | Complete | 12884 passed, 1 skipped | 3fd28e70 | FALLBACK REMOVED: ShipInstance + 18 test files updated |
 | 2026-02-28 | PROJ-211 | Phase 5 (5.7+5.8) | Complete | 12884 passed, 1 skipped | 7f1e8e25 | FleetCapabilityCalculator fallbacks REMOVED + 5 test files updated |
 | 2026-02-28 | PROJ-211 | Audit 1 | PASSED | 12884 passed, 1 skipped | - | All implementations verified, no issues |
+| 2026-02-28 | PROJ-208 | Phase 1 (1.1-1.4) | In Progress | 12904 passed, 1 skipped | pending | 3 commands + handlers + 20 tests |
 
 ---
 

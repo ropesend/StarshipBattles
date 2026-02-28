@@ -352,3 +352,68 @@ class RemoveBuildOrderCommand(Command):
     def __init__(self, fleet_id: int):
         self.type = CommandType.ISSUE_ORDER
         self.fleet_id = fleet_id
+
+
+# =============================================================================
+# Fleet Management Commands (PROJ-208)
+# =============================================================================
+
+@dataclass
+class SplitFleetCommand(Command):
+    """Command to remove ships from a fleet and create a new fleet.
+
+    PROJ-208 Phase 1: Routes fleet splitting through command pipeline.
+    The removed ships are placed into a newly created fleet at the same location.
+
+    Args:
+        fleet_id: Source fleet to remove ships from.
+        ship_instance_ids: List of ship instance_id strings to move to new fleet.
+    """
+    fleet_id: int
+    ship_instance_ids: List[str]
+
+    def __init__(self, fleet_id: int, ship_instance_ids: List[str]):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+        self.ship_instance_ids = ship_instance_ids
+
+
+@dataclass
+class DeleteFleetOrderCommand(Command):
+    """Command to remove a specific order from a fleet's order queue.
+
+    PROJ-208 Phase 1: Routes order deletion through command pipeline.
+
+    Args:
+        fleet_id: Fleet whose order queue to modify.
+        order_index: Index of the order to remove (0-based).
+    """
+    fleet_id: int
+    order_index: int
+
+    def __init__(self, fleet_id: int, order_index: int):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+        self.order_index = order_index
+
+
+@dataclass
+class ReorderFleetOrderCommand(Command):
+    """Command to move a fleet order up or down in the queue.
+
+    PROJ-208 Phase 1: Routes order reordering through command pipeline.
+
+    Args:
+        fleet_id: Fleet whose order queue to modify.
+        order_index: Index of the order to move.
+        direction: -1 for up (earlier), +1 for down (later).
+    """
+    fleet_id: int
+    order_index: int
+    direction: int
+
+    def __init__(self, fleet_id: int, order_index: int, direction: int):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+        self.order_index = order_index
+        self.direction = direction
