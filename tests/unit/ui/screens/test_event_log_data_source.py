@@ -59,8 +59,8 @@ class TestEventLogColumns:
     """Test EVENT_LOG_COLUMNS constant."""
 
     def test_column_count(self):
-        """Should have exactly 3 columns."""
-        assert len(EVENT_LOG_COLUMNS) == 3
+        """Should have exactly 4 columns (category, turn, location, message)."""
+        assert len(EVENT_LOG_COLUMNS) == 4
 
     def test_category_column(self):
         """Category column should have correct definition."""
@@ -82,7 +82,7 @@ class TestEventLogColumns:
 
     def test_message_column(self):
         """Message column should have correct definition."""
-        col = EVENT_LOG_COLUMNS[2]
+        col = EVENT_LOG_COLUMNS[3]
         assert col["id"] == "message"
         assert col["title"] == "Message"
         assert col["visible"] is True
@@ -409,3 +409,46 @@ class TestGetEventAtIndex:
         event = ds.get_event_at_index(0)
         assert event is not None
         assert event["category"] == "combat"
+
+
+# ---------------------------------------------------------------------------
+# FEAT-04: Location Column
+# ---------------------------------------------------------------------------
+
+class TestLocationColumn:
+    """Test location column for 'Go To Location' navigation."""
+
+    def test_column_count_includes_location(self):
+        """EVENT_LOG_COLUMNS should have 4 columns (category, turn, location, message)."""
+        assert len(EVENT_LOG_COLUMNS) == 4
+
+    def test_location_column_definition(self):
+        """Location column should exist with correct definition."""
+        location_col = next((c for c in EVENT_LOG_COLUMNS if c["id"] == "location"), None)
+        assert location_col is not None
+        assert location_col["title"] == "Location"
+        assert location_col["visible"] is True
+        assert isinstance(location_col["width"], int)
+
+    def test_location_cell_value_from_details(self):
+        """Location column should display location_name from event details."""
+        events = [_make_event(
+            details={"location_name": "Bunda I", "location_hex": [5, 3]}
+        )]
+        ds = EventLogDataSource(events)
+        value = ds.get_cell_value(0, "location")
+        assert value == "Bunda I"
+
+    def test_location_cell_value_empty_when_no_location(self):
+        """Location column should return empty string when no location data."""
+        events = [_make_event(details={})]
+        ds = EventLogDataSource(events)
+        value = ds.get_cell_value(0, "location")
+        assert value == ""
+
+    def test_location_cell_value_hex_fallback(self):
+        """Location column should show hex coords when name is missing but hex exists."""
+        events = [_make_event(details={"location_hex": [5, -3]})]
+        ds = EventLogDataSource(events)
+        value = ds.get_cell_value(0, "location")
+        assert "(5, -3)" in value

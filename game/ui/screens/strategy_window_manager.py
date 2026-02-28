@@ -212,6 +212,7 @@ class StrategyWindowManager:
             self.manager,
             events,
             on_close_callback=self._on_event_log_closed,
+            on_navigate_callback=self._on_event_log_navigate,
         )
 
     def open_event_log_with_events(self, events: list) -> None:
@@ -233,7 +234,25 @@ class StrategyWindowManager:
             self.manager,
             events,
             on_close_callback=self._on_event_log_closed,
+            on_navigate_callback=self._on_event_log_navigate,
         )
+
+    def _on_event_log_navigate(self, location_hex: list) -> None:
+        """Navigate camera to event location and close event log.
+
+        Args:
+            location_hex: [q, r] hex coordinates to navigate to.
+        """
+        from game.core.hex_math import HexCoord
+        hex_coord = HexCoord(location_hex[0], location_hex[1])
+
+        # Close the event log window
+        if self.event_log_window:
+            self.event_log_window.kill()
+
+        # Navigate camera to the location
+        if hasattr(self.scene, '_camera_nav'):
+            self.scene._camera_nav.center_on_hex(hex_coord)
 
     def _on_event_log_closed(self) -> None:
         """Callback when event log window is closed."""

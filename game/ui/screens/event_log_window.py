@@ -30,17 +30,23 @@ FILTER_BTN_HEIGHT = 32
 FILTER_GAP = 8
 
 
+DOUBLE_CLICK_THRESHOLD_MS = 400
+
+
 class EventLogWindow(UIWindow):
     """Modal window displaying game events with filter tabs.
 
     Shows events in a scrollable list sorted newest-first.
     Filter tabs allow viewing All, Combat, Production, or Colonies events.
+    Double-clicking a row with location data navigates the camera to that location.
 
     Args:
         rect: Window position and size.
         manager: pygame_gui UIManager instance.
         events: List of event dicts (from facade).
         on_close_callback: Called when the window is closed.
+        on_navigate_callback: Called with [q, r] hex coords when user
+            double-clicks an event row that has location data.
     """
 
     def __init__(
@@ -49,6 +55,7 @@ class EventLogWindow(UIWindow):
         manager: Any,
         events: list[dict],
         on_close_callback: Optional[Callable] = None,
+        on_navigate_callback: Optional[Callable] = None,
     ) -> None:
         super().__init__(
             rect=rect,
@@ -59,6 +66,11 @@ class EventLogWindow(UIWindow):
         self.all_events = list(events)
         self.current_filter = "all"
         self.on_close_callback = on_close_callback
+        self.on_navigate_callback = on_navigate_callback
+
+        # Double-click tracking
+        self._last_click_time: int = 0
+        self._last_click_row: int = -1
 
         # VirtualTable components
         self.data_source: Optional[EventLogDataSource] = None
@@ -225,7 +237,7 @@ class EventLogWindow(UIWindow):
     # ------------------------------------------------------------------
 
     def process_event(self, event: pygame.event.Event) -> bool:
-        """Handle UI events for filter button clicks."""
+        """Handle UI events for filter button clicks and row double-clicks."""
         handled = super().process_event(event)
 
         if hasattr(event, "type") and event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -238,7 +250,50 @@ class EventLogWindow(UIWindow):
                     handled = True
                     break
 
+        # FEAT-04: Double-click on row navigates to event location
+        if (
+            hasattr(event, "type")
+            and event.type == pygame.MOUSEBUTTONDOWN
+            and event.button == 1
+            and self.virtual_table
+        ):
+            row_idx = self.virtual_table.find_clicked_row(event.pos)
+            if row_idx >= 0:
+                now = pygame.time.get_ticks()
+                if (
+                    row_idx == self._last_click_row
+                    and (now - self._last_click_time) < DOUBLE_CLICK_THRESHOLD_MS
+                ):
+                    self._handle_row_navigate(row_idx)
+                    self._last_click_row = -1
+                    self._last_click_time = 0
+                    handled = True
+                else:
+                    self._last_click_row = row_idx
+                    self._last_click_time = now
+
         return handled
+
+    def _handle_row_navigate(self, row_index: int) -> None:
+        """Navigate to the location of an event row.
+
+        Extracts location_hex from the event's details and calls the
+        navigate callback if location data is present.
+
+        Args:
+            row_index: Index of the double-clicked row in filtered data.
+        """
+        if not self.data_source:
+            return
+
+        event = self.data_source.get_event_at_index(row_index)
+        if event is None:
+            return
+
+        details = event.get("details", {})
+        location_hex = details.get("location_hex")
+        if location_hex and self.on_navigate_callback:
+            self.on_navigate_callback(location_hex)
 
     # ------------------------------------------------------------------
     # Lifecycle

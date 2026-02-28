@@ -225,6 +225,8 @@ class FleetOrderProcessor:
             planet_id=final_planet.id,  # Planet always has id
             planet_name=final_planet.name,
             fleet_id=fleet.id,
+            location_name=final_planet.name,
+            location_hex=[fleet.location.q, fleet.location.r],
         )
         return ColonizeResult(colonized=True, planet_name=final_planet.name)
 

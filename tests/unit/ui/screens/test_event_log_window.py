@@ -349,3 +349,66 @@ class TestTurnStartModalTrigger:
         """facade.get_all_events should be callable."""
         from game.strategy.facade.strategy_session_facade import StrategySessionFacade
         assert hasattr(StrategySessionFacade, 'get_all_events')
+
+
+# ---------------------------------------------------------------------------
+# FEAT-04: Double-Click Navigation
+# ---------------------------------------------------------------------------
+
+class TestEventLogNavigation:
+    """Verify double-click navigation from event log to map location."""
+
+    def test_navigate_callback_stored(self):
+        """Window should store on_navigate_callback."""
+        cb = MagicMock()
+        win = _make_window(events=_sample_events())
+        win.on_navigate_callback = cb
+        assert win.on_navigate_callback is cb
+
+    def test_navigate_callback_param_in_constructor(self):
+        """EventLogWindow constructor should accept on_navigate_callback param."""
+        from game.ui.screens.event_log_window import EventLogWindow
+        import inspect
+        sig = inspect.signature(EventLogWindow.__init__)
+        assert "on_navigate_callback" in sig.parameters
+
+    def test_handle_row_double_click_calls_navigate(self):
+        """Double-clicking a row with location data should call navigate callback."""
+        cb = MagicMock()
+        events = [_make_event(
+            details={"location_hex": [5, 3], "location_name": "Alpha"}
+        )]
+        win = _make_window(events=events)
+        win.on_navigate_callback = cb
+
+        # Simulate a double-click on row 0
+        from game.ui.screens.event_log_data_source import EventLogDataSource
+        win.data_source = EventLogDataSource(events)
+        win._handle_row_navigate(0)
+
+        cb.assert_called_once_with([5, 3])
+
+    def test_handle_row_navigate_no_callback(self):
+        """Navigating without a callback should not raise."""
+        events = [_make_event(
+            details={"location_hex": [5, 3], "location_name": "Alpha"}
+        )]
+        win = _make_window(events=events)
+        win.on_navigate_callback = None
+
+        from game.ui.screens.event_log_data_source import EventLogDataSource
+        win.data_source = EventLogDataSource(events)
+        win._handle_row_navigate(0)  # Should not raise
+
+    def test_handle_row_navigate_no_location(self):
+        """Navigating a row without location data should not call callback."""
+        cb = MagicMock()
+        events = [_make_event(details={})]
+        win = _make_window(events=events)
+        win.on_navigate_callback = cb
+
+        from game.ui.screens.event_log_data_source import EventLogDataSource
+        win.data_source = EventLogDataSource(events)
+        win._handle_row_navigate(0)
+
+        cb.assert_not_called()

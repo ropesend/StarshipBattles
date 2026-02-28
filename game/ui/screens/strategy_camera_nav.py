@@ -57,6 +57,17 @@ class CameraNavigator:
         else:
             logger.debug(f"Could not center camera on {obj}")
 
+    def center_on_hex(self, hex_coord: HexCoord):
+        """Center camera directly on a hex coordinate.
+
+        Args:
+            hex_coord: Global hex coordinate to center on.
+        """
+        fx, fy = hex_to_pixel(hex_coord, self.hex_size)
+        self.camera.position.x = fx
+        self.camera.position.y = fy
+        logger.debug(f"Camera centered on hex {hex_coord}")
+
     def _resolve_global_hex(self, obj):
         """
         Resolve object to its global hex coordinate.

@@ -13,6 +13,7 @@ from game.ui.components.table.data_source import ITableDataSource
 EVENT_LOG_COLUMNS = [
     {"id": "category", "width": 90, "title": "Category", "visible": True, "sortable": True},
     {"id": "turn", "width": 60, "title": "Turn", "visible": True, "sortable": True},
+    {"id": "location", "width": 150, "title": "Location", "visible": True, "sortable": True},
     {"id": "message", "width": 500, "title": "Message", "visible": True, "sortable": True},
 ]
 
@@ -89,6 +90,16 @@ class EventLogDataSource(ITableDataSource):
 
         if column_id == "turn":
             return str(event.get("turn", "?"))
+
+        if column_id == "location":
+            details = event.get("details", {})
+            name = details.get("location_name", "")
+            if name:
+                return name
+            hex_coords = details.get("location_hex")
+            if hex_coords and len(hex_coords) == 2:
+                return f"({hex_coords[0]}, {hex_coords[1]})"
+            return ""
 
         if column_id == "message":
             return event.get("message", "")

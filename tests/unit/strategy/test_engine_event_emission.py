@@ -205,6 +205,7 @@ class TestFleetShipBuiltEvent:
         empire = _make_mock_empire()
         fleet = MagicMock(spec=Fleet)
         fleet.id = 7
+        fleet.location = MagicMock(q=5, r=-3)
 
         calls, fake = _capture_log_event_calls()
 
@@ -228,6 +229,7 @@ class TestFleetShipBuiltEvent:
         assert kw["fleet_id"] == 7
         assert kw["is_fleet_production"] is True
         assert "Fighter" in kw["message"]
+        assert kw["location_hex"] == [5, -3]
 
     def test_spawn_fleet_ship_no_event_when_no_save_path(self):
         """No event when save_path is None."""
@@ -427,6 +429,7 @@ class TestColonyFoundedEvent:
         fleet = MagicMock(spec=Fleet)
         fleet.id = 3
         fleet.owner_id = 0
+        fleet.location = MagicMock(q=2, r=-1)
 
         # Mock ship with colony pod
         mock_ship = MagicMock()

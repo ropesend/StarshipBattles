@@ -515,13 +515,13 @@ class ProductionEngine:
         else:
             # Colony/planet
             if vehicle_type == 'complex':
-                self._spawn_complex(colony_or_fleet, design_id, empire, save_path)
+                self._spawn_complex(colony_or_fleet, design_id, empire, save_path, galaxy)
                 # PROJ-161: Harvesting is now per-tick, so mid-turn facilities
                 # automatically participate in remaining ticks' harvesting
             else:
                 self._spawn_ship(colony_or_fleet, design_id, empire, galaxy, save_path)
 
-    def _spawn_complex(self, planet, design_id: str, empire, save_path: Optional[str] = None) -> None:
+    def _spawn_complex(self, planet, design_id: str, empire, save_path: Optional[str] = None, galaxy=None) -> None:
         """
         Add completed complex to planet's facilities.
 
@@ -530,6 +530,7 @@ class ProductionEngine:
             design_id: ID of the complex design
             empire: Empire that owns the planet
             save_path: Path to savegame folder for loading design data
+            galaxy: Galaxy for location calculation
         """
         # Load design data if possible
         design_data = {}
@@ -555,6 +556,15 @@ class ProductionEngine:
 
         planet.facilities.append(facility)
         logger.info(f"Built {facility.name} on {planet.name}")
+
+        # FEAT-04: Compute global hex for event location
+        location_hex = None
+        if galaxy:
+            parent_sys = galaxy.get_system_of_planet(planet)
+            if parent_sys:
+                loc = parent_sys.global_location + planet.location
+                location_hex = [loc.q, loc.r]
+
         log_event(
             EventType.COMPLEX_BUILT,
             category=EventCategory.PRODUCTION,
@@ -562,6 +572,8 @@ class ProductionEngine:
             message=f"Built {facility.name} on {planet.name}",
             design_id=design_id,
             planet_id=planet.id,
+            location_name=planet.name,
+            location_hex=location_hex,
         )
 
     def _spawn_ship(
@@ -630,6 +642,8 @@ class ProductionEngine:
             design_id=design_id,
             planet_id=planet.id,
             fleet_id=new_fleet.id,
+            location_name=planet.name,
+            location_hex=[spawn_loc.q, spawn_loc.r],
         )
 
     def _spawn_fleet_ship(
@@ -688,6 +702,7 @@ class ProductionEngine:
             design_id=design_id,
             fleet_id=fleet.id,
             is_fleet_production=True,
+            location_hex=[fleet.location.q, fleet.location.r],
         )
 
     def _spawn_fleet_complex(
@@ -762,4 +777,6 @@ class ProductionEngine:
             message=f"Built {facility.name} on {planet.name} (fleet yard)",
             design_id=design_id,
             planet_id=planet.id,
+            location_name=planet.name,
+            location_hex=[fleet.location.q, fleet.location.r],
         )

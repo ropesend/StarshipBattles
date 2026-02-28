@@ -210,6 +210,7 @@ class ConflictResolutionEngine:
             message=f"Battle: Fleet {winner.id} defeated Fleet {loser.id}",
             winner_fleet_id=winner.id,
             loser_fleet_id=loser.id,
+            location_hex=[f1.location.q, f1.location.r],
         )
         return winner
 
@@ -270,5 +271,6 @@ class ConflictResolutionEngine:
             message=f"Battle: Fleet {winner.id} defeated Fleet {loser.id}",
             winner_fleet_id=winner.id,
             loser_fleet_id=loser.id,
+            location_hex=[f1.location.q, f1.location.r],
         )
         return winner

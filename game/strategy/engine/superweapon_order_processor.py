@@ -85,6 +85,9 @@ class SuperweaponOrderProcessor:
         Returns:
             SuperweaponResult with success=True and fleet_consumed flag.
         """
+        # FEAT-04: Capture location before fleet may be consumed
+        fleet_loc = fleet.location
+
         # Remove ship
         if ship:
             fleet.remove_ship(ship)
@@ -107,6 +110,7 @@ class SuperweaponOrderProcessor:
             empire_id=empire.id,
             message=event_message,
             fleet_id=fleet.id,
+            location_hex=[fleet_loc.q, fleet_loc.r],
             **event_kwargs
         )
 
@@ -247,6 +251,8 @@ class SuperweaponOrderProcessor:
             message=f"Star system {system_name} destroyed",
             fleet_id=fleet.id,
             system_name=system_name,
+            location_name=system_name,
+            location_hex=[fleet.location.q, fleet.location.r],
         )
 
         return SuperweaponResult(
@@ -590,6 +596,9 @@ class SuperweaponOrderProcessor:
                 name = ship.name if isinstance(ship.name, str) else str(ship_id)
                 ship_names.append(name)
 
+        # FEAT-04: Capture location before fleet may be consumed
+        fleet_loc = fleet.location
+
         # Remove ships
         for ship in ships_to_remove:
             fleet.remove_ship(ship)
@@ -612,6 +621,7 @@ class SuperweaponOrderProcessor:
             fleet_id=fleet.id,
             ship_count=len(ships_to_remove),
             ship_names=ship_names,
+            location_hex=[fleet_loc.q, fleet_loc.r],
         )
 
         return SuperweaponResult(
