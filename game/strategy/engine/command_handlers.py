@@ -16,11 +16,48 @@ from typing import Protocol, Dict, Any, TYPE_CHECKING, runtime_checkable
 import logging
 
 from game.core.validation import ValidationResult
+from game.strategy.data.pathfinding import find_hybrid_path, strip_start_hex
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.engine.game_session import GameSession
+
+
+def add_move_order_if_needed(session: 'GameSession', fleet, target_hex) -> ValidationResult:
+    """Add a MOVE order to fleet if not already at target hex.
+
+    PROJ-204 Phase 3: Extracted from duplicate patterns in command handlers.
+    Use this when a command needs to auto-queue movement before an action.
+
+    Args:
+        session: GameSession for path calculation.
+        fleet: Fleet to potentially move.
+        target_hex: Destination hex coordinate.
+
+    Returns:
+        ValidationResult - invalid if no path found, valid otherwise.
+    """
+    from game.strategy.data.fleet import FleetOrder, OrderType
+
+    # Already at target - no move needed
+    if fleet.location == target_hex:
+        return ValidationResult.success()
+
+    # Calculate path
+    path = find_hybrid_path(session.galaxy, fleet.location, target_hex)
+    if not path:
+        return ValidationResult.error("No path found to target.")
+
+    # Queue MOVE order
+    move_order = FleetOrder(OrderType.MOVE, target=target_hex)
+    fleet.add_order(move_order)
+
+    # Set path immediately if it's the first order
+    if len(fleet.orders) == 1:
+        fleet.path = strip_start_hex(fleet.location, path)
+
+    return ValidationResult.success()
 
 
 @runtime_checkable
@@ -47,6 +84,7 @@ class BaseCommandHandler:
     error handling. Returns tuples of (object, error) where exactly one is set.
 
     PROJ-176 Phase 2: Extracted from duplicate resolution code in 19 handlers.
+    PROJ-204 Phase 3: Added _resolve_fleet_required and _resolve_planet_optional.
     """
 
     @staticmethod
@@ -71,6 +109,32 @@ class BaseCommandHandler:
         return (fleet, None)
 
     @staticmethod
+    def _resolve_fleet_required(session: 'GameSession', fleet_id: int, empire_id: int = None):
+        """Resolve a fleet by ID, raising ValueError if not found.
+
+        Use this when fleet must exist - avoids tuple unpacking boilerplate.
+
+        Args:
+            session: The game session with empires and galaxy.
+            fleet_id: The fleet ID to resolve.
+            empire_id: Optional empire ID to validate ownership.
+
+        Returns:
+            Fleet object if found.
+
+        Raises:
+            ValueError: If fleet not found or ownership validation fails.
+        """
+        fleet = session._get_fleet_by_id(fleet_id)
+        if fleet is None:
+            raise ValueError("Fleet not found.")
+
+        if empire_id is not None and fleet.owner_id != empire_id:
+            raise ValueError("Fleet does not belong to this empire.")
+
+        return fleet
+
+    @staticmethod
     def _resolve_planet(session: 'GameSession', planet_id: int) -> tuple:
         """Resolve a planet by ID.
 
@@ -86,6 +150,31 @@ class BaseCommandHandler:
             return (None, ValidationResult.error("Planet not found."))
 
         return (planet, None)
+
+    @staticmethod
+    def _resolve_planet_optional(session: 'GameSession', planet_id: int, required: bool = True):
+        """Resolve a planet by ID with configurable error handling.
+
+        Use this when planet may or may not be required.
+
+        Args:
+            session: The game session with galaxy.
+            planet_id: The planet ID to resolve.
+            required: If True, raise ValueError when not found. If False, return None.
+
+        Returns:
+            Planet object if found, None if not found and required=False.
+
+        Raises:
+            ValueError: If planet not found and required=True.
+        """
+        planet = session._get_planet_by_id(planet_id)
+        if planet is None:
+            if required:
+                raise ValueError("Planet not found.")
+            return None
+
+        return planet
 
 
 class CommandHandlerRegistry:
@@ -438,11 +527,12 @@ class TransferCommandHandler(BaseCommandHandler):
             # Find planet's global hex for MOVE order
             planet_global_hex = session.galaxy.get_planet_global_hex(planet)
 
-            # Prepend MOVE order if fleet isn't already at the planet
-            if planet_global_hex and fleet.location != planet_global_hex:
-                move_order = FleetOrder(OrderType.MOVE, target=planet_global_hex)
-                fleet.add_order(move_order)
-                logger.info(f"GameSession: Auto-added MOVE order to {planet_global_hex} for Fleet {fleet.id}")
+            # PROJ-204 Phase 3: Use helper for auto-move
+            if planet_global_hex:
+                orders_before = len(fleet.orders)
+                move_result = add_move_order_if_needed(session, fleet, planet_global_hex)
+                if move_result.is_valid and len(fleet.orders) > orders_before:
+                    logger.info(f"GameSession: Auto-added MOVE order to {planet_global_hex} for Fleet {fleet.id}")
 
             # Create TRANSFER order with params dict
             transfer_params = {
@@ -490,10 +580,12 @@ class WarpCommandHandler(BaseCommandHandler):
                 f"No warp point at {warp_point_hex}."
             )
 
-        # 4. If fleet is not at warp point, auto-queue MOVE first
-        if fleet.location != warp_point_hex:
-            move_order = FleetOrder(OrderType.MOVE, target=warp_point_hex)
-            fleet.add_order(move_order)
+        # 4. If fleet is not at warp point, auto-queue MOVE first (PROJ-204 Phase 3)
+        orders_before = len(fleet.orders)
+        move_result = add_move_order_if_needed(session, fleet, warp_point_hex)
+        if not move_result.is_valid:
+            return move_result
+        if len(fleet.orders) > orders_before:  # Move was added
             logger.info(f"GameSession: Auto-added MOVE to warp point at {warp_point_hex}")
 
         # 5. Queue WARP order

@@ -459,3 +459,155 @@ class TestTransferCommandHandler:
 
         assert result.is_valid
         mock_fleet.add_order.assert_called_once()
+
+
+class TestBaseCommandHandler:
+    """Tests for BaseCommandHandler resolution helpers."""
+
+    def test_resolve_fleet_required_returns_fleet_when_found(self):
+        """_resolve_fleet_required returns fleet when found."""
+        from game.strategy.engine.command_handlers import BaseCommandHandler
+
+        handler = BaseCommandHandler()
+        mock_fleet = Mock()
+        mock_fleet.id = 1
+
+        mock_session = Mock()
+        mock_session._get_fleet_by_id.return_value = mock_fleet
+
+        fleet = handler._resolve_fleet_required(mock_session, 1)
+
+        assert fleet is mock_fleet
+
+    def test_resolve_fleet_required_raises_when_not_found(self):
+        """_resolve_fleet_required raises ValueError when fleet not found."""
+        from game.strategy.engine.command_handlers import BaseCommandHandler
+
+        handler = BaseCommandHandler()
+        mock_session = Mock()
+        mock_session._get_fleet_by_id.return_value = None
+
+        with pytest.raises(ValueError) as exc_info:
+            handler._resolve_fleet_required(mock_session, 999)
+
+        assert "Fleet not found" in str(exc_info.value)
+
+    def test_resolve_fleet_required_validates_ownership(self):
+        """_resolve_fleet_required raises when owner_id doesn't match."""
+        from game.strategy.engine.command_handlers import BaseCommandHandler
+
+        handler = BaseCommandHandler()
+        mock_fleet = Mock()
+        mock_fleet.id = 1
+        mock_fleet.owner_id = 0
+
+        mock_session = Mock()
+        mock_session._get_fleet_by_id.return_value = mock_fleet
+
+        with pytest.raises(ValueError) as exc_info:
+            handler._resolve_fleet_required(mock_session, 1, empire_id=99)
+
+        assert "does not belong" in str(exc_info.value)
+
+    def test_resolve_planet_optional_returns_planet_when_found(self):
+        """_resolve_planet_optional returns planet when found."""
+        from game.strategy.engine.command_handlers import BaseCommandHandler
+
+        handler = BaseCommandHandler()
+        mock_planet = Mock()
+        mock_planet.id = 10
+
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = mock_planet
+
+        planet = handler._resolve_planet_optional(mock_session, 10)
+
+        assert planet is mock_planet
+
+    def test_resolve_planet_optional_returns_none_when_not_found_and_not_required(self):
+        """_resolve_planet_optional returns None when not found and required=False."""
+        from game.strategy.engine.command_handlers import BaseCommandHandler
+
+        handler = BaseCommandHandler()
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = None
+
+        planet = handler._resolve_planet_optional(mock_session, 999, required=False)
+
+        assert planet is None
+
+    def test_resolve_planet_optional_raises_when_not_found_and_required(self):
+        """_resolve_planet_optional raises ValueError when not found and required=True."""
+        from game.strategy.engine.command_handlers import BaseCommandHandler
+
+        handler = BaseCommandHandler()
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = None
+
+        with pytest.raises(ValueError) as exc_info:
+            handler._resolve_planet_optional(mock_session, 999, required=True)
+
+        assert "Planet not found" in str(exc_info.value)
+
+
+class TestCommandHelpers:
+    """Tests for command handler helper functions."""
+
+    def test_add_move_order_if_needed_no_move_when_at_target(self):
+        """add_move_order_if_needed does not add move when fleet at target."""
+        from game.strategy.engine.command_handlers import add_move_order_if_needed
+
+        mock_fleet = Mock()
+        mock_fleet.location = HexCoord(5, 5)
+        mock_fleet.orders = []
+        mock_fleet.add_order = Mock()
+
+        mock_session = Mock()
+
+        result = add_move_order_if_needed(mock_session, mock_fleet, HexCoord(5, 5))
+
+        assert result.is_valid
+        mock_fleet.add_order.assert_not_called()
+
+    def test_add_move_order_if_needed_adds_move_when_not_at_target(self):
+        """add_move_order_if_needed adds MOVE order when fleet not at target."""
+        from game.strategy.engine.command_handlers import add_move_order_if_needed
+        from game.strategy.data.fleet import OrderType
+
+        mock_fleet = Mock()
+        mock_fleet.location = HexCoord(0, 0)
+        mock_fleet.orders = []
+        mock_fleet.add_order = Mock()
+
+        mock_session = Mock()
+        mock_session.galaxy = Mock()
+
+        target = HexCoord(5, 5)
+
+        with patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
+            mock_path.return_value = [HexCoord(1, 0), HexCoord(2, 0), HexCoord(5, 5)]
+            result = add_move_order_if_needed(mock_session, mock_fleet, target)
+
+        assert result.is_valid
+        mock_fleet.add_order.assert_called_once()
+        call_args = mock_fleet.add_order.call_args[0][0]
+        assert call_args.type == OrderType.MOVE
+        assert call_args.target == target
+
+    def test_add_move_order_if_needed_returns_error_when_no_path(self):
+        """add_move_order_if_needed returns error when no path found."""
+        from game.strategy.engine.command_handlers import add_move_order_if_needed
+
+        mock_fleet = Mock()
+        mock_fleet.location = HexCoord(0, 0)
+        mock_fleet.orders = []
+
+        mock_session = Mock()
+        mock_session.galaxy = Mock()
+
+        with patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
+            mock_path.return_value = None
+            result = add_move_order_if_needed(mock_session, mock_fleet, HexCoord(100, 100))
+
+        assert not result.is_valid
+        assert "No path found" in result.message
