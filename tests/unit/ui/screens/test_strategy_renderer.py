@@ -816,3 +816,201 @@ class TestCoordinateConversion:
 
         # The mock implementation doesn't actually zoom, but verify it's called
         assert screen_pos_1x is not None
+
+
+# ===========================================================================
+# Hex Outline Tests (PROJ-214)
+# ===========================================================================
+
+def _setup_outline_scene(mock_scene):
+    """Configure mock_scene with hex outline prerequisites."""
+    mock_scene.session = MagicMock()
+    mock_scene.session.player_empire = MagicMock(id=0)
+    mock_scene.session.turn_number = 1
+    mock_scene.galaxy._global_hex_planets = {}
+    mock_scene.galaxy._global_hex_zones = {}
+    mock_scene.galaxy._global_hex_warp_points = {}
+    mock_scene.empires = []
+
+
+class TestHexOutlineDataCollection:
+    """Test _build_hex_outline_data() method."""
+
+    def test_empty_galaxy_returns_empty_dict(self, renderer, mock_scene):
+        _setup_outline_scene(mock_scene)
+        result = renderer._build_hex_outline_data()
+        assert result == {}
+
+    def test_unowned_planet_marked_non_player(self, renderer, mock_scene):
+        _setup_outline_scene(mock_scene)
+        hex_coord = MagicMock()
+        planet = MagicMock(owner_id=None)
+        mock_scene.galaxy._global_hex_planets = {hex_coord: [planet]}
+
+        result = renderer._build_hex_outline_data()
+        assert result[hex_coord] == (False, True)
+
+    def test_player_owned_planet_marked_player(self, renderer, mock_scene):
+        _setup_outline_scene(mock_scene)
+        hex_coord = MagicMock()
+        planet = MagicMock(owner_id=0)
+        mock_scene.galaxy._global_hex_planets = {hex_coord: [planet]}
+
+        result = renderer._build_hex_outline_data()
+        assert result[hex_coord] == (True, False)
+
+    def test_enemy_owned_planet_marked_non_player(self, renderer, mock_scene):
+        _setup_outline_scene(mock_scene)
+        hex_coord = MagicMock()
+        planet = MagicMock(owner_id=1)
+        mock_scene.galaxy._global_hex_planets = {hex_coord: [planet]}
+
+        result = renderer._build_hex_outline_data()
+        assert result[hex_coord] == (False, True)
+
+    def test_mixed_ownership_produces_both_flags(self, renderer, mock_scene):
+        _setup_outline_scene(mock_scene)
+        hex_coord = MagicMock()
+        player_planet = MagicMock(owner_id=0)
+        enemy_planet = MagicMock(owner_id=1)
+        mock_scene.galaxy._global_hex_planets = {hex_coord: [player_planet, enemy_planet]}
+
+        result = renderer._build_hex_outline_data()
+        assert result[hex_coord] == (True, True)
+
+    def test_star_zone_marked_non_player(self, renderer, mock_scene):
+        _setup_outline_scene(mock_scene)
+        hex_coord = MagicMock()
+        star = MagicMock(spec=[])  # No owner_id attribute
+        mock_scene.galaxy._global_hex_zones = {hex_coord: [star]}
+
+        result = renderer._build_hex_outline_data()
+        assert result[hex_coord] == (False, True)
+
+    def test_warp_point_marked_non_player(self, renderer, mock_scene):
+        _setup_outline_scene(mock_scene)
+        hex_coord = MagicMock()
+        mock_scene.galaxy._global_hex_warp_points = {hex_coord: MagicMock()}
+
+        result = renderer._build_hex_outline_data()
+        assert result[hex_coord] == (False, True)
+
+    def test_player_fleet_marked_player(self, renderer, mock_scene):
+        _setup_outline_scene(mock_scene)
+        hex_coord = MagicMock()
+        fleet = MagicMock(owner_id=0, location=hex_coord)
+        empire = MagicMock(fleets=[fleet])
+        mock_scene.empires = [empire]
+
+        result = renderer._build_hex_outline_data()
+        assert result[hex_coord] == (True, False)
+
+    def test_enemy_fleet_marked_non_player(self, renderer, mock_scene):
+        _setup_outline_scene(mock_scene)
+        hex_coord = MagicMock()
+        fleet = MagicMock(owner_id=1, location=hex_coord)
+        empire = MagicMock(fleets=[fleet])
+        mock_scene.empires = [empire]
+
+        result = renderer._build_hex_outline_data()
+        assert result[hex_coord] == (False, True)
+
+    def test_fleet_with_none_location_skipped(self, renderer, mock_scene):
+        _setup_outline_scene(mock_scene)
+        fleet = MagicMock(owner_id=0, location=None)
+        empire = MagicMock(fleets=[fleet])
+        mock_scene.empires = [empire]
+
+        result = renderer._build_hex_outline_data()
+        assert result == {}
+
+    def test_player_fleet_at_unowned_planet_produces_both(self, renderer, mock_scene):
+        _setup_outline_scene(mock_scene)
+        hex_coord = MagicMock()
+        planet = MagicMock(owner_id=None)
+        mock_scene.galaxy._global_hex_planets = {hex_coord: [planet]}
+        fleet = MagicMock(owner_id=0, location=hex_coord)
+        empire = MagicMock(fleets=[fleet])
+        mock_scene.empires = [empire]
+
+        result = renderer._build_hex_outline_data()
+        assert result[hex_coord] == (True, True)
+
+
+class TestHexOutlineCaching:
+    """Test hex outline data caching."""
+
+    def test_cache_returns_same_object_same_turn(self, renderer, mock_scene):
+        _setup_outline_scene(mock_scene)
+        data1 = renderer._get_hex_outline_data()
+        data2 = renderer._get_hex_outline_data()
+        assert data1 is data2
+
+    def test_cache_invalidates_on_turn_change(self, renderer, mock_scene):
+        _setup_outline_scene(mock_scene)
+        data1 = renderer._get_hex_outline_data()
+        mock_scene.session.turn_number = 2
+        data2 = renderer._get_hex_outline_data()
+        assert data1 is not data2
+
+
+class TestHexOutlineRendering:
+    """Test _draw_hex_outlines() rendering behavior."""
+
+    def test_outlines_not_drawn_below_zoom_threshold(self, renderer, mock_scene):
+        _setup_outline_scene(mock_scene)
+        mock_scene.camera.zoom = 0.3
+        mock_scene.hover_hex = None
+        mock_scene.input_mode = 'SELECT'
+        mock_scene.selected_fleet = None
+        screen = MagicMock()
+
+        with patch.object(renderer, '_draw_hex_outlines') as mock_draw_outlines, \
+             patch.object(renderer, '_draw_grid'), \
+             patch.object(renderer, '_draw_warp_lanes'), \
+             patch.object(renderer, '_draw_systems'), \
+             patch.object(renderer, '_draw_fleets'), \
+             patch('pygame.draw.rect'):
+            renderer.draw(screen)
+            mock_draw_outlines.assert_not_called()
+
+    def test_outlines_drawn_at_zoom_threshold(self, renderer, mock_scene):
+        _setup_outline_scene(mock_scene)
+        mock_scene.camera.zoom = 0.5
+        mock_scene.hover_hex = None
+        mock_scene.input_mode = 'SELECT'
+        mock_scene.selected_fleet = None
+        screen = MagicMock()
+
+        with patch.object(renderer, '_draw_hex_outlines') as mock_draw_outlines, \
+             patch.object(renderer, '_draw_grid'), \
+             patch.object(renderer, '_draw_warp_lanes'), \
+             patch.object(renderer, '_draw_systems'), \
+             patch.object(renderer, '_draw_fleets'), \
+             patch('pygame.draw.rect'):
+            renderer.draw(screen)
+            mock_draw_outlines.assert_called_once()
+
+
+class TestDrawInnerHex:
+    """Test _draw_inner_hex() geometry."""
+
+    def test_inner_hex_draws_closed_six_corner_polygon(self, renderer, mock_scene):
+        screen = MagicMock()
+        with patch('game.ui.screens.strategy_renderer.pygame.draw.lines') as mock_lines:
+            renderer._draw_inner_hex(screen, 0, 0, 0.88, (200, 60, 60))
+            mock_lines.assert_called_once()
+            args = mock_lines.call_args[0]
+            assert args[0] is screen
+            assert args[1] == (200, 60, 60)  # color
+            assert args[2] is True  # closed
+            assert len(args[3]) == 6  # 6 corners
+            assert args[4] == 2  # line width
+
+    def test_inner_hex_uses_correct_color(self, renderer, mock_scene):
+        screen = MagicMock()
+        test_color = (220, 220, 220)
+        with patch('game.ui.screens.strategy_renderer.pygame.draw.lines') as mock_lines:
+            renderer._draw_inner_hex(screen, 0, 0, 0.88, test_color)
+            args = mock_lines.call_args[0]
+            assert args[1] == test_color

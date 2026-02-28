@@ -2,9 +2,8 @@
 Tests for build queue production issues.
 
 PROJ-208: These tests were updated to reflect the new command-based architecture.
-The BuildQueueController now dispatches AddToConstructionQueueCommand instead of
-directly manipulating queues. The command handler sets turns_remaining to 1.0 as
-a default, and ProductionEngine recalculates dynamically during production.
+PROJ-213: Updated to verify that queue items have populated total_cost and
+resources_consumed fields, matching the fixed AddToConstructionQueueCommandHandler.
 """
 
 import pytest
@@ -13,12 +12,19 @@ from unittest.mock import MagicMock, patch
 from game.ui.panels.build_queue_controller import BuildQueueController
 from game.strategy.engine.production_engine import ProductionEngine
 from game.strategy.data.build_queue_source import BuildQueueSource
+from game.strategy.services.design_cost_calculator import DesignCostCalculator
 
 
-def _make_add_callback(entity_registry: dict):
+def _make_add_callback(entity_registry: dict, design_data_registry: dict = None):
     """Create an add_to_queue_callback that resolves queues from a registry.
 
-    PROJ-208: Simulates what session.handle_command does for AddToConstructionQueueCommand.
+    PROJ-213: Updated to populate total_cost from design data, matching the
+    fixed AddToConstructionQueueCommandHandler behavior.
+
+    Args:
+        entity_registry: Maps (entity_type, entity_id) to entity objects.
+        design_data_registry: Maps design_id to design_data dicts for cost calculation.
+            If None, total_cost defaults to empty (legacy behavior for backward compat tests).
     """
     def callback(
         entity_id: int,
@@ -52,13 +58,20 @@ def _make_add_callback(entity_registry: dict):
         if queue is None:
             return
 
-        # Build queue item - handler sets turns_remaining to 1.0 by default
+        # PROJ-213: Calculate design cost from design data
+        total_cost = {}
+        if design_data_registry and design_id in design_data_registry:
+            total_cost = DesignCostCalculator.calculate_total_cost(
+                design_data_registry[design_id]
+            )
+
+        # Build queue item with populated cost tracking
         item = {
             "design_id": design_id,
             "type": category,
             "turns_remaining": 1.0,
-            "total_cost": {},
-            "resources_consumed": {},
+            "total_cost": total_cost,
+            "resources_consumed": {res: 0.0 for res in total_cost},
         }
         if target_planet_id is not None:
             item["target_planet_id"] = target_planet_id
@@ -70,6 +83,19 @@ def _make_add_callback(entity_registry: dict):
             queue.append(item)
 
     return callback
+
+
+_TEST_DESIGN_DATA = {
+    "name": "Test Ship",
+    "vehicle_type": "Ship",
+    "layers": {
+        "l1": {
+            "components": [
+                {"resource_cost": {"A": 2500, "B": 6500, "C": 2000}}
+            ]
+        }
+    }
+}
 
 
 class TestBuildQueueReproduction:
@@ -86,45 +112,34 @@ class TestBuildQueueReproduction:
     @pytest.fixture
     def mock_design_library(self):
         lib = MagicMock()
-        # Mock a ship design with specific costs
-        # Cost A: 2500, B: 6500, C: 2000
-        lib.load_design_data.return_value = {
-            "name": "Test Ship",
-            "vehicle_type": "Ship",
-            "layers": {
-                "l1": {
-                    "components": [
-                        {"resource_cost": {"A": 2500, "B": 6500, "C": 2000}}
-                    ]
-                }
-            }
-        }
+        lib.load_design_data.return_value = _TEST_DESIGN_DATA
         return lib
 
     @pytest.fixture
     def mock_design_loader(self):
         loader = MagicMock()
         ship = MagicMock()
-        # Ensure the loader returns a ship with the correct cost
         ship.construction_cost = {"A": 2500, "B": 6500, "C": 2000}
         loader.load_ship_from_design_data.return_value = ship
         return loader
 
-    def test_repro_integer_rounding_logic(self, mock_build_context, mock_design_library, mock_design_loader):
-        """
-        PROJ-208: This test verifies that queue additions work through the command pattern.
+    @pytest.fixture
+    def design_data_registry(self):
+        """Registry mapping design_id to design_data for cost calculation."""
+        return {
+            "test_design_id": _TEST_DESIGN_DATA,
+            "test_design_id_2": _TEST_DESIGN_DATA,
+        }
 
-        The original test checked that turns_remaining was calculated from resource costs.
-        With PROJ-208, the command handler sets turns_remaining to 1.0 as a default,
-        and ProductionEngine recalculates dynamically during production. This test now
-        verifies that the item is correctly added to the queue via the command callback.
+    def test_queue_item_has_populated_cost(self, mock_build_context, mock_design_library, mock_design_loader, design_data_registry):
         """
-        # Create entity for callback
+        PROJ-213: Verify that queue items are created with populated total_cost
+        and zero-initialized resources_consumed, not empty dicts.
+        """
         planet_entity = MagicMock()
         planet_entity.id = 10
         planet_entity.facilities = []
 
-        # Create queue that the source will use
         test_queue = []
         planet_entity.construction_queue = test_queue
 
@@ -136,10 +151,9 @@ class TestBuildQueueReproduction:
             design_loader=mock_design_loader,
             design_report=MagicMock(),
             on_queue_changed=MagicMock(),
-            add_to_queue_callback=_make_add_callback(entity_registry)
+            add_to_queue_callback=_make_add_callback(entity_registry, design_data_registry)
         )
 
-        # Setup a queue source with 3000 production rate
         source = BuildQueueSource(
             queue_id="test_queue",
             display_name="Test Queue",
@@ -156,30 +170,27 @@ class TestBuildQueueReproduction:
         # Add to queue
         controller.add_to_queue("test_design_id")
 
-        # Verify item was added
+        # Verify item was added with correct cost data
         assert len(source.construction_queue) == 1
         item = source.construction_queue[0]
 
-        # PROJ-208: Handler uses default 1.0, ProductionEngine recalculates dynamically
-        assert item["turns_remaining"] == 1.0
         assert item["design_id"] == "test_design_id"
-        assert "total_cost" in item
+        assert item["turns_remaining"] == 1.0  # ProductionEngine recalculates dynamically
 
-    def test_repro_drag_and_drop_1_turn_bug(self, mock_build_context, mock_design_library, mock_design_loader):
-        """
-        PROJ-208: This test verifies command-based queue additions work correctly.
+        # PROJ-213: total_cost must be populated with actual design costs
+        assert item["total_cost"] == {"A": 2500, "B": 6500, "C": 2000}
 
-        The original test checked that dragged items preserved their turns_remaining.
-        With PROJ-208, the command handler always uses 1.0 as default. ProductionEngine
-        recalculates dynamically during production, so turns_remaining is not preserved
-        from drag operations - it's recalculated based on remaining costs.
+        # PROJ-213: resources_consumed must be zero-initialized for each resource
+        assert item["resources_consumed"] == {"A": 0.0, "B": 0.0, "C": 0.0}
+
+    def test_multiple_queue_additions_have_cost(self, mock_build_context, mock_design_library, mock_design_loader, design_data_registry):
         """
-        # Create entity for callback
+        PROJ-213: Verify that multiple queue additions all get populated costs.
+        """
         planet_entity = MagicMock()
         planet_entity.id = 10
         planet_entity.facilities = []
 
-        # Create queue that the source will use
         test_queue = []
         planet_entity.construction_queue = test_queue
 
@@ -191,7 +202,7 @@ class TestBuildQueueReproduction:
             design_loader=mock_design_loader,
             design_report=MagicMock(),
             on_queue_changed=MagicMock(),
-            add_to_queue_callback=_make_add_callback(entity_registry)
+            add_to_queue_callback=_make_add_callback(entity_registry, design_data_registry)
         )
 
         source = BuildQueueSource(
@@ -207,17 +218,13 @@ class TestBuildQueueReproduction:
         )
         controller.set_active_queue(source)
 
-        # Test 1: From list (new build)
+        # Add two items
         controller.add_to_queue("test_design_id", turns=None)
-        assert len(source.construction_queue) == 1
-        item = source.construction_queue[0]
-
-        # PROJ-208: Handler uses default 1.0
-        assert item["turns_remaining"] == 1.0
-
-        # Test 2: Add another item
         controller.add_to_queue("test_design_id_2", turns=0.5)
+
         assert len(source.construction_queue) == 2
-        item2 = source.construction_queue[1]
-        # PROJ-208: Handler uses default 1.0 (turns parameter is unused now)
-        assert item2["turns_remaining"] == 1.0
+
+        # Both items should have populated cost data
+        for item in source.construction_queue:
+            assert item["total_cost"] == {"A": 2500, "B": 6500, "C": 2000}
+            assert item["resources_consumed"] == {"A": 0.0, "B": 0.0, "C": 0.0}

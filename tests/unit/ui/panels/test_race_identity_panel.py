@@ -227,38 +227,101 @@ class TestSetFromConfig:
 
             panel.race_name_input.set_text.assert_called_with("Terrakin")
 
-    def test_set_from_config_populates_dropdowns(self, mock_race_config):
-        """set_from_config populates dropdown selections."""
+    def test_set_from_config_recreates_dropdowns(self, mock_race_config):
+        """set_from_config kills old dropdowns and creates new ones with correct values."""
         from game.ui.panels.race_identity_panel import RaceIdentityPanel
 
         with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
             panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
             mock_race_config.government_type = "Federation"
             mock_race_config.physical_type = "Humanoid"
+            mock_race_config.government_organization = "Democracy"
+            mock_race_config.leader_title = "President"
+            mock_race_config.society_type = "Diplomats"
             panel.race_config = mock_race_config
+            panel.ui_manager = MagicMock()
             panel._init_empty_refs()
 
-            panel.government_type_dropdown = MagicMock()
-            panel.physical_type_dropdown = MagicMock()
+            # Create mock dropdowns with required attributes
+            for attr in ['physical_type_dropdown', 'government_type_dropdown',
+                         'government_org_dropdown', 'leader_title_dropdown',
+                         'society_type_dropdown']:
+                mock_dd = MagicMock()
+                mock_dd.relative_rect = MagicMock()
+                mock_dd.ui_container = MagicMock()
+                setattr(panel, attr, mock_dd)
 
-            panel.set_from_config()
+            old_dropdowns = {
+                'physical': panel.physical_type_dropdown,
+                'gov_type': panel.government_type_dropdown,
+                'gov_org': panel.government_org_dropdown,
+                'leader': panel.leader_title_dropdown,
+                'society': panel.society_type_dropdown,
+            }
 
-            # Dropdowns have select_option method
-            panel.government_type_dropdown.selected_option = ("Federation", "Federation")
-            panel.physical_type_dropdown.selected_option = ("Humanoid", "Humanoid")
+            with patch('game.ui.panels.race_identity_panel.pygame_gui.elements.UIDropDownMenu') as MockDD:
+                MockDD.return_value = MagicMock()
+                panel.set_from_config()
 
-    def test_set_from_config_handles_empty_government(self, mock_race_config):
-        """set_from_config handles empty government_type."""
+            # Old dropdowns were killed
+            for name, old_dd in old_dropdowns.items():
+                old_dd.kill.assert_called_once(), f"{name} dropdown was not killed"
+
+            # New dropdown was created for each (5 dropdowns total)
+            assert MockDD.call_count == 5
+
+    def test_set_from_config_passes_correct_starting_option(self, mock_race_config):
+        """set_from_config passes the config value as starting_option to new dropdowns."""
+        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+
+        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
+            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
+            mock_race_config.government_type = "Empire"
+            mock_race_config.physical_type = ""  # empty = should use EMPTY_OPTION
+            mock_race_config.government_organization = "Autocracy"
+            mock_race_config.leader_title = "Emperor"
+            mock_race_config.society_type = "Conquerors"
+            panel.race_config = mock_race_config
+            panel.ui_manager = MagicMock()
+            panel._init_empty_refs()
+
+            for attr in ['physical_type_dropdown', 'government_type_dropdown',
+                         'government_org_dropdown', 'leader_title_dropdown',
+                         'society_type_dropdown']:
+                mock_dd = MagicMock()
+                mock_dd.relative_rect = MagicMock()
+                mock_dd.ui_container = MagicMock()
+                setattr(panel, attr, mock_dd)
+
+            with patch('game.ui.panels.race_identity_panel.pygame_gui.elements.UIDropDownMenu') as MockDD:
+                MockDD.return_value = MagicMock()
+                panel.set_from_config()
+
+            # Extract starting_option from each call's kwargs
+            starting_options = [
+                call.kwargs['starting_option']
+                for call in MockDD.call_args_list
+            ]
+
+            # Order: physical, government_type, government_org, leader_title, society
+            assert starting_options[0] == "-- Select --"  # empty physical_type
+            assert starting_options[1] == "Empire"
+            assert starting_options[2] == "Autocracy"
+            assert starting_options[3] == "Emperor"
+            assert starting_options[4] == "Conquerors"
+
+    def test_set_from_config_handles_none_dropdown(self, mock_race_config):
+        """set_from_config handles None dropdowns gracefully."""
         from game.ui.panels.race_identity_panel import RaceIdentityPanel
 
         with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
             panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
             mock_race_config.government_type = ""
             panel.race_config = mock_race_config
+            panel.ui_manager = MagicMock()
             panel._init_empty_refs()
 
-            panel.government_type_dropdown = MagicMock()
-
+            # All dropdowns are None from _init_empty_refs
             # Should not error
             panel.set_from_config()
 

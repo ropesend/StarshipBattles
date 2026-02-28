@@ -18,6 +18,8 @@ import logging
 from game.core.validation import ValidationResult
 from game.strategy.data.pathfinding import find_hybrid_path, strip_start_hex
 from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.services.design_cost_calculator import DesignCostCalculator
+from game.strategy.systems.design_library import DesignLibrary
 
 logger = logging.getLogger(__name__)
 
@@ -786,20 +788,23 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
             if cmd.index < 0 or cmd.index > len(queue):
                 return ValidationResult.error(f"Invalid queue index: {cmd.index}")
 
-        # 4. Create queue item
+        # 4. Calculate design cost (PROJ-213: fix empty total_cost bug)
+        total_cost = self._load_design_cost(session, entity, cmd.design_id)
+
+        # 5. Create queue item
         queue_item = {
             "design_id": cmd.design_id,
             "type": cmd.category,
-            "turns_remaining": 1.0,  # Default, UI layer can override via calculation
-            "total_cost": {},
-            "resources_consumed": {},
+            "turns_remaining": 1.0,  # ProductionEngine recalculates dynamically
+            "total_cost": total_cost,
+            "resources_consumed": {res: 0.0 for res in total_cost},
         }
 
-        # 5. Add target_planet_id for complexes if specified
+        # 6. Add target_planet_id for complexes if specified
         if cmd.target_planet_id is not None:
             queue_item["target_planet_id"] = cmd.target_planet_id
 
-        # 6. Insert or append
+        # 7. Insert or append
         if cmd.index is not None:
             queue.insert(cmd.index, queue_item)
             logger.info(f"GameSession: Inserted {cmd.design_id} into {cmd.entity_type} {cmd.entity_id} queue at {cmd.index}")
@@ -808,6 +813,32 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
             logger.info(f"GameSession: Appended {cmd.design_id} to {cmd.entity_type} {cmd.entity_id} queue")
 
         return ValidationResult.success()
+
+    def _load_design_cost(self, session: 'GameSession', entity, design_id: str) -> Dict[str, float]:
+        """Load design data and calculate total resource cost.
+
+        PROJ-213: Populates queue items with actual build costs so
+        ProductionEngine can process tick-based resource consumption.
+
+        Args:
+            session: Game session for save_path.
+            entity: Planet or Fleet with owner_id.
+            design_id: ID of the design to get cost for.
+
+        Returns:
+            Dict mapping resource type to cost amount, empty dict on failure.
+        """
+        try:
+            empire_id = getattr(entity, 'owner_id', 0)
+            library = DesignLibrary(session.save_path, empire_id)
+            design_data = library.load_design_data(design_id)
+            if design_data is None:
+                logger.warning(f"Could not load design data for {design_id}")
+                return {}
+            return DesignCostCalculator.calculate_total_cost(design_data)
+        except (OSError, ValueError, KeyError) as e:
+            logger.warning(f"Failed to calculate design cost for {design_id}: {e}")
+            return {}
 
     def _resolve_queue(self, entity, queue_id: Optional[str]) -> Optional[list]:
         """Find the correct construction queue for the entity.

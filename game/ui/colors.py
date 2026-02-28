@@ -411,6 +411,8 @@ PROFILING_TEXT = (255, 50, 50)          # Profiling indicator text
 ZONE_HIGHLIGHT = (100, 255, 100)        # Zone selection highlight
 STAR_FALLBACK = (255, 255, 200)         # Default star color
 STORM_FALLBACK = (100, 100, 100)        # Default storm tint
+HEX_OUTLINE_OCCUPIED = (200, 60, 60)   # Red - any object in hex
+HEX_OUTLINE_PLAYER_OWNED = (220, 220, 220)  # White - player-owned asset in hex
 
 # === Button Hover (danger) ===
 BTN_DANGER_HOVER_BORDER = (150, 80, 80) # Danger button hover border

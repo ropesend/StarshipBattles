@@ -399,30 +399,56 @@ class RaceIdentityPanel:
         if self.leader_name_input:
             self.leader_name_input.set_text(self.race_config.leader_name or "")
 
-        # Set dropdowns - need to handle empty values
-        self._set_dropdown_value(self.physical_type_dropdown, self.race_config.physical_type)
-        self._set_dropdown_value(self.government_type_dropdown, self.race_config.government_type)
-        self._set_dropdown_value(self.government_org_dropdown, self.race_config.government_organization)
-        self._set_dropdown_value(self.leader_title_dropdown, self.race_config.leader_title)
-        self._set_dropdown_value(self.society_type_dropdown, self.race_config.society_type)
+        # Recreate dropdowns with new selected values (pygame_gui has no
+        # API to change the displayed selection after creation)
+        physical_options = [self.EMPTY_OPTION] + list(PHYSICAL_TYPES)
+        gov_options = [self.EMPTY_OPTION] + list(GOVERNMENT_TYPES)
+        org_options = [self.EMPTY_OPTION] + list(GOVERNMENT_ORGANIZATIONS)
+        title_options = [self.EMPTY_OPTION] + list(LEADER_TITLES)
+        society_options = [self.EMPTY_OPTION] + list(SOCIETY_TYPES)
 
-    def _set_dropdown_value(self, dropdown, value: str):
+        self.physical_type_dropdown = self._recreate_dropdown(
+            self.physical_type_dropdown, physical_options, self.race_config.physical_type)
+        self.government_type_dropdown = self._recreate_dropdown(
+            self.government_type_dropdown, gov_options, self.race_config.government_type)
+        self.government_org_dropdown = self._recreate_dropdown(
+            self.government_org_dropdown, org_options, self.race_config.government_organization)
+        self.leader_title_dropdown = self._recreate_dropdown(
+            self.leader_title_dropdown, title_options, self.race_config.leader_title)
+        self.society_type_dropdown = self._recreate_dropdown(
+            self.society_type_dropdown, society_options, self.race_config.society_type)
+
+    def _recreate_dropdown(self, dropdown, options_list, value: str):
         """
-        Set dropdown to specific value or empty option.
+        Recreate a dropdown with a new selected value.
+
+        pygame_gui's UIDropDownMenu has no API to change the selected option
+        after creation — the visual button text won't update. The standard
+        workaround is to kill the old widget and create a new one.
 
         Args:
-            dropdown: UIDropDownMenu instance
+            dropdown: Existing UIDropDownMenu to replace
+            options_list: Full options list including EMPTY_OPTION
             value: Value to select, or empty string for empty option
+
+        Returns:
+            The newly created UIDropDownMenu
         """
         if dropdown is None:
-            return
+            return None
 
-        if not value:
-            # Select empty option
-            # pygame_gui's UIDropDownMenu needs the option to exist in the list
-            dropdown.selected_option = (self.EMPTY_OPTION, self.EMPTY_OPTION)
-        else:
-            dropdown.selected_option = (value, value)
+        selected = value if value and value in options_list else self.EMPTY_OPTION
+        rect = dropdown.relative_rect
+        container = dropdown.ui_container
+        dropdown.kill()
+
+        return pygame_gui.elements.UIDropDownMenu(
+            options_list=options_list,
+            starting_option=selected,
+            relative_rect=rect,
+            manager=self.ui_manager,
+            container=container,
+        )
 
     def update_labels(self):
         """Update display labels. No-op for this panel (labels are static)."""
