@@ -496,17 +496,19 @@ class SuperweaponOrderProcessor:
             temperature = race.temperature_ideal
             water = race.water_ideal
             # Build atmosphere from positive preferences (scaled to partial pressure)
+            # Translate display names ("Oxygen") to chemical formulas ("O2")
+            from game.strategy.data.race_config import GAS_NAME_TO_FORMULA
             atmosphere = {}
             for gas, preference in race.atmosphere_preferences.items():
                 if preference > 0:
-                    # Scale preference (0-100) to partial pressure (mbar)
-                    atmosphere[gas] = preference * 10.0  # e.g., 21% O2 -> 210 mbar
+                    formula = GAS_NAME_TO_FORMULA.get(gas, gas)
+                    atmosphere[formula] = preference * 10.0
         else:
             # Fallback to human-comfortable defaults
             gravity = 9.81  # 1g
             temperature = 288.0  # ~15°C
             water = 0.3
-            atmosphere = {"Oxygen": 210.0, "Nitrogen": 780.0}  # Earth-like
+            atmosphere = {"O2": 210.0, "N2": 780.0}  # Earth-like
 
         # Create Dyson Sphere planet at system center
         # Dyson Sphere properties (mega-engineering structure enclosing a star)

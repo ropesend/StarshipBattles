@@ -70,6 +70,20 @@ DEFAULT_ATMOSPHERE_PREFERENCES = {
     "Helium": 0.0,
 }
 
+# Mapping from display names (used in preferences/presets) to chemical formulas
+# (used in planet atmosphere dicts and UI rendering)
+GAS_NAME_TO_FORMULA = {
+    "Oxygen": "O2",
+    "Nitrogen": "N2",
+    "Carbon Dioxide": "CO2",
+    "Methane": "CH4",
+    "Hydrogen": "H2",
+    "Helium": "He",
+}
+
+# Reverse mapping: chemical formula -> display name
+GAS_FORMULA_TO_NAME = {v: k for k, v in GAS_NAME_TO_FORMULA.items()}
+
 
 @dataclass
 class RaceConfig:

@@ -783,10 +783,10 @@ class TestProcessCreateDysonSphere:
         assert dyson.surface_gravity == pytest.approx(1.5 * 9.81, rel=0.01)
         assert dyson.surface_temperature == 320.0
         assert dyson.surface_water == 0.1
-        # Atmosphere should only include positive preferences
-        assert "Oxygen" in dyson.atmosphere
-        assert "Nitrogen" in dyson.atmosphere
-        assert "Methane" not in dyson.atmosphere  # Negative preference excluded
+        # Atmosphere should use chemical formulas and only include positive preferences
+        assert "O2" in dyson.atmosphere
+        assert "N2" in dyson.atmosphere
+        assert "CH4" not in dyson.atmosphere  # Negative preference excluded
 
     def test_dyson_sphere_clearing_radius_is_5(self, mock_fleet, mock_system, component_registry):
         """Planets within 5 hexes should be removed (aligned to zone radius)."""

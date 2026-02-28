@@ -9,6 +9,28 @@ Atmosphere gas composition colors appear uniform for some planet types instead o
 ## Priority
 Medium
 
-## Status (Pending)
+## Status (Awaiting Confirmation)
 
 ## Work Log
+
+### 2026-02-28 — Root Cause & Fix
+
+**Root Cause:** Data naming mismatch. Homeworld/colony atmospheres were set using full gas names ("Oxygen", "Nitrogen") from `atmosphere_preferences`, but the `AtmosphereGraph` UI maps colors by chemical formulas ("O2", "N2"). Full names fell through to `GAS_UNKNOWN` (uniform color).
+
+- `_adjust_homeworld_to_race()` in `game_initializer.py` copied preference keys (full names) directly into `planet.atmosphere`
+- `superweapon_order_processor.py` (Dyson Sphere creation) had the same issue
+- `habitability.py` also had a lookup mismatch between formula-keyed atmospheres and name-keyed preferences
+
+**Fix Applied:**
+1. Added `GAS_NAME_TO_FORMULA` and `GAS_FORMULA_TO_NAME` mappings to `game/strategy/data/race_config.py`
+2. `game/strategy/engine/game_initializer.py:228` — translates gas names to formulas when setting `planet.atmosphere`
+3. `game/strategy/engine/superweapon_order_processor.py:503` — same translation for Dyson Sphere atmosphere
+4. `game/strategy/formulas/habitability.py:152` — reverse-translates formula keys to match display-name preferences
+
+**Tests Added:**
+- `test_adjust_homeworld_translates_gas_names_to_formulas` in `test_game_initializer.py`
+- `test_formula_keys_match_display_name_preferences` in `test_habitability.py`
+- `test_formula_keys_toxic_match` in `test_habitability.py`
+- Updated Dyson Sphere test to expect chemical formula keys
+
+**Full suite: 13,003 passed, 1 skipped, 0 failed.**

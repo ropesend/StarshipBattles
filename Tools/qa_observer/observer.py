@@ -12,6 +12,7 @@ import pyaudio
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import argparse
+import audioop
 
 # Load configuration
 load_dotenv()
@@ -19,6 +20,10 @@ load_dotenv('.env')
 
 SCREENSHOTS_DIR = os.getenv('SCREENSHOTS_DIR', r'C:\Users\rossr\Pictures\Screenshots')
 SESSION_OUTPUT_DIR = os.getenv('SESSION_OUTPUT_DIR', './session_data')
+
+# Audio configuration
+VOICE_THRESHOLD = int(os.getenv('VOICE_THRESHOLD', '300'))
+SILENCE_TIMEOUT = float(os.getenv('SILENCE_TIMEOUT', '2.0'))
 
 # Audio configuration
 CHUNK = 1024
@@ -89,40 +94,74 @@ def record_audio_loop(audio_output_dir):
     listener_thread.start()
 
     try:
+        sample_width = p.get_sample_size(FORMAT)
+        
         while not exit_event.is_set():
-            # The start time is critical for the processor.py synchronization
-            start_time = time.time()
-            timestamp_str = datetime.now().strftime('%H%M%S')
-            filename = audio_output_dir / f"audio_{timestamp_str}.wav"
-            
+            print("\nListening for voice...")
+            is_recording = False
             frames = []
+            silence_start_time = None
+            chunk_start_time = None
             
-            for _ in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
-                if exit_event.is_set():
-                    break
+            while not exit_event.is_set():
                 try:
                     data = stream.read(CHUNK, exception_on_overflow=False)
-                    frames.append(data)
                 except Exception as e:
                     print(f"Audio read error: {e}")
                     break
                     
-            wf = wave.open(str(filename), 'wb')
-            wf.setnchannels(CHANNELS)
-            wf.setsampwidth(p.get_sample_size(FORMAT))
-            wf.setframerate(RATE)
-            wf.writeframes(b''.join(frames))
-            wf.close()
-            
-            # Save the exact start time in a sidecar file
-            with open(filename.with_suffix('.txt'), 'w') as f:
-                f.write(str(start_time))
+                rms = audioop.rms(data, sample_width)
                 
-            print(f"[Audio] Saved chunk: {filename.name}")
+                if not is_recording:
+                    if rms > VOICE_THRESHOLD:
+                        is_recording = True
+                        # The start time is critical for the processor.py synchronization
+                        chunk_start_time = time.time()
+                        frames.append(data)
+                        print(f"[Audio] Voice detected (RMS: {rms}). Recording started...")
+                        # If you want to debug RMS levels continuously, uncomment below:
+                        # print(f"RMS: {rms}")
+                else:
+                    frames.append(data)
+                    
+                    if rms < VOICE_THRESHOLD:
+                        if silence_start_time is None:
+                            silence_start_time = time.time()
+                        elif time.time() - silence_start_time > SILENCE_TIMEOUT:
+                            # Silence timeout reached
+                            print(f"[Audio] Silence detected. Saving chunk...")
+                            break
+                    else:
+                        silence_start_time = None
+                        
+                    # Also respect max RECORD_SECONDS to send to Google API
+                    if time.time() - chunk_start_time > RECORD_SECONDS:
+                        print(f"[Audio] Max chunk length reached ({RECORD_SECONDS}s). Saving chunk...")
+                        break
+
+            if frames and is_recording:
+                timestamp_str = datetime.now().strftime('%H%M%S')
+                filename = audio_output_dir / f"audio_{timestamp_str}.wav"
+                
+                wf = wave.open(str(filename), 'wb')
+                wf.setnchannels(CHANNELS)
+                wf.setsampwidth(sample_width)
+                wf.setframerate(RATE)
+                wf.writeframes(b''.join(frames))
+                wf.close()
+                
+                # Save the exact start time in a sidecar file
+                with open(filename.with_suffix('.txt'), 'w') as f:
+                    f.write(str(chunk_start_time))
+                    
+                print(f"[Audio] Saved chunk: {filename.name}")
             
     except KeyboardInterrupt:
         # Save any partial frames that were collected before the interrupt
-        if 'frames' in locals() and frames:
+        if 'frames' in locals() and frames and is_recording:
+            timestamp_str = datetime.now().strftime('%H%M%S')
+            filename = audio_output_dir / f"audio_{timestamp_str}.wav"
+            
             wf = wave.open(str(filename), 'wb')
             wf.setnchannels(CHANNELS)
             wf.setsampwidth(p.get_sample_size(FORMAT))
@@ -130,7 +169,7 @@ def record_audio_loop(audio_output_dir):
             wf.writeframes(b''.join(frames))
             wf.close()
             with open(filename.with_suffix('.txt'), 'w') as f:
-                f.write(str(start_time))
+                f.write(str(chunk_start_time))
             print(f"[Audio] Saved partial chunk: {filename.name}")
     finally:
         stream.stop_stream()

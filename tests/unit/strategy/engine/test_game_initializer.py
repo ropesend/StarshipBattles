@@ -195,6 +195,35 @@ class TestGameInitializer:
 
         assert abs(planet.surface_gravity - 1.2 * 9.81) < 0.1
 
+    def test_adjust_homeworld_translates_gas_names_to_formulas(self):
+        """_adjust_homeworld_to_race should convert full gas names to chemical formulas (BUG-90)."""
+        from game.strategy.engine.game_initializer import GameInitializer
+        from game.strategy.data.planet import Planet, PlanetType
+        from game.core.hex_math import HexCoord
+
+        planet = Planet(
+            name="Test", location=HexCoord(0, 0), orbit_distance=1,
+            mass=5.9e24, radius=6.3e6, surface_area=5.1e14, density=5500.0,
+            surface_gravity=9.81, surface_pressure=101325.0, surface_temperature=288.0,
+            surface_water=0.7, tectonic_activity=0.5, magnetic_field=1.0,
+            planet_type=PlanetType.BARREN
+        )
+        race_config = Mock()
+        race_config.homeworld_type = "CONTINENTAL"
+        race_config.gravity_ideal = 1.0
+        race_config.temperature_ideal = 288.0
+        race_config.water_ideal = 0.7
+        # Use full gas names as in DEFAULT_ATMOSPHERE_PREFERENCES / homeworld_presets.json
+        race_config.atmosphere_preferences = {"Oxygen": 50.0, "Nitrogen": 30.0}
+
+        GameInitializer._adjust_homeworld_to_race(planet, race_config)
+
+        # Atmosphere dict should use chemical formulas, not full names
+        assert "O2" in planet.atmosphere, "Expected 'O2' key, got full name 'Oxygen'"
+        assert "N2" in planet.atmosphere, "Expected 'N2' key, got full name 'Nitrogen'"
+        assert "Oxygen" not in planet.atmosphere, "Full name 'Oxygen' should be translated to 'O2'"
+        assert "Nitrogen" not in planet.atmosphere, "Full name 'Nitrogen' should be translated to 'N2'"
+
     def test_adjust_homeworld_handles_invalid_planet_type(self):
         """_adjust_homeworld_to_race should handle invalid planet type gracefully."""
         from game.strategy.engine.game_initializer import GameInitializer
