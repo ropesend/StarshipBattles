@@ -117,6 +117,7 @@ def get_visible_bounding_box(surface: pygame.Surface, alpha_threshold: int = 10)
 def scale_image_by_visible_portion(
     surface: pygame.Surface,
     target_height: int,
+    max_width: Optional[int] = None,
     placeholder_width: int = 40,
     placeholder_color: Tuple[int, int, int] = TEXT_DIM
 ) -> pygame.Surface:
@@ -124,22 +125,27 @@ def scale_image_by_visible_portion(
     Scale an image based on its visible (non-transparent) portion, then crop
     to the visible area so the result is tightly framed.
 
-    The visible height will match target_height, maintaining the original
-    aspect ratio of the visible content.
+    Maintains the original aspect ratio of the visible content. When max_width
+    is provided, scales to fit within both max_width and target_height, and
+    centers the result on a transparent canvas of exactly (max_width, target_height).
 
     Args:
         surface: Source surface with alpha channel
         target_height: Target height for the visible portion
+        max_width: Optional maximum width constraint. When set, the result is
+            centered on a (max_width, target_height) transparent canvas.
         placeholder_width: Width of placeholder if surface is empty (default 40)
         placeholder_color: Color of placeholder (default dark gray)
 
     Returns:
         Cropped, scaled surface of the visible portion
     """
+    canvas_width = max_width if max_width is not None else placeholder_width
+
     # Find visible bounding box
     bbox = get_visible_bounding_box(surface)
     if bbox is None:
-        placeholder = pygame.Surface((placeholder_width, target_height), pygame.SRCALPHA)
+        placeholder = pygame.Surface((canvas_width, target_height), pygame.SRCALPHA)
         placeholder.fill(placeholder_color)
         return placeholder
 
@@ -148,7 +154,7 @@ def scale_image_by_visible_portion(
     visible_height = max_y - min_y
 
     if visible_height <= 0 or visible_width <= 0:
-        placeholder = pygame.Surface((placeholder_width, target_height), pygame.SRCALPHA)
+        placeholder = pygame.Surface((canvas_width, target_height), pygame.SRCALPHA)
         placeholder.fill(placeholder_color)
         return placeholder
 
@@ -156,11 +162,25 @@ def scale_image_by_visible_portion(
     visible_rect = pygame.Rect(min_x, min_y, visible_width, visible_height)
     cropped = surface.subsurface(visible_rect).copy()
 
-    # Scale cropped visible content to target_height, maintaining aspect ratio
+    # Scale cropped visible content, maintaining aspect ratio
     scale = target_height / visible_height
-    new_width = max(1, int(visible_width * scale))
+    if max_width is not None:
+        width_scale = max_width / visible_width
+        scale = min(scale, width_scale)
 
-    return pygame.transform.smoothscale(cropped, (new_width, target_height))
+    new_width = max(1, int(visible_width * scale))
+    new_height = max(1, int(visible_height * scale))
+    scaled = pygame.transform.smoothscale(cropped, (new_width, new_height))
+
+    if max_width is not None:
+        # Center on transparent canvas of exact target dimensions
+        canvas = pygame.Surface((max_width, target_height), pygame.SRCALPHA)
+        x_offset = (max_width - new_width) // 2
+        y_offset = (target_height - new_height) // 2
+        canvas.blit(scaled, (x_offset, y_offset))
+        return canvas
+
+    return scaled
 
 
 def create_section_header(
