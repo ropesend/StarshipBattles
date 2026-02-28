@@ -174,5 +174,5 @@ When all tasks above are done:
 - [x] `pytest tests/ -n 12` - full suite passes (12884 passed, 1 skipped, 4 bug_13 failures)
 - [x] Core strategy layer fallbacks removed (ShipInstance, FleetCapabilityCalculator)
 - [x] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to "Project Complete"
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to "Project Complete"
