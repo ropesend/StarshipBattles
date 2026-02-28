@@ -8,22 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-27
-**Last Completed:** PROJ-204 Phase 3 - Command Handler Consolidation
-**Current Status:** PROJ-204 Phase 3 Complete - Phases 4-5 remain
+**Last Completed:** PROJ-204 Phase 4 - Strategy Layer Consolidation
+**Current Status:** PROJ-204 Phase 4 Complete - Phase 5 remains
 **Current Project:** PROJ-204
-**Current Phase:** Phase 3 Complete
-**Test Status:** 12804 passed, 1 skipped
+**Current Phase:** Phase 4 Complete
+**Test Status:** 12815 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Added `_resolve_fleet_required()` to BaseCommandHandler (raises ValueError)
-- Added `_resolve_planet_optional()` to BaseCommandHandler (configurable required param)
-- Added `add_move_order_if_needed()` module-level helper for auto-queuing MOVE orders
-- Refactored TransferCommandHandler and WarpCommandHandler to use new helper
-- ColonizeMissionCommandHandler kept separate (unique BUG-70 population loading)
-- Added 9 new unit tests
-- All tests passing: 12804 passed, 1 skipped
-- Next: Phase 4 - Strategy Layer Consolidation
+- Added `_verify_and_consume_resources()` to FleetResourceAggregator (generic resource verify/consume)
+- Refactored has_resources_for_movement/warp and consume_movement/warp_resources
+- Added `deserialize_list()` to game/core/json_utils.py (resilient list deserialization)
+- Refactored StarSystem.from_dict() (4 loops) and Planet.from_dict() (2 loops)
+- Fixed 5 pre-existing cargo test bugs (incorrect mock attribute)
+- Added 20 new unit tests
+- Deferred CQ-23 and CQ-06 (lower priority)
+- All tests passing: 12815 passed, 1 skipped
+- Next: Phase 5 - Workshop UI Cleanup
 
 ---
 
@@ -67,6 +68,7 @@
 | 2026-02-27 | PROJ-204 | Phase 1 | Complete | 12778 passed | - | LayerIterator + DesignCostCalculator, 8 files refactored, +35 tests |
 | 2026-02-27 | PROJ-204 | Phase 2 | Complete | 12795 passed | - | strip_start_hex, get_tick_interval, O(1) lookup, zone helpers, +17 tests |
 | 2026-02-27 | PROJ-204 | Phase 3 | Complete | 12804 passed | - | _resolve_fleet_required, _resolve_planet_optional, add_move_order_if_needed, +9 tests |
+| 2026-02-27 | PROJ-204 | Phase 4 | Complete | 12815 passed | - | _verify_and_consume_resources, deserialize_list, +20 tests, CQ-23/CQ-06 deferred |
 
 ---
 

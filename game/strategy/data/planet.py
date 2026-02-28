@@ -458,28 +458,17 @@ class Planet:
             ) from e
 
         # Deserialize facilities with resilient error handling (skip bad, log warning)
-        facilities = []
-        for i, f in enumerate(data.get('facilities', [])):
-            try:
-                facility = PlanetaryFacility.from_dict(f)
-                facilities.append(facility)
-            except (PersistenceException, KeyError, TypeError) as e:
-                logger.warning(
-                    f"Planet '{data['name']}': skipping bad facility at index {i} - "
-                    f"{type(e).__name__}: {e}"
-                )
+        from game.core.json_utils import deserialize_list
+        parent_name = f"Planet '{data['name']}'"
+
+        facilities = deserialize_list(
+            data.get('facilities', []), PlanetaryFacility.from_dict, 'facility', parent_name
+        )
 
         # Deserialize populations with resilient error handling (skip bad, log warning)
-        populations = []
-        for i, p in enumerate(data.get('populations', [])):
-            try:
-                population = SpeciesPopulation.from_dict(p)
-                populations.append(population)
-            except (PersistenceException, KeyError, TypeError) as e:
-                logger.warning(
-                    f"Planet '{data['name']}': skipping bad population at index {i} - "
-                    f"{type(e).__name__}: {e}"
-                )
+        populations = deserialize_list(
+            data.get('populations', []), SpeciesPopulation.from_dict, 'population', parent_name
+        )
 
         return cls(
             name=data['name'],

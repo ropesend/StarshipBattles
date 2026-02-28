@@ -116,16 +116,15 @@ class StarSystem:
             Invalid children (stars, planets, warp points) are skipped with
             a warning log to allow resilient degradation.
         """
-        logger = logging.getLogger(__name__)
+        from game.core.json_utils import deserialize_list
+
         require_keys(data, ['name', 'global_location'], 'StarSystem')
+        parent_name = f"StarSystem '{data['name']}'"
 
         # Deserialize stars with error isolation
-        stars = []
-        for i, s in enumerate(data.get('stars', [])):
-            try:
-                stars.append(Star.from_dict(s))
-            except (PersistenceException, KeyError, TypeError, ValueError) as e:
-                logger.warning(f"StarSystem '{data['name']}': skipping invalid star at index {i}: {e}")
+        stars = deserialize_list(
+            data.get('stars', []), Star.from_dict, 'star', parent_name
+        )
 
         system = cls(
             name=data['name'],
@@ -135,25 +134,19 @@ class StarSystem:
         )
 
         # Deserialize warp points with error isolation
-        for i, wp in enumerate(data.get('warp_points', [])):
-            try:
-                system.warp_points.append(WarpPoint.from_dict(wp))
-            except (PersistenceException, KeyError, TypeError, ValueError) as e:
-                logger.warning(f"StarSystem '{data['name']}': skipping invalid warp point at index {i}: {e}")
+        system.warp_points = deserialize_list(
+            data.get('warp_points', []), WarpPoint.from_dict, 'warp point', parent_name
+        )
 
         # Deserialize planets with error isolation
-        for i, p in enumerate(data.get('planets', [])):
-            try:
-                system.planets.append(Planet.from_dict(p))
-            except (PersistenceException, KeyError, TypeError, ValueError) as e:
-                logger.warning(f"StarSystem '{data['name']}': skipping invalid planet at index {i}: {e}")
+        system.planets = deserialize_list(
+            data.get('planets', []), Planet.from_dict, 'planet', parent_name
+        )
 
         # Deserialize storms with error isolation (PROJ-189)
-        for i, s in enumerate(data.get('storms', [])):
-            try:
-                system.storms.append(Storm.from_dict(s))
-            except (PersistenceException, KeyError, TypeError, ValueError) as e:
-                logger.warning(f"StarSystem '{data['name']}': skipping invalid storm at index {i}: {e}")
+        system.storms = deserialize_list(
+            data.get('storms', []), Storm.from_dict, 'storm', parent_name
+        )
 
         return system
 

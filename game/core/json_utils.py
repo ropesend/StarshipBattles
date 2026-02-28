@@ -6,6 +6,7 @@ All JSON file I/O should use these functions for consistent error handling.
 
 Usage:
     from game.core.json_utils import load_json, save_json, load_json_required
+    from game.core.json_utils import deserialize_list
 
     # Safe loading with default
     data = load_json("config.json", default={})
@@ -15,6 +16,14 @@ Usage:
 
     # Saving
     success = save_json("output.json", data)
+
+    # Resilient list deserialization (skips invalid items)
+    planets = deserialize_list(
+        data.get('planets', []),
+        Planet.from_dict,
+        entity_name='planet',
+        parent_name=f"StarSystem '{system.name}'"
+    )
 
 Exceptions:
     load_json_required raises:
@@ -30,7 +39,7 @@ Note:
 import json
 import logging
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Callable, List, Optional, TypeVar, Union
 
 logger = logging.getLogger(__name__)
 
@@ -152,3 +161,57 @@ def save_json(
     except TypeError as e:
         logger.error(f"Failed to serialize data to JSON for {file_path}: {e}")
         return False
+
+
+# Type variable for generic deserializer return type
+T = TypeVar('T')
+
+
+def deserialize_list(
+    items: Optional[List[dict]],
+    deserializer: Callable[[dict], T],
+    entity_name: str,
+    parent_name: str
+) -> List[T]:
+    """
+    Deserialize a list of items with resilient error handling.
+
+    PROJ-204 Phase 4: Consolidates 11+ identical error-handling loops (CQ-22).
+
+    Invalid items are skipped with a warning log, allowing resilient degradation
+    when loading saved game data. This ensures partial save files can still be
+    loaded rather than failing entirely.
+
+    Args:
+        items: List of dicts to deserialize (None treated as empty list)
+        deserializer: Function that converts a dict to the target type
+        entity_name: Name of entity type for logging (e.g., 'planet', 'star')
+        parent_name: Name of parent object for logging context (e.g., "StarSystem 'Alpha'")
+
+    Returns:
+        List of successfully deserialized items (invalid items omitted)
+
+    Example:
+        planets = deserialize_list(
+            data.get('planets', []),
+            Planet.from_dict,
+            entity_name='planet',
+            parent_name=f"StarSystem '{system.name}'"
+        )
+    """
+    from game.core.exceptions import PersistenceException
+
+    if items is None:
+        return []
+
+    result = []
+    for i, item in enumerate(items):
+        try:
+            result.append(deserializer(item))
+        except (PersistenceException, KeyError, TypeError, ValueError) as e:
+            logger.warning(
+                f"{parent_name}: skipping invalid {entity_name} at index {i} - "
+                f"{type(e).__name__}: {e}"
+            )
+
+    return result

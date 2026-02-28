@@ -52,6 +52,49 @@ class FleetResourceAggregator:
                 total_costs[resource_type] = total_costs.get(resource_type, 0) + cost
         return total_costs
 
+    def _verify_and_consume_resources(
+        self,
+        cost_getter: Callable[['ShipInstance'], Dict[str, float]],
+        consume: bool = False,
+        multiplier: int = 1
+    ) -> bool:
+        """
+        Verify and optionally consume resources from all combat-capable ships.
+
+        PROJ-204 Phase 4: Consolidates duplicated verify/consume patterns (CQ-02).
+        This is an atomic operation - either all ships have enough resources
+        and consumption happens, or no resources are consumed.
+
+        Args:
+            cost_getter: Function that returns a dict of costs for a ship.
+            consume: If True, consume resources after verification passes.
+            multiplier: Multiply costs by this factor (e.g., hexes moved).
+
+        Returns:
+            True if all ships have sufficient resources, False otherwise.
+        """
+        ships = self._fleet.get_combat_capable_ships()
+
+        # Phase 1: Verify all ships have enough resources
+        for ship in ships:
+            costs = cost_getter(ship)
+            for resource_type, cost in costs.items():
+                total_cost = cost * multiplier
+                if total_cost > 0:
+                    if ship.get_current_resource(resource_type) < total_cost:
+                        return False
+
+        # Phase 2: Consume resources if requested
+        if consume:
+            for ship in ships:
+                costs = cost_getter(ship)
+                for resource_type, cost in costs.items():
+                    total_cost = cost * multiplier
+                    if total_cost > 0:
+                        ship.consume_resource(resource_type, total_cost)
+
+        return True
+
     # --- Generic Movement Resource Methods ---
 
     def get_movement_resource_costs(self) -> Dict[str, float]:
@@ -72,14 +115,10 @@ class FleetResourceAggregator:
         Returns:
             True if all combat-capable ships have enough of all required resources.
         """
-        for ship in self._fleet.get_combat_capable_ships():
-            costs = ship.get_all_resource_costs_per_hex()
-            for resource_type, cost in costs.items():
-                if cost > 0:
-                    current = ship.get_current_resource(resource_type)
-                    if current < cost:
-                        return False
-        return True
+        return self._verify_and_consume_resources(
+            lambda ship: ship.get_all_resource_costs_per_hex(),
+            consume=False
+        )
 
     def consume_movement_resources(self, hexes: int = 1) -> bool:
         """
@@ -94,26 +133,11 @@ class FleetResourceAggregator:
             True if all ships had sufficient resources, False otherwise.
             Note: If False, no resources are consumed (atomic operation).
         """
-        ships = self._fleet.get_combat_capable_ships()
-
-        # First, verify all ships have enough resources
-        for ship in ships:
-            costs = ship.get_all_resource_costs_per_hex()
-            for resource_type, cost in costs.items():
-                total_cost = cost * hexes
-                if total_cost > 0:
-                    if ship.get_current_resource(resource_type) < total_cost:
-                        return False
-
-        # All ships have enough, now consume
-        for ship in ships:
-            costs = ship.get_all_resource_costs_per_hex()
-            for resource_type, cost in costs.items():
-                total_cost = cost * hexes
-                if total_cost > 0:
-                    ship.consume_resource(resource_type, total_cost)
-
-        return True
+        return self._verify_and_consume_resources(
+            lambda ship: ship.get_all_resource_costs_per_hex(),
+            consume=True,
+            multiplier=hexes
+        )
 
     # --- Warp Resource Methods ---
 
@@ -136,14 +160,10 @@ class FleetResourceAggregator:
         Returns:
             True if all combat-capable ships have enough resources for one warp.
         """
-        for ship in self._fleet.get_combat_capable_ships():
-            warp_costs = ship.get_warp_resource_costs()
-            for resource_type, cost in warp_costs.items():
-                if cost > 0:
-                    current = ship.get_current_resource(resource_type)
-                    if current < cost:
-                        return False
-        return True
+        return self._verify_and_consume_resources(
+            lambda ship: ship.get_warp_resource_costs(),
+            consume=False
+        )
 
     def consume_warp_resources(self) -> bool:
         """
@@ -156,24 +176,10 @@ class FleetResourceAggregator:
             True if all ships had sufficient resources, False otherwise.
             Note: If False, no resources are consumed (atomic operation).
         """
-        ships = self._fleet.get_combat_capable_ships()
-
-        # First, verify all ships have enough resources
-        for ship in ships:
-            warp_costs = ship.get_warp_resource_costs()
-            for resource_type, cost in warp_costs.items():
-                if cost > 0:
-                    if ship.get_current_resource(resource_type) < cost:
-                        return False
-
-        # All ships have enough, now consume
-        for ship in ships:
-            warp_costs = ship.get_warp_resource_costs()
-            for resource_type, cost in warp_costs.items():
-                if cost > 0:
-                    ship.consume_resource(resource_type, cost)
-
-        return True
+        return self._verify_and_consume_resources(
+            lambda ship: ship.get_warp_resource_costs(),
+            consume=True
+        )
 
     # --- Capability Summary Methods ---
 

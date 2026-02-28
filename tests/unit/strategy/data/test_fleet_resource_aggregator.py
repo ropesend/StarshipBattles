@@ -346,7 +346,7 @@ class TestCargoMethods:
     def test_get_fleet_cargo_capacity(self, resource_aggregator, mock_fleet, mock_ship):
         """Fleet cargo capacity summed from ships."""
         mock_ship.get_cargo_capacity.return_value = 100
-        mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
+        mock_fleet.ships = [mock_ship]
 
         result = resource_aggregator.get_fleet_cargo_capacity("passengers")
 
@@ -360,7 +360,7 @@ class TestCargoMethods:
         ship2 = MagicMock()
         ship2.get_cargo_capacity.return_value = 50
 
-        mock_fleet.get_combat_capable_ships.return_value = [ship1, ship2]
+        mock_fleet.ships = [ship1, ship2]
 
         result = resource_aggregator.get_fleet_cargo_capacity("passengers")
 
@@ -378,7 +378,7 @@ class TestCargoMethods:
     def test_load_cargo_distributes_to_ships(self, resource_aggregator, mock_fleet, mock_ship):
         """Cargo is distributed to ships with capacity."""
         mock_ship.load_cargo.return_value = 75  # Loaded 75 of 100
-        mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
+        mock_fleet.ships = [mock_ship]
 
         result = resource_aggregator.load_cargo_to_fleet("passengers", 100)
 
@@ -667,6 +667,169 @@ class TestFuelEnduranceEdgeCases:
 # Test: Cargo Distribution Edge Cases
 # =============================================================================
 
+# =============================================================================
+# Test: Generic Resource Verification and Consumption (PROJ-204)
+# =============================================================================
+
+class TestVerifyAndConsumeResources:
+    """Tests for generic _verify_and_consume_resources() helper (CQ-02)."""
+
+    def test_verify_only_returns_true_when_all_ships_have_resources(
+        self, resource_aggregator, mock_fleet, mock_ship
+    ):
+        """Verify-only mode returns True when all ships have sufficient resources."""
+        mock_ship.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        mock_ship.get_current_resource.return_value = 100.0
+        mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
+
+        result = resource_aggregator._verify_and_consume_resources(
+            lambda ship: ship.get_all_resource_costs_per_hex(),
+            consume=False
+        )
+
+        assert result is True
+        mock_ship.consume_resource.assert_not_called()
+
+    def test_verify_only_returns_false_when_resources_insufficient(
+        self, resource_aggregator, mock_fleet, mock_ship
+    ):
+        """Verify-only mode returns False when resources insufficient."""
+        mock_ship.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        mock_ship.get_current_resource.return_value = 5.0  # Less than 10 cost
+        mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
+
+        result = resource_aggregator._verify_and_consume_resources(
+            lambda ship: ship.get_all_resource_costs_per_hex(),
+            consume=False
+        )
+
+        assert result is False
+
+    def test_consume_mode_consumes_resources_when_available(
+        self, resource_aggregator, mock_fleet, mock_ship
+    ):
+        """Consume mode consumes resources when all ships have enough."""
+        mock_ship.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        mock_ship.get_current_resource.return_value = 100.0
+        mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
+
+        result = resource_aggregator._verify_and_consume_resources(
+            lambda ship: ship.get_all_resource_costs_per_hex(),
+            consume=True
+        )
+
+        assert result is True
+        mock_ship.consume_resource.assert_called_with(ResourceType.FUEL, 10.0)
+
+    def test_consume_mode_no_consumption_when_insufficient(
+        self, resource_aggregator, mock_fleet, mock_ship
+    ):
+        """Consume mode doesn't consume when verification fails (atomic)."""
+        mock_ship.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        mock_ship.get_current_resource.return_value = 5.0  # Insufficient
+        mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
+
+        result = resource_aggregator._verify_and_consume_resources(
+            lambda ship: ship.get_all_resource_costs_per_hex(),
+            consume=True
+        )
+
+        assert result is False
+        mock_ship.consume_resource.assert_not_called()
+
+    def test_consume_mode_multiplier_applied(
+        self, resource_aggregator, mock_fleet, mock_ship
+    ):
+        """Consume mode applies multiplier to costs."""
+        mock_ship.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        mock_ship.get_current_resource.return_value = 100.0
+        mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
+
+        result = resource_aggregator._verify_and_consume_resources(
+            lambda ship: ship.get_all_resource_costs_per_hex(),
+            consume=True,
+            multiplier=5
+        )
+
+        assert result is True
+        mock_ship.consume_resource.assert_called_with(ResourceType.FUEL, 50.0)  # 10 * 5
+
+    def test_verify_empty_fleet_returns_true(self, resource_aggregator, mock_fleet):
+        """Empty fleet has resources (vacuously true)."""
+        mock_fleet.get_combat_capable_ships.return_value = []
+
+        result = resource_aggregator._verify_and_consume_resources(
+            lambda ship: ship.get_all_resource_costs_per_hex(),
+            consume=False
+        )
+
+        assert result is True
+
+    def test_verify_multiple_ships_all_checked(self, resource_aggregator, mock_fleet):
+        """All ships must have resources for verify to pass."""
+        ship1 = MagicMock()
+        ship1.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        ship1.get_current_resource.return_value = 100.0  # Sufficient
+
+        ship2 = MagicMock()
+        ship2.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        ship2.get_current_resource.return_value = 5.0  # Insufficient
+
+        mock_fleet.get_combat_capable_ships.return_value = [ship1, ship2]
+
+        result = resource_aggregator._verify_and_consume_resources(
+            lambda ship: ship.get_all_resource_costs_per_hex(),
+            consume=True
+        )
+
+        assert result is False
+        ship1.consume_resource.assert_not_called()  # Atomic - neither consumed
+        ship2.consume_resource.assert_not_called()
+
+    def test_verify_multiple_resource_types_all_checked(
+        self, resource_aggregator, mock_fleet
+    ):
+        """All resource types must be sufficient."""
+        ship = MagicMock()
+        ship.get_all_resource_costs_per_hex.return_value = {
+            ResourceType.FUEL: 10.0,
+            "energy": 5.0
+        }
+        def get_resource(resource_type):
+            if resource_type == ResourceType.FUEL:
+                return 100.0  # Sufficient
+            return 2.0  # Insufficient
+        ship.get_current_resource.side_effect = get_resource
+        mock_fleet.get_combat_capable_ships.return_value = [ship]
+
+        result = resource_aggregator._verify_and_consume_resources(
+            lambda ship: ship.get_all_resource_costs_per_hex(),
+            consume=True
+        )
+
+        assert result is False
+        ship.consume_resource.assert_not_called()
+
+    def test_zero_cost_resources_skipped(self, resource_aggregator, mock_fleet):
+        """Resources with 0 cost don't prevent verification."""
+        ship = MagicMock()
+        ship.get_all_resource_costs_per_hex.return_value = {
+            ResourceType.FUEL: 10.0,
+            "energy": 0.0  # Zero cost
+        }
+        ship.get_current_resource.return_value = 100.0
+        mock_fleet.get_combat_capable_ships.return_value = [ship]
+
+        result = resource_aggregator._verify_and_consume_resources(
+            lambda ship: ship.get_all_resource_costs_per_hex(),
+            consume=True
+        )
+
+        assert result is True
+        # Only non-zero resource consumed
+        ship.consume_resource.assert_called_once_with(ResourceType.FUEL, 10.0)
+
+
 class TestCargoDistributionEdgeCases:
     """Tests for cargo distribution across multiple ships."""
 
@@ -691,7 +854,7 @@ class TestCargoDistributionEdgeCases:
         ship2 = MagicMock()
         ship2.load_cargo.return_value = 50  # Loads remaining 50
 
-        cargo_fleet.get_combat_capable_ships.return_value = [ship1, ship2]
+        cargo_fleet.ships = [ship1, ship2]
 
         result = cargo_aggregator.load_cargo_to_fleet("passengers", 80)
 
@@ -707,7 +870,7 @@ class TestCargoDistributionEdgeCases:
         ship2 = MagicMock()
         ship2.load_cargo.return_value = 100  # Should not be called
 
-        cargo_fleet.get_combat_capable_ships.return_value = [ship1, ship2]
+        cargo_fleet.ships = [ship1, ship2]
 
         result = cargo_aggregator.load_cargo_to_fleet("passengers", 100)
 

@@ -258,3 +258,141 @@ class TestLoadJsonRequired:
 
         with pytest.raises(json.JSONDecodeError):
             load_json_required(str(test_file))
+
+
+# =============================================================================
+# Test: deserialize_list() - PROJ-204 Phase 4
+# =============================================================================
+
+class TestDeserializeList:
+    """Tests for resilient list deserialization (CQ-22)."""
+
+    def test_deserialize_list_all_valid(self):
+        """All items deserialize successfully."""
+        from game.core.json_utils import deserialize_list
+
+        items = [{"value": 1}, {"value": 2}, {"value": 3}]
+        deserializer = lambda x: x["value"]
+
+        result = deserialize_list(items, deserializer, "TestEntity", "Test")
+
+        assert result == [1, 2, 3]
+
+    def test_deserialize_list_skips_invalid_items(self):
+        """Invalid items are skipped with warning logged."""
+        from game.core.json_utils import deserialize_list
+
+        items = [{"value": 1}, {"bad": "item"}, {"value": 3}]
+        def deserializer(x):
+            return x["value"]  # Will raise KeyError on bad item
+
+        result = deserialize_list(items, deserializer, "TestEntity", "Test")
+
+        assert result == [1, 3]  # Bad item skipped
+
+    def test_deserialize_list_empty_list(self):
+        """Empty input returns empty output."""
+        from game.core.json_utils import deserialize_list
+
+        result = deserialize_list([], lambda x: x, "TestEntity", "Test")
+
+        assert result == []
+
+    def test_deserialize_list_all_invalid_returns_empty(self):
+        """All invalid items returns empty list."""
+        from game.core.json_utils import deserialize_list
+
+        items = [{"bad": 1}, {"bad": 2}]
+        def deserializer(x):
+            raise ValueError("Invalid")
+
+        result = deserialize_list(items, deserializer, "TestEntity", "Test")
+
+        assert result == []
+
+    def test_deserialize_list_handles_keyerror(self):
+        """KeyError from deserializer is caught."""
+        from game.core.json_utils import deserialize_list
+
+        items = [{"missing": "key"}]
+        def deserializer(x):
+            return x["required_key"]  # Will raise KeyError
+
+        result = deserialize_list(items, deserializer, "TestEntity", "Test")
+
+        assert result == []
+
+    def test_deserialize_list_handles_typeerror(self):
+        """TypeError from deserializer is caught."""
+        from game.core.json_utils import deserialize_list
+
+        items = [None]  # Will cause TypeError when accessed
+        def deserializer(x):
+            return x["key"]  # TypeError: 'NoneType' is not subscriptable
+
+        result = deserialize_list(items, deserializer, "TestEntity", "Test")
+
+        assert result == []
+
+    def test_deserialize_list_handles_valueerror(self):
+        """ValueError from deserializer is caught."""
+        from game.core.json_utils import deserialize_list
+
+        items = [{"value": "not_a_number"}]
+        def deserializer(x):
+            return int(x["value"])  # Will raise ValueError
+
+        result = deserialize_list(items, deserializer, "TestEntity", "Test")
+
+        assert result == []
+
+    def test_deserialize_list_handles_persistence_exception(self):
+        """PersistenceException from deserializer is caught."""
+        from game.core.json_utils import deserialize_list
+        from game.core.exceptions import PersistenceException
+
+        items = [{"data": "bad"}]
+        def deserializer(x):
+            raise PersistenceException("Bad data")
+
+        result = deserialize_list(items, deserializer, "TestEntity", "Test")
+
+        assert result == []
+
+    def test_deserialize_list_preserves_order(self):
+        """Output maintains input order for valid items."""
+        from game.core.json_utils import deserialize_list
+
+        items = [{"v": 3}, {"v": 1}, {"bad": True}, {"v": 4}, {"v": 1}]
+        def deserializer(x):
+            return x["v"]
+
+        result = deserialize_list(items, deserializer, "TestEntity", "Test")
+
+        assert result == [3, 1, 4, 1]  # Order preserved, bad item omitted
+
+    def test_deserialize_list_logs_warning_on_failure(self, caplog):
+        """Warning logged for each failed item."""
+        from game.core.json_utils import deserialize_list
+        import logging
+
+        items = [{"good": 1}, {"bad": 2}, {"bad": 3}]
+        def deserializer(x):
+            return x["good"]
+
+        with caplog.at_level(logging.WARNING):
+            deserialize_list(items, deserializer, "TestEntity", "ParentName")
+
+        # Should have 2 warnings (indices 1 and 2)
+        assert len([r for r in caplog.records if r.levelno == logging.WARNING]) == 2
+        # Check warning message contains useful context
+        assert "ParentName" in caplog.text
+        assert "TestEntity" in caplog.text
+
+    def test_deserialize_list_with_none_input_returns_empty(self):
+        """None input returns empty list."""
+        from game.core.json_utils import deserialize_list
+
+        result = deserialize_list(None, lambda x: x, "TestEntity", "Test")
+
+        assert result == []

@@ -28,14 +28,14 @@ Consolidate duplicated code across the strategy layer and design workshop UI ide
 | 1 | Foundation Utilities | AR-02, CQ-20, CQ-21, CQ-82 | Medium | Complete |
 | 2 | Quick Wins & Bug Fixes | CQ-42, CQ-44, CQ-50, CQ-26, CQ-27, CQ-07 | Simple | Complete |
 | 3 | Command Handler Consolidation | CQ-40, CQ-41, CQ-43, CQ-45, CQ-48 | Medium | Complete |
-| 4 | Strategy Layer Consolidation | CQ-02, CQ-22, CQ-23, CQ-06 | Medium | Pending |
+| 4 | Strategy Layer Consolidation | CQ-02, CQ-22 | Medium | Complete |
 | 5 | Workshop UI Cleanup | CQ-61, CQ-63, CQ-67, CQ-69, CQ-74 | Simple-Medium | Pending |
 
 ## Current Status
-- **Phase:** Phase 3 Complete
+- **Phase:** Phase 4 Complete
 - **Started:** 2026-02-27
 - **Baseline Tests:** 12743 passed, 1 skipped
-- **Current Tests:** 12804 passed, 1 skipped (+61 new tests total)
+- **Current Tests:** 12815 passed, 1 skipped (+72 new tests total)
 
 ## Phase 1 Summary
 - Created `game/core/patterns/layer_iterator.py` with 4 utility functions
@@ -58,6 +58,15 @@ Consolidate duplicated code across the strategy layer and design workshop UI ide
 - Refactored TransferCommandHandler and WarpCommandHandler to use new helper
 - Note: ColonizeMissionCommandHandler kept separate due to unique BUG-70 population loading
 - Added 9 new unit tests
+
+## Phase 4 Summary
+- Added `_verify_and_consume_resources()` to FleetResourceAggregator - generic resource verify/consume
+- Refactored 4 methods to use generic helper (movement + warp, check + consume)
+- Added `deserialize_list()` to `game/core/json_utils.py` - resilient list deserialization
+- Refactored StarSystem.from_dict() (4 loops) and Planet.from_dict() (2 loops)
+- Fixed 5 pre-existing cargo test bugs (incorrect mock attribute)
+- Added 20 new unit tests (9 for resource aggregator, 11 for deserialize_list)
+- Deferred CQ-23 and CQ-06 (lower priority, existing code works)
 
 ## Decisions
 See [decisions.md](decisions.md)
