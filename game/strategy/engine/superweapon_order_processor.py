@@ -56,6 +56,7 @@ class SuperweaponOrderProcessor:
         fleet: Fleet,
         empire: 'Empire',
         galaxy: Galaxy,
+        empires: List['Empire'],
         component_registry: Optional[Dict[str, Any]] = None
     ) -> SuperweaponResult:
         """
@@ -67,6 +68,7 @@ class SuperweaponOrderProcessor:
             fleet: Fleet with IMPLODE_PLANET order
             empire: Empire that owns the fleet
             galaxy: Galaxy for planet operations
+            empires: All empires (needed to remove planet from any owner's colonies)
             component_registry: Component registry for ability lookup
 
         Returns:
@@ -88,20 +90,18 @@ class SuperweaponOrderProcessor:
                 fleet, "DestroyPlanet", component_registry
             )
 
-        if ship is None and component_registry:
+        if ship is None:
+            # Belt-and-suspenders: validation should catch this, but if we get here
+            # without a valid ship, cancel the order gracefully
+            logger.warning(f"Fleet {fleet.id}: No ship with DestroyPlanet ability found, canceling order")
             fleet.pop_order()
             return SuperweaponResult(success=False, message="No ship with DestroyPlanet ability")
 
-        # If no registry provided, just use first ship (for tests without registry)
-        if ship is None:
-            ship = fleet.ships[0] if fleet.ships else None
-
-        # Remove planet from colony list if owned
+        # Remove planet from colony list if owned (iterate all empires to catch enemy planets)
         if target_planet.owner_id is not None:
-            # Find owning empire and remove from colonies
-            if target_planet in empire.colonies:
-                empire.colonies.remove(target_planet)
-            # Note: For enemy planets, we'd need to iterate empires
+            for emp in empires:
+                if target_planet in emp.colonies:
+                    emp.colonies.remove(target_planet)
 
         # Unregister planet from galaxy
         galaxy.unregister_planet(target_planet)
@@ -262,7 +262,11 @@ class SuperweaponOrderProcessor:
             )
 
         if ship is None:
-            ship = fleet.ships[0] if fleet.ships else None
+            # Belt-and-suspenders: validation should catch this, but if we get here
+            # without a valid ship, cancel the order gracefully
+            logger.warning(f"Fleet {fleet.id}: No ship with OpenWarpPoint ability found, canceling order")
+            fleet.pop_order()
+            return SuperweaponResult(success=False, message="No ship with OpenWarpPoint ability")
 
         # Calculate warp point locations
         # Near-end: at fleet's local position within system
@@ -354,7 +358,11 @@ class SuperweaponOrderProcessor:
             )
 
         if ship is None:
-            ship = fleet.ships[0] if fleet.ships else None
+            # Belt-and-suspenders: validation should catch this, but if we get here
+            # without a valid ship, cancel the order gracefully
+            logger.warning(f"Fleet {fleet.id}: No ship with CloseWarpPoint ability found, canceling order")
+            fleet.pop_order()
+            return SuperweaponResult(success=False, message="No ship with CloseWarpPoint ability")
 
         # Remove warp link (both ends)
         galaxy.remove_warp_link(current_system.name, destination_id)
@@ -389,6 +397,7 @@ class SuperweaponOrderProcessor:
         fleet: Fleet,
         empire: 'Empire',
         galaxy: Galaxy,
+        empires: List['Empire'],
         component_registry: Optional[Dict[str, Any]] = None
     ) -> SuperweaponResult:
         """
@@ -401,6 +410,7 @@ class SuperweaponOrderProcessor:
             fleet: Fleet with CREATE_DYSON_SPHERE order
             empire: Empire that owns the fleet
             galaxy: Galaxy for system operations
+            empires: All empires (needed to remove planets from any owner's colonies)
             component_registry: Component registry for ability lookup
 
         Returns:
@@ -432,7 +442,11 @@ class SuperweaponOrderProcessor:
             )
 
         if ship is None:
-            ship = fleet.ships[0] if fleet.ships else None
+            # Belt-and-suspenders: validation should catch this, but if we get here
+            # without a valid ship, cancel the order gracefully
+            logger.warning(f"Fleet {fleet.id}: No ship with CreateDysonSphere ability found, canceling order")
+            fleet.pop_order()
+            return SuperweaponResult(success=False, message="No ship with CreateDysonSphere ability")
 
         # Remove planets within zone radius (5 hexes for 11-hex diameter sphere)
         dyson_radius = 5
@@ -443,10 +457,11 @@ class SuperweaponOrderProcessor:
                 planets_to_remove.append(planet)
 
         for planet in planets_to_remove:
-            # Remove from empire colonies if owned (Planet always has owner_id)
+            # Remove from empire colonies if owned (iterate all empires to catch enemy planets)
             if planet.owner_id is not None:
-                if planet in empire.colonies:
-                    empire.colonies.remove(planet)
+                for emp in empires:
+                    if planet in emp.colonies:
+                        emp.colonies.remove(planet)
             galaxy.unregister_planet(planet)
 
         # Remove all stars

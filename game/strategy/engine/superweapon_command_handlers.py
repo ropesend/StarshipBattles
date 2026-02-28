@@ -44,7 +44,8 @@ class ImplodePlanetCommandHandler(BaseCommandHandler):
 
         # 3. Validate
         result = SuperweaponValidator.validate_implode_planet(
-            session.galaxy, fleet, planet
+            session.galaxy, fleet, planet,
+            component_registry=session.turn_engine._registries.components
         )
 
         # 4. Apply
@@ -68,7 +69,8 @@ class StellerateStarCommandHandler(BaseCommandHandler):
 
         # 2. Validate
         result = SuperweaponValidator.validate_stellerate_star(
-            session.galaxy, fleet
+            session.galaxy, fleet,
+            component_registry=session.turn_engine._registries.components
         )
 
         # 3. Apply
@@ -92,7 +94,8 @@ class OpenWarpPointCommandHandler(BaseCommandHandler):
 
         # 2. Validate
         result = SuperweaponValidator.validate_open_warp_point(
-            session.galaxy, fleet, cmd.target_system_name
+            session.galaxy, fleet, cmd.target_system_name,
+            component_registry=session.turn_engine._registries.components
         )
 
         # 3. Apply
@@ -120,7 +123,8 @@ class CloseWarpPointCommandHandler(BaseCommandHandler):
 
         # 2. Validate
         result = SuperweaponValidator.validate_close_warp_point(
-            session.galaxy, fleet, cmd.warp_point_destination_id
+            session.galaxy, fleet, cmd.warp_point_destination_id,
+            component_registry=session.turn_engine._registries.components
         )
 
         # 3. Apply
@@ -144,7 +148,8 @@ class CreateDysonSphereCommandHandler(BaseCommandHandler):
 
         # 2. Validate
         result = SuperweaponValidator.validate_create_dyson_sphere(
-            session.galaxy, fleet
+            session.galaxy, fleet,
+            component_registry=session.turn_engine._registries.components
         )
 
         # 3. Apply
@@ -235,12 +240,20 @@ class ImplodePlanetMissionCommandHandler(BaseCommandHandler):
         if error:
             return error
 
-        # 3. Setup move
+        # 3. Validate ability
+        result = SuperweaponValidator.validate_implode_planet(
+            session.galaxy, fleet, planet,
+            component_registry=session.turn_engine._registries.components
+        )
+        if not result.is_valid:
+            return result
+
+        # 4. Setup move
         move_result = _setup_mission_move(session, fleet, cmd.target_hex)
         if not move_result.is_valid:
             return move_result
 
-        # 4. Queue IMPLODE_PLANET order
+        # 5. Queue IMPLODE_PLANET order
         action_order = FleetOrder(OrderType.IMPLODE_PLANET, target=planet)
         fleet.add_order(action_order)
 
@@ -258,12 +271,20 @@ class StellerateStarMissionCommandHandler(BaseCommandHandler):
         if error:
             return error
 
-        # 2. Setup move
+        # 2. Validate ability
+        result = SuperweaponValidator.validate_stellerate_star(
+            session.galaxy, fleet,
+            component_registry=session.turn_engine._registries.components
+        )
+        if not result.is_valid:
+            return result
+
+        # 3. Setup move
         move_result = _setup_mission_move(session, fleet, cmd.target_hex)
         if not move_result.is_valid:
             return move_result
 
-        # 3. Queue STELLERATE_STAR order
+        # 4. Queue STELLERATE_STAR order
         action_order = FleetOrder(OrderType.STELLERATE_STAR, target=None)
         fleet.add_order(action_order)
 
@@ -281,12 +302,20 @@ class OpenWarpPointMissionCommandHandler(BaseCommandHandler):
         if error:
             return error
 
-        # 2. Setup move
+        # 2. Validate ability
+        result = SuperweaponValidator.validate_open_warp_point(
+            session.galaxy, fleet, cmd.target_system_name,
+            component_registry=session.turn_engine._registries.components
+        )
+        if not result.is_valid:
+            return result
+
+        # 3. Setup move
         move_result = _setup_mission_move(session, fleet, cmd.target_hex)
         if not move_result.is_valid:
             return move_result
 
-        # 3. Queue OPEN_WARP_POINT order with target dict
+        # 4. Queue OPEN_WARP_POINT order with target dict
         target_dict = {
             'target_hex': cmd.target_hex,
             'target_system_name': cmd.target_system_name
@@ -308,12 +337,20 @@ class CloseWarpPointMissionCommandHandler(BaseCommandHandler):
         if error:
             return error
 
-        # 2. Setup move
+        # 2. Validate ability
+        result = SuperweaponValidator.validate_close_warp_point(
+            session.galaxy, fleet, cmd.warp_point_destination_id,
+            component_registry=session.turn_engine._registries.components
+        )
+        if not result.is_valid:
+            return result
+
+        # 3. Setup move
         move_result = _setup_mission_move(session, fleet, cmd.target_hex)
         if not move_result.is_valid:
             return move_result
 
-        # 3. Queue CLOSE_WARP_POINT order
+        # 4. Queue CLOSE_WARP_POINT order
         action_order = FleetOrder(OrderType.CLOSE_WARP_POINT, target=cmd.warp_point_destination_id)
         fleet.add_order(action_order)
 
@@ -331,12 +368,20 @@ class CreateDysonSphereMissionCommandHandler(BaseCommandHandler):
         if error:
             return error
 
-        # 2. Setup move
+        # 2. Validate ability
+        result = SuperweaponValidator.validate_create_dyson_sphere(
+            session.galaxy, fleet,
+            component_registry=session.turn_engine._registries.components
+        )
+        if not result.is_valid:
+            return result
+
+        # 3. Setup move
         move_result = _setup_mission_move(session, fleet, cmd.target_hex)
         if not move_result.is_valid:
             return move_result
 
-        # 3. Queue CREATE_DYSON_SPHERE order
+        # 4. Queue CREATE_DYSON_SPHERE order
         action_order = FleetOrder(OrderType.CREATE_DYSON_SPHERE, target=None)
         fleet.add_order(action_order)
 

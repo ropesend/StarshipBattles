@@ -361,7 +361,9 @@ class TestImplodePlanetMissionCommandHandler:
         cmd = QueueImplodePlanetMissionCommand(fleet_id=1, target_hex=target_hex, planet_id=100)
         handler = ImplodePlanetMissionCommandHandler()
 
-        with patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
+             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+            mock_validator.validate_implode_planet.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5), HexCoord(7, 7), HexCoord(10, 10)]
             result = handler.execute(mock_session, cmd)
 
@@ -380,7 +382,9 @@ class TestImplodePlanetMissionCommandHandler:
         handler = ImplodePlanetMissionCommandHandler()
 
         path = [HexCoord(5, 5), HexCoord(7, 7), HexCoord(10, 10)]
-        with patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
+             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+            mock_validator.validate_implode_planet.return_value = ValidationResult()
             mock_path.return_value = path
             handler.execute(mock_session, cmd)
 
@@ -404,7 +408,9 @@ class TestStellerateStarMissionCommandHandler:
         cmd = QueueStellerateStarMissionCommand(fleet_id=1, target_hex=target_hex)
         handler = StellerateStarMissionCommandHandler()
 
-        with patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
+             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+            mock_validator.validate_stellerate_star.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
             result = handler.execute(mock_session, cmd)
 
@@ -434,7 +440,9 @@ class TestOpenWarpPointMissionCommandHandler:
         )
         handler = OpenWarpPointMissionCommandHandler()
 
-        with patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
+             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+            mock_validator.validate_open_warp_point.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
             result = handler.execute(mock_session, cmd)
 
@@ -465,7 +473,9 @@ class TestCloseWarpPointMissionCommandHandler:
         )
         handler = CloseWarpPointMissionCommandHandler()
 
-        with patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
+             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+            mock_validator.validate_close_warp_point.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
             result = handler.execute(mock_session, cmd)
 
@@ -492,7 +502,9 @@ class TestCreateDysonSphereMissionCommandHandler:
         cmd = QueueCreateDysonSphereMissionCommand(fleet_id=1, target_hex=target_hex)
         handler = CreateDysonSphereMissionCommandHandler()
 
-        with patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
+             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+            mock_validator.validate_create_dyson_sphere.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
             result = handler.execute(mock_session, cmd)
 
@@ -518,7 +530,9 @@ class TestMissionHandlerNoPath:
         cmd = QueueStellerateStarMissionCommand(fleet_id=1, target_hex=target_hex)
         handler = StellerateStarMissionCommandHandler()
 
-        with patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
+             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+            mock_validator.validate_stellerate_star.return_value = ValidationResult()
             mock_path.return_value = []  # No path found
             result = handler.execute(mock_session, cmd)
 
@@ -572,7 +586,9 @@ class TestHandlerEdgeCases:
         cmd = QueueStellerateStarMissionCommand(fleet_id=1, target_hex=target_hex)
         handler = StellerateStarMissionCommandHandler()
 
-        with patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
+             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+            mock_validator.validate_stellerate_star.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5)]  # Already there
             result = handler.execute(mock_session, cmd)
 

@@ -647,7 +647,9 @@ class FleetOrderProcessor:
             proc = SuperweaponOrderProcessor()
 
             if order.type == OrderType.IMPLODE_PLANET:
-                result = proc.process_implode_planet(fleet, empire, galaxy, component_registry)
+                result = proc.process_implode_planet(
+                    fleet, empire, galaxy, empires or [], component_registry
+                )
             elif order.type == OrderType.STELLERATE_STAR:
                 result = proc.process_stellerate_star(
                     fleet, empire, galaxy, empires or [], component_registry
@@ -657,7 +659,9 @@ class FleetOrderProcessor:
             elif order.type == OrderType.CLOSE_WARP_POINT:
                 result = proc.process_close_warp_point(fleet, empire, galaxy, component_registry)
             elif order.type == OrderType.CREATE_DYSON_SPHERE:
-                result = proc.process_create_dyson_sphere(fleet, empire, galaxy, component_registry)
+                result = proc.process_create_dyson_sphere(
+                    fleet, empire, galaxy, empires or [], component_registry
+                )
             elif order.type == OrderType.SELF_DESTRUCT:
                 result = proc.process_self_destruct(fleet, empire, galaxy)
             else:

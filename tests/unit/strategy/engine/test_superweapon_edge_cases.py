@@ -69,6 +69,11 @@ def mock_session(mock_fleet, mock_galaxy, mock_planet):
     session._get_planet_by_id = Mock(return_value=mock_planet)
     session.galaxy = mock_galaxy
     session.empires = []
+    # Add turn_engine._registries.components for validator
+    registries = Mock()
+    registries.components = {}
+    session.turn_engine = Mock()
+    session.turn_engine._registries = registries
     return session
 
 
@@ -92,7 +97,9 @@ class TestSetupMissionMove:
         cmd = QueueImplodePlanetMissionCommand(fleet_id=1, target_hex=target_hex, planet_id=100)
         handler = ImplodePlanetMissionCommandHandler()
 
-        with patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
+             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+            mock_validator.validate_implode_planet.return_value = ValidationResult()
             # Path should be calculated from (8,8) not (5,5)
             mock_path.return_value = [HexCoord(8, 8), HexCoord(10, 10), HexCoord(12, 12)]
             handler.execute(mock_session, cmd)
@@ -113,7 +120,9 @@ class TestSetupMissionMove:
         cmd = QueueImplodePlanetMissionCommand(fleet_id=1, target_hex=target_hex, planet_id=100)
         handler = ImplodePlanetMissionCommandHandler()
 
-        with patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
+             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+            mock_validator.validate_implode_planet.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
             handler.execute(mock_session, cmd)
 
@@ -133,7 +142,9 @@ class TestSetupMissionMove:
         cmd = QueueImplodePlanetMissionCommand(fleet_id=1, target_hex=target_hex, planet_id=100)
         handler = ImplodePlanetMissionCommandHandler()
 
-        with patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
+             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+            mock_validator.validate_implode_planet.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
             handler.execute(mock_session, cmd)
 
@@ -154,7 +165,9 @@ class TestSetupMissionMove:
         cmd = QueueImplodePlanetMissionCommand(fleet_id=1, target_hex=target_hex, planet_id=100)
         handler = ImplodePlanetMissionCommandHandler()
 
-        with patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+        with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
+             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+            mock_validator.validate_implode_planet.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(8, 8), HexCoord(10, 10), HexCoord(12, 12)]
             handler.execute(mock_session, cmd)
 
@@ -273,8 +286,9 @@ class TestOrderProcessorErrorCases:
         fleet = Mock()
         fleet.get_current_order.return_value = None
 
+        empire = Mock()
         processor = SuperweaponOrderProcessor()
-        result = processor.process_implode_planet(fleet, Mock(), Mock())
+        result = processor.process_implode_planet(fleet, empire, Mock(), [empire])
 
         assert not result.success
         assert "No IMPLODE_PLANET order" in result.message
@@ -286,8 +300,9 @@ class TestOrderProcessorErrorCases:
         fleet = Mock()
         fleet.get_current_order.return_value = FleetOrder(OrderType.MOVE, target=HexCoord(10, 10))
 
+        empire = Mock()
         processor = SuperweaponOrderProcessor()
-        result = processor.process_implode_planet(fleet, Mock(), Mock())
+        result = processor.process_implode_planet(fleet, empire, Mock(), [empire])
 
         assert not result.success
         assert "No IMPLODE_PLANET order" in result.message
@@ -300,8 +315,9 @@ class TestOrderProcessorErrorCases:
         fleet.get_current_order.return_value = FleetOrder(OrderType.IMPLODE_PLANET, target=None)
         fleet.pop_order = Mock()
 
+        empire = Mock()
         processor = SuperweaponOrderProcessor()
-        result = processor.process_implode_planet(fleet, Mock(), Mock())
+        result = processor.process_implode_planet(fleet, empire, Mock(), [empire])
 
         assert not result.success
         assert "No target planet" in result.message
@@ -451,8 +467,9 @@ class TestOrderProcessorErrorCases:
         galaxy = Mock()
         galaxy.systems = {HexCoord(10, 10): system}  # For get_system_at_hex lookup
 
+        empire = Mock()
         processor = SuperweaponOrderProcessor()
-        result = processor.process_create_dyson_sphere(fleet, Mock(), galaxy)
+        result = processor.process_create_dyson_sphere(fleet, empire, galaxy, [empire])
 
         assert not result.success
         assert "no stars" in result.message
@@ -516,8 +533,10 @@ class TestOrderProcessorNoAbility:
         # Registry without DestroyPlanet ability for 'laser'
         component_registry = {'laser': {'abilities': {}}}
 
+        empire = Mock(colonies=[])
         processor = SuperweaponOrderProcessor()
-        result = processor.process_implode_planet(fleet, Mock(colonies=[]), galaxy, component_registry)
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=None):
+            result = processor.process_implode_planet(fleet, empire, galaxy, [empire], component_registry)
 
         assert not result.success
         assert "DestroyPlanet ability" in result.message
@@ -560,7 +579,8 @@ class TestOrderProcessorColonyRemoval:
         component_registry = {'planet_imploder': {'abilities': {'DestroyPlanet': {}}}}
 
         processor = SuperweaponOrderProcessor()
-        processor.process_implode_planet(fleet, empire, galaxy, component_registry)
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=ship):
+            processor.process_implode_planet(fleet, empire, galaxy, [empire], component_registry)
 
         # Planet should be removed from colonies
         assert planet not in empire.colonies

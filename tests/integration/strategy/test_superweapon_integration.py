@@ -185,7 +185,7 @@ class TestImplodePlanetIntegration:
         # Process the superweapon order
         processor = SuperweaponOrderProcessor()
         result = processor.process_implode_planet(
-            fleet, empire, galaxy, component_registry
+            fleet, empire, galaxy, [empire], component_registry
         )
 
         # Verify result
@@ -441,7 +441,7 @@ class TestCreateDysonSphereIntegration:
         # Process the superweapon order
         processor = SuperweaponOrderProcessor()
         result = processor.process_create_dyson_sphere(
-            fleet, empire, galaxy, component_registry
+            fleet, empire, galaxy, [empire], component_registry
         )
 
         # Verify result
