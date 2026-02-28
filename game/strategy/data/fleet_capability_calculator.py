@@ -2,6 +2,10 @@
 
 PROJ-87 Phase 4: Encapsulates fleet capability queries like space yards,
 warp capability, and build type checking.
+
+PROJ-212 Phase 3: Added constructor DI for component_registry. Fallback
+to global registry maintained for backward compatibility until PROJ-211
+makes DI required across the codebase.
 """
 
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
@@ -12,7 +16,12 @@ if TYPE_CHECKING:
 
 
 def _get_default_component_registry() -> Dict[str, Any]:
-    """Get the default component registry for ability lookups."""
+    """Get the default component registry for ability lookups.
+
+    PROJ-212: This helper is retained for backward compatibility during
+    the DI migration. It will be removed when PROJ-211 makes component_registry
+    a required parameter.
+    """
     from game.core.registry import get_default_registry_provider
     return get_default_registry_provider().get_components()
 
@@ -28,28 +37,40 @@ class FleetCapabilityCalculator:
     """
 
     @staticmethod
-    def ship_has_spaceyard(ship: 'ShipInstance') -> bool:
+    def ship_has_spaceyard(
+        ship: 'ShipInstance',
+        component_registry: Optional[Dict[str, Any]] = None
+    ) -> bool:
         """
         Check if a single ship has a space shipyard component.
 
         Args:
             ship: The ShipInstance to check.
+            component_registry: Optional component registry for ability lookups.
+                If None, falls back to global registry (PROJ-211 will make required).
 
         Returns:
             True if ship has a component with SpaceShipyard ability.
         """
         from game.strategy.services.component_inspector import ship_has_ability
-        registry = _get_default_component_registry()
+        registry = component_registry if component_registry is not None else _get_default_component_registry()
         return ship_has_ability(ship, 'SpaceShipyard', registry)
 
-    def __init__(self, fleet: 'Fleet'):
+    def __init__(
+        self,
+        fleet: 'Fleet',
+        component_registry: Optional[Dict[str, Any]] = None
+    ):
         """
         Initialize calculator with fleet reference.
 
         Args:
             fleet: The Fleet instance to calculate capabilities for.
+            component_registry: Optional component registry for ability lookups.
+                If None, falls back to global registry (PROJ-211 will make required).
         """
         self._fleet = fleet
+        self._component_registry = component_registry
 
     @property
     def has_space_shipyard(self) -> bool:
@@ -65,11 +86,17 @@ class FleetCapabilityCalculator:
     def space_shipyard_count(self) -> int:
         """Count total fleet space yard components across all combat-capable ships."""
         from game.strategy.services.component_inspector import count_ability
-        registry = _get_default_component_registry()
+        registry = self._get_registry()
         count = 0
         for ship in self._fleet.get_combat_capable_ships():
             count += count_ability(ship, 'SpaceShipyard', registry)
         return count
+
+    def _get_registry(self) -> Dict[str, Any]:
+        """Get component registry, falling back to global if not injected."""
+        if self._component_registry is not None:
+            return self._component_registry
+        return _get_default_component_registry()
 
     def can_build_type(self, vehicle_type: str, galaxy: Any = None) -> bool:
         """
@@ -163,24 +190,32 @@ class FleetCapabilityCalculator:
         Returns:
             List of ShipInstance objects that have the ability.
         """
+        from game.strategy.services.component_inspector import ship_has_ability as check_ability
+        registry = self._get_registry()
         result = []
         for ship in self._fleet.get_combat_capable_ships():
-            if self.ship_has_ability(ship, ability_name):
+            if check_ability(ship, ability_name, registry):
                 result.append(ship)
         return result
 
     @staticmethod
-    def ship_has_ability(ship: 'ShipInstance', ability_name: str) -> bool:
+    def ship_has_ability(
+        ship: 'ShipInstance',
+        ability_name: str,
+        component_registry: Optional[Dict[str, Any]] = None
+    ) -> bool:
         """
         Check if a single ship has the specified ability.
 
         Args:
             ship: The ShipInstance to check.
             ability_name: Name of the ability to check for.
+            component_registry: Optional component registry for ability lookups.
+                If None, falls back to global registry (PROJ-211 will make required).
 
         Returns:
             True if ship has the ability, False otherwise.
         """
         from game.strategy.services.component_inspector import ship_has_ability
-        registry = _get_default_component_registry()
+        registry = component_registry if component_registry is not None else _get_default_component_registry()
         return ship_has_ability(ship, ability_name, registry)

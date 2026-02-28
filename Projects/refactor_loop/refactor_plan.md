@@ -8,20 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-27
-**Last Completed:** PROJ-212 Phase 2 - OrderType/FleetOrder Extraction
-**Current Status:** Phase 2 complete, Phase 3 ready
+**Last Completed:** PROJ-212 Phase 3 - DI & Service-Locator Fixes
+**Current Status:** All phases complete - Audit required
 **Current Project:** PROJ-212
-**Current Phase:** Phase 3 (DI & Service-Locator Fixes)
+**Current Phase:** Audit Cycle 1
 **Test Status:** 12866 passed, 1 skipped (+ 4 pre-existing bug_13_colony_flags failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 2 completed - OrderType/FleetOrder extraction:
-  - Task 2.1: Created game/strategy/data/order_types.py with OrderType, FleetOrder, MOVEMENT_ORDER_TYPES, ACTION_ORDER_TYPES
-  - Task 2.2: Updated 15 game source files + 73 test files to import from order_types.py
-  - Task 2.3: Verified no remaining imports from fleet.py for order types (fleet.py keeps internal imports)
-  - Task 2.4: Replaced action_time_resolver wrapper functions with module-level constants
-- Next: Phase 3 - DI & service-locator fixes
+- Phase 3 completed - DI & Service-Locator Fixes:
+  - Task 3.1: Added `component_registry` DI param to FleetCapabilityCalculator constructor and static methods
+  - Task 3.1: Added `_get_registry()` instance method for fallback to global registry
+  - Task 3.1: Retained `_get_default_component_registry()` helper for backward compatibility (PROJ-211 scope)
+  - Task 3.2: Audited all deferred registry imports - found ~20 TYPE_CHECKING (correct), ~8 DI fallbacks (PROJ-211 scope)
+  - Task 3.2: No unnecessary deferred imports found - Phase 2's OrderType extraction resolved main issues
+- All 3 phases complete - Ready for audit
 
 ---
 
@@ -79,6 +80,7 @@
 | 2026-02-27 | PROJ-207 | Audit 1 | PASSED | 12866 passed | - | All implementations verified, no issues |
 | 2026-02-27 | PROJ-212 | Phase 1 | Complete | 12866 passed | pending | 5 quick-win tasks: deferred imports, facade bypass |
 | 2026-02-27 | PROJ-212 | Phase 2 | Complete | 12866 passed | pending | order_types.py extraction, 88 files updated |
+| 2026-02-27 | PROJ-212 | Phase 3 | Complete | 12866 passed | pending | DI constructor added, deferred import audit done |
 
 ---
 
