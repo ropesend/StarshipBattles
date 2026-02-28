@@ -103,15 +103,15 @@ Infrastructure is in place (ship_factory fixture, singleton_registries fixture).
 get_calculated_stats(). This means ANY test that adds a ShipInstance to a Fleet
 needs registries. ~109 tests fail when fallback is removed.
 
-- [ ] Update tests/unit/strategy/test_fleet_capability_calculator.py (~15 tests)
-- [ ] Update tests/unit/strategy/test_fleet_capability_calculator_di.py (1 test)
-- [ ] Update tests/unit/test_advanced_fleet_orders.py (2 tests)
-- [ ] Update tests/integration/gameplay_loop/*.py (5 tests)
+- [x] Update tests/unit/strategy/test_fleet_capability_calculator.py (27 tests - DONE)
+- [x] Update tests/unit/strategy/test_fleet_capability_calculator_di.py (9 tests - already DI compliant)
+- [x] Update tests/unit/test_advanced_fleet_orders.py (7 tests - uses direct assignment, no add_ship)
+- [x] Update tests/integration/gameplay_loop/*.py (27 tests - already DI compliant)
 - [x] Update tests/integration/resource_system/*.py (7 tests - DONE)
-- [ ] Update tests/integration/save_load/*.py (7 tests/errors)
-- [ ] Update tests/unit/strategy/test_fleet_battle_adapter.py (8 tests)
-- [ ] Update tests/unit/strategy/ship_instance/*.py (6 tests)
-- [ ] Update tests/unit/strategy/test_ship_resource_manager.py (1 test)
+- [x] Update tests/integration/save_load/*.py (41 tests - already DI compliant)
+- [x] Update tests/unit/strategy/test_fleet_battle_adapter.py (13 tests - already DI compliant)
+- [x] Update tests/unit/strategy/ship_instance/*.py (94 tests - already DI compliant)
+- [x] Update tests/unit/strategy/test_ship_resource_manager.py (24 tests - already DI compliant)
 - [ ] Update remaining test files (~50+ files)
 - [ ] Verify: fallback removal succeeds
 
