@@ -55,11 +55,11 @@ class AbilityManager:
             # 1. Polymorphic check (preferred)
             if target_class and isinstance(ab, target_class):
                 found.append(ab)
-            # [KNOWN_ISSUE] Fallback for Module Identity Drift in tests.
-            # When test modules reload ability classes, isinstance() fails due to
-            # different class objects. This __name__ check provides test isolation.
-            # Ref: Phase 2 Task 2.5 audit - documented as intentional tech debt.
-            else:
+            elif target_class is not None:
+                # [KNOWN_ISSUE] Fallback for Module Identity Drift in tests.
+                # When test modules reload ability classes, isinstance() fails due to
+                # different class objects. This __name__ check provides test isolation.
+                # Ref: Phase 2 Task 2.5 audit - documented as intentional tech debt.
                 for cls in ab.__class__.mro():
                     if cls.__name__ == ability_name:
                         found.append(ab)

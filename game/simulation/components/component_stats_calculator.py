@@ -14,6 +14,10 @@ Usage:
 """
 from typing import Dict, List, Any, Optional, TYPE_CHECKING
 from game.simulation.formula_system import safe_evaluate_math_formula
+from game.simulation.components.modifiers import (
+    apply_modifier_effects,
+    get_default_stat_multipliers
+)
 
 if TYPE_CHECKING:
     from game.simulation.components.component import Component
@@ -47,11 +51,6 @@ class ComponentStatsCalculator:
                 - mass_mult, mass_add, hp_mult, cost_mult
                 - properties dict for direct property overrides
         """
-        from game.simulation.components.modifiers import (
-            apply_modifier_effects,
-            get_default_stat_multipliers
-        )
-
         # Use shared function for canonical default stats
         stats = get_default_stat_multipliers()
 

@@ -403,7 +403,7 @@ class FormationBehavior(AIBehavior):
 
 
 # =============================================================================
-# TEST-SPECIFIC BEHAVIORS
+# UTILITY BEHAVIORS
 # =============================================================================
 
 class DoNothingBehavior(AIBehavior):

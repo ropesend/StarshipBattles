@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Fix branching structure, move import, rename misleading comment.
 
 ---
@@ -16,7 +16,7 @@
 **File:** `game/simulation/components/ability_manager.py`
 **Tests:** `pytest tests/unit/simulation/components/test_ability_manager.py tests/`
 
-- [ ] In `get_abilities()` method, restructure the if/else at lines 54-66:
+- [x] In `get_abilities()` method, restructure the if/else at lines 54-66:
   ```python
   # Current (problematic - MRO walk runs for every non-match):
   if target_class and isinstance(ab, target_class):
@@ -35,44 +35,44 @@
               found.append(ab)
               break
   ```
-- [ ] Keep the `[KNOWN_ISSUE]` comment block - this is documented tech debt
-- [ ] Run ability manager tests
-- [ ] Run full test suite to verify no regressions
+- [x] Keep the `[KNOWN_ISSUE]` comment block - this is documented tech debt
+- [x] Run ability manager tests
+- [x] Run full test suite to verify no regressions
 
-**Notes:** The key change is adding `elif target_class is not None:` so the MRO walk ONLY fires when we had a target_class but isinstance failed (identity drift), not when iterating past non-matching abilities.
+**Notes:** Changed `else:` to `elif target_class is not None:` so MRO walk only fires when isinstance fails for a provided target_class, not when iterating past non-matching abilities.
 
 ### Task 3.2: Move runtime import to module level [Simple]
 **File:** `game/simulation/components/component_stats_calculator.py`
 **Tests:** `pytest tests/unit/simulation/components/`
 
-- [ ] Move import from inside `calculate_modifier_stats()` (lines 50-53) to module level:
+- [x] Move import from inside `calculate_modifier_stats()` (lines 50-53) to module level:
   ```python
   from game.simulation.components.modifiers import (
       apply_modifier_effects,
       get_default_stat_multipliers
   )
   ```
-- [ ] Verify no circular import: `python -c "from game.simulation.components.component_stats_calculator import ComponentStatsCalculator"`
-- [ ] Run tests
+- [x] Verify no circular import: `python -c "from game.simulation.components.component_stats_calculator import ComponentStatsCalculator"`
+- [x] Run tests
 
-**Notes:** Verified no circular dependency - `modifiers.py` only imports `logging`.
+**Notes:** Import moved to module level successfully, no circular dependency.
 
 ### Task 3.3: Rename misleading AI behavior comment [Simple]
 **File:** `game/ai/behaviors.py`
 **Tests:** No tests needed (comment-only change)
 
-- [ ] Change section header at line 406 from `TEST-SPECIFIC BEHAVIORS` to `UTILITY BEHAVIORS`
-- [ ] Verify no other references to "TEST-SPECIFIC" in the file
+- [x] Change section header at line 406 from `TEST-SPECIFIC BEHAVIORS` to `UTILITY BEHAVIORS`
+- [x] Verify no other references to "TEST-SPECIFIC" in the file
 
-**Notes:** These behaviors are instantiated in every AIController and selectable via strategy data.
+**Notes:** Comment updated. These behaviors are production code used by AIController.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] `pytest tests/unit/simulation/components/` passes
-- [ ] `pytest tests/ -n 12` full suite passes (baseline: 12,743+ passed, 0 failures)
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to indicate project complete
+- [x] All task checkboxes above are checked
+- [x] `pytest tests/unit/simulation/components/` passes (927 passed)
+- [x] `pytest tests/ -n 12` full suite passes (12,831 passed, 1 skipped)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to indicate project complete
