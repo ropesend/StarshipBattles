@@ -13,7 +13,6 @@ $ErrorActionPreference = "Continue"
 # Configuration
 $PLAN_FILE = "Projects/complexity_loop/cycle_plan.md"
 $WORKER_PROMPT = "Projects/complexity_loop/REFACTOR_WORKER.md"
-$WORKSPACE_DIR = "C:/Dev/Starship Battles"
 $TRIM_SCRIPT = "Projects/complexity_loop/trim_execution_log.py"
 $CHECK_SCRIPT = "Projects/complexity_loop/check_completion.py"
 $SLEEP_DURATION = 10
