@@ -31,9 +31,7 @@ All 19+ callers across 4 files use `fleet.pop_order()` directly. These methods a
 - [x] Verify: no production code breaks
 
 **Option B — Make authoritative (better long-term, more effort):**
-- [ ] Route all `fleet.pop_order()` calls through `complete_order()` or `cancel_order()` as appropriate
-- [ ] This gives a single place to add logging, events, cleanup hooks later
-- [ ] Update all 12+ calls in `fleet_order_processor.py`, 6 in `superweapon_order_processor.py`, 1 in `action_execution_engine.py`
+*(Not chosen - Option A selected)*
 
 **Recommended:** Option A for now. If a future project needs lifecycle hooks, that's the time to centralize.
 
