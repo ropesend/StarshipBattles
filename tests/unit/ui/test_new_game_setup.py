@@ -255,3 +255,54 @@ class TestNewGameSetupPlayerCount:
                 player_count=0,  # Invalid
                 empire_names=[]
             )
+
+
+class TestSetupRacePassesLoadedData:
+    """BUG-92: Verify Setup Species passes loaded race data to RaceSetupScreen."""
+
+    def test_setup_race_passes_loaded_race(self):
+        """When a race is already loaded, Setup Species should pass it as race_to_edit."""
+        from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
+        from game.strategy.data.race_config import RaceConfig
+
+        loaded_race = RaceConfig(race_id="loaded_species", name="Loaded Species")
+
+        with patch('game.ui.screens.new_game_setup_screen.NewGameSetupScreen.__init__', return_value=None):
+            screen = NewGameSetupScreen.__new__(NewGameSetupScreen)
+            screen.player_races = [loaded_race, None, None, None]
+            screen.ui_manager = MagicMock()
+            screen.ui_manager.window_resolution = (1920, 1080)
+            screen.active_race_modal = None
+            screen.race_modal_player_index = -1
+
+        with patch('game.ui.screens.race_setup_screen.RaceSetupScreen') as MockRaceSetup:
+            screen._on_setup_race_clicked(0)
+
+            MockRaceSetup.assert_called_once()
+            call_kwargs = MockRaceSetup.call_args
+            # race_to_edit should be the loaded race, not None
+            assert call_kwargs.kwargs.get('race_to_edit') is loaded_race or \
+                   (len(call_kwargs.args) > 4 and call_kwargs.args[4] is loaded_race), \
+                "race_to_edit should be the loaded race config"
+
+    def test_setup_race_no_loaded_race_passes_none(self):
+        """When no race is loaded, Setup Species should pass None as race_to_edit."""
+        from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
+
+        with patch('game.ui.screens.new_game_setup_screen.NewGameSetupScreen.__init__', return_value=None):
+            screen = NewGameSetupScreen.__new__(NewGameSetupScreen)
+            screen.player_races = [None, None, None, None]
+            screen.ui_manager = MagicMock()
+            screen.ui_manager.window_resolution = (1920, 1080)
+            screen.active_race_modal = None
+            screen.race_modal_player_index = -1
+
+        with patch('game.ui.screens.race_setup_screen.RaceSetupScreen') as MockRaceSetup:
+            screen._on_setup_race_clicked(0)
+
+            MockRaceSetup.assert_called_once()
+            call_kwargs = MockRaceSetup.call_args
+            # race_to_edit should be None
+            race_to_edit = call_kwargs.kwargs.get('race_to_edit')
+            assert race_to_edit is None, \
+                "race_to_edit should be None when no race is loaded"

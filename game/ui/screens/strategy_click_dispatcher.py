@@ -114,6 +114,10 @@ class ClickModeDispatcher:
                 )
             elif result and result.get('type') == 'success':
                 self._handler._fleet_router.finish_move_action(result['fleet'])
+            else:
+                # BUG-93: Error or no result — exit MOVE mode to prevent trapping
+                self.input_mode = 'SELECT'
+                logger.debug("Input Mode: SELECT (move failed)")
             return True
 
         elif button == 3:  # Right click cancels

@@ -200,6 +200,48 @@ class TestClickHandling:
 
         mock_scene._fleet_ops.handle_move_designation.assert_called_once()
 
+    def test_move_mode_error_returns_to_select(self, mock_scene, mapper):
+        """BUG-93: Move error should exit MOVE mode to SELECT."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        handler.input_mode = 'MOVE'
+        mock_scene.selected_fleet = MagicMock()
+        mock_scene._fleet_ops.handle_move_designation.return_value = {
+            'type': 'error', 'message': 'Unreachable'
+        }
+
+        handler.handle_click(100, 200, 1)
+
+        assert handler.input_mode == 'SELECT'
+
+    def test_move_mode_error_building_returns_to_select(self, mock_scene, mapper):
+        """BUG-93: Move error (building) should exit MOVE mode to SELECT."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        handler.input_mode = 'MOVE'
+        mock_scene.selected_fleet = MagicMock()
+        mock_scene._fleet_ops.handle_move_designation.return_value = {
+            'type': 'error', 'message': 'Fleet is building'
+        }
+
+        handler.handle_click(100, 200, 1)
+
+        assert handler.input_mode == 'SELECT'
+
+    def test_move_mode_success_returns_to_select(self, mock_scene, mapper):
+        """Successful move should exit MOVE mode to SELECT (via finish_move_action)."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        handler.input_mode = 'MOVE'
+        fleet = MagicMock()
+        mock_scene.selected_fleet = fleet
+        mock_scene._fleet_ops.handle_move_designation.return_value = {
+            'type': 'success', 'fleet': fleet
+        }
+
+        handler.handle_click(100, 200, 1)
+
+        # finish_move_action resets mode to SELECT (unless shift held)
+        assert handler.input_mode == 'SELECT'
+        mock_scene.on_ui_selection.assert_called_once_with(fleet)
+
     def test_right_click_in_move_mode_cancels(self, mock_scene, mapper):
         """Right-click in MOVE mode should cancel and return to SELECT."""
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)

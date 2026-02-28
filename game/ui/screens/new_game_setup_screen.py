@@ -449,11 +449,13 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         setup_rect = pygame.Rect(setup_x, setup_y, setup_width, setup_height)
 
         # Create and show the race setup screen
+        # BUG-92: Pass loaded race data so Setup Species edits existing selection
         self.active_race_modal = RaceSetupScreen(
             rect=setup_rect,
             manager=self.ui_manager,
             on_complete_callback=lambda race: self._on_race_created(player_index, race),
-            on_cancel_callback=self._on_race_dialog_cancelled
+            on_cancel_callback=self._on_race_dialog_cancelled,
+            race_to_edit=self.player_races[player_index]
         )
         self.race_modal_player_index = player_index
 
