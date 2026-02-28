@@ -8,24 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-27
-**Last Completed:** PROJ-211 Phase 2 Task 2.1 - ShipInstance DI
-**Current Status:** PROJ-211 Phase 2 in progress, Task 2.2 next
+**Last Completed:** PROJ-211 Phase 2 Task 2.2 - FleetCapabilityCalculator DI
+**Current Status:** PROJ-211 Phase 2 in progress, Task 2.3 next
 **Current Project:** PROJ-211
-**Current Phase:** Phase 2 (Strategy Data Objects) - Task 2.2
-**Test Status:** 12876 passed, 1 skipped (+ 4 pre-existing bug_13_colony_flags failures)
+**Current Phase:** Phase 2 (Strategy Data Objects) - Task 2.3
+**Test Status:** 12885 passed, 1 skipped (+ 4 pre-existing bug_13_colony_flags failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-211 Phase 2 Task 2.1 complete:
-  - Added `_registries` field to ShipInstance dataclass
-  - Added `set_registries()` method for post-construction DI
-  - Updated `create()` factory to accept and store registries
-  - Updated `from_dict()` to accept and store registries
-  - Updated `get_calculated_stats()` to use stored registries with temporary fallback
-  - Added test_registries_di.py with 10 tests for new DI functionality
-  - Delegate managers (ShipResourceManager, etc.) automatically use ship's registries
-- All tests passing (12876 passed, 1 skipped)
-- Next: Task 2.2 - FleetCapabilityCalculator DI, Task 2.3 - Remove fallbacks
+- PROJ-211 Phase 2 Task 2.2 complete:
+  - Added `_get_ship_component_registry()` helper to get registry from ship._registries
+  - Updated static methods `ship_has_spaceyard()` and `ship_has_ability()` to prefer ship._registries.components
+  - Updated `Fleet.__init__()` to accept optional `component_registry` parameter
+  - Updated `Fleet.from_dict()` to accept `registries` and pass to ships and calculator
+  - Updated `Empire.from_dict()` to accept `registries` and forward to Fleet.from_dict()
+  - Kept `_get_default_component_registry()` fallback temporarily (removed in Task 2.3)
+  - Added test_fleet_capability_calculator_di.py with 9 DI tests
+- All tests passing (12885 passed, 1 skipped)
+- Next: Task 2.3 - Remove all global fallbacks from Phase 2 changes
 
 ---
 
@@ -87,6 +87,7 @@
 | 2026-02-27 | PROJ-212 | Audit 1 | PASSED | 12866 passed | - | All implementations verified, no issues |
 | 2026-02-27 | PROJ-211 | Phase 1 | Complete | 12866 passed | pending | GameSession foundation, TurnEngine+tests updated |
 | 2026-02-27 | PROJ-211 | Phase 2 (2.1) | Complete | 12876 passed | pending | ShipInstance DI: _registries field, create/from_dict updated |
+| 2026-02-27 | PROJ-211 | Phase 2 (2.2) | Complete | 12885 passed | pending | FleetCapabilityCalculator DI: static methods + Fleet.from_dict |
 
 ---
 

@@ -1,7 +1,10 @@
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional, TYPE_CHECKING
 
 from game.core.validation_helpers import require_keys, safe_from_dict
+
+if TYPE_CHECKING:
+    from game.core.registry import GameRegistries
 
 logger = logging.getLogger(__name__)
 
@@ -171,13 +174,20 @@ class Empire:
         return data
 
     @classmethod
-    def from_dict(cls, data: dict, galaxy=None) -> 'Empire':
+    def from_dict(
+        cls,
+        data: dict,
+        galaxy=None,
+        registries: Optional['GameRegistries'] = None
+    ) -> 'Empire':
         """
         Deserialize Empire from dict.
 
         Args:
             data: Saved empire data
             galaxy: Galaxy instance for resolving planet references (required)
+            registries: Optional GameRegistries for DI. If provided, fleets
+                and ships will use these registries.
 
         Returns:
             Reconstructed Empire with colonies resolved
@@ -220,10 +230,11 @@ class Empire:
         empire.max_storage = data.get('max_storage', {})
 
         # Restore fleets (skip corrupt entries with warning)
+        # PROJ-211: Pass registries for DI
         empire.fleets = []
         for i, fleet_data in enumerate(data.get('fleets', [])):
             try:
-                fleet = Fleet.from_dict(fleet_data)
+                fleet = Fleet.from_dict(fleet_data, registries=registries)
                 fleet.owner_id = empire.id
                 empire.fleets.append(fleet)
             except Exception as e:

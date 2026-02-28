@@ -31,11 +31,19 @@ class Fleet:
     Ships are stored as ShipInstance objects with full state tracking.
     """
 
-    def __init__(self, fleet_id, owner_id, location, speed=5.0):
+    def __init__(
+        self,
+        fleet_id,
+        owner_id,
+        location,
+        speed=5.0,
+        component_registry: Optional[Dict[str, Any]] = None
+    ):
         self.id = fleet_id
         self.owner_id = owner_id  # 0=Player, 1=Enemy, etc
         self.location = location  # HexCoord
         self.ships: List[ShipInstance] = []
+        self._component_registry = component_registry
 
         # Movement & Orders
         self.speed = float(speed)
@@ -49,7 +57,8 @@ class Fleet:
         self._resource_agg = FleetResourceAggregator(self)
 
         # Delegate for capability queries (PROJ-87 Phase 4)
-        self._capabilities = FleetCapabilityCalculator(self)
+        # PROJ-211: Pass component_registry for DI
+        self._capabilities = FleetCapabilityCalculator(self, component_registry)
 
         # Delegate for battle conversion (PROJ-87 Phase 4)
         self._battle = FleetBattleAdapter(self)
@@ -297,12 +306,18 @@ class Fleet:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Fleet':
+    def from_dict(
+        cls,
+        data: Dict[str, Any],
+        registries: Optional['GameRegistries'] = None
+    ) -> 'Fleet':
         """
         Deserialize from save game.
 
         Args:
             data: Dict with fleet data
+            registries: Optional GameRegistries for DI. If provided, ships
+                and FleetCapabilityCalculator will use these registries.
 
         Returns:
             Reconstructed Fleet
@@ -319,17 +334,22 @@ class Fleet:
         elif isinstance(location, list):
             location = HexCoord(location[0], location[1])
 
+        # PROJ-211: Extract component_registry from registries for DI
+        component_registry = registries.components if registries else None
+
         fleet = cls(
             fleet_id=data['id'],
             owner_id=data['owner_id'],
             location=location,
             speed=data.get('speed', 5.0),
+            component_registry=component_registry,
         )
 
         # Restore ships (skip corrupt entries with warning)
         for i, ship_data in enumerate(data.get('ships', [])):
             try:
-                fleet.ships.append(ShipInstance.from_dict(ship_data))
+                ship = ShipInstance.from_dict(ship_data, registries=registries)
+                fleet.ships.append(ship)
             except Exception as e:
                 logger.warning(f"Fleet {data['id']}: skipping corrupt ship[{i}]: {e}")
 
