@@ -6,9 +6,9 @@
 > 3. Update plan.md phase table AND Current State
 
 **Status:** Not Started
-**Objective:** Fix remaining UI screen violations and clean up docstrings
-**Priority:** Low - Display-only code
-**Risk:** Very low
+**Objective:** Fix remaining UI screen violations, clean up docstrings, remove all fallbacks
+**Priority:** Low - Display-only code + test fixture updates
+**Risk:** Medium - Test fixture updates affect ~200 tests
 **Depends on:** Phase 4 (WorkshopContext carries registries)
 
 ---
@@ -48,7 +48,49 @@
 - [ ] Update docstring "Usage" example to show proper DI from session context
 - [ ] Remove example calling `get_default_registry_provider()` directly
 
-### Task 5.5: Final verification - zero fallback calls outside composition roots
+### Task 5.5: Update test fixtures to inject registries (MOVED FROM PHASE 2)
+**Files:** Test files using ShipInstance.create() / from_dict() without registries
+**Tests:** `pytest tests/ -n 12`
+
+This task enables fallback removal in Phase 2 objects. ~200 tests create ShipInstance
+or Fleet without passing registries.
+
+Strategy:
+1. Add autouse fixture or update conftest to make registries easily injectable
+2. Update test fixtures/factories to pass registries by default
+3. Update individual tests as needed
+
+- [ ] Create helper in conftest.py for test ShipInstance creation with registries
+- [ ] Update tests/unit/strategy/ship_instance/*.py tests
+- [ ] Update tests/unit/strategy/fleet/*.py tests
+- [ ] Update tests/unit/strategy/test_fleet_*.py tests
+- [ ] Update tests/integration/strategy/*.py tests
+- [ ] Update tests/integration/colonization/*.py tests
+- [ ] Update tests/integration/resource_system/*.py tests
+- [ ] Update remaining tests that create ShipInstance
+- [ ] Verify: all tests pass
+
+### Task 5.6: Remove ShipInstance.get_calculated_stats() fallback (MOVED FROM PHASE 2)
+**Files:** `game/strategy/data/ship_instance.py`
+**Depends on:** Task 5.5
+
+After test fixtures are updated in 5.5:
+- [ ] Remove the `get_default_registry_provider()` fallback from `get_calculated_stats()`
+- [ ] Raise explicit error if `self._registries` is None
+- [ ] Remove `get_default_registry_provider` import from ship_instance.py
+- [ ] Verify: all tests pass
+
+### Task 5.7: Remove FleetCapabilityCalculator fallbacks (MOVED FROM PHASE 2)
+**Files:** `game/strategy/data/fleet_capability_calculator.py`
+**Depends on:** Task 5.5
+
+- [ ] Remove `_get_default_component_registry()` helper function
+- [ ] Update `ship_has_spaceyard()` to raise if no registry available
+- [ ] Update `ship_has_ability()` to raise if no registry available
+- [ ] Update `_get_registry()` to raise if not injected
+- [ ] Verify: all tests pass
+
+### Task 5.8: Final verification - zero fallback calls outside composition roots
 **Tests:** `pytest tests/ -n 12`
 
 - [ ] Grep for `get_default_registry_provider()` across all production code

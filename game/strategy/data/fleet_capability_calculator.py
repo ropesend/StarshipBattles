@@ -5,7 +5,7 @@ warp capability, and build type checking.
 
 PROJ-212 Phase 3: Added constructor DI for component_registry.
 PROJ-211 Task 2.2: Added DI path via ship._registries.components.
-Fallback to global retained until Task 2.3 makes DI required.
+Fallback to global retained until test fixtures updated.
 """
 
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
@@ -18,8 +18,8 @@ if TYPE_CHECKING:
 def _get_default_component_registry() -> Dict[str, Any]:
     """Get the default component registry for ability lookups.
 
-    PROJ-211 TEMPORARY: This fallback will be removed in Task 2.3
-    after all callers are updated to use DI.
+    PROJ-211 TEMPORARY: This fallback will be removed after test
+    fixtures are updated to inject registries.
     """
     from game.core.registry import get_default_registry_provider
     return get_default_registry_provider().get_components()
@@ -71,7 +71,7 @@ class FleetCapabilityCalculator:
         if registry is None:
             registry = _get_ship_component_registry(ship)
         if registry is None:
-            # PROJ-211 TEMPORARY: Fallback removed in Task 2.3
+            # PROJ-211 TEMPORARY: Fallback removed after test fixtures updated
             registry = _get_default_component_registry()
         return ship_has_ability(ship, 'SpaceShipyard', registry)
 
@@ -115,14 +115,14 @@ class FleetCapabilityCalculator:
         """Get component registry, falling back to global if not injected.
 
         PROJ-211: Prefers injected registry. Falls back to global temporarily
-        until Task 2.3 makes DI required.
+        until test fixtures are updated.
 
         Returns:
             The component registry for ability lookups.
         """
         if self._component_registry is not None:
             return self._component_registry
-        # PROJ-211 TEMPORARY: Fallback removed in Task 2.3
+        # PROJ-211 TEMPORARY: Fallback removed after test fixtures updated
         return _get_default_component_registry()
 
     def can_build_type(self, vehicle_type: str, galaxy: Any = None) -> bool:
@@ -249,6 +249,6 @@ class FleetCapabilityCalculator:
         if registry is None:
             registry = _get_ship_component_registry(ship)
         if registry is None:
-            # PROJ-211 TEMPORARY: Fallback removed in Task 2.3
+            # PROJ-211 TEMPORARY: Fallback removed after test fixtures updated
             registry = _get_default_component_registry()
         return ship_has_ability(ship, ability_name, registry)
