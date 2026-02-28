@@ -23,6 +23,7 @@ from game.ui.colors import (
     OVERLAY_PROCESSING, WARPPOINT_FALLBACK, DYSON_FALLBACK, PLANET_FALLBACK,
     STORM_ION, STORM_PLASMA, STORM_GRAVITATIONAL, STORM_RADIATION, STORM_DARK_NEBULA,
     ZONE_HIGHLIGHT, STORM_FALLBACK,
+    HEX_OUTLINE_OCCUPIED, HEX_OUTLINE_PLAYER_OWNED,
 )
 from game.ui.utils import scale_and_rotate_image
 from game.ui.fonts import get_font
@@ -51,6 +52,10 @@ class StrategyRenderer:
 
         # Animation state
         self._elapsed_time = 0.0
+
+        # Hex outline cache (invalidated on turn change)
+        self._hex_outline_cache = None
+        self._hex_outline_cache_turn = -1
 
     def update(self, dt: float) -> None:
         """Update animation state.
@@ -121,6 +126,10 @@ class StrategyRenderer:
         if self.camera.zoom >= 0.4:
             self._draw_grid(screen)
 
+        # Hex occupancy outlines (behind all objects)
+        if self.camera.zoom >= 0.5:
+            self._draw_hex_outlines(screen)
+
         self._draw_warp_lanes(screen)
         self._draw_systems(screen)
         self._draw_fleets(screen)
@@ -169,6 +178,116 @@ class StrategyRenderer:
             corners_px.append(self.camera.world_to_screen(pygame.math.Vector2(px, py)))
 
         pygame.draw.lines(screen, ZONE_HIGHLIGHT, True, corners_px, 2)
+
+    # --- Hex Outline Methods (PROJ-214) ---
+
+    def _build_hex_outline_data(self):
+        """Build mapping of occupied global hexes to ownership flags.
+
+        Returns:
+            Dict mapping HexCoord -> (has_player_owned: bool, has_non_player: bool)
+        """
+        player_id = self.scene.session.player_empire.id if self.scene.session.player_empire else None
+        result = {}
+
+        # 1. Planets (from spatial index)
+        for global_hex, planets in self.galaxy._global_hex_planets.items():
+            has_player = False
+            has_non_player = False
+            for planet in planets:
+                if planet.owner_id is not None and planet.owner_id == player_id:
+                    has_player = True
+                else:
+                    has_non_player = True
+            result[global_hex] = (has_player, has_non_player)
+
+        # 2. Zones (stars, Dyson Spheres, storms)
+        for global_hex, zones in self.galaxy._global_hex_zones.items():
+            entry = result.get(global_hex, (False, False))
+            zone_has_player = entry[0]
+            zone_has_non_player = entry[1]
+            for zone_obj in zones:
+                if hasattr(zone_obj, 'owner_id') and zone_obj.owner_id == player_id:
+                    zone_has_player = True
+                else:
+                    zone_has_non_player = True
+            result[global_hex] = (zone_has_player, zone_has_non_player)
+
+        # 3. Warp points (always non-player)
+        for global_hex in self.galaxy._global_hex_warp_points:
+            entry = result.get(global_hex, (False, False))
+            result[global_hex] = (entry[0], True)
+
+        # 4. Fleets (check ownership per fleet)
+        for empire in self.empires:
+            for fleet in empire.fleets:
+                if fleet.location is None:
+                    continue
+                entry = result.get(fleet.location, (False, False))
+                if fleet.owner_id == player_id:
+                    result[fleet.location] = (True, entry[1])
+                else:
+                    result[fleet.location] = (entry[0], True)
+
+        return result
+
+    def _get_hex_outline_data(self):
+        """Get cached hex outline data, rebuilding if turn changed."""
+        current_turn = getattr(self.scene.session, 'turn_number', 0)
+        if self._hex_outline_cache is None or self._hex_outline_cache_turn != current_turn:
+            self._hex_outline_cache = self._build_hex_outline_data()
+            self._hex_outline_cache_turn = current_turn
+        return self._hex_outline_cache
+
+    def _draw_hex_outlines(self, screen):
+        """Draw inner hex outlines for occupied hexes.
+
+        Red outline for any object, white for player-owned,
+        dual concentric outlines when both are present.
+        """
+        outline_data = self._get_hex_outline_data()
+        if not outline_data:
+            return
+
+        sw = self.screen_width
+        sh = self.screen_height
+        margin = 50
+
+        for global_hex, (has_player, has_non_player) in outline_data.items():
+            cx, cy = hex_to_pixel(global_hex, self.hex_size)
+            screen_center = self.camera.world_to_screen(pygame.math.Vector2(cx, cy))
+
+            if screen_center.x < -margin or screen_center.x > sw + margin:
+                continue
+            if screen_center.y < -margin or screen_center.y > sh + margin:
+                continue
+
+            if has_player and has_non_player:
+                self._draw_inner_hex(screen, cx, cy, 0.90, HEX_OUTLINE_PLAYER_OWNED)
+                self._draw_inner_hex(screen, cx, cy, 0.80, HEX_OUTLINE_OCCUPIED)
+            elif has_player:
+                self._draw_inner_hex(screen, cx, cy, 0.88, HEX_OUTLINE_PLAYER_OWNED)
+            else:
+                self._draw_inner_hex(screen, cx, cy, 0.88, HEX_OUTLINE_OCCUPIED)
+
+    def _draw_inner_hex(self, screen, cx, cy, scale, color):
+        """Draw a single inner hex outline at the given scale factor.
+
+        Args:
+            screen: Pygame surface to draw on.
+            cx, cy: World-space center of the hex.
+            scale: Scale factor (0.0-1.0) relative to hex_size.
+            color: RGB tuple for the outline color.
+        """
+        inner_size = self.hex_size * scale
+        corners = []
+        for i in range(6):
+            angle_rad = math.radians(60 * i)
+            px = cx + inner_size * math.cos(angle_rad)
+            py = cy + inner_size * math.sin(angle_rad)
+            corners.append(self.camera.world_to_screen(pygame.math.Vector2(px, py)))
+
+        pygame.draw.lines(screen, color, True, corners, 2)
 
     def _draw_grid(self, screen):
         """Draw the hex grid with optimized snake lines."""
