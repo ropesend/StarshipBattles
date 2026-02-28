@@ -99,13 +99,20 @@ After remaining test fixtures are updated:
 Continue updating test files to use ship_factory or pass registries directly.
 Infrastructure is in place (ship_factory fixture, singleton_registries fixture).
 
-- [ ] Update tests/unit/strategy/test_fleet_capability_calculator.py
-- [ ] Update tests/unit/strategy/test_fleet_capability_calculator_di.py
-- [ ] Update tests/unit/test_advanced_fleet_orders.py
-- [ ] Update tests/integration/gameplay_loop/*.py
-- [ ] Update tests/integration/resource_system/*.py (use singleton_registries)
-- [ ] Update tests/integration/save_load/*.py
-- [ ] Update remaining test files (~50 files)
+**IMPORTANT DISCOVERY:** Fleet.add_ship() triggers speed recalculation which calls
+get_calculated_stats(). This means ANY test that adds a ShipInstance to a Fleet
+needs registries. ~109 tests fail when fallback is removed.
+
+- [ ] Update tests/unit/strategy/test_fleet_capability_calculator.py (~15 tests)
+- [ ] Update tests/unit/strategy/test_fleet_capability_calculator_di.py (1 test)
+- [ ] Update tests/unit/test_advanced_fleet_orders.py (2 tests)
+- [ ] Update tests/integration/gameplay_loop/*.py (5 tests)
+- [x] Update tests/integration/resource_system/*.py (7 tests - DONE)
+- [ ] Update tests/integration/save_load/*.py (7 tests/errors)
+- [ ] Update tests/unit/strategy/test_fleet_battle_adapter.py (8 tests)
+- [ ] Update tests/unit/strategy/ship_instance/*.py (6 tests)
+- [ ] Update tests/unit/strategy/test_ship_resource_manager.py (1 test)
+- [ ] Update remaining test files (~50+ files)
 - [ ] Verify: fallback removal succeeds
 
 ### Task 5.7: Remove FleetCapabilityCalculator fallbacks (MOVED FROM PHASE 2)

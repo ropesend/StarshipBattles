@@ -8,24 +8,30 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-211 Phase 5 Task 5.5 - Test fixture infrastructure for DI
-**Current Status:** PROJ-211 Phase 5 Task 5.5.1 in progress (more test fixtures to update)
+**Last Completed:** PROJ-211 Phase 5 Task 5.5.1 partial - Updated 7 resource_system tests
+**Current Status:** PROJ-211 Phase 5 Task 5.5.1 in progress (~109 tests remaining)
 **Current Project:** PROJ-211
-**Current Phase:** Phase 5 (UI Screens & Cleanup) - Task 5.5 Complete, 5.5.1 In Progress
-**Test Status:** 12884 passed, 1 skipped, 4 failed (unrelated asset tests)
-**Active Blockers:** Task 5.6 blocked until Task 5.5.1 complete (~127 tests need fixtures)
+**Current Phase:** Phase 5 (UI Screens & Cleanup) - Task 5.5.1 In Progress
+**Test Status:** 12882 passed, 1 skipped (excluding 4 asset tests)
+**Active Blockers:** Fleet.add_ship() triggers get_calculated_stats() via speed recalculation
 
 **Handoff Notes:**
-- Task 5.5 complete: Added DI test infrastructure
-  - ship_factory fixture in tests/conftest.py (wraps ShipInstance.create with fresh_registries)
-  - singleton_registries fixture in tests/integration/resource_system/conftest.py
-  - Updated ~40 tests in 6 files to use ship_factory
-- Task 5.6 attempted but failed: ~127 tests still create ShipInstance without registries
-  - Added Task 5.5.1 subtask to continue test fixture updates
-  - Key files needing updates: test_fleet_capability_calculator.py, test_advanced_fleet_orders.py,
-    integration/gameplay_loop/*.py, integration/save_load/*.py
-- Next: Continue Task 5.5.1 - update remaining test fixtures
-- 4 failing tests are unrelated (missing asset files in tests/repro_issues/test_bug_13_colony_flags.py)
+- Task 5.5.1 progress this session:
+  - Updated tests/integration/resource_system/test_resource_pipeline.py (4 tests)
+  - Updated tests/integration/resource_system/test_fleet_operations.py (3 tests)
+  - Both now use singleton_registries fixture for DI compliance
+- DISCOVERY: Fleet.add_ship() calls speed recalculation → get_calculated_stats()
+  - This means ANY test adding ShipInstance to Fleet triggers the fallback
+  - ~109 tests affected across 20+ files (not just the originally estimated 127)
+- Key files still needing updates:
+  - test_fleet_capability_calculator.py (~15 tests)
+  - test_fleet_battle_adapter.py (8 tests)
+  - test_advanced_fleet_orders.py (2 tests)
+  - integration/gameplay_loop/*.py (5 tests)
+  - integration/save_load/*.py (7 tests)
+  - ship_instance/*.py (6 tests)
+- Next: Continue Task 5.5.1 - focus on test_fleet_capability_calculator.py
+- 4 failing asset tests unrelated (tests/repro_issues/test_bug_13_colony_flags.py)
 
 ---
 
@@ -93,6 +99,7 @@
 | 2026-02-27 | PROJ-211 | Phase 3 | Complete | 12885 passed, 4 failed | 91154ee4 | Test fixtures updated; all init functions require registry_provider |
 | 2026-02-28 | PROJ-211 | Phase 4 | Complete | 12872 passed, 1 skipped | 6ebbc278 | UI services strict DI: WorkshopContext, ComponentService, ShipFactory, DesignLoaderAdapter |
 | 2026-02-28 | PROJ-211 | Phase 5 (5.5) | Complete | 12884 passed, 4 failed | f6fa144e | ship_factory fixture, ~40 tests updated, 5.5.1 created for remaining |
+| 2026-02-28 | PROJ-211 | Phase 5 (5.5.1) | In Progress | 12882 passed, 1 skipped | c5d04393 | 7 resource_system tests updated; Fleet.add_ship() discovery |
 
 ---
 

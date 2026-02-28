@@ -281,8 +281,9 @@ class ShipInstance:
 
             registries = self._registries
             if registries is None:
-                # PROJ-211 TEMPORARY FALLBACK: ~127 tests still need updating
-                # to inject registries. Will be removed in future phase.
+                # PROJ-211 TEMPORARY FALLBACK: Tests need updating to inject registries.
+                # Fleet.add_ship() triggers speed recalculation which calls get_calculated_stats().
+                # Will be removed after all test fixtures are updated.
                 from game.core.registry import get_default_registry_provider, GameRegistries
                 provider = get_default_registry_provider()
                 registries = GameRegistries(

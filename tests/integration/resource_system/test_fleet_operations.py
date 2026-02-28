@@ -15,7 +15,7 @@ from .conftest import create_mock_component, create_test_ship_design, make_ship_
 class TestWarpJumpUsesResourceConsumptionTrigger:
     """Test warp drive with ResourceConsumption trigger='warp_jump'."""
 
-    def test_warp_jump_uses_resource_consumption_trigger(self, loaded_registry):
+    def test_warp_jump_uses_resource_consumption_trigger(self, loaded_registry, singleton_registries):
         """
         Create warp drive with ResourceConsumption trigger='warp_jump',
         verify get_warp_resource_costs() returns that resource,
@@ -79,7 +79,8 @@ class TestWarpJumpUsesResourceConsumptionTrigger:
             ]
         )
 
-        ship = make_ship_instance(design_data)
+        # PROJ-211: pass registries for DI
+        ship = make_ship_instance(design_data, registries=singleton_registries)
         ship.resource_levels['plasma'] = 2000
         ship.resource_levels['energy'] = 5000
 
@@ -107,7 +108,7 @@ class TestWarpJumpUsesResourceConsumptionTrigger:
 class TestMovementWithMultiResourceConsumption:
     """Test movement consuming multiple resource types per hex."""
 
-    def test_movement_with_multi_resource_consumption(self, loaded_registry):
+    def test_movement_with_multi_resource_consumption(self, loaded_registry, singleton_registries):
         """
         Create ship consuming fuel + custom resource per hex,
         move fleet, verify both resources consumed.
@@ -170,7 +171,8 @@ class TestMovementWithMultiResourceConsumption:
             ]
         )
 
-        ship = make_ship_instance(design_data)
+        # PROJ-211: pass registries for DI
+        ship = make_ship_instance(design_data, registries=singleton_registries)
         ship.resource_levels['fuel'] = 50000
         ship.resource_levels['coolant'] = 1000
 
@@ -197,7 +199,7 @@ class TestMovementWithMultiResourceConsumption:
 class TestComponentToggleAffectsMovementAndWarp:
     """Test that disabling components affects movement and warp capabilities."""
 
-    def test_component_toggle_affects_movement_and_warp(self, loaded_registry):
+    def test_component_toggle_affects_movement_and_warp(self, loaded_registry, singleton_registries):
         """
         Create ship with engine and warp drive,
         disable engine via toggle, verify movement affected,
@@ -271,7 +273,8 @@ class TestComponentToggleAffectsMovementAndWarp:
             ]
         )
 
-        ship = make_ship_instance(design_data)
+        # PROJ-211: pass registries for DI
+        ship = make_ship_instance(design_data, registries=singleton_registries)
         ship.resource_levels['fuel'] = 50000
         ship.resource_levels['energy'] = 5000
 
