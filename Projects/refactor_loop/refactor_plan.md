@@ -8,22 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-209 Phase 1 (SaveGameService.load_game decomposition)
-**Current Status:** PROJ-209 Phase 1 COMPLETE — CC reduced from 26 to 5
+**Last Completed:** PROJ-209 Phase 2 (ProductionEngine._process_queue_tick_dynamic decomposition)
+**Current Status:** PROJ-209 Phase 2 COMPLETE — CC reduced from 27 to 11
 **Current Project:** PROJ-209
-**Current Phase:** Phase 2 ready
-**Test Status:** 12944 passed, 4 failed (pre-existing bug_13), 1 skipped
+**Current Phase:** Phase 3 ready
+**Test Status:** 12949 passed, 4 failed (pre-existing bug_13), 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-209 Phase 1 COMPLETE:**
-  - Extracted 4 helper methods: _load_json_safe, _load_save_metadata, _load_turn_data, _reconstruct_game_session
-  - Consolidated 7 duplicate try/except blocks into single _load_json_safe helper
-  - Removed redundant outer exception handler (DS-010)
-  - load_game orchestrator now clean 3-step pipeline (CC=5)
-  - All helper CCs ≤ 6
-  - Added 21 new tests for helpers and edge cases
-- **Next Action:** Phase 2 — decompose ProductionEngine._process_queue_tick_dynamic (CC 27 → ~7)
+- **PROJ-209 Phase 2 COMPLETE:**
+  - Fixed critical AR-01 bug: broken cost fallback with silent `pass`
+  - Extracted 7 helpers: _validate_queue_item, _calculate_tick_expenditure, _check_affordability, _apply_resource_consumption, _check_item_completion, _update_turns_remaining
+  - Created TickExpenditure NamedTuple for return type
+  - Added 4 named constants: TICKS_PER_TURN, TICK_CAPACITY_EPSILON, COMPLETION_EPSILON, MAX_QUEUE_ITERATIONS
+  - Added 5 new edge case tests (TC-001, TC-002, TC-005, TC-009, AR-01)
+  - Orchestrator CC=11 (down from 27; essential complexity due to 8 distinct cases)
+- **Next Action:** Phase 3 — decompose FleetNavigationService.project_path (CC 22 → ~10)
 
 ---
 
@@ -115,6 +115,7 @@
 | 2026-02-28 | PROJ-210 | Phase 5 | Complete | 12923 passed, 4 failed | 9ab5406e | Dead code cleanup: ~60 lines removed, ship_has_ability consolidated, magic numbers fixed |
 | 2026-02-28 | PROJ-210 | Audit 1 | PASSED | 12923 passed, 4 failed | - | All implementations verified, no issues |
 | 2026-02-28 | PROJ-209 | Phase 1 | Complete | 12944 passed, 4 failed | pending | load_game CC 26→5, 4 helpers extracted, 21 new tests |
+| 2026-02-28 | PROJ-209 | Phase 2 | Complete | 12949 passed, 4 failed | pending | _process_queue_tick_dynamic CC 27→11, 7 helpers, 5 new tests |
 
 ---
 

@@ -125,7 +125,174 @@ class TestProductionEngineRefactor:
         
         # Queue should be empty (both finished)
         assert len(mock_colony.construction_queue) == 0
-        
+
         # Verify spawns
         assert engine._spawn_ship.call_count == 2
+
+
+class TestProductionEngineEdgeCases:
+    """PROJ-209 Phase 2: Test coverage for edge cases (AR-01, TC-001, TC-002, TC-005, TC-009)."""
+
+    @pytest.fixture
+    def engine(self):
+        return ProductionEngine()
+
+    @pytest.fixture
+    def mock_empire(self):
+        emp = MagicMock(spec=Empire)
+        emp.id = "emp1"
+        emp.has_resources.return_value = True
+        emp.consume_resources = MagicMock()
+        return emp
+
+    @pytest.fixture
+    def mock_colony(self):
+        colony = MagicMock(spec=Planet)
+        colony.construction_queue = []
+        colony.facilities = []
+        return colony
+
+    def test_item_without_total_cost_is_skipped_with_warning(
+        self, engine, mock_empire, mock_colony, caplog
+    ):
+        """AR-01: Queue item missing 'total_cost' should be skipped with warning."""
+        # Item missing total_cost key
+        item_without_cost = {
+            "design_id": "broken_ship",
+            "type": "ship",
+            # Deliberately missing 'total_cost'
+            "resources_consumed": {}
+        }
+        # Valid item after it
+        valid_item = {
+            "design_id": "valid_ship",
+            "type": "ship",
+            "total_cost": {"A": 5},
+            "resources_consumed": {"A": 0}
+        }
+        mock_colony.construction_queue = [item_without_cost, valid_item]
+        rates = {"A": 1000}
+
+        engine._spawn_ship = MagicMock()
+
+        import logging
+        with caplog.at_level(logging.WARNING):
+            engine._process_queue_tick_dynamic(
+                mock_colony.construction_queue, mock_empire, 1, MagicMock(), None,
+                rates, mock_colony, False
+            )
+
+        # Broken item should be removed, valid item should complete
+        assert len(mock_colony.construction_queue) == 0
+        assert "broken_ship" in caplog.text
+        assert "missing 'total_cost'" in caplog.text
+        assert engine._spawn_ship.call_count == 1
+
+    def test_non_dict_item_is_removed_and_processing_continues(
+        self, engine, mock_empire, mock_colony
+    ):
+        """TC-001: Non-dict item in queue should be removed, processing continues."""
+        invalid_item = "not_a_dict"  # String instead of dict
+        valid_item = {
+            "design_id": "valid_ship",
+            "type": "ship",
+            "total_cost": {"A": 5},
+            "resources_consumed": {"A": 0}
+        }
+        mock_colony.construction_queue = [invalid_item, valid_item]
+        rates = {"A": 1000}
+
+        engine._spawn_ship = MagicMock()
+
+        engine._process_queue_tick_dynamic(
+            mock_colony.construction_queue, mock_empire, 1, MagicMock(), None,
+            rates, mock_colony, False
+        )
+
+        # Both should be removed (invalid popped, valid completed)
+        assert len(mock_colony.construction_queue) == 0
+        assert engine._spawn_ship.call_count == 1
+
+    def test_zero_production_rate_for_required_resource_stops_queue(
+        self, engine, mock_empire, mock_colony
+    ):
+        """TC-002: Zero production rate for a required resource should stop processing."""
+        item = {
+            "design_id": "test_ship",
+            "type": "ship",
+            "total_cost": {"A": 100, "B": 50},
+            "resources_consumed": {"A": 0, "B": 0}
+        }
+        mock_colony.construction_queue = [item]
+        # Rate has 0 for resource B
+        rates = {"A": 500, "B": 0}
+
+        engine._spawn_ship = MagicMock()
+
+        engine._process_queue_tick_dynamic(
+            mock_colony.construction_queue, mock_empire, 1, MagicMock(), None,
+            rates, mock_colony, False
+        )
+
+        # Item should still be in queue (cannot be built)
+        assert len(mock_colony.construction_queue) == 1
+        # No spawning should occur
+        assert engine._spawn_ship.call_count == 0
+        # No resources should have been consumed
+        assert item["resources_consumed"]["A"] == 0
+        assert item["resources_consumed"]["B"] == 0
+
+    def test_complex_only_filter_blocks_ship_items(
+        self, engine, mock_empire, mock_colony
+    ):
+        """TC-005: When is_complex_only=True, ship items should block the queue."""
+        ship_item = {
+            "design_id": "test_ship",
+            "type": "ship",
+            "total_cost": {"A": 100},
+            "resources_consumed": {"A": 0}
+        }
+        mock_colony.construction_queue = [ship_item]
+        rates = {"A": 500}
+
+        engine._spawn_ship = MagicMock()
+
+        engine._process_queue_tick_dynamic(
+            mock_colony.construction_queue, mock_empire, 1, MagicMock(), None,
+            rates, mock_colony, is_complex_only=True
+        )
+
+        # Ship item should still be in queue (can't build ships in complex-only queue)
+        assert len(mock_colony.construction_queue) == 1
+        # No spawning
+        assert engine._spawn_ship.call_count == 0
+
+    def test_iteration_safety_guard_prevents_infinite_loop(
+        self, engine, mock_empire, mock_colony
+    ):
+        """TC-009: Iteration safety guard should prevent infinite loops."""
+        # Create items that complete but somehow don't get popped
+        # This tests the safety guard by creating many quick-completing items
+        items = []
+        for i in range(15):  # More than the 10 iteration limit
+            items.append({
+                "design_id": f"ship_{i}",
+                "type": "ship",
+                "total_cost": {"A": 0.1},  # Very cheap items
+                "resources_consumed": {"A": 0}
+            })
+        mock_colony.construction_queue = items
+        rates = {"A": 100000}  # Very high rate - can complete many per tick
+
+        engine._spawn_ship = MagicMock()
+
+        # Should not hang - safety guard limits to 10 iterations
+        engine._process_queue_tick_dynamic(
+            mock_colony.construction_queue, mock_empire, 1, MagicMock(), None,
+            rates, mock_colony, False
+        )
+
+        # Should have processed at most 10 items (safety guard)
+        # Some items may remain due to iteration limit
+        assert engine._spawn_ship.call_count <= 10
 
