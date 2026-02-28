@@ -11,6 +11,7 @@
 | FEAT-02 | 2026-02-28 | Add "Generate Random" Buttons to Species Setup | Awaiting Confirmation | `active_features/FEAT-02.md` |
 | FEAT-03 | 2026-02-28 | Randomize all properties in Identity Setup | Awaiting Confirmation | `active_features/FEAT-03.md` |
 | FEAT-04 | 2026-02-28 | Event Log 'Go To Location' Navigation | Awaiting Confirmation | `active_features/FEAT-04.md` |
+| FEAT-05 | 2026-02-28 | Save/Update species workflow dialog | Pending | `active_features/FEAT-05.md` |
 
 ## 3. Current Focus: None
 No features currently in progress.
