@@ -13,37 +13,42 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. TBD | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Fix Command Handler & Tests | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-28 12:36
-**Active Phase:** Planning
-**Last Action:** Project created
-**Next Action:** Define project scope and phases
+**Last Updated:** 2026-02-28
+**Active Phase:** Complete
+**Last Action:** Audit Cycle 1 PASSED - no issues found
+**Next Action:** User verification via manual gameplay test
 **Blockers:** None
 
 ## Overview
-[2-3 sentence description of what this project accomplishes]
+The build queue system regressed to instant "1 turn" completion behavior. The `AddToConstructionQueueCommandHandler` (PROJ-208) was creating queue items with empty `total_cost: {}`, causing the `ProductionEngine` to treat all items as free and complete them instantly. Fixed by loading design data and calculating actual costs in the handler.
 
 ## Goals
-- [Goal 1]
-- [Goal 2]
+- Fix queue items being created with empty `total_cost`
+- Restore tick-based continuous production (resources consumed per tick over multiple turns)
+- Update tests to verify populated cost data
 
 ## Scope
-**In:** [What's included]
-**Out:** [What's explicitly excluded]
+**In:** Command handler cost calculation, test updates
+**Out:** ProductionEngine changes (already correct), UI display changes (driven by engine data)
 
 ## Key Files
 | Component | File Path |
 |-----------|-----------|
-| [Name] | `path/to/file.py` |
+| Command Handler (fixed) | `game/strategy/engine/command_handlers.py` |
+| DesignCostCalculator (reused) | `game/strategy/services/design_cost_calculator.py` |
+| DesignLibrary (reused) | `game/strategy/systems/design_library.py` |
+| ProductionEngine (unchanged) | `game/strategy/engine/production_engine.py` |
+| Tests (updated) | `tests/unit/strategy/engine/test_production_repro.py` |
 
 ## Related Documents
 - [design.md](design.md) - Architecture analysis and design rationale
 - [decisions.md](decisions.md) - Full decisions log
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing
-- [ ] Audit passed
+- [x] All phase checklists complete
+- [x] All tests passing (13022 passed, 1 skipped)
+- [x] Audit passed (Cycle 1 - no issues found)
 - [ ] User verified

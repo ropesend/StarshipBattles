@@ -4,8 +4,8 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-214 | Hex Highlights for Objects and Ownership | Planning | 2026-02-28 | 2026-02-28 |
-| PROJ-213 | Build Queue Reversion Bug Fix | Planning | 2026-02-28 | 2026-02-28 |
+| PROJ-214 | Hex Highlights for Objects and Ownership | Awaiting Verification | 2026-02-28 | 2026-02-28 |
+| PROJ-213 | Build Queue Reversion Bug Fix | Complete | 2026-02-28 | 2026-02-28 |
 | PROJ-212 | Deferred Import Cleanup & Coupling Reduction | Planning | 2026-02-27 | 2026-02-27 |
 | PROJ-211 | 211222 Remediation: General Di Inconsistency Strategy | Planning | 2026-02-27 | 2026-02-27 |
 | PROJ-210 | Strategy God Class Decomposition | Planning | 2026-02-27 | 2026-02-27 |
