@@ -10,31 +10,35 @@ C:\Developer\StarshipBattles\screenshots\screenshot_20260123_202105_670002_strat
 Medium (Visual bug)
 
 ## Status
-In-Progress
+Awaiting Confirmation
 
-## Root Cause (5th attempt)
+## Root Cause (6th attempt)
 
-The previous fixes all had the same fundamental problem: `scale_image_by_visible_portion()` in `game/ui/utils.py` scaled the **full image canvas** (including all transparent padding) based on visible height, but then `pygame_gui.UIImage.set_image()` scaled the entire result (transparent padding included) back down to fit the 56x46 widget rect. This cancelled out the visible-portion scaling, leaving the ship tiny.
+The 5th fix correctly cropped to visible content and scaled to target_height, but it did not constrain the width. The `virtual_table.py` creates a **square** UIImage widget (`img_size x img_size`), and when the scaled surface was wider than this widget, `UIImage.set_image()` stretched the image to fill the square, distorting the aspect ratio.
 
-Additionally, `get_visible_bounding_box()` used slow pixel-by-pixel Python iteration (O(width*height) calls) to detect visible content.
+The fundamental problem: `scale_image_by_visible_portion()` only constrained height, but the rendering widget constrains both dimensions. When a ship's visible content is wider than tall, height-only scaling produces an image wider than the widget, which then gets squished.
 
-## Fix
+## Fix (6th attempt)
 
-### 1. `game/ui/utils.py` — `get_visible_bounding_box()`
-Replaced pixel-by-pixel Python loop with native `surface.get_bounding_rect(min_alpha=10)` (C-level, orders of magnitude faster). Also now correctly detects single-pixel visible content.
+### 1. `game/ui/utils/pygame_utils.py` — `scale_image_by_visible_portion()`
+Added optional `max_width` parameter. When provided:
+- Scales visible content to fit within **both** `max_width` and `target_height` (using the smaller scale factor)
+- Centers the result on a transparent canvas of exactly `(max_width, target_height)`
+- This ensures the UIImage widget receives an exactly-sized surface with no distortion
 
-### 2. `game/ui/utils.py` — `scale_image_by_visible_portion()`
-**Key change:** Now **crops to the visible area first**, then scales the cropped content to target_height. The returned surface contains only visible content (no transparent padding), so when `UIImage.set_image()` renders it, the ship fills the widget instead of being a tiny dot in a sea of transparency.
+Without `max_width`, behavior is unchanged (backward compatible).
 
-Before: Scale full canvas → UIImage shrinks back → tiny ship
-After: Crop visible → Scale visible to target_height → UIImage displays at correct size
+### 2. `game/ui/screens/fleet_data_source.py` — `_get_ship_image()`
+Now passes `max_width=56` (column width 60 minus padding) when calling for topdown images.
 
 ### Files Modified
-1. `game/ui/utils.py`: Both functions rewritten
-2. `tests/unit/ui/test_utils.py`: Updated tests for new behavior
+1. `game/ui/utils/pygame_utils.py`: Added `max_width` parameter to `scale_image_by_visible_portion`
+2. `game/ui/screens/fleet_data_source.py`: Updated topdown image call to pass `max_width=56`
+3. `tests/unit/ui/test_utils.py`: Added 4 new tests for max_width behavior
 
 ### Tests
-All 31 UI utils tests pass.
+- 6 scale_image_by_visible_portion tests pass (2 existing + 4 new)
+- Full suite: 12,976 passed (4 pre-existing failures in unrelated colony flag tests)
 
 ## Work Log
 - 2026-01-23: Ticket created
@@ -42,10 +46,5 @@ All 31 UI utils tests pass.
 - 2026-01-24: Second fix (visible-portion scaling) - Rejected
 - 2026-01-24: Third fix (aspect ratio preservation) - Rejected
 - 2026-02-10: Fourth fix (kept full canvas) - Rejected
-- 2026-02-11: Fifth fix - Crop to visible area before scaling. Uses native C bounding rect. Returned surface contains only visible content.
-
----
-### ❌ Fix Rejected [2026-02-11 20:55]
-**Reason:** The fix is only partially fixed, it is the right height, but it should be scaled keeping its aspect ratio intact, it has been scaled to be too wide now.
-**New Constraints:** Scale the top-down image keeping its original aspect ratio intact. Reference screenshot: `C:\Dev\Starship Battles\output\screenshots\screenshot_20260211_205501_018240_strategy_viewport.png`
----
+- 2026-02-11: Fifth fix - Crop to visible area before scaling - Rejected (right height, but too wide)
+- 2026-02-28: Sixth fix - Added `max_width` constraint to `scale_image_by_visible_portion`. Scales to fit within both width and height bounds while preserving aspect ratio. Centers result on transparent canvas matching widget dimensions.

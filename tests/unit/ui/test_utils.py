@@ -329,6 +329,79 @@ class TestScaleImageByVisiblePortion:
         assert result is not None
         assert result.get_height() == 50
 
+    def test_max_width_constrains_wide_image(self):
+        """BUG-46: When visible content is wider than tall, max_width constrains it."""
+        from game.ui.utils import scale_image_by_visible_portion
+
+        # Create surface with wide visible content (200x50)
+        surface = pygame.Surface((300, 100), pygame.SRCALPHA)
+        surface.fill((0, 0, 0, 0))
+        pygame.draw.rect(surface, (255, 255, 255, 255), (50, 25, 200, 50))
+
+        result = scale_image_by_visible_portion(surface, target_height=40, max_width=56)
+
+        # Result canvas must be exactly max_width x target_height
+        assert result.get_width() == 56
+        assert result.get_height() == 40
+
+    def test_max_width_preserves_aspect_ratio(self):
+        """BUG-46: Aspect ratio is preserved when max_width constrains scaling."""
+        from game.ui.utils import scale_image_by_visible_portion
+
+        # Wide content: 200x100 (2:1 ratio)
+        surface = pygame.Surface((300, 200), pygame.SRCALPHA)
+        surface.fill((0, 0, 0, 0))
+        pygame.draw.rect(surface, (255, 255, 255, 255), (50, 50, 200, 100))
+
+        # max_width=40, target_height=40
+        # height scale = 40/100 = 0.4 → width would be 200*0.4 = 80 (too wide)
+        # width scale = 40/200 = 0.2 → height would be 100*0.2 = 20
+        # min(0.4, 0.2) = 0.2 → scaled to 40x20, centered on 40x40 canvas
+        result = scale_image_by_visible_portion(surface, target_height=40, max_width=40)
+
+        assert result.get_width() == 40
+        assert result.get_height() == 40
+
+        # The scaled image (40x20) should be centered vertically
+        # Top 10 rows should be transparent, middle 20 rows have content, bottom 10 transparent
+        # Check a pixel in the transparent top area
+        top_pixel = result.get_at((20, 5))
+        assert top_pixel.a == 0, "Top area should be transparent"
+        # Check a pixel in the content area
+        center_pixel = result.get_at((20, 20))
+        assert center_pixel.a > 0, "Center should have content"
+
+    def test_max_width_tall_image_fits_by_height(self):
+        """When visible content is taller than wide, height is the binding constraint."""
+        from game.ui.utils import scale_image_by_visible_portion
+
+        # Tall content: 50x200 (1:4 ratio)
+        surface = pygame.Surface((100, 300), pygame.SRCALPHA)
+        surface.fill((0, 0, 0, 0))
+        pygame.draw.rect(surface, (255, 255, 255, 255), (25, 50, 50, 200))
+
+        # height scale = 40/200 = 0.2 → width = 50*0.2 = 10
+        # width scale = 56/50 = 1.12
+        # min(0.2, 1.12) = 0.2 → scaled to 10x40, centered on 56x40 canvas
+        result = scale_image_by_visible_portion(surface, target_height=40, max_width=56)
+
+        assert result.get_width() == 56
+        assert result.get_height() == 40
+
+    def test_without_max_width_backward_compatible(self):
+        """Without max_width, behavior unchanged from before."""
+        from game.ui.utils import scale_image_by_visible_portion
+
+        surface = pygame.Surface((100, 100), pygame.SRCALPHA)
+        surface.fill((0, 0, 0, 0))
+        pygame.draw.rect(surface, (255, 255, 255, 255), (25, 25, 50, 50))
+
+        result = scale_image_by_visible_portion(surface, target_height=100)
+
+        # Same as test_basic_functionality - no max_width means old behavior
+        assert result.get_height() == 100
+        assert result.get_width() == 100
+
 
 class TestScaleImageToFit:
     """Tests for scale_image_to_fit helper."""

@@ -1,0 +1,45 @@
+"""Tests for ModifierEditorPanel.
+
+BUG-89: Verify that the panel has an update(dt) method,
+which workshop_screen.py calls every frame.
+"""
+import pytest
+from unittest.mock import MagicMock
+
+
+@pytest.fixture
+def modifier_panel():
+    """Create a ModifierEditorPanel with mocked dependencies."""
+    from game.ui.panels.builder_widgets import ModifierEditorPanel
+
+    manager = MagicMock()
+    container = MagicMock()
+    registries = MagicMock()
+
+    panel = ModifierEditorPanel(
+        manager=manager,
+        container=container,
+        width=300,
+        on_change_callback=MagicMock(),
+        registries=registries,
+    )
+    return panel
+
+
+class TestModifierEditorPanelUpdate:
+    """BUG-89: ModifierEditorPanel must have update(dt) method."""
+
+    def test_update_method_exists(self, modifier_panel):
+        """The panel must have an update method callable with dt argument."""
+        assert hasattr(modifier_panel, 'update'), (
+            "ModifierEditorPanel must have an update(dt) method"
+        )
+        assert callable(modifier_panel.update)
+
+    def test_update_does_not_raise(self, modifier_panel):
+        """Calling update(dt) must not raise an error."""
+        modifier_panel.update(0.016)  # ~60fps dt
+
+    def test_update_with_zero_dt(self, modifier_panel):
+        """update(0) must not raise."""
+        modifier_panel.update(0)

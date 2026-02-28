@@ -77,6 +77,10 @@ class ModifierEditorPanel:
         """Set the available height for the modifier panel."""
         self._panel_height = height
 
+    def update(self, dt):
+        """Update panel state. Called each frame by workshop_screen."""
+        pass
+
     def layout(self, start_y):
         """Update layout and reconciliation with scrolling support."""
         # Cache scroll position before clearing

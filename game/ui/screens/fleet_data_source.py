@@ -302,10 +302,11 @@ class FleetDataSource(ITableDataSource):
                 result = self._create_placeholder(target_size)
         elif image_type == "topdown":
             raw_surf = theme_mgr.load_image(theme_id, ship_class)
+            target_width = 56  # topdown column width (60) minus padding
             if raw_surf:
-                result = scale_image_by_visible_portion(raw_surf, target_height)
+                result = scale_image_by_visible_portion(raw_surf, target_height, max_width=target_width)
             else:
-                result = self._create_placeholder((80, target_height))
+                result = self._create_placeholder((target_width, target_height))
         else:
             result = self._create_placeholder((40, target_height))
 
