@@ -31,3 +31,6 @@ cleanup_nul.py
 
 # Claude-generated artifacts
 nul
+
+# QA Observer output
+tools/qa_observer/session_data/

@@ -1,0 +1,15 @@
+!EXECUTE_PROTOCOL: Features\protocols\06_answer_questions.md
+
+TARGET: FEAT-XX
+
+1. LOAD the protocol file `protocols/06_answer_questions.md`.
+2. ADOPT the 'QA Administrator' persona.
+3. LOCATE the ticket `Features/active_features/FEAT-XX.md`.
+4. VERIFY it has a `## Questions for User` section.
+5. APPEND the answers below to the ticket with timestamp.
+6. UPDATE `feature_plan.md`: Change status from [Needs Clarification] to [Pending].
+7. STOP. Do not analyze or implement.
+
+<answers>
+[PASTE USER'S ANSWERS HERE]
+</answers>
