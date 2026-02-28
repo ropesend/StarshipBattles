@@ -242,18 +242,6 @@ class TestDesignMetadataFromDict:
         assert metadata.is_obsolete is False
         assert metadata.times_built == 0
 
-    def test_from_dict_sprite_preview_none(self):
-        """from_dict handles None sprite_preview."""
-        data = {
-            "design_id": "test",
-            "name": "Test",
-            "sprite_preview": None
-        }
-
-        metadata = DesignMetadata.from_dict(data)
-
-        assert metadata.sprite_preview is None
-
     def test_from_dict_empty_resource_cost(self):
         """from_dict handles empty resource_cost."""
         data = {
@@ -497,31 +485,14 @@ class TestDesignMetadataSerialization:
             last_modified="2026-01-02T00:00:00",
             is_obsolete=True,
             times_built=25,
-            theme_id="Empire",
-            sprite_preview="some_path"
+            theme_id="Empire"
         )
 
         data = metadata.to_dict()
 
         assert data["design_id"] == "full_test"
-        assert data["sprite_preview"] == "some_path"
         assert data["is_obsolete"] is True
         assert data["times_built"] == 25
-
-    def test_to_dict_sprite_preview_none(self):
-        """to_dict correctly serializes None sprite_preview."""
-        metadata = DesignMetadata(
-            design_id="no_preview",
-            name="No Preview",
-            ship_class="Escort",
-            vehicle_type="Ship",
-            mass=100.0,
-            combat_power=50.0
-        )
-
-        data = metadata.to_dict()
-
-        assert data["sprite_preview"] is None
 
     def test_roundtrip_serialization(self):
         """to_dict and from_dict are inverse operations."""
@@ -537,8 +508,7 @@ class TestDesignMetadataSerialization:
             last_modified="2026-01-16T14:45:00",
             is_obsolete=True,
             times_built=42,
-            theme_id="Federation",
-            sprite_preview="path/to/preview.png"
+            theme_id="Federation"
         )
 
         data = original.to_dict()
@@ -556,7 +526,6 @@ class TestDesignMetadataSerialization:
         assert restored.is_obsolete == original.is_obsolete
         assert restored.times_built == original.times_built
         assert restored.theme_id == original.theme_id
-        assert restored.sprite_preview == original.sprite_preview
 
 
 class TestDesignMetadataOldLayerFormat:

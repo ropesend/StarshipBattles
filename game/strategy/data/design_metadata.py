@@ -7,7 +7,7 @@ sorting, and displaying designs in the UI.
 """
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 from datetime import datetime
 import os
 import warnings
@@ -36,10 +36,6 @@ class DesignMetadata:
 
     # Thumbnail data (optional)
     theme_id: str = ""
-    # NOTE: When sprite_preview is implemented, the preview image should be
-    # stored in a separate UI cache, not in this strategy-layer metadata.
-    # This field exists as a placeholder for save file compatibility.
-    sprite_preview: Optional[str] = None  # Reserved for future use
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize to JSON"""
@@ -55,8 +51,7 @@ class DesignMetadata:
             "last_modified": self.last_modified,
             "is_obsolete": self.is_obsolete,
             "times_built": self.times_built,
-            "theme_id": self.theme_id,
-            "sprite_preview": self.sprite_preview
+            "theme_id": self.theme_id
         }
 
     @classmethod
@@ -82,8 +77,7 @@ class DesignMetadata:
             last_modified=data.get("last_modified", ""),
             is_obsolete=data.get("is_obsolete", False),
             times_built=data.get("times_built", 0),
-            theme_id=data.get("theme_id", ""),
-            sprite_preview=data.get("sprite_preview")
+            theme_id=data.get("theme_id", "")
         )
 
     @classmethod

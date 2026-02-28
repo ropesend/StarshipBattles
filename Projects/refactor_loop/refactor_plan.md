@@ -8,21 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-27
-**Last Completed:** PROJ-204 Audit Cycle 1 - PASSED
-**Current Status:** PROJ-204 Complete - Starting PROJ-205
+**Last Completed:** PROJ-205 Phase 1 - Dead Placeholder Cleanup
+**Current Status:** Phase 1 Complete - Starting Phase 2
 **Current Project:** PROJ-205
-**Current Phase:** Not Started
-**Test Status:** 12837 passed, 1 skipped
+**Current Phase:** Phase 2
+**Test Status:** 12835 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-204 Audit PASSED on cycle 1
-- Verified all 12 implementation items across 5 phases
-- LayerIterator, DesignCostCalculator, strip_start_hex, get_tick_interval confirmed
-- BaseCommandHandler helpers, FleetResourceAggregator, deserialize_list confirmed
-- PanelFactory, UIElementRegistry confirmed
-- All utilities in use with proper tests
-- Next: Start PROJ-205 Phase 1
+- Phase 1 complete: Removed `sprite_preview` placeholder field from DesignMetadata
+- Removed field definition, to_dict entry, from_dict parameter
+- Removed unused `Optional` import
+- Deleted 2 tests, updated 2 tests that referenced sprite_preview
+- Test count reduced by 2 (expected - removed sprite_preview tests)
+- Next: Phase 2 - Legacy Code Path Eradication (colonize, column_mgr)
 
 ---
 
@@ -46,7 +45,7 @@
 
 ---
 
-- [ ] **PROJ-205: Legacy Code Elimination - Verified Findings**
+- [/] **PROJ-205: Legacy Code Elimination - Verified Findings**
   - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-205/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-205/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
@@ -69,6 +68,7 @@
 | 2026-02-27 | PROJ-204 | Phase 4 | Complete | 12815 passed | - | _verify_and_consume_resources, deserialize_list, +20 tests, CQ-23/CQ-06 deferred |
 | 2026-02-27 | PROJ-204 | Phase 5 | Complete | 12837 passed | - | _get_local_bounds, _set_controls_enabled, PanelFactory, UIElementRegistry, +22 tests |
 | 2026-02-27 | PROJ-204 | Audit 1 | PASSED | 12837 passed | - | All 12 verification items confirmed |
+| 2026-02-27 | PROJ-205 | Phase 1 | Complete | 12835 passed | - | Removed sprite_preview placeholder field + 2 tests |
 
 ---
 
