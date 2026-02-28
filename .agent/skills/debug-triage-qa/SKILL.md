@@ -46,7 +46,9 @@ Once the user approves the list, you must natively route the data into their sys
 3. **For Projects:**
    Do NOT use the `/proj-start` skill automatically. Creating a project is a heavy cognitive task that the user handles manually.
    Instead, create a single Markdown file in `Projects/Triage/` (e.g., `Projects/Triage/project_name.md`).
-   Write out the cleaned-up requirements and format the `![Screenshot]` links inside this file so the user has all the context ready for when they decide to start the project.
+   Write out the cleaned-up requirements and format the `![Screenshot]` links inside this file so the user has all the context ready for when they decide to start the project. 
+   **Crucially**, you must also physically MOVE or COPY any relevant screenshot files from the session data directory into the `Projects/Triage/` folder (or a dedicated `Projects/Triage/assets/` folder).
+   Update the `![Screenshot]` links inside the created Markdown file to point to these new screenshot paths using **relative paths** (e.g. `./assets/image.png`). Because the `Projects/Triage/` folder is part of the Git repository, using relative paths and keeping the markdown and images together ensures another user or agent can cleanly iterate on the project later with full context.
 
 ## Constraints
 - **Do not** write code to fix bugs or implement features during this workflow. Your job is triage only.

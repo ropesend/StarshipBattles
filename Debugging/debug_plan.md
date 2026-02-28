@@ -25,6 +25,8 @@
 | BUG-89 | 2026-02-28 | Workshop Screen Crash on Design Button Click | Awaiting Confirmation | [BUG-89.md](active_bugs/BUG-89.md) |
 | BUG-90 | 2026-02-28 | Incorrect atmosphere coloring in planet details box | Awaiting Confirmation | [BUG-90.md](active_bugs/BUG-90.md) |
 | BUG-91 | 2026-02-28 | Missing planet portrait in build yard UI | Awaiting Confirmation | [BUG-91.md](active_bugs/BUG-91.md) |
+| BUG-92 | 2026-02-28 | New Game Setup fails to populate loaded species data | Pending | [BUG-92.md](active_bugs/BUG-92.md) |
+| BUG-93 | 2026-02-28 | Fleet move targeting state cannot be completed or canceled | Pending | [BUG-93.md](active_bugs/BUG-93.md) |
 
 ## 3. Current Focus: None
 **Status:** All bugs in queue fixed or blocked. BUG-90 fixed (gas name-to-formula mapping). BUG-91 fixed (portrait_surface forwarding). BUG-84 blocked (needs runtime debugging). All others awaiting confirmation. Full test suite: 13,004 passed, 1 skipped, 0 failed.

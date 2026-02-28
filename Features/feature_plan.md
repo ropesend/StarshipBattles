@@ -10,6 +10,7 @@
 | FEAT-01 | 2026-02-28 | Pre-populate Save Game Name | Awaiting Confirmation | `active_features/FEAT-01.md` |
 | FEAT-02 | 2026-02-28 | Add "Generate Random" Buttons to Species Setup | Awaiting Confirmation | `active_features/FEAT-02.md` |
 | FEAT-03 | 2026-02-28 | Randomize all properties in Identity Setup | Pending | `active_features/FEAT-03.md` |
+| FEAT-04 | 2026-02-28 | Event Log 'Go To Location' Navigation | Pending | `active_features/FEAT-04.md` |
 
 ## 3. Current Focus: None
 No features currently in progress.
