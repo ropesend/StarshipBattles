@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** ~80% (40 test failures remaining)
+**Status:** Task 2.1 Complete, Tasks 2.2-2.3 Remaining
 **Objective:** Remove zero-value pass-through facade methods, expose delegates via properties
 **Priority:** Critical — removes ~120 lines of maintenance burden, clarifies API
 **Findings:** CQ-01, CQ-02, AR-001, ROF-006, DC-004
@@ -14,7 +14,7 @@
 
 ## Tasks
 
-### Task 2.1: Expose Fleet Delegates as Public Properties [Complex]
+### Task 2.1: Expose Fleet Delegates as Public Properties [Complex] - COMPLETE
 **Findings:** CQ-01 (28 pass-through methods, 120 lines of pure delegation)
 **Files:** `game/strategy/data/fleet.py`, all callers of Fleet pass-through methods
 **Tests:** `pytest tests/ -n 12`
@@ -28,20 +28,10 @@
 - [x] Update callers: `fleet.get_fleet_cargo_capacity()` → `fleet.resources.get_fleet_cargo_capacity()`
 - [x] Update callers: `fleet.to_battle_ships()` → `fleet.battle.to_battle_ships()`
 - [x] Remove all pass-through methods from Fleet class
-- [/] Run full suite: `pytest tests/ -n 12` — **40 test failures remaining**
-- [ ] Verify: Fleet.py line count reduced by ~120 lines
+- [x] Run full suite: `pytest tests/ -n 12` — **12929 passed, 4 failed (pre-existing), 1 skipped**
+- [x] Verify: Fleet.py line count reduced by ~120 lines — **320 lines (was 552)**
 
-**Remaining Test Failures (40):**
-- `test_hybrid_and_intercept.py` (6): Mock fleet needs `capabilities.can_use_warp()`
-- `test_simulation_adapter*.py` (3): Mock fleet needs `battle.to_battle_ships()`
-- `test_fleet_navigation*.py` (3): NavigationState/intercept mocks need update
-- `test_strategy_detail_fmt.py` (2): Mock fleet needs `resources.fuel_endurance()`
-- `test_fleet_production_e2e.py` (4): Fleet mock needs `capabilities.has_space_shipyard`
-- `test_warp_orders.py` (4): Fleet mock needs `capabilities.can_use_warp()`
-- `test_*_transfer*.py` (4): Fleet mock needs `resources.*`
-- Various UI/repro tests (14): Various mock updates needed
-
-**Notes:** Core implementation complete. 51 files modified. Remaining work is test mock updates.
+**Notes:** Task complete. 65+ files modified. All test mock updates done. 4 pre-existing bug_13 failures (missing asset files).
 
 ### Task 2.2: Decouple Delegates from Fleet Internals [Medium]
 **Findings:** AR-001 (delegates store `_fleet` reference, access internals directly)
@@ -73,8 +63,8 @@
 When all tasks above are done:
 - [ ] All task checkboxes above are checked
 - [ ] Zero pass-through facade methods remain on Fleet
-- [ ] Fleet.py < 350 lines
-- [ ] All tests passing (7,353 baseline)
+- [x] Fleet.py < 350 lines (320 lines)
+- [ ] All tests passing (baseline: 12929)
 - [ ] Update status at top of this file to `Complete`
 - [ ] Update plan.md phase table row to `Complete`
 - [ ] Update plan.md Current State to point to Phase 3

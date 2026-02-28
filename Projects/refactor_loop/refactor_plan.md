@@ -8,37 +8,28 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-210 Phase 2 WIP (Pass-Through Elimination ~80% complete)
-**Current Status:** PROJ-210 Phase 2 In Progress - 40 test failures remaining
+**Last Completed:** PROJ-210 Phase 2 Task 2.1 Complete (Pass-Through Elimination 100%)
+**Current Status:** PROJ-210 Phase 2 - Task 2.1 Done, Tasks 2.2-2.3 Remaining
 **Current Project:** PROJ-210
-**Current Phase:** Phase 2 (Facade Bloat & Pass-Through Elimination) - CONTINUE
-**Test Status:** 12893 passed, 40 failed, 1 skipped
+**Current Phase:** Phase 2 (Facade Bloat & Pass-Through Elimination) - Tasks 2.2-2.3
+**Test Status:** 12929 passed, 4 failed (pre-existing bug_13), 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-210 Phase 2 WIP (~80% complete):**
-  - Exposed delegate properties on Fleet: `capabilities`, `resources`, `battle`
-  - Removed 20+ pass-through methods from Fleet class
-  - Updated ALL game code callers to use delegate API:
-    - `fleet.capabilities.can_use_warp()`, `.has_space_shipyard`, etc.
-    - `fleet.resources.get_fleet_cargo_capacity()`, `.consume_*()`, etc.
-    - `fleet.battle.to_battle_ships()`, `.update_from_battle_results()`
-  - Updated IFleet protocol to expose delegate properties
-  - Updated 30+ test files with new API patterns
-- **Remaining Work (40 test failures):**
-  - `test_hybrid_and_intercept.py`: Mock fleet needs `capabilities.can_use_warp()`
-  - `test_simulation_adapter*.py`: Mock fleet needs `battle.to_battle_ships()`
-  - `test_fleet_navigation*.py`: NavigationState/intercept mock needs update
-  - `test_strategy_detail_fmt.py`: Mock fleet needs `resources.fuel_endurance()`
-  - Various UI/repro tests need mock updates
-- **Files Modified (51 files total):**
-  - game/strategy/data/fleet.py (removed 20+ pass-throughs, added delegate properties)
-  - game/core/protocols.py (IFleet updated)
-  - game/strategy/engine/*.py, game/strategy/services/*.py (updated callers)
-  - tests/**/test_*.py (30+ test files updated)
-- **Commit:** a381784b (WIP)
-- **Next Action:** Continue Phase 2 — fix remaining 40 test mock setups
-- Note: 4 bug_13 tests fail due to missing asset files (pre-existing, unrelated)
+- **PROJ-210 Phase 2 Task 2.1 COMPLETE:**
+  - All pass-through methods removed from Fleet class
+  - Fleet.py reduced from 552 to 320 lines
+  - 65+ files updated with new delegate API patterns
+  - All test mocks fixed, including:
+    - pathfinding.py: Added _ChaserProxyCapabilities for capabilities property
+    - strategy_detail_formatter.py: obj.capabilities.has_space_shipyard
+    - 14 test files with mock updates
+  - 4 pre-existing bug_13 failures (missing asset files)
+- **Remaining Work (Tasks 2.2-2.3):**
+  - Task 2.2: Decouple delegates from Fleet internals (consider interface-based approach)
+  - Task 2.3: Remove dead _default_formation_positions method
+- **Commit:** f0c0cff9
+- **Next Action:** Continue Phase 2 — Tasks 2.2-2.3
 
 ---
 
@@ -123,6 +114,7 @@
 | 2026-02-28 | PROJ-208 | Audit 1 | PASSED | 12929 passed, 1 skipped | pending | Fixed direction type mismatch in ReorderFleetOrderCommand |
 | 2026-02-28 | PROJ-210 | Phase 1 | Complete | 12929 passed, 1 skipped | pending | FleetOrderSerializer, PlanetaryFacility, SpeciesPopulation extracted |
 | 2026-02-28 | PROJ-210 | Phase 2 | ~80% | 12893 passed, 40 failed | a381784b | Fleet pass-through elimination; 51 files modified; test mocks need updates |
+| 2026-02-28 | PROJ-210 | Phase 2 Task 2.1 | Complete | 12929 passed, 4 failed | f0c0cff9 | All pass-throughs removed; 14 test files fixed; Fleet.py 320 lines |
 
 ---
 

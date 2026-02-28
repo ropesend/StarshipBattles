@@ -14,22 +14,18 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Serialization & Embedded Classes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Facade Bloat & Pass-Through Elimination | ~80% (40 tests failing) | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Facade Bloat & Pass-Through Elimination | Task 2.1 Complete, 2.2-2.3 Remaining | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Planet Decomposition | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. FleetOrderProcessor Decomposition | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Dead Code & Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-28
-**Active Phase:** Phase 2 (Continue)
-**Last Action:** Removed 20+ pass-through methods from Fleet; updated 51 files; 40 test failures remain
-**Next Action:** Continue Phase 2 — fix remaining test mock setups in:
-  - `test_hybrid_and_intercept.py` (fleet.capabilities.can_use_warp)
-  - `test_simulation_adapter*.py` (fleet.battle.to_battle_ships)
-  - `test_fleet_navigation*.py` (NavigationState/intercept mocks)
-  - `test_strategy_detail_fmt.py` (fleet.resources.fuel_endurance)
+**Active Phase:** Phase 2 (Continue with Tasks 2.2-2.3)
+**Last Action:** Task 2.1 complete - all pass-throughs removed, 65+ files updated, all tests fixed
+**Next Action:** Continue Phase 2 — Task 2.2 (Decouple Delegates) or Task 2.3 (Remove dead method)
 **Blockers:** None
-**Test Status:** 12,893 passed, 40 failed, 1 skipped (4 bug_13 pre-existing failures)
+**Test Status:** 12,929 passed, 4 failed (pre-existing bug_13), 1 skipped
 
 ## Overview
 Systematic decomposition of strategy domain god classes based on findings from review `2026-02-27_211327_general_strategy-god-classes`. 80 total findings from 5 review agents, validated by 3 independent validators (12.5% rejection rate).
