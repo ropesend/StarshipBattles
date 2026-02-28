@@ -19,13 +19,16 @@ class TestSimulationBattleResolverEnvironmentalEffects:
         resolver = SimulationBattleResolver()
 
         # Create fleets with no ships (triggers early return)
+        # PROJ-210: to_battle_ships accessed via fleet.battle property
         fleet1 = MagicMock()
         fleet1.id = 1
-        fleet1.to_battle_ships.return_value = []
+        fleet1.battle = MagicMock()
+        fleet1.battle.to_battle_ships.return_value = []
 
         fleet2 = MagicMock()
         fleet2.id = 2
-        fleet2.to_battle_ships.return_value = []
+        fleet2.battle = MagicMock()
+        fleet2.battle.to_battle_ships.return_value = []
 
         effects = EnvironmentalEffects(shield_capacity_mult=0.5, in_storm=True)
 
@@ -50,13 +53,16 @@ class TestSimulationBattleResolverEnvironmentalEffects:
         mock_ship2.max_shields = 500
         mock_ship2.current_shields = 400
 
+        # PROJ-210: to_battle_ships accessed via fleet.battle property
         fleet1 = MagicMock()
         fleet1.id = 1
-        fleet1.to_battle_ships.return_value = [mock_ship1]
+        fleet1.battle = MagicMock()
+        fleet1.battle.to_battle_ships.return_value = [mock_ship1]
 
         fleet2 = MagicMock()
         fleet2.id = 2
-        fleet2.to_battle_ships.return_value = [mock_ship2]
+        fleet2.battle = MagicMock()
+        fleet2.battle.to_battle_ships.return_value = [mock_ship2]
 
         # Storm with 50% shield reduction
         effects = EnvironmentalEffects(shield_capacity_mult=0.5, in_storm=True)
@@ -95,13 +101,16 @@ class TestSimulationBattleResolverEnvironmentalEffects:
         mock_ship2.max_shields = 500
         mock_ship2.current_shields = 500
 
+        # PROJ-210: to_battle_ships accessed via fleet.battle property
         fleet1 = MagicMock()
         fleet1.id = 1
-        fleet1.to_battle_ships.return_value = [mock_ship1]
+        fleet1.battle = MagicMock()
+        fleet1.battle.to_battle_ships.return_value = [mock_ship1]
 
         fleet2 = MagicMock()
         fleet2.id = 2
-        fleet2.to_battle_ships.return_value = [mock_ship2]
+        fleet2.battle = MagicMock()
+        fleet2.battle.to_battle_ships.return_value = [mock_ship2]
 
         # No storm - neutral effects
         effects = EnvironmentalEffects()
@@ -136,13 +145,16 @@ class TestSimulationBattleResolverEnvironmentalEffects:
         mock_ship2.max_shields = 500
         mock_ship2.current_shields = 500
 
+        # PROJ-210: to_battle_ships accessed via fleet.battle property
         fleet1 = MagicMock()
         fleet1.id = 1
-        fleet1.to_battle_ships.return_value = [mock_ship1]
+        fleet1.battle = MagicMock()
+        fleet1.battle.to_battle_ships.return_value = [mock_ship1]
 
         fleet2 = MagicMock()
         fleet2.id = 2
-        fleet2.to_battle_ships.return_value = [mock_ship2]
+        fleet2.battle = MagicMock()
+        fleet2.battle.to_battle_ships.return_value = [mock_ship2]
 
         with patch('game.strategy.adapters.simulation_adapter.BattleController') as mock_controller_cls:
             mock_controller = MagicMock()

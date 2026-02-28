@@ -31,8 +31,9 @@ class TestNavigationState:
         fleet.path = [HexCoord(6, 3), HexCoord(7, 3)]
         fleet.orders = [FleetOrder(OrderType.MOVE, HexCoord(7, 3))]
 
-        # Mock can_use_warp - will be called by from_fleet
-        fleet.can_use_warp = MagicMock(return_value=True)
+        # PROJ-210: Mock can_use_warp via capabilities property
+        fleet._capabilities = MagicMock()
+        fleet._capabilities.can_use_warp = MagicMock(return_value=True)
 
         state = NavigationState.from_fleet(fleet)
 

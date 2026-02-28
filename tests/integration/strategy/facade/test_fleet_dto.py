@@ -127,7 +127,8 @@ class TestFleetInfo:
         assert fleet.ships == ()
         assert fleet.orders == ()
         assert fleet.has_orders is False
-        assert fleet.capabilities.can_use_warp is False
+        # PROJ-210: can_use_warp is a direct field on FleetInfo, not on capabilities
+        assert fleet.can_use_warp is False
         assert fleet.projected_path == ()
 
     def test_create_fleet_with_ships_and_orders(self):
@@ -161,7 +162,8 @@ class TestFleetInfo:
         assert fleet.ships[0].name == "Ship A"
         assert len(fleet.orders) == 1
         assert fleet.has_orders is True
-        assert fleet.capabilities.can_use_warp is True
+        # PROJ-210: can_use_warp is a direct field on FleetInfo, not on capabilities
+        assert fleet.can_use_warp is True
         assert len(fleet.projected_path) == 4
 
     def test_is_frozen(self):

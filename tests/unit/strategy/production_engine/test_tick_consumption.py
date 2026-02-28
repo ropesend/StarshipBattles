@@ -481,8 +481,10 @@ class TestMidTurnCompletion:
 
         fleet = MagicMock(spec=Fleet)
         fleet.is_building = True
-        fleet.has_space_shipyard = True
-        fleet.space_shipyard_count = 1  # Required for rate calculation
+        # PROJ-210: Shipyard properties accessed via capabilities
+        fleet.capabilities = MagicMock()
+        fleet.capabilities.has_space_shipyard = True
+        fleet.capabilities.space_shipyard_count = 1  # Required for rate calculation
         fleet.construction_queue = [item]
         fleet.id = 1
         fleet.location = (10, 10)
@@ -513,8 +515,10 @@ class TestMidTurnCompletion:
 
         fleet = MagicMock(spec=Fleet)
         fleet.is_building = True
-        fleet.has_space_shipyard = True
-        fleet.space_shipyard_count = 1
+        # PROJ-210: Shipyard properties accessed via capabilities
+        fleet.capabilities = MagicMock()
+        fleet.capabilities.has_space_shipyard = True
+        fleet.capabilities.space_shipyard_count = 1
         fleet.construction_queue = [item]
         fleet.id = 1
         fleet.location = (10, 10)

@@ -45,18 +45,22 @@ class TestWarpOrderCommand:
     def warp_capable_fleet(self):
         """Create a fleet that can use warp."""
         fleet = Fleet("test_fleet", 0, HexCoord(10, 5), speed=5.0)
-        fleet.can_use_warp = MagicMock(return_value=True)
-        fleet.get_warp_limiting_ship = MagicMock(return_value=None)
+        # PROJ-210: can_use_warp accessed via fleet.capabilities property
+        fleet._capabilities = MagicMock()
+        fleet._capabilities.can_use_warp = MagicMock(return_value=True)
+        fleet._capabilities.get_warp_limiting_ship = MagicMock(return_value=None)
         return fleet
 
     @pytest.fixture
     def non_warp_fleet(self):
         """Create a fleet that cannot use warp."""
         fleet = Fleet("test_fleet", 0, HexCoord(10, 5), speed=5.0)
-        fleet.can_use_warp = MagicMock(return_value=False)
+        # PROJ-210: can_use_warp accessed via fleet.capabilities property
+        fleet._capabilities = MagicMock()
+        fleet._capabilities.can_use_warp = MagicMock(return_value=False)
         limiting_ship = MagicMock()
         limiting_ship.name = "Heavy Freighter"
-        fleet.get_warp_limiting_ship = MagicMock(return_value=limiting_ship)
+        fleet._capabilities.get_warp_limiting_ship = MagicMock(return_value=limiting_ship)
         return fleet
 
     def test_warp_command_at_warp_point_queues_warp_order(

@@ -84,7 +84,9 @@ def mock_fleet():
     fleet.owner_id = 1
     fleet.location = (10, 20)
     fleet.speed = 5
-    fleet.fuel_endurance = Mock(return_value=25)
+    # PROJ-210: fuel_endurance accessed via fleet.resources property
+    fleet.resources = Mock()
+    fleet.resources.fuel_endurance = Mock(return_value=25)
     fleet.orders = []
     fleet.ships = []
     return fleet
@@ -344,7 +346,8 @@ class TestFormatFleetInfo:
 
     def test_unlimited_fuel_display(self, mock_fleet):
         """Test unlimited fuel display."""
-        mock_fleet.fuel_endurance = Mock(return_value=-1)
+        # PROJ-210: fuel_endurance accessed via fleet.resources property
+        mock_fleet.resources.fuel_endurance = Mock(return_value=-1)
 
         result = format_fleet_info(mock_fleet)
 

@@ -27,10 +27,12 @@ def mock_fleet():
     fleet.orders = []
     fleet.get_current_order = MagicMock(return_value=None)
     fleet.pop_order = MagicMock()
-    fleet.get_fleet_cargo_capacity = MagicMock(return_value=100)
-    fleet.get_fleet_cargo_current = MagicMock(return_value=50)
-    fleet.load_cargo_to_fleet = MagicMock()
-    fleet.unload_cargo_from_fleet = MagicMock(return_value=50)
+    # PROJ-210: cargo methods accessed via fleet.resources property
+    fleet.resources = MagicMock()
+    fleet.resources.get_fleet_cargo_capacity = MagicMock(return_value=100)
+    fleet.resources.get_fleet_cargo_current = MagicMock(return_value=50)
+    fleet.resources.load_cargo_to_fleet = MagicMock()
+    fleet.resources.unload_cargo_from_fleet = MagicMock(return_value=50)
     return fleet
 
 

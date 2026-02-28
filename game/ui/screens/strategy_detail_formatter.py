@@ -337,7 +337,8 @@ class StrategyDetailFormatter:
             self.btn_fleet_report.show()
 
             # PROJ-67: Show Build button for fleets with space shipyard
-            if obj.has_space_shipyard:
+            # PROJ-210: Access via capabilities delegate
+            if obj.capabilities.has_space_shipyard:
                 self.btn_build_fleet.show()
 
             # Check if we can colonize (BUG FIX PROJ-198 Phase 4: turn_engine is on session, not scene)

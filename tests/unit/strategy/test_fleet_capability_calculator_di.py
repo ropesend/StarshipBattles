@@ -188,8 +188,9 @@ class TestFleetCapabilityCalculatorDI:
         fleet.add_ship(ship)
 
         # Calculator should use injected registry
+        # PROJ-210: Space shipyard properties accessed via capabilities
         assert fleet.capabilities.has_space_shipyard is True
-        assert fleet.space_shipyard_count == 1
+        assert fleet.capabilities.space_shipyard_count == 1
 
     def test_fleet_from_dict_passes_registries(self):
         """Fleet.from_dict passes registries to ships and calculator."""

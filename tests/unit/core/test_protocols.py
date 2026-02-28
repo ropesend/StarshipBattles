@@ -639,4 +639,6 @@ class TestPROJ193ExtendedIFleet:
         assert hasattr(fleet, 'construction_queue')
         assert hasattr(fleet, 'name')
         assert hasattr(fleet, 'is_building')
-        assert hasattr(fleet, 'has_space_shipyard')
+        # PROJ-210: has_space_shipyard moved to capabilities delegate
+        assert hasattr(fleet, 'capabilities')
+        assert hasattr(fleet.capabilities, 'has_space_shipyard')
