@@ -15,15 +15,15 @@
 |-------|--------|-----------|
 | 1. Serialization & Embedded Classes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Facade Bloat & Pass-Through Elimination | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Planet Decomposition | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Planet Decomposition | Complete (Deferred) | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. FleetOrderProcessor Decomposition | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Dead Code & Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-28
-**Active Phase:** Phase 3 (Planet Decomposition)
-**Last Action:** Phase 2 Complete — Task 2.2 deferred (low value), Task 2.3 already done in Task 2.1
-**Next Action:** Start Phase 3 — Extract embedded classes from Planet
+**Active Phase:** Phase 4 (FleetOrderProcessor Decomposition)
+**Last Action:** Phase 3 Complete — All 4 tasks deferred with rationale (low value, protocol constraints, already clean)
+**Next Action:** Start Phase 4 — Decompose FleetOrderProcessor into command handlers
 **Blockers:** None
 **Test Status:** 12,929 passed, 4 failed (pre-existing bug_13), 1 skipped
 
