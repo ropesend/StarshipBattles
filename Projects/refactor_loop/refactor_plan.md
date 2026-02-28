@@ -8,22 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-209 Phase 2 (ProductionEngine._process_queue_tick_dynamic decomposition)
-**Current Status:** PROJ-209 Phase 2 COMPLETE — CC reduced from 27 to 11
+**Last Completed:** PROJ-209 Phase 3 (FleetNavigationService.project_path decomposition)
+**Current Status:** PROJ-209 Phase 3 COMPLETE — CC reduced from 22 to 14 (36% reduction)
 **Current Project:** PROJ-209
-**Current Phase:** Phase 3 ready
-**Test Status:** 12949 passed, 4 failed (pre-existing bug_13), 1 skipped
+**Current Phase:** Phase 4 ready
+**Test Status:** 12959 passed, 4 failed (pre-existing bug_13), 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-209 Phase 2 COMPLETE:**
-  - Fixed critical AR-01 bug: broken cost fallback with silent `pass`
-  - Extracted 7 helpers: _validate_queue_item, _calculate_tick_expenditure, _check_affordability, _apply_resource_consumption, _check_item_completion, _update_turns_remaining
-  - Created TickExpenditure NamedTuple for return type
-  - Added 4 named constants: TICKS_PER_TURN, TICK_CAPACITY_EPSILON, COMPLETION_EPSILON, MAX_QUEUE_ITERATIONS
-  - Added 5 new edge case tests (TC-001, TC-002, TC-005, TC-009, AR-01)
-  - Orchestrator CC=11 (down from 27; essential complexity due to 8 distinct cases)
-- **Next Action:** Phase 3 — decompose FleetNavigationService.project_path (CC 22 → ~10)
+- **PROJ-209 Phase 3 COMPLETE:**
+  - Eliminated is_first_order flag pattern via initial_progress auto-clear
+  - Extracted 3 helpers: _consume_ticks (CC=4), _project_action_order (CC=1), _resolve_path_for_order (CC=4)
+  - Used dataclasses.replace() for NavigationState updates (CQ-026)
+  - Added 10 new tests: 2 WARP order tests, 2 pathfinding failure tests, 6 _consume_ticks unit tests
+  - Orchestrator CC=14 (down from 22; 36% reduction, essential complexity)
+- **Next Action:** Phase 4 — decompose ShipStatsCalculator.calculate_stats (CC 26 → ~8)
 
 ---
 
@@ -116,6 +115,7 @@
 | 2026-02-28 | PROJ-210 | Audit 1 | PASSED | 12923 passed, 4 failed | - | All implementations verified, no issues |
 | 2026-02-28 | PROJ-209 | Phase 1 | Complete | 12944 passed, 4 failed | pending | load_game CC 26→5, 4 helpers extracted, 21 new tests |
 | 2026-02-28 | PROJ-209 | Phase 2 | Complete | 12949 passed, 4 failed | pending | _process_queue_tick_dynamic CC 27→11, 7 helpers, 5 new tests |
+| 2026-02-28 | PROJ-209 | Phase 3 | Complete | 12959 passed, 4 failed | pending | project_path CC 22→14, 3 helpers, 10 new tests, dataclasses.replace |
 
 ---
 

@@ -23,8 +23,8 @@ Architecture:
 PROJ-187: Path projection accounts for action_time on non-movement orders.
 """
 import logging
-from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from dataclasses import dataclass, replace
+from typing import Any, Dict, Optional, Tuple
 
 from game.core.hex_math import HexCoord, hex_distance
 from game.strategy.data.fleet import (
@@ -353,13 +353,8 @@ class FleetNavigationService:
                 exit_hex = self._resolve_warp_exit(destination, galaxy)
                 if exit_hex:
                     # Warp transit: move directly to exit hex
-                    new_orders = state.orders[1:]
-                    new_state = NavigationState(
-                        location=exit_hex,
-                        path=(),
-                        orders=new_orders,
-                        speed=state.speed,
-                        can_warp=state.can_warp
+                    new_state = replace(
+                        state, location=exit_hex, path=(), orders=state.orders[1:]
                     )
                     return NavigationStep(
                         next_hex=exit_hex,
@@ -372,14 +367,7 @@ class FleetNavigationService:
 
             if state.location == destination:
                 # Already at destination, complete order
-                new_orders = state.orders[1:]
-                new_state = NavigationState(
-                    location=state.location,
-                    path=(),
-                    orders=new_orders,
-                    speed=state.speed,
-                    can_warp=state.can_warp
-                )
+                new_state = replace(state, path=(), orders=state.orders[1:])
                 return NavigationStep(next_hex=None, new_state=new_state, order_complete=True)
 
             # PROJ-187: Use specialized path for WARP orders
@@ -396,25 +384,13 @@ class FleetNavigationService:
         if current_path:
             next_hex = current_path[0]
             remaining_path = tuple(current_path[1:])
-
-            # Check if order completes after this move
             order_complete = len(remaining_path) == 0
-            if order_complete:
-                new_orders = state.orders[1:]
-            else:
-                new_orders = state.orders
-
-            new_state = NavigationState(
-                location=next_hex,
-                path=remaining_path,
-                orders=new_orders,
-                speed=state.speed,
-                can_warp=state.can_warp
+            new_orders = state.orders[1:] if order_complete else state.orders
+            new_state = replace(
+                state, location=next_hex, path=remaining_path, orders=new_orders
             )
             return NavigationStep(
-                next_hex=next_hex,
-                new_state=new_state,
-                order_complete=order_complete
+                next_hex=next_hex, new_state=new_state, order_complete=order_complete
             )
 
         return NavigationStep(next_hex=None, new_state=state, order_complete=False)
@@ -455,11 +431,9 @@ class FleetNavigationService:
         moves_left_in_turn = moves_per_turn
         current_turn = 0
 
-        # Track execution progress for first order (if any)
-        # This is needed to account for partial progress on current action
-        # FleetOrder always has execution_progress (default 0)
-        first_order_progress = fleet.orders[0].execution_progress if fleet.orders else 0
-        is_first_order = True
+        # Pre-adjust for execution_progress on first action order
+        # This handles partial completion of in-progress actions
+        initial_progress = fleet.orders[0].execution_progress if fleet.orders else 0
 
         # Safety limit to prevent infinite loops
         max_steps = max_turns * moves_per_turn + 100
@@ -471,104 +445,87 @@ class FleetNavigationService:
                 logger.warning("project_path exceeded max iterations")
                 break
 
-            # If no path but have orders, handle current order
+            # Handle current order if no path computed
             if not state.path and state.orders:
                 order = state.orders[0]
 
-                # PROJ-187: Handle action orders (non-movement)
+                # Action orders: consume ticks and advance
                 if order.type not in MOVEMENT_ORDER_TYPES:
-                    # Calculate action_time for this order
-                    action_time = self._get_action_time_for_projection(
-                        fleet, order, component_registry
+                    state, moves_left_in_turn, current_turn, initial_progress = (
+                        self._project_action_order(
+                            state, order, fleet, component_registry,
+                            moves_left_in_turn, current_turn, moves_per_turn,
+                            max_turns, initial_progress
+                        )
                     )
-
-                    # Account for existing execution_progress on first order
-                    if is_first_order and first_order_progress > 0:
-                        action_time = max(0, action_time - first_order_progress)
-
-                    # Consume action_time ticks
-                    while action_time > 0 and current_turn < max_turns:
-                        ticks_to_consume = min(action_time, moves_left_in_turn)
-                        action_time -= ticks_to_consume
-                        moves_left_in_turn -= ticks_to_consume
-
-                        if moves_left_in_turn <= 0:
-                            current_turn += 1
-                            moves_left_in_turn = moves_per_turn
-
-                    # Advance to next order
-                    state = NavigationState(
-                        location=state.location,
-                        path=(),
-                        orders=state.orders[1:],
-                        speed=state.speed,
-                        can_warp=state.can_warp
-                    )
-                    is_first_order = False
                     continue
 
-                destination = self.get_destination(state, order, galaxy)
-                if destination is None:
+                # Movement orders: resolve path
+                new_state = self._resolve_path_for_order(state, order, galaxy)
+                if new_state is None:
                     break
-
-                # PROJ-187: Use specialized path for WARP orders
-                if order.type == OrderType.WARP:
-                    new_path = self.compute_path_for_warp(state, destination, galaxy)
-                else:
-                    new_path = self.compute_path(state, destination, galaxy)
-                if not new_path:
-                    break
-
-                state = NavigationState(
-                    location=state.location,
-                    path=tuple(new_path),
-                    orders=state.orders,
-                    speed=state.speed,
-                    can_warp=state.can_warp
-                )
-                is_first_order = False
+                state = new_state
 
             if not state.path:
                 break
 
-            # Execute one step
+            # Execute one movement step
             start_hex = state.location
             next_hex = state.path[0]
             remaining_path = state.path[1:]
-
-            # Detect warp jump (distance > 1)
             is_warp = hex_distance(start_hex, next_hex) > 1
 
-            segment = PathSegment(
+            segments.append(PathSegment(
                 start=start_hex,
                 end=next_hex,
                 turn=current_turn,
                 is_warp=is_warp
+            ))
+
+            # Update state for next iteration
+            new_orders = state.orders[1:] if not remaining_path and state.orders else state.orders
+            state = replace(state, location=next_hex, path=remaining_path, orders=new_orders)
+
+            # Consume movement tick
+            moves_left_in_turn, current_turn = self._consume_ticks(
+                moves_left_in_turn, current_turn, moves_per_turn, max_turns, 1
             )
-            segments.append(segment)
-
-            # Update state
-            if not remaining_path:
-                # Order complete
-                new_orders = state.orders[1:] if state.orders else ()
-            else:
-                new_orders = state.orders
-
-            state = NavigationState(
-                location=next_hex,
-                path=remaining_path,
-                orders=new_orders,
-                speed=state.speed,
-                can_warp=state.can_warp
-            )
-
-            # Movement cost
-            moves_left_in_turn -= 1
-            if moves_left_in_turn <= 0:
-                current_turn += 1
-                moves_left_in_turn = moves_per_turn
 
         return segments
+
+    @staticmethod
+    def _consume_ticks(
+        moves_left: int,
+        current_turn: int,
+        moves_per_turn: int,
+        max_turns: int,
+        ticks: int
+    ) -> tuple:
+        """
+        Consume ticks and advance turns as needed.
+
+        Pure function that handles turn-boundary crossing logic.
+
+        Args:
+            moves_left: Remaining moves in current turn
+            current_turn: Current turn number
+            moves_per_turn: Number of moves per turn (from speed)
+            max_turns: Maximum turns to project
+            ticks: Number of ticks to consume
+
+        Returns:
+            Tuple of (new_moves_left, new_current_turn)
+        """
+        while ticks > 0 and current_turn < max_turns:
+            ticks_to_consume = min(ticks, moves_left)
+            ticks -= ticks_to_consume
+            moves_left -= ticks_to_consume
+
+            if moves_left <= 0:
+                current_turn += 1
+                moves_left = moves_per_turn
+
+        return (moves_left, current_turn)
 
     def _get_action_time_for_projection(
         self,
@@ -591,6 +548,83 @@ class FleetNavigationService:
         """
         from game.strategy.services.action_time_resolver import ActionTimeResolver
         return ActionTimeResolver.resolve_action_time(fleet, order, component_registry)
+
+    def _project_action_order(
+        self,
+        state: NavigationState,
+        order: FleetOrder,
+        fleet: Fleet,
+        component_registry,
+        moves_left: int,
+        current_turn: int,
+        moves_per_turn: int,
+        max_turns: int,
+        initial_progress: int
+    ) -> Tuple[NavigationState, int, int, int]:
+        """
+        Project an action order, consuming ticks and advancing state.
+
+        Args:
+            state: Current navigation state
+            order: The action order to project
+            fleet: Fleet for action_time lookup
+            component_registry: Registry for ability lookup
+            moves_left: Remaining moves in current turn
+            current_turn: Current turn number
+            moves_per_turn: Moves per turn (from speed)
+            max_turns: Maximum projection turns
+            initial_progress: Ticks already completed on this action
+
+        Returns:
+            Tuple of (new_state, new_moves_left, new_current_turn, remaining_initial_progress)
+        """
+        # Calculate action_time for this order, adjusted for progress
+        action_time = self._get_action_time_for_projection(
+            fleet, order, component_registry
+        )
+        action_time = max(0, action_time - initial_progress)
+        initial_progress = 0  # Only applies to first action order
+
+        # Consume action_time ticks
+        moves_left, current_turn = self._consume_ticks(
+            moves_left, current_turn, moves_per_turn, max_turns, action_time
+        )
+
+        # Advance to next order
+        new_state = replace(state, path=(), orders=state.orders[1:])
+        return (new_state, moves_left, current_turn, initial_progress)
+
+    def _resolve_path_for_order(
+        self,
+        state: NavigationState,
+        order: FleetOrder,
+        galaxy
+    ) -> Optional[NavigationState]:
+        """
+        Resolve destination and compute path for a movement order.
+
+        Args:
+            state: Current navigation state
+            order: The movement order to resolve
+            galaxy: Galaxy object for pathfinding
+
+        Returns:
+            New NavigationState with computed path, or None if no valid path
+        """
+        destination = self.get_destination(state, order, galaxy)
+        if destination is None:
+            return None
+
+        # Compute path based on order type
+        if order.type == OrderType.WARP:
+            new_path = self.compute_path_for_warp(state, destination, galaxy)
+        else:
+            new_path = self.compute_path(state, destination, galaxy)
+
+        if not new_path:
+            return None
+
+        return replace(state, path=tuple(new_path))
 
     def project_path_as_dicts(
         self,
