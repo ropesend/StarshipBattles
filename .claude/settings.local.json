@@ -41,7 +41,8 @@
       "Bash(claude:*)",
       "Bash(radon cc:*)",
       "Bash(git log:*)",
-      "Bash(git ls-files:*)"
+      "Bash(git ls-files:*)",
+      "Bash(git -C \"c:\\\\Dev\\\\Starship Battles\" log --all --oneline -- saves/)"
     ],
     "additionalDirectories": []
   }

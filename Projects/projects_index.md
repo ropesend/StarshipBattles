@@ -4,6 +4,8 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-205 | Legacy Code Elimination - Verified Findings | Plan Ready | 2026-02-27 | 2026-02-27 |
+| PROJ-204 | Strategy & Workshop Duplication Consolidation | Planning | 2026-02-27 | 2026-02-27 |
 | PROJ-203 | Reduce complexity: StrategyRenderer._draw_systems (CC 29) | Planning | 2026-02-27 | 2026-02-27 |
 | PROJ-202 | Reduce complexity: StrategyRenderer._draw_systems (CC 29) | Planning | 2026-02-27 | 2026-02-27 |
 | PROJ-201 | Reduce complexity: FleetDataSource._get_column_value (CC 29) | Planning | 2026-02-27 | 2026-02-27 |

@@ -53,14 +53,16 @@
 **Goal:** Deploy review agents in parallel
 
 1. **Launch Agents**
-   - Use Task tool with subagent_type=Explore
+   - Use Task tool with **subagent_type="general-purpose"** (NOT "Explore" — Explore agents cannot write files)
    - Launch all selected agents in parallel (single message, multiple tool calls)
    - Each agent writes findings to `findings/<agent_role>_report.md`
+   - The agent prompt MUST explicitly instruct the agent to use the Write tool to persist its report
 
 **IMPORTANT - Agent Launch Recommendations:**
 - **Synchronous launches (default):** For reviews with < 6 agents, launch synchronously (without `run_in_background`) to ensure outputs are captured reliably.
 - **Background launches:** Only use `run_in_background=true` for large reviews (8+ agents) when parallel execution is critical. Always verify outputs afterward.
 - **Verification:** After agents complete, check that all output files exist and contain content before proceeding to Phase D.
+- **If agents fail to write files:** This typically means they were launched with `subagent_type=Explore` instead of `general-purpose`. Re-launch with the correct agent type.
 
 2. **Agent Prompt Template**
    Each agent receives:
@@ -77,9 +79,10 @@
    1. Analyze the codebase through the lens of your focus area
    2. Identify issues, rate their severity, and suggest remediation
    3. Produce a structured report
+   4. **CRITICAL: Use the Write tool to save your report to the output file below. Your analysis is lost if you don't write the file.**
 
    ## Output Format
-   Write your findings to: Reviews/results/{REVIEW_FOLDER}/findings/{ROLE_NAME}_report.md
+   You MUST use the Write tool to save your report to: Reviews/results/{REVIEW_FOLDER}/findings/{ROLE_NAME}_report.md
 
    Use this structure:
 
@@ -133,6 +136,141 @@
    - Review compiled report for accuracy
    - Merge any duplicate findings
    - Verify severity classifications
+
+---
+
+### Phase D.5: Findings Verification
+**Goal:** Skeptically validate all findings against actual source code before presenting to user
+
+This phase is **mandatory** for all reviews. Validator agents independently verify each finding by reading the actual source code, checking whether the issue exists as described, and rendering a verdict.
+
+1. **Extract Findings for Validation**
+   ```bash
+   python Reviews/scripts/validate_findings.py <review_folder> --format markdown
+   ```
+   This outputs all findings in a format suitable for validator agents.
+
+2. **Determine Validator Count**
+   | Finding Count | Validators |
+   |---------------|------------|
+   | 1-15          | 2          |
+   | 16-40         | 3          |
+   | 41+           | 4          |
+
+   Split findings evenly across validators. Each validator gets a numbered slice.
+
+3. **Launch Validator Agents**
+   - Use Task tool with **subagent_type="general-purpose"** (validators must write files)
+   - Each validator writes to: `findings/validation/validator_N_report.md`
+   - Use the **Validator Prompt Template** below
+
+4. **Apply Verdicts**
+   ```bash
+   python Reviews/scripts/filter_validated_findings.py <review_folder>
+   ```
+   - Saves original report as `report_unvalidated.md`
+   - Writes filtered `report.md` with only verified findings
+   - Writes `findings/validation/validation_summary.json`
+   - Warnings are emitted for shards with >90% rejection rate (validator may be too aggressive)
+
+5. **Validator Prompt Template**
+   Each validator receives:
+   ```markdown
+   # Finding Validator {N}
+
+   ## Your Mindset
+   Be **skeptical but fair**. Assume every finding is wrong until you verify it yourself.
+   Your goal is to catch false positives, not to reject everything. A well-described issue
+   that genuinely exists in the code should be CONFIRMED.
+
+   ## Your Assigned Findings
+   {FINDINGS_SLICE — subset of findings assigned to this validator}
+
+   ## Validation Methodology
+
+   For EACH finding, follow these steps:
+
+   ### Step 1: Read the Source Code
+   - Open the file at the **Location** specified in the finding
+   - Read the relevant lines and surrounding context
+   - If the file does not exist → automatically **REJECTED**
+   - If the location is "Unknown" or empty → automatically **REJECTED**
+
+   ### Step 2: Verify the Claim
+   - Does the code at this location actually exhibit the described issue?
+   - Is the description accurate?
+   - Is the "Impact" statement realistic or exaggerated?
+   - Is the "Recommendation" feasible and correct?
+
+   ### Step 3: Check If Already Fixed
+   - Look for signs the issue was addressed (refactoring, TODO comments, recent changes)
+   - If clearly fixed → **REJECTED** with explanation
+
+   ### Step 4: Assess Severity
+   - Is the assigned severity appropriate?
+   - Severity inflation is common — downgrade liberally if warranted
+   - Critical = genuine architectural violation, security issue, or crash risk
+   - Major = real bug or significant maintainability problem
+   - Minor = code smell, low-risk issue
+   - Info = observation, not actionable
+
+   ### Step 5: Check for Common False Positive Patterns
+   - TYPE_CHECKING imports flagged as Critical/Major (should be Minor at most)
+   - Findings about classes with active decomposition projects in Projects/active_projects/
+   - Duplicate findings (same issue reported by multiple agents)
+   - Info-level observations that are not actionable issues
+   - Style/formatting issues with no functional impact
+
+   ### Step 6: Render Verdict
+   One of:
+   - **CONFIRMED** — Issue exists as described at stated severity
+   - **DOWNGRADED({new_severity})** — Issue exists but severity is wrong
+     (e.g., `DOWNGRADED(Minor)` for an inflated Critical)
+   - **REJECTED** — Issue does not exist, is already fixed, is a duplicate,
+     or cannot be verified
+
+   When in doubt: prefer DOWNGRADED over REJECTED (keep real issues, even if overrated).
+
+   ## Output Format
+   You MUST use the Write tool to save your report to:
+   Reviews/results/{REVIEW_FOLDER}/findings/validation/validator_{N}_report.md
+
+   Use EXACTLY this structure:
+
+   # Validation Report: Validator {N}
+
+   ## Summary
+   - **Findings Reviewed:** [N]
+   - **Confirmed:** [N]
+   - **Downgraded:** [N]
+   - **Rejected:** [N]
+   - **Rejection Rate:** [percentage]%
+
+   ## Verdicts
+
+   #### Finding: {FINDING_ID}
+   **Original Severity:** {severity}
+   **Verdict:** CONFIRMED
+   **Reason:** Verified — [brief explanation of what you found in the code].
+
+   #### Finding: {FINDING_ID}
+   **Original Severity:** Critical
+   **Verdict:** DOWNGRADED(Minor)
+   **New Severity:** Minor
+   **Reason:** [1-2 sentence explanation].
+
+   #### Finding: {FINDING_ID}
+   **Original Severity:** Major
+   **Verdict:** REJECTED
+   **Reason:** [1-2 sentence explanation].
+
+   ## Constraints
+   - You MUST review EVERY finding assigned to you
+   - You MUST read the actual source code — do not rely on the finding description alone
+   - Keep reasons concise (1-2 sentences)
+   - Do NOT modify any source files — this is read-only validation
+   - Spend more time on Critical/Major findings; Info findings can be validated quickly
+   ```
 
 ---
 
@@ -402,7 +540,8 @@ the "Start Project" prompt.
 4. Execute Phase B (Agent Planning)
 5. Execute Phase C (Review Swarm Launch)
 6. Execute Phase D (Findings Compilation)
-7. Execute Phase E (User Summary)
+7. Execute Phase D.5 (Findings Verification)
+8. Execute Phase E (User Summary)
 
 ### Key Scripts
 | Script | Purpose |
@@ -410,6 +549,8 @@ the "Start Project" prompt.
 | `create_review.py` | Initialize review folder and index |
 | `calculate_agents.py` | Recommend agent count for scope |
 | `compile_findings.py` | Aggregate agent reports into final report |
+| `validate_findings.py` | Extract findings for validation agents |
+| `filter_validated_findings.py` | Apply validation verdicts to filter report |
 | `review_to_project.py` | **Create full project structure from findings** (or handoff doc with `--no-create-project`) |
 
 ### Key Files Per Review
@@ -417,4 +558,7 @@ the "Start Project" prompt.
 |------|---------|
 | `scope.md` | Review scope definition and agent selection |
 | `findings/*.md` | Individual agent reports |
-| `report.md` | Final compiled review report |
+| `findings/validation/*.md` | Validator reports with verdicts |
+| `findings/validation/validation_summary.json` | Machine-readable validation stats |
+| `report.md` | Final compiled review report (post-validation) |
+| `report_unvalidated.md` | Original report before validation filtering |

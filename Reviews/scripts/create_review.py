@@ -299,8 +299,11 @@ def create_review(review_type: str, description: str, original: str = None) -> P
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     review_dir.mkdir(parents=True, exist_ok=True)
     findings_dir.mkdir(exist_ok=True)
+    validation_dir = findings_dir / "validation"
+    validation_dir.mkdir(exist_ok=True)
     print(f"  Created: {review_dir}")
     print(f"  Created: {findings_dir}")
+    print(f"  Created: {validation_dir}")
 
     # Create scope.md
     print(f"\nSTEP 2: Create review files")

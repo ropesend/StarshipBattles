@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
 """
-Filter a compiled sweep report using validation verdicts.
+Filter a compiled review report using validation verdicts.
 
-Reads 5 per-shard validation reports from the validation/ subdirectory,
-applies CONFIRMED/DOWNGRADED/REJECTED verdicts to findings in report.md,
-and writes a filtered report.md (original saved as report_unvalidated.md).
+Supports two validation modes:
+  - Shard mode (sweeps): Reads 5 per-shard reports (validation_FND_report.md, etc.)
+    from a validation/ subdirectory.
+  - Generic mode (all other reviews): Reads numbered validator reports
+    (validator_1_report.md, etc.) from findings/validation/.
+
+Auto-detects mode based on which files exist. Applies CONFIRMED/DOWNGRADED/REJECTED
+verdicts to findings in report.md, writes filtered report.md (original saved as
+report_unvalidated.md).
 
 Usage:
     python filter_validated_findings.py <review_folder>
 
 Examples:
     python filter_validated_findings.py 2026-02-12_sweep_full-codebase-sweep
-    python filter_validated_findings.py Reviews/results/2026-02-12_sweep_full-codebase-sweep
+    python filter_validated_findings.py 2026-02-27_general_strategy-review
 """
 
 import argparse
@@ -184,6 +190,49 @@ def load_validation_reports(validation_dir: Path) -> dict:
         'verdicts': all_verdicts,
         'cross_shard_duplicates': all_cross_shard,
         'by_shard': by_shard,
+    }
+
+
+def load_generic_validation_reports(validation_dir: Path) -> dict:
+    """Load numbered validator reports (validator_1_report.md, etc.).
+
+    Used for non-sweep reviews where findings are split across numbered
+    validators instead of codebase shards.
+
+    Returns combined dict of all verdicts and per-validator summaries.
+    """
+    all_verdicts = {}
+    by_validator = {}
+
+    report_files = sorted(validation_dir.glob('validator_*_report.md'))
+
+    if not report_files:
+        print(f"  [WARNING] No validator reports found in {validation_dir}")
+        return {
+            'verdicts': {},
+            'cross_shard_duplicates': [],
+            'by_shard': {},
+        }
+
+    for report_file in report_files:
+        validator_name = report_file.stem.replace('_report', '')
+        content = report_file.read_text(encoding='utf-8')
+        parsed = parse_validation_report(content)
+
+        all_verdicts.update(parsed['verdicts'])
+        by_validator[validator_name] = parsed['summary']
+
+        print(
+            f"  {validator_name}: {parsed['summary']['reviewed']} reviewed, "
+            f"{parsed['summary']['confirmed']} confirmed, "
+            f"{parsed['summary']['downgraded']} downgraded, "
+            f"{parsed['summary']['rejected']} rejected"
+        )
+
+    return {
+        'verdicts': all_verdicts,
+        'cross_shard_duplicates': [],  # no cross-shard concept in generic mode
+        'by_shard': by_validator,
     }
 
 
@@ -444,7 +493,11 @@ Examples:
             sys.exit(1)
 
     report_file = folder_path / 'report.md'
-    validation_dir = folder_path / 'validation'
+
+    # Auto-detect validation directory and mode
+    # Priority: findings/validation/ (generic) > validation/ (shard/sweep)
+    generic_validation_dir = folder_path / 'findings' / 'validation'
+    shard_validation_dir = folder_path / 'validation'
 
     print(f"\n{'=' * 50}")
     print(f"Filtering Validated Findings: {folder_path.name}")
@@ -455,13 +508,34 @@ Examples:
         print(f"ERROR: report.md not found in {folder_path}")
         sys.exit(1)
 
-    if not validation_dir.exists():
-        print(f"ERROR: validation/ directory not found in {folder_path}")
+    # Detect validation mode
+    generic_reports = list(generic_validation_dir.glob('validator_*_report.md')) if generic_validation_dir.exists() else []
+    shard_reports = any(
+        (shard_validation_dir / f'validation_{sid.lower()}_report.md').exists() or
+        (shard_validation_dir / f'validation_{sid}_report.md').exists()
+        for sid in SHARD_IDS
+    ) if shard_validation_dir.exists() else False
+
+    if generic_reports:
+        validation_dir = generic_validation_dir
+        use_shard_mode = False
+        print(f"  Mode: Generic ({len(generic_reports)} validator reports)")
+    elif shard_reports:
+        validation_dir = shard_validation_dir
+        use_shard_mode = True
+        print(f"  Mode: Shard (sweep validation)")
+    else:
+        print(f"ERROR: No validation reports found.")
+        print(f"  Checked: {generic_validation_dir}")
+        print(f"  Checked: {shard_validation_dir}")
         sys.exit(1)
 
     # Step 1: Load validation reports
     print("\nStep 1: Loading validation reports...")
-    validation_data = load_validation_reports(validation_dir)
+    if use_shard_mode:
+        validation_data = load_validation_reports(validation_dir)
+    else:
+        validation_data = load_generic_validation_reports(validation_dir)
     verdicts = validation_data['verdicts']
     print(f"  Total verdicts loaded: {len(verdicts)}")
 
@@ -478,19 +552,23 @@ Examples:
                     f"validator may be too aggressive"
                 )
 
-    # Step 2: Resolve cross-shard duplicates
-    print("\nStep 2: Resolving cross-shard duplicates...")
-    cross_shard_rejects = resolve_cross_shard_duplicates(
-        validation_data['cross_shard_duplicates'],
-        verdicts,
-    )
-    if cross_shard_rejects:
-        print(
-            f"  {len(cross_shard_rejects)} cross-shard "
-            f"duplicate(s) will be rejected"
+    # Step 2: Resolve cross-shard duplicates (shard mode only)
+    cross_shard_rejects = set()
+    if use_shard_mode and validation_data['cross_shard_duplicates']:
+        print("\nStep 2: Resolving cross-shard duplicates...")
+        cross_shard_rejects = resolve_cross_shard_duplicates(
+            validation_data['cross_shard_duplicates'],
+            verdicts,
         )
+        if cross_shard_rejects:
+            print(
+                f"  {len(cross_shard_rejects)} cross-shard "
+                f"duplicate(s) will be rejected"
+            )
+        else:
+            print("  No cross-shard duplicates to resolve")
     else:
-        print("  No cross-shard duplicates to resolve")
+        print("\nStep 2: Cross-shard duplicates — N/A (generic mode)")
 
     # Step 3: Parse existing report.md
     print("\nStep 3: Parsing report.md...")
