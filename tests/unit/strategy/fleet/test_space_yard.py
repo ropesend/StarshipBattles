@@ -82,10 +82,13 @@ class TestFleetConstructionQueue:
 
 
 class TestFleetHasSpaceShipyard:
-    """Test cases for Fleet.has_space_shipyard property."""
+    """Test cases for Fleet.has_space_shipyard property.
+
+    PROJ-211: Updated to set _registries on mocks for DI compliance.
+    """
 
     @pytest.fixture
-    def make_ship_with_yard(self):
+    def make_ship_with_yard(self, fresh_registries):
         """Factory for creating ship with fleet_space_yard component."""
         from game.strategy.data.ship_instance import ShipInstance
 
@@ -93,6 +96,8 @@ class TestFleetHasSpaceShipyard:
             mock = MagicMock(spec=ShipInstance)
             mock.name = name
             mock.is_combat_capable.return_value = is_combat_capable
+            # PROJ-211: Set _registries for DI compliance
+            mock._registries = fresh_registries
 
             if has_yard:
                 mock.design_data = {
@@ -154,10 +159,11 @@ class TestFleetHasSpaceShipyard:
         """Test empty fleet returns False."""
         assert basic_fleet.has_space_shipyard is False
 
-    def test_fleet_with_ability_dict_format(self, basic_fleet):
+    def test_fleet_with_ability_dict_format(self, basic_fleet, fresh_registries):
         """Test fleet detects SpaceShipyard via abilities dict (test fixture format)."""
         mock = MagicMock()
         mock.is_combat_capable.return_value = True
+        mock._registries = fresh_registries  # PROJ-211: DI compliance
         mock.design_data = {
             'name': 'Test Ship',
             'vehicle_type': 'Ship',
@@ -173,7 +179,10 @@ class TestFleetHasSpaceShipyard:
 
 
 class TestFleetCanBuildType:
-    """Test cases for Fleet.can_build_type() method."""
+    """Test cases for Fleet.can_build_type() method.
+
+    PROJ-211: Updated to set _registries on mocks for DI compliance.
+    """
 
     @pytest.fixture
     def fleet_with_yard(self, basic_fleet, make_ship_with_yard):
@@ -183,7 +192,7 @@ class TestFleetCanBuildType:
         return basic_fleet
 
     @pytest.fixture
-    def make_ship_with_yard(self):
+    def make_ship_with_yard(self, fresh_registries):
         """Factory for creating ship with fleet_space_yard component."""
         from game.strategy.data.ship_instance import ShipInstance
 
@@ -191,6 +200,7 @@ class TestFleetCanBuildType:
             mock = MagicMock(spec=ShipInstance)
             mock.name = name
             mock.is_combat_capable.return_value = is_combat_capable
+            mock._registries = fresh_registries  # PROJ-211: DI compliance
 
             if has_yard:
                 mock.design_data = {
@@ -269,15 +279,19 @@ class TestFleetCanBuildType:
 
 
 class TestFleetSpaceShipyardCount:
-    """Test cases for Fleet.space_shipyard_count property (BUG-79)."""
+    """Test cases for Fleet.space_shipyard_count property (BUG-79).
+
+    PROJ-211: Updated to set _registries on mocks for DI compliance.
+    """
 
     @pytest.fixture
-    def make_yard_ship(self):
+    def make_yard_ship(self, fresh_registries):
         """Factory for creating ships with configurable yard count."""
         def _make(name="Yard Ship", yard_count=1, is_combat_capable=True):
             mock = MagicMock()
             mock.name = name
             mock.is_combat_capable.return_value = is_combat_capable
+            mock._registries = fresh_registries  # PROJ-211: DI compliance
             components = [{'id': 'fleet_space_yard'} for _ in range(yard_count)]
             components.append({'id': 'reactor'})  # Non-yard component
             mock.design_data = {

@@ -17,30 +17,24 @@
 | 2. Strategy Data Objects | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Initialization Functions | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. UI Services | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. UI Screens & Cleanup | In Progress | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. UI Screens & Cleanup | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-28
-**Active Phase:** Phase 5 (Tasks 5.5.1 + 5.6 COMPLETE)
-**Last Action:** Task 5.6 COMPLETE - Removed ShipInstance fallback, updated ~18 test files
-**Next Action:** Task 5.7 - Remove FleetCapabilityCalculator fallbacks
+**Active Phase:** PROJECT COMPLETE - Ready for Audit
+**Last Action:** Phase 5 COMPLETE - All strategy layer DI fallbacks removed
+**Next Action:** Trigger Audit (Protocol 04)
 **Blockers:** None
-**Note:** MAJOR MILESTONE - ShipInstance.get_calculated_stats() fallback REMOVED. Now raises ValueError if _registries=None.
-**Progress this session:**
-- REMOVED get_default_registry_provider() fallback from ShipInstance.get_calculated_stats()
-- Updated 18 test files to pass registries where needed
-- Key files updated:
-  - tests/conftest.py make_mock_ship_instance - accepts registries param
-  - tests/integration/save_load/conftest.py - game_session_with_state uses fresh_registries
-  - tests/integration/strategy/production/*.py - ProductionEngine gets fresh_registries
-  - tests/integration/strategy/turn_engine/conftest.py - create_mock_ship_instance updated
-  - tests/repro_issues/test_bug_27_ordertype.py - local helper + tests updated
-  - tests/unit/strategy/ship_instance/test_registries_di.py - test expects ValueError now
-  - tests/unit/strategy/test_ship_resource_manager.py - fixture uses fresh_registries
-  - tests/unit/strategy/test_fleet_battle_adapter.py - 9 tests updated
-  - tests/unit/strategy/test_fleet_capability_calculator_di.py - 1 test updated
-  - tests/unit/test_advanced_fleet_orders.py - 2 tests updated
-- All tests pass: 12884 passed, 1 skipped, 4 pre-existing bug_13 failures
+
+**Summary of PROJ-211 achievements:**
+- ShipInstance.get_calculated_stats() - fallback REMOVED, now raises ValueError if _registries=None
+- FleetCapabilityCalculator - all fallbacks REMOVED:
+  - `_get_default_component_registry()` deleted
+  - `ship_has_spaceyard()`, `ship_has_ability()`, `_get_registry()` now raise ValueError if no registry
+  - Empty fleet checks added before registry lookup for robustness
+- ~25 test files updated to pass registries via DI
+
+**Test Status:** 12884 passed, 1 skipped, 4 pre-existing bug_13 failures (unrelated)
 
 ## Overview
 Systematic eradication of the `get_default_registry_provider()` fallback anti-pattern across the entire codebase. The DI infrastructure exists (PROJ-38 added parameters, PROJ-50 partially enforced them) but is in a half-migrated state where 13 production files silently fall back to global state.

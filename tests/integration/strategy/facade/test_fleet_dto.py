@@ -318,8 +318,11 @@ class TestFleetInfoFactory:
         assert info.ships[0].is_combat_capable is True  # Not destroyed/derelict
         assert info.ships[0].current_hp_percent == 1.0  # No damage
 
-    def test_from_fleet_with_damaged_ship(self):
-        """from_fleet correctly reports damaged ship HP."""
+    def test_from_fleet_with_damaged_ship(self, fresh_registries):
+        """from_fleet correctly reports damaged ship HP.
+
+        PROJ-211: Updated to set _registries for DI compliance.
+        """
         from game.strategy.facade.dto.fleet_dto import FleetInfo
         from game.strategy.data.ship_instance import ShipInstance
 
@@ -342,6 +345,8 @@ class TestFleetInfoFactory:
             },
             current_hp=50,  # Damaged
         )
+        # PROJ-211: Set _registries for DI compliance
+        ship.set_registries(fresh_registries)
         # Mock the calculated stats to return max_hp
         ship._cached_stats = {"max_hp": 100}
         fleet.ships.append(ship)

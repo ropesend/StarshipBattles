@@ -4,8 +4,8 @@ PROJ-87 Phase 4: Encapsulates fleet capability queries like space yards,
 warp capability, and build type checking.
 
 PROJ-212 Phase 3: Added constructor DI for component_registry.
-PROJ-211 Task 2.2: Added DI path via ship._registries.components.
-Fallback to global retained until test fixtures updated.
+PROJ-211 Task 5.7: Removed fallback to global registry - now requires
+ships have _registries set or explicit registry parameter.
 """
 
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
@@ -15,24 +15,19 @@ if TYPE_CHECKING:
     from game.strategy.data.ship_instance import ShipInstance
 
 
-def _get_default_component_registry() -> Dict[str, Any]:
-    """Get the default component registry for ability lookups.
-
-    PROJ-211 TEMPORARY: This fallback will be removed after test
-    fixtures are updated to inject registries.
-    """
-    from game.core.registry import get_default_registry_provider
-    return get_default_registry_provider().get_components()
-
-
 def _get_ship_component_registry(ship: 'ShipInstance') -> Optional[Dict[str, Any]]:
     """Get component registry from a ship's stored registries.
 
     Args:
-        ship: ShipInstance that may have _registries set
+        ship: ShipInstance that should have _registries set via DI
 
     Returns:
         The components dict from ship's registries, or None if not available
+
+    Note:
+        As of PROJ-211, all ShipInstance objects are required to have
+        _registries set at creation time. This function returns None only
+        for backward compatibility during the transition period.
     """
     if hasattr(ship, '_registries') and ship._registries is not None:
         return ship._registries.components
@@ -60,19 +55,25 @@ class FleetCapabilityCalculator:
         Args:
             ship: The ShipInstance to check.
             component_registry: Optional component registry for ability lookups.
-                If None, tries ship._registries.components, then falls back to global.
+                If None, uses ship._registries.components (required to be set).
 
         Returns:
             True if ship has a component with SpaceShipyard ability.
+
+        Raises:
+            ValueError: If no registry available (ship has no _registries and
+                none passed explicitly).
         """
         from game.strategy.services.component_inspector import ship_has_ability
-        # PROJ-211: Prefer explicit registry, then ship's registries, then global fallback
         registry = component_registry
         if registry is None:
             registry = _get_ship_component_registry(ship)
         if registry is None:
-            # PROJ-211 TEMPORARY: Fallback removed after test fixtures updated
-            registry = _get_default_component_registry()
+            raise ValueError(
+                "FleetCapabilityCalculator.ship_has_spaceyard requires a component "
+                "registry. Either pass component_registry explicitly or ensure ship "
+                "has _registries set via DI."
+            )
         return ship_has_ability(ship, 'SpaceShipyard', registry)
 
     def __init__(
@@ -105,25 +106,37 @@ class FleetCapabilityCalculator:
     def space_shipyard_count(self) -> int:
         """Count total fleet space yard components across all combat-capable ships."""
         from game.strategy.services.component_inspector import count_ability
+        combat_ships = self._fleet.get_combat_capable_ships()
+        if not combat_ships:
+            return 0
         registry = self._get_registry()
         count = 0
-        for ship in self._fleet.get_combat_capable_ships():
+        for ship in combat_ships:
             count += count_ability(ship, 'SpaceShipyard', registry)
         return count
 
     def _get_registry(self) -> Dict[str, Any]:
-        """Get component registry, falling back to global if not injected.
-
-        PROJ-211: Prefers injected registry. Falls back to global temporarily
-        until test fixtures are updated.
+        """Get component registry from injection or first ship's registries.
 
         Returns:
             The component registry for ability lookups.
+
+        Raises:
+            ValueError: If no registry available (none injected and fleet
+                has no ships with _registries set).
         """
         if self._component_registry is not None:
             return self._component_registry
-        # PROJ-211 TEMPORARY: Fallback removed after test fixtures updated
-        return _get_default_component_registry()
+        # Try to get from first ship's registries
+        for ship in self._fleet.get_combat_capable_ships():
+            ship_registry = _get_ship_component_registry(ship)
+            if ship_registry is not None:
+                return ship_registry
+        raise ValueError(
+            "FleetCapabilityCalculator requires a component registry. Either "
+            "pass component_registry to constructor or ensure fleet has ships "
+            "with _registries set via DI."
+        )
 
     def can_build_type(self, vehicle_type: str, galaxy: Any = None) -> bool:
         """
@@ -218,9 +231,12 @@ class FleetCapabilityCalculator:
             List of ShipInstance objects that have the ability.
         """
         from game.strategy.services.component_inspector import ship_has_ability as check_ability
+        combat_ships = self._fleet.get_combat_capable_ships()
+        if not combat_ships:
+            return []
         registry = self._get_registry()
         result = []
-        for ship in self._fleet.get_combat_capable_ships():
+        for ship in combat_ships:
             if check_ability(ship, ability_name, registry):
                 result.append(ship)
         return result
@@ -238,17 +254,23 @@ class FleetCapabilityCalculator:
             ship: The ShipInstance to check.
             ability_name: Name of the ability to check for.
             component_registry: Optional component registry for ability lookups.
-                If None, tries ship._registries.components, then falls back to global.
+                If None, uses ship._registries.components (required to be set).
 
         Returns:
             True if ship has the ability, False otherwise.
+
+        Raises:
+            ValueError: If no registry available (ship has no _registries and
+                none passed explicitly).
         """
         from game.strategy.services.component_inspector import ship_has_ability
-        # PROJ-211: Prefer explicit registry, then ship's registries, then global fallback
         registry = component_registry
         if registry is None:
             registry = _get_ship_component_registry(ship)
         if registry is None:
-            # PROJ-211 TEMPORARY: Fallback removed after test fixtures updated
-            registry = _get_default_component_registry()
+            raise ValueError(
+                "FleetCapabilityCalculator.ship_has_ability requires a component "
+                "registry. Either pass component_registry explicitly or ensure ship "
+                "has _registries set via DI."
+            )
         return ship_has_ability(ship, ability_name, registry)
