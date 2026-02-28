@@ -2,7 +2,7 @@
 #
 # Manages the full sweep-execute-merge cycle:
 #   1. Create a git branch for the cycle
-#   2. Run sweep-all via Claude CLI (SWEEP_WORKER.md)
+#   2. Run analysis-sweep via Claude CLI (SWEEP_WORKER.md)
 #   3. Auto-approve all projects
 #   4. Build cycle_plan.md from new projects
 #   5. Run inner loop to execute all projects

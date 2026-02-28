@@ -3,74 +3,60 @@
 This file tracks the migration of skills from `.claude/skills/` to `.agent/skills/`.
 
 ## Overall Status
-- **Total Skills**: 22
-- **Migrated**: 0
+- **Total Skills**: 35
+- **Migrated**: 35
 - **In-Progress**: 0
-- **Pending**: 22
+- **Pending**: 0
 
-## Migration Phases
+## Naming Convention
 
-### Phase 1: Foundation & Basic Developer Skills
-- [ ] add-bug
-- [ ] update-bug
-- [x] add-bug
-- [x] update-bug
-- [x] fix-bug
-- [x] close-bug
-- [x] add-to-plan
-
-### Phase 2: Project Management & Audit Skills
-- [x] start-project
-- [x] revise-project
-- [x] audit-project
-- [x] archive-project
-- [x] complexity-audit
-
-### Phase 3: Complex Swarm & Maintenance Skills
-- [x] sweep-all
-- [x] dead-code
-- [x] manage-refactor-plan
-
-### Phase 4: Remaining Skills
-- [x] add-to-plan (duplicate in list, will verify)
-- [x] batch-close-bugs
-- [x] close-project
-- [x] continue-debugging
-- [x] continue-project
-- [x] debug-next
-- [x] deep-dive-bug
-- [x] extract-phase
-- [x] reject-bug-fix
-- [x] reset-baseline
+All skills use category prefixes:
+- `debug-` — Bug tracking and debugging workflow
+- `proj-` — Project lifecycle management
+- `feature-` — Feature lifecycle management
+- `analysis-` — Code analysis and review
 
 ## Skill Detail Tracking
 
 | Skill | Claude Path | Antigravity Path | Status | Notes |
 |-------|-------------|------------------|--------|-------|
-| add-bug | `.claude/skills/add-bug` | `.agent/skills/add-bug` | Migrated | |
-| update-bug | `.claude/skills/update-bug` | `.agent/skills/update-bug` | Migrated | |
-| fix-bug | `.claude/skills/fix-bug` | `.agent/skills/fix-bug` | Migrated | |
-| close-bug | `.claude/skills/close-bug` | `.agent/skills/close-bug` | Migrated | |
-| add-to-plan | `.claude/skills/add-to-plan` | `.agent/skills/add-to-plan` | Migrated | |
-| start-project | `.claude/skills/start-project` | `.agent/skills/start-project` | Migrated | Adapted swarm to deep dive |
-| revise-project | `.claude/skills/revise-project` | `.agent/skills/revise-project` | Migrated | |
-| audit-project | `.claude/skills/audit-project` | `.agent/skills/audit-project` | Migrated | |
-| archive-project | `.claude/skills/archive-project` | `.agent/skills/archive-project` | Migrated | |
-| complexity-audit | `.claude/skills/complexity-audit` | `.agent/skills/complexity-audit` | Migrated | |
-| sweep-all | `.claude/skills/sweep-all` | `.agent/skills/sweep-all` | Migrated | Adapted 25-agent swarm |
-| dead-code | `.claude/skills/dead-code` | `.agent/skills/dead-code` | Migrated | |
-| manage-refactor-plan | `.claude/skills/manage-refactor-plan` | `.agent/skills/manage-refactor-plan` | Migrated | |
-| batch-close-bugs | `.claude/skills/batch-close-bugs` | `.agent/skills/batch-close-bugs` | Migrated | |
-| close-project | `.claude/skills/close-project` | `.agent/skills/close-project` | Migrated | |
-| continue-debugging | `.claude/skills/continue-debugging` | `.agent/skills/continue-debugging` | Migrated | |
-| continue-project | `.claude/skills/continue-project` | `.agent/skills/continue-project` | Migrated | |
+| debug-add-bug | `.claude/skills/debug-add-bug` | `.agent/skills/debug-add-bug` | Migrated | |
+| debug-answer-questions | `.claude/skills/debug-answer-questions` | `.agent/skills/debug-answer-questions` | Migrated | |
+| debug-batch-close | `.claude/skills/debug-batch-close` | `.agent/skills/debug-batch-close` | Migrated | |
+| debug-close-bug | `.claude/skills/debug-close-bug` | `.agent/skills/debug-close-bug` | Migrated | |
+| debug-continue | `.claude/skills/debug-continue` | `.agent/skills/debug-continue` | Migrated | |
+| debug-deep-dive | `.claude/skills/debug-deep-dive` | `.agent/skills/debug-deep-dive` | Migrated | Adapted swarm to deep dive |
+| debug-fix-bug | `.claude/skills/debug-fix-bug` | `.agent/skills/debug-fix-bug` | Migrated | |
 | debug-next | `.claude/skills/debug-next` | `.agent/skills/debug-next` | Migrated | |
-| deep-dive-bug | `.claude/skills/deep-dive-bug` | `.agent/skills/deep-dive-bug` | Migrated | Adapted swarm to deep dive |
-| extract-phase | `.claude/skills/extract-phase` | `.agent/skills/extract-phase` | Migrated | |
-| reject-bug-fix | `.claude/skills/reject-bug-fix` | `.agent/skills/reject-bug-fix` | Migrated | |
-| reset-baseline | `.claude/skills/reset-baseline` | `.agent/skills/reset-baseline` | Migrated | |
+| debug-reject-fix | `.claude/skills/debug-reject-fix` | `.agent/skills/debug-reject-fix` | Migrated | |
+| debug-triage-qa | — | `.agent/skills/debug-triage-qa` | Migrated | Agent-only skill |
+| debug-update-bug | `.claude/skills/debug-update-bug` | `.agent/skills/debug-update-bug` | Migrated | |
+| proj-start | `.claude/skills/proj-start` | `.agent/skills/proj-start` | Migrated | Adapted swarm to deep dive |
+| proj-continue | `.claude/skills/proj-continue` | `.agent/skills/proj-continue` | Migrated | |
+| proj-audit | `.claude/skills/proj-audit` | `.agent/skills/proj-audit` | Migrated | |
+| proj-close | `.claude/skills/proj-close` | `.agent/skills/proj-close` | Migrated | |
+| proj-revise | `.claude/skills/proj-revise` | `.agent/skills/proj-revise` | Migrated | |
+| proj-archive | `.claude/skills/proj-archive` | `.agent/skills/proj-archive` | Migrated | |
+| proj-extract-phase | `.claude/skills/proj-extract-phase` | `.agent/skills/proj-extract-phase` | Migrated | |
+| proj-add-to-plan | `.claude/skills/proj-add-to-plan` | `.agent/skills/proj-add-to-plan` | Migrated | |
+| proj-manage-plan | `.claude/skills/proj-manage-plan` | `.agent/skills/proj-manage-plan` | Migrated | |
+| proj-reset-baseline | `.claude/skills/proj-reset-baseline` | `.agent/skills/proj-reset-baseline` | Migrated | |
+| proj-review | `.claude/skills/proj-review` | `.agent/skills/proj-review` | Migrated | Newly migrated |
+| feature-add | `.claude/skills/feature-add` | `.agent/skills/feature-add` | Migrated | Newly migrated |
+| feature-implement | `.claude/skills/feature-implement` | `.agent/skills/feature-implement` | Migrated | Newly migrated |
+| feature-implement-next | `.claude/skills/feature-implement-next` | `.agent/skills/feature-implement-next` | Migrated | Newly migrated |
+| feature-continue | `.claude/skills/feature-continue` | `.agent/skills/feature-continue` | Migrated | Newly migrated |
+| feature-update | `.claude/skills/feature-update` | `.agent/skills/feature-update` | Migrated | Newly migrated |
+| feature-close | `.claude/skills/feature-close` | `.agent/skills/feature-close` | Migrated | Newly migrated |
+| feature-batch-close | `.claude/skills/feature-batch-close` | `.agent/skills/feature-batch-close` | Migrated | Newly migrated |
+| feature-deep-dive | `.claude/skills/feature-deep-dive` | `.agent/skills/feature-deep-dive` | Migrated | Newly migrated |
+| feature-answer-questions | `.claude/skills/feature-answer-questions` | `.agent/skills/feature-answer-questions` | Migrated | Newly migrated |
+| feature-reject | `.claude/skills/feature-reject` | `.agent/skills/feature-reject` | Migrated | Newly migrated |
+| analysis-complexity | `.claude/skills/analysis-complexity` | `.agent/skills/analysis-complexity` | Migrated | |
+| analysis-dead-code | `.claude/skills/analysis-dead-code` | `.agent/skills/analysis-dead-code` | Migrated | |
+| analysis-sweep | `.claude/skills/analysis-sweep` | `.agent/skills/analysis-sweep` | Migrated | Adapted 25-agent swarm |
 
 ## Session Hand-off
-- **Current Session End**: 2026-02-14
-- **Last Action**: COMPLETED ALL MIGRATIONS (22/22).
+- **Last Updated**: 2026-02-28
+- **Last Action**: Renamed all skills with category prefixes and migrated 11 remaining skills from .claude to .agent.
 - **Next Step**: Skills are ready for production use.

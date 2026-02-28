@@ -1,6 +1,6 @@
 # Continuous Improvement Loop
 
-An autonomous system that continuously reviews and improves the Starship Battles codebase by chaining the **sweep-all** code review pipeline with the **refactor loop** project execution engine.
+An autonomous system that continuously reviews and improves the Starship Battles codebase by chaining the **analysis-sweep** code review pipeline with the **refactor loop** project execution engine.
 
 ## How It Works
 
@@ -8,7 +8,7 @@ An autonomous system that continuously reviews and improves the Starship Battles
 ┌─── Cycle N ──────────────────────────────────────────────┐
 │                                                          │
 │  1. Create branch: sweep-cycle-N                         │
-│  2. Run sweep-all (25 agents, 5 review categories)       │
+│  2. Run analysis-sweep (25 agents, 5 review categories)   │
 │  3. Validate findings (5 skeptical agents, 1 per shard)  │
 │  4. Filter: keep only confirmed/downgraded findings      │
 │  5. Auto-approve ALL validated projects                  │
