@@ -196,92 +196,38 @@ class ShipStatsCalculator:
             # Get capacity multiplier for storage abilities
             capacity_mult = multipliers.get('capacity_mult', 1.0)
 
-            # Resource Storage - degrades with damage (generic handling)
-            for ability_data in ShipStatsCalculator._get_ability_list(abilities, 'ResourceStorage'):
-                resource_type = ability_data.get('resource', '')
-                max_amount = ShipStatsCalculator._evaluate_value(
-                    ability_data.get('max_amount') or ability_data.get('amount', 0), 0, formula_context
-                )
-                # Apply capacity multiplier from design modifiers
-                max_amount *= capacity_mult
-                if resource_type:
-                    resource_storage[resource_type] = (
-                        resource_storage.get(resource_type, 0) + max_amount * effectiveness
-                    )
+            # Resource Storage - degrades with damage
+            self._accumulate_resource_storage(
+                abilities, effectiveness, capacity_mult, formula_context, resource_storage
+            )
 
-            # Cargo Storage - degrades with damage (generic handling)
-            for ability_data in ShipStatsCalculator._get_ability_list(abilities, 'CargoStorage'):
-                cargo_type = ability_data.get('cargo_type', 'generic')
-                capacity = ShipStatsCalculator._evaluate_value(
-                    ability_data.get('capacity', 0), 0, formula_context
-                )
-                # Apply capacity multiplier from design modifiers
-                capacity *= capacity_mult
-                cargo_storage[cargo_type] = (
-                    cargo_storage.get(cargo_type, 0) + capacity * effectiveness
-                )
+            # Cargo Storage - degrades with damage
+            self._accumulate_cargo_storage(
+                abilities, effectiveness, capacity_mult, formula_context, cargo_storage
+            )
 
-            # Strategic Movement - degrades with damage (with modifiers)
-            if 'StrategicMovement' in abilities:
-                movement = ShipStatsCalculator._get_ability_value(abilities, 'StrategicMovement', formula_context)
-                movement *= multipliers.get('strategic_mult', 1.0)
-                total_strategic_movement += movement * effectiveness
+            # Strategic Movement - degrades with damage
+            total_strategic_movement += self._accumulate_movement(
+                abilities, effectiveness, formula_context, multipliers
+            )
 
-            # Get consumption multiplier for resource consumption abilities
+            # Resource Consumption - per_hex and per_turn triggers
             consumption_mult = multipliers.get('consumption_mult', 1.0)
-
-            # Resource Consumption - generic handling by trigger type
-            for ability_data in ShipStatsCalculator._get_ability_list(abilities, 'ResourceConsumption'):
-                resource_type = ability_data.get('resource', '')
-                amount = ShipStatsCalculator._evaluate_value(ability_data.get('amount', 0), 0, formula_context)
-                # Apply consumption multiplier from design modifiers
-                amount *= consumption_mult
-                trigger = ability_data.get('trigger', 'constant')
-
-                if trigger == 'strategic_per_hex':
-                    resource_consumption_per_hex[resource_type] = (
-                        resource_consumption_per_hex.get(resource_type, 0) + amount * effectiveness
-                    )
-                elif trigger == 'per_turn':
-                    resource_consumption_per_turn[resource_type] = (
-                        resource_consumption_per_turn.get(resource_type, 0) + amount * effectiveness
-                    )
-                # Note: warp_jump trigger handled below with warp effectiveness
+            self._accumulate_consumption(
+                abilities, effectiveness, consumption_mult, formula_context,
+                resource_consumption_per_hex, resource_consumption_per_turn
+            )
 
             # Warp Jump - requires 100% HP (effectiveness must be 1.0)
-            if 'WarpJump' in abilities:
-                warp_effectiveness = ShipStatsCalculator._get_warp_effectiveness(
-                    comp_id, comp_def, component_damage
+            warp_tonnage, warp_costs = self._accumulate_warp_stats(
+                abilities, comp_id, comp_def, component_damage, formula_context
+            )
+            if warp_tonnage > warp_max_tonnage:
+                warp_max_tonnage = warp_tonnage
+            for resource_type, cost in warp_costs.items():
+                warp_resource_costs[resource_type] = (
+                    warp_resource_costs.get(resource_type, 0) + cost
                 )
-                if warp_effectiveness > 0:
-                    warp_data = abilities.get('WarpJump', {})
-                    if isinstance(warp_data, dict):
-                        # Evaluate formulas for max_tonnage (e.g., "=ship_class_mass")
-                        tonnage = ShipStatsCalculator._evaluate_value(
-                            warp_data.get('max_tonnage', 0), 0, formula_context
-                        )
-                    else:
-                        tonnage = ShipStatsCalculator._evaluate_value(
-                            warp_data, 0, formula_context
-                        ) if isinstance(warp_data, str) and warp_data.startswith("=") else (
-                            warp_data if isinstance(warp_data, (int, float)) else 0
-                        )
-
-                    # Use largest warp drive tonnage
-                    if tonnage > warp_max_tonnage:
-                        warp_max_tonnage = int(tonnage)
-
-                    # Warp resource costs from ResourceConsumption with trigger='warp_jump'
-                    for ability_data in ShipStatsCalculator._get_ability_list(abilities, 'ResourceConsumption'):
-                        if ability_data.get('trigger') == 'warp_jump':
-                            resource_type = ability_data.get('resource', '')
-                            # Evaluate formulas for amount (e.g., "=5 * (ship_class_mass ** (2/3))")
-                            amount = ShipStatsCalculator._evaluate_value(
-                                ability_data.get('amount', 0), 0, formula_context
-                            )
-                            warp_resource_costs[resource_type] = (
-                                warp_resource_costs.get(resource_type, 0) + amount
-                            )
 
         return {
             'max_hp': int(total_hp),
@@ -379,6 +325,225 @@ class ShipStatsCalculator:
         if current_hp >= max_hp:
             return 1.0
         return 0.0
+
+    def _accumulate_warp_stats(
+        self,
+        abilities: Dict[str, Any],
+        comp_id: str,
+        comp_def: Any,
+        component_damage: Dict[str, int],
+        formula_context: Dict[str, Any]
+    ) -> Tuple[int, Dict[str, float]]:
+        """
+        Accumulate warp drive statistics from a component's abilities.
+
+        PROJ-209 Phase 4: Extracted from calculate_stats to reduce CC.
+
+        Warp drives require 100% HP to function. If the component is damaged,
+        returns (0, {}) indicating no warp contribution.
+
+        Args:
+            abilities: Component abilities dict
+            comp_id: Component ID for damage lookup
+            comp_def: Component definition from registry
+            component_damage: Dict of component_id -> current_hp
+            formula_context: Context for formula evaluation
+
+        Returns:
+            Tuple of (warp_tonnage, warp_costs_dict)
+            - warp_tonnage: int, max tonnage this warp drive can handle
+            - warp_costs_dict: Dict of resource_type -> cost for warp_jump trigger
+        """
+        if 'WarpJump' not in abilities:
+            return (0, {})
+
+        warp_effectiveness = ShipStatsCalculator._get_warp_effectiveness(
+            comp_id, comp_def, component_damage
+        )
+        if warp_effectiveness <= 0:
+            return (0, {})
+
+        # Parse warp tonnage from various formats
+        warp_data = abilities.get('WarpJump', {})
+        tonnage = self._parse_warp_tonnage(warp_data, formula_context)
+
+        # Collect warp resource costs
+        warp_costs: Dict[str, float] = {}
+        for ability_data in ShipStatsCalculator._get_ability_list(abilities, 'ResourceConsumption'):
+            if ability_data.get('trigger') == 'warp_jump':
+                resource_type = ability_data.get('resource', '')
+                amount = ShipStatsCalculator._evaluate_value(
+                    ability_data.get('amount', 0), 0, formula_context
+                )
+                if resource_type:
+                    warp_costs[resource_type] = warp_costs.get(resource_type, 0) + amount
+
+        return (int(tonnage), warp_costs)
+
+    @staticmethod
+    def _parse_warp_tonnage(
+        warp_data: Any,
+        formula_context: Dict[str, Any]
+    ) -> float:
+        """
+        Parse warp tonnage from various WarpJump ability formats.
+
+        PROJ-209 Phase 4: Extracted to simplify warp stats accumulation.
+
+        Supports:
+        - Dict with 'max_tonnage' key: {'max_tonnage': 5000}
+        - Formula string: "=ship_class_mass"
+        - Raw numeric: 5000 or 5000.0
+
+        Args:
+            warp_data: WarpJump ability value (dict, string, or numeric)
+            formula_context: Context for formula evaluation
+
+        Returns:
+            Parsed tonnage value as float
+        """
+        if isinstance(warp_data, dict):
+            return ShipStatsCalculator._evaluate_value(
+                warp_data.get('max_tonnage', 0), 0, formula_context
+            )
+        if isinstance(warp_data, str) and warp_data.startswith("="):
+            return ShipStatsCalculator._evaluate_value(warp_data, 0, formula_context)
+        if isinstance(warp_data, (int, float)):
+            return float(warp_data)
+        return 0.0
+
+    def _accumulate_resource_storage(
+        self,
+        abilities: Dict[str, Any],
+        effectiveness: float,
+        capacity_mult: float,
+        formula_context: Dict[str, Any],
+        storage_dict: Dict[str, float]
+    ) -> None:
+        """
+        Accumulate resource storage from component abilities.
+
+        PROJ-209 Phase 4: Extracted from calculate_stats to reduce CC.
+
+        Args:
+            abilities: Component abilities dict
+            effectiveness: Component effectiveness (0.0-1.0)
+            capacity_mult: Capacity multiplier from modifiers
+            formula_context: Context for formula evaluation
+            storage_dict: Dict to accumulate storage into (modified in-place)
+        """
+        for ability_data in ShipStatsCalculator._get_ability_list(abilities, 'ResourceStorage'):
+            resource_type = ability_data.get('resource', '')
+            max_amount = ShipStatsCalculator._evaluate_value(
+                ability_data.get('max_amount') or ability_data.get('amount', 0), 0, formula_context
+            )
+            max_amount *= capacity_mult
+            if resource_type:
+                storage_dict[resource_type] = (
+                    storage_dict.get(resource_type, 0) + max_amount * effectiveness
+                )
+
+    def _accumulate_cargo_storage(
+        self,
+        abilities: Dict[str, Any],
+        effectiveness: float,
+        capacity_mult: float,
+        formula_context: Dict[str, Any],
+        cargo_dict: Dict[str, float]
+    ) -> None:
+        """
+        Accumulate cargo storage from component abilities.
+
+        PROJ-209 Phase 4: Extracted from calculate_stats to reduce CC.
+
+        Args:
+            abilities: Component abilities dict
+            effectiveness: Component effectiveness (0.0-1.0)
+            capacity_mult: Capacity multiplier from modifiers
+            formula_context: Context for formula evaluation
+            cargo_dict: Dict to accumulate cargo into (modified in-place)
+        """
+        for ability_data in ShipStatsCalculator._get_ability_list(abilities, 'CargoStorage'):
+            cargo_type = ability_data.get('cargo_type', 'generic')
+            capacity = ShipStatsCalculator._evaluate_value(
+                ability_data.get('capacity', 0), 0, formula_context
+            )
+            capacity *= capacity_mult
+            cargo_dict[cargo_type] = (
+                cargo_dict.get(cargo_type, 0) + capacity * effectiveness
+            )
+
+    def _accumulate_movement(
+        self,
+        abilities: Dict[str, Any],
+        effectiveness: float,
+        formula_context: Dict[str, Any],
+        multipliers: Dict[str, float]
+    ) -> float:
+        """
+        Accumulate strategic movement from component abilities.
+
+        PROJ-209 Phase 4: Extracted from calculate_stats to reduce CC.
+
+        Args:
+            abilities: Component abilities dict
+            effectiveness: Component effectiveness (0.0-1.0)
+            formula_context: Context for formula evaluation
+            multipliers: Stat multipliers from modifiers
+
+        Returns:
+            Movement contribution from this component
+        """
+        if 'StrategicMovement' not in abilities:
+            return 0.0
+        movement = ShipStatsCalculator._get_ability_value(
+            abilities, 'StrategicMovement', formula_context
+        )
+        movement *= multipliers.get('strategic_mult', 1.0)
+        return movement * effectiveness
+
+    def _accumulate_consumption(
+        self,
+        abilities: Dict[str, Any],
+        effectiveness: float,
+        consumption_mult: float,
+        formula_context: Dict[str, Any],
+        per_hex_dict: Dict[str, float],
+        per_turn_dict: Dict[str, float]
+    ) -> None:
+        """
+        Accumulate resource consumption from component abilities.
+
+        PROJ-209 Phase 4: Extracted from calculate_stats to reduce CC.
+
+        Handles strategic_per_hex and per_turn triggers. The warp_jump trigger
+        is handled separately by _accumulate_warp_stats.
+
+        Args:
+            abilities: Component abilities dict
+            effectiveness: Component effectiveness (0.0-1.0)
+            consumption_mult: Consumption multiplier from modifiers
+            formula_context: Context for formula evaluation
+            per_hex_dict: Dict to accumulate per-hex consumption (modified in-place)
+            per_turn_dict: Dict to accumulate per-turn consumption (modified in-place)
+        """
+        for ability_data in ShipStatsCalculator._get_ability_list(abilities, 'ResourceConsumption'):
+            resource_type = ability_data.get('resource', '')
+            amount = ShipStatsCalculator._evaluate_value(
+                ability_data.get('amount', 0), 0, formula_context
+            )
+            amount *= consumption_mult
+            trigger = ability_data.get('trigger', 'constant')
+
+            if trigger == 'strategic_per_hex':
+                per_hex_dict[resource_type] = (
+                    per_hex_dict.get(resource_type, 0) + amount * effectiveness
+                )
+            elif trigger == 'per_turn':
+                per_turn_dict[resource_type] = (
+                    per_turn_dict.get(resource_type, 0) + amount * effectiveness
+                )
+            # warp_jump trigger handled by _accumulate_warp_stats
 
     def _iterate_design_components(
         self,

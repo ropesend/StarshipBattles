@@ -8,21 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-209 Phase 3 (FleetNavigationService.project_path decomposition)
-**Current Status:** PROJ-209 Phase 3 COMPLETE — CC reduced from 22 to 14 (36% reduction)
+**Last Completed:** PROJ-209 Phase 4 (ShipStatsCalculator.calculate_stats decomposition)
+**Current Status:** PROJ-209 ALL PHASES COMPLETE — Ready for audit
 **Current Project:** PROJ-209
-**Current Phase:** Phase 4 ready
-**Test Status:** 12959 passed, 4 failed (pre-existing bug_13), 1 skipped
+**Current Phase:** Audit ready
+**Test Status:** 12969 passed, 4 failed (pre-existing bug_13), 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-209 Phase 3 COMPLETE:**
-  - Eliminated is_first_order flag pattern via initial_progress auto-clear
-  - Extracted 3 helpers: _consume_ticks (CC=4), _project_action_order (CC=1), _resolve_path_for_order (CC=4)
-  - Used dataclasses.replace() for NavigationState updates (CQ-026)
-  - Added 10 new tests: 2 WARP order tests, 2 pathfinding failure tests, 6 _consume_ticks unit tests
-  - Orchestrator CC=14 (down from 22; 36% reduction, essential complexity)
-- **Next Action:** Phase 4 — decompose ShipStatsCalculator.calculate_stats (CC 26 → ~8)
+- **PROJ-209 Phase 4 COMPLETE:**
+  - Extracted 6 helper methods from calculate_stats (CC 26 → 11, 58% reduction)
+  - `_accumulate_warp_stats` (CC=6), `_parse_warp_tonnage` (CC=5)
+  - `_accumulate_resource_storage` (CC=4), `_accumulate_consumption` (CC=4)
+  - `_accumulate_cargo_storage` (CC=2), `_accumulate_movement` (CC=2)
+  - Added 10 new tests: TC-004 (warp non-dict), TC-010 (vehicle_classes), TC-013 (consumption_mult)
+  - All extracted methods CC ≤ 6 (within target)
+- **Next Action:** Trigger audit (Protocol 04)
 
 ---
 
@@ -116,6 +117,7 @@
 | 2026-02-28 | PROJ-209 | Phase 1 | Complete | 12944 passed, 4 failed | pending | load_game CC 26→5, 4 helpers extracted, 21 new tests |
 | 2026-02-28 | PROJ-209 | Phase 2 | Complete | 12949 passed, 4 failed | pending | _process_queue_tick_dynamic CC 27→11, 7 helpers, 5 new tests |
 | 2026-02-28 | PROJ-209 | Phase 3 | Complete | 12959 passed, 4 failed | pending | project_path CC 22→14, 3 helpers, 10 new tests, dataclasses.replace |
+| 2026-02-28 | PROJ-209 | Phase 4 | Complete | 12969 passed, 4 failed | pending | calculate_stats CC 26→11, 6 helpers, 10 new tests |
 
 ---
 
