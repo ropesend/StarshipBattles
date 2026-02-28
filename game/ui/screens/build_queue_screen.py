@@ -141,12 +141,14 @@ class BuildQueueScreen:
             self.controller.set_active_queue(self.active_queue_source)
 
         # Drag-drop handling
+        # PROJ-208: Inject remove callback for command dispatch
         self.drag_handler = BuildQueueDragHandler(
             portrait_loader=self.portrait_loader,
             design_library=self.design_library,
             on_add_to_queue=self.controller.add_to_queue,
             on_refresh_queue=self._refresh_queue_display,
-            on_refresh_design_report=self.controller.refresh_design_report
+            on_refresh_design_report=self.controller.refresh_design_report,
+            on_remove_from_queue=self._dispatch_remove_from_queue_command,
         )
 
         # Apply hotkey tooltips
@@ -252,6 +254,34 @@ class BuildQueueScreen:
         )
         self.session.handle_command(cmd)
 
+    def _dispatch_remove_from_queue_command(self, item_index: int) -> None:
+        """Dispatch RemoveFromConstructionQueueCommand through command pipeline.
+
+        PROJ-208: Routes build queue removals (drag-from-queue) through CQRS command system.
+
+        Args:
+            item_index: Index of the item to remove from the active queue.
+        """
+        from game.strategy.engine.commands import RemoveFromConstructionQueueCommand
+
+        # Determine entity from active queue source
+        source = self.active_queue_source
+        if source is None:
+            # Fallback to build_context
+            entity = self.build_context
+        else:
+            entity = source.owner_entity
+
+        entity_type = "planet" if hasattr(entity, 'planet_type') else "fleet"
+        entity_id = getattr(entity, 'id', 0)
+
+        cmd = RemoveFromConstructionQueueCommand(
+            entity_id=entity_id,
+            entity_type=entity_type,
+            item_index=item_index,
+        )
+        self.session.handle_command(cmd)
+
     # -----------------------------------------------------------------------
     # Refresh Methods (delegate to renderer)
     # -----------------------------------------------------------------------
@@ -340,15 +370,18 @@ class BuildQueueScreen:
             pass  # Handled by selector
 
     def _handle_remove(self):
-        """Handle remove from queue action."""
+        """Handle remove from queue action.
+
+        PROJ-208: Routes removal through RemoveFromConstructionQueueCommand.
+        """
         if len(self.selected_queue_indices) > 1:
             logger.warning("Cannot remove items in multi-select mode")
             return
 
         remove_queue = self._get_active_queue()
         if self.selected_queue_index is not None and self.selected_queue_index < len(remove_queue):
-            removed_item = remove_queue.pop(self.selected_queue_index)
-            design_id = removed_item.get('design_id', 'Unknown')
+            design_id = remove_queue[self.selected_queue_index].get('design_id', 'Unknown')
+            self._dispatch_remove_from_queue_command(self.selected_queue_index)
             logger.info(f"Removed {design_id} from queue at index {self.selected_queue_index}")
             self.selected_queue_index = None
             self._refresh_queue_display()

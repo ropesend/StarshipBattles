@@ -29,7 +29,7 @@ class MockSession:
         self.commands_handled = []
 
     def handle_command(self, cmd):
-        """Mock command handler that executes AddToConstructionQueueCommand.
+        """Mock command handler that executes queue commands.
 
         PROJ-208: Enables queue mutation tests to work with command pattern.
         """
@@ -37,7 +37,10 @@ class MockSession:
         self.commands_handled.append(cmd)
 
         # Execute AddToConstructionQueueCommand to maintain queue behavior
-        from game.strategy.engine.commands import AddToConstructionQueueCommand
+        from game.strategy.engine.commands import (
+            AddToConstructionQueueCommand,
+            RemoveFromConstructionQueueCommand,
+        )
         if isinstance(cmd, AddToConstructionQueueCommand):
             queue = self._resolve_queue(cmd.entity_id, cmd.entity_type, getattr(cmd, 'queue_id', None))
             if queue is not None:
@@ -54,6 +57,12 @@ class MockSession:
                     queue.insert(cmd.index, queue_item)
                 else:
                     queue.append(queue_item)
+
+        # PROJ-208: Execute RemoveFromConstructionQueueCommand for drag operations
+        elif isinstance(cmd, RemoveFromConstructionQueueCommand):
+            queue = self._resolve_queue(cmd.entity_id, cmd.entity_type, None)
+            if queue is not None and 0 <= cmd.item_index < len(queue):
+                queue.pop(cmd.item_index)
 
         return ValidationResult()
 

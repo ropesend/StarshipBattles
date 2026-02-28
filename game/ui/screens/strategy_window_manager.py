@@ -167,6 +167,7 @@ class StrategyWindowManager:
         w, h = int(self.width * 0.9), int(self.height * 0.9)
         rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
 
+        # PROJ-208: Pass session for command dispatch
         self.empire_build_queue_window = EmpireBuildQueueWindow(
             rect,
             self.manager,
@@ -174,6 +175,7 @@ class StrategyWindowManager:
             galaxy,
             on_close_callback=self._on_empire_build_queue_closed,
             on_navigate_to_hex=self.scene.on_navigate_to_hex_build,
+            session=self.scene.session,
         )
 
     def close_empire_build_queue_window(self) -> None:

@@ -11,7 +11,7 @@ from game.strategy.engine.command_handlers import (
     CommandHandlerRegistry,
     ColonizeCommandHandler,
     MoveCommandHandler,
-    BuildShipCommandHandler,
+    # NOTE: BuildShipCommandHandler removed in PROJ-208 (dead code)
     InterceptCommandHandler,
     JoinCommandHandler,
     ColonizeMissionCommandHandler,
@@ -64,7 +64,7 @@ class TestCommandHandlerRegistry:
         expected_commands = [
             'IssueColonizeCommand',
             'IssueMoveCommand',
-            'IssueBuildShipCommand',
+            # NOTE: IssueBuildShipCommand removed in PROJ-208 (dead code)
             'IssueInterceptCommand',
             'IssueJoinFleetCommand',
             'QueueColonizeMissionCommand',
@@ -182,37 +182,8 @@ class TestMoveCommandHandler:
         mock_fleet.add_order.assert_called_once()
 
 
-class TestBuildShipCommandHandler:
-    """Tests for BuildShipCommandHandler."""
-
-    def test_planet_not_found(self):
-        """Returns failure when planet not found."""
-        handler = BuildShipCommandHandler()
-        mock_session = Mock()
-        mock_session._get_planet_by_id.return_value = None
-        mock_cmd = Mock(planet_id=999, design_name="Scout")
-
-        result = handler.execute(mock_session, mock_cmd)
-
-        assert not result.is_valid
-        assert "Planet not found" in result.message
-
-    def test_valid_build_adds_production(self):
-        """Valid build calls add_production on planet."""
-        handler = BuildShipCommandHandler()
-
-        mock_planet = Mock()
-        mock_planet.add_production = Mock()
-
-        mock_session = Mock()
-        mock_session._get_planet_by_id.return_value = mock_planet
-
-        mock_cmd = Mock(planet_id=1, design_name="Scout")
-
-        result = handler.execute(mock_session, mock_cmd)
-
-        assert result.is_valid
-        mock_planet.add_production.assert_called_once_with("Scout", 1)
+# NOTE: TestBuildShipCommandHandler removed in PROJ-208 Phase 2 (dead code).
+# Use AddToConstructionQueueCommandHandler instead - see TestAddToConstructionQueueCommandHandler.
 
 
 class TestInterceptCommandHandler:

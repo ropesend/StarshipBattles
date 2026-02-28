@@ -8,3 +8,4 @@
 |------|----------|-----------|
 | 2026-02-27 | Project created from review | Review identified 42 findings; 25 selected for remediation |
 | 2026-02-27 | Severity-based phasing | Critical findings in Phase 1, Major in Phase 2, etc. |
+| 2026-02-28 | Removed IssueBuildShipCommand (dead code) | No production callers - only tests/docs. Replaced by AddToConstructionQueueCommand which uses the actual queue-based system instead of planet.add_production(). |

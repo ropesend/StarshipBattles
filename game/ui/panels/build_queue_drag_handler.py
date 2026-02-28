@@ -24,6 +24,10 @@ if TYPE_CHECKING:
     from game.strategy.systems.design_library import DesignLibrary
     import pygame_gui.elements as ui
 
+# PROJ-208: Type alias for remove-from-queue callback
+# Signature: (item_index: int) -> None
+RemoveFromQueueCallback = Callable[[int], None]
+
 
 class BuildQueueDragHandler:
     """
@@ -45,7 +49,8 @@ class BuildQueueDragHandler:
         design_library: 'DesignLibrary',
         on_add_to_queue: Callable[[str, Optional[float], str, Optional[int]], None],
         on_refresh_queue: Callable[[], None],
-        on_refresh_design_report: Callable[[str], None]
+        on_refresh_design_report: Callable[[str], None],
+        on_remove_from_queue: Optional['RemoveFromQueueCallback'] = None,
     ):
         """
         Initialize the drag handler.
@@ -56,12 +61,14 @@ class BuildQueueDragHandler:
             on_add_to_queue: Callback(design_id, turns, category, index) to add item to queue
             on_refresh_queue: Callback to refresh queue display after reorder
             on_refresh_design_report: Callback(design_id) to update design report on selection
+            on_remove_from_queue: PROJ-208 callback(item_index) to dispatch RemoveFromConstructionQueueCommand
         """
         self.portrait_loader = portrait_loader
         self.design_library = design_library
         self.on_add_to_queue = on_add_to_queue
         self.on_refresh_queue = on_refresh_queue
         self.on_refresh_design_report = on_refresh_design_report
+        self._on_remove_from_queue = on_remove_from_queue
 
         # Drag state
         self.dragged_item: Optional[dict] = None
@@ -179,9 +186,17 @@ class BuildQueueDragHandler:
             # Start actual drag - pick up from queue
             idx = self._pending_queue_index
             if idx < len(construction_queue):
-                item = construction_queue.pop(idx)
+                # PROJ-208: Read item data first (readonly), then remove via callback or direct
+                item = construction_queue[idx]
                 design_id = item.get('design_id', 'Unknown')
                 item_type = item.get('type', 'ship')
+
+                # Remove item: use command callback if available, else fall back to direct pop
+                if self._on_remove_from_queue is not None:
+                    self._on_remove_from_queue(idx)
+                else:
+                    # Legacy fallback for tests without command injection
+                    construction_queue.pop(idx)
 
                 # Load portrait icon for drag preview
                 portrait = self.portrait_loader.load_queue_item_portrait(design_id, item_type, 48)

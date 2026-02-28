@@ -14,7 +14,7 @@ from game.strategy.engine.commands import (
     CommandType,
     IssueColonizeCommand,
     IssueMoveCommand,
-    IssueBuildShipCommand,
+    # NOTE: IssueBuildShipCommand removed in PROJ-208 (dead code)
     IssueInterceptCommand,
     IssueJoinFleetCommand,
     QueueColonizeMissionCommand,
@@ -61,7 +61,7 @@ class TestCommandBase:
         commands = [
             IssueColonizeCommand(1, 2),
             IssueMoveCommand(1, HexCoord(0, 0)),
-            IssueBuildShipCommand(1, "Cruiser"),
+            # NOTE: IssueBuildShipCommand removed in PROJ-208 (dead code)
             IssueInterceptCommand(1, 2),
             IssueJoinFleetCommand(1, 2),
             QueueColonizeMissionCommand(1, HexCoord(0, 0), 2),
@@ -123,20 +123,8 @@ class TestIssueMoveCommand:
         assert cmd.target_hex == HexCoord(0, 0)
 
 
-class TestIssueBuildShipCommand:
-    """Tests for IssueBuildShipCommand."""
-
-    def test_create_build_ship_command(self):
-        """IssueBuildShipCommand should store planet_id and design_name."""
-        cmd = IssueBuildShipCommand(planet_id=15, design_name="Destroyer")
-        assert cmd.planet_id == 15
-        assert cmd.design_name == "Destroyer"
-        assert cmd.type == CommandType.ISSUE_ORDER
-
-    def test_design_name_preserved_exactly(self):
-        """Design name should be preserved exactly as provided."""
-        cmd = IssueBuildShipCommand(planet_id=1, design_name="Heavy Cruiser Mk II")
-        assert cmd.design_name == "Heavy Cruiser Mk II"
+# NOTE: TestIssueBuildShipCommand removed in PROJ-208 Phase 2 (dead code).
+# Use AddToConstructionQueueCommand instead - see test_construction_queue_command_handlers.py
 
 
 class TestIssueInterceptCommand:
@@ -418,5 +406,5 @@ class TestCommandEquality:
     def test_different_command_types_not_equal(self):
         """Different command classes should not be equal."""
         cmd1 = IssueColonizeCommand(fleet_id=1, planet_id=2)
-        cmd2 = IssueBuildShipCommand(planet_id=1, design_name="Test")
+        cmd2 = IssueInterceptCommand(fleet_id=1, target_fleet_id=2)
         assert cmd1 != cmd2

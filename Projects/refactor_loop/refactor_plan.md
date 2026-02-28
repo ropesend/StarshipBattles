@@ -8,25 +8,34 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-208 Phase 2 Task 2.4 (build_queue_controller.py)
-**Current Status:** PROJ-208 Phase 2 In Progress (Tasks 2.5-2.8 remaining)
+**Last Completed:** PROJ-208 Phase 2 Complete
+**Current Status:** PROJ-208 Phase 3 Ready
 **Current Project:** PROJ-208
-**Current Phase:** Phase 2 (Tasks 2.5-2.8)
-**Test Status:** 12923 passed, 1 skipped (4 pre-existing bug_13 failures)
+**Current Phase:** Phase 3
+**Test Status:** 12918 passed, 1 skipped (4 pre-existing bug_13 failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-208 Phase 2 Task 2.4 COMPLETE:**
-  - BuildQueueController now routes all queue additions through AddToConstructionQueueCommand
-  - Callback injection pattern: `add_to_queue_callback` parameter
-  - Added `queue_id` parameter to AddToConstructionQueueCommand for multi-queue support
-  - Updated command handler with `_resolve_queue()` method for shipyard facilities
-  - Updated test files: test_controller_multi_queue.py, test_command_handlers.py, test_production_repro.py, conftest.py, test_basics.py, test_build_queue_drag_drop.py
-- **Next Actions (Phase 2 remaining):**
-  - Task 2.5: Refactor build_queue_drag_handler.py to use commands
-  - Task 2.6: Refactor build_queue_screen.py to use commands
-  - Task 2.7: Refactor empire_build_queue_window.py batch add
-  - Task 2.8: Investigate IssueBuildShipCommand dead code
+- **PROJ-208 Phase 2 COMPLETE:**
+  - Tasks 2.5-2.8 all completed in this session
+  - Task 2.5: build_queue_drag_handler.py - added on_remove_from_queue callback
+  - Task 2.6: build_queue_screen.py - _handle_remove() uses command dispatch
+  - Task 2.7: empire_build_queue_window.py - added session injection for batch add
+  - Task 2.8: IssueBuildShipCommand removed (dead code) - no production callers
+- **Files Modified:**
+  - game/ui/panels/build_queue_drag_handler.py
+  - game/ui/screens/build_queue_screen.py
+  - game/ui/screens/empire_build_queue_window.py
+  - game/ui/screens/strategy_window_manager.py
+  - game/strategy/engine/commands.py (removed IssueBuildShipCommand)
+  - game/strategy/engine/command_handlers.py (removed BuildShipCommandHandler)
+  - game/strategy/engine/game_session.py (updated docstring)
+  - tests/integration/ui/test_build_queue_drag_drop.py
+  - tests/integration/strategy/test_command_handlers.py
+  - tests/unit/strategy/test_command_handlers.py
+  - tests/unit/strategy/engine/test_commands.py
+  - tests/unit/ui/screens/test_empire_build_queue_window.py
+- **Next Action:** Phase 3 - Research & Misc Commands
 - Note: 4 bug_13 tests fail due to missing asset files (pre-existing, unrelated)
 
 ---
@@ -106,6 +115,7 @@
 | 2026-02-28 | PROJ-208 | Phase 1 (1.5-1.6) | Complete | 12902 passed, 1 skipped | pending | UI refactoring: fleet_report + fleet_orders windows |
 | 2026-02-28 | PROJ-208 | Phase 2 (2.1-2.3) | Complete | 12923 passed, 1 skipped | pending | 3 commands + handlers + 26 tests |
 | 2026-02-28 | PROJ-208 | Phase 2 (2.4) | Complete | 12923 passed, 1 skipped | pending | build_queue_controller.py uses commands, queue_id param |
+| 2026-02-28 | PROJ-208 | Phase 2 (2.5-2.8) | Complete | 12918 passed, 1 skipped | pending | Drag handler, screen, empire window refactored; IssueBuildShipCommand removed |
 
 ---
 

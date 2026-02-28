@@ -19,7 +19,7 @@ Command Dispatch:
     handle_command(cmd) routes commands to handlers based on type:
     - IssueColonizeCommand → _handle_colonize_command
     - IssueMoveCommand → _handle_move_command
-    - IssueBuildShipCommand → _handle_build_ship_command
+    - AddToConstructionQueueCommand → AddToConstructionQueueCommandHandler
 
     Each handler:
     1. Resolves entity references (fleet, planet)

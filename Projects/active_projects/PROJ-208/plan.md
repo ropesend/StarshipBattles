@@ -14,15 +14,15 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Fleet Management Commands | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Build Queue Commands | In Progress (2.1-2.3 done) | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Build Queue Commands | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Research & Misc Commands | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. DTO Enhancements & Read Path | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-28
-**Active Phase:** Phase 2
-**Last Action:** Tasks 2.1-2.3 complete - AddToConstructionQueueCommand, RemoveFromConstructionQueueCommand, ReorderConstructionQueueCommand created with handlers + 26 unit tests
-**Next Action:** Task 2.4 - Refactor build_queue_controller.py to use commands
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete - All build queue commands implemented, UI refactored to use commands, IssueBuildShipCommand dead code removed
+**Next Action:** Phase 3 - Research & Misc Commands
 **Blockers:** None
 
 ## Overview

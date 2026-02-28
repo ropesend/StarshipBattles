@@ -324,20 +324,8 @@ class MoveCommandHandler(BaseCommandHandler):
         return ValidationResult.success()
 
 
-class BuildShipCommandHandler(BaseCommandHandler):
-    """Handler for IssueBuildShipCommand."""
-
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
-        """Handle IssueBuildShipCommand."""
-        # 1. Resolve Planet
-        planet, error = self._resolve_planet(session, cmd.planet_id)
-        if error:
-            return error
-
-        # 2. Apply
-        planet.add_production(cmd.design_name, 1)
-
-        return ValidationResult.success()
+# NOTE: BuildShipCommandHandler removed in PROJ-208 Phase 2 (dead code).
+# Use AddToConstructionQueueCommandHandler instead for all build queue operations.
 
 
 class InterceptCommandHandler(BaseCommandHandler):
@@ -972,7 +960,7 @@ def create_default_registry() -> CommandHandlerRegistry:
     # Core handlers
     registry.register('IssueColonizeCommand', ColonizeCommandHandler())
     registry.register('IssueMoveCommand', MoveCommandHandler())
-    registry.register('IssueBuildShipCommand', BuildShipCommandHandler())
+    # NOTE: IssueBuildShipCommand removed (PROJ-208) - use AddToConstructionQueueCommand
     registry.register('IssueInterceptCommand', InterceptCommandHandler())
     registry.register('IssueJoinFleetCommand', JoinCommandHandler())
     registry.register('QueueColonizeMissionCommand', ColonizeMissionCommandHandler())

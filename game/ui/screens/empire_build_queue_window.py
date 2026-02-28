@@ -82,6 +82,7 @@ class EmpireBuildQueueWindow(UIWindow):
         galaxy: Any,
         on_close_callback: Optional[Callable] = None,
         on_navigate_to_hex: Optional[Callable] = None,
+        session: Any = None,
     ) -> None:
         super().__init__(
             rect, manager,
@@ -93,6 +94,8 @@ class EmpireBuildQueueWindow(UIWindow):
         self.galaxy = galaxy
         self.on_close_callback = on_close_callback
         self.on_navigate_to_hex = on_navigate_to_hex
+        # PROJ-208: Session for command dispatch
+        self._session = session
 
         # --- Layout constants ---
         self.sidebar_width = UIConfig.SIDEBAR_WIDTH
@@ -352,13 +355,16 @@ class EmpireBuildQueueWindow(UIWindow):
     def batch_add_to_selected(
         self, item: Dict[str, Any], item_type: str,
     ) -> BatchAddResult:
-        """Add an item to all selected compatible queues."""
+        """Add an item to all selected compatible queues.
+
+        PROJ-208: Routes additions through AddToConstructionQueueCommand when session available.
+        """
         sources = self.get_selected_sources()
         added = 0
         skipped = 0
         for source in sources:
             if self._source_can_build_type(source, item_type):
-                source.construction_queue.append(dict(item))
+                self._add_item_to_source(source, item, item_type)
                 added += 1
             else:
                 skipped += 1
@@ -366,6 +372,33 @@ class EmpireBuildQueueWindow(UIWindow):
             logger.debug(f"Batch add: added to {added}/{added + skipped} queues")
             self._refresh_list()
         return BatchAddResult(added=added, skipped=skipped)
+
+    def _add_item_to_source(
+        self, source: BuildQueueSource, item: Dict[str, Any], item_type: str
+    ) -> None:
+        """Add item to a source's queue via command or direct append.
+
+        PROJ-208: Routes through AddToConstructionQueueCommand when session available.
+        """
+        if self._session is not None:
+            from game.strategy.engine.commands import AddToConstructionQueueCommand
+            entity = source.owner_entity
+            entity_type = "planet" if hasattr(entity, 'planet_type') else "fleet"
+            entity_id = getattr(entity, 'id', 0)
+            design_id = item.get('design_id', '')
+            cmd = AddToConstructionQueueCommand(
+                entity_id=entity_id,
+                entity_type=entity_type,
+                design_id=design_id,
+                category=item_type,
+                index=None,  # Append
+                target_planet_id=item.get('target_planet_id'),
+                queue_id=source.queue_id if source.queue_id else None,
+            )
+            self._session.handle_command(cmd)
+        else:
+            # Legacy fallback for tests without session injection
+            source.construction_queue.append(dict(item))
 
     @staticmethod
     def _source_can_build_type(source: BuildQueueSource, item_type: str) -> bool:

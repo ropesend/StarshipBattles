@@ -39,16 +39,8 @@ class IssueMoveCommand(Command):
         self.fleet_id = fleet_id
         self.target_hex = target_hex
 
-@dataclass
-class IssueBuildShipCommand(Command):
-    """Command to build a ship at a colony."""
-    planet_id: int
-    design_name: str
-
-    def __init__(self, planet_id: int, design_name: str):
-        self.type = CommandType.ISSUE_ORDER
-        self.planet_id = planet_id
-        self.design_name = design_name
+# NOTE: IssueBuildShipCommand removed in PROJ-208 Phase 2 (dead code).
+# Use AddToConstructionQueueCommand instead for all build queue operations.
 
 
 @dataclass

@@ -102,6 +102,9 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     win.sidebar_panel = MagicMock()
     win.row_elements = []
 
+    # PROJ-208: Session for command dispatch (None = fallback to direct append)
+    win._session = None
+
     # Column manager (Phase 3 sorting/reordering) - now TableColumnManager
     win._column_manager = MagicMock()
     win._column_manager.sort_column_id = None
