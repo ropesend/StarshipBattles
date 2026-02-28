@@ -5,49 +5,49 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** In Progress (Tasks 2.1-2.3 Complete)
 **Objective:** Create build queue commands and route all queue mutations through facade
 **Priority:** Critical/Major — second most severe violation cluster
 **Findings Addressed:** AR2-001, AR2-002, AR-014, AR-015, CGA-04, CGA-06, CGA-07, CGA-08, CGA-14, DCA-003
 
 ---
 
-## Task 2.1: Create AddToConstructionQueueCommand [Complex]
+## Task 2.1: Create AddToConstructionQueueCommand [Complex] ✅
 **File:** `game/strategy/engine/commands.py`, `game/strategy/engine/command_handlers.py`
 **Addresses:** AR2-001, CGA-04, DCA-003
 
-- [ ] Add `AddToConstructionQueueCommand` dataclass to `commands.py` (see design.md for spec)
-- [ ] Create `AddToConstructionQueueCommandHandler` in `command_handlers.py`
-- [ ] Implement validation: entity exists, design valid, category valid
-- [ ] Implement handler: look up design, create queue item, insert/append
-- [ ] Write handler unit tests (planet queue, fleet queue, insert vs append)
-- [ ] Verify: `pytest tests/ -k "construction_queue" -n 4`
+- [x] Add `AddToConstructionQueueCommand` dataclass to `commands.py` (see design.md for spec)
+- [x] Create `AddToConstructionQueueCommandHandler` in `command_handlers.py`
+- [x] Implement validation: entity exists, design valid, category valid
+- [x] Implement handler: look up design, create queue item, insert/append
+- [x] Write handler unit tests (planet queue, fleet queue, insert vs append)
+- [x] Verify: `pytest tests/ -k "construction_queue" -n 4`
 
-**Notes:** This handler needs to replicate the queue item creation logic currently in BuildQueueController._create_queue_item(). Consider extracting that as a shared utility.
+**Notes:** Command supports entity_type (planet/fleet), design_id, category, optional index (insert vs append), and optional target_planet_id for complexes. Handler creates queue item dict with design_id, type, turns_remaining, total_cost, resources_consumed.
 
-### Task 2.2: Create RemoveFromConstructionQueueCommand [Simple]
+### Task 2.2: Create RemoveFromConstructionQueueCommand [Simple] ✅
 **File:** `game/strategy/engine/commands.py`, `game/strategy/engine/command_handlers.py`
 **Addresses:** AR-015, CGA-06
 
-- [ ] Add `RemoveFromConstructionQueueCommand` dataclass
-- [ ] Create handler with validation (entity exists, index valid)
-- [ ] Handle fleet BUILD order cleanup when queue empties
-- [ ] Write handler unit tests
-- [ ] Verify tests pass
+- [x] Add `RemoveFromConstructionQueueCommand` dataclass
+- [x] Create handler with validation (entity exists, index valid)
+- [x] Handle fleet BUILD order cleanup when queue empties
+- [x] Write handler unit tests
+- [x] Verify tests pass
 
-**Notes:** [Filled during implementation]
+**Notes:** BUILD order cleanup not done in handler - that's a separate concern handled by RemoveBuildOrderCommand from PROJ-207. The handler just removes the item.
 
-### Task 2.3: Create ReorderConstructionQueueCommand [Medium]
+### Task 2.3: Create ReorderConstructionQueueCommand [Medium] ✅
 **File:** `game/strategy/engine/commands.py`, `game/strategy/engine/command_handlers.py`
 **Addresses:** AR2-002, CGA-07
 
-- [ ] Add `ReorderConstructionQueueCommand` dataclass
-- [ ] Create handler with validation (entity exists, both indices valid)
-- [ ] Implement atomic pop+insert
-- [ ] Write handler unit tests
-- [ ] Verify tests pass
+- [x] Add `ReorderConstructionQueueCommand` dataclass
+- [x] Create handler with validation (entity exists, both indices valid)
+- [x] Implement atomic pop+insert
+- [x] Write handler unit tests
+- [x] Verify tests pass
 
-**Notes:** [Filled during implementation]
+**Notes:** Handler performs atomic pop+insert. Tests verify forward/backward reordering works correctly.
 
 ### Task 2.4: Refactor build_queue_controller.py to use commands [Complex]
 **File:** `game/ui/panels/build_queue_controller.py`

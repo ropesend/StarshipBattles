@@ -20,6 +20,9 @@ from game.strategy.engine.command_handlers import (
     SplitFleetCommandHandler,
     DeleteFleetOrderCommandHandler,
     ReorderFleetOrderCommandHandler,
+    AddToConstructionQueueCommandHandler,
+    RemoveFromConstructionQueueCommandHandler,
+    ReorderConstructionQueueCommandHandler,
     create_default_registry,
 )
 from game.core.validation import ValidationResult
@@ -71,6 +74,10 @@ class TestCommandHandlerRegistry:
             'SplitFleetCommand',
             'DeleteFleetOrderCommand',
             'ReorderFleetOrderCommand',
+            # PROJ-208 Phase 2: Construction Queue Commands
+            'AddToConstructionQueueCommand',
+            'RemoveFromConstructionQueueCommand',
+            'ReorderConstructionQueueCommand',
         ]
 
         for cmd_name in expected_commands:
@@ -1050,3 +1057,434 @@ class TestReorderFleetOrderCommandHandler:
         assert result.is_valid
         assert mock_fleet.path == original_path
         assert mock_fleet.orders == [mock_order1, mock_order3, mock_order2]
+
+
+# =============================================================================
+# PROJ-208 Phase 2: Construction Queue Command Handler Tests
+# =============================================================================
+
+class TestAddToConstructionQueueCommandHandler:
+    """Tests for AddToConstructionQueueCommandHandler (PROJ-208 Phase 2)."""
+
+    def test_planet_not_found(self):
+        """Returns failure when planet not found."""
+        handler = AddToConstructionQueueCommandHandler()
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = None
+        mock_cmd = Mock(
+            entity_id=999,
+            entity_type="planet",
+            design_id="scout",
+            category="ship",
+            index=None,
+            target_planet_id=None
+        )
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert not result.is_valid
+        assert "Planet not found" in result.message
+
+    def test_fleet_not_found(self):
+        """Returns failure when fleet not found."""
+        handler = AddToConstructionQueueCommandHandler()
+        mock_session = Mock()
+        mock_session._get_fleet_by_id.return_value = None
+        mock_cmd = Mock(
+            entity_id=999,
+            entity_type="fleet",
+            design_id="scout",
+            category="ship",
+            index=None,
+            target_planet_id=None
+        )
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert not result.is_valid
+        assert "Fleet not found" in result.message
+
+    def test_invalid_entity_type(self):
+        """Returns failure for invalid entity type."""
+        handler = AddToConstructionQueueCommandHandler()
+        mock_session = Mock()
+        mock_cmd = Mock(
+            entity_id=1,
+            entity_type="invalid",
+            design_id="scout",
+            category="ship",
+            index=None,
+            target_planet_id=None
+        )
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert not result.is_valid
+        assert "not found" in result.message.lower()
+
+    def test_invalid_index_negative(self):
+        """Returns failure for negative index."""
+        handler = AddToConstructionQueueCommandHandler()
+
+        mock_planet = Mock()
+        mock_planet.construction_queue = []
+
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = mock_planet
+
+        mock_cmd = Mock(
+            entity_id=1,
+            entity_type="planet",
+            design_id="scout",
+            category="ship",
+            index=-1,
+            target_planet_id=None
+        )
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert not result.is_valid
+        assert "Invalid queue index" in result.message
+
+    def test_invalid_index_too_high(self):
+        """Returns failure for index beyond queue length."""
+        handler = AddToConstructionQueueCommandHandler()
+
+        mock_planet = Mock()
+        mock_planet.construction_queue = [{"design_id": "existing"}]
+
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = mock_planet
+
+        mock_cmd = Mock(
+            entity_id=1,
+            entity_type="planet",
+            design_id="scout",
+            category="ship",
+            index=5,
+            target_planet_id=None
+        )
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert not result.is_valid
+        assert "Invalid queue index" in result.message
+
+    def test_append_to_planet_queue(self):
+        """Successfully appends item to planet construction queue."""
+        handler = AddToConstructionQueueCommandHandler()
+
+        mock_planet = Mock()
+        mock_planet.construction_queue = []
+
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = mock_planet
+
+        mock_cmd = Mock(
+            entity_id=1,
+            entity_type="planet",
+            design_id="scout",
+            category="ship",
+            index=None,
+            target_planet_id=None
+        )
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert result.is_valid
+        assert len(mock_planet.construction_queue) == 1
+        assert mock_planet.construction_queue[0]["design_id"] == "scout"
+        assert mock_planet.construction_queue[0]["type"] == "ship"
+
+    def test_insert_at_index(self):
+        """Successfully inserts item at specified index."""
+        handler = AddToConstructionQueueCommandHandler()
+
+        existing_item = {"design_id": "cruiser", "type": "ship"}
+        mock_planet = Mock()
+        mock_planet.construction_queue = [existing_item]
+
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = mock_planet
+
+        mock_cmd = Mock(
+            entity_id=1,
+            entity_type="planet",
+            design_id="scout",
+            category="ship",
+            index=0,
+            target_planet_id=None
+        )
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert result.is_valid
+        assert len(mock_planet.construction_queue) == 2
+        assert mock_planet.construction_queue[0]["design_id"] == "scout"
+        assert mock_planet.construction_queue[1]["design_id"] == "cruiser"
+
+    def test_adds_target_planet_id_for_complex(self):
+        """Adds target_planet_id to queue item when specified."""
+        handler = AddToConstructionQueueCommandHandler()
+
+        mock_fleet = Mock()
+        mock_fleet.construction_queue = []
+
+        mock_session = Mock()
+        mock_session._get_fleet_by_id.return_value = mock_fleet
+
+        mock_cmd = Mock(
+            entity_id=1,
+            entity_type="fleet",
+            design_id="research_lab",
+            category="complex",
+            index=None,
+            target_planet_id=42
+        )
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert result.is_valid
+        assert mock_fleet.construction_queue[0]["target_planet_id"] == 42
+
+    def test_queue_item_has_required_fields(self):
+        """Queue item has all required fields."""
+        handler = AddToConstructionQueueCommandHandler()
+
+        mock_planet = Mock()
+        mock_planet.construction_queue = []
+
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = mock_planet
+
+        mock_cmd = Mock(
+            entity_id=1,
+            entity_type="planet",
+            design_id="scout",
+            category="ship",
+            index=None,
+            target_planet_id=None
+        )
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert result.is_valid
+        item = mock_planet.construction_queue[0]
+        assert "design_id" in item
+        assert "type" in item
+        assert "turns_remaining" in item
+        assert "total_cost" in item
+        assert "resources_consumed" in item
+
+
+class TestRemoveFromConstructionQueueCommandHandler:
+    """Tests for RemoveFromConstructionQueueCommandHandler (PROJ-208 Phase 2)."""
+
+    def test_planet_not_found(self):
+        """Returns failure when planet not found."""
+        handler = RemoveFromConstructionQueueCommandHandler()
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = None
+        mock_cmd = Mock(entity_id=999, entity_type="planet", item_index=0)
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert not result.is_valid
+        assert "Planet not found" in result.message
+
+    def test_fleet_not_found(self):
+        """Returns failure when fleet not found."""
+        handler = RemoveFromConstructionQueueCommandHandler()
+        mock_session = Mock()
+        mock_session._get_fleet_by_id.return_value = None
+        mock_cmd = Mock(entity_id=999, entity_type="fleet", item_index=0)
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert not result.is_valid
+        assert "Fleet not found" in result.message
+
+    def test_invalid_index_negative(self):
+        """Returns failure for negative index."""
+        handler = RemoveFromConstructionQueueCommandHandler()
+
+        mock_planet = Mock()
+        mock_planet.construction_queue = [{"design_id": "scout"}]
+
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = mock_planet
+
+        mock_cmd = Mock(entity_id=1, entity_type="planet", item_index=-1)
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert not result.is_valid
+        assert "Invalid queue index" in result.message
+
+    def test_invalid_index_too_high(self):
+        """Returns failure for index beyond queue length."""
+        handler = RemoveFromConstructionQueueCommandHandler()
+
+        mock_planet = Mock()
+        mock_planet.construction_queue = [{"design_id": "scout"}]
+
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = mock_planet
+
+        mock_cmd = Mock(entity_id=1, entity_type="planet", item_index=5)
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert not result.is_valid
+        assert "Invalid queue index" in result.message
+
+    def test_removes_item_from_queue(self):
+        """Successfully removes item from queue."""
+        handler = RemoveFromConstructionQueueCommandHandler()
+
+        item1 = {"design_id": "scout"}
+        item2 = {"design_id": "cruiser"}
+        mock_planet = Mock()
+        mock_planet.construction_queue = [item1, item2]
+
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = mock_planet
+
+        mock_cmd = Mock(entity_id=1, entity_type="planet", item_index=0)
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert result.is_valid
+        assert len(mock_planet.construction_queue) == 1
+        assert mock_planet.construction_queue[0] == item2
+
+    def test_removes_from_fleet_queue(self):
+        """Successfully removes item from fleet queue."""
+        handler = RemoveFromConstructionQueueCommandHandler()
+
+        item1 = {"design_id": "fighter"}
+        mock_fleet = Mock()
+        mock_fleet.construction_queue = [item1]
+
+        mock_session = Mock()
+        mock_session._get_fleet_by_id.return_value = mock_fleet
+
+        mock_cmd = Mock(entity_id=1, entity_type="fleet", item_index=0)
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert result.is_valid
+        assert len(mock_fleet.construction_queue) == 0
+
+
+class TestReorderConstructionQueueCommandHandler:
+    """Tests for ReorderConstructionQueueCommandHandler (PROJ-208 Phase 2)."""
+
+    def test_planet_not_found(self):
+        """Returns failure when planet not found."""
+        handler = ReorderConstructionQueueCommandHandler()
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = None
+        mock_cmd = Mock(entity_id=999, entity_type="planet", from_index=0, to_index=1)
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert not result.is_valid
+        assert "Planet not found" in result.message
+
+    def test_invalid_from_index(self):
+        """Returns failure for invalid from_index."""
+        handler = ReorderConstructionQueueCommandHandler()
+
+        mock_planet = Mock()
+        mock_planet.construction_queue = [{"design_id": "scout"}, {"design_id": "cruiser"}]
+
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = mock_planet
+
+        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=5, to_index=0)
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert not result.is_valid
+        assert "Invalid from_index" in result.message
+
+    def test_invalid_to_index(self):
+        """Returns failure for invalid to_index."""
+        handler = ReorderConstructionQueueCommandHandler()
+
+        mock_planet = Mock()
+        mock_planet.construction_queue = [{"design_id": "scout"}, {"design_id": "cruiser"}]
+
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = mock_planet
+
+        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=0, to_index=5)
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert not result.is_valid
+        assert "Invalid to_index" in result.message
+
+    def test_reorders_item_forward(self):
+        """Successfully moves item forward in queue."""
+        handler = ReorderConstructionQueueCommandHandler()
+
+        item1 = {"design_id": "scout"}
+        item2 = {"design_id": "cruiser"}
+        item3 = {"design_id": "battleship"}
+        mock_planet = Mock()
+        mock_planet.construction_queue = [item1, item2, item3]
+
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = mock_planet
+
+        # Move item at index 0 to index 2
+        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=0, to_index=2)
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert result.is_valid
+        # After pop(0) and insert(2): [item2, item3] -> insert(2, item1) -> [item2, item3, item1]
+        assert mock_planet.construction_queue == [item2, item3, item1]
+
+    def test_reorders_item_backward(self):
+        """Successfully moves item backward in queue."""
+        handler = ReorderConstructionQueueCommandHandler()
+
+        item1 = {"design_id": "scout"}
+        item2 = {"design_id": "cruiser"}
+        item3 = {"design_id": "battleship"}
+        mock_planet = Mock()
+        mock_planet.construction_queue = [item1, item2, item3]
+
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = mock_planet
+
+        # Move item at index 2 to index 0
+        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=2, to_index=0)
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert result.is_valid
+        # After pop(2) and insert(0): [item1, item2] -> insert(0, item3) -> [item3, item1, item2]
+        assert mock_planet.construction_queue == [item3, item1, item2]
+
+    def test_reorders_fleet_queue(self):
+        """Successfully reorders fleet construction queue."""
+        handler = ReorderConstructionQueueCommandHandler()
+
+        item1 = {"design_id": "fighter"}
+        item2 = {"design_id": "bomber"}
+        mock_fleet = Mock()
+        mock_fleet.construction_queue = [item1, item2]
+
+        mock_session = Mock()
+        mock_session._get_fleet_by_id.return_value = mock_fleet
+
+        mock_cmd = Mock(entity_id=1, entity_type="fleet", from_index=1, to_index=0)
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert result.is_valid
+        assert mock_fleet.construction_queue == [item2, item1]

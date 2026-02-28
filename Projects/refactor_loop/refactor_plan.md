@@ -8,23 +8,26 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-208 Phase 1 COMPLETE
-**Current Status:** PROJ-208 Phase 2 Ready
+**Last Completed:** PROJ-208 Phase 2 Tasks 2.1-2.3 (Commands + Handlers)
+**Current Status:** PROJ-208 Phase 2 In Progress (UI refactoring remaining)
 **Current Project:** PROJ-208
-**Current Phase:** Phase 2
-**Test Status:** 12902 passed, 1 skipped (4 pre-existing bug_13 failures)
+**Current Phase:** Phase 2 (Tasks 2.4-2.8)
+**Test Status:** 12923 passed, 1 skipped (4 pre-existing bug_13 failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-208 Phase 1 COMPLETE:**
-  - Task 1.5: fleet_report_window.py refactored - added split_fleet_callback, removed _create_fleet_for_ships, no more direct Fleet mutation
-  - Task 1.6: fleet_orders_window.py refactored - added delete_order_callback + reorder_order_callback, removed undo feature (command-level undo is future work), removed clear_orders fallback
-  - strategy_window_manager.py creates callback closures that dispatch commands via session.handle_command()
-  - Tests updated to verify callback dispatch pattern
-- **Next Actions (Phase 2):**
-  - Task 2.1: Create AddToConstructionQueueCommand
-  - Task 2.2: Create RemoveFromConstructionQueueCommand
-  - Task 2.3: Create ReorderConstructionQueueCommand
+- **PROJ-208 Phase 2 Tasks 2.1-2.3 COMPLETE:**
+  - AddToConstructionQueueCommand: entity_type (planet/fleet), design_id, category, index, target_planet_id
+  - RemoveFromConstructionQueueCommand: entity_type, entity_id, item_index
+  - ReorderConstructionQueueCommand: entity_type, entity_id, from_index, to_index
+  - All 3 handlers registered in create_default_registry()
+  - 26 new unit tests covering all handlers
+- **Next Actions (Phase 2 remaining):**
+  - Task 2.4: Refactor build_queue_controller.py to use commands
+  - Task 2.5: Refactor build_queue_drag_handler.py to use commands
+  - Task 2.6: Refactor build_queue_screen.py to use commands
+  - Task 2.7: Refactor empire_build_queue_window.py batch add
+  - Task 2.8: Investigate IssueBuildShipCommand dead code
 - Note: 4 bug_13 tests fail due to missing asset files (pre-existing, unrelated)
 
 ---
@@ -102,6 +105,7 @@
 | 2026-02-28 | PROJ-211 | Audit 1 | PASSED | 12884 passed, 1 skipped | - | All implementations verified, no issues |
 | 2026-02-28 | PROJ-208 | Phase 1 (1.1-1.4) | Complete | 12904 passed, 1 skipped | pending | 3 commands + handlers + 20 tests |
 | 2026-02-28 | PROJ-208 | Phase 1 (1.5-1.6) | Complete | 12902 passed, 1 skipped | pending | UI refactoring: fleet_report + fleet_orders windows |
+| 2026-02-28 | PROJ-208 | Phase 2 (2.1-2.3) | Complete | 12923 passed, 1 skipped | pending | 3 commands + handlers + 26 tests |
 
 ---
 

@@ -770,6 +770,153 @@ class ReorderFleetOrderCommandHandler(BaseCommandHandler):
         return ValidationResult.success()
 
 
+# =============================================================================
+# Construction Queue Command Handlers (PROJ-208 Phase 2)
+# =============================================================================
+
+class AddToConstructionQueueCommandHandler(BaseCommandHandler):
+    """Handler for AddToConstructionQueueCommand (PROJ-208 Phase 2)."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle AddToConstructionQueueCommand - add item to construction queue.
+
+        Creates a queue item dict with design_id, type, turns_remaining, and
+        cost tracking fields, then inserts or appends to the entity's queue.
+        """
+        # 1. Resolve entity (planet or fleet)
+        entity = self._resolve_build_entity(session, cmd.entity_id, cmd.entity_type)
+        if entity is None:
+            return ValidationResult.error(f"{cmd.entity_type.capitalize()} not found.")
+
+        # 2. Validate entity has construction_queue
+        if not hasattr(entity, 'construction_queue'):
+            return ValidationResult.error(f"{cmd.entity_type.capitalize()} cannot build.")
+
+        # 3. Validate index if specified
+        queue = entity.construction_queue
+        if cmd.index is not None:
+            if cmd.index < 0 or cmd.index > len(queue):
+                return ValidationResult.error(f"Invalid queue index: {cmd.index}")
+
+        # 4. Create queue item
+        queue_item = {
+            "design_id": cmd.design_id,
+            "type": cmd.category,
+            "turns_remaining": 1.0,  # Default, UI layer can override via calculation
+            "total_cost": {},
+            "resources_consumed": {},
+        }
+
+        # 5. Add target_planet_id for complexes if specified
+        if cmd.target_planet_id is not None:
+            queue_item["target_planet_id"] = cmd.target_planet_id
+
+        # 6. Insert or append
+        if cmd.index is not None:
+            queue.insert(cmd.index, queue_item)
+            logger.info(f"GameSession: Inserted {cmd.design_id} into {cmd.entity_type} {cmd.entity_id} queue at {cmd.index}")
+        else:
+            queue.append(queue_item)
+            logger.info(f"GameSession: Appended {cmd.design_id} to {cmd.entity_type} {cmd.entity_id} queue")
+
+        return ValidationResult.success()
+
+    def _resolve_build_entity(self, session: 'GameSession', entity_id: int, entity_type: str):
+        """Resolve a planet or fleet by ID and type.
+
+        Args:
+            session: Game session for lookups.
+            entity_id: ID of the entity.
+            entity_type: "planet" or "fleet".
+
+        Returns:
+            Planet or Fleet object, or None if not found.
+        """
+        if entity_type == "planet":
+            return session._get_planet_by_id(entity_id)
+        elif entity_type == "fleet":
+            return session._get_fleet_by_id(entity_id)
+        return None
+
+
+class RemoveFromConstructionQueueCommandHandler(BaseCommandHandler):
+    """Handler for RemoveFromConstructionQueueCommand (PROJ-208 Phase 2)."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle RemoveFromConstructionQueueCommand - remove item from queue.
+
+        For fleets, if the queue becomes empty, may need BUILD order cleanup
+        (handled by separate RemoveBuildOrderCommand if needed).
+        """
+        # 1. Resolve entity (planet or fleet)
+        entity = self._resolve_build_entity(session, cmd.entity_id, cmd.entity_type)
+        if entity is None:
+            return ValidationResult.error(f"{cmd.entity_type.capitalize()} not found.")
+
+        # 2. Validate entity has construction_queue
+        if not hasattr(entity, 'construction_queue'):
+            return ValidationResult.error(f"{cmd.entity_type.capitalize()} cannot build.")
+
+        # 3. Validate index
+        queue = entity.construction_queue
+        if cmd.item_index < 0 or cmd.item_index >= len(queue):
+            return ValidationResult.error(f"Invalid queue index: {cmd.item_index}")
+
+        # 4. Remove item
+        removed_item = queue.pop(cmd.item_index)
+        logger.info(f"GameSession: Removed item {cmd.item_index} from {cmd.entity_type} {cmd.entity_id} queue")
+
+        return ValidationResult.success()
+
+    def _resolve_build_entity(self, session: 'GameSession', entity_id: int, entity_type: str):
+        """Resolve a planet or fleet by ID and type."""
+        if entity_type == "planet":
+            return session._get_planet_by_id(entity_id)
+        elif entity_type == "fleet":
+            return session._get_fleet_by_id(entity_id)
+        return None
+
+
+class ReorderConstructionQueueCommandHandler(BaseCommandHandler):
+    """Handler for ReorderConstructionQueueCommand (PROJ-208 Phase 2)."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle ReorderConstructionQueueCommand - move item to new position.
+
+        Performs atomic pop + insert to move item from from_index to to_index.
+        """
+        # 1. Resolve entity (planet or fleet)
+        entity = self._resolve_build_entity(session, cmd.entity_id, cmd.entity_type)
+        if entity is None:
+            return ValidationResult.error(f"{cmd.entity_type.capitalize()} not found.")
+
+        # 2. Validate entity has construction_queue
+        if not hasattr(entity, 'construction_queue'):
+            return ValidationResult.error(f"{cmd.entity_type.capitalize()} cannot build.")
+
+        # 3. Validate indices
+        queue = entity.construction_queue
+        if cmd.from_index < 0 or cmd.from_index >= len(queue):
+            return ValidationResult.error(f"Invalid from_index: {cmd.from_index}")
+        if cmd.to_index < 0 or cmd.to_index >= len(queue):
+            return ValidationResult.error(f"Invalid to_index: {cmd.to_index}")
+
+        # 4. Perform atomic reorder (pop + insert)
+        item = queue.pop(cmd.from_index)
+        queue.insert(cmd.to_index, item)
+
+        logger.info(f"GameSession: Reordered {cmd.entity_type} {cmd.entity_id} queue {cmd.from_index} -> {cmd.to_index}")
+        return ValidationResult.success()
+
+    def _resolve_build_entity(self, session: 'GameSession', entity_id: int, entity_type: str):
+        """Resolve a planet or fleet by ID and type."""
+        if entity_type == "planet":
+            return session._get_planet_by_id(entity_id)
+        elif entity_type == "fleet":
+            return session._get_fleet_by_id(entity_id)
+        return None
+
+
 def create_default_registry() -> CommandHandlerRegistry:
     """Create a registry with all standard command handlers registered.
 
@@ -811,6 +958,11 @@ def create_default_registry() -> CommandHandlerRegistry:
     registry.register('SplitFleetCommand', SplitFleetCommandHandler())
     registry.register('DeleteFleetOrderCommand', DeleteFleetOrderCommandHandler())
     registry.register('ReorderFleetOrderCommand', ReorderFleetOrderCommandHandler())
+
+    # Construction queue handlers (PROJ-208 Phase 2)
+    registry.register('AddToConstructionQueueCommand', AddToConstructionQueueCommandHandler())
+    registry.register('RemoveFromConstructionQueueCommand', RemoveFromConstructionQueueCommandHandler())
+    registry.register('ReorderConstructionQueueCommand', ReorderConstructionQueueCommandHandler())
 
     # Superweapon direct handlers (PROJ-102)
     registry.register('IssueImplodePlanetCommand', ImplodePlanetCommandHandler())

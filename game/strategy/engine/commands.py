@@ -417,3 +417,93 @@ class ReorderFleetOrderCommand(Command):
         self.fleet_id = fleet_id
         self.order_index = order_index
         self.direction = direction
+
+
+# =============================================================================
+# Construction Queue Commands (PROJ-208 Phase 2)
+# =============================================================================
+
+@dataclass
+class AddToConstructionQueueCommand(Command):
+    """Command to add a design to a planet or fleet construction queue.
+
+    PROJ-208 Phase 2: Routes construction queue additions through command pipeline.
+
+    Args:
+        entity_id: Planet or fleet ID.
+        entity_type: "planet" or "fleet".
+        design_id: ID of the design to build.
+        category: Design category ("complex", "ship", "satellite", "fighter").
+        index: Optional insertion index. None = append to end.
+        target_planet_id: For complexes built at fleet yards, the target planet.
+    """
+    entity_id: int
+    entity_type: str
+    design_id: str
+    category: str
+    index: Optional[int] = None
+    target_planet_id: Optional[int] = None
+
+    def __init__(
+        self,
+        entity_id: int,
+        entity_type: str,
+        design_id: str,
+        category: str,
+        index: Optional[int] = None,
+        target_planet_id: Optional[int] = None
+    ):
+        self.type = CommandType.ISSUE_ORDER
+        self.entity_id = entity_id
+        self.entity_type = entity_type
+        self.design_id = design_id
+        self.category = category
+        self.index = index
+        self.target_planet_id = target_planet_id
+
+
+@dataclass
+class RemoveFromConstructionQueueCommand(Command):
+    """Command to remove an item from a construction queue.
+
+    PROJ-208 Phase 2: Routes construction queue removals through command pipeline.
+
+    Args:
+        entity_id: Planet or fleet ID.
+        entity_type: "planet" or "fleet".
+        item_index: Index of the item to remove.
+    """
+    entity_id: int
+    entity_type: str
+    item_index: int
+
+    def __init__(self, entity_id: int, entity_type: str, item_index: int):
+        self.type = CommandType.ISSUE_ORDER
+        self.entity_id = entity_id
+        self.entity_type = entity_type
+        self.item_index = item_index
+
+
+@dataclass
+class ReorderConstructionQueueCommand(Command):
+    """Command to move a construction queue item to a new position.
+
+    PROJ-208 Phase 2: Routes construction queue reordering through command pipeline.
+
+    Args:
+        entity_id: Planet or fleet ID.
+        entity_type: "planet" or "fleet".
+        from_index: Current index of the item.
+        to_index: Target index for the item.
+    """
+    entity_id: int
+    entity_type: str
+    from_index: int
+    to_index: int
+
+    def __init__(self, entity_id: int, entity_type: str, from_index: int, to_index: int):
+        self.type = CommandType.ISSUE_ORDER
+        self.entity_id = entity_id
+        self.entity_type = entity_type
+        self.from_index = from_index
+        self.to_index = to_index
