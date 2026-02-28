@@ -17,9 +17,10 @@ from pathlib import Path
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from utils.config import ACTIVE_DIR, ARCHIVED_DIR, PROJECTS_DIR
-from utils.index_manager import archive_project_in_index
+from utils.config import ACTIVE_DIR, ARCHIVED_DIR, PROJECTS_DIR, MAX_ARCHIVED_PROJECTS
+from utils.index_manager import archive_project_in_index, get_archived_entries_from_index
 from validate_close_ready import validate_close_ready
+from deep_archive_manager import sweep as deep_archive_sweep
 
 
 def archive_project(project_id: str, dry_run: bool = False, force: bool = False) -> bool:
@@ -114,6 +115,18 @@ def archive_project(project_id: str, dry_run: bool = False, force: bool = False)
         except Exception as e:
             print(f"  [WARN] Could not update index: {e}")
             print("         Please update projects_index.md manually")
+
+    # Step 5: Auto-sweep deep archive if over limit
+    archived_count = len(get_archived_entries_from_index())
+    if archived_count > MAX_ARCHIVED_PROJECTS:
+        print(f"\nSTEP 5: Deep archive sweep ({archived_count} > {MAX_ARCHIVED_PROJECTS} max)")
+        if dry_run:
+            print("  [DRY-RUN] Would sweep excess projects to deep archive")
+            deep_archive_sweep(dry_run=True)
+        else:
+            deep_archive_sweep(dry_run=False)
+    else:
+        print(f"\nSTEP 5: Deep archive sweep (not needed, {archived_count} <= {MAX_ARCHIVED_PROJECTS})")
 
     print(f"\n{'=' * 50}")
     if dry_run:

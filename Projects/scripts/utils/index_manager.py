@@ -5,7 +5,10 @@ from dataclasses import dataclass
 from typing import List, Optional
 from datetime import datetime
 
-from .config import INDEX_FILE, VALID_STATUSES, ACTIVE_DIR, ARCHIVED_DIR
+from .config import (
+    INDEX_FILE, VALID_STATUSES, ACTIVE_DIR, ARCHIVED_DIR,
+    DEEP_ARCHIVE_DIR, DEEP_ARCHIVE_INDEX,
+)
 
 
 @dataclass
@@ -190,12 +193,96 @@ def is_project_archived(project_id: str) -> bool:
     return archived_dir.exists() or archived_file.exists()
 
 
+def is_project_deep_archived(project_id: str) -> bool:
+    """Check if a project exists in the deep_archive directory."""
+    if not DEEP_ARCHIVE_DIR.exists():
+        return False
+    # Search all range subdirectories
+    for range_dir in DEEP_ARCHIVE_DIR.iterdir():
+        if range_dir.is_dir() and (range_dir / project_id).exists():
+            return True
+    return False
+
+
 def project_exists(project_id: str) -> bool:
-    """Check if a project exists (active or archived)."""
+    """Check if a project exists (active, archived, or deep-archived)."""
     active_dir = ACTIVE_DIR / project_id
     active_file = ACTIVE_DIR / f"{project_id}.md"
     return (
         active_dir.exists() or
         active_file.exists() or
-        is_project_archived(project_id)
+        is_project_archived(project_id) or
+        is_project_deep_archived(project_id)
     )
+
+
+def get_archived_entries_from_index() -> List[ProjectEntry]:
+    """Get all entries from the Archived Projects section of the index."""
+    content = read_projects_index()
+    entries = []
+
+    # Find the Archived Projects section
+    archived_section = re.search(
+        r'## Archived Projects.*?\n\|[^\n]+\|\n\|[-| ]+\|\n(.*?)(?=\n---|\n## |\Z)',
+        content, re.DOTALL,
+    )
+    if not archived_section:
+        return entries
+
+    row_pattern = r'\|\s*(PROJ-\d+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|'
+    for match in re.finditer(row_pattern, archived_section.group(1)):
+        entries.append(ProjectEntry(
+            project_id=match.group(1).strip(),
+            title=match.group(2).strip(),
+            status=match.group(3).strip(),
+            started=match.group(4).strip(),
+            last_updated=match.group(5).strip(),
+        ))
+
+    return entries
+
+
+def remove_entries_from_archived_section(project_ids: List[str]) -> None:
+    """Remove specific project rows from the Archived section of the index."""
+    content = read_projects_index()
+    ids_to_remove = set(project_ids)
+
+    for pid in ids_to_remove:
+        pattern = rf'\|\s*{re.escape(pid)}\s*\|[^\n]+\|\n'
+        content = re.sub(pattern, '', content)
+
+    write_projects_index(content)
+
+
+def read_deep_archive_index() -> str:
+    """Read the deep archive index file, or return empty header."""
+    if DEEP_ARCHIVE_INDEX.exists():
+        return DEEP_ARCHIVE_INDEX.read_text(encoding='utf-8')
+    return ""
+
+
+def write_deep_archive_index(content: str) -> None:
+    """Write the deep archive index file."""
+    DEEP_ARCHIVE_INDEX.write_text(content, encoding='utf-8')
+
+
+def append_to_deep_archive_index(entries: List[ProjectEntry]) -> None:
+    """Append project entries to the deep archive index."""
+    content = read_deep_archive_index()
+
+    if not content:
+        content = (
+            "# Deep Archive Index\n\n"
+            "Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to find details.\n\n"
+            "| ID | Title | Completed | Range |\n"
+            "|----|-------|-----------|-------|\n"
+        )
+
+    for entry in entries:
+        proj_num = int(entry.project_id.replace("PROJ-", ""))
+        range_start = ((proj_num - 1) // 50) * 50 + 1
+        range_end = range_start + 49
+        range_label = f"PROJ-{range_start:03d}-{range_end:03d}"
+        content += f"| {entry.project_id} | {entry.title} | {entry.last_updated} | {range_label} |\n"
+
+    write_deep_archive_index(content)
