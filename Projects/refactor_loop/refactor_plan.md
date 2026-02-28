@@ -38,6 +38,36 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
+- [ ] **PROJ-212: Deferred Import Cleanup & Coupling Reduction**
+  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-212/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-212/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+- [ ] **PROJ-211: Eradicate DI Fallback Anti-Pattern**
+  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-211/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-211/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+- [ ] **PROJ-208: CQRS Facade Bypass Remediation**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-208/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-208/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+- [ ] **PROJ-210: Strategy God Class Decomposition**
+  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-210/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-210/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+- [ ] **PROJ-209: Cyclomatic Complexity Decomposition**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-209/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-209/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
 ---
 
 ## Execution Log

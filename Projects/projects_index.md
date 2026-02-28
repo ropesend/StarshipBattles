@@ -4,6 +4,11 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-212 | Deferred Import Cleanup & Coupling Reduction | Planning | 2026-02-27 | 2026-02-27 |
+| PROJ-211 | 211222 Remediation: General Di Inconsistency Strategy | Planning | 2026-02-27 | 2026-02-27 |
+| PROJ-210 | Strategy God Class Decomposition | Planning | 2026-02-27 | 2026-02-27 |
+| PROJ-209 | Cyclomatic Complexity Decomposition | Planning | 2026-02-27 | 2026-02-27 |
+| PROJ-208 | CQRS Facade Bypass Remediation | Planning | 2026-02-27 | 2026-02-27 |
 | PROJ-207 | Fleet Order System Unification | Planning | 2026-02-27 | 2026-02-27 |
 
 ## Archived Projects
