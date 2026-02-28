@@ -46,12 +46,12 @@ MOVEMENT_ORDER_TYPES: frozenset = frozenset({
 
 # Action orders are handled by ActionExecutionEngine (tick-based execution)
 # Excludes BUILD (persistent, handled by ProductionEngine)
+# PROJ-207: JOIN_FLEET removed - handled by instant path (process_instant_orders) only
 ACTION_ORDER_TYPES: frozenset = frozenset({
     OrderType.COLONIZE,
     OrderType.TRANSFER,
     OrderType.LOAD_POPULATION,
     OrderType.UNLOAD_POPULATION,
-    OrderType.JOIN_FLEET,
     OrderType.IMPLODE_PLANET,
     OrderType.STELLERATE_STAR,
     OrderType.OPEN_WARP_POINT,

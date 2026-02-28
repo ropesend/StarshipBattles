@@ -624,9 +624,9 @@ class FleetOrderProcessor:
             )
             return result.colonized
 
-        elif order.type == OrderType.JOIN_FLEET:
-            result = self.process_join_fleet(fleet, empire, galaxy)
-            return result.merged
+        # PROJ-207: JOIN_FLEET removed from tick-based execution path.
+        # JOIN_FLEET is now handled ONLY by process_instant_orders() which fires
+        # when fleets are co-located. The MOVE_TO_FLEET preceding it handles travel.
 
         elif order.type in (OrderType.TRANSFER, OrderType.LOAD_POPULATION, OrderType.UNLOAD_POPULATION):
             # PROJ-68: Process cargo/population transfer

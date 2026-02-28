@@ -93,7 +93,11 @@ class TestWarpTravel:
         mock_fleet.consume_warp_resources.assert_not_called()
 
     def test_warp_fails_without_capability(self, mock_fleet, mock_galaxy):
-        """Warp fails if fleet lacks warp capability."""
+        """Warp fails if fleet lacks warp capability.
+
+        PROJ-207 EP-005: Warp failures now pop_order() instead of clear_orders().
+        Fleet can still move normally, so subsequent orders should survive.
+        """
         from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
 
         engine = FleetMovementEngine()
@@ -105,10 +109,14 @@ class TestWarpTravel:
 
         assert result.moved is False
         assert result.warp_blocked is True
-        mock_fleet.clear_orders.assert_called()
+        mock_fleet.pop_order.assert_called()  # PROJ-207: pop_order instead of clear_orders
 
     def test_warp_fails_without_resources(self, mock_fleet, mock_galaxy):
-        """Warp fails if fleet lacks warp resources."""
+        """Warp fails if fleet lacks warp resources.
+
+        PROJ-207 EP-005: Warp failures now pop_order() instead of clear_orders().
+        Fleet can still move normally, so subsequent orders should survive.
+        """
         from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
 
         engine = FleetMovementEngine()
@@ -120,7 +128,7 @@ class TestWarpTravel:
         result = engine.apply_movement(mock_fleet, distant_hex, mock_galaxy)
 
         assert result.moved is False
-        mock_fleet.clear_orders.assert_called()
+        mock_fleet.pop_order.assert_called()  # PROJ-207: pop_order instead of clear_orders
 
 
 # =============================================================================

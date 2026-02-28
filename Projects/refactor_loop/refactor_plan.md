@@ -8,23 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-27
-**Last Completed:** PROJ-207 Phase 2 - Superweapon Validation & Execution
-**Current Status:** Ready for Phase 3
+**Last Completed:** PROJ-207 Phase 3 - Execution Path Cleanup
+**Current Status:** Ready for Phase 4
 **Current Project:** PROJ-207
-**Current Phase:** Phase 3 - Execution Path Cleanup
-**Test Status:** 12792 passed, 1 skipped (+ 4 pre-existing bug_13_colony_flags failures)
+**Current Phase:** Phase 4 - Command Pipeline Consistency
+**Test Status:** 12857 passed, 1 skipped (+ 4 pre-existing bug_13_colony_flags failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 2 complete: VC-001, VC-002, CP-005 fixed
-- All 5 direct superweapon handlers now pass component_registry to validators
-- All 5 mission handlers now validate abilities BEFORE queuing orders
-- Removed ships[0] fallback pattern - processors cancel gracefully if no ship has ability
-- Enemy colony cleanup fixed - now iterates all empires
-- Updated process_implode_planet and process_create_dyson_sphere signatures to include `empires` parameter
-- Created 20 new tests in test_superweapon_handler_validation.py
-- Updated many existing tests to accommodate new validation and signature changes
-- Next: Phase 3 - Execution Path Cleanup (EP-001, EP-002, EP-003, EP-004)
+- Phase 3 complete: EP-001, EP-005 fixed
+- EP-001: Removed JOIN_FLEET from ACTION_ORDER_TYPES - now handled ONLY by instant path
+- EP-001: Replaced JOIN_FLEET branch in process_end_turn_orders with comment
+- EP-005: Changed warp failures to pop_order() instead of clear_orders()
+- EP-005: Stranded (no fuel) still clears all orders - fleet cannot move at all
+- Added 7 new tests across test_fleet_order_processor.py and test_fleet_movement_engine.py
+- Updated test_warp.py, test_action_execution_engine.py, test_advanced_fleet_orders.py
+- Next: Phase 4 - Command Pipeline Consistency (CP-001, CP-002, CP-003)
 
 ---
 
@@ -46,6 +45,7 @@
 |-----------|---------|--------|--------|-------|--------|-------|
 | 2026-02-27 | PROJ-207 | Phase 1 | Complete | 12827 passed | e451d6c3 | ODM-001, ODM-003 fixed |
 | 2026-02-27 | PROJ-207 | Phase 2 | Complete | 12792 passed | 8c3c4eed | VC-001, VC-002, CP-005 fixed |
+| 2026-02-27 | PROJ-207 | Phase 3 | Complete | 12857 passed | 06f2afd0 | EP-001, EP-005 fixed |
 
 ---
 

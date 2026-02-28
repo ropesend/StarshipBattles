@@ -159,15 +159,17 @@ class FleetMovementEngine:
         # Check and consume warp resources if this is a warp jump
         if is_warp:
             # Check warp CAPABILITY first
+            # PROJ-207 EP-005: Use pop_order() instead of clear_orders() for warp failures.
+            # Fleet can still move normally, so preserve subsequent orders.
             if not fleet.can_use_warp():
                 logger.debug(f"Fleet {fleet.id} warp blocked - no warp capability")
                 logger.warning(f"Fleet {fleet.id} cannot warp - no warp capability")
-                fleet.clear_orders()
+                fleet.pop_order()
                 return MovementResult(moved=False, warp_blocked=True)
 
             if not fleet.has_resources_for_warp():
                 logger.warning(f"Fleet {fleet.id} cannot warp - insufficient resources")
-                fleet.clear_orders()
+                fleet.pop_order()
                 return MovementResult(moved=False, warp_blocked=False)
 
             logger.debug(f"Fleet {fleet.id} executing warp jump to {next_hex}")

@@ -231,3 +231,164 @@ class TestFleetMovementEngineGetEffectiveSpeed:
 
         effective_speed = engine._get_effective_fleet_speed(fleet, galaxy)
         assert effective_speed == 2.0  # 4 * 0.5 = 2
+
+
+# =============================================================================
+# PROJ-207 EP-005: Error Handling Consistency Tests
+# =============================================================================
+
+class TestFleetMovementEngineErrorHandling:
+    """Tests for consistent error handling in apply_movement.
+
+    PROJ-207 EP-005: Warp failures should pop_order() not clear_orders().
+    Stranded (no fuel) should clear_orders() since fleet cannot move at all.
+    """
+
+    def test_stranded_fleet_clears_all_orders(self):
+        """Stranded fleet (no fuel) clears entire order queue.
+
+        When a fleet has no movement resources, it cannot execute ANY orders
+        that require movement, so clearing the queue is correct.
+        """
+        from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
+
+        engine = FleetMovementEngine()
+
+        fleet = create_mock_fleet(speed=5.0, location=HexCoord(0, 0))
+        fleet.has_resources_for_movement.return_value = False  # No fuel
+        fleet.clear_orders = MagicMock()
+        fleet.pop_order = MagicMock()
+
+        galaxy = MagicMock()
+
+        result = engine.apply_movement(fleet, HexCoord(1, 0), galaxy)
+
+        assert result.moved is False
+        assert result.stranded is True
+        fleet.clear_orders.assert_called_once()
+        fleet.pop_order.assert_not_called()
+
+    def test_warp_no_capability_pops_single_order(self):
+        """Warp failure (no capability) preserves subsequent orders.
+
+        When a WARP order fails because the fleet lacks warp capability,
+        the fleet can still move normally, so subsequent orders should survive.
+        """
+        from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
+
+        engine = FleetMovementEngine()
+
+        fleet = create_mock_fleet(speed=5.0, location=HexCoord(0, 0))
+        fleet.has_resources_for_movement.return_value = True
+        fleet.can_use_warp.return_value = False  # No warp capability
+        fleet.clear_orders = MagicMock()
+        fleet.pop_order = MagicMock()
+
+        galaxy = MagicMock()
+
+        # Simulate warp jump (distance > 1)
+        result = engine.apply_movement(fleet, HexCoord(10, 10), galaxy)
+
+        assert result.moved is False
+        assert result.warp_blocked is True
+        fleet.pop_order.assert_called_once()
+        fleet.clear_orders.assert_not_called()
+
+    def test_warp_insufficient_resources_pops_single_order(self):
+        """Warp failure (insufficient resources) preserves subsequent orders.
+
+        When a WARP order fails because of insufficient warp resources,
+        the fleet can still move normally, so subsequent orders should survive.
+        """
+        from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
+
+        engine = FleetMovementEngine()
+
+        fleet = create_mock_fleet(speed=5.0, location=HexCoord(0, 0))
+        fleet.has_resources_for_movement.return_value = True
+        fleet.can_use_warp.return_value = True  # Has capability
+        fleet.has_resources_for_warp.return_value = False  # But no resources
+        fleet.clear_orders = MagicMock()
+        fleet.pop_order = MagicMock()
+
+        galaxy = MagicMock()
+
+        # Simulate warp jump (distance > 1)
+        result = engine.apply_movement(fleet, HexCoord(10, 10), galaxy)
+
+        assert result.moved is False
+        assert result.warp_blocked is False  # Not blocked by capability
+        fleet.pop_order.assert_called_once()
+        fleet.clear_orders.assert_not_called()
+
+    def test_warp_with_colonize_preserves_colonize_on_failure(self):
+        """WARP + COLONIZE queue: WARP fails, COLONIZE is preserved.
+
+        This tests the user-facing behavior: if a player queues WARP then
+        COLONIZE, and WARP fails (no capability), the COLONIZE order should
+        remain in the queue for manual handling.
+        """
+        from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
+        from game.strategy.data.fleet import FleetOrder, OrderType
+
+        engine = FleetMovementEngine()
+
+        # Use a real fleet-like object with order queue
+        orders = [
+            FleetOrder(OrderType.WARP, HexCoord(10, 10)),
+            FleetOrder(OrderType.COLONIZE, MagicMock()),  # Planet mock
+        ]
+
+        fleet = create_mock_fleet(speed=5.0, location=HexCoord(0, 0))
+        fleet.has_resources_for_movement.return_value = True
+        fleet.can_use_warp.return_value = False  # No warp capability
+        fleet.orders = orders
+
+        # Real pop_order behavior
+        def pop_order_impl():
+            if fleet.orders:
+                fleet.orders.pop(0)
+        fleet.pop_order = MagicMock(side_effect=pop_order_impl)
+        fleet.clear_orders = MagicMock()
+
+        galaxy = MagicMock()
+
+        # Simulate warp jump (distance > 1)
+        result = engine.apply_movement(fleet, HexCoord(10, 10), galaxy)
+
+        assert result.moved is False
+        assert result.warp_blocked is True
+        # COLONIZE should still be in the queue
+        assert len(fleet.orders) == 1
+        assert fleet.orders[0].type == OrderType.COLONIZE
+
+    def test_single_move_order_stranded_clears_queue(self):
+        """Single MOVE order fails (stranded) → queue is empty.
+
+        When the only order is a MOVE that fails due to being stranded,
+        the queue should end up empty.
+        """
+        from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
+        from game.strategy.data.fleet import FleetOrder, OrderType
+
+        engine = FleetMovementEngine()
+
+        orders = [FleetOrder(OrderType.MOVE, HexCoord(1, 0))]
+
+        fleet = create_mock_fleet(speed=5.0, location=HexCoord(0, 0))
+        fleet.has_resources_for_movement.return_value = False  # Stranded
+        fleet.orders = orders
+
+        # Real clear_orders behavior
+        def clear_orders_impl():
+            fleet.orders.clear()
+        fleet.clear_orders = MagicMock(side_effect=clear_orders_impl)
+        fleet.pop_order = MagicMock()
+
+        galaxy = MagicMock()
+
+        result = engine.apply_movement(fleet, HexCoord(1, 0), galaxy)
+
+        assert result.moved is False
+        assert result.stranded is True
+        assert len(fleet.orders) == 0

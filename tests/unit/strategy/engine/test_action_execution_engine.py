@@ -489,12 +489,12 @@ class TestMultipleEmpires:
 class TestAllActionOrderTypes:
     """Test that all action order types are processed."""
 
+    # PROJ-207 EP-001: JOIN_FLEET removed - now handled by instant path only
     @pytest.mark.parametrize("order_type", [
         OrderType.COLONIZE,
         OrderType.TRANSFER,
         OrderType.LOAD_POPULATION,
         OrderType.UNLOAD_POPULATION,
-        OrderType.JOIN_FLEET,
         OrderType.IMPLODE_PLANET,
         OrderType.STELLERATE_STAR,
         OrderType.OPEN_WARP_POINT,
