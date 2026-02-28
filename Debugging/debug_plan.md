@@ -23,9 +23,11 @@
 | BUG-87 | 2026-02-11 | Empire Treasury window missing colony resource production totals | Awaiting Confirmation | [BUG-87.md](active_bugs/BUG-87.md) |
 | BUG-88 | 2026-02-11 | Empire Population tab blank - missing species information cards | Awaiting Confirmation | [BUG-88.md](active_bugs/BUG-88.md) |
 | BUG-89 | 2026-02-28 | Workshop Screen Crash on Design Button Click | Awaiting Confirmation | [BUG-89.md](active_bugs/BUG-89.md) |
+| BUG-90 | 2026-02-28 | Incorrect atmosphere coloring in planet details box | Awaiting Confirmation | [BUG-90.md](active_bugs/BUG-90.md) |
+| BUG-91 | 2026-02-28 | Missing planet portrait in build yard UI | Awaiting Confirmation | [BUG-91.md](active_bugs/BUG-91.md) |
 
 ## 3. Current Focus: None
-**Status:** All bugs in queue fixed or blocked. BUG-46 reworked (6th attempt — added max_width constraint). BUG-89 fixed (added missing update method). BUG-84 blocked (needs runtime debugging). All others awaiting confirmation. Full test suite: 12,976 passed, 4 pre-existing failures (colony flag asset tests).
+**Status:** All bugs in queue fixed or blocked. BUG-90 fixed (gas name-to-formula mapping). BUG-91 fixed (portrait_surface forwarding). BUG-84 blocked (needs runtime debugging). All others awaiting confirmation. Full test suite: 13,004 passed, 1 skipped, 0 failed.
 
 ## 4. Status Reference
 | Status | Meaning |

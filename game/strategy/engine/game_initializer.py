@@ -218,6 +218,8 @@ class GameInitializer:
 
         # Build atmosphere from preferences (positive preferences = present gases)
         # Use 1 ATM total pressure, distributed by positive preference weights
+        # Translate display names ("Oxygen") to chemical formulas ("O2") for rendering
+        from game.strategy.data.race_config import GAS_NAME_TO_FORMULA
         atm_prefs = race_config.atmosphere_preferences
         positive_gases = {gas: val for gas, val in atm_prefs.items() if val > 0}
 
@@ -226,7 +228,8 @@ class GameInitializer:
             one_atm = 101325.0  # Pa
             planet.atmosphere = {}
             for gas, val in positive_gases.items():
-                planet.atmosphere[gas] = (val / total_weight) * one_atm
+                formula = GAS_NAME_TO_FORMULA.get(gas, gas)
+                planet.atmosphere[formula] = (val / total_weight) * one_atm
             planet.surface_pressure = one_atm
         else:
             # No positive gas preferences - minimal atmosphere

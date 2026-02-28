@@ -146,9 +146,13 @@ def calculate_atmosphere_factor(
     weighted_score = 0.0
     total_weight = 0.0
 
+    from game.strategy.data.race_config import GAS_FORMULA_TO_NAME
+
     for gas, partial_pressure in planet_atmosphere.items():
         # Get preference for this gas (-100 to +100, default 0)
-        preference = atmosphere_preferences.get(gas, 0.0)
+        # Planet atmosphere uses chemical formulas (O2), preferences use display names (Oxygen)
+        pref_key = GAS_FORMULA_TO_NAME.get(gas, gas)
+        preference = atmosphere_preferences.get(pref_key, atmosphere_preferences.get(gas, 0.0))
 
         # Gas fraction (0 to 1)
         fraction = partial_pressure / total_pressure

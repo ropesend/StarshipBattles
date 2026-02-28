@@ -67,6 +67,7 @@ class BuildQueuePanelFactory:
         queue_sources: List['BuildQueueSource'],
         portrait_loader: 'BuildQueuePortraitLoader',
         on_queue_selection_changed,
+        portrait_surface: Optional[pygame.Surface] = None,
     ):
         """Initialize the panel factory.
 
@@ -77,6 +78,7 @@ class BuildQueuePanelFactory:
             queue_sources: List of BuildQueueSource objects at this hex.
             portrait_loader: BuildQueuePortraitLoader for resource icons.
             on_queue_selection_changed: Callback for queue selector changes.
+            portrait_surface: Planet portrait image surface.
         """
         self.manager = manager
         self.build_context = build_context
@@ -84,6 +86,7 @@ class BuildQueuePanelFactory:
         self.queue_sources = queue_sources
         self.portrait_loader = portrait_loader
         self.on_queue_selection_changed = on_queue_selection_changed
+        self.portrait_surface = portrait_surface
 
         # Get screen dimensions
         screen_size = manager.get_root_container().get_container().get_size()
@@ -161,7 +164,7 @@ class BuildQueuePanelFactory:
                 rect=pygame.Rect(10, 10, report_width, report_height),
                 planet=self.build_context,
                 container=container,
-                portrait_surface=None,  # Portrait handled separately
+                portrait_surface=self.portrait_surface,
                 show_complexes=False,
                 production_rates=compute_planet_production(
                     self.build_context, self.session.registries

@@ -237,6 +237,24 @@ class TestAtmosphereFactor:
         # No beneficial gas present = lower score
         assert factor <= 0.5
 
+    def test_formula_keys_match_display_name_preferences(self):
+        """Planet atmosphere with chemical formulas should match display-name preferences (BUG-90)."""
+        # Real scenario: generated planet has "O2", species preferences have "Oxygen"
+        factor = calculate_atmosphere_factor(
+            planet_atmosphere={"O2": 21000.0, "N2": 78000.0},
+            atmosphere_preferences={"Oxygen": 80.0, "Nitrogen": 20.0}
+        )
+        # Beneficial: species wants oxygen and nitrogen, planet has both
+        assert factor > 0.7
+
+    def test_formula_keys_toxic_match(self):
+        """Toxic gas with formula key should still reduce score."""
+        factor = calculate_atmosphere_factor(
+            planet_atmosphere={"CH4": 50000.0},
+            atmosphere_preferences={"Methane": -80.0}
+        )
+        assert factor < 0.3
+
 
 # --- Radiation Factor Tests ---
 

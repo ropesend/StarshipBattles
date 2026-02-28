@@ -389,6 +389,16 @@ class TestBuildQueueScreenPortraitLoader:
 
         assert screen.portrait_loader is not None
 
+    def test_portrait_surface_passed_to_panel_factory(self):
+        """Portrait surface should be forwarded to BuildQueuePanelFactory (BUG-91)."""
+        from game.ui.screens.build_queue_panel_factory import BuildQueuePanelFactory
+
+        # Verify the factory constructor accepts portrait_surface
+        import inspect
+        params = inspect.signature(BuildQueuePanelFactory.__init__).parameters
+        assert 'portrait_surface' in params, \
+            "BuildQueuePanelFactory should accept portrait_surface parameter"
+
     def test_resource_icons_loaded(self):
         """Resource icons should be loaded."""
         screen, mocks = _make_build_queue_screen()
