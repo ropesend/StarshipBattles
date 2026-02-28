@@ -8,28 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-210 Phase 2 Task 2.1 Complete (Pass-Through Elimination 100%)
-**Current Status:** PROJ-210 Phase 2 - Task 2.1 Done, Tasks 2.2-2.3 Remaining
+**Last Completed:** PROJ-210 Phase 2 Complete
+**Current Status:** PROJ-210 Phase 2 Complete, Ready for Phase 3
 **Current Project:** PROJ-210
-**Current Phase:** Phase 2 (Facade Bloat & Pass-Through Elimination) - Tasks 2.2-2.3
+**Current Phase:** Phase 3 (Planet Decomposition)
 **Test Status:** 12929 passed, 4 failed (pre-existing bug_13), 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-210 Phase 2 Task 2.1 COMPLETE:**
-  - All pass-through methods removed from Fleet class
-  - Fleet.py reduced from 552 to 320 lines
-  - 65+ files updated with new delegate API patterns
-  - All test mocks fixed, including:
-    - pathfinding.py: Added _ChaserProxyCapabilities for capabilities property
-    - strategy_detail_formatter.py: obj.capabilities.has_space_shipyard
-    - 14 test files with mock updates
-  - 4 pre-existing bug_13 failures (missing asset files)
-- **Remaining Work (Tasks 2.2-2.3):**
-  - Task 2.2: Decouple delegates from Fleet internals (consider interface-based approach)
-  - Task 2.3: Remove dead _default_formation_positions method
-- **Commit:** f0c0cff9
-- **Next Action:** Continue Phase 2 — Tasks 2.2-2.3
+- **PROJ-210 Phase 2 COMPLETE:**
+  - Task 2.1: All pass-throughs removed (65+ files, Fleet.py 320 lines)
+  - Task 2.2: DEFERRED — delegates use narrow Fleet interface (ships, capabilities, etc.), composition pattern is intentional, low value to decouple further
+  - Task 2.3: ALREADY DONE — _default_formation_positions was removed in Task 2.1
+- **Next Action:** Start Phase 3 — Planet Decomposition (extract embedded classes)
 
 ---
 
@@ -115,6 +106,7 @@
 | 2026-02-28 | PROJ-210 | Phase 1 | Complete | 12929 passed, 1 skipped | pending | FleetOrderSerializer, PlanetaryFacility, SpeciesPopulation extracted |
 | 2026-02-28 | PROJ-210 | Phase 2 | ~80% | 12893 passed, 40 failed | a381784b | Fleet pass-through elimination; 51 files modified; test mocks need updates |
 | 2026-02-28 | PROJ-210 | Phase 2 Task 2.1 | Complete | 12929 passed, 4 failed | f0c0cff9 | All pass-throughs removed; 14 test files fixed; Fleet.py 320 lines |
+| 2026-02-28 | PROJ-210 | Phase 2 | Complete | 12929 passed, 4 failed | pending | Task 2.2 deferred (low value); Task 2.3 already done |
 
 ---
 
