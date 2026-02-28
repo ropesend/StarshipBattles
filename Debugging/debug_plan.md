@@ -22,8 +22,9 @@
 | BUG-86 | 2026-02-11 | Build Queue planet details missing resource production numbers | Awaiting Confirmation | [BUG-86.md](active_bugs/BUG-86.md) |
 | BUG-87 | 2026-02-11 | Empire Treasury window missing colony resource production totals | Awaiting Confirmation | [BUG-87.md](active_bugs/BUG-87.md) |
 | BUG-88 | 2026-02-11 | Empire Population tab blank - missing species information cards | Awaiting Confirmation | [BUG-88.md](active_bugs/BUG-88.md) |
+| BUG-89 | 2026-02-28 | Workshop Screen Crash on Design Button Click | Pending | [BUG-89.md](active_bugs/BUG-89.md) |
 
-## 3. Current Focus: Batch complete
+## 3. Current Focus: None
 **Status:** All bugs in queue fixed or blocked. BUG-46/63/68 reworked (previously rejected). BUG-84 blocked (needs runtime debugging). All others awaiting confirmation. Full test suite: 9772 passed, 0 failures.
 
 ## 4. Status Reference
