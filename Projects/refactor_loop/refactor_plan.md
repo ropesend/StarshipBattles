@@ -8,30 +8,34 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-211 Phase 5 Task 5.5.1 partial - Updated ship_instance + colonization tests
-**Current Status:** PROJ-211 Phase 5 Task 5.5.1 in progress (~44 tests remaining)
+**Last Completed:** PROJ-211 Phase 5 Task 5.5.1 partial - Fixed ProductionEngine DI + 11 test files
+**Current Status:** PROJ-211 Phase 5 Task 5.5.1 in progress (~25 tests remaining)
 **Current Project:** PROJ-211
 **Current Phase:** Phase 5 (UI Screens & Cleanup) - Task 5.5.1 In Progress
-**Test Status:** 12824 passed, 1 skipped
-**Active Blockers:** Fleet.add_ship() triggers get_calculated_stats() via speed recalculation
+**Test Status:** 12884 passed, 1 skipped (4 pre-existing bug_13 failures)
+**Active Blockers:** None
 
 **Handoff Notes:**
 - Task 5.5.1 progress this session:
-  - Updated tests/unit/strategy/ship_instance/*.py (5 files) - using make_ship_with_stats fixture
-  - Updated tests/integration/colonization/*.py (3 test files + conftest.py)
-  - Updated tests/conftest.py make_colony_ship_for_planet to accept registries param
-  - Down from 85 failures to 44 failures when fallback removed
-- Remaining test files needing updates (~44 failures):
-  - tests/integration/gameplay_loop/test_commands_colonization.py (local make_colony_ship_for_planet)
-  - tests/integration/gameplay_loop/test_fleet_operations.py
-  - tests/integration/gameplay_loop/test_turn_execution.py
-  - tests/integration/strategy/production/*.py
-  - tests/integration/strategy/turn_engine/*.py
-  - tests/integration/ui/test_*.py
-  - tests/integration/test_complex_workflow.py
+  - **CRITICAL FIX**: ProductionEngine now accepts registries and passes to ShipInstance.create()
+  - Updated TurnEngine.production_engine to pass registries
+  - Updated tests/integration/gameplay_loop/*.py (3 files)
+  - Updated tests/integration/strategy/facade/test_fleet_dto.py
+  - Updated tests/integration/strategy/transfer/test_transfer_validation.py
+  - Updated tests/integration/strategy/turn_engine/*.py (conftest + test_basics)
+  - Updated tests/integration/ui/*.py (2 files)
+  - Down from 58 failures to 25 failures when fallback removed
+- Remaining test files needing updates (~25 failures):
+  - tests/integration/strategy/production/*.py (fleet production e2e)
+  - tests/integration/strategy/turn_engine/test_resources.py
+  - tests/repro_issues/test_bug_27_ordertype.py
+  - tests/unit/strategy/ship_instance/test_registries_di.py (update expected behavior)
+  - tests/unit/strategy/test_ship_resource_manager.py
   - tests/unit/strategy/test_fleet_battle_adapter.py
+  - tests/unit/strategy/test_fleet_capability_calculator_di.py
   - tests/unit/test_advanced_fleet_orders.py
-  - tests/integration/save_load/*.py (ERRORS)
+  - tests/integration/save_load/*.py (7 ERRORS - fixture issue)
+- Note: 4 bug_13 tests fail due to missing asset files (pre-existing, unrelated to PROJ-211)
 - Next: Continue updating remaining test files
 
 ---
@@ -103,6 +107,7 @@
 | 2026-02-28 | PROJ-211 | Phase 5 (5.5.1) | In Progress | 12882 passed, 1 skipped | c5d04393 | 7 resource_system tests updated; Fleet.add_ship() discovery |
 | 2026-02-28 | PROJ-211 | Phase 5 (5.5.1) | In Progress | 12882 passed, 1 skipped | pending | 40 more tests updated; make_ship_with_stats fixture added |
 | 2026-02-28 | PROJ-211 | Phase 5 (5.5.1) | In Progress | 12824 passed, 1 skipped | pending | ship_instance + colonization tests updated; 44 failures remaining |
+| 2026-02-28 | PROJ-211 | Phase 5 (5.5.1) | In Progress | 12884 passed, 1 skipped | 018e689b | ProductionEngine DI fix + 11 test files; 25 failures remaining |
 
 ---
 

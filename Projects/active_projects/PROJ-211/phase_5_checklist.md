@@ -117,20 +117,27 @@ needs registries. ~109 tests fail when fallback is removed.
 - [ ] Update remaining test files (~44 failures remaining when fallback removed)
 - [ ] Verify: fallback removal succeeds
 
-**Remaining test files needing updates (verified 2026-02-28):**
-- tests/integration/gameplay_loop/test_commands_colonization.py (local make_colony_ship_for_planet)
-- tests/integration/gameplay_loop/test_fleet_operations.py
-- tests/integration/gameplay_loop/test_turn_execution.py
-- tests/integration/strategy/production/*.py
-- tests/integration/strategy/facade/test_fleet_dto.py
-- tests/integration/strategy/transfer/test_transfer_validation.py
-- tests/integration/strategy/turn_engine/*.py
-- tests/integration/ui/test_*.py
-- tests/integration/test_complex_workflow.py
+**Remaining test files needing updates (verified 2026-02-28, updated this session):**
+DONE:
+- [x] tests/integration/gameplay_loop/test_commands_colonization.py - UPDATED
+- [x] tests/integration/gameplay_loop/test_fleet_operations.py - UPDATED
+- [x] tests/integration/gameplay_loop/test_turn_execution.py - UPDATED
+- [x] tests/integration/strategy/facade/test_fleet_dto.py - UPDATED
+- [x] tests/integration/strategy/transfer/test_transfer_validation.py - UPDATED
+- [x] tests/integration/strategy/turn_engine/*.py - UPDATED
+- [x] tests/integration/ui/test_*.py - UPDATED
+- [x] ProductionEngine - NOW PASSES registries to ShipInstance.create()
+
+REMAINING (~25 failures when fallback removed):
+- tests/integration/strategy/production/*.py (fleet production e2e)
+- tests/integration/strategy/turn_engine/test_resources.py
+- tests/repro_issues/test_bug_27_ordertype.py
+- tests/unit/strategy/ship_instance/test_registries_di.py (test for fallback - update expected behavior)
+- tests/unit/strategy/test_ship_resource_manager.py
 - tests/unit/strategy/test_fleet_battle_adapter.py
 - tests/unit/strategy/test_fleet_capability_calculator_di.py
 - tests/unit/test_advanced_fleet_orders.py
-- tests/integration/save_load/*.py (ERRORS in fixture)
+- tests/integration/save_load/*.py (7 ERRORS in fixture)
 
 ### Task 5.7: Remove FleetCapabilityCalculator fallbacks (MOVED FROM PHASE 2)
 **Files:** `game/strategy/data/fleet_capability_calculator.py`

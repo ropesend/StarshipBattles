@@ -22,15 +22,19 @@
 ## Current State
 **Last Updated:** 2026-02-28
 **Active Phase:** Phase 5 (Task 5.5.1 in progress)
-**Last Action:** Task 5.5.1 partial - Updated ship_instance tests (5 files), colonization tests (3 files + conftest)
-**Next Action:** Task 5.5.1 - Continue updating remaining test fixtures (~44 failures remaining)
-**Blockers:** Fleet.add_ship() triggers get_calculated_stats() via speed recalculation
-**Note:** Test removal attempt shows ~44 tests fail when fallback removed (down from 85).
+**Last Action:** Task 5.5.1 partial - Fixed ProductionEngine DI, updated ~11 test files
+**Next Action:** Task 5.5.1 - Continue updating remaining test fixtures (~25 failures remaining)
+**Blockers:** None
+**Note:** Test removal attempt shows ~25 tests fail when fallback removed (down from 58 this session).
 **Progress this session:**
-- Updated tests/unit/strategy/ship_instance/*.py (5 files) with make_ship_with_stats fixture
-- Updated tests/integration/colonization/*.py (3 test files + conftest.py)
-- Updated tests/conftest.py make_colony_ship_for_planet to accept registries parameter
-- All tests pass with fallback in place (12824 passed, 1 skipped)
+- Fixed ProductionEngine to accept and pass registries to ShipInstance.create()
+- Updated TurnEngine.production_engine property to pass registries
+- Updated tests/integration/gameplay_loop/*.py (3 files)
+- Updated tests/integration/strategy/facade/test_fleet_dto.py
+- Updated tests/integration/strategy/transfer/test_transfer_validation.py
+- Updated tests/integration/strategy/turn_engine/*.py (conftest + test_basics)
+- Updated tests/integration/ui/*.py (2 files)
+- All tests pass with fallback in place (12884 passed, 1 skipped, 4 pre-existing bug_13 failures)
 
 ## Overview
 Systematic eradication of the `get_default_registry_provider()` fallback anti-pattern across the entire codebase. The DI infrastructure exists (PROJ-38 added parameters, PROJ-50 partially enforced them) but is in a half-migrated state where 13 production files silently fall back to global state.
