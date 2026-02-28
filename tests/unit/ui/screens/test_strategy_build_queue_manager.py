@@ -162,7 +162,7 @@ class TestHandleFleetBuildQueueClose:
 
     def test_does_not_dispatch_build_command_if_fleet_already_has_build_order(self):
         """Should not dispatch command if fleet already has BUILD order."""
-        from game.strategy.data.fleet import OrderType
+        from game.strategy.data.order_types import OrderType
         manager, screen = _make_build_queue_manager()
 
         fleet = MagicMock()

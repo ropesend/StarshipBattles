@@ -1,7 +1,8 @@
 from unittest.mock import MagicMock, patch
 import pygame
 import pygame_gui
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 
 
 # Mock the window to avoid full pygame init

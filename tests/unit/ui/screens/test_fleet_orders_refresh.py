@@ -2,7 +2,8 @@ import pytest
 import pygame
 import pygame_gui
 from game.ui.screens.fleet_orders_window import FleetOrdersWindow
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 
 @pytest.fixture

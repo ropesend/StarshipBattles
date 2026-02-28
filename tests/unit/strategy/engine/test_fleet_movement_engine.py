@@ -9,7 +9,8 @@ from unittest.mock import MagicMock, patch
 
 from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
 from game.strategy.services.area_effect_manager import AreaEffectManager, EnvironmentalEffects
-from game.strategy.data.fleet import Fleet, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import OrderType
 from game.strategy.data.empire import Empire
 from game.core.hex_math import HexCoord
 
@@ -329,7 +330,7 @@ class TestFleetMovementEngineErrorHandling:
         remain in the queue for manual handling.
         """
         from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
-        from game.strategy.data.fleet import FleetOrder, OrderType
+        from game.strategy.data.order_types import FleetOrder, OrderType
 
         engine = FleetMovementEngine()
 
@@ -369,7 +370,7 @@ class TestFleetMovementEngineErrorHandling:
         the queue should end up empty.
         """
         from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
-        from game.strategy.data.fleet import FleetOrder, OrderType
+        from game.strategy.data.order_types import FleetOrder, OrderType
 
         engine = FleetMovementEngine()
 

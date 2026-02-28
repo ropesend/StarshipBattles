@@ -23,7 +23,7 @@ from game.strategy.services.fleet_navigation_service import (
     NavigationStep,
     PathSegment,
 )
-from game.strategy.data.fleet import FleetOrder, OrderType
+from game.strategy.data.order_types import FleetOrder, OrderType
 
 
 class TestNavigationStateImmutability:

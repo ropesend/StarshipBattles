@@ -20,7 +20,7 @@ from game.ui.screens.strategy_detail_fmt import (
     _format_cargo_summary,
     _format_orders,
 )
-from game.strategy.data.fleet import OrderType
+from game.strategy.data.order_types import OrderType
 
 
 # =============================================================================

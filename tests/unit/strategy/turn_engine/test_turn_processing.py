@@ -14,7 +14,7 @@ import pytest
 from unittest.mock import MagicMock, patch, PropertyMock
 
 from game.strategy.engine.turn_engine import TurnEngine
-from game.strategy.data.fleet import FleetOrder, OrderType
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 
 

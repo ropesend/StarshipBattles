@@ -24,7 +24,8 @@ from game.core.event_logging import log_event
 from game.strategy.events.event_types import EventType, EventCategory
 
 logger = logging.getLogger(__name__)
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 
 if TYPE_CHECKING:

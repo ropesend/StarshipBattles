@@ -14,7 +14,7 @@ import math
 import pygame
 from game.ui.config import UIConfig
 from game.core.hex_math import hex_to_pixel, pixel_to_hex, HexCoord
-from game.strategy.data.fleet import OrderType
+from game.strategy.data.order_types import OrderType
 from game.strategy.data.planet import PlanetType
 from game.ui.colors import (
     COLORS, WHITE,

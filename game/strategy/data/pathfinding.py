@@ -3,7 +3,7 @@ import logging
 from typing import List, Union, Optional, Sequence, TypeVar, TYPE_CHECKING
 
 from game.core.hex_math import hex_distance, hex_linedraw, HexCoord
-from game.strategy.data.fleet import OrderType
+from game.strategy.data.order_types import OrderType
 
 logger = logging.getLogger(__name__)
 

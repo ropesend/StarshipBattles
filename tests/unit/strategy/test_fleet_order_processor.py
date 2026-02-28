@@ -8,7 +8,8 @@ Tests order lifecycle management - advance, complete, cancel operations.
 import pytest
 from unittest.mock import MagicMock, patch
 
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 
 
@@ -458,7 +459,7 @@ class TestInstantOrderProcessing:
         JOIN_FLEET should only be processed by the instant path, not by
         tick-based action processing via ActionExecutionEngine.
         """
-        from game.strategy.data.fleet import ACTION_ORDER_TYPES, OrderType
+        from game.strategy.data.order_types import ACTION_ORDER_TYPES, OrderType
 
         # JOIN_FLEET should NOT be in ACTION_ORDER_TYPES
         assert OrderType.JOIN_FLEET not in ACTION_ORDER_TYPES

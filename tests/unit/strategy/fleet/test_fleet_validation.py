@@ -4,7 +4,8 @@ PROJ-171: Deserialization Input Validation
 """
 import pytest
 from game.core.exceptions import PersistenceException
-from game.strategy.data.fleet import Fleet, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import OrderType
 
 
 def make_valid_fleet_data():

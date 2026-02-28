@@ -3,7 +3,8 @@
 PROJ-102 Phase 2: Order Types & Command Definitions
 """
 import pytest
-from game.strategy.data.fleet import OrderType, FleetOrder, Fleet
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import OrderType, FleetOrder
 from game.strategy.engine.commands import (
     CommandType,
     IssueImplodePlanetCommand,

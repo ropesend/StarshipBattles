@@ -30,7 +30,8 @@ class TestBug27OrderTypeImport:
     def test_ordertype_import_in_strategy_ui(self):
         """Verify that OrderType is importable from strategy_ui module."""
         from game.ui.screens.strategy_ui import StrategyUI
-        from game.strategy.data.fleet import OrderType, FleetOrder, Fleet
+        from game.strategy.data.fleet import Fleet
+        from game.strategy.data.order_types import OrderType, FleetOrder
         # If we get here without ImportError, the module loads correctly
         assert OrderType.MOVE is not None
         assert OrderType.COLONIZE is not None
@@ -41,7 +42,8 @@ class TestBug27OrderTypeImport:
         pygame.display.set_mode((800, 600))
 
         from game.ui.screens.strategy_ui import StrategyUI
-        from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+        from game.strategy.data.fleet import Fleet
+        from game.strategy.data.order_types import FleetOrder, OrderType
         from game.strategy.data.empire import Empire
         from game.core.hex_math import HexCoord
 
@@ -75,7 +77,8 @@ class TestBug27OrderTypeImport:
         pygame.display.set_mode((800, 600))
 
         from game.ui.screens.strategy_ui import StrategyUI
-        from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+        from game.strategy.data.fleet import Fleet
+        from game.strategy.data.order_types import FleetOrder, OrderType
         from game.strategy.data.empire import Empire
         from game.core.hex_math import HexCoord
         from game.strategy.data.planet import Planet, PlanetType

@@ -12,7 +12,7 @@ from game.strategy.engine.command_handlers import (
     BuildOrderCommandHandler,
     create_auto_load_population_order
 )
-from game.strategy.data.fleet import FleetOrder, OrderType
+from game.strategy.data.order_types import FleetOrder, OrderType
 
 
 class TestIssueBuildOrderCommand:

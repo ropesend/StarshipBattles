@@ -6,7 +6,8 @@ Tests for fleet movement, fleet merge, and resource accumulation.
 import pytest
 from unittest.mock import MagicMock
 
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.ship_instance import ShipInstance
 from tests.conftest import make_mock_ship_instance

@@ -4,7 +4,8 @@ import pygame
 from unittest.mock import MagicMock, patch
 
 from game.ui.screens.strategy_ui import StrategyUI
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.strategy.data.empire import Empire
 from game.strategy.data.ship_instance import ShipInstance
 

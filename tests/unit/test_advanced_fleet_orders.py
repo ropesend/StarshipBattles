@@ -7,7 +7,8 @@ action orders moved to tick-based processing).
 """
 import pytest
 from unittest.mock import MagicMock, patch
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.engine.fleet_order_processor import FleetOrderProcessor

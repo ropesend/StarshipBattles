@@ -9,7 +9,7 @@ import pytest
 from unittest.mock import Mock, MagicMock, patch, PropertyMock
 from game.core.hex_math import HexCoord
 from game.core.validation import ValidationResult
-from game.strategy.data.fleet import FleetOrder, OrderType
+from game.strategy.data.order_types import FleetOrder, OrderType
 
 
 # =============================================================================

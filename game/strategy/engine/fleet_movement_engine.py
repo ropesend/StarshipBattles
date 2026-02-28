@@ -17,7 +17,8 @@ from dataclasses import dataclass
 from typing import Optional, List, Tuple, TYPE_CHECKING
 import logging
 
-from game.strategy.data.fleet import Fleet, OrderType, ACTION_ORDER_TYPES
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import OrderType, ACTION_ORDER_TYPES
 from game.strategy.services.fleet_speed_calculator import get_tick_interval
 
 logger = logging.getLogger(__name__)

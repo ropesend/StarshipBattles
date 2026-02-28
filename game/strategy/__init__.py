@@ -30,7 +30,8 @@ Interfaces (game.strategy.interfaces):
 """
 
 # Data
-from game.strategy.data.fleet import Fleet, OrderType, FleetOrder
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import OrderType, FleetOrder
 from game.strategy.data.ship_instance import ShipInstance
 from game.core.hex_math import HexCoord
 

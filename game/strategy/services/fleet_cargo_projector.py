@@ -11,7 +11,8 @@ currently has no passengers.
 """
 
 from typing import Dict, Any
-from game.strategy.data.fleet import Fleet, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import OrderType
 
 
 class FleetCargoProjector:

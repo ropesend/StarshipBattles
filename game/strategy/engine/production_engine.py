@@ -26,7 +26,8 @@ from game.strategy.services.design_cost_calculator import DesignCostCalculator
 
 logger = logging.getLogger(__name__)
 from game.strategy.data.build_queue_source import _facility_is_shipyard
-from game.strategy.data.fleet import Fleet, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import OrderType
 from game.strategy.data.planet import PlanetaryFacility
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.systems.design_library import DesignLibrary

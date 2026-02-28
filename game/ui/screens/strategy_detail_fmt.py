@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections import Counter
 from typing import TYPE_CHECKING
 
-from game.strategy.data.fleet import OrderType
+from game.strategy.data.order_types import OrderType
 from game.core.protocols import (
     is_star_system, is_star, is_planet, is_fleet,
     is_warp_point, is_sector_environment, is_storm

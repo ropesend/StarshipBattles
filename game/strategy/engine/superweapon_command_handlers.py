@@ -15,7 +15,7 @@ from game.core.validation import ValidationResult
 from game.strategy.engine.command_handlers import BaseCommandHandler
 
 logger = logging.getLogger(__name__)
-from game.strategy.data.fleet import FleetOrder, OrderType
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.strategy.data.pathfinding import find_hybrid_path, strip_start_hex
 from game.strategy.validation import SuperweaponValidator
 

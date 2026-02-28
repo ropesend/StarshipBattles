@@ -8,7 +8,8 @@ from unittest.mock import MagicMock, PropertyMock
 
 from game.core.validation import ValidationResult
 from game.strategy.engine.command_handlers import ColonizeMissionCommandHandler
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.ship_instance import ShipInstance
 

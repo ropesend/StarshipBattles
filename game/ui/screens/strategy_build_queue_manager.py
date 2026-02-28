@@ -15,6 +15,7 @@ import pygame
 from game.ui.screens.build_queue_screen import BuildQueueScreen
 from game.strategy.systems.design_library import DesignLibrary
 from game.ui.services.design_loader_adapter import DesignLoaderAdapter
+from game.strategy.data.order_types import OrderType
 
 if TYPE_CHECKING:
     from game.ui.screens.strategy_screen import StrategyScreen
@@ -127,7 +128,6 @@ class StrategyBuildQueueManager:
         Args:
             fleet: Fleet that was building
         """
-        from game.strategy.data.fleet import OrderType
         from game.strategy.engine.commands import IssueBuildOrderCommand, RemoveBuildOrderCommand
 
         if fleet.construction_queue:

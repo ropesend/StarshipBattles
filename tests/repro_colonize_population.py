@@ -1,7 +1,8 @@
 import unittest
 from unittest.mock import MagicMock
 from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 
 class TestColonizePopulation(unittest.TestCase):

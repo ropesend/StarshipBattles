@@ -20,32 +20,27 @@ from game.strategy.services.component_inspector import (
     iterate_design_components,
     get_component_abilities,
 )
+from game.strategy.data.order_types import OrderType
 
 if TYPE_CHECKING:
-    from game.strategy.data.fleet import Fleet, FleetOrder
+    from game.strategy.data.fleet import Fleet
+    from game.strategy.data.order_types import FleetOrder
 
 
+# PROJ-212: Module-level constants replacing wrapper functions
 # Mapping from OrderType to the ability name that provides action_time
-# Import locally to avoid circular imports
-def _get_order_to_ability_map() -> Dict[Any, str]:
-    """Get the mapping from OrderType to ability name."""
-    from game.strategy.data.fleet import OrderType
-    return {
-        OrderType.COLONIZE: 'ColonizePlanet',
-        OrderType.IMPLODE_PLANET: 'DestroyPlanet',
-        OrderType.STELLERATE_STAR: 'DestroyStar',
-        OrderType.OPEN_WARP_POINT: 'OpenWarpPoint',
-        OrderType.CLOSE_WARP_POINT: 'CloseWarpPoint',
-        OrderType.CREATE_DYSON_SPHERE: 'CreateDysonSphere',
-        OrderType.SELF_DESTRUCT: 'SelfDestruct',
-    }
-
+ORDER_TO_ABILITY_MAP: Dict[OrderType, str] = {
+    OrderType.COLONIZE: 'ColonizePlanet',
+    OrderType.IMPLODE_PLANET: 'DestroyPlanet',
+    OrderType.STELLERATE_STAR: 'DestroyStar',
+    OrderType.OPEN_WARP_POINT: 'OpenWarpPoint',
+    OrderType.CLOSE_WARP_POINT: 'CloseWarpPoint',
+    OrderType.CREATE_DYSON_SPHERE: 'CreateDysonSphere',
+    OrderType.SELF_DESTRUCT: 'SelfDestruct',
+}
 
 # Order types that are handled by movement engine, not action engine
-def _get_movement_order_types() -> set:
-    """Get order types handled by movement engine."""
-    from game.strategy.data.fleet import OrderType
-    return {OrderType.MOVE, OrderType.MOVE_TO_FLEET}
+MOVEMENT_ORDER_TYPES: frozenset = frozenset({OrderType.MOVE, OrderType.MOVE_TO_FLEET})
 
 
 class ActionTimeResolver:
@@ -82,13 +77,11 @@ class ActionTimeResolver:
             - Other orders (TRANSFER, JOIN_FLEET, etc.): 1 (default)
         """
         # Movement orders are handled by movement engine, not action engine
-        movement_types = _get_movement_order_types()
-        if order.type in movement_types:
+        if order.type in MOVEMENT_ORDER_TYPES:
             return 0
 
         # Get the ability name for this order type
-        order_to_ability = _get_order_to_ability_map()
-        ability_name = order_to_ability.get(order.type)
+        ability_name = ORDER_TO_ABILITY_MAP.get(order.type)
 
         if ability_name is None:
             # Default action time for orders without ability lookup

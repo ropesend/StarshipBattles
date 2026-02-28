@@ -505,7 +505,7 @@ class TestColonizeValidatorColonyPods:
     def test_get_committed_colony_pods(self, mock_planet_ice_dwarf, mock_planet_continental):
         """Should correctly count committed colony pods from orders."""
         from game.strategy.validation import ColonizeValidator
-        from game.strategy.data.fleet import OrderType
+        from game.strategy.data.order_types import OrderType
 
         order1 = MagicMock()
         order1.type = OrderType.COLONIZE
@@ -531,7 +531,7 @@ class TestColonizeValidatorColonyPods:
     ):
         """Cannot queue colonization when all matching pods are committed."""
         from game.strategy.validation import ColonizeValidator
-        from game.strategy.data.fleet import OrderType
+        from game.strategy.data.order_types import OrderType
 
         # Create an existing colonize order for the ice dwarf pod
         existing_order = MagicMock()
@@ -573,7 +573,7 @@ class TestColonizeValidatorColonyPods:
     ):
         """Different pod types are tracked independently."""
         from game.strategy.validation import ColonizeValidator
-        from game.strategy.data.fleet import OrderType
+        from game.strategy.data.order_types import OrderType
 
         # Create an ice dwarf planet that's already targeted
         ice_dwarf_planet = MagicMock()
@@ -871,7 +871,7 @@ class TestColonizeValidatorAnyPlanetPods:
     ):
         """Any Planet fails if all matching pods are already committed."""
         from game.strategy.validation import ColonizeValidator
-        from game.strategy.data.fleet import OrderType
+        from game.strategy.data.order_types import OrderType
 
         # Fleet has one ICE_DWARF pod
         mock_fleet.ships = [self._make_ship_with_pod("ICE_DWARF")]
@@ -962,7 +962,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
     def test_skip_chain_check_allows_overcommit(self, mock_component_registry):
         """skip_chain_check=True allows validation even when pods exhausted."""
         from game.strategy.validation import ColonizeValidator
-        from game.strategy.data.fleet import OrderType
+        from game.strategy.data.order_types import OrderType
 
         # Create galaxy and planet
         galaxy = MagicMock()
@@ -1065,7 +1065,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
     def test_get_committed_skips_non_colonize_orders(self):
         """get_committed_colony_pods ignores non-COLONIZE orders."""
         from game.strategy.validation import ColonizeValidator
-        from game.strategy.data.fleet import OrderType
+        from game.strategy.data.order_types import OrderType
 
         planet = self._make_planet("ICE_DWARF")
 
@@ -1088,7 +1088,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
     def test_get_committed_skips_colonize_with_none_target(self):
         """get_committed_colony_pods skips COLONIZE orders with target=None."""
         from game.strategy.validation import ColonizeValidator
-        from game.strategy.data.fleet import OrderType
+        from game.strategy.data.order_types import OrderType
 
         any_planet_order = MagicMock()
         any_planet_order.type = OrderType.COLONIZE
@@ -1201,7 +1201,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
     def test_any_planet_mixed_candidates_one_match(self, mock_component_registry):
         """Any Planet succeeds when at least one candidate matches available pod."""
         from game.strategy.validation import ColonizeValidator
-        from game.strategy.data.fleet import OrderType
+        from game.strategy.data.order_types import OrderType
 
         galaxy = MagicMock()
 

@@ -13,7 +13,8 @@ import logging
 
 from game.core.hex_math import HexCoord, hex_distance
 from game.core.event_logging import log_event
-from game.strategy.data.fleet import Fleet, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import OrderType
 
 logger = logging.getLogger(__name__)
 from game.strategy.data.planet import Planet, PlanetType

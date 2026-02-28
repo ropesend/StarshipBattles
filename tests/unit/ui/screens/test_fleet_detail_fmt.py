@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 from game.ui.screens.strategy_detail_fmt import format_fleet_info
-from game.strategy.data.fleet import OrderType
+from game.strategy.data.order_types import OrderType
 
 
 # --- Mock Helpers ---

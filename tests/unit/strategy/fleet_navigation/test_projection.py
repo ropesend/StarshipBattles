@@ -9,7 +9,8 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from game.core.hex_math import HexCoord
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 
 
 class TestProjectPath:

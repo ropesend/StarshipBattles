@@ -15,7 +15,7 @@ from game.ui.config import UIConfig
 from game.core.hex_math import HexCoord
 from game.core.input_actions import InputAction
 from game.core.protocols import is_planet, is_fleet
-from game.strategy.data.fleet import OrderType
+from game.strategy.data.order_types import OrderType
 
 if TYPE_CHECKING:
     from game.ui.services.input_mapper import InputMapper

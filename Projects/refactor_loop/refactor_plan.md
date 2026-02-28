@@ -8,22 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-27
-**Last Completed:** PROJ-212 Phase 1 - Quick Wins
-**Current Status:** Phase 1 complete, Phase 2 ready
+**Last Completed:** PROJ-212 Phase 2 - OrderType/FleetOrder Extraction
+**Current Status:** Phase 2 complete, Phase 3 ready
 **Current Project:** PROJ-212
-**Current Phase:** Phase 2 (OrderType/FleetOrder Extraction)
+**Current Phase:** Phase 3 (DI & Service-Locator Fixes)
 **Test Status:** 12866 passed, 1 skipped (+ 4 pre-existing bug_13_colony_flags failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 1 completed - all 5 quick-win tasks done:
-  - Task 1.1: Promoted FleetOrder/OrderType to top-level in command_handlers.py (11 deferred imports removed)
-  - Task 1.2: Promoted BuildQueueScreen/DesignLibrary/DesignLoaderAdapter to top-level in strategy_build_queue_manager.py
-  - Task 1.3: Promoted safe_evaluate_math_formula to top-level in weapons.py (7 inline imports removed)
-  - Task 1.4: Promoted command imports to top-level in strategy_fleet_ops.py (3 deferred imports removed)
-  - Task 1.5: Fixed facade bypass in strategy_build_queue_manager.py
-- Updated test patches for new import locations
-- Next: Phase 2 - Extract OrderType/FleetOrder from fleet.py
+- Phase 2 completed - OrderType/FleetOrder extraction:
+  - Task 2.1: Created game/strategy/data/order_types.py with OrderType, FleetOrder, MOVEMENT_ORDER_TYPES, ACTION_ORDER_TYPES
+  - Task 2.2: Updated 15 game source files + 73 test files to import from order_types.py
+  - Task 2.3: Verified no remaining imports from fleet.py for order types (fleet.py keeps internal imports)
+  - Task 2.4: Replaced action_time_resolver wrapper functions with module-level constants
+- Next: Phase 3 - DI & service-locator fixes
 
 ---
 
@@ -80,6 +78,7 @@
 | 2026-02-27 | PROJ-207 | Phase 5 | Complete | 12866 passed | ee96b795 | EP-002, EP-004, AU-005, AU-002, AU-004 fixed |
 | 2026-02-27 | PROJ-207 | Audit 1 | PASSED | 12866 passed | - | All implementations verified, no issues |
 | 2026-02-27 | PROJ-212 | Phase 1 | Complete | 12866 passed | pending | 5 quick-win tasks: deferred imports, facade bypass |
+| 2026-02-27 | PROJ-212 | Phase 2 | Complete | 12866 passed | pending | order_types.py extraction, 88 files updated |
 
 ---
 

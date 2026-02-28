@@ -12,7 +12,8 @@ from game.strategy.engine.action_execution_engine import (
     ActionExecutionEngine,
     ActionTickResult,
 )
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.strategy.data.empire import Empire
 from game.core.hex_math import HexCoord
 

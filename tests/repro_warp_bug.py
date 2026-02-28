@@ -1,7 +1,8 @@
 from unittest.mock import MagicMock
 import pytest
 from game.core.hex_math import HexCoord
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.strategy.data.galaxy import Galaxy, StarSystem
 from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 from game.ui.screens.strategy_detail_fmt import _format_orders

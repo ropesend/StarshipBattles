@@ -1,6 +1,7 @@
 import pytest
 from game.core.hex_math import HexCoord, hex_distance
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.strategy.data.pathfinding import project_fleet_path
 
 # Mocks

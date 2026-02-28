@@ -17,7 +17,8 @@ from unittest.mock import MagicMock, PropertyMock
 
 from game.core.hex_math import HexCoord, hex_distance
 from game.strategy.data.empire import Empire
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.stars import Star, StarType, Spectrum

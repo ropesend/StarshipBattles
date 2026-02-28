@@ -574,7 +574,7 @@ class TestCommandHelpers:
     def test_add_move_order_if_needed_adds_move_when_not_at_target(self):
         """add_move_order_if_needed adds MOVE order when fleet not at target."""
         from game.strategy.engine.command_handlers import add_move_order_if_needed
-        from game.strategy.data.fleet import OrderType
+        from game.strategy.data.order_types import OrderType
 
         mock_fleet = Mock()
         mock_fleet.location = HexCoord(0, 0)
