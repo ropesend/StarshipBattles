@@ -56,19 +56,25 @@ class TestBuildOrderProcessing:
         assert current.type == OrderType.BUILD
 
     def test_build_order_auto_completes_when_queue_empties(
-        self, order_processor, mock_empire, mock_galaxy
+        self, mock_empire, mock_galaxy
     ):
-        """Test BUILD order auto-completes when construction_queue empties."""
+        """Test BUILD order auto-completes when construction_queue empties.
+
+        Note: BUILD auto-pop is handled by ActionExecutionEngine, not FleetOrderProcessor.
+        """
+        from game.strategy.engine.action_execution_engine import ActionExecutionEngine
+
         fleet = Fleet("f1", 0, HexCoord(0, 0), speed=5.0)
         fleet.add_order(FleetOrder(OrderType.BUILD))
         fleet.construction_queue = []  # Empty queue
+        mock_empire.fleets = [fleet]
 
-        # Process end turn - BUILD order should be completed
-        consumed = order_processor.process_end_turn_orders(
-            fleet, mock_empire, mock_galaxy
-        )
+        order_processor = FleetOrderProcessor()
+        engine = ActionExecutionEngine(order_processor)
 
-        assert consumed is False  # Fleet is not deleted, just order completed
+        # Process tick - BUILD order should auto-pop when queue empty
+        engine.process_action_ticks([mock_empire], mock_galaxy, tick=20)
+
         # BUILD order should be popped
         current = fleet.get_current_order()
         assert current is None
@@ -82,18 +88,6 @@ class TestBuildOrderProcessing:
 
         # Manual cancellation via pop_order
         cancelled = fleet_with_build_order.pop_order()
-
-        assert cancelled is not None
-        assert cancelled.type == OrderType.BUILD
-        assert fleet_with_build_order.get_current_order() is None
-
-    def test_build_order_can_be_cancelled_via_processor(
-        self, order_processor, fleet_with_build_order
-    ):
-        """Test BUILD order can be cancelled via cancel_order()."""
-        cancelled = order_processor.cancel_order(
-            fleet_with_build_order, reason="User cancelled"
-        )
 
         assert cancelled is not None
         assert cancelled.type == OrderType.BUILD
@@ -130,15 +124,24 @@ class TestBuildOrderProcessing:
         assert len(fleet.orders) == 1
 
     def test_queued_orders_remain_after_build_completion(
-        self, order_processor, mock_empire, mock_galaxy
+        self, mock_empire, mock_galaxy
     ):
-        """Test orders queued after BUILD remain when BUILD completes."""
-        fleet = Fleet("f1", 0, HexCoord(0, 0))
+        """Test orders queued after BUILD remain when BUILD completes.
+
+        Note: BUILD auto-pop is handled by ActionExecutionEngine, not FleetOrderProcessor.
+        """
+        from game.strategy.engine.action_execution_engine import ActionExecutionEngine
+
+        fleet = Fleet("f1", 0, HexCoord(0, 0), speed=5.0)
         fleet.add_order(FleetOrder(OrderType.BUILD))
         fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(5, 5)))  # Queued after
         fleet.construction_queue = []  # Empty, BUILD will complete
+        mock_empire.fleets = [fleet]
 
-        order_processor.process_end_turn_orders(fleet, mock_empire, mock_galaxy)
+        order_processor = FleetOrderProcessor()
+        engine = ActionExecutionEngine(order_processor)
+
+        engine.process_action_ticks([mock_empire], mock_galaxy, tick=20)
 
         # BUILD should be popped, MOVE should now be current
         current = fleet.get_current_order()

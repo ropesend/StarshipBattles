@@ -51,6 +51,70 @@ class SuperweaponOrderProcessor:
         """Initialize the superweapon order processor."""
         pass
 
+    def _finalize_superweapon(
+        self,
+        fleet: Fleet,
+        empire: 'Empire',
+        ship,
+        event_type,
+        event_message: str,
+        log_message: str,
+        **event_kwargs
+    ) -> SuperweaponResult:
+        """
+        Finalize superweapon execution after effect is applied.
+
+        Common end-pattern for superweapon methods:
+        1. Remove ship from fleet
+        2. Pop order
+        3. Check if fleet is empty
+        4. Remove empty fleet from empire (SG-003 fix)
+        5. Log event
+        6. Return result
+
+        Args:
+            fleet: Fleet with superweapon order
+            empire: Empire that owns the fleet
+            ship: Ship to remove (the one carrying the superweapon)
+            event_type: EventType for logging
+            event_message: Message for log_event and result
+            log_message: Message for logger.info
+            **event_kwargs: Additional kwargs for log_event
+
+        Returns:
+            SuperweaponResult with success=True and fleet_consumed flag.
+        """
+        # Remove ship
+        if ship:
+            fleet.remove_ship(ship)
+
+        # Pop order
+        fleet.pop_order()
+
+        # Check if fleet is now empty
+        fleet_consumed = len(fleet.ships) == 0
+
+        # Clean up empty fleet (SG-003 fix)
+        if fleet_consumed:
+            empire.remove_fleet(fleet)
+
+        # Log
+        logger.info(log_message)
+        log_event(
+            event_type,
+            category=EventCategory.SUPERWEAPONS,
+            empire_id=empire.id,
+            message=event_message,
+            fleet_id=fleet.id,
+            **event_kwargs
+        )
+
+        return SuperweaponResult(
+            success=True,
+            fleet_consumed=fleet_consumed,
+            message=event_message
+        )
+
     def process_implode_planet(
         self,
         fleet: Fleet,
@@ -91,12 +155,11 @@ class SuperweaponOrderProcessor:
             )
 
         if ship is None:
-            # Belt-and-suspenders: validation should catch this, but if we get here
-            # without a valid ship, cancel the order gracefully
             logger.warning(f"Fleet {fleet.id}: No ship with DestroyPlanet ability found, canceling order")
             fleet.pop_order()
             return SuperweaponResult(success=False, message="No ship with DestroyPlanet ability")
 
+        # === Execute effect ===
         # Remove planet from colony list if owned (iterate all empires to catch enemy planets)
         if target_planet.owner_id is not None:
             for emp in empires:
@@ -106,30 +169,16 @@ class SuperweaponOrderProcessor:
         # Unregister planet from galaxy
         galaxy.unregister_planet(target_planet)
 
-        # Remove the ship carrying the Planet Imploder
-        if ship:
-            fleet.remove_ship(ship)
-
-        fleet.pop_order()
-
-        # Check if fleet is now empty
-        fleet_consumed = len(fleet.ships) == 0
-
-        logger.info(f"Planet {target_planet.name} destroyed by fleet {fleet.id}")
-        log_event(
-            EventType.PLANET_DESTROYED,
-            category=EventCategory.SUPERWEAPONS,
-            empire_id=empire.id,
-            message=f"Planet {target_planet.name} destroyed",
+        # === Finalize ===
+        return self._finalize_superweapon(
+            fleet=fleet,
+            empire=empire,
+            ship=ship,
+            event_type=EventType.PLANET_DESTROYED,
+            event_message=f"Planet {target_planet.name} destroyed",
+            log_message=f"Planet {target_planet.name} destroyed by fleet {fleet.id}",
             planet_id=target_planet.id,
             planet_name=target_planet.name,
-            fleet_id=fleet.id,
-        )
-
-        return SuperweaponResult(
-            success=True,
-            fleet_consumed=fleet_consumed,
-            message=f"Planet {target_planet.name} destroyed"
         )
 
     def process_stellerate_star(
@@ -262,12 +311,11 @@ class SuperweaponOrderProcessor:
             )
 
         if ship is None:
-            # Belt-and-suspenders: validation should catch this, but if we get here
-            # without a valid ship, cancel the order gracefully
             logger.warning(f"Fleet {fleet.id}: No ship with OpenWarpPoint ability found, canceling order")
             fleet.pop_order()
             return SuperweaponResult(success=False, message="No ship with OpenWarpPoint ability")
 
+        # === Execute effect ===
         # Calculate warp point locations
         # Near-end: at fleet's local position within system
         fleet_local = fleet.location - current_system.global_location
@@ -288,29 +336,16 @@ class SuperweaponOrderProcessor:
         current_system.warp_points.append(near_wp)
         target_system.warp_points.append(far_wp)
 
-        # Remove ship
-        if ship:
-            fleet.remove_ship(ship)
-
-        fleet.pop_order()
-
-        fleet_consumed = len(fleet.ships) == 0
-
-        logger.info(f"Warp point opened between {current_system.name} and {target_system.name}")
-        log_event(
-            EventType.WARP_POINT_OPENED,
-            category=EventCategory.SUPERWEAPONS,
-            empire_id=empire.id,
-            message=f"Warp point opened to {target_system.name}",
-            fleet_id=fleet.id,
+        # === Finalize ===
+        return self._finalize_superweapon(
+            fleet=fleet,
+            empire=empire,
+            ship=ship,
+            event_type=EventType.WARP_POINT_OPENED,
+            event_message=f"Warp point opened to {target_system.name}",
+            log_message=f"Warp point opened between {current_system.name} and {target_system.name}",
             source_system=current_system.name,
             target_system=target_system.name,
-        )
-
-        return SuperweaponResult(
-            success=True,
-            fleet_consumed=fleet_consumed,
-            message=f"Warp point opened to {target_system.name}"
         )
 
     def process_close_warp_point(
@@ -358,38 +393,24 @@ class SuperweaponOrderProcessor:
             )
 
         if ship is None:
-            # Belt-and-suspenders: validation should catch this, but if we get here
-            # without a valid ship, cancel the order gracefully
             logger.warning(f"Fleet {fleet.id}: No ship with CloseWarpPoint ability found, canceling order")
             fleet.pop_order()
             return SuperweaponResult(success=False, message="No ship with CloseWarpPoint ability")
 
+        # === Execute effect ===
         # Remove warp link (both ends)
         galaxy.remove_warp_link(current_system.name, destination_id)
 
-        # Remove ship
-        if ship:
-            fleet.remove_ship(ship)
-
-        fleet.pop_order()
-
-        fleet_consumed = len(fleet.ships) == 0
-
-        logger.info(f"Warp point closed between {current_system.name} and {destination_id}")
-        log_event(
-            EventType.WARP_POINT_CLOSED,
-            category=EventCategory.SUPERWEAPONS,
-            empire_id=empire.id,
-            message=f"Warp point to {destination_id} closed",
-            fleet_id=fleet.id,
+        # === Finalize ===
+        return self._finalize_superweapon(
+            fleet=fleet,
+            empire=empire,
+            ship=ship,
+            event_type=EventType.WARP_POINT_CLOSED,
+            event_message=f"Warp point to {destination_id} closed",
+            log_message=f"Warp point closed between {current_system.name} and {destination_id}",
             source_system=current_system.name,
             target_system=destination_id,
-        )
-
-        return SuperweaponResult(
-            success=True,
-            fleet_consumed=fleet_consumed,
-            message=f"Warp point to {destination_id} closed"
         )
 
     def process_create_dyson_sphere(
@@ -442,12 +463,11 @@ class SuperweaponOrderProcessor:
             )
 
         if ship is None:
-            # Belt-and-suspenders: validation should catch this, but if we get here
-            # without a valid ship, cancel the order gracefully
             logger.warning(f"Fleet {fleet.id}: No ship with CreateDysonSphere ability found, canceling order")
             fleet.pop_order()
             return SuperweaponResult(success=False, message="No ship with CreateDysonSphere ability")
 
+        # === Execute effect ===
         # Remove planets within zone radius (5 hexes for 11-hex diameter sphere)
         dyson_radius = 5
         planets_to_remove = []
@@ -513,28 +533,15 @@ class SuperweaponOrderProcessor:
         system.planets.append(dyson)
         galaxy.register_planet(system, dyson)
 
-        # Remove ship
-        if ship:
-            fleet.remove_ship(ship)
-
-        fleet.pop_order()
-
-        fleet_consumed = len(fleet.ships) == 0
-
-        logger.info(f"Dyson Sphere created in {system.name}")
-        log_event(
-            EventType.DYSON_SPHERE_CREATED,
-            category=EventCategory.SUPERWEAPONS,
-            empire_id=empire.id,
-            message=f"Dyson Sphere created in {system.name}",
-            fleet_id=fleet.id,
+        # === Finalize ===
+        return self._finalize_superweapon(
+            fleet=fleet,
+            empire=empire,
+            ship=ship,
+            event_type=EventType.DYSON_SPHERE_CREATED,
+            event_message=f"Dyson Sphere created in {system.name}",
+            log_message=f"Dyson Sphere created in {system.name}",
             system_name=system.name,
-        )
-
-        return SuperweaponResult(
-            success=True,
-            fleet_consumed=fleet_consumed,
-            message=f"Dyson Sphere created in {system.name}"
         )
 
     def process_self_destruct(
@@ -586,7 +593,12 @@ class SuperweaponOrderProcessor:
 
         fleet.pop_order()
 
+        # Check if fleet is now empty
         fleet_consumed = len(fleet.ships) == 0
+
+        # Clean up empty fleet (SG-003 fix)
+        if fleet_consumed:
+            empire.remove_fleet(fleet)
 
         logger.info(f"Ships self-destructed: {', '.join(ship_names)}")
         log_event(

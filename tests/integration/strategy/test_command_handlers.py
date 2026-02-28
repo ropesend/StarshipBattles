@@ -364,7 +364,8 @@ class TestColonizeMissionCommandHandler:
         cmd = QueueColonizeMissionCommand(fleet_id=101, target_hex=HexCoord(100, 100), planet_id=42)
 
         # Mock pathfinding to return None (no path)
-        with patch('game.strategy.data.pathfinding.find_hybrid_path') as mock_path:
+        # PROJ-207: Patch at command_handlers where function is imported
+        with patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
             mock_path.return_value = None
 
             result = session.handle_command(cmd)
@@ -434,7 +435,8 @@ class TestColonizeMissionCommandHandler:
         cmd = QueueColonizeMissionCommand(fleet_id=101, target_hex=target_hex, planet_id=42)
 
         # Mock pathfinding - path should start from (5,5) not (0,0)
-        with patch('game.strategy.data.pathfinding.find_hybrid_path') as mock_path:
+        # PROJ-207: Patch at command_handlers where function is imported
+        with patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
 
             result = session.handle_command(cmd)

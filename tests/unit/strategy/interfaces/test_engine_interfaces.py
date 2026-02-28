@@ -119,11 +119,11 @@ class TestIOrderProcessorInterface:
         assert hasattr(IOrderProcessor, 'process_instant_orders')
         assert getattr(IOrderProcessor.process_instant_orders, '__isabstractmethod__', False)
 
-    def test_iorder_processor_has_process_end_turn_orders_method(self):
-        """IOrderProcessor should define process_end_turn_orders abstract method."""
+    def test_iorder_processor_has_execute_action_order_method(self):
+        """IOrderProcessor should define execute_action_order abstract method."""
         from game.strategy.interfaces.engines import IOrderProcessor
-        assert hasattr(IOrderProcessor, 'process_end_turn_orders')
-        assert getattr(IOrderProcessor.process_end_turn_orders, '__isabstractmethod__', False)
+        assert hasattr(IOrderProcessor, 'execute_action_order')
+        assert getattr(IOrderProcessor.execute_action_order, '__isabstractmethod__', False)
 
 
 # =============================================================================
@@ -364,7 +364,7 @@ class TestConcreteImplementations:
             def process_instant_orders(self, empires):
                 return []
 
-            def process_end_turn_orders(self, fleet, empire, galaxy):
+            def execute_action_order(self, fleet, empire, galaxy, component_registry=None, empires=None):
                 return False
 
         processor = MockOrderProcessor()

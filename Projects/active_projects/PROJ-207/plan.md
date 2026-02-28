@@ -17,16 +17,16 @@
 | 2. Superweapon Validation & Execution | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Execution Path Cleanup | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Command Pipeline Consistency | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Code Hygiene & Dead Code | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Code Hygiene & Dead Code | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-27
-**Active Phase:** Phase 5 - Code Hygiene & Dead Code
-**Last Agent Action:** Phase 4 complete - CP-001, CP-002, CP-003 fixed
-**Next Action:** Begin Phase 5 implementation
+**Active Phase:** Audit
+**Last Agent Action:** Phase 5 complete - All 5 tasks done
+**Next Action:** Run audit to verify project completion
 **Blockers:** None
-**Test Baseline:** 12,876 passed, 4 pre-existing failures (bug_13_colony_flags), 1 skipped
-**Context for Next Agent:** Phase 4 complete. Created IssueBuildOrderCommand and RemoveBuildOrderCommand with handlers. Updated strategy_build_queue_manager.py to dispatch BUILD orders through command pipeline. Added clear_orders_callback to FleetOrdersWindow for command pipeline routing. Extracted create_auto_load_population_order() helper function used by both ColonizeCommandHandler and ColonizeMissionCommandHandler. 19 new tests added. All 275 colonize tests pass.
+**Test Baseline:** 12,866 passed, 4 pre-existing failures (bug_13_colony_flags), 1 skipped
+**Context for Next Agent:** Phase 5 complete. Deleted dead lifecycle methods (complete_order, cancel_order, cancel_all_orders). Removed duplicate BUILD auto-pop code. Extracted _finalize_superweapon() helper and added SG-003 fleet cleanup. Renamed process_end_turn_orders to execute_action_order with registry pattern. Enhanced add_move_order_if_needed() with chain-aware start_hex auto-detection. All 5 phases complete - ready for audit.
 
 ## Overview
 Systematic unification and remediation of the fleet order system based on deep code review

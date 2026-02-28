@@ -166,9 +166,9 @@ class IOrderProcessor(ABC):
     """
     Abstract interface for fleet order processing.
 
-    PROJ-187: Order processing is now split between:
+    PROJ-187/PROJ-207: Order processing is split between:
     - process_instant_orders(): Called every tick for JOIN_FLEET co-location
-    - process_end_turn_orders(): Called by ActionExecutionEngine when action completes
+    - execute_action_order(): Called by ActionExecutionEngine when action completes
 
     Implementations handle:
     - Instant order processing (JOIN_FLEET when co-located)
@@ -178,8 +178,8 @@ class IOrderProcessor(ABC):
     Example usage:
         processor = FleetOrderProcessor()  # or MockOrderProcessor for tests
         removed = processor.process_instant_orders(empires)
-        # process_end_turn_orders now called by ActionExecutionEngine, not TurnEngine
-        consumed = processor.process_end_turn_orders(fleet, empire, galaxy)
+        # execute_action_order called by ActionExecutionEngine, not TurnEngine
+        consumed = processor.execute_action_order(fleet, empire, galaxy)
     """
 
     @abstractmethod
@@ -199,7 +199,7 @@ class IOrderProcessor(ABC):
         pass
 
     @abstractmethod
-    def process_end_turn_orders(
+    def execute_action_order(
         self,
         fleet: 'Fleet',
         empire: Any,
@@ -208,11 +208,10 @@ class IOrderProcessor(ABC):
         empires: Optional[List] = None
     ) -> bool:
         """
-        Process action orders (COLONIZE, TRANSFER, JOIN_FLEET, superweapons).
+        Execute the fleet's current action order (COLONIZE, TRANSFER, superweapons).
 
-        PROJ-55: Added component_registry for colony pod ship removal.
-        PROJ-187: Now called by ActionExecutionEngine during tick loop,
-                  not by TurnEngine at end-of-turn. Name retained for compatibility.
+        PROJ-207: Renamed from process_end_turn_orders for clarity.
+        Called by ActionExecutionEngine when action progress reaches action_time.
 
         Args:
             fleet: Fleet to process

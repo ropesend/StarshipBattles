@@ -24,28 +24,45 @@ if TYPE_CHECKING:
     from game.strategy.engine.game_session import GameSession
 
 
-def add_move_order_if_needed(session: 'GameSession', fleet, target_hex) -> ValidationResult:
+def add_move_order_if_needed(
+    session: 'GameSession',
+    fleet,
+    target_hex,
+    start_hex=None
+) -> ValidationResult:
     """Add a MOVE order to fleet if not already at target hex.
 
     PROJ-204 Phase 3: Extracted from duplicate patterns in command handlers.
+    PROJ-207 Phase 5: Added start_hex for chain-aware path calculation.
+
     Use this when a command needs to auto-queue movement before an action.
 
     Args:
         session: GameSession for path calculation.
         fleet: Fleet to potentially move.
         target_hex: Destination hex coordinate.
+        start_hex: Optional starting hex for path calculation. If None,
+                   calculates chain-aware start (last MOVE target or fleet.location).
 
     Returns:
         ValidationResult - invalid if no path found, valid otherwise.
     """
     from game.strategy.data.fleet import FleetOrder, OrderType
 
+    # Determine start hex (chain-aware)
+    if start_hex is None:
+        start_hex = fleet.location
+        if fleet.orders:
+            last = fleet.orders[-1]
+            if last.type == OrderType.MOVE:
+                start_hex = last.target
+
     # Already at target - no move needed
-    if fleet.location == target_hex:
+    if start_hex == target_hex:
         return ValidationResult.success()
 
-    # Calculate path
-    path = find_hybrid_path(session.galaxy, fleet.location, target_hex)
+    # Calculate path from chain-aware start
+    path = find_hybrid_path(session.galaxy, start_hex, target_hex)
     if not path:
         return ValidationResult.error("No path found to target.")
 
@@ -53,8 +70,8 @@ def add_move_order_if_needed(session: 'GameSession', fleet, target_hex) -> Valid
     move_order = FleetOrder(OrderType.MOVE, target=target_hex)
     fleet.add_order(move_order)
 
-    # Set path immediately if it's the first order
-    if len(fleet.orders) == 1:
+    # Set path immediately if it's the first order and fleet is at start
+    if len(fleet.orders) == 1 and fleet.location == start_hex:
         fleet.path = strip_start_hex(fleet.location, path)
 
     return ValidationResult.success()
@@ -390,7 +407,6 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle QueueColonizeMissionCommand - queues MOVE and COLONIZE orders."""
         from game.strategy.data.fleet import FleetOrder, OrderType
-        from game.strategy.data.pathfinding import find_hybrid_path, strip_start_hex
         from game.strategy.validation import ColonizeValidator
 
         # 1. Resolve fleet
@@ -436,36 +452,20 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
                         code="COLONY_POD_EXHAUSTED"
                     )
 
-        # 3. Determine start hex (current location or last order target)
-        start_hex = fleet.location
-        if fleet.orders:
-            last = fleet.orders[-1]
-            if last.type == OrderType.MOVE:
-                start_hex = last.target
-
-        # 4. Calculate path
-        path = find_hybrid_path(session.galaxy, start_hex, cmd.target_hex)
-        if not path:
-            return ValidationResult.error("No path found to target.")
-
-        # 5. Auto-load population from colony at fleet's current location (BUG-70)
+        # 3. Auto-load population from colony at fleet's current location (BUG-70)
         # PROJ-207 Phase 4: Use shared helper
         origin_colony = session._find_colony_at_fleet(fleet)
         load_order = create_auto_load_population_order(origin_colony)
         if load_order:
             fleet.add_order(load_order)
 
-        # 6. Queue MOVE order if not already at target
-        if start_hex != cmd.target_hex:
-            move_order = FleetOrder(OrderType.MOVE, target=cmd.target_hex)
-            fleet.add_order(move_order)
+        # 4. Queue MOVE order if needed (chain-aware path calculation)
+        # PROJ-207 Phase 5: Use shared helper with auto chain detection
+        move_result = add_move_order_if_needed(session, fleet, cmd.target_hex)
+        if not move_result.is_valid:
+            return move_result
 
-            # Set path immediately if it's the active order (and no load order was inserted)
-            if len(fleet.orders) == 1:
-                # PROJ-204: Remove start hex from path before assigning
-                fleet.path = strip_start_hex(fleet.location, path)
-
-        # 7. Queue COLONIZE order (target=None means "any available planet")
+        # 5. Queue COLONIZE order (target=None means "any available planet")
         colonize_order = FleetOrder(OrderType.COLONIZE, target=planet)
         fleet.add_order(colonize_order)
 

@@ -306,10 +306,12 @@ class TestColonizeMissionCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
         mock_session._get_planet_by_id.return_value = None
+        mock_session._find_colony_at_fleet.return_value = None  # No origin colony
 
         mock_cmd = Mock(fleet_id=1, planet_id=None, target_hex=(100, 100))
 
-        with patch('game.strategy.data.pathfinding.find_hybrid_path', return_value=None):
+        # PROJ-207: Patch at command_handlers where function is imported
+        with patch('game.strategy.engine.command_handlers.find_hybrid_path', return_value=None):
             result = handler.execute(mock_session, mock_cmd)
 
         assert not result.is_valid
