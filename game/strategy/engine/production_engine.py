@@ -54,9 +54,15 @@ class ProductionEngine:
     - ticks_in_current_turn: int - Tick counter within current turn
     """
 
-    def __init__(self):
-        """Initialize the production engine."""
-        pass
+    def __init__(self, registries=None):
+        """Initialize the production engine.
+
+        PROJ-211: Added registries parameter for DI compliance.
+
+        Args:
+            registries: Optional GameRegistries for ship creation.
+        """
+        self._registries = registries
 
     # --- Resource Cost Methods (PROJ-75 Phase 4) ---
 
@@ -465,12 +471,14 @@ class ProductionEngine:
             return
 
         # Create ShipInstance (with serial number)
+        # PROJ-211: Pass registries for DI compliance
         ship_instance = ShipInstance.create(
             design_id=design_id,
             design_data=design_data,
             owner_id=empire.id,
             name=design_data.get("name", design_id),
-            empire=empire
+            empire=empire,
+            registries=self._registries,
         )
 
         # Create fleet with unique ID
@@ -524,12 +532,14 @@ class ProductionEngine:
             return
 
         # Create ShipInstance (with serial number)
+        # PROJ-211: Pass registries for DI compliance
         ship_instance = ShipInstance.create(
             design_id=design_id,
             design_data=design_data,
             owner_id=empire.id,
             name=design_data.get("name", design_id),
-            empire=empire
+            empire=empire,
+            registries=self._registries,
         )
 
         # Add ship to the building fleet

@@ -10,9 +10,13 @@ from game.strategy.data.empire import Empire
 from game.strategy.data.ship_instance import ShipInstance
 
 
-def make_mock_ship_instance(name="Test Ship", owner_id=0):
-    """Create a mock ShipInstance for testing."""
-    return ShipInstance(
+def make_mock_ship_instance(name="Test Ship", owner_id=0, registries=None):
+    """Create a mock ShipInstance for testing.
+
+    PROJ-211: Accepts optional registries for DI compliance. Required for tests
+    that call get_calculated_stats() (triggered by show_detailed_report).
+    """
+    ship = ShipInstance(
         instance_id=f"test-{name.lower().replace(' ', '-')}",
         design_id=name,
         name=name,
@@ -23,6 +27,10 @@ def make_mock_ship_instance(name="Test Ship", owner_id=0):
             'stats': {'mass': 100}
         },
     )
+    # PROJ-211: Set registries for DI compliance
+    if registries is not None:
+        ship.set_registries(registries)
+    return ship
 
 class MockScene:
     def __init__(self):
@@ -104,28 +112,28 @@ def test_build_button_visibility_unowned_planet(strategy_ui):
     # Assert
     assert strategy_ui.btn_build_yard.visible == 0, "Build button should be hidden for unowned planet"
 
-def test_fleet_buttons_visibility_owned_fleet(strategy_ui):
+def test_fleet_buttons_visibility_owned_fleet(strategy_ui, fresh_registries):
     """Test that fleet buttons are visible for owned fleets."""
     # Setup
     fleet = Fleet(1, strategy_ui.scene.current_empire.id, (0,0))
-    fleet.ships = [make_mock_ship_instance("Ship", strategy_ui.scene.current_empire.id)]
-    
+    fleet.ships = [make_mock_ship_instance("Ship", strategy_ui.scene.current_empire.id, registries=fresh_registries)]
+
     # Act
     strategy_ui.show_detailed_report(fleet)
-    
+
     # Assert
     assert strategy_ui.btn_colonize.visible == 1, "Colonize button should be visible for owned fleet"
     assert strategy_ui.btn_orders.visible == 1, "Orders button should be visible for owned fleet"
 
-def test_fleet_buttons_visibility_enemy_fleet(strategy_ui):
+def test_fleet_buttons_visibility_enemy_fleet(strategy_ui, fresh_registries):
     """Test that fleet buttons are hidden for enemy fleets."""
     # Setup
     fleet = Fleet(2, 999, (0,0)) # Enemy
-    fleet.ships = [make_mock_ship_instance("Ship", 999)]
-    
+    fleet.ships = [make_mock_ship_instance("Ship", 999, registries=fresh_registries)]
+
     # Act
     strategy_ui.show_detailed_report(fleet)
-    
+
     # Assert
     assert strategy_ui.btn_colonize.visible == 0, "Colonize button should be hidden for enemy fleet"
     assert strategy_ui.btn_orders.visible == 0, "Orders button should be hidden for enemy fleet"

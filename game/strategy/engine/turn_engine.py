@@ -191,7 +191,8 @@ class TurnEngine:
         """Return production engine, lazily creating default if not injected."""
         if self._production_engine is None:
             from game.strategy.engine.production_engine import ProductionEngine
-            self._production_engine = ProductionEngine()
+            # PROJ-211: Pass registries for ship creation DI compliance
+            self._production_engine = ProductionEngine(registries=self._registries)
         return self._production_engine
 
     @property

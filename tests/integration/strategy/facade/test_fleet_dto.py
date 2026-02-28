@@ -216,7 +216,7 @@ class TestFleetInfo:
         with pytest.raises(AttributeError):
             fleet.projected_path.append(HexCoord(0, 0))
 
-    def test_from_fleet_returns_tuples(self):
+    def test_from_fleet_returns_tuples(self, fresh_registries):
         """FleetInfo.from_fleet returns tuples for collection fields."""
         from game.strategy.facade.dto.fleet_dto import FleetInfo
         from game.strategy.data.ship_instance import ShipInstance
@@ -228,7 +228,7 @@ class TestFleetInfo:
             speed=5.0,
         )
 
-        # Add a ship
+        # Add a ship (PROJ-211: with registries for DI compliance)
         ship = ShipInstance(
             instance_id="test-ship",
             design_id="test_design",
@@ -236,6 +236,7 @@ class TestFleetInfo:
             owner_id=0,
             design_data={"name": "Test Ship", "ship_class": "Frigate", "layers": {}},
         )
+        ship.set_registries(fresh_registries)
         fleet.ships.append(ship)
 
         # Add an order and path
@@ -281,7 +282,7 @@ class TestFleetInfoFactory:
         assert info.orders == ()
         assert info.has_orders is False
 
-    def test_from_fleet_with_ships(self):
+    def test_from_fleet_with_ships(self, fresh_registries):
         """from_fleet includes ship information."""
         from game.strategy.facade.dto.fleet_dto import FleetInfo
         from game.strategy.data.ship_instance import ShipInstance
@@ -293,7 +294,7 @@ class TestFleetInfoFactory:
             speed=5.0,
         )
 
-        # Create a ship instance with minimal design data
+        # Create a ship instance with minimal design data (PROJ-211: with registries)
         ship = ShipInstance(
             instance_id="test-ship-001",
             design_id="test_design",
@@ -305,6 +306,7 @@ class TestFleetInfoFactory:
                 "layers": {},
             },
         )
+        ship.set_registries(fresh_registries)
         fleet.ships.append(ship)
 
         info = FleetInfo.from_fleet(fleet)

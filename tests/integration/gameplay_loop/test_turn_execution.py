@@ -213,7 +213,7 @@ class TestTurnEngineIsolation:
         # Conflict engine should be None initially (lazy initialization)
         assert turn_engine._conflict_engine is None
 
-    def test_battle_seeds_increment(self, turn_engine, two_empire_setup):
+    def test_battle_seeds_increment(self, turn_engine, two_empire_setup, fresh_registries):
         """Battle seeds increment for determinism."""
         empire1, empire2, galaxy = two_empire_setup
         empires = [empire1, empire2]
@@ -222,14 +222,20 @@ class TestTurnEngineIsolation:
         # Access conflict_engine to initialize it, then get initial seed
         initial_seed = turn_engine.conflict_engine._battle_seed_counter
 
+        # PROJ-211: Create ships with registries for DI compliance
+        def make_ship(name, owner_id):
+            ship = make_mock_ship_instance(name, owner_id)
+            ship.set_registries(fresh_registries)
+            return ship
+
         # Create combat situation
         loc = HexCoord(0, 0)
         fleet1 = Fleet(1, empire1.id, loc, speed=10.0)
-        fleet1.ships = [make_mock_ship_instance("Scout", empire1.id)]
+        fleet1.ships = [make_ship("Scout", empire1.id)]
         empire1.add_fleet(fleet1)
 
         fleet2 = Fleet(2, empire2.id, loc, speed=10.0)
-        fleet2.ships = [make_mock_ship_instance("Scout", empire2.id)]
+        fleet2.ships = [make_ship("Scout", empire2.id)]
         empire2.add_fleet(fleet2)
 
         turn_engine.process_turn(empires, galaxy)

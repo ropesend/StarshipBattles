@@ -10,8 +10,12 @@ from game.strategy.data.empire import Empire
 from game.strategy.data.ship_instance import ShipInstance
 
 
-def make_mock_ship_instance(name="Test Ship", owner_id=0, has_yard=False):
-    """Create a mock ShipInstance for testing."""
+def make_mock_ship_instance(name="Test Ship", owner_id=0, has_yard=False, registries=None):
+    """Create a mock ShipInstance for testing.
+
+    PROJ-211: Accepts optional registries for DI compliance. Required for tests
+    that call get_calculated_stats() (triggered by show_detailed_report).
+    """
     design_data = {
         'name': name,
         'vehicle_type': 'Ship',
@@ -25,6 +29,10 @@ def make_mock_ship_instance(name="Test Ship", owner_id=0, has_yard=False):
         owner_id=owner_id,
         design_data=design_data,
     )
+
+    # PROJ-211: Set registries for DI compliance
+    if registries is not None:
+        ship.set_registries(registries)
 
     # Mock has_space_shipyard ability if requested
     if has_yard:
@@ -58,11 +66,11 @@ def strategy_ui():
     return ui
 
 
-def test_build_button_visible_for_owned_fleet_with_shipyard(strategy_ui):
+def test_build_button_visible_for_owned_fleet_with_shipyard(strategy_ui, fresh_registries):
     """Test that build button is visible for owned fleet with space shipyard."""
     # Setup fleet with yard ship
     fleet = Fleet(1, strategy_ui.scene.current_empire.id, (0, 0))
-    yard_ship = make_mock_ship_instance("Yard Ship", strategy_ui.scene.current_empire.id, has_yard=True)
+    yard_ship = make_mock_ship_instance("Yard Ship", strategy_ui.scene.current_empire.id, has_yard=True, registries=fresh_registries)
     fleet.ships = [yard_ship]
 
     # Mock has_space_shipyard to return True
@@ -80,11 +88,11 @@ def test_build_button_visible_for_owned_fleet_with_shipyard(strategy_ui):
         Fleet.has_space_shipyard = property(original_has_space_shipyard)
 
 
-def test_build_button_hidden_for_owned_fleet_without_shipyard(strategy_ui):
+def test_build_button_hidden_for_owned_fleet_without_shipyard(strategy_ui, fresh_registries):
     """Test that build button is hidden for owned fleet without space shipyard."""
     # Setup fleet without yard ship
     fleet = Fleet(1, strategy_ui.scene.current_empire.id, (0, 0))
-    ship = make_mock_ship_instance("Regular Ship", strategy_ui.scene.current_empire.id, has_yard=False)
+    ship = make_mock_ship_instance("Regular Ship", strategy_ui.scene.current_empire.id, has_yard=False, registries=fresh_registries)
     fleet.ships = [ship]
 
     # Mock has_space_shipyard to return False
@@ -102,11 +110,11 @@ def test_build_button_hidden_for_owned_fleet_without_shipyard(strategy_ui):
         Fleet.has_space_shipyard = property(original_has_space_shipyard)
 
 
-def test_build_button_hidden_for_enemy_fleet_with_shipyard(strategy_ui):
+def test_build_button_hidden_for_enemy_fleet_with_shipyard(strategy_ui, fresh_registries):
     """Test that build button is hidden for enemy fleet even with space shipyard."""
     # Setup enemy fleet with yard
     fleet = Fleet(2, 999, (0, 0))  # Enemy owner_id
-    yard_ship = make_mock_ship_instance("Enemy Yard Ship", 999, has_yard=True)
+    yard_ship = make_mock_ship_instance("Enemy Yard Ship", 999, has_yard=True, registries=fresh_registries)
     fleet.ships = [yard_ship]
 
     # Mock has_space_shipyard to return True
@@ -127,11 +135,11 @@ def test_build_button_hidden_for_enemy_fleet_with_shipyard(strategy_ui):
 class TestBuildOrderDisplay:
     """Tests for BUILD order display in fleet info."""
 
-    def test_build_order_shows_in_fleet_detail(self, strategy_ui):
+    def test_build_order_shows_in_fleet_detail(self, strategy_ui, fresh_registries):
         """Test that BUILD order shows in fleet detail text."""
         # Setup fleet with BUILD order
         fleet = Fleet(1, strategy_ui.scene.current_empire.id, (0, 0))
-        ship = make_mock_ship_instance("Ship", strategy_ui.scene.current_empire.id)
+        ship = make_mock_ship_instance("Ship", strategy_ui.scene.current_empire.id, registries=fresh_registries)
         fleet.ships = [ship]
         fleet.orders = [FleetOrder(OrderType.BUILD)]
         fleet.construction_queue = [{'design_id': 'scout', 'turns_remaining': 3}]

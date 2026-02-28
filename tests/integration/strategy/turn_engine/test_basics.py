@@ -134,7 +134,8 @@ def test_order_chaining(fresh_registries):
     galaxy.systems[HexCoord(1, 0)] = mock_system
 
     f1 = Fleet(1, 0, HexCoord(0,0), speed=100.0) # Fast, arrives instantly
-    f1.ships.append(create_colony_ship("Colony Ship", 0))  # PROJ-140: Add proper colony ship
+    # PROJ-211: Pass registries for DI compliance
+    f1.ships.append(create_colony_ship("Colony Ship", 0, registries=fresh_registries))
     f1.path = [HexCoord(1,0)]
     f1.add_order(FleetOrder(OrderType.MOVE, HexCoord(1,0)))
     f1.add_order(FleetOrder(OrderType.COLONIZE, planet))
@@ -178,7 +179,8 @@ def test_colonize_deletes_fleet(fresh_registries):
     galaxy.systems[HexCoord(1, 0)] = mock_system
 
     f1 = Fleet(1, 0, HexCoord(1, 0), speed=5.0)
-    f1.ships.append(create_colony_ship("Colony Ship", 0))  # PROJ-140: Add proper colony ship
+    # PROJ-211: Pass registries for DI compliance
+    f1.ships.append(create_colony_ship("Colony Ship", 0, registries=fresh_registries))
     f1.orders = [FleetOrder(OrderType.COLONIZE, planet)]
 
     e1 = Empire(0, "P1", (0, 0, 0))

@@ -96,19 +96,25 @@ class TestFleetMovement:
 class TestFleetMerge:
     """Tests for fleet merge mechanics."""
 
-    def test_join_fleet_merges_ships(self, turn_engine, two_empire_setup):
+    def test_join_fleet_merges_ships(self, turn_engine, two_empire_setup, fresh_registries):
         """JOIN_FLEET order transfers ships to target fleet."""
         empire1, empire2, galaxy = two_empire_setup
         empires = [empire1, empire2]
 
+        # PROJ-211: Create ships with registries for DI compliance
+        def make_ship(name, owner_id):
+            ship = make_mock_ship_instance(name, owner_id)
+            ship.set_registries(fresh_registries)
+            return ship
+
         # Create two fleets at same location
         loc = HexCoord(0, 0)
         target_fleet = Fleet(1, empire1.id, loc, speed=10.0)
-        target_fleet.ships = [make_mock_ship_instance("Scout", empire1.id)]
+        target_fleet.ships = [make_ship("Scout", empire1.id)]
         empire1.add_fleet(target_fleet)
 
         joining_fleet = Fleet(2, empire1.id, loc, speed=10.0)
-        joining_fleet.ships = [make_mock_ship_instance("Destroyer", empire1.id)]
+        joining_fleet.ships = [make_ship("Destroyer", empire1.id)]
         joining_fleet.add_order(FleetOrder(OrderType.JOIN_FLEET, target=target_fleet))
         empire1.add_fleet(joining_fleet)
 
@@ -123,18 +129,24 @@ class TestFleetMerge:
         if target_fleet in empire1.fleets:
             assert len(target_fleet.ships) == 2
 
-    def test_join_fleet_requires_same_location(self, turn_engine, two_empire_setup):
+    def test_join_fleet_requires_same_location(self, turn_engine, two_empire_setup, fresh_registries):
         """JOIN_FLEET only merges when fleets are co-located."""
         empire1, empire2, galaxy = two_empire_setup
         empires = [empire1, empire2]
 
+        # PROJ-211: Create ships with registries for DI compliance
+        def make_ship(name, owner_id):
+            ship = make_mock_ship_instance(name, owner_id)
+            ship.set_registries(fresh_registries)
+            return ship
+
         # Create two fleets at DIFFERENT locations
         target_fleet = Fleet(1, empire1.id, HexCoord(0, 0), speed=10.0)
-        target_fleet.ships = [make_mock_ship_instance("Scout", empire1.id)]
+        target_fleet.ships = [make_ship("Scout", empire1.id)]
         empire1.add_fleet(target_fleet)
 
         joining_fleet = Fleet(2, empire1.id, HexCoord(10, 10), speed=10.0)  # Different location
-        joining_fleet.ships = [make_mock_ship_instance("Destroyer", empire1.id)]
+        joining_fleet.ships = [make_ship("Destroyer", empire1.id)]
         joining_fleet.add_order(FleetOrder(OrderType.JOIN_FLEET, target=target_fleet))
         empire1.add_fleet(joining_fleet)
 
