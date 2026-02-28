@@ -15,6 +15,12 @@ if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
     from game.core.registry import GameRegistries
 
+# Default battle formation positions (in simulation coordinates)
+FORMATION_BASE_X_TEAM_0 = 20000  # Left side of battlefield
+FORMATION_BASE_X_TEAM_1 = 80000  # Right side of battlefield
+FORMATION_BASE_Y = 50000         # Vertical center of battlefield
+FORMATION_SHIP_SPACING = 2000    # Vertical spacing between ships
+
 
 class FleetBattleAdapter:
     """
@@ -84,14 +90,10 @@ class FleetBattleAdapter:
         positions = []
 
         # Team 0 starts on the left, Team 1 on the right
-        base_x = 20000 if team_id == 0 else 80000
-        base_y = 50000
-
-        # Simple line formation
-        spacing = 2000
+        base_x = FORMATION_BASE_X_TEAM_0 if team_id == 0 else FORMATION_BASE_X_TEAM_1
 
         for i in range(count):
-            y = base_y + (i - count // 2) * spacing
+            y = FORMATION_BASE_Y + (i - count // 2) * FORMATION_SHIP_SPACING
             positions.append((base_x, y))
 
         return positions

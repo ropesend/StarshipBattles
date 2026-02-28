@@ -17,18 +17,19 @@
 | 2. Facade Bloat & Pass-Through Elimination | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Planet Decomposition | Complete (Deferred) | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. FleetOrderProcessor Decomposition | Complete (Deferred) | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Dead Code & Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Dead Code & Cleanup | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-28
-**Active Phase:** Phase 5 (Dead Code & Cleanup)
-**Last Action:** Phase 4 Complete — All 3 tasks deferred or already done:
-- Task 4.1 DEFERRED: FleetOrderProcessor already decomposed (SuperweaponOrderProcessor extracted)
-- Task 4.2 ALREADY DONE: Validation separated via *Validator classes
-- Task 4.3 DEFERRED: Fleet order methods trivial (20 lines), Fleet.py at 320 lines
-**Next Action:** Start Phase 5 — Dead Code & Cleanup
+**Active Phase:** All Phases Complete — Ready for Audit
+**Last Action:** Phase 5 Complete — Dead code cleanup:
+- Task 5.1: Removed get_layer_damage_summary() and get_component_damage_summary() (~23 lines)
+- Task 5.2: Removed duplicate FleetCapabilityCalculator.ship_has_ability() (~33 lines)
+- Task 5.3: Removed unused logger import from planet.py
+- Task 5.4: Added named constants in fleet_battle_adapter.py
+**Next Action:** Trigger Audit
 **Blockers:** None
-**Test Status:** 12,929 passed, 4 failed (pre-existing bug_13), 1 skipped
+**Test Status:** 12,923 passed, 4 failed (pre-existing bug_13), 1 skipped
 
 ## Overview
 Systematic decomposition of strategy domain god classes based on findings from review `2026-02-27_211327_general_strategy-god-classes`. 80 total findings from 5 review agents, validated by 3 independent validators (12.5% rejection rate).

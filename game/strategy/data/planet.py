@@ -4,7 +4,6 @@ Planet data class.
 PlanetaryFacility and SpeciesPopulation extracted to own modules (PROJ-210).
 """
 
-import logging
 import math
 from dataclasses import dataclass, field
 from enum import Enum, auto
@@ -17,8 +16,6 @@ from game.core.validation_helpers import (
 # PROJ-210: Import extracted classes for backward compatibility
 from game.strategy.data.planetary_facility import PlanetaryFacility
 from game.strategy.data.species_population import SpeciesPopulation
-
-logger = logging.getLogger(__name__)
 
 class PlanetType(Enum):
     """

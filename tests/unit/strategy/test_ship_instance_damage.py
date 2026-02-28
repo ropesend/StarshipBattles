@@ -38,31 +38,6 @@ class TestShipInstanceDamageInfo:
             }
         }
 
-    def test_get_component_damage_summary_no_damage(self, design_data, ship_factory):
-        """Ship with no damage should have empty damage summary."""
-        instance = ship_factory(design_data, owner_id=0)
-
-        summary = instance.get_component_damage_summary()
-
-        assert summary == {}
-
-    def test_get_component_damage_summary_with_damage(self, design_data, ship_factory):
-        """Ship with component damage should report it in summary."""
-        instance = ship_factory(design_data, owner_id=0)
-
-        # Simulate damage to components
-        instance.component_damage = {
-            'reactor_standard_0': 50,  # 50 HP remaining
-            'weapon_laser_0': 25,      # 25 HP remaining
-        }
-
-        summary = instance.get_component_damage_summary()
-
-        assert 'reactor_standard_0' in summary
-        assert 'weapon_laser_0' in summary
-        assert summary['reactor_standard_0'] == 50
-        assert summary['weapon_laser_0'] == 25
-
     def test_get_damaged_component_count(self, design_data, ship_factory):
         """Should count number of damaged components."""
         instance = ship_factory(design_data, owner_id=0)
@@ -76,18 +51,6 @@ class TestShipInstanceDamageInfo:
         }
 
         assert instance.get_damaged_component_count() == 3
-
-    def test_get_layer_damage_summary(self, design_data, ship_factory):
-        """Should provide damage summary grouped by layer."""
-        instance = ship_factory(design_data, owner_id=0)
-
-        # No damage - all layers should have 100% HP
-        summary = instance.get_layer_damage_summary()
-
-        # Even with no tracked damage, method should return empty dict
-        # (we don't have layer info without converting to Ship)
-        assert isinstance(summary, dict)
-
 
 class TestShipInstanceDisplayMethods:
     """Test display-related methods for ShipInstance."""

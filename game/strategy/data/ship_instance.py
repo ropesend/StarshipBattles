@@ -439,15 +439,6 @@ class ShipInstance:
         """Get human-readable display ID in format "DesignName-000001"."""
         return self._display_fmt.get_display_id()
 
-    def get_component_damage_summary(self) -> Dict[str, int]:
-        """
-        Get summary of damaged components.
-
-        Returns:
-            Dict mapping component_id to current HP for damaged components.
-        """
-        return dict(self.component_damage)
-
     def get_damaged_component_count(self) -> int:
         """
         Get count of damaged components.
@@ -456,19 +447,6 @@ class ShipInstance:
             Number of components with recorded damage.
         """
         return len(self.component_damage)
-
-    def get_layer_damage_summary(self) -> Dict[str, float]:
-        """
-        Get damage summary grouped by layer.
-
-        Note: Without converting to a Ship, we can't determine layer membership
-        of damaged components. Returns empty dict for ShipInstance.
-        Full layer info requires calling to_ship() first.
-
-        Returns:
-            Empty dict (layer info requires live Ship object).
-        """
-        return {}
 
     def get_status_text(self) -> str:
         """Get human-readable status text."""

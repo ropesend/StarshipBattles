@@ -241,40 +241,6 @@ class FleetCapabilityCalculator:
                 result.append(ship)
         return result
 
-    @staticmethod
-    def ship_has_ability(
-        ship: 'ShipInstance',
-        ability_name: str,
-        component_registry: Optional[Dict[str, Any]] = None
-    ) -> bool:
-        """
-        Check if a single ship has the specified ability.
-
-        Args:
-            ship: The ShipInstance to check.
-            ability_name: Name of the ability to check for.
-            component_registry: Optional component registry for ability lookups.
-                If None, uses ship._registries.components (required to be set).
-
-        Returns:
-            True if ship has the ability, False otherwise.
-
-        Raises:
-            ValueError: If no registry available (ship has no _registries and
-                none passed explicitly).
-        """
-        from game.strategy.services.component_inspector import ship_has_ability
-        registry = component_registry
-        if registry is None:
-            registry = _get_ship_component_registry(ship)
-        if registry is None:
-            raise ValueError(
-                "FleetCapabilityCalculator.ship_has_ability requires a component "
-                "registry. Either pass component_registry explicitly or ensure ship "
-                "has _registries set via DI."
-            )
-        return ship_has_ability(ship, ability_name, registry)
-
     def list_abilities(self) -> List[str]:
         """
         Get all unique ability names across all combat-capable ships in the fleet.
