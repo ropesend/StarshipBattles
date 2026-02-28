@@ -323,6 +323,14 @@ class GameSession:
         # Restore human player IDs
         session.human_player_ids = data.get('human_player_ids', [0, 1])
 
+        # Step 3: Resolve fleet order references (PROJ-207)
+        # Fleet orders targeting other fleets or planets are stored as marker dicts
+        # (_fleet_ref, _planet_ref) during deserialization. Now that all empires
+        # and galaxy are loaded, resolve these to actual object references.
+        for empire in session.empires:
+            for fleet in empire.fleets:
+                fleet.resolve_order_references(session.galaxy, session.empires)
+
         # Set convenience references
         session.player_empire = session.empires[0] if len(session.empires) > 0 else None
         session.enemy_empire = session.empires[1] if len(session.empires) > 1 else None

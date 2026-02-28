@@ -95,8 +95,8 @@ class FleetOrder:
                 # HexCoord for MOVE, WARP targets
                 target_data = {'q': self.target.q, 'r': self.target.r}
             elif isinstance(self.target, Planet):
-                # Planet target (COLONIZE etc.) - serialize full planet
-                target_data = self.target.to_dict()
+                # Planet reference for COLONIZE etc. (PROJ-207: use planet_ref instead of full dict)
+                target_data = {'type': 'planet_ref', 'id': self.target.id}
             elif isinstance(self.target, Fleet):
                 # Fleet reference - store ID
                 target_data = {'type': 'fleet_ref', 'id': self.target.id}
@@ -481,6 +481,63 @@ class Fleet:
         fleet.construction_queue = data.get('construction_queue', [])
 
         return fleet
+
+    def resolve_order_references(self, galaxy: Any, empires: List[Any]) -> None:
+        """
+        Resolve order target references after deserialization.
+
+        During from_dict(), order targets that reference Fleets or Planets are stored
+        as marker dicts (_fleet_ref, _planet_ref). This method resolves those markers
+        to actual object references.
+
+        Orders with unresolvable references (deleted fleets/planets) are removed
+        with a warning.
+
+        Args:
+            galaxy: Galaxy object with get_planet_by_id() method
+            empires: List of Empire objects containing all fleets
+        """
+        # Build fleet lookup across all empires
+        fleet_lookup: Dict[Any, 'Fleet'] = {}
+        for empire in empires:
+            for fleet in empire.fleets:
+                fleet_lookup[fleet.id] = fleet
+
+        # Resolve references, collecting indices of orders to remove
+        orders_to_remove: List[int] = []
+
+        for i, order in enumerate(self.orders):
+            target = order.target
+            if not isinstance(target, dict):
+                continue
+
+            # Resolve _fleet_ref
+            if '_fleet_ref' in target:
+                fleet_id = target['_fleet_ref']
+                resolved_fleet = fleet_lookup.get(fleet_id)
+                if resolved_fleet is not None:
+                    order.target = resolved_fleet
+                else:
+                    logger.warning(
+                        f"Fleet {self.id}: Cannot resolve _fleet_ref {fleet_id} - fleet no longer exists, removing order"
+                    )
+                    orders_to_remove.append(i)
+
+            # Resolve _planet_ref
+            elif '_planet_ref' in target:
+                planet_id = target['_planet_ref']
+                resolved_planet = galaxy.get_planet_by_id(planet_id)
+                if resolved_planet is not None:
+                    order.target = resolved_planet
+                else:
+                    logger.warning(
+                        f"Fleet {self.id}: Cannot resolve _planet_ref {planet_id} - planet no longer exists, removing order"
+                    )
+                    orders_to_remove.append(i)
+
+        # Remove invalid orders in reverse order to maintain indices
+        for i in reversed(orders_to_remove):
+            self.orders.pop(i)
 
     def __repr__(self):
         ship_count = len(self.ships)
