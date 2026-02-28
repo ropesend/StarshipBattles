@@ -479,8 +479,8 @@ class TestFleetCapabilityCalculatorDelegation:
     PROJ-211: Tests that add ships to fleets use fresh_registries for DI compliance.
     """
 
-    def test_fleet_has_space_shipyard_delegates(self, fresh_registries):
-        """Fleet.has_space_shipyard delegates to calculator."""
+    def test_fleet_capabilities_has_space_shipyard(self, fresh_registries):
+        """Fleet.capabilities.has_space_shipyard works via exposed delegate (PROJ-210)."""
         from game.strategy.data.fleet import Fleet
         from game.core.hex_math import HexCoord
 
@@ -492,10 +492,10 @@ class TestFleetCapabilityCalculatorDelegation:
         )
         fleet.add_ship(ship)
 
-        assert fleet.has_space_shipyard is True
+        assert fleet.capabilities.has_space_shipyard is True
 
-    def test_fleet_can_build_type_delegates(self, fresh_registries):
-        """Fleet.can_build_type delegates to calculator."""
+    def test_fleet_capabilities_can_build_type(self, fresh_registries):
+        """Fleet.capabilities.can_build_type works via exposed delegate (PROJ-210)."""
         from game.strategy.data.fleet import Fleet
         from game.core.hex_math import HexCoord
 
@@ -507,22 +507,22 @@ class TestFleetCapabilityCalculatorDelegation:
         )
         fleet.add_ship(ship)
 
-        assert fleet.can_build_type("ship") is True
+        assert fleet.capabilities.can_build_type("ship") is True
 
-    def test_fleet_can_use_warp_delegates(self):
-        """Fleet.can_use_warp delegates to calculator."""
+    def test_fleet_capabilities_can_use_warp(self):
+        """Fleet.capabilities.can_use_warp works via exposed delegate (PROJ-210)."""
         from game.strategy.data.fleet import Fleet
         from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         # No ships = cannot warp
-        assert fleet.can_use_warp() is False
+        assert fleet.capabilities.can_use_warp() is False
 
-    def test_fleet_get_warp_limiting_ship_delegates(self):
-        """Fleet.get_warp_limiting_ship delegates to calculator."""
+    def test_fleet_capabilities_get_warp_limiting_ship(self):
+        """Fleet.capabilities.get_warp_limiting_ship works via exposed delegate (PROJ-210)."""
         from game.strategy.data.fleet import Fleet
         from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         # No ships = no limiting ship
-        assert fleet.get_warp_limiting_ship() is None
+        assert fleet.capabilities.get_warp_limiting_ship() is None

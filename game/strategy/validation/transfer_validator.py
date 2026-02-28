@@ -156,10 +156,11 @@ class TransferValidator:
     ) -> ValidationResult:
         """Validate a load operation (colony -> fleet)."""
         # For passengers, check fleet has cargo capacity
+        # PROJ-210: Use fleet.resources delegate for cargo operations
         if cargo_type == "passengers":
-            capacity = fleet.get_fleet_cargo_capacity("passengers")
+            capacity = fleet.resources.get_fleet_cargo_capacity("passengers")
             # Use projected cargo if provided (accounts for earlier queued orders)
-            current = projected_cargo if projected_cargo is not None else fleet.get_fleet_cargo_current("passengers")
+            current = projected_cargo if projected_cargo is not None else fleet.resources.get_fleet_cargo_current("passengers")
             available_space = capacity - current
             logger.info(f"DIAG _validate_load: capacity={capacity}, current/projected={current}, available_space={available_space}, projected_cargo_param={projected_cargo}")
 
@@ -202,8 +203,9 @@ class TransferValidator:
     ) -> ValidationResult:
         """Validate an unload operation (fleet -> colony)."""
         # Check fleet has cargo to unload (use projected if available)
+        # PROJ-210: Use fleet.resources delegate for cargo operations
         if cargo_type == "passengers":
-            current_cargo = projected_cargo if projected_cargo is not None else fleet.get_fleet_cargo_current("passengers")
+            current_cargo = projected_cargo if projected_cargo is not None else fleet.resources.get_fleet_cargo_current("passengers")
             if current_cargo <= 0:
                 return ValidationResult.error(
                     "Fleet has no passengers to unload.",

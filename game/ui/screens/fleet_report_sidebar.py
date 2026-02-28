@@ -439,8 +439,8 @@ class FleetReportSidebar:
         else:
             self.lbl_passengers.set_text("Passengers: 0/0")
 
-        # Movement Capabilities - use fleet methods
-        capabilities = fleet.get_capability_summary()
+        # Movement Capabilities - use fleet.resources delegate (PROJ-210)
+        capabilities = fleet.resources.get_capability_summary()
 
         # Warp Capable
         if capabilities['can_warp']:

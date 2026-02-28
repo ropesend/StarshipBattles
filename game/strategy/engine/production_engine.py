@@ -134,7 +134,7 @@ class ProductionEngine:
 
             # 3. Fleet queues
             for fleet in empire.fleets:
-                if not fleet.is_building or not fleet.has_space_shipyard:
+                if not fleet.is_building or not fleet.capabilities.has_space_shipyard:
                     continue
                 
                 # Check for complex production location constraints early
@@ -170,7 +170,7 @@ class ProductionEngine:
                 # I will calculate total rate based on all yards.
                 # Default rate * count.
                 
-                yard_count = fleet.space_shipyard_count
+                yard_count = fleet.capabilities.space_shipyard_count
                 base_rate = get_default_production_rates("fleet_space_yard")
                 # Multiply rates by count
                 total_rate = {k: v * yard_count for k, v in base_rate.items()}

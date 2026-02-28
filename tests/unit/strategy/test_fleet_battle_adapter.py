@@ -239,17 +239,17 @@ class TestFleetBattleAdapterDelegation:
     """Test that Fleet properly delegates to FleetBattleAdapter."""
 
     def test_fleet_to_battle_ships_delegates(self):
-        """Fleet.to_battle_ships delegates to adapter."""
+        """Fleet.battle.to_battle_ships delegates to adapter."""
         from game.strategy.data.fleet import Fleet
         from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
-        # Empty fleet should work
-        result = fleet.to_battle_ships(team_id=0)
+        # Empty fleet should work - use fleet.battle.to_battle_ships (PROJ-210)
+        result = fleet.battle.to_battle_ships(team_id=0)
         assert result == []
 
     def test_fleet_update_from_battle_results_delegates(self, fresh_registries):
-        """Fleet.update_from_battle_results delegates to adapter."""
+        """Fleet.battle.update_from_battle_results delegates to adapter."""
         from game.strategy.data.fleet import Fleet
         from game.core.hex_math import HexCoord
 
@@ -258,6 +258,6 @@ class TestFleetBattleAdapterDelegation:
         ship = make_ship_instance(name="Ship", design_data={}, registries=fresh_registries)
         fleet.add_ship(ship)
 
-        # Simulate battle with no survivors
-        fleet.update_from_battle_results([])
+        # Simulate battle with no survivors - use fleet.battle.* (PROJ-210)
+        fleet.battle.update_from_battle_results([])
         assert len(fleet.ships) == 0

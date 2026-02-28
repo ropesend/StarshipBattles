@@ -87,7 +87,7 @@ class TestNavigationStateFromFleet:
         fleet.path = []
         fleet.orders = []
         fleet.speed = 5.0
-        fleet.can_use_warp.return_value = True
+        fleet.capabilities.can_use_warp.return_value = True
 
         state = NavigationState.from_fleet(fleet)
         assert state.location == HexCoord(3, 4)
@@ -99,7 +99,7 @@ class TestNavigationStateFromFleet:
         fleet.path = [HexCoord(1, 0), HexCoord(2, 0)]
         fleet.orders = []
         fleet.speed = 5.0
-        fleet.can_use_warp.return_value = False
+        fleet.capabilities.can_use_warp.return_value = False
 
         state = NavigationState.from_fleet(fleet)
         assert state.path == (HexCoord(1, 0), HexCoord(2, 0))
@@ -113,7 +113,7 @@ class TestNavigationStateFromFleet:
         fleet.path = []
         fleet.orders = [order]
         fleet.speed = 5.0
-        fleet.can_use_warp.return_value = False
+        fleet.capabilities.can_use_warp.return_value = False
 
         state = NavigationState.from_fleet(fleet)
         assert state.orders == (order,)
@@ -126,7 +126,7 @@ class TestNavigationStateFromFleet:
         fleet.path = []
         fleet.orders = []
         fleet.speed = 7.5
-        fleet.can_use_warp.return_value = False
+        fleet.capabilities.can_use_warp.return_value = False
 
         state = NavigationState.from_fleet(fleet)
         assert state.speed == 7.5
@@ -138,12 +138,12 @@ class TestNavigationStateFromFleet:
         fleet.path = []
         fleet.orders = []
         fleet.speed = 5.0
-        fleet.can_use_warp.return_value = True
+        fleet.capabilities.can_use_warp.return_value = True
 
         state = NavigationState.from_fleet(fleet)
         assert state.can_warp is True
 
-        fleet.can_use_warp.return_value = False
+        fleet.capabilities.can_use_warp.return_value = False
         state2 = NavigationState.from_fleet(fleet)
         assert state2.can_warp is False
 
@@ -396,7 +396,7 @@ class TestProjectPath:
         fleet.path = [HexCoord(1, 0)]
         fleet.orders = []
         fleet.speed = 0.0
-        fleet.can_use_warp.return_value = False
+        fleet.capabilities.can_use_warp.return_value = False
 
         galaxy = MagicMock()
         result = service.project_path(fleet, galaxy)
@@ -409,7 +409,7 @@ class TestProjectPath:
         fleet.path = [HexCoord(1, 0)]
         fleet.orders = []
         fleet.speed = -5.0
-        fleet.can_use_warp.return_value = False
+        fleet.capabilities.can_use_warp.return_value = False
 
         galaxy = MagicMock()
         result = service.project_path(fleet, galaxy)
@@ -422,7 +422,7 @@ class TestProjectPath:
         fleet.path = []
         fleet.orders = []
         fleet.speed = 5.0
-        fleet.can_use_warp.return_value = False
+        fleet.capabilities.can_use_warp.return_value = False
 
         galaxy = MagicMock()
         result = service.project_path(fleet, galaxy)
@@ -443,7 +443,7 @@ class TestProjectPathAsDicts:
         fleet.path = [HexCoord(1, 0)]
         fleet.orders = []
         fleet.speed = 5.0
-        fleet.can_use_warp.return_value = False
+        fleet.capabilities.can_use_warp.return_value = False
 
         galaxy = MagicMock()
         result = service.project_path_as_dicts(fleet, galaxy)
@@ -458,7 +458,7 @@ class TestProjectPathAsDicts:
         fleet.path = []
         fleet.orders = []
         fleet.speed = 0.0
-        fleet.can_use_warp.return_value = False
+        fleet.capabilities.can_use_warp.return_value = False
 
         galaxy = MagicMock()
         result = service.project_path_as_dicts(fleet, galaxy)
@@ -480,7 +480,7 @@ class TestCalculateFleetNextHex:
         fleet.path = []
         fleet.orders = []
         fleet.speed = 5.0
-        fleet.can_use_warp.return_value = False
+        fleet.capabilities.can_use_warp.return_value = False
 
         galaxy = MagicMock()
         result = service.calculate_fleet_next_hex(fleet, galaxy)
@@ -498,7 +498,7 @@ class TestCalculateFleetNextHex:
         fleet.path = []
         fleet.orders = [order]
         fleet.speed = 5.0
-        fleet.can_use_warp.return_value = False
+        fleet.capabilities.can_use_warp.return_value = False
 
         galaxy = MagicMock()
         result = service.calculate_fleet_next_hex(fleet, galaxy)

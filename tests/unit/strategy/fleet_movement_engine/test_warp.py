@@ -79,7 +79,7 @@ class TestWarpTravel:
 
         result = engine.apply_movement(mock_fleet, distant_hex, mock_galaxy)
 
-        mock_fleet.consume_warp_resources.assert_called()
+        mock_fleet.resources.consume_warp_resources.assert_called()
 
     def test_warp_not_detected_for_adjacent_hex(self, mock_fleet, mock_galaxy):
         """Warp is not detected for adjacent hex."""
@@ -91,7 +91,7 @@ class TestWarpTravel:
 
         engine.apply_movement(mock_fleet, adjacent_hex, mock_galaxy)
 
-        mock_fleet.consume_warp_resources.assert_not_called()
+        mock_fleet.resources.consume_warp_resources.assert_not_called()
 
     def test_warp_fails_without_capability(self, mock_fleet, mock_galaxy):
         """Warp fails if fleet lacks warp capability.
@@ -104,7 +104,7 @@ class TestWarpTravel:
         engine = FleetMovementEngine()
         mock_fleet.location = HexCoord(0, 0)
         distant_hex = HexCoord(50, 0)
-        mock_fleet.can_use_warp.return_value = False
+        mock_fleet.capabilities.can_use_warp.return_value = False
 
         result = engine.apply_movement(mock_fleet, distant_hex, mock_galaxy)
 
@@ -123,8 +123,8 @@ class TestWarpTravel:
         engine = FleetMovementEngine()
         mock_fleet.location = HexCoord(0, 0)
         distant_hex = HexCoord(50, 0)
-        mock_fleet.can_use_warp.return_value = True
-        mock_fleet.has_resources_for_warp.return_value = False
+        mock_fleet.capabilities.can_use_warp.return_value = True
+        mock_fleet.resources.has_resources_for_warp.return_value = False
 
         result = engine.apply_movement(mock_fleet, distant_hex, mock_galaxy)
 

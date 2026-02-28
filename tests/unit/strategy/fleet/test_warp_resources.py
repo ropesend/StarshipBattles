@@ -44,7 +44,7 @@ class TestWarpResourceMethods:
         ship = make_warp_ship(warp_resource_costs={'energy': 500.0})
         fleet.ships.append(ship)
 
-        costs = fleet.get_warp_resource_costs()
+        costs = fleet.resources.get_warp_resource_costs()
 
         assert costs == {'energy': 500.0}
 
@@ -55,7 +55,7 @@ class TestWarpResourceMethods:
         ship2 = make_warp_ship(warp_resource_costs={'energy': 300.0})
         fleet.ships.extend([ship1, ship2])
 
-        costs = fleet.get_warp_resource_costs()
+        costs = fleet.resources.get_warp_resource_costs()
 
         assert costs == {'energy': 800.0}
 
@@ -66,7 +66,7 @@ class TestWarpResourceMethods:
         ship2 = make_warp_ship(warp_resource_costs={'energy': 300.0, 'fuel': 50.0})
         fleet.ships.extend([ship1, ship2])
 
-        costs = fleet.get_warp_resource_costs()
+        costs = fleet.resources.get_warp_resource_costs()
 
         assert costs == {'energy': 800.0, 'fuel': 150.0}
 
@@ -74,7 +74,7 @@ class TestWarpResourceMethods:
         """Test warp resource costs for empty fleet returns empty dict."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
 
-        costs = fleet.get_warp_resource_costs()
+        costs = fleet.resources.get_warp_resource_costs()
 
         assert costs == {}
 
@@ -91,7 +91,7 @@ class TestWarpResourceMethods:
         )
         fleet.ships.extend([ship1, ship2])
 
-        assert fleet.has_resources_for_warp() is True
+        assert fleet.resources.has_resources_for_warp() is True
 
     def test_has_resources_for_warp_insufficient_energy_one_ship(self, make_warp_ship):
         """Test has_resources_for_warp returns False when one ship lacks energy."""
@@ -106,7 +106,7 @@ class TestWarpResourceMethods:
         )
         fleet.ships.extend([ship1, ship2])
 
-        assert fleet.has_resources_for_warp() is False
+        assert fleet.resources.has_resources_for_warp() is False
 
     def test_has_resources_for_warp_insufficient_fuel_one_ship(self, make_warp_ship):
         """Test has_resources_for_warp returns False when one ship lacks fuel."""
@@ -117,7 +117,7 @@ class TestWarpResourceMethods:
         )
         fleet.ships.append(ship)
 
-        assert fleet.has_resources_for_warp() is False
+        assert fleet.resources.has_resources_for_warp() is False
 
     def test_has_resources_for_warp_zero_cost_resources(self, make_warp_ship):
         """Test has_resources_for_warp handles zero-cost resources correctly."""
@@ -128,13 +128,13 @@ class TestWarpResourceMethods:
         )
         fleet.ships.append(ship)
 
-        assert fleet.has_resources_for_warp() is True
+        assert fleet.resources.has_resources_for_warp() is True
 
     def test_has_resources_for_warp_empty_fleet(self):
         """Test has_resources_for_warp returns True for empty fleet."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
 
-        assert fleet.has_resources_for_warp() is True
+        assert fleet.resources.has_resources_for_warp() is True
 
     def test_consume_warp_resources_success_all_ships(self, make_warp_ship):
         """Test successful consumption of warp resources from all ships."""
@@ -149,7 +149,7 @@ class TestWarpResourceMethods:
         )
         fleet.ships.extend([ship1, ship2])
 
-        result = fleet.consume_warp_resources()
+        result = fleet.resources.consume_warp_resources()
 
         assert result is True
         ship1.consume_resource.assert_called_with('energy', 500.0)
@@ -168,7 +168,7 @@ class TestWarpResourceMethods:
         )
         fleet.ships.extend([ship1, ship2])
 
-        result = fleet.consume_warp_resources()
+        result = fleet.resources.consume_warp_resources()
 
         assert result is False
         ship1.consume_resource.assert_not_called()
@@ -183,7 +183,7 @@ class TestWarpResourceMethods:
         )
         fleet.ships.append(ship)
 
-        result = fleet.consume_warp_resources()
+        result = fleet.resources.consume_warp_resources()
 
         assert result is False
         ship.consume_resource.assert_not_called()
@@ -197,7 +197,7 @@ class TestWarpResourceMethods:
         )
         fleet.ships.append(ship)
 
-        result = fleet.consume_warp_resources()
+        result = fleet.resources.consume_warp_resources()
 
         assert result is True
         ship.consume_resource.assert_not_called()
@@ -206,7 +206,7 @@ class TestWarpResourceMethods:
         """Test warp consumption succeeds for empty fleet (no-op)."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
 
-        result = fleet.consume_warp_resources()
+        result = fleet.resources.consume_warp_resources()
 
         assert result is True
 
@@ -261,7 +261,7 @@ class TestEdgeCases:
         )
         fleet.ships.extend([active_ship, destroyed_ship])
 
-        costs = fleet.get_movement_resource_costs()
+        costs = fleet.resources.get_movement_resource_costs()
 
         # Only active ship's cost should be counted
         assert costs == {'fuel': 10.0}
@@ -281,7 +281,7 @@ class TestEdgeCases:
         )
         fleet.ships.extend([active_ship, derelict_ship])
 
-        costs = fleet.get_warp_resource_costs()
+        costs = fleet.resources.get_warp_resource_costs()
 
         # Only active ship's cost should be counted
         assert costs == {'energy': 500.0}
@@ -309,7 +309,7 @@ class TestEdgeCases:
         )
         fleet.ships.extend([active1, destroyed, derelict, active2])
 
-        costs = fleet.get_movement_resource_costs()
+        costs = fleet.resources.get_movement_resource_costs()
 
         # Only active ships' costs
         assert costs == {'fuel': 25.0}
@@ -326,7 +326,7 @@ class TestEdgeCases:
             )
             fleet.ships.append(ship)
 
-        costs = fleet.get_movement_resource_costs()
+        costs = fleet.resources.get_movement_resource_costs()
 
         assert costs == {'fuel': 100.0}  # 100 ships * 1.0 fuel each
 
@@ -337,11 +337,11 @@ class TestEdgeCases:
         ship2 = make_edge_ship(resource_costs_per_hex={})
         fleet.ships.extend([ship1, ship2])
 
-        costs = fleet.get_movement_resource_costs()
+        costs = fleet.resources.get_movement_resource_costs()
 
         assert costs == {}
-        assert fleet.has_resources_for_movement() is True
-        assert fleet.consume_movement_resources(hexes=1) is True
+        assert fleet.resources.has_resources_for_movement() is True
+        assert fleet.resources.consume_movement_resources(hexes=1) is True
 
     def test_floating_point_precision_in_resource_consumption(self, make_edge_ship):
         """Test that floating point precision is handled correctly."""
@@ -354,7 +354,7 @@ class TestEdgeCases:
         fleet.ships.append(ship)
 
         # Moving 3 hexes should cost 0.3 fuel (common floating point issue: 0.1 + 0.1 + 0.1)
-        result = fleet.consume_movement_resources(hexes=3)
+        result = fleet.resources.consume_movement_resources(hexes=3)
 
         assert result is True
         # The cost should be 0.3 (0.1 * 3)
@@ -373,8 +373,8 @@ class TestEdgeCases:
 
         # Even with resources, has_resources_for_warp only checks resources
         # The actual warp capability (has warp drive) is checked by can_use_warp
-        assert fleet.has_resources_for_warp() is True
+        assert fleet.resources.has_resources_for_warp() is True
 
         # Consumption should still work
-        result = fleet.consume_warp_resources()
+        result = fleet.resources.consume_warp_resources()
         assert result is True

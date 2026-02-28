@@ -234,7 +234,7 @@ class StrategyBuildQueueManager:
 
         if is_fleet(self._screen.selected_object):
             fleet = self._screen.selected_object
-            if fleet.owner_id == self._screen.current_empire.id and fleet.has_space_shipyard:
+            if fleet.owner_id == self._screen.current_empire.id and fleet.capabilities.has_space_shipyard:
                 # Hide main UI
                 self._screen.ui.hide_ui()
 

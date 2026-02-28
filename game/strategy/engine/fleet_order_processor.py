@@ -371,8 +371,8 @@ class FleetOrderProcessor:
 
         if cargo_type == "passengers":
             # Determine how much to load
-            capacity = fleet.get_fleet_cargo_capacity("passengers")
-            current = fleet.get_fleet_cargo_current("passengers")
+            capacity = fleet.resources.get_fleet_cargo_capacity("passengers")
+            current = fleet.resources.get_fleet_cargo_current("passengers")
             available_space = capacity - current
 
             # If amount is 0, load as much as possible
@@ -399,7 +399,7 @@ class FleetOrderProcessor:
 
                 # Add to fleet cargo
                 # TODO: If we ever track species in fleet cargo, use species_id here
-                fleet.load_cargo_to_fleet("passengers", to_load)
+                fleet.resources.load_cargo_to_fleet("passengers", to_load)
 
                 return to_load
 
@@ -419,7 +419,7 @@ class FleetOrderProcessor:
 
         if cargo_type == "passengers":
             # Determine how much to unload
-            current_cargo = fleet.get_fleet_cargo_current("passengers")
+            current_cargo = fleet.resources.get_fleet_cargo_current("passengers")
 
             # If amount is 0, unload all
             to_unload = amount if amount > 0 else current_cargo
@@ -431,7 +431,7 @@ class FleetOrderProcessor:
                 return 0
 
             # Unload from fleet
-            actual_unloaded = fleet.unload_cargo_from_fleet("passengers", to_unload)
+            actual_unloaded = fleet.resources.unload_cargo_from_fleet("passengers", to_unload)
 
             # Add to colony population
             # Use provided species_id or empire's race_id
@@ -479,7 +479,7 @@ class FleetOrderProcessor:
         # Get passengers from fleet
         # Wrap in try/except for mock compatibility in tests
         try:
-            passengers = fleet.get_fleet_cargo_current("passengers")
+            passengers = fleet.resources.get_fleet_cargo_current("passengers")
         except (AttributeError, TypeError):
             passengers = 0
 
@@ -503,7 +503,7 @@ class FleetOrderProcessor:
         # Unload passengers from fleet (if any)
         if passengers > 0:
             try:
-                fleet.unload_cargo_from_fleet("passengers", passengers)
+                fleet.resources.unload_cargo_from_fleet("passengers", passengers)
             except (AttributeError, TypeError):
                 pass  # Mock fleet, skip unload
 

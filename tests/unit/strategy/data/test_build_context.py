@@ -62,7 +62,7 @@ class TestBuildContextProtocolCompliance:
 
         # has_space_shipyard property
         assert hasattr(mock_fleet, 'has_space_shipyard')
-        assert isinstance(mock_fleet.has_space_shipyard, bool)
+        assert isinstance(mock_fleet.capabilities.has_space_shipyard, bool)
 
         # owner_id property
         assert hasattr(mock_fleet, 'owner_id')
@@ -73,7 +73,7 @@ class TestBuildContextProtocolCompliance:
 
         # can_build_type method
         assert hasattr(mock_fleet, 'can_build_type')
-        assert callable(mock_fleet.can_build_type)
+        assert callable(mock_fleet.capabilities.can_build_type)
 
 
 class TestBuildContextDuckTyping:
@@ -102,7 +102,7 @@ class TestBuildContextDuckTyping:
         # Both should return False for ships when no shipyard
         assert minimal_planet.can_build_type("ship") is False
         # Fleet without yard also returns False
-        assert mock_fleet.can_build_type("ship") is False
+        assert mock_fleet.capabilities.can_build_type("ship") is False
 
         # Planet can always build complexes
         assert minimal_planet.can_build_type("complex") is True

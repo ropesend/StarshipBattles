@@ -70,10 +70,10 @@ def mock_fleet():
     fleet.remove_ship = MagicMock(side_effect=lambda ship: fleet.ships.remove(ship))
     fleet.get_current_order = MagicMock(return_value=None)
     fleet.pop_order = MagicMock()
-    fleet.has_resources_for_movement = MagicMock(return_value=True)
-    fleet.has_resources_for_warp = MagicMock(return_value=True)
-    fleet.consume_movement_resources = MagicMock()
-    fleet.consume_warp_resources = MagicMock()
+    fleet.resources.has_resources_for_movement = MagicMock(return_value=True)
+    fleet.resources.has_resources_for_warp = MagicMock(return_value=True)
+    fleet.resources.consume_movement_resources = MagicMock()
+    fleet.resources.consume_warp_resources = MagicMock()
     fleet.clear_orders = MagicMock()
     return fleet
 

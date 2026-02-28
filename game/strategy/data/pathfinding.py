@@ -212,7 +212,7 @@ def find_hybrid_path(galaxy, start_hex, end_hex, fleet=None):
     # Check if fleet can use warp points
     can_use_warp = True
     if fleet is not None:
-        can_use_warp = fleet.can_use_warp()
+        can_use_warp = fleet.capabilities.can_use_warp()
         logger.debug(f"find_hybrid_path: fleet={fleet.id}, can_use_warp={can_use_warp}")
 
     # 1. Identify Start/End Systems

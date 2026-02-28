@@ -207,14 +207,14 @@ class TestExecuteLoad:
         mock_planet.populations = [pop]
 
         # Fleet has capacity
-        mock_fleet.get_fleet_cargo_capacity.return_value = 100
-        mock_fleet.get_fleet_cargo_current.return_value = 20  # 80 available
+        mock_fleet.resources.get_fleet_cargo_capacity.return_value = 100
+        mock_fleet.resources.get_fleet_cargo_current.return_value = 20  # 80 available
 
         result = processor._execute_load(mock_fleet, mock_planet, "passengers", 50, mock_empire)
 
         assert result == 50
         assert pop.count == 150  # 200 - 50
-        mock_fleet.load_cargo_to_fleet.assert_called_with("passengers", 50)
+        mock_fleet.resources.load_cargo_to_fleet.assert_called_with("passengers", 50)
 
     def test_load_capped_by_capacity(self, processor, mock_fleet, mock_planet, mock_empire):
         """Load amount capped by available cargo capacity."""
@@ -224,13 +224,13 @@ class TestExecuteLoad:
         mock_planet.populations = [pop]
 
         # Fleet nearly full
-        mock_fleet.get_fleet_cargo_capacity.return_value = 100
-        mock_fleet.get_fleet_cargo_current.return_value = 90  # Only 10 space
+        mock_fleet.resources.get_fleet_cargo_capacity.return_value = 100
+        mock_fleet.resources.get_fleet_cargo_current.return_value = 90  # Only 10 space
 
         result = processor._execute_load(mock_fleet, mock_planet, "passengers", 50, mock_empire)
 
         assert result == 10  # Capped by available space
-        mock_fleet.load_cargo_to_fleet.assert_called_with("passengers", 10)
+        mock_fleet.resources.load_cargo_to_fleet.assert_called_with("passengers", 10)
 
     def test_load_capped_by_colony_population(self, processor, mock_fleet, mock_planet, mock_empire):
         """Load amount capped by colony population."""
@@ -240,8 +240,8 @@ class TestExecuteLoad:
         mock_planet.populations = [pop]
 
         # Fleet has plenty of capacity
-        mock_fleet.get_fleet_cargo_capacity.return_value = 100
-        mock_fleet.get_fleet_cargo_current.return_value = 0
+        mock_fleet.resources.get_fleet_cargo_capacity.return_value = 100
+        mock_fleet.resources.get_fleet_cargo_current.return_value = 0
 
         result = processor._execute_load(mock_fleet, mock_planet, "passengers", 50, mock_empire)
 
@@ -256,8 +256,8 @@ class TestExecuteLoad:
         pop2 = SpeciesPopulation(race_id="klingons", count=50, happiness=0.5)
         mock_planet.populations = [pop1, pop2]
 
-        mock_fleet.get_fleet_cargo_capacity.return_value = 100
-        mock_fleet.get_fleet_cargo_current.return_value = 0
+        mock_fleet.resources.get_fleet_cargo_capacity.return_value = 100
+        mock_fleet.resources.get_fleet_cargo_current.return_value = 0
 
         result = processor._execute_load(
             mock_fleet, mock_planet, "passengers", 30, mock_empire, species_id="klingons"
@@ -274,8 +274,8 @@ class TestExecuteLoad:
         pop = SpeciesPopulation(race_id="humans", count=200, happiness=0.5)
         mock_planet.populations = [pop]
 
-        mock_fleet.get_fleet_cargo_capacity.return_value = 100
-        mock_fleet.get_fleet_cargo_current.return_value = 20  # 80 available
+        mock_fleet.resources.get_fleet_cargo_capacity.return_value = 100
+        mock_fleet.resources.get_fleet_cargo_current.return_value = 20  # 80 available
 
         result = processor._execute_load(mock_fleet, mock_planet, "passengers", 0, mock_empire)
 
@@ -293,8 +293,8 @@ class TestExecuteUnload:
         """Unload passengers to colony population."""
         mock_planet.populations = []
 
-        mock_fleet.get_fleet_cargo_current.return_value = 100
-        mock_fleet.unload_cargo_from_fleet.return_value = 50
+        mock_fleet.resources.get_fleet_cargo_current.return_value = 100
+        mock_fleet.resources.unload_cargo_from_fleet.return_value = 50
 
         result = processor._execute_unload(mock_fleet, mock_planet, "passengers", 50, mock_empire)
 
@@ -307,8 +307,8 @@ class TestExecuteUnload:
         """Unload capped by available cargo."""
         mock_planet.populations = []
 
-        mock_fleet.get_fleet_cargo_current.return_value = 30
-        mock_fleet.unload_cargo_from_fleet.return_value = 30
+        mock_fleet.resources.get_fleet_cargo_current.return_value = 30
+        mock_fleet.resources.unload_cargo_from_fleet.return_value = 30
 
         result = processor._execute_unload(mock_fleet, mock_planet, "passengers", 50, mock_empire)
 
@@ -318,8 +318,8 @@ class TestExecuteUnload:
         """Amount of 0 means unload all cargo."""
         mock_planet.populations = []
 
-        mock_fleet.get_fleet_cargo_current.return_value = 75
-        mock_fleet.unload_cargo_from_fleet.return_value = 75
+        mock_fleet.resources.get_fleet_cargo_current.return_value = 75
+        mock_fleet.resources.unload_cargo_from_fleet.return_value = 75
 
         result = processor._execute_unload(mock_fleet, mock_planet, "passengers", 0, mock_empire)
 
@@ -332,8 +332,8 @@ class TestExecuteUnload:
         existing_pop = SpeciesPopulation(race_id="humans", count=100, happiness=0.5)
         mock_planet.populations = [existing_pop]
 
-        mock_fleet.get_fleet_cargo_current.return_value = 50
-        mock_fleet.unload_cargo_from_fleet.return_value = 50
+        mock_fleet.resources.get_fleet_cargo_current.return_value = 50
+        mock_fleet.resources.unload_cargo_from_fleet.return_value = 50
 
         result = processor._execute_unload(mock_fleet, mock_planet, "passengers", 50, mock_empire)
 
@@ -346,8 +346,8 @@ class TestExecuteUnload:
 
         mock_planet.populations = []
 
-        mock_fleet.get_fleet_cargo_current.return_value = 50
-        mock_fleet.unload_cargo_from_fleet.return_value = 50
+        mock_fleet.resources.get_fleet_cargo_current.return_value = 50
+        mock_fleet.resources.unload_cargo_from_fleet.return_value = 50
 
         result = processor._execute_unload(
             mock_fleet, mock_planet, "passengers", 50, mock_empire, species_id="vulcans"

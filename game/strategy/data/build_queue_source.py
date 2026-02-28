@@ -176,7 +176,7 @@ def _collect_fleet_sources(fleet, sources: List[BuildQueueSource]) -> None:
         fleet: Fleet instance to collect queues from.
         sources: List to append BuildQueueSource objects to.
     """
-    yard_count = fleet.space_shipyard_count
+    yard_count = fleet.capabilities.space_shipyard_count
     for yard_idx in range(yard_count):
         yard_num = yard_idx + 1
         display_suffix = f" - Shipyard {yard_num}" if yard_count > 1 else " - Shipyard"

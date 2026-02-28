@@ -345,9 +345,9 @@ def format_fleet_info(fleet: IFleet) -> str:
     text += f"<b>Owner:</b> {fleet.owner_id}<br>"
     text += f"<b>Location:</b> {fleet.location}<br>"
 
-    # Travel range
+    # Travel range (PROJ-210: use fleet.resources delegate)
     speed = int(fleet.speed)
-    fuel = fleet.fuel_endurance()
+    fuel = fleet.resources.fuel_endurance()
     if fuel == -1:
         fuel_str = "unlimited fuel"
     else:

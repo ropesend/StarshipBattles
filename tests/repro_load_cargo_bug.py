@@ -100,8 +100,8 @@ class TestReproLoadCargoBug(unittest.TestCase):
         print(f"Result valid: {result.is_valid}")
         print(f"Result errors: {result.errors}")
         print(f"Result message: {result.message}")
-        print(f"Fleet capacity call: {fleet.get_fleet_cargo_capacity.call_args}")
-        print(f"Fleet current call: {fleet.get_fleet_cargo_current.call_args}")
+        print(f"Fleet capacity call: {fleet.resources.get_fleet_cargo_capacity.call_args}")
+        print(f"Fleet current call: {fleet.resources.get_fleet_cargo_current.call_args}")
 
         # Assert
         self.assertTrue(result.is_valid, f"Transfer should be valid but got: {result.message}")
@@ -132,7 +132,7 @@ class TestReproLoadCargoBug(unittest.TestCase):
         self.assertTrue(result.is_valid, f"Validation should pass: {result.message}")
 
     def test_validator_no_projected_cargo(self):
-        """Test validator when projected_cargo is NOT provided (uses fleet.get_fleet_cargo_current)."""
+        """Test validator when projected_cargo is NOT provided (uses fleet.resources.get_fleet_cargo_current)."""
         planet = self._make_planet(planet_id=1, population=1000)
         fleet = self._make_fleet(fleet_id=1, passenger_capacity=5000, passengers_current=0)
         galaxy, system = self._make_galaxy(planets=[planet])
@@ -146,7 +146,7 @@ class TestReproLoadCargoBug(unittest.TestCase):
             amount=0,
             species_id='Human',
             skip_location_check=True,
-            # No projected_cargo — will use fleet.get_fleet_cargo_current
+            # No projected_cargo — will use fleet.resources.get_fleet_cargo_current
         )
 
         print(f"\n=== VALIDATOR NO PROJECTED ===")

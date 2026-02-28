@@ -33,8 +33,9 @@ class FleetCargoProjector:
         Returns:
             Projected cargo amount after all queued orders
         """
-        current = fleet.get_fleet_cargo_current(cargo_type)
-        capacity = fleet.get_fleet_cargo_capacity(cargo_type)
+        # PROJ-210: Use fleet.resources delegate for cargo operations
+        current = fleet.resources.get_fleet_cargo_current(cargo_type)
+        capacity = fleet.resources.get_fleet_cargo_capacity(cargo_type)
         projected = current
 
         for order in fleet.orders:

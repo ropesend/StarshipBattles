@@ -192,11 +192,11 @@ class TestTickProcessing:
         fleet.path = [HexCoord(1, 0), HexCoord(2, 0)]  # Pre-computed path
         fleet.get_current_order = MagicMock(return_value=order)
         fleet.pop_order = MagicMock()
-        fleet.has_resources_for_movement = MagicMock(return_value=True)
-        fleet.has_resources_for_warp = MagicMock(return_value=True)
-        fleet.can_use_warp = MagicMock(return_value=True)
-        fleet.consume_movement_resources = MagicMock()
-        fleet.consume_warp_resources = MagicMock()
+        fleet.resources.has_resources_for_movement = MagicMock(return_value=True)
+        fleet.resources.has_resources_for_warp = MagicMock(return_value=True)
+        fleet.capabilities.can_use_warp = MagicMock(return_value=True)
+        fleet.resources.consume_movement_resources = MagicMock()
+        fleet.resources.consume_warp_resources = MagicMock()
         fleet.clear_orders = MagicMock()
         fleet.get_ship_instances = MagicMock(return_value=[])
 
@@ -208,7 +208,7 @@ class TestTickProcessing:
 
         turn_engine._process_tick(1, [mock_empire], mock_galaxy)
 
-        fleet.consume_movement_resources.assert_called()
+        fleet.resources.consume_movement_resources.assert_called()
 
     def test_stranded_fleet_clears_orders(self, turn_engine, mock_empire, mock_galaxy):
         """Fleet without movement resources clears orders."""
@@ -222,11 +222,11 @@ class TestTickProcessing:
         fleet.path = [HexCoord(1, 0)]  # Has path
         fleet.get_current_order = MagicMock(return_value=order)
         fleet.pop_order = MagicMock()
-        fleet.has_resources_for_movement = MagicMock(return_value=False)  # No resources
-        fleet.has_resources_for_warp = MagicMock(return_value=True)
-        fleet.can_use_warp = MagicMock(return_value=True)
-        fleet.consume_movement_resources = MagicMock()
-        fleet.consume_warp_resources = MagicMock()
+        fleet.resources.has_resources_for_movement = MagicMock(return_value=False)  # No resources
+        fleet.resources.has_resources_for_warp = MagicMock(return_value=True)
+        fleet.capabilities.can_use_warp = MagicMock(return_value=True)
+        fleet.resources.consume_movement_resources = MagicMock()
+        fleet.resources.consume_warp_resources = MagicMock()
         fleet.clear_orders = MagicMock()
         fleet.get_ship_instances = MagicMock(return_value=[])
 

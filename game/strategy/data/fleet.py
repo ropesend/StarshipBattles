@@ -131,14 +131,14 @@ class Fleet:
         return self._capabilities
 
     @property
-    def has_space_shipyard(self) -> bool:
-        """Check if fleet has an operational space shipyard."""
-        return self._capabilities.has_space_shipyard
+    def resources(self) -> 'FleetResourceAggregator':
+        """Public access to fleet resource aggregation."""
+        return self._resource_agg
 
     @property
-    def space_shipyard_count(self) -> int:
-        """Count total fleet space yard components across all combat-capable ships."""
-        return self._capabilities.space_shipyard_count
+    def battle(self) -> 'FleetBattleAdapter':
+        """Public access to fleet battle conversion."""
+        return self._battle
 
     @property
     def is_building(self) -> bool:
@@ -150,101 +150,8 @@ class Fleet:
         current = self.get_current_order()
         return current is not None and current.type == OrderType.BUILD
 
-    def can_build_type(self, vehicle_type: str, galaxy: Any = None) -> bool:
-        """Check if fleet can build the specified vehicle type."""
-        return self._capabilities.can_build_type(vehicle_type, galaxy)
-
-    def can_use_warp(self) -> bool:
-        """Check if ALL ships in fleet can use warp points."""
-        return self._capabilities.can_use_warp()
-
-    def get_warp_limiting_ship(self) -> Optional[ShipInstance]:
-        """Get the ship that prevents the fleet from using warp, if any."""
-        return self._capabilities.get_warp_limiting_ship()
-
-    # --- Generic Movement Resource Methods (delegated) ---
-
-    def get_movement_resource_costs(self) -> Dict[str, float]:
-        """Get total fleet resource costs per hex of movement."""
-        return self._resource_agg.get_movement_resource_costs()
-
-    def has_resources_for_movement(self) -> bool:
-        """Check if fleet has resources for at least one hex of movement."""
-        return self._resource_agg.has_resources_for_movement()
-
-    def consume_movement_resources(self, hexes: int = 1) -> bool:
-        """Consume all movement resources from all ships."""
-        return self._resource_agg.consume_movement_resources(hexes)
-
-    # --- Warp Resource Methods (delegated) ---
-
-    def get_warp_resource_costs(self) -> Dict[str, float]:
-        """Get total fleet resource costs for a warp jump."""
-        return self._resource_agg.get_warp_resource_costs()
-
-    def has_resources_for_warp(self) -> bool:
-        """Check if fleet has all required resources for a warp jump."""
-        return self._resource_agg.has_resources_for_warp()
-
-    def consume_warp_resources(self) -> bool:
-        """Consume all required resources from all ships for a warp jump."""
-        return self._resource_agg.consume_warp_resources()
-
-    # --- Capability Summary Methods (delegated) ---
-
-    def fuel_endurance(self) -> int:
-        """Calculate fleet fuel endurance in hexes."""
-        return self._resource_agg.fuel_endurance()
-
-    def warp_jumps_remaining(self) -> int:
-        """Calculate how many warp jumps fleet can make."""
-        return self._resource_agg.warp_jumps_remaining()
-
-    def get_capability_summary(self) -> Dict[str, Any]:
-        """Get comprehensive fleet capability summary for UI."""
-        return self._resource_agg.get_capability_summary()
-
-    # --- Cargo Methods (delegated) ---
-
-    def get_fleet_cargo_capacity(self, cargo_type: str) -> int:
-        """Get total fleet cargo capacity for a specific cargo type."""
-        return self._resource_agg.get_fleet_cargo_capacity(cargo_type)
-
-    def get_fleet_cargo_current(self, cargo_type: str) -> int:
-        """Get total current cargo loaded in the fleet for a specific type."""
-        return self._resource_agg.get_fleet_cargo_current(cargo_type)
-
-    def load_cargo_to_fleet(self, cargo_type: str, amount: int) -> int:
-        """Load cargo to the fleet, distributing across ships with capacity."""
-        return self._resource_agg.load_cargo_to_fleet(cargo_type, amount)
-
-    def unload_cargo_from_fleet(self, cargo_type: str, amount: int) -> int:
-        """Unload cargo from the fleet, collecting from ships."""
-        return self._resource_agg.unload_cargo_from_fleet(cargo_type, amount)
-
-    def to_battle_ships(
-        self,
-        team_id: int,
-        formation_positions: Optional[List[Tuple[float, float]]] = None,
-        registries: Optional['GameRegistries'] = None
-    ) -> List['Ship']:
-        """Convert fleet ships to simulation Ship objects for battle."""
-        return self._battle.to_battle_ships(team_id, formation_positions, registries)
-
-    def _default_formation_positions(
-        self,
-        count: int,
-        team_id: int
-    ) -> List[Tuple[float, float]]:
-        """Generate default formation positions for ships."""
-        return self._battle._default_formation_positions(count, team_id)
-
-    def update_from_battle_results(
-        self,
-        surviving_ships: List[IPostBattleShip],
-    ) -> None:
-        """Update fleet ships from battle results."""
-        self._battle.update_from_battle_results(surviving_ships)
+    # NOTE: PROJ-210 Phase 2 removed pass-through methods.
+    # Use fleet.capabilities.*, fleet.resources.*, fleet.battle.* directly.
 
     def add_order(self, order: FleetOrder, index: Optional[int] = None) -> None:
         """Add an order to the queue."""

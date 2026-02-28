@@ -73,19 +73,15 @@ def test_build_button_visible_for_owned_fleet_with_shipyard(strategy_ui, fresh_r
     yard_ship = make_mock_ship_instance("Yard Ship", strategy_ui.scene.current_empire.id, has_yard=True, registries=fresh_registries)
     fleet.ships = [yard_ship]
 
-    # Mock has_space_shipyard to return True
-    fleet._has_space_shipyard = True
-    original_has_space_shipyard = Fleet.has_space_shipyard.fget
-    Fleet.has_space_shipyard = property(lambda self: getattr(self, '_has_space_shipyard', False))
+    # PROJ-210: Mock capabilities.has_space_shipyard (now accessed via property)
+    fleet._capabilities = MagicMock()
+    fleet._capabilities.has_space_shipyard = True
 
-    try:
-        # Act
-        strategy_ui.show_detailed_report(fleet)
+    # Act
+    strategy_ui.show_detailed_report(fleet)
 
-        # Assert
-        assert strategy_ui.btn_build_fleet.visible == 1, "Build button should be visible for owned fleet with shipyard"
-    finally:
-        Fleet.has_space_shipyard = property(original_has_space_shipyard)
+    # Assert
+    assert strategy_ui.btn_build_fleet.visible == 1, "Build button should be visible for owned fleet with shipyard"
 
 
 def test_build_button_hidden_for_owned_fleet_without_shipyard(strategy_ui, fresh_registries):
@@ -95,19 +91,15 @@ def test_build_button_hidden_for_owned_fleet_without_shipyard(strategy_ui, fresh
     ship = make_mock_ship_instance("Regular Ship", strategy_ui.scene.current_empire.id, has_yard=False, registries=fresh_registries)
     fleet.ships = [ship]
 
-    # Mock has_space_shipyard to return False
-    fleet._has_space_shipyard = False
-    original_has_space_shipyard = Fleet.has_space_shipyard.fget
-    Fleet.has_space_shipyard = property(lambda self: getattr(self, '_has_space_shipyard', False))
+    # PROJ-210: Mock capabilities.has_space_shipyard (now accessed via property)
+    fleet._capabilities = MagicMock()
+    fleet._capabilities.has_space_shipyard = False
 
-    try:
-        # Act
-        strategy_ui.show_detailed_report(fleet)
+    # Act
+    strategy_ui.show_detailed_report(fleet)
 
-        # Assert
-        assert strategy_ui.btn_build_fleet.visible == 0, "Build button should be hidden for fleet without shipyard"
-    finally:
-        Fleet.has_space_shipyard = property(original_has_space_shipyard)
+    # Assert
+    assert strategy_ui.btn_build_fleet.visible == 0, "Build button should be hidden for fleet without shipyard"
 
 
 def test_build_button_hidden_for_enemy_fleet_with_shipyard(strategy_ui, fresh_registries):
@@ -117,19 +109,15 @@ def test_build_button_hidden_for_enemy_fleet_with_shipyard(strategy_ui, fresh_re
     yard_ship = make_mock_ship_instance("Enemy Yard Ship", 999, has_yard=True, registries=fresh_registries)
     fleet.ships = [yard_ship]
 
-    # Mock has_space_shipyard to return True
-    fleet._has_space_shipyard = True
-    original_has_space_shipyard = Fleet.has_space_shipyard.fget
-    Fleet.has_space_shipyard = property(lambda self: getattr(self, '_has_space_shipyard', False))
+    # PROJ-210: Mock capabilities.has_space_shipyard (now accessed via property)
+    fleet._capabilities = MagicMock()
+    fleet._capabilities.has_space_shipyard = True
 
-    try:
-        # Act
-        strategy_ui.show_detailed_report(fleet)
+    # Act
+    strategy_ui.show_detailed_report(fleet)
 
-        # Assert
-        assert strategy_ui.btn_build_fleet.visible == 0, "Build button should be hidden for enemy fleet"
-    finally:
-        Fleet.has_space_shipyard = property(original_has_space_shipyard)
+    # Assert
+    assert strategy_ui.btn_build_fleet.visible == 0, "Build button should be hidden for enemy fleet"
 
 
 class TestBuildOrderDisplay:

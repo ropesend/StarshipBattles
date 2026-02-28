@@ -23,7 +23,7 @@ def create_mock_fleet(fleet_id=1, speed=5.0, location=HexCoord(0, 0)):
     fleet.location = location
     fleet.ships = []
     fleet.get_current_order.return_value = None
-    fleet.has_resources_for_movement.return_value = True
+    fleet.resources.has_resources_for_movement.return_value = True
     fleet.path = []
     return fleet
 
@@ -256,7 +256,7 @@ class TestFleetMovementEngineErrorHandling:
         engine = FleetMovementEngine()
 
         fleet = create_mock_fleet(speed=5.0, location=HexCoord(0, 0))
-        fleet.has_resources_for_movement.return_value = False  # No fuel
+        fleet.resources.has_resources_for_movement.return_value = False  # No fuel
         fleet.clear_orders = MagicMock()
         fleet.pop_order = MagicMock()
 
@@ -280,8 +280,8 @@ class TestFleetMovementEngineErrorHandling:
         engine = FleetMovementEngine()
 
         fleet = create_mock_fleet(speed=5.0, location=HexCoord(0, 0))
-        fleet.has_resources_for_movement.return_value = True
-        fleet.can_use_warp.return_value = False  # No warp capability
+        fleet.resources.has_resources_for_movement.return_value = True
+        fleet.capabilities.can_use_warp.return_value = False  # No warp capability
         fleet.clear_orders = MagicMock()
         fleet.pop_order = MagicMock()
 
@@ -306,9 +306,9 @@ class TestFleetMovementEngineErrorHandling:
         engine = FleetMovementEngine()
 
         fleet = create_mock_fleet(speed=5.0, location=HexCoord(0, 0))
-        fleet.has_resources_for_movement.return_value = True
-        fleet.can_use_warp.return_value = True  # Has capability
-        fleet.has_resources_for_warp.return_value = False  # But no resources
+        fleet.resources.has_resources_for_movement.return_value = True
+        fleet.capabilities.can_use_warp.return_value = True  # Has capability
+        fleet.resources.has_resources_for_warp.return_value = False  # But no resources
         fleet.clear_orders = MagicMock()
         fleet.pop_order = MagicMock()
 
@@ -341,8 +341,8 @@ class TestFleetMovementEngineErrorHandling:
         ]
 
         fleet = create_mock_fleet(speed=5.0, location=HexCoord(0, 0))
-        fleet.has_resources_for_movement.return_value = True
-        fleet.can_use_warp.return_value = False  # No warp capability
+        fleet.resources.has_resources_for_movement.return_value = True
+        fleet.capabilities.can_use_warp.return_value = False  # No warp capability
         fleet.orders = orders
 
         # Real pop_order behavior
@@ -377,7 +377,7 @@ class TestFleetMovementEngineErrorHandling:
         orders = [FleetOrder(OrderType.MOVE, HexCoord(1, 0))]
 
         fleet = create_mock_fleet(speed=5.0, location=HexCoord(0, 0))
-        fleet.has_resources_for_movement.return_value = False  # Stranded
+        fleet.resources.has_resources_for_movement.return_value = False  # Stranded
         fleet.orders = orders
 
         # Real clear_orders behavior

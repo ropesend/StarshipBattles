@@ -97,7 +97,7 @@ class TestWarpJumpUsesResourceConsumptionTrigger:
         fleet.add_ship(ship)
 
         # Verify consume_warp_resources() works
-        success = fleet.consume_warp_resources()
+        success = fleet.resources.consume_warp_resources()
         assert success is True
 
         # Verify both resources were consumed
@@ -181,14 +181,14 @@ class TestMovementWithMultiResourceConsumption:
         fleet.add_ship(ship)
 
         # Verify movement resource costs
-        costs = fleet.get_movement_resource_costs()
+        costs = fleet.resources.get_movement_resource_costs()
         assert 'fuel' in costs
         assert 'coolant' in costs
         assert costs['fuel'] == 100
         assert costs['coolant'] == 25
 
         # Move 3 hexes
-        success = fleet.consume_movement_resources(3)
+        success = fleet.resources.consume_movement_resources(3)
         assert success is True
 
         # Verify both resources consumed

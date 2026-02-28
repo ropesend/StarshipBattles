@@ -149,7 +149,7 @@ class FleetMovementEngine:
             MovementResult with success/failure details
         """
         # Check resources before moving
-        if not fleet.has_resources_for_movement():
+        if not fleet.resources.has_resources_for_movement():
             logger.warning(f"Fleet {fleet.id} stranded - insufficient resources for movement")
             fleet.clear_orders()
             return MovementResult(moved=False, stranded=True)
@@ -162,22 +162,22 @@ class FleetMovementEngine:
             # Check warp CAPABILITY first
             # PROJ-207 EP-005: Use pop_order() instead of clear_orders() for warp failures.
             # Fleet can still move normally, so preserve subsequent orders.
-            if not fleet.can_use_warp():
+            if not fleet.capabilities.can_use_warp():
                 logger.debug(f"Fleet {fleet.id} warp blocked - no warp capability")
                 logger.warning(f"Fleet {fleet.id} cannot warp - no warp capability")
                 fleet.pop_order()
                 return MovementResult(moved=False, warp_blocked=True)
 
-            if not fleet.has_resources_for_warp():
+            if not fleet.resources.has_resources_for_warp():
                 logger.warning(f"Fleet {fleet.id} cannot warp - insufficient resources")
                 fleet.pop_order()
                 return MovementResult(moved=False, warp_blocked=False)
 
             logger.debug(f"Fleet {fleet.id} executing warp jump to {next_hex}")
-            fleet.consume_warp_resources()
+            fleet.resources.consume_warp_resources()
 
         # Consume movement resources for this hex
-        fleet.consume_movement_resources(1)
+        fleet.resources.consume_movement_resources(1)
 
         # Apply movement
         old_location = fleet.location

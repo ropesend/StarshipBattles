@@ -188,7 +188,7 @@ class TestFleetCapabilityCalculatorDI:
         fleet.add_ship(ship)
 
         # Calculator should use injected registry
-        assert fleet.has_space_shipyard is True
+        assert fleet.capabilities.has_space_shipyard is True
         assert fleet.space_shipyard_count == 1
 
     def test_fleet_from_dict_passes_registries(self):
@@ -245,7 +245,7 @@ class TestFleetCapabilityCalculatorDI:
         assert fleet.ships[0]._registries.components == registries.components
 
         # Capability checks should work
-        assert fleet.has_space_shipyard is True
+        assert fleet.capabilities.has_space_shipyard is True
 
 
 class TestFleetCreationWithRegistry:

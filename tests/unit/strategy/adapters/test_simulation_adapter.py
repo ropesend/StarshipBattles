@@ -74,7 +74,9 @@ class TestSimulationBattleResolverBehavior:
         fleet = MagicMock()
         fleet.id = 1
         fleet.has_ship_instances.return_value = True
-        fleet.to_battle_ships.return_value = [MagicMock(), MagicMock()]
+        # PROJ-210: battle adapter is now accessed via fleet.battle property
+        fleet.battle = MagicMock()
+        fleet.battle.to_battle_ships.return_value = [MagicMock(), MagicMock()]
         return fleet
 
     @pytest.fixture
@@ -83,7 +85,9 @@ class TestSimulationBattleResolverBehavior:
         fleet = MagicMock()
         fleet.id = 2
         fleet.has_ship_instances.return_value = True
-        fleet.to_battle_ships.return_value = []
+        # PROJ-210: battle adapter is now accessed via fleet.battle property
+        fleet.battle = MagicMock()
+        fleet.battle.to_battle_ships.return_value = []
         return fleet
 
     def test_resolve_battle_returns_battle_result(self, mock_fleet_with_ships):

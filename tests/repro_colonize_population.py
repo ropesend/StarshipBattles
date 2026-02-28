@@ -16,7 +16,7 @@ class TestColonizePopulation(unittest.TestCase):
         fleet.orders = []
         fleet.get_current_order.return_value = FleetOrder(OrderType.COLONIZE, None)
         # Mock cargo: 0 passengers
-        fleet.get_fleet_cargo_current.return_value = 0
+        fleet.resources.get_fleet_cargo_current.return_value = 0
         fleet.unload_cargo_from_fleet = MagicMock()
 
         # Mock Empire with Race Config

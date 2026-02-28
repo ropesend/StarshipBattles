@@ -247,9 +247,9 @@ class ConflictResolutionEngine:
             environmental_effects=environmental_effects
         )
 
-        # Apply results to fleets
-        f1.update_from_battle_results(result.team0_survivors)
-        f2.update_from_battle_results(result.team1_survivors)
+        # Apply results to fleets (PROJ-210: use battle adapter property)
+        f1.battle.update_from_battle_results(result.team0_survivors)
+        f2.battle.update_from_battle_results(result.team1_survivors)
 
         # Determine winner
         if result.winner == 0:

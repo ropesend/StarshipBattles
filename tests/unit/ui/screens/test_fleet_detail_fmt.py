@@ -25,7 +25,7 @@ def _make_mock_fleet(fleet_id=1, owner_id=0, ships=None, orders=None,
     fleet.ships = ships or []
     fleet.orders = orders or []
     fleet.speed = speed
-    fleet.fuel_endurance.return_value = fuel_endurance
+    fleet.resources.fuel_endurance.return_value = fuel_endurance
     fleet.location = MagicMock(__str__=lambda self: "(0, 0)")
     fleet.construction_queue = []
     return fleet

@@ -501,8 +501,8 @@ class TransferCommandHandler(BaseCommandHandler):
         # Use projected cargo to account for earlier queued orders
         from game.strategy.services.fleet_cargo_projector import FleetCargoProjector
         projected = FleetCargoProjector.get_projected_cargo(fleet, cmd.cargo_type)
-        capacity = fleet.get_fleet_cargo_capacity(cmd.cargo_type)
-        current = fleet.get_fleet_cargo_current(cmd.cargo_type)
+        capacity = fleet.resources.get_fleet_cargo_capacity(cmd.cargo_type)
+        current = fleet.resources.get_fleet_cargo_current(cmd.cargo_type)
         logger.info(f"DIAG TransferCommandHandler: cargo capacity={capacity}, current={current}, projected={projected}")
 
         result = TransferValidator.validate(
@@ -594,8 +594,8 @@ class WarpCommandHandler(BaseCommandHandler):
             return error
 
         # 2. Validate fleet can use warp
-        if not fleet.can_use_warp():
-            limiting_ship = fleet.get_warp_limiting_ship()
+        if not fleet.capabilities.can_use_warp():
+            limiting_ship = fleet.capabilities.get_warp_limiting_ship()
             if limiting_ship:
                 return ValidationResult.error(
                     f"Fleet cannot use warp - {limiting_ship.name} lacks warp capability."

@@ -195,7 +195,7 @@ class TestColonizeTransfersPassengers:
         empire.add_fleet(fleet)
 
         # Verify cargo before
-        assert fleet.get_fleet_cargo_current("passengers") == 75
+        assert fleet.resources.get_fleet_cargo_current("passengers") == 75
 
         processor = FleetOrderProcessor()
         processor.process_colonize(
@@ -265,7 +265,7 @@ class TestColonizeMultipleShips:
         empire.add_fleet(fleet)
 
         # Total passengers = 30 + 45 = 75
-        assert fleet.get_fleet_cargo_current("passengers") == 75
+        assert fleet.resources.get_fleet_cargo_current("passengers") == 75
 
         processor = FleetOrderProcessor()
         processor.process_colonize(

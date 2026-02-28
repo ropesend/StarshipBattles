@@ -80,11 +80,11 @@ def create_fleet(fleet_id, empire_id, location, speed):
     """Helper to create a fleet with common defaults."""
     fleet = Fleet(fleet_id, empire_id, location, speed=speed)
     # Mock resource methods to always succeed
-    fleet.has_resources_for_movement = MagicMock(return_value=True)
-    fleet.consume_movement_resources = MagicMock(return_value=True)
-    fleet.can_use_warp = MagicMock(return_value=True)
-    fleet.has_resources_for_warp = MagicMock(return_value=True)
-    fleet.consume_warp_resources = MagicMock(return_value=True)
+    fleet.resources.has_resources_for_movement = MagicMock(return_value=True)
+    fleet.resources.consume_movement_resources = MagicMock(return_value=True)
+    fleet.capabilities.can_use_warp = MagicMock(return_value=True)
+    fleet.resources.has_resources_for_warp = MagicMock(return_value=True)
+    fleet.resources.consume_warp_resources = MagicMock(return_value=True)
     return fleet
 
 
@@ -205,7 +205,7 @@ class TestProjectionMatchesExecution:
         turn_engine.process_turn([empire], mock_galaxy)
 
         # VERIFY: Warp resources were consumed (confirming warp was detected)
-        fleet.consume_warp_resources.assert_called()
+        fleet.resources.consume_warp_resources.assert_called()
 
         # Fleet should have moved along projected warp path
         # With speed 5, should make 5 steps per turn

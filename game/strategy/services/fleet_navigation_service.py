@@ -66,7 +66,7 @@ class NavigationState:
             path=tuple(fleet.path),
             orders=tuple(fleet.orders),
             speed=fleet.speed,
-            can_warp=fleet.can_use_warp()
+            can_warp=fleet.capabilities.can_use_warp()
         )
 
 
@@ -181,10 +181,19 @@ class FleetNavigationService:
 
         # Use find_hybrid_path for pathfinding
         # Create minimal fleet-like object for warp capability check
+        # PROJ-210: Create capabilities-like object matching new API (fleet.capabilities.can_use_warp())
         can_warp_value = state.can_warp
+
+        class MockCapabilities:
+            def __init__(self, can_warp):
+                self._can_warp = can_warp
+
+            def can_use_warp(self):
+                return self._can_warp
+
         fleet_like = type('Fleet', (), {
             'id': -1,  # Projection context, no real fleet ID
-            'can_use_warp': lambda self: can_warp_value
+            'capabilities': MockCapabilities(can_warp_value)
         })()
 
         path = find_hybrid_path(galaxy, state.location, destination, fleet=fleet_like)
