@@ -8,27 +8,30 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-208 Audit Cycle 1 PASSED
-**Current Status:** PROJ-208 Complete - Moving to PROJ-210
+**Last Completed:** PROJ-210 Phase 1 (Serialization & Embedded Classes)
+**Current Status:** PROJ-210 Phase 1 Complete - Ready for Phase 2
 **Current Project:** PROJ-210
-**Current Phase:** Phase 1 (Ready to Start)
+**Current Phase:** Phase 2 (Facade Bloat & Pass-Through Elimination)
 **Test Status:** 12929 passed, 1 skipped (4 pre-existing bug_13 failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-208 AUDIT PASSED:**
-  - Found 1 issue: ReorderFleetOrderCommand direction type mismatch (str vs int)
-  - Fixed: fleet_orders_window.py now passes int direction instead of string
-  - Fixed: strategy_window_manager.py callback signature updated to int
-  - All 4 phases verified complete with proper implementations
-  - All command handlers tested and working
-  - FleetInfo DTO enhancements verified
-  - Protocol guards verified
-  - Facade routing verified
-- **Files Modified This Session:**
-  - game/ui/screens/fleet_orders_window.py (direction int fix)
-  - game/ui/screens/strategy_window_manager.py (callback signature fix)
-- **Next Action:** Start PROJ-210 Phase 1
+- **PROJ-210 Phase 1 Complete:**
+  - Created `fleet_order_serializer.py` with FleetOrderSerializer class
+  - Extracted order deserialization logic (7 target formats) from Fleet.from_dict()
+  - Extracted resolve_order_references() to serializer
+  - Fleet.from_dict() reduced from ~95 lines to ~50 lines
+  - Created `planetary_facility.py` with PlanetaryFacility class
+  - Created `species_population.py` with SpeciesPopulation dataclass
+  - Updated planet.py to import from new modules (backward compatible re-exports)
+- **Files Created:**
+  - game/strategy/data/fleet_order_serializer.py (new)
+  - game/strategy/data/planetary_facility.py (new)
+  - game/strategy/data/species_population.py (new)
+- **Files Modified:**
+  - game/strategy/data/fleet.py (imports reorganized, from_dict simplified)
+  - game/strategy/data/planet.py (embedded classes removed, imports added)
+- **Next Action:** Begin Phase 2 — eliminate pass-through facade methods on Fleet
 - Note: 4 bug_13 tests fail due to missing asset files (pre-existing, unrelated)
 
 ---
@@ -61,8 +64,8 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
-- [ ] **PROJ-210: Strategy God Class Decomposition**
-  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-210: Strategy God Class Decomposition**
+  - **Phases:** 5 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-210/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-210/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -112,6 +115,7 @@
 | 2026-02-28 | PROJ-208 | Phase 3 | Complete | 12918 passed, 1 skipped | pending | Facade routing fixed in 4 files; research commands DEFERRED (sandbox) |
 | 2026-02-28 | PROJ-208 | Phase 4 | Complete | 12929 passed, 1 skipped | pending | FleetInfo.capabilities, protocol guards, facade query methods |
 | 2026-02-28 | PROJ-208 | Audit 1 | PASSED | 12929 passed, 1 skipped | pending | Fixed direction type mismatch in ReorderFleetOrderCommand |
+| 2026-02-28 | PROJ-210 | Phase 1 | Complete | 12929 passed, 1 skipped | pending | FleetOrderSerializer, PlanetaryFacility, SpeciesPopulation extracted |
 
 ---
 

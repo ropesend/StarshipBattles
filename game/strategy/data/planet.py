@@ -1,15 +1,22 @@
+"""
+Planet data class.
+
+PlanetaryFacility and SpeciesPopulation extracted to own modules (PROJ-210).
+"""
+
 import logging
 import math
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Dict, FrozenSet, List, Optional, Any
-from game.core.constants import ResourceType
 from game.core.hex_math import HexCoord, hex_circle_filled
-from game.core.patterns.layer_iterator import iter_components, get_component_id
 from game.core.validation_helpers import (
     require_keys, validate_enum, validate_positive, validate_non_negative
 )
-from game.strategy.services.component_inspector import get_component_abilities
+
+# PROJ-210: Import extracted classes for backward compatibility
+from game.strategy.data.planetary_facility import PlanetaryFacility
+from game.strategy.data.species_population import SpeciesPopulation
 
 logger = logging.getLogger(__name__)
 
@@ -30,157 +37,6 @@ class PlanetType(Enum):
     ICE_DWARF = auto()   # Pluto type
     PLANETOID = auto()   # Ceres / Large Asteroid
     DYSON_SPHERE = auto()  # Artificial megastructure enclosing a star
-
-@dataclass
-class PlanetaryFacility:
-    """Represents a built complex on a planet."""
-    instance_id: str          # Unique ID (uuid)
-    design_id: str            # Reference to design file
-    name: str                 # Facility name
-    design_data: Dict[str, Any]  # Full complex design (from JSON)
-    is_operational: bool = True
-    construction_queue: List[Dict[str, Any]] = field(default_factory=list)
-    resource_levels: Dict[str, float] = field(default_factory=dict)
-
-    @classmethod
-    def from_dict(cls, data: dict) -> 'PlanetaryFacility':
-        """
-        Deserialize facility from dict.
-
-        Args:
-            data: Dict with facility data
-
-        Returns:
-            Reconstructed PlanetaryFacility
-
-        Raises:
-            PersistenceException: If required keys missing
-        """
-        require_keys(data, ['instance_id', 'design_id', 'name', 'design_data'], 'PlanetaryFacility')
-        return cls(
-            instance_id=data['instance_id'],
-            design_id=data['design_id'],
-            name=data['name'],
-            design_data=data['design_data'],
-            is_operational=data.get('is_operational', True),
-            construction_queue=data.get('construction_queue', []),
-            resource_levels=data.get('resource_levels', {})
-        )
-
-    def get_fuel_storage(self) -> float:
-        """Get current fuel level in this facility."""
-        return self.resource_levels.get(ResourceType.FUEL, 0.0)
-
-    def get_max_fuel_storage(self, registries) -> float:
-        """Calculate max fuel capacity from design_data components.
-
-        Scans all components in the facility's design_data for ResourceStorage
-        abilities with resource type 'fuel' and sums their amounts.
-
-        Args:
-            registries: GameRegistries with component definitions.
-
-        Returns:
-            Total fuel storage capacity.
-        """
-        total = 0.0
-        for comp in iter_components(self.design_data):
-            comp_id = get_component_id(comp)
-            comp_def = registries.components.get(comp_id)
-            if not comp_def:
-                continue
-            abilities = get_component_abilities(comp_def)
-            for storage in (abilities.get('ResourceStorage') or []):
-                if isinstance(storage, dict) and storage.get('resource') == ResourceType.FUEL:
-                    total += storage.get('amount', 0)
-        return total
-
-    def add_fuel(self, amount: float, registries) -> float:
-        """Add fuel up to max capacity.
-
-        Args:
-            amount: Amount of fuel to add.
-            registries: GameRegistries for max capacity lookup.
-
-        Returns:
-            Overflow amount that could not be stored.
-        """
-        max_storage = self.get_max_fuel_storage(registries)
-        current = self.get_fuel_storage()
-        space = max_storage - current
-        added = min(amount, space)
-        self.resource_levels[ResourceType.FUEL] = current + added
-        return amount - added
-
-    def withdraw_fuel(self, amount: float) -> float:
-        """Withdraw fuel from this facility.
-
-        Args:
-            amount: Amount of fuel to withdraw.
-
-        Returns:
-            Actual amount withdrawn (may be less than requested).
-        """
-        current = self.get_fuel_storage()
-        withdrawn = min(amount, current)
-        self.resource_levels[ResourceType.FUEL] = current - withdrawn
-        return withdrawn
-
-    @property
-    def is_shipyard(self) -> bool:
-        """Check if this facility is a space shipyard.
-
-        Scans design_data layers for component id 'space_shipyard' or
-        SpaceShipyard ability.
-
-        Returns:
-            True if the facility is an operational space shipyard.
-        """
-        if not self.is_operational:
-            return False
-
-        for comp in iter_components(self.design_data):
-            if isinstance(comp, dict):
-                if comp.get("id") == "space_shipyard":
-                    return True
-                if "SpaceShipyard" in comp.get("abilities", {}):
-                    return True
-        return False
-
-
-@dataclass
-class SpeciesPopulation:
-    """
-    Represents a population of a single species on a planet.
-
-    Population is tracked in units of 1,000 people for manageable numbers.
-    Happiness affects growth rate and productivity.
-    """
-    race_id: str  # References RaceConfig.race_id
-    count: int = 0  # Population units (1 unit = 1,000 people)
-    happiness: float = 0.5  # 0.0 (miserable) to 1.0 (ecstatic)
-
-    @classmethod
-    def from_dict(cls, data: dict) -> 'SpeciesPopulation':
-        """
-        Deserialize population from dict.
-
-        Args:
-            data: Dict with population data
-
-        Returns:
-            Reconstructed SpeciesPopulation
-
-        Raises:
-            PersistenceException: If required keys missing
-        """
-        require_keys(data, ['race_id', 'count'], 'SpeciesPopulation')
-        return cls(
-            race_id=data['race_id'],
-            count=data['count'],
-            happiness=data.get('happiness', 0.5)
-        )
-
 
 @dataclass
 class Planet:

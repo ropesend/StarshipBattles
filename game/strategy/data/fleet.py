@@ -1,15 +1,19 @@
-import logging
-from game.core.hex_math import HexCoord
-from game.core.validation_helpers import require_keys, validate_enum
-from game.strategy.data.ship_instance import ShipInstance
+"""
+Fleet data class.
 
-logger = logging.getLogger(__name__)
-from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
-from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
-from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
+FleetOrderSerializer extracted to fleet_order_serializer.py (PROJ-210).
+"""
+
+import logging
 from typing import List, Optional, Tuple, TYPE_CHECKING, Any, Dict
 
+from game.core.hex_math import HexCoord
 from game.core.protocols import IPostBattleShip
+from game.core.validation_helpers import require_keys
+from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
+from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
+from game.strategy.data.ship_instance import ShipInstance
 
 # PROJ-212: OrderType, FleetOrder, and order type sets extracted to order_types.py
 from game.strategy.data.order_types import (
@@ -18,6 +22,8 @@ from game.strategy.data.order_types import (
     MOVEMENT_ORDER_TYPES,
     ACTION_ORDER_TYPES,
 )
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
@@ -325,8 +331,10 @@ class Fleet:
         Raises:
             PersistenceException: If required keys missing
         """
+        # PROJ-210: Order deserialization delegated to FleetOrderSerializer
+        from game.strategy.data.fleet_order_serializer import FleetOrderSerializer
+
         require_keys(data, ['id', 'owner_id'], 'Fleet')
-        # ShipInstance imported at module level
 
         location = data.get('location')
         if isinstance(location, dict) and 'q' in location and 'r' in location:
@@ -362,51 +370,11 @@ class Fleet:
             else:
                 fleet.path.append(p)
 
-        # Restore orders (skip corrupt entries with warning)
-        # Note: Multiple target formats supported:
-        # 1. {'q': x, 'r': y} - HexCoord.to_dict() format
-        # 2. {'type': 'fleet_ref', 'id': xxx} - Fleet reference for MOVE_TO_FLEET orders
-        # 3. {'type': 'raw', 'value': str} - Fallback string representation
-        # 4. {'type': 'transfer', 'value': {...}} - TRANSFER order params (PROJ-68)
-        # 5. {'type': 'planet_ref', 'id': xxx} - Planet reference (PROJ-102)
-        # 6. {'type': 'ship_id_list', 'value': [...]} - Ship IDs (PROJ-102)
-        # 7. {'type': 'warp_params', 'value': {...}} - Warp parameters (PROJ-102)
-        for i, order_data in enumerate(data.get('orders', [])):
-            try:
-                order_type = validate_enum(order_data['type'], OrderType, 'type', f'Fleet order[{i}]')
-                target = None
-
-                target_data = order_data.get('target')
-                if target_data is not None:
-                    if isinstance(target_data, dict):
-                        if 'q' in target_data and 'r' in target_data:
-                            # HexCoord.to_dict() format
-                            target = HexCoord(target_data['q'], target_data['r'])
-                        elif target_data.get('type') == 'fleet_ref':
-                            # Fleet reference - store ID for later resolution
-                            target = {'_fleet_ref': target_data['id']}
-                        elif target_data.get('type') == 'transfer':
-                            # TRANSFER order params dict (PROJ-68)
-                            target = target_data['value']
-                        elif target_data.get('type') == 'planet_ref':
-                            # Planet reference for IMPLODE_PLANET (PROJ-102)
-                            target = {'_planet_ref': target_data['id']}
-                        elif target_data.get('type') == 'ship_id_list':
-                            # Ship ID list for SELF_DESTRUCT (PROJ-102)
-                            target = target_data['value']
-                        elif target_data.get('type') == 'warp_params':
-                            # Warp parameters for OPEN_WARP_POINT (PROJ-102)
-                            target = target_data['value']
-                        elif target_data.get('type') == 'raw':
-                            # Raw string fallback
-                            target = target_data['value']
-
-                order = FleetOrder(order_type, target)
-                # PROJ-187: Restore execution_progress (default 0 for backward compat)
-                order.execution_progress = order_data.get('execution_progress', 0)
-                fleet.orders.append(order)
-            except Exception as e:
-                logger.warning(f"Fleet {data['id']}: skipping corrupt order[{i}]: {e}")
+        # PROJ-210: Restore orders using serializer
+        fleet.orders = FleetOrderSerializer.deserialize_orders(
+            data.get('orders', []),
+            data['id']
+        )
 
         # Restore construction queue
         fleet.construction_queue = data.get('construction_queue', [])
@@ -428,47 +396,9 @@ class Fleet:
             galaxy: Galaxy object with get_planet_by_id() method
             empires: List of Empire objects containing all fleets
         """
-        # Build fleet lookup across all empires
-        fleet_lookup: Dict[Any, 'Fleet'] = {}
-        for empire in empires:
-            for fleet in empire.fleets:
-                fleet_lookup[fleet.id] = fleet
-
-        # Resolve references, collecting indices of orders to remove
-        orders_to_remove: List[int] = []
-
-        for i, order in enumerate(self.orders):
-            target = order.target
-            if not isinstance(target, dict):
-                continue
-
-            # Resolve _fleet_ref
-            if '_fleet_ref' in target:
-                fleet_id = target['_fleet_ref']
-                resolved_fleet = fleet_lookup.get(fleet_id)
-                if resolved_fleet is not None:
-                    order.target = resolved_fleet
-                else:
-                    logger.warning(
-                        f"Fleet {self.id}: Cannot resolve _fleet_ref {fleet_id} - fleet no longer exists, removing order"
-                    )
-                    orders_to_remove.append(i)
-
-            # Resolve _planet_ref
-            elif '_planet_ref' in target:
-                planet_id = target['_planet_ref']
-                resolved_planet = galaxy.get_planet_by_id(planet_id)
-                if resolved_planet is not None:
-                    order.target = resolved_planet
-                else:
-                    logger.warning(
-                        f"Fleet {self.id}: Cannot resolve _planet_ref {planet_id} - planet no longer exists, removing order"
-                    )
-                    orders_to_remove.append(i)
-
-        # Remove invalid orders in reverse order to maintain indices
-        for i in reversed(orders_to_remove):
-            self.orders.pop(i)
+        # PROJ-210: Delegate to FleetOrderSerializer
+        from game.strategy.data.fleet_order_serializer import FleetOrderSerializer
+        FleetOrderSerializer.resolve_order_references(self, galaxy, empires)
 
     def __repr__(self):
         ship_count = len(self.ships)
