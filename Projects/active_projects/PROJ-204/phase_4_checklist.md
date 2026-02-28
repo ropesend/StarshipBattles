@@ -2,6 +2,7 @@
 
 **Findings:** CQ-02, CQ-22, CQ-23, CQ-06
 **Effort:** Medium
+**Status:** Complete
 **Goal:** Consolidate strategy layer duplication in resources, serialization, and ability extraction
 
 ## Tasks

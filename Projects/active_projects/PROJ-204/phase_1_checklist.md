@@ -2,6 +2,7 @@
 
 **Findings:** AR-02, CQ-20, CQ-21, CQ-82
 **Effort:** Medium
+**Status:** Complete
 **Goal:** Create the shared utilities that unblock consolidation in later phases
 
 ## Tasks
