@@ -8,23 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-27
-**Last Completed:** PROJ-211 Phase 2 Complete - DI plumbing for ShipInstance/FleetCapabilityCalculator
-**Current Status:** PROJ-211 Phase 3 ready to start
+**Last Completed:** PROJ-211 Phase 3 - All test fixtures updated
+**Current Status:** PROJ-211 Phase 3 complete, Phase 4 ready to start
 **Current Project:** PROJ-211
-**Current Phase:** Phase 3 (Initialization Functions)
-**Test Status:** 12885 passed, 1 skipped (+ 4 pre-existing bug_13_colony_flags failures)
+**Current Phase:** Phase 4 (UI Services) - Not Started
+**Test Status:** 12885 passed, 4 failed (unrelated), 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-211 Phase 2 marked complete:
-  - Task 2.1: ShipInstance DI plumbing complete (accepts/uses registries)
-  - Task 2.2: FleetCapabilityCalculator DI plumbing complete
-  - Task 2.3: MOVED TO PHASE 5 - Fallback removal requires ~200 test fixture updates
-- Attempted fallback removal in this session but found 201 test failures
-- Reverted changes, updated Phase 2 to mark complete without fallback removal
-- Updated Phase 5 checklist to include fallback removal tasks (5.5, 5.6, 5.7)
-- All tests passing (12885 passed, 1 skipped)
-- Next: Phase 3 - Initialization Functions
+- PROJ-211 Phase 3 complete:
+  - Fixed ~71 test fixture errors
+  - Updated: regression conftest, registry_loader tests, cargo_storage tests,
+    regressions tests, allowed_layers tests, bug_09 tests
+  - All init functions now require registry_provider (no fallback)
+- 4 failures in test_bug_13_colony_flags.py are pre-existing (missing asset files)
+- Next: Begin Phase 4 - UI Services DI (WorkshopContext, ComponentService, etc.)
 
 ---
 
@@ -45,7 +43,7 @@
   - **Dependencies:** None
 
 - [/] **PROJ-211: Eradicate DI Fallback Anti-Pattern**
-  - **Phases:** 5 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 5 | **Status:** Phase 3 (~70%) | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-211/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-211/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -88,6 +86,8 @@
 | 2026-02-27 | PROJ-211 | Phase 2 (2.1) | Complete | 12876 passed | pending | ShipInstance DI: _registries field, create/from_dict updated |
 | 2026-02-27 | PROJ-211 | Phase 2 (2.2) | Complete | 12885 passed | pending | FleetCapabilityCalculator DI: static methods + Fleet.from_dict |
 | 2026-02-27 | PROJ-211 | Phase 2 | Complete | 12885 passed | pending | Phase 2 complete; Task 2.3 (fallback removal) moved to Phase 5 |
+| 2026-02-27 | PROJ-211 | Phase 3 | ~70% | 12801 passed, 71 errors | 01fa719d | Production code DI complete; test fixtures need updates |
+| 2026-02-27 | PROJ-211 | Phase 3 | Complete | 12885 passed, 4 failed | 91154ee4 | Test fixtures updated; all init functions require registry_provider |
 
 ---
 

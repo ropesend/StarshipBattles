@@ -65,10 +65,10 @@ class TestReloadRegistriesFromDirectory:
 
         call_order = []
 
-        def track_modifiers(path):
+        def track_modifiers(path, *, registry_provider=None):
             call_order.append("modifiers")
 
-        def track_components(path):
+        def track_components(path, *, registry_provider=None):
             call_order.append("components")
 
         with patch('game.simulation.services.registry_loader.load_modifiers', side_effect=track_modifiers):
@@ -88,7 +88,11 @@ class TestReloadRegistriesFromDirectory:
                 with patch('game.simulation.services.registry_loader.load_vehicle_classes'):
                     reload_registries_from_directory(mock_registry_manager, tmp_path)
 
-        mock_load.assert_called_once_with(str(comp_file))
+        # PROJ-211: Now passes registry_provider kwarg
+        mock_load.assert_called_once()
+        args, kwargs = mock_load.call_args
+        assert args[0] == str(comp_file)
+        assert 'registry_provider' in kwargs
 
     def test_reload_loads_vehicle_classes(self, mock_registry_manager, tmp_path):
         """load_vehicle_classes is called when file exists."""
@@ -100,7 +104,11 @@ class TestReloadRegistriesFromDirectory:
                 with patch('game.simulation.services.registry_loader.load_vehicle_classes') as mock_load:
                     reload_registries_from_directory(mock_registry_manager, tmp_path)
 
-        mock_load.assert_called_once_with(str(vclass_file))
+        # PROJ-211: Now passes registry_provider kwarg
+        mock_load.assert_called_once()
+        args, kwargs = mock_load.call_args
+        assert args[0] == str(vclass_file)
+        assert 'registry_provider' in kwargs
 
     def test_reload_with_layers_file(self, mock_registry_manager, tmp_path):
         """Passes layers_file_path when vehiclelayers.json exists."""
@@ -114,7 +122,12 @@ class TestReloadRegistriesFromDirectory:
                 with patch('game.simulation.services.registry_loader.load_vehicle_classes') as mock_load:
                     reload_registries_from_directory(mock_registry_manager, tmp_path)
 
-        mock_load.assert_called_once_with(str(vclass_file), layers_file_path=str(vlayer_file))
+        # PROJ-211: Now passes registry_provider kwarg
+        mock_load.assert_called_once()
+        args, kwargs = mock_load.call_args
+        assert args[0] == str(vclass_file)
+        assert kwargs['layers_file_path'] == str(vlayer_file)
+        assert 'registry_provider' in kwargs
 
     def test_reload_test_prefix_fallback(self, mock_registry_manager, tmp_path):
         """test_components.json is preferred over components.json."""
@@ -130,7 +143,11 @@ class TestReloadRegistriesFromDirectory:
                     reload_registries_from_directory(mock_registry_manager, tmp_path)
 
         # Should use test_ prefixed version
-        mock_load.assert_called_once_with(str(test_file))
+        # PROJ-211: Now passes registry_provider kwarg
+        mock_load.assert_called_once()
+        args, kwargs = mock_load.call_args
+        assert args[0] == str(test_file)
+        assert 'registry_provider' in kwargs
 
     def test_reload_missing_modifiers_file_continues(self, mock_registry_manager, tmp_path):
         """No crash if modifiers.json is absent."""

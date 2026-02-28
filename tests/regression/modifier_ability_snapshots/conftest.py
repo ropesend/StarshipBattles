@@ -10,8 +10,7 @@ from typing import Dict, Any, List, Optional
 from pathlib import Path
 
 from game.simulation.components.component import (
-    Component, load_components, load_modifiers, create_component,
-    reset_component_caches
+    Component, create_component, reset_component_caches
 )
 
 
@@ -211,10 +210,13 @@ def setup_registries(session_registries):
     PROJ-50: Updated to use session_registries from root conftest.py for
     strict DI compliance. Returns the registries so tests can pass them
     to create_component().
+
+    PROJ-211: Removed redundant load_modifiers/load_components calls.
+    The session_registries fixture (via SessionRegistryCache) already
+    loads all data. No need to reload here.
     """
-    # Still do a reset for legacy behavior during transition
+    # Reset caches to ensure clean state
     reset_component_caches()
-    load_modifiers("data/modifiers.json")
-    load_components("data/components.json")
+    # Data is already loaded by session_registries via SessionRegistryCache
     yield session_registries
     reset_component_caches()

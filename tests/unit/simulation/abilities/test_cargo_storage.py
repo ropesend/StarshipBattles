@@ -269,11 +269,12 @@ class TestShipStatsCargoStorage:
 class TestPassengerQuartersComponent:
     """Test passenger_quarters component from components.json."""
 
-    def test_passenger_quarters_component_loads(self):
+    def test_passenger_quarters_component_loads(self, fresh_registries):
         """passenger_quarters component loads from components.json."""
         from game.simulation.components.component import load_components_data
 
-        components = load_components_data()
+        # PROJ-211: Pass registries explicitly (no fallback)
+        components = load_components_data(registries=fresh_registries)
         component = components.get('passenger_quarters')
 
         assert component is not None
@@ -282,11 +283,12 @@ class TestPassengerQuartersComponent:
         assert component.mass == 200
         assert component.max_hp == 150
 
-    def test_passenger_quarters_has_cargo_storage_ability(self):
+    def test_passenger_quarters_has_cargo_storage_ability(self, fresh_registries):
         """passenger_quarters has CargoStorage ability with correct data."""
         from game.simulation.components.component import load_components_data
 
-        components = load_components_data()
+        # PROJ-211: Pass registries explicitly (no fallback)
+        components = load_components_data(registries=fresh_registries)
         component = components.get('passenger_quarters')
 
         abilities = component.abilities
@@ -296,22 +298,24 @@ class TestPassengerQuartersComponent:
         assert cargo_data['cargo_type'] == 'passengers'
         assert cargo_data['capacity'] == 5000
 
-    def test_passenger_quarters_has_life_support(self):
+    def test_passenger_quarters_has_life_support(self, fresh_registries):
         """passenger_quarters has LifeSupportCapacity ability."""
         from game.simulation.components.component import load_components_data
 
-        components = load_components_data()
+        # PROJ-211: Pass registries explicitly (no fallback)
+        components = load_components_data(registries=fresh_registries)
         component = components.get('passenger_quarters')
 
         abilities = component.abilities
         assert 'LifeSupportCapacity' in abilities
         assert abilities['LifeSupportCapacity'] == 5000
 
-    def test_passenger_quarters_requires_crew(self):
+    def test_passenger_quarters_requires_crew(self, fresh_registries):
         """passenger_quarters has CrewRequired ability."""
         from game.simulation.components.component import load_components_data
 
-        components = load_components_data()
+        # PROJ-211: Pass registries explicitly (no fallback)
+        components = load_components_data(registries=fresh_registries)
         component = components.get('passenger_quarters')
 
         abilities = component.abilities
