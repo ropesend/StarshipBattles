@@ -212,10 +212,12 @@ class TestMultipleSeekerTargetedEffects:
         # with SeekerWeaponAbility after the fix
 
         from game.simulation.components.component import Component, create_component, load_components, load_modifiers, reset_component_caches
+        from game.core.registry import get_default_registry_provider
 
         reset_component_caches()
-        load_modifiers("data/modifiers.json")
-        load_components("data/components.json")
+        provider = get_default_registry_provider()
+        load_modifiers("data/modifiers.json", registry_provider=provider)
+        load_components("data/components.json", registry_provider=provider)
 
         # Get a component with seeker ability
         missile = create_component('capital_missile', registries=fresh_registries)

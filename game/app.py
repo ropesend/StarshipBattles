@@ -28,7 +28,7 @@ def configure_logging():
 from game.ui.utils import create_centered_rect
 from game.simulation.components.component import load_components, load_modifiers
 from game.core.resources import load_resources_data
-from game.core.registry import GameRegistries, RegistryManager
+from game.core.registry import GameRegistries, RegistryManager, get_default_registry_provider
 from pygame_gui.elements import UIButton
 from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
@@ -113,15 +113,17 @@ class Game:
         self.state = GameState.MENU
 
         # Load game data
-        load_components(Paths.COMPONENTS_FILE)
-        load_modifiers(Paths.MODIFIERS_FILE)
+        # PROJ-211: Pass registry_provider explicitly (no fallback)
+        provider = get_default_registry_provider()
+        load_components(Paths.COMPONENTS_FILE, registry_provider=provider)
+        load_modifiers(Paths.MODIFIERS_FILE, registry_provider=provider)
         # PROJ-121: Use DI-friendly load_resources_data() directly
         resources_registry = RegistryManager.instance().resources
         resources_registry.update(load_resources_data(Paths.RESOURCES_FILE))
 
         # Initialize ship data
         from game.simulation.entities.ship_loader import initialize_ship_data
-        initialize_ship_data(Paths.ROOT_DIR)
+        initialize_ship_data(Paths.ROOT_DIR, registry_provider=provider)
 
         # Create GameRegistries container for DI (PROJ-38)
         # PROJ-181: Deprecated set_default_registries() removed.

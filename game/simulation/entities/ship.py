@@ -9,7 +9,7 @@ from game.simulation.components.component import Component, create_component
 from game.core.constants import LayerType
 from game.simulation.entities.layer_data import LayerData
 from game.core.math import Vector2
-from game.core.registry import GameRegistries
+from game.core.registry import GameRegistries, get_default_registry_provider
 
 logger = logging.getLogger(__name__)
 from game.core.constants import LayerDefaults, CombatConstants
@@ -505,7 +505,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             logger.error("Attempted to add None component to ship")
             return False
 
-        result = get_or_create_validator().validate_addition(self, component, layer_type)
+        # PROJ-211: Pass registry_provider explicitly
+        result = get_or_create_validator(registry_provider=get_default_registry_provider()).validate_addition(self, component, layer_type)
 
         if not result.is_valid:
             for err in result.errors:
@@ -547,8 +548,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             # Must clone for each new instance
             new_comp = component.clone()
             
-            # Use the global validator
-            result = get_or_create_validator().validate_addition(self, new_comp, layer_type)
+            # PROJ-211: Pass registry_provider explicitly
+            result = get_or_create_validator(registry_provider=get_default_registry_provider()).validate_addition(self, new_comp, layer_type)
             if not result.is_valid:
                 # Stop adding if we hit a limit
                 if added_count == 0:

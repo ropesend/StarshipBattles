@@ -13,8 +13,8 @@ from typing import List, Tuple, Optional, Union, TYPE_CHECKING
 import logging
 
 logger = logging.getLogger(__name__)
-# PROJ-50: Removed get_default_registry_provider - using strict DI
-from game.core.registry import clear_registry
+# PROJ-211: Re-added get_default_registry_provider for load_* functions
+from game.core.registry import clear_registry, get_default_registry_provider
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
@@ -108,9 +108,9 @@ class WorkshopDataLoader:
     def load_all(self) -> LoadResult:
         """
         Load all game data and return structured result.
-        
+
         Loads: modifiers, components, combat strategies, vehicle classes.
-        
+
         Returns:
             LoadResult with success status, default class, and any errors/warnings
         """
@@ -118,24 +118,27 @@ class WorkshopDataLoader:
         from game.simulation.entities.ship_loader import load_vehicle_classes
 
         result = LoadResult()
-        
+
         try:
             # 1. Clear registries first
             self.clear_registries()
-            
+
+            # PROJ-211: Pass registry_provider explicitly (no fallback)
+            provider = get_default_registry_provider()
+
             # 2. Load Modifiers
             mod_path, _ = self.find_file("modifiers.json")
             if mod_path:
-                load_modifiers(mod_path)
+                load_modifiers(mod_path, registry_provider=provider)
                 logger.info(f"Loaded modifiers from {mod_path}")
             else:
                 result.warnings.append("No modifiers.json found")
                 logger.warning("No modifiers.json found")
-            
+
             # 3. Load Components
             comp_path, _ = self.find_file("components.json")
             if comp_path:
-                load_components(comp_path)
+                load_components(comp_path, registry_provider=provider)
                 logger.info(f"Loaded components from {comp_path}")
             else:
                 result.warnings.append("No components.json found")
@@ -189,16 +192,19 @@ class WorkshopDataLoader:
     def _load_vehicle_classes(self, result: LoadResult) -> None:
         """Load vehicle classes and layer definitions."""
         from game.simulation.entities.ship_loader import load_vehicle_classes
-        
+
         vclass_path, _ = self.find_file(["vehicleclasses.json", "classes.json"])
         vlayer_path, _ = self.find_file(["vehiclelayers.json", "layers.json"])
-        
+
+        # PROJ-211: Pass registry_provider explicitly (no fallback)
+        provider = get_default_registry_provider()
+
         if vclass_path:
             if vlayer_path:
-                load_vehicle_classes(vclass_path, layers_file_path=vlayer_path)
+                load_vehicle_classes(vclass_path, layers_file_path=vlayer_path, registry_provider=provider)
                 logger.info(f"Loaded classes from {vclass_path} with layers from {vlayer_path}")
             else:
-                load_vehicle_classes(vclass_path)
+                load_vehicle_classes(vclass_path, registry_provider=provider)
                 logger.info(f"Loaded classes from {vclass_path}")
         else:
             result.warnings.append("No vehicleclasses.json found")

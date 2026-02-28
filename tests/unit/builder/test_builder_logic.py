@@ -5,6 +5,7 @@ from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, create_component
 from game.simulation.entities.layer_data import LayerData
+from game.core.registry import get_default_registry_provider
 from tests.fixtures.paths import get_project_root, get_data_dir
 
 
@@ -15,7 +16,8 @@ class TestBuilderLogic:
     def setup_and_teardown(self, fresh_registries):
         pygame.init()
         initialize_ship_data(str(get_project_root()))
-        load_components(str(get_data_dir() / "components.json"))
+        provider = get_default_registry_provider()
+        load_components(str(get_data_dir() / "components.json"), registry_provider=provider)
         self.registries = fresh_registries
         self.ship = Ship("BuilderTarget", 0, 0, (255,255,255), ship_class="Escort", registries=fresh_registries)
         yield

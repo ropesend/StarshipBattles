@@ -7,6 +7,7 @@ from game.ui.screens.battle_screen import BattleScreen
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components
+from game.core.registry import get_default_registry_provider
 
 from game.ai.strategy_manager import StrategyManager
 from tests.fixtures.paths import get_project_root, get_data_dir, get_unit_test_data_dir
@@ -18,7 +19,8 @@ def setup_game_data():
     pygame.init()
     # Ensure data dir is accessible
     initialize_ship_data(str(get_project_root()))
-    load_components(str(get_data_dir() / "components.json"))
+    provider = get_default_registry_provider()
+    load_components(str(get_data_dir() / "components.json"), registry_provider=provider)
     manager = StrategyManager.instance()
     manager.load_data(
          str(get_unit_test_data_dir()),

@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING
 from tests.fixtures.paths import get_data_dir, get_project_root
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, load_modifiers
+from game.core.registry import get_default_registry_provider
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
@@ -52,8 +53,10 @@ def global_ship_data():
     if not pygame.get_init():
         pygame.init()
 
-    initialize_ship_data(str(get_project_root()))
-    load_components(str(get_data_dir() / "components.json"))
+    # PROJ-211: Pass registry_provider explicitly (no fallback)
+    provider = get_default_registry_provider()
+    initialize_ship_data(str(get_project_root()), registry_provider=provider)
+    load_components(str(get_data_dir() / "components.json"), registry_provider=provider)
     return True
 
 
@@ -67,7 +70,9 @@ def global_ship_data_with_modifiers(global_ship_data):
     Returns:
         True when data is loaded
     """
-    load_modifiers(str(get_data_dir() / "modifiers.json"))
+    # PROJ-211: Pass registry_provider explicitly (no fallback)
+    provider = get_default_registry_provider()
+    load_modifiers(str(get_data_dir() / "modifiers.json"), registry_provider=provider)
     return True
 
 

@@ -11,6 +11,7 @@ from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import Component, load_components, create_component
 from game.simulation.systems.resource_manager import ResourceRegistry
+from game.core.registry import get_default_registry_provider
 from tests.fixtures.paths import get_data_dir
 
 
@@ -29,7 +30,8 @@ class TestComponentContextInjection:
     def setup_and_teardown(self):
         """Initialize ship data and components for each test."""
         initialize_ship_data()
-        load_components(str(get_data_dir() / "components.json"))
+        provider = get_default_registry_provider()
+        load_components(str(get_data_dir() / "components.json"), registry_provider=provider)
         yield
 
     def test_component_get_resource_cost_with_context(self, fresh_registries):
@@ -95,7 +97,8 @@ class TestResourceConsumptionDecoupling:
     def setup_and_teardown(self):
         """Initialize data for each test."""
         initialize_ship_data()
-        load_components(str(get_data_dir() / "components.json"))
+        provider = get_default_registry_provider()
+        load_components(str(get_data_dir() / "components.json"), registry_provider=provider)
         yield
 
     def test_resource_consumption_with_injected_registry(self, fresh_registries):
@@ -175,7 +178,8 @@ class TestComponentShipReferenceDeprecation:
     def setup_and_teardown(self):
         """Initialize data for each test."""
         initialize_ship_data()
-        load_components(str(get_data_dir() / "components.json"))
+        provider = get_default_registry_provider()
+        load_components(str(get_data_dir() / "components.json"), registry_provider=provider)
         yield
 
     def test_component_works_without_ship_reference(self, fresh_registries):

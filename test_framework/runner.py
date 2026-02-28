@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from game.core.paths import Paths
-from game.core.registry import RegistryManager
+from game.core.registry import RegistryManager, get_default_registry_provider
 from game.simulation.systems.battle_engine import BattleEngine
 from game.ai.ai_factory import AIControllerFactory
 from game.simulation.components.component import load_components, load_modifiers
@@ -58,16 +58,19 @@ class TestRunner:
 
         # Load New Data
         try:
+            # PROJ-211: Pass registry_provider explicitly (no fallback)
+            provider = get_default_registry_provider()
+
             logger.debug(f"Loading modifiers from {paths['modifiers']}")
-            load_modifiers(paths['modifiers'])
+            load_modifiers(paths['modifiers'], registry_provider=provider)
 
             logger.debug(f"Loading components from {paths['components']}")
-            load_components(paths['components'])
+            load_components(paths['components'], registry_provider=provider)
 
             # Helper needed in ship.py to accept direct path
             from game.simulation.entities.ship_loader import load_vehicle_classes
             logger.debug(f"Loading vehicle classes from {paths['vehicle_classes']}")
-            load_vehicle_classes(paths['vehicle_classes'])
+            load_vehicle_classes(paths['vehicle_classes'], registry_provider=provider)
 
             # IMPORTANT: Keep unfrozen to allow ship loading in scenario.setup()
             # The registry will remain unfrozen for the test duration

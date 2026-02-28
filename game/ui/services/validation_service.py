@@ -13,6 +13,7 @@ from typing import Any, Optional, TYPE_CHECKING
 
 from game.simulation.entities.ship_loader import get_or_create_validator
 from game.core.validation import ValidationResult
+from game.core.registry import get_default_registry_provider
 
 if TYPE_CHECKING:
     from game.core.constants import LayerType
@@ -45,7 +46,8 @@ class ValidationService:
     def _get_validator(self) -> Any:
         """Get the validator, using default if not injected."""
         if self._validator is None:
-            self._validator = get_or_create_validator()
+            # PROJ-211: Pass registry_provider explicitly
+            self._validator = get_or_create_validator(registry_provider=get_default_registry_provider())
         return self._validator
 
     def validate_addition(

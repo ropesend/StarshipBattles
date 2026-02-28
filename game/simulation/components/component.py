@@ -62,7 +62,7 @@ import logging
 import threading
 from game.simulation.formula_system import safe_evaluate_math_formula
 from typing import Optional, TYPE_CHECKING
-from game.core.registry import get_default_registry_provider
+# PROJ-211: Removed get_default_registry_provider import - DI is now required
 from game.core.json_utils import load_json_required
 from game.core.constants import CombatConstants
 from game.core.exceptions import ValidationException
@@ -483,15 +483,16 @@ def reset_component_caches():
 def load_components_data(
     file_path: str = "data/components.json",
     *,
-    registries: Optional['GameRegistries'] = None
+    registries: 'GameRegistries'
 ) -> dict:
     """
     Pure function to load components from JSON file.
 
+    PROJ-211: registries is now required (no fallback).
+
     Args:
         file_path: Path to the components JSON file
-        registries: GameRegistries for DI. If None, creates registries from
-                   the default provider.
+        registries: GameRegistries for DI. Required.
 
     Returns:
         Dict[str, Component]: Component objects keyed by their ID
@@ -508,16 +509,6 @@ def load_components_data(
         else:
             logger.error(f"components file not found at {abs_path}")
             return {}
-
-    # Build registries from provider if not provided
-    if registries is None:
-        provider = get_default_registry_provider()
-        registries = GameRegistries(
-            components=provider.get_components(),
-            modifiers=provider.get_modifiers(),
-            vehicle_classes=provider.get_vehicle_classes(),
-            resources={}
-        )
 
     try:
         data = load_json_required(file_path)
@@ -555,19 +546,27 @@ def load_components_data(
         return {}
 
 
-def load_components(file_path="data/components.json"):
+def load_components(file_path="data/components.json", *, registry_provider=None):
     """
     Load components from JSON and populate the global registry.
 
     Wrapper around load_components_data() that also populates the registry.
+
+    PROJ-211: registry_provider is now required (no fallback).
+
+    Args:
+        file_path: Path to the components JSON file.
+        registry_provider: IRegistryProvider for DI. Required.
     """
     import os
     import copy
     from game.core.registry import GameRegistries
 
+    if registry_provider is None:
+        raise ValueError("registry_provider is required (PROJ-211: no fallback)")
+
     cache_mgr = ComponentCacheManager.instance()
-    provider = get_default_registry_provider()
-    comps = provider.get_components()
+    comps = registry_provider.get_components()
 
     # If cache exists and matches file_path, hydrate Registry from cache (Fast Path)
     if cache_mgr.component_cache is not None and cache_mgr.last_component_file == file_path:
@@ -578,8 +577,8 @@ def load_components(file_path="data/components.json"):
     # Slow Path: Load from Disk using pure function with explicit registries
     registries = GameRegistries(
         components=comps,
-        modifiers=provider.get_modifiers(),
-        vehicle_classes=provider.get_vehicle_classes(),
+        modifiers=registry_provider.get_modifiers(),
+        vehicle_classes=registry_provider.get_vehicle_classes(),
         resources={}
     )
     result = load_components_data(file_path, registries=registries)
@@ -654,18 +653,26 @@ def load_modifiers_data(file_path: str = "data/modifiers.json") -> dict:
         return {}
 
 
-def load_modifiers(file_path="data/modifiers.json"):
+def load_modifiers(file_path="data/modifiers.json", *, registry_provider=None):
     """
     Load modifiers from JSON and populate the global registry.
 
     Wrapper around load_modifiers_data() that also populates the registry.
+
+    PROJ-211: registry_provider is now required (no fallback).
+
+    Args:
+        file_path: Path to the modifiers JSON file.
+        registry_provider: IRegistryProvider for DI. Required.
     """
     import os
     import copy
 
+    if registry_provider is None:
+        raise ValueError("registry_provider is required (PROJ-211: no fallback)")
+
     cache_mgr = ComponentCacheManager.instance()
-    # PROJ-50: Use provider directly (module-level initialization path)
-    mods = get_default_registry_provider().get_modifiers()
+    mods = registry_provider.get_modifiers()
 
     # Fast Path
     if cache_mgr.modifier_cache is not None and cache_mgr.last_modifier_file == file_path:
