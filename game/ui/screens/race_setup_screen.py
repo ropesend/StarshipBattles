@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 from game.core.paths import Paths
 from game.strategy.data.race_config import RaceConfig
 from game.strategy.systems.race_library import RaceLibrary
+from game.strategy.systems.race_randomizer import RaceRandomizer
 from game.ui.assets import ShipThemeManager
 
 # PROJ-12 Phase 4: Import extracted components
@@ -646,6 +647,16 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             container=container
         )
 
+        # Generate Random button (beside Cancel, visible on Identity/Visuals/Ships tabs)
+        randomize_width = 160
+        self.btn_randomize = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(10 + button_width + 10, button_y, randomize_width, button_height),
+            text="Generate Random",
+            manager=self.ui_manager,
+            container=container
+        )
+        self.btn_randomize.hide()
+
         # Save button (right side, always visible on Summary tab)
         self.btn_save = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect(content_width - button_width + 10, button_y, button_width, button_height),
@@ -705,6 +716,12 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             self.btn_save.show()
         else:
             self.btn_save.hide()
+
+        # Generate Random button shown on Identity, Visuals, and Ships tabs
+        if self.current_step in (self.TAB_IDENTITY, self.TAB_VISUALS, self.TAB_SHIPS):
+            self.btn_randomize.show()
+        else:
+            self.btn_randomize.hide()
 
     def _update_tab_highlighting(self):
         """Update tab button visual states to show current tab."""
@@ -839,6 +856,65 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         if self._description_panel:
             self._description_panel.set_from_config()
 
+    def _on_randomize(self):
+        """Handle Generate Random button click — dispatches by current tab."""
+        if self.current_step == self.TAB_IDENTITY:
+            self._randomize_identity()
+        elif self.current_step == self.TAB_VISUALS:
+            self._randomize_visuals()
+        elif self.current_step == self.TAB_SHIPS:
+            self._randomize_ships()
+
+    def _randomize_identity(self):
+        """Randomize all identity fields using portrait-aware names."""
+        portrait_id = self.race_config.portrait_id or None
+        result = RaceRandomizer.randomize_identity(portrait_id=portrait_id)
+
+        self.race_config.race_name = result["race_name"]
+        self.race_config.race_name_plural = result["race_name_plural"]
+        self.race_config.leader_name = result["leader_name"]
+        self.race_config.physical_type = result["physical_type"]
+        self.race_config.government_type = result["government_type"]
+        self.race_config.government_organization = result["government_organization"]
+        self.race_config.leader_title = result["leader_title"]
+        self.race_config.society_type = result["society_type"]
+        self.race_config.faction_name = result["faction_name"]
+
+        if self._identity_panel:
+            self._identity_panel.set_from_config()
+
+        logger.info(f"Randomized identity: {result['race_name']}")
+
+    def _randomize_visuals(self):
+        """Randomize flag and portrait selections."""
+        if self._flag_gallery:
+            flag_ids = [a[0] for a in self._flag_gallery._discover_assets()]
+            new_flag = RaceRandomizer.randomize_flag(flag_ids)
+            if new_flag:
+                self.race_config.flag_id = new_flag
+                self._flag_gallery.set_from_config()
+
+        if self._portrait_gallery:
+            portrait_ids = [a[0] for a in self._portrait_gallery._discover_assets()]
+            new_portrait = RaceRandomizer.randomize_portrait(portrait_ids)
+            if new_portrait:
+                self.race_config.portrait_id = new_portrait
+                self._portrait_gallery.set_from_config()
+
+        logger.info(f"Randomized visuals: flag={self.race_config.flag_id}, portrait={self.race_config.portrait_id}")
+
+    def _randomize_ships(self):
+        """Randomize ship theme selection."""
+        if self._theme_gallery:
+            theme_ids = [a[0] for a in self._theme_gallery._discover_assets()]
+            new_theme = RaceRandomizer.randomize_theme(theme_ids)
+            if new_theme:
+                self.race_config.theme_id = new_theme
+                self._theme_gallery.set_from_config()
+                self._refresh_ship_preview(new_theme)
+
+        logger.info(f"Randomized ships: theme={self.race_config.theme_id}")
+
     def _on_cancel(self):
         """Handle Cancel button click."""
         logger.debug("Race setup cancelled")
@@ -891,6 +967,9 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
                     handled = True
                 elif self.btn_load and event.ui_element == self.btn_load:
                     self._on_load_race()
+                    handled = True
+                elif event.ui_element == self.btn_randomize:
+                    self._on_randomize()
                     handled = True
                 else:
                     # Check flag buttons (PROJ-12 Phase 4: Delegate to RaceFlagGallery)

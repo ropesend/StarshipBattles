@@ -199,6 +199,34 @@ class TestNewGameSetupRaceConfig:
         assert config.players[0].race_config is None
 
 
+class TestNewGameSetupDefaultSaveName:
+    """Tests for auto-generated default save name."""
+
+    def test_default_save_name_starts_with_save_game(self):
+        """Default save name starts with 'save game'."""
+        from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
+
+        name = NewGameSetupScreen.generate_default_save_name()
+        assert name.startswith("save game ")
+
+    def test_default_save_name_contains_timestamp(self):
+        """Default save name contains a date-time timestamp."""
+        from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
+
+        name = NewGameSetupScreen.generate_default_save_name()
+        # Should match pattern: "save game YYYY-MM-DD HHMM"
+        assert re.match(r"save game \d{4}-\d{2}-\d{2} \d{4}$", name), \
+            f"Expected 'save game YYYY-MM-DD HHMM' pattern, got: '{name}'"
+
+    def test_default_save_name_passes_validation(self):
+        """Default save name passes save name validation."""
+        from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
+
+        name = NewGameSetupScreen.generate_default_save_name()
+        is_valid, error = NewGameSetupScreen.validate_save_name(name)
+        assert is_valid, f"Default save name '{name}' failed validation: {error}"
+
+
 class TestNewGameSetupPlayerCount:
     """Tests for player count handling."""
 

@@ -1,0 +1,146 @@
+{
+    "_description": "Pre-generated race names, plurals, and leader names keyed by portrait ID. Used by the Generate Random feature in Species Setup.",
+    "portraits": {
+        "Gemini_Generated_Image_59rl4259rl4259rl.jpg": {
+            "names": [
+                {"name": "Syntheran", "plural": "Syntherans"},
+                {"name": "Korvex", "plural": "Korvexians"},
+                {"name": "Mechara", "plural": "Mecharans"},
+                {"name": "Cypherite", "plural": "Cypherites"}
+            ],
+            "leaders": ["Nexus-7", "Arctus Prime", "Voidmind", "Zaelon-9", "Korath"]
+        },
+        "Gemini_Generated_Image_6dgi486dgi486dgi.jpg": {
+            "names": [
+                {"name": "Thalassian", "plural": "Thalassians"},
+                {"name": "Krytheen", "plural": "Krytheeni"},
+                {"name": "Cephalar", "plural": "Cephalar"},
+                {"name": "Opalith", "plural": "Opaliths"}
+            ],
+            "leaders": ["Deepcaller Xyuth", "Luminos", "Tidewarden Kreel", "Prism-of-Many", "Abyssal Quor"]
+        },
+        "Gemini_Generated_Image_6e32066e32066e32.jpg": {
+            "names": [
+                {"name": "Vermathi", "plural": "Vermathi"},
+                {"name": "Guldraan", "plural": "Guldraan"},
+                {"name": "Worathi", "plural": "Worathi"},
+                {"name": "Tendrith", "plural": "Tendriths"}
+            ],
+            "leaders": ["Elder Maugrun", "Siltwalker Vreem", "Burrowlord Thex", "Grolthen", "Mhaal the Wise"]
+        },
+        "Gemini_Generated_Image_7cgrxf7cgrxf7cgr.jpg": {
+            "names": [
+                {"name": "Elorai", "plural": "Elorai"},
+                {"name": "Zephyrite", "plural": "Zephyrites"},
+                {"name": "Velmari", "plural": "Velmari"},
+                {"name": "Quilani", "plural": "Quilani"}
+            ],
+            "leaders": ["Sage Ithari", "Veluin", "Stargazer Dey", "Yulith", "Miraan the Elder"]
+        },
+        "Gemini_Generated_Image_7fmc8m7fmc8m7fmc.jpg": {
+            "names": [
+                {"name": "Illitharan", "plural": "Illitharans"},
+                {"name": "Psykhem", "plural": "Psykhemi"},
+                {"name": "Voidtouched", "plural": "Voidtouched"},
+                {"name": "Ctharen", "plural": "Cthareni"}
+            ],
+            "leaders": ["Mindkeeper Uuloth", "The Watcher", "Archon Thalmus", "Whisper-in-Deep", "Dreadveil Nuur"]
+        },
+        "Gemini_Generated_Image_928aid928aid928a.jpg": {
+            "names": [
+                {"name": "Khithari", "plural": "Khithari"},
+                {"name": "Vexan", "plural": "Vexani"},
+                {"name": "Mantid", "plural": "Mantidae"},
+                {"name": "Chitrax", "plural": "Chitraxi"}
+            ],
+            "leaders": ["Broodqueen Xilith", "Warblade Kress", "The Mandible", "Hive-General Vrikt", "Skitter-Prime"]
+        },
+        "Gemini_Generated_Image_9gczrv9gczrv9gcz.jpg": {
+            "names": [
+                {"name": "Ranarii", "plural": "Ranarii"},
+                {"name": "Croathan", "plural": "Croathani"},
+                {"name": "Murkwei", "plural": "Murkwei"},
+                {"name": "Gelvadi", "plural": "Gelvadi"}
+            ],
+            "leaders": ["Throne-Keeper Bloth", "Fen-King Gulara", "Mire-Sage Rheet", "Sovereign Plith", "Grand Marshal Toxis"]
+        },
+        "Gemini_Generated_Image_dj3cb9dj3cb9dj3c.jpg": {
+            "names": [
+                {"name": "Draconari", "plural": "Draconari"},
+                {"name": "Skarath", "plural": "Skarathi"},
+                {"name": "Vraxian", "plural": "Vraxians"},
+                {"name": "Gharrul", "plural": "Gharrul"}
+            ],
+            "leaders": ["Warlord Kragoth", "Ironclaw Drazh", "Commander Sythek", "Fangscar", "Brute-King Ghorr"]
+        },
+        "Gemini_Generated_Image_dz63bdz63bdz63bd.jpg": {
+            "names": [
+                {"name": "Luminari", "plural": "Luminari"},
+                {"name": "Aetherite", "plural": "Aetherites"},
+                {"name": "Phothari", "plural": "Phothari"},
+                {"name": "Novaborn", "plural": "Novaborn"}
+            ],
+            "leaders": ["The Radiance", "Pulse-of-Stars", "Neuroveil", "Shimmer Collective", "Bright Architect"]
+        },
+        "Gemini_Generated_Image_j4l4qmj4l4qmj4l4.jpg": {
+            "names": [
+                {"name": "Ssethari", "plural": "Ssetharii"},
+                {"name": "Naga", "plural": "Nagari"},
+                {"name": "Ophidian", "plural": "Ophidians"},
+                {"name": "Viperak", "plural": "Viperaki"}
+            ],
+            "leaders": ["Scale-Admiral Shyss", "Venomtongue Kaa", "Coilmaster Rethis", "Cold-Eye Tessith", "Serpent-Lord Azuur"]
+        },
+        "Gemini_Generated_Image_mgltvpmgltvpmglt.jpg": {
+            "names": [
+                {"name": "Terran", "plural": "Terrans"},
+                {"name": "Solari", "plural": "Solari"},
+                {"name": "Novakin", "plural": "Novakin"},
+                {"name": "Heliosan", "plural": "Heliosans"}
+            ],
+            "leaders": ["Director Alara Voss", "Chancellor Miriam Sol", "Admiral Katya Orin", "Senator Helena Prax", "Consul Vera Strand"]
+        },
+        "Gemini_Generated_Image_py7y60py7y60py7y.jpg": {
+            "names": [
+                {"name": "Litharan", "plural": "Litharans"},
+                {"name": "Crysthari", "plural": "Crysthari"},
+                {"name": "Obsidari", "plural": "Obsidari"},
+                {"name": "Geothane", "plural": "Geothanes"}
+            ],
+            "leaders": ["Facet-Lord Azurath", "Shard-King Pryloss", "Diamondmind", "Vein-Speaker Corth", "Crystal Regent Ythil"]
+        },
+        "Gemini_Generated_Image_q9rh2eq9rh2eq9rh.jpg": {
+            "names": [
+                {"name": "Petrovan", "plural": "Petrovani"},
+                {"name": "Golemkind", "plural": "Golemkind"},
+                {"name": "Mossari", "plural": "Mossari"},
+                {"name": "Granithar", "plural": "Granithari"}
+            ],
+            "leaders": ["Stonewarden Thrum", "The Ancient Pillar", "Rootforge Borek", "Mossfather Grendol", "Crag-Shepherd Thuul"]
+        },
+        "Gemini_Generated_Image_r7fixkr7fixkr7fi.jpg": {
+            "names": [
+                {"name": "Krossari", "plural": "Krossari"},
+                {"name": "Drakhari", "plural": "Drakhari"},
+                {"name": "Saurgoth", "plural": "Saurgothi"},
+                {"name": "Rexxan", "plural": "Rexxani"}
+            ],
+            "leaders": ["Marshal Drekthor", "Scaleguard Vhossk", "Iron-Fang Kreel", "Captain Gharesh", "Commander Szathis"]
+        }
+    },
+    "fallback_names": [
+        {"name": "Xenari", "plural": "Xenari"},
+        {"name": "Astrion", "plural": "Astrioni"},
+        {"name": "Voidari", "plural": "Voidari"},
+        {"name": "Celesti", "plural": "Celesti"},
+        {"name": "Chronan", "plural": "Chronans"},
+        {"name": "Nexari", "plural": "Nexari"},
+        {"name": "Primari", "plural": "Primari"},
+        {"name": "Stellan", "plural": "Stellani"}
+    ],
+    "fallback_leaders": [
+        "Commander Vex", "Admiral Thorne", "Chancellor Drex", "Overlord Maxis",
+        "Archon Primus", "Warden Kael", "The Sovereign", "High Marshal Zyn",
+        "Elder Voraan", "Grand Consul Tyris", "Primarch Aldric", "The Arbiter"
+    ]
+}

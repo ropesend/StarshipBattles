@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import os
 import re
+from datetime import datetime
 import pygame
 import pygame_gui
 from typing import Callable, Optional, Tuple, List, TYPE_CHECKING
@@ -96,6 +97,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             container=container,
             placeholder_text="Enter save name..."
         )
+        self.save_name_input.set_text(self.generate_default_save_name())
         y_offset += 45
 
         # Player count label and dropdown
@@ -554,6 +556,11 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
                 return False, f"Save '{name}' already exists"
 
         return True, ""
+
+    @staticmethod
+    def generate_default_save_name() -> str:
+        """Generate a default save name with current timestamp."""
+        return f"save game {datetime.now().strftime('%Y-%m-%d %H%M')}"
 
     @staticmethod
     def get_player_count_options() -> List[int]:
