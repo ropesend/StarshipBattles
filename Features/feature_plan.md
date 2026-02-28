@@ -7,6 +7,8 @@
 ## 2. Feature Queue
 | ID | Date Added | Description | Status | Spec File |
 | :--- | :--- | :--- | :--- | :--- |
+| FEAT-01 | 2026-02-28 | Pre-populate Save Game Name | Pending | `active_features/FEAT-01.md` |
+| FEAT-02 | 2026-02-28 | Add "Generate Random" Buttons to Species Setup | Pending | `active_features/FEAT-02.md` |
 
 ## 3. Current Focus: None
 No features currently in progress.
