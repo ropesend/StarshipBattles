@@ -152,7 +152,7 @@ class TestGetCalculatedStatsWithRegistries:
     def test_fallback_to_global_registry_when_none(self, basic_design_data):
         """get_calculated_stats() should fall back to global registry when _registries is None.
 
-        PROJ-211: Temporary fallback during migration. Will be removed in Task 2.3.
+        PROJ-211: Temporary fallback during migration. Will be removed in Task 5.6.
         """
         ship = ShipInstance(
             instance_id='test-1',

@@ -2,6 +2,7 @@
 Integration tests for colonization execution.
 
 Tests colonization order execution and movement + colonization workflows.
+PROJ-211: Updated to pass fresh_registries for DI compliance.
 """
 
 import pytest
@@ -78,7 +79,7 @@ class TestColonizationExecution:
 class TestColonizationWithMovement:
     """Tests for colonization combined with movement orders."""
 
-    def test_move_then_colonize(self, turn_engine, simple_galaxy):
+    def test_move_then_colonize(self, turn_engine, simple_galaxy, fresh_registries):
         """Fleet can move to planet then colonize."""
         empire = Empire(0, "Mover", (100, 100, 100))
 
@@ -101,7 +102,8 @@ class TestColonizationWithMovement:
         start_loc = HexCoord(target_loc.q + 1, target_loc.r)
         fleet = Fleet(1, empire.id, start_loc, speed=100.0)  # Fast
         # PROJ-140: Use proper colony ship that matches planet type
-        fleet.ships = [make_colony_ship_for_planet(target_planet, empire.id)]
+        # PROJ-211: Pass registries for DI compliance
+        fleet.ships = [make_colony_ship_for_planet(target_planet, empire.id, registries=fresh_registries)]
         empire.add_fleet(fleet)
 
         # Queue move then colonize
@@ -120,7 +122,7 @@ class TestColonizationWithMovement:
         assert target_planet.owner_id == empire.id
         assert len(empire.colonies) == initial_colonies + 1
 
-    def test_colonize_at_destination_not_start(self, turn_engine, simple_galaxy):
+    def test_colonize_at_destination_not_start(self, turn_engine, simple_galaxy, fresh_registries):
         """Colonize order executes at destination, not start."""
         empire = Empire(0, "Traveler", (100, 100, 100))
 
@@ -147,7 +149,10 @@ class TestColonizationWithMovement:
 
         # Create fleet at start
         fleet = Fleet(1, empire.id, start_loc, speed=100.0)
-        fleet.ships = [make_mock_ship_instance("Colony Ship", empire.id)]
+        # PROJ-211: Set registries for DI compliance
+        ship = make_mock_ship_instance("Colony Ship", empire.id)
+        ship.set_registries(fresh_registries)
+        fleet.ships = [ship]
         empire.add_fleet(fleet)
 
         # Queue move + colonize

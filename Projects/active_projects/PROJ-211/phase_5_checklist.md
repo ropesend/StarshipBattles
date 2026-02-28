@@ -110,10 +110,27 @@ needs registries. ~109 tests fail when fallback is removed.
 - [x] Update tests/integration/resource_system/*.py (7 tests - DONE)
 - [x] Update tests/integration/save_load/*.py (41 tests - already DI compliant)
 - [x] Update tests/unit/strategy/test_fleet_battle_adapter.py (13 tests - already DI compliant)
-- [x] Update tests/unit/strategy/ship_instance/*.py (94 tests - already DI compliant)
+- [x] Update tests/unit/strategy/ship_instance/*.py (94 tests - DONE - using make_ship_with_stats fixture)
 - [x] Update tests/unit/strategy/test_ship_resource_manager.py (24 tests - already DI compliant)
-- [ ] Update remaining test files (~50+ files)
+- [x] Update tests/integration/colonization/*.py (30 tests - DONE - updated conftest + test files)
+- [x] Update tests/conftest.py make_colony_ship_for_planet (accepts registries parameter)
+- [ ] Update remaining test files (~44 failures remaining when fallback removed)
 - [ ] Verify: fallback removal succeeds
+
+**Remaining test files needing updates (verified 2026-02-28):**
+- tests/integration/gameplay_loop/test_commands_colonization.py (local make_colony_ship_for_planet)
+- tests/integration/gameplay_loop/test_fleet_operations.py
+- tests/integration/gameplay_loop/test_turn_execution.py
+- tests/integration/strategy/production/*.py
+- tests/integration/strategy/facade/test_fleet_dto.py
+- tests/integration/strategy/transfer/test_transfer_validation.py
+- tests/integration/strategy/turn_engine/*.py
+- tests/integration/ui/test_*.py
+- tests/integration/test_complex_workflow.py
+- tests/unit/strategy/test_fleet_battle_adapter.py
+- tests/unit/strategy/test_fleet_capability_calculator_di.py
+- tests/unit/test_advanced_fleet_orders.py
+- tests/integration/save_load/*.py (ERRORS in fixture)
 
 ### Task 5.7: Remove FleetCapabilityCalculator fallbacks (MOVED FROM PHASE 2)
 **Files:** `game/strategy/data/fleet_capability_calculator.py`

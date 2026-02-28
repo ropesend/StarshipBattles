@@ -2,6 +2,7 @@
 Tests for ShipInstance - resource capacity and level management.
 
 PROJ-48: Split from test_resources.py
+PROJ-211: Updated to use make_ship_with_stats fixture for DI compliance.
 """
 
 import pytest
@@ -11,78 +12,43 @@ from game.strategy.data.ship_instance import ShipInstance
 class TestGetResourceCapacity:
     """Tests for get_resource_capacity method."""
 
-    def test_get_resource_capacity_fuel(self, make_design_data_with_stats):
+    def test_get_resource_capacity_fuel(self, make_ship_with_stats):
         """get_resource_capacity returns fuel capacity from resource_storage."""
-        design_data = make_design_data_with_stats(expected_stats={
+        ship = make_ship_with_stats(expected_stats={
             'resource_storage': {'fuel': 5000}
         })
-        ship = ShipInstance(
-            instance_id='test-1',
-            design_id='TestDesign',
-            name='Test Ship',
-            owner_id=0,
-            design_data=design_data
-        )
 
         assert ship.get_resource_capacity('fuel') == 5000
 
-    def test_get_resource_capacity_energy(self, make_design_data_with_stats):
+    def test_get_resource_capacity_energy(self, make_ship_with_stats):
         """get_resource_capacity returns energy capacity from resource_storage."""
-        design_data = make_design_data_with_stats(expected_stats={
+        ship = make_ship_with_stats(expected_stats={
             'resource_storage': {'energy': 2000}
         })
-        ship = ShipInstance(
-            instance_id='test-1',
-            design_id='TestDesign',
-            name='Test Ship',
-            owner_id=0,
-            design_data=design_data
-        )
 
         assert ship.get_resource_capacity('energy') == 2000
 
-    def test_get_resource_capacity_custom_resource(self, make_design_data_with_stats):
+    def test_get_resource_capacity_custom_resource(self, make_ship_with_stats):
         """get_resource_capacity returns custom resource capacity."""
-        design_data = make_design_data_with_stats(expected_stats={
+        ship = make_ship_with_stats(expected_stats={
             'resource_storage': {'fuel': 1000, 'energy': 500, 'glag': 200}
         })
-        ship = ShipInstance(
-            instance_id='test-1',
-            design_id='TestDesign',
-            name='Test Ship',
-            owner_id=0,
-            design_data=design_data
-        )
 
         assert ship.get_resource_capacity('glag') == 200
 
-    def test_get_resource_capacity_unknown_resource(self, make_design_data_with_stats):
+    def test_get_resource_capacity_unknown_resource(self, make_ship_with_stats):
         """get_resource_capacity returns 0 for unknown resource types."""
-        design_data = make_design_data_with_stats(expected_stats={
+        ship = make_ship_with_stats(expected_stats={
             'resource_storage': {'fuel': 1000}
         })
-        ship = ShipInstance(
-            instance_id='test-1',
-            design_id='TestDesign',
-            name='Test Ship',
-            owner_id=0,
-            design_data=design_data
-        )
 
         assert ship.get_resource_capacity('unknown_resource') == 0
 
-    def test_get_resource_capacity_zero_capacity(self, make_design_data_with_stats):
+    def test_get_resource_capacity_zero_capacity(self, make_ship_with_stats):
         """get_resource_capacity returns 0 when resource has zero capacity."""
-        design_data = make_design_data_with_stats(expected_stats={
+        ship = make_ship_with_stats(expected_stats={
             'resource_storage': {'fuel': 0, 'energy': 100}
         })
-        ship = ShipInstance(
-            instance_id='test-1',
-            design_id='TestDesign',
-            name='Test Ship',
-            owner_id=0,
-            design_data=design_data
-        )
 
         assert ship.get_resource_capacity('fuel') == 0
 

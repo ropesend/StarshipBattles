@@ -315,17 +315,19 @@ def ship_factory(fresh_registries):
     return _create_ship
 
 
-def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship"):
+def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship", registries=None):
     """
     Create a colony ship that can colonize a specific planet.
 
     PROJ-140: Creates a ship with a colony pod matching the planet's type.
+    PROJ-211: Accepts optional registries for DI compliance.
     Use this for integration tests that need working colonization.
 
     Args:
         planet: The Planet object to create a colony ship for
         owner_id: Owner empire ID
         name: Ship name
+        registries: Optional GameRegistries for DI compliance
 
     Returns:
         ShipInstance: A colony ship that can colonize the given planet type
@@ -335,7 +337,7 @@ def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship"):
     planet_type_str = planet.planet_type.name
     pod_id = f"{planet_type_str.lower()}_colony_pod"
 
-    return ShipInstance(
+    ship = ShipInstance(
         instance_id=f"colony-{name.lower().replace(' ', '-')}-{id(name)}",
         design_id=f"{planet_type_str}_colony_ship",
         name=name,
@@ -344,8 +346,12 @@ def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship"):
             'name': name,
             'vehicle_type': 'Ship',
             'stats': {'mass': 100},
+            'expected_stats': {'speed': 10.0},  # PROJ-211: For Fleet speed calc
             'layers': {
                 'HULL': [{'id': pod_id}]
             }
         },
     )
+    if registries is not None:
+        ship.set_registries(registries)
+    return ship

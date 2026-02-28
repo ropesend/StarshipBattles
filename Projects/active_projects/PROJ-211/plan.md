@@ -22,12 +22,15 @@
 ## Current State
 **Last Updated:** 2026-02-28
 **Active Phase:** Phase 5 (Task 5.5.1 in progress)
-**Last Action:** Task 5.5.1 partial - Updated fleet_capability_calculator (27 tests), cost_queries (13 tests), added make_ship_with_stats fixture
-**Next Action:** Task 5.5.1 - Continue updating test fixtures (~50 tests remaining)
+**Last Action:** Task 5.5.1 partial - Updated ship_instance tests (5 files), colonization tests (3 files + conftest)
+**Next Action:** Task 5.5.1 - Continue updating remaining test fixtures (~44 failures remaining)
 **Blockers:** Fleet.add_ship() triggers get_calculated_stats() via speed recalculation
-**Note:** Test removal attempt shows ~93 tests fail when fallback removed. Many files already DI-compliant.
-Created make_ship_with_stats fixture in ship_instance/conftest.py for easier test updates.
-Files updated this session: test_fleet_capability_calculator.py (27 tests), test_cost_queries.py (13 tests).
+**Note:** Test removal attempt shows ~44 tests fail when fallback removed (down from 85).
+**Progress this session:**
+- Updated tests/unit/strategy/ship_instance/*.py (5 files) with make_ship_with_stats fixture
+- Updated tests/integration/colonization/*.py (3 test files + conftest.py)
+- Updated tests/conftest.py make_colony_ship_for_planet to accept registries parameter
+- All tests pass with fallback in place (12824 passed, 1 skipped)
 
 ## Overview
 Systematic eradication of the `get_default_registry_provider()` fallback anti-pattern across the entire codebase. The DI infrastructure exists (PROJ-38 added parameters, PROJ-50 partially enforced them) but is in a half-migrated state where 13 production files silently fall back to global state.

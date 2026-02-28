@@ -8,29 +8,31 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-211 Phase 5 Task 5.5.1 partial - Updated 40+ tests across multiple files
-**Current Status:** PROJ-211 Phase 5 Task 5.5.1 in progress (~50 tests remaining)
+**Last Completed:** PROJ-211 Phase 5 Task 5.5.1 partial - Updated ship_instance + colonization tests
+**Current Status:** PROJ-211 Phase 5 Task 5.5.1 in progress (~44 tests remaining)
 **Current Project:** PROJ-211
 **Current Phase:** Phase 5 (UI Screens & Cleanup) - Task 5.5.1 In Progress
-**Test Status:** 12882 passed, 1 skipped (excluding 4 asset tests)
+**Test Status:** 12824 passed, 1 skipped
 **Active Blockers:** Fleet.add_ship() triggers get_calculated_stats() via speed recalculation
 
 **Handoff Notes:**
 - Task 5.5.1 progress this session:
-  - Updated tests/unit/strategy/test_fleet_capability_calculator.py (27 tests) - uses fresh_registries fixture
-  - Updated tests/unit/strategy/ship_instance/test_cost_queries.py (13 tests) - uses make_ship_with_stats fixture
-  - Added make_ship_with_stats fixture to ship_instance/conftest.py
-  - Verified many other files already DI-compliant (gameplay_loop, save_load, fleet_battle_adapter, etc.)
-- Test removal attempt shows 93 tests fail when fallback removed
-- Many files already pass because they:
-  - Use direct assignment (f1.ships = [ship]) instead of add_ship()
-  - Use mocks or properly injected registries
-- Key files still needing updates:
-  - ship_instance/ - convenience_methods, capacity_levels, component_toggles, serialization edge cases
-  - test_registries_di.py - test_fallback_to_global_registry_when_none (expected to fail)
-  - Some gameplay_loop tests that create real ships
-- Next: Continue updating ship_instance test files using make_ship_with_stats fixture
-- 4 failing asset tests unrelated (tests/repro_issues/test_bug_13_colony_flags.py)
+  - Updated tests/unit/strategy/ship_instance/*.py (5 files) - using make_ship_with_stats fixture
+  - Updated tests/integration/colonization/*.py (3 test files + conftest.py)
+  - Updated tests/conftest.py make_colony_ship_for_planet to accept registries param
+  - Down from 85 failures to 44 failures when fallback removed
+- Remaining test files needing updates (~44 failures):
+  - tests/integration/gameplay_loop/test_commands_colonization.py (local make_colony_ship_for_planet)
+  - tests/integration/gameplay_loop/test_fleet_operations.py
+  - tests/integration/gameplay_loop/test_turn_execution.py
+  - tests/integration/strategy/production/*.py
+  - tests/integration/strategy/turn_engine/*.py
+  - tests/integration/ui/test_*.py
+  - tests/integration/test_complex_workflow.py
+  - tests/unit/strategy/test_fleet_battle_adapter.py
+  - tests/unit/test_advanced_fleet_orders.py
+  - tests/integration/save_load/*.py (ERRORS)
+- Next: Continue updating remaining test files
 
 ---
 
@@ -100,6 +102,7 @@
 | 2026-02-28 | PROJ-211 | Phase 5 (5.5) | Complete | 12884 passed, 4 failed | f6fa144e | ship_factory fixture, ~40 tests updated, 5.5.1 created for remaining |
 | 2026-02-28 | PROJ-211 | Phase 5 (5.5.1) | In Progress | 12882 passed, 1 skipped | c5d04393 | 7 resource_system tests updated; Fleet.add_ship() discovery |
 | 2026-02-28 | PROJ-211 | Phase 5 (5.5.1) | In Progress | 12882 passed, 1 skipped | pending | 40 more tests updated; make_ship_with_stats fixture added |
+| 2026-02-28 | PROJ-211 | Phase 5 (5.5.1) | In Progress | 12824 passed, 1 skipped | pending | ship_instance + colonization tests updated; 44 failures remaining |
 
 ---
 
