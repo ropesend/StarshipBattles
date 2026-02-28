@@ -21,11 +21,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-28
-**Active Phase:** Phase 5 (Tasks 5.1-5.4 Complete)
-**Last Action:** Tasks 5.1-5.4 complete - compute_planet_production, EmpirePanelWindow, builder sub-panels now use strict DI
-**Next Action:** Tasks 5.5-5.8 - Remove ShipInstance/FleetCapabilityCalculator fallbacks, final verification
-**Blockers:** None
-**Note:** Tasks 5.1-5.4 complete. 12884 tests passing (4 unrelated asset failures). GameRegistries now implements IRegistryProvider interface. Major UI callers updated to pass registries.
+**Active Phase:** Phase 5 (Task 5.5 Complete, 5.5.1 in progress)
+**Last Action:** Task 5.5 complete - ship_factory fixture created, ~40 tests updated
+**Next Action:** Task 5.5.1 - Continue updating test fixtures (~127 tests remaining)
+**Blockers:** Task 5.6 blocked until more test fixtures are updated
+**Note:** Infrastructure for DI in tests is now in place (ship_factory, singleton_registries fixtures). Many tests still use ShipInstance without registries and rely on fallback. 12884 tests passing (4 unrelated asset failures).
 
 ## Overview
 Systematic eradication of the `get_default_registry_provider()` fallback anti-pattern across the entire codebase. The DI infrastructure exists (PROJ-38 added parameters, PROJ-50 partially enforced them) but is in a half-migrated state where 13 production files silently fall back to global state.

@@ -252,6 +252,9 @@ def make_mock_ship_instance(name="Test Ship", owner_id=0):
     PROJ-40/NEW-INT-003: Consolidated from multiple integration test files.
     Use this helper instead of defining local versions in test files.
 
+    Note: This uses the direct constructor, not create(), so it doesn't require
+    registries. Use this for tests that don't call get_calculated_stats().
+
     Args:
         name: Ship name (also used as design_id)
         owner_id: Owner empire ID
@@ -272,6 +275,44 @@ def make_mock_ship_instance(name="Test Ship", owner_id=0):
             'stats': {'mass': 100}
         },
     )
+
+
+@pytest.fixture
+def ship_factory(fresh_registries):
+    """
+    Factory fixture for creating ShipInstance with proper DI.
+
+    PROJ-211: Provides a factory function that creates ShipInstance objects
+    with registries properly injected. Use this in tests that need to call
+    ShipInstance.create() or access get_calculated_stats().
+
+    Usage:
+        def test_something(ship_factory):
+            ship = ship_factory(design_data={'name': 'Destroyer', ...})
+            # Ship has registries, so get_calculated_stats() works
+
+    Returns:
+        Callable that creates ShipInstance with registries
+    """
+    from game.strategy.data.ship_instance import ShipInstance
+
+    def _create_ship(
+        design_data: dict,
+        owner_id: int = 0,
+        name: str = None,
+        design_id: str = None,
+        empire = None,
+    ) -> ShipInstance:
+        return ShipInstance.create(
+            design_data=design_data,
+            owner_id=owner_id,
+            name=name,
+            design_id=design_id,
+            empire=empire,
+            registries=fresh_registries,
+        )
+
+    return _create_ship
 
 
 def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship"):

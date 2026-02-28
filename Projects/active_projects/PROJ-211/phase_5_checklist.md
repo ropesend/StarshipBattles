@@ -55,33 +55,58 @@
 **Files:** Test files using ShipInstance.create() / from_dict() without registries
 **Tests:** `pytest tests/ -n 12`
 
-This task enables fallback removal in Phase 2 objects. ~200 tests create ShipInstance
-or Fleet without passing registries.
+This task enables fallback removal in Phase 2 objects. ~67 occurrences of ShipInstance.create()
+or ShipInstance.from_dict() across test files.
 
 Strategy:
-1. Add autouse fixture or update conftest to make registries easily injectable
-2. Update test fixtures/factories to pass registries by default
-3. Update individual tests as needed
+1. Add ship_factory fixture in conftest.py that injects fresh_registries
+2. Update test files to use ship_factory or pass registries directly
+3. For integration tests that manipulate singleton, add singleton_registries fixture
 
-- [ ] Create helper in conftest.py for test ShipInstance creation with registries
-- [ ] Update tests/unit/strategy/ship_instance/*.py tests
-- [ ] Update tests/unit/strategy/fleet/*.py tests
-- [ ] Update tests/unit/strategy/test_fleet_*.py tests
-- [ ] Update tests/integration/strategy/*.py tests
-- [ ] Update tests/integration/colonization/*.py tests
-- [ ] Update tests/integration/resource_system/*.py tests
-- [ ] Update remaining tests that create ShipInstance
-- [ ] Verify: all tests pass
+- [x] Create ship_factory fixture in conftest.py for DI-compliant ShipInstance creation
+- [x] Update tests/unit/strategy/test_ship_serial_numbering.py (16 tests)
+- [x] Update tests/unit/strategy/test_ship_instance_damage.py (17 tests)
+- [x] Update tests/integration/strategy/transfer/conftest.py fixtures
+- [x] Update tests/unit/strategy/facade/test_population_dtos.py
+- [x] Update tests/unit/strategy/engine/test_colonize_population.py (3 helper functions, 6 tests)
+- [x] Update tests/integration/resource_system/conftest.py (added singleton_registries)
+- [x] Verify: all tests pass (12884 passed, 4 unrelated failures)
 
 ### Task 5.6: Remove ShipInstance.get_calculated_stats() fallback (MOVED FROM PHASE 2)
 **Files:** `game/strategy/data/ship_instance.py`
-**Depends on:** Task 5.5
+**Depends on:** Task 5.5.1 (more test fixture updates needed)
 
-After test fixtures are updated in 5.5:
+**BLOCKED:** ~127 additional tests need fixture updates before fallback can be removed.
+Test files that still create ShipInstance without registries include:
+- tests/unit/strategy/test_fleet_capability_calculator.py
+- tests/unit/strategy/test_fleet_capability_calculator_di.py
+- tests/unit/test_advanced_fleet_orders.py
+- tests/integration/gameplay_loop/*.py
+- tests/integration/resource_system/*.py (need singleton_registries)
+- tests/integration/save_load/*.py
+- Many others (~50+ test files)
+
+After remaining test fixtures are updated:
 - [ ] Remove the `get_default_registry_provider()` fallback from `get_calculated_stats()`
 - [ ] Raise explicit error if `self._registries` is None
 - [ ] Remove `get_default_registry_provider` import from ship_instance.py
 - [ ] Verify: all tests pass
+
+### Task 5.5.1: Additional test fixture updates (NEW SUBTASK)
+**Files:** Multiple test files creating ShipInstance without registries
+**Tests:** `pytest tests/ -n 12`
+
+Continue updating test files to use ship_factory or pass registries directly.
+Infrastructure is in place (ship_factory fixture, singleton_registries fixture).
+
+- [ ] Update tests/unit/strategy/test_fleet_capability_calculator.py
+- [ ] Update tests/unit/strategy/test_fleet_capability_calculator_di.py
+- [ ] Update tests/unit/test_advanced_fleet_orders.py
+- [ ] Update tests/integration/gameplay_loop/*.py
+- [ ] Update tests/integration/resource_system/*.py (use singleton_registries)
+- [ ] Update tests/integration/save_load/*.py
+- [ ] Update remaining test files (~50 files)
+- [ ] Verify: fallback removal succeeds
 
 ### Task 5.7: Remove FleetCapabilityCalculator fallbacks (MOVED FROM PHASE 2)
 **Files:** `game/strategy/data/fleet_capability_calculator.py`

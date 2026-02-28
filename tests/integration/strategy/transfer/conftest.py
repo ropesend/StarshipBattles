@@ -3,6 +3,8 @@ Fixtures and factory functions for transfer validation integration tests.
 
 PROJ-159: Uses real Planet/Fleet objects instead of MagicMock to satisfy
 protocol-based type checking (is_planet() uses isinstance(obj, IPlanet)).
+
+PROJ-211: Updated to use ship_factory fixture for DI compliance.
 """
 
 import pytest
@@ -10,6 +12,7 @@ from game.strategy.data.planet import Planet, PlanetType, SpeciesPopulation
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.ship_instance import ShipInstance
 from game.core.hex_math import HexCoord
+from game.core.registry import GameRegistries
 
 
 # --- Factory Functions ---
@@ -58,7 +61,8 @@ def create_transport_ship(
     name: str = "Transport-1",
     owner_id: int = 0,
     cargo_capacity: int = 100,
-    current_cargo: int = 0
+    current_cargo: int = 0,
+    registries: GameRegistries = None
 ) -> ShipInstance:
     """
     Create a ship with passenger cargo capacity.
@@ -66,6 +70,8 @@ def create_transport_ship(
     Uses expected_stats to bypass registry lookup and set exact cargo capacity.
     This allows tests to control capacity precisely without depending on
     component registry definitions.
+
+    PROJ-211: Added registries parameter for DI compliance.
     """
     design = {
         "name": name,
@@ -77,7 +83,7 @@ def create_transport_ship(
             "cargo_storage": {"passengers": cargo_capacity}
         }
     }
-    ship = ShipInstance.create(design, owner_id=owner_id, name=name)
+    ship = ShipInstance.create(design, owner_id=owner_id, name=name, registries=registries)
     if current_cargo > 0:
         ship.cargo_contents["passengers"] = current_cargo
     return ship
@@ -88,7 +94,8 @@ def create_transport_fleet(
     owner_id: int = 0,
     location: HexCoord = None,
     cargo_capacity: int = 100,
-    current_cargo: int = 0
+    current_cargo: int = 0,
+    registries: GameRegistries = None
 ) -> Fleet:
     """
     Create a fleet with a transport ship.
@@ -99,6 +106,7 @@ def create_transport_fleet(
         location: Fleet location (default: origin)
         cargo_capacity: Passenger capacity of transport ship
         current_cargo: Current passengers loaded
+        registries: GameRegistries for DI (PROJ-211)
     """
     if location is None:
         location = HexCoord(0, 0)
@@ -108,7 +116,8 @@ def create_transport_fleet(
         name=f"Transport-{fleet_id}",
         owner_id=owner_id,
         cargo_capacity=cargo_capacity,
-        current_cargo=current_cargo
+        current_cargo=current_cargo,
+        registries=registries
     )
     fleet.add_ship(ship)
     return fleet
@@ -171,24 +180,26 @@ def uncolonized_planet() -> Planet:
 
 
 @pytest.fixture
-def transport_fleet() -> Fleet:
+def transport_fleet(fresh_registries) -> Fleet:
     """Fleet with empty transport capacity at origin."""
     return create_transport_fleet(
         fleet_id=1,
         cargo_capacity=100,
         current_cargo=0,
-        location=HexCoord(0, 0)
+        location=HexCoord(0, 0),
+        registries=fresh_registries
     )
 
 
 @pytest.fixture
-def loaded_fleet() -> Fleet:
+def loaded_fleet(fresh_registries) -> Fleet:
     """Fleet with passengers already loaded at origin."""
     return create_transport_fleet(
         fleet_id=2,
         cargo_capacity=100,
         current_cargo=50,
-        location=HexCoord(0, 0)
+        location=HexCoord(0, 0),
+        registries=fresh_registries
     )
 
 

@@ -266,7 +266,7 @@ class ShipInstance:
 
         PROJ-211: Uses _registries if set, otherwise falls back to global
         registry provider temporarily. The fallback will be removed after
-        test fixtures are updated to use DI.
+        all test fixtures are updated to use DI.
 
         Args:
             force_refresh: If True, recalculate even if cached
@@ -281,8 +281,8 @@ class ShipInstance:
 
             registries = self._registries
             if registries is None:
-                # PROJ-211 TEMPORARY FALLBACK: Will be removed after test
-                # fixtures are updated to inject registries
+                # PROJ-211 TEMPORARY FALLBACK: ~127 tests still need updating
+                # to inject registries. Will be removed in future phase.
                 from game.core.registry import get_default_registry_provider, GameRegistries
                 provider = get_default_registry_provider()
                 registries = GameRegistries(

@@ -135,12 +135,12 @@ class TestPlanetInfoPopulation:
 class TestFleetInfoCargo:
     """Tests for FleetInfo cargo fields."""
 
-    def test_fleet_info_includes_passenger_cargo(self):
+    def test_fleet_info_includes_passenger_cargo(self, ship_factory):
         """FleetInfo should expose passenger cargo capacity and count."""
         fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
 
-        # Create a ship with passenger capacity using factory
-        ship = ShipInstance.create(
+        # Create a ship with passenger capacity using factory (PROJ-211: DI)
+        ship = ship_factory(
             design_data={
                 "name": "Transport Alpha",
                 "ship_class": "Transport",
