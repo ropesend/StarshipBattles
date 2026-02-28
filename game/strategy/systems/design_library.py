@@ -37,7 +37,7 @@ class DesignLibrary:
         logger.debug(f"  empire_id: {empire_id}")
 
         # Determine designs folder location
-        if savegame_path is not None and savegame_path != "":
+        if isinstance(savegame_path, str) and savegame_path != "":
             # Use per-empire subfolder: designs/empire_N/
             self.designs_folder = os.path.join(savegame_path, "designs", f"empire_{empire_id}")
             logger.info(f"DesignLibrary: Using savegame designs folder: {self.designs_folder}")

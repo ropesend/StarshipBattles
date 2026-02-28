@@ -34,3 +34,6 @@ nul
 
 # QA Observer output
 tools/qa_observer/session_data/
+
+# Test artifact: MagicMock stringified as directory path
+MagicMock/

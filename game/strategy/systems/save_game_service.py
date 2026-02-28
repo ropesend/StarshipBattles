@@ -41,7 +41,7 @@ class SaveGameService:
         """
         try:
             # Determine save path
-            if game_session.save_path:
+            if isinstance(game_session.save_path, str) and game_session.save_path:
                 # Use existing save path
                 save_path = game_session.save_path
             else:
