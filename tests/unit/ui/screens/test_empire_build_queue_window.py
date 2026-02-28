@@ -107,10 +107,8 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     win._column_manager.sort_column_id = None
     win._column_manager.sort_descending = False
 
-    # Alias for backward compatibility
-    win.column_mgr = win._column_manager
-    win.column_mgr.handle_header_clicks = MagicMock(return_value=(False, False))
-    win.column_mgr.rebuild_headers = MagicMock()
+    win._column_manager.handle_header_clicks = MagicMock(return_value=(False, False))
+    win._column_manager.rebuild_headers = MagicMock()
 
     # VirtualTable components (PROJ-188 Phase 4)
     win._selection = MagicMock()
@@ -1585,17 +1583,17 @@ class TestProcessEvent:
 class TestColumnSortingAndReorder:
     """Tests for column sorting and reordering via ColumnManager."""
 
-    def test_column_mgr_attribute_exists(self):
-        """Window has column_mgr attribute after initialization."""
+    def test_column_manager_attribute_exists(self):
+        """Window has _column_manager attribute after initialization."""
         win = _make_window()
-        assert hasattr(win, 'column_mgr')
-        assert win.column_mgr is not None
+        assert hasattr(win, '_column_manager')
+        assert win._column_manager is not None
 
     def test_apply_sort_and_refresh_calls_sort(self):
         """_apply_sort_and_refresh applies sort via ViewModel's filter manager."""
         win = _make_window()
-        win.column_mgr.sort_column_id = 'location'
-        win.column_mgr.sort_descending = False
+        win._column_manager.sort_column_id = 'location'
+        win._column_manager.sort_descending = False
         # Mock _refresh_list to avoid pygame UI creation
         win._refresh_list = MagicMock()
 
@@ -1606,8 +1604,8 @@ class TestColumnSortingAndReorder:
     def test_apply_filters_includes_sort(self):
         """apply_filters triggers ViewModel filter application."""
         win = _make_window()
-        win.column_mgr.sort_column_id = 'queue_count'
-        win.column_mgr.sort_descending = True
+        win._column_manager.sort_column_id = 'queue_count'
+        win._column_manager.sort_descending = True
 
         # apply_filters delegates to ViewModel, which emits FILTERS_APPLIED event
         win.apply_filters()

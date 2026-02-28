@@ -80,6 +80,16 @@ def order_processor():
     return FleetOrderProcessor()
 
 @pytest.fixture
+def component_registry():
+    """Component registry with colony pod definitions."""
+    return {
+        'ice_dwarf_colony_pod': {
+            'id': 'ice_dwarf_colony_pod',
+            'abilities': {'ColonizePlanet': 'ICE_DWARF'}
+        },
+    }
+
+@pytest.fixture
 def galaxy_setup():
     galaxy = MockGalaxy()
     
@@ -95,7 +105,7 @@ def galaxy_setup():
     
     return galaxy, system, pA, pB
 
-def test_colonize_specific_success_at_exact_location(order_processor, galaxy_setup):
+def test_colonize_specific_success_at_exact_location(order_processor, galaxy_setup, component_registry):
     galaxy, system, pA, pB = galaxy_setup
 
     # Fleet at (11, 10) trying to colonize Planet B (which is globally at 11, 10)
@@ -107,14 +117,16 @@ def test_colonize_specific_success_at_exact_location(order_processor, galaxy_set
     empire.fleets.append(fleet)
 
     # Execute via FleetOrderProcessor (PROJ-187)
-    result = order_processor.process_end_turn_orders(fleet, empire, galaxy)
+    result = order_processor.process_end_turn_orders(
+        fleet, empire, galaxy, component_registry=component_registry
+    )
 
     assert result is True
     assert pB.owner_id == 1
     assert pB in empire.colonies
     assert len(empire.fleets) == 0 # Fleet consumed
 
-def test_colonize_specific_fail_wrong_location(order_processor, galaxy_setup):
+def test_colonize_specific_fail_wrong_location(order_processor, galaxy_setup, component_registry):
     galaxy, system, pA, pB = galaxy_setup
 
     # Fleet at (10, 10) (System Center / Planet A) trying to colonize Planet B (at 11, 10)
@@ -126,14 +138,16 @@ def test_colonize_specific_fail_wrong_location(order_processor, galaxy_setup):
     empire = Empire(1, "Player 1", (255, 0, 0))
     empire.fleets.append(fleet)
 
-    result = order_processor.process_end_turn_orders(fleet, empire, galaxy)
+    result = order_processor.process_end_turn_orders(
+        fleet, empire, galaxy, component_registry=component_registry
+    )
 
     assert result is False
     assert pB.owner_id is None # Not colonized
     assert len(fleet.orders) == 0 # Order popped (failed)
     assert len(empire.fleets) == 1 # Fleet still exists
 
-def test_colonize_any_success_at_location(order_processor, galaxy_setup):
+def test_colonize_any_success_at_location(order_processor, galaxy_setup, component_registry):
     galaxy, system, pA, pB = galaxy_setup
 
     # Fleet at (10, 10). Should define Planet A as target because it matches location
@@ -144,7 +158,9 @@ def test_colonize_any_success_at_location(order_processor, galaxy_setup):
     empire = Empire(1, "Player 1", (255, 0, 0))
     empire.fleets.append(fleet)
 
-    result = order_processor.process_end_turn_orders(fleet, empire, galaxy)
+    result = order_processor.process_end_turn_orders(
+        fleet, empire, galaxy, component_registry=component_registry
+    )
 
     assert result is True
     assert pA.owner_id == 1
@@ -374,33 +390,3 @@ class TestColonizePodShipRemoval:
 
         # Assert: Fleet still exists
         assert fleet in empire.fleets
-
-    def test_colonize_backward_compatible_without_registry(
-        self, galaxy_with_typed_planets
-    ):
-        """Without registry, colonization removes entire fleet (old behavior)."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
-
-        galaxy, ice_planet, continental_planet = galaxy_with_typed_planets
-
-        # Fleet with ships
-        ship1 = MockShip("Ship 1", {'layers': {}})
-        ship2 = MockShip("Ship 2", {'layers': {}})
-
-        fleet = Fleet(1, 1, HexCoord(10, 10))
-        fleet.ships.append(ship1)
-        fleet.ships.append(ship2)
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice_planet))
-
-        empire = Empire(1, "Player 1", (255, 0, 0))
-        empire.fleets.append(fleet)
-
-        # Execute WITHOUT component registry (old behavior)
-        processor = FleetOrderProcessor()
-        result = processor.process_colonize(fleet, empire, galaxy)
-
-        # Assert: Colonization succeeded
-        assert result.colonized is True
-
-        # Assert: Entire fleet was removed (old behavior)
-        assert fleet not in empire.fleets

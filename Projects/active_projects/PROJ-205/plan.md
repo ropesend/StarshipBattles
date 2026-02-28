@@ -14,16 +14,16 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Dead Placeholder Cleanup | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Legacy Code Path Eradication | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Legacy Code Path Eradication | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Code Hygiene Fixes | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-27
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete - removed sprite_preview placeholder field
-**Next Action:** Begin Phase 2 - Legacy Code Path Eradication
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete - removed legacy colonization code path, column_mgr alias
+**Next Action:** Begin Phase 3 - Code Hygiene Fixes (AbilityManager branching, import move, comment fix)
 **Blockers:** None
-**Baseline:** 12,835 passed, 1 skipped
+**Baseline:** 12,831 passed, 1 skipped
 
 ## Overview
 Address 6 verified actionable findings from the legacy code audit (Review `2026-02-27_141504_general_legacy-code-audit`). All findings were independently verified by skeptical verification agents. Original 34 findings were triaged down to these 6 confirmed issues plus 1 comment fix.
@@ -106,7 +106,7 @@ Address 6 verified actionable findings from the legacy code audit (Review `2026-
 
 ### Phase 2: Legacy Code Path Eradication [Medium]
 **Objective:** Remove the legacy colonization path and the test-only `column_mgr` alias.
-**Status:** Not Started
+**Status:** Complete
 
 #### Task 2.1: Remove legacy colonization code path [Medium]
 **File:** `game/strategy/engine/fleet_order_processor.py`

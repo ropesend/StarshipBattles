@@ -8,20 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-27
-**Last Completed:** PROJ-205 Phase 1 - Dead Placeholder Cleanup
-**Current Status:** Phase 1 Complete - Starting Phase 2
+**Last Completed:** PROJ-205 Phase 2 - Legacy Code Path Eradication
+**Current Status:** Phase 2 Complete - Starting Phase 3
 **Current Project:** PROJ-205
-**Current Phase:** Phase 2
-**Test Status:** 12835 passed, 1 skipped
+**Current Phase:** Phase 3
+**Test Status:** 12831 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 1 complete: Removed `sprite_preview` placeholder field from DesignMetadata
-- Removed field definition, to_dict entry, from_dict parameter
-- Removed unused `Optional` import
-- Deleted 2 tests, updated 2 tests that referenced sprite_preview
-- Test count reduced by 2 (expected - removed sprite_preview tests)
-- Next: Phase 2 - Legacy Code Path Eradication (colonize, column_mgr)
+- Phase 2 complete: Removed legacy colonization code path and column_mgr test alias
+- Made `component_registry` required in `process_colonize()` (no more Optional)
+- Removed legacy planet selection fallback, legacy fleet removal fallback
+- Added guard in `process_end_turn_orders()` for COLONIZE requiring registry
+- Updated colonize_validator and fleet_order_processor to use duck typing (hasattr) for test mock compatibility
+- Removed column_mgr alias from empire_build_queue_window.py
+- Updated tests: deleted 4 legacy tests, updated many others with component_registry fixtures
+- 63 colonization tests pass, 118 build queue tests pass
+- Next: Phase 3 - Code Hygiene Fixes (AbilityManager branching, import move, comment fix)
 
 ---
 
@@ -69,6 +72,7 @@
 | 2026-02-27 | PROJ-204 | Phase 5 | Complete | 12837 passed | - | _get_local_bounds, _set_controls_enabled, PanelFactory, UIElementRegistry, +22 tests |
 | 2026-02-27 | PROJ-204 | Audit 1 | PASSED | 12837 passed | - | All 12 verification items confirmed |
 | 2026-02-27 | PROJ-205 | Phase 1 | Complete | 12835 passed | - | Removed sprite_preview placeholder field + 2 tests |
+| 2026-02-27 | PROJ-205 | Phase 2 | Complete | 12831 passed | - | Removed legacy colonize path, column_mgr alias, updated 63+ tests |
 
 ---
 

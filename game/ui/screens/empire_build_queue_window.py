@@ -150,9 +150,8 @@ class EmpireBuildQueueWindow(UIWindow):
             header_height=self.header_height,
         )
 
-        # Store references for backward compatibility with tests
+        # Store reference for scroll wheel handling
         self.scroll_bar = self._virtual_table.scroll_bar
-        self.column_mgr = self._column_manager  # Alias for tests
 
         # Subscribe to ViewModel events
         self._event_bus.subscribe(

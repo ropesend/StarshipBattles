@@ -84,6 +84,20 @@ def _make_ship_with_colony_pod(name: str, planet_type: str = "continental") -> S
     return ShipInstance.create(design, owner_id=0, name=name)
 
 
+def _make_component_registry() -> dict:
+    """Create component registry with colony pod definitions for CONTINENTAL planets."""
+    return {
+        "colony_pod_continental": {
+            "id": "colony_pod_continental",
+            "abilities": {"ColonizePlanet": "CONTINENTAL"}
+        },
+        "passenger_quarters": {
+            "id": "passenger_quarters",
+            "abilities": {"CargoStorage": {"cargo_type": "passengers", "capacity": 100}}
+        },
+    }
+
+
 class MockGalaxy:
     """Mock galaxy for processor tests."""
     def __init__(self, planets: list):
@@ -133,7 +147,10 @@ class TestColonizeTransfersPassengers:
 
         # Process colonization
         processor = FleetOrderProcessor()
-        result = processor.process_colonize(fleet, empire, galaxy)
+        result = processor.process_colonize(
+            fleet, empire, galaxy,
+            component_registry=_make_component_registry()
+        )
 
         # Verify
         assert result.colonized is True
@@ -166,7 +183,10 @@ class TestColonizeTransfersPassengers:
         assert fleet.get_fleet_cargo_current("passengers") == 75
 
         processor = FleetOrderProcessor()
-        processor.process_colonize(fleet, empire, galaxy)
+        processor.process_colonize(
+            fleet, empire, galaxy,
+            component_registry=_make_component_registry()
+        )
 
         # Cargo should be empty after (fleet is consumed so check planet)
         assert planet.total_population == 75
@@ -196,7 +216,10 @@ class TestColonizeWithoutPassengers:
         empire.add_fleet(fleet)
 
         processor = FleetOrderProcessor()
-        result = processor.process_colonize(fleet, empire, galaxy)
+        result = processor.process_colonize(
+            fleet, empire, galaxy,
+            component_registry=_make_component_registry()
+        )
 
         assert result.colonized is True
         assert planet.owner_id == empire.id
@@ -230,7 +253,10 @@ class TestColonizeMultipleShips:
         assert fleet.get_fleet_cargo_current("passengers") == 75
 
         processor = FleetOrderProcessor()
-        processor.process_colonize(fleet, empire, galaxy)
+        processor.process_colonize(
+            fleet, empire, galaxy,
+            component_registry=_make_component_registry()
+        )
 
         # All passengers should transfer
         assert planet.total_population == 75
@@ -255,7 +281,10 @@ class TestExistingColonizationBehavior:
         empire.add_fleet(fleet)
 
         processor = FleetOrderProcessor()
-        result = processor.process_colonize(fleet, empire, galaxy)
+        result = processor.process_colonize(
+            fleet, empire, galaxy,
+            component_registry=_make_component_registry()
+        )
 
         assert result.colonized is True
         assert result.planet_name == "Test Planet"

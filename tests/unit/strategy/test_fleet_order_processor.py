@@ -263,50 +263,104 @@ class TestJoinFleetProcessing:
 class TestColonizeProcessing:
     """Tests for COLONIZE order processing."""
 
-    def test_process_colonize_success(self, mock_fleet, mock_empire, mock_galaxy):
+    @pytest.fixture
+    def component_registry(self):
+        """Component registry with colony pod definitions."""
+        return {
+            'continental_colony_pod': {
+                'id': 'continental_colony_pod',
+                'abilities': {'ColonizePlanet': 'CONTINENTAL'}
+            },
+        }
+
+    @pytest.fixture
+    def mock_planet_continental(self):
+        """Create a mock CONTINENTAL planet."""
+        from enum import Enum
+        from game.strategy.data.planet import Planet
+
+        class MockPlanetType(Enum):
+            CONTINENTAL = "CONTINENTAL"
+
+        planet = MagicMock(spec=Planet)
+        planet.name = "Target Planet"
+        planet.owner_id = None
+        planet.planet_type = MockPlanetType.CONTINENTAL
+        return planet
+
+    @pytest.fixture
+    def mock_ship_with_continental_pod(self):
+        """Create a mock ship with continental colony pod."""
+        ship = MagicMock()
+        ship.name = "Colony Ship"
+        ship.design_data = {
+            'layers': {'HULL': [{'id': 'continental_colony_pod'}]}
+        }
+        return ship
+
+    def test_process_colonize_success(
+        self, mock_fleet, mock_empire, mock_galaxy,
+        mock_planet_continental, mock_ship_with_continental_pod, component_registry
+    ):
         """COLONIZE succeeds when valid planet at location."""
         from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
 
         processor = FleetOrderProcessor()
 
-        mock_planet = MagicMock()
-        mock_planet.owner_id = None  # Unowned
-        mock_planet.name = "Target Planet"
+        # Setup fleet with colony ship
+        mock_fleet.ships = [mock_ship_with_continental_pod]
+        def remove_ship_effect(ship):
+            mock_fleet.ships.remove(ship)
+        mock_fleet.remove_ship = MagicMock(side_effect=remove_ship_effect)
 
-        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_continental]
 
-        order = FleetOrder(OrderType.COLONIZE, mock_planet)
+        order = FleetOrder(OrderType.COLONIZE, mock_planet_continental)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 
-        result = processor.process_colonize(mock_fleet, mock_empire, mock_galaxy)
+        result = processor.process_colonize(
+            mock_fleet, mock_empire, mock_galaxy,
+            component_registry=component_registry
+        )
 
         assert result.colonized is True
-        mock_empire.add_colony.assert_called_with(mock_planet)
+        mock_empire.add_colony.assert_called_with(mock_planet_continental)
+        # Fleet should be removed since it's now empty
         mock_empire.remove_fleet.assert_called_with(mock_fleet)
 
-    def test_process_colonize_any_planet(self, mock_fleet, mock_empire, mock_galaxy):
-        """COLONIZE with None target picks first valid planet."""
+    def test_process_colonize_any_planet(
+        self, mock_fleet, mock_empire, mock_galaxy,
+        mock_planet_continental, mock_ship_with_continental_pod, component_registry
+    ):
+        """COLONIZE with None target picks matching planet."""
         from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
 
         processor = FleetOrderProcessor()
 
-        mock_planet = MagicMock()
-        mock_planet.owner_id = None  # Unowned
-        mock_planet.name = "Auto-selected Planet"
+        # Setup fleet with colony ship
+        mock_fleet.ships = [mock_ship_with_continental_pod]
+        def remove_ship_effect(ship):
+            mock_fleet.ships.remove(ship)
+        mock_fleet.remove_ship = MagicMock(side_effect=remove_ship_effect)
 
-        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_continental]
 
         order = FleetOrder(OrderType.COLONIZE, None)  # Any planet
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 
-        result = processor.process_colonize(mock_fleet, mock_empire, mock_galaxy)
+        result = processor.process_colonize(
+            mock_fleet, mock_empire, mock_galaxy,
+            component_registry=component_registry
+        )
 
         assert result.colonized is True
-        mock_empire.add_colony.assert_called_with(mock_planet)
+        mock_empire.add_colony.assert_called_with(mock_planet_continental)
 
-    def test_process_colonize_fails_no_planet(self, mock_fleet, mock_empire, mock_galaxy):
+    def test_process_colonize_fails_no_planet(
+        self, mock_fleet, mock_empire, mock_galaxy, component_registry
+    ):
         """COLONIZE fails when no valid planet at location."""
         from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
 
@@ -317,26 +371,34 @@ class TestColonizeProcessing:
         order = FleetOrder(OrderType.COLONIZE, None)
         mock_fleet.get_current_order.return_value = order
 
-        result = processor.process_colonize(mock_fleet, mock_empire, mock_galaxy)
+        result = processor.process_colonize(
+            mock_fleet, mock_empire, mock_galaxy,
+            component_registry=component_registry
+        )
 
         assert result.colonized is False
         mock_fleet.pop_order.assert_called()
 
-    def test_process_colonize_fails_owned_planet(self, mock_fleet, mock_empire, mock_galaxy):
+    def test_process_colonize_fails_owned_planet(
+        self, mock_fleet, mock_empire, mock_galaxy,
+        mock_planet_continental, component_registry
+    ):
         """COLONIZE fails when planet is already owned."""
         from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
 
         processor = FleetOrderProcessor()
 
-        mock_planet = MagicMock()
-        mock_planet.owner_id = 1  # Already owned
+        mock_planet_continental.owner_id = 1  # Already owned
 
-        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_continental]
 
-        order = FleetOrder(OrderType.COLONIZE, mock_planet)
+        order = FleetOrder(OrderType.COLONIZE, mock_planet_continental)
         mock_fleet.get_current_order.return_value = order
 
-        result = processor.process_colonize(mock_fleet, mock_empire, mock_galaxy)
+        result = processor.process_colonize(
+            mock_fleet, mock_empire, mock_galaxy,
+            component_registry=component_registry
+        )
 
         assert result.colonized is False
 
@@ -351,20 +413,45 @@ class TestEndTurnOrderProcessing:
     def test_process_end_turn_orders_colonize(self, mock_fleet, mock_empire, mock_galaxy):
         """End-turn processing handles COLONIZE orders."""
         from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.data.planet import Planet
+        from enum import Enum
+
+        class MockPlanetType(Enum):
+            CONTINENTAL = "CONTINENTAL"
 
         processor = FleetOrderProcessor()
 
-        mock_planet = MagicMock()
+        mock_planet = MagicMock(spec=Planet)
         mock_planet.owner_id = None
         mock_planet.name = "Test Planet"
+        mock_planet.planet_type = MockPlanetType.CONTINENTAL
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
+
+        # Setup fleet with colony ship
+        mock_ship = MagicMock()
+        mock_ship.name = "Colony Ship"
+        mock_ship.design_data = {'layers': {'HULL': [{'id': 'continental_colony_pod'}]}}
+        mock_fleet.ships = [mock_ship]
+        def remove_ship_effect(ship):
+            mock_fleet.ships.remove(ship)
+        mock_fleet.remove_ship = MagicMock(side_effect=remove_ship_effect)
+
+        component_registry = {
+            'continental_colony_pod': {
+                'id': 'continental_colony_pod',
+                'abilities': {'ColonizePlanet': 'CONTINENTAL'}
+            },
+        }
 
         order = FleetOrder(OrderType.COLONIZE, mock_planet)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 
-        result = processor.process_end_turn_orders(mock_fleet, mock_empire, mock_galaxy)
+        result = processor.process_end_turn_orders(
+            mock_fleet, mock_empire, mock_galaxy,
+            component_registry=component_registry
+        )
 
         assert result is True  # Fleet consumed
         mock_empire.add_colony.assert_called()
@@ -642,24 +729,3 @@ class TestColonizeShipRemoval:
         mock_fleet.remove_ship.assert_called()
         # Fleet should NOT be removed since combat ship remains
         mock_empire.remove_fleet.assert_not_called()
-
-    def test_process_colonize_without_registry_removes_fleet(
-        self, mock_fleet, mock_empire, mock_galaxy, mock_planet_ice_dwarf
-    ):
-        """Without registry, colonize removes entire fleet (legacy behavior)."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
-
-        processor = FleetOrderProcessor()
-
-        mock_fleet.ships = []  # Doesn't matter without registry
-
-        order = FleetOrder(OrderType.COLONIZE, mock_planet_ice_dwarf)
-        mock_fleet.get_current_order.return_value = order
-        mock_fleet.location = HexCoord(5, 5)
-
-        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf]
-
-        result = processor.process_colonize(mock_fleet, mock_empire, mock_galaxy)
-
-        assert result.colonized is True
-        mock_empire.remove_fleet.assert_called_with(mock_fleet)

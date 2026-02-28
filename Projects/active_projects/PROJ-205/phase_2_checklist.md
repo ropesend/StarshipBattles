@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Remove the legacy colonization path and the test-only `column_mgr` alias.
 
 ---
@@ -16,15 +16,15 @@
 **File:** `game/strategy/engine/fleet_order_processor.py`
 **Tests:** `pytest tests/unit/strategy/test_fleet_order_processor.py tests/unit/strategy/engine/ tests/integration/strategy/ tests/integration/colonization/`
 
-- [ ] Make `component_registry` parameter required (remove `Optional` and `= None` default) in `process_colonize()` signature (line 176)
-- [ ] Remove legacy planet selection fallback: lines 242-244 (`else: final_planet = valid_candidates[0]`)
-- [ ] Remove legacy fleet removal fallback: lines 276-278 (`else: empire.remove_fleet(fleet)`)
-- [ ] Remove the `if component_registry is not None:` guard at line 249 (make the colony ship pre-check unconditional)
-- [ ] Update `process_end_turn_orders()` caller at line 629 if needed (already passes registry)
-- [ ] Update type annotation imports if `Optional` no longer needed for this param
-- [ ] Remove any docstring references to "legacy behavior" or "When None, entire fleet is removed"
+- [x] Make `component_registry` parameter required (remove `Optional` and `= None` default) in `process_colonize()` signature (line 176)
+- [x] Remove legacy planet selection fallback: lines 242-244 (`else: final_planet = valid_candidates[0]`)
+- [x] Remove legacy fleet removal fallback: lines 276-278 (`else: empire.remove_fleet(fleet)`)
+- [x] Remove the `if component_registry is not None:` guard at line 249 (make the colony ship pre-check unconditional)
+- [x] Update `process_end_turn_orders()` caller - added guard for COLONIZE requiring registry
+- [x] Update docstrings to remove legacy references
+- [x] Also updated validator to use duck typing for test compatibility
 
-**Notes:** 19 tests call without registry - all need updating in Task 2.2
+**Notes:** Updated to duck typing (hasattr) in fleet_order_processor and colonize_validator for test mock compatibility.
 
 ### Task 2.2: Update colonization tests to provide component_registry [Medium]
 **Files:**
@@ -37,21 +37,23 @@
 
 **Tests:** `pytest tests/unit/strategy/test_fleet_order_processor.py tests/unit/strategy/engine/ tests/integration/strategy/ tests/integration/colonization/ -v`
 
-- [ ] Add `component_registry` parameter to all 19 legacy test call sites
-- [ ] Delete explicit legacy test: `test_process_colonize_legacy_without_registry_still_works` (~line 325 in test_process_colonize_validation.py)
-- [ ] Delete `test_process_colonize_without_registry_removes_fleet` (~line 662 in test_fleet_order_processor.py)
-- [ ] Update remaining tests to use modern behavior (fleet kept when ships remain, only colony ship removed)
-- [ ] Run full colonization test suite
+- [x] Add `component_registry` parameter to all legacy test call sites
+- [x] Delete explicit legacy test: `test_process_colonize_legacy_without_registry_still_works`
+- [x] Delete `test_process_colonize_without_registry_removes_fleet`
+- [x] Delete `test_colonize_backward_compatible_without_registry` from integration tests
+- [x] Delete `test_colonize_without_registry_uses_legacy_behavior` from planet_specific tests
+- [x] Update remaining tests to use modern behavior
+- [x] Run full colonization test suite - 63 tests pass
 
-**Notes:** Follow pattern from existing registry-path tests (e.g., `test_process_colonize_with_registry_removes_ship` at line 574).
+**Notes:** Added component_registry fixtures and updated all test files.
 
 ### Task 2.3: Remove column_mgr test alias [Simple]
 **File:** `game/ui/screens/empire_build_queue_window.py`
 **Tests:** `pytest tests/unit/ui/screens/test_empire_build_queue_window.py`
 
-- [ ] Remove line 155: `self.column_mgr = self._column_manager  # Alias for tests`
-- [ ] Fix comment on line 153-154: change "Store references for backward compatibility with tests" to "Store reference for scroll wheel handling"
-- [ ] Keep `self.scroll_bar = self._virtual_table.scroll_bar` (line 154) - this IS production code
+- [x] Remove line 155: `self.column_mgr = self._column_manager  # Alias for tests`
+- [x] Fix comment on line 153-154: changed to "Store reference for scroll wheel handling"
+- [x] Kept `self.scroll_bar = self._virtual_table.scroll_bar` (production code)
 
 **Notes:**
 
@@ -59,16 +61,10 @@
 **File:** `tests/unit/ui/screens/test_empire_build_queue_window.py`
 **Tests:** `pytest tests/unit/ui/screens/test_empire_build_queue_window.py -v`
 
-- [ ] Replace all `win.column_mgr` references with `win._column_manager` (8 locations):
-  - Line 111: `win.column_mgr = win._column_manager` → remove line entirely
-  - Line 112: `win.column_mgr.handle_header_clicks` → `win._column_manager.handle_header_clicks`
-  - Line 113: `win.column_mgr.rebuild_headers` → `win._column_manager.rebuild_headers`
-  - Line 1592: `assert win.column_mgr is not None` → `assert win._column_manager is not None`
-  - Line 1597: `win.column_mgr.sort_column_id` → `win._column_manager.sort_column_id`
-  - Line 1598: `win.column_mgr.sort_descending` → `win._column_manager.sort_descending`
-  - Line 1609: `win.column_mgr.sort_column_id` → `win._column_manager.sort_column_id`
-  - Line 1610: `win.column_mgr.sort_descending` → `win._column_manager.sort_descending`
-- [ ] Run tests
+- [x] Removed backward compatibility alias line
+- [x] Updated all `win.column_mgr` references to `win._column_manager`
+- [x] Renamed test from `test_column_mgr_attribute_exists` to `test_column_manager_attribute_exists`
+- [x] Run tests - 118 passed
 
 **Notes:**
 
@@ -76,10 +72,10 @@
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] `pytest tests/unit/strategy/ tests/integration/strategy/ tests/integration/colonization/` passes
-- [ ] `pytest tests/unit/ui/screens/test_empire_build_queue_window.py` passes
-- [ ] `pytest tests/ --testmon` passes
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] `pytest tests/unit/strategy/ tests/integration/strategy/ tests/integration/colonization/` passes
+- [x] `pytest tests/unit/ui/screens/test_empire_build_queue_window.py` passes
+- [x] `pytest tests/ -n 12` passes (12831 passed, 1 skipped)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

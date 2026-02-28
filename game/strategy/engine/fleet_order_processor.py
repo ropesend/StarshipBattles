@@ -173,14 +173,13 @@ class FleetOrderProcessor:
         fleet: Fleet,
         empire: 'Empire',
         galaxy: 'Galaxy',
-        component_registry: Optional[Dict[str, Any]] = None
+        component_registry: Dict[str, Any]
     ) -> ColonizeResult:
         """
         Process a COLONIZE order.
 
         PROJ-36: Uses ColonizeValidator for validation.
-        PROJ-55: When component_registry is provided, removes only the colony
-                 ship instead of the entire fleet.
+        PROJ-55: Removes only the colony ship, keeping remaining ships in fleet.
 
         Claims a planet for the empire if valid.
 
@@ -188,9 +187,8 @@ class FleetOrderProcessor:
             fleet: Fleet with COLONIZE order
             empire: Empire that owns the fleet
             galaxy: Galaxy for planet lookup
-            component_registry: Optional component registry for pod lookup.
-                               When provided, only the colony ship is removed.
-                               When None, entire fleet is removed (legacy behavior).
+            component_registry: Component registry for pod lookup.
+                               Used to find and remove only the colony ship.
 
         Returns:
             ColonizeResult with colonization status
@@ -221,41 +219,36 @@ class FleetOrderProcessor:
             planets_at_loc = galaxy.get_planets_at_global_hex(fleet.location)
             valid_candidates = [p for p in planets_at_loc if p.owner_id is None]
 
-            # PROJ-140 Phase 2: When registry provided, pick planet that matches available pod
-            if component_registry is not None:
-                final_planet = None
-                for candidate in valid_candidates:
-                    if isinstance(candidate, Planet):
-                        planet_type_str = candidate.planet_type.name
-                        ship_with_pod = ColonizeValidator.find_ship_with_colony_pod(
-                            fleet, planet_type_str, component_registry
-                        )
-                        if ship_with_pod is not None:
-                            final_planet = candidate
-                            break
+            # PROJ-140 Phase 2: Pick planet that matches available pod
+            final_planet = None
+            for candidate in valid_candidates:
+                # Duck typing: check for planet_type attribute (works with mocks too)
+                if hasattr(candidate, 'planet_type') and candidate.planet_type is not None:
+                    planet_type_str = candidate.planet_type.name
+                    ship_with_pod = ColonizeValidator.find_ship_with_colony_pod(
+                        fleet, planet_type_str, component_registry
+                    )
+                    if ship_with_pod is not None:
+                        final_planet = candidate
+                        break
 
-                if final_planet is None:
-                    # No matching pod for any candidate
-                    logger.warning("FleetOrderProcessor: No matching pod for any candidate planet")
-                    fleet.pop_order()
-                    return ColonizeResult(colonized=False)
-            else:
-                # Legacy behavior: pick first valid candidate
-                final_planet = valid_candidates[0]
+            if final_planet is None:
+                # No matching pod for any candidate
+                logger.warning("FleetOrderProcessor: No matching pod for any candidate planet")
+                fleet.pop_order()
+                return ColonizeResult(colonized=False)
 
         # PROJ-140 Bug 2: Pre-check colony ship availability BEFORE any mutation
         # This ensures we never colonize without a valid colony ship to consume
-        colony_ship = None
-        if component_registry is not None:
-            planet_type_str = final_planet.planet_type.name
-            colony_ship = ColonizeValidator.find_ship_with_colony_pod(
-                fleet, planet_type_str, component_registry
-            )
-            if colony_ship is None:
-                # Defensive: shouldn't happen if validation passed, but fail safely
-                logger.warning(f"FleetOrderProcessor: No matching colony pod for {planet_type_str}")
-                fleet.pop_order()
-                return ColonizeResult(colonized=False)
+        planet_type_str = final_planet.planet_type.name
+        colony_ship = ColonizeValidator.find_ship_with_colony_pod(
+            fleet, planet_type_str, component_registry
+        )
+        if colony_ship is None:
+            # Defensive: shouldn't happen if validation passed, but fail safely
+            logger.warning(f"FleetOrderProcessor: No matching colony pod for {planet_type_str}")
+            fleet.pop_order()
+            return ColonizeResult(colonized=False)
 
         # Execute colonization (mutations happen only after pre-check passes)
         empire.add_colony(final_planet)
@@ -264,18 +257,14 @@ class FleetOrderProcessor:
         # PROJ-68: Transfer passengers from fleet to colony as founding population
         self._transfer_founding_population(fleet, final_planet, empire)
 
-        # PROJ-55: Remove only colony ship when registry is provided
-        if component_registry is not None and colony_ship is not None:
-            fleet.remove_ship(colony_ship)
-            logger.debug(f"FleetOrderProcessor: Removed colony ship '{colony_ship.name}' from fleet")
+        # PROJ-55: Remove only colony ship
+        fleet.remove_ship(colony_ship)
+        logger.debug(f"FleetOrderProcessor: Removed colony ship '{colony_ship.name}' from fleet")
 
-            # If fleet now empty, remove it
-            if len(fleet.ships) == 0:
-                empire.remove_fleet(fleet)
-                logger.debug(f"FleetOrderProcessor: Fleet {fleet.id} removed (no ships remaining)")
-        else:
-            # Legacy behavior: remove entire fleet
+        # If fleet now empty, remove it
+        if len(fleet.ships) == 0:
             empire.remove_fleet(fleet)
+            logger.debug(f"FleetOrderProcessor: Fleet {fleet.id} removed (no ships remaining)")
 
         logger.info(f"FleetOrderProcessor: Colonization successful. {empire.name} claimed {final_planet.name}")
         log_event(
@@ -603,8 +592,8 @@ class FleetOrderProcessor:
             fleet: Fleet to process
             empire: Empire that owns the fleet
             galaxy: Galaxy for validation
-            component_registry: Optional component registry for colony pod lookup.
-                               When provided, only the colony ship is removed.
+            component_registry: Component registry for colony pod lookup.
+                               Required for COLONIZE orders.
             empires: Optional list of all empires (needed for STELLERATE_STAR).
 
         Returns:
@@ -626,6 +615,10 @@ class FleetOrderProcessor:
 
         elif order.type == OrderType.COLONIZE:
             # PROJ-55: Pass component registry for ship removal
+            if component_registry is None:
+                logger.error("FleetOrderProcessor: COLONIZE order requires component_registry")
+                fleet.pop_order()
+                return False
             result = self.process_colonize(
                 fleet, empire, galaxy, component_registry=component_registry
             )

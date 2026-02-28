@@ -418,23 +418,45 @@ class TestColonyFoundedEvent:
     def _make_colonize_fleet(self):
         """Create a fleet with a COLONIZE order."""
         from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+        from enum import Enum
+
+        class MockPlanetType(Enum):
+            CONTINENTAL = "CONTINENTAL"
 
         fleet = MagicMock(spec=Fleet)
         fleet.id = 3
         fleet.owner_id = 0
-        fleet.ships = [MagicMock()]
+
+        # Mock ship with colony pod
+        mock_ship = MagicMock()
+        mock_ship.name = "Colony Ship"
+        mock_ship.design_data = {
+            'layers': {'HULL': [{'id': 'continental_colony_pod'}]}
+        }
+        fleet.ships = [mock_ship]
 
         target_planet = _make_mock_planet(planet_id=10, name="New Earth")
         target_planet.owner_id = None
         target_planet.populations = []
+        target_planet.planet_type = MockPlanetType.CONTINENTAL
 
         order = FleetOrder(OrderType.COLONIZE, target=target_planet)
         fleet.get_current_order.return_value = order
         fleet.pop_order = MagicMock()
         fleet.get_fleet_cargo_current = MagicMock(return_value=0)
         fleet.unload_cargo_from_fleet = MagicMock(return_value=0)
+        fleet.remove_ship = MagicMock(side_effect=lambda s: fleet.ships.remove(s))
 
         return fleet, target_planet
+
+    def _make_component_registry(self):
+        """Create component registry for tests."""
+        return {
+            'continental_colony_pod': {
+                'id': 'continental_colony_pod',
+                'abilities': {'ColonizePlanet': 'CONTINENTAL'}
+            },
+        }
 
     def test_process_colonize_emits_colony_founded_event(self):
         """process_colonize() emits colony_founded on success."""
@@ -444,6 +466,7 @@ class TestColonyFoundedEvent:
         fleet, target_planet = self._make_colonize_fleet()
         empire = _make_mock_empire(name="Human Empire")
         galaxy = _make_mock_galaxy()
+        component_registry = self._make_component_registry()
 
         calls, fake = _capture_log_event_calls()
 
@@ -451,9 +474,14 @@ class TestColonyFoundedEvent:
             mock_result = MagicMock()
             mock_result.is_valid = True
             mock_val.validate.return_value = mock_result
+            # Mock find_ship_with_colony_pod to return the colony ship
+            mock_val.find_ship_with_colony_pod.return_value = fleet.ships[0]
 
             with patch('game.strategy.engine.fleet_order_processor.log_event', fake):
-                result = processor.process_colonize(fleet, empire, galaxy)
+                result = processor.process_colonize(
+                    fleet, empire, galaxy,
+                    component_registry=component_registry
+                )
 
         assert result.colonized is True
         assert len(calls) == 1
@@ -473,6 +501,7 @@ class TestColonyFoundedEvent:
         fleet, target_planet = self._make_colonize_fleet()
         empire = _make_mock_empire()
         galaxy = _make_mock_galaxy()
+        component_registry = self._make_component_registry()
 
         calls, fake = _capture_log_event_calls()
 
@@ -483,7 +512,10 @@ class TestColonyFoundedEvent:
             mock_val.validate.return_value = mock_result
 
             with patch('game.strategy.engine.fleet_order_processor.log_event', fake):
-                result = processor.process_colonize(fleet, empire, galaxy)
+                result = processor.process_colonize(
+                    fleet, empire, galaxy,
+                    component_registry=component_registry
+                )
 
         assert result.colonized is False
         assert len(calls) == 0
@@ -492,18 +524,32 @@ class TestColonyFoundedEvent:
         """Colonizing 'any planet' emits event with the resolved planet name."""
         from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
         from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+        from game.strategy.data.planet import Planet
+        from enum import Enum
+
+        class MockPlanetType(Enum):
+            CONTINENTAL = "CONTINENTAL"
 
         processor = FleetOrderProcessor()
         empire = _make_mock_empire()
         galaxy = _make_mock_galaxy()
+        component_registry = self._make_component_registry()
 
         # Fleet with COLONIZE target=None (any planet)
         fleet = MagicMock(spec=Fleet)
         fleet.id = 5
         fleet.owner_id = 0
-        fleet.ships = [MagicMock()]
+
+        # Mock ship with colony pod
+        mock_ship = MagicMock()
+        mock_ship.name = "Colony Ship"
+        mock_ship.design_data = {
+            'layers': {'HULL': [{'id': 'continental_colony_pod'}]}
+        }
+        fleet.ships = [mock_ship]
         fleet.get_fleet_cargo_current = MagicMock(return_value=0)
         fleet.unload_cargo_from_fleet = MagicMock(return_value=0)
+        fleet.remove_ship = MagicMock(side_effect=lambda s: fleet.ships.remove(s))
 
         order = FleetOrder(OrderType.COLONIZE, target=None)
         fleet.get_current_order.return_value = order
@@ -511,21 +557,31 @@ class TestColonyFoundedEvent:
         from game.core.hex_math import HexCoord
         fleet.location = HexCoord(0, 0)
 
-        # Galaxy returns a planet at fleet's location
-        resolved_planet = _make_mock_planet(planet_id=20, name="Wild Planet")
+        # Galaxy returns a planet at fleet's location - use spec=Planet for isinstance checks
+        resolved_planet = MagicMock(spec=Planet)
+        resolved_planet.id = 20
+        resolved_planet.name = "Wild Planet"
         resolved_planet.owner_id = None
         resolved_planet.populations = []
+        resolved_planet.planet_type = MockPlanetType.CONTINENTAL
         galaxy.get_planets_at_global_hex.return_value = [resolved_planet]
+        galaxy.get_zones_at_global_hex.return_value = []
 
         calls, fake = _capture_log_event_calls()
 
+        # Patch the validator module where it's imported
         with patch('game.strategy.validation.ColonizeValidator') as mock_val:
             mock_result = MagicMock()
             mock_result.is_valid = True
             mock_val.validate.return_value = mock_result
+            # Mock find_ship_with_colony_pod to return the colony ship
+            mock_val.find_ship_with_colony_pod.return_value = mock_ship
 
             with patch('game.strategy.engine.fleet_order_processor.log_event', fake):
-                result = processor.process_colonize(fleet, empire, galaxy)
+                result = processor.process_colonize(
+                    fleet, empire, galaxy,
+                    component_registry=component_registry
+                )
 
         assert result.colonized is True
         assert len(calls) == 1

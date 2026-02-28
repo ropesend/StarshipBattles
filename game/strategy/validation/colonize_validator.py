@@ -119,7 +119,8 @@ class ColonizeValidator:
                 # Check if any valid candidate planet matches an available (uncommitted) pod
                 found_match = False
                 for candidate in valid_candidates:
-                    if isinstance(candidate, Planet):
+                    # Duck typing: check for planet_type attribute (works with mocks too)
+                    if hasattr(candidate, 'planet_type') and candidate.planet_type is not None:
                         planet_type_str = candidate.planet_type.name
                         available_count = available.get(planet_type_str, 0)
                         committed_count = committed.get(planet_type_str, 0)

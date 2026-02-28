@@ -299,36 +299,6 @@ class TestProcessColonizeValidation:
         # Assert: Order was popped
         assert len(fleet.orders) == 0
 
-    def test_process_colonize_legacy_without_registry_still_works(
-        self, galaxy_with_ice_planet
-    ):
-        """
-        PROJ-140: Legacy behavior (no registry) should still work.
-
-        No component_registry passed.
-        Assert: colonized=True (backward compat).
-        """
-        galaxy, ice_planet = galaxy_with_ice_planet
-
-        # Create fleet - pod type doesn't matter without registry
-        colony_ship = make_colony_ship("Colony Ship", 1, "CONTINENTAL")
-
-        fleet = Fleet(1, 1, HexCoord(10, 10))
-        fleet.ships.append(colony_ship)
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice_planet))
-
-        empire = Empire(1, "Player 1", (255, 0, 0))
-        empire.fleets.append(fleet)
-
-        # Execute colonization WITHOUT component registry (legacy)
-        processor = FleetOrderProcessor()
-        result = processor.process_colonize(fleet, empire, galaxy)
-
-        # Assert: Colonization succeeded (legacy behavior)
-        assert result.colonized is True
-        assert ice_planet.owner_id == 1
-
-
 # =============================================================================
 # Test Class: "Any Planet" Execution Selection (PROJ-140 Phase 2)
 # =============================================================================

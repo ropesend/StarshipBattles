@@ -653,36 +653,6 @@ class TestUIFiltering:
 class TestEdgeCases:
     """Edge case tests for colonization system."""
 
-    def test_colonize_without_registry_uses_legacy_behavior(
-        self, galaxy_with_ice_planet
-    ):
-        """
-        PROJ-55: Without component registry, entire fleet is removed (legacy).
-        """
-        galaxy, ice_planet = galaxy_with_ice_planet
-
-        # Fleet with multiple ships
-        colony_ship = make_colony_ship("Colony Ship", 1, "ICE_DWARF")
-        combat_ship = make_combat_ship("Combat Ship", 1)
-
-        fleet = Fleet(1, 1, HexCoord(10, 10))
-        fleet.ships.append(colony_ship)
-        fleet.ships.append(combat_ship)
-        fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice_planet))
-
-        empire = Empire(1, "Player 1", (255, 0, 0))
-        empire.fleets.append(fleet)
-
-        # Execute WITHOUT component registry (legacy behavior)
-        processor = FleetOrderProcessor()
-        result = processor.process_colonize(fleet, empire, galaxy)
-
-        # Assert: Colonization succeeded
-        assert result.colonized is True
-
-        # Assert: Entire fleet was removed (legacy behavior)
-        assert fleet not in empire.fleets
-
     def test_fleet_with_no_pods_cannot_colonize(
         self, galaxy_with_ice_planet, component_registry
     ):
