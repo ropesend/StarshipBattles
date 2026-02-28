@@ -8,23 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-211 Phase 5 Tasks 5.1-5.4 - UI screen DI fixes
-**Current Status:** PROJ-211 Phase 5 in progress, tasks 5.1-5.4 complete
+**Last Completed:** PROJ-211 Phase 5 Task 5.5 - Test fixture infrastructure for DI
+**Current Status:** PROJ-211 Phase 5 Task 5.5.1 in progress (more test fixtures to update)
 **Current Project:** PROJ-211
-**Current Phase:** Phase 5 (UI Screens & Cleanup) - Tasks 5.1-5.4 Complete
+**Current Phase:** Phase 5 (UI Screens & Cleanup) - Task 5.5 Complete, 5.5.1 In Progress
 **Test Status:** 12884 passed, 1 skipped, 4 failed (unrelated asset tests)
-**Active Blockers:** None
+**Active Blockers:** Task 5.6 blocked until Task 5.5.1 complete (~127 tests need fixtures)
 
 **Handoff Notes:**
-- PROJ-211 Phase 5 Tasks 5.1-5.4 complete:
-  - Task 5.1: compute_planet_production() now requires registries parameter (no fallback)
-  - Task 5.2: EmpirePanelWindow accepts registries, passed from StrategyWindowManager
-  - Task 5.3: Builder sub-panels (SchematicView, BuilderRightPanel) no longer fallback
-    - GameRegistries now implements IRegistryProvider interface (added get_* methods)
-    - VehicleClassService created from context.registries in workshop_screen
-  - Task 5.4: Docstrings already updated in Phase 4
-  - Test fixtures updated: MockSession, BuilderRightPanel tests
-- Next: Tasks 5.5-5.8 - Remove ShipInstance/FleetCapabilityCalculator fallbacks, final verification
+- Task 5.5 complete: Added DI test infrastructure
+  - ship_factory fixture in tests/conftest.py (wraps ShipInstance.create with fresh_registries)
+  - singleton_registries fixture in tests/integration/resource_system/conftest.py
+  - Updated ~40 tests in 6 files to use ship_factory
+- Task 5.6 attempted but failed: ~127 tests still create ShipInstance without registries
+  - Added Task 5.5.1 subtask to continue test fixture updates
+  - Key files needing updates: test_fleet_capability_calculator.py, test_advanced_fleet_orders.py,
+    integration/gameplay_loop/*.py, integration/save_load/*.py
+- Next: Continue Task 5.5.1 - update remaining test fixtures
 - 4 failing tests are unrelated (missing asset files in tests/repro_issues/test_bug_13_colony_flags.py)
 
 ---
@@ -92,6 +92,7 @@
 | 2026-02-27 | PROJ-211 | Phase 3 | ~70% | 12801 passed, 71 errors | 01fa719d | Production code DI complete; test fixtures need updates |
 | 2026-02-27 | PROJ-211 | Phase 3 | Complete | 12885 passed, 4 failed | 91154ee4 | Test fixtures updated; all init functions require registry_provider |
 | 2026-02-28 | PROJ-211 | Phase 4 | Complete | 12872 passed, 1 skipped | 6ebbc278 | UI services strict DI: WorkshopContext, ComponentService, ShipFactory, DesignLoaderAdapter |
+| 2026-02-28 | PROJ-211 | Phase 5 (5.5) | Complete | 12884 passed, 4 failed | f6fa144e | ship_factory fixture, ~40 tests updated, 5.5.1 created for remaining |
 
 ---
 
