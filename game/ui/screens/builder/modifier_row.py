@@ -74,13 +74,52 @@ class ModifierControlRow:
         self.component_context = None # Set during update
         
         self.height = 32 # Default height
-        
-        # We don't build layout in __init__ because we might be pooled? 
-        # Actually standard practice is build in init for UI widget. 
+
+        # We don't build layout in __init__ because we might be pooled?
+        # Actually standard practice is build in init for UI widget.
         # For pooling, we might just hide/show or update data.
         # But to keep it simple first, let's build.
-        # Wait, if we use container, we need to know Y position. 
+        # Wait, if we use container, we need to know Y position.
         # So we likely need a `layout(y)` method.
+
+    def _get_local_bounds(self):
+        """Get modifier bounds and clamp current value.
+
+        Returns:
+            Tuple of (min_value, max_value, clamped_value) where clamped_value
+            is current_value constrained to [min_value, max_value].
+
+        Uses ModifierLogic.get_local_min_max() when component context is
+        available, otherwise falls back to mod_def defaults.
+        """
+        if self.component_context:
+            min_v, max_v = ModifierLogic.get_local_min_max(self.mod_id, self.component_context)
+        else:
+            min_v, max_v = self.mod_def.min_val, self.mod_def.max_val
+        clamped = max(min_v, min(max_v, self.current_value))
+        return min_v, max_v, clamped
+
+    def _set_controls_enabled(self, enabled):
+        """Enable or disable all value controls (entry, slider, buttons).
+
+        Args:
+            enabled: True to enable controls, False to disable.
+        """
+        if self.entry:
+            if enabled:
+                self.entry.enable()
+            else:
+                self.entry.disable()
+        if self.slider:
+            if enabled:
+                self.slider.enable()
+            else:
+                self.slider.disable()
+        for btn in self.buttons.keys():
+            if enabled:
+                btn.enable()
+            else:
+                btn.disable()
 
     def build_ui(self, y):
         """Constructs the UI elements at the given y position."""
@@ -232,29 +271,15 @@ class ModifierControlRow:
              pass
              
         self.toggle_btn.set_text(f"[{check_char}] {self.mod_def.name}")
-        
-        # Enable/Disable Controls
-        if self.is_active:
-            if self.entry: 
-                self.entry.enable()
-                self.entry.set_text(f"{val:.2f}")
-            if self.slider: 
-                self.slider.enable()
-                # Update Range
-                min_v, max_v = ModifierLogic.get_local_min_max(self.mod_id, component) if component else (self.mod_def.min_val, self.mod_def.max_val)
-                self.slider.value_range = (min_v, max_v)
-                self.slider.set_current_value(val)
-                
-            for btn in self.buttons.keys():
-                btn.enable()
-        else:
-            if self.entry: 
-                self.entry.disable()
-                self.entry.set_text(f"{val:.2f}") # Show default/last
-            if self.slider: 
-                self.slider.disable()
-            for btn in self.buttons.keys():
-                btn.disable()
+
+        # Enable/Disable Controls and update values
+        self._set_controls_enabled(self.is_active)
+        if self.entry:
+            self.entry.set_text(f"{val:.2f}")
+        if self.is_active and self.slider:
+            min_v, max_v, _ = self._get_local_bounds()
+            self.slider.value_range = (min_v, max_v)
+            self.slider.set_current_value(val)
                 
         # Mandatory lock
         if component and ModifierLogic.is_modifier_mandatory(self.mod_id, component):
@@ -288,11 +313,10 @@ class ModifierControlRow:
                 action = self.buttons[event.ui_element]
                 mode = action['action']
                 step = action['value']
-                
-                min_v, max_v = ModifierLogic.get_local_min_max(self.mod_id, self.component_context) if self.component_context else (self.mod_def.min_val, self.mod_def.max_val)
-                
+
+                min_v, max_v, _ = self._get_local_bounds()
                 smart_floor = self.config.get('smart_floor', False)
-                
+
                 new_val = self.current_value
                 if mode == 'set_value':
                     new_val = float(step)
@@ -304,10 +328,10 @@ class ModifierControlRow:
                     new_val = ModifierLogic.calculate_snap_value(self.current_value, step, -1, min_v, max_v, smart_floor)
                 elif mode == 'snap_ceil':
                     new_val = ModifierLogic.calculate_snap_value(self.current_value, step, 1, min_v, max_v, smart_floor)
-                    
+
                 # Clamp
                 new_val = max(min_v, min(max_v, new_val))
-                
+
                 if new_val != self.current_value:
                     self.on_change_callback('value_change', self.mod_id, new_val)
                     return True
@@ -325,7 +349,7 @@ class ModifierControlRow:
             if event.ui_element == self.entry:
                 try:
                     val = float(self.entry.get_text())
-                    min_v, max_v = ModifierLogic.get_local_min_max(self.mod_id, self.component_context) if self.component_context else (self.mod_def.min_val, self.mod_def.max_val)
+                    min_v, max_v, _ = self._get_local_bounds()
                     val = max(min_v, min(max_v, val))
                     self.on_change_callback('value_change', self.mod_id, val)
                     return True

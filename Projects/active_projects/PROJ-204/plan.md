@@ -29,13 +29,13 @@ Consolidate duplicated code across the strategy layer and design workshop UI ide
 | 2 | Quick Wins & Bug Fixes | CQ-42, CQ-44, CQ-50, CQ-26, CQ-27, CQ-07 | Simple | Complete |
 | 3 | Command Handler Consolidation | CQ-40, CQ-41, CQ-43, CQ-45, CQ-48 | Medium | Complete |
 | 4 | Strategy Layer Consolidation | CQ-02, CQ-22 | Medium | Complete |
-| 5 | Workshop UI Cleanup | CQ-61, CQ-63, CQ-67, CQ-69, CQ-74 | Simple-Medium | Pending |
+| 5 | Workshop UI Cleanup | CQ-61, CQ-63, CQ-67, CQ-69, CQ-74 | Simple-Medium | Complete |
 
 ## Current Status
-- **Phase:** Phase 4 Complete
+- **Phase:** All Phases Complete - Ready for Audit
 - **Started:** 2026-02-27
 - **Baseline Tests:** 12743 passed, 1 skipped
-- **Current Tests:** 12815 passed, 1 skipped (+72 new tests total)
+- **Current Tests:** 12837 passed, 1 skipped (+94 new tests total)
 
 ## Phase 1 Summary
 - Created `game/core/patterns/layer_iterator.py` with 4 utility functions
@@ -67,6 +67,14 @@ Consolidate duplicated code across the strategy layer and design workshop UI ide
 - Fixed 5 pre-existing cargo test bugs (incorrect mock attribute)
 - Added 20 new unit tests (9 for resource aggregator, 11 for deserialize_list)
 - Deferred CQ-23 and CQ-06 (lower priority, existing code works)
+
+## Phase 5 Summary
+- Created `ModifierControlRow._get_local_bounds()` - consolidates range lookup
+- Created `ModifierControlRow._set_controls_enabled()` - consolidates enable/disable
+- Created `PanelFactory` at `game/ui/widgets/panel_factory.py`
+- Created `UIElementRegistry` at `game/ui/widgets/ui_element_registry.py`
+- CQ-74 (event consolidation) deemed not needed - WeaponsEvents are domain-specific
+- Added 22 new unit tests
 
 ## Decisions
 See [decisions.md](decisions.md)
