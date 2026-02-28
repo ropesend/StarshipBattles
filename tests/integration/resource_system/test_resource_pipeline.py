@@ -142,7 +142,7 @@ class TestPerTurnConsumptionAcrossFullTurn:
         empires = [MockEmpire()]
 
         # Run turn engine for 100 ticks
-        turn_engine = TurnEngine()
+        turn_engine = TurnEngine(registries=loaded_registry)
 
         for tick in range(1, 101):
             turn_engine.resource_engine.process_per_turn_consumption(tick, empires)
@@ -217,7 +217,7 @@ class TestAutoDisableComponentChainOnResourceDepletion:
                 self.fleets = [fleet]
 
         empires = [MockEmpire()]
-        turn_engine = TurnEngine()
+        turn_engine = TurnEngine(registries=loaded_registry)
 
         # Component should be enabled initially
         assert ship.is_component_enabled('test_plasma_engine') is True

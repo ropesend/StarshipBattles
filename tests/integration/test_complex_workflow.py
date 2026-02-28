@@ -183,10 +183,10 @@ def test_complex_design_in_build_queue(empire_with_colony):
     assert ships[0].name == "Frigate Mk1"
 
 
-def test_full_build_workflow(empire_with_colony):
+def test_full_build_workflow(empire_with_colony, fresh_registries):
     """Test complete workflow: Design → Queue → Build → Facility."""
     empire, planet, save_path = empire_with_colony
-    engine = TurnEngine()
+    engine = TurnEngine(registries=fresh_registries)
 
     # Initial state: no facilities
     assert len(planet.facilities) == 0
@@ -225,10 +225,10 @@ def test_full_build_workflow(empire_with_colony):
     assert len(facility.instance_id) > 0
 
 
-def test_shipyard_enables_ship_building(empire_with_colony):
+def test_shipyard_enables_ship_building(empire_with_colony, fresh_registries):
     """Test that building a shipyard complex enables ship construction."""
     empire, planet, save_path = empire_with_colony
-    engine = TurnEngine()
+    engine = TurnEngine(registries=fresh_registries)
 
     # Initial state: no shipyard
     assert planet.has_space_shipyard is False
@@ -277,10 +277,10 @@ def test_shipyard_enables_ship_building(empire_with_colony):
     assert any(ship.design_id == "frigate_mk1" for ship in new_fleet.ships)
 
 
-def test_multiple_complexes_on_planet(empire_with_colony):
+def test_multiple_complexes_on_planet(empire_with_colony, fresh_registries):
     """Test building multiple complexes on one planet."""
     empire, planet, save_path = empire_with_colony
-    engine = TurnEngine()
+    engine = TurnEngine(registries=fresh_registries)
 
     # Queue 3 complexes - each 100 Metals = completes in 5 ticks (well within 1 turn)
     # But base queue processes 1 item at a time, so each needs its own turn
@@ -335,10 +335,10 @@ def test_multiple_complexes_on_planet(empire_with_colony):
     assert design_ids.count("space_shipyard_mk1") == 1
 
 
-def test_shipyard_detection_with_multiple_facilities(empire_with_colony):
+def test_shipyard_detection_with_multiple_facilities(empire_with_colony, fresh_registries):
     """Test that has_space_shipyard works with multiple facilities."""
     empire, planet, save_path = empire_with_colony
-    engine = TurnEngine()
+    engine = TurnEngine(registries=fresh_registries)
 
     # Build 2 mining complexes (no shipyard) - small cost, completes quickly
     planet.construction_queue.extend([
@@ -378,10 +378,10 @@ def test_shipyard_detection_with_multiple_facilities(empire_with_colony):
     assert planet.has_space_shipyard is True
 
 
-def test_non_operational_shipyard_not_detected(empire_with_colony):
+def test_non_operational_shipyard_not_detected(empire_with_colony, fresh_registries):
     """Test that damaged/non-operational shipyard doesn't enable ship building."""
     empire, planet, save_path = empire_with_colony
-    engine = TurnEngine()
+    engine = TurnEngine(registries=fresh_registries)
 
     # Build shipyard
     planet.construction_queue.append({

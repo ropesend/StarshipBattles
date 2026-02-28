@@ -53,9 +53,9 @@ class MockGalaxy:
 
 
 @pytest.fixture
-def turn_engine():
+def turn_engine(fresh_registries):
     """Create a TurnEngine instance."""
-    return TurnEngine()
+    return TurnEngine(registries=fresh_registries)
 
 
 @pytest.fixture

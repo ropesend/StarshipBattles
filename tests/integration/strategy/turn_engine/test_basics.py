@@ -11,9 +11,9 @@ from .conftest import MockGalaxy, create_colony_ship, MockPlanetType
 
 
 @patch('game.strategy.data.pathfinding.find_hybrid_path')
-def test_movement_timing(mock_path):
+def test_movement_timing(mock_path, fresh_registries):
     """Verify ships move at correct tick intervals based on speed."""
-    engine = TurnEngine()
+    engine = TurnEngine(registries=fresh_registries)
 
     # Speed 5: 100 // 5 = 20. Moves at 20, 40, 60, 80, 100.
     f5 = Fleet(1, 0, HexCoord(0, 0), speed=5.0)
@@ -48,9 +48,9 @@ def test_movement_timing(mock_path):
 
 
 @patch('game.strategy.data.pathfinding.find_hybrid_path')
-def test_full_turn_distance(mock_path):
+def test_full_turn_distance(mock_path, fresh_registries):
     """Verify total distance traveled in a turn."""
-    engine = TurnEngine()
+    engine = TurnEngine(registries=fresh_registries)
 
     f2 = Fleet(1, 0, HexCoord(0,0), speed=2.0) # Should move 2 steps
     # Path must end at destination (10,0) to avoid path recalculation
@@ -74,9 +74,9 @@ def test_full_turn_distance(mock_path):
     assert f5.location == HexCoord(5,0)
 
 
-def test_combat_interception():
+def test_combat_interception(fresh_registries):
     """Verify fleets colliding mid-turn trigger combat."""
-    engine = TurnEngine()
+    engine = TurnEngine(registries=fresh_registries)
 
     # P1 at (0,0) moving Right -> Speed 5
     f1 = Fleet(1, 0, HexCoord(0,0), speed=5.0)
@@ -111,9 +111,9 @@ def test_combat_interception():
     assert survivors == 1
 
 
-def test_order_chaining():
+def test_order_chaining(fresh_registries):
     """Verify Colonize executes after Move finishes."""
-    engine = TurnEngine()
+    engine = TurnEngine(registries=fresh_registries)
 
     # Create a mock planet with proper location and planet type
     planet = MagicMock()
@@ -155,9 +155,9 @@ def test_order_chaining():
     assert len(f1.orders) == 0 # Order consumed
 
 
-def test_colonize_deletes_fleet():
+def test_colonize_deletes_fleet(fresh_registries):
     """Verify colonizing fleet is removed from empire after colonization."""
-    engine = TurnEngine()
+    engine = TurnEngine(registries=fresh_registries)
 
     # Create a mock planet with proper location and planet type
     planet = MagicMock()

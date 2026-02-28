@@ -21,9 +21,9 @@ class MockPlanetType(Enum):
 
 
 @pytest.fixture
-def turn_engine():
-    """Create a fresh turn engine."""
-    return TurnEngine()
+def turn_engine(fresh_registries):
+    """Create a fresh turn engine with DI registries."""
+    return TurnEngine(registries=fresh_registries)
 
 
 @pytest.fixture

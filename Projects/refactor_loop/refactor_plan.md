@@ -8,19 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-27
-**Last Completed:** PROJ-212 Audit Cycle 1 - PASSED
-**Current Status:** PROJ-212 complete, next project is PROJ-211
+**Last Completed:** PROJ-211 Phase 1 - GameSession Foundation
+**Current Status:** PROJ-211 Phase 1 complete, Phase 2 next
 **Current Project:** PROJ-211
-**Current Phase:** Phase 1 (not started)
+**Current Phase:** Phase 2 (Strategy Data Objects)
 **Test Status:** 12866 passed, 1 skipped (+ 4 pre-existing bug_13_colony_flags failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-212 audit passed on first cycle:
-  - All implementations verified (order_types.py extraction, DI constructor, facade bypass fix)
-  - No issues found, all tests passing
-  - Project marked complete
-- Next project: PROJ-211 (Eradicate DI Fallback Anti-Pattern)
+- PROJ-211 Phase 1 complete:
+  - Added registries property to GameSession
+  - Made TurnEngine registries parameter required (updated ~40 test files)
+  - Fixed StrategySessionFacade.get_fleet_remaining_pods() to use session.registries
+  - Made ShipInstance.to_ship() registries required
+  - Made EmpireEconomyCalculator registries required
+- All tests passing (12866 passed, 1 skipped)
+- Next: Phase 2 - Strategy Data Objects
 
 ---
 
@@ -40,8 +43,8 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
-- [ ] **PROJ-211: Eradicate DI Fallback Anti-Pattern**
-  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-211: Eradicate DI Fallback Anti-Pattern**
+  - **Phases:** 5 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-211/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-211/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -80,6 +83,7 @@
 | 2026-02-27 | PROJ-212 | Phase 2 | Complete | 12866 passed | pending | order_types.py extraction, 88 files updated |
 | 2026-02-27 | PROJ-212 | Phase 3 | Complete | 12866 passed | pending | DI constructor added, deferred import audit done |
 | 2026-02-27 | PROJ-212 | Audit 1 | PASSED | 12866 passed | - | All implementations verified, no issues |
+| 2026-02-27 | PROJ-211 | Phase 1 | Complete | 12866 passed | pending | GameSession foundation, TurnEngine+tests updated |
 
 ---
 

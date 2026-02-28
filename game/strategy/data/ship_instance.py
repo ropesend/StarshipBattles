@@ -515,18 +515,20 @@ class ShipInstance:
         self,
         position: Tuple[float, float],
         team_id: int,
-        registries: Optional['GameRegistries'] = None
+        *,
+        registries: 'GameRegistries'
     ) -> 'Ship':
         """
         Create a simulation Ship from this instance.
 
         Applies any existing damage/resource state from strategy layer.
 
+        PROJ-211: registries is now required (no global fallback).
+
         Args:
             position: (x, y) spawn position for the ship
             team_id: Team assignment for battle (0 or 1)
-            registries: Optional GameRegistries for DI. If None, uses global fallback
-                        (transitional - will be required in Phase 6).
+            registries: GameRegistries for DI (required).
         """
         # INTENTIONAL LATE IMPORT: Cross-layer boundary (strategy -> simulation)
         # See docs/ARCHITECTURE.md "Intentional Late Imports" section

@@ -53,6 +53,7 @@ if TYPE_CHECKING:
 import logging
 
 from game.core.event_logging import set_event_handler
+from game.core.registry import GameRegistries, get_default_registry_provider
 from game.strategy.events import Event, EventLog
 
 logger = logging.getLogger(__name__)
@@ -81,8 +82,17 @@ class GameSession:
         self._event_log = EventLog()
         set_event_handler(self._create_event_handler())
 
+        # PROJ-211: Resolve registries at init time, pass to TurnEngine
+        provider = get_default_registry_provider()
+        self._registries = GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources=provider.get_resources(),
+        )
+
         # Engine
-        self.turn_engine = TurnEngine()
+        self.turn_engine = TurnEngine(registries=self._registries)
         self._command_registry = create_default_registry()
 
         # Initialization via GameInitializer (PROJ-87 Phase 6)
@@ -103,6 +113,11 @@ class GameSession:
     def event_log(self) -> EventLog:
         """The session's event log for recording game events."""
         return self._event_log
+
+    @property
+    def registries(self) -> GameRegistries:
+        """The session's game registries for DI to sub-systems."""
+        return self._registries
 
     def _create_event_handler(self):
         """Create a callback for the global log_event() system.
@@ -288,8 +303,17 @@ class GameSession:
         session.turn_number = data.get('turn_number', 1)
         session.save_path = data.get('save_path')
 
+        # PROJ-211: Resolve registries at init time, pass to TurnEngine
+        provider = get_default_registry_provider()
+        session._registries = GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources=provider.get_resources(),
+        )
+
         # Initialize turn engine and command registry
-        session.turn_engine = TurnEngine()
+        session.turn_engine = TurnEngine(registries=session._registries)
         session._command_registry = create_default_registry()
 
         # Restore event log (PROJ-77)

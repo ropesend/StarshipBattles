@@ -32,9 +32,9 @@ def make_mock_ship_instance(name="Test Ship", owner_id=0):
 
 
 @pytest.fixture
-def turn_engine():
+def turn_engine(fresh_registries):
     """Create a fresh TurnEngine for each test."""
-    engine = TurnEngine()
+    engine = TurnEngine(registries=fresh_registries)
     yield engine
 
 

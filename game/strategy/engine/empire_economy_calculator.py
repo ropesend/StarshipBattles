@@ -9,7 +9,7 @@ This is a read-only calculation - it doesn't modify any game state.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, Optional, TYPE_CHECKING
+from typing import Dict, TYPE_CHECKING
 
 from game.core.constants import PLANET_RESOURCES
 from game.core.patterns.layer_iterator import iter_components
@@ -56,16 +56,11 @@ class EmpireEconomySnapshot:
 class EmpireEconomyCalculator:
     """Calculator for empire-wide production and expense aggregation.
 
+    PROJ-211: registries parameter is now required (no global fallback).
+
     Usage:
-        from game.core.registry import get_default_registry_provider, GameRegistries
-        provider = get_default_registry_provider()
-        registries = GameRegistries(
-            components=provider.get_components(),
-            modifiers=provider.get_modifiers(),
-            vehicle_classes=provider.get_vehicle_classes(),
-            resources=provider.get_resources(),
-        )
-        calculator = EmpireEconomyCalculator(registries=registries)
+        # From GameSession context
+        calculator = EmpireEconomyCalculator(registries=session.registries)
         snapshot = calculator.calculate(empire)
         # Access snapshot.colony_production, snapshot.maintenance_expenses, etc.
 
@@ -76,14 +71,16 @@ class EmpireEconomyCalculator:
 
     # Use shared MAINTENANCE_RATE from maintenance_engine module
 
-    def __init__(self, *, registries: Optional[GameRegistries] = None) -> None:
+    def __init__(self, *, registries: GameRegistries) -> None:
         """Initialize the calculator.
 
+        PROJ-211: registries is now required (no global fallback).
+
         Args:
-            registries: Optional GameRegistries for resolving component
-                       abilities from plain component IDs in design_data.
+            registries: GameRegistries for resolving component
+                       abilities from plain component IDs in design_data (required).
         """
-        self._registries: Optional[GameRegistries] = registries
+        self._registries: GameRegistries = registries
 
     def calculate(self, empire: 'Empire') -> EmpireEconomySnapshot:
         """Calculate complete economic snapshot for an empire.
