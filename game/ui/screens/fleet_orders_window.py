@@ -39,7 +39,7 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
         input_mapper: Optional['InputMapper'] = None,
         clear_orders_callback: Optional['Callable[[int], None]'] = None,
         delete_order_callback: Optional['Callable[[int, int], None]'] = None,
-        reorder_order_callback: Optional['Callable[[int, int, str], None]'] = None
+        reorder_order_callback: Optional['Callable[[int, int, int], None]'] = None
     ):
         """Initialize the Fleet Orders Window.
 
@@ -50,7 +50,7 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
             input_mapper: Optional InputMapper for hotkey tooltips.
             clear_orders_callback: Callback(fleet_id) to clear all orders.
             delete_order_callback: Callback(fleet_id, order_index) to delete an order.
-            reorder_order_callback: Callback(fleet_id, order_index, direction) to reorder.
+            reorder_order_callback: Callback(fleet_id, order_index, direction: int) to reorder (-1=up, +1=down).
         """
         super().__init__(
             rect=rect,
@@ -286,8 +286,8 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
 
         new_index = index + direction
         if 0 <= new_index < len(self.fleet.orders):
-            direction_str = "up" if direction < 0 else "down"
-            self._reorder_order_callback(self.fleet.id, index, direction_str)
+            # PROJ-208: Pass int direction (-1 for up, +1 for down) to command handler
+            self._reorder_order_callback(self.fleet.id, index, direction)
             self.rebuild_list()
 
     def delete_order(self, index):

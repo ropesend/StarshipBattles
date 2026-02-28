@@ -8,38 +8,27 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-208 Phase 4 Complete
-**Current Status:** PROJ-208 All Phases Complete - Ready for Audit
-**Current Project:** PROJ-208
-**Current Phase:** Audit
+**Last Completed:** PROJ-208 Audit Cycle 1 PASSED
+**Current Status:** PROJ-208 Complete - Moving to PROJ-210
+**Current Project:** PROJ-210
+**Current Phase:** Phase 1 (Ready to Start)
 **Test Status:** 12929 passed, 1 skipped (4 pre-existing bug_13 failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-208 Phase 4 COMPLETE:**
-  - Task 4.1: Added capabilities field to FleetInfo DTO
-    - Added list_abilities() to FleetCapabilityCalculator
-    - Added list_ship_abilities() to component_inspector
-    - 8 new tests in test_fleet_dto_capabilities.py
-  - Task 4.2: Replaced isinstance checks with protocol guards
-    - strategy_build_queue_manager.py now uses is_planet()/is_fleet()
-    - Updated tests to patch protocol guards
-  - Task 4.3: fleet_ops now uses facade.get_fleets_at_hex()
-    - get_fleet_at_hex() returns Optional[FleetInfo]
-    - execute_intercept() and handle_join_designation() use fleet_id
-  - Task 4.4: Added facade methods for game state queries
-    - get_save_path() and get_scuttle_events() on facade
-    - strategy_game_state_manager.py uses facade methods
-- **Files Modified:**
-  - game/strategy/facade/dto/fleet_dto.py (capabilities field)
-  - game/strategy/data/fleet_capability_calculator.py (list_abilities)
-  - game/strategy/services/component_inspector.py (list_ship_abilities)
-  - game/ui/screens/strategy_build_queue_manager.py (protocol guards)
-  - game/ui/screens/strategy_fleet_ops.py (facade.get_fleets_at_hex)
-  - game/strategy/facade/strategy_session_facade.py (get_save_path, get_scuttle_events)
-  - game/ui/screens/strategy_game_state_manager.py (facade methods)
-  - Multiple test files updated
-- **Next Action:** Run Protocol 04 Audit
+- **PROJ-208 AUDIT PASSED:**
+  - Found 1 issue: ReorderFleetOrderCommand direction type mismatch (str vs int)
+  - Fixed: fleet_orders_window.py now passes int direction instead of string
+  - Fixed: strategy_window_manager.py callback signature updated to int
+  - All 4 phases verified complete with proper implementations
+  - All command handlers tested and working
+  - FleetInfo DTO enhancements verified
+  - Protocol guards verified
+  - Facade routing verified
+- **Files Modified This Session:**
+  - game/ui/screens/fleet_orders_window.py (direction int fix)
+  - game/ui/screens/strategy_window_manager.py (callback signature fix)
+- **Next Action:** Start PROJ-210 Phase 1
 - Note: 4 bug_13 tests fail due to missing asset files (pre-existing, unrelated)
 
 ---
@@ -66,10 +55,10 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
-- [/] **PROJ-208: CQRS Facade Bypass Remediation**
-  - **Phases:** 4 | **Status:** Phase 1 In Progress | **Priority:** Medium
+- [x] **PROJ-208: CQRS Facade Bypass Remediation**
+  - **Phases:** 4 | **Status:** COMPLETE - Audit Passed | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-208/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-208/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
 - [ ] **PROJ-210: Strategy God Class Decomposition**
@@ -122,6 +111,7 @@
 | 2026-02-28 | PROJ-208 | Phase 2 (2.5-2.8) | Complete | 12918 passed, 1 skipped | pending | Drag handler, screen, empire window refactored; IssueBuildShipCommand removed |
 | 2026-02-28 | PROJ-208 | Phase 3 | Complete | 12918 passed, 1 skipped | pending | Facade routing fixed in 4 files; research commands DEFERRED (sandbox) |
 | 2026-02-28 | PROJ-208 | Phase 4 | Complete | 12929 passed, 1 skipped | pending | FleetInfo.capabilities, protocol guards, facade query methods |
+| 2026-02-28 | PROJ-208 | Audit 1 | PASSED | 12929 passed, 1 skipped | pending | Fixed direction type mismatch in ReorderFleetOrderCommand |
 
 ---
 

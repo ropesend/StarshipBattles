@@ -297,7 +297,7 @@ class StrategyWindowManager:
             cmd = DeleteFleetOrderCommand(fleet_id=fleet_id, order_index=order_index)
             self.scene.facade.handle_command(cmd)
 
-        def reorder_order_callback(fleet_id: int, order_index: int, direction: str) -> None:
+        def reorder_order_callback(fleet_id: int, order_index: int, direction: int) -> None:
             """Dispatch ReorderFleetOrderCommand through facade command pipeline."""
             from game.strategy.engine.commands import ReorderFleetOrderCommand
             cmd = ReorderFleetOrderCommand(fleet_id=fleet_id, order_index=order_index, direction=direction)

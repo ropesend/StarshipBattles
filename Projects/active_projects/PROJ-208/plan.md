@@ -20,9 +20,9 @@
 
 ## Current State
 **Last Updated:** 2026-02-28
-**Active Phase:** Complete - Ready for Audit
-**Last Action:** Phase 4 complete - Added capabilities field to FleetInfo, replaced isinstance checks with protocol guards, refactored fleet_ops to use facade.get_fleets_at_hex(), added get_save_path() and get_scuttle_events() facade methods.
-**Next Action:** Audit
+**Active Phase:** Complete - Audit Passed
+**Last Action:** Audit cycle 1 passed. Fixed ReorderFleetOrderCommand direction type mismatch.
+**Next Action:** User verification required
 **Blockers:** None
 
 ## Overview
@@ -88,8 +88,13 @@ Expected: **7353+ tests passing**
 - [DTO Coverage Analysis](../../Reviews/results/2026-02-27_211111_general_facade-bypass-layering-violations/findings/dto_coverage_analyst_report.md)
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing
-- [ ] No direct domain mutation remaining in scoped UI files
-- [ ] All new commands have handler tests
-- [ ] Audit passed
+- [x] All phase checklists complete
+- [x] All tests passing (12929 passed, 4 pre-existing bug_13 failures)
+- [x] No direct domain mutation remaining in scoped UI files
+- [x] All new commands have handler tests
+- [x] Audit passed (Cycle 1)
+
+## Audit Log
+| Cycle | Date | Findings | Resolution |
+|-------|------|----------|------------|
+| 1 | 2026-02-28 | ReorderFleetOrderCommand direction type mismatch (str vs int) | Fixed: fleet_orders_window.py and strategy_window_manager.py now pass int direction |
