@@ -9,9 +9,12 @@ from unittest.mock import MagicMock
 from game.strategy.data.ship_instance import ShipInstance
 
 
-def make_mock_ship_instance(name="Test Ship", owner_id=0):
-    """Create a mock ShipInstance for testing."""
-    return ShipInstance(
+def make_mock_ship_instance(name="Test Ship", owner_id=0, registries=None):
+    """Create a mock ShipInstance for testing.
+
+    PROJ-211: Added registries parameter for DI compliance.
+    """
+    ship = ShipInstance(
         instance_id=f"test-{name.lower().replace(' ', '-')}",
         design_id=name,
         name=name,
@@ -22,6 +25,9 @@ def make_mock_ship_instance(name="Test Ship", owner_id=0):
             'stats': {'mass': 100}
         },
     )
+    if registries is not None:
+        ship._registries = registries
+    return ship
 
 
 class TestBug27OrderTypeImport:
@@ -36,7 +42,7 @@ class TestBug27OrderTypeImport:
         assert OrderType.MOVE is not None
         assert OrderType.COLONIZE is not None
 
-    def test_show_detailed_report_fleet_with_orders(self):
+    def test_show_detailed_report_fleet_with_orders(self, fresh_registries):
         """Test that showing fleet with orders doesn't raise NameError."""
         pygame.init()
         pygame.display.set_mode((800, 600))
@@ -58,8 +64,9 @@ class TestBug27OrderTypeImport:
         ui = StrategyUI(scene, 800, 600)
 
         # Create fleet with MOVE order
+        # PROJ-211: Pass registries for DI compliance (ship assignment triggers speed calc)
         fleet = Fleet(1, 1, HexCoord(0, 0))
-        fleet.ships = [make_mock_ship_instance("TestShip", 1)]
+        fleet.ships = [make_mock_ship_instance("TestShip", 1, registries=fresh_registries)]
         fleet.orders = [FleetOrder(OrderType.MOVE, HexCoord(1, 1))]
 
         # This should not raise NameError anymore
@@ -71,7 +78,7 @@ class TestBug27OrderTypeImport:
 
         pygame.quit()
 
-    def test_show_detailed_report_fleet_with_colonize_order(self):
+    def test_show_detailed_report_fleet_with_colonize_order(self, fresh_registries):
         """Test fleet with COLONIZE order doesn't raise NameError."""
         pygame.init()
         pygame.display.set_mode((800, 600))
@@ -97,8 +104,9 @@ class TestBug27OrderTypeImport:
         mock_planet.name = "Test Planet"
 
         # Create fleet with COLONIZE order
+        # PROJ-211: Pass registries for DI compliance (ship assignment triggers speed calc)
         fleet = Fleet(1, 1, HexCoord(0, 0))
-        fleet.ships = [make_mock_ship_instance("ColonyShip", 1)]
+        fleet.ships = [make_mock_ship_instance("ColonyShip", 1, registries=fresh_registries)]
         fleet.orders = [FleetOrder(OrderType.COLONIZE, mock_planet)]
 
         # This should not raise NameError anymore

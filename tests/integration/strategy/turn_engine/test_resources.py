@@ -274,7 +274,8 @@ class TestFullTurnIntegration:
         """Verify both per-turn and movement resources are consumed during a turn."""
         engine = TurnEngine(registries=fresh_registries)
 
-        ship = create_mock_ship_instance()
+        # PROJ-211: Pass registries for DI compliance (fleet adds ship triggering speed calc)
+        ship = create_mock_ship_instance(registries=fresh_registries)
         ship.is_combat_capable = MagicMock(return_value=True)
 
         # Per-turn: 10 energy

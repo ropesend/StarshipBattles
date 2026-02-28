@@ -149,10 +149,10 @@ class TestGetCalculatedStatsWithRegistries:
             # Verify ShipStatsCalculator was created with stored registries
             mock_calc_cls.assert_called_with(registries=mock_registries)
 
-    def test_fallback_to_global_registry_when_none(self, basic_design_data):
-        """get_calculated_stats() should fall back to global registry when _registries is None.
+    def test_raises_when_registries_none(self, basic_design_data):
+        """get_calculated_stats() should raise ValueError when _registries is None.
 
-        PROJ-211: Temporary fallback during migration. Will be removed in Task 5.6.
+        PROJ-211: Fallback removed. Registries must be explicitly provided.
         """
         ship = ShipInstance(
             instance_id='test-1',
@@ -163,9 +163,9 @@ class TestGetCalculatedStatsWithRegistries:
         )
         ship._registries = None
 
-        # Should not raise - falls back to global registry
-        stats = ship.get_calculated_stats(force_refresh=True)
-        assert isinstance(stats, dict)
+        # Should raise - no fallback to global registry
+        with pytest.raises(ValueError, match="ShipInstance requires registries"):
+            ship.get_calculated_stats(force_refresh=True)
 
 
 class TestSetRegistriesMethod:

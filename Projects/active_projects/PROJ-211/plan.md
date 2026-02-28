@@ -21,20 +21,26 @@
 
 ## Current State
 **Last Updated:** 2026-02-28
-**Active Phase:** Phase 5 (Task 5.5.1 in progress)
-**Last Action:** Task 5.5.1 partial - Fixed ProductionEngine DI, updated ~11 test files
-**Next Action:** Task 5.5.1 - Continue updating remaining test fixtures (~25 failures remaining)
+**Active Phase:** Phase 5 (Tasks 5.5.1 + 5.6 COMPLETE)
+**Last Action:** Task 5.6 COMPLETE - Removed ShipInstance fallback, updated ~18 test files
+**Next Action:** Task 5.7 - Remove FleetCapabilityCalculator fallbacks
 **Blockers:** None
-**Note:** Test removal attempt shows ~25 tests fail when fallback removed (down from 58 this session).
+**Note:** MAJOR MILESTONE - ShipInstance.get_calculated_stats() fallback REMOVED. Now raises ValueError if _registries=None.
 **Progress this session:**
-- Fixed ProductionEngine to accept and pass registries to ShipInstance.create()
-- Updated TurnEngine.production_engine property to pass registries
-- Updated tests/integration/gameplay_loop/*.py (3 files)
-- Updated tests/integration/strategy/facade/test_fleet_dto.py
-- Updated tests/integration/strategy/transfer/test_transfer_validation.py
-- Updated tests/integration/strategy/turn_engine/*.py (conftest + test_basics)
-- Updated tests/integration/ui/*.py (2 files)
-- All tests pass with fallback in place (12884 passed, 1 skipped, 4 pre-existing bug_13 failures)
+- REMOVED get_default_registry_provider() fallback from ShipInstance.get_calculated_stats()
+- Updated 18 test files to pass registries where needed
+- Key files updated:
+  - tests/conftest.py make_mock_ship_instance - accepts registries param
+  - tests/integration/save_load/conftest.py - game_session_with_state uses fresh_registries
+  - tests/integration/strategy/production/*.py - ProductionEngine gets fresh_registries
+  - tests/integration/strategy/turn_engine/conftest.py - create_mock_ship_instance updated
+  - tests/repro_issues/test_bug_27_ordertype.py - local helper + tests updated
+  - tests/unit/strategy/ship_instance/test_registries_di.py - test expects ValueError now
+  - tests/unit/strategy/test_ship_resource_manager.py - fixture uses fresh_registries
+  - tests/unit/strategy/test_fleet_battle_adapter.py - 9 tests updated
+  - tests/unit/strategy/test_fleet_capability_calculator_di.py - 1 test updated
+  - tests/unit/test_advanced_fleet_orders.py - 2 tests updated
+- All tests pass: 12884 passed, 1 skipped, 4 pre-existing bug_13 failures
 
 ## Overview
 Systematic eradication of the `get_default_registry_provider()` fallback anti-pattern across the entire codebase. The DI infrastructure exists (PROJ-38 added parameters, PROJ-50 partially enforced them) but is in a half-migrated state where 13 production files silently fall back to global state.

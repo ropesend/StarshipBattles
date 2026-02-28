@@ -88,9 +88,10 @@ class TestFleetProductionE2E:
 
         return mock_galaxy, mock_planet
 
-    def test_e2e_fleet_with_yard_builds_ship_that_spawns_in_fleet(self, temp_save_dir):
+    def test_e2e_fleet_with_yard_builds_ship_that_spawns_in_fleet(self, temp_save_dir, fresh_registries):
         """E2E: Create fleet with yard → issue BUILD → advance turns → ship spawns in fleet."""
-        engine = ProductionEngine()
+        # PROJ-211: Pass registries for DI compliance when spawning ships
+        engine = ProductionEngine(registries=fresh_registries)
 
         # Create fleet with space yard capability
         # At 30/tick fleet yard rate, 6000 Metals = 200 ticks = 2 turns
@@ -324,9 +325,10 @@ class TestFleetProductionMultiQueue:
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)
 
-    def test_queue_items_processed_in_order(self, temp_save_dir):
+    def test_queue_items_processed_in_order(self, temp_save_dir, fresh_registries):
         """Queue items are processed one at a time in FIFO order."""
-        engine = ProductionEngine()
+        # PROJ-211: Pass registries for DI compliance when spawning ships
+        engine = ProductionEngine(registries=fresh_registries)
 
         # At 30/tick fleet yard rate:
         # ship_a: 3000 Metals = 100 ticks = 1 turn

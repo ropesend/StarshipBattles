@@ -219,8 +219,11 @@ class TestShipResourceManagerIntegration:
     """Integration tests with real ShipInstance."""
 
     @pytest.fixture
-    def ship_with_resources(self):
-        """Create a real ShipInstance with fuel/energy capacity."""
+    def ship_with_resources(self, fresh_registries):
+        """Create a real ShipInstance with fuel/energy capacity.
+
+        PROJ-211: Added registries parameter for DI compliance.
+        """
         from game.strategy.data.ship_instance import ShipInstance
 
         ship = ShipInstance(
@@ -239,6 +242,7 @@ class TestShipResourceManagerIntegration:
                 }
             },
         )
+        ship._registries = fresh_registries
         return ship
 
     def test_delegation_to_resource_manager(self, ship_with_resources):

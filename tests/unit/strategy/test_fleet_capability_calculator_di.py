@@ -158,7 +158,7 @@ class TestStaticMethodsUseShipRegistries:
 class TestFleetCapabilityCalculatorDI:
     """Test FleetCapabilityCalculator instance with injected registry."""
 
-    def test_calculator_with_injected_registry(self):
+    def test_calculator_with_injected_registry(self, fresh_registries):
         """FleetCapabilityCalculator uses injected component_registry."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
         from game.strategy.data.fleet import Fleet
@@ -176,6 +176,7 @@ class TestFleetCapabilityCalculatorDI:
         fleet = Fleet(1, 0, HexCoord(0, 0), component_registry=component_registry)
 
         # Create ship with yard component
+        # PROJ-211: Pass registries for DI compliance (add_ship triggers speed calc)
         ship = ShipInstance(
             instance_id="test-ship",
             design_id="design-1",
@@ -183,6 +184,7 @@ class TestFleetCapabilityCalculatorDI:
             owner_id=0,
             design_data={"layers": {"hull": [{"id": "fleet_space_yard"}]}}
         )
+        ship._registries = fresh_registries
         fleet.add_ship(ship)
 
         # Calculator should use injected registry

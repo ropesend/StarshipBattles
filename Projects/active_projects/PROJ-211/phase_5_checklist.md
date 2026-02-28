@@ -76,21 +76,10 @@ Strategy:
 **Files:** `game/strategy/data/ship_instance.py`
 **Depends on:** Task 5.5.1 (more test fixture updates needed)
 
-**BLOCKED:** ~127 additional tests need fixture updates before fallback can be removed.
-Test files that still create ShipInstance without registries include:
-- tests/unit/strategy/test_fleet_capability_calculator.py
-- tests/unit/strategy/test_fleet_capability_calculator_di.py
-- tests/unit/test_advanced_fleet_orders.py
-- tests/integration/gameplay_loop/*.py
-- tests/integration/resource_system/*.py (need singleton_registries)
-- tests/integration/save_load/*.py
-- Many others (~50+ test files)
-
-After remaining test fixtures are updated:
-- [ ] Remove the `get_default_registry_provider()` fallback from `get_calculated_stats()`
-- [ ] Raise explicit error if `self._registries` is None
-- [ ] Remove `get_default_registry_provider` import from ship_instance.py
-- [ ] Verify: all tests pass
+- [x] Remove the `get_default_registry_provider()` fallback from `get_calculated_stats()`
+- [x] Raise explicit error if `self._registries` is None
+- [x] Remove `get_default_registry_provider` import from ship_instance.py
+- [x] Verify: all tests pass (12884 passed, 4 unrelated bug_13 failures)
 
 ### Task 5.5.1: Additional test fixture updates (NEW SUBTASK)
 **Files:** Multiple test files creating ShipInstance without registries
@@ -114,11 +103,10 @@ needs registries. ~109 tests fail when fallback is removed.
 - [x] Update tests/unit/strategy/test_ship_resource_manager.py (24 tests - already DI compliant)
 - [x] Update tests/integration/colonization/*.py (30 tests - DONE - updated conftest + test files)
 - [x] Update tests/conftest.py make_colony_ship_for_planet (accepts registries parameter)
-- [ ] Update remaining test files (~44 failures remaining when fallback removed)
-- [ ] Verify: fallback removal succeeds
+- [x] Update remaining test files - **ALL FIXED** (see Task 5.6)
+- [x] Verify: fallback removal succeeds - **12884 passed, 4 unrelated failures**
 
-**Remaining test files needing updates (verified 2026-02-28, updated this session):**
-DONE:
+**Test files updated this session:**
 - [x] tests/integration/gameplay_loop/test_commands_colonization.py - UPDATED
 - [x] tests/integration/gameplay_loop/test_fleet_operations.py - UPDATED
 - [x] tests/integration/gameplay_loop/test_turn_execution.py - UPDATED
@@ -127,26 +115,30 @@ DONE:
 - [x] tests/integration/strategy/turn_engine/*.py - UPDATED
 - [x] tests/integration/ui/test_*.py - UPDATED
 - [x] ProductionEngine - NOW PASSES registries to ShipInstance.create()
-
-REMAINING (~25 failures when fallback removed):
-- tests/integration/strategy/production/*.py (fleet production e2e)
-- tests/integration/strategy/turn_engine/test_resources.py
-- tests/repro_issues/test_bug_27_ordertype.py
-- tests/unit/strategy/ship_instance/test_registries_di.py (test for fallback - update expected behavior)
-- tests/unit/strategy/test_ship_resource_manager.py
-- tests/unit/strategy/test_fleet_battle_adapter.py
-- tests/unit/strategy/test_fleet_capability_calculator_di.py
-- tests/unit/test_advanced_fleet_orders.py
-- tests/integration/save_load/*.py (7 ERRORS in fixture)
+- [x] tests/integration/strategy/production/*.py - UPDATED (2 tests, fresh_registries)
+- [x] tests/integration/strategy/turn_engine/test_resources.py - UPDATED
+- [x] tests/repro_issues/test_bug_27_ordertype.py - UPDATED (2 tests, fresh_registries)
+- [x] tests/unit/strategy/ship_instance/test_registries_di.py - UPDATED (test now expects ValueError)
+- [x] tests/unit/strategy/test_ship_resource_manager.py - UPDATED (fixture uses fresh_registries)
+- [x] tests/unit/strategy/test_fleet_battle_adapter.py - UPDATED (9 tests, fresh_registries)
+- [x] tests/unit/strategy/test_fleet_capability_calculator_di.py - UPDATED (1 test)
+- [x] tests/unit/test_advanced_fleet_orders.py - UPDATED (2 tests, fresh_registries)
+- [x] tests/integration/save_load/conftest.py - UPDATED (game_session_with_state)
+- [x] tests/conftest.py make_mock_ship_instance - UPDATED (accepts registries)
+- [x] tests/integration/strategy/turn_engine/conftest.py create_mock_ship_instance - UPDATED
 
 ### Task 5.7: Remove FleetCapabilityCalculator fallbacks (MOVED FROM PHASE 2)
 **Files:** `game/strategy/data/fleet_capability_calculator.py`
-**Depends on:** Task 5.5
+**Depends on:** Task 5.6 (ShipInstance fallback removed, all ships have registries)
+**Status:** READY - Task 5.6 complete, ships now always have _registries
+
+**Note:** Now that all ships entering fleets have _registries set, the `_get_ship_component_registry()`
+path will always succeed, making `_get_default_component_registry()` dead code. Remove it:
 
 - [ ] Remove `_get_default_component_registry()` helper function
 - [ ] Update `ship_has_spaceyard()` to raise if no registry available
 - [ ] Update `ship_has_ability()` to raise if no registry available
-- [ ] Update `_get_registry()` to raise if not injected
+- [ ] Update `_get_registry()` to raise if not injected (or get from first ship's registries)
 - [ ] Verify: all tests pass
 
 ### Task 5.8: Final verification - zero fallback calls outside composition roots

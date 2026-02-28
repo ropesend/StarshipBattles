@@ -16,9 +16,13 @@ from game.strategy.data.empire import Empire
 from game.strategy.data.ship_instance import ShipInstance
 
 
-def make_mock_ship_instance(name="Test Ship", owner_id=0):
-    """Create a mock ShipInstance for testing."""
-    return ShipInstance(
+def make_mock_ship_instance(name="Test Ship", owner_id=0, registries=None):
+    """Create a mock ShipInstance for testing.
+
+    PROJ-211: Added registries parameter for DI compliance.
+    Required when ship is added to fleet (triggers speed calc).
+    """
+    ship = ShipInstance(
         instance_id=f"test-{name.lower().replace(' ', '-')}-{id(name)}",
         design_id=name,
         name=name,
@@ -29,6 +33,9 @@ def make_mock_ship_instance(name="Test Ship", owner_id=0):
             'stats': {'mass': 100}
         },
     )
+    if registries is not None:
+        ship._registries = registries
+    return ship
 
 
 @pytest.fixture
@@ -62,7 +69,7 @@ def galaxy_mock():
 
 
 class TestAdvancedFleetOrders:
-    def test_fleet_merge_method(self, turn_engine, test_empire, galaxy_mock):
+    def test_fleet_merge_method(self, turn_engine, test_empire, galaxy_mock, fresh_registries):
         """Test the basic merge_with data operation."""
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
         f2 = Fleet(2, 0, HexCoord(10, 0), speed=10.0)
@@ -70,8 +77,9 @@ class TestAdvancedFleetOrders:
         test_empire.add_fleet(f1)
         test_empire.add_fleet(f2)
 
-        ship_a = make_mock_ship_instance("ShipA", 0)
-        ship_b = make_mock_ship_instance("ShipB", 0)
+        # PROJ-211: Pass registries for DI compliance (merge triggers speed calc)
+        ship_a = make_mock_ship_instance("ShipA", 0, registries=fresh_registries)
+        ship_b = make_mock_ship_instance("ShipB", 0, registries=fresh_registries)
         f1.ships = [ship_a]
         f2.ships = [ship_b]
         f1.orders = ["SomeOrder"]
@@ -228,7 +236,7 @@ class TestAdvancedFleetOrders:
         # Now correctly intercepts at (7,0) - 1 turn earlier than old buggy result!
         assert result == HexCoord(7, 0)
 
-    def test_join_fleet_execution(self, order_processor, test_empire, galaxy_mock):
+    def test_join_fleet_execution(self, order_processor, test_empire, galaxy_mock, fresh_registries):
         """Verify JOIN_FLEET order merges fleets.
 
         PROJ-207 EP-001: JOIN_FLEET is now handled by process_instant_orders only,
@@ -243,8 +251,9 @@ class TestAdvancedFleetOrders:
         # Setup: Co-located
         f1.location = HexCoord(5, 5)
         f2.location = HexCoord(5, 5)
-        ship_a = make_mock_ship_instance("ShipA", 0)
-        ship_b = make_mock_ship_instance("ShipB", 0)
+        # PROJ-211: Pass registries for DI compliance (merge triggers speed calc)
+        ship_a = make_mock_ship_instance("ShipA", 0, registries=fresh_registries)
+        ship_b = make_mock_ship_instance("ShipB", 0, registries=fresh_registries)
         f1.ships = [ship_a]
         f2.ships = [ship_b]
 

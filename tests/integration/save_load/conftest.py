@@ -35,17 +35,17 @@ def minimal_game_session():
 
 
 @pytest.fixture
-def game_session_with_state(minimal_game_session):
+def game_session_with_state(minimal_game_session, fresh_registries):
     """Create a game session with some game state to preserve."""
     session = minimal_game_session
 
-    # Add some fleets
+    # Add some fleets (PROJ-211: pass registries for DI compliance)
     fleet1 = Fleet(100, 0, HexCoord(10, 10), speed=15.0)
-    fleet1.ships = [make_mock_ship_instance("Scout", 0)]
+    fleet1.ships = [make_mock_ship_instance("Scout", 0, registries=fresh_registries)]
     session.empires[0].add_fleet(fleet1)
 
     fleet2 = Fleet(200, 1, HexCoord(20, 20), speed=10.0)
-    fleet2.ships = [make_mock_ship_instance("Destroyer", 1)]
+    fleet2.ships = [make_mock_ship_instance("Destroyer", 1, registries=fresh_registries)]
     session.empires[1].add_fleet(fleet2)
 
     # Advance a few turns

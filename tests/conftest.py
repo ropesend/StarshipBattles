@@ -245,26 +245,28 @@ def assert_list_length(items, expected_length: int, description: str = "") -> No
 # PROJ-40: Shared Test Helpers
 # =============================================================================
 
-def make_mock_ship_instance(name="Test Ship", owner_id=0):
+def make_mock_ship_instance(name="Test Ship", owner_id=0, registries=None):
     """
     Create a mock ShipInstance for testing.
 
     PROJ-40/NEW-INT-003: Consolidated from multiple integration test files.
     Use this helper instead of defining local versions in test files.
 
-    Note: This uses the direct constructor, not create(), so it doesn't require
-    registries. Use this for tests that don't call get_calculated_stats().
+    PROJ-211: Now accepts optional registries parameter. If provided, enables
+    get_calculated_stats() calls. Required for tests that call process_turn()
+    or Fleet.add_ship() since those trigger stats calculations.
 
     Args:
         name: Ship name (also used as design_id)
         owner_id: Owner empire ID
+        registries: Optional GameRegistries for stats calculation
 
     Returns:
         ShipInstance: A mock ship instance for testing
     """
     from game.strategy.data.ship_instance import ShipInstance
 
-    return ShipInstance(
+    ship = ShipInstance(
         instance_id=f"test-{name.lower().replace(' ', '-')}-{id(name)}",
         design_id=name,
         name=name,
@@ -275,6 +277,9 @@ def make_mock_ship_instance(name="Test Ship", owner_id=0):
             'stats': {'mass': 100}
         },
     )
+    if registries is not None:
+        ship._registries = registries
+    return ship
 
 
 @pytest.fixture

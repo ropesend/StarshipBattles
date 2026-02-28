@@ -36,9 +36,14 @@ def create_mock_ship_instance(
     is_derelict=False,
     resource_levels=None,
     component_toggles=None,
-    design_data=None
+    design_data=None,
+    registries=None
 ):
-    """Helper to create a mock ShipInstance for testing."""
+    """Helper to create a mock ShipInstance for testing.
+
+    PROJ-211: Added registries parameter for DI compliance. Required for tests
+    that call get_calculated_stats() or add ships to fleets.
+    """
     from game.strategy.data.ship_instance import ShipInstance
 
     ship = ShipInstance(
@@ -57,6 +62,8 @@ def create_mock_ship_instance(
         ship.design_data = design_data
     else:
         ship.design_data = {'name': name, 'layers': {}}
+    if registries is not None:
+        ship._registries = registries
     return ship
 
 

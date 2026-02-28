@@ -281,16 +281,10 @@ class ShipInstance:
 
             registries = self._registries
             if registries is None:
-                # PROJ-211 TEMPORARY FALLBACK: Tests need updating to inject registries.
-                # Fleet.add_ship() triggers speed recalculation which calls get_calculated_stats().
-                # Will be removed after all test fixtures are updated.
-                from game.core.registry import get_default_registry_provider, GameRegistries
-                provider = get_default_registry_provider()
-                registries = GameRegistries(
-                    components=provider.get_components(),
-                    modifiers=provider.get_modifiers(),
-                    vehicle_classes=provider.get_vehicle_classes(),
-                    resources=provider.get_resources(),
+                raise ValueError(
+                    "ShipInstance requires registries for stats calculation. "
+                    "Use ShipInstance.create() or from_dict() with registries parameter, "
+                    "or set ship._registries after construction."
                 )
 
             service = ShipStatsCalculator(registries=registries)

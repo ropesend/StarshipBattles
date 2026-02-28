@@ -8,35 +8,30 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-211 Phase 5 Task 5.5.1 partial - Fixed ProductionEngine DI + 11 test files
-**Current Status:** PROJ-211 Phase 5 Task 5.5.1 in progress (~25 tests remaining)
+**Last Completed:** PROJ-211 Phase 5 Tasks 5.5.1 + 5.6 COMPLETE - ShipInstance fallback REMOVED
+**Current Status:** PROJ-211 Phase 5 - Task 5.7 pending (FleetCapabilityCalculator fallbacks)
 **Current Project:** PROJ-211
-**Current Phase:** Phase 5 (UI Screens & Cleanup) - Task 5.5.1 In Progress
+**Current Phase:** Phase 5 (UI Screens & Cleanup) - Tasks 5.5.1 + 5.6 DONE, Task 5.7 Ready
 **Test Status:** 12884 passed, 1 skipped (4 pre-existing bug_13 failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Task 5.5.1 progress this session:
-  - **CRITICAL FIX**: ProductionEngine now accepts registries and passes to ShipInstance.create()
-  - Updated TurnEngine.production_engine to pass registries
-  - Updated tests/integration/gameplay_loop/*.py (3 files)
-  - Updated tests/integration/strategy/facade/test_fleet_dto.py
-  - Updated tests/integration/strategy/transfer/test_transfer_validation.py
-  - Updated tests/integration/strategy/turn_engine/*.py (conftest + test_basics)
-  - Updated tests/integration/ui/*.py (2 files)
-  - Down from 58 failures to 25 failures when fallback removed
-- Remaining test files needing updates (~25 failures):
-  - tests/integration/strategy/production/*.py (fleet production e2e)
-  - tests/integration/strategy/turn_engine/test_resources.py
-  - tests/repro_issues/test_bug_27_ordertype.py
-  - tests/unit/strategy/ship_instance/test_registries_di.py (update expected behavior)
-  - tests/unit/strategy/test_ship_resource_manager.py
-  - tests/unit/strategy/test_fleet_battle_adapter.py
-  - tests/unit/strategy/test_fleet_capability_calculator_di.py
-  - tests/unit/test_advanced_fleet_orders.py
-  - tests/integration/save_load/*.py (7 ERRORS - fixture issue)
-- Note: 4 bug_13 tests fail due to missing asset files (pre-existing, unrelated to PROJ-211)
-- Next: Continue updating remaining test files
+- **MAJOR MILESTONE**: ShipInstance.get_calculated_stats() fallback REMOVED
+  - Now raises ValueError if `_registries` is None (strict DI enforcement)
+  - All 18 failing test files updated to pass registries
+- Test files updated this session:
+  - tests/conftest.py make_mock_ship_instance - accepts registries param
+  - tests/integration/save_load/conftest.py - game_session_with_state uses fresh_registries
+  - tests/integration/strategy/production/*.py - ProductionEngine gets fresh_registries
+  - tests/integration/strategy/turn_engine/conftest.py - create_mock_ship_instance updated
+  - tests/repro_issues/test_bug_27_ordertype.py - local helper + tests updated
+  - tests/unit/strategy/ship_instance/test_registries_di.py - test expects ValueError
+  - tests/unit/strategy/test_ship_resource_manager.py - fixture uses fresh_registries
+  - tests/unit/strategy/test_fleet_battle_adapter.py - 9 tests updated
+  - tests/unit/strategy/test_fleet_capability_calculator_di.py - 1 test updated
+  - tests/unit/test_advanced_fleet_orders.py - 2 tests updated
+- Next: Task 5.7 - Remove FleetCapabilityCalculator fallbacks (now safe - all ships have registries)
+- Note: 4 bug_13 tests fail due to missing asset files (pre-existing, unrelated)
 
 ---
 
@@ -108,6 +103,7 @@
 | 2026-02-28 | PROJ-211 | Phase 5 (5.5.1) | In Progress | 12882 passed, 1 skipped | pending | 40 more tests updated; make_ship_with_stats fixture added |
 | 2026-02-28 | PROJ-211 | Phase 5 (5.5.1) | In Progress | 12824 passed, 1 skipped | pending | ship_instance + colonization tests updated; 44 failures remaining |
 | 2026-02-28 | PROJ-211 | Phase 5 (5.5.1) | In Progress | 12884 passed, 1 skipped | 018e689b | ProductionEngine DI fix + 11 test files; 25 failures remaining |
+| 2026-02-28 | PROJ-211 | Phase 5 (5.5.1+5.6) | Complete | 12884 passed, 1 skipped | pending | FALLBACK REMOVED: ShipInstance + 18 test files updated |
 
 ---
 
