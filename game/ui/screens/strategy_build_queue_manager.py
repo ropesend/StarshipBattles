@@ -19,6 +19,8 @@ from game.strategy.systems.design_library import DesignLibrary
 from game.ui.services.design_loader_adapter import DesignLoaderAdapter
 from game.strategy.data.order_types import OrderType
 
+from game.core.protocols import is_planet, is_fleet
+
 if TYPE_CHECKING:
     from game.ui.screens.strategy_screen import StrategyScreen
     from game.strategy.data.fleet import Fleet
@@ -72,8 +74,7 @@ class StrategyBuildQueueManager:
             logger.info("Build queue already open, ignoring click")
             return
 
-        from game.strategy.data.planet import Planet
-        if isinstance(self._screen.selected_object, Planet):
+        if is_planet(self._screen.selected_object):
             planet = self._screen.selected_object
             if planet.owner_id == self._screen.current_empire.id:
                 # Hide main UI
@@ -231,8 +232,7 @@ class StrategyBuildQueueManager:
             logger.info("Build queue already open, ignoring click")
             return
 
-        from game.strategy.data.fleet import Fleet
-        if isinstance(self._screen.selected_object, Fleet):
+        if is_fleet(self._screen.selected_object):
             fleet = self._screen.selected_object
             if fleet.owner_id == self._screen.current_empire.id and fleet.has_space_shipyard:
                 # Hide main UI

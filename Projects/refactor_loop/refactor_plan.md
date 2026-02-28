@@ -8,29 +8,38 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-208 Phase 3 Complete
-**Current Status:** PROJ-208 Phase 4 Ready
+**Last Completed:** PROJ-208 Phase 4 Complete
+**Current Status:** PROJ-208 All Phases Complete - Ready for Audit
 **Current Project:** PROJ-208
-**Current Phase:** Phase 4
-**Test Status:** 12918 passed, 1 skipped (4 pre-existing bug_13 failures)
+**Current Phase:** Audit
+**Test Status:** 12929 passed, 1 skipped (4 pre-existing bug_13 failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-208 Phase 3 COMPLETE:**
-  - Tasks 3.1-3.4 (Research commands) DEFERRED - research scene is standalone sandbox, not integrated with strategy layer
-  - Task 3.5: strategy_build_queue_manager.py - added facade param to BuildQueueScreen (3 sites)
-  - Task 3.6: strategy_window_manager.py - changed 4 callbacks from session to facade routing
-  - Task 3.7: fleet_orders_window.py - fallback already removed in prior phase (verified)
-  - Additional: build_queue_screen.py - added facade param, uses facade if available
-  - Additional: empire_build_queue_window.py - added facade param, uses facade if available
+- **PROJ-208 Phase 4 COMPLETE:**
+  - Task 4.1: Added capabilities field to FleetInfo DTO
+    - Added list_abilities() to FleetCapabilityCalculator
+    - Added list_ship_abilities() to component_inspector
+    - 8 new tests in test_fleet_dto_capabilities.py
+  - Task 4.2: Replaced isinstance checks with protocol guards
+    - strategy_build_queue_manager.py now uses is_planet()/is_fleet()
+    - Updated tests to patch protocol guards
+  - Task 4.3: fleet_ops now uses facade.get_fleets_at_hex()
+    - get_fleet_at_hex() returns Optional[FleetInfo]
+    - execute_intercept() and handle_join_designation() use fleet_id
+  - Task 4.4: Added facade methods for game state queries
+    - get_save_path() and get_scuttle_events() on facade
+    - strategy_game_state_manager.py uses facade methods
 - **Files Modified:**
-  - game/ui/screens/strategy_window_manager.py (4 callbacks use facade)
-  - game/ui/screens/strategy_build_queue_manager.py (3 instantiation sites)
-  - game/ui/screens/build_queue_screen.py (facade param + command dispatch)
-  - game/ui/screens/empire_build_queue_window.py (facade param + command dispatch)
-  - Projects/active_projects/PROJ-208/phase_3_checklist.md
-  - Projects/active_projects/PROJ-208/plan.md
-- **Next Action:** Phase 4 - DTO Enhancements & Read Path
+  - game/strategy/facade/dto/fleet_dto.py (capabilities field)
+  - game/strategy/data/fleet_capability_calculator.py (list_abilities)
+  - game/strategy/services/component_inspector.py (list_ship_abilities)
+  - game/ui/screens/strategy_build_queue_manager.py (protocol guards)
+  - game/ui/screens/strategy_fleet_ops.py (facade.get_fleets_at_hex)
+  - game/strategy/facade/strategy_session_facade.py (get_save_path, get_scuttle_events)
+  - game/ui/screens/strategy_game_state_manager.py (facade methods)
+  - Multiple test files updated
+- **Next Action:** Run Protocol 04 Audit
 - Note: 4 bug_13 tests fail due to missing asset files (pre-existing, unrelated)
 
 ---
@@ -112,6 +121,7 @@
 | 2026-02-28 | PROJ-208 | Phase 2 (2.4) | Complete | 12923 passed, 1 skipped | pending | build_queue_controller.py uses commands, queue_id param |
 | 2026-02-28 | PROJ-208 | Phase 2 (2.5-2.8) | Complete | 12918 passed, 1 skipped | pending | Drag handler, screen, empire window refactored; IssueBuildShipCommand removed |
 | 2026-02-28 | PROJ-208 | Phase 3 | Complete | 12918 passed, 1 skipped | pending | Facade routing fixed in 4 files; research commands DEFERRED (sandbox) |
+| 2026-02-28 | PROJ-208 | Phase 4 | Complete | 12929 passed, 1 skipped | pending | FleetInfo.capabilities, protocol guards, facade query methods |
 
 ---
 

@@ -16,13 +16,13 @@
 | 1. Fleet Management Commands | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Build Queue Commands | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Research & Misc Commands | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. DTO Enhancements & Read Path | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. DTO Enhancements & Read Path | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-28
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete - Facade routing fixed in strategy_window_manager.py (4 callbacks), strategy_build_queue_manager.py (3 sites), build_queue_screen.py, empire_build_queue_window.py. Research commands (3.1-3.4) DEFERRED - research scene is standalone sandbox not integrated with strategy layer.
-**Next Action:** Phase 4 - DTO Enhancements & Read Path
+**Active Phase:** Complete - Ready for Audit
+**Last Action:** Phase 4 complete - Added capabilities field to FleetInfo, replaced isinstance checks with protocol guards, refactored fleet_ops to use facade.get_fleets_at_hex(), added get_save_path() and get_scuttle_events() facade methods.
+**Next Action:** Audit
 **Blockers:** None
 
 ## Overview

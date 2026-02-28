@@ -274,3 +274,25 @@ class FleetCapabilityCalculator:
                 "has _registries set via DI."
             )
         return ship_has_ability(ship, ability_name, registry)
+
+    def list_abilities(self) -> List[str]:
+        """
+        Get all unique ability names across all combat-capable ships in the fleet.
+
+        Returns:
+            List of unique ability names found on any ship in the fleet.
+            Returns empty list if fleet has no combat-capable ships.
+        """
+        from game.strategy.services.component_inspector import list_ship_abilities
+
+        combat_ships = self._fleet.get_combat_capable_ships()
+        if not combat_ships:
+            return []
+
+        all_abilities: set = set()
+        registry = self._get_registry()
+        for ship in combat_ships:
+            ship_abilities = list_ship_abilities(ship, registry)
+            all_abilities.update(ship_abilities)
+
+        return list(all_abilities)

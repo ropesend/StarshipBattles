@@ -89,9 +89,11 @@ class TestOnBuildYardClick:
         screen._get_object_asset = MagicMock(return_value=None)
         screen.session.galaxy.get_system_of_planet.return_value = None
 
+        # PROJ-208: is_planet uses Protocol isinstance, need to patch it for mocks
         with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
              patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
-             patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'):
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'), \
+             patch('game.ui.screens.strategy_build_queue_manager.is_planet', return_value=True):
             manager.on_build_yard_click()
 
         MockBQS.assert_called_once()
@@ -230,9 +232,11 @@ class TestOnFleetBuildClick:
         screen.selected_object = mock_fleet
         screen._get_object_asset = MagicMock(return_value=None)
 
+        # PROJ-208: is_fleet uses Protocol isinstance, need to patch it for mocks
         with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
              patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
-             patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'):
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'), \
+             patch('game.ui.screens.strategy_build_queue_manager.is_fleet', return_value=True):
             manager.on_fleet_build_click()
 
         MockBQS.assert_called_once()

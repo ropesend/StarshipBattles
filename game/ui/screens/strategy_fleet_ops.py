@@ -10,9 +10,10 @@ Cross-layer imports (acceptable for UI):
 - StrategySessionFacade: TYPE_CHECKING - used for type hints only
 """
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from game.core.hex_math import pixel_to_hex
 from game.strategy.engine.commands import IssueMoveCommand, IssueInterceptCommand, IssueJoinFleetCommand
+from game.strategy.facade.dto.fleet_dto import FleetInfo
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ class FleetOperations:
     def hex_size(self):
         return self.scene.hex_size
 
-    def get_fleet_at_hex(self, hex_coord):
+    def get_fleet_at_hex(self, hex_coord) -> Optional[FleetInfo]:
         """
         Find the first fleet at the given hex.
 
@@ -54,13 +55,13 @@ class FleetOperations:
             hex_coord: HexCoord to search
 
         Returns:
-            Fleet object or None if no fleet at location
+            FleetInfo DTO or None if no fleet at location
+
+        Note:
+            PROJ-208: Uses facade.get_fleets_at_hex() instead of raw domain iteration.
         """
-        for emp in self.empires:
-            for f in emp.fleets:
-                if f.location == hex_coord:
-                    return f
-        return None
+        fleets = self.facade.get_fleets_at_hex(hex_coord)
+        return fleets[0] if fleets else None
 
     def handle_move_designation(self, mx, my, selected_fleet):
         """
@@ -88,13 +89,14 @@ class FleetOperations:
         world_pos = self.camera.screen_to_world((mx, my))
         target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.hex_size)
 
-        target_fleet = self.get_fleet_at_hex(target_hex)
+        target_fleet_info = self.get_fleet_at_hex(target_hex)
 
-        if target_fleet and target_fleet != selected_fleet:
+        # Compare fleet IDs to avoid mixing domain object with DTO
+        if target_fleet_info and target_fleet_info.fleet_id != selected_fleet.id:
             # Return choice context for UI prompt
             return {
                 'type': 'choice',
-                'target_fleet': target_fleet,
+                'target_fleet': target_fleet_info,
                 'target_hex': target_hex,
             }
         else:
@@ -132,20 +134,20 @@ class FleetOperations:
             logger.warning("Cannot find path to target (Unreachable).")
             return {'type': 'error', 'message': 'Unreachable'}
 
-    def execute_intercept(self, fleet, target_fleet):
+    def execute_intercept(self, fleet, target_fleet: FleetInfo):
         """
         Execute intercept order.
 
         Args:
             fleet: Fleet to issue order to
-            target_fleet: Fleet to intercept
+            target_fleet: FleetInfo DTO of fleet to intercept
 
         Returns:
             dict with result type and details
         """
-        logger.debug(f"Intercepting Fleet {target_fleet.id}...")
+        logger.debug(f"Intercepting Fleet {target_fleet.fleet_id}...")
 
-        cmd = IssueInterceptCommand(fleet.id, target_fleet.id)
+        cmd = IssueInterceptCommand(fleet.id, target_fleet.fleet_id)
         result = self.facade.handle_command(cmd)
 
         if result and result.is_valid:
@@ -172,23 +174,23 @@ class FleetOperations:
         world_pos = self.camera.screen_to_world((mx, my))
         target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.hex_size)
 
-        target_fleet = self.get_fleet_at_hex(target_hex)
+        target_fleet_info = self.get_fleet_at_hex(target_hex)
 
-        if not target_fleet:
+        if not target_fleet_info:
             logger.debug("No fleet at target location.")
             return None
 
-        if target_fleet == selected_fleet:
+        if target_fleet_info.fleet_id == selected_fleet.id:
             logger.debug("Cannot join self.")
             return None
 
-        if target_fleet.owner_id != selected_fleet.owner_id:
+        if target_fleet_info.owner_id != selected_fleet.owner_id:
             logger.debug("Cannot join enemy fleet.")
             return None
 
-        logger.debug(f"Queueing Join Order with Fleet {target_fleet.id}...")
+        logger.debug(f"Queueing Join Order with Fleet {target_fleet_info.fleet_id}...")
 
-        cmd = IssueJoinFleetCommand(selected_fleet.id, target_fleet.id)
+        cmd = IssueJoinFleetCommand(selected_fleet.id, target_fleet_info.fleet_id)
         result = self.facade.handle_command(cmd)
 
         if result and result.is_valid:
