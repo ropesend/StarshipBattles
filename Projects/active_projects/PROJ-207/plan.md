@@ -16,17 +16,17 @@
 | 1. Save/Load Data Integrity | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Superweapon Validation & Execution | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Execution Path Cleanup | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Command Pipeline Consistency | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Command Pipeline Consistency | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Code Hygiene & Dead Code | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-27
-**Active Phase:** Phase 4 - Command Pipeline Consistency
-**Last Agent Action:** Phase 3 complete - EP-001, EP-005 fixed
-**Next Action:** Begin Phase 4 implementation
+**Active Phase:** Phase 5 - Code Hygiene & Dead Code
+**Last Agent Action:** Phase 4 complete - CP-001, CP-002, CP-003 fixed
+**Next Action:** Begin Phase 5 implementation
 **Blockers:** None
-**Test Baseline:** 12,857 passed, 4 pre-existing failures (bug_13_colony_flags), 1 skipped
-**Context for Next Agent:** Phase 3 complete. Removed JOIN_FLEET from dual execution path - now handled ONLY by instant path (process_instant_orders). Standardized error handling - warp failures now pop_order() instead of clear_orders(), preserving subsequent orders. Stranded (no fuel) still clears all orders since fleet cannot move at all. Added 7 new tests. Updated existing tests to reflect new behavior.
+**Test Baseline:** 12,876 passed, 4 pre-existing failures (bug_13_colony_flags), 1 skipped
+**Context for Next Agent:** Phase 4 complete. Created IssueBuildOrderCommand and RemoveBuildOrderCommand with handlers. Updated strategy_build_queue_manager.py to dispatch BUILD orders through command pipeline. Added clear_orders_callback to FleetOrdersWindow for command pipeline routing. Extracted create_auto_load_population_order() helper function used by both ColonizeCommandHandler and ColonizeMissionCommandHandler. 19 new tests added. All 275 colonize tests pass.
 
 ## Overview
 Systematic unification and remediation of the fleet order system based on deep code review

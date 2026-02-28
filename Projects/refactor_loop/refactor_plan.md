@@ -8,22 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-27
-**Last Completed:** PROJ-207 Phase 3 - Execution Path Cleanup
-**Current Status:** Ready for Phase 4
+**Last Completed:** PROJ-207 Phase 4 - Command Pipeline Consistency
+**Current Status:** Ready for Phase 5
 **Current Project:** PROJ-207
-**Current Phase:** Phase 4 - Command Pipeline Consistency
-**Test Status:** 12857 passed, 1 skipped (+ 4 pre-existing bug_13_colony_flags failures)
+**Current Phase:** Phase 5 - Code Hygiene & Dead Code
+**Test Status:** 12876 passed, 1 skipped (+ 4 pre-existing bug_13_colony_flags failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 3 complete: EP-001, EP-005 fixed
-- EP-001: Removed JOIN_FLEET from ACTION_ORDER_TYPES - now handled ONLY by instant path
-- EP-001: Replaced JOIN_FLEET branch in process_end_turn_orders with comment
-- EP-005: Changed warp failures to pop_order() instead of clear_orders()
-- EP-005: Stranded (no fuel) still clears all orders - fleet cannot move at all
-- Added 7 new tests across test_fleet_order_processor.py and test_fleet_movement_engine.py
-- Updated test_warp.py, test_action_execution_engine.py, test_advanced_fleet_orders.py
-- Next: Phase 4 - Command Pipeline Consistency (CP-001, CP-002, CP-003)
+- Phase 4 complete: CP-001, CP-002, CP-003 fixed
+- CP-002: Created IssueBuildOrderCommand and RemoveBuildOrderCommand with handlers
+- CP-002: Updated strategy_build_queue_manager.py to dispatch BUILD orders via command pipeline
+- CP-001: Added clear_orders_callback to FleetOrdersWindow for command pipeline routing
+- CP-001: StrategyWindowManager creates callback closure that dispatches ClearFleetOrdersCommand
+- CP-003: Extracted create_auto_load_population_order() helper function
+- CP-003: Updated ColonizeCommandHandler and ColonizeMissionCommandHandler to use shared helper
+- Added 19 new tests across test_build_order_command_handler.py, test_strategy_build_queue_manager.py, test_fleet_orders_refresh.py
+- Next: Phase 5 - Code Hygiene & Dead Code
 
 ---
 
@@ -32,7 +33,7 @@
 > **Note:** Each checkbox represents an entire project. Phase details are in the project's plan.md file.
 
 - [/] **PROJ-207: Fleet Order System Unification**
-  - **Phases:** 5 | **Status:** In Progress (Phase 2 Complete) | **Priority:** Medium
+  - **Phases:** 5 | **Status:** In Progress (Phase 4 Complete) | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-207/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-207/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -46,6 +47,7 @@
 | 2026-02-27 | PROJ-207 | Phase 1 | Complete | 12827 passed | e451d6c3 | ODM-001, ODM-003 fixed |
 | 2026-02-27 | PROJ-207 | Phase 2 | Complete | 12792 passed | 8c3c4eed | VC-001, VC-002, CP-005 fixed |
 | 2026-02-27 | PROJ-207 | Phase 3 | Complete | 12857 passed | 06f2afd0 | EP-001, EP-005 fixed |
+| 2026-02-27 | PROJ-207 | Phase 4 | Complete | 12876 passed | 01b4b66e | CP-001, CP-002, CP-003 fixed |
 
 ---
 

@@ -321,3 +321,34 @@ class IssueWarpCommand(Command):
         self.type = CommandType.ISSUE_ORDER
         self.fleet_id = fleet_id
         self.warp_point_hex = warp_point_hex
+
+
+# =============================================================================
+# BUILD Order Commands (PROJ-207)
+# =============================================================================
+
+@dataclass
+class IssueBuildOrderCommand(Command):
+    """Command to issue a BUILD order to a fleet with space shipyard.
+
+    PROJ-207 Phase 4: Routes fleet BUILD orders through command pipeline.
+    The BUILD order tells the fleet to execute its construction queue.
+    """
+    fleet_id: int
+
+    def __init__(self, fleet_id: int):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+
+
+@dataclass
+class RemoveBuildOrderCommand(Command):
+    """Command to remove BUILD orders from a fleet.
+
+    PROJ-207 Phase 4: Used when construction queue is emptied.
+    """
+    fleet_id: int
+
+    def __init__(self, fleet_id: int):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id

@@ -60,6 +60,35 @@ def add_move_order_if_needed(session: 'GameSession', fleet, target_hex) -> Valid
     return ValidationResult.success()
 
 
+def create_auto_load_population_order(origin_colony) -> 'FleetOrder':
+    """Create a LOAD_POPULATION order to pick up founding population from colony.
+
+    PROJ-207 Phase 4: Extracted from duplicate patterns in ColonizeCommandHandler
+    and ColonizeMissionCommandHandler. Use this when auto-loading colonists
+    from a colony at the fleet's location.
+
+    Args:
+        origin_colony: The colony to load population from.
+
+    Returns:
+        FleetOrder for LOAD_POPULATION, or None if colony has no populations.
+    """
+    from game.strategy.data.fleet import FleetOrder, OrderType
+
+    if not origin_colony or not origin_colony.populations:
+        return None
+
+    species_id = origin_colony.populations[0].race_id if origin_colony.populations else "default"
+    transfer_params = {
+        'direction': 'load',
+        'cargo_type': 'passengers',
+        'amount': 0,  # 0 = load as much as possible
+        'planet_id': origin_colony.id,
+        'species_id': species_id
+    }
+    return FleetOrder(OrderType.LOAD_POPULATION, target=transfer_params)
+
+
 @runtime_checkable
 class ICommandHandler(Protocol):
     """Protocol for command handlers."""
@@ -232,17 +261,10 @@ class ColonizeCommandHandler(BaseCommandHandler):
         # 3. Apply
         if result.is_valid:
             # Auto-load population from colony at fleet's location (BUG-70)
+            # PROJ-207 Phase 4: Use shared helper
             origin_colony = session._find_colony_at_fleet(fleet)
-            if origin_colony and origin_colony.populations:
-                species_id = origin_colony.populations[0].race_id if origin_colony.populations else "default"
-                transfer_params = {
-                    'direction': 'load',
-                    'cargo_type': 'passengers',
-                    'amount': 0,
-                    'planet_id': origin_colony.id,
-                    'species_id': species_id
-                }
-                load_order = FleetOrder(OrderType.LOAD_POPULATION, target=transfer_params)
+            load_order = create_auto_load_population_order(origin_colony)
+            if load_order:
                 fleet.add_order(load_order)
 
             # Add MOVE order to get to the target planet
@@ -427,17 +449,10 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
             return ValidationResult.error("No path found to target.")
 
         # 5. Auto-load population from colony at fleet's current location (BUG-70)
+        # PROJ-207 Phase 4: Use shared helper
         origin_colony = session._find_colony_at_fleet(fleet)
-        if origin_colony and origin_colony.populations:
-            species_id = origin_colony.populations[0].race_id if origin_colony.populations else "default"
-            transfer_params = {
-                'direction': 'load',
-                'cargo_type': 'passengers',
-                'amount': 0,  # 0 = load as much as possible
-                'planet_id': origin_colony.id,
-                'species_id': species_id
-            }
-            load_order = FleetOrder(OrderType.LOAD_POPULATION, target=transfer_params)
+        load_order = create_auto_load_population_order(origin_colony)
+        if load_order:
             fleet.add_order(load_order)
 
         # 6. Queue MOVE order if not already at target
@@ -551,6 +566,52 @@ class TransferCommandHandler(BaseCommandHandler):
         return result
 
 
+class BuildOrderCommandHandler(BaseCommandHandler):
+    """Handler for IssueBuildOrderCommand (PROJ-207 Phase 4)."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle IssueBuildOrderCommand - creates BUILD order for fleet construction.
+
+        Inserts BUILD order at position 0 (front of queue) so it executes first.
+        Clears the fleet path since fleet must stay stationary to build.
+        """
+        from game.strategy.data.fleet import FleetOrder, OrderType
+
+        # 1. Resolve fleet
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
+
+        # 2. Create BUILD order and insert at front
+        build_order = FleetOrder(OrderType.BUILD)
+        fleet.orders.insert(0, build_order)
+
+        # 3. Clear movement path - fleet must stay stationary to build
+        fleet.path = []
+
+        logger.info(f"GameSession: Issued BUILD order for Fleet {fleet.id}")
+        return ValidationResult.success()
+
+
+class RemoveBuildOrderCommandHandler(BaseCommandHandler):
+    """Handler for RemoveBuildOrderCommand (PROJ-207 Phase 4)."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle RemoveBuildOrderCommand - removes BUILD orders from fleet."""
+        from game.strategy.data.fleet import OrderType
+
+        # 1. Resolve fleet
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
+
+        # 2. Remove all BUILD orders
+        fleet.orders = [o for o in fleet.orders if o.type != OrderType.BUILD]
+
+        logger.info(f"GameSession: Removed BUILD orders from Fleet {fleet.id}")
+        return ValidationResult.success()
+
+
 class WarpCommandHandler(BaseCommandHandler):
     """Handler for IssueWarpCommand (PROJ-187)."""
 
@@ -628,6 +689,10 @@ def create_default_registry() -> CommandHandlerRegistry:
     registry.register('ClearFleetOrdersCommand', ClearOrdersCommandHandler())
     registry.register('IssueTransferCommand', TransferCommandHandler())
     registry.register('IssueWarpCommand', WarpCommandHandler())  # PROJ-187
+
+    # Build order handlers (PROJ-207 Phase 4)
+    registry.register('IssueBuildOrderCommand', BuildOrderCommandHandler())
+    registry.register('RemoveBuildOrderCommand', RemoveBuildOrderCommandHandler())
 
     # Superweapon direct handlers (PROJ-102)
     registry.register('IssueImplodePlanetCommand', ImplodePlanetCommandHandler())

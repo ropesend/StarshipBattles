@@ -276,8 +276,16 @@ class StrategyWindowManager:
         w, h = 400, 500
         rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
 
+        # PROJ-207 Phase 4: Create callback closure for command dispatch
+        def clear_orders_callback(fleet_id: int) -> None:
+            """Dispatch ClearFleetOrdersCommand through command pipeline."""
+            from game.strategy.engine.commands import ClearFleetOrdersCommand
+            cmd = ClearFleetOrdersCommand(fleet_id=fleet_id)
+            self.scene.session.handle_command(cmd)
+
         self.fleet_orders_window = FleetOrdersWindow(
-            rect, self.manager, fleet, input_mapper=self._mapper
+            rect, self.manager, fleet, input_mapper=self._mapper,
+            clear_orders_callback=clear_orders_callback
         )
 
     # =========================================================================

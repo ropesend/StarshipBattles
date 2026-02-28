@@ -19,13 +19,21 @@ from game.strategy.data.fleet import OrderType
 
 if TYPE_CHECKING:
     from game.ui.services.input_mapper import InputMapper
+    from typing import Callable
 
 class FleetOrdersWindow(pygame_gui.elements.UIWindow):
     """
     Window to manage a Fleet's orders.
     Allows re-ordering, deletion, undeletion, and clearing.
     """
-    def __init__(self, rect, manager, fleet, input_mapper: Optional['InputMapper'] = None):
+    def __init__(
+        self,
+        rect,
+        manager,
+        fleet,
+        input_mapper: Optional['InputMapper'] = None,
+        clear_orders_callback: Optional['Callable[[int], None]'] = None
+    ):
         super().__init__(
             rect=rect,
             manager=manager,
@@ -35,6 +43,8 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
         )
         self.fleet = fleet
         self._mapper = input_mapper
+        # PROJ-207 Phase 4: Callback to dispatch clear orders through command pipeline
+        self._clear_orders_callback = clear_orders_callback
 
         # Undo History: Stores (index, order_object) tuples
         self.deleted_history = []
@@ -380,10 +390,18 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
     # Let's assume for this task, I will implement a `handle_global_event` method on `FleetOrdersWindow` and call it from `StrategyScreen`.
     
     def handle_global_event(self, event):
-        """Handle events from the wider application (like dialog confirmations)."""
+        """Handle events from the wider application (like dialog confirmations).
+
+        PROJ-207 Phase 4: Clear orders now routes through command pipeline via callback.
+        """
         if event.type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
             if event.ui_element.object_ids[-1] == '#confirm_clear_orders':
-                self.fleet.clear_orders()
+                # PROJ-207 Phase 4: Use callback to dispatch command if available
+                if self._clear_orders_callback:
+                    self._clear_orders_callback(self.fleet.id)
+                else:
+                    # Fallback for backward compatibility (e.g., tests)
+                    self.fleet.clear_orders()
                 self.deleted_history.clear()
                 self.btn_undo.disable()
                 self.rebuild_list()

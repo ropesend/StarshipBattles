@@ -122,10 +122,13 @@ class StrategyBuildQueueManager:
     def _handle_fleet_build_queue_close(self, fleet: "Fleet") -> None:
         """Handle fleet build queue closing - auto-issue BUILD order if items in queue.
 
+        PROJ-207 Phase 4: Routes BUILD orders through command pipeline.
+
         Args:
             fleet: Fleet that was building
         """
-        from game.strategy.data.fleet import FleetOrder, OrderType
+        from game.strategy.data.fleet import OrderType
+        from game.strategy.engine.commands import IssueBuildOrderCommand, RemoveBuildOrderCommand
 
         if fleet.construction_queue:
             # Check if fleet already has BUILD order
@@ -135,11 +138,12 @@ class StrategyBuildQueueManager:
             )
             if not has_build_order:
                 logger.info(f"Auto-issuing BUILD order to fleet {fleet.id} ({len(fleet.construction_queue)} items in queue)")
-                fleet.orders.insert(0, FleetOrder(OrderType.BUILD))
-                fleet.path = []  # Clear movement path
+                cmd = IssueBuildOrderCommand(fleet_id=fleet.id)
+                self._screen.session.handle_command(cmd)
         else:
-            # Queue is empty - remove BUILD order if present
-            fleet.orders = [o for o in fleet.orders if o.type != OrderType.BUILD]
+            # Queue is empty - remove BUILD order if present via command pipeline
+            cmd = RemoveBuildOrderCommand(fleet_id=fleet.id)
+            self._screen.session.handle_command(cmd)
 
     def on_navigate_to_hex_build(self, hex_coord, source) -> None:
         """Navigate to the build queue screen for a specific hex and source.
