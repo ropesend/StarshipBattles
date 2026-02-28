@@ -25,10 +25,12 @@ class MockGalaxy:
 
 
 class MockSession:
-    def __init__(self, galaxy=None, empire=None):
+    def __init__(self, galaxy=None, empire=None, registries=None):
         self.savegame_path = "test_savegame"
         self.current_empire = empire or Empire(1, "Test Empire", (255, 0, 0))
         self.galaxy = galaxy or MockGalaxy()
+        # PROJ-211: Add registries for DI
+        self.registries = registries
 
     def handle_command(self, cmd):
         """Mock command handler."""
@@ -41,7 +43,7 @@ class TestBuildQueuePortraitLogging:
     PROJ-40: Updated to use DI injection for dependencies.
     """
 
-    def test_portrait_load_failure_logs_warning(self, caplog, mock_design_library, mock_design_loader):
+    def test_portrait_load_failure_logs_warning(self, caplog, mock_design_library, mock_design_loader, mock_registries):
         """Portrait loading failure should log warning with path context."""
         pygame.init()
         screen = pygame.display.set_mode((1024, 768))
@@ -72,7 +74,8 @@ class TestBuildQueuePortraitLogging:
         galaxy = MockGalaxy()
         galaxy._global_hex_planets[hex_coord] = [planet]
 
-        session = MockSession(galaxy=galaxy, empire=empire)
+        # PROJ-211: Pass registries for DI
+        session = MockSession(galaxy=galaxy, empire=empire, registries=mock_registries)
         on_close = MagicMock()
 
         from game.ui.screens.build_queue_screen import BuildQueueScreen
@@ -115,7 +118,7 @@ class TestBuildQueuePortraitLogging:
 
         pygame.quit()
 
-    def test_portrait_placeholder_fallback_no_spam(self, caplog, mock_design_library, mock_design_loader):
+    def test_portrait_placeholder_fallback_no_spam(self, caplog, mock_design_library, mock_design_loader, mock_registries):
         """When no portrait exists, fallback to placeholder without log spam."""
         pygame.init()
         screen = pygame.display.set_mode((1024, 768))
@@ -145,7 +148,8 @@ class TestBuildQueuePortraitLogging:
         galaxy = MockGalaxy()
         galaxy._global_hex_planets[hex_coord] = [planet]
 
-        session = MockSession(galaxy=galaxy, empire=empire)
+        # PROJ-211: Pass registries for DI
+        session = MockSession(galaxy=galaxy, empire=empire, registries=mock_registries)
 
         from game.ui.screens.build_queue_screen import BuildQueueScreen
         bq_screen = BuildQueueScreen(

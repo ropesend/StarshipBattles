@@ -5,6 +5,8 @@ PROJ-43: This service provides a facade for component and modifier access,
 allowing UI code to work with components without directly importing from
 game.simulation.components.component.
 
+PROJ-211: Strict DI - registry_provider is now required (no fallback).
+
 The service encapsulates:
 - Component registry access
 - Modifier registry access
@@ -12,8 +14,9 @@ The service encapsulates:
 """
 from typing import Any, Dict, List, Optional
 
-from game.core.registry import get_default_registry_provider
 from game.core.protocols import IRegistryProvider
+from game.core.exceptions import ValidationException
+from game.core.error_codes import ErrorCode
 
 
 class ComponentService:
@@ -23,30 +26,33 @@ class ComponentService:
     and modifier data without directly importing from the simulation layer.
 
     Usage:
-        service = ComponentService()
+        # PROJ-211: Strict DI - registry_provider is required
+        provider = get_default_registry_provider()  # Or inject from caller
+        service = ComponentService(provider)
         components = service.get_all_components()
         modifiers = service.get_modifier_registry()
     """
 
-    def __init__(self, registry_provider: Optional[IRegistryProvider] = None):
+    def __init__(self, registry_provider: IRegistryProvider):
         """Initialize the ComponentService.
 
-        This follows the standard UI service DI pattern:
-        - Parameter name: registry_provider (or registry_provider/registries for GameRegistries)
-        - Default: Optional with lazy resolution via get_default_registry_provider()
-        - Services may choose strict required pattern (raises ValueError if None)
-          when PROJ-50 explicitly mandated it (e.g., VehicleClassService).
-
         Args:
-            registry_provider: Optional registry provider for dependency injection.
-                If None, uses get_default_registry_provider().
+            registry_provider: Registry provider for dependency injection.
+                PROJ-211: This parameter is now required (strict DI).
+
+        Raises:
+            ValidationException: If registry_provider is None.
         """
+        if registry_provider is None:
+            raise ValidationException(
+                "registry_provider is required",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"service": "ComponentService", "parameter": "registry_provider"}
+            )
         self._provider = registry_provider
 
     def _get_provider(self) -> IRegistryProvider:
-        """Get the registry provider, using default if not injected."""
-        if self._provider is None:
-            self._provider = get_default_registry_provider()
+        """Get the registry provider."""
         return self._provider
 
     def get_all_components(self) -> List[Any]:

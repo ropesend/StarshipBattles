@@ -7,6 +7,8 @@ to fix layer violation: tkinter is a UI framework and doesn't belong in simulati
 DUP-UI2-001: Tkinter initialization now uses shared tkinter_utils module.
 ADR-UI2-001: Uses DesignLoaderAdapter for ship loading (TYPE_CHECKING for Ship type hints).
 
+PROJ-211: DesignLoaderAdapter now requires registry_provider. Uses lazy initialization.
+
 This module handles:
 - Saving ship designs to JSON files via file dialog
 - Loading ship designs from JSON files via file dialog
@@ -29,6 +31,26 @@ from game.ui.services.tkinter_utils import (
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
+    from game.core.registry import GameRegistries
+
+
+# PROJ-211: Lazy registries initialization (not available at import time)
+_cached_registries = None
+
+
+def _get_registries() -> 'GameRegistries':
+    """Get or create registries for DesignLoaderAdapter."""
+    global _cached_registries
+    if _cached_registries is None:
+        from game.core.registry import get_default_registry_provider, GameRegistries
+        provider = get_default_registry_provider()
+        _cached_registries = GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources=provider.get_resources(),
+        )
+    return _cached_registries
 
 
 class ShipIO:
@@ -47,9 +69,12 @@ class ShipIO:
 
     @classmethod
     def _get_design_loader(cls) -> DesignLoaderAdapter:
-        """Get or create the shared DesignLoaderAdapter instance."""
+        """Get or create the shared DesignLoaderAdapter instance.
+
+        PROJ-211: Now passes registries to DesignLoaderAdapter.
+        """
         if cls._design_loader is None:
-            cls._design_loader = DesignLoaderAdapter()
+            cls._design_loader = DesignLoaderAdapter(registry_provider=_get_registries())
         return cls._design_loader
 
     @staticmethod

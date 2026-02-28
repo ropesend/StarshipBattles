@@ -8,7 +8,8 @@ Tests order lifecycle management - advance, complete, cancel operations.
 import pytest
 from unittest.mock import MagicMock, patch
 
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 
 
@@ -67,120 +68,6 @@ class TestFleetOrderProcessorCreation:
 
         assert processor is not None
 
-    def test_fleet_order_processor_has_complete_order(self):
-        """FleetOrderProcessor has complete_order method."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
-
-        processor = FleetOrderProcessor()
-
-        assert hasattr(processor, 'complete_order')
-        assert callable(processor.complete_order)
-
-    def test_fleet_order_processor_has_cancel_order(self):
-        """FleetOrderProcessor has cancel_order method."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
-
-        processor = FleetOrderProcessor()
-
-        assert hasattr(processor, 'cancel_order')
-        assert callable(processor.cancel_order)
-
-
-# =============================================================================
-# Test: Order Completion
-# =============================================================================
-
-class TestOrderCompletion:
-    """Tests for complete_order method."""
-
-    def test_complete_order_pops_order(self, mock_fleet):
-        """complete_order pops the current order from queue."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
-
-        processor = FleetOrderProcessor()
-        order = FleetOrder(OrderType.MOVE, HexCoord(10, 0))
-        mock_fleet.get_current_order.return_value = order
-
-        processor.complete_order(mock_fleet)
-
-        mock_fleet.pop_order.assert_called()
-
-    def test_complete_order_returns_completed_order(self, mock_fleet):
-        """complete_order returns the order that was completed."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
-
-        processor = FleetOrderProcessor()
-        order = FleetOrder(OrderType.MOVE, HexCoord(10, 0))
-        mock_fleet.get_current_order.return_value = order
-
-        result = processor.complete_order(mock_fleet)
-
-        assert result == order
-
-    def test_complete_order_with_no_order(self, mock_fleet):
-        """complete_order with no current order returns None."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
-
-        processor = FleetOrderProcessor()
-        mock_fleet.get_current_order.return_value = None
-
-        result = processor.complete_order(mock_fleet)
-
-        assert result is None
-        mock_fleet.pop_order.assert_not_called()
-
-
-# =============================================================================
-# Test: Order Cancellation
-# =============================================================================
-
-class TestOrderCancellation:
-    """Tests for cancel_order method."""
-
-    def test_cancel_order_pops_order(self, mock_fleet):
-        """cancel_order pops the current order from queue."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
-
-        processor = FleetOrderProcessor()
-        order = FleetOrder(OrderType.MOVE, HexCoord(10, 0))
-        mock_fleet.get_current_order.return_value = order
-
-        processor.cancel_order(mock_fleet, reason="Invalid target")
-
-        mock_fleet.pop_order.assert_called()
-
-    def test_cancel_order_returns_cancelled_order(self, mock_fleet):
-        """cancel_order returns the order that was cancelled."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
-
-        processor = FleetOrderProcessor()
-        order = FleetOrder(OrderType.MOVE, HexCoord(10, 0))
-        mock_fleet.get_current_order.return_value = order
-
-        result = processor.cancel_order(mock_fleet, reason="Invalid target")
-
-        assert result == order
-
-    def test_cancel_order_with_no_order(self, mock_fleet):
-        """cancel_order with no current order returns None."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
-
-        processor = FleetOrderProcessor()
-        mock_fleet.get_current_order.return_value = None
-
-        result = processor.cancel_order(mock_fleet, reason="No order")
-
-        assert result is None
-
-    def test_cancel_all_orders_clears_all(self, mock_fleet):
-        """cancel_all_orders clears all orders from fleet."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
-
-        processor = FleetOrderProcessor()
-
-        processor.cancel_all_orders(mock_fleet, reason="Stranded")
-
-        mock_fleet.clear_orders.assert_called()
 
 
 # =============================================================================
@@ -456,24 +343,9 @@ class TestEndTurnOrderProcessing:
         assert result is True  # Fleet consumed
         mock_empire.add_colony.assert_called()
 
-    def test_process_end_turn_orders_join_fleet(self, mock_fleet, mock_empire, mock_galaxy):
-        """End-turn processing handles JOIN_FLEET orders."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
-
-        processor = FleetOrderProcessor()
-
-        target_fleet = MagicMock()
-        target_fleet.id = 2
-        target_fleet.location = HexCoord(5, 5)
-
-        mock_fleet.location = HexCoord(5, 5)
-        order = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
-        mock_fleet.get_current_order.return_value = order
-
-        result = processor.process_end_turn_orders(mock_fleet, mock_empire, mock_galaxy)
-
-        assert result is True  # Fleet consumed
-        mock_fleet.merge_with.assert_called()
+    # PROJ-207 EP-001: Removed test_process_end_turn_orders_join_fleet
+    # JOIN_FLEET is now handled ONLY by process_instant_orders(), not by
+    # process_end_turn_orders(). See TestInstantOrderProcessing tests instead.
 
     def test_process_end_turn_orders_no_order(self, mock_fleet, mock_empire, mock_galaxy):
         """End-turn processing with no order returns False."""
@@ -546,6 +418,51 @@ class TestInstantOrderProcessing:
 
         assert len(removed) == 0
         joining_fleet.merge_with.assert_not_called()
+
+    def test_process_instant_join_fleet_preserves_order_when_not_colocated(self, mock_empire, mock_galaxy):
+        """PROJ-207 EP-001: JOIN_FLEET order stays queued when fleets not co-located.
+
+        When a fleet has a JOIN_FLEET order but isn't at the target's location yet,
+        the order should remain in the queue (not be popped or cleared).
+        The preceding MOVE_TO_FLEET will bring the fleet to the target.
+        """
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        target_fleet = MagicMock()
+        target_fleet.id = 2
+        target_fleet.location = HexCoord(100, 100)  # Target is far away
+        target_fleet.get_current_order = MagicMock(return_value=None)
+
+        joining_fleet = MagicMock()
+        joining_fleet.id = 1
+        joining_fleet.location = HexCoord(0, 0)  # Fleet hasn't arrived yet
+        joining_fleet.merge_with = MagicMock()
+        joining_fleet.pop_order = MagicMock()
+        joining_fleet.clear_orders = MagicMock()
+
+        order = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
+        joining_fleet.get_current_order = MagicMock(return_value=order)
+
+        mock_empire.fleets = [joining_fleet, target_fleet]
+
+        processor.process_instant_orders([mock_empire])
+
+        # Order should NOT be popped or cleared - it waits for arrival
+        joining_fleet.pop_order.assert_not_called()
+        joining_fleet.clear_orders.assert_not_called()
+
+    def test_join_fleet_not_in_action_order_types(self):
+        """PROJ-207 EP-001: JOIN_FLEET is NOT in ACTION_ORDER_TYPES.
+
+        JOIN_FLEET should only be processed by the instant path, not by
+        tick-based action processing via ActionExecutionEngine.
+        """
+        from game.strategy.data.order_types import ACTION_ORDER_TYPES, OrderType
+
+        # JOIN_FLEET should NOT be in ACTION_ORDER_TYPES
+        assert OrderType.JOIN_FLEET not in ACTION_ORDER_TYPES
 
 
 # =============================================================================

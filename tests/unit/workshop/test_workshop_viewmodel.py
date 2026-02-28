@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch, call
 
 import pygame
 
-from game.core.registry import GameRegistries
+from game.core.registry import GameRegistries, get_default_registry_provider
 from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
 from tests.fixtures.paths import get_project_root, get_data_dir
 
@@ -43,10 +43,12 @@ def workshop_class_setup():
     # Load data for Ship creation
     from game.simulation.entities.ship_loader import initialize_ship_data
     from game.simulation.components.component import load_components, load_modifiers
-    initialize_ship_data(str(get_project_root()))
+    # PROJ-211: Pass registry_provider explicitly
+    provider = get_default_registry_provider()
+    initialize_ship_data(str(get_project_root()), registry_provider=provider)
     data_dir = get_data_dir()
-    load_components(str(data_dir / "components.json"))
-    load_modifiers(str(data_dir / "modifiers.json"))
+    load_components(str(data_dir / "components.json"), registry_provider=provider)
+    load_modifiers(str(data_dir / "modifiers.json"), registry_provider=provider)
 
     yield
 
@@ -62,8 +64,10 @@ def mock_registries(workshop_class_setup):
     from game.simulation.components.component import load_components_data, load_modifiers_data
     from game.simulation.entities.ship_loader import load_vehicle_classes_data
 
+    # PROJ-211: Only load_components_data needs registries
+    minimal_registries = GameRegistries(components={}, modifiers={}, vehicle_classes={}, resources={})
     return GameRegistries(
-        components=load_components_data(),
+        components=load_components_data(registries=minimal_registries),
         modifiers=load_modifiers_data(),
         vehicle_classes=load_vehicle_classes_data(),
         resources={}

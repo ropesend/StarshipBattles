@@ -107,18 +107,20 @@ class TestBattleResolverIntegration:
         fleet1 = MagicMock()
         fleet1.id = 1
         fleet1.has_ship_instances.return_value = True
-        fleet1.update_from_battle_results = MagicMock()
+        fleet1.battle = MagicMock()
+        fleet1.battle.update_from_battle_results = MagicMock()
 
         fleet2 = MagicMock()
         fleet2.id = 2
         fleet2.has_ship_instances.return_value = True
-        fleet2.update_from_battle_results = MagicMock()
+        fleet2.battle = MagicMock()
+        fleet2.battle.update_from_battle_results = MagicMock()
 
         engine._resolve_combat_simulated(fleet1, fleet2)
 
-        # Verify fleet.update_from_battle_results was called with survivors
-        fleet1.update_from_battle_results.assert_called_once_with([survivor0])
-        fleet2.update_from_battle_results.assert_called_once_with([survivor1])
+        # Verify fleet.battle.update_from_battle_results was called with survivors (PROJ-210)
+        fleet1.battle.update_from_battle_results.assert_called_once_with([survivor0])
+        fleet2.battle.update_from_battle_results.assert_called_once_with([survivor1])
 
     def test_draw_returns_fleet_with_more_survivors(self):
         """Draw (winner=None) returns fleet with more survivors."""

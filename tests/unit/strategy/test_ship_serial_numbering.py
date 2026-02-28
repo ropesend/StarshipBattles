@@ -82,16 +82,16 @@ class TestShipInstanceSerial:
             'expected_stats': {'max_hp': 100, 'mass': 500}
         }
 
-    def test_ship_instance_has_serial_field(self, design_data):
+    def test_ship_instance_has_serial_field(self, design_data, ship_factory):
         """ShipInstance should have a serial field."""
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
         # Serial should be None by default if not provided
         assert hasattr(instance, 'serial')
         assert instance.serial is None
 
-    def test_serial_saved_to_dict(self, design_data):
+    def test_serial_saved_to_dict(self, design_data, ship_factory):
         """Serial should be included in to_dict() output."""
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
         instance.serial = 42
 
         data = instance.to_dict()
@@ -99,9 +99,9 @@ class TestShipInstanceSerial:
         assert 'serial' in data
         assert data['serial'] == 42
 
-    def test_serial_restored_from_dict(self, design_data):
+    def test_serial_restored_from_dict(self, design_data, ship_factory):
         """Serial should be restored by from_dict()."""
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
         instance.serial = 123
 
         data = instance.to_dict()
@@ -136,28 +136,28 @@ class TestShipInstanceDisplayId:
             'expected_stats': {'max_hp': 100}
         }
 
-    def test_display_id_format(self, design_data):
+    def test_display_id_format(self, design_data, ship_factory):
         """Display ID should be 'DesignName-000001' format."""
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
         instance.serial = 1
 
         display_id = instance.get_display_id()
 
         assert display_id == "Destroyer-000001"
 
-    def test_display_id_with_larger_serial(self, design_data):
+    def test_display_id_with_larger_serial(self, design_data, ship_factory):
         """Display ID should pad serial to 6 digits."""
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
         instance.serial = 1034
 
         display_id = instance.get_display_id()
 
         assert display_id == "Destroyer-001034"
 
-    def test_display_id_uses_design_name(self):
+    def test_display_id_uses_design_name(self, ship_factory):
         """Display ID should use design name, not instance name."""
         design_data = {'name': 'Cruiser', 'expected_stats': {'max_hp': 200}}
-        instance = ShipInstance.create(design_data, owner_id=0, name="USS Enterprise")
+        instance = ship_factory(design_data, owner_id=0, name="USS Enterprise")
         instance.serial = 7
 
         display_id = instance.get_display_id()
@@ -165,9 +165,9 @@ class TestShipInstanceDisplayId:
         # Should use design name "Cruiser", not instance name "USS Enterprise"
         assert display_id == "Cruiser-000007"
 
-    def test_display_id_returns_none_without_serial(self, design_data):
+    def test_display_id_returns_none_without_serial(self, design_data, ship_factory):
         """Display ID should return None if serial is not set."""
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
         instance.serial = None
 
         display_id = instance.get_display_id()
@@ -191,29 +191,29 @@ class TestShipCreationWithEmpire:
             'expected_stats': {'max_hp': 100}
         }
 
-    def test_create_with_empire_assigns_serial(self, design_data, empire):
+    def test_create_with_empire_assigns_serial(self, design_data, empire, ship_factory):
         """Creating ship with empire should automatically assign serial."""
-        instance = ShipInstance.create(design_data, owner_id=0, empire=empire)
+        instance = ship_factory(design_data, owner_id=0, empire=empire)
 
         assert instance.serial == 1
 
-    def test_create_with_empire_increments_serial(self, design_data, empire):
+    def test_create_with_empire_increments_serial(self, design_data, empire, ship_factory):
         """Multiple ships with same design get incrementing serials."""
-        instance1 = ShipInstance.create(design_data, owner_id=0, empire=empire)
-        instance2 = ShipInstance.create(design_data, owner_id=0, empire=empire)
-        instance3 = ShipInstance.create(design_data, owner_id=0, empire=empire)
+        instance1 = ship_factory(design_data, owner_id=0, empire=empire)
+        instance2 = ship_factory(design_data, owner_id=0, empire=empire)
+        instance3 = ship_factory(design_data, owner_id=0, empire=empire)
 
         assert instance1.serial == 1
         assert instance2.serial == 2
         assert instance3.serial == 3
 
-    def test_create_without_empire_has_no_serial(self, design_data):
+    def test_create_without_empire_has_no_serial(self, design_data, ship_factory):
         """Creating ship without empire should leave serial as None."""
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
 
         assert instance.serial is None
 
-    def test_create_with_empire_uses_design_id_for_counter(self, empire):
+    def test_create_with_empire_uses_design_id_for_counter(self, empire, ship_factory):
         """Serial counter should use design_id, not design name."""
         design_data = {
             'name': 'Destroyer MK1',  # Display name
@@ -221,13 +221,13 @@ class TestShipCreationWithEmpire:
         }
 
         # Create with explicit design_id
-        instance1 = ShipInstance.create(
+        instance1 = ship_factory(
             design_data,
             owner_id=0,
             design_id="destroyer_mk1_v2",
             empire=empire
         )
-        instance2 = ShipInstance.create(
+        instance2 = ship_factory(
             design_data,
             owner_id=0,
             design_id="destroyer_mk1_v2",
@@ -238,7 +238,7 @@ class TestShipCreationWithEmpire:
         assert instance2.serial == 2
 
         # Different design_id should start at 1
-        instance3 = ShipInstance.create(
+        instance3 = ship_factory(
             design_data,
             owner_id=0,
             design_id="different_design",

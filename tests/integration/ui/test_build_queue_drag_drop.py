@@ -19,10 +19,81 @@ class MockGalaxy:
 
 
 class MockSession:
-    def __init__(self, galaxy=None, empire=None):
+    def __init__(self, galaxy=None, empire=None, registries=None):
         self.save_path = "test_savegame"
         self.current_empire = empire or Empire(1, "Test Empire", (255, 0, 0))
         self.galaxy = galaxy or MockGalaxy()
+        # PROJ-211: Add registries for DI
+        self.registries = registries
+        # PROJ-208: Track commands for test verification
+        self.commands_handled = []
+
+    def handle_command(self, cmd):
+        """Mock command handler that executes queue commands.
+
+        PROJ-208: Enables queue mutation tests to work with command pattern.
+        """
+        from game.core.validation import ValidationResult
+        self.commands_handled.append(cmd)
+
+        # Execute AddToConstructionQueueCommand to maintain queue behavior
+        from game.strategy.engine.commands import (
+            AddToConstructionQueueCommand,
+            RemoveFromConstructionQueueCommand,
+        )
+        if isinstance(cmd, AddToConstructionQueueCommand):
+            queue = self._resolve_queue(cmd.entity_id, cmd.entity_type, getattr(cmd, 'queue_id', None))
+            if queue is not None:
+                queue_item = {
+                    "design_id": cmd.design_id,
+                    "type": cmd.category,
+                    "turns_remaining": 1.0,
+                    "total_cost": {},
+                    "resources_consumed": {},
+                }
+                if cmd.target_planet_id is not None:
+                    queue_item["target_planet_id"] = cmd.target_planet_id
+                if cmd.index is not None:
+                    queue.insert(cmd.index, queue_item)
+                else:
+                    queue.append(queue_item)
+
+        # PROJ-208: Execute RemoveFromConstructionQueueCommand for drag operations
+        elif isinstance(cmd, RemoveFromConstructionQueueCommand):
+            queue = self._resolve_queue(cmd.entity_id, cmd.entity_type, None)
+            if queue is not None and 0 <= cmd.item_index < len(queue):
+                queue.pop(cmd.item_index)
+
+        return ValidationResult()
+
+    def _resolve_entity(self, entity_id, entity_type):
+        """Resolve entity by ID and type."""
+        if entity_type == "planet":
+            for planets in self.galaxy._global_hex_planets.values():
+                for planet in planets:
+                    if getattr(planet, 'id', None) == entity_id:
+                        return planet
+        elif entity_type == "fleet":
+            return self.galaxy.fleets_by_id.get(entity_id)
+        return None
+
+    def _resolve_queue(self, entity_id, entity_type, queue_id):
+        """Resolve the construction queue, handling multi-queue entities."""
+        entity = self._resolve_entity(entity_id, entity_type)
+        if entity is None:
+            return None
+
+        if queue_id is None:
+            return getattr(entity, 'construction_queue', None)
+
+        # Check if queue_id matches a facility's instance_id
+        if hasattr(entity, 'facilities'):
+            for facility in entity.facilities:
+                if getattr(facility, 'instance_id', None) == queue_id:
+                    return getattr(facility, 'construction_queue', None)
+
+        # Fallback to entity's main queue
+        return getattr(entity, 'construction_queue', None)
 
 @pytest.fixture
 def mock_design_library():
@@ -56,11 +127,12 @@ def mock_design_loader():
 
 
 @pytest.fixture
-def build_queue_screen(mock_design_library, mock_design_loader):
+def build_queue_screen(mock_design_library, mock_design_loader, mock_registries):
     """Create BuildQueueScreen for testing.
 
     PROJ-40: Updated to use DI injection.
     PROJ-109: Updated to provide required hex_coord, galaxy, empire parameters.
+    PROJ-211: Updated to pass registries for DI.
     """
     pygame.init()
     screen = pygame.display.set_mode((1024, 768))
@@ -90,7 +162,7 @@ def build_queue_screen(mock_design_library, mock_design_loader):
     galaxy = MockGalaxy()
     galaxy._global_hex_planets[hex_coord] = [planet]
 
-    session = MockSession(galaxy=galaxy, empire=empire)
+    session = MockSession(galaxy=galaxy, empire=empire, registries=mock_registries)
     on_close = MagicMock()
 
     bq_screen = BuildQueueScreen(

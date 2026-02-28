@@ -19,7 +19,7 @@ Command Dispatch:
     handle_command(cmd) routes commands to handlers based on type:
     - IssueColonizeCommand → _handle_colonize_command
     - IssueMoveCommand → _handle_move_command
-    - IssueBuildShipCommand → _handle_build_ship_command
+    - AddToConstructionQueueCommand → AddToConstructionQueueCommandHandler
 
     Each handler:
     1. Resolves entity references (fleet, planet)
@@ -53,6 +53,7 @@ if TYPE_CHECKING:
 import logging
 
 from game.core.event_logging import set_event_handler
+from game.core.registry import GameRegistries, get_default_registry_provider
 from game.strategy.events import Event, EventLog
 
 logger = logging.getLogger(__name__)
@@ -81,8 +82,17 @@ class GameSession:
         self._event_log = EventLog()
         set_event_handler(self._create_event_handler())
 
+        # PROJ-211: Resolve registries at init time, pass to TurnEngine
+        provider = get_default_registry_provider()
+        self._registries = GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources=provider.get_resources(),
+        )
+
         # Engine
-        self.turn_engine = TurnEngine()
+        self.turn_engine = TurnEngine(registries=self._registries)
         self._command_registry = create_default_registry()
 
         # Initialization via GameInitializer (PROJ-87 Phase 6)
@@ -103,6 +113,11 @@ class GameSession:
     def event_log(self) -> EventLog:
         """The session's event log for recording game events."""
         return self._event_log
+
+    @property
+    def registries(self) -> GameRegistries:
+        """The session's game registries for DI to sub-systems."""
+        return self._registries
 
     def _create_event_handler(self):
         """Create a callback for the global log_event() system.
@@ -169,8 +184,8 @@ class GameSession:
         from game.strategy.data.pathfinding import find_hybrid_path, strip_start_hex
 
         # Log warp capability for debugging navigation issues (BUG-45)
-        # Fleet always has can_use_warp() method
-        logger.debug(f"preview_fleet_path: fleet={fleet.id}, can_use_warp={fleet.can_use_warp()}, target={target_hex}")
+        # Fleet always has capabilities.can_use_warp() method
+        logger.debug(f"preview_fleet_path: fleet={fleet.id}, can_use_warp={fleet.capabilities.can_use_warp()}, target={target_hex}")
 
         path = find_hybrid_path(self.galaxy, fleet.location, target_hex, fleet=fleet)
 
@@ -288,8 +303,17 @@ class GameSession:
         session.turn_number = data.get('turn_number', 1)
         session.save_path = data.get('save_path')
 
+        # PROJ-211: Resolve registries at init time, pass to TurnEngine
+        provider = get_default_registry_provider()
+        session._registries = GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources=provider.get_resources(),
+        )
+
         # Initialize turn engine and command registry
-        session.turn_engine = TurnEngine()
+        session.turn_engine = TurnEngine(registries=session._registries)
         session._command_registry = create_default_registry()
 
         # Restore event log (PROJ-77)
@@ -322,6 +346,14 @@ class GameSession:
 
         # Restore human player IDs
         session.human_player_ids = data.get('human_player_ids', [0, 1])
+
+        # Step 3: Resolve fleet order references (PROJ-207)
+        # Fleet orders targeting other fleets or planets are stored as marker dicts
+        # (_fleet_ref, _planet_ref) during deserialization. Now that all empires
+        # and galaxy are loaded, resolve these to actual object references.
+        for empire in session.empires:
+            for fleet in empire.fleets:
+                fleet.resolve_order_references(session.galaxy, session.empires)
 
         # Set convenience references
         session.player_empire = session.empires[0] if len(session.empires) > 0 else None

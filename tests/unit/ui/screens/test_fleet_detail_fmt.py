@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 from game.ui.screens.strategy_detail_fmt import format_fleet_info
-from game.strategy.data.fleet import OrderType
+from game.strategy.data.order_types import OrderType
 
 
 # --- Mock Helpers ---
@@ -25,7 +25,7 @@ def _make_mock_fleet(fleet_id=1, owner_id=0, ships=None, orders=None,
     fleet.ships = ships or []
     fleet.orders = orders or []
     fleet.speed = speed
-    fleet.fuel_endurance.return_value = fuel_endurance
+    fleet.resources.fuel_endurance.return_value = fuel_endurance
     fleet.location = MagicMock(__str__=lambda self: "(0, 0)")
     fleet.construction_queue = []
     return fleet

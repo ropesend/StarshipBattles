@@ -18,6 +18,7 @@ __all__ = [
     "ship_has_ability",
     "find_ship_with_ability",
     "count_ability",
+    "list_ship_abilities",
 ]
 
 
@@ -198,3 +199,26 @@ def count_ability(
             count += 1
 
     return count
+
+
+def list_ship_abilities(
+    ship: 'ShipInstance',
+    component_registry: Dict[str, Any]
+) -> List[str]:
+    """Get all unique ability names from a ship's components.
+
+    Args:
+        ship: Ship object with design_data attribute
+        component_registry: Component registry for ability lookup
+
+    Returns:
+        List of unique ability names found on the ship
+    """
+    abilities_set: set = set()
+
+    for _comp_entry, _comp_def, abilities in iterate_design_components(
+        ship.design_data, component_registry
+    ):
+        abilities_set.update(abilities.keys())
+
+    return list(abilities_set)

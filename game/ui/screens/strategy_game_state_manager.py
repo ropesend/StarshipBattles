@@ -74,7 +74,8 @@ class StrategyGameStateManager:
         self._screen._facade.process_turn()
 
         # Auto-save after turn processing
-        if self._screen.session.save_path:
+        # PROJ-208: Use facade.get_save_path() instead of session.save_path
+        if self._screen._facade.get_save_path():
             success, message, _ = SaveGameService.save_game(self._screen.session)
             if success:
                 logger.info(f"Auto-saved: {message}")
@@ -106,24 +107,25 @@ class StrategyGameStateManager:
 
         PROJ-75 Phase 6: Display a popup listing entities scuttled due to
         maintenance failure, filtered to the current player's empire.
+
+        PROJ-208: Uses facade.get_scuttle_events() instead of direct turn_engine access.
         """
-        turn_engine = self._screen.session.turn_engine
-        if turn_engine is None:
-            return
-        events = turn_engine.last_scuttle_events
+        # PROJ-208: Use facade method instead of session.turn_engine.last_scuttle_events
+        events = self._screen._facade.get_scuttle_events()
         if not events:
             return
 
         # Filter to current player's empire
+        # PROJ-208: Events are now dicts from facade, use dict access
         current_id = self._screen.current_empire.id
-        player_events = [e for e in events if e.empire_id == current_id]
+        player_events = [e for e in events if e['empire_id'] == current_id]
         if not player_events:
             return
 
         # Build notification message
         lines = []
         for ev in player_events:
-            lines.append(f"- {ev.entity_name} ({ev.entity_type}) at {ev.location}")
+            lines.append(f"- {ev['entity_name']} ({ev['entity_type']}) at {ev['location']}")
         body = "<br>".join(lines)
         html = f"<b>Maintenance Failure - Scuttled:</b><br>{body}"
 

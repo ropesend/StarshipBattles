@@ -6,7 +6,8 @@ PROJ-187: Resolves action_time for tick-based order execution.
 import pytest
 from unittest.mock import MagicMock
 
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.strategy.services.action_time_resolver import ActionTimeResolver
 
 

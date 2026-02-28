@@ -15,6 +15,7 @@ def _make_build_queue_manager():
     mock_screen = MagicMock()
     mock_screen.session = MagicMock()
     mock_screen.session.galaxy = MagicMock()
+    mock_screen.facade = MagicMock()  # PROJ-212: facade for command dispatch
     mock_screen.ui = MagicMock()
     mock_screen.ui.manager = MagicMock()
     mock_screen.selected_object = None
@@ -88,9 +89,11 @@ class TestOnBuildYardClick:
         screen._get_object_asset = MagicMock(return_value=None)
         screen.session.galaxy.get_system_of_planet.return_value = None
 
-        with patch('game.ui.screens.build_queue_screen.BuildQueueScreen') as MockBQS, \
-             patch('game.strategy.systems.design_library.DesignLibrary'), \
-             patch('game.ui.services.design_loader_adapter.DesignLoaderAdapter'):
+        # PROJ-208: is_planet uses Protocol isinstance, need to patch it for mocks
+        with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'), \
+             patch('game.ui.screens.strategy_build_queue_manager.is_planet', return_value=True):
             manager.on_build_yard_click()
 
         MockBQS.assert_called_once()
@@ -136,27 +139,36 @@ class TestOnBuildQueueClose:
 
 
 class TestHandleFleetBuildQueueClose:
-    """Test _handle_fleet_build_queue_close() method."""
+    """Test _handle_fleet_build_queue_close() method.
 
-    def test_adds_build_order_when_queue_has_items(self):
-        """Should add BUILD order when construction queue is not empty."""
+    PROJ-207 Phase 4: Tests now verify command dispatch instead of direct fleet manipulation.
+    """
+
+    def test_dispatches_build_command_when_queue_has_items(self):
+        """Should dispatch IssueBuildOrderCommand when construction queue is not empty."""
+        from game.strategy.engine.commands import IssueBuildOrderCommand
         manager, screen = _make_build_queue_manager()
 
         fleet = MagicMock()
+        fleet.id = 42
         fleet.construction_queue = [MagicMock()]  # Non-empty queue
         fleet.orders = []
 
         manager._handle_fleet_build_queue_close(fleet)
 
-        # Should have added a BUILD order
-        assert len(fleet.orders) == 1
+        # Should have dispatched IssueBuildOrderCommand
+        screen.facade.handle_command.assert_called_once()
+        cmd = screen.facade.handle_command.call_args[0][0]
+        assert isinstance(cmd, IssueBuildOrderCommand)
+        assert cmd.fleet_id == 42
 
-    def test_does_not_duplicate_build_order(self):
-        """Should not add BUILD order if fleet already has one."""
-        from game.strategy.data.fleet import FleetOrder, OrderType
+    def test_does_not_dispatch_build_command_if_fleet_already_has_build_order(self):
+        """Should not dispatch command if fleet already has BUILD order."""
+        from game.strategy.data.order_types import OrderType
         manager, screen = _make_build_queue_manager()
 
         fleet = MagicMock()
+        fleet.id = 42
         fleet.construction_queue = [MagicMock()]
         existing_build_order = MagicMock()
         existing_build_order.type = OrderType.BUILD
@@ -164,24 +176,26 @@ class TestHandleFleetBuildQueueClose:
 
         manager._handle_fleet_build_queue_close(fleet)
 
-        # Should still have just 1 order
-        assert len(fleet.orders) == 1
+        # Should NOT dispatch command
+        screen.facade.handle_command.assert_not_called()
 
-    def test_removes_build_order_when_queue_empty(self):
-        """Should remove BUILD order when construction queue is empty."""
-        from game.strategy.data.fleet import OrderType
+    def test_dispatches_remove_command_when_queue_empty(self):
+        """Should dispatch RemoveBuildOrderCommand when construction queue is empty."""
+        from game.strategy.engine.commands import RemoveBuildOrderCommand
         manager, screen = _make_build_queue_manager()
 
         fleet = MagicMock()
+        fleet.id = 99
         fleet.construction_queue = []  # Empty queue
-        build_order = MagicMock()
-        build_order.type = OrderType.BUILD
-        fleet.orders = [build_order]
+        fleet.orders = []
 
         manager._handle_fleet_build_queue_close(fleet)
 
-        # BUILD order should be removed
-        assert fleet.orders == []
+        # Should have dispatched RemoveBuildOrderCommand
+        screen.facade.handle_command.assert_called_once()
+        cmd = screen.facade.handle_command.call_args[0][0]
+        assert isinstance(cmd, RemoveBuildOrderCommand)
+        assert cmd.fleet_id == 99
 
 
 class TestOnFleetBuildClick:
@@ -218,9 +232,11 @@ class TestOnFleetBuildClick:
         screen.selected_object = mock_fleet
         screen._get_object_asset = MagicMock(return_value=None)
 
-        with patch('game.ui.screens.build_queue_screen.BuildQueueScreen') as MockBQS, \
-             patch('game.strategy.systems.design_library.DesignLibrary'), \
-             patch('game.ui.services.design_loader_adapter.DesignLoaderAdapter'):
+        # PROJ-208: is_fleet uses Protocol isinstance, need to patch it for mocks
+        with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'), \
+             patch('game.ui.screens.strategy_build_queue_manager.is_fleet', return_value=True):
             manager.on_fleet_build_click()
 
         MockBQS.assert_called_once()
@@ -264,9 +280,9 @@ class TestOnNavigateToHexBuild:
         mock_source.owner_entity = MagicMock()
         mock_source.display_name = "Test Planet"
 
-        with patch('game.ui.screens.build_queue_screen.BuildQueueScreen') as MockBQS, \
-             patch('game.strategy.systems.design_library.DesignLibrary'), \
-             patch('game.ui.services.design_loader_adapter.DesignLoaderAdapter'):
+        with patch('game.ui.screens.strategy_build_queue_manager.BuildQueueScreen') as MockBQS, \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLibrary'), \
+             patch('game.ui.screens.strategy_build_queue_manager.DesignLoaderAdapter'):
             manager.on_navigate_to_hex_build(mock_hex, mock_source)
 
         MockBQS.assert_called_once()

@@ -9,8 +9,13 @@ These tests verify that the new pure loading functions:
 import pytest
 import copy
 
-from game.core.registry import RegistryManager
+from game.core.registry import RegistryManager, GameRegistries
 from game.core.singleton import SingletonMeta
+
+
+def _make_minimal_registries():
+    """Create minimal registries for testing pure load functions."""
+    return GameRegistries(components={}, modifiers={}, vehicle_classes={}, resources={})
 
 
 @pytest.fixture(autouse=True)
@@ -33,7 +38,8 @@ class TestLoadComponentsData:
         """load_components_data() should return a dictionary."""
         from game.simulation.components.component import load_components_data
 
-        result = load_components_data("data/components.json")
+        # PROJ-211: registries is now required
+        result = load_components_data("data/components.json", registries=_make_minimal_registries())
 
         assert isinstance(result, dict)
 
@@ -41,7 +47,8 @@ class TestLoadComponentsData:
         """load_components_data() should return component objects keyed by ID."""
         from game.simulation.components.component import load_components_data, Component
 
-        result = load_components_data("data/components.json")
+        # PROJ-211: registries is now required
+        result = load_components_data("data/components.json", registries=_make_minimal_registries())
 
         assert len(result) > 0
         # Check that values are Component instances
@@ -58,8 +65,8 @@ class TestLoadComponentsData:
         registry = RegistryManager.instance().components
         assert len(registry) == 0
 
-        # Call pure function
-        result = load_components_data("data/components.json")
+        # Call pure function - PROJ-211: registries is now required
+        result = load_components_data("data/components.json", registries=_make_minimal_registries())
 
         # Registry should still be empty
         assert len(registry) == 0
@@ -70,8 +77,9 @@ class TestLoadComponentsData:
         """Each call to load_components_data() should return fresh instances."""
         from game.simulation.components.component import load_components_data
 
-        result1 = load_components_data("data/components.json")
-        result2 = load_components_data("data/components.json")
+        # PROJ-211: registries is now required
+        result1 = load_components_data("data/components.json", registries=_make_minimal_registries())
+        result2 = load_components_data("data/components.json", registries=_make_minimal_registries())
 
         # Should be equal but not identical
         assert set(result1.keys()) == set(result2.keys())
@@ -83,7 +91,8 @@ class TestLoadComponentsData:
         """load_components_data() should include known components like 'bridge'."""
         from game.simulation.components.component import load_components_data
 
-        result = load_components_data("data/components.json")
+        # PROJ-211: registries is now required
+        result = load_components_data("data/components.json", registries=_make_minimal_registries())
 
         assert "bridge" in result
         bridge = result["bridge"]
@@ -331,8 +340,8 @@ class TestLoaderPureFunctions:
         """load_components_data() should return components including 'bridge'."""
         from game.simulation.components.component import load_components_data
 
-        # Call pure function - no singleton access
-        result = load_components_data("data/components.json")
+        # Call pure function - PROJ-211: registries is now required
+        result = load_components_data("data/components.json", registries=_make_minimal_registries())
 
         # Verify data is returned correctly
         assert len(result) > 0

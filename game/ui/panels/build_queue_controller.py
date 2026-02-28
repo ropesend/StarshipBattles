@@ -26,6 +26,10 @@ if TYPE_CHECKING:
     from game.ui.services.design_loader_adapter import DesignLoaderAdapter
     from game.ui.panels.design_report_panel import DesignReportPanel
 
+# Type alias for the add-to-queue callback
+# Signature: (entity_id, entity_type, design_id, category, index, target_planet_id, queue_id) -> None
+AddToQueueCallback = Callable[[int, str, str, str, Optional[int], Optional[int], Optional[str]], None]
+
 # Category-to-build-capability mapping
 _SHIP_CATEGORIES = {"ship", "satellite", "fighter"}
 _COMPLEX_CATEGORIES = {"complex"}
@@ -61,6 +65,7 @@ class BuildQueueController:
         galaxy: Optional['Galaxy'] = None,
         empire: Optional['Empire'] = None,
         on_planet_selection_needed: Optional[Callable] = None,
+        add_to_queue_callback: Optional['AddToQueueCallback'] = None,
     ):
         """
         Initialize the controller.
@@ -75,6 +80,7 @@ class BuildQueueController:
             galaxy: Galaxy instance for planet lookup (PROJ-79)
             empire: Empire instance for ownership check (PROJ-79)
             on_planet_selection_needed: Callback when planet selection is needed (PROJ-79)
+            add_to_queue_callback: PROJ-208 callback to dispatch AddToConstructionQueueCommand
         """
         self.build_context = build_context
         self.design_library = design_library
@@ -87,6 +93,9 @@ class BuildQueueController:
         self.galaxy = galaxy
         self.empire = empire
         self.on_planet_selection_needed = on_planet_selection_needed
+
+        # PROJ-208: Command dispatch callback
+        self._add_to_queue_callback = add_to_queue_callback
 
         # Category filter state
         self.selected_category = "complex"
@@ -351,14 +360,39 @@ class BuildQueueController:
 
         return None
 
+    def _get_entity_info(self, source: 'BuildQueueSource') -> tuple:
+        """Extract entity_id, entity_type, and queue_id from a BuildQueueSource.
+
+        PROJ-208: Used to construct AddToConstructionQueueCommand.
+
+        Args:
+            source: The BuildQueueSource to extract info from.
+
+        Returns:
+            Tuple of (entity_id, entity_type, queue_id).
+        """
+        entity_type = source.context_type
+        queue_id = source.queue_id  # For multi-queue support (e.g., shipyard facilities)
+        if entity_type == "planet":
+            # For planet sources, use the planet_id
+            entity_id = source.planet_id
+            if entity_id is None:
+                # Fallback to owner_entity.id
+                entity_id = getattr(source.owner_entity, 'id', None)
+        else:  # fleet
+            entity_id = getattr(source.owner_entity, 'id', None)
+        return entity_id, entity_type, queue_id
+
     def _add_to_single_queue(
         self, design_id: str, turns: Optional[float], category: str, index: Optional[int]
     ) -> None:
         """Add item to the active queue source.
 
+        PROJ-208: Routes through AddToConstructionQueueCommand via callback.
+
         Args:
             design_id: ID of the design to build.
-            turns: Number of turns to complete (calculated if None).
+            turns: Number of turns to complete (unused, handler calculates).
             category: Design category.
             index: Optional insertion index.
         """
@@ -391,30 +425,18 @@ class BuildQueueController:
                 logger.warning("Planet selection needed but no callback provided")
                 return
 
-        # Calculate build time if not provided
-        build_rate = source.build_rate
-        if turns is None:
-            turns = self._calculate_build_turns(design_id, build_rate)
-
-        queue_item = {
-            "design_id": design_id,
-            "type": category,
-            "turns_remaining": turns
-        }
-        # Add cost tracking fields
-        queue_item.update(self._build_cost_tracking(design_id))
-
-        # PROJ-79: Add target_planet_id for complexes
+        # PROJ-208: Get entity info and dispatch via command callback
+        entity_id, entity_type, queue_id = self._get_entity_info(source)
         target_planet_id = self._get_target_planet_id(source, category)
-        if target_planet_id is not None:
-            queue_item["target_planet_id"] = target_planet_id
 
-        if index is not None:
-            source.construction_queue.insert(index, queue_item)
-            logger.info(f"Inserted {design_id} into '{source.display_name}' at position {index}")
+        if self._add_to_queue_callback and entity_id is not None:
+            self._add_to_queue_callback(
+                entity_id, entity_type, design_id, category, index, target_planet_id, queue_id
+            )
+            action = "Inserted" if index is not None else "Added"
+            logger.info(f"{action} {design_id} to '{source.display_name}' via command")
         else:
-            source.construction_queue.append(queue_item)
-            logger.info(f"Added {design_id} to '{source.display_name}' ({turns} turns)")
+            logger.warning(f"Cannot add to queue: callback={self._add_to_queue_callback}, entity_id={entity_id}")
 
     def _add_item_with_target_planet(
         self,
@@ -427,6 +449,7 @@ class BuildQueueController:
         """Add item with specified target_planet_id.
 
         PROJ-79: Called after planet selection callback.
+        PROJ-208: Routes through AddToConstructionQueueCommand via callback.
 
         Args:
             source: The BuildQueueSource to add to.
@@ -435,33 +458,28 @@ class BuildQueueController:
             target_planet_id: ID of the planet to receive the complex.
             index: Optional insertion index.
         """
-        build_rate = source.build_rate
-        turns = self._calculate_build_turns(design_id, build_rate)
+        # PROJ-208: Get entity info and dispatch via command callback
+        entity_id, entity_type, queue_id = self._get_entity_info(source)
 
-        queue_item = {
-            "design_id": design_id,
-            "type": category,
-            "turns_remaining": turns,
-            "target_planet_id": target_planet_id,
-        }
-        queue_item.update(self._build_cost_tracking(design_id))
-
-        if index is not None:
-            source.construction_queue.insert(index, queue_item)
-            logger.info(f"Inserted {design_id} into '{source.display_name}' at position {index} (target: planet {target_planet_id})")
+        if self._add_to_queue_callback and entity_id is not None:
+            self._add_to_queue_callback(
+                entity_id, entity_type, design_id, category, index, target_planet_id, queue_id
+            )
+            action = "Inserted" if index is not None else "Added"
+            logger.info(f"{action} {design_id} to '{source.display_name}' via command (target: planet {target_planet_id})")
         else:
-            source.construction_queue.append(queue_item)
-            logger.info(f"Added {design_id} to '{source.display_name}' ({turns} turns, target: planet {target_planet_id})")
+            logger.warning(f"Cannot add to queue with target planet: callback={self._add_to_queue_callback}, entity_id={entity_id}")
 
     def _add_to_multiple_queues(self, design_id: str, turns: Optional[float], category: str) -> None:
         """Add item to all compatible selected queue sources.
 
+        PROJ-208: Routes through AddToConstructionQueueCommand via callback.
         Skips sources that cannot build the given category. Index is not
         supported in multi-queue mode (always appends).
 
         Args:
             design_id: ID of the design to build.
-            turns: Number of turns to complete (calculated per-source if None).
+            turns: Number of turns to complete (unused, handler calculates).
             category: Design category.
         """
         added_count = 0
@@ -476,23 +494,21 @@ class BuildQueueController:
                 skipped_count += 1
                 continue
 
-            # Calculate build time per-source if not provided
-            source_turns = turns
-            if source_turns is None:
-                source_turns = self._calculate_build_turns(design_id, source.build_rate)
+            # PROJ-208: Get entity info and dispatch via command callback
+            entity_id, entity_type, queue_id = self._get_entity_info(source)
 
-            queue_item = {
-                "design_id": design_id,
-                "type": category,
-                "turns_remaining": source_turns
-            }
-            # Add cost tracking fields
-            queue_item.update(self._build_cost_tracking(design_id))
-            source.construction_queue.append(queue_item)
-            added_count += 1
+            if self._add_to_queue_callback and entity_id is not None:
+                # Multi-queue mode: always appends (index=None), no target_planet_id
+                self._add_to_queue_callback(
+                    entity_id, entity_type, design_id, category, None, None, queue_id
+                )
+                added_count += 1
+            else:
+                logger.warning(f"Cannot add to queue '{source.display_name}': callback={self._add_to_queue_callback}, entity_id={entity_id}")
+                skipped_count += 1
 
         logger.info(
-            f"Multi-queue add: {design_id} added to {added_count} queue(s), "
+            f"Multi-queue add: {design_id} added to {added_count} queue(s) via command, "
             f"{skipped_count} skipped"
         )
 
@@ -501,11 +517,12 @@ class BuildQueueController:
     ) -> None:
         """Add item to build_context.construction_queue (fallback mode).
 
+        PROJ-208: Routes through AddToConstructionQueueCommand via callback.
         Used when no queue source is explicitly set.
 
         Args:
             design_id: ID of the design to build.
-            turns: Number of turns to complete (calculated if None).
+            turns: Number of turns to complete (unused, handler calculates).
             category: Design category.
             index: Optional insertion index.
         """
@@ -517,26 +534,19 @@ class BuildQueueController:
             logger.warning(f"Cannot build {category}: build context cannot build this type")
             return
 
-        # Calculate build time if not provided
-        from game.strategy.data.build_queue_source import get_default_production_rates
-        default_rate = get_default_production_rates("planetary_yard")
-        if turns is None:
-            turns = self._calculate_build_turns(design_id, default_rate)
+        # PROJ-208: Get entity info from build_context and dispatch via command callback
+        # Fallback mode: no queue_id (uses entity's main queue)
+        entity_type = self.build_context.context_type
+        entity_id = getattr(self.build_context, 'id', None)
 
-        queue_item = {
-            "design_id": design_id,
-            "type": category,
-            "turns_remaining": turns
-        }
-        # Add cost tracking fields
-        queue_item.update(self._build_cost_tracking(design_id))
-
-        if index is not None:
-            self.build_context.construction_queue.insert(index, queue_item)
-            logger.info(f"Inserted {design_id} into build queue at position {index}")
+        if self._add_to_queue_callback and entity_id is not None:
+            self._add_to_queue_callback(
+                entity_id, entity_type, design_id, category, index, None, None
+            )
+            action = "Inserted" if index is not None else "Added"
+            logger.info(f"{action} {design_id} to build queue via command (fallback mode)")
         else:
-            self.build_context.construction_queue.append(queue_item)
-            logger.info(f"Added {design_id} to build queue ({turns} turns)")
+            logger.warning(f"Cannot add to fallback queue: callback={self._add_to_queue_callback}, entity_id={entity_id}")
 
     def refresh_design_report(self, design_id: str):
         """

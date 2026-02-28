@@ -12,7 +12,8 @@ from game.strategy.engine.action_execution_engine import (
     ActionExecutionEngine,
     ActionTickResult,
 )
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.strategy.data.empire import Empire
 from game.core.hex_math import HexCoord
 
@@ -38,7 +39,7 @@ def _make_fleet(
 def _make_mock_order_processor():
     """Create a mock FleetOrderProcessor."""
     processor = MagicMock()
-    processor.process_end_turn_orders.return_value = False  # Fleet not consumed
+    processor.execute_action_order.return_value = False  # Fleet not consumed
     return processor
 
 
@@ -169,7 +170,7 @@ class TestActionCompletion:
         assert len(results) == 1
         assert results[0].action_completed is True
         assert results[0].action_time == 1
-        processor.process_end_turn_orders.assert_called_once()
+        processor.execute_action_order.assert_called_once()
 
     def test_multi_tick_action_takes_correct_ticks(self):
         """Action with action_time=3 should take 3 action ticks."""
@@ -307,7 +308,7 @@ class TestFleetConsumption:
     def test_fleet_consumed_by_action(self):
         """Actions that consume the fleet should report fleet_consumed=True."""
         processor = _make_mock_order_processor()
-        processor.process_end_turn_orders.return_value = True  # Fleet consumed
+        processor.execute_action_order.return_value = True  # Fleet consumed
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
@@ -330,7 +331,7 @@ class TestFleetConsumption:
             empire.fleets.remove(fleet)
             return True
 
-        processor.process_end_turn_orders.side_effect = remove_fleet_on_call
+        processor.execute_action_order.side_effect = remove_fleet_on_call
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
@@ -366,7 +367,7 @@ class TestOrderPopping:
 
         engine.process_action_ticks([empire], galaxy, 20)
         # Order processor should have been called to handle the order
-        processor.process_end_turn_orders.assert_called_once()
+        processor.execute_action_order.assert_called_once()
 
     def test_multi_order_chain(self):
         """After first action completes, second should become active."""
@@ -382,7 +383,7 @@ class TestOrderPopping:
             # Second call: don't pop (we want to check progress)
             return False
 
-        processor.process_end_turn_orders.side_effect = pop_order_on_call
+        processor.execute_action_order.side_effect = pop_order_on_call
         engine = ActionExecutionEngine(processor)
 
         empire = _make_empire()
@@ -489,12 +490,12 @@ class TestMultipleEmpires:
 class TestAllActionOrderTypes:
     """Test that all action order types are processed."""
 
+    # PROJ-207 EP-001: JOIN_FLEET removed - now handled by instant path only
     @pytest.mark.parametrize("order_type", [
         OrderType.COLONIZE,
         OrderType.TRANSFER,
         OrderType.LOAD_POPULATION,
         OrderType.UNLOAD_POPULATION,
-        OrderType.JOIN_FLEET,
         OrderType.IMPLODE_PLANET,
         OrderType.STELLERATE_STAR,
         OrderType.OPEN_WARP_POINT,

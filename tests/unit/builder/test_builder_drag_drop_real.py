@@ -18,8 +18,9 @@ from game.simulation.entities.layer_data import LayerData
 class TestBuilderDragDropReal:
 
     @pytest.fixture(autouse=True)
-    def setup_builder(self):
+    def setup_builder(self, fresh_registries):
         """Set up the builder with mocked dependencies."""
+        self._registries = fresh_registries
         if not pygame.get_init():
             pygame.init()
             pygame.display.set_mode((1, 1))  # Mock display for UIManager
@@ -50,7 +51,8 @@ class TestBuilderDragDropReal:
 
         # Initialize Builder
         # We need a valid screen size
-        context = WorkshopContext.standalone(tech_preset_name="default")
+        # PROJ-211: registries is now required
+        context = WorkshopContext.standalone(tech_preset_name="default", registries=self._registries)
         context.on_return = lambda x: None
         builder = DesignWorkshopScreen(1280, 720, context)
 

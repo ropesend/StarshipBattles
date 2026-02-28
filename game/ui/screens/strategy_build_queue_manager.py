@@ -4,6 +4,8 @@ StrategyBuildQueueManager - Manages build queue screen operations for StrategySc
 Extracted from StrategyScreen as part of PROJ-173 Phase 4 to reduce StrategyScreen
 to ~530 lines. Handles all build queue screen creation, closing, and fleet BUILD order
 management.
+
+PROJ-211: DesignLoaderAdapter now requires registry_provider. Uses lazy initialization.
 """
 from __future__ import annotations
 
@@ -12,12 +14,39 @@ from typing import TYPE_CHECKING
 
 import pygame
 
+from game.ui.screens.build_queue_screen import BuildQueueScreen
+from game.strategy.systems.design_library import DesignLibrary
+from game.ui.services.design_loader_adapter import DesignLoaderAdapter
+from game.strategy.data.order_types import OrderType
+
+from game.core.protocols import is_planet, is_fleet
+
 if TYPE_CHECKING:
     from game.ui.screens.strategy_screen import StrategyScreen
     from game.strategy.data.fleet import Fleet
     from game.core.protocols import IFleet
+    from game.core.registry import GameRegistries
 
 logger = logging.getLogger(__name__)
+
+
+# PROJ-211: Lazy registries initialization (not available at import time)
+_cached_registries = None
+
+
+def _get_registries() -> 'GameRegistries':
+    """Get or create registries for DesignLoaderAdapter."""
+    global _cached_registries
+    if _cached_registries is None:
+        from game.core.registry import get_default_registry_provider, GameRegistries
+        provider = get_default_registry_provider()
+        _cached_registries = GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources=provider.get_resources(),
+        )
+    return _cached_registries
 
 
 class StrategyBuildQueueManager:
@@ -45,14 +74,9 @@ class StrategyBuildQueueManager:
             logger.info("Build queue already open, ignoring click")
             return
 
-        from game.strategy.data.planet import Planet
-        if isinstance(self._screen.selected_object, Planet):
+        if is_planet(self._screen.selected_object):
             planet = self._screen.selected_object
             if planet.owner_id == self._screen.current_empire.id:
-                from game.ui.screens.build_queue_screen import BuildQueueScreen
-                from game.strategy.systems.design_library import DesignLibrary
-                from game.ui.services.design_loader_adapter import DesignLoaderAdapter
-
                 # Hide main UI
                 self._screen.ui.hide_ui()
 
@@ -63,13 +87,15 @@ class StrategyBuildQueueManager:
                 savegame_path = self._screen.session.save_path
                 empire_id = planet.owner_id
                 design_library = DesignLibrary(savegame_path, empire_id)
-                design_loader = DesignLoaderAdapter()
+                # PROJ-211: Pass registries explicitly
+                design_loader = DesignLoaderAdapter(registry_provider=_get_registries())
 
                 # PROJ-69: Calculate hex coord for multi-queue discovery
                 parent_sys = self._screen.session.galaxy.get_system_of_planet(planet)
                 hex_coord = parent_sys.global_location + planet.location if parent_sys else None
 
                 # Create screen with injected dependencies and hex context
+                # PROJ-208 Phase 3: Pass facade for CQRS-compliant command dispatch
                 self._screen.build_queue_screen = BuildQueueScreen(
                     self._screen.ui.manager,
                     planet,
@@ -81,7 +107,8 @@ class StrategyBuildQueueManager:
                     hex_coord=hex_coord,
                     galaxy=self._screen.session.galaxy,
                     empire=self._screen.current_empire,
-                    input_mapper=self._screen.input_mapper
+                    input_mapper=self._screen.input_mapper,
+                    facade=self._screen.facade,
                 )
                 logger.info(f"Opened build queue for {planet.name}")
 
@@ -122,10 +149,12 @@ class StrategyBuildQueueManager:
     def _handle_fleet_build_queue_close(self, fleet: "Fleet") -> None:
         """Handle fleet build queue closing - auto-issue BUILD order if items in queue.
 
+        PROJ-207 Phase 4: Routes BUILD orders through command pipeline.
+
         Args:
             fleet: Fleet that was building
         """
-        from game.strategy.data.fleet import FleetOrder, OrderType
+        from game.strategy.engine.commands import IssueBuildOrderCommand, RemoveBuildOrderCommand
 
         if fleet.construction_queue:
             # Check if fleet already has BUILD order
@@ -135,11 +164,12 @@ class StrategyBuildQueueManager:
             )
             if not has_build_order:
                 logger.info(f"Auto-issuing BUILD order to fleet {fleet.id} ({len(fleet.construction_queue)} items in queue)")
-                fleet.orders.insert(0, FleetOrder(OrderType.BUILD))
-                fleet.path = []  # Clear movement path
+                cmd = IssueBuildOrderCommand(fleet_id=fleet.id)
+                self._screen.facade.handle_command(cmd)
         else:
-            # Queue is empty - remove BUILD order if present
-            fleet.orders = [o for o in fleet.orders if o.type != OrderType.BUILD]
+            # Queue is empty - remove BUILD order if present via command pipeline
+            cmd = RemoveBuildOrderCommand(fleet_id=fleet.id)
+            self._screen.facade.handle_command(cmd)
 
     def on_navigate_to_hex_build(self, hex_coord, source) -> None:
         """Navigate to the build queue screen for a specific hex and source.
@@ -164,10 +194,6 @@ class StrategyBuildQueueManager:
         # Close the empire build queue window
         self._screen.ui.close_empire_build_queue_window()
 
-        from game.ui.screens.build_queue_screen import BuildQueueScreen
-        from game.strategy.systems.design_library import DesignLibrary
-        from game.ui.services.design_loader_adapter import DesignLoaderAdapter
-
         # Hide main UI
         self._screen.ui.hide_ui()
 
@@ -178,9 +204,11 @@ class StrategyBuildQueueManager:
         savegame_path = self._screen.session.save_path
         empire_id = self._screen.current_empire.id
         design_library = DesignLibrary(savegame_path, empire_id)
-        design_loader = DesignLoaderAdapter()
+        # PROJ-211: Pass registries explicitly
+        design_loader = DesignLoaderAdapter(registry_provider=_get_registries())
 
         # Create build queue screen with hex context
+        # PROJ-208 Phase 3: Pass facade for CQRS-compliant command dispatch
         self._screen.build_queue_screen = BuildQueueScreen(
             self._screen.ui.manager,
             entity,
@@ -192,7 +220,8 @@ class StrategyBuildQueueManager:
             hex_coord=hex_coord,
             galaxy=self._screen.session.galaxy,
             empire=self._screen.current_empire,
-            input_mapper=self._screen.input_mapper
+            input_mapper=self._screen.input_mapper,
+            facade=self._screen.facade,
         )
         logger.info(f"Navigated to build queue for {source.display_name} at hex {hex_coord}")
 
@@ -203,14 +232,9 @@ class StrategyBuildQueueManager:
             logger.info("Build queue already open, ignoring click")
             return
 
-        from game.strategy.data.fleet import Fleet
-        if isinstance(self._screen.selected_object, Fleet):
+        if is_fleet(self._screen.selected_object):
             fleet = self._screen.selected_object
-            if fleet.owner_id == self._screen.current_empire.id and fleet.has_space_shipyard:
-                from game.ui.screens.build_queue_screen import BuildQueueScreen
-                from game.strategy.systems.design_library import DesignLibrary
-                from game.ui.services.design_loader_adapter import DesignLoaderAdapter
-
+            if fleet.owner_id == self._screen.current_empire.id and fleet.capabilities.has_space_shipyard:
                 # Hide main UI
                 self._screen.ui.hide_ui()
 
@@ -221,12 +245,14 @@ class StrategyBuildQueueManager:
                 savegame_path = self._screen.session.save_path
                 empire_id = fleet.owner_id
                 design_library = DesignLibrary(savegame_path, empire_id)
-                design_loader = DesignLoaderAdapter()
+                # PROJ-211: Pass registries explicitly
+                design_loader = DesignLoaderAdapter(registry_provider=_get_registries())
 
                 # PROJ-69: Use fleet.location as hex_coord for multi-queue discovery
                 hex_coord = fleet.location
 
                 # Create screen with fleet as build_context and hex context
+                # PROJ-208 Phase 3: Pass facade for CQRS-compliant command dispatch
                 self._screen.build_queue_screen = BuildQueueScreen(
                     self._screen.ui.manager,
                     fleet,  # Fleet as build_context
@@ -238,6 +264,7 @@ class StrategyBuildQueueManager:
                     hex_coord=hex_coord,
                     galaxy=self._screen.session.galaxy,
                     empire=self._screen.current_empire,
-                    input_mapper=self._screen.input_mapper
+                    input_mapper=self._screen.input_mapper,
+                    facade=self._screen.facade,
                 )
                 logger.info(f"Opened build queue for fleet {fleet.id}")

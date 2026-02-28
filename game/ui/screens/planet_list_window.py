@@ -27,13 +27,14 @@ from game.ui.screens.planet_data_source import PlanetDataSource
 from game.ui.panels.planet_report_panel import PlanetReportPanel, compute_planet_production
 
 class PlanetListWindow(UIWindow):
-    def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None, empires=None):
+    def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None, empires=None, registries=None):
         # Initialize state that set_dimensions() depends on before super().__init__(),
         # since UIWindow.__init__ triggers rebuild() -> set_dimensions().
         self.selected_planet = None
         self.planet_detail_panel = None
         self.btn_build_queue = None
         self.last_preset_selection = None  # PROJ-199: Lazy init elimination
+        self._registries = registries  # PROJ-211: Injected registries for DI
 
         super().__init__(rect, manager, window_display_title="Galactic Planet Registry", resizable=True)
 
@@ -453,7 +454,7 @@ class PlanetListWindow(UIWindow):
             container=self,  # Window is the container
             portrait_surface=portrait_surface,
             show_complexes=False,  # Match strategy UI - no separate complexes column
-            production_rates=compute_planet_production(planet)
+            production_rates=compute_planet_production(planet, self._registries)
         )
 
         # Add Build Queue button if player owns planet

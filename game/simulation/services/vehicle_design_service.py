@@ -14,7 +14,7 @@ from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import get_or_create_validator
 from game.simulation.components.component import Component, create_component
 from game.core.constants import LayerType
-from game.core.registry import GameRegistries
+from game.core.registry import GameRegistries, get_default_registry_provider
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
 
@@ -357,7 +357,8 @@ class VehicleDesignService:
         Returns:
             ValidationResult from the ship validator
         """
-        validator = get_or_create_validator()
+        # PROJ-211: Pass registry_provider explicitly
+        validator = get_or_create_validator(registry_provider=get_default_registry_provider())
         return validator.validate_design(ship)
 
     def get_available_components(
@@ -376,7 +377,8 @@ class VehicleDesignService:
             List of valid component IDs
         """
         available = []
-        validator = get_or_create_validator()
+        # PROJ-211: Pass registry_provider explicitly
+        validator = get_or_create_validator(registry_provider=get_default_registry_provider())
 
         for comp_id in self._registries.components.keys():
             # PROJ-50: Pass registries for DI

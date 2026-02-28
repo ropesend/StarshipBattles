@@ -7,7 +7,6 @@ from typing import List, Optional, TYPE_CHECKING
 
 from game.core.hex_math import HexCoord
 from game.core.validation import ValidationResult
-from game.core.exceptions import StateException
 from game.strategy.facade.dto import (
     FleetInfo,
     SystemInfo,
@@ -481,6 +480,7 @@ class StrategySessionFacade:
         """Get remaining colony pods for a fleet (available minus committed).
 
         PROJ-55: Used by UI to filter colonizable planets by available pod types.
+        PROJ-211: Uses session.registries instead of global fallback.
 
         Args:
             fleet_id: The fleet to check
@@ -490,20 +490,14 @@ class StrategySessionFacade:
             Example: {"ICE_DWARF": 1, "CONTINENTAL": 0}
             Returns empty dict if fleet not found.
         """
-        from game.core.registry import get_default_registry_provider
         from game.strategy.validation.colonize_validator import ColonizeValidator
 
         fleet = self._get_fleet_by_id(fleet_id)
         if fleet is None:
             return {}
 
-        # Get component registry
-        try:
-            provider = get_default_registry_provider()
-            component_registry = provider.get_components()
-        except (RuntimeError, AttributeError, ImportError, StateException):
-            # Defensive fallback - return empty dict if registry unavailable
-            return {}
+        # Get component registry from session (PROJ-211: strict DI)
+        component_registry = self._session.registries.components
 
         # Calculate available and committed pods
         available = ColonizeValidator.get_available_colony_pods(fleet, component_registry)
@@ -518,3 +512,38 @@ class StrategySessionFacade:
                 remaining[planet_type] = remaining_count
 
         return remaining
+
+    # --- Game State Queries (PROJ-208 Phase 4) ---
+
+    def get_save_path(self) -> Optional[str]:
+        """Get the current save game file path.
+
+        Returns:
+            The save file path, or None if not yet saved.
+        """
+        return self._session.save_path
+
+    def get_scuttle_events(self) -> List[dict]:
+        """Get scuttle events from the last turn processing.
+
+        Returns:
+            List of scuttle event dicts with keys:
+            - empire_id: int
+            - entity_type: str ("facility" or "ship")
+            - entity_name: str
+            - location: str
+        """
+        turn_engine = self._session.turn_engine
+        if turn_engine is None:
+            return []
+        events = turn_engine.last_scuttle_events
+        # Convert ScuttleEvent dataclasses to dicts
+        return [
+            {
+                'empire_id': e.empire_id,
+                'entity_type': e.entity_type,
+                'entity_name': e.entity_name,
+                'location': e.location,
+            }
+            for e in events
+        ]

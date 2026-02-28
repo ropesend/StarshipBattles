@@ -36,9 +36,9 @@ def game_session(minimal_config):
 
 
 @pytest.fixture
-def turn_engine():
+def turn_engine(fresh_registries):
     """Create a standalone turn engine for isolated tests."""
-    return TurnEngine()
+    return TurnEngine(registries=fresh_registries)
 
 
 @pytest.fixture

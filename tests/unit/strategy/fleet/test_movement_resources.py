@@ -46,7 +46,7 @@ class TestMovementResourceMethods:
         ship = make_resource_ship(resource_costs_per_hex={'fuel': 10.0})
         fleet.ships.append(ship)
 
-        costs = fleet.get_movement_resource_costs()
+        costs = fleet.resources.get_movement_resource_costs()
 
         assert costs == {'fuel': 10.0}
 
@@ -57,7 +57,7 @@ class TestMovementResourceMethods:
         ship2 = make_resource_ship(resource_costs_per_hex={'fuel': 15.0})
         fleet.ships.extend([ship1, ship2])
 
-        costs = fleet.get_movement_resource_costs()
+        costs = fleet.resources.get_movement_resource_costs()
 
         assert costs == {'fuel': 25.0}
 
@@ -68,7 +68,7 @@ class TestMovementResourceMethods:
         ship2 = make_resource_ship(resource_costs_per_hex={'fuel': 8.0, 'glag': 2.0})
         fleet.ships.extend([ship1, ship2])
 
-        costs = fleet.get_movement_resource_costs()
+        costs = fleet.resources.get_movement_resource_costs()
 
         assert costs == {'fuel': 18.0, 'energy': 5.0, 'glag': 2.0}
 
@@ -76,7 +76,7 @@ class TestMovementResourceMethods:
         """Test movement resource costs for empty fleet returns empty dict."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
 
-        costs = fleet.get_movement_resource_costs()
+        costs = fleet.resources.get_movement_resource_costs()
 
         assert costs == {}
 
@@ -93,7 +93,7 @@ class TestMovementResourceMethods:
         )
         fleet.ships.extend([ship1, ship2])
 
-        assert fleet.has_resources_for_movement() is True
+        assert fleet.resources.has_resources_for_movement() is True
 
     def test_has_resources_for_movement_insufficient_fuel_one_ship(self, make_resource_ship):
         """Test has_resources_for_movement returns False when one ship lacks fuel."""
@@ -108,7 +108,7 @@ class TestMovementResourceMethods:
         )
         fleet.ships.extend([ship1, ship2])
 
-        assert fleet.has_resources_for_movement() is False
+        assert fleet.resources.has_resources_for_movement() is False
 
     def test_has_resources_for_movement_insufficient_energy_one_ship(self, make_resource_ship):
         """Test has_resources_for_movement returns False when one ship lacks energy."""
@@ -119,7 +119,7 @@ class TestMovementResourceMethods:
         )
         fleet.ships.append(ship1)
 
-        assert fleet.has_resources_for_movement() is False
+        assert fleet.resources.has_resources_for_movement() is False
 
     def test_has_resources_for_movement_zero_cost_resources(self, make_resource_ship):
         """Test has_resources_for_movement handles zero-cost resources correctly."""
@@ -130,13 +130,13 @@ class TestMovementResourceMethods:
         )
         fleet.ships.append(ship)
 
-        assert fleet.has_resources_for_movement() is True
+        assert fleet.resources.has_resources_for_movement() is True
 
     def test_has_resources_for_movement_empty_fleet(self):
         """Test has_resources_for_movement returns True for empty fleet."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
 
-        assert fleet.has_resources_for_movement() is True
+        assert fleet.resources.has_resources_for_movement() is True
 
     def test_consume_movement_resources_success_single_hex(self, make_resource_ship):
         """Test successful consumption of movement resources for 1 hex."""
@@ -147,7 +147,7 @@ class TestMovementResourceMethods:
         )
         fleet.ships.append(ship)
 
-        result = fleet.consume_movement_resources(hexes=1)
+        result = fleet.resources.consume_movement_resources(hexes=1)
 
         assert result is True
         ship.consume_resource.assert_called_with('fuel', 10.0)
@@ -161,7 +161,7 @@ class TestMovementResourceMethods:
         )
         fleet.ships.append(ship)
 
-        result = fleet.consume_movement_resources(hexes=3)
+        result = fleet.resources.consume_movement_resources(hexes=3)
 
         assert result is True
         ship.consume_resource.assert_called_with('fuel', 30.0)
@@ -179,7 +179,7 @@ class TestMovementResourceMethods:
         )
         fleet.ships.extend([ship1, ship2])
 
-        result = fleet.consume_movement_resources(hexes=1)
+        result = fleet.resources.consume_movement_resources(hexes=1)
 
         assert result is False
         # Verify no resources were consumed (atomicity)
@@ -195,7 +195,7 @@ class TestMovementResourceMethods:
         )
         fleet.ships.append(ship)
 
-        result = fleet.consume_movement_resources(hexes=1)
+        result = fleet.resources.consume_movement_resources(hexes=1)
 
         assert result is False
         ship.consume_resource.assert_not_called()
@@ -209,7 +209,7 @@ class TestMovementResourceMethods:
         )
         fleet.ships.append(ship)
 
-        result = fleet.consume_movement_resources(hexes=1)
+        result = fleet.resources.consume_movement_resources(hexes=1)
 
         assert result is True
         # Zero-cost should not trigger consume call
@@ -219,6 +219,6 @@ class TestMovementResourceMethods:
         """Test consumption succeeds for empty fleet (no-op)."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
 
-        result = fleet.consume_movement_resources(hexes=1)
+        result = fleet.resources.consume_movement_resources(hexes=1)
 
         assert result is True

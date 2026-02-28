@@ -74,6 +74,9 @@ class ShipInstance:
     # Cached calculated stats (invalidated on damage change)
     _cached_stats: Optional[Dict[str, Any]] = field(default=None, repr=False)
 
+    # PROJ-211: Injected registries for stats calculation (no global fallback)
+    _registries: Optional['GameRegistries'] = field(default=None, repr=False, init=False)
+
     # Delegate managers (initialized in __post_init__)
     _resource_mgr: Optional['ShipResourceManager'] = field(default=None, repr=False, init=False)
     _cargo_mgr: Optional['ShipCargoManager'] = field(default=None, repr=False, init=False)
@@ -84,6 +87,19 @@ class ShipInstance:
         self._resource_mgr = ShipResourceManager(self)
         self._cargo_mgr = ShipCargoManager(self)
         self._display_fmt = ShipDisplayFormatter(self)
+
+    def set_registries(self, registries: 'GameRegistries') -> None:
+        """
+        Set the registries for stats calculation.
+
+        PROJ-211: Allows setting registries after construction for objects
+        created without registries (e.g., deserialization).
+
+        Args:
+            registries: GameRegistries instance for stats calculation.
+        """
+        self._registries = registries
+        self.invalidate_stats_cache()
 
     # PROJ-193: Property aliases for IShipInstance Protocol compliance
     @property
@@ -122,6 +138,7 @@ class ShipInstance:
         name: Optional[str] = None,
         design_id: Optional[str] = None,
         empire: Optional['Empire'] = None,
+        registries: Optional['GameRegistries'] = None,
     ) -> 'ShipInstance':
         """
         Create a new ship instance from a design.
@@ -134,6 +151,8 @@ class ShipInstance:
             empire: Empire to get serial number from. If None, no serial will be
                     assigned and a warning will be logged. Provide empire for proper
                     tracking of ships by serial number within empire fleets.
+            registries: GameRegistries for stats calculation. Required for proper
+                       DI. If None, get_calculated_stats() will raise an error.
 
         Returns:
             New ShipInstance with unique instance_id.
@@ -163,6 +182,7 @@ class ShipInstance:
             design_data=design_data,
         )
         instance.serial = serial
+        instance._registries = registries
 
         # Initialize all resources to full capacity
         stats = instance.get_calculated_stats()
@@ -244,6 +264,10 @@ class ShipInstance:
         reading from cached expected_stats. Results are cached and invalidated
         when component damage changes.
 
+        PROJ-211: Uses _registries if set, otherwise falls back to global
+        registry provider temporarily. The fallback will be removed after
+        all test fixtures are updated to use DI.
+
         Args:
             force_refresh: If True, recalculate even if cached
 
@@ -254,14 +278,15 @@ class ShipInstance:
             # INTENTIONAL LATE IMPORT: Lazy initialization pattern
             # See docs/ARCHITECTURE.md "Intentional Late Imports" section
             from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
-            from game.core.registry import get_default_registry_provider, GameRegistries
-            provider = get_default_registry_provider()
-            registries = GameRegistries(
-                components=provider.get_components(),
-                modifiers=provider.get_modifiers(),
-                vehicle_classes=provider.get_vehicle_classes(),
-                resources=provider.get_resources(),
-            )
+
+            registries = self._registries
+            if registries is None:
+                raise ValueError(
+                    "ShipInstance requires registries for stats calculation. "
+                    "Use ShipInstance.create() or from_dict() with registries parameter, "
+                    "or set ship._registries after construction."
+                )
+
             service = ShipStatsCalculator(registries=registries)
             self._cached_stats = service.calculate_stats(
                 self.design_data,
@@ -414,15 +439,6 @@ class ShipInstance:
         """Get human-readable display ID in format "DesignName-000001"."""
         return self._display_fmt.get_display_id()
 
-    def get_component_damage_summary(self) -> Dict[str, int]:
-        """
-        Get summary of damaged components.
-
-        Returns:
-            Dict mapping component_id to current HP for damaged components.
-        """
-        return dict(self.component_damage)
-
     def get_damaged_component_count(self) -> int:
         """
         Get count of damaged components.
@@ -431,19 +447,6 @@ class ShipInstance:
             Number of components with recorded damage.
         """
         return len(self.component_damage)
-
-    def get_layer_damage_summary(self) -> Dict[str, float]:
-        """
-        Get damage summary grouped by layer.
-
-        Note: Without converting to a Ship, we can't determine layer membership
-        of damaged components. Returns empty dict for ShipInstance.
-        Full layer info requires calling to_ship() first.
-
-        Returns:
-            Empty dict (layer info requires live Ship object).
-        """
-        return {}
 
     def get_status_text(self) -> str:
         """Get human-readable status text."""
@@ -515,18 +518,20 @@ class ShipInstance:
         self,
         position: Tuple[float, float],
         team_id: int,
-        registries: Optional['GameRegistries'] = None
+        *,
+        registries: 'GameRegistries'
     ) -> 'Ship':
         """
         Create a simulation Ship from this instance.
 
         Applies any existing damage/resource state from strategy layer.
 
+        PROJ-211: registries is now required (no global fallback).
+
         Args:
             position: (x, y) spawn position for the ship
             team_id: Team assignment for battle (0 or 1)
-            registries: Optional GameRegistries for DI. If None, uses global fallback
-                        (transitional - will be required in Phase 6).
+            registries: GameRegistries for DI (required).
         """
         # INTENTIONAL LATE IMPORT: Cross-layer boundary (strategy -> simulation)
         # See docs/ARCHITECTURE.md "Intentional Late Imports" section
@@ -660,12 +665,19 @@ class ShipInstance:
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ShipInstance':
+    def from_dict(
+        cls,
+        data: Dict[str, Any],
+        registries: Optional['GameRegistries'] = None,
+    ) -> 'ShipInstance':
         """
         Deserialize from save game.
 
         Args:
             data: Dict with ship instance data
+            registries: GameRegistries for stats calculation. Optional during
+                       deserialization but must be set before calling
+                       get_calculated_stats().
 
         Returns:
             Reconstructed ShipInstance
@@ -685,7 +697,7 @@ class ShipInstance:
         if data.get('battles_survived') is not None:
             validate_non_negative(data['battles_survived'], 'battles_survived', 'ShipInstance')
 
-        return cls(
+        instance = cls(
             instance_id=data['instance_id'],
             design_id=data['design_id'],
             name=data['name'],
@@ -703,6 +715,8 @@ class ShipInstance:
             battles_survived=data.get('battles_survived', 0),
             serial=data.get('serial'),
         )
+        instance._registries = registries
+        return instance
 
     def to_json(self, indent: int = 2) -> str:
         """Serialize to JSON string."""

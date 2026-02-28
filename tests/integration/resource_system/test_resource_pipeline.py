@@ -18,7 +18,7 @@ from .conftest import create_mock_component, create_test_ship_design, make_ship_
 class TestCustomResourceTypeFullPipeline:
     """Test loading custom resource and using it through the entire pipeline."""
 
-    def test_custom_resource_type_full_pipeline(self, loaded_registry, tmp_path):
+    def test_custom_resource_type_full_pipeline(self, loaded_registry, singleton_registries, tmp_path):
         """
         Load custom resource from JSON, create component with that resource type,
         create ship with that component, verify resource appears in stats,
@@ -66,8 +66,8 @@ class TestCustomResourceTypeFullPipeline:
             ]
         )
 
-        # Step 4: Create ship instance
-        ship = make_ship_instance(design_data)
+        # Step 4: Create ship instance (PROJ-211: pass registries for DI)
+        ship = make_ship_instance(design_data, registries=singleton_registries)
 
         # Step 5: Verify resource appears in stats
         stats = ship.get_calculated_stats()
@@ -94,7 +94,7 @@ class TestCustomResourceTypeFullPipeline:
 class TestPerTurnConsumptionAcrossFullTurn:
     """Test per-turn resource consumption spreads correctly across 100 ticks."""
 
-    def test_per_turn_consumption_across_full_turn(self, loaded_registry):
+    def test_per_turn_consumption_across_full_turn(self, loaded_registry, singleton_registries):
         """
         Create ship with per-turn consumption, run 100 ticks,
         verify exact amount consumed (not more, not less).
@@ -126,8 +126,8 @@ class TestPerTurnConsumptionAcrossFullTurn:
             ]
         )
 
-        # Create ship instance with full energy
-        ship = make_ship_instance(design_data)
+        # Create ship instance with full energy (PROJ-211: pass registries for DI)
+        ship = make_ship_instance(design_data, registries=singleton_registries)
         ship.resource_levels['energy'] = 10000  # Start at full
 
         # Create fleet with this ship
@@ -142,7 +142,7 @@ class TestPerTurnConsumptionAcrossFullTurn:
         empires = [MockEmpire()]
 
         # Run turn engine for 100 ticks
-        turn_engine = TurnEngine()
+        turn_engine = TurnEngine(registries=loaded_registry)
 
         for tick in range(1, 101):
             turn_engine.resource_engine.process_per_turn_consumption(tick, empires)
@@ -159,7 +159,7 @@ class TestPerTurnConsumptionAcrossFullTurn:
 class TestAutoDisableComponentChainOnResourceDepletion:
     """Test that components are auto-disabled when resources deplete."""
 
-    def test_auto_disable_component_chain_on_resource_depletion(self, loaded_registry):
+    def test_auto_disable_component_chain_on_resource_depletion(self, loaded_registry, singleton_registries):
         """
         Create ship with per-turn component, deplete resource during ticks,
         verify component auto-disabled and stats recalculated.
@@ -204,7 +204,8 @@ class TestAutoDisableComponentChainOnResourceDepletion:
             ]
         )
 
-        ship = make_ship_instance(design_data)
+        # PROJ-211: pass registries for DI
+        ship = make_ship_instance(design_data, registries=singleton_registries)
         # Start with only 30 energy (will deplete before turn ends)
         ship.resource_levels['energy'] = 30
 
@@ -217,7 +218,7 @@ class TestAutoDisableComponentChainOnResourceDepletion:
                 self.fleets = [fleet]
 
         empires = [MockEmpire()]
-        turn_engine = TurnEngine()
+        turn_engine = TurnEngine(registries=loaded_registry)
 
         # Component should be enabled initially
         assert ship.is_component_enabled('test_plasma_engine') is True
@@ -242,7 +243,7 @@ class TestAutoDisableComponentChainOnResourceDepletion:
 class TestBackwardCompatLoadOldSaveWithoutComponentToggles:
     """Test loading old save games that don't have component_toggles field."""
 
-    def test_backward_compat_load_old_save_without_component_toggles(self):
+    def test_backward_compat_load_old_save_without_component_toggles(self, fresh_registries):
         """
         Create ShipInstance.from_dict() with data missing component_toggles,
         verify defaults to empty dict, verify ship still works.
@@ -277,8 +278,8 @@ class TestBackwardCompatLoadOldSaveWithoutComponentToggles:
             'battles_survived': 3
         }
 
-        # Load from old format
-        ship = ShipInstance.from_dict(old_save_data)
+        # Load from old format (PROJ-211: pass registries for DI)
+        ship = ShipInstance.from_dict(old_save_data, registries=fresh_registries)
 
         # Verify component_toggles defaults to empty dict
         assert ship.component_toggles == {}, \

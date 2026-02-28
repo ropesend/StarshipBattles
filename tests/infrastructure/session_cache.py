@@ -52,13 +52,16 @@ class SessionRegistryCache:
                 # 3. Trigger Loaders (They populate Registry)
                 # Ensure we use absolute paths from constants
                 from game.core.paths import Paths
+                from game.core.registry import get_default_registry_provider
 
                 comp_path = os.path.join(Paths.DATA_DIR, "components.json")
                 mod_path = os.path.join(Paths.DATA_DIR, "modifiers.json")
-                
-                load_modifiers(mod_path)
-                load_components(comp_path)
-                load_vehicle_classes()
+
+                # PROJ-211: Pass registry_provider explicitly (no fallback)
+                provider = get_default_registry_provider()
+                load_modifiers(mod_path, registry_provider=provider)
+                load_components(comp_path, registry_provider=provider)
+                load_vehicle_classes(registry_provider=provider)
 
                 # 4. Load combat strategies
                 from game.ai.strategy_manager import StrategyManager

@@ -216,7 +216,7 @@ class FleetResourceAggregator:
             Returns 0 if fleet cannot use warp at all.
             Returns -1 if fleet has unlimited jumps (no resource cost).
         """
-        if not self._fleet.can_use_warp():
+        if not self._fleet.capabilities.can_use_warp():
             return 0
 
         min_jumps = float('inf')
@@ -240,8 +240,8 @@ class FleetResourceAggregator:
         """
         return {
             'speed': self._fleet.speed,
-            'can_warp': self._fleet.can_use_warp(),
-            'warp_limiting_ship': self._fleet.get_warp_limiting_ship(),
+            'can_warp': self._fleet.capabilities.can_use_warp(),
+            'warp_limiting_ship': self._fleet.capabilities.get_warp_limiting_ship(),
             'fuel_endurance': self.fuel_endurance(),
             'warp_jumps': self.warp_jumps_remaining(),
             'movement_resource_costs': self.get_movement_resource_costs(),

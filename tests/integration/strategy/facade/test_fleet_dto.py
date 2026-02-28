@@ -2,7 +2,8 @@
 import pytest
 from dataclasses import FrozenInstanceError
 from game.core.hex_math import HexCoord
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 
 
 class TestFleetOrderInfo:
@@ -126,6 +127,7 @@ class TestFleetInfo:
         assert fleet.ships == ()
         assert fleet.orders == ()
         assert fleet.has_orders is False
+        # PROJ-210: can_use_warp is a direct field on FleetInfo, not on capabilities
         assert fleet.can_use_warp is False
         assert fleet.projected_path == ()
 
@@ -160,6 +162,7 @@ class TestFleetInfo:
         assert fleet.ships[0].name == "Ship A"
         assert len(fleet.orders) == 1
         assert fleet.has_orders is True
+        # PROJ-210: can_use_warp is a direct field on FleetInfo, not on capabilities
         assert fleet.can_use_warp is True
         assert len(fleet.projected_path) == 4
 
@@ -215,7 +218,7 @@ class TestFleetInfo:
         with pytest.raises(AttributeError):
             fleet.projected_path.append(HexCoord(0, 0))
 
-    def test_from_fleet_returns_tuples(self):
+    def test_from_fleet_returns_tuples(self, fresh_registries):
         """FleetInfo.from_fleet returns tuples for collection fields."""
         from game.strategy.facade.dto.fleet_dto import FleetInfo
         from game.strategy.data.ship_instance import ShipInstance
@@ -227,7 +230,7 @@ class TestFleetInfo:
             speed=5.0,
         )
 
-        # Add a ship
+        # Add a ship (PROJ-211: with registries for DI compliance)
         ship = ShipInstance(
             instance_id="test-ship",
             design_id="test_design",
@@ -235,6 +238,7 @@ class TestFleetInfo:
             owner_id=0,
             design_data={"name": "Test Ship", "ship_class": "Frigate", "layers": {}},
         )
+        ship.set_registries(fresh_registries)
         fleet.ships.append(ship)
 
         # Add an order and path
@@ -280,7 +284,7 @@ class TestFleetInfoFactory:
         assert info.orders == ()
         assert info.has_orders is False
 
-    def test_from_fleet_with_ships(self):
+    def test_from_fleet_with_ships(self, fresh_registries):
         """from_fleet includes ship information."""
         from game.strategy.facade.dto.fleet_dto import FleetInfo
         from game.strategy.data.ship_instance import ShipInstance
@@ -292,7 +296,7 @@ class TestFleetInfoFactory:
             speed=5.0,
         )
 
-        # Create a ship instance with minimal design data
+        # Create a ship instance with minimal design data (PROJ-211: with registries)
         ship = ShipInstance(
             instance_id="test-ship-001",
             design_id="test_design",
@@ -304,6 +308,7 @@ class TestFleetInfoFactory:
                 "layers": {},
             },
         )
+        ship.set_registries(fresh_registries)
         fleet.ships.append(ship)
 
         info = FleetInfo.from_fleet(fleet)
@@ -315,8 +320,11 @@ class TestFleetInfoFactory:
         assert info.ships[0].is_combat_capable is True  # Not destroyed/derelict
         assert info.ships[0].current_hp_percent == 1.0  # No damage
 
-    def test_from_fleet_with_damaged_ship(self):
-        """from_fleet correctly reports damaged ship HP."""
+    def test_from_fleet_with_damaged_ship(self, fresh_registries):
+        """from_fleet correctly reports damaged ship HP.
+
+        PROJ-211: Updated to set _registries for DI compliance.
+        """
         from game.strategy.facade.dto.fleet_dto import FleetInfo
         from game.strategy.data.ship_instance import ShipInstance
 
@@ -339,6 +347,8 @@ class TestFleetInfoFactory:
             },
             current_hp=50,  # Damaged
         )
+        # PROJ-211: Set _registries for DI compliance
+        ship.set_registries(fresh_registries)
         # Mock the calculated stats to return max_hp
         ship._cached_stats = {"max_hp": 100}
         fleet.ships.append(ship)

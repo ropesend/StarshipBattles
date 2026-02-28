@@ -317,7 +317,7 @@ class TestFleetLoadCargo:
             design_data={'expected_stats': {'cargo_storage': {}}},
         )
         fleet.ships.append(ship)
-        loaded = fleet.load_cargo_to_fleet('passengers', 100)
+        loaded = fleet.resources.load_cargo_to_fleet('passengers', 100)
         assert loaded == 0
 
 

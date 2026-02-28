@@ -2,6 +2,7 @@
 Tests for ShipInstance - serialization, cloning, and edge cases.
 
 PROJ-48: Split from test_ship_instance_proj08.py
+PROJ-211: Updated to use make_ship_with_stats fixture for DI compliance.
 """
 
 import pytest
@@ -240,16 +241,9 @@ class TestAdditionalCoverage:
 
         assert restored.resource_levels == {'fuel': 4000, 'energy': 1500}
 
-    def test_multiple_toggles_with_stats_refresh(self, make_design_data_with_stats):
+    def test_multiple_toggles_with_stats_refresh(self, make_ship_with_stats):
         """Multiple component toggles correctly invalidate and refresh cache."""
-        design_data = make_design_data_with_stats(expected_stats={'max_hp': 100})
-        ship = ShipInstance(
-            instance_id='test-1',
-            design_id='TestDesign',
-            name='Test Ship',
-            owner_id=0,
-            design_data=design_data
-        )
+        ship = make_ship_with_stats(expected_stats={'max_hp': 100})
 
         # Initial cache
         _ = ship.get_calculated_stats()
@@ -335,16 +329,9 @@ class TestEdgeCases:
         assert result is False
         assert ship.resource_levels['fuel'] == 3000
 
-    def test_get_resource_capacity_empty_stats(self, make_design_data_with_stats):
+    def test_get_resource_capacity_empty_stats(self, make_ship_with_stats):
         """get_resource_capacity handles empty expected_stats."""
-        design_data = make_design_data_with_stats(expected_stats={})
-        ship = ShipInstance(
-            instance_id='test-1',
-            design_id='TestDesign',
-            name='Test Ship',
-            owner_id=0,
-            design_data=design_data
-        )
+        ship = make_ship_with_stats(expected_stats={})
 
         capacity = ship.get_resource_capacity('fuel')
         assert capacity == 0
@@ -366,19 +353,12 @@ class TestEdgeCases:
         assert ship.component_toggles['nonexistent_component'] is False
         assert ship.is_component_enabled('nonexistent_component') is False
 
-    def test_get_all_resource_costs_when_stats_missing_field(self, make_design_data_with_stats):
+    def test_get_all_resource_costs_when_stats_missing_field(self, make_ship_with_stats):
         """get_all_resource_costs_* handle missing fields gracefully."""
-        design_data = make_design_data_with_stats(expected_stats={
+        ship = make_ship_with_stats(expected_stats={
             'max_hp': 100
             # Missing resource cost fields
         })
-        ship = ShipInstance(
-            instance_id='test-1',
-            design_id='TestDesign',
-            name='Test Ship',
-            owner_id=0,
-            design_data=design_data
-        )
 
         # Should not raise, return empty dict
         per_hex = ship.get_all_resource_costs_per_hex()

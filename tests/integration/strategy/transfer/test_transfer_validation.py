@@ -35,9 +35,9 @@ def test_load_passengers_success(mock_galaxy, colonized_planet, transport_fleet)
     assert result.errors == []
 
 
-def test_load_fails_when_fleet_full(mock_galaxy, colonized_planet):
+def test_load_fails_when_fleet_full(mock_galaxy, colonized_planet, fresh_registries):
     """Load fails when fleet has no available cargo capacity."""
-    full_fleet = create_transport_fleet(cargo_capacity=100, current_cargo=100)
+    full_fleet = create_transport_fleet(cargo_capacity=100, current_cargo=100, registries=fresh_registries)
     # Put fleet at same location as galaxy system
     mock_galaxy.systems[HexCoord(0, 0)].planets.append(colonized_planet)
 
@@ -92,7 +92,7 @@ def test_unload_fails_when_fleet_empty(mock_galaxy, colonized_planet, transport_
 
 # --- General Validation Tests ---
 
-def test_fails_when_fleet_not_at_planet():
+def test_fails_when_fleet_not_at_planet(fresh_registries):
     """Transfer fails when fleet is not at the planet's system."""
     # Planet in system at (10, 10), fleet at (0, 0)
     galaxy = MockGalaxy()
@@ -100,7 +100,7 @@ def test_fails_when_fleet_not_at_planet():
     system = MockSystem(HexCoord(10, 10), [planet])
     galaxy.add_system(system)
 
-    fleet = create_transport_fleet(location=HexCoord(0, 0))
+    fleet = create_transport_fleet(location=HexCoord(0, 0), registries=fresh_registries)
 
     result = TransferValidator.validate(
         galaxy, fleet, planet,
@@ -110,14 +110,14 @@ def test_fails_when_fleet_not_at_planet():
     assert result.error_code == "NOT_AT_PLANET"
 
 
-def test_fails_when_planet_uncolonized():
+def test_fails_when_planet_uncolonized(fresh_registries):
     """Transfer fails when planet is not colonized."""
     galaxy = MockGalaxy()
     uncolonized = create_test_planet(name="Wild Planet", owner_id=None, population_count=0)
     system = MockSystem(HexCoord(0, 0), [uncolonized])
     galaxy.add_system(system)
 
-    fleet = create_transport_fleet(location=HexCoord(0, 0))
+    fleet = create_transport_fleet(location=HexCoord(0, 0), registries=fresh_registries)
 
     result = TransferValidator.validate(
         galaxy, fleet, uncolonized,

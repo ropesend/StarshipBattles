@@ -10,6 +10,7 @@ from game.ai.strategy_manager import StrategyManager
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.simulation.components.component import load_components, load_modifiers, create_component
 from game.core.constants import LayerType
+from game.core.registry import get_default_registry_provider
 from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
 
 
@@ -26,12 +27,13 @@ def movement_ai_setup(fresh_registries):
     comp_path = data_dir / "components.json"
     mod_path = data_dir / "modifiers.json"
 
+    provider = get_default_registry_provider()
     mod_path_str = None
     if comp_path.exists():
-        load_components(str(comp_path))
+        load_components(str(comp_path), registry_provider=provider)
     if mod_path.exists():
         mod_path_str = str(mod_path)
-        load_modifiers(str(mod_path))
+        load_modifiers(str(mod_path), registry_provider=provider)
 
     manager = StrategyManager.instance()
     manager.load_data(

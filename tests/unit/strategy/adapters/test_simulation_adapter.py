@@ -74,7 +74,9 @@ class TestSimulationBattleResolverBehavior:
         fleet = MagicMock()
         fleet.id = 1
         fleet.has_ship_instances.return_value = True
-        fleet.to_battle_ships.return_value = [MagicMock(), MagicMock()]
+        # PROJ-210: battle adapter is now accessed via fleet.battle property
+        fleet.battle = MagicMock()
+        fleet.battle.to_battle_ships.return_value = [MagicMock(), MagicMock()]
         return fleet
 
     @pytest.fixture
@@ -83,7 +85,9 @@ class TestSimulationBattleResolverBehavior:
         fleet = MagicMock()
         fleet.id = 2
         fleet.has_ship_instances.return_value = True
-        fleet.to_battle_ships.return_value = []
+        # PROJ-210: battle adapter is now accessed via fleet.battle property
+        fleet.battle = MagicMock()
+        fleet.battle.to_battle_ships.return_value = []
         return fleet
 
     def test_resolve_battle_returns_battle_result(self, mock_fleet_with_ships):
@@ -159,7 +163,9 @@ class TestSimulationBattleResolverBehavior:
         fleet2 = MagicMock()
         fleet2.id = 2
         fleet2.has_ship_instances.return_value = True
-        fleet2.to_battle_ships.return_value = [MagicMock()]
+        # PROJ-210: to_battle_ships accessed via fleet.battle property
+        fleet2.battle = MagicMock()
+        fleet2.battle.to_battle_ships.return_value = [MagicMock()]
 
         with patch('game.strategy.adapters.simulation_adapter.BattleController') as mock_controller_cls, \
              patch('game.strategy.adapters.simulation_adapter.BattleService'):
@@ -175,11 +181,11 @@ class TestSimulationBattleResolverBehavior:
 
             resolver.resolve_battle(mock_fleet_with_ships, fleet2)
 
-            # Verify fleet1 converted with team_id=0 (registries=None is default)
-            mock_fleet_with_ships.to_battle_ships.assert_called_with(team_id=0, registries=None)
+            # PROJ-210: Verify fleet1 converted with team_id=0 via battle adapter
+            mock_fleet_with_ships.battle.to_battle_ships.assert_called_with(team_id=0, registries=None)
 
-            # Verify fleet2 converted with team_id=1 (registries=None is default)
-            fleet2.to_battle_ships.assert_called_with(team_id=1, registries=None)
+            # PROJ-210: Verify fleet2 converted with team_id=1 via battle adapter
+            fleet2.battle.to_battle_ships.assert_called_with(team_id=1, registries=None)
 
     def test_resolve_battle_converts_survivors_to_ships(self, mock_fleet_with_ships):
         """Survivors should be converted using to_ship() method."""

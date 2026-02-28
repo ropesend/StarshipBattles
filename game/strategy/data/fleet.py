@@ -1,116 +1,33 @@
-import logging
-from game.core.hex_math import HexCoord
-from game.core.validation_helpers import require_keys, validate_enum
-from game.strategy.data.ship_instance import ShipInstance
+"""
+Fleet data class.
 
-logger = logging.getLogger(__name__)
-from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
-from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
-from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
-from enum import Enum, auto
+FleetOrderSerializer extracted to fleet_order_serializer.py (PROJ-210).
+"""
+
+import logging
 from typing import List, Optional, Tuple, TYPE_CHECKING, Any, Dict
 
+from game.core.hex_math import HexCoord
 from game.core.protocols import IPostBattleShip
+from game.core.validation_helpers import require_keys
+from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
+from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
+from game.strategy.data.ship_instance import ShipInstance
+
+# PROJ-212: OrderType, FleetOrder, and order type sets extracted to order_types.py
+from game.strategy.data.order_types import (
+    OrderType,
+    FleetOrder,
+    MOVEMENT_ORDER_TYPES,
+    ACTION_ORDER_TYPES,
+)
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
     from game.strategy.data.planet import Planet
-
-
-class OrderType(Enum):
-    MOVE = auto()
-    WARP = auto()  # PROJ-187: Explicit warp point traversal
-    COLONIZE = auto()
-    MOVE_TO_FLEET = auto()
-    JOIN_FLEET = auto()
-    BUILD = auto()
-    TRANSFER = auto()
-    # Superweapon orders (PROJ-102)
-    IMPLODE_PLANET = auto()
-    STELLERATE_STAR = auto()
-    OPEN_WARP_POINT = auto()
-    CLOSE_WARP_POINT = auto()
-    CREATE_DYSON_SPHERE = auto()
-    SELF_DESTRUCT = auto()
-    LOAD_POPULATION = auto()
-    UNLOAD_POPULATION = auto()
-
-
-# PROJ-187: Order type categorization for ActionExecutionEngine
-# Movement orders are handled by FleetMovementEngine
-MOVEMENT_ORDER_TYPES: frozenset = frozenset({
-    OrderType.MOVE,
-    OrderType.MOVE_TO_FLEET,
-    OrderType.WARP,
-})
-
-# Action orders are handled by ActionExecutionEngine (tick-based execution)
-# Excludes BUILD (persistent, handled by ProductionEngine)
-ACTION_ORDER_TYPES: frozenset = frozenset({
-    OrderType.COLONIZE,
-    OrderType.TRANSFER,
-    OrderType.LOAD_POPULATION,
-    OrderType.UNLOAD_POPULATION,
-    OrderType.JOIN_FLEET,
-    OrderType.IMPLODE_PLANET,
-    OrderType.STELLERATE_STAR,
-    OrderType.OPEN_WARP_POINT,
-    OrderType.CLOSE_WARP_POINT,
-    OrderType.CREATE_DYSON_SPHERE,
-    OrderType.SELF_DESTRUCT,
-})
-
-
-class FleetOrder:
-    def __init__(self, order_type, target=None):
-        self.type = order_type
-        self.target = target  # HexCoord for MOVE/WARP, Planet for COLONIZE, Fleet for MOVE_TO_FLEET/JOIN_FLEET
-        self.execution_progress: int = 0  # PROJ-187: Ticks spent executing this order
-
-    def __repr__(self):
-        if self.execution_progress > 0:
-            return f"FleetOrder({self.type.name}, {self.target}, progress={self.execution_progress})"
-        return f"FleetOrder({self.type.name}, {self.target})"
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Serialize for save game."""
-        # Import at runtime to avoid circular import
-        from game.strategy.data.planet import Planet
-
-        target_data = None
-        if self.target is not None:
-            if self.type in (OrderType.TRANSFER, OrderType.LOAD_POPULATION, OrderType.UNLOAD_POPULATION):
-                # TRANSFER and population orders store a dict with direction, cargo_type, amount, planet_id
-                target_data = {'type': 'transfer', 'value': self.target}
-            elif self.type == OrderType.IMPLODE_PLANET and isinstance(self.target, Planet):
-                # Planet reference for IMPLODE_PLANET (PROJ-102)
-                target_data = {'type': 'planet_ref', 'id': self.target.id}
-            elif self.type == OrderType.SELF_DESTRUCT and isinstance(self.target, list):
-                # Ship ID list for SELF_DESTRUCT (PROJ-102)
-                target_data = {'type': 'ship_id_list', 'value': self.target}
-            elif self.type == OrderType.OPEN_WARP_POINT and isinstance(self.target, dict):
-                # Warp parameters for OPEN_WARP_POINT (PROJ-102)
-                target_data = {'type': 'warp_params', 'value': self.target}
-            elif isinstance(self.target, HexCoord):
-                # HexCoord for MOVE, WARP targets
-                target_data = {'q': self.target.q, 'r': self.target.r}
-            elif isinstance(self.target, Planet):
-                # Planet target (COLONIZE etc.) - serialize full planet
-                target_data = self.target.to_dict()
-            elif isinstance(self.target, Fleet):
-                # Fleet reference - store ID
-                target_data = {'type': 'fleet_ref', 'id': self.target.id}
-            else:
-                target_data = {'type': 'raw', 'value': str(self.target)}
-
-        result = {
-            'type': self.type.name,
-            'target': target_data,
-        }
-        # PROJ-187: Only serialize execution_progress when > 0 (keeps saves clean)
-        if self.execution_progress > 0:
-            result['execution_progress'] = self.execution_progress
-        return result
 
 
 class Fleet:
@@ -120,11 +37,19 @@ class Fleet:
     Ships are stored as ShipInstance objects with full state tracking.
     """
 
-    def __init__(self, fleet_id, owner_id, location, speed=5.0):
+    def __init__(
+        self,
+        fleet_id,
+        owner_id,
+        location,
+        speed=5.0,
+        component_registry: Optional[Dict[str, Any]] = None
+    ):
         self.id = fleet_id
         self.owner_id = owner_id  # 0=Player, 1=Enemy, etc
         self.location = location  # HexCoord
         self.ships: List[ShipInstance] = []
+        self._component_registry = component_registry
 
         # Movement & Orders
         self.speed = float(speed)
@@ -138,7 +63,8 @@ class Fleet:
         self._resource_agg = FleetResourceAggregator(self)
 
         # Delegate for capability queries (PROJ-87 Phase 4)
-        self._capabilities = FleetCapabilityCalculator(self)
+        # PROJ-211: Pass component_registry for DI
+        self._capabilities = FleetCapabilityCalculator(self, component_registry)
 
         # Delegate for battle conversion (PROJ-87 Phase 4)
         self._battle = FleetBattleAdapter(self)
@@ -205,14 +131,14 @@ class Fleet:
         return self._capabilities
 
     @property
-    def has_space_shipyard(self) -> bool:
-        """Check if fleet has an operational space shipyard."""
-        return self._capabilities.has_space_shipyard
+    def resources(self) -> 'FleetResourceAggregator':
+        """Public access to fleet resource aggregation."""
+        return self._resource_agg
 
     @property
-    def space_shipyard_count(self) -> int:
-        """Count total fleet space yard components across all combat-capable ships."""
-        return self._capabilities.space_shipyard_count
+    def battle(self) -> 'FleetBattleAdapter':
+        """Public access to fleet battle conversion."""
+        return self._battle
 
     @property
     def is_building(self) -> bool:
@@ -224,101 +150,8 @@ class Fleet:
         current = self.get_current_order()
         return current is not None and current.type == OrderType.BUILD
 
-    def can_build_type(self, vehicle_type: str, galaxy: Any = None) -> bool:
-        """Check if fleet can build the specified vehicle type."""
-        return self._capabilities.can_build_type(vehicle_type, galaxy)
-
-    def can_use_warp(self) -> bool:
-        """Check if ALL ships in fleet can use warp points."""
-        return self._capabilities.can_use_warp()
-
-    def get_warp_limiting_ship(self) -> Optional[ShipInstance]:
-        """Get the ship that prevents the fleet from using warp, if any."""
-        return self._capabilities.get_warp_limiting_ship()
-
-    # --- Generic Movement Resource Methods (delegated) ---
-
-    def get_movement_resource_costs(self) -> Dict[str, float]:
-        """Get total fleet resource costs per hex of movement."""
-        return self._resource_agg.get_movement_resource_costs()
-
-    def has_resources_for_movement(self) -> bool:
-        """Check if fleet has resources for at least one hex of movement."""
-        return self._resource_agg.has_resources_for_movement()
-
-    def consume_movement_resources(self, hexes: int = 1) -> bool:
-        """Consume all movement resources from all ships."""
-        return self._resource_agg.consume_movement_resources(hexes)
-
-    # --- Warp Resource Methods (delegated) ---
-
-    def get_warp_resource_costs(self) -> Dict[str, float]:
-        """Get total fleet resource costs for a warp jump."""
-        return self._resource_agg.get_warp_resource_costs()
-
-    def has_resources_for_warp(self) -> bool:
-        """Check if fleet has all required resources for a warp jump."""
-        return self._resource_agg.has_resources_for_warp()
-
-    def consume_warp_resources(self) -> bool:
-        """Consume all required resources from all ships for a warp jump."""
-        return self._resource_agg.consume_warp_resources()
-
-    # --- Capability Summary Methods (delegated) ---
-
-    def fuel_endurance(self) -> int:
-        """Calculate fleet fuel endurance in hexes."""
-        return self._resource_agg.fuel_endurance()
-
-    def warp_jumps_remaining(self) -> int:
-        """Calculate how many warp jumps fleet can make."""
-        return self._resource_agg.warp_jumps_remaining()
-
-    def get_capability_summary(self) -> Dict[str, Any]:
-        """Get comprehensive fleet capability summary for UI."""
-        return self._resource_agg.get_capability_summary()
-
-    # --- Cargo Methods (delegated) ---
-
-    def get_fleet_cargo_capacity(self, cargo_type: str) -> int:
-        """Get total fleet cargo capacity for a specific cargo type."""
-        return self._resource_agg.get_fleet_cargo_capacity(cargo_type)
-
-    def get_fleet_cargo_current(self, cargo_type: str) -> int:
-        """Get total current cargo loaded in the fleet for a specific type."""
-        return self._resource_agg.get_fleet_cargo_current(cargo_type)
-
-    def load_cargo_to_fleet(self, cargo_type: str, amount: int) -> int:
-        """Load cargo to the fleet, distributing across ships with capacity."""
-        return self._resource_agg.load_cargo_to_fleet(cargo_type, amount)
-
-    def unload_cargo_from_fleet(self, cargo_type: str, amount: int) -> int:
-        """Unload cargo from the fleet, collecting from ships."""
-        return self._resource_agg.unload_cargo_from_fleet(cargo_type, amount)
-
-    def to_battle_ships(
-        self,
-        team_id: int,
-        formation_positions: Optional[List[Tuple[float, float]]] = None,
-        registries: Optional['GameRegistries'] = None
-    ) -> List['Ship']:
-        """Convert fleet ships to simulation Ship objects for battle."""
-        return self._battle.to_battle_ships(team_id, formation_positions, registries)
-
-    def _default_formation_positions(
-        self,
-        count: int,
-        team_id: int
-    ) -> List[Tuple[float, float]]:
-        """Generate default formation positions for ships."""
-        return self._battle._default_formation_positions(count, team_id)
-
-    def update_from_battle_results(
-        self,
-        surviving_ships: List[IPostBattleShip],
-    ) -> None:
-        """Update fleet ships from battle results."""
-        self._battle.update_from_battle_results(surviving_ships)
+    # NOTE: PROJ-210 Phase 2 removed pass-through methods.
+    # Use fleet.capabilities.*, fleet.resources.*, fleet.battle.* directly.
 
     def add_order(self, order: FleetOrder, index: Optional[int] = None) -> None:
         """Add an order to the queue."""
@@ -386,12 +219,18 @@ class Fleet:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Fleet':
+    def from_dict(
+        cls,
+        data: Dict[str, Any],
+        registries: Optional['GameRegistries'] = None
+    ) -> 'Fleet':
         """
         Deserialize from save game.
 
         Args:
             data: Dict with fleet data
+            registries: Optional GameRegistries for DI. If provided, ships
+                and FleetCapabilityCalculator will use these registries.
 
         Returns:
             Reconstructed Fleet
@@ -399,8 +238,10 @@ class Fleet:
         Raises:
             PersistenceException: If required keys missing
         """
+        # PROJ-210: Order deserialization delegated to FleetOrderSerializer
+        from game.strategy.data.fleet_order_serializer import FleetOrderSerializer
+
         require_keys(data, ['id', 'owner_id'], 'Fleet')
-        # ShipInstance imported at module level
 
         location = data.get('location')
         if isinstance(location, dict) and 'q' in location and 'r' in location:
@@ -408,17 +249,22 @@ class Fleet:
         elif isinstance(location, list):
             location = HexCoord(location[0], location[1])
 
+        # PROJ-211: Extract component_registry from registries for DI
+        component_registry = registries.components if registries else None
+
         fleet = cls(
             fleet_id=data['id'],
             owner_id=data['owner_id'],
             location=location,
             speed=data.get('speed', 5.0),
+            component_registry=component_registry,
         )
 
         # Restore ships (skip corrupt entries with warning)
         for i, ship_data in enumerate(data.get('ships', [])):
             try:
-                fleet.ships.append(ShipInstance.from_dict(ship_data))
+                ship = ShipInstance.from_dict(ship_data, registries=registries)
+                fleet.ships.append(ship)
             except Exception as e:
                 logger.warning(f"Fleet {data['id']}: skipping corrupt ship[{i}]: {e}")
 
@@ -431,56 +277,35 @@ class Fleet:
             else:
                 fleet.path.append(p)
 
-        # Restore orders (skip corrupt entries with warning)
-        # Note: Multiple target formats supported:
-        # 1. {'q': x, 'r': y} - HexCoord.to_dict() format
-        # 2. {'type': 'fleet_ref', 'id': xxx} - Fleet reference for MOVE_TO_FLEET orders
-        # 3. {'type': 'raw', 'value': str} - Fallback string representation
-        # 4. {'type': 'transfer', 'value': {...}} - TRANSFER order params (PROJ-68)
-        # 5. {'type': 'planet_ref', 'id': xxx} - Planet reference (PROJ-102)
-        # 6. {'type': 'ship_id_list', 'value': [...]} - Ship IDs (PROJ-102)
-        # 7. {'type': 'warp_params', 'value': {...}} - Warp parameters (PROJ-102)
-        for i, order_data in enumerate(data.get('orders', [])):
-            try:
-                order_type = validate_enum(order_data['type'], OrderType, 'type', f'Fleet order[{i}]')
-                target = None
-
-                target_data = order_data.get('target')
-                if target_data is not None:
-                    if isinstance(target_data, dict):
-                        if 'q' in target_data and 'r' in target_data:
-                            # HexCoord.to_dict() format
-                            target = HexCoord(target_data['q'], target_data['r'])
-                        elif target_data.get('type') == 'fleet_ref':
-                            # Fleet reference - store ID for later resolution
-                            target = {'_fleet_ref': target_data['id']}
-                        elif target_data.get('type') == 'transfer':
-                            # TRANSFER order params dict (PROJ-68)
-                            target = target_data['value']
-                        elif target_data.get('type') == 'planet_ref':
-                            # Planet reference for IMPLODE_PLANET (PROJ-102)
-                            target = {'_planet_ref': target_data['id']}
-                        elif target_data.get('type') == 'ship_id_list':
-                            # Ship ID list for SELF_DESTRUCT (PROJ-102)
-                            target = target_data['value']
-                        elif target_data.get('type') == 'warp_params':
-                            # Warp parameters for OPEN_WARP_POINT (PROJ-102)
-                            target = target_data['value']
-                        elif target_data.get('type') == 'raw':
-                            # Raw string fallback
-                            target = target_data['value']
-
-                order = FleetOrder(order_type, target)
-                # PROJ-187: Restore execution_progress (default 0 for backward compat)
-                order.execution_progress = order_data.get('execution_progress', 0)
-                fleet.orders.append(order)
-            except Exception as e:
-                logger.warning(f"Fleet {data['id']}: skipping corrupt order[{i}]: {e}")
+        # PROJ-210: Restore orders using serializer
+        fleet.orders = FleetOrderSerializer.deserialize_orders(
+            data.get('orders', []),
+            data['id']
+        )
 
         # Restore construction queue
         fleet.construction_queue = data.get('construction_queue', [])
 
         return fleet
+
+    def resolve_order_references(self, galaxy: Any, empires: List[Any]) -> None:
+        """
+        Resolve order target references after deserialization.
+
+        During from_dict(), order targets that reference Fleets or Planets are stored
+        as marker dicts (_fleet_ref, _planet_ref). This method resolves those markers
+        to actual object references.
+
+        Orders with unresolvable references (deleted fleets/planets) are removed
+        with a warning.
+
+        Args:
+            galaxy: Galaxy object with get_planet_by_id() method
+            empires: List of Empire objects containing all fleets
+        """
+        # PROJ-210: Delegate to FleetOrderSerializer
+        from game.strategy.data.fleet_order_serializer import FleetOrderSerializer
+        FleetOrderSerializer.resolve_order_references(self, galaxy, empires)
 
     def __repr__(self):
         ship_count = len(self.ships)

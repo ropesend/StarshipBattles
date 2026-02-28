@@ -359,27 +359,27 @@ class TestEnvironmentalHazardEngine:
 class TestTurnEngineIntegration:
     """Test EnvironmentalHazardEngine integration with TurnEngine."""
 
-    def test_turn_engine_has_environmental_engine_property(self):
+    def test_turn_engine_has_environmental_engine_property(self, fresh_registries):
         """Test TurnEngine creates environmental engine via lazy-init."""
         from game.strategy.engine.turn_engine import TurnEngine
 
-        engine = TurnEngine()
+        engine = TurnEngine(registries=fresh_registries)
         env_engine = engine.environmental_engine
 
         # Should create default EnvironmentalHazardEngine
         assert env_engine is not None
         assert isinstance(env_engine, EnvironmentalHazardEngine)
 
-    def test_turn_engine_accepts_injected_environmental_engine(self):
+    def test_turn_engine_accepts_injected_environmental_engine(self, fresh_registries):
         """Test TurnEngine accepts injected environmental engine."""
         from game.strategy.engine.turn_engine import TurnEngine
 
         mock_env_engine = MagicMock()
-        engine = TurnEngine(environmental_engine=mock_env_engine)
+        engine = TurnEngine(registries=fresh_registries, environmental_engine=mock_env_engine)
 
         assert engine.environmental_engine is mock_env_engine
 
-    def test_turn_engine_calls_environmental_engine_each_tick(self):
+    def test_turn_engine_calls_environmental_engine_each_tick(self, fresh_registries):
         """Test TurnEngine calls environmental engine during process_turn."""
         from game.strategy.engine.turn_engine import TurnEngine
 
@@ -406,6 +406,7 @@ class TestTurnEngineIntegration:
         mock_action.process_action_ticks.return_value = []
 
         engine = TurnEngine(
+            registries=fresh_registries,
             movement_engine=mock_movement,
             production_engine=mock_production,
             order_processor=mock_order_proc,
@@ -429,7 +430,7 @@ class TestTurnEngineIntegration:
         # Should be called 100 times (once per tick)
         assert mock_env_engine.process_environmental_tick.call_count == 100
 
-    def test_turn_engine_accumulates_environmental_events(self):
+    def test_turn_engine_accumulates_environmental_events(self, fresh_registries):
         """Test TurnEngine accumulates environmental events from all ticks."""
         from game.strategy.engine.turn_engine import TurnEngine
 
@@ -468,6 +469,7 @@ class TestTurnEngineIntegration:
         mock_action.process_action_ticks.return_value = []
 
         engine = TurnEngine(
+            registries=fresh_registries,
             movement_engine=mock_movement,
             production_engine=mock_production,
             order_processor=mock_order_proc,

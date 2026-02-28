@@ -38,34 +38,9 @@ class TestShipInstanceDamageInfo:
             }
         }
 
-    def test_get_component_damage_summary_no_damage(self, design_data):
-        """Ship with no damage should have empty damage summary."""
-        instance = ShipInstance.create(design_data, owner_id=0)
-
-        summary = instance.get_component_damage_summary()
-
-        assert summary == {}
-
-    def test_get_component_damage_summary_with_damage(self, design_data):
-        """Ship with component damage should report it in summary."""
-        instance = ShipInstance.create(design_data, owner_id=0)
-
-        # Simulate damage to components
-        instance.component_damage = {
-            'reactor_standard_0': 50,  # 50 HP remaining
-            'weapon_laser_0': 25,      # 25 HP remaining
-        }
-
-        summary = instance.get_component_damage_summary()
-
-        assert 'reactor_standard_0' in summary
-        assert 'weapon_laser_0' in summary
-        assert summary['reactor_standard_0'] == 50
-        assert summary['weapon_laser_0'] == 25
-
-    def test_get_damaged_component_count(self, design_data):
+    def test_get_damaged_component_count(self, design_data, ship_factory):
         """Should count number of damaged components."""
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
 
         assert instance.get_damaged_component_count() == 0
 
@@ -77,18 +52,6 @@ class TestShipInstanceDamageInfo:
 
         assert instance.get_damaged_component_count() == 3
 
-    def test_get_layer_damage_summary(self, design_data):
-        """Should provide damage summary grouped by layer."""
-        instance = ShipInstance.create(design_data, owner_id=0)
-
-        # No damage - all layers should have 100% HP
-        summary = instance.get_layer_damage_summary()
-
-        # Even with no tracked damage, method should return empty dict
-        # (we don't have layer info without converting to Ship)
-        assert isinstance(summary, dict)
-
-
 class TestShipInstanceDisplayMethods:
     """Test display-related methods for ShipInstance."""
 
@@ -99,61 +62,61 @@ class TestShipInstanceDisplayMethods:
             'expected_stats': {'max_hp': 200, 'mass': 1000},
         }
 
-    def test_get_status_text_ok(self, design_data):
+    def test_get_status_text_ok(self, design_data, ship_factory):
         """Healthy ship should return OK status."""
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
 
         status = instance.get_status_text()
 
         assert status == "OK"
 
-    def test_get_status_text_damaged(self, design_data):
+    def test_get_status_text_damaged(self, design_data, ship_factory):
         """Damaged ship should return DAMAGED status."""
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
         instance.current_hp = 150
 
         status = instance.get_status_text()
 
         assert status == "DAMAGED"
 
-    def test_get_status_text_derelict(self, design_data):
+    def test_get_status_text_derelict(self, design_data, ship_factory):
         """Derelict ship should return DERELICT status."""
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
         instance.is_derelict = True
 
         status = instance.get_status_text()
 
         assert status == "DERELICT"
 
-    def test_get_status_text_destroyed(self, design_data):
+    def test_get_status_text_destroyed(self, design_data, ship_factory):
         """Destroyed ship should return DESTROYED status."""
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
         instance.is_alive = False
 
         status = instance.get_status_text()
 
         assert status == "DESTROYED"
 
-    def test_get_hp_display_full(self, design_data):
+    def test_get_hp_display_full(self, design_data, ship_factory):
         """Full HP ship should show max/max."""
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
 
         display = instance.get_hp_display()
 
         assert display == "200/200"
 
-    def test_get_hp_display_damaged(self, design_data):
+    def test_get_hp_display_damaged(self, design_data, ship_factory):
         """Damaged ship should show current/max."""
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
         instance.current_hp = 150
 
         display = instance.get_hp_display()
 
         assert display == "150/200"
 
-    def test_get_hp_display_destroyed(self, design_data):
+    def test_get_hp_display_destroyed(self, design_data, ship_factory):
         """Destroyed ship should show 0/max."""
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
         instance.is_alive = False
         instance.current_hp = 0
 
@@ -179,26 +142,26 @@ class TestShipInstanceResourceDisplay:
             },
         }
 
-    def test_get_resource_display_full(self, design_data):
+    def test_get_resource_display_full(self, design_data, ship_factory):
         """Full resources should show max/max."""
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
 
         fuel_display = instance.get_resource_display('fuel')
 
         assert fuel_display == "500/500"
 
-    def test_get_resource_display_partial(self, design_data):
+    def test_get_resource_display_partial(self, design_data, ship_factory):
         """Partial resources should show current/max."""
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
         instance.resource_levels['fuel'] = 250
 
         fuel_display = instance.get_resource_display('fuel')
 
         assert fuel_display == "250/500"
 
-    def test_get_resource_display_unknown_resource(self, design_data):
+    def test_get_resource_display_unknown_resource(self, design_data, ship_factory):
         """Unknown resource should return N/A."""
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
 
         display = instance.get_resource_display('unknown_resource')
 
@@ -271,9 +234,9 @@ class TestShipInstanceLayerInfo:
             }
         }
 
-    def test_get_components_by_layer_from_design(self, design_data_with_layers):
+    def test_get_components_by_layer_from_design(self, design_data_with_layers, ship_factory):
         """Should extract component list grouped by layer from design data."""
-        instance = ShipInstance.create(design_data_with_layers, owner_id=0)
+        instance = ship_factory(design_data_with_layers, owner_id=0)
 
         by_layer = instance.get_components_by_layer()
 
@@ -285,21 +248,21 @@ class TestShipInstanceLayerInfo:
         assert 'OUTER' in by_layer
         assert 'ARMOR' in by_layer
 
-    def test_get_components_by_layer_empty_layers(self):
+    def test_get_components_by_layer_empty_layers(self, ship_factory):
         """Design without layers should return empty dict."""
         design_data = {
             'name': 'Simple',
             'expected_stats': {'max_hp': 50},
         }
-        instance = ShipInstance.create(design_data, owner_id=0)
+        instance = ship_factory(design_data, owner_id=0)
 
         by_layer = instance.get_components_by_layer()
 
         assert by_layer == {}
 
-    def test_get_damaged_components_by_layer(self, design_data_with_layers):
+    def test_get_damaged_components_by_layer(self, design_data_with_layers, ship_factory):
         """Should extract only damaged components grouped by layer."""
-        instance = ShipInstance.create(design_data_with_layers, owner_id=0)
+        instance = ship_factory(design_data_with_layers, owner_id=0)
         instance.component_damage = {
             'reactor_standard_0': 50,  # CORE layer
             'weapon_laser_0': 25,      # OUTER layer

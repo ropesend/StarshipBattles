@@ -8,6 +8,7 @@ from game.simulation.components.component import load_components, create_compone
 from game.core.constants import LayerType
 from game.simulation.entities.ship_stats import ShipStatsCalculator
 from game.core.paths import Paths
+from game.core.registry import get_default_registry_provider
 from tests.fixtures.paths import get_project_root
 
 
@@ -16,9 +17,11 @@ class TestBug09Endurance:
     @pytest.fixture(autouse=True)
     def setup(self, fresh_registries):
         pygame.init()
+        # PROJ-211: Pass registry_provider explicitly (no fallback)
+        provider = get_default_registry_provider()
         # Initialize shared data
-        initialize_ship_data(str(get_project_root()))
-        load_components(Paths.COMPONENTS_FILE)
+        initialize_ship_data(str(get_project_root()), registry_provider=provider)
+        load_components(Paths.COMPONENTS_FILE, registry_provider=provider)
         self.registries = fresh_registries
         ship = Ship("EnduranceRepro", 0, 0, (255, 255, 255), ship_class="Cruiser", registries=fresh_registries)
         calculator = ShipStatsCalculator(ship.vehicle_classes if hasattr(ship, 'vehicle_classes') else {})

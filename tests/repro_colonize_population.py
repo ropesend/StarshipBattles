@@ -1,7 +1,8 @@
 import unittest
 from unittest.mock import MagicMock
 from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 
 class TestColonizePopulation(unittest.TestCase):
@@ -15,7 +16,7 @@ class TestColonizePopulation(unittest.TestCase):
         fleet.orders = []
         fleet.get_current_order.return_value = FleetOrder(OrderType.COLONIZE, None)
         # Mock cargo: 0 passengers
-        fleet.get_fleet_cargo_current.return_value = 0
+        fleet.resources.get_fleet_cargo_current.return_value = 0
         fleet.unload_cargo_from_fleet = MagicMock()
 
         # Mock Empire with Race Config

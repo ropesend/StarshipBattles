@@ -2,6 +2,9 @@
 
 Cross-layer imports (acceptable for UI):
 - OrderType: Runtime - displays and filters order types
+
+PROJ-208 Phase 1: Refactored to use DeleteFleetOrderCommand and ReorderFleetOrderCommand
+via command pipeline callbacks. Undo feature removed (command-level undo is future work).
 """
 from __future__ import annotations
 
@@ -15,17 +18,40 @@ from game.ui.config import UIConfig
 from game.core.hex_math import HexCoord
 from game.core.input_actions import InputAction
 from game.core.protocols import is_planet, is_fleet
-from game.strategy.data.fleet import OrderType
+from game.strategy.data.order_types import OrderType
 
 if TYPE_CHECKING:
     from game.ui.services.input_mapper import InputMapper
+    from typing import Callable
 
 class FleetOrdersWindow(pygame_gui.elements.UIWindow):
     """
     Window to manage a Fleet's orders.
-    Allows re-ordering, deletion, undeletion, and clearing.
+    Allows re-ordering, deletion, and clearing.
+
+    PROJ-208: Operations route through command callbacks instead of direct mutation.
     """
-    def __init__(self, rect, manager, fleet, input_mapper: Optional['InputMapper'] = None):
+    def __init__(
+        self,
+        rect,
+        manager,
+        fleet,
+        input_mapper: Optional['InputMapper'] = None,
+        clear_orders_callback: Optional['Callable[[int], None]'] = None,
+        delete_order_callback: Optional['Callable[[int, int], None]'] = None,
+        reorder_order_callback: Optional['Callable[[int, int, int], None]'] = None
+    ):
+        """Initialize the Fleet Orders Window.
+
+        Args:
+            rect: Window position and size.
+            manager: pygame_gui UIManager.
+            fleet: Fleet object to display orders for.
+            input_mapper: Optional InputMapper for hotkey tooltips.
+            clear_orders_callback: Callback(fleet_id) to clear all orders.
+            delete_order_callback: Callback(fleet_id, order_index) to delete an order.
+            reorder_order_callback: Callback(fleet_id, order_index, direction: int) to reorder (-1=up, +1=down).
+        """
         super().__init__(
             rect=rect,
             manager=manager,
@@ -35,9 +61,11 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
         )
         self.fleet = fleet
         self._mapper = input_mapper
-
-        # Undo History: Stores (index, order_object) tuples
-        self.deleted_history = []
+        # PROJ-207 Phase 4: Callback to dispatch clear orders through command pipeline
+        self._clear_orders_callback = clear_orders_callback
+        # PROJ-208 Phase 1: Callbacks for delete/reorder operations
+        self._delete_order_callback = delete_order_callback
+        self._reorder_order_callback = reorder_order_callback
         
         # --- UI Layout ---
         
@@ -61,17 +89,8 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
             container=self,
             anchors={'left': 'right', 'right': 'right', 'top': 'bottom', 'bottom': 'bottom'}
         )
-        
-        self.btn_undo = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(10, -40, 100, 30),
-            text="Undo Delete",
-            manager=manager,
-            container=self,
-            anchors={'left': 'left', 'right': 'left', 'top': 'bottom', 'bottom': 'bottom'}
-        )
-        self.btn_undo.disable()
 
-        self.rows = [] # Keep track of row UI elements
+        self.rows = []  # Keep track of row UI elements
         self._last_order_count = len(fleet.orders)
         self.rebuild_list()
         self._apply_tooltips()
@@ -204,9 +223,6 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
         """Enrich buttons with hotkey hint tooltips from InputMapper."""
         if not self._mapper:
             return
-        undo_hint = self._mapper.get_display_text(InputAction.FLEET_ORDERS_UNDO)
-        if undo_hint:
-            self.btn_undo.set_tooltip(f"Undo Delete ({undo_hint})")
         clear_hint = self._mapper.get_display_text(InputAction.FLEET_ORDERS_CLEAR)
         if clear_hint:
             self.btn_clear.set_tooltip(f"Clear All ({clear_hint})")
@@ -223,9 +239,6 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
         if not self._mapper:
             return False
         action = self._mapper.resolve(event, contexts=["fleet_orders"])
-        if action == InputAction.FLEET_ORDERS_UNDO:
-            self.undo_delete()
-            return True
         if action == InputAction.FLEET_ORDERS_CLEAR:
             self.show_clear_confirmation()
             return True
@@ -243,11 +256,6 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
             if event.ui_element == self.btn_clear:
                 self.show_clear_confirmation()
                 handled = True
-            
-            elif event.ui_element == self.btn_undo:
-                self.undo_delete()
-                handled = True
-                
             else:
                 # Check row buttons
                 # IDs are #up_0, #down_1, #del_2 etc.
@@ -269,52 +277,29 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
         return handled
         
     def move_order(self, index, direction):
-        """Swap order at index with index + direction."""
+        """Swap order at index with index + direction.
+
+        PROJ-208: Routes through ReorderFleetOrderCommand via callback.
+        """
+        if not self._reorder_order_callback:
+            return
+
         new_index = index + direction
-        orders = self.fleet.orders
-        
-        if 0 <= new_index < len(orders):
-            orders[index], orders[new_index] = orders[new_index], orders[index]
-            
-            # If we moved the active order (index 0), we must invalidate current path
-            if index == 0 or new_index == 0:
-                self.fleet.path = []
-                
+        if 0 <= new_index < len(self.fleet.orders):
+            # PROJ-208: Pass int direction (-1 for up, +1 for down) to command handler
+            self._reorder_order_callback(self.fleet.id, index, direction)
             self.rebuild_list()
-            
+
     def delete_order(self, index):
-        """Remove order and add to undo stack."""
+        """Remove order at index.
+
+        PROJ-208: Routes through DeleteFleetOrderCommand via callback.
+        """
+        if not self._delete_order_callback:
+            return
+
         if 0 <= index < len(self.fleet.orders):
-            order = self.fleet.orders.pop(index)
-            
-            # If we deleted the active order (index 0), invalidate current path
-            if index == 0:
-                self.fleet.path = []
-                
-            # Store (original_index, order)
-            self.deleted_history.append((index, order))
-            self.btn_undo.enable()
-            self.rebuild_list()
-            
-    def undo_delete(self):
-        """Restore last deleted order."""
-        if self.deleted_history:
-            original_index, order = self.deleted_history.pop()
-            
-            # Clamp index to bounds (it might be out of range if other items were deleted/moved)
-            # Actually, insert handles out-of-bounds by appending, which is fine.
-            if original_index > len(self.fleet.orders):
-                original_index = len(self.fleet.orders)
-                
-            self.fleet.orders.insert(original_index, order)
-            
-            # If we restored to the active slot, invalidate path to be safe
-            if original_index == 0:
-                self.fleet.path = []
-            
-            if not self.deleted_history:
-                self.btn_undo.disable()
-                
+            self._delete_order_callback(self.fleet.id, index)
             self.rebuild_list()
             
     def show_clear_confirmation(self):
@@ -380,12 +365,15 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
     # Let's assume for this task, I will implement a `handle_global_event` method on `FleetOrdersWindow` and call it from `StrategyScreen`.
     
     def handle_global_event(self, event):
-        """Handle events from the wider application (like dialog confirmations)."""
+        """Handle events from the wider application (like dialog confirmations).
+
+        PROJ-207 Phase 4: Clear orders routes through command pipeline via callback.
+        PROJ-208 Phase 1: Removed fallback - callback is now required.
+        """
         if event.type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
             if event.ui_element.object_ids[-1] == '#confirm_clear_orders':
-                self.fleet.clear_orders()
-                self.deleted_history.clear()
-                self.btn_undo.disable()
-                self.rebuild_list()
-                return True
+                if self._clear_orders_callback:
+                    self._clear_orders_callback(self.fleet.id)
+                    self.rebuild_list()
+                    return True
         return False

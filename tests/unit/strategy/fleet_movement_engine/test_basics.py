@@ -7,7 +7,8 @@ Tests creation, movement calculation, and movement application.
 import pytest
 from unittest.mock import MagicMock, patch
 
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 
 
@@ -170,7 +171,7 @@ class TestMovementApplication:
 
         engine.apply_movement(mock_fleet, next_hex, mock_galaxy)
 
-        mock_fleet.consume_movement_resources.assert_called_with(1)
+        mock_fleet.resources.consume_movement_resources.assert_called_with(1)
 
     def test_apply_movement_fails_without_resources(self, mock_fleet, mock_galaxy):
         """apply_movement fails if fleet lacks resources."""
@@ -178,7 +179,7 @@ class TestMovementApplication:
 
         engine = FleetMovementEngine()
         next_hex = HexCoord(5, 0)
-        mock_fleet.has_resources_for_movement.return_value = False
+        mock_fleet.resources.has_resources_for_movement.return_value = False
         original_location = mock_fleet.location
 
         result = engine.apply_movement(mock_fleet, next_hex, mock_galaxy)

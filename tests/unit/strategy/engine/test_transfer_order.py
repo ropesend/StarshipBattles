@@ -6,7 +6,8 @@ PROJ-68 Phase 6: Tests for transfer order type, serialization, and processing.
 import pytest
 from unittest.mock import MagicMock, patch
 
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.strategy.data.ship_instance import ShipInstance
 from game.core.hex_math import HexCoord
 from game.strategy.data.planet import Planet, PlanetType, SpeciesPopulation
@@ -193,7 +194,7 @@ class TestFleetOrderProcessorTransfer:
         assert result.success
         assert result.amount_transferred == 50
         assert planet.populations[0].count == 450  # 500 - 50
-        assert fleet.get_fleet_cargo_current("passengers") == 50
+        assert fleet.resources.get_fleet_cargo_current("passengers") == 50
         assert len(fleet.orders) == 0  # Order completed
 
     def test_process_transfer_unload_passengers_to_colony(self):
@@ -227,7 +228,7 @@ class TestFleetOrderProcessorTransfer:
         assert result.success
         assert result.amount_transferred == 30
         assert planet.populations[0].count == 130  # 100 + 30
-        assert fleet.get_fleet_cargo_current("passengers") == 50  # 80 - 30
+        assert fleet.resources.get_fleet_cargo_current("passengers") == 50  # 80 - 30
         assert len(fleet.orders) == 0
 
     def test_transfer_partial_amount(self):
@@ -258,7 +259,7 @@ class TestFleetOrderProcessorTransfer:
         # Should only transfer what's available (20)
         assert result.amount_transferred == 20
         assert planet.populations[0].count == 0
-        assert fleet.get_fleet_cargo_current("passengers") == 20
+        assert fleet.resources.get_fleet_cargo_current("passengers") == 20
 
     def test_transfer_all_when_amount_zero(self):
         """Amount=0 transfers all available."""
@@ -288,7 +289,7 @@ class TestFleetOrderProcessorTransfer:
         assert result.success
         assert result.amount_transferred == 75  # All cargo
         assert planet.populations[0].count == 175
-        assert fleet.get_fleet_cargo_current("passengers") == 0
+        assert fleet.resources.get_fleet_cargo_current("passengers") == 0
 
     def test_transfer_creates_species_population_if_missing(self):
         """Unloading to a colony without that species creates new SpeciesPopulation."""
@@ -372,7 +373,7 @@ class TestFleetOrderProcessorTransfer:
         assert vulcan_pop.count == 150
         assert human_pop.count == 500
         # Fleet should have vulcan passengers
-        assert fleet.get_fleet_cargo_current("passengers") == 50
+        assert fleet.resources.get_fleet_cargo_current("passengers") == 50
 
     def test_process_transfer_species_specific_unload(self):
         """Unload a specific species from fleet to colony."""

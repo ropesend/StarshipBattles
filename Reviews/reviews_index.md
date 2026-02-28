@@ -13,6 +13,11 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 ## Active Reviews
 | Date | Type | Description | Status | Link |
 |------|------|-------------|--------|------|
+| 2026-02-27 | General Review | strategy-god-classes | In Progress | [2026-02-27_211327_general_strategy-god-classes](results/2026-02-27_211327_general_strategy-god-classes/) |
+| 2026-02-27 | General Review | circular-dependency-deferred-imports | In Progress | [2026-02-27_211243_general_circular-dependency-deferred-imports](results/2026-02-27_211243_general_circular-dependency-deferred-imports/) |
+| 2026-02-27 | General Review | di-inconsistency-strategy | Led to Project | [2026-02-27_211222_general_di-inconsistency-strategy](results/2026-02-27_211222_general_di-inconsistency-strategy/) |
+| 2026-02-27 | General Review | cyclomatic-complexity-deep-dive | In Progress | [2026-02-27_211154_general_cyclomatic-complexity-deep-dive](results/2026-02-27_211154_general_cyclomatic-complexity-deep-dive/) |
+| 2026-02-27 | General Review | facade-bypass-layering-violations | In Progress | [2026-02-27_211111_general_facade-bypass-layering-violations](results/2026-02-27_211111_general_facade-bypass-layering-violations/) |
 | 2026-02-27 | General Review | fleet-order-systems | In Progress | [2026-02-27_153151_general_fleet-order-systems](results/2026-02-27_153151_general_fleet-order-systems/) |
 | 2026-02-27 | General Review | legacy-code-audit | In Progress | [2026-02-27_141504_general_legacy-code-audit](results/2026-02-27_141504_general_legacy-code-audit/) |
 | 2026-02-27 | General Review | dead-code-elimination | In Progress | [2026-02-27_141459_general_dead-code-elimination](results/2026-02-27_141459_general_dead-code-elimination/) |
@@ -88,6 +93,7 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 | 2026-02-10_sweep_full-codebase-sweep | PROJ-110 | Test Coverage - Core Systems (54 findings) |
 | 2026-02-10_sweep_full-codebase-sweep | PROJ-111 | Test Coverage - UI & Framework (41 findings) |
 | 2026-02-23_195305_consistency_logger-json-pattern-standardization | PROJ-175 | Logger & JSON Pattern Standardization (15 findings) |
+| 2026-02-27_211222_general_di-inconsistency-strategy | PROJ-211 | Eradicate DI Fallback Anti-Pattern (5 phases, 13 production files) |
 
 ---
 

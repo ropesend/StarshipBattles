@@ -7,7 +7,8 @@ Tests warp travel, path management, and fleet intercept.
 import pytest
 from unittest.mock import MagicMock, patch
 
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 
 
@@ -78,7 +79,7 @@ class TestWarpTravel:
 
         result = engine.apply_movement(mock_fleet, distant_hex, mock_galaxy)
 
-        mock_fleet.consume_warp_resources.assert_called()
+        mock_fleet.resources.consume_warp_resources.assert_called()
 
     def test_warp_not_detected_for_adjacent_hex(self, mock_fleet, mock_galaxy):
         """Warp is not detected for adjacent hex."""
@@ -90,37 +91,45 @@ class TestWarpTravel:
 
         engine.apply_movement(mock_fleet, adjacent_hex, mock_galaxy)
 
-        mock_fleet.consume_warp_resources.assert_not_called()
+        mock_fleet.resources.consume_warp_resources.assert_not_called()
 
     def test_warp_fails_without_capability(self, mock_fleet, mock_galaxy):
-        """Warp fails if fleet lacks warp capability."""
+        """Warp fails if fleet lacks warp capability.
+
+        PROJ-207 EP-005: Warp failures now pop_order() instead of clear_orders().
+        Fleet can still move normally, so subsequent orders should survive.
+        """
         from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
 
         engine = FleetMovementEngine()
         mock_fleet.location = HexCoord(0, 0)
         distant_hex = HexCoord(50, 0)
-        mock_fleet.can_use_warp.return_value = False
+        mock_fleet.capabilities.can_use_warp.return_value = False
 
         result = engine.apply_movement(mock_fleet, distant_hex, mock_galaxy)
 
         assert result.moved is False
         assert result.warp_blocked is True
-        mock_fleet.clear_orders.assert_called()
+        mock_fleet.pop_order.assert_called()  # PROJ-207: pop_order instead of clear_orders
 
     def test_warp_fails_without_resources(self, mock_fleet, mock_galaxy):
-        """Warp fails if fleet lacks warp resources."""
+        """Warp fails if fleet lacks warp resources.
+
+        PROJ-207 EP-005: Warp failures now pop_order() instead of clear_orders().
+        Fleet can still move normally, so subsequent orders should survive.
+        """
         from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
 
         engine = FleetMovementEngine()
         mock_fleet.location = HexCoord(0, 0)
         distant_hex = HexCoord(50, 0)
-        mock_fleet.can_use_warp.return_value = True
-        mock_fleet.has_resources_for_warp.return_value = False
+        mock_fleet.capabilities.can_use_warp.return_value = True
+        mock_fleet.resources.has_resources_for_warp.return_value = False
 
         result = engine.apply_movement(mock_fleet, distant_hex, mock_galaxy)
 
         assert result.moved is False
-        mock_fleet.clear_orders.assert_called()
+        mock_fleet.pop_order.assert_called()  # PROJ-207: pop_order instead of clear_orders
 
 
 # =============================================================================

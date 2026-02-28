@@ -58,15 +58,20 @@ class BuildQueueScreen:
         hex_coord: 'HexCoord' = None,
         galaxy: 'Galaxy' = None,
         empire: 'Empire' = None,
-        input_mapper: Optional['InputMapper'] = None
+        input_mapper: Optional['InputMapper'] = None,
+        facade=None
     ):
-        """Initialize the build queue screen."""
+        """Initialize the build queue screen.
+
+        PROJ-208 Phase 3: Added facade parameter for CQRS-compliant command dispatch.
+        """
         # Validate required parameters
         self._validate_params(hex_coord, galaxy, empire, build_context)
 
         self.manager = manager
         self.build_context = build_context
         self.session = session
+        self.facade = facade  # PROJ-208: For command dispatch
         self.on_close = on_close_callback
         self.portrait_surface = portrait_surface
         self._mapper = input_mapper
@@ -122,6 +127,7 @@ class BuildQueueScreen:
         )
 
         # Controller for queue business logic
+        # PROJ-208: Create callback for AddToConstructionQueueCommand dispatch
         self.controller = BuildQueueController(
             build_context=self.build_context,
             design_library=self.design_library,
@@ -131,7 +137,8 @@ class BuildQueueScreen:
             hex_coord=self.hex_coord,
             galaxy=self.galaxy,
             empire=self.empire,
-            on_planet_selection_needed=self._prompt_target_planet
+            on_planet_selection_needed=self._prompt_target_planet,
+            add_to_queue_callback=self._dispatch_add_to_queue_command,
         )
 
         # Sync controller with initial queue selection
@@ -139,12 +146,14 @@ class BuildQueueScreen:
             self.controller.set_active_queue(self.active_queue_source)
 
         # Drag-drop handling
+        # PROJ-208: Inject remove callback for command dispatch
         self.drag_handler = BuildQueueDragHandler(
             portrait_loader=self.portrait_loader,
             design_library=self.design_library,
             on_add_to_queue=self.controller.add_to_queue,
             on_refresh_queue=self._refresh_queue_display,
-            on_refresh_design_report=self.controller.refresh_design_report
+            on_refresh_design_report=self.controller.refresh_design_report,
+            on_remove_from_queue=self._dispatch_remove_from_queue_command,
         )
 
         # Apply hotkey tooltips
@@ -210,6 +219,83 @@ class BuildQueueScreen:
         if self.active_queue_source is not None:
             return self.active_queue_source.construction_queue
         return self.build_context.construction_queue
+
+    # -----------------------------------------------------------------------
+    # Command Dispatch (PROJ-208)
+    # -----------------------------------------------------------------------
+
+    def _dispatch_add_to_queue_command(
+        self,
+        entity_id: int,
+        entity_type: str,
+        design_id: str,
+        category: str,
+        index: Optional[int],
+        target_planet_id: Optional[int],
+        queue_id: Optional[str],
+    ) -> None:
+        """Dispatch AddToConstructionQueueCommand through command pipeline.
+
+        PROJ-208: Routes build queue additions through CQRS command system.
+        PROJ-208 Phase 3: Route through facade for CQRS consistency.
+
+        Args:
+            entity_id: Planet or fleet ID.
+            entity_type: "planet" or "fleet".
+            design_id: ID of the design to build.
+            category: Design category ("complex", "ship", "satellite", "fighter").
+            index: Optional insertion index. None = append.
+            target_planet_id: For complexes built at fleet yards, the target planet.
+            queue_id: Optional queue identifier for multi-queue entities (e.g., shipyard facility ID).
+        """
+        from game.strategy.engine.commands import AddToConstructionQueueCommand
+        cmd = AddToConstructionQueueCommand(
+            entity_id=entity_id,
+            entity_type=entity_type,
+            design_id=design_id,
+            category=category,
+            index=index,
+            target_planet_id=target_planet_id,
+            queue_id=queue_id,
+        )
+        # PROJ-208 Phase 3: Route through facade if available, fallback to session
+        if self.facade:
+            self.facade.handle_command(cmd)
+        else:
+            self.session.handle_command(cmd)
+
+    def _dispatch_remove_from_queue_command(self, item_index: int) -> None:
+        """Dispatch RemoveFromConstructionQueueCommand through command pipeline.
+
+        PROJ-208: Routes build queue removals (drag-from-queue) through CQRS command system.
+        PROJ-208 Phase 3: Route through facade for CQRS consistency.
+
+        Args:
+            item_index: Index of the item to remove from the active queue.
+        """
+        from game.strategy.engine.commands import RemoveFromConstructionQueueCommand
+
+        # Determine entity from active queue source
+        source = self.active_queue_source
+        if source is None:
+            # Fallback to build_context
+            entity = self.build_context
+        else:
+            entity = source.owner_entity
+
+        entity_type = "planet" if hasattr(entity, 'planet_type') else "fleet"
+        entity_id = getattr(entity, 'id', 0)
+
+        cmd = RemoveFromConstructionQueueCommand(
+            entity_id=entity_id,
+            entity_type=entity_type,
+            item_index=item_index,
+        )
+        # PROJ-208 Phase 3: Route through facade if available, fallback to session
+        if self.facade:
+            self.facade.handle_command(cmd)
+        else:
+            self.session.handle_command(cmd)
 
     # -----------------------------------------------------------------------
     # Refresh Methods (delegate to renderer)
@@ -299,15 +385,18 @@ class BuildQueueScreen:
             pass  # Handled by selector
 
     def _handle_remove(self):
-        """Handle remove from queue action."""
+        """Handle remove from queue action.
+
+        PROJ-208: Routes removal through RemoveFromConstructionQueueCommand.
+        """
         if len(self.selected_queue_indices) > 1:
             logger.warning("Cannot remove items in multi-select mode")
             return
 
         remove_queue = self._get_active_queue()
         if self.selected_queue_index is not None and self.selected_queue_index < len(remove_queue):
-            removed_item = remove_queue.pop(self.selected_queue_index)
-            design_id = removed_item.get('design_id', 'Unknown')
+            design_id = remove_queue[self.selected_queue_index].get('design_id', 'Unknown')
+            self._dispatch_remove_from_queue_command(self.selected_queue_index)
             logger.info(f"Removed {design_id} from queue at index {self.selected_queue_index}")
             self.selected_queue_index = None
             self._refresh_queue_display()

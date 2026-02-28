@@ -14,8 +14,8 @@ class TestTransferValidatorRobustness:
     def mock_fleet(self):
         fleet = MagicMock()
         fleet.location = HexCoord(10, 10) # Global system location
-        fleet.get_fleet_cargo_capacity.return_value = 1000
-        fleet.get_fleet_cargo_current.return_value = 0
+        fleet.resources.get_fleet_cargo_capacity.return_value = 1000
+        fleet.resources.get_fleet_cargo_current.return_value = 0
         return fleet
 
     @pytest.fixture

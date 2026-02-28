@@ -2,16 +2,20 @@
 import pytest
 from unittest.mock import MagicMock
 
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.facade.dto.fleet_dto import FleetInfo
 
 
 class TestFleetInfoBuildFields:
-    """Test cases for FleetInfo BUILD-related DTO fields."""
+    """Test cases for FleetInfo BUILD-related DTO fields.
+
+    PROJ-211: Updated to set _registries on mocks for DI compliance.
+    """
 
     @pytest.fixture
-    def make_ship_with_yard(self):
+    def make_ship_with_yard(self, fresh_registries):
         """Factory for creating ship with fleet_space_yard component."""
         def _make(name="Yard Ship"):
             mock = MagicMock()
@@ -22,6 +26,8 @@ class TestFleetInfoBuildFields:
             mock.get_hp_percentage.return_value = 1.0
             # For can_use_warp() via ShipStatsCalculator
             mock.get_calculated_stats.return_value = {'mass': 5000}
+            # PROJ-211: Set _registries for DI compliance
+            mock._registries = fresh_registries
             mock.design_data = {
                 'name': name,
                 'ship_class': 'Support',
@@ -34,7 +40,7 @@ class TestFleetInfoBuildFields:
         return _make
 
     @pytest.fixture
-    def make_regular_ship(self):
+    def make_regular_ship(self, fresh_registries):
         """Factory for creating regular ship without yard."""
         def _make(name="Scout"):
             mock = MagicMock()
@@ -45,6 +51,8 @@ class TestFleetInfoBuildFields:
             mock.get_hp_percentage.return_value = 1.0
             # For can_use_warp() via ShipStatsCalculator
             mock.get_calculated_stats.return_value = {'mass': 2000}
+            # PROJ-211: Set _registries for DI compliance
+            mock._registries = fresh_registries
             mock.design_data = {
                 'name': name,
                 'ship_class': 'Scout',

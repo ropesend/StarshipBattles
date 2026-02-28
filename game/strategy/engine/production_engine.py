@@ -18,15 +18,36 @@ Responsibilities:
 
 import logging
 import uuid
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, NamedTuple
 
 from game.core.event_logging import log_event
 from game.strategy.events.event_types import EventType, EventCategory
 from game.strategy.services.design_cost_calculator import DesignCostCalculator
 
 logger = logging.getLogger(__name__)
+
+# PROJ-209 Phase 2: Named constants for production tick processing
+TICKS_PER_TURN = 100  # Number of ticks per game turn
+TICK_CAPACITY_EPSILON = 0.0001  # Minimum tick capacity to continue processing
+COMPLETION_EPSILON = 0.001  # Tolerance for float comparison in completion check
+MAX_QUEUE_ITERATIONS = 10  # Safety limit to prevent infinite loops
+
+
+class TickExpenditure(NamedTuple):
+    """Result of tick expenditure calculation.
+
+    PROJ-209 Phase 2: Extracted from _process_queue_tick_dynamic.
+    """
+
+    remaining_cost: Dict[str, float]  # Resources still needed
+    ticks_to_spend: float  # Time fraction to spend this step
+    cost_this_step: Dict[str, float]  # Resources to consume this step
+    max_ticks_needed: float  # Total ticks needed to complete item
+
+
 from game.strategy.data.build_queue_source import _facility_is_shipyard
-from game.strategy.data.fleet import Fleet, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import OrderType
 from game.strategy.data.planet import PlanetaryFacility
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.systems.design_library import DesignLibrary
@@ -53,9 +74,15 @@ class ProductionEngine:
     - ticks_in_current_turn: int - Tick counter within current turn
     """
 
-    def __init__(self):
-        """Initialize the production engine."""
-        pass
+    def __init__(self, registries=None):
+        """Initialize the production engine.
+
+        PROJ-211: Added registries parameter for DI compliance.
+
+        Args:
+            registries: Optional GameRegistries for ship creation.
+        """
+        self._registries = registries
 
     # --- Resource Cost Methods (PROJ-75 Phase 4) ---
 
@@ -127,7 +154,7 @@ class ProductionEngine:
 
             # 3. Fleet queues
             for fleet in empire.fleets:
-                if not fleet.is_building or not fleet.has_space_shipyard:
+                if not fleet.is_building or not fleet.capabilities.has_space_shipyard:
                     continue
                 
                 # Check for complex production location constraints early
@@ -163,7 +190,7 @@ class ProductionEngine:
                 # I will calculate total rate based on all yards.
                 # Default rate * count.
                 
-                yard_count = fleet.space_shipyard_count
+                yard_count = fleet.capabilities.space_shipyard_count
                 base_rate = get_default_production_rates("fleet_space_yard")
                 # Multiply rates by count
                 total_rate = {k: v * yard_count for k, v in base_rate.items()}
@@ -218,136 +245,247 @@ class ProductionEngine:
         
         # Max iterations to prevent infinite loops if something weird happens (e.g. 0 cost items)
         iterations = 0
-        while tick_capacity > 0.0001 and queue and iterations < 10:
+        while tick_capacity > TICK_CAPACITY_EPSILON and queue and iterations < MAX_QUEUE_ITERATIONS:
             iterations += 1
             item = queue[0]
-            
-            # Validation
-            if not isinstance(item, dict):
-                queue.pop(0) # Remove invalid
+
+            # Validate queue item (PROJ-209: extracted to helper)
+            validation_result = self._validate_queue_item(
+                item, colony_or_fleet, galaxy, is_complex_only
+            )
+            if validation_result == "skip":
+                queue.pop(0)
                 continue
-                
-            vehicle_type = item.get('type', 'ship')
-            design_id = item['design_id']
+            if validation_result == "stop":
+                return
 
-            # Filter check
-            if is_complex_only and vehicle_type != 'complex':
-                # Should not happen in base queue if Controller did its job, 
-                # but if it does, we can't build it here. 
-                # Legacy code returned; we should probably just stop processing this queue
-                # as it blocks the slot? Or skip it? 
-                # Legacy says "skipping ... item (use facility queue)".
-                # Since it's a list, the item is physically blocking the queue.
-                return 
+            # Calculate tick expenditure (PROJ-209: extracted to helper)
+            expenditure = self._calculate_tick_expenditure(
+                item, tick_capacity, production_rate
+            )
 
-            # Fleet complex location check
-            if isinstance(colony_or_fleet, Fleet) and vehicle_type == 'complex':
-                if not galaxy: 
-                    return
-                planets_at_hex = galaxy.get_planets_at_global_hex(colony_or_fleet.location)
-                if not planets_at_hex:
-                    return # Paused, not at planet
+            # Handle special cases
+            if expenditure is None:
+                # Zero production rate for required resource - cannot build
+                return
 
-            # Calculate remaining cost
-            # Ensure item has cost tracking initialized
-            if 'total_cost' not in item:
-                 # Should have been set by controller, but safety fallback
-                 item['total_cost'] = self._calculate_design_cost(item) # Need to load design? 
-                 # _calculate_design_cost expects design_data. We don't have it easily here without loading.
-                 # Actually, we can assume if it's missing, we can't process it accurately yet.
-                 # But let's try to trust the item has 'total_cost' from Controller.
-                 # If likely legacy item matches invalid state:
-                 pass
-
-            total_cost = item.get('total_cost', {})
-            resources_consumed = item.get('resources_consumed', {})
-            
-            # Calculate what is left
-            remaining_cost = {}
-            for res, amount in total_cost.items():
-                consumed = resources_consumed.get(res, 0.0)
-                remaining = max(0.0, amount - consumed)
-                if remaining > 0:
-                    remaining_cost[res] = remaining
-            
-            # If no remaining cost, it's done (or free). Finish immediately.
-            if not remaining_cost:
+            if not expenditure.remaining_cost:
+                # No remaining cost = complete/free item
                 self._complete_item(queue, item, empire, colony_or_fleet, galaxy, save_path, tick)
                 continue
 
-            # Determine limiting resource
-            # Time needed (in ticks) = (Remaining / (Rate/100))
-            # Rate is per TURN. Rate per tick is Rate / 100.
-            max_ticks_needed = 0.0
-            
-            for res, amount in remaining_cost.items():
-                p_rate_per_turn = production_rate.get(res, 0.0)
-                if p_rate_per_turn <= 0:
-                    # Requirements but no production rate! 
-                    # If we have 0 rate for a required resource, valid turns is INFINITY.
-                    # We cannot build this.
-                    return # Stops queue
-                
-                p_rate_per_tick = p_rate_per_turn / 100.0
-                ticks_needed = amount / p_rate_per_tick
-                if ticks_needed > max_ticks_needed:
-                    max_ticks_needed = ticks_needed
-            
-            # Calculate fraction of tick to use
-            ticks_to_spend = min(tick_capacity, max_ticks_needed)
-            
-            # Calculate resources to consume for this fraction
-            cost_this_step = {}
-            for res, amount in total_cost.items(): # Iterate total to include all cost types
-                # Rate * Fraction * 1/100
-                # Actually, wait. We consume ALL resources proportionally.
-                # Rate is the conversion rate of potential->progress.
-                # If we spend `ticks_to_spend` time, we consume `rate * ticks` resources.
-                # BUT we must limit by `remaining_cost` to avoid over-consumption 
-                # (though strict math should handle it if ticks_to_spend is precise).
-                
-                p_rate_per_tick = production_rate.get(res, 0.0) / 100.0
-                to_consume = p_rate_per_tick * ticks_to_spend
-                
-                # Clamp to remaining (handle floating point errors)
-                rem = remaining_cost.get(res, 0.0)
-                to_consume = min(to_consume, rem)
-                
-                cost_this_step[res] = to_consume
+            # Check affordability (PROJ-209: extracted to helper)
+            if not self._check_affordability(empire, expenditure.cost_this_step):
+                return  # Paused - insufficient resources
 
-            # Check affordability
-            if not empire.has_resources(cost_this_step):
-                return # Paused - insufficient resources
-            
-            # Consume resources
-            for res, amount in cost_this_step.items():
-                if amount > 0:
-                    empire.consume_resources(res, amount)
-                    item['resources_consumed'][res] = item.get('resources_consumed', {}).get(res, 0.0) + amount
-            
+            # Consume resources (PROJ-209: extracted to helper)
+            self._apply_resource_consumption(empire, item, expenditure.cost_this_step)
+
             # Decrement capacity
-            tick_capacity -= ticks_to_spend
-            
-            # Calculate turns_remaining for UI display (approximate)
-            # Remaining ticks / 100
-            if max_ticks_needed > 0:
-                 current_est_ticks = max_ticks_needed - ticks_to_spend
-                 item['turns_remaining'] = current_est_ticks / 100.0
-            else:
-                 item['turns_remaining'] = 0
+            tick_capacity -= expenditure.ticks_to_spend
 
-            # Check completion
-            # We re-calculate remaining to be sure
-            is_complete = True
-            for res, total in total_cost.items():
-                consumed = item['resources_consumed'].get(res, 0.0)
-                if consumed < total - 0.001: # Epsilon for float
-                    is_complete = False
-                    break
-            
-            if is_complete:
-                 self._complete_item(queue, item, empire, colony_or_fleet, galaxy, save_path, tick)
-                 # Loop continues with remaining tick_capacity
+            # Update UI display (PROJ-209: extracted to helper)
+            self._update_turns_remaining(item, expenditure)
+
+            # Check completion (PROJ-209: extracted to helper)
+            if self._check_item_completion(item):
+                self._complete_item(queue, item, empire, colony_or_fleet, galaxy, save_path, tick)
+                # Loop continues with remaining tick_capacity
+
+    def _validate_queue_item(
+        self,
+        item: Dict,
+        colony_or_fleet,
+        galaxy,
+        is_complex_only: bool
+    ) -> str:
+        """Validate a queue item and determine if processing should continue.
+
+        PROJ-209 Phase 2: Extracted from _process_queue_tick_dynamic.
+
+        Args:
+            item: The queue item dict.
+            colony_or_fleet: The colony or fleet context.
+            galaxy: Galaxy object for location checks.
+            is_complex_only: Whether this queue only processes complexes.
+
+        Returns:
+            "valid" - Item can be processed.
+            "skip" - Item is invalid, should be removed from queue and continue.
+            "stop" - Processing should halt (constraint not met).
+        """
+        # Type check
+        if not isinstance(item, dict):
+            return "skip"
+
+        vehicle_type = item.get('type', 'ship')
+        design_id = item.get('design_id')
+
+        # Filter check: complex-only queue can't build ships
+        if is_complex_only and vehicle_type != 'complex':
+            return "stop"
+
+        # Fleet complex location check
+        if isinstance(colony_or_fleet, Fleet) and vehicle_type == 'complex':
+            if not galaxy:
+                return "stop"
+            planets_at_hex = galaxy.get_planets_at_global_hex(colony_or_fleet.location)
+            if not planets_at_hex:
+                return "stop"  # Paused, not at planet
+
+        # Cost tracking check (AR-01 fix)
+        if 'total_cost' not in item:
+            logger.warning(
+                f"Queue item {design_id} missing 'total_cost' - skipping "
+                f"(should have been set by build queue controller)"
+            )
+            return "skip"
+
+        return "valid"
+
+    def _calculate_tick_expenditure(
+        self,
+        item: Dict,
+        tick_capacity: float,
+        production_rate: Dict[str, float]
+    ) -> Optional[TickExpenditure]:
+        """Calculate resource expenditure for a single production tick.
+
+        PROJ-209 Phase 2: Extracted from _process_queue_tick_dynamic.
+        This method is pure - no side effects.
+
+        Args:
+            item: The queue item dict with total_cost and resources_consumed.
+            tick_capacity: Available tick capacity (0.0 to 1.0).
+            production_rate: Production rate per turn for each resource.
+
+        Returns:
+            TickExpenditure with calculated values, or None if:
+            - No remaining cost (item is complete/free)
+            - Zero production rate for a required resource
+        """
+        total_cost = item['total_cost']
+        resources_consumed = item.get('resources_consumed', {})
+
+        # Calculate remaining cost
+        remaining_cost = {}
+        for res, amount in total_cost.items():
+            consumed = resources_consumed.get(res, 0.0)
+            remaining = max(0.0, amount - consumed)
+            if remaining > 0:
+                remaining_cost[res] = remaining
+
+        # No remaining cost = complete/free
+        if not remaining_cost:
+            return TickExpenditure(
+                remaining_cost={},
+                ticks_to_spend=0.0,
+                cost_this_step={},
+                max_ticks_needed=0.0
+            )
+
+        # Determine limiting resource and max ticks needed
+        max_ticks_needed = 0.0
+        for res, amount in remaining_cost.items():
+            p_rate_per_turn = production_rate.get(res, 0.0)
+            if p_rate_per_turn <= 0:
+                # Cannot build - zero rate for required resource
+                return None
+
+            p_rate_per_tick = p_rate_per_turn / TICKS_PER_TURN
+            ticks_needed = amount / p_rate_per_tick
+            if ticks_needed > max_ticks_needed:
+                max_ticks_needed = ticks_needed
+
+        # Calculate fraction of tick to use
+        ticks_to_spend = min(tick_capacity, max_ticks_needed)
+
+        # Calculate resources to consume
+        cost_this_step = {}
+        for res in total_cost:
+            p_rate_per_tick = production_rate.get(res, 0.0) / TICKS_PER_TURN
+            to_consume = p_rate_per_tick * ticks_to_spend
+            # Clamp to remaining (handle floating point errors)
+            rem = remaining_cost.get(res, 0.0)
+            to_consume = min(to_consume, rem)
+            cost_this_step[res] = to_consume
+
+        return TickExpenditure(
+            remaining_cost=remaining_cost,
+            ticks_to_spend=ticks_to_spend,
+            cost_this_step=cost_this_step,
+            max_ticks_needed=max_ticks_needed
+        )
+
+    def _check_affordability(self, empire, cost_this_step: Dict[str, float]) -> bool:
+        """Check if empire can afford the resource cost.
+
+        PROJ-209 Phase 2: Extracted from _process_queue_tick_dynamic.
+
+        Args:
+            empire: The empire to check resources for.
+            cost_this_step: Resources needed this step.
+
+        Returns:
+            True if empire has sufficient resources, False otherwise.
+        """
+        return empire.has_resources(cost_this_step)
+
+    def _apply_resource_consumption(
+        self,
+        empire,
+        item: Dict,
+        cost_this_step: Dict[str, float]
+    ) -> None:
+        """Consume resources and update item's consumption tracking.
+
+        PROJ-209 Phase 2: Extracted from _process_queue_tick_dynamic.
+
+        Args:
+            empire: Empire to deduct resources from.
+            item: Queue item to update resources_consumed on.
+            cost_this_step: Resources to consume.
+        """
+        for res, amount in cost_this_step.items():
+            if amount > 0:
+                empire.consume_resources(res, amount)
+                item['resources_consumed'][res] = (
+                    item.get('resources_consumed', {}).get(res, 0.0) + amount
+                )
+
+    def _check_item_completion(self, item: Dict) -> bool:
+        """Check if an item has been fully produced.
+
+        PROJ-209 Phase 2: Extracted from _process_queue_tick_dynamic.
+        Pure function - no side effects.
+
+        Args:
+            item: Queue item with total_cost and resources_consumed.
+
+        Returns:
+            True if all resources have been consumed (within epsilon).
+        """
+        total_cost = item['total_cost']
+        for res, total in total_cost.items():
+            consumed = item['resources_consumed'].get(res, 0.0)
+            if consumed < total - COMPLETION_EPSILON:
+                return False
+        return True
+
+    def _update_turns_remaining(self, item: Dict, expenditure: TickExpenditure) -> None:
+        """Update the turns_remaining field for UI display.
+
+        PROJ-209 Phase 2: Extracted from _process_queue_tick_dynamic.
+
+        Args:
+            item: Queue item to update.
+            expenditure: The tick expenditure result.
+        """
+        if expenditure.max_ticks_needed > 0:
+            current_est_ticks = expenditure.max_ticks_needed - expenditure.ticks_to_spend
+            item['turns_remaining'] = current_est_ticks / TICKS_PER_TURN
+        else:
+            item['turns_remaining'] = 0
 
     def _complete_item(self, queue, item, empire, colony_or_fleet, galaxy, save_path, tick):
         """Handle completion of a construction item.
@@ -464,12 +602,14 @@ class ProductionEngine:
             return
 
         # Create ShipInstance (with serial number)
+        # PROJ-211: Pass registries for DI compliance
         ship_instance = ShipInstance.create(
             design_id=design_id,
             design_data=design_data,
             owner_id=empire.id,
             name=design_data.get("name", design_id),
-            empire=empire
+            empire=empire,
+            registries=self._registries,
         )
 
         # Create fleet with unique ID
@@ -523,12 +663,14 @@ class ProductionEngine:
             return
 
         # Create ShipInstance (with serial number)
+        # PROJ-211: Pass registries for DI compliance
         ship_instance = ShipInstance.create(
             design_id=design_id,
             design_data=design_data,
             owner_id=empire.id,
             name=design_data.get("name", design_id),
-            empire=empire
+            empire=empire,
+            registries=self._registries,
         )
 
         # Add ship to the building fleet

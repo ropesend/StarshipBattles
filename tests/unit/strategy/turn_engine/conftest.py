@@ -8,7 +8,8 @@ from enum import Enum
 from unittest.mock import MagicMock
 
 from game.strategy.engine.turn_engine import TurnEngine
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.strategy.data.ship_instance import ShipInstance
@@ -20,9 +21,9 @@ class MockPlanetType(Enum):
 
 
 @pytest.fixture
-def turn_engine():
-    """Create a fresh turn engine."""
-    return TurnEngine()
+def turn_engine(fresh_registries):
+    """Create a fresh turn engine with DI registries."""
+    return TurnEngine(registries=fresh_registries)
 
 
 @pytest.fixture
@@ -69,10 +70,10 @@ def mock_fleet():
     fleet.remove_ship = MagicMock(side_effect=lambda ship: fleet.ships.remove(ship))
     fleet.get_current_order = MagicMock(return_value=None)
     fleet.pop_order = MagicMock()
-    fleet.has_resources_for_movement = MagicMock(return_value=True)
-    fleet.has_resources_for_warp = MagicMock(return_value=True)
-    fleet.consume_movement_resources = MagicMock()
-    fleet.consume_warp_resources = MagicMock()
+    fleet.resources.has_resources_for_movement = MagicMock(return_value=True)
+    fleet.resources.has_resources_for_warp = MagicMock(return_value=True)
+    fleet.resources.consume_movement_resources = MagicMock()
+    fleet.resources.consume_warp_resources = MagicMock()
     fleet.clear_orders = MagicMock()
     return fleet
 

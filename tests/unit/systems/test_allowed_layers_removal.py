@@ -8,6 +8,7 @@ import pytest
 
 from game.simulation.components.component import Component
 from game.simulation.entities.ship import Ship, LayerType
+from game.core.registry import get_default_registry_provider
 
 
 @pytest.fixture
@@ -31,8 +32,9 @@ class TestBuilderDropValidation:
             pytest.skip("No bridge in registry")
         bridge = comps['bridge'].clone()
 
-        # Validate should work without AttributeError
-        result = get_or_create_validator().validate_addition(cruiser_ship, bridge, LayerType.CORE)
+        # PROJ-211: Pass registry_provider explicitly (no fallback)
+        provider = get_default_registry_provider()
+        result = get_or_create_validator(registry_provider=provider).validate_addition(cruiser_ship, bridge, LayerType.CORE)
 
         # Result should be a ValidationResult object
         assert hasattr(result, 'is_valid')
@@ -55,8 +57,10 @@ class TestBuilderDropValidation:
 
         weapon = comps[weapon_id].clone()
 
+        # PROJ-211: Pass registry_provider explicitly (no fallback)
+        provider = get_default_registry_provider()
         # Try to place weapon in CORE (should be blocked by block_classification:Weapons rule)
-        result = get_or_create_validator().validate_addition(cruiser_ship, weapon, LayerType.CORE)
+        result = get_or_create_validator(registry_provider=provider).validate_addition(cruiser_ship, weapon, LayerType.CORE)
 
         # Weapon should fail validation in CORE
         assert not result.is_valid, "Weapon should not be allowed in CORE layer"
@@ -77,6 +81,8 @@ class TestBuilderDropValidation:
 
         armor = fresh_registries.components[armor_id].clone()
 
-        result = get_or_create_validator().validate_addition(cruiser_ship, armor, LayerType.ARMOR)
+        # PROJ-211: Pass registry_provider explicitly (no fallback)
+        provider = get_default_registry_provider()
+        result = get_or_create_validator(registry_provider=provider).validate_addition(cruiser_ship, armor, LayerType.ARMOR)
 
         assert result.is_valid, f"Armor should be allowed in ARMOR layer. Errors: {result.errors}"

@@ -39,6 +39,8 @@ from game.ui.screens.workshop_ship_io import WorkshopShipIO
 from game.ui.screens.workshop_data_reloader import WorkshopDataReloader
 from game.ui.colors import COLORS
 from game.ui.screens.builder.detail_panel import ComponentDetailPanel
+from game.ui.screens.builder.modifier_logic import ModifierLogic
+from game.ui.services.vehicle_class_service import VehicleClassService
 
 BG_COLOR = COLORS['bg_deep']
 
@@ -67,9 +69,15 @@ class DesignWorkshopScreen:
         self.event_bus = EventBus()
         self.screenshot_manager = ScreenshotManager.instance()
 
+        # PROJ-211: Initialize ModifierLogic with registry provider
+        ModifierLogic.init_service(context.registries)
+
         # PROJ-43: UI service adapters for ship I/O and design loading
         self._ship_io_adapter = ShipIOAdapter()
         self._design_loader_adapter = DesignLoaderAdapter(registry_provider=context.registries)
+
+        # PROJ-211: Create VehicleClassService for sub-panels
+        self._vehicle_class_service = VehicleClassService(context.registries)
 
         # MVVM: Create ViewModel to manage builder state
         # PROJ-38: Pass context for DI
@@ -118,7 +126,11 @@ class DesignWorkshopScreen:
             self.width - sch_x - self.right_panel_width,
             self.height - self.bottom_bar_height - self.weapons_report_height - self.modifier_grid_panel_height
         )
-        self.view = SchematicView(rect, self.sprite_mgr, self.theme_manager)
+        # PROJ-211: Pass VehicleClassService for strict DI
+        self.view = SchematicView(
+            rect, self.sprite_mgr, self.theme_manager,
+            vehicle_class_service=self._vehicle_class_service
+        )
         self.controller = InteractionController(self, self.view)
         
         self.error_message = ""
@@ -215,12 +227,14 @@ class DesignWorkshopScreen:
             # Register Drop Target
             self.controller.register_drop_target(self.layer_panel)
             
+            # PROJ-211: Pass VehicleClassService for strict DI
             self.right_panel = BuilderRightPanel(
                 self, self.ui_manager,
                 pygame.Rect(self.width - self.right_panel_width, 0,
                             self.right_panel_width, self.height - self.bottom_bar_height),
                 event_bus=self.event_bus,
                 viewmodel=self.viewmodel,
+                vehicle_class_service=self._vehicle_class_service,
                 hide_theme_selector=self.context.is_integrated()
             )
             

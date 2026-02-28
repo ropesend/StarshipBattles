@@ -150,8 +150,9 @@ class TestExecuteIntercept:
 
         mock_fleet = Mock()
         mock_fleet.id = 10
+        # PROJ-208: target is now FleetInfo DTO with fleet_id attribute
         mock_target = Mock()
-        mock_target.id = 20
+        mock_target.fleet_id = 20
 
         ops.execute_intercept(mock_fleet, mock_target)
 
@@ -173,8 +174,9 @@ class TestExecuteIntercept:
 
         mock_fleet = Mock()
         mock_fleet.id = 10
+        # PROJ-208: target is now FleetInfo DTO with fleet_id attribute
         mock_target = Mock()
-        mock_target.id = 20
+        mock_target.fleet_id = 20
 
         result = ops.execute_intercept(mock_fleet, mock_target)
 
@@ -198,9 +200,10 @@ class TestHandleJoinDesignation:
 
         ops = FleetOperations(mock_scene, mock_facade)
 
-        # Mock get_fleet_at_hex to return a target fleet
+        # Mock get_fleet_at_hex to return a FleetInfo DTO
+        # PROJ-208: FleetInfo uses fleet_id not id
         mock_target = Mock()
-        mock_target.id = 50
+        mock_target.fleet_id = 50
         mock_target.owner_id = 1
 
         mock_selected = Mock()
@@ -252,7 +255,10 @@ class TestHandleJoinDesignation:
 
         mock_selected = Mock()
         mock_selected.id = 40
-        ops.get_fleet_at_hex = Mock(return_value=mock_selected)  # Same fleet
+        # PROJ-208: get_fleet_at_hex returns FleetInfo DTO with fleet_id
+        mock_target_info = Mock()
+        mock_target_info.fleet_id = 40  # Same ID as selected
+        ops.get_fleet_at_hex = Mock(return_value=mock_target_info)
 
         result = ops.handle_join_designation(100, 100, mock_selected)
 
@@ -270,8 +276,9 @@ class TestHandleJoinDesignation:
 
         ops = FleetOperations(mock_scene, mock_facade)
 
+        # PROJ-208: get_fleet_at_hex returns FleetInfo DTO with fleet_id
         mock_target = Mock()
-        mock_target.id = 50
+        mock_target.fleet_id = 50
         mock_target.owner_id = 2  # Different owner
 
         mock_selected = Mock()

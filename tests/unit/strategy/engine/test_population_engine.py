@@ -329,7 +329,7 @@ class TestAptitudeConversion:
 class TestTurnEngineIntegration:
     """Test PopulationEngine integration with TurnEngine."""
 
-    def test_turn_engine_calls_population_engine(self):
+    def test_turn_engine_calls_population_engine(self, fresh_registries):
         """TurnEngine calls PopulationEngine when injected."""
         from game.strategy.engine.turn_engine import TurnEngine
 
@@ -338,6 +338,7 @@ class TestTurnEngineIntegration:
 
         # Inject into TurnEngine
         turn_engine = TurnEngine(
+            registries=fresh_registries,
             population_engine=mock_pop_engine
         )
 

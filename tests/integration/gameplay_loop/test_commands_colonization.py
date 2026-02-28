@@ -8,21 +8,23 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.engine.commands import CommandType
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.ship_instance import ShipInstance
 from tests.conftest import make_mock_ship_instance
 
 
-def make_colony_ship_for_planet(planet, owner_id: int) -> ShipInstance:
+def make_colony_ship_for_planet(planet, owner_id: int, registries=None) -> ShipInstance:
     """Create a ship with a colony pod matching the planet's type.
 
     PROJ-55: Ships now need colony pods to colonize specific planet types.
+    PROJ-211: Added registries parameter for DI compliance.
     """
     planet_type_str = planet.planet_type.name
     pod_id = f"{planet_type_str.lower()}_colony_pod"
 
-    return ShipInstance(
+    ship = ShipInstance(
         instance_id=f"colony-ship-{planet_type_str.lower()}-{id(planet)}",
         design_id=f"{planet_type_str}_colony_ship",
         name=f"Colony Ship ({planet_type_str})",
@@ -31,11 +33,15 @@ def make_colony_ship_for_planet(planet, owner_id: int) -> ShipInstance:
             'name': f"Colony Ship ({planet_type_str})",
             'vehicle_type': 'Ship',
             'stats': {'mass': 100},
+            'expected_stats': {'speed': 10.0},  # PROJ-211: For Fleet speed calc
             'layers': {
                 'HULL': [{'id': pod_id}]
             }
         },
     )
+    if registries is not None:
+        ship.set_registries(registries)
+    return ship
 
 
 # =============================================================================
@@ -142,22 +148,28 @@ class TestCommandExecution:
 class TestBattleResolution:
     """Tests for battle resolution when fleets meet."""
 
-    def test_opposing_fleets_trigger_combat(self, turn_engine, two_empire_setup):
+    def test_opposing_fleets_trigger_combat(self, turn_engine, two_empire_setup, fresh_registries):
         """Fleets from different empires at same hex trigger combat."""
         empire1, empire2, galaxy = two_empire_setup
         empires = [empire1, empire2]
+
+        # PROJ-211: Create ships with registries for DI compliance
+        def make_ship(name, owner_id):
+            ship = make_mock_ship_instance(name, owner_id)
+            ship.set_registries(fresh_registries)
+            return ship
 
         # Create opposing fleets at same location
         loc = HexCoord(0, 0)
         fleet1 = Fleet(1, empire1.id, loc, speed=10.0)
         fleet1.ships = [
-            make_mock_ship_instance("Scout", empire1.id),
-            make_mock_ship_instance("Destroyer", empire1.id)
+            make_ship("Scout", empire1.id),
+            make_ship("Destroyer", empire1.id)
         ]
         empire1.add_fleet(fleet1)
 
         fleet2 = Fleet(2, empire2.id, loc, speed=10.0)
-        fleet2.ships = [make_mock_ship_instance("Scout", empire2.id)]
+        fleet2.ships = [make_ship("Scout", empire2.id)]
         empire2.add_fleet(fleet2)
 
         total_fleets = len(empire1.fleets) + len(empire2.fleets)
@@ -168,19 +180,25 @@ class TestBattleResolution:
         remaining_fleets = len(empire1.fleets) + len(empire2.fleets)
         assert remaining_fleets < total_fleets
 
-    def test_same_empire_fleets_no_combat(self, turn_engine, two_empire_setup):
+    def test_same_empire_fleets_no_combat(self, turn_engine, two_empire_setup, fresh_registries):
         """Fleets from same empire don't fight each other."""
         empire1, empire2, galaxy = two_empire_setup
         empires = [empire1, empire2]
 
+        # PROJ-211: Create ships with registries for DI compliance
+        def make_ship(name, owner_id):
+            ship = make_mock_ship_instance(name, owner_id)
+            ship.set_registries(fresh_registries)
+            return ship
+
         # Create two fleets from same empire at same location
         loc = HexCoord(0, 0)
         fleet1 = Fleet(1, empire1.id, loc, speed=10.0)
-        fleet1.ships = [make_mock_ship_instance("Scout", empire1.id)]
+        fleet1.ships = [make_ship("Scout", empire1.id)]
         empire1.add_fleet(fleet1)
 
         fleet2 = Fleet(2, empire1.id, loc, speed=10.0)  # Same empire
-        fleet2.ships = [make_mock_ship_instance("Destroyer", empire1.id)]
+        fleet2.ships = [make_ship("Destroyer", empire1.id)]
         empire1.add_fleet(fleet2)
 
         initial_fleets = len(empire1.fleets)
@@ -199,7 +217,7 @@ class TestBattleResolution:
 class TestColonizationWorkflow:
     """Tests for colonization during turn execution."""
 
-    def test_colonize_order_claims_planet(self, turn_engine, two_empire_setup):
+    def test_colonize_order_claims_planet(self, turn_engine, two_empire_setup, fresh_registries):
         """COLONIZE order transfers planet ownership."""
         empire1, empire2, galaxy = two_empire_setup
         empires = [empire1, empire2]
@@ -222,8 +240,9 @@ class TestColonizationWorkflow:
 
         # Create fleet at planet's GLOBAL location (system + local offset)
         # PROJ-55: Use colony ship with correct pod type
+        # PROJ-211: Pass registries for DI compliance
         fleet = Fleet(1, empire1.id, global_loc, speed=10.0)
-        fleet.ships = [make_colony_ship_for_planet(target_planet, empire1.id)]
+        fleet.ships = [make_colony_ship_for_planet(target_planet, empire1.id, registries=fresh_registries)]
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
         empire1.add_fleet(fleet)
 
@@ -235,7 +254,7 @@ class TestColonizationWorkflow:
         assert len(empire1.colonies) > initial_colonies
         assert target_planet.owner_id == empire1.id
 
-    def test_colonize_removes_fleet(self, turn_engine, two_empire_setup):
+    def test_colonize_removes_fleet(self, turn_engine, two_empire_setup, fresh_registries):
         """Colonizing fleet is consumed."""
         empire1, empire2, galaxy = two_empire_setup
         empires = [empire1, empire2]
@@ -257,8 +276,9 @@ class TestColonizationWorkflow:
             pytest.skip("No unowned planet available")
 
         # PROJ-55: Use colony ship with correct pod type
+        # PROJ-211: Pass registries for DI compliance
         fleet = Fleet(1, empire1.id, global_loc, speed=10.0)
-        fleet.ships = [make_colony_ship_for_planet(target_planet, empire1.id)]
+        fleet.ships = [make_colony_ship_for_planet(target_planet, empire1.id, registries=fresh_registries)]
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
         empire1.add_fleet(fleet)
 

@@ -8,7 +8,8 @@ from unittest.mock import MagicMock
 from game.strategy.engine.commands import IssueColonizeCommand, CommandType
 from game.strategy.engine.turn_engine import TurnEngine
 from game.core.validation import ValidationResult
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.galaxy import Galaxy, StarSystem, Planet
 
@@ -41,8 +42,8 @@ def create_mock_fleet_with_colony_pod(fleet_id, location, planet_type_str="CONTI
 
 
 class TestCommands:
-    def test_issue_colonize_command_validation_success(self):
-        turn_engine = TurnEngine()
+    def test_issue_colonize_command_validation_success(self, fresh_registries):
+        turn_engine = TurnEngine(registries=fresh_registries)
         galaxy = MagicMock(spec=Galaxy)
 
         # PROJ-55: Use fleet with colony pod matching planet type
@@ -79,8 +80,8 @@ class TestCommands:
         assert res.is_valid
         assert res.errors == []
 
-    def test_issue_colonize_command_validation_fail_owned(self):
-        turn_engine = TurnEngine()
+    def test_issue_colonize_command_validation_fail_owned(self, fresh_registries):
+        turn_engine = TurnEngine(registries=fresh_registries)
         galaxy = MagicMock(spec=Galaxy)
         fleet = MagicMock(spec=Fleet)
         fleet.id = 101
@@ -111,8 +112,8 @@ class TestCommands:
         assert not res.is_valid
         assert res.error_code == "ALREADY_OWNED"
 
-    def test_issue_colonize_command_validation_fail_location(self):
-        turn_engine = TurnEngine()
+    def test_issue_colonize_command_validation_fail_location(self, fresh_registries):
+        turn_engine = TurnEngine(registries=fresh_registries)
         galaxy = MagicMock(spec=Galaxy)
         fleet = MagicMock(spec=Fleet)
         fleet.id = 101
@@ -143,8 +144,8 @@ class TestCommands:
         assert not res.is_valid
         assert res.error_code == "WRONG_LOCATION"
 
-    def test_issue_colonize_command_any_planet(self):
-        turn_engine = TurnEngine()
+    def test_issue_colonize_command_any_planet(self, fresh_registries):
+        turn_engine = TurnEngine(registries=fresh_registries)
         galaxy = MagicMock(spec=Galaxy)
         fleet = MagicMock(spec=Fleet)
         fleet.id = 101

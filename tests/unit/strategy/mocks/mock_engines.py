@@ -111,35 +111,56 @@ class MockOrderProcessor(IOrderProcessor):
 
     Attributes:
         process_instant_orders_result: Return value for process_instant_orders()
-        process_end_turn_orders_result: Return value for process_end_turn_orders()
+        execute_action_order_result: Return value for execute_action_order()
         process_instant_orders_calls: List of (empires,) call args
-        process_end_turn_orders_calls: List of (fleet, empire, galaxy) call args
+        execute_action_order_calls: List of (fleet, empire, galaxy, component_registry, empires) call args
     """
 
     def __init__(self):
         self.process_instant_orders_result: List[Tuple] = []
-        self.process_end_turn_orders_result: bool = False
+        self.execute_action_order_result: bool = False
 
         self.process_instant_orders_calls: List[Tuple] = []
-        self.process_end_turn_orders_calls: List[Tuple] = []
+        self.execute_action_order_calls: List[Tuple] = []
 
     @property
     def process_instant_orders_called(self) -> bool:
         return len(self.process_instant_orders_calls) > 0
 
     @property
+    def execute_action_order_called(self) -> bool:
+        return len(self.execute_action_order_calls) > 0
+
+    # Backward compatibility alias
+    @property
     def process_end_turn_orders_called(self) -> bool:
-        return len(self.process_end_turn_orders_calls) > 0
+        return self.execute_action_order_called
+
+    @property
+    def process_end_turn_orders_calls(self) -> List[Tuple]:
+        return self.execute_action_order_calls
+
+    @property
+    def process_end_turn_orders_result(self) -> bool:
+        return self.execute_action_order_result
+
+    @process_end_turn_orders_result.setter
+    def process_end_turn_orders_result(self, value: bool):
+        self.execute_action_order_result = value
 
     def process_instant_orders(self, empires):
         self.process_instant_orders_calls.append((empires,))
         return self.process_instant_orders_result
 
+    def execute_action_order(self, fleet, empire, galaxy, component_registry=None, empires=None):
+        """Execute the fleet's current action order."""
+        self.execute_action_order_calls.append((fleet, empire, galaxy, component_registry, empires))
+        return self.execute_action_order_result
+
+    # Backward compatibility alias
     def process_end_turn_orders(self, fleet, empire, galaxy, component_registry=None, empires=None):
-        # PROJ-55: Added component_registry parameter
-        # PROJ-102: Added empires parameter for superweapon orders
-        self.process_end_turn_orders_calls.append((fleet, empire, galaxy, component_registry, empires))
-        return self.process_end_turn_orders_result
+        """Deprecated: Use execute_action_order instead."""
+        return self.execute_action_order(fleet, empire, galaxy, component_registry, empires)
 
 
 @dataclass

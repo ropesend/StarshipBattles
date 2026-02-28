@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING
 from tests.fixtures.paths import get_data_dir, get_project_root
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, load_modifiers
+from game.core.registry import get_default_registry_provider
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
@@ -52,8 +53,10 @@ def global_ship_data():
     if not pygame.get_init():
         pygame.init()
 
-    initialize_ship_data(str(get_project_root()))
-    load_components(str(get_data_dir() / "components.json"))
+    # PROJ-211: Pass registry_provider explicitly (no fallback)
+    provider = get_default_registry_provider()
+    initialize_ship_data(str(get_project_root()), registry_provider=provider)
+    load_components(str(get_data_dir() / "components.json"), registry_provider=provider)
     return True
 
 
@@ -67,7 +70,9 @@ def global_ship_data_with_modifiers(global_ship_data):
     Returns:
         True when data is loaded
     """
-    load_modifiers(str(get_data_dir() / "modifiers.json"))
+    # PROJ-211: Pass registry_provider explicitly (no fallback)
+    provider = get_default_registry_provider()
+    load_modifiers(str(get_data_dir() / "modifiers.json"), registry_provider=provider)
     return True
 
 
@@ -240,23 +245,28 @@ def assert_list_length(items, expected_length: int, description: str = "") -> No
 # PROJ-40: Shared Test Helpers
 # =============================================================================
 
-def make_mock_ship_instance(name="Test Ship", owner_id=0):
+def make_mock_ship_instance(name="Test Ship", owner_id=0, registries=None):
     """
     Create a mock ShipInstance for testing.
 
     PROJ-40/NEW-INT-003: Consolidated from multiple integration test files.
     Use this helper instead of defining local versions in test files.
 
+    PROJ-211: Now accepts optional registries parameter. If provided, enables
+    get_calculated_stats() calls. Required for tests that call process_turn()
+    or Fleet.add_ship() since those trigger stats calculations.
+
     Args:
         name: Ship name (also used as design_id)
         owner_id: Owner empire ID
+        registries: Optional GameRegistries for stats calculation
 
     Returns:
         ShipInstance: A mock ship instance for testing
     """
     from game.strategy.data.ship_instance import ShipInstance
 
-    return ShipInstance(
+    ship = ShipInstance(
         instance_id=f"test-{name.lower().replace(' ', '-')}-{id(name)}",
         design_id=name,
         name=name,
@@ -267,19 +277,62 @@ def make_mock_ship_instance(name="Test Ship", owner_id=0):
             'stats': {'mass': 100}
         },
     )
+    if registries is not None:
+        ship._registries = registries
+    return ship
 
 
-def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship"):
+@pytest.fixture
+def ship_factory(fresh_registries):
+    """
+    Factory fixture for creating ShipInstance with proper DI.
+
+    PROJ-211: Provides a factory function that creates ShipInstance objects
+    with registries properly injected. Use this in tests that need to call
+    ShipInstance.create() or access get_calculated_stats().
+
+    Usage:
+        def test_something(ship_factory):
+            ship = ship_factory(design_data={'name': 'Destroyer', ...})
+            # Ship has registries, so get_calculated_stats() works
+
+    Returns:
+        Callable that creates ShipInstance with registries
+    """
+    from game.strategy.data.ship_instance import ShipInstance
+
+    def _create_ship(
+        design_data: dict,
+        owner_id: int = 0,
+        name: str = None,
+        design_id: str = None,
+        empire = None,
+    ) -> ShipInstance:
+        return ShipInstance.create(
+            design_data=design_data,
+            owner_id=owner_id,
+            name=name,
+            design_id=design_id,
+            empire=empire,
+            registries=fresh_registries,
+        )
+
+    return _create_ship
+
+
+def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship", registries=None):
     """
     Create a colony ship that can colonize a specific planet.
 
     PROJ-140: Creates a ship with a colony pod matching the planet's type.
+    PROJ-211: Accepts optional registries for DI compliance.
     Use this for integration tests that need working colonization.
 
     Args:
         planet: The Planet object to create a colony ship for
         owner_id: Owner empire ID
         name: Ship name
+        registries: Optional GameRegistries for DI compliance
 
     Returns:
         ShipInstance: A colony ship that can colonize the given planet type
@@ -289,7 +342,7 @@ def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship"):
     planet_type_str = planet.planet_type.name
     pod_id = f"{planet_type_str.lower()}_colony_pod"
 
-    return ShipInstance(
+    ship = ShipInstance(
         instance_id=f"colony-{name.lower().replace(' ', '-')}-{id(name)}",
         design_id=f"{planet_type_str}_colony_ship",
         name=name,
@@ -298,8 +351,12 @@ def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship"):
             'name': name,
             'vehicle_type': 'Ship',
             'stats': {'mass': 100},
+            'expected_stats': {'speed': 10.0},  # PROJ-211: For Fleet speed calc
             'layers': {
                 'HULL': [{'id': pod_id}]
             }
         },
     )
+    if registries is not None:
+        ship.set_registries(registries)
+    return ship

@@ -8,6 +8,7 @@ PROJ-127: Extracted _iterate_colony_pods helper to reduce duplication.
 from typing import Dict, Any, Iterator, Optional, Tuple, TYPE_CHECKING
 from game.core.validation import ValidationResult
 from game.strategy.services.component_inspector import iterate_design_components
+from game.strategy.data.order_types import OrderType
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
@@ -243,8 +244,6 @@ class ColonizeValidator:
             Dict mapping planet type string to count of committed pods.
             Example: {"ICE_DWARF": 2, "CONTINENTAL": 1}
         """
-        from game.strategy.data.fleet import OrderType
-
         committed: Dict[str, int] = {}
 
         for order in fleet.orders:

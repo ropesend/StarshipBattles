@@ -21,8 +21,8 @@ def mock_fleet():
     fleet = MagicMock()
     fleet.ships = []
     fleet.speed = 10
-    fleet.can_use_warp.return_value = True
-    fleet.get_warp_limiting_ship.return_value = None
+    fleet.capabilities.can_use_warp.return_value = True
+    fleet.capabilities.get_warp_limiting_ship.return_value = None
     return fleet
 
 
@@ -304,7 +304,7 @@ class TestCapabilitySummary:
 
     def test_warp_jumps_remaining_no_warp(self, resource_aggregator, mock_fleet):
         """Returns 0 when fleet cannot warp."""
-        mock_fleet.can_use_warp.return_value = False
+        mock_fleet.capabilities.can_use_warp.return_value = False
 
         result = resource_aggregator.warp_jumps_remaining()
 
@@ -315,7 +315,7 @@ class TestCapabilitySummary:
         mock_ship.get_current_resource.return_value = 150.0
         mock_ship.get_warp_resource_costs.return_value = {ResourceType.FUEL: 50.0}
         mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
-        mock_fleet.can_use_warp.return_value = True
+        mock_fleet.capabilities.can_use_warp.return_value = True
 
         result = resource_aggregator.warp_jumps_remaining()
 
@@ -324,7 +324,7 @@ class TestCapabilitySummary:
     def test_get_capability_summary(self, resource_aggregator, mock_fleet, mock_ship):
         """Capability summary includes all expected fields."""
         mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
-        mock_fleet.can_use_warp.return_value = True
+        mock_fleet.capabilities.can_use_warp.return_value = True
 
         result = resource_aggregator.get_capability_summary()
 
@@ -445,8 +445,8 @@ class TestEmptyFleetEdgeCases:
         fleet.ships = []
         fleet.get_combat_capable_ships.return_value = []
         fleet.speed = 0
-        fleet.can_use_warp.return_value = False
-        fleet.get_warp_limiting_ship.return_value = None
+        fleet.capabilities.can_use_warp.return_value = False
+        fleet.capabilities.get_warp_limiting_ship.return_value = None
         return fleet
 
     @pytest.fixture
@@ -477,7 +477,7 @@ class TestEmptyFleetEdgeCases:
 
     def test_warp_jumps_remaining_empty_fleet(self, empty_fleet_aggregator, empty_fleet):
         """Empty fleet returns 0 warp jumps (can't warp)."""
-        empty_fleet.can_use_warp.return_value = False
+        empty_fleet.capabilities.can_use_warp.return_value = False
         result = empty_fleet_aggregator.warp_jumps_remaining()
         assert result == 0
 
@@ -514,8 +514,8 @@ class TestMultipleResourceTypeEdgeCases:
         """Create fleet with ship using multiple resource types."""
         fleet = MagicMock()
         fleet.speed = 10
-        fleet.can_use_warp.return_value = True
-        fleet.get_warp_limiting_ship.return_value = None
+        fleet.capabilities.can_use_warp.return_value = True
+        fleet.capabilities.get_warp_limiting_ship.return_value = None
         return fleet
 
     @pytest.fixture
@@ -621,8 +621,8 @@ class TestFuelEnduranceEdgeCases:
         """Create fleet for endurance tests."""
         fleet = MagicMock()
         fleet.speed = 10
-        fleet.can_use_warp.return_value = True
-        fleet.get_warp_limiting_ship.return_value = None
+        fleet.capabilities.can_use_warp.return_value = True
+        fleet.capabilities.get_warp_limiting_ship.return_value = None
         return fleet
 
     @pytest.fixture

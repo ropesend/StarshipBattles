@@ -994,7 +994,7 @@ class TestSpecialCapabilityFilter:
         ship_with = make_mock_ship(serial=1, design_name="Planet Killer")
         ship_without = make_mock_ship(serial=2, design_name="Scout")
 
-        def mock_has_ability(ship, ability_name):
+        def mock_has_ability(ship, ability_name, registry):
             return ship.serial == 1 and ability_name == 'DestroyPlanet'
 
         filter_state = {
@@ -1006,7 +1006,7 @@ class TestSpecialCapabilityFilter:
             'show_no_destroy_planet': True,
         }
 
-        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_ability',
+        with patch('game.strategy.services.component_inspector.ship_has_ability',
                    side_effect=mock_has_ability):
             result = filter_ships([ship_with, ship_without], filter_state)
 
@@ -1021,7 +1021,7 @@ class TestSpecialCapabilityFilter:
         ship_with = make_mock_ship(serial=1, design_name="Planet Killer")
         ship_without = make_mock_ship(serial=2, design_name="Scout")
 
-        def mock_has_ability(ship, ability_name):
+        def mock_has_ability(ship, ability_name, registry):
             return ship.serial == 1 and ability_name == 'DestroyPlanet'
 
         filter_state = {
@@ -1033,7 +1033,7 @@ class TestSpecialCapabilityFilter:
             'show_no_destroy_planet': False,  # Hide ships without ability
         }
 
-        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_ability',
+        with patch('game.strategy.services.component_inspector.ship_has_ability',
                    side_effect=mock_has_ability):
             result = filter_ships([ship_with, ship_without], filter_state)
 
@@ -1065,7 +1065,7 @@ class TestSpecialCapabilityFilter:
         ship_with = make_mock_ship(serial=1, design_name="Warp Opener")
         ship_without = make_mock_ship(serial=2, design_name="Scout")
 
-        def mock_has_ability(ship, ability_name):
+        def mock_has_ability(ship, ability_name, registry):
             return ship.serial == 1 and ability_name == 'OpenWarpPoint'
 
         filter_state = {
@@ -1077,7 +1077,7 @@ class TestSpecialCapabilityFilter:
             'show_no_open_warp': True,
         }
 
-        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_ability',
+        with patch('game.strategy.services.component_inspector.ship_has_ability',
                    side_effect=mock_has_ability):
             result = filter_ships([ship_with, ship_without], filter_state)
 
@@ -1092,7 +1092,7 @@ class TestSpecialCapabilityFilter:
         ship_with = make_mock_ship(serial=1, design_name="Warp Closer")
         ship_without = make_mock_ship(serial=2, design_name="Scout")
 
-        def mock_has_ability(ship, ability_name):
+        def mock_has_ability(ship, ability_name, registry):
             return ship.serial == 1 and ability_name == 'CloseWarpPoint'
 
         filter_state = {
@@ -1104,7 +1104,7 @@ class TestSpecialCapabilityFilter:
             'show_no_close_warp': True,
         }
 
-        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_ability',
+        with patch('game.strategy.services.component_inspector.ship_has_ability',
                    side_effect=mock_has_ability):
             result = filter_ships([ship_with, ship_without], filter_state)
 
@@ -1119,7 +1119,7 @@ class TestSpecialCapabilityFilter:
         ship_with = make_mock_ship(serial=1, design_name="Star Destroyer")
         ship_without = make_mock_ship(serial=2, design_name="Scout")
 
-        def mock_has_ability(ship, ability_name):
+        def mock_has_ability(ship, ability_name, registry):
             return ship.serial == 1 and ability_name == 'DestroyStar'
 
         filter_state = {
@@ -1131,7 +1131,7 @@ class TestSpecialCapabilityFilter:
             'show_no_destroy_star': True,
         }
 
-        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_ability',
+        with patch('game.strategy.services.component_inspector.ship_has_ability',
                    side_effect=mock_has_ability):
             result = filter_ships([ship_with, ship_without], filter_state)
 
@@ -1146,7 +1146,7 @@ class TestSpecialCapabilityFilter:
         ship_with = make_mock_ship(serial=1, design_name="Sphere Builder")
         ship_without = make_mock_ship(serial=2, design_name="Scout")
 
-        def mock_has_ability(ship, ability_name):
+        def mock_has_ability(ship, ability_name, registry):
             return ship.serial == 1 and ability_name == 'CreateSphereWorld'
 
         filter_state = {
@@ -1158,7 +1158,7 @@ class TestSpecialCapabilityFilter:
             'show_no_create_sphere': True,
         }
 
-        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_ability',
+        with patch('game.strategy.services.component_inspector.ship_has_ability',
                    side_effect=mock_has_ability):
             result = filter_ships([ship_with, ship_without], filter_state)
 
@@ -1178,10 +1178,10 @@ class TestSpecialCapabilitySort:
         ship2 = make_mock_ship(serial=2, design_name="Planet Killer")
         ship3 = make_mock_ship(serial=3, design_name="Frigate")
 
-        def mock_has_ability(ship, ability_name):
+        def mock_has_ability(ship, ability_name, registry):
             return ship.serial == 2 and ability_name == 'DestroyPlanet'
 
-        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_ability',
+        with patch('game.strategy.services.component_inspector.ship_has_ability',
                    side_effect=mock_has_ability):
             result = sort_ships([ship1, ship2, ship3], 'can_destroy_planet', descending=True)
 

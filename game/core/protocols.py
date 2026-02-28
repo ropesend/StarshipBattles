@@ -281,7 +281,14 @@ class IZoneOccupant(Protocol):
 
 @runtime_checkable
 class IFleet(Protocol):
-    """Protocol for Fleet entities."""
+    """Protocol for Fleet entities.
+
+    PROJ-210: Delegate properties (capabilities, resources, battle) expose
+    the underlying delegate objects directly. Callers use:
+    - fleet.capabilities.has_space_shipyard
+    - fleet.resources.get_fleet_cargo_capacity(cargo_type)
+    - fleet.battle.to_battle_ships(team_id)
+    """
     @property
     def ships(self) -> List[Any]:
         ...
@@ -329,9 +336,20 @@ class IFleet(Protocol):
         """True if fleet is currently executing a BUILD order."""
         ...
 
+    # PROJ-210: Delegate properties for capability/resource/battle queries
     @property
-    def has_space_shipyard(self) -> bool:
-        """True if fleet has an operational space shipyard."""
+    def capabilities(self) -> Any:
+        """FleetCapabilityCalculator delegate for fleet capabilities."""
+        ...
+
+    @property
+    def resources(self) -> Any:
+        """FleetResourceAggregator delegate for resource operations."""
+        ...
+
+    @property
+    def battle(self) -> Any:
+        """FleetBattleAdapter delegate for battle conversion."""
         ...
 
 

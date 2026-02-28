@@ -101,7 +101,7 @@ def _make_mock_engines():
 class TestHarvestingIntegration:
     """Integration tests for HarvestingEngine in TurnEngine."""
 
-    def test_harvesting_called_during_process_turn(self):
+    def test_harvesting_called_during_process_turn(self, fresh_registries):
         """HarvestingEngine.process_harvesting_tick() is called 100 times during process_turn().
 
         PROJ-161: Changed from once-per-turn process_harvesting() to per-tick
@@ -111,6 +111,7 @@ class TestHarvestingIntegration:
         mocks = _make_mock_engines()
 
         engine = TurnEngine(
+            registries=fresh_registries,
             **mocks,
             harvesting_engine=mock_harvesting,
         )
@@ -127,7 +128,7 @@ class TestHarvestingIntegration:
             tick, empires = call[0]
             assert empires == [empire]
 
-    def test_harvesting_extracts_resources_end_to_end(self):
+    def test_harvesting_extracts_resources_end_to_end(self, fresh_registries):
         """Full E2E: facility harvests from planet into empire pool."""
         from game.strategy.engine.harvesting_engine import HarvestingEngine
 
@@ -144,6 +145,7 @@ class TestHarvestingIntegration:
         harvesting = HarvestingEngine()
 
         engine = TurnEngine(
+            registries=fresh_registries,
             **mocks,
             harvesting_engine=harvesting,
         )
@@ -155,7 +157,7 @@ class TestHarvestingIntegration:
         assert empire.resource_pool.get("Metals", 0.0) == pytest.approx(80.0)
         assert planet.resources["Metals"]["quantity"] == pytest.approx(4920.0)
 
-    def test_harvesting_before_production(self):
+    def test_harvesting_before_production(self, fresh_registries):
         """Harvesting runs before production within each tick.
 
         PROJ-161: Rewritten for per-tick behavior. In each tick, process_harvesting_tick
@@ -174,6 +176,7 @@ class TestHarvestingIntegration:
         mocks['production_engine'].process_construction_tick.side_effect = lambda t, e, g, **kw: production_ticks.append(t)
 
         engine = TurnEngine(
+            registries=fresh_registries,
             **mocks,
             harvesting_engine=mock_harvesting,
         )
@@ -195,7 +198,7 @@ class TestHarvestingIntegration:
         # Since both are called in sequence within each tick and stored in order,
         # if tick order is correct (1,1,2,2,3,3...) then order is preserved.
 
-    def test_harvesting_with_storage_cap(self):
+    def test_harvesting_with_storage_cap(self, fresh_registries):
         """Empire storage limits are respected during harvesting."""
         from game.strategy.engine.harvesting_engine import HarvestingEngine
 
@@ -232,6 +235,7 @@ class TestHarvestingIntegration:
         harvesting = HarvestingEngine()
 
         engine = TurnEngine(
+            registries=fresh_registries,
             **mocks,
             harvesting_engine=harvesting,
         )

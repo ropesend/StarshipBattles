@@ -260,14 +260,11 @@ class FleetDataSource(ITableDataSource):
     def _format_capability(self, ship: "ShipInstance", col_id: str) -> str:
         """Format special capability for display."""
         # INTENTIONAL LATE IMPORT: Avoid circular import
-        from game.strategy.data.fleet_capability_calculator import (
-            FleetCapabilityCalculator,
-        )
+        from game.strategy.services.component_inspector import ship_has_ability
 
         ability_name = SPECIAL_CAPABILITY_COLUMNS[col_id]
-        return (
-            "Yes" if FleetCapabilityCalculator.ship_has_ability(ship, ability_name) else "No"
-        )
+        registry = ship._registries.components if ship._registries else {}
+        return "Yes" if ship_has_ability(ship, ability_name, registry) else "No"
 
     def _get_ship_image(
         self, ship: "ShipInstance", image_type: str

@@ -6,16 +6,20 @@ Tests that:
 - No passengers seeds minimum population if empire has race_config
 - No race_config means no population seeded
 - Ship passengers are unloaded during transfer
+
+PROJ-211: Updated to use ship_factory fixture for DI compliance.
 """
 
 import pytest
 
 from game.strategy.data.empire import Empire
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.planet import Planet, PlanetType, SpeciesPopulation
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.engine.fleet_order_processor import FleetOrderProcessor, ColonizeResult
+from game.core.registry import GameRegistries
 
 
 def _make_planet(location: HexCoord, name: str = "Test Planet") -> Planet:
@@ -42,8 +46,12 @@ def _make_ship_with_cargo(
     name: str,
     cargo_capacity: int = 100,
     current_cargo: int = 0,
+    registries: GameRegistries = None,
 ) -> ShipInstance:
-    """Create a ship with passenger cargo capacity."""
+    """Create a ship with passenger cargo capacity.
+
+    PROJ-211: Added registries parameter for DI compliance.
+    """
     design = {
         "name": name,
         "hull_id": "test_hull",
@@ -60,15 +68,22 @@ def _make_ship_with_cargo(
             ]
         }
     }
-    ship = ShipInstance.create(design, owner_id=0, name=name)
+    ship = ShipInstance.create(design, owner_id=0, name=name, registries=registries)
     # Load cargo if specified
     if current_cargo > 0:
         ship.cargo_contents["passengers"] = current_cargo
     return ship
 
 
-def _make_ship_with_colony_pod(name: str, planet_type: str = "continental") -> ShipInstance:
-    """Create a ship with only a colony pod (no cargo)."""
+def _make_ship_with_colony_pod(
+    name: str,
+    planet_type: str = "continental",
+    registries: GameRegistries = None,
+) -> ShipInstance:
+    """Create a ship with only a colony pod (no cargo).
+
+    PROJ-211: Added registries parameter for DI compliance.
+    """
     design = {
         "name": name,
         "hull_id": "test_hull",
@@ -81,7 +96,7 @@ def _make_ship_with_colony_pod(name: str, planet_type: str = "continental") -> S
             ]
         }
     }
-    return ShipInstance.create(design, owner_id=0, name=name)
+    return ShipInstance.create(design, owner_id=0, name=name, registries=registries)
 
 
 def _make_component_registry() -> dict:
@@ -126,7 +141,7 @@ class MockRaceConfig:
 class TestColonizeTransfersPassengers:
     """Test that colonization transfers passengers to colony."""
 
-    def test_colonize_transfers_passengers_to_colony(self):
+    def test_colonize_transfers_passengers_to_colony(self, fresh_registries):
         """Passengers in fleet cargo become colony founding population."""
         # Setup
         location = HexCoord(0, 0)
@@ -140,7 +155,7 @@ class TestColonizeTransfersPassengers:
 
         # Fleet with passengers
         fleet = Fleet(1, empire.id, location)
-        ship = _make_ship_with_cargo("Colony Ship", cargo_capacity=100, current_cargo=50)
+        ship = _make_ship_with_cargo("Colony Ship", cargo_capacity=100, current_cargo=50, registries=fresh_registries)
         fleet.ships.append(ship)
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
         empire.add_fleet(fleet)
@@ -163,7 +178,7 @@ class TestColonizeTransfersPassengers:
         assert pop.count == 50
         assert pop.happiness == 0.5  # Neutral starting happiness
 
-    def test_colonize_passengers_unloaded_from_ships(self):
+    def test_colonize_passengers_unloaded_from_ships(self, fresh_registries):
         """Ship cargo is emptied during colonization."""
         location = HexCoord(0, 0)
         planet = _make_planet(location)
@@ -174,13 +189,13 @@ class TestColonizeTransfersPassengers:
         empire.race_config = MockRaceConfig("humans")
 
         fleet = Fleet(1, empire.id, location)
-        ship = _make_ship_with_cargo("Colony Ship", cargo_capacity=100, current_cargo=75)
+        ship = _make_ship_with_cargo("Colony Ship", cargo_capacity=100, current_cargo=75, registries=fresh_registries)
         fleet.ships.append(ship)
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
         empire.add_fleet(fleet)
 
         # Verify cargo before
-        assert fleet.get_fleet_cargo_current("passengers") == 75
+        assert fleet.resources.get_fleet_cargo_current("passengers") == 75
 
         processor = FleetOrderProcessor()
         processor.process_colonize(
@@ -199,7 +214,7 @@ class TestColonizeWithoutPassengers:
     # the auto-seeding feature was intentionally disabled per user request.
     # See fleet_order_processor.py:545-547 for the commented-out code.
 
-    def test_colonize_no_race_config_no_population(self):
+    def test_colonize_no_race_config_no_population(self, fresh_registries):
         """No race_config means no population is seeded."""
         location = HexCoord(0, 0)
         planet = _make_planet(location)
@@ -210,7 +225,7 @@ class TestColonizeWithoutPassengers:
         # No race_config set
 
         fleet = Fleet(1, empire.id, location)
-        ship = _make_ship_with_colony_pod("Colony Ship")
+        ship = _make_ship_with_colony_pod("Colony Ship", registries=fresh_registries)
         fleet.ships.append(ship)
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
         empire.add_fleet(fleet)
@@ -230,7 +245,7 @@ class TestColonizeWithoutPassengers:
 class TestColonizeMultipleShips:
     """Test colonization with multiple ships carrying passengers."""
 
-    def test_colonize_aggregates_all_ship_passengers(self):
+    def test_colonize_aggregates_all_ship_passengers(self, fresh_registries):
         """All passengers from all ships are transferred."""
         location = HexCoord(0, 0)
         planet = _make_planet(location)
@@ -242,15 +257,15 @@ class TestColonizeMultipleShips:
 
         fleet = Fleet(1, empire.id, location)
         # Multiple ships with passengers
-        ship1 = _make_ship_with_cargo("Transport 1", cargo_capacity=100, current_cargo=30)
-        ship2 = _make_ship_with_cargo("Transport 2", cargo_capacity=100, current_cargo=45)
-        ship3 = _make_ship_with_colony_pod("Colony Ship")  # No cargo
+        ship1 = _make_ship_with_cargo("Transport 1", cargo_capacity=100, current_cargo=30, registries=fresh_registries)
+        ship2 = _make_ship_with_cargo("Transport 2", cargo_capacity=100, current_cargo=45, registries=fresh_registries)
+        ship3 = _make_ship_with_colony_pod("Colony Ship", registries=fresh_registries)  # No cargo
         fleet.ships.extend([ship1, ship2, ship3])
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
         empire.add_fleet(fleet)
 
         # Total passengers = 30 + 45 = 75
-        assert fleet.get_fleet_cargo_current("passengers") == 75
+        assert fleet.resources.get_fleet_cargo_current("passengers") == 75
 
         processor = FleetOrderProcessor()
         processor.process_colonize(
@@ -265,7 +280,7 @@ class TestColonizeMultipleShips:
 class TestExistingColonizationBehavior:
     """Verify existing colonization functionality still works."""
 
-    def test_colonize_still_assigns_ownership(self):
+    def test_colonize_still_assigns_ownership(self, fresh_registries):
         """Basic colonization still assigns planet ownership."""
         location = HexCoord(0, 0)
         planet = _make_planet(location)
@@ -275,7 +290,7 @@ class TestExistingColonizationBehavior:
         empire = Empire(0, "Test Empire", (100, 100, 100))
 
         fleet = Fleet(1, empire.id, location)
-        ship = _make_ship_with_colony_pod("Colony Ship")
+        ship = _make_ship_with_colony_pod("Colony Ship", registries=fresh_registries)
         fleet.ships.append(ship)
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
         empire.add_fleet(fleet)
@@ -291,7 +306,7 @@ class TestExistingColonizationBehavior:
         assert planet.owner_id == empire.id
         assert planet in empire.colonies
 
-    def test_colonize_still_removes_colony_ship(self):
+    def test_colonize_still_removes_colony_ship(self, fresh_registries):
         """Colony ship is still removed when registry provided."""
         location = HexCoord(0, 0)
         planet = _make_planet(location)
@@ -301,12 +316,12 @@ class TestExistingColonizationBehavior:
         empire = Empire(0, "Test Empire", (100, 100, 100))
 
         fleet = Fleet(1, empire.id, location)
-        colony_ship = _make_ship_with_colony_pod("Colony Ship")
+        colony_ship = _make_ship_with_colony_pod("Colony Ship", registries=fresh_registries)
         escort = ShipInstance.create({
             "name": "Escort",
             "hull_id": "small_hull",
             "layers": {}
-        }, owner_id=0, name="Escort")
+        }, owner_id=0, name="Escort", registries=fresh_registries)
         fleet.ships.extend([colony_ship, escort])
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
         empire.add_fleet(fleet)

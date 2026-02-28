@@ -25,12 +25,8 @@ class BuilderRightPanel:
         self.rect = rect
         self.event_bus = event_bus
 
-        # PROJ-43/PROJ-50: Inject vehicle class service (strict DI)
-        # If no service provided, use RegistryManager-backed provider
-        if vehicle_class_service is None:
-            from game.core.registry import get_default_registry_provider
-            from game.ui.services.vehicle_class_service import VehicleClassService
-            vehicle_class_service = VehicleClassService(get_default_registry_provider())
+        # PROJ-43/PROJ-50/PROJ-211: Inject vehicle class service (strict DI)
+        # Vehicle class service is now required - no fallback
         self._vehicle_class_service = vehicle_class_service
 
         if event_bus:

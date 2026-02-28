@@ -99,7 +99,7 @@ def create_test_storm(
 class TestTurnProcessingStorms:
     """Integration tests for storm effects during turn processing."""
 
-    def test_fleet_in_storm_takes_environmental_damage(self):
+    def test_fleet_in_storm_takes_environmental_damage(self, fresh_registries):
         """Fleet in storm hex takes environmental damage over full turn."""
         # Create galaxy with system
         galaxy = Galaxy(radius=100)
@@ -126,7 +126,7 @@ class TestTurnProcessingStorms:
         empire.fleets.append(fleet)
 
         # Process full turn (100 ticks)
-        engine = TurnEngine()
+        engine = TurnEngine(registries=fresh_registries)
         engine.process_turn([empire], galaxy)
 
         # Verify damage was dealt
@@ -137,7 +137,7 @@ class TestTurnProcessingStorms:
             f"Expected ~{expected_damage} damage, got {actual_damage}"
         )
 
-    def test_fleet_in_storm_has_fuel_drained(self):
+    def test_fleet_in_storm_has_fuel_drained(self, fresh_registries):
         """Fleet in storm hex has fuel drained over full turn."""
         # Create galaxy with system
         galaxy = Galaxy(radius=100)
@@ -164,7 +164,7 @@ class TestTurnProcessingStorms:
         empire.fleets.append(fleet)
 
         # Process full turn
-        engine = TurnEngine()
+        engine = TurnEngine(registries=fresh_registries)
         engine.process_turn([empire], galaxy)
 
         # Verify fuel was drained
@@ -175,7 +175,7 @@ class TestTurnProcessingStorms:
             f"Expected ~{expected_drain} fuel drained, got {actual_drain}"
         )
 
-    def test_environmental_events_recorded(self):
+    def test_environmental_events_recorded(self, fresh_registries):
         """Environmental events are recorded during turn processing."""
         # Create galaxy with storm
         galaxy = Galaxy(radius=100)
@@ -202,7 +202,7 @@ class TestTurnProcessingStorms:
         empire.fleets.append(fleet)
 
         # Process turn
-        engine = TurnEngine()
+        engine = TurnEngine(registries=fresh_registries)
         engine.process_turn([empire], galaxy)
 
         # Verify events were recorded
@@ -215,7 +215,7 @@ class TestTurnProcessingStorms:
         assert event.damage_dealt > 0
         assert event.fuel_drained > 0
 
-    def test_fleet_outside_storm_unaffected(self):
+    def test_fleet_outside_storm_unaffected(self, fresh_registries):
         """Fleet outside storm hex takes no damage and no fuel drain."""
         # Create galaxy with storm
         galaxy = Galaxy(radius=100)
@@ -241,7 +241,7 @@ class TestTurnProcessingStorms:
         empire.fleets.append(fleet)
 
         # Process turn
-        engine = TurnEngine()
+        engine = TurnEngine(registries=fresh_registries)
         engine.process_turn([empire], galaxy)
 
         # Verify no damage or fuel drain

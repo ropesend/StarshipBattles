@@ -14,7 +14,7 @@ from game.strategy.data.empire import Empire
 
 
 @pytest.fixture
-def production_setup():
+def production_setup(fresh_registries):
     """Create temporary directory and test objects for production tests."""
     # Create temporary directory for test designs
     # DesignLibrary expects designs in empire-specific subfolder: designs/empire_N/
@@ -78,7 +78,7 @@ def production_setup():
     }
     empire.add_colony(planet)
 
-    engine = TurnEngine()
+    engine = TurnEngine(registries=fresh_registries)
     empires = [empire]
 
     yield {

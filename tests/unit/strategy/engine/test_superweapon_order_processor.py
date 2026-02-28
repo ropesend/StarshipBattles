@@ -6,7 +6,8 @@ PROJ-102 Phase 6: Tests for turn execution of superweapon orders.
 import pytest
 from unittest.mock import MagicMock, patch
 from game.core.hex_math import HexCoord
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
 from game.strategy.data.stars import Star, StarType
@@ -95,6 +96,7 @@ class TestProcessImplodePlanet:
     ):
         """Planet should be removed from system.planets."""
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
+        from unittest.mock import patch
 
         # Setup
         mock_system.planets = [mock_planet]
@@ -114,10 +116,11 @@ class TestProcessImplodePlanet:
         empire = MagicMock()
         empire.colonies = []
 
-        # Act
-        result = processor.process_implode_planet(
-            mock_fleet, empire, mock_galaxy, component_registry
-        )
+        # Act - patch find_ship_with_ability to return our mock ship
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=mock_ship_with_ability):
+            result = processor.process_implode_planet(
+                mock_fleet, empire, mock_galaxy, [empire], component_registry
+            )
 
         # Assert
         mock_galaxy.unregister_planet.assert_called_once_with(mock_planet)
@@ -148,10 +151,11 @@ class TestProcessImplodePlanet:
         empire = MagicMock()
         empire.colonies = []
 
-        # Act
-        processor.process_implode_planet(
-            mock_fleet, empire, mock_galaxy, component_registry
-        )
+        # Act - patch find_ship_with_ability to return our mock ship
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=mock_ship_with_ability):
+            processor.process_implode_planet(
+                mock_fleet, empire, mock_galaxy, [empire], component_registry
+            )
 
         # Assert
         mock_fleet.remove_ship.assert_called_once_with(mock_ship_with_ability)
@@ -178,9 +182,10 @@ class TestProcessImplodePlanet:
         empire.colonies = []
 
         with patch('game.strategy.engine.superweapon_order_processor.log_event') as mock_log:
-            processor.process_implode_planet(
-                mock_fleet, empire, mock_galaxy, component_registry
-            )
+            with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=mock_ship_with_ability):
+                processor.process_implode_planet(
+                    mock_fleet, empire, mock_galaxy, [empire], component_registry
+                )
 
             mock_log.assert_called_once()
             call_args = mock_log.call_args
@@ -550,10 +555,11 @@ class TestProcessCreateDysonSphere:
         empire = MagicMock()
         empire.colonies = []
 
-        # Act
-        processor.process_create_dyson_sphere(
-            mock_fleet, empire, mock_galaxy, component_registry
-        )
+        # Act - patch find_ship_with_ability to return our mock ship
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=ship):
+            processor.process_create_dyson_sphere(
+                mock_fleet, empire, mock_galaxy, [empire], component_registry
+            )
 
         # Assert
         assert mock_system.stars == []
@@ -596,10 +602,11 @@ class TestProcessCreateDysonSphere:
         empire = MagicMock()
         empire.colonies = []
 
-        # Act
-        processor.process_create_dyson_sphere(
-            mock_fleet, empire, mock_galaxy, component_registry
-        )
+        # Act - patch find_ship_with_ability to return our mock ship
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=ship):
+            processor.process_create_dyson_sphere(
+                mock_fleet, empire, mock_galaxy, [empire], component_registry
+            )
 
         # Assert - close planet unregistered, far planet NOT unregistered
         calls = [call[0][0] for call in mock_galaxy.unregister_planet.call_args_list]
@@ -634,10 +641,11 @@ class TestProcessCreateDysonSphere:
         empire = MagicMock()
         empire.colonies = []
 
-        # Act
-        processor.process_create_dyson_sphere(
-            mock_fleet, empire, mock_galaxy, component_registry
-        )
+        # Act - patch find_ship_with_ability to return our mock ship
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=ship):
+            processor.process_create_dyson_sphere(
+                mock_fleet, empire, mock_galaxy, [empire], component_registry
+            )
 
         # Assert - register_planet called with a Dyson Sphere
         mock_galaxy.register_planet.assert_called_once()
@@ -672,11 +680,13 @@ class TestProcessCreateDysonSphere:
 
         processor = SuperweaponOrderProcessor()
         empire = MagicMock()
+        empire.colonies = []
 
-        # Act
-        processor.process_create_dyson_sphere(
-            mock_fleet, empire, mock_galaxy, component_registry
-        )
+        # Act - patch find_ship_with_ability to return our mock ship
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=ship):
+            processor.process_create_dyson_sphere(
+                mock_fleet, empire, mock_galaxy, [empire], component_registry
+            )
 
         # Assert
         mock_fleet.remove_ship.assert_called_once_with(ship)
@@ -709,10 +719,11 @@ class TestProcessCreateDysonSphere:
         empire = MagicMock()
         empire.colonies = []
 
-        # Act
-        processor.process_create_dyson_sphere(
-            mock_fleet, empire, mock_galaxy, component_registry
-        )
+        # Act - patch find_ship_with_ability to return our mock ship
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=ship):
+            processor.process_create_dyson_sphere(
+                mock_fleet, empire, mock_galaxy, [empire], component_registry
+            )
 
         # Assert - Dyson Sphere has diameter_hexes=11.0
         call_args = mock_galaxy.register_planet.call_args
@@ -760,10 +771,11 @@ class TestProcessCreateDysonSphere:
         empire.race_config = race_config
         empire.colonies = []
 
-        # Act
-        processor.process_create_dyson_sphere(
-            mock_fleet, empire, mock_galaxy, component_registry
-        )
+        # Act - patch find_ship_with_ability to return our mock ship
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=ship):
+            processor.process_create_dyson_sphere(
+                mock_fleet, empire, mock_galaxy, [empire], component_registry
+            )
 
         # Assert - Dyson Sphere uses race_config values
         call_args = mock_galaxy.register_planet.call_args
@@ -815,10 +827,11 @@ class TestProcessCreateDysonSphere:
         empire = MagicMock()
         empire.colonies = []
 
-        # Act
-        processor.process_create_dyson_sphere(
-            mock_fleet, empire, mock_galaxy, component_registry
-        )
+        # Act - patch find_ship_with_ability to return our mock ship
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=ship):
+            processor.process_create_dyson_sphere(
+                mock_fleet, empire, mock_galaxy, [empire], component_registry
+            )
 
         # Assert - edge planet (5 hexes) removed, outside planet (6 hexes) survives
         calls = [call[0][0] for call in mock_galaxy.unregister_planet.call_args_list]
@@ -918,10 +931,11 @@ class TestComponentConsumption:
             mock_fleet.ships.remove(ship)
         mock_fleet.remove_ship.side_effect = do_remove
 
-        # Act
-        result = processor.process_implode_planet(
-            mock_fleet, empire, mock_galaxy, component_registry
-        )
+        # Act - patch find_ship_with_ability to return our mock ship
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=mock_ship_with_ability):
+            result = processor.process_implode_planet(
+                mock_fleet, empire, mock_galaxy, [empire], component_registry
+            )
 
         # Assert
         assert not result.fleet_consumed
@@ -952,11 +966,243 @@ class TestComponentConsumption:
             mock_fleet.ships.remove(ship)
         mock_fleet.remove_ship.side_effect = do_remove
 
-        # Act
-        result = processor.process_implode_planet(
-            mock_fleet, empire, mock_galaxy, component_registry
-        )
+        # Act - patch find_ship_with_ability to return our mock ship
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=mock_ship_with_ability):
+            result = processor.process_implode_planet(
+                mock_fleet, empire, mock_galaxy, [empire], component_registry
+            )
 
         # Assert
         assert result.fleet_consumed
         assert len(mock_fleet.ships) == 0
+
+
+# =============================================================================
+# PROJ-207 Phase 2 Tests - Task 2.3 and Task 2.4
+# =============================================================================
+
+class TestNoShipFallback:
+    """Tests for Task 2.3 - No ships[0] fallback when ability not found."""
+
+    def test_implode_planet_cancels_if_no_ability_ship(
+        self, mock_fleet, mock_system, mock_planet, component_registry
+    ):
+        """process_implode_planet cancels order if no ship has DestroyPlanet ability."""
+        from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
+        from unittest.mock import patch
+
+        # Setup - fleet has ships but none with the ability
+        mock_fleet.ships = [MagicMock(id="ship-1")]
+        mock_fleet.location = mock_system.global_location + mock_planet.location
+
+        order = FleetOrder(OrderType.IMPLODE_PLANET, target=mock_planet)
+        mock_fleet.get_current_order.return_value = order
+
+        mock_galaxy = MagicMock()
+        mock_galaxy.unregister_planet = MagicMock()
+
+        processor = SuperweaponOrderProcessor()
+        empire = MagicMock()
+        empire.colonies = []
+
+        # Act - patch find_ship_with_ability to return None (no ship has ability)
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=None):
+            result = processor.process_implode_planet(
+                mock_fleet, empire, mock_galaxy, [empire], component_registry
+            )
+
+        # Assert - order cancelled, no planet destroyed, no ship removed
+        assert not result.success
+        assert "DestroyPlanet" in result.message
+        mock_fleet.pop_order.assert_called_once()
+        mock_galaxy.unregister_planet.assert_not_called()
+        mock_fleet.remove_ship.assert_not_called()
+
+    def test_open_warp_point_cancels_if_no_ability_ship(
+        self, mock_fleet, mock_system, component_registry
+    ):
+        """process_open_warp_point cancels order if no ship has OpenWarpPoint ability."""
+        from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
+        from unittest.mock import patch
+
+        # Setup
+        mock_fleet.ships = [MagicMock(id="ship-1")]
+        mock_fleet.location = mock_system.global_location
+
+        target_system = MagicMock()
+        target_system.name = "Target System"
+        target_system.global_location = HexCoord(20, 20)
+        target_system.warp_points = []
+
+        mock_system.warp_points = []
+
+        order = FleetOrder(OrderType.OPEN_WARP_POINT, target={
+            'target_hex': HexCoord(20, 20),
+            'target_system_name': "Target System"
+        })
+        mock_fleet.get_current_order.return_value = order
+
+        mock_galaxy = MagicMock()
+        mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.name_map = {"Target System": target_system}
+
+        # Use get_system_at_hex helper function
+        def get_sys_at_loc(loc):
+            return mock_system if loc == mock_system.global_location else None
+        mock_galaxy.get_system_at_location = get_sys_at_loc
+
+        processor = SuperweaponOrderProcessor()
+        empire = MagicMock()
+
+        # Act - patch to return None
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=None), \
+             patch('game.strategy.engine.superweapon_order_processor.get_system_at_hex', return_value=mock_system):
+            result = processor.process_open_warp_point(
+                mock_fleet, empire, mock_galaxy, component_registry
+            )
+
+        # Assert
+        assert not result.success
+        assert "OpenWarpPoint" in result.message
+        mock_fleet.pop_order.assert_called_once()
+
+    def test_create_dyson_sphere_cancels_if_no_ability_ship(
+        self, mock_fleet, mock_system, component_registry
+    ):
+        """process_create_dyson_sphere cancels order if no ship has CreateDysonSphere ability."""
+        from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
+        from unittest.mock import patch
+
+        # Setup
+        mock_fleet.ships = [MagicMock(id="ship-1")]
+        mock_fleet.location = mock_system.global_location
+
+        order = FleetOrder(OrderType.CREATE_DYSON_SPHERE, target=None)
+        mock_fleet.get_current_order.return_value = order
+
+        mock_galaxy = MagicMock()
+        mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.register_planet = MagicMock()
+
+        processor = SuperweaponOrderProcessor()
+        empire = MagicMock()
+        empire.colonies = []
+
+        # Act - patch to return None
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=None), \
+             patch('game.strategy.engine.superweapon_order_processor.get_system_at_hex', return_value=mock_system):
+            result = processor.process_create_dyson_sphere(
+                mock_fleet, empire, mock_galaxy, [empire], component_registry
+            )
+
+        # Assert
+        assert not result.success
+        assert "CreateDysonSphere" in result.message
+        mock_fleet.pop_order.assert_called_once()
+        mock_galaxy.register_planet.assert_not_called()
+
+
+class TestEnemyColonyCleanup:
+    """Tests for Task 2.4 - Enemy colonies removed when planet destroyed."""
+
+    def test_implode_enemy_planet_removes_from_enemy_colonies(
+        self, mock_fleet, mock_system, mock_planet, mock_ship_with_ability, component_registry
+    ):
+        """Imploding enemy planet removes it from enemy empire's colonies list."""
+        from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
+        from unittest.mock import patch
+
+        # Setup - planet owned by enemy
+        mock_planet.owner_id = "enemy-empire"
+        mock_fleet.ships = [mock_ship_with_ability]
+        mock_fleet.location = mock_system.global_location + mock_planet.location
+
+        order = FleetOrder(OrderType.IMPLODE_PLANET, target=mock_planet)
+        mock_fleet.get_current_order.return_value = order
+
+        mock_galaxy = MagicMock()
+        mock_galaxy.unregister_planet = MagicMock()
+
+        processor = SuperweaponOrderProcessor()
+
+        # Player empire (attacker)
+        player_empire = MagicMock()
+        player_empire.id = "player"
+        player_empire.colonies = []
+
+        # Enemy empire (owner of planet)
+        enemy_empire = MagicMock()
+        enemy_empire.id = "enemy-empire"
+        enemy_empire.colonies = [mock_planet]  # Planet is in enemy's colonies
+
+        empires = [player_empire, enemy_empire]
+
+        # Act
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=mock_ship_with_ability):
+            result = processor.process_implode_planet(
+                mock_fleet, player_empire, mock_galaxy, empires, component_registry
+            )
+
+        # Assert - planet removed from enemy's colonies
+        assert result.success
+        assert mock_planet not in enemy_empire.colonies
+
+    def test_dyson_sphere_removes_enemy_planets_from_enemy_colonies(
+        self, mock_fleet, mock_system, component_registry
+    ):
+        """Creating Dyson Sphere removes nearby enemy planets from enemy colonies."""
+        from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
+        from unittest.mock import patch
+
+        # Setup - star at center
+        star = MagicMock()
+        star.location = HexCoord(0, 0)
+        mock_system.stars = [star]
+
+        # Enemy planet within clearing radius
+        enemy_planet = MagicMock()
+        enemy_planet.id = "enemy-planet"
+        enemy_planet.location = HexCoord(3, 0)  # Within 5-hex radius
+        enemy_planet.owner_id = "enemy-empire"
+
+        mock_system.planets = [enemy_planet]
+
+        ship = MagicMock()
+        ship.id = "ship-1"
+        mock_fleet.ships = [ship]
+        mock_fleet.location = mock_system.global_location
+
+        order = FleetOrder(OrderType.CREATE_DYSON_SPHERE, target=None)
+        mock_fleet.get_current_order.return_value = order
+
+        mock_galaxy = MagicMock()
+        mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.unregister_planet = MagicMock()
+        mock_galaxy.register_planet = MagicMock()
+
+        processor = SuperweaponOrderProcessor()
+
+        # Player empire (creator)
+        player_empire = MagicMock()
+        player_empire.id = "player"
+        player_empire.colonies = []
+        player_empire.race_config = None
+
+        # Enemy empire (owner of planet)
+        enemy_empire = MagicMock()
+        enemy_empire.id = "enemy-empire"
+        enemy_empire.colonies = [enemy_planet]
+
+        empires = [player_empire, enemy_empire]
+
+        # Act
+        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=ship), \
+             patch('game.strategy.engine.superweapon_order_processor.get_system_at_hex', return_value=mock_system):
+            result = processor.process_create_dyson_sphere(
+                mock_fleet, player_empire, mock_galaxy, empires, component_registry
+            )
+
+        # Assert - planet removed from enemy's colonies
+        assert result.success
+        assert enemy_planet not in enemy_empire.colonies
+        mock_galaxy.unregister_planet.assert_called_with(enemy_planet)

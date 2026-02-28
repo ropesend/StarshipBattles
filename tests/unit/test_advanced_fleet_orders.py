@@ -7,7 +7,8 @@ action orders moved to tick-based processing).
 """
 import pytest
 from unittest.mock import MagicMock, patch
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
@@ -15,9 +16,13 @@ from game.strategy.data.empire import Empire
 from game.strategy.data.ship_instance import ShipInstance
 
 
-def make_mock_ship_instance(name="Test Ship", owner_id=0):
-    """Create a mock ShipInstance for testing."""
-    return ShipInstance(
+def make_mock_ship_instance(name="Test Ship", owner_id=0, registries=None):
+    """Create a mock ShipInstance for testing.
+
+    PROJ-211: Added registries parameter for DI compliance.
+    Required when ship is added to fleet (triggers speed calc).
+    """
+    ship = ShipInstance(
         instance_id=f"test-{name.lower().replace(' ', '-')}-{id(name)}",
         design_id=name,
         name=name,
@@ -28,12 +33,15 @@ def make_mock_ship_instance(name="Test Ship", owner_id=0):
             'stats': {'mass': 100}
         },
     )
+    if registries is not None:
+        ship._registries = registries
+    return ship
 
 
 @pytest.fixture
-def turn_engine():
+def turn_engine(fresh_registries):
     """Create a fresh TurnEngine for each test."""
-    engine = TurnEngine()
+    engine = TurnEngine(registries=fresh_registries)
     yield engine
 
 
@@ -61,7 +69,7 @@ def galaxy_mock():
 
 
 class TestAdvancedFleetOrders:
-    def test_fleet_merge_method(self, turn_engine, test_empire, galaxy_mock):
+    def test_fleet_merge_method(self, turn_engine, test_empire, galaxy_mock, fresh_registries):
         """Test the basic merge_with data operation."""
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
         f2 = Fleet(2, 0, HexCoord(10, 0), speed=10.0)
@@ -69,8 +77,9 @@ class TestAdvancedFleetOrders:
         test_empire.add_fleet(f1)
         test_empire.add_fleet(f2)
 
-        ship_a = make_mock_ship_instance("ShipA", 0)
-        ship_b = make_mock_ship_instance("ShipB", 0)
+        # PROJ-211: Pass registries for DI compliance (merge triggers speed calc)
+        ship_a = make_mock_ship_instance("ShipA", 0, registries=fresh_registries)
+        ship_b = make_mock_ship_instance("ShipB", 0, registries=fresh_registries)
         f1.ships = [ship_a]
         f2.ships = [ship_b]
         f1.orders = ["SomeOrder"]
@@ -227,10 +236,11 @@ class TestAdvancedFleetOrders:
         # Now correctly intercepts at (7,0) - 1 turn earlier than old buggy result!
         assert result == HexCoord(7, 0)
 
-    def test_join_fleet_execution(self, order_processor, test_empire, galaxy_mock):
+    def test_join_fleet_execution(self, order_processor, test_empire, galaxy_mock, fresh_registries):
         """Verify JOIN_FLEET order merges fleets.
 
-        PROJ-187: Uses FleetOrderProcessor.process_end_turn_orders directly.
+        PROJ-207 EP-001: JOIN_FLEET is now handled by process_instant_orders only,
+        not by process_end_turn_orders. It fires instantly when co-located.
         """
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
         f2 = Fleet(2, 0, HexCoord(10, 0), speed=10.0)
@@ -241,29 +251,33 @@ class TestAdvancedFleetOrders:
         # Setup: Co-located
         f1.location = HexCoord(5, 5)
         f2.location = HexCoord(5, 5)
-        ship_a = make_mock_ship_instance("ShipA", 0)
-        ship_b = make_mock_ship_instance("ShipB", 0)
+        # PROJ-211: Pass registries for DI compliance (merge triggers speed calc)
+        ship_a = make_mock_ship_instance("ShipA", 0, registries=fresh_registries)
+        ship_b = make_mock_ship_instance("ShipB", 0, registries=fresh_registries)
         f1.ships = [ship_a]
         f2.ships = [ship_b]
 
         order = FleetOrder(OrderType.JOIN_FLEET, f2)
         f1.add_order(order)
 
-        # Execute via FleetOrderProcessor (PROJ-187)
-        result = order_processor.process_end_turn_orders(f1, test_empire, galaxy_mock)
+        # Execute via instant path (PROJ-207)
+        removed = order_processor.process_instant_orders([test_empire])
 
-        assert result is True  # Should return True (fleet consumed)
+        # Should have merged
+        assert len(removed) == 1
+        assert removed[0] == (test_empire, f1)
 
         # Verify F2 state
         assert len(f2.ships) == 2
 
-        # Verify Empire state
+        # Verify Empire state (removal happens after process_instant_orders)
         assert f1 not in test_empire.fleets
 
-    def test_join_fleet_fail_distance(self, order_processor, test_empire, galaxy_mock):
-        """Verify JOIN_FLEET fails if not at location.
+    def test_join_fleet_waits_when_not_colocated(self, order_processor, test_empire, galaxy_mock):
+        """Verify JOIN_FLEET waits when fleets not co-located.
 
-        PROJ-187: Uses FleetOrderProcessor.process_end_turn_orders directly.
+        PROJ-207 EP-001: JOIN_FLEET order stays queued when not at target's location.
+        The preceding MOVE_TO_FLEET will bring the fleet to the target first.
         """
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
         f2 = Fleet(2, 0, HexCoord(10, 0), speed=10.0)
@@ -272,17 +286,20 @@ class TestAdvancedFleetOrders:
         test_empire.add_fleet(f2)
 
         f1.location = HexCoord(0, 0)
-        f2.location = HexCoord(10, 0)
+        f2.location = HexCoord(10, 0)  # Different location
 
         order = FleetOrder(OrderType.JOIN_FLEET, f2)
         f1.add_order(order)
 
-        # Execute via FleetOrderProcessor (PROJ-187)
-        result = order_processor.process_end_turn_orders(f1, test_empire, galaxy_mock)
+        # Execute via instant path (PROJ-207)
+        removed = order_processor.process_instant_orders([test_empire])
 
-        assert result is False  # Did not consume fleet
+        # Should NOT merge - not co-located yet
+        assert len(removed) == 0
         assert f1 in test_empire.fleets
-        assert f1.get_current_order() is None  # Should have popped failed order
+        # Order should stay queued (waiting for fleet to arrive)
+        assert f1.get_current_order() is not None
+        assert f1.get_current_order().type == OrderType.JOIN_FLEET
 
     @patch('game.strategy.data.pathfinding.find_hybrid_path')
     @patch('game.strategy.data.pathfinding.project_fleet_path')

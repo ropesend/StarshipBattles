@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections import Counter
 from typing import TYPE_CHECKING
 
-from game.strategy.data.fleet import OrderType
+from game.strategy.data.order_types import OrderType
 from game.core.protocols import (
     is_star_system, is_star, is_planet, is_fleet,
     is_warp_point, is_sector_environment, is_storm
@@ -345,9 +345,9 @@ def format_fleet_info(fleet: IFleet) -> str:
     text += f"<b>Owner:</b> {fleet.owner_id}<br>"
     text += f"<b>Location:</b> {fleet.location}<br>"
 
-    # Travel range
+    # Travel range (PROJ-210: use fleet.resources delegate)
     speed = int(fleet.speed)
-    fuel = fleet.fuel_endurance()
+    fuel = fleet.resources.fuel_endurance()
     if fuel == -1:
         fuel_str = "unlimited fuel"
     else:

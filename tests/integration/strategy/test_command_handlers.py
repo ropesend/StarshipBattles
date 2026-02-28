@@ -2,8 +2,9 @@ import pytest
 from unittest.mock import MagicMock, patch
 from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.game_config import GameConfig
-from game.strategy.engine.commands import IssueMoveCommand, IssueBuildShipCommand, CommandType
-from game.strategy.data.fleet import Fleet, OrderType, FleetOrder
+from game.strategy.engine.commands import IssueMoveCommand, CommandType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import OrderType, FleetOrder
 from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.strategy.data.ship_instance import ShipInstance
@@ -128,31 +129,9 @@ def test_handle_move_command_invalid_fleet():
     assert result.is_valid is False
     assert "Fleet not found" in result.message
 
-def test_handle_build_ship_command():
-    """Test IssueBuildShipCommand adds to queue."""
-    config = GameConfig(system_count=0)
-    session = GameSession(config=config)
-    
-    # Setup Planet with proper ID (not Python id())
-    planet = MagicMock()
-    planet.id = 42  # Proper entity ID
-    planet.owner_id = session.player_empire.id
-    planet.construction_queue = []
-    
-    # Mock galaxy's entity registry lookup
-    session.galaxy = MockGalaxy()
-    session.galaxy.get_planet_by_id = MagicMock(return_value=planet)
-    
-    cmd = IssueBuildShipCommand(planet.id, "Colony Ship")
-    
-    result = session.handle_command(cmd)
-    
-    assert result.is_valid is True
-    # Verify planet lookup used proper ID
-    session.galaxy.get_planet_by_id.assert_called_with(42)
-    # Depending on implementation (calling add_production vs direct append)
-    # The current code uses planet.add_production("Colony Ship", 1).
-    assert planet.add_production.called or len(planet.construction_queue) > 0
+# NOTE: test_handle_build_ship_command removed in PROJ-208 Phase 2.
+# IssueBuildShipCommand was dead code - use AddToConstructionQueueCommand.
+# See tests/unit/strategy/engine/test_command_handlers.py for new tests.
 
 
 # =============================================================================
@@ -364,7 +343,8 @@ class TestColonizeMissionCommandHandler:
         cmd = QueueColonizeMissionCommand(fleet_id=101, target_hex=HexCoord(100, 100), planet_id=42)
 
         # Mock pathfinding to return None (no path)
-        with patch('game.strategy.data.pathfinding.find_hybrid_path') as mock_path:
+        # PROJ-207: Patch at command_handlers where function is imported
+        with patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
             mock_path.return_value = None
 
             result = session.handle_command(cmd)
@@ -434,7 +414,8 @@ class TestColonizeMissionCommandHandler:
         cmd = QueueColonizeMissionCommand(fleet_id=101, target_hex=target_hex, planet_id=42)
 
         # Mock pathfinding - path should start from (5,5) not (0,0)
-        with patch('game.strategy.data.pathfinding.find_hybrid_path') as mock_path:
+        # PROJ-207: Patch at command_handlers where function is imported
+        with patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
 
             result = session.handle_command(cmd)

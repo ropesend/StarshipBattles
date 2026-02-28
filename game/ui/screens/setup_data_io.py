@@ -5,6 +5,7 @@ Functions for scanning ship designs, formations, loading/saving battle setups,
 and loading ships from configuration entries.
 
 PROJ-43: Uses ShipFactory facade instead of direct Ship import.
+PROJ-211: ShipFactory now requires registry_provider. Uses lazy initialization.
 """
 import os
 import glob
@@ -19,8 +20,24 @@ from game.core.json_utils import load_json, load_json_required, save_json
 from game.core.paths import Paths
 
 
-# Module-level factory instance for convenience
-_ship_factory = ShipFactory()
+# PROJ-211: Lazy factory initialization (registries not available at import time)
+_ship_factory = None
+
+
+def _get_ship_factory() -> ShipFactory:
+    """Get or create the module-level ShipFactory with DI."""
+    global _ship_factory
+    if _ship_factory is None:
+        from game.core.registry import get_default_registry_provider, GameRegistries
+        provider = get_default_registry_provider()
+        registries = GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources=provider.get_resources(),
+        )
+        _ship_factory = ShipFactory(registry_provider=registries)
+    return _ship_factory
 
 
 def get_base_path():
@@ -87,6 +104,7 @@ def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angl
     Load ships from team entry list.
 
     PROJ-43: Uses ShipFactory facade instead of direct Ship import.
+    PROJ-211: Uses lazy-initialized factory getter.
 
     Args:
         team_entries: List of team entry dicts with design and strategy info
@@ -100,10 +118,11 @@ def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angl
     """
     ships = []
     formation_data = []
+    factory = _get_ship_factory()
 
     for i, entry in enumerate(team_entries):
         data = load_json_required(entry['design']['path'])
-        ship = _ship_factory.create_from_design(data)
+        ship = factory.create_from_design(data)
 
         # Calculate position
         if 'relative_position' in entry:
@@ -113,7 +132,7 @@ def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angl
             position = pygame.math.Vector2(start_x, start_y + i * 5000)
 
         # Configure ship via factory
-        _ship_factory.configure_ship(
+        factory.configure_ship(
             ship,
             position=position,
             angle=facing_angle,
@@ -135,7 +154,7 @@ def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angl
 
     # Set up formations via factory
     if formation_data:
-        _ship_factory.setup_formation(ships, formation_data)
+        factory.setup_formation(ships, formation_data)
 
     return ships
 

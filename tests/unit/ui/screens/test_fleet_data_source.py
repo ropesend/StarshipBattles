@@ -519,7 +519,7 @@ class TestFleetDataSourceCellValueSpecialCapabilities:
         ds = FleetDataSource(view_model)
 
         with patch(
-            "game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_ability",
+            "game.strategy.services.component_inspector.ship_has_ability",
             return_value=True,
         ):
             assert ds.get_cell_value(0, "can_destroy_planet") == "Yes"
@@ -534,7 +534,7 @@ class TestFleetDataSourceCellValueSpecialCapabilities:
         ds = FleetDataSource(view_model)
 
         with patch(
-            "game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_ability",
+            "game.strategy.services.component_inspector.ship_has_ability",
             return_value=False,
         ):
             assert ds.get_cell_value(0, "can_destroy_planet") == "No"
@@ -553,7 +553,7 @@ class TestFleetDataSourceCellValueSpecialCapabilities:
 
         for col_id in SPECIAL_CAPABILITY_COLUMNS:
             with patch(
-                "game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_ability",
+                "game.strategy.services.component_inspector.ship_has_ability",
                 return_value=True,
             ):
                 assert ds.get_cell_value(0, col_id) == "Yes"

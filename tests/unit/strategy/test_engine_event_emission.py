@@ -417,7 +417,8 @@ class TestColonyFoundedEvent:
 
     def _make_colonize_fleet(self):
         """Create a fleet with a COLONIZE order."""
-        from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+        from game.strategy.data.fleet import Fleet
+        from game.strategy.data.order_types import FleetOrder, OrderType
         from enum import Enum
 
         class MockPlanetType(Enum):
@@ -523,7 +524,8 @@ class TestColonyFoundedEvent:
     def test_colonize_any_planet_emits_event_with_resolved_name(self):
         """Colonizing 'any planet' emits event with the resolved planet name."""
         from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
-        from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+        from game.strategy.data.fleet import Fleet
+        from game.strategy.data.order_types import FleetOrder, OrderType
         from game.strategy.data.planet import Planet
         from enum import Enum
 

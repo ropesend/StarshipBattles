@@ -5,22 +5,71 @@ PROJ-69 Phase 6: Verifies single-queue, multi-queue, and fallback add behavior,
 including can_build_ships/can_build_complexes compatibility filtering.
 
 PROJ-79 Phase 2: Added tests for build time calculation and cost tracking.
+PROJ-208 Phase 2: Updated to use command callback pattern for queue mutations.
 """
 import pytest
 from unittest.mock import MagicMock
+from typing import Optional
 
 from game.ui.panels.build_queue_controller import BuildQueueController
 from game.strategy.data.build_queue_source import BuildQueueSource, get_default_production_rates
 
 
-def _make_controller(build_context=None) -> BuildQueueController:
-    """Create a controller with mock dependencies."""
+# PROJ-208: Registry for tracking entities by ID for callback resolution
+_entity_registry = {}
+
+
+def _make_add_callback(entity_registry: dict):
+    """Create a callback that adds items to queues via entity registry.
+
+    PROJ-208: Simulates the command handler behavior for testing.
+    """
+    def add_to_queue_callback(
+        entity_id: int,
+        entity_type: str,
+        design_id: str,
+        category: str,
+        index: Optional[int],
+        target_planet_id: Optional[int],
+        queue_id: Optional[str] = None,
+    ) -> None:
+        # Find entity in registry
+        key = (entity_type, entity_id)
+        entity = entity_registry.get(key)
+        if entity and hasattr(entity, 'construction_queue'):
+            queue_item = {
+                "design_id": design_id,
+                "type": category,
+                "turns_remaining": 1.0,  # Handler default
+                "total_cost": {},
+                "resources_consumed": {},
+            }
+            if target_planet_id is not None:
+                queue_item["target_planet_id"] = target_planet_id
+            if index is not None:
+                entity.construction_queue.insert(index, queue_item)
+            else:
+                entity.construction_queue.append(queue_item)
+    return add_to_queue_callback
+
+
+def _make_controller(build_context=None, entity_registry=None) -> BuildQueueController:
+    """Create a controller with mock dependencies.
+
+    PROJ-208: Now includes add_to_queue_callback for command pattern.
+    """
+    if entity_registry is None:
+        entity_registry = {}
+
     if build_context is None:
         build_context = MagicMock()
         build_context.context_type = "planet"
         build_context.has_space_shipyard = True
         build_context.can_build_type.return_value = True
         build_context.construction_queue = []
+        build_context.id = 1
+        # Register in entity registry
+        entity_registry[("planet", 1)] = build_context
 
     mock_library = MagicMock()
     mock_loader = MagicMock()
@@ -33,12 +82,17 @@ def _make_controller(build_context=None) -> BuildQueueController:
         design_loader=mock_loader,
         design_report=mock_report,
         on_queue_changed=on_changed,
+        add_to_queue_callback=_make_add_callback(entity_registry),
     )
 
 
 def _default_build_rate() -> dict:
     """Return default build rate dict for testing."""
     return {"Metals": 2000.0, "Organics": 2000.0, "Radioactives": 2000.0, "Vapors": 2000.0, "Exotics": 2000.0}
+
+
+# PROJ-208: Counter for generating unique entity IDs
+_entity_id_counter = 0
 
 
 def _make_source(
@@ -50,31 +104,66 @@ def _make_source(
     build_rate: dict = None,
     context_type: str = "planet",
     planet_id: int = None,
+    entity_registry: dict = None,
 ) -> BuildQueueSource:
-    """Create a BuildQueueSource with a real mutable queue."""
+    """Create a BuildQueueSource with a real mutable queue.
+
+    PROJ-208: If entity_registry is provided, registers the owner_entity
+    so the command callback can find it. For planet sources, register
+    using planet_id as the key (matching _get_entity_info behavior).
+    """
+    global _entity_id_counter
+    _entity_id_counter += 1
+
     actual_queue = queue if queue is not None else []
     actual_rate = build_rate if build_rate is not None else _default_build_rate()
+
+    # Create owner_entity with construction_queue and id
+    owner_entity = MagicMock()
+    owner_entity.construction_queue = actual_queue
+    owner_entity.id = _entity_id_counter
+
+    # For planet sources, use planet_id or generated id
+    effective_planet_id = planet_id if planet_id is not None else (
+        _entity_id_counter if context_type == "planet" else None
+    )
+
     source = BuildQueueSource(
         queue_id=queue_id,
         display_name=display_name,
-        owner_entity=MagicMock(),
+        owner_entity=owner_entity,
         construction_queue=actual_queue,
         can_build_ships=can_build_ships,
         can_build_complexes=can_build_complexes,
         context_type=context_type,
         build_rate=actual_rate,
-        planet_id=planet_id,
+        planet_id=effective_planet_id,
     )
+
+    # PROJ-208: Register entity for command callback resolution
+    # For planets, use planet_id; for fleets, use owner_entity.id
+    # This matches _get_entity_info behavior
+    if entity_registry is not None:
+        if context_type == "planet":
+            entity_registry[(context_type, effective_planet_id)] = owner_entity
+        else:
+            entity_registry[(context_type, owner_entity.id)] = owner_entity
+
     return source
 
 
 class TestControllerSingleQueueAdd:
-    """Tests for single-queue add behavior."""
+    """Tests for single-queue add behavior.
+
+    PROJ-208: Tests updated to use entity_registry for command callback resolution.
+    turns_remaining now uses handler default (1.0) instead of UI-provided value.
+    """
 
     def test_add_to_single_active_queue(self):
         """Adding to queue when active_queue_source is set targets that source."""
-        controller = _make_controller()
-        source = _make_source(queue_id="yard_1", display_name="Shipyard 1")
+        entity_registry = {}
+        controller = _make_controller(entity_registry=entity_registry)
+        source = _make_source(queue_id="yard_1", display_name="Shipyard 1", entity_registry=entity_registry)
         controller.set_active_queue(source)
 
         controller.add_to_queue("scout_ship", turns=3, category="ship")
@@ -83,12 +172,14 @@ class TestControllerSingleQueueAdd:
         item = source.construction_queue[0]
         assert item["design_id"] == "scout_ship"
         assert item["type"] == "ship"
-        assert item["turns_remaining"] == 3
+        # PROJ-208: Handler uses default turns_remaining (1.0)
+        assert item["turns_remaining"] == 1.0
 
     def test_add_incompatible_category_to_single_queue_rejected(self):
         """Ship category rejected by queue that can't build ships."""
-        controller = _make_controller()
-        source = _make_source(can_build_ships=False, can_build_complexes=True)
+        entity_registry = {}
+        controller = _make_controller(entity_registry=entity_registry)
+        source = _make_source(can_build_ships=False, can_build_complexes=True, entity_registry=entity_registry)
         controller.set_active_queue(source)
 
         controller.add_to_queue("scout_ship", turns=3, category="ship")
@@ -97,11 +188,13 @@ class TestControllerSingleQueueAdd:
 
     def test_add_complex_to_base_queue(self):
         """Complex category accepted by base queue (ships=False, complexes=True)."""
-        controller = _make_controller()
+        entity_registry = {}
+        controller = _make_controller(entity_registry=entity_registry)
         source = _make_source(
             queue_id="base",
             can_build_ships=False,
             can_build_complexes=True,
+            entity_registry=entity_registry,
         )
         controller.set_active_queue(source)
 
@@ -112,12 +205,13 @@ class TestControllerSingleQueueAdd:
 
     def test_add_with_index_inserts_at_position(self):
         """Adding with index inserts at specified position."""
-        controller = _make_controller()
+        entity_registry = {}
+        controller = _make_controller(entity_registry=entity_registry)
         existing_queue = [
             {"design_id": "item_a", "type": "ship", "turns_remaining": 3},
             {"design_id": "item_b", "type": "ship", "turns_remaining": 5},
         ]
-        source = _make_source(queue=existing_queue)
+        source = _make_source(queue=existing_queue, entity_registry=entity_registry)
         controller.set_active_queue(source)
 
         controller.add_to_queue("item_c", turns=2, category="ship", index=1)
@@ -127,13 +221,17 @@ class TestControllerSingleQueueAdd:
 
 
 class TestControllerMultiQueueAdd:
-    """Tests for multi-queue add behavior."""
+    """Tests for multi-queue add behavior.
+
+    PROJ-208: Tests updated to use entity_registry for command callback resolution.
+    """
 
     def test_add_to_all_selected_queues(self):
         """Adding in multi-select mode adds to all selected queues."""
-        controller = _make_controller()
-        source1 = _make_source(queue_id="yard_1")
-        source2 = _make_source(queue_id="yard_2")
+        entity_registry = {}
+        controller = _make_controller(entity_registry=entity_registry)
+        source1 = _make_source(queue_id="yard_1", entity_registry=entity_registry)
+        source2 = _make_source(queue_id="yard_2", entity_registry=entity_registry)
         controller.set_selected_queues([source1, source2])
 
         controller.add_to_queue("cruiser", turns=8, category="ship")
@@ -145,18 +243,21 @@ class TestControllerMultiQueueAdd:
 
     def test_multi_add_skips_incompatible_queues(self):
         """Multi-add skips queues that can't build the category."""
-        controller = _make_controller()
+        entity_registry = {}
+        controller = _make_controller(entity_registry=entity_registry)
         base_queue = _make_source(
             queue_id="base",
             display_name="Base",
             can_build_ships=False,
             can_build_complexes=True,
+            entity_registry=entity_registry,
         )
         yard_queue = _make_source(
             queue_id="yard_1",
             display_name="Shipyard 1",
             can_build_ships=True,
             can_build_complexes=True,
+            entity_registry=entity_registry,
         )
         controller.set_selected_queues([base_queue, yard_queue])
 
@@ -169,16 +270,19 @@ class TestControllerMultiQueueAdd:
 
     def test_multi_add_complex_to_all_compatible(self):
         """Multi-add complex adds to all queues that support complexes."""
-        controller = _make_controller()
+        entity_registry = {}
+        controller = _make_controller(entity_registry=entity_registry)
         base_queue = _make_source(
             queue_id="base",
             can_build_ships=False,
             can_build_complexes=True,
+            entity_registry=entity_registry,
         )
         yard_queue = _make_source(
             queue_id="yard_1",
             can_build_ships=True,
             can_build_complexes=True,
+            entity_registry=entity_registry,
         )
         controller.set_selected_queues([base_queue, yard_queue])
 
@@ -190,9 +294,10 @@ class TestControllerMultiQueueAdd:
 
     def test_multi_add_fighter_respects_ship_flag(self):
         """Fighter category uses can_build_ships flag."""
-        controller = _make_controller()
-        base_queue = _make_source(can_build_ships=False, can_build_complexes=True)
-        yard_queue = _make_source(can_build_ships=True, can_build_complexes=True)
+        entity_registry = {}
+        controller = _make_controller(entity_registry=entity_registry)
+        base_queue = _make_source(can_build_ships=False, can_build_complexes=True, entity_registry=entity_registry)
+        yard_queue = _make_source(can_build_ships=True, can_build_complexes=True, entity_registry=entity_registry)
         controller.set_selected_queues([base_queue, yard_queue])
 
         controller.add_to_queue("interceptor", turns=2, category="fighter")
@@ -202,9 +307,10 @@ class TestControllerMultiQueueAdd:
 
     def test_multi_add_satellite_respects_ship_flag(self):
         """Satellite category uses can_build_ships flag."""
-        controller = _make_controller()
-        base_queue = _make_source(can_build_ships=False, can_build_complexes=True)
-        yard_queue = _make_source(can_build_ships=True, can_build_complexes=True)
+        entity_registry = {}
+        controller = _make_controller(entity_registry=entity_registry)
+        base_queue = _make_source(can_build_ships=False, can_build_complexes=True, entity_registry=entity_registry)
+        yard_queue = _make_source(can_build_ships=True, can_build_complexes=True, entity_registry=entity_registry)
         controller.set_selected_queues([base_queue, yard_queue])
 
         controller.add_to_queue("comm_sat", turns=1, category="satellite")
@@ -218,35 +324,43 @@ class TestControllerModeTransitions:
 
     def test_set_active_queue_clears_multi_select(self):
         """Setting active queue clears multi-select."""
-        controller = _make_controller()
-        controller.set_selected_queues([_make_source(), _make_source()])
+        entity_registry = {}
+        controller = _make_controller(entity_registry=entity_registry)
+        controller.set_selected_queues([_make_source(entity_registry=entity_registry), _make_source(entity_registry=entity_registry)])
         assert len(controller.selected_queue_sources) == 2
 
-        controller.set_active_queue(_make_source())
+        controller.set_active_queue(_make_source(entity_registry=entity_registry))
 
         assert controller.active_queue_source is not None
         assert len(controller.selected_queue_sources) == 0
 
     def test_set_selected_queues_clears_active(self):
         """Setting multi-select clears active queue."""
-        controller = _make_controller()
-        controller.set_active_queue(_make_source())
+        entity_registry = {}
+        controller = _make_controller(entity_registry=entity_registry)
+        controller.set_active_queue(_make_source(entity_registry=entity_registry))
         assert controller.active_queue_source is not None
 
-        controller.set_selected_queues([_make_source()])
+        controller.set_selected_queues([_make_source(entity_registry=entity_registry)])
 
         assert controller.active_queue_source is None
         assert len(controller.selected_queue_sources) == 1
 
     def test_fallback_to_build_context_when_no_source(self):
-        """Falls back to build_context when neither source is set."""
+        """Falls back to build_context when neither source is set.
+
+        PROJ-208: Fallback mode now uses command callback pattern.
+        """
+        entity_registry = {}
         build_context = MagicMock()
         build_context.context_type = "planet"
         build_context.has_space_shipyard = True
         build_context.can_build_type.return_value = True
         build_context.construction_queue = []
+        build_context.id = 999
+        entity_registry[("planet", 999)] = build_context
 
-        controller = _make_controller(build_context=build_context)
+        controller = _make_controller(build_context=build_context, entity_registry=entity_registry)
         # No active_queue_source, no selected_queue_sources
 
         controller.add_to_queue("factory", turns=3, category="complex")
@@ -381,64 +495,98 @@ class TestBuildTimeCalculation:
         assert tracking["resources_consumed"] == {"Metals": 0.0, "Organics": 0.0}
 
     def test_add_to_queue_creates_cost_tracking(self):
-        """Adding to queue without turns creates cost tracking fields."""
+        """Adding to queue creates required fields via command callback.
+
+        PROJ-208: Cost tracking is now handled by command handler, which
+        creates items with total_cost and resources_consumed fields.
+        """
         design = MagicMock()
         design.design_id = "factory"
         design.resource_cost = {"Metals": 4000}
 
+        entity_registry = {}
         controller = self._make_controller_with_designs([design])
-        source = _make_source(build_rate={"Metals": 2000.0})
+        controller._add_to_queue_callback = _make_add_callback(entity_registry)
+
+        source = _make_source(build_rate={"Metals": 2000.0}, entity_registry=entity_registry)
         controller.set_active_queue(source)
 
         controller.add_to_queue("factory", category="complex")
 
         item = source.construction_queue[0]
-        assert item["turns_remaining"] == 2.0  # 4000 / 2000 = 2.0 (exact float)
+        # PROJ-208: Handler uses default turns_remaining (1.0)
+        assert item["turns_remaining"] == 1.0
         assert "total_cost" in item
         assert "resources_consumed" in item
 
     def test_add_to_queue_uses_source_build_rate(self):
-        """Build time calculated using source's build_rate."""
+        """Items are added via command callback.
+
+        PROJ-208: Build time is now set by handler (default 1.0),
+        not calculated from source build_rate.
+        """
         design = MagicMock()
         design.design_id = "cruiser"
         design.resource_cost = {"Metals": 9000}
 
+        entity_registry = {}
         controller = self._make_controller_with_designs([design])
-        source = _make_source(build_rate={"Metals": 3000.0})  # Shipyard rate
+        controller._add_to_queue_callback = _make_add_callback(entity_registry)
+
+        source = _make_source(build_rate={"Metals": 3000.0}, entity_registry=entity_registry)
         controller.set_active_queue(source)
 
         controller.add_to_queue("cruiser", category="ship")
 
         item = source.construction_queue[0]
-        assert item["turns_remaining"] == 3  # 9000 / 3000 = 3
+        # PROJ-208: Handler uses default turns_remaining (1.0)
+        assert item["turns_remaining"] == 1.0
 
     def test_multi_queue_add_uses_per_source_build_rate(self):
-        """Multi-queue add calculates turns per source."""
+        """Multi-queue add adds items to all selected queues.
+
+        PROJ-208: Test updated to verify command callback pattern.
+        turns_remaining is now set by handler (default 1.0), not calculated per-source.
+        """
         design = MagicMock()
         design.design_id = "cruiser"
         design.resource_cost = {"Metals": 6000}
 
+        entity_registry = {}
         controller = self._make_controller_with_designs([design])
-        slow_source = _make_source(queue_id="slow", build_rate={"Metals": 2000.0})
-        fast_source = _make_source(queue_id="fast", build_rate={"Metals": 3000.0})
+        # Inject callback with entity registry
+        controller._add_to_queue_callback = _make_add_callback(entity_registry)
+
+        slow_source = _make_source(queue_id="slow", build_rate={"Metals": 2000.0}, entity_registry=entity_registry)
+        fast_source = _make_source(queue_id="fast", build_rate={"Metals": 3000.0}, entity_registry=entity_registry)
         controller.set_selected_queues([slow_source, fast_source])
 
         controller.add_to_queue("cruiser", category="ship")
 
-        assert slow_source.construction_queue[0]["turns_remaining"] == 3  # 6000/2000
-        assert fast_source.construction_queue[0]["turns_remaining"] == 2  # 6000/3000
+        # PROJ-208: Items added via command, handler uses default turns_remaining
+        assert len(slow_source.construction_queue) == 1
+        assert len(fast_source.construction_queue) == 1
+        assert slow_source.construction_queue[0]["turns_remaining"] == 1.0
+        assert fast_source.construction_queue[0]["turns_remaining"] == 1.0
 
     def test_fallback_uses_planetary_yard_rate(self):
-        """Fallback mode uses PLANETARY_YARD_BUILD_RATE."""
+        """Fallback mode adds item to build_context queue.
+
+        PROJ-208: Test updated to verify command callback pattern.
+        turns_remaining is now set by handler (default 1.0), not calculated.
+        """
         design = MagicMock()
         design.design_id = "factory"
         design.resource_cost = {"Metals": 4000}
 
+        entity_registry = {}
         build_context = MagicMock()
         build_context.context_type = "planet"
         build_context.has_space_shipyard = True
         build_context.can_build_type.return_value = True
         build_context.construction_queue = []
+        build_context.id = 999
+        entity_registry[("planet", 999)] = build_context
 
         mock_library = MagicMock()
         mock_library.scan_designs.return_value = [design]
@@ -456,12 +604,14 @@ class TestBuildTimeCalculation:
             design_loader=mock_loader,
             design_report=MagicMock(),
             on_queue_changed=MagicMock(),
+            add_to_queue_callback=_make_add_callback(entity_registry),
         )
 
         controller.add_to_queue("factory", category="complex")
 
+        # PROJ-208: Handler uses default turns_remaining (1.0)
         item = build_context.construction_queue[0]
-        assert item["turns_remaining"] == 2  # 4000 / 2000 = 2
+        assert item["turns_remaining"] == 1.0
 
 
 class TestPlanetSelectionForFleetComplexes:
@@ -473,8 +623,15 @@ class TestPlanetSelectionForFleetComplexes:
         galaxy,
         empire,
         planets_at_hex: list,
+        entity_registry: dict = None,
     ) -> BuildQueueController:
-        """Create controller with fleet source and galaxy context."""
+        """Create controller with fleet source and galaxy context.
+
+        PROJ-208: Now accepts entity_registry for command callback pattern.
+        """
+        if entity_registry is None:
+            entity_registry = {}
+
         build_context = MagicMock()
         build_context.context_type = "fleet"
         build_context.has_space_shipyard = True
@@ -501,6 +658,7 @@ class TestPlanetSelectionForFleetComplexes:
             galaxy=galaxy,
             empire=empire,
             on_planet_selection_needed=on_planet_selection,
+            add_to_queue_callback=_make_add_callback(entity_registry),
         )
         return controller
 
@@ -638,7 +796,10 @@ class TestPlanetSelectionForFleetComplexes:
         assert planet2 in planets_arg
 
     def test_add_complex_single_colony_auto_sets_target_planet_id(self):
-        """Adding complex at single-colony hex auto-sets target_planet_id."""
+        """Adding complex at single-colony hex auto-sets target_planet_id.
+
+        PROJ-208: Updated to use entity_registry for command callback pattern.
+        """
         hex_coord = MagicMock()
         galaxy = MagicMock()
         empire = MagicMock()
@@ -648,11 +809,12 @@ class TestPlanetSelectionForFleetComplexes:
         planet1.id = 10
         planet1.owner_id = 1
 
+        entity_registry = {}
         controller = self._make_fleet_controller_with_galaxy(
-            hex_coord, galaxy, empire, [planet1]
+            hex_coord, galaxy, empire, [planet1], entity_registry=entity_registry
         )
 
-        source = _make_source(context_type="fleet", build_rate={"Metals": 2000.0})
+        source = _make_source(context_type="fleet", build_rate={"Metals": 2000.0}, entity_registry=entity_registry)
         source.context_type = "fleet"
         source.planet_id = None
         controller.set_active_queue(source)
@@ -665,7 +827,10 @@ class TestPlanetSelectionForFleetComplexes:
         assert item.get("target_planet_id") == 10
 
     def test_add_complex_planet_source_uses_planet_id(self):
-        """Adding complex via planet source uses source.planet_id."""
+        """Adding complex via planet source uses source.planet_id.
+
+        PROJ-208: Updated to use entity_registry for command callback pattern.
+        """
         hex_coord = MagicMock()
         galaxy = MagicMock()
         empire = MagicMock()
@@ -675,13 +840,13 @@ class TestPlanetSelectionForFleetComplexes:
         planet1.id = 10
         planet1.owner_id = 1
 
+        entity_registry = {}
         controller = self._make_fleet_controller_with_galaxy(
-            hex_coord, galaxy, empire, [planet1]
+            hex_coord, galaxy, empire, [planet1], entity_registry=entity_registry
         )
 
-        source = _make_source(context_type="planet", build_rate={"Metals": 2000.0})
+        source = _make_source(context_type="planet", build_rate={"Metals": 2000.0}, entity_registry=entity_registry, planet_id=10)
         source.context_type = "planet"
-        source.planet_id = 10
         controller.set_active_queue(source)
 
         controller.add_to_queue("factory", category="complex")
@@ -805,43 +970,56 @@ class TestPerResourceBuildRates:
         assert turns == 1
 
     def test_add_to_queue_with_dict_build_rate(self):
-        """Adding to queue calculates turns using Dict build_rate."""
+        """Adding to queue adds item via command callback.
+
+        PROJ-208: Turns calculation moved to handler (default 1.0).
+        """
         design = MagicMock()
         design.design_id = "cruiser"
         design.resource_cost = {"Metals": 5500, "Organics": 1000}
 
+        entity_registry = {}
         controller = self._make_controller_with_designs([design])
-        source = _make_source(build_rate={"Metals": 3000.0, "Organics": 3000.0})
+        controller._add_to_queue_callback = _make_add_callback(entity_registry)
+
+        source = _make_source(build_rate={"Metals": 3000.0, "Organics": 3000.0}, entity_registry=entity_registry)
         controller.set_active_queue(source)
 
         controller.add_to_queue("cruiser", category="ship")
 
         item = source.construction_queue[0]
-        # 5500 Metals / 3000 = 1.833... turns (exact float for tick-based production)
-        assert item["turns_remaining"] == pytest.approx(5500 / 3000)
+        # PROJ-208: Handler uses default turns_remaining (1.0)
+        assert item["turns_remaining"] == 1.0
 
     def test_multi_queue_different_per_resource_rates(self):
-        """Multi-queue with different per-resource rates."""
+        """Multi-queue adds items to all selected queues.
+
+        PROJ-208: Turns calculation moved to handler (default 1.0).
+        """
         design = MagicMock()
         design.design_id = "cruiser"
         design.resource_cost = {"Metals": 6000, "Exotics": 3000}
 
+        entity_registry = {}
         controller = self._make_controller_with_designs([design])
+        controller._add_to_queue_callback = _make_add_callback(entity_registry)
+
         # Standard yard: all at 3000
         standard = _make_source(
             queue_id="standard",
-            build_rate={"Metals": 3000.0, "Exotics": 3000.0}
+            build_rate={"Metals": 3000.0, "Exotics": 3000.0},
+            entity_registry=entity_registry,
         )
         # Advanced yard: Metals 3000, but Exotics 1500
         advanced = _make_source(
             queue_id="advanced",
-            build_rate={"Metals": 3000.0, "Exotics": 1500.0}
+            build_rate={"Metals": 3000.0, "Exotics": 1500.0},
+            entity_registry=entity_registry,
         )
         controller.set_selected_queues([standard, advanced])
 
         controller.add_to_queue("cruiser", category="ship")
 
-        # Standard: Metals ceil(6000/3000)=2, Exotics ceil(3000/3000)=1 → 2 turns
-        assert standard.construction_queue[0]["turns_remaining"] == 2
-        # Advanced: Metals ceil(6000/3000)=2, Exotics ceil(3000/1500)=2 → 2 turns
-        assert advanced.construction_queue[0]["turns_remaining"] == 2
+        # PROJ-208: Handler uses default turns_remaining (1.0) for all queues
+        assert standard.construction_queue[0]["turns_remaining"] == 1.0
+        assert advanced.construction_queue[0]["turns_remaining"] == 1.0

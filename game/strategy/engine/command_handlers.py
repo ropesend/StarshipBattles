@@ -12,11 +12,12 @@ Usage:
     registry.register('IssueColonizeCommand', ColonizeCommandHandler())
     result = registry.dispatch('IssueColonizeCommand', session, command)
 """
-from typing import Protocol, Dict, Any, TYPE_CHECKING, runtime_checkable
+from typing import Protocol, Dict, Any, TYPE_CHECKING, runtime_checkable, Optional
 import logging
 
 from game.core.validation import ValidationResult
 from game.strategy.data.pathfinding import find_hybrid_path, strip_start_hex
+from game.strategy.data.order_types import FleetOrder, OrderType
 
 logger = logging.getLogger(__name__)
 
@@ -24,28 +25,43 @@ if TYPE_CHECKING:
     from game.strategy.engine.game_session import GameSession
 
 
-def add_move_order_if_needed(session: 'GameSession', fleet, target_hex) -> ValidationResult:
+def add_move_order_if_needed(
+    session: 'GameSession',
+    fleet,
+    target_hex,
+    start_hex=None
+) -> ValidationResult:
     """Add a MOVE order to fleet if not already at target hex.
 
     PROJ-204 Phase 3: Extracted from duplicate patterns in command handlers.
+    PROJ-207 Phase 5: Added start_hex for chain-aware path calculation.
+
     Use this when a command needs to auto-queue movement before an action.
 
     Args:
         session: GameSession for path calculation.
         fleet: Fleet to potentially move.
         target_hex: Destination hex coordinate.
+        start_hex: Optional starting hex for path calculation. If None,
+                   calculates chain-aware start (last MOVE target or fleet.location).
 
     Returns:
         ValidationResult - invalid if no path found, valid otherwise.
     """
-    from game.strategy.data.fleet import FleetOrder, OrderType
+    # Determine start hex (chain-aware)
+    if start_hex is None:
+        start_hex = fleet.location
+        if fleet.orders:
+            last = fleet.orders[-1]
+            if last.type == OrderType.MOVE:
+                start_hex = last.target
 
     # Already at target - no move needed
-    if fleet.location == target_hex:
+    if start_hex == target_hex:
         return ValidationResult.success()
 
-    # Calculate path
-    path = find_hybrid_path(session.galaxy, fleet.location, target_hex)
+    # Calculate path from chain-aware start
+    path = find_hybrid_path(session.galaxy, start_hex, target_hex)
     if not path:
         return ValidationResult.error("No path found to target.")
 
@@ -53,11 +69,38 @@ def add_move_order_if_needed(session: 'GameSession', fleet, target_hex) -> Valid
     move_order = FleetOrder(OrderType.MOVE, target=target_hex)
     fleet.add_order(move_order)
 
-    # Set path immediately if it's the first order
-    if len(fleet.orders) == 1:
+    # Set path immediately if it's the first order and fleet is at start
+    if len(fleet.orders) == 1 and fleet.location == start_hex:
         fleet.path = strip_start_hex(fleet.location, path)
 
     return ValidationResult.success()
+
+
+def create_auto_load_population_order(origin_colony) -> 'FleetOrder':
+    """Create a LOAD_POPULATION order to pick up founding population from colony.
+
+    PROJ-207 Phase 4: Extracted from duplicate patterns in ColonizeCommandHandler
+    and ColonizeMissionCommandHandler. Use this when auto-loading colonists
+    from a colony at the fleet's location.
+
+    Args:
+        origin_colony: The colony to load population from.
+
+    Returns:
+        FleetOrder for LOAD_POPULATION, or None if colony has no populations.
+    """
+    if not origin_colony or not origin_colony.populations:
+        return None
+
+    species_id = origin_colony.populations[0].race_id if origin_colony.populations else "default"
+    transfer_params = {
+        'direction': 'load',
+        'cargo_type': 'passengers',
+        'amount': 0,  # 0 = load as much as possible
+        'planet_id': origin_colony.id,
+        'species_id': species_id
+    }
+    return FleetOrder(OrderType.LOAD_POPULATION, target=transfer_params)
 
 
 @runtime_checkable
@@ -214,8 +257,6 @@ class ColonizeCommandHandler(BaseCommandHandler):
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle IssueColonizeCommand."""
-        from game.strategy.data.fleet import FleetOrder, OrderType
-
         # 1. Resolve Fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
         if error:
@@ -232,17 +273,10 @@ class ColonizeCommandHandler(BaseCommandHandler):
         # 3. Apply
         if result.is_valid:
             # Auto-load population from colony at fleet's location (BUG-70)
+            # PROJ-207 Phase 4: Use shared helper
             origin_colony = session._find_colony_at_fleet(fleet)
-            if origin_colony and origin_colony.populations:
-                species_id = origin_colony.populations[0].race_id if origin_colony.populations else "default"
-                transfer_params = {
-                    'direction': 'load',
-                    'cargo_type': 'passengers',
-                    'amount': 0,
-                    'planet_id': origin_colony.id,
-                    'species_id': species_id
-                }
-                load_order = FleetOrder(OrderType.LOAD_POPULATION, target=transfer_params)
+            load_order = create_auto_load_population_order(origin_colony)
+            if load_order:
                 fleet.add_order(load_order)
 
             # Add MOVE order to get to the target planet
@@ -265,8 +299,6 @@ class MoveCommandHandler(BaseCommandHandler):
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle IssueMoveCommand."""
-        from game.strategy.data.fleet import FleetOrder, OrderType
-
         # 1. Resolve Fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
         if error:
@@ -292,20 +324,8 @@ class MoveCommandHandler(BaseCommandHandler):
         return ValidationResult.success()
 
 
-class BuildShipCommandHandler(BaseCommandHandler):
-    """Handler for IssueBuildShipCommand."""
-
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
-        """Handle IssueBuildShipCommand."""
-        # 1. Resolve Planet
-        planet, error = self._resolve_planet(session, cmd.planet_id)
-        if error:
-            return error
-
-        # 2. Apply
-        planet.add_production(cmd.design_name, 1)
-
-        return ValidationResult.success()
+# NOTE: BuildShipCommandHandler removed in PROJ-208 Phase 2 (dead code).
+# Use AddToConstructionQueueCommandHandler instead for all build queue operations.
 
 
 class InterceptCommandHandler(BaseCommandHandler):
@@ -313,8 +333,6 @@ class InterceptCommandHandler(BaseCommandHandler):
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle IssueInterceptCommand - creates a MOVE_TO_FLEET order."""
-        from game.strategy.data.fleet import FleetOrder, OrderType
-
         # 1. Resolve source fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
         if error:
@@ -338,8 +356,6 @@ class JoinCommandHandler(BaseCommandHandler):
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle IssueJoinFleetCommand - creates MOVE_TO_FLEET and JOIN_FLEET orders."""
-        from game.strategy.data.fleet import FleetOrder, OrderType
-
         # 1. Resolve source fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
         if error:
@@ -367,8 +383,6 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle QueueColonizeMissionCommand - queues MOVE and COLONIZE orders."""
-        from game.strategy.data.fleet import FleetOrder, OrderType
-        from game.strategy.data.pathfinding import find_hybrid_path, strip_start_hex
         from game.strategy.validation import ColonizeValidator
 
         # 1. Resolve fleet
@@ -414,43 +428,20 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
                         code="COLONY_POD_EXHAUSTED"
                     )
 
-        # 3. Determine start hex (current location or last order target)
-        start_hex = fleet.location
-        if fleet.orders:
-            last = fleet.orders[-1]
-            if last.type == OrderType.MOVE:
-                start_hex = last.target
-
-        # 4. Calculate path
-        path = find_hybrid_path(session.galaxy, start_hex, cmd.target_hex)
-        if not path:
-            return ValidationResult.error("No path found to target.")
-
-        # 5. Auto-load population from colony at fleet's current location (BUG-70)
+        # 3. Auto-load population from colony at fleet's current location (BUG-70)
+        # PROJ-207 Phase 4: Use shared helper
         origin_colony = session._find_colony_at_fleet(fleet)
-        if origin_colony and origin_colony.populations:
-            species_id = origin_colony.populations[0].race_id if origin_colony.populations else "default"
-            transfer_params = {
-                'direction': 'load',
-                'cargo_type': 'passengers',
-                'amount': 0,  # 0 = load as much as possible
-                'planet_id': origin_colony.id,
-                'species_id': species_id
-            }
-            load_order = FleetOrder(OrderType.LOAD_POPULATION, target=transfer_params)
+        load_order = create_auto_load_population_order(origin_colony)
+        if load_order:
             fleet.add_order(load_order)
 
-        # 6. Queue MOVE order if not already at target
-        if start_hex != cmd.target_hex:
-            move_order = FleetOrder(OrderType.MOVE, target=cmd.target_hex)
-            fleet.add_order(move_order)
+        # 4. Queue MOVE order if needed (chain-aware path calculation)
+        # PROJ-207 Phase 5: Use shared helper with auto chain detection
+        move_result = add_move_order_if_needed(session, fleet, cmd.target_hex)
+        if not move_result.is_valid:
+            return move_result
 
-            # Set path immediately if it's the active order (and no load order was inserted)
-            if len(fleet.orders) == 1:
-                # PROJ-204: Remove start hex from path before assigning
-                fleet.path = strip_start_hex(fleet.location, path)
-
-        # 7. Queue COLONIZE order (target=None means "any available planet")
+        # 5. Queue COLONIZE order (target=None means "any available planet")
         colonize_order = FleetOrder(OrderType.COLONIZE, target=planet)
         fleet.add_order(colonize_order)
 
@@ -482,7 +473,6 @@ class TransferCommandHandler(BaseCommandHandler):
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle IssueTransferCommand - creates TRANSFER order for cargo operations."""
-        from game.strategy.data.fleet import FleetOrder, OrderType
         from game.strategy.validation import TransferValidator
 
         logger.info(f"DIAG TransferCommandHandler: cmd fleet_id={cmd.fleet_id}, planet_id={cmd.planet_id}, cargo_type={cmd.cargo_type}, direction={cmd.direction}, amount={cmd.amount}, species_id={cmd.species_id}")
@@ -511,8 +501,8 @@ class TransferCommandHandler(BaseCommandHandler):
         # Use projected cargo to account for earlier queued orders
         from game.strategy.services.fleet_cargo_projector import FleetCargoProjector
         projected = FleetCargoProjector.get_projected_cargo(fleet, cmd.cargo_type)
-        capacity = fleet.get_fleet_cargo_capacity(cmd.cargo_type)
-        current = fleet.get_fleet_cargo_current(cmd.cargo_type)
+        capacity = fleet.resources.get_fleet_cargo_capacity(cmd.cargo_type)
+        current = fleet.resources.get_fleet_cargo_current(cmd.cargo_type)
         logger.info(f"DIAG TransferCommandHandler: cargo capacity={capacity}, current={current}, projected={projected}")
 
         result = TransferValidator.validate(
@@ -551,21 +541,61 @@ class TransferCommandHandler(BaseCommandHandler):
         return result
 
 
+class BuildOrderCommandHandler(BaseCommandHandler):
+    """Handler for IssueBuildOrderCommand (PROJ-207 Phase 4)."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle IssueBuildOrderCommand - creates BUILD order for fleet construction.
+
+        Inserts BUILD order at position 0 (front of queue) so it executes first.
+        Clears the fleet path since fleet must stay stationary to build.
+        """
+        # 1. Resolve fleet
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
+
+        # 2. Create BUILD order and insert at front
+        build_order = FleetOrder(OrderType.BUILD)
+        fleet.orders.insert(0, build_order)
+
+        # 3. Clear movement path - fleet must stay stationary to build
+        fleet.path = []
+
+        logger.info(f"GameSession: Issued BUILD order for Fleet {fleet.id}")
+        return ValidationResult.success()
+
+
+class RemoveBuildOrderCommandHandler(BaseCommandHandler):
+    """Handler for RemoveBuildOrderCommand (PROJ-207 Phase 4)."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle RemoveBuildOrderCommand - removes BUILD orders from fleet."""
+        # 1. Resolve fleet
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
+
+        # 2. Remove all BUILD orders
+        fleet.orders = [o for o in fleet.orders if o.type != OrderType.BUILD]
+
+        logger.info(f"GameSession: Removed BUILD orders from Fleet {fleet.id}")
+        return ValidationResult.success()
+
+
 class WarpCommandHandler(BaseCommandHandler):
     """Handler for IssueWarpCommand (PROJ-187)."""
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle IssueWarpCommand - creates WARP order with optional MOVE prefix."""
-        from game.strategy.data.fleet import FleetOrder, OrderType
-
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
         if error:
             return error
 
         # 2. Validate fleet can use warp
-        if not fleet.can_use_warp():
-            limiting_ship = fleet.get_warp_limiting_ship()
+        if not fleet.capabilities.can_use_warp():
+            limiting_ship = fleet.capabilities.get_warp_limiting_ship()
             if limiting_ship:
                 return ValidationResult.error(
                     f"Fleet cannot use warp - {limiting_ship.name} lacks warp capability."
@@ -596,6 +626,315 @@ class WarpCommandHandler(BaseCommandHandler):
         return ValidationResult.success()
 
 
+# =============================================================================
+# Fleet Management Command Handlers (PROJ-208)
+# =============================================================================
+
+class SplitFleetCommandHandler(BaseCommandHandler):
+    """Handler for SplitFleetCommand (PROJ-208 Phase 1)."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle SplitFleetCommand - split ships into a new fleet.
+
+        Removes specified ships from source fleet and creates a new fleet
+        with those ships at the same location.
+        """
+        # 1. Resolve source fleet
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
+
+        # 2. Validate ship_instance_ids
+        if not cmd.ship_instance_ids:
+            return ValidationResult.error("No ships specified for split.")
+
+        # Find ships to move
+        ships_to_move = []
+        for instance_id in cmd.ship_instance_ids:
+            found = None
+            for ship in fleet.ships:
+                if ship.instance_id == instance_id:
+                    found = ship
+                    break
+            if found is None:
+                return ValidationResult.error(f"Ship {instance_id} not found in fleet.")
+            ships_to_move.append(found)
+
+        # 3. Validate at least one ship remains in source fleet
+        remaining_count = len(fleet.ships) - len(ships_to_move)
+        if remaining_count < 1:
+            return ValidationResult.error("At least one ship must remain in the source fleet.")
+
+        # 4. Get owning empire to generate new fleet ID
+        if fleet.owner_id < 0 or fleet.owner_id >= len(session.empires):
+            return ValidationResult.error("Fleet owner not found.")
+        empire = session.empires[fleet.owner_id]
+
+        # 5. Create new fleet at same location
+        from game.strategy.data.fleet import Fleet
+        new_fleet_id = empire.get_next_fleet_id()
+        new_fleet = Fleet(
+            fleet_id=new_fleet_id,
+            owner_id=fleet.owner_id,
+            location=fleet.location,
+            component_registry=fleet._component_registry
+        )
+
+        # 6. Move ships to new fleet
+        for ship in ships_to_move:
+            fleet.remove_ship(ship)
+            new_fleet.add_ship(ship)
+
+        # 7. Register new fleet with empire
+        empire.add_fleet(new_fleet)
+
+        logger.info(f"GameSession: Split fleet {cmd.fleet_id} -> new fleet {new_fleet_id} ({len(ships_to_move)} ships)")
+        return ValidationResult.success()
+
+
+class DeleteFleetOrderCommandHandler(BaseCommandHandler):
+    """Handler for DeleteFleetOrderCommand (PROJ-208 Phase 1)."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle DeleteFleetOrderCommand - remove an order from the queue.
+
+        If the active order (index 0) is deleted, the fleet's path is invalidated.
+        """
+        # 1. Resolve fleet
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
+
+        # 2. Validate order_index
+        if cmd.order_index < 0 or cmd.order_index >= len(fleet.orders):
+            return ValidationResult.error(f"Invalid order index: {cmd.order_index}")
+
+        # 3. Remove the order
+        fleet.orders.pop(cmd.order_index)
+
+        # 4. If active order (index 0) was removed, invalidate path
+        if cmd.order_index == 0:
+            fleet.path = []
+
+        logger.info(f"GameSession: Deleted order {cmd.order_index} from fleet {cmd.fleet_id}")
+        return ValidationResult.success()
+
+
+class ReorderFleetOrderCommandHandler(BaseCommandHandler):
+    """Handler for ReorderFleetOrderCommand (PROJ-208 Phase 1)."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle ReorderFleetOrderCommand - swap order positions.
+
+        If the active order (index 0) is affected, the fleet's path is invalidated.
+        """
+        # 1. Resolve fleet
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
+
+        # 2. Validate order_index
+        if cmd.order_index < 0 or cmd.order_index >= len(fleet.orders):
+            return ValidationResult.error(f"Invalid order index: {cmd.order_index}")
+
+        # 3. Validate direction
+        if cmd.direction not in (-1, 1):
+            return ValidationResult.error(f"Invalid direction: {cmd.direction} (must be -1 or 1)")
+
+        # 4. Validate target index
+        target_index = cmd.order_index + cmd.direction
+        if target_index < 0 or target_index >= len(fleet.orders):
+            return ValidationResult.error(f"Cannot move order {cmd.order_index} in direction {cmd.direction}")
+
+        # 5. Swap orders
+        fleet.orders[cmd.order_index], fleet.orders[target_index] = \
+            fleet.orders[target_index], fleet.orders[cmd.order_index]
+
+        # 6. If active order (index 0) was affected, invalidate path
+        if cmd.order_index == 0 or target_index == 0:
+            fleet.path = []
+
+        logger.info(f"GameSession: Reordered fleet {cmd.fleet_id} order {cmd.order_index} -> {target_index}")
+        return ValidationResult.success()
+
+
+# =============================================================================
+# Construction Queue Command Handlers (PROJ-208 Phase 2)
+# =============================================================================
+
+class AddToConstructionQueueCommandHandler(BaseCommandHandler):
+    """Handler for AddToConstructionQueueCommand (PROJ-208 Phase 2)."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle AddToConstructionQueueCommand - add item to construction queue.
+
+        Creates a queue item dict with design_id, type, turns_remaining, and
+        cost tracking fields, then inserts or appends to the entity's queue.
+        """
+        # 1. Resolve entity (planet or fleet)
+        entity = self._resolve_build_entity(session, cmd.entity_id, cmd.entity_type)
+        if entity is None:
+            return ValidationResult.error(f"{cmd.entity_type.capitalize()} not found.")
+
+        # 2. Find the correct queue - may be entity.construction_queue or a facility queue
+        queue = self._resolve_queue(entity, cmd.queue_id)
+        if queue is None:
+            return ValidationResult.error(f"Construction queue not found.")
+
+        # 3. Validate index if specified
+        if cmd.index is not None:
+            if cmd.index < 0 or cmd.index > len(queue):
+                return ValidationResult.error(f"Invalid queue index: {cmd.index}")
+
+        # 4. Create queue item
+        queue_item = {
+            "design_id": cmd.design_id,
+            "type": cmd.category,
+            "turns_remaining": 1.0,  # Default, UI layer can override via calculation
+            "total_cost": {},
+            "resources_consumed": {},
+        }
+
+        # 5. Add target_planet_id for complexes if specified
+        if cmd.target_planet_id is not None:
+            queue_item["target_planet_id"] = cmd.target_planet_id
+
+        # 6. Insert or append
+        if cmd.index is not None:
+            queue.insert(cmd.index, queue_item)
+            logger.info(f"GameSession: Inserted {cmd.design_id} into {cmd.entity_type} {cmd.entity_id} queue at {cmd.index}")
+        else:
+            queue.append(queue_item)
+            logger.info(f"GameSession: Appended {cmd.design_id} to {cmd.entity_type} {cmd.entity_id} queue")
+
+        return ValidationResult.success()
+
+    def _resolve_queue(self, entity, queue_id: Optional[str]) -> Optional[list]:
+        """Find the correct construction queue for the entity.
+
+        PROJ-208: Supports multi-queue entities (e.g., planets with shipyard facilities).
+
+        Args:
+            entity: Planet or Fleet entity.
+            queue_id: Optional queue identifier. If None, uses entity.construction_queue.
+
+        Returns:
+            The construction queue list, or None if not found.
+        """
+        # If no queue_id specified, use entity's main queue
+        if queue_id is None:
+            return getattr(entity, 'construction_queue', None)
+
+        # For planets, check if queue_id matches a facility's instance_id
+        if hasattr(entity, 'facilities'):
+            for facility in entity.facilities:
+                if getattr(facility, 'instance_id', None) == queue_id:
+                    return getattr(facility, 'construction_queue', None)
+
+        # Check if queue_id matches base queue pattern (e.g., "planet_100_base")
+        base_queue_pattern = f"planet_{getattr(entity, 'id', '')}_base"
+        if queue_id == base_queue_pattern:
+            return getattr(entity, 'construction_queue', None)
+
+        # Fallback to entity's main queue
+        return getattr(entity, 'construction_queue', None)
+
+    def _resolve_build_entity(self, session: 'GameSession', entity_id: int, entity_type: str):
+        """Resolve a planet or fleet by ID and type.
+
+        Args:
+            session: Game session for lookups.
+            entity_id: ID of the entity.
+            entity_type: "planet" or "fleet".
+
+        Returns:
+            Planet or Fleet object, or None if not found.
+        """
+        if entity_type == "planet":
+            return session._get_planet_by_id(entity_id)
+        elif entity_type == "fleet":
+            return session._get_fleet_by_id(entity_id)
+        return None
+
+
+class RemoveFromConstructionQueueCommandHandler(BaseCommandHandler):
+    """Handler for RemoveFromConstructionQueueCommand (PROJ-208 Phase 2)."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle RemoveFromConstructionQueueCommand - remove item from queue.
+
+        For fleets, if the queue becomes empty, may need BUILD order cleanup
+        (handled by separate RemoveBuildOrderCommand if needed).
+        """
+        # 1. Resolve entity (planet or fleet)
+        entity = self._resolve_build_entity(session, cmd.entity_id, cmd.entity_type)
+        if entity is None:
+            return ValidationResult.error(f"{cmd.entity_type.capitalize()} not found.")
+
+        # 2. Validate entity has construction_queue
+        if not hasattr(entity, 'construction_queue'):
+            return ValidationResult.error(f"{cmd.entity_type.capitalize()} cannot build.")
+
+        # 3. Validate index
+        queue = entity.construction_queue
+        if cmd.item_index < 0 or cmd.item_index >= len(queue):
+            return ValidationResult.error(f"Invalid queue index: {cmd.item_index}")
+
+        # 4. Remove item
+        removed_item = queue.pop(cmd.item_index)
+        logger.info(f"GameSession: Removed item {cmd.item_index} from {cmd.entity_type} {cmd.entity_id} queue")
+
+        return ValidationResult.success()
+
+    def _resolve_build_entity(self, session: 'GameSession', entity_id: int, entity_type: str):
+        """Resolve a planet or fleet by ID and type."""
+        if entity_type == "planet":
+            return session._get_planet_by_id(entity_id)
+        elif entity_type == "fleet":
+            return session._get_fleet_by_id(entity_id)
+        return None
+
+
+class ReorderConstructionQueueCommandHandler(BaseCommandHandler):
+    """Handler for ReorderConstructionQueueCommand (PROJ-208 Phase 2)."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle ReorderConstructionQueueCommand - move item to new position.
+
+        Performs atomic pop + insert to move item from from_index to to_index.
+        """
+        # 1. Resolve entity (planet or fleet)
+        entity = self._resolve_build_entity(session, cmd.entity_id, cmd.entity_type)
+        if entity is None:
+            return ValidationResult.error(f"{cmd.entity_type.capitalize()} not found.")
+
+        # 2. Validate entity has construction_queue
+        if not hasattr(entity, 'construction_queue'):
+            return ValidationResult.error(f"{cmd.entity_type.capitalize()} cannot build.")
+
+        # 3. Validate indices
+        queue = entity.construction_queue
+        if cmd.from_index < 0 or cmd.from_index >= len(queue):
+            return ValidationResult.error(f"Invalid from_index: {cmd.from_index}")
+        if cmd.to_index < 0 or cmd.to_index >= len(queue):
+            return ValidationResult.error(f"Invalid to_index: {cmd.to_index}")
+
+        # 4. Perform atomic reorder (pop + insert)
+        item = queue.pop(cmd.from_index)
+        queue.insert(cmd.to_index, item)
+
+        logger.info(f"GameSession: Reordered {cmd.entity_type} {cmd.entity_id} queue {cmd.from_index} -> {cmd.to_index}")
+        return ValidationResult.success()
+
+    def _resolve_build_entity(self, session: 'GameSession', entity_id: int, entity_type: str):
+        """Resolve a planet or fleet by ID and type."""
+        if entity_type == "planet":
+            return session._get_planet_by_id(entity_id)
+        elif entity_type == "fleet":
+            return session._get_fleet_by_id(entity_id)
+        return None
+
+
 def create_default_registry() -> CommandHandlerRegistry:
     """Create a registry with all standard command handlers registered.
 
@@ -621,13 +960,27 @@ def create_default_registry() -> CommandHandlerRegistry:
     # Core handlers
     registry.register('IssueColonizeCommand', ColonizeCommandHandler())
     registry.register('IssueMoveCommand', MoveCommandHandler())
-    registry.register('IssueBuildShipCommand', BuildShipCommandHandler())
+    # NOTE: IssueBuildShipCommand removed (PROJ-208) - use AddToConstructionQueueCommand
     registry.register('IssueInterceptCommand', InterceptCommandHandler())
     registry.register('IssueJoinFleetCommand', JoinCommandHandler())
     registry.register('QueueColonizeMissionCommand', ColonizeMissionCommandHandler())
     registry.register('ClearFleetOrdersCommand', ClearOrdersCommandHandler())
     registry.register('IssueTransferCommand', TransferCommandHandler())
     registry.register('IssueWarpCommand', WarpCommandHandler())  # PROJ-187
+
+    # Build order handlers (PROJ-207 Phase 4)
+    registry.register('IssueBuildOrderCommand', BuildOrderCommandHandler())
+    registry.register('RemoveBuildOrderCommand', RemoveBuildOrderCommandHandler())
+
+    # Fleet management handlers (PROJ-208 Phase 1)
+    registry.register('SplitFleetCommand', SplitFleetCommandHandler())
+    registry.register('DeleteFleetOrderCommand', DeleteFleetOrderCommandHandler())
+    registry.register('ReorderFleetOrderCommand', ReorderFleetOrderCommandHandler())
+
+    # Construction queue handlers (PROJ-208 Phase 2)
+    registry.register('AddToConstructionQueueCommand', AddToConstructionQueueCommandHandler())
+    registry.register('RemoveFromConstructionQueueCommand', RemoveFromConstructionQueueCommandHandler())
+    registry.register('ReorderConstructionQueueCommand', ReorderConstructionQueueCommandHandler())
 
     # Superweapon direct handlers (PROJ-102)
     registry.register('IssueImplodePlanetCommand', ImplodePlanetCommandHandler())

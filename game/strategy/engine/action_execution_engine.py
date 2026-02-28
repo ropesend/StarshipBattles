@@ -195,7 +195,7 @@ class ActionExecutionEngine(IActionExecutionEngine):
 
         Returns True if the fleet was consumed by the action.
         """
-        return self._order_processor.process_end_turn_orders(
+        return self._order_processor.execute_action_order(
             fleet=fleet,
             empire=empire,
             galaxy=galaxy,

@@ -2,7 +2,8 @@
 import pytest
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.data.empire import Empire
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from unittest.mock import MagicMock, patch
 
@@ -10,9 +11,9 @@ from .conftest import MockGalaxy, create_colony_ship, MockPlanetType
 
 
 @patch('game.strategy.data.pathfinding.find_hybrid_path')
-def test_movement_timing(mock_path):
+def test_movement_timing(mock_path, fresh_registries):
     """Verify ships move at correct tick intervals based on speed."""
-    engine = TurnEngine()
+    engine = TurnEngine(registries=fresh_registries)
 
     # Speed 5: 100 // 5 = 20. Moves at 20, 40, 60, 80, 100.
     f5 = Fleet(1, 0, HexCoord(0, 0), speed=5.0)
@@ -47,9 +48,9 @@ def test_movement_timing(mock_path):
 
 
 @patch('game.strategy.data.pathfinding.find_hybrid_path')
-def test_full_turn_distance(mock_path):
+def test_full_turn_distance(mock_path, fresh_registries):
     """Verify total distance traveled in a turn."""
-    engine = TurnEngine()
+    engine = TurnEngine(registries=fresh_registries)
 
     f2 = Fleet(1, 0, HexCoord(0,0), speed=2.0) # Should move 2 steps
     # Path must end at destination (10,0) to avoid path recalculation
@@ -73,9 +74,9 @@ def test_full_turn_distance(mock_path):
     assert f5.location == HexCoord(5,0)
 
 
-def test_combat_interception():
+def test_combat_interception(fresh_registries):
     """Verify fleets colliding mid-turn trigger combat."""
-    engine = TurnEngine()
+    engine = TurnEngine(registries=fresh_registries)
 
     # P1 at (0,0) moving Right -> Speed 5
     f1 = Fleet(1, 0, HexCoord(0,0), speed=5.0)
@@ -110,9 +111,9 @@ def test_combat_interception():
     assert survivors == 1
 
 
-def test_order_chaining():
+def test_order_chaining(fresh_registries):
     """Verify Colonize executes after Move finishes."""
-    engine = TurnEngine()
+    engine = TurnEngine(registries=fresh_registries)
 
     # Create a mock planet with proper location and planet type
     planet = MagicMock()
@@ -133,7 +134,8 @@ def test_order_chaining():
     galaxy.systems[HexCoord(1, 0)] = mock_system
 
     f1 = Fleet(1, 0, HexCoord(0,0), speed=100.0) # Fast, arrives instantly
-    f1.ships.append(create_colony_ship("Colony Ship", 0))  # PROJ-140: Add proper colony ship
+    # PROJ-211: Pass registries for DI compliance
+    f1.ships.append(create_colony_ship("Colony Ship", 0, registries=fresh_registries))
     f1.path = [HexCoord(1,0)]
     f1.add_order(FleetOrder(OrderType.MOVE, HexCoord(1,0)))
     f1.add_order(FleetOrder(OrderType.COLONIZE, planet))
@@ -154,9 +156,9 @@ def test_order_chaining():
     assert len(f1.orders) == 0 # Order consumed
 
 
-def test_colonize_deletes_fleet():
+def test_colonize_deletes_fleet(fresh_registries):
     """Verify colonizing fleet is removed from empire after colonization."""
-    engine = TurnEngine()
+    engine = TurnEngine(registries=fresh_registries)
 
     # Create a mock planet with proper location and planet type
     planet = MagicMock()
@@ -177,7 +179,8 @@ def test_colonize_deletes_fleet():
     galaxy.systems[HexCoord(1, 0)] = mock_system
 
     f1 = Fleet(1, 0, HexCoord(1, 0), speed=5.0)
-    f1.ships.append(create_colony_ship("Colony Ship", 0))  # PROJ-140: Add proper colony ship
+    # PROJ-211: Pass registries for DI compliance
+    f1.ships.append(create_colony_ship("Colony Ship", 0, registries=fresh_registries))
     f1.orders = [FleetOrder(OrderType.COLONIZE, planet)]
 
     e1 = Empire(0, "P1", (0, 0, 0))

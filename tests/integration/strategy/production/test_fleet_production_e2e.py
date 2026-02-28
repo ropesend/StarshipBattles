@@ -13,7 +13,8 @@ import json
 import shutil
 from unittest.mock import MagicMock, patch, PropertyMock
 
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.engine.production_engine import ProductionEngine
@@ -87,9 +88,10 @@ class TestFleetProductionE2E:
 
         return mock_galaxy, mock_planet
 
-    def test_e2e_fleet_with_yard_builds_ship_that_spawns_in_fleet(self, temp_save_dir):
+    def test_e2e_fleet_with_yard_builds_ship_that_spawns_in_fleet(self, temp_save_dir, fresh_registries):
         """E2E: Create fleet with yard → issue BUILD → advance turns → ship spawns in fleet."""
-        engine = ProductionEngine()
+        # PROJ-211: Pass registries for DI compliance when spawning ships
+        engine = ProductionEngine(registries=fresh_registries)
 
         # Create fleet with space yard capability
         # At 30/tick fleet yard rate, 6000 Metals = 200 ticks = 2 turns
@@ -114,19 +116,21 @@ class TestFleetProductionE2E:
         # Give empire resources
         empire.resource_pool = {"Metals": 100000.0}
 
-        # Simulate fleet having a shipyard with count
-        with patch.object(Fleet, 'has_space_shipyard', new_callable=lambda: property(lambda self: True)), \
-             patch.object(Fleet, 'space_shipyard_count', new_callable=lambda: property(lambda self: 1)):
-            # Turn 1: progress but not complete
-            _process_fleet_turn(engine, [empire], None, temp_save_dir)
-            assert len(fleet.construction_queue) == 1
-            assert fleet.construction_queue[0]["resources_consumed"]["Metals"] > 0
-            assert len(fleet.ships) == initial_ship_count  # Not yet spawned
+        # PROJ-210: Mock capabilities property for has_space_shipyard
+        fleet._capabilities = MagicMock()
+        fleet._capabilities.has_space_shipyard = True
+        fleet._capabilities.space_shipyard_count = 1
 
-            # Turn 2: ship completes and spawns
-            _process_fleet_turn(engine, [empire], None, temp_save_dir)
-            assert len(fleet.construction_queue) == 0  # Queue empty
-            assert len(fleet.ships) == initial_ship_count + 1  # Ship spawned
+        # Turn 1: progress but not complete
+        _process_fleet_turn(engine, [empire], None, temp_save_dir)
+        assert len(fleet.construction_queue) == 1
+        assert fleet.construction_queue[0]["resources_consumed"]["Metals"] > 0
+        assert len(fleet.ships) == initial_ship_count  # Not yet spawned
+
+        # Turn 2: ship completes and spawns
+        _process_fleet_turn(engine, [empire], None, temp_save_dir)
+        assert len(fleet.construction_queue) == 0  # Queue empty
+        assert len(fleet.ships) == initial_ship_count + 1  # Ship spawned
 
     def test_e2e_fleet_at_planet_builds_complex_that_appears_on_planet(
         self, temp_save_dir, mock_galaxy_at_planet
@@ -157,9 +161,12 @@ class TestFleetProductionE2E:
         empire.colonies = []
         empire.resource_pool = {"Metals": 100000.0}
 
-        with patch.object(Fleet, 'has_space_shipyard', new_callable=lambda: property(lambda self: True)), \
-             patch.object(Fleet, 'space_shipyard_count', new_callable=lambda: property(lambda self: 1)):
-            _process_fleet_turn(engine, [empire], mock_galaxy, temp_save_dir)
+        # PROJ-210: Mock capabilities property for has_space_shipyard
+        fleet._capabilities = MagicMock()
+        fleet._capabilities.has_space_shipyard = True
+        fleet._capabilities.space_shipyard_count = 1
+
+        _process_fleet_turn(engine, [empire], mock_galaxy, temp_save_dir)
 
         # Queue should be empty
         assert len(fleet.construction_queue) == 0
@@ -273,28 +280,31 @@ class TestFleetProductionE2E:
         empire.colonies = []
         empire.resource_pool = {"Metals": 100000.0}
 
-        with patch.object(Fleet, 'has_space_shipyard', new_callable=lambda: property(lambda self: True)), \
-             patch.object(Fleet, 'space_shipyard_count', new_callable=lambda: property(lambda self: 1)):
-            # Turn 1: at planet - production proceeds
-            _process_fleet_turn(engine, [empire], mock_galaxy, temp_save_dir)
-            consumed_turn1 = fleet.construction_queue[0]["resources_consumed"]["Metals"]
-            assert consumed_turn1 > 0  # Made progress
+        # PROJ-210: Mock capabilities property for has_space_shipyard
+        fleet._capabilities = MagicMock()
+        fleet._capabilities.has_space_shipyard = True
+        fleet._capabilities.space_shipyard_count = 1
 
-            # "Move" fleet away from planet
-            fleet.location = HexCoord(10, 10)
+        # Turn 1: at planet - production proceeds
+        _process_fleet_turn(engine, [empire], mock_galaxy, temp_save_dir)
+        consumed_turn1 = fleet.construction_queue[0]["resources_consumed"]["Metals"]
+        assert consumed_turn1 > 0  # Made progress
 
-            # Turn 2: not at planet - production pauses for complex
-            _process_fleet_turn(engine, [empire], mock_galaxy, temp_save_dir)
-            consumed_turn2 = fleet.construction_queue[0]["resources_consumed"]["Metals"]
-            assert consumed_turn2 == consumed_turn1  # No additional progress
+        # "Move" fleet away from planet
+        fleet.location = HexCoord(10, 10)
 
-            # "Move" fleet back to planet
-            fleet.location = HexCoord(5, 5)
+        # Turn 2: not at planet - production pauses for complex
+        _process_fleet_turn(engine, [empire], mock_galaxy, temp_save_dir)
+        consumed_turn2 = fleet.construction_queue[0]["resources_consumed"]["Metals"]
+        assert consumed_turn2 == consumed_turn1  # No additional progress
 
-            # Turn 3: at planet - production resumes
-            _process_fleet_turn(engine, [empire], mock_galaxy, temp_save_dir)
-            consumed_turn3 = fleet.construction_queue[0]["resources_consumed"]["Metals"]
-            assert consumed_turn3 > consumed_turn2  # Made progress again
+        # "Move" fleet back to planet
+        fleet.location = HexCoord(5, 5)
+
+        # Turn 3: at planet - production resumes
+        _process_fleet_turn(engine, [empire], mock_galaxy, temp_save_dir)
+        consumed_turn3 = fleet.construction_queue[0]["resources_consumed"]["Metals"]
+        assert consumed_turn3 > consumed_turn2  # Made progress again
 
 
 class TestFleetProductionMultiQueue:
@@ -323,9 +333,10 @@ class TestFleetProductionMultiQueue:
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)
 
-    def test_queue_items_processed_in_order(self, temp_save_dir):
+    def test_queue_items_processed_in_order(self, temp_save_dir, fresh_registries):
         """Queue items are processed one at a time in FIFO order."""
-        engine = ProductionEngine()
+        # PROJ-211: Pass registries for DI compliance when spawning ships
+        engine = ProductionEngine(registries=fresh_registries)
 
         # At 30/tick fleet yard rate:
         # ship_a: 3000 Metals = 100 ticks = 1 turn
@@ -363,22 +374,25 @@ class TestFleetProductionMultiQueue:
         empire.colonies = []
         empire.resource_pool = {"Metals": 100000.0}
 
-        with patch.object(Fleet, 'has_space_shipyard', new_callable=lambda: property(lambda self: True)), \
-             patch.object(Fleet, 'space_shipyard_count', new_callable=lambda: property(lambda self: 1)):
-            # Turn 1: ship_a completes
-            _process_fleet_turn(engine, [empire], None, temp_save_dir)
-            assert len(fleet.construction_queue) == 2
-            assert fleet.construction_queue[0]["design_id"] == "ship_b"
+        # PROJ-210: Mock capabilities property for has_space_shipyard
+        fleet._capabilities = MagicMock()
+        fleet._capabilities.has_space_shipyard = True
+        fleet._capabilities.space_shipyard_count = 1
 
-            # Turn 2: ship_b progress
-            _process_fleet_turn(engine, [empire], None, temp_save_dir)
-            assert fleet.construction_queue[0]["resources_consumed"]["Metals"] > 0
+        # Turn 1: ship_a completes
+        _process_fleet_turn(engine, [empire], None, temp_save_dir)
+        assert len(fleet.construction_queue) == 2
+        assert fleet.construction_queue[0]["design_id"] == "ship_b"
 
-            # Turn 3: ship_b completes
-            _process_fleet_turn(engine, [empire], None, temp_save_dir)
-            assert len(fleet.construction_queue) == 1
-            assert fleet.construction_queue[0]["design_id"] == "ship_c"
+        # Turn 2: ship_b progress
+        _process_fleet_turn(engine, [empire], None, temp_save_dir)
+        assert fleet.construction_queue[0]["resources_consumed"]["Metals"] > 0
 
-            # Turn 4: ship_c completes
-            _process_fleet_turn(engine, [empire], None, temp_save_dir)
-            assert len(fleet.construction_queue) == 0
+        # Turn 3: ship_b completes
+        _process_fleet_turn(engine, [empire], None, temp_save_dir)
+        assert len(fleet.construction_queue) == 1
+        assert fleet.construction_queue[0]["design_id"] == "ship_c"
+
+        # Turn 4: ship_c completes
+        _process_fleet_turn(engine, [empire], None, temp_save_dir)
+        assert len(fleet.construction_queue) == 0

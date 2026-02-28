@@ -86,10 +86,11 @@ def _make_colony(facilities=None, name="Test Colony"):
     return colony
 
 
-def _make_fully_mocked_engine(maintenance_engine=None):
+def _make_fully_mocked_engine(registries, maintenance_engine=None):
     """Create TurnEngine with ALL engines injected via DI."""
     mock_maintenance = maintenance_engine or MockMaintenanceEngine()
     engine = TurnEngine(
+        registries=registries,
         movement_engine=MockMovementEngine(),
         production_engine=MockProductionEngine(),
         order_processor=MockOrderProcessor(),
@@ -102,9 +103,10 @@ def _make_fully_mocked_engine(maintenance_engine=None):
     return engine, mock_maintenance
 
 
-def _make_engine_with_real_maintenance():
+def _make_engine_with_real_maintenance(registries):
     """Create TurnEngine with real maintenance but other engines mocked."""
     return TurnEngine(
+        registries=registries,
         movement_engine=MockMovementEngine(),
         production_engine=MockProductionEngine(),
         order_processor=MockOrderProcessor(),
@@ -123,13 +125,13 @@ def _make_engine_with_real_maintenance():
 class TestMaintenanceTurnEngineIntegration:
     """Tests that MaintenanceEngine is properly wired into TurnEngine."""
 
-    def test_maintenance_engine_called_during_process_turn(self):
+    def test_maintenance_engine_called_during_process_turn(self, fresh_registries):
         """process_turn should call maintenance_engine.process_maintenance_tick 100 times.
 
         PROJ-161: Changed from once-per-turn process_maintenance() to per-tick
         process_maintenance_tick() called 100 times (once per tick).
         """
-        engine, mock_maintenance = _make_fully_mocked_engine()
+        engine, mock_maintenance = _make_fully_mocked_engine(fresh_registries)
         empire = _make_empire()
         empire.colonies = []
 
@@ -139,7 +141,7 @@ class TestMaintenanceTurnEngineIntegration:
         assert mock_maintenance.process_maintenance_tick_called
         assert len(mock_maintenance.process_maintenance_tick_calls) == 100
 
-    def test_maintenance_called_after_harvesting(self):
+    def test_maintenance_called_after_harvesting(self, fresh_registries):
         """Maintenance should run after harvesting within each tick so resources are available.
 
         PROJ-161: Rewritten for per-tick behavior. In each tick, process_harvesting_tick
@@ -165,6 +167,7 @@ class TestMaintenanceTurnEngineIntegration:
         mock_maintenance = TrackingMaintenanceEngine()
 
         engine = TurnEngine(
+            registries=fresh_registries,
             movement_engine=MockMovementEngine(),
             production_engine=MockProductionEngine(),
             order_processor=MockOrderProcessor(),
@@ -190,9 +193,9 @@ class TestMaintenanceTurnEngineIntegration:
             maint_idx = call_order.index(("maintenance", tick))
             assert harvest_idx < maint_idx, f"Tick {tick}: harvesting should precede maintenance"
 
-    def test_real_maintenance_deducts_facility_costs(self):
+    def test_real_maintenance_deducts_facility_costs(self, fresh_registries):
         """Real maintenance engine deducts costs when wired into TurnEngine."""
-        engine = _make_engine_with_real_maintenance()
+        engine = _make_engine_with_real_maintenance(fresh_registries)
         empire = _make_empire({"Metals": 1000.0})
         facility = _make_facility(resource_cost={"Metals": 200})  # 5% = 10
         colony = _make_colony(facilities=[facility])
@@ -202,9 +205,9 @@ class TestMaintenanceTurnEngineIntegration:
 
         assert empire.resource_pool["Metals"] == pytest.approx(990.0)
 
-    def test_real_maintenance_scuttles_facility(self):
+    def test_real_maintenance_scuttles_facility(self, fresh_registries):
         """Real maintenance engine scuttles facility when no resources."""
-        engine = _make_engine_with_real_maintenance()
+        engine = _make_engine_with_real_maintenance(fresh_registries)
         empire = _make_empire({"Metals": 0.0})
         facility = _make_facility(resource_cost={"Metals": 200})
         colony = _make_colony(facilities=[facility])
@@ -214,9 +217,10 @@ class TestMaintenanceTurnEngineIntegration:
 
         assert len(colony.facilities) == 0
 
-    def test_maintenance_engine_property_creates_default(self):
+    def test_maintenance_engine_property_creates_default(self, fresh_registries):
         """TurnEngine.maintenance_engine lazily creates MaintenanceEngine."""
         engine = TurnEngine(
+            registries=fresh_registries,
             movement_engine=MockMovementEngine(),
             production_engine=MockProductionEngine(),
             order_processor=MockOrderProcessor(),
@@ -226,10 +230,11 @@ class TestMaintenanceTurnEngineIntegration:
         from game.strategy.engine.maintenance_engine import MaintenanceEngine
         assert isinstance(engine.maintenance_engine, MaintenanceEngine)
 
-    def test_maintenance_engine_injectable(self):
+    def test_maintenance_engine_injectable(self, fresh_registries):
         """TurnEngine accepts maintenance_engine via constructor DI."""
         mock_maintenance = MockMaintenanceEngine()
         engine = TurnEngine(
+            registries=fresh_registries,
             movement_engine=MockMovementEngine(),
             production_engine=MockProductionEngine(),
             order_processor=MockOrderProcessor(),

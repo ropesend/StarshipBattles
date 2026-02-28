@@ -185,8 +185,9 @@ def _should_exclude_by_special_capabilities(ship: 'ShipInstance', filter_state: 
 
         if not show_has or not show_not:
             # INTENTIONAL LATE IMPORT: Avoid circular import with strategy data
-            from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
-            has_ability = FleetCapabilityCalculator.ship_has_ability(ship, ability_name)
+            from game.strategy.services.component_inspector import ship_has_ability
+            registry = ship._registries.components if ship._registries else {}
+            has_ability = ship_has_ability(ship, ability_name, registry)
             if has_ability and not show_has:
                 return True
             if not has_ability and not show_not:
@@ -315,9 +316,10 @@ def sort_ships(
             # No meaningful sort for combined column
             return 0
         elif sort_column in SPECIAL_CAPABILITY_COLUMNS:
-            from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+            from game.strategy.services.component_inspector import ship_has_ability
             ability_name = SPECIAL_CAPABILITY_COLUMNS[sort_column]
-            return 1 if FleetCapabilityCalculator.ship_has_ability(ship, ability_name) else 0
+            registry = ship._registries.components if ship._registries else {}
+            return 1 if ship_has_ability(ship, ability_name, registry) else 0
         return 0
 
     return sorted(ships, key=get_sort_key, reverse=descending)

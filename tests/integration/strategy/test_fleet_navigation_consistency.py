@@ -17,7 +17,8 @@ from unittest.mock import MagicMock, patch
 
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.data.empire import Empire
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord, hex_distance
 from game.strategy.services.fleet_navigation_service import (
     FleetNavigationService,
@@ -52,9 +53,9 @@ class MockGalaxy:
 
 
 @pytest.fixture
-def turn_engine():
+def turn_engine(fresh_registries):
     """Create a TurnEngine instance."""
-    return TurnEngine()
+    return TurnEngine(registries=fresh_registries)
 
 
 @pytest.fixture
@@ -79,11 +80,11 @@ def create_fleet(fleet_id, empire_id, location, speed):
     """Helper to create a fleet with common defaults."""
     fleet = Fleet(fleet_id, empire_id, location, speed=speed)
     # Mock resource methods to always succeed
-    fleet.has_resources_for_movement = MagicMock(return_value=True)
-    fleet.consume_movement_resources = MagicMock(return_value=True)
-    fleet.can_use_warp = MagicMock(return_value=True)
-    fleet.has_resources_for_warp = MagicMock(return_value=True)
-    fleet.consume_warp_resources = MagicMock(return_value=True)
+    fleet.resources.has_resources_for_movement = MagicMock(return_value=True)
+    fleet.resources.consume_movement_resources = MagicMock(return_value=True)
+    fleet.capabilities.can_use_warp = MagicMock(return_value=True)
+    fleet.resources.has_resources_for_warp = MagicMock(return_value=True)
+    fleet.resources.consume_warp_resources = MagicMock(return_value=True)
     return fleet
 
 
@@ -204,7 +205,7 @@ class TestProjectionMatchesExecution:
         turn_engine.process_turn([empire], mock_galaxy)
 
         # VERIFY: Warp resources were consumed (confirming warp was detected)
-        fleet.consume_warp_resources.assert_called()
+        fleet.resources.consume_warp_resources.assert_called()
 
         # Fleet should have moved along projected warp path
         # With speed 5, should make 5 steps per turn

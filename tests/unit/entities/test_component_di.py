@@ -21,8 +21,16 @@ def mock_registries():
     from game.simulation.components.component import load_components_data, load_modifiers_data
     from game.simulation.entities.ship_loader import load_vehicle_classes_data
 
+    # PROJ-211: Create minimal registries for pure loader calls
+    minimal_registries = GameRegistries(
+        components={},
+        modifiers={},
+        vehicle_classes={},
+        resources={}
+    )
+
     return GameRegistries(
-        components=load_components_data(),
+        components=load_components_data(registries=minimal_registries),
         modifiers=load_modifiers_data(),
         vehicle_classes=load_vehicle_classes_data(),
         resources={}

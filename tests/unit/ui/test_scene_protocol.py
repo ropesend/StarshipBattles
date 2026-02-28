@@ -61,13 +61,14 @@ class TestISceneProtocolCompliance:
         assert hasattr(scene, 'draw')
         assert hasattr(scene, 'handle_resize')
 
-    def test_workshop_screen_implements_iscene(self):
+    def test_workshop_screen_implements_iscene(self, fresh_registries):
         """DesignWorkshopScreen implements IScene protocol."""
         from game.core.protocols import IScene
         from game.ui.screens.workshop_screen import DesignWorkshopScreen
         from game.ui.screens.workshop_context import WorkshopContext
 
-        context = WorkshopContext.standalone(tech_preset_name="default")
+        # PROJ-211: registries is now required
+        context = WorkshopContext.standalone(tech_preset_name="default", registries=fresh_registries)
         context.on_return = lambda x=None: None
         scene = DesignWorkshopScreen(800, 600, context)
         assert isinstance(scene, IScene), "DesignWorkshopScreen should implement IScene"

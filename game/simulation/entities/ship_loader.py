@@ -12,19 +12,20 @@ from game.core.error_codes import ErrorCode
 from game.core.json_utils import load_json, load_json_required
 
 logger = logging.getLogger(__name__)
-from game.core.registry import set_validator, get_default_registry_provider, get_validator
+from game.core.registry import set_validator, get_validator
 from game.simulation.validation.ship_validator import ShipDesignValidator
 from game.core.paths import Paths
 
 
-def get_or_create_validator(registry_provider=None):
+def get_or_create_validator(*, registry_provider):
     """Get the ship design validator, creating it if necessary.
 
     PROJ-174: Uses IRegistryProvider pattern for registry access.
     Validator storage remains on RegistryManager (lifecycle concern).
+    PROJ-211: registry_provider is now required (no fallback).
 
     Args:
-        registry_provider: Optional IRegistryProvider. If None, uses default.
+        registry_provider: IRegistryProvider for DI. Required.
 
     Returns:
         ShipDesignValidator instance.
@@ -33,8 +34,6 @@ def get_or_create_validator(registry_provider=None):
     # PROJ-195: Use module-level wrapper instead of direct singleton access
     val = get_validator()
     if not val:
-        if registry_provider is None:
-            registry_provider = get_default_registry_provider()
         from game.core.registry import GameRegistries
         registries = GameRegistries(
             components=registry_provider.get_components(),
@@ -117,6 +116,7 @@ def load_vehicle_classes_data(
 def load_vehicle_classes(
     file_path: str = None,
     layers_file_path: Optional[str] = None,
+    *,
     registry_provider=None
 ) -> None:
     """
@@ -125,12 +125,16 @@ def load_vehicle_classes(
     Wrapper around load_vehicle_classes_data() that also populates the registry.
 
     PROJ-174: Uses IRegistryProvider pattern for registry access.
+    PROJ-211: registry_provider is now required (no fallback).
 
     Args:
         file_path: Path to vehicle classes JSON. Defaults to Paths.VEHICLE_CLASSES_FILE.
         layers_file_path: Optional path to layer definitions JSON.
-        registry_provider: Optional IRegistryProvider. If None, uses default.
+        registry_provider: IRegistryProvider for DI. Required.
     """
+    if registry_provider is None:
+        raise ValueError("registry_provider is required (PROJ-211: no fallback)")
+
     if file_path is None:
         file_path = Paths.VEHICLE_CLASSES_FILE
 
@@ -148,9 +152,6 @@ def load_vehicle_classes(
         layer_definitions = layer_data.get('definitions', {})
         logger.info(f"Loaded {len(layer_definitions)} layer configurations from {os.path.basename(layers_path)}.")
 
-    # PROJ-174: Use provider pattern for registry access
-    if registry_provider is None:
-        registry_provider = get_default_registry_provider()
     classes = registry_provider.get_vehicle_classes()
     classes.clear()
     classes.update(result)
@@ -158,10 +159,15 @@ def load_vehicle_classes(
     logger.info(f"Loaded {len(classes)} vehicle classes.")
 
 
-def initialize_ship_data(base_path: Optional[str] = None) -> None:
-    """Facade for initializing all ship-related data."""
+def initialize_ship_data(base_path: Optional[str] = None, *, registry_provider=None) -> None:
+    """Facade for initializing all ship-related data.
+
+    Args:
+        base_path: Optional base directory containing 'data' folder.
+        registry_provider: IRegistryProvider for DI. Required in production.
+    """
     if base_path:
         path = os.path.join(base_path, "data", "vehicleclasses.json")
-        load_vehicle_classes(path)
+        load_vehicle_classes(path, registry_provider=registry_provider)
     else:
-        load_vehicle_classes()
+        load_vehicle_classes(registry_provider=registry_provider)

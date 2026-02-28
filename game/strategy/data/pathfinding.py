@@ -3,7 +3,7 @@ import logging
 from typing import List, Union, Optional, Sequence, TypeVar, TYPE_CHECKING
 
 from game.core.hex_math import hex_distance, hex_linedraw, HexCoord
-from game.strategy.data.fleet import OrderType
+from game.strategy.data.order_types import OrderType
 
 logger = logging.getLogger(__name__)
 
@@ -212,7 +212,7 @@ def find_hybrid_path(galaxy, start_hex, end_hex, fleet=None):
     # Check if fleet can use warp points
     can_use_warp = True
     if fleet is not None:
-        can_use_warp = fleet.can_use_warp()
+        can_use_warp = fleet.capabilities.can_use_warp()
         logger.debug(f"find_hybrid_path: fleet={fleet.id}, can_use_warp={can_use_warp}")
 
     # 1. Identify Start/End Systems
@@ -308,13 +308,23 @@ def project_fleet_path(fleet, galaxy, max_turns=10):
     service = FleetNavigationService()
     return service.project_path_as_dicts(fleet, galaxy, max_turns)
 
+class _ChaserProxyCapabilities:
+    """Minimal capabilities adapter for _ChaserProxy."""
+
+    def __init__(self, can_warp: bool):
+        self._can_warp = can_warp
+
+    def can_use_warp(self) -> bool:
+        return self._can_warp
+
+
 class _ChaserProxy:
     """Adapter for find_hybrid_path that provides fleet-like interface.
 
     This adapter normalizes Fleet and NavigationState objects to provide
     the minimal interface needed by find_hybrid_path():
     - id: Fleet identifier for logging
-    - can_use_warp(): Warp capability check
+    - capabilities.can_use_warp(): Warp capability check
 
     This is an intentional adapter pattern (not legacy compatibility) that
     allows pure NavigationState objects to be used with pathfinding functions
@@ -324,11 +334,12 @@ class _ChaserProxy:
     """
 
     def __init__(self, can_warp: bool, fleet_id):
-        self._can_warp = can_warp
+        self._capabilities = _ChaserProxyCapabilities(can_warp)
         self.id = fleet_id
 
-    def can_use_warp(self) -> bool:
-        return self._can_warp
+    @property
+    def capabilities(self) -> _ChaserProxyCapabilities:
+        return self._capabilities
 
 
 def _extract_chaser_info(chaser: Union['Fleet', 'NavigationState']) -> tuple:
@@ -351,7 +362,7 @@ def _extract_chaser_info(chaser: Union['Fleet', 'NavigationState']) -> tuple:
             chaser.location,
             chaser.speed,
             chaser.id,
-            chaser.can_use_warp()
+            chaser.capabilities.can_use_warp()
         )
 
 

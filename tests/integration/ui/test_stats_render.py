@@ -15,6 +15,7 @@ from unittest.mock import MagicMock
 
 from game.simulation.entities.ship import Ship
 from game.ui.screens.builder.right_panel import BuilderRightPanel
+from game.ui.services.vehicle_class_service import VehicleClassService
 
 
 class TestStatsRender:
@@ -34,13 +35,20 @@ class TestStatsRender:
         builder.theme_manager.get_available_themes.return_value = ["Federation"]
         self.builder = builder
 
+        # PROJ-211: Create VehicleClassService for DI
+        self.vehicle_class_service = VehicleClassService(fresh_registries)
+
         yield
 
         pygame.quit()
 
     def test_stats_panel_creation_and_update(self):
         """BuilderRightPanel creates expected stat rows and updates without error."""
-        panel = BuilderRightPanel(self.builder, self.manager, pygame.Rect(0, 0, 500, 800))
+        # PROJ-211: Pass VehicleClassService for DI
+        panel = BuilderRightPanel(
+            self.builder, self.manager, pygame.Rect(0, 0, 500, 800),
+            vehicle_class_service=self.vehicle_class_service
+        )
 
         # Verify key stat sections exist
         assert 'mass' in panel.rows_map
@@ -58,7 +66,11 @@ class TestStatsRender:
         # Register fuel storage before creating the panel
         self.ship.resources.register_storage('fuel', 100)
 
-        panel = BuilderRightPanel(self.builder, self.manager, pygame.Rect(0, 0, 500, 800))
+        # PROJ-211: Pass VehicleClassService for DI
+        panel = BuilderRightPanel(
+            self.builder, self.manager, pygame.Rect(0, 0, 500, 800),
+            vehicle_class_service=self.vehicle_class_service
+        )
 
         assert 'crew_required' in panel.rows_map
         assert 'max_fuel' in panel.rows_map

@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 # These imports are legal here - Simulation layer can import its own modules
 from game.simulation.components.component import load_modifiers, load_components
 from game.simulation.entities.ship_loader import load_vehicle_classes
+from game.core.registry import get_default_registry_provider
 
 if TYPE_CHECKING:
     from game.core.registry import RegistryManager
@@ -86,11 +87,14 @@ def reload_registries_from_directory(
                 return std_path
         return None
 
+    # PROJ-211: Pass registry_provider explicitly (no fallback)
+    provider = get_default_registry_provider()
+
     # Load modifiers first (components may depend on them)
     mod_path = find_file("modifiers.json")
     if mod_path:
         try:
-            load_modifiers(str(mod_path))
+            load_modifiers(str(mod_path), registry_provider=provider)
             logger.info(f"RegistryLoader: Loaded modifiers from {mod_path}")
         except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
             logger.error(f"RegistryLoader: Failed to load modifiers: {e}")
@@ -99,7 +103,7 @@ def reload_registries_from_directory(
     comp_path = find_file("components.json")
     if comp_path:
         try:
-            load_components(str(comp_path))
+            load_components(str(comp_path), registry_provider=provider)
             logger.info(f"RegistryLoader: Loaded components from {comp_path}")
         except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
             logger.error(f"RegistryLoader: Failed to load components: {e}")
@@ -110,10 +114,10 @@ def reload_registries_from_directory(
     if vclass_path:
         try:
             if vlayer_path:
-                load_vehicle_classes(str(vclass_path), layers_file_path=str(vlayer_path))
+                load_vehicle_classes(str(vclass_path), layers_file_path=str(vlayer_path), registry_provider=provider)
                 logger.info(f"RegistryLoader: Loaded classes from {vclass_path} with layers from {vlayer_path}")
             else:
-                load_vehicle_classes(str(vclass_path))
+                load_vehicle_classes(str(vclass_path), registry_provider=provider)
                 logger.info(f"RegistryLoader: Loaded classes from {vclass_path}")
         except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
             logger.error(f"RegistryLoader: Failed to load vehicle classes: {e}")

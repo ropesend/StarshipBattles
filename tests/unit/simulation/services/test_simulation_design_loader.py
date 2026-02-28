@@ -15,6 +15,7 @@ from unittest.mock import MagicMock, patch
 from game.core.json_utils import save_json
 from game.simulation.components.component import load_components, load_modifiers
 from game.simulation.entities.ship_loader import load_vehicle_classes
+from game.core.registry import get_default_registry_provider
 from tests.fixtures.paths import get_data_dir
 
 
@@ -25,9 +26,10 @@ class TestSimulationDesignLoader:
     def setup_and_teardown(self):
         """Set up test environment with components and vehicle classes loaded."""
         data_dir = get_data_dir()
-        load_components(str(data_dir / "components.json"))
-        load_modifiers(str(data_dir / "modifiers.json"))
-        load_vehicle_classes(str(data_dir / "vehicleclasses.json"))
+        provider = get_default_registry_provider()
+        load_components(str(data_dir / "components.json"), registry_provider=provider)
+        load_modifiers(str(data_dir / "modifiers.json"), registry_provider=provider)
+        load_vehicle_classes(str(data_dir / "vehicleclasses.json"), registry_provider=provider)
 
         # Create temp directory for design files
         self.tmpdir = tempfile.mkdtemp()
@@ -176,9 +178,10 @@ class TestSimulationDesignLoaderIntegration:
     def setup_and_teardown(self):
         """Set up test environment with components loaded."""
         data_dir = get_data_dir()
-        load_components(str(data_dir / "components.json"))
-        load_modifiers(str(data_dir / "modifiers.json"))
-        load_vehicle_classes(str(data_dir / "vehicleclasses.json"))
+        provider = get_default_registry_provider()
+        load_components(str(data_dir / "components.json"), registry_provider=provider)
+        load_modifiers(str(data_dir / "modifiers.json"), registry_provider=provider)
+        load_vehicle_classes(str(data_dir / "vehicleclasses.json"), registry_provider=provider)
 
         self.tmpdir = tempfile.mkdtemp()
 

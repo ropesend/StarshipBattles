@@ -2,6 +2,7 @@
 Tests for ShipInstance - component toggle functionality.
 
 PROJ-48: Split from test_ship_instance_proj08.py
+PROJ-211: Updated to use make_ship_with_stats fixture for DI compliance.
 """
 
 import pytest
@@ -117,16 +118,9 @@ class TestSetComponentEnabled:
         ship.set_component_enabled('engine', True)
         assert ship.component_toggles['engine'] is True
 
-    def test_set_component_enabled_invalidates_cache(self, make_design_data_with_stats):
+    def test_set_component_enabled_invalidates_cache(self, make_ship_with_stats):
         """set_component_enabled should invalidate stats cache."""
-        design_data = make_design_data_with_stats(expected_stats={'max_hp': 100})
-        ship = ShipInstance(
-            instance_id='test-1',
-            design_id='TestDesign',
-            name='Test Ship',
-            owner_id=0,
-            design_data=design_data
-        )
+        ship = make_ship_with_stats(expected_stats={'max_hp': 100})
 
         # Populate cache
         _ = ship.get_calculated_stats()
@@ -203,19 +197,12 @@ class TestIsComponentEnabled:
 class TestCacheInvalidation:
     """Tests for stats cache invalidation."""
 
-    def test_cache_invalidation_on_set_component_enabled(self, make_design_data_with_stats):
+    def test_cache_invalidation_on_set_component_enabled(self, make_ship_with_stats):
         """set_component_enabled invalidates stats cache."""
-        design_data = make_design_data_with_stats(expected_stats={
+        ship = make_ship_with_stats(expected_stats={
             'max_hp': 100,
             'resource_storage': {'fuel': 1000}
         })
-        ship = ShipInstance(
-            instance_id='test-1',
-            design_id='TestDesign',
-            name='Test Ship',
-            owner_id=0,
-            design_data=design_data
-        )
 
         # Populate cache
         _ = ship.get_calculated_stats()
@@ -227,19 +214,12 @@ class TestCacheInvalidation:
         # Cache should be invalidated
         assert ship._cached_stats is None
 
-    def test_cache_recalculated_after_toggle(self, make_design_data_with_stats):
+    def test_cache_recalculated_after_toggle(self, make_ship_with_stats):
         """Stats are recalculated after cache invalidation from toggle."""
-        design_data = make_design_data_with_stats(expected_stats={
+        ship = make_ship_with_stats(expected_stats={
             'max_hp': 100,
             'resource_storage': {'fuel': 1000}
         })
-        ship = ShipInstance(
-            instance_id='test-1',
-            design_id='TestDesign',
-            name='Test Ship',
-            owner_id=0,
-            design_data=design_data
-        )
 
         # Get initial stats
         stats1 = ship.get_calculated_stats()
@@ -252,19 +232,12 @@ class TestCacheInvalidation:
         # Cache should be repopulated
         assert ship._cached_stats is not None
 
-    def test_cache_not_invalidated_on_other_changes(self, make_design_data_with_stats):
+    def test_cache_not_invalidated_on_other_changes(self, make_ship_with_stats):
         """Cache is not invalidated by non-toggle changes (except damage)."""
-        design_data = make_design_data_with_stats(expected_stats={
+        ship = make_ship_with_stats(expected_stats={
             'max_hp': 100,
             'resource_storage': {'fuel': 1000}
         })
-        ship = ShipInstance(
-            instance_id='test-1',
-            design_id='TestDesign',
-            name='Test Ship',
-            owner_id=0,
-            design_data=design_data
-        )
 
         # Populate cache
         _ = ship.get_calculated_stats()
@@ -280,16 +253,9 @@ class TestCacheInvalidation:
 class TestStatsIntegration:
     """Tests for component toggle integration with stats calculation."""
 
-    def test_component_toggles_passed_to_stats_calculation(self, make_design_data_with_stats):
+    def test_component_toggles_passed_to_stats_calculation(self, make_ship_with_stats):
         """component_toggles are passed to ShipStatsCalculator.calculate_stats."""
-        design_data = make_design_data_with_stats(expected_stats={'max_hp': 100})
-        ship = ShipInstance(
-            instance_id='test-1',
-            design_id='TestDesign',
-            name='Test Ship',
-            owner_id=0,
-            design_data=design_data
-        )
+        ship = make_ship_with_stats(expected_stats={'max_hp': 100})
         ship.set_component_enabled('engine', False)
 
         with patch('game.strategy.services.ship_stats_calculator.ShipStatsCalculator.calculate_stats') as mock_calc:
@@ -302,21 +268,14 @@ class TestStatsIntegration:
             call_args = mock_calc.call_args
             assert call_args[0][2] == {'engine': False}  # Third positional arg
 
-    def test_disabled_component_affects_stats(self, make_design_data_with_stats):
+    def test_disabled_component_affects_stats(self, make_ship_with_stats):
         """Disabled component should affect calculated stats."""
         # This is more of an integration test with ShipStatsCalculator
         # The stats service should exclude disabled components' abilities
-        design_data = make_design_data_with_stats(expected_stats={
+        ship = make_ship_with_stats(expected_stats={
             'max_hp': 100,
             'resource_storage': {'fuel': 1000}
         })
-        ship = ShipInstance(
-            instance_id='test-1',
-            design_id='TestDesign',
-            name='Test Ship',
-            owner_id=0,
-            design_data=design_data
-        )
 
         # Initially enabled
         stats1 = ship.get_calculated_stats()

@@ -1,12 +1,14 @@
 """
 Shared fixtures for resource system tests.
+
+PROJ-211: Updated make_ship_instance to use DI.
 """
 
 import pytest
 from dataclasses import dataclass
 from typing import Dict, Any, List
 
-from game.core.registry import RegistryManager
+from game.core.registry import RegistryManager, GameRegistries
 from game.strategy.data.ship_instance import ShipInstance
 
 
@@ -25,6 +27,25 @@ def loaded_registry():
     and cleans up after each test automatically.
     """
     return RegistryManager.instance()
+
+
+@pytest.fixture
+def singleton_registries(loaded_registry):
+    """
+    GameRegistries backed by the singleton RegistryManager.
+
+    PROJ-211: Use this when you need GameRegistries that tracks the singleton's
+    state (e.g., when dynamically adding components during tests).
+
+    The returned GameRegistries references the singleton's dictionaries directly,
+    so any components added to loaded_registry.components will be visible.
+    """
+    return GameRegistries(
+        components=loaded_registry.components,
+        modifiers=loaded_registry.modifiers,
+        vehicle_classes=loaded_registry.vehicle_classes,
+        resources=loaded_registry.resources
+    )
 
 
 @dataclass
@@ -73,11 +94,16 @@ def create_test_ship_design(
 def make_ship_instance(
     design_data: Dict[str, Any],
     owner_id: int = 0,
-    name: str = None
+    name: str = None,
+    registries: GameRegistries = None,
 ) -> ShipInstance:
-    """Create a ShipInstance from design data."""
+    """Create a ShipInstance from design data.
+
+    PROJ-211: Added registries parameter for DI compliance.
+    """
     return ShipInstance.create(
         design_data=design_data,
         owner_id=owner_id,
-        name=name or design_data.get('name', 'Test Ship')
+        name=name or design_data.get('name', 'Test Ship'),
+        registries=registries
     )

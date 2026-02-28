@@ -14,7 +14,7 @@ import pytest
 from unittest.mock import MagicMock, patch, PropertyMock
 
 from game.strategy.engine.turn_engine import TurnEngine
-from game.strategy.data.fleet import FleetOrder, OrderType
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 
 
@@ -126,11 +126,11 @@ class TestActionEngineIntegration:
 
         assert isinstance(engine, ActionExecutionEngine)
 
-    def test_action_engine_uses_injected(self):
+    def test_action_engine_uses_injected(self, fresh_registries):
         """Injected action_engine is used instead of creating default."""
         mock_action_engine = MagicMock()
 
-        turn_engine = TurnEngine(action_engine=mock_action_engine)
+        turn_engine = TurnEngine(registries=fresh_registries, action_engine=mock_action_engine)
 
         assert turn_engine.action_engine is mock_action_engine
 

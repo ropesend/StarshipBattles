@@ -82,10 +82,13 @@ class TestFleetConstructionQueue:
 
 
 class TestFleetHasSpaceShipyard:
-    """Test cases for Fleet.has_space_shipyard property."""
+    """Test cases for Fleet.has_space_shipyard property.
+
+    PROJ-211: Updated to set _registries on mocks for DI compliance.
+    """
 
     @pytest.fixture
-    def make_ship_with_yard(self):
+    def make_ship_with_yard(self, fresh_registries):
         """Factory for creating ship with fleet_space_yard component."""
         from game.strategy.data.ship_instance import ShipInstance
 
@@ -93,6 +96,8 @@ class TestFleetHasSpaceShipyard:
             mock = MagicMock(spec=ShipInstance)
             mock.name = name
             mock.is_combat_capable.return_value = is_combat_capable
+            # PROJ-211: Set _registries for DI compliance
+            mock._registries = fresh_registries
 
             if has_yard:
                 mock.design_data = {
@@ -122,21 +127,21 @@ class TestFleetHasSpaceShipyard:
         ship = make_mock_ship(name="Scout")
         basic_fleet.ships.append(ship)
 
-        assert basic_fleet.has_space_shipyard is False
+        assert basic_fleet.capabilities.has_space_shipyard is False
 
     def test_fleet_with_yard_returns_true(self, basic_fleet, make_ship_with_yard):
         """Test fleet with yard ship returns True."""
         yard_ship = make_ship_with_yard(name="Construction Ship", has_yard=True)
         basic_fleet.ships.append(yard_ship)
 
-        assert basic_fleet.has_space_shipyard is True
+        assert basic_fleet.capabilities.has_space_shipyard is True
 
     def test_fleet_with_destroyed_yard_returns_false(self, basic_fleet, make_ship_with_yard):
         """Test fleet with destroyed yard ship returns False."""
         yard_ship = make_ship_with_yard(name="Construction Ship", has_yard=True, is_combat_capable=False)
         basic_fleet.ships.append(yard_ship)
 
-        assert basic_fleet.has_space_shipyard is False
+        assert basic_fleet.capabilities.has_space_shipyard is False
 
     def test_fleet_with_mixed_ships_finds_yard(self, basic_fleet, make_ship_with_yard, make_mock_ship):
         """Test fleet finds yard among multiple ships."""
@@ -148,16 +153,17 @@ class TestFleetHasSpaceShipyard:
         basic_fleet.ships.append(yard_ship)
         basic_fleet.ships.append(tanker)
 
-        assert basic_fleet.has_space_shipyard is True
+        assert basic_fleet.capabilities.has_space_shipyard is True
 
     def test_empty_fleet_returns_false(self, basic_fleet):
         """Test empty fleet returns False."""
-        assert basic_fleet.has_space_shipyard is False
+        assert basic_fleet.capabilities.has_space_shipyard is False
 
-    def test_fleet_with_ability_dict_format(self, basic_fleet):
+    def test_fleet_with_ability_dict_format(self, basic_fleet, fresh_registries):
         """Test fleet detects SpaceShipyard via abilities dict (test fixture format)."""
         mock = MagicMock()
         mock.is_combat_capable.return_value = True
+        mock._registries = fresh_registries  # PROJ-211: DI compliance
         mock.design_data = {
             'name': 'Test Ship',
             'vehicle_type': 'Ship',
@@ -169,11 +175,14 @@ class TestFleetHasSpaceShipyard:
         }
         basic_fleet.ships.append(mock)
 
-        assert basic_fleet.has_space_shipyard is True
+        assert basic_fleet.capabilities.has_space_shipyard is True
 
 
 class TestFleetCanBuildType:
-    """Test cases for Fleet.can_build_type() method."""
+    """Test cases for Fleet.can_build_type() method.
+
+    PROJ-211: Updated to set _registries on mocks for DI compliance.
+    """
 
     @pytest.fixture
     def fleet_with_yard(self, basic_fleet, make_ship_with_yard):
@@ -183,7 +192,7 @@ class TestFleetCanBuildType:
         return basic_fleet
 
     @pytest.fixture
-    def make_ship_with_yard(self):
+    def make_ship_with_yard(self, fresh_registries):
         """Factory for creating ship with fleet_space_yard component."""
         from game.strategy.data.ship_instance import ShipInstance
 
@@ -191,6 +200,7 @@ class TestFleetCanBuildType:
             mock = MagicMock(spec=ShipInstance)
             mock.name = name
             mock.is_combat_capable.return_value = is_combat_capable
+            mock._registries = fresh_registries  # PROJ-211: DI compliance
 
             if has_yard:
                 mock.design_data = {
@@ -216,68 +226,72 @@ class TestFleetCanBuildType:
         return _make
 
     def test_fleet_with_yard_can_build_ships(self, fleet_with_yard):
-        """Test fleet with yard can build ships."""
-        assert fleet_with_yard.can_build_type("ship") is True
-        assert fleet_with_yard.can_build_type("Ship") is True
+        """Test fleet with yard can build ships (PROJ-210: via capabilities)."""
+        assert fleet_with_yard.capabilities.can_build_type("ship") is True
+        assert fleet_with_yard.capabilities.can_build_type("Ship") is True
 
     def test_fleet_with_yard_can_build_fighters(self, fleet_with_yard):
-        """Test fleet with yard can build fighters."""
-        assert fleet_with_yard.can_build_type("fighter") is True
-        assert fleet_with_yard.can_build_type("Fighter") is True
+        """Test fleet with yard can build fighters (PROJ-210: via capabilities)."""
+        assert fleet_with_yard.capabilities.can_build_type("fighter") is True
+        assert fleet_with_yard.capabilities.can_build_type("Fighter") is True
 
     def test_fleet_with_yard_can_build_satellites(self, fleet_with_yard):
-        """Test fleet with yard can build satellites."""
-        assert fleet_with_yard.can_build_type("satellite") is True
-        assert fleet_with_yard.can_build_type("Satellite") is True
+        """Test fleet with yard can build satellites (PROJ-210: via capabilities)."""
+        assert fleet_with_yard.capabilities.can_build_type("satellite") is True
+        assert fleet_with_yard.capabilities.can_build_type("Satellite") is True
 
     def test_fleet_without_yard_cannot_build(self, basic_fleet, make_mock_ship):
-        """Test fleet without yard cannot build anything."""
+        """Test fleet without yard cannot build anything (PROJ-210: via capabilities)."""
         ship = make_mock_ship(name="Scout")
         basic_fleet.ships.append(ship)
 
-        assert basic_fleet.can_build_type("ship") is False
-        assert basic_fleet.can_build_type("fighter") is False
-        assert basic_fleet.can_build_type("complex") is False
+        assert basic_fleet.capabilities.can_build_type("ship") is False
+        assert basic_fleet.capabilities.can_build_type("fighter") is False
+        assert basic_fleet.capabilities.can_build_type("complex") is False
 
     def test_fleet_at_planet_can_build_complex(self, fleet_with_yard):
-        """Test fleet at planet hex can build complexes."""
+        """Test fleet at planet hex can build complexes (PROJ-210: via capabilities)."""
         # Mock galaxy with planet at fleet's location
         mock_galaxy = MagicMock()
         mock_planet = MagicMock()
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
 
-        assert fleet_with_yard.can_build_type("complex", galaxy=mock_galaxy) is True
+        assert fleet_with_yard.capabilities.can_build_type("complex", galaxy=mock_galaxy) is True
         mock_galaxy.get_planets_at_global_hex.assert_called_with(fleet_with_yard.location)
 
     def test_fleet_not_at_planet_cannot_build_complex(self, fleet_with_yard):
-        """Test fleet NOT at planet hex cannot build complexes."""
+        """Test fleet NOT at planet hex cannot build complexes (PROJ-210: via capabilities)."""
         # Mock galaxy with no planet at fleet's location
         mock_galaxy = MagicMock()
         mock_galaxy.get_planets_at_global_hex.return_value = []
 
-        assert fleet_with_yard.can_build_type("complex", galaxy=mock_galaxy) is False
+        assert fleet_with_yard.capabilities.can_build_type("complex", galaxy=mock_galaxy) is False
 
     def test_complex_requires_galaxy_parameter(self, fleet_with_yard):
-        """Test building complex without galaxy param returns False."""
-        assert fleet_with_yard.can_build_type("complex") is False
-        assert fleet_with_yard.can_build_type("complex", galaxy=None) is False
+        """Test building complex without galaxy param returns False (PROJ-210: via capabilities)."""
+        assert fleet_with_yard.capabilities.can_build_type("complex") is False
+        assert fleet_with_yard.capabilities.can_build_type("complex", galaxy=None) is False
 
     def test_unknown_vehicle_type_returns_false(self, fleet_with_yard):
-        """Test unknown vehicle type returns False."""
-        assert fleet_with_yard.can_build_type("unknown") is False
-        assert fleet_with_yard.can_build_type("spaceship") is False
+        """Test unknown vehicle type returns False (PROJ-210: via capabilities)."""
+        assert fleet_with_yard.capabilities.can_build_type("unknown") is False
+        assert fleet_with_yard.capabilities.can_build_type("spaceship") is False
 
 
 class TestFleetSpaceShipyardCount:
-    """Test cases for Fleet.space_shipyard_count property (BUG-79)."""
+    """Test cases for Fleet.space_shipyard_count property (BUG-79).
+
+    PROJ-211: Updated to set _registries on mocks for DI compliance.
+    """
 
     @pytest.fixture
-    def make_yard_ship(self):
+    def make_yard_ship(self, fresh_registries):
         """Factory for creating ships with configurable yard count."""
         def _make(name="Yard Ship", yard_count=1, is_combat_capable=True):
             mock = MagicMock()
             mock.name = name
             mock.is_combat_capable.return_value = is_combat_capable
+            mock._registries = fresh_registries  # PROJ-211: DI compliance
             components = [{'id': 'fleet_space_yard'} for _ in range(yard_count)]
             components.append({'id': 'reactor'})  # Non-yard component
             mock.design_data = {
@@ -289,26 +303,26 @@ class TestFleetSpaceShipyardCount:
         return _make
 
     def test_empty_fleet_has_zero_yards(self, basic_fleet):
-        """Empty fleet has 0 space yards."""
-        assert basic_fleet.space_shipyard_count == 0
+        """Empty fleet has 0 space yards (PROJ-210: via capabilities)."""
+        assert basic_fleet.capabilities.space_shipyard_count == 0
 
     def test_fleet_with_one_yard_counts_one(self, basic_fleet, make_yard_ship):
-        """Fleet with one yard component counts 1."""
+        """Fleet with one yard component counts 1 (PROJ-210: via capabilities)."""
         basic_fleet.ships.append(make_yard_ship(yard_count=1))
-        assert basic_fleet.space_shipyard_count == 1
+        assert basic_fleet.capabilities.space_shipyard_count == 1
 
     def test_fleet_with_two_yards_on_one_ship(self, basic_fleet, make_yard_ship):
-        """Ship with 2 fleet_space_yard components counts 2 (BUG-79 core case)."""
+        """Ship with 2 fleet_space_yard components counts 2 (BUG-79 core case, PROJ-210: via capabilities)."""
         basic_fleet.ships.append(make_yard_ship(yard_count=2))
-        assert basic_fleet.space_shipyard_count == 2
+        assert basic_fleet.capabilities.space_shipyard_count == 2
 
     def test_fleet_with_yards_across_multiple_ships(self, basic_fleet, make_yard_ship):
-        """Yards across multiple ships are summed."""
+        """Yards across multiple ships are summed (PROJ-210: via capabilities)."""
         basic_fleet.ships.append(make_yard_ship(name="Ship A", yard_count=1))
         basic_fleet.ships.append(make_yard_ship(name="Ship B", yard_count=2))
-        assert basic_fleet.space_shipyard_count == 3
+        assert basic_fleet.capabilities.space_shipyard_count == 3
 
     def test_destroyed_ship_yards_not_counted(self, basic_fleet, make_yard_ship):
-        """Yards on destroyed (non-combat-capable) ships are not counted."""
+        """Yards on destroyed (non-combat-capable) ships are not counted (PROJ-210: via capabilities)."""
         basic_fleet.ships.append(make_yard_ship(yard_count=2, is_combat_capable=False))
-        assert basic_fleet.space_shipyard_count == 0
+        assert basic_fleet.capabilities.space_shipyard_count == 0

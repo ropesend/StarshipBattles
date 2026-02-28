@@ -119,6 +119,7 @@ class StrategyWindowManager:
             on_close_callback=self._on_planet_list_closed,
             asset_resolver=self._asset_resolver,
             empires=self.scene.session.empires,  # PROJ-198: Pass empires for owner name lookup
+            registries=self.scene.session.registries,  # PROJ-211: Pass registries for DI
         )
 
     def _on_planet_list_closed(self) -> None:
@@ -166,6 +167,7 @@ class StrategyWindowManager:
         w, h = int(self.width * 0.9), int(self.height * 0.9)
         rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
 
+        # PROJ-208 Phase 3: Pass facade for CQRS-compliant command dispatch
         self.empire_build_queue_window = EmpireBuildQueueWindow(
             rect,
             self.manager,
@@ -173,6 +175,8 @@ class StrategyWindowManager:
             galaxy,
             on_close_callback=self._on_empire_build_queue_closed,
             on_navigate_to_hex=self.scene.on_navigate_to_hex_build,
+            session=self.scene.session,
+            facade=self.scene.facade,
         )
 
     def close_empire_build_queue_window(self) -> None:
@@ -254,6 +258,7 @@ class StrategyWindowManager:
             self.manager,
             empire,
             on_close_callback=self._on_empire_panel_closed,
+            registries=self.scene.session.registries,  # PROJ-211: Pass registries for DI
         )
 
     def _on_empire_panel_closed(self) -> None:
@@ -276,8 +281,33 @@ class StrategyWindowManager:
         w, h = 400, 500
         rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
 
+        # PROJ-207 Phase 4: Create callback closure for command dispatch
+        # PROJ-208 Phase 3: Route through facade (not session) for CQRS consistency
+        def clear_orders_callback(fleet_id: int) -> None:
+            """Dispatch ClearFleetOrdersCommand through facade command pipeline."""
+            from game.strategy.engine.commands import ClearFleetOrdersCommand
+            cmd = ClearFleetOrdersCommand(fleet_id=fleet_id)
+            self.scene.facade.handle_command(cmd)
+
+        # PROJ-208 Phase 1: Callbacks for delete/reorder order commands
+        # PROJ-208 Phase 3: Route through facade (not session) for CQRS consistency
+        def delete_order_callback(fleet_id: int, order_index: int) -> None:
+            """Dispatch DeleteFleetOrderCommand through facade command pipeline."""
+            from game.strategy.engine.commands import DeleteFleetOrderCommand
+            cmd = DeleteFleetOrderCommand(fleet_id=fleet_id, order_index=order_index)
+            self.scene.facade.handle_command(cmd)
+
+        def reorder_order_callback(fleet_id: int, order_index: int, direction: int) -> None:
+            """Dispatch ReorderFleetOrderCommand through facade command pipeline."""
+            from game.strategy.engine.commands import ReorderFleetOrderCommand
+            cmd = ReorderFleetOrderCommand(fleet_id=fleet_id, order_index=order_index, direction=direction)
+            self.scene.facade.handle_command(cmd)
+
         self.fleet_orders_window = FleetOrdersWindow(
-            rect, self.manager, fleet, input_mapper=self._mapper
+            rect, self.manager, fleet, input_mapper=self._mapper,
+            clear_orders_callback=clear_orders_callback,
+            delete_order_callback=delete_order_callback,
+            reorder_order_callback=reorder_order_callback
         )
 
     # =========================================================================
@@ -297,6 +327,14 @@ class StrategyWindowManager:
         w, h = self.width * 0.9, self.height * 0.9
         rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
 
+        # PROJ-208 Phase 1: Create callback closure for SplitFleetCommand dispatch
+        # PROJ-208 Phase 3: Route through facade (not session) for CQRS consistency
+        def split_fleet_callback(fleet_id: int, ship_instance_ids: list) -> None:
+            """Dispatch SplitFleetCommand through facade command pipeline."""
+            from game.strategy.engine.commands import SplitFleetCommand
+            cmd = SplitFleetCommand(fleet_id=fleet_id, ship_instance_ids=ship_instance_ids)
+            self.scene.facade.handle_command(cmd)
+
         empire = self.scene.current_empire
         self.fleet_report_window = FleetReportWindow(
             rect,
@@ -304,6 +342,7 @@ class StrategyWindowManager:
             fleet,
             empire=empire,
             on_close_callback=self._on_fleet_report_closed,
+            split_fleet_callback=split_fleet_callback,
         )
 
     def _on_fleet_report_closed(self) -> None:

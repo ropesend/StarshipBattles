@@ -72,6 +72,7 @@ class FleetInfo:
         construction_queue_size: Number of items in the fleet's construction queue
         passenger_capacity: Total passenger cargo capacity across all ships
         passengers_current: Current number of passengers loaded
+        capabilities: Tuple of ability names available in this fleet (immutable)
     """
 
     fleet_id: int
@@ -89,6 +90,7 @@ class FleetInfo:
     construction_queue_size: int = 0
     passenger_capacity: int = 0
     passengers_current: int = 0
+    capabilities: Tuple[str, ...] = field(default_factory=tuple)
 
     @classmethod
     def from_fleet(cls, fleet: 'Fleet') -> 'FleetInfo':
@@ -160,6 +162,13 @@ class FleetInfo:
                 )
             )
 
+        # Get fleet capabilities (ability names)
+        try:
+            capabilities = tuple(fleet.capabilities.list_abilities())
+        except (ValueError, AttributeError):
+            # No registry available or no ships - empty capabilities
+            capabilities = ()
+
         return cls(
             fleet_id=fleet.id,
             owner_id=fleet.owner_id,
@@ -169,11 +178,12 @@ class FleetInfo:
             ships=tuple(ship_infos),
             orders=tuple(order_infos),
             has_orders=len(fleet.orders) > 0,
-            can_use_warp=fleet.can_use_warp(),
+            can_use_warp=fleet.capabilities.can_use_warp(),
             projected_path=tuple(fleet.path),
             is_building=fleet.is_building,
-            has_space_shipyard=fleet.has_space_shipyard,
+            has_space_shipyard=fleet.capabilities.has_space_shipyard,
             construction_queue_size=len(fleet.construction_queue),
-            passenger_capacity=fleet.get_fleet_cargo_capacity('passengers'),
-            passengers_current=fleet.get_fleet_cargo_current('passengers'),
+            passenger_capacity=fleet.resources.get_fleet_cargo_capacity('passengers'),
+            passengers_current=fleet.resources.get_fleet_cargo_current('passengers'),
+            capabilities=capabilities,
         )

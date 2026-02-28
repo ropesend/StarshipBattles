@@ -18,8 +18,11 @@ def basic_fleet():
 
 
 @pytest.fixture
-def make_mock_ship():
-    """Factory for creating mock ship instances."""
+def make_mock_ship(fresh_registries):
+    """Factory for creating mock ship instances.
+
+    PROJ-211: Updated to set _registries for DI compliance.
+    """
     from game.strategy.data.ship_instance import ShipInstance
 
     def _make(name="Test Ship", is_combat_capable=True):
@@ -33,6 +36,8 @@ def make_mock_ship():
             'mass': 100,
             'strategic_movement': 500  # Results in speed ~5
         }
+        # PROJ-211: Set _registries for DI compliance
+        mock._registries = fresh_registries
         return mock
     return _make
 

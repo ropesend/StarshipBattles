@@ -81,8 +81,8 @@ class SimulationBattleResolver(IBattleResolver):
         logger.info(f"Simulating battle: Fleet {fleet1.id} vs Fleet {fleet2.id}")
 
         # Convert fleets to battle ships
-        team1_ships = fleet1.to_battle_ships(team_id=0, registries=registries)
-        team2_ships = fleet2.to_battle_ships(team_id=1, registries=registries)
+        team1_ships = fleet1.battle.to_battle_ships(team_id=0, registries=registries)
+        team2_ships = fleet2.battle.to_battle_ships(team_id=1, registries=registries)
 
         # PROJ-189: Apply storm shield interference before combat
         if environmental_effects is not None and environmental_effects.shield_capacity_mult < 1.0:

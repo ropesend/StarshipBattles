@@ -52,7 +52,7 @@ Example:
     )
 """
 from game.core.validation import ValidationResult
-from game.core.registry import GameRegistries, get_default_registry_provider
+from game.core.registry import GameRegistries
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -101,7 +101,7 @@ class TurnEngine:
         self,
         battle_resolver: Optional['IBattleResolver'] = None,
         *,
-        registries: Optional[GameRegistries] = None,
+        registries: GameRegistries,
         movement_engine: Optional['IMovementEngine'] = None,
         production_engine: Optional['IProductionEngine'] = None,
         order_processor: Optional['IOrderProcessor'] = None,
@@ -125,8 +125,7 @@ class TurnEngine:
         Args:
             battle_resolver: Optional battle resolver implementation.
                            If None, defaults to SimulationBattleResolver.
-            registries: Optional GameRegistries for DI. Falls back to
-                       get_default_registry_provider() if None.
+            registries: GameRegistries for DI to sub-engines (required).
             movement_engine: Optional movement engine (IMovementEngine).
                            If None, creates FleetMovementEngine.
             production_engine: Optional production engine (IProductionEngine).
@@ -157,17 +156,8 @@ class TurnEngine:
         else:
             self._battle_resolver = battle_resolver
 
-        # PROJ-50/PROJ-58: Store registries for passing to sub-engines
-        if registries is not None:
-            self._registries = registries
-        else:
-            provider = get_default_registry_provider()
-            self._registries = GameRegistries(
-                components=provider.get_components(),
-                modifiers=provider.get_modifiers(),
-                vehicle_classes=provider.get_vehicle_classes(),
-                resources=provider.get_resources(),
-            )
+        # PROJ-211: Store registries for passing to sub-engines (required)
+        self._registries = registries
 
         # PROJ-43 Phase 4: Store injected engines or None for lazy init
         self._movement_engine: Optional['IMovementEngine'] = movement_engine
@@ -201,7 +191,8 @@ class TurnEngine:
         """Return production engine, lazily creating default if not injected."""
         if self._production_engine is None:
             from game.strategy.engine.production_engine import ProductionEngine
-            self._production_engine = ProductionEngine()
+            # PROJ-211: Pass registries for ship creation DI compliance
+            self._production_engine = ProductionEngine(registries=self._registries)
         return self._production_engine
 
     @property
@@ -419,29 +410,42 @@ class TurnEngine:
         self.conflict_engine.resolve_all_conflicts(empires, galaxy=galaxy)
 
 
-def create_default_turn_engine() -> TurnEngine:
+def create_default_turn_engine(registries: GameRegistries) -> TurnEngine:
     """
     Factory function to create a TurnEngine with all default engines.
 
     PROJ-43 Phase 4: Simplifies instantiation for production code.
+    PROJ-211: Requires registries parameter for strict DI.
 
     This factory creates a TurnEngine with all default sub-engines.
     For testing, use the TurnEngine constructor directly to inject
     mock engines.
+
+    Args:
+        registries: GameRegistries for DI to sub-engines (required).
 
     Returns:
         TurnEngine with default implementations of all sub-engines.
 
     Example:
         # Production code
-        engine = create_default_turn_engine()
+        from game.core.registry import get_default_registry_provider, GameRegistries
+        provider = get_default_registry_provider()
+        registries = GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources=provider.get_resources(),
+        )
+        engine = create_default_turn_engine(registries)
         engine.process_turn(empires, galaxy, save_path)
 
         # Test code - use constructor for mocking
         engine = TurnEngine(
+            registries=test_registries,
             movement_engine=mock_movement,
             production_engine=mock_production
         )
     """
-    return TurnEngine()
+    return TurnEngine(registries=registries)
 

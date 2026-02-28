@@ -120,105 +120,27 @@ class SaveGameService:
         Returns:
             Tuple of (GameSession or None, message: str)
         """
-        try:
-            # Resolve path
-            if not os.path.isabs(save_path):
-                save_path = os.path.join(Paths.SAVES_DIR, save_path)
+        # Step 1: Load and validate metadata (includes path resolution)
+        metadata, error = SaveGameService._load_save_metadata(save_path)
+        if error:
+            return None, error
 
-            # Validate save folder
-            is_valid, error_msg = SaveGameService._validate_save(save_path)
-            if not is_valid:
-                return None, f"Invalid save: {error_msg}"
+        resolved_path = metadata.pop('_resolved_path')
 
-            # Load metadata
-            metadata_path = os.path.join(save_path, "save_metadata.json")
-            try:
-                metadata = load_json_required(metadata_path)
-            except JSONDecodeError as e:
-                logger.error(f"SaveGameService: Corrupt metadata JSON at {metadata_path} - {e}")
-                return None, f"Save file corrupted: Metadata file contains invalid JSON"
-            except FileNotFoundError as e:
-                logger.error(f"SaveGameService: Missing metadata at {metadata_path}")
-                return None, f"Save file corrupted: Metadata file not found"
-            except PermissionError as e:
-                logger.error(f"SaveGameService: Permission denied reading {metadata_path}")
-                return None, f"Cannot read save: Permission denied"
-            except OSError as e:
-                logger.error(f"SaveGameService: OS error reading metadata - {e}")
-                return None, f"Save file corrupted: Cannot read metadata file"
+        # Step 2: Load turn data
+        game_state, error = SaveGameService._load_turn_data(resolved_path, metadata, turn_number)
+        if error:
+            return None, error
 
-            # Validate metadata
-            required_metadata_keys = ['version', 'timestamp', 'player_name']
-            missing_keys = [k for k in required_metadata_keys if k not in metadata]
-            if missing_keys:
-                return None, f"Save file corrupted: Missing metadata fields: {', '.join(missing_keys)}"
+        # Step 3: Reconstruct game session
+        game_session, error = SaveGameService._reconstruct_game_session(game_state, resolved_path)
+        if error:
+            return None, error
 
-            # Check version compatibility
-            save_version = metadata.get('version')
-            if not SaveGameService._is_compatible_version(save_version):
-                return None, f"Incompatible save version: {save_version} (requires {SaveGameService.SAVE_VERSION})"
-
-            # Determine which turn to load
-            if turn_number is None:
-                turn_number = metadata.get('latest_turn_number', metadata.get('turn_number', 1))
-
-            # Load turn file
-            turns_folder = os.path.join(save_path, "turns")
-            turn_file = os.path.join(turns_folder, f"turn_{turn_number}.json")
-
-            if not os.path.exists(turn_file):
-                return None, f"Turn {turn_number} not found in save"
-
-            try:
-                game_state = load_json_required(turn_file)
-            except JSONDecodeError as e:
-                logger.error(f"SaveGameService: Corrupt turn JSON at {turn_file} - {e}")
-                return None, f"Save file corrupted: Turn {turn_number} contains invalid JSON"
-            except FileNotFoundError as e:
-                logger.error(f"SaveGameService: Missing turn file at {turn_file}")
-                return None, f"Save file corrupted: Turn {turn_number} file not found"
-            except PermissionError as e:
-                logger.error(f"SaveGameService: Permission denied reading {turn_file}")
-                return None, f"Cannot read save: Permission denied"
-            except OSError as e:
-                logger.error(f"SaveGameService: OS error reading turn {turn_number} - {e}")
-                return None, f"Save file corrupted: Cannot read turn {turn_number}"
-
-            # Validate game state
-            required_state_keys = ['turn_number', 'config', 'galaxy', 'empires']
-            missing_keys = [k for k in required_state_keys if k not in game_state]
-            if missing_keys:
-                return None, f"Save file corrupted: Missing game state fields: {', '.join(missing_keys)}"
-
-            # Reconstruct GameSession
-            try:
-                from game.strategy.engine.game_session import GameSession
-                game_session = GameSession.from_dict(game_state)
-            except KeyError as e:
-                logger.error(f"SaveGameService: Missing required data field '{e}' in {turn_file}")
-                return None, f"Save file corrupted: Missing required data field"
-            except (TypeError, ValueError, ValidationException) as e:
-                logger.error(f"SaveGameService: Invalid data format in {turn_file} - {e}")
-                return None, f"Save file corrupted: Invalid data format"
-            except (AttributeError, ImportError, RuntimeError, StateException) as e:
-                logger.error(f"SaveGameService: Failed to reconstruct game session from {turn_file} - {e}")
-                return None, f"Save file corrupted: Failed to reconstruct game state"
-
-            # Restore save_path reference
-            game_session.save_path = save_path
-
-            logger.info(f"SaveGameService: Loaded turn {turn_number} from {os.path.basename(save_path)}")
-            return game_session, f"Game loaded: Turn {turn_number}"
-
-        except PermissionError as e:
-            logger.error(f"SaveGameService: Permission denied loading {save_path} - {e}")
-            return None, f"Cannot load save: Permission denied"
-        except OSError as e:
-            logger.error(f"SaveGameService: OS error loading {save_path} - {e}")
-            return None, f"Failed to load save: {str(e)}"
-        except (KeyError, TypeError, ValueError, AttributeError, ImportError, ValidationException, StateException) as e:
-            logger.exception(f"SaveGameService: Unexpected load error from {save_path} - {e}")
-            return None, f"Unexpected error while loading save"
+        # Resolve turn number for logging
+        loaded_turn = game_state.get('turn_number', turn_number or 1)
+        logger.info(f"SaveGameService: Loaded turn {loaded_turn} from {os.path.basename(resolved_path)}")
+        return game_session, f"Game loaded: Turn {loaded_turn}"
 
     @staticmethod
     def list_turns(save_path: str) -> List[dict]:
@@ -341,6 +263,142 @@ class SaveGameService:
         except shutil.Error as e:
             logger.error(f"SaveGameService: Unexpected error deleting {save_path} - {e}")
             return False, f"Delete failed: {str(e)}"
+
+    @staticmethod
+    def _load_json_safe(path: str, description: str) -> Tuple[Optional[dict], Optional[str]]:
+        """
+        Load JSON file with consolidated error handling.
+
+        Args:
+            path: Absolute path to JSON file
+            description: Human-readable description for error messages (e.g., "metadata", "turn 5")
+
+        Returns:
+            Tuple of (data_dict, None) on success or (None, error_msg) on failure
+        """
+        try:
+            data = load_json_required(path)
+            return data, None
+        except JSONDecodeError as e:
+            logger.error(f"SaveGameService: Corrupt {description} JSON at {path} - {e}")
+            return None, f"Save file corrupted: {description.capitalize()} file contains invalid JSON"
+        except FileNotFoundError:
+            logger.error(f"SaveGameService: Missing {description} at {path}")
+            return None, f"Save file corrupted: {description.capitalize()} file not found"
+        except PermissionError:
+            logger.error(f"SaveGameService: Permission denied reading {path}")
+            return None, f"Cannot read save: Permission denied"
+        except OSError as e:
+            logger.error(f"SaveGameService: OS error reading {description} - {e}")
+            return None, f"Save file corrupted: Cannot read {description} file"
+
+    @staticmethod
+    def _load_save_metadata(save_path: str) -> Tuple[Optional[dict], Optional[str]]:
+        """
+        Load and validate save metadata.
+
+        Handles path resolution, folder validation, metadata loading, key validation,
+        and version compatibility check.
+
+        Args:
+            save_path: Path to save folder (absolute or relative)
+
+        Returns:
+            Tuple of (metadata_dict, None) on success or (None, error_msg) on failure.
+            On success, metadata_dict includes '_resolved_path' with the absolute path.
+        """
+        # Resolve path
+        if not os.path.isabs(save_path):
+            save_path = os.path.join(Paths.SAVES_DIR, save_path)
+
+        # Validate save folder
+        is_valid, error_msg = SaveGameService._validate_save(save_path)
+        if not is_valid:
+            return None, f"Invalid save: {error_msg}"
+
+        # Load metadata
+        metadata_path = os.path.join(save_path, "save_metadata.json")
+        metadata, error = SaveGameService._load_json_safe(metadata_path, "metadata")
+        if error:
+            return None, error
+
+        # Validate metadata keys
+        required_metadata_keys = ['version', 'timestamp', 'player_name']
+        missing_keys = [k for k in required_metadata_keys if k not in metadata]
+        if missing_keys:
+            return None, f"Save file corrupted: Missing metadata fields: {', '.join(missing_keys)}"
+
+        # Check version compatibility
+        save_version = metadata.get('version')
+        if not SaveGameService._is_compatible_version(save_version):
+            return None, f"Incompatible save version: {save_version} (requires {SaveGameService.SAVE_VERSION})"
+
+        # Include resolved path in metadata for downstream use
+        metadata['_resolved_path'] = save_path
+        return metadata, None
+
+    @staticmethod
+    def _load_turn_data(save_path: str, metadata: dict, turn_number: Optional[int] = None) -> Tuple[Optional[dict], Optional[str]]:
+        """
+        Load turn file data with validation.
+
+        Args:
+            save_path: Absolute path to save folder
+            metadata: Loaded metadata dict
+            turn_number: Optional specific turn to load (defaults to latest)
+
+        Returns:
+            Tuple of (game_state_dict, None) on success or (None, error_msg) on failure
+        """
+        # Resolve turn number
+        if turn_number is None:
+            turn_number = metadata.get('latest_turn_number', metadata.get('turn_number', 1))
+
+        # Load turn file
+        turns_folder = os.path.join(save_path, "turns")
+        turn_file = os.path.join(turns_folder, f"turn_{turn_number}.json")
+
+        if not os.path.exists(turn_file):
+            return None, f"Turn {turn_number} not found in save"
+
+        game_state, error = SaveGameService._load_json_safe(turn_file, f"turn {turn_number}")
+        if error:
+            return None, error
+
+        # Validate game state keys
+        required_state_keys = ['turn_number', 'config', 'galaxy', 'empires']
+        missing_keys = [k for k in required_state_keys if k not in game_state]
+        if missing_keys:
+            return None, f"Save file corrupted: Missing game state fields: {', '.join(missing_keys)}"
+
+        return game_state, None
+
+    @staticmethod
+    def _reconstruct_game_session(game_state: dict, save_path: str) -> Tuple[Optional[object], Optional[str]]:
+        """
+        Reconstruct GameSession from loaded game state.
+
+        Args:
+            game_state: Validated game state dictionary
+            save_path: Absolute path to save folder (for restoring save_path reference)
+
+        Returns:
+            Tuple of (GameSession, None) on success or (None, error_msg) on failure
+        """
+        try:
+            from game.strategy.engine.game_session import GameSession
+            game_session = GameSession.from_dict(game_state)
+            game_session.save_path = save_path
+            return game_session, None
+        except KeyError as e:
+            logger.error(f"SaveGameService: Missing required data field '{e}' during reconstruction")
+            return None, f"Save file corrupted: Missing required data field"
+        except (TypeError, ValueError, ValidationException) as e:
+            logger.error(f"SaveGameService: Invalid data format during reconstruction - {e}")
+            return None, f"Save file corrupted: Invalid data format"
+        except (AttributeError, ImportError, RuntimeError, StateException) as e:
+            logger.error(f"SaveGameService: Failed to reconstruct game session - {e}")
+            return None, f"Save file corrupted: Failed to reconstruct game state"
 
     @staticmethod
     def _validate_save(save_path: str) -> Tuple[bool, Optional[str]]:

@@ -10,6 +10,7 @@ from game.ai.strategy_manager import StrategyManager
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.engine.spatial import SpatialGrid
 from game.simulation.components.component import load_components, create_component
+from game.core.registry import get_default_registry_provider
 from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
 
 
@@ -19,9 +20,11 @@ def ai_setup(fresh_registries):
     data_dir = get_data_dir()
     unit_test_data_dir = get_unit_test_data_dir()
 
-    load_components(str(data_dir / "components.json"))
+    # PROJ-211: Pass registry_provider explicitly
+    provider = get_default_registry_provider()
+    load_components(str(data_dir / "components.json"), registry_provider=provider)
     from game.simulation.entities.ship_loader import load_vehicle_classes
-    load_vehicle_classes(str(unit_test_data_dir / "test_vehicleclasses.json"))
+    load_vehicle_classes(str(unit_test_data_dir / "test_vehicleclasses.json"), registry_provider=provider)
     # Load test data for AI strategies to ensure reproducible tests
     manager = StrategyManager.instance()
     manager.load_data(
@@ -151,9 +154,11 @@ def strategy_setup(fresh_registries):
     data_dir = get_data_dir()
     unit_test_data_dir = get_unit_test_data_dir()
 
-    load_components(str(data_dir / "components.json"))
+    # PROJ-211: Pass registry_provider explicitly
+    provider = get_default_registry_provider()
+    load_components(str(data_dir / "components.json"), registry_provider=provider)
     from game.simulation.entities.ship_loader import load_vehicle_classes
-    load_vehicle_classes(str(unit_test_data_dir / "test_vehicleclasses.json"))
+    load_vehicle_classes(str(unit_test_data_dir / "test_vehicleclasses.json"), registry_provider=provider)
     # Load test data for AI strategies to ensure reproducible tests
     manager = StrategyManager.instance()
     manager.load_data(

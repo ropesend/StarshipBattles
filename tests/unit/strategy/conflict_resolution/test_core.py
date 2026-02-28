@@ -352,7 +352,8 @@ class TestBuildingFleetsCombat:
     def test_building_fleet_participates_in_combat(self):
         """Building fleet can still be attacked (no special protection)."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-        from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+        from game.strategy.data.fleet import Fleet
+        from game.strategy.data.order_types import FleetOrder, OrderType
 
         engine = ConflictResolutionEngine()
 
@@ -392,7 +393,7 @@ class TestBuildingFleetsCombat:
     def test_building_fleet_in_hex_collision_detection(self):
         """Fleet with BUILD order is included in hex collision detection."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-        from game.strategy.data.fleet import OrderType
+        from game.strategy.data.order_types import OrderType
 
         engine = ConflictResolutionEngine()
 

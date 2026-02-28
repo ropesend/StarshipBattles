@@ -18,7 +18,8 @@ from enum import Enum
 from unittest.mock import Mock, MagicMock
 
 from game.strategy.data.empire import Empire
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
@@ -95,18 +96,19 @@ class MockGalaxy:
         return []
 
 
-def make_colony_ship(name: str, owner_id: int, pod_type: str) -> ShipInstance:
+def make_colony_ship(name: str, owner_id: int, pod_type: str, registries=None) -> ShipInstance:
     """Create a ship with a colony pod component.
 
     Args:
         name: Ship name
         owner_id: Owner empire ID
         pod_type: Planet type the pod can colonize (e.g., "ICE_DWARF")
+        registries: Optional GameRegistries for DI compliance (PROJ-211)
 
     Returns:
         ShipInstance with colony pod in design_data
     """
-    return ShipInstance(
+    ship = ShipInstance(
         instance_id=f"colony-{name.lower().replace(' ', '-')}-{id(name)}",
         design_id=f"{pod_type}_colony_ship",
         name=name,
@@ -115,24 +117,29 @@ def make_colony_ship(name: str, owner_id: int, pod_type: str) -> ShipInstance:
             'name': name,
             'vehicle_type': 'Ship',
             'stats': {'mass': 100},
+            'expected_stats': {'speed': 10.0},  # PROJ-211: For Fleet speed calc
             'layers': {
                 'HULL': [{'id': f'{pod_type.lower()}_colony_pod'}]
             }
         },
     )
+    if registries is not None:
+        ship.set_registries(registries)
+    return ship
 
 
-def make_combat_ship(name: str, owner_id: int) -> ShipInstance:
+def make_combat_ship(name: str, owner_id: int, registries=None) -> ShipInstance:
     """Create a ship without a colony pod (combat ship).
 
     Args:
         name: Ship name
         owner_id: Owner empire ID
+        registries: Optional GameRegistries for DI compliance (PROJ-211)
 
     Returns:
         ShipInstance without colony pod
     """
-    return ShipInstance(
+    ship = ShipInstance(
         instance_id=f"combat-{name.lower().replace(' ', '-')}-{id(name)}",
         design_id="combat_ship",
         name=name,
@@ -141,11 +148,15 @@ def make_combat_ship(name: str, owner_id: int) -> ShipInstance:
             'name': name,
             'vehicle_type': 'Ship',
             'stats': {'mass': 150},
+            'expected_stats': {'speed': 10.0},  # PROJ-211: For Fleet speed calc
             'layers': {
                 'HULL': [{'id': 'laser_cannon'}]
             }
         },
     )
+    if registries is not None:
+        ship.set_registries(registries)
+    return ship
 
 
 @pytest.fixture
@@ -235,10 +246,11 @@ class TestColonizeWithMatchingPod:
     """Tests for colonization with matching colony pod."""
 
     def test_colonize_with_matching_pod_succeeds(
-        self, galaxy_with_ice_planet, component_registry
+        self, galaxy_with_ice_planet, component_registry, fresh_registries
     ):
         """
         PROJ-55: Colonization succeeds when fleet has matching pod.
+        PROJ-211: Updated to pass registries for DI compliance.
 
         Create Ice Dwarf planet, fleet with Ice Dwarf pod ship.
         Issue colonize command.
@@ -248,8 +260,9 @@ class TestColonizeWithMatchingPod:
         galaxy, ice_planet = galaxy_with_ice_planet
 
         # Create fleet with ice dwarf colony ship and combat ship
-        colony_ship = make_colony_ship("Ice Colony Ship", 1, "ICE_DWARF")
-        combat_ship = make_combat_ship("Escort Ship", 1)
+        # PROJ-211: Pass registries for DI compliance
+        colony_ship = make_colony_ship("Ice Colony Ship", 1, "ICE_DWARF", fresh_registries)
+        combat_ship = make_combat_ship("Escort Ship", 1, fresh_registries)
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(colony_ship)
@@ -324,10 +337,11 @@ class TestChainColonization:
     """Tests for chaining multiple colonization orders."""
 
     def test_chain_colonization_with_multiple_pods(
-        self, galaxy_with_two_continental_planets, component_registry
+        self, galaxy_with_two_continental_planets, component_registry, fresh_registries
     ):
         """
         PROJ-55: Chain colonization works with multiple pods.
+        PROJ-211: Updated to pass registries for DI compliance.
 
         Create 2 Continental planets, fleet with 2 Continental pod ships.
         Queue both colonizations.
@@ -337,8 +351,9 @@ class TestChainColonization:
         galaxy, continental1, continental2 = galaxy_with_two_continental_planets
 
         # Create fleet with 2 continental colony ships
-        colony_ship1 = make_colony_ship("Colony Ship 1", 1, "CONTINENTAL")
-        colony_ship2 = make_colony_ship("Colony Ship 2", 1, "CONTINENTAL")
+        # PROJ-211: Pass registries for DI compliance
+        colony_ship1 = make_colony_ship("Colony Ship 1", 1, "CONTINENTAL", fresh_registries)
+        colony_ship2 = make_colony_ship("Colony Ship 2", 1, "CONTINENTAL", fresh_registries)
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(colony_ship1)
@@ -417,10 +432,11 @@ class TestMixedFleetColonization:
     """Tests for fleets with multiple pod types."""
 
     def test_mixed_fleet_colonizes_multiple_types(
-        self, galaxy_with_multiple_planets, component_registry
+        self, galaxy_with_multiple_planets, component_registry, fresh_registries
     ):
         """
         PROJ-55: Mixed fleet can colonize different planet types.
+        PROJ-211: Updated to pass registries for DI compliance.
 
         Create Ice Dwarf + Continental planets, fleet with both pod types.
         Queue both colonizations.
@@ -430,8 +446,9 @@ class TestMixedFleetColonization:
         galaxy, ice_planet, continental_planet = galaxy_with_multiple_planets
 
         # Create fleet with both types of colony ships
-        ice_colony_ship = make_colony_ship("Ice Colony Ship", 1, "ICE_DWARF")
-        continental_colony_ship = make_colony_ship("Continental Colony Ship", 1, "CONTINENTAL")
+        # PROJ-211: Pass registries for DI compliance
+        ice_colony_ship = make_colony_ship("Ice Colony Ship", 1, "ICE_DWARF", fresh_registries)
+        continental_colony_ship = make_colony_ship("Continental Colony Ship", 1, "CONTINENTAL", fresh_registries)
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(ice_colony_ship)
@@ -516,10 +533,11 @@ class TestFleetRemovalBehavior:
         assert fleet not in empire.fleets
 
     def test_partial_fleet_colonization_preserves_fleet(
-        self, galaxy_with_ice_planet, component_registry
+        self, galaxy_with_ice_planet, component_registry, fresh_registries
     ):
         """
         PROJ-55: Colonization preserves fleet when other ships remain.
+        PROJ-211: Updated to pass registries for DI compliance.
 
         Create planet, fleet with colony ship + combat ship.
         Execute colonization.
@@ -528,8 +546,9 @@ class TestFleetRemovalBehavior:
         galaxy, ice_planet = galaxy_with_ice_planet
 
         # Fleet with colony ship and combat ship
-        colony_ship = make_colony_ship("Ice Colony Ship", 1, "ICE_DWARF")
-        combat_ship = make_combat_ship("Escort Ship", 1)
+        # PROJ-211: Pass registries for DI compliance
+        colony_ship = make_colony_ship("Ice Colony Ship", 1, "ICE_DWARF", fresh_registries)
+        combat_ship = make_combat_ship("Escort Ship", 1, fresh_registries)
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(colony_ship)

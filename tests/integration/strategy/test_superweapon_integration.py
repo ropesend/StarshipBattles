@@ -17,7 +17,8 @@ from unittest.mock import MagicMock, PropertyMock
 
 from game.core.hex_math import HexCoord, hex_distance
 from game.strategy.data.empire import Empire
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.stars import Star, StarType, Spectrum
@@ -185,7 +186,7 @@ class TestImplodePlanetIntegration:
         # Process the superweapon order
         processor = SuperweaponOrderProcessor()
         result = processor.process_implode_planet(
-            fleet, empire, galaxy, component_registry
+            fleet, empire, galaxy, [empire], component_registry
         )
 
         # Verify result
@@ -441,7 +442,7 @@ class TestCreateDysonSphereIntegration:
         # Process the superweapon order
         processor = SuperweaponOrderProcessor()
         result = processor.process_create_dyson_sphere(
-            fleet, empire, galaxy, component_registry
+            fleet, empire, galaxy, [empire], component_registry
         )
 
         # Verify result

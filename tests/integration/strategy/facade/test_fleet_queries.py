@@ -22,7 +22,7 @@ class TestGetFleet:
         mock_fleet.ships = []
         mock_fleet.orders = []
         mock_fleet.path = []
-        mock_fleet.can_use_warp.return_value = True
+        mock_fleet.capabilities.can_use_warp.return_value = True
 
         # Create mock empire with fleet
         mock_empire = Mock()
@@ -68,7 +68,7 @@ class TestGetFleet:
         mock_fleet.ships = []
         mock_fleet.orders = []
         mock_fleet.path = []
-        mock_fleet.can_use_warp.return_value = False
+        mock_fleet.capabilities.can_use_warp.return_value = False
 
         mock_empire1 = Mock()
         mock_empire1.fleets = []

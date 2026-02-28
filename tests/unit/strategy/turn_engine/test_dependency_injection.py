@@ -156,9 +156,10 @@ class TestTurnEngineConstructorDI:
 
     PROJ-43 Phase 4: TurnEngine should accept optional engine parameters
     for dependency injection, allowing mock engines in tests.
+    PROJ-211: registries parameter is now required.
     """
 
-    def test_default_engines_created_when_not_provided(self):
+    def test_default_engines_created_when_not_provided(self, fresh_registries):
         """TurnEngine creates default engines when none provided."""
         from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
         from game.strategy.engine.production_engine import ProductionEngine
@@ -166,7 +167,7 @@ class TestTurnEngineConstructorDI:
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.engine.resource_management_engine import ResourceManagementEngine
 
-        engine = TurnEngine()
+        engine = TurnEngine(registries=fresh_registries)
 
         assert isinstance(engine.movement_engine, FleetMovementEngine)
         assert isinstance(engine.production_engine, ProductionEngine)
@@ -174,63 +175,63 @@ class TestTurnEngineConstructorDI:
         assert isinstance(engine.conflict_engine, ConflictResolutionEngine)
         assert isinstance(engine.resource_engine, ResourceManagementEngine)
 
-    def test_movement_engine_injection(self):
+    def test_movement_engine_injection(self, fresh_registries):
         """TurnEngine uses injected movement engine."""
         from game.strategy.interfaces.engines import IMovementEngine
 
         mock_movement = MagicMock(spec=IMovementEngine)
-        engine = TurnEngine(movement_engine=mock_movement)
+        engine = TurnEngine(registries=fresh_registries, movement_engine=mock_movement)
 
         assert engine.movement_engine is mock_movement
 
-    def test_production_engine_injection(self):
+    def test_production_engine_injection(self, fresh_registries):
         """TurnEngine uses injected production engine."""
         from game.strategy.interfaces.engines import IProductionEngine
 
         mock_production = MagicMock(spec=IProductionEngine)
-        engine = TurnEngine(production_engine=mock_production)
+        engine = TurnEngine(registries=fresh_registries, production_engine=mock_production)
 
         assert engine.production_engine is mock_production
 
-    def test_order_processor_injection(self):
+    def test_order_processor_injection(self, fresh_registries):
         """TurnEngine uses injected order processor."""
         from game.strategy.interfaces.engines import IOrderProcessor
 
         mock_processor = MagicMock(spec=IOrderProcessor)
-        engine = TurnEngine(order_processor=mock_processor)
+        engine = TurnEngine(registries=fresh_registries, order_processor=mock_processor)
 
         assert engine.order_processor is mock_processor
 
-    def test_conflict_engine_injection(self):
+    def test_conflict_engine_injection(self, fresh_registries):
         """TurnEngine uses injected conflict engine."""
         from game.strategy.interfaces.engines import IConflictEngine
 
         mock_conflict = MagicMock(spec=IConflictEngine)
-        engine = TurnEngine(conflict_engine=mock_conflict)
+        engine = TurnEngine(registries=fresh_registries, conflict_engine=mock_conflict)
 
         assert engine.conflict_engine is mock_conflict
 
-    def test_resource_engine_injection(self):
+    def test_resource_engine_injection(self, fresh_registries):
         """TurnEngine uses injected resource engine."""
         from game.strategy.interfaces.engines import IResourceEngine
 
         mock_resource = MagicMock(spec=IResourceEngine)
-        engine = TurnEngine(resource_engine=mock_resource)
+        engine = TurnEngine(registries=fresh_registries, resource_engine=mock_resource)
 
         assert engine.resource_engine is mock_resource
 
-    def test_battle_resolver_injection_still_works(self):
+    def test_battle_resolver_injection_still_works(self, fresh_registries):
         """IBattleResolver injection should still work (existing API)."""
         from game.strategy.interfaces.battle_resolver import IBattleResolver
 
         mock_resolver = MagicMock(spec=IBattleResolver)
-        engine = TurnEngine(battle_resolver=mock_resolver)
+        engine = TurnEngine(registries=fresh_registries, battle_resolver=mock_resolver)
 
         # The conflict engine should receive the injected resolver
         # Note: After refactor, conflict engine is created in constructor
         assert engine._battle_resolver is mock_resolver
 
-    def test_mixed_injection_and_defaults(self):
+    def test_mixed_injection_and_defaults(self, fresh_registries):
         """TurnEngine handles mix of injected and default engines."""
         from game.strategy.interfaces.engines import IMovementEngine, IProductionEngine
         from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
@@ -241,6 +242,7 @@ class TestTurnEngineConstructorDI:
         mock_production = MagicMock(spec=IProductionEngine)
 
         engine = TurnEngine(
+            registries=fresh_registries,
             movement_engine=mock_movement,
             production_engine=mock_production
         )
@@ -254,7 +256,7 @@ class TestTurnEngineConstructorDI:
         assert isinstance(engine.conflict_engine, ConflictResolutionEngine)
         assert isinstance(engine.resource_engine, ResourceManagementEngine)
 
-    def test_injected_movement_engine_used_in_tick(self):
+    def test_injected_movement_engine_used_in_tick(self, fresh_registries):
         """Injected movement engine is called during tick processing."""
         from game.strategy.interfaces.engines import IMovementEngine, IConflictEngine, IResourceEngine, IOrderProcessor
 
@@ -269,6 +271,7 @@ class TestTurnEngineConstructorDI:
         mock_order.process_instant_orders.return_value = []
 
         engine = TurnEngine(
+            registries=fresh_registries,
             movement_engine=mock_movement,
             conflict_engine=mock_conflict,
             resource_engine=mock_resource,
@@ -284,7 +287,7 @@ class TestTurnEngineConstructorDI:
         mock_movement.collect_movements.assert_called_once()
         mock_movement.apply_movements.assert_called_once()
 
-    def test_injected_production_engine_used_in_tick(self):
+    def test_injected_production_engine_used_in_tick(self, fresh_registries):
         """Injected production engine is called during tick processing.
 
         PROJ-158: Production is now entirely tick-based. TurnEngine.process_production
@@ -306,6 +309,7 @@ class TestTurnEngineConstructorDI:
         mock_resupply.process_fleet_resupply.return_value = []
 
         engine = TurnEngine(
+            registries=fresh_registries,
             production_engine=mock_production,
             resource_engine=mock_resource,
             movement_engine=mock_movement,
@@ -340,15 +344,15 @@ class TestTurnEngineFactory:
         from game.strategy.engine.turn_engine import create_default_turn_engine
         assert create_default_turn_engine is not None
 
-    def test_factory_returns_turn_engine(self):
+    def test_factory_returns_turn_engine(self, fresh_registries):
         """Factory should return a TurnEngine instance."""
         from game.strategy.engine.turn_engine import create_default_turn_engine
 
-        engine = create_default_turn_engine()
+        engine = create_default_turn_engine(fresh_registries)
 
         assert isinstance(engine, TurnEngine)
 
-    def test_factory_creates_all_default_engines(self):
+    def test_factory_creates_all_default_engines(self, fresh_registries):
         """Factory should create TurnEngine with all default engines."""
         from game.strategy.engine.turn_engine import create_default_turn_engine
         from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
@@ -357,7 +361,7 @@ class TestTurnEngineFactory:
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.engine.resource_management_engine import ResourceManagementEngine
 
-        engine = create_default_turn_engine()
+        engine = create_default_turn_engine(fresh_registries)
 
         assert isinstance(engine.movement_engine, FleetMovementEngine)
         assert isinstance(engine.production_engine, ProductionEngine)
@@ -375,16 +379,17 @@ class TestMockEngines:
     """Tests demonstrating usage of mock engines from the mocks module.
 
     PROJ-43 Phase 4: Verify mock engines work correctly with TurnEngine.
+    PROJ-211: registries parameter is now required.
     """
 
-    def test_mock_movement_engine_tracks_calls(self):
+    def test_mock_movement_engine_tracks_calls(self, fresh_registries):
         """MockMovementEngine tracks method calls."""
         from tests.unit.strategy.mocks import MockMovementEngine
 
         mock = MockMovementEngine()
         mock.collect_movements_result = []
 
-        engine = TurnEngine(movement_engine=mock)
+        engine = TurnEngine(registries=fresh_registries, movement_engine=mock)
 
         # Access movement_engine to trigger usage
         result = engine.movement_engine.collect_movements([], None, 1)
@@ -408,7 +413,7 @@ class TestMockEngines:
         assert mock.process_construction_tick_called
         assert mock.process_construction_tick_calls == [(1, [], None, "/path", None)]
 
-    def test_full_tick_with_all_mocks(self):
+    def test_full_tick_with_all_mocks(self, fresh_registries):
         """TurnEngine._process_tick works with all mock engines."""
         from tests.unit.strategy.mocks import (
             MockMovementEngine,
@@ -423,6 +428,7 @@ class TestMockEngines:
         mock_resource = MockResourceEngine()
 
         engine = TurnEngine(
+            registries=fresh_registries,
             movement_engine=mock_movement,
             order_processor=mock_order,
             conflict_engine=mock_conflict,

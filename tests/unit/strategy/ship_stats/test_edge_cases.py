@@ -512,3 +512,340 @@ class TestCargoStorage:
 
         # 1000 * 0.5 = 500 (use approx for floating point)
         assert stats['cargo_storage']['generic'] == pytest.approx(500, rel=0.001)
+
+
+class TestWarpJumpNonDictValues:
+    """Tests for WarpJump ability with non-dict value formats (TC-004).
+
+    PROJ-209 Phase 4: Tests the branches at lines 263-268 where WarpJump
+    is a formula string or raw integer instead of dict.
+    """
+
+    def test_warp_jump_as_formula_string(self):
+        """WarpJump ability as formula string "=ship_class_mass" should evaluate correctly."""
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+        from game.core.registry import GameRegistries
+
+        # Component with WarpJump as a formula string (not a dict)
+        warp_comp = MockComponent(
+            'warp_drive', mass=100, max_hp=100,
+            abilities={
+                # WarpJump as formula string - evaluates to ship_class_mass
+                'WarpJump': "=ship_class_mass"
+            }
+        )
+
+        # Design with ship_class that has max_mass in vehicle_classes
+        design_data = {
+            'ship_class': 'Cruiser',
+            'layers': {
+                'OUTER': [{'id': 'warp_drive'}]
+            }
+        }
+
+        # Create registries with vehicle_classes containing ship class data
+        registries = GameRegistries(
+            components={'warp_drive': warp_comp},
+            modifiers={},
+            vehicle_classes={'Cruiser': {'max_mass': 8000}},
+            resources={}
+        )
+        service = ShipStatsCalculator(registries=registries)
+
+        stats = service.calculate_stats(design_data, {})
+
+        # Formula "=ship_class_mass" should evaluate to 8000
+        assert stats['warp_max_tonnage'] == 8000
+
+    def test_warp_jump_as_raw_integer(self):
+        """WarpJump ability as raw integer should be used directly."""
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+
+        # Component with WarpJump as raw integer (not dict, not formula)
+        warp_comp = MockComponent(
+            'warp_drive', mass=100, max_hp=100,
+            abilities={
+                'WarpJump': 5000  # Raw integer
+            }
+        )
+        design_data = make_design_data({'OUTER': ['warp_drive']})
+
+        registries = create_mock_registries(components={'warp_drive': warp_comp})
+        service = ShipStatsCalculator(registries=registries)
+
+        stats = service.calculate_stats(design_data, {})
+
+        assert stats['warp_max_tonnage'] == 5000
+
+    def test_warp_jump_as_raw_float(self):
+        """WarpJump ability as raw float should be converted to int."""
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+
+        warp_comp = MockComponent(
+            'warp_drive', mass=100, max_hp=100,
+            abilities={
+                'WarpJump': 4500.75  # Raw float
+            }
+        )
+        design_data = make_design_data({'OUTER': ['warp_drive']})
+
+        registries = create_mock_registries(components={'warp_drive': warp_comp})
+        service = ShipStatsCalculator(registries=registries)
+
+        stats = service.calculate_stats(design_data, {})
+
+        assert stats['warp_max_tonnage'] == 4500  # Converted to int
+
+    def test_warp_jump_non_formula_string_returns_zero(self):
+        """WarpJump as non-formula string should return 0 (fallback)."""
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+
+        warp_comp = MockComponent(
+            'warp_drive', mass=100, max_hp=100,
+            abilities={
+                'WarpJump': "not_a_formula"  # String without '='
+            }
+        )
+        design_data = make_design_data({'OUTER': ['warp_drive']})
+
+        registries = create_mock_registries(components={'warp_drive': warp_comp})
+        service = ShipStatsCalculator(registries=registries)
+
+        stats = service.calculate_stats(design_data, {})
+
+        # Non-formula string should fall through to 0
+        assert stats['warp_max_tonnage'] == 0
+
+
+class TestVehicleClassesFormulaContext:
+    """Tests for vehicle_classes formula context (TC-010).
+
+    PROJ-209 Phase 4: Tests that vehicle_classes registry is used
+    to populate formula context for ship_class_mass.
+    """
+
+    def test_formula_uses_vehicle_class_max_mass(self):
+        """Formula context should include ship_class_mass from vehicle_classes."""
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+        from game.core.registry import GameRegistries
+
+        # Component using formula that references ship_class_mass
+        engine = MockComponent(
+            'scaled_engine', mass=50, max_hp=100,
+            abilities={
+                'ResourceConsumption': [
+                    # Formula: fuel per hex = ship_class_mass / 100
+                    {'resource': 'fuel', 'amount': "=ship_class_mass / 100", 'trigger': 'strategic_per_hex'}
+                ]
+            }
+        )
+
+        design_data = {
+            'ship_class': 'Battleship',
+            'layers': {
+                'OUTER': [{'id': 'scaled_engine'}]
+            }
+        }
+
+        # Battleship with 20000 mass
+        registries = GameRegistries(
+            components={'scaled_engine': engine},
+            modifiers={},
+            vehicle_classes={'Battleship': {'max_mass': 20000}},
+            resources={}
+        )
+        service = ShipStatsCalculator(registries=registries)
+
+        stats = service.calculate_stats(design_data, {})
+
+        # Formula "=ship_class_mass / 100" with ship_class_mass=20000 = 200
+        assert stats['resource_consumption_per_hex']['fuel'] == 200.0
+
+    def test_unknown_ship_class_uses_default(self):
+        """Unknown ship class should use default ship_class_mass of 1000."""
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+        from game.core.registry import GameRegistries
+
+        engine = MockComponent(
+            'scaled_engine', mass=50, max_hp=100,
+            abilities={
+                'ResourceConsumption': [
+                    {'resource': 'fuel', 'amount': "=ship_class_mass / 100", 'trigger': 'strategic_per_hex'}
+                ]
+            }
+        )
+
+        design_data = {
+            'ship_class': 'UnknownClass',  # Not in vehicle_classes
+            'layers': {
+                'OUTER': [{'id': 'scaled_engine'}]
+            }
+        }
+
+        registries = GameRegistries(
+            components={'scaled_engine': engine},
+            modifiers={},
+            vehicle_classes={},  # Empty - no class definitions
+            resources={}
+        )
+        service = ShipStatsCalculator(registries=registries)
+
+        stats = service.calculate_stats(design_data, {})
+
+        # Default ship_class_mass = 1000, so 1000 / 100 = 10
+        assert stats['resource_consumption_per_hex']['fuel'] == 10.0
+
+    def test_no_ship_class_uses_default(self):
+        """Missing ship_class should use default ship_class_mass of 1000."""
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+        from game.core.registry import GameRegistries
+
+        engine = MockComponent(
+            'scaled_engine', mass=50, max_hp=100,
+            abilities={
+                'ResourceConsumption': [
+                    {'resource': 'fuel', 'amount': "=ship_class_mass / 10", 'trigger': 'strategic_per_hex'}
+                ]
+            }
+        )
+
+        design_data = {
+            # No ship_class key
+            'layers': {
+                'OUTER': [{'id': 'scaled_engine'}]
+            }
+        }
+
+        registries = GameRegistries(
+            components={'scaled_engine': engine},
+            modifiers={},
+            vehicle_classes={'Cruiser': {'max_mass': 8000}},
+            resources={}
+        )
+        service = ShipStatsCalculator(registries=registries)
+
+        stats = service.calculate_stats(design_data, {})
+
+        # Default ship_class_mass = 1000, so 1000 / 10 = 100
+        assert stats['resource_consumption_per_hex']['fuel'] == 100.0
+
+
+class TestConsumptionMultiplier:
+    """Tests for consumption_mult modifier (TC-013).
+
+    PROJ-209 Phase 4: Tests that consumption_mult from design modifiers
+    is applied to resource consumption values.
+    """
+
+    def test_consumption_mult_scales_per_hex_consumption(self):
+        """consumption_mult should scale strategic_per_hex consumption."""
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+        from game.simulation.components.component_constants import Modifier
+
+        engine = MockComponent(
+            'engine', mass=80, max_hp=100,
+            abilities={
+                'ResourceConsumption': [
+                    {'resource': 'fuel', 'amount': 100, 'trigger': 'strategic_per_hex'}
+                ]
+            }
+        )
+
+        # Modifier that doubles consumption
+        efficiency_mod = Modifier({
+            'id': 'inefficient',
+            'name': 'Inefficient',
+            'effects': [
+                {'stat': 'consumption_mult', 'formula': 'param'}
+            ]
+        })
+
+        design_data = {
+            'layers': {
+                'OUTER': [{
+                    'id': 'engine',
+                    'modifiers': [{'id': 'inefficient', 'value': 2.0}]  # 2x consumption
+                }]
+            }
+        }
+
+        registries = create_mock_registries(
+            components={'engine': engine},
+            modifiers={'inefficient': efficiency_mod}
+        )
+        service = ShipStatsCalculator(registries=registries)
+
+        stats = service.calculate_stats(design_data, {})
+
+        # Base 100 * 2.0 consumption_mult = 200
+        assert stats['resource_consumption_per_hex']['fuel'] == 200.0
+
+    def test_consumption_mult_scales_per_turn_consumption(self):
+        """consumption_mult should scale per_turn consumption."""
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+        from game.simulation.components.component_constants import Modifier
+
+        life_support = MockComponent(
+            'life_support', mass=30, max_hp=50,
+            abilities={
+                'ResourceConsumption': [
+                    {'resource': 'oxygen', 'amount': 10, 'trigger': 'per_turn'}
+                ]
+            }
+        )
+
+        # Modifier that halves consumption (efficient)
+        efficiency_mod = Modifier({
+            'id': 'efficient',
+            'name': 'Efficient',
+            'effects': [
+                {'stat': 'consumption_mult', 'formula': 'param'}
+            ]
+        })
+
+        design_data = {
+            'layers': {
+                'CORE': [{
+                    'id': 'life_support',
+                    'modifiers': [{'id': 'efficient', 'value': 0.5}]  # 0.5x consumption
+                }]
+            }
+        }
+
+        registries = create_mock_registries(
+            components={'life_support': life_support},
+            modifiers={'efficient': efficiency_mod}
+        )
+        service = ShipStatsCalculator(registries=registries)
+
+        stats = service.calculate_stats(design_data, {})
+
+        # Base 10 * 0.5 consumption_mult = 5
+        assert stats['resource_consumption_per_turn']['oxygen'] == 5.0
+
+    def test_no_consumption_mult_uses_base_value(self):
+        """Without consumption_mult modifier, base value should be used."""
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+
+        engine = MockComponent(
+            'engine', mass=80, max_hp=100,
+            abilities={
+                'ResourceConsumption': [
+                    {'resource': 'fuel', 'amount': 100, 'trigger': 'strategic_per_hex'}
+                ]
+            }
+        )
+
+        design_data = {
+            'layers': {
+                'OUTER': [{'id': 'engine'}]  # No modifiers
+            }
+        }
+
+        registries = create_mock_registries(components={'engine': engine})
+        service = ShipStatsCalculator(registries=registries)
+
+        stats = service.calculate_stats(design_data, {})
+
+        # Base value without modifier
+        assert stats['resource_consumption_per_hex']['fuel'] == 100.0

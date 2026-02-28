@@ -82,7 +82,8 @@ def builder_setup(fresh_registries):
     ship.has_components = has_components
 
     # Create Builder GUI (_create_ui is mocked so panels won't be created)
-    context = WorkshopContext.standalone(tech_preset_name="default")
+    # PROJ-211: registries is now required
+    context = WorkshopContext.standalone(tech_preset_name="default", registries=fresh_registries)
     builder_gui = DesignWorkshopScreen(800, 600, context)
 
     # Manually setup the mocks that _create_ui would have created

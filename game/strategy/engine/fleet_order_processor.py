@@ -24,7 +24,8 @@ from game.core.event_logging import log_event
 from game.strategy.events.event_types import EventType, EventCategory
 
 logger = logging.getLogger(__name__)
-from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.fleet import Fleet
+from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 
 if TYPE_CHECKING:
@@ -71,60 +72,9 @@ class FleetOrderProcessor:
 
     def __init__(self):
         """Initialize the fleet order processor."""
-        pass
-
-    def complete_order(self, fleet: Fleet) -> Optional[FleetOrder]:
-        """
-        Complete the current order for a fleet.
-
-        Pops the order from the queue, centralizing order completion logic.
-
-        Args:
-            fleet: Fleet whose order completed
-
-        Returns:
-            The completed order, or None if no order
-        """
-        order = fleet.get_current_order()
-        if not order:
-            return None
-
-        fleet.pop_order()
-        return order
-
-    def cancel_order(self, fleet: Fleet, reason: str = "") -> Optional[FleetOrder]:
-        """
-        Cancel the current order for a fleet.
-
-        Pops the order and logs the cancellation reason.
-
-        Args:
-            fleet: Fleet whose order is cancelled
-            reason: Reason for cancellation (for logging)
-
-        Returns:
-            The cancelled order, or None if no order
-        """
-        order = fleet.get_current_order()
-        if not order:
-            return None
-
-        logger.debug(f"Fleet {fleet.id} order cancelled: {reason}")
-        fleet.pop_order()
-        return order
-
-    def cancel_all_orders(self, fleet: Fleet, reason: str = "") -> None:
-        """
-        Cancel all orders for a fleet.
-
-        Clears the entire order queue.
-
-        Args:
-            fleet: Fleet whose orders are cancelled
-            reason: Reason for cancellation (for logging)
-        """
-        logger.debug(f"Fleet {fleet.id} all orders cancelled: {reason}")
-        fleet.clear_orders()
+        # Lazy import to avoid circular dependency
+        from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
+        self._superweapon_processor = SuperweaponOrderProcessor()
 
     def process_join_fleet(
         self,
@@ -421,8 +371,8 @@ class FleetOrderProcessor:
 
         if cargo_type == "passengers":
             # Determine how much to load
-            capacity = fleet.get_fleet_cargo_capacity("passengers")
-            current = fleet.get_fleet_cargo_current("passengers")
+            capacity = fleet.resources.get_fleet_cargo_capacity("passengers")
+            current = fleet.resources.get_fleet_cargo_current("passengers")
             available_space = capacity - current
 
             # If amount is 0, load as much as possible
@@ -449,7 +399,7 @@ class FleetOrderProcessor:
 
                 # Add to fleet cargo
                 # TODO: If we ever track species in fleet cargo, use species_id here
-                fleet.load_cargo_to_fleet("passengers", to_load)
+                fleet.resources.load_cargo_to_fleet("passengers", to_load)
 
                 return to_load
 
@@ -469,7 +419,7 @@ class FleetOrderProcessor:
 
         if cargo_type == "passengers":
             # Determine how much to unload
-            current_cargo = fleet.get_fleet_cargo_current("passengers")
+            current_cargo = fleet.resources.get_fleet_cargo_current("passengers")
 
             # If amount is 0, unload all
             to_unload = amount if amount > 0 else current_cargo
@@ -481,7 +431,7 @@ class FleetOrderProcessor:
                 return 0
 
             # Unload from fleet
-            actual_unloaded = fleet.unload_cargo_from_fleet("passengers", to_unload)
+            actual_unloaded = fleet.resources.unload_cargo_from_fleet("passengers", to_unload)
 
             # Add to colony population
             # Use provided species_id or empire's race_id
@@ -529,7 +479,7 @@ class FleetOrderProcessor:
         # Get passengers from fleet
         # Wrap in try/except for mock compatibility in tests
         try:
-            passengers = fleet.get_fleet_cargo_current("passengers")
+            passengers = fleet.resources.get_fleet_cargo_current("passengers")
         except (AttributeError, TypeError):
             passengers = 0
 
@@ -553,7 +503,7 @@ class FleetOrderProcessor:
         # Unload passengers from fleet (if any)
         if passengers > 0:
             try:
-                fleet.unload_cargo_from_fleet("passengers", passengers)
+                fleet.resources.unload_cargo_from_fleet("passengers", passengers)
             except (AttributeError, TypeError):
                 pass  # Mock fleet, skip unload
 
@@ -571,7 +521,7 @@ class FleetOrderProcessor:
         logger.debug(f"Colonization: Seeded {founding_pop} {race_id} on {planet.name}")
         return founding_pop
 
-    def process_end_turn_orders(
+    def execute_action_order(
         self,
         fleet: Fleet,
         empire: 'Empire',
@@ -580,13 +530,10 @@ class FleetOrderProcessor:
         empires: Optional[List['Empire']] = None
     ) -> bool:
         """
-        Process action orders (COLONIZE, JOIN_FLEET, TRANSFER, superweapons).
+        Execute the fleet's current action order (COLONIZE, TRANSFER, superweapons).
 
-        PROJ-55: Added component_registry for colony pod ship removal.
-        PROJ-68: Added TRANSFER order processing.
-        PROJ-102: Added superweapon order processing.
-        PROJ-187: Now called by ActionExecutionEngine during tick loop,
-                  not by TurnEngine at end-of-turn. Name retained for compatibility.
+        PROJ-207: Renamed from process_end_turn_orders. Uses handler registry.
+        Called by ActionExecutionEngine when action progress reaches action_time.
 
         Args:
             fleet: Fleet to process
@@ -603,18 +550,12 @@ class FleetOrderProcessor:
         if not order:
             return False
 
-        if order.type == OrderType.BUILD:
-            # BUILD order persists until construction_queue is empty
-            # It does not "complete" in the traditional sense - it auto-pops when queue empties
-            if not fleet.construction_queue:
-                # Queue is empty, auto-complete the BUILD order
-                fleet.pop_order()
-                logger.debug(f"Fleet {fleet.id} BUILD order completed - queue empty")
-            # BUILD does not consume the fleet
-            return False
+        # Note: BUILD orders are handled by ActionExecutionEngine.execute_tick()
+        # which auto-pops them when construction_queue is empty. They never reach here.
+        # Note: JOIN_FLEET is handled ONLY by process_instant_orders() when co-located.
 
-        elif order.type == OrderType.COLONIZE:
-            # PROJ-55: Pass component registry for ship removal
+        # COLONIZE handler
+        if order.type == OrderType.COLONIZE:
             if component_registry is None:
                 logger.error("FleetOrderProcessor: COLONIZE order requires component_registry")
                 fleet.pop_order()
@@ -624,48 +565,52 @@ class FleetOrderProcessor:
             )
             return result.colonized
 
-        elif order.type == OrderType.JOIN_FLEET:
-            result = self.process_join_fleet(fleet, empire, galaxy)
-            return result.merged
-
-        elif order.type in (OrderType.TRANSFER, OrderType.LOAD_POPULATION, OrderType.UNLOAD_POPULATION):
-            # PROJ-68: Process cargo/population transfer
+        # TRANSFER/LOAD/UNLOAD handlers (all map to process_transfer)
+        if order.type in (OrderType.TRANSFER, OrderType.LOAD_POPULATION, OrderType.UNLOAD_POPULATION):
             self.process_transfer(fleet, empire, galaxy)
-            # TRANSFER does not consume the fleet
-            return False
+            return False  # TRANSFER does not consume the fleet
 
-        # PROJ-102: Superweapon orders
-        elif order.type in (
-            OrderType.IMPLODE_PLANET,
-            OrderType.STELLERATE_STAR,
-            OrderType.OPEN_WARP_POINT,
-            OrderType.CLOSE_WARP_POINT,
-            OrderType.CREATE_DYSON_SPHERE,
-            OrderType.SELF_DESTRUCT,
-        ):
-            from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
-            proc = SuperweaponOrderProcessor()
+        # Superweapon handlers
+        proc = self._superweapon_processor
+        superweapon_handlers = {
+            OrderType.IMPLODE_PLANET: lambda: proc.process_implode_planet(
+                fleet, empire, galaxy, empires or [], component_registry
+            ),
+            OrderType.STELLERATE_STAR: lambda: proc.process_stellerate_star(
+                fleet, empire, galaxy, empires or [], component_registry
+            ),
+            OrderType.OPEN_WARP_POINT: lambda: proc.process_open_warp_point(
+                fleet, empire, galaxy, component_registry
+            ),
+            OrderType.CLOSE_WARP_POINT: lambda: proc.process_close_warp_point(
+                fleet, empire, galaxy, component_registry
+            ),
+            OrderType.CREATE_DYSON_SPHERE: lambda: proc.process_create_dyson_sphere(
+                fleet, empire, galaxy, empires or [], component_registry
+            ),
+            OrderType.SELF_DESTRUCT: lambda: proc.process_self_destruct(
+                fleet, empire, galaxy
+            ),
+        }
 
-            if order.type == OrderType.IMPLODE_PLANET:
-                result = proc.process_implode_planet(fleet, empire, galaxy, component_registry)
-            elif order.type == OrderType.STELLERATE_STAR:
-                result = proc.process_stellerate_star(
-                    fleet, empire, galaxy, empires or [], component_registry
-                )
-            elif order.type == OrderType.OPEN_WARP_POINT:
-                result = proc.process_open_warp_point(fleet, empire, galaxy, component_registry)
-            elif order.type == OrderType.CLOSE_WARP_POINT:
-                result = proc.process_close_warp_point(fleet, empire, galaxy, component_registry)
-            elif order.type == OrderType.CREATE_DYSON_SPHERE:
-                result = proc.process_create_dyson_sphere(fleet, empire, galaxy, component_registry)
-            elif order.type == OrderType.SELF_DESTRUCT:
-                result = proc.process_self_destruct(fleet, empire, galaxy)
-            else:
-                return False
-
+        handler = superweapon_handlers.get(order.type)
+        if handler:
+            result = handler()
             return result.fleet_consumed
 
         return False
+
+    # Backward compatibility alias
+    def process_end_turn_orders(
+        self,
+        fleet: Fleet,
+        empire: 'Empire',
+        galaxy: 'Galaxy',
+        component_registry: Optional[Dict[str, Any]] = None,
+        empires: Optional[List['Empire']] = None
+    ) -> bool:
+        """Deprecated: Use execute_action_order instead."""
+        return self.execute_action_order(fleet, empire, galaxy, component_registry, empires)
 
     def process_instant_orders(
         self,

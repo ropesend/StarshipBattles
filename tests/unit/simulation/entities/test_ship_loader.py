@@ -334,18 +334,20 @@ class TestInitializeShipData:
 
     def test_calls_load_vehicle_classes_with_custom_path(self, tmp_path):
         """Calls load_vehicle_classes with path derived from base_path."""
+        mock_provider = MagicMock()
         with patch('game.simulation.entities.ship_loader.load_vehicle_classes') as mock_load:
-            initialize_ship_data(str(tmp_path))
+            initialize_ship_data(str(tmp_path), registry_provider=mock_provider)
 
             expected_path = str(tmp_path / "data" / "vehicleclasses.json")
-            mock_load.assert_called_once_with(expected_path)
+            mock_load.assert_called_once_with(expected_path, registry_provider=mock_provider)
 
     def test_calls_load_vehicle_classes_with_default_path(self):
         """Calls load_vehicle_classes with no arguments when base_path is None."""
+        mock_provider = MagicMock()
         with patch('game.simulation.entities.ship_loader.load_vehicle_classes') as mock_load:
-            initialize_ship_data()
+            initialize_ship_data(registry_provider=mock_provider)
 
-            mock_load.assert_called_once_with()
+            mock_load.assert_called_once_with(registry_provider=mock_provider)
 
     def test_propagates_errors_from_load_vehicle_classes(self, tmp_path):
         """Propagates MissingResourceException from load_vehicle_classes."""
@@ -366,17 +368,24 @@ class TestGetOrCreateValidator:
     def test_returns_existing_validator(self):
         """Returns existing validator if already set."""
         mock_validator = MagicMock()
+        mock_provider = MagicMock()
 
         # PROJ-195: Patch the module-level get_validator function instead of RegistryManager
         with patch('game.simulation.entities.ship_loader.get_validator') as mock_get_val:
             mock_get_val.return_value = mock_validator
 
-            result = get_or_create_validator()
+            result = get_or_create_validator(registry_provider=mock_provider)
 
         assert result is mock_validator
 
     def test_creates_validator_when_none_exists(self):
         """Creates new ShipDesignValidator when none exists."""
+        mock_provider = MagicMock()
+        mock_provider.get_components.return_value = {}
+        mock_provider.get_modifiers.return_value = {}
+        mock_provider.get_vehicle_classes.return_value = {}
+        mock_provider.get_resources.return_value = {}
+
         # PROJ-195: Patch the module-level get_validator function
         with patch('game.simulation.entities.ship_loader.get_validator') as mock_get_val:
             mock_get_val.return_value = None
@@ -386,7 +395,7 @@ class TestGetOrCreateValidator:
                 MockValidator.return_value = mock_new_validator
 
                 with patch('game.simulation.entities.ship_loader.set_validator') as mock_set:
-                    result = get_or_create_validator()
+                    result = get_or_create_validator(registry_provider=mock_provider)
 
                     # Verify validator was created
                     MockValidator.assert_called_once()
@@ -685,9 +694,10 @@ class TestInitializeShipDataEdgeCases:
         """Handles base_path with trailing path separator."""
         # Path with trailing separator
         base_path_with_sep = str(tmp_path) + "\\"
+        mock_provider = MagicMock()
 
         with patch('game.simulation.entities.ship_loader.load_vehicle_classes') as mock_load:
-            initialize_ship_data(base_path_with_sep)
+            initialize_ship_data(base_path_with_sep, registry_provider=mock_provider)
 
             # Should still construct path correctly
             mock_load.assert_called_once()
@@ -701,14 +711,15 @@ class TestValidatorCaching:
     def test_get_or_create_validator_caches_result(self):
         """Multiple calls return the same validator instance."""
         mock_validator = MagicMock()
+        mock_provider = MagicMock()
 
         # PROJ-195: Patch the module-level get_validator function
         with patch('game.simulation.entities.ship_loader.get_validator') as mock_get_val:
             # Both calls return the same cached validator
             mock_get_val.return_value = mock_validator
 
-            result1 = get_or_create_validator()
-            result2 = get_or_create_validator()
+            result1 = get_or_create_validator(registry_provider=mock_provider)
+            result2 = get_or_create_validator(registry_provider=mock_provider)
 
         assert result1 is result2
         assert result1 is mock_validator

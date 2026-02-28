@@ -5,7 +5,7 @@ from unittest.mock import patch
 from game.simulation.entities import ship as ship
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import load_vehicle_classes
-from game.core.registry import RegistryManager
+from game.core.registry import RegistryManager, get_default_registry_provider
 from game.ui.assets import ShipThemeManager
 
 
@@ -41,8 +41,9 @@ class TestRegressions:
         original_ref = RegistryManager.instance().vehicle_classes
         original_id = id(original_ref)
 
-        # Call loader (from ship_loader module)
-        load_vehicle_classes()
+        # PROJ-211: Pass registry_provider explicitly (no fallback)
+        provider = get_default_registry_provider()
+        load_vehicle_classes(registry_provider=provider)
 
         # Verify reference is identical
         assert id(RegistryManager.instance().vehicle_classes) == original_id, \

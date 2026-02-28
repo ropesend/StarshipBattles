@@ -30,10 +30,12 @@ class TestComputePlanetProduction:
     """Tests for StrategyDetailFormatter.compute_planet_production."""
 
     @pytest.fixture
-    def formatter(self):
+    def formatter(self, mock_registries):
         """Create a minimal StrategyDetailFormatter for testing."""
         formatter = StrategyDetailFormatter.__new__(StrategyDetailFormatter)
         formatter.scene = MagicMock()
+        # PROJ-211: compute_planet_production now uses scene.session.registries
+        formatter.scene.session.registries = mock_registries
         return formatter
 
     def test_returns_empty_for_unowned_planet(self, formatter):
@@ -66,7 +68,7 @@ class TestComputePlanetProduction:
         result = formatter.compute_planet_production(planet)
         assert result['Metals'] == pytest.approx(80.0)  # 100 * 0.8
 
-    def test_registry_lookup_finds_harvester(self, formatter):
+    def test_registry_lookup_finds_harvester(self, formatter, mock_registries):
         """Components looked up via registry detect harvester abilities (BUG-78 fix)."""
         # Facility with component ID only (no inline abilities) - typical real data
         facility = MockFacility(design_data={
@@ -83,8 +85,7 @@ class TestComputePlanetProduction:
             facilities=[facility]
         )
 
-        # PROJ-174: Mock registry provider (DI pattern)
-        mock_provider = MagicMock()
+        # PROJ-211: Set up mock component in registries (DI pattern)
         mock_comp_def = MagicMock()
         mock_comp_def.abilities = {
             'ResourceHarvester': {
@@ -92,14 +93,9 @@ class TestComputePlanetProduction:
                 'base_harvest_rate': 100.0
             }
         }
-        mock_provider.get_components.return_value = {'metal_harvester': mock_comp_def}
-        mock_provider.get_modifiers.return_value = {}
-        mock_provider.get_vehicle_classes.return_value = {}
-        mock_provider.get_resources.return_value = {}
+        mock_registries.components['metal_harvester'] = mock_comp_def
 
-        with patch('game.core.registry.get_default_registry_provider',
-                   return_value=mock_provider):
-            result = formatter.compute_planet_production(planet)
+        result = formatter.compute_planet_production(planet)
 
         assert 'Metals' in result
         assert result['Metals'] == pytest.approx(80.0)  # 100 * 0.8
