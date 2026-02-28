@@ -36,7 +36,7 @@ All tests in this directory now pass, indicating the bugs have been fixed.
 | test_bug_12_energy_gen.py | BUG-12 | FIXED | Generator crew activation |
 | test_bug_12_hull_layer_addition.py | BUG-12 | FIXED | Prevent non-hull addition to hull layer |
 | test_bug_13_clear_removes_hull.py | BUG-13 | FIXED | Clear design removes hull |
-| test_bug_13_colony_flags.py | BUG-13 | FIXED | Colony flag loading with themes |
+| ~~test_bug_13_colony_flags.py~~ | BUG-13 | DELETED | Colony flag loading — covered by test_race_asset_loader.py and test_empire_asset_loading.py |
 | test_bug_13_weapons_report.py | BUG-13 | FIXED | Weapons report drawing structure |
 | test_bug_14_multi_planet_offset.py | BUG-14 | FIXED | Multi-planet position offset |
 | test_bug_15_screenshot_strategy.py | BUG-15 | FIXED | Screenshot strategy layer support |
