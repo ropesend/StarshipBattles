@@ -94,6 +94,7 @@ class StrategyBuildQueueManager:
                 hex_coord = parent_sys.global_location + planet.location if parent_sys else None
 
                 # Create screen with injected dependencies and hex context
+                # PROJ-208 Phase 3: Pass facade for CQRS-compliant command dispatch
                 self._screen.build_queue_screen = BuildQueueScreen(
                     self._screen.ui.manager,
                     planet,
@@ -105,7 +106,8 @@ class StrategyBuildQueueManager:
                     hex_coord=hex_coord,
                     galaxy=self._screen.session.galaxy,
                     empire=self._screen.current_empire,
-                    input_mapper=self._screen.input_mapper
+                    input_mapper=self._screen.input_mapper,
+                    facade=self._screen.facade,
                 )
                 logger.info(f"Opened build queue for {planet.name}")
 
@@ -205,6 +207,7 @@ class StrategyBuildQueueManager:
         design_loader = DesignLoaderAdapter(registry_provider=_get_registries())
 
         # Create build queue screen with hex context
+        # PROJ-208 Phase 3: Pass facade for CQRS-compliant command dispatch
         self._screen.build_queue_screen = BuildQueueScreen(
             self._screen.ui.manager,
             entity,
@@ -216,7 +219,8 @@ class StrategyBuildQueueManager:
             hex_coord=hex_coord,
             galaxy=self._screen.session.galaxy,
             empire=self._screen.current_empire,
-            input_mapper=self._screen.input_mapper
+            input_mapper=self._screen.input_mapper,
+            facade=self._screen.facade,
         )
         logger.info(f"Navigated to build queue for {source.display_name} at hex {hex_coord}")
 
@@ -248,6 +252,7 @@ class StrategyBuildQueueManager:
                 hex_coord = fleet.location
 
                 # Create screen with fleet as build_context and hex context
+                # PROJ-208 Phase 3: Pass facade for CQRS-compliant command dispatch
                 self._screen.build_queue_screen = BuildQueueScreen(
                     self._screen.ui.manager,
                     fleet,  # Fleet as build_context
@@ -259,6 +264,7 @@ class StrategyBuildQueueManager:
                     hex_coord=hex_coord,
                     galaxy=self._screen.session.galaxy,
                     empire=self._screen.current_empire,
-                    input_mapper=self._screen.input_mapper
+                    input_mapper=self._screen.input_mapper,
+                    facade=self._screen.facade,
                 )
                 logger.info(f"Opened build queue for fleet {fleet.id}")

@@ -83,7 +83,12 @@ class EmpireBuildQueueWindow(UIWindow):
         on_close_callback: Optional[Callable] = None,
         on_navigate_to_hex: Optional[Callable] = None,
         session: Any = None,
+        facade: Any = None,
     ) -> None:
+        """Initialize the empire build queue window.
+
+        PROJ-208 Phase 3: Added facade parameter for CQRS-compliant command dispatch.
+        """
         super().__init__(
             rect, manager,
             window_display_title="Empire Build Yards",
@@ -94,8 +99,9 @@ class EmpireBuildQueueWindow(UIWindow):
         self.galaxy = galaxy
         self.on_close_callback = on_close_callback
         self.on_navigate_to_hex = on_navigate_to_hex
-        # PROJ-208: Session for command dispatch
+        # PROJ-208: Session for command dispatch (facade preferred)
         self._session = session
+        self._facade = facade  # PROJ-208 Phase 3: For CQRS-compliant command dispatch
 
         # --- Layout constants ---
         self.sidebar_width = UIConfig.SIDEBAR_WIDTH
@@ -379,8 +385,12 @@ class EmpireBuildQueueWindow(UIWindow):
         """Add item to a source's queue via command or direct append.
 
         PROJ-208: Routes through AddToConstructionQueueCommand when session available.
+        PROJ-208 Phase 3: Prefers facade over session for CQRS consistency.
         """
-        if self._session is not None:
+        # PROJ-208: Use getattr for test compatibility (tests may bypass __init__)
+        facade = getattr(self, '_facade', None)
+        session = getattr(self, '_session', None)
+        if facade is not None or session is not None:
             from game.strategy.engine.commands import AddToConstructionQueueCommand
             entity = source.owner_entity
             entity_type = "planet" if hasattr(entity, 'planet_type') else "fleet"
@@ -395,9 +405,13 @@ class EmpireBuildQueueWindow(UIWindow):
                 target_planet_id=item.get('target_planet_id'),
                 queue_id=source.queue_id if source.queue_id else None,
             )
-            self._session.handle_command(cmd)
+            # PROJ-208 Phase 3: Route through facade if available, fallback to session
+            if facade:
+                facade.handle_command(cmd)
+            else:
+                session.handle_command(cmd)
         else:
-            # Legacy fallback for tests without session injection
+            # Legacy fallback for tests without session/facade injection
             source.construction_queue.append(dict(item))
 
     @staticmethod

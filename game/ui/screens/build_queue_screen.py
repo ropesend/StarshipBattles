@@ -58,15 +58,20 @@ class BuildQueueScreen:
         hex_coord: 'HexCoord' = None,
         galaxy: 'Galaxy' = None,
         empire: 'Empire' = None,
-        input_mapper: Optional['InputMapper'] = None
+        input_mapper: Optional['InputMapper'] = None,
+        facade=None
     ):
-        """Initialize the build queue screen."""
+        """Initialize the build queue screen.
+
+        PROJ-208 Phase 3: Added facade parameter for CQRS-compliant command dispatch.
+        """
         # Validate required parameters
         self._validate_params(hex_coord, galaxy, empire, build_context)
 
         self.manager = manager
         self.build_context = build_context
         self.session = session
+        self.facade = facade  # PROJ-208: For command dispatch
         self.on_close = on_close_callback
         self.portrait_surface = portrait_surface
         self._mapper = input_mapper
@@ -232,6 +237,7 @@ class BuildQueueScreen:
         """Dispatch AddToConstructionQueueCommand through command pipeline.
 
         PROJ-208: Routes build queue additions through CQRS command system.
+        PROJ-208 Phase 3: Route through facade for CQRS consistency.
 
         Args:
             entity_id: Planet or fleet ID.
@@ -252,12 +258,17 @@ class BuildQueueScreen:
             target_planet_id=target_planet_id,
             queue_id=queue_id,
         )
-        self.session.handle_command(cmd)
+        # PROJ-208 Phase 3: Route through facade if available, fallback to session
+        if self.facade:
+            self.facade.handle_command(cmd)
+        else:
+            self.session.handle_command(cmd)
 
     def _dispatch_remove_from_queue_command(self, item_index: int) -> None:
         """Dispatch RemoveFromConstructionQueueCommand through command pipeline.
 
         PROJ-208: Routes build queue removals (drag-from-queue) through CQRS command system.
+        PROJ-208 Phase 3: Route through facade for CQRS consistency.
 
         Args:
             item_index: Index of the item to remove from the active queue.
@@ -280,7 +291,11 @@ class BuildQueueScreen:
             entity_type=entity_type,
             item_index=item_index,
         )
-        self.session.handle_command(cmd)
+        # PROJ-208 Phase 3: Route through facade if available, fallback to session
+        if self.facade:
+            self.facade.handle_command(cmd)
+        else:
+            self.session.handle_command(cmd)
 
     # -----------------------------------------------------------------------
     # Refresh Methods (delegate to renderer)

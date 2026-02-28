@@ -8,34 +8,29 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-208 Phase 2 Complete
-**Current Status:** PROJ-208 Phase 3 Ready
+**Last Completed:** PROJ-208 Phase 3 Complete
+**Current Status:** PROJ-208 Phase 4 Ready
 **Current Project:** PROJ-208
-**Current Phase:** Phase 3
+**Current Phase:** Phase 4
 **Test Status:** 12918 passed, 1 skipped (4 pre-existing bug_13 failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-208 Phase 2 COMPLETE:**
-  - Tasks 2.5-2.8 all completed in this session
-  - Task 2.5: build_queue_drag_handler.py - added on_remove_from_queue callback
-  - Task 2.6: build_queue_screen.py - _handle_remove() uses command dispatch
-  - Task 2.7: empire_build_queue_window.py - added session injection for batch add
-  - Task 2.8: IssueBuildShipCommand removed (dead code) - no production callers
+- **PROJ-208 Phase 3 COMPLETE:**
+  - Tasks 3.1-3.4 (Research commands) DEFERRED - research scene is standalone sandbox, not integrated with strategy layer
+  - Task 3.5: strategy_build_queue_manager.py - added facade param to BuildQueueScreen (3 sites)
+  - Task 3.6: strategy_window_manager.py - changed 4 callbacks from session to facade routing
+  - Task 3.7: fleet_orders_window.py - fallback already removed in prior phase (verified)
+  - Additional: build_queue_screen.py - added facade param, uses facade if available
+  - Additional: empire_build_queue_window.py - added facade param, uses facade if available
 - **Files Modified:**
-  - game/ui/panels/build_queue_drag_handler.py
-  - game/ui/screens/build_queue_screen.py
-  - game/ui/screens/empire_build_queue_window.py
-  - game/ui/screens/strategy_window_manager.py
-  - game/strategy/engine/commands.py (removed IssueBuildShipCommand)
-  - game/strategy/engine/command_handlers.py (removed BuildShipCommandHandler)
-  - game/strategy/engine/game_session.py (updated docstring)
-  - tests/integration/ui/test_build_queue_drag_drop.py
-  - tests/integration/strategy/test_command_handlers.py
-  - tests/unit/strategy/test_command_handlers.py
-  - tests/unit/strategy/engine/test_commands.py
-  - tests/unit/ui/screens/test_empire_build_queue_window.py
-- **Next Action:** Phase 3 - Research & Misc Commands
+  - game/ui/screens/strategy_window_manager.py (4 callbacks use facade)
+  - game/ui/screens/strategy_build_queue_manager.py (3 instantiation sites)
+  - game/ui/screens/build_queue_screen.py (facade param + command dispatch)
+  - game/ui/screens/empire_build_queue_window.py (facade param + command dispatch)
+  - Projects/active_projects/PROJ-208/phase_3_checklist.md
+  - Projects/active_projects/PROJ-208/plan.md
+- **Next Action:** Phase 4 - DTO Enhancements & Read Path
 - Note: 4 bug_13 tests fail due to missing asset files (pre-existing, unrelated)
 
 ---
@@ -116,6 +111,7 @@
 | 2026-02-28 | PROJ-208 | Phase 2 (2.1-2.3) | Complete | 12923 passed, 1 skipped | pending | 3 commands + handlers + 26 tests |
 | 2026-02-28 | PROJ-208 | Phase 2 (2.4) | Complete | 12923 passed, 1 skipped | pending | build_queue_controller.py uses commands, queue_id param |
 | 2026-02-28 | PROJ-208 | Phase 2 (2.5-2.8) | Complete | 12918 passed, 1 skipped | pending | Drag handler, screen, empire window refactored; IssueBuildShipCommand removed |
+| 2026-02-28 | PROJ-208 | Phase 3 | Complete | 12918 passed, 1 skipped | pending | Facade routing fixed in 4 files; research commands DEFERRED (sandbox) |
 
 ---
 
