@@ -15,15 +15,15 @@
 |-------|--------|-----------|
 | 1. Expand Event Columns & Data Source | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Enrich Event Location Data at Creation | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Add Sidebar with Column Toggles | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Add Sidebar with Column Toggles | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Fix Double-Click Navigation | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Add Storm Column | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-28
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete - system_name and local_hex enrichment added to all event creation sites
-**Next Action:** Phase 3 - Add sidebar with column toggles
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 complete - EventLogSidebar with column toggles integrated into EventLogWindow
+**Next Action:** Phase 4 - Fix double-click navigation
 **Blockers:** None
 
 ## Overview

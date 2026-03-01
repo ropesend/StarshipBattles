@@ -17,6 +17,7 @@ from game.ui.screens.event_log_data_source import (
     EventLogDataSource,
     EVENT_LOG_COLUMNS,
 )
+from game.ui.screens.event_log_sidebar import EventLogSidebar
 
 
 # ---------------------------------------------------------------------------
@@ -28,6 +29,7 @@ TABLE_HEADER_HEIGHT = 30
 FILTER_BTN_WIDTH = 100
 FILTER_BTN_HEIGHT = 32
 FILTER_GAP = 8
+SIDEBAR_WIDTH = 180
 
 
 DOUBLE_CLICK_THRESHOLD_MS = 400
@@ -77,6 +79,9 @@ class EventLogWindow(UIWindow):
         self.column_manager: Optional[TableColumnManager] = None
         self.virtual_table: Optional[VirtualTable] = None
 
+        # Sidebar component
+        self.sidebar: Optional[EventLogSidebar] = None
+
         # --- Build UI ---
         self._init_layout()
         self._rebuild_list()
@@ -86,23 +91,33 @@ class EventLogWindow(UIWindow):
     # ------------------------------------------------------------------
 
     def _init_layout(self) -> None:
-        """Create filter header and table panel with VirtualTable."""
+        """Create sidebar, filter header and table panel with VirtualTable."""
         window_rect = self.get_container().get_rect()
         content_height = window_rect.height - 50  # title bar offset
 
-        # Header panel with filter buttons
+        # Sidebar panel on the left
+        self.sidebar_panel = UIPanel(
+            relative_rect=pygame.Rect(0, 0, SIDEBAR_WIDTH, content_height),
+            manager=self.ui_manager,
+            container=self,
+            anchors={"left": "left", "top": "top", "bottom": "bottom"},
+        )
+
+        # Header panel with filter buttons (right of sidebar)
+        header_width = window_rect.width - SIDEBAR_WIDTH
         self.header_panel = UIPanel(
-            relative_rect=pygame.Rect(0, 0, window_rect.width, HEADER_HEIGHT),
+            relative_rect=pygame.Rect(SIDEBAR_WIDTH, 0, header_width, HEADER_HEIGHT),
             manager=self.ui_manager,
             container=self,
             anchors={"left": "left", "right": "right", "top": "top"},
         )
         self._create_filter_buttons()
 
-        # Table panel below header (contains VirtualTable)
+        # Table panel below header, right of sidebar (contains VirtualTable)
         table_height = content_height - HEADER_HEIGHT
+        table_width = window_rect.width - SIDEBAR_WIDTH
         self.table_panel = UIPanel(
-            relative_rect=pygame.Rect(0, HEADER_HEIGHT, window_rect.width, table_height),
+            relative_rect=pygame.Rect(SIDEBAR_WIDTH, HEADER_HEIGHT, table_width, table_height),
             manager=self.ui_manager,
             container=self,
             anchors={
@@ -124,6 +139,13 @@ class EventLogWindow(UIWindow):
             NoSelect(),
             row_height=ROW_HEIGHT,
             header_height=TABLE_HEADER_HEIGHT,
+        )
+
+        # Create sidebar with column toggles
+        self.sidebar = EventLogSidebar(
+            panel=self.sidebar_panel,
+            manager=self.ui_manager,
+            column_manager=self.column_manager,
         )
 
     def _create_filter_buttons(self) -> None:
@@ -237,11 +259,13 @@ class EventLogWindow(UIWindow):
     # ------------------------------------------------------------------
 
     def process_event(self, event: pygame.event.Event) -> bool:
-        """Handle UI events for filter button clicks and row double-clicks."""
+        """Handle UI events for filter button clicks, column toggles, and row double-clicks."""
         handled = super().process_event(event)
 
         if hasattr(event, "type") and event.type == pygame_gui.UI_BUTTON_PRESSED:
             clicked = getattr(event, "ui_element", None)
+
+            # Check filter buttons
             for key, btn in self.filter_buttons.items():
                 if clicked is btn:
                     self.set_filter(key)
@@ -249,6 +273,18 @@ class EventLogWindow(UIWindow):
                     self._rebuild_list()
                     handled = True
                     break
+
+            # Check sidebar column toggle buttons
+            if not handled and self.sidebar:
+                col_id = self.sidebar.handle_button_click(clicked)
+                if col_id:
+                    self.column_manager.toggle_column(col_id)
+                    self.sidebar.refresh_button_labels()
+                    self.virtual_table.rebuild_headers()
+                    self.virtual_table.rebuild_row_pool()
+                    self.virtual_table.force_update()
+                    self.virtual_table.update_visible_rows()
+                    handled = True
 
         # FEAT-04: Double-click on row navigates to event location
         if (

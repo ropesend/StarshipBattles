@@ -8,22 +8,27 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-215 Phase 2 (Enrich Event Location Data at Creation)
+**Last Completed:** PROJ-215 Phase 3 (Add Sidebar with Column Toggles)
 **Current Status:** PROJ-215 in progress
 **Current Project:** PROJ-215
-**Current Phase:** Phase 3
-**Test Status:** 13057 passed, 1 skipped
+**Current Phase:** Phase 4
+**Test Status:** 13074 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-215 Phase 2 COMPLETE:**
-  - Added system_name and local_hex to production events (ship_built, complex_built)
-  - Added system_name to combat events (combat_resolved)
-  - Added system_name and local_hex to colonization events (colony_founded)
-  - Added defensive hasattr() checks for mock compatibility in tests
-  - 8 new tests in test_engine_event_emission.py covering all event types
-  - All 13057 tests passing
-- **Next:** Phase 3 - Add sidebar with column toggles (EventLogSidebar class)
+- **PROJ-215 Phase 3 COMPLETE:**
+  - Created EventLogSidebar class in game/ui/screens/event_log_sidebar.py
+  - Follows FleetReportSidebar pattern exactly
+  - Column visibility toggles with [x]/[ ] button pattern
+  - handle_button_click() returns column_id for toggle handling
+  - refresh_button_labels() updates button text after toggle
+  - Integrated into EventLogWindow with SIDEBAR_WIDTH=180
+  - Header panel and table panel shifted right by sidebar width
+  - process_event() handles column toggle → rebuild table flow
+  - 14 new tests in test_event_log_sidebar.py
+  - 3 integration tests in test_event_log_window.py
+  - All 13074 tests passing
+- **Next:** Phase 4 - Fix double-click navigation
 
 ---
 
@@ -187,6 +192,7 @@
 | 2026-02-28 | PROJ-214 | Audit 1 | PASSED | 13022 passed, 1 skipped | pending | Hex outline feature verified; no issues found |
 | 2026-02-28 | PROJ-215 | Phase 1 | Complete | 13049 passed, 1 skipped | pending | Granular location columns added (system, planet, local_hex, galaxy_hex) |
 | 2026-02-28 | PROJ-215 | Phase 2 | Complete | 13057 passed, 1 skipped | 089a50f3 | Event enrichment: system_name, local_hex added to all event sites |
+| 2026-02-28 | PROJ-215 | Phase 3 | Complete | 13074 passed, 1 skipped | pending | EventLogSidebar + column toggles integrated |
 
 ---
 
