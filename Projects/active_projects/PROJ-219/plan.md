@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Core Empire Changes | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Core Empire Changes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Wire Up Galaxy References | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Remove Redundant Calls | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Integration Tests | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -21,12 +21,12 @@
 
 ## Current State
 **Last Updated:** 2026-03-01
-**Active Phase:** Phase 1 - Ready to Start
-**Last Action:** Project review completed (Protocol 09) — 8 findings addressed, plan updated
-**Next Action:** Begin Phase 1: Core Empire Changes
+**Active Phase:** Phase 2 - Wire Up Galaxy References
+**Last Action:** Phase 1 complete: _galaxy, set_galaxy(), add_fleet(), remove_fleet() updated with auto-register/unregister
+**Next Action:** Begin Phase 2: Wire up galaxy references in GameInitializer and GameSession
 **Blockers:** None
-**Test Baseline:** 42 pre-existing failures (unrelated to fleet registration)
-**Context for Next Agent:** Plan reviewed and updated on 2026-03-01. Key changes: Bug table expanded to 8 locations, test import path fixed, Task 4.7 added for maintenance scuttle, line references clarified.
+**Test Baseline:** 13152 passed, 1 skipped
+**Context for Next Agent:** Empire now has _galaxy field + set_galaxy() + auto-register/unregister in add_fleet/remove_fleet. 7 new tests in test_empire_fleet_registration.py. Phase 2 wires galaxy refs in GameInitializer.initialize() and GameSession.from_dict().
 
 ## Overview
 

@@ -5,6 +5,7 @@ from game.core.validation_helpers import require_keys, safe_from_dict
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
+    from game.strategy.data.galaxy import Galaxy
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,9 @@ class Empire:
         # Ship serial number counters - per design_id
         self._design_serial_counters = {}  # Dict[str, int]
 
+        # Galaxy back-reference for auto fleet registration (PROJ-219)
+        self._galaxy: Optional['Galaxy'] = None
+
         # Empire-wide resource economy (PROJ-75)
         self.resource_pool = {}   # Dict[str, float] - current resource amounts
         self.max_storage = {}     # Dict[str, float] - storage capacity per type
@@ -54,12 +58,18 @@ class Empire:
             planet.owner_id = None
 
     def add_fleet(self, fleet):
+        """Add fleet to empire and register with galaxy for O(1) lookup."""
         self.fleets.append(fleet)
         fleet.owner_id = self.id
+        if self._galaxy:
+            self._galaxy.register_fleet(fleet)
 
     def remove_fleet(self, fleet):
+        """Remove fleet from empire and unregister from galaxy."""
         if fleet in self.fleets:
             self.fleets.remove(fleet)
+            if self._galaxy:
+                self._galaxy.unregister_fleet(fleet)
 
     def get_next_fleet_id(self) -> int:
         """Generate unique sequential fleet ID."""
@@ -83,6 +93,14 @@ class Empire:
         next_serial = current + 1
         self._design_serial_counters[design_id] = next_serial
         return next_serial
+
+    def set_galaxy(self, galaxy: 'Galaxy') -> None:
+        """Set galaxy reference for auto fleet registration/unregistration.
+
+        Call after construction when galaxy is available later
+        (e.g., during deserialization).
+        """
+        self._galaxy = galaxy
 
     # --- Resource Economy Methods (PROJ-75) ---
 
