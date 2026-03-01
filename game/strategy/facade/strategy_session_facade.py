@@ -547,3 +547,23 @@ class StrategySessionFacade:
             }
             for e in events
         ]
+
+    # --- Storm Queries (PROJ-215 Phase 5) ---
+
+    def get_storm_names_at_hex(self, hex_coord: HexCoord) -> List[str]:
+        """Get storm names affecting a global hex coordinate.
+
+        Uses AreaEffectManager to query the galaxy's zone spatial index
+        for storms at the given hex.
+
+        Args:
+            hex_coord: Global hex coordinate to query.
+
+        Returns:
+            List of storm names at this hex, or empty list if no storms.
+        """
+        from game.strategy.services.area_effect_manager import AreaEffectManager
+
+        manager = AreaEffectManager()
+        effects = manager.get_effects_at_global_hex(self._session.galaxy, hex_coord)
+        return effects.storm_names if effects.in_storm else []

@@ -59,8 +59,8 @@ class TestEventLogColumns:
     """Test EVENT_LOG_COLUMNS constant."""
 
     def test_column_count(self):
-        """Should have exactly 7 columns (category, turn, system, planet, local_hex, galaxy_hex, message)."""
-        assert len(EVENT_LOG_COLUMNS) == 7
+        """Should have exactly 8 columns (category, turn, system, planet, local_hex, galaxy_hex, storm, message)."""
+        assert len(EVENT_LOG_COLUMNS) == 8
 
     def test_category_column(self):
         """Category column should have correct definition."""
@@ -82,8 +82,8 @@ class TestEventLogColumns:
 
     def test_message_column(self):
         """Message column should have correct definition."""
-        # Message is now at index 6 (after 4 location columns)
-        col = EVENT_LOG_COLUMNS[6]
+        # Message is now at index 7 (after 4 location columns + storm)
+        col = EVENT_LOG_COLUMNS[7]
         assert col["id"] == "message"
         assert col["title"] == "Message"
         assert col["visible"] is True
@@ -420,8 +420,8 @@ class TestGranularLocationColumns:
     """Test granular location columns replacing single Location column."""
 
     def test_column_count(self):
-        """EVENT_LOG_COLUMNS should have 7 columns."""
-        assert len(EVENT_LOG_COLUMNS) == 7
+        """EVENT_LOG_COLUMNS should have 8 columns."""
+        assert len(EVENT_LOG_COLUMNS) == 8
 
     def test_system_column_definition(self):
         """System column should exist with correct definition."""
@@ -519,3 +519,52 @@ class TestGranularLocationColumns:
         """Old location column should no longer exist."""
         col = next((c for c in EVENT_LOG_COLUMNS if c["id"] == "location"), None)
         assert col is None
+
+
+# ---------------------------------------------------------------------------
+# PROJ-215 Phase 5: Storm Column
+# ---------------------------------------------------------------------------
+
+class TestStormColumn:
+    """Test storm column for showing storm names at event location."""
+
+    def test_storm_column_definition(self):
+        """Storm column should exist with correct definition (hidden by default)."""
+        col = next((c for c in EVENT_LOG_COLUMNS if c["id"] == "storm"), None)
+        assert col is not None
+        assert col["title"] == "Storm"
+        assert col["visible"] is False  # Hidden by default
+        assert col["sortable"] is True
+        assert isinstance(col["width"], int)
+
+    def test_storm_column_count_updated(self):
+        """EVENT_LOG_COLUMNS should now have 8 columns."""
+        assert len(EVENT_LOG_COLUMNS) == 8
+
+    def test_storm_cell_value_single_storm(self):
+        """Storm column should display storm name from event details."""
+        events = [_make_event(details={"storm_names": ["Ion Storm Alpha"]})]
+        ds = EventLogDataSource(events)
+        value = ds.get_cell_value(0, "storm")
+        assert value == "Ion Storm Alpha"
+
+    def test_storm_cell_value_multiple_storms(self):
+        """Storm column should join multiple storm names with comma."""
+        events = [_make_event(details={"storm_names": ["Ion Storm", "Plasma Storm"]})]
+        ds = EventLogDataSource(events)
+        value = ds.get_cell_value(0, "storm")
+        assert value == "Ion Storm, Plasma Storm"
+
+    def test_storm_cell_value_empty(self):
+        """Storm column should return empty string when no storms."""
+        events = [_make_event(details={})]
+        ds = EventLogDataSource(events)
+        value = ds.get_cell_value(0, "storm")
+        assert value == ""
+
+    def test_storm_cell_value_empty_list(self):
+        """Storm column should return empty string for empty storm list."""
+        events = [_make_event(details={"storm_names": []})]
+        ds = EventLogDataSource(events)
+        value = ds.get_cell_value(0, "storm")
+        assert value == ""

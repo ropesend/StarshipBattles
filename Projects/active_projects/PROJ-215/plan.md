@@ -17,13 +17,13 @@
 | 2. Enrich Event Location Data at Creation | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Add Sidebar with Column Toggles | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Fix Double-Click Navigation | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Add Storm Column | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Add Storm Column | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-28
-**Active Phase:** Phase 5
-**Last Action:** Phase 4 complete - Investigation confirmed navigation code correct, added 11 comprehensive tests
-**Next Action:** Phase 5 - Add Storm column
+**Active Phase:** Audit
+**Last Action:** Phase 5 complete - Storm column added with facade method, combat event enrichment, UI column + tests
+**Next Action:** Trigger audit (all phases complete)
 **Blockers:** None
 
 ## Overview

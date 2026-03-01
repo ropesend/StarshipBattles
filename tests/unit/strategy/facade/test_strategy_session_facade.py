@@ -777,3 +777,48 @@ class TestGameStateQueries:
             'entity_name': 'Mine',
             'location': 'Terra (1, 2)',
         }
+
+
+class TestStormQueries:
+    """Tests for storm query methods (PROJ-215 Phase 5)."""
+
+    def test_get_storm_names_at_hex_returns_storm_names(self):
+        """get_storm_names_at_hex returns storm names from AreaEffectManager."""
+        session = Mock()
+        # Mock galaxy for AreaEffectManager call
+        session.galaxy = Mock()
+
+        facade = StrategySessionFacade(session)
+
+        # Patch AreaEffectManager at the source module (deferred import)
+        with patch('game.strategy.services.area_effect_manager.AreaEffectManager') as MockManager:
+            mock_manager = MockManager.return_value
+            mock_effects = Mock()
+            mock_effects.in_storm = True
+            mock_effects.storm_names = ["Ion Storm Alpha", "Plasma Storm"]
+            mock_manager.get_effects_at_global_hex.return_value = mock_effects
+
+            result = facade.get_storm_names_at_hex(HexCoord(5, 3))
+
+            assert result == ["Ion Storm Alpha", "Plasma Storm"]
+            mock_manager.get_effects_at_global_hex.assert_called_once_with(
+                session.galaxy, HexCoord(5, 3)
+            )
+
+    def test_get_storm_names_at_hex_returns_empty_when_no_storms(self):
+        """get_storm_names_at_hex returns empty list when not in storm."""
+        session = Mock()
+        session.galaxy = Mock()
+
+        facade = StrategySessionFacade(session)
+
+        with patch('game.strategy.services.area_effect_manager.AreaEffectManager') as MockManager:
+            mock_manager = MockManager.return_value
+            mock_effects = Mock()
+            mock_effects.in_storm = False
+            mock_effects.storm_names = []
+            mock_manager.get_effects_at_global_hex.return_value = mock_effects
+
+            result = facade.get_storm_names_at_hex(HexCoord(0, 0))
+
+            assert result == []

@@ -210,6 +210,13 @@ class ConflictResolutionEngine:
             if sys:
                 system_name = sys.name
 
+        # PROJ-215 Phase 5: Get storm names at combat hex
+        storm_names = []
+        if self._area_effect_manager is not None and self._galaxy is not None:
+            effects = self._area_effect_manager.get_effects_at_global_hex(self._galaxy, f1.location)
+            if effects.in_storm:
+                storm_names = effects.storm_names
+
         log_event(
             EventType.COMBAT_RESOLVED,
             category=EventCategory.COMBAT,
@@ -219,6 +226,7 @@ class ConflictResolutionEngine:
             loser_fleet_id=loser.id,
             location_hex=[f1.location.q, f1.location.r],
             system_name=system_name,
+            storm_names=storm_names,
         )
         return winner
 
@@ -279,6 +287,11 @@ class ConflictResolutionEngine:
             if sys:
                 system_name = sys.name
 
+        # PROJ-215 Phase 5: Get storm names from environmental_effects (already queried above)
+        storm_names = []
+        if environmental_effects is not None and environmental_effects.in_storm:
+            storm_names = environmental_effects.storm_names
+
         log_event(
             EventType.COMBAT_RESOLVED,
             category=EventCategory.COMBAT,
@@ -288,5 +301,6 @@ class ConflictResolutionEngine:
             loser_fleet_id=loser.id,
             location_hex=[f1.location.q, f1.location.r],
             system_name=system_name,
+            storm_names=storm_names,
         )
         return winner

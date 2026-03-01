@@ -18,6 +18,7 @@ EVENT_LOG_COLUMNS = [
     {"id": "planet", "width": 120, "title": "Planet", "visible": True, "sortable": True},
     {"id": "local_hex", "width": 80, "title": "Local Hex", "visible": False, "sortable": True},
     {"id": "galaxy_hex", "width": 80, "title": "Galaxy Hex", "visible": False, "sortable": True},
+    {"id": "storm", "width": 120, "title": "Storm", "visible": False, "sortable": True},
     {"id": "message", "width": 500, "title": "Message", "visible": True, "sortable": True},
 ]
 
@@ -115,6 +116,12 @@ class EventLogDataSource(ITableDataSource):
             if hex_coords and len(hex_coords) == 2:
                 return f"({hex_coords[0]}, {hex_coords[1]})"
             return ""
+
+        # PROJ-215 Phase 5: Storm column
+        if column_id == "storm":
+            details = event.get("details", {})
+            storm_names = details.get("storm_names", [])
+            return ", ".join(storm_names) if storm_names else ""
 
         if column_id == "message":
             return event.get("message", "")
