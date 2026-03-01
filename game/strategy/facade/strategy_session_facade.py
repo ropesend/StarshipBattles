@@ -151,15 +151,10 @@ class StrategySessionFacade:
         Returns:
             List of HexCoords representing the path, or None if invalid
         """
-        logger.info(f"[DIAG] Facade.get_fleet_path_preview(fleet_id={fleet_id}, target={target_hex})")
         fleet = self._get_fleet_by_id(fleet_id)
-        logger.info(f"[DIAG]   _get_fleet_by_id returned: {fleet}")
         if fleet is None:
-            logger.info("[DIAG]   -> Fleet not found, returning None")
             return None
-        result = self._session.preview_fleet_path(fleet, target_hex)
-        logger.info(f"[DIAG]   preview_fleet_path returned: {len(result) if result else 'None'} hexes")
-        return result
+        return self._session.preview_fleet_path(fleet, target_hex)
 
     def get_fleet_path_projection(
         self, fleet_id: int, max_turns: int = 50

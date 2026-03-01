@@ -78,9 +78,7 @@ class FleetOperations:
             - {'type': 'error', 'message': str} on failure
             - None if no fleet selected
         """
-        logger.info(f"[DIAG] FleetOps.handle_move_designation({mx},{my}, fleet={selected_fleet})")
         if not selected_fleet:
-            logger.info("[DIAG]   No selected_fleet, returning None")
             return None
 
         # PROJ-67: Block movement while fleet is building
@@ -90,22 +88,18 @@ class FleetOperations:
 
         world_pos = self.camera.screen_to_world((mx, my))
         target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.hex_size)
-        logger.info(f"[DIAG]   target_hex={target_hex}")
 
         target_fleet_info = self.get_fleet_at_hex(target_hex)
-        logger.info(f"[DIAG]   target_fleet_info={target_fleet_info}")
 
         # Compare fleet IDs to avoid mixing domain object with DTO
         if target_fleet_info and target_fleet_info.fleet_id != selected_fleet.id:
             # Return choice context for UI prompt
-            logger.info("[DIAG]   -> Returning CHOICE (another fleet at target)")
             return {
                 'type': 'choice',
                 'target_fleet': target_fleet_info,
                 'target_hex': target_hex,
             }
         else:
-            logger.info("[DIAG]   -> Calling execute_move()")
             return self.execute_move(selected_fleet, target_hex)
 
     def execute_move(self, fleet, target_hex):
@@ -119,29 +113,20 @@ class FleetOperations:
         Returns:
             dict with result type and details
         """
-        logger.info(f"[DIAG] FleetOps.execute_move(fleet={fleet}, target={target_hex})")
-
         preview_path = self.facade.get_fleet_path_preview(fleet.id, target_hex)
-        logger.info(f"[DIAG]   preview_path={preview_path}")
 
         if preview_path:
-            logger.info(f"[DIAG]   Path confirmed: {len(preview_path)} steps.")
-
             cmd = IssueMoveCommand(fleet.id, target_hex)
-            logger.info(f"[DIAG]   Created command: {cmd}")
-
             result = self.facade.handle_command(cmd)
-            logger.info(f"[DIAG]   facade.handle_command returned: {result}")
 
             if result and result.is_valid:
-                logger.info(f"[DIAG]   -> SUCCESS")
                 return {'type': 'success', 'fleet': fleet}
             else:
                 msg = result.message if result else 'Unknown'
-                logger.warning(f"[DIAG]   -> FAILED: {msg}")
+                logger.warning(f"Move failed: {msg}")
                 return {'type': 'error', 'message': msg}
         else:
-            logger.warning("[DIAG]   -> FAILED: No path (Unreachable)")
+            logger.warning("Move failed: No path (Unreachable)")
             return {'type': 'error', 'message': 'Unreachable'}
 
     def execute_intercept(self, fleet, target_fleet: FleetInfo):

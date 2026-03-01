@@ -58,14 +58,24 @@ class Empire:
             planet.owner_id = None
 
     def add_fleet(self, fleet):
-        """Add fleet to empire and register with galaxy for O(1) lookup."""
+        """Add fleet to empire and auto-register with galaxy for O(1) lookup.
+
+        PROJ-219: Automatically registers the fleet with the galaxy entity
+        registry when a galaxy back-reference is set, eliminating the need
+        for separate galaxy.register_fleet() calls at each creation site.
+        """
         self.fleets.append(fleet)
         fleet.owner_id = self.id
         if self._galaxy:
             self._galaxy.register_fleet(fleet)
 
     def remove_fleet(self, fleet):
-        """Remove fleet from empire and unregister from galaxy."""
+        """Remove fleet from empire and auto-unregister from galaxy.
+
+        PROJ-219: Automatically unregisters the fleet from the galaxy entity
+        registry, preventing ghost fleets from remaining in the registry
+        after destruction, merging, or scuttling.
+        """
         if fleet in self.fleets:
             self.fleets.remove(fleet)
             if self._galaxy:

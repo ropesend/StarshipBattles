@@ -209,13 +209,10 @@ def find_hybrid_path(galaxy, start_hex, end_hex, fleet=None):
     Returns:
         List of HexCoords representing the path.
     """
-    logger.info(f"[DIAG] find_hybrid_path: start={start_hex}, end={end_hex}, fleet={fleet.id if fleet else None}")
-
     # Check if fleet can use warp points
     can_use_warp = True
     if fleet is not None:
         can_use_warp = fleet.capabilities.can_use_warp()
-        logger.info(f"[DIAG]   can_use_warp={can_use_warp}")
 
     # 1. Identify Start/End Systems
     # If in deep space, find NEAREST system to enter/exit the network.
@@ -227,21 +224,13 @@ def find_hybrid_path(galaxy, start_hex, end_hex, fleet=None):
     if not end_sys:
         end_sys = find_nearest_system(galaxy, end_hex)
 
-    logger.info(f"[DIAG]   start_sys={start_sys.name if start_sys else None}, end_sys={end_sys.name if end_sys else None}")
-
     # Case A: Same System (or both Deep Space near same system)
     if start_sys and end_sys and start_sys == end_sys:
-        logger.info(f"[DIAG]   -> Case A: Same system, direct path")
-        path = find_path_deep_space(start_hex, end_hex)
-        logger.info(f"[DIAG]   -> Path result: {len(path) if path else 0} hexes")
-        return path
+        return find_path_deep_space(start_hex, end_hex)
 
     # Case B: Fleet cannot warp - use direct hex path
     if not can_use_warp:
-        logger.info(f"[DIAG]   -> Case B: No warp, direct path")
-        path = find_path_deep_space(start_hex, end_hex)
-        logger.info(f"[DIAG]   -> Path result: {len(path) if path else 0} hexes")
-        return path
+        return find_path_deep_space(start_hex, end_hex)
 
     # Case C: Interstellar with warp capability
     if start_sys and end_sys:
@@ -292,14 +281,10 @@ def find_hybrid_path(galaxy, start_hex, end_hex, fleet=None):
         if final_segment:
             full_path.extend(final_segment)
 
-        logger.info(f"[DIAG]   -> Case C: Interstellar path, {len(full_path)} hexes")
         return full_path
 
     # Fallback: Just direct line (Deep Space logic)
-    logger.info(f"[DIAG]   -> Case D: Fallback direct path (no systems found)")
-    path = find_path_deep_space(start_hex, end_hex)
-    logger.info(f"[DIAG]   -> Path result: {len(path) if path else 0} hexes")
-    return path
+    return find_path_deep_space(start_hex, end_hex)
 
 def project_fleet_path(fleet, galaxy, max_turns=10):
     """

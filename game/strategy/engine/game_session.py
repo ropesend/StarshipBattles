@@ -354,8 +354,8 @@ class GameSession:
         for empire in session.empires:
             empire.set_galaxy(session.galaxy)
 
-        # PROJ-216: Register all fleets with galaxy for O(1) lookup
-        # Fleets are deserialized into empires but not automatically registered
+        # PROJ-219: Register deserialized fleets with galaxy for O(1) lookup.
+        # Deserialization bypasses add_fleet(), so explicit registration is needed.
         for empire in session.empires:
             for fleet in empire.fleets:
                 session.galaxy.register_fleet(fleet)
