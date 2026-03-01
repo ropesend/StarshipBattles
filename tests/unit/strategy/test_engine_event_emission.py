@@ -755,3 +755,354 @@ class TestCombatResolvedEvent:
 
         _, kw = calls[0]
         assert kw["empire_id"] == 5  # Winner's empire_id
+
+
+# ===========================================================================
+# PROJ-215: Event Location Enrichment (system_name, local_hex)
+# ===========================================================================
+
+
+class TestProductionEventLocationEnrichment:
+    """Production events include system_name and local_hex fields (PROJ-215)."""
+
+    def test_spawn_ship_event_includes_system_name(self):
+        """ship_built event includes system_name from parent system."""
+        from game.strategy.engine.production_engine import ProductionEngine
+        from game.core.hex_math import HexCoord
+
+        engine = ProductionEngine()
+        empire = _make_mock_empire()
+        planet = _make_mock_planet()
+        planet.location = HexCoord(2, 3)
+        galaxy = _make_mock_galaxy()
+
+        # Mock system with name
+        mock_system = MagicMock()
+        mock_system.name = "Sol"
+        mock_system.global_location = HexCoord(100, 200)
+        galaxy.get_system_of_planet.return_value = mock_system
+
+        calls, fake = _capture_log_event_calls()
+
+        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_cls:
+            mock_lib = MagicMock()
+            mock_lib.load_design_data.return_value = {"name": "Scout"}
+            mock_lib_cls.return_value = mock_lib
+
+            with patch('game.strategy.engine.production_engine.ShipInstance') as mock_si:
+                mock_ship = MagicMock()
+                mock_si.create.return_value = mock_ship
+
+                with patch('game.strategy.engine.production_engine.Fleet') as mock_fleet_cls:
+                    mock_fleet = MagicMock()
+                    mock_fleet.id = 1
+                    mock_fleet_cls.return_value = mock_fleet
+
+                    with patch('game.strategy.engine.production_engine.log_event', fake):
+                        engine._spawn_ship(planet, "scout", empire, galaxy, save_path="/test")
+
+        assert len(calls) == 1
+        _, kw = calls[0]
+        assert kw["system_name"] == "Sol"
+        assert kw["local_hex"] == [2, 3]
+
+    def test_spawn_ship_event_empty_system_name_when_no_system(self):
+        """ship_built event has empty system_name when no parent system found."""
+        from game.strategy.engine.production_engine import ProductionEngine
+        from game.core.hex_math import HexCoord
+
+        engine = ProductionEngine()
+        empire = _make_mock_empire()
+        planet = _make_mock_planet()
+        planet.location = HexCoord(2, 3)
+        galaxy = _make_mock_galaxy()
+        galaxy.get_system_of_planet.return_value = None
+
+        calls, fake = _capture_log_event_calls()
+
+        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_cls:
+            mock_lib = MagicMock()
+            mock_lib.load_design_data.return_value = {"name": "Scout"}
+            mock_lib_cls.return_value = mock_lib
+
+            with patch('game.strategy.engine.production_engine.ShipInstance') as mock_si:
+                mock_ship = MagicMock()
+                mock_si.create.return_value = mock_ship
+
+                with patch('game.strategy.engine.production_engine.Fleet') as mock_fleet_cls:
+                    mock_fleet = MagicMock()
+                    mock_fleet.id = 1
+                    mock_fleet_cls.return_value = mock_fleet
+
+                    with patch('game.strategy.engine.production_engine.log_event', fake):
+                        engine._spawn_ship(planet, "scout", empire, galaxy, save_path="/test")
+
+        _, kw = calls[0]
+        assert kw["system_name"] == ""
+        assert kw["local_hex"] is None
+
+    def test_spawn_complex_event_includes_system_name_and_local_hex(self):
+        """complex_built event includes system_name and local_hex."""
+        from game.strategy.engine.production_engine import ProductionEngine
+        from game.core.hex_math import HexCoord
+
+        engine = ProductionEngine()
+        empire = _make_mock_empire()
+        planet = _make_mock_planet()
+        planet.location = HexCoord(1, -2)
+
+        # Mock galaxy and system
+        mock_system = MagicMock()
+        mock_system.name = "Alpha Centauri"
+        mock_system.global_location = HexCoord(50, 50)
+        galaxy = _make_mock_galaxy()
+        galaxy.get_system_of_planet.return_value = mock_system
+
+        calls, fake = _capture_log_event_calls()
+
+        with patch('game.strategy.engine.production_engine.log_event', fake):
+            engine._spawn_complex(planet, "factory", empire, save_path=None, galaxy=galaxy)
+
+        _, kw = calls[0]
+        assert kw["system_name"] == "Alpha Centauri"
+        assert kw["local_hex"] == [1, -2]
+
+    def test_spawn_fleet_ship_event_has_empty_system_name(self):
+        """Fleet production (deep space) has empty system_name and local_hex=None."""
+        from game.strategy.engine.production_engine import ProductionEngine
+        from game.strategy.data.fleet import Fleet
+
+        engine = ProductionEngine()
+        empire = _make_mock_empire()
+        fleet = MagicMock(spec=Fleet)
+        fleet.id = 7
+        fleet.location = MagicMock(q=5, r=-3)
+
+        calls, fake = _capture_log_event_calls()
+
+        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_cls:
+            mock_lib = MagicMock()
+            mock_lib.load_design_data.return_value = {"name": "Fighter"}
+            mock_lib_cls.return_value = mock_lib
+
+            with patch('game.strategy.engine.production_engine.ShipInstance') as mock_si:
+                mock_ship = MagicMock()
+                mock_si.create.return_value = mock_ship
+
+                with patch('game.strategy.engine.production_engine.log_event', fake):
+                    engine._spawn_fleet_ship(fleet, "fighter_design", empire, save_path="/test")
+
+        _, kw = calls[0]
+        assert kw["system_name"] == ""
+        assert kw["local_hex"] is None
+
+
+class TestCombatEventLocationEnrichment:
+    """Combat events include system_name field (PROJ-215)."""
+
+    def test_combat_event_includes_system_name(self):
+        """combat_resolved event includes system_name from fleet location."""
+        from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        mock_resolver = MagicMock()
+        mock_result = MagicMock()
+        mock_result.winner = 0
+        mock_result.team0_survivors = [MagicMock()]
+        mock_result.team1_survivors = []
+        mock_resolver.resolve_battle.return_value = mock_result
+
+        # Mock galaxy with system
+        mock_galaxy = _make_mock_galaxy()
+        mock_system = MagicMock()
+        mock_system.name = "Orion"
+        mock_galaxy.get_system_at_location.return_value = mock_system
+
+        engine = ConflictResolutionEngine(battle_resolver=mock_resolver)
+        engine._galaxy = mock_galaxy  # Set galaxy directly (normally set during resolve_all_conflicts)
+
+        f1 = MagicMock(spec=Fleet)
+        f1.id = 1
+        f1.owner_id = 0
+        f1.location = HexCoord(10, 20)
+        f1.ships = [MagicMock()]
+
+        f2 = MagicMock(spec=Fleet)
+        f2.id = 2
+        f2.owner_id = 1
+        f2.location = HexCoord(10, 20)
+        f2.ships = [MagicMock()]
+
+        calls, fake = _capture_log_event_calls()
+
+        with patch('game.strategy.engine.conflict_resolution_engine.log_event', fake):
+            engine._resolve_combat_simulated(f1, f2)
+
+        _, kw = calls[0]
+        assert kw["system_name"] == "Orion"
+
+    def test_combat_event_empty_system_name_when_no_system(self):
+        """combat_resolved event has empty system_name when not at a system."""
+        from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        mock_resolver = MagicMock()
+        mock_result = MagicMock()
+        mock_result.winner = 0
+        mock_result.team0_survivors = [MagicMock()]
+        mock_result.team1_survivors = []
+        mock_resolver.resolve_battle.return_value = mock_result
+
+        # Mock galaxy with no system at location
+        mock_galaxy = _make_mock_galaxy()
+        mock_galaxy.get_system_at_location.return_value = None
+
+        engine = ConflictResolutionEngine(battle_resolver=mock_resolver)
+        engine._galaxy = mock_galaxy  # Set galaxy directly
+
+        f1 = MagicMock(spec=Fleet)
+        f1.id = 1
+        f1.owner_id = 0
+        f1.location = HexCoord(10, 20)
+        f1.ships = [MagicMock()]
+
+        f2 = MagicMock(spec=Fleet)
+        f2.id = 2
+        f2.owner_id = 1
+        f2.location = HexCoord(10, 20)
+        f2.ships = [MagicMock()]
+
+        calls, fake = _capture_log_event_calls()
+
+        with patch('game.strategy.engine.conflict_resolution_engine.log_event', fake):
+            engine._resolve_combat_simulated(f1, f2)
+
+        _, kw = calls[0]
+        assert kw["system_name"] == ""
+
+
+class TestColonizationEventLocationEnrichment:
+    """Colonization events include system_name and local_hex (PROJ-215)."""
+
+    def test_colonize_event_includes_system_name_and_local_hex(self):
+        """colony_founded event includes system_name and local_hex."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.data.fleet import Fleet
+        from game.strategy.data.order_types import FleetOrder, OrderType
+        from game.core.hex_math import HexCoord
+        from enum import Enum
+
+        class MockPlanetType(Enum):
+            CONTINENTAL = "CONTINENTAL"
+
+        processor = FleetOrderProcessor()
+        empire = _make_mock_empire()
+        galaxy = _make_mock_galaxy()
+
+        # Mock system
+        mock_system = MagicMock()
+        mock_system.name = "Kepler"
+        galaxy.get_system_of_planet.return_value = mock_system
+
+        # Fleet with COLONIZE order
+        fleet = MagicMock(spec=Fleet)
+        fleet.id = 3
+        fleet.owner_id = 0
+        fleet.location = HexCoord(5, 5)
+
+        mock_ship = MagicMock()
+        mock_ship.name = "Colony Ship"
+        mock_ship.design_data = {'layers': {'HULL': [{'id': 'continental_colony_pod'}]}}
+        fleet.ships = [mock_ship]
+        fleet.get_fleet_cargo_current = MagicMock(return_value=0)
+        fleet.unload_cargo_from_fleet = MagicMock(return_value=0)
+        fleet.remove_ship = MagicMock(side_effect=lambda s: fleet.ships.remove(s))
+
+        target_planet = _make_mock_planet(planet_id=10, name="New Earth")
+        target_planet.owner_id = None
+        target_planet.populations = []
+        target_planet.planet_type = MockPlanetType.CONTINENTAL
+        target_planet.location = HexCoord(3, -1)
+
+        order = FleetOrder(OrderType.COLONIZE, target=target_planet)
+        fleet.get_current_order.return_value = order
+        fleet.pop_order = MagicMock()
+
+        component_registry = {
+            'continental_colony_pod': {'id': 'continental_colony_pod', 'abilities': {'ColonizePlanet': 'CONTINENTAL'}}
+        }
+
+        calls, fake = _capture_log_event_calls()
+
+        with patch('game.strategy.validation.ColonizeValidator') as mock_val:
+            mock_result = MagicMock()
+            mock_result.is_valid = True
+            mock_val.validate.return_value = mock_result
+            mock_val.find_ship_with_colony_pod.return_value = mock_ship
+
+            with patch('game.strategy.engine.fleet_order_processor.log_event', fake):
+                processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
+
+        _, kw = calls[0]
+        assert kw["system_name"] == "Kepler"
+        assert kw["local_hex"] == [3, -1]
+
+    def test_colonize_event_empty_system_name_when_no_system(self):
+        """colony_founded event has empty system_name when no parent system."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.data.fleet import Fleet
+        from game.strategy.data.order_types import FleetOrder, OrderType
+        from game.core.hex_math import HexCoord
+        from enum import Enum
+
+        class MockPlanetType(Enum):
+            CONTINENTAL = "CONTINENTAL"
+
+        processor = FleetOrderProcessor()
+        empire = _make_mock_empire()
+        galaxy = _make_mock_galaxy()
+        galaxy.get_system_of_planet.return_value = None
+
+        fleet = MagicMock(spec=Fleet)
+        fleet.id = 3
+        fleet.owner_id = 0
+        fleet.location = HexCoord(5, 5)
+
+        mock_ship = MagicMock()
+        mock_ship.name = "Colony Ship"
+        mock_ship.design_data = {'layers': {'HULL': [{'id': 'continental_colony_pod'}]}}
+        fleet.ships = [mock_ship]
+        fleet.get_fleet_cargo_current = MagicMock(return_value=0)
+        fleet.unload_cargo_from_fleet = MagicMock(return_value=0)
+        fleet.remove_ship = MagicMock(side_effect=lambda s: fleet.ships.remove(s))
+
+        target_planet = _make_mock_planet(planet_id=10, name="Lone Rock")
+        target_planet.owner_id = None
+        target_planet.populations = []
+        target_planet.planet_type = MockPlanetType.CONTINENTAL
+        target_planet.location = HexCoord(2, 0)
+
+        order = FleetOrder(OrderType.COLONIZE, target=target_planet)
+        fleet.get_current_order.return_value = order
+        fleet.pop_order = MagicMock()
+
+        component_registry = {
+            'continental_colony_pod': {'id': 'continental_colony_pod', 'abilities': {'ColonizePlanet': 'CONTINENTAL'}}
+        }
+
+        calls, fake = _capture_log_event_calls()
+
+        with patch('game.strategy.validation.ColonizeValidator') as mock_val:
+            mock_result = MagicMock()
+            mock_result.is_valid = True
+            mock_val.validate.return_value = mock_result
+            mock_val.find_ship_with_colony_pod.return_value = mock_ship
+
+            with patch('game.strategy.engine.fleet_order_processor.log_event', fake):
+                processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
+
+        _, kw = calls[0]
+        assert kw["system_name"] == ""
+        assert kw["local_hex"] is None

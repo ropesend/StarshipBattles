@@ -217,6 +217,18 @@ class FleetOrderProcessor:
             logger.debug(f"FleetOrderProcessor: Fleet {fleet.id} removed (no ships remaining)")
 
         logger.info(f"FleetOrderProcessor: Colonization successful. {empire.name} claimed {final_planet.name}")
+
+        # PROJ-215: Look up system name and local hex for granular event log columns
+        system_name = ""
+        local_hex = None
+        if galaxy and hasattr(galaxy, 'get_system_of_planet'):
+            sys = galaxy.get_system_of_planet(final_planet)
+            if sys:
+                system_name = sys.name
+                # Only compute local_hex if planet has location attribute
+                if hasattr(final_planet, 'location') and final_planet.location is not None:
+                    local_hex = [final_planet.location.q, final_planet.location.r]
+
         log_event(
             EventType.COLONY_FOUNDED,
             category=EventCategory.COLONIES,
@@ -227,6 +239,8 @@ class FleetOrderProcessor:
             fleet_id=fleet.id,
             location_name=final_planet.name,
             location_hex=[fleet.location.q, fleet.location.r],
+            system_name=system_name,
+            local_hex=local_hex,
         )
         return ColonizeResult(colonized=True, planet_name=final_planet.name)
 

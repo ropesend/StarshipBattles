@@ -203,6 +203,13 @@ class ConflictResolutionEngine:
         else:
             winner, loser = f2, f1
 
+        # PROJ-215: Look up system name for granular event log columns
+        system_name = ""
+        if self._galaxy and hasattr(self._galaxy, 'get_system_at_location'):
+            sys = self._galaxy.get_system_at_location(f1.location)
+            if sys:
+                system_name = sys.name
+
         log_event(
             EventType.COMBAT_RESOLVED,
             category=EventCategory.COMBAT,
@@ -211,6 +218,7 @@ class ConflictResolutionEngine:
             winner_fleet_id=winner.id,
             loser_fleet_id=loser.id,
             location_hex=[f1.location.q, f1.location.r],
+            system_name=system_name,
         )
         return winner
 
@@ -264,6 +272,13 @@ class ConflictResolutionEngine:
             else:
                 winner, loser = f2, f1
 
+        # PROJ-215: Look up system name for granular event log columns
+        system_name = ""
+        if self._galaxy and hasattr(self._galaxy, 'get_system_at_location'):
+            sys = self._galaxy.get_system_at_location(f1.location)
+            if sys:
+                system_name = sys.name
+
         log_event(
             EventType.COMBAT_RESOLVED,
             category=EventCategory.COMBAT,
@@ -272,5 +287,6 @@ class ConflictResolutionEngine:
             winner_fleet_id=winner.id,
             loser_fleet_id=loser.id,
             location_hex=[f1.location.q, f1.location.r],
+            system_name=system_name,
         )
         return winner

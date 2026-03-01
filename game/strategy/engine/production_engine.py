@@ -558,12 +558,17 @@ class ProductionEngine:
         logger.info(f"Built {facility.name} on {planet.name}")
 
         # FEAT-04: Compute global hex for event location
+        # PROJ-215: Add system_name and local_hex for granular event log columns
         location_hex = None
+        system_name = ""
+        local_hex = None
         if galaxy:
             parent_sys = galaxy.get_system_of_planet(planet)
             if parent_sys:
                 loc = parent_sys.global_location + planet.location
                 location_hex = [loc.q, loc.r]
+                system_name = parent_sys.name
+                local_hex = [planet.location.q, planet.location.r]
 
         log_event(
             EventType.COMPLEX_BUILT,
@@ -574,6 +579,8 @@ class ProductionEngine:
             planet_id=planet.id,
             location_name=planet.name,
             location_hex=location_hex,
+            system_name=system_name,
+            local_hex=local_hex,
         )
 
     def _spawn_ship(
@@ -633,6 +640,15 @@ class ProductionEngine:
         # Increment design's times_built counter
         design_library.increment_built_count(design_id)
 
+        # PROJ-215: Compute system_name and local_hex for granular event log columns
+        system_name = ""
+        local_hex = None
+        if galaxy:
+            parent_sys = galaxy.get_system_of_planet(planet)
+            if parent_sys:
+                system_name = parent_sys.name
+                local_hex = [planet.location.q, planet.location.r]
+
         logger.info(f"Spawned {design_data.get('name', design_id)} at {spawn_loc} (Fleet {new_fleet.id})")
         log_event(
             EventType.SHIP_BUILT,
@@ -644,6 +660,8 @@ class ProductionEngine:
             fleet_id=new_fleet.id,
             location_name=planet.name,
             location_hex=[spawn_loc.q, spawn_loc.r],
+            system_name=system_name,
+            local_hex=local_hex,
         )
 
     def _spawn_fleet_ship(
@@ -694,6 +712,7 @@ class ProductionEngine:
         design_library.increment_built_count(design_id)
 
         logger.info(f"Fleet {fleet.id} built {design_data.get('name', design_id)}")
+        # PROJ-215: Fleet production in deep space has no system/local context
         log_event(
             EventType.SHIP_BUILT,
             category=EventCategory.PRODUCTION,
@@ -703,6 +722,8 @@ class ProductionEngine:
             fleet_id=fleet.id,
             is_fleet_production=True,
             location_hex=[fleet.location.q, fleet.location.r],
+            system_name="",
+            local_hex=None,
         )
 
     def _spawn_fleet_complex(
@@ -770,6 +791,17 @@ class ProductionEngine:
 
         planet.facilities.append(facility)
         logger.info(f"Fleet {fleet.id} built {facility.name} on {planet.name}")
+
+        # PROJ-215: Compute system_name and local_hex for granular event log columns
+        system_name = ""
+        local_hex = None
+        if hasattr(galaxy, 'get_system_of_planet'):
+            parent_sys = galaxy.get_system_of_planet(planet)
+            if parent_sys:
+                system_name = parent_sys.name
+                if hasattr(planet, 'location') and planet.location is not None:
+                    local_hex = [planet.location.q, planet.location.r]
+
         log_event(
             EventType.COMPLEX_BUILT,
             category=EventCategory.PRODUCTION,
@@ -779,4 +811,6 @@ class ProductionEngine:
             planet_id=planet.id,
             location_name=planet.name,
             location_hex=[fleet.location.q, fleet.location.r],
+            system_name=system_name,
+            local_hex=local_hex,
         )

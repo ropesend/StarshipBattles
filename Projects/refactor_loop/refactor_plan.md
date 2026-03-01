@@ -8,21 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-215 Phase 1 (Expand Event Columns & Data Source)
+**Last Completed:** PROJ-215 Phase 2 (Enrich Event Location Data at Creation)
 **Current Status:** PROJ-215 in progress
 **Current Project:** PROJ-215
-**Current Phase:** Phase 2
-**Test Status:** 13049 passed, 1 skipped
+**Current Phase:** Phase 3
+**Test Status:** 13057 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-215 Phase 1 COMPLETE:**
-  - Replaced single "Location" column with 4 granular columns: System, Planet, Local Hex, Galaxy Hex
-  - System and Planet visible by default; Local Hex and Galaxy Hex hidden by default
-  - Updated get_cell_value() to extract system_name, location_name, local_hex, location_hex from event details
-  - 14 new/updated tests for column definitions and cell values
-  - All 13049 tests passing
-- **Next:** Phase 2 - Enrich event data at creation time (add system_name and local_hex to events)
+- **PROJ-215 Phase 2 COMPLETE:**
+  - Added system_name and local_hex to production events (ship_built, complex_built)
+  - Added system_name to combat events (combat_resolved)
+  - Added system_name and local_hex to colonization events (colony_founded)
+  - Added defensive hasattr() checks for mock compatibility in tests
+  - 8 new tests in test_engine_event_emission.py covering all event types
+  - All 13057 tests passing
+- **Next:** Phase 3 - Add sidebar with column toggles (EventLogSidebar class)
 
 ---
 
@@ -185,6 +186,7 @@
 | 2026-02-28 | PROJ-213 | Audit 1 | PASSED | 13022 passed, 1 skipped | pending | Build queue cost bug fix verified; no issues found |
 | 2026-02-28 | PROJ-214 | Audit 1 | PASSED | 13022 passed, 1 skipped | pending | Hex outline feature verified; no issues found |
 | 2026-02-28 | PROJ-215 | Phase 1 | Complete | 13049 passed, 1 skipped | pending | Granular location columns added (system, planet, local_hex, galaxy_hex) |
+| 2026-02-28 | PROJ-215 | Phase 2 | Complete | 13057 passed, 1 skipped | 089a50f3 | Event enrichment: system_name, local_hex added to all event sites |
 
 ---
 
