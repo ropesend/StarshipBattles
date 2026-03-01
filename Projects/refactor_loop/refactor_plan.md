@@ -8,27 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-215 Phase 4 (Fix Double-Click Navigation)
-**Current Status:** PROJ-215 in progress
-**Current Project:** PROJ-215
-**Current Phase:** Phase 5
-**Test Status:** 13085 passed, 1 skipped
+**Last Completed:** PROJ-215 Audit (Complete)
+**Current Status:** PROJ-215 complete, ready for next project
+**Current Project:** None (PROJ-215 completed)
+**Current Phase:** N/A
+**Test Status:** 13093 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-215 Phase 4 COMPLETE:**
-  - Investigated navigation callback chain - all code was correct
-  - find_clicked_row() uses get_abs_rect() for screen coordinates - correct
-  - on_navigate_callback is set via _on_event_log_navigate
-  - _camera_nav exists on StrategyScreen with center_on_hex()
-  - No code fix needed - feature was already working correctly
-  - Added 6 tests in TestDoubleClickNavigation class:
-    - Double-click threshold constant, time tracking, navigation trigger
-    - Slow double-click (no trigger), different rows (no trigger), state reset
-  - Added 5 tests in TestEventLogNavigation (test_strategy_window_manager.py):
-    - Window closes, camera centers, handles edge cases
-  - All 13085 tests passing
-- **Next:** Phase 5 - Add Storm column
+- **PROJ-215 COMPLETE:**
+  - Phase 5: Storm column added
+    - Added get_storm_names_at_hex() facade method
+    - Added storm column to EVENT_LOG_COLUMNS (now 8 columns)
+    - Added storm_names to combat events in ConflictResolutionEngine
+    - Added 8 new tests (6 storm column + 2 facade)
+  - Audit passed: All implementations verified
+  - 13093 tests passing
+- **Next:** PROJ-218 (Fix Production Queue Cost and Build Time Defaults)
 
 ---
 
@@ -88,10 +84,10 @@
 
 ---
 
-- [/] **PROJ-215: Fix Event Log Location Display and Navigation**
-  - **Phases:** 5 | **Status:** Phase 1 Complete | **Priority:** Medium
+- [x] **PROJ-215: Fix Event Log Location Display and Navigation**
+  - **Phases:** 5 | **Status:** COMPLETE - Audit Passed | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-215/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-215/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
 ---
@@ -194,6 +190,8 @@
 | 2026-02-28 | PROJ-215 | Phase 2 | Complete | 13057 passed, 1 skipped | 089a50f3 | Event enrichment: system_name, local_hex added to all event sites |
 | 2026-02-28 | PROJ-215 | Phase 3 | Complete | 13074 passed, 1 skipped | pending | EventLogSidebar + column toggles integrated |
 | 2026-02-28 | PROJ-215 | Phase 4 | Complete | 13085 passed, 1 skipped | pending | Navigation verified correct, 11 tests added |
+| 2026-02-28 | PROJ-215 | Phase 5 | Complete | 13093 passed, 1 skipped | ad64dd31 | Storm column + facade method + combat enrichment |
+| 2026-02-28 | PROJ-215 | Audit 1 | PASSED | 13093 passed, 1 skipped | - | All implementations verified, no issues |
 
 ---
 
