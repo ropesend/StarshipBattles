@@ -268,7 +268,7 @@ class StrategyDetailFormatter:
         text += f"<b>Type:</b> {obj.star_type.name}<br>"
         text += f"<b>Mass:</b> {obj.mass:.2f} Sol<br>"
         text += f"<b>Temp:</b> {int(obj.temperature)} K<br>"
-        text += f"<b>Diam:</b> {obj.diameter_hexes:.1f} Hex<br>"
+        text += f"<b>Radius:</b> {obj.radius_hexes} Hex<br>"
 
         self.graph_image.show()
         self.btn_raw_data.show()

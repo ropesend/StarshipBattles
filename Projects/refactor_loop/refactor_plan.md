@@ -8,22 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-217 Phase 2
-**Current Status:** PROJ-217 Phase 2 complete; Phase 3 next
+**Last Completed:** PROJ-217 Phase 3
+**Current Status:** PROJ-217 Phase 3 complete; Phase 4 next
 **Current Project:** PROJ-217
-**Current Phase:** Phase 3 - UI & Rendering
-**Test Status:** Tests pending - Phases 1-2 renamed fields/updated logic, Phase 4 updates tests
+**Current Phase:** Phase 4 - Test Updates
+**Test Status:** Tests pending - Phases 1-3 renamed fields/updated logic, Phase 4 updates tests
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-217 Phase 2 Complete:**
-  - Renamed `_map_radius_to_hexes()` → `_map_solar_radius_to_hex_radius()` with int return
-  - Fixed companion placement: `p_hex + 2` instead of `int(p_hex * 2) + 2`
-  - Fixed planet orbit safe_start: `primary.radius_hexes + 2`
-  - Fixed warp distance formula: `star_radius * 3.0`
-  - Updated Dyson Sphere: `radius_hexes=6`
-  - Updated galaxy entity registry and spatial index
-- **Next:** Phase 3 - fix strategy_renderer.py, system_mode.py, detail formatters
+- **PROJ-217 Phase 3 Complete:**
+  - Fixed star rendering formula: `star.radius_hexes * hex_size * zoom`
+  - Fixed Dyson Sphere rendering: renamed vars, default 6, proper scaling
+  - Updated galaxy test mode: removed `* 0.5` factor, updated display label
+  - Updated detail formatters: "Radius:" instead of "Diam:"
+  - Updated visual test script rendering formula
+  - Verified: no diameter_hexes references in game/ui/ or scripts/
+- **Next:** Phase 4 - Update all test files to use new field name and values
 
 ---
 
@@ -195,6 +195,7 @@
 | 2026-02-28 | PROJ-218 | Audit 1 | PASSED | 13091 passed, 1 skipped | pending | Core bug fix verified; Phase 3 deferred (cleanup) |
 | 2026-02-28 | PROJ-217 | Phase 1 | Complete | pending | pending | Star/Planet/IPlanet renamed diameter_hexes→radius_hexes |
 | 2026-02-28 | PROJ-217 | Phase 2 | Complete | pending | pending | StarGenerator, planet_gen, warp, superweapon, entity registry updated |
+| 2026-02-28 | PROJ-217 | Phase 3 | Complete | pending | pending | strategy_renderer, system_mode, detail formatters, visual test script |
 
 ---
 

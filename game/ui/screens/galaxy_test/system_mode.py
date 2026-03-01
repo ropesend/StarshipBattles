@@ -336,7 +336,7 @@ class SystemModeHelper:
             screen_pos = self.screen.camera.world_to_screen(world_pos)
 
             dist = (click_pos - screen_pos).length()
-            star_radius = max(8, int(star.diameter_hexes * HEX_SIZE * self.screen.camera.zoom * 0.5))
+            star_radius = max(8, int(star.radius_hexes * HEX_SIZE * self.screen.camera.zoom))
 
             if dist < star_radius + click_threshold and dist < best_dist:
                 best_match = star
@@ -388,7 +388,7 @@ class SystemModeHelper:
             f"Mass: {star.mass:.3f} M☉",
             f"Temp: {star.temperature:.0f} K",
             f"Luminosity: {star.luminosity:.3f} L☉",
-            f"Diameter: {star.diameter_hexes:.1f} hexes",
+            f"Radius: {star.radius_hexes} hexes",
             f"Age: {star.age/1e9:.2f} Gyr",
         ]
 
@@ -513,8 +513,8 @@ class SystemModeHelper:
             world_pos = pygame.math.Vector2(px, py)
             screen_pos = self.screen.camera.world_to_screen(world_pos)
 
-            # Star size based on diameter in hexes
-            radius = max(8, int(star.diameter_hexes * HEX_SIZE * self.screen.camera.zoom * 0.5))
+            # Star size based on radius in hexes
+            radius = max(8, int(star.radius_hexes * HEX_SIZE * self.screen.camera.zoom))
 
             # Star color
             color = star.color

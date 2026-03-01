@@ -193,7 +193,7 @@ def format_star_info(star) -> str:
     text += f"<b>Type:</b> {star.star_type.name}<br>"
     text += f"<b>Mass:</b> {star.mass:.2f} Sol<br>"
     text += f"<b>Temp:</b> {int(star.temperature)} K<br>"
-    text += f"<b>Diam:</b> {star.diameter_hexes:.1f} Hex<br>"
+    text += f"<b>Radius:</b> {star.radius_hexes} Hex<br>"
     return text
 
 

@@ -174,11 +174,11 @@ def main():
                 if primary:
                     # Draw Primary at center (hx, hy)
                     # Convert diameter (hexes) to pixels
-                    # diameter_hexes is the full width. Radius is half.
+                    # radius_hexes is the radius in hex units.
                     # HEX_SIZE is center-to-corner radius of a single hex.
                     # So 1 hex width (flat to flat) is sqrt(3) * HEX_SIZE
-                    # But diameter_hexes usually refers to grid units.
-                    # Let's assume diameter_hexes means "this many hexes wide".
+                    # radius_hexes means center + (N-1) rings.
+                    # Multiply by HEX_SIZE for screen pixels.
                     # Radius in pixels = (diameter / 2) * (width of hex)
                     # Width of hex ~= 1.73 * HEX_SIZE
                     # But let's keep it simple: scale visually.
@@ -218,8 +218,8 @@ def main():
                          
                          # Size
                          # Base radius in pixels
-                         # Let's make 1 hex diameter = 2 * HEX_SIZE pixels roughly
-                         radius_px = max(2, int((star.diameter_hexes / 2.0) * HEX_SIZE * 2.0 * camera.zoom))
+                         # Base radius in pixels: radius_hexes * HEX_SIZE * zoom
+                         radius_px = max(2, int((star.radius_hexes  * HEX_SIZE * camera.zoom))
                          
                          pygame.draw.circle(screen, star.color, star_screen_pos, radius_px)
                          

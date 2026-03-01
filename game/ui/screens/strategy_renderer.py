@@ -525,7 +525,7 @@ class StrategyRenderer:
 
         asset_key = self._get_star_asset_key(star.color)
         star_img = self._asset_manager.load_image('stars', asset_key)
-        screen_star_r = max(3, int(star.diameter_hexes * self.hex_size * self.camera.zoom))
+        screen_star_r = max(3, int(star.radius_hexes * self.hex_size * self.camera.zoom))
 
         # Selection highlight (before star image)
         if is_selected_system and is_primary:
@@ -686,24 +686,24 @@ class StrategyRenderer:
         """Draw Dyson Sphere planets at their full multi-hex size.
 
         Dyson Spheres are rendered BEFORE normal planets so they appear behind them.
-        They use the Sphereworld_Portrait.png image scaled to diameter_hexes.
+        They use the Sphereworld_Portrait.png image scaled to radius_hexes.
         """
         for planet in sys.planets:
             if planet.planet_type != PlanetType.DYSON_SPHERE:
                 continue
 
-            # Get diameter from planet - IPlanet.diameter_hexes is always present
-            diameter_hexes = planet.diameter_hexes
-            if diameter_hexes <= 0:
-                diameter_hexes = 11.0  # Dyson Sphere standard size
+            # Get radius from planet - IPlanet.radius_hexes is always present
+            radius_hexes = planet.radius_hexes
+            if radius_hexes <= 0:
+                radius_hexes = 6  # Dyson Sphere standard size
 
             # Calculate screen position centered on planet's hex
             px, py = hex_to_pixel(planet.location, self.hex_size)
             center_world = pygame.math.Vector2(sys_world_pos.x + px, sys_world_pos.y + py)
             center_screen = self.camera.world_to_screen(center_world)
 
-            # Calculate size: diameter_hexes * hex_size * zoom (same formula as stars)
-            screen_diameter = max(6, int(diameter_hexes * self.hex_size * self.camera.zoom))
+            # Calculate size: radius_hexes * hex_size * zoom gives screen radius
+            screen_radius = max(6, int(radius_hexes * self.hex_size * self.camera.zoom))
 
             # Load Dyson Sphere image
             img = self._load_dyson_sphere_image()
@@ -712,24 +712,24 @@ class StrategyRenderer:
             if self.scene.selected_object == planet:
                 pygame.draw.circle(screen, WHITE,
                                    (int(center_screen.x), int(center_screen.y)),
-                                   screen_diameter // 2 + 4, 1)
+                                   screen_radius + 4, 1)
 
             if img:
-                # Scale and blit the image
-                scaled = pygame.transform.smoothscale(img, (screen_diameter, screen_diameter))
+                # Scale and blit the image (screen_radius * 2 for diameter)
+                scaled = pygame.transform.smoothscale(img, (screen_radius * 2, screen_radius * 2))
                 dest = scaled.get_rect(center=(int(center_screen.x), int(center_screen.y)))
                 screen.blit(scaled, dest)
             else:
                 # Fallback: draw a cyan circle
                 pygame.draw.circle(screen, DYSON_FALLBACK,
                                    (int(center_screen.x), int(center_screen.y)),
-                                   screen_diameter // 2)
+                                   screen_radius)
 
             # Draw owner marker if colonized
             if planet.owner_id is not None:
                 owner_emp = next((e for e in self.empires if e.id == planet.owner_id), None)
                 if owner_emp:
-                    marker_offset = screen_diameter * 0.4
+                    marker_offset = screen_radius * 0.8
                     marker_pos = (int(center_screen.x + marker_offset), int(center_screen.y - marker_offset))
 
                     emp_assets = self.empire_assets.get(owner_emp.id)
