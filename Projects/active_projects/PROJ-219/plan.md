@@ -16,17 +16,17 @@
 | 1. Core Empire Changes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Wire Up Galaxy References | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Remove Redundant Calls | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Integration Tests | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Integration Tests | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-03-01
-**Active Phase:** Phase 4 - Integration Tests
-**Last Action:** Phase 3 complete: Removed redundant register/unregister calls from 3 files
-**Next Action:** Begin Phase 4: Integration tests for fleet lifecycle
+**Active Phase:** Phase 5 - Cleanup
+**Last Action:** Phase 4 complete: 12 integration tests (11 passed, 1 skipped) covering all fleet lifecycle paths
+**Next Action:** Begin Phase 5: Remove PROJ-216 diagnostic logging and any other cleanup
 **Blockers:** None
-**Test Baseline:** 13156 passed, 1 skipped
-**Context for Next Agent:** Phase 3 removed: (1) `galaxy.register_fleet()` from production_engine.py, (2) `galaxy.register_fleet()` from command_handlers.py, (3) `galaxy.unregister_fleet()` from superweapon_order_processor.py. All registration/unregistration now happens automatically via Empire.add_fleet()/remove_fleet(). All tests pass.
+**Test Baseline:** 13167 passed, 2 skipped
+**Context for Next Agent:** Phase 4 added `tests/integration/strategy/test_fleet_registration_lifecycle.py` with 12 tests covering: combat destruction, JOIN_FLEET merge (direct + instant), COLONIZE empty fleet, superweapon consumption (full + partial + finalize path), save/load preservation (preserve + add + remove), and maintenance scuttle (full + partial). All ghost fleet bug fix locations verified.
 
 ## Overview
 

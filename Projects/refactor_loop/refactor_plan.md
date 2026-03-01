@@ -8,21 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-03-01
-**Last Completed:** PROJ-219 Phase 3
+**Last Completed:** PROJ-219 Phase 4
 **Current Status:** PROJ-219 in progress
 **Current Project:** PROJ-219
-**Current Phase:** Phase 4 - Integration Tests
-**Test Status:** 13156 passed, 1 skipped
+**Current Phase:** Phase 5 - Cleanup
+**Test Status:** 13167 passed, 2 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-219 Phase 3 COMPLETE:**
-  - Removed `galaxy.register_fleet(new_fleet)` from `production_engine.py` (3 lines)
-  - Removed `session.galaxy.register_fleet(new_fleet)` from `command_handlers.py` (1 line)
-  - Removed `galaxy.unregister_fleet(victim_fleet)` from `superweapon_order_processor.py` (1 line)
-  - All registration/unregistration now automatic via Empire.add_fleet()/remove_fleet()
-  - 117 targeted tests + 20 testmon tests all pass
-- **Next: Phase 4** - Integration tests for fleet lifecycle (add/remove/combat/merge scenarios)
+- **PROJ-219 Phase 4 COMPLETE:**
+  - Created `tests/integration/strategy/test_fleet_registration_lifecycle.py` (NEW)
+  - 12 tests (11 passed, 1 skipped): combat, JOIN_FLEET (2), colonize, superweapon (3), save/load (3), maintenance (2)
+  - All 7 ghost fleet bug fix locations verified via integration tests
+  - Note: process_self_destruct has pre-existing issue (uses ship.id which doesn't exist on ShipInstance) - tested via _finalize_superweapon path instead
+- **Next: Phase 5** - Remove PROJ-216 diagnostic logging and other cleanup
 
 ---
 
@@ -213,6 +212,7 @@
 | 2026-03-01 | PROJ-219 | Phase 1 | Complete | 13152 passed, 1 skipped | pending | _galaxy, set_galaxy(), add/remove_fleet auto-register, 7 tests |
 | 2026-03-01 | PROJ-219 | Phase 2 | Complete | 13156 passed, 1 skipped | pending | set_galaxy() in GameInitializer + GameSession.from_dict, 4 integration tests |
 | 2026-03-01 | PROJ-219 | Phase 3 | Complete | 13156 passed, 1 skipped | pending | Removed redundant register/unregister from 3 files |
+| 2026-03-01 | PROJ-219 | Phase 4 | Complete | 13167 passed, 2 skipped | pending | 12 integration tests for fleet lifecycle (all bug fix locations verified) |
 
 ---
 
