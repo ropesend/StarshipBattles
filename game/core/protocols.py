@@ -676,72 +676,89 @@ class ICombatShip(Protocol):
 
 
 # =============================================================================
-# TypeGuard Functions
+# TypeGuard Functions (Duck Typing Implementation)
+# =============================================================================
+#
+# These functions use duck typing (hasattr checks) instead of isinstance()
+# with @runtime_checkable Protocols. This approach:
+#
+# 1. Works with test mocks (MagicMock, Mock) without needing full protocol compliance
+# 2. Checks only the defining attributes that distinguish each entity type
+# 3. Still provides TypeGuard narrowing for static type checkers
+# 4. Is consistent with Python's duck typing philosophy
+#
+# Pattern: Check for the minimal set of attributes that uniquely identify the type.
 # =============================================================================
 
+
+def _has_attrs(obj: Any, *attrs: str) -> bool:
+    """Check if obj has all specified attributes (duck typing helper)."""
+    return all(hasattr(obj, attr) for attr in attrs)
+
+
 def is_star_system(obj: Any) -> TypeGuard[IStarSystem]:
-    """Check if obj satisfies the IStarSystem Protocol."""
-    return isinstance(obj, IStarSystem)
+    """Check if obj has star system attributes (stars, planets, warp_points)."""
+    return _has_attrs(obj, 'stars', 'planets', 'warp_points')
 
 
 def is_star(obj: Any) -> TypeGuard[IStar]:
-    """Check if obj satisfies the IStar Protocol."""
-    return isinstance(obj, IStar)
+    """Check if obj has star attributes (star_type, color, mass)."""
+    return _has_attrs(obj, 'star_type', 'color', 'mass')
 
 
 def is_planet(obj: Any) -> TypeGuard[IPlanet]:
-    """Check if obj satisfies the IPlanet Protocol."""
-    return isinstance(obj, IPlanet)
+    """Check if obj has planet attributes (planet_type)."""
+    return _has_attrs(obj, 'planet_type')
 
 
 def is_fleet(obj: Any) -> TypeGuard[IFleet]:
-    """Check if obj satisfies the IFleet Protocol."""
-    return isinstance(obj, IFleet)
+    """Check if obj has fleet attributes (ships, orders)."""
+    return _has_attrs(obj, 'ships', 'orders')
 
 
 def is_warp_point(obj: Any) -> TypeGuard[IWarpPoint]:
-    """Check if obj satisfies the IWarpPoint Protocol."""
-    return isinstance(obj, IWarpPoint)
+    """Check if obj has warp point attributes (destination_id)."""
+    return _has_attrs(obj, 'destination_id')
 
 
 def is_sector_environment(obj: Any) -> TypeGuard[ISectorEnvironment]:
-    """Check if obj satisfies the ISectorEnvironment Protocol."""
-    return isinstance(obj, ISectorEnvironment)
+    """Check if obj has sector environment attributes (local_hex, system)."""
+    return _has_attrs(obj, 'local_hex', 'system')
 
 
 def is_storm(obj: Any) -> TypeGuard[IStorm]:
-    """Check if obj satisfies the IStorm Protocol."""
-    return isinstance(obj, IStorm)
+    """Check if obj has storm attributes (storm_type, effects)."""
+    return _has_attrs(obj, 'storm_type', 'effects')
 
 
 def is_zone_occupant(obj: Any) -> TypeGuard[IZoneOccupant]:
-    """Check if obj satisfies the IZoneOccupant Protocol."""
-    return isinstance(obj, IZoneOccupant)
+    """Check if obj has zone occupant attributes (occupied_hexes)."""
+    return _has_attrs(obj, 'occupied_hexes')
 
 
 def is_combatant(obj: Any) -> TypeGuard[ICombatant]:
-    """Check if obj satisfies the ICombatant Protocol."""
-    return isinstance(obj, ICombatant)
+    """Check if obj has combatant attributes (team_id, is_alive)."""
+    return _has_attrs(obj, 'team_id', 'is_alive')
 
 
 def is_empire(obj: Any) -> TypeGuard[IEmpire]:
-    """Check if obj satisfies the IEmpire Protocol."""
-    return isinstance(obj, IEmpire)
+    """Check if obj has empire attributes (id, fleets)."""
+    return _has_attrs(obj, 'id', 'fleets')
 
 
 def is_facility(obj: Any) -> TypeGuard[IFacility]:
-    """Check if obj satisfies the IFacility Protocol."""
-    return isinstance(obj, IFacility)
+    """Check if obj has facility attributes (instance_id, design_id)."""
+    return _has_attrs(obj, 'instance_id', 'design_id')
 
 
 def is_ship_instance(obj: Any) -> TypeGuard[IShipInstance]:
-    """Check if obj satisfies the IShipInstance Protocol."""
-    return isinstance(obj, IShipInstance)
+    """Check if obj has ship instance attributes (design_id, design_data)."""
+    return _has_attrs(obj, 'design_id', 'design_data')
 
 
 def is_combat_ship(obj: Any) -> TypeGuard[ICombatShip]:
-    """Check if obj satisfies the ICombatShip Protocol."""
-    return isinstance(obj, ICombatShip)
+    """Check if obj has combat ship attributes (team_id, hp, is_derelict)."""
+    return _has_attrs(obj, 'team_id', 'hp', 'is_derelict')
 
 
 # =============================================================================
@@ -844,13 +861,13 @@ class IPostBattleShip(Protocol):
 
 
 def is_post_battle_ship(obj: Any) -> TypeGuard[IPostBattleShip]:
-    """Check if obj satisfies the IPostBattleShip Protocol."""
-    return isinstance(obj, IPostBattleShip)
+    """Check if obj has post-battle ship attributes (hp, max_hp, is_alive)."""
+    return _has_attrs(obj, 'hp', 'max_hp', 'is_alive')
 
 
 def is_resource_reader(obj: Any) -> TypeGuard[IResourceReader]:
-    """Check if obj satisfies the IResourceReader Protocol."""
-    return isinstance(obj, IResourceReader)
+    """Check if obj has resource reader methods (get_value, get_max_value)."""
+    return _has_attrs(obj, 'get_value', 'get_max_value')
 
 
 @runtime_checkable
@@ -880,8 +897,8 @@ class IResourceHolder(Protocol):
 
 
 def is_resource_holder(obj: Any) -> TypeGuard[IResourceHolder]:
-    """Check if obj implements IResourceHolder protocol."""
-    return isinstance(obj, IResourceHolder)
+    """Check if obj has resource holder attributes (resources, hp, max_hp)."""
+    return _has_attrs(obj, 'resources', 'hp', 'max_hp')
 
 
 # =============================================================================
@@ -966,5 +983,5 @@ class ICamera(Protocol):
 
 
 def is_camera(obj: Any) -> TypeGuard[ICamera]:
-    """Check if obj implements ICamera protocol."""
-    return isinstance(obj, ICamera)
+    """Check if obj has camera attributes (width, height, zoom, world_to_screen)."""
+    return _has_attrs(obj, 'width', 'height', 'zoom', 'world_to_screen')

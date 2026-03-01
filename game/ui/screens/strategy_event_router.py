@@ -262,16 +262,23 @@ class StrategyEventRouter:
         Returns:
             True if click was handled by UI, False otherwise.
         """
+        logger.info(f"[DIAG] EventRouter.handle_click({mx},{my},{button})")
+        logger.info(f"[DIAG]   sidebar boundary: x > {self.ui.width - self.ui.sidebar_width}")
+
         # 1. Check logical sidebar area
         if mx > self.ui.width - self.ui.sidebar_width:
+            logger.info(f"[DIAG]   -> BLOCKED by sidebar check (mx={mx})")
             return True
 
         # 2. Check if mouse is over an active modal/window that should block map clicks
         # PROJ-216: Replaced get_hovering_any_element() which was too broad and blocked
         # ALL clicks when hidden buttons (visible=0) were registered with pygame_gui.
-        if self._is_blocking_ui_element_at(mx, my):
+        blocking = self._is_blocking_ui_element_at(mx, my)
+        if blocking:
+            logger.info(f"[DIAG]   -> BLOCKED by _is_blocking_ui_element_at")
             return True
 
+        logger.info(f"[DIAG]   -> PASSED click gate, returning False (click not consumed)")
         return False
 
     def _is_blocking_ui_element_at(self, mx: int, my: int) -> bool:
@@ -294,29 +301,36 @@ class StrategyEventRouter:
 
         # Check active windows that should block clicks
         blocking_windows = [
-            wm.fleet_orders_window,
-            wm.planet_list_window,
-            wm.fleet_report_window,
-            wm.transfer_dialog,
-            wm.build_queue_list_window,
-            wm.empire_build_queue_window,
-            wm.event_log_window,
-            wm.empire_panel_window,
-            getattr(wm, '_pending_confirmation_dialog', None),
+            ('fleet_orders_window', wm.fleet_orders_window),
+            ('planet_list_window', wm.planet_list_window),
+            ('fleet_report_window', wm.fleet_report_window),
+            ('transfer_dialog', wm.transfer_dialog),
+            ('build_queue_list_window', wm.build_queue_list_window),
+            ('empire_build_queue_window', wm.empire_build_queue_window),
+            ('event_log_window', wm.event_log_window),
+            ('empire_panel_window', wm.empire_panel_window),
+            ('_pending_confirmation_dialog', getattr(wm, '_pending_confirmation_dialog', None)),
         ]
-        for window in blocking_windows:
-            if window is not None and window.alive() and window.rect.collidepoint((mx, my)):
-                return True
+        for name, window in blocking_windows:
+            if window is not None:
+                is_alive = window.alive()
+                collides = window.rect.collidepoint((mx, my)) if is_alive else False
+                if is_alive and collides:
+                    logger.info(f"[DIAG]   _is_blocking: {name} is blocking (alive={is_alive}, collides={collides})")
+                    return True
 
         # Check menu panel
         if self.ui.menu_panel is not None:
             if self.ui.menu_panel.get_abs_rect().collidepoint((mx, my)):
+                logger.info(f"[DIAG]   _is_blocking: menu_panel is blocking")
                 return True
 
         # Check top bar and resource bar (they are above the map)
         if hasattr(self.ui, 'top_bar') and self.ui.top_bar.rect.collidepoint((mx, my)):
+            logger.info(f"[DIAG]   _is_blocking: top_bar is blocking")
             return True
         if hasattr(self.ui, 'resource_bar') and self.ui.resource_bar.rect.collidepoint((mx, my)):
+            logger.info(f"[DIAG]   _is_blocking: resource_bar is blocking")
             return True
 
         return False

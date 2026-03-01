@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-219 | Fleet Registration Consolidation | Planning | 2026-02-28 | 2026-02-28 |
 | PROJ-218 | Fix Production Queue Cost and Build Time Defaults | Planning | 2026-02-28 | 2026-02-28 |
 | PROJ-217 | Standardize Star Measurement to Radius | Planning | 2026-02-28 | 2026-02-28 |
 | PROJ-216 | Fix Global Fleet Order Registration Failure | Planning | 2026-02-28 | 2026-02-28 |

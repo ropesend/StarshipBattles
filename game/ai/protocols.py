@@ -165,22 +165,33 @@ class IComponentHealth(Protocol):
 # =============================================================================
 # TypeGuard Functions
 # =============================================================================
+# Pattern: Use duck typing (_has_attrs) instead of isinstance() for protocol checks.
+# This ensures compatibility with MagicMock and other test doubles that have the
+# required attributes but don't formally implement the Protocol.
+# =============================================================================
+
+
+def _has_attrs(obj: Any, *attrs: str) -> bool:
+    """Check if obj has all specified attributes (duck typing helper)."""
+    return all(hasattr(obj, attr) for attr in attrs)
+
 
 def is_grid_entity(obj: Any) -> TypeGuard[IGridEntity]:
-    """Check if obj satisfies the IGridEntity Protocol."""
-    return isinstance(obj, IGridEntity)
+    """Check if obj has grid entity attributes (position, team_id)."""
+    return _has_attrs(obj, 'position', 'team_id')
 
 
 def is_projectile(obj: Any) -> TypeGuard[IProjectile]:
-    """Check if obj satisfies the IProjectile Protocol."""
-    return isinstance(obj, IProjectile)
+    """Check if obj has projectile attributes (type, for AttackType classification)."""
+    # Projectiles are grid entities with an attack type
+    return _has_attrs(obj, 'position', 'type')
 
 
 def is_formation_master(obj: Any) -> TypeGuard[IFormationMaster]:
-    """Check if obj satisfies the IFormationMaster Protocol."""
-    return isinstance(obj, IFormationMaster)
+    """Check if obj has formation master attributes (formation)."""
+    return _has_attrs(obj, 'formation')
 
 
 def is_component_health(obj: Any) -> TypeGuard[IComponentHealth]:
-    """Check if obj satisfies the IComponentHealth Protocol."""
-    return isinstance(obj, IComponentHealth)
+    """Check if obj has component health attributes (current_hp)."""
+    return _has_attrs(obj, 'current_hp')

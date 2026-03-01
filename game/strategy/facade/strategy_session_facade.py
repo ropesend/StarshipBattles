@@ -3,9 +3,12 @@
 Provides a strict facade for UI-to-engine communication using CQRS-lite pattern.
 All state mutations go through Commands, all reads return immutable DTOs.
 """
+import logging
 from typing import List, Optional, TYPE_CHECKING
 
 from game.core.hex_math import HexCoord
+
+logger = logging.getLogger(__name__)
 from game.core.validation import ValidationResult
 from game.strategy.facade.dto import (
     FleetInfo,
@@ -148,10 +151,15 @@ class StrategySessionFacade:
         Returns:
             List of HexCoords representing the path, or None if invalid
         """
+        logger.info(f"[DIAG] Facade.get_fleet_path_preview(fleet_id={fleet_id}, target={target_hex})")
         fleet = self._get_fleet_by_id(fleet_id)
+        logger.info(f"[DIAG]   _get_fleet_by_id returned: {fleet}")
         if fleet is None:
+            logger.info("[DIAG]   -> Fleet not found, returning None")
             return None
-        return self._session.preview_fleet_path(fleet, target_hex)
+        result = self._session.preview_fleet_path(fleet, target_hex)
+        logger.info(f"[DIAG]   preview_fleet_path returned: {len(result) if result else 'None'} hexes")
+        return result
 
     def get_fleet_path_projection(
         self, fleet_id: int, max_turns: int = 50
@@ -503,13 +511,11 @@ class StrategySessionFacade:
         available = ColonizeValidator.get_available_colony_pods(fleet, component_registry)
         committed = ColonizeValidator.get_committed_colony_pods(fleet)
 
-        # Calculate remaining
+        # Calculate remaining (include zero values per docstring contract)
         remaining = {}
         for planet_type, count in available.items():
             committed_count = committed.get(planet_type, 0)
-            remaining_count = count - committed_count
-            if remaining_count > 0:
-                remaining[planet_type] = remaining_count
+            remaining[planet_type] = count - committed_count
 
         return remaining
 

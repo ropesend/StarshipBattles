@@ -75,9 +75,14 @@ class ClickModeDispatcher:
         Returns:
             True if click was handled, False otherwise.
         """
+        logger.info(f"[DIAG] ClickDispatcher.dispatch_click({mx},{my},{button}), mode={self.input_mode}")
         handler = self._mode_handlers.get(self.input_mode)
         if handler:
-            return handler(mx, my, button)
+            logger.info(f"[DIAG]   Found handler for mode '{self.input_mode}', calling it")
+            result = handler(mx, my, button)
+            logger.info(f"[DIAG]   Handler returned: {result}")
+            return result
+        logger.info(f"[DIAG]   No handler found for mode '{self.input_mode}'")
         return False
 
     # =========================================================================
@@ -87,13 +92,17 @@ class ClickModeDispatcher:
     def _handle_move_mode_click(self, mx: int, my: int, button: int) -> bool:
         """Handle click in MOVE mode."""
         if button == 1:  # Left Click
+            logger.info(f"[DIAG] _handle_move_mode_click LEFT CLICK at ({mx},{my})")
+            logger.info(f"[DIAG]   selected_fleet={self.scene.selected_fleet}")
             result = self.scene._fleet_ops.handle_move_designation(
                 mx, my, self.scene.selected_fleet
             )
+            logger.info(f"[DIAG]   handle_move_designation returned: {result}")
             if result and result.get('type') == 'choice':
                 # Prompt user for move vs intercept
                 target_hex = result['target_hex']
                 target_fleet = result['target_fleet']
+                logger.info(f"[DIAG]   -> CHOICE prompt (move vs intercept)")
 
                 def on_move():
                     res = self.scene._fleet_ops.execute_move(
@@ -113,9 +122,11 @@ class ClickModeDispatcher:
                     target_fleet, target_hex, on_move, on_intercept
                 )
             elif result and result.get('type') == 'success':
+                logger.info(f"[DIAG]   -> SUCCESS, calling finish_move_action")
                 self._handler._fleet_router.finish_move_action(result['fleet'])
             else:
                 # BUG-93: Error or no result — exit MOVE mode to prevent trapping
+                logger.info(f"[DIAG]   -> FAILED/None result, reverting to SELECT mode")
                 self.input_mode = 'SELECT'
                 logger.debug("Input Mode: SELECT (move failed)")
             return True

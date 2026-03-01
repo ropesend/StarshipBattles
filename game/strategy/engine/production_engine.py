@@ -638,6 +638,10 @@ class ProductionEngine:
         new_fleet.add_ship(ship_instance)
         empire.add_fleet(new_fleet)
 
+        # PROJ-216: Register fleet with galaxy for O(1) lookup
+        if galaxy:
+            galaxy.register_fleet(new_fleet)
+
         # Increment design's times_built counter
         design_library.increment_built_count(design_id)
 

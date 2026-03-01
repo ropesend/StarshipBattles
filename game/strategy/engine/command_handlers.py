@@ -687,8 +687,9 @@ class SplitFleetCommandHandler(BaseCommandHandler):
             fleet.remove_ship(ship)
             new_fleet.add_ship(ship)
 
-        # 7. Register new fleet with empire
+        # 7. Register new fleet with empire and galaxy
         empire.add_fleet(new_fleet)
+        session.galaxy.register_fleet(new_fleet)  # PROJ-216: O(1) lookup
 
         logger.info(f"GameSession: Split fleet {cmd.fleet_id} -> new fleet {new_fleet_id} ({len(ships_to_move)} ships)")
         return ValidationResult.success()

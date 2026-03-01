@@ -24,6 +24,7 @@ def mock_component():
     """Create a minimal mock component for testing."""
     component = MagicMock(spec=Component)
     component.ability_instances = []
+    component.get_abilities = MagicMock(return_value=[])
     component.data = {}
     component.ship = None
     component.stats = {}
@@ -68,10 +69,11 @@ class TestCanAffordActivation:
     ):
         """can_afford_activation should return True when all activation costs affordable."""
         mock_resource_consumption_ability.check_available.return_value = True
-        mock_component.ability_instances = [mock_resource_consumption_ability]
+        mock_component.get_abilities = MagicMock(return_value=[mock_resource_consumption_ability])
         manager = ComponentResourceManager(mock_component)
 
         assert manager.can_afford_activation() is True
+        mock_component.get_abilities.assert_called_once_with('ResourceConsumption')
         mock_resource_consumption_ability.check_available.assert_called_once()
 
     def test_returns_false_when_activation_ability_not_affordable(
@@ -79,7 +81,7 @@ class TestCanAffordActivation:
     ):
         """can_afford_activation should return False when activation cost not affordable."""
         mock_resource_consumption_ability.check_available.return_value = False
-        mock_component.ability_instances = [mock_resource_consumption_ability]
+        mock_component.get_abilities = MagicMock(return_value=[mock_resource_consumption_ability])
         manager = ComponentResourceManager(mock_component)
 
         assert manager.can_afford_activation() is False
@@ -90,31 +92,23 @@ class TestCanAffordActivation:
         """can_afford_activation should ignore constant trigger abilities."""
         # Even if check_available returns False, it shouldn't matter
         mock_constant_consumption_ability.check_available.return_value = False
-        mock_component.ability_instances = [mock_constant_consumption_ability]
+        mock_component.get_abilities = MagicMock(return_value=[mock_constant_consumption_ability])
         manager = ComponentResourceManager(mock_component)
 
         assert manager.can_afford_activation() is True
         # check_available should not be called since trigger is 'constant'
         mock_constant_consumption_ability.check_available.assert_not_called()
 
-    def test_ignores_abilities_without_trigger(self, mock_component):
-        """can_afford_activation should ignore abilities without trigger attribute."""
+    def test_ignores_abilities_without_activation_trigger(self, mock_component):
+        """can_afford_activation should ignore abilities without activation trigger."""
         ability = MagicMock()
-        del ability.trigger  # No trigger attribute
-        mock_component.ability_instances = [ability]
+        ability.trigger = 'per_turn'  # Non-activation trigger
+        ability.check_available = MagicMock(return_value=False)
+        mock_component.get_abilities = MagicMock(return_value=[ability])
         manager = ComponentResourceManager(mock_component)
 
         assert manager.can_afford_activation() is True
-
-    def test_ignores_abilities_without_check_available(self, mock_component):
-        """can_afford_activation should ignore abilities without check_available method."""
-        ability = MagicMock()
-        ability.trigger = 'activation'
-        del ability.check_available  # No check_available method
-        mock_component.ability_instances = [ability]
-        manager = ComponentResourceManager(mock_component)
-
-        assert manager.can_afford_activation() is True
+        ability.check_available.assert_not_called()
 
     def test_multiple_activation_abilities_all_affordable(self, mock_component):
         """can_afford_activation should check all activation abilities."""
@@ -126,7 +120,7 @@ class TestCanAffordActivation:
         ability2.trigger = 'activation'
         ability2.check_available = MagicMock(return_value=True)
 
-        mock_component.ability_instances = [ability1, ability2]
+        mock_component.get_abilities = MagicMock(return_value=[ability1, ability2])
         manager = ComponentResourceManager(mock_component)
 
         assert manager.can_afford_activation() is True
@@ -143,7 +137,7 @@ class TestCanAffordActivation:
         ability2.trigger = 'activation'
         ability2.check_available = MagicMock(return_value=False)
 
-        mock_component.ability_instances = [ability1, ability2]
+        mock_component.get_abilities = MagicMock(return_value=[ability1, ability2])
         manager = ComponentResourceManager(mock_component)
 
         assert manager.can_afford_activation() is False
@@ -229,7 +223,6 @@ class TestTryActivate:
         ability.check_available = MagicMock(return_value=True)
         ability.check_and_consume = MagicMock()
 
-        mock_component.ability_instances = [ability]
         mock_component.get_abilities = MagicMock(return_value=[ability])
         manager = ComponentResourceManager(mock_component)
 
@@ -245,7 +238,6 @@ class TestTryActivate:
         ability.check_available = MagicMock(return_value=False)
         ability.check_and_consume = MagicMock()
 
-        mock_component.ability_instances = [ability]
         mock_component.get_abilities = MagicMock(return_value=[ability])
         manager = ComponentResourceManager(mock_component)
 
@@ -499,18 +491,19 @@ class TestResourceManagerEdgeCases:
         # Should not have __dict__ due to __slots__
         assert not hasattr(manager, '__dict__')
 
-    def test_handles_none_ability_attributes_gracefully(self, mock_component):
-        """Should handle abilities with None trigger/check_available."""
+    def test_handles_none_trigger_gracefully(self, mock_component):
+        """Should handle abilities with None trigger."""
         ability = MagicMock()
         ability.trigger = None
-        ability.check_available = None
-        mock_component.ability_instances = [ability]
+        ability.check_available = MagicMock(return_value=False)
+        mock_component.get_abilities = MagicMock(return_value=[ability])
         manager = ComponentResourceManager(mock_component)
 
-        # Should not raise
+        # Should not raise, and should return True since trigger != 'activation'
         result = manager.can_afford_activation()
 
         assert result is True
+        ability.check_available.assert_not_called()
 
     def test_default_multiplier_is_one(self, mock_component):
         """Default cost multiplier should be 1.0 when not in stats."""
@@ -627,7 +620,7 @@ class TestCanAffordActivationEarlyReturn:
         ability2.trigger = 'activation'
         ability2.check_available = MagicMock(return_value=True)
 
-        mock_component.ability_instances = [ability1, ability2]
+        mock_component.get_abilities = MagicMock(return_value=[ability1, ability2])
         manager = ComponentResourceManager(mock_component)
 
         result = manager.can_afford_activation()

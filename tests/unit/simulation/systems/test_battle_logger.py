@@ -240,10 +240,14 @@ class TestBattleLoggerClose:
         test_file = str(tmp_path / "test.txt")
         logger = BattleLogger(test_file, enabled=True)
         logger.start_session()
+        # Save original close so we can restore it for proper cleanup
+        original_close = logger.file.close
         logger.file.close = MagicMock(side_effect=IOError("Device error"))
         # Should not raise, should still set file to None
         logger.close()
         assert logger.file is None
+        # Restore and call original close to prevent GC warning
+        original_close()
 
 
 class TestBattleLoggerDestructor:

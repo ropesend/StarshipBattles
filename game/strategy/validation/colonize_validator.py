@@ -250,8 +250,8 @@ class ColonizeValidator:
             if order.type == OrderType.COLONIZE and order.target is not None:
                 # Get planet type from the target planet
                 target = order.target
-                # Use is_planet protocol for flexibility with test mocks
-                if is_planet(target):
+                # is_planet() uses duck typing, works with test mocks
+                if is_planet(target) and target.planet_type is not None:
                     planet_type_str = target.planet_type.name
                     committed[planet_type_str] = committed.get(planet_type_str, 0) + 1
 

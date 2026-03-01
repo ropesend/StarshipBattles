@@ -8,12 +8,10 @@ Extracted from Component class to handle resource-related operations:
 - get_resource_cost: Calculate resource costs with formulas/multipliers
 
 PROJ-88: God Class Decomposition - Simulation Core Tier
-PROJ-190: Updated to use IResourceConsumptionAbility protocol.
 """
 from typing import TYPE_CHECKING, Optional
 
 from game.simulation.formula_system import safe_evaluate_math_formula
-from game.simulation.interfaces import is_resource_consumption
 
 if TYPE_CHECKING:
     from game.simulation.components.component import Component
@@ -42,15 +40,14 @@ class ComponentResourceManager:
     def can_afford_activation(self) -> bool:
         """Check if component can afford activation costs.
 
-        Iterates through ability_instances looking for activation-triggered
-        resource consumption abilities and checks if resources are available.
+        Iterates through ResourceConsumption abilities looking for activation-triggered
+        ones and checks if resources are available.
 
         Returns:
             True if all activation costs can be afforded, False otherwise.
         """
-        for ability in self._component.ability_instances:
-            # Use IResourceConsumptionAbility protocol for type-safe check
-            if is_resource_consumption(ability) and ability.trigger == 'activation':
+        for ability in self._component.get_abilities('ResourceConsumption'):
+            if ability.trigger == 'activation':
                 if not ability.check_available():
                     return False
         return True

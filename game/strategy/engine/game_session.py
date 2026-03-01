@@ -185,12 +185,15 @@ class GameSession:
 
         # Log warp capability for debugging navigation issues (BUG-45)
         # Fleet always has capabilities.can_use_warp() method
-        logger.debug(f"preview_fleet_path: fleet={fleet.id}, can_use_warp={fleet.capabilities.can_use_warp()}, target={target_hex}")
+        logger.info(f"[DIAG] preview_fleet_path: fleet={fleet.id}, loc={fleet.location}, target={target_hex}")
 
         path = find_hybrid_path(self.galaxy, fleet.location, target_hex, fleet=fleet)
+        logger.info(f"[DIAG]   find_hybrid_path returned: {len(path) if path else 'None'} hexes")
 
         # PROJ-204: Consistent with Engine - remove start hex if it matches current location
-        return strip_start_hex(fleet.location, path)
+        result = strip_start_hex(fleet.location, path)
+        logger.info(f"[DIAG]   after strip_start_hex: {len(result) if result else 'None'} hexes")
+        return result
 
     def get_fleet_path_projection(self, fleet: 'Fleet', max_turns: int = 50) -> List[Dict[str, Any]]:
         """
@@ -346,6 +349,12 @@ class GameSession:
 
         # Restore human player IDs
         session.human_player_ids = data.get('human_player_ids', [0, 1])
+
+        # PROJ-216: Register all fleets with galaxy for O(1) lookup
+        # Fleets are deserialized into empires but not automatically registered
+        for empire in session.empires:
+            for fleet in empire.fleets:
+                session.galaxy.register_fleet(fleet)
 
         # Step 3: Resolve fleet order references (PROJ-207)
         # Fleet orders targeting other fleets or planets are stored as marker dicts

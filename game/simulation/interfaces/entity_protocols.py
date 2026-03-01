@@ -471,27 +471,38 @@ class ISerializableShip(Protocol):
 # =============================================================================
 # TypeGuard Functions
 # =============================================================================
+# Pattern: Use duck typing (_has_attrs) instead of isinstance() for protocol checks.
+# This ensures compatibility with MagicMock and other test doubles that have the
+# required attributes but don't formally implement the Protocol.
+# =============================================================================
+
+
+def _has_attrs(obj: Any, *attrs: str) -> bool:
+    """Check if obj has all specified attributes (duck typing helper)."""
+    return all(hasattr(obj, attr) for attr in attrs)
+
 
 def is_combat_ship(obj: Any) -> TypeGuard[ICombatShip]:
-    """Check if obj satisfies the ICombatShip Protocol."""
-    return isinstance(obj, ICombatShip)
+    """Check if obj has combat ship attributes (angle, layers)."""
+    return _has_attrs(obj, 'angle', 'layers')
 
 
 def is_projectile(obj: Any) -> TypeGuard[IProjectile]:
-    """Check if obj satisfies the IProjectile Protocol."""
-    return isinstance(obj, IProjectile)
+    """Check if obj has projectile attributes (owner, type)."""
+    # Projectiles have an owner (who fired) and type (AttackType)
+    return _has_attrs(obj, 'type') and _has_attrs(obj, 'position')
 
 
 def is_physics_ship(obj: Any) -> TypeGuard[IPhysicsShip]:
-    """Check if obj satisfies the IPhysicsShip Protocol."""
-    return isinstance(obj, IPhysicsShip)
+    """Check if obj has physics ship attributes (velocity, mass)."""
+    return _has_attrs(obj, 'velocity', 'mass')
 
 
 def is_formation_host(obj: Any) -> TypeGuard[IFormationHost]:
-    """Check if obj satisfies the IFormationHost Protocol."""
-    return isinstance(obj, IFormationHost)
+    """Check if obj has formation host attributes (formation)."""
+    return _has_attrs(obj, 'formation')
 
 
 def is_serializable_ship(obj: Any) -> TypeGuard[ISerializableShip]:
-    """Check if obj satisfies the ISerializableShip Protocol."""
-    return isinstance(obj, ISerializableShip)
+    """Check if obj has serializable ship attributes (to_save_dict, theme_id)."""
+    return _has_attrs(obj, 'to_save_dict', 'theme_id')

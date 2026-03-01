@@ -297,49 +297,66 @@ class IWarpJumpAbility(IAbility, Protocol):
 
 
 # =============================================================================
-# TypeGuard Functions
+# TypeGuard Functions (Duck Typing Implementation)
+# =============================================================================
+#
+# These functions use duck typing (hasattr checks) instead of isinstance()
+# with @runtime_checkable Protocols. This approach:
+#
+# 1. Works with test mocks (MagicMock, Mock) without needing full protocol compliance
+# 2. Checks only the defining attributes that distinguish each ability type
+# 3. Still provides TypeGuard narrowing for static type checkers
+# 4. Is consistent with Python's duck typing philosophy
+#
+# Pattern: Check for the minimal set of attributes that uniquely identify the type.
 # =============================================================================
 
+
+def _has_attrs(obj: Any, *attrs: str) -> bool:
+    """Check if obj has all specified attributes (duck typing helper)."""
+    return all(hasattr(obj, attr) for attr in attrs)
+
+
 def is_ability(obj: Any) -> TypeGuard[IAbility]:
-    """Check if obj satisfies the IAbility Protocol."""
-    return isinstance(obj, IAbility)
+    """Check if obj has core ability attributes (stack_group, tags)."""
+    return _has_attrs(obj, 'stack_group', 'tags')
 
 
 def is_resource_consumption(obj: Any) -> TypeGuard[IResourceConsumptionAbility]:
-    """Check if obj satisfies the IResourceConsumptionAbility Protocol."""
-    return isinstance(obj, IResourceConsumptionAbility)
+    """Check if obj has resource consumption attributes (trigger, resource_type, amount, check_available)."""
+    return _has_attrs(obj, 'trigger', 'resource_type', 'amount', 'check_available')
 
 
 def is_resource_storage(obj: Any) -> TypeGuard[IResourceStorageAbility]:
-    """Check if obj satisfies the IResourceStorageAbility Protocol."""
-    return isinstance(obj, IResourceStorageAbility)
+    """Check if obj has resource storage attributes (resource_type, max_amount)."""
+    return _has_attrs(obj, 'resource_type', 'max_amount')
 
 
 def is_resource_generation(obj: Any) -> TypeGuard[IResourceGenerationAbility]:
-    """Check if obj satisfies the IResourceGenerationAbility Protocol."""
-    return isinstance(obj, IResourceGenerationAbility)
+    """Check if obj has resource generation attributes (resource_type, rate)."""
+    return _has_attrs(obj, 'resource_type', 'rate')
 
 
 def is_weapon(obj: Any) -> TypeGuard[IWeaponAbility]:
-    """Check if obj satisfies the IWeaponAbility Protocol."""
-    return isinstance(obj, IWeaponAbility)
+    """Check if obj has weapon attributes (damage, range, reload_time)."""
+    return _has_attrs(obj, 'damage', 'range', 'reload_time')
 
 
 def is_beam_weapon(obj: Any) -> TypeGuard[IBeamWeaponAbility]:
-    """Check if obj satisfies the IBeamWeaponAbility Protocol."""
-    return isinstance(obj, IBeamWeaponAbility)
+    """Check if obj has beam weapon attributes (base_accuracy, accuracy_falloff + weapon attrs)."""
+    return _has_attrs(obj, 'damage', 'range', 'base_accuracy', 'accuracy_falloff')
 
 
 def is_seeker_weapon(obj: Any) -> TypeGuard[ISeekerWeaponAbility]:
-    """Check if obj satisfies the ISeekerWeaponAbility Protocol."""
-    return isinstance(obj, ISeekerWeaponAbility)
+    """Check if obj has seeker weapon attributes (endurance, turn_rate + weapon attrs)."""
+    return _has_attrs(obj, 'damage', 'range', 'endurance', 'turn_rate')
 
 
 def is_projectile_weapon(obj: Any) -> TypeGuard[IProjectileWeaponAbility]:
-    """Check if obj satisfies the IProjectileWeaponAbility Protocol."""
-    return isinstance(obj, IProjectileWeaponAbility)
+    """Check if obj has projectile weapon attributes (projectile_speed + weapon attrs, but not seeker attrs)."""
+    return _has_attrs(obj, 'damage', 'range', 'projectile_speed') and not hasattr(obj, 'turn_rate')
 
 
 def is_warp_jump(obj: Any) -> TypeGuard[IWarpJumpAbility]:
-    """Check if obj satisfies the IWarpJumpAbility Protocol."""
-    return isinstance(obj, IWarpJumpAbility)
+    """Check if obj has warp jump attributes (max_tonnage, energy_cost)."""
+    return _has_attrs(obj, 'max_tonnage', 'energy_cost')

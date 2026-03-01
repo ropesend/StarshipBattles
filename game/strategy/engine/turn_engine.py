@@ -183,6 +183,18 @@ class TurnEngine:
         # PROJ-189: Environmental event storage for UI notification
         self.last_environmental_events: list = []
 
+        # Performance timing accumulators (reset each turn in process_turn)
+        self._reset_phase_times()
+
+    def _reset_phase_times(self) -> None:
+        """Reset performance timing accumulators to zero."""
+        self._phase_times: dict[str, float] = {
+            'harvesting': 0.0, 'maintenance': 0.0, 'resources': 0.0,
+            'fuel_gen': 0.0, 'resupply': 0.0, 'production': 0.0,
+            'environmental': 0.0, 'instant_orders': 0.0, 'actions': 0.0,
+            'movement_calc': 0.0, 'movement_apply': 0.0, 'combat': 0.0,
+        }
+
     @property
     def movement_engine(self) -> 'IMovementEngine':
         """Return movement engine, lazily creating default if not injected."""
@@ -304,12 +316,7 @@ class TurnEngine:
         self.last_environmental_events = []
 
         # Performance timing accumulators
-        self._phase_times = {
-            'harvesting': 0.0, 'maintenance': 0.0, 'resources': 0.0,
-            'fuel_gen': 0.0, 'resupply': 0.0, 'production': 0.0,
-            'environmental': 0.0, 'instant_orders': 0.0, 'actions': 0.0,
-            'movement_calc': 0.0, 'movement_apply': 0.0, 'combat': 0.0,
-        }
+        self._reset_phase_times()
 
         turn_start = time.perf_counter()
 

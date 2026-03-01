@@ -52,14 +52,25 @@ class StrategyInputHandler:
         Args:
             event: Pygame event to process
         """
+        # DIAGNOSTIC: Log mouse clicks at entry point
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            logger.info(f"[DIAG] handle_event() MOUSEBUTTONDOWN at {event.pos}, button={event.button}")
+            logger.info(f"[DIAG]   build_queue_screen={self.scene.build_queue_screen is not None}")
+            logger.info(f"[DIAG]   planet_list_window={self.scene.ui.window_manager.planet_list_window is not None}")
+            logger.info(f"[DIAG]   input_mode={self.input_mode}")
+
         # If build queue screen is open, route events to it first
         if self.scene.build_queue_screen is not None:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                logger.info("[DIAG]   -> Early return: build_queue_screen is open")
             self.scene.build_queue_screen.handle_event(event)
             return
 
         # If planet list window is open, let pygame_gui handle it (skip our F11/F12)
         # BUG FIX PROJ-198 Phase 4: planet_list_window is on window_manager, not ui
         if self.scene.ui.window_manager.planet_list_window is not None:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                logger.info("[DIAG]   -> Early return: planet_list_window is open")
             self.scene.ui.handle_event(event)
             return
 
@@ -76,6 +87,7 @@ class StrategyInputHandler:
         # Mouse Click Events (PROJ-88: moved from app.py)
         elif event.type == pygame.MOUSEBUTTONDOWN:
             mx, my = event.pos
+            logger.info(f"[DIAG]   -> Reached MOUSEBUTTONDOWN handler, calling handle_click({mx},{my},{event.button})")
             self.handle_click(mx, my, event.button)
 
         # Mouse Wheel Events (PROJ-88: moved from app.py)
@@ -141,12 +153,16 @@ class StrategyInputHandler:
         Returns:
             True if click was handled, False otherwise.
         """
+        logger.info(f"[DIAG] handle_click({mx},{my},{button}) called, input_mode={self.input_mode}")
         ui_handled = self.scene.ui.handle_click(mx, my, button)
+        logger.info(f"[DIAG]   ui.handle_click returned: {ui_handled}")
         if ui_handled:
-            logger.debug(f"Click at ({mx},{my}) consumed by UI layer")
+            logger.info(f"[DIAG]   -> Click CONSUMED by UI layer, not reaching dispatcher")
             return True
-        logger.debug(f"Click at ({mx},{my}) reaching dispatcher, mode={self.input_mode}")
-        return self._click_dispatch.dispatch_click(mx, my, button)
+        logger.info(f"[DIAG]   -> Click passing to dispatcher, mode={self.input_mode}")
+        result = self._click_dispatch.dispatch_click(mx, my, button)
+        logger.info(f"[DIAG]   dispatcher returned: {result}")
+        return result
 
     def _handle_scroll(self, event):
         """Handle mouse wheel scroll events (PROJ-88: folded from app.py).
