@@ -8,21 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-218 Audit PASSED
-**Current Status:** PROJ-218 complete; ready for next project
-**Current Project:** PROJ-217 (next)
-**Current Phase:** Not started
-**Test Status:** 13091 passed, 1 skipped
+**Last Completed:** PROJ-217 Phase 1
+**Current Status:** PROJ-217 Phase 1 complete; Phase 2 next
+**Current Project:** PROJ-217
+**Current Phase:** Phase 2 - Generation & Game Logic
+**Test Status:** Tests pending - Phase 1 renamed fields, Phase 4 updates tests
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-218 AUDIT PASSED:**
-  - Phase 1+2 verified complete
-  - Core bug fix working: costs calculated from registry via Ship loading
-  - All callers pass registries correctly
-  - Phase 3 deferred (cleanup tasks - not required for core fix)
-  - 13091 tests passing
-- **Next:** Start PROJ-217 (Standardize Star Measurement to Radius)
+- **PROJ-217 Phase 1 Complete:**
+  - Renamed `diameter_hexes` → `radius_hexes` on Star, Planet, IPlanet
+  - Changed type from `float` to `int`
+  - Updated `occupied_hexes` formula to `hex_circle_filled(loc, radius_hexes - 1)`
+  - Updated serialization keys
+  - Tests failing as expected (using old field name) - Phase 4 will fix
+- **Next:** Phase 2 - update StarGenerator, companion placement, orbit safe_start, warp distance
 
 ---
 
@@ -98,8 +98,8 @@
 
 ---
 
-- [ ] **PROJ-217: Standardize Star Measurement to Radius**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-217: Standardize Star Measurement to Radius**
+  - **Phases:** 4 | **Status:** In Progress - Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-217/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-217/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -192,6 +192,7 @@
 | 2026-02-28 | PROJ-215 | Audit 1 | PASSED | 13093 passed, 1 skipped | - | All implementations verified, no issues |
 | 2026-02-28 | PROJ-218 | Phase 1+2 | Complete | 13091 passed, 1 skipped | pending | DesignCostCalculator rewrite + all callers + test updates |
 | 2026-02-28 | PROJ-218 | Audit 1 | PASSED | 13091 passed, 1 skipped | pending | Core bug fix verified; Phase 3 deferred (cleanup) |
+| 2026-02-28 | PROJ-217 | Phase 1 | Complete | pending | pending | Star/Planet/IPlanet renamed diameter_hexes→radius_hexes |
 
 ---
 

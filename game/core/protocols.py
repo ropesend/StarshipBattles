@@ -238,8 +238,8 @@ class IPlanet(Protocol):
         ...
 
     @property
-    def diameter_hexes(self) -> float:
-        """Diameter in hexes for multi-hex objects (0 for normal planets)."""
+    def radius_hexes(self) -> int:
+        """Radius in hexes for multi-hex objects (0 for normal planets)."""
         ...
 
     @property
@@ -260,7 +260,7 @@ class IZoneOccupant(Protocol):
 
     Zone occupants are game objects that span multiple hexes on the galaxy map.
     Examples include:
-    - Stars (based on diameter_hexes)
+    - Stars (based on radius_hexes)
     - Dyson Spheres (multi-hex planets)
     - Future: nebulae, asteroid fields
 

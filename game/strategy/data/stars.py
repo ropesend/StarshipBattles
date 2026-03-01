@@ -101,7 +101,7 @@ class Spectrum:
 class Star:
     name: str
     mass: float  # Solar Masses
-    diameter_hexes: float # Diameter in Hexes
+    radius_hexes: int  # Radius in hexes (1 = center only, 2 = center + ring 1, etc.)
     temperature: float # Kelvin
     luminosity: float # Solar Luminosity
     spectrum: Spectrum
@@ -114,18 +114,16 @@ class Star:
 
     @property
     def occupied_hexes(self) -> FrozenSet[HexCoord]:
-        """
-        Return all hexes occupied by this star (PROJ-139 IZoneOccupant).
+        """Return all hexes occupied by this star (PROJ-139 IZoneOccupant).
 
-        The zone radius is computed from diameter_hexes using ceiling(diameter/2).
-        This ensures a star with diameter 1.0 occupies the center hex plus immediate
-        neighbors (radius=1 -> 7 hexes).
+        radius_hexes=1 → center hex only (1 hex)
+        radius_hexes=2 → center + ring 1 (7 hexes)
+        radius_hexes=N → hex_circle_filled(location, N-1)
 
         Returns:
             FrozenSet of HexCoord in LOCAL system coordinates
         """
-        radius = max(0, int(math.ceil(self.diameter_hexes / 2.0)))
-        return hex_circle_filled(self.location, radius)
+        return hex_circle_filled(self.location, max(0, self.radius_hexes - 1))
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize Star to dict."""
@@ -133,7 +131,7 @@ class Star:
         return {
             'name': self.name,
             'mass': self.mass,
-            'diameter_hexes': self.diameter_hexes,
+            'radius_hexes': self.radius_hexes,
             'temperature': self.temperature,
             'luminosity': self.luminosity,
             'spectrum': self.spectrum.to_dict(),
@@ -162,7 +160,7 @@ class Star:
 
         # Validate required keys
         require_keys(data, [
-            'name', 'mass', 'diameter_hexes', 'temperature', 'luminosity',
+            'name', 'mass', 'radius_hexes', 'temperature', 'luminosity',
             'spectrum', 'star_type', 'color', 'age', 'location'
         ], 'Star')
 
@@ -195,7 +193,7 @@ class Star:
         return cls(
             name=data['name'],
             mass=data['mass'],
-            diameter_hexes=data['diameter_hexes'],
+            radius_hexes=data['radius_hexes'],
             temperature=data['temperature'],
             luminosity=data['luminosity'],
             spectrum=spectrum,

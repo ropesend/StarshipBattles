@@ -98,8 +98,8 @@ class Planet:
     image_rotation: float = 0.0  # Degrees (0.0 to 360.0) for visual variety
 
     # Multi-hex zone support (PROJ-139)
-    # diameter_hexes > 0 indicates this is a multi-hex object (e.g., Dyson Sphere)
-    diameter_hexes: float = 0.0
+    # radius_hexes > 0 indicates this is a multi-hex object (e.g., Dyson Sphere)
+    radius_hexes: int = 0
 
     def __eq__(self, other):
         if not isinstance(other, Planet):
@@ -116,19 +116,17 @@ class Planet:
 
     @property
     def occupied_hexes(self) -> FrozenSet[HexCoord]:
-        """
-        Return all hexes occupied by this planet (PROJ-139 IZoneOccupant).
+        """Return all hexes occupied by this planet (PROJ-139 IZoneOccupant).
 
-        For normal planets (diameter_hexes <= 0), returns just the planet's location.
-        For multi-hex objects like Dyson Spheres (diameter_hexes > 0), returns
-        all hexes in the zone based on the diameter.
+        For normal planets (radius_hexes <= 0), returns just the planet's location.
+        For multi-hex objects like Dyson Spheres (radius_hexes > 0), returns
+        all hexes in the zone based on the radius.
 
         Returns:
             FrozenSet of HexCoord in LOCAL system coordinates
         """
-        if self.diameter_hexes > 0:
-            radius = max(0, int(math.ceil(self.diameter_hexes / 2.0)))
-            return hex_circle_filled(self.location, radius)
+        if self.radius_hexes > 0:
+            return hex_circle_filled(self.location, max(0, self.radius_hexes - 1))
         return frozenset({self.location})
 
     @property
@@ -252,7 +250,7 @@ class Planet:
             ],
             'image_id': self.image_id,
             'image_rotation': self.image_rotation,
-            'diameter_hexes': self.diameter_hexes
+            'radius_hexes': self.radius_hexes
         }
 
     @classmethod
@@ -348,5 +346,5 @@ class Planet:
             id=data.get('id', -1),
             image_id=data.get('image_id', ''),
             image_rotation=data.get('image_rotation', 0.0),
-            diameter_hexes=data.get('diameter_hexes', 0.0)
+            radius_hexes=data.get('radius_hexes', 0)
         )
