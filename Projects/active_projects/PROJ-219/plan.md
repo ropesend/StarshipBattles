@@ -15,18 +15,18 @@
 |-------|--------|-----------|
 | 1. Core Empire Changes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Wire Up Galaxy References | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Remove Redundant Calls | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Remove Redundant Calls | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Integration Tests | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-03-01
-**Active Phase:** Phase 3 - Remove Redundant Calls
-**Last Action:** Phase 2 complete: set_galaxy() wired in GameInitializer.initialize() and GameSession.from_dict()
-**Next Action:** Begin Phase 3: Remove redundant register_fleet/unregister_fleet calls
+**Active Phase:** Phase 4 - Integration Tests
+**Last Action:** Phase 3 complete: Removed redundant register/unregister calls from 3 files
+**Next Action:** Begin Phase 4: Integration tests for fleet lifecycle
 **Blockers:** None
 **Test Baseline:** 13156 passed, 1 skipped
-**Context for Next Agent:** Galaxy wiring complete. GameInitializer.initialize() and GameSession.from_dict() both call set_galaxy() on all empires. 4 new integration tests in test_fleet_registration_wiring.py. Phase 3 removes redundant galaxy.register_fleet() calls in production_engine, command_handlers, and explicit unregister_fleet() in superweapon_processor.
+**Context for Next Agent:** Phase 3 removed: (1) `galaxy.register_fleet()` from production_engine.py, (2) `galaxy.register_fleet()` from command_handlers.py, (3) `galaxy.unregister_fleet()` from superweapon_order_processor.py. All registration/unregistration now happens automatically via Empire.add_fleet()/remove_fleet(). All tests pass.
 
 ## Overview
 

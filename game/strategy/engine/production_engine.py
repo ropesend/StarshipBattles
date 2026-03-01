@@ -636,11 +636,7 @@ class ProductionEngine:
         fleet_id = empire.get_next_fleet_id()
         new_fleet = Fleet(fleet_id, empire.id, spawn_loc)
         new_fleet.add_ship(ship_instance)
-        empire.add_fleet(new_fleet)
-
-        # PROJ-216: Register fleet with galaxy for O(1) lookup
-        if galaxy:
-            galaxy.register_fleet(new_fleet)
+        empire.add_fleet(new_fleet)  # PROJ-219: Auto-registers via empire._galaxy
 
         # Increment design's times_built counter
         design_library.increment_built_count(design_id)

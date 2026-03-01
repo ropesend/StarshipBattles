@@ -235,9 +235,7 @@ class SuperweaponOrderProcessor:
         # 2. Collect and destroy ALL fleets in the system (including actor)
         all_fleets_in_system = galaxy.get_all_fleets_in_system(system, empires)
         for (owner_empire, victim_fleet) in all_fleets_in_system:
-            # Unregister from galaxy (Galaxy always has unregister_fleet)
-            galaxy.unregister_fleet(victim_fleet)
-            # Remove from empire
+            # PROJ-219: Auto-unregisters from galaxy via empire._galaxy
             owner_empire.remove_fleet(victim_fleet)
 
         # 3. Remove all stars (but NOT warp points)
