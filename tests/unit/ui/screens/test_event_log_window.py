@@ -437,3 +437,189 @@ class TestEventLogSidebarIntegration:
         """EventLogSidebar should be importable from event_log_window module."""
         from game.ui.screens.event_log_window import EventLogSidebar
         assert EventLogSidebar is not None
+
+
+# ---------------------------------------------------------------------------
+# PROJ-215 Phase 4: Double-Click Navigation
+# ---------------------------------------------------------------------------
+
+class TestDoubleClickNavigation:
+    """Verify double-click detection and navigation callback triggering."""
+
+    def test_double_click_threshold_constant_defined(self):
+        """DOUBLE_CLICK_THRESHOLD_MS should be defined."""
+        from game.ui.screens.event_log_window import DOUBLE_CLICK_THRESHOLD_MS
+        assert DOUBLE_CLICK_THRESHOLD_MS == 400
+
+    def test_process_event_tracks_last_click_time(self):
+        """process_event should track click time for double-click detection."""
+        import pygame
+        from pygame_gui.elements import UIWindow
+        from game.ui.screens.event_log_data_source import EventLogDataSource
+
+        events = [_make_event(details={"location_hex": [5, 3]})]
+        win = _make_window(events=events)
+        win.data_source = EventLogDataSource(events)
+        win.on_navigate_callback = MagicMock()
+        win._last_click_time = 0
+        win._last_click_row = -1
+        win.sidebar = None
+
+        # Mock VirtualTable that returns row 0
+        win.virtual_table = MagicMock()
+        win.virtual_table.find_clicked_row.return_value = 0
+
+        # Simulate first click
+        mock_event = MagicMock()
+        mock_event.type = pygame.MOUSEBUTTONDOWN
+        mock_event.button = 1
+        mock_event.pos = (100, 100)
+
+        with patch.object(UIWindow, 'process_event', return_value=False):
+            with patch('pygame.time.get_ticks', return_value=1000):
+                win.process_event(mock_event)
+
+        assert win._last_click_row == 0
+        assert win._last_click_time == 1000
+
+    def test_process_event_triggers_navigate_on_double_click(self):
+        """Double-clicking same row within threshold should trigger navigation."""
+        import pygame
+        from pygame_gui.elements import UIWindow
+        from game.ui.screens.event_log_data_source import EventLogDataSource
+
+        events = [_make_event(details={"location_hex": [5, 3]})]
+        win = _make_window(events=events)
+        win.data_source = EventLogDataSource(events)
+        cb = MagicMock()
+        win.on_navigate_callback = cb
+        win._last_click_time = 0
+        win._last_click_row = -1
+        win.sidebar = None
+
+        # Mock VirtualTable that returns row 0
+        win.virtual_table = MagicMock()
+        win.virtual_table.find_clicked_row.return_value = 0
+
+        mock_event = MagicMock()
+        mock_event.type = pygame.MOUSEBUTTONDOWN
+        mock_event.button = 1
+        mock_event.pos = (100, 100)
+
+        with patch.object(UIWindow, 'process_event', return_value=False):
+            # First click at time 1000
+            with patch('pygame.time.get_ticks', return_value=1000):
+                win.process_event(mock_event)
+
+            # Second click at time 1200 (within 400ms threshold)
+            with patch('pygame.time.get_ticks', return_value=1200):
+                win.process_event(mock_event)
+
+        cb.assert_called_once_with([5, 3])
+
+    def test_process_event_no_navigate_on_slow_double_click(self):
+        """Clicks outside threshold should NOT trigger navigation."""
+        import pygame
+        from pygame_gui.elements import UIWindow
+        from game.ui.screens.event_log_data_source import EventLogDataSource
+
+        events = [_make_event(details={"location_hex": [5, 3]})]
+        win = _make_window(events=events)
+        win.data_source = EventLogDataSource(events)
+        cb = MagicMock()
+        win.on_navigate_callback = cb
+        win._last_click_time = 0
+        win._last_click_row = -1
+        win.sidebar = None
+
+        win.virtual_table = MagicMock()
+        win.virtual_table.find_clicked_row.return_value = 0
+
+        mock_event = MagicMock()
+        mock_event.type = pygame.MOUSEBUTTONDOWN
+        mock_event.button = 1
+        mock_event.pos = (100, 100)
+
+        with patch.object(UIWindow, 'process_event', return_value=False):
+            # First click at time 1000
+            with patch('pygame.time.get_ticks', return_value=1000):
+                win.process_event(mock_event)
+
+            # Second click at time 1500 (outside 400ms threshold)
+            with patch('pygame.time.get_ticks', return_value=1500):
+                win.process_event(mock_event)
+
+        cb.assert_not_called()
+
+    def test_process_event_no_navigate_on_different_rows(self):
+        """Clicking different rows should NOT trigger navigation."""
+        import pygame
+        from pygame_gui.elements import UIWindow
+        from game.ui.screens.event_log_data_source import EventLogDataSource
+
+        events = [
+            _make_event(details={"location_hex": [5, 3]}),
+            _make_event(details={"location_hex": [7, 9]}),
+        ]
+        win = _make_window(events=events)
+        win.data_source = EventLogDataSource(events)
+        cb = MagicMock()
+        win.on_navigate_callback = cb
+        win._last_click_time = 0
+        win._last_click_row = -1
+        win.sidebar = None
+
+        win.virtual_table = MagicMock()
+
+        mock_event = MagicMock()
+        mock_event.type = pygame.MOUSEBUTTONDOWN
+        mock_event.button = 1
+        mock_event.pos = (100, 100)
+
+        with patch.object(UIWindow, 'process_event', return_value=False):
+            # First click on row 0
+            win.virtual_table.find_clicked_row.return_value = 0
+            with patch('pygame.time.get_ticks', return_value=1000):
+                win.process_event(mock_event)
+
+            # Second click on row 1 (different row)
+            win.virtual_table.find_clicked_row.return_value = 1
+            with patch('pygame.time.get_ticks', return_value=1100):
+                win.process_event(mock_event)
+
+        cb.assert_not_called()
+
+    def test_double_click_resets_tracking_state(self):
+        """After successful double-click, tracking state should reset."""
+        import pygame
+        from pygame_gui.elements import UIWindow
+        from game.ui.screens.event_log_data_source import EventLogDataSource
+
+        events = [_make_event(details={"location_hex": [5, 3]})]
+        win = _make_window(events=events)
+        win.data_source = EventLogDataSource(events)
+        win.on_navigate_callback = MagicMock()
+        win._last_click_time = 0
+        win._last_click_row = -1
+        win.sidebar = None
+
+        win.virtual_table = MagicMock()
+        win.virtual_table.find_clicked_row.return_value = 0
+
+        mock_event = MagicMock()
+        mock_event.type = pygame.MOUSEBUTTONDOWN
+        mock_event.button = 1
+        mock_event.pos = (100, 100)
+
+        with patch.object(UIWindow, 'process_event', return_value=False):
+            # First click
+            with patch('pygame.time.get_ticks', return_value=1000):
+                win.process_event(mock_event)
+
+            # Second click triggers navigation
+            with patch('pygame.time.get_ticks', return_value=1100):
+                win.process_event(mock_event)
+
+        # State should be reset
+        assert win._last_click_row == -1
+        assert win._last_click_time == 0

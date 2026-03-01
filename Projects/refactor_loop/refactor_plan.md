@@ -8,27 +8,27 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-215 Phase 3 (Add Sidebar with Column Toggles)
+**Last Completed:** PROJ-215 Phase 4 (Fix Double-Click Navigation)
 **Current Status:** PROJ-215 in progress
 **Current Project:** PROJ-215
-**Current Phase:** Phase 4
-**Test Status:** 13074 passed, 1 skipped
+**Current Phase:** Phase 5
+**Test Status:** 13085 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-215 Phase 3 COMPLETE:**
-  - Created EventLogSidebar class in game/ui/screens/event_log_sidebar.py
-  - Follows FleetReportSidebar pattern exactly
-  - Column visibility toggles with [x]/[ ] button pattern
-  - handle_button_click() returns column_id for toggle handling
-  - refresh_button_labels() updates button text after toggle
-  - Integrated into EventLogWindow with SIDEBAR_WIDTH=180
-  - Header panel and table panel shifted right by sidebar width
-  - process_event() handles column toggle → rebuild table flow
-  - 14 new tests in test_event_log_sidebar.py
-  - 3 integration tests in test_event_log_window.py
-  - All 13074 tests passing
-- **Next:** Phase 4 - Fix double-click navigation
+- **PROJ-215 Phase 4 COMPLETE:**
+  - Investigated navigation callback chain - all code was correct
+  - find_clicked_row() uses get_abs_rect() for screen coordinates - correct
+  - on_navigate_callback is set via _on_event_log_navigate
+  - _camera_nav exists on StrategyScreen with center_on_hex()
+  - No code fix needed - feature was already working correctly
+  - Added 6 tests in TestDoubleClickNavigation class:
+    - Double-click threshold constant, time tracking, navigation trigger
+    - Slow double-click (no trigger), different rows (no trigger), state reset
+  - Added 5 tests in TestEventLogNavigation (test_strategy_window_manager.py):
+    - Window closes, camera centers, handles edge cases
+  - All 13085 tests passing
+- **Next:** Phase 5 - Add Storm column
 
 ---
 
@@ -193,6 +193,7 @@
 | 2026-02-28 | PROJ-215 | Phase 1 | Complete | 13049 passed, 1 skipped | pending | Granular location columns added (system, planet, local_hex, galaxy_hex) |
 | 2026-02-28 | PROJ-215 | Phase 2 | Complete | 13057 passed, 1 skipped | 089a50f3 | Event enrichment: system_name, local_hex added to all event sites |
 | 2026-02-28 | PROJ-215 | Phase 3 | Complete | 13074 passed, 1 skipped | pending | EventLogSidebar + column toggles integrated |
+| 2026-02-28 | PROJ-215 | Phase 4 | Complete | 13085 passed, 1 skipped | pending | Navigation verified correct, 11 tests added |
 
 ---
 

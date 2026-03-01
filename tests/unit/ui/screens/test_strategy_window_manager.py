@@ -248,6 +248,67 @@ class TestEventLogWindow:
 
 
 # =============================================================================
+# PROJ-215 Phase 4: Event Log Navigation Tests
+# =============================================================================
+
+class TestEventLogNavigation:
+    """Tests for event log navigation callback."""
+
+    def test_on_event_log_navigate_closes_window(self, window_manager):
+        """Test navigation callback closes the event log window."""
+        mock_window = Mock()
+        window_manager.event_log_window = mock_window
+
+        window_manager._on_event_log_navigate([5, 3])
+
+        mock_window.kill.assert_called_once()
+
+    def test_on_event_log_navigate_centers_camera(self, window_manager):
+        """Test navigation callback centers camera on hex."""
+        # Set up scene with camera navigator
+        mock_camera_nav = Mock()
+        window_manager.scene._camera_nav = mock_camera_nav
+
+        window_manager._on_event_log_navigate([5, 3])
+
+        mock_camera_nav.center_on_hex.assert_called_once()
+        # Verify HexCoord was created with correct values
+        call_arg = mock_camera_nav.center_on_hex.call_args[0][0]
+        assert call_arg.q == 5
+        assert call_arg.r == 3
+
+    def test_on_event_log_navigate_handles_no_camera_nav(self, window_manager):
+        """Test navigation doesn't crash if scene lacks _camera_nav."""
+        # Remove _camera_nav from scene
+        if hasattr(window_manager.scene, '_camera_nav'):
+            delattr(window_manager.scene, '_camera_nav')
+
+        # Should not raise
+        window_manager._on_event_log_navigate([5, 3])
+
+    def test_on_event_log_navigate_handles_no_window(self, window_manager):
+        """Test navigation doesn't crash if event_log_window is None."""
+        window_manager.event_log_window = None
+        mock_camera_nav = Mock()
+        window_manager.scene._camera_nav = mock_camera_nav
+
+        # Should not raise
+        window_manager._on_event_log_navigate([5, 3])
+
+        # Camera should still be moved
+        mock_camera_nav.center_on_hex.assert_called_once()
+
+    @patch('game.ui.screens.strategy_window_manager.EventLogWindow')
+    def test_open_event_log_passes_navigate_callback(self, mock_window_class, window_manager):
+        """Test open_event_log passes navigation callback to window."""
+        window_manager.open_event_log()
+
+        call_kwargs = mock_window_class.call_args[1]
+        assert 'on_navigate_callback' in call_kwargs
+        assert call_kwargs['on_navigate_callback'] == window_manager._on_event_log_navigate
+
+
+# =============================================================================
 # Empire Panel Window Tests
 # =============================================================================
 
