@@ -44,6 +44,9 @@
       "Bash(git ls-files:*)",
       "Bash(git -C \"c:\\\\Dev\\\\Starship Battles\" log --all --oneline -- saves/)"
     ],
-    "additionalDirectories": []
+    "additionalDirectories": [
+      "c:\\Dev\\Starship Battles\\Projects\\active_projects\\PROJ-216\\findings",
+      "c:\\Dev\\Starship Battles\\Projects\\active_projects\\PROJ-218\\findings"
+    ]
   }
 }

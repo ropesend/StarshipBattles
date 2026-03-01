@@ -81,6 +81,38 @@
 
 ---
 
+- [ ] **PROJ-215: Fix Event Log Location Display and Navigation**
+  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-215/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-215/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-218: Fix Production Queue Cost and Build Time Defaults**
+  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-218/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-218/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-217: Standardize Star Measurement to Radius**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-217/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-217/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-216: Fix Global Fleet Order Registration Failure**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-216/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-216/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
 ## Execution Log
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |

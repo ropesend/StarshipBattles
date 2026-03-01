@@ -4,6 +4,10 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-218 | Fix Production Queue Cost and Build Time Defaults | Planning | 2026-02-28 | 2026-02-28 |
+| PROJ-217 | Standardize Star Measurement to Radius | Planning | 2026-02-28 | 2026-02-28 |
+| PROJ-216 | Fix Global Fleet Order Registration Failure | Planning | 2026-02-28 | 2026-02-28 |
+| PROJ-215 | Fix Event Log Location Display and Navigation | Planning | 2026-02-28 | 2026-02-28 |
 | PROJ-214 | Hex Highlights for Objects and Ownership | Awaiting Verification | 2026-02-28 | 2026-02-28 |
 | PROJ-213 | Build Queue Reversion Bug Fix | Complete | 2026-02-28 | 2026-02-28 |
 | PROJ-212 | Deferred Import Cleanup & Coupling Reduction | Planning | 2026-02-27 | 2026-02-27 |
