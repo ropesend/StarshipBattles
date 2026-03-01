@@ -8,21 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-216 Phase 3 (Fix Confirmation Dialog Flow)
-**Current Status:** PROJ-216 Phase 3 complete; Phase 4 next
+**Last Completed:** PROJ-216 Phase 4 (Integration Tests)
+**Current Status:** PROJ-216 all phases complete; Audit next
 **Current Project:** PROJ-216
-**Current Phase:** Phase 4 (Integration Tests)
-**Test Status:** 13110 passed, 1 skipped
+**Current Phase:** Audit Cycle 1
+**Test Status:** 13153 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-216 Phase 3 COMPLETE:**
-  - VERIFIED: Confirmation dialog flow is INDEPENDENT of click gate
-  - `UI_CONFIRMATION_DIALOG_CONFIRMED` events flow through `route_event()` (lines 129-134), NOT `handle_click()`
-  - `strategy_input_handler.py:66` → `strategy_ui.py:331` → `route_event()` is the event path
-  - `window_manager.process_confirmation_event()` correctly executes stored callbacks
-  - Phase 2 fix has NO impact on confirmation dialogs - they always worked
-- **Next:** Phase 4 - Add integration tests for click-to-order pipeline
+- **PROJ-216 Phase 4 COMPLETE:**
+  - Created `tests/unit/ui/screens/test_click_gate_integration.py` - 27 tests
+  - Created `tests/integration/ui/test_move_order_registration.py` - 16 tests
+  - Tests cover: click gate behavior, window blocking, sidebar/top bar, click dispatcher routing
+- **All 4 phases complete - triggering audit**
 
 ---
 
@@ -200,6 +198,7 @@
 | 2026-02-28 | PROJ-216 | Phase 1 | Complete | 13091 passed, 1 skipped | pending | Diagnostic logging added to click gate |
 | 2026-02-28 | PROJ-216 | Phase 2 | Complete | 13110 passed, 1 skipped | pending | Click gate fixed; 19 new tests added |
 | 2026-02-28 | PROJ-216 | Phase 3 | Complete | 13110 passed, 1 skipped | pending | Confirmation flow verified independent of click gate |
+| 2026-02-28 | PROJ-216 | Phase 4 | Complete | 13153 passed, 1 skipped | pending | 43 integration tests (27 click gate + 16 move order) |
 
 ---
 

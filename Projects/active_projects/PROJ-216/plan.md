@@ -16,15 +16,15 @@
 | 1. Diagnostic Logging | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Fix Click Gate | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Fix Confirmation Dialog Flow | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Integration Tests | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Integration Tests | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-28
-**Active Phase:** Phase 4 (Integration Tests)
-**Last Action:** Phase 3 complete - confirmation flow verified independent of click gate
-**Next Action:** Phase 4 - Add integration tests for click-to-order pipeline
+**Active Phase:** Audit
+**Last Action:** Phase 4 complete - 43 integration tests added (27 click gate + 16 move order)
+**Next Action:** Trigger audit
 **Blockers:** None
-**Test Baseline:** 13,110 passed, 1 skipped
+**Test Baseline:** 13,153 passed, 1 skipped
 
 ## Overview
 
