@@ -28,7 +28,7 @@ class GalaxyWarpGenerator:
     def _calculate_warp_distance(self, system: 'StarSystem') -> float:
         """Calculate the distance for a warp point based on the primary star's size.
 
-        Formula: Base (15) + (Star Diameter * 1.5) + Random(-2 to 5)
+        Formula: Base (15) + (Star Radius * 3.0) + Random(-2 to 5)
         Min Distance: 10
 
         Args:
@@ -37,12 +37,12 @@ class GalaxyWarpGenerator:
         Returns:
             Distance in hex units for warp point placement.
         """
-        star_diam = 1.0
+        star_radius = 1
         if system.primary_star:
-            star_diam = system.primary_star.diameter_hexes
+            star_radius = system.primary_star.radius_hexes
 
         base_dist = 15.0
-        scaled_dist = base_dist + (star_diam * 1.5)
+        scaled_dist = base_dist + (star_radius * 3.0)  # radius * 3.0 preserves proportional relationship
         jitter = random.uniform(-2.0, 5.0)
 
         total_dist = scaled_dist + jitter

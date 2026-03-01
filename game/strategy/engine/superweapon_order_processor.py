@@ -475,7 +475,7 @@ class SuperweaponOrderProcessor:
             return SuperweaponResult(success=False, message="No ship with CreateDysonSphere ability")
 
         # === Execute effect ===
-        # Remove planets within zone radius (5 hexes for 11-hex diameter sphere)
+        # Remove planets within zone radius (radius_hexes=6 means 91 hexes, center + 5 rings)
         dyson_radius = 5
         planets_to_remove = []
         for planet in system.planets:
@@ -535,7 +535,7 @@ class SuperweaponOrderProcessor:
             magnetic_field=1.0,  # Engineered shielding
             planet_type=PlanetType.DYSON_SPHERE,
             image_id="Sphereworld_Portrait.png",
-            diameter_hexes=11.0,  # Multi-hex zone (11-hex diameter)
+            radius_hexes=6,  # Multi-hex zone: center + 5 rings = 91 hexes
         )
 
         # Add to system and register with galaxy

@@ -100,7 +100,7 @@ class PlanetGenerator:
         Returns dict mapping location to list of masses at that location.
         """
         primary = stars[0]
-        safe_start = int(primary.diameter_hexes / 2) + 2
+        safe_start = primary.radius_hexes + 2  # radius_hexes is already the radius
         max_dist = 20
 
         # Get planet count from blueprint or use default 3-10

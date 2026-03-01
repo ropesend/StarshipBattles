@@ -173,8 +173,8 @@ class GalaxySpatialIndex:
 
         # Add planet zone hexes for Dyson Spheres (PROJ-139)
         for planet in system.planets:
-            # Planet always has diameter_hexes (default 0.0)
-            if planet.diameter_hexes > 0:
+            # Planet always has radius_hexes (default 0)
+            if planet.radius_hexes > 0:
                 for local_hex in planet.occupied_hexes:
                     system_hexes.add(system.global_location + local_hex)
 

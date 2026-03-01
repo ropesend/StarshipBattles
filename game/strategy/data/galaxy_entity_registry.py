@@ -55,7 +55,7 @@ class GalaxyEntityRegistry:
         self._galaxy._global_hex_planets[global_hex].append(planet)
 
         # Register zone if planet has multi-hex footprint (PROJ-139)
-        if planet.diameter_hexes > 0:
+        if planet.radius_hexes > 0:
             self.register_zone(system, planet)
 
     def restore_planet(self, system: 'StarSystem', planet: 'Planet') -> None:
@@ -81,7 +81,7 @@ class GalaxyEntityRegistry:
         self._galaxy._global_hex_planets[global_hex].append(planet)
 
         # Register zone if planet has multi-hex footprint (PROJ-139)
-        if planet.diameter_hexes > 0:
+        if planet.radius_hexes > 0:
             self.register_zone(system, planet)
 
     def get_planet_by_id(self, planet_id: int) -> Optional['Planet']:
@@ -110,7 +110,7 @@ class GalaxyEntityRegistry:
         # Remove from spatial index and zone registry
         if system is not None:
             # Unregister zone if planet has multi-hex footprint (PROJ-139)
-            if planet.diameter_hexes > 0:
+            if planet.radius_hexes > 0:
                 self.unregister_zone(system, planet)
 
             global_hex = system.global_location + planet.location

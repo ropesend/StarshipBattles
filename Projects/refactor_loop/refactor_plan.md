@@ -8,21 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-217 Phase 1
-**Current Status:** PROJ-217 Phase 1 complete; Phase 2 next
+**Last Completed:** PROJ-217 Phase 2
+**Current Status:** PROJ-217 Phase 2 complete; Phase 3 next
 **Current Project:** PROJ-217
-**Current Phase:** Phase 2 - Generation & Game Logic
-**Test Status:** Tests pending - Phase 1 renamed fields, Phase 4 updates tests
+**Current Phase:** Phase 3 - UI & Rendering
+**Test Status:** Tests pending - Phases 1-2 renamed fields/updated logic, Phase 4 updates tests
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-217 Phase 1 Complete:**
-  - Renamed `diameter_hexes` → `radius_hexes` on Star, Planet, IPlanet
-  - Changed type from `float` to `int`
-  - Updated `occupied_hexes` formula to `hex_circle_filled(loc, radius_hexes - 1)`
-  - Updated serialization keys
-  - Tests failing as expected (using old field name) - Phase 4 will fix
-- **Next:** Phase 2 - update StarGenerator, companion placement, orbit safe_start, warp distance
+- **PROJ-217 Phase 2 Complete:**
+  - Renamed `_map_radius_to_hexes()` → `_map_solar_radius_to_hex_radius()` with int return
+  - Fixed companion placement: `p_hex + 2` instead of `int(p_hex * 2) + 2`
+  - Fixed planet orbit safe_start: `primary.radius_hexes + 2`
+  - Fixed warp distance formula: `star_radius * 3.0`
+  - Updated Dyson Sphere: `radius_hexes=6`
+  - Updated galaxy entity registry and spatial index
+- **Next:** Phase 3 - fix strategy_renderer.py, system_mode.py, detail formatters
 
 ---
 
@@ -193,6 +194,7 @@
 | 2026-02-28 | PROJ-218 | Phase 1+2 | Complete | 13091 passed, 1 skipped | pending | DesignCostCalculator rewrite + all callers + test updates |
 | 2026-02-28 | PROJ-218 | Audit 1 | PASSED | 13091 passed, 1 skipped | pending | Core bug fix verified; Phase 3 deferred (cleanup) |
 | 2026-02-28 | PROJ-217 | Phase 1 | Complete | pending | pending | Star/Planet/IPlanet renamed diameter_hexes→radius_hexes |
+| 2026-02-28 | PROJ-217 | Phase 2 | Complete | pending | pending | StarGenerator, planet_gen, warp, superweapon, entity registry updated |
 
 ---
 

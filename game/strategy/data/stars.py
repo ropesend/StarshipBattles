@@ -341,25 +341,31 @@ class StarGenerator:
                 
         return (int(r), int(g), int(b))
 
-    def _map_radius_to_hexes(self, radius_sol, star_type):
-        """
-        Map solar radius to hex diameter (1-11).
-        Small/Med stars -> 1-3 Hexes.
-        Giants -> Scale up to 11.
+    def _map_solar_radius_to_hex_radius(self, radius_sol: float, star_type: StarType) -> int:
+        """Map solar radius to hex radius (1-6).
+
+        1 = center hex only (compact/small stars)
+        2 = center + ring 1 (medium stars, 7 hexes)
+        3 = center + 2 rings (large stars, 19 hexes)
+        4 = center + 3 rings (giant stars, 37 hexes)
+        5 = center + 4 rings (supergiant stars, 61 hexes)
+        6 = center + 5 rings (largest giants/Dyson Spheres, 91 hexes)
         """
         if star_type in (StarType.NEUTRON_STAR, StarType.BLACK_HOLE, StarType.WHITE_DWARF):
-             return 0.5 # Sub-hex visual
-        
-        if radius_sol < 0.8: return 1.0
-        if radius_sol < 2.0: return 2.0 # Slightly larger
-        if radius_sol < 5.0: return 3.0
-        
-        import  math
+            return 1  # Compact remnants occupy center hex only
+
+        if radius_sol < 0.8:
+            return 1
+        if radius_sol < 2.0:
+            return 2
+        if radius_sol < 5.0:
+            return 2
+
+        # Giants and supergiants: logarithmic scaling
         log_r = math.log10(radius_sol)
-        hex_diam = 3.46 * log_r + 0.61
-        hex_diam = min(11.0, max(1.0, hex_diam))
-        
-        return float(int(hex_diam)) if hex_diam > 3 else hex_diam
+        hex_radius = 1.73 * log_r + 0.8  # Adjusted coefficients for radius scale
+        hex_radius = min(6, max(1, int(round(hex_radius))))
+        return hex_radius
 
     def _generate_spectrum(self, temp, luminosity):
         """
@@ -483,13 +489,13 @@ class StarGenerator:
         # 3. Generate Primary
         p_mass = self._generate_mass_constrained(mass_min, mass_max)
         p_type, p_rad, p_temp, p_lum, p_col = self._determine_type_and_radius(p_mass)
-        p_hex = self._map_radius_to_hexes(p_rad, p_type)
+        p_hex = self._map_solar_radius_to_hex_radius(p_rad, p_type)
         p_spec = self._generate_spectrum(p_temp, p_lum)
 
         primary = Star(
             name=f"{system_name} A",
             mass=p_mass,
-            diameter_hexes=p_hex,
+            radius_hexes=p_hex,
             temperature=p_temp,
             luminosity=p_lum,
             spectrum=p_spec,
@@ -502,7 +508,7 @@ class StarGenerator:
 
         # 4. Generate Companions
         suffixes = ['B', 'C', 'D']
-        min_dist_hex = int(p_hex * 2) + 2
+        min_dist_hex = p_hex + 2  # radius + buffer for safe companion placement
         occupied_hexes = {HexCoord(0, 0)}
 
         for i in range(count - 1):
@@ -510,7 +516,7 @@ class StarGenerator:
             c_mass_max = min(mass_max, p_mass * 0.99)
             c_mass = self._generate_mass_constrained(mass_min, c_mass_max)
             c_type, c_rad, c_temp, c_lum, c_col = self._determine_type_and_radius(c_mass)
-            c_hex = self._map_radius_to_hexes(c_rad, c_type)
+            c_hex = self._map_solar_radius_to_hex_radius(c_rad, c_type)
             c_spec = self._generate_spectrum(c_temp, c_lum)
 
             target_ring = min_dist_hex + (i * 10) + random.randint(2, 8)
@@ -530,7 +536,7 @@ class StarGenerator:
             companion = Star(
                 name=f"{system_name} {suffixes[i]}",
                 mass=c_mass,
-                diameter_hexes=c_hex,
+                radius_hexes=c_hex,
                 temperature=c_temp,
                 luminosity=c_lum,
                 spectrum=c_spec,
@@ -559,13 +565,13 @@ class StarGenerator:
         # 2. Generate Primary
         p_mass = self._generate_mass(is_primary=True)
         p_type, p_rad, p_temp, p_lum, p_col = self._determine_type_and_radius(p_mass)
-        p_hex = self._map_radius_to_hexes(p_rad, p_type)
+        p_hex = self._map_solar_radius_to_hex_radius(p_rad, p_type)
         p_spec = self._generate_spectrum(p_temp, p_lum)
 
         primary = Star(
             name=f"{system_name} A",
             mass=p_mass,
-            diameter_hexes=p_hex,
+            radius_hexes=p_hex,
             temperature=p_temp,
             luminosity=p_lum,
             spectrum=p_spec,
@@ -578,14 +584,14 @@ class StarGenerator:
 
         # 3. Generate Companions
         suffixes = ['B', 'C', 'D']
-        min_dist_hex = int(p_hex * 2) + 2
+        min_dist_hex = p_hex + 2  # radius + buffer for safe companion placement
 
         occupied_hexes = {HexCoord(0, 0)}
 
         for i in range(count - 1):
             c_mass = self._generate_mass(is_primary=False, primary_mass=p_mass)
             c_type, c_rad, c_temp, c_lum, c_col = self._determine_type_and_radius(c_mass)
-            c_hex = self._map_radius_to_hexes(c_rad, c_type)
+            c_hex = self._map_solar_radius_to_hex_radius(c_rad, c_type)
             c_spec = self._generate_spectrum(c_temp, c_lum)
 
             target_ring = min_dist_hex + (i * 10) + random.randint(2, 8)
@@ -605,7 +611,7 @@ class StarGenerator:
             companion = Star(
                 name=f"{system_name} {suffixes[i]}",
                 mass=c_mass,
-                diameter_hexes=c_hex,
+                radius_hexes=c_hex,
                 temperature=c_temp,
                 luminosity=c_lum,
                 spectrum=c_spec,
