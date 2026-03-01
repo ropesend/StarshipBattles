@@ -60,9 +60,15 @@ class DesignCostCalculator:
         if not design_data:
             return {}
 
+        # Cache: return previously calculated cost to avoid repeated Ship loading
+        cached = design_data.get('total_resource_cost')
+        if cached is not None:
+            return cached
+
         # First: Check for inline resource_cost on components
         inline_cost = DesignCostCalculator._calculate_inline_cost(design_data)
         if inline_cost:
+            design_data['total_resource_cost'] = inline_cost
             return inline_cost
 
         # Second: Ship loading from registry (for ship designs only)
@@ -75,8 +81,9 @@ class DesignCostCalculator:
 
                 if ship is not None:
                     # Extract construction_cost, stripping zero values
-                    cost = ship.construction_cost or {}
-                    return {res: amount for res, amount in cost.items() if amount > 0}
+                    cost = {res: amount for res, amount in (ship.construction_cost or {}).items() if amount > 0}
+                    design_data['total_resource_cost'] = cost
+                    return cost
             except Exception as e:
                 logger.debug(f"Ship loading failed: {e}")
 

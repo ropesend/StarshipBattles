@@ -51,9 +51,14 @@ Example:
         conflict_engine=mock_conflict
     )
 """
+import time
+import logging
+
 from game.core.validation import ValidationResult
 from game.core.registry import GameRegistries
 from typing import Optional, TYPE_CHECKING
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.interfaces.battle_resolver import IBattleResolver
@@ -298,6 +303,16 @@ class TurnEngine:
         # PROJ-189: Initialize environmental event accumulator (cleared each turn)
         self.last_environmental_events = []
 
+        # Performance timing accumulators
+        self._phase_times = {
+            'harvesting': 0.0, 'maintenance': 0.0, 'resources': 0.0,
+            'fuel_gen': 0.0, 'resupply': 0.0, 'production': 0.0,
+            'environmental': 0.0, 'instant_orders': 0.0, 'actions': 0.0,
+            'movement_calc': 0.0, 'movement_apply': 0.0, 'combat': 0.0,
+        }
+
+        turn_start = time.perf_counter()
+
         # 1. Subturn Loop (Movement, Actions & Combat)
         # PROJ-187: Action orders (COLONIZE, TRANSFER, superweapons) now processed
         # in Phase 1.5 of each tick via ActionExecutionEngine
@@ -305,7 +320,24 @@ class TurnEngine:
             self._process_tick(tick, empires, galaxy, save_path)
 
         # 2. Population Growth Phase (PROJ-68)
+        t0 = time.perf_counter()
         self.population_engine.process_population_growth(empires)
+        pop_time = time.perf_counter() - t0
+
+        total_time = time.perf_counter() - turn_start
+        logger.warning(
+            "TURN PERF: total=%.3fs | harvesting=%.3fs maintenance=%.3fs "
+            "resources=%.3fs fuel_gen=%.3fs resupply=%.3fs production=%.3fs "
+            "environmental=%.3fs orders=%.3fs actions=%.3fs "
+            "move_calc=%.3fs move_apply=%.3fs combat=%.3fs population=%.3fs",
+            total_time, self._phase_times['harvesting'], self._phase_times['maintenance'],
+            self._phase_times['resources'], self._phase_times['fuel_gen'],
+            self._phase_times['resupply'], self._phase_times['production'],
+            self._phase_times['environmental'], self._phase_times['instant_orders'],
+            self._phase_times['actions'], self._phase_times['movement_calc'],
+            self._phase_times['movement_apply'], self._phase_times['combat'],
+            pop_time,
+        )
         
     def validate_colonize_order(self, galaxy, fleet, target_planet) -> ValidationResult:
         """
@@ -352,63 +384,73 @@ class TurnEngine:
         """
 
         # --- Phase 0: Harvesting (1/100th per tick) ---
-        # PROJ-161: Spread harvesting across 100 ticks
+        t0 = time.perf_counter()
         self.harvesting_engine.process_harvesting_tick(tick, empires)
+        self._phase_times['harvesting'] += time.perf_counter() - t0
 
         # --- Phase 0a: Maintenance (1/100th per tick, immediate scuttle) ---
-        # PROJ-161: Spread maintenance across 100 ticks, accumulate scuttle events
+        t0 = time.perf_counter()
         tick_scuttles = self.maintenance_engine.process_maintenance_tick(tick, empires)
+        self._phase_times['maintenance'] += time.perf_counter() - t0
         self.last_scuttle_events.extend(tick_scuttles)
 
         # --- Phase 0b: Per-turn Resource Consumption ---
-        # PROJ-36: Delegate to ResourceManagementEngine
+        t0 = time.perf_counter()
         self.resource_engine.process_per_turn_consumption(tick, empires)
+        self._phase_times['resources'] += time.perf_counter() - t0
 
         # --- Phase 0c: Fuel generation at facilities ---
-        # PROJ-74: Generate fuel at planetary facilities with fuel synthesizers
+        t0 = time.perf_counter()
         self.resupply_engine.process_fuel_generation(tick, empires)
+        self._phase_times['fuel_gen'] += time.perf_counter() - t0
 
         # --- Phase 0d: Fleet resupply from facilities ---
-        # PROJ-74: Transfer fuel from facilities to co-located fleets
+        t0 = time.perf_counter()
         self.resupply_engine.process_fleet_resupply(tick, empires, galaxy)
+        self._phase_times['resupply'] += time.perf_counter() - t0
 
         # --- Phase 0e: Construction resource consumption + mid-turn completion ---
-        # PROJ-75/79: Deduct per-tick resource costs, spawn completed items mid-turn
+        t0 = time.perf_counter()
         self.production_engine.process_construction_tick(
             tick, empires, galaxy,
             save_path=save_path,
         )
+        self._phase_times['production'] += time.perf_counter() - t0
 
         # --- Phase 0f: Environmental Hazards (storm damage, fuel drain) ---
-        # PROJ-189: Apply storm effects to fleets in hazard hexes
+        t0 = time.perf_counter()
         env_events = self.environmental_engine.process_environmental_tick(tick, empires, galaxy)
+        self._phase_times['environmental'] += time.perf_counter() - t0
         self.last_environmental_events.extend(env_events)
 
         # --- Phase 1: Instant Orders (JOIN_FLEET) ---
-        # PROJ-12: Delegate to FleetOrderProcessor
+        t0 = time.perf_counter()
         self.order_processor.process_instant_orders(empires)
+        self._phase_times['instant_orders'] += time.perf_counter() - t0
 
         # --- Phase 1.5: Action Orders (COLONIZE, TRANSFER, superweapons) ---
-        # PROJ-187: Tick-based action execution for non-movement, non-BUILD orders
-        # GameRegistries always has components attribute
+        t0 = time.perf_counter()
         self.action_engine.process_action_ticks(
             empires, galaxy, tick,
             component_registry=self._registries.components,
             all_empires=empires
         )
+        self._phase_times['actions'] += time.perf_counter() - t0
 
         # --- Phase 2: Calculate Moves ---
-        # PROJ-12: Delegate to FleetMovementEngine
+        t0 = time.perf_counter()
         move_queue = self.movement_engine.collect_movements(empires, galaxy, tick)
+        self._phase_times['movement_calc'] += time.perf_counter() - t0
 
         # --- Phase 3: Apply Moves ---
-        # PROJ-12: Delegate to FleetMovementEngine
+        t0 = time.perf_counter()
         self.movement_engine.apply_movements(move_queue, galaxy)
+        self._phase_times['movement_apply'] += time.perf_counter() - t0
 
         # --- Phase 4: Combat ---
-        # PROJ-36: Delegate to ConflictResolutionEngine
-        # PROJ-189: Pass galaxy for storm effect lookup during combat
+        t0 = time.perf_counter()
         self.conflict_engine.resolve_all_conflicts(empires, galaxy=galaxy)
+        self._phase_times['combat'] += time.perf_counter() - t0
 
 
 def create_default_turn_engine(registries: GameRegistries) -> TurnEngine:
