@@ -350,6 +350,10 @@ class GameSession:
         # Restore human player IDs
         session.human_player_ids = data.get('human_player_ids', [0, 1])
 
+        # PROJ-219: Set galaxy back-references for auto fleet registration
+        for empire in session.empires:
+            empire.set_galaxy(session.galaxy)
+
         # PROJ-216: Register all fleets with galaxy for O(1) lookup
         # Fleets are deserialized into empires but not automatically registered
         for empire in session.empires:

@@ -52,6 +52,10 @@ class GameInitializer:
         # Set up initial scenario (homeworlds, colonies)
         GameInitializer._setup_initial_scenario(systems, empires, config)
 
+        # PROJ-219: Set galaxy back-references for auto fleet registration
+        for empire in empires:
+            empire.set_galaxy(galaxy)
+
         return galaxy, empires
 
     @staticmethod

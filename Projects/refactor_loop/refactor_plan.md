@@ -8,22 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-03-01
-**Last Completed:** PROJ-219 Phase 1
+**Last Completed:** PROJ-219 Phase 2
 **Current Status:** PROJ-219 in progress
 **Current Project:** PROJ-219
-**Current Phase:** Phase 2 - Wire Up Galaxy References
-**Test Status:** 13152 passed, 1 skipped
+**Current Phase:** Phase 3 - Remove Redundant Calls
+**Test Status:** 13156 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-219 Phase 1 COMPLETE:**
-  - Added `_galaxy: Optional['Galaxy']` field to Empire
-  - Added `set_galaxy()` method for late binding
-  - Modified `add_fleet()` to auto-call `galaxy.register_fleet(fleet)`
-  - Modified `remove_fleet()` to auto-call `galaxy.unregister_fleet(fleet)`
-  - 7 new tests in `tests/unit/strategy/data/test_empire_fleet_registration.py`
-  - Files modified: `game/strategy/data/empire.py`
-- **Next: Phase 2** - Wire up `set_galaxy()` in GameInitializer and GameSession
+- **PROJ-219 Phase 2 COMPLETE:**
+  - Added `set_galaxy()` call in `GameInitializer.initialize()` after `_setup_initial_scenario`
+  - Added `set_galaxy()` call in `GameSession.from_dict()` before fleet registration loop
+  - 4 new integration tests in `tests/integration/strategy/test_fleet_registration_wiring.py`
+  - Files modified: `game/strategy/engine/game_initializer.py`, `game/strategy/engine/game_session.py`
+- **Next: Phase 3** - Remove redundant `galaxy.register_fleet()` calls in production_engine, command_handlers, and explicit `galaxy.unregister_fleet()` in superweapon_processor
 
 ---
 
@@ -116,7 +114,7 @@
 ---
 
 - [/] **PROJ-219: Fleet Registration Consolidation**
-  - **Phases:** 5 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 5 | **Status:** Phase 2 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-219/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-219/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -212,6 +210,7 @@
 | 2026-02-28 | PROJ-216 | Phase 4 | Complete | 13153 passed, 1 skipped | 0aea4d9d | 43 integration tests (27 click gate + 16 move order) |
 | 2026-02-28 | PROJ-216 | Audit 1 | PASSED | 13153 passed, 1 skipped | - | Fix verified, 62 tests pass, no issues found |
 | 2026-03-01 | PROJ-219 | Phase 1 | Complete | 13152 passed, 1 skipped | pending | _galaxy, set_galaxy(), add/remove_fleet auto-register, 7 tests |
+| 2026-03-01 | PROJ-219 | Phase 2 | Complete | 13156 passed, 1 skipped | pending | set_galaxy() in GameInitializer + GameSession.from_dict, 4 integration tests |
 
 ---
 

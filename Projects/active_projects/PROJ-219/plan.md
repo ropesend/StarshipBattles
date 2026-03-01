@@ -14,19 +14,19 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Core Empire Changes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Wire Up Galaxy References | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Wire Up Galaxy References | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Remove Redundant Calls | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Integration Tests | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-03-01
-**Active Phase:** Phase 2 - Wire Up Galaxy References
-**Last Action:** Phase 1 complete: _galaxy, set_galaxy(), add_fleet(), remove_fleet() updated with auto-register/unregister
-**Next Action:** Begin Phase 2: Wire up galaxy references in GameInitializer and GameSession
+**Active Phase:** Phase 3 - Remove Redundant Calls
+**Last Action:** Phase 2 complete: set_galaxy() wired in GameInitializer.initialize() and GameSession.from_dict()
+**Next Action:** Begin Phase 3: Remove redundant register_fleet/unregister_fleet calls
 **Blockers:** None
-**Test Baseline:** 13152 passed, 1 skipped
-**Context for Next Agent:** Empire now has _galaxy field + set_galaxy() + auto-register/unregister in add_fleet/remove_fleet. 7 new tests in test_empire_fleet_registration.py. Phase 2 wires galaxy refs in GameInitializer.initialize() and GameSession.from_dict().
+**Test Baseline:** 13156 passed, 1 skipped
+**Context for Next Agent:** Galaxy wiring complete. GameInitializer.initialize() and GameSession.from_dict() both call set_galaxy() on all empires. 4 new integration tests in test_fleet_registration_wiring.py. Phase 3 removes redundant galaxy.register_fleet() calls in production_engine, command_handlers, and explicit unregister_fleet() in superweapon_processor.
 
 ## Overview
 
