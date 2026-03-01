@@ -102,7 +102,8 @@ class ProductionEngine:
         if 'total_resource_cost' in design_data:
             return design_data['total_resource_cost']
 
-        total_cost = DesignCostCalculator.calculate_total_cost(design_data)
+        # PROJ-218: Pass registries for Ship-loading cost calculation
+        total_cost = DesignCostCalculator.calculate_total_cost(design_data, self._registries)
         design_data['total_resource_cost'] = total_cost
         return total_cost
 

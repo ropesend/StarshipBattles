@@ -214,7 +214,8 @@ def _make_economy_turn_engine(registries):
         registries=registries,
         **mocks,
         harvesting_engine=HarvestingEngine(),
-        maintenance_engine=MaintenanceEngine(),
+        # PROJ-218: MaintenanceEngine now requires registries
+        maintenance_engine=MaintenanceEngine(registries=registries),
         production_engine=ProductionEngine(),
     )
 

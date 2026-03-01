@@ -256,7 +256,8 @@ class TurnEngine:
         """Return maintenance engine, lazily creating default if not injected."""
         if self._maintenance_engine is None:
             from game.strategy.engine.maintenance_engine import MaintenanceEngine
-            self._maintenance_engine = MaintenanceEngine()
+            # PROJ-218: Pass registries for cost calculation
+            self._maintenance_engine = MaintenanceEngine(registries=self._registries)
         return self._maintenance_engine
 
     @property

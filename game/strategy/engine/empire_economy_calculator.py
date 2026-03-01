@@ -220,4 +220,5 @@ class EmpireEconomyCalculator:
         Returns:
             Dict mapping resource type to maintenance cost amount.
         """
-        return calculate_maintenance_cost(design_data, MAINTENANCE_RATE)
+        # PROJ-218: Pass registries for Ship-loading cost calculation
+        return calculate_maintenance_cost(design_data, self._registries, MAINTENANCE_RATE)

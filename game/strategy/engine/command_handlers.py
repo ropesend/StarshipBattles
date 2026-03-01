@@ -835,7 +835,8 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
             if design_data is None:
                 logger.warning(f"Could not load design data for {design_id}")
                 return {}
-            return DesignCostCalculator.calculate_total_cost(design_data)
+            # PROJ-218: Pass registries for Ship-loading cost calculation
+            return DesignCostCalculator.calculate_total_cost(design_data, session.registries)
         except (OSError, ValueError, KeyError) as e:
             logger.warning(f"Failed to calculate design cost for {design_id}: {e}")
             return {}

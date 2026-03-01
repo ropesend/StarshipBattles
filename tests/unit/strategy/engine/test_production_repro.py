@@ -59,10 +59,11 @@ def _make_add_callback(entity_registry: dict, design_data_registry: dict = None)
             return
 
         # PROJ-213: Calculate design cost from design data
+        # PROJ-218: Pass None for registries to use inline fallback
         total_cost = {}
         if design_data_registry and design_id in design_data_registry:
             total_cost = DesignCostCalculator.calculate_total_cost(
-                design_data_registry[design_id]
+                design_data_registry[design_id], None
             )
 
         # Build queue item with populated cost tracking

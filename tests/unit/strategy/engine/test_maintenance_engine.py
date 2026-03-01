@@ -108,9 +108,9 @@ def _make_ship_instance(
 class TestMaintenanceEngine:
     """Tests for MaintenanceEngine.process_maintenance_tick() - PROJ-161 per-tick only."""
 
-    def _get_engine(self):
+    def _get_engine(self, registries=None):
         from game.strategy.engine.maintenance_engine import MaintenanceEngine
-        return MaintenanceEngine()
+        return MaintenanceEngine(registries=registries)
 
     def _process_full_turn(self, engine, empires):
         """Helper to simulate full turn (100 ticks) of maintenance."""
@@ -474,9 +474,9 @@ class TestPerTickMaintenance:
     charging 1/100th (0.05%) of build cost per tick.
     """
 
-    def _get_engine(self):
+    def _get_engine(self, registries=None):
         from game.strategy.engine.maintenance_engine import MaintenanceEngine
-        return MaintenanceEngine()
+        return MaintenanceEngine(registries=registries)
 
     def test_single_tick_deducts_one_hundredth(self):
         """Single tick deducts 1/100th of the per-turn maintenance cost."""

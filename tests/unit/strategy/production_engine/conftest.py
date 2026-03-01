@@ -3,6 +3,16 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.core.hex_math import HexCoord
+from game.strategy.engine.production_engine import ProductionEngine
+
+
+@pytest.fixture
+def production_engine(fresh_registries):
+    """Create a ProductionEngine with registries.
+
+    PROJ-218: Now requires registries for cost calculation via Ship loading.
+    """
+    return ProductionEngine(registries=fresh_registries)
 
 
 @pytest.fixture

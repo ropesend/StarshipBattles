@@ -13,16 +13,25 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Fix DesignCostCalculator to Use Registry | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Fix Command Handler and All Callers | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Cleanup and Validation Hardening | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Fix DesignCostCalculator to Use Registry | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Fix Command Handler and All Callers | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Cleanup and Validation Hardening | Deferred | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-28 16:30
-**Active Phase:** Planning
-**Last Action:** Plan written, awaiting user approval
-**Next Action:** User reviews plan, then implementation begins
+**Last Updated:** 2026-02-28
+**Active Phase:** Ready for Audit
+**Last Action:** Phase 1 & 2 complete; all tests passing (13091 passed, 1 skipped)
+**Next Action:** Audit
 **Blockers:** None
+
+**Implementation Summary:**
+- Rewrote `DesignCostCalculator.calculate_total_cost()` with dual approach: inline cost first, then Ship loading
+- Inline cost fallback supports tests and facilities with explicit `resource_cost` fields
+- Ship loading only used for designs with `ship_class` (avoids facility default hull costs)
+- Updated all callers: ProductionEngine, MaintenanceEngine, EmpireEconomyCalculator, command_handlers
+- MaintenanceEngine now requires `registries` parameter (DI pattern)
+- Updated 10+ test files to provide registries or use fixtures
+- All 13091 tests passing
 
 ## Overview
 Production queues display "1.0 turns, 0 cost" for all items instead of actual resource costs and build times. The root cause is `DesignCostCalculator.calculate_total_cost()` which looks for inline `resource_cost` on component entries in design JSON, but design files only contain component **references** (e.g., `{"id": "bridge"}`). The actual `resource_cost` data lives in the component registry (`data/components.json`), and costs can include formula-based values and modifier multipliers.

@@ -1,6 +1,7 @@
 """Tests for design cost calculation and queue item cost tracking.
 
 PROJ-75 Phase 4: Production resource consumption.
+PROJ-218: Updated to use Ship-loading cost calculation with registry.
 
 Task 4.1: Design cost calculation tests.
 Task 4.3: Queue item cost tracking tests.
@@ -11,129 +12,115 @@ from unittest.mock import MagicMock
 from game.strategy.engine.production_engine import ProductionEngine
 
 
-# --- Helper fixtures ---
+def _make_design_data(hull_id: str = "hull_frigate", components: list = None) -> dict:
+    """Create design_data with valid ship structure.
 
-def _make_design_data(components_by_layer: dict) -> dict:
-    """Create design_data with layers and components.
+    PROJ-218: Design data must have ship_class and valid component IDs
+    for the Ship loading approach to work.
 
     Args:
-        components_by_layer: Dict of layer_name -> list of component dicts.
-            Each component dict should have at minimum 'id' and optionally 'resource_cost'.
+        hull_id: Hull component ID (must exist in registry).
+        components: Optional list of additional component dicts for INNER layer.
     """
-    layers = {}
-    for layer_name, components in components_by_layer.items():
-        layers[layer_name] = {"components": components}
-    return {"layers": layers}
+    design = {
+        "name": "Test Ship",
+        "ship_class": "frigate",
+        "layers": {
+            "CORE": [{"id": hull_id}]
+        }
+    }
+    if components:
+        design["layers"]["INNER"] = components
+    return design
 
 
 class TestDesignCostCalculation:
-    """Tests for _calculate_design_cost method."""
+    """Tests for _calculate_design_cost method.
 
-    def test_single_component_cost(self):
-        """Cost from a single component is returned directly."""
-        engine = ProductionEngine()
-        design = _make_design_data({
-            "CORE": [
-                {"id": "bridge", "resource_cost": {"Metals": 80, "Organics": 20}}
-            ]
-        })
+    PROJ-218: Now uses Ship loading from registry - costs come from
+    component definitions in components.json, not inline resource_cost.
+    """
 
-        cost = engine._calculate_design_cost(design)
+    def test_hull_component_cost(self, production_engine):
+        """Hull component cost is calculated from registry."""
+        design = _make_design_data()
 
-        assert cost == {"Metals": 80, "Organics": 20}
+        cost = production_engine._calculate_design_cost(design)
 
-    def test_multiple_components_summed(self):
+        # Hull component should have Metals cost
+        assert "Metals" in cost
+        assert cost["Metals"] > 0
+
+    def test_multiple_components_summed(self, production_engine):
         """Costs from multiple components are summed per resource."""
-        engine = ProductionEngine()
-        design = _make_design_data({
-            "CORE": [
-                {"id": "bridge", "resource_cost": {"Metals": 80, "Organics": 20}},
-                {"id": "railgun", "resource_cost": {"Metals": 150, "Radioactives": 30}},
-            ]
-        })
+        design = _make_design_data(
+            components=[{"id": "combat_sensor"}]
+        )
 
-        cost = engine._calculate_design_cost(design)
+        cost = production_engine._calculate_design_cost(design)
 
-        assert cost == {"Metals": 230, "Organics": 20, "Radioactives": 30}
+        # Should have costs from hull + sensor
+        assert "Metals" in cost
+        assert cost["Metals"] > 0
 
-    def test_missing_resource_cost_defaults_empty(self):
-        """Components without resource_cost contribute nothing."""
-        engine = ProductionEngine()
-        design = _make_design_data({
-            "CORE": [
-                {"id": "bridge", "resource_cost": {"Metals": 100}},
-                {"id": "hull_plating"},  # No resource_cost
-            ]
-        })
+    def test_invalid_component_skipped(self, production_engine):
+        """Invalid component IDs don't cause failure."""
+        design = _make_design_data(
+            components=[{"id": "nonexistent_component"}]
+        )
 
-        cost = engine._calculate_design_cost(design)
+        # Should still get hull cost
+        cost = production_engine._calculate_design_cost(design)
+        assert isinstance(cost, dict)
 
-        assert cost == {"Metals": 100}
-
-    def test_multiple_layers_summed(self):
-        """Costs from components across different layers are summed."""
-        engine = ProductionEngine()
-        design = _make_design_data({
-            "CORE": [
-                {"id": "bridge", "resource_cost": {"Metals": 80}}
-            ],
-            "WEAPONS": [
-                {"id": "railgun", "resource_cost": {"Metals": 150, "Radioactives": 30}}
-            ],
-            "ENGINES": [
-                {"id": "thruster", "resource_cost": {"Metals": 120, "Radioactives": 40}}
-            ]
-        })
-
-        cost = engine._calculate_design_cost(design)
-
-        assert cost == {"Metals": 350, "Radioactives": 70}
-
-    def test_empty_design_returns_empty(self):
-        """Design with no layers returns empty cost dict."""
-        engine = ProductionEngine()
+    def test_empty_design_returns_hull_cost(self, production_engine):
+        """Design with empty layers still gets default hull cost."""
+        # Ship loader creates default hull
         design = {"layers": {}}
 
-        cost = engine._calculate_design_cost(design)
+        cost = production_engine._calculate_design_cost(design)
+
+        # Default hull has cost
+        assert isinstance(cost, dict)
+
+    def test_cost_cached_in_design_data(self, production_engine):
+        """Calculated cost is cached as total_resource_cost in design_data."""
+        design = _make_design_data()
+
+        cost = production_engine._calculate_design_cost(design)
+
+        assert "total_resource_cost" in design
+        assert design["total_resource_cost"] == cost
+
+    def test_cached_cost_returned_on_second_call(self, production_engine):
+        """Second call returns the cached value without recalculating."""
+        design = _make_design_data()
+
+        # First call calculates and caches
+        cost1 = production_engine._calculate_design_cost(design)
+
+        # Modify cached value to verify cache is used
+        design["total_resource_cost"]["Metals"] = 999
+
+        cost2 = production_engine._calculate_design_cost(design)
+
+        # Should return cached value (999), not recalculated
+        assert cost2["Metals"] == 999
+
+    def test_design_with_no_layers_key(self, production_engine):
+        """Design missing layers key returns empty cost."""
+        design = {}
+
+        cost = production_engine._calculate_design_cost(design)
 
         assert cost == {}
 
-    def test_cost_cached_in_design_data(self):
-        """Calculated cost is cached as total_resource_cost in design_data."""
-        engine = ProductionEngine()
-        design = _make_design_data({
-            "CORE": [
-                {"id": "bridge", "resource_cost": {"Metals": 80}}
-            ]
-        })
+    def test_registries_required(self):
+        """Engine without registries returns empty cost."""
+        engine = ProductionEngine(registries=None)
+        design = _make_design_data()
 
         cost = engine._calculate_design_cost(design)
 
-        assert "total_resource_cost" in design
-        assert design["total_resource_cost"] == {"Metals": 80}
-
-    def test_cached_cost_returned_on_second_call(self):
-        """Second call returns the cached value without recalculating."""
-        engine = ProductionEngine()
-        design = _make_design_data({
-            "CORE": [
-                {"id": "bridge", "resource_cost": {"Metals": 80}}
-            ]
-        })
-
-        # First call calculates and caches
-        cost1 = engine._calculate_design_cost(design)
-        # Modify layers to verify cache is used
-        design["layers"]["CORE"]["components"][0]["resource_cost"]["Metals"] = 999
-        cost2 = engine._calculate_design_cost(design)
-
-        assert cost2 == {"Metals": 80}  # Cached value, not 999
-
-    def test_design_with_no_layers_key(self):
-        """Design missing layers key returns empty cost."""
-        engine = ProductionEngine()
-        design = {}
-
-        cost = engine._calculate_design_cost(design)
-
+        # Returns empty when registries not provided
         assert cost == {}

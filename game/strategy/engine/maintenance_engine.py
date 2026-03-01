@@ -28,6 +28,7 @@ from game.strategy.services.design_cost_calculator import (
 )
 
 if TYPE_CHECKING:
+    from game.core.registry import GameRegistries
     from game.strategy.data.empire import Empire
     from game.strategy.data.planet import Planet, PlanetaryFacility
     from game.strategy.data.fleet import Fleet
@@ -40,20 +41,25 @@ logger = logging.getLogger(__name__)
 MAINTENANCE_RATE = DEFAULT_MAINTENANCE_RATE
 
 
-def calculate_maintenance_cost(design_data: Dict, rate: float = MAINTENANCE_RATE) -> Dict[str, float]:
+def calculate_maintenance_cost(
+    design_data: Dict,
+    registries: 'GameRegistries',
+    rate: float = MAINTENANCE_RATE
+) -> Dict[str, float]:
     """Calculate maintenance cost from a design's resource costs.
 
     PROJ-204: Delegates to DesignCostCalculator for centralized calculation.
-    This function is kept for backward compatibility.
+    PROJ-218: Now requires registries for Ship-loading cost calculation.
 
     Args:
         design_data: Design data dict containing layers with components.
+        registries: GameRegistries for component resolution (required).
         rate: Maintenance rate to apply (default: 5% = 0.05).
 
     Returns:
         Dict mapping resource type to maintenance cost amount.
     """
-    return DesignCostCalculator.calculate_maintenance_cost(design_data, rate)
+    return DesignCostCalculator.calculate_maintenance_cost(design_data, registries, rate)
 
 
 @dataclass
@@ -73,6 +79,7 @@ class MaintenanceEngine:
     empire cannot afford the payment, the entity is immediately scuttled.
 
     PROJ-161: Per-tick only (legacy full-turn method removed).
+    PROJ-218: Now requires registries for cost calculation.
 
     Processing order:
     1. Facilities (all colonies, in colony order)
@@ -80,14 +87,20 @@ class MaintenanceEngine:
     3. Empty fleet cleanup
 
     Usage:
-        engine = MaintenanceEngine()
+        engine = MaintenanceEngine(registries=session.registries)
         # Called 100 times per turn:
         events = engine.process_maintenance_tick(tick, empires)
     """
 
-    def __init__(self):
-        """Initialize the maintenance engine."""
-        pass
+    def __init__(self, *, registries: 'GameRegistries'):
+        """Initialize the maintenance engine.
+
+        PROJ-218: registries is now required for cost calculation.
+
+        Args:
+            registries: GameRegistries for component resolution.
+        """
+        self._registries = registries
 
     def process_maintenance_tick(self, tick: int, empires: List) -> List[ScuttleEvent]:
         """Process maintenance for one tick (1/100th of turn).
@@ -248,7 +261,8 @@ class MaintenanceEngine:
         Returns:
             Dict mapping resource type to maintenance cost amount.
         """
-        full_cost = calculate_maintenance_cost(design_data, MAINTENANCE_RATE)
+        # PROJ-218: Pass registries for Ship-loading cost calculation
+        full_cost = calculate_maintenance_cost(design_data, self._registries, MAINTENANCE_RATE)
         if tick_fraction == 1.0:
             return full_cost
         return {res: amount * tick_fraction for res, amount in full_cost.items()}

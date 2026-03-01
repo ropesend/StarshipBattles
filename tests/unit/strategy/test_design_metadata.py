@@ -84,7 +84,7 @@ class TestDesignMetadata:
                             "category": "weapon",
                             "damage": 100,
                             "rate_of_fire": 2,
-                            "cost": {"metal": 10, "energy": 5}
+                            "resource_cost": {"metal": 10, "energy": 5}
                         }
                     ]
                 },
@@ -184,9 +184,9 @@ class TestDesignMetadata:
         design_data = {
             "layers": {
                 "core": [
-                    {"cost": {"metal": 10, "energy": 5}},
-                    {"cost": {"metal": 20, "energy": 10}},
-                    {"cost": {"crystals": 5}}
+                    {"resource_cost": {"metal": 10, "energy": 5}},
+                    {"resource_cost": {"metal": 20, "energy": 10}},
+                    {"resource_cost": {"crystals": 5}}
                 ]
             }
         }
@@ -458,7 +458,7 @@ class TestDesignMetadataResourceCost:
         design_data = {
             "layers": {
                 "core": [
-                    {"id": "test", "cost": {}}
+                    {"id": "test", "resource_cost": {}}
                 ]
             }
         }
@@ -558,7 +558,7 @@ class TestDesignMetadataOldLayerFormat:
         design_data = {
             "layers": {
                 "outer": {  # Old format
-                    "position_1": {"cost": {"metal": 100}}
+                    "position_1": {"resource_cost": {"metal": 100}}
                 }
             }
         }
@@ -727,10 +727,10 @@ class TestDesignMetadataMultipleLayers:
         design_data = {
             "layers": {
                 "core": [
-                    {"cost": {"metal": 100, "energy": 50}}
+                    {"resource_cost": {"metal": 100, "energy": 50}}
                 ],
                 "outer": [
-                    {"cost": {"metal": 200, "crystals": 25}}
+                    {"resource_cost": {"metal": 200, "crystals": 25}}
                 ]
             }
         }
