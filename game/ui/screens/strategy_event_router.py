@@ -268,7 +268,9 @@ class StrategyEventRouter:
 
         # 2. Check if ANY UI element is being hovered (e.g. windows, modals)
         # This prevents clicking "through" the planet selection window to the map
-        if self.ui.manager.get_hovering_any_element():
+        hovering = self.ui.manager.get_hovering_any_element()
+        if hovering:
+            logger.debug(f"Click at ({mx},{my}) BLOCKED by UI hover check")
             return True
 
         return False

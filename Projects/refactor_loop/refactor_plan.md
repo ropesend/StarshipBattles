@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-217 Audit Passed
-**Current Status:** PROJ-217 complete; PROJ-216 next
+**Last Completed:** PROJ-216 Phase 1 (Diagnostic Logging)
+**Current Status:** PROJ-216 Phase 1 complete; Phase 2 next
 **Current Project:** PROJ-216
-**Current Phase:** Phase 1 (or planning)
-**Test Status:** 13091 passed, 1 skipped
+**Current Phase:** Phase 2 (Fix Click Gate)
+**Test Status:** 13091 passed, 1 skipped (213 strategy tests verified)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-217 COMPLETE:**
-  - All 4 phases finished: Core model, Generation, UI, Tests
-  - Zero diameter_hexes references remain in Python files
-  - 13,091 tests passing
-  - Audit cycle 1 PASSED - all verifications complete
-- **Next:** PROJ-216 - Fix Global Fleet Order Registration Failure
+- **PROJ-216 Phase 1 COMPLETE:**
+  - Diagnostic logging added to strategy_event_router.py (line 273)
+  - Diagnostic logging added to strategy_input_handler.py (lines 145-147)
+  - 98 input handler tests + 115 strategy screen tests passing
+  - Manual verification deferred (automated agent cannot launch game)
+- **Next:** Phase 2 - Replace get_hovering_any_element() with explicit window check
 
 ---
 
@@ -105,7 +105,7 @@
 
 ---
 
-- [ ] **PROJ-216: Fix Global Fleet Order Registration Failure**
+- [/] **PROJ-216: Fix Global Fleet Order Registration Failure**
   - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-216/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-216/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
@@ -196,6 +196,7 @@
 | 2026-02-28 | PROJ-217 | Phase 3 | Complete | pending | pending | strategy_renderer, system_mode, detail formatters, visual test script |
 | 2026-02-28 | PROJ-217 | Phase 4 | Complete | 13091 passed, 1 skipped | pending | All 23 test files updated |
 | 2026-02-28 | PROJ-217 | Audit 1 | PASSED | 13091 passed, 1 skipped | pending | All verifications complete |
+| 2026-02-28 | PROJ-216 | Phase 1 | Complete | 13091 passed, 1 skipped | pending | Diagnostic logging added to click gate |
 
 ---
 

@@ -141,9 +141,11 @@ class StrategyInputHandler:
         Returns:
             True if click was handled, False otherwise.
         """
-        if self.scene.ui.handle_click(mx, my, button):
+        ui_handled = self.scene.ui.handle_click(mx, my, button)
+        if ui_handled:
+            logger.debug(f"Click at ({mx},{my}) consumed by UI layer")
             return True
-
+        logger.debug(f"Click at ({mx},{my}) reaching dispatcher, mode={self.input_mode}")
         return self._click_dispatch.dispatch_click(mx, my, button)
 
     def _handle_scroll(self, event):
