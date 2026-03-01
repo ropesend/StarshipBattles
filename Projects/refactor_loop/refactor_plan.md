@@ -8,20 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-216 Phase 1 (Diagnostic Logging)
-**Current Status:** PROJ-216 Phase 1 complete; Phase 2 next
+**Last Completed:** PROJ-216 Phase 2 (Fix Click Gate)
+**Current Status:** PROJ-216 Phase 2 complete; Phase 3 next
 **Current Project:** PROJ-216
-**Current Phase:** Phase 2 (Fix Click Gate)
-**Test Status:** 13091 passed, 1 skipped (213 strategy tests verified)
+**Current Phase:** Phase 3 (Fix Confirmation Dialog Flow)
+**Test Status:** 13110 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-216 Phase 1 COMPLETE:**
-  - Diagnostic logging added to strategy_event_router.py (line 273)
-  - Diagnostic logging added to strategy_input_handler.py (lines 145-147)
-  - 98 input handler tests + 115 strategy screen tests passing
-  - Manual verification deferred (automated agent cannot launch game)
-- **Next:** Phase 2 - Replace get_hovering_any_element() with explicit window check
+- **PROJ-216 Phase 2 COMPLETE:**
+  - Replaced `get_hovering_any_element()` with `_is_blocking_ui_element_at()`
+  - New method explicitly checks 8 window types + menu_panel + top_bar + resource_bar
+  - Hidden buttons (visible=0) no longer block map clicks
+  - Created `test_strategy_event_router.py` with 19 comprehensive tests
+  - Removed Phase 1 diagnostic logging from event_router (kept input_handler debug logs)
+- **Next:** Phase 3 - Verify confirmation dialog flow (likely already working)
 
 ---
 
@@ -197,6 +198,7 @@
 | 2026-02-28 | PROJ-217 | Phase 4 | Complete | 13091 passed, 1 skipped | pending | All 23 test files updated |
 | 2026-02-28 | PROJ-217 | Audit 1 | PASSED | 13091 passed, 1 skipped | pending | All verifications complete |
 | 2026-02-28 | PROJ-216 | Phase 1 | Complete | 13091 passed, 1 skipped | pending | Diagnostic logging added to click gate |
+| 2026-02-28 | PROJ-216 | Phase 2 | Complete | 13110 passed, 1 skipped | pending | Click gate fixed; 19 new tests added |
 
 ---
 

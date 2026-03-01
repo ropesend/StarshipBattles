@@ -266,11 +266,57 @@ class StrategyEventRouter:
         if mx > self.ui.width - self.ui.sidebar_width:
             return True
 
-        # 2. Check if ANY UI element is being hovered (e.g. windows, modals)
-        # This prevents clicking "through" the planet selection window to the map
-        hovering = self.ui.manager.get_hovering_any_element()
-        if hovering:
-            logger.debug(f"Click at ({mx},{my}) BLOCKED by UI hover check")
+        # 2. Check if mouse is over an active modal/window that should block map clicks
+        # PROJ-216: Replaced get_hovering_any_element() which was too broad and blocked
+        # ALL clicks when hidden buttons (visible=0) were registered with pygame_gui.
+        if self._is_blocking_ui_element_at(mx, my):
+            return True
+
+        return False
+
+    def _is_blocking_ui_element_at(self, mx: int, my: int) -> bool:
+        """Check if a blocking UI element (modal window, menu panel) is at the given position.
+
+        Only actual interactive overlays should block map clicks - NOT hidden buttons,
+        container panels, or decorative elements.
+
+        PROJ-216: This replaces the overly broad get_hovering_any_element() check
+        that was blocking all clicks due to hidden UI elements being registered.
+
+        Args:
+            mx: Mouse x coordinate.
+            my: Mouse y coordinate.
+
+        Returns:
+            True if a blocking element is at the position, False otherwise.
+        """
+        wm = self.ui.window_manager
+
+        # Check active windows that should block clicks
+        blocking_windows = [
+            wm.fleet_orders_window,
+            wm.planet_list_window,
+            wm.fleet_report_window,
+            wm.transfer_dialog,
+            wm.build_queue_list_window,
+            wm.empire_build_queue_window,
+            wm.event_log_window,
+            wm.empire_panel_window,
+            getattr(wm, '_pending_confirmation_dialog', None),
+        ]
+        for window in blocking_windows:
+            if window is not None and window.alive() and window.rect.collidepoint((mx, my)):
+                return True
+
+        # Check menu panel
+        if self.ui.menu_panel is not None:
+            if self.ui.menu_panel.get_abs_rect().collidepoint((mx, my)):
+                return True
+
+        # Check top bar and resource bar (they are above the map)
+        if hasattr(self.ui, 'top_bar') and self.ui.top_bar.rect.collidepoint((mx, my)):
+            return True
+        if hasattr(self.ui, 'resource_bar') and self.ui.resource_bar.rect.collidepoint((mx, my)):
             return True
 
         return False
