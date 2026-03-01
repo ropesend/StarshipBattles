@@ -122,6 +122,20 @@ class TableColumnManager:
         """
         return sum(c.get("width", 0) for c in self.get_visible_columns())
 
+    def is_column_visible(self, column_id: str) -> bool:
+        """Check if a column is currently visible.
+
+        Args:
+            column_id: The column identifier.
+
+        Returns:
+            True if column is visible, False if hidden or not found.
+        """
+        col = self.get_column(column_id)
+        if col is None:
+            return False
+        return col.get("visible", True)
+
     def is_image_column(self, column_id: str) -> bool:
         """Check if a column is an image column.
 
