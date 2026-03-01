@@ -24,6 +24,8 @@ Check these files for PROJ-216 diagnostic logging that should be removed:
 - [ ] `game/strategy/facade/strategy_session_facade.py` - check for debug logging
 - [ ] `game/strategy/data/pathfinding.py` - check for debug logging
 
+> **Note:** These UI files are unrelated to fleet registration but were modified by PROJ-216. This cleanup is bundled here for convenience. If time-constrained, these can be skipped without affecting PROJ-219 goals.
+
 For each file:
 - Keep functional code changes from PROJ-216
 - Remove any verbose diagnostic logging that was added for debugging

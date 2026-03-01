@@ -24,7 +24,7 @@
   ```
 - [ ] Verify: Empires created via GameInitializer have `_galaxy` set
 
-**Notes:**
+**Notes:** Insert the loop before `return galaxy, empires` (line 55).
 
 ---
 
@@ -32,7 +32,7 @@
 **File:** `game/strategy/engine/game_session.py`
 **Tests:** `pytest tests/integration/save_load/`
 
-- [ ] After empire deserialization (line 342), before fleet registration loop (line 353), add:
+- [ ] After empire deserialization (line 349, after exception block), before fleet registration loop (line 353), add:
   ```python
   # PROJ-219: Set galaxy back-references for auto-registration
   for empire in session.empires:

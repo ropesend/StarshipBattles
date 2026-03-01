@@ -20,18 +20,19 @@
 | 5. Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-28 23:45
-**Active Phase:** Planning - READY FOR APPROVAL
-**Last Action:** Completed swarm analysis and detailed planning
-**Next Action:** Awaiting user approval to begin implementation
+**Last Updated:** 2026-03-01
+**Active Phase:** Phase 1 - Ready to Start
+**Last Action:** Project review completed (Protocol 09) — 8 findings addressed, plan updated
+**Next Action:** Begin Phase 1: Core Empire Changes
 **Blockers:** None
 **Test Baseline:** 42 pre-existing failures (unrelated to fleet registration)
+**Context for Next Agent:** Plan reviewed and updated on 2026-03-01. Key changes: Bug table expanded to 8 locations, test import path fixed, Task 4.7 added for maintenance scuttle, line references clarified.
 
 ## Overview
 
 Fleet registration with the galaxy registry is currently scattered across multiple files with no enforcement mechanism. When a fleet is created, two separate calls are required: `empire.add_fleet(fleet)` for ownership and `galaxy.register_fleet(fleet)` for O(1) lookup. This two-step ritual is error-prone - PROJ-216 found 3 locations where registration was missing.
 
-Additionally, swarm analysis discovered **6 locations with missing unregistration**, causing "ghost fleets" to remain in the registry after destruction.
+Additionally, swarm analysis discovered **7 locations with missing unregistration** (plus 1 with explicit unregister that becomes redundant), causing "ghost fleets" to remain in the registry after destruction.
 
 This project consolidates all registration/unregistration into `Empire.add_fleet()` and `Empire.remove_fleet()`.
 
@@ -39,7 +40,7 @@ This project consolidates all registration/unregistration into `Empire.add_fleet
 
 1. **Single-point registration**: `empire.add_fleet(fleet)` automatically calls `galaxy.register_fleet(fleet)`
 2. **Single-point unregistration**: `empire.remove_fleet(fleet)` automatically calls `galaxy.unregister_fleet(fleet)`
-3. **Fix ghost fleet bugs**: All 6 locations calling `remove_fleet()` without unregistering now work correctly
+3. **Fix ghost fleet bugs**: All 8 locations calling `remove_fleet()` now work correctly (7 missing unregistration + 1 redundant explicit call)
 4. **Cleanup**: Remove redundant registration calls and PROJ-216 diagnostic logging
 
 ## Scope
@@ -79,7 +80,9 @@ This project consolidates all registration/unregistration into `Empire.add_fleet
 | COLONIZE empty | `fleet_order_processor.py:216` | Empty fleet in registry |
 | Instant merge | `fleet_order_processor.py:663` | Merged fleet in registry |
 | Superweapon finalize | `superweapon_order_processor.py:103` | Consumed fleet in registry |
+| Self-destruct | `superweapon_order_processor.py:613` | Consumed fleet in registry |
 | Maintenance scuttle | `maintenance_engine.py:286` | Empty fleet in registry |
+| Stellarate (explicit) | `superweapon_order_processor.py:241` | Already has unregister; becomes redundant |
 
 ## Related Documents
 

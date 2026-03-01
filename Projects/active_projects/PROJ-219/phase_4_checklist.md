@@ -21,6 +21,7 @@ The following locations previously called `empire.remove_fleet()` WITHOUT `galax
 | COLONIZE empty | `fleet_order_processor.py:216` | Empty fleet in registry |
 | Instant merge | `fleet_order_processor.py:663` | Merged fleet in registry |
 | Superweapon finalize | `superweapon_order_processor.py:103` | Consumed fleet in registry |
+| Self-destruct | `superweapon_order_processor.py:613` | Consumed fleet in registry |
 | Maintenance scuttle | `maintenance_engine.py:286` | Empty fleet in registry |
 
 ---
@@ -63,7 +64,7 @@ Create new test file with:
   - Assert: Source fleet NOT in registry
   - Assert: Target fleet IS in registry with merged ships
 
-**Notes:**
+**Notes:** This test also validates the "instant merge" code path at line 663 — both use `remove_fleet()` which now auto-unregisters.
 
 ---
 
@@ -109,11 +110,24 @@ Create new test file with:
 
 ---
 
+### Task 4.7: Test maintenance scuttle unregisters empty fleet [Medium]
+**File:** `tests/integration/strategy/test_fleet_registration_lifecycle.py`
+**Tests:** `pytest tests/integration/strategy/test_fleet_registration_lifecycle.py::test_maintenance_scuttle_unregisters_empty_fleet`
+
+- [ ] Create `test_maintenance_scuttle_unregisters_empty_fleet`:
+  - Setup: Empire with fleet containing single ship, empire has 0 resources
+  - Action: Process maintenance tick (ships scuttled due to lack of maintenance)
+  - Assert: Fleet NOT in registry (0 ships remaining after scuttle)
+
+**Notes:**
+
+---
+
 ## Phase Completion Checklist
 
 When all tasks above are done:
 - [ ] All task checkboxes above are checked
-- [ ] Run `pytest tests/integration/strategy/test_fleet_registration_lifecycle.py` - all 6 tests pass
+- [ ] Run `pytest tests/integration/strategy/test_fleet_registration_lifecycle.py` - all 7 tests pass
 - [ ] Run `pytest tests/ --testmon` - no regressions
 - [ ] Update status at top of this file to `Complete`
 - [ ] Update plan.md phase table row to `Complete`

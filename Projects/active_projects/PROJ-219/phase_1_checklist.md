@@ -108,7 +108,7 @@ import pytest
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.galaxy import Galaxy
-from game.core.hex_utils import HexCoord
+from game.core.hex_math import HexCoord
 
 
 class TestEmpireFleetAutoRegistration:
