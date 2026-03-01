@@ -8,21 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-216 Phase 2 (Fix Click Gate)
-**Current Status:** PROJ-216 Phase 2 complete; Phase 3 next
+**Last Completed:** PROJ-216 Phase 3 (Fix Confirmation Dialog Flow)
+**Current Status:** PROJ-216 Phase 3 complete; Phase 4 next
 **Current Project:** PROJ-216
-**Current Phase:** Phase 3 (Fix Confirmation Dialog Flow)
+**Current Phase:** Phase 4 (Integration Tests)
 **Test Status:** 13110 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-216 Phase 2 COMPLETE:**
-  - Replaced `get_hovering_any_element()` with `_is_blocking_ui_element_at()`
-  - New method explicitly checks 8 window types + menu_panel + top_bar + resource_bar
-  - Hidden buttons (visible=0) no longer block map clicks
-  - Created `test_strategy_event_router.py` with 19 comprehensive tests
-  - Removed Phase 1 diagnostic logging from event_router (kept input_handler debug logs)
-- **Next:** Phase 3 - Verify confirmation dialog flow (likely already working)
+- **PROJ-216 Phase 3 COMPLETE:**
+  - VERIFIED: Confirmation dialog flow is INDEPENDENT of click gate
+  - `UI_CONFIRMATION_DIALOG_CONFIRMED` events flow through `route_event()` (lines 129-134), NOT `handle_click()`
+  - `strategy_input_handler.py:66` → `strategy_ui.py:331` → `route_event()` is the event path
+  - `window_manager.process_confirmation_event()` correctly executes stored callbacks
+  - Phase 2 fix has NO impact on confirmation dialogs - they always worked
+- **Next:** Phase 4 - Add integration tests for click-to-order pipeline
 
 ---
 
@@ -199,6 +199,7 @@
 | 2026-02-28 | PROJ-217 | Audit 1 | PASSED | 13091 passed, 1 skipped | pending | All verifications complete |
 | 2026-02-28 | PROJ-216 | Phase 1 | Complete | 13091 passed, 1 skipped | pending | Diagnostic logging added to click gate |
 | 2026-02-28 | PROJ-216 | Phase 2 | Complete | 13110 passed, 1 skipped | pending | Click gate fixed; 19 new tests added |
+| 2026-02-28 | PROJ-216 | Phase 3 | Complete | 13110 passed, 1 skipped | pending | Confirmation flow verified independent of click gate |
 
 ---
 
