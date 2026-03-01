@@ -37,7 +37,7 @@ def planet_generator(mock_image_registry):
 def mock_star():
     """Create a mock Star."""
     star = MagicMock()
-    star.diameter_hexes = 4
+    star.radius_hexes = 3
     star.luminosity = 1.0
     star.location = HexCoord(0, 0)
     star.spectral_class = "G"
@@ -278,11 +278,11 @@ class TestOrbitalSlots:
 
     def test_generate_orbital_slots_respects_safe_distance(self, planet_generator, mock_star):
         """Orbital slots are beyond safe start distance from star."""
-        mock_star.diameter_hexes = 6  # Larger star
+        mock_star.radius_hexes = 4  # Larger star
 
         slots = planet_generator._generate_orbital_slots([mock_star])
 
-        safe_start = int(mock_star.diameter_hexes / 2) + 2
+        safe_start = mock_star.radius_hexes + 2
 
         for loc in slots.keys():
             dist = max(abs(loc.q), abs(loc.r), abs(-loc.q - loc.r))

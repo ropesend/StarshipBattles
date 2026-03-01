@@ -8,22 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-217 Phase 3
-**Current Status:** PROJ-217 Phase 3 complete; Phase 4 next
+**Last Completed:** PROJ-217 Phase 4
+**Current Status:** PROJ-217 all phases complete; Ready for Audit
 **Current Project:** PROJ-217
-**Current Phase:** Phase 4 - Test Updates
-**Test Status:** Tests pending - Phases 1-3 renamed fields/updated logic, Phase 4 updates tests
+**Current Phase:** Audit
+**Test Status:** 13091 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-217 Phase 3 Complete:**
-  - Fixed star rendering formula: `star.radius_hexes * hex_size * zoom`
-  - Fixed Dyson Sphere rendering: renamed vars, default 6, proper scaling
-  - Updated galaxy test mode: removed `* 0.5` factor, updated display label
-  - Updated detail formatters: "Radius:" instead of "Diam:"
-  - Updated visual test script rendering formula
-  - Verified: no diameter_hexes references in game/ui/ or scripts/
-- **Next:** Phase 4 - Update all test files to use new field name and values
+- **PROJ-217 Phase 4 Complete:**
+  - Updated 23 test files to use radius_hexes instead of diameter_hexes
+  - test_stars.py: Star constructors, serialization, occupied_hexes tests
+  - test_planet_zones.py: Dyson Sphere fixtures, serialization, class renamed
+  - test_galaxy.py: make_test_star/make_test_planet helpers + all call sites
+  - test_protocols.py: IZoneOccupant tests, IPlanet property check
+  - Integration tests: 7 files updated
+  - Unit tests: 11 files updated including test_star_validation.py
+  - Zero diameter_hexes references remain in Python files
+- **Next:** Run audit to verify implementation
 
 ---
 
@@ -196,6 +198,7 @@
 | 2026-02-28 | PROJ-217 | Phase 1 | Complete | pending | pending | Star/Planet/IPlanet renamed diameter_hexes→radius_hexes |
 | 2026-02-28 | PROJ-217 | Phase 2 | Complete | pending | pending | StarGenerator, planet_gen, warp, superweapon, entity registry updated |
 | 2026-02-28 | PROJ-217 | Phase 3 | Complete | pending | pending | strategy_renderer, system_mode, detail formatters, visual test script |
+| 2026-02-28 | PROJ-217 | Phase 4 | Complete | 13091 passed, 1 skipped | pending | All 23 test files updated |
 
 ---
 

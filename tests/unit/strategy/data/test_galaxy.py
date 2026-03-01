@@ -12,14 +12,14 @@ from game.strategy.data.planet import Planet, PlanetType
 from game.core.hex_math import HexCoord
 
 
-def make_test_star(name="TestStar", diameter_hexes=1.0, location=None):
+def make_test_star(name="TestStar", radius_hexes=1, location=None):
     """Create a minimal Star for testing zone functionality."""
     if location is None:
         location = HexCoord(0, 0)
     return Star(
         name=name,
         mass=1.0,
-        diameter_hexes=diameter_hexes,
+        radius_hexes=radius_hexes,
         temperature=5778,
         luminosity=1.0,
         spectrum=Spectrum(
@@ -34,7 +34,7 @@ def make_test_star(name="TestStar", diameter_hexes=1.0, location=None):
 
 
 def make_test_planet(name="TestPlanet", planet_type=PlanetType.BARREN,
-                     location=None, diameter_hexes=0.0):
+                     location=None, radius_hexes=0):
     """Create a minimal Planet for testing zone functionality."""
     if location is None:
         location = HexCoord(0, 0)
@@ -53,7 +53,7 @@ def make_test_planet(name="TestPlanet", planet_type=PlanetType.BARREN,
         tectonic_activity=0.5,
         magnetic_field=1.0,
         planet_type=planet_type,
-        diameter_hexes=diameter_hexes
+        radius_hexes=radius_hexes
     )
 
 
@@ -205,7 +205,7 @@ class TestGalaxyZoneRegistry:
         """register_zone() should add object to all its occupied hexes."""
         galaxy = Galaxy(radius=1000)
         # Create a star with diameter 3 (radius=2 -> 19 hexes)
-        star = make_test_star(diameter_hexes=3.0)
+        star = make_test_star(radius_hexes=2)
         system = StarSystem(name="Test", global_location=HexCoord(10, 20), stars=[star])
 
         galaxy.register_zone(system, star)
@@ -218,7 +218,7 @@ class TestGalaxyZoneRegistry:
     def test_unregister_zone_removes_from_all_hexes(self):
         """unregister_zone() should remove object from all its occupied hexes."""
         galaxy = Galaxy(radius=1000)
-        star = make_test_star(diameter_hexes=3.0)
+        star = make_test_star(radius_hexes=2)
         system = StarSystem(name="Test", global_location=HexCoord(10, 20), stars=[star])
 
         galaxy.register_zone(system, star)
@@ -232,7 +232,7 @@ class TestGalaxyZoneRegistry:
     def test_get_zones_at_global_hex_returns_object(self):
         """get_zones_at_global_hex() should return objects at that hex."""
         galaxy = Galaxy(radius=1000)
-        star = make_test_star(diameter_hexes=1.0)
+        star = make_test_star(radius_hexes=1)
         system = StarSystem(name="Test", global_location=HexCoord(5, 5), stars=[star])
 
         galaxy.register_zone(system, star)
@@ -252,7 +252,7 @@ class TestGalaxyZoneRegistry:
     def test_register_zone_no_duplicates(self):
         """Registering the same zone twice should not create duplicates."""
         galaxy = Galaxy(radius=1000)
-        star = make_test_star(diameter_hexes=1.0)
+        star = make_test_star(radius_hexes=1)
         system = StarSystem(name="Test", global_location=HexCoord(0, 0), stars=[star])
 
         galaxy.register_zone(system, star)
@@ -265,7 +265,7 @@ class TestGalaxyZoneRegistry:
     def test_add_system_registers_star_zones(self):
         """add_system() should automatically register star zones."""
         galaxy = Galaxy(radius=1000)
-        star = make_test_star(diameter_hexes=3.0)
+        star = make_test_star(radius_hexes=2)
         system = StarSystem(name="Test", global_location=HexCoord(50, 50), stars=[star])
 
         galaxy.add_system(system)
@@ -278,7 +278,7 @@ class TestGalaxyZoneRegistry:
     def test_from_dict_rebuilds_star_zones(self):
         """from_dict() should rebuild star zone registry."""
         galaxy = Galaxy(radius=1000)
-        star = make_test_star(name="TestStar", diameter_hexes=3.0)
+        star = make_test_star(name="TestStar", radius_hexes=2)
         system = StarSystem(name="Test", global_location=HexCoord(30, 40), stars=[star])
         galaxy.add_system(system)
 
@@ -300,12 +300,12 @@ class TestGalaxyZoneRegistry:
         system = StarSystem(name="Test", global_location=HexCoord(0, 0))
         galaxy.add_system(system)
 
-        # Create Dyson Sphere planet with diameter_hexes
+        # Create Dyson Sphere planet with radius_hexes
         dyson = make_test_planet(
             name="Dyson Sphere",
             planet_type=PlanetType.DYSON_SPHERE,
             location=HexCoord(0, 0),
-            diameter_hexes=11.0  # 11-hex diameter -> radius 6 -> 127 hexes
+            radius_hexes=6  # center + 5 rings = 91 hexes
         )
         system.planets.append(dyson)
         galaxy.register_planet(system, dyson)
@@ -325,7 +325,7 @@ class TestGalaxyZoneRegistry:
             name="Dyson Sphere",
             planet_type=PlanetType.DYSON_SPHERE,
             location=HexCoord(0, 0),
-            diameter_hexes=11.0
+            radius_hexes=6
         )
         system.planets.append(dyson)
         galaxy.register_planet(system, dyson)
@@ -340,7 +340,7 @@ class TestGalaxyZoneRegistry:
         """get_system_at_location() should find system via star zone hex."""
         galaxy = Galaxy(radius=1000)
         # Star with diameter 5 -> radius 3 -> zone extends 3 hexes from center
-        star = make_test_star(name="BigStar", diameter_hexes=5.0)
+        star = make_test_star(name="BigStar", radius_hexes=3)
         system = StarSystem(name="Test", global_location=HexCoord(100, 100), stars=[star])
         galaxy.add_system(system)
 
@@ -361,7 +361,7 @@ class TestGalaxyZoneRegistry:
             name="Dyson Sphere",
             planet_type=PlanetType.DYSON_SPHERE,
             location=HexCoord(0, 0),
-            diameter_hexes=11.0  # radius 6
+            radius_hexes=6
         )
         system.planets.append(dyson)
         galaxy.register_planet(system, dyson)
@@ -376,7 +376,7 @@ class TestGalaxyZoneRegistry:
     def test_get_all_fleets_in_system_includes_zone_hexes(self):
         """get_all_fleets_in_system() should include star and Dyson zone hexes."""
         galaxy = Galaxy(radius=1000)
-        star = make_test_star(diameter_hexes=3.0)
+        star = make_test_star(radius_hexes=2)
         system = StarSystem(name="Test", global_location=HexCoord(0, 0), stars=[star])
         galaxy.add_system(system)
 
@@ -405,16 +405,16 @@ class TestZoneSerializationRoundTrip:
     def test_dyson_sphere_zones_rebuilt_after_from_dict(self):
         """from_dict() should rebuild Dyson Sphere zone registry."""
         galaxy = Galaxy(radius=1000)
-        star = make_test_star(name="Sol", diameter_hexes=2.0)
+        star = make_test_star(name="Sol", radius_hexes=2)
         system = StarSystem(name="Test", global_location=HexCoord(50, 50), stars=[star])
         galaxy.add_system(system)
 
-        # Create Dyson Sphere planet with diameter_hexes
+        # Create Dyson Sphere planet with radius_hexes
         dyson = make_test_planet(
             name="Dyson Sphere",
             planet_type=PlanetType.DYSON_SPHERE,
             location=HexCoord(5, 0),
-            diameter_hexes=11.0  # 11-hex diameter -> radius 6
+            radius_hexes=6  # center + 5 rings = 91 hexes
         )
         system.planets.append(dyson)
         galaxy.register_planet(system, dyson)
@@ -434,8 +434,8 @@ class TestZoneSerializationRoundTrip:
             assert any(p.name == "Dyson Sphere" for p in zones), \
                 f"Dyson zone not rebuilt at {global_hex}"
 
-    def test_planet_diameter_hexes_preserved_after_from_dict(self):
-        """Planet.diameter_hexes should be preserved through serialization."""
+    def test_planet_radius_hexes_preserved_after_from_dict(self):
+        """Planet.radius_hexes should be preserved through serialization."""
         galaxy = Galaxy(radius=1000)
         system = StarSystem(name="Test", global_location=HexCoord(0, 0))
         galaxy.add_system(system)
@@ -444,7 +444,7 @@ class TestZoneSerializationRoundTrip:
             name="Dyson Test",
             planet_type=PlanetType.DYSON_SPHERE,
             location=HexCoord(0, 0),
-            diameter_hexes=11.0
+            radius_hexes=6
         )
         system.planets.append(dyson)
         galaxy.register_planet(system, dyson)
@@ -456,13 +456,13 @@ class TestZoneSerializationRoundTrip:
         restored_system = restored.get_system_by_name("Test")
         restored_dyson = next(p for p in restored_system.planets if p.name == "Dyson Test")
 
-        # diameter_hexes should be preserved
-        assert restored_dyson.diameter_hexes == 11.0
+        # radius_hexes should be preserved
+        assert restored_dyson.radius_hexes == 6
 
     def test_star_zones_and_dyson_zones_coexist_after_from_dict(self):
         """from_dict() should rebuild both star and Dyson Sphere zones correctly."""
         galaxy = Galaxy(radius=1000)
-        star = make_test_star(name="BigStar", diameter_hexes=5.0)  # radius 3 -> 37 hexes
+        star = make_test_star(name="BigStar", radius_hexes=3)  # center + 2 rings = 19 hexes
         system = StarSystem(name="Test", global_location=HexCoord(0, 0), stars=[star])
         galaxy.add_system(system)
 
@@ -471,7 +471,7 @@ class TestZoneSerializationRoundTrip:
             name="Dyson",
             planet_type=PlanetType.DYSON_SPHERE,
             location=HexCoord(20, 0),
-            diameter_hexes=11.0
+            radius_hexes=6
         )
         system.planets.append(dyson)
         galaxy.register_planet(system, dyson)
@@ -554,7 +554,7 @@ class TestRestorePlanet:
             name="Restored Dyson",
             planet_type=PlanetType.DYSON_SPHERE,
             location=HexCoord(0, 0),
-            diameter_hexes=11.0
+            radius_hexes=6
         )
         dyson.id = 300
         system.planets.append(dyson)
@@ -721,7 +721,7 @@ class TestGetSystemAtLocationO1:
     def test_finds_system_via_star_zone_global_hex(self):
         """get_system_at_location() should find system via star zone hex."""
         galaxy = Galaxy(radius=1000)
-        star = make_test_star(name="BigStar", diameter_hexes=5.0)  # radius 3
+        star = make_test_star(name="BigStar", radius_hexes=3)  # radius 3
         system = StarSystem(name="Test", global_location=HexCoord(50, 50), stars=[star])
         galaxy.add_system(system)
 
@@ -782,7 +782,7 @@ class TestGetSystemAtLocationO1:
             name="Dyson Sphere",
             planet_type=PlanetType.DYSON_SPHERE,
             location=HexCoord(10, 0),
-            diameter_hexes=11.0  # radius 6
+            radius_hexes=6
         )
         system.planets.append(dyson)
         galaxy.register_planet(system, dyson)

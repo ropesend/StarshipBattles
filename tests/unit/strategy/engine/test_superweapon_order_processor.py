@@ -691,8 +691,8 @@ class TestProcessCreateDysonSphere:
         # Assert
         mock_fleet.remove_ship.assert_called_once_with(ship)
 
-    def test_dyson_sphere_has_diameter_hexes_11(self, mock_fleet, mock_system, component_registry):
-        """Dyson Sphere should have diameter_hexes=11.0 for multi-hex zone."""
+    def test_dyson_sphere_has_radius_hexes_6(self, mock_fleet, mock_system, component_registry):
+        """Dyson Sphere should have radius_hexes=6 for multi-hex zone."""
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 
         ship = MagicMock()
@@ -725,10 +725,10 @@ class TestProcessCreateDysonSphere:
                 mock_fleet, empire, mock_galaxy, [empire], component_registry
             )
 
-        # Assert - Dyson Sphere has diameter_hexes=11.0
+        # Assert - Dyson Sphere has radius_hexes=6
         call_args = mock_galaxy.register_planet.call_args
         dyson = call_args[0][1]
-        assert dyson.diameter_hexes == 11.0
+        assert dyson.radius_hexes == 6
 
     def test_dyson_sphere_uses_race_config_conditions(self, mock_fleet, mock_system, component_registry):
         """Dyson Sphere should use empire's race_config for ideal conditions."""

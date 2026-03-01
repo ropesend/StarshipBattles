@@ -24,7 +24,7 @@ def _valid_star_data() -> dict:
     return {
         'name': 'Test Star',
         'mass': 1.0,
-        'diameter_hexes': 2.0,
+        'radius_hexes': 2,
         'temperature': 5778,
         'luminosity': 1.0,
         'spectrum': _valid_spectrum_data(),
@@ -48,7 +48,7 @@ class TestStarFromDictValidation:
         assert star.star_type == StarType.MAIN_SEQUENCE
 
     @pytest.mark.parametrize('missing_key', [
-        'name', 'mass', 'diameter_hexes', 'temperature', 'luminosity',
+        'name', 'mass', 'radius_hexes', 'temperature', 'luminosity',
         'spectrum', 'star_type', 'color', 'age', 'location'
     ])
     def test_missing_key_raises_persistence_exception(self, missing_key):

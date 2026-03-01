@@ -67,7 +67,7 @@ class TestStarSystemFromDictValidation:
                 {
                     'name': 'Sol',
                     'mass': 1.0,
-                    'diameter_hexes': 1,
+                    'radius_hexes': 1,
                     'temperature': 5778,
                     'luminosity': 1.0,
                     'spectrum': {

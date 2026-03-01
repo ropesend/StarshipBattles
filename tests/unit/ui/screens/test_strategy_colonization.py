@@ -28,7 +28,7 @@ class TestColonizationSystemZone:
         mock_dyson.location = HexCoord(0, 0)  # Local location in system
         mock_dyson.owner_id = None
         mock_dyson.planet_type = MockPlanetType.DYSON_SPHERE
-        mock_dyson.diameter_hexes = 11.0
+        mock_dyson.radius_hexes = 6
 
         # Create mock system
         mock_system = MagicMock()

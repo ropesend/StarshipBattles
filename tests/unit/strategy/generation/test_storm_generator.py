@@ -50,7 +50,7 @@ def mock_star_system():
     star = Star(
         name="Test Star",
         mass=1.0,
-        diameter_hexes=2.0,
+        radius_hexes=2,
         temperature=5778,
         luminosity=1.0,
         spectrum=spectrum,

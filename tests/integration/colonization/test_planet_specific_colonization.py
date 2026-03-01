@@ -62,7 +62,7 @@ class MockPlanet:
         self.surface_gravity = 9.8
         self.surface_temperature = 300.0
         self.orbit_distance = 1
-        self.diameter_hexes = 0.0
+        self.radius_hexes = 0
         self.image_id = ""
         self.image_rotation = 0.0
 

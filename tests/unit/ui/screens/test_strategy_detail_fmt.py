@@ -53,7 +53,7 @@ def mock_star(mock_spectrum):
     star.star_type.name = "G2V"
     star.mass = 1.0
     star.temperature = 5778
-    star.diameter_hexes = 2.5
+    star.radius_hexes = 2
     return star
 
 
@@ -814,5 +814,5 @@ class TestFormatStarInfo:
         assert "1.00 Sol" in result
         assert "Temp:" in result
         assert "5778 K" in result
-        assert "Diam:" in result
-        assert "2.5 Hex" in result
+        assert "Radius:" in result
+        assert "2 Hex" in result

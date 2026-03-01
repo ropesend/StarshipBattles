@@ -25,7 +25,7 @@ def _make_star(name="Alpha", location=None, star_type=StarType.MAIN_SEQUENCE,
     return Star(
         name=name,
         mass=1.0,
-        diameter_hexes=1.0,
+        radius_hexes=1,
         temperature=5778,
         luminosity=1.0,
         spectrum=Spectrum(0, 0, 0, 0.3, 0.4, 0.3, 0, 0, 0),

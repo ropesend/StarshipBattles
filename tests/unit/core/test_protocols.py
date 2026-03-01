@@ -130,7 +130,7 @@ class TestProtocolsWithRealClasses:
         star = Star(
             name="Sun",
             mass=1.0,
-            diameter_hexes=1.0,
+            radius_hexes=1,
             temperature=5778,
             luminosity=1.0,
             spectrum=spectrum,
@@ -238,7 +238,7 @@ class TestTypeGuardFunctions:
         star = Star(
             name="Sun",
             mass=1.0,
-            diameter_hexes=1.0,
+            radius_hexes=1,
             temperature=5778,
             luminosity=1.0,
             spectrum=spectrum,
@@ -374,7 +374,7 @@ class TestIZoneOccupantProtocol:
         star = Star(
             name="Sun",
             mass=1.0,
-            diameter_hexes=1.0,
+            radius_hexes=1,
             temperature=5778,
             luminosity=1.0,
             spectrum=spectrum,
@@ -617,7 +617,7 @@ class TestPROJ193ExtendedIPlanet:
         assert hasattr(planet, 'surface_gravity')
         assert hasattr(planet, 'surface_temperature')
         assert hasattr(planet, 'orbit_distance')
-        assert hasattr(planet, 'diameter_hexes')
+        assert hasattr(planet, 'radius_hexes')
         assert hasattr(planet, 'image_id')
 
 

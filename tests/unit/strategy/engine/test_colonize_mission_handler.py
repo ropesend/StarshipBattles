@@ -59,7 +59,7 @@ def make_mock_planet(planet_type_name: str, planet_id: int = 1):
     planet.surface_gravity = 9.8
     planet.surface_temperature = 300.0
     planet.orbit_distance = 1
-    planet.diameter_hexes = 0.0
+    planet.radius_hexes = 0
     planet.image_id = ""
 
     return planet

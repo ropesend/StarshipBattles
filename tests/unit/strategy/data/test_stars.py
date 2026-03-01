@@ -151,7 +151,7 @@ class TestStar:
         star = Star(
             name="Sol A",
             mass=1.0,
-            diameter_hexes=2.0,
+            radius_hexes=2,
             temperature=5778,
             luminosity=1.0,
             spectrum=sample_spectrum,
@@ -163,7 +163,7 @@ class TestStar:
 
         assert star.name == "Sol A"
         assert star.mass == 1.0
-        assert star.diameter_hexes == 2.0
+        assert star.radius_hexes == 2
         assert star.temperature == 5778
         assert star.luminosity == 1.0
         assert star.spectrum == sample_spectrum
@@ -177,7 +177,7 @@ class TestStar:
         star = Star(
             name="Test Star",
             mass=2.5,
-            diameter_hexes=3.0,
+            radius_hexes=3,
             temperature=8000,
             luminosity=5.0,
             spectrum=sample_spectrum,
@@ -190,7 +190,7 @@ class TestStar:
 
         assert data['name'] == "Test Star"
         assert data['mass'] == 2.5
-        assert data['diameter_hexes'] == 3.0
+        assert data['radius_hexes'] == 3
         assert data['temperature'] == 8000
         assert data['luminosity'] == 5.0
         assert data['star_type'] == 'BLUE_GIANT'  # Enum converted to string
@@ -206,7 +206,7 @@ class TestStar:
         data = {
             'name': "Restored Star",
             'mass': 0.5,
-            'diameter_hexes': 1.0,
+            'radius_hexes': 1,
             'temperature': 3500,
             'luminosity': 0.1,
             'spectrum': sample_spectrum.to_dict(),
@@ -219,7 +219,7 @@ class TestStar:
 
         assert star.name == "Restored Star"
         assert star.mass == 0.5
-        assert star.diameter_hexes == 1.0
+        assert star.radius_hexes == 1
         assert star.temperature == 3500
         assert star.luminosity == 0.1
         assert isinstance(star.spectrum, Spectrum)
@@ -234,7 +234,7 @@ class TestStar:
         original = Star(
             name="Roundtrip Star",
             mass=1.5,
-            diameter_hexes=2.5,
+            radius_hexes=2,
             temperature=6500,
             luminosity=2.0,
             spectrum=sample_spectrum,
@@ -247,7 +247,7 @@ class TestStar:
 
         assert roundtrip.name == original.name
         assert roundtrip.mass == original.mass
-        assert roundtrip.diameter_hexes == original.diameter_hexes
+        assert roundtrip.radius_hexes == original.radius_hexes
         assert roundtrip.temperature == original.temperature
         assert roundtrip.luminosity == original.luminosity
         assert roundtrip.star_type == original.star_type
@@ -262,7 +262,7 @@ class TestStar:
         star = Star(
             name="Default Location Star",
             mass=1.0,
-            diameter_hexes=1.0,
+            radius_hexes=1,
             temperature=5000,
             luminosity=1.0,
             spectrum=sample_spectrum,
@@ -286,11 +286,11 @@ class TestStarOccupiedHexes:
         )
 
     def test_star_occupied_hexes_small(self, sample_spectrum):
-        """diameter_hexes=1.0 -> radius 1 -> 7 hexes."""
+        """radius_hexes=1 -> center only -> 1 hex."""
         star = Star(
             name="Small Star",
             mass=1.0,
-            diameter_hexes=1.0,
+            radius_hexes=1,
             temperature=5000,
             luminosity=1.0,
             spectrum=sample_spectrum,
@@ -300,19 +300,16 @@ class TestStarOccupiedHexes:
             location=HexCoord(0, 0)
         )
         hexes = star.occupied_hexes
-        # ceil(1.0 / 2) = 1 -> 7 hexes
-        assert len(hexes) == 7
+        # radius_hexes=1 -> fill(loc, 0) -> 1 hex (center only)
+        assert len(hexes) == 1
         assert star.location in hexes
-        # All hexes should be within distance 1 of location
-        for h in hexes:
-            assert hex_distance(star.location, h) <= 1
 
     def test_star_occupied_hexes_large(self, sample_spectrum):
-        """diameter_hexes=11.0 -> radius 6 -> 127 hexes."""
+        """radius_hexes=6 -> center + 5 rings -> 91 hexes."""
         star = Star(
             name="Large Star",
             mass=10.0,
-            diameter_hexes=11.0,
+            radius_hexes=6,
             temperature=8000,
             luminosity=100.0,
             spectrum=sample_spectrum,
@@ -322,19 +319,19 @@ class TestStarOccupiedHexes:
             location=HexCoord(0, 0)
         )
         hexes = star.occupied_hexes
-        # ceil(11.0 / 2) = 6 -> 1 + 6 + 12 + 18 + 24 + 30 + 36 = 127 hexes
-        assert len(hexes) == 127
+        # radius_hexes=6 -> fill(loc, 5) -> 1 + 6 + 12 + 18 + 24 + 30 = 91 hexes
+        assert len(hexes) == 91
         assert star.location in hexes
-        # All hexes should be within distance 6 of location
+        # All hexes should be within distance 5 of location
         for h in hexes:
-            assert hex_distance(star.location, h) <= 6
+            assert hex_distance(star.location, h) <= 5
 
     def test_star_occupied_hexes_sub_hex(self, sample_spectrum):
-        """diameter_hexes=0.5 -> radius 1 -> 7 hexes (ceil rounds up)."""
+        """radius_hexes=1 (compact remnant) -> center only -> 1 hex."""
         star = Star(
             name="Tiny Star",
             mass=0.5,
-            diameter_hexes=0.5,
+            radius_hexes=1,
             temperature=3000,
             luminosity=0.1,
             spectrum=sample_spectrum,
@@ -344,8 +341,8 @@ class TestStarOccupiedHexes:
             location=HexCoord(0, 0)
         )
         hexes = star.occupied_hexes
-        # ceil(0.5 / 2) = ceil(0.25) = 1 -> 7 hexes
-        assert len(hexes) == 7
+        # radius_hexes=1 -> fill(loc, 0) -> 1 hex (center only)
+        assert len(hexes) == 1
         assert star.location in hexes
 
     def test_star_occupied_hexes_with_offset_location(self, sample_spectrum):
@@ -353,7 +350,7 @@ class TestStarOccupiedHexes:
         star = Star(
             name="Offset Star",
             mass=1.0,
-            diameter_hexes=2.0,
+            radius_hexes=2,
             temperature=5000,
             luminosity=1.0,
             spectrum=sample_spectrum,
@@ -363,7 +360,7 @@ class TestStarOccupiedHexes:
             location=HexCoord(10, -5)
         )
         hexes = star.occupied_hexes
-        # ceil(2.0 / 2) = 1 -> 7 hexes
+        # radius_hexes=2 -> fill(loc, 1) -> 7 hexes (center + ring 1)
         assert len(hexes) == 7
         assert star.location in hexes
         # All hexes should be within distance 1 of location
@@ -377,7 +374,7 @@ class TestStarOccupiedHexes:
         star = Star(
             name="Test Star",
             mass=1.0,
-            diameter_hexes=1.0,
+            radius_hexes=1,
             temperature=5000,
             luminosity=1.0,
             spectrum=sample_spectrum,
@@ -458,27 +455,27 @@ class TestStarGenerator:
         assert r > 200, f"Cool star red should be high, got {r}"
 
     def test_map_radius_small_star(self, generator):
-        """Small radius maps to 1-3 hexes."""
+        """Small radius maps to 1-2 hex radius."""
         # Small star radius
-        hex_diam = generator._map_radius_to_hexes(0.5, StarType.MAIN_SEQUENCE)
-        assert 1.0 <= hex_diam <= 3.0, f"Small star should be 1-3 hexes, got {hex_diam}"
+        hex_radius = generator._map_solar_radius_to_hex_radius(0.5, StarType.MAIN_SEQUENCE)
+        assert 1 <= hex_radius <= 2, f"Small star should be 1-2 hex radius, got {hex_radius}"
 
-        hex_diam_2 = generator._map_radius_to_hexes(1.5, StarType.MAIN_SEQUENCE)
-        assert 1.0 <= hex_diam_2 <= 3.0, f"Medium-small star should be 1-3 hexes, got {hex_diam_2}"
+        hex_radius_2 = generator._map_solar_radius_to_hex_radius(1.5, StarType.MAIN_SEQUENCE)
+        assert 1 <= hex_radius_2 <= 2, f"Medium-small star should be 1-2 hex radius, got {hex_radius_2}"
 
     def test_map_radius_compact_remnant(self, generator):
-        """Compact remnants (neutron star, black hole, white dwarf) map to 0.5 hexes."""
+        """Compact remnants (neutron star, black hole, white dwarf) map to 1 hex radius."""
         # Test neutron star
-        hex_diam = generator._map_radius_to_hexes(0.00002, StarType.NEUTRON_STAR)
-        assert hex_diam == 0.5, f"Neutron star should be 0.5 hexes, got {hex_diam}"
+        hex_radius = generator._map_solar_radius_to_hex_radius(0.00002, StarType.NEUTRON_STAR)
+        assert hex_radius == 1, f"Neutron star should be 1 hex radius, got {hex_radius}"
 
         # Test black hole
-        hex_diam = generator._map_radius_to_hexes(0.0001, StarType.BLACK_HOLE)
-        assert hex_diam == 0.5, f"Black hole should be 0.5 hexes, got {hex_diam}"
+        hex_radius = generator._map_solar_radius_to_hex_radius(0.0001, StarType.BLACK_HOLE)
+        assert hex_radius == 1, f"Black hole should be 1 hex radius, got {hex_radius}"
 
         # Test white dwarf
-        hex_diam = generator._map_radius_to_hexes(0.01, StarType.WHITE_DWARF)
-        assert hex_diam == 0.5, f"White dwarf should be 0.5 hexes, got {hex_diam}"
+        hex_radius = generator._map_solar_radius_to_hex_radius(0.01, StarType.WHITE_DWARF)
+        assert hex_radius == 1, f"White dwarf should be 1 hex radius, got {hex_radius}"
 
     def test_generate_spectrum_has_9_bands(self, generator):
         """Generated spectrum has all 9 bands populated."""

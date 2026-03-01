@@ -563,7 +563,7 @@ class TestDrawSystemsStar:
         # Create star
         star = MagicMock()
         star.color = (255, 255, 0)  # Yellow
-        star.diameter_hexes = 1.0
+        star.radius_hexes = 1
         star.location = MagicMock(q=0, r=0)
         star.name = "Test Star"
 
@@ -603,7 +603,7 @@ class TestDrawSystemsStar:
         # Create tiny star
         star = MagicMock()
         star.color = (255, 255, 0)
-        star.diameter_hexes = 0.001  # Very small
+        star.radius_hexes = 1  # Very small (minimum)
         star.location = MagicMock(q=0, r=0)
         star.name = "Tiny Star"
 
@@ -637,7 +637,7 @@ class TestDrawSystemsStar:
         # Create star
         star = MagicMock()
         star.color = (255, 255, 0)
-        star.diameter_hexes = 1.0
+        star.radius_hexes = 1
         star.location = MagicMock(q=0, r=0)
         star.name = "Primary Star"
 
@@ -692,7 +692,7 @@ class TestDrawSystemsViewportCulling:
 
         star = MagicMock()
         star.color = (255, 255, 0)
-        star.diameter_hexes = 1.0
+        star.radius_hexes = 1
         star.location = MagicMock(q=0, r=0)
         star.name = "Star"
 
@@ -721,7 +721,7 @@ class TestDrawSystemsViewportCulling:
 
         star = MagicMock()
         star.color = (255, 255, 0)
-        star.diameter_hexes = 1.0
+        star.radius_hexes = 1
         star.location = MagicMock(q=0, r=0)
         star.name = "Star"
 

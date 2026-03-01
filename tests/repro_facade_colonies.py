@@ -29,7 +29,7 @@ class TestFacadeColonyRetrieval(unittest.TestCase):
         planet.planet_type = PlanetType.CONTINENTAL
         planet.image_id = "test_img"
         planet.image_rotation = 0
-        planet.diameter_hexes = 1
+        planet.radius_hexes = 1
         planet.construction_queue = []
         planet.facilities = {}
         planet.resources = {}
@@ -63,7 +63,7 @@ class TestFacadeColonyRetrieval(unittest.TestCase):
         planet.planet_type = PlanetType.CONTINENTAL
         planet.image_id = "test_img"
         planet.image_rotation = 0
-        planet.diameter_hexes = 1
+        planet.radius_hexes = 1
         planet.construction_queue = []
         planet.facilities = {}
         planet.resources = {}

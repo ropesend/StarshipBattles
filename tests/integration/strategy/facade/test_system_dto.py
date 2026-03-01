@@ -154,7 +154,7 @@ class TestSystemInfoFactory:
         star = Star(
             name="Alpha",
             mass=1.0,
-            diameter_hexes=2.0,
+            radius_hexes=2,
             temperature=5778,
             luminosity=1.0,
             spectrum=Spectrum(0, 0, 0, 0.3, 0.4, 0.3, 0, 0, 0),

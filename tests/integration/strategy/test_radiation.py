@@ -11,7 +11,7 @@ def flat_star():
     return Star(
         name="Test Star",
         mass=1.0,
-        diameter_hexes=1.0,
+        radius_hexes=1,
         temperature=5000,
         luminosity=1.0,
         spectrum=flat_spec,

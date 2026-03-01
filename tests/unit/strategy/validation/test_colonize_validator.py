@@ -297,7 +297,7 @@ class TestColonizeValidatorColonyPods:
         planet.surface_gravity = 9.8
         planet.surface_temperature = 300.0
         planet.orbit_distance = 1
-        planet.diameter_hexes = 0.0
+        planet.radius_hexes = 0
         planet.image_id = ""
         return planet
 
@@ -325,7 +325,7 @@ class TestColonizeValidatorColonyPods:
         planet.surface_gravity = 9.8
         planet.surface_temperature = 300.0
         planet.orbit_distance = 1
-        planet.diameter_hexes = 0.0
+        planet.radius_hexes = 0
         planet.image_id = ""
         return planet
 
@@ -633,7 +633,7 @@ class TestColonizeValidatorZoneColonization:
         mock_dyson.owner_id = None
         mock_dyson.location = HexCoord(0, 0)
         mock_dyson.planet_type = MockPlanetType.DYSON_SPHERE
-        mock_dyson.diameter_hexes = 11.0  # Multi-hex zone
+        mock_dyson.radius_hexes = 6  # Multi-hex zone
         mock_dyson.resources = {}
         mock_dyson.id = 1
         mock_dyson.populations = []
@@ -789,7 +789,7 @@ class TestColonizeValidatorAnyPlanetPods:
         planet.surface_gravity = 9.8
         planet.surface_temperature = 300.0
         planet.orbit_distance = 1
-        planet.diameter_hexes = 0.0
+        planet.radius_hexes = 0
         planet.image_id = ""
         return planet
 
@@ -955,7 +955,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
         planet.surface_gravity = 9.8
         planet.surface_temperature = 300.0
         planet.orbit_distance = 1
-        planet.diameter_hexes = 0.0
+        planet.radius_hexes = 0
         planet.image_id = ""
         return planet
 
@@ -1265,7 +1265,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
         dyson.surface_gravity = 9.8
         dyson.surface_temperature = 300.0
         dyson.orbit_distance = 1
-        dyson.diameter_hexes = 11.0
+        dyson.radius_hexes = 6
         dyson.image_id = ""
 
         # Both methods return the same object

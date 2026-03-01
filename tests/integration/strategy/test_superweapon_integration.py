@@ -102,7 +102,7 @@ def create_test_galaxy_with_system(system_name: str = "Test System",
     star = Star(
         name=f"{system_name} Star",
         mass=1.0,
-        diameter_hexes=1.0,
+        radius_hexes=1,
         temperature=5778.0,
         luminosity=1.0,
         spectrum=create_test_spectrum(),
@@ -280,7 +280,7 @@ class TestOpenWarpPointIntegration:
         star2 = Star(
             name="Delta Star",
             mass=0.8,
-            diameter_hexes=0.5,
+            radius_hexes=1,
             temperature=4500.0,
             luminosity=0.5,
             spectrum=create_test_spectrum(),
@@ -348,7 +348,7 @@ class TestCloseWarpPointIntegration:
         star2 = Star(
             name="Zeta Star",
             mass=0.5,
-            diameter_hexes=0.3,
+            radius_hexes=1,
             temperature=3500.0,
             luminosity=0.1,
             spectrum=create_test_spectrum(),

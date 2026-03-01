@@ -15,20 +15,20 @@ class TestWarpLogicRework:
         Verify that warp points generated for larger stars are placed further away 
         than those for smaller stars.
         """
-        # Create a small star system (Diam = 1)
+        # Create a small star system (radius = 1)
         small_sys = StarSystem("Small", HexCoord(0,0))
         small_star = Star(
-            name="Small A", mass=0.5, diameter_hexes=1.0, 
-            temperature=3000, luminosity=0.1, spectrum=None, 
+            name="Small A", mass=0.5, radius_hexes=1,
+            temperature=3000, luminosity=0.1, spectrum=None,
             star_type=None, color=(255,100,100), age=1e9
         )
         small_sys.stars = [small_star]
-        
-        # Create a large star system (Diam = 10)
+
+        # Create a large star system (radius = 5)
         large_sys = StarSystem("Large", HexCoord(100,0))
         large_star = Star(
-            name="Large A", mass=50.0, diameter_hexes=10.0, 
-            temperature=30000, luminosity=1000, spectrum=None, 
+            name="Large A", mass=50.0, radius_hexes=5,
+            temperature=30000, luminosity=1000, spectrum=None,
             star_type=None, color=(100,100,255), age=1e7
         )
         large_sys.stars = [large_star]
@@ -88,7 +88,7 @@ class TestWarpLogicRework:
         # Extremely tiny star
         micro_sys = StarSystem("Micro", HexCoord(0,0))
         micro_star = Star(
-            name="Micro", mass=0.1, diameter_hexes=0.1, # Tiny
+            name="Micro", mass=0.1, radius_hexes=1, # Tiny (minimum is 1)
             temperature=3000, luminosity=0.01, spectrum=None, star_type=None, color=(0,0,0), age=1
         )
         micro_sys.stars = [micro_star]

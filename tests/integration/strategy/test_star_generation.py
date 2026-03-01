@@ -114,7 +114,7 @@ class TestStarGeneration:
                 from game.core.hex_math import hex_distance, HexCoord
                 dist = hex_distance(HexCoord(0, 0), companion.location)
 
-                assert dist > primary.diameter_hexes, "Companion inside primary?"
+                assert dist > primary.radius_hexes, "Companion inside primary?"
 
         # Approx 10% binary -> ~200
         # Wide tolerance because random
@@ -130,10 +130,10 @@ class TestStarGeneration:
             for star in stars:
                 if star.star_type in (StarType.RED_GIANT, StarType.BLUE_GIANT):
                     seen_giants = True
-                    assert star.diameter_hexes > 2.0
+                    assert star.radius_hexes > 2
                 if star.star_type == StarType.RED_DWARF:
                     seen_dwarfs = True
-                    assert star.diameter_hexes <= 3.0
+                    assert star.radius_hexes <= 2
 
                 # Check Spectrum
                 spec = star.spectrum
