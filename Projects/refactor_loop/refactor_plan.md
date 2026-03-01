@@ -8,20 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-28
-**Last Completed:** PROJ-214 Audit PASSED
-**Current Status:** All projects in Master Task List complete
-**Current Project:** None (all work complete)
-**Current Phase:** N/A
-**Test Status:** 13022 passed, 1 skipped
+**Last Completed:** PROJ-215 Phase 1 (Expand Event Columns & Data Source)
+**Current Status:** PROJ-215 in progress
+**Current Project:** PROJ-215
+**Current Phase:** Phase 2
+**Test Status:** 13049 passed, 1 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- **PROJ-214 COMPLETE:** Audit Cycle 1 passed with no issues
-  - Hex outline feature for occupied hexes implemented
-  - Red outlines for any object, white for player-owned, dual concentric for mixed
-  - Zoom gated at 0.5, viewport culled, turn-cached
-  - 16 new tests added, all passing
-- **8 projects completed successfully:** PROJ-207, PROJ-208, PROJ-209, PROJ-210, PROJ-211, PROJ-212, PROJ-213, PROJ-214 all PASSED audit
+- **PROJ-215 Phase 1 COMPLETE:**
+  - Replaced single "Location" column with 4 granular columns: System, Planet, Local Hex, Galaxy Hex
+  - System and Planet visible by default; Local Hex and Galaxy Hex hidden by default
+  - Updated get_cell_value() to extract system_name, location_name, local_hex, location_hex from event details
+  - 14 new/updated tests for column definitions and cell values
+  - All 13049 tests passing
+- **Next:** Phase 2 - Enrich event data at creation time (add system_name and local_hex to events)
 
 ---
 
@@ -81,8 +82,8 @@
 
 ---
 
-- [ ] **PROJ-215: Fix Event Log Location Display and Navigation**
-  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-215: Fix Event Log Location Display and Navigation**
+  - **Phases:** 5 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-215/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-215/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -183,6 +184,7 @@
 | 2026-02-28 | - | Status Check | NO WORK | - | - | 16th verification: Both PROJ-213 & PROJ-214 remain templates; exiting |
 | 2026-02-28 | PROJ-213 | Audit 1 | PASSED | 13022 passed, 1 skipped | pending | Build queue cost bug fix verified; no issues found |
 | 2026-02-28 | PROJ-214 | Audit 1 | PASSED | 13022 passed, 1 skipped | pending | Hex outline feature verified; no issues found |
+| 2026-02-28 | PROJ-215 | Phase 1 | Complete | 13049 passed, 1 skipped | pending | Granular location columns added (system, planet, local_hex, galaxy_hex) |
 
 ---
 

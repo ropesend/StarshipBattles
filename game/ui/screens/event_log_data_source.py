@@ -10,10 +10,14 @@ from game.ui.components.table.data_source import ITableDataSource
 
 
 # Column definitions for the event log table
+# PROJ-215: Granular location columns (system, planet, local_hex, galaxy_hex)
 EVENT_LOG_COLUMNS = [
     {"id": "category", "width": 90, "title": "Category", "visible": True, "sortable": True},
     {"id": "turn", "width": 60, "title": "Turn", "visible": True, "sortable": True},
-    {"id": "location", "width": 150, "title": "Location", "visible": True, "sortable": True},
+    {"id": "system", "width": 120, "title": "System", "visible": True, "sortable": True},
+    {"id": "planet", "width": 120, "title": "Planet", "visible": True, "sortable": True},
+    {"id": "local_hex", "width": 80, "title": "Local Hex", "visible": False, "sortable": True},
+    {"id": "galaxy_hex", "width": 80, "title": "Galaxy Hex", "visible": False, "sortable": True},
     {"id": "message", "width": 500, "title": "Message", "visible": True, "sortable": True},
 ]
 
@@ -91,11 +95,22 @@ class EventLogDataSource(ITableDataSource):
         if column_id == "turn":
             return str(event.get("turn", "?"))
 
-        if column_id == "location":
+        # PROJ-215: Granular location columns
+        if column_id == "system":
+            return event.get("details", {}).get("system_name", "")
+
+        if column_id == "planet":
+            return event.get("details", {}).get("location_name", "")
+
+        if column_id == "local_hex":
             details = event.get("details", {})
-            name = details.get("location_name", "")
-            if name:
-                return name
+            local = details.get("local_hex")
+            if local and len(local) == 2:
+                return f"({local[0]}, {local[1]})"
+            return ""
+
+        if column_id == "galaxy_hex":
+            details = event.get("details", {})
             hex_coords = details.get("location_hex")
             if hex_coords and len(hex_coords) == 2:
                 return f"({hex_coords[0]}, {hex_coords[1]})"

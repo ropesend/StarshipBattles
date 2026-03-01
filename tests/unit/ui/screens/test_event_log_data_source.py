@@ -59,8 +59,8 @@ class TestEventLogColumns:
     """Test EVENT_LOG_COLUMNS constant."""
 
     def test_column_count(self):
-        """Should have exactly 4 columns (category, turn, location, message)."""
-        assert len(EVENT_LOG_COLUMNS) == 4
+        """Should have exactly 7 columns (category, turn, system, planet, local_hex, galaxy_hex, message)."""
+        assert len(EVENT_LOG_COLUMNS) == 7
 
     def test_category_column(self):
         """Category column should have correct definition."""
@@ -82,7 +82,8 @@ class TestEventLogColumns:
 
     def test_message_column(self):
         """Message column should have correct definition."""
-        col = EVENT_LOG_COLUMNS[3]
+        # Message is now at index 6 (after 4 location columns)
+        col = EVENT_LOG_COLUMNS[6]
         assert col["id"] == "message"
         assert col["title"] == "Message"
         assert col["visible"] is True
@@ -412,43 +413,109 @@ class TestGetEventAtIndex:
 
 
 # ---------------------------------------------------------------------------
-# FEAT-04: Location Column
+# PROJ-215: Granular Location Columns (System, Planet, Local Hex, Galaxy Hex)
 # ---------------------------------------------------------------------------
 
-class TestLocationColumn:
-    """Test location column for 'Go To Location' navigation."""
+class TestGranularLocationColumns:
+    """Test granular location columns replacing single Location column."""
 
-    def test_column_count_includes_location(self):
-        """EVENT_LOG_COLUMNS should have 4 columns (category, turn, location, message)."""
-        assert len(EVENT_LOG_COLUMNS) == 4
+    def test_column_count(self):
+        """EVENT_LOG_COLUMNS should have 7 columns."""
+        assert len(EVENT_LOG_COLUMNS) == 7
 
-    def test_location_column_definition(self):
-        """Location column should exist with correct definition."""
-        location_col = next((c for c in EVENT_LOG_COLUMNS if c["id"] == "location"), None)
-        assert location_col is not None
-        assert location_col["title"] == "Location"
-        assert location_col["visible"] is True
-        assert isinstance(location_col["width"], int)
+    def test_system_column_definition(self):
+        """System column should exist with correct definition."""
+        col = next((c for c in EVENT_LOG_COLUMNS if c["id"] == "system"), None)
+        assert col is not None
+        assert col["title"] == "System"
+        assert col["visible"] is True
+        assert col["sortable"] is True
+        assert isinstance(col["width"], int)
 
-    def test_location_cell_value_from_details(self):
-        """Location column should display location_name from event details."""
-        events = [_make_event(
-            details={"location_name": "Bunda I", "location_hex": [5, 3]}
-        )]
+    def test_planet_column_definition(self):
+        """Planet column should exist with correct definition."""
+        col = next((c for c in EVENT_LOG_COLUMNS if c["id"] == "planet"), None)
+        assert col is not None
+        assert col["title"] == "Planet"
+        assert col["visible"] is True
+        assert col["sortable"] is True
+        assert isinstance(col["width"], int)
+
+    def test_local_hex_column_definition(self):
+        """Local Hex column should exist with correct definition (hidden by default)."""
+        col = next((c for c in EVENT_LOG_COLUMNS if c["id"] == "local_hex"), None)
+        assert col is not None
+        assert col["title"] == "Local Hex"
+        assert col["visible"] is False  # Hidden by default
+        assert col["sortable"] is True
+        assert isinstance(col["width"], int)
+
+    def test_galaxy_hex_column_definition(self):
+        """Galaxy Hex column should exist with correct definition (hidden by default)."""
+        col = next((c for c in EVENT_LOG_COLUMNS if c["id"] == "galaxy_hex"), None)
+        assert col is not None
+        assert col["title"] == "Galaxy Hex"
+        assert col["visible"] is False  # Hidden by default
+        assert col["sortable"] is True
+        assert isinstance(col["width"], int)
+
+    def test_system_cell_value(self):
+        """System column should display system_name from event details."""
+        events = [_make_event(details={"system_name": "Lincoln"})]
         ds = EventLogDataSource(events)
-        value = ds.get_cell_value(0, "location")
-        assert value == "Bunda I"
+        value = ds.get_cell_value(0, "system")
+        assert value == "Lincoln"
 
-    def test_location_cell_value_empty_when_no_location(self):
-        """Location column should return empty string when no location data."""
+    def test_system_cell_value_empty(self):
+        """System column should return empty string when no system_name."""
         events = [_make_event(details={})]
         ds = EventLogDataSource(events)
-        value = ds.get_cell_value(0, "location")
+        value = ds.get_cell_value(0, "system")
         assert value == ""
 
-    def test_location_cell_value_hex_fallback(self):
-        """Location column should show hex coords when name is missing but hex exists."""
-        events = [_make_event(details={"location_hex": [5, -3]})]
+    def test_planet_cell_value(self):
+        """Planet column should display location_name from event details."""
+        events = [_make_event(details={"location_name": "Lincoln I"})]
         ds = EventLogDataSource(events)
-        value = ds.get_cell_value(0, "location")
-        assert "(5, -3)" in value
+        value = ds.get_cell_value(0, "planet")
+        assert value == "Lincoln I"
+
+    def test_planet_cell_value_empty(self):
+        """Planet column should return empty string when no location_name."""
+        events = [_make_event(details={})]
+        ds = EventLogDataSource(events)
+        value = ds.get_cell_value(0, "planet")
+        assert value == ""
+
+    def test_local_hex_cell_value(self):
+        """Local Hex column should format local_hex as (q, r)."""
+        events = [_make_event(details={"local_hex": [2, -1]})]
+        ds = EventLogDataSource(events)
+        value = ds.get_cell_value(0, "local_hex")
+        assert value == "(2, -1)"
+
+    def test_local_hex_cell_value_empty(self):
+        """Local Hex column should return empty string when no local_hex."""
+        events = [_make_event(details={})]
+        ds = EventLogDataSource(events)
+        value = ds.get_cell_value(0, "local_hex")
+        assert value == ""
+
+    def test_galaxy_hex_cell_value(self):
+        """Galaxy Hex column should format location_hex as (q, r)."""
+        events = [_make_event(details={"location_hex": [5, 3]})]
+        ds = EventLogDataSource(events)
+        value = ds.get_cell_value(0, "galaxy_hex")
+        assert value == "(5, 3)"
+
+    def test_galaxy_hex_cell_value_empty(self):
+        """Galaxy Hex column should return empty string when no location_hex."""
+        events = [_make_event(details={})]
+        ds = EventLogDataSource(events)
+        value = ds.get_cell_value(0, "galaxy_hex")
+        assert value == ""
+
+    def test_location_column_removed(self):
+        """Old location column should no longer exist."""
+        col = next((c for c in EVENT_LOG_COLUMNS if c["id"] == "location"), None)
+        assert col is None

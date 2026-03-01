@@ -13,17 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Expand Event Columns & Data Source | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Expand Event Columns & Data Source | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Enrich Event Location Data at Creation | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Add Sidebar with Column Toggles | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Fix Double-Click Navigation | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Add Storm Column | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-28 16:00
-**Active Phase:** Planning
-**Last Action:** Comprehensive code review and swarm analysis complete
-**Next Action:** User approval of plan
+**Last Updated:** 2026-02-28
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete - granular location columns (system, planet, local_hex, galaxy_hex) added
+**Next Action:** Phase 2 - Enrich event location data at creation time
 **Blockers:** None
 
 ## Overview
