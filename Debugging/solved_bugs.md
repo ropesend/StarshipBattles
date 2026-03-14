@@ -871,3 +871,27 @@ There needs to be a visible indicator on the line that indicates if the ship is 
 * **Notes:** 61/61 yard + build queue tests pass.
 
 ---
+
+## [BUG-46] - Fleet Report Ship Top-Down Image Too Small
+* **Date Solved:** 2026-03-14
+* **Original Issue:** In the fleet report, the top-down ship image was too small compared to the portrait.
+* **Solution Implemented:** Added `max_width` parameter to `scale_image_by_visible_portion()` in `pygame_utils.py`. Scales visible content to fit within both width and height bounds while preserving aspect ratio. `fleet_data_source.py` passes `max_width=56` for topdown images.
+* **Test Case:** `tests/unit/ui/test_utils.py` — 6 scale_image_by_visible_portion tests (2 existing + 4 new)
+
+---
+
+## [BUG-63] - Starting Planet Should Match Species Ideal Conditions
+* **Date Solved:** 2026-03-14
+* **Original Issue:** The starting planet for a player did not have the same conditions as the ideal conditions for that species.
+* **Solution Implemented:** `_adjust_homeworld_to_race()` in `game_initializer.py` adjusts planet type, gravity, temperature, water, atmosphere, and pressure to match the race's ideal conditions. Called during empire setup when `race_config` is present.
+* **Test Case:** Integration tests covering empire creation and colony setup verify initial conditions.
+
+---
+
+## [BUG-69] - Strategy View Scroll Wheel Zoom Locks Up
+* **Date Solved:** 2026-03-14
+* **Original Issue:** Scroll wheel zoom stopped working after opening and closing fleet orders or fleet report windows.
+* **Solution Implemented:** Fixed `strategy_ui.py` — the `UI_WINDOW_CLOSE` event handler was incorrectly nested inside the `UI_BUTTON_PRESSED` block, so window references were never cleared on close. Moved to a separate top-level handler and added `transfer_dialog` cleanup.
+* **Test Case:** 1570 strategy tests pass.
+
+---

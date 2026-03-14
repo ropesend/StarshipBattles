@@ -7,10 +7,7 @@
 ## 2. Bug Queue
 | ID | Date Found | Description | Status | Spec File |
 | :--- | :--- | :--- | :--- | :--- |
-| BUG-46 | 2026-01-23 | Fleet Report ship top-down image too small | Awaiting Confirmation | [BUG-46.md](active_bugs/BUG-46.md) |
-| BUG-63 | 2026-02-07 | Starting planet should match species ideal conditions | Awaiting Confirmation | [BUG-63.md](active_bugs/BUG-63.md) |
 | BUG-68 | 2026-02-07 | Fleet Report - ship selection + ship report + remove from fleet | Deep Investigation | [BUG-68.md](active_bugs/BUG-68.md) |
-| BUG-69 | 2026-02-07 | Strategy view - scroll wheel zoom locks up intermittently | Awaiting Confirmation | [BUG-69.md](active_bugs/BUG-69.md) |
 | BUG-70 | 2026-02-07 | Colonize order should load population before moving | Awaiting Confirmation | [BUG-70.md](active_bugs/BUG-70.md) |
 | BUG-73 | 2026-02-08 | Species Setup - Homeworld type selection still reports "Custom" | Awaiting Confirmation | [BUG-73.md](active_bugs/BUG-73.md) |
 | BUG-80 | 2026-02-11 | Planets List - Planet details panel dimensions and positioning | Awaiting Confirmation | [BUG-80.md](active_bugs/BUG-80.md) |
@@ -27,7 +24,9 @@
 | BUG-91 | 2026-02-28 | Missing planet portrait in build yard UI | Awaiting Confirmation | [BUG-91.md](active_bugs/BUG-91.md) |
 | BUG-92 | 2026-02-28 | New Game Setup fails to populate loaded species data | Awaiting Confirmation | [BUG-92.md](active_bugs/BUG-92.md) |
 | BUG-93 | 2026-02-28 | Fleet move targeting state cannot be completed or canceled | Awaiting Confirmation | [BUG-93.md](active_bugs/BUG-93.md) |
-| BUG-94 | 2026-03-14 | Star visual radius too small relative to hex grid | Awaiting Confirmation | [BUG-94.md](active_bugs/BUG-94.md) |
+| BUG-94 | 2026-03-14 | Star visual radius too small relative to hex grid | In-Progress | [BUG-94.md](active_bugs/BUG-94.md) |
+| BUG-95 | 2026-03-14 | Load Species dialog — hover/click only registers in row margins | Pending | [BUG-95.md](active_bugs/BUG-95.md) |
+| BUG-96 | 2026-03-14 | Build queue shows 1.0 turns and total cost instead of per-turn usage | Pending | [BUG-96.md](active_bugs/BUG-96.md) |
 
 ## 3. Current Focus: None
 **Status:** BUG-94 fixed (added sqrt(3) hex geometry factor to star/Dyson sphere rendering). All bugs in queue fixed or blocked. BUG-84 blocked (needs runtime debugging). All others awaiting confirmation.

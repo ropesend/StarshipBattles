@@ -22,7 +22,7 @@ This uses `hex_size = 10`, but the actual screen distance per hex ring is much l
 Medium
 
 ## Status
-Awaiting Confirmation
+In-Progress
 
 ## Work Log
 - 2026-03-14: Created from QA Session 20260314_074413.
@@ -32,3 +32,23 @@ Awaiting Confirmation
   - **Phase 2:** Added `math.sqrt(3)` multiplier to both star (line 528) and Dyson sphere (line 706) formulas.
   - **Files modified:** `game/ui/screens/strategy_renderer.py`, `tests/unit/ui/screens/test_strategy_renderer.py`
   - **Tests:** 13168 passed, 2 skipped, 0 failures (full suite).
+
+---
+### ❌ Fix Rejected [2026-03-14 09:00]
+**Reason:** The sqrt(3) fix improved things but the scaling is not uniform across all star sizes. Radius-2 stars now look perfect, but radius-4 stars are still too small (edge ends at border of 3rd ring instead of halfway into 4th ring) and radius-1 stars are slightly too big (overfill the center hex). The formula needs a non-linear adjustment or per-radius tuning rather than a single linear multiplier.
+
+**New Constraints:**
+- Radius-2 is the reference — its current size is correct and should not change
+- Radius-1 stars should be slightly smaller than they currently are (should not overflow the center hex)
+- Radius-4 stars need to be larger — edge should reach halfway into the outermost hex ring
+- The star edge for any radius-N star should extend to approximately the midpoint of the Nth hex ring
+
+[![Radius-4 star still too small after fix](../../tools/qa_observer/session_data/20260314_085600/images/bug_capture_085952.png)](../../tools/qa_observer/session_data/20260314_085600/images/bug_capture_085952.png)
+*Radius-4 star — edge should reach halfway into the 4th ring but only reaches the edge of the 3rd*
+
+[![Radius-1 star slightly too big after fix](../../tools/qa_observer/session_data/20260314_085600/images/bug_capture_090023.png)](../../tools/qa_observer/session_data/20260314_085600/images/bug_capture_090023.png)
+*Radius-1 star — slightly overfills the center hex, should be a bit smaller*
+
+[![Radius-2 star looks perfect](../../tools/qa_observer/session_data/20260314_085600/images/bug_capture_090052.png)](../../tools/qa_observer/session_data/20260314_085600/images/bug_capture_090052.png)
+*Radius-2 star — this is the correct size, use as reference*
+---
