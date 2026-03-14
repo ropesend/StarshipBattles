@@ -10,14 +10,20 @@
 ### Phase A: Scope Definition
 **Goal:** Understand what to review and user priorities
 
-1. **Gather Review Target**
+1. **Read Documentation Reference (MANDATORY)**
+   - Read `docs/README.md` to understand the documentation structure
+   - Read `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md`
+   - Read any `docs/systems/` or `docs/guides/` files relevant to the review scope
+   - These are the authoritative references for how the codebase should be structured. All review agents should compare code against these documented standards.
+
+2. **Gather Review Target**
    - Use AskUserQuestion to clarify:
      - Target scope (entire codebase, specific directories, specific modules)
      - Priority areas of concern
      - Known problem areas (optional)
      - Any constraints or exclusions
 
-2. **Create Review Folder**
+3. **Create Review Folder**
    ```bash
    python Reviews/scripts/create_review.py <type> "<description>"
    ```
@@ -25,7 +31,7 @@
    - Initializes: `scope.md`, `findings/` directory
    - Updates: `Reviews/reviews_index.md`
 
-3. **Document Scope**
+4. **Document Scope**
    - Write scope definition to `scope.md` in the review folder
 
 ---
@@ -72,14 +78,27 @@
    ## Your Focus
    {ROLE_FOCUS_DESCRIPTION}
 
+   ## Documentation Reference (MANDATORY)
+   The `docs/` directory is the authoritative source for architecture, patterns, and conventions.
+   Before analyzing code, read the relevant docs:
+   - `docs/01_ARCHITECTURE.md` — Layer structure and dependency rules
+   - `docs/02_PATTERNS.md` — Established design patterns
+   - `docs/03_CONVENTIONS.md` — Naming and coding conventions
+   - Any relevant `docs/systems/` or `docs/guides/` files for the area being reviewed
+
+   When you find code that contradicts `docs/`, flag it as a finding. Use the `DOC` prefix
+   for documentation-specific discrepancies (e.g., DOC-01). If the documentation itself
+   appears wrong (code universally disagrees), note it as an INFO-level finding.
+
    ## Review Scope
    {SCOPE_FROM_PHASE_A}
 
    ## Your Task
    1. Analyze the codebase through the lens of your focus area
-   2. Identify issues, rate their severity, and suggest remediation
-   3. Produce a structured report
-   4. **CRITICAL: Use the Write tool to save your report to the output file below. Your analysis is lost if you don't write the file.**
+   2. **Compare code against documented patterns in `docs/` — flag discrepancies**
+   3. Identify issues, rate their severity, and suggest remediation
+   4. Produce a structured report
+   5. **CRITICAL: Use the Write tool to save your report to the output file below. Your analysis is lost if you don't write the file.**
 
    ## Output Format
    You MUST use the Write tool to save your report to: Reviews/results/{REVIEW_FOLDER}/findings/{ROLE_NAME}_report.md
@@ -220,6 +239,7 @@ This phase is **mandatory** for all reviews. Validator agents independently veri
    - Is the description accurate?
    - Is the "Impact" statement realistic or exaggerated?
    - Is the "Recommendation" feasible and correct?
+   - **For documentation findings (DOC/DOCC prefix):** Read BOTH the referenced `docs/` file AND the code. Verify the discrepancy actually exists.
 
    ### Step 3: Check If Already Fixed
    - Look for signs the issue was addressed (refactoring, TODO comments, recent changes)
@@ -328,6 +348,7 @@ Select agents based on review type and user priorities.
 | Performance Profiler | Algorithms, queries, memory, caching | PERF | Performance, General |
 | Error Handling Auditor | Exceptions, logging, validation, recovery | ERR | General |
 | Documentation Reviewer | Docstrings, comments, types, README | DOC | General |
+| Documentation Consistency Reviewer | Code-docs discrepancies, stale docs, undocumented patterns | DOCC | General, Consistency, Migration |
 | Dead Code Hunter | Unused imports, unreachable code, orphaned files | DC | General |
 
 ### Specialized Agents
@@ -438,6 +459,17 @@ Select agents based on review type and user priorities.
 | {ID} | {Sev} | {Title} | `{path}` | {Effort} |
 
 {Detailed descriptions follow}
+```
+
+### Documentation Discrepancies
+```markdown
+## Documentation Discrepancies
+
+Any findings where code contradicts `docs/` documentation:
+
+| Finding ID | docs/ File | What docs say | What code does | Recommendation |
+|------------|-----------|---------------|----------------|----------------|
+| {ID} | `docs/{file}.md` | {documented behavior} | {actual behavior} | Update docs / Fix code |
 ```
 
 ### Appendices

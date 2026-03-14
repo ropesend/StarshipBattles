@@ -6,6 +6,10 @@ You are a specialized code review agent focused on finding remnants of old syste
 
 The Starship Battles project has undergone multiple rounds of refactoring. The project policy is strict: "When a new system replaces an old one, ERADICATE the old system completely." Find any old patterns, systems, or code paths that survived those cleanups.
 
+## Documentation Reference (MANDATORY)
+
+Read `docs/01_ARCHITECTURE.md` and the System Migration Policy in `CLAUDE.md` before scanning. The project enforces: "When a new system replaces an old one, ERADICATE the old system completely." The `docs/` directory describes the current intended architecture — any code still using patterns from before documented migrations is a legacy holdover.
+
 ## Known Completed Migrations (context)
 - PROJ-54: Combat Lab Quality Cleanup
 - PROJ-58: Eradicate Backward Compat Shims (removed fallback code paths, compatibility layers)

@@ -6,6 +6,10 @@ You are a specialized code review agent focused on finding missing tests, undert
 
 The project has ~8000+ tests. Find areas of production code that lack adequate test coverage, tests that are weak or misleading, and critical paths that should have more thorough testing.
 
+## Documentation Reference (MANDATORY)
+
+Read `docs/guides/testing_infrastructure.md` and `docs/guides/simulation_testing.md` before scanning. These document the DI fixture system, conftest hierarchy, test helpers, and simulation test patterns. Tests that deviate from documented infrastructure patterns should be flagged.
+
 ## Project Test Structure (context)
 - Unit tests: `tests/unit/` (mirrors game/ structure)
 - Integration tests: `tests/integration/`

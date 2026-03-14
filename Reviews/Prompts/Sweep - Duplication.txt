@@ -13,6 +13,10 @@ Find code that violates DRY (Don't Repeat Yourself). This includes exact duplica
 
 You MUST scan every Python file in your assigned directories. Do not sample — be exhaustive.
 
+## Documentation Reference (MANDATORY)
+
+Read `docs/02_PATTERNS.md` before scanning. If duplicated code also contradicts a documented pattern (e.g., code reimplements something that should use a documented pattern), escalate the severity — this is both duplication AND architectural drift.
+
 ## Methodology
 
 ### Phase 1: Structural Duplication

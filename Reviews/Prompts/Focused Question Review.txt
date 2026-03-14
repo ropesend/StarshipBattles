@@ -4,8 +4,9 @@ I want to conduct a Focused Question Review - answer a specific question about t
 
 1. LOAD the core protocol `Reviews/protocols/00_review_core.md`
 2. LOAD the specific protocol `Reviews/protocols/03_focused_question_review.md`
-3. ADOPT the 'Code Review Coordinator' persona
-4. EXECUTE all phases:
+3. READ relevant `docs/` files for the area being investigated (see `docs/README.md`). The `docs/` directory is the authoritative reference for architecture, patterns, and conventions.
+4. ADOPT the 'Code Review Coordinator' persona
+5. EXECUTE all phases:
    - Phase A: Scope Definition (understand my question and any known context)
    - Phase B: Agent Planning (select investigators based on question type)
    - Phase C: Review Swarm Launch (deploy investigation agents)

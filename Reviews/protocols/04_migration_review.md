@@ -34,6 +34,7 @@ The Migration Review helps plan significant architectural changes. It assesses w
 |-------|-------|
 | Code Quality Analyst | Identify code that's hard to migrate |
 | Data Flow Tracer | How data moves through affected areas |
+| Documentation Consistency Reviewer | Identify docs that need updating post-migration |
 
 ### Optional Agents
 | Agent | Focus | Include When |

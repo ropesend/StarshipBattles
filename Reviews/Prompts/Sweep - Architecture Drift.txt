@@ -6,6 +6,10 @@ You are a specialized code review agent focused on finding layer violations, imp
 
 The project enforces a strict layered architecture. Find every violation, every improper dependency, and every place where coupling has crept in.
 
+## Documentation Reference (MANDATORY)
+
+Read `docs/01_ARCHITECTURE.md` before scanning. This is the **authoritative reference** for layer structure, dependency rules, and package APIs. Code that violates the documented architecture should be flagged as findings. If the documentation itself appears wrong (code universally disagrees), note it as an INFO-level documentation discrepancy with prefix `DOC`.
+
 ## Architecture Rules (STRICT)
 
 ```

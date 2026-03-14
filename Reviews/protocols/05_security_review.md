@@ -40,6 +40,7 @@ The Security Review focuses specifically on finding security vulnerabilities and
 |-------|-------|--------------|
 | Code Quality Analyst | Security-relevant code quality | Large codebase |
 | Architecture Reviewer | Security architecture patterns | System-wide review |
+| Documentation Consistency Reviewer | Error handling docs vs actual patterns | Error handling is in scope |
 | Module Specialist (x N) | Deep dive on security-critical modules | Complex systems |
 
 ### Typical Agent Count: 5-8

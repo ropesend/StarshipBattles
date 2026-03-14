@@ -61,6 +61,7 @@ The Update Review provides a progress report on a previous review's findings. It
 |-------|-------|----------------|
 | Regression Hunter | Check if fixed items regressed | REG |
 | New Issue Scout | Discover new issues within original scope | NEW |
+| Documentation Consistency Reviewer | Check if fixes updated `docs/` as needed | DOCC |
 
 ### Typical Agent Count: 4
 

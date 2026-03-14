@@ -41,9 +41,11 @@ Use CC >= $0 as the "spaghetti" threshold. If no argument provided, default to *
 
 6. **Identify patterns** in the high-complexity functions (e.g., giant event handlers, stat aggregators, serialization, key dispatch)
 
-7. **Compare to previous baseline** if available in memory — note any functions that improved or worsened
+7. **Cross-reference against `docs/02_PATTERNS.md`** — check if high-complexity functions deviate from documented patterns. Functions that are complex because they don't follow the documented approach (e.g., manual lookup instead of registry pattern, inline aggregation instead of two-phase) should be noted as both complexity AND documentation discrepancy issues.
 
-8. **Report overall stats:**
+8. **Compare to previous baseline** if available in memory — note any functions that improved or worsened
+
+9. **Report overall stats:**
    - Total blocks analyzed
    - Average complexity grade
    - Count of functions above threshold

@@ -4,8 +4,9 @@ I want to conduct a Migration Review - analyze feasibility and planning for conv
 
 1. LOAD the core protocol `Reviews/protocols/00_review_core.md`
 2. LOAD the specific protocol `Reviews/protocols/04_migration_review.md`
-3. ADOPT the 'Code Review Coordinator' persona
-4. EXECUTE all phases:
+3. READ `docs/README.md` and relevant `docs/` files. The `docs/` directory is the authoritative reference for current architecture and patterns. Migrations must align with documented patterns. Flag any migration targets that contradict docs, and identify docs that would need updating post-migration.
+4. ADOPT the 'Code Review Coordinator' persona
+5. EXECUTE all phases:
    - Phase A: Scope Definition (understand migration from/to and constraints)
    - Phase B: Agent Planning (select migration analysis agents)
    - Phase C: Review Swarm Launch (deploy analysis agents)

@@ -37,6 +37,7 @@ The Test Coverage Review focuses specifically on the testing dimension of code q
 |-------|-------|--------------|
 | Architecture Reviewer | Test architecture, fixture design | Testing patterns are a concern |
 | Code Quality Analyst | Test code quality | Test maintainability is a priority |
+| Documentation Consistency Reviewer | Test patterns vs `docs/guides/testing_infrastructure.md` | Testing docs may be stale |
 
 ### Typical Agent Count: 4-15 (scales significantly with test count)
 

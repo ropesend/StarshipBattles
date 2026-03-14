@@ -31,6 +31,7 @@ The General Review is the "go-to" review type when you want a comprehensive heal
 | Agent | Focus |
 |-------|-------|
 | Error Handling Auditor | Exception handling, logging, validation |
+| Documentation Consistency Reviewer | Code-docs discrepancies, stale docs, undocumented patterns |
 | Dead Code Hunter | Unused imports, unreachable code, orphaned files |
 
 ### Optional Agents (Based on Scope/Priorities)

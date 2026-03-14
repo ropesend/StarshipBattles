@@ -39,6 +39,7 @@ The Performance Review focuses on finding performance issues through code analys
 |-------|-------|--------------|
 | Data Flow Tracer | Data movement, I/O patterns | I/O-bound concerns |
 | Architecture Reviewer | System-level performance patterns | System-wide review |
+| Documentation Consistency Reviewer | Documented patterns vs actual implementation | Performance issues may stem from pattern deviation |
 | Module Specialist (x N) | Deep dive on performance-critical modules | Complex systems |
 
 ### Typical Agent Count: 4-8

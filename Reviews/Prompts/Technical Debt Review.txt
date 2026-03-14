@@ -4,8 +4,9 @@ I want to conduct a Technical Debt Review - quantify and prioritize accumulated 
 
 1. LOAD the core protocol `Reviews/protocols/00_review_core.md`
 2. LOAD the specific protocol `Reviews/protocols/07_technical_debt_review.md`
-3. ADOPT the 'Code Review Coordinator' persona
-4. EXECUTE all phases:
+3. READ `docs/README.md` and relevant `docs/` files. The `docs/` directory is the authoritative reference for architecture, patterns, and conventions. Documentation debt (stale docs, undocumented patterns, code-docs discrepancies) should be included as a debt category.
+4. ADOPT the 'Code Review Coordinator' persona
+5. EXECUTE all phases:
    - Phase A: Scope Definition (understand debt concerns and business context)
    - Phase B: Agent Planning (select debt analysis agents)
    - Phase C: Review Swarm Launch (deploy debt cataloguing agents)

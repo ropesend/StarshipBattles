@@ -27,6 +27,7 @@ The Consistency Review helps identify where the codebase has evolved inconsisten
 |-------|-------|
 | Pattern Cataloguer | Document all patterns in use across the codebase |
 | Inconsistency Hunter | Find deviations from common patterns |
+| Documentation Consistency Reviewer | Code vs `docs/` discrepancies — `docs/` is the authoritative reference for patterns |
 
 ### Recommended Agents
 | Agent | Focus |

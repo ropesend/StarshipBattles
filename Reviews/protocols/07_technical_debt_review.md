@@ -34,6 +34,7 @@ The Technical Debt Review treats code quality issues as "debt" with ongoing "int
 |-------|-------|
 | Refactoring Opportunity Finder | Identify high-value refactoring targets |
 | Code Quality Analyst | Detailed code quality assessment |
+| Documentation Consistency Reviewer | Documentation debt — stale docs, code-docs discrepancies, undocumented patterns |
 
 ### Optional Agents
 | Agent | Focus | Include When |

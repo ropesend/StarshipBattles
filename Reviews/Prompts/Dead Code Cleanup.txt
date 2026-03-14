@@ -4,8 +4,9 @@ I want to conduct a Focused Review on **dead code, orphaned files, and unused ar
 
 1. LOAD the core protocol `Reviews/protocols/00_review_core.md`
 2. LOAD the specific protocol `Reviews/protocols/03_focused_question_review.md`
-3. ADOPT the 'Code Review Coordinator' persona
-4. EXECUTE all phases:
+3. READ relevant `docs/` files. Check if any dead code corresponds to patterns removed from docs (intentional eradication → prioritize removal). Also check if `docs/` still references any dead classes/functions — flag those as documentation discrepancies.
+4. ADOPT the 'Code Review Coordinator' persona
+5. EXECUTE all phases:
    - Phase A: Scope Definition (pre-defined below — confirm and proceed)
    - Phase B: Agent Planning (recommend and confirm agent configuration)
    - Phase C: Review Swarm Launch (deploy review agents)

@@ -45,6 +45,12 @@ Group the `game/` results by type:
 - **Dead constants/variables** — assigned but never read
 - **Dead imports** — imported but never used
 
+### Step 3b: Cross-reference against docs/
+
+Check if any dead code corresponds to patterns or classes documented in `docs/`:
+- **Dead code matching removed patterns:** If `docs/` no longer describes a pattern but dead code still implements it, this confirms the code is intentionally eradicated — prioritize removal.
+- **Docs still referencing dead code:** If `docs/` files still reference dead classes, functions, or patterns, flag these as documentation discrepancies that need fixing alongside the dead code removal.
+
 ### Step 4: Identify false positives
 
 Flag these common false positive patterns — do NOT report them as dead code:

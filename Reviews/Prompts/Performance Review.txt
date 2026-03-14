@@ -4,8 +4,9 @@ I want to conduct a Performance Review - identify bottlenecks and optimization o
 
 1. LOAD the core protocol `Reviews/protocols/00_review_core.md`
 2. LOAD the specific protocol `Reviews/protocols/06_performance_review.md`
-3. ADOPT the 'Code Review Coordinator' persona
-4. EXECUTE all phases:
+3. READ relevant `docs/` files for the areas being reviewed (see `docs/README.md`). The `docs/` directory describes expected patterns — performance issues caused by deviating from documented patterns should be flagged.
+4. ADOPT the 'Code Review Coordinator' persona
+5. EXECUTE all phases:
    - Phase A: Scope Definition (understand performance concerns and constraints)
    - Phase B: Agent Planning (select performance analysis agents)
    - Phase C: Review Swarm Launch (deploy performance audit agents)

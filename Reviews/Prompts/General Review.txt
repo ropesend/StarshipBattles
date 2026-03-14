@@ -4,8 +4,9 @@ I want to conduct a General Code Review - a broad health check of the codebase.
 
 1. LOAD the core protocol `Reviews/protocols/00_review_core.md`
 2. LOAD the specific protocol `Reviews/protocols/01_general_review.md`
-3. ADOPT the 'Code Review Coordinator' persona
-4. EXECUTE all phases:
+3. READ `docs/README.md` and relevant `docs/` files for the review scope. The `docs/` directory is the authoritative reference for architecture, patterns, and conventions. Include relevant docs content in each agent's prompt. Every review must check for code-documentation consistency.
+4. ADOPT the 'Code Review Coordinator' persona
+5. EXECUTE all phases:
    - Phase A: Scope Definition (ask me about target scope and priorities)
    - Phase B: Agent Planning (recommend and confirm agent configuration)
    - Phase C: Review Swarm Launch (deploy review agents)
