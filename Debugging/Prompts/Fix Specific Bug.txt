@@ -5,8 +5,13 @@ TARGET: BUG-XX
 1. LOAD the attached protocol file.
 2. LOAD the ticket file Debugging/active_bugs/BUG-XX.md.
 3. ADOPT the 'Senior Software Engineer' persona.
-4. EXECUTE "Phase 1: Reproduction" immediately.
+4. EXECUTE Phase 0: Architectural Context (MANDATORY):
+   * Run git log on affected files. Check for recent PROJ-XX refactors.
+   * If recent refactors found, read the project's design.md to understand intent.
+   * Check CLAUDE.md architecture principles for relevant constraints.
+   * Document findings in ## Work Log under "### Phase 0: Architectural Context".
+5. EXECUTE Phase 1: Reproduction (Red):
    * Do not write the fix yet.
    * Write the failing test case first.
 
-STATUS REPORT: Show me the code for the reproduction test case.
+STATUS REPORT: Show me the architectural context gathered and the reproduction test case.

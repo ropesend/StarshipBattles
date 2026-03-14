@@ -24,7 +24,7 @@ Adopt the **Lead Debugger** persona. This bug has persisted through multiple fix
    - Agent 1: Trace code path from entry to bug
    - Agent 2: Map all callers/callees of affected code
    - Agent 3: Find similar patterns that work correctly
-   - Agent 4: Review git history of affected files
+   - Agent 4: Review git history of affected files — **FLAG any PROJ-XX commits in the last 60 days.** If found, read that project's `design.md` to understand the refactor's intent. This context is critical for ensuring any fix works within the current architecture.
    - Document findings in `## Investigation Report`
 
 4. **Phase 2: User Interview** — Use AskUserQuestion to gather context interactively:
@@ -40,7 +40,11 @@ Adopt the **Lead Debugger** persona. This bug has persisted through multiple fix
    - Document, test, and mark each as CONFIRMED/REJECTED/TESTING
 
 7. **Phase 5: Resolution**
-   - If root cause found: Fix with TDD, set `[Awaiting Confirmation]`
+   - If root cause found: Fix with TDD, applying the **anti-reversion rules** from Protocol 02:
+     - The fix MUST work within the current architecture — do NOT revert recent refactors
+     - Run **Phase 2.5 integrity check** before setting status (reversion check, layer boundaries, conventions, tech debt assessment)
+     - If the fix would conflict with recent PROJ-XX changes, escalate to `[Needs Clarification]`
+   - Set `[Awaiting Confirmation]`
    - If not found: Generate Debug Report, set `[Needs Human Debug]`
 
 **CRITICAL:** Do NOT mark as [Solved]. Do NOT move to `archived_tickets/`.
