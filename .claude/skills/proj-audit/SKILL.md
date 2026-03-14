@@ -29,6 +29,8 @@ Adopt the **Skeptical Reviewer** persona. Your job is to **find problems**, not 
 3. **EXECUTE** Comprehensive Review:
    - Go through EVERY task and subtask
    - Verify: completion, tests exist, tests pass, code matches intent
+   - **Verify code changes are consistent with `docs/` (architecture, patterns, conventions)**
+   - **If project changed architecture or patterns, verify `docs/` was updated**
    - Document all concerns
 
 4. **For EACH concern:**

@@ -6,6 +6,29 @@ This file provides context for Claude Code when working on the Starship Battles 
 
 ---
 
+## Documentation First (CRITICAL)
+
+**Before reviewing, understanding, or changing ANY code, read the relevant `docs/` files first.**
+
+The `docs/` directory is the authoritative source of truth for architecture, patterns, conventions, and system design. Start at [`docs/README.md`](docs/README.md) which provides a reading order by task type.
+
+**Mandatory reading before any work:**
+1. [`docs/01_ARCHITECTURE.md`](docs/01_ARCHITECTURE.md) — Layer structure, package APIs, protocols
+2. [`docs/02_PATTERNS.md`](docs/02_PATTERNS.md) — 14 design patterns with file locations
+3. [`docs/03_CONVENTIONS.md`](docs/03_CONVENTIONS.md) — Naming, file organization, imports
+
+**Then read task-specific docs** (services, error handling, UI styling, combat, strategy, AI, etc.) as listed in the README.
+
+### Code-Documentation Consistency (CRITICAL)
+
+All code changes MUST remain consistent with the documentation. This is a two-way contract:
+
+- **When writing code:** Follow the patterns, conventions, and architecture described in `docs/`. If the docs say to use a pattern, use it. If the docs say not to do something, don't do it.
+- **When you find a discrepancy** between the docs and the code: **STOP and raise it with the user.** Do not silently follow stale docs or silently ignore them. Ask which is correct — the code or the docs — and fix whichever is wrong.
+- **When changing architecture or patterns:** Update the relevant doc in the same change. Documentation and code must stay in sync.
+
+---
+
 ## Your Role: Technical Consultant
 
 When working in VS Code, you are a **helpful technical consultant**, not an automated worker.
@@ -31,7 +54,7 @@ When working in VS Code, you are a **helpful technical consultant**, not an auto
 **Tech Stack:**
 - Python 3.x
 - Pygame for rendering
-- Pytest for testing (6246 tests baseline)
+- Pytest for testing (7353 tests baseline)
 - Test parallelization with pytest-xdist
 
 **Display Target:**
@@ -48,7 +71,7 @@ game/
 ├── core/              # Foundation (registries, validation, utilities)
 ├── simulation/        # Combat simulation engine
 │   ├── components/    # Ship components and abilities
-│   └── formulas/      # Damage, accuracy, movement calculations
+│   └── formula_system.py  # Damage, accuracy, movement calculations
 ├── strategy/          # Galaxy map, fleets, planets, research
 ├── ai/                # AI controllers and targeting
 └── ui/                # Pygame screens and rendering
@@ -153,7 +176,7 @@ DO:
 
 ## Architecture Principles
 
-For comprehensive architecture documentation, see [`docs/README.md`](docs/README.md).
+**See [`docs/`](docs/README.md) for full architecture documentation.** The summary below is for quick reference only — the docs are authoritative.
 
 ### Layer Separation
 - **Core** - No dependencies on other layers
@@ -162,11 +185,14 @@ For comprehensive architecture documentation, see [`docs/README.md`](docs/README
 - **UI** - Top layer, depends on all others
 - **AI** - Depends on Simulation and Strategy
 
-### Key Patterns
+### Key Patterns (see `docs/02_PATTERNS.md` for full list)
 - **Registry Pattern** - Centralized component/ship/planet registration
-- **Ability System** - Component abilities with stacking rules
-- **Hull as Component** - Ships are component containers
-- **Two-Stage Aggregation** - Collect abilities, then apply modifiers
+- **Singleton via SingletonMeta** - Thread-safe metaclass in `game/core/singleton.py`
+- **Protocol + TypeGuard** - Duck typing with runtime checks
+- **Dependency Injection** - IRegistryProvider for production/test split
+- **Facade/Delegate** - StrategySessionFacade, Ship→ShipCombatEngine
+- **CQRS-lite** - Command/query separation with frozen DTOs
+- **Two-Phase Ability Aggregation** - Intra-group MAX, inter-group SUM/MULTIPLY
 
 ---
 
@@ -186,7 +212,7 @@ For comprehensive architecture documentation, see [`docs/README.md`](docs/README
 - **CLI parallel workers:** 12 (`-n 12`)
 - **VS Code Test Explorer:** Use 4 workers (higher breaks the integrated test panel)
 - **Test monitor:** `--testmon` for incremental runs
-- **Baseline:** 6246 passed, 0 skipped
+- **Baseline:** 7353 passed, 0 skipped
 
 ---
 
@@ -196,4 +222,28 @@ For comprehensive architecture documentation, see [`docs/README.md`](docs/README
 - Use conventional commit format when applicable
 - Run full test suite before pushing
 - Keep commits focused on single changes
+
+---
+
+## Subagent Report Output
+
+Subagent reports go to `.agent_reports/` by default. This directory is git-ignored and its contents are disposable.
+
+### Default Workflow
+
+1. **Main agent** creates `.agent_reports/<descriptive-job-name>/` before spawning subagents
+2. **Main agent** passes the full path to each subagent in its prompt
+3. **Subagents** write reports ONLY to the provided directory, using the Write tool (not Bash)
+4. **Main agent** reads/processes reports, then deletes the job folder when the task is complete
+
+Reports in `.agent_reports/` are **ephemeral** — they will be deleted once the main agent finishes its task. Do not rely on them persisting across conversations.
+
+### Skill/Protocol Override
+
+When a skill or protocol specifies its own report location, use that location instead of `.agent_reports/`. The skill/protocol is authoritative. Examples:
+
+- **Project reviews** → `Projects/active_projects/PROJ-XX/findings/` (protocols 01, 04, 09)
+- **Codebase analysis sweeps** → `Reviews/results/{DATE}_{TYPE}_{SCOPE}/` (analysis-sweep skill)
+
+The main agent passes the skill-specified path to subagents in the same way — subagents should always write to whatever path they are given.
 

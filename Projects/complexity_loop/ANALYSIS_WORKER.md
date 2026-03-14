@@ -15,11 +15,15 @@ You are an **automated complexity analysis agent**. Your job is to analyze a hig
 
 ### 2. Execution Protocol
 
-1. **Read** the project directory:
+1. **Read** relevant `docs/` files for the area being analyzed:
+   - `docs/02_PATTERNS.md` — established patterns to follow during refactoring
+   - `docs/03_CONVENTIONS.md` — naming and coding conventions
+   - Any relevant `docs/systems/` doc for the target area
+2. **Read** the project directory:
    - `Projects/active_projects/PROJ-XX/plan.md`
    - `Projects/active_projects/PROJ-XX/findings/complexity_target.md`
    - `Projects/active_projects/PROJ-XX/findings/audit_data.json`
-2. **Read** the target function and its surrounding context:
+3. **Read** the target function and its surrounding context:
    - Read the full file containing the function
    - Read any closely-related files (imports, callers, tests)
 3. **Launch multi-agent code review** (Step 3 below)

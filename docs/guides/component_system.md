@@ -15,14 +15,14 @@ Ships are built from components - modular parts that provide capabilities like w
 ## Component Lifecycle
 
 ```
-1. Definition    → Component defined in components.json
-2. Registration  → Loaded into ComponentRegistry at startup
-3. Instantiation → Component() created from definition data
-4. Attachment    → Added to Ship via ship.add_component()
-5. Initialization→ Abilities created, modifiers applied
-6. Simulation    → update() called each tick, abilities fire
-7. Damage        → take_damage() reduces HP, may disable
-8. Destruction   → HP reaches 0, component destroyed
+1. Definition    -> Component defined in data/components.json
+2. Registration  -> Loaded into RegistryManager at startup
+3. Instantiation -> Component() created from definition data
+4. Attachment    -> Added to Ship via ship.add_component()
+5. Initialization-> Abilities created, modifiers applied
+6. Simulation    -> update() called each tick, abilities fire
+7. Damage        -> take_damage() reduces HP, may disable
+8. Destruction   -> HP reaches 0, component destroyed
 ```
 
 ### Key Lifecycle Methods
@@ -30,10 +30,10 @@ Ships are built from components - modular parts that provide capabilities like w
 | Method | When Called | Purpose |
 |--------|-------------|---------|
 | `__init__()` | Instantiation | Parse data, create abilities |
-| `recalculate()` | After modifier change | Apply stat modifiers |
+| `recalculate_stats()` | After modifier change | Apply stat modifiers |
 | `update()` | Each tick | Run ability updates, cooldowns |
 | `take_damage()` | On hit | Apply damage, check disable threshold |
-| `activate()` | Ability trigger | Execute special ability |
+| `on_activation()` | Ability trigger | Execute special ability (e.g. fire weapon) |
 
 ## Ability System
 
@@ -43,42 +43,79 @@ Abilities are the functional capabilities of components. A weapon component has 
 
 ```
 Ability (base)
-├── WeaponAbility
-│   ├── ProjectileWeaponAbility
-│   ├── BeamWeaponAbility
-│   └── SeekerWeaponAbility
-├── DefenseAbility
-│   ├── ShieldAbility
-│   └── ArmorAbility
-├── PropulsionAbility
-│   └── CombatPropulsion
-├── SensorAbility
-└── SpecialAbility
-    ├── RepairAbility
-    └── StealthAbility
++-- SimpleMultiplierAbility (standard pattern for single-value abilities)
+|   +-- CombatPropulsion
+|   +-- ManeuveringThruster
+|   +-- StrategicMovement
+|   +-- ShieldProjection
+|   +-- ShieldRegeneration
+|   +-- CrewCapacity
+|   +-- LifeSupportCapacity
++-- WeaponAbility
+|   +-- ProjectileWeaponAbility
+|   +-- BeamWeaponAbility
+|   +-- SeekerWeaponAbility
++-- ResourceConsumption
++-- ResourceStorage
++-- ResourceGeneration
++-- ToHitAttackModifier
++-- ToHitDefenseModifier
++-- EmissiveArmor
++-- CrewRequired
++-- WarpJump
++-- VehicleLaunchAbility
++-- CommandAndControl (marker)
++-- RequiresCommandAndControl (marker)
++-- RequiresCombatMovement (marker)
++-- StructuralIntegrity (marker)
++-- ColonizePlanet
++-- Superweapons (DestroyPlanet, DestroyStar, OpenWarpPoint, etc.)
 ```
 
 ### Key Ability Classes
 
 | Class | Location | Purpose |
 |-------|----------|---------|
-| `Ability` | `game/simulation/components/abilities/base.py` | Base class with stat binding |
-| `WeaponAbility` | `game/simulation/components/abilities/weapons.py` | Damage, range, reload, firing arc |
-| `ShieldAbility` | `game/simulation/components/abilities/defense.py` | Shield HP, regen rate |
-| `CombatPropulsion` | `game/simulation/components/abilities/propulsion.py` | Thrust, turn rate |
+| `Ability` | `abilities/base.py` | Base class with scope, layer, stat bindings |
+| `SimpleMultiplierAbility` | `abilities/base.py` | Standard pattern for single-value abilities |
+| `WeaponAbility` | `abilities/weapons.py` | Damage, range, reload, firing arc |
+| `ShieldProjection` | `abilities/defense.py` | Shield capacity |
+| `ShieldRegeneration` | `abilities/defense.py` | Shield regen rate |
+| `CombatPropulsion` | `abilities/propulsion.py` | Thrust force |
+| `ResourceConsumption` | `abilities/resources.py` | Fuel, ammo, energy consumption |
 
 ### Ability Stat Bindings
 
-Abilities declare which stats they expose via `STAT_BINDINGS`:
+Abilities declare which stats they consume via `STAT_BINDINGS`:
 
 ```python
-STAT_BINDINGS = [
+STAT_BINDINGS: List[AbilityStatBinding] = [
     AbilityStatBinding(StatKey.DAMAGE_MULT, 'damage', 'multiply', '_base_damage'),
     AbilityStatBinding(StatKey.RANGE_MULT, 'range', 'multiply', '_base_range'),
 ]
 ```
 
 This allows modifiers to affect ability stats using operations like `multiply`, `add`, or `set`.
+
+### SimpleMultiplierAbility Pattern
+
+Most abilities that track a single numeric value should extend `SimpleMultiplierAbility`. It eliminates boilerplate by configuring behavior via class attributes:
+
+```python
+class CombatPropulsion(SimpleMultiplierAbility):
+    stat_key = 'thrust_mult'       # Modifier stat key
+    value_attr = 'thrust_force'    # Current-value attribute name
+    base_attr = 'base_thrust'      # Base-value attribute name
+    ui_label = 'Thrust'            # Display label
+    ui_format = '{:.0f} N'         # Value format string
+    ui_color = HINT_THRUST          # Color hint constant
+
+    STAT_BINDINGS: List[AbilityStatBinding] = [
+        AbilityStatBinding(StatKey.THRUST_MULT, 'thrust_force', 'multiply', 'base_thrust'),
+    ]
+```
+
+`SimpleMultiplierAbility` automatically handles `__init__`, `recalculate`, `get_ui_rows`, and `get_primary_value`.
 
 ## Modifier System
 
@@ -108,7 +145,7 @@ Modifiers customize component stats. They are applied in the Workshop during shi
 1. User adjusts slider in Workshop UI
 2. Component.set_modifier_value() called
 3. Modifier value stored in component.modifiers dict
-4. Component.recalculate() triggered
+4. Component.recalculate_stats() triggered
 5. Ability.recalculate() applies stat bindings
 6. Final stat values updated
 ```
@@ -120,8 +157,11 @@ For detailed modifier documentation, see [modifier_system.md](modifier_system.md
 | Class | File | Responsibility |
 |-------|------|----------------|
 | `Component` | `game/simulation/components/component.py` | Component instance, ability host |
-| `ComponentRegistry` | `game/core/registries.py` | Stores component definitions |
+| `RegistryManager` | `game/core/registry.py` | Singleton managing all game data registries |
+| `DefaultRegistryProvider` | `game/core/registry.py` | DI provider backed by RegistryManager |
+| `TestRegistryProvider` | `game/core/registry.py` | Isolated registry for tests |
 | `Ability` | `game/simulation/components/abilities/base.py` | Base ability class |
+| `SimpleMultiplierAbility` | `game/simulation/components/abilities/base.py` | Standard single-value ability base |
 | `AbilityManager` | `game/simulation/components/ability_manager.py` | Creates abilities from data |
 | `ModifierManager` | `game/simulation/components/modifier_manager.py` | Applies modifier effects |
 | `ModifierService` | `game/simulation/services/modifier_service.py` | Modifier validation logic |
@@ -136,14 +176,7 @@ from game.core.registry import get_default_registry_provider
 
 provider = get_default_registry_provider()
 comp_data = provider.get_components().get('laser_mk1')
-component = Component(comp_data)
-```
-
-### Adding to Ship
-
-```python
-ship.add_component(component, layer_name='weapons')
-component.recalculate()  # Apply modifiers
+component = Component(comp_data, registries=provider)
 ```
 
 ### Querying Abilities
@@ -154,8 +187,8 @@ if component.has_ability('WeaponAbility'):
     weapon = component.get_ability('WeaponAbility')
     damage = weapon.get_damage(range_to_target=1000)
 
-# Get total thrust from all engines
-total_thrust = ship.get_total_ability_value('CombatPropulsion')
+# Get all abilities of a type
+weapons = component.get_abilities('WeaponAbility')
 ```
 
 ### Applying Damage
@@ -171,9 +204,60 @@ if component.current_hp <= 0:
     print("Component destroyed!")
 ```
 
+## Ship Layers
+
+Ships organize components into layers. The `LayerType` enum is defined in `game/core/constants.py`.
+
+### LayerType Reference
+
+| LayerType | Value | Contents |
+|-----------|-------|----------|
+| `HULL` | 0 | Ship hull (innermost chassis layer) |
+| `CORE` | 1 | Core systems (bridge, reactors, crew quarters) |
+| `INNER` | 2 | Inner systems (engines, storage) |
+| `OUTER` | 3 | Outer systems (shields, sensors, weapons) |
+| `ARMOR` | 4 | Armor layer (outermost) |
+
+```python
+from game.core.constants import LayerType
+```
+
+## Component Data Format (components.json)
+
+Components are defined in `data/components.json`. Each entry has:
+
+```json
+{
+    "id": "railgun",
+    "name": "Railgun",
+    "type": "ProjectileWeaponAbility",
+    "mass": 100,
+    "hp": 150,
+    "allowed_vehicle_types": ["Ship", "Satellite", "Planetary Complex"],
+    "abilities": {
+        "CrewRequired": 5,
+        "ResourceConsumption": [
+            {"resource": "ammo", "amount": 1, "trigger": "activation"}
+        ],
+        "ProjectileWeaponAbility": {
+            "damage": "=40 - (0.01 * range_to_target)",
+            "range": 2400,
+            "reload": 2.0,
+            "projectile_speed": 20000,
+            "firing_arc": 1
+        }
+    }
+}
+```
+
+Ability data supports three formats:
+- **Dict:** `{"damage": 100, "range": 5000}` - full parameter specification
+- **Primitive:** `5` or `true` - shorthand for single-value abilities
+- **Formula:** `"=50 * sqrt(ship_class_mass / 1000)"` - runtime evaluated expression
+
 ## Related Documentation
 
 - [adding_abilities.md](adding_abilities.md) - How to create new abilities
 - [adding_modifiers.md](adding_modifiers.md) - How to create new modifiers
 - [modifier_system.md](modifier_system.md) - Detailed modifier documentation
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Overall system architecture
+- [01_ARCHITECTURE.md](../01_ARCHITECTURE.md) - Overall system architecture

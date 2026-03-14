@@ -37,7 +37,7 @@ Only update Current State if validation PASSES. If it FAILS, fix the issues firs
 ```
 WHILE (context < 80% used) AND (unchecked tasks remain):
     1. Select next task
-    2. Execute Protocol 03 (Implement Task)
+    2. Execute task (TDD cycle below)
     3. Update plan document
     4. Check context usage
 
@@ -53,8 +53,9 @@ ON EXIT:
 ### 1. Initialize
 
 1. Read `## Current State` to understand where the project is
-2. Identify current phase and remaining tasks
-3. Note your starting point for the summary
+2. **Read relevant `docs/` files** for the areas being worked on (see `docs/README.md`)
+3. Identify current phase and remaining tasks
+4. Note your starting point for the summary
 
 ### 2. Work Loop
 
@@ -64,11 +65,67 @@ For each task until context limit:
    - Pick first unchecked task in current phase
    - If phase complete, move to next phase
 
-2. **Execute Task** (Protocol 03)
-   - Verify/write tests (Strict TDD)
-   - Implement subtasks
-   - Check off completed work
-   - Add notes
+2. **Execute Task** (TDD Cycle)
+
+   **a. Load Context**
+   - Read `## Current State` to understand where the project is
+   - Read the task description and all subtasks
+   - **Read relevant `docs/` files** for the area being modified (see `docs/README.md`)
+   - Check `## Decisions Log` for relevant context
+
+   **b. Verify/Write Tests (Strict TDD)**
+
+   Tests MUST exist and fail BEFORE writing implementation code.
+
+   - Check the **Tests:** line for the task
+   - If tests don't exist:
+     - Create test file at specified location
+     - Write tests that verify the expected behavior
+     - Run tests — confirm they FAIL: `pytest tests/path/to/test.py --testmon`
+     - Document test creation in task notes
+   - If tests exist:
+     - Run them to confirm current state: `pytest tests/path/to/test.py --testmon`
+     - Add additional tests if needed for subtasks
+
+   **c. Implement**
+
+   For each subtask:
+   - Write the minimum code to make tests pass
+   - Run the specific tests — confirm they pass
+   - Check off the subtask: `- [ ]` to `- [x]`
+   - Repeat for next subtask
+
+   **d. Verify**
+   - Run all tests for this task: `pytest tests/path/to/test.py --testmon`
+   - Run incremental regression tests: `pytest tests/ --testmon`
+   - Ensure no breaks introduced
+   - If tests fail unexpectedly or you suspect broader regression:
+     - Run full suite: `pytest tests/` (without --testmon)
+
+   **e. Document**
+   - Add implementation notes to the task:
+     ```markdown
+     **Notes:** [What you did, any surprises, files modified]
+     ```
+   - If this completes a phase, update phase status to `Complete`
+   - **If changes affect architecture, patterns, or conventions, update the relevant `docs/` file**
+
+   **f. Update Current State**
+
+   CRITICAL: Update `## Current State` before moving on:
+   ```markdown
+   ## Current State
+   **Last Updated:** [Now]
+   **Last Agent Action:** [What you just completed]
+   **Next Action:** [Next task or phase]
+   **Blockers:** [Any issues, or None]
+   **Context for Next Agent:** [What they need to know]
+   ```
+
+   **Handling Edge Cases:**
+   - *Task is Blocked:* Note the blocker in `## Current State`. Move to next unblocked task if possible. If all tasks blocked, stop and report.
+   - *Task is More Complex Than Tagged:* Note this in the task. Break into smaller subtasks if needed. Continue with the refined breakdown.
+   - *Tests Reveal Design Issue:* Note the issue in task notes. Add to `## Current State` as context. Continue if possible, or flag for user input.
 
 3. **Quick State Update**
    - Check off completed subtasks
@@ -158,11 +215,13 @@ Avoid stopping:
 
 ## Key Rules
 
-1. **Strict TDD** - Tests before implementation, always
-2. **Update as you go** - Check boxes, add notes
-3. **Comprehensive handoff** - Current State must enable seamless continuation
-4. **Stop cleanly** - Better to stop early than corrupt the plan
-5. **No placeholders** - Don't leave TODO comments or incomplete code
-6. **Run validation** - Always run `validate_phase.py` before stopping
-7. **Check off tasks** - Mark subtasks complete AS you finish them, not in batches
-8. **Use testmon for speed** - Run `pytest tests/ --testmon` for incremental tests; run full `pytest tests/` at project start, end, or when regression suspected
+1. **Read docs first** - Read relevant `docs/` files before working in any area
+2. **Strict TDD** - Tests before implementation, always
+3. **Update as you go** - Check boxes, add notes
+4. **Comprehensive handoff** - Current State must enable seamless continuation
+5. **Stop cleanly** - Better to stop early than corrupt the plan
+6. **No placeholders** - Don't leave TODO comments or incomplete code
+7. **Run validation** - Always run `validate_phase.py` before stopping
+8. **Check off tasks** - Mark subtasks complete AS you finish them, not in batches
+9. **Use testmon for speed** - Run `pytest tests/ --testmon` for incremental tests; run full `pytest tests/` at project start, end, or when regression suspected
+10. **Keep docs in sync** - If your changes affect architecture or patterns, update the relevant `docs/` file before stopping

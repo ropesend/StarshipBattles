@@ -17,15 +17,17 @@ Read and follow both protocol files.
 
 1. **LOAD** the project plan: `Projects/active_projects/PROJ-$0/plan.md`
 
-2. **READ** `## Current State` to understand where we left off.
+2. **READ** relevant `docs/` files for the areas being worked on (see `docs/README.md` for index). The `docs/` directory is the authoritative source for architecture and patterns.
 
-3. **RUN** project status scripts:
+3. **READ** `## Current State` to understand where we left off.
+
+4. **RUN** project status scripts:
    ```bash
    python Projects/scripts/project_status.py PROJ-$0
    python Projects/scripts/current_task.py PROJ-$0
    ```
 
-4. **EXECUTE** the autonomous work loop:
+5. **EXECUTE** the autonomous work loop:
    - Work through tasks using **Strict TDD**
    - Use `pytest tests/ --testmon` for incremental testing (fast)
    - Use `pytest tests/path/to/test.py --testmon` for targeted tests
@@ -33,7 +35,8 @@ Read and follow both protocol files.
    - Add implementation notes
    - Continue until context limit (~80%) or phase complete
 
-5. **BEFORE STOPPING:**
+6. **BEFORE STOPPING:**
+   - If changes affected architecture/patterns/conventions, update relevant `docs/` files
    - Run phase validation:
      ```bash
      python Projects/scripts/validate_phase.py PROJ-$0 [current_phase]
@@ -44,3 +47,4 @@ Read and follow both protocol files.
 **NOTE:** If first session on a new project, run `pytest tests/` (full, no --testmon) first.
 
 **CONSTRAINT:** Tests MUST be written BEFORE implementation (Strict TDD).
+**CONSTRAINT:** Code MUST be consistent with `docs/`. If you find discrepancies, flag them.

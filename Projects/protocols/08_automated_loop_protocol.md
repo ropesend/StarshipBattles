@@ -23,11 +23,13 @@ This protocol defines how Claude CLI operates in automated loop mode, executing 
 
 ## Core Principles
 
-1. **Stateless Operation** - Each agent instance is independent
-2. **Long-term Focus** - Always choose maintainability over convenience
-3. **Quality First** - Never compromise on tests or code quality
-4. **Audit Integration** - Automatic verification of all completed work
-5. **Clear Handoffs** - Comprehensive context for next agent
+1. **Documentation First** - Read relevant `docs/` files before working in any code area. The `docs/` directory is the authoritative source for architecture, patterns, and conventions.
+2. **Stateless Operation** - Each agent instance is independent
+3. **Long-term Focus** - Always choose maintainability over convenience
+4. **Quality First** - Never compromise on tests or code quality
+5. **Docs Consistency** - If changes affect architecture or patterns, update `docs/` in the same session. Code and documentation must stay in sync.
+6. **Audit Integration** - Automatic verification of all completed work
+7. **Clear Handoffs** - Comprehensive context for next agent
 
 ---
 
@@ -246,9 +248,11 @@ Before completing any task:
 - [ ] Proper error handling with specific exceptions
 - [ ] Comprehensive test coverage
 - [ ] No code duplication
-- [ ] Follows existing patterns and conventions
+- [ ] Follows patterns documented in `docs/02_PATTERNS.md`
+- [ ] Follows conventions documented in `docs/03_CONVENTIONS.md`
 - [ ] Type hints where appropriate
 - [ ] Docstrings for public APIs
+- [ ] If architecture/patterns changed: relevant `docs/` file updated
 
 ---
 
@@ -345,11 +349,14 @@ The loop runner scripts (`loop_runner.ps1` / `loop_runner.sh`) orchestrate the l
 
 ### Documentation Quality
 
+- **Read `docs/` before working** — architecture, patterns, and conventions are documented there
 - Update docstrings when changing behavior
 - Add comments for non-obvious logic
 - Document decisions in decisions.md
+- **Update `docs/` files if changes affect architecture, patterns, services, or conventions**
 - Keep README files current
 - Update protocol docs if workflow changes
+- **Flag code-documentation discrepancies** — don't silently ignore stale docs
 
 ---
 

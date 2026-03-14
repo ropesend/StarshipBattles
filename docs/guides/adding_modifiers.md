@@ -41,27 +41,40 @@ Add to `data/modifiers.json`:
 
 From `game/simulation/components/abilities/stat_keys.py`:
 
-| Stat Key | Operation | Affects |
-|----------|-----------|---------|
-| `mass_mult` | multiply | Component mass |
-| `hp_mult` | multiply | Component HP |
-| `cost_mult` | multiply | Resource costs |
-| `damage_mult` | multiply | Weapon damage |
-| `range_mult` | multiply | Weapon range |
-| `reload_mult` | multiply | Reload time |
-| `arc_add` | add | Firing arc degrees |
-| `arc_set` | set | Override firing arc |
-| `crew_req_mult` | multiply | Crew requirements |
-| `endurance_mult` | multiply | Seeker endurance |
-| `projectile_damage_mult` | multiply | Seeker missile damage |
-| `projectile_hp_mult` | multiply | Seeker missile HP |
-| `projectile_stealth_mult` | multiply | Seeker stealth |
-| `capacity_mult` | multiply | Shield/storage capacity |
+| Stat Key | Default | Operation | Affects |
+|----------|---------|-----------|---------|
+| `mass_mult` | 1.0 | multiply | Component mass |
+| `hp_mult` | 1.0 | multiply | Component HP |
+| `cost_mult` | 1.0 | multiply | Resource costs |
+| `damage_mult` | 1.0 | multiply | Weapon damage |
+| `range_mult` | 1.0 | multiply | Weapon range |
+| `reload_mult` | 1.0 | multiply | Reload time |
+| `thrust_mult` | 1.0 | multiply | Engine thrust |
+| `turn_mult` | 1.0 | multiply | Turn rate |
+| `strategic_mult` | 1.0 | multiply | Strategic speed |
+| `energy_gen_mult` | 1.0 | multiply | Energy generation |
+| `capacity_mult` | 1.0 | multiply | General capacity |
+| `shield_capacity_mult` | 1.0 | multiply | Shield capacity |
+| `crew_capacity_mult` | 1.0 | multiply | Crew capacity |
+| `life_support_capacity_mult` | 1.0 | multiply | Life support capacity |
+| `consumption_mult` | 1.0 | multiply | Resource consumption |
+| `endurance_mult` | 1.0 | multiply | Seeker endurance |
+| `projectile_damage_mult` | 1.0 | multiply | Seeker missile damage |
+| `projectile_hp_mult` | 1.0 | multiply | Seeker missile HP |
+| `crew_req_mult` | 1.0 | multiply | Crew requirements |
+| `mass_add` | 0.0 | add | Additional mass |
+| `arc_add` | 0.0 | add | Firing arc degrees |
+| `accuracy_add` | 0.0 | add | Accuracy bonus |
+| `projectile_stealth_level` | 0.0 | add | Seeker stealth level |
+| `arc_set` | None | set | Override firing arc |
+
+**Note:** The stat key for seeker stealth in effect definitions is `projectile_stealth_add` (operation: add), which maps to the internal stat `projectile_stealth_level`. See the `seeker_stealth` modifier in `data/modifiers.json` for an example.
 
 ### Operations
 
-- `multiply`: Final = Base × Value
+- `multiply`: Final = Base x Value (default if not specified)
 - `add`: Final = Base + Value
+- `add_to_mult`: Final = Base + Value (used for additive contributions to multiplier stats, e.g., rapid_fire mass scaling)
 - `set`: Final = Value (overrides)
 
 ## Step 3: Write Formulas
@@ -86,10 +99,11 @@ max(a, b)       Maximum
 | Effect | Formula | Explanation |
 |--------|---------|-------------|
 | Linear scaling | `param` | 1:1 with slider |
-| Quadratic HP | `param ^ 2` | HP = mass² |
-| Double range per level | `2 ^ param` | 1→2, 2→4, 3→8 |
-| Halve reload time | `1.0 / param` | 2→0.5, 3→0.33 |
+| Quadratic HP | `param ^ 2` | HP = mass squared |
+| Double range per level | `2 ^ param` | 1->2, 2->4, 3->8 |
+| Halve reload time | `1.0 / param` | 2->0.5, 3->0.33 |
 | Logarithmic mass | `1.0 + 0.514 * ln(1.0 + param / 30.0)` | Diminishing returns |
+| Additive mass scaling | `(param - 1.0) * 2.0` | With `add_to_mult` operation |
 
 ## Step 4: Add Restrictions
 
@@ -174,20 +188,24 @@ def test_your_modifier_effects():
 
 ## Step 7: Configure UI (Optional)
 
-Add UI config in `ui/builder/modifier_config.py`:
+Add UI config in `game/ui/screens/builder/modifier_config.py`:
 
 ```python
 MODIFIER_UI_CONFIG = {
     'your_modifier': {
-        'control_type': 'linear',
+        'control_type': 'linear_stepped',
         'slider_step': 0.1,
         'step_buttons': [
-            {'label': '-1', 'mode': 'delta_sub', 'value': 1.0},
-            {'label': '+1', 'mode': 'delta_add', 'value': 1.0}
+            {'label': '<<', 'value': 1.0, 'mode': 'delta_sub'},
+            {'label': '<', 'value': 0.1, 'mode': 'delta_sub'},
+            {'label': '>', 'value': 0.1, 'mode': 'delta_add'},
+            {'label': '>>', 'value': 1.0, 'mode': 'delta_add'}
         ]
     }
 }
 ```
+
+Modifiers not listed in `MODIFIER_UI_CONFIG` use the `DEFAULT_CONFIG` (linear slider with 0.01 step).
 
 ## Validation
 
@@ -205,5 +223,5 @@ if errors:
 - [ ] Formula syntax is valid
 - [ ] Restrictions are appropriate
 - [ ] Regression test written
-- [ ] UI config added (if needed)
+- [ ] UI config added in `game/ui/screens/builder/modifier_config.py` (if custom controls needed)
 - [ ] All tests pass

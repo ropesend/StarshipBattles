@@ -37,3 +37,6 @@ tools/qa_observer/session_data/
 
 # Test artifact: MagicMock stringified as directory path
 MagicMock/
+
+# Subagent temporary reports
+.agent_reports/

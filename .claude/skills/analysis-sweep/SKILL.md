@@ -62,7 +62,11 @@ Write `Reviews/results/{REVIEW_FOLDER}/scope.md` with:
 - Table of all 25 agents with their sweep type, shard, output file name, and finding ID prefix
 - Execution model: 5 waves of 5 parallel agents
 
-### Step 3: Read All Prompt Files
+### Step 3: Read Documentation Reference
+
+Before launching agents, read `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, and `docs/03_CONVENTIONS.md`. These are the authoritative references for architecture, patterns, and conventions. Include a summary of documented patterns and conventions in each agent's prompt context, so agents can identify violations against the documented standard (not just inconsistencies between files).
+
+### Step 4: Read All Prompt Files
 
 Read all 5 sweep prompt files:
 1. `Reviews/Prompts/Sweep - Duplication.txt`

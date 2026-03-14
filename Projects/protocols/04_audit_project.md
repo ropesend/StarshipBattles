@@ -92,6 +92,7 @@ Go through EVERY task and subtask in the plan. For each one:
 | **No Shortcuts** | Was the full requirement met, not a partial solution? |
 | **No Regressions** | Do existing tests still pass? |
 | **Notes Present** | Are implementation notes filled in? |
+| **Docs Consistent** | Do changes follow patterns in `docs/`? Were `docs/` updated if architecture/patterns changed? |
 
 ### Document Concerns
 
@@ -285,3 +286,4 @@ When audit passes with no significant issues:
 3. **Document everything** - Clear audit trail in Audit Log
 4. **Don't get stuck** - Escalate after 3 cycles
 5. **Severity matters** - Minor issues might be acceptable, major issues must be fixed
+6. **Docs consistency** - Verify code changes are consistent with `docs/`. Flag any discrepancies between code and documentation as audit findings. If the project changed architecture or patterns, `docs/` must have been updated.

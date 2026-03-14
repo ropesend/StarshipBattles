@@ -3,8 +3,11 @@
 1. LOAD the attached protocol file protocols/02a_batch_fix.md.
 2. READ Debugging/debug_plan.md to identify all [Pending] and [In-Progress] bugs.
 3. CRITICAL: For each bug, complete Phase 0 (Architectural Context) before attempting
-   any fix. Check git history, active projects, and architecture docs. NEVER revert
+   any fix. Read relevant `docs/` files (`docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`,
+   `docs/03_CONVENTIONS.md`), check git history, and check active projects. NEVER revert
    recently refactored code — fix forward or escalate to [Needs Clarification].
+   If code contradicts docs, check git dates to determine which is correct. If unclear,
+   set [Needs Clarification] and skip. Update docs inline when fixing discrepancies.
 4. BEGIN BATCH LOOP:
    * Select highest priority bug.
    * LOAD ticket file (e.g., Debugging/active_bugs/BUG-XX.md).

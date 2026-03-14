@@ -82,9 +82,10 @@ python Projects/scripts/validate_phase.py PROJ-XX 2 --strict
 ### Before Starting a Task
 
 1. Read the task description and all subtasks
-2. Read the **Tests** line - tests MUST exist before implementation
-3. Check the Decisions Log for relevant context
-4. If tests don't exist yet, write them FIRST (Strict TDD)
+2. **Read relevant `docs/` files** for the area you're working in (see `docs/README.md` for index)
+3. Read the **Tests** line - tests MUST exist before implementation
+4. Check the Decisions Log for relevant context
+5. If tests don't exist yet, write them FIRST (Strict TDD)
 
 ### Strict TDD Workflow
 
@@ -275,6 +276,7 @@ When all tasks in a phase are checked off:
 ```
 
 ### Key Rules
+- **Read `docs/` before working** — architecture, patterns, conventions are documented there
 - Tests BEFORE implementation (Strict TDD)
 - ALWAYS update Current State before stopping
 - Log decisions in Decisions Log
@@ -282,3 +284,5 @@ When all tasks in a phase are checked off:
 - Note any complexity surprises
 - Run `validate_phase.py` before marking phases complete
 - Check off tasks IMMEDIATELY when done (don't batch)
+- **If your changes affect architecture or patterns, update the relevant `docs/` file**
+- **If you find code that contradicts `docs/`, flag it — don't silently ignore**

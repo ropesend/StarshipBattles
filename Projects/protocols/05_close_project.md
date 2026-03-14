@@ -72,6 +72,10 @@ If closing multiple projects, print a final summary:
 
 ---
 
+## Documentation Check
+
+Before archiving, verify that if the project changed any architecture, patterns, services, or conventions, the relevant `docs/` files were updated. If not, flag this to the user as a required action before closing.
+
 ## Termination
 
 After archiving:

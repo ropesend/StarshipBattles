@@ -6,9 +6,13 @@ TARGET: BUG-XX
 2. LOAD the ticket file Debugging/active_bugs/BUG-XX.md.
 3. ADOPT the 'Senior Software Engineer' persona.
 4. EXECUTE Phase 0: Architectural Context (MANDATORY):
+   * Read relevant `docs/` files for the affected area:
+     - `docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md`
+     - Any relevant system doc from `docs/systems/`
    * Run git log on affected files. Check for recent PROJ-XX refactors.
    * If recent refactors found, read the project's design.md to understand intent.
    * Check CLAUDE.md architecture principles for relevant constraints.
+   * Compare code against docs — if they disagree, check git dates. If unclear, escalate.
    * Document findings in ## Work Log under "### Phase 0: Architectural Context".
 5. EXECUTE Phase 1: Reproduction (Red):
    * Do not write the fix yet.

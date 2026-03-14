@@ -55,11 +55,20 @@ This means:
 
 ## Phase A: Initial Understanding
 
-1. **Read User's Description**
+1. **Read Project Documentation** ⚠️ MANDATORY FIRST STEP
+   - Read `docs/README.md` to understand the documentation index
+   - Read `docs/01_ARCHITECTURE.md` to understand layer structure and APIs
+   - Read `docs/02_PATTERNS.md` to understand established design patterns
+   - Read `docs/03_CONVENTIONS.md` to understand naming and coding conventions
+   - Read any task-specific docs (e.g., `docs/systems/combat_simulation.md` if working on combat)
+   - **The docs/ directory is the authoritative source of truth for architecture and patterns.**
+   - **Your plan MUST be consistent with documented patterns and conventions.**
+
+2. **Read User's Description**
    - Parse the project description from the prompt
    - Identify: What is being added/refactored? Why?
 
-2. **Create Project Structure Using Script** ⚠️ MANDATORY
+3. **Create Project Structure Using Script** ⚠️ MANDATORY
    > **DO NOT create project files manually.** Always use the helper script to ensure
    > the proper directory structure is created.
 
@@ -82,7 +91,7 @@ This means:
    > python Reviews/scripts/review_to_project.py <review_folder>
    > ```
 
-3. **Run Full Test Suite (Baseline)**
+4. **Run Full Test Suite (Baseline)**
    Before beginning deep code review, establish a passing baseline:
    ```bash
    pytest tests/
@@ -92,14 +101,15 @@ This means:
    - This run also initializes the testmon database for future incremental runs
    - Document any pre-existing issues in `## Initial Analysis`
 
-4. **Deep Code Review**
+5. **Deep Code Review**
    - Launch 2-3 Explore agents to understand current architecture:
      - Agent 1: Examine the primary code area being modified
      - Agent 2: Identify related components and dependencies
      - Agent 3: Review existing patterns and conventions
+   - **Cross-reference code findings against `docs/` — flag any discrepancies**
    - Document findings in `## Initial Analysis` section
 
-5. **Initial Questions & Suggestions**
+6. **Initial Questions & Suggestions**
    - Use AskUserQuestion to:
      - Clarify scope and boundaries
      - Understand priorities and constraints
@@ -107,7 +117,7 @@ This means:
      - Offer suggestions based on findings
    - Document answers in `## Decisions Log`
 
-6. **Draft Tentative Plan**
+7. **Draft Tentative Plan**
    - Create high-level outline of phases and major tasks
    - Present to user for initial feedback
 
@@ -291,6 +301,7 @@ Create `Projects/active_projects/PROJ-XX/plan.md` with this structure:
 ## Verification Checklist
 
 ### Project Start (REQUIRED)
+- [ ] Read `docs/` foundation docs (01_ARCHITECTURE, 02_PATTERNS, 03_CONVENTIONS)
 - [ ] Run full test suite: `pytest tests/` - all tests pass (establishes baseline)
 
 ### After Each Phase
@@ -302,6 +313,7 @@ Create `Projects/active_projects/PROJ-XX/plan.md` with this structure:
 - [ ] [End-to-end test scenario 1]
 - [ ] [End-to-end test scenario 2]
 - [ ] Run full test suite: `pytest tests/` (NOT --testmon, full verification)
+- [ ] Verify changes are consistent with `docs/` — update docs if architecture/patterns changed
 
 ---
 

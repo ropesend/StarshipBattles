@@ -19,8 +19,9 @@ Adopt the **Project Review Coordinator** persona. Your goal is to align the proj
 
 ### Phase 1: Load & Prepare
 
-1. **LOAD** the project plan: `Projects/active_projects/PROJ-$0/plan.md`
-2. **LOAD** all phase checklists, `design.md`, and `decisions.md`
+1. **READ** relevant `docs/` files (`docs/01_ARCHITECTURE.md`, `docs/02_PATTERNS.md`, `docs/03_CONVENTIONS.md`) as the authoritative reference for how the codebase should be structured.
+2. **LOAD** the project plan: `Projects/active_projects/PROJ-$0/plan.md`
+3. **LOAD** all phase checklists, `design.md`, and `decisions.md`
 3. **RUN** project status:
    ```bash
    python Projects/scripts/project_status.py PROJ-$0
@@ -43,7 +44,7 @@ Each agent receives the full plan content, all checklist contents, and design.md
 | Plan-Code Alignment Analyst | Verify file paths, line numbers, code references are accurate | `review_YYYYMMDD_alignment_report.md` |
 | Task Freshness Analyst | Find already-done, obsolete, or prerequisite-changed tasks | `review_YYYYMMDD_freshness_report.md` |
 | Scope Gap Analyst | Identify areas in scope the plan doesn't cover | `review_YYYYMMDD_scope_gap_report.md` |
-| Design Pattern Analyst | Validate plan's approach matches current codebase patterns | `review_YYYYMMDD_design_report.md` |
+| Design Pattern Analyst | Validate plan's approach matches `docs/` patterns and conventions | `review_YYYYMMDD_design_report.md` |
 | Completeness Auditor | Cross-reference Goals vs Tasks, check phase structure | `review_YYYYMMDD_completeness_report.md` |
 
 Reports go to: `Projects/active_projects/PROJ-$0/findings/`

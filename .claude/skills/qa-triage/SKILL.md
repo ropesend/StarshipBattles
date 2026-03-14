@@ -216,7 +216,7 @@ Pending
 
 #### For Reject Bug Fix
 
-Follow `Debugging/protocols/05_reject_fix.md` pattern:
+Follow `Tickets/protocols/05_reject_ticket.md` pattern:
 
 1. **Identify** the matching BUG-XX ticket (from Step C)
 2. **Ask the user** for their rejection explanation — clean up speech-to-text artifacts but preserve meaning
@@ -240,7 +240,7 @@ Include screenshot references from this QA session using the standard relative p
 
 #### For Approve Bug Fix
 
-Follow `Debugging/protocols/03_close_bug.md` pattern:
+Follow `Tickets/protocols/03_close_ticket.md` pattern:
 
 1. **Identify** the matching BUG-XX ticket (from Step C)
 2. **Read** the ticket to extract the title, solution summary, and key test case

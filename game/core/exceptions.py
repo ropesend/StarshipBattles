@@ -76,7 +76,7 @@ Design Notes
 - All exceptions support code and context attributes
 - Context defaults to empty dict (never None)
 - Exception chaining preserves original cause with `raise from`
-- See docs/ERROR_HANDLING_GUIDELINES.md for complete usage guide
+- See docs/05_ERROR_HANDLING.md for complete usage guide
 """
 from typing import Optional
 

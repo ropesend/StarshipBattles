@@ -19,20 +19,29 @@ Adopt the **Project Architect** persona.
 
 ### Phase A: Initial Understanding
 
-1. Read the project description provided below
-2. **MANDATORY:** Create project structure using the helper script:
+1. **MANDATORY FIRST STEP:** Read project documentation:
+   - `docs/README.md` (documentation index)
+   - `docs/01_ARCHITECTURE.md` (layers, APIs, protocols)
+   - `docs/02_PATTERNS.md` (established design patterns)
+   - `docs/03_CONVENTIONS.md` (naming, coding style)
+   - Any task-specific docs from `docs/systems/` or `docs/guides/`
+   The `docs/` directory is the authoritative source for architecture and patterns.
+   Your plan MUST be consistent with documented patterns and conventions.
+2. Read the project description provided below
+3. **MANDATORY:** Create project structure using the helper script:
    ```bash
    python Projects/scripts/create_project.py "Project Title"
    ```
    Do NOT create project files manually. The script ensures proper directory structure.
-3. **MANDATORY:** Run full test suite to establish baseline:
+4. **MANDATORY:** Run full test suite to establish baseline:
    ```bash
    pytest tests/
    ```
    All tests must pass before proceeding. This also initializes testmon.
-4. Perform deep code review of relevant areas
-5. Ask clarifying questions
-6. Make suggestions based on findings
+5. Perform deep code review of relevant areas
+6. **Cross-reference code against `docs/` — flag any discrepancies to the user**
+7. Ask clarifying questions
+8. Make suggestions based on findings
 
 ### Phase B: Deep Dive Swarm Review
 

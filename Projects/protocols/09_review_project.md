@@ -247,13 +247,22 @@ Your analysis is LOST if you don't write the file.
 
 #### Agent 4: Design Pattern Analyst
 
-**Focus:** Verify the plan's proposed approach still matches current codebase patterns and conventions.
+**Focus:** Verify the plan's proposed approach still matches current codebase patterns and conventions **as documented in `docs/`**.
 
 ```markdown
 # Project Review Agent: Design Pattern Analyst
 
 ## Your Task
-Verify that the project plan's proposed implementation approach is still valid given the current state of the codebase.
+Verify that the project plan's proposed implementation approach is consistent with the documented architecture, patterns, and conventions.
+
+## CRITICAL: Read Documentation First
+Before analyzing code, read these documentation files:
+- `docs/01_ARCHITECTURE.md` — Layer structure and dependency rules
+- `docs/02_PATTERNS.md` — Established design patterns
+- `docs/03_CONVENTIONS.md` — Naming and coding conventions
+- Any relevant system docs in `docs/systems/`
+
+The `docs/` directory is the authoritative source for how the codebase should be structured.
 
 ## Project Plan
 {FULL_PLAN_MD_CONTENT}
@@ -266,12 +275,16 @@ Verify that the project plan's proposed implementation approach is still valid g
 
 ## Analysis Process
 1. Review the design.md for architectural decisions and proposed patterns
-2. Check the current codebase for:
+2. **Cross-reference against `docs/` documentation:**
+   - Does the plan follow the patterns documented in `docs/02_PATTERNS.md`?
+   - Does the plan follow conventions in `docs/03_CONVENTIONS.md`?
+   - Does the plan respect layer boundaries in `docs/01_ARCHITECTURE.md`?
+3. Check the current codebase for:
    - Has the codebase adopted new patterns since the plan was written?
    - Does the plan propose an approach that conflicts with current conventions?
    - Are there existing utilities or abstractions the plan should use but doesn't mention?
    - Has a dependency or API the plan relies on changed?
-3. For each task that describes HOW to implement something:
+4. For each task that describes HOW to implement something:
    - Is the proposed approach still the best way?
    - Are there simpler alternatives available now?
    - Would the approach create inconsistency with recent codebase changes?

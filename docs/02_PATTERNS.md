@@ -1,0 +1,837 @@
+# Design Patterns Reference
+
+Agent-optimized reference for every core pattern in the codebase.
+Each section: **Where**, **How It Works**, **When to Use**.
+
+---
+
+## Table of Contents
+
+1. [Singleton (SingletonMeta)](#1-singleton-singletonmeta)
+2. [Protocol + TypeGuard](#2-protocol--typeguard)
+3. [Dependency Injection (Registry)](#3-dependency-injection-registry)
+4. [Registry Pattern](#4-registry-pattern)
+5. [Facade / Delegate](#5-facade--delegate)
+6. [CQRS-lite (Strategy Session)](#6-cqrs-lite-strategy-session)
+7. [CommandHandlerRegistry](#7-commandhandlerregistry)
+8. [MVVM (Workshop)](#8-mvvm-workshop)
+9. [Template Method (Validation)](#9-template-method-validation)
+10. [Event Bus](#10-event-bus)
+11. [Surface Caching (SpriteManager)](#11-surface-caching-spritemanager)
+12. [Configuration Classes](#12-configuration-classes)
+13. [Battle Mode Strategy](#13-battle-mode-strategy)
+14. [Two-Phase Ability Aggregation](#14-two-phase-ability-aggregation)
+15. [Factory](#15-factory)
+
+---
+
+## 1. Singleton (SingletonMeta)
+
+### Where
+
+- Metaclass: `game/core/singleton.py` -- `SingletonMeta`
+- Users:
+  - `RegistryManager` -- `game/core/registry.py`
+  - `SpriteManager` -- `game/ui/renderer/sprites.py`
+  - `StrategyManager` -- `game/ai/strategy_manager.py`
+  - `ScreenshotManager` -- `game/ui/services/screenshot_manager.py`
+  - `StrategyMetadataService` -- `game/core/strategy_metadata.py`
+  - `Profiler` -- `game/core/profiling.py`
+  - `AssetManager` -- `game/assets/asset_manager.py`
+  - `ShipThemeManager` -- `game/ui/assets/ship_theme_manager.py`
+  - `SessionRegistryCache` -- `tests/infrastructure/session_cache.py` (manual singleton, not metaclass)
+
+### How It Works
+
+`SingletonMeta` is a thread-safe metaclass with double-checked locking. Classes that use
+`metaclass=SingletonMeta` get singleton behavior automatically -- both `MyClass()` and
+`MyClass.instance()` return the same instance.
+
+```python
+# game/core/singleton.py (actual code)
+class SingletonMeta(type):
+    _instances: Dict[Type, Any] = {}
+    _locks: Dict[Type, threading.Lock] = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls in SingletonMeta._instances:
+            return SingletonMeta._instances[cls]
+        lock = SingletonMeta._locks[cls]
+        with lock:
+            if cls in SingletonMeta._instances:
+                return SingletonMeta._instances[cls]
+            instance = super().__call__(*args, **kwargs)
+            SingletonMeta._instances[cls] = instance
+            return instance
+
+    def reset(cls) -> None:
+        """Reset for testing -- destroys the instance entirely."""
+        lock = SingletonMeta._locks.get(cls)
+        if lock:
+            with lock:
+                if cls in SingletonMeta._instances:
+                    del SingletonMeta._instances[cls]
+```
+
+Usage in a class:
+
+```python
+class SpriteManager(metaclass=SingletonMeta):
+    def __init__(self):
+        self.sprites = []
+        self.tile_size = 36
+```
+
+### When to Use
+
+- Global managers that need exactly one instance (rendering, data loading, AI strategies).
+- `reset()` comes free with `SingletonMeta`; always call it in test teardown.
+- Prefer DI over direct singleton access for business logic (see pattern 3).
+
+---
+
+## 2. Protocol + TypeGuard
+
+### Where
+
+`game/core/protocols.py` -- all protocol definitions and TypeGuard functions.
+
+### How It Works
+
+The codebase uses `@runtime_checkable` Protocol classes to define structural interfaces,
+paired with TypeGuard functions that use duck typing (hasattr checks) for safe narrowing.
+
+```python
+# game/core/protocols.py (actual code)
+@runtime_checkable
+class IFleet(Protocol):
+    @property
+    def ships(self) -> List[Any]: ...
+    @property
+    def orders(self) -> List[Any]: ...
+    @property
+    def location(self) -> Any: ...
+    @property
+    def owner_id(self) -> int: ...
+    # ... more properties
+
+def _has_attrs(obj: Any, *attrs: str) -> bool:
+    return all(hasattr(obj, attr) for attr in attrs)
+
+def is_fleet(obj: Any) -> TypeGuard[IFleet]:
+    """Check minimal distinguishing attributes."""
+    return _has_attrs(obj, 'ships', 'orders')
+```
+
+**Why duck typing?** `isinstance()` with `@runtime_checkable` requires full protocol
+compliance, which breaks with test mocks. Duck typing checks only the minimal
+distinguishing attributes.
+
+Protocol families (representative subset — see `game/core/protocols.py` for the full list of 23+ protocols):
+
+| Protocol | Distinguishing Attrs | Layer |
+|----------|---------------------|-------|
+| `IFleet` | `ships`, `orders` | Strategy |
+| `IPlanet` | `planet_type` | Strategy |
+| `IStarSystem` | `stars`, `planets`, `warp_points` | Strategy |
+| `ICombatShip` | `team_id`, `hp`, `is_derelict` | Simulation |
+| `IRegistryProvider` | `get_components`, `get_modifiers` | Core |
+| `IPostBattleShip` | `hp`, `max_hp`, `is_alive` | Cross-layer boundary |
+| `IScene` | `handle_event`, `update`, `draw` | UI |
+
+### When to Use
+
+- Cross-layer boundaries where you cannot import the concrete class.
+- Polymorphic code that handles multiple entity types (e.g., rendering fleets vs planets).
+- Always pair a Protocol with a TypeGuard function for runtime checks.
+
+---
+
+## 3. Dependency Injection (Registry)
+
+### Where
+
+`game/core/registry.py` -- `IRegistryProvider` (protocol in `protocols.py`),
+`DefaultRegistryProvider`, `TestRegistryProvider`, `get_default_registry_provider()`.
+
+### How It Works
+
+Three access modes, from most to least preferred:
+
+**1. Constructor injection (best):**
+```python
+def __init__(self, registry: IRegistryProvider):
+    self._registry = registry
+    components = registry.get_components()
+```
+
+**2. Factory function (acceptable for leaf code):**
+```python
+from game.core.registry import get_default_registry_provider
+provider = get_default_registry_provider()
+```
+
+**3. Direct singleton (composition roots only):**
+```python
+mgr = RegistryManager.instance()
+mgr.hydrate(components_data, modifiers_data, vehicle_classes_data)
+```
+
+**Production path:** `DefaultRegistryProvider` delegates to `RegistryManager` singleton:
+
+```python
+# game/core/registry.py (actual code)
+class DefaultRegistryProvider:
+    def get_components(self) -> Dict[str, Any]:
+        return RegistryManager.instance().components
+```
+
+**Test path:** `TestRegistryProvider` holds isolated data:
+
+```python
+# game/core/registry.py (actual code)
+class TestRegistryProvider:
+    def __init__(self, components=None, modifiers=None, ...):
+        self._components = components if components is not None else {}
+    def get_components(self) -> Dict[str, Any]:
+        return self._components
+```
+
+**Ship class requires registries (strict DI):**
+```python
+# game/simulation/entities/ship.py (actual code)
+class Ship(PhysicsBody, ShipPhysicsMixin):
+    def __init__(self, name, x, y, color, team_id=0, ship_class="Escort",
+                 theme_id="Federation", *, registries: GameRegistries):
+        if registries is None:
+            raise ValidationException("registries is required ...")
+```
+
+### When to Use
+
+- All services and domain objects that need component/modifier/vehicle-class data.
+- Tests: use `TestRegistryProvider` for isolation; never depend on global singleton state.
+
+---
+
+## 4. Registry Pattern
+
+### Where
+
+- `game/core/registry.py` -- `RegistryManager`, `GameRegistries`
+- Data files: `data/components.json`, `data/modifiers.json`, `data/vehicleclasses.json`, `data/resources.json`
+
+### How It Works
+
+`RegistryManager` is a singleton holding four dictionaries: `components`, `modifiers`,
+`vehicle_classes`, and `resources`. `GameRegistries` is an immutable (`@dataclass(frozen=True)`)
+container that bundles these together for DI.
+
+```python
+# game/core/registry.py (actual code)
+@dataclass(frozen=True)
+class GameRegistries:
+    components: Dict[str, Any]
+    modifiers: Dict[str, Any]
+    vehicle_classes: Dict[str, Any]
+    resources: Dict[str, Any]
+
+    # Also implements IRegistryProvider interface
+    def get_components(self) -> Dict[str, Any]:
+        return self.components
+```
+
+Lifecycle:
+1. **Load:** Game startup loads JSON files into `RegistryManager` dictionaries.
+2. **Freeze:** `freeze_registry()` prevents accidental mutations during gameplay.
+3. **Access:** Consumer code receives `IRegistryProvider` or `GameRegistries` via DI.
+4. **Test reset:** `RegistryManager.reset()` destroys the instance; `.clear()` empties data.
+
+### When to Use
+
+- Looking up component definitions, modifier specs, or vehicle class data.
+
+---
+
+## 5. Facade / Delegate
+
+### Where
+
+- **Facade:** `game/strategy/facade/strategy_session_facade.py` -- `StrategySessionFacade`
+- **Delegate:** `game/simulation/entities/ship.py` -- Ship delegates combat to `ShipCombatEngine`
+
+### How It Works
+
+**StrategySessionFacade** wraps `GameSession` to provide the UI a clean interface.
+The UI never touches `GameSession` directly.
+
+```python
+# game/strategy/facade/strategy_session_facade.py (actual code)
+class StrategySessionFacade:
+    def __init__(self, session: 'GameSession') -> None:
+        self._session = session
+
+    # COMMANDS (Write Path)
+    def handle_command(self, command: 'Command') -> ValidationResult:
+        return self._session.handle_command(command)
+
+    # QUERIES (Read Path) - return DTOs, never domain objects
+    def get_fleet(self, fleet_id: int) -> Optional[FleetInfo]:
+        fleet = self._get_fleet_by_id(fleet_id)
+        if fleet is None:
+            return None
+        return FleetInfo.from_fleet(fleet)
+```
+
+**Ship -> ShipCombatEngine delegation:** Ship lazily creates a `ShipCombatEngine`
+and delegates all combat operations to it.
+
+```python
+# game/simulation/entities/ship.py (actual code)
+class Ship(PhysicsBody, ShipPhysicsMixin):   # NOTE: No ShipCombatMixin
+
+    @property
+    def combat_engine(self):
+        if self._combat_engine is None:
+            self._combat_engine = ShipCombatEngine(self)
+        return self._combat_engine
+```
+
+**Fleet delegates:** Fleet also uses the delegate pattern to decompose responsibilities:
+- `FleetCapabilityCalculator` -- computes fleet-level capabilities from ship components
+- `FleetResourceAggregator` -- aggregates resource totals across all ships in a fleet
+- `FleetBattleAdapter` -- adapts fleet data for the combat simulation layer
+
+### When to Use
+
+- **Facade:** Layer boundary needs a simplified, controlled API (UI to engine).
+- **Delegate:** Class would become a god class. Extract behavior; original keeps public API.
+
+---
+
+## 6. CQRS-lite (Strategy Session)
+
+### Where
+
+- Facade: `game/strategy/facade/strategy_session_facade.py`
+- DTOs: `game/strategy/facade/dto/` (fleet_dto.py, system_dto.py, planet_dto.py, empire_dto.py)
+- Commands: `game/strategy/engine/commands.py`
+
+### How It Works
+
+The strategy layer separates reads and writes:
+
+- **Commands (writes):** All state mutations go through `handle_command(Command)`.
+  Commands are plain data objects dispatched to handlers.
+- **Queries (reads):** Return frozen `@dataclass` DTOs, never live domain objects.
+
+```python
+# Write path -- UI sends a command
+from game.strategy.engine.commands import IssueMoveCommand
+result = facade.handle_command(IssueMoveCommand(fleet_id=42, target_hex=hex))
+
+# Read path -- UI queries for display data
+fleet_info: FleetInfo = facade.get_fleet(42)  # Returns frozen DTO
+```
+
+DTO example:
+
+```python
+# game/strategy/facade/dto/fleet_dto.py (actual code)
+@dataclass(frozen=True)
+class FleetOrderInfo:
+    order_type: str
+    target_description: str
+    target_hex: Optional[HexCoord] = None
+    target_id: Optional[int] = None
+
+@dataclass(frozen=True)
+class ShipInfo:
+    instance_id: str
+    name: str
+    design_id: str
+    ship_class: str
+```
+
+### When to Use
+
+- All UI-to-strategy-engine communication must go through the facade.
+- Never expose mutable domain objects to the UI layer.
+- Commands should be validated and return `ValidationResult`.
+
+---
+
+## 7. CommandHandlerRegistry
+
+### Where
+
+`game/strategy/engine/command_handlers.py` -- `CommandHandlerRegistry`, `ICommandHandler`,
+`BaseCommandHandler`, and all concrete handlers.
+
+### How It Works
+
+Registry-based dispatch replaces a giant switch/if-else in `GameSession`.
+
+```python
+# game/strategy/engine/command_handlers.py (actual code)
+@runtime_checkable
+class ICommandHandler(Protocol):
+    def execute(self, session: 'GameSession', command: Any) -> ValidationResult: ...
+
+class CommandHandlerRegistry:
+    def __init__(self):
+        self._handlers: Dict[str, ICommandHandler] = {}
+
+    def register(self, command_name: str, handler: ICommandHandler) -> None:
+        self._handlers[command_name] = handler
+
+    def dispatch(self, command_name: str, session, command) -> ValidationResult:
+        handler = self._handlers.get(command_name)
+        if handler is None:
+            return ValidationResult.error(f"Unknown command type: {command_name}")
+        return handler.execute(session, command)
+```
+
+Handlers extend `BaseCommandHandler` for common resolution helpers:
+
+```python
+class ColonizeCommandHandler(BaseCommandHandler):
+    def execute(self, session, cmd) -> ValidationResult:
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
+        # ... validation and application
+```
+
+Factory creates the default registry with all handlers:
+
+```python
+def create_default_registry() -> CommandHandlerRegistry:
+    registry = CommandHandlerRegistry()
+    registry.register('IssueColonizeCommand', ColonizeCommandHandler())
+    registry.register('IssueMoveCommand', MoveCommandHandler())
+    # ... 20+ handlers registered
+    return registry
+```
+
+### When to Use
+
+- Adding a new strategy command: create a handler class, register it in `create_default_registry()`.
+- Each handler follows: resolve entities, validate, apply, return `ValidationResult`.
+
+---
+
+## 8. MVVM (Workshop)
+
+### Where
+
+- ViewModel: `game/ui/screens/workshop_viewmodel.py` -- `WorkshopViewModel`
+- EventBus: `game/ui/screens/builder/event_bus.py` -- `EventBus`
+- Events: `game/ui/screens/builder_utils.py` -- `BuilderEvents`
+- Service: `game/simulation/services/vehicle_design_service.py` -- `VehicleDesignService`
+
+### How It Works
+
+The Design Workshop uses Model-View-ViewModel. The ViewModel holds all state, emits
+events on changes, and delegates operations to `VehicleDesignService`.
+
+```python
+# game/ui/screens/workshop_viewmodel.py (actual code)
+class WorkshopViewModel:
+    def __init__(self, event_bus, screen_width, screen_height, *, context=None):
+        self.event_bus = event_bus
+        self._ship_service = VehicleDesignService(...)  # NOT ShipBuilderService
+        self._ship: Optional[Ship] = None
+        self._selected_components: List[Tuple[LayerType, int, Component]] = []
+        self._dragged_item: Optional[Component] = None
+```
+
+Data flow:
+```
+View (panels) --[user action]--> ViewModel --[delegates]--> VehicleDesignService
+                                     |
+                                     v
+                              EventBus.emit(SHIP_UPDATED)
+                                     |
+                                     v
+                          View (panels) refresh via subscription
+```
+
+### When to Use
+
+- Complex UI screens with multiple panels sharing state.
+- The ViewModel is the single source of truth; views are stateless renderers.
+- Always use `VehicleDesignService` (not `ShipBuilderService`) for ship operations.
+
+---
+
+## 9. Template Method (Validation)
+
+### Where
+
+`game/simulation/validation/base.py` -- `ValidationRule`, `DesignValidationRule`, `AdditionValidationRule`
+
+### How It Works
+
+`ValidationRule` defines the algorithm skeleton. Subclasses override `_do_validate()`
+for specific logic and optionally `_should_validate()` to control when the rule runs.
+
+```python
+# game/simulation/validation/base.py (actual code)
+class ValidationRule(ABC):
+    def validate(self, ship, component=None, layer_type=None) -> ValidationResult:
+        if not self._should_validate(component, layer_type):
+            return ValidationResult.success()
+        return self._do_validate(ship, component, layer_type)
+
+    def _should_validate(self, component, layer_type) -> bool:
+        return component is not None and layer_type is not None
+
+    @abstractmethod
+    def _do_validate(self, ship, component, layer_type) -> ValidationResult:
+        pass
+
+class DesignValidationRule(ValidationRule):
+    """Always runs -- validates the ship design as a whole."""
+    def _should_validate(self, component, layer_type) -> bool:
+        return True
+
+class AdditionValidationRule(ValidationRule):
+    """Only runs when adding a component (default guard)."""
+    pass
+```
+
+### When to Use
+
+- Adding a new validation rule: extend `DesignValidationRule` or `AdditionValidationRule`.
+- Override `_should_validate()` for custom guard logic (e.g., only for unique components).
+- Implement `_do_validate()` with your rule; return `ValidationResult.success()` or `.error(msg)`.
+
+---
+
+## 10. Event Bus
+
+### Where
+
+- Implementation: `game/ui/screens/builder/event_bus.py` -- `EventBus`
+- Event constants: `game/ui/screens/builder_utils.py` -- `BuilderEvents`
+
+### How It Works
+
+Simple pub/sub with string event types, defensive copy during emit, and error isolation.
+
+```python
+# game/ui/screens/builder/event_bus.py (actual code)
+class EventBus:
+    def __init__(self):
+        self._subscribers = {}
+
+    def subscribe(self, event_type, callback):
+        if not callable(callback):
+            raise ValidationException(...)
+        if event_type not in self._subscribers:
+            self._subscribers[event_type] = []
+        self._subscribers[event_type].append(callback)
+
+    def emit(self, event_type, data=None):
+        if event_type in self._subscribers:
+            handlers = list(self._subscribers[event_type])  # Defensive copy
+            for callback in handlers:
+                try:
+                    callback(data)
+                except Exception as e:
+                    logger.error(f"Error in event handler for {event_type}: {e}")
+```
+
+Event constants:
+
+```python
+# game/ui/screens/builder_utils.py (actual code)
+class BuilderEvents:
+    SHIP_UPDATED = 'SHIP_UPDATED'
+    SELECTION_CHANGED = 'SELECTION_CHANGED'
+    REGISTRY_RELOADED = 'REGISTRY_RELOADED'
+    TEMPLATE_MODIFIERS_CHANGED = 'TEMPLATE_MODIFIERS_CHANGED'
+    DRAG_STATE_CHANGED = 'DRAG_STATE_CHANGED'
+    HULL_LAYER_VISIBILITY_CHANGED = 'HULL_LAYER_VISIBILITY_CHANGED'
+```
+
+**Key detail:** `emit()` passes a single `data` argument (not `*args, **kwargs`).
+Subscribers receive one argument: `callback(data)`.
+
+### When to Use
+
+- Decoupling UI panels that need to react to shared state changes.
+- Always use string constants from `BuilderEvents`, never raw strings.
+- Currently scoped to the Workshop UI; not a general-purpose game event system.
+
+---
+
+## 11. Surface Caching (SpriteManager)
+
+### Where
+
+`game/ui/renderer/sprites.py` -- `SpriteManager` (singleton via `SingletonMeta`)
+
+### How It Works
+
+`SpriteManager` loads component sprite images once and caches them by index.
+Individual UI panels also maintain local caches for expensive operations
+(rotated text, scaled surfaces).
+
+```python
+# game/ui/renderer/sprites.py (actual code)
+class SpriteManager(metaclass=SingletonMeta):
+    def __init__(self):
+        self.sprites = []
+        self.tile_size = 36
+
+    def load_sprites(self, base_path: str) -> None:
+        components_dir = os.path.join(base_path, "assets", "Images", "Components")
+        tiles_dir = os.path.join(components_dir, "Tiles")
+        if os.path.exists(tiles_dir):
+            self._load_from_directory(tiles_dir)
+        # ...
+```
+
+### When to Use
+
+- Cache: font rendering, surface rotation, surface scaling (all create new surfaces).
+- Do not cache: color fills, line drawing (fast, position-dependent).
+- Individual panels use `Dict[str, Surface]` caches with `invalidate_cache()` methods.
+
+---
+
+## 12. Configuration Classes
+
+### Where
+
+`game/core/config.py` -- `DisplayConfig`, `AIConfig`, `PhysicsConfig`, `BattleConfig`
+
+### How It Works
+
+Configuration classes are **plain classes with class-level attributes** (not `@dataclass`).
+They use `@classmethod` helpers for common operations.
+
+```python
+# game/core/config.py (actual code)
+class DisplayConfig:
+    """Display and resolution configuration."""
+    DEFAULT_WIDTH: int = 3840
+    DEFAULT_HEIGHT: int = 2160
+    WINDOWED_WIDTH: int = 2560
+    WINDOWED_HEIGHT: int = 1600
+    TEST_WIDTH: int = 1440
+    TEST_HEIGHT: int = 900
+
+    @classmethod
+    def default_resolution(cls) -> Tuple[int, int]:
+        return (cls.DEFAULT_WIDTH, cls.DEFAULT_HEIGHT)
+
+class AIConfig:
+    MIN_SPACING: int = 150
+    DEFAULT_ORBIT_DISTANCE: int = 500
+    MAX_CORRECTION_FORCE: int = 500
+    # ... many more
+
+class PhysicsConfig:
+    TICK_RATE: float = 0.01
+    DEFAULT_LINEAR_DRAG: float = 0.5
+
+class BattleConfig:
+    TARGET_QUERY_RADIUS: int = 200000
+    COLLISION_BUFFER: int = 100
+```
+
+**Important:** These are NOT `@dataclass(frozen=True)`. They are plain classes used as
+namespace containers for constants. Do not add `@dataclass` decorators.
+
+Layout config in `game/ui/screens/builder_utils.py` does use frozen dataclasses for
+instantiated layout objects:
+
+```python
+@dataclass(frozen=True)
+class PanelWidths:
+    component_palette: int = 400
+    layer_panel: int = 500
+PANEL_WIDTHS = PanelWidths()  # Singleton instance
+```
+
+### When to Use
+
+- Centralizing magic numbers. Group by domain (AI, Physics, Battle, Display).
+- Core config: plain classes. UI layout config: frozen dataclasses with singleton instances.
+- Always import from the config module, never inline magic numbers.
+
+---
+
+## 13. Battle Mode Strategy
+
+### Where
+
+`game/simulation/combat/battle_mode_handler.py` -- `BattleModeHandler` ABC and four concrete handlers.
+
+### How It Works
+
+The Strategy pattern eliminates mode-specific conditionals in `BattleController`.
+Each battle mode (Manual, Test, Strategy, Hypothetical) has a dedicated handler.
+
+```python
+# game/simulation/combat/battle_mode_handler.py (actual code)
+class BattleModeHandler(ABC):
+    @abstractmethod
+    def configure(self, controller, config) -> None: ...
+    @abstractmethod
+    def can_retreat(self) -> bool: ...
+    @abstractmethod
+    def can_reinforce(self) -> bool: ...
+    @abstractmethod
+    def should_clone_ships(self) -> bool: ...
+    @abstractmethod
+    def is_headless_default(self) -> bool: ...
+    @abstractmethod
+    def apply_results(self, controller, results) -> None: ...
+```
+
+Concrete handlers:
+
+| Handler | Retreat | Reinforce | Clone | Headless | Effects |
+|---------|---------|-----------|-------|----------|---------|
+| `ManualBattleModeHandler` | No | No | No | No | None |
+| `TestBattleModeHandler` | No | No | No | Yes | None |
+| `StrategyBattleModeHandler` | Yes | Yes | No | Yes | Fleet updates |
+| `HypotheticalBattleModeHandler` | No | No | Yes | Yes | None |
+
+Factory function selects the handler:
+
+```python
+def get_handler_for_mode(mode: BattleMode) -> BattleModeHandler:
+    handlers = {
+        BattleMode.MANUAL: ManualBattleModeHandler,
+        BattleMode.TEST: TestBattleModeHandler,
+        BattleMode.STRATEGY: StrategyBattleModeHandler,
+        BattleMode.HYPOTHETICAL: HypotheticalBattleModeHandler,
+    }
+    return handlers[mode]()
+```
+
+### When to Use
+
+- Adding a new battle mode: create a handler, add it to the factory dict.
+- Never add mode-specific if/else branches in `BattleController`.
+
+---
+
+## 14. Two-Phase Ability Aggregation
+
+### Where
+
+`game/simulation/entities/ability_aggregator.py` -- `calculate_ability_totals()`,
+`_aggregate_ability_groups()`
+
+### How It Works
+
+Abilities on ship components support stacking groups. Aggregation is two-phase:
+
+1. **Intra-group (MAX):** Within the same named stack group, take the highest value.
+   This models redundancy -- two sensors in the same group do not stack.
+2. **Inter-group (SUM or MULTIPLY):** Across different groups, sum the contributions.
+   Special abilities (`ToHitAttackModifier`, `ToHitDefenseModifier`) multiply instead.
+
+```python
+# game/simulation/entities/ability_aggregator.py (actual code)
+MULTIPLICATIVE_ABILITIES = {'ToHitAttackModifier', 'ToHitDefenseModifier'}
+MARKER_ABILITIES = {'CommandAndControl', 'Armor', 'RequiresCommandAndControl', ...}
+
+def _aggregate_ability_groups(ability_groups):
+    totals = {}
+    for ability_name, groups in ability_groups.items():
+        group_contributions = []
+        for key, values in groups.items():
+            nums = [v for v in values if isinstance(v, (int, float)) and not isinstance(v, bool)]
+            if nums:
+                group_contributions.append(max(nums))          # Phase 1: MAX within group
+            elif any(v is True for v in values):
+                group_contributions.append(True)
+
+        if not group_contributions:
+            continue
+
+        first = group_contributions[0]
+        if isinstance(first, bool):
+            totals[ability_name] = True
+        else:
+            if ability_name in MULTIPLICATIVE_ABILITIES:
+                val = 1.0
+                for v in group_contributions:
+                    if isinstance(v, (int, float)):             # Type guard
+                        val *= v                                # Phase 2: MULTIPLY
+                totals[ability_name] = val
+            else:
+                val = sum(v for v in group_contributions if isinstance(v, (int, float)))  # Phase 2: SUM
+                totals[ability_name] = val
+    return totals
+```
+
+### When to Use
+
+- Calculating effective ship stats from components.
+- New abilities default to SUM across groups. Add to `MULTIPLICATIVE_ABILITIES`
+  if the ability should multiply. Add to `MARKER_ABILITIES` for boolean presence checks.
+- Stack groups are defined in component JSON via the `stack_group` field.
+
+---
+
+## 15. Factory
+
+### Where
+
+- `game/ai/ai_factory.py` -- `AIControllerFactory`
+- `game/ui/services/ship_factory.py` -- `ShipFactory`
+- `game/ui/widgets/panel_factory.py` -- `PanelFactory`
+
+### How It Works
+
+Factory classes encapsulate object creation logic, hiding constructor complexity and
+configuration details from callers. They are used throughout the codebase where object
+construction requires assembling dependencies, applying defaults, or selecting concrete
+implementations.
+
+### When to Use
+
+- Object creation requires non-trivial setup, dependency resolution, or conditional logic.
+- Callers should not need to know concrete implementation details.
+- Centralizes construction so changes to dependencies propagate from one place.
+
+---
+
+## Quick Reference
+
+| Pattern | Primary File | Key Class/Function |
+|---------|-------------|-------------------|
+| Singleton | `game/core/singleton.py` | `SingletonMeta` |
+| Protocol+TypeGuard | `game/core/protocols.py` | `IFleet`, `is_fleet()` |
+| DI (Registry) | `game/core/registry.py` | `DefaultRegistryProvider`, `TestRegistryProvider` |
+| Registry | `game/core/registry.py` | `RegistryManager`, `GameRegistries` |
+| Facade | `game/strategy/facade/strategy_session_facade.py` | `StrategySessionFacade` |
+| Delegate | `game/simulation/entities/ship_combat_engine.py` | `ShipCombatEngine` |
+| CQRS-lite | `game/strategy/facade/` | Commands + DTOs |
+| CommandHandler | `game/strategy/engine/command_handlers.py` | `CommandHandlerRegistry` |
+| MVVM | `game/ui/screens/workshop_viewmodel.py` | `WorkshopViewModel` |
+| Template Method | `game/simulation/validation/base.py` | `ValidationRule` |
+| Event Bus | `game/ui/screens/builder/event_bus.py` | `EventBus`, `BuilderEvents` |
+| Surface Cache | `game/ui/renderer/sprites.py` | `SpriteManager` |
+| Config Classes | `game/core/config.py` | `DisplayConfig`, `AIConfig`, `PhysicsConfig` |
+| Battle Mode | `game/simulation/combat/battle_mode_handler.py` | `BattleModeHandler` |
+| Ability Aggregation | `game/simulation/entities/ability_aggregator.py` | `calculate_ability_totals()` |
+| Factory | `game/ai/ai_factory.py`, `game/ui/services/ship_factory.py` | `AIControllerFactory`, `ShipFactory`, `PanelFactory` |
+
+### Critical Naming Reminders
+
+- Ship inherits `(PhysicsBody, ShipPhysicsMixin)` -- **no ShipCombatMixin**.
+- Config classes in `game/core/config.py` are **plain classes, not dataclasses**.
+- Use **BattleScreen / StrategyScreen**, not BattleScene / StrategyScene.
+- Use **VehicleDesignService**, not ShipBuilderService.
+- **ScreenshotManager** is at `game/ui/services/screenshot_manager.py`.
+- **StrategyManager** is at `game/ai/strategy_manager.py`.
+- **EventBus** is at `game/ui/screens/builder/event_bus.py`.

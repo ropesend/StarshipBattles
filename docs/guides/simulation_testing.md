@@ -42,7 +42,8 @@ simulation_tests/                    # Simulation-specific test ecosystem
 │   ├── propulsion_scenarios.py      # Engine/thruster scenarios
 │   ├── defense_scenarios.py         # Shield/armor scenarios
 │   ├── modifier_scenarios.py        # Modifier scenarios
-│   └── resource_scenarios.py        # Fuel/energy/ammo scenarios
+│   ├── resource_scenarios.py        # Fuel/energy/ammo scenarios
+│   └── example_beam_test.py         # Example scenario for reference
 ├── tests/                           # Pytest wrappers for scenarios
 │   ├── test_beam_weapons.py
 │   ├── test_projectile_weapons.py
@@ -57,16 +58,19 @@ simulation_tests/                    # Simulation-specific test ecosystem
 │   └── test_example_scenarios.py
 ├── suites/                          # Suite documentation (per ability)
 │   └── BeamWeaponAbility.md
+├── specs/                           # Test specifications
+│   └── component_test_specifications.md
+├── utils/                           # Utility helpers
+│   ├── README.md
+│   └── test_log_analyzer.py
 ├── validation/                      # Validation system docs
 │   └── README.md
-├── specs/                           # Test specifications
-├── utils/                           # Utility helpers
 └── output/                          # Test output artifacts
 
 test_framework/                      # Shared test framework (used by both pytest and Combat Lab)
 ├── runner.py                        # TestRunner - executes scenarios
 ├── registry.py                      # TestRegistry - discovers and indexes scenarios
-├── scenario.py                      # TestScenario base class definition
+├── scenario.py                      # CombatScenario base class definition
 ├── test_history.py                  # Test history persistence
 ├── battle_state_capture.py          # State snapshot utilities
 ├── scenarios/                       # Combat Lab visual scenarios
@@ -74,6 +78,8 @@ test_framework/                      # Shared test framework (used by both pytes
 │   ├── gun_accuracy_test.py
 │   ├── range_test.py
 │   └── simple_duel.py
+Note: TestScenario (which extends CombatScenario) lives in `simulation_tests/scenarios/base.py`.
+
 └── services/                        # Service layer for Combat Lab
     ├── test_execution_service.py
     ├── test_results_service.py
@@ -82,7 +88,7 @@ test_framework/                      # Shared test framework (used by both pytes
     ├── ui_state_service.py
     └── test_lab_controller.py
 
-tests/                               # General test suite (~6246 tests)
+tests/                               # General test suite (~7353 tests)
 ├── conftest.py                      # Root pytest config
 ├── fixtures/                        # Shared fixtures
 │   ├── paths.py                     # Path utilities
@@ -91,7 +97,6 @@ tests/                               # General test suite (~6246 tests)
 │   ├── battle.py                    # Battle engine fixtures
 │   ├── ai.py                        # AI test fixtures
 │   ├── common.py                    # Common utilities
-│   ├── ship_fixtures.py             # Additional ship utilities
 │   └── test_scenarios.py            # TestScenario helpers
 ├── infrastructure/                  # Test infrastructure
 │   └── session_cache.py             # SessionRegistryCache
@@ -163,8 +168,8 @@ pytest tests/unit/ -v
 # Simulation tests only
 pytest simulation_tests/tests/ -v -m simulation
 
-# Parallel execution (4 workers)
-pytest tests/ -n 4
+# Parallel execution (12 workers for CLI, 4 for VS Code Test Explorer)
+pytest tests/ -n 12
 
 # Specific test
 pytest simulation_tests/tests/test_beam_weapons.py::TestBeamAccuracy::test_BEAM360_001 -v
@@ -815,7 +820,3 @@ Full Combat Lab UI integration where:
 - Visual replay of any test with state inspection
 
 The `test_framework/services/` layer (test_lab_controller, ui_state_service, etc.) provides the foundation for this but full integration is ongoing.
-
-### ASPIRATIONAL -- Data-Driven Test Generation
-
-The `simulation_tests/data_driven/` directory and `simulation_tests/data/ship_templates/` infrastructure exist for generating test ships from templates, but the generation pipeline is not yet operational.
