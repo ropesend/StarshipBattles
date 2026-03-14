@@ -47,7 +47,7 @@ For each of the 11 ship classes, 4 fighters, and 4 satellites:
 - [ ] Export processed images to `Skins/` as transparent PNGs.
 - [ ] Run the processing script to center and frame:
 ```powershell
-python scripts/ship_background_remover.py --input "assets/ShipThemes/[ThemeName]/Skins" --output "assets/ShipThemes/[ThemeName]/Skins" --threshold 30
+python assets/tools/ship_background_remover.py --input "assets/ShipThemes/[ThemeName]/Skins" --output "assets/ShipThemes/[ThemeName]/Skins" --threshold 30
 ```
 
 ## 4. Generating Portraits

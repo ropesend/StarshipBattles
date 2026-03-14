@@ -37,7 +37,7 @@
 | AI | [ai_system.md](systems/ai_system.md) | Behaviors, strategy manager, target evaluator, adapters |
 | Research | [research_system.md](systems/research_system.md) | Tech tree, research tracker, leaky bucket algorithm |
 | Orders | [orders_system.md](systems/orders_system.md) | Order lifecycle, types, execution engines |
-| Planets | [planetary_complex.md](systems/planetary_complex.md) | Facilities, tick-based production, resource consumption |
+| Production | [production_system.md](systems/production_system.md) | Build queues, tick-based production, spawning, rate resolution |
 
 ### Step 4: How-to guides (read when performing specific tasks)
 
@@ -78,7 +78,7 @@ docs/
     ├── ai_system.md               AI behaviors, targeting, adapters
     ├── research_system.md         Tech tree, research tracker
     ├── orders_system.md           Order lifecycle and execution
-    └── planetary_complex.md       Facilities, production model
+    └── production_system.md       Build queues, production model, spawning
 ```
 
 ## Quick Reference

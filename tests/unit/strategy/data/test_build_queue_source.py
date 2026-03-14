@@ -13,6 +13,8 @@ from game.strategy.data.build_queue_source import (
     collect_all_build_queues_for_empire,
     _facility_is_shipyard,
     get_default_production_rates,
+    get_production_rate_for_queue,
+    estimate_build_turns,
 )
 from game.strategy.data.planet import Planet, PlanetaryFacility
 from game.strategy.data.fleet import Fleet
@@ -678,3 +680,146 @@ class TestGetDefaultProductionRates:
         rates1["Metals"] = 9999
         # Original should be unchanged
         assert rates2["Metals"] == 2000
+
+
+# ---------------------------------------------------------------------------
+# Tests: estimate_build_turns (BUG-96 refactor)
+# ---------------------------------------------------------------------------
+
+class TestEstimateBuildTurns:
+    """Test estimate_build_turns() — single source of truth for turn estimation."""
+
+    def test_limiting_resource_determines_turns(self):
+        """Picks the slowest (limiting) resource."""
+        # Metals: 8000/2000 = 4 turns, Electronics: 500/1000 = 0.5 turns → 4.0
+        result = estimate_build_turns(
+            {"metals": 8000.0, "electronics": 500.0},
+            {"metals": 2000.0, "electronics": 1000.0}
+        )
+        assert result == 4.0
+
+    def test_single_resource(self):
+        """Works with a single resource."""
+        result = estimate_build_turns(
+            {"metals": 3000.0},
+            {"metals": 1000.0}
+        )
+        assert result == 3.0
+
+    def test_fallback_on_empty_cost(self):
+        """Returns 1.0 if total_cost is empty."""
+        result = estimate_build_turns({}, {"metals": 1000.0})
+        assert result == 1.0
+
+    def test_fallback_on_empty_rate(self):
+        """Returns 1.0 if production_rate is empty."""
+        result = estimate_build_turns({"metals": 1000.0}, {})
+        assert result == 1.0
+
+    def test_fallback_on_zero_rate(self):
+        """Returns 1.0 if any required resource has zero production rate."""
+        result = estimate_build_turns(
+            {"metals": 1000.0}, {"metals": 0.0}
+        )
+        assert result == 1.0
+
+    def test_fallback_on_missing_rate(self):
+        """Returns 1.0 if a required resource has no matching rate entry."""
+        result = estimate_build_turns(
+            {"metals": 1000.0}, {"organics": 2000.0}
+        )
+        assert result == 1.0
+
+    def test_zero_cost_resources_ignored(self):
+        """Resources with zero cost are skipped."""
+        result = estimate_build_turns(
+            {"metals": 2000.0, "organics": 0.0},
+            {"metals": 1000.0, "organics": 1000.0}
+        )
+        assert result == 2.0
+
+    def test_minimum_return_value(self):
+        """Never returns less than 0.01."""
+        result = estimate_build_turns(
+            {"metals": 1.0},
+            {"metals": 1000000.0}
+        )
+        assert result >= 0.01
+
+
+# ---------------------------------------------------------------------------
+# Tests: get_production_rate_for_queue (BUG-96 refactor)
+# ---------------------------------------------------------------------------
+
+class TestGetProductionRateForQueue:
+    """Test get_production_rate_for_queue() — unified rate resolution."""
+
+    def test_planet_base_queue_returns_planetary_yard_rate(self):
+        """Planet with no queue_id returns planetary yard rate."""
+        planet = _make_planet()
+        rate = get_production_rate_for_queue(planet, None)
+        assert rate == EXPECTED_PLANETARY_RATES
+
+    def test_planet_base_queue_with_explicit_id(self):
+        """Planet base queue identified by planet_N_base pattern returns planetary rate."""
+        planet = _make_planet(planet_id=5)
+        rate = get_production_rate_for_queue(planet, "planet_5_base")
+        # No facility matches this id, falls through to default
+        assert rate == EXPECTED_PLANETARY_RATES
+
+    def test_planet_shipyard_facility_queue(self):
+        """Planet facility queue returns that facility's production rate."""
+        planet = _make_planet()
+        facility = _make_shipyard_facility(instance_id="yard-001")
+        planet.facilities.append(facility)
+        rate = get_production_rate_for_queue(planet, "yard-001")
+        assert rate == EXPECTED_SHIPYARD_RATES
+
+    def test_planet_shipyard_with_bonus(self):
+        """Facility with construction_speed_bonus applies multiplier."""
+        planet = _make_planet()
+        facility = _make_shipyard_facility(
+            instance_id="yard-fast", construction_speed_bonus=2.0
+        )
+        planet.facilities.append(facility)
+        rate = get_production_rate_for_queue(planet, "yard-fast")
+        expected = {res: val * 2.0 for res, val in EXPECTED_SHIPYARD_RATES.items()}
+        assert rate == expected
+
+    def test_fleet_returns_fleet_yard_rate(self):
+        """Fleet returns fleet_space_yard rate."""
+        fleet = _make_fleet_with_yard()
+        rate = get_production_rate_for_queue(fleet, None)
+        assert rate == EXPECTED_FLEET_RATES
+
+    def test_fleet_multi_yard_multiplies_rate(self):
+        """Fleet with multiple yards multiplies rate by yard count."""
+        fleet = MagicMock()
+        fleet.capabilities.space_shipyard_count = 2
+        from game.strategy.data.fleet import Fleet
+        # Make isinstance check pass
+        fleet.__class__ = Fleet
+
+        rate = get_production_rate_for_queue(fleet, None)
+        expected = {res: val * 2 for res, val in EXPECTED_FLEET_RATES.items()}
+        assert rate == expected
+
+    def test_matches_collect_planet_sources_rate(self):
+        """Rate for a facility queue matches what _collect_planet_sources produces."""
+        hex_coord = HexCoord(5, 5)
+        planet = _make_planet(hex_coord=hex_coord)
+        facility = _make_shipyard_facility(
+            instance_id="yard-verify", construction_speed_bonus=1.5
+        )
+        planet.facilities.append(facility)
+
+        # Get rate via the new utility
+        direct_rate = get_production_rate_for_queue(planet, "yard-verify")
+
+        # Get rate via collect path
+        galaxy = _make_galaxy({hex_coord: [planet]})
+        empire = _make_empire(empire_id=0)
+        sources = collect_build_queues_at_hex(hex_coord, galaxy, empire)
+        shipyard_source = [s for s in sources if s.queue_id == "yard-verify"][0]
+
+        assert direct_rate == shipyard_source.build_rate

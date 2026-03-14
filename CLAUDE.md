@@ -148,8 +148,11 @@ When faced with choices, prefer:
 - Specific exceptions over broad catches
 - Extract abstraction over copy-paste
 - Dependency injection over singletons
+- Delegate to existing logic over reimplementing it
 
 **Always prefer the clean-sheet design.** When choosing an approach, pick the one you'd choose if building from scratch. Don't compromise the design to make short-term tasks easier.
+
+**No bandaids. No workarounds. No symptom-masking.** If a fix overrides internal methods, monkey-patches objects, suppresses default behavior, or duplicates existing logic — it is not a fix. Find the architectural root cause and fix the design. A proper system overhaul is always preferred over a workaround.
 
 **Minimize technical debt. Maximize maintainability.**
 

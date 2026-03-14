@@ -382,6 +382,47 @@ class TestBrowserDialogEdgeCases:
             # Should handle gracefully
             assert dialog.selected_race is None
 
+    def test_row_uses_single_button_with_embedded_image(self, mock_race_config, mock_race_library):
+        """BUG-95: Row should use a single UIButton with the composite surface
+        set as the button's foreground image. One element = no z-order conflicts."""
+        from game.ui.screens.race_browser_dialog import RaceBrowserDialog
+
+        with patch.object(RaceBrowserDialog, '__init__', lambda self, *args, **kwargs: None):
+            dialog = RaceBrowserDialog.__new__(RaceBrowserDialog)
+            dialog.ui_manager = MagicMock()
+            dialog.scroll_container = MagicMock()
+            scroll_rect = MagicMock()
+            scroll_rect.width = 500
+            dialog.scroll_container.get_relative_rect.return_value = scroll_rect
+            dialog.PREVIEW_SIZE = 60
+            dialog.ROW_HEIGHT = 80
+            dialog._asset_loader = MagicMock()
+            dialog._asset_loader.load_portrait_preview.return_value = None
+            dialog._asset_loader.load_flag_preview.return_value = None
+            mock_race_config.theme_id = None
+
+            mock_theme_mgr = MagicMock()
+
+            with patch('pygame.Surface') as MockSurface:
+                with patch('pygame.font.SysFont') as MockFont:
+                    mock_font = MagicMock()
+                    mock_text = MagicMock()
+                    mock_text.get_height.return_value = 20
+                    mock_font.render.return_value = mock_text
+                    MockFont.return_value = mock_font
+
+                    with patch('pygame_gui.elements.UIButton') as MockButton:
+                        mock_btn_instance = MockButton.return_value
+                        row = dialog._create_race_row(mock_race_config, 0, 0, mock_theme_mgr)
+
+            # Row should have exactly 1 element: the button itself
+            assert len(row['elements']) == 1
+            assert row['elements'][0] == row['button']
+            # Button should have the composite surface set as its foreground image
+            assert mock_btn_instance.normal_images is not None
+            assert len(mock_btn_instance.normal_images) == 1
+            mock_btn_instance.rebuild.assert_called_once()
+
     def test_dialog_cleanup_on_cancel(self, mock_race_library):
         """Dialog properly cleans up on cancel."""
         from game.ui.screens.race_browser_dialog import RaceBrowserDialog

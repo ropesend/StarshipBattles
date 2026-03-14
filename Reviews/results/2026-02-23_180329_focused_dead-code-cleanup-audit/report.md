@@ -110,12 +110,12 @@ Several items from the prior dead code report (DC-001 through DC-027) were **rec
 - Interdependent pair used for local bug tracking workflow
 - **Verdict:** KEEP
 
-### scripts/ Active Tools — 11 Files Worth Keeping
+### scripts/ Active Tools — 10 Files Worth Keeping (reorganized 2026-03-14)
 **ID:** KEEP-001 | **Agent:** Tools & Scripts Auditor
-- test_sharded.py, loc.py, galaxy_screenshot.py, visual_test_galaxy.py
-- diagnose_blueprints.py, analyze_dependency_graph.py, find_orphaned_tests.py
-- process_flags.py, process_planet_spheres.py, process_planet_spheres_opt.py, nebula_to_alpha.py
-- **Verdict:** KEEP — active development tools and asset processing
+- scripts/: test_sharded.py, test.ps1, loc.py, analyze_dependency_graph.py, find_orphaned_tests.py
+- scripts/strategy/: galaxy_screenshot.py, visual_test_galaxy.py, diagnose_blueprints.py
+- assets/tools/: process_flags.py, process_planet_spheres.py, nebula_to_alpha.py, ship_background_remover.py
+- **Verdict:** KEEP — active development tools and asset processing (reorganized by system)
 
 ---
 

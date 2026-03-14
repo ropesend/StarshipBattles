@@ -1,21 +1,34 @@
-# Planetary Complex System
+# Production System
 
-This document describes the planetary complex (facility) building system: design, construction queue, tick-based production, and spawning.
+This document describes the unified construction/production system: build queues, tick-based resource consumption, turn estimation, and item spawning. The same `ProductionEngine` algorithm handles all build contexts — planet base queues (complexes), planet shipyard facility queues (ships), and fleet space yard queues (ships and complexes).
 
 ---
 
 ## Overview
 
-Players design planetary complexes in the workshop (same UI as ships), queue them for construction at colonies or fleet yards, and production completes mid-turn via tick-based dynamic resource consumption. Completed complexes become `PlanetaryFacility` instances on planets.
+Players design items in the Workshop (ships, complexes, satellites, fighters), queue them for construction via the Build Queue UI, and `ProductionEngine` consumes resources per tick (100 ticks/turn) until completion. The system is context-agnostic: one algorithm processes all queue types with parameterized production rates and context-specific spawning.
+
+### Build Contexts
+
+| Context | Queue Source | Can Build | Production Rate |
+|---------|-------------|-----------|-----------------|
+| Planet base queue | `planet.construction_queue` | Complexes only | `planetary_yard` (2000/resource/turn) |
+| Planet shipyard facility | `facility.construction_queue` | Ships + complexes | Per-facility rate (default 3000, with bonus) |
+| Fleet space yard | `fleet.construction_queue` | Ships + complexes | `fleet_space_yard` × yard count |
 
 ### User Workflow
 
 ```
-1. Design complex in Workshop (select "Planetary Complex" hull tier)
-2. Queue complex for building via Build Queue UI
-3. ProductionEngine consumes resources per tick (100 ticks/turn)
-4. When resource cost fully consumed, facility spawns on planet
-5. Shipyard facilities enable ship construction at that colony
+1. Design item in Workshop (ship hull, planetary complex, fighter, satellite)
+2. Queue item at a build location via Build Queue UI
+3. turns_remaining pre-calculated using estimate_build_turns() (limiting-resource formula)
+4. ProductionEngine consumes resources per tick (100 ticks/turn)
+5. When resource cost fully consumed, item spawns:
+   - Complex → PlanetaryFacility on planet
+   - Ship from planet shipyard → new Fleet at planet
+   - Ship from fleet yard → added to existing fleet
+   - Complex from fleet yard → PlanetaryFacility on planet at fleet's hex
+6. Shipyard facilities enable ship construction at that colony
 ```
 
 ---
@@ -24,16 +37,18 @@ Players design planetary complexes in the workshop (same UI as ships), queue the
 
 ### Layer Separation
 
-- **Strategy layer:** `PlanetaryFacility` data model, `Planet.facilities` list, `ProductionEngine`
-- **UI layer:** `BuildQueueScreen` manages queue display and category filtering
+- **Strategy layer:** `ProductionEngine`, `BuildQueueSource`, `PlanetaryFacility`, queue data on Planet/Fleet
+- **UI layer:** `BuildQueueScreen` / `EmpireBuildQueueWindow` manage queue display and category filtering
 - **Simulation layer:** Component abilities (`ResourceHarvesterAbility`, `SpaceShipyardAbility`)
 
 ### Key Design Principles
 
-1. **Tick-based production** -- resources consumed dynamically each tick, not turn-counting
-2. **Facilities are instances** -- each has a UUID, design_data, and operational status
-3. **Parallel construction** -- each shipyard facility has its own queue processed independently
-4. **Design data embedded** -- facility stores full design JSON for offline querying
+1. **Unified algorithm** -- one `_process_queue_tick_dynamic()` handles all queue types
+2. **Parameterized behavior** -- production rate and spawning context vary, not the algorithm
+3. **Tick-based production** -- resources consumed dynamically each tick, not turn-counting
+4. **Facilities are instances** -- each has a UUID, design_data, and operational status
+5. **Parallel construction** -- each shipyard facility has its own queue processed independently
+6. **Data holders, not processors** -- Planet, Fleet, and PlanetaryFacility hold queue lists; ProductionEngine processes them
 
 ---
 
@@ -73,9 +88,14 @@ Key properties and methods:
     "type": "complex",             # or "ship", "fighter", "satellite"
     "total_cost": {"metals": 50, "organics": 10},
     "resources_consumed": {"metals": 0, "organics": 0},
-    "turns_remaining": 2.5         # Estimated, updated each tick for UI
+    "turns_remaining": 2.5         # Pre-calculated at queue-add time, updated each tick
 }
 ```
+
+`turns_remaining` is pre-calculated when the item is added to the queue using
+`estimate_build_turns()` from `build_queue_source.py`, which applies the same
+limiting-resource formula as `ProductionEngine`. This ensures the UI shows a
+correct estimate immediately, before the first production tick recalculates it.
 
 ---
 
@@ -135,26 +155,33 @@ Production rates are per-turn (divided by 100 for per-tick). Rates come from `Bu
 
 ## Spawning
 
-### Complex Spawning (`_spawn_complex`)
+`_complete_item()` dispatches to the appropriate spawner based on item type and build context:
+
+| Item Type | Build Context | Spawner | Result |
+|-----------|---------------|---------|--------|
+| Complex | Planet base queue | `_spawn_complex()` | `PlanetaryFacility` on planet |
+| Ship/Fighter/Satellite | Planet shipyard | `_spawn_ship()` | New `Fleet` at planet |
+| Ship/Fighter/Satellite | Fleet yard | `_spawn_fleet_ship()` | Added to existing fleet |
+| Complex | Fleet yard | `_spawn_fleet_complex()` | `PlanetaryFacility` on planet at fleet's hex |
+
+### Complex Spawning (`_spawn_complex` / `_spawn_fleet_complex`)
 
 1. Load design_data from `DesignLibrary(save_path, empire_id)`.
 2. Create `PlanetaryFacility` with UUID, design_data, `is_operational=True`.
-3. Append to `planet.facilities`.
+3. Append to `planet.facilities` (fleet variant finds planet at fleet's hex).
 4. Log `COMPLEX_BUILT` event.
 
-Fleet yards can also build complexes (`_spawn_fleet_complex`), spawning on the planet at the fleet's hex location.
-
-### Ship Spawning (`_spawn_ship`)
+### Ship Spawning (`_spawn_ship` / `_spawn_fleet_ship`)
 
 1. Load design_data from `DesignLibrary`.
 2. Create `ShipInstance` via `ShipInstance.create()`.
-3. Create new `Fleet` at planet location, add ship.
-4. Register fleet via `empire.add_fleet()`.
+3. Planet variant: create new `Fleet` at planet location, add ship, register via `empire.add_fleet()`.
+4. Fleet variant: add ship directly to existing fleet.
 5. Log `SHIP_BUILT` event.
 
 ---
 
-## Components
+## Planetary Complex Components
 
 Six components restricted to `"Planetary Complex"` vehicle type, defined in `data/components.json`:
 
@@ -186,17 +213,40 @@ Accessed from the strategy screen via the "Build Yard" button on owned planets.
 
 ---
 
+## Queue Discovery and Rate Resolution
+
+**File:** `game/strategy/data/build_queue_source.py`
+
+`BuildQueueSource` is a dataclass that abstracts away the origin of a queue (planet base, facility, fleet). The UI and command handlers work with `BuildQueueSource` objects rather than distinguishing entity types directly.
+
+### Key Functions
+
+| Function | Purpose |
+|----------|---------|
+| `collect_build_queues_at_hex()` | All queue sources at a hex for an empire |
+| `collect_all_build_queues_for_empire()` | All queue sources across entire empire |
+| `get_production_rate_for_queue(entity, queue_id)` | Rate for a specific queue (used by command handler) |
+| `estimate_build_turns(total_cost, rate)` | Limiting-resource turn estimate (single source of truth) |
+| `get_default_production_rates(yard_type)` | Load rates from `data/production_rates.json` |
+
+**Note:** `estimate_build_turns()` and `get_production_rate_for_queue()` are the authoritative utilities for turn estimation. The command handler delegates to these — do not duplicate this logic elsewhere.
+
+---
+
 ## Key Files
 
 | Component | File |
 |-----------|------|
+| ProductionEngine | `game/strategy/engine/production_engine.py` |
+| BuildQueueSource & utilities | `game/strategy/data/build_queue_source.py` |
 | PlanetaryFacility | `game/strategy/data/planetary_facility.py` |
 | Planet (facilities list) | `game/strategy/data/planet.py` |
-| ProductionEngine | `game/strategy/engine/production_engine.py` |
+| Fleet (construction_queue) | `game/strategy/data/fleet.py` |
+| Command handlers | `game/strategy/engine/command_handlers.py` |
 | BuildQueueScreen | `game/ui/screens/build_queue_screen.py` |
+| EmpireBuildQueueWindow | `game/ui/screens/empire_build_queue_window.py` |
 | Harvester abilities | `game/simulation/components/abilities/harvester.py` |
 | Component definitions | `data/components.json` |
+| Production rates | `data/production_rates.json` |
 | DesignLibrary | `game/strategy/systems/design_library.py` |
-| Strategy screen integration | `game/ui/screens/strategy_screen.py` |
-| Build queue data sources | `game/strategy/data/build_queue_source.py` |
 | Design cost calculator | `game/strategy/services/design_cost_calculator.py` |

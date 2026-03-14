@@ -126,6 +126,72 @@ def _facility_is_shipyard(facility: 'PlanetaryFacility') -> bool:
     return facility.is_shipyard
 
 
+def estimate_build_turns(total_cost: Dict[str, float],
+                         production_rate: Dict[str, float]) -> float:
+    """Estimate turns to complete a build item given its cost and production rate.
+
+    Uses the limiting-resource formula: max(cost[res] / rate[res]) across all
+    resources. This is the single source of truth for initial turn estimates
+    (used by AddToConstructionQueueCommandHandler) and matches the per-tick
+    calculation in ProductionEngine._calculate_tick_expenditure().
+
+    Args:
+        total_cost: Dict mapping resource name to total cost amount.
+        production_rate: Dict mapping resource name to units produced per turn.
+
+    Returns:
+        Estimated turns, minimum 0.01. Falls back to 1.0 if cost is empty
+        or any required resource has zero/missing production rate.
+    """
+    if not total_cost or not production_rate:
+        return 1.0
+    max_turns = 0.0
+    for res, cost in total_cost.items():
+        if cost <= 0:
+            continue
+        rate = production_rate.get(res, 0.0)
+        if rate <= 0:
+            return 1.0  # Can't estimate without rate
+        turns = cost / rate
+        if turns > max_turns:
+            max_turns = turns
+    return max(0.01, max_turns) if max_turns > 0 else 1.0
+
+
+def get_production_rate_for_queue(entity, queue_id: Optional[str]) -> Dict[str, float]:
+    """Get the production rate for a specific construction queue on an entity.
+
+    Resolves the correct rate based on entity type (planet vs fleet) and
+    queue_id (base queue vs facility queue). Uses the same rate-resolution
+    logic as _collect_planet_sources / _collect_fleet_sources to ensure
+    consistency between queue discovery and turn estimation.
+
+    Args:
+        entity: Planet or Fleet that owns the queue.
+        queue_id: Queue identifier (facility instance_id, base queue id, or None).
+
+    Returns:
+        Dict mapping resource name to units per turn. Empty dict on failure.
+    """
+    from game.strategy.data.fleet import Fleet
+
+    if isinstance(entity, Fleet):
+        yard_count = getattr(entity.capabilities, 'space_shipyard_count', 1)
+        base_rate = get_default_production_rates("fleet_space_yard")
+        return {k: v * max(1, yard_count) for k, v in base_rate.items()}
+
+    # Planet: check if queue_id points to a shipyard facility
+    if queue_id and hasattr(entity, 'facilities'):
+        for facility in entity.facilities:
+            if getattr(facility, 'instance_id', None) == queue_id:
+                if _facility_is_shipyard(facility):
+                    return _get_facility_production_rates(facility)
+                break
+
+    # Default: planetary yard rate (for base queue / complexes)
+    return get_default_production_rates("planetary_yard")
+
+
 def _collect_planet_sources(planet, sources: List[BuildQueueSource]) -> None:
     """Collect build queue sources from a single planet.
 

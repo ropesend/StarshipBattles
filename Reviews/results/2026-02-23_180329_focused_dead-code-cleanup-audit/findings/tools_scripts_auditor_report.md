@@ -127,22 +127,22 @@
 
 ---
 
-### Info: Retained Scripts (11 files, ~2,220 LOC)
+### Info: Retained Scripts (10 files, ~2,121 LOC)
 
 **ID:** KEEP-001
 **Status:** Active — development tools, verification utilities, and asset processing scripts
-**Files kept:**
-- test_sharded.py (413) — Active test infrastructure
-- loc.py (114) — Lines of code counter
-- galaxy_screenshot.py (366) — Galaxy visualization
-- visual_test_galaxy.py (323) — Interactive galaxy testing
-- diagnose_blueprints.py (293) — Blueprint verification
-- analyze_dependency_graph.py (182) — Dependency analysis
-- find_orphaned_tests.py (67) — Test hygiene
-- process_flags.py (174) — Flag image processing pipeline
-- process_planet_spheres.py (99) — Planet image processing
-- process_planet_spheres_opt.py (109) — Optimized planet processing
-- nebula_to_alpha.py (80) — Nebula image processing
+**Files kept (reorganized 2026-03-14):**
+- scripts/test_sharded.py (413) — Active test infrastructure
+- scripts/loc.py (114) — Lines of code counter
+- scripts/analyze_dependency_graph.py (182) — Dependency analysis
+- scripts/find_orphaned_tests.py (67) — Test hygiene
+- scripts/strategy/galaxy_screenshot.py (366) — Galaxy visualization
+- scripts/strategy/visual_test_galaxy.py (323) — Interactive galaxy testing
+- scripts/strategy/diagnose_blueprints.py (293) — Blueprint verification
+- assets/tools/process_flags.py (174) — Flag image processing pipeline
+- assets/tools/process_planet_spheres.py (109) — Planet image processing (optimized)
+- assets/tools/nebula_to_alpha.py (80) — Nebula image processing
+- assets/tools/ship_background_remover.py — Ship image background removal
 
 ---
 
@@ -154,12 +154,18 @@
 - Update pytest.ini to remove Tools from pythonpath
 - Result: Tools/ directory no longer exists
 
-### scripts/ Directory: CURATE
-**Keep (11 files):**
+### scripts/ Directory: CURATED (reorganized 2026-03-14)
+**Keep in scripts/ (5 files):**
 - Development tools: test_sharded.py, loc.py
-- Visualization: galaxy_screenshot.py, visual_test_galaxy.py
-- Verification: diagnose_blueprints.py, analyze_dependency_graph.py, find_orphaned_tests.py
-- Asset processing: process_flags.py, process_planet_spheres.py, process_planet_spheres_opt.py, nebula_to_alpha.py
+- Verification: analyze_dependency_graph.py, find_orphaned_tests.py
+- Test wrapper: test.ps1
+
+**Moved to scripts/strategy/ (3 files):**
+- Strategy visualization: galaxy_screenshot.py, visual_test_galaxy.py
+- Strategy verification: diagnose_blueprints.py
+
+**Moved to assets/tools/ (4 files):**
+- Asset processing: process_flags.py, process_planet_spheres.py, nebula_to_alpha.py, ship_background_remover.py
 
 **Delete (17 files + 2 subdirectories):**
 - All one-time migration/fix scripts

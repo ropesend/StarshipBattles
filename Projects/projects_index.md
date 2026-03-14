@@ -4,24 +4,24 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-219 | Fleet Registration Consolidation | Planning | 2026-02-28 | 2026-02-28 |
-| PROJ-218 | Fix Production Queue Cost and Build Time Defaults | Planning | 2026-02-28 | 2026-02-28 |
-| PROJ-217 | Standardize Star Measurement to Radius | Planning | 2026-02-28 | 2026-02-28 |
-| PROJ-216 | Fix Global Fleet Order Registration Failure | Planning | 2026-02-28 | 2026-02-28 |
-| PROJ-215 | Fix Event Log Location Display and Navigation | Planning | 2026-02-28 | 2026-02-28 |
-| PROJ-214 | Hex Highlights for Objects and Ownership | Awaiting Verification | 2026-02-28 | 2026-02-28 |
-| PROJ-213 | Build Queue Reversion Bug Fix | Complete | 2026-02-28 | 2026-02-28 |
-| PROJ-212 | Deferred Import Cleanup & Coupling Reduction | Planning | 2026-02-27 | 2026-02-27 |
-| PROJ-211 | 211222 Remediation: General Di Inconsistency Strategy | Planning | 2026-02-27 | 2026-02-27 |
-| PROJ-210 | Strategy God Class Decomposition | Planning | 2026-02-27 | 2026-02-27 |
-| PROJ-209 | Cyclomatic Complexity Decomposition | Planning | 2026-02-27 | 2026-02-27 |
-| PROJ-208 | CQRS Facade Bypass Remediation | Planning | 2026-02-27 | 2026-02-27 |
 | PROJ-207 | Fleet Order System Unification | Planning | 2026-02-27 | 2026-02-27 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-219 | Fleet Registration Consolidation | Archived | 2026-02-28 | 2026-03-14 |
+| PROJ-218 | Fix Production Queue Cost and Build Time Defaults | Archived | 2026-02-28 | 2026-03-14 |
+| PROJ-217 | Standardize Star Measurement to Radius | Archived | 2026-02-28 | 2026-03-14 |
+| PROJ-216 | Fix Global Fleet Order Registration Failure | Archived | 2026-02-28 | 2026-03-14 |
+| PROJ-215 | Fix Event Log Location Display and Navigation | Archived | 2026-02-28 | 2026-03-14 |
+| PROJ-214 | Hex Highlights for Objects and Ownership | Archived | 2026-02-28 | 2026-03-14 |
+| PROJ-213 | Build Queue Reversion Bug Fix | Archived | 2026-02-28 | 2026-03-14 |
+| PROJ-212 | Deferred Import Cleanup & Coupling Reduction | Archived | 2026-02-27 | 2026-03-14 |
+| PROJ-211 | 211222 Remediation: General Di Inconsistency Strategy | Archived | 2026-02-27 | 2026-03-14 |
+| PROJ-210 | Strategy God Class Decomposition | Archived | 2026-02-27 | 2026-03-14 |
+| PROJ-209 | Cyclomatic Complexity Decomposition | Archived | 2026-02-27 | 2026-03-14 |
+| PROJ-208 | CQRS Facade Bypass Remediation | Archived | 2026-02-27 | 2026-03-14 |
 | PROJ-205 | Legacy Code Elimination - Verified Findings | Archived | 2026-02-27 | 2026-02-27 |
 | PROJ-204 | Strategy & Workshop Duplication Consolidation | Archived | 2026-02-27 | 2026-02-27 |
 | PROJ-203 | Reduce complexity: StrategyRenderer._draw_systems (CC 29) | Archived | 2026-02-27 | 2026-02-27 |
@@ -30,18 +30,6 @@
 | PROJ-200 | Reduce complexity: filter_ships (CC 36) | Archived | 2026-02-27 | 2026-02-27 |
 | PROJ-199 | Duck Typing Cleanup - Lazy Init and CompDef Centralization | Archived | 2026-02-25 | 2026-02-27 |
 | PROJ-198 | UI Layer Duck Typing Elimination - Strategy Screens & Services | Archived | 2026-02-25 | 2026-02-25 |
-| PROJ-197 | Duplication Consolidation Completion | Archived | 2026-02-25 | 2026-02-25 |
-| PROJ-196 | Consolidate Duplicated Code | Archived | 2026-02-24 | 2026-02-25 |
-| PROJ-195 | Eradicate RegistryManager Singleton from Non-Root Code | Archived | 2026-02-24 | 2026-02-25 |
-| PROJ-194 | Builder & Workshop Duck Typing Elimination | Archived | 2026-02-24 | 2026-02-25 |
-| PROJ-193 | UI Data Binding Duck Typing Elimination | Archived | 2026-02-24 | 2026-02-25 |
-| PROJ-192 | AI Behavior Protocols - Duck Typing Elimination | Archived | 2026-02-24 | 2026-02-25 |
-| PROJ-191 | Strategy Layer Duck Typing Elimination | Archived | 2026-02-24 | 2026-02-25 |
-| PROJ-190 | Core Simulation Duck Typing Elimination | Archived | 2026-02-24 | 2026-02-25 |
-| PROJ-189 | Storms Environmental Hazards | Archived | 2026-02-24 | 2026-02-25 |
-| PROJ-188 | Strategy Layer List UI Consolidation | Archived | 2026-02-24 | 2026-02-25 |
-| PROJ-187 | Strategy Orders Tick-Based Action System | Archived | 2026-02-24 | 2026-02-25 |
-| PROJ-186 | Exception Handling Polish - ErrorCode Consistency and Final Cleanup | Archived | 2026-02-24 | 2026-02-24 |
 
 ---
 

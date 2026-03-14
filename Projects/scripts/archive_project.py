@@ -11,13 +11,12 @@ Usage:
 import argparse
 import shutil
 import sys
-from datetime import datetime
 from pathlib import Path
 
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from utils.config import ACTIVE_DIR, ARCHIVED_DIR, PROJECTS_DIR, MAX_ARCHIVED_PROJECTS
+from utils.config import ACTIVE_DIR, ARCHIVED_DIR, MAX_ARCHIVED_PROJECTS
 from utils.index_manager import archive_project_in_index, get_archived_entries_from_index
 from validate_close_ready import validate_close_ready
 from deep_archive_manager import sweep as deep_archive_sweep
@@ -65,28 +64,8 @@ def archive_project(project_id: str, dry_run: bool = False, force: bool = False)
         print(f"\n  [FAIL] Project not found: {project_id}")
         return False
 
-    # Step 2: Backup
-    print("\nSTEP 2: Backup")
-    backup_dir = PROJECTS_DIR / "backups"
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-    if is_directory:
-        backup_path = backup_dir / f"{project_id}_{timestamp}"
-    else:
-        backup_path = backup_dir / f"{project_id}_{timestamp}.md"
-
-    if dry_run:
-        print(f"  [DRY-RUN] Would create backup at: {backup_path}")
-    else:
-        backup_dir.mkdir(exist_ok=True)
-        if is_directory:
-            shutil.copytree(source, backup_path)
-        else:
-            shutil.copy2(source, backup_path)
-        print(f"  Created: {backup_path}")
-
-    # Step 3: Move project
-    print("\nSTEP 3: Move project")
+    # Step 2: Move project
+    print("\nSTEP 2: Move project")
     print(f"  FROM: {source}")
     print(f"  TO:   {dest}")
 
@@ -102,8 +81,8 @@ def archive_project(project_id: str, dry_run: bool = False, force: bool = False)
             shutil.move(str(source), str(dest))
         print("  [DONE]")
 
-    # Step 4: Update index
-    print("\nSTEP 4: Update projects_index.md")
+    # Step 3: Update index
+    print("\nSTEP 3: Update projects_index.md")
     if dry_run:
         print("  [DRY-RUN] Would update index:")
         print(f"    - Remove {project_id} from Active Projects")
@@ -116,17 +95,17 @@ def archive_project(project_id: str, dry_run: bool = False, force: bool = False)
             print(f"  [WARN] Could not update index: {e}")
             print("         Please update projects_index.md manually")
 
-    # Step 5: Auto-sweep deep archive if over limit
+    # Step 4: Auto-sweep deep archive if over limit
     archived_count = len(get_archived_entries_from_index())
     if archived_count > MAX_ARCHIVED_PROJECTS:
-        print(f"\nSTEP 5: Deep archive sweep ({archived_count} > {MAX_ARCHIVED_PROJECTS} max)")
+        print(f"\nSTEP 4: Deep archive sweep ({archived_count} > {MAX_ARCHIVED_PROJECTS} max)")
         if dry_run:
             print("  [DRY-RUN] Would sweep excess projects to deep archive")
             deep_archive_sweep(dry_run=True)
         else:
             deep_archive_sweep(dry_run=False)
     else:
-        print(f"\nSTEP 5: Deep archive sweep (not needed, {archived_count} <= {MAX_ARCHIVED_PROJECTS})")
+        print(f"\nSTEP 4: Deep archive sweep (not needed, {archived_count} <= {MAX_ARCHIVED_PROJECTS})")
 
     print(f"\n{'=' * 50}")
     if dry_run:

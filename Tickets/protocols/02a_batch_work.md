@@ -86,7 +86,7 @@ Follow [PROTOCOL 02: Ticket Resolution (TDD)](02_work_ticket.md) for the selecte
 
 5. **Phase 3 -- Implementation (Green):** Modify code to pass test, run regression.
 
-6. **[Bug Only] Phase 2.5 -- Post-Fix Integrity Check:** Verify fix doesn't revert recent refactors (`git diff` review), maintains layer boundaries, follows conventions. If reversion detected: set `[Needs Clarification]`, move to next ticket.
+6. **[Bug Only] Phase 2.5 -- Post-Fix Integrity Check:** Verify fix doesn't revert recent refactors (`git diff` review), maintains layer boundaries, follows conventions. **Duplication check:** search for existing functions that perform the same logic — delegate rather than duplicate. **Design quality gate:** evaluate "is this what I'd build from scratch?" and "would I approve this in a code review?" — if the fix monkey-patches, overrides internals, or suppresses behavior rather than fixing architecture, rework it. If reversion or design issues detected: rework or set `[Needs Clarification]`, move to next ticket.
 
 7. **Phase 4 -- Documentation:** Update Work Log with approach, files modified, and context from Phase 0. Update relevant `docs/` file if: (a) fix/implementation changed architecture/patterns/conventions, (b) a discrepancy was resolved, (c) **[Bug]** the root cause involved an undocumented pattern, or (d) **[Feature]** a new pattern or architectural element was introduced. List all `docs/` files updated in the Work Log.
 
@@ -116,9 +116,9 @@ Follow [PROTOCOL 02: Ticket Resolution (TDD)](02_work_ticket.md) for the selecte
 
 ---
 
-### [Bug Only] Anti-Reversion Policy
+### [Bug Only] Anti-Reversion & Quality Policy
 
-The batch loop MUST NOT silently revert refactored code. This is the #1 risk of autonomous bug fixing.
+The batch loop MUST NOT silently revert refactored code or introduce tech debt. These are the top risks of autonomous bug fixing.
 
 **Hard Rules:**
 1. If `git log` shows affected files were modified by a PROJ-XX commit in the last 60 days, read that project's `design.md` before implementing ANY fix.
@@ -127,6 +127,9 @@ The batch loop MUST NOT silently revert refactored code. This is the #1 risk of 
 4. Every fix should leave the code BETTER than it found it -- cleaner, more maintainable, with better test coverage.
 5. Refer to CLAUDE.md: "When a new system replaces an old one, ERADICATE the old system completely." Your fix must not resurrect eradicated code.
 6. Fixes must follow patterns in `docs/02_PATTERNS.md` and conventions in `docs/03_CONVENTIONS.md`. If a fix changes architecture or patterns, update the relevant `docs/` file before moving to the next ticket.
+7. **Never duplicate existing logic.** Before writing a new function, search for existing functions with the same purpose. Delegate to them. If adaptation is needed, extract a shared utility.
+8. **Never mask symptoms.** If your fix overrides internal methods, monkey-patches objects, suppresses default behavior, or adds `lambda: False` workarounds, it is NOT a fix — it is a bandaid. Find the architectural root cause and fix the design.
+9. **Apply the clean-sheet test.** Ask: "If I were designing this from scratch, would I choose this approach?" If the answer is no, rework the fix. A proper system overhaul is always preferred over a workaround.
 
 ---
 

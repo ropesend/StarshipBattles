@@ -791,20 +791,27 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
         # 4. Calculate design cost (PROJ-213: fix empty total_cost bug)
         total_cost = self._load_design_cost(session, entity, cmd.design_id)
 
-        # 5. Create queue item
+        # 5. Pre-calculate initial turns estimate (BUG-96)
+        from game.strategy.data.build_queue_source import (
+            get_production_rate_for_queue, estimate_build_turns,
+        )
+        production_rate = get_production_rate_for_queue(entity, cmd.queue_id)
+        initial_turns = estimate_build_turns(total_cost, production_rate)
+
+        # 6. Create queue item
         queue_item = {
             "design_id": cmd.design_id,
             "type": cmd.category,
-            "turns_remaining": 1.0,  # ProductionEngine recalculates dynamically
+            "turns_remaining": initial_turns,
             "total_cost": total_cost,
             "resources_consumed": {res: 0.0 for res in total_cost},
         }
 
-        # 6. Add target_planet_id for complexes if specified
+        # 7. Add target_planet_id for complexes if specified
         if cmd.target_planet_id is not None:
             queue_item["target_planet_id"] = cmd.target_planet_id
 
-        # 7. Insert or append
+        # 8. Insert or append
         if cmd.index is not None:
             queue.insert(cmd.index, queue_item)
             logger.info(f"GameSession: Inserted {cmd.design_id} into {cmd.entity_type} {cmd.entity_id} queue at {cmd.index}")

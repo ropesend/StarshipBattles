@@ -179,11 +179,29 @@ Before documenting, verify the fix maintains architectural integrity:
    - No magic numbers, no broad exception catches?
    If NO: Rework the fix before proceeding.
 
-4. **Tech Debt Assessment:** Does this fix reduce, maintain, or increase tech debt? A fix that increases tech debt requires justification documented in the Work Log. Prefer fixes that actively reduce tech debt.
+4. **Duplication Check (MANDATORY):** Does the fix re-implement logic that already exists elsewhere in the codebase?
+   - Search for existing functions/methods that perform the same calculation, resolution, or transformation.
+   - If existing logic is found: **delegate to it** (import and call) rather than writing a new copy.
+   - If the existing logic needs minor adaptation, extract a shared utility and have both call sites use it.
+   - If you wrote a new function: search the codebase for any other function with similar inputs/outputs/purpose.
+   - **Red flags that indicate duplication:**
+     - Importing private helpers (`_function_name`) from another module to reuse internally
+     - Writing a formula that matches one in another file
+     - Creating a method that walks the same data structure as an existing method
+   If duplication is found: **Refactor to eliminate it before proceeding.** Extract the shared logic into a public utility in the module that owns the data, then have all call sites delegate to it.
+
+5. **Design Quality Gate (MANDATORY):** Step back and evaluate the fix as if reviewing someone else's PR. Ask:
+   - **"Is this what I would build if designing from scratch?"** If the answer is no, the fix is a workaround. Rework it.
+   - **"Would I approve this in a code review?"** If you'd request changes (monkey-patching, overriding internal methods, suppressing behavior rather than fixing architecture), rework it.
+   - **"Does this fix the root cause or mask the symptom?"** A fix that disables, overrides, or suppresses a behavior (e.g., `obj.method = lambda: False`) is masking the symptom. Find the architectural solution instead.
+   - **"If a new developer read only this diff, would they understand why it works?"** If the fix requires comments explaining non-obvious workarounds, it's likely not the right design.
+   Document your answers briefly in the Work Log under `### Phase 2.5: Design Review`.
+
+6. **Tech Debt Assessment:** Does this fix reduce, maintain, or increase tech debt? A fix that increases tech debt requires justification documented in the Work Log. Prefer fixes that actively reduce tech debt.
 
 * **If all checks pass:** Proceed to Phase 4 (Documentation).
 * **If reversion detected:** Set `[Needs Clarification]`, document the conflict, **STOP**.
-* **If layer/convention issues found:** Rework fix, re-run tests, then re-check.
+* **If layer/convention/duplication/design issues found:** Rework fix, re-run tests, then re-check.
 
 ### 6. Phase 4: Documentation & Gatekeeper
 

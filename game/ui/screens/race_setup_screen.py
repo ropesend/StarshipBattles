@@ -101,6 +101,12 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             self.race_config = RaceConfig()
             self.is_editing = False
 
+        # FEAT-05: Save/Update dialog elements (created on demand)
+        self._save_update_dialog = None
+        self._btn_overwrite = None
+        self._btn_save_new = None
+        self._btn_save_cancel = None
+
         # Current tab (start on Summary)
         self.current_step = self.TAB_SUMMARY
 
@@ -922,7 +928,11 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         self.kill()
 
     def _on_save(self):
-        """Handle Save button click."""
+        """Handle Save button click.
+
+        FEAT-05: When editing a loaded species, shows a dialog asking whether
+        to overwrite the existing species or save as a new one.
+        """
         # Validate all required fields
         is_valid, error = self._validate_for_save()
         if not is_valid:
@@ -934,7 +944,16 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         if not validation_result.is_valid:
             logger.warning(f"Saving race with validation warnings: {validation_result.first_error}")
 
-        # Save to library
+        # FEAT-05: If editing a loaded species, prompt for overwrite vs save-as-new
+        if self.is_editing and self.race_config.race_id:
+            self._show_save_update_dialog()
+            return
+
+        # New species — save directly
+        self._do_save()
+
+    def _do_save(self):
+        """Execute the actual save to library."""
         success, message = self.race_library.save_race(self.race_config)
         if success:
             logger.info(f"Race saved: {self.race_config.name}")
@@ -942,6 +961,98 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             self.kill()
         else:
             self.error_label.set_text(message)
+
+    def _show_save_update_dialog(self):
+        """FEAT-05: Show dialog asking to overwrite or save as new species."""
+        if self._save_update_dialog is not None:
+            return  # Already showing
+
+        dialog_width = 400
+        dialog_height = 180
+        container = self.get_container()
+        cx = (container.get_size()[0] - dialog_width) // 2
+        cy = (container.get_size()[1] - dialog_height) // 2
+
+        self._save_update_dialog = pygame_gui.elements.UIWindow(
+            rect=pygame.Rect(cx, cy, dialog_width, dialog_height),
+            manager=self.ui_manager,
+            window_display_title="Save Species",
+            object_id="#save_update_dialog",
+            resizable=False
+        )
+
+        dialog_container = self._save_update_dialog.get_container()
+        dw = dialog_container.get_size()[0]
+
+        # Message label
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(10, 10, dw - 20, 50),
+            text="This species was loaded from the library.",
+            manager=self.ui_manager,
+            container=dialog_container
+        )
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(10, 40, dw - 20, 50),
+            text="How would you like to save it?",
+            manager=self.ui_manager,
+            container=dialog_container
+        )
+
+        # Buttons
+        btn_width = 110
+        btn_height = 36
+        btn_y = 95
+        spacing = 15
+        total_btn_width = btn_width * 3 + spacing * 2
+        start_x = (dw - total_btn_width) // 2
+
+        self._btn_overwrite = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(start_x, btn_y, btn_width, btn_height),
+            text="Overwrite",
+            manager=self.ui_manager,
+            container=dialog_container,
+            object_id="#btn_overwrite"
+        )
+
+        self._btn_save_new = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(start_x + btn_width + spacing, btn_y, btn_width, btn_height),
+            text="Save as New",
+            manager=self.ui_manager,
+            container=dialog_container,
+            object_id="#btn_save_new"
+        )
+
+        self._btn_save_cancel = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(start_x + 2 * (btn_width + spacing), btn_y, btn_width, btn_height),
+            text="Cancel",
+            manager=self.ui_manager,
+            container=dialog_container,
+            object_id="#btn_save_cancel"
+        )
+
+    def _on_overwrite_save(self):
+        """FEAT-05: Overwrite existing species (keep race_id)."""
+        if self._save_update_dialog:
+            self._save_update_dialog.kill()
+            self._save_update_dialog = None
+        self._do_save()
+
+    def _on_save_as_new(self):
+        """FEAT-05: Save as new species (clear race_id to generate fresh one)."""
+        if self._save_update_dialog:
+            self._save_update_dialog.kill()
+            self._save_update_dialog = None
+        self.race_config.race_id = None
+        self.is_editing = False
+        if self.btn_save:
+            self.btn_save.set_text("Save")
+        self._do_save()
+
+    def _on_save_dialog_cancel(self):
+        """FEAT-05: Cancel save dialog — return to editing."""
+        if self._save_update_dialog:
+            self._save_update_dialog.kill()
+            self._save_update_dialog = None
 
     def process_event(self, event: pygame.event.Event) -> bool:
         """Process pygame events.
@@ -957,6 +1068,18 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
                     self._on_tab_clicked(btn.tab_index)
                     handled = True
                     break
+
+            # FEAT-05: Save/Update dialog buttons
+            if not handled and self._save_update_dialog is not None:
+                if event.ui_element == self._btn_overwrite:
+                    self._on_overwrite_save()
+                    handled = True
+                elif event.ui_element == self._btn_save_new:
+                    self._on_save_as_new()
+                    handled = True
+                elif event.ui_element == self._btn_save_cancel:
+                    self._on_save_dialog_cancel()
+                    handled = True
 
             if not handled:
                 if event.ui_element == self.btn_cancel:

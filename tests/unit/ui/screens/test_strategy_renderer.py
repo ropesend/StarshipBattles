@@ -630,10 +630,12 @@ class TestDrawSystemsStar:
                     break
 
     def test_star_radius_accounts_for_hex_geometry(self, renderer, mock_scene):
-        """Star screen radius must include sqrt(3) factor for hex center-to-center distance.
+        """Star screen radius uses non-linear scaling anchored at radius-2.
 
-        BUG-94: For flat-topped hexes, adjacent hex centers are sqrt(3)*hex_size apart,
-        not hex_size apart. The star rendering formula must account for this geometry.
+        BUG-94: Linear sqrt(3) scaling is correct for radius-2 but undershoots
+        large radii and overshoots radius-1. The formula uses a power curve so
+        that radius-2 is unchanged, radius-1 is smaller, and radius-4 is larger
+        than the linear formula would produce.
         """
         import math as _math
         screen = MagicMock()
@@ -662,17 +664,43 @@ class TestDrawSystemsStar:
             for call in mock_circle.call_args_list:
                 if call[0][1] == (255, 255, 0):  # Star color
                     radius = call[0][3]
-                    # hex_size=10, zoom=1.0, radius_hexes=2
-                    # Correct: int(2 * sqrt(3) * 10 * 1.0) = 34
-                    # Wrong (without sqrt(3)): int(2 * 10 * 1.0) = 20
+                    # Radius-2 anchor: identical to linear formula
+                    # int(2 * sqrt(3) * 10 * 1.0) = 34
                     expected = int(star.radius_hexes * _math.sqrt(3) * 10 * 1.0)
                     assert radius == expected, (
                         f"Star radius {radius} != expected {expected}; "
-                        f"missing sqrt(3) hex geometry factor"
+                        f"radius-2 anchor point changed"
                     )
                     break
             else:
                 pytest.fail("Fallback circle with star color not found")
+
+    def test_star_radius_nonlinear_scaling(self, renderer, mock_scene):
+        """Non-linear scaling: radius-1 < linear, radius-4 > linear.
+
+        BUG-94: Ensures the power curve produces correct relative sizes.
+        """
+        import math as _math
+        hex_spacing = _math.sqrt(3) * 10 * 1.0  # hex_size=10, zoom=1.0
+
+        mock_scene.camera.zoom = 1.0
+        # Direct unit test of the helper method
+        r1 = renderer._hex_radius_to_screen(1)
+        r2 = renderer._hex_radius_to_screen(2)
+        r4 = renderer._hex_radius_to_screen(4)
+
+        linear_r1 = int(1 * hex_spacing)  # 17
+        linear_r2 = int(2 * hex_spacing)  # 34
+        linear_r4 = int(4 * hex_spacing)  # 69
+
+        # Radius-2 is the anchor — must equal linear formula
+        assert r2 == linear_r2, f"Radius-2 should be {linear_r2}, got {r2}"
+        # Radius-1 should be smaller than linear (not overflow center hex)
+        assert r1 < linear_r1, f"Radius-1 ({r1}) should be < linear ({linear_r1})"
+        # Radius-4 should be larger than linear (reach further into outer ring)
+        assert r4 > linear_r4, f"Radius-4 ({r4}) should be > linear ({linear_r4})"
+        # Monotonically increasing
+        assert r1 < r2 < r4, f"Radii should increase: r1={r1}, r2={r2}, r4={r4}"
 
     def test_star_selection_highlight_on_primary(self, renderer, mock_scene):
         """Selected system's primary star should have white outline."""

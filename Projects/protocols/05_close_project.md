@@ -24,7 +24,6 @@ python Projects/scripts/archive_project.py PROJ-XX --force
 ```
 
 The `--force` flag skips all validation. The script handles:
-- Creating a timestamped backup in `Projects/backups/`
 - Moving the project to `Projects/archived_projects/`
 - Updating `Projects/projects_index.md`
 

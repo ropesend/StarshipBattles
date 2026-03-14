@@ -24,12 +24,12 @@
 | BUG-91 | 2026-02-28 | Missing planet portrait in build yard UI | Awaiting Confirmation | [BUG-91.md](active_bugs/BUG-91.md) |
 | BUG-92 | 2026-02-28 | New Game Setup fails to populate loaded species data | Awaiting Confirmation | [BUG-92.md](active_bugs/BUG-92.md) |
 | BUG-93 | 2026-02-28 | Fleet move targeting state cannot be completed or canceled | Awaiting Confirmation | [BUG-93.md](active_bugs/BUG-93.md) |
-| BUG-94 | 2026-03-14 | Star visual radius too small relative to hex grid | In-Progress | [BUG-94.md](active_bugs/BUG-94.md) |
-| BUG-95 | 2026-03-14 | Load Species dialog — hover/click only registers in row margins | Pending | [BUG-95.md](active_bugs/BUG-95.md) |
-| BUG-96 | 2026-03-14 | Build queue shows 1.0 turns and total cost instead of per-turn usage | Pending | [BUG-96.md](active_bugs/BUG-96.md) |
+| BUG-94 | 2026-03-14 | Star visual radius too small relative to hex grid | Awaiting Confirmation | [BUG-94.md](active_bugs/BUG-94.md) |
+| BUG-95 | 2026-03-14 | Load Species dialog — hover/click only registers in row margins | Awaiting Confirmation | [BUG-95.md](active_bugs/BUG-95.md) |
+| BUG-96 | 2026-03-14 | Build queue shows 1.0 turns and total cost instead of per-turn usage | Awaiting Confirmation | [BUG-96.md](active_bugs/BUG-96.md) |
 
 ## 3. Current Focus: None
-**Status:** BUG-94 fixed (added sqrt(3) hex geometry factor to star/Dyson sphere rendering). All bugs in queue fixed or blocked. BUG-84 blocked (needs runtime debugging). All others awaiting confirmation.
+**Status:** BUG-94/95/96 fixed. All bugs in queue fixed or blocked. BUG-84 blocked (needs runtime debugging). All others awaiting confirmation.
 
 ## 4. Status Reference
 | Status | Meaning |

@@ -22,7 +22,7 @@ This uses `hex_size = 10`, but the actual screen distance per hex ring is much l
 Medium
 
 ## Status
-In-Progress
+Awaiting Confirmation
 
 ## Work Log
 - 2026-03-14: Created from QA Session 20260314_074413.
@@ -52,3 +52,14 @@ In-Progress
 [![Radius-2 star looks perfect](../../tools/qa_observer/session_data/20260314_085600/images/bug_capture_090052.png)](../../tools/qa_observer/session_data/20260314_085600/images/bug_capture_090052.png)
 *Radius-2 star — this is the correct size, use as reference*
 ---
+
+### ✅ Fix v2 Applied [2026-03-14]
+**Approach:** Replaced linear `radius_hexes * sqrt(3) * hex_size * zoom` with a non-linear power curve: `2 * hex_spacing * (radius_hexes / 2) ^ 1.2`.
+
+- **Anchor:** Radius-2 produces identical result to the linear formula (34px at hex_size=10, zoom=1.0).
+- **Radius-1:** Power curve reduces from 17px → ~15px (doesn't overflow center hex).
+- **Radius-4:** Power curve increases from 69px → ~79px (reaches further into 4th ring).
+- **Implementation:** Extracted `_hex_radius_to_screen()` helper method used by both star and Dyson sphere rendering.
+- **Tests:** Updated `test_star_radius_accounts_for_hex_geometry` (radius-2 anchor), added `test_star_radius_nonlinear_scaling` (verifies r1 < linear, r2 = linear, r4 > linear).
+- **Files modified:** `game/ui/screens/strategy_renderer.py`, `tests/unit/ui/screens/test_strategy_renderer.py`
+- **Tests:** 66/66 strategy renderer tests pass.

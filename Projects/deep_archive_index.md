@@ -185,3 +185,15 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-183 | PROJ-175 Post-Refactor Cleanup - Logging Pattern Completion | 2026-02-24 | PROJ-151-200 |
 | PROJ-184 | Type-Safe Spatial Query API | 2026-02-24 | PROJ-151-200 |
 | PROJ-185 | Post-PROJ-174 Backward Compatibility Eradication | 2026-02-24 | PROJ-151-200 |
+| PROJ-186 | Exception Handling Polish - ErrorCode Consistency and Final Cleanup | 2026-02-24 | PROJ-151-200 |
+| PROJ-187 | Strategy Orders Tick-Based Action System | 2026-02-25 | PROJ-151-200 |
+| PROJ-188 | Strategy Layer List UI Consolidation | 2026-02-25 | PROJ-151-200 |
+| PROJ-189 | Storms Environmental Hazards | 2026-02-25 | PROJ-151-200 |
+| PROJ-190 | Core Simulation Duck Typing Elimination | 2026-02-25 | PROJ-151-200 |
+| PROJ-191 | Strategy Layer Duck Typing Elimination | 2026-02-25 | PROJ-151-200 |
+| PROJ-192 | AI Behavior Protocols - Duck Typing Elimination | 2026-02-25 | PROJ-151-200 |
+| PROJ-193 | UI Data Binding Duck Typing Elimination | 2026-02-25 | PROJ-151-200 |
+| PROJ-194 | Builder & Workshop Duck Typing Elimination | 2026-02-25 | PROJ-151-200 |
+| PROJ-195 | Eradicate RegistryManager Singleton from Non-Root Code | 2026-02-25 | PROJ-151-200 |
+| PROJ-196 | Consolidate Duplicated Code | 2026-02-25 | PROJ-151-200 |
+| PROJ-197 | Duplication Consolidation Completion | 2026-02-25 | PROJ-151-200 |

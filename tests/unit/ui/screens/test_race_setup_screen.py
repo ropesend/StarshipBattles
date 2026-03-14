@@ -90,8 +90,15 @@ def _make_race_setup_screen():
     screen.btn_cancel = MagicMock()
     screen.btn_save = MagicMock()
     screen.btn_load = MagicMock()
+    screen.btn_randomize = MagicMock()
     screen.error_label = MagicMock()
     screen.name_input = MagicMock()
+
+    # FEAT-05: Save/Update dialog (created on demand)
+    screen._save_update_dialog = None
+    screen._btn_overwrite = None
+    screen._btn_save_new = None
+    screen._btn_save_cancel = None
 
     mocks = {
         'ui_manager': screen.ui_manager,
@@ -612,3 +619,93 @@ class TestRaceSetupLoadSpecies:
         screen._flag_gallery.set_from_config.assert_called()
         screen._portrait_gallery.set_from_config.assert_called()
         screen._theme_gallery.set_from_config.assert_called()
+
+
+# ===========================================================================
+# FEAT-05: Save/Update Dialog Tests
+# ===========================================================================
+
+class TestSaveUpdateDialog:
+    """FEAT-05: Tests for the overwrite vs save-as-new dialog workflow."""
+
+    def test_new_species_saves_directly(self):
+        """New species (not editing) should save without showing dialog."""
+        screen, mocks = _make_race_setup_screen()
+        screen.is_editing = False
+        screen.race_config.race_id = None
+        screen._validate_for_save = MagicMock(return_value=(True, ""))
+        screen.race_config.validate.return_value = MagicMock(is_valid=True)
+        mocks['race_library'].save_race.return_value = (True, "Saved")
+        screen.kill = MagicMock()
+
+        screen._on_save()
+
+        # Should save directly, no dialog
+        assert screen._save_update_dialog is None
+        mocks['race_library'].save_race.assert_called_once()
+
+    def test_editing_species_shows_dialog(self):
+        """Editing a loaded species should show the save/update dialog."""
+        screen, mocks = _make_race_setup_screen()
+        screen.is_editing = True
+        screen.race_config.race_id = "existing_race_abc123"
+        screen._validate_for_save = MagicMock(return_value=(True, ""))
+        screen.race_config.validate.return_value = MagicMock(is_valid=True)
+        screen.get_container = MagicMock()
+        screen.get_container.return_value.get_size.return_value = (800, 600)
+
+        with patch('pygame_gui.elements.UIWindow'):
+            with patch('pygame_gui.elements.UILabel'):
+                with patch('pygame_gui.elements.UIButton') as MockBtn:
+                    screen._on_save()
+
+        # Dialog should be shown, save NOT called yet
+        assert screen._save_update_dialog is not None
+        mocks['race_library'].save_race.assert_not_called()
+
+    def test_overwrite_keeps_race_id(self):
+        """Overwrite button should save with the existing race_id."""
+        screen, mocks = _make_race_setup_screen()
+        screen.is_editing = True
+        screen.race_config.race_id = "existing_race_abc123"
+        dialog_mock = MagicMock()
+        screen._save_update_dialog = dialog_mock
+        mocks['race_library'].save_race.return_value = (True, "Saved")
+        screen.kill = MagicMock()
+
+        screen._on_overwrite_save()
+
+        # race_id should be preserved
+        assert screen.race_config.race_id == "existing_race_abc123"
+        mocks['race_library'].save_race.assert_called_once()
+        dialog_mock.kill.assert_called()
+        assert screen._save_update_dialog is None
+
+    def test_save_as_new_clears_race_id(self):
+        """Save as New button should clear race_id for fresh generation."""
+        screen, mocks = _make_race_setup_screen()
+        screen.is_editing = True
+        screen.race_config.race_id = "existing_race_abc123"
+        dialog_mock = MagicMock()
+        screen._save_update_dialog = dialog_mock
+        mocks['race_library'].save_race.return_value = (True, "Saved")
+        screen.kill = MagicMock()
+
+        screen._on_save_as_new()
+
+        # race_id should be cleared
+        assert screen.race_config.race_id is None
+        assert screen.is_editing is False
+        mocks['race_library'].save_race.assert_called_once()
+        dialog_mock.kill.assert_called()
+        assert screen._save_update_dialog is None
+
+    def test_cancel_dialog_does_not_save(self):
+        """Cancel button should close dialog without saving."""
+        screen, mocks = _make_race_setup_screen()
+        screen._save_update_dialog = MagicMock()
+
+        screen._on_save_dialog_cancel()
+
+        assert screen._save_update_dialog is None
+        mocks['race_library'].save_race.assert_not_called()

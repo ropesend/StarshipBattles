@@ -146,9 +146,16 @@ class RaceBrowserDialog(pygame_gui.elements.UIWindow):
 
     def _create_race_row(self, race: 'RaceConfig', y: int, index: int,
                          theme_manager: ShipThemeManager) -> dict:
-        """Create a single race row with previews."""
+        """Create a single race row as a single UIButton with embedded imagery.
+
+        BUG-95: Uses a single UIButton per row with the composite surface set as
+        the button's foreground image via normal_images. This eliminates z-order
+        conflicts entirely — one element handles both display and interaction.
+        The button renders: background -> images -> text (text is empty).
+        """
         scroll_rect = self.scroll_container.get_relative_rect()
         row_width = scroll_rect.width - 40
+        row_height = self.ROW_HEIGHT - 5
 
         row = {
             'race': race,
@@ -156,74 +163,77 @@ class RaceBrowserDialog(pygame_gui.elements.UIWindow):
             'elements': []
         }
 
-        x = 5
+        btn_x = 5
 
-        # Row button (clickable background)
+        # Build composite surface with all preview content
+        composite = self._render_row_surface(race, row_width, row_height, theme_manager)
+
+        # Single button with composite image as foreground content
         row_btn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(x, y, row_width, self.ROW_HEIGHT - 5),
+            relative_rect=pygame.Rect(btn_x, y, row_width, row_height),
             text="",
             manager=self.ui_manager,
             container=self.scroll_container,
             object_id=f"#race_row_{index}"
         )
+        # Set the composite as the button's foreground image (renders between bg and text)
+        row_btn.normal_images = [composite]
+        row_btn.hovered_images = [composite]
+        row_btn.selected_images = [composite]
+        row_btn.disabled_images = [composite]
+        # Position at top-left (0,0) not centered, since composite fills the button
+        row_btn.normal_image_positions = [(0, 0)]
+        row_btn.hovered_image_positions = [(0, 0)]
+        row_btn.selected_image_positions = [(0, 0)]
+        row_btn.disabled_image_positions = [(0, 0)]
+        row_btn.rebuild()
+
         row['button'] = row_btn
         row['elements'].append(row_btn)
 
-        # Portrait preview
-        x += 10
+        return row
+
+    def _render_row_surface(self, race: 'RaceConfig', width: int, height: int,
+                            theme_manager: ShipThemeManager) -> pygame.Surface:
+        """Render portrait, flag, ship preview, and name onto a single surface."""
+        surf = pygame.Surface((width, height), pygame.SRCALPHA)
+        x = 5
+        preview_y = (height - self.PREVIEW_SIZE) // 2
+
+        # Portrait
         portrait_surf = self._load_portrait_preview(race.portrait_id)
         if portrait_surf:
-            portrait_img = pygame_gui.elements.UIImage(
-                relative_rect=pygame.Rect(x, y + 10, self.PREVIEW_SIZE, self.PREVIEW_SIZE),
-                image_surface=portrait_surf,
-                manager=self.ui_manager,
-                container=self.scroll_container
-            )
-            row['elements'].append(portrait_img)
+            surf.blit(portrait_surf, (x, preview_y))
         x += self.PREVIEW_SIZE + 10
 
-        # Flag preview (single shape, not all 3)
+        # Flag
         flag_surf = self._load_flag_preview(race.flag_id)
         if flag_surf:
-            flag_img = pygame_gui.elements.UIImage(
-                relative_rect=pygame.Rect(x, y + 10, self.PREVIEW_SIZE, self.PREVIEW_SIZE),
-                image_surface=flag_surf,
-                manager=self.ui_manager,
-                container=self.scroll_container
-            )
-            row['elements'].append(flag_img)
+            surf.blit(flag_surf, (x, preview_y))
         x += self.PREVIEW_SIZE + 10
 
-        # Ship preview (top-down view)
+        # Ship preview
         if race.theme_id:
             ship_surf = theme_manager.load_image(race.theme_id, "Cruiser")
             if ship_surf:
-                # Scale to preview size
                 w, h = ship_surf.get_size()
                 scale = min(self.PREVIEW_SIZE / w, self.PREVIEW_SIZE / h)
                 new_size = (int(w * scale), int(h * scale))
                 scaled_ship = pygame.transform.smoothscale(ship_surf, new_size)
-
-                ship_img = pygame_gui.elements.UIImage(
-                    relative_rect=pygame.Rect(x, y + 10, self.PREVIEW_SIZE, self.PREVIEW_SIZE),
-                    image_surface=scaled_ship,
-                    manager=self.ui_manager,
-                    container=self.scroll_container
-                )
-                row['elements'].append(ship_img)
+                # Center within preview area
+                sx = x + (self.PREVIEW_SIZE - new_size[0]) // 2
+                sy = preview_y + (self.PREVIEW_SIZE - new_size[1]) // 2
+                surf.blit(scaled_ship, (sx, sy))
         x += self.PREVIEW_SIZE + 15
 
-        # Race name label
-        name_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, y + 25, row_width - x - 10, 30),
-            text=race.name or "[Unnamed Species]",
-            manager=self.ui_manager,
-            container=self.scroll_container
-        )
-        row['elements'].append(name_label)
-        row['name_label'] = name_label
+        # Race name text
+        name = race.name or "[Unnamed Species]"
+        font = pygame.font.SysFont(None, 24)
+        text_surf = font.render(name, True, (220, 220, 220))
+        text_y = (height - text_surf.get_height()) // 2
+        surf.blit(text_surf, (x, text_y))
 
-        return row
+        return surf
 
     def _load_portrait_preview(self, portrait_id: Optional[str]) -> Optional[pygame.Surface]:
         """Load and scale a portrait for preview.

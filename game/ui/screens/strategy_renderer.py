@@ -102,6 +102,27 @@ class StrategyRenderer:
     def SIDEBAR_WIDTH(self):
         return UIConfig.STRATEGY_SIDEBAR_WIDTH
 
+    def _hex_radius_to_screen(self, radius_hexes: float) -> int:
+        """Convert a hex-space radius to screen pixels using non-linear scaling.
+
+        Uses a power curve anchored so that radius-2 matches the linear sqrt(3)
+        formula exactly, while larger radii grow faster (reaching further into
+        outer hex rings) and radius-1 grows slower (not overflowing center hex).
+
+        BUG-94: linear sqrt(3) scaling is correct for radius-2 but undershoots
+        large radii and overshoots radius-1.
+        """
+        if radius_hexes <= 0:
+            return 3
+        # Reference: radius-2 at hex_size=10, zoom=1 → 34px
+        # Exponent > 1 makes large radii grow faster, small radii slower
+        _EXPONENT = 1.2
+        # Base unit: screen distance for 1 hex ring
+        hex_spacing = math.sqrt(3) * self.hex_size * self.camera.zoom
+        # Anchor at radius_hexes=2: result == 2 * hex_spacing (preserves current correct size)
+        # General: result = 2 * hex_spacing * (radius_hexes / 2) ^ exponent
+        return max(3, int(2 * hex_spacing * (radius_hexes / 2) ** _EXPONENT))
+
     @property
     def TOP_BAR_HEIGHT(self):
         return self.scene.TOP_BAR_HEIGHT
@@ -525,7 +546,7 @@ class StrategyRenderer:
 
         asset_key = self._get_star_asset_key(star.color)
         star_img = self._asset_manager.load_image('stars', asset_key)
-        screen_star_r = max(3, int(star.radius_hexes * math.sqrt(3) * self.hex_size * self.camera.zoom))
+        screen_star_r = self._hex_radius_to_screen(star.radius_hexes)
 
         # Selection highlight (before star image)
         if is_selected_system and is_primary:
@@ -702,8 +723,8 @@ class StrategyRenderer:
             center_world = pygame.math.Vector2(sys_world_pos.x + px, sys_world_pos.y + py)
             center_screen = self.camera.world_to_screen(center_world)
 
-            # Calculate size: radius_hexes * sqrt(3) * hex_size * zoom gives screen radius
-            screen_radius = max(6, int(radius_hexes * math.sqrt(3) * self.hex_size * self.camera.zoom))
+            # Calculate size using non-linear hex-to-screen scaling (BUG-94)
+            screen_radius = max(6, self._hex_radius_to_screen(radius_hexes))
 
             # Load Dyson Sphere image
             img = self._load_dyson_sphere_image()

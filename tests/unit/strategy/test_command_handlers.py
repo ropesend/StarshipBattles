@@ -1263,6 +1263,49 @@ class TestAddToConstructionQueueCommandHandler:
         assert "resources_consumed" in item
 
 
+    def test_turns_remaining_precalculated_from_production_rate(self):
+        """BUG-96: turns_remaining should be pre-calculated via build_queue_source
+        utilities, not hardcoded to 1.0."""
+        handler = AddToConstructionQueueCommandHandler()
+
+        mock_planet = Mock()
+        mock_planet.construction_queue = []
+        mock_planet.facilities = []
+
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = mock_planet
+
+        mock_cmd = Mock(
+            entity_id=1,
+            entity_type="planet",
+            design_id="scout",
+            category="ship",
+            index=None,
+            target_planet_id=None,
+            queue_id=None
+        )
+
+        # Mock _load_design_cost to return known costs
+        total_cost = {"metals": 3000.0, "electronics": 500.0}
+        handler._load_design_cost = Mock(return_value=total_cost)
+
+        # Patch the shared utilities that the handler delegates to
+        with patch(
+            'game.strategy.data.build_queue_source.get_production_rate_for_queue',
+            return_value={"metals": 1000.0, "electronics": 1000.0}
+        ) as mock_rate, patch(
+            'game.strategy.data.build_queue_source.estimate_build_turns',
+            return_value=3.0
+        ) as mock_estimate:
+            result = handler.execute(mock_session, mock_cmd)
+
+        assert result.is_valid
+        item = mock_planet.construction_queue[0]
+        assert item["turns_remaining"] == 3.0
+        mock_rate.assert_called_once_with(mock_planet, None)
+        mock_estimate.assert_called_once_with(total_cost, {"metals": 1000.0, "electronics": 1000.0})
+
+
 class TestRemoveFromConstructionQueueCommandHandler:
     """Tests for RemoveFromConstructionQueueCommandHandler (PROJ-208 Phase 2)."""
 
