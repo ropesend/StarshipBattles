@@ -459,6 +459,14 @@ For each category with findings:
 
 ## Phase 5: Plan Update & Summary
 
+### 5.0: Update File Manifest
+
+If any changes were applied that affect which files the project touches (new tasks, new phases, updated file references):
+- Regenerate `manifest.md` by scanning all phase checklists for `**File:**` fields
+- Include all files from the Key Files table in `plan.md`
+- Include all test files (new and existing) referenced in tasks
+- If no `manifest.md` exists, create one now (required for `/proj-parallel`)
+
 ### 5.1: Update Current State
 
 Update `plan.md` `## Current State`:

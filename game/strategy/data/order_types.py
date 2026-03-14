@@ -95,8 +95,8 @@ class FleetOrder:
             elif self.type == OrderType.SELF_DESTRUCT and isinstance(self.target, list):
                 # Ship ID list for SELF_DESTRUCT (PROJ-102)
                 target_data = {'type': 'ship_id_list', 'value': self.target}
-            elif self.type == OrderType.OPEN_WARP_POINT and isinstance(self.target, dict):
-                # Warp parameters for OPEN_WARP_POINT (PROJ-102)
+            elif self.type in (OrderType.OPEN_WARP_POINT, OrderType.CLOSE_WARP_POINT) and isinstance(self.target, dict):
+                # Warp parameters for OPEN/CLOSE_WARP_POINT (PROJ-102)
                 target_data = {'type': 'warp_params', 'value': self.target}
             elif isinstance(self.target, HexCoord):
                 # HexCoord for MOVE, WARP targets

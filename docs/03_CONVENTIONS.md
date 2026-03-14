@@ -41,7 +41,31 @@ Builder panels live in `game/ui/screens/builder/` (e.g., `left_panel.py`, `right
 
 Workshop files live directly in `game/ui/screens/` (**not** a `workshop/` subdirectory): `workshop_screen.py` (class: `DesignWorkshopScreen`), `workshop_viewmodel.py`, `workshop_context.py`, `workshop_event_router.py`, `workshop_data_loader.py`, `workshop_data_reloader.py`, `workshop_ship_io.py`.
 
-### 1.4 Handler Naming
+### 1.4 Star System vs Sector
+
+These terms describe **different spatial granularities** on the galaxy hex map. They are not interchangeable.
+
+| Term | Scope | Data Type | Examples |
+|------|-------|-----------|----------|
+| **Star system** | A circular region of the galaxy map (radius 50 hexes / 101 hexes across) centered on a star, containing all planets, warp points, and storms within its boundary | `StarSystem` | `galaxy.get_system_at_location()`, `system.name`, `system.global_location` |
+| **Sector** | A single hex coordinate on the galaxy map — the smallest addressable location | `HexCoord` | `fleet.location`, `warp_point.location`, `planet.location` |
+
+**Star system spatial properties:**
+- **Center:** `system.global_location` — the origin hex in global galaxy coordinates.
+- **Boundary:** Circular, radius 50 hexes from center. Defined by `get_system_at_hex()` in `game/strategy/data/pathfinding.py` (`radius=50`). Any sector within 50 hexes of a system center belongs to that system.
+- **Separation:** Systems are placed at least 400 hexes apart (center to center), ensuring no overlap.
+- **Contents:** Stars (with their own `radius_hexes` for multi-hex visual footprint), planets (at orbital distances up to ~20 hexes), warp points, and storms — each at a specific sector within the system.
+- **Coordinate duality:** Entities within a system store **local** coordinates (offset from system center). Convert to global: `global_hex = system.global_location + entity.location`.
+
+**Key distinctions:**
+- A system contains **many sectors**. A star system's hexes include the central star, orbiting planets, and warp points — each at a different sector (hex).
+- A system can have **multiple warp points in different sectors**. Validating "fleet is in the right system" is not sufficient when targeting a specific warp point — you must validate the fleet is in the correct **sector**.
+- `fleet.location` is always a **sector** (specific hex). `system.global_location` is the system's **origin sector** (center hex).
+- When an order targets a specific location (warp point, planet), store the **sector** (`HexCoord`) for execution-time validation, not just the system name.
+
+**Rule:** Use **star system** (or just **system**) when referring to the entire region (e.g., "fleet is in the Alpha system"). Use **sector** when referring to a specific hex coordinate (e.g., "fleet is at the warp point's sector"). When validating fleet position for an order, always validate at **sector** precision.
+
+### 1.5 Handler Naming
 
 Input handlers are prefixed with their screen/context name:
 
@@ -55,7 +79,7 @@ Input handlers are prefixed with their screen/context name:
 - **DON'T:** Reference `InputHandler` at `game/core/input_handler.py` -- it does not exist.
 - **DO:** The core layer has `input_actions.py` (`game/core/input_actions.py`), not an input handler.
 
-### 1.5 MVVM Pattern Files
+### 1.6 MVVM Pattern Files
 
 Complex screens use Model-View-ViewModel:
 
@@ -66,7 +90,7 @@ Complex screens use Model-View-ViewModel:
 | `*_event_router.py` | Event dispatch between UI components | `workshop_event_router.py`, `strategy_event_router.py` |
 | `*_data_loader.py` | Data loading coordination | `workshop_data_loader.py` |
 
-### 1.6 Ability Module Names
+### 1.7 Ability Module Names
 
 All ability modules live in `game/simulation/components/abilities/`:
 

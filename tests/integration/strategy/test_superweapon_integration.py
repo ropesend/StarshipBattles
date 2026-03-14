@@ -197,10 +197,10 @@ class TestImplodePlanetIntegration:
         assert planet not in system.planets
         assert planet.id not in galaxy.planets_by_id
 
-        # Verify ship consumed, escort remains
-        assert imploder_ship not in fleet.ships
+        # Verify ship preserved, escort remains
+        assert imploder_ship in fleet.ships
         assert escort_ship in fleet.ships
-        assert len(fleet.ships) == 1
+        assert len(fleet.ships) == 2
 
         # Verify order popped
         assert len(fleet.orders) == 0
@@ -332,16 +332,16 @@ class TestOpenWarpPointIntegration:
         assert system1.warp_points[0].destination_id == "Delta"
         assert system2.warp_points[0].destination_id == "Gamma"
 
-        # Verify ship consumed
-        assert qti_ship not in fleet.ships
-        assert len(fleet.ships) == 0
+        # Verify ship preserved
+        assert qti_ship in fleet.ships
+        assert len(fleet.ships) == 1
 
 
 class TestCloseWarpPointIntegration:
     """End-to-end tests for Close Warp Point superweapon."""
 
     def test_close_warp_point_full_flow(self, component_registry):
-        """Test full flow: warp points removed from BOTH systems, ship consumed."""
+        """Test full flow: warp points removed from BOTH systems, ship preserved."""
         # Setup galaxy with two linked systems
         galaxy = create_test_galaxy_with_system("Epsilon", HexCoord(0, 0))
 
@@ -380,7 +380,7 @@ class TestCloseWarpPointIntegration:
         fleet.ships.append(qtd_ship)
 
         # Issue CLOSE_WARP_POINT order
-        fleet.orders.append(FleetOrder(OrderType.CLOSE_WARP_POINT, "Zeta"))
+        fleet.orders.append(FleetOrder(OrderType.CLOSE_WARP_POINT, {'destination_id': 'Zeta', 'target_hex': {'q': warp_global_hex.q, 'r': warp_global_hex.r}}))
 
         # Create empire
         empire = Empire(1, "Player", (255, 0, 0))
@@ -400,9 +400,9 @@ class TestCloseWarpPointIntegration:
         assert len(system1.warp_points) == 0
         assert len(system2.warp_points) == 0
 
-        # Verify ship consumed
-        assert qtd_ship not in fleet.ships
-        assert len(fleet.ships) == 0
+        # Verify ship preserved (not consumed)
+        assert qtd_ship in fleet.ships
+        assert len(fleet.ships) == 1
 
 
 class TestCreateDysonSphereIntegration:
@@ -466,9 +466,9 @@ class TestCreateDysonSphereIntegration:
         assert dyson.location == HexCoord(0, 0)  # At system center
         assert dyson.owner_id is None  # Colonizable (no owner)
 
-        # Verify ship consumed
-        assert dsc_ship not in fleet.ships
-        assert len(fleet.ships) == 0
+        # Verify ship preserved
+        assert dsc_ship in fleet.ships
+        assert len(fleet.ships) == 1
 
 
 class TestSelfDestructIntegration:
@@ -609,13 +609,13 @@ class TestSuperweaponOrderSerialization:
         """Test Fleet with CLOSE_WARP_POINT order: round-trip."""
         # Create fleet with close warp point order
         fleet = Fleet(1, 1, HexCoord(5, 5))
-        fleet.orders.append(FleetOrder(OrderType.CLOSE_WARP_POINT, "Target System"))
+        fleet.orders.append(FleetOrder(OrderType.CLOSE_WARP_POINT, {'destination_id': 'Target System', 'target_hex': {'q': 5, 'r': 5}}))
 
         # Serialize
         order_data = fleet.orders[0].to_dict()
 
         # Verify serialization
         assert order_data['type'] == 'CLOSE_WARP_POINT'
-        # String target uses raw type
-        assert order_data['target']['type'] == 'raw'
-        assert order_data['target']['value'] == 'Target System'
+        assert order_data['target']['type'] == 'warp_params'
+        assert order_data['target']['value']['destination_id'] == 'Target System'
+        assert order_data['target']['value']['target_hex'] == {'q': 5, 'r': 5}

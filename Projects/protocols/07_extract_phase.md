@@ -75,14 +75,24 @@ The original phase is context, not constraint. The new project may:
 - Add phases not in the original
 - Approach the problem from a different angle
 
-### Step 4: Verify Original Project
+### Step 4: Update Original Project Manifest
+
+If the original project has a `manifest.md` (required for `/proj-parallel`):
+1. Regenerate `manifest.md` by scanning all **remaining** (non-extracted) phase checklists
+2. Remove files that were ONLY referenced in the extracted phase
+3. Keep files that are referenced by both the extracted phase AND other phases
+
+The new sub-project will get its own `manifest.md` during `/proj-start` (Protocol 01, Step 5).
+
+### Step 5: Verify Original Project
 
 Check that the original project was updated:
 1. `plan.md` Quick Status shows "Extracted -> PROJ-XX"
 2. Phase checklist shows "Status: Extracted"
 3. `decisions.md` has the extraction entry
+4. `manifest.md` no longer lists files exclusive to the extracted phase
 
-### Step 5: Continue Work
+### Step 6: Continue Work
 
 - Original project can continue with other phases
 - New project follows normal lifecycle (Start → Continue → Audit → Close)

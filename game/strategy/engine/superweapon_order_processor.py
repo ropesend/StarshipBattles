@@ -3,9 +3,10 @@ SuperweaponOrderProcessor - Processes superweapon orders during turn execution.
 
 PROJ-102 Phase 6: Turn execution logic for strategic superweapon orders.
 
-Each superweapon order consumes the ship carrying the ability and executes
-a galaxy-altering effect (destroy planet, destroy star, open/close warp points,
-create Dyson Sphere, or self-destruct).
+Each superweapon order executes a galaxy-altering effect (destroy planet,
+destroy star, open/close warp points, create Dyson Sphere, or self-destruct).
+Only stellerate_star and self_destruct consume the ship; other superweapons
+preserve the ship for reuse.
 """
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
@@ -60,13 +61,14 @@ class SuperweaponOrderProcessor:
         event_type,
         event_message: str,
         log_message: str,
+        consume_ship: bool = True,
         **event_kwargs
     ) -> SuperweaponResult:
         """
         Finalize superweapon execution after effect is applied.
 
         Common end-pattern for superweapon methods:
-        1. Remove ship from fleet
+        1. Optionally remove ship from fleet (if consume_ship=True)
         2. Pop order
         3. Check if fleet is empty
         4. Remove empty fleet from empire (SG-003 fix)
@@ -80,6 +82,8 @@ class SuperweaponOrderProcessor:
             event_type: EventType for logging
             event_message: Message for log_event and result
             log_message: Message for logger.info
+            consume_ship: If True, remove the ship from the fleet (default).
+                Only stellerate_star (suicide weapon) should consume.
             **event_kwargs: Additional kwargs for log_event
 
         Returns:
@@ -88,8 +92,8 @@ class SuperweaponOrderProcessor:
         # FEAT-04: Capture location before fleet may be consumed
         fleet_loc = fleet.location
 
-        # Remove ship
-        if ship:
+        # Remove ship only if this superweapon consumes it
+        if consume_ship and ship:
             fleet.remove_ship(ship)
 
         # Pop order
@@ -131,7 +135,7 @@ class SuperweaponOrderProcessor:
         """
         Process an IMPLODE_PLANET order.
 
-        Destroys the target planet, removes the ship with DestroyPlanet ability.
+        Destroys the target planet. Ship is preserved for reuse.
 
         Args:
             fleet: Fleet with IMPLODE_PLANET order
@@ -182,6 +186,7 @@ class SuperweaponOrderProcessor:
             event_type=EventType.PLANET_DESTROYED,
             event_message=f"Planet {target_planet.name} destroyed",
             log_message=f"Planet {target_planet.name} destroyed by fleet {fleet.id}",
+            consume_ship=False,
             planet_id=target_planet.id,
             planet_name=target_planet.name,
         )
@@ -270,7 +275,7 @@ class SuperweaponOrderProcessor:
         Process an OPEN_WARP_POINT order.
 
         Creates bidirectional warp points between current system and target system.
-        Consumes the ship with OpenWarpPoint ability.
+        Ship is preserved for reuse.
 
         Args:
             fleet: Fleet with OPEN_WARP_POINT order
@@ -349,6 +354,7 @@ class SuperweaponOrderProcessor:
             event_type=EventType.WARP_POINT_OPENED,
             event_message=f"Warp point opened to {target_system.name}",
             log_message=f"Warp point opened between {current_system.name} and {target_system.name}",
+            consume_ship=False,
             source_system=current_system.name,
             target_system=target_system.name,
         )
@@ -363,7 +369,7 @@ class SuperweaponOrderProcessor:
         """
         Process a CLOSE_WARP_POINT order.
 
-        Removes both ends of the warp link. Consumes the ship with CloseWarpPoint ability.
+        Removes both ends of the warp link. Ship is preserved for reuse.
 
         Args:
             fleet: Fleet with CLOSE_WARP_POINT order
@@ -378,8 +384,17 @@ class SuperweaponOrderProcessor:
         if not order or order.type != OrderType.CLOSE_WARP_POINT:
             return SuperweaponResult(success=False, message="No CLOSE_WARP_POINT order")
 
-        # Target is destination ID string
-        destination_id = order.target
+        # Extract target params (dict with destination_id and target_hex)
+        params = order.target
+        if isinstance(params, dict):
+            destination_id = params.get('destination_id', '')
+            hex_data = params.get('target_hex')
+            expected_hex = HexCoord(hex_data['q'], hex_data['r']) if hex_data else None
+        else:
+            # Legacy: plain string target (backward compat for in-flight orders)
+            destination_id = params
+            expected_hex = None
+
         if not destination_id:
             fleet.pop_order()
             return SuperweaponResult(success=False, message="No destination specified")
@@ -389,6 +404,18 @@ class SuperweaponOrderProcessor:
         if current_system is None:
             fleet.pop_order()
             return SuperweaponResult(success=False, message="Fleet not at a star system")
+
+        # Validate fleet is at the exact warp point sector (hex), not just the right system
+        if expected_hex and fleet.location != expected_hex:
+            logger.warning(
+                f"Fleet {fleet.id}: Expected to be at sector {expected_hex} but is at "
+                f"sector {fleet.location}, canceling CLOSE_WARP_POINT order"
+            )
+            fleet.pop_order()
+            return SuperweaponResult(
+                success=False,
+                message=f"Fleet is at sector {fleet.location} but order targets warp point at sector {expected_hex}"
+            )
 
         # Find ship with CloseWarpPoint ability
         ship = None
@@ -414,6 +441,7 @@ class SuperweaponOrderProcessor:
             event_type=EventType.WARP_POINT_CLOSED,
             event_message=f"Warp point to {destination_id} closed",
             log_message=f"Warp point closed between {current_system.name} and {destination_id}",
+            consume_ship=False,
             source_system=current_system.name,
             target_system=destination_id,
         )
@@ -430,7 +458,7 @@ class SuperweaponOrderProcessor:
         Process a CREATE_DYSON_SPHERE order.
 
         Removes star and nearby planets (<= 9 hexes), creates Dyson Sphere planet.
-        Consumes the ship with CreateDysonSphere ability.
+        Ship is preserved for reuse.
 
         Args:
             fleet: Fleet with CREATE_DYSON_SPHERE order
@@ -548,6 +576,7 @@ class SuperweaponOrderProcessor:
             event_type=EventType.DYSON_SPHERE_CREATED,
             event_message=f"Dyson Sphere created in {system.name}",
             log_message=f"Dyson Sphere created in {system.name}",
+            consume_ship=False,
             system_name=system.name,
         )
 

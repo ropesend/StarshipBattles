@@ -88,7 +88,14 @@ If the project is in `archived_projects/`:
 **Notes:**
 ```
 
-### 5. Update Verification Checklist
+### 5. Update File Manifest
+
+If the project has a `manifest.md` file (required for parallel execution via `/proj-parallel`):
+- Add any NEW files referenced in the revision phase tasks to `manifest.md`
+- Do NOT remove existing entries (previous phases still used those files)
+- If no `manifest.md` exists, create one by scanning ALL phase checklists for `**File:**` fields
+
+### 6. Update Verification Checklist
 
 Add revision-specific verification items:
 ```markdown
@@ -101,14 +108,14 @@ Add revision-specific verification items:
 - [ ] Full test suite passes at revision end: `pytest tests/`
 ```
 
-### 6. Determine Next Steps
+### 7. Determine Next Steps
 
 **Ask user:**
 - Is this revision plan acceptable?
 - Should we proceed to implementation immediately?
 - Any additional changes to include while we're revising?
 
-### 7. Proceed with Standard Workflow
+### 8. Proceed with Standard Workflow
 
 After user approves the revision plan:
 1. Use **Protocol 03a (Continue Working)** to implement

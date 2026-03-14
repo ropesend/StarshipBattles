@@ -251,7 +251,7 @@ class TestCloseWarpPointCommandHandler:
         assert result.is_valid
 
     def test_execute_adds_order_with_destination_id(self, mock_session, mock_fleet):
-        """Handler adds CLOSE_WARP_POINT order with destination ID."""
+        """Handler adds CLOSE_WARP_POINT order with destination and source system."""
         from game.strategy.engine.superweapon_command_handlers import CloseWarpPointCommandHandler
         from game.strategy.engine.commands import IssueCloseWarpPointCommand
 
@@ -264,7 +264,10 @@ class TestCloseWarpPointCommandHandler:
 
         assert len(mock_fleet.orders) == 1
         assert mock_fleet.orders[0].type == OrderType.CLOSE_WARP_POINT
-        assert mock_fleet.orders[0].target == "Alpha Centauri"
+        target = mock_fleet.orders[0].target
+        assert isinstance(target, dict)
+        assert target['destination_id'] == "Alpha Centauri"
+        assert 'target_hex' in target
 
 
 # =============================================================================
@@ -483,7 +486,10 @@ class TestCloseWarpPointMissionCommandHandler:
         assert len(mock_fleet.orders) == 2
         assert mock_fleet.orders[0].type == OrderType.MOVE
         assert mock_fleet.orders[1].type == OrderType.CLOSE_WARP_POINT
-        assert mock_fleet.orders[1].target == "Alpha Centauri"
+        target = mock_fleet.orders[1].target
+        assert isinstance(target, dict)
+        assert target['destination_id'] == "Alpha Centauri"
+        assert 'target_hex' in target
 
 
 # =============================================================================

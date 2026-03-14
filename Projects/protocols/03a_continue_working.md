@@ -109,6 +109,7 @@ For each task until context limit:
      ```
    - If this completes a phase, update phase status to `Complete`
    - **If changes affect architecture, patterns, or conventions, update the relevant `docs/` file**
+   - **If you edited a file not listed in `manifest.md`**, add it to the manifest (required for `/proj-parallel` conflict detection). If no `manifest.md` exists, skip this step.
 
    **f. Update Current State**
 

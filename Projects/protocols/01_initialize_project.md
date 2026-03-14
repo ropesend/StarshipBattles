@@ -200,7 +200,16 @@ Launch **6-8 Explore agents in parallel** to analyze the codebase with the tenta
    - Update `## Current State` with initial state
    - Update `Projects/projects_index.md` with new project
 
-5. **User Approval**
+5. **Generate File Manifest** ⚠️ REQUIRED FOR PARALLEL EXECUTION
+   - Scan all phase checklists for `**File:**` fields on every task
+   - Scan task subtasks for any additional file references
+   - Include all files from the Key Files table in `plan.md`
+   - Include all new test files to be created
+   - Write consolidated list to `manifest.md` in the project directory
+   - Format: table with File, Type (Production/Test), and Notes columns
+   - See `Projects/protocols/03b_parallel_projects.md` for the manifest format
+
+6. **User Approval**
    - Present complete plan to user
    - Get explicit approval before implementation begins
 

@@ -129,7 +129,12 @@ class CloseWarpPointCommandHandler(BaseCommandHandler):
 
         # 3. Apply
         if result.is_valid:
-            order = FleetOrder(OrderType.CLOSE_WARP_POINT, target=cmd.warp_point_destination_id)
+            # Store the warp point's sector (hex) for execution-time validation
+            target_dict = {
+                'destination_id': cmd.warp_point_destination_id,
+                'target_hex': {'q': fleet.location.q, 'r': fleet.location.r},
+            }
+            order = FleetOrder(OrderType.CLOSE_WARP_POINT, target=target_dict)
             fleet.add_order(order)
             logger.info(f"GameSession: Issued CLOSE_WARP_POINT order for Fleet {fleet.id}")
 
@@ -302,10 +307,11 @@ class OpenWarpPointMissionCommandHandler(BaseCommandHandler):
         if error:
             return error
 
-        # 2. Validate ability
+        # 2. Validate ability (skip location check — fleet will move there first)
         result = SuperweaponValidator.validate_open_warp_point(
             session.galaxy, fleet, cmd.target_system_name,
-            component_registry=session.turn_engine._registries.components
+            component_registry=session.turn_engine._registries.components,
+            skip_location_check=True
         )
         if not result.is_valid:
             return result
@@ -337,10 +343,11 @@ class CloseWarpPointMissionCommandHandler(BaseCommandHandler):
         if error:
             return error
 
-        # 2. Validate ability
+        # 2. Validate ability (skip location check — fleet will move there first)
         result = SuperweaponValidator.validate_close_warp_point(
             session.galaxy, fleet, cmd.warp_point_destination_id,
-            component_registry=session.turn_engine._registries.components
+            component_registry=session.turn_engine._registries.components,
+            skip_location_check=True
         )
         if not result.is_valid:
             return result
@@ -350,8 +357,12 @@ class CloseWarpPointMissionCommandHandler(BaseCommandHandler):
         if not move_result.is_valid:
             return move_result
 
-        # 4. Queue CLOSE_WARP_POINT order
-        action_order = FleetOrder(OrderType.CLOSE_WARP_POINT, target=cmd.warp_point_destination_id)
+        # 4. Queue CLOSE_WARP_POINT order with target sector for execution-time validation
+        target_dict = {
+            'destination_id': cmd.warp_point_destination_id,
+            'target_hex': {'q': cmd.target_hex.q, 'r': cmd.target_hex.r},
+        }
+        action_order = FleetOrder(OrderType.CLOSE_WARP_POINT, target=target_dict)
         fleet.add_order(action_order)
 
         logger.info(f"GameSession: Queued CLOSE_WARP_POINT mission for Fleet {fleet.id}")

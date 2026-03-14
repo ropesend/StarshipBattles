@@ -111,14 +111,15 @@ class TestFleetOrderSerialization:
         assert data['target'] is None
 
     def test_close_warp_point_order_round_trip(self):
-        """CLOSE_WARP_POINT order serializes with warp_point_ref target."""
-        order = FleetOrder(OrderType.CLOSE_WARP_POINT, "warp_point_dest_42")
+        """CLOSE_WARP_POINT order serializes with warp_params target."""
+        target = {'destination_id': 'warp_point_dest_42', 'target_hex': {'q': 10, 'r': 5}}
+        order = FleetOrder(OrderType.CLOSE_WARP_POINT, target)
         data = order.to_dict()
 
         assert data['type'] == 'CLOSE_WARP_POINT'
-        # String target uses raw format
-        assert data['target']['type'] == 'raw'
-        assert data['target']['value'] == "warp_point_dest_42"
+        assert data['target']['type'] == 'warp_params'
+        assert data['target']['value']['destination_id'] == 'warp_point_dest_42'
+        assert data['target']['value']['target_hex'] == {'q': 10, 'r': 5}
 
 
 class TestFleetFromDictDeserialization:

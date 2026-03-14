@@ -104,7 +104,8 @@ class SuperweaponValidator:
         galaxy,
         fleet,
         target_system_name: str,
-        component_registry: Optional[Dict[str, Any]] = None
+        component_registry: Optional[Dict[str, Any]] = None,
+        skip_location_check: bool = False
     ) -> ValidationResult:
         """Validate if a fleet can open a warp point to a target system.
 
@@ -113,6 +114,8 @@ class SuperweaponValidator:
             fleet: The Fleet object
             target_system_name: Name of target system
             component_registry: Optional component registry for ability lookup
+            skip_location_check: If True, skip fleet location validation
+                (used during order queueing when fleet will move before execution)
 
         Returns:
             ValidationResult with is_valid and message.
@@ -125,20 +128,21 @@ class SuperweaponValidator:
             if ship is None:
                 return ValidationResult.error("No ship in fleet has OpenWarpPoint ability.")
 
-        # Check fleet is at a star system
-        current_system = galaxy.get_system_at_location(fleet.location)
-        if current_system is None:
-            return ValidationResult.error("Fleet must be at a star system to open a warp point.")
+        if not skip_location_check:
+            # Check fleet is at a star system
+            current_system = galaxy.get_system_at_location(fleet.location)
+            if current_system is None:
+                return ValidationResult.error("Fleet must be at a star system to open a warp point.")
+
+            # Check warp link doesn't already exist (warp_points always exists)
+            for wp in current_system.warp_points:
+                if wp.destination_id == target_system_name:
+                    return ValidationResult.error(f"Warp link to '{target_system_name}' already exists.")
 
         # Check target system exists
         target_system = galaxy.name_map.get(target_system_name)
         if target_system is None:
             return ValidationResult.error(f"Target system '{target_system_name}' does not exist.")
-
-        # Check warp link doesn't already exist (warp_points always exists)
-        for wp in current_system.warp_points:
-            if wp.destination_id == target_system_name:
-                return ValidationResult.error(f"Warp link to '{target_system_name}' already exists.")
 
         return ValidationResult.success()
 
@@ -147,7 +151,8 @@ class SuperweaponValidator:
         galaxy,
         fleet,
         warp_point_dest_id: str,
-        component_registry: Optional[Dict[str, Any]] = None
+        component_registry: Optional[Dict[str, Any]] = None,
+        skip_location_check: bool = False
     ) -> ValidationResult:
         """Validate if a fleet can close a warp point.
 
@@ -156,6 +161,8 @@ class SuperweaponValidator:
             fleet: The Fleet object
             warp_point_dest_id: Destination ID of warp point to close
             component_registry: Optional component registry for ability lookup
+            skip_location_check: If True, skip fleet location validation
+                (used during order queueing when fleet will move before execution)
 
         Returns:
             ValidationResult with is_valid and message.
@@ -168,22 +175,23 @@ class SuperweaponValidator:
             if ship is None:
                 return ValidationResult.error("No ship in fleet has CloseWarpPoint ability.")
 
-        # Check fleet is at a star system
-        current_system = galaxy.get_system_at_location(fleet.location)
-        if current_system is None:
-            return ValidationResult.error("Fleet must be at a star system to close a warp point.")
+        if not skip_location_check:
+            # Check fleet is at a star system
+            current_system = galaxy.get_system_at_location(fleet.location)
+            if current_system is None:
+                return ValidationResult.error("Fleet must be at a star system to close a warp point.")
 
-        # Check warp point with matching destination exists at fleet's hex
-        found_warp_point = False
-        for wp in current_system.warp_points:
-            # Check if fleet is at this warp point's location
-            wp_global = current_system.global_location + wp.location
-            if fleet.location == wp_global and wp.destination_id == warp_point_dest_id:
-                found_warp_point = True
-                break
+            # Check warp point with matching destination exists at fleet's hex
+            found_warp_point = False
+            for wp in current_system.warp_points:
+                # Check if fleet is at this warp point's location
+                wp_global = current_system.global_location + wp.location
+                if fleet.location == wp_global and wp.destination_id == warp_point_dest_id:
+                    found_warp_point = True
+                    break
 
-        if not found_warp_point:
-            return ValidationResult.error(f"No warp point to '{warp_point_dest_id}' at fleet location.")
+            if not found_warp_point:
+                return ValidationResult.error(f"No warp point to '{warp_point_dest_id}' at fleet location.")
 
         return ValidationResult.success()
 

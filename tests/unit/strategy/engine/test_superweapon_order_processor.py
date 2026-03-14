@@ -126,10 +126,10 @@ class TestProcessImplodePlanet:
         mock_galaxy.unregister_planet.assert_called_once_with(mock_planet)
         assert result.success
 
-    def test_ship_with_ability_removed(
+    def test_ship_not_consumed(
         self, mock_fleet, mock_system, mock_planet, mock_ship_with_ability, component_registry
     ):
-        """Ship carrying DestroyPlanet ability should be removed from fleet."""
+        """Ship carrying DestroyPlanet ability should be preserved (not consumed)."""
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 
         # Setup
@@ -157,8 +157,8 @@ class TestProcessImplodePlanet:
                 mock_fleet, empire, mock_galaxy, [empire], component_registry
             )
 
-        # Assert
-        mock_fleet.remove_ship.assert_called_once_with(mock_ship_with_ability)
+        # Assert — ship should NOT be removed
+        mock_fleet.remove_ship.assert_not_called()
 
     def test_event_logged(
         self, mock_fleet, mock_system, mock_planet, mock_ship_with_ability, component_registry
@@ -410,8 +410,8 @@ class TestProcessOpenWarpPoint:
         assert len(target_system.warp_points) == 1
         assert target_system.warp_points[0].destination_id == "Alpha"
 
-    def test_ship_consumed(self, mock_fleet, component_registry):
-        """Ship with OpenWarpPoint should be removed from fleet."""
+    def test_ship_not_consumed(self, mock_fleet, component_registry):
+        """Ship with OpenWarpPoint should be preserved (not consumed)."""
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 
         ship = MagicMock()
@@ -448,8 +448,8 @@ class TestProcessOpenWarpPoint:
             mock_fleet, empire, mock_galaxy, component_registry
         )
 
-        # Assert
-        mock_fleet.remove_ship.assert_called_once_with(ship)
+        # Assert — ship should NOT be removed
+        mock_fleet.remove_ship.assert_not_called()
 
 
 class TestProcessCloseWarpPoint:
@@ -472,7 +472,7 @@ class TestProcessCloseWarpPoint:
         mock_fleet.ships = [ship]
         mock_fleet.location = current_system.global_location + wp.location
 
-        order = FleetOrder(OrderType.CLOSE_WARP_POINT, target="Beta")
+        order = FleetOrder(OrderType.CLOSE_WARP_POINT, target={'destination_id': 'Beta', 'target_hex': {'q': 15, 'r': 10}})
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -490,8 +490,8 @@ class TestProcessCloseWarpPoint:
         # Assert
         mock_galaxy.remove_warp_link.assert_called_once_with("Alpha", "Beta")
 
-    def test_ship_consumed(self, mock_fleet, component_registry):
-        """Ship with CloseWarpPoint should be removed."""
+    def test_ship_not_consumed(self, mock_fleet, component_registry):
+        """Ship with CloseWarpPoint should be preserved (not consumed)."""
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 
         ship = MagicMock()
@@ -507,7 +507,7 @@ class TestProcessCloseWarpPoint:
         mock_fleet.ships = [ship]
         mock_fleet.location = current_system.global_location + wp.location
 
-        order = FleetOrder(OrderType.CLOSE_WARP_POINT, target="Beta")
+        order = FleetOrder(OrderType.CLOSE_WARP_POINT, target={'destination_id': 'Beta', 'target_hex': {'q': 15, 'r': 10}})
         mock_fleet.get_current_order.return_value = order
 
         mock_galaxy = MagicMock()
@@ -522,8 +522,47 @@ class TestProcessCloseWarpPoint:
             mock_fleet, empire, mock_galaxy, component_registry
         )
 
-        # Assert
-        mock_fleet.remove_ship.assert_called_once_with(ship)
+        # Assert — ship should NOT be removed
+        mock_fleet.remove_ship.assert_not_called()
+
+    def test_rejects_wrong_sector(self, mock_fleet, component_registry):
+        """Order should fail if fleet ends up at wrong sector due to reordered moves."""
+        from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
+
+        ship = MagicMock()
+        ship.id = "ship-1"
+        ship.design_data = {'layers': {'core': [{'id': 'quantum_disruptor'}]}}
+
+        # Fleet is at hex (50,50) but order targets warp point at hex (15,10)
+        wrong_system = MagicMock(spec=StarSystem)
+        wrong_system.name = "Gamma"
+        wrong_system.global_location = HexCoord(50, 50)
+
+        mock_fleet.ships = [ship]
+        mock_fleet.location = HexCoord(50, 50)
+
+        order = FleetOrder(OrderType.CLOSE_WARP_POINT, target={
+            'destination_id': 'Beta',
+            'target_hex': {'q': 15, 'r': 10}
+        })
+        mock_fleet.get_current_order.return_value = order
+
+        mock_galaxy = MagicMock()
+        mock_galaxy.systems = {wrong_system.global_location: wrong_system}
+
+        processor = SuperweaponOrderProcessor()
+        empire = MagicMock()
+
+        # Act
+        result = processor.process_close_warp_point(
+            mock_fleet, empire, mock_galaxy, component_registry
+        )
+
+        # Assert — order rejected, warp link NOT removed
+        assert not result.success
+        assert "sector" in result.message.lower()
+        mock_galaxy.remove_warp_link.assert_not_called()
+        mock_fleet.pop_order.assert_called_once()
 
 
 class TestProcessCreateDysonSphere:
@@ -654,8 +693,8 @@ class TestProcessCreateDysonSphere:
         assert dyson.planet_type == PlanetType.DYSON_SPHERE
         assert dyson.location == HexCoord(0, 0)
 
-    def test_ship_consumed(self, mock_fleet, mock_system, component_registry):
-        """Ship with CreateDysonSphere should be removed."""
+    def test_ship_not_consumed(self, mock_fleet, mock_system, component_registry):
+        """Ship with CreateDysonSphere should be preserved (not consumed)."""
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 
         ship = MagicMock()
@@ -688,8 +727,8 @@ class TestProcessCreateDysonSphere:
                 mock_fleet, empire, mock_galaxy, [empire], component_registry
             )
 
-        # Assert
-        mock_fleet.remove_ship.assert_called_once_with(ship)
+        # Assert — ship should NOT be removed
+        mock_fleet.remove_ship.assert_not_called()
 
     def test_dyson_sphere_has_radius_hexes_6(self, mock_fleet, mock_system, component_registry):
         """Dyson Sphere should have radius_hexes=6 for multi-hex zone."""
@@ -902,17 +941,13 @@ class TestProcessSelfDestruct:
 class TestComponentConsumption:
     """Tests for component consumption patterns."""
 
-    def test_fleet_not_removed_if_ships_remain(
+    def test_fleet_not_consumed_when_ship_preserved(
         self, mock_fleet, mock_system, mock_planet, mock_ship_with_ability, component_registry
     ):
-        """Fleet should NOT be flagged for removal if ships remain after operation."""
+        """Fleet should NOT be consumed since non-consuming superweapons preserve the ship."""
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 
-        other_ship = MagicMock()
-        other_ship.id = "ship-2"
-        other_ship.design_data = {'layers': {}}
-
-        mock_fleet.ships = [mock_ship_with_ability, other_ship]
+        mock_fleet.ships = [mock_ship_with_ability]
         mock_fleet.location = mock_system.global_location
 
         order = FleetOrder(OrderType.IMPLODE_PLANET, target=mock_planet)
@@ -926,55 +961,16 @@ class TestComponentConsumption:
         empire = MagicMock()
         empire.colonies = []
 
-        # Simulate remove_ship behavior
-        def do_remove(ship):
-            mock_fleet.ships.remove(ship)
-        mock_fleet.remove_ship.side_effect = do_remove
-
         # Act - patch find_ship_with_ability to return our mock ship
         with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=mock_ship_with_ability):
             result = processor.process_implode_planet(
                 mock_fleet, empire, mock_galaxy, [empire], component_registry
             )
 
-        # Assert
+        # Assert — ship not consumed, fleet not consumed
         assert not result.fleet_consumed
-        assert len(mock_fleet.ships) == 1  # other_ship remains
-
-    def test_fleet_removed_if_last_ship(
-        self, mock_fleet, mock_system, mock_planet, mock_ship_with_ability, component_registry
-    ):
-        """Fleet should be flagged for removal if no ships remain."""
-        from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
-
-        mock_fleet.ships = [mock_ship_with_ability]  # Only one ship
-        mock_fleet.location = mock_system.global_location
-
-        order = FleetOrder(OrderType.IMPLODE_PLANET, target=mock_planet)
-        mock_fleet.get_current_order.return_value = order
-
-        mock_galaxy = MagicMock()
-        mock_galaxy.unregister_planet = MagicMock()
-        mock_galaxy._planet_to_system = {mock_planet: mock_system}
-
-        processor = SuperweaponOrderProcessor()
-        empire = MagicMock()
-        empire.colonies = []
-
-        # Simulate remove_ship behavior
-        def do_remove(ship):
-            mock_fleet.ships.remove(ship)
-        mock_fleet.remove_ship.side_effect = do_remove
-
-        # Act - patch find_ship_with_ability to return our mock ship
-        with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=mock_ship_with_ability):
-            result = processor.process_implode_planet(
-                mock_fleet, empire, mock_galaxy, [empire], component_registry
-            )
-
-        # Assert
-        assert result.fleet_consumed
-        assert len(mock_fleet.ships) == 0
+        mock_fleet.remove_ship.assert_not_called()
+        assert len(mock_fleet.ships) == 1
 
 
 # =============================================================================

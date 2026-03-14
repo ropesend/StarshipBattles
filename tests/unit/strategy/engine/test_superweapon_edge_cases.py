@@ -438,7 +438,7 @@ class TestOrderProcessorErrorCases:
 
         fleet = Mock()
         fleet.location = HexCoord(100, 100)
-        fleet.get_current_order.return_value = FleetOrder(OrderType.CLOSE_WARP_POINT, target="Beta")
+        fleet.get_current_order.return_value = FleetOrder(OrderType.CLOSE_WARP_POINT, target={'destination_id': 'Beta', 'target_hex': {'q': 100, 'r': 100}})
         fleet.pop_order = Mock()
 
         galaxy = Mock()

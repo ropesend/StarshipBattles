@@ -468,6 +468,40 @@ class TestValidateCloseWarpPoint:
         assert result.is_valid is False
         assert "CloseWarpPoint" in result.message
 
+    def test_skip_location_check_allows_remote_queueing(
+        self, mock_galaxy, mock_fleet, mock_system, mock_component_registry
+    ):
+        """Valid with skip_location_check: fleet not at warp point but has ability."""
+        from game.strategy.validation import SuperweaponValidator
+
+        ship = make_ship_with_component("ship1", "qtd_device")
+        mock_fleet.ships = [ship]
+        mock_fleet.location = HexCoord(99, 99)  # Far from warp point
+
+        result = SuperweaponValidator.validate_close_warp_point(
+            mock_galaxy, mock_fleet, "Other System", mock_component_registry,
+            skip_location_check=True
+        )
+
+        assert result.is_valid is True
+
+    def test_skip_location_check_still_checks_ability(
+        self, mock_galaxy, mock_fleet, mock_component_registry
+    ):
+        """Invalid with skip_location_check: ability check still enforced."""
+        from game.strategy.validation import SuperweaponValidator
+
+        ship = make_ship_with_component("ship1", "regular_engine")
+        mock_fleet.ships = [ship]
+
+        result = SuperweaponValidator.validate_close_warp_point(
+            mock_galaxy, mock_fleet, "Other System", mock_component_registry,
+            skip_location_check=True
+        )
+
+        assert result.is_valid is False
+        assert "CloseWarpPoint" in result.message
+
 
 # =============================================================================
 # Test: validate_create_dyson_sphere

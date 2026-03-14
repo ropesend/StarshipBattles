@@ -110,6 +110,19 @@ DECISIONS_TEMPLATE = '''# {project_id}: Decisions Log
 | {date} | Project initialized | Starting point for {title} |
 '''
 
+MANIFEST_TEMPLATE = '''# {project_id} File Manifest
+
+> Generated during /proj-start. Used by /proj-parallel for conflict detection.
+> Updated if implementation discovers additional files.
+
+## Files
+
+| File | Type | Notes |
+|------|------|-------|
+| path/to/file.py | Production | [What changes] |
+| tests/path/to/test_file.py | Test | [New or modified] |
+'''
+
 PHASE_TEMPLATE = '''# Phase {phase_num}: {phase_name}
 
 > **BEFORE MARKING THIS PHASE COMPLETE:**
@@ -211,6 +224,11 @@ def create_project(title: str, project_id: str = None) -> str:
     )
     (project_dir / "phase_1_checklist.md").write_text(phase_content, encoding='utf-8')
     print(f"  Created: phase_1_checklist.md")
+
+    # Create manifest.md (for parallel execution)
+    manifest_content = MANIFEST_TEMPLATE.format(project_id=project_id)
+    (project_dir / "manifest.md").write_text(manifest_content, encoding='utf-8')
+    print(f"  Created: manifest.md")
 
     # Update projects_index.md
     print(f"\nSTEP 3: Update projects_index.md")
