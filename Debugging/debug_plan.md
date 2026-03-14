@@ -12,7 +12,6 @@
 | BUG-73 | 2026-02-08 | Species Setup - Homeworld type selection still reports "Custom" | Awaiting Confirmation | [BUG-73.md](active_bugs/BUG-73.md) |
 | BUG-80 | 2026-02-11 | Planets List - Planet details panel dimensions and positioning | Awaiting Confirmation | [BUG-80.md](active_bugs/BUG-80.md) |
 | BUG-81 | 2026-02-11 | Species Setup - Load Saved Species does nothing | Awaiting Confirmation | [BUG-81.md](active_bugs/BUG-81.md) |
-| BUG-82 | 2026-02-11 | Design Workshop - Load Design window is very slow to open | Awaiting Confirmation | [BUG-82.md](active_bugs/BUG-82.md) |
 | BUG-83 | 2026-02-11 | Fleet Report - Missing special capability columns and filters | Awaiting Confirmation | [BUG-83.md](active_bugs/BUG-83.md) |
 | BUG-84 | 2026-02-11 | Warp Gate Close and Planet Destroyer orders not registering | Blocked | [BUG-84.md](active_bugs/BUG-84.md) |
 | BUG-85 | 2026-02-11 | New game colonies report 0 population instead of max | Awaiting Confirmation | [BUG-85.md](active_bugs/BUG-85.md) |

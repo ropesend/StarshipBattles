@@ -28,3 +28,21 @@ High
 4. Component naming: Verify the component JSON defines abilities with exact names "CloseWarpPoint" / "DestroyPlanet"
 
 **Status:** Blocked - needs runtime debugging with actual game session to identify where the flow breaks.
+
+---
+### 📝 User Update [2026-03-14]
+**Source:** QA Session 20260314_094507
+
+New findings from live gameplay testing:
+
+1. **Partial functionality confirmed:** The close warp point order DOES work, but only if the ship is already in the sector containing the warp point before the order is given. If the ship is elsewhere, the order does not appear in the orders queue. The confirmation dialog appears regardless (see screenshot), but the order is silently dropped if the ship isn't at the target sector.
+
+2. **New issue — wrong-sector execution risk:** The validation should check that the ship is at the correct specific warp point when execution occurs. If move orders are rearranged and the ship ends up at a different sector containing a different warp point, the wrong warp point should NOT be closed.
+
+3. **New issue — fleet destroyed on warp point close:** When a warp point is successfully closed, the fleet containing the ship is lost/destroyed. The fleet should survive the operation.
+
+[![Close Warp Point confirmation dialog](../../tools/qa_observer/session_data/20260314_094507/images/bug_capture_095705.png)](../../tools/qa_observer/session_data/20260314_094507/images/bug_capture_095705.png)
+
+*Close Warp Point confirmation dialog — this dialog appears correctly, but the order only registers if the ship is already at the warp point's sector.*
+
+**Impact on investigation:** Finding #1 narrows the root cause — the order creation pipeline works, but the command handler or validation logic incorrectly requires the ship to already be at the destination sector at order-creation time rather than at execution time.

@@ -895,3 +895,11 @@ There needs to be a visible indicator on the line that indicates if the ship is 
 * **Test Case:** 1570 strategy tests pass.
 
 ---
+
+## [BUG-82] - Design Workshop - Load Design window is very slow to open
+* **Date Solved:** 2026-03-14
+* **Original Issue:** The Load Design window in the Design Workshop took a long time to open due to pixel-by-pixel bounding box scans and no thumbnail caching.
+* **Solution Implemented:** Replaced `_get_visible_bounding_box` with pygame's native `surface.get_bounding_rect(min_alpha=10)` and added module-level thumbnail caches (`_portrait_cache`, `_topdown_cache`) keyed by `(design_id, size)` in `game/ui/screens/design_image_helper.py`.
+* **Test Case:** `tests/unit/ui/screens/test_design_image_helper.py` — 49 design-related tests pass.
+
+---
