@@ -629,6 +629,51 @@ class TestDrawSystemsStar:
                     assert radius >= 3, f"Star radius {radius} is less than minimum 3"
                     break
 
+    def test_star_radius_accounts_for_hex_geometry(self, renderer, mock_scene):
+        """Star screen radius must include sqrt(3) factor for hex center-to-center distance.
+
+        BUG-94: For flat-topped hexes, adjacent hex centers are sqrt(3)*hex_size apart,
+        not hex_size apart. The star rendering formula must account for this geometry.
+        """
+        import math as _math
+        screen = MagicMock()
+        mock_scene.camera.zoom = 1.0
+
+        star = MagicMock()
+        star.color = (255, 255, 0)
+        star.radius_hexes = 2
+        star.location = MagicMock(q=0, r=0)
+        star.name = "Radius-2 Star"
+
+        mock_system = MagicMock()
+        mock_system.global_location = MagicMock(q=0, r=0)
+        mock_system.planets = []
+        mock_system.primary_star = star
+        mock_system.stars = [star]
+        mock_system.name = "Test System"
+        mock_scene.galaxy.systems = {'sys1': mock_system}
+        mock_scene.selected_object = None
+
+        renderer._asset_manager.load_image.return_value = None
+
+        with patch('pygame.draw.circle') as mock_circle:
+            renderer._draw_systems(screen)
+
+            for call in mock_circle.call_args_list:
+                if call[0][1] == (255, 255, 0):  # Star color
+                    radius = call[0][3]
+                    # hex_size=10, zoom=1.0, radius_hexes=2
+                    # Correct: int(2 * sqrt(3) * 10 * 1.0) = 34
+                    # Wrong (without sqrt(3)): int(2 * 10 * 1.0) = 20
+                    expected = int(star.radius_hexes * _math.sqrt(3) * 10 * 1.0)
+                    assert radius == expected, (
+                        f"Star radius {radius} != expected {expected}; "
+                        f"missing sqrt(3) hex geometry factor"
+                    )
+                    break
+            else:
+                pytest.fail("Fallback circle with star color not found")
+
     def test_star_selection_highlight_on_primary(self, renderer, mock_scene):
         """Selected system's primary star should have white outline."""
         screen = MagicMock()

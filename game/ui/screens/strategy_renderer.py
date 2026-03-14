@@ -525,7 +525,7 @@ class StrategyRenderer:
 
         asset_key = self._get_star_asset_key(star.color)
         star_img = self._asset_manager.load_image('stars', asset_key)
-        screen_star_r = max(3, int(star.radius_hexes * self.hex_size * self.camera.zoom))
+        screen_star_r = max(3, int(star.radius_hexes * math.sqrt(3) * self.hex_size * self.camera.zoom))
 
         # Selection highlight (before star image)
         if is_selected_system and is_primary:
@@ -702,8 +702,8 @@ class StrategyRenderer:
             center_world = pygame.math.Vector2(sys_world_pos.x + px, sys_world_pos.y + py)
             center_screen = self.camera.world_to_screen(center_world)
 
-            # Calculate size: radius_hexes * hex_size * zoom gives screen radius
-            screen_radius = max(6, int(radius_hexes * self.hex_size * self.camera.zoom))
+            # Calculate size: radius_hexes * sqrt(3) * hex_size * zoom gives screen radius
+            screen_radius = max(6, int(radius_hexes * math.sqrt(3) * self.hex_size * self.camera.zoom))
 
             # Load Dyson Sphere image
             img = self._load_dyson_sphere_image()

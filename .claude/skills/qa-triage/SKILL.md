@@ -7,7 +7,7 @@ argument-hint: [session_directory_name] (e.g., 20260314_074413, or omit for late
 
 # QA Session Triage
 
-Process a QA Observer session log interactively, categorizing each observation as a Bug, Feature, or Prospective Project.
+Process a QA Observer session log interactively, categorizing each observation as a Bug, Feature, Prospective Project, or acting on existing bug fixes (reject/approve).
 
 ## Your Role
 
@@ -93,7 +93,12 @@ Compare the observation against existing active tickets:
 - If a potential match is found:
   1. Read the full existing ticket file (e.g., `Debugging/active_bugs/BUG-XX.md`) for detailed context
   2. Present the match: "This may overlap with BUG-XX: [description]"
-  3. Use **AskUserQuestion** to determine the outcome:
+  3. **If the matching bug has status `[Awaiting Confirmation]`**, use **AskUserQuestion** with these options:
+     - **Approve Fix** — the bug is confirmed fixed during this QA session (proceed to Step E: Approve Bug Fix)
+     - **Reject Fix** — the bug is NOT fixed, user observed it again (proceed to Step E: Reject Bug Fix)
+     - **Add Context** — related observation but not directly about the fix status (append `### 📝 User Update` block)
+     - **New Ticket** — distinct issue, proceed to Step D
+  4. **For all other matches**, use **AskUserQuestion** with:
      - **Duplicate** — skip this observation entirely (note in session summary)
      - **Add Context** — append new information and screenshots to the existing ticket as a `### 📝 User Update` block (Protocol 04 pattern), then move on
      - **New Ticket** — this is a distinct issue, proceed to Step D
@@ -105,7 +110,9 @@ Propose a category based on code investigation findings, and confirm with the us
 1. **Bug** — something is broken or behaving incorrectly
 2. **Feature** — a new capability or enhancement request
 3. **Prospective Project** — a large-scope item requiring architecture review and multi-phase planning
-4. **Skip** — not actionable, or user changed their mind
+4. **Reject Bug Fix** — an existing bug (status: Awaiting Confirmation) was NOT actually fixed; the user observed the same problem during this QA session. This option is only valid when the observation matches an existing `[Awaiting Confirmation]` bug (typically offered during Step C).
+5. **Approve Bug Fix** — an existing bug (status: Awaiting Confirmation) IS confirmed fixed; remove it from the active list. This option is only valid when the observation matches an existing `[Awaiting Confirmation]` bug (typically offered during Step C).
+6. **Skip** — not actionable, or user changed their mind
 
 ### Step E: Create Ticket
 
@@ -207,6 +214,45 @@ Pending
 
 ---
 
+#### For Reject Bug Fix
+
+Follow `Debugging/protocols/05_reject_fix.md` pattern:
+
+1. **Identify** the matching BUG-XX ticket (from Step C)
+2. **Ask the user** for their rejection explanation — clean up speech-to-text artifacts but preserve meaning
+3. **Append** to the end of `Debugging/active_bugs/BUG-XX.md`:
+
+```markdown
+---
+### ❌ Fix Rejected [YYYY-MM-DD HH:MM]
+**Reason:** [User's explanation, cleaned up]
+**New Constraints:** [Any specific new data or observations, including screenshot references]
+---
+```
+
+Include screenshot references from this QA session using the standard relative path pattern:
+`[![Description](../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)](../../tools/qa_observer/session_data/<session_id>/images/<filename>.png)`
+
+4. **Update** `Debugging/debug_plan.md` — change status from `[Awaiting Confirmation]` to `[In-Progress]`
+5. Report: "BUG-XX fix rejected and reverted to In-Progress."
+
+---
+
+#### For Approve Bug Fix
+
+Follow `Debugging/protocols/03_close_bug.md` pattern:
+
+1. **Identify** the matching BUG-XX ticket (from Step C)
+2. **Read** the ticket to extract the title, solution summary, and key test case
+3. **Append** entry to `Debugging/solved_bugs.md`:
+   - Format: `## BUG-XX [Title]`
+   - Content: Date Solved, Brief Summary of Solution, Key Test Case
+4. **Move** `Debugging/active_bugs/BUG-XX.md` to `Debugging/archived_tickets/BUG-XX.md` (do not modify the ticket content — preserve full logs)
+5. **Remove** the row for BUG-XX from `Debugging/debug_plan.md`
+6. Report: "BUG-XX confirmed fixed and archived."
+
+---
+
 ## Phase 3: Session Summary
 
 After all observations have been processed, present a final summary table:
@@ -219,10 +265,13 @@ After all observations have been processed, present a final summary table:
 | 1 | Star display too small | Bug | BUG-94 | New ticket |
 | 2 | Want fleet auto-routing | Feature | FEAT-06 | New ticket |
 | 3 | Combat UI needs overhaul | Project | combat_ui_overhaul.md | Triage created |
-| 4 | Shield flicker | Bug | BUG-69 | Added context to existing ticket |
-| 5 | Minor comment | Skip | — | Not actionable |
+| 4 | Shield flicker | Reject Fix | BUG-69 | Fix rejected, reverted to In-Progress |
+| 5 | Fleet display correct now | Approve Fix | BUG-85 | Confirmed fixed, archived |
+| 6 | Minor comment | Skip | — | Not actionable |
 
 **Created:** X bugs, Y features, Z project triage items
+**Bug fixes rejected:** R
+**Bug fixes approved:** A
 **Duplicates/context added:** N
 **Skipped:** M
 ```

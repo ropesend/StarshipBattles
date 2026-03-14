@@ -22,7 +22,13 @@ This uses `hex_size = 10`, but the actual screen distance per hex ring is much l
 Medium
 
 ## Status
-Pending
+Awaiting Confirmation
 
 ## Work Log
 - 2026-03-14: Created from QA Session 20260314_074413.
+- 2026-03-14: **Fixed.** Root cause confirmed: star and Dyson sphere rendering formulas were missing `sqrt(3)` multiplier for hex geometry. For flat-topped hexes, adjacent hex centers are `sqrt(3) * hex_size` apart, not `hex_size`. The formula `radius_hexes * hex_size * zoom` was ~1.73x too small.
+  - **Phase 0:** Checked PROJ-217 (Standardize Star Measurement to Radius) — that project renamed `diameter_hexes` → `radius_hexes` but didn't fix the pixel conversion factor. Fix preserves PROJ-217 naming.
+  - **Phase 1:** Added `test_star_radius_accounts_for_hex_geometry` — confirmed radius was 20 instead of expected 34 for a radius-2 star.
+  - **Phase 2:** Added `math.sqrt(3)` multiplier to both star (line 528) and Dyson sphere (line 706) formulas.
+  - **Files modified:** `game/ui/screens/strategy_renderer.py`, `tests/unit/ui/screens/test_strategy_renderer.py`
+  - **Tests:** 13168 passed, 2 skipped, 0 failures (full suite).
