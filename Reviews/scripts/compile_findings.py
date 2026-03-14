@@ -23,44 +23,81 @@ sys.path.insert(0, str(Path(__file__).parent))
 from utils.config import RESULTS_DIR, SEVERITY_LEVELS
 
 
+def _normalize_severity(raw: str) -> str:
+    """Normalize severity string to one of: Critical, Major, Minor, Info."""
+    raw = raw.upper()
+    if raw in ('HIGH', 'CRITICAL'):
+        return 'Critical'
+    elif raw in ('MAJOR', 'MEDIUM'):
+        return 'Major'
+    elif raw in ('MINOR', 'LOW'):
+        return 'Minor'
+    else:
+        return 'Info'
+
+
+# Severity words the parser recognizes
+_SEVERITY_WORDS = r'CRITICAL|HIGH|MAJOR|MEDIUM|MINOR|LOW|INFO'
+
+# Patterns for finding headers, ordered from most specific to least.
+# Each pattern captures (severity, title) in groups 1 and 2.
+_FINDING_PATTERNS = [
+    # Standard: #### SEVERITY: Title  (or ### — accept h3 and h4)
+    re.compile(
+        rf'#{{3,4}}\s+({_SEVERITY_WORDS}):\s*(.+?)(?=\n)',
+        re.IGNORECASE,
+    ),
+    # ID-first with colon: #### PC-01: SEVERITY - Title  (or ###)
+    re.compile(
+        rf'#{{3,4}}\s+\S+:\s*({_SEVERITY_WORDS})\s*[-–—]\s*(.+?)(?=\n)',
+        re.IGNORECASE,
+    ),
+    # ID-first with double-dash: ### CE-01 -- SEVERITY: Title  (or ####)
+    re.compile(
+        rf'#{{3,4}}\s+\S+\s*--\s*({_SEVERITY_WORDS}):\s*(.+?)(?=\n)',
+        re.IGNORECASE,
+    ),
+]
+
+
 def parse_finding(content: str) -> list:
     """Parse findings from a markdown file.
 
-    Looks for patterns like:
-    #### CRITICAL: Title
-    **ID:** XXX-01
-    **Location:** `file:lines`
-    ...
+    Handles multiple heading formats that agents may produce:
+      - #### SEVERITY: Title           (canonical)
+      - ### SEVERITY: Title            (h3 instead of h4)
+      - #### ID: SEVERITY - Title      (ID prefix with colon)
+      - ### ID -- SEVERITY: Title      (ID prefix with double-dash)
+
+    All patterns accept both ### and #### heading levels.
     """
     findings = []
 
-    # Pattern to match finding blocks
-    finding_pattern = re.compile(
-        r'####\s+(CRITICAL|HIGH|MAJOR|MEDIUM|MINOR|LOW|INFO|Info):\s*(.+?)(?=\n)',
-        re.IGNORECASE
-    )
+    # Collect all matches from all patterns, deduplicating by position
+    all_matches = []  # list of (start_pos, end_pos, severity, title)
+    seen_positions = set()
 
-    # Find all finding headers
-    matches = list(finding_pattern.finditer(content))
+    for pattern in _FINDING_PATTERNS:
+        for match in pattern.finditer(content):
+            pos = match.start()
+            if pos not in seen_positions:
+                seen_positions.add(pos)
+                all_matches.append((
+                    pos,
+                    match.end(),
+                    match.group(1),
+                    match.group(2).strip(),
+                ))
 
-    for i, match in enumerate(matches):
-        severity = match.group(1).upper()
-        title = match.group(2).strip()
+    # Sort by position in the document
+    all_matches.sort(key=lambda m: m[0])
 
-        # Normalize severity
-        if severity in ('HIGH', 'CRITICAL'):
-            severity = 'Critical'
-        elif severity in ('MAJOR', 'MEDIUM'):
-            severity = 'Major'
-        elif severity in ('MINOR', 'LOW'):
-            severity = 'Minor'
-        else:
-            severity = 'Info'
+    for i, (start_pos, end_pos, raw_severity, title) in enumerate(all_matches):
+        severity = _normalize_severity(raw_severity)
 
         # Get the content until next finding or end
-        start = match.end()
-        end = matches[i + 1].start() if i + 1 < len(matches) else len(content)
-        finding_content = content[start:end]
+        next_start = all_matches[i + 1][0] if i + 1 < len(all_matches) else len(content)
+        finding_content = content[end_pos:next_start]
 
         # Extract ID
         id_match = re.search(r'\*\*ID:\*\*\s*(\S+)', finding_content)

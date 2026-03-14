@@ -13,6 +13,8 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 ## Active Reviews
 | Date | Type | Description | Status | Link |
 |------|------|-------------|--------|------|
+| 2026-03-13 | Consistency Review | all-patterns-game-codebase | In Progress | [2026-03-13_180002_consistency_all-patterns-game-codebase](results/2026-03-13_180002_consistency_all-patterns-game-codebase/) |
+| 2026-03-13 | Consistency Review | all-patterns-game-codebase | In Progress | [2026-03-13_173626_consistency_all-patterns-game-codebase](results/2026-03-13_173626_consistency_all-patterns-game-codebase/) |
 | 2026-02-27 | General Review | strategy-god-classes | In Progress | [2026-02-27_211327_general_strategy-god-classes](results/2026-02-27_211327_general_strategy-god-classes/) |
 | 2026-02-27 | General Review | circular-dependency-deferred-imports | In Progress | [2026-02-27_211243_general_circular-dependency-deferred-imports](results/2026-02-27_211243_general_circular-dependency-deferred-imports/) |
 | 2026-02-27 | General Review | di-inconsistency-strategy | Led to Project | [2026-02-27_211222_general_di-inconsistency-strategy](results/2026-02-27_211222_general_di-inconsistency-strategy/) |

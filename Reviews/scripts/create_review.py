@@ -215,11 +215,23 @@ def count_findings_in_review(review_folder: Path) -> int:
 
     count = 0
     import re
-    finding_pattern = re.compile(r'####\s+(CRITICAL|MAJOR|MINOR|INFO):', re.IGNORECASE)
+    # Accept both ### and #### headings, and multiple ID/severity orderings
+    # that agents may produce (see compile_findings.py for full docs).
+    _SEV = r'CRITICAL|HIGH|MAJOR|MEDIUM|MINOR|LOW|INFO'
+    finding_patterns = [
+        re.compile(rf'#{{3,4}}\s+({_SEV}):', re.IGNORECASE),
+        re.compile(rf'#{{3,4}}\s+\S+:\s*({_SEV})\s*[-–—]', re.IGNORECASE),
+        re.compile(rf'#{{3,4}}\s+\S+\s*--\s*({_SEV}):', re.IGNORECASE),
+    ]
 
     for report_file in findings_dir.glob("*.md"):
         content = report_file.read_text(encoding='utf-8')
-        count += len(finding_pattern.findall(content))
+        seen_positions = set()
+        for pattern in finding_patterns:
+            for match in pattern.finditer(content):
+                if match.start() not in seen_positions:
+                    seen_positions.add(match.start())
+                    count += 1
 
     return count
 

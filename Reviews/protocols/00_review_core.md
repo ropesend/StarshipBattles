@@ -91,7 +91,8 @@
    - Critical: [N], Major: [N], Minor: [N], Info: [N]
 
    ### Findings
-   For each finding use:
+   For each finding use EXACTLY this heading format — the automated parser
+   depends on it:
 
    #### {SEVERITY}: {Brief Title}
    **ID:** {CATEGORY_CODE}-{NUMBER} (e.g., CQ-01, SEC-03)
@@ -100,6 +101,24 @@
    **Impact:** [Why it matters]
    **Recommendation:** [How to fix]
    **Effort:** [Simple/Medium/Complex]
+
+   **HEADING FORMAT RULES (the report parser will fail if these are violated):**
+   - The heading MUST be exactly `####` (h4) — not `###` or `#####`
+   - The heading MUST start with the severity word: `#### CRITICAL:`, `#### MAJOR:`, `#### MINOR:`, or `#### INFO:`
+   - Do NOT put the finding ID in the heading — the ID goes on the **ID:** line below
+   - Valid severity words: CRITICAL, MAJOR, MINOR, INFO
+   - Example of CORRECT format:
+     ```
+     #### MAJOR: Duplicate Protocol Definitions
+     **ID:** AR-001
+     **Location:** `game/core/protocols.py:601`
+     ```
+   - Example of WRONG format (DO NOT USE):
+     ```
+     ### MAJOR: Title              ← wrong: ### instead of ####
+     #### AR-001: MAJOR - Title    ← wrong: ID before severity
+     ### CE-01 -- CRITICAL: Title  ← wrong: both ### and ID prefix
+     ```
 
    ### Top 5 Priority Issues
    [Ranked list of your most important findings]

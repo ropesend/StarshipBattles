@@ -116,9 +116,9 @@ def parse_new_issues_report(new_issues_file: Path) -> list:
     content = new_issues_file.read_text(encoding='utf-8')
     new_issues = []
 
-    # Pattern for new issue entries
+    # Pattern for new issue entries — accept both ### and #### headings
     pattern = re.compile(
-        r'####\s+(CRITICAL|MAJOR|MINOR|INFO):\s*(.+?)\n'
+        r'#{3,4}\s+(CRITICAL|HIGH|MAJOR|MEDIUM|MINOR|LOW|INFO):\s*(.+?)\n'
         r'.*?\*\*ID:\*\*\s*(NEW-\d+)'
         r'.*?\*\*Location:\*\*\s*`([^`]+)`',
         re.IGNORECASE | re.DOTALL
