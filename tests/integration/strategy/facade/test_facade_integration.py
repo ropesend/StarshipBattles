@@ -155,9 +155,10 @@ class TestColonizeCommandIntegration:
         # Verify command succeeded
         assert result.is_valid, f"Colonize should succeed: {result.message}"
 
-        # Verify fleet has colonize order
-        assert len(fleet.orders) > 0
-        assert fleet.orders[0].type == OrderType.COLONIZE
+        # BUG-70: Order queue is now LOAD_POPULATION + COLONIZE
+        assert len(fleet.orders) >= 2
+        assert fleet.orders[0].type == OrderType.LOAD_POPULATION
+        assert fleet.orders[-1].type == OrderType.COLONIZE
 
     def test_colonize_already_owned_fails(self, game_setup):
         """Colonize command fails for already owned planet."""

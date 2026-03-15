@@ -51,12 +51,13 @@ def add_move_order_if_needed(
         ValidationResult - invalid if no path found, valid otherwise.
     """
     # Determine start hex (chain-aware)
+    # BUG-70: Find the last MOVE order (skip non-MOVE orders like LOAD_POPULATION)
     if start_hex is None:
         start_hex = fleet.location
-        if fleet.orders:
-            last = fleet.orders[-1]
-            if last.type == OrderType.MOVE:
-                start_hex = last.target
+        for order in reversed(fleet.orders):
+            if order.type == OrderType.MOVE:
+                start_hex = order.target
+                break
 
     # Already at target - no move needed
     if start_hex == target_hex:
@@ -78,29 +79,20 @@ def add_move_order_if_needed(
     return ValidationResult.success()
 
 
-def create_auto_load_population_order(origin_colony) -> 'FleetOrder':
-    """Create a LOAD_POPULATION order to pick up founding population from colony.
+def create_auto_load_population_order() -> 'FleetOrder':
+    """Create a generic LOAD_POPULATION order for colonize workflows.
 
-    PROJ-207 Phase 4: Extracted from duplicate patterns in ColonizeCommandHandler
-    and ColonizeMissionCommandHandler. Use this when auto-loading colonists
-    from a colony at the fleet's location.
-
-    Args:
-        origin_colony: The colony to load population from.
+    BUG-70: The order is always inserted at command time. At execution time,
+    the fleet order processor auto-resolves the colony at the fleet's current
+    hex. If no owned colony is present, the order is a no-op.
 
     Returns:
-        FleetOrder for LOAD_POPULATION, or None if colony has no populations.
+        FleetOrder for LOAD_POPULATION (always returns an order, never None).
     """
-    if not origin_colony or not origin_colony.populations:
-        return None
-
-    species_id = origin_colony.populations[0].race_id if origin_colony.populations else "default"
     transfer_params = {
         'direction': 'load',
         'cargo_type': 'passengers',
         'amount': 0,  # 0 = load as much as possible
-        'planet_id': origin_colony.id,
-        'species_id': species_id
     }
     return FleetOrder(OrderType.LOAD_POPULATION, target=transfer_params)
 
@@ -274,12 +266,10 @@ class ColonizeCommandHandler(BaseCommandHandler):
 
         # 3. Apply
         if result.is_valid:
-            # Auto-load population from colony at fleet's location (BUG-70)
-            # PROJ-207 Phase 4: Use shared helper
-            origin_colony = session._find_colony_at_fleet(fleet)
-            load_order = create_auto_load_population_order(origin_colony)
-            if load_order:
-                fleet.add_order(load_order)
+            # BUG-70: Always insert LOAD_POPULATION before MOVE/COLONIZE.
+            # Colony is resolved at execution time, not command time.
+            fleet.add_order(create_auto_load_population_order())
+            logger.debug(f"BUG-70: Inserted LOAD_POPULATION order for fleet {fleet.id}")
 
             # Add MOVE order to get to the target planet
             planet_global_hex = session.galaxy.get_planet_global_hex(target_planet)
@@ -430,12 +420,10 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
                         code="COLONY_POD_EXHAUSTED"
                     )
 
-        # 3. Auto-load population from colony at fleet's current location (BUG-70)
-        # PROJ-207 Phase 4: Use shared helper
-        origin_colony = session._find_colony_at_fleet(fleet)
-        load_order = create_auto_load_population_order(origin_colony)
-        if load_order:
-            fleet.add_order(load_order)
+        # 3. BUG-70: Always insert LOAD_POPULATION before MOVE/COLONIZE.
+        # Colony is resolved at execution time, not command time.
+        fleet.add_order(create_auto_load_population_order())
+        logger.debug(f"BUG-70: Inserted LOAD_POPULATION order for fleet {fleet.id}")
 
         # 4. Queue MOVE order if needed (chain-aware path calculation)
         # PROJ-207 Phase 5: Use shared helper with auto chain detection

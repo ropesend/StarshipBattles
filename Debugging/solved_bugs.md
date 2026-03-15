@@ -903,3 +903,123 @@ There needs to be a visible indicator on the line that indicates if the ship is 
 * **Test Case:** `tests/unit/ui/screens/test_design_image_helper.py` — 49 design-related tests pass.
 
 ---
+
+## [BUG-73] - Species Setup - Homeworld type selection still reports "Custom"
+* **Date Solved:** 2026-03-14
+* **Original Issue:** Selecting a homeworld type in species setup still showed "Custom" in the summary because display names weren't converted to preset IDs.
+* **Solution Implemented:** Convert display name to preset ID via `get_preset_id_from_name()` in dropdown handler; convert back to display name in summary panel.
+* **Test Case:** `game/ui/panels/race_environment_panel.py`, `game/ui/panels/race_summary_panel.py`
+
+---
+
+## [BUG-81] - Species Setup - Load Saved Species does nothing
+* **Date Solved:** 2026-03-14
+* **Original Issue:** Loading a saved species opened the dialog but clicking Load did nothing — sub-panels held stale references to the old RaceConfig object.
+* **Solution Implemented:** Added loop in `_populate_ui_from_config` to update `panel.race_config` on all 8 panels before calling `set_from_config()`.
+* **Test Case:** `tests/unit/ui/screens/test_race_setup_screen.py::TestRaceSetupLoadSpecies`
+
+---
+
+## [BUG-83] - Fleet Report - Missing special capability columns and filters
+* **Date Solved:** 2026-03-14
+* **Original Issue:** Fleet Report lacked columns for DestroyPlanet, OpenWarpPoint, CloseWarpPoint, DestroyStar, and CreateSphereWorld capabilities.
+* **Solution Implemented:** Added 5 special capability columns with filtering and sorting across column_manager, view model, filters, and window files.
+* **Test Case:** 13 new tests across `TestSpecialCapabilityColumns`, `TestSpecialCapabilityFilter`, `TestSpecialCapabilitySort`, `TestViewModelSpecialFilters`.
+
+---
+
+## [BUG-84] - Warp Gate Close and Planet Destroyer orders not registering
+* **Date Solved:** 2026-03-14
+* **Original Issue:** Superweapon orders (close warp, destroy planet) silently failed when fleet wasn't at target location. Fleet was also destroyed after executing superweapon.
+* **Solution Implemented:** Added `skip_location_check` parameter to superweapon validators (matching COLONIZE/TRANSFER pattern). Added `consume_ship` parameter to `_finalize_superweapon()` — only stellerate_star and self_destruct consume. Added sector-level validation at execution time with dict target format.
+* **Test Case:** Multiple new tests including `test_skip_location_check_allows_remote_queueing`, `test_ship_not_consumed`, `test_rejects_wrong_sector`. Full suite: 13,178 passed.
+
+---
+
+## [BUG-85] - New game colonies report 0 population instead of max
+* **Date Solved:** 2026-03-14
+* **Original Issue:** Colonies at game start reported 0 population because `PlayerConfig` was missing `race_config` and initial population was hardcoded to 10,000.
+* **Solution Implemented:** Added `race_config=race` to PlayerConfig constructor. Changed initial population from hardcoded 10,000 to `home_planet.max_population`.
+* **Test Case:** `tests/unit/ui/test_new_game_setup.py::TestNewGameSetupRaceConfig`, `tests/unit/strategy/engine/test_population_seeding.py`
+
+---
+
+## [BUG-86] - Build Queue planet details missing resource production numbers
+* **Date Solved:** 2026-03-14
+* **Original Issue:** Build queue and planets list panels showed zero production because `production_rates` parameter wasn't passed to `PlanetReportPanel`.
+* **Solution Implemented:** Extracted shared `compute_planet_production()` to `planet_report_panel` module. Updated build queue and planets list to pass production_rates.
+* **Test Case:** `test_compute_planet_production.py` (5 tests)
+
+---
+
+## [BUG-87] - Empire Treasury window missing colony resource production totals
+* **Date Solved:** 2026-03-14
+* **Original Issue:** Economy calculator only checked inline abilities on facility components, missing registry-based components (e.g., `metal_harvester`).
+* **Solution Implemented:** Added registry parameter to `EmpireEconomyCalculator` with fallback lookup matching `HarvestingEngine` pattern.
+* **Test Case:** `test_registry_fallback_for_colony_production`, `test_registry_fallback_with_no_registries_returns_zero`
+
+---
+
+## [BUG-88] - Empire Population tab blank - missing species information cards
+* **Date Solved:** 2026-03-14
+* **Original Issue:** Population tab showed "No species data available" because `race_config` was None for empires created without explicit race setup.
+* **Solution Implemented:** In `_create_empires()`, create a default `RaceConfig` when `player_cfg.race_config` is None, using player name and theme.
+* **Test Case:** `test_empire_always_has_race_config`, `test_empire_preserves_explicit_race_config`
+
+---
+
+## [BUG-89] - Workshop Screen Crash on Design Button Click
+* **Date Solved:** 2026-03-14
+* **Original Issue:** `AttributeError: 'ModifierEditorPanel' object has no attribute 'update'` — missing `update(dt)` method on `ModifierEditorPanel`.
+* **Solution Implemented:** Added no-op `update(self, dt)` method to `ModifierEditorPanel` in `builder_widgets.py`.
+* **Test Case:** `tests/unit/ui/panels/test_modifier_editor_panel.py` (3 tests)
+
+---
+
+## [BUG-90] - Incorrect atmosphere coloring in planet details box
+* **Date Solved:** 2026-03-14
+* **Original Issue:** Atmosphere graph showed uniform colors because homeworld atmospheres used full gas names ("Oxygen") but UI mapped by chemical formulas ("O2").
+* **Solution Implemented:** Added `GAS_NAME_TO_FORMULA`/`GAS_FORMULA_TO_NAME` mappings. Translated gas names to formulas in `game_initializer.py` and `superweapon_order_processor.py`. Reverse-translated in `habitability.py`.
+* **Test Case:** `test_adjust_homeworld_translates_gas_names_to_formulas`, `test_formula_keys_match_display_name_preferences`
+
+---
+
+## [BUG-91] - Missing planet portrait in build yard UI
+* **Date Solved:** 2026-03-14
+* **Original Issue:** Build queue screen received `portrait_surface` but never forwarded it to `BuildQueuePanelFactory`, resulting in blank portrait.
+* **Solution Implemented:** Added `portrait_surface` parameter to factory constructor and forwarded it from `BuildQueueScreen`.
+* **Test Case:** `tests/unit/ui/screens/test_build_queue_screen.py::test_portrait_surface_passed_to_panel_factory`
+
+---
+
+## [BUG-92] - New Game Setup fails to populate loaded species data
+* **Date Solved:** 2026-03-14
+* **Original Issue:** Clicking "Setup Species" after loading a saved species opened a blank form because `race_to_edit` wasn't passed to `RaceSetupScreen`.
+* **Solution Implemented:** Added `race_to_edit=self.player_races[player_index]` to `RaceSetupScreen()` constructor call.
+* **Test Case:** `tests/unit/ui/test_new_game_setup.py::test_setup_race_passes_loaded_race`
+
+---
+
+## [BUG-93] - Fleet move targeting state cannot be completed or canceled
+* **Date Solved:** 2026-03-14
+* **Original Issue:** Failed move clicks left the player stuck in MOVE targeting mode because error results didn't reset `input_mode`.
+* **Solution Implemented:** Added `else` branch in `_handle_move_mode_click()` that resets `input_mode` to `'SELECT'` on error/None results.
+* **Test Case:** `tests/unit/ui/screens/test_strategy_input_handler_core.py` (3 new tests)
+
+---
+
+## [BUG-94] - Star visual radius too small relative to hex grid
+* **Date Solved:** 2026-03-14
+* **Original Issue:** Star rendering formula used raw `hex_size` instead of accounting for hex geometry. Non-linear scaling needed for different star sizes.
+* **Solution Implemented:** Replaced linear formula with non-linear power curve `2 * hex_spacing * (radius_hexes / 2) ^ 1.2`. Extracted `_hex_radius_to_screen()` helper used by both star and Dyson sphere rendering.
+* **Test Case:** `tests/unit/ui/screens/test_strategy_renderer.py` — `test_star_radius_accounts_for_hex_geometry`, `test_star_radius_nonlinear_scaling`
+
+---
+
+## [BUG-95] - Load Species dialog — hover/click only registers in row margins
+* **Date Solved:** 2026-03-14
+* **Original Issue:** Species row overlay elements (portrait, flag, label) were siblings of the button, intercepting mouse events due to z-order.
+* **Solution Implemented:** Restructured to single UIButton per row with composite surface as foreground image via `button.normal_images`. Eliminated z-order conflicts.
+* **Test Case:** `tests/unit/ui/test_race_browser_dialog.py` (17 tests)
+
+---

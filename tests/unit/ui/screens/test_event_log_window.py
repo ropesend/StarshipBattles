@@ -471,7 +471,7 @@ class TestDoubleClickNavigation:
 
         # Simulate first click
         mock_event = MagicMock()
-        mock_event.type = pygame.MOUSEBUTTONDOWN
+        mock_event.type = pygame.MOUSEBUTTONUP
         mock_event.button = 1
         mock_event.pos = (100, 100)
 
@@ -502,7 +502,7 @@ class TestDoubleClickNavigation:
         win.virtual_table.find_clicked_row.return_value = 0
 
         mock_event = MagicMock()
-        mock_event.type = pygame.MOUSEBUTTONDOWN
+        mock_event.type = pygame.MOUSEBUTTONUP
         mock_event.button = 1
         mock_event.pos = (100, 100)
 
@@ -536,7 +536,7 @@ class TestDoubleClickNavigation:
         win.virtual_table.find_clicked_row.return_value = 0
 
         mock_event = MagicMock()
-        mock_event.type = pygame.MOUSEBUTTONDOWN
+        mock_event.type = pygame.MOUSEBUTTONUP
         mock_event.button = 1
         mock_event.pos = (100, 100)
 
@@ -572,7 +572,7 @@ class TestDoubleClickNavigation:
         win.virtual_table = MagicMock()
 
         mock_event = MagicMock()
-        mock_event.type = pygame.MOUSEBUTTONDOWN
+        mock_event.type = pygame.MOUSEBUTTONUP
         mock_event.button = 1
         mock_event.pos = (100, 100)
 
@@ -607,7 +607,7 @@ class TestDoubleClickNavigation:
         win.virtual_table.find_clicked_row.return_value = 0
 
         mock_event = MagicMock()
-        mock_event.type = pygame.MOUSEBUTTONDOWN
+        mock_event.type = pygame.MOUSEBUTTONUP
         mock_event.button = 1
         mock_event.pos = (100, 100)
 

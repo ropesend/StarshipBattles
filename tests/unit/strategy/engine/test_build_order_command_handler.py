@@ -198,49 +198,21 @@ class TestBuildOrderHandlerRegistration:
 
 
 class TestCreateAutoLoadPopulationOrder:
-    """Tests for create_auto_load_population_order helper (CP-003)."""
+    """Tests for create_auto_load_population_order helper (BUG-70 rework)."""
 
-    def test_creates_load_order_with_population(self):
-        """Should create LOAD_POPULATION order when colony has populations."""
-        mock_colony = Mock()
-        mock_colony.id = 42
-        mock_pop = Mock()
-        mock_pop.race_id = "human_colonist"
-        mock_colony.populations = [mock_pop]
-
-        order = create_auto_load_population_order(mock_colony)
+    def test_creates_generic_load_order(self):
+        """Should create a generic LOAD_POPULATION order with no planet_id."""
+        order = create_auto_load_population_order()
 
         assert order is not None
         assert order.type == OrderType.LOAD_POPULATION
         assert order.target['direction'] == 'load'
         assert order.target['cargo_type'] == 'passengers'
         assert order.target['amount'] == 0
-        assert order.target['planet_id'] == 42
-        assert order.target['species_id'] == "human_colonist"
+        assert 'planet_id' not in order.target
+        assert 'species_id' not in order.target
 
-    def test_returns_none_when_no_colony(self):
-        """Should return None when origin_colony is None."""
-        order = create_auto_load_population_order(None)
-        assert order is None
-
-    def test_returns_none_when_colony_has_no_populations(self):
-        """Should return None when colony has empty populations list."""
-        mock_colony = Mock()
-        mock_colony.populations = []
-
-        order = create_auto_load_population_order(mock_colony)
-        assert order is None
-
-    def test_uses_first_population_species(self):
-        """Should use the first population's race_id as species_id."""
-        mock_colony = Mock()
-        mock_colony.id = 99
-        mock_pop1 = Mock()
-        mock_pop1.race_id = "species_alpha"
-        mock_pop2 = Mock()
-        mock_pop2.race_id = "species_beta"
-        mock_colony.populations = [mock_pop1, mock_pop2]
-
-        order = create_auto_load_population_order(mock_colony)
-
-        assert order.target['species_id'] == "species_alpha"
+    def test_always_returns_order(self):
+        """Should always return an order (never None). Colony resolved at execution time."""
+        order = create_auto_load_population_order()
+        assert order is not None

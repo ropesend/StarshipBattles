@@ -189,7 +189,7 @@ class FleetReportWindow(UIWindow):
                 handled = True
 
         # Handle mouse clicks on ship rows
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             if self._handle_row_click(event.pos):
                 handled = True
 

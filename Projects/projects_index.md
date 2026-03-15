@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-220 | Tri-State Filter Widget & Filter Unification | Planning | 2026-03-14 | 2026-03-14 |
 | PROJ-207 | Fleet Order System Unification | Planning | 2026-02-27 | 2026-02-27 |
 
 ## Archived Projects

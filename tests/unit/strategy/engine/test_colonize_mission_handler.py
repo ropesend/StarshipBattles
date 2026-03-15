@@ -78,9 +78,6 @@ def make_mock_session(fleet, planet=None, component_registry=None):
     else:
         session._get_planet_by_id.return_value = None
 
-    # Mock _find_colony_at_fleet (no auto-load)
-    session._find_colony_at_fleet.return_value = None
-
     # Mock galaxy for pathfinding
     session.galaxy = MagicMock()
 

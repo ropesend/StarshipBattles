@@ -8,14 +8,15 @@ In the Fleet Report I need to be able to select a ship, the Ship report should s
 Medium
 
 ## Status
-In-Progress
+Awaiting Confirmation
 
 ## Root Cause
 
-The Fleet Report's right detail panel was using `DesignReportPanel` (which shows static design specifications) instead of `ShipDetailPanel` (which shows live ship instance data with damage, resources, and a "Remove from Fleet" button). This meant:
-- No damage/resource info shown for actual ship instances
-- No "Remove from Fleet" button available
-- Events not forwarded to the detail panel (layer toggles, remove button)
+**Two issues (both now fixed):**
+
+1. **(Fixed earlier)** The Fleet Report's right detail panel was using `DesignReportPanel` instead of `ShipDetailPanel`. Fixed in PROJ-173 Phase 1 (2026-02-13).
+
+2. **(Fixed 2026-03-14)** Ship row clicks never registered because `process_event()` listened for `pygame.MOUSEBUTTONDOWN`, which is consumed by child `UIPanel` elements before it reaches `FleetReportWindow`. pygame_gui's `UIManager` processes child panels at higher layers first; `UIPanel.process_event()` returns `True` for any `MOUSEBUTTONDOWN` inside the panel, breaking the event loop. The fix: use `MOUSEBUTTONUP` instead, which is not consumed by UIPanel. This matches `PlanetListWindow` (line 207) and `EmpireBuildQueueWindow` (line 447) which both use `MOUSEBUTTONUP` and work correctly.
 
 ## Fix
 
@@ -42,10 +43,36 @@ The Fleet Report's right detail panel was using `DesignReportPanel` (which shows
 ## Tests
 All 56 fleet report window tests pass (37 main + 19 multi-select).
 
+## Investigation Report
+
+### Code Path Trace
+`FleetReportWindow.process_event()` → checks `MOUSEBUTTONDOWN` → `_handle_row_click(pos)` → `VirtualTable.handle_click(pos)` → `find_clicked_row(pos)` → `MultiSelect.handle_click()` → `_update_detail_panel()` → `ShipDetailPanel.update_ship()`
+
+### Root Cause
+`FleetReportWindow.process_event()` never receives the `MOUSEBUTTONDOWN` event. pygame_gui's `UIManager.process_events()` iterates UI sprites by layer (highest first). The row background `UIPanel` elements inside `_list_view_panel` consume `MOUSEBUTTONDOWN` (returning `True`), causing the UIManager to break its loop before reaching the `FleetReportWindow`.
+
+### Similar Patterns Found
+- `PlanetListWindow` (line 207): uses `MOUSEBUTTONUP` — works correctly
+- `EmpireBuildQueueWindow` (line 447): uses `MOUSEBUTTONUP` — works correctly
+- `EventLogWindow` (line 292): uses `MOUSEBUTTONDOWN` — same latent bug (also fixed)
+
+### Documentation Discrepancies
+None — code matches docs. No list+detail pattern is explicitly documented in `docs/`.
+
+## Hypothesis Log
+
+### Hypothesis 1: MOUSEBUTTONDOWN consumed by child UIPanels - CONFIRMED
+**Theory:** pygame_gui's UIPanel.process_event() returns True for MOUSEBUTTONDOWN inside the panel, causing UIManager to break its event loop before reaching FleetReportWindow.
+**Evidence For:** PlanetListWindow and EmpireBuildQueueWindow use MOUSEBUTTONUP and work. FleetReportWindow uses MOUSEBUTTONDOWN and doesn't work.
+**Evidence Against:** None.
+**Test:** Change MOUSEBUTTONDOWN to MOUSEBUTTONUP.
+**Result:** Fix applied. All 56 tests pass.
+
 ## Work Log
 - 2026-02-07: Original fix applied (added remove button to ShipDetailPanel)
 - 2026-02-11: Fix rejected - panel was wrong type (DesignReportPanel vs ShipDetailPanel)
 - 2026-02-11: Reworked - swapped DesignReportPanel for ShipDetailPanel, wired callbacks, forwarded events
+- 2026-03-14: Deep investigation — root cause found: MOUSEBUTTONDOWN consumed by child UIPanels. Changed to MOUSEBUTTONUP in fleet_report_window.py and event_log_window.py. All 56 tests pass.
 
 ---
 ### Fix Rejected [2026-02-11 12:00]

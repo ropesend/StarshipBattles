@@ -289,7 +289,7 @@ class EventLogWindow(UIWindow):
         # FEAT-04: Double-click on row navigates to event location
         if (
             hasattr(event, "type")
-            and event.type == pygame.MOUSEBUTTONDOWN
+            and event.type == pygame.MOUSEBUTTONUP
             and event.button == 1
             and self.virtual_table
         ):

@@ -89,6 +89,10 @@ class StrategyWindowManager:
         # Callback map for dynamic prompt buttons
         self.ui_callbacks: dict = {}
 
+        # Confirmation dialog state (PROJ-198)
+        self._pending_confirmation_dialog = None
+        self._pending_confirmation_callback = None
+
     def handle_resize(self, width: int, height: int) -> None:
         """Update stored dimensions on resize.
 

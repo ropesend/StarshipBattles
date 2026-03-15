@@ -79,6 +79,11 @@ class TestStrategyWindowManagerInit:
         """Test initialization creates empty callbacks dict."""
         assert window_manager.ui_callbacks == {}
 
+    def test_init_confirmation_dialog_attributes(self, window_manager):
+        """BUG-97: Confirmation dialog attributes must be initialized to None."""
+        assert window_manager._pending_confirmation_dialog is None
+        assert window_manager._pending_confirmation_callback is None
+
 
 # =============================================================================
 # Handle Resize Tests
@@ -626,6 +631,27 @@ class TestProcessUICallbacks:
         event.type = 12345  # Some other event type
 
         result = window_manager.process_ui_callbacks(event)
+
+        assert result is False
+
+
+# =============================================================================
+# Confirmation Dialog Tests (BUG-97)
+# =============================================================================
+
+class TestConfirmationDialog:
+    """Tests for confirmation dialog management."""
+
+    def test_process_confirmation_event_no_dialog_shown(self, window_manager):
+        """BUG-97: process_confirmation_event must not crash when no dialog has been shown."""
+        import pygame_gui
+
+        event = Mock()
+        event.type = pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED
+        event.ui_element = Mock()
+
+        # Must not raise AttributeError
+        result = window_manager.process_confirmation_event(event)
 
         assert result is False
 

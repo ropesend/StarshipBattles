@@ -118,14 +118,14 @@ class TestColonizeCommandHandler:
         mock_session._get_planet_by_id.return_value = mock_planet
         mock_session.galaxy.get_planet_global_hex.return_value = HexCoord(0, 0)
         mock_session.turn_engine.validate_colonize_order.return_value = ValidationResult()
-        mock_session._find_colony_at_fleet.return_value = None
 
         mock_cmd = Mock(fleet_id=1, planet_id=10)
 
         result = handler.execute(mock_session, mock_cmd)
 
         assert result.is_valid
-        mock_fleet.add_order.assert_called_once()
+        # BUG-70: Now always adds LOAD_POPULATION + COLONIZE (2 calls)
+        assert mock_fleet.add_order.call_count == 2
 
 
 class TestMoveCommandHandler:
@@ -291,7 +291,6 @@ class TestColonizeMissionCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
         mock_session._get_planet_by_id.return_value = None
-        mock_session._find_colony_at_fleet.return_value = None  # No origin colony
 
         mock_cmd = Mock(fleet_id=1, planet_id=None, target_hex=(100, 100))
 

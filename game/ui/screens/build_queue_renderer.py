@@ -214,15 +214,17 @@ class BuildQueueRenderer:
             )
 
             if total_cost and turns > 0:
+                resources_consumed = item.get("resources_consumed", {})
                 for resource in PLANET_RESOURCES:
                     total_amt = total_cost.get(resource, 0)
-                    if total_amt > 0:
-                        per_turn = total_amt / turns
+                    consumed = resources_consumed.get(resource, 0)
+                    remaining = max(0, total_amt - consumed)
+                    if remaining > 0:
                         col_x = column_positions.get(resource, 0) - 10
-                        if per_turn >= 1:
-                            cost_text = f"{int(per_turn)}"
+                        if remaining >= 1:
+                            cost_text = f"{int(remaining)}"
                         else:
-                            cost_text = f"{per_turn:.1f}"
+                            cost_text = f"{remaining:.1f}"
                         ui.UILabel(
                             relative_rect=pygame.Rect(col_x, 14, 50, 20),
                             text=cost_text,

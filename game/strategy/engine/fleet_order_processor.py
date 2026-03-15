@@ -288,6 +288,19 @@ class FleetOrderProcessor:
         target = None
         if planet_id:
             target = galaxy.get_planet_by_id(planet_id)
+        elif not planet_id and not target_fleet_id and order.type == OrderType.LOAD_POPULATION:
+            # BUG-70: Generic LOAD_POPULATION — auto-resolve colony at fleet's current hex
+            planets_at_hex = galaxy.get_planets_at_global_hex(fleet.location)
+            for p in planets_at_hex:
+                if p.owner_id == empire.id and hasattr(p, 'populations') and p.populations and p.total_population > 0:
+                    target = p
+                    logger.debug(f"BUG-70: Auto-resolved colony {p.name} (pop={p.total_population}) at fleet hex {fleet.location}")
+                    break
+            if not target:
+                # No owned colony at fleet hex — no-op, continue with next order
+                logger.debug(f"BUG-70: No owned colony at fleet hex {fleet.location}, skipping LOAD_POPULATION")
+                fleet.pop_order()
+                return TransferResult(success=True, message="No colony at location, skipped")
         elif target_fleet_id:
             # Need to find fleet by ID. FleetOrderProcessor doesn't have session access here usually,
             # but we can look through the empire's fleets or all empires.
