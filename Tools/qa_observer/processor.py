@@ -1,4 +1,5 @@
 import os
+import shutil
 import argparse
 from pathlib import Path
 from datetime import datetime
@@ -167,6 +168,29 @@ def main():
         
     print("Generating synchronized Markdown...")
     generate_markdown(session_dir, all_words, screenshots)
+
+    # Prune old sessions, keeping only the 5 most recent
+    prune_old_sessions(session_dir.parent, keep=5)
+
+
+def prune_old_sessions(sessions_root: Path, keep: int = 5):
+    """Delete oldest session directories, keeping only the most recent `keep`."""
+    if not sessions_root.exists():
+        return
+
+    session_dirs = sorted(
+        [d for d in sessions_root.iterdir() if d.is_dir()],
+        key=lambda d: d.name
+    )
+
+    if len(session_dirs) <= keep:
+        return
+
+    to_delete = session_dirs[:len(session_dirs) - keep]
+    for d in to_delete:
+        print(f"Pruning old session: {d.name}")
+        shutil.rmtree(d)
+
 
 if __name__ == "__main__":
     main()

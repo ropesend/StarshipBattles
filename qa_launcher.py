@@ -17,7 +17,7 @@ def main():
 
     print("=== StarshipBattles QA Debug Launcher ===")
     print("Launching QA Observer in the background...")
-    
+
     # Needs CREATE_NEW_PROCESS_GROUP on Windows to separate Ctrl+C handling
     creation_flags = 0
     if os.name == 'nt':
@@ -25,7 +25,7 @@ def main():
 
     # We run it from its own sub-directory so its .env loads correctly relative to itself
     observer_dir = os.path.dirname(observer_script)
-    
+
     # Open a pipe to stdin so we can explicitly tell it to quit across platforms
     observer_process = subprocess.Popen(
         [python_exe, observer_script, '--child'],
@@ -33,6 +33,18 @@ def main():
         creationflags=creation_flags,
         stdin=subprocess.PIPE
     )
+
+    # Launch the audio monitor window so user can verify mic is working
+    audio_monitor_script = os.path.join(observer_dir, 'audio_monitor.py')
+    monitor_process = None
+    if os.path.exists(audio_monitor_script):
+        print("Launching Audio Monitor window...")
+        monitor_process = subprocess.Popen(
+            [python_exe, audio_monitor_script],
+            cwd=observer_dir,
+            creationflags=creation_flags,
+            stdin=subprocess.PIPE
+        )
 
     # Give the observer a second to initialize microphone/watchdog before starting the game
     time.sleep(1.5)
@@ -58,14 +70,20 @@ def main():
     print(f"\nGame process finished (Exit code: {game_process.returncode}).")
     print("Shutting down QA Observer (this will trigger processing)...")
 
+    # Shut down the audio monitor window
+    if monitor_process and monitor_process.poll() is None:
+        try:
+            monitor_process.communicate(input=b"QUIT\n", timeout=5)
+        except subprocess.TimeoutExpired:
+            monitor_process.kill()
+
     # Gracefully tell the observer to stop via standard input messaging
     try:
         observer_process.communicate(input=b"QUIT\n", timeout=15)
     except subprocess.TimeoutExpired:
         print("Observer took too long to quit. Forcing termination.")
         observer_process.kill()
-        
-        
+
     # Wait for the observer to finish
     observer_process.wait()
 
