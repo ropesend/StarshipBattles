@@ -1023,3 +1023,30 @@ There needs to be a visible indicator on the line that indicates if the ship is 
 * **Test Case:** `tests/unit/ui/test_race_browser_dialog.py` (17 tests)
 
 ---
+
+## [BUG-70] - Colonize order should load population before moving
+* **Date Solved:** 2026-03-14
+* **Original Issue:** Colonize command did not insert a TRANSFER (load population) order before the MOVE order, so colony ships arrived at destinations with empty cargo.
+* **Solution Implemented:** Reworked LOAD_POPULATION as a generic queued order with no `planet_id`. Colony is resolved dynamically at execution time from the fleet's hex. Command handlers always insert LOAD_POPULATION before MOVE/COLONIZE.
+* **Test Case:** `tests/unit/strategy/test_command_handlers.py` — colonize command handler tests
+* **Notes:** Colony lookup at command time was wrong approach; execution-time resolution is correct because fleet may not be at a colony when command is issued.
+
+---
+
+## [BUG-97] - Crash when clicking confirmation dialog to clear fleet orders
+* **Date Solved:** 2026-03-14
+* **Original Issue:** `StrategyWindowManager` crashed with `AttributeError: '_pending_confirmation_dialog'` because the attribute was only set inside `show_confirmation_dialog()` but never initialized in `__init__()`.
+* **Solution Implemented:** Added initialization of `_pending_confirmation_dialog` and `_pending_confirmation_callback` to `None` in `StrategyWindowManager.__init__()`.
+* **Test Case:** `tests/unit/ui/screens/test_strategy_window_manager.py` — `test_init_confirmation_dialog_attributes`, `test_process_confirmation_event_no_dialog_shown`
+* **Notes:** None.
+
+---
+
+## [BUG-96] - Build queue shows total cost instead of per-turn resource usage
+* **Date Solved:** 2026-03-14
+* **Original Issue:** Build queue resource columns showed total cost divided by turns_remaining, producing inflated values when turns < 1.0. Initial fix corrected turns_remaining pre-calculation but exposed the display formula bug.
+* **Solution Implemented:** Superseded by prospective project `build_queue_configurable_columns.md` — the entire build queue will be reworked to use the shared configurable column system with proper per-turn spend and total remaining columns.
+* **Test Case:** Will be covered by the project's test suite.
+* **Notes:** Deep investigation fix changed display to show remaining cost. Full rework planned as a project.
+
+---

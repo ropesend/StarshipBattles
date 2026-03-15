@@ -43,6 +43,14 @@ This file serves as the permanent index of all completed features with implement
 * **Notes:** pygame_gui `UIDropDownMenu` has no public API to change displayed selection after creation; must kill and recreate.
 ---
 
+## [FEAT-04] - Event Log 'Go To Location' Navigation
+* **Date Completed:** 2026-03-14
+* **Original Request:** Add clickable/double-click navigation to event log entries that moves the camera to the event's location on the map, with a Location column showing where each event occurred.
+* **Implementation Summary:** Added `location_hex` and `location_name` to all `log_event()` calls across production, combat, colonization, and superweapon engines. Added Location column to event log via `EVENT_LOG_COLUMNS`. Implemented double-click detection in `EventLogWindow` with navigate callback that closes the log and centers camera via `center_on_hex()`.
+* **Test Case:** `tests/unit/ui/screens/test_event_log_data_source.py` (5 tests), `tests/unit/ui/screens/test_event_log_window.py` (5 tests), `tests/unit/ui/screens/test_camera_navigator.py` (3 tests)
+* **Notes:** None.
+---
+
 ## [FEAT-05] - Save/Update Species Workflow Dialog
 * **Date Completed:** 2026-03-14
 * **Original Request:** When modifying and saving an existing species, prompt a dialog offering to overwrite the old species or save as a new one.

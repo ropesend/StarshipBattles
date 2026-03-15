@@ -7,7 +7,6 @@
 ## 2. Feature Queue
 | ID | Date Added | Description | Status | Spec File |
 | :--- | :--- | :--- | :--- | :--- |
-| FEAT-04 | 2026-02-28 | Event Log 'Go To Location' Navigation | Awaiting Confirmation | `active_features/FEAT-04.md` |
 
 ## 3. Current Focus: None
 No features currently in progress.
