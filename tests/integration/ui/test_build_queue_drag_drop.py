@@ -276,21 +276,22 @@ def test_reorder_queue(build_queue_screen):
     # CRITICAL: Update manager to calculate rects for new panels
     build_queue_screen.manager.update(0.1)
     
-    # PROJ-180: Access via renderer.*
-    # Drag item B (index 1) to top (estimate y offset)
-    # Find panel for item B
-    panel_B = build_queue_screen.renderer.queue_items[1]
-    
+    # PROJ-221: Use VirtualTable row pool to find queue item row positions
+    vt = build_queue_screen.panels.virtual_table
+    row_pool = vt._row_pool
+    # Row 1 (item B) - get its background panel position
+    row_b_bg = row_pool[1]["bg"]
+
     # 1. Pick up B - start with mouse down
     event_down = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {
         'button': 1,
-        'pos': panel_B.get_abs_rect().center
+        'pos': row_b_bg.get_abs_rect().center
     })
     build_queue_screen.handle_event(event_down)
 
     # Simulate mouse motion to exceed drag threshold (10 pixels)
-    motion_pos = (panel_B.get_abs_rect().centerx + 15,
-                  panel_B.get_abs_rect().centery + 15)
+    motion_pos = (row_b_bg.get_abs_rect().centerx + 15,
+                  row_b_bg.get_abs_rect().centery + 15)
     event_motion = pygame.event.Event(pygame.MOUSEMOTION, {
         'pos': motion_pos,
         'rel': (15, 15),
@@ -300,13 +301,11 @@ def test_reorder_queue(build_queue_screen):
 
     assert build_queue_screen.drag_handler.dragged_item['design_id'] == "item_B"
     assert len(build_queue_screen.build_context.construction_queue) == 1 # A is left
-    
-    # PROJ-180: Access via panels.*
-    # 2. Drop at top of queue panel
-    # The queue panel starts at some Y. rel_y // 65 = 0 means index 0.
-    # Let's drop at the absolute top of the queue scrollable
-    drop_pos = (build_queue_screen.panels.queue_scrollable.get_abs_rect().centerx,
-                build_queue_screen.panels.queue_scrollable.get_abs_rect().top + 5)
+
+    # PROJ-221: Drop at top of VirtualTable list view panel
+    list_panel = vt._list_view_panel
+    drop_pos = (list_panel.get_abs_rect().centerx,
+                list_panel.get_abs_rect().top + 5)
     
     event_up = pygame.event.Event(pygame.MOUSEBUTTONUP, {
         'button': 1,
@@ -328,19 +327,20 @@ def test_remove_from_queue(build_queue_screen):
     build_queue_screen._refresh_queue_display()
     build_queue_screen.manager.update(0.1)
 
-    # PROJ-180: Access via renderer.*
-    panel = build_queue_screen.renderer.queue_items[0]
-    
+    # PROJ-221: Use VirtualTable row pool to find queue item row positions
+    vt = build_queue_screen.panels.virtual_table
+    row_0_bg = vt._row_pool[0]["bg"]
+
     # 1. Pick up - start with mouse down
     event_down = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {
         'button': 1,
-        'pos': panel.get_abs_rect().center
+        'pos': row_0_bg.get_abs_rect().center
     })
     build_queue_screen.handle_event(event_down)
 
     # Simulate mouse motion to exceed drag threshold (10 pixels)
-    motion_pos = (panel.get_abs_rect().centerx + 15,
-                  panel.get_abs_rect().centery + 15)
+    motion_pos = (row_0_bg.get_abs_rect().centerx + 15,
+                  row_0_bg.get_abs_rect().centery + 15)
     event_motion = pygame.event.Event(pygame.MOUSEMOTION, {
         'pos': motion_pos,
         'rel': (15, 15),

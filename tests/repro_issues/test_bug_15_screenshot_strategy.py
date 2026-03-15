@@ -319,14 +319,17 @@ class TestBuildQueueScreenshotSupport:
         mock_design_loader = MagicMock()
 
         # PROJ-172: Patches moved to panel factory module
+        # PROJ-221: Added VirtualTable and TableColumnManager patches
         with patch('game.ui.screens.build_queue_panel_factory.PlanetReportPanel'), \
              patch('game.ui.screens.build_queue_panel_factory.DesignReportPanel'), \
              patch('game.ui.screens.build_queue_panel_factory.ui.UIPanel'), \
              patch('game.ui.screens.build_queue_panel_factory.ui.UIButton'), \
              patch('game.ui.screens.build_queue_panel_factory.ui.UITextBox'), \
              patch('game.ui.screens.build_queue_panel_factory.ui.UILabel'), \
-             patch('game.ui.screens.build_queue_panel_factory.ui.UIImage'), \
              patch('game.ui.screens.build_queue_panel_factory.ui.UIScrollingContainer'), \
+             patch('game.ui.screens.build_queue_panel_factory.VirtualTable'), \
+             patch('game.ui.screens.build_queue_panel_factory.TableColumnManager'), \
+             patch('game.ui.screens.build_queue_panel_factory.SingleSelect'), \
              patch('game.ui.screens.build_queue_renderer.ui.UIPanel'), \
              patch('game.ui.screens.build_queue_renderer.ui.UIButton'), \
              patch('game.ui.screens.build_queue_renderer.ui.UITextBox'), \

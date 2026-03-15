@@ -308,19 +308,18 @@ class BuildQueueScreen:
         self.renderer.refresh_items_list(designs, self.controller.selected_category)
 
     def _refresh_queue_display(self):
-        """Refresh the build queue display."""
+        """Refresh the build queue display via VirtualTable."""
         is_multi = len(self.selected_queue_indices) > 1
-        selected_sources = [
-            self.queue_sources[i] for i in sorted(self.selected_queue_indices)
-        ] if is_multi else None
-
         queue = self._get_active_queue() if not is_multi else []
 
-        self.renderer.queue_items = self.renderer.refresh_queue_display(
+        # Get build rate from active queue source
+        build_rate = {}
+        if self.active_queue_source is not None:
+            build_rate = self.active_queue_source.build_rate or {}
+
+        self.renderer.refresh_queue_display(
             queue=queue,
-            selected_queue_index=self.selected_queue_index,
-            is_multi_select=is_multi,
-            selected_sources=selected_sources,
+            build_rate=build_rate,
             on_queue_selector_refresh=self._refresh_queue_selector,
         )
 
@@ -405,14 +404,21 @@ class BuildQueueScreen:
             logger.warning("No queue item selected to remove")
 
     def _handle_drag_operations(self, event: pygame.event.Event) -> None:
-        """Handle mouse events for drag-and-drop."""
+        """Handle mouse events for drag-and-drop.
+
+        PROJ-221 Phase 4: Adapted to work with VirtualTable. Queue item
+        click detection now uses VirtualTable.handle_click() for row
+        identification, with the drag handler still managing drag state.
+        """
         multi_select = len(self.selected_queue_indices) > 1
         active_queue = self._get_active_queue()
+        virtual_table = self.panels.virtual_table
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.drag_handler.handle_mouse_down(
-                event, self.panels.items_scrollable, self.renderer.queue_items,
-                active_queue, self.controller.selected_category,
+                event, self.panels.items_scrollable,
+                virtual_table, active_queue,
+                self.controller.selected_category,
                 multi_select_active=multi_select
             )
 
@@ -423,8 +429,9 @@ class BuildQueueScreen:
 
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             result = self.drag_handler.handle_mouse_up(
-                event, self.panels.build_queue_panel, self.panels.queue_scrollable,
-                active_queue, multi_select_active=multi_select
+                event, self.panels.build_queue_panel,
+                virtual_table, active_queue,
+                multi_select_active=multi_select
             )
             if result is not None:
                 self.selected_queue_index = result
@@ -549,5 +556,4 @@ class BuildQueueScreen:
     def draw(self, screen: pygame.Surface):
         """Draw the UI."""
         self.manager.draw_ui(screen)
-        self.renderer.draw_selection_highlight(screen, self.selected_queue_index)
         self.drag_handler.draw_drag_preview(screen)

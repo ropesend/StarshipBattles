@@ -2,6 +2,7 @@
 
 Creates all UI panels for the build queue screen. Extracted from build_queue_screen.py
 as part of PROJ-172 Phase 4 MVVM refactoring.
+PROJ-221 Phase 4: Replaced hardcoded columns with VirtualTable integration.
 """
 from __future__ import annotations
 
@@ -13,10 +14,14 @@ import pygame
 import pygame_gui
 import pygame_gui.elements as ui
 
-from game.core.constants import PLANET_RESOURCES
 from game.ui.panels.planet_report_panel import PlanetReportPanel, compute_planet_production
 from game.ui.panels.design_report_panel import DesignReportPanel
 from game.ui.screens.build_queue_selector import BuildQueueSelector
+from game.ui.components.table import VirtualTable, TableColumnManager, SingleSelect
+from game.ui.screens.build_queue_queue_data_source import (
+    BuildQueueQueueDataSource,
+    BUILD_QUEUE_COLUMNS,
+)
 
 if TYPE_CHECKING:
     from game.strategy.data.build_queue_source import BuildQueueSource
@@ -27,7 +32,10 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class BuildQueuePanels:
-    """Container for all BuildQueueScreen panels."""
+    """Container for all BuildQueueScreen panels.
+
+    PROJ-221 Phase 4: Replaced queue_column_positions with VirtualTable components.
+    """
 
     background: ui.UIPanel
     context_report: ui.UIPanel  # PlanetReportPanel or fleet info panel
@@ -38,7 +46,9 @@ class BuildQueuePanels:
     items_scrollable: ui.UIScrollingContainer
     build_queue_panel: ui.UIPanel
     queue_header_text: ui.UITextBox
-    queue_scrollable: ui.UIScrollingContainer
+    virtual_table: VirtualTable
+    column_manager: TableColumnManager
+    data_source: BuildQueueQueueDataSource
     filter_panel: ui.UIPanel
     bottom_bar: ui.UIPanel
     btn_close: ui.UIButton
@@ -49,7 +59,6 @@ class BuildQueuePanels:
     btn_category_satellite: ui.UIButton
     btn_category_fighter: ui.UIButton
     resource_icons: Dict[str, pygame.Surface]
-    queue_column_positions: Dict[str, int]
 
 
 class BuildQueuePanelFactory:
@@ -110,7 +119,9 @@ class BuildQueuePanelFactory:
         queue_selector = self._create_queue_selector_panel(background)
         design_report = self._create_design_report_panel(background)
         items_panel, items_scrollable = self._create_items_list_panel(background)
-        queue_panel, queue_header, queue_scrollable, col_positions = self._create_build_queue_panel(background)
+        queue_panel, queue_header, virtual_table, column_manager, data_source = (
+            self._create_build_queue_panel(background)
+        )
         filter_panel, btn_complex, btn_ship, btn_sat, btn_fighter, btn_add, btn_remove = (
             self._create_filter_panel(background)
         )
@@ -126,7 +137,9 @@ class BuildQueuePanelFactory:
             items_scrollable=items_scrollable,
             build_queue_panel=queue_panel,
             queue_header_text=queue_header,
-            queue_scrollable=queue_scrollable,
+            virtual_table=virtual_table,
+            column_manager=column_manager,
+            data_source=data_source,
             filter_panel=filter_panel,
             bottom_bar=bottom_bar,
             btn_close=btn_close,
@@ -137,7 +150,6 @@ class BuildQueuePanelFactory:
             btn_category_satellite=btn_sat,
             btn_category_fighter=btn_fighter,
             resource_icons=self.resource_icons,
-            queue_column_positions=col_positions,
         )
 
     def _create_background(self) -> ui.UIPanel:
@@ -277,10 +289,12 @@ class BuildQueuePanelFactory:
         return panel, scrollable
 
     def _create_build_queue_panel(self, container: ui.UIPanel):
-        """Create build queue panel.
+        """Create build queue panel with VirtualTable.
+
+        PROJ-221 Phase 4: Replaced hardcoded columns with VirtualTable.
 
         Returns:
-            Tuple of (panel, header_text, scrollable_container, column_positions).
+            Tuple of (panel, header_text, virtual_table, column_manager, data_source).
         """
         panel_left = 10 + 480 + 10 + 700 + 10
         design_details_width = 750
@@ -304,47 +318,36 @@ class BuildQueuePanelFactory:
             container=panel
         )
 
-        # Column header row
-        header_y = 42
-        header_height = 22
-        col_x = 10
-
-        ui.UILabel(
-            relative_rect=pygame.Rect(col_x, header_y, 450, header_height),
-            text="Item",
-            manager=self.manager,
-            container=panel
-        )
-        col_x += 455
-
-        ui.UILabel(
-            relative_rect=pygame.Rect(col_x, header_y, 45, header_height),
-            text="Turns",
-            manager=self.manager,
-            container=panel
-        )
-        col_x += 50
-
-        column_positions = {"Item": 10, "Turns": 465}
-        for resource in PLANET_RESOURCES:
-            icon = self.resource_icons.get(resource)
-            if icon:
-                ui.UIImage(
-                    relative_rect=pygame.Rect(col_x, header_y + 1, 20, 20),
-                    image_surface=icon,
-                    manager=self.manager,
-                    container=panel
-                )
-            column_positions[resource] = col_x
-            col_x += 55
-
-        scrollable = ui.UIScrollingContainer(
-            relative_rect=pygame.Rect(10, 68, panel_width - 20, panel_height - 78),
+        # VirtualTable container (below header text)
+        table_panel = ui.UIPanel(
+            relative_rect=pygame.Rect(0, 42, panel_width, panel_height - 52),
             manager=self.manager,
             container=panel
         )
 
-        return panel, header_text, scrollable, column_positions
+        # Get initial build rate from first queue source
+        initial_build_rate = {}
+        if self.queue_sources:
+            initial_build_rate = self.queue_sources[0].build_rate or {}
+
+        # Create column manager, data source, and VirtualTable
+        column_manager = TableColumnManager(BUILD_QUEUE_COLUMNS)
+        data_source = BuildQueueQueueDataSource(
+            columns=BUILD_QUEUE_COLUMNS,
+            portrait_loader=self.portrait_loader,
+            build_rate=initial_build_rate,
+        )
+        virtual_table = VirtualTable(
+            table_panel,
+            self.manager,
+            data_source,
+            column_manager,
+            SingleSelect(),
+            row_height=48,
+            header_height=40,
+        )
+
+        return panel, header_text, virtual_table, column_manager, data_source
 
     def _create_filter_panel(self, container: ui.UIPanel):
         """Create categories/filter panel.

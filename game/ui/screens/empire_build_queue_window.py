@@ -485,12 +485,17 @@ class EmpireBuildQueueWindow(UIWindow):
 
         # Check header buttons for sort/swap changes
         header_result = self._virtual_table.check_header_presses()
-        sort_col = header_result.get('sort_column')
         swap_col = header_result.get('swap_column')
+        sort_col = header_result.get('sort_column')
 
-        if sort_col or swap_col:
-            if sort_col:
-                self._column_manager.set_sort(sort_col)
+        if swap_col:
+            col_dict, direction = swap_col
+            self._column_manager.swap_column(col_dict['id'], direction)
+            self._virtual_table.rebuild_headers()
+            self._virtual_table.rebuild_row_pool()
+            self._refresh_list()
+        elif sort_col:
+            self._column_manager.set_sort(sort_col)
             self._apply_sort_and_refresh()
 
         # Update visible rows if scroll position changed

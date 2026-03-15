@@ -13,20 +13,20 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Fix Column Swap Bug | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Per-Turn Spend Calculation | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Build Queue Data Source & Column Defs | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. VirtualTable Integration | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Drag Handler Adaptation | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Verification & Cleanup | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 1. Fix Column Swap Bug | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Per-Turn Spend Calculation | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Build Queue Data Source & Column Defs | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. VirtualTable Integration | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Drag Handler Adaptation | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Verification & Cleanup | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-03-14 22:30
-**Active Phase:** Planning
-**Last Action:** Swarm review complete, plan drafted
-**Next Action:** User approval of plan
+**Last Updated:** 2026-03-15
+**Active Phase:** Complete
+**Last Action:** Completed all 6 phases
+**Next Action:** None - project complete
 **Blockers:** None
-**Context for Next Agent:** Plan ready for implementation. See design.md for architecture analysis and decisions.md for all decisions.
+**Context for Next Agent:** All phases complete. 13212 passed, 2 skipped (32 net new tests). VirtualTable integrated into BuildQueueScreen, per-turn spend columns added, column swap bug fixed, drag handler adapted. Note: PlanetListWindow also has the swap_column bug (out of scope for this project).
 
 ## Overview
 Replace the per-planet BuildQueueScreen's hardcoded column layout with the shared `TableColumnManager` + `VirtualTable` system used by PlanetListWindow, EmpireBuildQueueWindow, and other windows. Add per-turn spend columns and a build order column. Fix the column swap bug in EmpireBuildQueueWindow.
@@ -90,37 +90,37 @@ Replace the per-planet BuildQueueScreen's hardcoded column layout with the share
 
 ### Phase 1: Fix Column Swap Bug [Simple]
 **Objective:** Fix the column reordering arrows in EmpireBuildQueueWindow
-**Status:** Not Started
+**Status:** Complete
 
 See [phase_1_checklist.md](phase_1_checklist.md) for tasks.
 
 ### Phase 2: Per-Turn Spend Calculation [Medium]
 **Objective:** Add utility function to calculate proportional per-turn resource spend
-**Status:** Not Started
+**Status:** Complete
 
 See [phase_2_checklist.md](phase_2_checklist.md) for tasks.
 
 ### Phase 3: Build Queue Data Source & Column Definitions [Medium]
 **Objective:** Create ITableDataSource implementation and column definitions for per-planet build queue
-**Status:** Not Started
+**Status:** Complete
 
 See [phase_3_checklist.md](phase_3_checklist.md) for tasks.
 
 ### Phase 4: VirtualTable Integration [Complex]
 **Objective:** Replace hardcoded queue display with VirtualTable in BuildQueueScreen
-**Status:** Not Started
+**Status:** Complete
 
 See [phase_4_checklist.md](phase_4_checklist.md) for tasks.
 
 ### Phase 5: Drag Handler Adaptation [Medium]
 **Objective:** Refactor DragHandler to work with VirtualTable row indices instead of UIPanel references
-**Status:** Not Started
+**Status:** Complete
 
 See [phase_5_checklist.md](phase_5_checklist.md) for tasks.
 
 ### Phase 6: Verification & Cleanup [Simple]
 **Objective:** Full verification, dead code removal, test suite pass
-**Status:** Not Started
+**Status:** Complete
 
 See [phase_6_checklist.md](phase_6_checklist.md) for tasks.
 
@@ -155,12 +155,12 @@ See [phase_6_checklist.md](phase_6_checklist.md) for tasks.
 | 1 | | | |
 
 ## Completion Checklist
-- [ ] All Phase 1 tasks checked off
-- [ ] All Phase 2 tasks checked off
-- [ ] All Phase 3 tasks checked off
-- [ ] All Phase 4 tasks checked off
-- [ ] All Phase 5 tasks checked off
-- [ ] All Phase 6 tasks checked off
-- [ ] All tests passing (13180+ passed)
+- [x] All Phase 1 tasks checked off
+- [x] All Phase 2 tasks checked off
+- [x] All Phase 3 tasks checked off
+- [x] All Phase 4 tasks checked off
+- [x] All Phase 5 tasks checked off
+- [x] All Phase 6 tasks checked off
+- [x] All tests passing (13212 passed, 2 skipped)
 - [ ] Audit passed (no significant issues)
 - [ ] User verified

@@ -180,9 +180,8 @@ def test_queue_display_updates(build_queue_screen):
     # Refresh display
     build_queue_screen._refresh_queue_display()
 
-    # PROJ-180: Access via renderer.*
-    # Verify queue panel has items (implementation-dependent check)
-    assert hasattr(build_queue_screen.renderer, 'queue_items')
+    # PROJ-221: VirtualTable manages queue display - verify data source has correct count
+    assert build_queue_screen.panels.data_source.get_row_count() == 1
 
 
 def test_close_callback_fires(build_queue_screen):

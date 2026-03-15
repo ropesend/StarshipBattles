@@ -89,18 +89,19 @@ class BuildQueueDragHandler:
         self,
         event: pygame.event.Event,
         items_scrollable: Any,
-        queue_items: List[Any],
+        virtual_table: Any,
         construction_queue: Optional[List[Dict[str, Any]]],
         selected_category: str,
         multi_select_active: bool = False
     ) -> bool:
-        """
-        Handle mouse button down event for drag initiation.
+        """Handle mouse button down event for drag initiation.
+
+        PROJ-221 Phase 4/5: Replaced queue_items UIPanel list with VirtualTable.
 
         Args:
             event: pygame MOUSEBUTTONDOWN event
             items_scrollable: Scrollable container with design items
-            queue_items: List of queue item UI panels
+            virtual_table: VirtualTable managing queue row display
             construction_queue: The active queue's construction list (or None)
             selected_category: Currently selected design category
             multi_select_active: If True, disable all drag operations
@@ -141,16 +142,13 @@ class BuildQueueDragHandler:
                     logger.info(f"Started drag from mouse down: {self.selected_design}")
                     return True
 
-        # Check if mouse is over a queue item panel - track for potential drag
-        for element in queue_items:
-            if element.get_abs_rect().collidepoint(event.pos):
-                idx = getattr(element, 'queue_index', -1)
-                if idx != -1:
-                    # Store start position for drag threshold check
-                    self.drag_start_pos = event.pos
-                    self._pending_queue_index = idx  # Track which item might be dragged
-                    return True
-                break
+        # Check if mouse is over a queue item row via VirtualTable
+        clicked_row = virtual_table.handle_click(event.pos)
+        if clicked_row >= 0:
+            # Store start position for drag threshold check
+            self.drag_start_pos = event.pos
+            self._pending_queue_index = clicked_row
+            return True
 
         return False
 
@@ -223,17 +221,18 @@ class BuildQueueDragHandler:
         self,
         event: pygame.event.Event,
         build_queue_panel: Any,
-        queue_scrollable: Any,
+        virtual_table: Any,
         construction_queue: List[Dict[str, Any]],
         multi_select_active: bool = False
     ) -> Optional[int]:
-        """
-        Handle mouse button up event for drop or click-select.
+        """Handle mouse button up event for drop or click-select.
+
+        PROJ-221 Phase 4/5: Replaced queue_scrollable with VirtualTable.
 
         Args:
             event: pygame MOUSEBUTTONUP event
             build_queue_panel: Panel containing the build queue
-            queue_scrollable: Scrollable container for queue items
+            virtual_table: VirtualTable managing queue row display
             construction_queue: The active queue's construction list
             multi_select_active: If True, disable all drag operations
 
@@ -270,11 +269,12 @@ class BuildQueueDragHandler:
 
             # Check if dropped over build queue panel
             if build_queue_panel.rect.collidepoint(event.pos):
-                # Calculate insertion index based on vertical mouse position
-                rel_y = event.pos[1] - queue_scrollable.get_abs_rect().top
+                # Calculate insertion index based on mouse position relative to table
+                list_panel = virtual_table._list_view_panel
+                rel_y = event.pos[1] - list_panel.get_abs_rect().top
+                row_height = virtual_table._row_height
 
-                # Estimate index: each item is ~65 pixels high
-                estimated_idx = rel_y // 65
+                estimated_idx = rel_y // row_height
                 insert_idx = max(0, min(int(estimated_idx), len(construction_queue)))
 
                 turns = self.dragged_item.get('turns')

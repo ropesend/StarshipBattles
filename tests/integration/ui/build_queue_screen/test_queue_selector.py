@@ -373,9 +373,8 @@ def test_queue_display_shows_active_source_items():
     })
     bq._refresh_queue_display()
 
-    # PROJ-180: Access via renderer.*
-    # Should have 1 queue item displayed
-    assert len(bq.renderer.queue_items) == 1
+    # PROJ-221: VirtualTable manages queue display - verify data source has correct count
+    assert bq.panels.data_source.get_row_count() == 1
 
     pygame.quit()
 

@@ -1641,3 +1641,84 @@ class TestColumnSortingAndReorder:
             win.process_event(event)
 
         win._virtual_table.rebuild_headers.assert_called()
+
+
+# =======================================================================
+# Column Swap Tests (PROJ-221 Phase 1)
+# =======================================================================
+
+class TestColumnSwap:
+    """EmpireBuildQueueWindow should handle column swap events correctly."""
+
+    def test_column_swap_calls_swap_column_on_manager(self):
+        """When header returns swap_column event, swap_column() is called on column_manager."""
+        from pygame_gui.elements import UIWindow
+
+        win = _make_window()
+        win._refresh_list = MagicMock()
+
+        col_dict = {"id": "location", "title": "Location", "width": 150, "visible": True}
+        win._virtual_table.check_header_presses = MagicMock(
+            return_value={"swap_column": (col_dict, 1), "sort_column": None}
+        )
+        win.scroll_bar.check_has_moved_recently = MagicMock(return_value=False)
+
+        with patch.object(UIWindow, 'update', return_value=None):
+            win.update(0.016)
+
+        win._column_manager.swap_column.assert_called_once_with("location", 1)
+
+    def test_column_swap_rebuilds_headers_and_rows(self):
+        """After swap, rebuild_headers() and rebuild_row_pool() are called."""
+        from pygame_gui.elements import UIWindow
+
+        win = _make_window()
+        win._refresh_list = MagicMock()
+
+        col_dict = {"id": "status", "title": "Status", "width": 80, "visible": True}
+        win._virtual_table.check_header_presses = MagicMock(
+            return_value={"swap_column": (col_dict, -1), "sort_column": None}
+        )
+        win.scroll_bar.check_has_moved_recently = MagicMock(return_value=False)
+
+        with patch.object(UIWindow, 'update', return_value=None):
+            win.update(0.016)
+
+        win._virtual_table.rebuild_headers.assert_called_once()
+        win._virtual_table.rebuild_row_pool.assert_called_once()
+
+    def test_column_swap_does_not_set_sort(self):
+        """Swap must NOT call set_sort() — swap and sort are distinct operations."""
+        from pygame_gui.elements import UIWindow
+
+        win = _make_window()
+        win._refresh_list = MagicMock()
+
+        col_dict = {"id": "location", "title": "Location", "width": 150, "visible": True}
+        win._virtual_table.check_header_presses = MagicMock(
+            return_value={"swap_column": (col_dict, 1), "sort_column": None}
+        )
+        win.scroll_bar.check_has_moved_recently = MagicMock(return_value=False)
+
+        with patch.object(UIWindow, 'update', return_value=None):
+            win.update(0.016)
+
+        win._column_manager.set_sort.assert_not_called()
+
+    def test_column_swap_refreshes_list(self):
+        """After swap, _refresh_list() is called to update display."""
+        from pygame_gui.elements import UIWindow
+
+        win = _make_window()
+        win._refresh_list = MagicMock()
+
+        col_dict = {"id": "location", "title": "Location", "width": 150, "visible": True}
+        win._virtual_table.check_header_presses = MagicMock(
+            return_value={"swap_column": (col_dict, 1), "sort_column": None}
+        )
+        win.scroll_bar.check_has_moved_recently = MagicMock(return_value=False)
+
+        with patch.object(UIWindow, 'update', return_value=None):
+            win.update(0.016)
+
+        win._refresh_list.assert_called()

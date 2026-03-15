@@ -206,7 +206,7 @@ Six components restricted to `"Planetary Complex"` vehicle type, defined in `dat
 
 Full-screen UI with three panels:
 - **Items List** (left) -- available designs filtered by category
-- **Build Queue** (center) -- queued items with estimated turns remaining
+- **Build Queue** (center) -- VirtualTable displaying order, item name, turns, per-turn spend, and remaining cost columns (PROJ-221)
 - **Filter Panel** (right) -- category buttons (Complexes, Ships, Satellites, Fighters) plus Add/Remove
 
 Accessed from the strategy screen via the "Build Yard" button on owned planets.

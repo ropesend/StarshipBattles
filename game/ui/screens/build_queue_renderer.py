@@ -2,18 +2,17 @@
 
 Handles rendering of queue items and design list. Extracted from build_queue_screen.py
 as part of PROJ-172 Phase 4 MVVM refactoring.
+PROJ-221 Phase 4: Simplified queue display to use VirtualTable.
 """
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 import pygame
 import pygame_gui.elements as ui
 
-from game.core.constants import PLANET_RESOURCES
 from game.ui.screens.build_queue_helpers import format_resource_cost
-from game.ui.colors import TEAM_1_TEXT
 
 if TYPE_CHECKING:
     from game.ui.screens.build_queue_panel_factory import BuildQueuePanels
@@ -27,10 +26,11 @@ class BuildQueueRenderer:
 
     Handles:
     - Refreshing the items list (available designs)
-    - Refreshing the queue display (current build queue)
-    - Drawing selection highlights and drag previews
+    - Refreshing the queue display via VirtualTable
+    - Updating queue header text
 
     Does not own state - receives data from ViewModel.
+    PROJ-221: Queue display delegated to VirtualTable (selection handled there).
     """
 
     def __init__(
@@ -49,9 +49,6 @@ class BuildQueueRenderer:
         self.manager = manager
         self.panels = panels
         self.portrait_loader = portrait_loader
-
-        # Queue item panels (rebuilt on each refresh)
-        self.queue_items: List = []
 
     def refresh_items_list(self, designs: List, selected_category: str) -> None:
         """Refresh the available designs list.
@@ -123,130 +120,31 @@ class BuildQueueRenderer:
     def refresh_queue_display(
         self,
         queue: List[dict],
-        selected_queue_index: Optional[int],
-        is_multi_select: bool,
-        selected_sources: List = None,
-        on_queue_selector_refresh = None,
-    ) -> List:
-        """Refresh the build queue display.
+        build_rate: Dict[str, float],
+        on_queue_selector_refresh=None,
+    ) -> None:
+        """Refresh the build queue display via VirtualTable.
+
+        PROJ-221 Phase 4: Simplified to update data source and VirtualTable.
 
         Args:
             queue: List of queue item dicts.
-            selected_queue_index: Currently selected item index.
-            is_multi_select: True if multiple queue sources are selected.
-            selected_sources: List of selected sources for multi-select display.
+            build_rate: Production rate per turn for the active queue.
             on_queue_selector_refresh: Callback to refresh queue selector counts.
-
-        Returns:
-            List of queue item panels for selection tracking.
         """
-        scrollable = self.panels.queue_scrollable
-        column_positions = self.panels.queue_column_positions
+        data_source = self.panels.data_source
+        virtual_table = self.panels.virtual_table
 
-        # Clear existing queue items
-        elements_to_kill = list(scrollable.get_container().elements)
-        for element in elements_to_kill:
-            element.kill()
-        self.queue_items = []
+        # Update data source with current queue and rates
+        data_source.set_queue(queue, build_rate)
 
-        # Multi-select mode: show message instead of queue contents
-        if is_multi_select and selected_sources:
-            selected_names = [s.display_name for s in selected_sources]
-            msg_lines = "<br>".join(f"- {name}" for name in selected_names)
-            ui.UITextBox(
-                relative_rect=pygame.Rect(10, 10, scrollable.get_container().get_size()[0] - 20, 200),
-                html_text=f"<b>Adding to {len(selected_sources)} queues:</b><br>{msg_lines}",
-                manager=self.manager,
-                container=scrollable
-            )
-            if on_queue_selector_refresh:
-                on_queue_selector_refresh()
-            return self.queue_items
-
-        # Display each item in the queue
-        y_offset = 0
-        icon_size = 40
-
-        for idx, item in enumerate(queue):
-            design_id = item.get("design_id", "Unknown")
-            turns = item.get("turns_remaining", 0)
-            item_type = item.get("type", "ship")
-
-            is_selected = (idx == selected_queue_index)
-            panel_object_id = "#queue_item_selected" if is_selected else "#queue_item"
-
-            total_cost = item.get("total_cost")
-            panel_height = 48
-
-            item_panel = ui.UIPanel(
-                relative_rect=pygame.Rect(0, y_offset, scrollable.get_container().get_size()[0] - 20, panel_height),
-                manager=self.manager,
-                container=scrollable,
-                object_id=panel_object_id
-            )
-            item_panel.queue_index = idx
-            item_panel.item_data = item
-            item_panel.is_selected = is_selected
-
-            portrait_surface = self.portrait_loader.load_queue_item_portrait(design_id, item_type, icon_size)
-            if portrait_surface:
-                ui.UIImage(
-                    relative_rect=pygame.Rect(4, 4, icon_size, icon_size),
-                    image_surface=portrait_surface,
-                    manager=self.manager,
-                    container=item_panel
-                )
-
-            name_x = icon_size + 8
-            ui.UILabel(
-                relative_rect=pygame.Rect(name_x, 14, 400, 20),
-                text=f"{design_id} ({item_type})",
-                manager=self.manager,
-                container=item_panel
-            )
-
-            turns_x = column_positions.get("Turns", 165) - 10
-            ui.UILabel(
-                relative_rect=pygame.Rect(turns_x, 14, 45, 20),
-                text=f"{turns}",
-                manager=self.manager,
-                container=item_panel
-            )
-
-            if total_cost and turns > 0:
-                resources_consumed = item.get("resources_consumed", {})
-                for resource in PLANET_RESOURCES:
-                    total_amt = total_cost.get(resource, 0)
-                    consumed = resources_consumed.get(resource, 0)
-                    remaining = max(0, total_amt - consumed)
-                    if remaining > 0:
-                        col_x = column_positions.get(resource, 0) - 10
-                        if remaining >= 1:
-                            cost_text = f"{int(remaining)}"
-                        else:
-                            cost_text = f"{remaining:.1f}"
-                        ui.UILabel(
-                            relative_rect=pygame.Rect(col_x, 14, 50, 20),
-                            text=cost_text,
-                            manager=self.manager,
-                            container=item_panel
-                        )
-
-            self.queue_items.append(item_panel)
-            y_offset += panel_height + 3
-
-        if not queue:
-            ui.UILabel(
-                relative_rect=pygame.Rect(10, 10, 300, 30),
-                text="Queue is empty",
-                manager=self.manager,
-                container=scrollable
-            )
+        # Refresh VirtualTable display
+        virtual_table.update_scroll_bar()
+        virtual_table.force_update()
+        virtual_table.update_visible_rows()
 
         if on_queue_selector_refresh:
             on_queue_selector_refresh()
-
-        return self.queue_items
 
     def update_queue_header(self, active_source) -> None:
         """Update build queue header text.
@@ -260,22 +158,3 @@ class BuildQueueRenderer:
             header_text = "<b>Build Queue</b>"
         self.panels.queue_header_text.set_text(header_text)
 
-    def draw_selection_highlight(
-        self,
-        screen: pygame.Surface,
-        selected_queue_index: Optional[int],
-    ) -> None:
-        """Draw selection highlight on selected queue item.
-
-        Args:
-            screen: pygame surface to draw on.
-            selected_queue_index: Currently selected item index.
-        """
-        if selected_queue_index is None:
-            return
-
-        for item_panel in self.queue_items:
-            if getattr(item_panel, 'queue_index', -1) == selected_queue_index:
-                abs_rect = item_panel.get_abs_rect()
-                pygame.draw.rect(screen, TEAM_1_TEXT, abs_rect, 3)
-                break
