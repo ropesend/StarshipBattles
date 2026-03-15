@@ -23,7 +23,7 @@ CHUNK = 1024
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 16000
-VOICE_THRESHOLD = int(os.getenv('VOICE_THRESHOLD', '300'))
+VOICE_THRESHOLD = int(os.getenv('VOICE_THRESHOLD', '450'))
 
 # Monitor display config
 WINDOW_SIZE = 512

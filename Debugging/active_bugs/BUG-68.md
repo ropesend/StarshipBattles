@@ -79,3 +79,9 @@ None — code matches docs. No list+detail pattern is explicitly documented in `
 **Reason:** 68
 **New Constraints:** None provided
 ---
+
+---
+### ❌ Fix Rejected [2026-03-14 22:16]
+**Reason:** Ship selection and right-hand panel now work correctly. However, the "Remove from Fleet" button still does nothing when clicked — the core issue remains unfixed.
+**New Constraints:** Ship removal should be instant (no turn cost). Clicking "Remove from Fleet" should immediately create a new fleet-of-one containing the removed ship at the same location. The UI callback currently ignores command results, so validation failures are silent — this needs error feedback.
+---

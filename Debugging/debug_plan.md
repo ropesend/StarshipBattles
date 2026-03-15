@@ -7,7 +7,7 @@
 ## 2. Bug Queue
 | ID | Date Found | Description | Status | Spec File |
 | :--- | :--- | :--- | :--- | :--- |
-| BUG-68 | 2026-02-07 | Fleet Report - ship selection + ship report + remove from fleet | Awaiting Confirmation | [BUG-68.md](active_bugs/BUG-68.md) |
+| BUG-68 | 2026-02-07 | Fleet Report - ship selection + ship report + remove from fleet | In-Progress | [BUG-68.md](active_bugs/BUG-68.md) |
 | BUG-80 | 2026-02-11 | Planets List - Planet details panel dimensions and positioning | Awaiting Confirmation | [BUG-80.md](active_bugs/BUG-80.md) |
 
 ## 3. Current Focus: BUG-70

@@ -22,7 +22,7 @@ SCREENSHOTS_DIR = os.getenv('SCREENSHOTS_DIR', r'C:\Users\rossr\Pictures\Screens
 SESSION_OUTPUT_DIR = os.getenv('SESSION_OUTPUT_DIR', './session_data')
 
 # Audio configuration
-VOICE_THRESHOLD = int(os.getenv('VOICE_THRESHOLD', '300'))
+VOICE_THRESHOLD = int(os.getenv('VOICE_THRESHOLD', '450'))
 SILENCE_TIMEOUT = float(os.getenv('SILENCE_TIMEOUT', '2.0'))
 
 # Audio configuration
