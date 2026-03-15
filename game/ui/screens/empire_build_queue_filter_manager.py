@@ -5,10 +5,14 @@ for the EmpireBuildQueueWindow. This module extracts filter/column logic
 to allow unit testing of filter behavior without pygame/UI dependencies.
 
 Created as part of PROJ-89 Phase 3.
+PROJ-220 Phase 4: Replaced 3 bool filter dicts with FilterStateManager.
 """
 from __future__ import annotations
 
 from typing import Any, Callable, Dict, List, TYPE_CHECKING
+
+from game.ui.filters.filter_state import FilterState
+from game.ui.filters.filter_state_manager import FilterStateManager
 
 if TYPE_CHECKING:
     from game.strategy.data.build_queue_source import BuildQueueSource
@@ -48,14 +52,23 @@ DEFAULT_COLUMNS: List[Dict[str, Any]] = [
     {'id': 'res_exotics_total', 'width': 70, 'title': 'Exo Tot', 'visible': True},
 ]
 
+# Mapping from filter key to (trait_extractor) for tri-state filtering
+_FILTER_TRAIT_MAP = {
+    'loc_Planet': lambda s: s.context_type == "planet",
+    'loc_Fleet': lambda s: s.context_type == "fleet",
+    'status_Active': lambda s: len(s.construction_queue) > 0,
+    'status_Empty': lambda s: len(s.construction_queue) == 0,
+    'cap_Ships': lambda s: s.can_build_ships,
+    'cap_Complexes': lambda s: s.can_build_complexes,
+}
+
 
 class BuildQueueFilterManager:
     """Manages filter state and column visibility for the Empire Build Queue.
 
+    Uses FilterStateManager for tri-state (YES/NO/IGNORE) filter control.
+
     Attributes:
-        filter_location_type: Dict mapping 'Planet'/'Fleet' to enabled state.
-        filter_status: Dict mapping 'Active'/'Empty' to enabled state.
-        filter_capabilities: Dict mapping 'Ships'/'Complexes' to enabled state.
         search_text: Current text search filter (case-insensitive).
         columns: List of column configuration dicts.
     """
@@ -69,10 +82,16 @@ class BuildQueueFilterManager:
         Args:
             columns: Optional column definitions. If None, uses DEFAULT_COLUMNS.
         """
-        # Filter state - all enabled by default
-        self.filter_location_type: Dict[str, bool] = {'Planet': True, 'Fleet': True}
-        self.filter_status: Dict[str, bool] = {'Active': True, 'Empty': True}
-        self.filter_capabilities: Dict[str, bool] = {'Ships': True, 'Complexes': True}
+        # Tri-state filters via FilterStateManager
+        self._filter_mgr = FilterStateManager({
+            'loc_Planet': FilterState.IGNORE,
+            'loc_Fleet': FilterState.IGNORE,
+            'status_Active': FilterState.IGNORE,
+            'status_Empty': FilterState.IGNORE,
+            'cap_Ships': FilterState.IGNORE,
+            'cap_Complexes': FilterState.IGNORE,
+        })
+
         self.search_text: str = ""
 
         # Column configuration - deep copy to allow independent modification
@@ -82,6 +101,19 @@ class BuildQueueFilterManager:
             ]
         else:
             self.columns = [dict(col) for col in columns]
+
+    @property
+    def filter_manager(self) -> FilterStateManager:
+        """Access the tri-state FilterStateManager."""
+        return self._filter_mgr
+
+    def get_filter_state(self, key: str) -> FilterState:
+        """Get the current FilterState for a filter key."""
+        return self._filter_mgr.get_state(key)
+
+    def set_filter_state(self, key: str, state: FilterState) -> None:
+        """Set a filter to a specific FilterState."""
+        self._filter_mgr.set_state(key, state)
 
     def get_visible_columns(self) -> List[Dict[str, Any]]:
         """Return list of currently visible columns.
@@ -112,7 +144,7 @@ class BuildQueueFilterManager:
         """Apply all active filters to a list of sources.
 
         Filters are combined with AND logic: a source must pass all
-        enabled filters to appear in the result.
+        active filters to appear in the result.
 
         Args:
             sources: The full list of sources to filter.
@@ -122,29 +154,15 @@ class BuildQueueFilterManager:
         """
         result = list(sources)
 
-        # Location type filter
-        result = [
-            s for s in result
-            if (s.context_type == "planet" and self.filter_location_type.get('Planet', True))
-            or (s.context_type == "fleet" and self.filter_location_type.get('Fleet', True))
-        ]
-
-        # Queue status filter
-        result = [
-            s for s in result
-            if (len(s.construction_queue) > 0 and self.filter_status.get('Active', True))
-            or (len(s.construction_queue) == 0 and self.filter_status.get('Empty', True))
-        ]
-
-        # Capabilities filter - show source if ANY of its capabilities match
-        # an enabled filter. If all filters are on, show everything.
-        if not (self.filter_capabilities.get('Ships', True)
-                and self.filter_capabilities.get('Complexes', True)):
-            result = [
-                s for s in result
-                if (s.can_build_ships and self.filter_capabilities.get('Ships', True))
-                or (s.can_build_complexes and self.filter_capabilities.get('Complexes', True))
-            ]
+        # Apply tri-state filters
+        for key, trait_fn in _FILTER_TRAIT_MAP.items():
+            state = self._filter_mgr.get_state(key)
+            if state is FilterState.IGNORE:
+                continue
+            if state is FilterState.YES:
+                result = [s for s in result if trait_fn(s)]
+            else:  # FilterState.NO
+                result = [s for s in result if not trait_fn(s)]
 
         # Text search filter
         if self.search_text.strip():

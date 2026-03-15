@@ -3,6 +3,7 @@ Fleet Report filtering and stats calculation.
 
 PROJ-03: Fleet Report Window feature implementation.
 PROJ-40: Removed backward-compat wrapper - use ShipStatsCalculator directly.
+PROJ-220: Refactored binary paired-bool filters to tri-state FilterState.
 """
 from __future__ import annotations
 
@@ -10,10 +11,20 @@ from typing import TYPE_CHECKING, Dict, Any, List
 
 from game.core.constants import ResourceType
 from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+from game.ui.filters.filter_state import FilterState
 from game.ui.screens.fleet_data_source import SPECIAL_CAPABILITY_COLUMNS
 
 if TYPE_CHECKING:
     from game.strategy.data.ship_instance import ShipInstance
+
+# Mapping from SPECIAL_CAPABILITY_COLUMNS col_id to FilterState key
+SPECIAL_CAPABILITY_FILTER_KEYS = {
+    'can_destroy_planet': 'destroy_planet',
+    'can_open_warp': 'open_warp',
+    'can_close_warp': 'close_warp',
+    'can_destroy_star': 'destroy_star',
+    'can_create_sphere': 'create_sphere',
+}
 
 
 def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
@@ -121,77 +132,61 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
     }
 
 
-def _should_exclude_by_warp(ship: 'ShipInstance', filter_state: Dict[str, bool]) -> bool:
-    """Check if ship should be excluded based on warp capability filters."""
-    show_warp = filter_state.get('show_warp_capable', True)
-    show_not_warp = filter_state.get('show_not_warp_capable', True)
+def _check_tri_state(state: FilterState, has_trait: bool) -> bool:
+    """Check if an item should be excluded based on tri-state filter.
 
-    # If both filters are on, no exclusion needed
-    if show_warp and show_not_warp:
+    Returns True if the item should be EXCLUDED.
+    """
+    if state is FilterState.IGNORE:
         return False
+    if state is FilterState.YES:
+        return not has_trait
+    # FilterState.NO
+    return has_trait
 
+
+def _should_exclude_by_warp(ship: 'ShipInstance', filter_state: Dict[str, Any]) -> bool:
+    """Check if ship should be excluded based on warp capability filter."""
+    state = filter_state.get('warp_capable', FilterState.IGNORE)
+    if state is FilterState.IGNORE:
+        return False
     is_warp_capable = ShipStatsCalculator.has_warp_capability(ship)
-    if is_warp_capable and not show_warp:
-        return True
-    if not is_warp_capable and not show_not_warp:
-        return True
-    return False
+    return _check_tri_state(state, is_warp_capable)
 
 
-def _should_exclude_by_spaceyard(ship: 'ShipInstance', filter_state: Dict[str, bool]) -> bool:
-    """Check if ship should be excluded based on spaceyard capability filters."""
-    show_has_yard = filter_state.get('show_has_spaceyard', True)
-    show_no_yard = filter_state.get('show_no_spaceyard', True)
-
-    # If both filters are on, no exclusion needed
-    if show_has_yard and show_no_yard:
+def _should_exclude_by_spaceyard(ship: 'ShipInstance', filter_state: Dict[str, Any]) -> bool:
+    """Check if ship should be excluded based on spaceyard capability filter."""
+    state = filter_state.get('has_spaceyard', FilterState.IGNORE)
+    if state is FilterState.IGNORE:
         return False
-
     # INTENTIONAL LATE IMPORT: Avoid circular import with strategy data
     from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
     has_yard = FleetCapabilityCalculator.ship_has_spaceyard(ship)
-    if has_yard and not show_has_yard:
-        return True
-    if not has_yard and not show_no_yard:
-        return True
-    return False
+    return _check_tri_state(state, has_yard)
 
 
-def _should_exclude_by_cargo(ship: 'ShipInstance', filter_state: Dict[str, bool]) -> bool:
-    """Check if ship should be excluded based on cargo content filters."""
-    show_has_cargo = filter_state.get('show_has_cargo', True)
-    show_no_cargo = filter_state.get('show_no_cargo', True)
-
-    # If both filters are on, no exclusion needed
-    if show_has_cargo and show_no_cargo:
+def _should_exclude_by_cargo(ship: 'ShipInstance', filter_state: Dict[str, Any]) -> bool:
+    """Check if ship should be excluded based on cargo content filter."""
+    state = filter_state.get('has_cargo', FilterState.IGNORE)
+    if state is FilterState.IGNORE:
         return False
-
     has_cargo = bool(ship.cargo_contents) and sum(ship.cargo_contents.values()) > 0
-    if has_cargo and not show_has_cargo:
-        return True
-    if not has_cargo and not show_no_cargo:
-        return True
-    return False
+    return _check_tri_state(state, has_cargo)
 
 
-def _should_exclude_by_special_capabilities(ship: 'ShipInstance', filter_state: Dict[str, bool]) -> bool:
+def _should_exclude_by_special_capabilities(ship: 'ShipInstance', filter_state: Dict[str, Any]) -> bool:
     """Check if ship should be excluded based on special capability filters."""
     for col_id, ability_name in SPECIAL_CAPABILITY_COLUMNS.items():
-        # Derive filter keys from column id: 'can_destroy_planet' -> show_can_destroy_planet / show_no_destroy_planet
-        # The "no" variant strips the "can_" prefix
-        show_has = filter_state.get(f'show_{col_id}', True)
-        no_key = col_id.replace('can_', 'no_', 1)
-        show_not = filter_state.get(f'show_{no_key}', True)
-
-        if not show_has or not show_not:
-            # INTENTIONAL LATE IMPORT: Avoid circular import with strategy data
-            from game.strategy.services.component_inspector import ship_has_ability
-            registry = ship._registries.components if ship._registries else {}
-            has_ability = ship_has_ability(ship, ability_name, registry)
-            if has_ability and not show_has:
-                return True
-            if not has_ability and not show_not:
-                return True
+        filter_key = SPECIAL_CAPABILITY_FILTER_KEYS[col_id]
+        state = filter_state.get(filter_key, FilterState.IGNORE)
+        if state is FilterState.IGNORE:
+            continue
+        # INTENTIONAL LATE IMPORT: Avoid circular import with strategy data
+        from game.strategy.services.component_inspector import ship_has_ability
+        registry = ship._registries.components if ship._registries else {}
+        has_ability = ship_has_ability(ship, ability_name, registry)
+        if _check_tri_state(state, has_ability):
+            return True
     return False
 
 
@@ -218,19 +213,16 @@ def _should_exclude_by_status(ship: 'ShipInstance', filter_state: Dict[str, bool
     return not filter_state.get('show_undamaged', True)
 
 
-def filter_ships(ships: List[ShipInstance], filter_state: Dict[str, bool]) -> List[ShipInstance]:
+def filter_ships(ships: List[ShipInstance], filter_state: Dict[str, Any]) -> List[ShipInstance]:
     """
-    Filter ships based on status filter state.
+    Filter ships based on combined filter state.
 
     Args:
         ships: List of ShipInstance objects
-        filter_state: Dict with keys:
-            - show_damaged: Include damaged ships
-            - show_undamaged: Include undamaged ships
-            - show_derelict: Include derelict ships
-            - show_destroyed: Include destroyed ships
-            - show_warp_capable: Include warp-capable ships
-            - show_not_warp_capable: Include ships without warp capability
+        filter_state: Dict with mixed keys:
+            Status filters (bool): show_damaged, show_undamaged, show_derelict, show_destroyed
+            Tri-state filters (FilterState): warp_capable, has_spaceyard, has_cargo,
+                destroy_planet, open_warp, close_warp, destroy_star, create_sphere
 
     Returns:
         Filtered list of ships

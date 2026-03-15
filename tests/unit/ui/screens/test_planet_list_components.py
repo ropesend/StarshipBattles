@@ -306,6 +306,88 @@ class TestApplyPlanetListState:
 
         assert filter_types == {'Continental': False, 'Arid': True}
 
+    def test_applies_owner_filters(self):
+        """Test applies owner filters from state (PROJ-220 bug fix)."""
+        from game.ui.screens.planet_list_presets import apply_planet_list_state
+
+        state = {
+            'filters': {
+                'owner': {'Player': True, 'Enemy': False, 'Unowned': True}
+            }
+        }
+        columns = []
+        txt_name_filter = Mock()
+        filter_types = {}
+        filter_owner = {'Player': True, 'Enemy': True, 'Unowned': True}
+        ui_filters = {'owners': {}}
+
+        apply_planet_list_state(
+            state, columns, txt_name_filter, filter_types, ui_filters,
+            filter_owner=filter_owner,
+        )
+
+        assert filter_owner == {'Player': True, 'Enemy': False, 'Unowned': True}
+
+    def test_applies_owner_filters_updates_buttons(self):
+        """Test applies owner filters updates UI buttons (PROJ-220 bug fix)."""
+        from game.ui.screens.planet_list_presets import apply_planet_list_state
+
+        state = {
+            'filters': {
+                'owner': {'Player': False, 'Enemy': True, 'Unowned': False}
+            }
+        }
+        columns = []
+        txt_name_filter = Mock()
+        filter_types = {}
+        filter_owner = {'Player': True, 'Enemy': True, 'Unowned': True}
+        btn_player = Mock()
+        btn_enemy = Mock()
+        btn_unowned = Mock()
+        ui_filters = {
+            'owners': {
+                'Player': btn_player,
+                'Enemy': btn_enemy,
+                'Unowned': btn_unowned,
+            }
+        }
+
+        apply_planet_list_state(
+            state, columns, txt_name_filter, filter_types, ui_filters,
+            filter_owner=filter_owner,
+        )
+
+        btn_player.unselect.assert_called_once()
+        btn_player.set_text.assert_called_with("Player")
+        btn_enemy.select.assert_called_once()
+        btn_enemy.set_text.assert_called_with("[Enemy]")
+        btn_unowned.unselect.assert_called_once()
+        btn_unowned.set_text.assert_called_with("Unowned")
+
+    def test_missing_owner_key_defaults_to_all_true(self):
+        """Old presets without owner key should leave filter_owner unchanged."""
+        from game.ui.screens.planet_list_presets import apply_planet_list_state
+
+        state = {
+            'filters': {
+                'types': {'Continental': True}
+                # Note: no 'owner' key
+            }
+        }
+        columns = []
+        txt_name_filter = Mock()
+        filter_types = {'Continental': False}
+        filter_owner = {'Player': True, 'Enemy': True, 'Unowned': True}
+        ui_filters = {'types': {}}
+
+        apply_planet_list_state(
+            state, columns, txt_name_filter, filter_types, ui_filters,
+            filter_owner=filter_owner,
+        )
+
+        # Owner filter should remain unchanged (all True)
+        assert filter_owner == {'Player': True, 'Enemy': True, 'Unowned': True}
+
 
 # =============================================================================
 # filter_planets Tests (extending existing)

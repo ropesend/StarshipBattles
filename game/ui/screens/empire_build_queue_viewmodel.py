@@ -7,8 +7,9 @@ Created as part of PROJ-172 Phase 3.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Set
+from typing import TYPE_CHECKING, Any, List, Set
 
+from game.ui.filters.filter_state import FilterState
 from game.ui.screens.empire_build_queue_filter_manager import BuildQueueFilterManager
 from game.ui.screens.empire_build_queue_formatter import (
     get_queue_summary,
@@ -128,35 +129,25 @@ class EmpireBuildQueueViewModel:
         """Current search filter text."""
         return self._search_text
 
-    @property
-    def filter_location_type(self) -> Dict[str, bool]:
-        """Location type filter state."""
-        return self._filter_mgr.filter_location_type
+    def get_filter_state(self, key: str) -> FilterState:
+        """Get the current FilterState for a filter key.
 
-    @filter_location_type.setter
-    def filter_location_type(self, value: Dict[str, bool]) -> None:
-        """Set location type filter state."""
-        self._filter_mgr.filter_location_type = value
+        Args:
+            key: Filter key (e.g., 'loc_Planet', 'status_Active').
 
-    @property
-    def filter_status(self) -> Dict[str, bool]:
-        """Queue status filter state."""
-        return self._filter_mgr.filter_status
+        Returns:
+            Current FilterState value.
+        """
+        return self._filter_mgr.get_filter_state(key)
 
-    @filter_status.setter
-    def filter_status(self, value: Dict[str, bool]) -> None:
-        """Set queue status filter state."""
-        self._filter_mgr.filter_status = value
+    def set_filter_state(self, key: str, state: FilterState) -> None:
+        """Set a filter to a specific FilterState.
 
-    @property
-    def filter_capabilities(self) -> Dict[str, bool]:
-        """Build capabilities filter state."""
-        return self._filter_mgr.filter_capabilities
-
-    @filter_capabilities.setter
-    def filter_capabilities(self, value: Dict[str, bool]) -> None:
-        """Set build capabilities filter state."""
-        self._filter_mgr.filter_capabilities = value
+        Args:
+            key: Filter key (e.g., 'loc_Planet', 'status_Active').
+            state: New FilterState value.
+        """
+        self._filter_mgr.set_filter_state(key, state)
 
     # -----------------------------------------------------------------------
     # Source Management
@@ -249,39 +240,6 @@ class EmpireBuildQueueViewModel:
         """
         self._search_text = text
         self._filter_mgr.search_text = text
-
-    def toggle_filter(self, filter_key: str) -> bool:
-        """Toggle a filter by its key.
-
-        Args:
-            filter_key: Key in format "category_value" (e.g., "loc_Planet").
-
-        Returns:
-            New filter state, or False if key not recognized.
-        """
-        parts = filter_key.split("_", 1)
-        if len(parts) != 2:
-            return False
-
-        category, value = parts
-
-        if category == "loc":
-            if value in self._filter_mgr.filter_location_type:
-                new_state = not self._filter_mgr.filter_location_type[value]
-                self._filter_mgr.filter_location_type[value] = new_state
-                return new_state
-        elif category == "status":
-            if value in self._filter_mgr.filter_status:
-                new_state = not self._filter_mgr.filter_status[value]
-                self._filter_mgr.filter_status[value] = new_state
-                return new_state
-        elif category == "cap":
-            if value in self._filter_mgr.filter_capabilities:
-                new_state = not self._filter_mgr.filter_capabilities[value]
-                self._filter_mgr.filter_capabilities[value] = new_state
-                return new_state
-
-        return False
 
     def apply_filters(self) -> None:
         """Re-apply all filters and clear selection."""

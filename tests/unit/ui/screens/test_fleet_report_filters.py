@@ -1,8 +1,12 @@
-"""Tests for fleet report filtering and stats calculation - PROJ-03 Phase 3."""
+"""Tests for fleet report filtering and stats calculation - PROJ-03 Phase 3.
+
+PROJ-220: Updated filter tests from paired-bool to tri-state FilterState.
+"""
 import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.data.ship_instance import ShipInstance
+from game.ui.filters.filter_state import FilterState
 
 
 def make_mock_ship(
@@ -346,7 +350,7 @@ class TestFilterShipsWarp:
     """Test cases for warp capability filtering in filter_ships."""
 
     def test_filter_hide_warp_capable(self):
-        """Hide warp-capable ships when filter is off."""
+        """NO filter shows only non-warp-capable ships."""
         from game.ui.screens.fleet_report_filters import filter_ships
 
         ships = [
@@ -358,17 +362,15 @@ class TestFilterShipsWarp:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'show_warp_capable': False,
-            'show_not_warp_capable': True,
+            'warp_capable': FilterState.NO,
         }
         result = filter_ships(ships, filter_state)
 
         assert len(result) == 1
-        # The remaining ship should not have warp capability
-        assert 'WarpJump' not in result[0].design_data['layers'].get('CORE', [{}])[0].get('abilities', {})
+        assert result[0].design_data['expected_stats']['warp_max_tonnage'] == 0
 
     def test_filter_hide_not_warp_capable(self):
-        """Hide non-warp-capable ships when filter is off."""
+        """YES filter shows only warp-capable ships."""
         from game.ui.screens.fleet_report_filters import filter_ships
 
         ships = [
@@ -380,17 +382,15 @@ class TestFilterShipsWarp:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'show_warp_capable': True,
-            'show_not_warp_capable': False,
+            'warp_capable': FilterState.YES,
         }
         result = filter_ships(ships, filter_state)
 
         assert len(result) == 1
-        # The remaining ship should have warp capability (via expected_stats)
         assert result[0].design_data['expected_stats']['warp_max_tonnage'] == 1500
 
     def test_filter_show_all_warp_states(self):
-        """With both warp filters enabled, all ships should pass warp filter."""
+        """IGNORE filter passes all ships through warp filter."""
         from game.ui.screens.fleet_report_filters import filter_ships
 
         ships = [
@@ -402,8 +402,7 @@ class TestFilterShipsWarp:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'show_warp_capable': True,
-            'show_not_warp_capable': True,
+            'warp_capable': FilterState.IGNORE,
         }
         result = filter_ships(ships, filter_state)
 
@@ -589,7 +588,7 @@ class TestFilterShipsSpaceyard:
     """Test cases for spaceyard capability filtering in filter_ships."""
 
     def test_filter_hide_has_spaceyard(self):
-        """Hide ships with spaceyards when filter is off."""
+        """NO filter shows only ships without spaceyards."""
         from game.ui.screens.fleet_report_filters import filter_ships
         from unittest.mock import patch
 
@@ -607,8 +606,7 @@ class TestFilterShipsSpaceyard:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'show_has_spaceyard': False,
-            'show_no_spaceyard': True,
+            'has_spaceyard': FilterState.NO,
         }
 
         with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard', side_effect=mock_has_yard):
@@ -618,7 +616,7 @@ class TestFilterShipsSpaceyard:
         assert result[0].name == "Destroyer"
 
     def test_filter_hide_no_spaceyard(self):
-        """Hide ships without spaceyards when filter is off."""
+        """YES filter shows only ships with spaceyards."""
         from game.ui.screens.fleet_report_filters import filter_ships
         from unittest.mock import patch
 
@@ -636,8 +634,7 @@ class TestFilterShipsSpaceyard:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'show_has_spaceyard': True,
-            'show_no_spaceyard': False,
+            'has_spaceyard': FilterState.YES,
         }
 
         with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard', side_effect=mock_has_yard):
@@ -647,7 +644,7 @@ class TestFilterShipsSpaceyard:
         assert result[0].name == "Carrier"
 
     def test_filter_show_all_spaceyard_states(self):
-        """With both spaceyard filters enabled, all ships pass."""
+        """IGNORE filter passes all ships through spaceyard filter."""
         from game.ui.screens.fleet_report_filters import filter_ships
 
         ship_with_yard = make_mock_ship(design_name="Carrier")
@@ -661,8 +658,7 @@ class TestFilterShipsSpaceyard:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'show_has_spaceyard': True,
-            'show_no_spaceyard': True,
+            'has_spaceyard': FilterState.IGNORE,
         }
 
         result = filter_ships(ships, filter_state)
@@ -673,7 +669,7 @@ class TestFilterShipsCargo:
     """Test cases for cargo filtering in filter_ships."""
 
     def test_filter_hide_has_cargo(self):
-        """Hide ships with cargo when filter is off."""
+        """NO filter shows only ships without cargo."""
         from game.ui.screens.fleet_report_filters import filter_ships
 
         ship_with_cargo = make_mock_ship(design_name="Freighter")
@@ -689,8 +685,7 @@ class TestFilterShipsCargo:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'show_has_cargo': False,
-            'show_no_cargo': True,
+            'has_cargo': FilterState.NO,
         }
 
         result = filter_ships(ships, filter_state)
@@ -698,7 +693,7 @@ class TestFilterShipsCargo:
         assert result[0].name == "Warship"
 
     def test_filter_hide_no_cargo(self):
-        """Hide ships without cargo when filter is off."""
+        """YES filter shows only ships with cargo."""
         from game.ui.screens.fleet_report_filters import filter_ships
 
         ship_with_cargo = make_mock_ship(design_name="Freighter")
@@ -714,8 +709,7 @@ class TestFilterShipsCargo:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'show_has_cargo': True,
-            'show_no_cargo': False,
+            'has_cargo': FilterState.YES,
         }
 
         result = filter_ships(ships, filter_state)
@@ -739,8 +733,7 @@ class TestFilterShipsCargo:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'show_has_cargo': False,
-            'show_no_cargo': True,
+            'has_cargo': FilterState.NO,
         }
 
         result = filter_ships(ships, filter_state)
@@ -761,15 +754,14 @@ class TestFilterShipsCargo:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'show_has_cargo': False,
-            'show_no_cargo': True,
+            'has_cargo': FilterState.NO,
         }
 
         result = filter_ships(ships, filter_state)
         assert len(result) == 1  # Treated as no cargo
 
     def test_filter_show_all_cargo_states(self):
-        """With both cargo filters enabled, all ships pass."""
+        """IGNORE filter passes all ships through cargo filter."""
         from game.ui.screens.fleet_report_filters import filter_ships
 
         ship_with_cargo = make_mock_ship(design_name="Freighter")
@@ -785,8 +777,7 @@ class TestFilterShipsCargo:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'show_has_cargo': True,
-            'show_no_cargo': True,
+            'has_cargo': FilterState.IGNORE,
         }
 
         result = filter_ships(ships, filter_state)
@@ -889,8 +880,7 @@ class TestFilterCombinations:
             'show_undamaged': False,  # hide undamaged
             'show_derelict': True,
             'show_destroyed': True,
-            'show_warp_capable': True,
-            'show_not_warp_capable': False,  # hide non-warp
+            'warp_capable': FilterState.YES,  # only warp-capable
         }
         result = filter_ships(ships, filter_state)
 
@@ -925,10 +915,8 @@ class TestFilterCombinations:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'show_has_spaceyard': True,
-            'show_no_spaceyard': False,  # hide ships without spaceyard
-            'show_has_cargo': True,
-            'show_no_cargo': False,  # hide ships without cargo
+            'has_spaceyard': FilterState.YES,  # only ships with spaceyard
+            'has_cargo': FilterState.YES,  # only ships with cargo
         }
 
         with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard', side_effect=mock_has_yard):
@@ -968,12 +956,8 @@ class TestFilterCombinations:
             'show_undamaged': False,  # exclude undamaged
             'show_derelict': True,
             'show_destroyed': True,
-            'show_warp_capable': True,
-            'show_not_warp_capable': False,  # exclude non-warp
-            'show_has_spaceyard': True,
-            'show_no_spaceyard': True,
-            'show_has_cargo': True,
-            'show_no_cargo': False,  # exclude no-cargo
+            'warp_capable': FilterState.YES,  # only warp-capable
+            'has_cargo': FilterState.YES,  # only ships with cargo
         }
 
         with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard', side_effect=mock_has_yard):
@@ -1002,8 +986,7 @@ class TestSpecialCapabilityFilter:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'show_can_destroy_planet': False,  # Hide ships with ability
-            'show_no_destroy_planet': True,
+            'destroy_planet': FilterState.NO,
         }
 
         with patch('game.strategy.services.component_inspector.ship_has_ability',
@@ -1029,8 +1012,7 @@ class TestSpecialCapabilityFilter:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'show_can_destroy_planet': True,
-            'show_no_destroy_planet': False,  # Hide ships without ability
+            'destroy_planet': FilterState.YES,
         }
 
         with patch('game.strategy.services.component_inspector.ship_has_ability',
@@ -1046,7 +1028,7 @@ class TestSpecialCapabilityFilter:
 
         ships = [make_mock_ship(serial=i) for i in range(5)]
 
-        # Default filter state - all show flags True
+        # Default filter state - tri-state defaults to IGNORE
         filter_state = {
             'show_damaged': True,
             'show_undamaged': True,
@@ -1073,8 +1055,7 @@ class TestSpecialCapabilityFilter:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'show_can_open_warp': False,  # Hide ships with ability
-            'show_no_open_warp': True,
+            'open_warp': FilterState.NO,
         }
 
         with patch('game.strategy.services.component_inspector.ship_has_ability',
@@ -1100,8 +1081,7 @@ class TestSpecialCapabilityFilter:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'show_can_close_warp': False,  # Hide ships with ability
-            'show_no_close_warp': True,
+            'close_warp': FilterState.NO,
         }
 
         with patch('game.strategy.services.component_inspector.ship_has_ability',
@@ -1127,8 +1107,7 @@ class TestSpecialCapabilityFilter:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'show_can_destroy_star': False,  # Hide ships with ability
-            'show_no_destroy_star': True,
+            'destroy_star': FilterState.NO,
         }
 
         with patch('game.strategy.services.component_inspector.ship_has_ability',
@@ -1154,8 +1133,7 @@ class TestSpecialCapabilityFilter:
             'show_undamaged': True,
             'show_derelict': True,
             'show_destroyed': True,
-            'show_can_create_sphere': False,  # Hide ships with ability
-            'show_no_create_sphere': True,
+            'create_sphere': FilterState.NO,
         }
 
         with patch('game.strategy.services.component_inspector.ship_has_ability',
@@ -1189,45 +1167,64 @@ class TestSpecialCapabilitySort:
         assert result[0].serial == 2
 
 
-class TestViewModelSpecialFilters:
-    """Tests for FleetListViewModel special capability filter state (BUG-83)."""
+class TestViewModelTriStateFilters:
+    """Tests for FleetListViewModel tri-state filter API (PROJ-220)."""
 
-    def test_toggle_special_filter(self):
-        """Toggle special capability filter changes state."""
+    def test_set_filter_state(self):
+        """set_filter_state changes tri-state filter."""
         from game.ui.screens.fleet_report_view_model import FleetListViewModel
 
         vm = FleetListViewModel()
-        assert vm.filter_show_can_destroy_planet is True
+        assert vm.get_tri_state('destroy_planet') is FilterState.IGNORE
 
-        result = vm.toggle_filter('can_destroy_planet')
-        assert result is False
-        assert vm.filter_show_can_destroy_planet is False
+        vm.set_filter_state('destroy_planet', FilterState.YES)
+        assert vm.get_tri_state('destroy_planet') is FilterState.YES
 
-    def test_special_filter_state_included(self):
-        """Special capability filters appear in get_filter_state()."""
+    def test_tri_state_filters_in_get_filter_state(self):
+        """Tri-state filter keys appear in get_filter_state()."""
         from game.ui.screens.fleet_report_view_model import FleetListViewModel
 
         vm = FleetListViewModel()
         state = vm.get_filter_state()
 
-        assert 'show_can_destroy_planet' in state
-        assert 'show_no_destroy_planet' in state
-        assert 'show_can_open_warp' in state
-        assert 'show_can_close_warp' in state
-        assert 'show_can_destroy_star' in state
-        assert 'show_can_create_sphere' in state
+        assert state['destroy_planet'] is FilterState.IGNORE
+        assert state['open_warp'] is FilterState.IGNORE
+        assert state['close_warp'] is FilterState.IGNORE
+        assert state['destroy_star'] is FilterState.IGNORE
+        assert state['create_sphere'] is FilterState.IGNORE
+        assert state['warp_capable'] is FilterState.IGNORE
+        assert state['has_spaceyard'] is FilterState.IGNORE
+        assert state['has_cargo'] is FilterState.IGNORE
 
-    def test_special_filter_labels(self):
-        """Special capability filters have display labels."""
+    def test_tri_state_labels(self):
+        """Tri-state filters have display labels."""
         from game.ui.screens.fleet_report_view_model import FleetListViewModel
 
         vm = FleetListViewModel()
 
-        assert vm.get_filter_label('can_destroy_planet') == 'Can Destroy Planet'
-        assert vm.get_filter_label('no_destroy_planet') == 'No Planet Destroyer'
-        assert vm.get_filter_label('can_open_warp') == 'Can Open Warp'
-        assert vm.get_filter_label('can_destroy_star') == 'Can Destroy Star'
-        assert vm.get_filter_label('can_create_sphere') == 'Can Create Sphere'
+        assert vm.get_filter_label('destroy_planet') == 'Destroy Planet'
+        assert vm.get_filter_label('open_warp') == 'Open Warp'
+        assert vm.get_filter_label('destroy_star') == 'Destroy Star'
+        assert vm.get_filter_label('create_sphere') == 'Create Sphere'
+
+    def test_status_toggle_still_works(self):
+        """Status filter toggle is unchanged."""
+        from game.ui.screens.fleet_report_view_model import FleetListViewModel
+
+        vm = FleetListViewModel()
+        assert vm.filter_show_damaged is True
+
+        result = vm.toggle_filter('damaged')
+        assert result is False
+        assert vm.filter_show_damaged is False
+
+    def test_filter_manager_exposed(self):
+        """filter_manager property provides access to FilterStateManager."""
+        from game.ui.screens.fleet_report_view_model import FleetListViewModel
+
+        vm = FleetListViewModel()
+        mgr = vm.filter_manager
+        assert mgr.get_state('warp_capable') is FilterState.IGNORE
 
 
 if __name__ == '__main__':

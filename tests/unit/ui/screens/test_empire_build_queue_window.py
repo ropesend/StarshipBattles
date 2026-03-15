@@ -85,10 +85,11 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     # Mock sidebar with button dicts (Window properties delegate to _sidebar)
     win._sidebar = MagicMock()
     win._sidebar.column_toggle_buttons = {}
-    win._sidebar.filter_toggle_buttons = {}
+    win._sidebar.tri_state_widgets = {}
     win._sidebar.search_entry = None
     win._sidebar.btn_apply_filters = None
     win._sidebar.handle_button_click = MagicMock(return_value=False)
+    win._sidebar.check_tri_state_presses = MagicMock(return_value=None)
 
     # Mock UI elements
     win.scroll_bar = MagicMock()
@@ -589,29 +590,19 @@ class TestColumnToggle:
 
 
 # =======================================================================
-# Filter State Tests (Phase 4)
+# Filter State Tests (Phase 4, updated PROJ-220)
 # =======================================================================
 
 class TestFilterState:
-    """Window should initialize filter state correctly."""
+    """Window should initialize filter state correctly via ViewModel."""
 
-    def test_filter_location_type_initialized(self):
-        """Window has location type filter dict with both types True."""
+    def test_all_filters_ignore_initially(self):
+        """All filters default to IGNORE via ViewModel."""
+        from game.ui.filters.filter_state import FilterState
         win = _make_window()
-        assert hasattr(win, 'filter_location_type')
-        assert win.filter_location_type == {'Planet': True, 'Fleet': True}
-
-    def test_filter_status_initialized(self):
-        """Window has queue status filter dict with both types True."""
-        win = _make_window()
-        assert hasattr(win, 'filter_status')
-        assert win.filter_status == {'Active': True, 'Empty': True}
-
-    def test_filter_capabilities_initialized(self):
-        """Window has capabilities filter dict with both types True."""
-        win = _make_window()
-        assert hasattr(win, 'filter_capabilities')
-        assert win.filter_capabilities == {'Ships': True, 'Complexes': True}
+        for key in ('loc_Planet', 'loc_Fleet', 'status_Active',
+                     'status_Empty', 'cap_Ships', 'cap_Complexes'):
+            assert win._viewmodel.get_filter_state(key) == FilterState.IGNORE
 
     def test_search_text_initialized(self):
         """Window has search_text initialized to empty string."""
@@ -621,68 +612,72 @@ class TestFilterState:
 
 
 # =======================================================================
-# Location Type Filter Tests (Phase 4)
+# Location Type Filter Tests (Phase 4, updated PROJ-220)
 # =======================================================================
 
 class TestLocationTypeFilter:
-    """_filter_sources() should filter by location type."""
+    """Filtering by location type via tri-state FilterState."""
 
-    def test_show_all_locations(self):
-        """All sources shown when both types enabled."""
+    def test_ignore_shows_all_locations(self):
+        """IGNORE state shows all sources (default)."""
         sources = [
             _make_source("p1", "Planet Base", "planet"),
             _make_source("f1", "Fleet Yard", "fleet"),
         ]
         win = _make_window(sources=sources)
-        win.filter_location_type = {'Planet': True, 'Fleet': True}
-        result = win._filter_sources(sources)
-        assert len(result) == 2
+        # Default is IGNORE — all should show
+        assert len(win.filtered_sources) == 2
 
-    def test_hide_fleet_sources(self):
-        """Fleet sources hidden when Fleet filter disabled."""
+    def test_loc_planet_yes_shows_only_planets(self):
+        """Setting loc_Planet to YES shows only planet sources."""
+        from game.ui.filters.filter_state import FilterState
         sources = [
             _make_source("p1", "Planet Base", "planet"),
             _make_source("f1", "Fleet Yard", "fleet"),
         ]
         win = _make_window(sources=sources)
-        win.filter_location_type = {'Planet': True, 'Fleet': False}
-        result = win._filter_sources(sources)
-        assert len(result) == 1
-        assert result[0].context_type == "planet"
+        win._viewmodel.set_filter_state('loc_Planet', FilterState.YES)
+        win.apply_filters()
+        assert len(win.filtered_sources) == 1
+        assert win.filtered_sources[0].context_type == "planet"
 
-    def test_hide_planet_sources(self):
-        """Planet sources hidden when Planet filter disabled."""
+    def test_loc_planet_no_excludes_planets(self):
+        """Setting loc_Planet to NO excludes planet sources."""
+        from game.ui.filters.filter_state import FilterState
         sources = [
             _make_source("p1", "Planet Base", "planet"),
             _make_source("f1", "Fleet Yard", "fleet"),
         ]
         win = _make_window(sources=sources)
-        win.filter_location_type = {'Planet': False, 'Fleet': True}
-        result = win._filter_sources(sources)
-        assert len(result) == 1
-        assert result[0].context_type == "fleet"
+        win._viewmodel.set_filter_state('loc_Planet', FilterState.NO)
+        win.apply_filters()
+        assert len(win.filtered_sources) == 1
+        assert win.filtered_sources[0].context_type == "fleet"
 
-    def test_hide_all_locations_shows_empty(self):
-        """Empty result when both location types disabled."""
+    def test_loc_fleet_no_excludes_fleets(self):
+        """Setting loc_Fleet to NO excludes fleet sources."""
+        from game.ui.filters.filter_state import FilterState
         sources = [
             _make_source("p1", "Planet Base", "planet"),
             _make_source("f1", "Fleet Yard", "fleet"),
         ]
         win = _make_window(sources=sources)
-        win.filter_location_type = {'Planet': False, 'Fleet': False}
-        result = win._filter_sources(sources)
-        assert len(result) == 0
+        win._viewmodel.set_filter_state('loc_Fleet', FilterState.NO)
+        win.apply_filters()
+        assert len(win.filtered_sources) == 1
+        assert win.filtered_sources[0].context_type == "planet"
 
 
 # =======================================================================
-# Queue Status Filter Tests (Phase 4)
+# Queue Status Filter Tests (Phase 4, updated PROJ-220)
 # =======================================================================
 
 class TestQueueStatusFilter:
-    """_filter_sources() should filter by queue status."""
+    """Filtering by queue status via tri-state FilterState."""
 
-    def test_show_all_statuses(self):
-        """All sources shown when both statuses enabled."""
+    def test_status_active_yes_shows_only_active(self):
+        """Setting status_Active to YES shows only queues with items."""
+        from game.ui.filters.filter_state import FilterState
         sources = [
             _make_source("p1", "Active Queue", queue_items=[
                 {"design_id": "frigate", "turns_remaining": 3}
@@ -690,12 +685,14 @@ class TestQueueStatusFilter:
             _make_source("p2", "Empty Queue", queue_items=[]),
         ]
         win = _make_window(sources=sources)
-        win.filter_status = {'Active': True, 'Empty': True}
-        result = win._filter_sources(sources)
-        assert len(result) == 2
+        win._viewmodel.set_filter_state('status_Active', FilterState.YES)
+        win.apply_filters()
+        assert len(win.filtered_sources) == 1
+        assert win.filtered_sources[0].queue_id == "p1"
 
-    def test_hide_empty_queues(self):
-        """Empty queues hidden when Empty filter disabled."""
+    def test_status_empty_yes_shows_only_empty(self):
+        """Setting status_Empty to YES shows only empty queues."""
+        from game.ui.filters.filter_state import FilterState
         sources = [
             _make_source("p1", "Active Queue", queue_items=[
                 {"design_id": "frigate", "turns_remaining": 3}
@@ -703,13 +700,14 @@ class TestQueueStatusFilter:
             _make_source("p2", "Empty Queue", queue_items=[]),
         ]
         win = _make_window(sources=sources)
-        win.filter_status = {'Active': True, 'Empty': False}
-        result = win._filter_sources(sources)
-        assert len(result) == 1
-        assert result[0].queue_id == "p1"
+        win._viewmodel.set_filter_state('status_Empty', FilterState.YES)
+        win.apply_filters()
+        assert len(win.filtered_sources) == 1
+        assert win.filtered_sources[0].queue_id == "p2"
 
-    def test_hide_active_queues(self):
-        """Active queues hidden when Active filter disabled."""
+    def test_status_active_no_excludes_active(self):
+        """Setting status_Active to NO excludes active queues."""
+        from game.ui.filters.filter_state import FilterState
         sources = [
             _make_source("p1", "Active Queue", queue_items=[
                 {"design_id": "frigate", "turns_remaining": 3}
@@ -717,21 +715,22 @@ class TestQueueStatusFilter:
             _make_source("p2", "Empty Queue", queue_items=[]),
         ]
         win = _make_window(sources=sources)
-        win.filter_status = {'Active': False, 'Empty': True}
-        result = win._filter_sources(sources)
-        assert len(result) == 1
-        assert result[0].queue_id == "p2"
+        win._viewmodel.set_filter_state('status_Active', FilterState.NO)
+        win.apply_filters()
+        assert len(win.filtered_sources) == 1
+        assert win.filtered_sources[0].queue_id == "p2"
 
 
 # =======================================================================
-# Capabilities Filter Tests (Phase 4)
+# Capabilities Filter Tests (Phase 4, updated PROJ-220)
 # =======================================================================
 
 class TestCapabilitiesFilter:
-    """_filter_sources() should filter by build capabilities."""
+    """Filtering by build capabilities via tri-state FilterState."""
 
-    def test_show_all_capabilities(self):
-        """All sources shown when both capabilities enabled."""
+    def test_cap_ships_yes_shows_only_ship_builders(self):
+        """Setting cap_Ships to YES shows only sources that can build ships."""
+        from game.ui.filters.filter_state import FilterState
         sources = [
             _make_source("p1", "Ships Only", can_build_ships=True,
                          can_build_complexes=False),
@@ -739,12 +738,14 @@ class TestCapabilitiesFilter:
                          can_build_complexes=True),
         ]
         win = _make_window(sources=sources)
-        win.filter_capabilities = {'Ships': True, 'Complexes': True}
-        result = win._filter_sources(sources)
-        assert len(result) == 2
+        win._viewmodel.set_filter_state('cap_Ships', FilterState.YES)
+        win.apply_filters()
+        assert len(win.filtered_sources) == 1
+        assert win.filtered_sources[0].queue_id == "p1"
 
-    def test_hide_ship_builders(self):
-        """Ship builders hidden when Ships filter disabled."""
+    def test_cap_complexes_yes_shows_only_complex_builders(self):
+        """Setting cap_Complexes to YES shows only sources that can build complexes."""
+        from game.ui.filters.filter_state import FilterState
         sources = [
             _make_source("p1", "Ships Only", can_build_ships=True,
                          can_build_complexes=False),
@@ -752,13 +753,14 @@ class TestCapabilitiesFilter:
                          can_build_complexes=True),
         ]
         win = _make_window(sources=sources)
-        win.filter_capabilities = {'Ships': False, 'Complexes': True}
-        result = win._filter_sources(sources)
-        assert len(result) == 1
-        assert result[0].queue_id == "p2"
+        win._viewmodel.set_filter_state('cap_Complexes', FilterState.YES)
+        win.apply_filters()
+        assert len(win.filtered_sources) == 1
+        assert win.filtered_sources[0].queue_id == "p2"
 
-    def test_hide_complex_builders(self):
-        """Complex builders hidden when Complexes filter disabled."""
+    def test_cap_ships_no_excludes_ship_builders(self):
+        """Setting cap_Ships to NO excludes ship builders."""
+        from game.ui.filters.filter_state import FilterState
         sources = [
             _make_source("p1", "Ships Only", can_build_ships=True,
                          can_build_complexes=False),
@@ -766,47 +768,10 @@ class TestCapabilitiesFilter:
                          can_build_complexes=True),
         ]
         win = _make_window(sources=sources)
-        win.filter_capabilities = {'Ships': True, 'Complexes': False}
-        result = win._filter_sources(sources)
-        assert len(result) == 1
-        assert result[0].queue_id == "p1"
-
-    def test_both_capabilities_source_shown_when_either_enabled(self):
-        """Source building both ships+complexes is shown if either filter on."""
-        sources = [
-            _make_source("p1", "Both", can_build_ships=True,
-                         can_build_complexes=True),
-        ]
-        win = _make_window(sources=sources)
-        win.filter_capabilities = {'Ships': True, 'Complexes': False}
-        result = win._filter_sources(sources)
-        assert len(result) == 1
-
-    def test_neither_capability_source_hidden_when_both_off(self):
-        """Source with no capabilities hidden when both filters off."""
-        sources = [
-            _make_source("p1", "None", can_build_ships=False,
-                         can_build_complexes=False),
-        ]
-        win = _make_window(sources=sources)
-        win.filter_capabilities = {'Ships': False, 'Complexes': False}
-        result = win._filter_sources(sources)
-        assert len(result) == 0
-
-    def test_neither_capability_source_shown_when_both_on(self):
-        """Source with no capabilities is still shown when all filters enabled.
-
-        A source that can build neither should appear when the user has all
-        capability filters turned on (no filtering desired).
-        """
-        sources = [
-            _make_source("p1", "None", can_build_ships=False,
-                         can_build_complexes=False),
-        ]
-        win = _make_window(sources=sources)
-        win.filter_capabilities = {'Ships': True, 'Complexes': True}
-        result = win._filter_sources(sources)
-        assert len(result) == 1
+        win._viewmodel.set_filter_state('cap_Ships', FilterState.NO)
+        win.apply_filters()
+        assert len(win.filtered_sources) == 1
+        assert win.filtered_sources[0].queue_id == "p2"
 
 
 # =======================================================================
@@ -814,7 +779,7 @@ class TestCapabilitiesFilter:
 # =======================================================================
 
 class TestTextSearchFilter:
-    """_filter_sources() should filter by text search on name."""
+    """Filtering by text search on name."""
 
     def test_empty_search_shows_all(self):
         """Empty search text shows all sources."""
@@ -824,8 +789,8 @@ class TestTextSearchFilter:
         ]
         win = _make_window(sources=sources)
         win.search_text = ""
-        result = win._filter_sources(sources)
-        assert len(result) == 2
+        win.apply_filters()
+        assert len(win.filtered_sources) == 2
 
     def test_search_by_name_substring(self):
         """Search matches display_name substring (case-insensitive)."""
@@ -835,9 +800,9 @@ class TestTextSearchFilter:
         ]
         win = _make_window(sources=sources)
         win.search_text = "alpha"
-        result = win._filter_sources(sources)
-        assert len(result) == 1
-        assert result[0].queue_id == "p1"
+        win.apply_filters()
+        assert len(win.filtered_sources) == 1
+        assert win.filtered_sources[0].queue_id == "p1"
 
     def test_search_case_insensitive(self):
         """Search is case-insensitive."""
@@ -846,8 +811,8 @@ class TestTextSearchFilter:
         ]
         win = _make_window(sources=sources)
         win.search_text = "alpha"
-        result = win._filter_sources(sources)
-        assert len(result) == 1
+        win.apply_filters()
+        assert len(win.filtered_sources) == 1
 
     def test_search_no_match(self):
         """Search with no matching sources returns empty."""
@@ -856,8 +821,8 @@ class TestTextSearchFilter:
         ]
         win = _make_window(sources=sources)
         win.search_text = "gamma"
-        result = win._filter_sources(sources)
-        assert len(result) == 0
+        win.apply_filters()
+        assert len(win.filtered_sources) == 0
 
     def test_search_matches_partial(self):
         """Partial text matches."""
@@ -868,12 +833,12 @@ class TestTextSearchFilter:
         ]
         win = _make_window(sources=sources)
         win.search_text = "alph"
-        result = win._filter_sources(sources)
-        assert len(result) == 2
+        win.apply_filters()
+        assert len(win.filtered_sources) == 2
 
 
 # =======================================================================
-# Combined Filter Tests (Phase 4)
+# Combined Filter Tests (Phase 4, updated PROJ-220)
 # =======================================================================
 
 class TestCombinedFilters:
@@ -881,6 +846,7 @@ class TestCombinedFilters:
 
     def test_location_and_status_combined(self):
         """Location type AND status filters combine."""
+        from game.ui.filters.filter_state import FilterState
         sources = [
             _make_source("p1", "Planet Active", "planet", queue_items=[
                 {"design_id": "frigate", "turns_remaining": 3}
@@ -891,14 +857,15 @@ class TestCombinedFilters:
             ]),
         ]
         win = _make_window(sources=sources)
-        win.filter_location_type = {'Planet': True, 'Fleet': False}
-        win.filter_status = {'Active': True, 'Empty': False}
-        result = win._filter_sources(sources)
-        assert len(result) == 1
-        assert result[0].queue_id == "p1"
+        win._viewmodel.set_filter_state('loc_Fleet', FilterState.NO)
+        win._viewmodel.set_filter_state('status_Empty', FilterState.NO)
+        win.apply_filters()
+        assert len(win.filtered_sources) == 1
+        assert win.filtered_sources[0].queue_id == "p1"
 
     def test_all_filters_combined(self):
         """All four filters combine correctly."""
+        from game.ui.filters.filter_state import FilterState
         sources = [
             _make_source("p1", "Alpha Base", "planet",
                          can_build_ships=False, can_build_complexes=True,
@@ -911,29 +878,29 @@ class TestCombinedFilters:
                          queue_items=[{"design_id": "scout", "turns_remaining": 1}]),
         ]
         win = _make_window(sources=sources)
-        win.filter_location_type = {'Planet': True, 'Fleet': True}
-        win.filter_status = {'Active': True, 'Empty': False}
-        win.filter_capabilities = {'Ships': False, 'Complexes': True}
+        win._viewmodel.set_filter_state('status_Empty', FilterState.NO)
+        win._viewmodel.set_filter_state('cap_Complexes', FilterState.YES)
         win.search_text = "alpha"
-        result = win._filter_sources(sources)
-        assert len(result) == 1
-        assert result[0].queue_id == "p1"
+        win.apply_filters()
+        assert len(win.filtered_sources) == 1
+        assert win.filtered_sources[0].queue_id == "p1"
 
     def test_apply_filters_updates_filtered_sources(self):
         """apply_filters() updates filtered_sources via ViewModel."""
+        from game.ui.filters.filter_state import FilterState
         sources = [
             _make_source("p1", "Alpha", "planet"),
             _make_source("f1", "Fleet", "fleet"),
         ]
         win = _make_window(sources=sources)
-        win.filter_location_type['Planet'] = True
-        win.filter_location_type['Fleet'] = False
+        win._viewmodel.set_filter_state('loc_Planet', FilterState.YES)
         win.apply_filters()
         assert len(win.filtered_sources) == 1
         assert win.filtered_sources[0].context_type == "planet"
 
     def test_apply_filters_resets_selection(self):
         """apply_filters() clears selection when filters change."""
+        from game.ui.filters.filter_state import FilterState
         sources = [
             _make_source("p1", "Alpha", "planet"),
             _make_source("f1", "Fleet", "fleet"),
@@ -941,7 +908,7 @@ class TestCombinedFilters:
         win = _make_window(sources=sources)
         win._refresh_list = MagicMock()
         win._select_source(0)
-        win.filter_location_type = {'Planet': True, 'Fleet': False}
+        win._viewmodel.set_filter_state('loc_Planet', FilterState.YES)
         win.apply_filters()
         assert win.selected_source is None
         assert win.selected_index == -1
@@ -1476,46 +1443,30 @@ class TestProcessEvent:
         # Headers should be rebuilt via VirtualTable
         win._virtual_table.rebuild_headers.assert_called()
 
-    def test_filter_toggle_button_click_toggles_filter(self):
-        """Clicking a filter toggle button toggles that filter's state.
+    def test_tri_state_filter_change_via_sidebar(self):
+        """Tri-state filter change via sidebar updates ViewModel filter state.
 
-        Note: In MVVM architecture, sidebar handles filter toggles via ViewModel.
+        Note: Tri-state widgets are polled in update() via check_tri_state_presses().
+        The sidebar handles set_filter_state + apply_filters internally.
         """
-        import pygame_gui
-        from pygame_gui.elements import UIWindow
+        from game.ui.filters.filter_state import FilterState
 
         win = _make_window()
-        # Create mock filter toggle button
-        mock_btn = MagicMock()
-        mock_btn.set_text = MagicMock()
-
-        # Configure sidebar to handle the button
-        win._sidebar.filter_toggle_buttons = {'loc_Planet': mock_btn}
-
-        # Sidebar toggles filter via ViewModel
-        def handle_and_toggle(btn):
-            if btn is mock_btn:
-                win._viewmodel.toggle_filter('loc_Planet')
-                win._viewmodel.apply_filters()
-                mock_btn.set_text("[ ] Planet")
-                return True
-            return False
-
-        win._sidebar.handle_button_click = MagicMock(side_effect=handle_and_toggle)
-
-        # Create event
-        event = MagicMock()
-        event.type = pygame_gui.UI_BUTTON_PRESSED
-        event.ui_element = mock_btn
-
-        # Mock parent process_event to avoid UIWindow attribute errors
-        with patch.object(UIWindow, 'process_event', return_value=False):
-            win.process_event(event)
-
-        # Filter should now be False (toggled via ViewModel)
-        assert win.filter_location_type['Planet'] is False
-        # Button text should be updated
-        mock_btn.set_text.assert_called()
+        win._refresh_list = MagicMock()
+        # Simulate sidebar tri-state press returning a filter change
+        win._sidebar.check_tri_state_presses = MagicMock(
+            return_value=('loc_Planet', FilterState.YES)
+        )
+        # Set up header presses to return no actions
+        win._virtual_table.check_header_presses = MagicMock(
+            return_value={'swap_column': None, 'sort_column': None}
+        )
+        win.scroll_bar.check_has_moved_recently = MagicMock(return_value=False)
+        # Verify the sidebar method is called during update
+        from pygame_gui.elements import UIWindow
+        with patch.object(UIWindow, 'update'):
+            win.update(0.016)
+        win._sidebar.check_tri_state_presses.assert_called_once()
 
     def test_apply_filters_button_click_reads_search_and_applies(self):
         """Clicking Apply Filters button reads search text and applies filters.

@@ -6,10 +6,13 @@ Verifies the ViewModel that manages build queue list state:
 - Search text filtering
 - Event emission on state changes
 - Lazy refresh (cached results)
+
+PROJ-220 Phase 4: Updated for tri-state FilterState API.
 """
 import pytest
 from unittest.mock import MagicMock, patch
 
+from game.ui.filters.filter_state import FilterState
 from game.strategy.data.build_queue_source import BuildQueueSource
 from game.ui.screens.empire_build_queue_viewmodel import (
     EmpireBuildQueueViewModel,
@@ -110,12 +113,15 @@ class TestViewModelInitialization:
         vm, _ = _make_viewmodel()
         assert vm.search_text == ""
 
-    def test_filter_state_all_enabled_initially(self):
-        """All filters enabled by default."""
+    def test_filter_state_all_ignore_initially(self):
+        """All filters default to IGNORE (show everything)."""
         vm, _ = _make_viewmodel()
-        assert vm.filter_location_type == {'Planet': True, 'Fleet': True}
-        assert vm.filter_status == {'Active': True, 'Empty': True}
-        assert vm.filter_capabilities == {'Ships': True, 'Complexes': True}
+        assert vm.get_filter_state('loc_Planet') is FilterState.IGNORE
+        assert vm.get_filter_state('loc_Fleet') is FilterState.IGNORE
+        assert vm.get_filter_state('status_Active') is FilterState.IGNORE
+        assert vm.get_filter_state('status_Empty') is FilterState.IGNORE
+        assert vm.get_filter_state('cap_Ships') is FilterState.IGNORE
+        assert vm.get_filter_state('cap_Complexes') is FilterState.IGNORE
 
 
 # ===========================================================================
@@ -279,17 +285,29 @@ class TestSelectionHelpers:
 class TestFilterApplication:
     """apply_filters() should filter sources correctly."""
 
-    def test_apply_filters_updates_filtered_sources(self):
-        """apply_filters() updates filtered_sources."""
+    def test_apply_filters_with_loc_planet_no(self):
+        """Setting loc_Planet=NO excludes planets."""
         sources = [
             _make_source("p1", "Alpha", "planet"),
             _make_source("f1", "Fleet", "fleet"),
         ]
         vm, _ = _make_viewmodel(sources=sources)
-        vm.filter_location_type = {'Planet': True, 'Fleet': False}
+        vm.set_filter_state('loc_Planet', FilterState.NO)
         vm.apply_filters()
         assert len(vm.filtered_sources) == 1
-        assert vm.filtered_sources[0].context_type == "planet"
+        assert vm.filtered_sources[0].context_type == "fleet"
+
+    def test_apply_filters_with_loc_fleet_yes(self):
+        """Setting loc_Fleet=YES shows only fleets."""
+        sources = [
+            _make_source("p1", "Alpha", "planet"),
+            _make_source("f1", "Fleet", "fleet"),
+        ]
+        vm, _ = _make_viewmodel(sources=sources)
+        vm.set_filter_state('loc_Fleet', FilterState.YES)
+        vm.apply_filters()
+        assert len(vm.filtered_sources) == 1
+        assert vm.filtered_sources[0].context_type == "fleet"
 
     def test_apply_filters_clears_selection(self):
         """apply_filters() clears selection."""
@@ -298,29 +316,52 @@ class TestFilterApplication:
         vm.apply_filters()
         assert vm.selected_indices == set()
 
-    def test_filter_by_queue_status(self):
-        """Filter by active/empty queue status."""
+    def test_filter_by_queue_status_active_only(self):
+        """status_Active=YES shows only active queues."""
         sources = [
             _make_source("p1", "Active", queue_items=[{"design_id": "x"}]),
             _make_source("p2", "Empty", queue_items=[]),
         ]
         vm, _ = _make_viewmodel(sources=sources)
-        vm.filter_status = {'Active': True, 'Empty': False}
+        vm.set_filter_state('status_Active', FilterState.YES)
         vm.apply_filters()
         assert len(vm.filtered_sources) == 1
         assert vm.filtered_sources[0].queue_id == "p1"
 
-    def test_filter_by_capabilities(self):
-        """Filter by build capabilities."""
+    def test_filter_by_capabilities_complexes_yes(self):
+        """cap_Complexes=YES shows only complex builders."""
         sources = [
             _make_source("p1", "Ships Only", can_build_ships=True, can_build_complexes=False),
             _make_source("p2", "Complexes Only", can_build_ships=False, can_build_complexes=True),
         ]
         vm, _ = _make_viewmodel(sources=sources)
-        vm.filter_capabilities = {'Ships': False, 'Complexes': True}
+        vm.set_filter_state('cap_Complexes', FilterState.YES)
         vm.apply_filters()
         assert len(vm.filtered_sources) == 1
         assert vm.filtered_sources[0].queue_id == "p2"
+
+
+class TestSetFilterState:
+    """Test set_filter_state/get_filter_state API (PROJ-220)."""
+
+    def test_set_and_get_filter_state(self):
+        """set_filter_state changes value read by get_filter_state."""
+        vm, _ = _make_viewmodel()
+        vm.set_filter_state('loc_Planet', FilterState.YES)
+        assert vm.get_filter_state('loc_Planet') is FilterState.YES
+
+    def test_set_filter_state_no(self):
+        """set_filter_state can set to NO."""
+        vm, _ = _make_viewmodel()
+        vm.set_filter_state('cap_Ships', FilterState.NO)
+        assert vm.get_filter_state('cap_Ships') is FilterState.NO
+
+    def test_set_filter_state_back_to_ignore(self):
+        """set_filter_state can return to IGNORE."""
+        vm, _ = _make_viewmodel()
+        vm.set_filter_state('status_Active', FilterState.YES)
+        vm.set_filter_state('status_Active', FilterState.IGNORE)
+        assert vm.get_filter_state('status_Active') is FilterState.IGNORE
 
 
 class TestSearchFiltering:
@@ -403,7 +444,6 @@ class TestLazyRefresh:
     def test_needs_refresh_false_after_init_refresh(self):
         """_needs_refresh is False after construction (initial refresh done)."""
         vm, _ = _make_viewmodel()
-        # Initial refresh happens in __init__, so flag is cleared
         assert vm._needs_refresh is False
 
     def test_filtered_sources_clears_needs_refresh(self):
@@ -412,14 +452,12 @@ class TestLazyRefresh:
         _ = vm.filtered_sources
         assert vm._needs_refresh is False
 
-    def test_filter_change_sets_needs_refresh(self):
-        """Changing filter state sets _needs_refresh."""
+    def test_filter_change_and_apply_refreshes(self):
+        """Changing filter state and applying updates filtered sources."""
         vm, _ = _make_viewmodel()
         _ = vm.filtered_sources  # Clear flag
-        vm.filter_location_type['Planet'] = False
+        vm.set_filter_state('loc_Planet', FilterState.NO)
         vm.apply_filters()
-        # After apply_filters, _needs_refresh should be cleared again
-        # since we recalculated
         _ = vm.filtered_sources
         assert vm._needs_refresh is False
 
@@ -429,49 +467,6 @@ class TestLazyRefresh:
         first = vm.filtered_sources
         second = vm.filtered_sources
         assert first is second
-
-
-# ===========================================================================
-# Toggle Filter Tests
-# ===========================================================================
-
-class TestToggleFilter:
-    """toggle_filter() convenience method."""
-
-    def test_toggle_location_filter(self):
-        """toggle_filter() toggles location type filter."""
-        vm, _ = _make_viewmodel()
-        assert vm.filter_location_type['Planet'] is True
-        vm.toggle_filter('loc_Planet')
-        assert vm.filter_location_type['Planet'] is False
-
-    def test_toggle_status_filter(self):
-        """toggle_filter() toggles status filter."""
-        vm, _ = _make_viewmodel()
-        assert vm.filter_status['Active'] is True
-        vm.toggle_filter('status_Active')
-        assert vm.filter_status['Active'] is False
-
-    def test_toggle_capability_filter(self):
-        """toggle_filter() toggles capability filter."""
-        vm, _ = _make_viewmodel()
-        assert vm.filter_capabilities['Ships'] is True
-        vm.toggle_filter('cap_Ships')
-        assert vm.filter_capabilities['Ships'] is False
-
-    def test_toggle_unknown_filter_returns_false(self):
-        """toggle_filter() returns False for unknown filter."""
-        vm, _ = _make_viewmodel()
-        result = vm.toggle_filter('unknown_filter')
-        assert result is False
-
-    def test_toggle_filter_returns_new_state(self):
-        """toggle_filter() returns the new state."""
-        vm, _ = _make_viewmodel()
-        result = vm.toggle_filter('loc_Planet')
-        assert result is False  # Was True, now False
-        result = vm.toggle_filter('loc_Planet')
-        assert result is True  # Was False, now True
 
 
 # ===========================================================================

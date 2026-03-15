@@ -664,3 +664,76 @@ class TestFleetReportEdgeCases:
         window.fleet.ships = [fast_ship]
 
         assert fast_ship.speed == 10
+
+
+# ===========================================================================
+# PROJ-220 Task 3.4: Tri-state filter wiring tests
+# ===========================================================================
+
+class TestFleetReportTriStateWiring:
+    """Test FleetReportWindow handles tri-state filter changes from sidebar (PROJ-220)."""
+
+    def _setup_window_for_update(self, sidebar_actions):
+        """Create a window ready to test update() with given sidebar actions."""
+        window, mocks = _make_fleet_report_window()
+        window.sidebar = MagicMock()
+        window.sidebar.check_button_presses.return_value = sidebar_actions
+        window.virtual_table = MagicMock()
+        window.virtual_table.check_header_presses.return_value = {
+            'swap_column': None, 'sort_column': None
+        }
+        window.selection = MagicMock()
+        window._update_detail_panel = MagicMock()
+        window.refresh_list = MagicMock()
+        return window, mocks
+
+    @patch('game.ui.screens.fleet_report_window.UIWindow.update')
+    def test_filter_state_changed_calls_set_filter_state(self, _mock_super):
+        """Window should call view_model.set_filter_state when sidebar returns filter_state_changed."""
+        from game.ui.filters.filter_state import FilterState
+        window, mocks = self._setup_window_for_update({
+            'filter_toggled': None,
+            'filter_state_changed': ('warp_capable', FilterState.YES),
+            'column_toggled': None,
+            'remove_selected': False,
+        })
+        window.update(0.016)
+        mocks['view_model'].set_filter_state.assert_called_once_with('warp_capable', FilterState.YES)
+
+    @patch('game.ui.screens.fleet_report_window.UIWindow.update')
+    def test_filter_state_changed_refreshes_list(self, _mock_super):
+        """Window should refresh list after tri-state filter change."""
+        from game.ui.filters.filter_state import FilterState
+        window, mocks = self._setup_window_for_update({
+            'filter_toggled': None,
+            'filter_state_changed': ('has_cargo', FilterState.NO),
+            'column_toggled': None,
+            'remove_selected': False,
+        })
+        window.update(0.016)
+        window.refresh_list.assert_called_once()
+
+    @patch('game.ui.screens.fleet_report_window.UIWindow.update')
+    def test_filter_state_changed_clears_selection(self, _mock_super):
+        """Window should clear selection after tri-state filter change."""
+        from game.ui.filters.filter_state import FilterState
+        window, mocks = self._setup_window_for_update({
+            'filter_toggled': None,
+            'filter_state_changed': ('destroy_planet', FilterState.YES),
+            'column_toggled': None,
+            'remove_selected': False,
+        })
+        window.update(0.016)
+        window.selection.clear.assert_called()
+
+    @patch('game.ui.screens.fleet_report_window.UIWindow.update')
+    def test_status_filter_toggle_still_works(self, _mock_super):
+        """Window should still handle status filter toggles via filter_toggled."""
+        window, mocks = self._setup_window_for_update({
+            'filter_toggled': 'damaged',
+            'filter_state_changed': None,
+            'column_toggled': None,
+            'remove_selected': False,
+        })
+        window.update(0.016)
+        mocks['view_model'].toggle_filter.assert_called_once_with('damaged')

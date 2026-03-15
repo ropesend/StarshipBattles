@@ -212,36 +212,6 @@ class EmpireBuildQueueWindow(UIWindow):
         self._viewmodel.selected_indices = value
 
     @property
-    def filter_location_type(self) -> Dict[str, bool]:
-        """Location type filter state."""
-        return self._viewmodel.filter_location_type
-
-    @filter_location_type.setter
-    def filter_location_type(self, value: Dict[str, bool]) -> None:
-        """Set location type filter."""
-        self._viewmodel.filter_location_type = value
-
-    @property
-    def filter_status(self) -> Dict[str, bool]:
-        """Queue status filter state."""
-        return self._viewmodel.filter_status
-
-    @filter_status.setter
-    def filter_status(self, value: Dict[str, bool]) -> None:
-        """Set queue status filter."""
-        self._viewmodel.filter_status = value
-
-    @property
-    def filter_capabilities(self) -> Dict[str, bool]:
-        """Capabilities filter state."""
-        return self._viewmodel.filter_capabilities
-
-    @filter_capabilities.setter
-    def filter_capabilities(self, value: Dict[str, bool]) -> None:
-        """Set capabilities filter."""
-        self._viewmodel.filter_capabilities = value
-
-    @property
     def search_text(self) -> str:
         """Search text."""
         return self._viewmodel.search_text
@@ -260,11 +230,6 @@ class EmpireBuildQueueWindow(UIWindow):
     def column_toggle_buttons(self) -> Dict[str, Any]:
         """Column toggle button dict from sidebar (read-only)."""
         return self._sidebar.column_toggle_buttons
-
-    @property
-    def filter_toggle_buttons(self) -> Dict[str, Any]:
-        """Filter toggle button dict from sidebar (read-only)."""
-        return self._sidebar.filter_toggle_buttons
 
     @property
     def search_entry(self) -> Any:
@@ -480,8 +445,11 @@ class EmpireBuildQueueWindow(UIWindow):
         return handled
 
     def update(self, time_delta: float) -> None:
-        """Update loop - check scrollbar and header button changes."""
+        """Update loop - check scrollbar, header, and tri-state filter changes."""
         super().update(time_delta)
+
+        # Check tri-state filter widgets
+        self._sidebar.check_tri_state_presses()
 
         # Check header buttons for sort/swap changes
         header_result = self._virtual_table.check_header_presses()
@@ -528,24 +496,8 @@ class EmpireBuildQueueWindow(UIWindow):
     # Filtering (delegated to ViewModel)
     # -----------------------------------------------------------------------
 
-    def _filter_sources(
-        self, sources: List[BuildQueueSource],
-    ) -> List[BuildQueueSource]:
-        """Apply all active filters to a list of sources."""
-        # Sync state to ViewModel's filter manager
-        self._viewmodel._filter_mgr.filter_location_type = self.filter_location_type
-        self._viewmodel._filter_mgr.filter_status = self.filter_status
-        self._viewmodel._filter_mgr.filter_capabilities = self.filter_capabilities
-        self._viewmodel._filter_mgr.search_text = self.search_text
-        return self._viewmodel._filter_mgr.filter_sources(sources)
-
     def apply_filters(self) -> None:
         """Re-apply all filters and refresh display."""
-        # Sync state to ViewModel
-        self._viewmodel._filter_mgr.filter_location_type = self.filter_location_type
-        self._viewmodel._filter_mgr.filter_status = self.filter_status
-        self._viewmodel._filter_mgr.filter_capabilities = self.filter_capabilities
-        self._viewmodel._filter_mgr.search_text = self.search_text
         self._viewmodel.apply_filters()
 
     def _apply_sort_and_refresh(self) -> None:

@@ -2,59 +2,70 @@
 Fleet List View Model - Manages filtering, sorting, and ship list state.
 
 PROJ-44 Phase 7 Task 7.4: Extracted from FleetReportWindow for testability.
+PROJ-220: Replaced 16 binary filter attributes with FilterStateManager.
 """
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Dict, Any
 
+from game.ui.filters.filter_state import FilterState
+from game.ui.filters.filter_state_manager import FilterStateManager
 from game.ui.screens.fleet_report_filters import filter_ships, sort_ships
 
 if TYPE_CHECKING:
     from game.strategy.data.ship_instance import ShipInstance
 
+# Tri-state filter attribute labels for display
+_TRI_STATE_LABELS = {
+    'warp_capable': 'Warp Capable',
+    'has_spaceyard': 'Has Spaceyard',
+    'has_cargo': 'Has Cargo',
+    'destroy_planet': 'Destroy Planet',
+    'open_warp': 'Open Warp',
+    'close_warp': 'Close Warp',
+    'destroy_star': 'Destroy Star',
+    'create_sphere': 'Create Sphere',
+}
+
+# Status filter labels for display
+_STATUS_LABELS = {
+    'damaged': 'Damaged',
+    'undamaged': 'Undamaged',
+    'derelict': 'Derelict',
+    'destroyed': 'Destroyed',
+}
+
 
 class FleetListViewModel:
-    """
-    Manages ship list state for FleetReportWindow.
+    """Manages ship list state for FleetReportWindow.
 
     Handles:
-    - Filter state (damaged, undamaged, derelict, destroyed, warp capable)
+    - Tri-state filter state via FilterStateManager (warp, spaceyard, cargo, special caps)
+    - Status filter state (damaged, undamaged, derelict, destroyed) as bools
     - Sort state (column and direction)
     - Filtering and sorting ships
     """
 
     def __init__(self, ships: List[ShipInstance] = None):
-        """
-        Initialize view model with optional ship list.
-
-        Args:
-            ships: Initial list of ships to manage
-        """
         self._ships = ships or []
 
-        # Filter state - defaults match FleetReportWindow
+        # Status filters (4-state, not binary — kept as bools)
         self.filter_show_damaged = True
         self.filter_show_undamaged = True
         self.filter_show_derelict = True
         self.filter_show_destroyed = False  # Destroyed hidden by default
-        self.filter_show_warp_capable = True
-        self.filter_show_not_warp_capable = True
-        self.filter_show_has_spaceyard = True
-        self.filter_show_no_spaceyard = True
-        self.filter_show_has_cargo = True
-        self.filter_show_no_cargo = True
 
-        # Special capability filters
-        self.filter_show_can_destroy_planet = True
-        self.filter_show_no_destroy_planet = True
-        self.filter_show_can_open_warp = True
-        self.filter_show_no_open_warp = True
-        self.filter_show_can_close_warp = True
-        self.filter_show_no_close_warp = True
-        self.filter_show_can_destroy_star = True
-        self.filter_show_no_destroy_star = True
-        self.filter_show_can_create_sphere = True
-        self.filter_show_no_create_sphere = True
+        # Tri-state filters via FilterStateManager
+        self._filter_mgr = FilterStateManager({
+            'warp_capable': FilterState.IGNORE,
+            'has_spaceyard': FilterState.IGNORE,
+            'has_cargo': FilterState.IGNORE,
+            'destroy_planet': FilterState.IGNORE,
+            'open_warp': FilterState.IGNORE,
+            'close_warp': FilterState.IGNORE,
+            'destroy_star': FilterState.IGNORE,
+            'create_sphere': FilterState.IGNORE,
+        })
 
         # Sort state
         self.sort_column_id = 'serial'
@@ -64,23 +75,21 @@ class FleetListViewModel:
         self._filtered_ships: List[ShipInstance] = []
         self._needs_refresh = True
 
-    def update_ships(self, ships: List[ShipInstance]) -> None:
-        """
-        Update the source ship list.
+    @property
+    def filter_manager(self) -> FilterStateManager:
+        """Access the tri-state filter manager."""
+        return self._filter_mgr
 
-        Args:
-            ships: New list of ships
-        """
+    def update_ships(self, ships: List[ShipInstance]) -> None:
+        """Update the source ship list."""
         self._ships = ships or []
         self._needs_refresh = True
 
     def toggle_filter(self, filter_id: str) -> bool:
-        """
-        Toggle a filter on/off.
+        """Toggle a status filter on/off. For tri-state, use set_filter_state().
 
         Args:
-            filter_id: Filter identifier ('damaged', 'undamaged', 'derelict',
-                      'destroyed', 'warp_capable', 'not_warp_capable')
+            filter_id: Status filter identifier ('damaged', 'undamaged', 'derelict', 'destroyed')
 
         Returns:
             New filter state (True = showing, False = hiding)
@@ -97,124 +106,58 @@ class FleetListViewModel:
         elif filter_id == 'destroyed':
             self.filter_show_destroyed = not self.filter_show_destroyed
             result = self.filter_show_destroyed
-        elif filter_id == 'warp_capable':
-            self.filter_show_warp_capable = not self.filter_show_warp_capable
-            result = self.filter_show_warp_capable
-        elif filter_id == 'not_warp_capable':
-            self.filter_show_not_warp_capable = not self.filter_show_not_warp_capable
-            result = self.filter_show_not_warp_capable
-        elif filter_id == 'has_spaceyard':
-            self.filter_show_has_spaceyard = not self.filter_show_has_spaceyard
-            result = self.filter_show_has_spaceyard
-        elif filter_id == 'no_spaceyard':
-            self.filter_show_no_spaceyard = not self.filter_show_no_spaceyard
-            result = self.filter_show_no_spaceyard
-        elif filter_id == 'has_cargo':
-            self.filter_show_has_cargo = not self.filter_show_has_cargo
-            result = self.filter_show_has_cargo
-        elif filter_id == 'no_cargo':
-            self.filter_show_no_cargo = not self.filter_show_no_cargo
-            result = self.filter_show_no_cargo
-        elif filter_id == 'can_destroy_planet':
-            self.filter_show_can_destroy_planet = not self.filter_show_can_destroy_planet
-            result = self.filter_show_can_destroy_planet
-        elif filter_id == 'no_destroy_planet':
-            self.filter_show_no_destroy_planet = not self.filter_show_no_destroy_planet
-            result = self.filter_show_no_destroy_planet
-        elif filter_id == 'can_open_warp':
-            self.filter_show_can_open_warp = not self.filter_show_can_open_warp
-            result = self.filter_show_can_open_warp
-        elif filter_id == 'no_open_warp':
-            self.filter_show_no_open_warp = not self.filter_show_no_open_warp
-            result = self.filter_show_no_open_warp
-        elif filter_id == 'can_close_warp':
-            self.filter_show_can_close_warp = not self.filter_show_can_close_warp
-            result = self.filter_show_can_close_warp
-        elif filter_id == 'no_close_warp':
-            self.filter_show_no_close_warp = not self.filter_show_no_close_warp
-            result = self.filter_show_no_close_warp
-        elif filter_id == 'can_destroy_star':
-            self.filter_show_can_destroy_star = not self.filter_show_can_destroy_star
-            result = self.filter_show_can_destroy_star
-        elif filter_id == 'no_destroy_star':
-            self.filter_show_no_destroy_star = not self.filter_show_no_destroy_star
-            result = self.filter_show_no_destroy_star
-        elif filter_id == 'can_create_sphere':
-            self.filter_show_can_create_sphere = not self.filter_show_can_create_sphere
-            result = self.filter_show_can_create_sphere
-        elif filter_id == 'no_create_sphere':
-            self.filter_show_no_create_sphere = not self.filter_show_no_create_sphere
-            result = self.filter_show_no_create_sphere
         else:
             return False
 
         self._needs_refresh = True
         return result
 
-    def set_sort(self, column_id: str) -> None:
-        """
-        Set sort column. If same column, toggles direction.
+    def set_filter_state(self, attribute: str, state: FilterState) -> None:
+        """Set a tri-state filter to a specific state.
 
         Args:
-            column_id: Column to sort by
+            attribute: Filter attribute name (e.g., 'warp_capable', 'has_cargo')
+            state: New FilterState value
         """
-        if self.sort_column_id == column_id:
-            # Toggle direction if same column
-            self.sort_descending = not self.sort_descending
-        else:
-            # New column, reset to ascending
-            self.sort_column_id = column_id
-            self.sort_descending = False
-
+        self._filter_mgr.set_state(attribute, state)
         self._needs_refresh = True
 
-    def get_filter_state(self) -> Dict[str, bool]:
-        """
-        Get current filter state as dict for filter_ships function.
+    def get_tri_state(self, attribute: str) -> FilterState:
+        """Get the current FilterState for a tri-state filter attribute."""
+        return self._filter_mgr.get_state(attribute)
 
-        Returns:
-            Dict with filter state keys
+    def set_sort(self, column_id: str) -> None:
+        """Set sort column. If same column, toggles direction."""
+        if self.sort_column_id == column_id:
+            self.sort_descending = not self.sort_descending
+        else:
+            self.sort_column_id = column_id
+            self.sort_descending = False
+        self._needs_refresh = True
+
+    def get_filter_state(self) -> Dict[str, Any]:
+        """Get current filter state as dict for filter_ships function.
+
+        Returns dict with status filter bools and tri-state FilterState values.
         """
-        return {
+        state: Dict[str, Any] = {
             'show_damaged': self.filter_show_damaged,
             'show_undamaged': self.filter_show_undamaged,
             'show_derelict': self.filter_show_derelict,
             'show_destroyed': self.filter_show_destroyed,
-            'show_warp_capable': self.filter_show_warp_capable,
-            'show_not_warp_capable': self.filter_show_not_warp_capable,
-            'show_has_spaceyard': self.filter_show_has_spaceyard,
-            'show_no_spaceyard': self.filter_show_no_spaceyard,
-            'show_has_cargo': self.filter_show_has_cargo,
-            'show_no_cargo': self.filter_show_no_cargo,
-            'show_can_destroy_planet': self.filter_show_can_destroy_planet,
-            'show_no_destroy_planet': self.filter_show_no_destroy_planet,
-            'show_can_open_warp': self.filter_show_can_open_warp,
-            'show_no_open_warp': self.filter_show_no_open_warp,
-            'show_can_close_warp': self.filter_show_can_close_warp,
-            'show_no_close_warp': self.filter_show_no_close_warp,
-            'show_can_destroy_star': self.filter_show_can_destroy_star,
-            'show_no_destroy_star': self.filter_show_no_destroy_star,
-            'show_can_create_sphere': self.filter_show_can_create_sphere,
-            'show_no_create_sphere': self.filter_show_no_create_sphere,
         }
+        state.update(self._filter_mgr.get_all_states())
+        return state
 
     def get_filtered_ships(self) -> List[ShipInstance]:
-        """
-        Get filtered and sorted ship list.
-
-        Returns:
-            List of ships after filtering and sorting
-        """
+        """Get filtered and sorted ship list."""
         if self._needs_refresh:
             self._refresh()
         return self._filtered_ships
 
     def _refresh(self) -> None:
         """Refresh the filtered/sorted ship list."""
-        # Apply filters
         filtered = filter_ships(self._ships, self.get_filter_state())
-
-        # Apply sort
         self._filtered_ships = sort_ships(
             filtered,
             self.sort_column_id,
@@ -231,49 +174,9 @@ class FleetListViewModel:
         return len(self._ships)
 
     def get_filter_label(self, filter_id: str) -> str:
-        """
-        Get display label for a filter.
-
-        Args:
-            filter_id: Filter identifier
-
-        Returns:
-            Human-readable filter label
-        """
-        labels = {
-            'damaged': 'Damaged',
-            'undamaged': 'Undamaged',
-            'derelict': 'Derelict',
-            'destroyed': 'Destroyed',
-            'warp_capable': 'Warp Capable',
-            'not_warp_capable': 'Not Warp Capable',
-            'has_spaceyard': 'Has Yard',
-            'no_spaceyard': 'No Yard',
-            'has_cargo': 'Has Cargo',
-            'no_cargo': 'No Cargo',
-            'can_destroy_planet': 'Can Destroy Planet',
-            'no_destroy_planet': 'No Planet Destroyer',
-            'can_open_warp': 'Can Open Warp',
-            'no_open_warp': 'No Warp Opener',
-            'can_close_warp': 'Can Close Warp',
-            'no_close_warp': 'No Warp Closer',
-            'can_destroy_star': 'Can Destroy Star',
-            'no_destroy_star': 'No Star Destroyer',
-            'can_create_sphere': 'Can Create Sphere',
-            'no_create_sphere': 'No Sphere Builder',
-        }
-        return labels.get(filter_id, filter_id)
-
-    def is_filter_enabled(self, filter_id: str) -> bool:
-        """
-        Check if a filter is enabled (showing matching ships).
-
-        Args:
-            filter_id: Filter identifier
-
-        Returns:
-            True if filter is enabled
-        """
-        state = self.get_filter_state()
-        key = f'show_{filter_id}'
-        return state.get(key, True)
+        """Get display label for a filter attribute."""
+        if filter_id in _STATUS_LABELS:
+            return _STATUS_LABELS[filter_id]
+        if filter_id in _TRI_STATE_LABELS:
+            return _TRI_STATE_LABELS[filter_id]
+        return filter_id

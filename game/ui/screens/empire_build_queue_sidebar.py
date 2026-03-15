@@ -7,16 +7,35 @@ Created as part of PROJ-172 Phase 3.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 import pygame
 from pygame_gui.elements import UIButton, UILabel, UIPanel, UITextEntryLine
 
+from game.ui.components.filters.tri_state_widget import TriStateFilterWidget
 from game.ui.config import UIConfig
+from game.ui.filters.filter_state import FilterState
 
 if TYPE_CHECKING:
     from game.ui.screens.empire_build_queue_viewmodel import EmpireBuildQueueViewModel
     from game.ui.screens.builder.event_bus import EventBus
+
+
+# Tri-state filter definitions: (section_header, [(filter_key, label), ...])
+_TRI_STATE_SECTIONS = [
+    ('LOCATION TYPE', [
+        ('loc_Planet', 'Planet'),
+        ('loc_Fleet', 'Fleet'),
+    ]),
+    ('QUEUE STATUS', [
+        ('status_Active', 'Active'),
+        ('status_Empty', 'Empty'),
+    ]),
+    ('CAPABILITIES', [
+        ('cap_Ships', 'Ships'),
+        ('cap_Complexes', 'Complexes'),
+    ]),
+]
 
 
 class EmpireBuildQueueSidebar:
@@ -58,7 +77,7 @@ class EmpireBuildQueueSidebar:
 
         # UI element references
         self.column_toggle_buttons: Dict[str, UIButton] = {}
-        self.filter_toggle_buttons: Dict[str, UIButton] = {}
+        self.tri_state_widgets: Dict[str, TriStateFilterWidget] = {}
         self.search_entry: Optional[UITextEntryLine] = None
         self.btn_apply_filters: Optional[UIButton] = None
 
@@ -93,72 +112,29 @@ class EmpireBuildQueueSidebar:
             y_off += 35
 
     def _build_filters(self) -> None:
-        """Create filter toggle buttons and search box."""
+        """Create tri-state filter widgets and search box."""
         # Start below column toggles
         y_off = 40 + len(self.columns) * 35 + 15
 
-        # --- Location Type ---
-        UILabel(
-            relative_rect=pygame.Rect(10, y_off, self.sidebar_width, 25),
-            text="LOCATION TYPE",
-            manager=self.ui_manager,
-            container=self.container,
-        )
-        y_off += 30
-        for key in ('Planet', 'Fleet'):
-            prefix = "[x]" if self.viewmodel.filter_location_type[key] else "[ ]"
-            btn = UIButton(
-                relative_rect=pygame.Rect(10, y_off, self.sidebar_width, 30),
-                text=f"{prefix} {key}",
+        # --- Tri-state filter sections ---
+        for section_header, filters in _TRI_STATE_SECTIONS:
+            UILabel(
+                relative_rect=pygame.Rect(10, y_off, self.sidebar_width, 25),
+                text=section_header,
                 manager=self.ui_manager,
                 container=self.container,
             )
-            self.filter_toggle_buttons[f"loc_{key}"] = btn
-            y_off += 35
-
-        y_off += 10
-
-        # --- Queue Status ---
-        UILabel(
-            relative_rect=pygame.Rect(10, y_off, self.sidebar_width, 25),
-            text="QUEUE STATUS",
-            manager=self.ui_manager,
-            container=self.container,
-        )
-        y_off += 30
-        for key in ('Active', 'Empty'):
-            prefix = "[x]" if self.viewmodel.filter_status[key] else "[ ]"
-            btn = UIButton(
-                relative_rect=pygame.Rect(10, y_off, self.sidebar_width, 30),
-                text=f"{prefix} {key}",
-                manager=self.ui_manager,
-                container=self.container,
-            )
-            self.filter_toggle_buttons[f"status_{key}"] = btn
-            y_off += 35
-
-        y_off += 10
-
-        # --- Capabilities ---
-        UILabel(
-            relative_rect=pygame.Rect(10, y_off, self.sidebar_width, 25),
-            text="CAPABILITIES",
-            manager=self.ui_manager,
-            container=self.container,
-        )
-        y_off += 30
-        for key in ('Ships', 'Complexes'):
-            prefix = "[x]" if self.viewmodel.filter_capabilities[key] else "[ ]"
-            btn = UIButton(
-                relative_rect=pygame.Rect(10, y_off, self.sidebar_width, 30),
-                text=f"{prefix} {key}",
-                manager=self.ui_manager,
-                container=self.container,
-            )
-            self.filter_toggle_buttons[f"cap_{key}"] = btn
-            y_off += 35
-
-        y_off += 10
+            y_off += 30
+            for filter_key, label in filters:
+                widget = TriStateFilterWidget(
+                    relative_rect=pygame.Rect(10, y_off, self.sidebar_width, 25),
+                    label=label,
+                    manager=self.ui_manager,
+                    container=self.container,
+                )
+                self.tri_state_widgets[filter_key] = widget
+                y_off += 30
+            y_off += 10
 
         # --- Text Search ---
         UILabel(
@@ -191,6 +167,8 @@ class EmpireBuildQueueSidebar:
         """Handle a UI button click event.
 
         Checks if button is one of the sidebar buttons and processes it.
+        Note: Tri-state filter widgets are polled via check_tri_state_presses(),
+        not through this event-based handler.
 
         Args:
             button: The UIButton that was clicked.
@@ -209,13 +187,26 @@ class EmpireBuildQueueSidebar:
                 self._handle_column_toggle(col_id)
                 return True
 
-        # Check filter toggles
-        for filter_key, btn in self.filter_toggle_buttons.items():
-            if btn is button:
-                self._handle_filter_toggle(filter_key)
-                return True
-
         return False
+
+    def check_tri_state_presses(self) -> Optional[Tuple[str, FilterState]]:
+        """Poll tri-state filter widgets for presses.
+
+        Called from the window's update() loop. Returns the first
+        widget press found, or None if no press occurred.
+
+        Returns:
+            Tuple of (filter_key, new_state) if a widget was pressed,
+            or None if no press occurred.
+        """
+        for filter_key, widget in self.tri_state_widgets.items():
+            new_state = widget.check_pressed()
+            if new_state is not None:
+                widget.set_state(new_state)
+                self.viewmodel.set_filter_state(filter_key, new_state)
+                self.viewmodel.apply_filters()
+                return (filter_key, new_state)
+        return None
 
     def _handle_column_toggle(self, col_id: str) -> None:
         """Handle column toggle button click.
@@ -233,24 +224,6 @@ class EmpireBuildQueueSidebar:
                 label = col['title'] or col['id']
                 btn.set_text(f"{prefix} {label}")
                 return
-
-    def _handle_filter_toggle(self, filter_key: str) -> None:
-        """Handle filter toggle button click.
-
-        Args:
-            filter_key: Filter key (e.g., "loc_Planet").
-        """
-        new_state = self.viewmodel.toggle_filter(filter_key)
-
-        # Update button text
-        btn = self.filter_toggle_buttons[filter_key]
-        parts = filter_key.split("_", 1)
-        value = parts[1] if len(parts) > 1 else filter_key
-        prefix = "[x]" if new_state else "[ ]"
-        btn.set_text(f"{prefix} {value}")
-
-        # Apply filters immediately on toggle
-        self.viewmodel.apply_filters()
 
     def _handle_apply_click(self) -> None:
         """Handle Apply Filters button click."""

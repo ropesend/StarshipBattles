@@ -2,11 +2,44 @@
 Fleet Report Sidebar - Sidebar UI component for FleetReportWindow.
 
 PROJ-173 Phase 1: Extracted from FleetReportWindow to reduce god class size.
+PROJ-220 Phase 3: Replaced paired filter buttons with TriStateFilterWidget.
 """
+from typing import Dict
+
 import pygame
 from pygame_gui.elements import UIPanel, UILabel, UIButton
 
+from game.ui.components.filters.tri_state_widget import TriStateFilterWidget
 from game.ui.screens.fleet_report_filters import calculate_fleet_stats
+
+
+# Status filter attributes and their initial enabled state
+_STATUS_FILTERS = {
+    'damaged': ('Damaged', True),
+    'undamaged': ('Undamaged', True),
+    'derelict': ('Derelict', True),
+    'destroyed': ('Destroyed', False),
+}
+
+# Tri-state filter definitions: (attribute_name, label, section_header)
+_TRI_STATE_SECTIONS = [
+    ('WARP CAPABILITY', [
+        ('warp_capable', 'Warp Capable'),
+    ]),
+    ('SPACEYARD', [
+        ('has_spaceyard', 'Has Spaceyard'),
+    ]),
+    ('CARGO', [
+        ('has_cargo', 'Has Cargo'),
+    ]),
+    ('SPECIAL CAPABILITIES', [
+        ('destroy_planet', 'Destroy Planet'),
+        ('open_warp', 'Open Warp'),
+        ('close_warp', 'Close Warp'),
+        ('destroy_star', 'Destroy Star'),
+        ('create_sphere', 'Create Sphere'),
+    ]),
+]
 
 
 class FleetReportSidebar:
@@ -49,7 +82,8 @@ class FleetReportSidebar:
         self.sidebar_width = panel.get_relative_rect().width
 
         # Widget collections
-        self.filter_buttons = {}
+        self.filter_buttons: Dict[str, UIButton] = {}
+        self.tri_state_widgets: Dict[str, TriStateFilterWidget] = {}
         self.column_buttons = {}
 
         # Summary labels
@@ -221,7 +255,7 @@ class FleetReportSidebar:
         self._build_actions_section(y)
 
     def _build_filter_section(self, y: int) -> int:
-        """Build filter toggle buttons. Returns updated y position."""
+        """Build filter toggle buttons and tri-state widgets. Returns updated y position."""
         UILabel(
             relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 30),
             text="FILTERS",
@@ -230,107 +264,39 @@ class FleetReportSidebar:
         )
         y += 35
 
-        # Status filter checkboxes
-        filter_configs = [
-            ('damaged', 'Damaged'),
-            ('undamaged', 'Undamaged'),
-            ('derelict', 'Derelict'),
-            ('destroyed', 'Destroyed'),
-        ]
-
-        for filter_id, label in filter_configs:
-            y = self._create_filter_button(filter_id, label, y)
+        # Status filter buttons (toggle on/off)
+        for filter_id, (label, default_on) in _STATUS_FILTERS.items():
+            y = self._create_status_filter_button(filter_id, label, default_on, y)
 
         y += 10
 
-        # Warp capability filter section
-        UILabel(
-            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 25),
-            text="WARP CAPABILITY",
-            manager=self.manager,
-            container=self.panel
-        )
-        y += 28
+        # Tri-state filter widgets (Yes/No/Ignore)
+        for section_header, filters in _TRI_STATE_SECTIONS:
+            UILabel(
+                relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 25),
+                text=section_header,
+                manager=self.manager,
+                container=self.panel
+            )
+            y += 28
 
-        warp_filter_configs = [
-            ('warp_capable', 'Warp Capable'),
-            ('not_warp_capable', 'Not Warp Capable'),
-        ]
+            for attr_name, label in filters:
+                widget = TriStateFilterWidget(
+                    attribute_name=attr_name,
+                    label=label,
+                    rect=pygame.Rect(10, y, self.sidebar_width - 20, 28),
+                    manager=self.manager,
+                    container=self.panel,
+                )
+                self.tri_state_widgets[attr_name] = widget
+                y += 30
 
-        for filter_id, label in warp_filter_configs:
-            y = self._create_filter_button(filter_id, label, y)
+            y += 10
 
-        y += 10
-
-        # Spaceyard filter section
-        UILabel(
-            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 25),
-            text="SPACEYARD",
-            manager=self.manager,
-            container=self.panel
-        )
-        y += 28
-
-        spaceyard_filter_configs = [
-            ('has_spaceyard', 'Has Yard'),
-            ('no_spaceyard', 'No Yard'),
-        ]
-
-        for filter_id, label in spaceyard_filter_configs:
-            y = self._create_filter_button(filter_id, label, y)
-
-        y += 10
-
-        # Cargo filter section
-        UILabel(
-            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 25),
-            text="CARGO",
-            manager=self.manager,
-            container=self.panel
-        )
-        y += 28
-
-        cargo_filter_configs = [
-            ('has_cargo', 'Has Cargo'),
-            ('no_cargo', 'No Cargo'),
-        ]
-
-        for filter_id, label in cargo_filter_configs:
-            y = self._create_filter_button(filter_id, label, y)
-
-        y += 10
-
-        # Special capabilities filter section
-        UILabel(
-            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 25),
-            text="SPECIAL CAPABILITIES",
-            manager=self.manager,
-            container=self.panel
-        )
-        y += 28
-
-        special_filter_configs = [
-            ('can_destroy_planet', 'Destroy Planet'),
-            ('no_destroy_planet', 'No Destroy Planet'),
-            ('can_open_warp', 'Open Warp'),
-            ('no_open_warp', 'No Open Warp'),
-            ('can_close_warp', 'Close Warp'),
-            ('no_close_warp', 'No Close Warp'),
-            ('can_destroy_star', 'Destroy Star'),
-            ('no_destroy_star', 'No Destroy Star'),
-            ('can_create_sphere', 'Create Sphere'),
-            ('no_create_sphere', 'No Create Sphere'),
-        ]
-
-        for filter_id, label in special_filter_configs:
-            y = self._create_filter_button(filter_id, label, y)
-
-        y += 10
         return y
 
-    def _create_filter_button(self, filter_id: str, label: str, y: int) -> int:
-        """Create a single filter toggle button. Returns updated y position."""
-        is_on = self.view_model.is_filter_enabled(filter_id)
+    def _create_status_filter_button(self, filter_id: str, label: str, is_on: bool, y: int) -> int:
+        """Create a status filter toggle button. Returns updated y position."""
         btn_text = f"[{label}]" if is_on else label
         btn = UIButton(
             relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 28),
@@ -488,10 +454,10 @@ class FleetReportSidebar:
 
     def update_filter_button(self, filter_id: str, is_enabled: bool):
         """
-        Update a filter button's appearance.
+        Update a status filter button's appearance.
 
         Args:
-            filter_id: Filter identifier
+            filter_id: Status filter identifier
             is_enabled: Whether filter is now enabled
         """
         label = self.view_model.get_filter_label(filter_id)
@@ -525,17 +491,27 @@ class FleetReportSidebar:
 
         Returns:
             Dict with keys:
-            - 'filter_toggled': filter_id or None
+            - 'filter_toggled': status filter_id or None
+            - 'filter_state_changed': (attribute, FilterState) tuple or None
             - 'column_toggled': col_id or None
             - 'remove_selected': bool
         """
         result = {
             'filter_toggled': None,
+            'filter_state_changed': None,
             'column_toggled': None,
             'remove_selected': False
         }
 
-        # Check filter buttons
+        # Check tri-state filter widgets
+        for attr_name, widget in self.tri_state_widgets.items():
+            new_state = widget.check_pressed()
+            if new_state is not None:
+                widget.set_state(new_state)
+                result['filter_state_changed'] = (attr_name, new_state)
+                return result  # Only one action per frame
+
+        # Check status filter buttons
         for filter_id, btn in self.filter_buttons.items():
             if btn.check_pressed():
                 result['filter_toggled'] = filter_id

@@ -107,7 +107,7 @@ def capture_planet_list_state(columns, txt_name_filter, filter_types, filter_own
     }
 
 
-def apply_planet_list_state(state, columns, txt_name_filter, filter_types, ui_filters):
+def apply_planet_list_state(state, columns, txt_name_filter, filter_types, ui_filters, filter_owner=None):
     """Apply a saved state to the planet list.
 
     Args:
@@ -116,6 +116,7 @@ def apply_planet_list_state(state, columns, txt_name_filter, filter_types, ui_fi
         txt_name_filter: The name filter text entry widget
         filter_types: Dict of planet type filter states (will be modified)
         ui_filters: Dict containing slider and button UI elements
+        filter_owner: Dict of owner filter states (will be modified). PROJ-220 fix.
 
     Returns:
         The reordered columns list
@@ -169,6 +170,21 @@ def apply_planet_list_state(state, columns, txt_name_filter, filter_types, ui_fi
                 else:
                     btn.unselect()
                     btn.set_text(f"{t}")
+
+        # Restore Owner Filters (PROJ-220 bug fix)
+        if 'owner' in f and filter_owner is not None:
+            filter_owner.clear()
+            filter_owner.update(f['owner'])
+
+            # Update Owner Toggles UI
+            for o, btn in ui_filters.get('owners', {}).items():
+                if o in filter_owner:
+                    if filter_owner[o]:
+                        btn.select()
+                        btn.set_text(f"[{o}]")
+                    else:
+                        btn.unselect()
+                        btn.set_text(f"{o}")
 
         if 'ranges' in f:
             r = f['ranges']

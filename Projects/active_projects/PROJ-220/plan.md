@@ -13,20 +13,20 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Foundation: FilterState Enum & FilterStateManager | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. TriStateFilterWidget (Pygame Component) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Retrofit Fleet Report | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Retrofit Build Queue | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Planet List State Unification | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Cleanup & Verification | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 1. Foundation: FilterState Enum & FilterStateManager | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. TriStateFilterWidget (Pygame Component) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Retrofit Fleet Report | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Retrofit Build Queue | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Planet List State Unification | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Cleanup & Verification | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-03-14 21:00
-**Active Phase:** Planning
-**Last Action:** Plan approved (pending user confirmation)
-**Next Action:** Begin Phase 1 — create FilterState enum and FilterStateManager
+**Last Updated:** 2026-03-15
+**Active Phase:** PROJECT COMPLETE
+**Last Action:** Phase 6 complete — All dead code verified clean, full test suite passes (13,300 passed, 2 skipped)
+**Next Action:** User manual verification of tri-state widget rendering (Task 6.2)
 **Blockers:** None
-**Context for Next Agent:** Test baseline is 13,178 passed, 2 skipped. All decisions are in decisions.md. Design rationale is in design.md. Triage context is in findings/tristate_filter_unification.md.
+**Context for Next Agent:** All 6 phases complete. Tri-state filter infrastructure built and deployed across Fleet Report (8 binary filters → 8 tri-state), Build Queue (6 toggles → 3 tri-state groups), and Planet List (state unified via PlanetListFilterManager). 122 net new tests added. Owner filter preset restore bug fixed (BUG-27 gap). Only remaining item: manual visual verification by user (Task 6.2 in phase_6_checklist.md).
 
 ## Overview
 Replace paired Yes/No toggle buttons across Fleet Report and Build Queue windows with a unified tri-state filter control (Yes / No / Ignore). Create shared filter infrastructure (FilterState enum, FilterStateManager, TriStateFilterWidget) that all filter windows adopt. Planet List adopts the state manager for future extensibility but has no current binary filters to convert.
@@ -83,9 +83,9 @@ Replace paired Yes/No toggle buttons across Fleet Report and Build Queue windows
 - [decisions.md](decisions.md) - Full decisions log
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing (`pytest tests/ -n 12`)
-- [ ] All 3 windows render correctly with new filter UI
-- [ ] Tri-state filters cycle through Yes/No/Ignore correctly
-- [ ] Planet List presets still load/save correctly
+- [x] All phase checklists complete
+- [x] All tests passing (`pytest tests/ -n 12`) — 13,300 passed, 2 skipped
+- [ ] All 3 windows render correctly with new filter UI (PENDING: manual user verification)
+- [ ] Tri-state filters cycle through Yes/No/Ignore correctly (PENDING: manual user verification)
+- [ ] Planet List presets still load/save correctly (PENDING: manual user verification)
 - [ ] User verified

@@ -21,6 +21,7 @@ from game.ui.screens.planet_list_filters import (
     compute_planet_ranges, get_system_name, get_owner_name, get_mass_earth, get_resource_str
 )
 from game.ui.screens.planet_list_presets import PresetManager, capture_planet_list_state, apply_planet_list_state
+from game.ui.screens.planet_list_filter_manager import PlanetListFilterManager
 from game.ui.screens.planet_list_sidebar import build_sidebar
 from game.ui.components.table import VirtualTable, TableColumnManager, SingleSelect
 from game.ui.screens.planet_data_source import PlanetDataSource
@@ -57,18 +58,12 @@ class PlanetListWindow(UIWindow):
         # Preset manager
         self.preset_manager = PresetManager()
 
-        # Filter States
-        self.filter_types = {
-            'Continental': True, 'Arid': True, 'Pelagic': True,
-            'Magma': True, 'Cryoplanet': True, 'Barren': True,
-            'Jovian': True, 'Ice Giant': True, 'Chthonian': True,
-            'Ice Dwarf': True, 'Planetoid': True
-        }
-        self.filter_owner = {'Player': True, 'Enemy': True, 'Unowned': True}
+        # Filter state manager (PROJ-220: extracted from inline dicts)
+        self._filter_mgr = PlanetListFilterManager()
 
         # Compute dynamic filter ranges from actual planet data
         self._planet_ranges = compute_planet_ranges(self.all_planets)
-        self.filter_ranges = {
+        self._filter_mgr.filter_ranges = {
             'gravity': [self._planet_ranges['gravity'][0], self._planet_ranges['gravity'][1]],
             'temp': [self._planet_ranges['temp'][0], self._planet_ranges['temp'][1]],
             'mass': [self._planet_ranges['mass'][0], self._planet_ranges['mass'][1]]
@@ -159,6 +154,40 @@ class PlanetListWindow(UIWindow):
 
         # Initial Population
         self.refresh_list()
+
+    # -----------------------------------------------------------------------
+    # Filter state properties (delegate to PlanetListFilterManager)
+    # -----------------------------------------------------------------------
+
+    @property
+    def filter_types(self):
+        """Planet type filter dict (mutable reference)."""
+        return self._filter_mgr.filter_types
+
+    @filter_types.setter
+    def filter_types(self, value):
+        """Set planet type filter dict."""
+        self._filter_mgr.filter_types = value
+
+    @property
+    def filter_owner(self):
+        """Owner category filter dict (mutable reference)."""
+        return self._filter_mgr.filter_owner
+
+    @filter_owner.setter
+    def filter_owner(self, value):
+        """Set owner category filter dict."""
+        self._filter_mgr.filter_owner = value
+
+    @property
+    def filter_ranges(self):
+        """Range filter dict (mutable reference)."""
+        return self._filter_mgr.filter_ranges
+
+    @filter_ranges.setter
+    def filter_ranges(self, value):
+        """Set range filter dict."""
+        self._filter_mgr.filter_ranges = value
 
     def refresh_list(self):
         """Filter and update scrollbar."""
@@ -402,7 +431,8 @@ class PlanetListWindow(UIWindow):
         """Restore state."""
         self.columns = apply_planet_list_state(
             state, self.columns, self.txt_name_filter,
-            self.filter_types, self.ui_filters
+            self.filter_types, self.ui_filters,
+            filter_owner=self.filter_owner,
         )
         # Re-sync TableColumnManager with updated columns
         self.column_manager = TableColumnManager(self.columns)

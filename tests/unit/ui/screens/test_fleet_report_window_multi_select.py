@@ -385,24 +385,25 @@ class TestRemoveButtonState:
         mock_column_manager.get_toggleable_columns.return_value = []
         mock_empire = Mock()
 
-        # Patch pygame_gui elements
+        # Patch pygame_gui elements and TriStateFilterWidget
         with patch('game.ui.screens.fleet_report_sidebar.UIPanel'):
             with patch('game.ui.screens.fleet_report_sidebar.UILabel'):
                 with patch('game.ui.screens.fleet_report_sidebar.UIButton'):
-                    sidebar = FleetReportSidebar(
-                        panel=mock_panel,
-                        manager=mock_manager,
-                        view_model=mock_view_model,
-                        column_manager=mock_column_manager,
-                        empire=mock_empire
-                    )
-                    # Mock the button directly
-                    sidebar.btn_remove_selected = Mock()
-                    sidebar.btn_remove_selected.enable = Mock()
-                    sidebar.btn_remove_selected.disable = Mock()
-                    sidebar.btn_remove_selected.set_text = Mock()
+                    with patch('game.ui.screens.fleet_report_sidebar.TriStateFilterWidget'):
+                        sidebar = FleetReportSidebar(
+                            panel=mock_panel,
+                            manager=mock_manager,
+                            view_model=mock_view_model,
+                            column_manager=mock_column_manager,
+                            empire=mock_empire
+                        )
+                        # Mock the button directly
+                        sidebar.btn_remove_selected = Mock()
+                        sidebar.btn_remove_selected.enable = Mock()
+                        sidebar.btn_remove_selected.disable = Mock()
+                        sidebar.btn_remove_selected.set_text = Mock()
 
-                    return sidebar
+                        return sidebar
 
     def test_button_enabled_with_selection_and_empire(self, sidebar_with_button):
         """Button enabled when ships selected and empire available."""

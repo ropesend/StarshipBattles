@@ -302,7 +302,10 @@ class FleetReportWindow(UIWindow):
         # Check sidebar button presses
         sidebar_actions = self.sidebar.check_button_presses()
 
-        if sidebar_actions['filter_toggled']:
+        if sidebar_actions.get('filter_state_changed'):
+            attr, new_state = sidebar_actions['filter_state_changed']
+            self._apply_tri_state_filter(attr, new_state)
+        elif sidebar_actions['filter_toggled']:
             self._toggle_filter(sidebar_actions['filter_toggled'])
         elif sidebar_actions['column_toggled']:
             self._toggle_column(sidebar_actions['column_toggled'])
@@ -336,6 +339,18 @@ class FleetReportWindow(UIWindow):
         self.sidebar.update_remove_button(0)
 
         # Refresh the list with new filters
+        self.refresh_list()
+
+    def _apply_tri_state_filter(self, attribute: str, state):
+        """Apply a tri-state filter change and refresh UI."""
+        self.view_model.set_filter_state(attribute, state)
+
+        # Selection may now reference invalid indices, clear it
+        self.selection.clear()
+        self.selected_ship = None
+        self._update_detail_panel()
+        self.sidebar.update_remove_button(0)
+
         self.refresh_list()
 
     def _toggle_column(self, col_id: str):

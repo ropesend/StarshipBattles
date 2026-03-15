@@ -261,5 +261,28 @@
         "colours": {
             "normal_text": "#9aabcc"
         }
+    },
+    "button.@tri_state_radio": {
+        "font": {
+            "name": "arial",
+            "size": "12"
+        },
+        "colours": {
+            "normal_bg": "#1e2530",
+            "hovered_bg": "#283040",
+            "selected_bg": "#2a5090",
+            "normal_border": "#3a4860",
+            "hovered_border": "#55aaee",
+            "selected_border": "#4499dd",
+            "normal_text": "#aabbdd",
+            "hovered_text": "#ddeeff",
+            "selected_text": "#ffffff"
+        },
+        "misc": {
+            "text_horiz_alignment": "center",
+            "text_vert_alignment": "center",
+            "border_width": "1",
+            "shape_corner_radius": "3"
+        }
     }
 }

@@ -2,9 +2,12 @@
 Tests for FleetListViewModel - manages filtering, sorting, and pagination state.
 
 PROJ-44 Phase 7 Task 7.4: FleetReportWindow refactoring.
+PROJ-220: Updated for tri-state FilterState API.
 """
 import pytest
 from unittest.mock import Mock, MagicMock
+
+from game.ui.filters.filter_state import FilterState
 
 
 class TestFleetListViewModel:
@@ -35,14 +38,19 @@ class TestFleetListViewModel:
         from game.ui.screens.fleet_report_view_model import FleetListViewModel
         return FleetListViewModel(mock_ships)
 
-    def test_init_sets_default_filters(self, view_model):
-        """ViewModel initializes with default filter state."""
+    def test_init_sets_default_status_filters(self, view_model):
+        """ViewModel initializes with default status filter state."""
         assert view_model.filter_show_damaged is True
         assert view_model.filter_show_undamaged is True
         assert view_model.filter_show_derelict is True
         assert view_model.filter_show_destroyed is False  # Destroyed hidden by default
-        assert view_model.filter_show_warp_capable is True
-        assert view_model.filter_show_not_warp_capable is True
+
+    def test_init_sets_default_tri_state_filters(self, view_model):
+        """ViewModel initializes with all tri-state filters as IGNORE."""
+        assert view_model.get_tri_state('warp_capable') is FilterState.IGNORE
+        assert view_model.get_tri_state('has_spaceyard') is FilterState.IGNORE
+        assert view_model.get_tri_state('has_cargo') is FilterState.IGNORE
+        assert view_model.get_tri_state('destroy_planet') is FilterState.IGNORE
 
     def test_init_sets_default_sort(self, view_model):
         """ViewModel initializes with default sort state."""
@@ -116,14 +124,17 @@ class TestFleetListViewModel:
         assert hps == sorted(hps, reverse=True)
 
     def test_get_filter_state_dict(self, view_model):
-        """get_filter_state returns dict for filter_ships function."""
+        """get_filter_state returns dict with status bools and tri-state FilterState values."""
         state = view_model.get_filter_state()
+        # Status filters as bools
         assert state['show_damaged'] is True
         assert state['show_undamaged'] is True
         assert state['show_derelict'] is True
         assert state['show_destroyed'] is False
-        assert state['show_warp_capable'] is True
-        assert state['show_not_warp_capable'] is True
+        # Tri-state filters as FilterState
+        assert state['warp_capable'] is FilterState.IGNORE
+        assert state['has_spaceyard'] is FilterState.IGNORE
+        assert state['has_cargo'] is FilterState.IGNORE
 
     def test_update_ships_refreshes_filtered_list(self, view_model):
         """Updating ships refreshes the filtered list."""
@@ -159,127 +170,64 @@ class TestFleetListViewModel:
         assert view_model.get_total_ship_count() == 5
 
 
-class TestFleetListViewModelWarpFilters:
-    """Test warp capability filtering."""
-
-    @pytest.fixture
-    def mock_ships_with_warp(self):
-        """Create mock ships with mixed warp capabilities."""
-        ships = []
-        for i in range(4):
-            ship = Mock()
-            ship.instance_id = f"ship-{i}"
-            ship.serial = i + 1
-            ship.is_alive = True
-            ship.is_derelict = False
-            ship.is_damaged = Mock(return_value=False)
-            ship.get_hp_percentage = Mock(return_value=1.0)
-            # Ships 0,1 have warp; ships 2,3 don't
-            ship.has_warp = (i < 2)
-            ships.append(ship)
-        return ships
-
-    @pytest.fixture
-    def view_model(self, mock_ships_with_warp):
-        """Create FleetListViewModel with mocked warp check."""
-        from game.ui.screens.fleet_report_view_model import FleetListViewModel
-
-        # Create view model
-        vm = FleetListViewModel(mock_ships_with_warp)
-        return vm
-
-    def test_toggle_warp_capable_filter(self, view_model):
-        """Toggle warp capable filter."""
-        assert view_model.filter_show_warp_capable is True
-        view_model.toggle_filter('warp_capable')
-        assert view_model.filter_show_warp_capable is False
-
-    def test_toggle_not_warp_capable_filter(self, view_model):
-        """Toggle not warp capable filter."""
-        assert view_model.filter_show_not_warp_capable is True
-        view_model.toggle_filter('not_warp_capable')
-        assert view_model.filter_show_not_warp_capable is False
-
-
-class TestFleetListViewModelSpaceyardFilters:
-    """Test spaceyard capability filtering."""
+class TestFleetListViewModelTriStateAPI:
+    """Test tri-state filter API (PROJ-220)."""
 
     @pytest.fixture
     def view_model(self):
-        """Create FleetListViewModel instance."""
         from game.ui.screens.fleet_report_view_model import FleetListViewModel
         return FleetListViewModel([])
 
-    def test_init_spaceyard_filters_default(self, view_model):
-        """ViewModel initializes with spaceyard filters enabled by default."""
-        assert view_model.filter_show_has_spaceyard is True
-        assert view_model.filter_show_no_spaceyard is True
+    def test_set_filter_state_warp(self, view_model):
+        """set_filter_state changes warp filter."""
+        view_model.set_filter_state('warp_capable', FilterState.YES)
+        assert view_model.get_tri_state('warp_capable') is FilterState.YES
 
-    def test_toggle_has_spaceyard_filter(self, view_model):
-        """Toggle has_spaceyard filter."""
-        assert view_model.filter_show_has_spaceyard is True
-        view_model.toggle_filter('has_spaceyard')
-        assert view_model.filter_show_has_spaceyard is False
-        view_model.toggle_filter('has_spaceyard')
-        assert view_model.filter_show_has_spaceyard is True
+    def test_set_filter_state_spaceyard(self, view_model):
+        """set_filter_state changes spaceyard filter."""
+        view_model.set_filter_state('has_spaceyard', FilterState.NO)
+        assert view_model.get_tri_state('has_spaceyard') is FilterState.NO
 
-    def test_toggle_no_spaceyard_filter(self, view_model):
-        """Toggle no_spaceyard filter."""
-        assert view_model.filter_show_no_spaceyard is True
-        view_model.toggle_filter('no_spaceyard')
-        assert view_model.filter_show_no_spaceyard is False
+    def test_set_filter_state_cargo(self, view_model):
+        """set_filter_state changes cargo filter."""
+        view_model.set_filter_state('has_cargo', FilterState.YES)
+        assert view_model.get_tri_state('has_cargo') is FilterState.YES
 
-    def test_get_filter_state_includes_spaceyard(self, view_model):
-        """get_filter_state includes spaceyard filter keys."""
+    def test_set_filter_state_special_capability(self, view_model):
+        """set_filter_state changes special capability filters."""
+        view_model.set_filter_state('destroy_planet', FilterState.YES)
+        assert view_model.get_tri_state('destroy_planet') is FilterState.YES
+
+    def test_set_filter_state_marks_refresh(self, view_model):
+        """set_filter_state triggers refresh on next get_filtered_ships."""
+        view_model.get_filtered_ships()  # Prime cache
+        view_model.set_filter_state('warp_capable', FilterState.YES)
+        assert view_model._needs_refresh is True
+
+    def test_get_filter_state_includes_tri_state(self, view_model):
+        """get_filter_state includes tri-state FilterState values."""
+        view_model.set_filter_state('warp_capable', FilterState.YES)
         state = view_model.get_filter_state()
-        assert 'show_has_spaceyard' in state
-        assert 'show_no_spaceyard' in state
-        assert state['show_has_spaceyard'] is True
-        assert state['show_no_spaceyard'] is True
+        assert state['warp_capable'] is FilterState.YES
 
-    def test_get_filter_label_spaceyard(self, view_model):
-        """get_filter_label returns correct labels for spaceyard filters."""
-        assert view_model.get_filter_label('has_spaceyard') == 'Has Yard'
-        assert view_model.get_filter_label('no_spaceyard') == 'No Yard'
+    def test_filter_manager_exposed(self, view_model):
+        """filter_manager property provides access to FilterStateManager."""
+        mgr = view_model.filter_manager
+        assert mgr.get_state('warp_capable') is FilterState.IGNORE
 
-
-class TestFleetListViewModelCargoFilters:
-    """Test cargo filtering."""
-
-    @pytest.fixture
-    def view_model(self):
-        """Create FleetListViewModel instance."""
-        from game.ui.screens.fleet_report_view_model import FleetListViewModel
-        return FleetListViewModel([])
-
-    def test_init_cargo_filters_default(self, view_model):
-        """ViewModel initializes with cargo filters enabled by default."""
-        assert view_model.filter_show_has_cargo is True
-        assert view_model.filter_show_no_cargo is True
-
-    def test_toggle_has_cargo_filter(self, view_model):
-        """Toggle has_cargo filter."""
-        assert view_model.filter_show_has_cargo is True
-        view_model.toggle_filter('has_cargo')
-        assert view_model.filter_show_has_cargo is False
-        view_model.toggle_filter('has_cargo')
-        assert view_model.filter_show_has_cargo is True
-
-    def test_toggle_no_cargo_filter(self, view_model):
-        """Toggle no_cargo filter."""
-        assert view_model.filter_show_no_cargo is True
-        view_model.toggle_filter('no_cargo')
-        assert view_model.filter_show_no_cargo is False
-
-    def test_get_filter_state_includes_cargo(self, view_model):
-        """get_filter_state includes cargo filter keys."""
-        state = view_model.get_filter_state()
-        assert 'show_has_cargo' in state
-        assert 'show_no_cargo' in state
-        assert state['show_has_cargo'] is True
-        assert state['show_no_cargo'] is True
-
-    def test_get_filter_label_cargo(self, view_model):
-        """get_filter_label returns correct labels for cargo filters."""
+    def test_get_filter_label_tri_state(self, view_model):
+        """get_filter_label returns labels for tri-state filters."""
+        assert view_model.get_filter_label('warp_capable') == 'Warp Capable'
+        assert view_model.get_filter_label('has_spaceyard') == 'Has Spaceyard'
         assert view_model.get_filter_label('has_cargo') == 'Has Cargo'
-        assert view_model.get_filter_label('no_cargo') == 'No Cargo'
+        assert view_model.get_filter_label('destroy_planet') == 'Destroy Planet'
+
+    def test_get_filter_label_status(self, view_model):
+        """get_filter_label returns labels for status filters."""
+        assert view_model.get_filter_label('damaged') == 'Damaged'
+        assert view_model.get_filter_label('destroyed') == 'Destroyed'
+
+    def test_toggle_returns_false_for_tri_state_ids(self, view_model):
+        """toggle_filter returns False for non-status filter IDs."""
+        result = view_model.toggle_filter('warp_capable')
+        assert result is False  # Not a status filter
