@@ -127,8 +127,9 @@ class EmpireBuildQueueSidebar:
             y_off += 30
             for filter_key, label in filters:
                 widget = TriStateFilterWidget(
-                    relative_rect=pygame.Rect(10, y_off, self.sidebar_width, 25),
+                    attribute_name=filter_key,
                     label=label,
+                    rect=pygame.Rect(10, y_off, self.sidebar_width, 25),
                     manager=self.ui_manager,
                     container=self.container,
                 )
