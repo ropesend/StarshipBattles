@@ -7,9 +7,11 @@ PROJ-173 Phase 1: Extracted FleetReportSidebar and FleetListRenderer for god cla
 PROJ-188 Phase 2: Migrated to VirtualTable + FleetDataSource + MultiSelect.
 PROJ-208 Phase 1: Refactored to use SplitFleetCommand via command pipeline.
 """
+import logging
 from typing import Callable, Optional
 
 import pygame
+import pygame_gui
 from pygame_gui.elements import UIWindow, UIPanel
 
 from game.ui.config import UIConfig
@@ -18,7 +20,8 @@ from game.ui.components.table import VirtualTable, TableColumnManager, MultiSele
 from game.ui.screens.fleet_data_source import FleetDataSource, DEFAULT_FLEET_COLUMNS
 from game.ui.screens.fleet_report_sidebar import FleetReportSidebar
 from game.ui.panels.ship_detail_panel import ShipDetailPanel
-from game.strategy.engine.commands import SplitFleetCommand
+
+logger = logging.getLogger(__name__)
 
 
 class FleetReportWindow(UIWindow):
@@ -173,14 +176,13 @@ class FleetReportWindow(UIWindow):
         if self.ship_detail_panel and self.ship_detail_panel.process_event(event):
             return True
 
-        if event.type == pygame.USEREVENT:
-            if hasattr(event, 'user_type') and event.user_type == 'ui_button_pressed':
-                # Check for header clicks (sorting)
-                obj_id = event.ui_element.object_ids[-1] if event.ui_element.object_ids else ""
-                if obj_id.startswith("#header_"):
-                    col_id = obj_id[8:]  # Remove "#header_" prefix
-                    self._handle_header_click(col_id)
-                    handled = True
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            # Check for header clicks (sorting)
+            obj_id = event.ui_element.object_ids[-1] if event.ui_element.object_ids else ""
+            if obj_id.startswith("#header_"):
+                col_id = obj_id[8:]  # Remove "#header_" prefix
+                self._handle_header_click(col_id)
+                handled = True
 
         # Handle scroll events
         if hasattr(event, 'user_type') and event.user_type == 'ui_vertical_scroll_bar_moved':
@@ -253,12 +255,13 @@ class FleetReportWindow(UIWindow):
         PROJ-208: Routes through SplitFleetCommand via command pipeline.
         """
         if not self.empire or not self._split_fleet_callback:
-            # No command callback - cannot split fleet
             return
 
-        # Dispatch through command pipeline (handler creates new fleet)
         if ship in self.fleet.ships:
-            self._split_fleet_callback(self.fleet.id, [ship.instance_id])
+            result = self._split_fleet_callback(self.fleet.id, [ship.instance_id])
+            if result and not result.is_valid:
+                logger.warning(f"Remove ship failed: {result.message}")
+                return
             self._post_removal_refresh()
 
     def _on_remove_selected_ships(self):
@@ -281,9 +284,11 @@ class FleetReportWindow(UIWindow):
         if not ships_to_remove:
             return
 
-        # Dispatch through command pipeline (handler creates new fleet)
         ship_ids = [ship.instance_id for ship in ships_to_remove]
-        self._split_fleet_callback(self.fleet.id, ship_ids)
+        result = self._split_fleet_callback(self.fleet.id, ship_ids)
+        if result and not result.is_valid:
+            logger.warning(f"Remove ships failed: {result.message}")
+            return
         self._post_removal_refresh()
 
     def _post_removal_refresh(self):

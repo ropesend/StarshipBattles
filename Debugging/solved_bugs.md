@@ -1050,3 +1050,12 @@ There needs to be a visible indicator on the line that indicates if the ship is 
 * **Notes:** Deep investigation fix changed display to show remaining cost. Full rework planned as a project.
 
 ---
+
+## [BUG-68] - Fleet Report - Ship Selection and Ship Report Panel
+* **Date Solved:** 2026-03-22
+* **Original Issue:** In the Fleet Report, clicking on a ship row did not select it and the right-hand detail panel did not display ship information. Root cause: `process_event()` used `MOUSEBUTTONDOWN` which was consumed by child `UIPanel` elements before reaching `FleetReportWindow`.
+* **Solution Implemented:** Changed event handling from `MOUSEBUTTONDOWN` to `MOUSEBUTTONUP` (matching working patterns in `PlanetListWindow` and `EmpireBuildQueueWindow`). Replaced `DesignReportPanel` with `ShipDetailPanel`, wired callbacks, and forwarded events to the detail panel.
+* **Test Case:** `tests/unit/ui/screens/test_fleet_report_window.py` — 56 tests (37 main + 19 multi-select)
+* **Notes:** The "Remove from Fleet" button issue was split into a separate ticket (BUG-99). Ship selection and detail panel display are confirmed working.
+
+---

@@ -54,6 +54,7 @@ class InputAction(str, Enum):
     FLEET_TRANSFER = "fleet.transfer"
     FLEET_DROP_CARGO = "fleet.drop_cargo"
     FLEET_LOAD_CARGO = "fleet.load_cargo"
+    FLEET_WARP = "fleet.warp"
     FLEET_CANCEL_MODE = "fleet.cancel_mode"
 
     # Superweapon commands
@@ -117,6 +118,7 @@ ACTION_DISPLAY_NAMES: Dict[InputAction, str] = {
     InputAction.FLEET_TRANSFER: "Transfer Cargo",
     InputAction.FLEET_DROP_CARGO: "Drop Cargo",
     InputAction.FLEET_LOAD_CARGO: "Load Cargo",
+    InputAction.FLEET_WARP: "Warp Fleet",
     InputAction.FLEET_CANCEL_MODE: "Cancel Mode",
     InputAction.FLEET_IMPLODE_PLANET: "Destroy Planet",
     InputAction.FLEET_STELLERATE_STAR: "Destroy Star",
@@ -176,6 +178,7 @@ ACTION_GROUPS: Dict[str, List[InputAction]] = {
         InputAction.FLEET_TRANSFER,
         InputAction.FLEET_DROP_CARGO,
         InputAction.FLEET_LOAD_CARGO,
+        InputAction.FLEET_WARP,
         InputAction.FLEET_CANCEL_MODE,
         InputAction.FLEET_IMPLODE_PLANET,
         InputAction.FLEET_STELLERATE_STAR,

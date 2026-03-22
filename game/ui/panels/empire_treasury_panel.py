@@ -262,7 +262,8 @@ class EmpireTreasuryPanel:
         return [
             ("Tributes", self.snapshot.tribute_expenses, False),
             ("Maintenance Costs", self.snapshot.maintenance_expenses, False),
-            ("Construction Queues", self.snapshot.construction_expenses, False),
+            ("Construction Queues (Ships)", self.snapshot.construction_expenses_ships, False),
+            ("Construction Queues (Complexes)", self.snapshot.construction_expenses_complexes, False),
             ("Total", self.snapshot.total_expenses, True),
         ]
 

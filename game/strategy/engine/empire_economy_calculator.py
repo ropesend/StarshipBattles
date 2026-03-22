@@ -9,7 +9,7 @@ This is a read-only calculation - it doesn't modify any game state.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, TYPE_CHECKING
+from typing import Dict, List, Tuple, TYPE_CHECKING
 
 from game.core.constants import PLANET_RESOURCES
 from game.core.patterns.layer_iterator import iter_components
@@ -22,6 +22,7 @@ from game.strategy.engine.maintenance_engine import (
     calculate_maintenance_cost,
 )
 from game.strategy.engine.harvesting_engine import get_harvester_info
+from game.strategy.engine.construction_forecast import forecast_queue_turn_spend
 
 
 @dataclass
@@ -44,7 +45,8 @@ class EmpireEconomySnapshot:
     # Expense categories
     tribute_expenses: Dict[str, float] = field(default_factory=dict)
     maintenance_expenses: Dict[str, float] = field(default_factory=dict)
-    construction_expenses: Dict[str, float] = field(default_factory=dict)
+    construction_expenses_ships: Dict[str, float] = field(default_factory=dict)
+    construction_expenses_complexes: Dict[str, float] = field(default_factory=dict)
     total_expenses: Dict[str, float] = field(default_factory=dict)
 
     # Treasury state
@@ -109,12 +111,23 @@ class EmpireEconomyCalculator:
         # Expense aggregation
         snapshot.maintenance_expenses = self._aggregate_maintenance(empire)
 
+        # Construction expenses split by type
+        ships_exp, complexes_exp = self._aggregate_construction_expenses(empire)
+        snapshot.construction_expenses_ships = ships_exp
+        snapshot.construction_expenses_complexes = complexes_exp
+
         # Placeholder expense categories (future implementation)
         snapshot.tribute_expenses = zero_resources.copy()
-        snapshot.construction_expenses = zero_resources.copy()
 
-        # Total expenses = maintenance only for now
-        snapshot.total_expenses = snapshot.maintenance_expenses.copy()
+        # Total expenses = sum of all expense categories
+        snapshot.total_expenses = {}
+        for r in PLANET_RESOURCES:
+            snapshot.total_expenses[r] = (
+                snapshot.tribute_expenses.get(r, 0.0)
+                + snapshot.maintenance_expenses.get(r, 0.0)
+                + snapshot.construction_expenses_ships.get(r, 0.0)
+                + snapshot.construction_expenses_complexes.get(r, 0.0)
+            )
 
         # Net resources per turn
         snapshot.net_resources = {}
@@ -222,3 +235,66 @@ class EmpireEconomyCalculator:
         """
         # PROJ-218: Pass registries for Ship-loading cost calculation
         return calculate_maintenance_cost(design_data, self._registries, MAINTENANCE_RATE)
+
+    def _aggregate_construction_expenses(
+        self, empire: 'Empire'
+    ) -> Tuple[Dict[str, float], Dict[str, float]]:
+        """Calculate construction expenses split by ships vs complexes.
+
+        Iterates all construction queues (planet base, facility, fleet),
+        forecasts per-turn spend using queue-level distribution, and
+        classifies by item type.
+
+        Args:
+            empire: Empire with colonies and fleets.
+
+        Returns:
+            Tuple of (ships_expenses, complexes_expenses), each a dict
+            mapping resource type to total per-turn expense.
+        """
+        from game.strategy.data.build_queue_source import (
+            get_default_production_rates,
+            _get_facility_production_rates,
+            _facility_is_shipyard,
+        )
+        from game.strategy.data.fleet import Fleet
+
+        ships = {r: 0.0 for r in PLANET_RESOURCES}
+        complexes = {r: 0.0 for r in PLANET_RESOURCES}
+
+        def _accumulate(queue: List[Dict], build_rate: Dict[str, float]) -> None:
+            """Forecast spend for a queue and accumulate into ships/complexes."""
+            if not queue:
+                return
+            per_item_spend = forecast_queue_turn_spend(queue, build_rate)
+            for i, item in enumerate(queue):
+                item_type = item.get("type", "ship")
+                target = complexes if item_type == "complex" else ships
+                spend = per_item_spend[i]
+                for r, amount in spend.items():
+                    if r in target:
+                        target[r] += amount
+
+        # Planet base queues (complexes only)
+        for colony in empire.colonies:
+            base_rate = get_default_production_rates("planetary_yard")
+            _accumulate(colony.construction_queue, base_rate)
+
+            # Facility queues (shipyards)
+            for facility in colony.facilities:
+                if facility.construction_queue and _facility_is_shipyard(facility):
+                    fac_rate = _get_facility_production_rates(facility)
+                    _accumulate(facility.construction_queue, fac_rate)
+
+        # Fleet queues
+        for fleet in empire.fleets:
+            if not fleet.construction_queue:
+                continue
+            if not hasattr(fleet, 'capabilities') or not fleet.capabilities.has_space_shipyard:
+                continue
+            yard_count = fleet.capabilities.space_shipyard_count
+            base_rate = get_default_production_rates("fleet_space_yard")
+            total_rate = {k: v * yard_count for k, v in base_rate.items()}
+            _accumulate(fleet.construction_queue, total_rate)
+
+        return ships, complexes

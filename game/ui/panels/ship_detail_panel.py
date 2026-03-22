@@ -426,18 +426,17 @@ class ShipDetailPanel:
             True if event was handled
         """
         # Handle layer toggle buttons and remove button
-        if event.type == pygame.USEREVENT:
-            if hasattr(event, 'user_type') and event.user_type == 'ui_button_pressed':
-                # Remove from fleet button
-                if self.btn_remove and event.ui_element == self.btn_remove:
-                    if self.on_remove_ship and self.current_ship:
-                        self.on_remove_ship(self.current_ship)
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            # Remove from fleet button
+            if self.btn_remove and event.ui_element == self.btn_remove:
+                if self.on_remove_ship and self.current_ship:
+                    self.on_remove_ship(self.current_ship)
+                return True
+            # Layer toggle buttons
+            for layer_name, button in self.layer_buttons.items():
+                if event.ui_element == button:
+                    self.toggle_layer(layer_name)
                     return True
-                # Layer toggle buttons
-                for layer_name, button in self.layer_buttons.items():
-                    if event.ui_element == button:
-                        self.toggle_layer(layer_name)
-                        return True
         return False
 
     def kill(self):

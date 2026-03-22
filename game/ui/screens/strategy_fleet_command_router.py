@@ -106,10 +106,21 @@ class FleetCommandRouter:
                 logger.debug("Select a fleet first.")
             return True
 
+        elif action == InputAction.FLEET_WARP:
+            if self.scene.selected_fleet:
+                if hasattr(self.scene.selected_fleet, 'capabilities') and not self.scene.selected_fleet.capabilities.can_use_warp():
+                    logger.debug("Selected fleet cannot use warp points.")
+                    return True
+                self.input_mode = 'WARP_TARGET'
+                logger.debug("Input Mode: WARP_TARGET - Click destination warp point.")
+            else:
+                logger.debug("Select a fleet first.")
+            return True
+
         elif action == InputAction.FLEET_CANCEL_MODE:
             if self.input_mode in ('MOVE', 'COLONIZE_TARGET', 'JOIN', 'TRANSFER', 'DROP_CARGO', 'LOAD_CARGO',
-                                   'IMPLODE_PLANET_TARGET', 'STELLERATE_STAR_TARGET', 'OPEN_WARP_TARGET',
-                                   'CLOSE_WARP_TARGET', 'DYSON_SPHERE_TARGET'):
+                                   'WARP_TARGET', 'IMPLODE_PLANET_TARGET', 'STELLERATE_STAR_TARGET',
+                                   'OPEN_WARP_TARGET', 'CLOSE_WARP_TARGET', 'DYSON_SPHERE_TARGET'):
                 self.input_mode = 'SELECT'
                 logger.debug("Input Mode: SELECT")
             return True

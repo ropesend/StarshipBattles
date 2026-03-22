@@ -203,7 +203,10 @@ class TestFormatResourceCost:
 # Per-Turn Spend Calculation Tests (PROJ-221 Phase 2)
 # =======================================================================
 
-from game.ui.screens.build_queue_helpers import calculate_per_turn_spend
+from game.ui.screens.build_queue_helpers import (
+    calculate_per_turn_spend,
+    calculate_queue_turn_spend,
+)
 
 
 class TestPerTurnSpend:
@@ -342,3 +345,180 @@ class TestPerTurnSpend:
         # Verify proportions: Metals:Organics:Vapors = 9:3:6 = 3:1:2
         assert result["Metals"] / result["Organics"] == pytest.approx(3.0)
         assert result["Vapors"] / result["Organics"] == pytest.approx(2.0)
+
+
+# =======================================================================
+# Queue-Wide Turn Spend Distribution Tests (BUG-98)
+# =======================================================================
+
+
+class TestQueueTurnSpend:
+    """Tests for calculate_queue_turn_spend() — distributes production across queue."""
+
+    def _make_item(self, metals_cost, metals_consumed=0.0):
+        """Helper to create a simple metals-only queue item."""
+        return {
+            "total_cost": {"Metals": metals_cost},
+            "resources_consumed": {"Metals": metals_consumed},
+        }
+
+    def _make_multi_item(self, total_cost, resources_consumed=None):
+        """Helper to create a multi-resource queue item."""
+        if resources_consumed is None:
+            resources_consumed = {res: 0.0 for res in total_cost}
+        return {
+            "total_cost": total_cost,
+            "resources_consumed": resources_consumed,
+        }
+
+    def test_single_item_gets_full_rate(self):
+        """Single item that takes multiple turns gets the full build rate."""
+        queue = [self._make_item(6000.0)]
+        build_rate = {"Metals": 3000.0}
+
+        result = calculate_queue_turn_spend(queue, build_rate)
+
+        assert len(result) == 1
+        assert result[0]["Metals"] == pytest.approx(3000.0)
+
+    def test_single_item_completes_within_turn(self):
+        """Single item that completes in <1 turn shows only remaining cost."""
+        queue = [self._make_item(749.0)]
+        build_rate = {"Metals": 3000.0}
+
+        result = calculate_queue_turn_spend(queue, build_rate)
+
+        assert len(result) == 1
+        assert result[0]["Metals"] == pytest.approx(749.0)
+
+    def test_multiple_items_all_complete_within_turn(self):
+        """Multiple cheap items that all complete within one turn."""
+        queue = [self._make_item(749.0) for _ in range(3)]
+        build_rate = {"Metals": 3000.0}
+
+        result = calculate_queue_turn_spend(queue, build_rate)
+
+        # 3 items at 749 each = 2247, well within 3000 capacity
+        assert len(result) == 3
+        assert result[0]["Metals"] == pytest.approx(749.0)
+        assert result[1]["Metals"] == pytest.approx(749.0)
+        assert result[2]["Metals"] == pytest.approx(749.0)
+
+    def test_bug_98_scenario_five_items(self):
+        """BUG-98 scenario: 5 items at 749 each, 3000/turn rate.
+
+        Items 1-4 complete (749 * 4 = 2996), item 5 gets remainder (4).
+        """
+        queue = [self._make_item(749.0) for _ in range(5)]
+        build_rate = {"Metals": 3000.0}
+
+        result = calculate_queue_turn_spend(queue, build_rate)
+
+        assert len(result) == 5
+        assert result[0]["Metals"] == pytest.approx(749.0)
+        assert result[1]["Metals"] == pytest.approx(749.0)
+        assert result[2]["Metals"] == pytest.approx(749.0)
+        assert result[3]["Metals"] == pytest.approx(749.0)
+        assert result[4]["Metals"] == pytest.approx(4.0)
+
+    def test_bug_98_scenario_six_items(self):
+        """BUG-98 scenario with 6th item: gets zero production."""
+        queue = [self._make_item(749.0) for _ in range(6)]
+        build_rate = {"Metals": 3000.0}
+
+        result = calculate_queue_turn_spend(queue, build_rate)
+
+        assert len(result) == 6
+        assert result[4]["Metals"] == pytest.approx(4.0)
+        assert result[5]["Metals"] == pytest.approx(0.0)
+
+    def test_partially_consumed_first_item(self):
+        """First item already partially built — uses less capacity."""
+        queue = [
+            self._make_item(749.0, metals_consumed=500.0),  # 249 remaining
+            self._make_item(749.0),  # 749 remaining
+        ]
+        build_rate = {"Metals": 3000.0}
+
+        result = calculate_queue_turn_spend(queue, build_rate)
+
+        assert result[0]["Metals"] == pytest.approx(249.0)
+        assert result[1]["Metals"] == pytest.approx(749.0)
+
+    def test_empty_queue(self):
+        """Empty queue returns empty list."""
+        result = calculate_queue_turn_spend([], {"Metals": 3000.0})
+        assert result == []
+
+    def test_zero_rate_blocks_all_items(self):
+        """Zero production rate blocks all items."""
+        queue = [self._make_item(749.0), self._make_item(749.0)]
+        build_rate = {"Metals": 0.0}
+
+        result = calculate_queue_turn_spend(queue, build_rate)
+
+        assert result[0]["Metals"] == pytest.approx(0.0)
+        assert result[1]["Metals"] == pytest.approx(0.0)
+
+    def test_multi_resource_limiting_resource(self):
+        """Multi-resource items: limiting resource determines capacity fraction."""
+        # Item costs 6000 Metals + 1500 Organics, rate 3000 each
+        # Limiting: Metals at 6000/3000 = 2 turns → uses full turn capacity
+        queue = [
+            self._make_multi_item({"Metals": 6000.0, "Organics": 1500.0}),
+            self._make_multi_item({"Metals": 1000.0, "Organics": 500.0}),
+        ]
+        build_rate = {"Metals": 3000.0, "Organics": 3000.0}
+
+        result = calculate_queue_turn_spend(queue, build_rate)
+
+        # First item takes 2 turns (Metals-limited), uses full turn capacity
+        # Metals: rate * 1.0 turn = 3000, clamped to remaining 6000 → 3000
+        # Organics: rate * 1.0 turn = 3000, clamped to remaining 1500 → 1500
+        assert result[0]["Metals"] == pytest.approx(3000.0)
+        assert result[0]["Organics"] == pytest.approx(1500.0)
+        # Second item gets 0 — no capacity left
+        assert result[1]["Metals"] == pytest.approx(0.0)
+        assert result[1]["Organics"] == pytest.approx(0.0)
+
+    def test_multi_resource_item_completes_mid_turn(self):
+        """Multi-resource item that completes mid-turn passes capacity to next."""
+        # Item costs 1500 Metals + 750 Organics, rate 3000 each
+        # Limiting: Metals at 1500/3000 = 0.5 turns → leaves 0.5 turn capacity
+        queue = [
+            self._make_multi_item({"Metals": 1500.0, "Organics": 750.0}),
+            self._make_multi_item({"Metals": 6000.0, "Organics": 3000.0}),
+        ]
+        build_rate = {"Metals": 3000.0, "Organics": 3000.0}
+
+        result = calculate_queue_turn_spend(queue, build_rate)
+
+        # First item: completes in 0.5 turns, spend = remaining cost
+        assert result[0]["Metals"] == pytest.approx(1500.0)
+        assert result[0]["Organics"] == pytest.approx(750.0)
+        # Second item: gets 0.5 turn capacity, Metals-limited (6000/3000=2 turns)
+        # 0.5 turns * 3000/turn = 1500 Metals, Organics: 0.5 * 3000 = 1500 clamped to 3000 → 1500
+        assert result[1]["Metals"] == pytest.approx(1500.0)
+        assert result[1]["Organics"] == pytest.approx(1500.0)
+
+    def test_fully_consumed_item_passes_all_capacity(self):
+        """Already-complete item at head of queue passes full capacity through."""
+        queue = [
+            self._make_item(749.0, metals_consumed=749.0),  # Already done
+            self._make_item(749.0),
+        ]
+        build_rate = {"Metals": 3000.0}
+
+        result = calculate_queue_turn_spend(queue, build_rate)
+
+        assert result[0]["Metals"] == pytest.approx(0.0)
+        assert result[1]["Metals"] == pytest.approx(749.0)
+
+    def test_missing_rate_for_required_resource(self):
+        """Missing build rate for a required resource blocks that item and subsequent."""
+        queue = [self._make_item(749.0)]
+        build_rate = {}  # No rate for Metals
+
+        result = calculate_queue_turn_spend(queue, build_rate)
+
+        assert result[0]["Metals"] == pytest.approx(0.0)

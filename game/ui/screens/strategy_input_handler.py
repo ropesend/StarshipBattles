@@ -109,7 +109,9 @@ class StrategyInputHandler:
         """Handle keyboard input using InputMapper (PROJ-71)."""
         # Build context list based on current state
         contexts = ["strategy", "global", "detail_panel"]
-        if self.scene.selected_fleet or self.input_mode in ('MOVE', 'JOIN', 'COLONIZE_TARGET', 'TRANSFER', 'DROP_CARGO', 'LOAD_CARGO'):
+        if self.scene.selected_fleet or self.input_mode in ('MOVE', 'JOIN', 'COLONIZE_TARGET', 'TRANSFER', 'DROP_CARGO', 'LOAD_CARGO',
+                                                                'WARP_TARGET', 'IMPLODE_PLANET_TARGET', 'STELLERATE_STAR_TARGET',
+                                                                'OPEN_WARP_TARGET', 'CLOSE_WARP_TARGET', 'DYSON_SPHERE_TARGET'):
             contexts.append("fleet")
 
         action = self._mapper.resolve(event, contexts)

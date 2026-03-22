@@ -7,6 +7,7 @@ with damage tracking and resource display.
 import pytest
 from unittest.mock import MagicMock, patch
 import pygame
+import pygame_gui
 
 
 # --- Helpers ---
@@ -429,8 +430,8 @@ class TestImageScaling:
 class TestProcessEvent:
     """Tests for event handling."""
 
-    def test_non_user_event_returns_false(self):
-        """Non-USEREVENT type returns False."""
+    def test_non_button_event_returns_false(self):
+        """Non-button event type returns False."""
         from game.ui.panels.ship_detail_panel import ShipDetailPanel
 
         with patch.object(ShipDetailPanel, '__init__', lambda self, *a, **kw: None):
@@ -463,8 +464,7 @@ class TestProcessEvent:
         panel.layer_buttons = {}
 
         event = MagicMock()
-        event.type = pygame.USEREVENT
-        event.user_type = 'ui_button_pressed'
+        event.type = pygame_gui.UI_BUTTON_PRESSED
         event.ui_element = remove_btn
 
         result = panel.process_event(event)
@@ -486,8 +486,7 @@ class TestProcessEvent:
         panel.current_ship = None
 
         event = MagicMock()
-        event.type = pygame.USEREVENT
-        event.user_type = 'ui_button_pressed'
+        event.type = pygame_gui.UI_BUTTON_PRESSED
         event.ui_element = core_btn
 
         result = panel.process_event(event)

@@ -41,6 +41,7 @@ class ClickModeDispatcher:
             'TRANSFER': self._handle_transfer_mode_click,
             'DROP_CARGO': self._handle_drop_cargo_mode_click,
             'LOAD_CARGO': self._handle_load_cargo_mode_click,
+            'WARP_TARGET': self._handle_warp_target_click,
             'IMPLODE_PLANET_TARGET': self._handle_implode_planet_click,
             'STELLERATE_STAR_TARGET': self._handle_stellerate_star_click,
             'OPEN_WARP_TARGET': self._handle_open_warp_click,
@@ -133,7 +134,20 @@ class ClickModeDispatcher:
             result = self.scene._fleet_ops.handle_join_designation(
                 mx, my, self.scene.selected_fleet
             )
-            if result and result.get('type') == 'success':
+            if result and result.get('type') == 'choice':
+                # Multiple valid fleets — prompt user to select
+                fleets = result['fleets']
+                fleet_ref = self.scene.selected_fleet
+
+                def on_fleet_selected(target_fleet):
+                    res = self.scene._fleet_ops.execute_join(fleet_ref, target_fleet)
+                    if res and res.get('type') == 'success':
+                        self.input_mode = 'SELECT'
+                        self.scene.on_ui_selection(res['fleet'])
+
+                self.scene.ui.prompt_fleet_selection(fleets, on_fleet_selected)
+
+            elif result and result.get('type') == 'success':
                 self.input_mode = 'SELECT'
                 self.scene.on_ui_selection(result['fleet'])
             return True
@@ -213,6 +227,28 @@ class ClickModeDispatcher:
             fleet = self.scene.selected_fleet
             self.scene.ui.open_cargo_quick_dialog(fleet, target_hex, 'load')
             self.input_mode = 'SELECT'
+            return True
+        elif button == 3:  # Right click cancels
+            self.input_mode = 'SELECT'
+            logger.debug("Input Mode: SELECT")
+            return True
+        return False
+
+    def _handle_warp_target_click(self, mx: int, my: int, button: int) -> bool:
+        """Handle click in WARP_TARGET mode — issue warp order to clicked warp point."""
+        if button == 1:  # Left Click
+            target_hex = self._resolve_click_target(mx, my)
+            fleet = self.scene.selected_fleet
+            if fleet:
+                from game.strategy.engine.commands import IssueWarpCommand
+                cmd = IssueWarpCommand(fleet.id, target_hex)
+                result = self.scene.facade.handle_command(cmd)
+                if result and result.is_valid:
+                    self.input_mode = 'SELECT'
+                    self.scene.on_ui_selection(fleet)
+                else:
+                    msg = result.error_message if result else "Unknown error"
+                    logger.warning("Warp order failed: %s", msg)
             return True
         elif button == 3:  # Right click cancels
             self.input_mode = 'SELECT'

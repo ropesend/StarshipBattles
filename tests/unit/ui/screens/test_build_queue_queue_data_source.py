@@ -177,11 +177,15 @@ class TestCellValues:
         assert result == "3,000"
 
     def test_org_rate_column(self):
-        """Org/t column should show proportional Organics spend."""
+        """Org/t column should show Organics spend for first item.
+
+        With queue-wide distribution (BUG-98): item 1 is Metals-limited
+        (6000/3000 = 2 turns), uses full turn capacity. Organics: rate
+        3000 * 1 turn = 3000, clamped to remaining 1500 → 1500.
+        """
         ds, _ = _make_data_source()
         result = ds.get_cell_value(0, "org_rate")
-        # Org spend = 1500/2 = 750
-        assert result == "750"
+        assert result == "1,500"
 
     def test_met_rem_column(self):
         """Met remaining column should show remaining cost."""

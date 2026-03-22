@@ -155,8 +155,8 @@ class StrategyRenderer:
         self._draw_systems(screen)
         self._draw_fleets(screen)
 
-        # Move Line Preview
-        if self.scene.input_mode == 'MOVE' and self.scene.selected_fleet:
+        # Move/Warp Line Preview
+        if self.scene.input_mode in ('MOVE', 'WARP_TARGET') and self.scene.selected_fleet:
             self._draw_move_preview(screen)
 
         # Hover Highlight

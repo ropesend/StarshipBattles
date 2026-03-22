@@ -7,6 +7,9 @@
 ## 2. Feature Queue
 | ID | Date Added | Description | Status | Spec File |
 | :--- | :--- | :--- | :--- | :--- |
+| FEAT-06 | 2026-03-22 | Treasury construction queue expenses - populate and split by ships/complexes | Awaiting Confirmation | [FEAT-06.md](active_features/FEAT-06.md) |
+| FEAT-07 | 2026-03-22 | Add 'W' hotkey for explicit warp orders on strategy map | Awaiting Confirmation | [FEAT-07.md](active_features/FEAT-07.md) |
+| FEAT-08 | 2026-03-22 | Fleet join order - target selection dialog and fleet ID display | Awaiting Confirmation | [FEAT-08.md](active_features/FEAT-08.md) |
 
 ## 3. Current Focus: None
 No features currently in progress.

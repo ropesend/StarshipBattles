@@ -344,6 +344,10 @@ class StrategyUI:
         """Open a modal window to select a planet."""
         self.window_manager.prompt_planet_selection(planets, on_select)
 
+    def prompt_fleet_selection(self, fleets, on_select):
+        """Open a modal window to select a fleet to join."""
+        self.window_manager.prompt_fleet_selection(fleets, on_select)
+
     def show_system_picker(self, systems, current_system, on_selected):
         """Open a modal window to select a star system for warp point creation."""
         self.window_manager.open_system_selection(systems, current_system, on_selected)

@@ -161,7 +161,11 @@ class FleetOperations:
             selected_fleet: The fleet that will join another
 
         Returns:
-            dict with result type, or None if invalid
+            dict with result type:
+            - {'type': 'choice', 'fleets': List[FleetInfo]} when multiple valid targets
+            - {'type': 'success', 'fleet': fleet} on successful join
+            - {'type': 'error', 'message': str} on failure
+            - None if no valid target
         """
         if not selected_fleet:
             return None
@@ -169,27 +173,43 @@ class FleetOperations:
         world_pos = self.camera.screen_to_world((mx, my))
         target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.hex_size)
 
-        target_fleet_info = self.get_fleet_at_hex(target_hex)
+        all_fleets = self.facade.get_fleets_at_hex(target_hex)
 
-        if not target_fleet_info:
-            logger.debug("No fleet at target location.")
+        # Filter to valid join targets: same owner, not self
+        valid_targets = [
+            f for f in all_fleets
+            if f.fleet_id != selected_fleet.id and f.owner_id == selected_fleet.owner_id
+        ]
+
+        if not valid_targets:
+            logger.debug("No valid fleet to join at target location.")
             return None
 
-        if target_fleet_info.fleet_id == selected_fleet.id:
-            logger.debug("Cannot join self.")
-            return None
+        if len(valid_targets) == 1:
+            # Single valid target — auto-join
+            return self.execute_join(selected_fleet, valid_targets[0])
 
-        if target_fleet_info.owner_id != selected_fleet.owner_id:
-            logger.debug("Cannot join enemy fleet.")
-            return None
+        # Multiple valid targets — prompt user to choose
+        return {'type': 'choice', 'fleets': valid_targets}
 
+    def execute_join(self, fleet, target_fleet_info: 'FleetInfo'):
+        """
+        Execute join fleet command.
+
+        Args:
+            fleet: Fleet issuing the join order
+            target_fleet_info: FleetInfo DTO of fleet to join
+
+        Returns:
+            dict with result type and details
+        """
         logger.debug(f"Queueing Join Order with Fleet {target_fleet_info.fleet_id}...")
 
-        cmd = IssueJoinFleetCommand(selected_fleet.id, target_fleet_info.fleet_id)
+        cmd = IssueJoinFleetCommand(fleet.id, target_fleet_info.fleet_id)
         result = self.facade.handle_command(cmd)
 
         if result and result.is_valid:
-            return {'type': 'success', 'fleet': selected_fleet}
+            return {'type': 'success', 'fleet': fleet}
         else:
             msg = result.message if result else 'Unknown'
             logger.warning(f"Join Fleet Failed: {msg}")

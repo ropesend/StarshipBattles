@@ -44,7 +44,8 @@ def sample_snapshot():
         "Metals": 10.0, "Organics": 5.0, "Vapors": 2.0,
         "Radioactives": 1.0, "Exotics": 0.5
     }
-    snapshot.construction_expenses = {r: 0.0 for r in PLANET_RESOURCES}
+    snapshot.construction_expenses_ships = {r: 0.0 for r in PLANET_RESOURCES}
+    snapshot.construction_expenses_complexes = {r: 0.0 for r in PLANET_RESOURCES}
     snapshot.total_expenses = snapshot.maintenance_expenses.copy()
 
     # Treasury
@@ -206,12 +207,13 @@ class TestRowData:
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
         rows = panel._get_expense_rows()
 
-        assert len(rows) == 4  # 3 categories + total
+        assert len(rows) == 5  # 4 categories + total
         assert rows[0][0] == "Tributes"
         assert rows[1][0] == "Maintenance Costs"
-        assert rows[2][0] == "Construction Queues"
-        assert rows[3][0] == "Total"
-        assert rows[3][2] is True
+        assert rows[2][0] == "Construction Queues (Ships)"
+        assert rows[3][0] == "Construction Queues (Complexes)"
+        assert rows[4][0] == "Total"
+        assert rows[4][2] is True
 
     @patch('game.ui.panels.empire_treasury_panel.create_section_header')
     @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')

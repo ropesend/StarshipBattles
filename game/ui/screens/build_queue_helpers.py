@@ -104,6 +104,86 @@ def calculate_per_turn_spend(
     return result
 
 
+def calculate_queue_turn_spend(
+    queue: list, build_rate: dict
+) -> list:
+    """Calculate per-turn resource spend for each item in a queue.
+
+    Distributes production capacity sequentially across the queue,
+    matching ProductionEngine's carry-over behavior. Each item consumes
+    capacity based on the limiting-resource formula; remaining capacity
+    passes to the next item.
+
+    Args:
+        queue: List of queue item dicts with 'total_cost' and
+            'resources_consumed' keys.
+        build_rate: Dict mapping resource name to production rate per turn.
+
+    Returns:
+        List of dicts (one per queue item), each mapping resource name
+        to per-turn spend amount. Items beyond production capacity show 0.
+    """
+    if not queue:
+        return []
+
+    result = []
+    turn_capacity = 1.0  # Fraction of the turn remaining
+
+    for item in queue:
+        total_cost = item.get("total_cost", {})
+        resources_consumed = item.get("resources_consumed", {})
+
+        if not total_cost or turn_capacity <= 0:
+            result.append({res: 0.0 for res in total_cost})
+            continue
+
+        # Calculate remaining cost per resource
+        remaining = {}
+        for res, amount in total_cost.items():
+            rem = max(0.0, amount - resources_consumed.get(res, 0.0))
+            if rem > 0:
+                remaining[res] = rem
+
+        # No remaining cost = already complete, passes all capacity through
+        if not remaining:
+            result.append({res: 0.0 for res in total_cost})
+            continue
+
+        # Find limiting resource: how many turns to complete this item?
+        max_turns_needed = 0.0
+        blocked = False
+        for res, rem in remaining.items():
+            rate = build_rate.get(res, 0.0)
+            if rate <= 0:
+                blocked = True
+                break
+            turns = rem / rate
+            if turns > max_turns_needed:
+                max_turns_needed = turns
+
+        if blocked or max_turns_needed <= 0:
+            # Can't build this item — all subsequent items also blocked
+            result.append({res: 0.0 for res in total_cost})
+            turn_capacity = 0.0
+            continue
+
+        # How much of this item can we build with remaining capacity?
+        turns_to_spend = min(turn_capacity, max_turns_needed)
+
+        # Calculate resources consumed this turn
+        spend = {}
+        for res in total_cost:
+            rate = build_rate.get(res, 0.0)
+            to_consume = rate * turns_to_spend
+            rem = remaining.get(res, 0.0)
+            spend[res] = min(to_consume, rem)
+
+        result.append(spend)
+        turn_capacity -= turns_to_spend
+
+    return result
+
+
 def format_resource_cost(cost: dict) -> str:
     """Format resource cost dict into compact display string.
 

@@ -9,9 +9,8 @@ from typing import Any, Dict, List, Optional
 
 import pygame
 
-from game.core.constants import PLANET_RESOURCES
 from game.ui.components.table.data_source import ITableDataSource
-from game.ui.screens.build_queue_helpers import calculate_per_turn_spend
+from game.ui.screens.build_queue_helpers import calculate_queue_turn_spend
 
 # Resource key to column ID mapping
 _RESOURCE_RATE_COLUMNS = {
@@ -88,9 +87,13 @@ class BuildQueueQueueDataSource(ITableDataSource):
         self._portrait_loader = portrait_loader
         self._queue: List[Dict] = []
         self._build_rate = build_rate
+        self._per_turn_cache: List[Dict[str, float]] = []
 
     def set_queue(self, queue: List[Dict], build_rate: Dict[str, float]) -> None:
         """Update the active queue and build rate.
+
+        Pre-computes per-turn spend distribution across the entire queue
+        so that production capacity is allocated sequentially (BUG-98).
 
         Args:
             queue: List of queue item dicts.
@@ -98,6 +101,7 @@ class BuildQueueQueueDataSource(ITableDataSource):
         """
         self._queue = queue
         self._build_rate = build_rate
+        self._per_turn_cache = calculate_queue_turn_spend(queue, build_rate)
 
     def get_row_count(self) -> int:
         """Return number of items in the active queue."""
@@ -136,11 +140,12 @@ class BuildQueueQueueDataSource(ITableDataSource):
                 return f"{turns:.1f}"
             return str(int(turns))
 
-        # Per-turn spend columns
+        # Per-turn spend columns (BUG-98: use pre-computed queue distribution)
         if column_id in _RATE_COL_TO_RESOURCE:
             resource = _RATE_COL_TO_RESOURCE[column_id]
-            per_turn = calculate_per_turn_spend(item, self._build_rate)
-            return _format_int(per_turn.get(resource, 0.0))
+            if row_index < len(self._per_turn_cache):
+                return _format_int(self._per_turn_cache[row_index].get(resource, 0.0))
+            return "-"
 
         # Remaining cost columns
         if column_id in _REM_COL_TO_RESOURCE:

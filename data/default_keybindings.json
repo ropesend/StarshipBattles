@@ -24,6 +24,7 @@
     "fleet.join": {"key": "K_j", "modifiers": []},
     "fleet.colonize": {"key": "K_c", "modifiers": []},
     "fleet.transfer": {"key": "K_t", "modifiers": []},
+    "fleet.warp": {"key": "K_w", "modifiers": []},
     "fleet.cancel_mode": {"key": "K_ESCAPE", "modifiers": []},
     "fleet.drop_cargo": {"key": "K_d", "modifiers": []},
     "fleet.load_cargo": {"key": "K_l", "modifiers": []},

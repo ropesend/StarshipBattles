@@ -11,6 +11,7 @@ import pygame
 import pygame_gui
 import pygame_gui.elements as ui
 
+from game.ui.screens.fleet_selection_window import FleetSelectionWindow
 from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 from game.ui.screens.planet_list_window import PlanetListWindow
 from game.ui.screens.system_selection_window import SystemSelectionWindow
@@ -352,11 +353,11 @@ class StrategyWindowManager:
 
         # PROJ-208 Phase 1: Create callback closure for SplitFleetCommand dispatch
         # PROJ-208 Phase 3: Route through facade (not session) for CQRS consistency
-        def split_fleet_callback(fleet_id: int, ship_instance_ids: list) -> None:
+        def split_fleet_callback(fleet_id: int, ship_instance_ids: list):
             """Dispatch SplitFleetCommand through facade command pipeline."""
             from game.strategy.engine.commands import SplitFleetCommand
             cmd = SplitFleetCommand(fleet_id=fleet_id, ship_instance_ids=ship_instance_ids)
-            self.scene.facade.handle_command(cmd)
+            return self.scene.facade.handle_command(cmd)
 
         empire = self.scene.current_empire
         self.fleet_report_window = FleetReportWindow(
@@ -473,6 +474,24 @@ class StrategyWindowManager:
         y = (self.height - height) / 2
         rect = pygame.Rect(x, y, width, height)
         SystemSelectionWindow(rect, self.manager, systems, current_system, on_selected)
+
+    # =========================================================================
+    # Fleet Selection Prompt (FEAT-08)
+    # =========================================================================
+
+    def prompt_fleet_selection(self, fleets, on_select: Callable) -> None:
+        """Open a modal window to select a fleet to join.
+
+        Args:
+            fleets: List of FleetInfo DTOs to choose from.
+            on_select: Callback called with the selected FleetInfo.
+        """
+        width = 450
+        height = 400
+        x = (self.width - width) / 2
+        y = (self.height - height) / 2
+        rect = pygame.Rect(x, y, width, height)
+        FleetSelectionWindow(rect, self.manager, fleets, on_select)
 
     # =========================================================================
     # Move Choice Prompt

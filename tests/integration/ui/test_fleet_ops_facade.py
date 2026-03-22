@@ -187,7 +187,7 @@ class TestHandleJoinDesignation:
     """Tests for handle_join_designation using facade."""
 
     def test_join_uses_facade_command(self):
-        """handle_join_designation calls facade.handle_command with IssueJoinFleetCommand."""
+        """handle_join_designation auto-joins when single valid target at hex."""
         from game.ui.screens.strategy_fleet_ops import FleetOperations
         from game.strategy.engine.commands import IssueJoinFleetCommand
 
@@ -200,8 +200,7 @@ class TestHandleJoinDesignation:
 
         ops = FleetOperations(mock_scene, mock_facade)
 
-        # Mock get_fleet_at_hex to return a FleetInfo DTO
-        # PROJ-208: FleetInfo uses fleet_id not id
+        # FEAT-08: facade.get_fleets_at_hex returns list of FleetInfo DTOs
         mock_target = Mock()
         mock_target.fleet_id = 50
         mock_target.owner_id = 1
@@ -210,7 +209,7 @@ class TestHandleJoinDesignation:
         mock_selected.id = 40
         mock_selected.owner_id = 1
 
-        ops.get_fleet_at_hex = Mock(return_value=mock_target)
+        mock_facade.get_fleets_at_hex.return_value = [mock_target]
 
         result = ops.handle_join_designation(100, 100, mock_selected)
 
@@ -219,6 +218,38 @@ class TestHandleJoinDesignation:
         assert isinstance(cmd, IssueJoinFleetCommand)
         assert cmd.fleet_id == 40
         assert cmd.target_fleet_id == 50
+
+    def test_join_returns_choice_for_multiple_valid_targets(self):
+        """handle_join_designation returns choice when multiple valid fleets at hex."""
+        from game.ui.screens.strategy_fleet_ops import FleetOperations
+
+        mock_scene = Mock()
+        mock_scene.camera.screen_to_world.return_value = Mock(x=0, y=0)
+        mock_scene.hex_size = 60
+
+        mock_facade = Mock()
+
+        ops = FleetOperations(mock_scene, mock_facade)
+
+        mock_target_a = Mock()
+        mock_target_a.fleet_id = 50
+        mock_target_a.owner_id = 1
+
+        mock_target_b = Mock()
+        mock_target_b.fleet_id = 60
+        mock_target_b.owner_id = 1
+
+        mock_selected = Mock()
+        mock_selected.id = 40
+        mock_selected.owner_id = 1
+
+        mock_facade.get_fleets_at_hex.return_value = [mock_target_a, mock_target_b]
+
+        result = ops.handle_join_designation(100, 100, mock_selected)
+
+        assert result['type'] == 'choice'
+        assert len(result['fleets']) == 2
+        mock_facade.handle_command.assert_not_called()
 
     def test_join_returns_none_for_no_target_fleet(self):
         """handle_join_designation returns None when no fleet at target."""
@@ -229,12 +260,13 @@ class TestHandleJoinDesignation:
         mock_scene.hex_size = 60
 
         mock_facade = Mock()
+        mock_facade.get_fleets_at_hex.return_value = []
 
         ops = FleetOperations(mock_scene, mock_facade)
-        ops.get_fleet_at_hex = Mock(return_value=None)
 
         mock_selected = Mock()
         mock_selected.id = 40
+        mock_selected.owner_id = 1
 
         result = ops.handle_join_designation(100, 100, mock_selected)
 
@@ -242,7 +274,7 @@ class TestHandleJoinDesignation:
         mock_facade.handle_command.assert_not_called()
 
     def test_join_returns_none_for_self(self):
-        """handle_join_designation returns None when targeting self."""
+        """handle_join_designation returns None when only self at hex."""
         from game.ui.screens.strategy_fleet_ops import FleetOperations
 
         mock_scene = Mock()
@@ -255,17 +287,20 @@ class TestHandleJoinDesignation:
 
         mock_selected = Mock()
         mock_selected.id = 40
-        # PROJ-208: get_fleet_at_hex returns FleetInfo DTO with fleet_id
-        mock_target_info = Mock()
-        mock_target_info.fleet_id = 40  # Same ID as selected
-        ops.get_fleet_at_hex = Mock(return_value=mock_target_info)
+        mock_selected.owner_id = 1
+
+        # Only fleet at hex is self
+        mock_self_fleet = Mock()
+        mock_self_fleet.fleet_id = 40
+        mock_self_fleet.owner_id = 1
+        mock_facade.get_fleets_at_hex.return_value = [mock_self_fleet]
 
         result = ops.handle_join_designation(100, 100, mock_selected)
 
         assert result is None
 
     def test_join_returns_none_for_enemy_fleet(self):
-        """handle_join_designation returns None for enemy fleet."""
+        """handle_join_designation returns None when only enemy fleets at hex."""
         from game.ui.screens.strategy_fleet_ops import FleetOperations
 
         mock_scene = Mock()
@@ -276,7 +311,6 @@ class TestHandleJoinDesignation:
 
         ops = FleetOperations(mock_scene, mock_facade)
 
-        # PROJ-208: get_fleet_at_hex returns FleetInfo DTO with fleet_id
         mock_target = Mock()
         mock_target.fleet_id = 50
         mock_target.owner_id = 2  # Different owner
@@ -285,7 +319,7 @@ class TestHandleJoinDesignation:
         mock_selected.id = 40
         mock_selected.owner_id = 1
 
-        ops.get_fleet_at_hex = Mock(return_value=mock_target)
+        mock_facade.get_fleets_at_hex.return_value = [mock_target]
 
         result = ops.handle_join_designation(100, 100, mock_selected)
 
