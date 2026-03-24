@@ -324,7 +324,8 @@ class PlanetListWindow(UIWindow):
         # Handle header sort/swap clicks via VirtualTable
         header_result = self.virtual_table.check_header_presses()
         if header_result.get('swap_column'):
-            # Column was swapped - rebuild everything
+            col_dict, direction = header_result.get('swap_column')
+            self.column_manager.swap_column(col_dict['id'], direction)
             self.virtual_table.rebuild_headers()
             self.virtual_table.rebuild_row_pool()
             self.refresh_list()

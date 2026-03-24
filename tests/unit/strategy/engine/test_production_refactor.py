@@ -2,11 +2,12 @@
 PROJ-191 Phase 3: Updated mocks to use spec= for type safety.
 """
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from game.strategy.engine.production_engine import ProductionEngine
 from game.strategy.data.build_queue_source import BuildQueueSource
 from game.strategy.data.empire import Empire
 from game.strategy.data.planet import Planet
+from game.strategy.events.event_types import EventType, EventCategory
 
 class TestProductionEngineRefactor:
     @pytest.fixture
@@ -295,4 +296,193 @@ class TestProductionEngineEdgeCases:
         # Should have processed at most 10 items (safety guard)
         # Some items may remain due to iteration limit
         assert engine._spawn_ship.call_count <= 10
+
+
+class TestResourceShortageEventLogging:
+    """FEAT-09: Test that RESOURCE_SHORTAGE events are logged when production pauses."""
+
+    @pytest.fixture
+    def engine(self):
+        return ProductionEngine()
+
+    @pytest.fixture
+    def empire(self):
+        emp = MagicMock(spec=Empire)
+        emp.id = 1
+        emp.resource_pool = {"Metals": 10.0, "Organics": 2.0}
+        emp.has_resources.return_value = False  # Cannot afford
+        emp.consume_resources = MagicMock()
+        return emp
+
+    @pytest.fixture
+    def colony(self):
+        colony = MagicMock(spec=Planet)
+        colony.construction_queue = []
+        colony.facilities = []
+        return colony
+
+    def test_shortage_event_logged_on_affordability_failure(self, engine, empire, colony):
+        """A RESOURCE_SHORTAGE event should be logged when affordability check fails."""
+        item = {
+            "design_id": "frigate_mk1",
+            "type": "ship",
+            "total_cost": {"Metals": 100, "Organics": 50},
+            "resources_consumed": {"Metals": 0, "Organics": 0},
+        }
+        colony.construction_queue = [item]
+        rates = {"Metals": 500, "Organics": 500}
+
+        with patch("game.strategy.engine.production_engine.log_event") as mock_log:
+            engine._process_queue_tick_dynamic(
+                colony.construction_queue, empire, 1, MagicMock(), None,
+                rates, colony, False
+            )
+
+            # Should have logged a RESOURCE_SHORTAGE event
+            shortage_calls = [
+                c for c in mock_log.call_args_list
+                if c[0][0] == EventType.RESOURCE_SHORTAGE
+            ]
+            assert len(shortage_calls) == 1
+
+            call_kwargs = shortage_calls[0][1]
+            assert call_kwargs["category"] == EventCategory.PRODUCTION
+            assert call_kwargs["empire_id"] == 1
+            assert call_kwargs["design_id"] == "frigate_mk1"
+            assert "limiting_resource" in call_kwargs
+            assert "available" in call_kwargs
+            assert "needed" in call_kwargs
+
+    def test_shortage_event_identifies_limiting_resource(self, engine, empire, colony):
+        """The event should identify which resource is the bottleneck."""
+        item = {
+            "design_id": "cruiser_mk1",
+            "type": "ship",
+            "total_cost": {"Metals": 100, "Organics": 50},
+            "resources_consumed": {"Metals": 0, "Organics": 0},
+        }
+        colony.construction_queue = [item]
+        rates = {"Metals": 500, "Organics": 500}
+
+        # Empire has plenty of Metals but almost no Organics
+        empire.resource_pool = {"Metals": 1000.0, "Organics": 0.5}
+
+        with patch("game.strategy.engine.production_engine.log_event") as mock_log:
+            engine._process_queue_tick_dynamic(
+                colony.construction_queue, empire, 1, MagicMock(), None,
+                rates, colony, False
+            )
+
+            shortage_calls = [
+                c for c in mock_log.call_args_list
+                if c[0][0] == EventType.RESOURCE_SHORTAGE
+            ]
+            assert len(shortage_calls) == 1
+
+            call_kwargs = shortage_calls[0][1]
+            assert call_kwargs["limiting_resource"] == "Organics"
+            assert call_kwargs["available"] == 0.5
+            assert call_kwargs["needed"] == 5.0  # 500/100 = 5 per tick
+
+    def test_shortage_event_logged_once_per_item_per_turn(self, engine, empire, colony):
+        """Only one RESOURCE_SHORTAGE event per item per turn, not every tick."""
+        item = {
+            "design_id": "frigate_mk1",
+            "type": "ship",
+            "total_cost": {"Metals": 100},
+            "resources_consumed": {"Metals": 0},
+        }
+        colony.construction_queue = [item]
+        rates = {"Metals": 500}
+
+        with patch("game.strategy.engine.production_engine.log_event") as mock_log:
+            # Simulate multiple ticks within the same turn
+            for tick in range(1, 4):
+                engine._process_queue_tick_dynamic(
+                    colony.construction_queue, empire, tick, MagicMock(), None,
+                    rates, colony, False
+                )
+
+            shortage_calls = [
+                c for c in mock_log.call_args_list
+                if c[0][0] == EventType.RESOURCE_SHORTAGE
+            ]
+            # Should only be logged once, not three times
+            assert len(shortage_calls) == 1
+
+    def test_shortage_flag_resets_between_turns(self, engine, colony):
+        """If shortage persists across turns, it should log again in the next turn."""
+        empire_poor = MagicMock(spec=Empire)
+        empire_poor.id = 1
+        empire_poor.resource_pool = {"Metals": 0.0}
+        empire_poor.has_resources.return_value = False
+
+        item = {
+            "design_id": "frigate_mk1",
+            "type": "ship",
+            "total_cost": {"Metals": 100},
+            "resources_consumed": {"Metals": 0},
+        }
+        colony.construction_queue = [item]
+        rates = {"Metals": 500}
+
+        with patch("game.strategy.engine.production_engine.log_event") as mock_log:
+            # Turn 1: tick 1 logs shortage, tick 2 does not
+            engine._process_queue_tick_dynamic(
+                colony.construction_queue, empire_poor, 1, MagicMock(), None,
+                rates, colony, False
+            )
+            engine._process_queue_tick_dynamic(
+                colony.construction_queue, empire_poor, 2, MagicMock(), None,
+                rates, colony, False
+            )
+
+            shortage_calls_turn1 = [
+                c for c in mock_log.call_args_list
+                if c[0][0] == EventType.RESOURCE_SHORTAGE
+            ]
+            assert len(shortage_calls_turn1) == 1
+
+        # Clear the flag for next turn (tick == 1 resets)
+        with patch("game.strategy.engine.production_engine.log_event") as mock_log:
+            # Turn 2: tick 1 should log again
+            engine._process_queue_tick_dynamic(
+                colony.construction_queue, empire_poor, 1, MagicMock(), None,
+                rates, colony, False
+            )
+
+            shortage_calls_turn2 = [
+                c for c in mock_log.call_args_list
+                if c[0][0] == EventType.RESOURCE_SHORTAGE
+            ]
+            assert len(shortage_calls_turn2) == 1
+
+    def test_no_shortage_event_when_affordable(self, engine, colony):
+        """No shortage event should be logged when empire can afford production."""
+        empire_rich = MagicMock(spec=Empire)
+        empire_rich.id = 1
+        empire_rich.resource_pool = {"Metals": 10000.0}
+        empire_rich.has_resources.return_value = True
+        empire_rich.consume_resources = MagicMock(return_value=True)
+
+        item = {
+            "design_id": "frigate_mk1",
+            "type": "ship",
+            "total_cost": {"Metals": 100},
+            "resources_consumed": {"Metals": 0},
+        }
+        colony.construction_queue = [item]
+        rates = {"Metals": 500}
+
+        with patch("game.strategy.engine.production_engine.log_event") as mock_log:
+            engine._process_queue_tick_dynamic(
+                colony.construction_queue, empire_rich, 1, MagicMock(), None,
+                rates, colony, False
+            )
+
+            shortage_calls = [
+                c for c in mock_log.call_args_list
+                if c[0][0] == EventType.RESOURCE_SHORTAGE
+            ]
+            assert len(shortage_calls) == 0
 

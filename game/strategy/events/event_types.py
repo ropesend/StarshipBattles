@@ -16,6 +16,7 @@ class EventType(str, Enum):
     WARP_POINT_CLOSED = "warp_point_closed"
     DYSON_SPHERE_CREATED = "dyson_sphere_created"
     SHIPS_SELF_DESTRUCTED = "ships_self_destructed"
+    RESOURCE_SHORTAGE = "resource_shortage"
 
 
 class EventCategory(str, Enum):

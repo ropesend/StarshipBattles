@@ -733,3 +733,66 @@ class TestDetailPanelGeometry:
         x_narrow, _, _ = narrow._detail_panel_geometry()
         x_wide, _, _ = wide._detail_panel_geometry()
         assert x_wide > x_narrow
+
+
+# =============================================================================
+# PlanetListWindow Column Swap Tests (BUG-100)
+# =============================================================================
+
+class TestPlanetListColumnSwap:
+    """PlanetListWindow should call column_manager.swap_column() when header returns swap event."""
+
+    def _make_update_stub(self):
+        """Create a minimal stub wired for testing the update() swap path."""
+        from game.ui.screens.planet_list_window import PlanetListWindow
+        stub = Mock(spec=PlanetListWindow)
+        stub.btn_apply = Mock()
+        stub.btn_apply.check_pressed.return_value = False
+        stub.virtual_table = Mock()
+        stub.virtual_table.scroll_bar.check_has_moved_recently.return_value = False
+        stub.column_manager = Mock()
+        stub.filter_types = {}
+        stub.filter_owner = {}
+        stub.btn_all_types = Mock()
+        stub.btn_none_types = Mock()
+        stub.btn_all_owners = Mock()
+        stub.btn_none_owners = Mock()
+        stub.ui_filters = {}
+        stub.refresh_list = Mock()
+        stub._handle_slider_sync = Mock()
+        stub._handle_filter_toggles = Mock()
+        stub._handle_column_toggles = Mock()
+        stub._handle_preset_changes = Mock()
+        return stub
+
+    def _run_update_with_swap(self, stub, col_dict, direction):
+        """Run PlanetListWindow.update on the stub with a swap_column header result."""
+        from game.ui.screens.planet_list_window import PlanetListWindow
+        from pygame_gui.elements import UIWindow
+        stub.virtual_table.check_header_presses.return_value = {
+            'swap_column': (col_dict, direction), 'sort_column': None
+        }
+        with patch.object(UIWindow, 'update', return_value=None):
+            PlanetListWindow.update(stub, 0.016)
+
+    def test_swap_column_calls_column_manager(self):
+        """When header returns swap_column, column_manager.swap_column() must be called."""
+        stub = self._make_update_stub()
+        col_dict = {"id": "mass", "title": "Mass", "width": 100, "visible": True}
+        self._run_update_with_swap(stub, col_dict, 1)
+        stub.column_manager.swap_column.assert_called_once_with("mass", 1)
+
+    def test_swap_column_rebuilds_headers_and_rows(self):
+        """After swap, rebuild_headers() and rebuild_row_pool() must be called."""
+        stub = self._make_update_stub()
+        col_dict = {"id": "gravity", "title": "Gravity", "width": 80, "visible": True}
+        self._run_update_with_swap(stub, col_dict, -1)
+        stub.virtual_table.rebuild_headers.assert_called_once()
+        stub.virtual_table.rebuild_row_pool.assert_called_once()
+
+    def test_swap_column_refreshes_list(self):
+        """After swap, refresh_list() must be called."""
+        stub = self._make_update_stub()
+        col_dict = {"id": "mass", "title": "Mass", "width": 100, "visible": True}
+        self._run_update_with_swap(stub, col_dict, 1)
+        stub.refresh_list.assert_called_once()

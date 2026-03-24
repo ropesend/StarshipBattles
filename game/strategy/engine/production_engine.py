@@ -241,6 +241,12 @@ class ProductionEngine:
         if not queue:
             return
 
+        # FEAT-09: Reset shortage flags at the start of each turn
+        if tick == 1:
+            for q_item in queue:
+                if isinstance(q_item, dict):
+                    q_item.pop('_shortage_logged', None)
+
         # Capacity in fractional ticks (0.0 to 1.0)
         tick_capacity = 1.0
         
@@ -277,6 +283,12 @@ class ProductionEngine:
 
             # Check affordability (PROJ-209: extracted to helper)
             if not self._check_affordability(empire, expenditure.cost_this_step):
+                # FEAT-09: Log shortage event once per item per turn
+                if not item.get('_shortage_logged'):
+                    self._log_resource_shortage(
+                        empire, item, expenditure.cost_this_step, colony_or_fleet
+                    )
+                    item['_shortage_logged'] = True
                 return  # Paused - insufficient resources
 
             # Consume resources (PROJ-209: extracted to helper)
@@ -431,6 +443,64 @@ class ProductionEngine:
             True if empire has sufficient resources, False otherwise.
         """
         return empire.has_resources(cost_this_step)
+
+    def _log_resource_shortage(
+        self,
+        empire,
+        item: Dict,
+        cost_this_step: Dict[str, float],
+        colony_or_fleet,
+    ) -> None:
+        """Log a RESOURCE_SHORTAGE event identifying the bottleneck resource.
+
+        FEAT-09: Called once per item per turn when affordability check fails.
+
+        Args:
+            empire: The empire that cannot afford production.
+            item: The blocked queue item.
+            cost_this_step: Resources needed this tick step.
+            colony_or_fleet: Build location context (Planet or Fleet).
+        """
+        # Find the limiting resource: largest shortfall ratio (needed / available)
+        limiting_resource = ""
+        worst_ratio = -1.0
+        limiting_available = 0.0
+        limiting_needed = 0.0
+
+        for resource, needed in cost_this_step.items():
+            if needed <= 0:
+                continue
+            available = empire.resource_pool.get(resource, 0.0)
+            if available >= needed:
+                continue
+            shortfall_ratio = needed / max(available, 0.0001)
+            if shortfall_ratio > worst_ratio:
+                worst_ratio = shortfall_ratio
+                limiting_resource = resource
+                limiting_available = available
+                limiting_needed = needed
+
+        design_id = item.get('design_id', 'unknown')
+        vehicle_type = item.get('type', 'ship')
+
+        location_hex = None
+        if hasattr(colony_or_fleet, 'location'):
+            loc = colony_or_fleet.location
+            if hasattr(loc, 'q') and hasattr(loc, 'r'):
+                location_hex = [loc.q, loc.r]
+
+        log_event(
+            EventType.RESOURCE_SHORTAGE,
+            category=EventCategory.PRODUCTION,
+            empire_id=empire.id,
+            message=f"Production paused: insufficient {limiting_resource} for {design_id}",
+            design_id=design_id,
+            vehicle_type=vehicle_type,
+            limiting_resource=limiting_resource,
+            available=limiting_available,
+            needed=limiting_needed,
+            location_hex=location_hex,
+        )
 
     def _apply_resource_consumption(
         self,

@@ -58,3 +58,11 @@ This file serves as the permanent index of all completed features with implement
 * **Test Case:** `tests/unit/ui/screens/test_race_setup_screen.py::TestSaveUpdateDialog` (5 tests)
 * **Notes:** None.
 ---
+
+## [FEAT-08] - Fleet Join Order — Target Selection Dialog and Fleet ID Display
+* **Date Completed:** 2026-03-23
+* **Original Request:** When pressing 'J' to join a fleet and clicking a hex with multiple fleets, show a selection dialog. Also display target fleet ID in the orders window.
+* **Implementation Summary:** Created `FleetSelectionWindow` with UISelectionList for multi-fleet target picking. Modified `handle_join_designation()` to filter valid targets and return choice dict for multiple fleets. Added dialog integration via `strategy_window_manager.py` and `strategy_ui.py`. Orders window already displayed fleet IDs correctly.
+* **Test Case:** `tests/integration/ui/test_fleet_ops_facade.py` (including `test_join_returns_choice_for_multiple_valid_targets`)
+* **Notes:** Minor display issue with fleet info panel order formatting filed separately as BUG-101.
+---

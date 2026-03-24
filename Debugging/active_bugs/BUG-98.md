@@ -126,3 +126,23 @@ The `BuildQueueQueueDataSource` would call this once per `set_queue()` and cache
 - 2026-03-22: Deep Investigation — Root cause confirmed as architectural mismatch. `calculate_per_turn_spend()` processes items in isolation; needs queue-wide sequential distribution matching ProductionEngine's carry-over logic.
 - 2026-03-22: User interview complete. Scope: per-planet queue only, no resource pool caps.
 - 2026-03-22: Fix implemented via TDD. Added `calculate_queue_turn_spend()` in `build_queue_helpers.py` — distributes production sequentially across queue with carry-over. Updated `BuildQueueQueueDataSource` to pre-compute distribution on `set_queue()` and cache results. Updated data source test. 58/58 tests pass, 1786/1786 UI screen tests pass.
+
+---
+### ❌ Fix Rejected [2026-03-23 14:36]
+**Reason:** The distribution logic only works correctly for the limiting resource (metals in this case). Non-limiting resources (Organics, Vapors, Radioactives, Exotics) do not show proportionally reduced values for items that receive partial production. Metals only appear correct because they happen to be the limiting resource — if a different resource were limiting, metals would likely show incorrect values too. All resource columns must distribute proportionally based on the same carry-over capacity.
+**New Constraints:** All resource types must show proportional next-turn values, not just the limiting resource. The carry-over capacity calculation must apply uniformly across all resource columns.
+
+[![Build queue showing metals correct at 4 for item 5, but other resources not proportionally reduced](../../Tools/qa_observer/session_data/20260323_143412/images/bug_capture_143611.png)](../../Tools/qa_observer/session_data/20260323_143412/images/bug_capture_143611.png)
+---
+
+### Hypothesis 2: Non-proportional resource formula in queue distribution - CONFIRMED
+**Theory:** `calculate_queue_turn_spend()` uses `rate * turns_to_spend` for each resource, which gives all resources with equal build rates the same spend value. Non-limiting resources should instead use proportional consumption: `(remaining[res] / max_turns_needed) * turns_to_spend`, so spend ratios match cost ratios.
+**Evidence For:**
+- With costs {Metals: 749, Organics: 110} and equal rates of 3000, the old formula gives 4.0 for BOTH on a partial item, but correct proportional value for Organics is 0.587 (110/749 * 4.0).
+- User confirmed expected values: per-turn spend ratio must equal cost ratio.
+- ProductionEngine uses raw rate × time (non-proportional), but user explicitly chose proportional display for the UI.
+**Evidence Against:** None.
+**Test:** New tests `test_partial_item_proportional_non_limiting_resources` and `test_partial_item_five_resources_proportional` verify all resources are proportionally reduced.
+**Result:** Fix confirmed — all resource types now show proportional per-turn values.
+
+- 2026-03-23: Deep Dive — Hypothesis 2 confirmed: `calculate_queue_turn_spend()` used `rate * turns_to_spend` (raw build rate) instead of `(remaining / max_turns_needed) * turns_to_spend` (proportional rate). Fixed formula in `build_queue_helpers.py:174-179`. Design decision: UI shows proportional consumption (spend ratio = cost ratio), which differs from ProductionEngine's raw-rate-then-clamp approach. Added 2 new tests, updated 3 existing tests. 13353/13353 tests pass (2 skipped).

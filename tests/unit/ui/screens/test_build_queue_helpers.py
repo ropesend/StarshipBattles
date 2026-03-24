@@ -461,7 +461,11 @@ class TestQueueTurnSpend:
         assert result[1]["Metals"] == pytest.approx(0.0)
 
     def test_multi_resource_limiting_resource(self):
-        """Multi-resource items: limiting resource determines capacity fraction."""
+        """Multi-resource items: all resources consumed proportionally.
+
+        BUG-98: Resources progress at the same fractional rate toward
+        completion. Spend ratio matches cost ratio.
+        """
         # Item costs 6000 Metals + 1500 Organics, rate 3000 each
         # Limiting: Metals at 6000/3000 = 2 turns → uses full turn capacity
         queue = [
@@ -473,10 +477,10 @@ class TestQueueTurnSpend:
         result = calculate_queue_turn_spend(queue, build_rate)
 
         # First item takes 2 turns (Metals-limited), uses full turn capacity
-        # Metals: rate * 1.0 turn = 3000, clamped to remaining 6000 → 3000
-        # Organics: rate * 1.0 turn = 3000, clamped to remaining 1500 → 1500
+        # Metals: (6000/2.0) * 1.0 = 3000
+        # Organics: (1500/2.0) * 1.0 = 750 (proportional to cost ratio)
         assert result[0]["Metals"] == pytest.approx(3000.0)
-        assert result[0]["Organics"] == pytest.approx(1500.0)
+        assert result[0]["Organics"] == pytest.approx(750.0)
         # Second item gets 0 — no capacity left
         assert result[1]["Metals"] == pytest.approx(0.0)
         assert result[1]["Organics"] == pytest.approx(0.0)
@@ -497,9 +501,10 @@ class TestQueueTurnSpend:
         assert result[0]["Metals"] == pytest.approx(1500.0)
         assert result[0]["Organics"] == pytest.approx(750.0)
         # Second item: gets 0.5 turn capacity, Metals-limited (6000/3000=2 turns)
-        # 0.5 turns * 3000/turn = 1500 Metals, Organics: 0.5 * 3000 = 1500 clamped to 3000 → 1500
+        # Metals: (6000/2.0) * 0.5 = 1500
+        # Organics: (3000/2.0) * 0.5 = 750 (proportional to cost ratio)
         assert result[1]["Metals"] == pytest.approx(1500.0)
-        assert result[1]["Organics"] == pytest.approx(1500.0)
+        assert result[1]["Organics"] == pytest.approx(750.0)
 
     def test_fully_consumed_item_passes_all_capacity(self):
         """Already-complete item at head of queue passes full capacity through."""
@@ -522,3 +527,63 @@ class TestQueueTurnSpend:
         result = calculate_queue_turn_spend(queue, build_rate)
 
         assert result[0]["Metals"] == pytest.approx(0.0)
+
+    def test_partial_item_proportional_non_limiting_resources(self):
+        """BUG-98 fix rejection: non-limiting resources must be proportionally reduced.
+
+        With 5 items costing {Metals: 749, Organics: 110} each at rate 3000/turn:
+        - Items 1-4 complete fully (749*4=2996 of 3000 capacity)
+        - Item 5 gets ~0.00133 turns of capacity
+        - Item 5 Metals: 3000 * 0.00133 = 4.0 (limiting resource, full rate)
+        - Item 5 Organics: (110/0.24967) * 0.00133 ≈ 0.587 (proportional, NOT 4.0)
+        """
+        queue = [
+            self._make_multi_item({"Metals": 749.0, "Organics": 110.0})
+            for _ in range(6)
+        ]
+        build_rate = {"Metals": 3000.0, "Organics": 3000.0}
+
+        result = calculate_queue_turn_spend(queue, build_rate)
+
+        # Items 1-4: complete within turn, spend = remaining cost
+        for i in range(4):
+            assert result[i]["Metals"] == pytest.approx(749.0)
+            assert result[i]["Organics"] == pytest.approx(110.0)
+
+        # Item 5: gets remainder of turn capacity
+        # Metals (limiting): 4.0
+        assert result[4]["Metals"] == pytest.approx(4.0, abs=0.1)
+        # Organics (non-limiting): must be proportionally reduced
+        # ratio = 110/749 * 4.0 ≈ 0.587
+        expected_org = 110.0 / 749.0 * result[4]["Metals"]
+        assert result[4]["Organics"] == pytest.approx(expected_org, abs=0.01)
+        # Critically: organics must NOT equal metals (the old bug)
+        assert result[4]["Organics"] < result[4]["Metals"]
+
+        # Item 6: zero production
+        assert result[5]["Metals"] == pytest.approx(0.0)
+        assert result[5]["Organics"] == pytest.approx(0.0)
+
+    def test_partial_item_five_resources_proportional(self):
+        """BUG-98: all 5 resource types proportionally reduced for partial items."""
+        costs = {
+            "Metals": 749.0,
+            "Organics": 110.0,
+            "Vapors": 50.0,
+            "Radioactives": 249.0,
+            "Exotics": 269.0,
+        }
+        queue = [self._make_multi_item(dict(costs)) for _ in range(6)]
+        build_rate = {res: 3000.0 for res in costs}
+
+        result = calculate_queue_turn_spend(queue, build_rate)
+
+        # Item 5 (index 4) gets partial capacity
+        item5 = result[4]
+        # All resources should be proportional to their remaining/limiting ratio
+        limiting_turns = 749.0 / 3000.0  # Metals is limiting
+        for res, remaining in costs.items():
+            expected = (remaining / limiting_turns) * (1.0 - 4 * limiting_turns)
+            assert item5[res] == pytest.approx(expected, abs=0.01), (
+                f"{res}: expected {expected:.3f}, got {item5[res]:.3f}"
+            )

@@ -48,12 +48,12 @@ def format_empire_resources(empire) -> str:
 def calculate_per_turn_spend(
     queue_item: dict, build_rate: dict
 ) -> dict:
-    """Calculate proportional per-turn resource spend for a queue item.
+    """Calculate proportional per-turn resource spend for a single queue item.
 
     Uses the limiting-resource formula: find the resource that takes the
     longest to complete (max remaining/rate), then each resource spends
-    remaining/limiting_turns per turn. This matches the proportional
-    calculation in ProductionEngine._calculate_tick_expenditure().
+    remaining/limiting_turns per turn. All resources progress at the same
+    fractional rate toward completion (spend ratio matches cost ratio).
 
     Args:
         queue_item: Dict with 'total_cost' and 'resources_consumed' keys.
@@ -170,13 +170,14 @@ def calculate_queue_turn_spend(
         # How much of this item can we build with remaining capacity?
         turns_to_spend = min(turn_capacity, max_turns_needed)
 
-        # Calculate resources consumed this turn
+        # Calculate resources consumed this turn using proportional rates.
+        # Each resource consumes at (remaining / limiting_turns) per turn,
+        # so partial capacity scales all resources proportionally.
         spend = {}
         for res in total_cost:
-            rate = build_rate.get(res, 0.0)
-            to_consume = rate * turns_to_spend
             rem = remaining.get(res, 0.0)
-            spend[res] = min(to_consume, rem)
+            proportional_rate = rem / max_turns_needed
+            spend[res] = min(proportional_rate * turns_to_spend, rem)
 
         result.append(spend)
         turn_capacity -= turns_to_spend

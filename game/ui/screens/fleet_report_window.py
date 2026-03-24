@@ -11,7 +11,6 @@ import logging
 from typing import Callable, Optional
 
 import pygame
-import pygame_gui
 from pygame_gui.elements import UIWindow, UIPanel
 
 from game.ui.config import UIConfig
@@ -176,14 +175,6 @@ class FleetReportWindow(UIWindow):
         if self.ship_detail_panel and self.ship_detail_panel.process_event(event):
             return True
 
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            # Check for header clicks (sorting)
-            obj_id = event.ui_element.object_ids[-1] if event.ui_element.object_ids else ""
-            if obj_id.startswith("#header_"):
-                col_id = obj_id[8:]  # Remove "#header_" prefix
-                self._handle_header_click(col_id)
-                handled = True
-
         # Handle scroll events
         if hasattr(event, 'user_type') and event.user_type == 'ui_vertical_scroll_bar_moved':
             if event.ui_element == self.virtual_table.scroll_bar:
@@ -219,13 +210,6 @@ class FleetReportWindow(UIWindow):
         self.sidebar.update_remove_button(len(selected_indices))
         return True
 
-    def _handle_header_click(self, col_id):
-        """Handle clicking on a column header for sorting."""
-        # Update sort state in both column_manager (for header display) and view_model (for sorting)
-        self.column_manager.set_sort(col_id)
-        self.view_model.set_sort(col_id)
-        self.virtual_table.rebuild_headers()
-        self.refresh_list()
 
     def select_ship(self, ship):
         """Select a single ship to show in the detail panel (API for external callers)."""
