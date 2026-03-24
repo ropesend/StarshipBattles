@@ -197,3 +197,5 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-195 | Eradicate RegistryManager Singleton from Non-Root Code | 2026-02-25 | PROJ-151-200 |
 | PROJ-196 | Consolidate Duplicated Code | 2026-02-25 | PROJ-151-200 |
 | PROJ-197 | Duplication Consolidation Completion | 2026-02-25 | PROJ-151-200 |
+| PROJ-198 | UI Layer Duck Typing Elimination - Strategy Screens & Services | 2026-02-25 | PROJ-151-200 |
+| PROJ-199 | Duck Typing Cleanup - Lazy Init and CompDef Centralization | 2026-02-27 | PROJ-151-200 |

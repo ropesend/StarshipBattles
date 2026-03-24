@@ -75,8 +75,27 @@ class Empire:
         PROJ-219: Automatically unregisters the fleet from the galaxy entity
         registry, preventing ghost fleets from remaining in the registry
         after destruction, merging, or scuttling.
+
+        PROJ-222: Cancels all pursuer orders targeting this fleet and logs
+        FLEET_JOIN_CANCELLED events before removal.
         """
         if fleet in self.fleets:
+            # PROJ-222: Cancel all pursuer orders before removing fleet
+            if hasattr(fleet, 'pursuer_tracker'):
+                cancelled = fleet.pursuer_tracker.notify_target_destroyed()
+                if cancelled:
+                    from game.core.event_logging import log_event
+                    from game.strategy.events.event_types import EventType, EventCategory
+                    for pursuer in cancelled:
+                        log_event(
+                            EventType.FLEET_JOIN_CANCELLED,
+                            category=EventCategory.FLEET_OPERATIONS,
+                            empire_id=pursuer.owner_id,
+                            message=f"Fleet {pursuer.id} join order cancelled: target Fleet {fleet.id} destroyed",
+                            fleet_id=pursuer.id,
+                            target_fleet_id=fleet.id,
+                        )
+
             self.fleets.remove(fleet)
             if self._galaxy:
                 self._galaxy.unregister_fleet(fleet)

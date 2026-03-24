@@ -589,16 +589,129 @@ class TestFormatOrders:
 
         assert "1. UNLOAD All ore" in result
 
-    def test_generic_order_type(self, mock_fleet):
-        """Test generic order type fallback (superweapon orders)."""
+    def test_move_to_fleet_order(self, mock_fleet):
+        """Test MOVE_TO_FLEET order formatting shows 'Intercept Fleet {id}'."""
+        target_fleet = Mock()
+        target_fleet.ships = []
+        target_fleet.orders = []
+        target_fleet.id = 10042
+
         order = Mock()
-        order.type = OrderType.IMPLODE_PLANET
-        order.target = (10, 20)  # target hex
+        order.type = OrderType.MOVE_TO_FLEET
+        order.target = target_fleet
         mock_fleet.orders = [order]
 
         result = _format_orders(mock_fleet)
 
-        assert "1. IMPLODE_PLANET" in result
+        assert "1. Intercept Fleet 10042" in result
+
+    def test_move_to_fleet_order_invalid_target(self, mock_fleet):
+        """Test MOVE_TO_FLEET order with non-fleet target shows '?'."""
+        order = Mock(spec=[])  # no attributes — fails is_fleet check
+        order.type = OrderType.MOVE_TO_FLEET
+        order.target = "not_a_fleet"
+        mock_fleet.orders = [order]
+
+        result = _format_orders(mock_fleet)
+
+        assert "1. Intercept Fleet ?" in result
+
+    def test_join_fleet_order(self, mock_fleet):
+        """Test JOIN_FLEET order formatting shows 'Join Fleet {id}'."""
+        target_fleet = Mock()
+        target_fleet.ships = []
+        target_fleet.orders = []
+        target_fleet.id = 10099
+
+        order = Mock()
+        order.type = OrderType.JOIN_FLEET
+        order.target = target_fleet
+        mock_fleet.orders = [order]
+
+        result = _format_orders(mock_fleet)
+
+        assert "1. Join Fleet 10099" in result
+
+    def test_join_fleet_order_invalid_target(self, mock_fleet):
+        """Test JOIN_FLEET order with non-fleet target shows '?'."""
+        order = Mock(spec=[])
+        order.type = OrderType.JOIN_FLEET
+        order.target = "not_a_fleet"
+        mock_fleet.orders = [order]
+
+        result = _format_orders(mock_fleet)
+
+        assert "1. Join Fleet ?" in result
+
+    def test_load_population_order(self, mock_fleet):
+        """Test LOAD_POPULATION order formatting."""
+        order = Mock()
+        order.type = OrderType.LOAD_POPULATION
+        order.target = {"direction": "load"}
+        mock_fleet.orders = [order]
+
+        result = _format_orders(mock_fleet)
+
+        assert "1. Load Cargo" in result
+
+    def test_unload_population_order(self, mock_fleet):
+        """Test UNLOAD_POPULATION order formatting."""
+        order = Mock()
+        order.type = OrderType.UNLOAD_POPULATION
+        order.target = {"direction": "unload"}
+        mock_fleet.orders = [order]
+
+        result = _format_orders(mock_fleet)
+
+        assert "1. Drop Cargo" in result
+
+    def test_implode_planet_order(self, mock_fleet):
+        """Test IMPLODE_PLANET order formatting with planet name."""
+        planet = Mock()
+        planet.name = "Doomed World"
+        planet.population = 0  # has planet attrs for is_planet
+
+        order = Mock()
+        order.type = OrderType.IMPLODE_PLANET
+        order.target = planet
+        mock_fleet.orders = [order]
+
+        result = _format_orders(mock_fleet)
+
+        assert "1. Implode Doomed World" in result
+
+    def test_stellerate_star_order(self, mock_fleet):
+        """Test STELLERATE_STAR order formatting."""
+        order = Mock()
+        order.type = OrderType.STELLERATE_STAR
+        order.target = None
+        mock_fleet.orders = [order]
+
+        result = _format_orders(mock_fleet)
+
+        assert "1. Stellerate Star" in result
+
+    def test_create_dyson_sphere_order(self, mock_fleet):
+        """Test CREATE_DYSON_SPHERE order formatting."""
+        order = Mock()
+        order.type = OrderType.CREATE_DYSON_SPHERE
+        order.target = None
+        mock_fleet.orders = [order]
+
+        result = _format_orders(mock_fleet)
+
+        assert "1. Create Dyson Sphere" in result
+
+    def test_generic_order_type(self, mock_fleet):
+        """Test generic order type fallback for truly unknown order types."""
+        order = Mock()
+        order.type = OrderType.SELF_DESTRUCT
+        order.target = None
+        mock_fleet.orders = [order]
+
+        result = _format_orders(mock_fleet)
+
+        assert "1. SELF_DESTRUCT" in result
 
     def test_multiple_orders_numbered(self, mock_fleet):
         """Test multiple orders are numbered."""

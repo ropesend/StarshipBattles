@@ -179,6 +179,85 @@ class TestFleetOrders:
         assert fleet.path == []
 
 
+class TestFleetRemoveOrderAt:
+    """Test cases for Fleet.remove_order_at() (PROJ-222 Phase 2)."""
+
+    @pytest.fixture
+    def fleet(self):
+        return Fleet("f1", 0, HexCoord(0, 0))
+
+    def test_remove_order_at_valid_index(self, fleet):
+        order1 = FleetOrder(OrderType.MOVE, HexCoord(1, 0))
+        order2 = FleetOrder(OrderType.MOVE, HexCoord(2, 0))
+        fleet.add_order(order1)
+        fleet.add_order(order2)
+
+        removed = fleet.remove_order_at(0)
+        assert removed is order1
+        assert len(fleet.orders) == 1
+        assert fleet.orders[0] is order2
+
+    def test_remove_order_at_index_zero_clears_path(self, fleet):
+        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(1, 0)))
+        fleet.path = [HexCoord(0, 0), HexCoord(1, 0)]
+
+        fleet.remove_order_at(0)
+        assert fleet.path == []
+
+    def test_remove_order_at_invalid_index_returns_none(self, fleet):
+        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(1, 0)))
+        assert fleet.remove_order_at(5) is None
+        assert fleet.remove_order_at(-1) is None
+        assert len(fleet.orders) == 1  # Unchanged
+
+    def test_remove_order_at_middle_preserves_path(self, fleet):
+        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(1, 0)))
+        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(2, 0)))
+        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(3, 0)))
+        fleet.path = [HexCoord(0, 0)]
+
+        removed = fleet.remove_order_at(1)
+        assert removed is not None
+        assert len(fleet.orders) == 2
+        assert fleet.path == [HexCoord(0, 0)]  # Path preserved
+
+
+class TestFleetRemoveOrdersByType:
+    """Test cases for Fleet.remove_orders_by_type() (PROJ-222 Phase 2)."""
+
+    @pytest.fixture
+    def fleet(self):
+        return Fleet("f1", 0, HexCoord(0, 0))
+
+    def test_remove_orders_by_type_removes_matching(self, fleet):
+        fleet.add_order(FleetOrder(OrderType.BUILD))
+        fleet.add_order(FleetOrder(OrderType.BUILD))
+        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(1, 0)))
+
+        removed = fleet.remove_orders_by_type(OrderType.BUILD)
+        assert len(removed) == 2
+        assert all(o.type == OrderType.BUILD for o in removed)
+        assert len(fleet.orders) == 1
+
+    def test_remove_orders_by_type_preserves_others(self, fleet):
+        move_order = FleetOrder(OrderType.MOVE, HexCoord(1, 0))
+        join_order = FleetOrder(OrderType.JOIN_FLEET, target="some_fleet")
+        fleet.add_order(move_order)
+        fleet.add_order(FleetOrder(OrderType.BUILD))
+        fleet.add_order(join_order)
+
+        fleet.remove_orders_by_type(OrderType.BUILD)
+        assert len(fleet.orders) == 2
+        assert fleet.orders[0] is move_order
+        assert fleet.orders[1] is join_order
+
+    def test_remove_orders_by_type_no_matches(self, fleet):
+        fleet.add_order(FleetOrder(OrderType.MOVE, HexCoord(1, 0)))
+        removed = fleet.remove_orders_by_type(OrderType.BUILD)
+        assert removed == []
+        assert len(fleet.orders) == 1
+
+
 class TestFleetMerge:
     """Test cases for fleet merging."""
 
@@ -222,6 +301,15 @@ class TestFleetMerge:
         fleet1.merge_with("not a fleet")
 
         assert len(fleet1.ships) == 1  # Ship not removed
+
+
+class TestFleetPursuerTrackerIntegration:
+    """Test that Fleet has a pursuer_tracker property (PROJ-222 Phase 3)."""
+
+    def test_fleet_has_pursuer_tracker(self):
+        fleet = Fleet("f1", 0, HexCoord(0, 0))
+        assert hasattr(fleet, 'pursuer_tracker')
+        assert fleet.pursuer_tracker.pursuer_count == 0
 
 
 class TestFleetEquality:

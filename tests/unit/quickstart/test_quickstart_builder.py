@@ -187,6 +187,52 @@ class TestQuickstartBuilderDesignCopying:
             assert len(design_files) >= 2
 
 
+    def test_copy_designs_applies_empire_themes(self, temp_save_folder):
+        """BUG-102: Copied designs should have theme_id updated to match each empire's theme."""
+        import json
+
+        empire_themes = {0: "Federation", 1: "Klingons"}
+        result = QuickstartBuilder.copy_quickstart_designs(
+            temp_save_folder, [0, 1], empire_themes=empire_themes
+        )
+        assert result is True
+
+        # Check empire 0 designs have Federation theme
+        empire_0_folder = Path(temp_save_folder) / "designs" / "empire_0"
+        for design_file in empire_0_folder.glob("*.json"):
+            with open(design_file) as f:
+                data = json.load(f)
+            if "theme_id" in data:
+                assert data["theme_id"] == "Federation", (
+                    f"{design_file.name}: expected Federation, got {data['theme_id']}"
+                )
+
+        # Check empire 1 designs have Klingons theme
+        empire_1_folder = Path(temp_save_folder) / "designs" / "empire_1"
+        for design_file in empire_1_folder.glob("*.json"):
+            with open(design_file) as f:
+                data = json.load(f)
+            if "theme_id" in data:
+                assert data["theme_id"] == "Klingons", (
+                    f"{design_file.name}: expected Klingons, got {data['theme_id']}"
+                )
+
+    def test_copy_designs_without_themes_preserves_original(self, temp_save_folder):
+        """Backward compat: without empire_themes, designs keep original theme_id."""
+        import json
+
+        result = QuickstartBuilder.copy_quickstart_designs(temp_save_folder, [0])
+        assert result is True
+
+        empire_folder = Path(temp_save_folder) / "designs" / "empire_0"
+        for design_file in empire_folder.glob("*.json"):
+            with open(design_file) as f:
+                data = json.load(f)
+            # Original template theme should be preserved (Federation)
+            if "theme_id" in data:
+                assert data["theme_id"] == "Federation"
+
+
 class TestInitialComplexesConstant:
     """Tests for the INITIAL_COMPLEXES constant."""
 

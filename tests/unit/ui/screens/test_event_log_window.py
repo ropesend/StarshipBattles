@@ -623,3 +623,78 @@ class TestDoubleClickNavigation:
         # State should be reset
         assert win._last_click_row == -1
         assert win._last_click_time == 0
+
+
+# ---------------------------------------------------------------------------
+# BUG-104: Column Reorder Arrows
+# ---------------------------------------------------------------------------
+
+class TestEventLogColumnReorder:
+    """Verify EventLogWindow.update() handles column swap from header arrows."""
+
+    def _make_update_stub(self):
+        """Create a stub with mocked VirtualTable for testing update()."""
+        from game.ui.screens.event_log_window import EventLogWindow
+
+        with patch.object(EventLogWindow, '__init__', lambda self, *a, **kw: None):
+            stub = EventLogWindow.__new__(EventLogWindow)
+
+        stub.virtual_table = MagicMock()
+        stub.virtual_table.check_header_presses.return_value = {
+            'swap_column': None, 'sort_column': None
+        }
+        stub.virtual_table.scroll_bar = MagicMock()
+        stub.virtual_table.scroll_bar.check_has_moved_recently.return_value = False
+        stub.column_manager = MagicMock()
+        stub.data_source = MagicMock()
+        stub.current_filter = "all"
+        stub.ui_manager = MagicMock()
+        return stub
+
+    def _run_update_with_swap(self, stub, col_dict, direction):
+        """Run EventLogWindow.update on the stub with a swap_column header result."""
+        from game.ui.screens.event_log_window import EventLogWindow
+        from pygame_gui.elements import UIWindow
+        stub.virtual_table.check_header_presses.return_value = {
+            'swap_column': (col_dict, direction), 'sort_column': None
+        }
+        with patch.object(UIWindow, 'update', return_value=None):
+            EventLogWindow.update(stub, 0.016)
+
+    def test_update_method_exists(self):
+        """EventLogWindow should have an update() method."""
+        from game.ui.screens.event_log_window import EventLogWindow
+        assert hasattr(EventLogWindow, 'update')
+
+    def test_swap_column_calls_column_manager(self):
+        """When header returns swap_column, column_manager.swap_column() must be called."""
+        stub = self._make_update_stub()
+        col_dict = {"id": "turn", "title": "Turn", "width": 60, "visible": True}
+        self._run_update_with_swap(stub, col_dict, 1)
+        stub.column_manager.swap_column.assert_called_once_with("turn", 1)
+
+    def test_swap_column_rebuilds_headers_and_rows(self):
+        """After swap, rebuild_headers() and rebuild_row_pool() must be called."""
+        stub = self._make_update_stub()
+        col_dict = {"id": "turn", "title": "Turn", "width": 60, "visible": True}
+        self._run_update_with_swap(stub, col_dict, -1)
+        stub.virtual_table.rebuild_headers.assert_called_once()
+        stub.virtual_table.rebuild_row_pool.assert_called_once()
+
+    def test_swap_column_refreshes_list(self):
+        """After swap, visible rows must be refreshed."""
+        stub = self._make_update_stub()
+        col_dict = {"id": "message", "title": "Message", "width": 300, "visible": True}
+        self._run_update_with_swap(stub, col_dict, 1)
+        stub.virtual_table.force_update.assert_called()
+        stub.virtual_table.update_visible_rows.assert_called()
+
+    def test_no_swap_does_not_rebuild(self):
+        """When no swap occurs, rebuild should not be called."""
+        from game.ui.screens.event_log_window import EventLogWindow
+        from pygame_gui.elements import UIWindow
+        stub = self._make_update_stub()
+        with patch.object(UIWindow, 'update', return_value=None):
+            EventLogWindow.update(stub, 0.016)
+        stub.virtual_table.rebuild_headers.assert_not_called()
+        stub.virtual_table.rebuild_row_pool.assert_not_called()

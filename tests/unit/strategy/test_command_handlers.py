@@ -26,6 +26,7 @@ from game.strategy.engine.command_handlers import (
     create_default_registry,
 )
 from game.core.validation import ValidationResult
+from game.strategy.data.fleet import Fleet
 
 
 class TestCommandHandlerRegistry:
@@ -249,10 +250,12 @@ class TestJoinCommandHandler:
 
         mock_fleet = Mock()
         mock_fleet.id = 1
+        mock_fleet.owner_id = 0
         mock_fleet.add_order = Mock()
 
         mock_target = Mock()
         mock_target.id = 2
+        mock_target.owner_id = 0
 
         mock_session = Mock()
         mock_session._get_fleet_by_id.side_effect = lambda fid: mock_fleet if fid == 1 else mock_target
@@ -263,6 +266,82 @@ class TestJoinCommandHandler:
 
         assert result.is_valid
         assert mock_fleet.add_order.call_count == 2
+
+
+class TestJoinCommandHandlerPursuerTracking:
+    """Tests for JoinCommandHandler pursuer registration and validation (PROJ-222)."""
+
+    def _make_session_with_real_fleets(self, fleet, target):
+        """Helper: create mock session that returns real Fleet objects."""
+        mock_session = Mock()
+        lookup = {fleet.id: fleet, target.id: target}
+        mock_session._get_fleet_by_id.side_effect = lambda fid: lookup.get(fid)
+        return mock_session
+
+    def test_join_registers_pursuer(self):
+        fleet = Fleet("f1", 0, HexCoord(0, 0))
+        target = Fleet("f2", 0, HexCoord(5, 5))
+        session = self._make_session_with_real_fleets(fleet, target)
+        cmd = Mock(fleet_id="f1", target_fleet_id="f2")
+
+        result = JoinCommandHandler().execute(session, cmd)
+
+        assert result.is_valid
+        assert target.pursuer_tracker.pursuer_count == 1
+        assert fleet in target.pursuer_tracker.pursuers
+
+    def test_join_self_targeting_rejected(self):
+        fleet = Fleet("f1", 0, HexCoord(0, 0))
+        session = self._make_session_with_real_fleets(fleet, fleet)
+        cmd = Mock(fleet_id="f1", target_fleet_id="f1")
+
+        result = JoinCommandHandler().execute(session, cmd)
+
+        assert not result.is_valid
+        assert "itself" in result.message.lower()
+
+    def test_join_cross_empire_rejected(self):
+        fleet = Fleet("f1", 0, HexCoord(0, 0))
+        target = Fleet("f2", 1, HexCoord(5, 5))  # Different owner
+        session = self._make_session_with_real_fleets(fleet, target)
+        cmd = Mock(fleet_id="f1", target_fleet_id="f2")
+
+        result = JoinCommandHandler().execute(session, cmd)
+
+        assert not result.is_valid
+        assert "empire" in result.message.lower()
+
+
+class TestInterceptCommandHandlerPursuerTracking:
+    """Tests for InterceptCommandHandler pursuer registration and validation (PROJ-222)."""
+
+    def _make_session_with_real_fleets(self, fleet, target):
+        mock_session = Mock()
+        lookup = {fleet.id: fleet, target.id: target}
+        mock_session._get_fleet_by_id.side_effect = lambda fid: lookup.get(fid)
+        return mock_session
+
+    def test_intercept_registers_pursuer(self):
+        fleet = Fleet("f1", 0, HexCoord(0, 0))
+        target = Fleet("f2", 0, HexCoord(5, 5))
+        session = self._make_session_with_real_fleets(fleet, target)
+        cmd = Mock(fleet_id="f1", target_fleet_id="f2")
+
+        result = InterceptCommandHandler().execute(session, cmd)
+
+        assert result.is_valid
+        assert target.pursuer_tracker.pursuer_count == 1
+        assert fleet in target.pursuer_tracker.pursuers
+
+    def test_intercept_self_targeting_rejected(self):
+        fleet = Fleet("f1", 0, HexCoord(0, 0))
+        session = self._make_session_with_real_fleets(fleet, fleet)
+        cmd = Mock(fleet_id="f1", target_fleet_id="f1")
+
+        result = InterceptCommandHandler().execute(session, cmd)
+
+        assert not result.is_valid
+        assert "itself" in result.message.lower()
 
 
 class TestColonizeMissionCommandHandler:
@@ -318,13 +397,11 @@ class TestClearOrdersCommandHandler:
         assert "Fleet not found" in result.message
 
     def test_clears_orders_and_path(self):
-        """Valid clear resets orders and path lists."""
+        """Valid clear calls fleet.clear_orders() (PROJ-222: uses Fleet API)."""
         handler = ClearOrdersCommandHandler()
 
         mock_fleet = Mock()
         mock_fleet.id = 1
-        mock_fleet.orders = ['order1', 'order2']
-        mock_fleet.path = ['hex1', 'hex2']
 
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
@@ -334,8 +411,7 @@ class TestClearOrdersCommandHandler:
         result = handler.execute(mock_session, mock_cmd)
 
         assert result.is_valid
-        assert mock_fleet.orders == []
-        assert mock_fleet.path == []
+        mock_fleet.clear_orders.assert_called_once()
 
 
 class TestTransferCommandHandler:
@@ -798,16 +874,12 @@ class TestDeleteFleetOrderCommandHandler:
         assert "Invalid order index" in result.message
 
     def test_delete_active_order_clears_path(self):
-        """Deleting active order (index 0) clears fleet path."""
+        """Deleting order calls fleet.remove_order_at() (PROJ-222: uses Fleet API)."""
         handler = DeleteFleetOrderCommandHandler()
-
-        mock_order1 = Mock()
-        mock_order2 = Mock()
 
         mock_fleet = Mock()
         mock_fleet.id = 1
-        mock_fleet.orders = [mock_order1, mock_order2]
-        mock_fleet.path = [HexCoord(1, 0), HexCoord(2, 0)]
+        mock_fleet.orders = [Mock(), Mock()]
 
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
@@ -817,21 +889,15 @@ class TestDeleteFleetOrderCommandHandler:
         result = handler.execute(mock_session, mock_cmd)
 
         assert result.is_valid
-        assert mock_fleet.path == []
-        assert mock_fleet.orders == [mock_order2]
+        mock_fleet.remove_order_at.assert_called_once_with(0)
 
     def test_delete_non_active_order_preserves_path(self):
-        """Deleting non-active order preserves fleet path."""
+        """Deleting non-active order calls fleet.remove_order_at() with correct index."""
         handler = DeleteFleetOrderCommandHandler()
-
-        mock_order1 = Mock()
-        mock_order2 = Mock()
 
         mock_fleet = Mock()
         mock_fleet.id = 1
-        mock_fleet.orders = [mock_order1, mock_order2]
-        original_path = [HexCoord(1, 0), HexCoord(2, 0)]
-        mock_fleet.path = original_path.copy()
+        mock_fleet.orders = [Mock(), Mock()]
 
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
@@ -841,8 +907,7 @@ class TestDeleteFleetOrderCommandHandler:
         result = handler.execute(mock_session, mock_cmd)
 
         assert result.is_valid
-        assert mock_fleet.path == original_path
-        assert mock_fleet.orders == [mock_order1]
+        mock_fleet.remove_order_at.assert_called_once_with(1)
 
 
 class TestReorderFleetOrderCommandHandler:
@@ -1313,7 +1378,7 @@ class TestRemoveFromConstructionQueueCommandHandler:
         handler = RemoveFromConstructionQueueCommandHandler()
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = None
-        mock_cmd = Mock(entity_id=999, entity_type="planet", item_index=0)
+        mock_cmd = Mock(entity_id=999, entity_type="planet", item_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1325,7 +1390,7 @@ class TestRemoveFromConstructionQueueCommandHandler:
         handler = RemoveFromConstructionQueueCommandHandler()
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = None
-        mock_cmd = Mock(entity_id=999, entity_type="fleet", item_index=0)
+        mock_cmd = Mock(entity_id=999, entity_type="fleet", item_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1342,7 +1407,7 @@ class TestRemoveFromConstructionQueueCommandHandler:
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = mock_planet
 
-        mock_cmd = Mock(entity_id=1, entity_type="planet", item_index=-1)
+        mock_cmd = Mock(entity_id=1, entity_type="planet", item_index=-1, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1359,7 +1424,7 @@ class TestRemoveFromConstructionQueueCommandHandler:
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = mock_planet
 
-        mock_cmd = Mock(entity_id=1, entity_type="planet", item_index=5)
+        mock_cmd = Mock(entity_id=1, entity_type="planet", item_index=5, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1378,7 +1443,7 @@ class TestRemoveFromConstructionQueueCommandHandler:
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = mock_planet
 
-        mock_cmd = Mock(entity_id=1, entity_type="planet", item_index=0)
+        mock_cmd = Mock(entity_id=1, entity_type="planet", item_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1397,12 +1462,95 @@ class TestRemoveFromConstructionQueueCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(entity_id=1, entity_type="fleet", item_index=0)
+        mock_cmd = Mock(entity_id=1, entity_type="fleet", item_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
         assert result.is_valid
         assert len(mock_fleet.construction_queue) == 0
+
+    def test_removes_from_facility_queue(self):
+        """Successfully removes item from a facility queue (BUG-103)."""
+        handler = RemoveFromConstructionQueueCommandHandler()
+
+        # Planet base queue (should be untouched)
+        base_item = {"design_id": "complex_a"}
+        mock_planet = Mock()
+        mock_planet.construction_queue = [base_item]
+        mock_planet.id = 1
+
+        # Facility queue (target)
+        fac_item1 = {"design_id": "scout"}
+        fac_item2 = {"design_id": "cruiser"}
+        mock_facility = Mock()
+        mock_facility.instance_id = "fac-uuid-001"
+        mock_facility.construction_queue = [fac_item1, fac_item2]
+        mock_planet.facilities = [mock_facility]
+
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = mock_planet
+
+        mock_cmd = Mock(
+            entity_id=1, entity_type="planet",
+            item_index=0, queue_id="fac-uuid-001",
+        )
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert result.is_valid
+        assert len(mock_facility.construction_queue) == 1
+        assert mock_facility.construction_queue[0] == fac_item2
+        # Base queue unchanged
+        assert mock_planet.construction_queue == [base_item]
+
+    def test_removes_from_base_queue_with_queue_id(self):
+        """Removes from base queue when queue_id matches base pattern (BUG-103)."""
+        handler = RemoveFromConstructionQueueCommandHandler()
+
+        base_item = {"design_id": "complex_a"}
+        mock_planet = Mock()
+        mock_planet.construction_queue = [base_item]
+        mock_planet.id = 42
+        mock_planet.facilities = []
+
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = mock_planet
+
+        mock_cmd = Mock(
+            entity_id=42, entity_type="planet",
+            item_index=0, queue_id="planet_42_base",
+        )
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert result.is_valid
+        assert len(mock_planet.construction_queue) == 0
+
+    def test_facility_queue_invalid_index(self):
+        """Returns failure for invalid index on facility queue (BUG-103)."""
+        handler = RemoveFromConstructionQueueCommandHandler()
+
+        mock_planet = Mock()
+        mock_planet.construction_queue = []
+        mock_planet.id = 1
+
+        mock_facility = Mock()
+        mock_facility.instance_id = "fac-uuid-001"
+        mock_facility.construction_queue = [{"design_id": "scout"}]
+        mock_planet.facilities = [mock_facility]
+
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = mock_planet
+
+        mock_cmd = Mock(
+            entity_id=1, entity_type="planet",
+            item_index=5, queue_id="fac-uuid-001",
+        )
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert not result.is_valid
+        assert "Invalid queue index" in result.message
 
 
 class TestReorderConstructionQueueCommandHandler:
@@ -1413,7 +1561,7 @@ class TestReorderConstructionQueueCommandHandler:
         handler = ReorderConstructionQueueCommandHandler()
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = None
-        mock_cmd = Mock(entity_id=999, entity_type="planet", from_index=0, to_index=1)
+        mock_cmd = Mock(entity_id=999, entity_type="planet", from_index=0, to_index=1, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1430,7 +1578,7 @@ class TestReorderConstructionQueueCommandHandler:
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = mock_planet
 
-        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=5, to_index=0)
+        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=5, to_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1447,7 +1595,7 @@ class TestReorderConstructionQueueCommandHandler:
         mock_session = Mock()
         mock_session._get_planet_by_id.return_value = mock_planet
 
-        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=0, to_index=5)
+        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=0, to_index=5, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1468,7 +1616,7 @@ class TestReorderConstructionQueueCommandHandler:
         mock_session._get_planet_by_id.return_value = mock_planet
 
         # Move item at index 0 to index 2
-        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=0, to_index=2)
+        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=0, to_index=2, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1490,7 +1638,7 @@ class TestReorderConstructionQueueCommandHandler:
         mock_session._get_planet_by_id.return_value = mock_planet
 
         # Move item at index 2 to index 0
-        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=2, to_index=0)
+        mock_cmd = Mock(entity_id=1, entity_type="planet", from_index=2, to_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
@@ -1510,9 +1658,43 @@ class TestReorderConstructionQueueCommandHandler:
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
 
-        mock_cmd = Mock(entity_id=1, entity_type="fleet", from_index=1, to_index=0)
+        mock_cmd = Mock(entity_id=1, entity_type="fleet", from_index=1, to_index=0, queue_id=None)
 
         result = handler.execute(mock_session, mock_cmd)
 
         assert result.is_valid
         assert mock_fleet.construction_queue == [item2, item1]
+
+    def test_reorders_facility_queue(self):
+        """Successfully reorders items in a facility queue (BUG-103)."""
+        handler = ReorderConstructionQueueCommandHandler()
+
+        # Planet base queue (should be untouched)
+        base_item = {"design_id": "complex_a"}
+        mock_planet = Mock()
+        mock_planet.construction_queue = [base_item]
+        mock_planet.id = 1
+
+        # Facility queue (target)
+        fac_item1 = {"design_id": "scout"}
+        fac_item2 = {"design_id": "cruiser"}
+        mock_facility = Mock()
+        mock_facility.instance_id = "fac-uuid-001"
+        mock_facility.construction_queue = [fac_item1, fac_item2]
+        mock_planet.facilities = [mock_facility]
+
+        mock_session = Mock()
+        mock_session._get_planet_by_id.return_value = mock_planet
+
+        mock_cmd = Mock(
+            entity_id=1, entity_type="planet",
+            from_index=1, to_index=0,
+            queue_id="fac-uuid-001",
+        )
+
+        result = handler.execute(mock_session, mock_cmd)
+
+        assert result.is_valid
+        assert mock_facility.construction_queue == [fac_item2, fac_item1]
+        # Base queue unchanged
+        assert mock_planet.construction_queue == [base_item]

@@ -1059,3 +1059,30 @@ There needs to be a visible indicator on the line that indicates if the ship is 
 * **Notes:** The "Remove from Fleet" button issue was split into a separate ticket (BUG-99). Ship selection and detail panel display are confirmed working.
 
 ---
+
+## [BUG-98] - Build Queue "Next Turn" Resource Columns Show Incorrect Per-Item Values
+* **Date Solved:** 2026-03-24
+* **Original Issue:** Build queue "next turn" resource columns displayed the full build rate for every item instead of distributing production sequentially across the queue. Non-limiting resources also failed to show proportional values.
+* **Solution Implemented:** Replaced per-item `calculate_per_turn_spend()` with queue-level `calculate_queue_turn_spend()` in `build_queue_helpers.py` that walks items sequentially with carry-over capacity. Used proportional formula `(remaining / max_turns_needed) * turns_to_spend` so all resource columns reflect correct cost ratios.
+* **Test Case:** `tests/unit/ui/screens/test_build_queue_helpers.py` — includes `test_partial_item_proportional_non_limiting_resources` and `test_partial_item_five_resources_proportional`
+* **Notes:** UI intentionally uses proportional consumption display (spend ratio = cost ratio), which differs from ProductionEngine's raw-rate-then-clamp approach. This is a deliberate design decision.
+
+---
+
+## [BUG-99] - "Remove from Fleet" Button in Fleet Report Does Nothing When Clicked
+* **Date Solved:** 2026-03-24
+* **Original Issue:** The "Remove from Fleet" button in the Fleet Report visually responded to clicks but did not actually remove ships. The SplitFleetCommand dispatch path existed but validation failures were silent.
+* **Solution Implemented:** Fixed the event routing and command dispatch path so SplitFleetCommand reaches GameSession.handle_command() correctly. Added user feedback for validation errors.
+* **Test Case:** `tests/unit/ui/screens/test_fleet_report_window.py`
+* **Notes:** None.
+
+---
+
+## [BUG-100] - Planet List Window Column Reorder Arrows Do Not Swap Columns
+* **Date Solved:** 2026-03-24
+* **Original Issue:** Clicking left/right arrows on column headers in the Planet List Window did not reorder columns. The `column_manager.swap_column()` call was missing before the header rebuild.
+* **Solution Implemented:** Added the missing `swap_column()` call in `planet_list_window.py` before `rebuild_headers()` and `rebuild_row_pool()`, matching the pattern used in EmpireBuildQueueWindow and FleetReportWindow.
+* **Test Case:** `tests/unit/ui/screens/test_planet_list_components.py`
+* **Notes:** None.
+
+---

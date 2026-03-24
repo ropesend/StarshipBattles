@@ -9,7 +9,7 @@ import shutil
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List, TYPE_CHECKING
+from typing import Dict, Optional, List, TYPE_CHECKING
 
 from game.strategy.engine.game_config import GameConfig, PlayerConfig, THEME_DEFAULTS
 from game.strategy.data.race_config import RaceConfig
@@ -213,13 +213,20 @@ class QuickstartBuilder:
         )
 
     @staticmethod
-    def copy_quickstart_designs(save_path: str, empire_ids: List[int]) -> bool:
+    def copy_quickstart_designs(
+        save_path: str,
+        empire_ids: List[int],
+        empire_themes: Optional[Dict[int, str]] = None
+    ) -> bool:
         """
         Copy pre-made quickstart designs to a save folder.
 
         Args:
             save_path: Path to the save folder
             empire_ids: List of empire IDs to copy designs for
+            empire_themes: Optional mapping of empire_id -> theme_id.
+                If provided, each copied design's theme_id is updated
+                to match the empire's theme.
 
         Returns:
             True if successful, False otherwise
@@ -239,10 +246,22 @@ class QuickstartBuilder:
             dest_folder = Path(save_path) / "designs" / f"empire_{empire_id}"
             dest_folder.mkdir(parents=True, exist_ok=True)
 
+            theme_id = empire_themes.get(empire_id) if empire_themes else None
+
             for design_file in design_files:
                 dest_path = dest_folder / design_file.name
                 try:
-                    shutil.copy2(design_file, dest_path)
+                    if theme_id:
+                        # Copy and update theme_id in the design data
+                        import json
+                        with open(design_file, 'r') as f:
+                            data = json.load(f)
+                        if "theme_id" in data:
+                            data["theme_id"] = theme_id
+                        with open(dest_path, 'w') as f:
+                            json.dump(data, f, indent=4)
+                    else:
+                        shutil.copy2(design_file, dest_path)
                     logger.debug(f"Copied design {design_file.name} to empire_{empire_id}")
                 except (OSError, PermissionError, shutil.Error) as e:
                     logger.error(f"Failed to copy design {design_file.name}: {e}")

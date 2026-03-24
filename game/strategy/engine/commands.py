@@ -463,21 +463,26 @@ class RemoveFromConstructionQueueCommand(Command):
     """Command to remove an item from a construction queue.
 
     PROJ-208 Phase 2: Routes construction queue removals through command pipeline.
+    BUG-103: Added queue_id for multi-queue entities (facility queues).
 
     Args:
         entity_id: Planet or fleet ID.
         entity_type: "planet" or "fleet".
         item_index: Index of the item to remove.
+        queue_id: Optional queue identifier for multi-queue entities (e.g., shipyard facility ID).
     """
     entity_id: int
     entity_type: str
     item_index: int
+    queue_id: Optional[str] = None
 
-    def __init__(self, entity_id: int, entity_type: str, item_index: int):
+    def __init__(self, entity_id: int, entity_type: str, item_index: int,
+                 queue_id: Optional[str] = None):
         self.type = CommandType.ISSUE_ORDER
         self.entity_id = entity_id
         self.entity_type = entity_type
         self.item_index = item_index
+        self.queue_id = queue_id
 
 
 @dataclass
@@ -485,21 +490,26 @@ class ReorderConstructionQueueCommand(Command):
     """Command to move a construction queue item to a new position.
 
     PROJ-208 Phase 2: Routes construction queue reordering through command pipeline.
+    BUG-103: Added queue_id for multi-queue entities (facility queues).
 
     Args:
         entity_id: Planet or fleet ID.
         entity_type: "planet" or "fleet".
         from_index: Current index of the item.
         to_index: Target index for the item.
+        queue_id: Optional queue identifier for multi-queue entities (e.g., shipyard facility ID).
     """
     entity_id: int
     entity_type: str
     from_index: int
     to_index: int
+    queue_id: Optional[str] = None
 
-    def __init__(self, entity_id: int, entity_type: str, from_index: int, to_index: int):
+    def __init__(self, entity_id: int, entity_type: str, from_index: int, to_index: int,
+                 queue_id: Optional[str] = None):
         self.type = CommandType.ISSUE_ORDER
         self.entity_id = entity_id
         self.entity_type = entity_type
         self.from_index = from_index
         self.to_index = to_index
+        self.queue_id = queue_id

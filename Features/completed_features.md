@@ -66,3 +66,27 @@ This file serves as the permanent index of all completed features with implement
 * **Test Case:** `tests/integration/ui/test_fleet_ops_facade.py` (including `test_join_returns_choice_for_multiple_valid_targets`)
 * **Notes:** Minor display issue with fleet info panel order formatting filed separately as BUG-101.
 ---
+
+## [FEAT-07] - Add 'W' Hotkey for Explicit Warp Orders
+* **Date Completed:** 2026-03-24
+* **Original Request:** Add a 'W' hotkey on the strategy map to activate warp order mode, allowing click-to-warp on warp points for the selected fleet.
+* **Implementation Summary:** Added `FLEET_WARP` to `InputAction` enum mapped to 'W', added `WARP_TARGET` input mode in `strategy_fleet_command_router.py`, handled click dispatch in `strategy_click_dispatcher.py` to find warp points and issue `IssueWarpCommand`, gated on fleet warp capability.
+* **Test Case:** `tests/integration/ui/test_fleet_ops_facade.py`
+* **Notes:** Backend infrastructure (OrderType.WARP, IssueWarpCommand, WarpCommandHandler) already existed.
+---
+
+## [FEAT-09] - Log Resource Depletion Events When Production Is Paused
+* **Date Completed:** 2026-03-24
+* **Original Request:** Log structured events when production pauses due to insufficient resources, including which resource was limiting, amounts available/needed, and which build yards were affected.
+* **Implementation Summary:** Added new EventType for resource shortage in `event_types.py`. Added `log_event()` call in `ProductionEngine._process_queue_tick_dynamic()` at the affordability check failure point with limiting resource details.
+* **Test Case:** `tests/unit/strategy/events/test_event_types.py`
+* **Notes:** None.
+---
+
+## [FEAT-06] - Populate Treasury Construction Queue Expenses (Split by Ships and Complexes)
+* **Date Completed:** 2026-03-24
+* **Original Request:** Replace the zero-value "Construction Queues" line in the Treasury view with two separate expense lines for ships and complexes, showing actual next-turn resource expenditures.
+* **Implementation Summary:** Implemented queue-walking distribution logic in `EmpireEconomyCalculator` to iterate construction queues, classify items by type, and sum resource expenditures into ship vs complex categories. Depends on the queue distribution logic from BUG-98.
+* **Test Case:** `tests/unit/strategy/engine/test_production_refactor.py`
+* **Notes:** Depends on BUG-98's `calculate_queue_turn_spend()` for accurate per-item distribution.
+---

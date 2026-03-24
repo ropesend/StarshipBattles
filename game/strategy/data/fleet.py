@@ -12,6 +12,7 @@ from game.core.protocols import IPostBattleShip
 from game.core.validation_helpers import require_keys
 from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
 from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+from game.strategy.data.fleet_pursuer_tracker import FleetPursuerTracker
 from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
 from game.strategy.data.ship_instance import ShipInstance
 
@@ -68,6 +69,9 @@ class Fleet:
 
         # Delegate for battle conversion (PROJ-87 Phase 4)
         self._battle = FleetBattleAdapter(self)
+
+        # Delegate for pursuer tracking (PROJ-222)
+        self._pursuer_tracker = FleetPursuerTracker(self)
 
     @property
     def name(self) -> str:
@@ -141,6 +145,11 @@ class Fleet:
         return self._battle
 
     @property
+    def pursuer_tracker(self) -> 'FleetPursuerTracker':
+        """Public access to fleet pursuer tracking (PROJ-222)."""
+        return self._pursuer_tracker
+
+    @property
     def is_building(self) -> bool:
         """
         Check if fleet is currently executing a BUILD order.
@@ -153,6 +162,26 @@ class Fleet:
     # NOTE: PROJ-210 Phase 2 removed pass-through methods.
     # Use fleet.capabilities.*, fleet.resources.*, fleet.battle.* directly.
 
+    def _unregister_from_target(self, order: FleetOrder) -> None:
+        """Unregister this fleet from the target fleet's pursuer tracker.
+
+        Called when an order is removed from the queue. Only acts on
+        MOVE_TO_FLEET/JOIN_FLEET orders with a Fleet target that has
+        a pursuer_tracker. Only unregisters if no remaining orders in
+        the queue still target the same fleet (PROJ-222).
+        """
+        if order.type in (OrderType.MOVE_TO_FLEET, OrderType.JOIN_FLEET):
+            target = order.target
+            if hasattr(target, 'pursuer_tracker'):
+                # Check if any remaining order still targets this fleet
+                still_targeting = any(
+                    o.type in (OrderType.MOVE_TO_FLEET, OrderType.JOIN_FLEET)
+                    and o.target is target
+                    for o in self.orders
+                )
+                if not still_targeting:
+                    target.pursuer_tracker.remove_pursuer(self)
+
     def add_order(self, order: FleetOrder, index: Optional[int] = None) -> None:
         """Add an order to the queue."""
         if index is None:
@@ -162,8 +191,19 @@ class Fleet:
 
     def clear_orders(self) -> None:
         """Clear all orders and the current path."""
+        # PROJ-222: Unregister from all target fleets before clearing.
+        # Collect unique targets first, then unregister (since all orders are being removed,
+        # we bypass _unregister_from_target's "still targeting" check).
+        targets_to_unregister = set()
+        for order in self.orders:
+            if hasattr(order, 'type') and order.type in (OrderType.MOVE_TO_FLEET, OrderType.JOIN_FLEET):
+                target = order.target
+                if hasattr(target, 'pursuer_tracker'):
+                    targets_to_unregister.add(target)
         self.orders.clear()
         self.path = []
+        for target in targets_to_unregister:
+            target.pursuer_tracker.remove_pursuer(self)
 
     def get_current_order(self) -> Optional[FleetOrder]:
         """Get the current (first) order, or None if queue is empty."""
@@ -175,17 +215,60 @@ class Fleet:
         """Remove and return the current order, or None if queue is empty."""
         if self.orders:
             finished = self.orders.pop(0)
+            self._unregister_from_target(finished)
             self.path = []  # Clear path associated with that order
             return finished
         return None
+
+    def remove_order_at(self, index: int) -> Optional[FleetOrder]:
+        """Remove and return the order at the given index.
+
+        Clears the path if the active order (index 0) is removed.
+        Returns None if the index is out of bounds.
+        """
+        if index < 0 or index >= len(self.orders):
+            return None
+        removed = self.orders.pop(index)
+        self._unregister_from_target(removed)
+        if index == 0:
+            self.path = []
+        return removed
+
+    def remove_orders_by_type(self, order_type: OrderType) -> List[FleetOrder]:
+        """Remove all orders of the given type. Returns the removed orders."""
+        removed = [o for o in self.orders if o.type == order_type]
+        for order in removed:
+            self._unregister_from_target(order)
+        self.orders = [o for o in self.orders if o.type != order_type]
+        return removed
 
     def merge_with(self, other_fleet: 'Fleet') -> None:
         """
         Merge this fleet into other_fleet.
         Transfers all ships and clears this fleet.
+
+        PROJ-222: Before clearing orders, redirects all pursuers of this
+        fleet to other_fleet and logs FLEET_JOIN_REDIRECTED events.
         """
         if not isinstance(other_fleet, Fleet):
             return
+
+        # PROJ-222: Redirect all pursuers to other_fleet BEFORE clearing orders
+        # (clear_orders would unregister from targets, but redirect must happen first)
+        redirected = self._pursuer_tracker.redirect_pursuers(other_fleet)
+        if redirected:
+            from game.core.event_logging import log_event
+            from game.strategy.events.event_types import EventType, EventCategory
+            for pursuer, _old_target in redirected:
+                log_event(
+                    EventType.FLEET_JOIN_REDIRECTED,
+                    category=EventCategory.FLEET_OPERATIONS,
+                    empire_id=pursuer.owner_id,
+                    message=f"Fleet {pursuer.id} join order redirected from Fleet {self.id} to Fleet {other_fleet.id}",
+                    fleet_id=pursuer.id,
+                    old_target_id=self.id,
+                    new_target_id=other_fleet.id,
+                )
 
         # Transfer ships
         other_fleet.ships.extend(self.ships)

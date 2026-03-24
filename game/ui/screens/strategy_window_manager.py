@@ -302,7 +302,7 @@ class StrategyWindowManager:
         if self.fleet_orders_window:
             self.fleet_orders_window.kill()
 
-        w, h = 400, 500
+        w, h = 480, 500
         rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
 
         # PROJ-207 Phase 4: Create callback closure for command dispatch

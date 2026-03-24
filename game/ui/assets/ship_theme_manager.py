@@ -124,8 +124,13 @@ class ShipThemeManager(metaclass=SingletonMeta):
             
         # Fallback to default if theme missing
         if theme_name not in self.theme_data:
+            logger.debug(
+                f"load_image: theme '{theme_name}' not in theme_data "
+                f"(available: {list(self.theme_data.keys())}), "
+                f"falling back to '{self.default_theme}'"
+            )
             theme_name = self.default_theme
-            
+
         # Check Cache
         if theme_name in self.themes and ship_class in self.themes[theme_name]:
             return self.themes[theme_name][ship_class]
@@ -238,6 +243,11 @@ class ShipThemeManager(metaclass=SingletonMeta):
 
         # Fallback to default if theme missing
         if theme_name not in self.theme_data:
+            logger.debug(
+                f"get_portrait_image: theme '{theme_name}' not in theme_data "
+                f"(available: {list(self.theme_data.keys())}), "
+                f"falling back to '{self.default_theme}'"
+            )
             theme_name = self.default_theme
 
         # Check cache

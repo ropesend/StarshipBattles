@@ -255,6 +255,32 @@ class EventLogWindow(UIWindow):
                 btn.unselect()
 
     # ------------------------------------------------------------------
+    # Update loop
+    # ------------------------------------------------------------------
+
+    def update(self, time_delta: float) -> None:
+        """Update loop - check header presses for column swap/sort."""
+        super().update(time_delta)
+
+        if not self.virtual_table:
+            return
+
+        # Check header buttons for sort/swap changes
+        header_result = self.virtual_table.check_header_presses()
+        swap_col = header_result.get('swap_column')
+
+        if swap_col:
+            col_dict, direction = swap_col
+            self.column_manager.swap_column(col_dict['id'], direction)
+            self.virtual_table.rebuild_headers()
+            self.virtual_table.rebuild_row_pool()
+            self._rebuild_list()
+
+        # Update visible rows if scroll position changed
+        if self.virtual_table.scroll_bar.check_has_moved_recently():
+            self.virtual_table.update_visible_rows()
+
+    # ------------------------------------------------------------------
     # Events
     # ------------------------------------------------------------------
 

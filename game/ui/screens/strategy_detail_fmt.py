@@ -279,8 +279,6 @@ def _format_orders(fleet: IFleet) -> str:
     """
     Format fleet orders as numbered HTML list.
 
-    Handles MOVE, COLONIZE, BUILD, TRANSFER, and generic order types.
-
     Args:
         fleet: Fleet object (IFleet protocol)
 
@@ -296,8 +294,13 @@ def _format_orders(fleet: IFleet) -> str:
         if order.type == OrderType.MOVE:
             text += f" {i+1}. MOVE {order.target}<br>"
         elif order.type == OrderType.WARP:
-            # PROJ-187: Display WARP order with target warp point hex
             text += f" {i+1}. WARP through {order.target}<br>"
+        elif order.type == OrderType.MOVE_TO_FLEET:
+            f_id = order.target.id if is_fleet(order.target) else "?"
+            text += f" {i+1}. Intercept Fleet {f_id}<br>"
+        elif order.type == OrderType.JOIN_FLEET:
+            f_id = order.target.id if is_fleet(order.target) else "?"
+            text += f" {i+1}. Join Fleet {f_id}<br>"
         elif order.type == OrderType.COLONIZE:
             p_name = order.target.name if order.target else 'Unknown'
             text += f" {i+1}. COLONIZE {p_name}<br>"
@@ -313,6 +316,10 @@ def _format_orders(fleet: IFleet) -> str:
                 text += f" {i+1}. {direction.upper()} {amt_str} {cargo_type}<br>"
             else:
                 text += f" {i+1}. TRANSFER {order.target}<br>"
+        elif order.type == OrderType.LOAD_POPULATION:
+            text += f" {i+1}. Load Cargo<br>"
+        elif order.type == OrderType.UNLOAD_POPULATION:
+            text += f" {i+1}. Drop Cargo<br>"
         elif order.type == OrderType.OPEN_WARP_POINT:
             if isinstance(order.target, dict):
                 target_name = order.target.get('target_system_name', 'Unknown')
@@ -322,6 +329,13 @@ def _format_orders(fleet: IFleet) -> str:
         elif order.type == OrderType.CLOSE_WARP_POINT:
             dest = order.target if isinstance(order.target, str) else "Unknown"
             text += f" {i+1}. CLOSE WARP POINT -> {dest}<br>"
+        elif order.type == OrderType.IMPLODE_PLANET:
+            p_name = order.target.name if is_planet(order.target) else 'Unknown'
+            text += f" {i+1}. Implode {p_name}<br>"
+        elif order.type == OrderType.STELLERATE_STAR:
+            text += f" {i+1}. Stellerate Star<br>"
+        elif order.type == OrderType.CREATE_DYSON_SPHERE:
+            text += f" {i+1}. Create Dyson Sphere<br>"
         else:
             text += f" {i+1}. {order.type.name}<br>"
 

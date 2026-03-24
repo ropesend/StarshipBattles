@@ -111,6 +111,18 @@ class FleetOrderProcessor:
             logger.debug(f"FleetOrderProcessor: Fleet {fleet.id} merging into {target_fleet.id}")
             fleet.merge_with(target_fleet)
             empire.remove_fleet(fleet)
+            # PROJ-222: Log FLEET_JOINED event
+            from game.core.event_logging import log_event
+            from game.strategy.events.event_types import EventType, EventCategory
+            log_event(
+                EventType.FLEET_JOINED,
+                category=EventCategory.FLEET_OPERATIONS,
+                empire_id=empire.id,
+                message=f"Fleet {fleet.id} joined Fleet {target_fleet.id}",
+                fleet_id=fleet.id,
+                target_fleet_id=target_fleet.id,
+                ship_count=len(target_fleet.ships),
+            )
             return JoinFleetResult(merged=True)
         else:
             # Not at location yet
@@ -669,10 +681,24 @@ class FleetOrderProcessor:
                         if fleet.location == target_fleet.location:
                             logger.debug(f"FleetOrderProcessor [Instant]: Fleet {fleet.id} merging into {target_fleet.id}")
                             fleet.merge_with(target_fleet)
-                            fleets_to_remove.append((empire, fleet))
+                            fleets_to_remove.append((empire, fleet, target_fleet))
 
-        # Remove merged fleets
-        for empire, fleet in fleets_to_remove:
+        # Remove merged fleets and log events
+        from game.core.event_logging import log_event
+        from game.strategy.events.event_types import EventType, EventCategory
+        result = []
+        for empire, fleet, target_fleet in fleets_to_remove:
             empire.remove_fleet(fleet)
+            # PROJ-222: Log FLEET_JOINED event
+            log_event(
+                EventType.FLEET_JOINED,
+                category=EventCategory.FLEET_OPERATIONS,
+                empire_id=empire.id,
+                message=f"Fleet {fleet.id} joined Fleet {target_fleet.id}",
+                fleet_id=fleet.id,
+                target_fleet_id=target_fleet.id,
+                ship_count=len(target_fleet.ships),
+            )
+            result.append((empire, fleet))
 
-        return fleets_to_remove
+        return result

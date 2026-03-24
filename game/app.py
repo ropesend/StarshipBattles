@@ -264,7 +264,8 @@ class Game:
             # Pre-build homeworld complexes (same as quickstart)
             from game.strategy.quickstart_builder import QuickstartBuilder
             empire_ids = [e.id for e in session.empires]
-            QuickstartBuilder.copy_quickstart_designs(save_path, empire_ids)
+            empire_themes = {e.id: e.empire_theme_id for e in session.empires}
+            QuickstartBuilder.copy_quickstart_designs(save_path, empire_ids, empire_themes=empire_themes)
             QuickstartBuilder.spawn_initial_complexes(save_path, session)
 
             # Create strategy scene with new session
@@ -318,8 +319,9 @@ class Game:
             session.save_path = save_path
             logger.info(f"Quickstart {player_count}P save created: {save_path}")
 
-            # Copy quickstart designs for empires
-            QuickstartBuilder.copy_quickstart_designs(save_path, empire_ids)
+            # Copy quickstart designs for empires (BUG-102: apply empire themes)
+            empire_themes = {e.id: e.empire_theme_id for e in session.empires}
+            QuickstartBuilder.copy_quickstart_designs(save_path, empire_ids, empire_themes=empire_themes)
 
             # Spawn initial complexes on home planets
             QuickstartBuilder.spawn_initial_complexes(save_path, session)

@@ -124,10 +124,21 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
         total_h = len(orders) * (row_height + gap) + 10
         self.list_container.set_scrollable_area_dimensions((self.list_container.rect.width - 20, total_h))
         
+        # Calculate button positions relative to container width
+        content_width = self.list_container.get_container().get_rect().width
+        btn_size = 30
+        btn_gap = 5
+        # Buttons anchored to right edge: [up] [down] [del]
+        btn_del_x = content_width - btn_size - btn_gap
+        btn_down_x = btn_del_x - btn_size - btn_gap
+        btn_up_x = btn_down_x - btn_size - btn_gap
+        # Description fills space between index label and first button
+        desc_x = 40
+        desc_width = btn_up_x - desc_x - btn_gap
+
         for i, order in enumerate(orders):
             row_y = y_offset + i * (row_height + gap)
-            
-            # Row Container (Virtual or just positioning)
+
             # 1. Index Label
             lbl_idx = pygame_gui.elements.UILabel(
                 relative_rect=pygame.Rect(5, row_y, 30, row_height),
@@ -135,37 +146,37 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
                 manager=self.ui_manager,
                 container=self.list_container
             )
-            
+
             # 2. Description
             desc = self._get_order_description(order)
             lbl_desc = pygame_gui.elements.UILabel(
-                relative_rect=pygame.Rect(40, row_y, 260, row_height),
+                relative_rect=pygame.Rect(desc_x, row_y, desc_width, row_height),
                 text=desc,
                 manager=self.ui_manager,
                 container=self.list_container
             )
-            
-            # 3. Controls (Up, Down, Delete)
+
+            # 3. Controls (Up, Down, Delete) — positioned relative to container width
             btn_up = pygame_gui.elements.UIButton(
-                relative_rect=pygame.Rect(310, row_y, 30, row_height),
+                relative_rect=pygame.Rect(btn_up_x, row_y, btn_size, row_height),
                 text="^",
                 manager=self.ui_manager,
                 container=self.list_container,
-                object_id=f"#up_{i}" # Tag for event handling
+                object_id=f"#up_{i}"
             )
             if i == 0: btn_up.disable()
-            
+
             btn_down = pygame_gui.elements.UIButton(
-                relative_rect=pygame.Rect(345, row_y, 30, row_height),
+                relative_rect=pygame.Rect(btn_down_x, row_y, btn_size, row_height),
                 text="v",
                 manager=self.ui_manager,
                 container=self.list_container,
                 object_id=f"#down_{i}"
             )
             if i == len(orders) - 1: btn_down.disable()
-            
+
             btn_del = pygame_gui.elements.UIButton(
-                relative_rect=pygame.Rect(380, row_y, 30, row_height),
+                relative_rect=pygame.Rect(btn_del_x, row_y, btn_size, row_height),
                 text="X",
                 manager=self.ui_manager,
                 container=self.list_container,

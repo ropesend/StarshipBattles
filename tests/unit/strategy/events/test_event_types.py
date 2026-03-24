@@ -25,9 +25,19 @@ class TestEventType:
     def test_resource_shortage_value(self) -> None:
         assert EventType.RESOURCE_SHORTAGE == "resource_shortage"
 
-    def test_has_eleven_members(self) -> None:
+    def test_fleet_joined_value(self) -> None:
+        assert EventType.FLEET_JOINED == "fleet_joined"
+
+    def test_fleet_join_redirected_value(self) -> None:
+        assert EventType.FLEET_JOIN_REDIRECTED == "fleet_join_redirected"
+
+    def test_fleet_join_cancelled_value(self) -> None:
+        assert EventType.FLEET_JOIN_CANCELLED == "fleet_join_cancelled"
+
+    def test_has_fourteen_members(self) -> None:
         # Original 4 + 6 superweapon events (PROJ-102) + RESOURCE_SHORTAGE (FEAT-09)
-        assert len(EventType) == 11
+        # + 3 fleet events (PROJ-222)
+        assert len(EventType) == 14
 
 
 class TestEventCategory:
@@ -49,6 +59,9 @@ class TestEventCategory:
         for member in EventCategory:
             assert isinstance(member.value, str)
 
-    def test_has_five_members(self) -> None:
-        # Original 4 + SUPERWEAPONS (PROJ-102)
-        assert len(EventCategory) == 5
+    def test_fleet_operations_value(self) -> None:
+        assert EventCategory.FLEET_OPERATIONS == "fleet_operations"
+
+    def test_has_six_members(self) -> None:
+        # Original 4 + SUPERWEAPONS (PROJ-102) + FLEET_OPERATIONS (PROJ-222)
+        assert len(EventCategory) == 6

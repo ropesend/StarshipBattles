@@ -112,5 +112,54 @@ def test_clear_orders_requires_callback(manager, fleet):
     assert len(fleet.orders) == 1  # Orders NOT cleared - callback required
 
 
+def test_buttons_fit_within_container(manager, fleet):
+    """BUG-105: All row buttons (up, down, delete) must fit within the container width."""
+    # Use the default window width from strategy_window_manager (480px)
+    window = FleetOrdersWindow(pygame.Rect(0, 0, 480, 500), manager, fleet)
+
+    fleet.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(1, 1)))
+    fleet.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(2, 2)))
+    window.update(0.1)
+
+    assert len(window.rows) == 2
+
+    # Get the container's usable width (the scrollable area width)
+    container_width = window.list_container.get_container().get_rect().width
+
+    for row in window.rows:
+        # The delete button is the rightmost element — its right edge must fit
+        del_rect = row['del'].relative_rect
+        assert del_rect.right <= container_width, (
+            f"Delete button right edge ({del_rect.right}) exceeds "
+            f"container width ({container_width})"
+        )
+        # Down button must also fit
+        down_rect = row['down'].relative_rect
+        assert down_rect.right <= container_width, (
+            f"Down button right edge ({down_rect.right}) exceeds "
+            f"container width ({container_width})"
+        )
+
+
+def test_buttons_use_relative_positioning(manager, fleet):
+    """BUG-105: Button positions should adapt to different window widths."""
+    # Create two windows with different widths
+    narrow = FleetOrdersWindow(pygame.Rect(0, 0, 480, 500), manager, fleet)
+    wide = FleetOrdersWindow(pygame.Rect(0, 0, 600, 500), manager, fleet)
+
+    fleet.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(1, 1)))
+    narrow.update(0.1)
+    wide.update(0.1)
+
+    # Delete button X position should differ between narrow and wide windows
+    narrow_del_x = narrow.rows[0]['del'].relative_rect.x
+    wide_del_x = wide.rows[0]['del'].relative_rect.x
+
+    assert wide_del_x > narrow_del_x, (
+        f"Button positions should be relative to container width. "
+        f"Narrow delete X={narrow_del_x}, Wide delete X={wide_del_x}"
+    )
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

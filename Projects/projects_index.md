@@ -4,14 +4,15 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-221 | Build Queue Configurable Columns & Column Swap Fix | Planning | 2026-03-14 | 2026-03-14 |
-| PROJ-220 | Tri-State Filter Widget & Filter Unification | Planning | 2026-03-14 | 2026-03-14 |
+| PROJ-222 | Fleet Join Order Redirect and Pursuer Tracking | Planning | 2026-03-24 | 2026-03-24 |
 | PROJ-207 | Fleet Order System Unification | Planning | 2026-02-27 | 2026-02-27 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-220 | Tri-State Filter Widget & Filter Unification | Archived | 2026-03-14 | 2026-03-24 |
+| PROJ-221 | Build Queue Configurable Columns & Column Swap Fix | Archived | 2026-03-14 | 2026-03-24 |
 | PROJ-219 | Fleet Registration Consolidation | Archived | 2026-02-28 | 2026-03-14 |
 | PROJ-218 | Fix Production Queue Cost and Build Time Defaults | Archived | 2026-02-28 | 2026-03-14 |
 | PROJ-217 | Standardize Star Measurement to Radius | Archived | 2026-02-28 | 2026-03-14 |
@@ -30,8 +31,6 @@ w# Projects Index
 | PROJ-202 | Reduce complexity: StrategyRenderer._draw_systems (CC 29) | Archived | 2026-02-27 | 2026-02-27 |
 | PROJ-201 | Reduce complexity: FleetDataSource._get_column_value (CC 29) | Archived | 2026-02-27 | 2026-02-27 |
 | PROJ-200 | Reduce complexity: filter_ships (CC 36) | Archived | 2026-02-27 | 2026-02-27 |
-| PROJ-199 | Duck Typing Cleanup - Lazy Init and CompDef Centralization | Archived | 2026-02-25 | 2026-02-27 |
-| PROJ-198 | UI Layer Duck Typing Elimination - Strategy Screens & Services | Archived | 2026-02-25 | 2026-02-25 |
 
 ---
 

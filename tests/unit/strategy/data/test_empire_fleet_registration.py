@@ -96,3 +96,67 @@ class TestEmpireFleetAutoRegistration:
         data = empire_with_galaxy.to_dict()
         assert '_galaxy' not in data
         assert 'galaxy' not in data
+
+
+class TestRemoveFleetPursuerCancel:
+    """Tests for pursuer cancellation when fleet is removed (PROJ-222 Phase 4)."""
+
+    def test_remove_fleet_cancels_pursuer_orders(self):
+        """When Fleet B is removed, Fleet A (pursuing B) should have its orders cancelled."""
+        from game.strategy.data.order_types import FleetOrder, OrderType
+
+        empire = Empire(0, "Test", (255, 0, 0))
+        fleet_a = Fleet(1, 0, HexCoord(0, 0))
+        fleet_b = Fleet(2, 0, HexCoord(5, 5))
+
+        empire.add_fleet(fleet_a)
+        empire.add_fleet(fleet_b)
+
+        # A pursues B
+        fleet_a.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=fleet_b))
+        fleet_a.add_order(FleetOrder(OrderType.JOIN_FLEET, target=fleet_b))
+        fleet_b.pursuer_tracker.add_pursuer(fleet_a)
+
+        # B is destroyed
+        empire.remove_fleet(fleet_b)
+
+        # A's targeting orders should be removed
+        assert len(fleet_a.orders) == 0
+        assert fleet_b.pursuer_tracker.pursuer_count == 0
+
+    def test_remove_fleet_no_pursuers(self):
+        """Removing a fleet with no pursuers should not error."""
+        empire = Empire(0, "Test", (255, 0, 0))
+        fleet = Fleet(1, 0, HexCoord(0, 0))
+        empire.add_fleet(fleet)
+
+        # Should not raise
+        empire.remove_fleet(fleet)
+        assert fleet not in empire.fleets
+
+    def test_remove_fleet_preserves_non_targeting_orders(self):
+        """Only orders targeting the removed fleet are cancelled."""
+        from game.strategy.data.order_types import FleetOrder, OrderType
+
+        empire = Empire(0, "Test", (255, 0, 0))
+        fleet_a = Fleet(1, 0, HexCoord(0, 0))
+        fleet_b = Fleet(2, 0, HexCoord(5, 5))
+        fleet_c = Fleet(3, 0, HexCoord(10, 10))
+
+        empire.add_fleet(fleet_a)
+        empire.add_fleet(fleet_b)
+        empire.add_fleet(fleet_c)
+
+        # A has orders targeting both B and C
+        fleet_a.add_order(FleetOrder(OrderType.MOVE, target=HexCoord(3, 3)))
+        fleet_a.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=fleet_b))
+        fleet_a.add_order(FleetOrder(OrderType.MOVE_TO_FLEET, target=fleet_c))
+        fleet_b.pursuer_tracker.add_pursuer(fleet_a)
+
+        # B is destroyed
+        empire.remove_fleet(fleet_b)
+
+        # Only B-targeting order removed; MOVE and C-targeting preserved
+        assert len(fleet_a.orders) == 2
+        assert fleet_a.orders[0].target == HexCoord(3, 3)
+        assert fleet_a.orders[1].target is fleet_c

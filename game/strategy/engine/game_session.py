@@ -350,6 +350,17 @@ class GameSession:
             for fleet in empire.fleets:
                 fleet.resolve_order_references(session.galaxy, session.empires)
 
+        # PROJ-222: Rebuild pursuer tracker from resolved order references.
+        # After resolve_order_references(), order targets are live Fleet objects.
+        # Scan all orders and register pursuers with their targets.
+        from game.strategy.data.order_types import OrderType
+        for empire in session.empires:
+            for fleet in empire.fleets:
+                for order in fleet.orders:
+                    if order.type in (OrderType.MOVE_TO_FLEET, OrderType.JOIN_FLEET):
+                        if hasattr(order.target, 'pursuer_tracker'):
+                            order.target.pursuer_tracker.add_pursuer(fleet)
+
         # Set convenience references
         session.player_empire = session.empires[0] if len(session.empires) > 0 else None
         session.enemy_empire = session.empires[1] if len(session.empires) > 1 else None

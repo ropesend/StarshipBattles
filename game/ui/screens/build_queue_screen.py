@@ -270,6 +270,7 @@ class BuildQueueScreen:
 
         PROJ-208: Routes build queue removals (drag-from-queue) through CQRS command system.
         PROJ-208 Phase 3: Route through facade for CQRS consistency.
+        BUG-103: Pass queue_id for multi-queue entities (facility queues).
 
         Args:
             item_index: Index of the item to remove from the active queue.
@@ -286,11 +287,13 @@ class BuildQueueScreen:
 
         entity_type = "planet" if hasattr(entity, 'planet_type') else "fleet"
         entity_id = getattr(entity, 'id', 0)
+        queue_id = getattr(source, 'queue_id', None) if source is not None else None
 
         cmd = RemoveFromConstructionQueueCommand(
             entity_id=entity_id,
             entity_type=entity_type,
             item_index=item_index,
+            queue_id=queue_id,
         )
         # PROJ-208 Phase 3: Route through facade if available, fallback to session
         if self.facade:

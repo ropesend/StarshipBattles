@@ -10,10 +10,13 @@ Cross-layer imports (acceptable for UI display):
 """
 from __future__ import annotations
 
+import logging
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIButton, UIScrollingContainer, UIImage
 from typing import Dict, Optional, Tuple, List, TYPE_CHECKING
+
+logger = logging.getLogger(__name__)
 
 from game.core.constants import LayerType, ResourceType  # Canonical location for LayerType
 from game.ui.assets import ShipThemeManager
@@ -190,6 +193,7 @@ class ShipDetailPanel:
         # Get theme and ship class
         theme_id = ship.design_data.get('theme_id', 'Federation')
         ship_class = ship.design_data.get('ship_class', 'Unknown')
+        logger.debug(f"ShipDetailPanel: building display for theme_id='{theme_id}', ship_class='{ship_class}'")
         theme_mgr = ShipThemeManager.instance()
 
         # Portrait image (left)

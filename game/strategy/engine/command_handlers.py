@@ -213,6 +213,60 @@ class BaseCommandHandler:
 
         return planet
 
+    @staticmethod
+    def _resolve_build_entity(session: 'GameSession', entity_id: int, entity_type: str):
+        """Resolve a planet or fleet by ID and type.
+
+        BUG-103: Extracted to BaseCommandHandler for shared use by all
+        construction queue handlers.
+
+        Args:
+            session: Game session for lookups.
+            entity_id: ID of the entity.
+            entity_type: "planet" or "fleet".
+
+        Returns:
+            Planet or Fleet object, or None if not found.
+        """
+        if entity_type == "planet":
+            return session._get_planet_by_id(entity_id)
+        elif entity_type == "fleet":
+            return session._get_fleet_by_id(entity_id)
+        return None
+
+    @staticmethod
+    def _resolve_queue(entity, queue_id: Optional[str]) -> Optional[list]:
+        """Find the correct construction queue for the entity.
+
+        BUG-103: Extracted to BaseCommandHandler for shared use by all
+        construction queue handlers. Supports multi-queue entities
+        (e.g., planets with shipyard facilities).
+
+        Args:
+            entity: Planet or Fleet entity.
+            queue_id: Optional queue identifier. If None, uses entity.construction_queue.
+
+        Returns:
+            The construction queue list, or None if not found.
+        """
+        # If no queue_id specified, use entity's main queue
+        if queue_id is None:
+            return getattr(entity, 'construction_queue', None)
+
+        # For planets, check if queue_id matches a facility's instance_id
+        if hasattr(entity, 'facilities'):
+            for facility in entity.facilities:
+                if getattr(facility, 'instance_id', None) == queue_id:
+                    return getattr(facility, 'construction_queue', None)
+
+        # Check if queue_id matches base queue pattern (e.g., "planet_100_base")
+        base_queue_pattern = f"planet_{getattr(entity, 'id', '')}_base"
+        if queue_id == base_queue_pattern:
+            return getattr(entity, 'construction_queue', None)
+
+        # Fallback to entity's main queue
+        return getattr(entity, 'construction_queue', None)
+
 
 class CommandHandlerRegistry:
     """Registry for command handlers with dispatch capability."""
@@ -335,9 +389,16 @@ class InterceptCommandHandler(BaseCommandHandler):
         if error:
             return ValidationResult.error("Target fleet not found.")
 
-        # 3. Create MOVE_TO_FLEET order
+        # 3. PROJ-222: Validate not self-targeting
+        if fleet.id == target_fleet.id:
+            return ValidationResult.error("Fleet cannot intercept itself.")
+
+        # 4. Create MOVE_TO_FLEET order
         order = FleetOrder(OrderType.MOVE_TO_FLEET, target=target_fleet)
         fleet.add_order(order)
+
+        # 5. PROJ-222: Register as pursuer
+        target_fleet.pursuer_tracker.add_pursuer(fleet)
 
         logger.info(f"GameSession: Issued Intercept Order for Fleet {fleet.id} -> Fleet {target_fleet.id}")
         return ValidationResult.success()
@@ -358,13 +419,24 @@ class JoinCommandHandler(BaseCommandHandler):
         if error:
             return ValidationResult.error("Target fleet not found.")
 
-        # 3. Create MOVE_TO_FLEET order first
+        # 3. PROJ-222: Validate not self-targeting
+        if fleet.id == target_fleet.id:
+            return ValidationResult.error("Fleet cannot join itself.")
+
+        # 4. PROJ-222: Validate same empire
+        if fleet.owner_id != target_fleet.owner_id:
+            return ValidationResult.error("Cannot join fleet of another empire.")
+
+        # 5. Create MOVE_TO_FLEET order first
         move_order = FleetOrder(OrderType.MOVE_TO_FLEET, target=target_fleet)
         fleet.add_order(move_order)
 
-        # 4. Then create JOIN_FLEET order
+        # 6. Then create JOIN_FLEET order
         join_order = FleetOrder(OrderType.JOIN_FLEET, target=target_fleet)
         fleet.add_order(join_order)
+
+        # 7. PROJ-222: Register as pursuer
+        target_fleet.pursuer_tracker.add_pursuer(fleet)
 
         logger.info(f"GameSession: Issued Join Fleet Order for Fleet {fleet.id} -> Fleet {target_fleet.id}")
         return ValidationResult.success()
@@ -450,9 +522,8 @@ class ClearOrdersCommandHandler(BaseCommandHandler):
         if error:
             return error
 
-        # 2. Clear orders and path
-        fleet.orders = []
-        fleet.path = []
+        # 2. Clear orders and path (PROJ-222: use Fleet API for pursuer cleanup)
+        fleet.clear_orders()
 
         logger.info(f"GameSession: Cleared orders for Fleet {fleet.id}")
         return ValidationResult.success()
@@ -566,8 +637,8 @@ class RemoveBuildOrderCommandHandler(BaseCommandHandler):
         if error:
             return error
 
-        # 2. Remove all BUILD orders
-        fleet.orders = [o for o in fleet.orders if o.type != OrderType.BUILD]
+        # 2. Remove all BUILD orders (PROJ-222: use Fleet API for consistency)
+        fleet.remove_orders_by_type(OrderType.BUILD)
 
         logger.info(f"GameSession: Removed BUILD orders from Fleet {fleet.id}")
         return ValidationResult.success()
@@ -699,12 +770,8 @@ class DeleteFleetOrderCommandHandler(BaseCommandHandler):
         if cmd.order_index < 0 or cmd.order_index >= len(fleet.orders):
             return ValidationResult.error(f"Invalid order index: {cmd.order_index}")
 
-        # 3. Remove the order
-        fleet.orders.pop(cmd.order_index)
-
-        # 4. If active order (index 0) was removed, invalidate path
-        if cmd.order_index == 0:
-            fleet.path = []
+        # 3. Remove the order (PROJ-222: use Fleet API for pursuer cleanup)
+        fleet.remove_order_at(cmd.order_index)
 
         logger.info(f"GameSession: Deleted order {cmd.order_index} from fleet {cmd.fleet_id}")
         return ValidationResult.success()
@@ -836,56 +903,12 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
             logger.warning(f"Failed to calculate design cost for {design_id}: {e}")
             return {}
 
-    def _resolve_queue(self, entity, queue_id: Optional[str]) -> Optional[list]:
-        """Find the correct construction queue for the entity.
-
-        PROJ-208: Supports multi-queue entities (e.g., planets with shipyard facilities).
-
-        Args:
-            entity: Planet or Fleet entity.
-            queue_id: Optional queue identifier. If None, uses entity.construction_queue.
-
-        Returns:
-            The construction queue list, or None if not found.
-        """
-        # If no queue_id specified, use entity's main queue
-        if queue_id is None:
-            return getattr(entity, 'construction_queue', None)
-
-        # For planets, check if queue_id matches a facility's instance_id
-        if hasattr(entity, 'facilities'):
-            for facility in entity.facilities:
-                if getattr(facility, 'instance_id', None) == queue_id:
-                    return getattr(facility, 'construction_queue', None)
-
-        # Check if queue_id matches base queue pattern (e.g., "planet_100_base")
-        base_queue_pattern = f"planet_{getattr(entity, 'id', '')}_base"
-        if queue_id == base_queue_pattern:
-            return getattr(entity, 'construction_queue', None)
-
-        # Fallback to entity's main queue
-        return getattr(entity, 'construction_queue', None)
-
-    def _resolve_build_entity(self, session: 'GameSession', entity_id: int, entity_type: str):
-        """Resolve a planet or fleet by ID and type.
-
-        Args:
-            session: Game session for lookups.
-            entity_id: ID of the entity.
-            entity_type: "planet" or "fleet".
-
-        Returns:
-            Planet or Fleet object, or None if not found.
-        """
-        if entity_type == "planet":
-            return session._get_planet_by_id(entity_id)
-        elif entity_type == "fleet":
-            return session._get_fleet_by_id(entity_id)
-        return None
-
-
 class RemoveFromConstructionQueueCommandHandler(BaseCommandHandler):
-    """Handler for RemoveFromConstructionQueueCommand (PROJ-208 Phase 2)."""
+    """Handler for RemoveFromConstructionQueueCommand (PROJ-208 Phase 2).
+
+    BUG-103: Updated to use _resolve_queue() from BaseCommandHandler for
+    multi-queue entity support (facility queues).
+    """
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle RemoveFromConstructionQueueCommand - remove item from queue.
@@ -898,12 +921,12 @@ class RemoveFromConstructionQueueCommandHandler(BaseCommandHandler):
         if entity is None:
             return ValidationResult.error(f"{cmd.entity_type.capitalize()} not found.")
 
-        # 2. Validate entity has construction_queue
-        if not hasattr(entity, 'construction_queue'):
-            return ValidationResult.error(f"{cmd.entity_type.capitalize()} cannot build.")
+        # 2. Find the correct queue (BUG-103: supports facility queues via queue_id)
+        queue = self._resolve_queue(entity, getattr(cmd, 'queue_id', None))
+        if queue is None:
+            return ValidationResult.error(f"Construction queue not found.")
 
         # 3. Validate index
-        queue = entity.construction_queue
         if cmd.item_index < 0 or cmd.item_index >= len(queue):
             return ValidationResult.error(f"Invalid queue index: {cmd.item_index}")
 
@@ -913,17 +936,13 @@ class RemoveFromConstructionQueueCommandHandler(BaseCommandHandler):
 
         return ValidationResult.success()
 
-    def _resolve_build_entity(self, session: 'GameSession', entity_id: int, entity_type: str):
-        """Resolve a planet or fleet by ID and type."""
-        if entity_type == "planet":
-            return session._get_planet_by_id(entity_id)
-        elif entity_type == "fleet":
-            return session._get_fleet_by_id(entity_id)
-        return None
-
 
 class ReorderConstructionQueueCommandHandler(BaseCommandHandler):
-    """Handler for ReorderConstructionQueueCommand (PROJ-208 Phase 2)."""
+    """Handler for ReorderConstructionQueueCommand (PROJ-208 Phase 2).
+
+    BUG-103: Updated to use _resolve_queue() from BaseCommandHandler for
+    multi-queue entity support (facility queues).
+    """
 
     def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
         """Handle ReorderConstructionQueueCommand - move item to new position.
@@ -935,12 +954,12 @@ class ReorderConstructionQueueCommandHandler(BaseCommandHandler):
         if entity is None:
             return ValidationResult.error(f"{cmd.entity_type.capitalize()} not found.")
 
-        # 2. Validate entity has construction_queue
-        if not hasattr(entity, 'construction_queue'):
-            return ValidationResult.error(f"{cmd.entity_type.capitalize()} cannot build.")
+        # 2. Find the correct queue (BUG-103: supports facility queues via queue_id)
+        queue = self._resolve_queue(entity, getattr(cmd, 'queue_id', None))
+        if queue is None:
+            return ValidationResult.error(f"Construction queue not found.")
 
         # 3. Validate indices
-        queue = entity.construction_queue
         if cmd.from_index < 0 or cmd.from_index >= len(queue):
             return ValidationResult.error(f"Invalid from_index: {cmd.from_index}")
         if cmd.to_index < 0 or cmd.to_index >= len(queue):
@@ -952,14 +971,6 @@ class ReorderConstructionQueueCommandHandler(BaseCommandHandler):
 
         logger.info(f"GameSession: Reordered {cmd.entity_type} {cmd.entity_id} queue {cmd.from_index} -> {cmd.to_index}")
         return ValidationResult.success()
-
-    def _resolve_build_entity(self, session: 'GameSession', entity_id: int, entity_type: str):
-        """Resolve a planet or fleet by ID and type."""
-        if entity_type == "planet":
-            return session._get_planet_by_id(entity_id)
-        elif entity_type == "fleet":
-            return session._get_fleet_by_id(entity_id)
-        return None
 
 
 def create_default_registry() -> CommandHandlerRegistry:

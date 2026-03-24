@@ -126,18 +126,14 @@ class TestRemoveBuildOrderCommand:
         assert cmd.type == CommandType.ISSUE_ORDER
 
     def test_handler_removes_build_orders(self):
-        """Handler should remove all BUILD orders from fleet."""
+        """Handler should call fleet.remove_orders_by_type(BUILD) (PROJ-222: uses Fleet API)."""
         from game.strategy.engine.commands import RemoveBuildOrderCommand
         from game.strategy.engine.command_handlers import RemoveBuildOrderCommandHandler
 
         handler = RemoveBuildOrderCommandHandler()
         session = Mock()
 
-        # Fleet with BUILD and MOVE orders
-        build_order = FleetOrder(OrderType.BUILD)
-        move_order = FleetOrder(OrderType.MOVE, target=Mock())
         mock_fleet = Mock()
-        mock_fleet.orders = [build_order, move_order]
         session._get_fleet_by_id.return_value = mock_fleet
 
         cmd = RemoveBuildOrderCommand(fleet_id=15)
@@ -145,8 +141,7 @@ class TestRemoveBuildOrderCommand:
         result = handler.execute(session, cmd)
 
         assert result.is_valid
-        assert len(mock_fleet.orders) == 1
-        assert mock_fleet.orders[0].type == OrderType.MOVE
+        mock_fleet.remove_orders_by_type.assert_called_once_with(OrderType.BUILD)
 
     def test_handler_does_nothing_if_no_build_order(self):
         """Handler should succeed even if no BUILD order exists."""

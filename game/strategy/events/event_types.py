@@ -17,6 +17,9 @@ class EventType(str, Enum):
     DYSON_SPHERE_CREATED = "dyson_sphere_created"
     SHIPS_SELF_DESTRUCTED = "ships_self_destructed"
     RESOURCE_SHORTAGE = "resource_shortage"
+    FLEET_JOINED = "fleet_joined"
+    FLEET_JOIN_REDIRECTED = "fleet_join_redirected"
+    FLEET_JOIN_CANCELLED = "fleet_join_cancelled"
 
 
 class EventCategory(str, Enum):
@@ -26,4 +29,5 @@ class EventCategory(str, Enum):
     COLONIES = "colonies"
     COMBAT = "combat"
     SUPERWEAPONS = "superweapons"
+    FLEET_OPERATIONS = "fleet_operations"
     ALL = "all"
