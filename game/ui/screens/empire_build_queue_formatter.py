@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from typing import Any, TYPE_CHECKING
 
+from game.ui.utils.formatters import format_compact_number
+
 if TYPE_CHECKING:
     from game.strategy.data.build_queue_source import BuildQueueSource
 
@@ -184,9 +186,4 @@ def get_resource_total_text(source: BuildQueueSource, resource_name: str) -> str
     amount = total_cost.get(resource_name, 0)
     if amount == 0:
         return "0"
-    # Format k/M
-    if amount >= 1000000:
-        return f"{amount / 1000000:.1f}M"
-    if amount >= 1000:
-        return f"{amount // 1000}k"
-    return str(int(amount))
+    return format_compact_number(amount)

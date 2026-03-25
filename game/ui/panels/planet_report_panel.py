@@ -13,6 +13,7 @@ import pygame_gui
 from pygame_gui.elements import UIImage, UITextBox, UIPanel, UIScrollingContainer, UILabel
 from game.ui.screens.strategy_detail_fmt import format_planet_info
 from game.ui.fonts import get_font
+from game.ui.utils.formatters import format_compact_number
 
 if TYPE_CHECKING:
     from game.core.protocols import IPlanet, IFacility
@@ -308,15 +309,6 @@ class PlanetReportPanel:
 
             y_offset += 30  # Gap between items
 
-    def _format_compact_number(self, value: float) -> str:
-        """Format a number with K/M suffixes for compact display."""
-        if value >= 1_000_000:
-            return f"{value / 1_000_000:.1f}M"
-        elif value >= 1_000:
-            return f"{value / 1_000:.0f}k"
-        else:
-            return str(int(value))
-
     def _build_resource_grid(self) -> None:
         """
         Build the resource grid panel with icons, quantity, quality, and production rows.
@@ -370,7 +362,7 @@ class PlanetReportPanel:
             # Quantity label
             qty_label = UILabel(
                 relative_rect=pygame.Rect(col_x, 28, col_w, 20),
-                text=self._format_compact_number(quantity),
+                text=format_compact_number(quantity),
                 manager=self.manager,
                 container=self.resource_panel
             )
@@ -388,7 +380,7 @@ class PlanetReportPanel:
             # Production label
             prod_label = UILabel(
                 relative_rect=pygame.Rect(col_x, 68, col_w, 20),
-                text=self._format_compact_number(production) if production else "0",
+                text=format_compact_number(production) if production else "0",
                 manager=self.manager,
                 container=self.resource_panel
             )

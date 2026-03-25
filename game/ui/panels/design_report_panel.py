@@ -15,11 +15,10 @@ import pygame_gui
 from pygame_gui.elements import UIImage, UILabel, UIPanel, UITextBox
 from typing import Optional, TYPE_CHECKING
 from game.ui.panels.design_stats_panel import DesignStatsPanel
-from game.ui.fonts import get_font
-from game.ui.colors import (
-    SHIP_CLASS_FIGHTER, SHIP_CLASS_CORVETTE, SHIP_CLASS_ESCORT, SHIP_CLASS_DESTROYER,
-    SHIP_CLASS_CRUISER, SHIP_CLASS_BATTLESHIP, SHIP_CLASS_CARRIER, SHIP_CLASS_DEFAULT,
-    WHITE, BLACK, TEXT_ITEM
+from game.ui.utils.portraits import (
+    get_ship_class_color,
+    get_portrait_search_paths,
+    create_placeholder_portrait,
 )
 
 if TYPE_CHECKING:
@@ -170,7 +169,9 @@ class DesignReportPanel:
     def _update_portrait(self, ship: Ship):
         """Update ship portrait image by loading from file system."""
         import os
-        import re
+        import logging
+
+        logger = logging.getLogger(__name__)
 
         # Get portrait dimensions from the UIImage widget
         portrait_rect = self.portrait_image.relative_rect
@@ -180,90 +181,32 @@ class DesignReportPanel:
         # Determine portrait file path
         theme = ship.theme_id
         ship_class = ship.ship_class
-
-        # Ensure ship_class is a string
         if not isinstance(ship_class, str):
             ship_class = str(ship_class) if ship_class else 'Unknown'
 
-        # Parse ship class name (handle formats like "Large Escort (Scout)")
-        match = re.match(r"(.*)\s+\((.*)\)", ship_class)
-        if match:
-            base = match.group(1).strip().replace(" ", "")
-            sub = match.group(2).strip().replace(" ", "")
-            class_clean = f"{sub}{base}"
-        else:
-            class_clean = ship_class.replace(" ", "")
-
-        filename = f"{class_clean}_Portrait.jpg"
-
-        # Try multiple locations for portrait image
-        portrait_paths = [
-            os.path.join("assets", "ShipThemes", theme, "Portraits", filename),
-            os.path.join("resources", "Portraits", theme, filename),
-            os.path.join("resources", "Portraits", theme, f"{ship_class}_Portrait.jpg"),
-            os.path.join("assets", "Images", "Default_Ship_Portrait.png")
-        ]
+        # Try loading from file system using shared search paths
+        portrait_paths = get_portrait_search_paths(theme, ship_class)
 
         portrait_surface = None
         for path in portrait_paths:
             if os.path.exists(path):
                 try:
                     loaded_img = pygame.image.load(path)
-                    portrait_surface = pygame.transform.smoothscale(loaded_img, (portrait_width, portrait_height))
+                    portrait_surface = pygame.transform.smoothscale(
+                        loaded_img, (portrait_width, portrait_height)
+                    )
                     break
                 except (FileNotFoundError, OSError, pygame.error) as e:
-                    import logging
-                    logger = logging.getLogger(__name__)
                     logger.warning(f"Failed to load portrait from {path}: {e}")
                     continue
 
-        # Fallback: Create placeholder portrait if no image found
+        # Fallback: Create placeholder portrait using shared utility
         if portrait_surface is None:
-            portrait_surface = pygame.Surface((portrait_width, portrait_height))
-
-            # Simple gradient based on ship class
-            class_colors = {
-                'Fighter': SHIP_CLASS_FIGHTER,
-                'Corvette': SHIP_CLASS_CORVETTE,
-                'Escort': SHIP_CLASS_ESCORT,
-                'Frigate': SHIP_CLASS_ESCORT,  # Same as Escort
-                'Destroyer': SHIP_CLASS_DESTROYER,
-                'Cruiser': SHIP_CLASS_CRUISER,
-                'Battleship': SHIP_CLASS_BATTLESHIP,
-                'Carrier': SHIP_CLASS_CARRIER
-            }
-
-            base_color = class_colors.get(ship_class, SHIP_CLASS_DEFAULT)
-
-            # Gradient fill
-            for y in range(portrait_height):
-                fade = 1.0 - (y / portrait_height) * 0.4
-                color = tuple(int(c * fade) for c in base_color)
-                pygame.draw.line(portrait_surface, color, (0, y), (portrait_width, y))
-
-            # Add ship name and class
-            # Scale font sizes based on portrait size
-            font_scale = portrait_width / 200.0  # 200 was original portrait size
-            font_large = get_font(int(18 * font_scale), bold=True)
-            font_small = get_font(int(14 * font_scale))
-
-            # Ship name
-            name_text = font_large.render(ship.name[:25], True, WHITE)
-            name_rect = name_text.get_rect(center=(portrait_width // 2, int(portrait_height * 0.45)))
-            # Shadow
-            shadow = font_large.render(ship.name[:25], True, BLACK)
-            shadow_rect = shadow.get_rect(center=(portrait_width // 2 + 1, int(portrait_height * 0.45) + 1))
-            portrait_surface.blit(shadow, shadow_rect)
-            portrait_surface.blit(name_text, name_rect)
-
-            # Ship class
-            if ship_class:
-                class_text = font_small.render(str(ship_class), True, TEXT_ITEM)
-                class_rect = class_text.get_rect(center=(portrait_width // 2, int(portrait_height * 0.55)))
-                portrait_surface.blit(class_text, class_rect)
-
-            # Border
-            pygame.draw.rect(portrait_surface, TEXT_ITEM, (0, 0, portrait_width, portrait_height), 2)
+            base_color = get_ship_class_color(ship_class)
+            portrait_surface = create_placeholder_portrait(
+                portrait_width, portrait_height, base_color,
+                ship.name, subtitle=ship_class,
+            )
 
         # Update UIImage
         self.portrait_image.set_image(portrait_surface)

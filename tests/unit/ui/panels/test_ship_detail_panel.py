@@ -69,32 +69,32 @@ class TestGetDamageColor:
 
         assert color == HP_HEALTHY
 
-    def test_moderate_damage_returns_yellow(self):
-        """HP at 50-75% returns yellow color."""
+    def test_moderate_damage_returns_green(self):
+        """HP at 60% returns green (>= 50% threshold)."""
         from game.ui.panels.ship_detail_panel import get_damage_color
-        from game.ui.colors import HP_DAMAGED
+        from game.ui.colors import HP_HEALTHY
 
         color = get_damage_color(0.60)
 
-        assert color == HP_DAMAGED
+        assert color == HP_HEALTHY
 
-    def test_boundary_50_returns_yellow(self):
-        """HP at exactly 50% returns yellow (boundary test)."""
+    def test_boundary_50_returns_green(self):
+        """HP at exactly 50% returns green (healthy threshold)."""
         from game.ui.panels.ship_detail_panel import get_damage_color
-        from game.ui.colors import HP_DAMAGED
+        from game.ui.colors import HP_HEALTHY
 
         color = get_damage_color(0.50)
 
-        assert color == HP_DAMAGED
+        assert color == HP_HEALTHY
 
-    def test_critical_damage_returns_red(self):
-        """HP at 1-50% returns red color."""
+    def test_moderate_damage_returns_yellow(self):
+        """HP at 25-49% returns yellow color."""
         from game.ui.panels.ship_detail_panel import get_damage_color
-        from game.ui.colors import HP_CRITICAL
+        from game.ui.colors import HP_DAMAGED
 
-        color = get_damage_color(0.25)
+        color = get_damage_color(0.35)
 
-        assert color == HP_CRITICAL
+        assert color == HP_DAMAGED
 
     def test_nearly_destroyed_returns_red(self):
         """HP at 1% returns red color."""

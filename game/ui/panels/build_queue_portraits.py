@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 import os
-import re
 from typing import TYPE_CHECKING, Optional, Dict
 
 import pygame
@@ -19,6 +18,7 @@ from game.ui.colors import (
     VEHICLE_SHIP, VEHICLE_FIGHTER, VEHICLE_STATION, VEHICLE_COMPLEX,
     TEXT_DIM, WHITE
 )
+from game.ui.utils.portraits import get_portrait_search_paths
 
 logger = logging.getLogger(__name__)
 
@@ -97,23 +97,8 @@ class BuildQueuePortraitLoader:
         if not isinstance(ship_class, str):
             ship_class = str(ship_class) if ship_class else 'Unknown'
 
-        # Parse ship class name (handle formats like "Large Escort (Scout)")
-        match = re.match(r"(.*)\s+\((.*)\)", ship_class)
-        if match:
-            base = match.group(1).strip().replace(" ", "")
-            sub = match.group(2).strip().replace(" ", "")
-            class_clean = f"{sub}{base}"
-        else:
-            class_clean = ship_class.replace(" ", "")
-
-        filename = f"{class_clean}_Portrait.jpg"
-
-        # Try multiple locations for portrait image
-        portrait_paths = [
-            os.path.join("assets", "ShipThemes", theme, "Portraits", filename),
-            os.path.join("resources", "Portraits", theme, filename),
-            os.path.join("assets", "Images", "Default_Ship_Portrait.png")
-        ]
+        # Use shared portrait search paths
+        portrait_paths = get_portrait_search_paths(theme, ship_class)
 
         for path in portrait_paths:
             if os.path.exists(path):

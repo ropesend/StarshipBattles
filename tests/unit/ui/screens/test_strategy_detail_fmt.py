@@ -821,7 +821,7 @@ class TestFormatPlanetInfo:
 
         result = format_planet_info(mock_planet)
 
-        assert "5K" in result or "6K" in result  # Rounding
+        assert "5k" in result or "6k" in result  # Rounding
 
     def test_happiness_indicators(self, mock_planet):
         """Test happiness indicators display."""

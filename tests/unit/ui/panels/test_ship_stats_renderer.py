@@ -152,13 +152,13 @@ class TestGetHpBarColor:
         assert color == COMPONENT_INACTIVE_BG
 
     def test_boundary_fifty_percent(self):
-        """Exactly 50% returns yellow (not green)."""
+        """Exactly 50% returns green (healthy threshold)."""
         from game.ui.panels.ship_stats_renderer import get_hp_bar_color
-        from game.ui.colors import HP_DAMAGED
+        from game.ui.colors import HP_HEALTHY
 
         color = get_hp_bar_color(0.5, is_active=True)
 
-        assert color == HP_DAMAGED
+        assert color == HP_HEALTHY
 
     def test_boundary_twenty_percent(self):
         """Exactly 20% returns red (not yellow)."""

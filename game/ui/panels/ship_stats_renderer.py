@@ -24,6 +24,7 @@ from game.ui.colors import (
     AI_STRATEGY_TEXT, METADATA_FILE_TEXT, SEEKER_TITLE, WEAPON_INACTIVE, WEAPON_INACTIVE_STATUS,
     CREW_LOW
 )
+from game.ui.utils.formatters import get_damage_color
 from game.core.constants import CombatConstants, LayerType, ResourceType
 
 
@@ -90,6 +91,10 @@ def get_component_status_display(comp):
 def get_hp_bar_color(hp_pct, is_active=True):
     """Get the appropriate color for an HP bar.
 
+    Delegates to the shared ``get_damage_color`` utility for HP-based
+    color mapping, but returns ``COMPONENT_INACTIVE_BG`` for inactive
+    components (specific to combat HP bar rendering).
+
     Args:
         hp_pct: HP percentage (0.0 to 1.0)
         is_active: Whether the component is active
@@ -99,11 +104,7 @@ def get_hp_bar_color(hp_pct, is_active=True):
     """
     if not is_active:
         return COMPONENT_INACTIVE_BG
-    if hp_pct > 0.5:
-        return HP_HEALTHY
-    elif hp_pct > 0.2:
-        return HP_DAMAGED
-    return HP_CRITICAL
+    return get_damage_color(hp_pct)
 
 
 def draw_ship_resources(surface, ship: 'ICombatShip', x_indent, y, bar_w, bar_h, font):

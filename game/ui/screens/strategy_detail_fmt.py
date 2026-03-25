@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 
 from game.core.constants import EARTH_MASS
 from game.core.string_utils import display_name
+from game.ui.utils.formatters import format_compact_number
 from game.strategy.data.order_types import OrderType
 from game.core.protocols import (
     is_star_system, is_star, is_planet, is_fleet,
@@ -107,20 +108,8 @@ def format_planet_info(planet: IPlanet) -> str:
         max_pop = planet.max_population
 
         if total_pop > 0 or max_pop > 0:
-            # Format population with K/M suffixes
-            if total_pop >= 1_000_000:
-                pop_str = f"{total_pop / 1_000_000:.1f}M"
-            elif total_pop >= 1_000:
-                pop_str = f"{total_pop / 1_000:.0f}K"
-            else:
-                pop_str = str(total_pop)
-
-            if max_pop >= 1_000_000:
-                max_str = f"{max_pop / 1_000_000:.1f}M"
-            elif max_pop >= 1_000:
-                max_str = f"{max_pop / 1_000:.0f}K"
-            else:
-                max_str = str(max_pop)
+            pop_str = format_compact_number(total_pop)
+            max_str = format_compact_number(max_pop)
 
             text += f"<br><b>Population:</b> {pop_str} / {max_str}<br>"
 
@@ -135,10 +124,7 @@ def format_planet_info(planet: IPlanet) -> str:
                     else:
                         h_icon = "-"
 
-                    if pop.count >= 1_000:
-                        cnt_str = f"{pop.count / 1_000:.0f}K"
-                    else:
-                        cnt_str = str(pop.count)
+                    cnt_str = format_compact_number(pop.count)
 
                     text += f" - {pop.race_id}: {cnt_str} [{h_icon}]<br>"
 

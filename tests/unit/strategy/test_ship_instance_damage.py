@@ -181,20 +181,20 @@ class TestShipDetailPanelHelper:
         assert color == HP_HEALTHY
 
     def test_get_damage_color_yellow(self):
-        """Medium HP should return yellow color."""
+        """Medium HP (25-49%) should return yellow color."""
         from game.ui.panels.ship_detail_panel import get_damage_color
         from game.ui.colors import HP_DAMAGED
 
-        color = get_damage_color(0.6)  # 60%
+        color = get_damage_color(0.35)  # 35%
 
         assert color == HP_DAMAGED
 
     def test_get_damage_color_red(self):
-        """Low HP should return red color."""
+        """Low HP (<25%) should return red color."""
         from game.ui.panels.ship_detail_panel import get_damage_color
         from game.ui.colors import HP_CRITICAL
 
-        color = get_damage_color(0.3)  # 30%
+        color = get_damage_color(0.15)  # 15%
 
         assert color == HP_CRITICAL
 

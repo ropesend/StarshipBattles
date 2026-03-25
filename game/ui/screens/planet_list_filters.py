@@ -4,6 +4,7 @@ This module contains the filtering and sorting logic for the planet list,
 separated from the UI rendering code.
 """
 from game.core.constants import EARTH_MASS
+from game.ui.utils.formatters import format_compact_number
 
 
 def gather_planets(galaxy, empire):
@@ -298,13 +299,7 @@ def get_resource_str(planet, resource_name):
     if resource_name in planet.resources:
         resource = planet.resources[resource_name]
         quantity = resource['quantity']
-        # Format k/M
-        if quantity >= 1000000:
-            quantity_str = f"{quantity/1000000:.1f}M"
-        elif quantity >= 1000:
-            quantity_str = f"{quantity/1000:.0f}k"
-        else:
-            quantity_str = str(quantity)
+        quantity_str = format_compact_number(quantity)
 
         quality = resource['quality']
         return f"{quantity_str} (Q{quality:.0f})"

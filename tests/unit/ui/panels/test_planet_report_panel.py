@@ -240,62 +240,32 @@ class TestComplexesList:
 # --- Number Formatting Tests ---
 
 class TestNumberFormatting:
-    """Tests for compact number formatting."""
+    """Tests for compact number formatting (delegated to shared utility)."""
 
     def test_format_small_number(self):
         """Numbers < 1000 display as integers."""
-        from game.ui.panels.planet_report_panel import PlanetReportPanel
-
-        with patch.object(PlanetReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = PlanetReportPanel.__new__(PlanetReportPanel)
-
-        result = panel._format_compact_number(500)
-
-        assert result == "500"
+        from game.ui.utils.formatters import format_compact_number
+        assert format_compact_number(500) == "500"
 
     def test_format_thousand(self):
         """Numbers 1000-999999 display with 'k' suffix."""
-        from game.ui.panels.planet_report_panel import PlanetReportPanel
-
-        with patch.object(PlanetReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = PlanetReportPanel.__new__(PlanetReportPanel)
-
-        result = panel._format_compact_number(5000)
-
-        assert result == "5k"
+        from game.ui.utils.formatters import format_compact_number
+        assert format_compact_number(5000) == "5k"
 
     def test_format_large_thousand(self):
         """Large thousands format correctly."""
-        from game.ui.panels.planet_report_panel import PlanetReportPanel
-
-        with patch.object(PlanetReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = PlanetReportPanel.__new__(PlanetReportPanel)
-
-        result = panel._format_compact_number(500000)
-
-        assert result == "500k"
+        from game.ui.utils.formatters import format_compact_number
+        assert format_compact_number(500000) == "500k"
 
     def test_format_million(self):
         """Numbers >= 1000000 display with 'M' suffix."""
-        from game.ui.panels.planet_report_panel import PlanetReportPanel
-
-        with patch.object(PlanetReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = PlanetReportPanel.__new__(PlanetReportPanel)
-
-        result = panel._format_compact_number(5000000)
-
-        assert result == "5.0M"
+        from game.ui.utils.formatters import format_compact_number
+        assert format_compact_number(5000000) == "5.0M"
 
     def test_format_million_decimal(self):
         """Millions display with one decimal place."""
-        from game.ui.panels.planet_report_panel import PlanetReportPanel
-
-        with patch.object(PlanetReportPanel, '__init__', lambda self, *a, **kw: None):
-            panel = PlanetReportPanel.__new__(PlanetReportPanel)
-
-        result = panel._format_compact_number(1500000)
-
-        assert result == "1.5M"
+        from game.ui.utils.formatters import format_compact_number
+        assert format_compact_number(1500000) == "1.5M"
 
 
 # --- Resource Grid Tests ---

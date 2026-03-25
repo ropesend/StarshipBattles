@@ -14,41 +14,18 @@ import logging
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIButton, UIScrollingContainer, UIImage
-from typing import Dict, Optional, Tuple, List, TYPE_CHECKING
+from typing import Dict, Optional, List, TYPE_CHECKING
 
 logger = logging.getLogger(__name__)
 
 from game.core.constants import LayerType, ResourceType  # Canonical location for LayerType
 from game.core.string_utils import display_name
 from game.ui.assets import ShipThemeManager
-from game.ui.colors import HP_HEALTHY, HP_DAMAGED, HP_CRITICAL, HP_DESTROYED, BAR_BG, BAR_BORDER
+from game.ui.colors import BAR_BG, BAR_BORDER
+from game.ui.utils.formatters import get_damage_color
 
 if TYPE_CHECKING:
     from game.strategy.data.ship_instance import ShipInstance
-
-
-def get_damage_color(hp_percentage: float) -> Tuple[int, int, int]:
-    """
-    Get color representing damage level.
-
-    Args:
-        hp_percentage: HP as fraction 0.0-1.0
-
-    Returns:
-        RGB tuple for damage visualization:
-        - Green for >75%
-        - Yellow for 50-75%
-        - Red for 1-50%
-        - Gray for 0% (destroyed)
-    """
-    if hp_percentage <= 0:
-        return HP_DESTROYED
-    elif hp_percentage < 0.5:
-        return HP_CRITICAL
-    elif hp_percentage < 0.75:
-        return HP_DAMAGED
-    else:
-        return HP_HEALTHY
 
 
 class ShipDetailPanel:
