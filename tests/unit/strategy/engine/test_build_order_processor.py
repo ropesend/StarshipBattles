@@ -45,7 +45,7 @@ class TestBuildOrderProcessing:
         initial_order = fleet_with_build_order.get_current_order()
 
         # Process end turn - BUILD order should persist
-        consumed = order_processor.process_end_turn_orders(
+        consumed = order_processor.execute_action_order(
             fleet_with_build_order, mock_empire, mock_galaxy
         )
 
@@ -101,7 +101,7 @@ class TestBuildOrderProcessing:
         mock_empire.fleets = [fleet_with_build_order]
         initial_fleet_count = len(mock_empire.fleets)
 
-        consumed = order_processor.process_end_turn_orders(
+        consumed = order_processor.execute_action_order(
             fleet_with_build_order, mock_empire, mock_galaxy
         )
 
@@ -118,7 +118,7 @@ class TestBuildOrderProcessing:
         fleet.add_order(FleetOrder(OrderType.BUILD))
         fleet.construction_queue = [{'design_id': 'destroyer', 'turns_remaining': 3}]
 
-        result = order_processor.process_end_turn_orders(fleet, mock_empire, mock_galaxy)
+        result = order_processor.execute_action_order(fleet, mock_empire, mock_galaxy)
 
         assert result is False
         assert fleet.get_current_order().type == OrderType.BUILD

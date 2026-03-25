@@ -442,6 +442,69 @@ class StarGenerator:
 
         return self._generate_random_stars(system_name)
 
+    def _generate_companions(
+        self,
+        count: int,
+        primary: 'Star',
+        system_name: str,
+        mass_fn,
+    ) -> list:
+        """Generate companion stars for a system.
+
+        Shared logic for both blueprint and random star generation.
+        Handles type/radius determination, spectrum generation, and
+        collision-safe placement.
+
+        Args:
+            count: Number of companions to generate.
+            primary: The primary star (for age).
+            system_name: System name for star naming.
+            mass_fn: Callable(index) -> float that generates companion mass.
+
+        Returns:
+            List of companion Star objects.
+        """
+        companions = []
+        suffixes = ['B', 'C', 'D']
+        min_dist_hex = primary.radius_hexes + 2
+        occupied_hexes = {HexCoord(0, 0)}
+
+        for i in range(count):
+            c_mass = mass_fn(i)
+            c_type, c_rad, c_temp, c_lum, c_col = self._determine_type_and_radius(c_mass)
+            c_hex = self._map_solar_radius_to_hex_radius(c_rad, c_type)
+            c_spec = self._generate_spectrum(c_temp, c_lum)
+
+            target_ring = min_dist_hex + (i * 10) + random.randint(2, 8)
+            potential_coords = hex_ring(target_ring)
+
+            if not potential_coords:
+                loc = HexCoord(target_ring, 0)
+            else:
+                loc = random.choice(potential_coords)
+                while loc in occupied_hexes and len(occupied_hexes) < 100:
+                    target_ring += 1
+                    potential_coords = hex_ring(target_ring)
+                    loc = random.choice(potential_coords)
+
+            occupied_hexes.add(loc)
+
+            companion = Star(
+                name=f"{system_name} {suffixes[i]}",
+                mass=c_mass,
+                radius_hexes=c_hex,
+                temperature=c_temp,
+                luminosity=c_lum,
+                spectrum=c_spec,
+                star_type=c_type,
+                color=c_col,
+                age=primary.age,
+                location=loc
+            )
+            companions.append(companion)
+
+        return companions
+
     def generate_from_blueprint(self, system_name, blueprint):
         """
         Generate stars based on a system blueprint.
@@ -507,45 +570,14 @@ class StarGenerator:
         stars.append(primary)
 
         # 4. Generate Companions
-        suffixes = ['B', 'C', 'D']
-        min_dist_hex = p_hex + 2  # radius + buffer for safe companion placement
-        occupied_hexes = {HexCoord(0, 0)}
-
-        for i in range(count - 1):
-            # Companion mass constrained by blueprint and primary
-            c_mass_max = min(mass_max, p_mass * 0.99)
-            c_mass = self._generate_mass_constrained(mass_min, c_mass_max)
-            c_type, c_rad, c_temp, c_lum, c_col = self._determine_type_and_radius(c_mass)
-            c_hex = self._map_solar_radius_to_hex_radius(c_rad, c_type)
-            c_spec = self._generate_spectrum(c_temp, c_lum)
-
-            target_ring = min_dist_hex + (i * 10) + random.randint(2, 8)
-            potential_coords = hex_ring(target_ring)
-
-            if not potential_coords:
-                loc = HexCoord(target_ring, 0)
-            else:
-                loc = random.choice(potential_coords)
-                while loc in occupied_hexes and len(occupied_hexes) < 100:
-                    target_ring += 1
-                    potential_coords = hex_ring(target_ring)
-                    loc = random.choice(potential_coords)
-
-            occupied_hexes.add(loc)
-
-            companion = Star(
-                name=f"{system_name} {suffixes[i]}",
-                mass=c_mass,
-                radius_hexes=c_hex,
-                temperature=c_temp,
-                luminosity=c_lum,
-                spectrum=c_spec,
-                star_type=c_type,
-                color=c_col,
-                age=primary.age,
-                location=loc
-            )
-            stars.append(companion)
+        c_mass_max = min(mass_max, p_mass * 0.99)
+        companions = self._generate_companions(
+            count=count - 1,
+            primary=primary,
+            system_name=system_name,
+            mass_fn=lambda _i: self._generate_mass_constrained(mass_min, c_mass_max),
+        )
+        stars.extend(companions)
 
         return stars
 
@@ -583,44 +615,13 @@ class StarGenerator:
         stars.append(primary)
 
         # 3. Generate Companions
-        suffixes = ['B', 'C', 'D']
-        min_dist_hex = p_hex + 2  # radius + buffer for safe companion placement
-
-        occupied_hexes = {HexCoord(0, 0)}
-
-        for i in range(count - 1):
-            c_mass = self._generate_mass(is_primary=False, primary_mass=p_mass)
-            c_type, c_rad, c_temp, c_lum, c_col = self._determine_type_and_radius(c_mass)
-            c_hex = self._map_solar_radius_to_hex_radius(c_rad, c_type)
-            c_spec = self._generate_spectrum(c_temp, c_lum)
-
-            target_ring = min_dist_hex + (i * 10) + random.randint(2, 8)
-            potential_coords = hex_ring(target_ring)
-
-            if not potential_coords:
-                loc = HexCoord(target_ring, 0)
-            else:
-                loc = random.choice(potential_coords)
-                while loc in occupied_hexes and len(occupied_hexes) < 100:
-                    target_ring += 1
-                    potential_coords = hex_ring(target_ring)
-                    loc = random.choice(potential_coords)
-
-            occupied_hexes.add(loc)
-
-            companion = Star(
-                name=f"{system_name} {suffixes[i]}",
-                mass=c_mass,
-                radius_hexes=c_hex,
-                temperature=c_temp,
-                luminosity=c_lum,
-                spectrum=c_spec,
-                star_type=c_type,
-                color=c_col,
-                age=primary.age,
-                location=loc
-            )
-            stars.append(companion)
+        companions = self._generate_companions(
+            count=count - 1,
+            primary=primary,
+            system_name=system_name,
+            mass_fn=lambda _i: self._generate_mass(is_primary=False, primary_mass=p_mass),
+        )
+        stars.extend(companions)
 
         return stars
 

@@ -69,11 +69,10 @@ def mock_session(mock_fleet, mock_galaxy, mock_planet, mock_component_registry):
     session.galaxy = mock_galaxy
     session.empires = []
 
-    # Setup turn_engine._registries.components accessor
+    # Use public registries API
     registries = Mock()
     registries.components = mock_component_registry
-    session.turn_engine = Mock()
-    session.turn_engine._registries = registries
+    session.registries = registries
 
     return session
 
@@ -276,7 +275,7 @@ class TestImplodePlanetMissionCommandHandlerValidates:
         handler = ImplodePlanetMissionCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+             patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
             mock_validator.validate_implode_planet.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
             handler.execute(mock_session, cmd)
@@ -316,7 +315,7 @@ class TestStellerateStarMissionCommandHandlerValidates:
         handler = StellerateStarMissionCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+             patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
             mock_validator.validate_stellerate_star.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
             handler.execute(mock_session, cmd)
@@ -355,7 +354,7 @@ class TestOpenWarpPointMissionCommandHandlerValidates:
         handler = OpenWarpPointMissionCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+             patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
             mock_validator.validate_open_warp_point.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
             handler.execute(mock_session, cmd)
@@ -396,7 +395,7 @@ class TestCloseWarpPointMissionCommandHandlerValidates:
         handler = CloseWarpPointMissionCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+             patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
             mock_validator.validate_close_warp_point.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
             handler.execute(mock_session, cmd)
@@ -435,7 +434,7 @@ class TestCreateDysonSphereMissionCommandHandlerValidates:
         handler = CreateDysonSphereMissionCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+             patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
             mock_validator.validate_create_dyson_sphere.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
             handler.execute(mock_session, cmd)

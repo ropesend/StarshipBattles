@@ -295,10 +295,10 @@ class TestColonizeProcessing:
 # =============================================================================
 
 class TestEndTurnOrderProcessing:
-    """Tests for process_end_turn_orders method."""
+    """Tests for execute_action_order method."""
 
-    def test_process_end_turn_orders_colonize(self, mock_fleet, mock_empire, mock_galaxy):
-        """End-turn processing handles COLONIZE orders."""
+    def test_execute_action_order_colonize(self, mock_fleet, mock_empire, mock_galaxy):
+        """Action order processing handles COLONIZE orders."""
         from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
         from game.strategy.data.planet import Planet
         from enum import Enum
@@ -335,7 +335,7 @@ class TestEndTurnOrderProcessing:
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 
-        result = processor.process_end_turn_orders(
+        result = processor.execute_action_order(
             mock_fleet, mock_empire, mock_galaxy,
             component_registry=component_registry
         )
@@ -354,7 +354,7 @@ class TestEndTurnOrderProcessing:
         processor = FleetOrderProcessor()
         mock_fleet.get_current_order.return_value = None
 
-        result = processor.process_end_turn_orders(mock_fleet, mock_empire, mock_galaxy)
+        result = processor.execute_action_order(mock_fleet, mock_empire, mock_galaxy)
 
         assert result is False
 

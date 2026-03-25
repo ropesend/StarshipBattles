@@ -31,17 +31,13 @@ class GalaxyEntityRegistry:
         """
         self._galaxy = galaxy
 
-    def register_planet(self, system: 'StarSystem', planet: 'Planet') -> None:
-        """Register a planet with the galaxy, assigning ID and updating indexes.
+    def _index_planet(self, system: 'StarSystem', planet: 'Planet') -> None:
+        """Index a planet in all galaxy lookups (shared by register/restore).
 
         Args:
             system: StarSystem containing the planet.
-            planet: Planet to register.
+            planet: Planet to index (must have id already set).
         """
-        # Assign unique ID
-        planet.id = self._galaxy._next_planet_id
-        self._galaxy._next_planet_id += 1
-
         # Add to ID registry
         self._galaxy.planets_by_id[planet.id] = planet
 
@@ -58,6 +54,19 @@ class GalaxyEntityRegistry:
         if planet.radius_hexes > 0:
             self.register_zone(system, planet)
 
+    def register_planet(self, system: 'StarSystem', planet: 'Planet') -> None:
+        """Register a planet with the galaxy, assigning ID and updating indexes.
+
+        Args:
+            system: StarSystem containing the planet.
+            planet: Planet to register.
+        """
+        # Assign unique ID
+        planet.id = self._galaxy._next_planet_id
+        self._galaxy._next_planet_id += 1
+
+        self._index_planet(system, planet)
+
     def restore_planet(self, system: 'StarSystem', planet: 'Planet') -> None:
         """Register a planet with pre-existing ID (for deserialization).
 
@@ -68,21 +77,7 @@ class GalaxyEntityRegistry:
             system: StarSystem containing the planet.
             planet: Planet to register (must have id already set).
         """
-        # Add to ID registry (preserving existing ID)
-        self._galaxy.planets_by_id[planet.id] = planet
-
-        # Add to reverse lookup
-        self._galaxy._planet_to_system[planet] = system
-
-        # Add to spatial index (global hex)
-        global_hex = system.global_location + planet.location
-        if global_hex not in self._galaxy._global_hex_planets:
-            self._galaxy._global_hex_planets[global_hex] = []
-        self._galaxy._global_hex_planets[global_hex].append(planet)
-
-        # Register zone if planet has multi-hex footprint (PROJ-139)
-        if planet.radius_hexes > 0:
-            self.register_zone(system, planet)
+        self._index_planet(system, planet)
 
     def get_planet_by_id(self, planet_id: int) -> Optional['Planet']:
         """O(1) lookup of planet by ID.

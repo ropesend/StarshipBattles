@@ -5,7 +5,7 @@ PROJ-143 Phase 2, Task 2.4: Tests for edge cases not covered by existing test fi
 Focuses on:
 - Error paths in command handlers
 - Error paths in order processors
-- _setup_mission_move helper function behavior
+- add_move_order_if_needed helper function behavior (via mission handlers)
 - Missing target validation
 - Invalid state handling
 """
@@ -69,20 +69,19 @@ def mock_session(mock_fleet, mock_galaxy, mock_planet):
     session._get_planet_by_id = Mock(return_value=mock_planet)
     session.galaxy = mock_galaxy
     session.empires = []
-    # Add turn_engine._registries.components for validator
+    # Use public registries API
     registries = Mock()
     registries.components = {}
-    session.turn_engine = Mock()
-    session.turn_engine._registries = registries
+    session.registries = registries
     return session
 
 
 # =============================================================================
-# _setup_mission_move Helper Tests
+# Mission Move Helper Tests (add_move_order_if_needed via mission handlers)
 # =============================================================================
 
 class TestSetupMissionMove:
-    """Tests for the _setup_mission_move helper function."""
+    """Tests for the add_move_order_if_needed helper used by mission handlers."""
 
     def test_uses_last_move_order_target_as_start_hex(self, mock_session, mock_fleet, mock_planet):
         """Start hex is determined from last MOVE order's target if orders exist."""
@@ -98,7 +97,7 @@ class TestSetupMissionMove:
         handler = ImplodePlanetMissionCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+             patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
             mock_validator.validate_implode_planet.return_value = ValidationResult()
             # Path should be calculated from (8,8) not (5,5)
             mock_path.return_value = [HexCoord(8, 8), HexCoord(10, 10), HexCoord(12, 12)]
@@ -121,7 +120,7 @@ class TestSetupMissionMove:
         handler = ImplodePlanetMissionCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+             patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
             mock_validator.validate_implode_planet.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
             handler.execute(mock_session, cmd)
@@ -143,7 +142,7 @@ class TestSetupMissionMove:
         handler = ImplodePlanetMissionCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+             patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
             mock_validator.validate_implode_planet.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(5, 5), HexCoord(10, 10)]
             handler.execute(mock_session, cmd)
@@ -166,7 +165,7 @@ class TestSetupMissionMove:
         handler = ImplodePlanetMissionCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator, \
-             patch('game.strategy.engine.superweapon_command_handlers.find_hybrid_path') as mock_path:
+             patch('game.strategy.engine.command_handlers.find_hybrid_path') as mock_path:
             mock_validator.validate_implode_planet.return_value = ValidationResult()
             mock_path.return_value = [HexCoord(8, 8), HexCoord(10, 10), HexCoord(12, 12)]
             handler.execute(mock_session, cmd)

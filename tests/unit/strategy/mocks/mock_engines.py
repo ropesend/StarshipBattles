@@ -131,23 +131,6 @@ class MockOrderProcessor(IOrderProcessor):
     def execute_action_order_called(self) -> bool:
         return len(self.execute_action_order_calls) > 0
 
-    # Backward compatibility alias
-    @property
-    def process_end_turn_orders_called(self) -> bool:
-        return self.execute_action_order_called
-
-    @property
-    def process_end_turn_orders_calls(self) -> List[Tuple]:
-        return self.execute_action_order_calls
-
-    @property
-    def process_end_turn_orders_result(self) -> bool:
-        return self.execute_action_order_result
-
-    @process_end_turn_orders_result.setter
-    def process_end_turn_orders_result(self, value: bool):
-        self.execute_action_order_result = value
-
     def process_instant_orders(self, empires):
         self.process_instant_orders_calls.append((empires,))
         return self.process_instant_orders_result
@@ -156,11 +139,6 @@ class MockOrderProcessor(IOrderProcessor):
         """Execute the fleet's current action order."""
         self.execute_action_order_calls.append((fleet, empire, galaxy, component_registry, empires))
         return self.execute_action_order_result
-
-    # Backward compatibility alias
-    def process_end_turn_orders(self, fleet, empire, galaxy, component_registry=None, empires=None):
-        """Deprecated: Use execute_action_order instead."""
-        return self.execute_action_order(fleet, empire, galaxy, component_registry, empires)
 
 
 @dataclass

@@ -45,7 +45,6 @@ class TickExpenditure(NamedTuple):
     max_ticks_needed: float  # Total ticks needed to complete item
 
 
-from game.strategy.data.build_queue_source import _facility_is_shipyard
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import OrderType
 from game.strategy.data.planet import PlanetaryFacility
@@ -129,7 +128,7 @@ class ProductionEngine:
             galaxy: Galaxy object for spawning.
             save_path: Path to savegame folder for loading designs.
         """
-        from game.strategy.data.build_queue_source import get_default_production_rates, _get_facility_production_rates, _facility_is_shipyard
+        from game.strategy.data.build_queue_source import get_default_production_rates, _get_facility_production_rates
 
         for empire in empires:
             for colony in empire.colonies:
@@ -144,7 +143,7 @@ class ProductionEngine:
 
                 # 2. Facility queues (shipyards)
                 for facility in colony.facilities:
-                    if facility.construction_queue and _facility_is_shipyard(facility):
+                    if facility.construction_queue and facility.is_shipyard:
                         # Rate: specific to facility
                         fac_rate = _get_facility_production_rates(facility)
                         self._process_queue_tick_dynamic(
@@ -592,6 +591,125 @@ class ProductionEngine:
             else:
                 self._spawn_ship(colony_or_fleet, design_id, empire, galaxy, save_path)
 
+    def _load_design(self, design_id: str, empire, save_path: Optional[str]) -> dict:
+        """Load design data from the design library.
+
+        Args:
+            design_id: Design to load.
+            empire: Empire owning the design.
+            save_path: Path to savegame folder.
+
+        Returns:
+            Design data dict, or empty dict on failure.
+        """
+        if not save_path:
+            logger.warning(f"No savegame path - creating empty data for {design_id}")
+            return {}
+        library = DesignLibrary(save_path, empire.id)
+        loaded = library.load_design_data(design_id)
+        if loaded:
+            return loaded
+        logger.warning(f"Could not load design: {design_id}")
+        return {}
+
+    def _create_and_place_facility(
+        self, planet, design_id: str, empire, save_path: Optional[str],
+        galaxy=None, log_prefix: str = ""
+    ) -> None:
+        """Create a facility and place it on a planet.
+
+        Shared by _spawn_complex (colony production) and _spawn_fleet_complex
+        (fleet production). Handles design loading, facility creation,
+        placement, and event logging.
+
+        Args:
+            planet: Planet to add facility to.
+            design_id: ID of the complex design.
+            empire: Empire that owns the production.
+            save_path: Path to savegame folder.
+            galaxy: Galaxy for location calculation.
+            log_prefix: Optional prefix for log messages (e.g., "Fleet 5 ").
+        """
+        design_data = self._load_design(design_id, empire, save_path)
+
+        facility = PlanetaryFacility(
+            instance_id=str(uuid.uuid4()),
+            design_id=design_id,
+            name=design_data.get("name", design_id),
+            design_data=design_data,
+            is_operational=True
+        )
+
+        planet.facilities.append(facility)
+        logger.info(f"{log_prefix}Built {facility.name} on {planet.name}")
+
+        # Compute location info for event logging
+        location_hex = None
+        system_name = ""
+        local_hex = None
+        if galaxy and hasattr(galaxy, 'get_system_of_planet'):
+            parent_sys = galaxy.get_system_of_planet(planet)
+            if parent_sys:
+                system_name = parent_sys.name
+                if hasattr(planet, 'location') and planet.location is not None:
+                    loc = parent_sys.global_location + planet.location
+                    location_hex = [loc.q, loc.r]
+                    local_hex = [planet.location.q, planet.location.r]
+
+        suffix = " (fleet yard)" if log_prefix else ""
+        log_event(
+            EventType.COMPLEX_BUILT,
+            category=EventCategory.PRODUCTION,
+            empire_id=empire.id,
+            message=f"Built {facility.name} on {planet.name}{suffix}",
+            design_id=design_id,
+            planet_id=planet.id,
+            location_name=planet.name,
+            location_hex=location_hex,
+            system_name=system_name,
+            local_hex=local_hex,
+        )
+
+    def _load_and_create_ship(
+        self, design_id: str, empire, save_path: Optional[str]
+    ) -> Optional[ShipInstance]:
+        """Load design and create a ship instance.
+
+        Shared by _spawn_ship (colony production) and _spawn_fleet_ship
+        (fleet production). Handles design loading, ship creation, and
+        built count increment.
+
+        Args:
+            design_id: ID of the ship design.
+            empire: Empire that owns the design.
+            save_path: Path to savegame folder.
+
+        Returns:
+            ShipInstance if successful, None on failure.
+        """
+        if not save_path:
+            logger.warning(f"Cannot spawn {design_id}: no save_path provided")
+            return None
+
+        design_library = DesignLibrary(save_path, empire.id)
+        design_data = design_library.load_design_data(design_id)
+
+        if not design_data:
+            logger.warning(f"Cannot spawn {design_id}: design data not found")
+            return None
+
+        ship_instance = ShipInstance.create(
+            design_id=design_id,
+            design_data=design_data,
+            owner_id=empire.id,
+            name=design_data.get("name", design_id),
+            empire=empire,
+            registries=self._registries,
+        )
+
+        design_library.increment_built_count(design_id)
+        return ship_instance
+
     def _spawn_complex(self, planet, design_id: str, empire, save_path: Optional[str] = None, galaxy=None) -> None:
         """
         Add completed complex to planet's facilities.
@@ -603,56 +721,7 @@ class ProductionEngine:
             save_path: Path to savegame folder for loading design data
             galaxy: Galaxy for location calculation
         """
-        # Load design data if possible
-        design_data = {}
-
-        if save_path:
-            library = DesignLibrary(save_path, empire.id)
-            loaded_data = library.load_design_data(design_id)
-            if loaded_data:
-                design_data = loaded_data
-            else:
-                logger.warning(f"Could not load design: {design_id}")
-        else:
-            logger.warning(f"No savegame path - creating empty facility for {design_id}")
-
-        # Create facility instance
-        facility = PlanetaryFacility(
-            instance_id=str(uuid.uuid4()),
-            design_id=design_id,
-            name=design_data.get("name", design_id),
-            design_data=design_data,
-            is_operational=True
-        )
-
-        planet.facilities.append(facility)
-        logger.info(f"Built {facility.name} on {planet.name}")
-
-        # FEAT-04: Compute global hex for event location
-        # PROJ-215: Add system_name and local_hex for granular event log columns
-        location_hex = None
-        system_name = ""
-        local_hex = None
-        if galaxy:
-            parent_sys = galaxy.get_system_of_planet(planet)
-            if parent_sys:
-                loc = parent_sys.global_location + planet.location
-                location_hex = [loc.q, loc.r]
-                system_name = parent_sys.name
-                local_hex = [planet.location.q, planet.location.r]
-
-        log_event(
-            EventType.COMPLEX_BUILT,
-            category=EventCategory.PRODUCTION,
-            empire_id=empire.id,
-            message=f"Built {facility.name} on {planet.name}",
-            design_id=design_id,
-            planet_id=planet.id,
-            location_name=planet.name,
-            location_hex=location_hex,
-            system_name=system_name,
-            local_hex=local_hex,
-        )
+        self._create_and_place_facility(planet, design_id, empire, save_path, galaxy)
 
     def _spawn_ship(
         self,
@@ -672,35 +741,20 @@ class ProductionEngine:
             galaxy: Galaxy for location calculation
             save_path: Path to savegame folder for loading design data
         """
+        ship_instance = self._load_and_create_ship(design_id, empire, save_path)
+        if ship_instance is None:
+            return
+
         # Calculate spawn location
         spawn_loc = planet.location
+        system_name = ""
+        local_hex = None
         if galaxy:
             parent_sys = galaxy.get_system_of_planet(planet)
             if parent_sys:
                 spawn_loc = parent_sys.global_location + planet.location
-
-        # Load design data
-        if not save_path:
-            logger.warning(f"Cannot spawn {design_id}: no save_path provided")
-            return
-
-        design_library = DesignLibrary(save_path, empire.id)
-        design_data = design_library.load_design_data(design_id)
-
-        if not design_data:
-            logger.warning(f"Cannot spawn {design_id}: design data not found")
-            return
-
-        # Create ShipInstance (with serial number)
-        # PROJ-211: Pass registries for DI compliance
-        ship_instance = ShipInstance.create(
-            design_id=design_id,
-            design_data=design_data,
-            owner_id=empire.id,
-            name=design_data.get("name", design_id),
-            empire=empire,
-            registries=self._registries,
-        )
+                system_name = parent_sys.name
+                local_hex = [planet.location.q, planet.location.r]
 
         # Create fleet with unique ID
         fleet_id = empire.get_next_fleet_id()
@@ -708,24 +762,12 @@ class ProductionEngine:
         new_fleet.add_ship(ship_instance)
         empire.add_fleet(new_fleet)  # PROJ-219: Auto-registers via empire._galaxy
 
-        # Increment design's times_built counter
-        design_library.increment_built_count(design_id)
-
-        # PROJ-215: Compute system_name and local_hex for granular event log columns
-        system_name = ""
-        local_hex = None
-        if galaxy:
-            parent_sys = galaxy.get_system_of_planet(planet)
-            if parent_sys:
-                system_name = parent_sys.name
-                local_hex = [planet.location.q, planet.location.r]
-
-        logger.info(f"Spawned {design_data.get('name', design_id)} at {spawn_loc} (Fleet {new_fleet.id})")
+        logger.info(f"Spawned {ship_instance.name} at {spawn_loc} (Fleet {new_fleet.id})")
         log_event(
             EventType.SHIP_BUILT,
             category=EventCategory.PRODUCTION,
             empire_id=empire.id,
-            message=f"Built {design_data.get('name', design_id)} at {planet.name}",
+            message=f"Built {ship_instance.name} at {planet.name}",
             design_id=design_id,
             planet_id=planet.id,
             fleet_id=new_fleet.id,
@@ -753,42 +795,18 @@ class ProductionEngine:
             empire: Empire that owns the fleet
             save_path: Path to savegame folder for loading design data
         """
-        # Load design data
-        if not save_path:
-            logger.warning(f"Cannot spawn {design_id}: no save_path provided")
+        ship_instance = self._load_and_create_ship(design_id, empire, save_path)
+        if ship_instance is None:
             return
 
-        design_library = DesignLibrary(save_path, empire.id)
-        design_data = design_library.load_design_data(design_id)
-
-        if not design_data:
-            logger.warning(f"Cannot spawn {design_id}: design data not found")
-            return
-
-        # Create ShipInstance (with serial number)
-        # PROJ-211: Pass registries for DI compliance
-        ship_instance = ShipInstance.create(
-            design_id=design_id,
-            design_data=design_data,
-            owner_id=empire.id,
-            name=design_data.get("name", design_id),
-            empire=empire,
-            registries=self._registries,
-        )
-
-        # Add ship to the building fleet
         fleet.add_ship(ship_instance)
 
-        # Increment design's times_built counter
-        design_library.increment_built_count(design_id)
-
-        logger.info(f"Fleet {fleet.id} built {design_data.get('name', design_id)}")
-        # PROJ-215: Fleet production in deep space has no system/local context
+        logger.info(f"Fleet {fleet.id} built {ship_instance.name}")
         log_event(
             EventType.SHIP_BUILT,
             category=EventCategory.PRODUCTION,
             empire_id=empire.id,
-            message=f"Fleet {fleet.id} built {design_data.get('name', design_id)}",
+            message=f"Fleet {fleet.id} built {ship_instance.name}",
             design_id=design_id,
             fleet_id=fleet.id,
             is_fleet_production=True,
@@ -839,49 +857,7 @@ class ProductionEngine:
         else:
             planet = planets_at_hex[0]
 
-        # Load design data
-        design_data = {}
-        if save_path:
-            library = DesignLibrary(save_path, empire.id)
-            loaded_data = library.load_design_data(design_id)
-            if loaded_data:
-                design_data = loaded_data
-            else:
-                logger.warning(f"Could not load design: {design_id}")
-        else:
-            logger.warning(f"No savegame path - creating empty facility for {design_id}")
-
-        # Create facility instance
-        facility = PlanetaryFacility(
-            instance_id=str(uuid.uuid4()),
-            design_id=design_id,
-            name=design_data.get("name", design_id),
-            design_data=design_data,
-            is_operational=True
-        )
-
-        planet.facilities.append(facility)
-        logger.info(f"Fleet {fleet.id} built {facility.name} on {planet.name}")
-
-        # PROJ-215: Compute system_name and local_hex for granular event log columns
-        system_name = ""
-        local_hex = None
-        if hasattr(galaxy, 'get_system_of_planet'):
-            parent_sys = galaxy.get_system_of_planet(planet)
-            if parent_sys:
-                system_name = parent_sys.name
-                if hasattr(planet, 'location') and planet.location is not None:
-                    local_hex = [planet.location.q, planet.location.r]
-
-        log_event(
-            EventType.COMPLEX_BUILT,
-            category=EventCategory.PRODUCTION,
-            empire_id=empire.id,
-            message=f"Built {facility.name} on {planet.name} (fleet yard)",
-            design_id=design_id,
-            planet_id=planet.id,
-            location_name=planet.name,
-            location_hex=[fleet.location.q, fleet.location.r],
-            system_name=system_name,
-            local_hex=local_hex,
+        self._create_and_place_facility(
+            planet, design_id, empire, save_path, galaxy,
+            log_prefix=f"Fleet {fleet.id} "
         )

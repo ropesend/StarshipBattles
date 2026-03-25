@@ -13,12 +13,6 @@ def generator():
     image_registry = PlanetImageRegistry()
     return PlanetGenerator(image_registry)
 
-def test_mass_generation_ranges(generator):
-    """Verify masses are within bounds."""
-    for _ in range(100):
-        mass = generator._generate_mass()
-        assert 1e20 < mass < 2e27
-
 def test_radius_density_consistency(generator):
     """Verify radius and density calculations are physically linked."""
     mass = MASS_EARTH

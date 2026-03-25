@@ -111,21 +111,6 @@ def _get_facility_production_rates(facility: 'PlanetaryFacility') -> Dict[str, f
     return get_default_production_rates("space_shipyard")
 
 
-def _facility_is_shipyard(facility: 'PlanetaryFacility') -> bool:
-    """Check if a planetary facility is a space shipyard.
-
-    Delegates to PlanetaryFacility.is_shipyard property which checks
-    design_data layers for component id 'space_shipyard' or SpaceShipyard ability.
-
-    Args:
-        facility: The planetary facility to check.
-
-    Returns:
-        True if the facility is an operational space shipyard.
-    """
-    return facility.is_shipyard
-
-
 def estimate_build_turns(total_cost: Dict[str, float],
                          production_rate: Dict[str, float]) -> float:
     """Estimate turns to complete a build item given its cost and production rate.
@@ -184,7 +169,7 @@ def get_production_rate_for_queue(entity, queue_id: Optional[str]) -> Dict[str, 
     if queue_id and hasattr(entity, 'facilities'):
         for facility in entity.facilities:
             if getattr(facility, 'instance_id', None) == queue_id:
-                if _facility_is_shipyard(facility):
+                if facility.is_shipyard:
                     return _get_facility_production_rates(facility)
                 break
 
@@ -218,7 +203,7 @@ def _collect_planet_sources(planet, sources: List[BuildQueueSource]) -> None:
     # Shipyard facility queues
     shipyard_index = 0
     for facility in planet.facilities:
-        if _facility_is_shipyard(facility):
+        if facility.is_shipyard:
             shipyard_index += 1
             sources.append(BuildQueueSource(
                 queue_id=facility.instance_id,

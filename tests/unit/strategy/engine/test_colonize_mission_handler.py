@@ -81,13 +81,14 @@ def make_mock_session(fleet, planet=None, component_registry=None):
     # Mock galaxy for pathfinding
     session.galaxy = MagicMock()
 
-    # Mock turn_engine with registries
+    # Mock registries (public API)
     if component_registry is not None:
-        session.turn_engine = MagicMock()
-        session.turn_engine._registries = MagicMock()
-        session.turn_engine._registries.components = component_registry
+        registries = MagicMock()
+        registries.components = component_registry
+        session.registries = registries
     else:
-        session.turn_engine = None
+        session.registries = MagicMock()
+        session.registries.components = {}
 
     return session
 

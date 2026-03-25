@@ -11,7 +11,6 @@ from game.strategy.data.build_queue_source import (
     BuildQueueSource,
     collect_build_queues_at_hex,
     collect_all_build_queues_for_empire,
-    _facility_is_shipyard,
     get_default_production_rates,
     get_production_rate_for_queue,
     estimate_build_turns,
@@ -163,26 +162,26 @@ def _make_galaxy(planets_at_hex=None):
 
 
 # ---------------------------------------------------------------------------
-# Tests: _facility_is_shipyard
+# Tests: PlanetaryFacility.is_shipyard (via property, not wrapper function)
 # ---------------------------------------------------------------------------
 
 class TestFacilityIsShipyard:
-    """Test _facility_is_shipyard helper."""
+    """Test PlanetaryFacility.is_shipyard property."""
 
     def test_shipyard_facility_detected(self):
         """Operational shipyard facility should be detected."""
         facility = _make_shipyard_facility()
-        assert _facility_is_shipyard(facility) is True
+        assert facility.is_shipyard is True
 
     def test_non_shipyard_facility_not_detected(self):
         """Non-shipyard facility should not be detected."""
         facility = _make_non_shipyard_facility()
-        assert _facility_is_shipyard(facility) is False
+        assert facility.is_shipyard is False
 
     def test_non_operational_shipyard_excluded(self):
         """Non-operational shipyard facility should not be detected."""
         facility = _make_shipyard_facility(operational=False)
-        assert _facility_is_shipyard(facility) is False
+        assert facility.is_shipyard is False
 
     def test_shipyard_by_ability_only(self):
         """Facility with SpaceShipyard ability but different id is detected."""
@@ -199,7 +198,7 @@ class TestFacilityIsShipyard:
             },
             is_operational=True,
         )
-        assert _facility_is_shipyard(facility) is True
+        assert facility.is_shipyard is True
 
     def test_empty_design_data_not_shipyard(self):
         """Facility with empty design data should not be a shipyard."""
@@ -210,7 +209,7 @@ class TestFacilityIsShipyard:
             design_data={},
             is_operational=True,
         )
-        assert _facility_is_shipyard(facility) is False
+        assert facility.is_shipyard is False
 
 
 # ---------------------------------------------------------------------------

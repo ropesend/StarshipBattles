@@ -68,34 +68,6 @@ class TestPlanetGeneratorInit:
 class TestMassGeneration:
     """Tests for mass generation methods."""
 
-    def test_generate_mass_returns_positive(self, planet_generator):
-        """_generate_mass returns positive mass."""
-        mass = planet_generator._generate_mass()
-
-        assert mass > 0
-
-    def test_generate_mass_within_bounds(self, planet_generator):
-        """_generate_mass returns mass within expected range."""
-        from game.strategy.data.planet_physics import MASS_CERES, MASS_JUPITER
-
-        # Generate multiple samples
-        for _ in range(100):
-            mass = planet_generator._generate_mass()
-            assert MASS_CERES <= mass <= MASS_JUPITER
-
-    def test_generate_mass_companion_constrained_by_primary(self, planet_generator):
-        """Companion mass is constrained by primary mass."""
-        from game.strategy.data.planet_physics import MASS_EARTH
-
-        primary_mass = MASS_EARTH
-
-        for _ in range(50):
-            companion_mass = planet_generator._generate_mass(
-                is_companion=True, primary_mass=primary_mass
-            )
-            # Companion should be <= 40% of primary
-            assert companion_mass <= primary_mass * 0.4 + 1e15  # Small tolerance
-
     def test_generate_mass_constrained_respects_min(self, planet_generator):
         """_generate_mass_constrained respects minimum bound."""
         min_mass = 1e24

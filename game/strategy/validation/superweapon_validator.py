@@ -33,6 +33,42 @@ class SuperweaponValidator:
         return _inspector_find_ship(fleet.ships, ability_name, component_registry)
 
     @staticmethod
+    def _require_ability(
+        fleet,
+        ability_name: str,
+        component_registry: Optional[Dict[str, Any]]
+    ) -> Optional[ValidationResult]:
+        """Check that a fleet has a ship with the required ability.
+
+        Returns an error ValidationResult if the ability is missing,
+        or None if the check passes.
+        """
+        if component_registry is not None:
+            ship = SuperweaponValidator.find_ship_with_ability(
+                fleet, ability_name, component_registry
+            )
+            if ship is None:
+                return ValidationResult.error(
+                    f"No ship in fleet has {ability_name} ability."
+                )
+        return None
+
+    @staticmethod
+    def _require_at_star_system(
+        galaxy, fleet
+    ) -> Optional[Any]:
+        """Check that fleet is at a star system.
+
+        Returns (system, None) on success, or (None, error) on failure.
+        """
+        system = galaxy.get_system_at_location(fleet.location)
+        if system is None:
+            return None, ValidationResult.error(
+                "Fleet must be at a star system."
+            )
+        return system, None
+
+    @staticmethod
     def validate_implode_planet(
         galaxy,
         fleet,
@@ -50,17 +86,12 @@ class SuperweaponValidator:
         Returns:
             ValidationResult with is_valid and message.
         """
-        # Check target planet exists
         if target_planet is None:
             return ValidationResult.error("No target planet specified.")
 
-        # Check for DestroyPlanet ability
-        if component_registry is not None:
-            ship = SuperweaponValidator.find_ship_with_ability(
-                fleet, "DestroyPlanet", component_registry
-            )
-            if ship is None:
-                return ValidationResult.error("No ship in fleet has DestroyPlanet ability.")
+        error = SuperweaponValidator._require_ability(fleet, "DestroyPlanet", component_registry)
+        if error:
+            return error
 
         return ValidationResult.success()
 
@@ -80,20 +111,14 @@ class SuperweaponValidator:
         Returns:
             ValidationResult with is_valid and message.
         """
-        # Check for DestroyStar ability
-        if component_registry is not None:
-            ship = SuperweaponValidator.find_ship_with_ability(
-                fleet, "DestroyStar", component_registry
-            )
-            if ship is None:
-                return ValidationResult.error("No ship in fleet has DestroyStar ability.")
+        error = SuperweaponValidator._require_ability(fleet, "DestroyStar", component_registry)
+        if error:
+            return error
 
-        # Check fleet is at a star system
-        system = galaxy.get_system_at_location(fleet.location)
-        if system is None:
-            return ValidationResult.error("Fleet must be at a star system to destroy a star.")
+        system, error = SuperweaponValidator._require_at_star_system(galaxy, fleet)
+        if error:
+            return error
 
-        # Check system has stars (stars is always [] or populated)
         if not system.stars:
             return ValidationResult.error("System has no stars to destroy.")
 
@@ -120,21 +145,15 @@ class SuperweaponValidator:
         Returns:
             ValidationResult with is_valid and message.
         """
-        # Check for OpenWarpPoint ability
-        if component_registry is not None:
-            ship = SuperweaponValidator.find_ship_with_ability(
-                fleet, "OpenWarpPoint", component_registry
-            )
-            if ship is None:
-                return ValidationResult.error("No ship in fleet has OpenWarpPoint ability.")
+        error = SuperweaponValidator._require_ability(fleet, "OpenWarpPoint", component_registry)
+        if error:
+            return error
 
         if not skip_location_check:
-            # Check fleet is at a star system
-            current_system = galaxy.get_system_at_location(fleet.location)
-            if current_system is None:
-                return ValidationResult.error("Fleet must be at a star system to open a warp point.")
+            current_system, error = SuperweaponValidator._require_at_star_system(galaxy, fleet)
+            if error:
+                return error
 
-            # Check warp link doesn't already exist (warp_points always exists)
             for wp in current_system.warp_points:
                 if wp.destination_id == target_system_name:
                     return ValidationResult.error(f"Warp link to '{target_system_name}' already exists.")
@@ -167,19 +186,14 @@ class SuperweaponValidator:
         Returns:
             ValidationResult with is_valid and message.
         """
-        # Check for CloseWarpPoint ability
-        if component_registry is not None:
-            ship = SuperweaponValidator.find_ship_with_ability(
-                fleet, "CloseWarpPoint", component_registry
-            )
-            if ship is None:
-                return ValidationResult.error("No ship in fleet has CloseWarpPoint ability.")
+        error = SuperweaponValidator._require_ability(fleet, "CloseWarpPoint", component_registry)
+        if error:
+            return error
 
         if not skip_location_check:
-            # Check fleet is at a star system
-            current_system = galaxy.get_system_at_location(fleet.location)
-            if current_system is None:
-                return ValidationResult.error("Fleet must be at a star system to close a warp point.")
+            current_system, error = SuperweaponValidator._require_at_star_system(galaxy, fleet)
+            if error:
+                return error
 
             # Check warp point with matching destination exists at fleet's hex
             found_warp_point = False
@@ -211,21 +225,15 @@ class SuperweaponValidator:
         Returns:
             ValidationResult with is_valid and message.
         """
-        # Check for CreateDysonSphere ability
-        if component_registry is not None:
-            ship = SuperweaponValidator.find_ship_with_ability(
-                fleet, "CreateDysonSphere", component_registry
-            )
-            if ship is None:
-                return ValidationResult.error("No ship in fleet has CreateDysonSphere ability.")
+        error = SuperweaponValidator._require_ability(fleet, "CreateDysonSphere", component_registry)
+        if error:
+            return error
 
-        # Check fleet is at a star system
-        current_system = galaxy.get_system_at_location(fleet.location)
-        if current_system is None:
-            return ValidationResult.error("Fleet must be at a star system to create a Dyson Sphere.")
+        system, error = SuperweaponValidator._require_at_star_system(galaxy, fleet)
+        if error:
+            return error
 
-        # Check system has stars (stars always exists on StarSystem)
-        if not current_system.stars:
+        if not system.stars:
             return ValidationResult.error("System must have stars to create a Dyson Sphere.")
 
         return ValidationResult.success()

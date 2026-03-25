@@ -99,6 +99,7 @@ class TestShipBuiltEvent:
 
             with patch('game.strategy.engine.production_engine.ShipInstance') as mock_si:
                 mock_ship = MagicMock()
+                mock_ship.name = "Scout Ship"
                 mock_si.create.return_value = mock_ship
 
                 with patch('game.strategy.engine.production_engine.Fleet') as mock_fleet_cls:
@@ -216,6 +217,7 @@ class TestFleetShipBuiltEvent:
 
             with patch('game.strategy.engine.production_engine.ShipInstance') as mock_si:
                 mock_ship = MagicMock()
+                mock_ship.name = "Fighter"
                 mock_si.create.return_value = mock_ship
 
                 with patch('game.strategy.engine.production_engine.log_event', fake):
