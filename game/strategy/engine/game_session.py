@@ -83,13 +83,7 @@ class GameSession:
         set_event_handler(self._create_event_handler())
 
         # PROJ-211: Resolve registries at init time, pass to TurnEngine
-        provider = get_default_registry_provider()
-        self._registries = GameRegistries(
-            components=provider.get_components(),
-            modifiers=provider.get_modifiers(),
-            vehicle_classes=provider.get_vehicle_classes(),
-            resources=provider.get_resources(),
-        )
+        self._registries = self._resolve_registries()
 
         # Engine
         self.turn_engine = TurnEngine(registries=self._registries)
@@ -108,6 +102,21 @@ class GameSession:
         # Convenience references for common empires
         self.player_empire = self.empires[0] if len(self.empires) > 0 else None
         self.enemy_empire = self.empires[1] if len(self.empires) > 1 else None
+
+    @staticmethod
+    def _resolve_registries() -> GameRegistries:
+        """Resolve game registries from the default provider.
+
+        Shared by __init__ and from_dict to avoid duplicating the
+        provider resolution and GameRegistries construction.
+        """
+        provider = get_default_registry_provider()
+        return GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources=provider.get_resources(),
+        )
 
     @property
     def event_log(self) -> EventLog:
@@ -289,13 +298,7 @@ class GameSession:
         session.save_path = data.get('save_path')
 
         # PROJ-211: Resolve registries at init time, pass to TurnEngine
-        provider = get_default_registry_provider()
-        session._registries = GameRegistries(
-            components=provider.get_components(),
-            modifiers=provider.get_modifiers(),
-            vehicle_classes=provider.get_vehicle_classes(),
-            resources=provider.get_resources(),
-        )
+        session._registries = GameSession._resolve_registries()
 
         # Initialize turn engine and command registry
         session.turn_engine = TurnEngine(registries=session._registries)

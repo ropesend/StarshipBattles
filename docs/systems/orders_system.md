@@ -339,7 +339,7 @@ def process_your_new_order(self, fleet, empire, galaxy, ...):
     return YourResult(success=True)
 ```
 
-Wire into `process_end_turn_orders()`:
+Wire into `execute_action_order()`:
 ```python
 elif order.type == OrderType.YOUR_NEW_ORDER:
     result = self.process_your_new_order(fleet, empire, galaxy)

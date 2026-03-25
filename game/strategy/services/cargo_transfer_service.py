@@ -18,6 +18,59 @@ if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
 
 
+def _extract_population_items(
+    planet_info,
+    label_fn=None,
+    planet_id: Optional[int] = None
+) -> List[Dict[str, Any]]:
+    """Extract population items from a PlanetInfo object.
+
+    Shared logic for get_load_items (colony->fleet) and
+    get_inventory_items (planet inventory display).
+
+    Args:
+        planet_info: PlanetInfo with population_details and total_population.
+        label_fn: Optional callable(race_id, count) -> str for custom labels.
+                 Defaults to "Population: {race_id} ({count})".
+        planet_id: Optional planet ID to include in item dicts.
+
+    Returns:
+        List of item dicts.
+    """
+    items = []
+    if not planet_info:
+        return items
+
+    if planet_info.population_details:
+        for race_id, count, happiness in planet_info.population_details:
+            if count > 0:
+                label = label_fn(race_id, count) if label_fn else f"Population: {race_id} ({count})"
+                item = {
+                    'label': label,
+                    'cargo_type': 'passengers',
+                    'species_id': race_id,
+                    'max_amount': count,
+                }
+                if planet_id is not None:
+                    item['planet_id'] = planet_id
+                items.append(item)
+    else:
+        pop = planet_info.total_population
+        if pop > 0:
+            label = label_fn(None, pop) if label_fn else f"Population ({pop})"
+            item = {
+                'label': label,
+                'cargo_type': 'passengers',
+                'species_id': None,
+                'max_amount': pop,
+            }
+            if planet_id is not None:
+                item['planet_id'] = planet_id
+            items.append(item)
+
+    return items
+
+
 class CargoTransferService:
     """Service for cargo transfer business logic.
 
@@ -103,29 +156,14 @@ class CargoTransferService:
             if not planet_info:
                 continue
 
-            # Population details: tuple of (race_id, count, happiness)
-            # PlanetInfo always has population_details (default empty tuple)
-            if planet_info.population_details:
-                for race_id, count, happiness in planet_info.population_details:
-                    if count > 0:
-                        items.append({
-                            'label': f"{colony.name}: {race_id} ({count})",
-                            'cargo_type': 'passengers',
-                            'species_id': race_id,
-                            'max_amount': count,
-                            'planet_id': colony.planet_id
-                        })
-            else:
-                # Fallback to total_population (PlanetInfo always has this, default 0)
-                pop = planet_info.total_population
-                if pop > 0:
-                    items.append({
-                        'label': f"{colony.name}: Population ({pop})",
-                        'cargo_type': 'passengers',
-                        'species_id': None,
-                        'max_amount': pop,
-                        'planet_id': colony.planet_id
-                    })
+            def _label(race_id, count, _name=colony.name):
+                if race_id:
+                    return f"{_name}: {race_id} ({count})"
+                return f"{_name}: Population ({count})"
+
+            items.extend(_extract_population_items(
+                planet_info, label_fn=_label, planet_id=colony.planet_id
+            ))
 
         return items
 
@@ -159,23 +197,7 @@ class CargoTransferService:
                 })
         # PlanetInfo: has population_details and total_population
         elif isinstance(obj_info, PlanetInfo):
-            if obj_info.population_details:
-                for race_id, count, happiness in obj_info.population_details:
-                    if count > 0:
-                        items.append({
-                            'label': f"Population: {race_id} ({count})",
-                            'cargo_type': 'passengers',
-                            'species_id': race_id,
-                            'max_amount': count
-                        })
-            elif obj_info.total_population > 0:
-                # Fallback to total_population if no details
-                items.append({
-                    'label': f"Population ({obj_info.total_population})",
-                    'cargo_type': 'passengers',
-                    'species_id': None,
-                    'max_amount': obj_info.total_population
-                })
+            items.extend(_extract_population_items(obj_info))
 
         return items
 

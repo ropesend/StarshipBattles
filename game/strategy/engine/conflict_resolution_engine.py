@@ -87,6 +87,54 @@ class ConflictResolutionEngine:
         self._battle_seed_counter += 1
         return self._battle_seed_counter
 
+    def _log_combat_result(
+        self,
+        winner: 'Fleet',
+        loser: 'Fleet',
+        location,
+        environmental_effects=None
+    ) -> None:
+        """Log a combat resolved event with system and storm context.
+
+        Centralizes the combat event logging that was previously duplicated
+        in _resolve_combat (RNG path) and _resolve_combat_simulated.
+
+        Args:
+            winner: The winning fleet.
+            loser: The losing fleet.
+            location: Hex location of the combat.
+            environmental_effects: Optional environmental effects at combat location.
+        """
+        # Look up system name for granular event log columns
+        system_name = ""
+        if self._galaxy and hasattr(self._galaxy, 'get_system_at_location'):
+            sys = self._galaxy.get_system_at_location(location)
+            if sys:
+                system_name = sys.name
+
+        # Get storm names from environmental effects or area effect manager
+        storm_names = []
+        if environmental_effects is not None and environmental_effects.in_storm:
+            storm_names = environmental_effects.storm_names
+        elif self._area_effect_manager is not None and self._galaxy is not None:
+            effects = self._area_effect_manager.get_effects_at_global_hex(
+                self._galaxy, location
+            )
+            if effects.in_storm:
+                storm_names = effects.storm_names
+
+        log_event(
+            EventType.COMBAT_RESOLVED,
+            category=EventCategory.COMBAT,
+            empire_id=winner.owner_id,
+            message=f"Battle: Fleet {winner.id} defeated Fleet {loser.id}",
+            winner_fleet_id=winner.id,
+            loser_fleet_id=loser.id,
+            location_hex=[location.q, location.r],
+            system_name=system_name,
+            storm_names=storm_names,
+        )
+
     def resolve_all_conflicts(
         self,
         empires,
@@ -203,31 +251,7 @@ class ConflictResolutionEngine:
         else:
             winner, loser = f2, f1
 
-        # PROJ-215: Look up system name for granular event log columns
-        system_name = ""
-        if self._galaxy and hasattr(self._galaxy, 'get_system_at_location'):
-            sys = self._galaxy.get_system_at_location(f1.location)
-            if sys:
-                system_name = sys.name
-
-        # PROJ-215 Phase 5: Get storm names at combat hex
-        storm_names = []
-        if self._area_effect_manager is not None and self._galaxy is not None:
-            effects = self._area_effect_manager.get_effects_at_global_hex(self._galaxy, f1.location)
-            if effects.in_storm:
-                storm_names = effects.storm_names
-
-        log_event(
-            EventType.COMBAT_RESOLVED,
-            category=EventCategory.COMBAT,
-            empire_id=winner.owner_id,
-            message=f"Battle: Fleet {winner.id} defeated Fleet {loser.id}",
-            winner_fleet_id=winner.id,
-            loser_fleet_id=loser.id,
-            location_hex=[f1.location.q, f1.location.r],
-            system_name=system_name,
-            storm_names=storm_names,
-        )
+        self._log_combat_result(winner, loser, f1.location)
         return winner
 
     def _resolve_combat_simulated(self, f1: 'Fleet', f2: 'Fleet') -> 'Fleet':
@@ -280,27 +304,5 @@ class ConflictResolutionEngine:
             else:
                 winner, loser = f2, f1
 
-        # PROJ-215: Look up system name for granular event log columns
-        system_name = ""
-        if self._galaxy and hasattr(self._galaxy, 'get_system_at_location'):
-            sys = self._galaxy.get_system_at_location(f1.location)
-            if sys:
-                system_name = sys.name
-
-        # PROJ-215 Phase 5: Get storm names from environmental_effects (already queried above)
-        storm_names = []
-        if environmental_effects is not None and environmental_effects.in_storm:
-            storm_names = environmental_effects.storm_names
-
-        log_event(
-            EventType.COMBAT_RESOLVED,
-            category=EventCategory.COMBAT,
-            empire_id=winner.owner_id,
-            message=f"Battle: Fleet {winner.id} defeated Fleet {loser.id}",
-            winner_fleet_id=winner.id,
-            loser_fleet_id=loser.id,
-            location_hex=[f1.location.q, f1.location.r],
-            system_name=system_name,
-            storm_names=storm_names,
-        )
+        self._log_combat_result(winner, loser, f1.location, environmental_effects)
         return winner

@@ -269,7 +269,6 @@ class EmpireEconomyCalculator:
         from game.strategy.data.build_queue_source import (
             get_default_production_rates,
             _get_facility_production_rates,
-            _facility_is_shipyard,
         )
         from game.strategy.data.fleet import Fleet
 
@@ -296,7 +295,7 @@ class EmpireEconomyCalculator:
 
             # Facility queues (shipyards)
             for facility in colony.facilities:
-                if facility.construction_queue and _facility_is_shipyard(facility):
+                if facility.construction_queue and facility.is_shipyard:
                     fac_rate = _get_facility_production_rates(facility)
                     _accumulate(facility.construction_queue, fac_rate)
 

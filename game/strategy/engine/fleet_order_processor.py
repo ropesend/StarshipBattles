@@ -3,8 +3,8 @@ FleetOrderProcessor - Centralized order lifecycle management.
 
 PROJ-12 Phase 3: Extracted from TurnEngine to decompose the god class.
 STRAT-006: Centralize order lifecycle management.
-PROJ-187: process_end_turn_orders() now called by ActionExecutionEngine during ticks,
-          not by TurnEngine at end-of-turn.
+PROJ-187: execute_action_order() called by ActionExecutionEngine during ticks.
+PROJ-226: Removed backward compat alias process_end_turn_orders.
 
 Responsibilities:
 - Order completion (pop_order in single location)
@@ -67,7 +67,7 @@ class FleetOrderProcessor:
     - process_join_fleet() - handle JOIN_FLEET orders
     - process_colonize() - handle COLONIZE orders
     - process_instant_orders() - tick-based instant orders
-    - process_end_turn_orders() - end-of-turn orders
+    - execute_action_order() - execute action orders (COLONIZE, TRANSFER, superweapons)
     """
 
     def __init__(self):
@@ -75,6 +75,31 @@ class FleetOrderProcessor:
         # Lazy import to avoid circular dependency
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
         self._superweapon_processor = SuperweaponOrderProcessor()
+
+    def _execute_fleet_merge(self, fleet: Fleet, target_fleet: Fleet, empire: 'Empire') -> None:
+        """Merge fleet into target and log the event.
+
+        Shared logic for both single-fleet processing (process_join_fleet)
+        and batch processing (process_instant_orders).
+
+        Args:
+            fleet: Fleet being merged (will be removed).
+            target_fleet: Fleet receiving the merged ships.
+            empire: Empire that owns both fleets.
+        """
+        fleet.merge_with(target_fleet)
+        empire.remove_fleet(fleet)
+        from game.core.event_logging import log_event
+        from game.strategy.events.event_types import EventType, EventCategory
+        log_event(
+            EventType.FLEET_JOINED,
+            category=EventCategory.FLEET_OPERATIONS,
+            empire_id=empire.id,
+            message=f"Fleet {fleet.id} joined Fleet {target_fleet.id}",
+            fleet_id=fleet.id,
+            target_fleet_id=target_fleet.id,
+            ship_count=len(target_fleet.ships),
+        )
 
     def process_join_fleet(
         self,
@@ -109,20 +134,7 @@ class FleetOrderProcessor:
 
         if fleet.location == target_fleet.location:
             logger.debug(f"FleetOrderProcessor: Fleet {fleet.id} merging into {target_fleet.id}")
-            fleet.merge_with(target_fleet)
-            empire.remove_fleet(fleet)
-            # PROJ-222: Log FLEET_JOINED event
-            from game.core.event_logging import log_event
-            from game.strategy.events.event_types import EventType, EventCategory
-            log_event(
-                EventType.FLEET_JOINED,
-                category=EventCategory.FLEET_OPERATIONS,
-                empire_id=empire.id,
-                message=f"Fleet {fleet.id} joined Fleet {target_fleet.id}",
-                fleet_id=fleet.id,
-                target_fleet_id=target_fleet.id,
-                ship_count=len(target_fleet.ships),
-            )
+            self._execute_fleet_merge(fleet, target_fleet, empire)
             return JoinFleetResult(merged=True)
         else:
             # Not at location yet
@@ -641,18 +653,6 @@ class FleetOrderProcessor:
 
         return False
 
-    # Backward compatibility alias
-    def process_end_turn_orders(
-        self,
-        fleet: Fleet,
-        empire: 'Empire',
-        galaxy: 'Galaxy',
-        component_registry: Optional[Dict[str, Any]] = None,
-        empires: Optional[List['Empire']] = None
-    ) -> bool:
-        """Deprecated: Use execute_action_order instead."""
-        return self.execute_action_order(fleet, empire, galaxy, component_registry, empires)
-
     def process_instant_orders(
         self,
         empires: List['Empire']
@@ -669,36 +669,21 @@ class FleetOrderProcessor:
         Returns:
             List of (empire, fleet) tuples for removed fleets
         """
-        fleets_to_remove = []
+        fleets_to_merge = []
 
         for empire in empires:
             for fleet in list(empire.fleets):  # Copy list since we may modify it
                 order = fleet.get_current_order()
                 if order and order.type == OrderType.JOIN_FLEET:
                     target_fleet = order.target
-                    # Fleet always has location; None check suffices
-                    if target_fleet is not None:
-                        if fleet.location == target_fleet.location:
-                            logger.debug(f"FleetOrderProcessor [Instant]: Fleet {fleet.id} merging into {target_fleet.id}")
-                            fleet.merge_with(target_fleet)
-                            fleets_to_remove.append((empire, fleet, target_fleet))
+                    if target_fleet is not None and fleet.location == target_fleet.location:
+                        logger.debug(f"FleetOrderProcessor [Instant]: Fleet {fleet.id} merging into {target_fleet.id}")
+                        fleets_to_merge.append((empire, fleet, target_fleet))
 
-        # Remove merged fleets and log events
-        from game.core.event_logging import log_event
-        from game.strategy.events.event_types import EventType, EventCategory
+        # Execute merges (deferred to avoid modifying lists during iteration)
         result = []
-        for empire, fleet, target_fleet in fleets_to_remove:
-            empire.remove_fleet(fleet)
-            # PROJ-222: Log FLEET_JOINED event
-            log_event(
-                EventType.FLEET_JOINED,
-                category=EventCategory.FLEET_OPERATIONS,
-                empire_id=empire.id,
-                message=f"Fleet {fleet.id} joined Fleet {target_fleet.id}",
-                fleet_id=fleet.id,
-                target_fleet_id=target_fleet.id,
-                ship_count=len(target_fleet.ships),
-            )
+        for empire, fleet, target_fleet in fleets_to_merge:
+            self._execute_fleet_merge(fleet, target_fleet, empire)
             result.append((empire, fleet))
 
         return result

@@ -403,29 +403,6 @@ class PlanetGenerator:
             image_rotation=image_rotation
         )
 
-    def _generate_mass(self, is_companion=False, primary_mass=None) -> float:
-        """
-        Generate planet mass in kg using log-normal distribution.
-
-        Range: Ceres (9e20) to Jupiter (1.9e27)
-        Weighted towards Mars - Super Earth range.
-        """
-        min_mass = MASS_CERES
-        max_mass = MASS_JUPITER
-
-        if primary_mass:
-            target_max = primary_mass * 0.4
-            if target_max < min_mass:
-                return min_mass
-            max_mass = min(MASS_JUPITER, target_max)
-
-        while True:
-            log_val = random.gauss(24.5, 1.5)
-            mass = 10 ** log_val
-
-            if min_mass <= mass <= max_mass:
-                return mass
-
     def _generate_surface_flags(self, mass: float, temp: float):
         """
         Generate surface water, tectonic activity, and magnetic field.

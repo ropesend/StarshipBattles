@@ -458,10 +458,10 @@ class TestMockEngines:
         from game.strategy.engine.action_execution_engine import ActionExecutionEngine
 
         mock_processor = MockOrderProcessor()
-        mock_processor.process_end_turn_orders_result = True
+        mock_processor.execute_action_order_result = True
 
         action_engine = ActionExecutionEngine(order_processor=mock_processor)
 
-        # ActionExecutionEngine calls process_end_turn_orders when action completes
+        # ActionExecutionEngine calls execute_action_order when action completes
         # Verify the mock can be used correctly
-        assert mock_processor.process_end_turn_orders_result is True
+        assert mock_processor.execute_action_order_result is True

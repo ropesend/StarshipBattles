@@ -118,7 +118,7 @@ def test_colonize_specific_success_at_exact_location(order_processor, galaxy_set
     empire.fleets.append(fleet)
 
     # Execute via FleetOrderProcessor (PROJ-187)
-    result = order_processor.process_end_turn_orders(
+    result = order_processor.execute_action_order(
         fleet, empire, galaxy, component_registry=component_registry
     )
 
@@ -139,7 +139,7 @@ def test_colonize_specific_fail_wrong_location(order_processor, galaxy_setup, co
     empire = Empire(1, "Player 1", (255, 0, 0))
     empire.fleets.append(fleet)
 
-    result = order_processor.process_end_turn_orders(
+    result = order_processor.execute_action_order(
         fleet, empire, galaxy, component_registry=component_registry
     )
 
@@ -159,7 +159,7 @@ def test_colonize_any_success_at_location(order_processor, galaxy_setup, compone
     empire = Empire(1, "Player 1", (255, 0, 0))
     empire.fleets.append(fleet)
 
-    result = order_processor.process_end_turn_orders(
+    result = order_processor.execute_action_order(
         fleet, empire, galaxy, component_registry=component_registry
     )
 
@@ -176,7 +176,7 @@ def test_colonize_any_fail_no_candidates(order_processor, galaxy_setup):
 
     empire = Empire(1, "Player 1", (255, 0, 0))
 
-    result = order_processor.process_end_turn_orders(fleet, empire, galaxy)
+    result = order_processor.execute_action_order(fleet, empire, galaxy)
 
     assert result is False
     assert len(fleet.orders) == 0 # Popped
@@ -192,7 +192,7 @@ def test_colonize_specific_fail_owned(order_processor, galaxy_setup):
 
     empire = Empire(1, "Player 1", (255, 0, 0))
 
-    result = order_processor.process_end_turn_orders(fleet, empire, galaxy)
+    result = order_processor.execute_action_order(fleet, empire, galaxy)
 
     assert result is False
     assert len(fleet.orders) == 0
