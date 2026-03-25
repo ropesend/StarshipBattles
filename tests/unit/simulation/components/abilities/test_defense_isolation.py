@@ -536,44 +536,44 @@ class TestEmissiveArmor:
         """Initialize with positive value."""
         ability = EmissiveArmor(mock_component, 5)
 
-        assert ability.amount == 5
-        assert ability._base_amount == 5
+        assert ability.value == 5
+        assert ability._base_value == 5
 
     def test_init_with_zero(self, mock_component):
         """Initialize with zero value."""
         ability = EmissiveArmor(mock_component, 0)
 
-        assert ability.amount == 0
-        assert ability._base_amount == 0
+        assert ability.value == 0
+        assert ability._base_value == 0
 
     def test_init_with_dict_value(self, mock_component):
         """Initialize with dict containing 'value' key."""
         data = {'value': 10}
         ability = EmissiveArmor(mock_component, data)
 
-        assert ability.amount == 10
+        assert ability.value == 10
 
     def test_init_with_float_truncates(self, mock_component):
         """Initialize with float truncates to int."""
         ability = EmissiveArmor(mock_component, 7.9)
 
-        assert ability.amount == 7
-        assert isinstance(ability.amount, int)
+        assert ability.value == 7
+        assert isinstance(ability.value, int)
 
-    def test_init_amount_is_integer(self, mock_component):
-        """amount is stored as integer."""
+    def test_init_value_is_integer(self, mock_component):
+        """value is stored as integer."""
         ability = EmissiveArmor(mock_component, 3)
 
-        assert isinstance(ability.amount, int)
-        assert isinstance(ability._base_amount, int)
+        assert isinstance(ability.value, int)
+        assert isinstance(ability._base_value, int)
 
     def test_recalculate_is_no_op(self, mock_component):
-        """recalculate does not change amount (no bindings)."""
+        """recalculate does not change value (no bindings)."""
         ability = EmissiveArmor(mock_component, 5)
 
         ability.recalculate()
 
-        assert ability.amount == 5
+        assert ability.value == 5
 
     def test_get_ui_rows_format(self, mock_component):
         """get_ui_rows returns correct format."""
@@ -648,7 +648,7 @@ class TestDefenseAbilitiesEdgeCases:
         ability = EmissiveArmor(mock_component, -5)
 
         # Implementation stores as int, doesn't validate
-        assert ability.amount == -5
+        assert ability.value == -5
 
     def test_to_hit_attack_very_large_bonus(self, mock_component):
         """ToHitAttackModifier handles very large bonus."""

@@ -131,11 +131,13 @@ class TestTargetingRules:
         comp.is_active = True
         comp.has_pdc_ability.return_value = True
 
-        # Mock WeaponAbility
+        # Mock WeaponAbility with real check_firing_solution
+        from game.simulation.components.abilities.weapons import WeaponAbility
         ab = MagicMock()
         ab.range = 500
         ab.facing_angle = 0
         ab.firing_arc = 90
+        ab.check_firing_solution = lambda sp, sa, tp: WeaponAbility.check_firing_solution(ab, sp, sa, tp)
         comp.get_ability.return_value = ab
 
         # Mock the Ship helper method to return our component

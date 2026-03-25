@@ -1,5 +1,5 @@
 from game.engine.physics import PhysicsBody
-from game.simulation.physics_constants import K_SPEED, K_THRUST
+from game.simulation.physics_constants import compute_acceleration, compute_max_speed
 
 
 class ShipPhysicsMixin:
@@ -30,8 +30,8 @@ class ShipPhysicsMixin:
             current_total_thrust = self.get_total_ability_value('CombatPropulsion', operational_only=True)
 
             if self.mass > 0:
-                current_accel = (current_total_thrust * K_THRUST) / (self.mass * self.mass)
-                potential_max_speed = (current_total_thrust * K_SPEED) / self.mass
+                current_accel = compute_acceleration(current_total_thrust, self.mass)
+                potential_max_speed = compute_max_speed(current_total_thrust, self.mass)
                 target_v = potential_max_speed * self.engine_throttle
                 step = current_accel
 

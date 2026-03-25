@@ -413,3 +413,110 @@ class TestTotalDefenseScoreInitialization:
         # For a ship with just a Hull, this will be based on size/maneuver/ecm scores
         # The exact value depends on the ship configuration, but it should be a float
         assert isinstance(ship.total_defense_score, float), "total_defense_score should be a float"
+
+
+# =============================================================================
+# PROJ-225: Hull Auto-Equip Extraction Tests
+# =============================================================================
+
+class TestHullAutoEquip:
+    """Tests for the extracted _equip_default_hull method."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, fresh_registries):
+        yield
+
+    def test_init_equips_default_hull(self, fresh_registries):
+        """Ship.__init__ equips the default hull component."""
+        ship = Ship("Test", 0, 0, (255, 255, 255), registries=fresh_registries)
+        hull_comps = ship.layers[LayerType.HULL].components
+        assert len(hull_comps) == 1
+        assert hull_comps[0].layer_assigned == LayerType.HULL
+        assert hull_comps[0].ship is ship
+
+    def test_change_class_equips_new_hull(self, fresh_registries):
+        """Ship.change_class equips the hull for the new class."""
+        ship = Ship("Test", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
+        old_hull = ship.layers[LayerType.HULL].components[0]
+
+        # Change to a different class that also has a hull
+        ship.change_class("Frigate")
+        new_hull = ship.layers[LayerType.HULL].components[0]
+
+        # Should have a hull in the new class
+        assert len(ship.layers[LayerType.HULL].components) == 1
+        assert new_hull.ship is ship
+        assert new_hull.layer_assigned == LayerType.HULL
+
+    def test_no_hull_if_class_has_no_default(self, fresh_registries):
+        """Ship with no default_hull_id gets no hull component."""
+        fresh_registries.vehicle_classes["NoHull"] = {
+            "max_mass": 500,
+            "layers": [
+                {"type": "CORE", "radius_pct": 0.5, "max_mass_pct": 1.0},
+            ]
+        }
+        ship = Ship("Test", 0, 0, (255, 255, 255), ship_class="NoHull", registries=fresh_registries)
+        assert len(ship.layers[LayerType.HULL].components) == 0
+
+
+# =============================================================================
+# PROJ-225: Component Attachment Extraction Tests
+# =============================================================================
+
+class TestComponentAttachment:
+    """Tests for the extracted _attach_component method."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, fresh_registries):
+        yield
+
+    def test_add_component_attaches_correctly(self, fresh_registries):
+        """add_component sets layer_assigned, ship ref, and triggers recalculate."""
+        ship = Ship("Test", 0, 0, (255, 255, 255), registries=fresh_registries)
+        bridge = create_component('bridge', registries=fresh_registries)
+
+        result = ship.add_component(bridge, LayerType.CORE)
+
+        assert result is True
+        assert bridge.layer_assigned == LayerType.CORE
+        assert bridge.ship is ship
+        assert bridge in ship.layers[LayerType.CORE].components
+
+    def test_add_components_bulk_attaches_all(self, fresh_registries):
+        """add_components_bulk attaches multiple components correctly."""
+        ship = Ship("Test", 0, 0, (255, 255, 255), registries=fresh_registries)
+        bridge = create_component('bridge', registries=fresh_registries)
+
+        count = ship.add_components_bulk(bridge, LayerType.CORE, 2)
+
+        assert count >= 1  # At least one should be added
+        for comp in ship.layers[LayerType.CORE].components:
+            assert comp.layer_assigned == LayerType.CORE
+            assert comp.ship is ship
+
+
+# =============================================================================
+# PROJ-225: DEFAULT_MAX_MASS Constant Tests
+# =============================================================================
+
+class TestDefaultMaxMass:
+    """Tests for DEFAULT_MAX_MASS named constant."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, fresh_registries):
+        yield
+
+    def test_constant_exists(self):
+        """DEFAULT_MAX_MASS is defined in ship module."""
+        from game.simulation.entities.ship import DEFAULT_MAX_MASS
+        assert DEFAULT_MAX_MASS == 1000
+
+    def test_ship_uses_constant_for_unknown_class(self, fresh_registries):
+        """Ship with unknown class uses DEFAULT_MAX_MASS."""
+        from game.simulation.entities.ship import DEFAULT_MAX_MASS
+        fresh_registries.vehicle_classes["Unknown"] = {
+            "layers": [{"type": "CORE", "radius_pct": 0.5, "max_mass_pct": 1.0}]
+        }
+        ship = Ship("Test", 0, 0, (255, 255, 255), ship_class="Unknown", registries=fresh_registries)
+        assert ship.max_mass_budget == DEFAULT_MAX_MASS

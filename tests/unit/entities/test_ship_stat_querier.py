@@ -243,25 +243,8 @@ class TestShipStatQuerierMaxWeaponRange:
 class TestShipStatQuerierCachedSummary:
     """Tests for cached_summary property."""
 
-    def test_cached_summary_returns_ship_cached_summary(self):
-        """cached_summary returns the ship's _cached_summary dict."""
-        mock_ship = Mock()
-        mock_ship._cached_summary = {'dps': 100, 'speed': 50}
-
-        querier = ShipStatQuerier(mock_ship)
-        result = querier.cached_summary
-
-        assert result == {'dps': 100, 'speed': 50}
-
-    def test_cached_summary_returns_empty_dict_when_empty(self):
-        """cached_summary returns empty dict when ship has no cached data."""
-        mock_ship = Mock()
-        mock_ship._cached_summary = {}
-
-        querier = ShipStatQuerier(mock_ship)
-        result = querier.cached_summary
-
-        assert result == {}
+    # PROJ-225: Removed test_cached_summary_* tests (DUP-SIM-007).
+    # cached_summary property removed from ShipStatQuerier - use Ship.cached_summary.
 
 
 # ============================================================================

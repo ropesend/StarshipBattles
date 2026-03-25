@@ -12,6 +12,9 @@ from game.core.math import Vector2
 from game.core.registry import GameRegistries, get_default_registry_provider
 
 logger = logging.getLogger(__name__)
+
+# Re-export for backward compatibility and convenient access
+from game.simulation.physics_constants import DEFAULT_MAX_MASS
 from game.core.constants import LayerDefaults, CombatConstants
 
 from .ship_stats import ShipStatsCalculator
@@ -75,17 +78,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self._initialize_layers()
         
         # Auto-equip default Hull component if defined for this class
-        default_hull_id = class_def.get('default_hull_id')
-        if default_hull_id:
-            # PROJ-38: Pass registries to create_component
-            hull_component = create_component(default_hull_id, registries=self._registries)
-            if hull_component:
-                # Direct append to avoid validation during init
-                self.layers[LayerType.HULL].components.append(hull_component)
-                hull_component.layer_assigned = LayerType.HULL
-                hull_component.ship = self
-            else:
-                logger.warning(f"Ship '{name}': Failed to create default hull '{default_hull_id}'")
+        self._equip_default_hull(class_def)
 
         # Stats - Cached values (populated by ShipStatsCalculator.calculate())
         self._cached_mass: float = 0.0
@@ -100,7 +93,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.target_speed: float = 0.0 # New Target Speed Control
         
         # Budget
-        self.max_mass_budget: float = class_def.get('max_mass', 1000)
+        self.max_mass_budget: float = class_def.get('max_mass', DEFAULT_MAX_MASS)
         
         # Stats initialized to 0.0 - Recalculate will populate these
         self.current_mass: float = 0.0 
@@ -200,6 +193,25 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self._combat_engine: Optional[ShipCombatEngine] = None
 
 
+
+    def _equip_default_hull(self, class_def: dict) -> None:
+        """Auto-equip the default hull component defined in the vehicle class.
+
+        PROJ-225: Extracted from duplicated logic in __init__ and change_class.
+
+        Args:
+            class_def: Vehicle class definition dict (may contain 'default_hull_id')
+        """
+        default_hull_id = class_def.get('default_hull_id')
+        if default_hull_id:
+            hull_component = create_component(default_hull_id, registries=self._registries)
+            if hull_component:
+                # Direct append to avoid validation during init/class change
+                self.layers[LayerType.HULL].components.append(hull_component)
+                hull_component.layer_assigned = LayerType.HULL
+                hull_component.ship = self
+            else:
+                logger.warning(f"Ship '{self.name}': Failed to create default hull '{default_hull_id}'")
 
     @property
     def registries(self) -> GameRegistries:
@@ -458,21 +470,13 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             class_def = {}
         self.base_mass = 0.0  # Hull component provides mass via ShipStatsCalculator
         self.vehicle_type = class_def.get('type', "Ship")
-        self.max_mass_budget = class_def.get('max_mass', 1000)
+        self.max_mass_budget = class_def.get('max_mass', DEFAULT_MAX_MASS)
 
         # Re-initialize Layers (clears self.layers)
         self._initialize_layers()
 
         # Auto-equip default Hull component for the NEW class (BUG-11 Fix)
-        default_hull_id = class_def.get('default_hull_id')
-        if default_hull_id:
-            # PROJ-42: Pass registries to create_component
-            hull_component = create_component(default_hull_id, registries=self._registries)
-            if hull_component:
-                # Direct append to avoid validation during class change
-                self.layers[LayerType.HULL].components.append(hull_component)
-                hull_component.layer_assigned = LayerType.HULL
-                hull_component.ship = self
+        self._equip_default_hull(class_def)
         
         if migrate_components:
             # Attempt to restore components
@@ -499,6 +503,28 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         # Finally recalculate stats
         self.recalculate_stats()
 
+    def _attach_component(self, component: Component, layer_type: LayerType, modifier_service=None) -> None:
+        """Attach a validated component to a layer and apply mandatory modifiers.
+
+        PROJ-225: Extracted from duplicated logic in add_component and add_components_bulk.
+        Does NOT validate or trigger recalculate_stats - caller is responsible for both.
+
+        Args:
+            component: The component to attach (must already be validated)
+            layer_type: Target layer
+            modifier_service: Optional pre-created ModifierService (for bulk efficiency)
+        """
+        self.layers[layer_type].components.append(component)
+        component.layer_assigned = layer_type
+        component.ship = self
+        component.recalculate_stats()
+        # Apply mandatory modifiers (e.g., size mount) immediately upon addition
+        if modifier_service is None:
+            # LATE IMPORT: services/__init__.py imports VehicleDesignService which imports Ship
+            from game.simulation.services.modifier_service import ModifierService
+            modifier_service = ModifierService(modifier_registry=self._registries.modifiers)
+        modifier_service.ensure_mandatory_modifiers(component)
+
     def add_component(self, component: Component, layer_type: LayerType) -> bool:
         """Validate and add a component to the specified layer."""
         if component is None:
@@ -513,16 +539,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
                 logger.error(err)
             return False
 
-        self.layers[layer_type].components.append(component)
-        component.layer_assigned = layer_type
-        component.ship = self
-        component.recalculate_stats()
-        # Apply mandatory modifiers (e.g., size mount) immediately upon addition
-        # LATE IMPORT: services/__init__.py imports VehicleDesignService which imports Ship
-        from game.simulation.services.modifier_service import ModifierService
-        # PROJ-50: Use strict DI with ship's registries
-        service = ModifierService(modifier_registry=self._registries.modifiers)
-        service.ensure_mandatory_modifiers(component)
+        self._attach_component(component, layer_type)
         self._cached_summary = {}  # Invalidate cache
         self._invalidate_components_cache()  # PROJ-49: Invalidate component cache
 
@@ -542,12 +559,15 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         Returns the number of components successfully added.
         """
         added_count = 0
-        
-        # Loop to add
+
+        # PROJ-225: Create modifier service once for all additions (not per-component)
+        from game.simulation.services.modifier_service import ModifierService
+        modifier_service = ModifierService(modifier_registry=self._registries.modifiers)
+
         for _ in range(count):
             # Must clone for each new instance
             new_comp = component.clone()
-            
+
             # PROJ-211: Pass registry_provider explicitly
             result = get_or_create_validator(registry_provider=get_default_registry_provider()).validate_addition(self, new_comp, layer_type)
             if not result.is_valid:
@@ -557,22 +577,13 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
                     for err in result.errors:
                         logger.error(err)
                 break
-                
-            self.layers[layer_type].components.append(new_comp)
-            new_comp.layer_assigned = layer_type
-            new_comp.ship = self
-            new_comp.recalculate_stats()
-            # Apply mandatory modifiers (e.g., size mount) immediately upon addition
-            # LATE IMPORT: services/__init__.py imports VehicleDesignService which imports Ship
-            from game.simulation.services.modifier_service import ModifierService
-            # PROJ-50: Use strict DI with ship's registries
-            service = ModifierService(modifier_registry=self._registries.modifiers)
-            service.ensure_mandatory_modifiers(new_comp)
+
+            self._attach_component(new_comp, layer_type, modifier_service=modifier_service)
             added_count += 1
-            
+
         if added_count > 0:
             self.recalculate_stats()
-            
+
         return added_count
 
     def remove_component(self, layer_type: LayerType, index: int) -> Optional[Component]:
@@ -797,22 +808,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         """Check if the current ship design is valid."""
         return self.validator_helper.check_validity()
 
-    @property
-    def layers_dict(self) -> Dict[str, List[Any]]:
-        """Helper for JSON serialization."""
-        d = {}
-        for l_type, layer_data in self.layers.items():
-            d[l_type.name] = []
-            for comp in layer_data.components:
-                # Minimal serialization: ID + Modifiers
-                c_data = {
-                    "id": comp.id,
-                    "modifiers": []
-                }
-                for m in comp.modifiers:
-                    c_data["modifiers"].append({"id": m.definition.id, "value": m.value})
-                d[l_type.name].append(c_data)
-        return d
+    # PROJ-225: Removed unused layers_dict property (DUP-SIM-010).
+    # Ship serialization uses ShipSerializer.to_dict() exclusively.
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize ship to dictionary.

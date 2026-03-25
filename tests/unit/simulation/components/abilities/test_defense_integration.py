@@ -260,21 +260,21 @@ class TestEmissiveArmorIntegration:
         armor1 = EmissiveArmor(mock_component, 5)
         armor2 = EmissiveArmor(mock_component, 3)
 
-        total_ignore = armor1.amount + armor2.amount
+        total_ignore = armor1.value + armor2.value
         assert total_ignore == 8
 
     def test_armor_zero_value(self, mock_component):
         """Zero armor provides no damage reduction."""
         armor = EmissiveArmor(mock_component, 0)
 
-        assert armor.amount == 0
+        assert armor.value == 0
         assert armor.get_primary_value() == 0.0
 
     def test_armor_large_value(self, mock_component):
         """Large armor values should work correctly."""
         armor = EmissiveArmor(mock_component, 1000)
 
-        assert armor.amount == 1000
+        assert armor.value == 1000
         assert armor.get_primary_value() == 1000.0
 
 
@@ -498,7 +498,7 @@ class TestDefenseValueInitialization:
         data = {'value': 6}
         armor = EmissiveArmor(mock_component, data)
 
-        assert armor.amount == 6
+        assert armor.value == 6
 
     def test_missing_value_key_defaults_to_zero(self, mock_component):
         """Missing 'value' key in dict defaults to zero."""
@@ -514,4 +514,4 @@ class TestDefenseValueInitialization:
         assert regen.rate == 0.0
         assert attack.value == 0.0
         assert defense.value == 0.0
-        assert armor.amount == 0
+        assert armor.value == 0

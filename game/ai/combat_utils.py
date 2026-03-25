@@ -14,7 +14,7 @@ import logging
 
 from typing import Any, List, Optional, TYPE_CHECKING
 
-from game.core.math import Vector2, angle_from_vector
+from game.core.math import Vector2
 from game.ai.interfaces.controllable import IControllable
 
 if TYPE_CHECKING:
@@ -203,6 +203,13 @@ def is_in_pdc_arc(ship: Any, target: Any) -> bool:
             return False
         pdc_components = method('WeaponAbility', operational_only=True)
 
+    # Guard: can't determine firing arc for target at same position
+    vec_to_target = target_pos - ship_pos
+    if vec_to_target.length_squared() == 0:
+        return False
+
+    ship_angle = get_rotation(ship)
+
     for comp in pdc_components:
         # Components always have has_pdc_ability method
         if not comp.has_pdc_ability():
@@ -212,21 +219,8 @@ def is_in_pdc_arc(ship: Any, target: Any) -> bool:
         if weapon_ab is None:
             continue
 
-        dist = ship_pos.distance_to(target_pos)
-        if dist > weapon_ab.range:
-            continue
-
-        vec_to_target = target_pos - ship_pos
-        if vec_to_target.length_squared() == 0:
-            continue
-
-        angle_to_target = angle_from_vector(vec_to_target.x, vec_to_target.y)
-
-        ship_angle = get_rotation(ship)
-        comp_facing = (ship_angle + weapon_ab.facing_angle) % 360
-        diff = (angle_to_target - comp_facing + 180) % 360 - 180
-
-        if abs(diff) <= (weapon_ab.firing_arc / 2):
+        # PROJ-225: Delegate to WeaponAbility.check_firing_solution (single source of truth)
+        if weapon_ab.check_firing_solution(ship_pos, ship_angle, target_pos):
             return True
 
     return False

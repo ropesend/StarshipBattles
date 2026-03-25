@@ -51,7 +51,7 @@ Example:
 """
 from game.simulation.components.component_constants import ComponentStatus
 from game.core.constants import LayerType, ResourceType
-from game.simulation.physics_constants import K_SPEED, K_THRUST, K_TURN
+from game.simulation.physics_constants import K_TURN, compute_acceleration, compute_max_speed, DEFAULT_MAX_MASS
 from game.simulation.entities.ability_aggregator import calculate_ability_totals, get_ability_total
 from game.simulation.entities.combat_endurance import calculate_combat_endurance
 from game.core.config import PhysicsConfig
@@ -234,11 +234,11 @@ class ShipStatsCalculator:
         """
         # Physics Stats - INVERSE MASS SCALING
         if ship.mass > 0:
-            ship.acceleration_rate = (ship.total_thrust * K_THRUST) / (ship.mass * ship.mass)
+            ship.acceleration_rate = compute_acceleration(ship.total_thrust, ship.mass)
             raw_turn_speed = ship.turn_speed
             ship.turn_speed = (raw_turn_speed * K_TURN) / (ship.mass ** 1.5)
 
-            ship.max_speed = (ship.total_thrust * K_SPEED) / ship.mass if ship.total_thrust > 0 else 0
+            ship.max_speed = compute_max_speed(ship.total_thrust, ship.mass) if ship.total_thrust > 0 else 0
         else:
             ship.acceleration_rate = 0
             ship.max_speed = 0
@@ -393,7 +393,7 @@ class ShipStatsCalculator:
         ship.max_targets = CombatConstants.DEFAULT_MAX_TARGETS  # Reset to default
 
         # Centralize mass budget lookup
-        ship.max_mass_budget = self.vehicle_classes.get(ship.ship_class, {}).get('max_mass', 1000)
+        ship.max_mass_budget = self.vehicle_classes.get(ship.ship_class, {}).get('max_mass', DEFAULT_MAX_MASS)
 
         # Effective Crew is limited by Life Support
         effective_crew = min(available_crew, available_life_support)
@@ -476,10 +476,10 @@ class ShipStatsCalculator:
     def _check_mass_limits(self, ship) -> None:
         ship.mass_limits_ok = True
         # Budget check (Max Mass)
-        ship.max_mass_budget = 1000 # Default
-        
+        ship.max_mass_budget = DEFAULT_MAX_MASS
+
         if ship.ship_class in self.vehicle_classes:
-             ship.max_mass_budget = self.vehicle_classes[ship.ship_class].get('max_mass', 1000)
+             ship.max_mass_budget = self.vehicle_classes[ship.ship_class].get('max_mass', DEFAULT_MAX_MASS)
 
         for layer_type, layer_data in ship.layers.items():
             limit_ratio = layer_data.max_mass_pct

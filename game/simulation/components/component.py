@@ -59,8 +59,8 @@ Key Classes:
 """
 import json
 import logging
-import threading
 from game.simulation.formula_system import safe_evaluate_math_formula
+from game.core.singleton import SingletonMeta
 from typing import Optional, TYPE_CHECKING
 # PROJ-211: Removed get_default_registry_provider import - DI is now required
 from game.core.json_utils import load_json_required
@@ -440,11 +440,9 @@ class Component:
 # Type-specific behavior is handled by ability instances (WeaponAbility, etc.)
 
 
-# Thread-safe singleton for component and modifier caches
-class ComponentCacheManager:
+# PROJ-225: Migrated to SingletonMeta (consistent with all other singletons in codebase)
+class ComponentCacheManager(metaclass=SingletonMeta):
     """Thread-safe singleton manager for component and modifier caches."""
-    _instance = None
-    _lock = threading.Lock()
 
     def __init__(self):
         self.component_cache = None
@@ -452,31 +450,12 @@ class ComponentCacheManager:
         self.last_component_file = None
         self.last_modifier_file = None
 
-    @classmethod
-    def instance(cls):
-        """Get the singleton instance with thread-safe initialization."""
-        if cls._instance is None:
-            with cls._lock:
-                # Double-check after acquiring lock
-                if cls._instance is None:
-                    cls._instance = cls()
-        return cls._instance
-
-    @classmethod
-    def reset(cls):
-        """Reset all caches for test isolation."""
-        with cls._lock:
-            if cls._instance is not None:
-                cls._instance.component_cache = None
-                cls._instance.modifier_cache = None
-                cls._instance.last_component_file = None
-                cls._instance.last_modifier_file = None
-
 
 def reset_component_caches():
     """
     Reset all caches for test isolation.
     This ensures clean state between tests in parallel execution.
+    PROJ-225: Now uses SingletonMeta.reset() which destroys the instance entirely.
     """
     ComponentCacheManager.reset()
 

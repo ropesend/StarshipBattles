@@ -218,13 +218,23 @@ class TestGetHpPercent:
 class TestIsInPdcArc:
     """Tests for is_in_pdc_arc function."""
 
+    def _make_weapon_mock(self, pdc_range, facing_angle, firing_arc):
+        """Create a weapon ability mock with real check_firing_solution.
+
+        PROJ-225: is_in_pdc_arc now delegates to check_firing_solution.
+        """
+        from game.simulation.components.abilities.weapons import WeaponAbility
+
+        weapon_ability = Mock()
+        weapon_ability.range = pdc_range
+        weapon_ability.facing_angle = facing_angle
+        weapon_ability.firing_arc = firing_arc
+        weapon_ability.check_firing_solution = lambda sp, sa, tp: WeaponAbility.check_firing_solution(weapon_ability, sp, sa, tp)
+        return weapon_ability
+
     def test_target_in_arc_returns_true(self):
         """is_in_pdc_arc returns True when target is in PDC arc."""
-        # Create PDC component
-        weapon_ability = Mock()
-        weapon_ability.range = 100
-        weapon_ability.facing_angle = 0
-        weapon_ability.firing_arc = 90
+        weapon_ability = self._make_weapon_mock(100, 0, 90)
 
         pdc_comp = Mock()
         pdc_comp.has_pdc_ability = Mock(return_value=True)
@@ -246,10 +256,7 @@ class TestIsInPdcArc:
 
     def test_target_out_of_range_returns_false(self):
         """is_in_pdc_arc returns False when target is out of range."""
-        weapon_ability = Mock()
-        weapon_ability.range = 50
-        weapon_ability.facing_angle = 0
-        weapon_ability.firing_arc = 90
+        weapon_ability = self._make_weapon_mock(50, 0, 90)
 
         pdc_comp = Mock()
         pdc_comp.has_pdc_ability = Mock(return_value=True)
@@ -308,11 +315,19 @@ class TestIsInPdcArcEdgeCases:
     """
 
     def _create_pdc_ship(self, position, rotation, pdc_range, facing_angle, firing_arc):
-        """Helper to create a ship with PDC weapon using direct attributes."""
+        """Helper to create a ship with PDC weapon using direct attributes.
+
+        PROJ-225: weapon_ability.check_firing_solution now uses the real
+        WeaponAbility method since is_in_pdc_arc delegates to it.
+        """
+        from game.simulation.components.abilities.weapons import WeaponAbility
+
         weapon_ability = Mock()
         weapon_ability.range = pdc_range
         weapon_ability.facing_angle = facing_angle
         weapon_ability.firing_arc = firing_arc
+        # Bind real check_firing_solution method to the mock
+        weapon_ability.check_firing_solution = lambda sp, sa, tp: WeaponAbility.check_firing_solution(weapon_ability, sp, sa, tp)
 
         pdc_comp = Mock()
         pdc_comp.has_pdc_ability = Mock(return_value=True)
