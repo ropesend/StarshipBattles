@@ -54,3 +54,11 @@ class TestSimulationConstants:
         from game.core.constants import SimulationConstants
 
         assert SimulationConstants.ABSOLUTE_MAX_TICKS >= SimulationConstants.DEFAULT_MAX_TICKS
+
+    def test_ticks_per_second_derived_from_tick_rate(self):
+        """TICKS_PER_SECOND must be the inverse of PhysicsConfig.TICK_RATE."""
+        from game.core.constants import SimulationConstants
+        from game.core.config import PhysicsConfig
+
+        expected = int(1.0 / PhysicsConfig.TICK_RATE)
+        assert SimulationConstants.TICKS_PER_SECOND == expected

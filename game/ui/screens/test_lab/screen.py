@@ -13,6 +13,7 @@ import os
 from game.ui.fonts import get_font, FONT_MONO
 from game.ui.screens.test_lab import theme
 from game.core.config import DisplayConfig
+from game.core.string_utils import display_name
 WIDTH, HEIGHT = DisplayConfig.DEFAULT_WIDTH, DisplayConfig.DEFAULT_HEIGHT
 from game.core.json_utils import load_json
 from test_framework.registry import TestRegistry
@@ -482,7 +483,7 @@ class TestLabScreen:
                     value_str = f"{value:.4f}"
                 else:
                     value_str = str(value)
-                display_key = key.replace('_', ' ').title()
+                display_key = display_name(key)
                 lines.append(f"  {display_key}: {value_str}")
         lines.append("")
 

@@ -19,6 +19,7 @@ from typing import Dict, Optional, Tuple, List, TYPE_CHECKING
 logger = logging.getLogger(__name__)
 
 from game.core.constants import LayerType, ResourceType  # Canonical location for LayerType
+from game.core.string_utils import display_name
 from game.ui.assets import ShipThemeManager
 from game.ui.colors import HP_HEALTHY, HP_DAMAGED, HP_CRITICAL, HP_DESTROYED, BAR_BG, BAR_BORDER
 
@@ -394,7 +395,7 @@ class ShipDetailPanel:
                         base_id = parts[0]
                     else:
                         base_id = comp_id
-                    comp_name = base_id.replace('_', ' ').title()
+                    comp_name = display_name(base_id)
 
                     # Determine color based on HP (would need max HP for percentage)
                     # For now, just display HP value with indicator

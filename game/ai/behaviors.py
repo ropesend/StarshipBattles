@@ -189,7 +189,6 @@ class AttackRunBehavior(AIBehavior):
     DEFAULT_APPROACH_DIST_FACTOR: float = AIConfig.ATTACK_RUN_APPROACH_DIST_FACTOR
     DEFAULT_RETREAT_DIST_FACTOR: float = AIConfig.ATTACK_RUN_RETREAT_DIST_FACTOR
     DEFAULT_RETREAT_DURATION: float = AIConfig.ATTACK_RUN_RETREAT_DURATION
-    TICK_DURATION: float = PhysicsConfig.TICK_RATE
     FLEE_DISTANCE: int = AIConfig.FLEE_DISTANCE
     APPROACH_HYSTERESIS: float = AIConfig.ATTACK_RUN_APPROACH_HYSTERESIS
 
@@ -222,7 +221,7 @@ class AttackRunBehavior(AIBehavior):
 
         elif self.attack_state == 'retreat':
             # Cycle-Based: 1 tick = 0.01 seconds. Decrement timer by 0.01.
-            self.attack_timer -= self.TICK_DURATION
+            self.attack_timer -= PhysicsConfig.TICK_RATE
 
             flee_dir = _flee_direction(ship_pos, target.position)
             flee_pos = ship_pos + flee_dir * self.FLEE_DISTANCE
@@ -271,7 +270,6 @@ class FormationBehavior(AIBehavior):
     CORRECTION_FACTOR: float = AIConfig.FORMATION_CORRECTION_FACTOR
     MAX_CORRECTION_FORCE: int = AIConfig.MAX_CORRECTION_FORCE
     PREDICTION_TICKS: int = AIConfig.FORMATION_PREDICTION_TICKS
-    TICK_DURATION: float = PhysicsConfig.TICK_RATE
     NAVIGATE_STOP_DIST: int = AIConfig.FORMATION_NAVIGATE_STOP_DIST
 
     def update(self, target: Any, strategy: Dict[str, Any]) -> None:
@@ -390,7 +388,7 @@ class FormationBehavior(AIBehavior):
             # Predict where master will be in X ticks based on current speed
             # formation_master implements IFormationMaster - access attributes directly
             prediction_ticks = self.PREDICTION_TICKS
-            predicted_master_pos = formation_master.position + (Vector2(0, -1).rotate(-formation_master.angle) * formation_master.current_speed * prediction_ticks * self.TICK_DURATION)
+            predicted_master_pos = formation_master.position + (Vector2(0, -1).rotate(-formation_master.angle) * formation_master.current_speed * prediction_ticks * PhysicsConfig.TICK_RATE)
             # Re-calculate offset based on formation_master's current angle
             if rotation_mode == 'fixed':
                 pred_offset = formation_offset

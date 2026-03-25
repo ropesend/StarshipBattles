@@ -13,6 +13,8 @@ from __future__ import annotations
 from collections import Counter
 from typing import TYPE_CHECKING
 
+from game.core.constants import EARTH_MASS
+from game.core.string_utils import display_name
 from game.strategy.data.order_types import OrderType
 from game.core.protocols import (
     is_star_system, is_star, is_planet, is_fleet,
@@ -78,7 +80,7 @@ def format_planet_info(planet: IPlanet) -> str:
     text += f"<b>Orbit:</b> Ring {planet.orbit_distance}<br>"
 
     # Mass formatting
-    m_earth = 5.97e24
+    m_earth = EARTH_MASS
     m_jup = 1.89e27
     if planet.mass >= m_jup:
         m_str = f"{planet.mass/m_jup:.2f} M_Jup"
@@ -269,8 +271,8 @@ def _format_cargo_summary(fleet: IFleet) -> str:
 
     text = "<b>Cargo:</b><br>"
     for cargo_type, amount in totals.items():
-        display_name = cargo_type.replace('_', ' ').title()
-        text += f" {display_name}: {amount}<br>"
+        cargo_label = display_name(cargo_type)
+        text += f" {cargo_label}: {amount}<br>"
 
     return text
 

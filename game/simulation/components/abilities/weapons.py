@@ -3,6 +3,7 @@ import math
 from typing import Dict, Any, List
 
 from game.core.config import PhysicsConfig
+from game.core.math import angle_from_vector
 from game.simulation.formula_system import safe_evaluate_math_formula
 
 logger = logging.getLogger(__name__)
@@ -229,7 +230,7 @@ class WeaponAbility(Ability):
         # 2. Arc Check
         # Vector to target
         aim_vec = target_pos - ship_pos
-        aim_angle = math.degrees(math.atan2(aim_vec.y, aim_vec.x)) % 360
+        aim_angle = angle_from_vector(aim_vec.x, aim_vec.y)
 
         # Component Global Facing
         comp_facing = (ship_angle + self.facing_angle) % 360

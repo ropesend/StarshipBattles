@@ -14,6 +14,8 @@ Used by UI components to display:
 """
 from typing import Dict, Any, List, Optional, Set, TYPE_CHECKING
 
+from game.core.string_utils import display_name
+
 from .modifier_effects import ModifierEffectEvaluator
 
 if TYPE_CHECKING:
@@ -297,7 +299,7 @@ class ModifierIntrospection:
                 display_text = f"{current:.1f}"
 
             display_entries.append({
-                'label': attribute.replace('_', ' ').title(),
+                'label': display_name(attribute),
                 'attribute': attribute,
                 'base': base,
                 'current': current,

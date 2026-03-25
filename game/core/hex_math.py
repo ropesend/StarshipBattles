@@ -64,7 +64,7 @@ Example:
 """
 import math
 import random
-from typing import FrozenSet, List, Set, Tuple
+from typing import FrozenSet, List, Optional, Set, Tuple
 
 
 class HexCoord:
@@ -305,6 +305,34 @@ def hex_from_dict(data: dict) -> HexCoord:
         Reconstructed HexCoord
     """
     return HexCoord(data['q'], data['r'])
+
+
+def hex_from_dict_safe(
+    data: dict,
+    key: str = 'location',
+    default: Optional[HexCoord] = None
+) -> Optional[HexCoord]:
+    """
+    Deserialize a HexCoord from a nested dict, returning default on failure.
+
+    Safely extracts a HexCoord from ``data[key]``, handling missing keys,
+    None values, and malformed dicts without raising exceptions.
+
+    Args:
+        data: Outer dict containing the hex coordinate under *key*
+        key: Key to look up in *data* (default ``'location'``)
+        default: Value to return when deserialization fails
+
+    Returns:
+        Deserialized HexCoord, or *default* if the value is missing/invalid
+    """
+    try:
+        raw = data.get(key)
+        if raw is None:
+            return default
+        return HexCoord(raw['q'], raw['r'])
+    except (KeyError, TypeError, ValueError):
+        return default
 
 
 def hex_random_cluster(

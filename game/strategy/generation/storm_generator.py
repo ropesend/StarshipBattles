@@ -6,6 +6,7 @@ import random
 from typing import Any, Dict, List, Optional, Set
 
 from game.core.hex_math import HexCoord, hex_random_cluster
+from game.core.string_utils import display_name
 from game.strategy.data.storm import Storm, StormEffect
 
 # Greek letters for storm naming
@@ -111,7 +112,7 @@ class StormGenerator:
             intensity = rng.uniform(0.3, 1.0)
 
             # Generate name
-            type_name = storm_type_def.get("name", storm_type_id.replace("_", " ").title())
+            type_name = storm_type_def.get("name", display_name(storm_type_id))
             greek_letter = GREEK_LETTERS[greek_index % len(GREEK_LETTERS)]
             name = f"{type_name} {greek_letter}"
             greek_index += 1

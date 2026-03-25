@@ -16,6 +16,7 @@ import pygame
 import pygame_gui
 from typing import Dict, List, Optional, Callable, TYPE_CHECKING
 
+from game.core.string_utils import display_name
 from game.ui.assets import ShipThemeManager
 
 logger = logging.getLogger(__name__)
@@ -407,8 +408,8 @@ class RaceSummaryPanel:
         """Format homeworld type."""
         if self.race_config.homeworld_type:
             # Convert preset ID (e.g. "CONTINENTAL") to display name (e.g. "Continental")
-            display_name = self.race_config.homeworld_type.replace("_", " ").title()
-            return f"Homeworld: {display_name}"
+            hw_label = display_name(self.race_config.homeworld_type)
+            return f"Homeworld: {hw_label}"
         return "Homeworld: Custom"
 
     def _format_water_summary(self) -> str:

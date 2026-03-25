@@ -7,7 +7,7 @@ angle_to, and as_int_tuple methods.
 import math
 import pytest
 
-from game.core.math import Vector2
+from game.core.math import Vector2, angle_from_vector
 
 
 class TestVector2Indexing:
@@ -163,3 +163,24 @@ class TestVector2AsIntTuple:
         v = Vector2(1000000.9, -999999.1)
         result = v.as_int_tuple()
         assert result == (1000000, -999999)
+
+
+class TestAngleFromVector:
+    """Tests for angle_from_vector utility."""
+
+    def test_right_is_zero(self):
+        assert angle_from_vector(1, 0) == pytest.approx(0.0)
+
+    def test_down_is_90(self):
+        assert angle_from_vector(0, 1) == pytest.approx(90.0)
+
+    def test_left_is_180(self):
+        assert angle_from_vector(-1, 0) == pytest.approx(180.0)
+
+    def test_up_is_270(self):
+        assert angle_from_vector(0, -1) == pytest.approx(270.0)
+
+    def test_always_positive(self):
+        """Result should always be in [0, 360)."""
+        result = angle_from_vector(-1, -0.001)
+        assert 0 <= result < 360

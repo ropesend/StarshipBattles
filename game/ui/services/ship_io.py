@@ -68,6 +68,13 @@ class ShipIO:
     _design_loader: Optional[DesignLoaderAdapter] = None
 
     @classmethod
+    def _ensure_ships_folder(cls) -> str:
+        """Return the ships folder path, creating it if necessary."""
+        folder = os.path.join(os.getcwd(), cls.default_ships_folder)
+        os.makedirs(folder, exist_ok=True)
+        return folder
+
+    @classmethod
     def _get_design_loader(cls) -> DesignLoaderAdapter:
         """Get or create the shared DesignLoaderAdapter instance.
 
@@ -92,9 +99,7 @@ class ShipIO:
 
         try:
             data = ship.to_dict()
-            ships_folder = os.path.join(os.getcwd(), ShipIO.default_ships_folder)
-            if not os.path.exists(ships_folder):
-                os.makedirs(ships_folder)
+            ships_folder = ShipIO._ensure_ships_folder()
 
             # Sanitize filename
             safe_name = "".join([c for c in ship.name if c.isalpha() or c.isdigit() or c in (' ', '-', '_')]).strip()
@@ -139,9 +144,7 @@ class ShipIO:
             return None, "Tkinter not initialized"
 
         try:
-            ships_folder = os.path.join(os.getcwd(), cls.default_ships_folder)
-            if not os.path.exists(ships_folder):
-                os.makedirs(ships_folder)
+            ships_folder = cls._ensure_ships_folder()
 
             filename = open_load_dialog(
                 initialdir=ships_folder,

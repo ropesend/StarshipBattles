@@ -37,3 +37,22 @@ class TestPlanetResources:
 
         for resource in PLANET_RESOURCES:
             assert isinstance(resource, str)
+
+
+class TestPhysicsConstants:
+    """Test physics constants from core.constants."""
+
+    def test_earth_mass_importable(self):
+        """EARTH_MASS should be importable from game.core.constants."""
+        from game.core.constants import EARTH_MASS
+        assert EARTH_MASS is not None
+
+    def test_earth_mass_value(self):
+        """EARTH_MASS should be approximately 5.97e24 kg."""
+        from game.core.constants import EARTH_MASS
+        assert 5.96e24 < EARTH_MASS < 5.98e24
+
+    def test_earth_mass_is_float(self):
+        """EARTH_MASS should be a float."""
+        from game.core.constants import EARTH_MASS
+        assert isinstance(EARTH_MASS, float)

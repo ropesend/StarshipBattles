@@ -52,6 +52,12 @@ class BattleService:
         self._is_started: bool = False
         self._seed: Optional[int] = None
 
+    def _require_engine(self) -> Optional[BattleServiceResult]:
+        """Return an error result if no engine is active, else None."""
+        if self._engine is None:
+            return BattleServiceResult(success=False, errors=["No active battle"])
+        return None
+
     def create_battle(
         self,
         seed: Optional[int] = None,
@@ -112,9 +118,9 @@ class BattleService:
         """
         errors = []
 
-        if self._engine is None:
-            errors.append("No active battle - call create_battle() first")
-            return BattleServiceResult(success=False, errors=errors)
+        guard = self._require_engine()
+        if guard:
+            return guard
 
         if self._is_started:
             errors.append("Cannot add ships after battle has started")
@@ -146,9 +152,9 @@ class BattleService:
         """
         errors = []
 
-        if self._engine is None:
-            errors.append("No active battle")
-            return BattleServiceResult(success=False, errors=errors)
+        guard = self._require_engine()
+        if guard:
+            return guard
 
         if self._is_started:
             errors.append("Cannot remove ships after battle has started")
@@ -185,9 +191,9 @@ class BattleService:
         """
         errors = []
 
-        if self._engine is None:
-            errors.append("No active battle - call create_battle() first")
-            return BattleServiceResult(success=False, errors=errors)
+        guard = self._require_engine()
+        if guard:
+            return guard
 
         if self._is_started:
             errors.append("Battle already started")
@@ -224,9 +230,9 @@ class BattleService:
         """
         errors = []
 
-        if self._engine is None:
-            errors.append("No active battle")
-            return BattleServiceResult(success=False, errors=errors)
+        guard = self._require_engine()
+        if guard:
+            return guard
 
         if not self._is_started:
             errors.append("Battle not started - call start_battle() first")
@@ -248,9 +254,9 @@ class BattleService:
         """
         errors = []
 
-        if self._engine is None:
-            errors.append("No active battle")
-            return BattleServiceResult(success=False, errors=errors)
+        guard = self._require_engine()
+        if guard:
+            return guard
 
         if not self._is_started:
             errors.append("Battle not started - call start_battle() first")

@@ -218,6 +218,36 @@ def lerp(a: float, b: float, t: float) -> float:
     return a + (b - a) * t
 
 
+def angle_from_vector(dx: float, dy: float) -> float:
+    """
+    Convert a direction vector to an angle in degrees, normalized to [0, 360).
+
+    Args:
+        dx: X component of direction
+        dy: Y component of direction
+
+    Returns:
+        Angle in degrees, 0 = right, 90 = down, normalized to [0, 360)
+    """
+    return _math.degrees(_math.atan2(dy, dx)) % 360
+
+
+def normalize_angle(angle: float) -> float:
+    """
+    Normalize an angle to the range (-180, 180].
+
+    Args:
+        angle: Angle in degrees (any value)
+
+    Returns:
+        Equivalent angle in the range (-180, 180]
+    """
+    angle = angle % 360
+    if angle > 180:
+        angle -= 360
+    return angle
+
+
 def angle_diff(from_angle: float, to_angle: float) -> float:
     """
     Calculate the shortest angular difference between two angles.

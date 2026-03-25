@@ -65,7 +65,7 @@ class TestBattleControllerStart:
         assert id(mock_ship) in controller._ship_id_map
 
     def test_start_captures_initial_state(self, controller, basic_config, mock_service):
-        """start captures the initial battle state."""
+        """start captures the initial battle state via BattleStateManager."""
         mock_engine = Mock()
         mock_engine.ships = []
         mock_engine.projectiles = []
@@ -74,10 +74,9 @@ class TestBattleControllerStart:
 
         controller.configure(basic_config)
 
-        with patch('game.simulation.battle_controller.BattleState') as MockState:
-            MockState.capture_from_engine.return_value = Mock()
+        with patch.object(controller._state_manager, 'capture_state', return_value=Mock()) as mock_capture:
             controller.start()
-            MockState.capture_from_engine.assert_called_once()
+            mock_capture.assert_called_once_with(mock_engine, basic_config)
 
     def test_start_returns_service_result(self, controller, basic_config, mock_service):
         """start returns the result from service."""

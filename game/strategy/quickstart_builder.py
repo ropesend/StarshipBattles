@@ -15,7 +15,7 @@ from game.strategy.engine.game_config import GameConfig, PlayerConfig, THEME_DEF
 from game.strategy.data.race_config import RaceConfig
 from game.strategy.data.planet import PlanetaryFacility
 from game.strategy.systems.design_library import DesignLibrary
-from game.core.json_utils import load_json
+from game.core.json_utils import load_json, save_json
 
 logger = logging.getLogger(__name__)
 
@@ -253,13 +253,11 @@ class QuickstartBuilder:
                 try:
                     if theme_id:
                         # Copy and update theme_id in the design data
-                        import json
-                        with open(design_file, 'r') as f:
-                            data = json.load(f)
-                        if "theme_id" in data:
-                            data["theme_id"] = theme_id
-                        with open(dest_path, 'w') as f:
-                            json.dump(data, f, indent=4)
+                        data = load_json(design_file)
+                        if data is not None:
+                            if "theme_id" in data:
+                                data["theme_id"] = theme_id
+                            save_json(dest_path, data, indent=4)
                     else:
                         shutil.copy2(design_file, dest_path)
                     logger.debug(f"Copied design {design_file.name} to empire_{empire_id}")

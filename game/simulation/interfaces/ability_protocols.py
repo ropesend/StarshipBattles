@@ -33,6 +33,8 @@ from typing import (
     TypeGuard,
 )
 
+from game.core.protocols import _has_attrs
+
 
 # =============================================================================
 # Base Ability Protocol
@@ -310,11 +312,6 @@ class IWarpJumpAbility(IAbility, Protocol):
 #
 # Pattern: Check for the minimal set of attributes that uniquely identify the type.
 # =============================================================================
-
-
-def _has_attrs(obj: Any, *attrs: str) -> bool:
-    """Check if obj has all specified attributes (duck typing helper)."""
-    return all(hasattr(obj, attr) for attr in attrs)
 
 
 def is_ability(obj: Any) -> TypeGuard[IAbility]:

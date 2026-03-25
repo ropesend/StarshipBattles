@@ -323,7 +323,7 @@ class TestAIControllerAvoidance:
         """
         from game.ai.controller import AIController
         from game.ai.interfaces.controllable import ShipControllableAdapter
-        from game.core.config import BattleConfig
+        from game.core.config import BattleTuning
 
         # Set up ship
         mock_ship.is_alive = True

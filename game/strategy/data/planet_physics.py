@@ -21,7 +21,8 @@ MASS_CERES = 9.39e20
 MASS_MOON = 7.34e22
 MASS_MERCURY = 3.30e23
 MASS_MARS = 6.42e23
-MASS_EARTH = 5.97e24
+from game.core.constants import EARTH_MASS
+MASS_EARTH = EARTH_MASS  # Backward-compatible alias
 MASS_NEPTUNE = 1.02e26
 MASS_JUPITER = 1.89e27
 

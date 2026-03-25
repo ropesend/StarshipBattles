@@ -61,7 +61,7 @@ from game.core.paths import Paths
 logger = logging.getLogger(__name__)
 from game.engine.spatial import SpatialGrid
 from game.core.constants import AttackType
-from game.core.config import PhysicsConfig, BattleConfig
+from game.core.config import PhysicsConfig, BattleTuning
 from game.simulation.projectile_manager import ProjectileManager
 from game.engine.collision import CollisionSystem
 from game.simulation.systems.battle_end_conditions import BattleEndCondition, BattleEndMode
@@ -458,7 +458,7 @@ class BattleEngine:
                 new_ship.velocity = Vector2(source_ship.velocity)
                 # Boost fighter forward at launch speed
                 launch_dir = Vector2(1, 0).rotate(source_ship.angle)
-                new_ship.velocity += launch_dir * BattleConfig.FIGHTER_LAUNCH_SPEED
+                new_ship.velocity += launch_dir * BattleTuning.FIGHTER_LAUNCH_SPEED
                 new_ship.angle = source_ship.angle
                 
                 # Add to battle
@@ -517,17 +517,8 @@ class BattleEngine:
 
         # HP_BASED: Check alive ships (optionally excluding derelict)
         if self.end_condition.mode == BattleEndMode.HP_BASED:
-            team1_alive = sum(
-                1 for s in self.ships
-                if s.team_id == 0 and s.is_alive
-                and (not self.end_condition.check_derelict or not s.is_derelict)
-            )
-            team2_alive = sum(
-                1 for s in self.ships
-                if s.team_id == 1 and s.is_alive
-                and (not self.end_condition.check_derelict or not s.is_derelict)
-            )
-            return team1_alive == 0 or team2_alive == 0
+            team0_alive, team1_alive = self._count_alive_teams()
+            return team0_alive == 0 or team1_alive == 0
 
         # CAPABILITY_BASED: Check if any team can't fight
         if self.end_condition.mode == BattleEndMode.CAPABILITY_BASED:
@@ -541,6 +532,30 @@ class BattleEngine:
 
         # Fallback (should never reach here)
         return False
+
+    def _count_alive_teams(self) -> Tuple[int, int]:
+        """
+        Count alive ships per team, respecting derelict settings.
+
+        Uses the current end_condition.check_derelict flag to determine
+        whether derelict ships count as alive. This ensures consistent
+        counting between is_battle_over() and get_winner().
+
+        Returns:
+            Tuple of (team0_alive, team1_alive) counts
+        """
+        check_derelict = self.end_condition.check_derelict
+        team0_alive = sum(
+            1 for s in self.ships
+            if s.team_id == 0 and s.is_alive
+            and (not check_derelict or not s.is_derelict)
+        )
+        team1_alive = sum(
+            1 for s in self.ships
+            if s.team_id == 1 and s.is_alive
+            and (not check_derelict or not s.is_derelict)
+        )
+        return team0_alive, team1_alive
 
     def _check_escape_condition(self) -> bool:
         """
@@ -632,11 +647,10 @@ class BattleEngine:
             1: Team 1 wins (team 0 has no alive ships)
             -1: Draw (both teams have alive ships, or both eliminated)
         """
-        team1_alive = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
-        team2_alive = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
-        if team1_alive > 0 and team2_alive == 0:
+        team0_alive, team1_alive = self._count_alive_teams()
+        if team0_alive > 0 and team1_alive == 0:
             return 0
-        elif team2_alive > 0 and team1_alive == 0:
+        elif team1_alive > 0 and team0_alive == 0:
             return 1
         return -1
     

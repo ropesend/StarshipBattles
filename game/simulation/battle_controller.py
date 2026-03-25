@@ -202,13 +202,10 @@ class BattleController:
                     import uuid
                     self._ship_id_map[id(ship)] = str(uuid.uuid4())
 
-            # Capture initial state
-            self._initial_state = BattleState.capture_from_engine(
+            # Capture initial state (routed through BattleStateManager)
+            self._initial_state = self._state_manager.capture_state(
                 self._service.get_engine(),
-                mode=self._config.mode.value,
-                seed=self._config.seed,
-                allow_retreat=self._config.allow_retreat,
-                allow_reinforcements=self._config.allow_reinforcements,
+                self._config
             )
 
             logger.info(f"Battle started: mode={self._config.mode.value}, "

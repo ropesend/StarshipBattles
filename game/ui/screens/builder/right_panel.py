@@ -12,6 +12,7 @@ from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIDropDownMen
 from pygame_gui.core import UIElement
 
 from game.core.strategy_metadata import StrategyMetadataService
+from game.core.string_utils import display_name
 from game.ui.panels.design_stats_panel import DesignStatsPanel
 
 logger = logging.getLogger(__name__)
@@ -110,7 +111,7 @@ class BuilderRightPanel:
         UILabel(pygame.Rect(10, y, 60, 25), "AI:", manager=self.manager, container=self.panel)
         
         strategies = StrategyMetadataService.instance().strategies
-        ai_options = [strat.get('name', sid.replace('_', ' ').title()) for sid, strat in strategies.items()]
+        ai_options = [strat.get('name', display_name(sid)) for sid, strat in strategies.items()]
         
         # Ensure we have at least one option
         if not ai_options:
@@ -120,7 +121,7 @@ class BuilderRightPanel:
         ai_display = None
         for sid, strat in strategies.items():
             if sid == self.builder.ship.ai_strategy:
-                ai_display = strat.get('name', sid.replace('_', ' ').title())
+                ai_display = strat.get('name', display_name(sid))
                 break
         
         # Fallback to first option if ship's strategy is not in new data-driven system
@@ -202,7 +203,7 @@ class BuilderRightPanel:
         
         # 5. Recreate AI
         strategies = StrategyMetadataService.instance().strategies
-        ai_options = [strat.get('name', sid.replace('_', ' ').title()) for sid, strat in strategies.items()]
+        ai_options = [strat.get('name', display_name(sid)) for sid, strat in strategies.items()]
         
         # Ensure we have at least one option
         if not ai_options:
@@ -212,7 +213,7 @@ class BuilderRightPanel:
         ai_display = None
         for sid, strat in strategies.items():
             if sid == s.ai_strategy:
-                ai_display = strat.get('name', sid.replace('_', ' ').title())
+                ai_display = strat.get('name', display_name(sid))
                 break
         
         # Fallback to first option if ship's strategy is not in new data-driven system

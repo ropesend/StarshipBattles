@@ -7,45 +7,46 @@ import os
 import shutil
 
 from game.strategy.data.race_config import RaceConfig
-from game.strategy.systems.race_library import RaceLibrary, _slugify
+from game.core.string_utils import slugify
+from game.strategy.systems.race_library import RaceLibrary
 
 
 class TestSlugify:
-    """Tests for the _slugify helper function."""
+    """Tests for the slugify helper function (now in game.core.string_utils)."""
 
     def test_slugify_simple_name(self):
         """Test slugifying a simple name."""
-        assert _slugify("Test Race") == "test_race"
+        assert slugify("Test Race") == "test_race"
 
     def test_slugify_mixed_case(self):
         """Test slugifying mixed case."""
-        assert _slugify("TeStRaCe") == "testrace"
+        assert slugify("TeStRaCe") == "testrace"
 
     def test_slugify_special_characters(self):
         """Test slugifying with special characters."""
-        assert _slugify("Test@Race!#123") == "testrace123"
+        assert slugify("Test@Race!#123") == "testrace123"
 
     def test_slugify_hyphens(self):
         """Test slugifying with hyphens."""
-        assert _slugify("Test-Race-Name") == "test_race_name"
+        assert slugify("Test-Race-Name") == "test_race_name"
 
     def test_slugify_multiple_spaces(self):
         """Test slugifying with multiple spaces."""
-        assert _slugify("Test   Race") == "test_race"
+        assert slugify("Test   Race") == "test_race"
 
     def test_slugify_empty_string(self):
         """Test slugifying empty string."""
-        assert _slugify("") == "race"
+        assert slugify("") == ""
 
     def test_slugify_only_special_chars(self):
         """Test slugifying string with only special characters."""
-        assert _slugify("@#$%") == "race"
+        assert slugify("@#$%") == ""
 
     def test_slugify_long_name(self):
-        """Test slugifying a very long name."""
+        """Test slugifying a very long name (no length limit in core slugify)."""
         long_name = "A" * 100
-        result = _slugify(long_name)
-        assert len(result) <= 50
+        result = slugify(long_name)
+        assert result == "a" * 100  # Core slugify doesn't truncate
 
 
 class TestRaceLibraryBasic:

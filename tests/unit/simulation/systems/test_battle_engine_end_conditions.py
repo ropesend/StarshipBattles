@@ -312,3 +312,74 @@ class TestExistingModesUnchanged:
         battle_engine.tick_counter = 100_000
 
         assert battle_engine.is_battle_over() is False
+
+
+class TestTeamAliveCountingConsistency:
+    """Tests for DUP-SYS-004: is_battle_over() and get_winner() must count derelicts consistently."""
+
+    def test_get_winner_excludes_derelicts_when_check_derelict_enabled(
+        self, battle_engine, mock_ship, mock_ship_team1
+    ):
+        """get_winner() must exclude derelicts when check_derelict is True."""
+        mock_ship.is_alive = True
+        mock_ship.is_derelict = True
+
+        mock_ship_team1.is_alive = True
+        mock_ship_team1.is_derelict = False
+
+        battle_engine.ships = [mock_ship, mock_ship_team1]
+        battle_engine.end_condition = BattleEndCondition(
+            mode=BattleEndMode.HP_BASED,
+            check_derelict=True
+        )
+
+        # is_battle_over should be True (team 0 has no non-derelict alive ships)
+        assert battle_engine.is_battle_over() is True
+        # get_winner should return 1 (team 1 wins)
+        assert battle_engine.get_winner() == 1
+
+    def test_get_winner_includes_derelicts_when_check_derelict_disabled(
+        self, battle_engine, mock_ship, mock_ship_team1
+    ):
+        """get_winner() should count derelicts as alive when check_derelict is False."""
+        mock_ship.is_alive = True
+        mock_ship.is_derelict = True
+
+        mock_ship_team1.is_alive = True
+        mock_ship_team1.is_derelict = False
+
+        battle_engine.ships = [mock_ship, mock_ship_team1]
+        battle_engine.end_condition = BattleEndCondition(
+            mode=BattleEndMode.HP_BASED,
+            check_derelict=False
+        )
+
+        assert battle_engine.is_battle_over() is False
+        assert battle_engine.get_winner() == -1
+
+    def test_count_alive_teams_shared_helper_used(self, battle_engine, mock_ship, mock_ship_team1):
+        """Verify _count_alive_teams helper exists and is used by both methods."""
+        battle_engine.ships = [mock_ship, mock_ship_team1]
+        battle_engine.end_condition = BattleEndCondition(
+            mode=BattleEndMode.HP_BASED,
+            check_derelict=False
+        )
+
+        assert hasattr(battle_engine, '_count_alive_teams')
+
+        counts = battle_engine._count_alive_teams()
+        assert counts[0] == 1
+        assert counts[1] == 1
+
+    def test_count_alive_teams_with_derelict_check(self, battle_engine, mock_ship, mock_ship_team1):
+        """_count_alive_teams respects check_derelict setting."""
+        mock_ship.is_derelict = True
+        battle_engine.ships = [mock_ship, mock_ship_team1]
+        battle_engine.end_condition = BattleEndCondition(
+            mode=BattleEndMode.HP_BASED,
+            check_derelict=True
+        )
+
+        counts = battle_engine._count_alive_teams()
+        assert counts[0] == 0
+        assert counts[1] == 1

@@ -1,5 +1,5 @@
 import logging
-from game.core.math import Vector2
+from game.core.math import Vector2, normalize_angle
 from game.engine.physics import PhysicsBody
 from game.core.event_logging import log_event
 from game.core.constants import AttackType
@@ -155,14 +155,7 @@ class Projectile(PhysicsBody):
                 desired_dir = desired_vec.normalize()
                 current_dir = p_vel.normalize() if p_vel.length() > 0 else Vector2(1, 0)
                 
-                angle_diff = current_dir.angle_to(desired_dir)
-                
-                # Normalize angle to [-180, 180] to ensure shortest turn path
-                # Pygame's angle_to can return values like 225 instead of -135
-                if angle_diff > 180:
-                    angle_diff -= 360
-                elif angle_diff < -180:
-                    angle_diff += 360
+                angle_diff = normalize_angle(current_dir.angle_to(desired_dir))
                     
                 # Turn rate is degrees per second, convert to degrees per tick
                 max_turn_step = self.turn_rate * PhysicsConfig.TICK_RATE

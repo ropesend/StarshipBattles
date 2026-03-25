@@ -117,7 +117,7 @@ class TestDesignLibrary:
         library.save_design(ship, "Built Ship", set())
 
         # Try to save again with design marked as built
-        success, message = library.save_design(ship, "Built Ship", {"Built_Ship"})
+        success, message = library.save_design(ship, "Built Ship", {"built_ship"})
 
         assert not success
         assert "built" in message.lower()
@@ -261,9 +261,9 @@ class TestDesignLibrary:
 
     def test_sanitize_design_id(self):
         """Design ID sanitization works correctly"""
-        assert DesignLibrary._sanitize_design_id("Simple Name") == "Simple_Name"
-        assert DesignLibrary._sanitize_design_id("Name!@#$%With^&*()Special") == "NameWithSpecial"
-        assert DesignLibrary._sanitize_design_id("   Spaces   ") == "Spaces"
+        assert DesignLibrary._sanitize_design_id("Simple Name") == "simple_name"
+        assert DesignLibrary._sanitize_design_id("Name!@#$%With^&*()Special") == "namewithspecial"
+        assert DesignLibrary._sanitize_design_id("   Spaces   ") == "spaces"
         assert DesignLibrary._sanitize_design_id("") == "unnamed_design"
 
     def test_has_design(self, setup_library):

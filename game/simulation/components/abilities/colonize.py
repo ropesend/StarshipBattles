@@ -10,6 +10,8 @@ matching the pod's planet_type.
 
 from typing import Dict, Any, List
 
+from game.core.string_utils import display_name
+
 from .base import Ability, AbilityLayer, AbilityScope
 from .ui_colors import HINT_COLONIZE
 
@@ -63,7 +65,7 @@ class ColonizePlanet(Ability):
             List with single row showing 'Colonizes: <Planet Type>'
         """
         # Format planet type: "ICE_DWARF" -> "Ice Dwarf"
-        formatted_type = self.planet_type.replace('_', ' ').title()
+        formatted_type = display_name(self.planet_type)
 
         return [{
             'label': 'Colonizes',

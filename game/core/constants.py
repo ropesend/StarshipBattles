@@ -1,5 +1,7 @@
 from enum import Enum, IntEnum
 
+from game.core.config import PhysicsConfig
+
 __all__ = [
     'AttackType',
     'GameState',
@@ -9,6 +11,7 @@ __all__ = [
     'SimulationConstants',
     'PLANET_RESOURCES',
     'ResourceType',
+    'EARTH_MASS',
     # Feature flags
     'ENABLE_SCREENSHOTS',
     # PROJ-113: Colors and FONT_MAIN moved to game.ui.colors
@@ -55,14 +58,14 @@ class CombatConstants:
     """Constants for combat simulation."""
     DEFAULT_MAX_TARGETS = 1           # Default maximum targets for multi-target weapons
     DEFAULT_DAMAGE_THRESHOLD = 0.5    # Components fail at 50% HP by default
-    # Note: FIGHTER_LAUNCH_SPEED is in BattleConfig (game/core/config.py)
+    # Note: FIGHTER_LAUNCH_SPEED is in BattleTuning (game/core/config.py)
 
 
 # Simulation Constants
 class SimulationConstants:
     """Constants for battle simulation timing and bounds."""
     # Timing
-    TICKS_PER_SECOND = 100            # Simulation tick rate
+    TICKS_PER_SECOND = int(1.0 / PhysicsConfig.TICK_RATE)  # Derived from PhysicsConfig
 
     # Warp retreat charging
     WARP_CHARGE_TICKS = 500           # Ticks needed for warp retreat (5 seconds at 100 TPS)
@@ -106,4 +109,8 @@ class LayerType(Enum):
     INNER = 2
     OUTER = 3
     ARMOR = 4
+
+
+# Physics Constants
+EARTH_MASS = 5.97e24  # Earth mass in kg — canonical value, import from here
 

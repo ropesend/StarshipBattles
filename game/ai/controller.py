@@ -54,8 +54,8 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-from game.core.math import Vector2, angle_diff
-from game.core.config import AIConfig, BattleConfig
+from game.core.math import Vector2, angle_diff, angle_from_vector
+from game.core.config import AIConfig, BattleTuning
 from game.ai.behaviors import (RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior,
                           FormationBehavior, DoNothingBehavior, StraightLineBehavior,
                           RotateOnlyBehavior, ErraticBehavior, OrbitBehavior, StationaryFireBehavior)
@@ -116,14 +116,14 @@ class AIController:
         Returns:
             List of enemy entities (ships and optionally missiles)
         """
-        candidates = self.grid.query_radius(self.ship.get_position(), BattleConfig.TARGET_QUERY_RADIUS)
+        candidates = self.grid.query_radius(self.ship.get_position(), BattleTuning.TARGET_QUERY_RADIUS)
         enemies = [obj for obj in candidates
                    if obj.is_alive and is_combatant(obj)
                    and obj.team_id == self.enemy_team_id
                    and obj != exclude]
 
         if include_missiles:
-            missiles = [obj for obj in self.grid.query_radius(self.ship.get_position(), BattleConfig.MISSILE_QUERY_RADIUS)
+            missiles = [obj for obj in self.grid.query_radius(self.ship.get_position(), BattleTuning.MISSILE_QUERY_RADIUS)
                         if is_projectile(obj)
                         and obj.type == AttackType.MISSILE
                         and obj.is_alive
@@ -405,7 +405,7 @@ class AIController:
 
     def check_avoidance(self):
         """Check for nearby collisions."""
-        nearby = self.grid.query_radius(self.ship.get_position(), BattleConfig.AVOIDANCE_RADIUS)
+        nearby = self.grid.query_radius(self.ship.get_position(), BattleTuning.AVOIDANCE_RADIUS)
         closest = None
         min_d = float('inf')
 
@@ -422,7 +422,7 @@ class AIController:
 
             d = self.ship.get_position().distance_to(obj.position)
             # IGridEntity guarantees .radius attribute
-            thresh = self.ship.get_radius() + obj.radius + BattleConfig.COLLISION_BUFFER
+            thresh = self.ship.get_radius() + obj.radius + BattleTuning.COLLISION_BUFFER
 
             if d < thresh:
                 if d < min_d:
@@ -433,7 +433,7 @@ class AIController:
             vec = self.ship.get_position() - closest.position
             if vec.length() == 0:
                 vec = Vector2(1, 0)
-            return self.ship.get_position() + vec.normalize() * BattleConfig.AVOIDANCE_TARGET_DISTANCE
+            return self.ship.get_position() + vec.normalize() * BattleTuning.AVOIDANCE_TARGET_DISTANCE
         return None
 
     def navigate_to(self, target_pos, stop_dist: float = 0) -> None:
@@ -442,7 +442,7 @@ class AIController:
         distance = ship_pos.distance_to(target_pos)
         dx = target_pos.x - ship_pos.x
         dy = target_pos.y - ship_pos.y
-        target_angle = math.degrees(math.atan2(dy, dx)) % 360
+        target_angle = angle_from_vector(dx, dy)
         current_angle = self.ship.get_rotation() % 360
         ang_diff = angle_diff(current_angle, target_angle)
 

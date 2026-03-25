@@ -24,6 +24,8 @@ from typing import (
     TypeGuard,
 )
 
+from game.core.protocols import _has_attrs
+
 
 # =============================================================================
 # Grid Entity Protocol (Combat entities with position and team)
@@ -169,11 +171,6 @@ class IComponentHealth(Protocol):
 # This ensures compatibility with MagicMock and other test doubles that have the
 # required attributes but don't formally implement the Protocol.
 # =============================================================================
-
-
-def _has_attrs(obj: Any, *attrs: str) -> bool:
-    """Check if obj has all specified attributes (duck typing helper)."""
-    return all(hasattr(obj, attr) for attr in attrs)
 
 
 def is_grid_entity(obj: Any) -> TypeGuard[IGridEntity]:

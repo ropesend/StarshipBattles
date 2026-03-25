@@ -11,10 +11,10 @@ during combat. All errors are logged for debugging, but the system continues
 operating when possible.
 """
 import logging
-import math
+
 from typing import Any, List, Optional, TYPE_CHECKING
 
-from game.core.math import Vector2
+from game.core.math import Vector2, angle_from_vector
 from game.ai.interfaces.controllable import IControllable
 
 if TYPE_CHECKING:
@@ -220,7 +220,7 @@ def is_in_pdc_arc(ship: Any, target: Any) -> bool:
         if vec_to_target.length_squared() == 0:
             continue
 
-        angle_to_target = math.degrees(math.atan2(vec_to_target.y, vec_to_target.x)) % 360
+        angle_to_target = angle_from_vector(vec_to_target.x, vec_to_target.y)
 
         ship_angle = get_rotation(ship)
         comp_facing = (ship_angle + weapon_ab.facing_angle) % 360

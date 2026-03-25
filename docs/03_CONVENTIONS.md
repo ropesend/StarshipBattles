@@ -170,7 +170,7 @@ import pygame
 
 # 3. Game modules
 from game.core.math import Vector2
-from game.core.config import PhysicsConfig, BattleConfig
+from game.core.config import PhysicsConfig, BattleTuning
 from game.simulation.entities.ship import Ship
 ```
 

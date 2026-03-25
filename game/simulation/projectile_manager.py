@@ -2,7 +2,7 @@ import logging
 from typing import List, Optional, Set, Any, TYPE_CHECKING
 from game.core.math import Vector2
 from game.core.constants import AttackType
-from game.core.config import BattleConfig
+from game.core.config import BattleTuning
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class ProjectileManager:
             p_pos = Vector2(p.position.x, p.position.y)
             p_vel = Vector2(p.velocity.x, p.velocity.y)
 
-            query_radius = p_vel.length() + BattleConfig.PROJECTILE_QUERY_BUFFER
+            query_radius = p_vel.length() + BattleTuning.PROJECTILE_QUERY_BUFFER
             nearby_ships = grid.query_radius(p_pos, query_radius)
 
             hit_occurred = False
@@ -99,7 +99,7 @@ class ProjectileManager:
             DV = p_vel - s_vel
 
             dv_sq = DV.dot(DV)
-            collision_radius = s.radius + BattleConfig.PROJECTILE_HIT_TOLERANCE
+            collision_radius = s.radius + BattleTuning.PROJECTILE_HIT_TOLERANCE
 
             hit = False
 
@@ -161,7 +161,7 @@ class ProjectileManager:
             return False
 
         dist = p.position.distance_to(t_missile.position)
-        if dist < (p.radius + t_missile.radius + BattleConfig.MISSILE_INTERCEPT_BUFFER):
+        if dist < (p.radius + t_missile.radius + BattleTuning.MISSILE_INTERCEPT_BUFFER):
             t_missile.take_damage(p.damage)
             if not t_missile.is_alive:
                 t_missile.status = 'destroyed'

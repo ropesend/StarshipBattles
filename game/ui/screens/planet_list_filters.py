@@ -3,6 +3,7 @@
 This module contains the filtering and sorting logic for the planet list,
 separated from the UI rendering code.
 """
+from game.core.constants import EARTH_MASS
 
 
 def gather_planets(galaxy, empire):
@@ -16,7 +17,7 @@ def gather_planets(galaxy, empire):
         List of planets with cached filter values attached
     """
     planets = []
-    m_earth_const = 5.97e24
+    m_earth_const = EARTH_MASS
     g_const = 9.81
 
     if galaxy and galaxy.systems:
@@ -180,7 +181,7 @@ def compute_planet_ranges(all_planets):
     Returns:
         Dict with 'gravity', 'temp', 'mass' keys, each containing (min, max) tuple
     """
-    m_earth = 5.97e24
+    m_earth = EARTH_MASS
 
     # Default fallbacks if no planets exist
     ranges = {
@@ -280,7 +281,7 @@ def get_mass_earth(planet):
     Returns:
         Formatted string with mass in Earth masses
     """
-    m_earth = 5.97e24
+    m_earth = EARTH_MASS
     return f"{planet.mass/m_earth:.2f}"
 
 

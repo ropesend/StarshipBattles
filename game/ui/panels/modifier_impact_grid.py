@@ -13,6 +13,7 @@ import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel
 from typing import Dict, Any, List, Optional, TYPE_CHECKING
 
+from game.core.string_utils import display_name
 from game.ui.fonts import get_font
 from game.ui.colors import (
     MODIFIER_HEADER_BG, MODIFIER_ROW_BG, MODIFIER_ROW_ALT_BG, MODIFIER_FOOTER_BG,
@@ -236,7 +237,7 @@ class ModifierImpactGrid:
                 break
 
         # Handle special cases
-        name = name.replace('_', ' ').title()
+        name = display_name(name)
 
         # Abbreviations
         if name.lower() == 'hp':

@@ -108,8 +108,12 @@ class PhysicsConfig:
     REFERENCE_MASS: int = 1000
 
 
-class BattleConfig:
-    """Battle simulation configuration."""
+class BattleTuning:
+    """Battle simulation tuning constants.
+
+    Renamed from BattleConfig (PROJ-224 DUP-SYS-003) to avoid ambiguity
+    with game.simulation.battle_config.BattleConfig (per-battle instance config).
+    """
 
     # Query radius for finding targets
     TARGET_QUERY_RADIUS: int = 200000

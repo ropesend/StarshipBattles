@@ -33,7 +33,7 @@ Validation (game.core.validation):
     ValidationResult, IValidationRule
 
 Configuration (game.core.config):
-    DisplayConfig, AIConfig, PhysicsConfig, BattleConfig
+    DisplayConfig, AIConfig, PhysicsConfig, BattleTuning
     (UIConfig is in game.ui.config - PROJ-113)
 
 Paths (game.core.paths):
@@ -98,7 +98,7 @@ from game.core.config import (
     DisplayConfig,
     AIConfig,
     PhysicsConfig,
-    BattleConfig,
+    BattleTuning,
 )
 # PROJ-113: UIConfig moved to game.ui.config
 
@@ -138,7 +138,7 @@ __all__ = [
     # Validation
     'ValidationResult', 'IValidationRule',
     # Configuration (UIConfig moved to game.ui.config - PROJ-113)
-    'DisplayConfig', 'AIConfig', 'PhysicsConfig', 'BattleConfig',
+    'DisplayConfig', 'AIConfig', 'PhysicsConfig', 'BattleTuning',
     # Paths
     'Paths',
     # Protocols

@@ -853,7 +853,7 @@ class TestCheckAvoidance:
     def test_avoidance_returns_target_for_close_object(self, mock_ship, mock_grid, mock_strategy_manager):
         """Close object within threshold returns avoidance target."""
         from game.ai.controller import AIController
-        from game.core.config import BattleConfig
+        from game.core.config import BattleTuning
 
         close_ship = Mock()
         close_ship.is_alive = True

@@ -8,37 +8,16 @@ import json
 import logging
 import os
 import glob
-import re
 import uuid
 from typing import List, Optional, Tuple
 
 from game.core.paths import Paths
+from game.core.string_utils import slugify
 from game.strategy.data.race_config import RaceConfig
 from game.core.exceptions import ValidationException
 
 logger = logging.getLogger(__name__)
 
-
-def _slugify(text: str) -> str:
-    """
-    Convert text to a filesystem-safe slug.
-
-    Args:
-        text: The text to convert
-
-    Returns:
-        Lowercase slug with only alphanumeric characters and underscores
-    """
-    # Convert to lowercase
-    slug = text.lower()
-    # Replace spaces and hyphens with underscores
-    slug = re.sub(r'[\s\-]+', '_', slug)
-    # Remove any characters that aren't alphanumeric or underscore
-    slug = re.sub(r'[^\w]', '', slug)
-    # Remove leading/trailing underscores
-    slug = slug.strip('_')
-    # Limit length
-    return slug[:50] if slug else "race"
 
 
 class RaceLibrary:
@@ -242,7 +221,7 @@ class RaceLibrary:
             A unique race ID string
         """
         # Create base slug from name
-        base_slug = _slugify(name) if name else "race"
+        base_slug = slugify(name)[:50] if name else "race"
 
         # Add short UUID suffix for uniqueness
         suffix = uuid.uuid4().hex[:8]

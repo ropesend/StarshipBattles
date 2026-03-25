@@ -1021,11 +1021,11 @@ class TestProjectileManagerAdditionalEdgeCases:
 
     def test_projectile_just_inside_collision_radius_hits(self, manager, mock_grid):
         """Projectile clearly inside collision radius hits ship."""
-        from game.core.config import BattleConfig
+        from game.core.config import BattleTuning
 
         proj = MagicMock()
         ship_radius = 10
-        tolerance = BattleConfig.PROJECTILE_HIT_TOLERANCE
+        tolerance = BattleTuning.PROJECTILE_HIT_TOLERANCE
         # Position projectile clearly within collision range
         # Collision radius = ship_radius + tolerance = 15
         # Place projectile at distance 5 (well within 15)

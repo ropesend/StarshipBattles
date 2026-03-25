@@ -405,7 +405,8 @@ class TestAttackRunBehavior:
         assert flee_pos.x < 280
 
     def test_attack_run_retreat_timer_decrements(self, mock_controller, mock_target):
-        """Timer decreases by TICK_DURATION each update."""
+        """Timer decreases by PhysicsConfig.TICK_RATE each update."""
+        from game.core.config import PhysicsConfig
         behavior = AttackRunBehavior(mock_controller)
         behavior.attack_state = 'retreat'
         behavior.attack_timer = 2.0
@@ -414,7 +415,7 @@ class TestAttackRunBehavior:
         behavior.update(mock_target, {})
 
         assert behavior.attack_timer < initial_timer
-        assert behavior.attack_timer == pytest.approx(initial_timer - behavior.TICK_DURATION)
+        assert behavior.attack_timer == pytest.approx(initial_timer - PhysicsConfig.TICK_RATE)
 
     def test_attack_run_transitions_back_to_approach(self, mock_controller, mock_target):
         """After timer and distance, returns to approach."""

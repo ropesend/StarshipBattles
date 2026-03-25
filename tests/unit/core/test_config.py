@@ -75,16 +75,16 @@ class TestBattleConfig:
 
     def test_query_radius(self):
         """Query radius values are correct."""
-        from game.core.config import BattleConfig
+        from game.core.config import BattleTuning
 
-        assert BattleConfig.TARGET_QUERY_RADIUS == 200000
-        assert BattleConfig.MISSILE_QUERY_RADIUS == 1500
+        assert BattleTuning.TARGET_QUERY_RADIUS == 200000
+        assert BattleTuning.MISSILE_QUERY_RADIUS == 1500
 
     def test_collision_values(self):
         """Collision detection values are correct."""
-        from game.core.config import BattleConfig
+        from game.core.config import BattleTuning
 
-        assert BattleConfig.COLLISION_BUFFER == 100
+        assert BattleTuning.COLLISION_BUFFER == 100
 
 
 class TestUIConfig:

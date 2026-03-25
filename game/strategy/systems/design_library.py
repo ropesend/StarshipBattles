@@ -13,6 +13,7 @@ from typing import List, Optional, Tuple, Set
 from datetime import datetime
 from game.strategy.data.design_metadata import DesignMetadata
 from game.core.json_utils import load_json_required, save_json
+from game.core.string_utils import slugify
 from game.core.exceptions import ValidationException
 
 logger = logging.getLogger(__name__)
@@ -398,14 +399,8 @@ class DesignLibrary:
         Returns:
             Safe filename string
         """
-        # Keep only alphanumeric, space, hyphen, underscore
-        safe = "".join([c for c in name if c.isalnum() or c in (' ', '-', '_')]).strip()
-
-        # Replace spaces with underscores
-        safe = safe.replace(' ', '_')
-
-        # Default if empty
-        return safe if safe else "unnamed_design"
+        result = slugify(name)
+        return result if result else "unnamed_design"
 
     def get_design_path(self, design_id: str) -> str:
         """

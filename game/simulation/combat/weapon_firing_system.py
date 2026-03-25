@@ -13,7 +13,7 @@ Part of PROJ-44 Phase 5: ShipCombatEngine Decomposition.
 import math
 from typing import TYPE_CHECKING, List, Optional, Any, Dict
 
-from game.core.math import Vector2
+from game.core.math import Vector2, angle_from_vector
 from game.core.constants import AttackType, CombatConstants, SimulationConstants
 from game.simulation.entities.projectile import Projectile
 
@@ -251,7 +251,7 @@ class WeaponFiringSystem:
         # Check if target is in arc
         if target:
             rel_pos = target.position - ship.position
-            target_angle = math.degrees(math.atan2(rel_pos.y, rel_pos.x))
+            target_angle = angle_from_vector(rel_pos.x, rel_pos.y)
             diff = (target_angle - comp_facing + 180) % 360 - 180
             if abs(diff) <= (weapon_ab.firing_arc / 2):
                 launch_vec = aim_vec.normalize() if aim_vec.length() > 0 else launch_vec

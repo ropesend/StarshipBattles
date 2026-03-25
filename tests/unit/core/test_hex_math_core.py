@@ -20,6 +20,7 @@ from game.core.hex_math import (
     hex_linedraw,
     hex_to_dict,
     hex_from_dict,
+    hex_from_dict_safe,
 )
 
 
@@ -863,3 +864,60 @@ class TestHexRandomCluster:
         for h in absolute_hexes:
             # All should be within reasonable distance of center
             assert hex_distance(center, h) <= 5  # Can't be farther than cluster size
+
+
+# =============================================================================
+# hex_from_dict_safe Tests
+# =============================================================================
+
+class TestHexFromDictSafe:
+    """Tests for hex_from_dict_safe utility."""
+
+    def test_valid_location_key(self):
+        """Should deserialize from default 'location' key."""
+        data = {'location': {'q': 3, 'r': -1}}
+        result = hex_from_dict_safe(data)
+        assert result == HexCoord(3, -1)
+
+    def test_custom_key(self):
+        """Should deserialize from a custom key."""
+        data = {'coord': {'q': 5, 'r': 2}}
+        result = hex_from_dict_safe(data, key='coord')
+        assert result == HexCoord(5, 2)
+
+    def test_missing_key_returns_default(self):
+        """Should return default when key is missing."""
+        data = {'other': 'value'}
+        result = hex_from_dict_safe(data)
+        assert result is None
+
+    def test_missing_key_returns_custom_default(self):
+        """Should return custom default when key is missing."""
+        default = HexCoord(0, 0)
+        data = {'other': 'value'}
+        result = hex_from_dict_safe(data, default=default)
+        assert result == default
+
+    def test_none_value_returns_default(self):
+        """Should return default when value is None."""
+        data = {'location': None}
+        result = hex_from_dict_safe(data)
+        assert result is None
+
+    def test_invalid_dict_returns_default(self):
+        """Should return default for invalid dict (missing q/r)."""
+        data = {'location': {'x': 1, 'y': 2}}
+        result = hex_from_dict_safe(data)
+        assert result is None
+
+    def test_non_dict_value_returns_default(self):
+        """Should return default when value is not a dict."""
+        data = {'location': 'not_a_dict'}
+        result = hex_from_dict_safe(data)
+        assert result is None
+
+    def test_empty_dict_returns_default(self):
+        """Should return default for empty nested dict."""
+        data = {'location': {}}
+        result = hex_from_dict_safe(data)
+        assert result is None

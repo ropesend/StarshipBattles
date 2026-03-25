@@ -49,7 +49,7 @@ import math
 import random
 from typing import List, Dict, Any
 
-from game.core.config import BattleConfig
+from game.core.config import BattleTuning
 
 # Note: Ship type hint uses Any to avoid tight coupling with simulation entities
 
@@ -149,16 +149,16 @@ class CollisionSystem:
                 
                 msg = ""
                 if hp_rammer < hp_target:
-                    s.combat_engine.take_damage(hp_rammer + BattleConfig.GUARANTEED_KILL_DAMAGE)
-                    target.combat_engine.take_damage(hp_rammer * BattleConfig.RAMMING_DAMAGE_FACTOR)
+                    s.combat_engine.take_damage(hp_rammer + BattleTuning.GUARANTEED_KILL_DAMAGE)
+                    target.combat_engine.take_damage(hp_rammer * BattleTuning.RAMMING_DAMAGE_FACTOR)
                     msg = f"Ramming: {s.name} destroyed by {target.name}!"
                 elif hp_target < hp_rammer:
-                    target.combat_engine.take_damage(hp_target + BattleConfig.GUARANTEED_KILL_DAMAGE)
-                    s.combat_engine.take_damage(hp_target * BattleConfig.RAMMING_DAMAGE_FACTOR)
+                    target.combat_engine.take_damage(hp_target + BattleTuning.GUARANTEED_KILL_DAMAGE)
+                    s.combat_engine.take_damage(hp_target * BattleTuning.RAMMING_DAMAGE_FACTOR)
                     msg = f"Ramming: {target.name} destroyed by {s.name}!"
                 else:
-                    s.combat_engine.take_damage(hp_rammer + BattleConfig.GUARANTEED_KILL_DAMAGE)
-                    target.combat_engine.take_damage(hp_target + BattleConfig.GUARANTEED_KILL_DAMAGE)
+                    s.combat_engine.take_damage(hp_rammer + BattleTuning.GUARANTEED_KILL_DAMAGE)
+                    target.combat_engine.take_damage(hp_target + BattleTuning.GUARANTEED_KILL_DAMAGE)
                     msg = f"Ramming: Mutual destruction!"
                 
                 if logger:

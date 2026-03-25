@@ -5,6 +5,7 @@ Displays detailed information for a selected test run.
 
 import pygame
 
+from game.core.string_utils import display_name
 from game.ui.colors import TEST_PASS, TEST_FAIL
 from game.ui.fonts import get_font
 from game.ui.screens.test_lab import theme
@@ -310,7 +311,7 @@ class TestRunDetailsPanel:
                     value_str = f"{value:.1%}" if 0 < value < 1 else f"{value:.2f}"
                 else:
                     value_str = str(value)
-                display_key = key.replace('_', ' ').title()
+                display_key = display_name(key)
                 metric_text = f"  {display_key}: {value_str}"
                 metric_surf = self.small_font.render(metric_text, True, self.text_color)
                 surface.blit(metric_surf, (self.x + 15, y_offset))
