@@ -1086,3 +1086,21 @@ There needs to be a visible indicator on the line that indicates if the ship is 
 * **Notes:** None.
 
 ---
+
+## [BUG-103] - Build Queue "Remove Selected" and Drag-Out Removal Don't Work for Facility Queues
+* **Date Solved:** 2026-03-24
+* **Original Issue:** Items could not be removed from facility build queues (e.g., shipyard queues). `RemoveFromConstructionQueueCommand` was missing the `queue_id` parameter, so the handler always targeted the base planet queue instead of the facility queue.
+* **Solution Implemented:** Added `queue_id: Optional[str] = None` to both `RemoveFromConstructionQueueCommand` and `ReorderConstructionQueueCommand`. Moved `_resolve_build_entity()` and `_resolve_queue()` to `BaseCommandHandler`. Updated Remove and Reorder handlers to use `_resolve_queue()`. Updated UI dispatch to pass `queue_id`.
+* **Test Case:** `tests/unit/strategy/test_command_handlers.py` — 5 new facility queue tests
+* **Notes:** `ReorderConstructionQueueCommand` had the same bug and was fixed simultaneously.
+
+---
+
+## [BUG-104] - Event Log Window Column Reorder Arrows Not Wired Up
+* **Date Solved:** 2026-03-24
+* **Original Issue:** Clicking left/right arrows on column headers in the Event Log window did nothing. `EventLogWindow` had no `update()` method, so `check_header_presses()` was never called.
+* **Solution Implemented:** Added `update()` method to `EventLogWindow` with the standard column swap pattern (`check_header_presses()` → `swap_column()` → `rebuild_headers()` → `rebuild_row_pool()` → `refresh_list()`), matching the other three VirtualTable windows.
+* **Test Case:** `tests/unit/ui/screens/test_event_log_window.py` — 5 new tests
+* **Notes:** None.
+
+---

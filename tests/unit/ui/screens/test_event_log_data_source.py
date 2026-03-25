@@ -48,6 +48,7 @@ def _sample_events() -> list:
         _make_event("colony_founded", "colonies", 2, 0, "Colony on Beta"),
         _make_event("combat_resolved", "combat", 2, 0, "Battle at Gamma"),
         _make_event("ship_built", "production", 3, 0, "Cruiser built at Delta"),
+        _make_event("fleet_joined", "fleet_operations", 2, 0, "Fleet 3 joined Fleet 1"),
     ]
 
 
@@ -109,6 +110,11 @@ class TestCategoryIcons:
         assert "colonies" in CATEGORY_ICONS
         assert "[Colony]" in CATEGORY_ICONS["colonies"]
 
+    def test_fleet_operations_icon(self):
+        """Fleet operations category should have icon."""
+        assert "fleet_operations" in CATEGORY_ICONS
+        assert "[FleetOps]" in CATEGORY_ICONS["fleet_operations"]
+
 
 # ---------------------------------------------------------------------------
 # DataSource Initialization
@@ -126,7 +132,7 @@ class TestEventLogDataSourceInit:
         """Should store events on init."""
         events = _sample_events()
         ds = EventLogDataSource(events)
-        assert ds.get_row_count() == 5
+        assert ds.get_row_count() == 6
 
     def test_default_filter_is_all(self):
         """Default filter should be 'all'."""
@@ -177,7 +183,13 @@ class TestGetRowCount:
         """Should return all events with 'all' filter."""
         ds = EventLogDataSource(_sample_events())
         ds.set_filter("all")
-        assert ds.get_row_count() == 5
+        assert ds.get_row_count() == 6
+
+    def test_fleet_operations_filter(self):
+        """Should return only fleet_operations events with 'fleet_operations' filter."""
+        ds = EventLogDataSource(_sample_events())
+        ds.set_filter("fleet_operations")
+        assert ds.get_row_count() == 1
 
     def test_combat_filter(self):
         """Should return only combat events with 'combat' filter."""
@@ -225,6 +237,13 @@ class TestGetCellValue:
         ds = EventLogDataSource(events)
         value = ds.get_cell_value(0, "category")
         assert "[Colony]" in value
+
+    def test_category_column_fleet_operations(self):
+        """Category column should show icon for fleet_operations."""
+        events = [_make_event("fleet_joined", "fleet_operations", 1, 0, "Fleet joined")]
+        ds = EventLogDataSource(events)
+        value = ds.get_cell_value(0, "category")
+        assert "[FleetOps]" in value
 
     def test_turn_column(self):
         """Turn column should return string turn number."""
@@ -304,7 +323,7 @@ class TestSetFilter:
         """set_filter('all') should show all events."""
         ds = EventLogDataSource(_sample_events())
         ds.set_filter("all")
-        assert ds.get_row_count() == 5
+        assert ds.get_row_count() == 6
 
     def test_filter_combat(self):
         """set_filter('combat') should show only combat events."""
@@ -325,6 +344,13 @@ class TestSetFilter:
         ds.set_filter("colonies")
         assert ds.get_row_count() == 1
         assert ds.get_cell_value(0, "message") == "Colony on Beta"
+
+    def test_filter_fleet_operations(self):
+        """set_filter('fleet_operations') should show only fleet operation events."""
+        ds = EventLogDataSource(_sample_events())
+        ds.set_filter("fleet_operations")
+        assert ds.get_row_count() == 1
+        assert ds.get_cell_value(0, "message") == "Fleet 3 joined Fleet 1"
 
     def test_filter_empty_category(self):
         """Filter for category with no events should return 0 rows."""
@@ -372,7 +398,7 @@ class TestUpdateEvents:
     def test_update_to_empty(self):
         """update_events with empty list should clear data."""
         ds = EventLogDataSource(_sample_events())
-        assert ds.get_row_count() == 5
+        assert ds.get_row_count() == 6
         ds.update_events([])
         assert ds.get_row_count() == 0
 

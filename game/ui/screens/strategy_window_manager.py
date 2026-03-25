@@ -86,6 +86,11 @@ class StrategyWindowManager:
         self.fleet_report_window = None
         self.transfer_dialog = None
         self.empire_panel_window = None
+        self.move_choice_window = None
+        self.cargo_quick_dialog = None
+        self.planet_selection_window = None
+        self.system_selection_window = None
+        self.fleet_selection_window = None
 
         # Callback map for dynamic prompt buttons
         self.ui_callbacks: dict = {}
@@ -425,7 +430,7 @@ class StrategyWindowManager:
         win_rect = pygame.Rect(0, 0, win_w, win_h)
         win_rect.center = (self.width // 2, self.height // 2)
 
-        CargoQuickDialog(
+        self.cargo_quick_dialog = CargoQuickDialog(
             relative_rect=win_rect,
             manager=self.manager,
             fleet=fleet,
@@ -454,7 +459,7 @@ class StrategyWindowManager:
 
         rect = pygame.Rect(x, y, width, height)
         # Use PlanetSelectionWindow (PROJ-54 - now uses PlanetReportPanel internally)
-        PlanetSelectionWindow(rect, self.manager, planets, on_select)
+        self.planet_selection_window = PlanetSelectionWindow(rect, self.manager, planets, on_select)
 
     # =========================================================================
     # System Selection Prompt (PROJ-138)
@@ -473,7 +478,7 @@ class StrategyWindowManager:
         x = (self.width - width) / 2
         y = (self.height - height) / 2
         rect = pygame.Rect(x, y, width, height)
-        SystemSelectionWindow(rect, self.manager, systems, current_system, on_selected)
+        self.system_selection_window = SystemSelectionWindow(rect, self.manager, systems, current_system, on_selected)
 
     # =========================================================================
     # Fleet Selection Prompt (FEAT-08)
@@ -491,7 +496,7 @@ class StrategyWindowManager:
         x = (self.width - width) / 2
         y = (self.height - height) / 2
         rect = pygame.Rect(x, y, width, height)
-        FleetSelectionWindow(rect, self.manager, fleets, on_select)
+        self.fleet_selection_window = FleetSelectionWindow(rect, self.manager, fleets, on_select)
 
     # =========================================================================
     # Move Choice Prompt
@@ -521,6 +526,7 @@ class StrategyWindowManager:
         win = pygame_gui.elements.UIWindow(
             rect=rect, manager=self.manager, window_display_title="Select Move Type"
         )
+        self.move_choice_window = win
 
         pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(10, 10, 280, 30),

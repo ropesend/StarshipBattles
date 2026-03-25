@@ -27,6 +27,7 @@ CATEGORY_ICONS = {
     "combat": "[Combat]",
     "production": "[Prod]",
     "colonies": "[Colony]",
+    "fleet_operations": "[FleetOps]",
 }
 
 
@@ -34,7 +35,7 @@ class EventLogDataSource(ITableDataSource):
     """Data source providing event log data for VirtualTable.
 
     Handles:
-    - Category filtering (all, combat, production, colonies)
+    - Category filtering (all, combat, production, colonies, fleet_operations)
     - Newest-first sorting (descending by turn)
     - Cell value extraction for category, turn, message columns
     """
@@ -48,10 +49,10 @@ class EventLogDataSource(ITableDataSource):
 
         Args:
             events: List of event dicts from facade. Each should have:
-                - category: str ('combat', 'production', 'colonies')
+                - category: str ('combat', 'production', 'colonies', 'fleet_operations')
                 - turn: int - turn number when event occurred
                 - message: str - event description text
-            current_filter: Initial filter ('all', 'combat', 'production', 'colonies').
+            current_filter: Initial filter ('all', 'combat', 'production', 'colonies', 'fleet_operations').
         """
         self._all_events = list(events)
         self._current_filter = current_filter
@@ -145,7 +146,7 @@ class EventLogDataSource(ITableDataSource):
         """Set the active filter category and recompute filtered list.
 
         Args:
-            category: One of 'all', 'combat', 'production', 'colonies'.
+            category: One of 'all', 'combat', 'production', 'colonies', 'fleet_operations'.
         """
         self._current_filter = category
         self._recompute_filtered()

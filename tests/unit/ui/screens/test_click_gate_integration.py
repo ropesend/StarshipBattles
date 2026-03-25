@@ -54,6 +54,11 @@ def _create_strategy_event_router():
     wm.event_log_window = None
     wm.empire_panel_window = None
     wm._pending_confirmation_dialog = None
+    wm.move_choice_window = None
+    wm.cargo_quick_dialog = None
+    wm.planet_selection_window = None
+    wm.system_selection_window = None
+    wm.fleet_selection_window = None
 
     ui.window_manager = wm
 

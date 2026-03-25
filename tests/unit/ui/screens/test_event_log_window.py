@@ -37,6 +37,7 @@ def _sample_events():
         _make_event("colony_founded", "colonies", 2, 0, "Colony on Beta"),
         _make_event("combat_resolved", "combat", 2, 0, "Battle at Gamma"),
         _make_event("ship_built", "production", 3, 0, "Cruiser built at Delta"),
+        _make_event("fleet_joined", "fleet_operations", 2, 0, "Fleet 3 joined Fleet 1"),
     ]
 
 
@@ -68,11 +69,13 @@ def _make_window(events=None, on_close=None):
     win.btn_combat = MagicMock()
     win.btn_production = MagicMock()
     win.btn_colonies = MagicMock()
+    win.btn_fleet_ops = MagicMock()
     win.filter_buttons = {
         "all": win.btn_all,
         "combat": win.btn_combat,
         "production": win.btn_production,
         "colonies": win.btn_colonies,
+        "fleet_operations": win.btn_fleet_ops,
     }
 
     return win
@@ -126,7 +129,7 @@ class TestEventFiltering:
         win = _make_window(events=events)
         win.current_filter = "all"
         result = win.get_filtered_events()
-        assert len(result) == 5
+        assert len(result) == 6
 
     def test_get_filtered_events_combat(self):
         """'combat' filter should return only combat events."""
@@ -153,6 +156,15 @@ class TestEventFiltering:
         result = win.get_filtered_events()
         assert len(result) == 1
         assert result[0]["event_type"] == "colony_founded"
+
+    def test_get_filtered_events_fleet_operations(self):
+        """'fleet_operations' filter should return only fleet operation events."""
+        events = _sample_events()
+        win = _make_window(events=events)
+        win.current_filter = "fleet_operations"
+        result = win.get_filtered_events()
+        assert len(result) == 1
+        assert result[0]["event_type"] == "fleet_joined"
 
     def test_filtered_events_sorted_newest_first(self):
         """Filtered events should be sorted newest first (descending by turn)."""
@@ -197,13 +209,19 @@ class TestFilterSwitching:
         win.set_filter("colonies")
         assert win.current_filter == "colonies"
 
+    def test_set_filter_to_fleet_operations(self):
+        """set_filter('fleet_operations') should update current_filter."""
+        win = _make_window(events=_sample_events())
+        win.set_filter("fleet_operations")
+        assert win.current_filter == "fleet_operations"
+
     def test_set_filter_back_to_all(self):
         """set_filter('all') should reset to show all events."""
         win = _make_window(events=_sample_events())
         win.set_filter("combat")
         win.set_filter("all")
         assert win.current_filter == "all"
-        assert len(win.get_filtered_events()) == 5
+        assert len(win.get_filtered_events()) == 6
 
 
 # ---------------------------------------------------------------------------
@@ -270,6 +288,11 @@ class TestStrategyUIEventLogIntegration:
         ui.window_manager.transfer_dialog = None
         ui.window_manager.event_log_window = None
         ui.window_manager.empire_panel_window = None
+        ui.window_manager.move_choice_window = None
+        ui.window_manager.cargo_quick_dialog = None
+        ui.window_manager.planet_selection_window = None
+        ui.window_manager.system_selection_window = None
+        ui.window_manager.fleet_selection_window = None
 
         # PROJ-86 Phase 7: Event router
         from game.ui.screens.strategy_event_router import StrategyEventRouter

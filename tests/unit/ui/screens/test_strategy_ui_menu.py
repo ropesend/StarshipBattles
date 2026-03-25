@@ -61,6 +61,11 @@ def _make_strategy_ui():
     ui.window_manager.transfer_dialog = None
     ui.window_manager.event_log_window = None
     ui.window_manager.empire_panel_window = None
+    ui.window_manager.move_choice_window = None
+    ui.window_manager.cargo_quick_dialog = None
+    ui.window_manager.planet_selection_window = None
+    ui.window_manager.system_selection_window = None
+    ui.window_manager.fleet_selection_window = None
     ui.window_manager.ui_callbacks = {}
     ui.window_manager.process_ui_callbacks.return_value = False
 

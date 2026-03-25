@@ -319,7 +319,7 @@ class GameSession:
         # Step 2: Load Empires (resolves planet references via galaxy)
         try:
             session.empires = [
-                Empire.from_dict(emp_data, galaxy=session.galaxy)
+                Empire.from_dict(emp_data, galaxy=session.galaxy, registries=session._registries)
                 for emp_data in data.get('empires', [])
             ]
         except KeyError as e:

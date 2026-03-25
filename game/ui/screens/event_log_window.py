@@ -39,7 +39,7 @@ class EventLogWindow(UIWindow):
     """Modal window displaying game events with filter tabs.
 
     Shows events in a scrollable list sorted newest-first.
-    Filter tabs allow viewing All, Combat, Production, or Colonies events.
+    Filter tabs allow viewing All, Combat, Production, Colonies, or Fleet Ops events.
     Double-clicking a row with location data navigates the camera to that location.
 
     Args:
@@ -183,12 +183,21 @@ class EventLogWindow(UIWindow):
             manager=self.ui_manager,
             container=self.header_panel,
         )
+        x += FILTER_BTN_WIDTH + FILTER_GAP
+
+        self.btn_fleet_ops = UIButton(
+            relative_rect=pygame.Rect(x, y, FILTER_BTN_WIDTH, FILTER_BTN_HEIGHT),
+            text="Fleet Ops",
+            manager=self.ui_manager,
+            container=self.header_panel,
+        )
 
         self.filter_buttons = {
             "all": self.btn_all,
             "combat": self.btn_combat,
             "production": self.btn_production,
             "colonies": self.btn_colonies,
+            "fleet_operations": self.btn_fleet_ops,
         }
 
         # Highlight the default active filter
@@ -227,7 +236,7 @@ class EventLogWindow(UIWindow):
         """Switch the active filter category.
 
         Args:
-            category: One of 'all', 'combat', 'production', 'colonies'.
+            category: One of 'all', 'combat', 'production', 'colonies', 'fleet_operations'.
         """
         self.current_filter = category
         if self.data_source:

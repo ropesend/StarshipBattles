@@ -76,6 +76,16 @@ class StrategyEventRouter:
             return True
         if wm.empire_panel_window is not None:
             return True
+        if wm.move_choice_window is not None:
+            return True
+        if wm.cargo_quick_dialog is not None:
+            return True
+        if wm.planet_selection_window is not None:
+            return True
+        if wm.system_selection_window is not None:
+            return True
+        if wm.fleet_selection_window is not None:
+            return True
 
         return False
 
@@ -241,6 +251,16 @@ class StrategyEventRouter:
             wm._on_event_log_closed()
         elif event.ui_element == wm.empire_panel_window:
             wm._on_empire_panel_closed()
+        elif event.ui_element == wm.move_choice_window:
+            wm.move_choice_window = None
+        elif event.ui_element == wm.cargo_quick_dialog:
+            wm.cargo_quick_dialog = None
+        elif event.ui_element == wm.planet_selection_window:
+            wm.planet_selection_window = None
+        elif event.ui_element == wm.system_selection_window:
+            wm.system_selection_window = None
+        elif event.ui_element == wm.fleet_selection_window:
+            wm.fleet_selection_window = None
 
     def process_custom_events(self, event) -> None:
         """Process custom UI events from window callbacks.
@@ -303,6 +323,11 @@ class StrategyEventRouter:
             ('event_log_window', wm.event_log_window),
             ('empire_panel_window', wm.empire_panel_window),
             ('_pending_confirmation_dialog', getattr(wm, '_pending_confirmation_dialog', None)),
+            ('move_choice_window', wm.move_choice_window),
+            ('cargo_quick_dialog', wm.cargo_quick_dialog),
+            ('planet_selection_window', wm.planet_selection_window),
+            ('system_selection_window', wm.system_selection_window),
+            ('fleet_selection_window', wm.fleet_selection_window),
         ]
         for name, window in blocking_windows:
             if window is not None:

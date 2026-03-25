@@ -7,6 +7,7 @@
 ## 2. Feature Queue
 | ID | Date Added | Description | Status | Spec File |
 | :--- | :--- | :--- | :--- | :--- |
+| FEAT-10 | 2026-03-24 | Add "Fleet Operations" filter tab to Event Log window | Awaiting Confirmation | [FEAT-10.md](active_features/FEAT-10.md) |
 
 ## 3. Current Focus: None
 No features currently in progress.

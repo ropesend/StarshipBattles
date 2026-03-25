@@ -49,6 +49,11 @@ def mock_ui():
     ui.window_manager.event_log_window = None
     ui.window_manager.empire_panel_window = None
     ui.window_manager._pending_confirmation_dialog = None
+    ui.window_manager.move_choice_window = None
+    ui.window_manager.cargo_quick_dialog = None
+    ui.window_manager.planet_selection_window = None
+    ui.window_manager.system_selection_window = None
+    ui.window_manager.fleet_selection_window = None
 
     # Menu panel not open
     ui.menu_panel = None

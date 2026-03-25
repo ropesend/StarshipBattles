@@ -10,12 +10,12 @@
 | BUG-80 | 2026-02-11 | Planets List - Planet details panel dimensions and positioning | Awaiting Confirmation | [BUG-80.md](active_bugs/BUG-80.md) |
 | BUG-101 | 2026-03-23 | Fleet info panel shows raw enum names for MOVE_TO_FLEET and JOIN_FLEET orders | Awaiting Confirmation | [BUG-101.md](active_bugs/BUG-101.md) |
 | BUG-102 | 2026-03-24 | Build queue ship detail panel shows wrong species theme image | Awaiting Confirmation | [BUG-102.md](active_bugs/BUG-102.md) |
-| BUG-103 | 2026-03-24 | Build queue "Remove Selected" and drag-out removal don't work for facility queues | Awaiting Confirmation | [BUG-103.md](active_bugs/BUG-103.md) |
-| BUG-104 | 2026-03-24 | Event log window column reorder arrows not wired up | Awaiting Confirmation | [BUG-104.md](active_bugs/BUG-104.md) |
 | BUG-105 | 2026-03-24 | Fleet orders dialog too narrow — down arrow and X buttons hidden until resized | Awaiting Confirmation | [BUG-105.md](active_bugs/BUG-105.md) |
+| BUG-106 | 2026-03-24 | "Select Move Type" dialog click passes through to hex map, creating duplicate move orders | Awaiting Confirmation | [BUG-106.md](active_bugs/BUG-106.md) |
+| BUG-107 | 2026-03-24 | Game crashes on turn advance after loading a save — ShipInstance missing registries | Awaiting Confirmation | [BUG-107.md](active_bugs/BUG-107.md) |
 
-## 3. Current Focus: None
-**Status:** No bug currently in focus.
+## 3. Current Focus: BUG-106
+**Status:** Awaiting Confirmation — fix applied, all 5 untracked dialogs now tracked for click-blocking.
 
 ## 4. Status Reference
 | Status | Meaning |

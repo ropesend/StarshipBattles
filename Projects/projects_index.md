@@ -4,13 +4,14 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-222 | Fleet Join Order Redirect and Pursuer Tracking | Planning | 2026-03-24 | 2026-03-24 |
-| PROJ-207 | Fleet Order System Unification | Planning | 2026-02-27 | 2026-02-27 |
+| PROJ-223 | Save/Load Round-Trip Verification Framework | Planning | 2026-03-24 | 2026-03-24 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-222 | Fleet Join Order Redirect and Pursuer Tracking | Archived | 2026-03-24 | 2026-03-24 |
+| PROJ-207 | Fleet Order System Unification | Archived | 2026-02-27 | 2026-02-27 |
 | PROJ-220 | Tri-State Filter Widget & Filter Unification | Archived | 2026-03-14 | 2026-03-24 |
 | PROJ-221 | Build Queue Configurable Columns & Column Swap Fix | Archived | 2026-03-14 | 2026-03-24 |
 | PROJ-219 | Fleet Registration Consolidation | Archived | 2026-02-28 | 2026-03-14 |
@@ -30,7 +31,6 @@ w# Projects Index
 | PROJ-203 | Reduce complexity: StrategyRenderer._draw_systems (CC 29) | Archived | 2026-02-27 | 2026-02-27 |
 | PROJ-202 | Reduce complexity: StrategyRenderer._draw_systems (CC 29) | Archived | 2026-02-27 | 2026-02-27 |
 | PROJ-201 | Reduce complexity: FleetDataSource._get_column_value (CC 29) | Archived | 2026-02-27 | 2026-02-27 |
-| PROJ-200 | Reduce complexity: filter_ships (CC 36) | Archived | 2026-02-27 | 2026-02-27 |
 
 ---
 
