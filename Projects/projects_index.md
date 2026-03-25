@@ -5,6 +5,11 @@ w# Projects Index
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
 | PROJ-223 | Save/Load Round-Trip Verification Framework | Planning | 2026-03-24 | 2026-03-24 |
+| PROJ-224 | Core Utilities & Shared Helpers (Dedup Campaign 1/5) | Planning | 2026-03-24 | 2026-03-24 |
+| PROJ-225 | Simulation Layer Consolidation (Dedup Campaign 2/5) | Planning | 2026-03-24 | 2026-03-24 |
+| PROJ-226 | Strategy Layer Consolidation (Dedup Campaign 3/5) | Planning | 2026-03-24 | 2026-03-24 |
+| PROJ-227 | UI Formatting, Portraits & Shared Components (Dedup Campaign 4/5) | Planning | 2026-03-24 | 2026-03-24 |
+| PROJ-228 | UI Structural Patterns (Dedup Campaign 5/5) | Planning | 2026-03-24 | 2026-03-24 |
 
 ## Archived Projects
 
