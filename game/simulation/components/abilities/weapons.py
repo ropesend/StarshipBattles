@@ -11,6 +11,32 @@ from .stat_keys import StatKey, AbilityStatBinding
 from .ui_colors import HINT_DAMAGE, HINT_RANGE, HINT_RELOAD, HINT_PROJECTILE_SPEED, HINT_ACCURACY
 
 
+def _parse_formula_field(raw, default: float = 0.0, formula_context: dict = None) -> tuple:
+    """Parse a field that may be a number or a formula string.
+
+    PROJ-225: Extracted from duplicated logic in WeaponAbility.__init__ and sync_data.
+
+    Args:
+        raw: Raw value (number, formula string starting with '=', or None)
+        default: Default value if raw is falsy (not including numeric 0)
+        formula_context: Variables for formula evaluation (default: empty dict)
+
+    Returns:
+        Tuple of (parsed_value: float, formula_string_or_none)
+    """
+    if formula_context is None:
+        formula_context = {}
+
+    if isinstance(raw, str) and raw.startswith('='):
+        formula_str = raw[1:]
+        value = float(max(0, safe_evaluate_math_formula(formula_str, formula_context)))
+        return value, formula_str
+    elif raw is not None:
+        return float(raw), None
+    else:
+        return float(default), None
+
+
 class WeaponAbility(Ability):
     """Base class for all offensive weapon capabilities.
 
@@ -48,54 +74,41 @@ class WeaponAbility(Ability):
         AbilityStatBinding(StatKey.ARC_ADD, 'firing_arc', 'add', '_base_firing_arc'),
     ]
 
+    def _get_raw_field(self, data, key: str, default, fallback_key: str = None):
+        """Get a raw field value from data dict or component fallback.
+
+        Args:
+            data: Ability data (dict or primitive)
+            key: Primary key to look up
+            default: Default value if not found
+            fallback_key: Optional fallback key in component.data (e.g. 'base_damage')
+        """
+        if isinstance(data, dict):
+            return data.get(key, default)
+        raw = self.component.data.get(key, default)
+        if not raw and fallback_key:
+            raw = self.component.data.get(fallback_key, default)
+        return raw
+
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
 
-        # Handle damage (may be number or formula string)
-        if isinstance(data, dict):
-            raw_damage = data.get('damage', 0)
-        else:
-            # Fallback to component base stats if data is not a dict (e.g. shortcut 'true')
-            raw_damage = self.component.data.get('damage', 0)
-            if not raw_damage:
-                raw_damage = self.component.data.get('base_damage', 0)
+        # Parse damage (may be number or formula string)
+        raw_damage = self._get_raw_field(data, 'damage', 0, 'base_damage')
+        self.damage, self.damage_formula = _parse_formula_field(
+            raw_damage, default=0.0, formula_context={'range_to_target': 0}
+        )
+        self._base_damage = self.damage
 
-        if isinstance(raw_damage, str) and raw_damage.startswith('='):
-            self.damage_formula = raw_damage[1:]  # Store without '='
-            # Evaluate at range 0 for base value
-            self.damage = float(max(0, safe_evaluate_math_formula(self.damage_formula, {'range_to_target': 0})))
-        else:
-            self.damage_formula = None
-            self.damage = float(raw_damage) if raw_damage else 0.0
-        self._base_damage = self.damage  # Store for modifier sync
+        # Parse range (may be number or formula string)
+        raw_range = self._get_raw_field(data, 'range', 0, 'base_range')
+        self.range, _ = _parse_formula_field(raw_range, default=0.0)
+        self._base_range = self.range
 
-        # Handle range (may be number or formula string)
-        if isinstance(data, dict):
-            raw_range = data.get('range', 0)
-        else:
-            raw_range = self.component.data.get('range', 0)
-            if not raw_range:
-                raw_range = self.component.data.get('base_range', 0)
-
-        if isinstance(raw_range, str) and raw_range.startswith('='):
-            self.range = float(max(0, safe_evaluate_math_formula(raw_range[1:], {})))
-        else:
-            self.range = float(raw_range) if raw_range else 0.0
-        self._base_range = self.range  # Store for modifier sync
-
-        # Handle reload (may be number or formula string)
-        if isinstance(data, dict):
-            raw_reload = data.get('reload', 1.0)
-        else:
-            raw_reload = self.component.data.get('reload', 1.0)
-            if not raw_reload:
-                raw_reload = self.component.data.get('base_reload', 1.0)
-
-        if isinstance(raw_reload, str) and raw_reload.startswith('='):
-            self.reload_time = float(max(0.0, safe_evaluate_math_formula(raw_reload[1:], {})))
-        else:
-            self.reload_time = float(raw_reload) if raw_reload is not None else 1.0
-        self._base_reload = self.reload_time  # Store for modifier sync
+        # Parse reload (may be number or formula string)
+        raw_reload = self._get_raw_field(data, 'reload', 1.0, 'base_reload')
+        self.reload_time, _ = _parse_formula_field(raw_reload, default=1.0)
+        self._base_reload = self.reload_time
 
         self.cooldown_timer = 0.0
 
@@ -123,27 +136,15 @@ class WeaponAbility(Ability):
 
         # Damage/Range/Reload might be formulas, but usually they are base values in data
         # which recalculate() then uses to apply multipliers.
-        # We update the _base_ values from data if they exist.
+        # PROJ-225: Use shared _parse_formula_field for all three fields.
         if 'damage' in data:
-            raw = data['damage']
-            if isinstance(raw, str) and raw.startswith('='):
-                self._base_damage = float(max(0, safe_evaluate_math_formula(raw[1:], {})))
-            else:
-                self._base_damage = float(raw)
+            self._base_damage, _ = _parse_formula_field(data['damage'])
             self.damage = self._base_damage
         if 'range' in data:
-            raw = data['range']
-            if isinstance(raw, str) and raw.startswith('='):
-                self._base_range = float(max(0, safe_evaluate_math_formula(raw[1:], {})))
-            else:
-                self._base_range = float(raw)
+            self._base_range, _ = _parse_formula_field(data['range'])
             self.range = self._base_range
         if 'reload' in data:
-            raw = data['reload']
-            if isinstance(raw, str) and raw.startswith('='):
-                self._base_reload = float(max(0.0, safe_evaluate_math_formula(raw[1:], {})))
-            else:
-                self._base_reload = float(raw)
+            self._base_reload, _ = _parse_formula_field(data['reload'], default=1.0)
             self.reload_time = self._base_reload
 
     def recalculate(self):

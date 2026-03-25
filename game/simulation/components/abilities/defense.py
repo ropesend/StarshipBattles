@@ -1,7 +1,6 @@
-from typing import Dict, Any, List
+from typing import List
 
-from game.core.config import PhysicsConfig
-from .base import Ability, SimpleMultiplierAbility
+from .base import SimpleMultiplierAbility, StaticValueAbility
 from .stat_keys import StatKey, AbilityStatBinding
 from .ui_colors import HINT_SHIELD_CAP, HINT_SHIELD_REGEN, HINT_DAMAGE, HINT_EVASION, HINT_ACCURACY
 
@@ -50,68 +49,26 @@ class ShieldRegeneration(SimpleMultiplierAbility):
     ]
 
 
-class ToHitAttackModifier(Ability):
+class ToHitAttackModifier(StaticValueAbility):
     """Modifier for to-hit attack bonuses."""
 
-    STAT_BINDINGS: List[AbilityStatBinding] = []  # No modifier stats consumed
-
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
-        self.value = self._parse_primary_value(data)
-        self._base_value = self.value
-
-    def recalculate(self):
-        # Apply generic properties or specific mult if needed.
-        # Modifiers usually stack by addition in 'properties', but if we want mult:
-        # For now, just re-setting base in case we add multipliers later.
-        pass
-
-    def get_ui_rows(self):
-        val = self.value
-        sign = "+" if val >= 0 else ""
-        return [{'label': 'Targeting', 'value': f"{sign}{val:.1f}", 'color_hint': HINT_DAMAGE}]
-
-    def get_primary_value(self) -> float:
-        return self.value
+    ui_label = 'Targeting'
+    ui_color = HINT_DAMAGE
+    ui_format = '{:+.1f}'
 
 
-class ToHitDefenseModifier(Ability):
+class ToHitDefenseModifier(StaticValueAbility):
     """Modifier for to-hit defense bonuses."""
 
-    STAT_BINDINGS: List[AbilityStatBinding] = []  # No modifier stats consumed
-
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
-        self.value = self._parse_primary_value(data)
-        self._base_value = self.value
-
-    def recalculate(self):
-        pass
-
-    def get_ui_rows(self):
-        val = self.value
-        sign = "+" if val >= 0 else ""
-        return [{'label': 'Evasion', 'value': f"{sign}{val:.1f}", 'color_hint': HINT_EVASION}]
-
-    def get_primary_value(self) -> float:
-        return self.value
+    ui_label = 'Evasion'
+    ui_color = HINT_EVASION
+    ui_format = '{:+.1f}'
 
 
-class EmissiveArmor(Ability):
+class EmissiveArmor(StaticValueAbility):
     """Provides damage ignore (ablative armor)."""
 
-    STAT_BINDINGS: List[AbilityStatBinding] = []  # No modifier stats consumed
-
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
-        self.amount = int(self._parse_primary_value(data))
-        self._base_amount = self.amount
-
-    def recalculate(self):
-        pass
-
-    def get_ui_rows(self):
-        return [{'label': 'Dmg Ignore', 'value': f"{self.amount}", 'color_hint': HINT_ACCURACY}]
-
-    def get_primary_value(self) -> float:
-        return float(self.amount)
+    ui_label = 'Dmg Ignore'
+    ui_color = HINT_ACCURACY
+    ui_format = '{}'
+    int_result = True

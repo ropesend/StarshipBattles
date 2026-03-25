@@ -140,12 +140,5 @@ class ShipStatQuerier:
 
         return max_rng if max_rng > 0 else 0.0
 
-    @property
-    def cached_summary(self) -> dict:
-        """
-        Get cached dictionary of high-level ship stats (DPS, Speed, etc).
-
-        Returns:
-            The ship's _cached_summary dictionary.
-        """
-        return self._ship._cached_summary
+    # PROJ-225: Removed redundant cached_summary property (DUP-SIM-007).
+    # Use Ship.cached_summary instead.

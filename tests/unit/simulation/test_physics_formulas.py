@@ -728,3 +728,73 @@ class TestFormulaConsistency:
         assert isinstance(physics_constants['K_SPEED'], int)
         assert isinstance(physics_constants['K_THRUST'], int)
         assert isinstance(physics_constants['K_TURN'], int)
+
+
+# =============================================================================
+# Shared Formula Functions (PROJ-225)
+# =============================================================================
+
+class TestComputeAcceleration:
+    """Tests for compute_acceleration() shared function."""
+
+    def test_basic_calculation(self):
+        """Standard calculation matches inline formula."""
+        from game.simulation.physics_constants import compute_acceleration
+        result = compute_acceleration(100, 500)
+        expected = (100 * K_THRUST) / (500 * 500)
+        assert result == pytest.approx(expected)
+
+    def test_zero_thrust(self):
+        """Zero thrust gives zero acceleration."""
+        from game.simulation.physics_constants import compute_acceleration
+        assert compute_acceleration(0, 500) == 0.0
+
+    def test_zero_mass_returns_zero(self):
+        """Zero mass returns 0 (division by zero guard)."""
+        from game.simulation.physics_constants import compute_acceleration
+        assert compute_acceleration(100, 0) == 0.0
+
+    def test_negative_mass_returns_zero(self):
+        """Negative mass returns 0."""
+        from game.simulation.physics_constants import compute_acceleration
+        assert compute_acceleration(100, -10) == 0.0
+
+    def test_inverse_square_mass(self):
+        """Doubling mass quarters acceleration."""
+        from game.simulation.physics_constants import compute_acceleration
+        a1 = compute_acceleration(100, 500)
+        a2 = compute_acceleration(100, 1000)
+        assert a2 == pytest.approx(a1 / 4, rel=1e-9)
+
+
+class TestComputeMaxSpeed:
+    """Tests for compute_max_speed() shared function."""
+
+    def test_basic_calculation(self):
+        """Standard calculation matches inline formula."""
+        from game.simulation.physics_constants import compute_max_speed
+        result = compute_max_speed(100, 500)
+        expected = (100 * K_SPEED) / 500
+        assert result == pytest.approx(expected)
+
+    def test_zero_thrust(self):
+        """Zero thrust gives zero max speed."""
+        from game.simulation.physics_constants import compute_max_speed
+        assert compute_max_speed(0, 500) == 0.0
+
+    def test_zero_mass_returns_zero(self):
+        """Zero mass returns 0 (division by zero guard)."""
+        from game.simulation.physics_constants import compute_max_speed
+        assert compute_max_speed(100, 0) == 0.0
+
+    def test_negative_mass_returns_zero(self):
+        """Negative mass returns 0."""
+        from game.simulation.physics_constants import compute_max_speed
+        assert compute_max_speed(100, -10) == 0.0
+
+    def test_inverse_linear_mass(self):
+        """Doubling mass halves max speed."""
+        from game.simulation.physics_constants import compute_max_speed
+        s1 = compute_max_speed(100, 500)
+        s2 = compute_max_speed(100, 1000)
+        assert s2 == pytest.approx(s1 / 2, rel=1e-9)

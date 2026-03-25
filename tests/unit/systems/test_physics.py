@@ -293,25 +293,25 @@ class TestPhysicsConstantsConsolidation:
     """Test that physics constants are centralized - PHYS-01 regression test."""
 
     def test_stats_uses_physics_constants_module(self, pygame_init):
-        """Verify ship_stats.py imports K_SPEED, K_THRUST, K_TURN from physics_constants.py.
+        """Verify ship_stats.py uses physics_constants for formulas.
 
         PROJ-51 Phase 4: The old systems/stats.py was orphaned dead code and deleted.
         The actual stats calculator is in entities/ship_stats.py.
+        PROJ-225: Physics formulas extracted to shared functions in physics_constants.
         """
         from game.simulation import physics_constants
         # PROJ-51: Use the actual ship_stats module (not the deleted systems/stats)
         from game.simulation.entities import ship_stats as stats_module
 
-        # Verify the constants are imported into stats module (not defined locally)
-        # If the fix is correct, stats_module should reference physics_constants values
-        assert hasattr(stats_module, 'K_SPEED'), "stats module should import K_SPEED"
-        assert hasattr(stats_module, 'K_THRUST'), "stats module should import K_THRUST"
+        # Verify K_TURN is still imported (used directly for turn speed)
         assert hasattr(stats_module, 'K_TURN'), "stats module should import K_TURN"
-
-        # Verify values match physics_constants (single source of truth)
-        assert stats_module.K_SPEED == physics_constants.K_SPEED
-        assert stats_module.K_THRUST == physics_constants.K_THRUST
         assert stats_module.K_TURN == physics_constants.K_TURN
+
+        # PROJ-225: Verify shared formula functions are imported
+        assert hasattr(stats_module, 'compute_acceleration'), "stats module should import compute_acceleration"
+        assert hasattr(stats_module, 'compute_max_speed'), "stats module should import compute_max_speed"
+        assert stats_module.compute_acceleration is physics_constants.compute_acceleration
+        assert stats_module.compute_max_speed is physics_constants.compute_max_speed
 
     def test_physics_constants_values(self, pygame_init):
         """Verify physics_constants has expected values (documentation check)."""

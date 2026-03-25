@@ -81,80 +81,41 @@ def apply_modifier_effects(modifier_def, value, stats, component=None):
             _apply_effect_to_dict(stat_key, effect_value, operation, ability_stat_dict)
             continue  # Don't apply to global stats
 
-        # Apply based on operation type
-        if operation == 'multiply':
-            # Multiplicative stats: stats[key] *= value
-            if stat_key in stats and isinstance(stats[stat_key], (int, float)):
-                stats[stat_key] *= effect_value
-        elif operation == 'add_to_mult':
-            # Add to multiplier (e.g. rapid_fire mass scaling)
-            if stat_key in stats and isinstance(stats[stat_key], (int, float)):
-                stats[stat_key] += effect_value
-        elif operation == 'add':
-            # Additive stats: stats[key] += value
-            if stat_key in stats:
-                stats[stat_key] += effect_value
-            elif stat_key == 'mass_add':
-                stats['mass_add'] += effect_value
-            elif stat_key == 'arc_add':
-                stats['arc_add'] += effect_value
-            elif stat_key == 'accuracy_add':
-                stats['accuracy_add'] += effect_value
-            elif stat_key == 'projectile_stealth_add':
-                stats['projectile_stealth_level'] += effect_value
-        elif operation == 'set':
-            # Set stats: stats[key] = value
-            if stat_key == 'arc_set':
-                stats['arc_set'] = effect_value
-            elif stat_key == 'facing_angle':
-                if 'properties' not in stats:
-                    stats['properties'] = {}
-                stats['properties']['facing_angle'] = effect_value
-            else:
-                stats[stat_key] = effect_value
-        else:
-            # Unknown operation - log warning and ignore
-            logger.warning(f"Unknown operation '{operation}' for stat '{stat_key}', effect ignored")
+        # PROJ-225: Pre-process special key mappings, then delegate to _apply_effect_to_dict
+        # Special case: 'projectile_stealth_add' maps to 'projectile_stealth_level'
+        if stat_key == 'projectile_stealth_add' and operation == 'add':
+            stat_key = 'projectile_stealth_level'
+
+        # Special case: 'facing_angle' set goes into nested 'properties' dict
+        if stat_key == 'facing_angle' and operation == 'set':
+            if 'properties' not in stats:
+                stats['properties'] = {}
+            stats['properties']['facing_angle'] = effect_value
+            continue
+
+        # For multiply/add_to_mult on global stats, guard against non-numeric values
+        if operation in ('multiply', 'add_to_mult'):
+            if stat_key not in stats or not isinstance(stats[stat_key], (int, float)):
+                continue
+
+        _apply_effect_to_dict(stat_key, effect_value, operation, stats)
 
 
 def get_default_stat_multipliers():
     """
     Return default stat multipliers dictionary.
 
-    This is the canonical list of all supported modifier stats.
+    Delegates to StatKey.create_default_stats_dict() as the single source of truth.
     Used by both Component and ShipStatsCalculator for consistency.
+
+    PROJ-225: Unified to use StatKey enum as canonical source (DUP-CMP-004).
 
     Returns:
         Dict with all stat keys initialized to neutral values
         (1.0 for multipliers, 0.0 for additive, None for set operations)
     """
-    return {
-        'mass_mult': 1.0,
-        'hp_mult': 1.0,
-        'damage_mult': 1.0,
-        'range_mult': 1.0,
-        'cost_mult': 1.0,
-        'thrust_mult': 1.0,
-        'turn_mult': 1.0,
-        'strategic_mult': 1.0,
-        'energy_gen_mult': 1.0,
-        'capacity_mult': 1.0,
-        'shield_capacity_mult': 1.0,
-        'crew_capacity_mult': 1.0,
-        'life_support_capacity_mult': 1.0,
-        'consumption_mult': 1.0,
-        'mass_add': 0.0,
-        'arc_add': 0.0,
-        'accuracy_add': 0.0,
-        'arc_set': None,
-        'properties': {},
-        'reload_mult': 1.0,
-        'endurance_mult': 1.0,
-        'projectile_hp_mult': 1.0,
-        'projectile_damage_mult': 1.0,
-        'projectile_stealth_level': 0.0,
-        'crew_req_mult': 1.0,
-    }
+    from game.simulation.components.abilities.stat_keys import StatKey
+    return StatKey.create_default_stats_dict()
 
 
 def calculate_stat_multipliers(modifier_entries, modifier_registry):

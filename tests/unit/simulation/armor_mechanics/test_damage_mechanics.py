@@ -191,8 +191,8 @@ class TestEmissiveArmorAbility:
 
         ability = EmissiveArmor(component, data)
 
-        assert ability.amount == 15
-        assert ability._base_amount == 15
+        assert ability.value == 15
+        assert ability._base_value == 15
 
     def test_ability_simple_value(self):
         """EmissiveArmor should accept simple numeric value."""
@@ -203,7 +203,7 @@ class TestEmissiveArmorAbility:
 
         ability = EmissiveArmor(component, data)
 
-        assert ability.amount == 20
+        assert ability.value == 20
 
     def test_ability_ui_rows(self):
         """EmissiveArmor should provide UI rows."""

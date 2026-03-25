@@ -342,6 +342,58 @@ class Ability:
         return summary
 
 
+class StaticValueAbility(Ability):
+    """Base class for abilities that hold a static value with no modifier bindings.
+
+    These abilities parse a single numeric value from component data and expose it
+    unchanged. recalculate() is a no-op since there are no STAT_BINDINGS.
+
+    Subclasses configure behavior via class attributes:
+        ui_label:    Display label for get_ui_rows() (e.g. 'Targeting')
+        ui_color:    Color hint constant (e.g. HINT_DAMAGE)
+        ui_format:   Format string for the value (default: '{:.1f}')
+        int_result:  If True, cast parsed value to int (default: False)
+
+    PROJ-225: Extracted to eliminate duplication across ToHitAttackModifier,
+    ToHitDefenseModifier, and EmissiveArmor.
+    """
+    ui_label: str = ''
+    ui_color: str = ''
+    ui_format: str = '{:.1f}'
+    int_result: bool = False
+
+    STAT_BINDINGS: List['AbilityStatBinding'] = []  # No modifier stats consumed
+
+    def __init_subclass__(cls, **kwargs):
+        """Validate that required class attributes are set."""
+        super().__init_subclass__(**kwargs)
+        required = ('ui_label', 'ui_color')
+        for attr in required:
+            val = getattr(cls, attr, '')
+            if not val and cls.__name__ != 'StaticValueAbility':
+                raise TypeError(f"{cls.__name__} must set class attribute '{attr}'")
+
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        val = self._parse_primary_value(data)
+        if self.int_result:
+            val = int(val)
+        self.value = val
+        self._base_value = val
+
+    def recalculate(self):
+        """No-op: static values have no modifier bindings."""
+        pass
+
+    def get_ui_rows(self) -> List[Dict[str, Any]]:
+        """Return single UI row with formatted value."""
+        return [{'label': self.ui_label, 'value': self.ui_format.format(self.value), 'color_hint': self.ui_color}]
+
+    def get_primary_value(self) -> float:
+        """Return current value as float."""
+        return float(self.value)
+
+
 class SimpleMultiplierAbility(Ability):
     """Base class for abilities with a single numeric value modified by one multiplier.
 
