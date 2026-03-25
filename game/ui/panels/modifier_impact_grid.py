@@ -14,6 +14,7 @@ from pygame_gui.elements import UIPanel, UILabel
 from typing import Dict, Any, List, Optional, TYPE_CHECKING
 
 from game.ui.fonts import get_font
+from game.ui.widgets.scroll_state import ScrollState
 from game.ui.colors import (
     MODIFIER_HEADER_BG, MODIFIER_ROW_BG, MODIFIER_ROW_ALT_BG, MODIFIER_FOOTER_BG,
     MODIFIER_BUFF, MODIFIER_DEBUFF, MODIFIER_NEUTRAL, TEXT_ITEM
@@ -79,8 +80,7 @@ class ModifierImpactGrid:
         self.modifier_rows: List[Dict[str, Any]] = []  # Per-modifier data
 
         # Scrolling state
-        self.scroll_offset_y = 0  # Vertical scroll offset in pixels
-        self.max_visible_rows = 0  # Calculated based on rect height
+        self.scroll = ScrollState(step=self.ROW_HEIGHT)
 
         # UI elements for cleanup
         self._ui_elements: List = []
@@ -404,7 +404,7 @@ class ModifierImpactGrid:
         screen.set_clip(content_area.clip(old_clip))
 
         # Draw modifier rows (with scroll offset)
-        row_y = base_y + self.HEADER_HEIGHT - self.scroll_offset_y
+        row_y = base_y + self.HEADER_HEIGHT - self.scroll.offset
         for row_idx, row_data in enumerate(self.modifier_rows):
             # Skip rows above visible area
             if row_y + self.ROW_HEIGHT < content_area.top:
@@ -485,17 +485,11 @@ class ModifierImpactGrid:
             mx, my = pygame.mouse.get_pos()
             abs_rect = self.panel.get_abs_rect()
             if abs_rect.collidepoint(mx, my):
-                # Calculate scroll
-                total_content_height = (len(self.modifier_rows) + 1) * self.ROW_HEIGHT
-                visible_height = abs_rect.height - self.TITLE_HEIGHT - self.HEADER_HEIGHT - self.ROW_HEIGHT
-                max_scroll = max(0, total_content_height - visible_height)
-
-                # Scroll direction (event.y is positive for up, negative for down)
-                self.scroll_offset_y -= event.y * self.ROW_HEIGHT
-
-                # Clamp
-                self.scroll_offset_y = max(0, min(max_scroll, self.scroll_offset_y))
-                return True
+                # Update scroll dimensions dynamically
+                self.scroll.content_height = (len(self.modifier_rows) + 1) * self.ROW_HEIGHT
+                self.scroll.viewport_height = abs_rect.height - self.TITLE_HEIGHT - self.HEADER_HEIGHT - self.ROW_HEIGHT
+                if self.scroll.handle_mousewheel(event):
+                    return True
 
         return False
 

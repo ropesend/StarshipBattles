@@ -7,6 +7,7 @@ import json
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton
+from game.ui.widgets.scroll_state import ScrollState
 
 from game.ui.fonts import get_font
 from game.ui.screens.test_lab import theme
@@ -42,10 +43,14 @@ class JSONPopup:
         self.title_font = get_font(24)
         self.body_font = get_font(14, "Courier New")  # Monospace for JSON
 
-        # Scrolling
-        self.scroll_offset = 0
+        # Scrolling (line-based: offset is line index, step is lines per scroll tick)
         self.line_height = 18
         self.lines = self.json_text.split('\n')
+        self.scroll = ScrollState(
+            content_height=len(self.lines),
+            viewport_height=max(1, (self.height - 90) // self.line_height),
+            step=3,
+        )
 
         # Close button (pygame_gui UIButton)
         self.close_button = UIButton(
@@ -71,8 +76,7 @@ class JSONPopup:
 
         # Handle scrolling
         if event.type == pygame.MOUSEWHEEL:
-            self.scroll_offset -= event.y * 3
-            self.scroll_offset = max(0, min(self.scroll_offset, len(self.lines) - 20))
+            self.scroll.handle_mousewheel(event)
 
         # Close on Escape
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -105,14 +109,14 @@ class JSONPopup:
         max_visible_lines = content_height // self.line_height
 
         # Draw JSON lines (with scrolling)
-        for i, line in enumerate(self.lines[self.scroll_offset:self.scroll_offset + max_visible_lines]):
+        for i, line in enumerate(self.lines[self.scroll.offset:self.scroll.offset + max_visible_lines]):
             line_surf = self.body_font.render(line, True, theme.TEXT)
             screen.blit(line_surf, (self.x + 20, content_y + i * self.line_height))
 
         # Scrollbar indicator (if needed)
         if len(self.lines) > max_visible_lines:
             scrollbar_height = max(30, int(content_height * (max_visible_lines / len(self.lines))))
-            scrollbar_y = content_y + int(content_height * (self.scroll_offset / len(self.lines)))
+            scrollbar_y = content_y + int(content_height * self.scroll.scroll_ratio)
             scrollbar_rect = pygame.Rect(self.x + self.width - 20, scrollbar_y, 10, scrollbar_height)
             pygame.draw.rect(screen, theme.SCROLLBAR_THUMB, scrollbar_rect, border_radius=5)
 

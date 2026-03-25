@@ -1,6 +1,7 @@
 import logging
 import pygame
 from game.core.profiling import profile_action
+from game.ui.widgets.scroll_state import ScrollState
 
 logger = logging.getLogger(__name__)
 from game.ui.config import UIConfig
@@ -69,7 +70,7 @@ class ShipStatsPanel(BattlePanel):
     def __init__(self, scene, x, y, w, h):
         super().__init__(scene, x, y, w, h)
         self.expanded_ships = set()  # Set of ship IDs (strings)
-        self.scroll_offset = 0
+        self.scroll = ScrollState()
         self.content_height = 0
 
     def _get_ship_id(self, ship) -> str:
@@ -106,7 +107,7 @@ class ShipStatsPanel(BattlePanel):
         font_name = get_default_font(UIConfig.FONT_NAME)
         font_stat = get_default_font(UIConfig.FONT_STAT)
 
-        y = 10 - self.scroll_offset
+        y = 10 - self.scroll.offset
         panel_w = self.rect.width
 
         # PROJ-43: Use _get_ships() for DTO-based access
@@ -136,7 +137,7 @@ class ShipStatsPanel(BattlePanel):
         for ship in team2_ships:
             y = self.draw_ship_entry(self.surface, ship, y, panel_w, font_name, font_stat, TEAM_2_BANNER_BG)
 
-        self.content_height = y + self.scroll_offset
+        self.content_height = y + self.scroll.offset
 
         screen.blit(self.surface, self.rect.topleft)
         pygame.draw.line(screen, BORDER_PANEL, self.rect.topleft, self.rect.bottomleft, 2)
@@ -210,7 +211,7 @@ class ShipStatsPanel(BattlePanel):
         by ship ID. Returns ("focus_ship", ship_id) for camera focus.
         """
         rel_x = mx
-        rel_y = my + self.scroll_offset
+        rel_y = my + self.scroll.offset
 
         # PROJ-43: Use _get_ships() for DTO-based access
         ships = self._get_ships()
@@ -262,7 +263,7 @@ class SeekerMonitorPanel(BattlePanel):
         super().__init__(scene, x, y, w, h)
         self.tracked_seekers = []
         self.expanded_seekers = set()  # Set of projectile IDs (strings)
-        self.scroll_offset = 0
+        self.scroll = ScrollState()
         self.clear_btn_rect = None
         self.content_height = 0
 
@@ -308,7 +309,7 @@ class SeekerMonitorPanel(BattlePanel):
         font_name = get_default_font(22)
         font_stat = get_default_font(18)
         
-        y = 10 - self.scroll_offset
+        y = 10 - self.scroll.offset
         panel_w = self.rect.width
         
         active_count = sum(1 for p in self.tracked_seekers if p.status == 'active')
@@ -320,7 +321,7 @@ class SeekerMonitorPanel(BattlePanel):
         for proj in self.tracked_seekers:
             y = self.draw_seeker_entry(self.surface, proj, y, panel_w, font_name, font_stat)
             
-        self.content_height = y + self.scroll_offset
+        self.content_height = y + self.scroll.offset
         
         screen.blit(self.surface, self.rect.topleft)
         
@@ -446,7 +447,7 @@ class SeekerMonitorPanel(BattlePanel):
             return True
 
         rel_x = mx - self.rect.x
-        rel_y = my - self.rect.y + self.scroll_offset
+        rel_y = my - self.rect.y + self.scroll.offset
 
         y_pos = 10 + 30
 

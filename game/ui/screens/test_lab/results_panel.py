@@ -7,6 +7,7 @@ import pygame
 
 from game.ui.fonts import get_font
 from game.ui.screens.test_lab import theme
+from game.ui.widgets.scroll_state import ScrollState
 from .test_run_card import TestRunCard
 
 
@@ -30,8 +31,7 @@ class ResultsPanel:
 
         self.current_test_id = None
         self.run_cards = []
-        self.scroll_offset = 0
-        self.max_scroll = 0
+        self.scroll = ScrollState(step=20)
         self.selected_card_index = None
         self.details_panel = None  # Reference to TestRunDetailsPanel
 
@@ -58,7 +58,7 @@ class ResultsPanel:
     def set_test(self, test_id):
         """Update panel to show runs for specific test."""
         self.current_test_id = test_id
-        self.scroll_offset = 0
+        self.scroll.reset()
         self.selected_card_index = None
 
         # Clear details panel
@@ -88,7 +88,8 @@ class ResultsPanel:
     def _recalculate_scroll(self):
         """Recalculate maximum scroll offset."""
         if not self.run_cards:
-            self.max_scroll = 0
+            self.scroll.content_height = 0
+            self.scroll.viewport_height = 0
             return
 
         # Calculate total content height
@@ -96,9 +97,9 @@ class ResultsPanel:
         for card in self.run_cards:
             total_height += card.get_height() + 10
 
-        # Max scroll is content height - visible height
-        visible_height = self.height - 10
-        self.max_scroll = max(0, total_height - visible_height)
+        self.scroll.content_height = total_height
+        self.scroll.viewport_height = self.height - 10
+        self.scroll.clamp()
 
     def handle_event(self, event):
         """Handle mouse events."""
@@ -119,7 +120,7 @@ class ResultsPanel:
 
             # Check card clicks (accounting for scroll)
             for i, card in enumerate(self.run_cards):
-                adjusted_my = my + self.scroll_offset
+                adjusted_my = my + self.scroll.offset
                 if card.handle_click(mx, adjusted_my):
                     # Update selection
                     self.selected_card_index = i
@@ -134,9 +135,8 @@ class ResultsPanel:
         if event.type == pygame.MOUSEWHEEL:
             mx, my = pygame.mouse.get_pos()
             if self.x <= mx <= self.x + self.width and self.y <= my <= self.y + self.height:
-                self.scroll_offset -= event.y * 20
-                self.scroll_offset = max(0, min(self.scroll_offset, self.max_scroll))
-                return True
+                if self.scroll.handle_mousewheel(event):
+                    return True
 
         return False
 
@@ -145,7 +145,7 @@ class ResultsPanel:
         mx, my = pygame.mouse.get_pos()
 
         # Update card hover states (accounting for scroll)
-        adjusted_my = my + self.scroll_offset
+        adjusted_my = my + self.scroll.offset
         for card in self.run_cards:
             card.handle_hover(mx, adjusted_my)
 
@@ -166,7 +166,7 @@ class ResultsPanel:
 
         for card in self.run_cards:
             # Adjust Y position for scrolling
-            card_y = card.y - self.scroll_offset
+            card_y = card.y - self.scroll.offset
             if self._is_card_visible(card_y, card.get_height()):
                 # Temporarily adjust position for drawing
                 original_y = card.y
@@ -177,7 +177,7 @@ class ResultsPanel:
         surface.set_clip(None)
 
         # Draw scrollbar
-        if self.max_scroll > 0:
+        if self.scroll.can_scroll:
             self._draw_scrollbar(surface)
 
     def _draw_header(self, surface):
@@ -239,7 +239,7 @@ class ResultsPanel:
     def _draw_scrollbar(self, surface):
         """Draw scrollbar indicator."""
         visible_height = self.height - 90
-        total_content_height = visible_height + self.max_scroll
+        total_content_height = visible_height + self.scroll.max_offset
 
         # Scrollbar dimensions
         scrollbar_width = 8
@@ -249,7 +249,7 @@ class ResultsPanel:
 
         # Calculate thumb size and position
         thumb_height = max(30, int(visible_height * (visible_height / total_content_height)))
-        thumb_y = scrollbar_track_y + int((self.scroll_offset / self.max_scroll) * (scrollbar_track_height - thumb_height))
+        thumb_y = scrollbar_track_y + int(self.scroll.scroll_ratio * (scrollbar_track_height - thumb_height))
 
         # Draw thumb
         pygame.draw.rect(surface, theme.SCROLLBAR_THUMB,

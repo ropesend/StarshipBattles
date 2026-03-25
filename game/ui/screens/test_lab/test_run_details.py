@@ -8,6 +8,7 @@ import pygame
 from game.ui.colors import TEST_PASS, TEST_FAIL
 from game.ui.fonts import get_font
 from game.ui.screens.test_lab import theme
+from game.ui.widgets.scroll_state import ScrollState
 from game.ui.screens.test_lab.formatting_utils import format_value
 
 
@@ -38,8 +39,7 @@ class TestRunDetailsPanel:
         self.small_font = get_font(12)
 
         self.selected_run = None
-        self.scroll_offset = 0
-        self.max_scroll = 0
+        self.scroll = ScrollState(step=20)
 
         # View States button
         self.view_states_button_rect = None
@@ -56,24 +56,25 @@ class TestRunDetailsPanel:
     def set_run(self, run_record, run_number):
         """Set the run to display details for."""
         self.selected_run = (run_record, run_number)
-        self.scroll_offset = 0
+        self.scroll.reset()
         self._calculate_scroll()
 
     def clear(self):
         """Clear selected run."""
         self.selected_run = None
-        self.scroll_offset = 0
+        self.scroll.reset()
 
     def _calculate_scroll(self):
         """Calculate max scroll based on content height."""
         if not self.selected_run:
-            self.max_scroll = 0
+            self.scroll.content_height = 0
+            self.scroll.viewport_height = 0
             return
 
         run_record, _ = self.selected_run
-        content_height = 150 + len(run_record.metrics) * 20 + 50 + len(run_record.validation_results) * 40
-        visible_height = self.height - 20
-        self.max_scroll = max(0, content_height - visible_height)
+        self.scroll.content_height = 150 + len(run_record.metrics) * 20 + 50 + len(run_record.validation_results) * 40
+        self.scroll.viewport_height = self.height - 20
+        self.scroll.clamp()
 
     def handle_event(self, event):
         """Handle scroll and click events."""
@@ -106,9 +107,8 @@ class TestRunDetailsPanel:
         if event.type == pygame.MOUSEWHEEL:
             mouse_x, mouse_y = pygame.mouse.get_pos()
             if self.x <= mouse_x <= self.x + self.width and self.y <= mouse_y <= self.y + self.height:
-                self.scroll_offset -= event.y * 20
-                self.scroll_offset = max(0, min(self.scroll_offset, self.max_scroll))
-                return True
+                if self.scroll.handle_mousewheel(event):
+                    return True
         return False
 
     def draw(self, surface):
@@ -131,7 +131,7 @@ class TestRunDetailsPanel:
         clip_rect = pygame.Rect(self.x, self.y + 35, self.width, self.height - 35)
         surface.set_clip(clip_rect)
 
-        y_offset = self.y + 40 - self.scroll_offset
+        y_offset = self.y + 40 - self.scroll.offset
 
         # Run info header and status
         y_offset = self._draw_header_and_status(surface, run_record, run_number, y_offset)
@@ -159,7 +159,7 @@ class TestRunDetailsPanel:
         y_offset = self._draw_validation_results(surface, run_record, y_offset)
 
         surface.set_clip(None)
-        if self.max_scroll > 0:
+        if self.scroll.can_scroll:
             self._draw_scrollbar(surface)
 
     def _draw_header_and_status(self, surface, run_record, run_number, y_offset):
@@ -216,7 +216,7 @@ class TestRunDetailsPanel:
             button_width = 110
             button_height = 26
             button_x = self.x + self.width - button_width - 15
-            button_y = y_offset - 5 + self.scroll_offset  # Account for scroll in positioning
+            button_y = y_offset - 5 + self.scroll.offset  # Account for scroll in positioning
 
             # Only show button if it's in the visible area
             if button_y >= self.y and button_y + button_height <= self.y + self.height:
@@ -244,7 +244,7 @@ class TestRunDetailsPanel:
                 button_x = self.view_states_button_rect.x - button_width - 10
             else:
                 button_x = self.x + self.width - button_width - 15
-            button_y = y_offset - 5 + self.scroll_offset
+            button_y = y_offset - 5 + self.scroll.offset
 
             # Only show button if it's in the visible area
             if button_y >= self.y and button_y + button_height <= self.y + self.height:
@@ -273,7 +273,7 @@ class TestRunDetailsPanel:
             button_x = self.view_states_button_rect.x - button_width - 10
         else:
             button_x = self.x + self.width - button_width - 15
-        button_y = y_offset - 5 + self.scroll_offset
+        button_y = y_offset - 5 + self.scroll.offset
 
         # Only show button if it's in the visible area
         if button_y >= self.y and button_y + button_height <= self.y + self.height:
@@ -885,11 +885,11 @@ class TestRunDetailsPanel:
     def _draw_scrollbar(self, surface):
         """Draw scrollbar indicator."""
         visible_height = self.height
-        total_content_height = visible_height + self.max_scroll
+        total_content_height = visible_height + self.scroll.max_offset
         scrollbar_width = 8
         scrollbar_x = self.x + self.width - scrollbar_width - 5
         scrollbar_track_y = self.y + 5
         scrollbar_track_height = visible_height - 10
         thumb_height = max(30, int(visible_height * (visible_height / total_content_height)))
-        thumb_y = scrollbar_track_y + int((self.scroll_offset / self.max_scroll) * (scrollbar_track_height - thumb_height))
+        thumb_y = scrollbar_track_y + int(self.scroll.scroll_ratio * (scrollbar_track_height - thumb_height))
         pygame.draw.rect(surface, theme.SCROLLBAR_THUMB, (scrollbar_x, thumb_y, scrollbar_width, thumb_height), border_radius=4)

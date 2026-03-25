@@ -16,6 +16,7 @@ from tkinter import filedialog
 import logging
 
 from game.ui.fonts import get_default_font
+from game.ui.widgets.scroll_state import ScrollState
 from game.ui.colors import BG_PANEL_DARK, TEAM_1_TEXT, TEAM_2_TEXT
 
 logger = logging.getLogger(__name__)
@@ -78,7 +79,7 @@ class BattleSetupScreen:
         self.available_formations = []
         self.team1 = []
         self.team2 = []
-        self.scroll_offset = 0
+        self.scroll = ScrollState()
         self.ai_dropdown_open = None
         self.ai_strategies = list(StrategyMetadataService.instance().strategies.keys())
 
@@ -91,7 +92,7 @@ class BattleSetupScreen:
             self.team1 = []
             self.team2 = []
 
-        self.scroll_offset = 0
+        self.scroll = ScrollState()
         self.ai_dropdown_open = None
 
     def get_ships(self):
