@@ -147,7 +147,7 @@ class EmpireEconomyCalculator:
 
         Scans colonies -> facilities -> components for ResourceHarvester abilities.
         Checks inline abilities first, then falls back to registry lookup.
-        Production = base_harvest_rate * planet_resource_quality
+        Production = min(base_harvest_rate * quality, remaining_quantity) per harvester.
 
         Args:
             empire: Empire with colonies attribute.
@@ -158,6 +158,13 @@ class EmpireEconomyCalculator:
         totals = {r: 0.0 for r in PLANET_RESOURCES}
 
         for colony in empire.colonies:
+            # Track remaining quantity per resource for this colony
+            # (multiple harvesters draw from the same deposit)
+            remaining_quantity: Dict[str, float] = {}
+            for res in PLANET_RESOURCES:
+                resource_data = colony.resources.get(res, {})
+                remaining_quantity[res] = resource_data.get('quantity', 0.0)
+
             for facility in colony.facilities:
                 # Skip non-operational facilities
                 if not facility.is_operational:
@@ -177,11 +184,18 @@ class EmpireEconomyCalculator:
                     # Get planet quality for this resource
                     resource_data = colony.resources.get(resource_type, {})
                     quality = resource_data.get('quality', 0.0)
+                    if quality <= 0:
+                        continue
 
-                    # Accumulate production
-                    production = base_rate * quality
+                    # Cap production by remaining planet quantity
+                    potential = base_rate * quality
+                    available = remaining_quantity.get(resource_type, 0.0)
+                    production = min(potential, available)
+
                     if resource_type in totals:
                         totals[resource_type] += production
+                    # Reduce tracked quantity so subsequent harvesters see less
+                    remaining_quantity[resource_type] = max(0.0, available - production)
 
         return totals
 

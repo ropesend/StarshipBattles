@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 from game.core.constants import PLANET_RESOURCES
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry
-from game.core.hex_math import HexCoord, hex_ring
+from game.core.hex_math import HexCoord, hex_ring, hex_circle_filled
 from game.strategy.data.physics import calculate_incident_radiation
 from game.strategy.data.stars import Star
 from game.strategy.data.planet_physics import (
@@ -128,7 +128,10 @@ class PlanetGenerator:
         if primary_count == 0:
             return {}
 
-        occupied_locations = set()
+        # Collect exclusion zones for all stars (occupied hexes + buffer)
+        # Primary star is already handled by safe_start distance check.
+        # Secondary stars need explicit hex exclusion (BUG-108).
+        occupied_locations = self._collect_star_exclusion_zones(stars)
         occupied_slots = {}
 
         # Get mass constraints from blueprint
@@ -171,6 +174,25 @@ class PlanetGenerator:
                     break
 
         return occupied_slots
+
+    def _collect_star_exclusion_zones(self, stars: List[Star]) -> set:
+        """Collect hexes that planets cannot occupy due to star presence.
+
+        For each secondary star (stars[1:]), excludes the star's occupied hexes
+        plus a buffer zone of 2 hexes around it, matching the primary star's
+        safe_start convention (radius_hexes + 2).
+
+        Args:
+            stars: List of stars in the system.
+
+        Returns:
+            Set of HexCoord that planets must not occupy.
+        """
+        excluded = set()
+        for star in stars[1:]:
+            buffer_radius = star.radius_hexes + 1  # +1 because hex_circle_filled is inclusive
+            excluded.update(hex_circle_filled(star.location, buffer_radius))
+        return excluded
 
     def _generate_mass_constrained(
         self,

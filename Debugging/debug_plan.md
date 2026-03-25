@@ -13,6 +13,8 @@
 | BUG-105 | 2026-03-24 | Fleet orders dialog too narrow — down arrow and X buttons hidden until resized | Awaiting Confirmation | [BUG-105.md](active_bugs/BUG-105.md) |
 | BUG-106 | 2026-03-24 | "Select Move Type" dialog click passes through to hex map, creating duplicate move orders | Awaiting Confirmation | [BUG-106.md](active_bugs/BUG-106.md) |
 | BUG-107 | 2026-03-24 | Game crashes on turn advance after loading a save — ShipInstance missing registries | Awaiting Confirmation | [BUG-107.md](active_bugs/BUG-107.md) |
+| BUG-108 | 2026-03-24 | Planet generation does not check for hex collisions with secondary/additional stars | Awaiting Confirmation | [BUG-108.md](active_bugs/BUG-108.md) |
+| BUG-109 | 2026-03-24 | Resources decline each turn despite large production surplus — eventual total maintenance failure | Awaiting Confirmation | [BUG-109.md](active_bugs/BUG-109.md) |
 
 ## 3. Current Focus: BUG-106
 **Status:** Awaiting Confirmation — fix applied, all 5 untracked dialogs now tracked for click-blocking.

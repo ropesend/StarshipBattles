@@ -329,6 +329,37 @@ class TestOrbitalSlots:
             first_mass = slots[first_loc][0]
             assert first_mass > 1e26  # Gas giant range
 
+    def test_generate_orbital_slots_avoids_secondary_star_hexes(self, planet_generator, mock_star):
+        """BUG-108: Planets must not be placed in hexes occupied by secondary stars."""
+        from game.core.hex_math import hex_circle_filled
+
+        # Primary star at (0,0) with radius_hexes=2
+        mock_star.radius_hexes = 2
+
+        # Secondary star at distance 8 from origin, with radius_hexes=2
+        # This places it within the default orbital range (safe_start=4, max_dist=20)
+        secondary = MagicMock()
+        secondary.radius_hexes = 2
+        secondary.location = HexCoord(8, 0)
+        secondary.luminosity = 0.5
+        # occupied_hexes should return the filled hex zone around the secondary
+        secondary.occupied_hexes = hex_circle_filled(HexCoord(8, 0), 1)  # radius_hexes-1 = 1
+
+        stars = [mock_star, secondary]
+
+        # The secondary star's occupied hexes plus a 2-hex buffer zone
+        secondary_zone = hex_circle_filled(HexCoord(8, 0), secondary.radius_hexes + 1)  # radius + buffer
+
+        # Generate many times to catch probabilistic collisions
+        for _ in range(50):
+            slots = planet_generator._generate_orbital_slots(stars)
+
+            for loc in slots.keys():
+                assert loc not in secondary_zone, (
+                    f"Planet placed at {loc} which is within secondary star zone "
+                    f"(star at {secondary.location}, radius_hexes={secondary.radius_hexes})"
+                )
+
 
 # =============================================================================
 # Test: Surface Flags Generation

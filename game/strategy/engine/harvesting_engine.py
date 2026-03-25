@@ -122,7 +122,24 @@ class HarvestingEngine(IHarvestingEngine):
         """
         self.recalculate_storage(empires)
         for empire in empires:
+            if tick == 1:
+                try:
+                    logger.debug(
+                        f"[BUG-109] Tick 1 START: empire {empire.id} "
+                        f"resource_pool={dict(empire.resource_pool)}, "
+                        f"max_storage={dict(empire.max_storage)}"
+                    )
+                except (AttributeError, TypeError):
+                    pass
             self._process_empire(empire, tick_fraction=0.01)
+            if tick == 1:
+                try:
+                    logger.debug(
+                        f"[BUG-109] Tick 1 AFTER HARVEST: empire {empire.id} "
+                        f"resource_pool={dict(empire.resource_pool)}"
+                    )
+                except (AttributeError, TypeError):
+                    pass
 
     def recalculate_storage(self, empires: List) -> None:
         """

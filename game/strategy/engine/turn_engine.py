@@ -320,11 +320,35 @@ class TurnEngine:
 
         turn_start = time.perf_counter()
 
+        # [BUG-109] Log resource state before turn processing
+        for empire in empires:
+            try:
+                logger.debug(
+                    f"[BUG-109] === TURN START === empire {empire.id} "
+                    f"resource_pool={dict(empire.resource_pool)}, "
+                    f"facilities={sum(len(c.facilities) for c in empire.colonies)}, "
+                    f"ships={sum(len(f.ships) for f in empire.fleets)}"
+                )
+            except (AttributeError, TypeError):
+                pass
+
         # 1. Subturn Loop (Movement, Actions & Combat)
         # PROJ-187: Action orders (COLONIZE, TRANSFER, superweapons) now processed
         # in Phase 1.5 of each tick via ActionExecutionEngine
         for tick in range(1, 101):
             self._process_tick(tick, empires, galaxy, save_path)
+
+        # [BUG-109] Log resource state after all ticks
+        for empire in empires:
+            try:
+                logger.debug(
+                    f"[BUG-109] === TURN END (after 100 ticks) === empire {empire.id} "
+                    f"resource_pool={dict(empire.resource_pool)}, "
+                    f"facilities={sum(len(c.facilities) for c in empire.colonies)}, "
+                    f"ships={sum(len(f.ships) for f in empire.fleets)}"
+                )
+            except (AttributeError, TypeError):
+                pass
 
         # 2. Population Growth Phase (PROJ-68)
         t0 = time.perf_counter()
@@ -392,6 +416,15 @@ class TurnEngine:
 
         # --- Phase 0: Harvesting (1/100th per tick) ---
         t0 = time.perf_counter()
+        if tick == 1:
+            for empire in empires:
+                try:
+                    logger.debug(
+                        f"[BUG-109] TURN START tick=1: empire {empire.id} "
+                        f"resource_pool={dict(empire.resource_pool)}"
+                    )
+                except (AttributeError, TypeError):
+                    pass
         self.harvesting_engine.process_harvesting_tick(tick, empires)
         self._phase_times['harvesting'] += time.perf_counter() - t0
 
@@ -400,6 +433,15 @@ class TurnEngine:
         tick_scuttles = self.maintenance_engine.process_maintenance_tick(tick, empires)
         self._phase_times['maintenance'] += time.perf_counter() - t0
         self.last_scuttle_events.extend(tick_scuttles)
+        if tick == 1:
+            for empire in empires:
+                try:
+                    logger.debug(
+                        f"[BUG-109] Tick 1 AFTER MAINTENANCE: empire {empire.id} "
+                        f"resource_pool={dict(empire.resource_pool)}"
+                    )
+                except (AttributeError, TypeError):
+                    pass
 
         # --- Phase 0b: Per-turn Resource Consumption ---
         t0 = time.perf_counter()
@@ -423,6 +465,15 @@ class TurnEngine:
             save_path=save_path,
         )
         self._phase_times['production'] += time.perf_counter() - t0
+        if tick == 1:
+            for empire in empires:
+                try:
+                    logger.debug(
+                        f"[BUG-109] Tick 1 AFTER CONSTRUCTION: empire {empire.id} "
+                        f"resource_pool={dict(empire.resource_pool)}"
+                    )
+                except (AttributeError, TypeError):
+                    pass
 
         # --- Phase 0f: Environmental Hazards (storm damage, fuel drain) ---
         t0 = time.perf_counter()

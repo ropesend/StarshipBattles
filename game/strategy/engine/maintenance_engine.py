@@ -135,6 +135,12 @@ class MaintenanceEngine:
         events: List[ScuttleEvent] = []
         fleets_with_scuttles: set = set()
 
+        # [BUG-109] Track total maintenance cost for this tick
+        try:
+            pool_before = dict(empire.resource_pool)
+        except (AttributeError, TypeError):
+            pool_before = None
+
         # Phase 1: Facility maintenance
         for colony in empire.colonies:
             events.extend(self._process_colony_facilities(colony, empire, tick_fraction))
@@ -148,6 +154,22 @@ class MaintenanceEngine:
 
         # Phase 3: Clean up fleets emptied by scuttling only
         self._cleanup_empty_fleets(empire, fleets_with_scuttles)
+
+        # [BUG-109] Log maintenance deductions for first tick only
+        if tick_fraction < 1.0 and pool_before is not None:
+            try:
+                deltas = {}
+                for res in set(list(pool_before.keys()) + list(empire.resource_pool.keys())):
+                    delta = empire.resource_pool.get(res, 0.0) - pool_before.get(res, 0.0)
+                    if abs(delta) > 0.001:
+                        deltas[res] = round(delta, 2)
+                if deltas:
+                    logger.debug(
+                        f"[BUG-109] Maintenance tick deductions: empire {empire.id} "
+                        f"deltas={deltas} scuttles={len(events)}"
+                    )
+            except (AttributeError, TypeError):
+                pass
 
         return events
 
