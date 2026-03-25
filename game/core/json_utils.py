@@ -39,9 +39,39 @@ Note:
 import json
 import logging
 from pathlib import Path
-from typing import Any, Callable, List, Optional, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# Serializable Type Registry (PROJ-223)
+# =============================================================================
+
+_SERIALIZABLE_REGISTRY: Dict[str, type] = {}
+
+
+def register_serializable(type_name: str = None):
+    """Decorator that registers a class as a serializable type.
+
+    Optional — not required for serialization to work. Supports gradual adoption.
+
+    Args:
+        type_name: Custom registry key. Defaults to cls.__name__.
+
+    Returns:
+        The class unchanged.
+    """
+    def decorator(cls):
+        key = type_name if type_name is not None else cls.__name__
+        _SERIALIZABLE_REGISTRY[key] = cls
+        return cls
+    return decorator
+
+
+def get_serializable_registry() -> Dict[str, type]:
+    """Return a copy of the serializable type registry."""
+    return dict(_SERIALIZABLE_REGISTRY)
 
 
 def load_json(

@@ -147,7 +147,7 @@ class TestBattlePanels:
         # rel_y = 70 + 50 = 120.
         # This matches the interval [110, 135).
 
-        panel.scroll_offset = 50
+        panel.scroll.offset = 50
         handled = panel.handle_click(10, 70)
         assert handled is True, "Click at 70 with scroll 50 should map to 120 and hit ship2"
         assert "Villain" in panel.expanded_ships

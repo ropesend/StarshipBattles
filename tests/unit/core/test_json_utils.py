@@ -396,3 +396,83 @@ class TestDeserializeList:
         result = deserialize_list(None, lambda x: x, "TestEntity", "Test")
 
         assert result == []
+
+
+# =============================================================================
+# Test: @register_serializable decorator - PROJ-223
+# =============================================================================
+
+class TestRegisterSerializable:
+    """Tests for the optional @register_serializable decorator."""
+
+    def setup_method(self):
+        """Clear registry before each test."""
+        from game.core.json_utils import _SERIALIZABLE_REGISTRY
+        _SERIALIZABLE_REGISTRY.clear()
+
+    def test_decorator_registers_class(self):
+        """Decorated class appears in the registry."""
+        from game.core.json_utils import register_serializable, get_serializable_registry
+
+        @register_serializable()
+        class MyEntity:
+            pass
+
+        registry = get_serializable_registry()
+        assert "MyEntity" in registry
+        assert registry["MyEntity"] is MyEntity
+
+    def test_decorator_with_custom_name(self):
+        """Custom type_name overrides default class name."""
+        from game.core.json_utils import register_serializable, get_serializable_registry
+
+        @register_serializable(type_name="CustomName")
+        class AnotherEntity:
+            pass
+
+        registry = get_serializable_registry()
+        assert "CustomName" in registry
+        assert "AnotherEntity" not in registry
+        assert registry["CustomName"] is AnotherEntity
+
+    def test_registry_returns_copy(self):
+        """get_serializable_registry returns a copy, not the internal dict."""
+        from game.core.json_utils import register_serializable, get_serializable_registry
+
+        @register_serializable()
+        class Foo:
+            pass
+
+        reg1 = get_serializable_registry()
+        reg1["injected"] = "bad"
+        reg2 = get_serializable_registry()
+        assert "injected" not in reg2
+
+    def test_decorator_does_not_modify_class(self):
+        """Decorated class is returned unchanged."""
+        from game.core.json_utils import register_serializable
+
+        @register_serializable()
+        class Original:
+            value = 42
+
+        assert Original.value == 42
+        obj = Original()
+        assert isinstance(obj, Original)
+
+    def test_multiple_registrations(self):
+        """Multiple classes can be registered."""
+        from game.core.json_utils import register_serializable, get_serializable_registry
+
+        @register_serializable()
+        class A:
+            pass
+
+        @register_serializable()
+        class B:
+            pass
+
+        registry = get_serializable_registry()
+        assert len(registry) == 2
+        assert "A" in registry
+        assert "B" in registry

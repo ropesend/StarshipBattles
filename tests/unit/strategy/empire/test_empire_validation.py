@@ -143,3 +143,28 @@ class TestEmpireValidation:
         empire = Empire.from_dict(data)
         assert empire.resource_pool == {'energy': 1000, 'minerals': 500}
         assert empire.max_storage == {'energy': 5000, 'minerals': 2000}
+
+
+class TestEmpireSerializationDeterminism:
+    """PROJ-223: Verify deterministic serialization output."""
+
+    def test_built_ship_designs_sorted_in_to_dict(self):
+        """built_ship_designs should be sorted for deterministic JSON output."""
+        empire = Empire(empire_id=0, name="Test", color=(0, 0, 255))
+        empire.built_ship_designs = {"frigate", "escort", "dreadnought", "battleship"}
+
+        result = empire.to_dict()
+        designs = result['built_ship_designs']
+
+        assert designs == sorted(designs), (
+            f"built_ship_designs not sorted: {designs}"
+        )
+        assert designs == ["battleship", "dreadnought", "escort", "frigate"]
+
+    def test_built_ship_designs_deterministic_across_calls(self):
+        """Multiple to_dict calls produce identical output."""
+        empire = Empire(empire_id=0, name="Test", color=(0, 0, 255))
+        empire.built_ship_designs = {"z_design", "a_design", "m_design"}
+
+        results = [empire.to_dict()['built_ship_designs'] for _ in range(10)]
+        assert all(r == results[0] for r in results)

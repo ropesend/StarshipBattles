@@ -167,8 +167,8 @@ class BattleStateViewer:
             35
         )
 
-        self.initial_panel.scroll_offset = 0
-        self.final_panel.scroll_offset = 0
+        self.initial_panel.scroll.reset()
+        self.final_panel.scroll.reset()
 
     def handle_event(self, event) -> bool:
         """Handle mouse and keyboard events."""

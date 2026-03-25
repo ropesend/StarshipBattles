@@ -8,6 +8,7 @@ import pygame
 
 from game.ui.fonts import get_font
 from game.ui.screens.test_lab import theme
+from game.ui.widgets.scroll_state import ScrollState
 
 
 class ScrollableJSONViewer:
@@ -33,13 +34,16 @@ class ScrollableJSONViewer:
         self.json_text = json.dumps(json_data, indent=2) if json_data else "{}"
         self.lines = self.json_text.split('\n')
 
-        # Scrolling state
-        self.scroll_offset = 0
+        # Scrolling state (line-based: offset is line index)
         self.line_height = 18
         self.title_height = 30
         self.content_height = height - self.title_height
         self.visible_lines = max(1, self.content_height // self.line_height)
-        self.max_scroll = max(0, len(self.lines) - self.visible_lines)
+        self.scroll = ScrollState(
+            content_height=len(self.lines),
+            viewport_height=self.visible_lines,
+            step=3,
+        )
 
         # Fonts (match Test Details panel style)
         self.body_font = get_font(14)
@@ -56,8 +60,8 @@ class ScrollableJSONViewer:
         """Update displayed JSON data."""
         self.json_text = json.dumps(json_data, indent=2) if json_data else "{}"
         self.lines = self.json_text.split('\n')
-        self.max_scroll = max(0, len(self.lines) - self.visible_lines)
-        self.scroll_offset = min(self.scroll_offset, self.max_scroll)
+        self.scroll.content_height = len(self.lines)
+        self.scroll.clamp()
 
     def handle_scroll(self, event):
         """Handle mouse wheel scrolling."""
@@ -66,11 +70,7 @@ class ScrollableJSONViewer:
             mouse_x, mouse_y = pygame.mouse.get_pos()
             if (self.x <= mouse_x <= self.x + self.width and
                 self.y <= mouse_y <= self.y + self.height):
-
-                # Scroll up/down
-                self.scroll_offset -= event.y * 3  # 3 lines per wheel tick
-                self.scroll_offset = max(0, min(self.scroll_offset, self.max_scroll))
-                return True
+                return self.scroll.handle_mousewheel(event)
         return False
 
     def draw(self, surface):
@@ -94,7 +94,7 @@ class ScrollableJSONViewer:
         pygame.draw.rect(surface, self.bg_color, content_rect)
 
         # Draw JSON lines (visible range only)
-        start_line = self.scroll_offset
+        start_line = self.scroll.offset
         end_line = min(start_line + self.visible_lines, len(self.lines))
 
         for i in range(start_line, end_line):
@@ -107,7 +107,7 @@ class ScrollableJSONViewer:
             surface.blit(text_surface, (text_x, text_y))
 
         # Draw scrollbar if needed
-        if self.max_scroll > 0:
+        if self.scroll.can_scroll:
             scrollbar_x = self.x + self.width - 15
             scrollbar_y = self.y + self.title_height + 5
             scrollbar_height = self.content_height - 10
@@ -118,6 +118,6 @@ class ScrollableJSONViewer:
 
             # Scrollbar thumb
             thumb_height = max(20, int(scrollbar_height * self.visible_lines / len(self.lines)))
-            thumb_y = scrollbar_y + int((scrollbar_height - thumb_height) * (self.scroll_offset / self.max_scroll))
+            thumb_y = scrollbar_y + int((scrollbar_height - thumb_height) * self.scroll.scroll_ratio)
             pygame.draw.rect(surface, theme.JSON_SCROLLBAR_THUMB,
                            (scrollbar_x, thumb_y, 10, thumb_height))

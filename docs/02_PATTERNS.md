@@ -22,6 +22,8 @@ Each section: **Where**, **How It Works**, **When to Use**.
 13. [Battle Mode Strategy](#13-battle-mode-strategy)
 14. [Two-Phase Ability Aggregation](#14-two-phase-ability-aggregation)
 15. [Factory](#15-factory)
+16. [ScrollState (Scroll Utility)](#16-scrollstate-scroll-utility)
+17. [Serializable Protocol](#17-serializable-protocol)
 
 ---
 
@@ -805,6 +807,79 @@ implementations.
 
 ---
 
+## 16. ScrollState (Scroll Utility)
+
+### Where
+
+- Implementation: `game/ui/widgets/scroll_state.py` -- `ScrollState`
+- Tests: `tests/unit/ui/widgets/test_scroll_state.py`
+- Consumers: `results_panel.py`, `test_run_details.py`, `dialogs.py`, `json_viewer.py`, `scrollable_json_panel.py`, `modifier_impact_grid.py`, `battle_panels.py`, `setup_screen.py`, `battle_state_viewer.py`
+
+### How It Works
+
+`ScrollState` encapsulates the common scroll_offset + MOUSEWHEEL handling pattern into a reusable utility. It manages offset tracking, clamping, mousewheel events, and scroll ratio calculation for scrollbar positioning.
+
+```python
+from game.ui.widgets.scroll_state import ScrollState
+
+# In __init__:
+self.scroll = ScrollState(step=20)
+
+# When content changes:
+self.scroll.content_height = total_content_height
+self.scroll.viewport_height = visible_area_height
+self.scroll.clamp()
+
+# In event handler:
+if event.type == pygame.MOUSEWHEEL:
+    if self.scroll.handle_mousewheel(event):
+        return True  # consumed
+
+# In draw method:
+y = start_y - self.scroll.offset
+
+# For scrollbar thumb positioning:
+thumb_y = track_y + int(self.scroll.scroll_ratio * available_range)
+```
+
+Works with both pixel-based scrolling (default) and line-based scrolling (set content_height to line count, viewport_height to visible line count, step to lines per scroll tick).
+
+### When to Use
+
+- Any UI panel or widget that needs vertical scrolling with MOUSEWHEEL support.
+- Replaces the ad-hoc `self.scroll_offset = 0; self.max_scroll = 0` pattern.
+- Do NOT use for zoom handling (camera) or scrollbar-driven scrolling (pygame_gui widgets).
+
+---
+
+## 17. Serializable Protocol
+
+### Where
+
+- Protocol: `game/core/protocols.py` -- `ISerializable`
+- Tests: `tests/unit/core/test_serializable_protocol.py`
+- Implementors: `ComponentState`, `ShipState`, `ProjectileState`, `BattleState`, `BattleResults` in `game/simulation/battle_state.py`
+
+### How It Works
+
+`ISerializable` is a `@runtime_checkable` Protocol that defines the `to_dict()` / `from_dict()` contract. It exists for **type checking only** -- there is no mixin or base class, because each implementor has domain-specific serialization logic.
+
+```python
+@runtime_checkable
+class ISerializable(Protocol):
+    def to_dict(self) -> Dict[str, Any]: ...
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'ISerializable': ...
+```
+
+### When to Use
+
+- Use as a type annotation when a function accepts any serializable object.
+- Do NOT create a mixin. Each class implements its own `to_dict()`/`from_dict()`.
+
+---
+
 ## Quick Reference
 
 | Pattern | Primary File | Key Class/Function |
@@ -825,6 +900,8 @@ implementations.
 | Battle Mode | `game/simulation/combat/battle_mode_handler.py` | `BattleModeHandler` |
 | Ability Aggregation | `game/simulation/entities/ability_aggregator.py` | `calculate_ability_totals()` |
 | Factory | `game/ai/ai_factory.py`, `game/ui/services/ship_factory.py` | `AIControllerFactory`, `ShipFactory`, `PanelFactory` |
+| ScrollState | `game/ui/widgets/scroll_state.py` | `ScrollState` |
+| Serializable | `game/core/protocols.py` | `ISerializable` |
 
 ### Critical Naming Reminders
 

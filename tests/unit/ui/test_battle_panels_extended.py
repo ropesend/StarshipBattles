@@ -303,11 +303,11 @@ class TestSeekerMonitorPanelExtended:
             panel.add_seeker(self.create_mock_seeker('active'))
 
         assert len(panel.tracked_seekers) == 20
-        assert panel.scroll_offset == 0  # Initial offset
+        assert panel.scroll.offset == 0  # Initial offset
 
         # Set scroll offset
-        panel.scroll_offset = 100
-        assert panel.scroll_offset == 100
+        panel.scroll.offset = 100
+        assert panel.scroll.offset == 100
 
     def test_get_projectile_id_with_dto_id(self):
         """Test _get_projectile_id() uses .id for DTOs."""

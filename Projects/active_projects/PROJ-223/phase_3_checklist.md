@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Cover compound types (those containing nested serializable objects) with field-level round-trip tests.
 
 ---
@@ -13,88 +13,64 @@
 ## Tasks
 
 ### Task 3.1: Planet round-trip tests (with facilities and populations) [Medium]
-**File:** `tests/integration/save_load/test_roundtrip_planet.py` (extend)
-**Tests:** `pytest tests/integration/save_load/test_roundtrip_planet.py`
+- [x] Test Planet with all 25+ physics/classification fields
+- [x] Test nested facilities and populations round-trip
+- [x] Test resources, atmosphere, construction_queue, owner_id, visual fields
+- [x] Test PlanetType enum round-trip
 
-- [ ] Test Planet with all 25+ physics/classification fields
-- [ ] Test nested facilities and populations round-trip
-- [ ] Test resources, atmosphere, construction_queue, owner_id, visual fields
-- [ ] Test PlanetType enum round-trip
-
-**Notes:**
+**Notes:** 10 tests in TestPlanetRoundTrip. Tests all PlanetType enum values.
 
 ### Task 3.2: StarSystem round-trip tests (with all children) [Medium]
-**File:** `tests/integration/save_load/test_roundtrip_galaxy.py` (extend)
-**Tests:** `pytest tests/integration/save_load/test_roundtrip_galaxy.py`
+- [x] Test StarSystem with stars, warp_points, planets, storms
+- [x] Test region_id optional field
+- [x] Test deserialize_list error isolation
 
-- [ ] Test StarSystem with stars, warp_points, planets, storms
-- [ ] Test region_id optional field
-- [ ] Test deserialize_list error isolation
-
-**Notes:**
+**Notes:** 6 tests. Storm hex_offsets uses ignore+manual check due to frozenset ordering.
 
 ### Task 3.3: ShipInstance round-trip tests (field-level) [Medium]
-**File:** `tests/integration/save_load/test_roundtrip_ships.py` (NEW)
-**Tests:** `pytest tests/integration/save_load/test_roundtrip_ships.py`
+- [x] Test all 15 fields including design_data (large nested dict)
+- [x] Test resource_levels, component_toggles, cargo_contents
+- [x] Test registries parameter passed and stored
 
-- [ ] Test all 15 fields including design_data (large nested dict)
-- [ ] Test resource_levels, component_toggles, cargo_contents
-- [ ] Test registries parameter passed and stored
-
-**Notes:**
+**Notes:** 11 tests in TestShipInstanceRoundTrip.
 
 ### Task 3.4: Fleet round-trip tests (with ships and orders) [Medium]
-**File:** `tests/integration/save_load/test_roundtrip_fleet.py` (NEW)
-**Tests:** `pytest tests/integration/save_load/test_roundtrip_fleet.py`
+- [x] Test all core fields + nested ships and orders
+- [x] Test path list (HexCoords) round-trip
+- [x] Test registries passed to ShipInstance during from_dict
 
-- [ ] Test all core fields + nested ships and orders
-- [ ] Test path list (HexCoords) round-trip
-- [ ] Test registries passed to ShipInstance during from_dict
-
-**Notes:**
+**Notes:** 10 tests in TestFleetRoundTrip.
 
 ### Task 3.5: Empire round-trip tests (with fleets and economy) [Medium]
-**File:** `tests/integration/save_load/test_roundtrip_empire.py` (extend)
-**Tests:** `pytest tests/integration/save_load/test_roundtrip_empire.py`
+- [x] Test all core fields + nested fleets
+- [x] Test colony_ids, built_ship_designs, counters, economy fields
+- [x] Test optional fields: flag_id, portrait_id, race_config
 
-- [ ] Test all core fields + nested fleets
-- [ ] Test colony_ids, built_ship_designs, counters, economy fields
-- [ ] Test optional fields: flag_id, portrait_id, race_config
-
-**Notes:** Colony resolution tested in Phase 4.
+**Notes:** 12 tests in TestEmpireRoundTrip. Colony resolution tested in Phase 4.
 
 ### Task 3.6: Galaxy round-trip tests [Medium]
-**File:** `tests/integration/save_load/test_roundtrip_galaxy.py` (extend)
-**Tests:** `pytest tests/integration/save_load/test_roundtrip_galaxy.py`
+- [x] Test radius, _next_planet_id, systems array
+- [x] Test spatial indexes rebuilt after from_dict
 
-- [ ] Test radius, _next_planet_id, systems array
-- [ ] Test spatial indexes rebuilt after from_dict
-
-**Notes:**
+**Notes:** 5 tests in TestGalaxyRoundTrip.
 
 ### Task 3.7: ResearchTracker round-trip tests [Simple]
-**File:** `tests/integration/save_load/test_roundtrip_research.py` (extend)
-**Tests:** `pytest tests/integration/save_load/test_roundtrip_research.py`
+- [x] Test all ResearchTracker fields
+- [x] Test node_states with multiple entries
+- [x] Test empty tracker
 
-- [ ] Test all ResearchTracker fields
-- [ ] Test node_states with multiple entries
-- [ ] Test empty tracker
-
-**Notes:**
+**Notes:** 3 tests in TestResearchTrackerRoundTrip.
 
 ### Task 3.8: Run full test suite [Simple]
-**Tests:** `pytest tests/ -n 12`
-
-- [ ] All tests pass, no regressions
+- [x] All tests pass: 13,673 passed, 2 skipped
 
 **Notes:**
 
 ---
 
 ## Phase Completion Checklist
-When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Run `pytest tests/ -n 12` — all tests pass
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] Run `pytest tests/ -n 12` — 13,673 passed, 2 skipped
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

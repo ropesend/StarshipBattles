@@ -204,7 +204,7 @@ class Empire:
             'empire_theme_id': self.empire_theme_id,
             'colony_ids': [p.id for p in self.colonies],  # Store IDs only
             'fleets': [f.to_dict() for f in self.fleets],
-            'built_ship_designs': list(self.built_ship_designs),
+            'built_ship_designs': sorted(self.built_ship_designs),
             '_next_fleet_id': self._next_fleet_id,
             '_design_serial_counters': self._design_serial_counters,
             'resource_pool': dict(self.resource_pool),

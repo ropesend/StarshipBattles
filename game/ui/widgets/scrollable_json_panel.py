@@ -15,6 +15,7 @@ from typing import Optional, Tuple, Dict
 
 from game.ui.utils.json_diff import DiffResult
 from game.ui.fonts import get_font, FONT_MONO
+from game.ui.widgets.scroll_state import ScrollState
 from game.ui.colors import (
     BORDER_LIGHT, TEXT_ITEM, TEXT_ERROR,
     JSON_BG, JSON_BORDER, JSON_TITLE_BG, JSON_TITLE_TEXT,
@@ -59,8 +60,7 @@ class ScrollableJsonPanel:
 
         # Content
         self.json_lines = []  # List of (indent_level, text, color, bg_color) tuples
-        self.scroll_offset = 0
-        self.max_scroll = 0
+        self.scroll = ScrollState(step=40)
         self.line_height = 18
 
         # Diff data
@@ -108,12 +108,12 @@ class ScrollableJsonPanel:
             json_str: JSON string to parse and display
             diff_paths: Dict mapping paths to diff status (DiffResult constants)
         """
-        self.scroll_offset = 0
+        self.scroll.reset()
         self.json_lines = []
         self.diff_paths = diff_paths
 
         if not json_str:
-            self.max_scroll = 0
+            self.scroll.content_height = 0
             return
 
         try:
@@ -124,10 +124,9 @@ class ScrollableJsonPanel:
             for line in json_str.split('\n'):
                 self.json_lines.append((0, line, self.text_color, None))
 
-        # Calculate max scroll
-        content_height = len(self.json_lines) * self.line_height
-        visible_height = self.height - 40
-        self.max_scroll = max(0, content_height - visible_height)
+        # Update scroll dimensions
+        self.scroll.content_height = len(self.json_lines) * self.line_height
+        self.scroll.viewport_height = self.height - 40
 
     def _get_diff_colors(self, path: str) -> Tuple[Optional[Tuple], Optional[Tuple]]:
         """
@@ -291,9 +290,8 @@ class ScrollableJsonPanel:
         elif event.type == pygame.MOUSEWHEEL:
             mx, my = pygame.mouse.get_pos()
             if self.x <= mx <= self.x + self.width and self.y <= my <= self.y + self.height:
-                self.scroll_offset -= event.y * 40
-                self.scroll_offset = max(0, min(self.scroll_offset, self.max_scroll))
-                return True
+                if self.scroll.handle_mousewheel(event):
+                    return True
 
         return False
 
@@ -305,19 +303,18 @@ class ScrollableJsonPanel:
 
     def _get_scrollbar_thumb_rect(self) -> pygame.Rect:
         """Get the scrollbar thumb rectangle."""
-        if self.max_scroll <= 0:
+        if not self.scroll.can_scroll:
             return pygame.Rect(0, 0, 0, 0)
 
         scrollbar_x = self.x + self.width - self.scrollbar_width - 5
         scrollbar_y = self.y + 35
         scrollbar_height = self.height - 40
 
-        content_height = len(self.json_lines) * self.line_height
+        content_height = self.scroll.content_height
         visible_ratio = min(1.0, (self.height - 40) / content_height) if content_height > 0 else 1.0
         thumb_height = max(30, int(scrollbar_height * visible_ratio))
 
-        scroll_ratio = self.scroll_offset / self.max_scroll if self.max_scroll > 0 else 0
-        thumb_y = scrollbar_y + int((scrollbar_height - thumb_height) * scroll_ratio)
+        thumb_y = scrollbar_y + int((scrollbar_height - thumb_height) * self.scroll.scroll_ratio)
 
         return pygame.Rect(scrollbar_x, thumb_y, self.scrollbar_width, thumb_height)
 
@@ -331,9 +328,8 @@ class ScrollableJsonPanel:
         available_range = scrollbar_height - thumb_rect.height
 
         if available_range > 0:
-            scroll_ratio = (drag_y - scrollbar_y) / available_range
-            scroll_ratio = max(0, min(1, scroll_ratio))
-            self.scroll_offset = int(scroll_ratio * self.max_scroll)
+            ratio = (drag_y - scrollbar_y) / available_range
+            self.scroll.set_from_ratio(ratio)
 
     def draw(self, surface):
         """
@@ -361,7 +357,7 @@ class ScrollableJsonPanel:
         surface.set_clip(clip_rect)
 
         # Draw JSON lines
-        y = content_y - self.scroll_offset
+        y = content_y - self.scroll.offset
         for line_data in self.json_lines:
             if y + self.line_height < content_y:
                 y += self.line_height
@@ -394,7 +390,7 @@ class ScrollableJsonPanel:
         surface.set_clip(None)
 
         # Scrollbar
-        if self.max_scroll > 0:
+        if self.scroll.can_scroll:
             self._draw_scrollbar(surface)
 
     def _draw_scrollbar(self, surface):

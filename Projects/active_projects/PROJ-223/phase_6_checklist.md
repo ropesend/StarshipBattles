@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Build a harness usable from QA sessions to snapshot, save/load, and compare game state.
 
 ---
@@ -13,44 +13,35 @@
 ## Tasks
 
 ### Task 6.1: Create state snapshot utility [Medium]
-**File:** `tests/infrastructure/state_snapshot.py` (NEW)
-**Tests:** `pytest tests/unit/infrastructure/test_state_snapshot.py`
+- [x] Create `snapshot_game_state()` function
+- [x] Create `compare_game_states()` function with expected-difference filtering
+- [x] Create `SaveLoadVerifier` class with `verify_round_trip()` method
+- [x] Create `VerificationReport` dataclass
+- [x] Write unit tests
+- [x] Run tests: `pytest tests/unit/infrastructure/test_state_snapshot.py`
 
-- [ ] Create `snapshot_game_state()` function
-- [ ] Create `compare_game_states()` function with expected-difference filtering
-- [ ] Create `SaveLoadVerifier` class with `verify_round_trip()` method
-- [ ] Create `VerificationReport` dataclass
-- [ ] Write unit tests
-- [ ] Run tests: `pytest tests/unit/infrastructure/test_state_snapshot.py`
-
-**Notes:**
+**Notes:** Auto-ignores save_path and storm hex_offsets. Handles tuple→list JSON conversion.
 
 ### Task 6.2: Create verification integration test [Medium]
-**File:** `tests/integration/save_load/test_live_verification.py` (NEW)
-**Tests:** `pytest tests/integration/save_load/test_live_verification.py`
+- [x] Test verify_round_trip with minimal game session → passes
+- [x] Test verify_round_trip with populated game session → passes
+- [x] Test deliberate corruption → verification catches it
+- [x] Test report includes timing and size stats
 
-- [ ] Test verify_round_trip with minimal game session → passes
-- [ ] Test verify_round_trip with populated game session → passes
-- [ ] Test deliberate corruption → verification catches it
-- [ ] Test report includes timing and size stats
-
-**Notes:**
+**Notes:** 10 tests across unit and integration files.
 
 ### Task 6.3: Run full test suite (final verification) [Simple]
-**Tests:** `pytest tests/ -n 12`
-
-- [ ] All tests pass
-- [ ] Verify total test count increased by expected amount
-- [ ] Record final test count
+- [x] All tests pass: 13,714 passed, 2 skipped
+- [x] Verify total test count increased by expected amount (280 new tests from baseline 13,434)
+- [x] Record final test count: 13,714
 
 **Notes:**
 
 ---
 
 ## Phase Completion Checklist
-When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Run `pytest tests/ -n 12` — all tests pass
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to indicate project complete
+- [x] All task checkboxes above are checked
+- [x] Run `pytest tests/ -n 12` — 13,714 passed, 2 skipped
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to indicate project complete

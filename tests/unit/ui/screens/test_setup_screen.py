@@ -105,15 +105,15 @@ class TestBattleSetupScreen:
         assert screen.team2 == [entry2]
 
     def test_start_resets_scroll_offset(self):
-        """Test start() resets scroll_offset to 0."""
+        """Test start() resets scroll state to 0."""
         screen = self.BattleSetupScreen(800, 600)
-        screen.scroll_offset = 100
+        screen.scroll.offset = 100
 
         with patch('game.ui.screens.setup_screen.scan_ship_designs', return_value=[]):
             with patch('game.ui.screens.setup_screen.scan_formations', return_value=[]):
                 screen.start()
 
-        assert screen.scroll_offset == 0
+        assert screen.scroll.offset == 0
 
     def test_start_closes_ai_dropdown(self):
         """Test start() closes AI dropdown."""
