@@ -1104,3 +1104,39 @@ There needs to be a visible indicator on the line that indicates if the ship is 
 * **Notes:** None.
 
 ---
+
+## [BUG-101] - Fleet Info Panel Shows Raw Enum Names for MOVE_TO_FLEET and JOIN_FLEET Orders
+* **Date Solved:** 2026-03-25
+* **Original Issue:** The fleet info panel displayed raw enum names like "MOVE_TO_FLEET" and "JOIN_FLEET" instead of formatted text. Seven order types were missing from `_format_orders()` in `strategy_detail_fmt.py`.
+* **Solution Implemented:** Added explicit handlers for all 7 missing order types in `_format_orders()`, matching the formatting patterns from `fleet_orders_window.py:_get_order_description()`. Updated docstring to list all handled order types.
+* **Test Case:** `tests/unit/ui/screens/test_strategy_detail_fmt.py` — 9 new tests
+* **Notes:** None.
+
+---
+
+## [BUG-102] - Build Queue Ship Detail Panel Shows Wrong Species Theme Image
+* **Date Solved:** 2026-03-25
+* **Original Issue:** Ship detail panel in build yards showed Federation theme image for all species. Root cause: `QuickstartBuilder.copy_quickstart_designs()` copied template designs with hardcoded `"theme_id": "Federation"` to all empires.
+* **Solution Implemented:** Added `empire_themes` parameter to `copy_quickstart_designs()` that updates `theme_id` in each copied design JSON to match the empire's theme. Both callers in `app.py` now pass empire themes. Added diagnostic logging to `ShipThemeManager` fallback paths.
+* **Test Case:** `tests/unit/quickstart/test_quickstart_builder.py` — 2 new tests
+* **Notes:** Only applies to new games. Existing saves retain `theme_id: "Federation"` — per project policy, save files are disposable.
+
+---
+
+## [BUG-105] - Fleet Orders Dialog Too Narrow — Down Arrow and X Buttons Hidden
+* **Date Solved:** 2026-03-25
+* **Original Issue:** Fleet orders dialog opened at 400px width, but button layout required 410px. Down-arrow and X (remove) buttons were clipped off the right edge.
+* **Solution Implemented:** Increased default width from 400 to 480px in `strategy_window_manager.py`. Refactored button positions in `fleet_orders_window.py:rebuild_list()` from hardcoded X-offsets to relative positioning anchored to container right edge.
+* **Test Case:** `tests/unit/ui/screens/test_fleet_orders_refresh.py` — `test_buttons_fit_within_container`, `test_buttons_use_relative_positioning`
+* **Notes:** None.
+
+---
+
+## [BUG-106] - Select Move Type Dialog Click Passes Through to Hex Map
+* **Date Solved:** 2026-03-25
+* **Original Issue:** Clicking buttons on the "Select Move Type" dialog also registered as a hex map click, creating duplicate move orders. The dialog was an untracked `UIWindow` invisible to the click-blocking system.
+* **Solution Implemented:** Stored all 5 untracked dialog windows as instance attributes on `StrategyWindowManager`, added them to `_is_blocking_ui_element_at()`, `has_modal_open()`, and `_handle_window_close()` in `strategy_event_router.py`.
+* **Test Case:** `tests/unit/ui/screens/test_click_gate_integration.py`, `tests/unit/ui/screens/test_strategy_event_router.py`
+* **Notes:** Fixed broader architectural gap — CargoQuickDialog, PlanetSelectionWindow, SystemSelectionWindow, and FleetSelectionWindow were also untracked.
+
+---
