@@ -200,3 +200,10 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-198 | UI Layer Duck Typing Elimination - Strategy Screens & Services | 2026-02-25 | PROJ-151-200 |
 | PROJ-199 | Duck Typing Cleanup - Lazy Init and CompDef Centralization | 2026-02-27 | PROJ-151-200 |
 | PROJ-200 | Reduce complexity: filter_ships (CC 36) | 2026-02-27 | PROJ-151-200 |
+| PROJ-201 | Reduce complexity: FleetDataSource._get_column_value (CC 29) | 2026-02-27 | PROJ-201-250 |
+| PROJ-202 | Reduce complexity: StrategyRenderer._draw_systems (CC 29) | 2026-02-27 | PROJ-201-250 |
+| PROJ-203 | Reduce complexity: StrategyRenderer._draw_systems (CC 29) | 2026-02-27 | PROJ-201-250 |
+| PROJ-204 | Strategy & Workshop Duplication Consolidation | 2026-02-27 | PROJ-201-250 |
+| PROJ-205 | Legacy Code Elimination - Verified Findings | 2026-02-27 | PROJ-201-250 |
+| PROJ-207 | Fleet Order System Unification | 2026-02-27 | PROJ-201-250 |
+| PROJ-208 | CQRS Facade Bypass Remediation | 2026-03-14 | PROJ-201-250 |
