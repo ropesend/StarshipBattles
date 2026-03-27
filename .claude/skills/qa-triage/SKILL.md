@@ -33,6 +33,19 @@ The session argument is: **$ARGUMENTS**
    - Construct path: `Tools/qa_observer/session_data/<argument>/QA_Session_Log.md`
    - Verify the file exists. If not, list available sessions and **STOP**.
 
+### Step 1b: Check for Prior Triage
+
+After selecting a session (whether auto-selected or specified by argument):
+
+1. Check if `Tools/qa_observer/session_data/<session_id>/triage_summary.md` exists.
+2. If it exists:
+   - Read it and display the summary table to the user
+   - Use **AskUserQuestion** with options:
+     - **Re-triage** — process the session again from scratch (proceed normally)
+     - **Pick another** — list all untriaged sessions (directories that do NOT contain `triage_summary.md`) and let the user choose, or STOP if none remain
+   - If no untriaged sessions exist for "Pick another", report: "All sessions have been triaged. Nothing to do." and **STOP**.
+3. If it does not exist, proceed normally.
+
 ### Step 2: Read and Parse the Session Log
 
 1. Read the full `QA_Session_Log.md` file.
@@ -275,6 +288,13 @@ After all observations have been processed, present a final summary table:
 **Duplicates/context added:** N
 **Skipped:** M
 ```
+
+### Write Triage Summary to Session
+
+Write the summary table above (the full markdown block including the stats lines) to:
+`Tools/qa_observer/session_data/<session_id>/triage_summary.md`
+
+This file serves as a persistent record that the session has been triaged, and is checked in Phase 1 to prevent redundant processing.
 
 ---
 
