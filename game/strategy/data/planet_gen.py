@@ -153,7 +153,9 @@ class PlanetGenerator:
                     dist = random.randint(safe_start, safe_start + 1)
                     dist = max(2, min(dist, 3))  # Ensure orbit 2-3
                 else:
-                    dist = random.randint(safe_start, max_dist)
+                    # Triangular distribution biased toward inner orbits
+                    mode = safe_start + (max_dist - safe_start) * 0.3
+                    dist = int(random.triangular(safe_start, max_dist, mode))
 
                 ring_coords = hex_ring(dist)
                 if not ring_coords:
@@ -223,9 +225,10 @@ class PlanetGenerator:
             log_mu = 26.5
             log_sigma = 0.8
         else:
-            # Default distribution (weighted towards Mars - Super Earth)
-            log_mu = 24.5
-            log_sigma = 1.5
+            # Default distribution centered on Mars-mass, tighter spread
+            # to keep most planets below the giant threshold (6e24 kg = log 24.78)
+            log_mu = 24.0
+            log_sigma = 1.0
 
         log_min = math.log10(mass_min)
         log_max = math.log10(mass_max)
@@ -297,22 +300,19 @@ class PlanetGenerator:
 
     def _generate_moon_mass(self, primary_mass: float) -> float:
         """
-        Generate moon mass (normal distribution around 10% of primary).
-        """
-        target_mu = primary_mass * 0.10
-        target_sigma = primary_mass * 0.02
+        Generate moon mass (log-uniform from 0.001% to 5% of primary).
 
-        moon_mass = random.gauss(target_mu, target_sigma)
+        Real moons are tiny relative to their parent: Ganymede is 0.008%
+        of Jupiter's mass. Log-uniform distribution gives most moons at
+        the small end with rare larger ones.
+        """
+        log_min = math.log10(primary_mass * 0.00001)  # 0.001%
+        log_max = math.log10(primary_mass * 0.05)      # 5%
+
+        moon_mass = 10 ** random.uniform(log_min, log_max)
 
         # Floor at dwarf planet size
-        if moon_mass < MASS_CERES:
-            moon_mass = MASS_CERES
-
-        # Ensure moon isn't larger than primary
-        if moon_mass >= primary_mass:
-            moon_mass = primary_mass * 0.5
-
-        return moon_mass
+        return max(moon_mass, MASS_CERES)
 
     def _create_planet_objects(
         self,
@@ -420,9 +420,9 @@ class PlanetGenerator:
 
         # Water presence based on temperature
         if 250 < temp < 350:
-            water = random.uniform(0.1, 0.9)
+            water = random.uniform(0.1, 1.0)
         elif temp <= 250:
-            water = random.uniform(0.1, 0.9)  # Frozen
+            water = random.uniform(0.1, 1.0)  # Frozen
         else:
             water = 0  # Boiled off
 

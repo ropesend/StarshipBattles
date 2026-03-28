@@ -9,7 +9,7 @@ import math
 from unittest.mock import Mock
 
 from game.core.hex_math import HexCoord
-from game.strategy.data.physics import SectorEnvironment, calculate_incident_radiation
+from game.strategy.data.physics import SectorEnvironment, calculate_incident_radiation, FLUX_SCALE, FALLOFF_EXPONENT
 from game.strategy.data.stars import Spectrum
 
 
@@ -56,7 +56,7 @@ class TestCalculateIncidentRadiation:
         return star
 
     def test_single_star_at_same_hex(self):
-        """Star at same hex as target: distance clamped to 1.0, full intensity."""
+        """Star at same hex as target: distance clamped to 1.0, FLUX_SCALE applied."""
         star = self._make_star(
             HexCoord(0, 0),
             Spectrum(10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0)
@@ -64,21 +64,20 @@ class TestCalculateIncidentRadiation:
 
         result = calculate_incident_radiation(HexCoord(0, 0), [star])
 
-        # Distance is 0, clamped to 1.0, so falloff = 1/1^2.1 = 1.0
-        # All bands should be at full intensity
-        assert result.gamma_ray == pytest.approx(10.0)
-        assert result.xray == pytest.approx(10.0)
-        assert result.ultraviolet == pytest.approx(10.0)
-        assert result.blue == pytest.approx(10.0)
-        assert result.green == pytest.approx(10.0)
-        assert result.red == pytest.approx(10.0)
-        assert result.infrared == pytest.approx(10.0)
-        assert result.microwave == pytest.approx(10.0)
-        assert result.radio == pytest.approx(10.0)
+        # Distance is 0, clamped to 1.0, falloff = FLUX_SCALE / 1^exp = FLUX_SCALE
+        expected = 10.0 * FLUX_SCALE
+        assert result.gamma_ray == pytest.approx(expected)
+        assert result.xray == pytest.approx(expected)
+        assert result.ultraviolet == pytest.approx(expected)
+        assert result.blue == pytest.approx(expected)
+        assert result.green == pytest.approx(expected)
+        assert result.red == pytest.approx(expected)
+        assert result.infrared == pytest.approx(expected)
+        assert result.microwave == pytest.approx(expected)
+        assert result.radio == pytest.approx(expected)
 
     def test_single_star_distance_2(self):
-        """Star at distance 2: falloff = 1/2^2.1."""
-        # Create star at origin, target at (2, 0) which is distance 2
+        """Star at distance 2: falloff = FLUX_SCALE / 2^exp."""
         star = self._make_star(
             HexCoord(0, 0),
             Spectrum(10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0)
@@ -86,8 +85,7 @@ class TestCalculateIncidentRadiation:
 
         result = calculate_incident_radiation(HexCoord(2, 0), [star])
 
-        # falloff = 1 / 2^2.1 = 1 / 4.287... ≈ 0.2332
-        expected_falloff = 1.0 / (2.0 ** 2.1)
+        expected_falloff = FLUX_SCALE / (2.0 ** FALLOFF_EXPONENT)
         expected_value = 10.0 * expected_falloff
 
         assert result.gamma_ray == pytest.approx(expected_value, rel=1e-4)
@@ -95,8 +93,7 @@ class TestCalculateIncidentRadiation:
         assert result.infrared == pytest.approx(expected_value, rel=1e-4)
 
     def test_single_star_distance_5(self):
-        """Star at distance 5: falloff = 1/5^2.1."""
-        # Star at origin, target at (5, 0) which is distance 5
+        """Star at distance 5: falloff = FLUX_SCALE / 5^exp."""
         star = self._make_star(
             HexCoord(0, 0),
             Spectrum(100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0)
@@ -104,8 +101,7 @@ class TestCalculateIncidentRadiation:
 
         result = calculate_incident_radiation(HexCoord(5, 0), [star])
 
-        # falloff = 1 / 5^2.1 ≈ 0.0347
-        expected_falloff = 1.0 / (5.0 ** 2.1)
+        expected_falloff = FLUX_SCALE / (5.0 ** FALLOFF_EXPONENT)
         expected_value = 100.0 * expected_falloff
 
         assert result.gamma_ray == pytest.approx(expected_value, rel=1e-4)
@@ -125,11 +121,11 @@ class TestCalculateIncidentRadiation:
         target = HexCoord(0, 0)
         result = calculate_incident_radiation(target, [star1, star2])
 
-        # star1 at distance 0 (clamped to 1): falloff = 1.0, gamma_ray = 10.0
-        # star2 at distance 3: falloff = 1/3^2.1 ≈ 0.0962, infrared = 10.0 * 0.0962
-        falloff_star2 = 1.0 / (3.0 ** 2.1)
+        # star1 at distance 0 (clamped to 1): falloff = FLUX_SCALE
+        # star2 at distance 3: falloff = FLUX_SCALE / 3^exp
+        falloff_star2 = FLUX_SCALE / (3.0 ** FALLOFF_EXPONENT)
 
-        assert result.gamma_ray == pytest.approx(10.0)
+        assert result.gamma_ray == pytest.approx(10.0 * FLUX_SCALE)
         assert result.infrared == pytest.approx(10.0 * falloff_star2, rel=1e-4)
 
     def test_zero_distance_clamped(self):
@@ -142,10 +138,11 @@ class TestCalculateIncidentRadiation:
         # Target at same location as star
         result = calculate_incident_radiation(HexCoord(3, 4), [star])
 
-        # Distance = 0, clamped to 1.0, full intensity
-        assert result.gamma_ray == pytest.approx(5.0)
-        assert result.blue == pytest.approx(5.0)
-        assert result.radio == pytest.approx(5.0)
+        # Distance = 0, clamped to 1.0, full FLUX_SCALE applied
+        expected = 5.0 * FLUX_SCALE
+        assert result.gamma_ray == pytest.approx(expected)
+        assert result.blue == pytest.approx(expected)
+        assert result.radio == pytest.approx(expected)
 
     def test_all_spectrum_bands_scaled(self):
         """All 9 spectrum bands get the falloff applied correctly."""
@@ -167,7 +164,7 @@ class TestCalculateIncidentRadiation:
         # Distance 2
         result = calculate_incident_radiation(HexCoord(2, 0), [star])
 
-        falloff = 1.0 / (2.0 ** 2.1)
+        falloff = FLUX_SCALE / (2.0 ** FALLOFF_EXPONENT)
 
         assert result.gamma_ray == pytest.approx(1.0 * falloff, rel=1e-4)
         assert result.xray == pytest.approx(2.0 * falloff, rel=1e-4)

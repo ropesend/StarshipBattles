@@ -159,16 +159,15 @@ class TestMoonGeneration:
         assert 0.0 <= chance_huge <= 0.95
 
     def test_generate_moon_mass_proportional(self, planet_generator):
-        """Moon mass is proportional to primary (~10%)."""
+        """Moon mass is 0.001% to 5% of primary (log-uniform)."""
         from game.strategy.data.planet_physics import MASS_EARTH
 
         primary_mass = MASS_EARTH
 
         for _ in range(20):
             moon_mass = planet_generator._generate_moon_mass(primary_mass)
-            # Should be around 10% +/- 20%
             ratio = moon_mass / primary_mass
-            assert 0.01 <= ratio <= 0.5
+            assert 0.00001 <= ratio <= 0.05
 
     def test_generate_moon_mass_not_larger_than_primary(self, planet_generator):
         """Moon mass cannot exceed primary mass."""
