@@ -215,7 +215,25 @@ def main():
         if observer.is_alive():
             observer.stop()
             observer.join()
-        
+
+        # Copy game logs into session data before processing
+        logs_dest = session_dir / "logs"
+        logs_dest.mkdir(exist_ok=True)
+        project_root = Path(__file__).resolve().parent.parent.parent
+        game_logs_dir = project_root / "output" / "logs"
+        log_files = [
+            "battle.log",
+            "battle_log.txt",
+            "crash_log.txt",
+            "combat_lab.log",
+            "profiling_history.json",
+        ]
+        for name in log_files:
+            src = game_logs_dir / name
+            if src.exists():
+                shutil.copy2(src, logs_dest / name)
+                print(f"[Logs] Copied {name} into session data.")
+
         # If running independently, run processor.py
         # If running as child, the launcher handles the end-of-session
         if not args.child:

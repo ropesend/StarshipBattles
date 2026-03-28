@@ -10866,6 +10866,32 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-001_2026-03-27T18-09-40-663938_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-001_2026-03-27T18-09-40-663938_final.json",
       "seed": 221670908
+    },
+    {
+      "timestamp": "2026-03-28T05:25:58.682875",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "MOD-001",
+        "initial_hp": 3050,
+        "final_hp": 2354.0,
+        "damage_dealt": 696.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 1.392,
+        "base_damage": 1,
+        "damage_multiplier": 1.5,
+        "expected_beam_damage": 1.5,
+        "actual_beam_damage": 1.5,
+        "modifier_applied_correctly": true,
+        "duration_real": 0.28846120834350586,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-001_2026-03-28T05-25-58-394414_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-001_2026-03-28T05-25-58-394414_final.json",
+      "seed": 478163327
     }
   ],
   "MOD-002": [
@@ -10946,6 +10972,32 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-002_2026-03-27T18-09-41-028199_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-002_2026-03-27T18-09-41-028199_final.json",
       "seed": 2146545843
+    },
+    {
+      "timestamp": "2026-03-28T05:25:59.021259",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "MOD-002",
+        "initial_hp": 3050,
+        "final_hp": 2652.0,
+        "damage_dealt": 398.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.796,
+        "base_range": 800,
+        "expected_beam_range": 1600,
+        "actual_beam_range": 1600.0,
+        "modifier_applied_correctly": true,
+        "distance": 1200,
+        "duration_real": 0.23943829536437988,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-002_2026-03-28T05-25-58-781821_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-002_2026-03-28T05-25-58-781821_final.json",
+      "seed": 1539595631
     }
   ],
   "MOD-003": [
@@ -11020,6 +11072,30 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-003_2026-03-27T18-09-41-361531_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-003_2026-03-27T18-09-41-361531_final.json",
       "seed": 1301612341
+    },
+    {
+      "timestamp": "2026-03-28T05:25:59.394666",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "MOD-003",
+        "initial_hp": 3050,
+        "final_hp": 2367.5,
+        "damage_dealt": 682.5,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 1.365,
+        "actual_reload_time": 0.0,
+        "base_reload": 0.0,
+        "reload_modifier_note": "Base reload is 0.0; multiplier has no effect on zero",
+        "duration_real": 0.2831261157989502,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-003_2026-03-28T05-25-59-111540_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-003_2026-03-28T05-25-59-111540_final.json",
+      "seed": 244981510
     }
   ],
   "MOD-004": [
@@ -11127,6 +11203,41 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-004_2026-03-27T18-09-41-716510_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-004_2026-03-27T18-09-41-716510_final.json",
       "seed": 390633475
+    },
+    {
+      "timestamp": "2026-03-28T05:25:59.726362",
+      "ticks_run": 200,
+      "passed": true,
+      "metrics": {
+        "test_id": "MOD-004",
+        "initial_position": [
+          0.0,
+          0.0
+        ],
+        "final_position": [
+          12406.25,
+          0.0
+        ],
+        "initial_velocity_magnitude": 0.0,
+        "final_velocity_magnitude": 62.5,
+        "distance_traveled": 12406.25,
+        "ticks_run": 200,
+        "expected_max_speed": 62.5,
+        "expected_acceleration_rate": 15.625,
+        "base_thrust": 500,
+        "thrust_multiplier": 2,
+        "expected_thrust": 1000,
+        "actual_thrust": 1000.0,
+        "actual_ability_thrust": 1000.0,
+        "modifier_applied_correctly": true,
+        "duration_real": 0.24016952514648438,
+        "ticks": 200
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-004_2026-03-28T05-25-59-486193_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-004_2026-03-28T05-25-59-486193_final.json",
+      "seed": 1246212240
     }
   ],
   "MOD-005": [
@@ -11200,6 +11311,30 @@
       "validation_results": [],
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-005_2026-03-27T18-09-42-046885_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-005_2026-03-27T18-09-42-046885_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-03-28T05:26:00.091388",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "MOD-005",
+        "initial_hp": 3050,
+        "final_hp": 2354.0,
+        "damage_dealt": 696.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 1.392,
+        "actual_base_accuracy": 2.0,
+        "base_accuracy": 2.0,
+        "note": "Uses damage boost ship; accuracy_boost ship not created",
+        "duration_real": 0.27464866638183594,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-005_2026-03-28T05-25-59-816739_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-005_2026-03-28T05-25-59-816739_final.json",
       "seed": 478163327
     }
   ],
@@ -11277,6 +11412,31 @@
       "validation_results": [],
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-006_2026-03-27T18-09-42-415978_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-006_2026-03-27T18-09-42-415978_final.json",
+      "seed": 1539595631
+    },
+    {
+      "timestamp": "2026-03-28T05:26:00.463106",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "MOD-006",
+        "initial_hp": 3050,
+        "final_hp": 2586.0,
+        "damage_dealt": 464.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.928,
+        "base_arc": 360,
+        "expected_arc": 180,
+        "actual_firing_arc": 180.0,
+        "modifier_applied_correctly": true,
+        "duration_real": 0.27545762062072754,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-006_2026-03-28T05-26-00-187648_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-006_2026-03-28T05-26-00-187648_final.json",
       "seed": 1539595631
     }
   ],
