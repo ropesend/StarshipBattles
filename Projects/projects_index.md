@@ -4,6 +4,7 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-231 | Star List Panel | Planning | 2026-03-28 | 2026-03-28 |
 | PROJ-230 | Planet Generation Balance Tuning | Planning | 2026-03-27 | 2026-03-27 |
 | PROJ-229 | Galaxy Generation Inspector Tool | Planning | 2026-03-27 | 2026-03-27 |
 
