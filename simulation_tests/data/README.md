@@ -41,9 +41,9 @@ Defines all components that can be installed on ships.
 
 | Component ID | Base Accuracy | Falloff | Range | Damage | Purpose |
 |--------------|---------------|---------|-------|--------|---------|
-| `test_beam_low_acc_1dmg` | 50% | 0.2%/px | 800 | 1 | Low accuracy tests |
-| `test_beam_med_acc_1dmg` | 80% | 0.1%/px | 800 | 1 | Medium accuracy tests |
-| `test_beam_high_acc_1dmg` | 99% | 0.01%/px | 800 | 1 | High accuracy tests |
+| `test_beam_low_acc_1dmg` | 0.5 (~53% at point blank) | 0.002/px | 800 | 1 | Low accuracy tests |
+| `test_beam_med_acc_1dmg` | 2.0 (~88% at point blank) | 0.001/px | 800 | 1 | Medium accuracy tests |
+| `test_beam_high_acc_1dmg` | 5.0 (~99% at point blank) | 0.0005/px | 800 | 1 | High accuracy tests |
 
 **Beam Weapon Abilities**:
 ```json
@@ -62,8 +62,8 @@ Defines all components that can be installed on ships.
 - `damage` - Damage per hit (integer)
 - `range` - Maximum range in pixels
 - `reload` - Time between shots in seconds (0.0 = every tick)
-- `base_accuracy` - Base hit chance (0.0-1.0)
-- `accuracy_falloff` - Accuracy reduction per pixel distance
+- `base_accuracy` - Sigmoid input score (not a probability; fed through `1/(1+e^-x)` to get hit chance)
+- `accuracy_falloff` - Score reduction per pixel of surface distance
 
 #### Armor Components
 
@@ -239,9 +239,9 @@ If actual stats don't match after loading, warning is printed.
 
 | Ship File | Mass | Weapon | Purpose |
 |-----------|------|--------|---------|
-| `Test_Attacker_Beam360_Low.json` | 25 | Low accuracy beam | Low accuracy tests |
-| `Test_Attacker_Beam360_Med.json` | 25 | Medium accuracy beam | Medium accuracy tests |
-| `Test_Attacker_Beam360_High.json` | 25 | High accuracy beam | High accuracy tests |
+| `Test_Attacker_Beam360_Low.json` | 400 | Low accuracy beam | Low accuracy tests |
+| `Test_Attacker_Beam360_Med.json` | 400 | Medium accuracy beam | Medium accuracy tests |
+| `Test_Attacker_Beam360_High.json` | 400 | High accuracy beam | High accuracy tests |
 
 **Example**:
 ```json
@@ -257,7 +257,7 @@ If actual stats don't match after loading, warning is printed.
         ]
     },
     "expected_stats": {
-        "mass": 25.0
+        "mass": 400.0
     }
 }
 ```
@@ -338,10 +338,10 @@ From `vehicleclasses.json`:
 
 | Class ID | Size | Base Mass | Layers | Purpose |
 |----------|------|-----------|--------|---------|
-| `TestS_2L` | Small | 10 | 2 (CORE only) | Small ships (mass <100) |
-| `TestM_2L` | Medium | 200 | 2 (CORE only) | Medium ships (mass 200-600) |
+| `TestS_2L` | Small | 400 (hull_test_s) | 2 (CORE, ARMOR) | Small ships |
+| `TestM_2L` | Medium | 1000 (hull_test_m) | 2 (CORE, ARMOR) | Medium ships |
 
-Base mass is added to component masses to get total ship mass.
+Hull mass comes from the default hull component, not a base_mass field. All non-hull test components have mass 0.
 
 ### Creating New Test Ships
 
@@ -349,16 +349,16 @@ Base mass is added to component masses to get total ship mass.
 
 1. **Identify Requirements**:
    ```
-   Need: Attacker with projectile weapon, mass ~25
+   Need: Attacker with projectile weapon
    Team: 1 (attackers)
    Behavior: Stationary
    ```
 
 2. **Choose Components**:
    ```
-   Weapon: test_projectile_std (mass 5)
-   Hull class: TestS_2L (base mass 10)
-   Total: 5 + 10 = 15 mass (close enough to 25)
+   Weapon: test_projectile_std (mass 0, zero-mass architecture)
+   Hull class: TestS_2L (hull_test_s = 400 tons)
+   Total: 0 + 400 = 400 mass
    ```
 
 3. **Create JSON File** (`Test_Attacker_Projectile.json`):
@@ -379,8 +379,8 @@ Base mass is added to component masses to get total ship mass.
        },
        "_test_notes": "Attacker with standard projectile weapon for PROJ tests",
        "expected_stats": {
-           "max_hp": 20,
-           "mass": 15.0
+           "max_hp": 120,
+           "mass": 400.0
        },
        "resources": {
            "fuel": 0.0,
@@ -392,17 +392,17 @@ Base mass is added to component masses to get total ship mass.
 
 4. **Calculate Expected Stats**:
    ```python
-   # Component: test_projectile_std
-   component_hp = 20
-   component_mass = 5
+   # Hull: hull_test_s (default for TestS_2L)
+   hull_mass = 400
+   hull_hp = 100
 
-   # Hull: TestS_2L
-   hull_mass = 10
-   hull_hp = 0  # Assume hull adds no HP (check vehicleclasses.json)
+   # Component: test_projectile_std (zero-mass architecture)
+   component_hp = 20
+   component_mass = 0
 
    # Total
-   max_hp = component_hp + hull_hp = 20
-   mass = component_mass + hull_mass = 15.0
+   max_hp = hull_hp + component_hp = 120
+   mass = hull_mass + component_mass = 400.0
    ```
 
 5. **Use in Test**:

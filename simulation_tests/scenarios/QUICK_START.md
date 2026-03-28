@@ -1,266 +1,171 @@
-# Quick Start: Creating Your First TestScenario
+# Quick Start: Creating a Test Scenario
 
-This guide will walk you through creating your first test scenario in 5 minutes.
+This guide shows how to create a test scenario using the template pattern.
 
-## Step 1: Understand the Pattern
+## The Pattern
 
-TestScenarios work in both pytest (headless) and Combat Lab (visual) using the EXACT same code.
+Every weapon accuracy test extends `StaticTargetScenario` and implements `validate()`:
 
 ```python
-from simulation_tests.scenarios import TestScenario, TestMetadata
+class MyTest(StaticTargetScenario):
+    metadata = TestMetadata(...)
 
-class MyTest(TestScenario):
-    metadata = TestMetadata(...)  # Describes the test
+    # Template configuration (replaces manual setup/update)
+    attacker_ship = "Test_Attacker_Beam360_Low.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 50  # center-to-center pixels
 
-    def setup(self, battle_engine):
-        # Load ships and position them
-        pass
-
-    def verify(self, battle_engine):
-        # Return True if test passed
-        return True
+    def validate(self, engine) -> list:
+        """Return Check objects. Called after collect_results() populates self.damage_dealt, etc."""
+        checks = self._template_preconditions()
+        checks.append(check_exact("Target Mass", 400, self.target.mass))
+        checks.append(check_tost("Hit Rate", 0.5318, successes=int(self.damage_dealt),
+                                  trials=engine.tick_counter, margin=0.06))
+        return checks
 ```
 
-## Step 2: Create Your Scenario File
+The template handles `setup()`, `update()`, and `collect_results()` automatically.
+You only write validation logic.
 
-Create a new file in `simulation_tests/scenarios/`:
+## Lifecycle
 
-**File**: `simulation_tests/scenarios/my_first_test.py`
+1. **`setup()`** -- Template loads ships, positions them, starts the battle engine
+2. **`update()`** -- Template fires the weapon each tick (`force_fire=True` by default)
+3. **`collect_results()`** -- Template populates `self.damage_dealt`, `self.results['ticks_run']`, etc.
+4. **`validate()`** -- You return a list of `Check` objects (the framework calls `collect_results()` first)
+
+## Check Functions
+
+Import from `simulation_tests.scenarios.validation`:
+
+| Function | Purpose | Default Phase |
+|----------|---------|---------------|
+| `check_exact(name, expected, actual)` | Exact equality | `data` |
+| `check_approx(name, expected, actual, tolerance)` | Float within relative tolerance | `outcome` |
+| `check_tost(name, expected_p, successes, trials, margin)` | TOST equivalence test | `outcome` |
+| `check_true(name, condition)` | Boolean precondition | `precondition` |
+
+A test passes only when ALL checks pass. If any fail, `ValidationReport.failed_phase` identifies which phase broke first.
+
+## Complete Working Example
+
+**File**: `simulation_tests/scenarios/my_beam_test.py`
 
 ```python
-"""
-My First Test Scenario
+"""Point-blank beam accuracy test."""
 
-This test validates that a beam weapon can damage a target.
-"""
+from simulation_tests.scenarios import TestMetadata
+from simulation_tests.scenarios.validation import check_exact, check_tost, check_true
+from simulation_tests.scenarios.templates import StaticTargetScenario
+from simulation_tests.test_constants import (
+    STANDARD_TEST_TICKS, STANDARD_MARGIN, STANDARD_SEED,
+    BEAM_LOW_DAMAGE, STATIONARY_TARGET_MASS,
+)
 
-import pygame
-from simulation_tests.scenarios import TestScenario, TestMetadata
 
-
-class MyFirstBeamTest(TestScenario):
-    """My first test scenario."""
+class MyBeamPointBlankTest(StaticTargetScenario):
+    """MYTEST-001: Low accuracy beam at point-blank range."""
 
     metadata = TestMetadata(
-        test_id="MY-001",
+        test_id="MYTEST-001",
         category="MyTests",
-        subcategory="Beam Tests",
-        name="My first beam test",
-        summary="Tests that a beam weapon can damage a target",
-        conditions=["Distance: 100px", "Stationary target"],
-        edge_cases=["Basic functionality"],
-        expected_outcome="Target takes damage",
-        pass_criteria="Damage > 0",
-        max_ticks=500,
-        seed=42,
-        tags=["beginner", "beam"]
+        subcategory="Beam Accuracy",
+        name="Low Accuracy Beam - Point Blank",
+        summary="Validates low accuracy beam hit rate at 50px",
+        conditions=["Distance: 50px", "Weapon: Low Accuracy Beam", "Target: Stationary, 400 tons"],
+        edge_cases=["Minimal range penalty"],
+        expected_outcome="Hit rate ~53% (TOST equivalence within +/-6%)",
+        pass_criteria="TOST p < 0.05",
+        max_ticks=STANDARD_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["beam", "accuracy", "point-blank"],
     )
 
-    def setup(self, battle_engine):
-        """Setup the test."""
-        # Load ships
-        attacker = self._load_ship('Test_Attacker_Beam360_Low.json')
-        target = self._load_ship('Test_Target_Stationary.json')
+    # Template configuration -- no need to write setup() or update()
+    attacker_ship = "Test_Attacker_Beam360_Low.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 50
 
-        # Position ships 100px apart
-        attacker.position = pygame.math.Vector2(0, 0)
-        attacker.angle = 0  # Facing right
-        target.position = pygame.math.Vector2(100, 0)
-        target.angle = 0
+    def custom_setup(self, battle_engine):
+        """Hook called at end of template setup. Calculate expected hit chance."""
+        from simulation_tests.scenarios.beam_scenarios import compute_beam_hit_chance
+        self.expected_hit_chance = compute_beam_hit_chance(self)
 
-        # Store initial HP
-        self.initial_hp = target.hp
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
 
-        # Start battle with fixed seed
-        battle_engine.start([attacker], [target], seed=self.metadata.seed)
+        # Data phase: verify loaded ship stats
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
+        checks.append(check_exact("Beam Damage", BEAM_LOW_DAMAGE, beam.damage))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
 
-        # Set target
-        attacker.current_target = target
-
-        # Store references
-        self.attacker = attacker
-        self.target = target
-
-    def update(self, battle_engine):
-        """Called every tick - make attacker fire."""
-        self.attacker.comp_trigger_pulled = True
-
-    def verify(self, battle_engine):
-        """Check if test passed."""
-        # Calculate damage
-        damage = self.initial_hp - self.target.hp
-
-        # Store results
-        self.results['damage_dealt'] = damage
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-
-        # Test passes if damage > 0
-        return damage > 0
+        # Outcome phase: TOST equivalence test on hit rate
+        checks.append(check_tost(
+            "Hit Rate",
+            self.expected_hit_chance,
+            successes=int(self.damage_dealt),
+            trials=engine.tick_counter,
+            margin=STANDARD_MARGIN,
+        ))
+        return checks
 ```
 
-## Step 3: Verify Discovery
-
-Check that your scenario is discovered:
-
-```bash
-python -c "from test_framework.registry import TestRegistry; TestRegistry().print_summary()"
-```
-
-You should see:
-
-```
-MyTests
---------------------------------------------------------------------------------
-
-  Beam Tests:
-    MY-001: My first beam test
-        Tests that a beam weapon can damage a target
-```
-
-## Step 4: Create Pytest Wrapper
-
-Create `simulation_tests/tests/test_my_first_test.py`:
+**Pytest wrapper**: `simulation_tests/tests/test_my_beam.py`
 
 ```python
-"""
-My First Test (Pytest Wrapper)
-"""
+"""Pytest wrapper for MyBeamPointBlankTest."""
 
 import pytest
 from test_framework.runner import TestRunner
-from simulation_tests.scenarios.my_first_test import MyFirstBeamTest
+from simulation_tests.scenarios.my_beam_test import MyBeamPointBlankTest
 
 
 @pytest.mark.simulation
-class TestMyFirst:
-    """My first test using TestScenario."""
-
+class TestMyBeam:
     @pytest.fixture(autouse=True)
     def setup(self, isolated_registry):
         self.runner = TestRunner()
 
-    def test_MY_001_my_first_beam_test(self):
-        """MY-001: My first beam test."""
-        scenario = self.runner.run_scenario(MyFirstBeamTest, headless=True)
-        assert scenario.passed, f"Test failed: {scenario.results}"
+    def test_MYTEST_001(self):
+        result = self.runner.run_scenario(MyBeamPointBlankTest, headless=True)
+        assert result.passed, f"Failed: {result.results.get('validation')}"
 ```
 
-## Step 5: Run the Test
+## Running Tests
 
 ```bash
-pytest simulation_tests/tests/test_my_first_test.py -v
+# Run all simulation tests
+python -m simulation_tests.run_tests
+
+# Filter by test ID prefix
+python -m simulation_tests.run_tests MYTEST
+
+# Run specific test
+python -m simulation_tests.run_tests MYTEST-001
+
+# List all registered tests
+python -m simulation_tests.run_tests --list
+
+# Run via pytest
+pytest simulation_tests/tests/test_my_beam.py -v
 ```
 
-You should see:
+## Key Points
 
-```
-test_my_first_test.py::TestMyFirst::test_MY_001_my_first_beam_test PASSED
-```
+- **Extend `StaticTargetScenario`**, not raw `TestScenario` -- it handles setup/update/collect_results
+- **Implement `validate()`**, not `verify()` -- return `list[Check]`, not `bool`
+- **`collect_results()` runs automatically** before `validate()` -- use `self.damage_dealt`, `self.results['ticks_run']`, etc.
+- **Use `custom_setup()`** for scenario-specific initialization (called at end of template setup)
+- **Use `_template_preconditions()`** as the first line of `validate()` for standard sanity checks
+- **Use `get_ability(ship, 'ClassName')`** to extract ability instances from loaded ships
 
-## Next Steps
+## See Also
 
-### Try Different Scenarios
-
-1. **Different Distances**: Test at 50px, 200px, 500px
-2. **Different Weapons**: Use projectile or seeker weapons
-3. **Moving Targets**: Load 'Test_Target_Erratic_Small.json'
-4. **Multiple Ships**: Add more attackers or targets
-
-### Explore Available Ships
-
-Check what test ships are available:
-
-```bash
-ls simulation_tests/data/ships/
-```
-
-You'll see:
-- `Test_Attacker_Beam360_Low.json` - Low accuracy beam
-- `Test_Attacker_Beam360_Med.json` - Medium accuracy beam
-- `Test_Attacker_Beam360_High.json` - High accuracy beam
-- `Test_Attacker_Proj360.json` - Projectile weapon
-- `Test_Attacker_Seeker360.json` - Seeker weapon
-- `Test_Target_Stationary.json` - Stationary target
-- `Test_Target_Erratic_Small.json` - Moving target
-
-### Read the Full Guide
-
-See `docs/test_migration_guide.md` for:
-- Complete examples
-- Common patterns
-- Best practices
-- Troubleshooting
-
-### Look at Examples
-
-Study `simulation_tests/scenarios/example_beam_test.py` for a complete working example.
-
-## Common Mistakes
-
-### 1. Forgetting to Set Seed
-
-```python
-# Bad - non-deterministic
-battle_engine.start([attacker], [target])
-
-# Good - deterministic
-battle_engine.start([attacker], [target], seed=self.metadata.seed)
-```
-
-### 2. Not Storing Initial State
-
-```python
-# Bad - can't verify damage
-def verify(self, battle_engine):
-    return self.target.hp < ???  # What was initial HP?
-
-# Good - stored in setup
-def setup(self, battle_engine):
-    self.initial_hp = target.hp
-
-def verify(self, battle_engine):
-    return self.target.hp < self.initial_hp
-```
-
-### 3. Not Storing Results
-
-```python
-# Bad - no details on failure
-def verify(self, battle_engine):
-    return damage > 0
-
-# Good - store details
-def verify(self, battle_engine):
-    damage = self.initial_hp - self.target.hp
-    self.results['damage_dealt'] = damage
-    self.results['hit_rate'] = hits / shots
-    return damage > 0
-```
-
-## Tips
-
-1. **Start Simple**: Begin with a basic test and add complexity gradually
-2. **Use Fixed Seeds**: Always use fixed seeds for reproducibility
-3. **Store Everything**: Store initial values and results for debugging
-4. **Clear Metadata**: Write clear descriptions and pass criteria
-5. **Test in Pytest First**: Verify in pytest before trying in Combat Lab
-
-## Help
-
-If you get stuck:
-1. Check `simulation_tests/scenarios/example_beam_test.py`
-2. Read `docs/test_migration_guide.md`
-3. Look at `simulation_tests/scenarios/README.md`
-4. Check existing tests in `simulation_tests/tests/`
-
-## Summary
-
-Creating a TestScenario involves:
-1. Define TestMetadata describing the test
-2. Implement setup() to configure ships
-3. Implement verify() to check results
-4. Optionally implement update() for per-tick logic
-5. Create pytest wrapper to run the scenario
-
-That's it! Your test now works in both pytest (headless) and Combat Lab (visual).
+- `templates.py` -- All available templates (StaticTargetScenario, DuelScenario, PropulsionScenario, ResourceScenario)
+- `beam_scenarios.py` -- Production examples using the parametrized `BeamAccuracyScenario` pattern
+- `validation.py` -- Check, ValidationReport, and all check functions
+- `../test_constants.py` -- Centralized constants (margins, distances, weapon stats)

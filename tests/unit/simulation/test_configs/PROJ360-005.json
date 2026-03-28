@@ -1,5 +1,5 @@
 ﻿{
-    "test_id": "PROJ360-005",
+    "test_id": "PROJECTILE-005",
     "description": "Projectile 360 - Erratic Target Large",
     "duration_ticks": 1000,
     "ships": [

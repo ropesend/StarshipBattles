@@ -1,5 +1,5 @@
 {
-    "test_id": "PROJ360-001",
+    "test_id": "PROJECTILE-001",
     "description": "Projectile 360 - Stationary Target",
     "duration_ticks": 1000,
     "ships": [

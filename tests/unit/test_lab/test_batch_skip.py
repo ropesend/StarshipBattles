@@ -108,7 +108,7 @@ class TestBatchSkipTest:
         output_log = []
         executor = _make_executor(registry=mock_registry, output_log=output_log)
 
-        executor.batch_tests = ["SEEK360-PD-001"]
+        executor.batch_tests = ["SEEKER-PD-001"]
         executor.batch_total = 1
         executor.batch_current_index = 0
         executor.batch_running = True
@@ -138,7 +138,7 @@ class TestBatchSkipTest:
         mock_registry.get_by_id.return_value = _make_scenario_info(mock_cls)
 
         executor = _make_executor(registry=mock_registry)
-        executor.batch_tests = ["SEEK360-PD-001"]
+        executor.batch_tests = ["SEEKER-PD-001"]
         executor.batch_total = 1
         executor.batch_current_index = 0
         executor.batch_running = True

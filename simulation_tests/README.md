@@ -9,14 +9,14 @@ Combat Lab is a comprehensive testing system for validating combat mechanics in 
 ## Quick Links
 
 ### Getting Started
-- **[Quick Start Guide](QUICK_START_GUIDE.md)** - Create your first test in 10 minutes
+- **[Quick Start Guide](scenarios/QUICK_START.md)** - Create your first test using templates
 
 ### Core Documentation
 - **[Main Documentation](COMBAT_LAB_DOCUMENTATION.md)** - Complete system overview
 - **[Test Constants](test_constants.py)** - Centralized constants for tests
 
 ### Key Files
-- **UI**: `game/ui/screens/test_lab_screen.py` - Combat Lab pygame interface
+- **UI**: `game/ui/screens/test_lab/screen.py` - Combat Lab pygame interface
 - **Controller**: `test_framework/services/test_lab_controller.py` - UI coordinator
 - **Registry**: `test_framework/registry.py` - Auto-discovers test scenarios
 - **Runner**: `test_framework/runner.py` - Executes test scenarios
@@ -43,7 +43,7 @@ Combat Lab provides:
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                          Combat Lab UI                               │
-│                (game/ui/screens/test_lab_screen.py)                 │
+│                (game/ui/screens/test_lab/screen.py)                 │
 └──────────────────────────────┬──────────────────────────────────────┘
                                │
 ┌──────────────────────────────▼──────────────────────────────────────┐
@@ -204,7 +204,7 @@ print(f"Hit Rate: {scenario.results.get('hit_rate', 0):.2%}")
 Starship Battles/
 ├── game/
 │   └── ui/screens/
-│       └── test_lab_screen.py      # Combat Lab UI
+│       └── test_lab/screen.py      # Combat Lab UI
 │
 ├── test_framework/
 │   ├── registry.py                 # Test discovery
@@ -215,7 +215,7 @@ Starship Battles/
 └── simulation_tests/
     ├── README.md                   # This file
     ├── COMBAT_LAB_DOCUMENTATION.md # Full documentation
-    ├── QUICK_START_GUIDE.md        # Tutorial
+    ├── scenarios/QUICK_START.md     # Tutorial
     ├── run_tests.py                # Headless test runner (python -m simulation_tests.run_tests)
     ├── test_constants.py           # Centralized constants
     ├── logging_config.py           # Combat Lab logging
@@ -247,7 +247,7 @@ Starship Battles/
 
 | I want to... | See... |
 |--------------|--------|
-| Create a new test | [Quick Start Guide](QUICK_START_GUIDE.md) |
+| Create a new test | [Quick Start Guide](scenarios/QUICK_START.md) |
 | Understand TOST | [Main Docs - Validation System](COMBAT_LAB_DOCUMENTATION.md#validation-system) |
 | Calculate hit rates | [Main Docs - Beam Weapon Mechanics](COMBAT_LAB_DOCUMENTATION.md#beam-weapon-mechanics) |
 | Debug failing tests | [Main Docs - Troubleshooting](COMBAT_LAB_DOCUMENTATION.md#troubleshooting) |
@@ -285,7 +285,7 @@ Starship Battles/
 
 ## Next Steps
 
-1. **Read**: [Quick Start Guide](QUICK_START_GUIDE.md)
+1. **Read**: [Quick Start Guide](scenarios/QUICK_START.md)
 2. **Try**: Run a test in Combat Lab UI (`python main.py`)
 3. **Create**: Follow Quick Start to create your first test
 4. **Explore**: Read [Main Documentation](COMBAT_LAB_DOCUMENTATION.md) for deep dive

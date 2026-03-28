@@ -1,5 +1,5 @@
 """
-Seeker Weapon Test Scenarios (SEEK360-001 to SEEK360-TRACK-004, SEEK360-PD-001 to PD-003)
+Seeker Weapon Test Scenarios (SEEKER-001 to SEEKER-TRACK-004, SEEKER-PD-001 to PD-003)
 
 These tests validate seeker/missile weapon behavior including:
 - Lifetime/endurance mechanics (5.0 second endurance)
@@ -38,7 +38,7 @@ from simulation_tests.test_constants import (
 
 class SeekerCloseRangeImpactScenario(StaticTargetScenario):
     """
-    SEEK360-001: Seeker Impact at Close Range
+    SEEKER-001: Seeker Impact at Close Range
 
     Tests that seeker missiles successfully launch, track, and impact
     a stationary target at close range (500px) well before endurance expires.
@@ -50,7 +50,7 @@ class SeekerCloseRangeImpactScenario(StaticTargetScenario):
     distance = STANDARD_DISTANCE
 
     metadata = TestMetadata(
-        test_id="SEEK360-001",
+        test_id="SEEKER-001",
         category="Seeker Weapons",
         subcategory="Endurance",
         name="Seeker Impact - Close Range (500px)",
@@ -103,7 +103,7 @@ class SeekerCloseRangeImpactScenario(StaticTargetScenario):
 
 class SeekerMidRangeImpactScenario(StaticTargetScenario):
     """
-    SEEK360-002: Seeker Impact at Mid Range
+    SEEKER-002: Seeker Impact at Mid Range
 
     Tests that seeker missiles successfully reach and impact a target
     at mid range (2500px) within endurance limit.
@@ -115,7 +115,7 @@ class SeekerMidRangeImpactScenario(StaticTargetScenario):
     distance = 2500
 
     metadata = TestMetadata(
-        test_id="SEEK360-002",
+        test_id="SEEKER-002",
         category="Seeker Weapons",
         subcategory="Endurance",
         name="Seeker Impact - Mid Range (2500px)",
@@ -157,7 +157,7 @@ class SeekerMidRangeImpactScenario(StaticTargetScenario):
 
 class SeekerBeyondRangeExpireScenario(StaticTargetScenario):
     """
-    SEEK360-003: Seeker Expires Beyond Range
+    SEEKER-003: Seeker Expires Beyond Range
 
     Tests that seeker missiles expire due to endurance limit when
     target is positioned beyond effective range (5000px).
@@ -169,7 +169,7 @@ class SeekerBeyondRangeExpireScenario(StaticTargetScenario):
     distance = 5000
 
     metadata = TestMetadata(
-        test_id="SEEK360-003",
+        test_id="SEEKER-003",
         category="Seeker Weapons",
         subcategory="Endurance",
         name="Seeker Expires - Beyond Range (5000px)",
@@ -210,7 +210,7 @@ class SeekerBeyondRangeExpireScenario(StaticTargetScenario):
 
 class SeekerEdgeCaseRangeScenario(StaticTargetScenario):
     """
-    SEEK360-004: Seeker at Edge Case Range
+    SEEKER-004: Seeker at Edge Case Range
 
     Tests seeker behavior at edge of effective range (4500px),
     where endurance limit becomes critical factor.
@@ -222,7 +222,7 @@ class SeekerEdgeCaseRangeScenario(StaticTargetScenario):
     distance = 4500
 
     metadata = TestMetadata(
-        test_id="SEEK360-004",
+        test_id="SEEKER-004",
         category="Seeker Weapons",
         subcategory="Endurance",
         name="Seeker Impact - Edge Case Range (4500px)",
@@ -268,7 +268,7 @@ class SeekerEdgeCaseRangeScenario(StaticTargetScenario):
 
 class SeekerTrackingStationaryScenario(StaticTargetScenario):
     """
-    SEEK360-TRACK-001: Seeker Tracking Stationary Target
+    SEEKER-TRACK-001: Seeker Tracking Stationary Target
 
     Tests basic seeker tracking and impact against a stationary target.
     Direct flight path - validates core tracking mechanics.
@@ -280,7 +280,7 @@ class SeekerTrackingStationaryScenario(StaticTargetScenario):
     distance = SEEKER_TRACKING_DISTANCE
 
     metadata = TestMetadata(
-        test_id="SEEK360-TRACK-001",
+        test_id="SEEKER-TRACK-001",
         category="Seeker Weapons",
         subcategory="Tracking",
         name="Seeker Tracking - Stationary Target (1000px)",
@@ -319,7 +319,7 @@ class SeekerTrackingStationaryScenario(StaticTargetScenario):
 
 class SeekerTrackingLinearScenario(StaticTargetScenario):
     """
-    SEEK360-TRACK-002: Seeker Tracking Linear Moving Target
+    SEEKER-TRACK-002: Seeker Tracking Linear Moving Target
 
     Tests seeker tracking against a target moving in a straight line.
     Seeker must lead target and adjust trajectory for intercept.
@@ -332,7 +332,7 @@ class SeekerTrackingLinearScenario(StaticTargetScenario):
     target_angle = 90  # Moving up
 
     metadata = TestMetadata(
-        test_id="SEEK360-TRACK-002",
+        test_id="SEEKER-TRACK-002",
         category="Seeker Weapons",
         subcategory="Tracking",
         name="Seeker Tracking - Linear Target (1000px)",
@@ -370,7 +370,7 @@ class SeekerTrackingLinearScenario(StaticTargetScenario):
 
 class SeekerTrackingOrbitingScenario(StaticTargetScenario):
     """
-    SEEK360-TRACK-003: Seeker Tracking Orbiting Target
+    SEEKER-TRACK-003: Seeker Tracking Orbiting Target
 
     Tests seeker tracking against a target following a curved/orbiting path.
     Requires continuous tracking adjustments and curved pursuit.
@@ -382,7 +382,7 @@ class SeekerTrackingOrbitingScenario(StaticTargetScenario):
     distance = SEEKER_TRACKING_DISTANCE
 
     metadata = TestMetadata(
-        test_id="SEEK360-TRACK-003",
+        test_id="SEEKER-TRACK-003",
         category="Seeker Weapons",
         subcategory="Tracking",
         name="Seeker Tracking - Orbiting Target (1000px)",
@@ -421,7 +421,7 @@ class SeekerTrackingOrbitingScenario(StaticTargetScenario):
 
 class SeekerTrackingErraticScenario(StaticTargetScenario):
     """
-    SEEK360-TRACK-004: Seeker vs Highly Maneuverable Erratic Target
+    SEEKER-TRACK-004: Seeker vs Highly Maneuverable Erratic Target
 
     Tests seeker tracking limits against a small, highly maneuverable
     target performing erratic evasive maneuvers. Target may out-turn seeker.
@@ -433,7 +433,7 @@ class SeekerTrackingErraticScenario(StaticTargetScenario):
     distance = SEEKER_TRACKING_DISTANCE
 
     metadata = TestMetadata(
-        test_id="SEEK360-TRACK-004",
+        test_id="SEEKER-TRACK-004",
         category="Seeker Weapons",
         subcategory="Tracking",
         name="Seeker Tracking - Erratic Small Target (1000px)",
@@ -477,7 +477,7 @@ class SeekerTrackingErraticScenario(StaticTargetScenario):
 
 class SeekerPointDefenseNoneScenario(StaticTargetScenario):
     """
-    SEEK360-PD-001: Seeker vs No Point Defense (Baseline)
+    SEEKER-PD-001: Seeker vs No Point Defense (Baseline)
 
     Placeholder test for point defense interaction.
     Tests baseline scenario where target has no PD - all seekers should hit.
@@ -494,7 +494,7 @@ class SeekerPointDefenseNoneScenario(StaticTargetScenario):
     skip_reason = "Requires point defense target ships - not yet implemented"
 
     metadata = TestMetadata(
-        test_id="SEEK360-PD-001",
+        test_id="SEEKER-PD-001",
         category="Seeker Weapons",
         subcategory="Point Defense",
         name="Seeker vs No Point Defense (Baseline)",
@@ -524,7 +524,7 @@ class SeekerPointDefenseNoneScenario(StaticTargetScenario):
 
 class SeekerPointDefenseSingleScenario(StaticTargetScenario):
     """
-    SEEK360-PD-002: Seeker vs Single Point Defense
+    SEEKER-PD-002: Seeker vs Single Point Defense
 
     Placeholder test for single PD weapon interaction.
     Tests seeker interception rate with one PD weapon.
@@ -541,7 +541,7 @@ class SeekerPointDefenseSingleScenario(StaticTargetScenario):
     skip_reason = "Requires point defense target ships - not yet implemented"
 
     metadata = TestMetadata(
-        test_id="SEEK360-PD-002",
+        test_id="SEEKER-PD-002",
         category="Seeker Weapons",
         subcategory="Point Defense",
         name="Seeker vs Single Point Defense",
@@ -572,7 +572,7 @@ class SeekerPointDefenseSingleScenario(StaticTargetScenario):
 
 class SeekerPointDefenseTripleScenario(StaticTargetScenario):
     """
-    SEEK360-PD-003: Seeker vs Triple Point Defense
+    SEEKER-PD-003: Seeker vs Triple Point Defense
 
     Placeholder test for multiple PD weapon interaction.
     Tests seeker interception rate with three PD weapons.
@@ -589,7 +589,7 @@ class SeekerPointDefenseTripleScenario(StaticTargetScenario):
     skip_reason = "Requires point defense target ships - not yet implemented"
 
     metadata = TestMetadata(
-        test_id="SEEK360-PD-003",
+        test_id="SEEKER-PD-003",
         category="Seeker Weapons",
         subcategory="Point Defense",
         name="Seeker vs Triple Point Defense",

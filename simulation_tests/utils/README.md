@@ -25,9 +25,9 @@ Total Tests: 38
 Total Log Entries: 42
 
 ✓ BEAM360-001: Results match
-✗ PROJ360-002: MISMATCH DETECTED
+✗ PROJECTILE-002: MISMATCH DETECTED
     - Damage mismatch: UI=250, Headless=248
-? SEEK360-001: Missing runs (UI: 0, Headless: 1)
+? SEEKER-001: Missing runs (UI: 0, Headless: 1)
 
 ======================================================================
 Summary:

@@ -38,7 +38,7 @@ tests/
 │   ├── component_logger.py      # Structured event logging
 │   ├── test_configs/            # Test configuration JSONs
 │   │   ├── ENG-001.json
-│   │   ├── PROJ360-001.json
+│   │   ├── PROJECTILE-001.json
 │   │   └── ...
 │   └── output/
 │       └── logs/                # Generated log files
@@ -415,24 +415,24 @@ assert abs(final_speed - 312.5) < 0.5, f"Expected 312.5, got {final_speed}"
 
 | Test ID | Attacker | Target | AI Policy | Expected Log |
 |---------|----------|--------|-----------|--------------|
-| `PROJ360-001` | `Test_Attacker_Proj360` | `Test_Target_Stationary` | Both: `do_nothing` | All `HIT` events, no `MISS` |
-| `PROJ360-002` | `Test_Attacker_Proj360` | `Test_Target_Linear_Slow` | Target: `straight_line` | All `HIT` (predictive leading) |
-| `PROJ360-003` | `Test_Attacker_Proj360` | `Test_Target_Linear_Fast` | Target: `straight_line` | All `HIT` (predictive leading) |
-| `PROJ360-004` | `Test_Attacker_Proj360` | `Test_Target_Erratic_Small` | Target: `erratic` | Mix of `HIT`/`MISS` (measure ratio) |
-| `PROJ360-005` | `Test_Attacker_Proj360` | `Test_Target_Erratic_Large` | Target: `erratic` | Higher `HIT` ratio than small target |
-| `PROJ360-006` | `Test_Attacker_Proj360` | Target at max_range + 100 | Both: `do_nothing` | `WEAPON_FIRE` events but 0 `HIT` events |
+| `PROJECTILE-001` | `Test_Attacker_Proj360` | `Test_Target_Stationary` | Both: `do_nothing` | All `HIT` events, no `MISS` |
+| `PROJECTILE-002` | `Test_Attacker_Proj360` | `Test_Target_Linear_Slow` | Target: `straight_line` | All `HIT` (predictive leading) |
+| `PROJECTILE-003` | `Test_Attacker_Proj360` | `Test_Target_Linear_Fast` | Target: `straight_line` | All `HIT` (predictive leading) |
+| `PROJECTILE-004` | `Test_Attacker_Proj360` | `Test_Target_Erratic_Small` | Target: `erratic` | Mix of `HIT`/`MISS` (measure ratio) |
+| `PROJECTILE-005` | `Test_Attacker_Proj360` | `Test_Target_Erratic_Large` | Target: `erratic` | Higher `HIT` ratio than small target |
+| `PROJECTILE-006` | `Test_Attacker_Proj360` | Target at max_range + 100 | Both: `do_nothing` | `WEAPON_FIRE` events but 0 `HIT` events |
 
 > [!IMPORTANT]
-> Out-of-range test (PROJ360-006): The weapon **should fire** (log shows `WEAPON_FIRE`), but **no `HIT` should appear in log**.
+> Out-of-range test (PROJECTILE-006): The weapon **should fire** (log shows `WEAPON_FIRE`), but **no `HIT` should appear in log**.
 
 #### 7.1.2 Damage Tests
 
 | Test ID | Range | Expected Log |
 |---------|-------|--------------|
-| `PROJ360-DMG-10` | 10% of max range (100 px) | Sum of `HIT` damage == shots × weapon_damage |
-| `PROJ360-DMG-50` | 50% of max range (500 px) | Sum of `HIT` damage == shots × weapon_damage |
-| `PROJ360-DMG-90` | 90% of max range (900 px) | Sum of `HIT` damage == shots × weapon_damage |
-| `PROJ360-DMG-BEYOND` | 110% of max range (1100 px) | 0 `HIT` events, 0 damage |
+| `PROJECTILE-DMG-10` | 10% of max range (100 px) | Sum of `HIT` damage == shots × weapon_damage |
+| `PROJECTILE-DMG-50` | 50% of max range (500 px) | Sum of `HIT` damage == shots × weapon_damage |
+| `PROJECTILE-DMG-90` | 90% of max range (900 px) | Sum of `HIT` damage == shots × weapon_damage |
+| `PROJECTILE-DMG-BEYOND` | 110% of max range (1100 px) | 0 `HIT` events, 0 damage |
 
 ---
 
@@ -491,27 +491,27 @@ def calculate_hit_chance(distance, attack_score_bonus=0.0, defense_score_penalty
 
 | Test ID | Target Distance | Expected Log |
 |---------|-----------------|--------------|
-| `SEEK360-001` | 500 (close) | `SEEKER_IMPACT` before t=1s |
-| `SEEK360-002` | 2500 (mid) | `SEEKER_IMPACT` before lifetime (t≈2.5s) |
-| `SEEK360-003` | 5000 (beyond) | `SEEKER_EXPIRE` at t=5s, no `SEEKER_IMPACT` |
-| `SEEK360-004` | 4500 (edge) | Either `SEEKER_IMPACT` or `SEEKER_EXPIRE` |
+| `SEEKER-001` | 500 (close) | `SEEKER_IMPACT` before t=1s |
+| `SEEKER-002` | 2500 (mid) | `SEEKER_IMPACT` before lifetime (t≈2.5s) |
+| `SEEKER-003` | 5000 (beyond) | `SEEKER_EXPIRE` at t=5s, no `SEEKER_IMPACT` |
+| `SEEKER-004` | 4500 (edge) | Either `SEEKER_IMPACT` or `SEEKER_EXPIRE` |
 
 #### 7.3.3 Point Defense Resistance Tests
 
 | Test ID | Target PD Level | Number of Seekers | Expected Log |
 |---------|-----------------|-------------------|--------------|
-| `SEEK360-PD-001` | None | 10 | 10 `SEEKER_IMPACT` events |
-| `SEEK360-PD-002` | 1× `test_weapon_pd_omni` | 10 | Measure `SEEKER_IMPACT` vs `SEEKER_DESTROYED` |
-| `SEEK360-PD-003` | 3× `test_weapon_pd_omni` | 10 | Higher `SEEKER_DESTROYED` count |
+| `SEEKER-PD-001` | None | 10 | 10 `SEEKER_IMPACT` events |
+| `SEEKER-PD-002` | 1× `test_weapon_pd_omni` | 10 | Measure `SEEKER_IMPACT` vs `SEEKER_DESTROYED` |
+| `SEEKER-PD-003` | 3× `test_weapon_pd_omni` | 10 | Higher `SEEKER_DESTROYED` count |
 
 #### 7.3.4 Tracking Tests
 
 | Test ID | Target Behavior | Expected Log |
 |---------|-----------------|--------------|
-| `SEEK360-TRACK-001` | Stationary | `SEEKER_IMPACT` (direct flight) |
-| `SEEK360-TRACK-002` | Linear movement | `SEEKER_IMPACT` (lead correction) |
-| `SEEK360-TRACK-003` | Orbiting | `SEEKER_IMPACT` (curved pursuit) |
-| `SEEK360-TRACK-004` | Erratic (high maneuverability) | May see `SEEKER_EXPIRE` if out-turned |
+| `SEEKER-TRACK-001` | Stationary | `SEEKER_IMPACT` (direct flight) |
+| `SEEKER-TRACK-002` | Linear movement | `SEEKER_IMPACT` (lead correction) |
+| `SEEKER-TRACK-003` | Orbiting | `SEEKER_IMPACT` (curved pursuit) |
+| `SEEKER-TRACK-004` | Erratic (high maneuverability) | May see `SEEKER_EXPIRE` if out-turned |
 
 ---
 
@@ -663,12 +663,12 @@ All scenarios must be tested at **4 facing angles**:
 - [ ] Create attacker ships (Section 5.2)
 - [ ] Create target ships (Section 5.3)
 - [ ] Add weapon fire/hit/miss logging
-- [ ] Implement `PROJ360-001` through `PROJ360-006`
-- [ ] Implement `PROJ360-DMG-*` damage tests
+- [ ] Implement `PROJECTILE-001` through `PROJECTILE-006`
+- [ ] Implement `PROJECTILE-DMG-*` damage tests
 - [ ] Implement `BEAM360-001` through `BEAM360-011`
-- [ ] Implement `SEEK360-*` lifetime tests
-- [ ] Implement `SEEK360-PD-*` point defense tests
-- [ ] Implement `SEEK360-TRACK-*` tracking tests
+- [ ] Implement `SEEKER-*` lifetime tests
+- [ ] Implement `SEEKER-PD-*` point defense tests
+- [ ] Implement `SEEKER-TRACK-*` tracking tests
 
 ### Phase 3: 90° Arc Weapon Tests
 - [ ] Implement `PROJ90-PASS-*` (4 facings)

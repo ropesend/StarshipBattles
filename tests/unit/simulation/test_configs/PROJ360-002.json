@@ -1,5 +1,5 @@
 {
-    "test_id": "PROJ360-002",
+    "test_id": "PROJECTILE-002",
     "description": "Projectile 360 - Linear Target Slow",
     "duration_ticks": 1000,
     "ships": [

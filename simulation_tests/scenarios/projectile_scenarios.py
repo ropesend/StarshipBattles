@@ -1,5 +1,5 @@
 """
-Projectile Weapon Test Scenarios (PROJ360-001 to PROJ360-006, PROJ360-DMG-*)
+Projectile Weapon Test Scenarios (PROJECTILE-001 to PROJECTILE-006, PROJECTILE-DMG-*)
 
 These tests validate projectile weapon mechanics:
 - Projectile travel time and physics
@@ -18,11 +18,11 @@ Projectile Weapon Mechanics:
 - Unlike beams, projectiles have travel time - target can move during flight
 
 Test Coverage:
-- Stationary target accuracy: 1 test (PROJ360-001)
-- Linear moving target tests: 2 tests (PROJ360-002, PROJ360-003)
-- Erratic target tests: 2 tests (PROJ360-004, PROJ360-005)
-- Range limit test: 1 test (PROJ360-006)
-- Damage at various ranges: 3 tests (PROJ360-DMG-010, -050, -090)
+- Stationary target accuracy: 1 test (PROJECTILE-001)
+- Linear moving target tests: 2 tests (PROJECTILE-002, PROJECTILE-003)
+- Erratic target tests: 2 tests (PROJECTILE-004, PROJECTILE-005)
+- Range limit test: 1 test (PROJECTILE-006)
+- Damage at various ranges: 3 tests (PROJECTILE-DMG-010, -050, -090)
 
 Projectile Weapon Stats:
 - Damage: 50 per hit
@@ -64,14 +64,14 @@ def calculate_projectile_travel_time(distance: float, projectile_speed: float) -
 
 class ProjectileStationaryTargetScenario(StaticTargetScenario):
     """
-    PROJ360-001: 100% Accuracy vs Stationary Target
+    PROJECTILE-001: 100% Accuracy vs Stationary Target
 
     Tests that projectile weapons hit consistently against a stationary target
     at close range (200px) where travel time is minimal.
     """
 
     metadata = TestMetadata(
-        test_id="PROJ360-001",
+        test_id="PROJECTILE-001",
         category="Projectile Weapons",
         subcategory="Accuracy",
         name="Projectile vs Stationary - Point Blank (200px)",
@@ -134,14 +134,14 @@ class ProjectileStationaryTargetScenario(StaticTargetScenario):
 
 class ProjectileLinearSlowTargetScenario(StaticTargetScenario):
     """
-    PROJ360-002: Accuracy vs Slow Linearly Moving Target
+    PROJECTILE-002: Accuracy vs Slow Linearly Moving Target
 
     Tests predictive leading - projectiles should hit slow-moving targets
     by aiming at predicted future position.
     """
 
     metadata = TestMetadata(
-        test_id="PROJ360-002",
+        test_id="PROJECTILE-002",
         category="Projectile Weapons",
         subcategory="Moving Targets",
         name="Projectile vs Slow Linear Target (200px)",
@@ -192,14 +192,14 @@ class ProjectileLinearSlowTargetScenario(StaticTargetScenario):
 
 class ProjectileLinearFastTargetScenario(StaticTargetScenario):
     """
-    PROJ360-003: Accuracy vs Fast Linearly Moving Target
+    PROJECTILE-003: Accuracy vs Fast Linearly Moving Target
 
     Tests that fast-moving targets are harder to hit but still hittable
     with proper leading calculations.
     """
 
     metadata = TestMetadata(
-        test_id="PROJ360-003",
+        test_id="PROJECTILE-003",
         category="Projectile Weapons",
         subcategory="Moving Targets",
         name="Projectile vs Fast Linear Target (400px)",
@@ -251,14 +251,14 @@ class ProjectileLinearFastTargetScenario(StaticTargetScenario):
 
 class ProjectileErraticSmallTargetScenario(StaticTargetScenario):
     """
-    PROJ360-004: Accuracy vs Small Erratically Moving Target
+    PROJECTILE-004: Accuracy vs Small Erratically Moving Target
 
     Tests that erratic movement patterns significantly reduce hit rate
     as leading predictions fail when target changes velocity.
     """
 
     metadata = TestMetadata(
-        test_id="PROJ360-004",
+        test_id="PROJECTILE-004",
         category="Projectile Weapons",
         subcategory="Moving Targets",
         name="Projectile vs Erratic Small Target (300px)",
@@ -302,14 +302,14 @@ class ProjectileErraticSmallTargetScenario(StaticTargetScenario):
 
 class ProjectileErraticLargeTargetScenario(StaticTargetScenario):
     """
-    PROJ360-005: Accuracy vs Large Erratically Moving Target
+    PROJECTILE-005: Accuracy vs Large Erratically Moving Target
 
     Tests that larger erratic targets are easier to hit than small ones
     due to increased hit window despite unpredictable movement.
     """
 
     metadata = TestMetadata(
-        test_id="PROJ360-005",
+        test_id="PROJECTILE-005",
         category="Projectile Weapons",
         subcategory="Moving Targets",
         name="Projectile vs Erratic Large Target (300px)",
@@ -356,14 +356,14 @@ class ProjectileErraticLargeTargetScenario(StaticTargetScenario):
 
 class ProjectileOutOfRangeScenario(StaticTargetScenario):
     """
-    PROJ360-006: Out of Range - Weapon Fires But No Hits
+    PROJECTILE-006: Out of Range - Weapon Fires But No Hits
 
     Tests that projectiles cannot hit targets beyond weapon's max range (1000px).
     Weapon may fire but projectiles despawn before reaching target.
     """
 
     metadata = TestMetadata(
-        test_id="PROJ360-006",
+        test_id="PROJECTILE-006",
         category="Projectile Weapons",
         subcategory="Range Limits",
         name="Projectile Out of Range (1200px > 1000px max)",
@@ -414,14 +414,14 @@ class ProjectileOutOfRangeScenario(StaticTargetScenario):
 
 class ProjectileDamageCloseRangeScenario(StaticTargetScenario):
     """
-    PROJ360-DMG-010: Damage at Close Range (100px / 10% of max range)
+    PROJECTILE-DMG-010: Damage at Close Range (100px / 10% of max range)
 
     Tests that projectiles deal consistent full damage at close range.
     Unlike some weapon systems, projectiles don't have damage falloff.
     """
 
     metadata = TestMetadata(
-        test_id="PROJ360-DMG-010",
+        test_id="PROJECTILE-DMG-010",
         category="Projectile Weapons",
         subcategory="Damage",
         name="Projectile Damage - Close Range (100px / 10%)",
@@ -473,14 +473,14 @@ class ProjectileDamageCloseRangeScenario(StaticTargetScenario):
 
 class ProjectileDamageMidRangeScenario(StaticTargetScenario):
     """
-    PROJ360-DMG-050: Damage at Mid-Range (500px / 50% of max range)
+    PROJECTILE-DMG-050: Damage at Mid-Range (500px / 50% of max range)
 
     Tests that projectiles maintain full damage at mid-range.
     Travel time increases but damage remains constant.
     """
 
     metadata = TestMetadata(
-        test_id="PROJ360-DMG-050",
+        test_id="PROJECTILE-DMG-050",
         category="Projectile Weapons",
         subcategory="Damage",
         name="Projectile Damage - Mid Range (500px / 50%)",
@@ -532,14 +532,14 @@ class ProjectileDamageMidRangeScenario(StaticTargetScenario):
 
 class ProjectileDamageLongRangeScenario(StaticTargetScenario):
     """
-    PROJ360-DMG-090: Damage at Long Range (900px / 90% of max range)
+    PROJECTILE-DMG-090: Damage at Long Range (900px / 90% of max range)
 
     Tests that projectiles maintain full damage even at edge of range.
     Maximum travel time but damage remains consistent.
     """
 
     metadata = TestMetadata(
-        test_id="PROJ360-DMG-090",
+        test_id="PROJECTILE-DMG-090",
         category="Projectile Weapons",
         subcategory="Damage",
         name="Projectile Damage - Long Range (900px / 90%)",
