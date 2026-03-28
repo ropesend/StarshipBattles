@@ -531,12 +531,18 @@ class PlanetGenerator:
         resources = {}
 
         log_mass = math.log10(max(mass, 1.0))
-        size_factor = (log_mass - cfg.min_log_mass) / (cfg.max_log_mass - cfg.min_log_mass)
-        size_factor = max(0.0, min(1.0, size_factor))
+        sf_linear = (log_mass - cfg.min_log_mass) / (cfg.max_log_mass - cfg.min_log_mass)
+        sf_linear = max(0.001, min(1.0, sf_linear))
+        # Exponential ramp: sf^2 provides a base floor, plus a steep power-law
+        # ramp that creates ~1000x range between Ceres and Jupiter.
+        # C=24.8 calibrated so f(Jupiter) / f(Ceres) ~ 1000.
+        _RAMP_C = 24.8
+        size_factor = sf_linear ** 2 * (1.0 + _RAMP_C * sf_linear ** 4)
 
         # Earth-mass size_factor for baseline calibration
         earth_log = math.log10(MASS_EARTH)
-        earth_size_factor = (earth_log - cfg.min_log_mass) / (cfg.max_log_mass - cfg.min_log_mass)
+        earth_sf_linear = (earth_log - cfg.min_log_mass) / (cfg.max_log_mass - cfg.min_log_mass)
+        earth_size_factor = earth_sf_linear ** 2 * (1.0 + _RAMP_C * earth_sf_linear ** 4)
 
         type_name = planet_type.name
 

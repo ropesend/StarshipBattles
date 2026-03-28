@@ -245,7 +245,7 @@
 
         "quantity": {
             "description": "Resource quantity parameters. earth_mass_baseline is the average total quantity per resource for an Earth-mass planet. Quantity scales proportionally with mass.",
-            "earth_mass_baseline": 10000000,
+            "earth_mass_baseline": 250000000,
             "determinism_weight": 0.7,
             "randomness_weight": 0.3,
             "minimum_floor": 10000
