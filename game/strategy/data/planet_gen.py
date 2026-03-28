@@ -460,9 +460,16 @@ class PlanetGenerator:
 
         # Gas Giants & Ice Giants (> 10 Earth Masses approx)
         if mass > cfg.giant_min:
-            # Chthonian: Large stripped core. High Temp OR Low Pressure (stripped)
+            # Chthonian: stripped giant core. Very hot giants close to stars
+            # have their atmospheres stripped away. Probability increases
+            # with temperature — represents proximity to stellar radiation.
             if temp > 600 and pressure < cfg.chthonian_max:
                 return PlanetType.CHTHONIAN
+            if temp > 300:
+                # Hotter giants have higher stripping chance (up to ~30% at 1500K+)
+                strip_chance = min(0.30, (temp - 300) / 4000)
+                if random.random() < strip_chance:
+                    return PlanetType.CHTHONIAN
 
             if mass > cfg.gas_giant_min:
                 return PlanetType.JOVIAN

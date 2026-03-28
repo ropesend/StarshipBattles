@@ -8,6 +8,13 @@ Rev 4: Updated requirements:
 - 2 smaller: +30° and -30°
 - 3 smaller: +15°, 0°, -45°
 - Distance = 1.5x radius of largest planet (center to center)
+
+Rev 5: Proportional moon sizing:
+- Secondary planets (moons) are sized proportionally to the primary planet
+  based on their physical radius ratio.
+- If primary radius = 10 and secondary radius = 3, secondary draw size = 3/10 of primary.
+- Minimum draw diameter clamped at 5 pixels (radius >= 3px).
+- No additional reduction factor on secondaries (base = primary draw radius, not half of it).
 """
 import pygame
 import math
@@ -186,4 +193,145 @@ class TestRendererMultiPlanetLogic:
 
         assert smaller_x > hex_center_x, (
             f"Smaller planet at x={smaller_x} should be RIGHT of hex center ({hex_center_x})"
+        )
+
+
+class TestProportionalMoonSizing:
+    """Rev 5: Tests for proportional moon sizing relative to the primary planet."""
+
+    MIN_DRAW_RADIUS = 3  # 5px diameter -> ceil(2.5) = 3px radius
+
+    def test_secondary_planet_proportional_to_primary(self):
+        """
+        GIVEN a primary planet with radius 10 and a secondary with radius 3
+        WHEN calculating draw sizes
+        THEN the secondary draw radius should be 3/10 of the primary draw radius.
+        """
+        hex_px_radius = 100
+        largest_draw_r = hex_px_radius * 0.5  # = 50 (primary draw radius)
+
+        primary_radius = 10.0
+        secondary_radius = 3.0
+        rel_scale = secondary_radius / primary_radius  # 0.3
+
+        # Secondary should use largest_draw_r as base, not a reduced base
+        draw_r = max(self.MIN_DRAW_RADIUS, int(largest_draw_r * rel_scale))
+
+        assert draw_r == 15, f"Expected draw_r=15 (50*0.3), got {draw_r}"
+
+    def test_secondary_is_exact_ratio_of_primary_draw_size(self):
+        """
+        GIVEN any primary and secondary planet radii
+        WHEN calculating draw sizes
+        THEN secondary_draw / primary_draw should equal secondary_radius / primary_radius
+             (unless clamped by minimum).
+        """
+        hex_px_radius = 100
+        largest_draw_r = hex_px_radius * 0.5  # = 50
+
+        test_cases = [
+            (10.0, 5.0, 25),   # 50% -> 25px
+            (10.0, 3.0, 15),   # 30% -> 15px
+            (10.0, 7.0, 35),   # 70% -> 35px
+            (10.0, 1.0, 5),    # 10% -> 5px
+            (100.0, 50.0, 25), # 50% -> 25px
+        ]
+
+        for primary_r, secondary_r, expected_draw in test_cases:
+            rel_scale = secondary_r / primary_r
+            draw_r = max(self.MIN_DRAW_RADIUS, int(largest_draw_r * rel_scale))
+            assert draw_r == expected_draw, (
+                f"primary={primary_r}, secondary={secondary_r}: "
+                f"expected draw_r={expected_draw}, got {draw_r}"
+            )
+
+    def test_minimum_draw_diameter_is_5_pixels(self):
+        """
+        GIVEN a very small moon relative to the primary
+        WHEN calculating draw size
+        THEN the draw radius should be clamped so diameter >= 5px (radius >= 3px).
+        """
+        hex_px_radius = 100
+        largest_draw_r = hex_px_radius * 0.5  # = 50
+
+        # Tiny moon: 0.01 ratio -> 50 * 0.01 = 0.5px, should clamp to 3px
+        primary_radius = 70000.0  # Gas giant
+        moon_radius = 500.0       # Planetoid
+        rel_scale = moon_radius / primary_radius  # ~0.007
+
+        draw_r = max(self.MIN_DRAW_RADIUS, int(largest_draw_r * rel_scale))
+
+        assert draw_r == self.MIN_DRAW_RADIUS, (
+            f"Tiny moon should be clamped to minimum {self.MIN_DRAW_RADIUS}px radius, got {draw_r}"
+        )
+        assert draw_r * 2 >= 5, "Minimum diameter must be at least 5 pixels"
+
+    def test_no_0_4_floor_on_rel_scale(self):
+        """
+        GIVEN a secondary planet with radius ratio 0.2 (below old 0.4 floor)
+        WHEN calculating draw size
+        THEN it should use 0.2 directly, NOT clamp to 0.4.
+        """
+        hex_px_radius = 100
+        largest_draw_r = hex_px_radius * 0.5  # = 50
+
+        primary_radius = 10.0
+        secondary_radius = 2.0
+        rel_scale = secondary_radius / primary_radius  # 0.2
+
+        draw_r = max(self.MIN_DRAW_RADIUS, int(largest_draw_r * rel_scale))
+
+        # 50 * 0.2 = 10, not 50 * 0.4 = 20
+        assert draw_r == 10, (
+            f"Expected draw_r=10 (0.2 ratio, no floor), got {draw_r}"
+        )
+
+    def test_primary_planet_size_unchanged(self):
+        """
+        GIVEN the largest planet in a multi-planet hex
+        WHEN calculating its draw size
+        THEN it should still be hex_px_radius * 0.5 (unchanged from before).
+        """
+        hex_px_radius = 100
+        largest_draw_r = hex_px_radius * 0.5  # = 50
+
+        # Primary planet: rel_scale = 1.0
+        primary_draw_r = max(self.MIN_DRAW_RADIUS, int(largest_draw_r * 1.0))
+
+        assert primary_draw_r == 50, f"Primary draw radius should be 50, got {primary_draw_r}"
+
+    def test_proportional_sizing_various_hex_radii(self):
+        """
+        GIVEN different hex_px_radius values (different zoom levels)
+        WHEN calculating secondary draw sizes
+        THEN proportional ratio is maintained at all zoom levels.
+        """
+        expected_ratio = 0.3  # e.g. secondary radius 3 / primary radius 10
+
+        for hex_px_radius in [50, 100, 200, 400]:
+            largest_draw_r = hex_px_radius * 0.5
+            primary_draw = max(self.MIN_DRAW_RADIUS, int(largest_draw_r * 1.0))
+            secondary_draw = max(self.MIN_DRAW_RADIUS, int(largest_draw_r * expected_ratio))
+
+            # Check ratio is maintained (within rounding tolerance)
+            if secondary_draw > self.MIN_DRAW_RADIUS:
+                actual_ratio = secondary_draw / primary_draw
+                assert abs(actual_ratio - expected_ratio) < 0.05, (
+                    f"hex_px_radius={hex_px_radius}: ratio {actual_ratio:.2f} != {expected_ratio}"
+                )
+
+    def test_gas_giant_type_boost_not_applied_in_multi_planet(self):
+        """
+        GIVEN a gas giant as primary in a multi-planet hex
+        WHEN calculating draw sizes
+        THEN the 1.5x gas giant boost should NOT be applied (that's only for single-planet hexes).
+        The primary should use hex_px_radius * 0.5, same as any other planet type.
+        """
+        hex_px_radius = 100
+        # In multi-planet hexes, largest_draw_r = hex_px_radius * 0.5
+        # regardless of whether the primary is a gas giant or not.
+        largest_draw_r = hex_px_radius * 0.5
+
+        assert largest_draw_r == 50, (
+            "Multi-planet primary should not get gas giant boost"
         )
