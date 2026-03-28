@@ -277,12 +277,17 @@ class EventLogWindow(UIWindow):
         # Check header buttons for sort/swap changes
         header_result = self.virtual_table.check_header_presses()
         swap_col = header_result.get('swap_column')
+        sort_col = header_result.get('sort_column')
 
         if swap_col:
             col_dict, direction = swap_col
             self.column_manager.swap_column(col_dict['id'], direction)
             self.virtual_table.rebuild_headers()
             self.virtual_table.rebuild_row_pool()
+            self._rebuild_list()
+        elif sort_col:
+            self.column_manager.set_sort(sort_col)
+            self.virtual_table.rebuild_headers()
             self._rebuild_list()
 
         # Update visible rows if scroll position changed

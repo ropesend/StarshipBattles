@@ -474,28 +474,16 @@ class StrategyRenderer:
             if self.camera.zoom >= 0.5:
                 self._draw_system_details(screen, sys, world_pos)
 
-    def _get_star_asset_key(self, color: tuple) -> str:
-        """Map star RGB color to asset key for star image loading.
-
-        IMPORTANT: Evaluation order matters - conditions overlap.
-        White check must come before orange check.
+    def _get_star_asset_key(self, star) -> str:
+        """Get asset key for a star using star_type via the manifest.
 
         Args:
-            color: RGB tuple (r, g, b) with values 0-255
+            star: Star object with star_type attribute
 
         Returns:
-            Asset key: 'yellow', 'red', 'blue', 'white', or 'orange'
+            Asset key: 'yellow', 'red', 'blue', 'white', 'orange', 'neutron', or 'black'
         """
-        r, g, b = color[0], color[1], color[2]
-        if r > 200 and g < 100:
-            return 'red'
-        elif b > 200 and r < 100:
-            return 'blue'
-        elif r > 200 and g > 200 and b > 200:
-            return 'white'
-        elif r > 200 and g > 150:
-            return 'orange'
-        return 'yellow'
+        return self._asset_manager.get_star_asset_key_for_type(star.star_type.name)
 
     def _draw_colony_marker(self, screen, sys, world_pos):
         """Draw colony ownership marker at low zoom levels.
@@ -544,7 +532,7 @@ class StrategyRenderer:
             pygame.math.Vector2(hx + local_pixel_x, hy + local_pixel_y)
         )
 
-        asset_key = self._get_star_asset_key(star.color)
+        asset_key = self._get_star_asset_key(star)
         star_img = self._asset_manager.load_image('stars', asset_key)
         screen_star_r = self._hex_radius_to_screen(star.radius_hexes)
 

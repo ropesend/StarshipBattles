@@ -87,6 +87,7 @@ class StarListWindow(UIWindow):
 
         # Column definitions
         self.columns = [
+            {'id': 'icon', 'width': 50, 'title': '', 'type': 'image', 'visible': True},
             {'id': 'name', 'width': 150, 'title': 'Name', 'attr': 'name', 'visible': True},
             {'id': 'type', 'width': 120, 'title': 'Type', 'func': get_star_type_display, 'visible': True},
             {'id': 'system', 'width': 120, 'title': 'System', 'func': get_system_name, 'visible': True},
@@ -331,6 +332,9 @@ class StarListWindow(UIWindow):
             self.virtual_table.rebuild_row_pool()
             self.refresh_list()
         elif header_result.get('sort_column'):
+            col_id = header_result.get('sort_column')
+            self.column_manager.set_sort(col_id)
+            self.virtual_table.rebuild_headers()
             self.refresh_list()
 
         # Presets
@@ -363,17 +367,18 @@ class StarListWindow(UIWindow):
                 return
 
     def _handle_slider_sync(self):
-        """Sync slider values to text boxes."""
+        """Sync slider values to text boxes (only when slider moved)."""
         for key in ('mass', 'temperature', 'luminosity', 'age', 'radius_hexes'):
-            if key not in self.ui_filters:
+            f = self.ui_filters.get(key)
+            if not f:
                 continue
-            f = self.ui_filters[key]
             for which in ('min', 'max'):
+                slider = f[which]
+                if not slider.has_moved_recently:
+                    continue
                 txt_box = f[f'{which}_txt']
                 if not txt_box.is_focused:
-                    new_txt = f"{f[which].get_current_value():.1f}"
-                    if txt_box.get_text() != new_txt:
-                        txt_box.set_text(new_txt)
+                    txt_box.set_text(f"{slider.get_current_value():.1f}")
 
     def _handle_column_toggles(self):
         """Handle column visibility toggles."""

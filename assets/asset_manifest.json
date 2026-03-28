@@ -3,10 +3,20 @@
     "black": "assets/Images/Stellar Objects/Stars/StarBlackAsset.png",
     "blue": "assets/Images/Stellar Objects/Stars/StarBlueAsset.png",
     "neutron": "assets/Images/Stellar Objects/Stars/StarNeutronAsset.png",
-    "orange": "assets/Images/Stellar Objects/Stars/star_orange_large_lp.png",
+    "orange": "assets/Images/Stellar Objects/Stars/StarOrangeAsset.png",
     "red": "assets/Images/Stellar Objects/Stars/StarRedAsset.png",
     "white": "assets/Images/Stellar Objects/Stars/StarWhiteAsset.png",
     "yellow": "assets/Images/Stellar Objects/Stars/StarYellowAsset.png"
+  },
+  "star_type_assets": {
+    "MAIN_SEQUENCE": "yellow",
+    "RED_GIANT": "red",
+    "BLUE_GIANT": "blue",
+    "WHITE_DWARF": "white",
+    "RED_DWARF": "red",
+    "NEUTRON_STAR": "neutron",
+    "BLACK_HOLE": "black",
+    "BROWN_DWARF": "orange"
   },
   "planets": {
     "terran": [

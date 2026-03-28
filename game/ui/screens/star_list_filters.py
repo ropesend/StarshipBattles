@@ -27,7 +27,7 @@ def gather_stars(galaxy):
 
         for star in system.stars:
             star._cached_name_lower = star.name.lower()
-            star._cached_type_category = star.star_type.name
+            star._cached_type_category = star.star_type.name.replace('_', ' ').title()
             star._cached_system_name = system.name
             star._cached_system_global_location = system.global_location
             star._cached_planet_count = planet_count

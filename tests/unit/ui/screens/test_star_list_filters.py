@@ -70,7 +70,7 @@ class TestGatherStars:
         result = gather_stars(galaxy)
         s = result[0]
         assert s._cached_name_lower == "sol"
-        assert s._cached_type_category == "MAIN_SEQUENCE"
+        assert s._cached_type_category == "Main Sequence"
         assert s._cached_system_name == "Solar"
         assert s._cached_system_global_location == HexCoord(10, 20)
         assert s._cached_planet_count == 1
@@ -114,7 +114,7 @@ class TestFilterStars:
         return gather_stars(galaxy)
 
     def _all_types_enabled(self):
-        return {t.name: True for t in StarType}
+        return {t.name.replace('_', ' ').title(): True for t in StarType}
 
     def test_no_filters(self):
         stars = self._gathered_stars()
@@ -134,7 +134,7 @@ class TestFilterStars:
     def test_type_filter(self):
         stars = self._gathered_stars()
         types = self._all_types_enabled()
-        types["RED_GIANT"] = False
+        types["Red Giant"] = False
         result = filter_stars(stars, "", types,
                               0, 100, 0, 1e6, 0, 1e6, 0, 1.5e10, 1, 6)
         assert len(result) == 2
