@@ -247,16 +247,17 @@ class StarGenerator:
         """
         Determine star type via weighted roll, then set physical properties.
 
-        Returns (StarType, Radius_Solar, Temperature_K, Luminosity_Solar, Color).
-        The generated mass informs properties but does not gate type selection.
+        Returns (StarType, Mass_Solar, Radius_Solar, Temperature_K, Luminosity_Solar, Color).
+        Mass may be adjusted to be consistent with the rolled type.
         """
         # Roll for type directly using weighted probabilities
         star_type = self._roll_star_type()
 
         # Set properties based on type, using mass as a seed for variation
         if star_type == StarType.BLUE_GIANT:
-            # Massive hot stars — override mass upward if needed
-            mass = max(mass, random.uniform(8, 50))
+            # Massive hot stars — includes B-type main sequence (3-8 Msol)
+            # through to true supergiants (50+ Msol)
+            mass = max(mass, random.uniform(3, 50))
             luminosity = mass ** 3.5 * random.uniform(1.5, 5.0)
             radius = mass ** 0.8 * random.uniform(5, 20)
             temperature = max(10000, random.uniform(15000, 40000))
@@ -285,7 +286,8 @@ class StarGenerator:
             color = (140, 60, 40)
 
         elif star_type == StarType.WHITE_DWARF:
-            mass = max(mass, random.uniform(0.5, 1.4))
+            mass = min(mass, 1.4)  # Chandrasekhar limit
+            mass = max(mass, 0.5)  # Minimum WD mass
             radius = 0.01  # Earth-sized
             temperature = random.uniform(8000, 40000)
             luminosity = (radius ** 2) * ((temperature / SOLAR_TEMP_K) ** 4)
@@ -313,7 +315,7 @@ class StarGenerator:
             temperature = t_ratio * SOLAR_TEMP_K
             color = self._kelvin_to_rgb(temperature)
 
-        return star_type, radius, temperature, luminosity, color
+        return star_type, mass, radius, temperature, luminosity, color
 
     def _roll_star_type(self) -> StarType:
         """Select star type using weighted random roll."""
@@ -494,7 +496,7 @@ class StarGenerator:
 
         for i in range(count):
             c_mass = mass_fn(i)
-            c_type, c_rad, c_temp, c_lum, c_col = self._determine_type_and_radius(c_mass)
+            c_type, c_mass, c_rad, c_temp, c_lum, c_col = self._determine_type_and_radius(c_mass)
             c_hex = self._map_solar_radius_to_hex_radius(c_rad, c_type)
             c_spec = self._generate_spectrum(c_temp, c_lum)
 
@@ -574,7 +576,7 @@ class StarGenerator:
 
         # 3. Generate Primary
         p_mass = self._generate_mass_constrained(mass_min, mass_max)
-        p_type, p_rad, p_temp, p_lum, p_col = self._determine_type_and_radius(p_mass)
+        p_type, p_mass, p_rad, p_temp, p_lum, p_col = self._determine_type_and_radius(p_mass)
         p_hex = self._map_solar_radius_to_hex_radius(p_rad, p_type)
         p_spec = self._generate_spectrum(p_temp, p_lum)
 
@@ -619,7 +621,7 @@ class StarGenerator:
 
         # 2. Generate Primary
         p_mass = self._generate_mass(is_primary=True)
-        p_type, p_rad, p_temp, p_lum, p_col = self._determine_type_and_radius(p_mass)
+        p_type, p_mass, p_rad, p_temp, p_lum, p_col = self._determine_type_and_radius(p_mass)
         p_hex = self._map_solar_radius_to_hex_radius(p_rad, p_type)
         p_spec = self._generate_spectrum(p_temp, p_lum)
 

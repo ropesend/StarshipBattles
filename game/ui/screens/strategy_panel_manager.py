@@ -67,6 +67,7 @@ class StrategyWidgets:
     lbl_fleet: Any = None
     btn_next_fleet: Any = None
     btn_planets: Any = None
+    btn_stars: Any = None
     btn_empire: Any = None
     btn_research: Any = None
     btn_design: Any = None
@@ -268,36 +269,40 @@ def create_strategy_panels(
         relative_rect=pygame.Rect(main_start_x, 5, btn_w, 40), text="Planets",
         manager=manager, container=widgets.top_bar
     )
+    widgets.btn_stars = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect(main_start_x + 1*(btn_w+gap), 5, btn_w, 40), text="Stars",
+        manager=manager, container=widgets.top_bar
+    )
     widgets.btn_empire = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect(main_start_x + 1*(btn_w+gap), 5, btn_w, 40), text="Empire",
+        relative_rect=pygame.Rect(main_start_x + 2*(btn_w+gap), 5, btn_w, 40), text="Empire",
         manager=manager, container=widgets.top_bar
     )
     widgets.btn_research = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect(main_start_x + 2*(btn_w+gap), 5, btn_w, 40), text="Research",
+        relative_rect=pygame.Rect(main_start_x + 3*(btn_w+gap), 5, btn_w, 40), text="Research",
         manager=manager, container=widgets.top_bar
     )
     widgets.btn_design = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect(main_start_x + 3*(btn_w+gap), 5, btn_w, 40), text="Design",
+        relative_rect=pygame.Rect(main_start_x + 4*(btn_w+gap), 5, btn_w, 40), text="Design",
         manager=manager, container=widgets.top_bar
     )
     widgets.btn_build_queues = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect(main_start_x + 4*(btn_w+gap), 5, btn_w, 40), text="Build Yards",
+        relative_rect=pygame.Rect(main_start_x + 5*(btn_w+gap), 5, btn_w, 40), text="Build Yards",
         manager=manager, container=widgets.top_bar
     )
     widgets.btn_all_queues = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect(main_start_x + 5*(btn_w+gap), 5, btn_w, 40), text="All Queues",
+        relative_rect=pygame.Rect(main_start_x + 6*(btn_w+gap), 5, btn_w, 40), text="All Queues",
         manager=manager, container=widgets.top_bar
     )
     widgets.btn_menu = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect(main_start_x + 6*(btn_w+gap), 5, btn_w, 40), text="Menu",
+        relative_rect=pygame.Rect(main_start_x + 7*(btn_w+gap), 5, btn_w, 40), text="Menu",
         manager=manager, container=widgets.top_bar
     )
     widgets.btn_events = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect(main_start_x + 7*(btn_w+gap), 5, btn_w, 40), text="Log",
+        relative_rect=pygame.Rect(main_start_x + 8*(btn_w+gap), 5, btn_w, 40), text="Log",
         manager=manager, container=widgets.top_bar
     )
     widgets.btn_next_turn = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect(main_start_x + 8*(btn_w+gap), 5, 150, 40), text="End Turn",
+        relative_rect=pygame.Rect(main_start_x + 9*(btn_w+gap), 5, 150, 40), text="End Turn",
         manager=manager, container=widgets.top_bar
     )
 

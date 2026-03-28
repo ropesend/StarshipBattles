@@ -417,15 +417,16 @@ class TestStarGenerator:
         """_determine_type_and_radius returns a valid StarType enum."""
         random.seed(456)
         for mass in [0.3, 0.7, 1.0, 2.0, 10.0, 50.0]:
-            star_type, _, _, _, _ = generator._determine_type_and_radius(mass)
+            star_type, _, _, _, _, _ = generator._determine_type_and_radius(mass)
             assert isinstance(star_type, StarType)
             assert star_type in list(StarType)
 
     def test_determine_type_returns_valid_star_type(self, generator):
-        """Type determination returns a valid StarType for any mass."""
+        """Type determination returns a valid StarType for any mass and consistent mass."""
         for mass in [0.05, 0.3, 1.0, 5.0, 30.0]:
-            star_type, radius, temp, lum, color = generator._determine_type_and_radius(mass)
+            star_type, adj_mass, radius, temp, lum, color = generator._determine_type_and_radius(mass)
             assert isinstance(star_type, StarType)
+            assert adj_mass > 0
             assert radius >= 0
             assert temp >= 0
             assert lum >= 0

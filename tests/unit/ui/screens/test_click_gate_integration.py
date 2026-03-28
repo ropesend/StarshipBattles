@@ -47,6 +47,7 @@ def _create_strategy_event_router():
     wm = MagicMock()
     wm.fleet_orders_window = None
     wm.planet_list_window = None
+    wm.star_list_window = None
     wm.fleet_report_window = None
     wm.transfer_dialog = None
     wm.build_queue_list_window = None

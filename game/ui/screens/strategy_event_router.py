@@ -64,6 +64,8 @@ class StrategyEventRouter:
             return True
         if wm.planet_list_window is not None:
             return True
+        if wm.star_list_window is not None:
+            return True
         if wm.fleet_report_window is not None:
             return True
         if wm.transfer_dialog is not None:
@@ -157,6 +159,8 @@ class StrategyEventRouter:
 
         if event.ui_element == ui.btn_planets:
             ui.open_planet_list()
+        elif event.ui_element == ui.btn_stars:
+            ui.open_star_list()
         elif event.ui_element == ui.btn_design:
             ui.scene.on_design_click()
         elif event.ui_element == ui.btn_build_queues:
@@ -239,6 +243,8 @@ class StrategyEventRouter:
 
         if event.ui_element == wm.fleet_orders_window:
             wm.fleet_orders_window = None
+        elif event.ui_element == wm.star_list_window:
+            wm._on_star_list_closed()
         elif event.ui_element == wm.fleet_report_window:
             wm.fleet_report_window = None
         elif event.ui_element == wm.transfer_dialog:
@@ -316,6 +322,7 @@ class StrategyEventRouter:
         blocking_windows = [
             ('fleet_orders_window', wm.fleet_orders_window),
             ('planet_list_window', wm.planet_list_window),
+            ('star_list_window', wm.star_list_window),
             ('fleet_report_window', wm.fleet_report_window),
             ('transfer_dialog', wm.transfer_dialog),
             ('build_queue_list_window', wm.build_queue_list_window),

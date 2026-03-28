@@ -14,6 +14,7 @@ import pygame_gui.elements as ui
 from game.ui.screens.fleet_selection_window import FleetSelectionWindow
 from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 from game.ui.screens.planet_list_window import PlanetListWindow
+from game.ui.screens.star_list_window import StarListWindow
 from game.ui.screens.system_selection_window import SystemSelectionWindow
 from game.ui.screens.fleet_orders_window import FleetOrdersWindow
 from game.ui.screens.fleet_report_window import FleetReportWindow
@@ -79,6 +80,7 @@ class StrategyWindowManager:
 
         # Window references
         self.planet_list_window = None
+        self.star_list_window = None
         self.build_queue_list_window = None
         self.empire_build_queue_window = None
         self.event_log_window = None
@@ -135,6 +137,44 @@ class StrategyWindowManager:
     def _on_planet_list_closed(self) -> None:
         """Callback when planet list window is closed."""
         self.planet_list_window = None
+
+    # =========================================================================
+    # Star List Window (PROJ-231)
+    # =========================================================================
+
+    def open_star_list(self) -> None:
+        """Open the Star List Window."""
+        if self.star_list_window:
+            self.star_list_window.kill()
+
+        w, h = self.width * 0.9, self.height * 0.9
+        rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
+
+        galaxy = self.scene.galaxy
+
+        self.star_list_window = StarListWindow(
+            rect,
+            self.manager,
+            galaxy,
+            on_close_callback=self._on_star_list_closed,
+            on_navigate_callback=self._on_star_navigate,
+        )
+
+    def _on_star_list_closed(self) -> None:
+        """Callback when star list window is closed."""
+        self.star_list_window = None
+
+    def _on_star_navigate(self, global_hex) -> None:
+        """Navigate camera to star's system location and close star list.
+
+        Args:
+            global_hex: HexCoord of the system to navigate to.
+        """
+        if self.star_list_window:
+            self.star_list_window.kill()
+
+        if hasattr(self.scene, '_camera_nav'):
+            self.scene._camera_nav.center_on_hex(global_hex)
 
     # =========================================================================
     # Build Queue List Window

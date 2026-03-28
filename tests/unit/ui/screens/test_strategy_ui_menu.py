@@ -36,6 +36,7 @@ def _make_strategy_ui():
     ui.btn_menu = MagicMock()
     ui.btn_menu.get_abs_rect.return_value = pygame.Rect(700, 5, 100, 40)
     ui.btn_planets = MagicMock()
+    ui.btn_stars = MagicMock()
     ui.btn_design = MagicMock()
     ui.btn_build_queues = MagicMock()
     ui.btn_all_queues = MagicMock()
@@ -55,6 +56,7 @@ def _make_strategy_ui():
     ui.window_manager = MagicMock()
     ui.window_manager.fleet_orders_window = None
     ui.window_manager.planet_list_window = None
+    ui.window_manager.star_list_window = None
     ui.window_manager.build_queue_list_window = None
     ui.window_manager.empire_build_queue_window = None
     ui.window_manager.fleet_report_window = None
@@ -346,6 +348,7 @@ class TestMenuPanelModal:
         # No other modals open
         ui.fleet_orders_window = None
         ui.planet_list_window = None
+        ui.star_list_window = None
         ui.fleet_report_window = None
         ui.transfer_dialog = None
         ui.build_queue_list_window = None

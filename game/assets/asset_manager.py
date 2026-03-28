@@ -116,6 +116,21 @@ class AssetManager(metaclass=SingletonMeta):
              return group[idx]
         return group[0]
 
+    def get_star_asset_key_for_type(self, star_type_name: str) -> str:
+        """Get the star asset key for a given StarType enum name.
+
+        Uses the 'star_type_assets' section of the manifest to map
+        StarType names to star image asset keys.
+
+        Args:
+            star_type_name: StarType enum name (e.g., 'MAIN_SEQUENCE', 'RED_GIANT')
+
+        Returns:
+            Asset key string (e.g., 'yellow', 'red', 'blue')
+        """
+        type_assets = self.manifest.get('star_type_assets', {})
+        return type_assets.get(star_type_name, 'yellow')
+
     def get_star_color_key(self, rgb: tuple) -> str:
         """
         Determine the star asset key based on RGB color values.
