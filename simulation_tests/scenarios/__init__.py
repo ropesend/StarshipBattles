@@ -70,6 +70,17 @@ from simulation_tests.scenarios.modifier_scenarios import (
     AccuracyBoostScenario,
     TurretArcSetScenario,
 )
+from simulation_tests.scenarios.propulsion_scenarios import (
+    PropEngineAccelerationScenario,
+    PropDualEngineScenario,
+    PropThrustMassRatioScenario,
+    PropThrusterTurnRateScenario,
+    PropThrusterRotationScenario,
+    PropDualThrusterScenario,
+    PropNoEngineStationaryScenario,
+    PropThrusterOnlyScenario,
+    PropMassAffectsTurnRateScenario,
+)
 
 __all__ = [
     'TestScenario',
@@ -105,4 +116,14 @@ __all__ = [
     'ThrustMultiplierScenario',
     'AccuracyBoostScenario',
     'TurretArcSetScenario',
+    # Propulsion scenarios
+    'PropEngineAccelerationScenario',
+    'PropDualEngineScenario',
+    'PropThrustMassRatioScenario',
+    'PropThrusterTurnRateScenario',
+    'PropThrusterRotationScenario',
+    'PropDualThrusterScenario',
+    'PropNoEngineStationaryScenario',
+    'PropThrusterOnlyScenario',
+    'PropMassAffectsTurnRateScenario',
 ]

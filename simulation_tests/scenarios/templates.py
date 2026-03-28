@@ -9,6 +9,7 @@ Template Hierarchy:
   - StaticTargetScenario: Attacker vs stationary target
   - DuelScenario: Two ships engaging each other
   - PropulsionScenario: Single ship movement/physics tests
+  - ResourceScenario: Resource consumption/depletion/regeneration tests
 
 Usage Example:
     class MyWeaponTest(StaticTargetScenario):
@@ -627,12 +628,230 @@ class PropulsionScenario(TestScenario):
             ))
         return checks
 
+    def _propulsion_data_checks(self, expected_mass, expected_thrust):
+        """Common data checks for propulsion scenarios."""
+        from simulation_tests.scenarios.validation import check_exact
+        return [
+            check_exact("Ship Mass", expected_mass, self.ship.mass),
+            check_exact("Engine Thrust", expected_thrust, self.ship.total_thrust),
+        ]
+
+    def _propulsion_outcome_checks(self, expected_max_speed, expected_final_speed, expected_distance=None):
+        """Common outcome checks for propulsion scenarios."""
+        from simulation_tests.scenarios.validation import check_approx
+        checks = [
+            check_approx("Max Speed", expected_max_speed, self.ship.max_speed),
+            check_approx("Final Speed", expected_final_speed, self.final_velocity.length()),
+        ]
+        if expected_distance is not None:
+            checks.append(check_approx("Distance", expected_distance, self.distance_traveled, tolerance=0.02))
+        return checks
+
     def verify(self, battle_engine) -> bool:
         """
         Legacy pass/fail for un-migrated scenarios.
 
         New scenarios should implement validate() instead.
         """
+        self.collect_results(battle_engine)
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement validate() or verify()"
+        )
+
+
+# ============================================================================
+# RESOURCE SCENARIO TEMPLATE
+# ============================================================================
+
+class ResourceScenario(TestScenario):
+    """
+    Base template for resource consumption/depletion/regeneration tests.
+
+    Eliminates ~40 lines of duplicate setup/update/collect_results code per test.
+    Used by: Fuel consumption tests, energy weapon tests, ammo weapon tests.
+
+    Subclass Configuration (required):
+    - ship_file: str - Filename of the primary ship JSON
+    - resource_type: str - Resource to track ("fuel", "energy", "ammo")
+
+    Subclass Configuration (optional):
+    - thrust_forward: bool - Auto-thrust each tick (default: False)
+    - force_fire: bool - Auto-fire weapon each tick (default: False)
+    - target_ship_file: str - Target ship filename (required when force_fire=True)
+    - target_distance: float - Distance to place target (default: 10)
+
+    Automatic Setup:
+    - Loads primary ship at origin
+    - Optionally loads target ship at (target_distance, 0)
+    - Stores initial resource value
+    - Creates time-based end condition
+    - Sets attacker's current_target if target exists
+
+    Automatic Update:
+    - Applies thrust if thrust_forward=True
+    - Forces fire if force_fire=True
+
+    Measurement Attributes (populated by collect_results):
+    - initial_value: Resource value before test
+    - final_value: Resource value after test
+    - value_consumed: initial_value - final_value
+    - final_velocity: Ship speed at end of test
+
+    Results Dict Keys:
+    - ticks_run, initial_value, final_value, value_consumed, final_velocity
+
+    Example Usage:
+        class FuelConsumptionTest(ResourceScenario):
+            metadata = TestMetadata(...)
+            ship_file = "Test_Engine_Ship.json"
+            resource_type = "fuel"
+            thrust_forward = True
+
+            def validate(self, engine) -> list:
+                checks = self._template_preconditions()
+                checks.append(check_approx("Final Fuel", 995.0, self.final_value, tolerance=0.01))
+                return checks
+    """
+
+    # Configuration - subclasses must set these
+    ship_file: Optional[str] = None
+    resource_type: Optional[str] = None  # "fuel", "energy", "ammo"
+
+    # Optional configuration
+    thrust_forward: bool = False
+    force_fire: bool = False
+    target_ship_file: Optional[str] = None  # Required when force_fire=True
+    target_distance: float = 10  # Distance to place target ship
+
+    # Measurement attributes (populated by collect_results)
+    initial_value: float = 0
+    final_value: float = 0
+    value_consumed: float = 0
+
+    def setup(self, battle_engine):
+        """
+        Standard setup for resource scenarios.
+
+        Loads ship, optionally loads target, stores initial resource value,
+        starts battle with time-based end condition.
+        """
+        # Validate configuration
+        if self.ship_file is None:
+            raise ValueError(f"{self.__class__.__name__} must set 'ship_file' attribute")
+        if self.resource_type is None:
+            raise ValueError(f"{self.__class__.__name__} must set 'resource_type' attribute")
+        if self.force_fire and self.target_ship_file is None:
+            raise ValueError(
+                f"{self.__class__.__name__} has force_fire=True but no 'target_ship_file' set"
+            )
+
+        # Load primary ship
+        self.ship = self._load_ship(self.ship_file)
+        self.ship.position = pygame.math.Vector2(0, 0)
+        self.ship.angle = 0
+
+        # Store initial resource value
+        self.initial_value = self.ship.resources.get_value(self.resource_type)
+
+        # Optionally load target ship
+        self.target = None
+        if self.target_ship_file is not None:
+            self.target = self._load_ship(self.target_ship_file)
+            self.target.position = pygame.math.Vector2(self.target_distance, 0)
+            self.target.angle = 0
+            self.initial_hp = self.target.hp
+
+        # Store start position for distance calculations
+        self.start_position = pygame.math.Vector2(self.ship.position)
+
+        # Create end condition
+        end_condition = self._create_end_condition()
+
+        # Start battle
+        team_a = [self.ship]
+        team_b = [self.target] if self.target else []
+
+        # Determine seed (support UI override)
+        seed_to_use = getattr(self, '_override_seed', None)
+        if seed_to_use is None:
+            seed_to_use = self.metadata.seed
+
+        battle_engine.start(team_a, team_b,
+                           seed=seed_to_use,
+                           end_condition=end_condition)
+
+        # Set targeting if target exists
+        if self.target is not None:
+            self.ship.current_target = self.target
+
+        # Call custom setup hook if defined
+        if hasattr(self, 'custom_setup'):
+            self.custom_setup(battle_engine)
+
+    def update(self, battle_engine):
+        """
+        Standard update for resource scenarios.
+
+        Applies thrust and/or fires weapon each tick based on configuration.
+        """
+        if self.ship and self.ship.is_alive:
+            if self.thrust_forward:
+                self.ship.thrust_forward()
+            if self.force_fire:
+                self.ship.comp_trigger_pulled = True
+
+        # Call custom update hook if defined
+        if hasattr(self, 'custom_update'):
+            self.custom_update(battle_engine)
+
+    def collect_results(self, engine):
+        """
+        Populate measurement attributes for ResourceScenario.
+
+        Called automatically by _run_validation() before validate().
+        Stores resource values, consumption delta, velocity, and distance.
+        """
+        self.final_value = self.ship.resources.get_value(self.resource_type)
+        self.value_consumed = self.initial_value - self.final_value
+        self.final_velocity = self.ship.current_speed
+        final_position = pygame.math.Vector2(self.ship.position)
+        self.distance_traveled = final_position.distance_to(self.start_position)
+
+        self.results['ticks_run'] = engine.tick_counter
+        self.results['initial_value'] = self.initial_value
+        self.results['final_value'] = self.final_value
+        self.results['value_consumed'] = self.value_consumed
+        self.results['final_velocity'] = self.final_velocity
+        self.results['distance_traveled'] = self.distance_traveled
+
+        # Store damage dealt if target exists
+        if self.target is not None:
+            self.damage_dealt = self.initial_hp - self.target.hp
+            self.results['damage_dealt'] = self.damage_dealt
+
+        # Hook for subclasses to add extra results
+        if hasattr(self, '_collect_extra_results'):
+            self._collect_extra_results(engine)
+
+    def _template_preconditions(self):
+        """
+        Return automatic precondition checks for ResourceScenario.
+
+        Checks:
+        - Simulation ran (ticks > 0)
+        """
+        from simulation_tests.scenarios.validation import check_true
+        checks = []
+        ticks = self.results.get('ticks_run', 0)
+        checks.append(check_true(
+            "Simulation Ran",
+            ticks > 0,
+            actual=ticks,
+        ))
+        return checks
+
+    def verify(self, battle_engine) -> bool:
+        """Legacy pass/fail. New scenarios should implement validate()."""
         self.collect_results(battle_engine)
         raise NotImplementedError(
             f"{self.__class__.__name__} must implement validate() or verify()"

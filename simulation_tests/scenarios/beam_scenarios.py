@@ -316,6 +316,9 @@ class BeamAccuracyScenario(StaticTargetScenario):
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
         checks.append(check_exact("Beam Damage", self._beam_damage_expected, beam.damage))
         checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
         margin = HIGH_PRECISION_MARGIN if self.high_tick else STANDARD_MARGIN
@@ -500,6 +503,9 @@ class BeamMediumAccuracyErraticMidRangeScenario(StaticTargetScenario):
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
         checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
         checks.append(check_true(
             "Defense Reduces Hit Chance",
@@ -576,6 +582,9 @@ class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
         checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
         checks.append(check_true(
             "Defense Reduces Hit Chance",
@@ -646,6 +655,9 @@ class BeamOutOfRangeScenario(StaticTargetScenario):
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
         checks.append(check_exact("Distance Beyond Range", True, self.distance > beam.range,
                                   phase="data"))
         checks.append(check_exact("Damage Dealt", 0, self.damage_dealt, phase="outcome"))

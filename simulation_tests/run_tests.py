@@ -54,7 +54,6 @@ def discover_scenarios():
         'simulation_tests.scenarios.resource_scenarios',
         'simulation_tests.scenarios.defense_scenarios',
         'simulation_tests.scenarios.modifier_scenarios',
-        'simulation_tests.scenarios.example_beam_test',
     ]
 
     for module_name in scenario_modules:

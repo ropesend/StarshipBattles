@@ -4,7 +4,7 @@ Unit tests for Resource System test scenarios.
 Tests that each resource scenario:
 - Has correct metadata
 - Stores proper results during verification
-- Uses _load_ship() for ship loading
+- Uses ResourceScenario template correctly
 - Has appropriate pass criteria
 """
 import pytest
@@ -22,6 +22,7 @@ from simulation_tests.scenarios.resource_scenarios import (
     ProjectileAmmoDepletionScenario,
     SeekerAmmoConsumptionScenario
 )
+from simulation_tests.scenarios.templates import ResourceScenario
 
 
 class TestResourceScenarioMetadata:
@@ -132,6 +133,60 @@ class TestResourceScenarioMaxTicks:
             assert scenario.metadata.max_ticks == 100
 
 
+class TestResourceScenarioTemplateConfig:
+    """Tests that scenarios have correct template configuration."""
+
+    def test_fuel_scenarios_use_resource_template(self):
+        """Fuel scenarios should extend ResourceScenario."""
+        for ScenarioClass in [EngineFuelConsumptionScenario,
+                              EngineFuelDepletionScenario,
+                              EngineFuelRegenerationScenario]:
+            assert issubclass(ScenarioClass, ResourceScenario)
+
+    def test_energy_scenarios_use_resource_template(self):
+        """Energy scenarios should extend ResourceScenario."""
+        for ScenarioClass in [BeamEnergyConsumptionScenario,
+                              BeamEnergyDepletionScenario,
+                              BeamEnergyRegenerationScenario]:
+            assert issubclass(ScenarioClass, ResourceScenario)
+
+    def test_ammo_scenarios_use_resource_template(self):
+        """Ammo scenarios should extend ResourceScenario."""
+        for ScenarioClass in [ProjectileAmmoConsumptionScenario,
+                              ProjectileAmmoDepletionScenario,
+                              SeekerAmmoConsumptionScenario]:
+            assert issubclass(ScenarioClass, ResourceScenario)
+
+    def test_fuel_scenarios_track_fuel(self):
+        """Fuel scenarios should have resource_type='fuel'."""
+        for ScenarioClass in [EngineFuelConsumptionScenario,
+                              EngineFuelDepletionScenario,
+                              EngineFuelRegenerationScenario]:
+            scenario = ScenarioClass()
+            assert scenario.resource_type == "fuel"
+            assert scenario.thrust_forward is True
+
+    def test_energy_scenarios_track_energy(self):
+        """Energy scenarios should have resource_type='energy'."""
+        for ScenarioClass in [BeamEnergyConsumptionScenario,
+                              BeamEnergyDepletionScenario,
+                              BeamEnergyRegenerationScenario]:
+            scenario = ScenarioClass()
+            assert scenario.resource_type == "energy"
+            assert scenario.force_fire is True
+            assert scenario.target_ship_file is not None
+
+    def test_ammo_scenarios_track_ammo(self):
+        """Ammo scenarios should have resource_type='ammo'."""
+        for ScenarioClass in [ProjectileAmmoConsumptionScenario,
+                              ProjectileAmmoDepletionScenario,
+                              SeekerAmmoConsumptionScenario]:
+            scenario = ScenarioClass()
+            assert scenario.resource_type == "ammo"
+            assert scenario.force_fire is True
+            assert scenario.target_ship_file is not None
+
+
 class TestFuelScenarioResults:
     """Tests for fuel scenario result storage."""
 
@@ -153,7 +208,7 @@ class TestFuelScenarioResults:
         ship.angle = 0
         ship.is_alive = True
         ship.engine_throttle = 1.0
-        ship.layers = {}  # Empty layers dict for validation
+        ship.layers = {}
         ship.mass = 400.0
         ship.hp = 100
         ship.max_hp = 100
@@ -166,38 +221,37 @@ class TestFuelScenarioResults:
         engine.tick_counter = 500
         return engine
 
-    def test_fuel_consumption_stores_initial_fuel(self, mock_ship, mock_battle_engine):
-        """EngineFuelConsumptionScenario should store initial_fuel."""
+    def test_fuel_consumption_stores_initial_value(self, mock_ship, mock_battle_engine):
+        """EngineFuelConsumptionScenario should store initial_value."""
         scenario = EngineFuelConsumptionScenario()
         scenario.ship = mock_ship
-        scenario.initial_fuel = 1000.0
-        scenario.initial_velocity = 0.0
+        scenario.initial_value = 1000.0
         scenario.start_position = pygame.math.Vector2(0, 0)
-        scenario.results = {}
-
-        # Mock get_value to return final fuel
-        mock_ship.resources.get_value.return_value = 995.0
-
-        scenario.collect_results(mock_battle_engine)
-
-        assert 'initial_fuel' in scenario.results
-        assert scenario.results['initial_fuel'] == 1000.0
-
-    def test_fuel_consumption_stores_final_fuel(self, mock_ship, mock_battle_engine):
-        """EngineFuelConsumptionScenario should store final_fuel."""
-        scenario = EngineFuelConsumptionScenario()
-        scenario.ship = mock_ship
-        scenario.initial_fuel = 1000.0
-        scenario.initial_velocity = 0.0
-        scenario.start_position = pygame.math.Vector2(0, 0)
+        scenario.target = None
         scenario.results = {}
 
         mock_ship.resources.get_value.return_value = 995.0
 
         scenario.collect_results(mock_battle_engine)
 
-        assert 'final_fuel' in scenario.results
-        assert scenario.results['final_fuel'] == 995.0
+        assert 'initial_value' in scenario.results
+        assert scenario.results['initial_value'] == 1000.0
+
+    def test_fuel_consumption_stores_final_value(self, mock_ship, mock_battle_engine):
+        """EngineFuelConsumptionScenario should store final_value."""
+        scenario = EngineFuelConsumptionScenario()
+        scenario.ship = mock_ship
+        scenario.initial_value = 1000.0
+        scenario.start_position = pygame.math.Vector2(0, 0)
+        scenario.target = None
+        scenario.results = {}
+
+        mock_ship.resources.get_value.return_value = 995.0
+
+        scenario.collect_results(mock_battle_engine)
+
+        assert 'final_value' in scenario.results
+        assert scenario.results['final_value'] == 995.0
 
     def test_fuel_consumption_stores_test_id(self):
         """EngineFuelConsumptionScenario stores test_id on init."""
@@ -223,7 +277,7 @@ class TestEnergyScenarioResults:
         target.is_alive = True
         target.hp = 100
         target.max_hp = 200
-        target.layers = {}  # Empty layers dict for validation
+        target.layers = {}
         target.mass = 400.0
         return target
 
@@ -233,20 +287,17 @@ class TestEnergyScenarioResults:
         ship = Mock()
         ship.resources = mock_resources
         ship.position = pygame.math.Vector2(0, 0)
+        ship.current_speed = 0.0
         ship.angle = 0
         ship.is_alive = True
-        ship.weapon_systems = Mock()
-        ship.weapon_systems.fire_counts = {'test_beam_rapid_1dmg': 100}
-        ship.weapon_systems.hit_counts = {'test_beam_rapid_1dmg': 98}
-        ship.weapon_systems.total_damage_dealt = 98
-        ship.layers = {}  # Empty layers dict for validation
+        ship.layers = {}
         ship.mass = 400.0
         ship.hp = 100
         ship.max_hp = 100
         return ship
 
     @pytest.fixture
-    def mock_battle_engine(self, mock_target):
+    def mock_battle_engine(self):
         """Create mock battle engine."""
         engine = Mock()
         engine.tick_counter = 100
@@ -255,10 +306,11 @@ class TestEnergyScenarioResults:
     def test_energy_consumption_stores_shots_fired(self, mock_ship, mock_target, mock_battle_engine):
         """BeamEnergyConsumptionScenario should store shots_fired."""
         scenario = BeamEnergyConsumptionScenario()
-        scenario.attacker = mock_ship
+        scenario.ship = mock_ship
         scenario.target = mock_target
-        scenario.initial_energy = 100.0
-        scenario.initial_hp = 200  # Target's initial HP
+        scenario.initial_value = 100.0
+        scenario.initial_hp = 200
+        scenario.start_position = pygame.math.Vector2(0, 0)
         scenario.results = {}
 
         mock_ship.resources.get_value.return_value = 0.0
@@ -272,10 +324,11 @@ class TestEnergyScenarioResults:
     def test_energy_consumption_stores_damage_dealt(self, mock_ship, mock_target, mock_battle_engine):
         """BeamEnergyConsumptionScenario should store damage_dealt."""
         scenario = BeamEnergyConsumptionScenario()
-        scenario.attacker = mock_ship
+        scenario.ship = mock_ship
         scenario.target = mock_target
-        scenario.initial_energy = 100.0
-        scenario.initial_hp = 200  # Target's initial HP
+        scenario.initial_value = 100.0
+        scenario.initial_hp = 200
+        scenario.start_position = pygame.math.Vector2(0, 0)
         scenario.results = {}
 
         mock_ship.resources.get_value.return_value = 0.0
@@ -305,7 +358,7 @@ class TestAmmoScenarioResults:
         target.is_alive = True
         target.hp = 100
         target.max_hp = 200
-        target.layers = {}  # Empty layers dict for validation
+        target.layers = {}
         target.mass = 400.0
         return target
 
@@ -315,32 +368,30 @@ class TestAmmoScenarioResults:
         ship = Mock()
         ship.resources = mock_resources
         ship.position = pygame.math.Vector2(0, 0)
+        ship.current_speed = 0.0
         ship.angle = 0
         ship.is_alive = True
-        ship.weapon_systems = Mock()
-        ship.weapon_systems.fire_counts = {'test_proj_rapid': 100}
-        ship.weapon_systems.hit_counts = {'test_proj_rapid': 95}
-        ship.weapon_systems.total_damage_dealt = 95
-        ship.layers = {}  # Empty layers dict for validation
+        ship.layers = {}
         ship.mass = 400.0
         ship.hp = 100
         ship.max_hp = 100
         return ship
 
     @pytest.fixture
-    def mock_battle_engine(self, mock_target):
+    def mock_battle_engine(self):
         """Create mock battle engine."""
         engine = Mock()
         engine.tick_counter = 100
         return engine
 
-    def test_projectile_consumption_stores_initial_ammo(self, mock_ship, mock_target, mock_battle_engine):
-        """ProjectileAmmoConsumptionScenario should store initial_ammo."""
+    def test_projectile_consumption_stores_initial_value(self, mock_ship, mock_target, mock_battle_engine):
+        """ProjectileAmmoConsumptionScenario should store initial_value."""
         scenario = ProjectileAmmoConsumptionScenario()
-        scenario.attacker = mock_ship
+        scenario.ship = mock_ship
         scenario.target = mock_target
-        scenario.initial_ammo = 100.0
-        scenario.initial_hp = 200  # Target's initial HP
+        scenario.initial_value = 100.0
+        scenario.initial_hp = 200
+        scenario.start_position = pygame.math.Vector2(0, 0)
         scenario.results = {}
 
         mock_ship.resources.get_value.return_value = 0.0
@@ -348,19 +399,19 @@ class TestAmmoScenarioResults:
 
         scenario.collect_results(mock_battle_engine)
 
-        assert 'initial_ammo' in scenario.results
-        assert scenario.results['initial_ammo'] == 100.0
+        assert 'initial_value' in scenario.results
+        assert scenario.results['initial_value'] == 100.0
 
     def test_seeker_consumption_stores_launches(self, mock_ship, mock_target, mock_battle_engine):
         """SeekerAmmoConsumptionScenario should store launches."""
         scenario = SeekerAmmoConsumptionScenario()
-        scenario.attacker = mock_ship
+        scenario.ship = mock_ship
         scenario.target = mock_target
-        scenario.initial_ammo = 100.0
+        scenario.initial_value = 100.0
+        scenario.initial_hp = 200
+        scenario.start_position = pygame.math.Vector2(0, 0)
         scenario.results = {}
 
-        # Mock seeker fire counts
-        mock_ship.weapon_systems.fire_counts = {'test_seeker_rapid': 100}
         mock_ship.resources.get_value.return_value = 0.0
 
         scenario.collect_results(mock_battle_engine)

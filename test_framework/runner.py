@@ -15,7 +15,6 @@ from game.core.registry import RegistryManager, get_default_registry_provider
 from game.simulation.systems.battle_engine import BattleEngine
 from game.ai.ai_factory import AIControllerFactory
 from game.simulation.components.component import load_components, load_modifiers
-from game.simulation.entities.ship_loader import initialize_ship_data
 from simulation_tests.logging_config import get_logger, setup_combat_lab_logging
 
 # Setup logging

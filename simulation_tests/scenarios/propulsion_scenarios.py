@@ -303,13 +303,8 @@ class PropEngineAccelerationScenario(PropulsionScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data
-        checks.append(check_exact("Ship Mass", PROP001_TOTAL_MASS, self.ship.mass))
-        checks.append(check_exact("Engine Thrust", PROP001_ENGINE_THRUST, self.ship.total_thrust))
-        # Outcome
-        checks.append(check_approx("Max Speed", PROP001_MAX_SPEED, self.ship.max_speed))
-        checks.append(check_approx("Final Speed", PROP001_EXPECTED_FINAL_SPEED, self.final_velocity.length()))
-        checks.append(check_approx("Distance", PROP001_EXPECTED_DISTANCE, self.distance_traveled, tolerance=0.02))
+        checks.extend(self._propulsion_data_checks(PROP001_TOTAL_MASS, PROP001_ENGINE_THRUST))
+        checks.extend(self._propulsion_outcome_checks(PROP001_MAX_SPEED, PROP001_EXPECTED_FINAL_SPEED, PROP001_EXPECTED_DISTANCE))
         return checks
 
 
@@ -356,13 +351,8 @@ class PropDualEngineScenario(PropulsionScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data
-        checks.append(check_exact("Ship Mass", PROP001C_TOTAL_MASS, self.ship.mass))
-        checks.append(check_exact("Total Thrust", PROP001C_TOTAL_THRUST, self.ship.total_thrust))
-        # Outcome
-        checks.append(check_approx("Max Speed", PROP001C_MAX_SPEED, self.ship.max_speed))
-        checks.append(check_approx("Final Speed", PROP001C_EXPECTED_FINAL_SPEED, self.final_velocity.length()))
-        checks.append(check_approx("Distance", PROP001C_EXPECTED_DISTANCE, self.distance_traveled, tolerance=0.02))
+        checks.extend(self._propulsion_data_checks(PROP001C_TOTAL_MASS, PROP001C_TOTAL_THRUST))
+        checks.extend(self._propulsion_outcome_checks(PROP001C_MAX_SPEED, PROP001C_EXPECTED_FINAL_SPEED, PROP001C_EXPECTED_DISTANCE))
         return checks
 
 

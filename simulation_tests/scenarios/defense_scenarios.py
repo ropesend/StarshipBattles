@@ -263,6 +263,9 @@ class EmissiveArmorBlocksLowDamageScenario(StaticTargetScenario):
         checks.append(check_exact("Emissive Armor Value", EMISSIVE_ARMOR_REDUCTION,
                                   self.target.emissive_armor, phase="data"))
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
         checks.append(check_true("Beam Damage < Armor",
                                  beam.damage < EMISSIVE_ARMOR_REDUCTION,
                                  detail=f"beam.damage={beam.damage}, armor={EMISSIVE_ARMOR_REDUCTION}",
@@ -319,6 +322,9 @@ class EmissiveArmorReducesHighDamageScenario(StaticTargetScenario):
         checks.append(check_exact("Emissive Armor Value", EMISSIVE_ARMOR_REDUCTION,
                                   self.target.emissive_armor, phase="data"))
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
         checks.append(check_true("Beam Damage <= Armor",
                                  beam.damage <= EMISSIVE_ARMOR_REDUCTION,
                                  detail=f"beam.damage={beam.damage}, armor={EMISSIVE_ARMOR_REDUCTION}",
