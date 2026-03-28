@@ -619,16 +619,14 @@ class StrategyRenderer:
 
                 for i, p in enumerate(planets):
                     rel_scale = p.radius / largest.radius
-                    if rel_scale < 0.4:
-                        rel_scale = 0.4
 
-                    base_r = hex_px_radius * 0.25
-                    draw_r = max(2, int(base_r * rel_scale))
+                    # Rev 5: Secondary planets sized proportionally to primary.
+                    # Base is largest_draw_r so ratio maps directly to screen size.
+                    # Minimum 5px diameter (3px radius) to keep tiny moons visible.
+                    draw_r = max(3, int(largest_draw_r * rel_scale))
 
                     if p == largest:
                         final_offset = pygame.math.Vector2(group_offset_x, 0)
-                        primary_draw_r = max(2, int(largest_draw_r * rel_scale))
-                        draw_r = primary_draw_r
                     else:
                         idx = planets.index(p) - 1
                         angle = smaller_angles[idx] if idx < len(smaller_angles) else 0

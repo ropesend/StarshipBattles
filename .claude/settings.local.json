@@ -42,7 +42,9 @@
       "Bash(radon cc:*)",
       "Bash(git log:*)",
       "Bash(git ls-files:*)",
-      "Bash(git -C \"c:\\\\Dev\\\\Starship Battles\" log --all --oneline -- saves/)"
+      "Bash(git -C \"c:\\\\Dev\\\\Starship Battles\" log --all --oneline -- saves/)",
+      "Bash(for seed:*)",
+      "Bash(do python:*)"
     ],
     "additionalDirectories": [
       "c:\\Dev\\Starship Battles\\Projects\\active_projects\\PROJ-216\\findings",

@@ -429,6 +429,39 @@ def compute_balance_metrics(galaxy):
         'systems_per_region': region_counts,
     }
 
+    # Moon/co-orbital analysis: group planets by hex location within each system
+    from collections import Counter
+    hex_group_sizes = []  # how many bodies share each occupied hex
+    for system in galaxy.systems.values():
+        loc_counts = Counter()
+        for p in system.planets:
+            loc_counts[p.location] += 1
+        hex_group_sizes.extend(loc_counts.values())
+
+    # Count how many hexes have N bodies (1=solo, 2=primary+1moon, etc.)
+    group_size_dist = Counter(hex_group_sizes)
+    total_hexes = len(hex_group_sizes)
+    moon_hexes = sum(1 for s in hex_group_sizes if s > 1)
+    total_moons = sum(s - 1 for s in hex_group_sizes)  # extra bodies beyond the primary
+
+    # Histogram: how many hexes have 1, 2, 3, ... bodies
+    max_group = max(hex_group_sizes) if hex_group_sizes else 0
+    moon_histogram = {}
+    for size in range(1, max_group + 1):
+        count = group_size_dist.get(size, 0)
+        if count > 0 or size <= 5:
+            moon_histogram[str(size)] = count
+
+    moons = {
+        'total_occupied_hexes': total_hexes,
+        'hexes_with_moons': moon_hexes,
+        'hexes_without_moons': total_hexes - moon_hexes,
+        'total_moons': total_moons,
+        'pct_hexes_with_moons': round(100 * moon_hexes / total_hexes, 1) if total_hexes else 0,
+        'avg_moons_per_hex': round(total_moons / total_hexes, 2) if total_hexes else 0,
+        'bodies_per_hex_histogram': moon_histogram,
+    }
+
     return {
         'total_systems': len(galaxy.systems),
         'total_planets': total_planets,
@@ -442,6 +475,7 @@ def compute_balance_metrics(galaxy):
         'storm_coverage': storm_coverage,
         'connectivity': connectivity,
         'spatial': spatial,
+        'moons': moons,
     }
 
 
@@ -519,6 +553,17 @@ def print_summary(data, verbosity):
     if sc['storm_type_distribution']:
         parts = [f"{k}={v}" for k, v in sc['storm_type_distribution'].items()]
         print(f"  Types: {', '.join(parts)}")
+
+    # Moons
+    mn = metrics['moons']
+    print(f"\nMoons/Co-orbitals:")
+    print(f"  {mn['total_occupied_hexes']} orbital hexes, {mn['hexes_with_moons']} have moons "
+          f"({mn['pct_hexes_with_moons']:.1f}%), {mn['total_moons']} total moons")
+    print(f"  Bodies per hex: ", end='')
+    for size, count in sorted(mn['bodies_per_hex_histogram'].items(), key=lambda x: int(x[0])):
+        label = 'solo' if size == '1' else f'{int(size)-1} moon{"s" if int(size) > 2 else ""}'
+        print(f"[{label}]={count} ", end='')
+    print()
 
     # Verbose: per-system breakdown
     if verbosity >= 2:

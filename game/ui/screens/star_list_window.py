@@ -241,11 +241,33 @@ class StarListWindow(UIWindow):
     def process_event(self, event):
         handled = super().process_event(event)
 
-        # Navigate button
+        # Handle all button presses in event-driven path (not polled per-frame)
         if event.type == UI_BUTTON_PRESSED:
             if event.ui_element == self.btn_navigate:
                 self._navigate_to_selected()
                 return True
+            if event.ui_element == self.btn_apply:
+                self.refresh_list()
+                return True
+            if event.ui_element == self.btn_all_types:
+                self._set_all_type_filters(True)
+                return True
+            if event.ui_element == self.btn_none_types:
+                self._set_all_type_filters(False)
+                return True
+            if event.ui_element == self.btn_save_preset:
+                self._save_preset()
+                return True
+            # Check type toggle buttons
+            for key, btn in self.ui_filters.get('types', {}).items():
+                if event.ui_element == btn:
+                    self._toggle_type_filter(key, btn)
+                    return True
+            # Check column toggle buttons
+            for col_id, btn in self.ui_filters.get('columns', {}).items():
+                if event.ui_element == btn:
+                    self._toggle_column(btn)
+                    return True
 
         # Star row clicks
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
@@ -306,24 +328,24 @@ class StarListWindow(UIWindow):
     def update(self, time_delta):
         super().update(time_delta)
 
-        # Apply button
-        if self.btn_apply.check_pressed():
-            self.refresh_list()
-
-        # Scrollbar
+        # Scrollbar movement (cheap — only updates rows when position changed)
         if self.virtual_table.scroll_bar.check_has_moved_recently():
             self.virtual_table.update_visible_rows()
 
-        # Slider sync
-        self._handle_slider_sync()
+        # Slider text sync (only when slider actually moved)
+        for key in ('mass', 'temperature', 'luminosity', 'age', 'radius_hexes'):
+            f = self.ui_filters.get(key)
+            if not f:
+                continue
+            for which in ('min', 'max'):
+                slider = f[which]
+                if not slider.has_moved_recently:
+                    continue
+                txt_box = f[f'{which}_txt']
+                if not txt_box.is_focused:
+                    txt_box.set_text(f"{slider.get_current_value():.1f}")
 
-        # Type filter toggles
-        self._handle_filter_toggles()
-
-        # Column visibility
-        self._handle_column_toggles()
-
-        # Header sort/swap
+        # Header sort/swap (check_presses iterates header buttons)
         header_result = self.virtual_table.check_header_presses()
         if header_result.get('swap_column'):
             col_dict, direction = header_result.get('swap_column')
@@ -337,91 +359,68 @@ class StarListWindow(UIWindow):
             self.virtual_table.rebuild_headers()
             self.refresh_list()
 
-        # Presets
-        self._handle_preset_changes()
-
-    def _handle_filter_toggles(self):
-        """Handle All/None buttons and individual star type toggles."""
-        buttons = self.ui_filters.get('types', {})
-        if self.btn_all_types.check_pressed():
-            for key, btn in buttons.items():
-                self.filter_types[key] = True
-                btn.select()
-                btn.set_text(f"[{key}]")
-            self.refresh_list()
-            return
-        if self.btn_none_types.check_pressed():
-            for key, btn in buttons.items():
-                self.filter_types[key] = False
-                btn.unselect()
-                btn.set_text(f"{key}")
-            self.refresh_list()
-            return
-        for key, btn in buttons.items():
-            if btn.check_pressed():
-                state = not self.filter_types[key]
-                self.filter_types[key] = state
-                btn.select() if state else btn.unselect()
-                btn.set_text(f"[{key}]" if state else f"{key}")
-                self.refresh_list()
-                return
-
-    def _handle_slider_sync(self):
-        """Sync slider values to text boxes (only when slider moved)."""
-        for key in ('mass', 'temperature', 'luminosity', 'age', 'radius_hexes'):
-            f = self.ui_filters.get(key)
-            if not f:
-                continue
-            for which in ('min', 'max'):
-                slider = f[which]
-                if not slider.has_moved_recently:
-                    continue
-                txt_box = f[f'{which}_txt']
-                if not txt_box.is_focused:
-                    txt_box.set_text(f"{slider.get_current_value():.1f}")
-
-    def _handle_column_toggles(self):
-        """Handle column visibility toggles."""
-        for col_id, btn in self.ui_filters.get('columns', {}).items():
-            if btn.check_pressed():
-                col = btn.col_ref
-                new_visible = self.column_manager.toggle_column(col['id'])
-                if new_visible is not None:
-                    t = f"[x] {col['title'] or col['id']}" if new_visible else f"[ ] {col['title'] or col['id']}"
-                    btn.set_text(t)
-                    col['visible'] = new_visible
-                    self.virtual_table.rebuild_headers()
-                    self.virtual_table.rebuild_row_pool()
-                    self.refresh_list()
-                return
-
-    def _handle_preset_changes(self):
-        """Handle preset dropdown selection and save button."""
+        # Preset dropdown (cheap — single string comparison)
         if self.last_preset_selection is None:
             self.last_preset_selection = self.dd_presets.selected_option
-
         if self.dd_presets.selected_option != self.last_preset_selection:
             self.last_preset_selection = self.dd_presets.selected_option
             name = self.last_preset_selection
             if self.preset_manager.has_preset(name):
                 self._apply_state(self.preset_manager.get_preset(name))
 
-        if self.btn_save_preset.check_pressed():
-            name = self.txt_preset_name.get_text()
-            if name:
-                state = self._capture_current_state()
-                self.preset_manager.save_preset(name, state)
-                rect = self.dd_presets.relative_rect
-                container = self.dd_presets.ui_container
-                self.dd_presets.kill()
-                self.dd_presets = UIDropDownMenu(
-                    options_list=self.preset_manager.get_preset_names(),
-                    starting_option=name,
-                    relative_rect=rect,
-                    manager=self.ui_manager,
-                    container=container,
-                )
-                self.last_preset_selection = name
+    # -----------------------------------------------------------------------
+    # Event-driven button handlers (called from process_event, not polled)
+    # -----------------------------------------------------------------------
+
+    def _set_all_type_filters(self, enabled: bool):
+        """Set all star type filters to enabled/disabled."""
+        for key, btn in self.ui_filters.get('types', {}).items():
+            self.filter_types[key] = enabled
+            if enabled:
+                btn.select()
+                btn.set_text(f"[{key}]")
+            else:
+                btn.unselect()
+                btn.set_text(f"{key}")
+        self.refresh_list()
+
+    def _toggle_type_filter(self, key: str, btn):
+        """Toggle a single star type filter."""
+        state = not self.filter_types[key]
+        self.filter_types[key] = state
+        btn.select() if state else btn.unselect()
+        btn.set_text(f"[{key}]" if state else f"{key}")
+        self.refresh_list()
+
+    def _toggle_column(self, btn):
+        """Toggle column visibility from a sidebar button."""
+        col = btn.col_ref
+        new_visible = self.column_manager.toggle_column(col['id'])
+        if new_visible is not None:
+            t = f"[x] {col['title'] or col['id']}" if new_visible else f"[ ] {col['title'] or col['id']}"
+            btn.set_text(t)
+            col['visible'] = new_visible
+            self.virtual_table.rebuild_headers()
+            self.virtual_table.rebuild_row_pool()
+            self.refresh_list()
+
+    def _save_preset(self):
+        """Save the current state as a preset."""
+        name = self.txt_preset_name.get_text()
+        if name:
+            state = self._capture_current_state()
+            self.preset_manager.save_preset(name, state)
+            rect = self.dd_presets.relative_rect
+            container = self.dd_presets.ui_container
+            self.dd_presets.kill()
+            self.dd_presets = UIDropDownMenu(
+                options_list=self.preset_manager.get_preset_names(),
+                starting_option=name,
+                relative_rect=rect,
+                manager=self.ui_manager,
+                container=container,
+            )
+            self.last_preset_selection = name
 
     def _capture_current_state(self):
         """Serialize current filters and column config."""

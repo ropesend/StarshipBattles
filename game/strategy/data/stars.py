@@ -595,12 +595,14 @@ class StarGenerator:
         stars.append(primary)
 
         # 4. Generate Companions
-        c_mass_max = min(mass_max, p_mass * 0.99)
+        # With type-first generation, companion mass is set by its rolled type,
+        # so we use the full blueprint mass range rather than constraining to
+        # below primary mass.
         companions = self._generate_companions(
             count=count - 1,
             primary=primary,
             system_name=system_name,
-            mass_fn=lambda _i: self._generate_mass_constrained(mass_min, c_mass_max),
+            mass_fn=lambda _i: self._generate_mass_constrained(mass_min, mass_max),
         )
         stars.extend(companions)
 
@@ -640,11 +642,14 @@ class StarGenerator:
         stars.append(primary)
 
         # 3. Generate Companions
+        # With type-first generation, companion mass is set by its rolled type,
+        # so we don't constrain it by primary mass (which may be small if the
+        # primary rolled RED_DWARF or BROWN_DWARF).
         companions = self._generate_companions(
             count=count - 1,
             primary=primary,
             system_name=system_name,
-            mass_fn=lambda _i: self._generate_mass(is_primary=False, primary_mass=p_mass),
+            mass_fn=lambda _i: self._generate_mass(is_primary=True),
         )
         stars.extend(companions)
 

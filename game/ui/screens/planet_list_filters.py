@@ -28,8 +28,9 @@ def gather_planets(galaxy, empire):
                 p._cached_gravity_g = p.surface_gravity / g_const
                 p._cached_mass_earth = p.mass / m_earth_const
                 p._cached_name_lower = p.name.lower()
-                # Cache system name directly (PROJ-198 Phase 4: eliminated _temp_system_ref monkey-patch)
+                # Cache system name and location for display and navigation
                 p._cached_system_name = s.name
+                p._cached_system_global_location = s.global_location
 
                 # Pre-compute type category
                 # Use title case of the enum name (e.g. "Ice Giant", "Continental")

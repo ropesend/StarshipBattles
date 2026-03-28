@@ -125,23 +125,23 @@ class TestMoonGeneration:
     """Tests for moon generation."""
 
     def test_calculate_moon_chance_jupiter_high(self, planet_generator):
-        """Jupiter-sized bodies have high moon chance (~80%)."""
+        """Jupiter-sized bodies have high moon chance (~88%)."""
         from game.strategy.data.planet_physics import MASS_JUPITER
 
         chance = planet_generator._calculate_moon_chance(MASS_JUPITER)
 
-        assert 0.7 <= chance <= 0.95
+        assert 0.8 <= chance <= 0.95
 
-    def test_calculate_moon_chance_earth_low(self, planet_generator):
-        """Earth-sized bodies have lower moon chance (~10%)."""
+    def test_calculate_moon_chance_earth_moderate(self, planet_generator):
+        """Earth-sized bodies have moderate moon chance (~35%)."""
         from game.strategy.data.planet_physics import MASS_EARTH
 
         chance = planet_generator._calculate_moon_chance(MASS_EARTH)
 
-        assert 0.05 <= chance <= 0.15
+        assert 0.25 <= chance <= 0.45
 
     def test_calculate_moon_chance_ceres_very_low(self, planet_generator):
-        """Ceres-sized bodies have very low moon chance (~1%)."""
+        """Ceres-sized bodies have very low moon chance (~2%)."""
         from game.strategy.data.planet_physics import MASS_CERES
 
         chance = planet_generator._calculate_moon_chance(MASS_CERES)

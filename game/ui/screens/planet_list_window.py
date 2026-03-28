@@ -28,12 +28,13 @@ from game.ui.screens.planet_data_source import PlanetDataSource
 from game.ui.panels.planet_report_panel import PlanetReportPanel, compute_planet_production
 
 class PlanetListWindow(UIWindow):
-    def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None, empires=None, registries=None):
+    def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None, empires=None, registries=None, on_navigate_callback=None):
         # Initialize state that set_dimensions() depends on before super().__init__(),
         # since UIWindow.__init__ triggers rebuild() -> set_dimensions().
         self.selected_planet = None
         self.planet_detail_panel = None
         self.btn_build_queue = None
+        self.btn_navigate = None
         self.last_preset_selection = None  # PROJ-199: Lazy init elimination
         self._registries = registries  # PROJ-211: Injected registries for DI
 
@@ -43,6 +44,7 @@ class PlanetListWindow(UIWindow):
         self.empire = empire # Current player empire for "Owner" context
         self.empires = empires or []  # PROJ-198: All empires for owner name lookup
         self.on_close_callback = on_close_callback
+        self.on_navigate_callback = on_navigate_callback
         self.asset_resolver = asset_resolver  # Function to get image for planet
 
         # --- Layout Constants ---
@@ -129,7 +131,7 @@ class PlanetListWindow(UIWindow):
         # Main Content Area - Panel for VirtualTable
         main_w = rect.width - self.sidebar_width - self.detail_panel_width - self.panel_margin - 10
         self.main_panel = UIPanel(
-            relative_rect=pygame.Rect(self.sidebar_width, 0, main_w, rect.height - 50),
+            relative_rect=pygame.Rect(self.sidebar_width, 0, main_w, rect.height - 90),
             manager=manager, container=self,
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'})
 
@@ -150,6 +152,15 @@ class PlanetListWindow(UIWindow):
             selection_strategy=self.selection,
             row_height=self.row_height,
             header_height=self.header_height,
+        )
+
+        # Navigate button (bottom of main area)
+        nav_y = rect.height - 80
+        self.btn_navigate = UIButton(
+            relative_rect=pygame.Rect(self.sidebar_width + 10, nav_y, 180, 30),
+            text="Navigate to Planet",
+            manager=manager,
+            container=self,
         )
 
         # Initial Population
@@ -225,12 +236,48 @@ class PlanetListWindow(UIWindow):
     def process_event(self, event):
         handled = super().process_event(event)
 
-        # Handle Build Queue button click
+        # Handle all button presses in event-driven path (not polled per-frame)
         if event.type == UI_BUTTON_PRESSED:
             if event.ui_element == self.btn_build_queue:
                 if self.selected_planet:
                     logger.info(f"Build Queue button clicked for planet: {self.selected_planet.name}")
                 return True
+            if event.ui_element == self.btn_navigate:
+                self._navigate_to_selected()
+                return True
+            if event.ui_element == self.btn_apply:
+                self.refresh_list()
+                return True
+            if event.ui_element == self.btn_all_types:
+                self._set_all_filters(self.filter_types, 'types', True)
+                return True
+            if event.ui_element == self.btn_none_types:
+                self._set_all_filters(self.filter_types, 'types', False)
+                return True
+            if event.ui_element == self.btn_all_owners:
+                self._set_all_filters(self.filter_owner, 'owners', True)
+                return True
+            if event.ui_element == self.btn_none_owners:
+                self._set_all_filters(self.filter_owner, 'owners', False)
+                return True
+            if event.ui_element == self.btn_save_preset:
+                self._save_preset()
+                return True
+            # Check type toggle buttons
+            for key, btn in self.ui_filters.get('types', {}).items():
+                if event.ui_element == btn:
+                    self._toggle_filter(self.filter_types, key, btn)
+                    return True
+            # Check owner toggle buttons
+            for key, btn in self.ui_filters.get('owners', {}).items():
+                if event.ui_element == btn:
+                    self._toggle_filter(self.filter_owner, key, btn)
+                    return True
+            # Check column toggle buttons
+            for col_id, btn in self.ui_filters.get('columns', {}).items():
+                if event.ui_element == btn:
+                    self._toggle_column(btn)
+                    return True
 
         # Handle planet row clicks
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:  # Left click
@@ -303,25 +350,24 @@ class PlanetListWindow(UIWindow):
     def update(self, time_delta):
         super().update(time_delta)
 
-        # Apply button
-        if self.btn_apply.check_pressed():
-            self.refresh_list()
-
-        # Handle scrollbar changes
+        # Scrollbar movement (cheap — only updates rows when position changed)
         if self.virtual_table.scroll_bar.check_has_moved_recently():
             self.virtual_table.update_visible_rows()
 
-        # Sync slider values to text boxes
-        self._handle_slider_sync()
+        # Slider text sync (only when slider actually moved)
+        for key in ['gravity', 'temp', 'mass']:
+            f = self.ui_filters.get(key)
+            if not f:
+                continue
+            for which in ['min', 'max']:
+                slider = f[which]
+                if not slider.has_moved_recently:
+                    continue
+                txt_box = f[f'{which}_txt']
+                if not txt_box.is_focused:
+                    txt_box.set_text(f"{slider.get_current_value():.1f}")
 
-        # Handle filter toggles
-        self._handle_filter_toggles(self.filter_types, self.btn_all_types, self.btn_none_types, 'types')
-        self._handle_filter_toggles(self.filter_owner, self.btn_all_owners, self.btn_none_owners, 'owners')
-
-        # Handle column visibility toggles
-        self._handle_column_toggles()
-
-        # Handle header sort/swap clicks via VirtualTable
+        # Header sort/swap (check_presses iterates header buttons)
         header_result = self.virtual_table.check_header_presses()
         if header_result.get('swap_column'):
             col_dict, direction = header_result.get('swap_column')
@@ -335,94 +381,68 @@ class PlanetListWindow(UIWindow):
             self.virtual_table.rebuild_headers()
             self.refresh_list()
 
-        # Handle preset selection and save
-        self._handle_preset_changes()
-
-    def _handle_filter_toggles(self, filter_dict, btn_all, btn_none, ui_key):
-        """Handle All/None buttons and individual toggles for a filter category."""
-        buttons = self.ui_filters.get(ui_key, {})
-        if btn_all.check_pressed():
-            for key, btn in buttons.items():
-                filter_dict[key] = True
-                btn.select()
-                btn.set_text(f"[{key}]")
-            self.refresh_list()
-            return
-        if btn_none.check_pressed():
-            for key, btn in buttons.items():
-                filter_dict[key] = False
-                btn.unselect()
-                btn.set_text(f"{key}")
-            self.refresh_list()
-            return
-        for key, btn in buttons.items():
-            if btn.check_pressed():
-                state = not filter_dict[key]
-                filter_dict[key] = state
-                btn.select() if state else btn.unselect()
-                btn.set_text(f"[{key}]" if state else f"{key}")
-                self.refresh_list()
-                return
-
-    def _handle_slider_sync(self):
-        """Sync slider values to text boxes (only when slider moved)."""
-        for key in ['gravity', 'temp', 'mass']:
-            f = self.ui_filters[key]
-            for which in ['min', 'max']:
-                slider = f[which]
-                if not slider.has_moved_recently:
-                    continue
-                txt_box = f[f'{which}_txt']
-                if not txt_box.is_focused:
-                    txt_box.set_text(f"{slider.get_current_value():.1f}")
-
-    def _handle_column_toggles(self):
-        """Handle column visibility toggles."""
-        for col_id, btn in self.ui_filters.get('columns', {}).items():
-            if btn.check_pressed():
-                col = btn.col_ref
-                # Use TableColumnManager to toggle
-                new_visible = self.column_manager.toggle_column(col['id'])
-                if new_visible is not None:
-                    # Update button text
-                    t = f"[x] {col['title'] or col['id']}" if new_visible else f"[ ] {col['title'] or col['id']}"
-                    btn.set_text(t)
-                    # Update the column list reference for presets
-                    col['visible'] = new_visible
-                    # Rebuild table
-                    self.virtual_table.rebuild_headers()
-                    self.virtual_table.rebuild_row_pool()
-                    self.refresh_list()
-                return
-
-    def _handle_preset_changes(self):
-        """Handle preset dropdown selection and save button."""
-        # Lazy init tracker
+        # Preset dropdown (cheap — single string comparison)
         if self.last_preset_selection is None:
             self.last_preset_selection = self.dd_presets.selected_option
-
         if self.dd_presets.selected_option != self.last_preset_selection:
             self.last_preset_selection = self.dd_presets.selected_option
             name = self.last_preset_selection
             if self.preset_manager.has_preset(name):
                 self._apply_state(self.preset_manager.get_preset(name))
 
-        if self.btn_save_preset.check_pressed():
-            name = self.txt_preset_name.get_text()
-            if name:
-                state = self._capture_current_state()
-                self.preset_manager.save_preset(name, state)
-                rect = self.dd_presets.relative_rect
-                container = self.dd_presets.ui_container
-                self.dd_presets.kill()
-                self.dd_presets = UIDropDownMenu(
-                    options_list=self.preset_manager.get_preset_names(),
-                    starting_option=name,
-                    relative_rect=rect,
-                    manager=self.ui_manager,
-                    container=container
-                )
-                self.last_preset_selection = name
+    # -----------------------------------------------------------------------
+    # Event-driven button handlers (called from process_event, not polled)
+    # -----------------------------------------------------------------------
+
+    def _set_all_filters(self, filter_dict, ui_key, enabled):
+        """Set all filters in a category to enabled/disabled."""
+        for key, btn in self.ui_filters.get(ui_key, {}).items():
+            filter_dict[key] = enabled
+            if enabled:
+                btn.select()
+                btn.set_text(f"[{key}]")
+            else:
+                btn.unselect()
+                btn.set_text(f"{key}")
+        self.refresh_list()
+
+    def _toggle_filter(self, filter_dict, key, btn):
+        """Toggle a single filter in a category."""
+        state = not filter_dict[key]
+        filter_dict[key] = state
+        btn.select() if state else btn.unselect()
+        btn.set_text(f"[{key}]" if state else f"{key}")
+        self.refresh_list()
+
+    def _toggle_column(self, btn):
+        """Toggle column visibility from a sidebar button."""
+        col = btn.col_ref
+        new_visible = self.column_manager.toggle_column(col['id'])
+        if new_visible is not None:
+            t = f"[x] {col['title'] or col['id']}" if new_visible else f"[ ] {col['title'] or col['id']}"
+            btn.set_text(t)
+            col['visible'] = new_visible
+            self.virtual_table.rebuild_headers()
+            self.virtual_table.rebuild_row_pool()
+            self.refresh_list()
+
+    def _save_preset(self):
+        """Save the current state as a preset."""
+        name = self.txt_preset_name.get_text()
+        if name:
+            state = self._capture_current_state()
+            self.preset_manager.save_preset(name, state)
+            rect = self.dd_presets.relative_rect
+            container = self.dd_presets.ui_container
+            self.dd_presets.kill()
+            self.dd_presets = UIDropDownMenu(
+                options_list=self.preset_manager.get_preset_names(),
+                starting_option=name,
+                relative_rect=rect,
+                manager=self.ui_manager,
+                container=container
+            )
+            self.last_preset_selection = name
 
     def _capture_current_state(self):
         """Serialize current filters and column config."""
@@ -447,6 +467,13 @@ class PlanetListWindow(UIWindow):
         self.virtual_table.rebuild_headers()
         self.virtual_table.rebuild_row_pool()
         self.refresh_list()
+
+    def _navigate_to_selected(self):
+        """Navigate camera to the selected planet's system."""
+        if self.selected_planet and self.on_navigate_callback:
+            loc = getattr(self.selected_planet, '_cached_system_global_location', None)
+            if loc:
+                self.on_navigate_callback(loc)
 
     def _take_screenshot(self):
         """Take a screenshot of the current screen including the planet list."""
@@ -539,6 +566,10 @@ class PlanetListWindow(UIWindow):
         if self.btn_build_queue:
             self.btn_build_queue.kill()
             self.btn_build_queue = None
+
+        if self.btn_navigate:
+            self.btn_navigate.kill()
+            self.btn_navigate = None
 
         if self.on_close_callback:
             self.on_close_callback()

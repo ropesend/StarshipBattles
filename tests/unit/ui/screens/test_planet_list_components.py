@@ -746,23 +746,15 @@ class TestPlanetListColumnSwap:
         """Create a minimal stub wired for testing the update() swap path."""
         from game.ui.screens.planet_list_window import PlanetListWindow
         stub = Mock(spec=PlanetListWindow)
-        stub.btn_apply = Mock()
-        stub.btn_apply.check_pressed.return_value = False
         stub.virtual_table = Mock()
         stub.virtual_table.scroll_bar.check_has_moved_recently.return_value = False
         stub.column_manager = Mock()
-        stub.filter_types = {}
-        stub.filter_owner = {}
-        stub.btn_all_types = Mock()
-        stub.btn_none_types = Mock()
-        stub.btn_all_owners = Mock()
-        stub.btn_none_owners = Mock()
         stub.ui_filters = {}
         stub.refresh_list = Mock()
-        stub._handle_slider_sync = Mock()
-        stub._handle_filter_toggles = Mock()
-        stub._handle_column_toggles = Mock()
-        stub._handle_preset_changes = Mock()
+        stub.dd_presets = Mock()
+        stub.dd_presets.selected_option = "Default"
+        stub.last_preset_selection = "Default"
+        stub.preset_manager = Mock()
         return stub
 
     def _run_update_with_swap(self, stub, col_dict, direction):

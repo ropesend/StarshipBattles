@@ -160,7 +160,10 @@ class VirtualTable:
                         manager=self._manager,
                         container=row_bg,
                     )
-                    widgets.append({"type": "image", "el": img, "col": col})
+                    widgets.append({
+                        "type": "image", "el": img, "col": col,
+                        "_last_img": None,
+                    })
                 else:
                     # Label widget
                     lbl = UILabel(
@@ -169,7 +172,10 @@ class VirtualTable:
                         manager=self._manager,
                         container=row_bg,
                     )
-                    widgets.append({"type": "label", "el": lbl, "col": col})
+                    widgets.append({
+                        "type": "label", "el": lbl, "col": col,
+                        "_last_text": "",
+                    })
 
                 x += width
 
@@ -177,12 +183,14 @@ class VirtualTable:
                 "bg": row_bg,
                 "widgets": widgets,
                 "row_index": -1,
+                "_last_color": None,
             })
 
     def update_visible_rows(self) -> None:
         """Update content of row pool based on scroll position.
 
         Uses dirty tracking to skip updates when nothing changed.
+        Caches text/color values to avoid redundant pygame_gui calls.
         """
         current_pct = self._scroll_bar.start_percentage
         current_count = self._data_source.get_row_count()
@@ -216,38 +224,52 @@ class VirtualTable:
             if data_idx < current_count:
                 row["bg"].show()
 
-                # Update highlight
+                # Determine target color
                 if data_idx in selected:
-                    row["bg"].background_colour = self.SELECTED_COLOR
+                    target_color = self.SELECTED_COLOR
                 else:
-                    # Check for domain-specific highlight
                     highlight = self._data_source.get_row_highlight(data_idx)
                     if highlight:
-                        row["bg"].background_colour = pygame.Color(*highlight)
+                        target_color = pygame.Color(*highlight)
                     else:
-                        row["bg"].background_colour = self.UNSELECTED_COLOR
-                row["bg"].rebuild()
+                        target_color = self.UNSELECTED_COLOR
 
-                # Update cell contents
+                # Only rebuild panel if color actually changed
+                if row["_last_color"] != target_color:
+                    row["_last_color"] = target_color
+                    row["bg"].background_colour = target_color
+                    row["bg"].rebuild()
+
+                # Update cell contents (skip if text unchanged)
                 for widget in row["widgets"]:
                     col = widget["col"]
                     col_id = col["id"]
 
                     if widget["type"] == "image":
                         img_surface = self._data_source.get_cell_image(data_idx, col_id)
-                        if img_surface:
-                            widget["el"].set_image(img_surface)
-                        else:
-                            # Empty surface
-                            rect = widget["el"].get_relative_rect()
-                            widget["el"].set_image(
-                                pygame.Surface((rect.width, rect.height))
-                            )
+                        if img_surface is not widget.get("_last_img"):
+                            widget["_last_img"] = img_surface
+                            if img_surface:
+                                widget["el"].set_image(img_surface)
+                            else:
+                                rect = widget["el"].get_relative_rect()
+                                widget["el"].set_image(
+                                    pygame.Surface((rect.width, rect.height))
+                                )
                     else:
-                        text = self._data_source.get_cell_value(data_idx, col_id)
-                        widget["el"].set_text(str(text))
+                        text = str(self._data_source.get_cell_value(data_idx, col_id))
+                        if text != widget.get("_last_text"):
+                            widget["_last_text"] = text
+                            widget["el"].set_text(text)
             else:
                 row["bg"].hide()
+                row["_last_color"] = None
+                # Reset cached text/image so re-shown rows get updated
+                for widget in row["widgets"]:
+                    if widget["type"] == "label":
+                        widget["_last_text"] = None
+                    else:
+                        widget["_last_img"] = None
 
     def update_scroll_bar(self) -> None:
         """Update scroll bar visible percentage."""
@@ -306,14 +328,18 @@ class VirtualTable:
                 continue
 
             if data_idx in selected:
-                row["bg"].background_colour = self.SELECTED_COLOR
+                target_color = self.SELECTED_COLOR
             else:
                 highlight = self._data_source.get_row_highlight(data_idx)
                 if highlight:
-                    row["bg"].background_colour = pygame.Color(*highlight)
+                    target_color = pygame.Color(*highlight)
                 else:
-                    row["bg"].background_colour = self.UNSELECTED_COLOR
-            row["bg"].rebuild()
+                    target_color = self.UNSELECTED_COLOR
+
+            if row["_last_color"] != target_color:
+                row["_last_color"] = target_color
+                row["bg"].background_colour = target_color
+                row["bg"].rebuild()
 
     def check_header_presses(self) -> Dict[str, Any]:
         """Check for header button presses.
