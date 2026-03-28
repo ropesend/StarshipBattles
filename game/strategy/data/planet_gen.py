@@ -279,22 +279,34 @@ class PlanetGenerator:
 
     def _calculate_moon_chance(self, primary_mass: float) -> float:
         """
-        Calculate probability of having additional moons.
+        Calculate per-roll probability of adding another moon.
 
-        Jupiter-sized: 80% base chance
-        Earth-sized: 10% base chance
-        Ceres-sized: 1% base chance
+        Each moon is an independent roll; the chain continues until a roll
+        fails.  Larger bodies get much higher chances, producing rich moon
+        systems around gas giants while small bodies rarely have any.
+
+        Targets (geometric distribution, chance^N for N+ moons):
+          Jupiter+ (>1e27): 88% -> ~46% have 6+, ~88% have 1+
+          Neptune  (~1e26): 75% -> ~18% have 6+, ~75% have 1+
+          Super-Earth:      55% -> ~3% have 6+
+          Earth:            35% -> 35% have 1+
+          Mars:             15% -> 15% have 1+
+          Ceres:             2% -> rarely any
         """
         log_m = math.log10(primary_mass)
 
         if log_m >= 27.27:  # Jupiter+
-            chance = 0.8
+            chance = 0.88
         elif log_m >= 24.77:  # Earth to Jupiter
-            chance = 0.1 + (log_m - 24.77) * 0.28
+            # Linear interp: Earth(24.77)=0.35 to Jupiter(27.27)=0.88
+            t = (log_m - 24.77) / (27.27 - 24.77)
+            chance = 0.35 + t * (0.88 - 0.35)
         elif log_m >= 20.97:  # Ceres to Earth
-            chance = 0.01 + (log_m - 20.97) * 0.0237
+            # Linear interp: Ceres(20.97)=0.02 to Earth(24.77)=0.35
+            t = (log_m - 20.97) / (24.77 - 20.97)
+            chance = 0.02 + t * (0.35 - 0.02)
         else:
-            chance = 0.01
+            chance = 0.02
 
         return max(0.0, min(0.95, chance))
 
