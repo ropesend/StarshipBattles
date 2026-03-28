@@ -77,6 +77,18 @@ Tickets approved by the user but blocked by file conflicts. Each entry stores:
 - Files needed (the conflicting ones)
 - Which ticket(s) are blocking it
 
+### Continue Gate State
+
+```
+ACCEPTING_NEW = true           -- User willing to add more tickets
+INITIAL_BATCH_LAUNCHED = false -- First batch (up to 5) not yet spawned
+```
+
+- `ACCEPTING_NEW` starts `true`. Set to `false` when the user declines to continue.
+- The initial batch of up to 5 teammates launches WITHOUT asking the user.
+- After the initial batch, every new teammate spawn requires user confirmation.
+- Once `ACCEPTING_NEW = false`, existing teammates finish their work but no new ones are spawned.
+
 ### Ticket Queue
 
 All target tickets, tracked through states:
@@ -100,7 +112,22 @@ All target tickets, tracked through states:
 
 ### Step 1: Session Setup
 
-1. Read `{DASHBOARD}` to identify target tickets (from arguments or all `[Pending]`/`[In-Progress]`).
+1. Build the ticket queue based on arguments:
+
+   **No arguments (default):**
+   - Read `Debugging/debug_plan.md` -- collect all `[Pending]` and `[In-Progress]` bugs.
+   - Read `Features/feature_plan.md` -- collect all `[Pending]` and `[In-Progress]` features.
+   - Order: **all bugs first, then all features.**
+   - Both type configs are used -- switch PREFIX/ACTIVE_DIR/DASHBOARD per ticket type.
+
+   **Type specified** (`bug` or `feature`, with or without `all`):
+   - Read the corresponding `{DASHBOARD}`. Select all `[Pending]` and `[In-Progress]` tickets.
+
+   **Type + specific numbers** (`bug 85 86 87`):
+   - Read `{DASHBOARD}`. Select those specific tickets. Warn and skip any not `[Pending]` or `[In-Progress]`.
+
+   If no eligible tickets found, inform the user and stop.
+
 2. Read `docs/README.md` for documentation structure.
 3. Create session directory:
    ```
@@ -109,20 +136,22 @@ All target tickets, tracked through states:
    └── results/
    ```
 4. Create team: `TeamCreate(team_name="{TEAM_NAME}", description="Parallel deep dive for {N} tickets")`
-5. Initialize coordinator state: empty FILES_IN_USE, empty waiting queue, ticket queue from targets.
+5. Initialize coordinator state: empty FILES_IN_USE, empty waiting queue, ticket queue from targets, `ACCEPTING_NEW = true`, `INITIAL_BATCH_LAUNCHED = false`.
 6. Write initial dashboard to `{SESSION_DIR}/dashboard.md`.
 7. Announce to user.
 
 ### Step 2: Rolling Loop
 
 ```
+# INITIAL BATCH: Launch up to 5 teammates without asking
+WHILE slots_available AND tickets_queued AND total_launched < 5:
+    Spawn investigation teammate (background)
+    Mark ticket as "investigating"
+Set INITIAL_BATCH_LAUNCHED = true
+
+# ROLLING LOOP
 WHILE tickets remain (queued OR investigating OR interviewing OR findings_ready
        OR awaiting_approval OR approved OR implementing OR merging OR waiting):
-
-    # INVESTIGATE: Fill slots with investigation teammates
-    WHILE investigation_slots_available AND tickets_queued:
-        Spawn investigation teammate (background)
-        Mark ticket as "investigating"
 
     # RELAY: Handle teammate messages (questions)
     FOR each incoming teammate message:
@@ -149,9 +178,14 @@ WHILE tickets remain (queued OR investigating OR interviewing OR findings_ready
         IF all its files are now free:
             Remove from queue, send implementation instructions
 
-    # REFILL: Spawn next investigation teammate if slot freed
-    IF investigation_slots_available AND tickets_queued:
-        Spawn next teammate
+    # CONTINUE GATE: Ask user before spawning new teammates
+    IF INITIAL_BATCH_LAUNCHED AND ACCEPTING_NEW AND slots_available AND tickets_queued:
+        Ask user: "[Done ticket] complete. {N} tickets remain. Continue?"
+        IF user says yes:
+            Spawn ONE new investigation teammate
+        ELSE:
+            Set ACCEPTING_NEW = false
+            (Existing teammates continue; no new ones spawned)
 
     # UPDATE: Write dashboard
     Update {SESSION_DIR}/dashboard.md
@@ -230,7 +264,7 @@ When a teammate reports implementation complete:
    - Remove ticket's files from `FILES_IN_USE`.
    - Send teammate shutdown: `SendMessage(to="investigator-{prefix}-{id}", message={type: "shutdown_request"})`
    - **Scan WAITING_QUEUE:** For each waiting ticket, check if ALL its files are now free. If yes, remove from queue and send its (still-idle) teammate the implementation instructions.
-   - If an investigation slot freed up and tickets remain queued, spawn next teammate.
+   - **Continue Gate:** If `ACCEPTING_NEW` is true and tickets remain queued, ask user before spawning next (see Step 2 pseudocode). If `ACCEPTING_NEW` is false, do not spawn new teammates.
 
 ### Step 6: Session Summary
 

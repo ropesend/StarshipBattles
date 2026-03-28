@@ -105,22 +105,13 @@ class TestLabExecutor:
 
             # Ensure battle engine exists (may have been reset after previous test)
             self.ensure_engine()
-            engine = self.get_engine()
 
-            if engine is None:
+            if self.get_engine() is None:
                 self.output_log.append("ERROR: Could not create battle engine!")
                 return
 
-            # Clear battle engine
-            logger.debug(f" Clearing battle engine")
-            engine.start([], [])
-
-            # Setup scenario
-            logger.debug(f" Calling scenario.setup()")
-            scenario.setup(engine)
-            logger.debug(f" Scenario setup complete")
-
             # Switch to battle scene for visual execution
+            # (_switch_to_battle handles engine.start + scenario.setup)
             self.switch_to_battle(scenario)
 
             self.output_log.append(f"Started test {test_id}")
@@ -167,6 +158,15 @@ class TestLabExecutor:
             scenario_cls = scenario_info['class']
             scenario = scenario_cls()
             logger.debug(f" Scenario instantiated: {scenario.name}")
+
+            # Skip scenarios that are marked as not ready to run (BUG-111)
+            if getattr(scenario, 'skip_test', False):
+                skip_reason = getattr(scenario, 'skip_reason', 'No reason given')
+                scenario.results['skipped'] = True
+                scenario.results['skip_reason'] = skip_reason
+                self.registry.update_last_run_results(test_id, scenario.results)
+                self.output_log.append(f"Test {test_id} SKIPPED - {skip_reason}")
+                return True
 
             # Load test data
             logger.debug(f" Loading test data for scenario")
@@ -306,6 +306,19 @@ class TestLabExecutor:
             # Instantiate scenario
             scenario_cls = scenario_info['class']
             scenario = scenario_cls()
+
+            # Skip scenarios that are marked as not ready to run (BUG-111)
+            if getattr(scenario, 'skip_test', False):
+                skip_reason = getattr(scenario, 'skip_reason', 'No reason given')
+                scenario.results['skipped'] = True
+                scenario.results['skip_reason'] = skip_reason
+                self.registry.update_last_run_results(test_id, scenario.results)
+                self.output_log.append(
+                    f"[{self.batch_current_index + 1}/{self.batch_total}] {test_id}: SKIPPED - {skip_reason}"
+                )
+                self.batch_current_index += 1
+                pygame.time.set_timer(pygame.USEREVENT + 1, 50, loops=1)
+                return
 
             # Load test data
             runner.load_data_for_scenario(scenario)

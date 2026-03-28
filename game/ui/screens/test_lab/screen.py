@@ -364,11 +364,9 @@ class TestLabScreen:
         logger.debug("Test selection cleared")
 
     def _on_back(self):
-        """Return to main menu."""
-        from game.core.constants import GameState
-        self.game.state = GameState.MENU
-        if hasattr(self.game, 'menu_screen') and hasattr(self.game.menu_screen, 'create_particles'):
-            self.game.menu_screen.create_particles()
+        """Return to main menu via scene_callback (PROJ-65 pattern)."""
+        if self.scene_callback:
+            self.scene_callback("return_to_menu")
 
     # ─────────────────────────────────────────────────────────────────
     # Executor callback helpers
@@ -414,7 +412,11 @@ class TestLabScreen:
             )
 
     def _switch_to_battle(self, scenario):
-        """Configure battle scene for visual test mode and switch to battle state."""
+        """Configure battle scene for visual test mode and request transition.
+
+        Sets up the battle scene for test mode, then delegates the actual
+        scene transition to app.py via scene_callback (PROJ-65 pattern).
+        """
         engine = self.game.battle_scene.engine
 
         # Clear and setup engine
@@ -435,9 +437,9 @@ class TestLabScreen:
             self.game.battle_scene.camera.fit_objects(ships)
             self.game.battle_scene.camera.target_zoom = self.game.battle_scene.camera.zoom
 
-        # Switch to battle state
-        from game.core.constants import GameState
-        self.game.state = GameState.BATTLE
+        # Request scene transition via callback (app.py manages active_scene)
+        if self.scene_callback:
+            self.scene_callback("start_test_battle", scenario=scenario)
 
     def _on_view_battle_states(self, run_record, run_number):
         """Open the battle state viewer for a test run."""

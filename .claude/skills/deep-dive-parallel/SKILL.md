@@ -1,8 +1,8 @@
 ---
 name: deep-dive-parallel
-description: Parallel deep-dive investigation of multiple tickets using agent teams with real-time Q&A (e.g., /deep-dive-parallel bug 85 86 87 or /deep-dive-parallel feature all)
+description: Parallel deep-dive investigation of multiple tickets using agent teams with real-time Q&A (e.g., /deep-dive-parallel or /deep-dive-parallel bug 85 86 87)
 disable-model-invocation: true
-argument-hint: bug|feature <numbers or "all">
+argument-hint: "[bug|feature [numbers...]] (no args = all bugs then features)"
 ---
 
 # Parallel Deep Dive: Agent Team Investigation
@@ -17,7 +17,12 @@ You are the **Coordinator** -- a Senior Software Engineer managing a parallel de
 
 ## Arguments
 
-Parse `$ARGUMENTS` as: first word = ticket type (`bug` or `feature`), remaining words = ticket numbers or `all`.
+Parse `$ARGUMENTS` using these rules:
+
+- **No arguments** (empty): Target ALL eligible bugs AND features. Bugs are processed first, then features.
+- **Type only** (`bug` or `feature`): Target all eligible tickets of that type.
+- **Type + numbers** (`bug 85 86 87`): Target those specific tickets.
+- **Type + `all`** (`bug all`): Target all eligible tickets of that type (same as type only).
 
 **Input:** $ARGUMENTS
 
@@ -33,10 +38,21 @@ Parse `$ARGUMENTS` as: first word = ticket type (`bug` or `feature`), remaining 
 
 ## Session Setup
 
-1. **Read** `{DASHBOARD}` to identify target tickets.
-   - If `$ARGUMENTS` includes `all`: select all `[Pending]` and `[In-Progress]` tickets.
-   - If `$ARGUMENTS` includes ticket numbers: select those specific tickets (verify they exist and are `[Pending]` or `[In-Progress]`). Warn and skip any with other statuses.
-   - If no eligible tickets found, inform the user and stop.
+1. **Build the ticket queue** based on arguments:
+
+   **No arguments (default):**
+   - Read `Debugging/debug_plan.md` -- collect all `[Pending]` and `[In-Progress]` bugs.
+   - Read `Features/feature_plan.md` -- collect all `[Pending]` and `[In-Progress]` features.
+   - Order: **all bugs first, then all features.**
+   - Both PREFIX/ACTIVE_DIR/DASHBOARD configs are used (switch per ticket type).
+
+   **Type specified (`bug` or `feature`, with or without `all`):**
+   - Read the corresponding `{DASHBOARD}`. Select all `[Pending]` and `[In-Progress]` tickets.
+
+   **Type + specific numbers (`bug 85 86 87`):**
+   - Read `{DASHBOARD}`. Select those specific tickets (verify they exist and are `[Pending]` or `[In-Progress]`). Warn and skip any with other statuses.
+
+   If no eligible tickets found, inform the user and stop.
 
 2. **Read** `docs/README.md` to understand documentation structure.
 
@@ -122,7 +138,17 @@ When a teammate reports implementation complete:
 6. **Always after implementation completes:**
    - Remove ticket's files from `FILES_IN_USE`.
    - **Scan WAITING_QUEUE:** For any now-unblocked ticket, send its teammate implementation instructions.
-   - If a slot freed up, spawn next investigation teammate.
+   - **Continue Gate** (see below): If tickets remain in queue, ask user before spawning next.
+
+### Continue Gate
+
+After the initial batch of teammates has been launched (up to 5), the coordinator does NOT automatically spawn new teammates when slots free up. Instead:
+
+1. When a teammate finishes (investigation complete + approved/skipped/etc.) and there are still `queued` tickets remaining:
+2. Ask the user via AskUserQuestion: **"[Ticket] is done. {N} tickets remain in queue. Continue with the next ticket?"**
+   - **Yes:** Spawn one new investigation teammate for the next queued ticket. (Next time a teammate finishes, ask again.)
+   - **No:** Set `ACCEPTING_NEW = false`. Let all currently-active teammates finish their work, but do not spawn any new ones. The session winds down naturally.
+3. The initial launch of up to 5 teammates happens WITHOUT asking -- the gate only activates after the first batch.
 
 ### Update Dashboard
 

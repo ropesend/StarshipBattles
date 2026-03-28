@@ -665,6 +665,8 @@ class Game:
         """Handle scene actions from TestLabScreen."""
         if action == "return_to_menu":
             self._switch_scene(GameState.MENU, self._menu_scene)
+        elif action == "start_test_battle":
+            self._switch_scene(GameState.BATTLE, self.battle_scene)
 
     def _update_and_draw(self, frame_time, events):
         """Update logic and draw current scene (PROJ-65: unified dispatch).
