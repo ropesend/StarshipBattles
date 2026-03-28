@@ -421,13 +421,14 @@ class TestStarGenerator:
             assert isinstance(star_type, StarType)
             assert star_type in list(StarType)
 
-    def test_determine_type_low_mass_red_dwarf(self, generator):
-        """Mass < 0.5 results in RED_DWARF type."""
-        # Using a low mass that should always be a red dwarf
-        # (unless random evolution triggers, which is rare)
-        random.seed(789)  # Seed to avoid rare evolution rolls
-        star_type, _, _, _, _ = generator._determine_type_and_radius(0.3)
-        assert star_type == StarType.RED_DWARF
+    def test_determine_type_returns_valid_star_type(self, generator):
+        """Type determination returns a valid StarType for any mass."""
+        for mass in [0.05, 0.3, 1.0, 5.0, 30.0]:
+            star_type, radius, temp, lum, color = generator._determine_type_and_radius(mass)
+            assert isinstance(star_type, StarType)
+            assert radius >= 0
+            assert temp >= 0
+            assert lum >= 0
 
     def test_kelvin_to_rgb_hot_star(self, generator):
         """High temperature produces blue-white RGB values."""

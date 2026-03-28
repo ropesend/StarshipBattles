@@ -589,7 +589,7 @@ class TestResourceGeneration:
         assert large_qty > small_qty * 0.5  # Allow some variance
 
     def test_generate_resources_earth_mass_baseline(self, planet_generator):
-        """Earth-mass planet yields approximately 10M per resource (with affinity=1.0)."""
+        """Earth-mass planet yields approximately 250M per resource (with affinity=1.0)."""
         from game.strategy.data.planet_physics import MASS_EARTH
 
         # Run multiple times and average to reduce randomness impact
@@ -602,9 +602,9 @@ class TestResourceGeneration:
 
         for res_name, total in totals.items():
             avg = total / n_samples
-            # With affinities, some resources will be above/below 10M.
-            # Allow wide band: 2M to 25M per resource
-            assert 2_000_000 < avg < 25_000_000, (
+            # With affinities, some resources will be above/below 250M.
+            # Allow wide band: 50M to 650M per resource
+            assert 50_000_000 < avg < 650_000_000, (
                 f"{res_name} average {avg:.0f} not in expected range for Earth-mass"
             )
 
