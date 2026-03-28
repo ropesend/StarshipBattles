@@ -16,6 +16,8 @@ from simulation_tests.scenarios.validation import check_exact, check_tost, check
 from simulation_tests.scenarios.templates import StaticTargetScenario
 from simulation_tests.scenarios.beam_scenarios import compute_beam_hit_chance
 from simulation_tests.test_constants import (
+    POINT_BLANK_DISTANCE,
+    MID_RANGE_DISTANCE,
     STANDARD_DISTANCE,
     STANDARD_SEED,
     STANDARD_MARGIN,
@@ -49,7 +51,7 @@ class ShieldAbsorbsDamageScenario(StaticTargetScenario):
 
     attacker_ship = "Test_Attacker_Beam360_Med.json"
     target_ship = SHIELDED_TARGET_SHIP
-    distance = 50
+    distance = POINT_BLANK_DISTANCE
 
     metadata = TestMetadata(
         test_id="SHIELD-001",
@@ -78,17 +80,20 @@ class ShieldAbsorbsDamageScenario(StaticTargetScenario):
         tags=["defense", "shield", "absorption", "beam"],
     )
 
+    def _collect_extra_results(self, battle_engine):
+        self.shield_absorbed = SHIELD_CAPACITY - self.target.current_shields
+        self.results['shield_absorbed'] = self.shield_absorbed
+
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
         # Data
         checks.append(check_exact("Initial Shield Capacity", SHIELD_CAPACITY,
                                   self.target.max_shields, phase="data"))
         # Outcome
-        shield_absorbed = SHIELD_CAPACITY - self.target.current_shields
         checks.append(check_true("Damage Dealt", self.damage_dealt > 0,
                                  actual=self.damage_dealt, phase="outcome"))
-        checks.append(check_true("Shields Absorbed Damage", shield_absorbed > 0,
-                                 actual=shield_absorbed, phase="outcome"))
+        checks.append(check_true("Shields Absorbed Damage", self.shield_absorbed > 0,
+                                 actual=self.shield_absorbed, phase="outcome"))
         return checks
 
 
@@ -103,7 +108,7 @@ class ShieldOverflowToHullScenario(StaticTargetScenario):
 
     attacker_ship = "Test_Attacker_Beam360_High.json"
     target_ship = SHIELDED_TARGET_SHIP
-    distance = 50
+    distance = POINT_BLANK_DISTANCE
 
     metadata = TestMetadata(
         test_id="SHIELD-002",
@@ -161,7 +166,7 @@ class ShieldRegenerationScenario(StaticTargetScenario):
 
     attacker_ship = "Test_Attacker_Beam360_Med.json"
     target_ship = SHIELD_REGEN_TARGET_SHIP
-    distance = 50
+    distance = POINT_BLANK_DISTANCE
 
     metadata = TestMetadata(
         test_id="SHIELD-003",
@@ -222,7 +227,7 @@ class EmissiveArmorBlocksLowDamageScenario(StaticTargetScenario):
 
     attacker_ship = "Test_Attacker_Beam360_Med.json"
     target_ship = EMISSIVE_ARMOR_TARGET_SHIP
-    distance = 50
+    distance = POINT_BLANK_DISTANCE
 
     metadata = TestMetadata(
         test_id="ARMOR-001",
@@ -278,7 +283,7 @@ class EmissiveArmorReducesHighDamageScenario(StaticTargetScenario):
 
     attacker_ship = "Test_Attacker_Beam360_High.json"
     target_ship = EMISSIVE_ARMOR_TARGET_SHIP
-    distance = 50
+    distance = POINT_BLANK_DISTANCE
 
     metadata = TestMetadata(
         test_id="ARMOR-002",
@@ -338,7 +343,7 @@ class ECMReducesHitRateScenario(StaticTargetScenario):
 
     attacker_ship = "Test_Attacker_Beam360_Med.json"
     target_ship = ECM_TARGET_SHIP
-    distance = 400
+    distance = MID_RANGE_DISTANCE
 
     metadata = TestMetadata(
         test_id="ECM-001",
@@ -400,7 +405,7 @@ class SensorImprovesHitRateScenario(StaticTargetScenario):
 
     attacker_ship = SENSOR_ATTACKER_SHIP
     target_ship = "Test_Target_Stationary.json"
-    distance = 400
+    distance = MID_RANGE_DISTANCE
 
     metadata = TestMetadata(
         test_id="SENSOR-001",

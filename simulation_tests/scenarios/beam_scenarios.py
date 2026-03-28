@@ -39,7 +39,11 @@ from simulation_tests.test_constants import (
     STATIONARY_TARGET_MASS,
     STANDARD_MARGIN,
     HIGH_PRECISION_MARGIN,
-    STANDARD_SEED
+    STANDARD_SEED,
+    POINT_BLANK_DISTANCE,
+    MID_RANGE_DISTANCE,
+    NEAR_MAX_RANGE_DISTANCE,
+    BEAM_OUT_OF_RANGE_DISTANCE,
 )
 
 
@@ -146,1026 +150,289 @@ def compute_beam_hit_chance(scenario, target_acceleration=0.0, target_turn_speed
 
 
 # ============================================================================
+# ACCURACY LEVEL CONFIGURATION
+# ============================================================================
+
+# Maps accuracy_level -> (attacker_ship, beam_damage, subcategory_label)
+_ACCURACY_CONFIG = {
+    "low": (
+        "Test_Attacker_Beam360_Low.json",
+        BEAM_LOW_DAMAGE,
+        "Low",
+    ),
+    "med": (
+        "Test_Attacker_Beam360_Med.json",
+        BEAM_MED_DAMAGE,
+        "Medium",
+    ),
+    "high": (
+        "Test_Attacker_Beam360_High.json",
+        BEAM_HIGH_DAMAGE,
+        "High",
+    ),
+}
+
+# Maps distance_label -> (center_distance, distance_display_name)
+_DISTANCE_CONFIG = {
+    "point_blank": (POINT_BLANK_DISTANCE, "Point Blank"),
+    "mid_range": (MID_RANGE_DISTANCE, "Mid Range"),
+    "max_range": (NEAR_MAX_RANGE_DISTANCE, "Max Range"),
+}
+
+# Maps (accuracy_level, distance_label) -> test_id number
+_TEST_ID_MAP = {
+    ("low", "point_blank"): "001",
+    ("low", "mid_range"): "002",
+    ("low", "max_range"): "003",
+    ("med", "point_blank"): "004",
+    ("med", "mid_range"): "005",
+    ("med", "max_range"): "006",
+    ("high", "point_blank"): "007",
+    ("high", "max_range"): "008",
+}
+
+# Non-standard max_ticks for standard (non-HT) tests (default is STANDARD_TEST_TICKS)
+_MAX_TICKS_OVERRIDE = {
+    ("low", "max_range"): 1000,
+    ("med", "max_range"): 1000,
+}
+
+# UI priority: point_blank=10, mid_range=9, max_range=8
+_UI_PRIORITY = {
+    "point_blank": 10,
+    "mid_range": 9,
+    "max_range": 8,
+}
+
+
+# ============================================================================
+# PARAMETRIZED BASE CLASS
+# ============================================================================
+
+class BeamAccuracyScenario(StaticTargetScenario):
+    """
+    Parametrized base for beam accuracy tests against stationary targets.
+
+    Subclasses set accuracy_level, distance_label, and optionally high_tick=True.
+    Everything else -- ship files, metadata, custom_setup, validate -- is derived
+    automatically.
+    """
+
+    # Subclass must set these
+    accuracy_level: str = None   # "low", "med", "high"
+    distance_label: str = None   # "point_blank", "mid_range", "max_range"
+    high_tick: bool = False
+
+    # Set by __init_subclass__
+    target_ship = None
+    attacker_ship = None
+    distance = None
+    metadata = None
+
+    def __init_subclass__(cls, **kwargs):
+        """Auto-configure metadata and template attributes from accuracy_level/distance_label."""
+        super().__init_subclass__(**kwargs)
+
+        # Skip configuration for the base class itself
+        if cls.accuracy_level is None or cls.distance_label is None:
+            return
+
+        acc_ship, beam_damage, acc_label = _ACCURACY_CONFIG[cls.accuracy_level]
+        center_distance, dist_name = _DISTANCE_CONFIG[cls.distance_label]
+        test_num = _TEST_ID_MAP[(cls.accuracy_level, cls.distance_label)]
+
+        cls._beam_damage_expected = beam_damage
+
+        # Ship and distance configuration
+        cls.attacker_ship = acc_ship
+        cls.distance = center_distance
+
+        if cls.high_tick:
+            cls.target_ship = "Test_Target_Stationary_HighTick.json"
+            test_id = f"BEAMWEAPON-{test_num}-HT"
+            max_ticks = HIGH_TICK_TEST_TICKS
+            margin_name = "HIGH_PRECISION"
+            ui_priority = 11
+            subcategory = f"Accuracy - {acc_label} (High-Tick)"
+            name_suffix = " [100k Ticks]"
+            extra_tags = ["high-tick", "precision"]
+            summary_prefix = "High-precision validation"
+            summary_detail = "with 100k ticks for +/-1% statistical margin"
+            expected_outcome_tpl = "Hit rate within +/-1% of expected with 99% confidence"
+            pass_criteria = "Statistical validation passes with p < 0.05"
+        else:
+            cls.target_ship = "Test_Target_Stationary.json"
+            test_id = f"BEAMWEAPON-{test_num}"
+            max_ticks = _MAX_TICKS_OVERRIDE.get(
+                (cls.accuracy_level, cls.distance_label), STANDARD_TEST_TICKS
+            )
+            margin_name = "STANDARD"
+            ui_priority = _UI_PRIORITY[cls.distance_label]
+            subcategory = f"Accuracy - {acc_label}"
+            name_suffix = ""
+            extra_tags = []
+            summary_prefix = f"Validates {acc_label.lower()} accuracy beam"
+            summary_detail = f"at {dist_name.lower()} range"
+            expected_outcome_tpl = "Hit rate matches sigmoid prediction within +/-6%"
+            pass_criteria = "TOST equivalence test passes"
+
+        # Compute surface distance for metadata display
+        target_radius = 40 * ((STATIONARY_TARGET_MASS / 1000) ** (1/3))
+        surface_dist = center_distance - target_radius
+
+        dist_tag = cls.distance_label.replace("_", "-")
+        acc_tag = f"{cls.accuracy_level.replace('med', 'medium')}-accuracy"
+
+        cls.metadata = TestMetadata(
+            test_id=test_id,
+            category="BeamWeaponAbility",
+            subcategory=subcategory,
+            name=f"{acc_label} Accuracy Beam - {dist_name} ({surface_dist:.1f}px surface){name_suffix}",
+            summary=f"{summary_prefix} {summary_detail}",
+            conditions=[
+                f"Attacker: {acc_ship}",
+                f"Target: {cls.target_ship} (mass={int(STATIONARY_TARGET_MASS)})",
+                f"Center Distance: {center_distance} pixels",
+                f"Surface Distance: {surface_dist:.2f} pixels",
+                f"Margin: {margin_name}",
+                f"Test Duration: {max_ticks} ticks",
+            ],
+            edge_cases=[
+                f"Beam accuracy test at {dist_name.lower()} with {acc_label.lower()} accuracy weapon",
+            ],
+            expected_outcome=expected_outcome_tpl,
+            pass_criteria=pass_criteria,
+            max_ticks=max_ticks,
+            seed=STANDARD_SEED,
+            battle_end_mode="time_based",
+            ui_priority=ui_priority,
+            tags=["accuracy", acc_tag, dist_tag, "beam-weapons"] + extra_tags,
+        )
+
+    def custom_setup(self, battle_engine):
+        """Calculate test-specific expected hit chance."""
+        self.expected_hit_chance = compute_beam_hit_chance(self)
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Beam Damage", self._beam_damage_expected, beam.damage))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        margin = HIGH_PRECISION_MARGIN if self.high_tick else STANDARD_MARGIN
+        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
+                                  successes=int(self.damage_dealt),
+                                  trials=engine.tick_counter,
+                                  margin=margin))
+        return checks
+
+
+# ============================================================================
 # LOW ACCURACY BEAM TESTS (base_accuracy=0.5, falloff=0.002)
 # ============================================================================
 
-class BeamLowAccuracyPointBlankScenario(StaticTargetScenario):
-    """
-    BEAMWEAPON-001: Low Accuracy Beam at Point-Blank Range
-
-    Tests that a low accuracy beam weapon (0.5 base) hits consistently
-    at point-blank range where range penalty is minimal.
-
-    Surface distance: 20.53px (center 50px - radius 29.47px)
-    Expected hit rate: 53.18%
-    """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Beam360_Low.json"
-    target_ship = "Test_Target_Stationary.json"
-    distance = 50
-
-    metadata = TestMetadata(
-        test_id="BEAMWEAPON-001",
-        category="BeamWeaponAbility",
-        subcategory="Accuracy - Low",
-        name="Low Accuracy Beam - Point Blank (20.5px surface)",
-        summary="Validates low accuracy beam (0.5 base) hits consistently at point-blank range with minimal range penalty",
-        conditions=[
-            "Attacker: Test_Attacker_Beam360_Low.json",
-            "Target: Test_Target_Stationary.json (mass=400)",
-            "Base Accuracy: 0.5",
-            "Accuracy Falloff: 0.002 per pixel",
-            "Center Distance: 50 pixels",
-            "Target Radius: 29.47 pixels (from mass=400)",
-            "Surface Distance: 50 - 29.47 = 20.53 pixels (actual firing distance)",
-            "Range Penalty: 20.53 * 0.002 = 0.0411",
-            "Defense Penalty: 0.3316 (from mass=400 size score)",
-            "Net Score: 0.5 - 0.0411 - 0.3316 = 0.1273",
-            "Beam Damage: 1 per hit",
-            "Test Duration: 500 ticks"
-        ],
-        edge_cases=[
-            "Minimal range penalty at close range",
-            "Target size affects defense score",
-            "Sigmoid formula: P = 1/(1+e^-0.1273) = 0.5318 (53.18% hit rate)"
-        ],
-        expected_outcome="Hit rate ~53% with damage > 0 after 500 ticks",
-        pass_criteria="damage_dealt > 0",
-        max_ticks=STANDARD_TEST_TICKS,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full 500 ticks regardless of ship status
-        ui_priority=10,
-        tags=["accuracy", "low-accuracy", "point-blank", "beam-weapons"],
-    )
-
-    def custom_setup(self, battle_engine):
-        """Calculate test-specific expected hit chance."""
-        self.expected_hit_chance = compute_beam_hit_chance(self)
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_exact("Beam Damage", BEAM_LOW_DAMAGE, beam.damage))
-        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
-                                  successes=int(self.damage_dealt),
-                                  trials=engine.tick_counter,
-                                  margin=STANDARD_MARGIN))
-        return checks
+class BeamLowAccuracyPointBlankScenario(BeamAccuracyScenario):
+    """BEAMWEAPON-001: Low Accuracy Beam at Point-Blank Range"""
+    accuracy_level = "low"
+    distance_label = "point_blank"
 
 
-class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
-    """
-    BEAMWEAPON-001-HT: Low Accuracy Beam at Point-Blank Range (High-Tick Version)
-
-    High-precision validation test with 100,000 ticks for precise statistical validation.
-    Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
-    Run occasionally for deep validation before releases.
-
-    Surface distance: 20.53px (center 50px - radius 29.47px for mass=400)
-    Expected hit rate: 53.18%
-    """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Beam360_Low.json"
-    target_ship = "Test_Target_Stationary_HighTick.json"
-    distance = 50
-
-    metadata = TestMetadata(
-        test_id="BEAMWEAPON-001-HT",
-        category="BeamWeaponAbility",
-        subcategory="Accuracy - Low (High-Tick)",
-        name="Low Accuracy Beam - Point Blank (20.5px surface) [100k Ticks]",
-        summary="High-precision validation of low accuracy beam with 100k ticks for ±1% statistical margin",
-        conditions=[
-            "Attacker: Test_Attacker_Beam360_Low.json",
-            "Target: Test_Target_Stationary_HighTick.json (1B HP, mass=400 - now identical to standard)",
-            "Base Accuracy: 0.5",
-            "Accuracy Falloff: 0.002 per pixel",
-            "Center Distance: 50 pixels",
-            "Target Radius: 29.47 pixels (from mass=400)",
-            "Surface Distance: 50 - 29.47 = 20.53 pixels (actual firing distance)",
-            "Range Penalty: 20.53 * 0.002 = 0.0411",
-            "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
-            "Net Score: 0.5 - 0.0411 - 0.3316 = 0.1273",
-            "Beam Damage: 1 per hit",
-            "Test Duration: 100,000 ticks (HIGH-TICK)"
-        ],
-        edge_cases=[
-            "Ultra-high sample size (100k ticks)",
-            "Standard Error: ~0.16% (very precise)",
-            "Can detect deviations as small as ±1%",
-            "Sigmoid formula: P = 1/(1+e^-0.1273) = 0.5318 (53.18% hit rate)"
-        ],
-        expected_outcome="Hit rate within ±1% of expected (53.18%) with 99% confidence",
-        pass_criteria="Statistical validation passes with p < 0.05",
-        max_ticks=HIGH_TICK_TEST_TICKS,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full 100k ticks
-        ui_priority=11,  # Show right after regular version
-        tags=["accuracy", "low-accuracy", "point-blank", "beam-weapons", "high-tick", "precision"],
-    )
-
-    def custom_setup(self, battle_engine):
-        """Calculate test-specific expected hit chance."""
-        self.expected_hit_chance = compute_beam_hit_chance(self)
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_exact("Beam Damage", BEAM_LOW_DAMAGE, beam.damage))
-        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
-                                  successes=int(self.damage_dealt),
-                                  trials=engine.tick_counter,
-                                  margin=HIGH_PRECISION_MARGIN))
-        return checks
+class BeamLowAccuracyPointBlankHighTickScenario(BeamAccuracyScenario):
+    """BEAMWEAPON-001-HT: Low Accuracy Beam at Point-Blank Range (High-Tick)"""
+    accuracy_level = "low"
+    distance_label = "point_blank"
+    high_tick = True
 
 
-class BeamLowAccuracyMidRangeScenario(StaticTargetScenario):
-    """
-    BEAMWEAPON-002: Low Accuracy Beam at Mid-Range
-
-    Tests that a low accuracy beam weapon (0.5 base) maintains reasonable
-    accuracy at mid-range (400px) with moderate range penalty.
-
-    Surface distance: 370.53px (center 400px - radius 29.47px)
-    Expected hit rate: 36.07%
-    """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Beam360_Low.json"
-    target_ship = "Test_Target_Stationary.json"
-    distance = 400
-
-    metadata = TestMetadata(
-        test_id="BEAMWEAPON-002",
-        category="BeamWeaponAbility",
-        subcategory="Accuracy - Low",
-        name="Low Accuracy Beam - Mid Range (370.5px surface)",
-        summary="Validates low accuracy beam performance at mid-range with moderate accuracy degradation",
-        conditions=[
-            "Attacker: Test_Attacker_Beam360_Low.json",
-            "Target: Test_Target_Stationary.json (mass=400)",
-            "Base Accuracy: 0.5",
-            "Accuracy Falloff: 0.002 per pixel",
-            "Center Distance: 400 pixels",
-            "Target Radius: 29.47 pixels (from mass=400)",
-            "Surface Distance: 400 - 29.47 = 370.53 pixels (actual firing distance)",
-            "Range Penalty: 370.53 * 0.002 = 0.7411",
-            "Defense Penalty: 0.3316 (from mass=400 size score)",
-            "Net Score: 0.5 - 0.7411 - 0.3316 = -0.5727",
-            "Sigmoid formula: P = 1/(1+e^0.5727) ≈ 0.3607 (36.07% hit rate)",
-            "Beam Damage: 1 per hit",
-            "Test Duration: 500 ticks"
-        ],
-        edge_cases=[
-            "Moderate range penalty reduces accuracy significantly",
-            "Net score is negative but still has decent hit chance"
-        ],
-        expected_outcome="Moderate hit rate (~36%) with some damage dealt",
-        pass_criteria="simulation_completes (ticks_run > 0)",
-        max_ticks=STANDARD_TEST_TICKS,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
-        ui_priority=9,
-        tags=["accuracy", "low-accuracy", "mid-range", "beam-weapons"],
-    )
-
-    def custom_setup(self, battle_engine):
-        """Calculate test-specific expected hit chance."""
-        self.expected_hit_chance = compute_beam_hit_chance(self)
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_exact("Beam Damage", BEAM_LOW_DAMAGE, beam.damage))
-        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
-                                  successes=int(self.damage_dealt),
-                                  trials=engine.tick_counter,
-                                  margin=STANDARD_MARGIN))
-        return checks
+class BeamLowAccuracyMidRangeScenario(BeamAccuracyScenario):
+    """BEAMWEAPON-002: Low Accuracy Beam at Mid-Range"""
+    accuracy_level = "low"
+    distance_label = "mid_range"
 
 
-class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
-    """
-    BEAMWEAPON-002-HT: Low Accuracy Beam at Mid-Range (High-Tick Version)
-
-    High-precision validation test with 100,000 ticks for precise statistical validation.
-    Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
-    Run occasionally for deep validation before releases.
-
-    Surface distance: 370.53px (center 400px - radius 29.47px for mass=400)
-    Expected hit rate: 36.07%
-    """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Beam360_Low.json"
-    target_ship = "Test_Target_Stationary_HighTick.json"
-    distance = 400
-
-    metadata = TestMetadata(
-        test_id="BEAMWEAPON-002-HT",
-        category="BeamWeaponAbility",
-        subcategory="Accuracy - Low (High-Tick)",
-        name="Low Accuracy Beam - Mid Range (370.5px surface) [100k Ticks]",
-        summary="High-precision validation with 100k ticks for ±1% statistical margin",
-        conditions=[
-            "Attacker: Test_Attacker_Beam360_Low.json",
-            "Target: Test_Target_Stationary_HighTick.json (1B HP, mass=400 - now identical to standard)",
-            "Base Accuracy: 0.5",
-            "Accuracy Falloff: 0.002 per pixel",
-            "Center Distance: 400 pixels",
-            "Target Radius: 29.47 pixels (from mass=400)",
-            "Surface Distance: 400 - 29.47 = 370.53 pixels (actual firing distance)",
-            "Range Penalty: 370.53 * 0.002 = 0.7411",
-            "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
-            "Net Score: 0.5 - 0.7411 - 0.3316 = -0.5727",
-            "Sigmoid formula: P = 1/(1+e^0.5727) ≈ 0.3607 (36.07% hit rate)",
-            "Beam Damage: 1 per hit",
-            "Test Duration: 100,000 ticks (HIGH-TICK)"
-        ],
-        edge_cases=[
-            "Ultra-high sample size (100k ticks)",
-            "Standard Error: ~0.16% (very precise)",
-            "Can detect deviations as small as ±1%",
-            "Moderate range penalty reduces accuracy significantly"
-        ],
-        expected_outcome="Hit rate within ±1% of expected (36.07%) with 99% confidence",
-        pass_criteria="Statistical validation passes with p < 0.05",
-        max_ticks=HIGH_TICK_TEST_TICKS,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full 100k ticks
-        ui_priority=11,  # Show right after regular version
-        tags=["accuracy", "low-accuracy", "mid-range", "beam-weapons", "high-tick", "precision"],
-    )
-
-    def custom_setup(self, battle_engine):
-        """Calculate test-specific expected hit chance."""
-        self.expected_hit_chance = compute_beam_hit_chance(self)
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_exact("Beam Damage", BEAM_LOW_DAMAGE, beam.damage))
-        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
-                                  successes=int(self.damage_dealt),
-                                  trials=engine.tick_counter,
-                                  margin=HIGH_PRECISION_MARGIN))
-        return checks
+class BeamLowAccuracyMidRangeHighTickScenario(BeamAccuracyScenario):
+    """BEAMWEAPON-002-HT: Low Accuracy Beam at Mid-Range (High-Tick)"""
+    accuracy_level = "low"
+    distance_label = "mid_range"
+    high_tick = True
 
 
-class BeamLowAccuracyMaxRangeScenario(StaticTargetScenario):
-    """
-    BEAMWEAPON-003: Low Accuracy Beam at Max Range
-
-    Tests that a low accuracy beam weapon (0.5 base) has heavily degraded
-    accuracy at max range (750px) with high range penalty.
-
-    Surface distance: 720.53px (center 750px - radius 29.47px)
-    Expected hit rate: 21.86%
-    """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Beam360_Low.json"
-    target_ship = "Test_Target_Stationary.json"
-    distance = 750
-
-    metadata = TestMetadata(
-        test_id="BEAMWEAPON-003",
-        category="BeamWeaponAbility",
-        subcategory="Accuracy - Low",
-        name="Low Accuracy Beam - Max Range (720.5px surface)",
-        summary="Validates low accuracy beam has heavily degraded accuracy at max range with high range penalty",
-        conditions=[
-            "Attacker: Test_Attacker_Beam360_Low.json",
-            "Target: Test_Target_Stationary.json (mass=400)",
-            "Base Accuracy: 0.5",
-            "Accuracy Falloff: 0.002 per pixel",
-            "Center Distance: 750 pixels (near max range of 800)",
-            "Target Radius: 29.47 pixels (from mass=400)",
-            "Surface Distance: 750 - 29.47 = 720.53 pixels (actual firing distance)",
-            "Range Penalty: 720.53 * 0.002 = 1.4411",
-            "Defense Penalty: 0.3316 (from mass=400 size score)",
-            "Net Score: 0.5 - 1.4411 - 0.3316 = -1.2727",
-            "Sigmoid formula: P = 1/(1+e^1.2727) ≈ 0.2186 (21.86% hit rate)",
-            "Beam Damage: 1 per hit",
-            "Test Duration: 1000 ticks"
-        ],
-        edge_cases=[
-            "High range penalty at extreme distance",
-            "Low probability but not impossible",
-            "Extended test duration to allow for hits"
-        ],
-        expected_outcome="Low hit rate (~22%) with possible damage dealt",
-        pass_criteria="simulation_completes (ticks_run > 0)",
-        max_ticks=1000,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
-        ui_priority=8,
-        tags=["accuracy", "low-accuracy", "max-range", "beam-weapons"],
-    )
-
-    def custom_setup(self, battle_engine):
-        """Calculate test-specific expected hit chance."""
-        self.expected_hit_chance = compute_beam_hit_chance(self)
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_exact("Beam Damage", BEAM_LOW_DAMAGE, beam.damage))
-        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
-                                  successes=int(self.damage_dealt),
-                                  trials=engine.tick_counter,
-                                  margin=STANDARD_MARGIN))
-        return checks
+class BeamLowAccuracyMaxRangeScenario(BeamAccuracyScenario):
+    """BEAMWEAPON-003: Low Accuracy Beam at Max Range"""
+    accuracy_level = "low"
+    distance_label = "max_range"
 
 
 # ============================================================================
 # MEDIUM ACCURACY BEAM TESTS (base_accuracy=2.0, falloff=0.001)
 # ============================================================================
 
-class BeamMediumAccuracyPointBlankScenario(StaticTargetScenario):
-    """
-    BEAMWEAPON-004: Medium Accuracy Beam at Point-Blank Range
-
-    Tests that a medium accuracy beam weapon (2.0 base) hits very consistently
-    at point-blank range (50px).
-
-    Surface distance: 20.53px (center 50px - radius 29.47px)
-    Expected hit rate: 83.85%
-    """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Beam360_Med.json"
-    target_ship = "Test_Target_Stationary.json"
-    distance = 50
-
-    metadata = TestMetadata(
-        test_id="BEAMWEAPON-004",
-        category="BeamWeaponAbility",
-        subcategory="Accuracy - Medium",
-        name="Medium Accuracy Beam - Point Blank (20.5px surface)",
-        summary="Validates medium accuracy beam (2.0 base) hits very consistently at point-blank range",
-        conditions=[
-            "Attacker: Test_Attacker_Beam360_Med.json",
-            "Target: Test_Target_Stationary.json (mass=400)",
-            "Base Accuracy: 2.0",
-            "Accuracy Falloff: 0.001 per pixel",
-            "Center Distance: 50 pixels",
-            "Target Radius: 29.47 pixels (from mass=400)",
-            "Surface Distance: 50 - 29.47 = 20.53 pixels (actual firing distance)",
-            "Range Penalty: 20.53 * 0.001 = 0.0205",
-            "Defense Penalty: 0.3316 (from mass=400 size score)",
-            "Net Score: 2.0 - 0.0205 - 0.3316 = 1.6479",
-            "Sigmoid formula: P = 1/(1+e^-1.6479) ≈ 0.8385 (83.85% hit rate)",
-            "Beam Damage: 1 per hit",
-            "Test Duration: 500 ticks"
-        ],
-        edge_cases=[
-            "Very high net score results in near-perfect accuracy",
-            "Should deal significant damage quickly"
-        ],
-        expected_outcome="Very high hit rate (~84%) with significant damage dealt",
-        pass_criteria="damage_dealt > 0",
-        max_ticks=STANDARD_TEST_TICKS,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
-        ui_priority=10,
-        tags=["accuracy", "medium-accuracy", "point-blank", "beam-weapons"],
-    )
-
-    def custom_setup(self, battle_engine):
-        """Calculate test-specific expected hit chance."""
-        self.expected_hit_chance = compute_beam_hit_chance(self)
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
-        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
-                                  successes=int(self.damage_dealt),
-                                  trials=engine.tick_counter,
-                                  margin=STANDARD_MARGIN))
-        return checks
+class BeamMediumAccuracyPointBlankScenario(BeamAccuracyScenario):
+    """BEAMWEAPON-004: Medium Accuracy Beam at Point-Blank Range"""
+    accuracy_level = "med"
+    distance_label = "point_blank"
 
 
-class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
-    """
-    BEAMWEAPON-004-HT: Medium Accuracy Beam at Point-Blank Range (High-Tick Version)
-
-    High-precision validation test with 100,000 ticks for precise statistical validation.
-    Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
-    Run occasionally for deep validation before releases.
-
-    Surface distance: 20.53px (center 50px - radius 29.47px for mass=400)
-    Expected hit rate: 83.85%
-    """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Beam360_Med.json"
-    target_ship = "Test_Target_Stationary_HighTick.json"
-    distance = 50
-
-    metadata = TestMetadata(
-        test_id="BEAMWEAPON-004-HT",
-        category="BeamWeaponAbility",
-        subcategory="Accuracy - Medium (High-Tick)",
-        name="Medium Accuracy Beam - Point Blank (20.5px surface) [100k Ticks]",
-        summary="High-precision validation with 100k ticks for ±1% statistical margin",
-        conditions=[
-            "Attacker: Test_Attacker_Beam360_Med.json",
-            "Target: Test_Target_Stationary_HighTick.json (1B HP, mass=400 - now identical to standard)",
-            "Base Accuracy: 2.0",
-            "Accuracy Falloff: 0.001 per pixel",
-            "Center Distance: 50 pixels",
-            "Target Radius: 29.47 pixels (from mass=400)",
-            "Surface Distance: 50 - 29.47 = 20.53 pixels (actual firing distance)",
-            "Range Penalty: 20.53 * 0.001 = 0.0205",
-            "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
-            "Net Score: 2.0 - 0.0205 - 0.3316 = 1.6479",
-            "Sigmoid formula: P = 1/(1+e^-1.6479) ≈ 0.8385 (83.85% hit rate)",
-            "Beam Damage: 1 per hit",
-            "Test Duration: 100,000 ticks (HIGH-TICK)"
-        ],
-        edge_cases=[
-            "Ultra-high sample size (100k ticks)",
-            "Standard Error: ~0.16% (very precise)",
-            "Can detect deviations as small as ±1%",
-            "Very high net score results in near-perfect accuracy"
-        ],
-        expected_outcome="Hit rate within ±1% of expected (83.85%) with 99% confidence",
-        pass_criteria="Statistical validation passes with p < 0.05",
-        max_ticks=HIGH_TICK_TEST_TICKS,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full 100k ticks
-        ui_priority=11,  # Show right after regular version
-        tags=["accuracy", "medium-accuracy", "point-blank", "beam-weapons", "high-tick", "precision"],
-    )
-
-    def custom_setup(self, battle_engine):
-        """Calculate test-specific expected hit chance."""
-        self.expected_hit_chance = compute_beam_hit_chance(self)
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
-        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
-                                  successes=int(self.damage_dealt),
-                                  trials=engine.tick_counter,
-                                  margin=HIGH_PRECISION_MARGIN))
-        return checks
+class BeamMediumAccuracyPointBlankHighTickScenario(BeamAccuracyScenario):
+    """BEAMWEAPON-004-HT: Medium Accuracy Beam at Point-Blank Range (High-Tick)"""
+    accuracy_level = "med"
+    distance_label = "point_blank"
+    high_tick = True
 
 
-class BeamMediumAccuracyMidRangeScenario(StaticTargetScenario):
-    """
-    BEAMWEAPON-005: Medium Accuracy Beam at Mid-Range
-
-    Tests that a medium accuracy beam weapon (2.0 base) maintains high
-    accuracy at mid-range (400px).
-
-    Surface distance: 370.53px (center 400px - radius 29.47px)
-    Expected hit rate: 78.55%
-    """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Beam360_Med.json"
-    target_ship = "Test_Target_Stationary.json"
-    distance = 400
-
-    metadata = TestMetadata(
-        test_id="BEAMWEAPON-005",
-        category="BeamWeaponAbility",
-        subcategory="Accuracy - Medium",
-        name="Medium Accuracy Beam - Mid Range (370.5px surface)",
-        summary="Validates medium accuracy beam maintains high accuracy at mid-range",
-        conditions=[
-            "Attacker: Test_Attacker_Beam360_Med.json",
-            "Target: Test_Target_Stationary.json (mass=400)",
-            "Base Accuracy: 2.0",
-            "Accuracy Falloff: 0.001 per pixel",
-            "Center Distance: 400 pixels",
-            "Target Radius: 29.47 pixels (from mass=400)",
-            "Surface Distance: 400 - 29.47 = 370.53 pixels (actual firing distance)",
-            "Range Penalty: 370.53 * 0.001 = 0.3705",
-            "Defense Penalty: 0.3316 (from mass=400 size score)",
-            "Net Score: 2.0 - 0.3705 - 0.3316 = 1.2979",
-            "Sigmoid formula: P = 1/(1+e^-1.2979) ≈ 0.7855 (78.55% hit rate)",
-            "Beam Damage: 1 per hit",
-            "Test Duration: 500 ticks"
-        ],
-        edge_cases=[
-            "Moderate range penalty but still high net score",
-            "Should maintain good hit rate at distance"
-        ],
-        expected_outcome="High hit rate (~79%) with damage dealt",
-        pass_criteria="damage_dealt > 0",
-        max_ticks=STANDARD_TEST_TICKS,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
-        ui_priority=9,
-        tags=["accuracy", "medium-accuracy", "mid-range", "beam-weapons"],
-    )
-
-    def custom_setup(self, battle_engine):
-        """Calculate test-specific expected hit chance."""
-        self.expected_hit_chance = compute_beam_hit_chance(self)
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
-        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
-                                  successes=int(self.damage_dealt),
-                                  trials=engine.tick_counter,
-                                  margin=STANDARD_MARGIN))
-        return checks
+class BeamMediumAccuracyMidRangeScenario(BeamAccuracyScenario):
+    """BEAMWEAPON-005: Medium Accuracy Beam at Mid-Range"""
+    accuracy_level = "med"
+    distance_label = "mid_range"
 
 
-class BeamMediumAccuracyMidRangeHighTickScenario(StaticTargetScenario):
-    """
-    BEAMWEAPON-005-HT: Medium Accuracy Beam at Mid-Range (High-Tick Version)
-
-    High-precision validation test with 100,000 ticks for precise statistical validation.
-    Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
-    Run occasionally for deep validation before releases.
-
-    Surface distance: 370.53px (center 400px - radius 29.47px for mass=400)
-    Expected hit rate: 80.98%
-    """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Beam360_Med.json"
-    target_ship = "Test_Target_Stationary_HighTick.json"
-    distance = 400
-
-    metadata = TestMetadata(
-        test_id="BEAMWEAPON-005-HT",
-        category="BeamWeaponAbility",
-        subcategory="Accuracy - Medium (High-Tick)",
-        name="Medium Accuracy Beam - Mid Range (370.5px surface) [100k Ticks]",
-        summary="High-precision validation with 100k ticks for ±1% statistical margin",
-        conditions=[
-            "Attacker: Test_Attacker_Beam360_Med.json",
-            "Target: Test_Target_Stationary_HighTick.json (1B HP, mass=400 - now identical to standard)",
-            "Base Accuracy: 2.0",
-            "Accuracy Falloff: 0.001 per pixel",
-            "Center Distance: 400 pixels",
-            "Target Radius: 29.47 pixels (from mass=400)",
-            "Surface Distance: 400 - 29.47 = 370.53 pixels (actual firing distance)",
-            "Range Penalty: 366.26 * 0.001 = 0.3663",
-            "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
-            "Net Score: 2.0 - 0.3663 - 0.1849 = 1.4488",
-            "Sigmoid formula: P = 1/(1+e^-1.4488) ≈ 0.8098 (80.98% hit rate)",
-            "Beam Damage: 1 per hit",
-            "Test Duration: 100,000 ticks (HIGH-TICK)"
-        ],
-        edge_cases=[
-            "Ultra-high sample size (100k ticks)",
-            "Standard Error: ~0.16% (very precise)",
-            "Can detect deviations as small as ±1%",
-            "Moderate range penalty but still high net score"
-        ],
-        expected_outcome="Hit rate within ±1% of expected (80.98%) with 99% confidence",
-        pass_criteria="Statistical validation passes with p < 0.05",
-        max_ticks=HIGH_TICK_TEST_TICKS,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full 100k ticks
-        ui_priority=11,  # Show right after regular version
-        tags=["accuracy", "medium-accuracy", "mid-range", "beam-weapons", "high-tick", "precision"],
-    )
-
-    def custom_setup(self, battle_engine):
-        """Calculate test-specific expected hit chance."""
-        self.expected_hit_chance = compute_beam_hit_chance(self)
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
-        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
-                                  successes=int(self.damage_dealt),
-                                  trials=engine.tick_counter,
-                                  margin=HIGH_PRECISION_MARGIN))
-        return checks
+class BeamMediumAccuracyMidRangeHighTickScenario(BeamAccuracyScenario):
+    """BEAMWEAPON-005-HT: Medium Accuracy Beam at Mid-Range (High-Tick)"""
+    accuracy_level = "med"
+    distance_label = "mid_range"
+    high_tick = True
 
 
-class BeamMediumAccuracyMaxRangeScenario(StaticTargetScenario):
-    """
-    BEAMWEAPON-006: Medium Accuracy Beam at Max Range
-
-    Tests that a medium accuracy beam weapon (2.0 base) maintains reasonable
-    accuracy even at max range (750px).
-
-    Surface distance: 720.53px (center 750px - radius 29.47px)
-    Expected hit rate: 72.07%
-    """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Beam360_Med.json"
-    target_ship = "Test_Target_Stationary.json"
-    distance = 750
-
-    metadata = TestMetadata(
-        test_id="BEAMWEAPON-006",
-        category="BeamWeaponAbility",
-        subcategory="Accuracy - Medium",
-        name="Medium Accuracy Beam - Max Range (720.5px surface)",
-        summary="Validates medium accuracy beam maintains reasonable accuracy at max range",
-        conditions=[
-            "Attacker: Test_Attacker_Beam360_Med.json",
-            "Target: Test_Target_Stationary.json (mass=400)",
-            "Base Accuracy: 2.0",
-            "Accuracy Falloff: 0.001 per pixel",
-            "Center Distance: 750 pixels (near max range of 800)",
-            "Target Radius: 29.47 pixels (from mass=400)",
-            "Surface Distance: 750 - 29.47 = 720.53 pixels (actual firing distance)",
-            "Range Penalty: 720.53 * 0.001 = 0.7205",
-            "Defense Penalty: 0.3316 (from mass=400 size score)",
-            "Net Score: 2.0 - 0.7205 - 0.3316 = 0.9479",
-            "Sigmoid formula: P = 1/(1+e^-0.9479) ≈ 0.7207 (72.07% hit rate)",
-            "Beam Damage: 1 per hit",
-            "Test Duration: 1000 ticks"
-        ],
-        edge_cases=[
-            "High range penalty but medium accuracy compensates",
-            "Should still hit regularly at max range"
-        ],
-        expected_outcome="Good hit rate (~72%) with damage dealt",
-        pass_criteria="simulation_completes (ticks_run > 0)",
-        max_ticks=1000,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
-        ui_priority=8,
-        tags=["accuracy", "medium-accuracy", "max-range", "beam-weapons"],
-    )
-
-    def custom_setup(self, battle_engine):
-        """Calculate test-specific expected hit chance."""
-        self.expected_hit_chance = compute_beam_hit_chance(self)
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
-        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
-                                  successes=int(self.damage_dealt),
-                                  trials=engine.tick_counter,
-                                  margin=STANDARD_MARGIN))
-        return checks
+class BeamMediumAccuracyMaxRangeScenario(BeamAccuracyScenario):
+    """BEAMWEAPON-006: Medium Accuracy Beam at Max Range"""
+    accuracy_level = "med"
+    distance_label = "max_range"
 
 
-class BeamMediumAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
-    """
-    BEAMWEAPON-006-HT: Medium Accuracy Beam at Max Range (High-Tick Version)
-
-    High-precision validation test with 100,000 ticks for precise statistical validation.
-    Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
-    Run occasionally for deep validation before releases.
-
-    Surface distance: 720.53px (center 750px - radius 29.47px for mass=400)
-    Expected hit rate: 75.00%
-    """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Beam360_Med.json"
-    target_ship = "Test_Target_Stationary_HighTick.json"
-    distance = 750
-
-    metadata = TestMetadata(
-        test_id="BEAMWEAPON-006-HT",
-        category="BeamWeaponAbility",
-        subcategory="Accuracy - Medium (High-Tick)",
-        name="Medium Accuracy Beam - Max Range (720.5px surface) [100k Ticks]",
-        summary="High-precision validation with 100k ticks for ±1% statistical margin",
-        conditions=[
-            "Attacker: Test_Attacker_Beam360_Med.json",
-            "Target: Test_Target_Stationary_HighTick.json (1B HP, mass=400 - now identical to standard)",
-            "Base Accuracy: 2.0",
-            "Accuracy Falloff: 0.001 per pixel",
-            "Center Distance: 750 pixels (near max range of 800)",
-            "Target Radius: 29.47 pixels (from mass=400)",
-            "Surface Distance: 750 - 29.47 = 720.53 pixels (actual firing distance)",
-            "Range Penalty: 720.53 * 0.001 = 0.7163",
-            "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
-            "Net Score: 2.0 - 0.7163 - 0.1849 = 1.0988",
-            "Sigmoid formula: P = 1/(1+e^-1.0988) ≈ 0.7500 (75.00% hit rate)",
-            "Beam Damage: 1 per hit",
-            "Test Duration: 100,000 ticks (HIGH-TICK)"
-        ],
-        edge_cases=[
-            "Ultra-high sample size (100k ticks)",
-            "Standard Error: ~0.16% (very precise)",
-            "Can detect deviations as small as ±1%",
-            "High range penalty but medium accuracy compensates"
-        ],
-        expected_outcome="Hit rate within ±1% of expected (75.00%) with 99% confidence",
-        pass_criteria="Statistical validation passes with p < 0.05",
-        max_ticks=HIGH_TICK_TEST_TICKS,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full 100k ticks
-        ui_priority=11,  # Show right after regular version
-        tags=["accuracy", "medium-accuracy", "max-range", "beam-weapons", "high-tick", "precision"],
-    )
-
-    def custom_setup(self, battle_engine):
-        """Calculate test-specific expected hit chance."""
-        self.expected_hit_chance = compute_beam_hit_chance(self)
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
-        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
-                                  successes=int(self.damage_dealt),
-                                  trials=engine.tick_counter,
-                                  margin=HIGH_PRECISION_MARGIN))
-        return checks
+class BeamMediumAccuracyMaxRangeHighTickScenario(BeamAccuracyScenario):
+    """BEAMWEAPON-006-HT: Medium Accuracy Beam at Max Range (High-Tick)"""
+    accuracy_level = "med"
+    distance_label = "max_range"
+    high_tick = True
 
 
 # ============================================================================
 # HIGH ACCURACY BEAM TESTS (base_accuracy=5.0, falloff=0.0005)
 # ============================================================================
 
-class BeamHighAccuracyPointBlankScenario(StaticTargetScenario):
-    """
-    BEAMWEAPON-007: High Accuracy Beam at Point-Blank Range
-
-    Tests that a high accuracy beam weapon (5.0 base) has near-perfect
-    accuracy at point-blank range (50px).
-
-    Surface distance: 20.53px (center 50px - radius 29.47px)
-    Expected hit rate: 99.06%
-    """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Beam360_High.json"
-    target_ship = "Test_Target_Stationary.json"
-    distance = 50
-
-    metadata = TestMetadata(
-        test_id="BEAMWEAPON-007",
-        category="BeamWeaponAbility",
-        subcategory="Accuracy - High",
-        name="High Accuracy Beam - Point Blank (20.5px surface)",
-        summary="Validates high accuracy beam (5.0 base) has near-perfect accuracy at point-blank range",
-        conditions=[
-            "Attacker: Test_Attacker_Beam360_High.json",
-            "Target: Test_Target_Stationary.json (mass=400)",
-            "Base Accuracy: 5.0",
-            "Accuracy Falloff: 0.0005 per pixel",
-            "Center Distance: 50 pixels",
-            "Target Radius: 29.47 pixels (from mass=400)",
-            "Surface Distance: 50 - 29.47 = 20.53 pixels (actual firing distance)",
-            "Range Penalty: 20.53 * 0.0005 = 0.0103",
-            "Defense Penalty: 0.3316 (from mass=400 size score)",
-            "Net Score: 5.0 - 0.0103 - 0.3316 = 4.6581",
-            "Sigmoid formula: P = 1/(1+e^-4.6581) ≈ 0.9906 (99.06% hit rate)",
-            "Beam Damage: 1 per hit",
-            "Test Duration: 500 ticks"
-        ],
-        edge_cases=[
-            "Extremely high net score results in near-100% accuracy",
-            "Should hit almost every shot"
-        ],
-        expected_outcome="Near-perfect hit rate (~99%+) with consistent damage",
-        pass_criteria="damage_dealt > 0",
-        max_ticks=STANDARD_TEST_TICKS,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
-        ui_priority=10,
-        tags=["accuracy", "high-accuracy", "point-blank", "beam-weapons"],
-    )
-
-    def custom_setup(self, battle_engine):
-        """Calculate test-specific expected hit chance."""
-        self.expected_hit_chance = compute_beam_hit_chance(self)
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_exact("Beam Damage", BEAM_HIGH_DAMAGE, beam.damage))
-        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
-                                  successes=int(self.damage_dealt),
-                                  trials=engine.tick_counter,
-                                  margin=STANDARD_MARGIN))
-        return checks
+class BeamHighAccuracyPointBlankScenario(BeamAccuracyScenario):
+    """BEAMWEAPON-007: High Accuracy Beam at Point-Blank Range"""
+    accuracy_level = "high"
+    distance_label = "point_blank"
 
 
-class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
-    """
-    BEAMWEAPON-007-HT: High Accuracy Beam at Point-Blank Range (High-Tick Version)
-
-    High-precision validation test with 100,000 ticks for precise statistical validation.
-    Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
-    Run occasionally for deep validation before releases.
-
-    Surface distance: 20.53px (center 50px - radius 29.47px for mass=400)
-    Expected hit rate: 99.06%
-    """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Beam360_High.json"
-    target_ship = "Test_Target_Stationary_HighTick.json"
-    distance = 50
-
-    metadata = TestMetadata(
-        test_id="BEAMWEAPON-007-HT",
-        category="BeamWeaponAbility",
-        subcategory="Accuracy - High (High-Tick)",
-        name="High Accuracy Beam - Point Blank (20.5px surface) [100k Ticks]",
-        summary="High-precision validation with 100k ticks for ±1% statistical margin",
-        conditions=[
-            "Attacker: Test_Attacker_Beam360_High.json",
-            "Target: Test_Target_Stationary_HighTick.json (1B HP, mass=400 - now identical to standard)",
-            "Base Accuracy: 5.0",
-            "Accuracy Falloff: 0.0005 per pixel",
-            "Center Distance: 50 pixels",
-            "Target Radius: 29.47 pixels (from mass=400)",
-            "Surface Distance: 50 - 29.47 = 20.53 pixels (actual firing distance)",
-            "Range Penalty: 20.53 * 0.0005 = 0.0103",
-            "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
-            "Net Score: 5.0 - 0.0103 - 0.3316 = 4.6581",
-            "Sigmoid formula: P = 1/(1+e^-4.6581) ≈ 0.9906 (99.06% hit rate)",
-            "Beam Damage: 1 per hit",
-            "Test Duration: 100,000 ticks (HIGH-TICK)"
-        ],
-        edge_cases=[
-            "Ultra-high sample size (100k ticks)",
-            "Standard Error: ~0.16% (very precise)",
-            "Can detect deviations as small as ±1%",
-            "Extremely high net score results in near-100% accuracy"
-        ],
-        expected_outcome="Hit rate within ±1% of expected (99.06%) with 99% confidence",
-        pass_criteria="Statistical validation passes with p < 0.05",
-        max_ticks=HIGH_TICK_TEST_TICKS,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full 100k ticks
-        ui_priority=11,  # Show right after regular version
-        tags=["accuracy", "high-accuracy", "point-blank", "beam-weapons", "high-tick", "precision"],
-    )
-
-    def custom_setup(self, battle_engine):
-        """Calculate test-specific expected hit chance."""
-        self.expected_hit_chance = compute_beam_hit_chance(self)
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_exact("Beam Damage", BEAM_HIGH_DAMAGE, beam.damage))
-        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
-                                  successes=int(self.damage_dealt),
-                                  trials=engine.tick_counter,
-                                  margin=HIGH_PRECISION_MARGIN))
-        return checks
+class BeamHighAccuracyPointBlankHighTickScenario(BeamAccuracyScenario):
+    """BEAMWEAPON-007-HT: High Accuracy Beam at Point-Blank Range (High-Tick)"""
+    accuracy_level = "high"
+    distance_label = "point_blank"
+    high_tick = True
 
 
-class BeamHighAccuracyMaxRangeScenario(StaticTargetScenario):
-    """
-    BEAMWEAPON-008: High Accuracy Beam at Max Range
-
-    Tests that a high accuracy beam weapon (5.0 base) maintains excellent
-    accuracy even at max range (750px).
-
-    Surface distance: 720.53px (center 750px - radius 29.47px)
-    Expected hit rate: 98.66%
-    """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Beam360_High.json"
-    target_ship = "Test_Target_Stationary.json"
-    distance = 750
-
-    metadata = TestMetadata(
-        test_id="BEAMWEAPON-008",
-        category="BeamWeaponAbility",
-        subcategory="Accuracy - High",
-        name="High Accuracy Beam - Max Range (720.5px surface)",
-        summary="Validates high accuracy beam maintains excellent accuracy at max range",
-        conditions=[
-            "Attacker: Test_Attacker_Beam360_High.json",
-            "Target: Test_Target_Stationary.json (mass=400)",
-            "Base Accuracy: 5.0",
-            "Accuracy Falloff: 0.0005 per pixel",
-            "Center Distance: 750 pixels (near max range of 800)",
-            "Target Radius: 29.47 pixels (from mass=400)",
-            "Surface Distance: 750 - 29.47 = 720.53 pixels (actual firing distance)",
-            "Range Penalty: 720.53 * 0.0005 = 0.3603",
-            "Defense Penalty: 0.3316 (from mass=400 size score)",
-            "Net Score: 5.0 - 0.3603 - 0.3316 = 4.3081",
-            "Sigmoid formula: P = 1/(1+e^-4.3081) ≈ 0.9866 (98.66% hit rate)",
-            "Beam Damage: 1 per hit",
-            "Test Duration: 500 ticks"
-        ],
-        edge_cases=[
-            "Low accuracy falloff means high accuracy is barely affected by range",
-            "Should hit almost every shot even at max range"
-        ],
-        expected_outcome="Near-perfect hit rate (~99%+) with consistent damage",
-        pass_criteria="damage_dealt > 0",
-        max_ticks=STANDARD_TEST_TICKS,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
-        ui_priority=9,
-        tags=["accuracy", "high-accuracy", "max-range", "beam-weapons"],
-    )
-
-    def custom_setup(self, battle_engine):
-        """Calculate test-specific expected hit chance."""
-        self.expected_hit_chance = compute_beam_hit_chance(self)
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_exact("Beam Damage", BEAM_HIGH_DAMAGE, beam.damage))
-        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
-                                  successes=int(self.damage_dealt),
-                                  trials=engine.tick_counter,
-                                  margin=STANDARD_MARGIN))
-        return checks
+class BeamHighAccuracyMaxRangeScenario(BeamAccuracyScenario):
+    """BEAMWEAPON-008: High Accuracy Beam at Max Range"""
+    accuracy_level = "high"
+    distance_label = "max_range"
 
 
-class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
-    """
-    BEAMWEAPON-008-HT: High Accuracy Beam at Max Range (High-Tick Version)
-
-    High-precision validation test with 100,000 ticks for precise statistical validation.
-    Uses ±1% equivalence margin with 99% confidence (SE ≈ 0.16%).
-    Run occasionally for deep validation before releases.
-
-    Surface distance: 720.53px (center 750px - radius 29.47px for mass=400)
-    Expected hit rate: 98.66%
-    """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Beam360_High.json"
-    target_ship = "Test_Target_Stationary_HighTick.json"
-    distance = 750
-
-    metadata = TestMetadata(
-        test_id="BEAMWEAPON-008-HT",
-        category="BeamWeaponAbility",
-        subcategory="Accuracy - High (High-Tick)",
-        name="High Accuracy Beam - Max Range (720.5px surface) [100k Ticks]",
-        summary="High-precision validation with 100k ticks for ±1% statistical margin",
-        conditions=[
-            "Attacker: Test_Attacker_Beam360_High.json",
-            "Target: Test_Target_Stationary_HighTick.json (1B HP, mass=400 - now identical to standard)",
-            "Base Accuracy: 5.0",
-            "Accuracy Falloff: 0.0005 per pixel",
-            "Center Distance: 750 pixels (near max range of 800)",
-            "Target Radius: 29.47 pixels (from mass=400)",
-            "Surface Distance: 750 - 29.47 = 720.53 pixels (actual firing distance)",
-            "Range Penalty: 720.53 * 0.0005 = 0.3603",
-            "Defense Penalty: 0.3316 (from mass=400 size score - now identical to standard)",
-            "Net Score: 5.0 - 0.3603 - 0.3316 = 4.3081",
-            "Sigmoid formula: P = 1/(1+e^-4.3081) ≈ 0.9866 (98.66% hit rate)",
-            "Beam Damage: 1 per hit",
-            "Test Duration: 100,000 ticks (HIGH-TICK)"
-        ],
-        edge_cases=[
-            "Ultra-high sample size (100k ticks)",
-            "Standard Error: ~0.16% (very precise)",
-            "Can detect deviations as small as ±1%",
-            "Low accuracy falloff means high accuracy is barely affected by range"
-        ],
-        expected_outcome="Hit rate within ±1% of expected (98.66%) with 99% confidence",
-        pass_criteria="Statistical validation passes with p < 0.05",
-        max_ticks=HIGH_TICK_TEST_TICKS,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full 100k ticks
-        ui_priority=11,  # Show right after regular version
-        tags=["accuracy", "high-accuracy", "max-range", "beam-weapons", "high-tick", "precision"],
-    )
-
-    def custom_setup(self, battle_engine):
-        """Calculate test-specific expected hit chance."""
-        self.expected_hit_chance = compute_beam_hit_chance(self)
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_exact("Beam Damage", BEAM_HIGH_DAMAGE, beam.damage))
-        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
-                                  successes=int(self.damage_dealt),
-                                  trials=engine.tick_counter,
-                                  margin=HIGH_PRECISION_MARGIN))
-        return checks
+class BeamHighAccuracyMaxRangeHighTickScenario(BeamAccuracyScenario):
+    """BEAMWEAPON-008-HT: High Accuracy Beam at Max Range (High-Tick)"""
+    accuracy_level = "high"
+    distance_label = "max_range"
+    high_tick = True
 
 
 # ============================================================================
@@ -1186,7 +453,7 @@ class BeamMediumAccuracyErraticMidRangeScenario(StaticTargetScenario):
     # Template configuration
     attacker_ship = "Test_Attacker_Beam360_Med.json"
     target_ship = "Test_Target_Erratic_Small.json"
-    distance = 400
+    distance = MID_RANGE_DISTANCE
 
     metadata = TestMetadata(
         test_id="BEAMWEAPON-009",
@@ -1205,7 +472,7 @@ class BeamMediumAccuracyErraticMidRangeScenario(StaticTargetScenario):
             "Range Penalty: 383.92 * 0.001 = 0.3839",
             "Defense Penalty: 3.1408 (from mass=65, acc=295.86, turn=238.53)",
             "Net Score: 2.0 - 0.3839 - 3.1408 = -1.5247",
-            "Sigmoid formula: P = 1/(1+e^1.5247) ≈ 0.0484 (4.84% hit rate)",
+            "Sigmoid formula: P = 1/(1+e^1.5247) = 0.0484 (4.84% hit rate)",
             "Beam Damage: 1 per hit",
             "Test Duration: 1000 ticks"
         ],
@@ -1218,7 +485,7 @@ class BeamMediumAccuracyErraticMidRangeScenario(StaticTargetScenario):
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=1000,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
+        battle_end_mode="time_based",
         ui_priority=7,
         tags=["accuracy", "medium-accuracy", "moving-target", "erratic", "beam-weapons"],
     )
@@ -1262,7 +529,7 @@ class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
     # Template configuration
     attacker_ship = "Test_Attacker_Beam360_Med.json"
     target_ship = "Test_Target_Erratic_Small.json"
-    distance = 750
+    distance = NEAR_MAX_RANGE_DISTANCE
 
     metadata = TestMetadata(
         test_id="BEAMWEAPON-010",
@@ -1281,7 +548,7 @@ class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
             "Range Penalty: 733.92 * 0.001 = 0.7339",
             "Defense Penalty: 3.1408 (from mass=65, acc=295.86, turn=238.53)",
             "Net Score: 2.0 - 0.7339 - 3.1408 = -1.8747",
-            "Sigmoid formula: P = 1/(1+e^1.8747) ≈ 0.0347 (3.47% hit rate)",
+            "Sigmoid formula: P = 1/(1+e^1.8747) = 0.0347 (3.47% hit rate)",
             "Beam Damage: 1 per hit",
             "Test Duration: 1000 ticks"
         ],
@@ -1294,7 +561,7 @@ class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=1000,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
+        battle_end_mode="time_based",
         ui_priority=6,
         tags=["accuracy", "medium-accuracy", "moving-target", "erratic", "max-range", "beam-weapons"],
     )
@@ -1342,7 +609,7 @@ class BeamOutOfRangeScenario(StaticTargetScenario):
     # Template configuration
     attacker_ship = "Test_Attacker_Beam360_Med.json"
     target_ship = "Test_Target_Stationary.json"
-    distance = 900
+    distance = BEAM_OUT_OF_RANGE_DISTANCE
 
     metadata = TestMetadata(
         test_id="BEAMWEAPON-011",
@@ -1371,7 +638,7 @@ class BeamOutOfRangeScenario(StaticTargetScenario):
         pass_criteria="damage_dealt == 0",
         max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
+        battle_end_mode="time_based",
         ui_priority=8,
         tags=["range-limit", "out-of-range", "beam-weapons"],
     )

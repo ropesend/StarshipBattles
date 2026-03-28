@@ -38,7 +38,8 @@ from simulation_tests.scenarios.templates import StaticTargetScenario
 from simulation_tests.scenarios.validation import check_exact, check_true
 from simulation_tests.test_constants import (
     STANDARD_TEST_TICKS,
-    STANDARD_SEED
+    STANDARD_SEED,
+    PROJECTILE_OUT_OF_RANGE_DISTANCE,
 )
 
 
@@ -394,11 +395,11 @@ class ProjectileOutOfRangeScenario(StaticTargetScenario):
 
     attacker_ship = "Test_Attacker_Proj360.json"
     target_ship = "Test_Target_Stationary.json"
-    distance = 1200
+    distance = PROJECTILE_OUT_OF_RANGE_DISTANCE
 
     def _collect_extra_results(self, battle_engine):
         """Store range-specific results."""
-        self.results['distance'] = 1200
+        self.results['distance'] = PROJECTILE_OUT_OF_RANGE_DISTANCE
         self.results['weapon_max_range'] = 1000
 
     def validate(self, engine) -> list:

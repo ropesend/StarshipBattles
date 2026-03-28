@@ -5,15 +5,14 @@
 2. [System Architecture](#system-architecture)
 3. [Component Diagram](#component-diagram)
 4. [Test Framework](#test-framework)
-5. [Pre-Run Validation System](#pre-run-validation-system)
-6. [Battle End Conditions](#battle-end-conditions)
-7. [Validation System](#validation-system)
-8. [Data Files](#data-files)
-9. [Creating New Tests](#creating-new-tests)
-10. [Beam Weapon Tests](#beam-weapon-tests)
-11. [Running Tests](#running-tests)
-12. [Troubleshooting](#troubleshooting)
-13. [Design Decisions](#design-decisions)
+5. [Battle End Conditions](#battle-end-conditions)
+6. [Validation System](#validation-system)
+7. [Data Files](#data-files)
+8. [Creating New Tests](#creating-new-tests)
+9. [Beam Weapon Tests](#beam-weapon-tests)
+10. [Running Tests](#running-tests)
+11. [Troubleshooting](#troubleshooting)
+12. [Design Decisions](#design-decisions)
 
 ---
 
@@ -23,7 +22,7 @@ The **Combat Lab** is a comprehensive testing system for validating combat mecha
 
 - **Visual test runner** - In-game UI for browsing and running tests
 - **Statistical validation** - TOST (Two One-Sided Tests) equivalence testing
-- **Data verification** - ExactMatchRules for component/ship data validation
+- **Data verification** - Exact-match checks for component/ship data validation
 - **Headless execution** - Run tests without UI for CI/CD integration
 - **High-tick precision tests** - 100k+ tick tests for precise validation (±1% margins)
 - **Standard tests** - 500-tick tests for quick validation (±6% margins)
@@ -66,6 +65,7 @@ Starship Battles/
 │   ├── COMBAT_LAB_DOCUMENTATION.md     # This file
 │   ├── README.md                       # Documentation hub
 │   ├── QUICK_START_GUIDE.md            # 10-minute tutorial
+│   ├── run_tests.py                    # Headless test runner (python -m simulation_tests.run_tests)
 │   ├── test_constants.py               # Centralized test constants
 │   ├── logging_config.py               # Combat Lab logging
 │   │
@@ -79,11 +79,15 @@ Starship Battles/
 │   │       ├── Test_Target_Erratic_Small.json
 │   │       └── Test_Attacker_*.json
 │   │
+│   ├── validation/                     # Validation system docs
+│   │
 │   └── scenarios/                      # Test scenario implementations
 │       ├── base.py                     # TestScenario, TestMetadata
-│       ├── validation.py               # ValidationRule classes
+│       ├── validation.py               # Check, ValidationReport, check functions
 │       ├── templates.py                # Reusable scenario templates
 │       ├── beam_scenarios.py           # Beam weapon tests
+│       ├── defense_scenarios.py        # Defense/armor/shield tests
+│       ├── modifier_scenarios.py       # Stat modifier tests
 │       ├── projectile_scenarios.py     # Projectile weapon tests
 │       ├── seeker_scenarios.py         # Seeker/missile tests
 │       ├── propulsion_scenarios.py     # Movement/physics tests
@@ -143,10 +147,10 @@ Starship Battles/
 │  - results: Dict (populated during execution)                               │
 │                                                                              │
 │  Methods:                                                                    │
-│  - setup(engine)    → Initialize ships, positions, expected values          │
-│  - update(engine)   → Per-tick logic (optional)                             │
-│  - verify(engine)   → Calculate results, run validation, return pass/fail   │
-│  - run_validation() → Execute ValidationRules                               │
+│  - setup(engine)           → Initialize ships, positions, expected values   │
+│  - update(engine)          → Per-tick logic (optional)                      │
+│  - collect_results(engine) → Populate measurement attributes                │
+│  - validate(engine)        → Return list of Check objects                   │
 └──────────────────────────────┬──────────────────────────────────────────────┘
                                │
 ┌──────────────────────────────▼──────────────────────────────────────────────┐
@@ -154,18 +158,18 @@ Starship Battles/
 │              (simulation_tests/scenarios/validation.py)                      │
 │                                                                              │
 │  ┌─────────────────┐  ┌────────────────────┐  ┌──────────────────────────┐ │
-│  │ ExactMatchRule  │  │DeterministicMatch  │  │  StatisticalTestRule     │ │
-│  │                 │  │      Rule          │  │       (TOST)             │ │
-│  │ Zero-tolerance  │  │                    │  │                          │ │
-│  │ exact match     │  │ Tiny tolerance     │  │ p < 0.05 = PASS          │ │
-│  │ for component   │  │ (1e-9) for         │  │ (proven equivalent)      │ │
-│  │ data validation │  │ physics calcs      │  │                          │ │
+│  │  check_exact    │  │   check_approx     │  │    check_tost            │ │
+│  │                 │  │                    │  │       (TOST)             │ │
+│  │ Zero-tolerance  │  │ Tolerance-based    │  │                          │ │
+│  │ exact match     │  │ approximate match  │  │ p < 0.05 = PASS          │ │
+│  │ for component   │  │ for physics calcs  │  │ (proven equivalent)      │ │
+│  │ data validation │  │                    │  │                          │ │
 │  └─────────────────┘  └────────────────────┘  └──────────────────────────┘ │
 │                                                                              │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                         Validator                                    │   │
-│  │  - Runs all rules, aggregates results                               │   │
-│  │  - has_failures(), has_warnings(), get_summary()                    │   │
+│  │  Check: Single validation check (phase, name, expected, actual)      │   │
+│  │  ValidationReport: Aggregates checks, determines pass/fail           │   │
+│  │  - passed, failed_phase, summary(), to_dict()                       │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -211,16 +215,15 @@ Starship Battles/
          │         │         ├──> scenario.update(engine)
          │         │         └──> Check battle end condition
          │         │
-         │         └──> scenario.verify(engine)
+         │         └──> scenario._run_validation(engine)
          │                   │
-         │                   ├──> Calculate damage_dealt, hit_rate, etc.
-         │                   ├──> scenario.run_validation(engine)
-         │                   │         │
-         │                   │         ├──> ExactMatchRules
-         │                   │         ├──> DeterministicMatchRules
-         │                   │         └──> StatisticalTestRules (TOST)
+         │                   ├──> scenario.collect_results(engine)
+         │                   │         └──> Calculate damage_dealt, hit_rate, etc.
+         │                   ├──> scenario.validate(engine)
+         │                   │         └──> Return list of Check objects
+         │                   ├──> Build ValidationReport from checks
          │                   │
-         │                   └──> Return passed = True/False
+         │                   └──> Return report (passed = True/False)
          │
          └──> TestResultsService.add_run(test_id, results)
                    │
@@ -250,9 +253,13 @@ class TestScenario(CombatScenario):
         """Configure ships and initial state. MUST be implemented."""
         raise NotImplementedError
 
-    def verify(self, battle_engine) -> bool:
-        """Check if test passed. MUST be implemented."""
+    def validate(self, engine) -> List[Check]:
+        """Return all validation checks. MUST be implemented."""
         raise NotImplementedError
+
+    def collect_results(self, engine):
+        """Populate measurement attributes before validate() runs. Optional."""
+        pass
 
     def update(self, battle_engine):
         """Optional per-tick update logic."""
@@ -260,9 +267,6 @@ class TestScenario(CombatScenario):
 
     def _load_ship(self, filename: str) -> Ship:
         """Helper to load ship from simulation_tests/data/ships/"""
-
-    def run_validation(self, battle_engine) -> List[ValidationResult]:
-        """Run all validation rules from metadata."""
 ```
 
 ### TestMetadata
@@ -271,7 +275,6 @@ Every test has metadata describing what it tests:
 
 ```python
 from simulation_tests.scenarios.base import TestMetadata
-from simulation_tests.scenarios.validation import ExactMatchRule, StatisticalTestRule
 
 metadata = TestMetadata(
     test_id="BEAMWEAPON-001",              # Unique identifier
@@ -295,19 +298,6 @@ metadata = TestMetadata(
     max_ticks=500,           # Test duration
     seed=42,                 # Random seed for reproducibility
     battle_end_mode="time_based",  # Run full duration
-
-    # Validation rules (checked after test runs)
-    validation_rules=[
-        ExactMatchRule(name='Beam Damage', path='attacker.weapon.damage', expected=1),
-        StatisticalTestRule(
-            name='Hit Rate',
-            test_type='binomial',
-            expected_probability=0.5318,
-            equivalence_margin=0.06,  # ±6% for 500-tick test
-            trials_expr='ticks_run',
-            successes_expr='damage_dealt'
-        )
-    ]
 )
 ```
 
@@ -332,232 +322,18 @@ metadata = TestMetadata(
    - scenario.update(engine)  # Test-specific per-tick logic
    - Check if battle is over (time_based mode runs full duration)
    ↓
-5. scenario.verify(engine)
-   - Calculate actual outcomes (damage_dealt, hit_rate, etc.)
-   - Run ExactMatchRules (component data validation)
-   - Run DeterministicMatchRules (physics validation)
-   - Run StatisticalTestRules (TOST equivalence tests)
-   - Store results in scenario.results
-   - Set self.passed = True/False
+5. scenario._run_validation(engine)
+   - Call collect_results(engine) to populate measurement attributes
+   - Call validate(engine) to get list of Check objects
+   - Build ValidationReport from checks
+   - Store results in scenario.results['validation']
+   - Set self.passed from report.passed
    ↓
 6. RESULTS DISPLAY
    - Show metrics (damage_dealt, hit_rate, ticks_run)
-   - Show validation results (PASS/FAIL for each rule)
-   - Show p-values and confidence intervals
-```
-
----
-
-## Pre-Run Validation System
-
-The Combat Lab includes a **pre-run validation system** that verifies test data BEFORE the test executes. This prevents tests from running with incorrect assumptions about ship/component data.
-
-### Why Pre-Run Validation?
-
-Tests often make assumptions about data values (ship mass, engine thrust, weapon damage). If these assumptions don't match the actual JSON data files, test results are meaningless. Pre-run validation:
-
-1. **Catches data drift** - When component data is modified, affected tests fail fast with clear errors
-2. **Documents expectations** - Each test explicitly states what values it expects from data files
-3. **Shows formulas** - Calculated values show their formulas with actual values substituted
-4. **Blocks invalid tests** - Tests cannot run if data mismatches are detected
-
-### Expectation Types
-
-#### 1. DataExpectation - JSON File Values
-
-Validates that test assumptions about JSON data match actual file values.
-
-```python
-from simulation_tests.scenarios.prerun_validation import DataExpectation
-
-DataExpectation(
-    name='Ship Mass',
-    source='ship.mass',           # Path in loaded object
-    expected=400,                 # What we expect
-    json_file='Test_Engine_1x.json',  # Source file (for display)
-    tolerance=0.001               # 0.1% tolerance for floats
-)
-```
-
-**Display Format:**
-```
-DATA VALUES (from JSON):
-  [✓] Ship Mass: 400 (expected 400) [Test_Engine_1x.json]
-  [✗] Engine Thrust: 500 (expected 600) [Test_Engine_1x.json]  ← BLOCKING
-```
-
-#### 2. CalculatedExpectation - Physics Formulas
-
-Validates calculated physics values and shows the formula with actual values.
-
-```python
-from simulation_tests.scenarios.prerun_validation import CalculatedExpectation
-
-CalculatedExpectation(
-    name='Max Speed',
-    formula='(thrust × K_SPEED) / mass',  # Human-readable formula
-    formula_expr=lambda thrust, K_SPEED, mass: (thrust * K_SPEED) / mass,
-    expected=31.25,
-    variables={'thrust': 500, 'K_SPEED': 25, 'mass': 400},
-    tolerance=0.001
-)
-```
-
-**Display Format:**
-```
-CALCULATED VALUES:
-  [✓] Max Speed: 31.25 [= (500 × 25) / 400]
-      Actual ship value: 31.25
-  [✗] Acceleration: 7.8125 [= (500 × 2500) / 400²]  ← FORMULA MISMATCH
-```
-
-#### 3. SetupCondition - Test Parameters (Not Validated)
-
-Documents test setup parameters that are defined by the test itself, not from data files.
-
-```python
-from simulation_tests.scenarios.prerun_validation import SetupCondition
-
-SetupCondition(
-    name='Initial Position',
-    value='(0, 0)',
-    description='Ship starts at origin'
-)
-```
-
-**Display Format:**
-```
-SETUP CONDITIONS:
-  Initial Position: (0, 0) - Ship starts at origin
-  Test Duration: 100 ticks
-  Throttle Command: 100%
-```
-
-#### 4. PassCriterion - Success Criteria
-
-Defines what must be true for the test to pass.
-
-```python
-from simulation_tests.scenarios.prerun_validation import PassCriterion
-
-PassCriterion(
-    description='final_velocity > expected_velocity × 0.99',
-    numeric_threshold=30.94,  # 31.25 × 0.99
-    expression=lambda results: results['final_velocity'] > 30.94
-)
-```
-
-**Display Format:**
-```
-PASS CRITERIA:
-  ✓ final_velocity > 30.94
-  ✓ distance_traveled > 0
-```
-
-### Using Pre-Run Validation in a Test
-
-```python
-class PropulsionMaxSpeedTest(TestScenario):
-    """PROP-001: Test that ship reaches calculated max speed."""
-
-    # Define expectations as class attributes
-    data_expectations = [
-        DataExpectation(
-            name='Ship Mass',
-            source='ship.mass',
-            expected=400,
-            json_file='Test_Engine_1x_LowMass.json'
-        ),
-        DataExpectation(
-            name='Engine Thrust',
-            source='ship.total_thrust',
-            expected=500,
-            json_file='Test_Engine_1x_LowMass.json'
-        ),
-    ]
-
-    calculated_expectations = [
-        CalculatedExpectation(
-            name='Max Speed',
-            formula='(thrust × K_SPEED) / mass',
-            formula_expr=lambda thrust, K_SPEED, mass: (thrust * K_SPEED) / mass,
-            expected=31.25,
-            variables={'thrust': 500, 'K_SPEED': 25, 'mass': 400}
-        ),
-    ]
-
-    setup_conditions = [
-        SetupCondition(name='Initial Position', value='(0, 0)'),
-        SetupCondition(name='Throttle', value='100%'),
-    ]
-
-    pass_criteria = [
-        PassCriterion(
-            description='final_velocity >= max_speed × 0.99',
-            numeric_threshold=30.94
-        ),
-    ]
-
-    def custom_setup(self, battle_engine):
-        """Called during setup to run pre-run validation."""
-        from simulation_tests.scenarios.prerun_validation import PreRunValidator
-
-        context = {'ship': self.ship}
-        validator = PreRunValidator()
-        self.prerun_validation = validator.validate_scenario(self, context)
-
-        # Store for UI display
-        self.results['prerun_validation'] = self.prerun_validation.to_dict()
-
-        # BLOCK execution if validation fails
-        if not self.prerun_validation.can_run:
-            error_msg = "Pre-run validation failed:\n" + "\n".join(
-                self.prerun_validation.blocking_errors
-            )
-            raise ValueError(error_msg)
-```
-
-### UI Display
-
-When pre-run validation is present, the Test Details panel shows:
-
-```
-┌─────────────────────────────────────────┐
-│ PROP-001: Low Mass Engine Ship          │
-├─────────────────────────────────────────┤
-│ DATA VALUES (from JSON):                │
-│   [✓] Ship Mass: 400                    │
-│   [✓] Engine Thrust: 500                │
-│                                         │
-│ CALCULATED VALUES:                      │
-│   [✓] Max Speed: 31.25                  │
-│       [= (500 × 25) / 400]              │
-│   [✓] Acceleration: 7.8125              │
-│       [= (500 × 2500) / 400²]           │
-│                                         │
-│ SETUP CONDITIONS:                       │
-│   Initial Position: (0, 0)              │
-│   Throttle: 100%                        │
-│   Duration: 100 ticks                   │
-│                                         │
-│ PASS CRITERIA:                          │
-│   • final_velocity >= 30.94             │
-│   • distance_traveled > 0               │
-└─────────────────────────────────────────┘
-```
-
-If validation fails:
-
-```
-┌─────────────────────────────────────────┐
-│ ⚠ VALIDATION FAILED - TEST BLOCKED     │
-├─────────────────────────────────────────┤
-│ DATA VALUES (from JSON):                │
-│   [✗] Ship Mass: 600 (expected 400)     │
-│       ↳ BLOCKING: Data mismatch         │
-│                                         │
-│ [Run Test] button is DISABLED           │
-└─────────────────────────────────────────┘
+   - Show validation results (PASS/FAIL for each check, grouped by phase)
+   - Show failed_phase if any checks failed
+   - Show p-values and confidence intervals for statistical checks
 ```
 
 ---
@@ -666,56 +442,49 @@ metadata = TestMetadata(
 
 ## Validation System
 
-The Combat Lab uses three types of validation rules:
+The Combat Lab uses a three-phase validation system based on `Check` objects and `ValidationReport`.
 
-### 1. ExactMatchRule - Data Verification
+Scenarios implement `validate(self, engine) -> list` which returns a list of `Check` objects.
+Each check is tagged with a phase (`"data"`, `"precondition"`, `"outcome"`) so the framework
+knows what failed and why.
 
-Validates that test metadata matches actual component data with **zero tolerance**.
+### Check Functions
+
+#### check_exact - Data Verification
+
+Validates that a value matches expected with **zero tolerance**.
 
 **Purpose**: Ensures test expectations accurately reflect component definitions.
 
 ```python
-from simulation_tests.scenarios.validation import ExactMatchRule
+from simulation_tests.scenarios.validation import check_exact
 
-ExactMatchRule(
-    name='Beam Weapon Damage',          # Human-readable name
-    path='attacker.weapon.damage',      # Dot-notation path to value
-    expected=1                          # Expected value (must match exactly)
-)
+check_exact("Beam Weapon Damage", expected=1, actual=weapon.damage)
 ```
 
-**Common Paths**:
-- `attacker.weapon.damage` - Weapon damage value
-- `attacker.weapon.base_accuracy` - Base accuracy
-- `attacker.weapon.accuracy_falloff` - Falloff per pixel
-- `attacker.weapon.range` - Maximum range
-- `target.mass` - Target ship mass
+#### check_approx - Physics Validation
 
-**How It Works**:
-1. Parses dot-notation path to find the value in validation context
-2. Compares actual value to expected value
-3. PASS if values match exactly
-4. FAIL if values differ (with detailed error message)
+Validates floating-point calculations with configurable tolerance.
 
-### 2. DeterministicMatchRule - Physics Validation
-
-Validates floating-point calculations with tiny tolerance (default 1e-9).
-
-**Purpose**: Validates deterministic physics calculations that should be exact.
+**Purpose**: Validates deterministic physics calculations that should be approximately exact.
 
 ```python
-from simulation_tests.scenarios.validation import DeterministicMatchRule
+from simulation_tests.scenarios.validation import check_approx
 
-DeterministicMatchRule(
-    name='Expected Hit Chance',
-    path='results.expected_hit_chance',
-    expected=0.5318,
-    tolerance=1e-4,  # Allow for display rounding
-    description='P = 1/(1+e^-x) from sigmoid formula'
-)
+check_approx("Expected Hit Chance", expected=0.5318, actual=computed_chance, tolerance=1e-4)
 ```
 
-### 3. StatisticalTestRule - TOST Equivalence Testing
+#### check_true - Boolean Condition
+
+Validates that a condition is true.
+
+```python
+from simulation_tests.scenarios.validation import check_true
+
+check_true("Ship Moved", self.distance > 0)
+```
+
+#### check_tost - TOST Equivalence Testing
 
 Validates that measured outcomes are **statistically equivalent** to expected outcomes.
 
@@ -738,16 +507,14 @@ TOST proves things are **equivalent** (p < 0.05 = proven equivalent within margi
 - **p ≥ 0.05** = FAIL (not proven equivalent, could be different)
 
 ```python
-from simulation_tests.scenarios.validation import StatisticalTestRule
+from simulation_tests.scenarios.validation import check_tost
 
-StatisticalTestRule(
+check_tost(
     name='Hit Rate',
-    test_type='binomial',                    # Type of test
-    expected_probability=0.5318,             # Expected hit rate
-    equivalence_margin=0.06,                 # ±6% margin
-    trials_expr='ticks_run',                 # Expression for trial count
-    successes_expr='damage_dealt',           # Expression for success count
-    description='Each beam hit = 1 damage'
+    expected_p=0.5318,           # Expected hit rate
+    successes=damage_dealt,      # Number of successes
+    trials=ticks_run,            # Number of trials
+    margin=0.06,                 # ±6% margin
 )
 ```
 
@@ -894,7 +661,7 @@ def calculate_hit_chance(base_acc, falloff, distance, attack_bonus=0.0, defense_
 
 ```python
 from simulation_tests.scenarios.base import TestScenario, TestMetadata
-from simulation_tests.scenarios.validation import ExactMatchRule, StatisticalTestRule
+from simulation_tests.scenarios.validation import check_exact, check_tost
 from simulation_tests.test_constants import *
 
 class MyBeamTest(TestScenario):
@@ -912,17 +679,6 @@ class MyBeamTest(TestScenario):
         pass_criteria="damage_dealt > 0",
         max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,
-        validation_rules=[
-            ExactMatchRule(name='Damage', path='attacker.weapon.damage', expected=1),
-            StatisticalTestRule(
-                name='Hit Rate',
-                test_type='binomial',
-                expected_probability=0.5318,
-                equivalence_margin=STANDARD_MARGIN,
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt'
-            )
-        ]
     )
 
     def setup(self, battle_engine):
@@ -936,93 +692,31 @@ class MyBeamTest(TestScenario):
         battle_engine.start([self.attacker], [self.target], seed=self.metadata.seed)
         self.initial_hp = self.target.hp
 
-    def verify(self, battle_engine) -> bool:
+    def collect_results(self, engine):
+        """Populate measurement attributes."""
         self.damage_dealt = self.initial_hp - self.target.hp
         self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
+        self.results['ticks_run'] = engine.tick_counter
+        self.results['hit_rate'] = self.damage_dealt / engine.tick_counter
 
-        self.run_validation(battle_engine)
-        return self.damage_dealt > 0
+    def validate(self, engine) -> list:
+        """Return Check objects for three-phase validation."""
+        checks = []
+        # Data phase - verify component data
+        weapon = self.attacker.weapon
+        checks.append(check_exact('Damage', expected=1, actual=weapon.damage))
+        # Outcome phase - verify statistical equivalence
+        checks.append(check_tost(
+            'Hit Rate',
+            expected_p=0.5318,
+            successes=self.damage_dealt,
+            trials=engine.tick_counter,
+            margin=STANDARD_MARGIN,
+        ))
+        return checks
 ```
 
-#### 5. Add Pre-Run Validation (Recommended)
-
-For physics tests that depend on specific data values, add pre-run validation:
-
-```python
-from simulation_tests.scenarios.prerun_validation import (
-    DataExpectation, CalculatedExpectation, SetupCondition, PassCriterion
-)
-
-class MyPropulsionTest(TestScenario):
-    """PROP-XXX: Description of test."""
-
-    # Expected values from JSON files - MUST match actual data
-    data_expectations = [
-        DataExpectation(
-            name='Ship Mass',
-            source='ship.mass',
-            expected=400,                         # What we expect
-            json_file='Test_Ship.json'            # Source file for reference
-        ),
-        DataExpectation(
-            name='Engine Thrust',
-            source='ship.total_thrust',
-            expected=500,
-            json_file='Test_Ship.json'
-        ),
-    ]
-
-    # Calculated values - show formulas with actual values
-    calculated_expectations = [
-        CalculatedExpectation(
-            name='Max Speed',
-            formula='(thrust × K_SPEED) / mass',  # Human-readable
-            formula_expr=lambda thrust, K_SPEED, mass: (thrust * K_SPEED) / mass,
-            expected=31.25,
-            variables={'thrust': 500, 'K_SPEED': 25, 'mass': 400}
-        ),
-    ]
-
-    # Setup conditions (not validated, just displayed)
-    setup_conditions = [
-        SetupCondition(name='Initial Position', value='(0, 0)'),
-        SetupCondition(name='Throttle Command', value='100%'),
-    ]
-
-    # Pass criteria
-    pass_criteria = [
-        PassCriterion(
-            description='final_velocity >= expected × 0.99',
-            numeric_threshold=30.94
-        ),
-    ]
-
-    def setup(self, battle_engine):
-        self.ship = self._load_ship('Test_Ship.json')
-        # ... position ship, etc ...
-
-        # Run pre-run validation (blocks if data mismatch)
-        self._run_prerun_validation()
-
-        battle_engine.start([self.ship], [], seed=self.metadata.seed)
-
-    def _run_prerun_validation(self):
-        """Validate expectations before test runs."""
-        from simulation_tests.scenarios.prerun_validation import PreRunValidator
-
-        context = {'ship': self.ship}
-        validator = PreRunValidator()
-        self.prerun_validation = validator.validate_scenario(self, context)
-        self.results['prerun_validation'] = self.prerun_validation.to_dict()
-
-        if not self.prerun_validation.can_run:
-            errors = "\n".join(self.prerun_validation.blocking_errors)
-            raise ValueError(f"Pre-run validation failed:\n{errors}")
-```
-
-#### 6. Test is Auto-Discovered
+#### 5. Test is Auto-Discovered
 
 The `TestRegistry` automatically scans `simulation_tests/scenarios/` and registers all `TestScenario` subclasses with metadata.
 
@@ -1225,11 +919,11 @@ RESOURCE CONSUMPTION
 1. Launch game: `python main.py`
 2. Navigate to "Combat Lab" from main menu
 3. Browse tests by category in left panels
-4. Select test to view details (metadata, conditions, validation rules)
+4. Select test to view details (metadata, conditions, checks)
 5. Click "Run Visual" or "Run Headless"
 6. View results:
    - Metrics (damage_dealt, hit_rate, ticks_run)
-   - Validation results (PASS/FAIL for each rule)
+   - Validation results (PASS/FAIL for each check, grouped by phase)
    - P-values and statistical analysis
 
 ### Headless Execution
@@ -1253,7 +947,10 @@ print(f"Hit Rate: {scenario.results.get('hit_rate', 0):.2%}")
 ### Command Line
 
 ```bash
-python -m test_framework.runner simulation_tests/scenarios/beam_scenarios.py --headless
+python -m simulation_tests.run_tests                # Run all
+python -m simulation_tests.run_tests BEAM           # Filter by ID prefix
+python -m simulation_tests.run_tests PROP-001       # Run specific test
+python -m simulation_tests.run_tests --list         # List all tests
 ```
 
 ---
@@ -1293,34 +990,14 @@ surface_distance = center_distance - target_radius
 
 **Solution**: Use extreme HP armor (1 billion HP) for test targets.
 
-#### Pre-run validation fails with "Data mismatch"
+#### Data check fails with unexpected value
 
-**Cause**: Test expectations don't match actual JSON data values.
-
-**Example Error**:
-```
-Pre-run validation failed:
-Data mismatch - Ship Mass: expected 400, got 600
-```
+**Cause**: Test expectations (in `check_exact` calls) don't match actual component/ship data values.
 
 **Solutions**:
-1. Update the test's `data_expectations` to match current JSON values
+1. Update the test's `validate()` method with correct expected values
 2. OR update the JSON file if the test's expectations are correct
 3. Check if component mass architecture changed (zero-mass components?)
-
-#### Pre-run validation fails with "path not found"
-
-**Cause**: The `source` path in a DataExpectation doesn't match the object structure.
-
-**Example Error**:
-```
-Data error - Engine Thrust: Attribute 'thrust' not found on Ship
-```
-
-**Solution**: Check the actual attribute names on the loaded object:
-- `ship.mass` not `ship.total_mass`
-- `ship.total_thrust` not `ship.thrust`
-- Use `dir(ship)` to see available attributes
 
 #### Single-ship test ends immediately with "victory"
 
@@ -1353,40 +1030,16 @@ metadata = TestMetadata(
 
 ## Design Decisions
 
-### Why Pre-Run Validation?
+### Why Three-Phase Validation?
 
-**Problem**: Tests make assumptions about JSON data (ship mass = 400, thrust = 500). If these assumptions drift from actual data, tests produce meaningless results.
+**Problem**: When a test fails, it can be hard to tell whether the issue is bad data, a broken precondition, or an incorrect outcome.
 
-**Solution**: Validate assumptions BEFORE running. Tests explicitly declare their expectations, and execution is blocked if data doesn't match.
+**Solution**: Each Check is tagged with a phase (`data`, `precondition`, `outcome`). The `ValidationReport.failed_phase` property identifies the root cause immediately.
 
 **Benefits**:
-- Catches data drift immediately
-- Documents what values the test depends on
-- Shows formulas with actual values for transparency
-- Prevents "false pass" tests that ran with wrong data
-
-### Why Show Formulas with Values?
-
-Instead of just showing `max_speed: 31.25`, we show:
-```
-max_speed: 31.25 [= (500 × 25) / 400]
-```
-
-This makes it obvious:
-1. What formula was used
-2. What values were plugged in
-3. Why the expected result is what it is
-
-If the formula is wrong, reviewers can spot it immediately.
-
-### Why Block Tests on Data Mismatch?
-
-A test running with wrong assumptions is worse than no test:
-- It gives false confidence
-- Results can't be trusted
-- Debugging becomes harder (is the formula wrong or the data wrong?)
-
-By blocking execution, we force the issue to be resolved first.
+- Data drift caught in the `data` phase before blaming the simulation
+- Precondition failures (weapon didn't fire, ship didn't move) separated from outcome failures
+- Clear failure attribution simplifies debugging
 
 ### Why TOST Instead of Traditional Hypothesis Testing?
 

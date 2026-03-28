@@ -31,40 +31,40 @@ class BeamPointBlankTest(TestScenario):
         if self.attacker and self.attacker.is_alive:
             self.attacker.comp_trigger_pulled = True
 
-    def verify(self, battle_engine) -> bool:
-        # 20 lines of duplicate result storage
+    def validate(self, engine) -> list:
+        # 20 lines of duplicate result collection + checks
         damage_dealt = self.initial_hp - self.target.hp
         self.results['initial_hp'] = self.initial_hp
         # ... etc
-        return damage_dealt > 0
+        return [check_true("Damage Dealt", damage_dealt > 0)]
 ```
 
 ### After Templates (Same Scenario = ~120 lines)
 ```python
 class BeamPointBlankTest(StaticTargetScenario):
-    # Template configuration (3 lines replaces 55 lines of setup/update/verify)
+    # Template configuration (3 lines replaces 55 lines of setup/update/validate)
     attacker_ship = "Attacker.json"
     target_ship = "Target.json"
     distance = 50
 
     metadata = TestMetadata(...)  # 100 lines (unchanged)
 
-    def verify(self, battle_engine) -> bool:
-        # Template already stores standard results
-        # Only implement test-specific logic
-        return self.damage_dealt > 0
+    def validate(self, engine) -> list:
+        # Template already populates standard results via collect_results()
+        # Only implement test-specific checks
+        return [check_true("Damage Dealt", self.damage_dealt > 0)]
 ```
 
 **Result:**
 - Eliminates 30-60 lines of boilerplate per scenario
 - 35+ scenarios × 40 lines average = **~1,400 lines removed**
-- Plus eliminates update() and most verify() code = **~2,000 total lines**
+- Plus eliminates update() and most validate() code = **~2,000 total lines**
 
 ## Migration Examples
 
 ### Example 1: Static Target Scenario (Most Common)
 
-**Before (56 lines of setup/update/verify):**
+**Before (56 lines of setup/update/validate):**
 ```python
 class BeamLowAccuracyPointBlankScenario(TestScenario):
     metadata = TestMetadata(...)
@@ -103,20 +103,18 @@ class BeamLowAccuracyPointBlankScenario(TestScenario):
         if self.attacker and self.attacker.is_alive:
             self.attacker.comp_trigger_pulled = True
 
-    def verify(self, battle_engine) -> bool:
-        """Check if damage was dealt."""
+    def collect_results(self, engine):
+        """Calculate results."""
         damage_dealt = self.initial_hp - self.target.hp
-
-        # Store results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
         self.results['damage_dealt'] = damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
+        self.results['ticks_run'] = engine.tick_counter
         self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['target_alive'] = self.target.is_alive
 
-        # Pass if any damage was dealt
-        return damage_dealt > 0
+    def validate(self, engine) -> list:
+        return [check_true("Damage Dealt", self.results['damage_dealt'] > 0)]
 ```
 
 **After (15 lines - eliminates 41 lines):**
@@ -133,11 +131,11 @@ class BeamLowAccuracyPointBlankScenario(StaticTargetScenario):
         """Called after standard setup - only custom logic."""
         self.expected_hit_chance = calculate_expected_hit_chance(...)
 
-    def verify(self, battle_engine) -> bool:
-        """Template already stores all standard results."""
+    def validate(self, engine) -> list:
+        """Template already populates standard results via collect_results()."""
         # self.damage_dealt, self.results['damage_dealt'], etc. already set
         self.results['expected_hit_chance'] = self.expected_hit_chance
-        return self.damage_dealt > 0
+        return [check_true("Damage Dealt", self.damage_dealt > 0)]
 ```
 
 **What the Template Does Automatically:**
@@ -148,8 +146,8 @@ class BeamLowAccuracyPointBlankScenario(StaticTargetScenario):
 - Starts battle with proper seed
 - Sets `attacker.current_target = target`
 - Forces attacker to fire each tick (auto-update)
-- Calculates `damage_dealt = initial_hp - target.hp`
-- Stores standard results: `initial_hp`, `final_hp`, `damage_dealt`, `ticks_run`, `target_alive`, `hit_rate`
+- In `collect_results()`: calculates `damage_dealt = initial_hp - target.hp`
+- In `collect_results()`: stores standard results: `initial_hp`, `final_hp`, `damage_dealt`, `ticks_run`, `target_alive`, `hit_rate`
 
 **Custom Hooks Available:**
 - `custom_setup(battle_engine)` - Called after standard setup
@@ -191,14 +189,12 @@ class SeekerCloseRangeImpactScenario(TestScenario):
         if self.attacker and self.attacker.is_alive:
             self.attacker.comp_trigger_pulled = True
 
-    def verify(self, battle_engine) -> bool:
+    def validate(self, engine) -> list:
         damage_dealt = self.initial_hp - self.target.hp
         self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
         self.results['damage_dealt'] = damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-        return damage_dealt >= 100
+        self.results['ticks_run'] = engine.tick_counter
+        return [check_true("Sufficient Damage", damage_dealt >= 100)]
 ```
 
 **After (10 lines - eliminates 30 lines):**
@@ -211,9 +207,9 @@ class SeekerCloseRangeImpactScenario(StaticTargetScenario):
 
     metadata = TestMetadata(...)
 
-    def verify(self, battle_engine) -> bool:
-        # Template already calculated damage_dealt and stored results
-        return self.damage_dealt >= 100
+    def validate(self, engine) -> list:
+        # Template already calculated damage_dealt via collect_results()
+        return [check_true("Sufficient Damage", self.damage_dealt >= 100)]
 ```
 
 ### Example 3: Propulsion Scenario
@@ -248,13 +244,13 @@ class PropEngineAccelerationScenario(TestScenario):
         # Apply thrust to make the ship accelerate
         self.ship.thrust_forward()
 
-    def verify(self, battle_engine) -> bool:
+    def validate(self, engine) -> list:
         final_velocity = self.ship.velocity.length()
         self.results['initial_velocity'] = self.initial_velocity
         self.results['final_velocity'] = final_velocity
         self.results['distance_traveled'] = (self.ship.position - self.initial_position).length()
-        self.results['ticks_run'] = battle_engine.tick_counter
-        return final_velocity > self.initial_velocity and final_velocity > 0
+        self.results['ticks_run'] = engine.tick_counter
+        return [check_true("Accelerated", final_velocity > self.initial_velocity and final_velocity > 0)]
 ```
 
 **After (12 lines - eliminates 38 lines):**
@@ -266,11 +262,12 @@ class PropEngineAccelerationScenario(PropulsionScenario):
 
     metadata = TestMetadata(...)
 
-    def verify(self, battle_engine) -> bool:
-        # Template already stored: initial_velocity, final_velocity,
-        # distance_traveled, all results, etc.
-        return self.final_velocity.length() > self.start_velocity.length() and \
-               self.final_velocity.length() > 0
+    def validate(self, engine) -> list:
+        # Template already stored via collect_results(): initial_velocity,
+        # final_velocity, distance_traveled, all results, etc.
+        return [check_true("Accelerated",
+                self.final_velocity.length() > self.start_velocity.length()
+                and self.final_velocity.length() > 0)]
 ```
 
 ## Template Configuration Reference
@@ -311,7 +308,7 @@ def custom_update(self, battle_engine):
 - `target_alive` - Target survival status
 - `hit_rate` - Damage per tick (if applicable)
 
-**Attributes Available in verify():**
+**Attributes Available in validate():**
 - `self.attacker` - Attacker ship object
 - `self.target` - Target ship object
 - `self.initial_hp` - Target initial HP
@@ -345,7 +342,7 @@ force_fire = True       # Auto-fire weapons each tick
 - `ship1_alive`, `ship2_alive` - Survival status
 - `winner` - 'ship1', 'ship2', 'draw', or None
 
-**Attributes Available in verify():**
+**Attributes Available in validate():**
 - `self.ship1`, `self.ship2` - Ship objects
 - `self.ship1_damage_dealt`, `self.ship2_damage_dealt`
 - `self.winner` - Winner determination
@@ -379,7 +376,7 @@ turn_right = False                # Auto-turn right
 - `ticks_run` - Simulation ticks
 - `expected_max_speed`, `expected_acceleration_rate` - Physics
 
-**Attributes Available in verify():**
+**Attributes Available in validate():**
 - `self.ship` - Ship object
 - `self.start_position`, `self.final_position` - Vector2
 - `self.start_velocity`, `self.final_velocity` - Vector2
@@ -414,14 +411,14 @@ For each scenario to migrate:
    - If update() only fires weapon → DELETE IT (template does this)
    - If update() has custom behavior → Move to `custom_update()`
 
-5. **Simplify verify():**
-   - Delete result storage lines (template does this)
-   - Keep only test-specific verification logic
+5. **Simplify validate():**
+   - Delete result storage lines (template's `collect_results()` does this)
+   - Keep only test-specific validation checks
    - Use `self.damage_dealt` instead of calculating
 
 6. **Test the migrated scenario:**
    ```bash
-   pytest simulation_tests/tests/test_beam_weapons.py::test_specific_scenario -v
+   python -m simulation_tests.run_tests BEAMWEAPON-001
    ```
 
 ## Migration Order (Recommended)
@@ -441,24 +438,17 @@ python -c "from simulation_tests.scenarios.beam_scenarios import BeamLowAccuracy
 
 ### Run Single Test
 ```bash
-pytest simulation_tests/tests/test_beam_weapons.py::test_beam_low_accuracy_point_blank -v
+python -m simulation_tests.run_tests BEAMWEAPON-001
 ```
 
-### Run All Tests in Category
+### Run All Tests
 ```bash
-pytest simulation_tests/tests/test_beam_weapons.py -v
+python -m simulation_tests.run_tests
 ```
 
-### Compare Results
-Before migration:
+### List Available Tests
 ```bash
-pytest simulation_tests/tests/test_beam_weapons.py -v > before.txt
-```
-
-After migration:
-```bash
-pytest simulation_tests/tests/test_beam_weapons.py -v > after.txt
-diff before.txt after.txt  # Should show no test behavior changes
+python -m simulation_tests.run_tests --list
 ```
 
 ## Common Pitfalls
@@ -500,13 +490,13 @@ def custom_setup(self, battle_engine):
 ### 4. Recalculating values template already provides
 ```python
 # WRONG - redundant calculation
-def verify(self, battle_engine) -> bool:
-    damage_dealt = self.initial_hp - self.target.hp  # Template already does this
-    return damage_dealt > 0
+def validate(self, engine) -> list:
+    damage_dealt = self.initial_hp - self.target.hp  # Template's collect_results() already does this
+    return [check_true("Damage Dealt", damage_dealt > 0)]
 
 # RIGHT - use template attribute
-def verify(self, battle_engine) -> bool:
-    return self.damage_dealt > 0  # Already calculated
+def validate(self, engine) -> list:
+    return [check_true("Damage Dealt", self.damage_dealt > 0)]  # Already calculated
 ```
 
 ## Estimated Effort

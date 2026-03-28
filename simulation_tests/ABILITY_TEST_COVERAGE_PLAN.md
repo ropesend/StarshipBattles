@@ -1,3 +1,9 @@
+> **Status: Aspirational**
+> This document describes planned test coverage that has NOT been fully implemented.
+> The `simulation_tests/tests/` directory referenced below no longer exists.
+> Scenario classes now live in `simulation_tests/scenarios/*_scenarios.py` and are
+> run via `python -m simulation_tests.run_tests`.
+
 # Comprehensive Ability Test Coverage Plan
 
 ## Objective

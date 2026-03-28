@@ -30,55 +30,6 @@ from typing import Any, Dict, List, Optional
 PHASES = ("data", "precondition", "outcome")
 
 
-def resolve_path(context: Dict[str, Any], path: str) -> Any:
-    """
-    Resolve dot-notation path to value.
-
-    Supports dict key access and object attribute access at each level.
-
-    Args:
-        context: Root dictionary.
-        path: Dot-notation path (e.g., 'attacker.weapon.damage').
-
-    Returns:
-        Value at path.
-
-    Raises:
-        ValueError: If path resolution fails.
-    """
-    parts = path.split('.')
-    current = context
-    path_trace = []
-
-    for part in parts:
-        path_trace.append(part)
-
-        if isinstance(current, dict):
-            if part not in current:
-                available = list(current.keys())[:10]
-                raise ValueError(
-                    f"Path resolution failed at '{'.'.join(path_trace)}': "
-                    f"key '{part}' not found. Available: {available}"
-                )
-            current = current[part]
-        else:
-            if not hasattr(current, part):
-                available = [a for a in dir(current) if not a.startswith('_')][:10]
-                raise ValueError(
-                    f"Path resolution failed at '{'.'.join(path_trace)}': "
-                    f"attribute '{part}' not found on {type(current).__name__}. "
-                    f"Available: {available}"
-                )
-            current = getattr(current, part)
-
-        if current is None:
-            raise ValueError(
-                f"Path resolution encountered None at '{'.'.join(path_trace)}'"
-            )
-
-    return current
-
-
 # ---------------------------------------------------------------------------
 # Core data model
 # ---------------------------------------------------------------------------

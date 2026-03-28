@@ -41,7 +41,6 @@ from simulation_tests.scenarios.validation import (
     check_approx,
     check_tost,
     check_true,
-    resolve_path,
 )
 from simulation_tests.scenarios.defense_scenarios import (
     ShieldAbsorbsDamageScenario,
@@ -81,7 +80,6 @@ __all__ = [
     'check_approx',
     'check_tost',
     'check_true',
-    'resolve_path',
     # Defense scenarios
     'ShieldAbsorbsDamageScenario',
     'ShieldOverflowToHullScenario',

@@ -26,19 +26,10 @@ from simulation_tests.scenarios.templates import StaticTargetScenario
 from simulation_tests.scenarios.validation import check_true
 from simulation_tests.test_constants import (
     STANDARD_DISTANCE,
-    STANDARD_SEED
+    STANDARD_SEED,
+    SEEKER_TRACKING_DISTANCE,
 )
 
-
-def _get_seeker_ability(ship):
-    """Extract the SeekerWeaponAbility instance from a loaded ship."""
-    for layer_name, layer_data in ship.layers.items():
-        for component in layer_data.components:
-                if hasattr(component, 'ability_instances'):
-                    for ability in component.ability_instances:
-                        if ability.__class__.__name__ == 'SeekerWeaponAbility':
-                            return ability
-    return None
 
 
 # ============================================================================
@@ -93,7 +84,7 @@ class SeekerCloseRangeImpactScenario(StaticTargetScenario):
     def _collect_extra_results(self, battle_engine):
         self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
         # Read weapon stats from loaded ship data
-        seeker_ability = _get_seeker_ability(self.attacker)
+        seeker_ability = self.get_ability(self.attacker, 'SeekerWeaponAbility')
         if seeker_ability:
             self.results['weapon_type'] = 'Seeker360'
             self.results['missile_speed'] = seeker_ability.projectile_speed
@@ -286,7 +277,7 @@ class SeekerTrackingStationaryScenario(StaticTargetScenario):
     # Template configuration
     attacker_ship = "Test_Attacker_Seeker360.json"
     target_ship = "Test_Target_Stationary.json"
-    distance = 1000
+    distance = SEEKER_TRACKING_DISTANCE
 
     metadata = TestMetadata(
         test_id="SEEK360-TRACK-001",
@@ -337,7 +328,7 @@ class SeekerTrackingLinearScenario(StaticTargetScenario):
     # Template configuration
     attacker_ship = "Test_Attacker_Seeker360.json"
     target_ship = "Test_Target_Linear_Slow.json"
-    distance = 1000
+    distance = SEEKER_TRACKING_DISTANCE
     target_angle = 90  # Moving up
 
     metadata = TestMetadata(
@@ -388,7 +379,7 @@ class SeekerTrackingOrbitingScenario(StaticTargetScenario):
     # Template configuration
     attacker_ship = "Test_Attacker_Seeker360.json"
     target_ship = "Test_Target_Orbiting.json"
-    distance = 1000
+    distance = SEEKER_TRACKING_DISTANCE
 
     metadata = TestMetadata(
         test_id="SEEK360-TRACK-003",
@@ -439,7 +430,7 @@ class SeekerTrackingErraticScenario(StaticTargetScenario):
     # Template configuration
     attacker_ship = "Test_Attacker_Seeker360.json"
     target_ship = "Test_Target_Erratic_Small.json"
-    distance = 1000
+    distance = SEEKER_TRACKING_DISTANCE
 
     metadata = TestMetadata(
         test_id="SEEK360-TRACK-004",
@@ -497,7 +488,7 @@ class SeekerPointDefenseNoneScenario(StaticTargetScenario):
     # Template configuration (not used - scenario is skipped)
     attacker_ship = "Test_Attacker_Seeker360.json"
     target_ship = "Test_Target_No_PD.json"  # NOT IMPLEMENTED
-    distance = 1000
+    distance = SEEKER_TRACKING_DISTANCE
 
     skip_test = True
     skip_reason = "Requires point defense target ships - not yet implemented"
@@ -544,7 +535,7 @@ class SeekerPointDefenseSingleScenario(StaticTargetScenario):
     # Template configuration (not used - scenario is skipped)
     attacker_ship = "Test_Attacker_Seeker360.json"
     target_ship = "Test_Target_Single_PD.json"  # NOT IMPLEMENTED
-    distance = 1000
+    distance = SEEKER_TRACKING_DISTANCE
 
     skip_test = True
     skip_reason = "Requires point defense target ships - not yet implemented"
@@ -592,7 +583,7 @@ class SeekerPointDefenseTripleScenario(StaticTargetScenario):
     # Template configuration (not used - scenario is skipped)
     attacker_ship = "Test_Attacker_Seeker360.json"
     target_ship = "Test_Target_Triple_PD.json"  # NOT IMPLEMENTED
-    distance = 1000
+    distance = SEEKER_TRACKING_DISTANCE
 
     skip_test = True
     skip_reason = "Requires point defense target ships - not yet implemented"

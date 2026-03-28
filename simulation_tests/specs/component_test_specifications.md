@@ -1,3 +1,9 @@
+> **Status: Aspirational / Superseded**
+> This document describes an earlier test architecture that was superseded by the
+> Combat Lab scenario system. The directory structure, logging system, and test
+> execution flow described here do NOT match the current implementation.
+> See `simulation_tests/README.md` for current architecture.
+
 # Component Test Specifications
 
 > [!IMPORTANT]

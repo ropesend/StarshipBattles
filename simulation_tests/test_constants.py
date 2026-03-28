@@ -15,10 +15,6 @@ STANDARD_TEST_TICKS = 500
 # High-precision test duration for statistical validation
 HIGH_TICK_TEST_TICKS = 100000
 
-# Special durations for specific test types
-RESOURCE_TEST_TICKS = 600  # Allow 1+ weapon reloads
-RESOURCE_DEPLETION_TICKS = 1000  # ~10 seconds for full depletion
-
 
 # ============================================================================
 # TEST DISTANCES (pixels)
@@ -38,6 +34,16 @@ MAX_RANGE_DISTANCE = 800
 
 # Long range (beyond most weapon ranges)
 LONG_RANGE_DISTANCE = 3000
+
+# Near max-range distance for beam accuracy tests (within 800px weapon range)
+NEAR_MAX_RANGE_DISTANCE = 750
+
+# Seeker tracking test distance
+SEEKER_TRACKING_DISTANCE = 1000
+
+# Beyond-weapon-range distances for out-of-range tests
+BEAM_OUT_OF_RANGE_DISTANCE = 900
+PROJECTILE_OUT_OF_RANGE_DISTANCE = 1200
 
 
 # ============================================================================
@@ -259,7 +265,3 @@ MODIFIER_TEST_TICKS = 500
 # Standard seed for reproducible tests
 STANDARD_SEED = 42
 
-# Alternative seeds for variation testing
-ALT_SEED_1 = 123
-ALT_SEED_2 = 456
-ALT_SEED_3 = 789

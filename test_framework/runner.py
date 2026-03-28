@@ -26,11 +26,9 @@ class TestRunner:
     __test__ = False  # Not a pytest test class
 
     def __init__(self):
-        # PROJ-126: Create factory and inject into engine - engine calls set_grid automatically
-        self._ai_factory = AIControllerFactory()
-        self.engine = BattleEngine(ai_factory=self._ai_factory)
+        self.engine = None  # Created fresh per scenario in run_scenario()
         self.current_scenario = None
-        self.test_log = []  # Store log of all test executions
+        self.test_log = []
         
     def load_data_for_scenario(self, scenario):
         """
@@ -139,7 +137,7 @@ class TestRunner:
             scenario.passed = False
             scenario.results['error'] = str(e)
             if log_results:
-                self._log_test_execution(scenario, headless)
+                self.log_test_execution(scenario, headless)
             return scenario
 
         end_time = time.time()

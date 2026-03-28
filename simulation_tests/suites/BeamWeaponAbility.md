@@ -183,36 +183,36 @@ With buffer: 100,000 ticks
 
 ---
 
-## Validation Rules
+## Validation
 
-Each test should have TWO validation layers:
+Each beam scenario validates across three phases using the check functions
+from `simulation_tests/scenarios/validation.py`:
 
-1. **Formula Validation** (DeterministicMatchRule)
-   - Verifies the expected hit probability is calculated correctly
-   - Catches bugs in test setup or formula implementation
+1. **Data phase** (`check_exact`) -- Loaded component values match expectations
+2. **Precondition phase** (`check_true`) -- Weapon fired, target was alive, etc.
+3. **Outcome phase** (`check_tost`) -- Observed hit rate is statistically equivalent to expected
 
-2. **Outcome Validation** (StatisticalTestRule)
-   - Verifies actual hit rate matches expected statistically
-   - Catches bugs in game engine hit resolution
-
-Example:
+Example (from `BeamAccuracyScenario` in `beam_scenarios.py`):
 ```python
-validation_rules=[
-    DeterministicMatchRule(
-        name='Expected Hit Chance',
-        path='results.expected_hit_chance',
-        expected=0.5318,
-        description='P = 1/(1+e^-0.1273) from sigmoid formula'
-    ),
-    StatisticalTestRule(
-        name='Hit Rate',
-        test_type='binomial',
-        expected_probability=0.5318,
-        equivalence_margin=0.06,
-        trials_expr='ticks_run',
-        successes_expr='damage_dealt'
-    )
-]
+def validate(self, engine) -> List[Check]:
+    checks = []
+    # Data: verify loaded weapon stats
+    checks.append(check_exact("Weapon Damage", 1, self.attacker.weapon.damage))
+    checks.append(check_exact("Base Accuracy", 0.5, self.attacker.weapon.base_accuracy))
+
+    # Precondition: simulation ran
+    checks.append(check_true("Ticks Ran", engine.tick_count > 0))
+
+    # Outcome: hit rate matches formula prediction
+    damage_dealt = self.initial_hp - self.target.hp
+    checks.append(check_tost(
+        "Hit Rate",
+        expected_p=0.5318,
+        successes=damage_dealt,
+        trials=engine.tick_count,
+        margin=0.06,
+    ))
+    return checks
 ```
 
 ---
