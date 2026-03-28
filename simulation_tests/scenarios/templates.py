@@ -106,6 +106,10 @@ class StaticTargetScenario(TestScenario):
         Standard setup for static target scenarios.
         Subclasses can override for custom setup, or use configuration attributes.
         """
+        # Skip placeholder tests that aren't ready to run
+        if self.skip_test:
+            return
+
         # Validate configuration
         if self.attacker_ship is None:
             raise ValueError(f"{self.__class__.__name__} must set 'attacker_ship' attribute")
@@ -157,6 +161,9 @@ class StaticTargetScenario(TestScenario):
         Forces attacker to fire each tick (if force_fire=True).
         Subclasses can override for custom behavior.
         """
+        if self.skip_test:
+            return
+
         if self.force_fire:
             if self.attacker and self.attacker.is_alive:
                 self.attacker.comp_trigger_pulled = True

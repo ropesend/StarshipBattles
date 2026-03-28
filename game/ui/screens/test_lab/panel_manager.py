@@ -110,7 +110,7 @@ class TestLabPanelManager:
                 width=tabbed_width,
                 height=component_panel_height,
                 component_ids=unique_component_ids,
-                load_component_callback=self._data_extractor.load_component_data
+                load_component_callback=self._data_extractor.load_component
             )
             component_panels.append(component_panel)
         else:
@@ -135,7 +135,7 @@ class TestLabPanelManager:
                     width=panel_width,
                     height=component_panel_height,
                     component_ids=ship_info['component_ids'],
-                    load_component_callback=self._data_extractor.load_component_data
+                    load_component_callback=self._data_extractor.load_component
                 )
                 component_panels.append(component_panel)
 

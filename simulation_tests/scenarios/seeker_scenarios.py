@@ -470,6 +470,9 @@ class SeekerPointDefenseNoneScenario(StaticTargetScenario):
     target_ship = "Test_Target_No_PD.json"  # NOT IMPLEMENTED
     distance = 1000
 
+    skip_test = True
+    skip_reason = "Requires point defense target ships - not yet implemented"
+
     metadata = TestMetadata(
         test_id="SEEK360-PD-001",
         category="Seeker Weapons",
@@ -498,18 +501,6 @@ class SeekerPointDefenseNoneScenario(StaticTargetScenario):
         tags=["seeker", "missile", "point-defense", "baseline", "placeholder", "not-implemented"]
     )
 
-    def setup(self, battle_engine):
-        """Placeholder setup."""
-        # Will be implemented when PD target ships exist
-        pass
-
-    def verify(self, battle_engine) -> bool:
-        """Placeholder verification."""
-        # Mark as skipped
-        self.results['skipped'] = True
-        self.results['skip_reason'] = "Requires point defense target ships - not yet implemented"
-        return False
-
 
 class SeekerPointDefenseSingleScenario(StaticTargetScenario):
     """
@@ -525,6 +516,9 @@ class SeekerPointDefenseSingleScenario(StaticTargetScenario):
     attacker_ship = "Test_Attacker_Seeker360.json"
     target_ship = "Test_Target_Single_PD.json"  # NOT IMPLEMENTED
     distance = 1000
+
+    skip_test = True
+    skip_reason = "Requires point defense target ships - not yet implemented"
 
     metadata = TestMetadata(
         test_id="SEEK360-PD-002",
@@ -555,18 +549,6 @@ class SeekerPointDefenseSingleScenario(StaticTargetScenario):
         tags=["seeker", "missile", "point-defense", "interception", "placeholder", "not-implemented"]
     )
 
-    def setup(self, battle_engine):
-        """Placeholder setup."""
-        # Will be implemented when PD target ships exist
-        pass
-
-    def verify(self, battle_engine) -> bool:
-        """Placeholder verification."""
-        # Mark as skipped
-        self.results['skipped'] = True
-        self.results['skip_reason'] = "Requires point defense target ships - not yet implemented"
-        return False
-
 
 class SeekerPointDefenseTripleScenario(StaticTargetScenario):
     """
@@ -582,6 +564,9 @@ class SeekerPointDefenseTripleScenario(StaticTargetScenario):
     attacker_ship = "Test_Attacker_Seeker360.json"
     target_ship = "Test_Target_Triple_PD.json"  # NOT IMPLEMENTED
     distance = 1000
+
+    skip_test = True
+    skip_reason = "Requires point defense target ships - not yet implemented"
 
     metadata = TestMetadata(
         test_id="SEEK360-PD-003",
@@ -612,18 +597,6 @@ class SeekerPointDefenseTripleScenario(StaticTargetScenario):
         ui_priority=3,
         tags=["seeker", "missile", "point-defense", "layered-defense", "placeholder", "not-implemented"]
     )
-
-    def setup(self, battle_engine):
-        """Placeholder setup."""
-        # Will be implemented when PD target ships exist
-        pass
-
-    def verify(self, battle_engine) -> bool:
-        """Placeholder verification."""
-        # Mark as skipped
-        self.results['skipped'] = True
-        self.results['skip_reason'] = "Requires point defense target ships - not yet implemented"
-        return False
 
 
 # ============================================================================
