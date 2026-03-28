@@ -42,6 +42,7 @@ def mock_ui():
     ui.window_manager = MagicMock()
     ui.window_manager.fleet_orders_window = None
     ui.window_manager.planet_list_window = None
+    ui.window_manager.star_list_window = None
     ui.window_manager.fleet_report_window = None
     ui.window_manager.transfer_dialog = None
     ui.window_manager.build_queue_list_window = None

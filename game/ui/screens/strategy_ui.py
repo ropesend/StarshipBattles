@@ -94,6 +94,7 @@ class StrategyUI:
         self.lbl_fleet = widgets.lbl_fleet
         self.btn_next_fleet = widgets.btn_next_fleet
         self.btn_planets = widgets.btn_planets
+        self.btn_stars = widgets.btn_stars
         self.btn_empire = widgets.btn_empire
         self.btn_research = widgets.btn_research
         self.btn_design = widgets.btn_design
@@ -359,6 +360,10 @@ class StrategyUI:
     def open_planet_list(self):
         """Open the Planet List Window."""
         self.window_manager.open_planet_list()
+
+    def open_star_list(self):
+        """Open the Star List Window."""
+        self.window_manager.open_star_list()
 
     def open_build_queue_list(self):
         """Open the Build Queue List Window (BUG-67)."""

@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 from game.core.validation import ValidationResult
 from game.strategy.facade.dto import (
     FleetInfo,
+    StarInfo,
     SystemInfo,
     PlanetInfo,
     EmpireInfo,
@@ -185,6 +186,27 @@ class StrategySessionFacade:
             SystemInfo.from_star_system(system)
             for system in self._session.galaxy.systems.values()
         ]
+
+    def get_all_stars(self) -> List[StarInfo]:
+        """Get information about all stars in the galaxy.
+
+        Returns enriched StarInfo DTOs with system context (system name,
+        global location, planet count, companion star count).
+
+        Returns:
+            List of StarInfo DTOs for all stars across all systems
+        """
+        results = []
+        for system in self._session.galaxy.systems.values():
+            for star in system.stars:
+                results.append(StarInfo.from_star(
+                    star,
+                    system_name=system.name,
+                    system_global_location=system.global_location,
+                    planet_count=len(system.planets),
+                    total_star_count=len(system.stars),
+                ))
+        return results
 
     def get_system_at_hex(self, hex_coord: HexCoord) -> Optional[SystemInfo]:
         """Get the system at a specific hex coordinate.
