@@ -234,6 +234,113 @@
         }
     },
 
+    "resource_generation": {
+        "description": "Data-driven planet resource generation parameters. Quantity scales with mass; quality inversely correlates with mass. Planet types have affinity modifiers for thematic resource distribution.",
+
+        "mass_scaling": {
+            "description": "Log10(kg) bounds for normalizing planet mass to a 0-1 size_factor",
+            "min_log_mass": 20.0,
+            "max_log_mass": 28.0
+        },
+
+        "quantity": {
+            "description": "Resource quantity parameters. earth_mass_baseline is the average total quantity per resource for an Earth-mass planet. Quantity scales proportionally with mass.",
+            "earth_mass_baseline": 10000000,
+            "determinism_weight": 0.7,
+            "randomness_weight": 0.3,
+            "minimum_floor": 10000
+        },
+
+        "quality": {
+            "description": "Resource quality parameters. Quality inversely correlates with mass (small=refined, large=crude). Scale is 0-100.",
+            "max_quality": 100.0,
+            "determinism_weight": 0.7,
+            "randomness_weight": 0.3,
+            "minimum_floor": 5.0
+        },
+
+        "planet_type_affinities": {
+            "description": "Per-planet-type resource multipliers. Values > 1.0 boost, < 1.0 reduce. Absent entries default to 1.0. Designed for moderate specialization (1.5-2.5x favored, 0.5-0.8x reduced).",
+            "CONTINENTAL": {
+                "Metals": 1.2,
+                "Organics": 1.5,
+                "Vapors": 0.8,
+                "Radioactives": 1.0,
+                "Exotics": 0.9
+            },
+            "ARID": {
+                "Metals": 1.5,
+                "Organics": 0.4,
+                "Vapors": 0.3,
+                "Radioactives": 1.8,
+                "Exotics": 1.3
+            },
+            "PELAGIC": {
+                "Metals": 0.6,
+                "Organics": 2.0,
+                "Vapors": 1.8,
+                "Radioactives": 0.5,
+                "Exotics": 0.8
+            },
+            "MAGMA": {
+                "Metals": 2.0,
+                "Organics": 0.2,
+                "Vapors": 0.5,
+                "Radioactives": 2.5,
+                "Exotics": 1.5
+            },
+            "CRYOPLANET": {
+                "Metals": 0.7,
+                "Organics": 0.5,
+                "Vapors": 2.0,
+                "Radioactives": 0.6,
+                "Exotics": 1.8
+            },
+            "BARREN": {
+                "Metals": 1.8,
+                "Organics": 0.2,
+                "Vapors": 0.3,
+                "Radioactives": 1.5,
+                "Exotics": 1.0
+            },
+            "JOVIAN": {
+                "Metals": 0.3,
+                "Organics": 0.5,
+                "Vapors": 2.5,
+                "Radioactives": 0.4,
+                "Exotics": 1.5
+            },
+            "ICE_GIANT": {
+                "Metals": 0.4,
+                "Organics": 0.6,
+                "Vapors": 2.2,
+                "Radioactives": 0.5,
+                "Exotics": 1.8
+            },
+            "CHTHONIAN": {
+                "Metals": 2.5,
+                "Organics": 0.1,
+                "Vapors": 0.2,
+                "Radioactives": 2.0,
+                "Exotics": 2.0
+            },
+            "ICE_DWARF": {
+                "Metals": 0.5,
+                "Organics": 0.3,
+                "Vapors": 1.8,
+                "Radioactives": 0.4,
+                "Exotics": 2.0
+            },
+            "PLANETOID": {
+                "Metals": 1.5,
+                "Organics": 0.2,
+                "Vapors": 0.3,
+                "Radioactives": 1.2,
+                "Exotics": 1.5
+            }
+        }
+    },
+
     "density_models": {
         "description": "Density ranges for different body compositions",
         "iron_core": {

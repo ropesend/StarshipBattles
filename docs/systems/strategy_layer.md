@@ -318,6 +318,7 @@ via `StrategySessionFacade.get_turn_events()` (returns dicts, not domain objects
 - `game/strategy/generation/placement_strategies.py` -- placement algorithms
 - `game/strategy/generation/region_classifier.py` -- arm/cluster classification
 - `game/strategy/data/planet_gen.py` -- `PlanetGenerator`
+- `game/strategy/data/resource_generation_config.py` -- `ResourceGenerationConfig` (data-driven resource parameters)
 - `game/strategy/generation/storm_generator.py` -- `StormGenerator`
 
 ### Galaxy Structure
@@ -380,3 +381,31 @@ Layout detection:
 5. **Storm generation** -- `StormGenerator` places environmental hazards
 6. **Region classification** -- `RegionClassifier` assigns region IDs to systems
 7. **Planet images** -- `PlanetImageRegistry` assigns visual assets
+
+### Planet Resource Generation
+
+**Files:**
+- `game/strategy/data/planet_gen.py` -- `PlanetGenerator._generate_resources(mass, planet_type)`
+- `game/strategy/data/resource_generation_config.py` -- `ResourceGenerationConfig`, `get_resource_generation_config()`
+- `data/astrophysics.json` -- `resource_generation` section
+
+Resource generation is fully data-driven via `astrophysics.json`. All parameters are loaded through `ResourceGenerationConfig` (follows the `ClassificationConfig` pattern with `@lru_cache` singleton and hardcoded defaults as fallback).
+
+**Parameters (in `astrophysics.json` → `resource_generation`):**
+- `mass_scaling` -- log10(kg) bounds for normalizing planet mass to a 0-1 size_factor
+- `quantity` -- `earth_mass_baseline` (default 10M), determinism/randomness weights, minimum floor
+- `quality` -- max quality (0-100), determinism/randomness weights, minimum floor
+- `planet_type_affinities` -- per-planet-type resource multiplier matrix (e.g., MAGMA: Radioactives×2.5, Organics×0.2)
+
+**Resource generation formula:**
+1. Compute `size_factor` from log10(mass) normalized to `[min_log_mass, max_log_mass]`
+2. Calibrate so Earth-mass yields `earth_mass_baseline` quantity per resource
+3. For each resource: `quantity = (size_factor * determinism + random * randomness) * calibration * affinity`
+4. Quality inversely correlates: `quality = (1 - size_factor) * determinism + random * randomness`
+5. Both have minimum floors to prevent zero values
+
+**Affinity design:** Moderate specialization (1.5-2.5× favored, 0.3-0.8× reduced). Every planet has some of each resource. Thematic mapping:
+- Gas giants (JOVIAN, ICE_GIANT) → high Vapors, low Metals
+- Volcanic (MAGMA, CHTHONIAN) → high Metals + Radioactives, low Organics
+- Ocean/temperate (PELAGIC, CONTINENTAL) → high Organics
+- Cold/exotic (CRYOPLANET, ICE_DWARF) → high Vapors + Exotics

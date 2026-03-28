@@ -398,7 +398,7 @@ class PlanetGenerator:
             surface_water=water,
             tectonic_activity=activity,
             magnetic_field=mag_field,
-            resources=self._generate_resources(mass),
+            resources=self._generate_resources(mass, p_type),
             image_id=image_id,
             image_rotation=image_rotation
         )
@@ -507,33 +507,65 @@ class PlanetGenerator:
 
         return PlanetType.BARREN
 
-    def _generate_resources(self, mass: float) -> dict:
+    def _generate_resources(self, mass: float, planet_type: PlanetType) -> dict:
         """
-        Generate resources based on mass.
+        Generate resources based on mass and planet type.
 
-        Large planets: High quantity, low quality (hard to extract)
-        Small planets: Low quantity, high quality (easy to extract)
+        Quantity scales proportionally with mass (10M baseline at Earth-mass).
+        Quality inversely correlates with mass (small=refined, large=crude).
+        Planet type affinities shift per-resource quantities thematically.
+
+        All parameters are loaded from astrophysics.json via
+        ResourceGenerationConfig for data-driven tuning.
+
+        Args:
+            mass: Planet mass in kg.
+            planet_type: Classified planet type for affinity lookup.
+
+        Returns:
+            Dict mapping resource name to {quantity: int, quality: float}.
         """
+        from game.strategy.data.resource_generation_config import get_resource_generation_config
+        cfg = get_resource_generation_config()
+
         resources = {}
 
         log_mass = math.log10(max(mass, 1.0))
-        min_log = 20.0
-        max_log = 28.0
-
-        size_factor = (log_mass - min_log) / (max_log - min_log)
+        size_factor = (log_mass - cfg.min_log_mass) / (cfg.max_log_mass - cfg.min_log_mass)
         size_factor = max(0.0, min(1.0, size_factor))
 
-        for res in PLANET_RESOURCES:
-            # Quantity correlates with size
-            r_qty = random.random()
-            qty_norm = (size_factor * 0.7) + (r_qty * 0.3)
-            quantity = int(qty_norm * 1000000)
+        # Earth-mass size_factor for baseline calibration
+        earth_log = math.log10(MASS_EARTH)
+        earth_size_factor = (earth_log - cfg.min_log_mass) / (cfg.max_log_mass - cfg.min_log_mass)
 
-            # Quality inversely correlates with size
+        type_name = planet_type.name
+
+        for res in PLANET_RESOURCES:
+            # Quantity: proportional to mass, calibrated so Earth-mass = baseline
+            r_qty = random.random()
+            qty_norm = (size_factor * cfg.qty_determinism) + (r_qty * cfg.qty_randomness)
+            earth_qty_norm = earth_size_factor * cfg.qty_determinism + 0.5 * cfg.qty_randomness
+            # Scale so that earth_qty_norm maps to earth_mass_baseline
+            if earth_qty_norm > 0:
+                quantity = qty_norm / earth_qty_norm * cfg.earth_mass_baseline
+            else:
+                quantity = cfg.earth_mass_baseline
+
+            # Apply planet type affinity
+            affinity = cfg.get_affinity(type_name, res)
+            quantity *= affinity
+
+            # Enforce minimum floor
+            quantity = max(cfg.qty_minimum_floor, int(quantity))
+
+            # Quality: inversely correlates with size
             qual_bias = 1.0 - size_factor
             r_qual = random.random()
-            qual_norm = (qual_bias * 0.7) + (r_qual * 0.3)
-            quality = qual_norm * 100.0
+            qual_norm = (qual_bias * cfg.qual_determinism) + (r_qual * cfg.qual_randomness)
+            quality = qual_norm * cfg.max_quality
+
+            # Enforce minimum floor
+            quality = max(cfg.qual_minimum_floor, quality)
 
             resources[res] = {
                 'quantity': quantity,

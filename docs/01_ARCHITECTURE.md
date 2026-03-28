@@ -107,7 +107,7 @@ Six layers with strict downward-only dependency flow:
 
 | Subpackage      | Description |
 |-----------------|-------------|
-| `data/`         | Domain entities (notable modules): Fleet, ShipInstance, Empire, Galaxy, Planet, Stars, Storm, Pathfinding, plus fleet delegates (`fleet_battle_adapter.py`, `fleet_capability_calculator.py`, `fleet_resource_aggregator.py`) |
+| `data/`         | Domain entities (notable modules): Fleet, ShipInstance, Empire, Galaxy, Planet, Stars, Storm, Pathfinding, plus fleet delegates (`fleet_battle_adapter.py`, `fleet_capability_calculator.py`, `fleet_resource_aggregator.py`), and data-driven configs (`classification_config.py`, `resource_generation_config.py`) |
 | `engine/`       | Turn processing: TurnEngine, GameSession, GameConfig, GameInitializer, Commands, CommandHandlers, FleetOrderProcessor, plus sub-engines (movement, conflict, harvesting, production, population, economy, maintenance, resupply, action execution, environmental hazards) |
 | `services/`     | ShipStatsCalculator, FleetSpeedCalculator, FleetNavigationService, ComponentInspector, DesignCostCalculator, CargoTransferService, AreaEffectManager, ActionTimeResolver, FleetCargoProjector |
 | `facade/`       | StrategySessionFacade (UI-to-engine communication) |

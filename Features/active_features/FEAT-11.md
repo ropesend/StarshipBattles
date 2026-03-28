@@ -23,7 +23,7 @@ Planet resource quantities and quality distribution should be driven by JSON dat
 Medium
 
 ## Status
-Pending
+Awaiting Confirmation
 
 ## Analysis Report
 
@@ -177,3 +177,13 @@ Pending
 - 2026-03-25: Created from QA Session 20260325_191105.
 - 2026-03-27: Deep Investigation initiated (Protocol 02b). Phase 1 agent swarm completed — architecture impact, dependency mapping, pattern search, and scope assessment all confirm this is a Moderate-complexity feature fully contained within the Strategy layer.
 - 2026-03-27: Phase 2 user interview completed. Key decisions: 10M Earth-mass baseline with mass-proportional scaling, data-drive everything, moderate affinities (1.5-2.5x) fully JSON-tunable, all features ship together. Phase 3 complexity assessment: Moderate. Phase 4 implementation strategy defined.
+- 2026-03-27: Implementation complete. All 7 steps executed:
+  - Added `resource_generation` section to `data/astrophysics.json` (mass scaling, quantity/quality params, 11 planet-type affinity entries)
+  - Created `game/strategy/data/resource_generation_config.py` — `ResourceGenerationConfig` class with `@lru_cache` singleton, hardcoded defaults fallback, `get_affinity()` accessor
+  - Updated `game/strategy/generation/loaders/astrophysics_loader.py` — added `resource_generation` to required sections + schema validation
+  - Refactored `PlanetGenerator._generate_resources(mass, planet_type)` — all constants externalized to JSON, mass-proportional quantity calibrated to 10M Earth-mass baseline, planet-type affinity multipliers, minimum floors
+  - Updated `_create_single_planet()` call site to pass `p_type`
+  - 9 new config tests (`test_resource_generation_config.py`), 8 updated + 4 new resource generation tests (`test_planet_gen.py`)
+  - Full test suite: **13,866 passed**, 2 skipped, 0 failures
+  - Docs updated: `docs/systems/strategy_layer.md` (new Planet Resource Generation section), `docs/01_ARCHITECTURE.md` (strategy data/ description)
+  - Status set to [Awaiting Confirmation]

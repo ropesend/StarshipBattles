@@ -23,6 +23,7 @@ class AstrophysicsLoader:
     - Ice line calculations
     - Atmospheric retention thresholds
     - Planet classification thresholds
+    - Resource generation parameters (mass scaling, quality, affinities)
     """
 
     DEFAULT_PATH = Path("data/astrophysics.json")
@@ -121,7 +122,8 @@ class AstrophysicsLoader:
             "habitable_zone",
             "ice_line",
             "atmosphere_retention",
-            "classification"
+            "classification",
+            "resource_generation"
         ]
 
         for section in required_sections:
@@ -186,3 +188,13 @@ class AstrophysicsLoader:
                 code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
                 context={"section": "classification", "missing_key": "temperature_thresholds"}
             )
+
+        # Validate resource_generation
+        res_gen = data["resource_generation"]
+        for key in ["mass_scaling", "quantity", "quality", "planet_type_affinities"]:
+            if key not in res_gen:
+                raise ValidationException(
+                    f"resource_generation missing {key}",
+                    code=ErrorCode.SCHEMA_VALIDATION_ERROR.value,
+                    context={"section": "resource_generation", "missing_key": key}
+                )

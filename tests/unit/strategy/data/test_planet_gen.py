@@ -544,7 +544,7 @@ class TestResourceGeneration:
         """_generate_resources returns dict of resources."""
         from game.strategy.data.planet_physics import MASS_EARTH
 
-        resources = planet_generator._generate_resources(MASS_EARTH)
+        resources = planet_generator._generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
 
         assert isinstance(resources, dict)
 
@@ -552,7 +552,7 @@ class TestResourceGeneration:
         """Resources dict has quantity and quality for each resource."""
         from game.strategy.data.planet_physics import MASS_EARTH
 
-        resources = planet_generator._generate_resources(MASS_EARTH)
+        resources = planet_generator._generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
 
         for res_name, res_data in resources.items():
             assert 'quantity' in res_data
@@ -562,33 +562,122 @@ class TestResourceGeneration:
         """Resource quantities are non-negative."""
         from game.strategy.data.planet_physics import MASS_EARTH
 
-        resources = planet_generator._generate_resources(MASS_EARTH)
+        resources = planet_generator._generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
 
         for res_name, res_data in resources.items():
             assert res_data['quantity'] >= 0
 
     def test_generate_resources_quality_bounded(self, planet_generator):
-        """Resource quality is bounded 0-100."""
+        """Resource quality is bounded within valid range."""
         from game.strategy.data.planet_physics import MASS_EARTH
 
-        resources = planet_generator._generate_resources(MASS_EARTH)
+        resources = planet_generator._generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
 
         for res_name, res_data in resources.items():
-            assert 0 <= res_data['quality'] <= 100
+            assert 5.0 <= res_data['quality'] <= 100
 
     def test_generate_resources_large_planet_high_quantity(self, planet_generator):
         """Large planets tend to have higher resource quantities."""
         from game.strategy.data.planet_physics import MASS_JUPITER, MASS_CERES
 
-        large_resources = planet_generator._generate_resources(MASS_JUPITER)
-        small_resources = planet_generator._generate_resources(MASS_CERES)
+        large_resources = planet_generator._generate_resources(MASS_JUPITER, PlanetType.JOVIAN)
+        small_resources = planet_generator._generate_resources(MASS_CERES, PlanetType.PLANETOID)
 
-        # Average over multiple samples for statistical significance
         large_qty = sum(r['quantity'] for r in large_resources.values())
         small_qty = sum(r['quantity'] for r in small_resources.values())
 
         # Large should generally have more quantity
         assert large_qty > small_qty * 0.5  # Allow some variance
+
+    def test_generate_resources_earth_mass_baseline(self, planet_generator):
+        """Earth-mass planet yields approximately 10M per resource (with affinity=1.0)."""
+        from game.strategy.data.planet_physics import MASS_EARTH
+
+        # Run multiple times and average to reduce randomness impact
+        totals = {res: 0 for res in ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]}
+        n_samples = 50
+        for _ in range(n_samples):
+            resources = planet_generator._generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
+            for res_name, res_data in resources.items():
+                totals[res_name] += res_data['quantity']
+
+        for res_name, total in totals.items():
+            avg = total / n_samples
+            # With affinities, some resources will be above/below 10M.
+            # Allow wide band: 2M to 25M per resource
+            assert 2_000_000 < avg < 25_000_000, (
+                f"{res_name} average {avg:.0f} not in expected range for Earth-mass"
+            )
+
+    def test_generate_resources_quality_inverse_with_mass(self, planet_generator):
+        """Small planets have higher quality than large planets."""
+        from game.strategy.data.planet_physics import MASS_JUPITER, MASS_CERES
+
+        # Average quality over samples
+        large_quals = []
+        small_quals = []
+        for _ in range(30):
+            large = planet_generator._generate_resources(MASS_JUPITER, PlanetType.JOVIAN)
+            small = planet_generator._generate_resources(MASS_CERES, PlanetType.PLANETOID)
+            large_quals.append(sum(r['quality'] for r in large.values()) / 5)
+            small_quals.append(sum(r['quality'] for r in small.values()) / 5)
+
+        avg_large = sum(large_quals) / len(large_quals)
+        avg_small = sum(small_quals) / len(small_quals)
+
+        assert avg_small > avg_large, "Small planets should have higher quality"
+
+    def test_generate_resources_minimum_floor(self, planet_generator):
+        """No resource quantity drops below the minimum floor."""
+        from game.strategy.data.planet_physics import MASS_CERES
+
+        for _ in range(20):
+            resources = planet_generator._generate_resources(MASS_CERES, PlanetType.PLANETOID)
+            for res_name, res_data in resources.items():
+                assert res_data['quantity'] >= 10_000, (
+                    f"{res_name} quantity {res_data['quantity']} below minimum floor"
+                )
+                assert res_data['quality'] >= 5.0, (
+                    f"{res_name} quality {res_data['quality']} below minimum floor"
+                )
+
+    def test_generate_resources_planet_type_affinity(self, planet_generator):
+        """Planet type affinities shift resource distribution."""
+        from game.strategy.data.planet_physics import MASS_EARTH
+
+        # MAGMA should favor Radioactives and Metals over Organics
+        magma_totals = {"Metals": 0, "Organics": 0, "Radioactives": 0}
+        n_samples = 50
+        for _ in range(n_samples):
+            resources = planet_generator._generate_resources(MASS_EARTH, PlanetType.MAGMA)
+            for res in magma_totals:
+                magma_totals[res] += resources[res]['quantity']
+
+        avg_metals = magma_totals["Metals"] / n_samples
+        avg_organics = magma_totals["Organics"] / n_samples
+        avg_radioactives = magma_totals["Radioactives"] / n_samples
+
+        # MAGMA: Metals=2.0, Organics=0.2, Radioactives=2.5
+        assert avg_metals > avg_organics * 3, "MAGMA should have much more Metals than Organics"
+        assert avg_radioactives > avg_organics * 3, "MAGMA should have much more Radioactives than Organics"
+
+    def test_generate_resources_gas_giant_favors_vapors(self, planet_generator):
+        """Gas giants should have significantly more Vapors than Metals."""
+        from game.strategy.data.planet_physics import MASS_JUPITER
+
+        vapors_total = 0
+        metals_total = 0
+        n_samples = 50
+        for _ in range(n_samples):
+            resources = planet_generator._generate_resources(MASS_JUPITER, PlanetType.JOVIAN)
+            vapors_total += resources['Vapors']['quantity']
+            metals_total += resources['Metals']['quantity']
+
+        avg_vapors = vapors_total / n_samples
+        avg_metals = metals_total / n_samples
+
+        # JOVIAN: Vapors=2.5, Metals=0.3 → Vapors should be ~8x Metals
+        assert avg_vapors > avg_metals * 3, "JOVIAN should have much more Vapors than Metals"
 
 
 # =============================================================================
