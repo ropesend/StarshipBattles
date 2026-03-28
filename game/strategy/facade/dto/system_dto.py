@@ -55,6 +55,7 @@ class StarInfo:
     spectrum_infrared: float = 0.0
     spectrum_microwave: float = 0.0
     spectrum_radio: float = 0.0
+    image_id: str = ""
 
     @classmethod
     def from_star(cls, star: 'Star', system_name: str = "",
@@ -96,6 +97,7 @@ class StarInfo:
             spectrum_infrared=star.spectrum.infrared,
             spectrum_microwave=star.spectrum.microwave,
             spectrum_radio=star.spectrum.radio,
+            image_id=star.image_id,
         )
 
 

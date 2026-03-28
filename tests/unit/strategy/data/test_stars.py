@@ -273,6 +273,75 @@ class TestStar:
         )
         assert star.location == HexCoord(0, 0)
 
+    def test_star_image_id_default_empty(self, sample_spectrum):
+        """Default image_id is empty string."""
+        star = Star(
+            name="No Image Star",
+            mass=1.0, radius_hexes=1, temperature=5000, luminosity=1.0,
+            spectrum=sample_spectrum, star_type=StarType.MAIN_SEQUENCE,
+            color=(255, 255, 255), age=5.0e9,
+        )
+        assert star.image_id == ""
+
+    def test_star_image_id_assigned(self, sample_spectrum):
+        """image_id can be set to a filename."""
+        star = Star(
+            name="Imaged Star",
+            mass=1.0, radius_hexes=1, temperature=5000, luminosity=1.0,
+            spectrum=sample_spectrum, star_type=StarType.MAIN_SEQUENCE,
+            color=(255, 255, 255), age=5.0e9,
+            image_id="StarYellowVariant_3.png",
+        )
+        assert star.image_id == "StarYellowVariant_3.png"
+
+    def test_star_to_dict_includes_image_id(self, sample_spectrum):
+        """to_dict includes image_id."""
+        star = Star(
+            name="Dict Star",
+            mass=1.0, radius_hexes=1, temperature=5000, luminosity=1.0,
+            spectrum=sample_spectrum, star_type=StarType.MAIN_SEQUENCE,
+            color=(255, 255, 255), age=5.0e9,
+            image_id="StarBlueAsset.png",
+        )
+        data = star.to_dict()
+        assert data['image_id'] == "StarBlueAsset.png"
+
+    def test_star_from_dict_reads_image_id(self, sample_spectrum):
+        """from_dict reads image_id field."""
+        data = {
+            'name': "From Dict Star", 'mass': 1.0, 'radius_hexes': 1,
+            'temperature': 5000, 'luminosity': 1.0,
+            'spectrum': sample_spectrum.to_dict(),
+            'star_type': 'MAIN_SEQUENCE', 'color': [255, 255, 255],
+            'age': 5.0e9, 'location': {'q': 0, 'r': 0},
+            'image_id': 'StarRedVariant_2.png',
+        }
+        star = Star.from_dict(data)
+        assert star.image_id == "StarRedVariant_2.png"
+
+    def test_star_from_dict_missing_image_id_defaults_empty(self, sample_spectrum):
+        """from_dict without image_id defaults to empty string."""
+        data = {
+            'name': "Legacy Star", 'mass': 1.0, 'radius_hexes': 1,
+            'temperature': 5000, 'luminosity': 1.0,
+            'spectrum': sample_spectrum.to_dict(),
+            'star_type': 'MAIN_SEQUENCE', 'color': [255, 255, 255],
+            'age': 5.0e9, 'location': {'q': 0, 'r': 0},
+        }
+        star = Star.from_dict(data)
+        assert star.image_id == ""
+
+    def test_star_image_id_roundtrip(self, sample_spectrum):
+        """image_id survives to_dict/from_dict roundtrip."""
+        original = Star(
+            name="Roundtrip", mass=1.0, radius_hexes=1, temperature=5000,
+            luminosity=1.0, spectrum=sample_spectrum,
+            star_type=StarType.MAIN_SEQUENCE, color=(255, 255, 255),
+            age=5.0e9, image_id="StarOrangeVariant_1.png",
+        )
+        roundtrip = Star.from_dict(original.to_dict())
+        assert roundtrip.image_id == "StarOrangeVariant_1.png"
+
 
 class TestStarOccupiedHexes:
     """Tests for Star.occupied_hexes property (PROJ-139 IZoneOccupant)."""

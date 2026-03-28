@@ -112,6 +112,9 @@ class Star:
     # Location relative to system center (0,0,0)
     location: HexCoord = field(default_factory=lambda: HexCoord(0, 0))
 
+    # Visual representation (assigned during generation, persisted in saves)
+    image_id: str = ""  # Filename from star assets (e.g., "StarBlueVariant_3.png")
+
     @property
     def occupied_hexes(self) -> FrozenSet[HexCoord]:
         """Return all hexes occupied by this star (PROJ-139 IZoneOccupant).
@@ -138,7 +141,8 @@ class Star:
             'star_type': self.star_type.name,  # Enum to string
             'color': list(self.color),  # Tuple to list for JSON
             'age': self.age,
-            'location': hex_to_dict(self.location)
+            'location': hex_to_dict(self.location),
+            'image_id': self.image_id,
         }
 
     @classmethod
@@ -200,12 +204,28 @@ class Star:
             star_type=star_type,
             color=tuple(data['color']),
             age=data['age'],
-            location=location
+            location=location,
+            image_id=data.get('image_id', ''),
         )
 
 class StarGenerator:
-    def __init__(self):
-        pass
+    def __init__(self, image_registry=None):
+        """Initialize the star generator.
+
+        Args:
+            image_registry: Optional StarImageRegistry for assigning images.
+                When None, stars get empty image_id (useful for tests).
+        """
+        self._image_registry = image_registry
+
+    def _get_image_id(self, star_type: StarType) -> str:
+        """Get an image_id for a star type from the registry.
+
+        Returns empty string if no registry is available.
+        """
+        if self._image_registry is None:
+            return ""
+        return self._image_registry.get_random_image(star_type)
 
     def _generate_mass(self, is_primary: bool = True, primary_mass: float = None) -> float:
         """
@@ -524,7 +544,8 @@ class StarGenerator:
                 star_type=c_type,
                 color=c_col,
                 age=primary.age,
-                location=loc
+                location=loc,
+                image_id=self._get_image_id(c_type),
             )
             companions.append(companion)
 
@@ -590,7 +611,8 @@ class StarGenerator:
             star_type=p_type,
             color=p_col,
             age=random.uniform(0.1, 10.0) * 1e9,
-            location=HexCoord(0, 0)
+            location=HexCoord(0, 0),
+            image_id=self._get_image_id(p_type),
         )
         stars.append(primary)
 
@@ -637,7 +659,8 @@ class StarGenerator:
             star_type=p_type,
             color=p_col,
             age=random.uniform(0.1, 10.0) * 1e9,
-            location=HexCoord(0, 0)
+            location=HexCoord(0, 0),
+            image_id=self._get_image_id(p_type),
         )
         stars.append(primary)
 

@@ -31,6 +31,17 @@ class AssetManager(metaclass=SingletonMeta):
         self.manifest = {}
         self.manifest_path = Paths.ASSET_MANIFEST_FILE
         self.missing_texture = None
+        self.star_metadata = {}
+        self._load_star_metadata()
+
+    def _load_star_metadata(self):
+        """Load the star core metadata JSON."""
+        metadata_path = os.path.join(Paths.ASSET_DIR, "star_metadata.json")
+        if os.path.exists(metadata_path):
+            self.star_metadata = load_json(metadata_path)
+            logger.info(f"Loaded star metadata from {metadata_path}")
+        else:
+            logger.warning(f"Star metadata not found at {metadata_path}")
 
     def clear(self):
         """Reset all caches. Used for test isolation."""
@@ -115,6 +126,52 @@ class AssetManager(metaclass=SingletonMeta):
              idx = seed_id % len(group)
              return group[idx]
         return group[0]
+
+    def load_star_image(self, image_filename: str, requested_size: int = 512) -> pygame.Surface:
+        """
+        Load a star image at the most appropriate resolution.
+        
+        Args:
+            image_filename: The star image filename (basename only, e.g., "StarBlueAsset.png")
+            requested_size: Target display size in pixels (default 512)
+        """
+        size_chain = [128, 256, 512, 1024]
+        start_index = 0
+        for i, size in enumerate(size_chain):
+            if requested_size <= size:
+                start_index = i
+                break
+        
+        for size in size_chain[start_index:]:
+            try:
+                folder = self._get_star_folder_for_size(size)
+                image_path = os.path.join(folder, image_filename)
+                img = self.load_external_image(image_path)
+                if img and img != self.get_missing_texture():
+                    return img
+            except Exception as e:
+                logger.warning(f"Could not load star image {image_filename} at {size}px: {e}")
+                continue
+                
+        return self.get_missing_texture()
+
+    def get_star_core_info(self, image_filename: str) -> dict:
+        """
+        Get the normalized core information (center and radius) for a star.
+
+        Args:
+            image_filename: Basename of the star image.
+
+        Returns:
+            Dict with 'centerX', 'centerY', 'radiusCore', 'radiusCorona' (all 0.0-1.0)
+            Returns defaults if not found.
+        """
+        return self.star_metadata.get(image_filename, {
+            "centerX": 0.5,
+            "centerY": 0.5,
+            "radiusCore": 0.25,
+            "radiusCorona": 0.35
+        })
 
     def get_star_asset_key_for_type(self, star_type_name: str) -> str:
         """Get the star asset key for a given StarType enum name.
@@ -219,6 +276,18 @@ class AssetManager(metaclass=SingletonMeta):
                 context={"requested_size": size, "valid_sizes": list(size_to_path.keys())}
             )
 
+        return size_to_path[size]
+
+    def _get_star_folder_for_size(self, size: int) -> str:
+        """Map a resolution size to the corresponding Stars folder path."""
+        size_to_path = {
+            128: Paths.STARS_128_DIR,
+            256: Paths.STARS_256_DIR,
+            512: Paths.STARS_512_DIR,
+            1024: Paths.STARS_1024_DIR,
+        }
+        if size not in size_to_path:
+            raise ResourceException(f"Invalid star image size: {size}")
         return size_to_path[size]
 
     def load_planet_image(self, image_filename: str, requested_size: int = 512) -> pygame.Surface:

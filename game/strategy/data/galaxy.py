@@ -16,6 +16,7 @@ from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.storm import Storm
 from game.strategy.data.planet_gen import PlanetGenerator
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry
+from game.strategy.generation.star_image_registry import StarImageRegistry
 from game.strategy.generation.storm_generator import StormGenerator
 from game.strategy.data.galaxy_warp_generator import GalaxyWarpGenerator
 from game.strategy.data.galaxy_system_generator import GalaxySystemGenerator
@@ -177,7 +178,8 @@ class Galaxy:
         # Initialize Naming Registry
         data_path = os.path.join(os.getcwd(), 'data', 'StarSystemNames.YAML')
         self.naming = NameRegistry(data_path)
-        self.star_generator = StarGenerator()
+        self.star_image_registry = StarImageRegistry()
+        self.star_generator = StarGenerator(image_registry=self.star_image_registry)
         self.image_registry = PlanetImageRegistry()
         self.planet_generator = PlanetGenerator(self.image_registry)
 

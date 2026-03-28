@@ -79,6 +79,13 @@ class Paths:
     PLANETS_V3_256_DIR: str = os.path.join(PLANETS_V3_DIR, "Planets_V3_256")
     PLANETS_V3_128_DIR: str = os.path.join(PLANETS_V3_DIR, "Planets_V3_128")
 
+    # Star subdirectories (PROJ-XX Star Expansion)
+    STARS_DIR: str = os.path.join(ASSET_DIR, "Images", "Stellar Objects", "Stars")
+    STARS_1024_DIR: str = os.path.join(STARS_DIR, "Stars_1024")
+    STARS_512_DIR: str = os.path.join(STARS_DIR, "Stars_512")
+    STARS_256_DIR: str = os.path.join(STARS_DIR, "Stars_256")
+    STARS_128_DIR: str = os.path.join(STARS_DIR, "Stars_128")
+
     # Stellar Objects subdirectories
     SPHERE_WORLD_DIR: str = os.path.join(ASSET_DIR, "Images", "Stellar Objects", "Sphere world")
 
@@ -133,4 +140,8 @@ class Paths:
     @classmethod
     def get_planets_v3_dir(cls) -> Path:
         return _PROJECT_ROOT / "assets" / "Images" / "Stellar Objects" / "Planets" / "Planets_V3"
+
+    @classmethod
+    def get_stars_dir(cls) -> Path:
+        return _PROJECT_ROOT / "assets" / "Images" / "Stellar Objects" / "Stars"
 

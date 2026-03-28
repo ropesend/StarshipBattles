@@ -566,6 +566,7 @@ class TestDrawSystemsStar:
         star.radius_hexes = 1
         star.location = MagicMock(q=0, r=0)
         star.name = "Test Star"
+        star.image_id = ""
 
         mock_system = MagicMock()
         mock_system.global_location = MagicMock(q=0, r=0)
@@ -606,6 +607,7 @@ class TestDrawSystemsStar:
         star.radius_hexes = 1  # Very small (minimum)
         star.location = MagicMock(q=0, r=0)
         star.name = "Tiny Star"
+        star.image_id = ""
 
         mock_system = MagicMock()
         mock_system.global_location = MagicMock(q=0, r=0)
@@ -646,6 +648,7 @@ class TestDrawSystemsStar:
         star.radius_hexes = 2
         star.location = MagicMock(q=0, r=0)
         star.name = "Radius-2 Star"
+        star.image_id = ""
 
         mock_system = MagicMock()
         mock_system.global_location = MagicMock(q=0, r=0)
@@ -713,6 +716,7 @@ class TestDrawSystemsStar:
         star.radius_hexes = 1
         star.location = MagicMock(q=0, r=0)
         star.name = "Primary Star"
+        star.image_id = ""
 
         mock_system = MagicMock()
         mock_system.global_location = MagicMock(q=0, r=0)
@@ -768,6 +772,7 @@ class TestDrawSystemsViewportCulling:
         star.radius_hexes = 1
         star.location = MagicMock(q=0, r=0)
         star.name = "Star"
+        star.image_id = ""
 
         # Create system very far away (beyond margin)
         mock_system = MagicMock()
@@ -797,6 +802,7 @@ class TestDrawSystemsViewportCulling:
         star.radius_hexes = 1
         star.location = MagicMock(q=0, r=0)
         star.name = "Star"
+        star.image_id = ""
 
         # Create system at origin (well within viewport)
         mock_system = MagicMock()

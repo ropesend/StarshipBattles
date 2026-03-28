@@ -11,6 +11,7 @@ from game.strategy.generation.placement_strategies import (
     DensityBasedPlacementStrategy,
 )
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry
+from game.strategy.generation.star_image_registry import StarImageRegistry
 
 __all__ = [
     'DensityMap',
@@ -18,4 +19,5 @@ __all__ = [
     'RandomPlacementStrategy',
     'DensityBasedPlacementStrategy',
     'PlanetImageRegistry',
+    'StarImageRegistry',
 ]
