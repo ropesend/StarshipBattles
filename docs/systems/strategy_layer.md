@@ -26,6 +26,7 @@ All queries return **immutable DTOs**, never domain objects.
 DTO types (defined in `game/strategy/facade/dto/` package, with submodules `fleet_dto.py`, `system_dto.py`, `planet_dto.py`, `empire_dto.py`, re-exported via `__init__.py`):
 - `FleetInfo` -- fleet state snapshot
 - `FleetSummary` -- lightweight fleet overview
+- `StarInfo` -- star data with system context (PROJ-231)
 - `SystemInfo` -- star system data
 - `PlanetInfo` -- planet details
 - `EmpireInfo` -- empire state
@@ -38,7 +39,7 @@ Each DTO has a `from_<domain_object>()` class method for conversion.
 | Category | Methods |
 |----------|---------|
 | Fleet | `get_fleet()`, `get_fleets_at_hex()`, `get_fleet_path_preview()`, `get_fleet_path_projection()` |
-| System | `get_all_systems()`, `get_system_at_hex()`, `get_system_near_hex()`, `get_system_containing_fleet()` |
+| System | `get_all_systems()`, `get_all_stars()`, `get_system_at_hex()`, `get_system_near_hex()`, `get_system_containing_fleet()` |
 | Planet | `get_planet()`, `get_planets_at_hex()` |
 | Empire | `get_all_empires()`, `get_empire()`, `get_empire_colonies()`, `get_empire_fleets()` |
 | Game State | `get_turn_number()`, `get_human_player_ids()`, `get_save_path()` |

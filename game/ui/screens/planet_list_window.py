@@ -28,12 +28,13 @@ from game.ui.screens.planet_data_source import PlanetDataSource
 from game.ui.panels.planet_report_panel import PlanetReportPanel, compute_planet_production
 
 class PlanetListWindow(UIWindow):
-    def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None, empires=None, registries=None):
+    def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None, empires=None, registries=None, on_navigate_callback=None):
         # Initialize state that set_dimensions() depends on before super().__init__(),
         # since UIWindow.__init__ triggers rebuild() -> set_dimensions().
         self.selected_planet = None
         self.planet_detail_panel = None
         self.btn_build_queue = None
+        self.btn_navigate = None
         self.last_preset_selection = None  # PROJ-199: Lazy init elimination
         self._registries = registries  # PROJ-211: Injected registries for DI
 
@@ -43,6 +44,7 @@ class PlanetListWindow(UIWindow):
         self.empire = empire # Current player empire for "Owner" context
         self.empires = empires or []  # PROJ-198: All empires for owner name lookup
         self.on_close_callback = on_close_callback
+        self.on_navigate_callback = on_navigate_callback
         self.asset_resolver = asset_resolver  # Function to get image for planet
 
         # --- Layout Constants ---
@@ -129,7 +131,7 @@ class PlanetListWindow(UIWindow):
         # Main Content Area - Panel for VirtualTable
         main_w = rect.width - self.sidebar_width - self.detail_panel_width - self.panel_margin - 10
         self.main_panel = UIPanel(
-            relative_rect=pygame.Rect(self.sidebar_width, 0, main_w, rect.height - 50),
+            relative_rect=pygame.Rect(self.sidebar_width, 0, main_w, rect.height - 90),
             manager=manager, container=self,
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'})
 
@@ -150,6 +152,15 @@ class PlanetListWindow(UIWindow):
             selection_strategy=self.selection,
             row_height=self.row_height,
             header_height=self.header_height,
+        )
+
+        # Navigate button (bottom of main area)
+        nav_y = rect.height - 80
+        self.btn_navigate = UIButton(
+            relative_rect=pygame.Rect(self.sidebar_width + 10, nav_y, 180, 30),
+            text="Navigate to Planet",
+            manager=manager,
+            container=self,
         )
 
         # Initial Population
@@ -230,6 +241,9 @@ class PlanetListWindow(UIWindow):
             if event.ui_element == self.btn_build_queue:
                 if self.selected_planet:
                     logger.info(f"Build Queue button clicked for planet: {self.selected_planet.name}")
+                return True
+            if event.ui_element == self.btn_navigate:
+                self._navigate_to_selected()
                 return True
             if event.ui_element == self.btn_apply:
                 self.refresh_list()
@@ -454,6 +468,13 @@ class PlanetListWindow(UIWindow):
         self.virtual_table.rebuild_row_pool()
         self.refresh_list()
 
+    def _navigate_to_selected(self):
+        """Navigate camera to the selected planet's system."""
+        if self.selected_planet and self.on_navigate_callback:
+            loc = getattr(self.selected_planet, '_cached_system_global_location', None)
+            if loc:
+                self.on_navigate_callback(loc)
+
     def _take_screenshot(self):
         """Take a screenshot of the current screen including the planet list."""
         sm = ScreenshotManager.instance()
@@ -545,6 +566,10 @@ class PlanetListWindow(UIWindow):
         if self.btn_build_queue:
             self.btn_build_queue.kill()
             self.btn_build_queue = None
+
+        if self.btn_navigate:
+            self.btn_navigate.kill()
+            self.btn_navigate = None
 
         if self.on_close_callback:
             self.on_close_callback()
