@@ -88,13 +88,19 @@ Display to the user:
 - Any associated screenshots — **read the image files** so the user can see them in the conversation
 - A brief restatement: "It sounds like you're describing [X]. Is that right?"
 
-### Step B: Code Investigation
+### Step B: Code & Log Investigation
 
 Launch Explore agent(s) to understand the relevant code:
 - Search for code related to the described behavior
 - Identify the specific files, classes, and functions involved
 - Determine whether the described behavior matches what the code actually does
 - Present findings to the user: "I looked at [file:function] and here is what I found..."
+
+**Log cross-referencing:** If `Tools/qa_observer/session_data/<session_id>/logs/` exists:
+1. Read `word_timestamps.jsonl` from the session root to identify the precise time window for this observation. Each line is `{"time": <unix>, "ts": "HH:MM:SS", "word": "..."}`. Find the words corresponding to this observation's timestamps to narrow the window.
+2. Search `logs/battle.log` (format: `%(asctime)s - %(name)s - %(levelname)s - %(message)s`) around that time window for errors, warnings, or relevant state changes.
+3. Also check `logs/battle_log.txt` (combat events) and `logs/crash_log.txt` (crash tracebacks) if they exist.
+4. Include pertinent log excerpts in your investigation findings.
 
 This investigation informs whether it's truly a bug, a feature gap, or something that needs deeper architectural work.
 
@@ -141,7 +147,14 @@ Based on the confirmed category:
    - Include relevant findings from code investigation
 2. **Present** the draft to the user for approval or edits
 3. **Determine priority** (Critical/High/Medium/Low) — propose one based on severity, confirm with user
-4. **Create** the ticket file `Debugging/active_bugs/BUG-XX.md`:
+4. **Copy session logs** into the bug's directory (so they survive session pruning):
+   - If `Tools/qa_observer/session_data/<session_id>/logs/` exists:
+     - Create `Debugging/active_bugs/BUG-XX_logs/`
+     - Copy all log files from the session `logs/` directory into `BUG-XX_logs/`
+   - If `Tools/qa_observer/session_data/<session_id>/word_timestamps.jsonl` exists:
+     - Copy it into `BUG-XX_logs/` as well
+
+5. **Create** the ticket file `Debugging/active_bugs/BUG-XX.md`:
 
 ```markdown
 # BUG-XX: [Title]
@@ -155,12 +168,26 @@ Based on the confirmed category:
 ## Status
 Pending
 
+## Relevant Logs
+
+**Session:** <session_id>
+**Time window:** HH:MM:SS — HH:MM:SS
+
+Log excerpts (use a fenced code block):
+
+    [Relevant lines from battle.log / battle_log.txt / crash_log.txt around the observed time.
+    Include a few lines of context before and after the key event. Omit if no relevant log entries found.]
+
+Full logs: [BUG-XX_logs/](./BUG-XX_logs/)
+
 ## Work Log
 - YYYY-MM-DD: Created from QA Session <session_id>.
 ```
 
-5. **Update** `Debugging/debug_plan.md` — append a new row to the Bug Queue table
-6. Report: "Created BUG-XX: [title]"
+> **Note:** The "Relevant Logs" section should be omitted entirely if no session logs were captured or no relevant log entries were found for the observation's time window. In that case, also skip step 4 (no `BUG-XX_logs/` directory needed).
+
+6. **Update** `Debugging/debug_plan.md` — append a new row to the Bug Queue table
+7. Report: "Created BUG-XX: [title]"
 
 ---
 
@@ -261,8 +288,9 @@ Follow `Tickets/protocols/03_close_ticket.md` pattern:
    - Format: `## BUG-XX [Title]`
    - Content: Date Solved, Brief Summary of Solution, Key Test Case
 4. **Move** `Debugging/active_bugs/BUG-XX.md` to `Debugging/archived_tickets/BUG-XX.md` (do not modify the ticket content — preserve full logs)
-5. **Remove** the row for BUG-XX from `Debugging/debug_plan.md`
-6. Report: "BUG-XX confirmed fixed and archived."
+5. **Move** `Debugging/active_bugs/BUG-XX_logs/` to `Debugging/archived_tickets/BUG-XX_logs/` if it exists
+6. **Remove** the row for BUG-XX from `Debugging/debug_plan.md`
+7. Report: "BUG-XX confirmed fixed and archived."
 
 ---
 

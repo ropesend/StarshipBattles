@@ -11,6 +11,8 @@
 | BUG-107 | 2026-03-24 | Game crashes on turn advance after loading a save — ShipInstance missing registries | Awaiting Confirmation | [BUG-107.md](active_bugs/BUG-107.md) |
 | BUG-108 | 2026-03-24 | Planet generation does not check for hex collisions with secondary/additional stars | Awaiting Confirmation | [BUG-108.md](active_bugs/BUG-108.md) |
 | BUG-109 | 2026-03-24 | Resources decline each turn despite large production surplus — eventual total maintenance failure | Awaiting Confirmation | [BUG-109.md](active_bugs/BUG-109.md) |
+| BUG-110 | 2026-03-28 | Combat Lab visual run — no transition to battle screen, user remains on Test Viewer | Pending | [BUG-110.md](active_bugs/BUG-110.md) |
+| BUG-111 | 2026-03-28 | SeekerPointDefenseNoneScenario crashes during batch run — missing `attacker` attribute | Pending | [BUG-111.md](active_bugs/BUG-111.md) |
 
 ## 3. Current Focus: None
 No bugs currently in progress.
