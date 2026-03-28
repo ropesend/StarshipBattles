@@ -12,11 +12,15 @@ Each test isolates ONE defense ability against a calibrated beam attacker.
 """
 
 from simulation_tests.scenarios import TestMetadata
+from simulation_tests.scenarios.validation import check_exact, check_tost, check_true
 from simulation_tests.scenarios.templates import StaticTargetScenario
 from simulation_tests.scenarios.beam_scenarios import compute_beam_hit_chance
 from simulation_tests.test_constants import (
+    POINT_BLANK_DISTANCE,
+    MID_RANGE_DISTANCE,
     STANDARD_DISTANCE,
     STANDARD_SEED,
+    STANDARD_MARGIN,
     SHIELD_CAPACITY,
     SHIELD_REGEN_RATE,
     EMISSIVE_ARMOR_REDUCTION,
@@ -47,7 +51,7 @@ class ShieldAbsorbsDamageScenario(StaticTargetScenario):
 
     attacker_ship = "Test_Attacker_Beam360_Med.json"
     target_ship = SHIELDED_TARGET_SHIP
-    distance = 50
+    distance = POINT_BLANK_DISTANCE
 
     metadata = TestMetadata(
         test_id="SHIELD-001",
@@ -76,13 +80,21 @@ class ShieldAbsorbsDamageScenario(StaticTargetScenario):
         tags=["defense", "shield", "absorption", "beam"],
     )
 
-    verify_damage_dealt = True
-
     def _collect_extra_results(self, battle_engine):
-        self.results['initial_shields'] = SHIELD_CAPACITY
-        self.results['final_shields'] = self.target.current_shields
-        self.results['shield_damage_absorbed'] = SHIELD_CAPACITY - self.target.current_shields
-        self.results['shield_held'] = self.target.current_shields > 0
+        self.shield_absorbed = SHIELD_CAPACITY - self.target.current_shields
+        self.results['shield_absorbed'] = self.shield_absorbed
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data
+        checks.append(check_exact("Initial Shield Capacity", SHIELD_CAPACITY,
+                                  self.target.max_shields, phase="data"))
+        # Outcome
+        checks.append(check_true("Damage Dealt", self.damage_dealt > 0,
+                                 actual=self.damage_dealt, phase="outcome"))
+        checks.append(check_true("Shields Absorbed Damage", self.shield_absorbed > 0,
+                                 actual=self.shield_absorbed, phase="outcome"))
+        return checks
 
 
 class ShieldOverflowToHullScenario(StaticTargetScenario):
@@ -96,7 +108,7 @@ class ShieldOverflowToHullScenario(StaticTargetScenario):
 
     attacker_ship = "Test_Attacker_Beam360_High.json"
     target_ship = SHIELDED_TARGET_SHIP
-    distance = 50
+    distance = POINT_BLANK_DISTANCE
 
     metadata = TestMetadata(
         test_id="SHIELD-002",
@@ -126,13 +138,20 @@ class ShieldOverflowToHullScenario(StaticTargetScenario):
         tags=["defense", "shield", "overflow", "hull-damage", "beam"],
     )
 
-    min_damage_threshold = SHIELD_CAPACITY + 1
-
-    def _collect_extra_results(self, battle_engine):
-        self.results['initial_shields'] = SHIELD_CAPACITY
-        self.results['final_shields'] = self.target.current_shields
-        self.results['shields_depleted'] = self.target.current_shields == 0
-        self.results['hull_damage'] = self.damage_dealt - (SHIELD_CAPACITY - self.target.current_shields) if self.target.current_shields == 0 else 0
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data
+        checks.append(check_exact("Initial Shield Capacity", SHIELD_CAPACITY,
+                                  self.target.max_shields, phase="data"))
+        # Outcome
+        checks.append(check_true("Shields Depleted", self.target.current_shields == 0,
+                                 actual=self.target.current_shields, phase="outcome"))
+        checks.append(check_true("Damage Exceeds Shield Capacity",
+                                 self.damage_dealt > SHIELD_CAPACITY,
+                                 actual=self.damage_dealt,
+                                 detail=f"damage_dealt={self.damage_dealt}, shield_capacity={SHIELD_CAPACITY}",
+                                 phase="outcome"))
+        return checks
 
 
 class ShieldRegenerationScenario(StaticTargetScenario):
@@ -147,7 +166,7 @@ class ShieldRegenerationScenario(StaticTargetScenario):
 
     attacker_ship = "Test_Attacker_Beam360_Med.json"
     target_ship = SHIELD_REGEN_TARGET_SHIP
-    distance = 50
+    distance = POINT_BLANK_DISTANCE
 
     metadata = TestMetadata(
         test_id="SHIELD-003",
@@ -178,13 +197,19 @@ class ShieldRegenerationScenario(StaticTargetScenario):
         tags=["defense", "shield", "regeneration", "sustain", "beam"],
     )
 
-    measurement_mode = True
-
-    def _collect_extra_results(self, battle_engine):
-        self.results['initial_shields'] = SHIELD_CAPACITY
-        self.results['final_shields'] = self.target.current_shields
-        self.results['shield_regen_rate'] = SHIELD_REGEN_RATE
-        self.results['shields_intact'] = self.target.current_shields > 0
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data
+        checks.append(check_exact("Initial Shield Capacity", SHIELD_CAPACITY,
+                                  self.target.max_shields, phase="data"))
+        # Outcome - verify beam hit and some hull damage got through.
+        # The shield regen scenario is observational: it confirms that
+        # regen doesn't crash and shields absorb some damage over time.
+        checks.append(check_true(
+            "Hull Damage Dealt", self.damage_dealt > 0,
+            actual=self.damage_dealt, phase="outcome",
+        ))
+        return checks
 
 
 # ============================================================================
@@ -202,7 +227,7 @@ class EmissiveArmorBlocksLowDamageScenario(StaticTargetScenario):
 
     attacker_ship = "Test_Attacker_Beam360_Med.json"
     target_ship = EMISSIVE_ARMOR_TARGET_SHIP
-    distance = 50
+    distance = POINT_BLANK_DISTANCE
 
     metadata = TestMetadata(
         test_id="ARMOR-001",
@@ -232,11 +257,22 @@ class EmissiveArmorBlocksLowDamageScenario(StaticTargetScenario):
         tags=["defense", "armor", "emissive", "block", "beam"],
     )
 
-    expect_no_damage = True
-
-    def _collect_extra_results(self, battle_engine):
-        self.results['emissive_armor_value'] = self.target.emissive_armor
-        self.results['beam_damage_per_hit'] = 1
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data
+        checks.append(check_exact("Emissive Armor Value", EMISSIVE_ARMOR_REDUCTION,
+                                  self.target.emissive_armor, phase="data"))
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
+        checks.append(check_true("Beam Damage < Armor",
+                                 beam.damage < EMISSIVE_ARMOR_REDUCTION,
+                                 detail=f"beam.damage={beam.damage}, armor={EMISSIVE_ARMOR_REDUCTION}",
+                                 phase="data"))
+        # Outcome
+        checks.append(check_exact("Damage Dealt", 0, self.damage_dealt, phase="outcome"))
+        return checks
 
 
 class EmissiveArmorReducesHighDamageScenario(StaticTargetScenario):
@@ -250,7 +286,7 @@ class EmissiveArmorReducesHighDamageScenario(StaticTargetScenario):
 
     attacker_ship = "Test_Attacker_Beam360_High.json"
     target_ship = EMISSIVE_ARMOR_TARGET_SHIP
-    distance = 50
+    distance = POINT_BLANK_DISTANCE
 
     metadata = TestMetadata(
         test_id="ARMOR-002",
@@ -280,11 +316,22 @@ class EmissiveArmorReducesHighDamageScenario(StaticTargetScenario):
         tags=["defense", "armor", "emissive", "reduction", "beam"],
     )
 
-    expect_no_damage = True
-
-    def _collect_extra_results(self, battle_engine):
-        self.results['emissive_armor_value'] = self.target.emissive_armor
-        self.results['beam_damage_per_hit'] = 5
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data
+        checks.append(check_exact("Emissive Armor Value", EMISSIVE_ARMOR_REDUCTION,
+                                  self.target.emissive_armor, phase="data"))
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
+        checks.append(check_true("Beam Damage <= Armor",
+                                 beam.damage <= EMISSIVE_ARMOR_REDUCTION,
+                                 detail=f"beam.damage={beam.damage}, armor={EMISSIVE_ARMOR_REDUCTION}",
+                                 phase="data"))
+        # Outcome
+        checks.append(check_exact("Damage Dealt", 0, self.damage_dealt, phase="outcome"))
+        return checks
 
 
 # ============================================================================
@@ -302,7 +349,7 @@ class ECMReducesHitRateScenario(StaticTargetScenario):
 
     attacker_ship = "Test_Attacker_Beam360_Med.json"
     target_ship = ECM_TARGET_SHIP
-    distance = 400
+    distance = MID_RANGE_DISTANCE
 
     metadata = TestMetadata(
         test_id="ECM-001",
@@ -331,20 +378,26 @@ class ECMReducesHitRateScenario(StaticTargetScenario):
         tags=["defense", "ecm", "to-hit", "defense-modifier", "beam"],
     )
 
-    measurement_mode = True
-
     def custom_setup(self, battle_engine):
         self.expected_hit_chance_with_ecm = compute_beam_hit_chance(
             self, target_ecm_score=ECM_DEFENSE_VALUE
         )
         self.expected_hit_chance_baseline = compute_beam_hit_chance(self)
 
-    def _collect_extra_results(self, battle_engine):
-        self.results['ecm_defense_value'] = ECM_DEFENSE_VALUE
-        self.results['target_defense_score'] = self.target.total_defense_score
-        self.results['expected_hit_chance_with_ecm'] = self.expected_hit_chance_with_ecm
-        self.results['expected_hit_chance_baseline'] = self.expected_hit_chance_baseline
-        self.results['hit_rate_reduction'] = self.expected_hit_chance_baseline - self.expected_hit_chance_with_ecm
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data
+        checks.append(check_true("ECM Reduces Expected Hit Chance",
+                                 self.expected_hit_chance_with_ecm < self.expected_hit_chance_baseline,
+                                 detail=f"with_ecm={self.expected_hit_chance_with_ecm:.4f}, "
+                                        f"baseline={self.expected_hit_chance_baseline:.4f}",
+                                 phase="data"))
+        # Outcome
+        checks.append(check_tost("Hit Rate With ECM", self.expected_hit_chance_with_ecm,
+                                  successes=int(self.damage_dealt),
+                                  trials=engine.tick_counter,
+                                  margin=STANDARD_MARGIN))
+        return checks
 
 
 class SensorImprovesHitRateScenario(StaticTargetScenario):
@@ -358,7 +411,7 @@ class SensorImprovesHitRateScenario(StaticTargetScenario):
 
     attacker_ship = SENSOR_ATTACKER_SHIP
     target_ship = "Test_Target_Stationary.json"
-    distance = 400
+    distance = MID_RANGE_DISTANCE
 
     metadata = TestMetadata(
         test_id="SENSOR-001",

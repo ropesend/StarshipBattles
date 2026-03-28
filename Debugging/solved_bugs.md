@@ -1140,3 +1140,23 @@ There needs to be a visible indicator on the line that indicates if the ship is 
 * **Notes:** Fixed broader architectural gap — CargoQuickDialog, PlanetSelectionWindow, SystemSelectionWindow, and FleetSelectionWindow were also untracked.
 
 ---
+
+## [BUG-110] - Combat Lab Visual Run — No Transition to Battle Screen
+* **Date Solved:** 2026-03-28
+* **Confirmed in:** QA Session 20260328_090355
+* **Original Issue:** Clicking "Run Visual" in the Combat Lab Test Viewer did not transition to the battle screen. The user remained on the Test Viewer because `_switch_to_battle()` set `game.state` directly without updating `game.active_scene`, bypassing the PROJ-65 unified scene dispatch.
+* **Solution Implemented:** Changed `_switch_to_battle()` to use `scene_callback("start_test_battle")` instead of setting `game.state` directly. Added corresponding handler in `app.py` using `_switch_scene()`. Removed duplicate `engine.start()`/`scenario.setup()` from `run_visual()`.
+* **Test Case:** `tests/unit/ui/screens/test_visual_run.py` — 5 new scene transition tests
+* **Notes:** None.
+
+---
+
+## [BUG-112] - Combat Lab Visual Run Results Intermittently Not Recorded
+* **Date Solved:** 2026-03-28
+* **Confirmed in:** QA Session 20260328_090355
+* **Original Issue:** Visual run results sometimes failed to appear in Test Run History. Root cause: two exit paths from battle screen — the ControlPanel "End Battle" button routed through `return_to_setup` which bypassed `reset_selection()`, losing visual test results.
+* **Solution Implemented:** In `battle_screen.py` handle_event, when `result == "end_battle"` and `self.test_mode`, route through `_trigger_return_to_test_lab()` instead of `_trigger_return_to_setup()`. This unifies all exit paths to call `reset_selection()`.
+* **Test Case:** `tests/unit/ui/screens/test_visual_run.py::TestEndBattleInTestMode` — 2 tests
+* **Notes:** None.
+
+---

@@ -216,9 +216,11 @@ class TestHandleUpdateExpectedValues:
     ):
         """Test collecting validation failures."""
         sample_scenario_info['last_run_results'] = {
-            'validation_results': [
-                {'name': 'Test', 'status': 'FAIL', 'expected': 1, 'actual': 2}
-            ]
+            'validation': {
+                'checks': [
+                    {'phase': 'data', 'name': 'Test', 'expected': 1, 'actual': 2, 'passed': False, 'detail': ''}
+                ]
+            }
         }
         mock_test_registry.get_by_id = Mock(return_value=sample_scenario_info)
         controller = TestLabUIController(mock_game, mock_test_registry, mock_test_history)

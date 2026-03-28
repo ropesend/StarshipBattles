@@ -35,14 +35,12 @@ Usage:
 
 from simulation_tests.scenarios.base import TestScenario, TestMetadata
 from simulation_tests.scenarios.validation import (
-    resolve_path,
-    ValidationRule,
-    ExactMatchRule,
-    DeterministicMatchRule,
-    StatisticalTestRule,
-    Validator,
-    ValidationResult,
-    ValidationStatus
+    Check,
+    ValidationReport,
+    check_exact,
+    check_approx,
+    check_tost,
+    check_true,
 )
 from simulation_tests.scenarios.defense_scenarios import (
     ShieldAbsorbsDamageScenario,
@@ -72,18 +70,27 @@ from simulation_tests.scenarios.modifier_scenarios import (
     AccuracyBoostScenario,
     TurretArcSetScenario,
 )
+from simulation_tests.scenarios.propulsion_scenarios import (
+    PropEngineAccelerationScenario,
+    PropDualEngineScenario,
+    PropThrustMassRatioScenario,
+    PropThrusterTurnRateScenario,
+    PropThrusterRotationScenario,
+    PropDualThrusterScenario,
+    PropNoEngineStationaryScenario,
+    PropThrusterOnlyScenario,
+    PropMassAffectsTurnRateScenario,
+)
 
 __all__ = [
     'TestScenario',
     'TestMetadata',
-    'resolve_path',
-    'ValidationRule',
-    'ExactMatchRule',
-    'DeterministicMatchRule',
-    'StatisticalTestRule',
-    'Validator',
-    'ValidationResult',
-    'ValidationStatus',
+    'Check',
+    'ValidationReport',
+    'check_exact',
+    'check_approx',
+    'check_tost',
+    'check_true',
     # Defense scenarios
     'ShieldAbsorbsDamageScenario',
     'ShieldOverflowToHullScenario',
@@ -109,4 +116,14 @@ __all__ = [
     'ThrustMultiplierScenario',
     'AccuracyBoostScenario',
     'TurretArcSetScenario',
+    # Propulsion scenarios
+    'PropEngineAccelerationScenario',
+    'PropDualEngineScenario',
+    'PropThrustMassRatioScenario',
+    'PropThrusterTurnRateScenario',
+    'PropThrusterRotationScenario',
+    'PropDualThrusterScenario',
+    'PropNoEngineStationaryScenario',
+    'PropThrusterOnlyScenario',
+    'PropMassAffectsTurnRateScenario',
 ]

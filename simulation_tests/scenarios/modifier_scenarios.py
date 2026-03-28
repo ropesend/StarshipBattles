@@ -16,6 +16,7 @@ Test Coverage:
 
 from simulation_tests.scenarios.base import TestMetadata
 from simulation_tests.scenarios.templates import StaticTargetScenario, PropulsionScenario
+from simulation_tests.scenarios.validation import check_exact, check_approx, check_true
 from simulation_tests.test_constants import (
     STANDARD_SEED,
     POINT_BLANK_DISTANCE,
@@ -43,27 +44,6 @@ from simulation_tests.test_constants import (
     THRUST_BOOST_PARAM,
 )
 
-
-def _get_beam_ability(ship):
-    """Extract the BeamWeaponAbility instance from a loaded ship."""
-    for layer_name, layer_data in ship.layers.items():
-        for component in layer_data.components:
-            if hasattr(component, 'ability_instances'):
-                for ability in component.ability_instances:
-                    if ability.__class__.__name__ == 'BeamWeaponAbility':
-                        return ability
-    return None
-
-
-def _get_propulsion_ability(ship):
-    """Extract the CombatPropulsion ability instance from a loaded ship."""
-    for layer_name, layer_data in ship.layers.items():
-        for component in layer_data.components:
-            if hasattr(component, 'ability_instances'):
-                for ability in component.ability_instances:
-                    if ability.__class__.__name__ == 'CombatPropulsion':
-                        return ability
-    return None
 
 
 # ============================================================================
@@ -103,10 +83,8 @@ class DamageMultiplierScenario(StaticTargetScenario):
     target_ship = "Test_Target.json"
     distance = POINT_BLANK_DISTANCE
 
-    verify_damage_dealt = True
-
     def custom_setup(self, battle_engine):
-        beam = _get_beam_ability(self.attacker)
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
         if beam:
             self.actual_beam_damage = beam.damage
             self.modifier_applied_correctly = abs(beam.damage - MOD_EXPECTED_DAMAGE) < 0.001
@@ -121,15 +99,20 @@ class DamageMultiplierScenario(StaticTargetScenario):
         self.results['actual_beam_damage'] = self.actual_beam_damage
         self.results['modifier_applied_correctly'] = self.modifier_applied_correctly
 
-    def verify(self, battle_engine):
-        self._collect_results(battle_engine)
-        if not self.modifier_applied_correctly:
-            self.results['failure_reason'] = (
-                f"Modifier not applied: expected beam.damage={MOD_EXPECTED_DAMAGE}, "
-                f"got {self.actual_beam_damage}"
-            )
-            return False
-        return self.damage_dealt > 0
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data: modifier applied correctly
+        checks.append(check_approx(
+            "Beam Damage Modified", MOD_EXPECTED_DAMAGE,
+            self.actual_beam_damage or 0.0, tolerance=0.001,
+            phase="data",
+        ))
+        # Outcome: damage was dealt
+        checks.append(check_true(
+            "Damage Dealt", self.damage_dealt > 0,
+            actual=self.damage_dealt, phase="outcome",
+        ))
+        return checks
 
 
 # ============================================================================
@@ -171,10 +154,8 @@ class RangeMultiplierScenario(StaticTargetScenario):
     target_ship = "Test_Target.json"
     distance = 1200  # Beyond base 800 range, within modified 1600
 
-    verify_damage_dealt = True
-
     def custom_setup(self, battle_engine):
-        beam = _get_beam_ability(self.attacker)
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
         if beam:
             self.actual_beam_range = beam.range
             self.modifier_applied_correctly = abs(beam.range - MOD_EXPECTED_RANGE) < 0.001
@@ -189,15 +170,20 @@ class RangeMultiplierScenario(StaticTargetScenario):
         self.results['modifier_applied_correctly'] = self.modifier_applied_correctly
         self.results['distance'] = self.distance
 
-    def verify(self, battle_engine):
-        self._collect_results(battle_engine)
-        if not self.modifier_applied_correctly:
-            self.results['failure_reason'] = (
-                f"Modifier not applied: expected beam.range={MOD_EXPECTED_RANGE}, "
-                f"got {self.actual_beam_range}"
-            )
-            return False
-        return self.damage_dealt > 0
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data: modifier applied correctly
+        checks.append(check_approx(
+            "Beam Range Modified", MOD_EXPECTED_RANGE,
+            self.actual_beam_range or 0.0, tolerance=0.001,
+            phase="data",
+        ))
+        # Outcome: damage was dealt at extended range
+        checks.append(check_true(
+            "Damage Dealt at Extended Range", self.damage_dealt > 0,
+            actual=self.damage_dealt, phase="outcome",
+        ))
+        return checks
 
 
 # ============================================================================
@@ -241,14 +227,25 @@ class ReloadReductionScenario(StaticTargetScenario):
     target_ship = "Test_Target.json"
     distance = POINT_BLANK_DISTANCE
 
-    measurement_mode = True
-
     def _collect_extra_results(self, battle_engine):
-        beam = _get_beam_ability(self.attacker)
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
         if beam:
+            self.actual_reload_time = beam.reload_time
             self.results['actual_reload_time'] = beam.reload_time
             self.results['base_reload'] = 0.0
             self.results['reload_modifier_note'] = "Base reload is 0.0; multiplier has no effect on zero"
+        else:
+            self.actual_reload_time = None
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data: reload time attribute is accessible (base is 0.0, so modified is also 0.0)
+        checks.append(check_exact(
+            "Reload Time (zero base)", 0.0,
+            self.actual_reload_time if self.actual_reload_time is not None else -1,
+            phase="data",
+        ))
+        return checks
 
 
 # ============================================================================
@@ -291,32 +288,14 @@ class ThrustMultiplierScenario(PropulsionScenario):
     def custom_setup(self, battle_engine):
         self.actual_thrust = self.ship.total_thrust
         self.modifier_applied_correctly = abs(self.actual_thrust - MOD_EXPECTED_THRUST) < 0.001
-        propulsion = _get_propulsion_ability(self.ship)
+        propulsion = self.get_ability(self.ship, 'CombatPropulsion')
         if propulsion:
             self.actual_ability_thrust = propulsion.thrust_force
         else:
             self.actual_ability_thrust = None
 
-    def verify(self, battle_engine):
-        # Call parent to collect standard propulsion results
-        self.final_position = self.ship.position.copy()
-        self.final_velocity = self.ship.velocity.copy()
-        self.final_angle = self.ship.angle
-
-        self.distance_traveled = (self.final_position - self.start_position).length()
-        self.velocity_change = (self.final_velocity - self.start_velocity).length()
-        self.angle_change = abs(self.final_angle - self.start_angle)
-
-        self.results['initial_position'] = (self.start_position.x, self.start_position.y)
-        self.results['final_position'] = (self.final_position.x, self.final_position.y)
-        self.results['initial_velocity_magnitude'] = self.start_velocity.length()
-        self.results['final_velocity_magnitude'] = self.final_velocity.length()
-        self.results['distance_traveled'] = self.distance_traveled
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['expected_max_speed'] = self.expected_max_speed
-        self.results['expected_acceleration_rate'] = self.expected_acceleration_rate
-
-        # Modifier-specific results
+    def validate(self, engine) -> list:
+        # Store modifier-specific results for reporting
         self.results['base_thrust'] = MOD_BASE_ENGINE_THRUST
         self.results['thrust_multiplier'] = THRUST_BOOST_PARAM
         self.results['expected_thrust'] = MOD_EXPECTED_THRUST
@@ -324,17 +303,21 @@ class ThrustMultiplierScenario(PropulsionScenario):
         self.results['actual_ability_thrust'] = self.actual_ability_thrust
         self.results['modifier_applied_correctly'] = self.modifier_applied_correctly
 
-        if not self.modifier_applied_correctly:
-            self.results['failure_reason'] = (
-                f"Modifier not applied: expected total_thrust={MOD_EXPECTED_THRUST}, "
-                f"got {self.actual_thrust}"
-            )
-            return False
-
-        # Verify ship reaches boosted max speed (62.5 for 1000 thrust / 400 mass)
+        checks = self._template_preconditions()
+        # Data: thrust modifier applied correctly
+        checks.append(check_approx(
+            "Total Thrust Modified", MOD_EXPECTED_THRUST,
+            self.actual_thrust, tolerance=0.001,
+            phase="data",
+        ))
+        # Outcome: ship reaches boosted max speed (62.5 for 1000 thrust / 400 mass)
         final_speed = self.final_velocity.length()
-        expected_max = self.expected_max_speed  # Should be 62.5
-        return final_speed >= expected_max * 0.95  # Allow 5% tolerance
+        checks.append(check_approx(
+            "Final Speed Near Max", self.expected_max_speed,
+            final_speed, tolerance=0.05,
+            phase="outcome",
+        ))
+        return checks
 
 
 # ============================================================================
@@ -381,14 +364,26 @@ class AccuracyBoostScenario(StaticTargetScenario):
     target_ship = "Test_Target.json"
     distance = POINT_BLANK_DISTANCE
 
-    measurement_mode = True
-
     def _collect_extra_results(self, battle_engine):
-        beam = _get_beam_ability(self.attacker)
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
         if beam:
+            self.actual_base_accuracy = beam.base_accuracy
             self.results['actual_base_accuracy'] = beam.base_accuracy
             self.results['base_accuracy'] = MOD_BASE_BEAM_ACCURACY
             self.results['note'] = "Uses damage boost ship; accuracy_boost ship not created"
+        else:
+            self.actual_base_accuracy = None
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data: beam accuracy attribute is accessible
+        checks.append(check_true(
+            "Beam Accuracy Loaded",
+            self.actual_base_accuracy is not None,
+            actual=self.actual_base_accuracy,
+            phase="data",
+        ))
+        return checks
 
 
 # ============================================================================
@@ -430,10 +425,8 @@ class TurretArcSetScenario(StaticTargetScenario):
     target_ship = "Test_Target.json"
     distance = POINT_BLANK_DISTANCE
 
-    verify_damage_dealt = True
-
     def custom_setup(self, battle_engine):
-        beam = _get_beam_ability(self.attacker)
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
         if beam:
             self.actual_firing_arc = beam.firing_arc
             self.modifier_applied_correctly = abs(beam.firing_arc - MOD_EXPECTED_ARC) < 0.001
@@ -447,12 +440,17 @@ class TurretArcSetScenario(StaticTargetScenario):
         self.results['actual_firing_arc'] = self.actual_firing_arc
         self.results['modifier_applied_correctly'] = self.modifier_applied_correctly
 
-    def verify(self, battle_engine):
-        self._collect_results(battle_engine)
-        if not self.modifier_applied_correctly:
-            self.results['failure_reason'] = (
-                f"Modifier not applied: expected firing_arc={MOD_EXPECTED_ARC}, "
-                f"got {self.actual_firing_arc}"
-            )
-            return False
-        return self.damage_dealt > 0
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data: arc modifier applied correctly
+        checks.append(check_approx(
+            "Firing Arc Modified", MOD_EXPECTED_ARC,
+            self.actual_firing_arc or 0.0, tolerance=0.001,
+            phase="data",
+        ))
+        # Outcome: damage was dealt (target within 180-degree arc)
+        checks.append(check_true(
+            "Damage Dealt Within Arc", self.damage_dealt > 0,
+            actual=self.damage_dealt, phase="outcome",
+        ))
+        return checks

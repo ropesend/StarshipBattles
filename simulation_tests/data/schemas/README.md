@@ -22,15 +22,15 @@ These schemas validate the structure and data types of Combat Lab test data to c
 
 ## Usage
 
-### Automatic Validation (Pytest)
+### Automatic Validation
 
-Schemas are automatically validated when running pytest:
+Schemas are automatically validated when running simulation tests:
 
 ```bash
-pytest simulation_tests/
+python -m simulation_tests.run_tests
 ```
 
-The `conftest.py` fixture validates all data files before tests run. If validation fails, the test session aborts with clear error messages.
+The `init_environment()` function in `run_tests.py` validates all data files before tests run. If validation fails, the test session aborts with clear error messages.
 
 ### Manual Validation
 
@@ -242,7 +242,7 @@ After modifying schemas:
 python -m simulation_tests.data.schema_validator
 
 # Run full test suite
-pytest simulation_tests/
+python -m simulation_tests.run_tests
 ```
 
 ## Dependencies

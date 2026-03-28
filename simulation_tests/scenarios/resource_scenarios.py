@@ -30,13 +30,10 @@ Expected Values Architecture:
 - This ensures tests stay in sync with ship/component data files
 """
 
-import pygame
 from game.simulation.physics_constants import K_SPEED
-from simulation_tests.scenarios import TestScenario, TestMetadata
-from simulation_tests.scenarios.validation import DeterministicMatchRule
-from simulation_tests.scenarios.prerun_validation import (
-    DataExpectation, CalculatedExpectation, SetupCondition, PassCriterion
-)
+from simulation_tests.scenarios import TestMetadata
+from simulation_tests.scenarios.templates import ResourceScenario
+from simulation_tests.scenarios.validation import check_exact, check_approx, check_true
 
 
 # =============================================================================
@@ -183,18 +180,13 @@ RES008_EXPECTED_FINAL_AMMO = RES008_INITIAL_AMMO - RES008_EXPECTED_AMMO_CONSUMED
 # FUEL CONSUMPTION TESTS
 # ============================================================================
 
-class EngineFuelConsumptionScenario(TestScenario):
+class EngineFuelConsumptionScenario(ResourceScenario):
     """
     RESOURCE-001: Engine Consumes Fuel
 
     Tests that engine fuel consumption rate is predictable. With 1.0 fuel/sec
     consumption and 1000 fuel capacity, running for 500 ticks (5 seconds)
     should consume exactly 5.0 fuel.
-
-    Pre-Run Validation:
-    - Data values from .json files are validated against expected values
-    - Calculated physics values are validated against formulas
-    - Test will not run if any validation fails
     """
 
     metadata = TestMetadata(
@@ -223,190 +215,35 @@ class EngineFuelConsumptionScenario(TestScenario):
         battle_end_mode="time_based",
         ui_priority=10,
         tags=["resource", "fuel", "consumption", "engine"],
-        validation_rules=[
-            # Data verification
-            DeterministicMatchRule(
-                name='Initial Fuel',
-                path='results.initial_fuel',
-                expected=RES001_INITIAL_FUEL,
-                description=f'Ship starts with {RES001_INITIAL_FUEL} fuel'
-            ),
-            DeterministicMatchRule(
-                name='Final Fuel',
-                path='results.final_fuel',
-                expected=RES001_EXPECTED_FINAL_FUEL,
-                tolerance=0.01,
-                description=f'{RES001_INITIAL_FUEL} - {RES001_EXPECTED_FUEL_CONSUMED} = {RES001_EXPECTED_FINAL_FUEL}'
-            ),
-            DeterministicMatchRule(
-                name='Fuel Consumed',
-                path='results.fuel_consumed',
-                expected=RES001_EXPECTED_FUEL_CONSUMED,
-                tolerance=0.01,
-                description=f'{RES001_FUEL_CONSUMPTION_PER_SEC}/sec × {RES001_DURATION_SEC}s = {RES001_EXPECTED_FUEL_CONSUMED}'
-            ),
-        ]
     )
 
-    # =========================================================================
-    # PRE-RUN VALIDATION: Data Expectations
-    # =========================================================================
-    data_expectations = [
-        DataExpectation(
-            name='Initial Fuel Capacity',
-            source='initial_fuel',
-            expected=RES001_INITIAL_FUEL,
-            json_file=RES001_SHIP_FILE
-        ),
-        DataExpectation(
-            name='Engine Thrust',
-            source='total_thrust',
-            expected=RES001_ENGINE_THRUST,
-            json_file=RES001_SHIP_FILE
-        ),
-    ]
+    ship_file = RES001_SHIP_FILE
+    resource_type = "fuel"
+    thrust_forward = True
 
-    # =========================================================================
-    # PRE-RUN VALIDATION: Calculated Expectations
-    # =========================================================================
-    calculated_expectations = [
-        CalculatedExpectation(
-            name='Expected Fuel Consumed',
-            formula='consumption_rate × duration_seconds',
-            formula_expr=lambda rate, duration: rate * duration,
-            expected=RES001_EXPECTED_FUEL_CONSUMED,
-            variables={
-                'rate': RES001_FUEL_CONSUMPTION_PER_SEC,
-                'duration': RES001_DURATION_SEC
-            }
-        ),
-        CalculatedExpectation(
-            name='Expected Final Fuel',
-            formula='initial_fuel - fuel_consumed',
-            formula_expr=lambda initial, consumed: initial - consumed,
-            expected=RES001_EXPECTED_FINAL_FUEL,
-            variables={
-                'initial': RES001_INITIAL_FUEL,
-                'consumed': RES001_EXPECTED_FUEL_CONSUMED
-            }
-        ),
-    ]
-
-    # =========================================================================
-    # SETUP CONDITIONS
-    # =========================================================================
-    setup_conditions = [
-        SetupCondition(name='Initial Position', value='(0, 0)', description='Ship starts at origin'),
-        SetupCondition(name='Initial Angle', value='0°', description='Ship faces right (+X)'),
-        SetupCondition(name='Test Duration', value=f'{RES001_MAX_TICKS} ticks', description=f'{RES001_DURATION_SEC} seconds'),
-        SetupCondition(name='Thrust Command', value='Forward (each tick)', description='thrust_forward() called every tick'),
-    ]
-
-    # =========================================================================
-    # PASS CRITERIA
-    # =========================================================================
-    pass_criteria = [
-        PassCriterion(
-            description=f'Final Fuel = {RES001_EXPECTED_FINAL_FUEL}',
-            expression=lambda r: abs(r.get('final_fuel', 0) - RES001_EXPECTED_FINAL_FUEL) < 0.01,
-            numeric_threshold=RES001_EXPECTED_FINAL_FUEL
-        ),
-        PassCriterion(
-            description=f'Fuel Consumed = {RES001_EXPECTED_FUEL_CONSUMED}',
-            expression=lambda r: abs(r.get('fuel_consumed', 0) - RES001_EXPECTED_FUEL_CONSUMED) < 0.01,
-            numeric_threshold=RES001_EXPECTED_FUEL_CONSUMED
-        ),
-        PassCriterion(
-            description='Ship is moving (velocity > 0)',
-            expression=lambda r: r.get('final_velocity', 0) > 0,
-            numeric_threshold=0.0
-        ),
-    ]
-
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        ship = self._load_ship(RES001_SHIP_FILE)
-
-        ship.position = pygame.math.Vector2(0, 0)
-        ship.angle = 0
-
-        self.initial_fuel = ship.resources.get_value('fuel')
-        self.initial_velocity = ship.current_speed
-        self.start_position = pygame.math.Vector2(ship.position)
-
-        end_condition = self._create_end_condition()
-
-        battle_engine.start([ship], [],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        self.ship = ship
-        self._run_prerun_validation()
-
-    def _run_prerun_validation(self):
-        """Run pre-run validation and store results."""
-        from simulation_tests.scenarios.prerun_validation import PreRunValidator
-
-        context = {
-            'ship': self.ship,
-            'initial_fuel': self.ship.resources.get_value('fuel'),
-            'total_thrust': self.ship.total_thrust,
-        }
-
-        validator = PreRunValidator()
-        self.prerun_validation = validator.validate_scenario(self, context)
-        self.results['prerun_validation'] = self.prerun_validation.to_dict()
-
-        if not self.prerun_validation.can_run:
-            error_msg = "Pre-run validation failed:\n" + "\n".join(self.prerun_validation.blocking_errors)
-            raise ValueError(error_msg)
-
-    def update(self, battle_engine):
-        """Apply thrust each tick to make ship move and consume fuel."""
-        if self.ship and self.ship.is_alive:
-            self.ship.thrust_forward()
-
-    def verify(self, battle_engine) -> bool:
-        """Check fuel consumption matches expected."""
-        final_fuel = self.ship.resources.get_value('fuel')
-        fuel_consumed = self.initial_fuel - final_fuel
-        final_velocity = self.ship.current_speed
-        final_position = pygame.math.Vector2(self.ship.position)
-        distance_traveled = final_position.distance_to(self.start_position)
-        ticks_run = battle_engine.tick_counter
-
-        # Store results
-        self.results['test_id'] = self.metadata.test_id
-        self.results['initial_fuel'] = self.initial_fuel
-        self.results['final_fuel'] = final_fuel
-        self.results['fuel_consumed'] = fuel_consumed
-        self.results['expected_consumed'] = RES001_EXPECTED_FUEL_CONSUMED
-        self.results['expected_final_fuel'] = RES001_EXPECTED_FINAL_FUEL
-        self.results['final_velocity'] = final_velocity
-        self.results['distance_traveled'] = distance_traveled
-        self.results['ticks_run'] = ticks_run
-
-        # Run validation rules
-        if hasattr(self.metadata, 'validation_rules') and self.metadata.validation_rules:
-            self.run_validation(battle_engine)
-
-        # Evaluate pass criteria
-        all_criteria_passed = all(
-            criterion.evaluate(self.results)
-            for criterion in self.pass_criteria
-        )
-        self.results['all_criteria_passed'] = all_criteria_passed
-
-        return all_criteria_passed
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data
+        checks.append(check_exact("Initial Fuel", RES001_INITIAL_FUEL, self.initial_value))
+        checks.append(check_exact("Engine Thrust", RES001_ENGINE_THRUST, self.ship.total_thrust))
+        # Precondition
+        checks.append(check_true("Ship Moved", self.final_velocity > 0, actual=self.final_velocity))
+        # Outcome
+        checks.append(check_approx("Final Fuel", RES001_EXPECTED_FINAL_FUEL, self.final_value, tolerance=0.01))
+        checks.append(check_approx("Fuel Consumed", RES001_EXPECTED_FUEL_CONSUMED, self.value_consumed, tolerance=0.01))
+        return checks
 
 
-class EngineFuelDepletionScenario(TestScenario):
+class EngineFuelDepletionScenario(ResourceScenario):
     """
     RESOURCE-002: Engine Starvation Stops Movement
 
     Tests that engine stops providing thrust when fuel is depleted.
     With 2.5 fuel and 1.0 fuel/sec consumption, engine runs out at tick ~250.
     Ship should decelerate to 0 velocity by end of test.
+
+    NOTE: This test currently FAILS because the engine does not stop when
+    fuel is depleted -- this is a real game bug, not a test bug.
     """
 
     metadata = TestMetadata(
@@ -435,122 +272,33 @@ class EngineFuelDepletionScenario(TestScenario):
         battle_end_mode="time_based",
         ui_priority=10,
         tags=["resource", "fuel", "depletion", "starvation", "engine"],
-        validation_rules=[
-            DeterministicMatchRule(
-                name='Final Fuel',
-                path='results.final_fuel',
-                expected=RES002_EXPECTED_FINAL_FUEL,
-                description='Fuel fully depleted'
-            ),
-            DeterministicMatchRule(
-                name='Final Velocity',
-                path='results.final_velocity',
-                expected=RES002_EXPECTED_FINAL_VELOCITY,
-                tolerance=0.01,
-                description='Ship stopped after fuel starvation'
-            ),
-        ]
     )
 
-    data_expectations = [
-        DataExpectation(
-            name='Initial Fuel',
-            source='initial_fuel',
-            expected=RES002_INITIAL_FUEL,
-            json_file=RES002_SHIP_FILE
-        ),
-    ]
+    ship_file = RES002_SHIP_FILE
+    resource_type = "fuel"
+    thrust_forward = True
 
-    calculated_expectations = [
-        CalculatedExpectation(
-            name='Depletion Tick',
-            formula='initial_fuel / consumption_rate × 100',
-            formula_expr=lambda fuel, rate: int(fuel / rate * 100),
-            expected=RES002_EXPECTED_DEPLETION_TICK,
-            variables={
-                'fuel': RES002_INITIAL_FUEL,
-                'rate': RES002_FUEL_CONSUMPTION_PER_SEC
-            }
-        ),
-    ]
-
-    pass_criteria = [
-        PassCriterion(
-            description='Fuel Depleted (final_fuel = 0)',
-            expression=lambda r: r.get('final_fuel', 1) == 0,
-            numeric_threshold=0.0
-        ),
-        PassCriterion(
-            description='Ship Stopped (velocity < 0.01)',
-            expression=lambda r: r.get('final_velocity', 1) < 0.01,
-            numeric_threshold=0.0
-        ),
-        PassCriterion(
-            description='Ship Moved Before Starvation',
-            expression=lambda r: r.get('distance_traveled', 0) > 0,
-            numeric_threshold=0.0
-        ),
-    ]
-
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        ship = self._load_ship(RES002_SHIP_FILE)
-
-        ship.position = pygame.math.Vector2(0, 0)
-        ship.angle = 0
-
-        self.initial_fuel = ship.resources.get_value('fuel')
-        self.initial_position = pygame.math.Vector2(ship.position)
-
-        end_condition = self._create_end_condition()
-
-        battle_engine.start([ship], [],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        self.ship = ship
-
-    def update(self, battle_engine):
-        """Apply thrust each tick."""
-        if self.ship and self.ship.is_alive:
-            self.ship.thrust_forward()
-
-    def verify(self, battle_engine) -> bool:
-        """Check fuel depleted and ship stopped."""
-        final_fuel = self.ship.resources.get_value('fuel')
-        final_velocity = self.ship.current_speed
-        final_position = pygame.math.Vector2(self.ship.position)
-        distance_traveled = final_position.distance_to(self.initial_position)
-        ticks_run = battle_engine.tick_counter
-
-        self.results['test_id'] = self.metadata.test_id
-        self.results['initial_fuel'] = self.initial_fuel
-        self.results['final_fuel'] = final_fuel
-        self.results['fuel_consumed'] = self.initial_fuel - final_fuel
-        self.results['final_velocity'] = final_velocity
-        self.results['distance_traveled'] = distance_traveled
-        self.results['ticks_run'] = ticks_run
-
-        # Run validation rules
-        if hasattr(self.metadata, 'validation_rules') and self.metadata.validation_rules:
-            self.run_validation(battle_engine)
-
-        # Evaluate pass criteria
-        all_criteria_passed = all(
-            criterion.evaluate(self.results)
-            for criterion in self.pass_criteria
-        )
-        self.results['all_criteria_passed'] = all_criteria_passed
-
-        return all_criteria_passed
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data
+        checks.append(check_exact("Initial Fuel", RES002_INITIAL_FUEL, self.initial_value))
+        # Precondition
+        checks.append(check_true("Ship Moved", self.distance_traveled > 0, actual=self.distance_traveled))
+        # Outcome
+        checks.append(check_approx("Fuel Depleted", RES002_EXPECTED_FINAL_FUEL, self.final_value, tolerance=0.01, phase="outcome"))
+        checks.append(check_true("Ship Stopped", self.final_velocity < 0.01,
+                                 actual=self.final_velocity, phase="outcome"))
+        return checks
 
 
-class EngineFuelRegenerationScenario(TestScenario):
+class EngineFuelRegenerationScenario(ResourceScenario):
     """
     RESOURCE-003: Fuel Generation Sustains Movement
 
     Tests that fuel generator keeps engine running. With 1.0 fuel/sec consumption
     and 1.0 fuel/sec generation, fuel should stay stable and ship keeps moving.
+
+    NOTE: This test currently FAILS because the generator is not working.
     """
 
     metadata = TestMetadata(
@@ -579,93 +327,31 @@ class EngineFuelRegenerationScenario(TestScenario):
         battle_end_mode="time_based",
         ui_priority=10,
         tags=["resource", "fuel", "regeneration", "engine"],
-        validation_rules=[
-            DeterministicMatchRule(
-                name='Fuel Stable',
-                path='results.fuel_change',
-                expected=0.0,
-                tolerance=0.5,
-                description='Generator matches consumption (net rate = 0)'
-            ),
-        ]
     )
 
-    data_expectations = [
-        DataExpectation(
-            name='Initial Fuel',
-            source='initial_fuel',
-            expected=RES003_INITIAL_FUEL,
-            json_file=RES003_SHIP_FILE
-        ),
-    ]
+    ship_file = RES003_SHIP_FILE
+    resource_type = "fuel"
+    thrust_forward = True
 
-    pass_criteria = [
-        PassCriterion(
-            description='Fuel Stable (change < 0.5)',
-            expression=lambda r: abs(r.get('fuel_change', 10)) < 0.5,
-            numeric_threshold=0.0
-        ),
-        PassCriterion(
-            description='Ship Moving (velocity > 0)',
-            expression=lambda r: r.get('final_velocity', 0) > 0,
-            numeric_threshold=0.0
-        ),
-    ]
-
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        ship = self._load_ship(RES003_SHIP_FILE)
-
-        ship.position = pygame.math.Vector2(0, 0)
-        ship.angle = 0
-
-        self.initial_fuel = ship.resources.get_value('fuel')
-
-        end_condition = self._create_end_condition()
-
-        battle_engine.start([ship], [],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        self.ship = ship
-
-    def update(self, battle_engine):
-        """Apply thrust each tick."""
-        if self.ship and self.ship.is_alive:
-            self.ship.thrust_forward()
-
-    def verify(self, battle_engine) -> bool:
-        """Check fuel stable and ship moving."""
-        final_fuel = self.ship.resources.get_value('fuel')
-        final_velocity = self.ship.current_speed
-        ticks_run = battle_engine.tick_counter
-
-        self.results['test_id'] = self.metadata.test_id
-        self.results['initial_fuel'] = self.initial_fuel
-        self.results['final_fuel'] = final_fuel
-        self.results['fuel_change'] = final_fuel - self.initial_fuel
-        self.results['final_velocity'] = final_velocity
-        self.results['ticks_run'] = ticks_run
-
-        # Run validation rules
-        if hasattr(self.metadata, 'validation_rules') and self.metadata.validation_rules:
-            self.run_validation(battle_engine)
-
-        # Evaluate pass criteria
-        all_criteria_passed = all(
-            criterion.evaluate(self.results)
-            for criterion in self.pass_criteria
-        )
-        self.results['all_criteria_passed'] = all_criteria_passed
-
-        return all_criteria_passed
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        fuel_change = self.final_value - self.initial_value
+        # Data
+        checks.append(check_exact("Initial Fuel", RES003_INITIAL_FUEL, self.initial_value))
+        # Outcome
+        checks.append(check_true("Fuel Stable", abs(fuel_change) < 0.5,
+                                 actual=fuel_change, phase="outcome",
+                                 detail=f"fuel_change={fuel_change:.4f}, threshold=0.5"))
+        checks.append(check_true("Ship Moving", self.final_velocity > 0,
+                                 actual=self.final_velocity, phase="outcome"))
+        return checks
 
 
 # ============================================================================
 # ENERGY CONSUMPTION TESTS (BEAM WEAPONS)
 # ============================================================================
 
-class BeamEnergyConsumptionScenario(TestScenario):
+class BeamEnergyConsumptionScenario(ResourceScenario):
     """
     RESOURCE-004: Beam Weapon Consumes Energy
 
@@ -700,118 +386,30 @@ class BeamEnergyConsumptionScenario(TestScenario):
         battle_end_mode="time_based",
         ui_priority=9,
         tags=["resource", "energy", "consumption", "beam-weapons"],
-        validation_rules=[
-            DeterministicMatchRule(
-                name='Energy Consumed',
-                path='results.energy_consumed',
-                expected=RES004_EXPECTED_ENERGY_CONSUMED,
-                tolerance=0.01,
-                description=f'{RES004_EXPECTED_SHOTS} shots × {RES004_ENERGY_PER_SHOT} energy/shot'
-            ),
-            DeterministicMatchRule(
-                name='Final Energy',
-                path='results.final_energy',
-                expected=RES004_EXPECTED_FINAL_ENERGY,
-                tolerance=0.01,
-                description=f'{RES004_INITIAL_ENERGY} - {RES004_EXPECTED_ENERGY_CONSUMED} = {RES004_EXPECTED_FINAL_ENERGY}'
-            ),
-        ]
     )
 
-    data_expectations = [
-        DataExpectation(
-            name='Initial Energy',
-            source='initial_energy',
-            expected=RES004_INITIAL_ENERGY,
-            json_file=RES004_SHIP_FILE
-        ),
-    ]
+    ship_file = RES004_SHIP_FILE
+    resource_type = "energy"
+    force_fire = True
+    target_ship_file = "Test_Target_Stationary.json"
+    target_distance = 10
 
-    calculated_expectations = [
-        CalculatedExpectation(
-            name='Expected Energy Consumed',
-            formula='shots × energy_per_shot',
-            formula_expr=lambda shots, cost: shots * cost,
-            expected=RES004_EXPECTED_ENERGY_CONSUMED,
-            variables={
-                'shots': RES004_EXPECTED_SHOTS,
-                'cost': RES004_ENERGY_PER_SHOT
-            }
-        ),
-    ]
+    def _collect_extra_results(self, engine):
+        """Store shots_fired derived from energy consumed."""
+        self.shots_fired = int(self.value_consumed)  # 1 energy per shot
+        self.results['shots_fired'] = self.shots_fired
 
-    pass_criteria = [
-        PassCriterion(
-            description=f'Energy Consumed = {RES004_EXPECTED_ENERGY_CONSUMED}',
-            expression=lambda r: abs(r.get('energy_consumed', 0) - RES004_EXPECTED_ENERGY_CONSUMED) < 0.01,
-            numeric_threshold=RES004_EXPECTED_ENERGY_CONSUMED
-        ),
-        PassCriterion(
-            description=f'Shots Fired = {RES004_EXPECTED_SHOTS}',
-            expression=lambda r: r.get('shots_fired', 0) == RES004_EXPECTED_SHOTS,
-            numeric_threshold=RES004_EXPECTED_SHOTS
-        ),
-    ]
-
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        attacker = self._load_ship(RES004_SHIP_FILE)
-        target = self._load_ship("Test_Target_Stationary.json")
-
-        attacker.position = pygame.math.Vector2(0, 0)
-        attacker.angle = 0
-        target.position = pygame.math.Vector2(10, 0)
-        target.angle = 0
-
-        self.initial_energy = attacker.resources.get_value('energy')
-        self.initial_hp = target.hp
-
-        end_condition = self._create_end_condition()
-
-        battle_engine.start([attacker], [target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        attacker.current_target = target
-
-        self.attacker = attacker
-        self.target = target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
-    def verify(self, battle_engine) -> bool:
-        """Check energy consumed and damage dealt."""
-        final_energy = self.attacker.resources.get_value('energy')
-        energy_consumed = self.initial_energy - final_energy
-        damage_dealt = self.initial_hp - self.target.hp
-        ticks_run = battle_engine.tick_counter
-
-        self.results['test_id'] = self.metadata.test_id
-        self.results['initial_energy'] = self.initial_energy
-        self.results['final_energy'] = final_energy
-        self.results['energy_consumed'] = energy_consumed
-        self.results['shots_fired'] = int(energy_consumed)  # 1 energy per shot
-        self.results['damage_dealt'] = damage_dealt
-        self.results['ticks_run'] = ticks_run
-
-        # Run validation rules
-        if hasattr(self.metadata, 'validation_rules') and self.metadata.validation_rules:
-            self.run_validation(battle_engine)
-
-        # Evaluate pass criteria
-        all_criteria_passed = all(
-            criterion.evaluate(self.results)
-            for criterion in self.pass_criteria
-        )
-        self.results['all_criteria_passed'] = all_criteria_passed
-
-        return all_criteria_passed
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data
+        checks.append(check_exact("Initial Energy", RES004_INITIAL_ENERGY, self.initial_value))
+        # Outcome
+        checks.append(check_approx("Energy Consumed", RES004_EXPECTED_ENERGY_CONSUMED, self.value_consumed, tolerance=0.01))
+        checks.append(check_exact("Shots Fired", RES004_EXPECTED_SHOTS, self.shots_fired, phase="outcome"))
+        return checks
 
 
-class BeamEnergyDepletionScenario(TestScenario):
+class BeamEnergyDepletionScenario(ResourceScenario):
     """
     RESOURCE-005: Energy Depletion Stops Weapon
 
@@ -846,103 +444,30 @@ class BeamEnergyDepletionScenario(TestScenario):
         battle_end_mode="time_based",
         ui_priority=9,
         tags=["resource", "energy", "depletion", "beam-weapons"],
-        validation_rules=[
-            DeterministicMatchRule(
-                name='Final Energy',
-                path='results.final_energy',
-                expected=RES005_EXPECTED_FINAL_ENERGY,
-                description='Energy fully depleted'
-            ),
-            DeterministicMatchRule(
-                name='Shots Fired',
-                path='results.shots_fired',
-                expected=RES005_EXPECTED_SHOTS,
-                description=f'{RES005_INITIAL_ENERGY} / {RES005_ENERGY_PER_SHOT} = {RES005_EXPECTED_SHOTS} shots'
-            ),
-        ]
     )
 
-    data_expectations = [
-        DataExpectation(
-            name='Initial Energy',
-            source='initial_energy',
-            expected=RES005_INITIAL_ENERGY,
-            json_file=RES005_SHIP_FILE
-        ),
-    ]
+    ship_file = RES005_SHIP_FILE
+    resource_type = "energy"
+    force_fire = True
+    target_ship_file = "Test_Target_Stationary.json"
+    target_distance = 10
 
-    pass_criteria = [
-        PassCriterion(
-            description='Energy Depleted (final_energy = 0)',
-            expression=lambda r: r.get('final_energy', 1) == 0,
-            numeric_threshold=0.0
-        ),
-        PassCriterion(
-            description=f'Shots Fired = {RES005_EXPECTED_SHOTS}',
-            expression=lambda r: r.get('shots_fired', 0) == RES005_EXPECTED_SHOTS,
-            numeric_threshold=RES005_EXPECTED_SHOTS
-        ),
-    ]
+    def _collect_extra_results(self, engine):
+        """Store shots_fired derived from energy consumed."""
+        self.shots_fired = int(self.value_consumed)
+        self.results['shots_fired'] = self.shots_fired
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        attacker = self._load_ship(RES005_SHIP_FILE)
-        target = self._load_ship("Test_Target_Stationary.json")
-
-        attacker.position = pygame.math.Vector2(0, 0)
-        attacker.angle = 0
-        target.position = pygame.math.Vector2(10, 0)
-        target.angle = 0
-
-        self.initial_energy = attacker.resources.get_value('energy')
-        self.initial_hp = target.hp
-
-        end_condition = self._create_end_condition()
-
-        battle_engine.start([attacker], [target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        attacker.current_target = target
-
-        self.attacker = attacker
-        self.target = target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
-    def verify(self, battle_engine) -> bool:
-        """Check energy depleted and weapon stopped."""
-        final_energy = self.attacker.resources.get_value('energy')
-        energy_consumed = self.initial_energy - final_energy
-        damage_dealt = self.initial_hp - self.target.hp
-        ticks_run = battle_engine.tick_counter
-
-        self.results['test_id'] = self.metadata.test_id
-        self.results['initial_energy'] = self.initial_energy
-        self.results['final_energy'] = final_energy
-        self.results['energy_consumed'] = energy_consumed
-        self.results['shots_fired'] = int(energy_consumed)
-        self.results['damage_dealt'] = damage_dealt
-        self.results['ticks_run'] = ticks_run
-
-        # Run validation rules
-        if hasattr(self.metadata, 'validation_rules') and self.metadata.validation_rules:
-            self.run_validation(battle_engine)
-
-        # Evaluate pass criteria
-        all_criteria_passed = all(
-            criterion.evaluate(self.results)
-            for criterion in self.pass_criteria
-        )
-        self.results['all_criteria_passed'] = all_criteria_passed
-
-        return all_criteria_passed
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data
+        checks.append(check_exact("Initial Energy", RES005_INITIAL_ENERGY, self.initial_value))
+        # Outcome
+        checks.append(check_exact("Energy Depleted", RES005_EXPECTED_FINAL_ENERGY, self.final_value, phase="outcome"))
+        checks.append(check_exact("Shots Fired", RES005_EXPECTED_SHOTS, self.shots_fired, phase="outcome"))
+        return checks
 
 
-class BeamEnergyRegenerationScenario(TestScenario):
+class BeamEnergyRegenerationScenario(ResourceScenario):
     """
     RESOURCE-005a: Energy Regeneration Sustains Weapon
 
@@ -978,95 +503,37 @@ class BeamEnergyRegenerationScenario(TestScenario):
         battle_end_mode="time_based",
         ui_priority=9,
         tags=["resource", "energy", "regeneration", "beam-weapons"],
-        validation_rules=[
-            DeterministicMatchRule(
-                name='Shots Fired',
-                path='results.shots_fired',
-                expected=RES005A_EXPECTED_SHOTS,
-                tolerance=5,  # Allow small variance
-                description='Generator sustains continuous firing'
-            ),
-        ]
     )
 
-    pass_criteria = [
-        PassCriterion(
-            description=f'Shots Fired ≈ {RES005A_EXPECTED_SHOTS}',
-            expression=lambda r: abs(r.get('shots_fired', 0) - RES005A_EXPECTED_SHOTS) < 5,
-            numeric_threshold=RES005A_EXPECTED_SHOTS
-        ),
-        PassCriterion(
-            description='Energy Not Depleted',
-            expression=lambda r: r.get('final_energy', -1) >= 0,
-            numeric_threshold=0.0
-        ),
-    ]
+    ship_file = RES005A_SHIP_FILE
+    resource_type = "energy"
+    force_fire = True
+    target_ship_file = "Test_Target_Stationary.json"
+    target_distance = 10
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        attacker = self._load_ship(RES005A_SHIP_FILE)
-        target = self._load_ship("Test_Target_Stationary.json")
+    def _collect_extra_results(self, engine):
+        """Estimate shots by damage (1 damage per hit at point-blank)."""
+        self.shots_fired = self.damage_dealt
+        self.results['shots_fired'] = self.shots_fired
+        self.results['energy_change'] = self.final_value - self.initial_value
 
-        attacker.position = pygame.math.Vector2(0, 0)
-        attacker.angle = 0
-        target.position = pygame.math.Vector2(10, 0)
-        target.angle = 0
-
-        self.initial_energy = attacker.resources.get_value('energy')
-        self.initial_hp = target.hp
-
-        end_condition = self._create_end_condition()
-
-        battle_engine.start([attacker], [target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        attacker.current_target = target
-
-        self.attacker = attacker
-        self.target = target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
-    def verify(self, battle_engine) -> bool:
-        """Check weapon fires continuously with generator."""
-        final_energy = self.attacker.resources.get_value('energy')
-        damage_dealt = self.initial_hp - self.target.hp
-        ticks_run = battle_engine.tick_counter
-
-        # Estimate shots by damage (1 damage per hit at point-blank)
-        estimated_shots = damage_dealt
-
-        self.results['test_id'] = self.metadata.test_id
-        self.results['initial_energy'] = self.initial_energy
-        self.results['final_energy'] = final_energy
-        self.results['energy_change'] = final_energy - self.initial_energy
-        self.results['damage_dealt'] = damage_dealt
-        self.results['shots_fired'] = estimated_shots
-        self.results['ticks_run'] = ticks_run
-
-        # Run validation rules
-        if hasattr(self.metadata, 'validation_rules') and self.metadata.validation_rules:
-            self.run_validation(battle_engine)
-
-        # Evaluate pass criteria
-        all_criteria_passed = all(
-            criterion.evaluate(self.results)
-            for criterion in self.pass_criteria
-        )
-        self.results['all_criteria_passed'] = all_criteria_passed
-
-        return all_criteria_passed
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Outcome
+        checks.append(check_true("Shots Fired Near Expected",
+                                 abs(self.shots_fired - RES005A_EXPECTED_SHOTS) < 5,
+                                 actual=self.shots_fired, phase="outcome",
+                                 detail=f"expected~{RES005A_EXPECTED_SHOTS}, tolerance=5"))
+        checks.append(check_true("Energy Not Depleted", self.final_value >= 0,
+                                 actual=self.final_value, phase="outcome"))
+        return checks
 
 
 # ============================================================================
 # AMMO CONSUMPTION TESTS (PROJECTILE & SEEKER)
 # ============================================================================
 
-class ProjectileAmmoConsumptionScenario(TestScenario):
+class ProjectileAmmoConsumptionScenario(ResourceScenario):
     """
     RESOURCE-006: Projectile Weapon Consumes Ammo
 
@@ -1101,105 +568,30 @@ class ProjectileAmmoConsumptionScenario(TestScenario):
         battle_end_mode="time_based",
         ui_priority=8,
         tags=["resource", "ammo", "consumption", "projectile-weapons"],
-        validation_rules=[
-            DeterministicMatchRule(
-                name='Ammo Consumed',
-                path='results.ammo_consumed',
-                expected=RES006_EXPECTED_AMMO_CONSUMED,
-                tolerance=0.01,
-                description=f'{RES006_EXPECTED_SHOTS} shots × {RES006_AMMO_PER_SHOT} ammo/shot'
-            ),
-            DeterministicMatchRule(
-                name='Final Ammo',
-                path='results.final_ammo',
-                expected=RES006_EXPECTED_FINAL_AMMO,
-                tolerance=0.01,
-                description=f'{RES006_INITIAL_AMMO} - {RES006_EXPECTED_AMMO_CONSUMED} = {RES006_EXPECTED_FINAL_AMMO}'
-            ),
-        ]
     )
 
-    data_expectations = [
-        DataExpectation(
-            name='Initial Ammo',
-            source='initial_ammo',
-            expected=RES006_INITIAL_AMMO,
-            json_file=RES006_SHIP_FILE
-        ),
-    ]
+    ship_file = RES006_SHIP_FILE
+    resource_type = "ammo"
+    force_fire = True
+    target_ship_file = "Test_Target_Stationary.json"
+    target_distance = 50
 
-    pass_criteria = [
-        PassCriterion(
-            description=f'Ammo Consumed = {RES006_EXPECTED_AMMO_CONSUMED}',
-            expression=lambda r: abs(r.get('ammo_consumed', 0) - RES006_EXPECTED_AMMO_CONSUMED) < 0.01,
-            numeric_threshold=RES006_EXPECTED_AMMO_CONSUMED
-        ),
-        PassCriterion(
-            description=f'Shots Fired = {RES006_EXPECTED_SHOTS}',
-            expression=lambda r: r.get('shots_fired', 0) == RES006_EXPECTED_SHOTS,
-            numeric_threshold=RES006_EXPECTED_SHOTS
-        ),
-    ]
+    def _collect_extra_results(self, engine):
+        """Store shots_fired derived from ammo consumed."""
+        self.shots_fired = int(self.value_consumed)
+        self.results['shots_fired'] = self.shots_fired
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        attacker = self._load_ship(RES006_SHIP_FILE)
-        target = self._load_ship("Test_Target_Stationary.json")
-
-        attacker.position = pygame.math.Vector2(0, 0)
-        attacker.angle = 0
-        target.position = pygame.math.Vector2(50, 0)
-        target.angle = 0
-
-        self.initial_ammo = attacker.resources.get_value('ammo')
-        self.initial_hp = target.hp
-
-        end_condition = self._create_end_condition()
-
-        battle_engine.start([attacker], [target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        attacker.current_target = target
-
-        self.attacker = attacker
-        self.target = target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
-    def verify(self, battle_engine) -> bool:
-        """Check ammo consumed."""
-        final_ammo = self.attacker.resources.get_value('ammo')
-        ammo_consumed = self.initial_ammo - final_ammo
-        damage_dealt = self.initial_hp - self.target.hp
-        ticks_run = battle_engine.tick_counter
-
-        self.results['test_id'] = self.metadata.test_id
-        self.results['initial_ammo'] = self.initial_ammo
-        self.results['final_ammo'] = final_ammo
-        self.results['ammo_consumed'] = ammo_consumed
-        self.results['shots_fired'] = int(ammo_consumed)
-        self.results['damage_dealt'] = damage_dealt
-        self.results['ticks_run'] = ticks_run
-
-        # Run validation rules
-        if hasattr(self.metadata, 'validation_rules') and self.metadata.validation_rules:
-            self.run_validation(battle_engine)
-
-        # Evaluate pass criteria
-        all_criteria_passed = all(
-            criterion.evaluate(self.results)
-            for criterion in self.pass_criteria
-        )
-        self.results['all_criteria_passed'] = all_criteria_passed
-
-        return all_criteria_passed
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data
+        checks.append(check_exact("Initial Ammo", RES006_INITIAL_AMMO, self.initial_value))
+        # Outcome
+        checks.append(check_approx("Ammo Consumed", RES006_EXPECTED_AMMO_CONSUMED, self.value_consumed, tolerance=0.01))
+        checks.append(check_exact("Shots Fired", RES006_EXPECTED_SHOTS, self.shots_fired, phase="outcome"))
+        return checks
 
 
-class ProjectileAmmoDepletionScenario(TestScenario):
+class ProjectileAmmoDepletionScenario(ResourceScenario):
     """
     RESOURCE-007: Ammo Depletion Stops Projectile Weapon
 
@@ -1234,103 +626,30 @@ class ProjectileAmmoDepletionScenario(TestScenario):
         battle_end_mode="time_based",
         ui_priority=8,
         tags=["resource", "ammo", "depletion", "projectile-weapons"],
-        validation_rules=[
-            DeterministicMatchRule(
-                name='Final Ammo',
-                path='results.final_ammo',
-                expected=RES007_EXPECTED_FINAL_AMMO,
-                description='Ammo fully depleted'
-            ),
-            DeterministicMatchRule(
-                name='Shots Fired',
-                path='results.shots_fired',
-                expected=RES007_EXPECTED_SHOTS,
-                description=f'{RES007_INITIAL_AMMO} / {RES007_AMMO_PER_SHOT} = {RES007_EXPECTED_SHOTS} shots'
-            ),
-        ]
     )
 
-    data_expectations = [
-        DataExpectation(
-            name='Initial Ammo',
-            source='initial_ammo',
-            expected=RES007_INITIAL_AMMO,
-            json_file=RES007_SHIP_FILE
-        ),
-    ]
+    ship_file = RES007_SHIP_FILE
+    resource_type = "ammo"
+    force_fire = True
+    target_ship_file = "Test_Target_Stationary.json"
+    target_distance = 50
 
-    pass_criteria = [
-        PassCriterion(
-            description='Ammo Depleted (final_ammo = 0)',
-            expression=lambda r: r.get('final_ammo', 1) == 0,
-            numeric_threshold=0.0
-        ),
-        PassCriterion(
-            description=f'Shots Fired = {RES007_EXPECTED_SHOTS}',
-            expression=lambda r: r.get('shots_fired', 0) == RES007_EXPECTED_SHOTS,
-            numeric_threshold=RES007_EXPECTED_SHOTS
-        ),
-    ]
+    def _collect_extra_results(self, engine):
+        """Store shots_fired derived from ammo consumed."""
+        self.shots_fired = int(self.value_consumed)
+        self.results['shots_fired'] = self.shots_fired
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        attacker = self._load_ship(RES007_SHIP_FILE)
-        target = self._load_ship("Test_Target_Stationary.json")
-
-        attacker.position = pygame.math.Vector2(0, 0)
-        attacker.angle = 0
-        target.position = pygame.math.Vector2(50, 0)
-        target.angle = 0
-
-        self.initial_ammo = attacker.resources.get_value('ammo')
-        self.initial_hp = target.hp
-
-        end_condition = self._create_end_condition()
-
-        battle_engine.start([attacker], [target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        attacker.current_target = target
-
-        self.attacker = attacker
-        self.target = target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
-    def verify(self, battle_engine) -> bool:
-        """Check ammo depleted and weapon stopped."""
-        final_ammo = self.attacker.resources.get_value('ammo')
-        ammo_consumed = self.initial_ammo - final_ammo
-        damage_dealt = self.initial_hp - self.target.hp
-        ticks_run = battle_engine.tick_counter
-
-        self.results['test_id'] = self.metadata.test_id
-        self.results['initial_ammo'] = self.initial_ammo
-        self.results['final_ammo'] = final_ammo
-        self.results['ammo_consumed'] = ammo_consumed
-        self.results['shots_fired'] = int(ammo_consumed)
-        self.results['damage_dealt'] = damage_dealt
-        self.results['ticks_run'] = ticks_run
-
-        # Run validation rules
-        if hasattr(self.metadata, 'validation_rules') and self.metadata.validation_rules:
-            self.run_validation(battle_engine)
-
-        # Evaluate pass criteria
-        all_criteria_passed = all(
-            criterion.evaluate(self.results)
-            for criterion in self.pass_criteria
-        )
-        self.results['all_criteria_passed'] = all_criteria_passed
-
-        return all_criteria_passed
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data
+        checks.append(check_exact("Initial Ammo", RES007_INITIAL_AMMO, self.initial_value))
+        # Outcome
+        checks.append(check_exact("Ammo Depleted", RES007_EXPECTED_FINAL_AMMO, self.final_value, phase="outcome"))
+        checks.append(check_exact("Shots Fired", RES007_EXPECTED_SHOTS, self.shots_fired, phase="outcome"))
+        return checks
 
 
-class SeekerAmmoConsumptionScenario(TestScenario):
+class SeekerAmmoConsumptionScenario(ResourceScenario):
     """
     RESOURCE-008: Seeker Weapon Consumes Ammo
 
@@ -1366,100 +685,27 @@ class SeekerAmmoConsumptionScenario(TestScenario):
         battle_end_mode="time_based",
         ui_priority=7,
         tags=["resource", "ammo", "consumption", "seeker-weapons", "missiles"],
-        validation_rules=[
-            DeterministicMatchRule(
-                name='Ammo Consumed',
-                path='results.ammo_consumed',
-                expected=RES008_EXPECTED_AMMO_CONSUMED,
-                tolerance=0.01,
-                description=f'{RES008_EXPECTED_LAUNCHES} launches × {RES008_AMMO_PER_LAUNCH} ammo/launch'
-            ),
-            DeterministicMatchRule(
-                name='Final Ammo',
-                path='results.final_ammo',
-                expected=RES008_EXPECTED_FINAL_AMMO,
-                tolerance=0.01,
-                description=f'{RES008_INITIAL_AMMO} - {RES008_EXPECTED_AMMO_CONSUMED} = {RES008_EXPECTED_FINAL_AMMO}'
-            ),
-        ]
     )
 
-    data_expectations = [
-        DataExpectation(
-            name='Initial Ammo',
-            source='initial_ammo',
-            expected=RES008_INITIAL_AMMO,
-            json_file=RES008_SHIP_FILE
-        ),
-    ]
+    ship_file = RES008_SHIP_FILE
+    resource_type = "ammo"
+    force_fire = True
+    target_ship_file = "Test_Target_Stationary.json"
+    target_distance = 500
 
-    pass_criteria = [
-        PassCriterion(
-            description=f'Ammo Consumed = {RES008_EXPECTED_AMMO_CONSUMED}',
-            expression=lambda r: abs(r.get('ammo_consumed', 0) - RES008_EXPECTED_AMMO_CONSUMED) < 0.01,
-            numeric_threshold=RES008_EXPECTED_AMMO_CONSUMED
-        ),
-        PassCriterion(
-            description=f'Launches = {RES008_EXPECTED_LAUNCHES}',
-            expression=lambda r: r.get('launches', 0) == RES008_EXPECTED_LAUNCHES,
-            numeric_threshold=RES008_EXPECTED_LAUNCHES
-        ),
-    ]
+    def _collect_extra_results(self, engine):
+        """Store launches derived from ammo consumed."""
+        self.launches = int(self.value_consumed)  # 1 ammo per launch
+        self.results['launches'] = self.launches
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        attacker = self._load_ship(RES008_SHIP_FILE)
-        target = self._load_ship("Test_Target_Stationary.json")
-
-        attacker.position = pygame.math.Vector2(0, 0)
-        attacker.angle = 0
-        target.position = pygame.math.Vector2(500, 0)  # Far enough for seekers in flight
-        target.angle = 0
-
-        self.initial_ammo = attacker.resources.get_value('ammo')
-
-        end_condition = self._create_end_condition()
-
-        battle_engine.start([attacker], [target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        attacker.current_target = target
-
-        self.attacker = attacker
-        self.target = target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
-    def verify(self, battle_engine) -> bool:
-        """Check ammo consumed (launches, not hits)."""
-        final_ammo = self.attacker.resources.get_value('ammo')
-        ammo_consumed = self.initial_ammo - final_ammo
-        ticks_run = battle_engine.tick_counter
-
-        self.results['test_id'] = self.metadata.test_id
-        self.results['initial_ammo'] = self.initial_ammo
-        self.results['final_ammo'] = final_ammo
-        self.results['ammo_consumed'] = ammo_consumed
-        self.results['launches'] = int(ammo_consumed)  # 1 ammo per launch
-        self.results['ticks_run'] = ticks_run
-        # Note: damage_dealt not verified for seekers (still in flight)
-
-        # Run validation rules
-        if hasattr(self.metadata, 'validation_rules') and self.metadata.validation_rules:
-            self.run_validation(battle_engine)
-
-        # Evaluate pass criteria
-        all_criteria_passed = all(
-            criterion.evaluate(self.results)
-            for criterion in self.pass_criteria
-        )
-        self.results['all_criteria_passed'] = all_criteria_passed
-
-        return all_criteria_passed
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data
+        checks.append(check_exact("Initial Ammo", RES008_INITIAL_AMMO, self.initial_value))
+        # Outcome
+        checks.append(check_approx("Ammo Consumed", RES008_EXPECTED_AMMO_CONSUMED, self.value_consumed, tolerance=0.01))
+        checks.append(check_exact("Launches", RES008_EXPECTED_LAUNCHES, self.launches, phase="outcome"))
+        return checks
 
 
 # ============================================================================

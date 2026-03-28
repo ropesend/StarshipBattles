@@ -26,7 +26,6 @@ def create_test_metadata(
     edge_cases: Optional[List[str]] = None,
     expected_outcome: str = "Expected outcome",
     pass_criteria: str = "Pass criteria",
-    validation_rules: Optional[List] = None,
     max_ticks: int = 500,
     seed: int = 42,
     battle_end_mode: str = "time_based",
@@ -46,7 +45,6 @@ def create_test_metadata(
         edge_cases: Edge cases being tested
         expected_outcome: What should happen
         pass_criteria: How we verify success
-        validation_rules: List of ValidationRule instances
         max_ticks: Maximum simulation ticks
         seed: Random seed for reproducibility
         battle_end_mode: Battle end condition mode
@@ -76,7 +74,6 @@ def create_test_metadata(
         edge_cases=edge_cases or [],
         expected_outcome=expected_outcome,
         pass_criteria=pass_criteria,
-        validation_rules=validation_rules or [],
         max_ticks=max_ticks,
         seed=seed,
         battle_end_mode=battle_end_mode,
@@ -125,7 +122,6 @@ def create_mock_test_scenario(
         scenario.metadata.edge_cases = []
         scenario.metadata.expected_outcome = "Expected outcome"
         scenario.metadata.pass_criteria = "Pass criteria"
-        scenario.metadata.validation_rules = []
         scenario.metadata.tags = []
         scenario.metadata.to_dict = Mock(return_value={
             'test_id': test_id,

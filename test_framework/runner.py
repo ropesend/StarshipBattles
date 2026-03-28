@@ -15,7 +15,6 @@ from game.core.registry import RegistryManager, get_default_registry_provider
 from game.simulation.systems.battle_engine import BattleEngine
 from game.ai.ai_factory import AIControllerFactory
 from game.simulation.components.component import load_components, load_modifiers
-from game.simulation.entities.ship_loader import initialize_ship_data
 from simulation_tests.logging_config import get_logger, setup_combat_lab_logging
 
 # Setup logging
@@ -26,11 +25,9 @@ class TestRunner:
     __test__ = False  # Not a pytest test class
 
     def __init__(self):
-        # PROJ-126: Create factory and inject into engine - engine calls set_grid automatically
-        self._ai_factory = AIControllerFactory()
-        self.engine = BattleEngine(ai_factory=self._ai_factory)
+        self.engine = None  # Created fresh per scenario in run_scenario()
         self.current_scenario = None
-        self.test_log = []  # Store log of all test executions
+        self.test_log = []
         
     def load_data_for_scenario(self, scenario):
         """
@@ -139,14 +136,19 @@ class TestRunner:
             scenario.passed = False
             scenario.results['error'] = str(e)
             if log_results:
-                self._log_test_execution(scenario, headless)
+                self.log_test_execution(scenario, headless)
             return scenario
 
         end_time = time.time()
         duration = end_time - start_time
 
-        # 5. Verify
-        scenario.passed = scenario.verify(self.engine)
+        # 5. Validate (new system) or Verify (legacy fallback)
+        try:
+            report = scenario._run_validation(self.engine)
+            scenario.passed = report.passed
+        except NotImplementedError:
+            # Legacy scenario not yet migrated to validate()
+            scenario.passed = scenario.verify(self.engine)
         scenario.results['duration_real'] = duration
         scenario.results['ticks'] = self.engine.tick_counter
 

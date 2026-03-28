@@ -23,21 +23,13 @@ Test Coverage:
 
 from simulation_tests.scenarios import TestMetadata
 from simulation_tests.scenarios.templates import StaticTargetScenario
+from simulation_tests.scenarios.validation import check_true
 from simulation_tests.test_constants import (
     STANDARD_DISTANCE,
-    STANDARD_SEED
+    STANDARD_SEED,
+    SEEKER_TRACKING_DISTANCE,
 )
 
-
-def _get_seeker_ability(ship):
-    """Extract the SeekerWeaponAbility instance from a loaded ship."""
-    for layer_name, layer_data in ship.layers.items():
-        for component in layer_data.components:
-                if hasattr(component, 'ability_instances'):
-                    for ability in component.ability_instances:
-                        if ability.__class__.__name__ == 'SeekerWeaponAbility':
-                            return ability
-    return None
 
 
 # ============================================================================
@@ -89,12 +81,10 @@ class SeekerCloseRangeImpactScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "close-range", "guided"]
     )
 
-    min_damage_threshold = 100
-
     def _collect_extra_results(self, battle_engine):
         self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
         # Read weapon stats from loaded ship data
-        seeker_ability = _get_seeker_ability(self.attacker)
+        seeker_ability = self.get_ability(self.attacker, 'SeekerWeaponAbility')
         if seeker_ability:
             self.results['weapon_type'] = 'Seeker360'
             self.results['missile_speed'] = seeker_ability.projectile_speed
@@ -102,6 +92,13 @@ class SeekerCloseRangeImpactScenario(StaticTargetScenario):
             self.results['missile_damage'] = seeker_ability.projectile_damage
             self.results['missile_endurance'] = seeker_ability.endurance
             self.results['expected_travel_time_ticks'] = int(self.distance / seeker_ability.projectile_speed * 100)
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        checks.append(check_true("Damage >= 100", self.damage_dealt >= 100,
+                                 actual=self.damage_dealt, phase="outcome",
+                                 detail="expected >= 100 (1+ missile impact)"))
+        return checks
 
 
 class SeekerMidRangeImpactScenario(StaticTargetScenario):
@@ -148,10 +145,14 @@ class SeekerMidRangeImpactScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "mid-range", "guided"]
     )
 
-    verify_damage_dealt = True
-
     def _collect_extra_results(self, battle_engine):
         self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        checks.append(check_true("Damage Dealt", self.damage_dealt > 0,
+                                 actual=self.damage_dealt, phase="outcome"))
+        return checks
 
 
 class SeekerBeyondRangeExpireScenario(StaticTargetScenario):
@@ -198,10 +199,13 @@ class SeekerBeyondRangeExpireScenario(StaticTargetScenario):
         tags=["seeker", "missile", "endurance-limit", "expire", "edge-case"]
     )
 
-    measurement_mode = True
-
     def _collect_extra_results(self, battle_engine):
         self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Measurement test -- seeker likely expires or doesn't fire at this range
+        return checks
 
 
 class SeekerEdgeCaseRangeScenario(StaticTargetScenario):
@@ -249,10 +253,13 @@ class SeekerEdgeCaseRangeScenario(StaticTargetScenario):
         tags=["seeker", "missile", "endurance-limit", "edge-case"]
     )
 
-    measurement_mode = True
-
     def _collect_extra_results(self, battle_engine):
         self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Measurement test -- edge case range, results vary
+        return checks
 
 
 # ============================================================================
@@ -270,7 +277,7 @@ class SeekerTrackingStationaryScenario(StaticTargetScenario):
     # Template configuration
     attacker_ship = "Test_Attacker_Seeker360.json"
     target_ship = "Test_Target_Stationary.json"
-    distance = 1000
+    distance = SEEKER_TRACKING_DISTANCE
 
     metadata = TestMetadata(
         test_id="SEEK360-TRACK-001",
@@ -303,7 +310,11 @@ class SeekerTrackingStationaryScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "stationary", "guided"]
     )
 
-    verify_damage_dealt = True
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        checks.append(check_true("Damage Dealt", self.damage_dealt > 0,
+                                 actual=self.damage_dealt, phase="outcome"))
+        return checks
 
 
 class SeekerTrackingLinearScenario(StaticTargetScenario):
@@ -317,7 +328,7 @@ class SeekerTrackingLinearScenario(StaticTargetScenario):
     # Template configuration
     attacker_ship = "Test_Attacker_Seeker360.json"
     target_ship = "Test_Target_Linear_Slow.json"
-    distance = 1000
+    distance = SEEKER_TRACKING_DISTANCE
     target_angle = 90  # Moving up
 
     metadata = TestMetadata(
@@ -351,7 +362,10 @@ class SeekerTrackingLinearScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "linear-target", "intercept"]
     )
 
-    measurement_mode = True
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Measurement test -- seeker tracks linear target, results vary
+        return checks
 
 
 class SeekerTrackingOrbitingScenario(StaticTargetScenario):
@@ -365,7 +379,7 @@ class SeekerTrackingOrbitingScenario(StaticTargetScenario):
     # Template configuration
     attacker_ship = "Test_Attacker_Seeker360.json"
     target_ship = "Test_Target_Orbiting.json"
-    distance = 1000
+    distance = SEEKER_TRACKING_DISTANCE
 
     metadata = TestMetadata(
         test_id="SEEK360-TRACK-003",
@@ -399,7 +413,10 @@ class SeekerTrackingOrbitingScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "orbiting", "curved-pursuit"]
     )
 
-    measurement_mode = True
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Measurement test -- curved pursuit, results vary
+        return checks
 
 
 class SeekerTrackingErraticScenario(StaticTargetScenario):
@@ -413,7 +430,7 @@ class SeekerTrackingErraticScenario(StaticTargetScenario):
     # Template configuration
     attacker_ship = "Test_Attacker_Seeker360.json"
     target_ship = "Test_Target_Erratic_Small.json"
-    distance = 1000
+    distance = SEEKER_TRACKING_DISTANCE
 
     metadata = TestMetadata(
         test_id="SEEK360-TRACK-004",
@@ -448,7 +465,10 @@ class SeekerTrackingErraticScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "erratic", "evasion", "edge-case"]
     )
 
-    measurement_mode = True
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Measurement test -- erratic targets may evade seekers entirely
+        return checks
 
 
 # ============================================================================
@@ -468,7 +488,7 @@ class SeekerPointDefenseNoneScenario(StaticTargetScenario):
     # Template configuration (not used - scenario is skipped)
     attacker_ship = "Test_Attacker_Seeker360.json"
     target_ship = "Test_Target_No_PD.json"  # NOT IMPLEMENTED
-    distance = 1000
+    distance = SEEKER_TRACKING_DISTANCE
 
     skip_test = True
     skip_reason = "Requires point defense target ships - not yet implemented"
@@ -515,7 +535,7 @@ class SeekerPointDefenseSingleScenario(StaticTargetScenario):
     # Template configuration (not used - scenario is skipped)
     attacker_ship = "Test_Attacker_Seeker360.json"
     target_ship = "Test_Target_Single_PD.json"  # NOT IMPLEMENTED
-    distance = 1000
+    distance = SEEKER_TRACKING_DISTANCE
 
     skip_test = True
     skip_reason = "Requires point defense target ships - not yet implemented"
@@ -563,7 +583,7 @@ class SeekerPointDefenseTripleScenario(StaticTargetScenario):
     # Template configuration (not used - scenario is skipped)
     attacker_ship = "Test_Attacker_Seeker360.json"
     target_ship = "Test_Target_Triple_PD.json"  # NOT IMPLEMENTED
-    distance = 1000
+    distance = SEEKER_TRACKING_DISTANCE
 
     skip_test = True
     skip_reason = "Requires point defense target ships - not yet implemented"

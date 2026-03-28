@@ -217,53 +217,18 @@ def observer_spy():
 # =============================================================================
 
 @pytest.fixture
-def sample_validation_rule():
-    """Sample ExactMatchRule."""
-    from simulation_tests.scenarios.validation import ExactMatchRule
-    return ExactMatchRule(
-        name="Beam Weapon Damage",
-        path="attacker.weapon.damage",
-        expected=1
-    )
-
-
-@pytest.fixture
-def sample_validation_context():
-    """Sample validation context."""
+def sample_validation_report():
+    """Sample ValidationReport dict (as stored in scenario.results['validation'])."""
     return {
-        'attacker': {
-            'mass': 400.0,
-            'weapon': {
-                'damage': 1,
-                'range': 1000,
-                'base_accuracy': 0.5,
-                'accuracy_falloff': 0.002
-            }
+        'passed': False,
+        'failed_phase': 'data',
+        'summary': {
+            'data': {'total': 2, 'passed': 1, 'failed': 1},
+            'precondition': {'total': 0, 'passed': 0, 'failed': 0},
+            'outcome': {'total': 0, 'passed': 0, 'failed': 0},
         },
-        'target': {
-            'mass': 400.0
-        }
+        'checks': [
+            {'phase': 'data', 'name': 'Beam Damage', 'expected': 1, 'actual': 1, 'passed': True, 'detail': ''},
+            {'phase': 'data', 'name': 'Target Mass', 'expected': 400, 'actual': 500, 'passed': False, 'detail': ''},
+        ],
     }
-
-
-@pytest.fixture
-def sample_validation_results():
-    """Sample validation results list."""
-    from simulation_tests.scenarios.validation import ValidationResult
-
-    return [
-        ValidationResult(
-            name="Test Rule 1",
-            status="PASS",
-            message="Value matches expected",
-            expected=1,
-            actual=1
-        ),
-        ValidationResult(
-            name="Test Rule 2",
-            status="FAIL",
-            message="Value mismatch",
-            expected=2,
-            actual=3
-        )
-    ]

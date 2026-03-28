@@ -21,7 +21,7 @@ Combat Lab is a comprehensive testing system for validating combat mechanics in 
 - **Registry**: `test_framework/registry.py` - Auto-discovers test scenarios
 - **Runner**: `test_framework/runner.py` - Executes test scenarios
 - **Base Classes**: `simulation_tests/scenarios/base.py` - TestScenario, TestMetadata
-- **Validation**: `simulation_tests/scenarios/validation.py` - ValidationRule classes
+- **Validation**: `simulation_tests/scenarios/validation.py` - Check, ValidationReport, check functions
 
 ---
 
@@ -31,7 +31,7 @@ Combat Lab provides:
 
 - **Visual Test Runner** - In-game UI for browsing and running tests
 - **Statistical Validation** - TOST (Two One-Sided Tests) equivalence testing
-- **Data Verification** - ExactMatchRules for component data validation
+- **Data Verification** - Exact-match checks for component data validation
 - **Headless Execution** - Run tests without UI for CI/CD integration
 - **High-Precision Tests** - 100k tick tests with ±1% margins
 - **Self-Documenting** - Each test includes rich metadata explaining what it validates
@@ -65,15 +65,16 @@ Combat Lab provides:
 │             (simulation_tests/scenarios/base.py)                     │
 │  - setup(engine): Initialize ships, positions                        │
 │  - update(engine): Per-tick logic (optional)                        │
-│  - verify(engine): Calculate results, run validation                │
+│  - collect_results(engine): Populate measurement attributes          │
+│  - validate(engine): Return list of Check objects                    │
 └──────────────────────────────┬──────────────────────────────────────┘
                                │
 ┌──────────────────────────────▼──────────────────────────────────────┐
 │                       Validation System                              │
 │           (simulation_tests/scenarios/validation.py)                 │
-│  - ExactMatchRule: Zero-tolerance data verification                  │
-│  - DeterministicMatchRule: Physics with tiny tolerance               │
-│  - StatisticalTestRule: TOST equivalence testing                    │
+│  - Check: Single validation check with phase and outcome             │
+│  - ValidationReport: Aggregates checks, determines pass/fail         │
+│  - check_exact, check_approx, check_tost, check_true                │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -172,6 +173,15 @@ python main.py
 # Select test and click "Run Visual" or "Run Headless"
 ```
 
+### Headless (Command Line)
+
+```bash
+python -m simulation_tests.run_tests                # Run all
+python -m simulation_tests.run_tests BEAM           # Filter by ID prefix
+python -m simulation_tests.run_tests PROP-001       # Run specific test
+python -m simulation_tests.run_tests --list         # List all tests
+```
+
 ### Headless (Python)
 
 ```python
@@ -206,7 +216,9 @@ Starship Battles/
     ├── README.md                   # This file
     ├── COMBAT_LAB_DOCUMENTATION.md # Full documentation
     ├── QUICK_START_GUIDE.md        # Tutorial
+    ├── run_tests.py                # Headless test runner (python -m simulation_tests.run_tests)
     ├── test_constants.py           # Centralized constants
+    ├── logging_config.py           # Combat Lab logging
     │
     ├── data/
     │   ├── components.json         # Test components
@@ -214,11 +226,15 @@ Starship Battles/
     │   ├── vehicleclasses.json     # Ship hulls
     │   └── ships/                  # Ship configurations
     │
+    ├── validation/                 # Validation system docs
+    │
     └── scenarios/
         ├── base.py                 # TestScenario, TestMetadata
-        ├── validation.py           # ValidationRule classes
-        ├── templates.py            # Reusable templates
+        ├── validation.py           # Check, ValidationReport, check functions
+        ├── templates.py            # Reusable scenario templates
         ├── beam_scenarios.py       # Beam weapon tests
+        ├── defense_scenarios.py    # Defense/armor/shield tests
+        ├── modifier_scenarios.py   # Stat modifier tests
         ├── projectile_scenarios.py # Projectile tests
         ├── seeker_scenarios.py     # Seeker/missile tests
         ├── propulsion_scenarios.py # Movement tests
