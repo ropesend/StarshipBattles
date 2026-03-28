@@ -2,6 +2,7 @@
 
 Tests the flow when "Run Visual" is clicked in the Combat Lab UI.
 """
+import pygame
 import pytest
 from unittest.mock import Mock, patch
 
@@ -73,14 +74,18 @@ class TestVisualRunFlow:
         return controller
 
     def _create_test_lab_screen(self, mock_game, mock_registry, mock_controller):
-        """Helper to create a TestLabScreen with mocked dependencies."""
+        """Helper to create a TestLabScreen with mocked dependencies.
+
+        Uses the real _switch_to_battle method (BUG-110 fix).
+        """
         from game.ui.screens.test_lab import TestLabScreen
         from game.ui.screens.test_lab.test_executor import TestLabExecutor
         registry, _, _ = mock_registry
 
-        with patch.object(TestLabScreen, '__init__', lambda self, game, w, h: None):
+        with patch.object(TestLabScreen, '__init__', lambda self, *a, **kw: None):
             screen = TestLabScreen.__new__(TestLabScreen)
             screen.game = mock_game
+            screen.scene_callback = Mock()
             screen.registry = registry
             screen.controller = mock_controller
 
@@ -96,27 +101,7 @@ class TestVisualRunFlow:
                 switch_to_battle=lambda scenario: screen._switch_to_battle(scenario),
                 output_log=mock_controller.output_log,
             )
-            # Add _switch_to_battle method
-            screen._switch_to_battle = lambda scenario: self._switch_to_battle_impl(mock_game, scenario)
             return screen
-
-    def _switch_to_battle_impl(self, mock_game, scenario):
-        """Implementation of _switch_to_battle for tests."""
-        from game.core.constants import GameState
-        engine = mock_game.battle_scene.engine
-        engine.start([], [])
-        scenario.setup(engine)
-        mock_game.battle_scene.headless_mode = False
-        mock_game.battle_scene.sim_paused = True
-        mock_game.battle_scene.test_mode = True
-        mock_game.battle_scene.test_scenario = scenario
-        mock_game.battle_scene.test_tick_count = 0
-        mock_game.battle_scene.test_completed = False
-        ships = engine.ships
-        if ships:
-            mock_game.battle_scene.camera.fit_objects(ships)
-            mock_game.battle_scene.camera.target_zoom = mock_game.battle_scene.camera.zoom
-        mock_game.state = GameState.BATTLE
 
     def test_visual_run_sets_test_mode_true(self, mock_game, mock_registry, mock_controller):
         """Visual run should set test_mode to True on battle_scene."""
@@ -152,17 +137,17 @@ class TestVisualRunFlow:
         # Verify simulation starts paused
         assert mock_game.battle_scene.sim_paused is True
 
-    def test_visual_run_switches_to_battle_state(self, mock_game, mock_registry, mock_controller):
-        """Visual run should switch game state to BATTLE."""
-        from game.core.constants import GameState
+    def test_visual_run_requests_battle_transition(self, mock_game, mock_registry, mock_controller):
+        """Visual run should request battle transition via scene_callback."""
         screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
+        _, _, mock_scenario = mock_registry
 
         with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 
-        # Verify state changed to BATTLE
-        assert mock_game.state == GameState.BATTLE
+        # Verify scene_callback was called to request battle transition
+        screen.scene_callback.assert_called_once_with("start_test_battle", scenario=mock_scenario)
 
     def test_visual_run_calls_scenario_setup(self, mock_game, mock_registry, mock_controller):
         """Visual run should call scenario.setup() with the engine."""
@@ -173,8 +158,8 @@ class TestVisualRunFlow:
             MockRunner.return_value = Mock()
             screen._on_run()
 
-        # Verify scenario.setup() was called with the engine (called twice - once in executor, once in switch_to_battle)
-        assert mock_scenario.setup.call_count == 2
+        # Verify scenario.setup() was called once (in _switch_to_battle, not duplicated)
+        assert mock_scenario.setup.call_count == 1
 
     def test_visual_run_stores_scenario_reference(self, mock_game, mock_registry, mock_controller):
         """Visual run should store scenario reference for update() calls."""
@@ -202,6 +187,153 @@ class TestVisualRunFlow:
 
         # Verify camera.fit_objects() was called with ships
         mock_game.battle_scene.camera.fit_objects.assert_called_once_with([mock_ship])
+
+
+class TestSceneTransitionCallbacks:
+    """Tests that scene transitions use scene_callback (BUG-110).
+
+    The _switch_to_battle() and _on_back() methods must use scene_callback
+    to request transitions from app.py, not set game.state directly.
+    """
+
+    @pytest.fixture
+    def mock_game(self):
+        """Create a mock Game object with battle_scene."""
+        game = Mock()
+        game.battle_scene = Mock()
+        game.battle_scene.engine = Mock()
+        game.battle_scene.engine.ships = []
+        game.battle_scene.sim_paused = False
+        game.battle_scene.test_mode = False
+        game.battle_scene.headless_mode = True
+        game.battle_scene.test_scenario = None
+        game.battle_scene.test_tick_count = 0
+        game.battle_scene.test_completed = False
+        game.battle_scene.camera = Mock()
+        game.battle_scene._battle_service = Mock()
+        game.screen = Mock()
+        game.screen.get_width.return_value = 3840
+        game.screen.get_height.return_value = 2160
+        return game
+
+    def _create_screen_with_real_switch(self, mock_game, scene_callback):
+        """Create a TestLabScreen with the real _switch_to_battle method."""
+        from game.ui.screens.test_lab.screen import TestLabScreen
+
+        with patch.object(TestLabScreen, '__init__', lambda self, *a, **kw: None):
+            screen = TestLabScreen.__new__(TestLabScreen)
+            screen.game = mock_game
+            screen.scene_callback = scene_callback
+            return screen
+
+    def test_switch_to_battle_calls_scene_callback(self, mock_game):
+        """_switch_to_battle must call scene_callback('start_test_battle')."""
+        callback = Mock()
+        screen = self._create_screen_with_real_switch(mock_game, callback)
+
+        scenario = Mock()
+        screen._switch_to_battle(scenario)
+
+        callback.assert_called_once_with("start_test_battle", scenario=scenario)
+
+    def test_switch_to_battle_does_not_set_game_state_directly(self, mock_game):
+        """_switch_to_battle must NOT set game.state directly (app.py does that)."""
+        callback = Mock()
+        mock_game.state = "INITIAL"  # sentinel value
+        screen = self._create_screen_with_real_switch(mock_game, callback)
+
+        scenario = Mock()
+        screen._switch_to_battle(scenario)
+
+        # game.state should not have been set by _switch_to_battle
+        assert mock_game.state == "INITIAL"
+
+    def test_on_back_calls_scene_callback(self, mock_game):
+        """_on_back must call scene_callback('return_to_menu')."""
+        callback = Mock()
+        screen = self._create_screen_with_real_switch(mock_game, callback)
+
+        screen._on_back()
+
+        callback.assert_called_once_with("return_to_menu")
+
+    def test_on_back_does_not_set_game_state_directly(self, mock_game):
+        """_on_back must NOT set game.state directly."""
+        callback = Mock()
+        mock_game.state = "INITIAL"
+        screen = self._create_screen_with_real_switch(mock_game, callback)
+
+        screen._on_back()
+
+        assert mock_game.state == "INITIAL"
+
+    def test_switch_to_battle_configures_battle_scene(self, mock_game):
+        """_switch_to_battle should configure battle scene for test mode."""
+        callback = Mock()
+        screen = self._create_screen_with_real_switch(mock_game, callback)
+
+        scenario = Mock()
+        screen._switch_to_battle(scenario)
+
+        assert mock_game.battle_scene.headless_mode is False
+        assert mock_game.battle_scene.sim_paused is True
+        assert mock_game.battle_scene.test_mode is True
+        assert mock_game.battle_scene.test_scenario == scenario
+        assert mock_game.battle_scene.test_tick_count == 0
+        assert mock_game.battle_scene.test_completed is False
+
+
+class TestEndBattleInTestMode:
+    """Tests that 'End Battle' button routes correctly in test mode (BUG-112).
+
+    When in test_mode, the 'end_battle' click result should trigger
+    return_to_test_lab (which calls reset_selection), NOT return_to_setup
+    (which skips reset_selection and loses test results).
+    """
+
+    @pytest.fixture
+    def battle_screen(self):
+        """Create a minimal BattleScreen for testing handle_event."""
+        from game.ui.screens.battle_screen import BattleScreen
+
+        with patch.object(BattleScreen, '__init__', lambda self, *a, **kw: None):
+            screen = BattleScreen.__new__(BattleScreen)
+            screen.scene_callback = Mock()
+            screen.test_mode = True
+            screen.test_completed = True
+            screen.test_scenario = Mock()
+            screen._battle_service = Mock()
+            screen.ui = Mock()
+            screen.camera = Mock()
+            screen.screen_height = 2160
+            return screen
+
+    def test_end_battle_in_test_mode_routes_to_test_lab(self, battle_screen):
+        """'end_battle' in test_mode should call return_to_test_lab, not return_to_setup."""
+        battle_screen.ui.handle_click.return_value = "end_battle"
+
+        event = Mock()
+        event.type = pygame.MOUSEBUTTONDOWN
+        event.pos = (100, 100)
+        event.button = 1
+
+        battle_screen.handle_event(event)
+
+        battle_screen.scene_callback.assert_called_once_with("return_to_test_lab")
+
+    def test_end_battle_not_in_test_mode_routes_to_setup(self, battle_screen):
+        """'end_battle' outside test_mode should still call return_to_setup."""
+        battle_screen.test_mode = False
+        battle_screen.ui.handle_click.return_value = "end_battle"
+
+        event = Mock()
+        event.type = pygame.MOUSEBUTTONDOWN
+        event.pos = (100, 100)
+        event.button = 1
+
+        battle_screen.handle_event(event)
+
+        battle_screen.scene_callback.assert_called_once_with("return_to_setup")
 
 
 class TestBattleScreenDrawsInTestMode:

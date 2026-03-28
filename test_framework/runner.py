@@ -93,6 +93,15 @@ class TestRunner:
         scenario = scenario_cls()
         self.current_scenario = scenario
 
+        # Skip scenarios that are marked as not ready to run (BUG-111)
+        if getattr(scenario, 'skip_test', False):
+            skip_reason = getattr(scenario, 'skip_reason', 'No reason given')
+            scenario.passed = False
+            scenario.results['skipped'] = True
+            scenario.results['skip_reason'] = skip_reason
+            logger.info(f"Skipping scenario: {scenario.name} - {skip_reason}")
+            return scenario
+
         # 1. Load Data
         self.load_data_for_scenario(scenario)
 

@@ -322,7 +322,10 @@ class BattleScreen:
                 self.camera.target = result[1]
             elif result == "end_battle":
                 self._battle_service.reset()
-                self._trigger_return_to_setup()
+                if self.test_mode:
+                    self._trigger_return_to_test_lab()
+                else:
+                    self._trigger_return_to_setup()
             elif not result and event.button == 1:
                 self.camera.target = None
         elif event.type == pygame.MOUSEWHEEL:
