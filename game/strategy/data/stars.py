@@ -255,8 +255,9 @@ class StarGenerator:
 
         # Set properties based on type, using mass as a seed for variation
         if star_type == StarType.BLUE_GIANT:
-            # Massive hot stars — override mass upward if needed
-            mass = max(mass, random.uniform(8, 50))
+            # Massive hot stars — includes B-type main sequence (3-8 Msol)
+            # through to true supergiants (50+ Msol)
+            mass = max(mass, random.uniform(3, 50))
             luminosity = mass ** 3.5 * random.uniform(1.5, 5.0)
             radius = mass ** 0.8 * random.uniform(5, 20)
             temperature = max(10000, random.uniform(15000, 40000))
