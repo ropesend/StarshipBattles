@@ -145,8 +145,13 @@ class TestRunner:
         end_time = time.time()
         duration = end_time - start_time
 
-        # 5. Verify
-        scenario.passed = scenario.verify(self.engine)
+        # 5. Validate (new system) or Verify (legacy fallback)
+        try:
+            report = scenario._run_validation(self.engine)
+            scenario.passed = report.passed
+        except NotImplementedError:
+            # Legacy scenario not yet migrated to validate()
+            scenario.passed = scenario.verify(self.engine)
         scenario.results['duration_real'] = duration
         scenario.results['ticks'] = self.engine.tick_counter
 

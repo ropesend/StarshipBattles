@@ -23,10 +23,7 @@ import pygame
 from game.simulation.physics_constants import K_SPEED, K_THRUST, K_TURN
 from simulation_tests.scenarios import TestScenario, TestMetadata
 from simulation_tests.scenarios.templates import PropulsionScenario
-from simulation_tests.scenarios.validation import ExactMatchRule, DeterministicMatchRule
-from simulation_tests.scenarios.prerun_validation import (
-    DataExpectation, CalculatedExpectation, SetupCondition, PassCriterion
-)
+from simulation_tests.scenarios.validation import check_exact, check_approx, check_true
 
 
 # =============================================================================
@@ -298,183 +295,22 @@ class PropEngineAccelerationScenario(PropulsionScenario):
         battle_end_mode="time_based",
         ui_priority=10,
         tags=["propulsion", "engine", "acceleration", "foundational"],
-        validation_rules=[
-            # Pre-calculated physics predictions (pass criteria)
-            DeterministicMatchRule(
-                name='Max Speed',
-                path='ship.max_speed',
-                expected=PROP001_MAX_SPEED,
-                description=f'max_speed = (thrust × K_SPEED) / mass = {PROP001_MAX_SPEED}'
-            ),
-            DeterministicMatchRule(
-                name='Final Speed',
-                path='results.final_velocity_magnitude',
-                expected=PROP001_EXPECTED_FINAL_SPEED,
-                description=f'Ship reaches max_speed = {PROP001_EXPECTED_FINAL_SPEED}'
-            ),
-            DeterministicMatchRule(
-                name='Distance',
-                path='results.distance_traveled',
-                expected=PROP001_EXPECTED_DISTANCE,
-                tolerance=0.1,
-                description=f'Accel phase ({PROP001_TICKS_TO_MAX_SPEED} ticks) + cruise phase ({PROP001_CRUISE_TICKS} ticks) = {PROP001_EXPECTED_DISTANCE:.2f} px'
-            ),
-        ]
     )
 
     # Configuration attributes
     ship_file = PROP001_SHIP_FILE
     thrust_forward = True
 
-    # =========================================================================
-    # PRE-RUN VALIDATION: Data Expectations
-    # These values are checked against actual .json data BEFORE test runs
-    # =========================================================================
-    data_expectations = [
-        DataExpectation(
-            name='Ship Mass',
-            source='ship.mass',
-            expected=PROP001_TOTAL_MASS,
-            json_file=PROP001_SHIP_FILE
-        ),
-        DataExpectation(
-            name='Engine Thrust',
-            source='ship.total_thrust',
-            expected=PROP001_ENGINE_THRUST,
-            json_file=PROP001_SHIP_FILE
-        ),
-    ]
-
-    # =========================================================================
-    # PRE-RUN VALIDATION: Calculated Expectations
-    # Physics formulas with expected results - shows formula and values
-    # =========================================================================
-    calculated_expectations = [
-        CalculatedExpectation(
-            name='Max Speed',
-            formula='(thrust × K_SPEED) / mass',
-            formula_expr=lambda thrust, K_SPEED, mass: (thrust * K_SPEED) / mass,
-            expected=PROP001_MAX_SPEED,
-            variables={
-                'thrust': PROP001_ENGINE_THRUST,
-                'K_SPEED': K_SPEED,
-                'mass': PROP001_TOTAL_MASS
-            }
-        ),
-        CalculatedExpectation(
-            name='Acceleration Rate',
-            formula='(thrust × K_THRUST) / mass²',
-            formula_expr=lambda thrust, K_THRUST, mass: (thrust * K_THRUST) / (mass ** 2),
-            expected=PROP001_ACCELERATION,
-            variables={
-                'thrust': PROP001_ENGINE_THRUST,
-                'K_THRUST': K_THRUST,
-                'mass': PROP001_TOTAL_MASS
-            }
-        ),
-    ]
-
-    # =========================================================================
-    # SETUP CONDITIONS: Test configuration (not validated, just displayed)
-    # =========================================================================
-    setup_conditions = [
-        SetupCondition(
-            name='Initial Position',
-            value='(0, 0)',
-            description='Ship starts at origin'
-        ),
-        SetupCondition(
-            name='Initial Velocity',
-            value='(0, 0)',
-            description='Ship starts at rest'
-        ),
-        SetupCondition(
-            name='Initial Angle',
-            value='0°',
-            description='Ship faces right (+X direction)'
-        ),
-        SetupCondition(
-            name='Test Duration',
-            value='100 ticks',
-            description='Simulation runs for 100 physics ticks'
-        ),
-        SetupCondition(
-            name='Thrust Command',
-            value='Forward (each tick)',
-            description='thrust_forward() called every tick'
-        ),
-    ]
-
-    # =========================================================================
-    # PASS CRITERIA: Pre-calculated numeric criteria for test success
-    # =========================================================================
-    pass_criteria = [
-        PassCriterion(
-            description=f'Max Speed = {PROP001_MAX_SPEED}',
-            expression=lambda r: abs(r.get('max_speed', 0) - PROP001_MAX_SPEED) < 0.01,
-            numeric_threshold=PROP001_MAX_SPEED
-        ),
-        PassCriterion(
-            description=f'Final Speed = {PROP001_EXPECTED_FINAL_SPEED}',
-            expression=lambda r: abs(r.get('final_velocity_magnitude', 0) - PROP001_EXPECTED_FINAL_SPEED) < 0.01,
-            numeric_threshold=PROP001_EXPECTED_FINAL_SPEED
-        ),
-        PassCriterion(
-            description=f'Distance = {PROP001_EXPECTED_DISTANCE:.2f}',
-            expression=lambda r: abs(r.get('distance_traveled', 0) - PROP001_EXPECTED_DISTANCE) < 1.0,
-            numeric_threshold=PROP001_EXPECTED_DISTANCE
-        ),
-    ]
-
-    def custom_setup(self, battle_engine):
-        """
-        Validate ship data matches expectations before test runs.
-
-        This performs pre-run validation to ensure the loaded ship
-        matches our expected values from the .json files.
-        """
-        from simulation_tests.scenarios.prerun_validation import PreRunValidator
-
-        # Build validation context
-        context = {'ship': self.ship}
-
-        # Run pre-run validation
-        validator = PreRunValidator()
-        self.prerun_validation = validator.validate_scenario(self, context)
-
-        # Store validation results for UI display
-        self.results['prerun_validation'] = self.prerun_validation.to_dict()
-
-        # Block test if validation failed
-        if not self.prerun_validation.can_run:
-            error_msg = "Pre-run validation failed:\n" + "\n".join(self.prerun_validation.blocking_errors)
-            raise ValueError(error_msg)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if the test passed."""
-        # Call parent to calculate and store all standard results
-        # Parent stores: final_velocity_magnitude, distance_traveled, etc.
-        try:
-            super().verify(battle_engine)
-        except NotImplementedError:
-            pass  # Expected - parent raises this for subclasses to override
-
-        # Store max_speed for validation rules and pass criteria
-        self.results['max_speed'] = self.ship.max_speed
-
-        # Backward compatibility scalar values
-        self.results['initial_velocity'] = self.start_velocity.length()
-        self.results['final_velocity'] = self.final_velocity.length()
-
-        # Evaluate pass criteria against results
-        all_criteria_passed = all(
-            criterion.evaluate(self.results)
-            for criterion in self.pass_criteria
-        )
-        self.results['all_criteria_passed'] = all_criteria_passed
-
-        # Test passes if all criteria met
-        return all_criteria_passed
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data
+        checks.append(check_exact("Ship Mass", PROP001_TOTAL_MASS, self.ship.mass))
+        checks.append(check_exact("Engine Thrust", PROP001_ENGINE_THRUST, self.ship.total_thrust))
+        # Outcome
+        checks.append(check_approx("Max Speed", PROP001_MAX_SPEED, self.ship.max_speed))
+        checks.append(check_approx("Final Speed", PROP001_EXPECTED_FINAL_SPEED, self.final_velocity.length()))
+        checks.append(check_approx("Distance", PROP001_EXPECTED_DISTANCE, self.distance_traveled, tolerance=0.02))
+        return checks
 
 
 class PropDualEngineScenario(PropulsionScenario):
@@ -512,93 +348,22 @@ class PropDualEngineScenario(PropulsionScenario):
         battle_end_mode="time_based",
         ui_priority=9,
         tags=["propulsion", "engine", "stacking", "ability"],
-        validation_rules=[
-            # Pre-calculated physics predictions (pass criteria)
-            DeterministicMatchRule(
-                name='Max Speed',
-                path='ship.max_speed',
-                expected=PROP001C_MAX_SPEED,
-                description=f'max_speed = ({PROP001C_TOTAL_THRUST} × {K_SPEED}) / {PROP001C_TOTAL_MASS} = {PROP001C_MAX_SPEED}'
-            ),
-            DeterministicMatchRule(
-                name='Final Speed',
-                path='results.final_velocity_magnitude',
-                expected=PROP001C_EXPECTED_FINAL_SPEED,
-                description=f'Ship reaches max_speed = {PROP001C_EXPECTED_FINAL_SPEED}'
-            ),
-            DeterministicMatchRule(
-                name='Distance',
-                path='results.distance_traveled',
-                expected=PROP001C_EXPECTED_DISTANCE,
-                tolerance=0.1,
-                description=f'Accel phase ({PROP001C_TICKS_TO_MAX_SPEED} ticks) + cruise phase ({PROP001C_CRUISE_TICKS} ticks) = {PROP001C_EXPECTED_DISTANCE:.2f} px'
-            ),
-            DeterministicMatchRule(
-                name='Total Thrust',
-                path='ship.total_thrust',
-                expected=PROP001C_TOTAL_THRUST,
-                description=f'{PROP001C_ENGINE_COUNT} × {PROP001C_ENGINE_THRUST_EACH} = {PROP001C_TOTAL_THRUST} (stacked)'
-            ),
-        ]
     )
 
     # Configuration attributes
     ship_file = PROP001C_SHIP_FILE
     thrust_forward = True
 
-    # =========================================================================
-    # PASS CRITERIA: Pre-calculated numeric criteria for test success
-    # =========================================================================
-    pass_criteria = [
-        PassCriterion(
-            description=f'Max Speed = {PROP001C_MAX_SPEED}',
-            expression=lambda r: abs(r.get('max_speed', 0) - PROP001C_MAX_SPEED) < 0.01,
-            numeric_threshold=PROP001C_MAX_SPEED
-        ),
-        PassCriterion(
-            description=f'Final Speed = {PROP001C_EXPECTED_FINAL_SPEED}',
-            expression=lambda r: abs(r.get('final_velocity_magnitude', 0) - PROP001C_EXPECTED_FINAL_SPEED) < 0.01,
-            numeric_threshold=PROP001C_EXPECTED_FINAL_SPEED
-        ),
-        PassCriterion(
-            description=f'Distance = {PROP001C_EXPECTED_DISTANCE:.2f}',
-            expression=lambda r: abs(r.get('distance_traveled', 0) - PROP001C_EXPECTED_DISTANCE) < 1.0,
-            numeric_threshold=PROP001C_EXPECTED_DISTANCE
-        ),
-        PassCriterion(
-            description=f'Total Thrust = {PROP001C_TOTAL_THRUST}',
-            expression=lambda r: abs(r.get('total_thrust', 0) - PROP001C_TOTAL_THRUST) < 0.01,
-            numeric_threshold=PROP001C_TOTAL_THRUST
-        ),
-    ]
-
-    def custom_setup(self, battle_engine):
-        """Verify ship has stacked engine thrust."""
-        # Verify thrust stacking
-        assert abs(self.ship.total_thrust - PROP001C_TOTAL_THRUST) < 0.01, \
-            f"Expected total thrust {PROP001C_TOTAL_THRUST}, got {self.ship.total_thrust}"
-
-    def verify(self, battle_engine) -> bool:
-        """Check if the test passed."""
-        try:
-            super().verify(battle_engine)
-        except NotImplementedError:
-            pass
-
-        # Store results for validation rules and pass criteria
-        self.results['max_speed'] = self.ship.max_speed
-        self.results['total_thrust'] = self.ship.total_thrust
-        self.results['initial_velocity'] = self.start_velocity.length()
-        self.results['final_velocity'] = self.final_velocity.length()
-
-        # Evaluate pass criteria against results
-        all_criteria_passed = all(
-            criterion.evaluate(self.results)
-            for criterion in self.pass_criteria
-        )
-        self.results['all_criteria_passed'] = all_criteria_passed
-
-        return all_criteria_passed
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data
+        checks.append(check_exact("Ship Mass", PROP001C_TOTAL_MASS, self.ship.mass))
+        checks.append(check_exact("Total Thrust", PROP001C_TOTAL_THRUST, self.ship.total_thrust))
+        # Outcome
+        checks.append(check_approx("Max Speed", PROP001C_MAX_SPEED, self.ship.max_speed))
+        checks.append(check_approx("Final Speed", PROP001C_EXPECTED_FINAL_SPEED, self.final_velocity.length()))
+        checks.append(check_approx("Distance", PROP001C_EXPECTED_DISTANCE, self.distance_traveled, tolerance=0.02))
+        return checks
 
 
 class PropThrustMassRatioScenario(TestScenario):
@@ -634,66 +399,6 @@ class PropThrustMassRatioScenario(TestScenario):
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=9,
         tags=["propulsion", "engine", "mass", "scaling", "foundational"],
-        validation_rules=[
-            # Low mass ship configuration
-            ExactMatchRule(
-                name='Low Mass Ship - Mass',
-                path='low_mass_ship.mass',
-                expected=PROP002_LOW_MASS
-            ),
-            ExactMatchRule(
-                name='Low Mass Ship - Thrust',
-                path='low_mass_ship.total_thrust',
-                expected=PROP002_THRUST
-            ),
-            DeterministicMatchRule(
-                name='Low Mass Ship - Max Speed',
-                path='low_mass_ship.max_speed',
-                expected=PROP002_LOW_MAX_SPEED,
-                description='max_speed = (500 * 25) / 400 = 31.25'
-            ),
-            # Medium mass ship configuration
-            ExactMatchRule(
-                name='Med Mass Ship - Mass',
-                path='med_mass_ship.mass',
-                expected=PROP002_MED_MASS
-            ),
-            ExactMatchRule(
-                name='Med Mass Ship - Thrust',
-                path='med_mass_ship.total_thrust',
-                expected=PROP002_THRUST
-            ),
-            DeterministicMatchRule(
-                name='Med Mass Ship - Max Speed',
-                path='med_mass_ship.max_speed',
-                expected=PROP002_MED_MAX_SPEED,
-                description=f'max_speed = (500 * 25) / {PROP002_MED_MASS}'
-            ),
-            # High mass ship configuration
-            ExactMatchRule(
-                name='High Mass Ship - Mass',
-                path='high_mass_ship.mass',
-                expected=PROP002_HIGH_MASS
-            ),
-            ExactMatchRule(
-                name='High Mass Ship - Thrust',
-                path='high_mass_ship.total_thrust',
-                expected=PROP002_THRUST
-            ),
-            DeterministicMatchRule(
-                name='High Mass Ship - Max Speed',
-                path='high_mass_ship.max_speed',
-                expected=PROP002_HIGH_MAX_SPEED,
-                description=f'max_speed = (500 * 25) / {PROP002_HIGH_MASS}'
-            ),
-            # Speed ratio validation (inverse mass ratio)
-            DeterministicMatchRule(
-                name='Speed Ratio (Low/Med)',
-                path='results.speed_ratio_low_med',
-                expected=PROP002_MED_MASS / PROP002_LOW_MASS,  # Should equal mass ratio
-                description='speed_ratio = low_speed / med_speed = med_mass / low_mass'
-            ),
-        ]
     )
 
     def setup(self, battle_engine):
@@ -744,95 +449,39 @@ class PropThrustMassRatioScenario(TestScenario):
         self.med_mass.thrust_forward()
         self.high_mass.thrust_forward()
 
-    def verify(self, battle_engine) -> bool:
-        """Check if the test passed."""
-        # Get final velocities
-        v_low = self.low_mass.velocity.length()
-        v_med = self.med_mass.velocity.length()
-        v_high = self.high_mass.velocity.length()
+    def collect_results(self, engine):
+        """Populate measurement attributes for the three ships."""
+        self.results['ticks_run'] = engine.tick_counter
 
-        # Store results
-        self.results['low_mass'] = {
-            'mass': self.low_mass.mass,
-            'thrust': self.low_mass.total_thrust,
-            'max_speed': self.low_mass.max_speed,
-            'final_velocity': v_low,
-            'distance': self.low_mass.position.distance_to(self.initial_positions['low'])
-        }
-        self.results['med_mass'] = {
-            'mass': self.med_mass.mass,
-            'thrust': self.med_mass.total_thrust,
-            'max_speed': self.med_mass.max_speed,
-            'final_velocity': v_med,
-            'distance': self.med_mass.position.distance_to(self.initial_positions['med'])
-        }
-        self.results['high_mass'] = {
-            'mass': self.high_mass.mass,
-            'thrust': self.high_mass.total_thrust,
-            'max_speed': self.high_mass.max_speed,
-            'final_velocity': v_high,
-            'distance': self.high_mass.position.distance_to(self.initial_positions['high'])
-        }
+    def validate(self, engine) -> list:
+        checks = []
+        ticks = self.results.get('ticks_run', 0)
+        checks.append(check_true("Simulation Ran", ticks > 0, actual=ticks))
 
-        # Verify speed ratio matches inverse mass ratio
-        # low_speed / med_speed should equal med_mass / low_mass
-        speed_ratio_low_med = self.low_mass.max_speed / self.med_mass.max_speed
-        mass_ratio_med_low = self.med_mass.mass / self.low_mass.mass
+        # Data: verify all ships have same thrust
+        checks.append(check_exact("Low Mass Ship Mass", PROP002_LOW_MASS, self.low_mass.mass))
+        checks.append(check_exact("Med Mass Ship Mass", PROP002_MED_MASS, self.med_mass.mass))
+        checks.append(check_exact("High Mass Ship Mass", PROP002_HIGH_MASS, self.high_mass.mass))
+        checks.append(check_exact("Low Mass Thrust", PROP002_THRUST, self.low_mass.total_thrust))
+        checks.append(check_exact("Med Mass Thrust", PROP002_THRUST, self.med_mass.total_thrust))
+        checks.append(check_exact("High Mass Thrust", PROP002_THRUST, self.high_mass.total_thrust))
 
-        ratio_error = abs(speed_ratio_low_med - mass_ratio_med_low) / mass_ratio_med_low
+        # Outcome: verify max speeds match formula
+        checks.append(check_approx("Low Mass Max Speed", PROP002_LOW_MAX_SPEED, self.low_mass.max_speed))
+        checks.append(check_approx("Med Mass Max Speed", PROP002_MED_MAX_SPEED, self.med_mass.max_speed))
+        checks.append(check_approx("High Mass Max Speed", PROP002_HIGH_MAX_SPEED, self.high_mass.max_speed))
 
-        self.results['speed_ratio_low_med'] = speed_ratio_low_med
-        self.results['expected_ratio'] = mass_ratio_med_low
-        self.results['ratio_error_percent'] = ratio_error * 100
+        # Outcome: verify speed ordering (low mass = highest speed)
+        ordering_correct = (self.high_mass.max_speed < self.med_mass.max_speed < self.low_mass.max_speed)
+        checks.append(check_true("Speed Ordering", ordering_correct,
+                                 detail="Expected: high_mass < med_mass < low_mass", phase="outcome"))
 
-        # Verify ordering
-        speed_ordering_correct = (self.high_mass.max_speed < self.med_mass.max_speed < self.low_mass.max_speed)
-        self.results['speed_ordering_correct'] = speed_ordering_correct
+        # Outcome: verify speed ratio matches inverse mass ratio
+        speed_ratio = self.low_mass.max_speed / self.med_mass.max_speed
+        mass_ratio = self.med_mass.mass / self.low_mass.mass
+        checks.append(check_approx("Speed/Mass Ratio", mass_ratio, speed_ratio))
 
-        # Pass if ratio matches exactly (tiny tolerance for floating point)
-        # Physics is deterministic - ratio should be exact
-        ratio_matches = ratio_error < 1e-9
-        self.results['ratio_matches'] = ratio_matches
-
-        # Run validation rules
-        if hasattr(self.metadata, 'validation_rules') and self.metadata.validation_rules:
-            self.run_validation(battle_engine)
-
-        return ratio_matches and speed_ordering_correct
-
-    def run_validation(self, battle_engine):
-        """
-        Override to add the three ships to validation context.
-        """
-        from simulation_tests.scenarios.validation import Validator
-
-        if not self.metadata.validation_rules:
-            return []
-
-        # Build validation context with all three ships
-        context = {
-            'test_scenario': self,
-            'battle_engine': battle_engine,
-            'results': self.results if hasattr(self, 'results') else {},
-            'metadata': self.metadata,
-            # Add each ship to context
-            'low_mass_ship': self._extract_ship_validation_data(self.low_mass),
-            'med_mass_ship': self._extract_ship_validation_data(self.med_mass),
-            'high_mass_ship': self._extract_ship_validation_data(self.high_mass),
-        }
-
-        # Run validator
-        validator = Validator(self.metadata.validation_rules)
-        validation_results = validator.validate(context)
-
-        # Store in results for UI access
-        if hasattr(self, 'results'):
-            self.results['validation_results'] = [r.to_dict() for r in validation_results]
-            self.results['validation_summary'] = validator.get_summary(validation_results)
-            self.results['has_validation_failures'] = validator.has_failures(validation_results)
-            self.results['has_validation_warnings'] = validator.has_warnings(validation_results)
-
-        return validation_results
+        return checks
 
 
 class PropThrusterTurnRateScenario(PropulsionScenario):
@@ -870,89 +519,22 @@ class PropThrusterTurnRateScenario(PropulsionScenario):
         battle_end_mode="time_based",
         ui_priority=8,
         tags=["propulsion", "thruster", "turn_rate", "foundational"],
-        validation_rules=[
-            # Pre-calculated physics predictions (pass criteria)
-            DeterministicMatchRule(
-                name='Turn Speed',
-                path='ship.turn_speed',
-                expected=PROP003_TURN_SPEED,
-                description=f'turn_speed = ({PROP003_RAW_TURN_RATE} × {K_TURN}) / {PROP003_TOTAL_MASS}^1.5 = {PROP003_TURN_SPEED}'
-            ),
-            DeterministicMatchRule(
-                name='Starting Angle',
-                path='results.starting_angle',
-                expected=PROP003_STARTING_ANGLE,
-                description=f'Ship starts at {PROP003_STARTING_ANGLE}°'
-            ),
-            DeterministicMatchRule(
-                name='Final Angle',
-                path='results.final_angle',
-                expected=PROP003_EXPECTED_FINAL_ANGLE,
-                tolerance=0.01,
-                description=f'CCW rotation: 0° - {PROP003_EXPECTED_ANGLE_CHANGE}° = {PROP003_EXPECTED_FINAL_ANGLE}° (wrapped)'
-            ),
-        ]
     )
 
     # Configuration attributes
     ship_file = PROP003_SHIP_FILE
     turn_left = True
 
-    # =========================================================================
-    # PASS CRITERIA: Pre-calculated numeric criteria for test success
-    # =========================================================================
-    pass_criteria = [
-        PassCriterion(
-            description=f'Turn Speed = {PROP003_TURN_SPEED}',
-            expression=lambda r: abs(r.get('actual_turn_speed', 0) - PROP003_TURN_SPEED) < 0.001,
-            numeric_threshold=PROP003_TURN_SPEED
-        ),
-        PassCriterion(
-            description=f'Starting Angle = {PROP003_STARTING_ANGLE}°',
-            expression=lambda r: abs(r.get('starting_angle', 0) - PROP003_STARTING_ANGLE) < 0.01,
-            numeric_threshold=PROP003_STARTING_ANGLE
-        ),
-        PassCriterion(
-            description=f'Final Angle = {PROP003_EXPECTED_FINAL_ANGLE}°',
-            expression=lambda r: abs(r.get('final_angle', 0) - PROP003_EXPECTED_FINAL_ANGLE) < 0.1,
-            numeric_threshold=PROP003_EXPECTED_FINAL_ANGLE
-        ),
-    ]
-
-    def custom_setup(self, battle_engine):
-        """Verify ship stats match expectations."""
-        # Store expected values for verification
-        self.expected_turn_speed = PROP003_TURN_SPEED
-        self.expected_final_angle = PROP003_EXPECTED_FINAL_ANGLE
-
-    def verify(self, battle_engine) -> bool:
-        """Check if the test passed."""
-        actual_turn_speed = self.ship.turn_speed
-
-        # Store scenario-specific result fields BEFORE calling parent
-        self.results['mass'] = self.ship.mass
-        self.results['raw_turn_rate'] = PROP003_RAW_TURN_RATE
-        self.results['expected_turn_speed'] = self.expected_turn_speed
-        self.results['actual_turn_speed'] = actual_turn_speed
-        self.results['starting_angle'] = self.start_angle
-        self.results['final_angle'] = self.ship.angle
-        self.results['angle_change'] = self.ship.angle - self.start_angle
-        self.results['expected_angle_change'] = PROP003_EXPECTED_ANGLE_CHANGE
-
-        # Call parent to calculate and store all standard results
-        try:
-            super().verify(battle_engine)
-        except NotImplementedError:
-            pass
-
-        # Evaluate pass criteria against results
-        all_criteria_passed = all(
-            criterion.evaluate(self.results)
-            for criterion in self.pass_criteria
-        )
-        self.results['all_criteria_passed'] = all_criteria_passed
-
-        return all_criteria_passed
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data
+        checks.append(check_exact("Ship Mass", PROP003_TOTAL_MASS, self.ship.mass))
+        checks.append(check_exact("Engine Thrust", PROP003_THRUST, self.ship.total_thrust))
+        # Outcome
+        checks.append(check_approx("Turn Speed", PROP003_TURN_SPEED, self.ship.turn_speed))
+        checks.append(check_approx("Starting Angle", PROP003_STARTING_ANGLE, self.start_angle))
+        checks.append(check_approx("Final Angle", PROP003_EXPECTED_FINAL_ANGLE, self.final_angle, tolerance=0.01))
+        return checks
 
 
 class PropThrusterRotationScenario(PropulsionScenario):
@@ -989,88 +571,21 @@ class PropThrusterRotationScenario(PropulsionScenario):
         battle_end_mode="time_based",
         ui_priority=8,
         tags=["propulsion", "thruster", "rotation", "physics"],
-        validation_rules=[
-            # Pre-calculated physics predictions (pass criteria)
-            DeterministicMatchRule(
-                name='Turn Speed',
-                path='ship.turn_speed',
-                expected=PROP004_TURN_SPEED,
-                description=f'turn_speed = ({PROP003_RAW_TURN_RATE} × {K_TURN}) / {PROP004_TOTAL_MASS}^1.5 = {PROP004_TURN_SPEED}'
-            ),
-            DeterministicMatchRule(
-                name='Starting Angle',
-                path='results.initial_angle',
-                expected=PROP004_STARTING_ANGLE,
-                description=f'Ship starts at {PROP004_STARTING_ANGLE}°'
-            ),
-            DeterministicMatchRule(
-                name='Final Angle',
-                path='results.final_angle',
-                expected=PROP004_EXPECTED_FINAL_ANGLE,
-                tolerance=0.01,
-                description=f'CW rotation: 0° + {PROP004_EXPECTED_ANGLE_CHANGE}° = {PROP004_EXPECTED_FINAL_ANGLE}°'
-            ),
-        ]
     )
 
     # Configuration attributes
     ship_file = PROP004_SHIP_FILE
     turn_right = True
 
-    # =========================================================================
-    # PASS CRITERIA: Pre-calculated numeric criteria for test success
-    # =========================================================================
-    pass_criteria = [
-        PassCriterion(
-            description=f'Turn Speed = {PROP004_TURN_SPEED}',
-            expression=lambda r: abs(r.get('turn_speed', 0) - PROP004_TURN_SPEED) < 0.001,
-            numeric_threshold=PROP004_TURN_SPEED
-        ),
-        PassCriterion(
-            description=f'Starting Angle = {PROP004_STARTING_ANGLE}°',
-            expression=lambda r: abs(r.get('initial_angle', 0) - PROP004_STARTING_ANGLE) < 0.01,
-            numeric_threshold=PROP004_STARTING_ANGLE
-        ),
-        PassCriterion(
-            description=f'Final Angle = {PROP004_EXPECTED_FINAL_ANGLE}°',
-            expression=lambda r: abs(r.get('final_angle', 0) - PROP004_EXPECTED_FINAL_ANGLE) < 0.1,
-            numeric_threshold=PROP004_EXPECTED_FINAL_ANGLE
-        ),
-    ]
-
-    def custom_setup(self, battle_engine):
-        """Track angle changes during simulation."""
-        self.expected_turn_speed = PROP004_TURN_SPEED
-        self.expected_final_angle = PROP004_EXPECTED_FINAL_ANGLE
-        self.angle_history = [self.ship.angle]
-
-    def custom_update(self, battle_engine):
-        """Record angle each tick."""
-        self.angle_history.append(self.ship.angle)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if the test passed."""
-        try:
-            super().verify(battle_engine)
-        except NotImplementedError:
-            pass
-
-        # Store results for validation rules and pass criteria
-        self.results['turn_speed'] = self.ship.turn_speed
-        self.results['initial_angle'] = self.start_angle
-        self.results['final_angle'] = self.final_angle
-        self.results['angle_change'] = PROP004_EXPECTED_ANGLE_CHANGE
-        self.results['expected_angle_change'] = PROP004_EXPECTED_ANGLE_CHANGE
-        self.results['angle_history_sample'] = self.angle_history[::10]
-
-        # Evaluate pass criteria against results
-        all_criteria_passed = all(
-            criterion.evaluate(self.results)
-            for criterion in self.pass_criteria
-        )
-        self.results['all_criteria_passed'] = all_criteria_passed
-
-        return all_criteria_passed
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data
+        checks.append(check_exact("Ship Mass", PROP004_TOTAL_MASS, self.ship.mass))
+        # Outcome
+        checks.append(check_approx("Turn Speed", PROP004_TURN_SPEED, self.ship.turn_speed))
+        checks.append(check_approx("Starting Angle", PROP004_STARTING_ANGLE, self.start_angle))
+        checks.append(check_approx("Final Angle", PROP004_EXPECTED_FINAL_ANGLE, self.final_angle, tolerance=0.01))
+        return checks
 
 
 class PropDualThrusterScenario(PropulsionScenario):
@@ -1108,92 +623,21 @@ class PropDualThrusterScenario(PropulsionScenario):
         battle_end_mode="time_based",
         ui_priority=7,
         tags=["propulsion", "thruster", "stacking", "ability"],
-        validation_rules=[
-            # Pre-calculated physics predictions (pass criteria)
-            DeterministicMatchRule(
-                name='Turn Speed',
-                path='ship.turn_speed',
-                expected=PROP004B_TURN_SPEED,
-                description=f'turn_speed = ({PROP004B_TOTAL_RAW_TURN_RATE} × {K_TURN}) / {PROP004B_TOTAL_MASS}^1.5 = {PROP004B_TURN_SPEED}'
-            ),
-            DeterministicMatchRule(
-                name='Starting Angle',
-                path='results.initial_angle',
-                expected=PROP004B_STARTING_ANGLE,
-                description=f'Ship starts at {PROP004B_STARTING_ANGLE}°'
-            ),
-            DeterministicMatchRule(
-                name='Final Angle',
-                path='results.final_angle',
-                expected=PROP004B_EXPECTED_FINAL_ANGLE,
-                tolerance=0.01,
-                description=f'CW rotation: 0° + {PROP004B_EXPECTED_ANGLE_CHANGE}° = {PROP004B_EXPECTED_FINAL_ANGLE}°'
-            ),
-        ]
     )
 
     # Configuration attributes
     ship_file = PROP004B_SHIP_FILE
     turn_right = True
 
-    # =========================================================================
-    # PASS CRITERIA: Pre-calculated numeric criteria for test success
-    # =========================================================================
-    pass_criteria = [
-        PassCriterion(
-            description=f'Turn Speed = {PROP004B_TURN_SPEED}',
-            expression=lambda r: abs(r.get('turn_speed', 0) - PROP004B_TURN_SPEED) < 0.001,
-            numeric_threshold=PROP004B_TURN_SPEED
-        ),
-        PassCriterion(
-            description=f'Starting Angle = {PROP004B_STARTING_ANGLE}°',
-            expression=lambda r: abs(r.get('initial_angle', 0) - PROP004B_STARTING_ANGLE) < 0.01,
-            numeric_threshold=PROP004B_STARTING_ANGLE
-        ),
-        PassCriterion(
-            description=f'Final Angle = {PROP004B_EXPECTED_FINAL_ANGLE}°',
-            expression=lambda r: abs(r.get('final_angle', 0) - PROP004B_EXPECTED_FINAL_ANGLE) < 0.1,
-            numeric_threshold=PROP004B_EXPECTED_FINAL_ANGLE
-        ),
-    ]
-
-    def custom_setup(self, battle_engine):
-        """Verify ship has stacked thruster turn rate."""
-        self.expected_turn_speed = PROP004B_TURN_SPEED
-        self.expected_final_angle = PROP004B_EXPECTED_FINAL_ANGLE
-        self.angle_history = [self.ship.angle]
-
-        # Verify turn_speed stacking
-        assert abs(self.ship.turn_speed - PROP004B_TURN_SPEED) < 0.001, \
-            f"Expected turn_speed {PROP004B_TURN_SPEED}, got {self.ship.turn_speed}"
-
-    def custom_update(self, battle_engine):
-        """Record angle each tick."""
-        self.angle_history.append(self.ship.angle)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if the test passed."""
-        try:
-            super().verify(battle_engine)
-        except NotImplementedError:
-            pass
-
-        # Store results for validation rules and pass criteria
-        self.results['turn_speed'] = self.ship.turn_speed
-        self.results['initial_angle'] = self.start_angle
-        self.results['final_angle'] = self.final_angle
-        self.results['angle_change'] = PROP004B_EXPECTED_ANGLE_CHANGE
-        self.results['expected_angle_change'] = PROP004B_EXPECTED_ANGLE_CHANGE
-        self.results['angle_history_sample'] = self.angle_history[::10]
-
-        # Evaluate pass criteria against results
-        all_criteria_passed = all(
-            criterion.evaluate(self.results)
-            for criterion in self.pass_criteria
-        )
-        self.results['all_criteria_passed'] = all_criteria_passed
-
-        return all_criteria_passed
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data
+        checks.append(check_exact("Ship Mass", PROP004B_TOTAL_MASS, self.ship.mass))
+        checks.append(check_exact("Turn Speed", PROP004B_TURN_SPEED, self.ship.turn_speed, phase="data"))
+        # Outcome
+        checks.append(check_approx("Starting Angle", PROP004B_STARTING_ANGLE, self.start_angle))
+        checks.append(check_approx("Final Angle", PROP004B_EXPECTED_FINAL_ANGLE, self.final_angle, tolerance=0.01))
+        return checks
 
 
 class PropNoEngineStationaryScenario(PropulsionScenario):
@@ -1229,72 +673,31 @@ class PropNoEngineStationaryScenario(PropulsionScenario):
         battle_end_mode="time_based",
         ui_priority=10,
         tags=["propulsion", "engine", "negative_test", "foundational"],
-        validation_rules=[
-            # Ship configuration validation
-            ExactMatchRule(
-                name='Ship Mass',
-                path='ship.mass',
-                expected=PROP001B_TOTAL_MASS
-            ),
-            ExactMatchRule(
-                name='Total Thrust (Should be 0)',
-                path='ship.total_thrust',
-                expected=0
-            ),
-            ExactMatchRule(
-                name='Max Speed (Should be 0)',
-                path='ship.max_speed',
-                expected=0
-            ),
-            # Test outcome validation - ship should not move
-            DeterministicMatchRule(
-                name='Final Velocity',
-                path='results.final_velocity_magnitude',
-                expected=0.0,
-                description='Ship without engine cannot accelerate'
-            ),
-            DeterministicMatchRule(
-                name='Distance Traveled',
-                path='results.distance_traveled',
-                expected=0.0,
-                description='Ship should remain at initial position'
-            ),
-        ]
     )
 
     # Configuration attributes
     ship_file = "Test_No_Engine.json"
     thrust_forward = True  # Command thrust, but it should have no effect
 
-    def custom_setup(self, battle_engine):
-        """Verify ship has no engine and cannot thrust."""
-        # Verify ship has zero thrust
-        assert self.ship.total_thrust == 0, \
-            f"Expected zero thrust, got {self.ship.total_thrust}"
-        assert self.ship.max_speed == 0, \
-            f"Expected zero max_speed, got {self.ship.max_speed}"
-
-    def verify(self, battle_engine) -> bool:
-        """Check that ship did not move."""
-        try:
-            super().verify(battle_engine)
-        except NotImplementedError:
-            pass
-
-        final_velocity = self.final_velocity.length()
-        distance_traveled = self.final_position.distance_to(self.start_position)
-
-        # Store results
-        self.results['initial_velocity'] = 0.0
-        self.results['final_velocity'] = final_velocity
-        self.results['distance_traveled'] = distance_traveled
-        self.results['thrust'] = self.ship.total_thrust
-        self.results['mass'] = self.ship.mass
-        self.results['max_speed'] = self.ship.max_speed
-        self.results['remained_stationary'] = (final_velocity < 1e-9 and distance_traveled < 1e-9)
-
-        # Pass if ship stayed stationary
-        return self.results['remained_stationary']
+    def validate(self, engine) -> list:
+        checks = []
+        ticks = self.results.get('ticks_run', 0)
+        checks.append(check_true("Simulation Ran", ticks > 0, actual=ticks))
+        # Data
+        checks.append(check_exact("Ship Thrust", PROP001B_THRUST, self.ship.total_thrust))
+        checks.append(check_exact("Ship Max Speed", PROP001B_MAX_SPEED, self.ship.max_speed))
+        # Outcome: ship must NOT move
+        checks.append(check_true("Remained Stationary",
+                                 self.distance_traveled < 1e-9,
+                                 actual=self.distance_traveled,
+                                 detail="Ship should not move without an engine",
+                                 phase="outcome"))
+        checks.append(check_true("Zero Final Velocity",
+                                 self.final_velocity.length() < 1e-9,
+                                 actual=self.final_velocity.length(),
+                                 detail="Velocity should remain zero",
+                                 phase="outcome"))
+        return checks
 
 
 class PropThrusterOnlyScenario(PropulsionScenario):
@@ -1330,34 +733,6 @@ class PropThrusterOnlyScenario(PropulsionScenario):
         battle_end_mode="time_based",
         ui_priority=8,
         tags=["propulsion", "thruster", "rotation", "isolated_test"],
-        validation_rules=[
-            # Pre-calculated physics predictions (pass criteria)
-            DeterministicMatchRule(
-                name='Turn Speed',
-                path='ship.turn_speed',
-                expected=PROP003B_TURN_SPEED,
-                description=f'turn_speed = ({PROP003B_RAW_TURN_RATE} × {K_TURN}) / {PROP003B_TOTAL_MASS}^1.5 = {PROP003B_TURN_SPEED}'
-            ),
-            DeterministicMatchRule(
-                name='Starting Angle',
-                path='results.initial_angle',
-                expected=PROP003B_STARTING_ANGLE,
-                description=f'Ship starts at {PROP003B_STARTING_ANGLE}°'
-            ),
-            DeterministicMatchRule(
-                name='Final Angle',
-                path='results.final_angle',
-                expected=PROP003B_EXPECTED_FINAL_ANGLE,
-                tolerance=0.01,
-                description=f'CCW rotation: 0° - {PROP003B_EXPECTED_ANGLE_CHANGE}° = {PROP003B_EXPECTED_FINAL_ANGLE}° (wrapped)'
-            ),
-            DeterministicMatchRule(
-                name='Final Velocity',
-                path='results.final_velocity_magnitude',
-                expected=0.0,
-                description='Ship without engine cannot translate'
-            ),
-        ]
     )
 
     # Configuration attributes
@@ -1365,63 +740,26 @@ class PropThrusterOnlyScenario(PropulsionScenario):
     turn_left = True
     thrust_forward = True  # Also command thrust - should have no effect
 
-    # =========================================================================
-    # PASS CRITERIA: Pre-calculated numeric criteria for test success
-    # =========================================================================
-    pass_criteria = [
-        PassCriterion(
-            description=f'Turn Speed = {PROP003B_TURN_SPEED}',
-            expression=lambda r: abs(r.get('actual_turn_speed', 0) - PROP003B_TURN_SPEED) < 0.001,
-            numeric_threshold=PROP003B_TURN_SPEED
-        ),
-        PassCriterion(
-            description=f'Final Angle = {PROP003B_EXPECTED_FINAL_ANGLE}°',
-            expression=lambda r: abs(r.get('final_angle', 0) - PROP003B_EXPECTED_FINAL_ANGLE) < 0.1,
-            numeric_threshold=PROP003B_EXPECTED_FINAL_ANGLE
-        ),
-        PassCriterion(
-            description='Final Velocity = 0',
-            expression=lambda r: r.get('final_velocity_magnitude', 1) < 0.001,
-            numeric_threshold=0.0
-        ),
-    ]
-
-    def custom_setup(self, battle_engine):
-        """Verify ship has thruster but no engine."""
-        self.expected_turn_speed = PROP003B_TURN_SPEED
-        self.expected_final_angle = PROP003B_EXPECTED_FINAL_ANGLE
-
-        # Verify ship has zero thrust but positive turn speed
-        assert self.ship.total_thrust == 0, \
-            f"Expected zero thrust, got {self.ship.total_thrust}"
-        assert self.ship.turn_speed > 0, \
-            f"Expected positive turn_speed, got {self.ship.turn_speed}"
-
-    def verify(self, battle_engine) -> bool:
-        """Check that ship rotated but did not move."""
-        try:
-            super().verify(battle_engine)
-        except NotImplementedError:
-            pass
-
-        # Store results for validation rules and pass criteria
-        self.results['mass'] = self.ship.mass
-        self.results['total_thrust'] = self.ship.total_thrust
-        self.results['expected_turn_speed'] = self.expected_turn_speed
-        self.results['actual_turn_speed'] = self.ship.turn_speed
-        self.results['initial_angle'] = self.start_angle
-        self.results['final_angle'] = self.final_angle
-        self.results['angle_change'] = PROP003B_EXPECTED_ANGLE_CHANGE
-        self.results['expected_angle_change'] = PROP003B_EXPECTED_ANGLE_CHANGE
-
-        # Evaluate pass criteria against results
-        all_criteria_passed = all(
-            criterion.evaluate(self.results)
-            for criterion in self.pass_criteria
-        )
-        self.results['all_criteria_passed'] = all_criteria_passed
-
-        return all_criteria_passed
+    def validate(self, engine) -> list:
+        # Don't use template preconditions — this test intentionally has
+        # thrust_forward=True with no engine, so "Ship Moved" would wrongly fail.
+        checks = []
+        checks.append(check_true("Simulation Ran", engine.tick_counter > 0,
+                                 actual=engine.tick_counter))
+        # Data
+        checks.append(check_exact("Ship Mass", PROP003B_TOTAL_MASS, self.ship.mass))
+        checks.append(check_exact("Ship Thrust", PROP003B_THRUST, self.ship.total_thrust))
+        checks.append(check_true("Has Turn Speed", self.ship.turn_speed > 0,
+                                 actual=self.ship.turn_speed, phase="data"))
+        # Outcome
+        checks.append(check_approx("Turn Speed", PROP003B_TURN_SPEED, self.ship.turn_speed))
+        checks.append(check_approx("Final Angle", PROP003B_EXPECTED_FINAL_ANGLE, self.final_angle, tolerance=0.01))
+        checks.append(check_true("Zero Final Velocity",
+                                 self.final_velocity.length() < 0.001,
+                                 actual=self.final_velocity.length(),
+                                 detail="Ship should not translate without an engine",
+                                 phase="outcome"))
+        return checks
 
 
 class PropMassAffectsTurnRateScenario(TestScenario):
@@ -1460,70 +798,7 @@ class PropMassAffectsTurnRateScenario(TestScenario):
         battle_end_mode="time_based",
         ui_priority=7,
         tags=["propulsion", "thruster", "mass", "turn_rate", "scaling", "foundational"],
-        validation_rules=[
-            # Low mass ship predictions
-            DeterministicMatchRule(
-                name='Low Mass - Turn Speed',
-                path='low_mass_ship.turn_speed',
-                expected=PROP005_LOW_TURN_SPEED,
-                description=f'({PROP005_RAW_TURN_RATE} × {K_TURN}) / {PROP005_LOW_MASS}^1.5 = {PROP005_LOW_TURN_SPEED}'
-            ),
-            DeterministicMatchRule(
-                name='Low Mass - Final Angle',
-                path='results.low_mass_final_angle',
-                expected=PROP005_LOW_EXPECTED_FINAL_ANGLE,
-                tolerance=0.01,
-                description=f'CW: 0° + {PROP005_LOW_EXPECTED_ANGLE_CHANGE}° = {PROP005_LOW_EXPECTED_FINAL_ANGLE}°'
-            ),
-            # High mass ship predictions
-            DeterministicMatchRule(
-                name='High Mass - Turn Speed',
-                path='high_mass_ship.turn_speed',
-                expected=PROP005_HIGH_TURN_SPEED,
-                description=f'({PROP005_RAW_TURN_RATE} × {K_TURN}) / {PROP005_HIGH_MASS}^1.5 = {PROP005_HIGH_TURN_SPEED:.4f}'
-            ),
-            DeterministicMatchRule(
-                name='High Mass - Final Angle',
-                path='results.high_mass_final_angle',
-                expected=PROP005_HIGH_EXPECTED_FINAL_ANGLE,
-                tolerance=0.001,
-                description=f'CW: 0° + {PROP005_HIGH_EXPECTED_ANGLE_CHANGE:.4f}° = {PROP005_HIGH_EXPECTED_FINAL_ANGLE:.4f}°'
-            ),
-            # Ratio validation
-            DeterministicMatchRule(
-                name='Turn Speed Ratio',
-                path='results.turn_speed_ratio',
-                expected=PROP005_EXPECTED_RATIO,
-                description=f'low/high = (high_mass/low_mass)^1.5 = {PROP005_EXPECTED_RATIO:.2f}'
-            ),
-        ]
     )
-
-    # =========================================================================
-    # PASS CRITERIA: Pre-calculated numeric criteria for test success
-    # =========================================================================
-    pass_criteria = [
-        PassCriterion(
-            description=f'Low Mass Turn Speed = {PROP005_LOW_TURN_SPEED}',
-            expression=lambda r: abs(r.get('low_mass_turn_speed', 0) - PROP005_LOW_TURN_SPEED) < 0.001,
-            numeric_threshold=PROP005_LOW_TURN_SPEED
-        ),
-        PassCriterion(
-            description=f'Low Mass Final Angle = {PROP005_LOW_EXPECTED_FINAL_ANGLE}°',
-            expression=lambda r: abs(r.get('low_mass_final_angle', 0) - PROP005_LOW_EXPECTED_FINAL_ANGLE) < 0.1,
-            numeric_threshold=PROP005_LOW_EXPECTED_FINAL_ANGLE
-        ),
-        PassCriterion(
-            description=f'High Mass Turn Speed = {PROP005_HIGH_TURN_SPEED:.4f}',
-            expression=lambda r: abs(r.get('high_mass_turn_speed', 0) - PROP005_HIGH_TURN_SPEED) < 0.0001,
-            numeric_threshold=PROP005_HIGH_TURN_SPEED
-        ),
-        PassCriterion(
-            description=f'High Mass Final Angle = {PROP005_HIGH_EXPECTED_FINAL_ANGLE:.4f}°',
-            expression=lambda r: abs(r.get('high_mass_final_angle', 0) - PROP005_HIGH_EXPECTED_FINAL_ANGLE) < 0.01,
-            numeric_threshold=PROP005_HIGH_EXPECTED_FINAL_ANGLE
-        ),
-    ]
 
     def setup(self, battle_engine):
         """Load and position both ships."""
@@ -1560,83 +835,33 @@ class PropMassAffectsTurnRateScenario(TestScenario):
         if self.high_mass_ship.is_alive:
             self.high_mass_ship.rotate(1)  # clockwise
 
-    def verify(self, battle_engine) -> bool:
-        """Verify turn speed ratio matches mass^1.5 ratio."""
-        low_turn_speed = self.low_mass_ship.turn_speed
-        high_turn_speed = self.high_mass_ship.turn_speed
+    def collect_results(self, engine):
+        """Populate measurement attributes for the two ships."""
+        self.results['ticks_run'] = engine.tick_counter
 
-        # Store flat results for validation rules and pass criteria
-        self.results['low_mass_turn_speed'] = low_turn_speed
-        self.results['low_mass_final_angle'] = self.low_mass_ship.angle
-        self.results['low_mass_start_angle'] = self.low_mass_start_angle
-        self.results['high_mass_turn_speed'] = high_turn_speed
-        self.results['high_mass_final_angle'] = self.high_mass_ship.angle
-        self.results['high_mass_start_angle'] = self.high_mass_start_angle
+    def validate(self, engine) -> list:
+        checks = []
+        ticks = self.results.get('ticks_run', 0)
+        checks.append(check_true("Simulation Ran", ticks > 0, actual=ticks))
 
-        # Store nested results for backward compatibility
-        self.results['low_mass_ship'] = {
-            'mass': self.low_mass_ship.mass,
-            'turn_speed': low_turn_speed,
-            'expected_turn_speed': PROP005_LOW_TURN_SPEED,
-            'raw_turn_rate': PROP005_RAW_TURN_RATE,
-            'start_angle': self.low_mass_start_angle,
-            'final_angle': self.low_mass_ship.angle,
-            'expected_final_angle': PROP005_LOW_EXPECTED_FINAL_ANGLE,
-            'angle_change': PROP005_LOW_EXPECTED_ANGLE_CHANGE
-        }
+        # Data
+        checks.append(check_exact("Low Mass Ship Mass", PROP005_LOW_MASS, self.low_mass_ship.mass))
+        checks.append(check_exact("High Mass Ship Mass", PROP005_HIGH_MASS, self.high_mass_ship.mass))
 
-        self.results['high_mass_ship'] = {
-            'mass': self.high_mass_ship.mass,
-            'turn_speed': high_turn_speed,
-            'expected_turn_speed': PROP005_HIGH_TURN_SPEED,
-            'raw_turn_rate': PROP005_RAW_TURN_RATE,
-            'start_angle': self.high_mass_start_angle,
-            'final_angle': self.high_mass_ship.angle,
-            'expected_final_angle': PROP005_HIGH_EXPECTED_FINAL_ANGLE,
-            'angle_change': PROP005_HIGH_EXPECTED_ANGLE_CHANGE
-        }
+        # Outcome: turn speeds match formula
+        checks.append(check_approx("Low Mass Turn Speed", PROP005_LOW_TURN_SPEED, self.low_mass_ship.turn_speed))
+        checks.append(check_approx("High Mass Turn Speed", PROP005_HIGH_TURN_SPEED, self.high_mass_ship.turn_speed, tolerance=1e-6))
 
-        # Calculate actual ratio
-        actual_ratio = low_turn_speed / high_turn_speed if high_turn_speed > 0 else 0
-        self.results['turn_speed_ratio'] = actual_ratio
-        self.results['expected_ratio'] = PROP005_EXPECTED_RATIO
+        # Outcome: final angles match predictions
+        checks.append(check_approx("Low Mass Final Angle", PROP005_LOW_EXPECTED_FINAL_ANGLE, self.low_mass_ship.angle, tolerance=0.01))
+        checks.append(check_approx("High Mass Final Angle", PROP005_HIGH_EXPECTED_FINAL_ANGLE, self.high_mass_ship.angle, tolerance=0.01))
 
-        # Run validation rules
-        self.run_validation(battle_engine)
+        # Outcome: turn speed ratio matches mass^1.5 ratio
+        if self.high_mass_ship.turn_speed > 0:
+            actual_ratio = self.low_mass_ship.turn_speed / self.high_mass_ship.turn_speed
+            checks.append(check_approx("Turn Speed Ratio", PROP005_EXPECTED_RATIO, actual_ratio))
 
-        # Evaluate pass criteria against results
-        all_criteria_passed = all(
-            criterion.evaluate(self.results)
-            for criterion in self.pass_criteria
-        )
-        self.results['all_criteria_passed'] = all_criteria_passed
-
-        return all_criteria_passed
-
-    def run_validation(self, battle_engine):
-        """Override to add ships to validation context."""
-        from simulation_tests.scenarios.validation import Validator
-
-        if not self.metadata.validation_rules:
-            return []
-
-        context = {
-            'test_scenario': self,
-            'battle_engine': battle_engine,
-            'results': self.results,
-            'metadata': self.metadata,
-            'low_mass_ship': self._extract_ship_validation_data(self.low_mass_ship),
-            'high_mass_ship': self._extract_ship_validation_data(self.high_mass_ship),
-        }
-
-        validator = Validator(self.metadata.validation_rules)
-        validation_results = validator.validate(context)
-
-        self.results['validation_results'] = [r.to_dict() for r in validation_results]
-        self.results['validation_summary'] = validator.get_summary(validation_results)
-        self.results['has_validation_failures'] = validator.has_failures(validation_results)
-
-        return validation_results
+        return checks
 
 
 # Export all scenarios for registry discovery

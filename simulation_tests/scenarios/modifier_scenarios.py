@@ -122,7 +122,7 @@ class DamageMultiplierScenario(StaticTargetScenario):
         self.results['modifier_applied_correctly'] = self.modifier_applied_correctly
 
     def verify(self, battle_engine):
-        self._collect_results(battle_engine)
+        self.collect_results(battle_engine)
         if not self.modifier_applied_correctly:
             self.results['failure_reason'] = (
                 f"Modifier not applied: expected beam.damage={MOD_EXPECTED_DAMAGE}, "
@@ -190,7 +190,7 @@ class RangeMultiplierScenario(StaticTargetScenario):
         self.results['distance'] = self.distance
 
     def verify(self, battle_engine):
-        self._collect_results(battle_engine)
+        self.collect_results(battle_engine)
         if not self.modifier_applied_correctly:
             self.results['failure_reason'] = (
                 f"Modifier not applied: expected beam.range={MOD_EXPECTED_RANGE}, "
@@ -448,7 +448,7 @@ class TurretArcSetScenario(StaticTargetScenario):
         self.results['modifier_applied_correctly'] = self.modifier_applied_correctly
 
     def verify(self, battle_engine):
-        self._collect_results(battle_engine)
+        self.collect_results(battle_engine)
         if not self.modifier_applied_correctly:
             self.results['failure_reason'] = (
                 f"Modifier not applied: expected firing_arc={MOD_EXPECTED_ARC}, "

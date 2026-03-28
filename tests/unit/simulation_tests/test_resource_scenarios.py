@@ -178,7 +178,7 @@ class TestFuelScenarioResults:
         # Mock get_value to return final fuel
         mock_ship.resources.get_value.return_value = 995.0
 
-        scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         assert 'initial_fuel' in scenario.results
         assert scenario.results['initial_fuel'] == 1000.0
@@ -194,25 +194,14 @@ class TestFuelScenarioResults:
 
         mock_ship.resources.get_value.return_value = 995.0
 
-        scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         assert 'final_fuel' in scenario.results
         assert scenario.results['final_fuel'] == 995.0
 
-    def test_fuel_consumption_stores_test_id(self, mock_ship, mock_battle_engine):
-        """EngineFuelConsumptionScenario should store test_id."""
+    def test_fuel_consumption_stores_test_id(self):
+        """EngineFuelConsumptionScenario stores test_id on init."""
         scenario = EngineFuelConsumptionScenario()
-        scenario.ship = mock_ship
-        scenario.initial_fuel = 1000.0
-        scenario.initial_velocity = 0.0
-        scenario.start_position = pygame.math.Vector2(0, 0)
-        scenario.results = {}
-
-        mock_ship.resources.get_value.return_value = 995.0
-
-        scenario.verify(mock_battle_engine)
-
-        assert 'test_id' in scenario.results
         assert scenario.results['test_id'] == 'RESOURCE-001'
 
 
@@ -275,7 +264,7 @@ class TestEnergyScenarioResults:
         mock_ship.resources.get_value.return_value = 0.0
         mock_target.hp = 102  # 200 - 98 = 102 (took 98 damage)
 
-        scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         assert 'shots_fired' in scenario.results
         assert scenario.results['shots_fired'] == 100
@@ -292,7 +281,7 @@ class TestEnergyScenarioResults:
         mock_ship.resources.get_value.return_value = 0.0
         mock_target.hp = 102  # 200 - 98 = 102 (took 98 damage)
 
-        scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         assert 'damage_dealt' in scenario.results
         assert scenario.results['damage_dealt'] == 98
@@ -357,7 +346,7 @@ class TestAmmoScenarioResults:
         mock_ship.resources.get_value.return_value = 0.0
         mock_target.hp = 105  # 200 - 95 = 105 (took 95 damage)
 
-        scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         assert 'initial_ammo' in scenario.results
         assert scenario.results['initial_ammo'] == 100.0
@@ -374,7 +363,7 @@ class TestAmmoScenarioResults:
         mock_ship.weapon_systems.fire_counts = {'test_seeker_rapid': 100}
         mock_ship.resources.get_value.return_value = 0.0
 
-        scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         assert 'launches' in scenario.results
         assert scenario.results['launches'] == 100

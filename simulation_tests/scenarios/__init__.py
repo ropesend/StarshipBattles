@@ -35,14 +35,13 @@ Usage:
 
 from simulation_tests.scenarios.base import TestScenario, TestMetadata
 from simulation_tests.scenarios.validation import (
+    Check,
+    ValidationReport,
+    check_exact,
+    check_approx,
+    check_tost,
+    check_true,
     resolve_path,
-    ValidationRule,
-    ExactMatchRule,
-    DeterministicMatchRule,
-    StatisticalTestRule,
-    Validator,
-    ValidationResult,
-    ValidationStatus
 )
 from simulation_tests.scenarios.defense_scenarios import (
     ShieldAbsorbsDamageScenario,
@@ -76,14 +75,13 @@ from simulation_tests.scenarios.modifier_scenarios import (
 __all__ = [
     'TestScenario',
     'TestMetadata',
+    'Check',
+    'ValidationReport',
+    'check_exact',
+    'check_approx',
+    'check_tost',
+    'check_true',
     'resolve_path',
-    'ValidationRule',
-    'ExactMatchRule',
-    'DeterministicMatchRule',
-    'StatisticalTestRule',
-    'Validator',
-    'ValidationResult',
-    'ValidationStatus',
     # Defense scenarios
     'ShieldAbsorbsDamageScenario',
     'ShieldOverflowToHullScenario',

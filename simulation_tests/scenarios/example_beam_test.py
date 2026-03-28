@@ -12,6 +12,7 @@ This file serves as:
 
 import pygame
 from simulation_tests.scenarios import TestScenario, TestMetadata
+from simulation_tests.scenarios.validation import check_true
 
 
 class ExampleBeamPointBlankTest(TestScenario):
@@ -83,23 +84,24 @@ class ExampleBeamPointBlankTest(TestScenario):
         # Force weapon firing
         self.attacker.comp_trigger_pulled = True
 
-    def verify(self, battle_engine):
-        """
-        Check if the test passed.
-
-        Returns True if the beam weapon dealt any damage to the target.
-        """
-        # Calculate damage dealt
-        damage_dealt = self.initial_target_hp - self.target.hp
-
-        # Store detailed results for reporting
-        self.results['damage_dealt'] = damage_dealt
+    def collect_results(self, engine):
+        """Populate measurement attributes before validation."""
+        self.damage_dealt = self.initial_target_hp - self.target.hp
+        self.results['damage_dealt'] = self.damage_dealt
         self.results['initial_hp'] = self.initial_target_hp
         self.results['final_hp'] = self.target.hp
         self.results['target_alive'] = self.target.is_alive
-        self.results['ticks_run'] = battle_engine.tick_counter
+        self.results['ticks_run'] = engine.tick_counter
 
-        # Test passes if any damage was dealt
-        passed = damage_dealt > 0
-
-        return passed
+    def validate(self, engine) -> list:
+        checks = []
+        ticks = self.results.get('ticks_run', 0)
+        checks.append(check_true("Simulation Ran", ticks > 0, actual=ticks))
+        checks.append(check_true(
+            "Damage Dealt",
+            self.damage_dealt > 0,
+            actual=self.damage_dealt,
+            detail="Beam should deal damage at point-blank range",
+            phase="outcome",
+        ))
+        return checks

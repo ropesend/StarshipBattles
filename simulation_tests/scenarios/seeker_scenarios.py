@@ -23,6 +23,7 @@ Test Coverage:
 
 from simulation_tests.scenarios import TestMetadata
 from simulation_tests.scenarios.templates import StaticTargetScenario
+from simulation_tests.scenarios.validation import check_true
 from simulation_tests.test_constants import (
     STANDARD_DISTANCE,
     STANDARD_SEED
@@ -89,8 +90,6 @@ class SeekerCloseRangeImpactScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "close-range", "guided"]
     )
 
-    min_damage_threshold = 100
-
     def _collect_extra_results(self, battle_engine):
         self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
         # Read weapon stats from loaded ship data
@@ -102,6 +101,13 @@ class SeekerCloseRangeImpactScenario(StaticTargetScenario):
             self.results['missile_damage'] = seeker_ability.projectile_damage
             self.results['missile_endurance'] = seeker_ability.endurance
             self.results['expected_travel_time_ticks'] = int(self.distance / seeker_ability.projectile_speed * 100)
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        checks.append(check_true("Damage >= 100", self.damage_dealt >= 100,
+                                 actual=self.damage_dealt, phase="outcome",
+                                 detail="expected >= 100 (1+ missile impact)"))
+        return checks
 
 
 class SeekerMidRangeImpactScenario(StaticTargetScenario):
@@ -148,10 +154,14 @@ class SeekerMidRangeImpactScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "mid-range", "guided"]
     )
 
-    verify_damage_dealt = True
-
     def _collect_extra_results(self, battle_engine):
         self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        checks.append(check_true("Damage Dealt", self.damage_dealt > 0,
+                                 actual=self.damage_dealt, phase="outcome"))
+        return checks
 
 
 class SeekerBeyondRangeExpireScenario(StaticTargetScenario):
@@ -198,10 +208,13 @@ class SeekerBeyondRangeExpireScenario(StaticTargetScenario):
         tags=["seeker", "missile", "endurance-limit", "expire", "edge-case"]
     )
 
-    measurement_mode = True
-
     def _collect_extra_results(self, battle_engine):
         self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Measurement test -- seeker likely expires or doesn't fire at this range
+        return checks
 
 
 class SeekerEdgeCaseRangeScenario(StaticTargetScenario):
@@ -249,10 +262,13 @@ class SeekerEdgeCaseRangeScenario(StaticTargetScenario):
         tags=["seeker", "missile", "endurance-limit", "edge-case"]
     )
 
-    measurement_mode = True
-
     def _collect_extra_results(self, battle_engine):
         self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Measurement test -- edge case range, results vary
+        return checks
 
 
 # ============================================================================
@@ -303,7 +319,11 @@ class SeekerTrackingStationaryScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "stationary", "guided"]
     )
 
-    verify_damage_dealt = True
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        checks.append(check_true("Damage Dealt", self.damage_dealt > 0,
+                                 actual=self.damage_dealt, phase="outcome"))
+        return checks
 
 
 class SeekerTrackingLinearScenario(StaticTargetScenario):
@@ -351,7 +371,10 @@ class SeekerTrackingLinearScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "linear-target", "intercept"]
     )
 
-    measurement_mode = True
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Measurement test -- seeker tracks linear target, results vary
+        return checks
 
 
 class SeekerTrackingOrbitingScenario(StaticTargetScenario):
@@ -399,7 +422,10 @@ class SeekerTrackingOrbitingScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "orbiting", "curved-pursuit"]
     )
 
-    measurement_mode = True
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Measurement test -- curved pursuit, results vary
+        return checks
 
 
 class SeekerTrackingErraticScenario(StaticTargetScenario):
@@ -448,7 +474,10 @@ class SeekerTrackingErraticScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "erratic", "evasion", "edge-case"]
     )
 
-    measurement_mode = True
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Measurement test -- erratic targets may evade seekers entirely
+        return checks
 
 
 # ============================================================================

@@ -123,28 +123,13 @@ class TestPROP005PhysicsCalculations:
 class TestPROP005ResultsStorage:
     """Tests for PROP-005 results storage."""
 
-    def test_results_include_low_mass_ship_data(self):
-        """Results should include low_mass ship turn_speed, mass, raw_turn_rate."""
-        # This test will be run with mock setup once scenario is implemented
+    def test_scenario_has_validate_method(self):
+        """Scenario should implement validate() for the new validation system."""
         from simulation_tests.scenarios.propulsion_scenarios import PropMassAffectsTurnRateScenario
         scenario = PropMassAffectsTurnRateScenario()
-        # Check metadata has validation rules for low mass ship
-        validation_names = [r.name for r in scenario.metadata.validation_rules]
-        assert any('Low Mass' in name for name in validation_names)
-
-    def test_results_include_high_mass_ship_data(self):
-        """Results should include high_mass ship turn_speed, mass, raw_turn_rate."""
-        from simulation_tests.scenarios.propulsion_scenarios import PropMassAffectsTurnRateScenario
-        scenario = PropMassAffectsTurnRateScenario()
-        validation_names = [r.name for r in scenario.metadata.validation_rules]
-        assert any('High Mass' in name for name in validation_names)
-
-    def test_results_include_turn_speed_ratio(self):
-        """Results should include turn_speed ratio validation."""
-        from simulation_tests.scenarios.propulsion_scenarios import PropMassAffectsTurnRateScenario
-        scenario = PropMassAffectsTurnRateScenario()
-        validation_names = [r.name for r in scenario.metadata.validation_rules]
-        assert any('Ratio' in name for name in validation_names)
+        assert hasattr(scenario, 'validate')
+        # validate() is defined on the class, not just inherited as NotImplementedError
+        assert 'validate' in type(scenario).__dict__
 
 
 class TestPROP005TestShipExists:

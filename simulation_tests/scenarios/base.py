@@ -55,60 +55,12 @@ from dataclasses import dataclass, field
 
 from test_framework.scenario import CombatScenario
 from game.simulation.entities.ship import Ship
-from simulation_tests.scenarios.validation import ValidationRule, Validator, ValidationResult
+from simulation_tests.scenarios.validation import Check, ValidationReport
 from simulation_tests.logging_config import get_logger
 from game.core.constants import SimulationConstants
 
 # Get logger for this module
 logger = get_logger(__name__)
-
-# Maps ability class names to extraction config for _extract_ship_validation_data.
-# 'key' is the dict key in the extracted data (e.g., data['weapon']).
-# 'attrs' lists attributes to extract from the ability instance.
-ABILITY_EXTRACTION_MAP = {
-    'BeamWeaponAbility': {
-        'key': 'weapon',  # data['weapon'] for beam scenarios
-        'attrs': ['damage', 'range', 'base_accuracy', 'accuracy_falloff', 'reload_time', 'firing_arc']
-    },
-    'ProjectileWeaponAbility': {
-        'key': 'projectile_weapon',
-        'attrs': ['damage', 'range', 'projectile_speed', 'reload_time', 'firing_arc']
-    },
-    'SeekerWeaponAbility': {
-        'key': 'seeker_weapon',
-        'attrs': ['damage', 'range', 'endurance', 'turn_rate', 'projectile_speed',
-                  'projectile_damage', 'projectile_hp', 'projectile_stealth', 'reload_time', 'firing_arc']
-    },
-    'ShieldProjection': {
-        'key': 'shield',
-        'attrs': ['capacity']
-    },
-    'ShieldRegeneration': {
-        'key': 'shield_regen',
-        'attrs': ['rate']
-    },
-    'EmissiveArmor': {
-        'key': 'emissive_armor',
-        'attrs': ['amount']
-    },
-    'ToHitAttackModifier': {
-        'key': 'attack_modifier',
-        'attrs': ['value']
-    },
-    'ToHitDefenseModifier': {
-        'key': 'defense_modifier',
-        'attrs': ['value']
-    },
-    'CombatPropulsion': {
-        'key': 'propulsion',
-        'attrs': ['thrust_force']
-    },
-    'ManeuveringThruster': {
-        'key': 'maneuvering',
-        'attrs': ['turn_rate']
-    },
-}
-
 
 @dataclass
 class TestMetadata:
@@ -142,8 +94,6 @@ class TestMetadata:
         escape_all_ships: Require all ships to escape (default: False)
         ui_priority: Display priority in Combat Lab (0=normal, higher=more important)
         tags: Optional tags for filtering (e.g., ["accuracy", "close_range"])
-        validation_rules: List of ValidationRule instances for automatic validation
-        outcome_metrics: Dictionary defining how test outcomes are measured
     """
     test_id: str
     category: str
@@ -164,8 +114,6 @@ class TestMetadata:
     escape_all_ships: bool = False
     ui_priority: int = 0
     tags: List[str] = field(default_factory=list)
-    validation_rules: List[ValidationRule] = field(default_factory=list)
-    outcome_metrics: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert metadata to dictionary for serialization."""
@@ -189,8 +137,6 @@ class TestMetadata:
             'escape_all_ships': self.escape_all_ships,
             'ui_priority': self.ui_priority,
             'tags': self.tags,
-            'validation_rules_count': len(self.validation_rules),
-            'outcome_metrics': self.outcome_metrics
         }
 
 
@@ -554,26 +500,61 @@ class TestScenario(CombatScenario):
             f"{self.__class__.__name__} must implement setup(battle_engine)"
         )
 
-    def verify(self, battle_engine) -> bool:
+    def validate(self, engine) -> 'List[Check]':
         """
-        Check if the test passed.
+        Return all validation checks for this scenario.
 
-        Subclasses MUST implement this method.
+        Subclasses implement this instead of verify(). Each check is tagged
+        with a phase ("data", "precondition", "outcome") so the framework
+        knows what failed and why.
 
         Args:
-            battle_engine: BattleEngine instance to verify
+            engine: BattleEngine instance after simulation.
 
         Returns:
-            True if test passed, False otherwise
-
-        Example:
-            def verify(self, battle_engine):
-                target = battle_engine.teams[1][0]
-                damage_dealt = self.initial_hp - target.hp
-                return damage_dealt > 0
+            List of Check objects.
         """
         raise NotImplementedError(
-            f"{self.__class__.__name__} must implement verify(battle_engine)"
+            f"{self.__class__.__name__} must implement validate(engine)"
+        )
+
+    def collect_results(self, engine):
+        """
+        Populate measurement attributes before validate() runs.
+
+        Override in templates to calculate derived values (damage_dealt,
+        final_velocity, etc.) that validate() checks reference.
+
+        Args:
+            engine: BattleEngine instance after simulation.
+        """
+        pass
+
+    def _run_validation(self, engine) -> 'ValidationReport':
+        """
+        Run the three-phase validation pipeline.
+
+        1. Calls collect_results(engine) to populate measurement attributes.
+        2. Calls validate(engine) to get all Check objects.
+        3. Builds a ValidationReport that determines pass/fail.
+
+        Returns:
+            ValidationReport with the authoritative pass/fail result.
+        """
+        self.collect_results(engine)
+        checks = self.validate(engine)
+        report = ValidationReport(checks=checks)
+        self.results['validation'] = report.to_dict()
+        return report
+
+    def verify(self, battle_engine) -> bool:
+        """
+        Legacy pass/fail method. Kept as fallback during migration.
+
+        New scenarios should implement validate() instead.
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement validate(engine) or verify(battle_engine)"
         )
 
     def update(self, battle_engine):
@@ -605,119 +586,22 @@ class TestScenario(CombatScenario):
         """
         return self.metadata.to_dict()
 
-    def run_validation(self, battle_engine) -> List[ValidationResult]:
+    def get_ability(self, ship, ability_class_name: str):
         """
-        Run validation rules after test completion.
-
-        This method is called automatically after verify() to validate:
-        1. Exact matches: Test metadata vs component data
-        2. Statistical tests: Expected vs measured outcomes
+        Extract the first ability instance of a given class from a ship.
 
         Args:
-            battle_engine: BattleEngine instance with test results
+            ship: Ship instance.
+            ability_class_name: Class name string (e.g., 'BeamWeaponAbility').
 
         Returns:
-            List of ValidationResult objects
+            Ability instance, or None if not found.
         """
-        if not self.metadata.validation_rules:
-            return []
-
-        # Build validation context
-        context = {
-            'test_scenario': self,
-            'battle_engine': battle_engine,
-            'results': self.results if hasattr(self, 'results') else {},
-            'metadata': self.metadata
-        }
-
-        # Add ships to context with extracted component data
-        if hasattr(self, 'attacker') and self.attacker:
-            context['attacker'] = self._extract_ship_validation_data(self.attacker)
-        if hasattr(self, 'target') and self.target:
-            context['target'] = self._extract_ship_validation_data(self.target)
-        # For propulsion tests that use self.ship instead of attacker/target
-        if hasattr(self, 'ship') and self.ship:
-            context['ship'] = self._extract_ship_validation_data(self.ship)
-
-        # Run validator
-        validator = Validator(self.metadata.validation_rules)
-        validation_results = validator.validate(context)
-
-        # Store in results for UI access
-        if hasattr(self, 'results'):
-            self.results['validation_results'] = [r.to_dict() for r in validation_results]
-            self.results['validation_summary'] = validator.get_summary(validation_results)
-            self.results['has_validation_failures'] = validator.has_failures(validation_results)
-            self.results['has_validation_warnings'] = validator.has_warnings(validation_results)
-
-            # Include load-time validation errors if any
-            if hasattr(self, '_load_validation_errors') and self._load_validation_errors:
-                self.results['load_validation_errors'] = self._load_validation_errors
-
-        return validation_results
-
-    def _extract_ship_validation_data(self, ship: Ship) -> Dict[str, Any]:
-        """
-        Extract ship and component data for validation.
-
-        Converts a Ship object into a dictionary structure suitable for
-        validation rule path resolution (e.g., 'attacker.weapon.damage').
-
-        Uses ABILITY_EXTRACTION_MAP to extract data for all ability types,
-        not just beams. Also computes ship-level defense aggregates.
-
-        Args:
-            ship: Ship instance to extract data from
-
-        Returns:
-            Dictionary with ship properties and component data
-        """
-        data = {
-            'ship': ship,  # Keep reference to ship object
-            'mass': ship.mass,
-            'hp': ship.hp,
-            'max_hp': ship.max_hp,
-            # Propulsion attributes
-            'total_thrust': getattr(ship, 'total_thrust', 0.0),
-            'max_speed': getattr(ship, 'max_speed', 0.0),
-            'acceleration_rate': getattr(ship, 'acceleration_rate', 0.0),
-            'turn_speed': getattr(ship, 'turn_speed', 0.0),
-        }
-
-        # Ship-level defense aggregates
-        total_defense_score = 0.0
-        total_emissive_armor = 0.0
-        total_max_shields = 0.0
-
-        # Extract ability data from all components using ABILITY_EXTRACTION_MAP
         if hasattr(ship, 'layers') and ship.layers:
-            for layer_name, layer_data in ship.layers.items():
+            for layer_data in ship.layers.values():
                 for component in layer_data.components:
-                        if hasattr(component, 'ability_instances') and component.ability_instances:
-                            for ability in component.ability_instances:
-                                ability_class_name = ability.__class__.__name__
-                                config = ABILITY_EXTRACTION_MAP.get(ability_class_name)
-                                if config is None:
-                                    continue
-                                key = config['key']
-                                # Extract listed attributes
-                                ability_data = {}
-                                for attr in config['attrs']:
-                                    ability_data[attr] = getattr(ability, attr, None)
-                                # First occurrence wins (test ships have one of each)
-                                if key not in data:
-                                    data[key] = ability_data
-                                    logger.debug(f"Extracted {key} data from {ship.name}: {ability_data}")
-                                # Aggregate defense stats
-                                if ability_class_name == 'ToHitDefenseModifier':
-                                    total_defense_score += getattr(ability, 'value', 0.0)
-                                elif ability_class_name == 'EmissiveArmor':
-                                    total_emissive_armor += getattr(ability, 'amount', 0.0)
-                                elif ability_class_name == 'ShieldProjection':
-                                    total_max_shields += getattr(ability, 'capacity', 0.0)
-
-        data['total_defense_score'] = total_defense_score
-        data['emissive_armor'] = total_emissive_armor
-        data['max_shields'] = total_max_shields
-
-        return data
+                    if hasattr(component, 'ability_instances'):
+                        for ability in component.ability_instances:
+                            if ability.__class__.__name__ == ability_class_name:
+                                return ability
+        return None

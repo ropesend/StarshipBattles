@@ -95,8 +95,7 @@ class TestPropulsionScenarioVelocityResults:
         scenario.expected_acceleration_rate = 7.8125
         scenario.results = {}
 
-        with pytest.raises(NotImplementedError):
-            scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         assert 'initial_velocity_magnitude' in scenario.results
         assert scenario.results['initial_velocity_magnitude'] == 0.0
@@ -112,8 +111,7 @@ class TestPropulsionScenarioVelocityResults:
         scenario.expected_acceleration_rate = 7.8125
         scenario.results = {}
 
-        with pytest.raises(NotImplementedError):
-            scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         assert 'final_velocity_magnitude' in scenario.results
         assert scenario.results['final_velocity_magnitude'] == 25.0  # mock_ship.velocity.length()
@@ -133,8 +131,7 @@ class TestPropulsionScenarioPositionResults:
         scenario.expected_acceleration_rate = 7.8125
         scenario.results = {}
 
-        with pytest.raises(NotImplementedError):
-            scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         assert 'initial_position' in scenario.results
         assert scenario.results['initial_position'] == (0, 0)
@@ -150,8 +147,7 @@ class TestPropulsionScenarioPositionResults:
         scenario.expected_acceleration_rate = 7.8125
         scenario.results = {}
 
-        with pytest.raises(NotImplementedError):
-            scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         assert 'final_position' in scenario.results
         assert scenario.results['final_position'] == (100, 50)
@@ -167,8 +163,7 @@ class TestPropulsionScenarioPositionResults:
         scenario.expected_acceleration_rate = 7.8125
         scenario.results = {}
 
-        with pytest.raises(NotImplementedError):
-            scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         assert 'distance_traveled' in scenario.results
         # Distance from (0,0) to (100, 50) = sqrt(100^2 + 50^2) = 111.8
@@ -190,8 +185,7 @@ class TestPropulsionScenarioAngleResults:
         scenario.expected_acceleration_rate = 7.8125
         scenario.results = {}
 
-        with pytest.raises(NotImplementedError):
-            scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         assert 'initial_angle' in scenario.results
         assert scenario.results['initial_angle'] == 0.0
@@ -207,8 +201,7 @@ class TestPropulsionScenarioAngleResults:
         scenario.expected_acceleration_rate = 7.8125
         scenario.results = {}
 
-        with pytest.raises(NotImplementedError):
-            scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         assert 'final_angle' in scenario.results
         assert scenario.results['final_angle'] == 15.0  # mock_ship.angle
@@ -224,8 +217,7 @@ class TestPropulsionScenarioAngleResults:
         scenario.expected_acceleration_rate = 7.8125
         scenario.results = {}
 
-        with pytest.raises(NotImplementedError):
-            scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         assert 'angle_change' in scenario.results
         assert scenario.results['angle_change'] == 15.0  # final - initial
@@ -245,8 +237,7 @@ class TestPropulsionScenarioExpectedAngle:
         scenario.expected_acceleration_rate = 7.8125
         scenario.results = {}
 
-        with pytest.raises(NotImplementedError):
-            scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         # turn_speed = 15.625 degrees per 100 ticks
         # ticks = 50
@@ -266,8 +257,7 @@ class TestPropulsionScenarioExpectedAngle:
         scenario.expected_acceleration_rate = 7.8125
         scenario.results = {}
 
-        with pytest.raises(NotImplementedError):
-            scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         assert 'turn_speed_degrees_per_tick' in scenario.results
         # turn_speed / 100 = degrees per tick
@@ -294,8 +284,7 @@ class TestPropulsionScenarioExpectedAngle:
         scenario.expected_acceleration_rate = 7.8125
         scenario.results = {}
 
-        with pytest.raises(NotImplementedError):
-            scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         # For ships with turn_speed=0, expected_angle_change should not be calculated
         # or should be 0
@@ -317,8 +306,7 @@ class TestPropulsionScenarioExpectedVelocity:
         scenario.expected_acceleration_rate = 7.8125
         scenario.results = {}
 
-        with pytest.raises(NotImplementedError):
-            scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         assert 'expected_max_speed' in scenario.results
         assert scenario.results['expected_max_speed'] == 31.25
@@ -334,8 +322,7 @@ class TestPropulsionScenarioExpectedVelocity:
         scenario.expected_acceleration_rate = 7.8125
         scenario.results = {}
 
-        with pytest.raises(NotImplementedError):
-            scenario.verify(mock_battle_engine)
+        scenario.collect_results(mock_battle_engine)
 
         assert 'expected_acceleration_rate' in scenario.results
         assert scenario.results['expected_acceleration_rate'] == 7.8125

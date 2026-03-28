@@ -20,12 +20,8 @@ Test Coverage:
 """
 
 import math
-from simulation_tests.scenarios import (
-    TestMetadata,
-    ExactMatchRule,
-    DeterministicMatchRule,
-    StatisticalTestRule
-)
+from simulation_tests.scenarios import TestMetadata
+from simulation_tests.scenarios.validation import check_exact, check_approx, check_tost, check_true
 from simulation_tests.scenarios.templates import StaticTargetScenario
 from simulation_tests.test_constants import (
     STANDARD_TEST_TICKS,
@@ -36,8 +32,10 @@ from simulation_tests.test_constants import (
     BEAM_LOW_DAMAGE,
     BEAM_MED_ACCURACY,
     BEAM_MED_FALLOFF,
+    BEAM_MED_DAMAGE,
     BEAM_HIGH_ACCURACY,
     BEAM_HIGH_FALLOFF,
+    BEAM_HIGH_DAMAGE,
     STATIONARY_TARGET_MASS,
     STANDARD_MARGIN,
     HIGH_PRECISION_MARGIN,
@@ -199,89 +197,22 @@ class BeamLowAccuracyPointBlankScenario(StaticTargetScenario):
         battle_end_mode="time_based",  # Run for full 500 ticks regardless of ship status
         ui_priority=10,
         tags=["accuracy", "low-accuracy", "point-blank", "beam-weapons"],
-        validation_rules=[
-            # Exact match validations - comparing test metadata to component data
-            ExactMatchRule(
-                name='Beam Weapon Damage',
-                path='attacker.weapon.damage',
-                expected=BEAM_LOW_DAMAGE
-            ),
-            ExactMatchRule(
-                name='Base Accuracy',
-                path='attacker.weapon.base_accuracy',
-                expected=BEAM_LOW_ACCURACY
-            ),
-            ExactMatchRule(
-                name='Accuracy Falloff',
-                path='attacker.weapon.accuracy_falloff',
-                expected=BEAM_LOW_FALLOFF
-            ),
-            ExactMatchRule(
-                name='Weapon Range',
-                path='attacker.weapon.range',
-                expected=BEAM_LOW_RANGE
-            ),
-            ExactMatchRule(
-                name='Target Mass',
-                path='target.mass',
-                expected=STATIONARY_TARGET_MASS
-            ),
-            # Layer 1: Formula validation - verify expected hit chance calculation is correct
-            # Uses 1e-4 tolerance to account for display rounding (0.5318 vs 0.5317890...)
-            DeterministicMatchRule(
-                name='Expected Hit Chance',
-                path='results.expected_hit_chance',
-                expected=0.5318,
-                tolerance=1e-4,
-                description='P = 1/(1+e^-0.1273) from sigmoid formula with net_score = 0.5 - 0.0411 - 0.3316'
-            ),
-            # Layer 2: Statistical validation - validates actual test outcomes using TOST equivalence testing
-            StatisticalTestRule(
-                name='Hit Rate',
-                test_type='binomial',
-                expected_probability=0.5318,  # At surface distance 20.53px (not 50px center distance)
-                equivalence_margin=STANDARD_MARGIN,  # ±6% margin for 500-tick test (99% confidence, ~1% failure rate)
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt',
-                description='Each beam hit = 1 damage, so damage_dealt = number of hits'
-            )
-        ],
-        outcome_metrics={
-            'primary_metric': 'hit_rate',
-            'measurements': {
-                'ticks_run': {
-                    'description': 'Number of simulation ticks (opportunities to fire)',
-                    'unit': 'ticks'
-                },
-                'damage_dealt': {
-                    'description': 'Total HP damage dealt to target (1 damage per hit)',
-                    'unit': 'hp'
-                },
-                'hit_rate': {
-                    'formula': 'damage_dealt / ticks_run',
-                    'description': 'Actual hit rate (shots that connected)',
-                    'unit': 'percentage',
-                    'expected': 0.5318,  # At surface distance (20.53px) not center distance (50px)
-                    'tolerance': 0.05  # p-value threshold
-                },
-                'expected_hit_rate': {
-                    'description': 'Expected hit rate at surface distance (20.53px from mass=400 radius)',
-                    'unit': 'percentage',
-                    'value': 0.5318
-                }
-            }
-        }
     )
-
-    verify_damage_dealt = True
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
         self.expected_hit_chance = compute_beam_hit_chance(self)
 
-    def _collect_extra_results(self, battle_engine):
-        """Store beam-specific results."""
-        self.results['expected_hit_chance'] = self.expected_hit_chance
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Beam Damage", BEAM_LOW_DAMAGE, beam.damage))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
+                                  successes=int(self.damage_dealt),
+                                  trials=engine.tick_counter,
+                                  margin=STANDARD_MARGIN))
+        return checks
 
 
 class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
@@ -334,80 +265,22 @@ class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
         battle_end_mode="time_based",  # Run for full 100k ticks
         ui_priority=11,  # Show right after regular version
         tags=["accuracy", "low-accuracy", "point-blank", "beam-weapons", "high-tick", "precision"],
-        validation_rules=[
-            # Exact match validations
-            ExactMatchRule(
-                name='Beam Weapon Damage',
-                path='attacker.weapon.damage',
-                expected=BEAM_LOW_DAMAGE
-            ),
-            ExactMatchRule(
-                name='Base Accuracy',
-                path='attacker.weapon.base_accuracy',
-                expected=BEAM_LOW_ACCURACY
-            ),
-            ExactMatchRule(
-                name='Accuracy Falloff',
-                path='attacker.weapon.accuracy_falloff',
-                expected=BEAM_LOW_FALLOFF
-            ),
-            ExactMatchRule(
-                name='Weapon Range',
-                path='attacker.weapon.range',
-                expected=BEAM_LOW_RANGE
-            ),
-            ExactMatchRule(
-                name='Target Mass',
-                path='target.mass',
-                expected=400.0  # Standard target mass (zero-mass component architecture)
-            ),
-            # Statistical validation with tight ±1% margin
-            StatisticalTestRule(
-                name='Hit Rate',
-                test_type='binomial',
-                expected_probability=0.5318,  # At surface distance 20.53px (now identical to standard test with mass=400)
-                equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt',
-                description='Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples)'
-            )
-        ],
-        outcome_metrics={
-            'primary_metric': 'hit_rate',
-            'measurements': {
-                'ticks_run': {
-                    'description': 'Number of simulation ticks (100,000 high-precision samples)',
-                    'unit': 'ticks'
-                },
-                'damage_dealt': {
-                    'description': 'Total HP damage dealt to target (1 damage per hit)',
-                    'unit': 'hp'
-                },
-                'hit_rate': {
-                    'formula': 'damage_dealt / ticks_run',
-                    'description': 'Actual hit rate (shots that connected)',
-                    'unit': 'percentage',
-                    'expected': 0.5318,  # At surface distance (20.53px) - now identical to standard test
-                    'tolerance': 0.05  # p-value threshold
-                },
-                'expected_hit_rate': {
-                    'description': 'Expected hit rate at surface distance (20.53px from mass=400 radius)',
-                    'unit': 'percentage',
-                    'value': 0.5318
-                }
-            }
-        }
     )
-
-    verify_damage_dealt = True
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
         self.expected_hit_chance = compute_beam_hit_chance(self)
 
-    def _collect_extra_results(self, battle_engine):
-        """Store beam-specific results."""
-        self.results['expected_hit_chance'] = self.expected_hit_chance
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Beam Damage", BEAM_LOW_DAMAGE, beam.damage))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
+                                  successes=int(self.damage_dealt),
+                                  trials=engine.tick_counter,
+                                  margin=HIGH_PRECISION_MARGIN))
+        return checks
 
 
 class BeamLowAccuracyMidRangeScenario(StaticTargetScenario):
@@ -458,53 +331,22 @@ class BeamLowAccuracyMidRangeScenario(StaticTargetScenario):
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=9,
         tags=["accuracy", "low-accuracy", "mid-range", "beam-weapons"],
-        validation_rules=[
-            ExactMatchRule(
-                name='Beam Weapon Damage',
-                path='attacker.weapon.damage',
-                expected=BEAM_LOW_DAMAGE
-            ),
-            ExactMatchRule(
-                name='Base Accuracy',
-                path='attacker.weapon.base_accuracy',
-                expected=BEAM_LOW_ACCURACY
-            ),
-            ExactMatchRule(
-                name='Accuracy Falloff',
-                path='attacker.weapon.accuracy_falloff',
-                expected=BEAM_LOW_FALLOFF
-            ),
-            ExactMatchRule(
-                name='Weapon Range',
-                path='attacker.weapon.range',
-                expected=BEAM_LOW_RANGE
-            ),
-            ExactMatchRule(
-                name='Target Mass',
-                path='target.mass',
-                expected=STATIONARY_TARGET_MASS
-            ),
-            StatisticalTestRule(
-                name='Hit Rate',
-                test_type='binomial',
-                expected_probability=0.3607,
-                equivalence_margin=STANDARD_MARGIN,
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt',
-                description='Each beam hit = 1 damage, so damage_dealt = number of hits'
-            )
-        ]
     )
-
-    measurement_mode = True
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
         self.expected_hit_chance = compute_beam_hit_chance(self)
 
-    def _collect_extra_results(self, battle_engine):
-        """Store beam-specific results."""
-        self.results['expected_hit_chance'] = self.expected_hit_chance
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Beam Damage", BEAM_LOW_DAMAGE, beam.damage))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
+                                  successes=int(self.damage_dealt),
+                                  trials=engine.tick_counter,
+                                  margin=STANDARD_MARGIN))
+        return checks
 
 
 class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
@@ -558,79 +400,22 @@ class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
         battle_end_mode="time_based",  # Run for full 100k ticks
         ui_priority=11,  # Show right after regular version
         tags=["accuracy", "low-accuracy", "mid-range", "beam-weapons", "high-tick", "precision"],
-        validation_rules=[
-            ExactMatchRule(
-                name='Beam Weapon Damage',
-                path='attacker.weapon.damage',
-                expected=BEAM_LOW_DAMAGE
-            ),
-            ExactMatchRule(
-                name='Base Accuracy',
-                path='attacker.weapon.base_accuracy',
-                expected=BEAM_LOW_ACCURACY
-            ),
-            ExactMatchRule(
-                name='Accuracy Falloff',
-                path='attacker.weapon.accuracy_falloff',
-                expected=BEAM_LOW_FALLOFF
-            ),
-            ExactMatchRule(
-                name='Weapon Range',
-                path='attacker.weapon.range',
-                expected=BEAM_LOW_RANGE
-            ),
-            ExactMatchRule(
-                name='Target Mass',
-                path='target.mass',
-                expected=400.0  # Standard target mass (zero-mass component architecture)
-            ),
-            # Statistical validation with tight ±1% margin
-            StatisticalTestRule(
-                name='Hit Rate',
-                test_type='binomial',
-                expected_probability=0.3607,  # At surface distance 370.53px (now identical to standard test with mass=400)
-                equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt',
-                description='Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples)'
-            )
-        ],
-        outcome_metrics={
-            'primary_metric': 'hit_rate',
-            'measurements': {
-                'ticks_run': {
-                    'description': 'Number of simulation ticks (100,000 high-precision samples)',
-                    'unit': 'ticks'
-                },
-                'damage_dealt': {
-                    'description': 'Total HP damage dealt to target (1 damage per hit)',
-                    'unit': 'hp'
-                },
-                'hit_rate': {
-                    'formula': 'damage_dealt / ticks_run',
-                    'description': 'Actual hit rate (shots that connected)',
-                    'unit': 'percentage',
-                    'expected': 0.3607,  # At surface distance (370.53px) - now identical to standard test
-                    'tolerance': 0.05  # p-value threshold
-                },
-                'expected_hit_rate': {
-                    'description': 'Expected hit rate at surface distance (370.53px from mass=400 radius)',
-                    'unit': 'percentage',
-                    'value': 0.3607
-                }
-            }
-        }
     )
-
-    measurement_mode = True
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
         self.expected_hit_chance = compute_beam_hit_chance(self)
 
-    def _collect_extra_results(self, battle_engine):
-        """Store beam-specific results."""
-        self.results['expected_hit_chance'] = self.expected_hit_chance
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Beam Damage", BEAM_LOW_DAMAGE, beam.damage))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
+                                  successes=int(self.damage_dealt),
+                                  trials=engine.tick_counter,
+                                  margin=HIGH_PRECISION_MARGIN))
+        return checks
 
 
 class BeamLowAccuracyMaxRangeScenario(StaticTargetScenario):
@@ -682,53 +467,22 @@ class BeamLowAccuracyMaxRangeScenario(StaticTargetScenario):
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=8,
         tags=["accuracy", "low-accuracy", "max-range", "beam-weapons"],
-        validation_rules=[
-            ExactMatchRule(
-                name='Beam Weapon Damage',
-                path='attacker.weapon.damage',
-                expected=BEAM_LOW_DAMAGE
-            ),
-            ExactMatchRule(
-                name='Base Accuracy',
-                path='attacker.weapon.base_accuracy',
-                expected=BEAM_LOW_ACCURACY
-            ),
-            ExactMatchRule(
-                name='Accuracy Falloff',
-                path='attacker.weapon.accuracy_falloff',
-                expected=BEAM_LOW_FALLOFF
-            ),
-            ExactMatchRule(
-                name='Weapon Range',
-                path='attacker.weapon.range',
-                expected=BEAM_LOW_RANGE
-            ),
-            ExactMatchRule(
-                name='Target Mass',
-                path='target.mass',
-                expected=STATIONARY_TARGET_MASS
-            ),
-            StatisticalTestRule(
-                name='Hit Rate',
-                test_type='binomial',
-                expected_probability=0.2186,
-                equivalence_margin=STANDARD_MARGIN,
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt',
-                description='Each beam hit = 1 damage, so damage_dealt = number of hits'
-            )
-        ]
     )
-
-    measurement_mode = True
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
         self.expected_hit_chance = compute_beam_hit_chance(self)
 
-    def _collect_extra_results(self, battle_engine):
-        """Store beam-specific results."""
-        self.results['expected_hit_chance'] = self.expected_hit_chance
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Beam Damage", BEAM_LOW_DAMAGE, beam.damage))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
+                                  successes=int(self.damage_dealt),
+                                  trials=engine.tick_counter,
+                                  margin=STANDARD_MARGIN))
+        return checks
 
 
 # ============================================================================
@@ -783,53 +537,22 @@ class BeamMediumAccuracyPointBlankScenario(StaticTargetScenario):
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=10,
         tags=["accuracy", "medium-accuracy", "point-blank", "beam-weapons"],
-        validation_rules=[
-            ExactMatchRule(
-                name='Beam Weapon Damage',
-                path='attacker.weapon.damage',
-                expected=BEAM_LOW_DAMAGE
-            ),
-            ExactMatchRule(
-                name='Base Accuracy',
-                path='attacker.weapon.base_accuracy',
-                expected=BEAM_MED_ACCURACY
-            ),
-            ExactMatchRule(
-                name='Accuracy Falloff',
-                path='attacker.weapon.accuracy_falloff',
-                expected=BEAM_MED_FALLOFF
-            ),
-            ExactMatchRule(
-                name='Weapon Range',
-                path='attacker.weapon.range',
-                expected=BEAM_LOW_RANGE
-            ),
-            ExactMatchRule(
-                name='Target Mass',
-                path='target.mass',
-                expected=STATIONARY_TARGET_MASS
-            ),
-            StatisticalTestRule(
-                name='Hit Rate',
-                test_type='binomial',
-                expected_probability=0.8385,
-                equivalence_margin=STANDARD_MARGIN,
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt',
-                description='Each beam hit = 1 damage, so damage_dealt = number of hits'
-            )
-        ]
     )
-
-    verify_damage_dealt = True
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
         self.expected_hit_chance = compute_beam_hit_chance(self)
 
-    def _collect_extra_results(self, battle_engine):
-        """Store beam-specific results."""
-        self.results['expected_hit_chance'] = self.expected_hit_chance
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
+                                  successes=int(self.damage_dealt),
+                                  trials=engine.tick_counter,
+                                  margin=STANDARD_MARGIN))
+        return checks
 
 
 class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
@@ -883,79 +606,22 @@ class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
         battle_end_mode="time_based",  # Run for full 100k ticks
         ui_priority=11,  # Show right after regular version
         tags=["accuracy", "medium-accuracy", "point-blank", "beam-weapons", "high-tick", "precision"],
-        validation_rules=[
-            ExactMatchRule(
-                name='Beam Weapon Damage',
-                path='attacker.weapon.damage',
-                expected=BEAM_LOW_DAMAGE
-            ),
-            ExactMatchRule(
-                name='Base Accuracy',
-                path='attacker.weapon.base_accuracy',
-                expected=BEAM_MED_ACCURACY
-            ),
-            ExactMatchRule(
-                name='Accuracy Falloff',
-                path='attacker.weapon.accuracy_falloff',
-                expected=BEAM_MED_FALLOFF
-            ),
-            ExactMatchRule(
-                name='Weapon Range',
-                path='attacker.weapon.range',
-                expected=BEAM_LOW_RANGE
-            ),
-            ExactMatchRule(
-                name='Target Mass',
-                path='target.mass',
-                expected=400.0  # Standard target mass (zero-mass component architecture)
-            ),
-            # Statistical validation with tight ±1% margin
-            StatisticalTestRule(
-                name='Hit Rate',
-                test_type='binomial',
-                expected_probability=0.8385,  # At surface distance 20.53px (now identical to standard test with mass=400)
-                equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt',
-                description='Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples)'
-            )
-        ],
-        outcome_metrics={
-            'primary_metric': 'hit_rate',
-            'measurements': {
-                'ticks_run': {
-                    'description': 'Number of simulation ticks (100,000 high-precision samples)',
-                    'unit': 'ticks'
-                },
-                'damage_dealt': {
-                    'description': 'Total HP damage dealt to target (1 damage per hit)',
-                    'unit': 'hp'
-                },
-                'hit_rate': {
-                    'formula': 'damage_dealt / ticks_run',
-                    'description': 'Actual hit rate (shots that connected)',
-                    'unit': 'percentage',
-                    'expected': 0.8385,  # At surface distance (20.53px) - now identical to standard test
-                    'tolerance': 0.05  # p-value threshold
-                },
-                'expected_hit_rate': {
-                    'description': 'Expected hit rate at surface distance (20.53px from mass=400 radius)',
-                    'unit': 'percentage',
-                    'value': 0.8385
-                }
-            }
-        }
     )
-
-    verify_damage_dealt = True
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
         self.expected_hit_chance = compute_beam_hit_chance(self)
 
-    def _collect_extra_results(self, battle_engine):
-        """Store beam-specific results."""
-        self.results['expected_hit_chance'] = self.expected_hit_chance
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
+                                  successes=int(self.damage_dealt),
+                                  trials=engine.tick_counter,
+                                  margin=HIGH_PRECISION_MARGIN))
+        return checks
 
 
 class BeamMediumAccuracyMidRangeScenario(StaticTargetScenario):
@@ -1006,53 +672,22 @@ class BeamMediumAccuracyMidRangeScenario(StaticTargetScenario):
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=9,
         tags=["accuracy", "medium-accuracy", "mid-range", "beam-weapons"],
-        validation_rules=[
-            ExactMatchRule(
-                name='Beam Weapon Damage',
-                path='attacker.weapon.damage',
-                expected=BEAM_LOW_DAMAGE
-            ),
-            ExactMatchRule(
-                name='Base Accuracy',
-                path='attacker.weapon.base_accuracy',
-                expected=BEAM_MED_ACCURACY
-            ),
-            ExactMatchRule(
-                name='Accuracy Falloff',
-                path='attacker.weapon.accuracy_falloff',
-                expected=BEAM_MED_FALLOFF
-            ),
-            ExactMatchRule(
-                name='Weapon Range',
-                path='attacker.weapon.range',
-                expected=BEAM_LOW_RANGE
-            ),
-            ExactMatchRule(
-                name='Target Mass',
-                path='target.mass',
-                expected=STATIONARY_TARGET_MASS
-            ),
-            StatisticalTestRule(
-                name='Hit Rate',
-                test_type='binomial',
-                expected_probability=0.7855,
-                equivalence_margin=STANDARD_MARGIN,
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt',
-                description='Each beam hit = 1 damage, so damage_dealt = number of hits'
-            )
-        ]
     )
-
-    verify_damage_dealt = True
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
         self.expected_hit_chance = compute_beam_hit_chance(self)
 
-    def _collect_extra_results(self, battle_engine):
-        """Store beam-specific results."""
-        self.results['expected_hit_chance'] = self.expected_hit_chance
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
+                                  successes=int(self.damage_dealt),
+                                  trials=engine.tick_counter,
+                                  margin=STANDARD_MARGIN))
+        return checks
 
 
 class BeamMediumAccuracyMidRangeHighTickScenario(StaticTargetScenario):
@@ -1106,79 +741,22 @@ class BeamMediumAccuracyMidRangeHighTickScenario(StaticTargetScenario):
         battle_end_mode="time_based",  # Run for full 100k ticks
         ui_priority=11,  # Show right after regular version
         tags=["accuracy", "medium-accuracy", "mid-range", "beam-weapons", "high-tick", "precision"],
-        validation_rules=[
-            ExactMatchRule(
-                name='Beam Weapon Damage',
-                path='attacker.weapon.damage',
-                expected=BEAM_LOW_DAMAGE
-            ),
-            ExactMatchRule(
-                name='Base Accuracy',
-                path='attacker.weapon.base_accuracy',
-                expected=BEAM_MED_ACCURACY
-            ),
-            ExactMatchRule(
-                name='Accuracy Falloff',
-                path='attacker.weapon.accuracy_falloff',
-                expected=BEAM_MED_FALLOFF
-            ),
-            ExactMatchRule(
-                name='Weapon Range',
-                path='attacker.weapon.range',
-                expected=BEAM_LOW_RANGE
-            ),
-            ExactMatchRule(
-                name='Target Mass',
-                path='target.mass',
-                expected=400.0  # Standard target mass (zero-mass component architecture)
-            ),
-            # Statistical validation with tight ±1% margin
-            StatisticalTestRule(
-                name='Hit Rate',
-                test_type='binomial',
-                expected_probability=0.7855,  # At surface distance 370.53px (now identical to standard test with mass=400)
-                equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt',
-                description='Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples)'
-            )
-        ],
-        outcome_metrics={
-            'primary_metric': 'hit_rate',
-            'measurements': {
-                'ticks_run': {
-                    'description': 'Number of simulation ticks (100,000 high-precision samples)',
-                    'unit': 'ticks'
-                },
-                'damage_dealt': {
-                    'description': 'Total HP damage dealt to target (1 damage per hit)',
-                    'unit': 'hp'
-                },
-                'hit_rate': {
-                    'formula': 'damage_dealt / ticks_run',
-                    'description': 'Actual hit rate (shots that connected)',
-                    'unit': 'percentage',
-                    'expected': 0.7855,  # At surface distance (370.53px) - now identical to standard test
-                    'tolerance': 0.05  # p-value threshold
-                },
-                'expected_hit_rate': {
-                    'description': 'Expected hit rate at surface distance (370.53px from mass=400 radius)',
-                    'unit': 'percentage',
-                    'value': 0.7855
-                }
-            }
-        }
     )
-
-    verify_damage_dealt = True
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
         self.expected_hit_chance = compute_beam_hit_chance(self)
 
-    def _collect_extra_results(self, battle_engine):
-        """Store beam-specific results."""
-        self.results['expected_hit_chance'] = self.expected_hit_chance
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
+                                  successes=int(self.damage_dealt),
+                                  trials=engine.tick_counter,
+                                  margin=HIGH_PRECISION_MARGIN))
+        return checks
 
 
 class BeamMediumAccuracyMaxRangeScenario(StaticTargetScenario):
@@ -1229,53 +807,22 @@ class BeamMediumAccuracyMaxRangeScenario(StaticTargetScenario):
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=8,
         tags=["accuracy", "medium-accuracy", "max-range", "beam-weapons"],
-        validation_rules=[
-            ExactMatchRule(
-                name='Beam Weapon Damage',
-                path='attacker.weapon.damage',
-                expected=BEAM_LOW_DAMAGE
-            ),
-            ExactMatchRule(
-                name='Base Accuracy',
-                path='attacker.weapon.base_accuracy',
-                expected=BEAM_MED_ACCURACY
-            ),
-            ExactMatchRule(
-                name='Accuracy Falloff',
-                path='attacker.weapon.accuracy_falloff',
-                expected=BEAM_MED_FALLOFF
-            ),
-            ExactMatchRule(
-                name='Weapon Range',
-                path='attacker.weapon.range',
-                expected=BEAM_LOW_RANGE
-            ),
-            ExactMatchRule(
-                name='Target Mass',
-                path='target.mass',
-                expected=STATIONARY_TARGET_MASS
-            ),
-            StatisticalTestRule(
-                name='Hit Rate',
-                test_type='binomial',
-                expected_probability=0.7207,
-                equivalence_margin=STANDARD_MARGIN,
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt',
-                description='Each beam hit = 1 damage, so damage_dealt = number of hits'
-            )
-        ]
     )
-
-    measurement_mode = True
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
         self.expected_hit_chance = compute_beam_hit_chance(self)
 
-    def _collect_extra_results(self, battle_engine):
-        """Store beam-specific results."""
-        self.results['expected_hit_chance'] = self.expected_hit_chance
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
+                                  successes=int(self.damage_dealt),
+                                  trials=engine.tick_counter,
+                                  margin=STANDARD_MARGIN))
+        return checks
 
 
 class BeamMediumAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
@@ -1329,79 +876,22 @@ class BeamMediumAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
         battle_end_mode="time_based",  # Run for full 100k ticks
         ui_priority=11,  # Show right after regular version
         tags=["accuracy", "medium-accuracy", "max-range", "beam-weapons", "high-tick", "precision"],
-        validation_rules=[
-            ExactMatchRule(
-                name='Beam Weapon Damage',
-                path='attacker.weapon.damage',
-                expected=BEAM_LOW_DAMAGE
-            ),
-            ExactMatchRule(
-                name='Base Accuracy',
-                path='attacker.weapon.base_accuracy',
-                expected=BEAM_MED_ACCURACY
-            ),
-            ExactMatchRule(
-                name='Accuracy Falloff',
-                path='attacker.weapon.accuracy_falloff',
-                expected=BEAM_MED_FALLOFF
-            ),
-            ExactMatchRule(
-                name='Weapon Range',
-                path='attacker.weapon.range',
-                expected=BEAM_LOW_RANGE
-            ),
-            ExactMatchRule(
-                name='Target Mass',
-                path='target.mass',
-                expected=400.0  # Standard target mass (zero-mass component architecture)
-            ),
-            # Statistical validation with tight ±1% margin
-            StatisticalTestRule(
-                name='Hit Rate',
-                test_type='binomial',
-                expected_probability=0.7207,  # At surface distance 720.53px (now identical to standard test with mass=400)
-                equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt',
-                description='Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples)'
-            )
-        ],
-        outcome_metrics={
-            'primary_metric': 'hit_rate',
-            'measurements': {
-                'ticks_run': {
-                    'description': 'Number of simulation ticks (100,000 high-precision samples)',
-                    'unit': 'ticks'
-                },
-                'damage_dealt': {
-                    'description': 'Total HP damage dealt to target (1 damage per hit)',
-                    'unit': 'hp'
-                },
-                'hit_rate': {
-                    'formula': 'damage_dealt / ticks_run',
-                    'description': 'Actual hit rate (shots that connected)',
-                    'unit': 'percentage',
-                    'expected': 0.7207,  # At surface distance (720.53px) - now identical to standard test
-                    'tolerance': 0.05  # p-value threshold
-                },
-                'expected_hit_rate': {
-                    'description': 'Expected hit rate at surface distance (720.53px from mass=400 radius)',
-                    'unit': 'percentage',
-                    'value': 0.7207
-                }
-            }
-        }
     )
-
-    measurement_mode = True
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
         self.expected_hit_chance = compute_beam_hit_chance(self)
 
-    def _collect_extra_results(self, battle_engine):
-        """Store beam-specific results."""
-        self.results['expected_hit_chance'] = self.expected_hit_chance
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
+                                  successes=int(self.damage_dealt),
+                                  trials=engine.tick_counter,
+                                  margin=HIGH_PRECISION_MARGIN))
+        return checks
 
 
 # ============================================================================
@@ -1456,53 +946,22 @@ class BeamHighAccuracyPointBlankScenario(StaticTargetScenario):
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=10,
         tags=["accuracy", "high-accuracy", "point-blank", "beam-weapons"],
-        validation_rules=[
-            ExactMatchRule(
-                name='Beam Weapon Damage',
-                path='attacker.weapon.damage',
-                expected=BEAM_LOW_DAMAGE
-            ),
-            ExactMatchRule(
-                name='Base Accuracy',
-                path='attacker.weapon.base_accuracy',
-                expected=BEAM_HIGH_ACCURACY
-            ),
-            ExactMatchRule(
-                name='Accuracy Falloff',
-                path='attacker.weapon.accuracy_falloff',
-                expected=BEAM_HIGH_FALLOFF
-            ),
-            ExactMatchRule(
-                name='Weapon Range',
-                path='attacker.weapon.range',
-                expected=BEAM_LOW_RANGE
-            ),
-            ExactMatchRule(
-                name='Target Mass',
-                path='target.mass',
-                expected=STATIONARY_TARGET_MASS
-            ),
-            StatisticalTestRule(
-                name='Hit Rate',
-                test_type='binomial',
-                expected_probability=0.9906,
-                equivalence_margin=STANDARD_MARGIN,
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt',
-                description='Each beam hit = 1 damage, so damage_dealt = number of hits'
-            )
-        ]
     )
-
-    verify_damage_dealt = True
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
         self.expected_hit_chance = compute_beam_hit_chance(self)
 
-    def _collect_extra_results(self, battle_engine):
-        """Store beam-specific results."""
-        self.results['expected_hit_chance'] = self.expected_hit_chance
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Beam Damage", BEAM_HIGH_DAMAGE, beam.damage))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
+                                  successes=int(self.damage_dealt),
+                                  trials=engine.tick_counter,
+                                  margin=STANDARD_MARGIN))
+        return checks
 
 
 class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
@@ -1556,79 +1015,22 @@ class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
         battle_end_mode="time_based",  # Run for full 100k ticks
         ui_priority=11,  # Show right after regular version
         tags=["accuracy", "high-accuracy", "point-blank", "beam-weapons", "high-tick", "precision"],
-        validation_rules=[
-            ExactMatchRule(
-                name='Beam Weapon Damage',
-                path='attacker.weapon.damage',
-                expected=BEAM_LOW_DAMAGE
-            ),
-            ExactMatchRule(
-                name='Base Accuracy',
-                path='attacker.weapon.base_accuracy',
-                expected=BEAM_HIGH_ACCURACY
-            ),
-            ExactMatchRule(
-                name='Accuracy Falloff',
-                path='attacker.weapon.accuracy_falloff',
-                expected=BEAM_HIGH_FALLOFF
-            ),
-            ExactMatchRule(
-                name='Weapon Range',
-                path='attacker.weapon.range',
-                expected=BEAM_LOW_RANGE
-            ),
-            ExactMatchRule(
-                name='Target Mass',
-                path='target.mass',
-                expected=400.0  # Standard target mass (zero-mass component architecture)
-            ),
-            # Statistical validation with tight ±1% margin
-            StatisticalTestRule(
-                name='Hit Rate',
-                test_type='binomial',
-                expected_probability=0.9906,  # At surface distance 20.53px (now identical to standard test with mass=400)
-                equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt',
-                description='Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples)'
-            )
-        ],
-        outcome_metrics={
-            'primary_metric': 'hit_rate',
-            'measurements': {
-                'ticks_run': {
-                    'description': 'Number of simulation ticks (100,000 high-precision samples)',
-                    'unit': 'ticks'
-                },
-                'damage_dealt': {
-                    'description': 'Total HP damage dealt to target (1 damage per hit)',
-                    'unit': 'hp'
-                },
-                'hit_rate': {
-                    'formula': 'damage_dealt / ticks_run',
-                    'description': 'Actual hit rate (shots that connected)',
-                    'unit': 'percentage',
-                    'expected': 0.9906,  # At surface distance (20.53px) - now identical to standard test
-                    'tolerance': 0.05  # p-value threshold
-                },
-                'expected_hit_rate': {
-                    'description': 'Expected hit rate at surface distance (20.53px from mass=400 radius)',
-                    'unit': 'percentage',
-                    'value': 0.9906
-                }
-            }
-        }
     )
-
-    verify_damage_dealt = True
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
         self.expected_hit_chance = compute_beam_hit_chance(self)
 
-    def _collect_extra_results(self, battle_engine):
-        """Store beam-specific results."""
-        self.results['expected_hit_chance'] = self.expected_hit_chance
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Beam Damage", BEAM_HIGH_DAMAGE, beam.damage))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
+                                  successes=int(self.damage_dealt),
+                                  trials=engine.tick_counter,
+                                  margin=HIGH_PRECISION_MARGIN))
+        return checks
 
 
 class BeamHighAccuracyMaxRangeScenario(StaticTargetScenario):
@@ -1679,53 +1081,22 @@ class BeamHighAccuracyMaxRangeScenario(StaticTargetScenario):
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=9,
         tags=["accuracy", "high-accuracy", "max-range", "beam-weapons"],
-        validation_rules=[
-            ExactMatchRule(
-                name='Beam Weapon Damage',
-                path='attacker.weapon.damage',
-                expected=BEAM_LOW_DAMAGE
-            ),
-            ExactMatchRule(
-                name='Base Accuracy',
-                path='attacker.weapon.base_accuracy',
-                expected=BEAM_HIGH_ACCURACY
-            ),
-            ExactMatchRule(
-                name='Accuracy Falloff',
-                path='attacker.weapon.accuracy_falloff',
-                expected=BEAM_HIGH_FALLOFF
-            ),
-            ExactMatchRule(
-                name='Weapon Range',
-                path='attacker.weapon.range',
-                expected=BEAM_LOW_RANGE
-            ),
-            ExactMatchRule(
-                name='Target Mass',
-                path='target.mass',
-                expected=STATIONARY_TARGET_MASS
-            ),
-            StatisticalTestRule(
-                name='Hit Rate',
-                test_type='binomial',
-                expected_probability=0.9866,
-                equivalence_margin=STANDARD_MARGIN,
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt',
-                description='Each beam hit = 1 damage, so damage_dealt = number of hits'
-            )
-        ]
     )
-
-    verify_damage_dealt = True
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
         self.expected_hit_chance = compute_beam_hit_chance(self)
 
-    def _collect_extra_results(self, battle_engine):
-        """Store beam-specific results."""
-        self.results['expected_hit_chance'] = self.expected_hit_chance
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Beam Damage", BEAM_HIGH_DAMAGE, beam.damage))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
+                                  successes=int(self.damage_dealt),
+                                  trials=engine.tick_counter,
+                                  margin=STANDARD_MARGIN))
+        return checks
 
 
 class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
@@ -1779,79 +1150,22 @@ class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
         battle_end_mode="time_based",  # Run for full 100k ticks
         ui_priority=11,  # Show right after regular version
         tags=["accuracy", "high-accuracy", "max-range", "beam-weapons", "high-tick", "precision"],
-        validation_rules=[
-            ExactMatchRule(
-                name='Beam Weapon Damage',
-                path='attacker.weapon.damage',
-                expected=BEAM_LOW_DAMAGE
-            ),
-            ExactMatchRule(
-                name='Base Accuracy',
-                path='attacker.weapon.base_accuracy',
-                expected=BEAM_HIGH_ACCURACY
-            ),
-            ExactMatchRule(
-                name='Accuracy Falloff',
-                path='attacker.weapon.accuracy_falloff',
-                expected=BEAM_HIGH_FALLOFF
-            ),
-            ExactMatchRule(
-                name='Weapon Range',
-                path='attacker.weapon.range',
-                expected=BEAM_LOW_RANGE
-            ),
-            ExactMatchRule(
-                name='Target Mass',
-                path='target.mass',
-                expected=400.0  # Standard target mass (zero-mass component architecture)
-            ),
-            # Statistical validation with tight ±1% margin
-            StatisticalTestRule(
-                name='Hit Rate',
-                test_type='binomial',
-                expected_probability=0.9866,  # At surface distance 720.53px (now identical to standard test with mass=400)
-                equivalence_margin=HIGH_PRECISION_MARGIN,  # ±1% margin for 100k-tick test (SE ≈ 0.16%, 99% confidence)
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt',
-                description='Each beam hit = 1 damage, so damage_dealt = number of hits (100k samples)'
-            )
-        ],
-        outcome_metrics={
-            'primary_metric': 'hit_rate',
-            'measurements': {
-                'ticks_run': {
-                    'description': 'Number of simulation ticks (100,000 high-precision samples)',
-                    'unit': 'ticks'
-                },
-                'damage_dealt': {
-                    'description': 'Total HP damage dealt to target (1 damage per hit)',
-                    'unit': 'hp'
-                },
-                'hit_rate': {
-                    'formula': 'damage_dealt / ticks_run',
-                    'description': 'Actual hit rate (shots that connected)',
-                    'unit': 'percentage',
-                    'expected': 0.9866,  # At surface distance (720.53px) - now identical to standard test
-                    'tolerance': 0.05  # p-value threshold
-                },
-                'expected_hit_rate': {
-                    'description': 'Expected hit rate at surface distance (720.53px from mass=400 radius)',
-                    'unit': 'percentage',
-                    'value': 0.9866
-                }
-            }
-        }
     )
-
-    verify_damage_dealt = True
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
         self.expected_hit_chance = compute_beam_hit_chance(self)
 
-    def _collect_extra_results(self, battle_engine):
-        """Store beam-specific results."""
-        self.results['expected_hit_chance'] = self.expected_hit_chance
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Beam Damage", BEAM_HIGH_DAMAGE, beam.damage))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        checks.append(check_tost("Hit Rate", self.expected_hit_chance,
+                                  successes=int(self.damage_dealt),
+                                  trials=engine.tick_counter,
+                                  margin=HIGH_PRECISION_MARGIN))
+        return checks
 
 
 # ============================================================================
@@ -1907,45 +1221,7 @@ class BeamMediumAccuracyErraticMidRangeScenario(StaticTargetScenario):
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=7,
         tags=["accuracy", "medium-accuracy", "moving-target", "erratic", "beam-weapons"],
-        validation_rules=[
-            ExactMatchRule(
-                name='Beam Weapon Damage',
-                path='attacker.weapon.damage',
-                expected=BEAM_LOW_DAMAGE
-            ),
-            ExactMatchRule(
-                name='Base Accuracy',
-                path='attacker.weapon.base_accuracy',
-                expected=BEAM_MED_ACCURACY
-            ),
-            ExactMatchRule(
-                name='Accuracy Falloff',
-                path='attacker.weapon.accuracy_falloff',
-                expected=BEAM_MED_FALLOFF
-            ),
-            ExactMatchRule(
-                name='Weapon Range',
-                path='attacker.weapon.range',
-                expected=BEAM_LOW_RANGE
-            ),
-            ExactMatchRule(
-                name='Target Mass',
-                path='target.mass',
-                expected=65.0
-            ),
-            StatisticalTestRule(
-                name='Hit Rate',
-                test_type='binomial',
-                expected_probability=0.0484,
-                equivalence_margin=STANDARD_MARGIN,
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt',
-                description='Each beam hit = 1 damage, so damage_dealt = number of hits'
-            )
-        ]
     )
-
-    measurement_mode = True
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
@@ -1954,10 +1230,22 @@ class BeamMediumAccuracyErraticMidRangeScenario(StaticTargetScenario):
         )
         self.expected_hit_chance_base = compute_beam_hit_chance(self)
 
-    def _collect_extra_results(self, battle_engine):
-        """Store beam-specific results."""
-        self.results['expected_hit_chance'] = self.expected_hit_chance
-        self.results['expected_hit_chance_base'] = self.expected_hit_chance_base
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
+        checks.append(check_true(
+            "Defense Reduces Hit Chance",
+            self.expected_hit_chance < self.expected_hit_chance_base,
+            detail=f"with_defense={self.expected_hit_chance:.4f}, base={self.expected_hit_chance_base:.4f}",
+        ))
+        # Erratic target - observational only (hit rate depends on AI movement)
+        checks.append(check_true(
+            "Some Damage Dealt", self.damage_dealt >= 0,
+            actual=self.damage_dealt, phase="outcome",
+            detail="Erratic target test - hit rate varies with AI movement",
+        ))
+        return checks
 
 
 class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
@@ -2009,45 +1297,7 @@ class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=6,
         tags=["accuracy", "medium-accuracy", "moving-target", "erratic", "max-range", "beam-weapons"],
-        validation_rules=[
-            ExactMatchRule(
-                name='Beam Weapon Damage',
-                path='attacker.weapon.damage',
-                expected=BEAM_LOW_DAMAGE
-            ),
-            ExactMatchRule(
-                name='Base Accuracy',
-                path='attacker.weapon.base_accuracy',
-                expected=BEAM_MED_ACCURACY
-            ),
-            ExactMatchRule(
-                name='Accuracy Falloff',
-                path='attacker.weapon.accuracy_falloff',
-                expected=BEAM_MED_FALLOFF
-            ),
-            ExactMatchRule(
-                name='Weapon Range',
-                path='attacker.weapon.range',
-                expected=BEAM_LOW_RANGE
-            ),
-            ExactMatchRule(
-                name='Target Mass',
-                path='target.mass',
-                expected=65.0
-            ),
-            StatisticalTestRule(
-                name='Hit Rate',
-                test_type='binomial',
-                expected_probability=0.0347,
-                equivalence_margin=STANDARD_MARGIN,
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt',
-                description='Each beam hit = 1 damage, so damage_dealt = number of hits'
-            )
-        ]
     )
-
-    measurement_mode = True
 
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
@@ -2056,10 +1306,22 @@ class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
         )
         self.expected_hit_chance_base = compute_beam_hit_chance(self)
 
-    def _collect_extra_results(self, battle_engine):
-        """Store beam-specific results."""
-        self.results['expected_hit_chance'] = self.expected_hit_chance
-        self.results['expected_hit_chance_base'] = self.expected_hit_chance_base
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
+        checks.append(check_true(
+            "Defense Reduces Hit Chance",
+            self.expected_hit_chance < self.expected_hit_chance_base,
+            detail=f"with_defense={self.expected_hit_chance:.4f}, base={self.expected_hit_chance_base:.4f}",
+        ))
+        # Erratic target - observational only (hit rate depends on AI movement)
+        checks.append(check_true(
+            "Some Damage Dealt", self.damage_dealt >= 0,
+            actual=self.damage_dealt, phase="outcome",
+            detail="Erratic target test - hit rate varies with AI movement",
+        ))
+        return checks
 
 
 # ============================================================================
@@ -2112,41 +1374,15 @@ class BeamOutOfRangeScenario(StaticTargetScenario):
         battle_end_mode="time_based",  # Run for full duration regardless of ship status
         ui_priority=8,
         tags=["range-limit", "out-of-range", "beam-weapons"],
-        validation_rules=[
-            ExactMatchRule(
-                name='Beam Weapon Damage',
-                path='attacker.weapon.damage',
-                expected=BEAM_LOW_DAMAGE
-            ),
-            ExactMatchRule(
-                name='Base Accuracy',
-                path='attacker.weapon.base_accuracy',
-                expected=BEAM_MED_ACCURACY
-            ),
-            ExactMatchRule(
-                name='Accuracy Falloff',
-                path='attacker.weapon.accuracy_falloff',
-                expected=BEAM_MED_FALLOFF
-            ),
-            ExactMatchRule(
-                name='Weapon Range',
-                path='attacker.weapon.range',
-                expected=BEAM_LOW_RANGE
-            ),
-            ExactMatchRule(
-                name='Target Mass',
-                path='target.mass',
-                expected=STATIONARY_TARGET_MASS
-            )
-        ]
     )
 
-    expect_no_damage = True
-
-    def _collect_extra_results(self, battle_engine):
-        """Store range-specific results."""
-        self.results['distance'] = 900
-        self.results['weapon_max_range'] = 800
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_exact("Distance Beyond Range", True, self.distance > beam.range,
+                                  phase="data"))
+        checks.append(check_exact("Damage Dealt", 0, self.damage_dealt, phase="outcome"))
+        return checks
 
 
 # ============================================================================
