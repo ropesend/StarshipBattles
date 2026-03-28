@@ -229,78 +229,101 @@ class StarGenerator:
             
             return mass
 
+    # Star type probabilities for direct-roll selection.
+    # Targets per ~57-star galaxy: Blue Giant ~3-4, White Dwarf ~1-2,
+    # Brown Dwarf ~1-2, Neutron Star ~1, Black Hole ~1 (rarest).
+    _TYPE_WEIGHTS = {
+        StarType.MAIN_SEQUENCE: 0.525,
+        StarType.RED_DWARF:     0.250,
+        StarType.RED_GIANT:     0.070,
+        StarType.BLUE_GIANT:    0.060,
+        StarType.BROWN_DWARF:   0.030,
+        StarType.WHITE_DWARF:   0.030,
+        StarType.NEUTRON_STAR:  0.020,
+        StarType.BLACK_HOLE:    0.015,
+    }
+
     def _determine_type_and_radius(self, mass: float, age_ratio: float = 0.5) -> tuple:
         """
-        Determine type and radius based on mass and random evolution factor.
-        Returns (StarType, Radius_Solar, Temperature_K, Luminosity_Solar, Color)
-        Simplified astrophysics model.
-        """
-        # Mass-Luminosity Relation (Approximation for Main Sequence)
-        # L ~ M^3.5
-        luminosity = mass ** 3.5
-        
-        # Stefan-Boltzmann Law: L = 4 * PI * R^2 * Sigma * T^4
-        # We need to determine T or R to find the other.
-        # Main Sequence Relation: R ~ M^0.8 (approx)
-        radius = mass ** 0.8
-        
-        # Calculate T from L and R
-        # (L/L_sol) = (R/R_sol)^2 * (T/T_sol)^4
-        # T/T_sol = ((L/L_sol) / (R/R_sol)^2)^(1/4)
-        t_ratio = (luminosity / (radius ** 2)) ** 0.25
-        temperature = t_ratio * SOLAR_TEMP_K
-        
-        star_type = StarType.MAIN_SEQUENCE
-        color = self._kelvin_to_rgb(temperature)
+        Determine star type via weighted roll, then set physical properties.
 
-        # Evolution / Giants Logic (Random chance based on mass)
-        # High mass stars evolve faster.
-        evolution_roll = random.random()
-        
-        if mass > 8 and evolution_roll > 0.9:
-            # Blue Giant or Supergiant
-            star_type = StarType.BLUE_GIANT
-            radius *= random.uniform(5, 20) # Significantly larger
-            luminosity *= random.uniform(1.5, 5.0) # Brighter
-            # Temp stays high or cools slightly? Blue Giants are hot.
-            temperature = max(10000, temperature * 0.8) 
-            
-        elif mass > 0.8 and evolution_roll > 0.85:
-            # Red Giant phase
-            star_type = StarType.RED_GIANT
-            radius *= random.uniform(10, 100) # Huge expansion
-            temperature = random.uniform(3000, 4500) # Cool down
-            # Luminosity increases due to size: L ~ R^2 * T^4
+        Returns (StarType, Radius_Solar, Temperature_K, Luminosity_Solar, Color).
+        The generated mass informs properties but does not gate type selection.
+        """
+        # Roll for type directly using weighted probabilities
+        star_type = self._roll_star_type()
+
+        # Set properties based on type, using mass as a seed for variation
+        if star_type == StarType.BLUE_GIANT:
+            # Massive hot stars — override mass upward if needed
+            mass = max(mass, random.uniform(8, 50))
+            luminosity = mass ** 3.5 * random.uniform(1.5, 5.0)
+            radius = mass ** 0.8 * random.uniform(5, 20)
+            temperature = max(10000, random.uniform(15000, 40000))
+            color = self._kelvin_to_rgb(temperature)
+
+        elif star_type == StarType.RED_GIANT:
+            mass = max(mass, random.uniform(0.8, 5.0))
+            radius = mass ** 0.8 * random.uniform(10, 100)
+            temperature = random.uniform(3000, 4500)
             luminosity = (radius ** 2) * ((temperature / SOLAR_TEMP_K) ** 4)
             color = (255, 60, 60)
 
-        elif mass < 0.5:
-             star_type = StarType.RED_DWARF
-             color = (255, 100, 100)
-             
-        elif mass > 1.4 and evolution_roll > 0.98:
-            # Remnants (Rare)
-            roll = random.random()
-            if roll > 0.8 and mass > 20: 
-                star_type = StarType.BLACK_HOLE
-                radius = 0.0001 # Tiny
-                luminosity = 0.001 # Accretion disk?
-                temperature = 0 # Event horizon
-                color = (20, 0, 40)
-            elif roll > 0.5 and mass > 8:
-                star_type = StarType.NEUTRON_STAR
-                radius = 0.00002 # Tiny
-                luminosity = 0.01 
-                temperature = 1000000 
-                color = (200, 200, 255)
-            else:
-                 star_type = StarType.WHITE_DWARF
-                 radius = 0.01 # Earth size
-                 temperature = random.uniform(8000, 40000)
-                 color = (220, 220, 255)
-                 luminosity = (radius ** 2) * ((temperature / SOLAR_TEMP_K) ** 4)
+        elif star_type == StarType.RED_DWARF:
+            mass = min(mass, random.uniform(0.08, 0.5))
+            luminosity = mass ** 3.5
+            radius = mass ** 0.8
+            t_ratio = (luminosity / (radius ** 2)) ** 0.25
+            temperature = t_ratio * SOLAR_TEMP_K
+            color = (255, 100, 100)
+
+        elif star_type == StarType.BROWN_DWARF:
+            mass = random.uniform(0.01, 0.08)
+            radius = random.uniform(0.08, 0.15)  # Jupiter-sized
+            temperature = random.uniform(500, 2500)
+            luminosity = (radius ** 2) * ((temperature / SOLAR_TEMP_K) ** 4)
+            color = (140, 60, 40)
+
+        elif star_type == StarType.WHITE_DWARF:
+            mass = max(mass, random.uniform(0.5, 1.4))
+            radius = 0.01  # Earth-sized
+            temperature = random.uniform(8000, 40000)
+            luminosity = (radius ** 2) * ((temperature / SOLAR_TEMP_K) ** 4)
+            color = (220, 220, 255)
+
+        elif star_type == StarType.NEUTRON_STAR:
+            mass = max(mass, random.uniform(1.4, 3.0))
+            radius = 0.00002
+            temperature = 1000000
+            luminosity = 0.01
+            color = (200, 200, 255)
+
+        elif star_type == StarType.BLACK_HOLE:
+            mass = max(mass, random.uniform(5, 50))
+            radius = 0.0001
+            temperature = 0  # Event horizon
+            luminosity = 0.001  # Accretion disk
+            color = (20, 0, 40)
+
+        else:
+            # MAIN_SEQUENCE — standard mass-luminosity-radius relations
+            luminosity = mass ** 3.5
+            radius = mass ** 0.8
+            t_ratio = (luminosity / (radius ** 2)) ** 0.25
+            temperature = t_ratio * SOLAR_TEMP_K
+            color = self._kelvin_to_rgb(temperature)
 
         return star_type, radius, temperature, luminosity, color
+
+    def _roll_star_type(self) -> StarType:
+        """Select star type using weighted random roll."""
+        roll = random.random()
+        cumulative = 0.0
+        for star_type, weight in self._TYPE_WEIGHTS.items():
+            cumulative += weight
+            if roll < cumulative:
+                return star_type
+        return StarType.MAIN_SEQUENCE
 
     def _kelvin_to_rgb(self, temp: float) -> tuple:
         """Approximate RGB from Kelvin."""

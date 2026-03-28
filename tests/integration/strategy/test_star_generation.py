@@ -139,7 +139,9 @@ class TestStarGeneration:
                 spec = star.spectrum
                 assert spec is not None
                 total = spec.get_total_output()
-                assert total > 0
+                # Black holes have zero temperature/spectrum (event horizon)
+                if star.star_type != StarType.BLACK_HOLE:
+                    assert total > 0
 
                 # Verify 9 bands are present and non-negative
                 assert spec.gamma_ray >= 0
