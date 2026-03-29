@@ -51,8 +51,26 @@ class TestLabUIController:
         # Load all scenarios from registry
         self.all_scenarios = registry.get_all_scenarios()
 
+        # Load historical results so status dots show on startup
+        self._load_history_into_registry(test_history)
+
         # Run static validation on startup
         self._run_static_validation()
+
+    def _load_history_into_registry(self, test_history: TestHistory):
+        """Load latest run results from history into registry for status display.
+
+        Without this, the pass/fail dots in the test list are empty until
+        a test is run in the current session.
+        """
+        loaded = 0
+        for test_id in self.all_scenarios:
+            latest = test_history.get_latest_run(test_id)
+            if latest is not None:
+                self.registry.update_last_run_results(test_id, latest.to_dict())
+                loaded += 1
+        if loaded:
+            logger.debug(f"Loaded {loaded} test histories from prior runs")
 
     def _run_static_validation(self):
         """Run static validation on all scenarios at startup."""

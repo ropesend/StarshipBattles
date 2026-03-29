@@ -76,6 +76,18 @@
       }
     },
     {
+      "id": "test_thruster_high",
+      "name": "Test Thruster (High Agility)",
+      "type": "Thruster",
+      "mass": 0,
+      "hp": 20,
+      "turn_speed": 500.0,
+      "sprite_index": 78,
+      "abilities": {
+        "ManeuveringThruster": 500.0
+      }
+    },
+    {
       "id": "test_gen_fusion",
       "name": "Test Generator (Fusion)",
       "type": "Generator",

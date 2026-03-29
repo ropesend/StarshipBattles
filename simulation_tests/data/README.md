@@ -85,12 +85,24 @@ Defines all components that can be installed on ships.
 
 #### Engines & Thrusters
 
-| Component ID | Thrust | Mass | Purpose |
-|--------------|--------|------|---------|
-| `test_engine_no_fuel` | 500 | 0 | Basic engine (no fuel consumption) |
-| `test_thruster_std` | - | 0 | Standard maneuvering thruster |
+| Component ID | Value | Mass | Purpose |
+|--------------|-------|------|---------|
+| `test_engine_no_fuel` | 500 thrust | 0 | Basic engine (no fuel consumption) |
+| `test_engine_slow` | 50 thrust | 0 | Slow engine for linear slow target |
+| `test_thruster_std` | 5.0 raw turn | 0 | Standard maneuvering thruster (propulsion tests) |
+| `test_thruster_high` | 500.0 raw turn | 0 | High agility thruster (erratic targets, 100x std) |
 
 All propulsion components have mass = 0. Ship mass comes from hull only.
+
+**Turn Speed Units**: `turn_speed` in expected_stats is in degrees per 100 ticks.
+`rotate()` divides by 100, so effective rotation = `turn_speed / 100` deg/tick.
+A ship with `turn_speed=1562.5` rotates at 15.6 deg/tick.
+
+**Erratic Target Thruster Sizing**: The thruster must be powerful enough that
+the leash overshoot (max_speed * ticks_for_180_turn) is well under the leash
+radius. For the small ship (400kg, 31.25 px/tick), `test_thruster_high` gives
+overshoot ~360px. For the large ship (4000kg, 3.125 px/tick), 4x thrusters are
+needed for overshoot ~285px. Both fit within the 1000px leash.
 
 #### Projectile Weapons
 

@@ -178,6 +178,9 @@ class StaticTargetScenario(TestScenario):
         if hasattr(self, 'custom_update'):
             self.custom_update(battle_engine)
 
+        # Position tracking (no-op when track_positions is False)
+        self._track_tick(battle_engine.tick_counter)
+
     def collect_results(self, engine):
         """
         Populate measurement attributes for StaticTargetScenario.
@@ -198,11 +201,13 @@ class StaticTargetScenario(TestScenario):
         if engine.tick_counter > 0 and self.damage_dealt > 0:
             self.results['hit_rate'] = self.damage_dealt / engine.tick_counter
 
-        # Collect per-weapon firing statistics
+        # Collect per-weapon firing statistics (pass engine for in-flight counting)
         if hasattr(self, 'attacker') and self.attacker:
-            self._collect_weapon_stats(self.attacker, 'attacker')
+            self._collect_weapon_stats(self.attacker, 'attacker', engine=engine)
         if hasattr(self, 'target') and self.target:
-            self._collect_weapon_stats(self.target, 'target')
+            self._collect_weapon_stats(self.target, 'target', engine=engine)
+
+        self._finalize_tracking()
 
         for key in self.custom_result_keys:
             if hasattr(self, key):
@@ -392,6 +397,8 @@ class DuelScenario(TestScenario):
         if hasattr(self, 'custom_update'):
             self.custom_update(battle_engine)
 
+        self._track_tick(battle_engine.tick_counter)
+
     def collect_results(self, engine):
         """
         Populate measurement attributes for DuelScenario.
@@ -416,8 +423,10 @@ class DuelScenario(TestScenario):
         self.results['ship2_alive'] = self.ship2.is_alive
 
         # Collect per-weapon firing statistics
-        self._collect_weapon_stats(self.ship1, 'ship1')
-        self._collect_weapon_stats(self.ship2, 'ship2')
+        self._collect_weapon_stats(self.ship1, 'ship1', engine=engine)
+        self._collect_weapon_stats(self.ship2, 'ship2', engine=engine)
+
+        self._finalize_tracking()
 
         # Determine winner
         if self.ship1.is_alive and not self.ship2.is_alive:
@@ -568,6 +577,8 @@ class PropulsionScenario(TestScenario):
         if hasattr(self, 'custom_update'):
             self.custom_update(battle_engine)
 
+        self._track_tick(battle_engine.tick_counter)
+
     def collect_results(self, engine):
         """
         Populate measurement attributes for PropulsionScenario.
@@ -609,6 +620,8 @@ class PropulsionScenario(TestScenario):
             expected_angle_change = degrees_per_tick * ticks_run
             self.results['expected_angle_change'] = expected_angle_change
             self.results['turn_speed_degrees_per_tick'] = degrees_per_tick
+
+        self._finalize_tracking()
 
     def _template_preconditions(self):
         """
@@ -819,6 +832,8 @@ class ResourceScenario(TestScenario):
         if hasattr(self, 'custom_update'):
             self.custom_update(battle_engine)
 
+        self._track_tick(battle_engine.tick_counter)
+
     def collect_results(self, engine):
         """
         Populate measurement attributes for ResourceScenario.
@@ -845,9 +860,11 @@ class ResourceScenario(TestScenario):
             self.results['damage_dealt'] = self.damage_dealt
 
         # Collect per-weapon firing statistics
-        self._collect_weapon_stats(self.ship, 'ship')
+        self._collect_weapon_stats(self.ship, 'ship', engine=engine)
         if self.target is not None:
-            self._collect_weapon_stats(self.target, 'target')
+            self._collect_weapon_stats(self.target, 'target', engine=engine)
+
+        self._finalize_tracking()
 
         # Hook for subclasses to add extra results
         if hasattr(self, '_collect_extra_results'):

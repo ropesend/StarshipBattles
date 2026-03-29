@@ -163,7 +163,8 @@ class TestDrawShipBehavior:
 
         surface = MagicMock()
 
-        draw_ship(surface, ship, camera)
+        with patch('pygame.draw.circle'):  # Always-drawn fallback dot
+            draw_ship(surface, ship, camera)
 
         # Should have called blit (to draw the theme image)
         assert surface.blit.called

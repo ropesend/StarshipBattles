@@ -49,6 +49,74 @@ class TestTestLabUIControllerInit:
         mock_metadata_instance.validate_all_scenarios.assert_called_once()
 
 
+class TestHistoryLoadedOnInit:
+    """Test that historical test results are loaded into registry on startup."""
+
+    def test_init_loads_history_into_registry(
+        self, mock_game, mock_test_registry, mock_test_history
+    ):
+        """Tests with prior runs show their last result in the registry."""
+        # Setup: history has a passing run for TEST-001
+        mock_run = Mock()
+        mock_run.to_dict.return_value = {
+            'passed': True,
+            'validation_summary': {'pass': 3, 'fail': 0, 'warn': 0},
+            'validation_results': [
+                {'name': 'Check1', 'status': 'PASS', 'phase': 'outcome'}
+            ],
+        }
+        mock_test_history.get_latest_run = Mock(side_effect=lambda tid: mock_run if tid == 'TEST-001' else None)
+
+        # Registry has TEST-001 in its scenarios
+        mock_test_registry.get_all_scenarios.return_value = {
+            'TEST-001': {'last_run_results': None},
+        }
+
+        TestLabUIController(mock_game, mock_test_registry, mock_test_history)
+
+        # Registry should have been updated with the historical result
+        mock_test_registry.update_last_run_results.assert_any_call('TEST-001', mock_run.to_dict())
+
+    def test_init_skips_tests_with_no_history(
+        self, mock_game, mock_test_registry, mock_test_history
+    ):
+        """Tests without prior runs keep last_run_results as None."""
+        mock_test_history.get_latest_run = Mock(return_value=None)
+
+        mock_test_registry.get_all_scenarios.return_value = {
+            'NEW-001': {'last_run_results': None},
+        }
+
+        TestLabUIController(mock_game, mock_test_registry, mock_test_history)
+
+        # update_last_run_results should NOT be called for tests with no history
+        for call in mock_test_registry.update_last_run_results.call_args_list:
+            assert call[0][0] != 'NEW-001'
+
+    def test_init_loads_failing_test_history(
+        self, mock_game, mock_test_registry, mock_test_history
+    ):
+        """Failed test results are also loaded into registry."""
+        mock_run = Mock()
+        mock_run.to_dict.return_value = {
+            'passed': False,
+            'validation_summary': {'pass': 2, 'fail': 1, 'warn': 0},
+            'validation_results': [
+                {'name': 'Check1', 'status': 'PASS', 'phase': 'data'},
+                {'name': 'Check2', 'status': 'FAIL', 'phase': 'outcome'},
+            ],
+        }
+        mock_test_history.get_latest_run = Mock(return_value=mock_run)
+
+        mock_test_registry.get_all_scenarios.return_value = {
+            'FAIL-001': {'last_run_results': None},
+        }
+
+        TestLabUIController(mock_game, mock_test_registry, mock_test_history)
+
+        mock_test_registry.update_last_run_results.assert_any_call('FAIL-001', mock_run.to_dict())
+
+
 class TestHandleCategoryClick:
     """Test category click handling."""
 

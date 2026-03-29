@@ -230,7 +230,8 @@ class TestDrawShipRendering:
             mock_stm.instance.return_value = mock_theme_manager
             with patch('game.ui.renderer.game_renderer.scale_and_rotate_image', return_value=mock_rotated):
                 with patch('game.ui.renderer.game_renderer.calculate_ship_image_scale', return_value=1.0):
-                    draw_ship(mock_surface, mock_ship, mock_camera)
+                    with patch('pygame.draw.circle'):  # Always-drawn fallback dot
+                        draw_ship(mock_surface, mock_ship, mock_camera)
 
         # Surface.blit should have been called to draw the ship image
         mock_surface.blit.assert_called()

@@ -8,7 +8,6 @@ The simulation engine already tracks these counters on Component and Ship
 objects — these tests verify the bridge from engine state to test results.
 """
 
-import pytest
 from unittest.mock import Mock, MagicMock, patch, PropertyMock
 from game.simulation.components.abilities.weapons import (
     WeaponAbility,
@@ -260,3 +259,104 @@ class TestCollectWeaponStatsEdgeCases:
         assert len(weapons) == 2
         total = sum(w["shots_fired"] for w in weapons)
         assert total == 14
+
+
+# =============================================================================
+# In-flight projectile tracking
+# =============================================================================
+
+
+def _create_mock_projectile(owner_ship, alive=True):
+    """Create a mock projectile with owner reference."""
+    proj = Mock()
+    proj.owner = owner_ship
+    proj.is_alive = alive
+    return proj
+
+
+def _create_mock_engine(projectiles=None):
+    """Create a mock engine with a projectiles list."""
+    engine = Mock()
+    engine.projectiles = projectiles or []
+    return engine
+
+
+class TestInFlightTracking:
+    """Tests for in-flight projectile counting in weapon stats."""
+
+    def test_counts_in_flight_projectiles(self):
+        """In-flight projectiles owned by the ship are counted."""
+        scenario = _create_scenario_instance()
+        comp = _create_mock_component("Railgun", ProjectileWeaponAbility, shots_fired=10, shots_hit=7)
+        ship = _create_mock_ship([comp], total_shots_fired=10)
+
+        engine = _create_mock_engine([
+            _create_mock_projectile(ship, alive=True),
+            _create_mock_projectile(ship, alive=True),
+            _create_mock_projectile(ship, alive=False),  # dead, not in flight
+        ])
+
+        scenario._collect_weapon_stats(ship, "attacker", engine=engine)
+
+        assert scenario.results["attacker_in_flight"] == 2
+        assert scenario.results["attacker_resolved_shots"] == 8  # 10 - 2
+        assert scenario.results["attacker_resolved_hits"] == 7
+
+    def test_no_engine_skips_in_flight(self):
+        """Without engine reference, in-flight keys are not set."""
+        scenario = _create_scenario_instance()
+        comp = _create_mock_component("Railgun", ProjectileWeaponAbility, shots_fired=5, shots_hit=3)
+        ship = _create_mock_ship([comp])
+
+        scenario._collect_weapon_stats(ship, "attacker")
+
+        assert "attacker_in_flight" not in scenario.results
+
+    def test_in_flight_excludes_other_ships_projectiles(self):
+        """Only projectiles owned by the specific ship are counted."""
+        scenario = _create_scenario_instance()
+        comp = _create_mock_component("Railgun", ProjectileWeaponAbility, shots_fired=5, shots_hit=3)
+        ship = _create_mock_ship([comp], total_shots_fired=5)
+        other_ship = Mock()
+
+        engine = _create_mock_engine([
+            _create_mock_projectile(ship, alive=True),
+            _create_mock_projectile(other_ship, alive=True),  # different owner
+            _create_mock_projectile(other_ship, alive=True),
+        ])
+
+        scenario._collect_weapon_stats(ship, "attacker", engine=engine)
+
+        assert scenario.results["attacker_in_flight"] == 1
+
+    def test_zero_in_flight(self):
+        """Zero in-flight when all projectiles have resolved."""
+        scenario = _create_scenario_instance()
+        comp = _create_mock_component("Railgun", ProjectileWeaponAbility, shots_fired=10, shots_hit=10)
+        ship = _create_mock_ship([comp], total_shots_fired=10)
+
+        engine = _create_mock_engine([])
+
+        scenario._collect_weapon_stats(ship, "attacker", engine=engine)
+
+        assert scenario.results["attacker_in_flight"] == 0
+        assert scenario.results["attacker_resolved_shots"] == 10
+
+    def test_resolved_hit_rate(self):
+        """Resolved hit rate excludes in-flight from denominator."""
+        scenario = _create_scenario_instance()
+        comp = _create_mock_component("Railgun", ProjectileWeaponAbility, shots_fired=100, shots_hit=96)
+        ship = _create_mock_ship([comp], total_shots_fired=100)
+
+        engine = _create_mock_engine([
+            _create_mock_projectile(ship, alive=True),
+            _create_mock_projectile(ship, alive=True),
+            _create_mock_projectile(ship, alive=True),
+            _create_mock_projectile(ship, alive=True),
+        ])
+
+        scenario._collect_weapon_stats(ship, "attacker", engine=engine)
+
+        # 100 shots - 4 in flight = 96 resolved, 96 hits = 100%
+        assert scenario.results["attacker_resolved_shots"] == 96
+        assert scenario.results["attacker_resolved_hits"] == 96

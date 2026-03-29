@@ -205,6 +205,9 @@ class TestScenario(CombatScenario):
     # Subclasses must define this
     metadata: TestMetadata = None
 
+    # Position tracking — set to True on scenarios that need path analysis
+    track_positions: bool = False
+
     def __init__(self):
         """Initialize test scenario from metadata."""
         super().__init__()
@@ -221,6 +224,10 @@ class TestScenario(CombatScenario):
 
         # Store test_id in results for UI display (e.g., propulsion test detection)
         self.results['test_id'] = self.metadata.test_id
+
+        # Position tracking log (populated by _track_tick when track_positions=True)
+        self._position_log: Dict[str, list] = {}
+        self._tracking_weapon_range: Optional[float] = None
 
         # Set test data paths - use simulation_tests/data
         data_dir = self._get_test_data_dir()
@@ -610,13 +617,101 @@ class TestScenario(CombatScenario):
         """
         return self.metadata.to_dict()
 
-    def _collect_weapon_stats(self, ship: Ship, role: str) -> None:
+    # Ship attribute names to discover for tracking, in priority order.
+    # First match with a .position attribute is the reference ship for distance.
+    _TRACKABLE_SHIPS = [
+        ('attacker', True),   # (attr_name, is_reference)
+        ('target', False),
+        ('ship', True),       # PropulsionScenario / ResourceScenario
+        ('ship1', True),      # DuelScenario
+        ('ship2', False),
+    ]
+
+    def _track_tick(self, tick: int) -> None:
+        """Record position data for all discovered ships this tick.
+
+        When ``track_positions`` is False this method returns immediately
+        (single bool check — zero overhead).
+
+        Set ``_tracking_weapon_range`` before the first call to get
+        per-tick ``in_range`` flags on non-reference ships.
+
+        Args:
+            tick: Current simulation tick number.
+        """
+        if not self.track_positions:
+            return
+
+        # Find reference ship (for distance calculations)
+        ref_ship = None
+        for attr, is_ref in self._TRACKABLE_SHIPS:
+            ship = getattr(self, attr, None)
+            if ship is not None and hasattr(ship, 'position') and is_ref:
+                ref_ship = ship
+                break
+
+        # Record each discovered ship
+        for attr, is_ref in self._TRACKABLE_SHIPS:
+            ship = getattr(self, attr, None)
+            if ship is None or not hasattr(ship, 'position'):
+                continue
+
+            entry = {
+                'tick': tick,
+                'x': ship.position.x,
+                'y': ship.position.y,
+                'speed': getattr(ship, 'current_speed', ship.velocity.length() if hasattr(ship, 'velocity') else 0.0),
+                'heading': getattr(ship, 'angle', 0.0),
+            }
+
+            # Distance and range for non-reference ships
+            if ref_ship is not None and ship is not ref_ship:
+                dist = ref_ship.position.distance_to(ship.position)
+                entry['dist_to_attacker'] = dist
+                if self._tracking_weapon_range is not None:
+                    entry['in_range'] = dist <= self._tracking_weapon_range
+
+            self._position_log.setdefault(attr, []).append(entry)
+
+    def _finalize_tracking(self) -> None:
+        """Store tracking data and per-ship summaries in ``self.results``.
+
+        Call this from ``collect_results()`` or ``_collect_extra_results()``.
+        When tracking is disabled this is a no-op.
+        """
+        if not self.track_positions or not self._position_log:
+            return
+
+        self.results['position_tracks'] = dict(self._position_log)
+
+        summary = {}
+        for role, entries in self._position_log.items():
+            distances = [e['dist_to_attacker'] for e in entries if 'dist_to_attacker' in e]
+            in_range_count = sum(1 for e in entries if e.get('in_range', False))
+            out_of_range_count = sum(1 for e in entries if 'in_range' in e and not e['in_range'])
+
+            role_summary = {'ticks_tracked': len(entries)}
+            if distances:
+                role_summary['min_distance'] = min(distances)
+                role_summary['max_distance'] = max(distances)
+                role_summary['ticks_in_range'] = in_range_count
+                role_summary['ticks_out_of_range'] = out_of_range_count
+
+            summary[role] = role_summary
+
+        self.results['tracking_summary'] = summary
+
+    def _collect_weapon_stats(self, ship: Ship, role: str, engine=None) -> None:
         """
         Collect per-weapon firing statistics from a ship's components.
 
         Reads the existing ``shots_fired`` and ``shots_hit`` counters that the
         simulation engine maintains on every Component and stores them in
         ``self.results`` under role-prefixed keys.
+
+        When ``engine`` is provided, also counts in-flight projectiles owned
+        by this ship so hit rate can be calculated against resolved shots
+        only (excluding projectiles that hadn't arrived when the test ended).
 
         Stored results::
 
@@ -625,16 +720,24 @@ class TestScenario(CombatScenario):
             {role}_weapons : list[dict]
                 One entry per weapon component with keys:
                 name, type, shots_fired, shots_hit.
+            {role}_in_flight : int  (only when engine provided)
+                Projectiles still alive at test end, owned by this ship.
+            {role}_resolved_shots : int  (only when engine provided)
+                total_shots_fired minus in_flight.
+            {role}_resolved_hits : int  (only when engine provided)
+                Same as total shots_hit (hits are always resolved).
 
         Args:
             ship: Ship instance whose weapons to inspect.
             role: Prefix for result keys (e.g. ``"attacker"``, ``"target"``).
+            engine: Optional BattleEngine for in-flight projectile counting.
         """
         from game.simulation.components.abilities.weapons import WeaponAbility
 
         self.results[f'{role}_total_shots_fired'] = ship.total_shots_fired
 
         weapons = []
+        total_hits = 0
         for layer_data in ship.layers.values():
             for comp in layer_data.components:
                 if not hasattr(comp, 'ability_instances'):
@@ -647,9 +750,20 @@ class TestScenario(CombatScenario):
                             'shots_fired': comp.shots_fired,
                             'shots_hit': comp.shots_hit,
                         })
+                        total_hits += comp.shots_hit
                         break  # one entry per component
 
         self.results[f'{role}_weapons'] = weapons
+
+        # Count in-flight projectiles (still alive at test end)
+        if engine is not None:
+            in_flight = sum(
+                1 for p in engine.projectiles
+                if p.is_alive and p.owner is ship
+            )
+            self.results[f'{role}_in_flight'] = in_flight
+            self.results[f'{role}_resolved_shots'] = ship.total_shots_fired - in_flight
+            self.results[f'{role}_resolved_hits'] = total_hits
 
     def get_ability(self, ship, ability_class_name: str):
         """
