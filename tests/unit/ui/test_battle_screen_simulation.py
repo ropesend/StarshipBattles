@@ -324,17 +324,18 @@ class TestBattleScreenEventHandling:
 
         self.scene.ui.handle_click.assert_called_with(100, 100, 1)
 
-    def test_handle_event_mouse_scroll_forwards_to_ui(self):
-        """Test handle_event() forwards mouse scroll to UI."""
+    def test_handle_event_mouse_scroll_forwards_to_camera(self):
+        """Test handle_event() forwards mouse scroll to camera for zoom."""
         self.scene.start([self.ship1], [self.ship2], headless=False)
 
         event = MagicMock()
         event.type = pygame.MOUSEWHEEL
         event.y = 1
 
-        self.scene.handle_event(event)
+        with patch.object(self.scene.camera, 'update_input') as mock_cam:
+            self.scene.handle_event(event)
 
-        self.scene.ui.handle_scroll.assert_called_with(1, 600)
+            mock_cam.assert_called_once_with(0, [event], allow_wasd=False)
 
     def test_handle_event_focus_ship_from_ui_click(self):
         """Test handle_event() sets camera target from UI focus_ship result."""
@@ -380,6 +381,108 @@ class TestBattleScreenEventHandling:
         self.scene.handle_event(event)
 
         assert self.scene.camera.target is None
+
+
+class TestBattleScreenCameraInput:
+    """Test that battle screen processes camera input (panning, arrow keys) each frame."""
+
+    @pytest.fixture(autouse=True)
+    def setup_scene(self, fresh_registries):
+        """Set up BattleScreen with mocked UI."""
+        with patch('game.ui.screens.battle_screen.BattleUI') as MockUI:
+            self.scene = BattleScreen(800, 600)
+            self.scene.ui = MockUI.return_value
+            self.scene.ui.show_overlay = False
+
+            self.ship1 = Ship("Ship1", 0, 0, (0, 0, 255), registries=fresh_registries)
+            self.ship1.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+            self.ship1.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+            self.ship1.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+            self.ship1.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
+            self.ship1.recalculate_stats()
+
+            self.ship2 = Ship("Ship2", 1000, 0, (255, 0, 0), registries=fresh_registries)
+            self.ship2.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+            self.ship2.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+            self.ship2.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+            self.ship2.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
+            self.ship2.recalculate_stats()
+
+            yield
+
+    def test_visual_update_calls_camera_update_input(self):
+        """Camera input (panning, arrow keys) is processed each visual frame."""
+        self.scene.start([self.ship1], [self.ship2], headless=False)
+        self.scene.sim_paused = True  # Pause to isolate camera update
+
+        with patch.object(self.scene.camera, 'update_input') as mock_input:
+            self.scene._update_visual(0.016)
+
+            mock_input.assert_called_once()
+            # Should pass dt and disable WASD (conflicts with speed keys)
+            args, kwargs = mock_input.call_args
+            assert args[0] == 0.016  # dt
+            assert kwargs.get('allow_wasd', True) is False
+
+    def _make_key_state(self, pressed_keys=None):
+        """Create a mock key state with specific keys pressed."""
+        # Use a defaultdict-like object that returns False for any index
+        state = MagicMock()
+        state.__getitem__ = lambda self_inner, key: key in (pressed_keys or [])
+        return state
+
+    def test_arrow_key_panning_moves_camera(self):
+        """Arrow keys pan the camera during visual update."""
+        self.scene.start([self.ship1], [self.ship2], headless=False)
+        self.scene.sim_paused = True
+        self.scene.camera.target = None
+
+        initial_pos = pygame.math.Vector2(self.scene.camera.position)
+
+        with patch('pygame.key.get_pressed', return_value=self._make_key_state([pygame.K_RIGHT])), \
+             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
+             patch('pygame.mouse.get_rel', return_value=(0, 0)):
+            self.scene._update_visual(0.1)
+
+        assert self.scene.camera.position.x > initial_pos.x
+
+    def test_middle_mouse_panning_moves_camera(self):
+        """Middle mouse drag pans the camera during visual update."""
+        self.scene.start([self.ship1], [self.ship2], headless=False)
+        self.scene.sim_paused = True
+        self.scene.camera.target = None
+        self.scene.camera.position = pygame.math.Vector2(500, 500)
+
+        with patch('pygame.key.get_pressed', return_value=self._make_key_state()), \
+             patch('pygame.mouse.get_pressed', return_value=(False, True, False)), \
+             patch('pygame.mouse.get_rel', return_value=(50, 30)):
+            self.scene._update_visual(0.016)
+
+        # Camera should have moved opposite to mouse drag direction
+        assert self.scene.camera.position.x < 500
+        assert self.scene.camera.position.y < 500
+
+    def test_middle_mouse_panning_clears_target(self):
+        """Middle mouse drag clears camera target follow."""
+        self.scene.start([self.ship1], [self.ship2], headless=False)
+        self.scene.sim_paused = True
+        self.scene.camera.target = self.ship1
+
+        with patch('pygame.key.get_pressed', return_value=self._make_key_state()), \
+             patch('pygame.mouse.get_pressed', return_value=(False, True, False)), \
+             patch('pygame.mouse.get_rel', return_value=(10, 10)):
+            self.scene._update_visual(0.016)
+
+        assert self.scene.camera.target is None
+
+    def test_headless_mode_does_not_process_camera_input(self):
+        """Headless mode skips camera input processing entirely."""
+        self.scene.start([self.ship1], [self.ship2], headless=True)
+
+        with patch.object(self.scene.camera, 'update_input') as mock_input:
+            self.scene.update(0.016)
+
+            mock_input.assert_not_called()
 
 
 class TestBattleScreenTickMechanics:

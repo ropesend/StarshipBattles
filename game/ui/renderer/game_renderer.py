@@ -34,9 +34,10 @@ COMPONENT_DOT_RADIUS = 3       # Base radius for component dots (scaled with zoo
 DIRECTION_LINE_OFFSET = 10     # How far direction indicator extends past ship
 DIRECTION_LINE_WIDTH = 2       # Width of direction indicator line
 
-# Fallback rendering (when no ship image available)
-FALLBACK_DOT_RADIUS = 3        # Base radius for simple dot icon
-FALLBACK_DOT_MIN_SIZE = 2      # Minimum pixel size for fallback dot
+# Fallback rendering (when ship image too small or unavailable)
+FALLBACK_DOT_RADIUS = 5        # Base radius for simple dot icon (scales with zoom)
+FALLBACK_DOT_MIN_SIZE = 3      # Minimum pixel radius — ships always visible
+MIN_SHIP_PIXEL_SIZE = 4        # Below this diameter, use colored dot instead of image
 
 # Layer color constants
 LAYER_COLORS = {
@@ -68,18 +69,16 @@ def draw_ship(surface, ship, camera):
     
     # Use ship's calculated radius (based on actual mass)
     base_radius = ship.radius
-    scaled_radius = scale(base_radius)
     
     # Draw Theme Image if available
     theme_mgr = ShipThemeManager.instance()
     theme_id = getattr(ship, 'theme_id', 'Federation')
     ship_img = theme_mgr.load_image(theme_id, ship.ship_class)
     
-    drawn_image = False
-    
-    if ship_img and camera.zoom > MIN_ZOOM_FOR_IMAGE:
-        # Scale logic: visible portion should match diameter of the collision circle
-        target_size = 2 * scale(base_radius)
+    # Scale logic: visible portion should match diameter of the collision circle
+    target_size = 2 * scale(base_radius)
+
+    if ship_img and camera.zoom > MIN_ZOOM_FOR_IMAGE and target_size >= MIN_SHIP_PIXEL_SIZE:
 
         # Get visible metrics to ignore transparent padding
         metrics = theme_mgr.get_image_metrics(theme_id, ship.ship_class)
@@ -98,7 +97,6 @@ def draw_ship(surface, ship, camera):
         if rotated_img.get_size() != ship_img.get_size() or scale_factor > 0:
             rect = rotated_img.get_rect(center=(cx, cy))
             surface.blit(rotated_img, rect)
-            drawn_image = True
             
     # Draw Overlay Circles (Collision Radius)
     # Shows collision radius and layer boundaries when overlay mode is active
@@ -162,10 +160,10 @@ def draw_ship(surface, ship, camera):
         pygame.draw.line(surface, DEBUG_DIRECTION, (cx, cy), (int(end_pos_screen.x), int(end_pos_screen.y)), max(1, scale(DIRECTION_LINE_WIDTH)))
 
     
-    if not drawn_image:
-        # Draw simple dot icon for low zoom if no image
-        color = ship.color  # Use ship identity color
-        pygame.draw.circle(surface, color, (cx, cy), max(FALLBACK_DOT_MIN_SIZE, scale(FALLBACK_DOT_RADIUS)))
-        return
+    # Always draw a colored dot so ships are visible at any zoom level.
+    # At close zoom the ship image covers it; at far zoom it provides
+    # a minimum-size marker that never disappears.
+    dot_color = ship.color if hasattr(ship, 'color') else (255, 255, 255)
+    pygame.draw.circle(surface, dot_color, (cx, cy), max(FALLBACK_DOT_MIN_SIZE, scale(FALLBACK_DOT_RADIUS)))
 
 

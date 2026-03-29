@@ -494,7 +494,11 @@ class BattleScreen:
             b['timer'] -= dt
         self.beams = [b for b in self.beams if b['timer'] > 0]
 
-        # Update Camera
+        # Process camera input (middle-mouse pan, arrow keys)
+        # WASD disabled to avoid conflicts with speed/pause keys
+        self.camera.update_input(dt, [], allow_wasd=False)
+
+        # Update Camera (smooth zoom, target follow)
         self.camera.update(dt)
 
     def _update_tick_rate(self, dt: float):

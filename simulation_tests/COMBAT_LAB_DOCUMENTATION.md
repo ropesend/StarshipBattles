@@ -924,18 +924,23 @@ Test IDs follow the pattern: `PROJECTILE-XXX` and `PROJECTILE-DMG-XXX`.
 |---------|-------------|--------|----------|
 | **PROJECTILE-001** | Stationary target at 200px | Stationary | ~100% |
 | **PROJECTILE-002** | Slow linear target (crossing) | 1.25 px/tick | ~90% |
-| **PROJECTILE-003** | Fast linear target (crossing) | 37.5 px/tick | ~97% |
-| **PROJECTILE-004** | Erratic small target at 300px | Erratic small | ~90% |
-| **PROJECTILE-005** | Erratic large target at 300px | Erratic large | ~96% |
+| **PROJECTILE-003** | Fast linear target (crossing) | 37.5 px/tick | ~94% |
+| **PROJECTILE-004** | Erratic small target at 300px | Erratic small | ~76% |
+| **PROJECTILE-005** | Erratic large target at 300px | Erratic large | ~100% |
+
+Hit rates are **resolved** — projectiles still in flight at test end are excluded.
 
 #### Range Tests
 
-| Test ID | Description | Expected |
-|---------|-------------|----------|
+| Test ID | Description | Resolved HR |
+|---------|-------------|-------------|
 | **PROJECTILE-006** | Out of range (1200px > 1000px max) | 0 damage |
-| **PROJECTILE-DMG-010** | Damage at 100px (10% range) | ~100% hit |
-| **PROJECTILE-DMG-050** | Damage at 500px (50% range) | ~99% hit |
-| **PROJECTILE-DMG-090** | Damage at 900px (90% range) | ~99% hit |
+| **PROJECTILE-DMG-010** | Damage at 100px (10% range) | 100% |
+| **PROJECTILE-DMG-050** | Damage at 500px (50% range) | 100% |
+| **PROJECTILE-DMG-090** | Damage at 900px (90% range) | 100% |
+
+Note: DMG tests all show 100% *resolved* hit rate. Any apparent miss rate is
+entirely from in-flight projectiles that hadn't arrived when the test ended.
 
 ### Projectile Test Design Principles
 
@@ -957,6 +962,24 @@ variable between the two tests is target speed.
 `shots_fired` and `shots_hit` counters from the simulation engine via
 `_collect_weapon_stats()`. These appear in results as `attacker_weapons` and
 `attacker_total_shots_fired`.
+
+**In-Flight Tracking**: When the engine is passed to `_collect_weapon_stats()`,
+it counts alive projectiles owned by the ship. Results include:
+- `{role}_in_flight` — projectiles still alive at test end
+- `{role}_resolved_shots` — total fired minus in-flight
+- `{role}_resolved_hits` — total hits (always resolved)
+
+This prevents travel-time artifacts in hit rate calculations.
+
+**Erratic Target Design**: Erratic targets use `test_thruster_high` (raw=500,
+100x the standard thruster) and a 1000px leash radius in the ErraticController.
+The high turn rate ensures ships can steer back within the leash zone:
+- Small ship (400kg): 15.6 deg/tick effective, 360px overshoot — fully contained
+- Large ship (4000kg): needs 4x thrusters for 1.98 deg/tick, 285px overshoot
+
+**Position Tracking**: Erratic scenarios enable `track_positions = True` for
+per-tick path analysis. Results include `tracking_summary` with ticks_in_range,
+min/max distance, and full position logs.
 
 ### Speed Units (CRITICAL)
 
@@ -1108,6 +1131,53 @@ metadata = TestMetadata(
 - Data drift caught in the `data` phase before blaming the simulation
 - Precondition failures (weapon didn't fire, ship didn't move) separated from outcome failures
 - Clear failure attribution simplifies debugging
+
+### Verify Every Assumption, Not Just the Outcome (CRITICAL)
+
+A test that checks only the outcome can pass for the wrong reason. Every assumption
+the test relies on must be verified in the appropriate phase:
+
+**Data phase** — verify ALL loaded weapon/ship stats match expected values:
+```python
+checks.append(check_exact("Weapon Damage", 1, weapon.damage))
+checks.append(check_exact("Weapon Range", 1000, weapon.range))
+checks.append(check_exact("Projectile Speed", 20000, weapon.projectile_speed))
+checks.append(check_exact("Reload Time", 0.0, weapon.reload_time))
+```
+
+**Precondition phase** — verify the test setup actually created the expected conditions:
+```python
+# If the test depends on the target MOVING, verify it moved
+target_speed = self.target.velocity.length()
+checks.append(check_approx("Target At Full Speed", 37.5, target_speed,
+                           tolerance=0.01, phase="precondition"))
+target_displacement = self.target.position.distance_to(start_pos)
+checks.append(check_true("Target Displaced > 10000px", target_displacement > 10000,
+                         actual=f"{target_displacement:.0f}px", phase="precondition"))
+
+# If the test depends on the target staying IN RANGE, verify it did
+summary = self.results.get('tracking_summary', {}).get('target', {})
+checks.append(check_true("Target In Range > 500 ticks", summary.get('ticks_in_range', 0) > 500,
+                         phase="precondition"))
+```
+
+**Outcome phase** — use bounds that are hard to pass by accident:
+```python
+# BAD: passes with 1 lucky hit out of 500 shots
+checks.append(check_true("Damage Dealt", self.damage_dealt > 0, phase="outcome"))
+
+# GOOD: requires near-perfect accuracy against stationary target
+checks.append(check_true("100% Resolved Hit Rate", hits == resolved, phase="outcome"))
+
+# GOOD: erratic target uses BOTH bounds (too high = didn't evade, too low = broken)
+checks.append(check_true("Hit Rate > 50%", hit_rate > 0.50, phase="outcome"))
+checks.append(check_true("Hit Rate < 95%", hit_rate < 0.95, phase="outcome"))
+```
+
+**Real example of why this matters**: The arc_set modifier bug silently zeroed weapon
+firing arcs. Tests passed because targets were positioned exactly on-axis. With proper
+data-phase checks (`check_exact("Firing Arc", 360, weapon.firing_arc)`), the bug would
+have been caught immediately.
 
 ### Why TOST Instead of Traditional Hypothesis Testing?
 

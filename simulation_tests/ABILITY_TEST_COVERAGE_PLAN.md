@@ -228,27 +228,46 @@ Create carrier/hangar tests in simulation_tests/.
 
 These practices were established through iterative development of the test suite:
 
+### Weapon & Target Setup
 1. **Damage = 1 per hit** for accuracy tests: `damage_dealt == hits`, simple counting
 2. **Reload = 0.0** for accuracy tests: fires every tick, high sample counts for statistical validity
 3. **Extreme HP targets** (1 billion HP): targets never die during tests
 4. **Zero-mass components**: ship mass comes only from hull, keeps physics predictable
 5. **Point-blank distance ≥ 100px**: ships with mass=400 have radius ~29.5px; center distance must exceed sum of radii to avoid visual overlap
-6. **Moving targets start out of range**: place at (100, -1200) heading up so they reach full speed before entering the engagement zone
-7. **Same starting position for comparable tests**: PROJ-002 (slow) and PROJ-003 (fast) both start at (100, -1200), isolating target speed as the only variable
-8. **Use game-realistic values**: projectile speed=20000 matches the actual railgun in the game (200 px/tick after PROJECTILE_SPEED_SCALE division)
-9. **Track shots_fired and hits**: templates auto-collect per-weapon stats via `_collect_weapon_stats()`; scenarios can add `_collect_extra_results()` to expose `shots_fired`, `hits`, `hit_rate` in results
+6. **Use game-realistic values**: projectile speed=20000 matches the actual railgun in the game (200 px/tick after PROJECTILE_SPEED_SCALE division)
+
+### Moving Target Design
+7. **Moving targets start out of range**: place at (100, -1200) heading up so they reach full speed before entering the engagement zone
+8. **Same starting position for comparable tests**: PROJ-002 (slow) and PROJ-003 (fast) both start at (100, -1200), isolating target speed as the only variable
+9. **Erratic target thruster sizing**: calculate overshoot = max_speed * (180 / effective_turn_rate); must be well under leash radius. Use `test_thruster_high` (raw=500); large ships may need multiple thrusters
+10. **Enable position tracking** (`track_positions=True`) on erratic/moving tests to verify the leash works and targets stay in the engagement zone
+11. **Turn speed is per 100 ticks**: `rotate()` divides by 100. When sizing thrusters, use `turn_speed / 100` as the actual deg/tick rotation rate
+
+### Instrumentation & Metrics
+12. **Track shots_fired and hits**: templates auto-collect per-weapon stats via `_collect_weapon_stats()`; scenarios can add `_collect_extra_results()` to expose `shots_fired`, `hits`, `hit_rate` in results
+13. **Use resolved hit rate**: exclude in-flight projectiles from hit/miss counting — `resolved_shots = fired - in_flight`. Without this, long-range tests show false accuracy dropoff from travel-time artifacts
+
+### Validation Rigour (CRITICAL)
+14. **Verify ALL assumptions in preconditions, not just outcomes.** A test that depends on a moving target MUST verify the target actually moved. A test that depends on weapon range MUST verify the distance. If a precondition fails silently, the outcome check becomes meaningless — a "pass" on a broken test is worse than a failure.
+15. **Verify target movement in precondition phase**: check `target.velocity.length()` matches expected `max_speed`, check displacement from start position is substantial, check position tracking `ticks_in_range` and `max_distance` for erratic targets
+16. **Pass criteria must be hard to game**: use both upper AND lower bounds on hit rate for erratic tests (too high = target didn't evade, too low = weapon broken). Require minimum shot counts so a single lucky hit can't pass the test. Require 100% resolved hit rate for stationary targets — not just "damage > 0"
+17. **Validate every weapon stat in data phase**: damage, range, projectile_speed, reload_time. If a modifier silently overwrites a value (like the arc_set bug), data-phase checks catch it before the outcome phase runs
+18. **Verify the weapon actually fired** (or didn't): PROJ-006 checks `shots_fired == 0` to confirm the weapon correctly refused to fire at an out-of-range target. Without this, the test would pass if the weapon was broken for any reason
 
 ## Speed Unit Reference
 
-Ship speed and projectile speed use **different scales**:
+Ship speed, projectile speed, and turn speed all use **different scales**:
 
-| Entity | Config/Formula | Actual (px/tick) |
-|--------|---------------|-----------------|
-| Ship | `(thrust * 25) / mass` | Direct |
-| Projectile | `projectile_speed / 100` | After PROJECTILE_SPEED_SCALE |
+| Entity | Config/Formula | Actual (px/tick or deg/tick) |
+|--------|---------------|----------------------------|
+| Ship speed | `(thrust * 25) / mass` | px/tick directly |
+| Projectile speed | `projectile_speed / 100` | px/tick after PROJECTILE_SPEED_SCALE |
+| Turn speed | `(raw_turn * 25000) / mass^1.5` | degrees per 100 ticks; `rotate()` divides by 100 |
 
-Example: A ship with thrust=1500, mass=1000 has max_speed=37.5 px/tick.
-A projectile with speed=20000 moves at 200 px/tick (5.3x faster).
+Examples:
+- Ship: thrust=1500, mass=1000 → max_speed=37.5 px/tick
+- Projectile: speed=20000 → 200 px/tick (5.3x faster than ship)
+- Turn: raw=500, mass=400 → turn_speed=1562.5 → effective 15.6 deg/tick
 
 ## Success Criteria
 

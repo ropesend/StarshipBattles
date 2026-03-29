@@ -125,20 +125,28 @@ class ProjectileStationaryTargetScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data
+        # Data phase: verify weapon and target loaded correctly
         weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
         if weapon:
             checks.append(check_exact("Weapon Damage", 1, weapon.damage))
             checks.append(check_exact("Weapon Range", 1000, weapon.range))
+            checks.append(check_exact("Projectile Speed", 20000, weapon.projectile_speed))
+            checks.append(check_exact("Reload Time", 0.0, weapon.reload_time))
         checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        # Precondition
+        # Precondition phase: verify geometry
         center_dist = self.attacker.position.distance_to(self.target.position)
         checks.append(check_approx("Center Distance", float(self.distance), center_dist,
                                    tolerance=0.01, phase="precondition"))
-        # Outcome: with reload=0, hundreds of shots should hit a stationary target
-        checks.append(check_true("Damage Dealt", self.damage_dealt > 0,
-                                 actual=self.damage_dealt, phase="outcome",
-                                 detail="stationary target should be hit"))
+        # Outcome phase: stationary target must be hit with near-perfect accuracy
+        resolved = self.results.get('attacker_resolved_shots', 0)
+        hits = self.results.get('attacker_resolved_hits', 0)
+        checks.append(check_true("Shots Fired", resolved > 100,
+                                 actual=resolved, phase="outcome",
+                                 detail="weapon should fire hundreds of shots in 500 ticks"))
+        checks.append(check_true("100% Resolved Hit Rate", resolved > 0 and hits == resolved,
+                                 actual=f"{hits}/{resolved}",
+                                 phase="outcome",
+                                 detail="stationary target: every resolved shot must hit"))
         return checks
 
 
@@ -203,28 +211,49 @@ class ProjectileLinearSlowTargetScenario(StaticTargetScenario):
         self.target.angle = 90
 
     def _collect_extra_results(self, engine):
-        """Store hit tracking results."""
-        shots = self.results.get('attacker_total_shots_fired', 0)
-        hits = int(self.damage_dealt)  # damage=1 per hit
-        self.results['shots_fired'] = shots
+        """Store hit tracking with resolved stats (excluding in-flight)."""
+        resolved = self.results.get('attacker_resolved_shots', 0)
+        hits = self.results.get('attacker_resolved_hits', 0)
+        in_flight = self.results.get('attacker_in_flight', 0)
+        self.results['shots_fired'] = self.results.get('attacker_total_shots_fired', 0)
         self.results['hits'] = hits
-        self.results['hit_rate'] = hits / shots if shots > 0 else 0.0
+        self.results['in_flight'] = in_flight
+        self.results['hit_rate'] = hits / resolved if resolved > 0 else 0.0
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        # Data phase: verify weapon and target loaded correctly
         weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
         if weapon:
             checks.append(check_exact("Weapon Damage", 1, weapon.damage))
             checks.append(check_exact("Weapon Range", 1000, weapon.range))
-        # Outcome: weapon must fire and hit
-        shots = self.results.get('attacker_total_shots_fired', 0)
-        hits = int(self.damage_dealt)
-        checks.append(check_true("Shots Fired", shots > 0,
-                                 actual=shots, phase="outcome",
-                                 detail="weapon should fire while target is in range"))
+            checks.append(check_exact("Projectile Speed", 20000, weapon.projectile_speed))
+            checks.append(check_exact("Reload Time", 0.0, weapon.reload_time))
+        checks.append(check_approx("Target Max Speed", 1.25, self.target.max_speed,
+                                   tolerance=0.01))
+        # Precondition phase: verify target moved and entered range
+        target_speed = self.target.velocity.length()
+        checks.append(check_approx("Target At Full Speed", 1.25, target_speed,
+                                   tolerance=0.01, phase="precondition"))
+        target_displacement = self.target.position.distance_to(pygame.math.Vector2(100, -1200))
+        checks.append(check_true("Target Displaced > 500px", target_displacement > 500,
+                                 actual=f"{target_displacement:.0f}px",
+                                 phase="precondition",
+                                 detail="slow target should have traveled ~619px from start"))
+        resolved = self.results.get('attacker_resolved_shots', 0)
+        checks.append(check_true("Target Entered Range", resolved > 100,
+                                 actual=resolved, phase="precondition",
+                                 detail="slow target should be in range for ~332 ticks"))
+        # Outcome phase: leading should achieve high hit rate
+        hits = self.results.get('attacker_resolved_hits', 0)
+        hit_rate = hits / resolved if resolved > 0 else 0
         checks.append(check_true("Hits Registered", hits > 0,
                                  actual=hits, phase="outcome",
                                  detail="leading should land hits on slow target"))
+        checks.append(check_true("Hit Rate > 80%", hit_rate > 0.80,
+                                 actual=f"{hit_rate:.1%} ({hits}/{resolved})",
+                                 phase="outcome",
+                                 detail="slow linear target should be hit consistently"))
         return checks
 
 
@@ -287,28 +316,49 @@ class ProjectileLinearFastTargetScenario(StaticTargetScenario):
         self.target.angle = 90
 
     def _collect_extra_results(self, engine):
-        """Store hit tracking results."""
-        shots = self.results.get('attacker_total_shots_fired', 0)
-        hits = int(self.damage_dealt)
-        self.results['shots_fired'] = shots
+        """Store hit tracking with resolved stats (excluding in-flight)."""
+        resolved = self.results.get('attacker_resolved_shots', 0)
+        hits = self.results.get('attacker_resolved_hits', 0)
+        in_flight = self.results.get('attacker_in_flight', 0)
+        self.results['shots_fired'] = self.results.get('attacker_total_shots_fired', 0)
         self.results['hits'] = hits
-        self.results['hit_rate'] = hits / shots if shots > 0 else 0.0
+        self.results['in_flight'] = in_flight
+        self.results['hit_rate'] = hits / resolved if resolved > 0 else 0.0
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        # Data phase: verify weapon and target loaded correctly
         weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
         if weapon:
             checks.append(check_exact("Weapon Damage", 1, weapon.damage))
             checks.append(check_exact("Weapon Range", 1000, weapon.range))
-        # Outcome: weapon must fire during engagement window
-        shots = self.results.get('attacker_total_shots_fired', 0)
-        hits = int(self.damage_dealt)
-        checks.append(check_true("Shots Fired", shots > 0,
-                                 actual=shots, phase="outcome",
-                                 detail="weapon should fire while target is in range"))
+            checks.append(check_exact("Projectile Speed", 20000, weapon.projectile_speed))
+            checks.append(check_exact("Reload Time", 0.0, weapon.reload_time))
+        checks.append(check_approx("Target Max Speed", 37.5, self.target.max_speed,
+                                   tolerance=0.01))
+        # Precondition phase: verify target moved fast and crossed through zone
+        target_speed = self.target.velocity.length()
+        checks.append(check_approx("Target At Full Speed", 37.5, target_speed,
+                                   tolerance=0.01, phase="precondition"))
+        target_displacement = self.target.position.distance_to(pygame.math.Vector2(100, -1200))
+        checks.append(check_true("Target Displaced > 10000px", target_displacement > 10000,
+                                 actual=f"{target_displacement:.0f}px",
+                                 phase="precondition",
+                                 detail="fast target should have traveled far from start"))
+        resolved = self.results.get('attacker_resolved_shots', 0)
+        checks.append(check_true("Shots During Engagement", resolved > 20,
+                                 actual=resolved, phase="precondition",
+                                 detail="fast target should be in range for ~54 ticks"))
+        # Outcome phase: leading should hit the fast target
+        hits = self.results.get('attacker_resolved_hits', 0)
+        hit_rate = hits / resolved if resolved > 0 else 0
         checks.append(check_true("Hits Registered", hits > 0,
                                  actual=hits, phase="outcome",
                                  detail="leading should land some hits on fast target"))
+        checks.append(check_true("Hit Rate > 50%", hit_rate > 0.50,
+                                 actual=f"{hit_rate:.1%} ({hits}/{resolved})",
+                                 phase="outcome",
+                                 detail="fast linear target should be hittable with leading"))
         return checks
 
 
@@ -360,21 +410,55 @@ class ProjectileErraticSmallTargetScenario(StaticTargetScenario):
     attacker_ship = "Test_Attacker_Proj360.json"
     target_ship = "Test_Target_Erratic_Small.json"
     distance = 300
+    track_positions = True
 
     def custom_setup(self, battle_engine):
+        self._tracking_weapon_range = 1000
         self.target_movement = ErraticController(
-            center=self.target.position.copy(), max_radius=400, seed=42
+            center=self.target.position.copy(), max_radius=1000, seed=42
         )
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        # Data phase: verify weapon loaded correctly
         weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
         if weapon:
             checks.append(check_exact("Weapon Damage", 1, weapon.damage))
             checks.append(check_exact("Weapon Range", 1000, weapon.range))
-        checks.append(check_true("Target Moved", self.target.position.distance_to(
+            checks.append(check_exact("Projectile Speed", 20000, weapon.projectile_speed))
+            checks.append(check_exact("Reload Time", 0.0, weapon.reload_time))
+        # Precondition phase: verify target moved erratically and stayed in range
+        target_speed = self.target.velocity.length()
+        checks.append(check_approx("Target At Full Speed", 31.25, target_speed,
+                                   tolerance=0.01, phase="precondition"))
+        checks.append(check_true("Target Moved From Start", self.target.position.distance_to(
             pygame.math.Vector2(self.distance, 0)) > 1, phase="precondition",
             detail="Erratic target should move from starting position"))
+        summary = self.results.get('tracking_summary', {}).get('target', {})
+        max_dist = summary.get('max_distance', 0)
+        checks.append(check_true("Target Maneuvered (max dist > 400px)", max_dist > 400,
+                                 actual=f"{max_dist:.0f}px",
+                                 phase="precondition",
+                                 detail="erratic target should range across the engagement zone"))
+        ticks_in = summary.get('ticks_in_range', 0)
+        checks.append(check_true("Target In Range > 500 ticks", ticks_in > 500,
+                                 actual=ticks_in, phase="precondition",
+                                 detail="small erratic target should stay mostly in range with high thruster"))
+        # Outcome phase: must fire enough shots and hit a meaningful fraction
+        resolved = self.results.get('attacker_resolved_shots', 0)
+        hits = self.results.get('attacker_resolved_hits', 0)
+        hit_rate = hits / resolved if resolved > 0 else 0
+        checks.append(check_true("Shots Fired > 500", resolved > 500,
+                                 actual=resolved, phase="outcome",
+                                 detail="weapon should fire most ticks while target in range"))
+        checks.append(check_true("Hit Rate > 50%", hit_rate > 0.50,
+                                 actual=f"{hit_rate:.1%} ({hits}/{resolved})",
+                                 phase="outcome",
+                                 detail="erratic small target should be hit more than half the time"))
+        checks.append(check_true("Hit Rate < 95%", hit_rate < 0.95,
+                                 actual=f"{hit_rate:.1%}",
+                                 phase="outcome",
+                                 detail="erratic movement should cause some misses"))
         return checks
 
 
@@ -421,21 +505,55 @@ class ProjectileErraticLargeTargetScenario(StaticTargetScenario):
     attacker_ship = "Test_Attacker_Proj360.json"
     target_ship = "Test_Target_Erratic_Large.json"
     distance = 300
+    track_positions = True
 
     def custom_setup(self, battle_engine):
+        self._tracking_weapon_range = 1000
         self.target_movement = ErraticController(
-            center=self.target.position.copy(), max_radius=400, seed=42
+            center=self.target.position.copy(), max_radius=1000, seed=42
         )
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        # Data phase: verify weapon loaded correctly
         weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
         if weapon:
             checks.append(check_exact("Weapon Damage", 1, weapon.damage))
             checks.append(check_exact("Weapon Range", 1000, weapon.range))
-        checks.append(check_true("Target Moved", self.target.position.distance_to(
+            checks.append(check_exact("Projectile Speed", 20000, weapon.projectile_speed))
+            checks.append(check_exact("Reload Time", 0.0, weapon.reload_time))
+        # Precondition phase: verify target moved erratically and stayed in range
+        target_speed = self.target.velocity.length()
+        checks.append(check_approx("Target At Full Speed", 3.125, target_speed,
+                                   tolerance=0.01, phase="precondition"))
+        checks.append(check_true("Target Moved From Start", self.target.position.distance_to(
             pygame.math.Vector2(self.distance, 0)) > 1, phase="precondition",
             detail="Erratic target should move from starting position"))
+        summary = self.results.get('tracking_summary', {}).get('target', {})
+        max_dist = summary.get('max_distance', 0)
+        checks.append(check_true("Target Maneuvered (max dist > 400px)", max_dist > 400,
+                                 actual=f"{max_dist:.0f}px",
+                                 phase="precondition",
+                                 detail="erratic target should range across the engagement zone"))
+        ticks_in = summary.get('ticks_in_range', 0)
+        checks.append(check_true("Target In Range > 400 ticks", ticks_in > 400,
+                                 actual=ticks_in, phase="precondition",
+                                 detail="large erratic target with 4x thrusters should stay mostly in range"))
+        # Outcome phase: large target should be hit very consistently
+        resolved = self.results.get('attacker_resolved_shots', 0)
+        hits = self.results.get('attacker_resolved_hits', 0)
+        hit_rate = hits / resolved if resolved > 0 else 0
+        checks.append(check_true("Shots Fired > 400", resolved > 400,
+                                 actual=resolved, phase="outcome",
+                                 detail="weapon should fire most ticks while target in range"))
+        checks.append(check_true("Hit Rate > 95%", hit_rate > 0.95,
+                                 actual=f"{hit_rate:.1%} ({hits}/{resolved})",
+                                 phase="outcome",
+                                 detail="large target should be nearly impossible to miss"))
+        checks.append(check_true("Hit Rate > PROJ-004", hit_rate > 0.80,
+                                 actual=f"{hit_rate:.1%}",
+                                 phase="outcome",
+                                 detail="large target hit rate must exceed small target"))
         return checks
 
 
@@ -494,17 +612,24 @@ class ProjectileOutOfRangeScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data
+        # Data phase: verify weapon loaded correctly
         weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
         if weapon:
             checks.append(check_exact("Weapon Damage", 1, weapon.damage))
             checks.append(check_exact("Weapon Range", 1000, weapon.range))
+            checks.append(check_exact("Projectile Speed", 20000, weapon.projectile_speed))
         checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        # Precondition
+        # Precondition phase: verify target is actually beyond range
         center_dist = self.attacker.position.distance_to(self.target.position)
         checks.append(check_approx("Center Distance", float(PROJECTILE_OUT_OF_RANGE_DISTANCE), center_dist,
                                    tolerance=0.01, phase="precondition"))
-        # Outcome
+        checks.append(check_true("Target Beyond Range", center_dist > 1000,
+                                 actual=f"{center_dist:.0f}px vs 1000px max",
+                                 phase="precondition",
+                                 detail="target must be beyond weapon max range"))
+        # Outcome phase: no damage AND verify weapon didn't fire (target out of range)
+        shots = self.results.get('attacker_total_shots_fired', 0)
+        checks.append(check_exact("No Shots Fired", 0, shots, phase="outcome"))
         checks.append(check_exact("No Damage At Range", 0, self.damage_dealt, phase="outcome"))
         return checks
 
@@ -567,20 +692,27 @@ class ProjectileDamageCloseRangeScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data
+        # Data phase
         weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
         if weapon:
             checks.append(check_exact("Weapon Damage", 1, weapon.damage))
             checks.append(check_exact("Weapon Range", 1000, weapon.range))
+            checks.append(check_exact("Projectile Speed", 20000, weapon.projectile_speed))
+            checks.append(check_exact("Reload Time", 0.0, weapon.reload_time))
         checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        # Precondition
+        # Precondition phase
         center_dist = self.attacker.position.distance_to(self.target.position)
         checks.append(check_approx("Center Distance", 100.0, center_dist,
                                    tolerance=0.01, phase="precondition"))
-        # Outcome
-        checks.append(check_true("Damage Dealt", self.damage_dealt > 0,
-                                 actual=self.damage_dealt, phase="outcome",
-                                 detail="expected > 0 at close range (100px)"))
+        # Outcome phase: 100% resolved hit rate proves no damage falloff
+        resolved = self.results.get('attacker_resolved_shots', 0)
+        hits = self.results.get('attacker_resolved_hits', 0)
+        checks.append(check_true("Shots Fired", resolved > 50,
+                                 actual=resolved, phase="outcome"))
+        checks.append(check_true("100% Resolved Hit Rate (No Falloff)", resolved > 0 and hits == resolved,
+                                 actual=f"{hits}/{resolved}",
+                                 phase="outcome",
+                                 detail="close range: every resolved shot must hit"))
         return checks
 
 
@@ -639,20 +771,27 @@ class ProjectileDamageMidRangeScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data
+        # Data phase
         weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
         if weapon:
             checks.append(check_exact("Weapon Damage", 1, weapon.damage))
             checks.append(check_exact("Weapon Range", 1000, weapon.range))
+            checks.append(check_exact("Projectile Speed", 20000, weapon.projectile_speed))
+            checks.append(check_exact("Reload Time", 0.0, weapon.reload_time))
         checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        # Precondition
+        # Precondition phase
         center_dist = self.attacker.position.distance_to(self.target.position)
         checks.append(check_approx("Center Distance", 500.0, center_dist,
                                    tolerance=0.01, phase="precondition"))
-        # Outcome
-        checks.append(check_true("Damage Dealt", self.damage_dealt > 0,
-                                 actual=self.damage_dealt, phase="outcome",
-                                 detail="expected > 0 at mid range (500px)"))
+        # Outcome phase: 100% resolved hit rate proves no damage falloff at mid range
+        resolved = self.results.get('attacker_resolved_shots', 0)
+        hits = self.results.get('attacker_resolved_hits', 0)
+        checks.append(check_true("Shots Fired", resolved > 50,
+                                 actual=resolved, phase="outcome"))
+        checks.append(check_true("100% Resolved Hit Rate (No Falloff)", resolved > 0 and hits == resolved,
+                                 actual=f"{hits}/{resolved}",
+                                 phase="outcome",
+                                 detail="mid range: every resolved shot must hit (no falloff)"))
         return checks
 
 
@@ -712,17 +851,27 @@ class ProjectileDamageLongRangeScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data
+        # Data phase
         weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
         if weapon:
             checks.append(check_exact("Weapon Damage", 1, weapon.damage))
             checks.append(check_exact("Weapon Range", 1000, weapon.range))
+            checks.append(check_exact("Projectile Speed", 20000, weapon.projectile_speed))
+            checks.append(check_exact("Reload Time", 0.0, weapon.reload_time))
         checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
-        # Precondition
+        # Precondition phase
         center_dist = self.attacker.position.distance_to(self.target.position)
         checks.append(check_approx("Center Distance", 900.0, center_dist,
                                    tolerance=0.01, phase="precondition"))
-        # Measurement test -- at edge of range, just verify simulation completed
+        # Outcome phase: 100% resolved hit rate proves no damage falloff at edge of range
+        resolved = self.results.get('attacker_resolved_shots', 0)
+        hits = self.results.get('attacker_resolved_hits', 0)
+        checks.append(check_true("Shots Fired", resolved > 50,
+                                 actual=resolved, phase="outcome"))
+        checks.append(check_true("100% Resolved Hit Rate (No Falloff)", resolved > 0 and hits == resolved,
+                                 actual=f"{hits}/{resolved}",
+                                 phase="outcome",
+                                 detail="edge of range: every resolved shot must hit (no falloff)"))
         return checks
 
 

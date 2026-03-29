@@ -107,6 +107,8 @@ Test IDs follow the pattern: `PROJECTILE-XXX` and `PROJECTILE-DMG-XXX`.
 Projectile tests fire every tick (reload=0) with 1 damage per hit, so
 `damage_dealt == hits`. Moving targets start at (100, -1200) out of weapon
 range heading upward, ensuring they reach full speed before engagement.
+Hit rates are computed from *resolved* shots only — projectiles still in
+flight when the test ends are excluded from the hit/miss count.
 
 ### Defense & Modifier Tests (13 tests)
 
@@ -151,6 +153,21 @@ Resource tests validate:
 
 ## Key Concepts
 
+### Verify Every Assumption (CRITICAL)
+
+A test that checks only the outcome can pass for the wrong reason. Each
+phase must verify the assumptions that subsequent phases depend on:
+
+- **Data phase**: every loaded weapon/ship stat (damage, range, speed, reload)
+- **Precondition phase**: geometry (distances), movement (target speed,
+  displacement, ticks in range), and weapon activity (shots fired)
+- **Outcome phase**: hard-to-game bounds (100% for stationary, both upper
+  AND lower bounds for erratic targets, minimum shot counts)
+
+If a test depends on a moving target, the precondition phase MUST verify
+the target actually moved at the expected speed and covered the expected
+distance. A "pass" on a broken test is worse than a failure.
+
 ### TOST (Two One-Sided Tests)
 
 Traditional hypothesis testing proves things are **different**.
@@ -191,6 +208,50 @@ effective_speed = projectile_speed / 100
 A projectile with speed 20000 moves at 200 px/tick.
 A ship with Top Spd 37.5 moves at 37.5 px/tick.
 The projectile is 5.3x faster than the ship.
+
+### Turn Speed Units
+
+`turn_speed` in ship stats is in **degrees per 100 ticks**, not per tick.
+`rotate()` divides by 100, so effective rotation = `turn_speed / 100` deg/tick.
+
+```python
+# Example: turn_speed=1562.5
+# Actual: 1562.5 / 100 = 15.625 deg/tick
+# 180-degree turn: 180 / 15.625 = 11.5 ticks
+```
+
+This matters for erratic target leash calculations — overshoot = max_speed * (180 / effective_turn_rate).
+
+### In-Flight Projectile Tracking
+
+Projectile hit rates are computed from **resolved shots only**. Projectiles
+still in flight when the test ends are excluded from the hit/miss count:
+
+```python
+resolved_shots = total_shots_fired - in_flight
+resolved_hit_rate = hits / resolved_shots
+```
+
+This prevents travel-time artifacts: without this correction, long-range
+tests appear to have lower accuracy simply because more projectiles are
+mid-flight at test end. The DMG consistency tests (010/050/090) all show
+100% resolved hit rate at every range.
+
+### Position Tracking
+
+Scenarios can enable per-tick position recording for path analysis:
+
+```python
+class MyScenario(StaticTargetScenario):
+    track_positions = True
+
+    def custom_setup(self, engine):
+        self._tracking_weapon_range = 1000  # for in_range flags
+```
+
+This records tick, x, y, speed, heading, distance, and in_range for every
+ship every tick. Results include `tracking_summary` with ticks_in_range,
+min/max distance. Zero overhead when disabled (single bool check).
 
 ### Defense Score (Logarithmic Formula)
 
@@ -322,6 +383,16 @@ Starship Battles/
 | **Zero-mass components** | Isolates hull mass for predictable defense scores |
 | **1 billion HP targets** | Survives 100k ticks at 99% hit rate |
 | **Two test tiers** | Fast feedback (500) + precise validation (100k) |
+| **Damage=1, reload=0** | Projectile: damage_dealt == hits; fires every tick for high sample counts |
+| **Resolved hit rate** | Excludes in-flight projectiles from denominator — eliminates travel-time artifacts |
+| **Position tracking** | Optional per-tick recording for path analysis — zero overhead when off |
+| **Point-blank ≥ 100px** | Ships with mass=400 have ~29.5px radius; avoids visual overlap |
+| **Game-realistic speeds** | Projectile speed=20000 matches actual railgun; 5.3x faster than fastest ship |
+| **Same start position** | PROJ-002/003 both start (100,-1200) — only speed differs for clean comparison |
+| **High agility thruster** | test_thruster_high (raw=500) for erratic targets to stay within leash |
+| **Generic arc_set detection** | Modifier arc defaults based on effect type, not hardcoded modifier IDs |
+| **History on startup** | Combat Lab loads test_history.json into registry so status dots show immediately |
+| **Always-visible ships** | Colored dot always drawn in battle view — prevents transparent-image invisibility |
 
 ---
 
@@ -336,6 +407,7 @@ Starship Battles/
 ## Credits
 
 **Created**: January 2026
+**Last Updated**: March 2026
 **Combat Lab System**: Claude + User collaboration
 
 ---
