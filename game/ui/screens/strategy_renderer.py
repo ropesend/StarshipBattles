@@ -608,11 +608,14 @@ class StrategyRenderer:
             center_x_frac = core_info.get('centerX', 0.5)
             center_y_frac = core_info.get('centerY', 0.5)
 
+            # Progressive scaling boost: larger stars need proportionally more
+            # screen space to visually fill their hex footprint. No effect at
+            # radius 1, adds ~1 hex ring of extra size by radius 6.
+            radius_boost = 1.0 + (star.radius_hexes - 1) * 0.03
+
             # Scale so core in the image matches the hex screen size.
-            # Metadata 'radius' is normalized to image width; treat as diameter
-            # to get the correct visual scale on the hex grid.
             core_diameter_frac = core_radius_frac * 2
-            display_size = int(screen_star_r / core_diameter_frac)
+            display_size = int((screen_star_r * radius_boost) / core_diameter_frac)
             display_size = max(display_size, 4)  # minimum size
 
             scaled_img = pygame.transform.smoothscale(star_img, (display_size, display_size))
