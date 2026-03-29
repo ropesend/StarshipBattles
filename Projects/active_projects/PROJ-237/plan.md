@@ -13,20 +13,20 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Ability Classes & Component Definitions | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Data Model Changes | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Planet Energy Engine | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Planet Orders Framework | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Integration & Shield Blocking | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. UI, Quickstart & Final Integration | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 1. Ability Classes & Component Definitions | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Data Model Changes | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Planet Energy Engine | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Planet Orders Framework | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Integration & Shield Blocking | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. UI, Quickstart & Final Integration | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-03-29
-**Active Phase:** Planning — Awaiting User Approval
-**Last Action:** Full plan drafted with 6 phases, swarm review complete, all phase checklists written
-**Next Action:** User approves plan → begin Phase 1 implementation
+**Active Phase:** Complete
+**Last Action:** All 6 phases implemented and verified
+**Next Action:** Create PROJ-238 for order system unification, UI, and hotkeys
 **Blockers:** None
-**Test Baseline:** 13951 passed, 19 failed (pre-existing), 2 skipped
+**Test Baseline:** 13951 passed → **14016 passed** (+65 new tests), 19 failed (pre-existing, unchanged)
 
 ## Overview
 Add three interconnected subsystems to the strategy layer: (1) a per-planet energy system with generators and batteries, (2) a planetary shield that consumes energy and blocks planet destroyers, and (3) a planet orders framework (parallel to fleet orders) that enables tick-based planet actions. The shield is the first planet order type; future orders include launching fighters and converting resources.
