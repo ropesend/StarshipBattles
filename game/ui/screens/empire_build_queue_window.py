@@ -356,9 +356,9 @@ class EmpireBuildQueueWindow(UIWindow):
         facade = getattr(self, '_facade', None)
         session = getattr(self, '_session', None)
         if facade is not None or session is not None:
-            from game.strategy.engine.commands import AddToConstructionQueueCommand
+            from game.strategy.engine.commands import AddToConstructionQueueCommand, BuildEntityType
             entity = source.owner_entity
-            entity_type = "planet" if hasattr(entity, 'planet_type') else "fleet"
+            entity_type = BuildEntityType.PLANET if hasattr(entity, 'planet_type') else BuildEntityType.FLEET
             entity_id = getattr(entity, 'id', 0)
             design_id = item.get('design_id', '')
             cmd = AddToConstructionQueueCommand(

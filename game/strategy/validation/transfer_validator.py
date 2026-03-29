@@ -17,7 +17,7 @@ class TransferValidator:
     VALID_CARGO_TYPES = {"passengers"}  # Extensible for future cargo types
 
     # Valid directions
-    VALID_DIRECTIONS = {"load", "unload"}
+    VALID_DIRECTIONS = {"load", "unload"}  # str values match TransferDirection enum
 
     @staticmethod
     def validate(

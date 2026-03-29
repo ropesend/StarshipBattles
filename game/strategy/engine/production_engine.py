@@ -27,7 +27,7 @@ from game.strategy.services.design_cost_calculator import DesignCostCalculator
 logger = logging.getLogger(__name__)
 
 # PROJ-209 Phase 2: Named constants for production tick processing
-TICKS_PER_TURN = 100  # Number of ticks per game turn
+from game.strategy.engine.turn_engine import TICKS_PER_TURN
 TICK_CAPACITY_EPSILON = 0.0001  # Minimum tick capacity to continue processing
 COMPLETION_EPSILON = 0.001  # Tolerance for float comparison in completion check
 MAX_QUEUE_ITERATIONS = 10  # Safety limit to prevent infinite loops

@@ -285,7 +285,8 @@ class BuildQueueScreen:
         else:
             entity = source.owner_entity
 
-        entity_type = "planet" if hasattr(entity, 'planet_type') else "fleet"
+        from game.strategy.engine.commands import BuildEntityType
+        entity_type = BuildEntityType.PLANET if hasattr(entity, 'planet_type') else BuildEntityType.FLEET
         entity_id = getattr(entity, 'id', 0)
         queue_id = getattr(source, 'queue_id', None) if source is not None else None
 

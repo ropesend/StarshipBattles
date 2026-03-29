@@ -350,23 +350,22 @@ elif order.type == OrderType.YOUR_NEW_ORDER:
 
 ```python
 # game/strategy/engine/command_handlers.py
-class YourNewOrderCommandHandler(ICommandHandler):
-    @staticmethod
-    def execute(session, params):
-        fleet = session.get_fleet(params['fleet_id'])
-        # Validate
-        # Create order
+class YourNewOrderCommandHandler(BaseCommandHandler):
+    def execute(self, session: 'GameSession', cmd: 'YourNewOrderCommand') -> ValidationResult:
+        # 1. Resolve fleet
+        fleet, error = self._resolve_fleet(session, cmd.fleet_id)
+        if error:
+            return error
+        # 2. Validate
+        # 3. Create order
         order = FleetOrder(OrderType.YOUR_NEW_ORDER, target=...)
         fleet.add_order(order)
-        return CommandResult(success=True)
+        return ValidationResult.success()
 ```
 
-Register in `CommandHandlerRegistry`:
+Register in `create_default_registry()`:
 ```python
-_handlers = {
-    # ... existing ...
-    "your_new_order": YourNewOrderCommandHandler,
-}
+registry.register('YourNewOrderCommand', YourNewOrderCommandHandler())
 ```
 
 ### 6. Add Tests

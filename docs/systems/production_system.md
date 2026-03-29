@@ -144,12 +144,12 @@ Production rates are per-turn (divided by 100 for per-tick). Rates come from `Bu
 
 ### Constants
 
-| Constant | Value | Purpose |
-|----------|-------|---------|
-| `TICKS_PER_TURN` | 100 | Ticks per game turn |
-| `TICK_CAPACITY_EPSILON` | 0.0001 | Minimum tick capacity to continue |
-| `COMPLETION_EPSILON` | 0.001 | Float tolerance for completion check |
-| `MAX_QUEUE_ITERATIONS` | 10 | Safety limit per tick |
+| Constant | Value | Defined In | Purpose |
+|----------|-------|------------|---------|
+| `TICKS_PER_TURN` | 100 | `turn_engine.py` (imported by ProductionEngine) | Ticks per game turn |
+| `TICK_CAPACITY_EPSILON` | 0.0001 | `production_engine.py` | Minimum tick capacity to continue |
+| `COMPLETION_EPSILON` | 0.001 | `production_engine.py` | Float tolerance for completion check |
+| `MAX_QUEUE_ITERATIONS` | 10 | `production_engine.py` | Safety limit per tick |
 
 ---
 

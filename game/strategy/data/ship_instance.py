@@ -9,21 +9,28 @@ Bridges between:
 Each ShipInstance tracks the current state of a ship (damage, resources)
 separate from its design template.
 
-PROJ-40/NEW-STRAT-008: Added validation and warning for serial parameter.
+Delegates:
+- ShipResourceManager: resource tracking (fuel, energy, ammo)
+- ShipCargoManager: cargo loading/unloading
+- ShipDisplayFormatter: display string formatting
+- ShipInstanceBridge: simulation bridge (to_ship, update_from_ship)
+- ShipInstanceSerializer: serialization (to_dict, from_dict, clone)
 """
 import logging
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, Tuple, List, TYPE_CHECKING
 import uuid
-import json
 
 from game.core.protocols import IPostBattleShip
-from game.core.validation_helpers import require_keys, validate_non_negative
 from game.strategy.data.ship_resource_manager import ShipResourceManager
 from game.strategy.data.ship_cargo_manager import ShipCargoManager
 from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
+from game.strategy.data.ship_instance_bridge import ShipInstanceBridge
 
 logger = logging.getLogger(__name__)
+
+# Fallback if stats dict lacks max_hp (should not happen with proper DI)
+_DEFAULT_MAX_HP = 100
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
@@ -81,12 +88,14 @@ class ShipInstance:
     _resource_mgr: Optional['ShipResourceManager'] = field(default=None, repr=False, init=False)
     _cargo_mgr: Optional['ShipCargoManager'] = field(default=None, repr=False, init=False)
     _display_fmt: Optional['ShipDisplayFormatter'] = field(default=None, repr=False, init=False)
+    _bridge: Optional['ShipInstanceBridge'] = field(default=None, repr=False, init=False)
 
     def __post_init__(self) -> None:
         """Initialize delegate managers after dataclass init."""
         self._resource_mgr = ShipResourceManager(self)
         self._cargo_mgr = ShipCargoManager(self)
         self._display_fmt = ShipDisplayFormatter(self)
+        self._bridge = ShipInstanceBridge(self)
 
     def set_registries(self, registries: 'GameRegistries') -> None:
         """
@@ -191,59 +200,6 @@ class ShipInstance:
 
         return instance
 
-    @staticmethod
-    def _capture_resource_levels(ship: IPostBattleShip) -> Dict[str, float]:
-        """Extract all resource levels from a post-battle Ship."""
-        levels: Dict[str, float] = {}
-        if ship.resources:
-            for name in ship.resources.get_resource_names():
-                levels[name] = ship.resources.get_value(name)
-        return levels
-
-    @classmethod
-    def from_ship(cls, ship: IPostBattleShip, owner_id: int) -> 'ShipInstance':
-        """
-        Create a ShipInstance from a live Ship object.
-
-        Captures the current state of the ship including any damage.
-
-        Note:
-            Also calls ShipSerializer.to_dict() internally, which requires
-            a full simulation Ship instance (not just IPostBattleShip).
-        """
-        # INTENTIONAL LATE IMPORT: Cross-layer boundary (strategy -> simulation)
-        # See docs/ARCHITECTURE.md "Intentional Late Imports" section
-        from game.simulation.entities.ship_serialization import ShipSerializer
-
-        # Serialize the ship design
-        design_data = ShipSerializer.to_dict(ship)
-
-        instance = cls(
-            instance_id=str(uuid.uuid4()),
-            design_id=ship.name,
-            name=ship.name,
-            owner_id=owner_id,
-            design_data=design_data,
-        )
-
-        # Capture current state if damaged
-        if ship.hp < ship.max_hp:
-            instance.current_hp = ship.hp
-
-        # Capture component damage
-        for layer_type, layer_data in ship.layers.items():
-            for comp in layer_data.components:
-                if comp.current_hp < comp.max_hp:
-                    instance.component_damage[comp.id] = comp.current_hp
-
-        # Capture resource levels
-        instance.resource_levels = cls._capture_resource_levels(ship)
-
-        instance.is_derelict = ship.is_derelict
-        instance.is_alive = ship.is_alive
-
-        return instance
-
     def is_damaged(self) -> bool:
         """Check if ship has any damage."""
         return (
@@ -308,7 +264,7 @@ class ShipInstance:
         """Get current HP as percentage of max."""
         if self.current_hp is None:
             return 1.0
-        max_hp = self.get_calculated_stats().get('max_hp', 100)
+        max_hp = self.get_calculated_stats().get('max_hp', _DEFAULT_MAX_HP)
         if max_hp <= 0:
             return 0.0
         return self.current_hp / max_hp
@@ -526,53 +482,12 @@ class ShipInstance:
 
         Applies any existing damage/resource state from strategy layer.
 
-        PROJ-211: registries is now required (no global fallback).
-
         Args:
             position: (x, y) spawn position for the ship
             team_id: Team assignment for battle (0 or 1)
             registries: GameRegistries for DI (required).
         """
-        # INTENTIONAL LATE IMPORT: Cross-layer boundary (strategy -> simulation)
-        # See docs/ARCHITECTURE.md "Intentional Late Imports" section
-        from game.simulation.entities.ship_serialization import ShipSerializer
-        # log_debug imported at module level
-
-        # Create ship from design data
-        ship = ShipSerializer.from_dict(self.design_data, registries=registries)
-
-        # Set position and team
-        ship.x, ship.y = position
-        ship.team_id = team_id
-
-        # Apply HP damage if tracked
-        if self.current_hp is not None:
-            # Calculate damage to distribute
-            damage = ship.max_hp - self.current_hp
-            if damage > 0:
-                logger.debug(f"Ship {self.name} entering battle with {damage} damage pre-applied")
-                # Apply damage (this will distribute to components)
-                ship.combat_engine.take_damage(damage)
-
-        # Apply component-specific damage
-        for comp_id, target_hp in self.component_damage.items():
-            for layer_type, layer_data in ship.layers.items():
-                for comp in layer_data.components:
-                    if comp.id == comp_id:
-                        # Set component to specific HP
-                        damage = comp.current_hp - target_hp
-                        if damage > 0:
-                            comp.take_damage(damage)
-
-        # Apply resource levels
-        if ship.resources:
-            for resource_name, current in self.resource_levels.items():
-                ship.resources.set_value(resource_name, current)
-
-        # Recalculate stats after applying damage
-        ship.recalculate_stats()
-
-        return ship
+        return self._bridge.to_ship(position, team_id, registries=registries)
 
     def update_from_ship(self, ship: IPostBattleShip) -> None:
         """
@@ -580,34 +495,7 @@ class ShipInstance:
 
         Called after strategy battle resolution to persist damage/resource changes.
         """
-        # Update HP state
-        if ship.is_alive:
-            if ship.hp < ship.max_hp:
-                self.current_hp = ship.hp
-            else:
-                self.current_hp = None  # Full health
-            self.is_alive = True
-        else:
-            self.is_alive = False
-            self.current_hp = 0
-
-        self.is_derelict = ship.is_derelict
-
-        # Update component damage
-        self.component_damage.clear()
-        for layer_type, layer_data in ship.layers.items():
-            for comp in layer_data.components:
-                if comp.current_hp < comp.max_hp:
-                    self.component_damage[comp.id] = comp.current_hp
-
-        # Update resource levels
-        self.resource_levels = self._capture_resource_levels(ship)
-
-        # Update battle stats
-        self.battles_survived += 1
-
-        # Invalidate stats cache (damage changed)
-        self.invalidate_stats_cache()
+        self._bridge.update_from_ship(ship)
 
     def repair(self, amount: int) -> int:
         """
@@ -618,7 +506,7 @@ class ShipInstance:
         if self.current_hp is None:
             return 0  # Already at full health
 
-        max_hp = self.get_calculated_stats().get('max_hp', 100)
+        max_hp = self.get_calculated_stats().get('max_hp', _DEFAULT_MAX_HP)
         old_hp = self.current_hp
         self.current_hp = min(max_hp, self.current_hp + amount)
 
@@ -642,27 +530,8 @@ class ShipInstance:
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize for save game."""
-        data = {
-            'instance_id': self.instance_id,
-            'design_id': self.design_id,
-            'name': self.name,
-            'owner_id': self.owner_id,
-            'design_data': self.design_data,
-            'current_hp': self.current_hp,
-            'component_damage': self.component_damage,
-            'resource_levels': self.resource_levels,
-            'component_toggles': self.component_toggles,
-            'is_alive': self.is_alive,
-            'is_derelict': self.is_derelict,
-            'experience': self.experience,
-            'kills': self.kills,
-            'battles_survived': self.battles_survived,
-            'serial': self.serial,
-        }
-        # Only include cargo_contents if non-empty
-        if self.cargo_contents:
-            data['cargo_contents'] = self.cargo_contents
-        return data
+        from game.strategy.data.ship_instance_serializer import ShipInstanceSerializer
+        return ShipInstanceSerializer.to_dict(self)
 
     @classmethod
     def from_dict(
@@ -685,69 +554,24 @@ class ShipInstance:
         Raises:
             PersistenceException: If required keys missing or values invalid
         """
-        require_keys(data, ['instance_id', 'design_id', 'name', 'owner_id'], 'ShipInstance')
-
-        # Validate non-negative numeric fields (if present in data)
-        if data.get('current_hp') is not None:
-            validate_non_negative(data['current_hp'], 'current_hp', 'ShipInstance')
-        if data.get('experience') is not None:
-            validate_non_negative(data['experience'], 'experience', 'ShipInstance')
-        if data.get('kills') is not None:
-            validate_non_negative(data['kills'], 'kills', 'ShipInstance')
-        if data.get('battles_survived') is not None:
-            validate_non_negative(data['battles_survived'], 'battles_survived', 'ShipInstance')
-
-        instance = cls(
-            instance_id=data['instance_id'],
-            design_id=data['design_id'],
-            name=data['name'],
-            owner_id=data['owner_id'],
-            design_data=data.get('design_data', {}),
-            current_hp=data.get('current_hp'),
-            component_damage=data.get('component_damage', {}),
-            resource_levels=data.get('resource_levels', {}),
-            component_toggles=data.get('component_toggles', {}),
-            cargo_contents=data.get('cargo_contents', {}),
-            is_alive=data.get('is_alive', True),
-            is_derelict=data.get('is_derelict', False),
-            experience=data.get('experience', 0),
-            kills=data.get('kills', 0),
-            battles_survived=data.get('battles_survived', 0),
-            serial=data.get('serial'),
-        )
-        instance._registries = registries
-        return instance
+        from game.strategy.data.ship_instance_serializer import ShipInstanceSerializer
+        return ShipInstanceSerializer.from_dict(data, registries=registries)
 
     def to_json(self, indent: int = 2) -> str:
         """Serialize to JSON string."""
-        return json.dumps(self.to_dict(), indent=indent)
+        from game.strategy.data.ship_instance_serializer import ShipInstanceSerializer
+        return ShipInstanceSerializer.to_json(self, indent=indent)
 
     @classmethod
     def from_json(cls, json_str: str) -> 'ShipInstance':
         """Deserialize from JSON string."""
-        data = json.loads(json_str)
-        return cls.from_dict(data)
+        from game.strategy.data.ship_instance_serializer import ShipInstanceSerializer
+        return ShipInstanceSerializer.from_json(json_str)
 
     def clone(self) -> 'ShipInstance':
         """Create a deep copy of this instance (for hypothetical battles)."""
-        import copy
-        return ShipInstance(
-            instance_id=str(uuid.uuid4()),  # New ID for clone
-            design_id=self.design_id,
-            name=self.name,
-            owner_id=self.owner_id,
-            design_data=copy.deepcopy(self.design_data),
-            current_hp=self.current_hp,
-            component_damage=copy.deepcopy(self.component_damage),
-            resource_levels=copy.deepcopy(self.resource_levels),
-            component_toggles=copy.deepcopy(self.component_toggles),
-            cargo_contents=copy.deepcopy(self.cargo_contents),
-            is_alive=self.is_alive,
-            is_derelict=self.is_derelict,
-            experience=self.experience,
-            kills=self.kills,
-            battles_survived=self.battles_survived,
-        )
+        from game.strategy.data.ship_instance_serializer import ShipInstanceSerializer
+        return ShipInstanceSerializer.clone(self)
 
     def __repr__(self) -> str:
         hp_status = f"{self.current_hp}HP" if self.current_hp is not None else "Full"

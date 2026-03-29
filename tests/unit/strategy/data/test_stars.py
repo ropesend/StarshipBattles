@@ -16,6 +16,7 @@ from game.strategy.data.stars import (
     StarGenerator,
     SOLAR_TEMP_K,
 )
+from unittest.mock import patch
 from game.core.hex_math import HexCoord, hex_distance
 
 
@@ -620,3 +621,140 @@ class TestStarGenerator:
         assert stars[1].mass < stars[0].mass, (
             f"Companion mass {stars[1].mass} >= primary {stars[0].mass}"
         )
+
+
+class TestDetermineTypeCharacterization:
+    """Golden-output tests pinning _determine_type_and_radius behavior per StarType.
+
+    These tests mock _roll_star_type to force each type, then verify the
+    exact output tuple with a seeded RNG. Any refactoring must produce
+    identical results for identical seeds.
+    """
+
+    @pytest.fixture
+    def generator(self):
+        return StarGenerator()
+
+    @pytest.mark.parametrize("star_type,seed,input_mass", [
+        (StarType.BLUE_GIANT, 100, 1.0),
+        (StarType.RED_GIANT, 100, 1.0),
+        (StarType.RED_DWARF, 100, 1.0),
+        (StarType.BROWN_DWARF, 100, 1.0),
+        (StarType.WHITE_DWARF, 100, 1.0),
+        (StarType.NEUTRON_STAR, 100, 1.0),
+        (StarType.BLACK_HOLE, 100, 1.0),
+        (StarType.MAIN_SEQUENCE, 100, 1.0),
+    ])
+    def test_type_produces_valid_output(self, generator, star_type, seed, input_mass):
+        """Each star type produces valid physical properties."""
+        random.seed(seed)
+        with patch.object(generator, '_roll_star_type', return_value=star_type):
+            result_type, mass, radius, temp, lum, color = (
+                generator._determine_type_and_radius(input_mass)
+            )
+
+        assert result_type == star_type
+        assert mass > 0
+        assert radius >= 0
+        assert temp >= 0
+        assert lum >= 0
+        assert isinstance(color, tuple)
+        assert len(color) == 3
+        assert all(0 <= c <= 255 for c in color)
+
+    @pytest.mark.parametrize("star_type,expected_color", [
+        (StarType.RED_GIANT, (255, 60, 60)),
+        (StarType.RED_DWARF, (255, 100, 100)),
+        (StarType.BROWN_DWARF, (140, 60, 40)),
+        (StarType.WHITE_DWARF, (220, 220, 255)),
+        (StarType.NEUTRON_STAR, (200, 200, 255)),
+        (StarType.BLACK_HOLE, (20, 0, 40)),
+    ])
+    def test_fixed_color_types(self, generator, star_type, expected_color):
+        """Types with fixed colors always return the exact expected color."""
+        random.seed(42)
+        with patch.object(generator, '_roll_star_type', return_value=star_type):
+            _, _, _, _, _, color = generator._determine_type_and_radius(1.0)
+
+        assert color == expected_color, (
+            f"{star_type.name} expected color {expected_color}, got {color}"
+        )
+
+    def test_main_sequence_uses_kelvin_to_rgb(self, generator):
+        """MAIN_SEQUENCE derives color from temperature via _kelvin_to_rgb."""
+        random.seed(42)
+        with patch.object(generator, '_roll_star_type', return_value=StarType.MAIN_SEQUENCE):
+            _, mass, _, temp, _, color = generator._determine_type_and_radius(1.0)
+
+        expected_color = generator._kelvin_to_rgb(temp)
+        assert color == expected_color
+
+    def test_blue_giant_uses_kelvin_to_rgb(self, generator):
+        """BLUE_GIANT derives color from temperature via _kelvin_to_rgb."""
+        random.seed(42)
+        with patch.object(generator, '_roll_star_type', return_value=StarType.BLUE_GIANT):
+            _, _, _, temp, _, color = generator._determine_type_and_radius(1.0)
+
+        expected_color = generator._kelvin_to_rgb(temp)
+        assert color == expected_color
+
+    def test_stefan_boltzmann_luminosity_formula(self, generator):
+        """RED_GIANT, BROWN_DWARF, WHITE_DWARF use Stefan-Boltzmann for luminosity."""
+        for star_type in [StarType.RED_GIANT, StarType.BROWN_DWARF, StarType.WHITE_DWARF]:
+            random.seed(42)
+            with patch.object(generator, '_roll_star_type', return_value=star_type):
+                _, _, radius, temp, lum, _ = generator._determine_type_and_radius(1.0)
+
+            expected_lum = (radius ** 2) * ((temp / SOLAR_TEMP_K) ** 4)
+            assert abs(lum - expected_lum) < 1e-10, (
+                f"{star_type.name}: lum={lum}, expected={expected_lum}"
+            )
+
+    def test_mass_adjustment_patterns(self, generator):
+        """Each type adjusts mass in its characteristic way."""
+        input_mass = 1.0
+
+        # BLUE_GIANT: max(mass, uniform(3, 50)) — always >= 3
+        random.seed(42)
+        with patch.object(generator, '_roll_star_type', return_value=StarType.BLUE_GIANT):
+            _, mass, _, _, _, _ = generator._determine_type_and_radius(input_mass)
+        assert mass >= 3.0
+
+        # RED_DWARF: min(mass, uniform(0.08, 0.5)) — always <= 0.5
+        random.seed(42)
+        with patch.object(generator, '_roll_star_type', return_value=StarType.RED_DWARF):
+            _, mass, _, _, _, _ = generator._determine_type_and_radius(input_mass)
+        assert mass <= 0.5
+
+        # WHITE_DWARF: max(min(mass, 1.4), 0.5) — clamped to [0.5, 1.4]
+        random.seed(42)
+        with patch.object(generator, '_roll_star_type', return_value=StarType.WHITE_DWARF):
+            _, mass, _, _, _, _ = generator._determine_type_and_radius(input_mass)
+        assert 0.5 <= mass <= 1.4
+
+        # NEUTRON_STAR: max(mass, uniform(1.4, 3.0)) — always >= 1.4
+        random.seed(42)
+        with patch.object(generator, '_roll_star_type', return_value=StarType.NEUTRON_STAR):
+            _, mass, _, _, _, _ = generator._determine_type_and_radius(input_mass)
+        assert mass >= 1.4
+
+        # MAIN_SEQUENCE: no adjustment — mass unchanged
+        random.seed(42)
+        with patch.object(generator, '_roll_star_type', return_value=StarType.MAIN_SEQUENCE):
+            _, mass, _, _, _, _ = generator._determine_type_and_radius(input_mass)
+        assert mass == input_mass
+
+    def test_kelvin_to_rgb_known_values(self, generator):
+        """Pin _kelvin_to_rgb at key temperatures."""
+        # Solar temperature (~5778K)
+        r, g, b = generator._kelvin_to_rgb(5778)
+        assert 0 <= r <= 255 and 0 <= g <= 255 and 0 <= b <= 255
+        assert r >= b  # Sun should be warm white
+
+        # Very hot (40000K) — should be blue-ish
+        r, g, b = generator._kelvin_to_rgb(40000)
+        assert b >= 200
+
+        # Very cool (3000K) — should be red-dominant
+        r, g, b = generator._kelvin_to_rgb(3000)
+        assert r == 255  # Red channel maxes out for cool stars

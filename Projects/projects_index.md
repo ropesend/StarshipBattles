@@ -4,14 +4,19 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-231 | Star List Panel | Planning | 2026-03-28 | 2026-03-28 |
-| PROJ-230 | Planet Generation Balance Tuning | Planning | 2026-03-27 | 2026-03-27 |
-| PROJ-229 | Galaxy Generation Inspector Tool | Planning | 2026-03-27 | 2026-03-27 |
+| PROJ-236 | Extract Magic Numbers from stars.py and planet_gen.py | Planning | 2026-03-28 | 2026-03-28 |
+| PROJ-235 | TurnEngine Phase Timing Cleanup | Planning | 2026-03-28 | 2026-03-28 |
+| PROJ-234 | ShipInstance God Object Decomposition | Awaiting Verification | 2026-03-28 | 2026-03-28 |
+| PROJ-233 | Refactor ProductionEngine - Extract Oversized Methods and Deduplicate Spawn Logic | Planning | 2026-03-28 | 2026-03-28 |
+| PROJ-232 | Command Layer Cleanup - Fix Dataclasses, Eliminate Handler Boilerplate, Add Type Safety | Planning | 2026-03-28 | 2026-03-28 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-231 | Star List Panel | Archived | 2026-03-28 | 2026-03-28 |
+| PROJ-230 | Planet Generation Balance Tuning | Archived | 2026-03-27 | 2026-03-28 |
+| PROJ-229 | Galaxy Generation Inspector Tool | Archived | 2026-03-27 | 2026-03-28 |
 | PROJ-228 | UI Structural Patterns (Dedup Campaign 5/5) | Archived | 2026-03-24 | 2026-03-25 |
 | PROJ-227 | UI Formatting, Portraits & Shared Components (Dedup Campaign 4/5) | Archived | 2026-03-24 | 2026-03-25 |
 | PROJ-226 | Strategy Layer Consolidation (Dedup Campaign 3/5) | Archived | 2026-03-24 | 2026-03-25 |
@@ -29,9 +34,6 @@ w# Projects Index
 | PROJ-214 | Hex Highlights for Objects and Ownership | Archived | 2026-02-28 | 2026-03-14 |
 | PROJ-213 | Build Queue Reversion Bug Fix | Archived | 2026-02-28 | 2026-03-14 |
 | PROJ-212 | Deferred Import Cleanup & Coupling Reduction | Archived | 2026-02-27 | 2026-03-14 |
-| PROJ-211 | 211222 Remediation: General Di Inconsistency Strategy | Archived | 2026-02-27 | 2026-03-14 |
-| PROJ-210 | Strategy God Class Decomposition | Archived | 2026-02-27 | 2026-03-14 |
-| PROJ-209 | Cyclomatic Complexity Decomposition | Archived | 2026-02-27 | 2026-03-14 |
 
 ---
 

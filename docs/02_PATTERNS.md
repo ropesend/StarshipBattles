@@ -304,6 +304,13 @@ class Ship(PhysicsBody, ShipPhysicsMixin):   # NOTE: No ShipCombatMixin
 - `FleetResourceAggregator` -- aggregates resource totals across all ships in a fleet
 - `FleetBattleAdapter` -- adapts fleet data for the combat simulation layer
 
+**ShipInstance delegates:** ShipInstance uses delegation to separate concerns:
+- `ShipInstanceBridge` -- conversion between strategy ShipInstance and simulation Ship (`to_ship`, `update_from_ship`)
+- `ShipInstanceSerializer` -- serialization/deserialization (`to_dict`, `from_dict`, `clone`)
+- `ShipResourceManager` -- resource tracking (fuel, energy, ammo)
+- `ShipCargoManager` -- cargo loading/unloading
+- `ShipDisplayFormatter` -- display string formatting
+
 ### When to Use
 
 - **Facade:** Layer boundary needs a simplified, controlled API (UI to engine).
@@ -378,7 +385,7 @@ Registry-based dispatch replaces a giant switch/if-else in `GameSession`.
 # game/strategy/engine/command_handlers.py (actual code)
 @runtime_checkable
 class ICommandHandler(Protocol):
-    def execute(self, session: 'GameSession', command: Any) -> ValidationResult: ...
+    def execute(self, session: 'GameSession', command: 'Command') -> ValidationResult: ...
 
 class CommandHandlerRegistry:
     def __init__(self):
@@ -858,7 +865,7 @@ Works with both pixel-based scrolling (default) and line-based scrolling (set co
 
 - Protocol: `game/core/protocols.py` -- `ISerializable`
 - Tests: `tests/unit/core/test_serializable_protocol.py`
-- Implementors: `ComponentState`, `ShipState`, `ProjectileState`, `BattleState`, `BattleResults` in `game/simulation/battle_state.py`
+- Implementors: `ComponentState`, `ShipState`, `ProjectileState`, `BattleState`, `BattleResults` in `game/simulation/battle_state.py`; `ShipInstance` via `ShipInstanceSerializer` in `game/strategy/data/ship_instance_serializer.py`
 
 ### How It Works
 

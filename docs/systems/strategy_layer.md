@@ -66,7 +66,7 @@ UI -> StrategySessionFacade.handle_command(cmd)
 
 ```python
 class ICommandHandler(Protocol):
-    def execute(self, session: GameSession, command: Any) -> ValidationResult: ...
+    def execute(self, session: GameSession, command: Command) -> ValidationResult: ...
 ```
 
 ### BaseCommandHandler
@@ -108,7 +108,7 @@ Factory: `create_default_registry()` registers all handlers.
 ### Shared Helpers
 
 - `add_move_order_if_needed(session, fleet, target_hex, start_hex?)` -- chain-aware MOVE queuing
-- `create_auto_load_population_order(origin_colony)` -- LOAD_POPULATION order factory
+- `create_auto_load_population_order()` -- LOAD_POPULATION order factory (no params; colony resolved at execution time)
 
 ---
 

@@ -17,6 +17,12 @@ from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from game.strategy.data.ship_instance import ShipInstance
 
+# Fallback if stats dict lacks max_hp (should not happen with proper DI)
+_DEFAULT_MAX_HP = 100
+
+# Zero-padded 6-digit serial number format
+SERIAL_FORMAT = '06d'
+
 
 class ShipDisplayFormatter:
     """
@@ -49,7 +55,7 @@ class ShipDisplayFormatter:
             return None
         # Use design name from design_data for display
         design_name = self._ship.design_data.get('name', self._ship.design_id)
-        return f"{design_name}-{self._ship.serial:06d}"
+        return f"{design_name}-{self._ship.serial:{SERIAL_FORMAT}}"
 
     def get_status_text(self) -> str:
         """
@@ -74,7 +80,7 @@ class ShipDisplayFormatter:
         Returns:
             HP display string like "150/200"
         """
-        max_hp = self._ship.get_calculated_stats().get('max_hp', 100)
+        max_hp = self._ship.get_calculated_stats().get('max_hp', _DEFAULT_MAX_HP)
 
         if self._ship.current_hp is None:
             return f"{max_hp}/{max_hp}"

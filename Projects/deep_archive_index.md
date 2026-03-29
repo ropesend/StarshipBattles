@@ -207,3 +207,6 @@ Projects moved to deep storage. Use `deep_archive_manager.py lookup PROJ-XX` to 
 | PROJ-205 | Legacy Code Elimination - Verified Findings | 2026-02-27 | PROJ-201-250 |
 | PROJ-207 | Fleet Order System Unification | 2026-02-27 | PROJ-201-250 |
 | PROJ-208 | CQRS Facade Bypass Remediation | 2026-03-14 | PROJ-201-250 |
+| PROJ-209 | Cyclomatic Complexity Decomposition | 2026-03-14 | PROJ-201-250 |
+| PROJ-210 | Strategy God Class Decomposition | 2026-03-14 | PROJ-201-250 |
+| PROJ-211 | 211222 Remediation: General Di Inconsistency Strategy | 2026-03-14 | PROJ-201-250 |

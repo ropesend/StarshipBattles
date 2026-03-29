@@ -31,6 +31,7 @@ class ResourceGenerationConfig:
         "determinism_weight": 0.7,
         "randomness_weight": 0.3,
         "minimum_floor": 10_000,
+        "ramp_c": 24.8,
     }
 
     DEFAULT_QUALITY = {
@@ -75,6 +76,7 @@ class ResourceGenerationConfig:
         self.qty_minimum_floor = qty.get(
             "minimum_floor", self.DEFAULT_QUANTITY["minimum_floor"]
         )
+        self.ramp_c = qty.get("ramp_c", self.DEFAULT_QUANTITY["ramp_c"])
 
         # Quality parameters
         self.max_quality = qual.get("max_quality", self.DEFAULT_QUALITY["max_quality"])
@@ -100,6 +102,7 @@ class ResourceGenerationConfig:
         self.qty_determinism = self.DEFAULT_QUANTITY["determinism_weight"]
         self.qty_randomness = self.DEFAULT_QUANTITY["randomness_weight"]
         self.qty_minimum_floor = self.DEFAULT_QUANTITY["minimum_floor"]
+        self.ramp_c = self.DEFAULT_QUANTITY["ramp_c"]
 
         self.max_quality = self.DEFAULT_QUALITY["max_quality"]
         self.qual_determinism = self.DEFAULT_QUALITY["determinism_weight"]
