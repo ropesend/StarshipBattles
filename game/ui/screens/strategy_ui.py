@@ -387,9 +387,12 @@ class StrategyUI:
         """Open the Event Log Window with a specific event list."""
         self.window_manager.open_event_log_with_events(events)
 
-    def open_orders_window(self, fleet):
-        """Open the Fleet Orders Window."""
-        self.window_manager.open_orders_window(fleet)
+    def open_orders_window(self, entity, entity_type: str = "fleet"):
+        """Open the Orders Window for a fleet or planet.
+
+        PROJ-238: Generalized to support any IOrderable entity.
+        """
+        self.window_manager.open_orders_window(entity, entity_type=entity_type)
 
     def open_fleet_report_window(self, fleet):
         """Open the Fleet Report Window."""
