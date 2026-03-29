@@ -194,7 +194,7 @@ def save_json(
     except OSError as e:
         logger.error(f"Failed to save JSON to {file_path}: {e}")
         return False
-    except TypeError as e:
+    except (TypeError, ValueError) as e:
         logger.error(f"Failed to serialize data to JSON for {file_path}: {e}")
         # Clean up temp file if serialization failed
         tmp_path = file_path.with_suffix(file_path.suffix + '.tmp')

@@ -1,0 +1,90 @@
+MOAW
+
+- hex grid that rolls over heading right eventually has a unit on the left side,
+- grid can be approx 40x40 to 120x120
+- there are 4 types of tiles on the grid: water, land, maintain, city
+- There are 9 units:
+   - Army
+   - Paratroopers
+   - Fighter
+   - Bomber
+   - Transport
+   - Destroyer
+   - Submarine
+   - Carrier
+   - Battleship
+- Cities
+   - scattered across the map in fixed locations
+   - cannot be destroyed
+   - start unclaimed
+   - rolling a army into a city claims the city
+   - once owned, cities provide production
+   - cities can build one unit at a time
+   - different units will have different times to be produced
+- Units
+	- All unit stats should be defined in a .json file, as little as possible should be hard coded
+	- Army
+		- moves on land only
+		- cannot travel over mountains or water
+		- moves at 1 hex per turn
+		- unlimited range
+		- 4 turns to build
+		- can attack any other unit
+	- Patatroopers
+		- fly (moves over all terain)
+		- moves 6 hexes per turn
+		- range of 32 hexes before it needs to refule
+		- When over land (Not maintains, not cities, not water) can be converted to a Army.  Army's cannot be converted to Paratroopers
+		- 6 turns to build
+		- cannot attack
+	- fighter 
+		- fly
+		- moves 16 hexes per turn
+		- range 16 hexes
+		- 8 turns to build
+		- can attack any other unit
+	- Bomber
+		- fly
+		- moves 4 hexes per turn
+		- range 32 hexes
+		- 12 turns to build
+		- When they attack, the bomber is destroyed and all units in the attacked hex, and the neighbor hexes are aliminated, any claimed cities in the blast zone become unclaimed
+	    - Can attack armies, cities, submarines, battleships, destroyers, transports
+	- Transport
+		- Boat (can only move on water)
+		- moves 4 hexes per turn
+		- unlimited range
+		- can carry up to 6 armies - arrmies are loaded by moving them onto the transport.
+		- 2 turns to build
+	- Destroyer
+		- Boat
+		- moves 6 hexes per turn
+		- unlimited range
+		- 6 turns to build
+		- can attack any unit
+	- Submarine
+		- Boat
+		- moves 4 hexes per turn
+		- unlimited range
+		- 6 turns to build
+		- can mattack submarines, battleships, destroyers
+	- Carrier
+		- Boat
+		- moves 4 hexes per turn
+		- unlimited range
+		- serves a landing/refuling station for aircraft
+		- Cannot attack anything
+		- 12 turns to build
+	- Battleship
+		- Boat
+		- moves 4 hexes per turn
+		- unlimited range
+		- 12 turns to build
+		- can attack all units
+		
+		
+At game start:
+select map size
+select number of players
+map is created - players are distributed so each has one city.  Each player should be on a separate land mass.
+		
