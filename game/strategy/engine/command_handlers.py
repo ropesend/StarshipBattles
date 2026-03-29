@@ -1038,4 +1038,14 @@ def create_default_registry() -> CommandHandlerRegistry:
     registry.register('QueueCloseWarpPointMissionCommand', CloseWarpPointMissionCommandHandler())
     registry.register('QueueCreateDysonSphereMissionCommand', CreateDysonSphereMissionCommandHandler())
 
+    # PROJ-237: Planet order command handlers
+    from game.strategy.engine.planet_command_handlers import (
+        IssuePlanetOrderCommandHandler,
+        ClearPlanetOrdersCommandHandler,
+        DeletePlanetOrderCommandHandler,
+    )
+    registry.register('IssuePlanetOrderCommand', IssuePlanetOrderCommandHandler())
+    registry.register('ClearPlanetOrdersCommand', ClearPlanetOrdersCommandHandler())
+    registry.register('DeletePlanetOrderCommand', DeletePlanetOrderCommandHandler())
+
     return registry

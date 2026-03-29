@@ -156,6 +156,15 @@ class SuperweaponOrderProcessor:
             fleet.pop_order()
             return SuperweaponResult(success=False, message="No target planet")
 
+        # PROJ-237: Check for active planetary shield
+        if getattr(target_planet, 'shield_active', False) is True:
+            logger.info(f"Planet {target_planet.name} protected by planetary shield, canceling IMPLODE_PLANET")
+            fleet.pop_order()
+            return SuperweaponResult(
+                success=False,
+                message=f"Planet {target_planet.name} is protected by a planetary shield"
+            )
+
         # Find ship with DestroyPlanet ability
         ship = None
         if component_registry:

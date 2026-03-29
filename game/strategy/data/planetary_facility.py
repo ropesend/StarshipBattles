@@ -23,6 +23,8 @@ class PlanetaryFacility:
     is_operational: bool = True
     construction_queue: List[Dict[str, Any]] = field(default_factory=list)
     resource_levels: Dict[str, float] = field(default_factory=dict)
+    # PROJ-237: Per-component state tracking (e.g., shield active/inactive)
+    component_states: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, data: dict) -> 'PlanetaryFacility':
@@ -46,8 +48,32 @@ class PlanetaryFacility:
             design_data=data['design_data'],
             is_operational=data.get('is_operational', True),
             construction_queue=data.get('construction_queue', []),
-            resource_levels=data.get('resource_levels', {})
+            resource_levels=data.get('resource_levels', {}),
+            component_states=data.get('component_states', {}),
         )
+
+    def is_component_active(self, component_id: str) -> bool:
+        """Check if a component is in active state.
+
+        Args:
+            component_id: Component identifier to check.
+
+        Returns:
+            True if the component is marked as active.
+        """
+        state = self.component_states.get(component_id, {})
+        return state.get('active', False)
+
+    def set_component_active(self, component_id: str, active: bool) -> None:
+        """Set a component's active state.
+
+        Args:
+            component_id: Component identifier to update.
+            active: Whether the component should be active.
+        """
+        if component_id not in self.component_states:
+            self.component_states[component_id] = {}
+        self.component_states[component_id]['active'] = active
 
     def get_fuel_storage(self) -> float:
         """Get current fuel level in this facility."""

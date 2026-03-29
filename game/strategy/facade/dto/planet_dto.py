@@ -40,6 +40,10 @@ class PlanetInfo:
     total_population: int = 0
     max_population: int = 0
     population_details: Tuple[Tuple[str, int, float], ...] = field(default_factory=tuple)
+    # PROJ-237: Energy and shield state
+    energy: float = 0.0
+    energy_capacity: float = 0.0
+    shield_active: bool = False
 
     @classmethod
     def from_planet(cls, planet: 'Planet') -> 'PlanetInfo':
@@ -69,4 +73,7 @@ class PlanetInfo:
             total_population=planet.total_population,
             max_population=planet.max_population,
             population_details=pop_details,
+            energy=getattr(planet, 'energy', 0.0),
+            energy_capacity=getattr(planet, 'energy_capacity', 0.0),
+            shield_active=getattr(planet, 'shield_active', False),
         )

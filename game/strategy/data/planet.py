@@ -8,10 +8,14 @@ import math
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Dict, FrozenSet, List, Optional, Any
+from typing import TYPE_CHECKING as _TC
 from game.core.hex_math import HexCoord, hex_circle_filled
 from game.core.validation_helpers import (
     require_keys, validate_enum, validate_positive, validate_non_negative
 )
+
+if _TC:
+    from game.strategy.data.planet_order_types import PlanetOrder
 
 # PROJ-210: Import extracted classes for backward compatibility
 from game.strategy.data.planetary_facility import PlanetaryFacility
@@ -101,6 +105,17 @@ class Planet:
     # radius_hexes > 0 indicates this is a multi-hex object (e.g., Dyson Sphere)
     radius_hexes: int = 0
 
+    # Energy system (PROJ-237)
+    energy: float = 0.0              # Current energy level
+    energy_capacity: float = 0.0     # Max (recalculated from batteries each tick)
+    energy_generation: float = 0.0   # Rate (recalculated from generators each tick)
+
+    # Shield state (PROJ-237)
+    shield_active: bool = False      # Whether planetary shield is currently active
+
+    # Planet order queue (PROJ-237) - parallel to Fleet.orders
+    planet_orders: List['PlanetOrder'] = field(default_factory=list)
+
     def __eq__(self, other):
         if not isinstance(other, Planet):
             return False
@@ -185,6 +200,32 @@ class Planet:
 
         return False
 
+    # --- Planet Order Management (PROJ-237) ---
+
+    def get_current_planet_order(self) -> Optional['PlanetOrder']:
+        """Get the first order in the planet's order queue."""
+        return self.planet_orders[0] if self.planet_orders else None
+
+    def pop_planet_order(self) -> Optional['PlanetOrder']:
+        """Remove and return the first order from the queue."""
+        return self.planet_orders.pop(0) if self.planet_orders else None
+
+    def add_planet_order(self, order: 'PlanetOrder', index: Optional[int] = None) -> None:
+        """Add an order to the planet's queue.
+
+        Args:
+            order: PlanetOrder to add.
+            index: Optional insertion index. None = append to end.
+        """
+        if index is not None:
+            self.planet_orders.insert(index, order)
+        else:
+            self.planet_orders.append(order)
+
+    def clear_planet_orders(self) -> None:
+        """Remove all orders from the planet's queue."""
+        self.planet_orders.clear()
+
     def add_production(self, design_id: str, turns: int, vehicle_type: str = "ship"):
         """Add item to construction queue.
 
@@ -238,7 +279,8 @@ class Planet:
                     'design_data': f.design_data,
                     'is_operational': f.is_operational,
                     'construction_queue': list(f.construction_queue),
-                    'resource_levels': f.resource_levels.copy()
+                    'resource_levels': f.resource_levels.copy(),
+                    'component_states': f.component_states.copy() if f.component_states else {},
                 } for f in self.facilities
             ],
             'populations': [
@@ -250,7 +292,13 @@ class Planet:
             ],
             'image_id': self.image_id,
             'image_rotation': self.image_rotation,
-            'radius_hexes': self.radius_hexes
+            'radius_hexes': self.radius_hexes,
+            # PROJ-237: Energy, shield, and planet orders
+            'energy': self.energy,
+            'energy_capacity': self.energy_capacity,
+            'energy_generation': self.energy_generation,
+            'shield_active': self.shield_active,
+            'planet_orders': [o.to_dict() for o in self.planet_orders],
         }
 
     @classmethod
@@ -346,5 +394,30 @@ class Planet:
             id=data.get('id', -1),
             image_id=data.get('image_id', ''),
             image_rotation=data.get('image_rotation', 0.0),
-            radius_hexes=data.get('radius_hexes', 0)
+            radius_hexes=data.get('radius_hexes', 0),
+            # PROJ-237: Energy, shield, and planet orders (safe defaults for old saves)
+            energy=data.get('energy', 0.0),
+            energy_capacity=data.get('energy_capacity', 0.0),
+            energy_generation=data.get('energy_generation', 0.0),
+            shield_active=data.get('shield_active', False),
+            planet_orders=_deserialize_planet_orders(data.get('planet_orders', [])),
         )
+
+
+def _deserialize_planet_orders(orders_data: list) -> list:
+    """Deserialize planet orders from save data.
+
+    Args:
+        orders_data: List of order dicts from save data.
+
+    Returns:
+        List of PlanetOrder instances. Silently skips invalid entries.
+    """
+    from game.strategy.data.planet_order_types import PlanetOrder as _PlanetOrder
+    result = []
+    for item in orders_data:
+        try:
+            result.append(_PlanetOrder.from_dict(item))
+        except (KeyError, TypeError, ValueError):
+            pass  # Skip malformed orders
+    return result
