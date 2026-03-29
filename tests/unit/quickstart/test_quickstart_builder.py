@@ -236,9 +236,9 @@ class TestQuickstartBuilderDesignCopying:
 class TestInitialComplexesConstant:
     """Tests for the INITIAL_COMPLEXES constant."""
 
-    def test_initial_complexes_has_seven_entries(self):
-        """Should have exactly 7 complex design IDs."""
-        assert len(INITIAL_COMPLEXES) == 7
+    def test_initial_complexes_has_eight_entries(self):
+        """Should have exactly 8 complex design IDs (PROJ-237: +shield complex)."""
+        assert len(INITIAL_COMPLEXES) == 8
 
     def test_initial_complexes_includes_shipyard(self):
         """Should include the existing qs_complex shipyard."""
@@ -314,7 +314,7 @@ class TestSpawnInitialComplexes:
         result = QuickstartBuilder.spawn_initial_complexes(temp_save_folder, session)
 
         assert result is True
-        assert len(planet.facilities) == 7
+        assert len(planet.facilities) == 8
 
     def test_spawned_facilities_are_planetary_facility(self, temp_save_folder):
         """Each spawned facility should be a PlanetaryFacility instance."""
@@ -395,8 +395,8 @@ class TestSpawnInitialComplexes:
         result = QuickstartBuilder.spawn_initial_complexes(temp_save_folder_2p, session)
 
         assert result is True
-        assert len(planet1.facilities) == 7
-        assert len(planet2.facilities) == 7
+        assert len(planet1.facilities) == 8
+        assert len(planet2.facilities) == 8
 
     def test_empire_with_no_colonies_skipped(self, temp_save_folder):
         """Empire with no colonies should be skipped gracefully."""
@@ -435,5 +435,5 @@ class TestSpawnInitialComplexes:
 
         QuickstartBuilder.spawn_initial_complexes(temp_save_folder, session)
 
-        assert len(home.facilities) == 7
+        assert len(home.facilities) == 8
         assert len(second.facilities) == 0

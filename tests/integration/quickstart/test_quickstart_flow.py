@@ -62,11 +62,11 @@ class TestQuickstartWithComplexes:
         # Cleanup
         shutil.rmtree(save_path, ignore_errors=True)
 
-    def test_home_planet_has_seven_facilities(self, full_quickstart_1p):
-        """Home planet should have exactly 7 facilities after quickstart."""
+    def test_home_planet_has_eight_facilities(self, full_quickstart_1p):
+        """Home planet should have exactly 8 facilities after quickstart (PROJ-237: +shield complex)."""
         session = full_quickstart_1p
         home_planet = session.empires[0].colonies[0]
-        assert len(home_planet.facilities) == 7
+        assert len(home_planet.facilities) == 8
 
     def test_home_planet_has_shipyard(self, full_quickstart_1p):
         """Home planet should have operational shipyard."""
@@ -110,8 +110,8 @@ class TestQuickstartWithComplexes:
 
         for i, empire in enumerate(session.empires):
             home_planet = empire.colonies[0]
-            assert len(home_planet.facilities) == 7, (
-                f"Empire {i} has {len(home_planet.facilities)} facilities, expected 7"
+            assert len(home_planet.facilities) == 8, (
+                f"Empire {i} has {len(home_planet.facilities)} facilities, expected 8"
             )
             assert home_planet.has_space_shipyard is True, (
                 f"Empire {i} home planet missing shipyard"

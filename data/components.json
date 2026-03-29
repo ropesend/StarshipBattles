@@ -2437,6 +2437,64 @@
                 "Metals": 50,
                 "Radioactives": 25
             }
+        },
+        {
+            "id": "planetary_shield_generator",
+            "name": "Planetary Shield Generator",
+            "type": "PlanetaryDefense",
+            "mass": 500,
+            "hp": 300,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "PlanetaryShield": {
+                    "energy_drain_rate": 25.0,
+                    "activation_time": 50,
+                    "deactivation_time": 10,
+                    "shield_hp": 0,
+                    "shield_regen": 0
+                }
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "Metals": 500,
+                "Exotics": 200,
+                "Radioactives": 100
+            }
+        },
+        {
+            "id": "planetary_energy_generator",
+            "name": "Planetary Energy Generator",
+            "type": "PlanetaryInfrastructure",
+            "mass": 200,
+            "hp": 150,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "PlanetaryEnergyGenerator": {"generation_rate": 50.0}
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 200,
+                "Radioactives": 50
+            }
+        },
+        {
+            "id": "planetary_energy_battery",
+            "name": "Planetary Energy Battery",
+            "type": "PlanetaryInfrastructure",
+            "mass": 150,
+            "hp": 100,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "PlanetaryEnergyStorage": {"capacity": 5000.0}
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 150,
+                "Vapors": 50
+            }
         }
     ]
 }

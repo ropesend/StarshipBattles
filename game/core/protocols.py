@@ -252,6 +252,22 @@ class IPlanet(Protocol):
         """Rotation angle in degrees (0.0 to 360.0) for visual variety."""
         ...
 
+    # PROJ-237: Energy and shield properties
+    @property
+    def energy(self) -> float:
+        """Current stored energy level."""
+        ...
+
+    @property
+    def energy_capacity(self) -> float:
+        """Maximum energy storage capacity."""
+        ...
+
+    @property
+    def shield_active(self) -> bool:
+        """Whether planetary shield is currently active."""
+        ...
+
 
 @runtime_checkable
 class IZoneOccupant(Protocol):

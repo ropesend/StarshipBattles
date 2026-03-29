@@ -357,3 +357,36 @@ class ReorderConstructionQueueCommand(Command):
     from_index: int
     to_index: int
     queue_id: Optional[str] = None
+
+
+# =============================================================================
+# Planet Order Commands (PROJ-237)
+# =============================================================================
+
+@dataclass
+class IssuePlanetOrderCommand(Command):
+    """Command to issue an order to a planet (e.g., activate/deactivate shield).
+
+    Args:
+        planet_id: Planet to issue order to.
+        order_type: PlanetOrderType name (e.g., "ACTIVATE_SHIELD").
+        facility_instance_id: Target facility UUID.
+        component_id: Optional specific component within facility.
+    """
+    planet_id: int
+    order_type: str
+    facility_instance_id: str
+    component_id: Optional[str] = None
+
+
+@dataclass
+class ClearPlanetOrdersCommand(Command):
+    """Command to clear all orders from a planet."""
+    planet_id: int
+
+
+@dataclass
+class DeletePlanetOrderCommand(Command):
+    """Command to remove a specific order from a planet's order queue."""
+    planet_id: int
+    order_index: int

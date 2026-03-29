@@ -34,10 +34,10 @@ class TestEventType:
     def test_fleet_join_cancelled_value(self) -> None:
         assert EventType.FLEET_JOIN_CANCELLED == "fleet_join_cancelled"
 
-    def test_has_fourteen_members(self) -> None:
+    def test_has_seventeen_members(self) -> None:
         # Original 4 + 6 superweapon events (PROJ-102) + RESOURCE_SHORTAGE (FEAT-09)
-        # + 3 fleet events (PROJ-222)
-        assert len(EventType) == 14
+        # + 3 fleet events (PROJ-222) + 3 shield events (PROJ-237)
+        assert len(EventType) == 17
 
 
 class TestEventCategory:
@@ -62,6 +62,7 @@ class TestEventCategory:
     def test_fleet_operations_value(self) -> None:
         assert EventCategory.FLEET_OPERATIONS == "fleet_operations"
 
-    def test_has_six_members(self) -> None:
+    def test_has_seven_members(self) -> None:
         # Original 4 + SUPERWEAPONS (PROJ-102) + FLEET_OPERATIONS (PROJ-222)
-        assert len(EventCategory) == 6
+        # + PLANET_OPERATIONS (PROJ-237)
+        assert len(EventCategory) == 7

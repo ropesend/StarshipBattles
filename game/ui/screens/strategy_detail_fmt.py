@@ -140,8 +140,37 @@ def format_planet_info(planet: IPlanet) -> str:
         else:
             text += "<br><b>Complexes:</b> None<br>"
 
+    # PROJ-237: Energy & Shield display
+    energy_cap = getattr(planet, 'energy_capacity', None)
+    if isinstance(energy_cap, (int, float)) and energy_cap > 0:
+        energy_val = getattr(planet, 'energy', 0.0)
+        energy_pct = (energy_val / energy_cap * 100) if energy_cap > 0 else 0
+        text += f"<br><b>Energy:</b> {energy_val:.0f} / {energy_cap:.0f} ({energy_pct:.0f}%)"
+
+    shield_val = getattr(planet, 'shield_active', None)
+    if isinstance(shield_val, bool) and hasattr(planet, 'facilities'):
+        has_shield = _planet_has_shield_facility(planet)
+        if has_shield:
+            status = "Active" if shield_val else "Inactive"
+            text += f"<br><b>Planetary Shield:</b> {status}"
+
     # Resources are displayed in the dedicated resource grid panel (PROJ-82)
     return text
+
+
+def _planet_has_shield_facility(planet) -> bool:
+    """Check if a planet has any facility with a PlanetaryShield ability."""
+    for facility in planet.facilities:
+        design_data = getattr(facility, 'design_data', None)
+        if not isinstance(design_data, dict):
+            continue
+        for layer_data in design_data.get('layers', {}).values():
+            if not isinstance(layer_data, list):
+                continue
+            for comp in layer_data:
+                if isinstance(comp, dict) and 'PlanetaryShield' in comp.get('abilities', {}):
+                    return True
+    return False
 
 
 def format_star_system_info(system) -> str:

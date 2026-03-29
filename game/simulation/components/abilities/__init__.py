@@ -67,6 +67,9 @@ from .weapons import (
 # Harvester and storage abilities
 from .harvester import ResourceHarvesterAbility, SpaceShipyardAbility, EmpireStorageAbility
 
+# Planetary abilities (PROJ-237)
+from .planetary import PlanetaryShieldAbility, PlanetaryEnergyGeneratorAbility, PlanetaryEnergyStorageAbility
+
 # --- Registry ---
 
 ABILITY_REGISTRY = {
@@ -100,6 +103,10 @@ ABILITY_REGISTRY = {
     "SpaceShipyard": SpaceShipyardAbility,
     "EmpireStorage": EmpireStorageAbility,
     "CargoStorage": CargoStorage,
+    # Planetary abilities (PROJ-237)
+    "PlanetaryShield": PlanetaryShieldAbility,
+    "PlanetaryEnergyGenerator": PlanetaryEnergyGeneratorAbility,
+    "PlanetaryEnergyStorage": PlanetaryEnergyStorageAbility,
     # Superweapon abilities
     "DestroyPlanet": DestroyPlanet,
     "DestroyStar": DestroyStar,
@@ -171,6 +178,10 @@ __all__ = [
     'EmpireStorageAbility',
     # Cargo
     'CargoStorage',
+    # Planetary (PROJ-237)
+    'PlanetaryShieldAbility',
+    'PlanetaryEnergyGeneratorAbility',
+    'PlanetaryEnergyStorageAbility',
     # Superweapons
     'DestroyPlanet',
     'DestroyStar',

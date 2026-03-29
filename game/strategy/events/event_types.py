@@ -20,6 +20,10 @@ class EventType(str, Enum):
     FLEET_JOINED = "fleet_joined"
     FLEET_JOIN_REDIRECTED = "fleet_join_redirected"
     FLEET_JOIN_CANCELLED = "fleet_join_cancelled"
+    # Planet operations (PROJ-237)
+    SHIELD_ACTIVATED = "shield_activated"
+    SHIELD_DEACTIVATED = "shield_deactivated"
+    SHIELD_AUTO_DEACTIVATED = "shield_auto_deactivated"
 
 
 class EventCategory(str, Enum):
@@ -30,4 +34,5 @@ class EventCategory(str, Enum):
     COMBAT = "combat"
     SUPERWEAPONS = "superweapons"
     FLEET_OPERATIONS = "fleet_operations"
+    PLANET_OPERATIONS = "planet_operations"
     ALL = "all"

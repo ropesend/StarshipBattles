@@ -77,6 +77,8 @@ if TYPE_CHECKING:
         IMaintenanceEngine,
         IActionExecutionEngine,
         IEnvironmentalHazardEngine,
+        IPlanetEnergyEngine,
+        IPlanetActionEngine,
     )
     from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
     from game.strategy.engine.production_engine import ProductionEngine
@@ -121,6 +123,8 @@ class TurnEngine:
         maintenance_engine: Optional['IMaintenanceEngine'] = None,
         action_engine: Optional['IActionExecutionEngine'] = None,
         environmental_engine: Optional['IEnvironmentalHazardEngine'] = None,
+        planet_energy_engine: Optional['IPlanetEnergyEngine'] = None,
+        planet_action_engine: Optional['IPlanetActionEngine'] = None,
     ):
         """
         Initialize the turn engine.
@@ -179,6 +183,9 @@ class TurnEngine:
         self._maintenance_engine: Optional['IMaintenanceEngine'] = maintenance_engine
         self._action_engine: Optional['IActionExecutionEngine'] = action_engine
         self._environmental_engine: Optional['IEnvironmentalHazardEngine'] = environmental_engine
+        # PROJ-237: Planet energy and action engines
+        self._planet_energy_engine: Optional['IPlanetEnergyEngine'] = planet_energy_engine
+        self._planet_action_engine: Optional['IPlanetActionEngine'] = planet_action_engine
 
         # PROJ-75 Phase 6: Scuttle event storage for UI notification
         self.last_scuttle_events: list = []
@@ -195,6 +202,7 @@ class TurnEngine:
             'harvesting': 0.0, 'maintenance': 0.0, 'resources': 0.0,
             'fuel_gen': 0.0, 'resupply': 0.0, 'production': 0.0,
             'environmental': 0.0, 'instant_orders': 0.0, 'actions': 0.0,
+            'planet_energy': 0.0, 'planet_actions': 0.0,
             'movement_calc': 0.0, 'movement_apply': 0.0, 'combat': 0.0,
         }
 
@@ -328,6 +336,26 @@ class TurnEngine:
             self._environmental_engine = EnvironmentalHazardEngine()
         return self._environmental_engine
 
+    @property
+    def planet_energy_engine(self) -> 'IPlanetEnergyEngine':
+        """Return planet energy engine, lazily creating default if not injected."""
+        if self._planet_energy_engine is None:
+            from game.strategy.engine.planet_energy_engine import PlanetEnergyEngine
+            self._planet_energy_engine = PlanetEnergyEngine(registries=self._registries)
+        return self._planet_energy_engine
+
+    @property
+    def planet_action_engine(self) -> 'IPlanetActionEngine':
+        """Return planet action engine, lazily creating default if not injected."""
+        if self._planet_action_engine is None:
+            from game.strategy.engine.planet_action_engine import PlanetActionEngine
+            from game.strategy.services.planet_action_time_resolver import PlanetActionTimeResolver
+            self._planet_action_engine = PlanetActionEngine(
+                registries=self._registries,
+                action_time_resolver=PlanetActionTimeResolver(),
+            )
+        return self._planet_action_engine
+
     def process_turn(self, empires, galaxy, save_path=None):
         """
         Execute one full turn (TICKS_PER_TURN sub-ticks).
@@ -376,14 +404,16 @@ class TurnEngine:
         total_time = time.perf_counter() - turn_start
         logger.warning(
             "TURN PERF: total=%.3fs | harvesting=%.3fs maintenance=%.3fs "
-            "resources=%.3fs fuel_gen=%.3fs resupply=%.3fs production=%.3fs "
-            "environmental=%.3fs orders=%.3fs actions=%.3fs "
+            "resources=%.3fs fuel_gen=%.3fs planet_energy=%.3fs resupply=%.3fs production=%.3fs "
+            "environmental=%.3fs orders=%.3fs actions=%.3fs planet_actions=%.3fs "
             "move_calc=%.3fs move_apply=%.3fs combat=%.3fs population=%.3fs",
             total_time, self._phase_times['harvesting'], self._phase_times['maintenance'],
             self._phase_times['resources'], self._phase_times['fuel_gen'],
-            self._phase_times['resupply'], self._phase_times['production'],
+            self._phase_times['planet_energy'], self._phase_times['resupply'],
+            self._phase_times['production'],
             self._phase_times['environmental'], self._phase_times['instant_orders'],
-            self._phase_times['actions'], self._phase_times['movement_calc'],
+            self._phase_times['actions'], self._phase_times['planet_actions'],
+            self._phase_times['movement_calc'],
             self._phase_times['movement_apply'], self._phase_times['combat'],
             pop_time,
         )
@@ -449,6 +479,9 @@ class TurnEngine:
         # --- Phase 0c: Fuel generation at facilities ---
         self._time_phase('fuel_gen', self.resupply_engine.process_fuel_generation, tick, empires)
 
+        # --- Phase 0c1: Planet Energy (generation, consumption, auto-deactivation) ---
+        self._time_phase('planet_energy', self.planet_energy_engine.process_energy_tick, tick, empires)
+
         # --- Phase 0d: Fleet resupply from facilities ---
         self._time_phase('resupply', self.resupply_engine.process_fleet_resupply, tick, empires, galaxy)
 
@@ -470,6 +503,11 @@ class TurnEngine:
                          empires, galaxy, tick,
                          component_registry=self._registries.components,
                          all_empires=empires)
+
+        # --- Phase 1.6: Planet Action Orders (shield activation, etc.) ---
+        self._time_phase('planet_actions', self.planet_action_engine.process_planet_actions_tick,
+                         tick, empires,
+                         component_registry=self._registries.components)
 
         # --- Phase 2: Calculate Moves ---
         move_queue = self._time_phase('movement_calc', self.movement_engine.collect_movements, empires, galaxy, tick)
