@@ -447,7 +447,7 @@
         },
         {
             "id": "AS2",
-            "name": "Ice Planet Colonization",
+            "name": "Ice Giant Colonization",
             "max_levels": 1,
             "requirements": [
                 [
@@ -467,7 +467,7 @@
         },
         {
             "id": "AS3",
-            "name": "Gas Giant Colonization",
+            "name": "Jovian Colonization",
             "max_levels": 1,
             "requirements": [
                 [
@@ -999,33 +999,6 @@
             "price_curve": "linear"
         },
         {
-            "id": "AS15",
-            "name": "Baseship Construction",
-            "max_levels": 6,
-            "requirements": [
-                [
-                    {
-                        "node_id": "AS14",
-                        "level_range": [
-                            4,
-                            6
-                        ]
-                    },
-                    {
-                        "node_id": "AS17",
-                        "level_range": [
-                            4,
-                            6
-                        ]
-                    }
-                ]
-            ],
-            "base_decay": 0.0059,
-            "volatility": 0.114,
-            "price": 1.08,
-            "price_curve": "sqrt"
-        },
-        {
             "id": "AS10",
             "name": "Space Yards",
             "max_levels": 11,
@@ -1107,7 +1080,7 @@
         },
         {
             "id": "AS40",
-            "name": "Weapon Mounts",
+            "name": "Component Mounts",
             "max_levels": 1,
             "requirements": [
                 [
@@ -2268,7 +2241,10 @@
                     },
                     {
                         "node_id": "UD_1",
-                        "level_range": [1, 1]
+                        "level_range": [
+                            1,
+                            1
+                        ]
                     }
                 ]
             ],
@@ -2292,7 +2268,10 @@
                     },
                     {
                         "node_id": "UD_2",
-                        "level_range": [1, 1]
+                        "level_range": [
+                            1,
+                            1
+                        ]
                     }
                 ]
             ],
@@ -2316,7 +2295,10 @@
                     },
                     {
                         "node_id": "UD_3",
-                        "level_range": [1, 1]
+                        "level_range": [
+                            1,
+                            1
+                        ]
                     }
                 ]
             ],
@@ -2340,7 +2322,10 @@
                     },
                     {
                         "node_id": "UD_4",
-                        "level_range": [1, 1]
+                        "level_range": [
+                            1,
+                            1
+                        ]
                     }
                 ]
             ],
@@ -2364,7 +2349,10 @@
                     },
                     {
                         "node_id": "UD_5",
-                        "level_range": [1, 1]
+                        "level_range": [
+                            1,
+                            1
+                        ]
                     }
                 ]
             ],
@@ -2388,7 +2376,10 @@
                     },
                     {
                         "node_id": "UD_6",
-                        "level_range": [1, 1]
+                        "level_range": [
+                            1,
+                            1
+                        ]
                     }
                 ]
             ],
@@ -2416,7 +2407,10 @@
                 [
                     {
                         "node_id": "RT1",
-                        "level_range": [1, 1]
+                        "level_range": [
+                            1,
+                            1
+                        ]
                     }
                 ]
             ],
@@ -2433,7 +2427,10 @@
                 [
                     {
                         "node_id": "RT1",
-                        "level_range": [1, 1]
+                        "level_range": [
+                            1,
+                            1
+                        ]
                     }
                 ]
             ],
@@ -2461,7 +2458,10 @@
                 [
                     {
                         "node_id": "RT2",
-                        "level_range": [1, 1]
+                        "level_range": [
+                            1,
+                            1
+                        ]
                     }
                 ]
             ],
@@ -2478,7 +2478,10 @@
                 [
                     {
                         "node_id": "RT2",
-                        "level_range": [1, 1]
+                        "level_range": [
+                            1,
+                            1
+                        ]
                     }
                 ]
             ],
@@ -2506,7 +2509,10 @@
                 [
                     {
                         "node_id": "RT3",
-                        "level_range": [1, 1]
+                        "level_range": [
+                            1,
+                            1
+                        ]
                     }
                 ]
             ],
@@ -2523,7 +2529,10 @@
                 [
                     {
                         "node_id": "RT3",
-                        "level_range": [1, 1]
+                        "level_range": [
+                            1,
+                            1
+                        ]
                     }
                 ]
             ],
@@ -2551,7 +2560,10 @@
                 [
                     {
                         "node_id": "RT4",
-                        "level_range": [1, 1]
+                        "level_range": [
+                            1,
+                            1
+                        ]
                     }
                 ]
             ],
@@ -2568,7 +2580,10 @@
                 [
                     {
                         "node_id": "RT4",
-                        "level_range": [1, 1]
+                        "level_range": [
+                            1,
+                            1
+                        ]
                     }
                 ]
             ],
@@ -2596,7 +2611,10 @@
                 [
                     {
                         "node_id": "RT5",
-                        "level_range": [1, 1]
+                        "level_range": [
+                            1,
+                            1
+                        ]
                     }
                 ]
             ],
@@ -2624,7 +2642,10 @@
                 [
                     {
                         "node_id": "RT6",
-                        "level_range": [1, 1]
+                        "level_range": [
+                            1,
+                            1
+                        ]
                     }
                 ]
             ],
@@ -2641,7 +2662,10 @@
                 [
                     {
                         "node_id": "RT6",
-                        "level_range": [1, 1]
+                        "level_range": [
+                            1,
+                            1
+                        ]
                     }
                 ]
             ],

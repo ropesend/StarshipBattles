@@ -242,14 +242,27 @@
     ]
   },
   "star_colors": {
-    "red": {"r_min": 200, "g_max": 100},
-    "blue": {"r_max": 100, "b_min": 200},
-    "white": {"r_min": 200, "g_min": 200, "b_min": 200},
-    "orange": {"r_min": 200, "g_min": 150},
+    "red": {
+      "r_min": 200,
+      "g_max": 100
+    },
+    "blue": {
+      "r_max": 100,
+      "b_min": 200
+    },
+    "white": {
+      "r_min": 200,
+      "g_min": 200,
+      "b_min": 200
+    },
+    "orange": {
+      "r_min": 200,
+      "g_min": 150
+    },
     "yellow": {}
   },
   "backgrounds": {
-    "strategy_map": "assets/Images/System Backgrounds/Background Stars.jpg"
+    "strategy_map": "assets/Images/System Backgrounds/StarsBlackBackground 3.png"
   },
   "ui": {},
   "resource_icons": {
