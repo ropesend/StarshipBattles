@@ -294,12 +294,14 @@ class TestBatchSkipTest:
         """Scenarios that don't define skip_test at all should run normally."""
         mock_scenario = Mock(spec=[
             'results', 'max_ticks', 'passed', 'metadata', 'name',
-            'setup', 'update', 'verify', '_override_seed',
+            'setup', 'update', 'verify', '_run_validation', '_override_seed',
         ])
         mock_scenario.results = {}
         mock_scenario.max_ticks = 10
         mock_scenario.passed = True
-        mock_scenario.verify.return_value = True
+        mock_report = Mock()
+        mock_report.passed = True
+        mock_scenario._run_validation.return_value = mock_report
         mock_scenario.metadata = Mock()
         mock_scenario.metadata.seed = 42
         mock_scenario.metadata.name = "No Skip Attr"

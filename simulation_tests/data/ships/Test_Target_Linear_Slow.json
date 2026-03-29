@@ -18,7 +18,7 @@
   "layers": {
     "CORE": [
       {
-        "id": "test_armor_std"
+        "id": "test_armor_extreme_hp"
       },
       {
         "id": "test_engine_slow"
@@ -28,7 +28,7 @@
   },
   "_test_notes": "Linearly moving target, slow speed. Mass = hull_test_m(1000) + armor(0) + engine(0) = 1000. Zero-mass component architecture.",
   "expected_stats": {
-    "max_hp": 750,
+    "max_hp": 1000000550,
     "max_fuel": 0.0,
     "max_energy": 0.0,
     "max_ammo": 0.0,
@@ -37,7 +37,7 @@
     "turn_speed": 0.0,
     "total_thrust": 50.0,
     "mass": 1000.0,
-    "armor_hp_pool": 200
+    "armor_hp_pool": 1000000000
   },
   "propulsion_details": {
     "engine_component": "test_engine_slow",

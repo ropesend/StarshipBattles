@@ -545,6 +545,30 @@ class TestScenario(CombatScenario):
         checks = self.validate(engine)
         report = ValidationReport(checks=checks)
         self.results['validation'] = report.to_dict()
+
+        # Populate keys the Combat Lab UI reads for rendering
+        self.results['validation_results'] = [
+            {
+                'name': c.name,
+                'status': 'PASS' if c.passed else 'FAIL',
+                'expected': c.expected,
+                'actual': c.actual,
+                'p_value': None,
+                'tolerance': None,
+                'phase': c.phase,
+                'detail': c.detail,
+            }
+            for c in checks
+        ]
+        summary = report.summary()
+        self.results['validation_summary'] = {
+            'pass': sum(s['passed'] for s in summary.values()),
+            'fail': sum(s['failed'] for s in summary.values()),
+            'warn': 0,
+            'info': 0,
+        }
+        self.results['has_validation_failures'] = not report.passed
+
         return report
 
     def verify(self, battle_engine) -> bool:
@@ -585,6 +609,47 @@ class TestScenario(CombatScenario):
             Dictionary containing all test metadata
         """
         return self.metadata.to_dict()
+
+    def _collect_weapon_stats(self, ship: Ship, role: str) -> None:
+        """
+        Collect per-weapon firing statistics from a ship's components.
+
+        Reads the existing ``shots_fired`` and ``shots_hit`` counters that the
+        simulation engine maintains on every Component and stores them in
+        ``self.results`` under role-prefixed keys.
+
+        Stored results::
+
+            {role}_total_shots_fired : int
+                Ship-level aggregate of all shots fired.
+            {role}_weapons : list[dict]
+                One entry per weapon component with keys:
+                name, type, shots_fired, shots_hit.
+
+        Args:
+            ship: Ship instance whose weapons to inspect.
+            role: Prefix for result keys (e.g. ``"attacker"``, ``"target"``).
+        """
+        from game.simulation.components.abilities.weapons import WeaponAbility
+
+        self.results[f'{role}_total_shots_fired'] = ship.total_shots_fired
+
+        weapons = []
+        for layer_data in ship.layers.values():
+            for comp in layer_data.components:
+                if not hasattr(comp, 'ability_instances'):
+                    continue
+                for ab in comp.ability_instances:
+                    if isinstance(ab, WeaponAbility):
+                        weapons.append({
+                            'name': comp.name,
+                            'type': ab.__class__.__name__,
+                            'shots_fired': comp.shots_fired,
+                            'shots_hit': comp.shots_hit,
+                        })
+                        break  # one entry per component
+
+        self.results[f'{role}_weapons'] = weapons
 
     def get_ability(self, ship, ability_class_name: str):
         """

@@ -20,8 +20,8 @@ HIGH_TICK_TEST_TICKS = 100000
 # TEST DISTANCES (pixels)
 # ============================================================================
 
-# Point-blank range (minimal range penalty)
-POINT_BLANK_DISTANCE = 50
+# Point-blank range (minimal range penalty, must exceed ship radii to avoid overlap)
+POINT_BLANK_DISTANCE = 100
 
 # Mid-range distance (moderate range penalty)
 MID_RANGE_DISTANCE = 400
@@ -56,11 +56,13 @@ BEAM_LOW_DAMAGE = 1
 # Medium accuracy beam weapon
 BEAM_MED_ACCURACY = 2.0
 BEAM_MED_FALLOFF = 0.001
+BEAM_MED_RANGE = 800
 BEAM_MED_DAMAGE = 1
 
 # High accuracy beam weapon
 BEAM_HIGH_ACCURACY = 5.0
 BEAM_HIGH_FALLOFF = 0.0005
+BEAM_HIGH_RANGE = 800
 BEAM_HIGH_DAMAGE = 1
 
 

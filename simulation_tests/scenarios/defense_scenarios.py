@@ -32,6 +32,10 @@ from simulation_tests.test_constants import (
     ECM_TARGET_SHIP,
     SENSOR_ATTACKER_SHIP,
     DEFENSE_TEST_TICKS,
+    BEAM_MED_ACCURACY,
+    BEAM_MED_FALLOFF,
+    BEAM_MED_DAMAGE,
+    BEAM_HIGH_DAMAGE,
 )
 
 
@@ -86,9 +90,14 @@ class ShieldAbsorbsDamageScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
         # Data
-        checks.append(check_exact("Initial Shield Capacity", SHIELD_CAPACITY,
+        checks.append(check_exact("Shield Capacity", SHIELD_CAPACITY,
                                   self.target.max_shields, phase="data"))
+        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage, phase="data"))
         # Outcome
         checks.append(check_true("Damage Dealt", self.damage_dealt > 0,
                                  actual=self.damage_dealt, phase="outcome"))
@@ -140,9 +149,14 @@ class ShieldOverflowToHullScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
         # Data
-        checks.append(check_exact("Initial Shield Capacity", SHIELD_CAPACITY,
+        checks.append(check_exact("Shield Capacity", SHIELD_CAPACITY,
                                   self.target.max_shields, phase="data"))
+        checks.append(check_exact("Beam Damage", BEAM_HIGH_DAMAGE, beam.damage, phase="data"))
         # Outcome
         checks.append(check_true("Shields Depleted", self.target.current_shields == 0,
                                  actual=self.target.current_shields, phase="outcome"))
@@ -199,9 +213,14 @@ class ShieldRegenerationScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
         # Data
-        checks.append(check_exact("Initial Shield Capacity", SHIELD_CAPACITY,
+        checks.append(check_exact("Shield Capacity", SHIELD_CAPACITY,
                                   self.target.max_shields, phase="data"))
+        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage, phase="data"))
         # Outcome - verify beam hit and some hull damage got through.
         # The shield regen scenario is observational: it confirms that
         # regen doesn't crash and shields absorb some damage over time.
@@ -259,13 +278,14 @@ class EmissiveArmorBlocksLowDamageScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data
-        checks.append(check_exact("Emissive Armor Value", EMISSIVE_ARMOR_REDUCTION,
-                                  self.target.emissive_armor, phase="data"))
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
         checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
         if beam is None:
             return checks
+        # Data
+        checks.append(check_exact("Emissive Armor Value", EMISSIVE_ARMOR_REDUCTION,
+                                  self.target.emissive_armor, phase="data"))
+        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage, phase="data"))
         checks.append(check_true("Beam Damage < Armor",
                                  beam.damage < EMISSIVE_ARMOR_REDUCTION,
                                  detail=f"beam.damage={beam.damage}, armor={EMISSIVE_ARMOR_REDUCTION}",
@@ -318,13 +338,14 @@ class EmissiveArmorReducesHighDamageScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data
-        checks.append(check_exact("Emissive Armor Value", EMISSIVE_ARMOR_REDUCTION,
-                                  self.target.emissive_armor, phase="data"))
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
         checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
         if beam is None:
             return checks
+        # Data
+        checks.append(check_exact("Emissive Armor Value", EMISSIVE_ARMOR_REDUCTION,
+                                  self.target.emissive_armor, phase="data"))
+        checks.append(check_exact("Beam Damage", BEAM_HIGH_DAMAGE, beam.damage, phase="data"))
         checks.append(check_true("Beam Damage <= Armor",
                                  beam.damage <= EMISSIVE_ARMOR_REDUCTION,
                                  detail=f"beam.damage={beam.damage}, armor={EMISSIVE_ARMOR_REDUCTION}",
@@ -386,7 +407,20 @@ class ECMReducesHitRateScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
+        # Data: verify loaded values
+        ecm_ability = self.get_ability(self.target, 'ToHitDefenseModifier')
+        ecm_value = ecm_ability.value if ecm_ability else 0.0
+        checks.append(check_exact("ECM Defense Value", ECM_DEFENSE_VALUE, ecm_value,
+                                  phase="data"))
+        checks.append(check_exact("Beam Base Accuracy", BEAM_MED_ACCURACY, beam.base_accuracy,
+                                  phase="data"))
+        checks.append(check_exact("Beam Accuracy Falloff", BEAM_MED_FALLOFF, beam.accuracy_falloff,
+                                  phase="data"))
+        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage, phase="data"))
         checks.append(check_true("ECM Reduces Expected Hit Chance",
                                  self.expected_hit_chance_with_ecm < self.expected_hit_chance_baseline,
                                  detail=f"with_ecm={self.expected_hit_chance_with_ecm:.4f}, "
@@ -440,8 +474,6 @@ class SensorImprovesHitRateScenario(StaticTargetScenario):
         tags=["defense", "sensor", "to-hit", "attack-modifier", "beam"],
     )
 
-    verify_damage_dealt = True
-
     def custom_setup(self, battle_engine):
         from simulation_tests.scenarios.beam_scenarios import calculate_expected_hit_chance, calculate_defense_score
         # Extract beam weapon stats
@@ -474,6 +506,34 @@ class SensorImprovesHitRateScenario(StaticTargetScenario):
         self.results['expected_hit_chance_with_sensor'] = self.expected_hit_chance_with_sensor
         self.results['expected_hit_chance_baseline'] = self.expected_hit_chance_baseline
         self.results['hit_rate_improvement'] = self.expected_hit_chance_with_sensor - self.expected_hit_chance_baseline
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
+        # Data: verify loaded values
+        sensor_ability = self.get_ability(self.attacker, 'ToHitAttackModifier')
+        sensor_value = sensor_ability.value if sensor_ability else 0.0
+        checks.append(check_exact("Sensor Attack Value", SENSOR_ATTACK_VALUE, sensor_value,
+                                  phase="data"))
+        checks.append(check_exact("Beam Base Accuracy", BEAM_MED_ACCURACY, beam.base_accuracy,
+                                  phase="data"))
+        checks.append(check_exact("Beam Accuracy Falloff", BEAM_MED_FALLOFF, beam.accuracy_falloff,
+                                  phase="data"))
+        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage, phase="data"))
+        checks.append(check_true("Sensor Improves Expected Hit Chance",
+                                 self.expected_hit_chance_with_sensor > self.expected_hit_chance_baseline,
+                                 detail=f"with_sensor={self.expected_hit_chance_with_sensor:.4f}, "
+                                        f"baseline={self.expected_hit_chance_baseline:.4f}",
+                                 phase="data"))
+        # Outcome
+        checks.append(check_true(
+            "Damage Dealt", self.damage_dealt > 0,
+            actual=self.damage_dealt, phase="outcome",
+        ))
+        return checks
 
 
 # ============================================================================

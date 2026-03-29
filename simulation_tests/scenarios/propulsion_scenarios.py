@@ -304,6 +304,10 @@ class PropEngineAccelerationScenario(PropulsionScenario):
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
         checks.extend(self._propulsion_data_checks(PROP001_TOTAL_MASS, PROP001_ENGINE_THRUST))
+        # Precondition
+        checks.append(check_approx("Starting Angle", 0.0, self.start_angle, phase="precondition"))
+        checks.append(check_approx("Starting Position X", 0.0, self.start_position.x, phase="precondition"))
+        checks.append(check_approx("Starting Position Y", 0.0, self.start_position.y, phase="precondition"))
         checks.extend(self._propulsion_outcome_checks(PROP001_MAX_SPEED, PROP001_EXPECTED_FINAL_SPEED, PROP001_EXPECTED_DISTANCE))
         return checks
 
@@ -352,6 +356,10 @@ class PropDualEngineScenario(PropulsionScenario):
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
         checks.extend(self._propulsion_data_checks(PROP001C_TOTAL_MASS, PROP001C_TOTAL_THRUST))
+        # Precondition
+        checks.append(check_approx("Starting Angle", 0.0, self.start_angle, phase="precondition"))
+        checks.append(check_approx("Starting Position X", 0.0, self.start_position.x, phase="precondition"))
+        checks.append(check_approx("Starting Position Y", 0.0, self.start_position.y, phase="precondition"))
         checks.extend(self._propulsion_outcome_checks(PROP001C_MAX_SPEED, PROP001C_EXPECTED_FINAL_SPEED, PROP001C_EXPECTED_DISTANCE))
         return checks
 
@@ -520,9 +528,10 @@ class PropThrusterTurnRateScenario(PropulsionScenario):
         # Data
         checks.append(check_exact("Ship Mass", PROP003_TOTAL_MASS, self.ship.mass))
         checks.append(check_exact("Engine Thrust", PROP003_THRUST, self.ship.total_thrust))
+        checks.append(check_approx("Turn Speed", PROP003_TURN_SPEED, self.ship.turn_speed, phase="data"))
+        # Precondition
+        checks.append(check_approx("Starting Angle", PROP003_STARTING_ANGLE, self.start_angle, phase="precondition"))
         # Outcome
-        checks.append(check_approx("Turn Speed", PROP003_TURN_SPEED, self.ship.turn_speed))
-        checks.append(check_approx("Starting Angle", PROP003_STARTING_ANGLE, self.start_angle))
         checks.append(check_approx("Final Angle", PROP003_EXPECTED_FINAL_ANGLE, self.final_angle, tolerance=0.01))
         return checks
 
@@ -571,9 +580,12 @@ class PropThrusterRotationScenario(PropulsionScenario):
         checks = self._template_preconditions()
         # Data
         checks.append(check_exact("Ship Mass", PROP004_TOTAL_MASS, self.ship.mass))
+        checks.append(check_approx("Turn Speed", PROP004_TURN_SPEED, self.ship.turn_speed, phase="data"))
+        # Precondition
+        checks.append(check_approx("Starting Angle", PROP004_STARTING_ANGLE, self.start_angle, phase="precondition"))
+        checks.append(check_approx("Starting Position X", 0.0, self.start_position.x, phase="precondition"))
+        checks.append(check_approx("Starting Position Y", 0.0, self.start_position.y, phase="precondition"))
         # Outcome
-        checks.append(check_approx("Turn Speed", PROP004_TURN_SPEED, self.ship.turn_speed))
-        checks.append(check_approx("Starting Angle", PROP004_STARTING_ANGLE, self.start_angle))
         checks.append(check_approx("Final Angle", PROP004_EXPECTED_FINAL_ANGLE, self.final_angle, tolerance=0.01))
         return checks
 
@@ -624,8 +636,9 @@ class PropDualThrusterScenario(PropulsionScenario):
         # Data
         checks.append(check_exact("Ship Mass", PROP004B_TOTAL_MASS, self.ship.mass))
         checks.append(check_exact("Turn Speed", PROP004B_TURN_SPEED, self.ship.turn_speed, phase="data"))
+        # Precondition
+        checks.append(check_approx("Starting Angle", PROP004B_STARTING_ANGLE, self.start_angle, phase="precondition"))
         # Outcome
-        checks.append(check_approx("Starting Angle", PROP004B_STARTING_ANGLE, self.start_angle))
         checks.append(check_approx("Final Angle", PROP004B_EXPECTED_FINAL_ANGLE, self.final_angle, tolerance=0.01))
         return checks
 

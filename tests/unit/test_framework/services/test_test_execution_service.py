@@ -161,7 +161,7 @@ class TestRunHeadless:
         assert result['error'] is None
         assert result['ticks_run'] == 100
         assert 'duration_real' in result
-        mock_test_scenario.verify.assert_called_once_with(mock_battle_engine)
+        mock_test_scenario._run_validation.assert_called_once_with(mock_battle_engine)
 
     def test_run_headless_runs_max_ticks(
         self,
@@ -339,8 +339,10 @@ class TestRunHeadless:
         service.runner.load_data_for_scenario = Mock()
         service.runner._log_test_execution = Mock()
 
-        # Make test fail
-        mock_test_scenario.verify = Mock(return_value=False)
+        # Make test fail via _run_validation
+        failed_report = Mock()
+        failed_report.passed = False
+        mock_test_scenario._run_validation = Mock(return_value=failed_report)
 
         result = service.run_headless(sample_scenario_info, mock_battle_engine)
 

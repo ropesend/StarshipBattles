@@ -39,10 +39,10 @@
   "weapon_stats": {
     "type": "Projectile360",
     "component_id": "test_weapon_proj_omni",
-    "damage": 50,
+    "damage": 1,
     "range": 1000,
-    "projectile_speed": 1500,
-    "reload_time": 1.0,
+    "projectile_speed": 20000,
+    "reload_time": 0.0,
     "firing_arc": 360
   },
   "resources": {

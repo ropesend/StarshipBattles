@@ -329,7 +329,7 @@ class BattleScreen:
             elif not result and event.button == 1:
                 self.camera.target = None
         elif event.type == pygame.MOUSEWHEEL:
-            self.ui.handle_scroll(event.y, self.screen_height)
+            self.camera.update_input(0, [event], allow_wasd=False)
 
     def _handle_keydown(self, event):
         """Handle keyboard shortcuts during battle."""
@@ -455,8 +455,12 @@ class BattleScreen:
                 self.test_scenario.results['ticks_run'] = self.test_tick_count
                 self.test_scenario.results['ticks'] = self.test_tick_count  # Alias for consistency
 
-                # Run verification (populates additional results)
-                self.test_scenario.passed = self.test_scenario.verify(self.engine)
+                # Validate results (new system) or verify (legacy fallback)
+                try:
+                    report = self.test_scenario._run_validation(self.engine)
+                    self.test_scenario.passed = report.passed
+                except NotImplementedError:
+                    self.test_scenario.passed = self.test_scenario.verify(self.engine)
                 logger.debug(f"Test {'PASSED' if self.test_scenario.passed else 'FAILED'}")
                 logger.debug(f"Results populated: {list(self.test_scenario.results.keys())}")
 

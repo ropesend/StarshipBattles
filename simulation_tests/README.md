@@ -82,7 +82,7 @@ Combat Lab provides:
 
 ## Current Test Suite
 
-### Beam Weapon Tests
+### Beam Weapon Tests (21 tests)
 
 Test IDs follow the pattern: `BEAMWEAPON-XXX` for standard, `BEAMWEAPON-XXX-HT` for high-tick.
 
@@ -93,7 +93,46 @@ Test IDs follow the pattern: `BEAMWEAPON-XXX` for standard, `BEAMWEAPON-XXX-HT` 
 | **Boundary Tests** | 1 test | Out of range (deterministic) |
 | **High-Tick Precision** | 7 tests | Same as standard but 100k ticks, ±1% margin |
 
-### Resource System Tests
+### Projectile Weapon Tests (9 tests)
+
+Test IDs follow the pattern: `PROJECTILE-XXX` and `PROJECTILE-DMG-XXX`.
+
+| Category | Tests | Description |
+|----------|-------|-------------|
+| **Stationary Target** | 1 test | 100% accuracy baseline at 200px |
+| **Moving Targets** | 4 tests | Slow/fast linear + small/large erratic targets |
+| **Boundary Tests** | 1 test | Out of range (1200px > 1000px max) |
+| **Damage Consistency** | 3 tests | No damage falloff at 10%, 50%, 90% of max range |
+
+Projectile tests fire every tick (reload=0) with 1 damage per hit, so
+`damage_dealt == hits`. Moving targets start at (100, -1200) out of weapon
+range heading upward, ensuring they reach full speed before engagement.
+
+### Defense & Modifier Tests (13 tests)
+
+| Category | Tests | Description |
+|----------|-------|-------------|
+| **Shields** | 3 tests | Absorption, overflow to hull, regeneration |
+| **Armor** | 2 tests | Emissive armor blocks/reduces damage |
+| **ECM/Sensors** | 2 tests | Hit rate modifiers |
+| **Stat Modifiers** | 6 tests | Damage/range/reload/thrust/accuracy/arc multipliers |
+
+### Propulsion Tests (9 tests)
+
+| Category | Tests | Description |
+|----------|-------|-------------|
+| **Engine Physics** | 5 tests | Acceleration, max speed, dual engines, thrust/mass |
+| **Thruster Physics** | 4 tests | Turn rate, rotation, dual thrusters, mass effects |
+
+### Seeker Weapon Tests (11 tests)
+
+| Category | Tests | Description |
+|----------|-------|-------------|
+| **Endurance** | 4 tests | Close/mid/beyond/edge range lifetime |
+| **Tracking** | 4 tests | Stationary/linear/orbiting/erratic targets |
+| **Point Defense** | 3 tests | PDC interaction (placeholders, skipped) |
+
+### Resource System Tests (9 tests)
 
 Test IDs follow the pattern: `RESOURCE-XXX`.
 
@@ -131,9 +170,27 @@ target_radius = 40 * (mass / 1000) ** (1/3)
 # Surface distance (what weapons use)
 surface_distance = center_distance - target_radius
 
-# Example: mass=400, center_distance=50
-# radius = 29.47px, surface_distance = 20.53px
+# Example: mass=400, center_distance=100
+# radius = 29.47px, surface_distance = 70.53px
 ```
+
+### Speed Units (CRITICAL)
+
+Ship speed and projectile speed use **different scales**:
+
+```python
+# Ship speed: directly in px/tick
+max_speed = (total_thrust * K_SPEED) / mass  # K_SPEED=25
+# Example: thrust=600, mass=932 → 16.1 px/tick
+
+# Projectile speed: divided by PROJECTILE_SPEED_SCALE (100)
+effective_speed = projectile_speed / 100
+# Example: projectile_speed=20000 → 200 px/tick
+```
+
+A projectile with speed 20000 moves at 200 px/tick.
+A ship with Top Spd 37.5 moves at 37.5 px/tick.
+The projectile is 5.3x faster than the ship.
 
 ### Defense Score (Logarithmic Formula)
 

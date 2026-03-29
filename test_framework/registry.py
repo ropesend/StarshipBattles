@@ -180,9 +180,8 @@ class TestRegistry:
                         issubclass(attr, TestScenario) and
                         attr is not TestScenario):
 
-                        # Check if it has metadata
+                        # Skip abstract/template classes (no metadata = not a concrete scenario)
                         if not hasattr(attr, 'metadata') or attr.metadata is None:
-                            logger.warning(f"{attr_name} in {filename} has no metadata")
                             continue
 
                         metadata = attr.metadata

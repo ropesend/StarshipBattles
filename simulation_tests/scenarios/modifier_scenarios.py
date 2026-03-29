@@ -101,9 +101,17 @@ class DamageMultiplierScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data: modifier applied correctly
+        # Data: base stat and modifier applied correctly
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
+        checks.append(check_exact(
+            "Base Beam Damage (from JSON)", MOD_BASE_BEAM_DAMAGE,
+            self.results.get('base_damage', 0), phase="data",
+        ))
         checks.append(check_approx(
-            "Beam Damage Modified", MOD_EXPECTED_DAMAGE,
+            "Modified Beam Damage", MOD_EXPECTED_DAMAGE,
             self.actual_beam_damage or 0.0, tolerance=0.001,
             phase="data",
         ))
@@ -172,9 +180,17 @@ class RangeMultiplierScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data: modifier applied correctly
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
+        # Data: base stat and modifier applied correctly
+        checks.append(check_exact(
+            "Base Beam Range (from JSON)", MOD_BASE_BEAM_RANGE,
+            self.results.get('base_range', 0), phase="data",
+        ))
         checks.append(check_approx(
-            "Beam Range Modified", MOD_EXPECTED_RANGE,
+            "Modified Beam Range", MOD_EXPECTED_RANGE,
             self.actual_beam_range or 0.0, tolerance=0.001,
             phase="data",
         ))
@@ -239,9 +255,17 @@ class ReloadReductionScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data: reload time attribute is accessible (base is 0.0, so modified is also 0.0)
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
+        # Data: base stat and modified stat
         checks.append(check_exact(
-            "Reload Time (zero base)", 0.0,
+            "Base Reload Time (from JSON)", 0.0,
+            self.results.get('base_reload', -1), phase="data",
+        ))
+        checks.append(check_exact(
+            "Modified Reload Time", 0.0,
             self.actual_reload_time if self.actual_reload_time is not None else -1,
             phase="data",
         ))
@@ -304,9 +328,13 @@ class ThrustMultiplierScenario(PropulsionScenario):
         self.results['modifier_applied_correctly'] = self.modifier_applied_correctly
 
         checks = self._template_preconditions()
-        # Data: thrust modifier applied correctly
+        # Data: base stat and modifier applied correctly
+        checks.append(check_exact(
+            "Base Engine Thrust (from JSON)", MOD_BASE_ENGINE_THRUST,
+            self.results.get('base_thrust', 0), phase="data",
+        ))
         checks.append(check_approx(
-            "Total Thrust Modified", MOD_EXPECTED_THRUST,
+            "Modified Total Thrust", MOD_EXPECTED_THRUST,
             self.actual_thrust, tolerance=0.001,
             phase="data",
         ))
@@ -376,11 +404,18 @@ class AccuracyBoostScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data: beam accuracy attribute is accessible
-        checks.append(check_true(
-            "Beam Accuracy Loaded",
-            self.actual_base_accuracy is not None,
-            actual=self.actual_base_accuracy,
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
+        # Data: base stat and actual loaded value
+        checks.append(check_exact(
+            "Base Beam Accuracy (from JSON)", MOD_BASE_BEAM_ACCURACY,
+            self.results.get('base_accuracy', 0), phase="data",
+        ))
+        checks.append(check_approx(
+            "Actual Beam Accuracy", MOD_BASE_BEAM_ACCURACY,
+            self.actual_base_accuracy or 0.0, tolerance=0.001,
             phase="data",
         ))
         return checks
@@ -442,9 +477,17 @@ class TurretArcSetScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data: arc modifier applied correctly
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
+        if beam is None:
+            return checks
+        # Data: base stat and modifier applied correctly
+        checks.append(check_exact(
+            "Base Firing Arc (from JSON)", MOD_BASE_BEAM_ARC,
+            self.results.get('base_arc', 0), phase="data",
+        ))
         checks.append(check_approx(
-            "Firing Arc Modified", MOD_EXPECTED_ARC,
+            "Modified Firing Arc", MOD_EXPECTED_ARC,
             self.actual_firing_arc or 0.0, tolerance=0.001,
             phase="data",
         ))

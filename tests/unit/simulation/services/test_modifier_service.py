@@ -71,13 +71,13 @@ def mock_modifier_allow_abilities():
 
 @pytest.fixture
 def mock_turret_mount():
-    """Create turret_mount modifier (has special handling)."""
+    """Create turret_mount modifier (has arc_set effect for generic detection)."""
     return Modifier({
         'id': 'turret_mount',
         'name': 'Turret Mount',
         'param': {'min': 15.0, 'max': 180.0, 'default': 45.0},
         'restrictions': {'allow_abilities': ['ProjectileWeaponAbility', 'BeamWeaponAbility']},
-        'effects': []
+        'effects': [{'stat': 'arc_set', 'formula': 'param', 'operation': 'set'}]
     })
 
 
@@ -915,3 +915,119 @@ class TestAdditionalModifierEdgeCases:
 
         assert service.is_modifier_allowed('with_effect', mock_weapon_component) is True
         assert service.get_initial_value('with_effect', mock_weapon_component) == 5
+
+
+# =============================================================================
+# Test: Generic arc_set detection (effect-based, not ID-based)
+# =============================================================================
+
+class TestArcSetEffectDetection:
+    """Tests that any modifier with an arc_set effect defaults to the weapon's
+    base firing arc, regardless of modifier ID.
+
+    This replaces the hardcoded 'turret_mount' check with generic effect-based
+    detection, so custom modifiers (e.g. test_turret) behave correctly.
+    """
+
+    @pytest.fixture
+    def custom_arc_modifier(self):
+        """A non-turret_mount modifier that uses arc_set effect."""
+        return Modifier({
+            'id': 'custom_arc',
+            'name': 'Custom Arc Override',
+            'param': {'min': 0, 'max': 360, 'default': 0},
+            'restrictions': {},
+            'effects': [{'stat': 'arc_set', 'formula': 'param', 'operation': 'set'}]
+        })
+
+    @pytest.fixture
+    def no_arc_modifier(self):
+        """A modifier with no arc_set effect (damage only)."""
+        return Modifier({
+            'id': 'damage_only',
+            'name': 'Damage Only',
+            'param': {'min': 1, 'max': 10, 'default': 0},
+            'restrictions': {},
+            'effects': [{'stat': 'damage_mult', 'formula': 'param'}]
+        })
+
+    def test_custom_arc_modifier_defaults_to_base_arc_from_abilities(
+        self, custom_arc_modifier, mock_weapon_component
+    ):
+        """Custom arc_set modifier defaults to weapon's base firing_arc."""
+        service = ModifierService(modifier_registry={'custom_arc': custom_arc_modifier})
+        # mock_weapon_component has ProjectileWeaponAbility with firing_arc: 30
+        value = service.get_initial_value('custom_arc', mock_weapon_component)
+        assert value == 30.0
+
+    def test_custom_arc_modifier_defaults_to_beam_arc(
+        self, custom_arc_modifier, mock_beam_component
+    ):
+        """Custom arc_set modifier finds BeamWeaponAbility firing_arc."""
+        service = ModifierService(modifier_registry={'custom_arc': custom_arc_modifier})
+        # mock_beam_component has BeamWeaponAbility with firing_arc: 45
+        value = service.get_initial_value('custom_arc', mock_beam_component)
+        assert value == 45.0
+
+    def test_custom_arc_modifier_defaults_to_root_firing_arc(self, custom_arc_modifier):
+        """Custom arc_set modifier checks root-level firing_arc first."""
+        comp = MagicMock()
+        comp.data = {'firing_arc': 120, 'abilities': {}}
+        service = ModifierService(modifier_registry={'custom_arc': custom_arc_modifier})
+        value = service.get_initial_value('custom_arc', comp)
+        assert value == 120.0
+
+    def test_custom_arc_modifier_fallback_to_min_val(self, custom_arc_modifier):
+        """Custom arc_set modifier falls back to min_val if no firing_arc."""
+        comp = MagicMock()
+        comp.data = {'abilities': {}}
+        service = ModifierService(modifier_registry={'custom_arc': custom_arc_modifier})
+        value = service.get_initial_value('custom_arc', comp)
+        assert value == 0.0  # min_val of custom_arc
+
+    def test_non_arc_modifier_uses_default_val(
+        self, no_arc_modifier, mock_weapon_component
+    ):
+        """Modifier without arc_set effect still uses default_val."""
+        service = ModifierService(modifier_registry={'damage_only': no_arc_modifier})
+        value = service.get_initial_value('damage_only', mock_weapon_component)
+        assert value == 0  # default_val of damage_only
+
+    def test_turret_mount_still_works_with_generic_detection(
+        self, mock_weapon_component
+    ):
+        """turret_mount (hardcoded case removed) still works via effect detection.
+
+        Note: mock_turret_mount fixture has no effects list, so it falls through
+        to default_val. This test uses a turret_mount WITH an arc_set effect.
+        """
+        turret_with_effect = Modifier({
+            'id': 'turret_mount',
+            'name': 'Turret Mount',
+            'param': {'min': 15.0, 'max': 180.0, 'default': 45.0},
+            'restrictions': {'allow_abilities': ['ProjectileWeaponAbility', 'BeamWeaponAbility']},
+            'effects': [{'stat': 'arc_set', 'formula': 'param', 'operation': 'set'}]
+        })
+        service = ModifierService(modifier_registry={'turret_mount': turret_with_effect})
+        # mock_weapon_component has ProjectileWeaponAbility with firing_arc: 30
+        value = service.get_initial_value('turret_mount', mock_weapon_component)
+        assert value == 30.0
+
+    def test_arc_set_detection_in_get_local_min_max(
+        self, custom_arc_modifier, mock_weapon_component
+    ):
+        """Custom arc_set modifier also clamps min to base firing_arc."""
+        service = ModifierService(modifier_registry={'custom_arc': custom_arc_modifier})
+        min_val, max_val = service.get_local_min_max('custom_arc', mock_weapon_component)
+        # mock_weapon_component has firing_arc: 30
+        assert min_val == 30.0
+        assert max_val == 360.0
+
+    def test_non_arc_modifier_min_max_unchanged(
+        self, no_arc_modifier, mock_weapon_component
+    ):
+        """Non-arc modifier min/max are not affected by base firing_arc."""
+        service = ModifierService(modifier_registry={'damage_only': no_arc_modifier})
+        min_val, max_val = service.get_local_min_max('damage_only', mock_weapon_component)
+        assert min_val == 1.0  # from modifier definition
+        assert max_val == 10.0

@@ -240,8 +240,12 @@ class TestLabExecutor:
         elapsed_time = time.time() - start_time
         logger.debug(f" Simulation complete: {tick_count} ticks in {elapsed_time:.2f}s ({tick_count/elapsed_time:.0f} ticks/sec)")
 
-        # Verify and collect results
-        scenario.passed = scenario.verify(engine)
+        # Validate results (new system) or verify (legacy fallback)
+        try:
+            report = scenario._run_validation(engine)
+            scenario.passed = report.passed
+        except NotImplementedError:
+            scenario.passed = scenario.verify(engine)
         logger.debug(f" Test {'PASSED' if scenario.passed else 'FAILED'}")
 
         # Store results including battle state file paths
@@ -361,9 +365,13 @@ class TestLabExecutor:
                     if engine.is_battle_over():
                         break
 
-            # Verify results
+            # Validate results (new system) or verify (legacy fallback)
             elapsed_time = time.time() - start_time
-            scenario.passed = scenario.verify(engine)
+            try:
+                report = scenario._run_validation(engine)
+                scenario.passed = report.passed
+            except NotImplementedError:
+                scenario.passed = scenario.verify(engine)
 
             # Store results including battle state file paths
             scenario.results['ticks_run'] = tick_count

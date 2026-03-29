@@ -136,6 +136,10 @@ def create_mock_test_scenario(
     scenario.setup = Mock()
     scenario.update = Mock()
     scenario.verify = Mock(return_value=True)
+    # _run_validation returns a report-like object with passed=True by default
+    mock_report = Mock()
+    mock_report.passed = True
+    scenario._run_validation = Mock(return_value=mock_report)
     scenario.get_data_paths = Mock(return_value={
         'components': 'data/components.json',
         'modifiers': 'data/modifiers.json',

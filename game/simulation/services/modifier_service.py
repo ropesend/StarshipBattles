@@ -38,6 +38,12 @@ class ModifierService:
     # Modifiers that cannot be removed by the user
     MANDATORY_MODIFIERS = ['simple_size_mount', 'range_mount', 'facing', 'turret_mount']
 
+    # Weapon ability class names to search for base firing_arc
+    _WEAPON_ABILITY_NAMES = [
+        'ProjectileWeaponAbility', 'BeamWeaponAbility',
+        'SeekerWeaponAbility', 'WeaponAbility',
+    ]
+
     def __init__(self, modifier_registry: Dict[str, Any]):
         """
         Initialize ModifierService with modifier registry.
@@ -138,11 +144,52 @@ class ModifierService:
         """
         return mod_id in self.get_mandatory_modifiers(component)
 
+    @staticmethod
+    def _has_arc_set_effect(mod_def) -> bool:
+        """Check whether a modifier definition contains an arc_set effect.
+
+        Args:
+            mod_def: Modifier definition with an ``effects`` list.
+
+        Returns:
+            True if any effect targets the ``arc_set`` stat.
+        """
+        for effect in getattr(mod_def, 'effects', []):
+            if isinstance(effect, dict) and effect.get('stat') == 'arc_set':
+                return True
+        return False
+
+    @staticmethod
+    def _get_base_firing_arc(component) -> float | None:
+        """Extract the base firing arc from a component's data.
+
+        Checks the root-level ``firing_arc`` key first, then searches
+        inside weapon ability dicts.
+
+        Args:
+            component: Component with a ``data`` dict.
+
+        Returns:
+            Base firing arc as a float, or None if not found.
+        """
+        base_arc = component.data.get('firing_arc')
+        if base_arc is not None:
+            return float(base_arc)
+
+        abilities = component.data.get('abilities', {})
+        for ab_name in ModifierService._WEAPON_ABILITY_NAMES:
+            ab_data = abilities.get(ab_name, {})
+            if isinstance(ab_data, dict) and 'firing_arc' in ab_data:
+                return float(ab_data['firing_arc'])
+
+        return None
+
     def get_initial_value(self, mod_id: str, component) -> float:
         """
         Get the initial value for a newly applied modifier.
 
-        PROJ-42: Simplified to instance-only method.
+        For modifiers with an ``arc_set`` effect, defaults to the component's
+        base firing arc so the modifier is neutral until explicitly changed.
 
         Args:
             mod_id: The modifier ID
@@ -167,20 +214,14 @@ class ModifierService:
             return 0.0
         elif mod_id == 'precision_mount':
             return 0.0
-        elif mod_id == 'turret_mount':
-            # Default to base firing arc
-            base_arc = component.data.get('firing_arc')
-            # Check inside ability dicts if not at root level
-            if base_arc is None:
-                abilities = component.data.get('abilities', {})
-                for ab_name in ['ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility', 'WeaponAbility']:
-                    ab_data = abilities.get(ab_name, {})
-                    if isinstance(ab_data, dict) and 'firing_arc' in ab_data:
-                        base_arc = ab_data['firing_arc']
-                        break
-            if base_arc is None:
-                base_arc = mod_def.min_val
-            return float(base_arc)
+
+        # Generic arc_set detection — any modifier that sets firing arc
+        # defaults to the weapon's base arc so it is neutral until changed.
+        if self._has_arc_set_effect(mod_def):
+            base_arc = self._get_base_firing_arc(component)
+            if base_arc is not None:
+                return base_arc
+            return float(mod_def.min_val)
 
         return mod_def.default_val
 
@@ -205,7 +246,9 @@ class ModifierService:
         """
         Returns (min, max) for a modifier, accounting for component-specific constraints.
 
-        PROJ-42: Simplified to instance-only method.
+        For modifiers with an ``arc_set`` effect, the minimum value is clamped
+        to the component's base firing arc so it cannot be reduced below the
+        weapon's inherent arc.
 
         Args:
             mod_id: The modifier ID
@@ -221,19 +264,11 @@ class ModifierService:
         local_min = float(mod_def.min_val)
         local_max = float(mod_def.max_val)
 
-        if mod_id == 'turret_mount':
-            # Min value cannot be less than the component's base fixed arc
-            base_arc = component.data.get('firing_arc')
-            # Check inside ability dicts if not at root level
-            if base_arc is None:
-                abilities = component.data.get('abilities', {})
-                for ab_name in ['ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility', 'WeaponAbility']:
-                    ab_data = abilities.get(ab_name, {})
-                    if isinstance(ab_data, dict) and 'firing_arc' in ab_data:
-                        base_arc = ab_data['firing_arc']
-                        break
-            if base_arc is None:
-                base_arc = local_min
-            local_min = float(base_arc)
+        # Any arc_set modifier: min cannot be less than the weapon's base arc
+        if self._has_arc_set_effect(mod_def):
+            base_arc = self._get_base_firing_arc(component)
+            if base_arc is not None:
+                local_min = base_arc
+            # else: keep modifier's own min_val
 
         return (local_min, local_max)

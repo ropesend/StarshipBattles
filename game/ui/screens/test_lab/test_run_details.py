@@ -73,7 +73,17 @@ class TestRunDetailsPanel:
             return
 
         run_record, _ = self.selected_run
-        self.scroll.content_height = 150 + len(run_record.metrics) * 20 + 50 + len(run_record.validation_results) * 40
+        # Account for phase headers (~27px each, up to 3 phases)
+        phase_header_height = 0
+        if run_record.validation_results:
+            phases_present = set(
+                vr.get('phase', 'outcome') for vr in run_record.validation_results
+            )
+            phase_header_height = len(phases_present) * 27
+        self.scroll.content_height = (
+            150 + len(run_record.metrics) * 20 + 50
+            + phase_header_height + len(run_record.validation_results) * 40
+        )
         self.scroll.viewport_height = self.height - 20
         self.scroll.clamp()
 
@@ -322,7 +332,10 @@ class TestRunDetailsPanel:
         return y_offset
 
     def _draw_validation_results(self, surface, run_record, y_offset):
-        """Draw validation results section with expected/actual/status.
+        """Draw validation results section grouped by phase with expected/actual/status.
+
+        Checks are grouped into DATA, PRECONDITION, and OUTCOME phases.
+        Each check shows a green/red indicator, name, expected, actual, and detail.
 
         Returns updated y_offset.
         """
@@ -338,8 +351,43 @@ class TestRunDetailsPanel:
                        (self.x + 10, y_offset), (self.x + self.width - 20, y_offset))
         y_offset += 8
 
+        # Group by phase
+        phase_order = ['data', 'precondition', 'outcome']
+        phase_labels = {
+            'data': 'DATA CHECKS',
+            'precondition': 'PRECONDITION CHECKS',
+            'outcome': 'OUTCOME CHECKS',
+        }
+        phase_colors = {
+            'data': theme.PHASE_DATA,
+            'precondition': theme.PHASE_PRECONDITION,
+            'outcome': theme.PHASE_OUTCOME,
+        }
+
+        grouped = {p: [] for p in phase_order}
         for vr in run_record.validation_results:
-            y_offset = self._draw_single_validation(surface, vr, y_offset)
+            phase = vr.get('phase', 'outcome')
+            if phase not in grouped:
+                phase = 'outcome'
+            grouped[phase].append(vr)
+
+        for phase in phase_order:
+            checks = grouped[phase]
+            if not checks:
+                continue
+
+            # Phase header
+            phase_label = phase_labels[phase]
+            phase_color = phase_colors[phase]
+            phase_surf = self.body_font.render(phase_label, True, phase_color)
+            surface.blit(phase_surf, (self.x + 15, y_offset))
+            y_offset += 22
+
+            # Individual checks
+            for vr in checks:
+                y_offset = self._draw_single_validation(surface, vr, y_offset)
+
+            y_offset += 5  # Space between phase groups
 
         return y_offset
 
@@ -348,30 +396,31 @@ class TestRunDetailsPanel:
 
         Returns updated y_offset.
         """
-        status = vr['status']
-        name = vr['name']
+        status = vr.get('status', 'PASS')
+        name = vr.get('name', '')
         expected = vr.get('expected')
         actual = vr.get('actual')
+        detail = vr.get('detail')
         p_value = vr.get('p_value')
 
         # Determine colors based on status
         if status == 'PASS':
             status_color = self.pass_color
-            symbol = "PASS"
+            symbol = "V"
             actual_color = self.pass_color
         elif status == 'FAIL':
             status_color = self.fail_color
-            symbol = "FAIL"
+            symbol = "X"
             actual_color = self.fail_color
         else:
             status_color = theme.STATUS_WARNING
-            symbol = "WARN"
+            symbol = "!"
             actual_color = theme.STATUS_WARNING
 
         # Validation name with symbol (color-coded)
         val_line = f"{symbol} {name}"
         val_surf = self.small_font.render(val_line, True, status_color)
-        surface.blit(val_surf, (self.x + 15, y_offset))
+        surface.blit(val_surf, (self.x + 20, y_offset))
         y_offset += 18
 
         # Define layout constants
@@ -417,6 +466,14 @@ class TestRunDetailsPanel:
             p_value_surf = self.small_font.render(p_str, True, p_color)
             surface.blit(p_label, (self.x + indent, y_offset))
             surface.blit(p_value_surf, (self.x + indent + label_width, y_offset))
+            y_offset += 16
+
+        # Detail string (e.g. TOST info, tolerance)
+        if detail:
+            detail_label = self.small_font.render("Detail:", True, label_color)
+            detail_value = self.small_font.render(str(detail), True, theme.TEXT_MUTED)
+            surface.blit(detail_label, (self.x + indent, y_offset))
+            surface.blit(detail_value, (self.x + indent + label_width, y_offset))
             y_offset += 16
 
         y_offset += 10  # Space between validation items

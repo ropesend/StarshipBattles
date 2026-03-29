@@ -161,3 +161,9 @@ SECTION_CONDITIONS = (150, 200, 255)  # Conditions section (blue)
 SECTION_EDGE_CASES = (255, 200, 100)  # Edge cases section (orange)
 SECTION_OUTCOME = (100, 255, 150)   # Expected outcome (bright green)
 SECTION_CRITERIA = (255, 150, 150)  # Pass criteria (pink)
+
+
+# === Validation Phase Headers ===
+PHASE_DATA = (150, 200, 255)        # Data checks header (light blue)
+PHASE_PRECONDITION = (200, 180, 120)  # Precondition checks header (warm gold)
+PHASE_OUTCOME = (150, 220, 150)     # Outcome checks header (soft green)

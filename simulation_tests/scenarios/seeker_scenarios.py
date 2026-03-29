@@ -23,7 +23,10 @@ Test Coverage:
 
 from simulation_tests.scenarios import TestMetadata
 from simulation_tests.scenarios.templates import StaticTargetScenario
-from simulation_tests.scenarios.validation import check_true
+from simulation_tests.scenarios.validation import check_exact, check_approx, check_true
+from simulation_tests.scenarios.movement import (
+    StraightLineController, CircularOrbitController, ErraticController
+)
 from simulation_tests.test_constants import (
     STANDARD_DISTANCE,
     STANDARD_SEED,
@@ -95,6 +98,17 @@ class SeekerCloseRangeImpactScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        # Data
+        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
+        if seeker:
+            checks.append(check_exact("Seeker Damage", 100, seeker.projectile_damage))
+            checks.append(check_exact("Seeker Speed", 1000, seeker.projectile_speed))
+            checks.append(check_exact("Seeker Endurance", 5.0, seeker.endurance))
+        # Precondition
+        center_dist = self.attacker.position.distance_to(self.target.position)
+        checks.append(check_approx("Center Distance", float(STANDARD_DISTANCE), center_dist,
+                                   tolerance=0.01, phase="precondition"))
+        # Outcome
         checks.append(check_true("Damage >= 100", self.damage_dealt >= 100,
                                  actual=self.damage_dealt, phase="outcome",
                                  detail="expected >= 100 (1+ missile impact)"))
@@ -150,6 +164,17 @@ class SeekerMidRangeImpactScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        # Data
+        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
+        if seeker:
+            checks.append(check_exact("Seeker Damage", 100, seeker.projectile_damage))
+            checks.append(check_exact("Seeker Speed", 1000, seeker.projectile_speed))
+            checks.append(check_exact("Seeker Endurance", 5.0, seeker.endurance))
+        # Precondition
+        center_dist = self.attacker.position.distance_to(self.target.position)
+        checks.append(check_approx("Center Distance", 2500.0, center_dist,
+                                   tolerance=0.01, phase="precondition"))
+        # Outcome
         checks.append(check_true("Damage Dealt", self.damage_dealt > 0,
                                  actual=self.damage_dealt, phase="outcome"))
         return checks
@@ -204,6 +229,16 @@ class SeekerBeyondRangeExpireScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        # Data
+        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
+        if seeker:
+            checks.append(check_exact("Seeker Damage", 100, seeker.projectile_damage))
+            checks.append(check_exact("Seeker Speed", 1000, seeker.projectile_speed))
+            checks.append(check_exact("Seeker Endurance", 5.0, seeker.endurance))
+        # Precondition
+        center_dist = self.attacker.position.distance_to(self.target.position)
+        checks.append(check_approx("Center Distance", 5000.0, center_dist,
+                                   tolerance=0.01, phase="precondition"))
         # Measurement test -- seeker likely expires or doesn't fire at this range
         return checks
 
@@ -258,6 +293,16 @@ class SeekerEdgeCaseRangeScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        # Data
+        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
+        if seeker:
+            checks.append(check_exact("Seeker Damage", 100, seeker.projectile_damage))
+            checks.append(check_exact("Seeker Speed", 1000, seeker.projectile_speed))
+            checks.append(check_exact("Seeker Endurance", 5.0, seeker.endurance))
+        # Precondition
+        center_dist = self.attacker.position.distance_to(self.target.position)
+        checks.append(check_approx("Center Distance", 4500.0, center_dist,
+                                   tolerance=0.01, phase="precondition"))
         # Measurement test -- edge case range, results vary
         return checks
 
@@ -312,6 +357,17 @@ class SeekerTrackingStationaryScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        # Data
+        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
+        if seeker:
+            checks.append(check_exact("Seeker Damage", 100, seeker.projectile_damage))
+            checks.append(check_exact("Seeker Speed", 1000, seeker.projectile_speed))
+            checks.append(check_exact("Seeker Endurance", 5.0, seeker.endurance))
+        # Precondition
+        center_dist = self.attacker.position.distance_to(self.target.position)
+        checks.append(check_approx("Center Distance", float(SEEKER_TRACKING_DISTANCE), center_dist,
+                                   tolerance=0.01, phase="precondition"))
+        # Outcome
         checks.append(check_true("Damage Dealt", self.damage_dealt > 0,
                                  actual=self.damage_dealt, phase="outcome"))
         return checks
@@ -330,6 +386,7 @@ class SeekerTrackingLinearScenario(StaticTargetScenario):
     target_ship = "Test_Target_Linear_Slow.json"
     distance = SEEKER_TRACKING_DISTANCE
     target_angle = 90  # Moving up
+    target_movement = StraightLineController()
 
     metadata = TestMetadata(
         test_id="SEEKER-TRACK-002",
@@ -364,6 +421,13 @@ class SeekerTrackingLinearScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        # Data
+        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
+        if seeker:
+            checks.append(check_exact("Seeker Damage", 100, seeker.projectile_damage))
+            checks.append(check_exact("Seeker Speed", 1000, seeker.projectile_speed))
+            checks.append(check_exact("Seeker Endurance", 5.0, seeker.endurance))
+        # Note: no center distance check -- linear target moves during simulation
         # Measurement test -- seeker tracks linear target, results vary
         return checks
 
@@ -380,6 +444,7 @@ class SeekerTrackingOrbitingScenario(StaticTargetScenario):
     attacker_ship = "Test_Attacker_Seeker360.json"
     target_ship = "Test_Target_Orbiting.json"
     distance = SEEKER_TRACKING_DISTANCE
+    target_movement = CircularOrbitController(direction=1)
 
     metadata = TestMetadata(
         test_id="SEEKER-TRACK-003",
@@ -415,6 +480,13 @@ class SeekerTrackingOrbitingScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        # Data
+        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
+        if seeker:
+            checks.append(check_exact("Seeker Damage", 100, seeker.projectile_damage))
+            checks.append(check_exact("Seeker Speed", 1000, seeker.projectile_speed))
+            checks.append(check_exact("Seeker Endurance", 5.0, seeker.endurance))
+        # Note: no center distance check -- orbiting target moves during simulation
         # Measurement test -- curved pursuit, results vary
         return checks
 
@@ -465,8 +537,20 @@ class SeekerTrackingErraticScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "erratic", "evasion", "edge-case"]
     )
 
+    def custom_setup(self, battle_engine):
+        self.target_movement = ErraticController(
+            center=self.target.position.copy(), max_radius=600, seed=42
+        )
+
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        # Data
+        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
+        if seeker:
+            checks.append(check_exact("Seeker Damage", 100, seeker.projectile_damage))
+            checks.append(check_exact("Seeker Speed", 1000, seeker.projectile_speed))
+            checks.append(check_exact("Seeker Endurance", 5.0, seeker.endurance))
+        # Note: no center distance check -- erratic target moves during simulation
         # Measurement test -- erratic targets may evade seekers entirely
         return checks
 

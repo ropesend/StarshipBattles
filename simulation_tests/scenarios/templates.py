@@ -87,6 +87,7 @@ class StaticTargetScenario(TestScenario):
     # Optional configuration
     attacker_angle: float = 0.0  # Default: facing right
     target_angle: float = 0.0
+    target_movement = None  # Optional movement controller (StraightLineController, etc.)
     verify_damage_dealt: bool = False  # If True, auto-verify damage > 0
     force_fire: bool = True  # If True, auto-trigger weapon each tick
 
@@ -169,6 +170,10 @@ class StaticTargetScenario(TestScenario):
             if self.attacker and self.attacker.is_alive:
                 self.attacker.comp_trigger_pulled = True
 
+        # Apply target movement controller if configured
+        if self.target_movement and self.target and self.target.is_alive:
+            self.target_movement.update(self.target)
+
         # Call custom update hook if defined
         if hasattr(self, 'custom_update'):
             self.custom_update(battle_engine)
@@ -192,6 +197,12 @@ class StaticTargetScenario(TestScenario):
 
         if engine.tick_counter > 0 and self.damage_dealt > 0:
             self.results['hit_rate'] = self.damage_dealt / engine.tick_counter
+
+        # Collect per-weapon firing statistics
+        if hasattr(self, 'attacker') and self.attacker:
+            self._collect_weapon_stats(self.attacker, 'attacker')
+        if hasattr(self, 'target') and self.target:
+            self._collect_weapon_stats(self.target, 'target')
 
         for key in self.custom_result_keys:
             if hasattr(self, key):
@@ -403,6 +414,10 @@ class DuelScenario(TestScenario):
         self.results['ticks_run'] = engine.tick_counter
         self.results['ship1_alive'] = self.ship1.is_alive
         self.results['ship2_alive'] = self.ship2.is_alive
+
+        # Collect per-weapon firing statistics
+        self._collect_weapon_stats(self.ship1, 'ship1')
+        self._collect_weapon_stats(self.ship2, 'ship2')
 
         # Determine winner
         if self.ship1.is_alive and not self.ship2.is_alive:
@@ -828,6 +843,11 @@ class ResourceScenario(TestScenario):
         if self.target is not None:
             self.damage_dealt = self.initial_hp - self.target.hp
             self.results['damage_dealt'] = self.damage_dealt
+
+        # Collect per-weapon firing statistics
+        self._collect_weapon_stats(self.ship, 'ship')
+        if self.target is not None:
+            self._collect_weapon_stats(self.target, 'target')
 
         # Hook for subclasses to add extra results
         if hasattr(self, '_collect_extra_results'):

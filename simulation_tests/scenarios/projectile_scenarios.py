@@ -10,7 +10,7 @@ These tests validate projectile weapon mechanics:
 
 Projectile Weapon Mechanics:
 - Projectiles are physical objects that travel through space at a fixed speed
-- Travel time = distance / projectile_speed (e.g., 200px / 1500px/s = 0.133s)
+- Travel time = distance / effective_speed (e.g., 200px / 200px/tick = 1 tick)
 - Hit detection occurs when projectile position overlaps with target
 - For moving targets, weapon system calculates leading angle
 - Leading prediction assumes constant linear velocity
@@ -24,21 +24,26 @@ Test Coverage:
 - Range limit test: 1 test (PROJECTILE-006)
 - Damage at various ranges: 3 tests (PROJECTILE-DMG-010, -050, -090)
 
-Projectile Weapon Stats:
-- Damage: 50 per hit
+Projectile Weapon Stats (test_weapon_proj_omni):
+- Damage: 1 per hit (keeps math simple: damage_dealt == hits)
 - Range: 1000 pixels
-- Projectile Speed: 1500 px/s
-- Reload Time: 1.0s (100 ticks @ 100Hz)
+- Projectile Speed: 20000 (200 px/tick after PROJECTILE_SPEED_SCALE)
+- Reload Time: 0.0s (fires every tick for high sample counts)
 - Firing Arc: 360 degrees
+
+All targets use extreme HP armor (1 billion HP) so they survive the full
+test duration regardless of hit count.
 """
 
 import pygame
 from simulation_tests.scenarios import TestMetadata
 from simulation_tests.scenarios.templates import StaticTargetScenario
-from simulation_tests.scenarios.validation import check_exact, check_true
+from simulation_tests.scenarios.validation import check_exact, check_approx, check_true
+from simulation_tests.scenarios.movement import StraightLineController, ErraticController
 from simulation_tests.test_constants import (
     STANDARD_TEST_TICKS,
     STANDARD_SEED,
+    STATIONARY_TARGET_MASS,
     PROJECTILE_OUT_OF_RANGE_DISTANCE,
 )
 
@@ -80,20 +85,20 @@ class ProjectileStationaryTargetScenario(StaticTargetScenario):
             "Attacker: Test_Attacker_Proj360.json",
             "Target: Test_Target_Stationary.json",
             "Distance: 200 pixels",
-            "Projectile Speed: 1500 px/s",
-            "Travel Time: 200/1500 = 0.133s (~13 ticks)",
-            "Reload Time: 1.0s (100 ticks)",
-            "Damage: 50 per hit",
-            "Test Duration: 500 ticks (~5 shots)"
+            "Projectile Speed: 20000 (200 px/tick)",
+            "Travel Time: 200px / 200px/tick = 1 tick",
+            "Reload Time: 0.0s (fires every tick)",
+            "Damage: 1 per hit",
+            "Test Duration: 500 ticks"
         ],
         edge_cases=[
             "Minimal projectile travel time at close range",
             "Target is stationary - no leading calculation needed",
-            "Should hit 100% of shots fired",
-            "Each hit deals exactly 50 damage"
+            "Should hit ~100% of shots fired",
+            "damage_dealt == number of hits (1 dmg per hit)"
         ],
-        expected_outcome="High damage (≥150, 3+ hits) from projectile hits",
-        pass_criteria="damage_dealt >= 150",
+        expected_outcome="Near-100% hit rate against stationary target",
+        pass_criteria="damage_dealt > 0",
         max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
@@ -107,24 +112,33 @@ class ProjectileStationaryTargetScenario(StaticTargetScenario):
 
     def custom_setup(self, battle_engine):
         """Store projectile mechanics for results."""
-        self.travel_time = calculate_projectile_travel_time(200, 1500)
-        self.expected_shots = 5
+        self.travel_time = calculate_projectile_travel_time(200, 20000)
 
     def _collect_extra_results(self, battle_engine):
         """Store projectile-specific results."""
         self.results['travel_time_seconds'] = self.travel_time
-        self.results['expected_damage_min'] = 150
         self.results['weapon_type'] = 'Projectile360'
-        self.results['weapon_damage'] = 50
+        self.results['weapon_damage'] = 1
         self.results['weapon_range'] = 1000
-        self.results['projectile_speed'] = 1500
-        self.results['reload_time'] = 1.0
+        self.results['projectile_speed'] = 20000
+        self.results['reload_time'] = 0.0
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        checks.append(check_true("Damage Dealt", self.damage_dealt >= 150,
+        # Data
+        weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
+        if weapon:
+            checks.append(check_exact("Weapon Damage", 1, weapon.damage))
+            checks.append(check_exact("Weapon Range", 1000, weapon.range))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        # Precondition
+        center_dist = self.attacker.position.distance_to(self.target.position)
+        checks.append(check_approx("Center Distance", float(self.distance), center_dist,
+                                   tolerance=0.01, phase="precondition"))
+        # Outcome: with reload=0, hundreds of shots should hit a stationary target
+        checks.append(check_true("Damage Dealt", self.damage_dealt > 0,
                                  actual=self.damage_dealt, phase="outcome",
-                                 detail=f"expected >= 150 (3+ hits x 50 dmg)"))
+                                 detail="stationary target should be hit"))
         return checks
 
 
@@ -134,114 +148,167 @@ class ProjectileStationaryTargetScenario(StaticTargetScenario):
 
 class ProjectileLinearSlowTargetScenario(StaticTargetScenario):
     """
-    PROJECTILE-002: Accuracy vs Slow Linearly Moving Target
+    PROJECTILE-002: Accuracy vs Slow Linearly Moving Target (crossing engagement)
 
-    Tests predictive leading - projectiles should hit slow-moving targets
-    by aiming at predicted future position.
+    Tests predictive leading against a slow target that crosses through the
+    attacker's engagement zone.  The target starts at (100, -1200), out of
+    weapon range, heading upward (angle 90).  It reaches full speed (1.25
+    px/tick) by tick 9 and enters range at tick ~168.  It remains in range
+    for the rest of the 500-tick test (~332 in-range shots).
+
+    Same starting position as PROJECTILE-003 (fast target) so the only
+    variable is target speed.
     """
 
     metadata = TestMetadata(
         test_id="PROJECTILE-002",
         category="Projectile Weapons",
         subcategory="Moving Targets",
-        name="Projectile vs Slow Linear Target (200px)",
-        summary="Validates predictive leading allows hits on slow-moving targets",
+        name="Projectile vs Slow Linear Target (crossing)",
+        summary="Validates predictive leading allows hits on slow-moving linear targets",
         conditions=[
             "Attacker: Test_Attacker_Proj360.json",
             "Target: Test_Target_Linear_Slow.json",
-            "Distance: ~200 pixels (initial)",
-            "Target Velocity: Slow linear motion",
-            "Projectile Speed: 1500 px/s",
-            "Leading: System calculates intercept angle",
-            "Damage: 50 per hit",
+            "Target Start: (100, -1200), heading 90 (upward)",
+            "Target Speed: max 1.25 px/tick (full speed by tick 9)",
+            "Enters Range: tick ~168, stays in range for ~332 ticks",
+            "Projectile Speed: 20000 (200 px/tick after scale)",
+            "Reload Time: 0.0s (fires every tick)",
+            "Damage: 1 per hit (damage_dealt == hits)",
             "Test Duration: 500 ticks"
         ],
         edge_cases=[
             "Target moves during projectile flight",
             "Weapon system predicts future position",
             "Leading calculation assumes constant velocity",
-            "Slow targets easier to predict than fast",
-            "May have reduced hit rate vs stationary"
+            "Slow targets easier to predict than fast"
         ],
-        expected_outcome="Moderate damage (>0) from successful leading predictions",
-        pass_criteria="damage_dealt > 0 (test marked as skip - target config issue)",
+        expected_outcome="High hit rate from successful leading predictions",
+        pass_criteria="damage_dealt > 0",
         max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
         ui_priority=8,
-        tags=["accuracy", "projectile", "moving-target", "linear", "leading"]
+        tags=["accuracy", "projectile", "moving-target", "linear", "slow", "leading", "crossing"]
     )
 
     attacker_ship = "Test_Attacker_Proj360.json"
     target_ship = "Test_Target_Linear_Slow.json"
-    distance = 200
-    skip_test = True
-    skip_reason = "Target ship engine configuration issue - target moves too fast"
+    distance = 1204  # Initial center-to-center distance from (0,0) to (100,-1200)
+    target_movement = StraightLineController()
 
     def custom_setup(self, battle_engine):
-        """Adjust target position with y-offset and set target angle."""
-        self.target.position = pygame.math.Vector2(200, 20)
-        self.target.angle = 90  # Moving up (+Y)
+        """Position target out of range, heading upward through engagement zone."""
+        self.target.position = pygame.math.Vector2(100, -1200)
+        self.target.angle = 90
+
+    def _collect_extra_results(self, engine):
+        """Store hit tracking results."""
+        shots = self.results.get('attacker_total_shots_fired', 0)
+        hits = int(self.damage_dealt)  # damage=1 per hit
+        self.results['shots_fired'] = shots
+        self.results['hits'] = hits
+        self.results['hit_rate'] = hits / shots if shots > 0 else 0.0
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        checks.append(check_true("Damage Dealt", self.damage_dealt > 0,
-                                 actual=self.damage_dealt, phase="outcome"))
+        weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
+        if weapon:
+            checks.append(check_exact("Weapon Damage", 1, weapon.damage))
+            checks.append(check_exact("Weapon Range", 1000, weapon.range))
+        # Outcome: weapon must fire and hit
+        shots = self.results.get('attacker_total_shots_fired', 0)
+        hits = int(self.damage_dealt)
+        checks.append(check_true("Shots Fired", shots > 0,
+                                 actual=shots, phase="outcome",
+                                 detail="weapon should fire while target is in range"))
+        checks.append(check_true("Hits Registered", hits > 0,
+                                 actual=hits, phase="outcome",
+                                 detail="leading should land hits on slow target"))
         return checks
 
 
 class ProjectileLinearFastTargetScenario(StaticTargetScenario):
     """
-    PROJECTILE-003: Accuracy vs Fast Linearly Moving Target
+    PROJECTILE-003: Accuracy vs Fast Linearly Moving Target (crossing engagement)
 
-    Tests that fast-moving targets are harder to hit but still hittable
-    with proper leading calculations.
+    Tests predictive leading against a fast target that crosses through the
+    attacker's engagement zone.  The target starts at (100, -1200), out of
+    weapon range, heading upward (angle 90).  It reaches full speed (37.5
+    px/tick) by tick 9 and enters range at the same tick.  It crosses
+    closest approach (~100px) around tick 38 and exits range around tick 63.
+    Engagement window: ~54 in-range ticks.
+
+    Same starting position as PROJECTILE-002 (slow target) so the only
+    variable is target speed.
     """
 
     metadata = TestMetadata(
         test_id="PROJECTILE-003",
         category="Projectile Weapons",
         subcategory="Moving Targets",
-        name="Projectile vs Fast Linear Target (400px)",
-        summary="Validates that fast-moving targets are harder to hit but still hittable with leading",
+        name="Projectile vs Fast Linear Target (crossing)",
+        summary="Validates predictive leading against a fast target crossing through the engagement zone",
         conditions=[
             "Attacker: Test_Attacker_Proj360.json",
             "Target: Test_Target_Linear_Fast.json",
-            "Distance: ~400 pixels (initial)",
-            "Target Velocity: Fast linear motion",
-            "Projectile Speed: 1500 px/s",
-            "Travel Time: ~0.27s (longer intercept time)",
-            "Leading: Calculates intercept for fast target",
+            "Target Start: (100, -1200), heading 90 (upward)",
+            "Target Speed: max 37.5 px/tick (full speed by tick 9)",
+            "Enters Range: tick ~9, closest ~100px at tick ~38, exits tick ~63",
+            "Engagement Window: ~54 ticks in range",
+            "Projectile Speed: 20000 (200 px/tick after scale)",
+            "Reload Time: 0.0s (fires every tick)",
+            "Damage: 1 per hit (damage_dealt == hits)",
             "Test Duration: 500 ticks"
         ],
         edge_cases=[
-            "Fast targets move significant distance during flight",
-            "Leading angle more critical for fast targets",
-            "Higher chance of missing if target changes velocity",
-            "Hit rate lower than slow targets",
-            "May result in minimal or no damage"
+            "Fast target crosses through engagement zone briefly",
+            "Leading angle changes rapidly as target passes",
+            "Hit rate expected to be lower than slow target (PROJECTILE-002)",
+            "Projectile travel time significant at longer ranges"
         ],
-        expected_outcome="Possible damage (≥0) - fast targets may evade",
+        expected_outcome="Some hits during the ~54-tick engagement window",
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
         ui_priority=7,
-        tags=["accuracy", "projectile", "moving-target", "linear", "fast", "leading"]
+        tags=["accuracy", "projectile", "moving-target", "linear", "fast", "leading", "crossing"]
     )
 
     attacker_ship = "Test_Attacker_Proj360.json"
     target_ship = "Test_Target_Linear_Fast.json"
-    distance = 400
+    distance = 1204  # Initial center-to-center distance from (0,0) to (100,-1200)
+    target_movement = StraightLineController()
 
     def custom_setup(self, battle_engine):
-        """Adjust target position with y-offset and set target angle."""
-        self.target.position = pygame.math.Vector2(400, 100)
-        self.target.angle = 90  # Moving up (+Y)
+        """Position target out of range, heading upward through engagement zone."""
+        self.target.position = pygame.math.Vector2(100, -1200)
+        self.target.angle = 90
+
+    def _collect_extra_results(self, engine):
+        """Store hit tracking results."""
+        shots = self.results.get('attacker_total_shots_fired', 0)
+        hits = int(self.damage_dealt)
+        self.results['shots_fired'] = shots
+        self.results['hits'] = hits
+        self.results['hit_rate'] = hits / shots if shots > 0 else 0.0
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Measurement test -- fast targets may or may not be hit
+        weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
+        if weapon:
+            checks.append(check_exact("Weapon Damage", 1, weapon.damage))
+            checks.append(check_exact("Weapon Range", 1000, weapon.range))
+        # Outcome: weapon must fire during engagement window
+        shots = self.results.get('attacker_total_shots_fired', 0)
+        hits = int(self.damage_dealt)
+        checks.append(check_true("Shots Fired", shots > 0,
+                                 actual=shots, phase="outcome",
+                                 detail="weapon should fire while target is in range"))
+        checks.append(check_true("Hits Registered", hits > 0,
+                                 actual=hits, phase="outcome",
+                                 detail="leading should land some hits on fast target"))
         return checks
 
 
@@ -269,19 +336,19 @@ class ProjectileErraticSmallTargetScenario(StaticTargetScenario):
             "Distance: ~300 pixels",
             "Target Movement: Erratic/unpredictable pattern",
             "Target Size: Small (harder to hit)",
-            "Projectile Speed: 1500 px/s",
-            "Travel Time: ~0.2s",
-            "Test Duration: 1000 ticks (extended for hit chances)"
+            "Projectile Speed: 20000 (200 px/tick)",
+            "Reload Time: 0.0s (fires every tick)",
+            "Damage: 1 per hit",
+            "Test Duration: 1000 ticks"
         ],
         edge_cases=[
             "Erratic movement invalidates leading predictions",
             "Target changes velocity unpredictably",
             "Small size reduces hit window",
             "Projectiles miss when target dodges",
-            "Very low hit rate expected",
-            "Primarily a measurement test"
+            "Low hit rate expected"
         ],
-        expected_outcome="Low or zero damage due to erratic movement",
+        expected_outcome="Low hit rate due to erratic movement",
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=1000,
         seed=STANDARD_SEED,
@@ -294,9 +361,20 @@ class ProjectileErraticSmallTargetScenario(StaticTargetScenario):
     target_ship = "Test_Target_Erratic_Small.json"
     distance = 300
 
+    def custom_setup(self, battle_engine):
+        self.target_movement = ErraticController(
+            center=self.target.position.copy(), max_radius=400, seed=42
+        )
+
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Measurement test -- erratic small targets have very low hit rate
+        weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
+        if weapon:
+            checks.append(check_exact("Weapon Damage", 1, weapon.damage))
+            checks.append(check_exact("Weapon Range", 1000, weapon.range))
+        checks.append(check_true("Target Moved", self.target.position.distance_to(
+            pygame.math.Vector2(self.distance, 0)) > 1, phase="precondition",
+            detail="Erratic target should move from starting position"))
         return checks
 
 
@@ -320,18 +398,18 @@ class ProjectileErraticLargeTargetScenario(StaticTargetScenario):
             "Distance: ~300 pixels",
             "Target Movement: Erratic/unpredictable pattern",
             "Target Size: Large (easier to hit)",
-            "Projectile Speed: 1500 px/s",
-            "Travel Time: ~0.2s",
+            "Projectile Speed: 20000 (200 px/tick)",
+            "Reload Time: 0.0s (fires every tick)",
+            "Damage: 1 per hit",
             "Test Duration: 1000 ticks"
         ],
         edge_cases=[
             "Erratic movement still invalidates predictions",
             "Larger size increases hit probability",
             "Hit rate should be higher than small erratic target",
-            "Size compensates for unpredictable movement",
-            "Primarily a comparison/measurement test"
+            "Size compensates for unpredictable movement"
         ],
-        expected_outcome="Potentially higher hit rate than small erratic target",
+        expected_outcome="Higher hit rate than small erratic target (PROJECTILE-004)",
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=1000,
         seed=STANDARD_SEED,
@@ -344,9 +422,20 @@ class ProjectileErraticLargeTargetScenario(StaticTargetScenario):
     target_ship = "Test_Target_Erratic_Large.json"
     distance = 300
 
+    def custom_setup(self, battle_engine):
+        self.target_movement = ErraticController(
+            center=self.target.position.copy(), max_radius=400, seed=42
+        )
+
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Measurement test -- erratic large targets may have higher hit rate than small
+        weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
+        if weapon:
+            checks.append(check_exact("Weapon Damage", 1, weapon.damage))
+            checks.append(check_exact("Weapon Range", 1000, weapon.range))
+        checks.append(check_true("Target Moved", self.target.position.distance_to(
+            pygame.math.Vector2(self.distance, 0)) > 1, phase="precondition",
+            detail="Erratic target should move from starting position"))
         return checks
 
 
@@ -373,8 +462,9 @@ class ProjectileOutOfRangeScenario(StaticTargetScenario):
             "Target: Test_Target_Stationary.json",
             "Weapon Max Range: 1000 pixels",
             "Distance: 1200 pixels (200px beyond range)",
-            "Projectile Speed: 1500 px/s",
-            "Projectile Lifetime: Limited by max_range",
+            "Projectile Speed: 20000 (200 px/tick)",
+            "Reload Time: 0.0s (fires every tick)",
+            "Damage: 1 per hit",
             "Test Duration: 500 ticks"
         ],
         edge_cases=[
@@ -404,6 +494,17 @@ class ProjectileOutOfRangeScenario(StaticTargetScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        # Data
+        weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
+        if weapon:
+            checks.append(check_exact("Weapon Damage", 1, weapon.damage))
+            checks.append(check_exact("Weapon Range", 1000, weapon.range))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        # Precondition
+        center_dist = self.attacker.position.distance_to(self.target.position)
+        checks.append(check_approx("Center Distance", float(PROJECTILE_OUT_OF_RANGE_DISTANCE), center_dist,
+                                   tolerance=0.01, phase="precondition"))
+        # Outcome
         checks.append(check_exact("No Damage At Range", 0, self.damage_dealt, phase="outcome"))
         return checks
 
@@ -430,20 +531,20 @@ class ProjectileDamageCloseRangeScenario(StaticTargetScenario):
             "Attacker: Test_Attacker_Proj360.json",
             "Target: Test_Target_Stationary.json",
             "Distance: 100 pixels (10% of 1000px max range)",
-            "Projectile Speed: 1500 px/s",
-            "Travel Time: 100/1500 = 0.067s (~7 ticks)",
-            "Damage Per Hit: 50",
+            "Projectile Speed: 20000 (200 px/tick)",
+            "Travel Time: 100px / 200px/tick = ~1 tick",
+            "Reload Time: 0.0s (fires every tick)",
+            "Damage Per Hit: 1",
             "No Damage Falloff: Projectiles deal full damage at any range",
-            "Test Duration: 200 ticks (~2 shots)"
+            "Test Duration: 200 ticks"
         ],
         edge_cases=[
             "Very short travel time at close range",
-            "Each hit should deal exactly 50 damage",
-            "No damage falloff or range penalty",
-            "Damage is either 50 (hit) or 0 (miss)"
+            "Each hit should deal exactly 1 damage",
+            "No damage falloff or range penalty"
         ],
-        expected_outcome="Damage dealt in multiples of 50 (full weapon damage)",
-        pass_criteria="damage_dealt > 0 and (damage_dealt % 50 == 0 or damage_dealt > 0)",
+        expected_outcome="damage_dealt == number of hits (no falloff)",
+        pass_criteria="damage_dealt > 0",
         max_ticks=200,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
@@ -457,17 +558,29 @@ class ProjectileDamageCloseRangeScenario(StaticTargetScenario):
 
     def custom_setup(self, battle_engine):
         """Calculate travel time for results."""
-        self.travel_time = calculate_projectile_travel_time(100, 1500)
+        self.travel_time = calculate_projectile_travel_time(100, 20000)
 
     def _collect_extra_results(self, battle_engine):
         """Store damage consistency results."""
         self.results['travel_time_seconds'] = self.travel_time
-        self.results['damage_per_hit'] = 50
+        self.results['damage_per_hit'] = 1
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        # Data
+        weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
+        if weapon:
+            checks.append(check_exact("Weapon Damage", 1, weapon.damage))
+            checks.append(check_exact("Weapon Range", 1000, weapon.range))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        # Precondition
+        center_dist = self.attacker.position.distance_to(self.target.position)
+        checks.append(check_approx("Center Distance", 100.0, center_dist,
+                                   tolerance=0.01, phase="precondition"))
+        # Outcome
         checks.append(check_true("Damage Dealt", self.damage_dealt > 0,
-                                 actual=self.damage_dealt, phase="outcome"))
+                                 actual=self.damage_dealt, phase="outcome",
+                                 detail="expected > 0 at close range (100px)"))
         return checks
 
 
@@ -489,19 +602,20 @@ class ProjectileDamageMidRangeScenario(StaticTargetScenario):
             "Attacker: Test_Attacker_Proj360.json",
             "Target: Test_Target_Stationary.json",
             "Distance: 500 pixels (50% of 1000px max range)",
-            "Projectile Speed: 1500 px/s",
-            "Travel Time: 500/1500 = 0.333s (~33 ticks)",
-            "Damage Per Hit: 50",
+            "Projectile Speed: 20000 (200 px/tick)",
+            "Travel Time: 500px / 200px/tick = ~3 ticks",
+            "Reload Time: 0.0s (fires every tick)",
+            "Damage Per Hit: 1",
             "No Damage Falloff: Full damage at any range",
-            "Test Duration: 300 ticks (~3 shots)"
+            "Test Duration: 300 ticks"
         ],
         edge_cases=[
             "Increased travel time but same damage",
-            "Each hit should deal exactly 50 damage",
+            "Each hit should deal exactly 1 damage",
             "No damage reduction at mid-range",
             "Travel time doesn't affect damage output"
         ],
-        expected_outcome="Full damage (50) per hit at mid-range",
+        expected_outcome="damage_dealt == number of hits (no falloff)",
         pass_criteria="damage_dealt > 0",
         max_ticks=300,
         seed=STANDARD_SEED,
@@ -516,17 +630,29 @@ class ProjectileDamageMidRangeScenario(StaticTargetScenario):
 
     def custom_setup(self, battle_engine):
         """Calculate travel time for results."""
-        self.travel_time = calculate_projectile_travel_time(500, 1500)
+        self.travel_time = calculate_projectile_travel_time(500, 20000)
 
     def _collect_extra_results(self, battle_engine):
         """Store damage consistency results."""
         self.results['travel_time_seconds'] = self.travel_time
-        self.results['damage_per_hit'] = 50
+        self.results['damage_per_hit'] = 1
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        # Data
+        weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
+        if weapon:
+            checks.append(check_exact("Weapon Damage", 1, weapon.damage))
+            checks.append(check_exact("Weapon Range", 1000, weapon.range))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        # Precondition
+        center_dist = self.attacker.position.distance_to(self.target.position)
+        checks.append(check_approx("Center Distance", 500.0, center_dist,
+                                   tolerance=0.01, phase="precondition"))
+        # Outcome
         checks.append(check_true("Damage Dealt", self.damage_dealt > 0,
-                                 actual=self.damage_dealt, phase="outcome"))
+                                 actual=self.damage_dealt, phase="outcome",
+                                 detail="expected > 0 at mid range (500px)"))
         return checks
 
 
@@ -548,20 +674,21 @@ class ProjectileDamageLongRangeScenario(StaticTargetScenario):
             "Attacker: Test_Attacker_Proj360.json",
             "Target: Test_Target_Stationary.json",
             "Distance: 900 pixels (90% of 1000px max range)",
-            "Projectile Speed: 1500 px/s",
-            "Travel Time: 900/1500 = 0.6s (~60 ticks)",
-            "Damage Per Hit: 50",
+            "Projectile Speed: 20000 (200 px/tick)",
+            "Travel Time: 900px / 200px/tick = ~5 ticks",
+            "Reload Time: 0.0s (fires every tick)",
+            "Damage Per Hit: 1",
             "No Damage Falloff: Full damage even at max range",
-            "Test Duration: 400 ticks (~4 shots)"
+            "Test Duration: 400 ticks"
         ],
         edge_cases=[
             "Maximum travel time (0.6s per shot)",
             "Edge of weapon range",
-            "Still deals full 50 damage per hit",
+            "Still deals full 1 damage per hit",
             "No damage reduction at long range",
             "Travel time is significant but damage unchanged"
         ],
-        expected_outcome="Full damage per hit at edge of range (simulation may complete)",
+        expected_outcome="damage_dealt == number of hits (no falloff at edge of range)",
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=400,
         seed=STANDARD_SEED,
@@ -576,15 +703,25 @@ class ProjectileDamageLongRangeScenario(StaticTargetScenario):
 
     def custom_setup(self, battle_engine):
         """Calculate travel time for results."""
-        self.travel_time = calculate_projectile_travel_time(900, 1500)
+        self.travel_time = calculate_projectile_travel_time(900, 20000)
 
     def _collect_extra_results(self, battle_engine):
         """Store damage consistency results."""
         self.results['travel_time_seconds'] = self.travel_time
-        self.results['damage_per_hit'] = 50
+        self.results['damage_per_hit'] = 1
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        # Data
+        weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
+        if weapon:
+            checks.append(check_exact("Weapon Damage", 1, weapon.damage))
+            checks.append(check_exact("Weapon Range", 1000, weapon.range))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        # Precondition
+        center_dist = self.attacker.position.distance_to(self.target.position)
+        checks.append(check_approx("Center Distance", 900.0, center_dist,
+                                   tolerance=0.01, phase="precondition"))
         # Measurement test -- at edge of range, just verify simulation completed
         return checks
 

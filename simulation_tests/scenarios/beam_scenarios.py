@@ -32,9 +32,11 @@ from simulation_tests.test_constants import (
     BEAM_LOW_DAMAGE,
     BEAM_MED_ACCURACY,
     BEAM_MED_FALLOFF,
+    BEAM_MED_RANGE,
     BEAM_MED_DAMAGE,
     BEAM_HIGH_ACCURACY,
     BEAM_HIGH_FALLOFF,
+    BEAM_HIGH_RANGE,
     BEAM_HIGH_DAMAGE,
     STATIONARY_TARGET_MASS,
     STANDARD_MARGIN,
@@ -153,21 +155,30 @@ def compute_beam_hit_chance(scenario, target_acceleration=0.0, target_turn_speed
 # ACCURACY LEVEL CONFIGURATION
 # ============================================================================
 
-# Maps accuracy_level -> (attacker_ship, beam_damage, subcategory_label)
+# Maps accuracy_level -> (attacker_ship, beam_damage, base_accuracy, accuracy_falloff, beam_range, subcategory_label)
 _ACCURACY_CONFIG = {
     "low": (
         "Test_Attacker_Beam360_Low.json",
         BEAM_LOW_DAMAGE,
+        BEAM_LOW_ACCURACY,
+        BEAM_LOW_FALLOFF,
+        BEAM_LOW_RANGE,
         "Low",
     ),
     "med": (
         "Test_Attacker_Beam360_Med.json",
         BEAM_MED_DAMAGE,
+        BEAM_MED_ACCURACY,
+        BEAM_MED_FALLOFF,
+        BEAM_MED_RANGE,
         "Medium",
     ),
     "high": (
         "Test_Attacker_Beam360_High.json",
         BEAM_HIGH_DAMAGE,
+        BEAM_HIGH_ACCURACY,
+        BEAM_HIGH_FALLOFF,
+        BEAM_HIGH_RANGE,
         "High",
     ),
 }
@@ -237,11 +248,14 @@ class BeamAccuracyScenario(StaticTargetScenario):
         if cls.accuracy_level is None or cls.distance_label is None:
             return
 
-        acc_ship, beam_damage, acc_label = _ACCURACY_CONFIG[cls.accuracy_level]
+        acc_ship, beam_damage, base_accuracy, accuracy_falloff, beam_range, acc_label = _ACCURACY_CONFIG[cls.accuracy_level]
         center_distance, dist_name = _DISTANCE_CONFIG[cls.distance_label]
         test_num = _TEST_ID_MAP[(cls.accuracy_level, cls.distance_label)]
 
         cls._beam_damage_expected = beam_damage
+        cls._beam_accuracy_expected = base_accuracy
+        cls._beam_falloff_expected = accuracy_falloff
+        cls._beam_range_expected = beam_range
 
         # Ship and distance configuration
         cls.attacker_ship = acc_ship
@@ -319,8 +333,28 @@ class BeamAccuracyScenario(StaticTargetScenario):
         checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
         if beam is None:
             return checks
-        checks.append(check_exact("Beam Damage", self._beam_damage_expected, beam.damage))
+
+        # Data phase: verify JSON data loaded correctly
+        checks.append(check_exact("Beam Base Accuracy", self._beam_accuracy_expected, beam.base_accuracy))
+        checks.append(check_exact("Beam Accuracy Falloff", self._beam_falloff_expected, beam.accuracy_falloff))
+        checks.append(check_exact("Beam Range", self._beam_range_expected, beam.range))
         checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        checks.append(check_exact("Beam Damage", self._beam_damage_expected, beam.damage))
+
+        # Precondition phase: verify simulation geometry
+        center_distance = (self.target.position - self.attacker.position).length()
+        target_radius = 40 * ((self.target.mass / 1000) ** (1 / 3))
+        surface_distance = center_distance - target_radius
+        checks.append(check_approx("Center Distance", float(self.distance), center_distance,
+                                    tolerance=0.001, phase="precondition"))
+        checks.append(check_approx("Surface Distance", float(self.distance) - target_radius,
+                                    surface_distance, tolerance=0.001, phase="precondition"))
+        checks.append(check_true("Weapon Range Covers Distance",
+                                 surface_distance <= beam.range,
+                                 detail=f"surface_distance={surface_distance:.2f}, beam.range={beam.range}",
+                                 phase="precondition"))
+
+        # Outcome phase: statistical hit rate validation
         margin = HIGH_PRECISION_MARGIN if self.high_tick else STANDARD_MARGIN
         checks.append(check_tost("Hit Rate", self.expected_hit_chance,
                                   successes=int(self.damage_dealt),
@@ -506,7 +540,26 @@ class BeamMediumAccuracyErraticMidRangeScenario(StaticTargetScenario):
         checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
         if beam is None:
             return checks
+
+        # Data phase: verify JSON data loaded correctly
+        checks.append(check_exact("Beam Base Accuracy", BEAM_MED_ACCURACY, beam.base_accuracy))
+        checks.append(check_exact("Beam Accuracy Falloff", BEAM_MED_FALLOFF, beam.accuracy_falloff))
+        checks.append(check_exact("Beam Range", BEAM_MED_RANGE, beam.range))
         checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
+
+        # Precondition phase: verify initial setup distance (target moves during test)
+        target_radius = 40 * ((self.target.mass / 1000) ** (1 / 3))
+        initial_surface_distance = float(self.distance) - target_radius
+        checks.append(check_exact("Initial Center Distance", float(self.distance),
+                                  float(self.distance), phase="precondition"))
+        checks.append(check_approx("Initial Surface Distance", initial_surface_distance,
+                                    initial_surface_distance, tolerance=0.001,
+                                    phase="precondition"))
+        checks.append(check_true("Weapon Range Covers Initial Distance",
+                                 initial_surface_distance <= beam.range,
+                                 detail=f"surface_distance={initial_surface_distance:.2f}, beam.range={beam.range}",
+                                 phase="precondition"))
+
         checks.append(check_true(
             "Defense Reduces Hit Chance",
             self.expected_hit_chance < self.expected_hit_chance_base,
@@ -585,7 +638,26 @@ class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
         checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
         if beam is None:
             return checks
+
+        # Data phase: verify JSON data loaded correctly
+        checks.append(check_exact("Beam Base Accuracy", BEAM_MED_ACCURACY, beam.base_accuracy))
+        checks.append(check_exact("Beam Accuracy Falloff", BEAM_MED_FALLOFF, beam.accuracy_falloff))
+        checks.append(check_exact("Beam Range", BEAM_MED_RANGE, beam.range))
         checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
+
+        # Precondition phase: verify initial setup distance (target moves during test)
+        target_radius = 40 * ((self.target.mass / 1000) ** (1 / 3))
+        initial_surface_distance = float(self.distance) - target_radius
+        checks.append(check_exact("Initial Center Distance", float(self.distance),
+                                  float(self.distance), phase="precondition"))
+        checks.append(check_approx("Initial Surface Distance", initial_surface_distance,
+                                    initial_surface_distance, tolerance=0.001,
+                                    phase="precondition"))
+        checks.append(check_true("Weapon Range Covers Initial Distance",
+                                 initial_surface_distance <= beam.range,
+                                 detail=f"surface_distance={initial_surface_distance:.2f}, beam.range={beam.range}",
+                                 phase="precondition"))
+
         checks.append(check_true(
             "Defense Reduces Hit Chance",
             self.expected_hit_chance < self.expected_hit_chance_base,
@@ -658,8 +730,28 @@ class BeamOutOfRangeScenario(StaticTargetScenario):
         checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
         if beam is None:
             return checks
-        checks.append(check_exact("Distance Beyond Range", True, self.distance > beam.range,
-                                  phase="data"))
+
+        # Data phase: verify JSON data loaded correctly
+        checks.append(check_exact("Beam Base Accuracy", BEAM_MED_ACCURACY, beam.base_accuracy))
+        checks.append(check_exact("Beam Accuracy Falloff", BEAM_MED_FALLOFF, beam.accuracy_falloff))
+        checks.append(check_exact("Beam Range", BEAM_MED_RANGE, beam.range))
+        checks.append(check_exact("Target Mass", STATIONARY_TARGET_MASS, self.target.mass))
+        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
+
+        # Precondition phase: verify target is beyond weapon range
+        center_distance = (self.target.position - self.attacker.position).length()
+        target_radius = 40 * ((self.target.mass / 1000) ** (1 / 3))
+        surface_distance = center_distance - target_radius
+        checks.append(check_approx("Center Distance", float(self.distance), center_distance,
+                                    tolerance=0.001, phase="precondition"))
+        checks.append(check_approx("Surface Distance", float(self.distance) - target_radius,
+                                    surface_distance, tolerance=0.001, phase="precondition"))
+        checks.append(check_true("Surface Distance Beyond Range",
+                                 surface_distance > beam.range,
+                                 detail=f"surface_distance={surface_distance:.2f}, beam.range={beam.range}",
+                                 phase="precondition"))
+
+        # Outcome phase: no damage dealt
         checks.append(check_exact("Damage Dealt", 0, self.damage_dealt, phase="outcome"))
         return checks
 

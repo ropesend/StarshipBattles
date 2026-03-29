@@ -846,7 +846,7 @@ class TestLabRenderer:
     def _draw_validation_section(
         self, screen, x: int, y: int, results: Dict[str, Any], viewmodel
     ) -> int:
-        """Draw validation results section with color-coded status."""
+        """Draw validation results section grouped by phase with color-coded status."""
         # Section header
         header_surf = self.body_font.render("Validation Results:", True, theme.STATUS_HIGHLIGHT)
         screen.blit(header_surf, (x, y))
@@ -882,64 +882,44 @@ class TestLabRenderer:
         screen.blit(summary_surf, (x + 10, y))
         y += 25
 
-        # Individual validation results
+        # Group validation results by phase
+        phase_order = ['data', 'precondition', 'outcome']
+        phase_labels = {
+            'data': 'DATA CHECKS',
+            'precondition': 'PRECONDITION CHECKS',
+            'outcome': 'OUTCOME CHECKS',
+        }
+        phase_colors = {
+            'data': theme.PHASE_DATA,
+            'precondition': theme.PHASE_PRECONDITION,
+            'outcome': theme.PHASE_OUTCOME,
+        }
+
+        grouped: Dict[str, list] = {p: [] for p in phase_order}
         for vr in validation_results:
-            status = vr['status']
-            name = vr['name']
-            expected = vr['expected']
-            actual = vr['actual']
-            p_value = vr.get('p_value')
+            phase = vr.get('phase', 'outcome')
+            if phase not in grouped:
+                phase = 'outcome'
+            grouped[phase].append(vr)
 
-            # Status color
-            if status == 'PASS':
-                status_color = TEST_PASS
-                symbol = "V"
-            elif status == 'FAIL':
-                status_color = TEST_FAIL
-                symbol = "X"
-            elif status == 'WARN':
-                status_color = theme.STATUS_WARNING
-                symbol = "!"
-            else:
-                status_color = theme.STATUS_INFO
-                symbol = "i"
+        # Draw each phase group
+        for phase in phase_order:
+            checks = grouped[phase]
+            if not checks:
+                continue
 
-            # Validation name with symbol
-            name_surf = self.small_font.render(f"{symbol} {name}", True, status_color)
-            screen.blit(name_surf, (x + 10, y))
+            # Phase header
+            phase_label = phase_labels[phase]
+            phase_color = phase_colors[phase]
+            phase_surf = self.small_font.render(phase_label, True, phase_color)
+            screen.blit(phase_surf, (x + 10, y))
             y += 20
 
-            # Expected vs Actual
-            if expected is not None and actual is not None:
-                # Format as percentage if between 0 and 1
-                if isinstance(expected, (int, float)) and 0 <= expected <= 1:
-                    exp_str = f"{expected:.2%}"
-                else:
-                    exp_str = str(expected)
+            # Individual checks in this phase
+            for vr in checks:
+                y = self._draw_validation_check_compact(screen, x, y, vr)
 
-                if isinstance(actual, (int, float)) and 0 <= actual <= 1:
-                    act_str = f"{actual:.2%}"
-                else:
-                    act_str = str(actual)
-
-                exp_act_text = f"Expected: {exp_str} | Actual: {act_str}"
-                exp_act_surf = self.small_font.render(exp_act_text, True, theme.TEXT_MUTED)
-                screen.blit(exp_act_surf, (x + 25, y))
-                y += 18
-
-            # P-value (for statistical tests - TOST interpretation)
-            if p_value is not None:
-                p_text = f"p-value: {p_value:.4f}"
-                if p_value < 0.05:
-                    p_color = TEST_PASS  # Green - proven equivalent (PASS)
-                else:
-                    p_color = TEST_FAIL  # Red - not proven equivalent (FAIL)
-
-                p_surf = self.small_font.render(p_text, True, p_color)
-                screen.blit(p_surf, (x + 25, y))
-                y += 18
-
-            y += 5  # Space between validation items
+            y += 5  # Space between phase groups
 
         # Add "Update Expected Values" button if there are failures
         if fail_count > 0:
@@ -983,6 +963,53 @@ class TestLabRenderer:
 
         return y
 
+    def _draw_validation_check_compact(
+        self, screen, x: int, y: int, vr: Dict[str, Any]
+    ) -> int:
+        """Draw a single validation check as a compact line with pass/fail indicator.
+
+        Format: [symbol] Name: expected=X, actual=Y
+        or:     [symbol] Name: detail string
+
+        Returns updated y position.
+        """
+        status = vr.get('status', 'PASS')
+        name = vr.get('name', '')
+        expected = vr.get('expected')
+        actual = vr.get('actual')
+        detail = vr.get('detail')
+
+        # Determine symbol and color
+        if status == 'PASS':
+            line_color = TEST_PASS
+            symbol = "V"
+        elif status == 'FAIL':
+            line_color = TEST_FAIL
+            symbol = "X"
+        elif status == 'WARN':
+            line_color = theme.STATUS_WARNING
+            symbol = "!"
+        else:
+            line_color = theme.STATUS_INFO
+            symbol = "i"
+
+        # Build the display string
+        parts = [f"  {symbol} {name}:"]
+        if expected is not None:
+            parts.append(f"expected={expected},")
+        if actual is not None:
+            parts.append(f"actual={actual}")
+        # If there's a detail string (e.g. TOST p-value), append it
+        if detail:
+            parts.append(f"({detail})")
+
+        line_text = " ".join(parts)
+        line_surf = self.small_font.render(line_text, True, line_color)
+        screen.blit(line_surf, (x + 15, y))
+        y += 18
+
+        return y
+
     def _draw_validation_flag(
         self, screen, x: int, y: int, scenario_info: Dict[str, Any]
     ) -> None:
@@ -999,27 +1026,34 @@ class TestLabRenderer:
         # Check for validation results
         last_run_results = scenario_info.get('last_run_results')
 
-        if not last_run_results or 'validation_results' not in last_run_results:
-            # No validation data - gray circle
+        if not last_run_results:
+            # No run data at all - gray circle
             color = theme.SEED_RANDOM
             symbol = None
-        else:
+        elif 'validation_results' in last_run_results:
+            # New-style validation results with per-check dicts
             validation_summary = last_run_results.get('validation_summary', {})
             fail_count = validation_summary.get('fail', 0)
             warn_count = validation_summary.get('warn', 0)
 
             if fail_count > 0:
-                # Failures - red circle with X
                 color = TEST_FAIL
                 symbol = "X"
             elif warn_count > 0:
-                # Warnings - yellow circle with !
                 color = theme.STATUS_WARNING
                 symbol = "!"
             else:
-                # All passed - green circle with checkmark
                 color = TEST_PASS
                 symbol = "V"
+        elif last_run_results.get('validation', {}).get('passed') is not None:
+            # Fallback: old-style validation with a single 'passed' bool
+            passed = last_run_results['validation']['passed']
+            color = TEST_PASS if passed else TEST_FAIL
+            symbol = "V" if passed else "X"
+        else:
+            # No validation data - gray circle
+            color = theme.SEED_RANDOM
+            symbol = None
 
         # Draw circle
         pygame.draw.circle(screen, color, (x, y), radius)

@@ -1,8 +1,7 @@
-> **Status: Aspirational**
-> This document describes planned test coverage that has NOT been fully implemented.
-> The `simulation_tests/tests/` directory referenced below no longer exists.
-> Scenario classes now live in `simulation_tests/scenarios/*_scenarios.py` and are
+> **Status: Partially Implemented**
+> Scenario classes live in `simulation_tests/scenarios/*_scenarios.py` and are
 > run via `python -m simulation_tests.run_tests`.
+> Current baseline: **64 passed, 2 failed (game bugs), 3 skipped (69 total)**.
 
 # Comprehensive Ability Test Coverage Plan
 
@@ -212,27 +211,60 @@ Create carrier/hangar tests in simulation_tests/.
 
 ## Execution Order
 
-1. **Phase 1** (Already Complete): Weapon tests simplified
-2. **Phase 2**: Propulsion tests - validates movement works
-3. **Phase 3**: Shield tests - validates defense layer
-4. **Phase 4**: Defense/Attack modifier tests - validates hit calculations
-5. **Phase 5**: Point Defense tests - validates PDC behavior
-6. **Phase 6**: Carrier tests - validates complex interactions
+1. **Phase 1** (Complete): Beam weapon tests (21 scenarios)
+2. **Phase 2** (Complete): Propulsion tests (9 scenarios)
+3. **Phase 3** (Complete): Shield tests (3 scenarios)
+4. **Phase 4** (Complete): Defense/Attack modifier tests (9 scenarios: armor, ECM, sensor, stat modifiers)
+5. **Phase 5** (Complete): Projectile weapon tests (9 scenarios)
+6. **Phase 6** (Complete): Seeker weapon tests (8 scenarios + 3 PDC placeholders)
+7. **Phase 7** (Complete): Resource system tests (9 scenarios)
+8. **Phase 8** (Pending): Point Defense tests - flesh out SEEKER-PD-001/002/003
+9. **Phase 9** (Pending): Carrier/VehicleLaunch tests
+10. **Phase 10** (Pending): Crystalline armor, component damage, derelict detection
 
 ---
+
+## Test Design Best Practices
+
+These practices were established through iterative development of the test suite:
+
+1. **Damage = 1 per hit** for accuracy tests: `damage_dealt == hits`, simple counting
+2. **Reload = 0.0** for accuracy tests: fires every tick, high sample counts for statistical validity
+3. **Extreme HP targets** (1 billion HP): targets never die during tests
+4. **Zero-mass components**: ship mass comes only from hull, keeps physics predictable
+5. **Point-blank distance ≥ 100px**: ships with mass=400 have radius ~29.5px; center distance must exceed sum of radii to avoid visual overlap
+6. **Moving targets start out of range**: place at (100, -1200) heading up so they reach full speed before entering the engagement zone
+7. **Same starting position for comparable tests**: PROJ-002 (slow) and PROJ-003 (fast) both start at (100, -1200), isolating target speed as the only variable
+8. **Use game-realistic values**: projectile speed=20000 matches the actual railgun in the game (200 px/tick after PROJECTILE_SPEED_SCALE division)
+9. **Track shots_fired and hits**: templates auto-collect per-weapon stats via `_collect_weapon_stats()`; scenarios can add `_collect_extra_results()` to expose `shots_fired`, `hits`, `hit_rate` in results
+
+## Speed Unit Reference
+
+Ship speed and projectile speed use **different scales**:
+
+| Entity | Config/Formula | Actual (px/tick) |
+|--------|---------------|-----------------|
+| Ship | `(thrust * 25) / mass` | Direct |
+| Projectile | `projectile_speed / 100` | After PROJECTILE_SPEED_SCALE |
+
+Example: A ship with thrust=1500, mass=1000 has max_speed=37.5 px/tick.
+A projectile with speed=20000 moves at 200 px/tick (5.3x faster).
 
 ## Success Criteria
 
 - Each ability has at least one dedicated test
 - Tests use minimal components (no unnecessary batteries/generators)
-- All tests pass: `python -m pytest simulation_tests/ -v`
-- New components follow naming: `test_<type>_no_resource`
+- All tests pass: `python -m simulation_tests.run_tests`
+- New components follow naming: `test_<type>_<variant>`
+- Use `test_armor_extreme_hp` for targets that should not die
 
 ---
 
 ## Reference Files
 
-- **Abilities**: `game/simulation/components/abilities.py`
+- **Abilities**: `game/simulation/components/abilities/` (weapons.py, defense.py, propulsion.py, etc.)
 - **Test Components**: `simulation_tests/data/components.json`
 - **Test Ships**: `simulation_tests/data/ships/`
-- **Existing Tests**: `simulation_tests/tests/`
+- **Test Scenarios**: `simulation_tests/scenarios/*_scenarios.py`
+- **Test Constants**: `simulation_tests/test_constants.py`
+- **Templates**: `simulation_tests/scenarios/templates.py`

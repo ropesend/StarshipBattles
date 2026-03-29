@@ -141,10 +141,10 @@
       "sprite_index": 85,
       "abilities": {
         "ProjectileWeaponAbility": {
-          "damage": 50,
+          "damage": 1,
           "range": 1000,
-          "projectile_speed": 1500,
-          "reload": 1.0,
+          "projectile_speed": 20000,
+          "reload": 0.0,
           "firing_arc": 360
         }
       }

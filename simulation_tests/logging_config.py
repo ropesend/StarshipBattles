@@ -34,7 +34,7 @@ _logging_initialized = False
 _DEFAULT_LOG_FILE = os.path.join(Paths.LOGS_DIR, "combat_lab.log")
 
 
-def setup_combat_lab_logging(log_file=None, console_level=logging.INFO):
+def setup_combat_lab_logging(log_file=None, console_level=logging.WARNING):
     """
     Configure logging for Combat Lab test framework.
 

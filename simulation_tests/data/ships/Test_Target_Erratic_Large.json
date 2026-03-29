@@ -18,7 +18,7 @@
   "layers": {
     "CORE": [
       {
-        "id": "test_armor_std"
+        "id": "test_armor_extreme_hp"
       },
       {
         "id": "test_engine_no_fuel"
@@ -31,7 +31,7 @@
   },
   "_test_notes": "Large erratic target. Mass = hull_test_l(4000) + armor(0) + engine(0) + thruster(0) = 4000. Zero-mass component architecture.",
   "expected_stats": {
-    "max_hp": 2270,
+    "max_hp": 1000002070,
     "max_fuel": 0.0,
     "max_energy": 0.0,
     "max_ammo": 0.0,
@@ -40,7 +40,7 @@
     "turn_speed": 0.4940322399471092,
     "total_thrust": 500.0,
     "mass": 4000.0,
-    "armor_hp_pool": 200
+    "armor_hp_pool": 1000000000
   },
   "propulsion_details": {
     "engine_thrust": 500,

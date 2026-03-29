@@ -92,38 +92,55 @@ Defines all components that can be installed on ships.
 
 All propulsion components have mass = 0. Ship mass comes from hull only.
 
+#### Projectile Weapons
+
+| Component ID | Damage | Speed | Range | Reload | Purpose |
+|--------------|--------|-------|-------|--------|---------|
+| `test_weapon_proj_omni` | 1 | 20000 (200 px/tick) | 1000 | 0.0 | Accuracy & damage tests |
+| `test_proj_rapid` | 1 | 5000 (50 px/tick) | 1000 | 0.0 | Resource consumption tests |
+
+**Projectile Weapon Design**:
+- **Damage = 1**: `damage_dealt == number_of_hits` for simple counting
+- **Reload = 0.0**: Fires every tick for high sample counts
+- **Speed = 20000**: 200 px/tick after PROJECTILE_SPEED_SCALE(100), ~5x faster than the fastest test target
+
+**Speed Units**: `projectile_speed` is divided by `PROJECTILE_SPEED_SCALE` (100) to
+convert to px/tick. Ship speed uses `(thrust * K_SPEED) / mass` directly in px/tick.
+A projectile at 20000 = 200 px/tick, a fast ship at max_speed 37.5 = 37.5 px/tick.
+
 ### Adding New Test Components
 
-1. **Identify Required Stats**:
+1. **Identify Required Stats** (use game data as reference for realistic values):
    ```
-   Need: Projectile weapon, 10 damage, 300 speed, 1.0s reload
+   Need: Projectile weapon, 1 damage, 20000 speed, 0.0 reload
    ```
 
-2. **Create Component Entry**:
+2. **Create Component Entry** (mass=0 for test components):
    ```json
    {
        "id": "test_projectile_std",
        "name": "Test Projectile (Standard)",
        "type": "ProjectileWeaponAbility",
-       "mass": 5,
-       "hp": 20,
-       "sprite_index": 87,
+       "mass": 0,
+       "hp": 50,
+       "sprite_index": 85,
        "abilities": {
            "ProjectileWeaponAbility": {
-               "damage": 10,
-               "projectile_speed": 300,
-               "range": 800,
-               "reload": 1.0
+               "damage": 1,
+               "projectile_speed": 20000,
+               "range": 1000,
+               "reload": 0.0,
+               "firing_arc": 360
            }
        }
    }
    ```
 
-3. **Add ExactMatchRules** in test:
+3. **Validate in test** using `check_exact`:
    ```python
-   ExactMatchRule(name='Projectile Damage', path='attacker.weapon.damage', expected=10),
-   ExactMatchRule(name='Projectile Speed', path='attacker.weapon.projectile_speed', expected=300),
-   # etc.
+   weapon = self.get_ability(self.attacker, 'ProjectileWeaponAbility')
+   checks.append(check_exact("Weapon Damage", 1, weapon.damage))
+   checks.append(check_exact("Weapon Range", 1000, weapon.range))
    ```
 
 ## Ship Files (ships/ directory)

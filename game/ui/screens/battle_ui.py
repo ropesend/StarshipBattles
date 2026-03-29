@@ -128,6 +128,10 @@ class BattleUI:
 
         return False
 
+    def handle_scroll(self, scroll_y, screen_height):
+        """Handle mouse wheel scroll. Currently no scrollable content in battle view."""
+        pass
+
     def draw_grid(self, screen):
         """Draw the background grid."""
         grid_spacing = UIConfig.GRID_SPACING

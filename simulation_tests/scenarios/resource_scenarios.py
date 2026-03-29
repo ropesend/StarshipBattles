@@ -224,6 +224,7 @@ class EngineFuelConsumptionScenario(ResourceScenario):
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
         # Data
+        checks.append(check_exact("Ship Mass", RES001_HULL_MASS, self.ship.mass))
         checks.append(check_exact("Initial Fuel", RES001_INITIAL_FUEL, self.initial_value))
         checks.append(check_exact("Engine Thrust", RES001_ENGINE_THRUST, self.ship.total_thrust))
         # Precondition
@@ -281,6 +282,7 @@ class EngineFuelDepletionScenario(ResourceScenario):
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
         # Data
+        checks.append(check_exact("Ship Mass", RES001_HULL_MASS, self.ship.mass))
         checks.append(check_exact("Initial Fuel", RES002_INITIAL_FUEL, self.initial_value))
         # Precondition
         checks.append(check_true("Ship Moved", self.distance_traveled > 0, actual=self.distance_traveled))
@@ -337,7 +339,9 @@ class EngineFuelRegenerationScenario(ResourceScenario):
         checks = self._template_preconditions()
         fuel_change = self.final_value - self.initial_value
         # Data
+        checks.append(check_exact("Ship Mass", RES001_HULL_MASS, self.ship.mass))
         checks.append(check_exact("Initial Fuel", RES003_INITIAL_FUEL, self.initial_value))
+        checks.append(check_exact("Engine Thrust", RES001_ENGINE_THRUST, self.ship.total_thrust))
         # Outcome
         checks.append(check_true("Fuel Stable", abs(fuel_change) < 0.5,
                                  actual=fuel_change, phase="outcome",
@@ -519,6 +523,8 @@ class BeamEnergyRegenerationScenario(ResourceScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+        # Data
+        checks.append(check_exact("Initial Energy", RES005A_INITIAL_ENERGY, self.initial_value))
         # Outcome
         checks.append(check_true("Shots Fired Near Expected",
                                  abs(self.shots_fired - RES005A_EXPECTED_SHOTS) < 5,

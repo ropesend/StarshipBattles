@@ -732,7 +732,7 @@ Test IDs follow the pattern: `BEAMWEAPON-XXX` for standard tests, `BEAMWEAPON-XX
 
 | Test ID | Description | Expected Hit Rate |
 |---------|-------------|-------------------|
-| **BEAMWEAPON-001** | Low Accuracy, Point Blank (50px) | 53.18% |
+| **BEAMWEAPON-001** | Low Accuracy, Point Blank (100px) | ~53% |
 | **BEAMWEAPON-002** | Low Accuracy, Mid Range (400px) | varies |
 | **BEAMWEAPON-003** | Low Accuracy, Max Range (750px) | varies |
 | **BEAMWEAPON-004** | Medium Accuracy, Point Blank | varies |
@@ -909,6 +909,74 @@ RESOURCE CONSUMPTION
   ✓ Within tolerance
   Final Velocity:   10.5 (moving)
 ```
+
+---
+
+## Projectile Weapon Tests
+
+### Current Test Suite
+
+Test IDs follow the pattern: `PROJECTILE-XXX` and `PROJECTILE-DMG-XXX`.
+
+#### Accuracy Tests
+
+| Test ID | Description | Target | Hit Rate |
+|---------|-------------|--------|----------|
+| **PROJECTILE-001** | Stationary target at 200px | Stationary | ~100% |
+| **PROJECTILE-002** | Slow linear target (crossing) | 1.25 px/tick | ~90% |
+| **PROJECTILE-003** | Fast linear target (crossing) | 37.5 px/tick | ~97% |
+| **PROJECTILE-004** | Erratic small target at 300px | Erratic small | ~90% |
+| **PROJECTILE-005** | Erratic large target at 300px | Erratic large | ~96% |
+
+#### Range Tests
+
+| Test ID | Description | Expected |
+|---------|-------------|----------|
+| **PROJECTILE-006** | Out of range (1200px > 1000px max) | 0 damage |
+| **PROJECTILE-DMG-010** | Damage at 100px (10% range) | ~100% hit |
+| **PROJECTILE-DMG-050** | Damage at 500px (50% range) | ~99% hit |
+| **PROJECTILE-DMG-090** | Damage at 900px (90% range) | ~99% hit |
+
+### Projectile Test Design Principles
+
+**Weapon Configuration** (`test_weapon_proj_omni`):
+- **Damage: 1** per hit — `damage_dealt == number_of_hits` for simple math
+- **Reload: 0.0** — fires every tick for high sample counts
+- **Projectile Speed: 20000** — 200 px/tick after PROJECTILE_SPEED_SCALE (100)
+- **Range: 1000px**, **Arc: 360 degrees**
+
+**Target HP**: All targets use `test_armor_extreme_hp` (1 billion HP) so they
+survive the full test duration regardless of hit count.
+
+**Linear Target Setup (PROJ-002, PROJ-003)**: Both tests use the same starting
+position `(100, -1200)`, out of weapon range, heading upward (angle 90). This
+ensures targets reach full speed before entering the engagement zone. The only
+variable between the two tests is target speed.
+
+**Weapon Stats Collection**: All templates automatically collect per-weapon
+`shots_fired` and `shots_hit` counters from the simulation engine via
+`_collect_weapon_stats()`. These appear in results as `attacker_weapons` and
+`attacker_total_shots_fired`.
+
+### Speed Units (CRITICAL)
+
+Ship speed and projectile speed use **different unit scales**:
+
+```
+Ship max_speed:       (thrust * K_SPEED) / mass     → px/tick directly
+Projectile velocity:  projectile_speed / PROJECTILE_SPEED_SCALE(100) → px/tick
+```
+
+| Entity | Config Value | Actual Speed | Unit |
+|--------|-------------|--------------|------|
+| Slow target (Test_Target_Linear_Slow) | thrust=50, mass=1000 | 1.25 | px/tick |
+| Fast target (Test_Target_Linear_Fast) | thrust=1500, mass=1000 | 37.5 | px/tick |
+| Test projectile (test_weapon_proj_omni) | 20000 | 200 | px/tick |
+| Typical escort ship | thrust=600, mass=932 | ~16 | px/tick |
+
+The PROJECTILE_SPEED_SCALE factor (100) allows projectile stats to use larger
+numbers for balance tuning while converting to the same px/tick unit system
+as ships.
 
 ---
 
@@ -1091,13 +1159,14 @@ The margin is chosen to be ≥3× the standard error for the sample size.
 ## Credits & Version History
 
 **Created**: January 2026
-**Last Updated**: January 2026
+**Last Updated**: March 2026
 
 **Combat Lab System Design**: Claude + User collaboration
 **Key Components**:
 - TOST equivalence testing for probabilistic validation
 - Logarithmic defense score formula
 - Surface distance calculations for beam weapons
+- Per-weapon fire tracking (`shots_fired`, `shots_hit`) via `_collect_weapon_stats()`
 - Comprehensive test metadata system
 
 **Key Learnings**:
@@ -1105,3 +1174,9 @@ The margin is chosen to be ≥3× the standard error for the sample size.
 - Defense score uses logarithmic formula based on diameter
 - TOST proves equivalence (p < 0.05 = PASS)
 - ±6% margin for 500-tick tests, ±1% for 100k-tick tests
+- Ship speed and projectile speed use different unit scales (see Speed Units section)
+- Point-blank distance must exceed sum of ship radii to avoid visual overlap (~60px for mass=400 ships)
+- Use reload=0 and damage=1 for accuracy tests: high sample counts, simple hit counting
+- Moving targets should start out of range so they reach full speed before engagement
+- All targets that should not die must use `test_armor_extreme_hp` (1 billion HP)
+- Modifiers with `arc_set` effects auto-default to the weapon's base firing arc (generic detection, not ID-based)
