@@ -611,7 +611,7 @@ class StrategyRenderer:
             # Progressive scaling boost: larger stars need proportionally more
             # screen space to visually fill their hex footprint. No effect at
             # radius 1, adds ~1 hex ring of extra size by radius 6.
-            radius_boost = 1.0 + (star.radius_hexes - 1) * 0.03
+            radius_boost = 1.0 + (star.radius_hexes - 1) * 0.05
 
             # Scale so core in the image matches the hex screen size.
             core_diameter_frac = core_radius_frac * 2
