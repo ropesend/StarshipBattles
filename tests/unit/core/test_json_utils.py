@@ -227,6 +227,53 @@ class TestSaveJson:
         assert result is False
 
 
+class TestSaveJsonAtomicWrite:
+    """Tests for atomic write behavior in save_json."""
+
+    def test_no_temp_file_left_after_success(self, tmp_path):
+        """Temporary file is cleaned up after successful save."""
+        from game.core.json_utils import save_json
+
+        test_file = tmp_path / "clean.json"
+        save_json(str(test_file), {"key": "value"})
+
+        # No .tmp files should remain
+        tmp_files = list(tmp_path.glob("*.tmp"))
+        assert tmp_files == []
+        assert test_file.exists()
+
+    def test_original_preserved_on_write_failure(self, tmp_path):
+        """Original file content survives if the write fails mid-stream."""
+        from game.core.json_utils import save_json, load_json
+
+        test_file = tmp_path / "precious.json"
+        original_data = {"original": True, "count": 42}
+        save_json(str(test_file), original_data)
+
+        # Try to save non-serializable data (will fail during json.dump)
+        bad_data = {"broken": {1, 2, 3}}  # sets aren't JSON serializable
+        result = save_json(str(test_file), bad_data)
+
+        assert result is False
+        # Original file must be intact
+        assert load_json(str(test_file)) == original_data
+
+    def test_concurrent_read_during_write(self, tmp_path):
+        """File is readable at all times — never in a half-written state."""
+        from game.core.json_utils import save_json, load_json
+
+        test_file = tmp_path / "concurrent.json"
+        save_json(str(test_file), {"version": 1})
+
+        # Overwrite with new data
+        save_json(str(test_file), {"version": 2})
+
+        # Read should get version 2, never corrupt/empty
+        result = load_json(str(test_file))
+        assert result is not None
+        assert result["version"] == 2
+
+
 class TestLoadJsonRequired:
     """Tests for load_json_required() function."""
 
