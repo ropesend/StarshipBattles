@@ -188,10 +188,28 @@ class TestHistory:
         self._load()
 
     def _load(self):
-        """Load history from JSON file."""
-        data = load_json(self.history_file, default=None)
-        if data is None:
+        """Load history from JSON file.
+
+        If the file is corrupt (truncated, invalid JSON), backs it up
+        with a ``.corrupt`` extension and starts with empty history.
+        """
+        if not os.path.exists(self.history_file):
             logger.info("No existing history file found, starting fresh")
+            return
+
+        data = load_json(self.history_file, default=None)
+
+        if data is None:
+            # File exists but failed to parse — back it up and start fresh
+            corrupt_path = self.history_file + '.corrupt'
+            try:
+                import shutil
+                shutil.copy2(self.history_file, corrupt_path)
+                logger.warning(
+                    f"Corrupt history file backed up to {corrupt_path}, starting fresh"
+                )
+            except OSError:
+                logger.warning("Corrupt history file could not be backed up, starting fresh")
             return
 
         # Convert dicts back to TestRunRecord objects

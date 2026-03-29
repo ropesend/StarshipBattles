@@ -177,8 +177,14 @@ def save_json(
         # Create parent directories if needed
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(file_path, 'w', encoding=encoding) as f:
+        # Atomic write: serialize to temp file first, then rename.
+        # If serialization or writing fails, the original file is untouched.
+        tmp_path = file_path.with_suffix(file_path.suffix + '.tmp')
+        with open(tmp_path, 'w', encoding=encoding) as f:
             json.dump(data, f, indent=indent, ensure_ascii=ensure_ascii)
+
+        # Replace original with completed temp file (atomic on most OS)
+        tmp_path.replace(file_path)
 
         logger.debug(f"Saved JSON to {file_path}")
         return True
@@ -190,6 +196,9 @@ def save_json(
         return False
     except TypeError as e:
         logger.error(f"Failed to serialize data to JSON for {file_path}: {e}")
+        # Clean up temp file if serialization failed
+        tmp_path = file_path.with_suffix(file_path.suffix + '.tmp')
+        tmp_path.unlink(missing_ok=True)
         return False
 
 

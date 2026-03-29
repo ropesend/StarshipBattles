@@ -74,7 +74,7 @@ class MyBeamPointBlankTest(StaticTargetScenario):
         summary="Validates low accuracy beam hit rate at 50px",
         conditions=["Distance: 50px", "Weapon: Low Accuracy Beam", "Target: Stationary, 400 tons"],
         edge_cases=["Minimal range penalty"],
-        expected_outcome="Hit rate ~53% (TOST equivalence within +/-6%)",
+        expected_outcome="Hit rate ~53% (TOST equivalence within +/-10%)",
         pass_criteria="TOST p < 0.05",
         max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,

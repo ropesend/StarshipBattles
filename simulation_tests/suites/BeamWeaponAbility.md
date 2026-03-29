@@ -160,13 +160,13 @@ Step 6: P_hit = 1/(1 + e^(-0.1273)) = 0.5318 (53.18%)
 
 ## Statistical Validation
 
-### Standard Tests (500 ticks, ±6% margin)
+### Standard Tests (500 ticks, ±10% margin)
 
 Minimum ticks calculation:
 ```
 n_min = (z² × p × (1-p)) / ε²
-n_min = (1.96² × 0.5 × 0.5) / 0.06²  (worst case p=0.5)
-n_min ≈ 267 ticks
+n_min = (1.96² × 0.5 × 0.5) / 0.10²  (worst case p=0.5)
+n_min ≈ 96 ticks
 
 With 2x buffer: 500 ticks
 ```

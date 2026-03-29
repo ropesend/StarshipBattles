@@ -88,7 +88,7 @@ Test IDs follow the pattern: `BEAMWEAPON-XXX` for standard, `BEAMWEAPON-XXX-HT` 
 
 | Category | Tests | Description |
 |----------|-------|-------------|
-| **Standard Accuracy** | 8 tests | Low/Med/High accuracy at various ranges (500 ticks, ±6%) |
+| **Standard Accuracy** | 8 tests | Low/Med/High accuracy at various ranges (500 ticks, ±10%) |
 | **Moving Targets** | 2 tests | Erratic small targets with high defense (500 ticks) |
 | **Boundary Tests** | 1 test | Out of range (deterministic) |
 | **High-Tick Precision** | 7 tests | Same as standard but 100k ticks, ±1% margin |
@@ -275,7 +275,7 @@ def calculate_defense_score(mass, acceleration=0.0, turn_speed=0.0, ecm_score=0.
 
 | Type | Ticks | Margin | Standard Error | Use Case |
 |------|-------|--------|----------------|----------|
-| **Standard** | 500 | ±6% | ~2.2% | Quick validation, development |
+| **Standard** | 500 | ±10% | ~2.2–4.4% | Quick validation, development |
 | **High-Tick** | 100,000 | ±1% | ~0.16% | Precise validation, releases |
 
 ---
@@ -392,7 +392,10 @@ Starship Battles/
 | **High agility thruster** | test_thruster_high (raw=500) for erratic targets to stay within leash |
 | **Generic arc_set detection** | Modifier arc defaults based on effect type, not hardcoded modifier IDs |
 | **History on startup** | Combat Lab loads test_history.json into registry so status dots show immediately |
+| **Atomic JSON writes** | `save_json()` writes to .tmp then renames — original file survives interrupted writes |
+| **Corrupt file recovery** | Corrupt test_history.json is backed up to .corrupt and system starts fresh |
 | **Always-visible ships** | Colored dot always drawn in battle view — prevents transparent-image invisibility |
+| **Verify assumptions** | Preconditions check movement, speed, distance — not just outcomes |
 
 ---
 

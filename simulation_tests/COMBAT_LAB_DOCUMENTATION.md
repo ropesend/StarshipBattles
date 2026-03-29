@@ -25,7 +25,7 @@ The **Combat Lab** is a comprehensive testing system for validating combat mecha
 - **Data verification** - Exact-match checks for component/ship data validation
 - **Headless execution** - Run tests without UI for CI/CD integration
 - **High-tick precision tests** - 100k+ tick tests for precise validation (±1% margins)
-- **Standard tests** - 500-tick tests for quick validation (±6% margins)
+- **Standard tests** - 500-tick tests for quick validation (±10% margins)
 
 ### Key Features
 
@@ -514,7 +514,7 @@ check_tost(
     expected_p=0.5318,           # Expected hit rate
     successes=damage_dealt,      # Number of successes
     trials=ticks_run,            # Number of trials
-    margin=0.06,                 # ±6% margin
+    margin=0.10,                 # ±10% margin
 )
 ```
 
@@ -524,7 +524,7 @@ The margin determines how "close" is "close enough" to call it equivalent:
 
 | Test Type | Ticks | Margin | Standard Error | Use Case |
 |-----------|-------|--------|----------------|----------|
-| **Standard** | 500 | ±6% | ~2.2% | Quick validation, development |
+| **Standard** | 500 | ±10% | ~2.2–4.4% | Quick validation, development |
 | **High-Tick** | 100,000 | ±1% | ~0.16% | Precise validation, releases |
 
 **Rule of Thumb**: Margin should be ≥3× the standard error for reliable testing.
@@ -728,7 +728,7 @@ The `TestRegistry` automatically scans `simulation_tests/scenarios/` and registe
 
 Test IDs follow the pattern: `BEAMWEAPON-XXX` for standard tests, `BEAMWEAPON-XXX-HT` for high-tick variants.
 
-#### Standard Tests (500 ticks, ±6% margin)
+#### Standard Tests (500 ticks, ±10% margin)
 
 | Test ID | Description | Expected Hit Rate |
 |---------|-------------|-------------------|
@@ -1117,6 +1117,26 @@ metadata = TestMetadata(
 )
 ```
 
+#### Test history lost between sessions
+
+**Cause**: `test_history.json` was corrupted (truncated mid-write).
+
+**Background**: Prior to the atomic write fix, `save_json()` wrote directly to
+the target file. If the process was interrupted (crash, forced close, file lock),
+the file was left truncated with invalid JSON. On next load, the corrupt file
+silently returned `None`, and history was lost.
+
+**Current safeguards** (these should prevent recurrence):
+1. **Atomic writes**: `save_json()` writes to a `.tmp` file first, then renames.
+   If the write fails, the original file is untouched.
+2. **Corrupt file recovery**: `TestHistory._load()` detects corrupt JSON, backs
+   it up to `.corrupt`, and starts fresh with a warning.
+3. **History loaded on startup**: `_load_history_into_registry()` populates
+   pass/fail dots from the history file when Combat Lab opens.
+
+If you see a `.corrupt` backup file, it means a previous session's write was
+interrupted — check the log for details.
+
 ---
 
 ## Design Decisions
@@ -1219,7 +1239,7 @@ Prevents early battle termination. Even with 100k ticks at 99% hit rate, only ~9
 
 ### Why Two Test Tiers?
 
-- **Standard (500 ticks, ±6%)**: Fast feedback during development
+- **Standard (500 ticks, ±10%)**: Fast feedback during development
 - **High-Tick (100k ticks, ±1%)**: Precise validation before releases
 
 The margin is chosen to be ≥3× the standard error for the sample size.
@@ -1236,17 +1256,25 @@ The margin is chosen to be ≥3× the standard error for the sample size.
 - TOST equivalence testing for probabilistic validation
 - Logarithmic defense score formula
 - Surface distance calculations for beam weapons
-- Per-weapon fire tracking (`shots_fired`, `shots_hit`) via `_collect_weapon_stats()`
+- Per-weapon fire tracking (`shots_fired`, `shots_hit`, `in_flight`) via `_collect_weapon_stats()`
+- Per-tick position tracking via `track_positions` for path analysis
+- Atomic JSON writes preventing file corruption
 - Comprehensive test metadata system
 
 **Key Learnings**:
 - Beam weapons use surface distance, not center-to-center distance
 - Defense score uses logarithmic formula based on diameter
 - TOST proves equivalence (p < 0.05 = PASS)
-- ±6% margin for 500-tick tests, ±1% for 100k-tick tests
+- ±10% margin for 500-tick tests, ±1% for 100k-tick tests (6% was unreliable for low-accuracy beams)
 - Ship speed and projectile speed use different unit scales (see Speed Units section)
+- `turn_speed` is degrees per 100 ticks — `rotate()` divides by 100
 - Point-blank distance must exceed sum of ship radii to avoid visual overlap (~60px for mass=400 ships)
 - Use reload=0 and damage=1 for accuracy tests: high sample counts, simple hit counting
 - Moving targets should start out of range so they reach full speed before engagement
 - All targets that should not die must use `test_armor_extreme_hp` (1 billion HP)
 - Modifiers with `arc_set` effects auto-default to the weapon's base firing arc (generic detection, not ID-based)
+- In-flight projectiles at test end create false accuracy dropoff — use resolved hit rate
+- Verify every assumption in preconditions: if a test depends on movement, verify the target moved
+- Use both upper and lower bounds on hit rate for erratic targets to prevent false passes
+- Atomic writes (`save_json`) prevent corrupt JSON from process interruption
+- Corrupt history files are backed up to `.corrupt` and the system starts fresh

@@ -22,7 +22,7 @@ Complete test suite for beam weapon mechanics (18 tests).
 
 ### Test Suite Overview (18 Total Tests)
 
-#### Standard Tests (11 tests, 500 ticks, ±6% margin)
+#### Standard Tests (11 tests, 500 ticks, ±10% margin)
 
 | Test ID | Weapon | Distance | Target | Expected Hit Rate |
 |---------|--------|----------|--------|-------------------|
