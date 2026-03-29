@@ -666,10 +666,67 @@ class PanelWidths:
 PANEL_WIDTHS = PanelWidths()  # Singleton instance
 ```
 
+### Data-Driven Configs (Strategy Layer)
+
+The strategy layer uses a second config pattern for **JSON-backed tunable parameters** loaded
+from `data/astrophysics.json`. These are classes with `DEFAULT_*` dicts, `_load_from_json()`
+/ `_use_defaults()` methods, and an `@lru_cache` getter function with graceful fallback.
+
+**Files:**
+- `game/strategy/data/classification_config.py` -- `ClassificationConfig` (planet classification thresholds)
+- `game/strategy/data/resource_generation_config.py` -- `ResourceGenerationConfig` (resource quantity/quality/affinities)
+- `game/strategy/data/star_generation_config.py` -- `StarGenerationConfig` (star type weights, mass distribution, SB type properties)
+- `game/strategy/data/orbital_generation_config.py` -- `OrbitalGenerationConfig` (orbital placement, moon system, surface flags)
+
+```python
+# game/strategy/data/classification_config.py (actual code, representative)
+class ClassificationConfig:
+    DEFAULT_MASS = {
+        "dwarf_max": 2.0e23,
+        "giant_min": 6.0e24,
+        "gas_giant_min": 1.0e26,
+    }
+    # ... more DEFAULT_* dicts
+
+    def __init__(self, data: Optional[Dict[str, Any]] = None):
+        if data and "classification" in data:
+            self._load_from_json(data["classification"])
+        else:
+            self._use_defaults()
+
+    def _load_from_json(self, section: Dict[str, Any]) -> None:
+        subsection = section.get("mass_thresholds", {})
+        self.dwarf_max = subsection.get("dwarf_max", self.DEFAULT_MASS["dwarf_max"])
+        # ... each attribute uses .get() with DEFAULT dict fallback
+
+    def _use_defaults(self) -> None:
+        self.dwarf_max = self.DEFAULT_MASS["dwarf_max"]
+        # ... direct assignment from DEFAULT dicts
+
+@lru_cache(maxsize=1)
+def get_classification_config() -> ClassificationConfig:
+    try:
+        from game.strategy.generation.loaders.astrophysics_loader import AstrophysicsLoader
+        loader = AstrophysicsLoader()
+        data = loader.load()
+        return ClassificationConfig(data)
+    except (ImportError, FileNotFoundError, OSError, KeyError, TypeError, ValueError) as e:
+        logger.warning(f"Failed to load classification config: {e}")
+        return ClassificationConfig(None)  # Falls back to hardcoded defaults
+```
+
+Key characteristics:
+- `@lru_cache(maxsize=1)` — singleton; loads once per process
+- **Late import** of `AstrophysicsLoader` inside the getter (avoids circular imports)
+- **Broad exception handling** — catches all likely loading failures, falls back to defaults
+- **Tests must call `get_*_config.cache_clear()`** in setup/teardown to prevent pollution
+- Consumers import the getter via late import inside methods (e.g., `planet_gen.py` line 458)
+
 ### When to Use
 
-- Centralizing magic numbers. Group by domain (AI, Physics, Battle, Display).
-- Core config: plain classes. UI layout config: frozen dataclasses with singleton instances.
+- **Core config (static):** Game-engine constants that never change at runtime (AI, Physics, Battle, Display). Use plain classes in `game/core/config.py`.
+- **Strategy data-driven config (JSON-backed):** Gameplay tuning parameters loaded from `astrophysics.json`. Use the `@lru_cache` getter pattern in `game/strategy/data/*_config.py`.
+- **UI layout config:** Frozen dataclasses with singleton instances.
 - Always import from the config module, never inline magic numbers.
 
 ---

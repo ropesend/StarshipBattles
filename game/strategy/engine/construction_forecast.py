@@ -13,6 +13,7 @@ Used by:
 from typing import Dict, List
 
 from game.core.constants import PLANET_RESOURCES
+from game.strategy.engine.production_math import find_limiting_resource_ticks
 
 
 def forecast_queue_turn_spend(
@@ -65,19 +66,11 @@ def forecast_queue_turn_spend(
             result.append({r: 0.0 for r in PLANET_RESOURCES})
             continue
 
-        # Find limiting resource: max(remaining / rate) gives turns needed
-        turns_needed = 0.0
-        can_build = True
-        for res, rem in remaining_cost.items():
-            rate = build_rate.get(res, 0.0)
-            if rate <= 0:
-                can_build = False
-                break
-            t = rem / rate
-            if t > turns_needed:
-                turns_needed = t
-
-        if not can_build or turns_needed <= 0:
+        # Find limiting resource (PROJ-233: shared formula, ticks_per_turn=1 for turns)
+        turns_needed = find_limiting_resource_ticks(
+            remaining_cost, build_rate, ticks_per_turn=1
+        )
+        if turns_needed is None or turns_needed <= 0:
             result.append({r: 0.0 for r in PLANET_RESOURCES})
             continue
 

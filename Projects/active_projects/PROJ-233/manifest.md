@@ -18,3 +18,5 @@
 | `tests/unit/strategy/engine/test_production_math.py` | Test | **New** — unit tests for shared formula |
 | `tests/unit/strategy/mocks/mock_engines.py` | Test | Modified — remove stale `harvesting_engine` from MockProductionEngine |
 | `tests/unit/strategy/interfaces/test_engine_interfaces.py` | Test | Modified — remove stale `harvesting_engine` from inline mock |
+| `tests/unit/strategy/production_engine/test_tick_consumption.py` | Test | Modified — update patch.object targets for spawner extraction |
+| `tests/unit/strategy/turn_engine/test_dependency_injection.py` | Test | Modified — remove stale `harvesting_engine` arg from mock call |

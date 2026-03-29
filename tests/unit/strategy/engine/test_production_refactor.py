@@ -117,7 +117,7 @@ class TestProductionEngineRefactor:
         rates = {"A": 1000}
         
         # Mock spawning to avoid errors
-        engine._spawn_ship = MagicMock()
+        engine._spawner._spawn_ship = MagicMock()
         
         engine._process_queue_tick_dynamic(
             mock_colony.construction_queue, mock_empire, 1, MagicMock(), None,
@@ -128,7 +128,7 @@ class TestProductionEngineRefactor:
         assert len(mock_colony.construction_queue) == 0
 
         # Verify spawns
-        assert engine._spawn_ship.call_count == 2
+        assert engine._spawner._spawn_ship.call_count == 2
 
 
 class TestProductionEngineEdgeCases:
@@ -174,7 +174,7 @@ class TestProductionEngineEdgeCases:
         mock_colony.construction_queue = [item_without_cost, valid_item]
         rates = {"A": 1000}
 
-        engine._spawn_ship = MagicMock()
+        engine._spawner._spawn_ship = MagicMock()
 
         import logging
         with caplog.at_level(logging.WARNING):
@@ -187,7 +187,7 @@ class TestProductionEngineEdgeCases:
         assert len(mock_colony.construction_queue) == 0
         assert "broken_ship" in caplog.text
         assert "missing 'total_cost'" in caplog.text
-        assert engine._spawn_ship.call_count == 1
+        assert engine._spawner._spawn_ship.call_count == 1
 
     def test_non_dict_item_is_removed_and_processing_continues(
         self, engine, mock_empire, mock_colony
@@ -203,7 +203,7 @@ class TestProductionEngineEdgeCases:
         mock_colony.construction_queue = [invalid_item, valid_item]
         rates = {"A": 1000}
 
-        engine._spawn_ship = MagicMock()
+        engine._spawner._spawn_ship = MagicMock()
 
         engine._process_queue_tick_dynamic(
             mock_colony.construction_queue, mock_empire, 1, MagicMock(), None,
@@ -212,7 +212,7 @@ class TestProductionEngineEdgeCases:
 
         # Both should be removed (invalid popped, valid completed)
         assert len(mock_colony.construction_queue) == 0
-        assert engine._spawn_ship.call_count == 1
+        assert engine._spawner._spawn_ship.call_count == 1
 
     def test_zero_production_rate_for_required_resource_stops_queue(
         self, engine, mock_empire, mock_colony
@@ -228,7 +228,7 @@ class TestProductionEngineEdgeCases:
         # Rate has 0 for resource B
         rates = {"A": 500, "B": 0}
 
-        engine._spawn_ship = MagicMock()
+        engine._spawner._spawn_ship = MagicMock()
 
         engine._process_queue_tick_dynamic(
             mock_colony.construction_queue, mock_empire, 1, MagicMock(), None,
@@ -238,7 +238,7 @@ class TestProductionEngineEdgeCases:
         # Item should still be in queue (cannot be built)
         assert len(mock_colony.construction_queue) == 1
         # No spawning should occur
-        assert engine._spawn_ship.call_count == 0
+        assert engine._spawner._spawn_ship.call_count == 0
         # No resources should have been consumed
         assert item["resources_consumed"]["A"] == 0
         assert item["resources_consumed"]["B"] == 0
@@ -256,7 +256,7 @@ class TestProductionEngineEdgeCases:
         mock_colony.construction_queue = [ship_item]
         rates = {"A": 500}
 
-        engine._spawn_ship = MagicMock()
+        engine._spawner._spawn_ship = MagicMock()
 
         engine._process_queue_tick_dynamic(
             mock_colony.construction_queue, mock_empire, 1, MagicMock(), None,
@@ -266,7 +266,7 @@ class TestProductionEngineEdgeCases:
         # Ship item should still be in queue (can't build ships in complex-only queue)
         assert len(mock_colony.construction_queue) == 1
         # No spawning
-        assert engine._spawn_ship.call_count == 0
+        assert engine._spawner._spawn_ship.call_count == 0
 
     def test_iteration_safety_guard_prevents_infinite_loop(
         self, engine, mock_empire, mock_colony
@@ -285,7 +285,7 @@ class TestProductionEngineEdgeCases:
         mock_colony.construction_queue = items
         rates = {"A": 100000}  # Very high rate - can complete many per tick
 
-        engine._spawn_ship = MagicMock()
+        engine._spawner._spawn_ship = MagicMock()
 
         # Should not hang - safety guard limits to 10 iterations
         engine._process_queue_tick_dynamic(
@@ -295,7 +295,7 @@ class TestProductionEngineEdgeCases:
 
         # Should have processed at most 10 items (safety guard)
         # Some items may remain due to iteration limit
-        assert engine._spawn_ship.call_count <= 10
+        assert engine._spawner._spawn_ship.call_count <= 10
 
 
 class TestResourceShortageEventLogging:

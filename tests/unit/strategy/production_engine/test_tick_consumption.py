@@ -363,7 +363,7 @@ class TestTickConsumption:
         empire.id = 0
         empire.colonies = [colony]
 
-        with patch.object(engine, '_spawn_complex'):
+        with patch.object(engine._spawner, '_create_and_place_facility'):
             engine.process_construction_tick(1, [empire], None)
 
         # Zero cost = instant completion, item removed from queue
@@ -424,7 +424,7 @@ class TestMidTurnCompletion:
         empire.id = 0
         empire.colonies = [colony]
 
-        with patch.object(engine, '_spawn_complex') as mock_spawn:
+        with patch.object(engine._spawner, '_create_and_place_facility') as mock_spawn:
             engine.process_construction_tick(100, [empire], None)
 
             # Item should be removed from queue
@@ -457,7 +457,7 @@ class TestMidTurnCompletion:
         empire.id = 0
         empire.colonies = [colony]
 
-        with patch.object(engine, '_spawn_complex'):
+        with patch.object(engine._spawner, '_create_and_place_facility'):
             engine.process_construction_tick(100, [empire], None)
 
             # Item1 removed, Item2 now at position 0
@@ -491,7 +491,7 @@ class TestMidTurnCompletion:
 
         empire.fleets = [fleet]
 
-        with patch.object(engine, '_spawn_fleet_ship') as mock_spawn:
+        with patch.object(engine._spawner, '_spawn_fleet_ship') as mock_spawn:
             engine.process_construction_tick(100, [empire], None)
 
             # Should spawn ship
@@ -559,7 +559,7 @@ class TestMidTurnCompletion:
         colony.id = 1
         empire.colonies = [colony]
 
-        with patch.object(engine, '_spawn_complex') as mock_spawn:
+        with patch.object(engine._spawner, '_create_and_place_facility') as mock_spawn:
             engine.process_construction_tick(1, [empire], None)
 
             # Should NOT spawn - Organics not complete

@@ -408,10 +408,10 @@ class TestMockEngines:
         mock = MockProductionEngine()
 
         # Call process_construction_tick directly
-        mock.process_construction_tick(1, [], None, "/path", None)
+        mock.process_construction_tick(1, [], None, "/path")
 
         assert mock.process_construction_tick_called
-        assert mock.process_construction_tick_calls == [(1, [], None, "/path", None)]
+        assert mock.process_construction_tick_calls == [(1, [], None, "/path")]
 
     def test_full_tick_with_all_mocks(self, fresh_registries):
         """TurnEngine._process_tick works with all mock engines."""

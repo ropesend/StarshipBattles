@@ -133,7 +133,7 @@ class IProductionEngine(ABC):
 
     Example usage:
         engine = ProductionEngine()  # or MockProductionEngine for tests
-        engine.process_construction_tick(tick, empires, galaxy, save_path, harvesting_engine)
+        engine.process_construction_tick(tick, empires, galaxy, save_path)
     """
 
     @abstractmethod
@@ -143,7 +143,6 @@ class IProductionEngine(ABC):
         empires: List,
         galaxy: Any,
         save_path: Optional[str] = None,
-        harvesting_engine: Any = None
     ) -> None:
         """
         Process per-tick resource consumption for all construction queues.
@@ -151,13 +150,13 @@ class IProductionEngine(ABC):
         PROJ-75 Phase 4: Called each subturn tick (1-100) to deduct resources
         from empire pools for active construction.
         PROJ-79: Handles mid-turn completion and spawning.
+        PROJ-233: Removed stale harvesting_engine parameter (removed in PROJ-161).
 
         Args:
             tick: Current tick number (1-100)
             empires: List of Empire objects to process
             galaxy: Galaxy object
             save_path: Path to savegame folder for loading designs during spawning
-            harvesting_engine: HarvestingEngine for mid-turn facility harvest
         """
         pass
 

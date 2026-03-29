@@ -88,7 +88,7 @@ class MockProductionEngine(IProductionEngine):
     Tracks method calls and allows configurable behavior.
 
     Attributes:
-        process_construction_tick_calls: List of (tick, empires, galaxy, save_path, harvesting_engine) call args
+        process_construction_tick_calls: List of (tick, empires, galaxy, save_path) call args
     """
 
     def __init__(self):
@@ -98,9 +98,9 @@ class MockProductionEngine(IProductionEngine):
     def process_construction_tick_called(self) -> bool:
         return len(self.process_construction_tick_calls) > 0
 
-    def process_construction_tick(self, tick, empires, galaxy, save_path=None, harvesting_engine=None):
-        """PROJ-75/79: Per-tick construction resource consumption mock."""
-        self.process_construction_tick_calls.append((tick, empires, galaxy, save_path, harvesting_engine))
+    def process_construction_tick(self, tick, empires, galaxy, save_path=None):
+        """PROJ-75/79/233: Per-tick construction resource consumption mock."""
+        self.process_construction_tick_calls.append((tick, empires, galaxy, save_path))
 
 
 class MockOrderProcessor(IOrderProcessor):

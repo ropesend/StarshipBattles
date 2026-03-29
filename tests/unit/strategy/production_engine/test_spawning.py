@@ -38,8 +38,8 @@ class TestShipSpawning:
         engine = ProductionEngine()
 
         # Should not crash, but should log warning
-        with patch('game.strategy.engine.production_engine.logger') as mock_logger:
-            engine._spawn_ship(mock_planet, "Scout", mock_empire, mock_galaxy, save_path=None)
+        with patch('game.strategy.engine.production_spawner.logger') as mock_logger:
+            engine._spawner._spawn_ship(mock_planet, "Scout", mock_empire, mock_galaxy, save_path=None)
 
             mock_logger.warning.assert_called()
 
@@ -49,19 +49,19 @@ class TestShipSpawning:
 
         engine = ProductionEngine()
 
-        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_class:
+        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_class:
             mock_library = MagicMock()
             mock_library.load_design_data.return_value = {"name": "Scout Ship"}
             mock_lib_class.return_value = mock_library
 
-            with patch('game.strategy.engine.production_engine.ShipInstance') as mock_ship_class:
+            with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_ship_class:
                 mock_ship = MagicMock()
                 mock_ship.design_data = {'vehicle_type': 'Ship'}
                 mock_ship.get_calculated_stats.return_value = {'mass': 100, 'strategic_movement': 500}
                 mock_ship.is_combat_capable.return_value = True
                 mock_ship_class.create.return_value = mock_ship
 
-                engine._spawn_ship(mock_planet, "Scout", mock_empire, mock_galaxy, save_path="/test")
+                engine._spawner._spawn_ship(mock_planet, "Scout", mock_empire, mock_galaxy, save_path="/test")
 
                 mock_empire.add_fleet.assert_called()
 
@@ -71,19 +71,19 @@ class TestShipSpawning:
 
         engine = ProductionEngine()
 
-        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_class:
+        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_class:
             mock_library = MagicMock()
             mock_library.load_design_data.return_value = {"name": "Scout"}
             mock_lib_class.return_value = mock_library
 
-            with patch('game.strategy.engine.production_engine.ShipInstance') as mock_ship_class:
+            with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_ship_class:
                 mock_ship = MagicMock()
                 mock_ship.design_data = {'vehicle_type': 'Ship'}
                 mock_ship.get_calculated_stats.return_value = {'mass': 100, 'strategic_movement': 500}
                 mock_ship.is_combat_capable.return_value = True
                 mock_ship_class.create.return_value = mock_ship
 
-                engine._spawn_ship(mock_planet, "Scout", mock_empire, mock_galaxy, save_path="/test")
+                engine._spawner._spawn_ship(mock_planet, "Scout", mock_empire, mock_galaxy, save_path="/test")
 
                 mock_library.increment_built_count.assert_called_with("Scout")
 
@@ -97,7 +97,7 @@ class TestComplexSpawning:
 
         engine = ProductionEngine()
 
-        engine._spawn_complex(mock_planet, "Factory", mock_empire, save_path=None)
+        engine._spawner._create_and_place_facility(mock_planet, "Factory", mock_empire, save_path=None)
 
         assert len(mock_planet.facilities) == 1
 
@@ -107,12 +107,12 @@ class TestComplexSpawning:
 
         engine = ProductionEngine()
 
-        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_class:
+        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_class:
             mock_library = MagicMock()
             mock_library.load_design_data.return_value = {"name": "Advanced Factory"}
             mock_lib_class.return_value = mock_library
 
-            engine._spawn_complex(mock_planet, "Factory", mock_empire, save_path="/test")
+            engine._spawner._create_and_place_facility(mock_planet, "Factory", mock_empire, save_path="/test")
 
             mock_library.load_design_data.assert_called_with("Factory")
 
@@ -129,20 +129,20 @@ class TestSpawnLocation:
         mock_planet.location = HexCoord(10, 20)
         mock_galaxy.get_system_of_planet.return_value = None
 
-        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_class:
+        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_class:
             mock_library = MagicMock()
             mock_library.load_design_data.return_value = {"name": "Scout"}
             mock_lib_class.return_value = mock_library
 
-            with patch('game.strategy.engine.production_engine.ShipInstance') as mock_ship_class:
+            with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_ship_class:
                 mock_ship = MagicMock()
                 mock_ship_class.create.return_value = mock_ship
 
-                with patch('game.strategy.engine.production_engine.Fleet') as mock_fleet_class:
+                with patch('game.strategy.engine.production_spawner.Fleet') as mock_fleet_class:
                     mock_fleet = MagicMock()
                     mock_fleet_class.return_value = mock_fleet
 
-                    engine._spawn_ship(mock_planet, "Scout", mock_empire, mock_galaxy, save_path="/test")
+                    engine._spawner._spawn_ship(mock_planet, "Scout", mock_empire, mock_galaxy, save_path="/test")
 
                     # Fleet created at planet location
                     mock_fleet_class.assert_called()
@@ -160,20 +160,20 @@ class TestSpawnLocation:
         mock_system.global_location = HexCoord(100, 200)
         mock_galaxy.get_system_of_planet.return_value = mock_system
 
-        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_class:
+        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_class:
             mock_library = MagicMock()
             mock_library.load_design_data.return_value = {"name": "Scout"}
             mock_lib_class.return_value = mock_library
 
-            with patch('game.strategy.engine.production_engine.ShipInstance') as mock_ship_class:
+            with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_ship_class:
                 mock_ship = MagicMock()
                 mock_ship_class.create.return_value = mock_ship
 
-                with patch('game.strategy.engine.production_engine.Fleet') as mock_fleet_class:
+                with patch('game.strategy.engine.production_spawner.Fleet') as mock_fleet_class:
                     mock_fleet = MagicMock()
                     mock_fleet_class.return_value = mock_fleet
 
-                    engine._spawn_ship(mock_planet, "Scout", mock_empire, mock_galaxy, save_path="/test")
+                    engine._spawner._spawn_ship(mock_planet, "Scout", mock_empire, mock_galaxy, save_path="/test")
 
                     # Fleet created at global location (system + planet)
                     call_args = mock_fleet_class.call_args[0]
