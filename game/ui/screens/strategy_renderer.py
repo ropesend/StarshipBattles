@@ -11,7 +11,9 @@ Cross-layer imports (acceptable for UI rendering):
 """
 import logging
 import math
+import os
 import pygame
+from game.core.paths import Paths
 from game.ui.config import UIConfig
 from game.core.hex_math import hex_to_pixel, pixel_to_hex, HexCoord
 from game.strategy.data.order_types import OrderType
@@ -50,12 +52,57 @@ class StrategyRenderer:
         from game.assets.asset_manager import get_asset_manager
         self._asset_manager = get_asset_manager()
 
+        # Background image (static, not affected by camera)
+        self._bg_image = None
+        self._bg_scaled = None
+        self._bg_scaled_size = (0, 0)
+        self._bg_brightness = -1.0  # force rebuild on first draw
+        self._load_background()
+
+        # Settings reference
+        from game.ui.services.game_settings import GameSettings
+        self._settings = GameSettings()
+
         # Animation state
         self._elapsed_time = 0.0
 
         # Hex outline cache (invalidated on turn change)
         self._hex_outline_cache = None
         self._hex_outline_cache_turn = -1
+
+    def _load_background(self) -> None:
+        """Load the galaxy background image from the asset manifest."""
+        img = self._asset_manager.load_image('backgrounds', 'strategy_map')
+        if isinstance(img, pygame.Surface) and img != self._asset_manager.get_missing_texture():
+            self._bg_image = img
+
+    def _draw_background(self, screen, viewport_rect: pygame.Rect) -> None:
+        """Draw the static background image scaled to fill the viewport.
+
+        Applies brightness dimming from game settings.
+        """
+        if self._bg_image is None:
+            return
+
+        target_size = (viewport_rect.width, viewport_rect.height)
+        brightness = self._settings.background_brightness
+
+        # Rebuild scaled surface if size or brightness changed
+        if (self._bg_scaled is None
+                or self._bg_scaled_size != target_size
+                or self._bg_brightness != brightness):
+            scaled = pygame.transform.smoothscale(self._bg_image, target_size)
+            if brightness < 1.0:
+                # Dim by blitting a semi-transparent black overlay
+                dim = pygame.Surface(target_size)
+                dim.fill((0, 0, 0))
+                dim.set_alpha(int((1.0 - brightness) * 255))
+                scaled.blit(dim, (0, 0))
+            self._bg_scaled = scaled
+            self._bg_scaled_size = target_size
+            self._bg_brightness = brightness
+
+        screen.blit(self._bg_scaled, viewport_rect.topleft)
 
     def update(self, dt: float) -> None:
         """Update animation state.
@@ -140,6 +187,7 @@ class StrategyRenderer:
             viewport_rect = pygame.Rect(0, self.TOP_BAR_HEIGHT, viewport_w, viewport_h)
             screen.set_clip(viewport_rect)
             screen.fill(COLORS['bg_deep'], viewport_rect)
+            self._draw_background(screen, viewport_rect)
         else:
             screen.fill(COLORS['bg_deep'])
 
@@ -474,16 +522,24 @@ class StrategyRenderer:
             if self.camera.zoom >= 0.5:
                 self._draw_system_details(screen, sys, world_pos)
 
-    def _get_star_asset_key(self, star) -> str:
-        """Get asset key for a star using star_type via the manifest.
+    def _load_star_image(self, star) -> 'pygame.Surface':
+        """Load a star image using the star's image_id.
+
+        Uses the resolution-aware loader from AssetManager (1024px for strategy view).
+        Falls back to None if star has no image_id or image not found.
 
         Args:
-            star: Star object with star_type attribute
+            star: Star object with image_id attribute
 
         Returns:
-            Asset key: 'yellow', 'red', 'blue', 'white', 'orange', 'neutron', or 'black'
+            pygame.Surface or None
         """
-        return self._asset_manager.get_star_asset_key_for_type(star.star_type.name)
+        if not star.image_id:
+            return None
+        img = self._asset_manager.load_star_image(star.image_id, 1024)
+        if img and img != self._asset_manager.get_missing_texture():
+            return img
+        return None
 
     def _draw_colony_marker(self, screen, sys, world_pos):
         """Draw colony ownership marker at low zoom levels.
@@ -518,6 +574,10 @@ class StrategyRenderer:
     def _draw_star(self, screen, star, system_center: tuple, system_name: str, is_primary: bool, is_selected_system: bool):
         """Render a single star with image, selection highlight, and label.
 
+        Uses star.image_id with core metadata from star_metadata.json for
+        proper sizing — the visible core matches the hex radius, corona
+        extends freely beyond.
+
         Args:
             screen: pygame.Surface to draw on
             star: Star object to render
@@ -532,18 +592,37 @@ class StrategyRenderer:
             pygame.math.Vector2(hx + local_pixel_x, hy + local_pixel_y)
         )
 
-        asset_key = self._get_star_asset_key(star)
-        star_img = self._asset_manager.load_image('stars', asset_key)
         screen_star_r = self._hex_radius_to_screen(star.radius_hexes)
 
         # Selection highlight (before star image)
         if is_selected_system and is_primary:
             pygame.draw.circle(screen, WHITE, star_screen_pos, screen_star_r + 4, 1)
 
-        # Star image or fallback
+        # Star image with core-based sizing, or fallback to colored circle
+        star_img = self._load_star_image(star)
         if star_img:
-            scaled_img = pygame.transform.smoothscale(star_img, (screen_star_r * 2, screen_star_r * 2))
-            dest_rect = scaled_img.get_rect(center=(int(star_screen_pos.x), int(star_screen_pos.y)))
+            # Use core metadata to size the image so the visible core
+            # matches the hex radius — corona extends beyond
+            core_info = self._asset_manager.get_star_core_info(star.image_id)
+            core_radius_frac = max(core_info.get('radiusCore', 0.25), 0.05)
+            center_x_frac = core_info.get('centerX', 0.5)
+            center_y_frac = core_info.get('centerY', 0.5)
+
+            # Scale so core in the image matches the hex screen size.
+            # Metadata 'radius' is normalized to image width; treat as diameter
+            # to get the correct visual scale on the hex grid.
+            core_diameter_frac = core_radius_frac * 2
+            display_size = int(screen_star_r / core_diameter_frac)
+            display_size = max(display_size, 4)  # minimum size
+
+            scaled_img = pygame.transform.smoothscale(star_img, (display_size, display_size))
+
+            # Offset for off-center cores
+            offset_x = int((0.5 - center_x_frac) * display_size)
+            offset_y = int((0.5 - center_y_frac) * display_size)
+            dest_rect = scaled_img.get_rect(
+                center=(int(star_screen_pos.x) + offset_x, int(star_screen_pos.y) + offset_y)
+            )
             screen.blit(scaled_img, dest_rect)
         else:
             pygame.draw.circle(screen, star.color, star_screen_pos, screen_star_r)

@@ -22,8 +22,10 @@ class AstrophysicsLoader:
     - Habitable zone formula
     - Ice line calculations
     - Atmospheric retention thresholds
-    - Planet classification thresholds
-    - Resource generation parameters (mass scaling, quality, affinities)
+    - Planet classification thresholds (including chthonian stripping)
+    - Resource generation parameters (mass scaling, quality, affinities, ramp_c)
+    - Star generation parameters (type weights, mass distribution, system probabilities, companion spacing, Stefan-Boltzmann type properties)
+    - Orbital generation parameters (orbital placement, planet mass distribution, moon system, surface flags)
     """
 
     DEFAULT_PATH = Path("data/astrophysics.json")
@@ -123,7 +125,9 @@ class AstrophysicsLoader:
             "ice_line",
             "atmosphere_retention",
             "classification",
-            "resource_generation"
+            "resource_generation",
+            "star_generation",
+            "orbital_generation",
         ]
 
         for section in required_sections:

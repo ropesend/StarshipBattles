@@ -60,6 +60,9 @@ from typing import Optional, TYPE_CHECKING
 
 logger = logging.getLogger(__name__)
 
+# Number of sub-ticks per strategy turn
+TICKS_PER_TURN = 100
+
 if TYPE_CHECKING:
     from game.strategy.interfaces.battle_resolver import IBattleResolver
     from game.strategy.interfaces.engines import (
@@ -195,6 +198,34 @@ class TurnEngine:
             'movement_calc': 0.0, 'movement_apply': 0.0, 'combat': 0.0,
         }
 
+    def _time_phase(self, key: str, fn, *args, **kwargs):
+        """Execute a phase function and accumulate its duration to _phase_times.
+
+        Args:
+            key: Phase timing key (must exist in _phase_times dict).
+            fn: Callable to execute and time.
+            *args: Positional arguments forwarded to fn.
+            **kwargs: Keyword arguments forwarded to fn.
+
+        Returns:
+            Whatever fn returns (used by phases that return event lists or move queues).
+        """
+        t0 = time.perf_counter()
+        result = fn(*args, **kwargs)
+        self._phase_times[key] += time.perf_counter() - t0
+        return result
+
+    def _log_empire_state(self, empires, label: str) -> None:
+        """Log empire resource state for debugging (BUG-109)."""
+        for empire in empires:
+            try:
+                logger.debug(
+                    f"[BUG-109] {label}: empire {empire.id} "
+                    f"resource_pool={dict(empire.resource_pool)}"
+                )
+            except (AttributeError, TypeError):
+                pass
+
     @property
     def movement_engine(self) -> 'IMovementEngine':
         """Return movement engine, lazily creating default if not injected."""
@@ -299,12 +330,17 @@ class TurnEngine:
 
     def process_turn(self, empires, galaxy, save_path=None):
         """
-        Execute one full turn (100 sub-ticks).
+        Execute one full turn (TICKS_PER_TURN sub-ticks).
 
         Args:
             empires: List of Empire objects to process
             galaxy: Galaxy object for spatial calculations
             save_path: Path to savegame folder for loading designs during production
+
+        Side Effects:
+            Populates self.last_scuttle_events (List[ScuttleEvent]) from maintenance.
+            Populates self.last_environmental_events (List[EnvironmentalEvent]) from storms.
+            Both lists are cleared at turn start and readable after this method returns.
         """
         # Store save_path for tick processing (PROJ-79)
         self._current_save_path = save_path
@@ -321,34 +357,16 @@ class TurnEngine:
         turn_start = time.perf_counter()
 
         # [BUG-109] Log resource state before turn processing
-        for empire in empires:
-            try:
-                logger.debug(
-                    f"[BUG-109] === TURN START === empire {empire.id} "
-                    f"resource_pool={dict(empire.resource_pool)}, "
-                    f"facilities={sum(len(c.facilities) for c in empire.colonies)}, "
-                    f"ships={sum(len(f.ships) for f in empire.fleets)}"
-                )
-            except (AttributeError, TypeError):
-                pass
+        self._log_empire_state(empires, "=== TURN START ===")
 
         # 1. Subturn Loop (Movement, Actions & Combat)
         # PROJ-187: Action orders (COLONIZE, TRANSFER, superweapons) now processed
         # in Phase 1.5 of each tick via ActionExecutionEngine
-        for tick in range(1, 101):
+        for tick in range(1, TICKS_PER_TURN + 1):
             self._process_tick(tick, empires, galaxy, save_path)
 
         # [BUG-109] Log resource state after all ticks
-        for empire in empires:
-            try:
-                logger.debug(
-                    f"[BUG-109] === TURN END (after 100 ticks) === empire {empire.id} "
-                    f"resource_pool={dict(empire.resource_pool)}, "
-                    f"facilities={sum(len(c.facilities) for c in empire.colonies)}, "
-                    f"ships={sum(len(f.ships) for f in empire.fleets)}"
-                )
-            except (AttributeError, TypeError):
-                pass
+        self._log_empire_state(empires, f"=== TURN END (after {TICKS_PER_TURN} ticks) ===")
 
         # 2. Population Growth Phase (PROJ-68)
         t0 = time.perf_counter()
@@ -415,100 +433,52 @@ class TurnEngine:
         """
 
         # --- Phase 0: Harvesting (1/100th per tick) ---
-        t0 = time.perf_counter()
         if tick == 1:
-            for empire in empires:
-                try:
-                    logger.debug(
-                        f"[BUG-109] TURN START tick=1: empire {empire.id} "
-                        f"resource_pool={dict(empire.resource_pool)}"
-                    )
-                except (AttributeError, TypeError):
-                    pass
-        self.harvesting_engine.process_harvesting_tick(tick, empires)
-        self._phase_times['harvesting'] += time.perf_counter() - t0
+            self._log_empire_state(empires, "TURN START tick=1")
+        self._time_phase('harvesting', self.harvesting_engine.process_harvesting_tick, tick, empires)
 
         # --- Phase 0a: Maintenance (1/100th per tick, immediate scuttle) ---
-        t0 = time.perf_counter()
-        tick_scuttles = self.maintenance_engine.process_maintenance_tick(tick, empires)
-        self._phase_times['maintenance'] += time.perf_counter() - t0
+        tick_scuttles = self._time_phase('maintenance', self.maintenance_engine.process_maintenance_tick, tick, empires)
         self.last_scuttle_events.extend(tick_scuttles)
         if tick == 1:
-            for empire in empires:
-                try:
-                    logger.debug(
-                        f"[BUG-109] Tick 1 AFTER MAINTENANCE: empire {empire.id} "
-                        f"resource_pool={dict(empire.resource_pool)}"
-                    )
-                except (AttributeError, TypeError):
-                    pass
+            self._log_empire_state(empires, "Tick 1 AFTER MAINTENANCE")
 
         # --- Phase 0b: Per-turn Resource Consumption ---
-        t0 = time.perf_counter()
-        self.resource_engine.process_per_turn_consumption(tick, empires)
-        self._phase_times['resources'] += time.perf_counter() - t0
+        self._time_phase('resources', self.resource_engine.process_per_turn_consumption, tick, empires)
 
         # --- Phase 0c: Fuel generation at facilities ---
-        t0 = time.perf_counter()
-        self.resupply_engine.process_fuel_generation(tick, empires)
-        self._phase_times['fuel_gen'] += time.perf_counter() - t0
+        self._time_phase('fuel_gen', self.resupply_engine.process_fuel_generation, tick, empires)
 
         # --- Phase 0d: Fleet resupply from facilities ---
-        t0 = time.perf_counter()
-        self.resupply_engine.process_fleet_resupply(tick, empires, galaxy)
-        self._phase_times['resupply'] += time.perf_counter() - t0
+        self._time_phase('resupply', self.resupply_engine.process_fleet_resupply, tick, empires, galaxy)
 
         # --- Phase 0e: Construction resource consumption + mid-turn completion ---
-        t0 = time.perf_counter()
-        self.production_engine.process_construction_tick(
-            tick, empires, galaxy,
-            save_path=save_path,
-        )
-        self._phase_times['production'] += time.perf_counter() - t0
+        self._time_phase('production', self.production_engine.process_construction_tick,
+                         tick, empires, galaxy, save_path=save_path)
         if tick == 1:
-            for empire in empires:
-                try:
-                    logger.debug(
-                        f"[BUG-109] Tick 1 AFTER CONSTRUCTION: empire {empire.id} "
-                        f"resource_pool={dict(empire.resource_pool)}"
-                    )
-                except (AttributeError, TypeError):
-                    pass
+            self._log_empire_state(empires, "Tick 1 AFTER CONSTRUCTION")
 
         # --- Phase 0f: Environmental Hazards (storm damage, fuel drain) ---
-        t0 = time.perf_counter()
-        env_events = self.environmental_engine.process_environmental_tick(tick, empires, galaxy)
-        self._phase_times['environmental'] += time.perf_counter() - t0
+        env_events = self._time_phase('environmental', self.environmental_engine.process_environmental_tick, tick, empires, galaxy)
         self.last_environmental_events.extend(env_events)
 
         # --- Phase 1: Instant Orders (JOIN_FLEET) ---
-        t0 = time.perf_counter()
-        self.order_processor.process_instant_orders(empires)
-        self._phase_times['instant_orders'] += time.perf_counter() - t0
+        self._time_phase('instant_orders', self.order_processor.process_instant_orders, empires)
 
         # --- Phase 1.5: Action Orders (COLONIZE, TRANSFER, superweapons) ---
-        t0 = time.perf_counter()
-        self.action_engine.process_action_ticks(
-            empires, galaxy, tick,
-            component_registry=self._registries.components,
-            all_empires=empires
-        )
-        self._phase_times['actions'] += time.perf_counter() - t0
+        self._time_phase('actions', self.action_engine.process_action_ticks,
+                         empires, galaxy, tick,
+                         component_registry=self._registries.components,
+                         all_empires=empires)
 
         # --- Phase 2: Calculate Moves ---
-        t0 = time.perf_counter()
-        move_queue = self.movement_engine.collect_movements(empires, galaxy, tick)
-        self._phase_times['movement_calc'] += time.perf_counter() - t0
+        move_queue = self._time_phase('movement_calc', self.movement_engine.collect_movements, empires, galaxy, tick)
 
         # --- Phase 3: Apply Moves ---
-        t0 = time.perf_counter()
-        self.movement_engine.apply_movements(move_queue, galaxy)
-        self._phase_times['movement_apply'] += time.perf_counter() - t0
+        self._time_phase('movement_apply', self.movement_engine.apply_movements, move_queue, galaxy)
 
         # --- Phase 4: Combat ---
-        t0 = time.perf_counter()
-        self.conflict_engine.resolve_all_conflicts(empires, galaxy=galaxy)
-        self._phase_times['combat'] += time.perf_counter() - t0
+        self._time_phase('combat', self.conflict_engine.resolve_all_conflicts, empires, galaxy=galaxy)
 
 
 def create_default_turn_engine(registries: GameRegistries) -> TurnEngine:

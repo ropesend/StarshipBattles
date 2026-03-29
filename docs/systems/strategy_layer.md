@@ -66,7 +66,7 @@ UI -> StrategySessionFacade.handle_command(cmd)
 
 ```python
 class ICommandHandler(Protocol):
-    def execute(self, session: GameSession, command: Any) -> ValidationResult: ...
+    def execute(self, session: GameSession, command: Command) -> ValidationResult: ...
 ```
 
 ### BaseCommandHandler
@@ -108,7 +108,7 @@ Factory: `create_default_registry()` registers all handlers.
 ### Shared Helpers
 
 - `add_move_order_if_needed(session, fleet, target_hex, start_hex?)` -- chain-aware MOVE queuing
-- `create_auto_load_population_order(origin_colony)` -- LOAD_POPULATION order factory
+- `create_auto_load_population_order()` -- LOAD_POPULATION order factory (no params; colony resolved at execution time)
 
 ---
 
@@ -318,9 +318,15 @@ via `StrategySessionFacade.get_turn_events()` (returns dicts, not domain objects
 - `game/strategy/data/galaxy_warp_generator.py` -- `GalaxyWarpGenerator`
 - `game/strategy/generation/placement_strategies.py` -- placement algorithms
 - `game/strategy/generation/region_classifier.py` -- arm/cluster classification
+- `game/strategy/data/stars.py` -- `StarGenerator`, `Star`, `StarType`, `Spectrum`
 - `game/strategy/data/planet_gen.py` -- `PlanetGenerator`
-- `game/strategy/data/resource_generation_config.py` -- `ResourceGenerationConfig` (data-driven resource parameters)
 - `game/strategy/generation/storm_generator.py` -- `StormGenerator`
+- `game/strategy/data/classification_config.py` -- `ClassificationConfig` (planet classification thresholds)
+- `game/strategy/data/resource_generation_config.py` -- `ResourceGenerationConfig` (data-driven resource parameters)
+- `game/strategy/data/star_generation_config.py` -- `StarGenerationConfig` (star type weights, mass distribution, companion spacing)
+- `game/strategy/data/orbital_generation_config.py` -- `OrbitalGenerationConfig` (orbital placement, moon system, surface flags)
+- `game/strategy/generation/loaders/astrophysics_loader.py` -- `AstrophysicsLoader` (loads `data/astrophysics.json`)
+- `data/astrophysics.json` -- central data file for all generation parameters
 
 ### Galaxy Structure
 
@@ -410,3 +416,35 @@ Resource generation is fully data-driven via `astrophysics.json`. All parameters
 - Volcanic (MAGMA, CHTHONIAN) → high Metals + Radioactives, low Organics
 - Ocean/temperate (PELAGIC, CONTINENTAL) → high Organics
 - Cold/exotic (CRYOPLANET, ICE_DWARF) → high Vapors + Exotics
+
+### Star Generation Config
+
+**Files:**
+- `game/strategy/data/stars.py` -- `StarGenerator._determine_type_and_radius()`, `_generate_mass()`, `_generate_random_stars()`
+- `game/strategy/data/star_generation_config.py` -- `StarGenerationConfig`, `get_star_generation_config()`
+- `data/astrophysics.json` -- `star_generation` section
+
+Star generation parameters are data-driven via `astrophysics.json`. Follows the same `@lru_cache` singleton + hardcoded defaults pattern as `ClassificationConfig`.
+
+**Parameters (in `astrophysics.json` → `star_generation`):**
+- `type_weights` -- probability weights for star type selection (8 types, sum to ~1.0)
+- `mass_generation` -- log-normal distribution parameters (sigma, min/max mass, max attempts)
+- `system_probabilities` -- multi-star system count thresholds, age generation range
+- `companion_spacing` -- companion star hex placement (ring multiplier, jitter, collision limit)
+
+Stefan-Boltzmann types (RED_GIANT, BROWN_DWARF, WHITE_DWARF) share a common luminosity formula and are parameterized in `DEFAULT_STEFAN_BOLTZMANN_TYPES` with per-type mass adjustment, radius, temperature range, and fixed color.
+
+### Orbital Generation Config
+
+**Files:**
+- `game/strategy/data/planet_gen.py` -- `PlanetGenerator._generate_orbital_slots()`, `_calculate_moon_chance()`, `_generate_surface_flags()`
+- `game/strategy/data/orbital_generation_config.py` -- `OrbitalGenerationConfig`, `get_orbital_generation_config()`
+- `data/astrophysics.json` -- `orbital_generation` section
+
+Orbital generation parameters are data-driven via `astrophysics.json`. Follows the same pattern as `ClassificationConfig` and `StarGenerationConfig`.
+
+**Parameters (in `astrophysics.json` → `orbital_generation`):**
+- `orbital` -- safe start offset, max orbital distance, planet count range, triangular distribution mode, hot Jupiter forcing parameters
+- `mass_generation` -- log-normal mu/sigma per bias type (small, large, default), max iterations
+- `moon_system` -- mass threshold log-interpolation (Jupiter/Earth/Ceres breakpoints and chances), moon mass ratio bounds, max moons per body
+- `surface` -- tectonic activity and magnetic field ranges per body mass class, water temperature thresholds

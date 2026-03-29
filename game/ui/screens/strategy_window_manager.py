@@ -88,6 +88,7 @@ class StrategyWindowManager:
         self.fleet_report_window = None
         self.transfer_dialog = None
         self.empire_panel_window = None
+        self.settings_window = None
         self.move_choice_window = None
         self.cargo_quick_dialog = None
         self.planet_selection_window = None
@@ -349,6 +350,30 @@ class StrategyWindowManager:
     def _on_empire_panel_closed(self) -> None:
         """Callback when empire panel window is closed."""
         self.empire_panel_window = None
+
+    # =========================================================================
+    # Settings Window
+    # =========================================================================
+
+    def open_settings(self) -> None:
+        """Open the Settings Window."""
+        if self.settings_window:
+            self.settings_window.kill()
+
+        from game.ui.screens.settings_window import SettingsWindow
+
+        w, h = 500, 200
+        rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
+
+        self.settings_window = SettingsWindow(
+            rect,
+            self.manager,
+            on_close_callback=self._on_settings_closed,
+        )
+
+    def _on_settings_closed(self) -> None:
+        """Callback when settings window is closed."""
+        self.settings_window = None
 
     # =========================================================================
     # Fleet Orders Window

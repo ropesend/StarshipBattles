@@ -20,6 +20,17 @@ from game.strategy.validation import SuperweaponValidator
 
 if TYPE_CHECKING:
     from game.strategy.engine.game_session import GameSession
+    from game.strategy.engine.commands import (
+        IssueImplodePlanetCommand, IssueStellerateStarCommand,
+        IssueOpenWarpPointCommand, IssueCloseWarpPointCommand,
+        IssueCreateDysonSphereCommand, IssueSelfDestructCommand,
+        QueueImplodePlanetMissionCommand, QueueStellerateStarMissionCommand,
+        QueueOpenWarpPointMissionCommand, QueueCloseWarpPointMissionCommand,
+        QueueCreateDysonSphereMissionCommand,
+    )
+
+if TYPE_CHECKING:
+    from game.strategy.engine.game_session import GameSession
 
 
 # =============================================================================
@@ -29,7 +40,7 @@ if TYPE_CHECKING:
 class ImplodePlanetCommandHandler(BaseCommandHandler):
     """Handler for IssueImplodePlanetCommand."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'IssueImplodePlanetCommand') -> ValidationResult:
         """Handle IssueImplodePlanetCommand - creates IMPLODE_PLANET order."""
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
@@ -59,7 +70,7 @@ class ImplodePlanetCommandHandler(BaseCommandHandler):
 class StellerateStarCommandHandler(BaseCommandHandler):
     """Handler for IssueStellerateStarCommand."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'IssueStellerateStarCommand') -> ValidationResult:
         """Handle IssueStellerateStarCommand - creates STELLERATE_STAR order."""
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
@@ -84,7 +95,7 @@ class StellerateStarCommandHandler(BaseCommandHandler):
 class OpenWarpPointCommandHandler(BaseCommandHandler):
     """Handler for IssueOpenWarpPointCommand."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'IssueOpenWarpPointCommand') -> ValidationResult:
         """Handle IssueOpenWarpPointCommand - creates OPEN_WARP_POINT order."""
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
@@ -113,7 +124,7 @@ class OpenWarpPointCommandHandler(BaseCommandHandler):
 class CloseWarpPointCommandHandler(BaseCommandHandler):
     """Handler for IssueCloseWarpPointCommand."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'IssueCloseWarpPointCommand') -> ValidationResult:
         """Handle IssueCloseWarpPointCommand - creates CLOSE_WARP_POINT order."""
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
@@ -143,7 +154,7 @@ class CloseWarpPointCommandHandler(BaseCommandHandler):
 class CreateDysonSphereCommandHandler(BaseCommandHandler):
     """Handler for IssueCreateDysonSphereCommand."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'IssueCreateDysonSphereCommand') -> ValidationResult:
         """Handle IssueCreateDysonSphereCommand - creates CREATE_DYSON_SPHERE order."""
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
@@ -168,7 +179,7 @@ class CreateDysonSphereCommandHandler(BaseCommandHandler):
 class SelfDestructCommandHandler(BaseCommandHandler):
     """Handler for IssueSelfDestructCommand."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'IssueSelfDestructCommand') -> ValidationResult:
         """Handle IssueSelfDestructCommand - creates SELF_DESTRUCT order."""
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
@@ -194,7 +205,7 @@ class SelfDestructCommandHandler(BaseCommandHandler):
 class ImplodePlanetMissionCommandHandler(BaseCommandHandler):
     """Handler for QueueImplodePlanetMissionCommand."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'QueueImplodePlanetMissionCommand') -> ValidationResult:
         """Handle QueueImplodePlanetMissionCommand - queues MOVE + IMPLODE_PLANET."""
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
@@ -230,7 +241,7 @@ class ImplodePlanetMissionCommandHandler(BaseCommandHandler):
 class StellerateStarMissionCommandHandler(BaseCommandHandler):
     """Handler for QueueStellerateStarMissionCommand."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'QueueStellerateStarMissionCommand') -> ValidationResult:
         """Handle QueueStellerateStarMissionCommand - queues MOVE + STELLERATE_STAR."""
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
@@ -261,7 +272,7 @@ class StellerateStarMissionCommandHandler(BaseCommandHandler):
 class OpenWarpPointMissionCommandHandler(BaseCommandHandler):
     """Handler for QueueOpenWarpPointMissionCommand."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'QueueOpenWarpPointMissionCommand') -> ValidationResult:
         """Handle QueueOpenWarpPointMissionCommand - queues MOVE + OPEN_WARP_POINT."""
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
@@ -297,7 +308,7 @@ class OpenWarpPointMissionCommandHandler(BaseCommandHandler):
 class CloseWarpPointMissionCommandHandler(BaseCommandHandler):
     """Handler for QueueCloseWarpPointMissionCommand."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'QueueCloseWarpPointMissionCommand') -> ValidationResult:
         """Handle QueueCloseWarpPointMissionCommand - queues MOVE + CLOSE_WARP_POINT."""
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
@@ -333,7 +344,7 @@ class CloseWarpPointMissionCommandHandler(BaseCommandHandler):
 class CreateDysonSphereMissionCommandHandler(BaseCommandHandler):
     """Handler for QueueCreateDysonSphereMissionCommand."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'QueueCreateDysonSphereMissionCommand') -> ValidationResult:
         """Handle QueueCreateDysonSphereMissionCommand - queues MOVE + CREATE_DYSON_SPHERE."""
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)

@@ -54,6 +54,13 @@ class ClassificationConfig:
         "magma_threshold": 0.7,
     }
 
+    DEFAULT_CHTHONIAN = {
+        "certain_temp": 600,       # Temperature above which stripping is certain
+        "strip_start_temp": 300,   # Temperature above which stripping begins
+        "max_probability": 0.30,   # Maximum stripping probability
+        "strip_divisor": 4000,     # Divisor for probability formula
+    }
+
     def __init__(self, data: Optional[Dict[str, Any]] = None):
         """
         Initialize configuration from JSON data or defaults.
@@ -101,6 +108,21 @@ class ClassificationConfig:
         # Activity threshold
         self.activity_magma_threshold = self.DEFAULT_ACTIVITY["magma_threshold"]
 
+        # Chthonian stripping
+        chthonian = classification.get("chthonian_stripping", {})
+        self.chthonian_certain_temp = chthonian.get(
+            "certain_temp", self.DEFAULT_CHTHONIAN["certain_temp"]
+        )
+        self.chthonian_strip_start_temp = chthonian.get(
+            "strip_start_temp", self.DEFAULT_CHTHONIAN["strip_start_temp"]
+        )
+        self.chthonian_max_probability = chthonian.get(
+            "max_probability", self.DEFAULT_CHTHONIAN["max_probability"]
+        )
+        self.chthonian_strip_divisor = chthonian.get(
+            "strip_divisor", self.DEFAULT_CHTHONIAN["strip_divisor"]
+        )
+
     def _use_defaults(self) -> None:
         """Use default hardcoded values."""
         self.dwarf_max = self.DEFAULT_MASS["dwarf_max"]
@@ -125,6 +147,11 @@ class ClassificationConfig:
         self.continental_water_min = self.DEFAULT_WATER["continental_min"]
 
         self.activity_magma_threshold = self.DEFAULT_ACTIVITY["magma_threshold"]
+
+        self.chthonian_certain_temp = self.DEFAULT_CHTHONIAN["certain_temp"]
+        self.chthonian_strip_start_temp = self.DEFAULT_CHTHONIAN["strip_start_temp"]
+        self.chthonian_max_probability = self.DEFAULT_CHTHONIAN["max_probability"]
+        self.chthonian_strip_divisor = self.DEFAULT_CHTHONIAN["strip_divisor"]
 
 
 @lru_cache(maxsize=1)

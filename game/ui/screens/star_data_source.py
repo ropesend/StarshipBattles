@@ -89,29 +89,30 @@ class StarDataSource(ITableDataSource):
         return ""
 
     def _get_star_icon(self, star) -> pygame.Surface:
-        """Get star icon with caching. Uses asset images with fallback to colored circles.
+        """Get star icon with caching. Uses star.image_id with fallback to colored circles.
 
         Args:
-            star: Star object with color attribute.
+            star: Star object with image_id and color attributes.
 
         Returns:
             40x40 pygame Surface.
         """
-        am = AssetManager.instance()
-        asset_key = am.get_star_asset_key_for_type(star.star_type.name)
-        cache_key = f"star_{asset_key}"
+        # Use image_id for per-variant caching when available
+        image_id = getattr(star, 'image_id', '')
+        if image_id:
+            cache_key = f"star_{image_id}"
+            if cache_key in self._icon_cache:
+                return self._icon_cache[cache_key]
 
-        if cache_key in self._icon_cache:
-            return self._icon_cache[cache_key]
-
-        img = am.load_image('stars', asset_key)
-
-        if img and img != am.get_missing_texture():
-            scaled = pygame.transform.smoothscale(img, (_ICON_SIZE, _ICON_SIZE))
-            self._icon_cache[cache_key] = scaled
-            return scaled
+            am = AssetManager.instance()
+            img = am.load_star_image(image_id, 128)
+            if img and img != am.get_missing_texture():
+                scaled = pygame.transform.smoothscale(img, (_ICON_SIZE, _ICON_SIZE))
+                self._icon_cache[cache_key] = scaled
+                return scaled
 
         # Fallback: colored circle
+        cache_key = f"star_circle_{star.color[0]}_{star.color[1]}_{star.color[2]}"
         return self._make_circle_icon(star.color, cache_key)
 
     def _make_circle_icon(self, color: tuple, cache_key: str) -> pygame.Surface:

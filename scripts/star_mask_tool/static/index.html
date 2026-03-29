@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Masking Tool v2.3</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --panel-bg: rgba(20, 20, 20, 0.9);
+            --accent-color: #0088ff;
+            --accent-glow: rgba(0, 136, 255, 0.3);
+            --text-color: #e0e0e0;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --radius: 12px;
+            --outline-color: #ffffff;
+            --corona-color: #00ffff;
+        }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        #sidebar {
+            width: 320px;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(20px);
+            z-index: 10;
+        }
+
+        #header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        #header h1 {
+            font-size: 1.1rem;
+            margin: 0;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: #fff;
+        }
+
+        #star-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .star-item {
+            padding: 10px 14px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+
+        .star-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .star-item.active {
+            background: rgba(0, 136, 255, 0.15);
+            color: #fff;
+            border-left: 3px solid var(--accent-color);
+        }
+
+        .star-item.processed .status {
+            color: #00ff80;
+        }
+
+        /* Workspace Grid */
+        #workspace {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--border-color);
+            overflow: hidden;
+        }
+
+        .view-panel {
+            background: #000;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .view-panel h2 {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            margin: 0;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #666;
+            z-index: 15;
+            pointer-events: none;
+        }
+
+        .img-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        #view-editor { cursor: crosshair; }
+        #view-black { background: #000; }
+        #view-white { background: #fff; }
+
+        .star-preview {
+            max-width: 95%;
+            max-height: 95%;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        /* Processed Preview Style */
+        .processed-img {
+            -webkit-mask-image: url(#star-mask);
+            mask-image: url(#star-mask);
+        }
+
+        /* Overlays */
+        #editor-mask-svg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        #mask-circle-outline {
+            stroke: var(--outline-color);
+            transition: stroke 0.2s;
+        }
+        #mask-corona-outline {
+            stroke: var(--corona-color);
+            stroke-dasharray: 4,4;
+        }
+
+        /* Controls Overlays */
+        #top-toolbar {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            display: flex;
+            gap: 12px;
+            z-index: 30;
+        }
+
+        .toolbar-group {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            gap: 4px;
+        }
+
+        #floating-controls {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            z-index: 40;
+        }
+
+        /* Inputs & Sliders */
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .control-row:last-child { margin-bottom: 0; }
+
+        .control-row label {
+            width: 120px;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: #666;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent-color);
+        }
+
+        input[type="text"] {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            width: 50px;
+            text-align: center;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 800;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary { background: var(--accent-color); color: #fff; }
+        .btn-secondary { background: rgba(255,255,255,0.05); color: #fff; }
+        .btn:hover { transform: translateY(-1px); background: rgba(255,255,255,0.2); }
+        .btn-primary:hover { background: #0077ee; box-shadow: 0 4px 15px var(--accent-glow); }
+
+        .fine-tune-btns {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        button.small {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.65rem;
+            font-weight: 800;
+        }
+
+        button.small:hover { background: rgba(255, 255, 255, 0.2); }
+
+        .color-dot {
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .color-dot.active { border-color: #fff; transform: scale(1.2); }
+
+        #toast {
+            position: fixed; top: 40px; left: 50%; transform: translateX(-50%) translateY(-100px);
+            background: #00ff80; color: #000; padding: 12px 24px; border-radius: 30px;
+            font-weight: 800; transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            z-index: 1000; box-shadow: 0 10px 30px rgba(0, 255, 128, 0.4);
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+    <!-- Unified SVG Mask Infrastructure v2.3 -->
+    <svg style="position: absolute; width: 0; height: 0;">
+      <defs>
+        <!-- Grayscale + Gamma Correction (matching backend Power-Law) -->
+        <filter id="to-lum">
+          <feColorMatrix type="matrix" 
+            values="0.299 0.587 0.114 0 0
+                    0.299 0.587 0.114 0 0
+                    0.299 0.587 0.114 0 0
+                    0 0 0 1 0" />
+          <feComponentTransfer>
+            <feFuncR type="gamma" exponent="0.152" amplitude="1" offset="0" />
+            <feFuncG type="gamma" exponent="0.152" amplitude="1" offset="0" />
+            <feFuncB type="gamma" exponent="0.152" amplitude="1" offset="0" />
+          </feComponentTransfer>
+        </filter>
+
+        <!-- Radial Gradient for Corona Falloff (v2.3) -->
+        <!-- Use objectBoundingBox to coordinate with 1x1 mask rect -->
+        <radialGradient id="corona-grad" gradientUnits="objectBoundingBox">
+            <stop id="grad-stop-core" offset="0%" stop-color="white" />
+            <stop id="grad-stop-corona" offset="100%" stop-color="black" />
+        </radialGradient>
+
+        <!-- Dynamic Mask v2.3 -->
+        <mask id="star-mask" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">
+          <!-- 1. The Grayscale Image (Base Transparency from brightness) -->
+          <image id="mask-lum-img" x="0" y="0" width="1" height="1" filter="url(#to-lum)" preserveAspectRatio="none" />
+          
+          <!-- 2. The Falloff Rect (Multiplied overlay to fade edges) -->
+          <!-- In a mask, "white" is opaque, "black" is transparent. -->
+          <!-- We multiply the image luminosity with the radial gradient. -->
+          <rect x="0" y="0" width="1" height="1" fill="url(#corona-grad)" style="mix-blend-mode: multiply;" />
+          
+          <!-- 3. The Solid Core Circle (Forcing 100% opacity inside Radius 1) -->
+          <circle id="mask-core-fill" fill="white" />
+        </mask>
+      </defs>
+    </svg>
+
+    <div id="toast">SAVED & ADVANCED</div>
+
+    <div id="sidebar">
+        <div id="header">
+            <h1>STAR MASK <span style="color:var(--accent-color)">v2.3</span></h1>
+        </div>
+        <div id="star-list"></div>
+    </div>
+
+    <div id="workspace">
+        <div class="view-panel" id="view-editor">
+            <h2>1. Editor (Concentric Circles)</h2>
+            <div class="img-container" id="editor-container">
+                <img id="img-source" class="star-preview">
+                <svg id="editor-mask-svg">
+                    <!-- Corona Outline -->
+                    <circle id="mask-corona-outline" cx="50%" cy="50%" r="250" fill="transparent" stroke-width="1.5" />
+                    <!-- Core Outline -->
+                    <circle id="mask-circle-outline" cx="50%" cy="50%" r="100" fill="transparent" stroke-width="2" />
+                    <!-- Shared Center -->
+                    <circle id="mask-center-dot" cx="50%" cy="50%" r="4" fill="#0088ff" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="view-panel" id="view-black">
+            <h2>2. Final Result (on Black)</h2>
+            <div class="img-container">
+                <img id="img-black" class="star-preview processed-img">
+            </div>
+        </div>
+
+        <div class="view-panel" id="view-white">
+            <h2>3. Final Result (on White)</h2>
+            <div class="img-container">
+                <img id="img-white" class="star-preview processed-img">
+            </div>
+        </div>
+    </div>
+
+    <div id="top-toolbar">
+        <div class="toolbar-group">
+            <div class="color-dot active" style="background:#fff" onclick="setOutline('white')"></div>
+            <div class="color-dot" style="background:#ffcc00" onclick="setOutline('#ffcc00')"></div>
+            <div class="color-dot" style="background:#ff3300" onclick="setOutline('#ff3300')"></div>
+            <div class="color-dot" style="background:#0088ff" onclick="setOutline('#0088ff')"></div>
+        </div>
+    </div>
+
+    <div id="floating-controls">
+        <div class="control-row">
+            <label>Core Radius (1)</label>
+            <input type="range" id="radius-range" min="0" max="1024" value="200">
+            <div class="fine-tune-btns">
+                <button class="small" onclick="adjustRadius(-1, -10)">-10</button>
+                <button class="small" onclick="adjustRadius(-1, -1)">-1</button>
+                <input type="text" id="radius-val" value="200">
+                <button class="small" onclick="adjustRadius(-1, 1)">+1</button>
+                <button class="small" onclick="adjustRadius(-1, 10)">+10</button>
+            </div>
+        </div>
+        <div class="control-row">
+            <label>Corona Extent (2)</label>
+            <input type="range" id="radius-corona-range" min="0" max="1024" value="300">
+            <div class="fine-tune-btns">
+                <button class="small" onclick="adjustRadius(2, -10)">-10</button>
+                <button class="small" onclick="adjustRadius(2, -1)">-1</button>
+                <input type="text" id="radius-corona-val" value="300">
+                <button class="small" onclick="adjustRadius(2, 1)">+1</button>
+                <button class="small" onclick="adjustRadius(2, 10)">+10</button>
+            </div>
+        </div>
+        <div class="control-row">
+            <label>Position (Shared)</label>
+            <div style="flex:1; display:flex; gap:12px; align-items:center;">
+                <span style="font-size:0.6rem; color:#555">X</span>
+                <input type="text" id="posX" value="512">
+                <span style="font-size:0.6rem; color:#555" style="margin-left:8px">Y</span>
+                <input type="text" id="posY" value="512">
+                <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.6rem; margin-left:12px" onclick="autoCenter()">
+                    <i class="fas fa-crosshairs"></i> CENTROID
+                </button>
+            </div>
+            <button class="btn btn-primary" onclick="save()">
+                <i class="fas fa-save"></i> SAVE & NEXT
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let stars = [];
+        let currentIndex = -1;
+        let config = {
+            filename: '',
+            centerX: 512,
+            centerY: 512,
+            radius: 200,      // Core
+            radiusCorona: 300, // Corona
+            outlineColor: 'white'
+        };
+        let imgSize = { w: 1024, h: 1024 };
+        let isDragging = false;
+
+        const sidebar = document.getElementById('star-list');
+        const imgSource = document.getElementById('img-source');
+        const imgBlack = document.getElementById('img-black');
+        const imgWhite = document.getElementById('img-white');
+        const editorContainer = document.getElementById('editor-container');
+        
+        const maskCircleOutline = document.getElementById('mask-circle-outline');
+        const maskCoronaOutline = document.getElementById('mask-corona-outline');
+        const maskCenterDot = document.getElementById('mask-center-dot');
+        
+        const maskCoreFill = document.getElementById('mask-core-fill');
+        const maskLumImg = document.getElementById('mask-lum-img');
+        const gradStopCore = document.getElementById('grad-stop-core');
+        const gradStopCorona = document.getElementById('grad-stop-corona');
+        const coronaGrad = document.getElementById('corona-grad');
+
+        async function init() {
+            const resp = await fetch('/api/stars');
+            stars = await resp.json();
+            renderList();
+            if (currentIndex === -1 && stars.length > 0) loadStar(0);
+        }
+
+        function renderList() {
+            sidebar.innerHTML = stars.map((s, i) => `
+                <div class="star-item ${i === currentIndex ? 'active' : ''} ${s.processed ? 'processed' : ''}" onclick="loadStar(${i})">
+                    <span>${s.name}</span>
+                    <i class="fas fa-${s.processed ? 'check-circle' : 'circle'}" style="font-size:0.65rem"></i>
+                </div>
+            `).join('');
+        }
+
+        function loadStar(index) {
+            currentIndex = index;
+            const star = stars[index];
+            config.filename = star.name;
+            
+            if (star.config) {
+                config.centerX = star.config.centerX;
+                config.centerY = star.config.centerY;
+                config.radius = star.config.radius;
+                // Init Corona Radius: Just beyond core if missing
+                config.radiusCorona = star.config.radiusCorona || (config.radius + 50);
+                if (star.config.outlineColor) setOutline(star.config.outlineColor);
+            } else {
+                config.radiusCorona = config.radius + 50;
+            }
+
+            const url = `/images/${star.name}?t=${Date.now()}`;
+            imgSource.src = url;
+            imgBlack.src = url;
+            imgWhite.src = url;
+            maskLumImg.setAttribute('href', url);
+
+            imgSource.onload = () => {
+                imgSize.w = imgSource.naturalWidth;
+                imgSize.h = imgSource.naturalHeight;
+                updateUI();
+            };
+            renderList();
+        }
+
+        function updateUI() {
+            const rect = imgSource.getBoundingClientRect();
+            const containerRect = editorContainer.getBoundingClientRect();
+            
+            const scaleX = rect.width / imgSize.w;
+            const scaleY = rect.height / imgSize.h;
+            
+            const x = config.centerX * scaleX + (rect.left - containerRect.left);
+            const y = config.centerY * scaleY + (rect.top - containerRect.top);
+            
+            // Editor Circles
+            maskCircleOutline.setAttribute('cx', x);
+            maskCircleOutline.setAttribute('cy', y);
+            maskCircleOutline.setAttribute('r', config.radius * scaleX);
+            
+            maskCoronaOutline.setAttribute('cx', x);
+            maskCoronaOutline.setAttribute('cy', y);
+            maskCoronaOutline.setAttribute('r', config.radiusCorona * scaleX);
+            
+            maskCenterDot.setAttribute('cx', x);
+            maskCenterDot.setAttribute('cy', y);
+
+            // SVG Mask (0-1 range)
+            const cx = config.centerX / imgSize.w;
+            const cy = config.centerY / imgSize.h;
+            
+            maskCoreFill.setAttribute('cx', cx);
+            maskCoreFill.setAttribute('cy', cy);
+            maskCoreFill.setAttribute('r', config.radius / imgSize.w);
+
+            // Radial Gradient Position
+            coronaGrad.setAttribute('cx', cx);
+            coronaGrad.setAttribute('cy', cy);
+            coronaGrad.setAttribute('fx', cx);
+            coronaGrad.setAttribute('fy', cy);
+            coronaGrad.setAttribute('r', config.radiusCorona / imgSize.w);
+            
+            // Stop Positioning (Normalize offset by radiusCorona)
+            const coreOffset = (config.radius / config.radiusCorona) * 100;
+            gradStopCore.setAttribute('offset', `${coreOffset}%`);
+
+            // Controls
+            document.getElementById('radius-range').value = config.radius;
+            document.getElementById('radius-val').value = Math.round(config.radius);
+            document.getElementById('radius-corona-range').value = config.radiusCorona;
+            document.getElementById('radius-corona-val').value = Math.round(config.radiusCorona);
+            document.getElementById('posX').value = Math.round(config.centerX);
+            document.getElementById('posY').value = Math.round(config.centerY);
+        }
+
+        async function autoCenter() {
+            const resp = await fetch(`/api/centroid/${config.filename}`);
+            const res = await resp.json();
+            config.centerX = res.x;
+            config.centerY = res.y;
+            updateUI();
+        }
+
+        function adjustRadius(circleNum, delta) {
+            if (circleNum === -1 || circleNum === 1) {
+                config.radius = Math.max(0, Math.min(1024, config.radius + delta));
+            } else {
+                config.radiusCorona = Math.max(config.radius, Math.min(1024, config.radiusCorona + delta));
+            }
+            updateUI();
+        }
+
+        function setOutline(color) {
+            config.outlineColor = color;
+            document.body.style.setProperty('--outline-color', color);
+            document.querySelectorAll('.color-dot').forEach(d => {
+                d.classList.toggle('active', d.style.background.includes(color) || color.includes(d.style.background));
+            });
+        }
+
+        async function save() {
+            const resp = await fetch('/api/save', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(config)
+            });
+            if (resp.ok) {
+                stars[currentIndex].processed = true;
+                stars[currentIndex].config = { ...config };
+                showToast();
+                if (currentIndex < stars.length - 1) loadStar(currentIndex + 1);
+                else init(); 
+            }
+        }
+
+        function showToast() {
+            const t = document.getElementById('toast');
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        // Interaction
+        document.getElementById('view-editor').onmousedown = (e) => { isDragging = true; move(e); };
+        window.onmousemove = (e) => { if (isDragging) move(e); };
+        window.onmouseup = () => isDragging = false;
+
+        function move(e) {
+            const rect = imgSource.getBoundingClientRect();
+            config.centerX = ((e.clientX - rect.left) / rect.width) * imgSize.w;
+            config.centerY = ((e.clientY - rect.top) / rect.height) * imgSize.h;
+            updateUI();
+        }
+
+        document.getElementById('radius-range').oninput = (e) => {
+            config.radius = parseInt(e.target.value);
+            updateUI();
+        };
+        document.getElementById('radius-corona-range').oninput = (e) => {
+            config.radiusCorona = parseInt(e.target.value);
+            updateUI();
+        };
+
+        document.getElementById('radius-val').onchange = (e) => {
+            config.radius = parseInt(e.target.value);
+            updateUI();
+        };
+        document.getElementById('radius-corona-val').onchange = (e) => {
+            config.radiusCorona = parseInt(e.target.value);
+            updateUI();
+        };
+
+        window.onkeydown = (e) => {
+            if (document.activeElement.tagName === 'INPUT') return;
+            const step = e.shiftKey ? 10 : 1;
+            if (e.key === 'ArrowUp') config.centerY -= step;
+            else if (e.key === 'ArrowDown') config.centerY += step;
+            else if (e.key === 'ArrowLeft') config.centerX -= step;
+            else if (e.key === 'ArrowRight') config.centerX += step;
+            else if (e.key === '[') config.radius -= step;
+            else if (e.key === ']') config.radius += step;
+            else if (e.key === '{') config.radiusCorona -= step;
+            else if (e.key === '}') config.radiusCorona += step;
+            else if (e.key === 'r') autoCenter();
+            else if (e.key === '1') setOutline('white');
+            else if (e.key === '2') setOutline('#ffcc00');
+            else if (e.key === '3') setOutline('#ff3300');
+            else if (e.key === '4') setOutline('#0088ff');
+            else if (e.key === 'Enter' && e.ctrlKey) save();
+            else return;
+            e.preventDefault();
+            updateUI();
+        };
+
+        window.onresize = updateUI;
+        init();
+    </script>
+</body>
+</html>

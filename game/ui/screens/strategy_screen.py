@@ -353,7 +353,7 @@ class StrategyScreen:
         elif option == "load_game":
             self._show_load_game_dialog()
         elif option == "settings":
-            self._show_coming_soon("Settings")
+            self.ui.window_manager.open_settings()
         elif option == "controls":
             if self.scene_callback:
                 self.scene_callback("open_keybindings")
@@ -511,8 +511,11 @@ class StrategyScreen:
         am = get_asset_manager()
 
         if is_star(obj):
-            asset_key = am.get_star_color_key(obj.color)
-            return am.load_image('stars', asset_key)
+            if obj.image_id:
+                img = am.load_star_image(obj.image_id, requested_size=512)
+                if img and img != am.get_missing_texture():
+                    return img
+            return None
 
         elif is_planet(obj):
             if obj.image_id:

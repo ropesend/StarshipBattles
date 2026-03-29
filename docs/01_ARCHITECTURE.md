@@ -107,8 +107,8 @@ Six layers with strict downward-only dependency flow:
 
 | Subpackage      | Description |
 |-----------------|-------------|
-| `data/`         | Domain entities (notable modules): Fleet, ShipInstance, Empire, Galaxy, Planet, Stars, Storm, Pathfinding, plus fleet delegates (`fleet_battle_adapter.py`, `fleet_capability_calculator.py`, `fleet_resource_aggregator.py`), and data-driven configs (`classification_config.py`, `resource_generation_config.py`) |
-| `engine/`       | Turn processing: TurnEngine, GameSession, GameConfig, GameInitializer, Commands, CommandHandlers, FleetOrderProcessor, plus sub-engines (movement, conflict, harvesting, production, population, economy, maintenance, resupply, action execution, environmental hazards) |
+| `data/`         | Domain entities (notable modules): Fleet, ShipInstance, Empire, Galaxy, Planet, Stars, Storm, Pathfinding, plus fleet delegates (`fleet_battle_adapter.py`, `fleet_capability_calculator.py`, `fleet_resource_aggregator.py`), ShipInstance delegates (`ship_instance_bridge.py`, `ship_instance_serializer.py`, `ship_resource_manager.py`, `ship_cargo_manager.py`, `ship_display_formatter.py`), and data-driven configs (`classification_config.py`, `resource_generation_config.py`, `star_generation_config.py`, `orbital_generation_config.py`) |
+| `engine/`       | Turn processing: TurnEngine, GameSession, GameConfig, GameInitializer, Commands, CommandHandlers, FleetOrderProcessor, plus sub-engines (movement, conflict, harvesting, production + ProductionSpawner, population, economy, maintenance, resupply, action execution, environmental hazards), and shared utilities (`production_math.py`, `construction_forecast.py`) |
 | `services/`     | ShipStatsCalculator, FleetSpeedCalculator, FleetNavigationService, ComponentInspector, DesignCostCalculator, CargoTransferService, AreaEffectManager, ActionTimeResolver, FleetCargoProjector |
 | `facade/`       | StrategySessionFacade (UI-to-engine communication) |
 | `facade/dto/`   | Read-only DTOs: FleetInfo, SystemInfo, PlanetInfo, EmpireInfo |
@@ -288,7 +288,7 @@ Layers communicate through Protocol definitions in `game/core/protocols.py`. Upp
 
 Intentional late imports exist at specific cross-layer boundaries:
 - `Ship.add_component()` imports ModifierService (real import cycle)
-- `ShipInstance.from_ship()`/`to_ship()` imports ShipSerializer (cross-layer boundary)
+- `ShipInstanceBridge.to_ship()` imports ShipSerializer (cross-layer boundary)
 - `ShipInstance.get_calculated_stats()` imports ShipStatsCalculator (lazy init)
 - `Fleet.trigger_speed_recalculation()` imports FleetSpeedCalculator (edge operation)
 

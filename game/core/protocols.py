@@ -874,7 +874,7 @@ def is_resource_reader(obj: Any) -> TypeGuard[IResourceReader]:
 class IResourceHolder(Protocol):
     """Protocol for objects that hold resources accessible via ResourceRegistry.
 
-    Used by ShipInstance bridge methods (to_ship, from_ship, update_from_ship)
+    Used by ShipInstance bridge methods (to_ship, update_from_ship)
     to access Ship resource state without hasattr checks.
     """
     @property

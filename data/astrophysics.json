@@ -231,6 +231,14 @@
                 "pressure_min": 5000,
                 "notes": "Earth-like mixed terrain"
             }
+        },
+
+        "chthonian_stripping": {
+            "description": "Chthonian planet (stripped giant core) parameters",
+            "certain_temp": 600,
+            "strip_start_temp": 300,
+            "max_probability": 0.30,
+            "strip_divisor": 4000
         }
     },
 
@@ -248,7 +256,8 @@
             "earth_mass_baseline": 250000000,
             "determinism_weight": 0.7,
             "randomness_weight": 0.3,
-            "minimum_floor": 10000
+            "minimum_floor": 10000,
+            "ramp_c": 24.8
         },
 
         "quality": {
@@ -338,6 +347,105 @@
                 "Radioactives": 1.2,
                 "Exotics": 1.5
             }
+        }
+    },
+
+    "star_generation": {
+        "description": "Star generation parameters: type weights, mass distribution, system probabilities, companion spacing, and Stefan-Boltzmann type property tables.",
+
+        "type_weights": {
+            "description": "Probability weights for star type selection. Must sum to ~1.0.",
+            "MAIN_SEQUENCE": 0.525,
+            "RED_DWARF": 0.250,
+            "RED_GIANT": 0.070,
+            "BLUE_GIANT": 0.060,
+            "BROWN_DWARF": 0.030,
+            "WHITE_DWARF": 0.030,
+            "NEUTRON_STAR": 0.020,
+            "BLACK_HOLE": 0.015
+        },
+
+        "mass_generation": {
+            "description": "Log-normal mass distribution parameters (solar masses).",
+            "sigma": 0.8,
+            "min_mass": 0.1,
+            "max_mass": 100.0,
+            "max_attempts": 1000
+        },
+
+        "system_probabilities": {
+            "description": "Multi-star system probabilities and age generation.",
+            "count_thresholds": [
+                {"count": 4, "cumulative": 0.001},
+                {"count": 3, "cumulative": 0.011},
+                {"count": 2, "cumulative": 0.111}
+            ],
+            "default_count": 1,
+            "age_min": 0.1,
+            "age_max": 10.0,
+            "age_unit": 1e9
+        },
+
+        "companion_spacing": {
+            "description": "Companion star placement parameters (hex distances).",
+            "ring_multiplier": 10,
+            "jitter_min": 2,
+            "jitter_max": 8,
+            "min_offset": 2,
+            "collision_limit": 100
+        }
+    },
+
+    "orbital_generation": {
+        "description": "Planet orbital generation parameters: orbital placement, mass distribution, moon system, and surface flags.",
+
+        "orbital": {
+            "safe_start_offset": 2,
+            "max_orbital_distance": 20,
+            "default_planet_min": 3,
+            "default_planet_max": 10,
+            "orbital_distribution_mode": 0.3,
+            "max_placement_attempts": 20,
+            "hot_jupiter_log_mass_min": 26.7,
+            "hot_jupiter_log_mass_max": 28.0,
+            "hot_jupiter_orbit_min": 2,
+            "hot_jupiter_orbit_max": 3
+        },
+
+        "mass_generation": {
+            "small_bias_mu": 24.0,
+            "small_bias_sigma": 0.8,
+            "large_bias_mu": 26.5,
+            "large_bias_sigma": 0.8,
+            "default_mu": 24.0,
+            "default_sigma": 1.0,
+            "max_iterations": 100
+        },
+
+        "moon_system": {
+            "jupiter_threshold_log": 27.27,
+            "earth_threshold_log": 24.77,
+            "ceres_threshold_log": 20.97,
+            "jupiter_chance": 0.88,
+            "earth_chance": 0.35,
+            "ceres_chance": 0.02,
+            "max_chance_cap": 0.95,
+            "mass_ratio_min": 0.00001,
+            "mass_ratio_max": 0.05,
+            "max_moons_per_body": 50
+        },
+
+        "surface": {
+            "active_body_activity_min": 0.1,
+            "active_body_activity_max": 0.8,
+            "active_body_mag_min": 0.5,
+            "active_body_mag_max": 2.0,
+            "small_body_activity_min": 0.0,
+            "small_body_activity_max": 0.2,
+            "small_body_mag_min": 0.0,
+            "small_body_mag_max": 0.5,
+            "water_temp_min": 250,
+            "water_temp_max": 350
         }
     },
 

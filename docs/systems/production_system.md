@@ -101,7 +101,10 @@ correct estimate immediately, before the first production tick recalculates it.
 
 ## Production Model (Tick-Based)
 
-**File:** `game/strategy/engine/production_engine.py`
+**Files:**
+- `game/strategy/engine/production_engine.py` -- queue processing and resource consumption
+- `game/strategy/engine/production_spawner.py` -- entity spawning on completion
+- `game/strategy/engine/production_math.py` -- shared limiting-resource formula
 
 Production uses dynamic resource consumption per tick, not turn-counting.
 
@@ -144,27 +147,29 @@ Production rates are per-turn (divided by 100 for per-tick). Rates come from `Bu
 
 ### Constants
 
-| Constant | Value | Purpose |
-|----------|-------|---------|
-| `TICKS_PER_TURN` | 100 | Ticks per game turn |
-| `TICK_CAPACITY_EPSILON` | 0.0001 | Minimum tick capacity to continue |
-| `COMPLETION_EPSILON` | 0.001 | Float tolerance for completion check |
-| `MAX_QUEUE_ITERATIONS` | 10 | Safety limit per tick |
+| Constant | Value | Defined In | Purpose |
+|----------|-------|------------|---------|
+| `TICKS_PER_TURN` | 100 | `turn_engine.py` (imported by ProductionEngine) | Ticks per game turn |
+| `TICK_CAPACITY_EPSILON` | 0.0001 | `production_engine.py` | Minimum tick capacity to continue |
+| `COMPLETION_EPSILON` | 0.001 | `production_engine.py` | Float tolerance for completion check |
+| `MAX_QUEUE_ITERATIONS` | 10 | `production_engine.py` | Safety limit per tick |
 
 ---
 
 ## Spawning
 
-`_complete_item()` dispatches to the appropriate spawner based on item type and build context:
+**File:** `game/strategy/engine/production_spawner.py`
 
-| Item Type | Build Context | Spawner | Result |
-|-----------|---------------|---------|--------|
-| Complex | Planet base queue | `_spawn_complex()` | `PlanetaryFacility` on planet |
+PROJ-233: Spawning logic is in `ProductionSpawner`, a separate class from `ProductionEngine`. `ProductionEngine._complete_item()` delegates to `ProductionSpawner.spawn_completed_item()`, which dispatches based on item type and build context:
+
+| Item Type | Build Context | Spawner Method | Result |
+|-----------|---------------|----------------|--------|
+| Complex | Planet base queue | `_create_and_place_facility()` | `PlanetaryFacility` on planet |
 | Ship/Fighter/Satellite | Planet shipyard | `_spawn_ship()` | New `Fleet` at planet |
 | Ship/Fighter/Satellite | Fleet yard | `_spawn_fleet_ship()` | Added to existing fleet |
 | Complex | Fleet yard | `_spawn_fleet_complex()` | `PlanetaryFacility` on planet at fleet's hex |
 
-### Complex Spawning (`_spawn_complex` / `_spawn_fleet_complex`)
+### Complex Spawning (`_create_and_place_facility` / `_spawn_fleet_complex`)
 
 1. Load design_data from `DesignLibrary(save_path, empire_id)`.
 2. Create `PlanetaryFacility` with UUID, design_data, `is_operational=True`.
@@ -238,6 +243,8 @@ Accessed from the strategy screen via the "Build Yard" button on owned planets.
 | Component | File |
 |-----------|------|
 | ProductionEngine | `game/strategy/engine/production_engine.py` |
+| ProductionSpawner | `game/strategy/engine/production_spawner.py` |
+| Production math (shared formula) | `game/strategy/engine/production_math.py` |
 | BuildQueueSource & utilities | `game/strategy/data/build_queue_source.py` |
 | PlanetaryFacility | `game/strategy/data/planetary_facility.py` |
 | Planet (facilities list) | `game/strategy/data/planet.py` |

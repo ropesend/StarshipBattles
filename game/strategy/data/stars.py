@@ -10,11 +10,42 @@ from game.core.validation_helpers import (
     require_keys, validate_enum, validate_positive, validate_non_negative, safe_from_dict
 )
 
-# Constants
+# Solar reference constants
 SOLAR_MASS_KG = 1.989e30
 SOLAR_RADIUS_M = 6.957e8
 SOLAR_LUMINOSITY_W = 3.828e26
 SOLAR_TEMP_K = 5778
+
+# Kelvin-to-RGB approximation coefficients (Tanner Helland's algorithm)
+# Source: tannerhelland.com/2012/09/18/convert-temperature-rgb-algorithm-code
+_KELVIN_RED_COEFF = 329.698727446
+_KELVIN_RED_EXP = -0.1332047592
+_KELVIN_GREEN_LOW_COEFF = 99.4708025861
+_KELVIN_GREEN_LOW_OFFSET = -161.1195681661
+_KELVIN_GREEN_HIGH_COEFF = 288.1221695283
+_KELVIN_GREEN_HIGH_EXP = -0.0755148492
+_KELVIN_BLUE_COEFF = 138.5177312231
+_KELVIN_BLUE_OFFSET = -305.0447927307
+_KELVIN_WARM_COOL_BOUNDARY = 66   # temp/100 dividing warm and cool formulas
+_KELVIN_BLUE_FLOOR = 19           # temp/100 below which blue channel = 0
+
+# Wien's displacement law constant (meters * Kelvin)
+WIEN_DISPLACEMENT_CONSTANT = 2.898e-3
+_SPECTRUM_SIGMA = 0.5             # log-gaussian width for Planck approximation
+_SPECTRUM_JITTER_RANGE = (0.9, 1.1)
+
+# Representative wavelengths (meters) for 9-band spectrum model
+_WAVELENGTHS = {
+    'gamma': 1e-12, 'xray': 1e-9, 'uv': 1e-7,
+    'blue': 4.5e-7, 'green': 5.5e-7, 'red': 6.5e-7,
+    'ir': 1e-5, 'microwave': 1e-2, 'radio': 10,
+}
+
+# Hex radius mapping coefficients (solar radii → hex radius 1-6)
+_HEX_RADIUS_LOG_COEFF = 1.73
+_HEX_RADIUS_LOG_OFFSET = 0.8
+_HEX_RADIUS_MIN = 1
+_HEX_RADIUS_MAX = 6
 
 class StarType(Enum):
     MAIN_SEQUENCE = auto()
@@ -112,6 +143,9 @@ class Star:
     # Location relative to system center (0,0,0)
     location: HexCoord = field(default_factory=lambda: HexCoord(0, 0))
 
+    # Visual representation (assigned during generation, persisted in saves)
+    image_id: str = ""  # Filename from star assets (e.g., "StarBlueVariant_3.png")
+
     @property
     def occupied_hexes(self) -> FrozenSet[HexCoord]:
         """Return all hexes occupied by this star (PROJ-139 IZoneOccupant).
@@ -138,7 +172,8 @@ class Star:
             'star_type': self.star_type.name,  # Enum to string
             'color': list(self.color),  # Tuple to list for JSON
             'age': self.age,
-            'location': hex_to_dict(self.location)
+            'location': hex_to_dict(self.location),
+            'image_id': self.image_id,
         }
 
     @classmethod
@@ -200,48 +235,59 @@ class Star:
             star_type=star_type,
             color=tuple(data['color']),
             age=data['age'],
-            location=location
+            location=location,
+            image_id=data.get('image_id', ''),
         )
 
 class StarGenerator:
-    def __init__(self):
-        pass
+    def __init__(self, image_registry=None):
+        """Initialize the star generator.
+
+        Args:
+            image_registry: Optional StarImageRegistry for assigning images.
+                When None, stars get empty image_id (useful for tests).
+        """
+        self._image_registry = image_registry
+
+    def _get_image_id(self, star_type: StarType) -> str:
+        """Get an image_id for a star type from the registry.
+
+        Returns empty string if no registry is available.
+        """
+        if self._image_registry is None:
+            return ""
+        return self._image_registry.get_random_image(star_type)
 
     def _generate_mass(self, is_primary: bool = True, primary_mass: float = None) -> float:
         """
         Generates mass using a log-normal distribution.
         If not primary, ensures mass < primary_mass.
         """
-        # Log-normal distribution centered around 1.0 (log(1)=0)
-        # Sigma controls the spread. Sigma=1.0 gives a long tail.
-        
-        while True:
-            # Shifted log-normal to allow for smaller stars
-            mass = random.lognormvariate(0, 0.8)
-            
-            # Constraints
-            if mass < 0.1: continue
-            if mass > 100.0: continue
-            
+        from game.strategy.data.star_generation_config import get_star_generation_config
+        cfg = get_star_generation_config()
+
+        for _ in range(cfg.mass_max_attempts):
+            mass = random.lognormvariate(0, cfg.mass_sigma)
+
+            if mass < cfg.mass_min:
+                continue
+            if mass > cfg.mass_max:
+                continue
+
             if not is_primary and primary_mass is not None:
                 if mass >= primary_mass:
-                    continue # Retry
-            
+                    continue
+
             return mass
 
-    # Star type probabilities for direct-roll selection.
-    # Targets per ~57-star galaxy: Blue Giant ~3-4, White Dwarf ~1-2,
-    # Brown Dwarf ~1-2, Neutron Star ~1, Black Hole ~1 (rarest).
-    _TYPE_WEIGHTS = {
-        StarType.MAIN_SEQUENCE: 0.525,
-        StarType.RED_DWARF:     0.250,
-        StarType.RED_GIANT:     0.070,
-        StarType.BLUE_GIANT:    0.060,
-        StarType.BROWN_DWARF:   0.030,
-        StarType.WHITE_DWARF:   0.030,
-        StarType.NEUTRON_STAR:  0.020,
-        StarType.BLACK_HOLE:    0.015,
-    }
+        # Fallback: uniform in log space
+        return math.exp(random.uniform(
+            math.log(cfg.mass_min), math.log(cfg.mass_max)
+        ))
+
+    # Star types that use the Stefan-Boltzmann luminosity formula:
+    # luminosity = radius^2 * (temperature / SOLAR_TEMP_K)^4
+    _SB_TYPES = frozenset({StarType.RED_GIANT, StarType.BROWN_DWARF, StarType.WHITE_DWARF})
 
     def _determine_type_and_radius(self, mass: float, age_ratio: float = 0.5) -> tuple:
         """
@@ -250,11 +296,19 @@ class StarGenerator:
         Returns (StarType, Mass_Solar, Radius_Solar, Temperature_K, Luminosity_Solar, Color).
         Mass may be adjusted to be consistent with the rolled type.
         """
-        # Roll for type directly using weighted probabilities
+        from game.strategy.data.star_generation_config import get_star_generation_config
+        cfg = get_star_generation_config()
+
         star_type = self._roll_star_type()
 
-        # Set properties based on type, using mass as a seed for variation
-        if star_type == StarType.BLUE_GIANT:
+        # Stefan-Boltzmann types: RED_GIANT, BROWN_DWARF, WHITE_DWARF
+        # These share: luminosity = radius^2 * (temperature / SOLAR_TEMP_K)^4
+        if star_type in self._SB_TYPES:
+            mass, radius, temperature, luminosity, color = (
+                self._compute_stefan_boltzmann_type(star_type, mass, cfg)
+            )
+
+        elif star_type == StarType.BLUE_GIANT:
             # Massive hot stars — includes B-type main sequence (3-8 Msol)
             # through to true supergiants (50+ Msol)
             mass = max(mass, random.uniform(3, 50))
@@ -263,13 +317,6 @@ class StarGenerator:
             temperature = max(10000, random.uniform(15000, 40000))
             color = self._kelvin_to_rgb(temperature)
 
-        elif star_type == StarType.RED_GIANT:
-            mass = max(mass, random.uniform(0.8, 5.0))
-            radius = mass ** 0.8 * random.uniform(10, 100)
-            temperature = random.uniform(3000, 4500)
-            luminosity = (radius ** 2) * ((temperature / SOLAR_TEMP_K) ** 4)
-            color = (255, 60, 60)
-
         elif star_type == StarType.RED_DWARF:
             mass = min(mass, random.uniform(0.08, 0.5))
             luminosity = mass ** 3.5
@@ -277,21 +324,6 @@ class StarGenerator:
             t_ratio = (luminosity / (radius ** 2)) ** 0.25
             temperature = t_ratio * SOLAR_TEMP_K
             color = (255, 100, 100)
-
-        elif star_type == StarType.BROWN_DWARF:
-            mass = random.uniform(0.01, 0.08)
-            radius = random.uniform(0.08, 0.15)  # Jupiter-sized
-            temperature = random.uniform(500, 2500)
-            luminosity = (radius ** 2) * ((temperature / SOLAR_TEMP_K) ** 4)
-            color = (140, 60, 40)
-
-        elif star_type == StarType.WHITE_DWARF:
-            mass = min(mass, 1.4)  # Chandrasekhar limit
-            mass = max(mass, 0.5)  # Minimum WD mass
-            radius = 0.01  # Earth-sized
-            temperature = random.uniform(8000, 40000)
-            luminosity = (radius ** 2) * ((temperature / SOLAR_TEMP_K) ** 4)
-            color = (220, 220, 255)
 
         elif star_type == StarType.NEUTRON_STAR:
             mass = max(mass, random.uniform(1.4, 3.0))
@@ -317,53 +349,105 @@ class StarGenerator:
 
         return star_type, mass, radius, temperature, luminosity, color
 
+    def _compute_stefan_boltzmann_type(
+        self, star_type: 'StarType', mass: float, cfg
+    ) -> tuple:
+        """
+        Compute properties for Stefan-Boltzmann types (RED_GIANT, BROWN_DWARF, WHITE_DWARF).
+
+        These types share the luminosity formula:
+            luminosity = radius^2 * (temperature / SOLAR_TEMP_K)^4
+
+        Args:
+            star_type: The star type (must be in _SB_TYPES).
+            mass: Input mass in solar masses.
+            cfg: StarGenerationConfig instance.
+
+        Returns:
+            (mass, radius, temperature, luminosity, color) tuple.
+        """
+        props = cfg.stefan_boltzmann_types[star_type.name]
+
+        # Adjust mass per type's mode
+        mode = props["mass_mode"]
+        if mode == "max":
+            mass = max(mass, random.uniform(*props["mass_range"]))
+        elif mode == "replace":
+            mass = random.uniform(*props["mass_range"])
+        elif mode == "clamp":
+            mass = min(mass, props["mass_clamp_upper"])
+            mass = max(mass, props["mass_clamp_lower"])
+
+        # Compute radius
+        if "radius_fixed" in props:
+            radius = props["radius_fixed"]
+        elif props.get("radius_power") is not None:
+            radius = mass ** props["radius_power"] * random.uniform(
+                *props["radius_multiplier_range"]
+            )
+        else:
+            radius = random.uniform(*props["radius_range"])
+
+        # Temperature from range
+        temperature = random.uniform(*props["temp_range"])
+
+        # Stefan-Boltzmann luminosity
+        luminosity = (radius ** 2) * ((temperature / SOLAR_TEMP_K) ** 4)
+
+        color = tuple(props["color"])
+
+        return mass, radius, temperature, luminosity, color
+
     def _roll_star_type(self) -> StarType:
         """Select star type using weighted random roll."""
+        from game.strategy.data.star_generation_config import get_star_generation_config
+        cfg = get_star_generation_config()
+
         roll = random.random()
         cumulative = 0.0
-        for star_type, weight in self._TYPE_WEIGHTS.items():
+        for type_name, weight in cfg.type_weights.items():
             cumulative += weight
             if roll < cumulative:
-                return star_type
+                return StarType[type_name]
         return StarType.MAIN_SEQUENCE
 
     def _kelvin_to_rgb(self, temp: float) -> tuple:
-        """Approximate RGB from Kelvin."""
+        """Approximate RGB from Kelvin using Tanner Helland's algorithm."""
         temp = temp / 100
-        
-        # Red
-        if temp <= 66:
+
+        # Red channel
+        if temp <= _KELVIN_WARM_COOL_BOUNDARY:
             r = 255
         else:
             r = temp - 60
-            r = 329.698727446 * (r ** -0.1332047592)
+            r = _KELVIN_RED_COEFF * (r ** _KELVIN_RED_EXP)
             if r < 0: r = 0
             if r > 255: r = 255
-            
-        # Green
-        if temp <= 66:
+
+        # Green channel
+        if temp <= _KELVIN_WARM_COOL_BOUNDARY:
             g = temp
-            g = 99.4708025861 * math.log(g) - 161.1195681661
+            g = _KELVIN_GREEN_LOW_COEFF * math.log(g) + _KELVIN_GREEN_LOW_OFFSET
             if g < 0: g = 0
             if g > 255: g = 255
         else:
             g = temp - 60
-            g = 288.1221695283 * (g ** -0.0755148492)
+            g = _KELVIN_GREEN_HIGH_COEFF * (g ** _KELVIN_GREEN_HIGH_EXP)
             if g < 0: g = 0
             if g > 255: g = 255
-            
-        # Blue
-        if temp >= 66:
+
+        # Blue channel
+        if temp >= _KELVIN_WARM_COOL_BOUNDARY:
             b = 255
         else:
-            if temp <= 19:
+            if temp <= _KELVIN_BLUE_FLOOR:
                 b = 0
             else:
                 b = temp - 10
-                b = 138.5177312231 * math.log(b) - 305.0447927307
+                b = _KELVIN_BLUE_COEFF * math.log(b) + _KELVIN_BLUE_OFFSET
                 if b < 0: b = 0
                 if b > 255: b = 255
-                
+
         return (int(r), int(g), int(b))
 
     def _map_solar_radius_to_hex_radius(self, radius_sol: float, star_type: StarType) -> int:
@@ -388,66 +472,45 @@ class StarGenerator:
 
         # Giants and supergiants: logarithmic scaling
         log_r = math.log10(radius_sol)
-        hex_radius = 1.73 * log_r + 0.8  # Adjusted coefficients for radius scale
-        hex_radius = min(6, max(1, int(round(hex_radius))))
+        hex_radius = _HEX_RADIUS_LOG_COEFF * log_r + _HEX_RADIUS_LOG_OFFSET
+        hex_radius = min(_HEX_RADIUS_MAX, max(_HEX_RADIUS_MIN, int(round(hex_radius))))
         return hex_radius
 
     def _generate_spectrum(self, temp, luminosity):
         """
         Generate spectrum based on Black Body radiation logic.
         Refined to 9 bands including 3 visible split bands.
+        Uses Wien's displacement law with log-gaussian approximation.
         """
-        b = 2.898e-3
-        peak_wavelength = b / temp if temp > 0 else 1e99
-        
-        def intensity_at(target_wl):
-             if peak_wavelength <= 0: return 0
-             # Log-space distance for distribution width
-             dist = math.log10(target_wl) - math.log10(peak_wavelength)
-             sigma = 0.5 # Tighter peaks for better differentiation
-             # Planck's law is asymmetrical, but log-gaussian is a usable approx for games
-             return math.exp(-(dist**2) / (2*sigma**2))
+        peak_wavelength = WIEN_DISPLACEMENT_CONSTANT / temp if temp > 0 else 1e99
 
-        # Representative Wavelengths (Meters)
-        wl_gamma = 1e-12    # Gamma
-        wl_xray = 1e-9      # X-Ray
-        wl_uv = 1e-7        # UV
-        wl_blue = 4.5e-7    # Blue (450nm)
-        wl_green = 5.5e-7   # Green (550nm)
-        wl_red = 6.5e-7     # Red (650nm)
-        wl_ir = 1e-5        # Infrared
-        wl_micro = 1e-2     # Microwave
-        wl_radio = 10       # Radio
-        
-        s_gamma = intensity_at(wl_gamma)
-        s_xray = intensity_at(wl_xray)
-        s_uv = intensity_at(wl_uv)
-        s_blue = intensity_at(wl_blue)
-        s_green = intensity_at(wl_green)
-        s_red = intensity_at(wl_red)
-        s_ir = intensity_at(wl_ir)
-        s_micro = intensity_at(wl_micro)
-        s_radio = intensity_at(wl_radio)
-        
-        total = (s_gamma + s_xray + s_uv + 
-                 s_blue + s_green + s_red + 
-                 s_ir + s_micro + s_radio)
-                 
+        def intensity_at(target_wl):
+            if peak_wavelength <= 0:
+                return 0
+            dist = math.log10(target_wl) - math.log10(peak_wavelength)
+            return math.exp(-(dist ** 2) / (2 * _SPECTRUM_SIGMA ** 2))
+
+        wl = _WAVELENGTHS
+        intensities = {band: intensity_at(wavelength) for band, wavelength in wl.items()}
+
+        total = sum(intensities.values())
         scale = luminosity / total if total > 0 else 0
-        
+
+        jitter_min, jitter_max = _SPECTRUM_JITTER_RANGE
+
         def jitter(val):
-            return val * scale * random.uniform(0.9, 1.1)
-        
+            return val * scale * random.uniform(jitter_min, jitter_max)
+
         return Spectrum(
-            gamma_ray=jitter(s_gamma),
-            xray=jitter(s_xray),
-            ultraviolet=jitter(s_uv),
-            blue=jitter(s_blue),
-            green=jitter(s_green),
-            red=jitter(s_red),
-            infrared=jitter(s_ir),
-            microwave=jitter(s_micro),
-            radio=jitter(s_radio)
+            gamma_ray=jitter(intensities['gamma']),
+            xray=jitter(intensities['xray']),
+            ultraviolet=jitter(intensities['uv']),
+            blue=jitter(intensities['blue']),
+            green=jitter(intensities['green']),
+            red=jitter(intensities['red']),
+            infrared=jitter(intensities['ir']),
+            microwave=jitter(intensities['microwave']),
+            radio=jitter(intensities['radio']),
         )
 
     def generate_system_stars(self, system_name, blueprint=None):
@@ -489,9 +552,12 @@ class StarGenerator:
         Returns:
             List of companion Star objects.
         """
+        from game.strategy.data.star_generation_config import get_star_generation_config
+        cfg = get_star_generation_config()
+
         companions = []
         suffixes = ['B', 'C', 'D']
-        min_dist_hex = primary.radius_hexes + 2
+        min_dist_hex = primary.radius_hexes + cfg.companion_min_offset
         occupied_hexes = {HexCoord(0, 0)}
 
         for i in range(count):
@@ -500,14 +566,16 @@ class StarGenerator:
             c_hex = self._map_solar_radius_to_hex_radius(c_rad, c_type)
             c_spec = self._generate_spectrum(c_temp, c_lum)
 
-            target_ring = min_dist_hex + (i * 10) + random.randint(2, 8)
+            target_ring = (min_dist_hex
+                           + (i * cfg.companion_ring_multiplier)
+                           + random.randint(cfg.companion_jitter_min, cfg.companion_jitter_max))
             potential_coords = hex_ring(target_ring)
 
             if not potential_coords:
                 loc = HexCoord(target_ring, 0)
             else:
                 loc = random.choice(potential_coords)
-                while loc in occupied_hexes and len(occupied_hexes) < 100:
+                while loc in occupied_hexes and len(occupied_hexes) < cfg.companion_collision_limit:
                     target_ring += 1
                     potential_coords = hex_ring(target_ring)
                     loc = random.choice(potential_coords)
@@ -524,7 +592,8 @@ class StarGenerator:
                 star_type=c_type,
                 color=c_col,
                 age=primary.age,
-                location=loc
+                location=loc,
+                image_id=self._get_image_id(c_type),
             )
             companions.append(companion)
 
@@ -575,6 +644,9 @@ class StarGenerator:
         mass_max = mass_spec.get("max", 100.0)
 
         # 3. Generate Primary
+        from game.strategy.data.star_generation_config import get_star_generation_config
+        cfg = get_star_generation_config()
+
         p_mass = self._generate_mass_constrained(mass_min, mass_max)
         p_type, p_mass, p_rad, p_temp, p_lum, p_col = self._determine_type_and_radius(p_mass)
         p_hex = self._map_solar_radius_to_hex_radius(p_rad, p_type)
@@ -589,8 +661,9 @@ class StarGenerator:
             spectrum=p_spec,
             star_type=p_type,
             color=p_col,
-            age=random.uniform(0.1, 10.0) * 1e9,
-            location=HexCoord(0, 0)
+            age=random.uniform(cfg.age_min, cfg.age_max) * cfg.age_unit,
+            location=HexCoord(0, 0),
+            image_id=self._get_image_id(p_type),
         )
         stars.append(primary)
 
@@ -612,14 +685,18 @@ class StarGenerator:
         """
         Generate stars using default random probabilities.
         """
+        from game.strategy.data.star_generation_config import get_star_generation_config
+        cfg = get_star_generation_config()
+
         stars = []
 
-        # 1. Determine Count
+        # 1. Determine Count from probability thresholds
         roll = random.random()
-        if roll < 0.001: count = 4
-        elif roll < 0.011: count = 3
-        elif roll < 0.111: count = 2
-        else: count = 1
+        count = cfg.system_default_count
+        for entry in cfg.system_count_thresholds:
+            if roll < entry["cumulative"]:
+                count = entry["count"]
+                break
 
         # 2. Generate Primary
         p_mass = self._generate_mass(is_primary=True)
@@ -636,8 +713,9 @@ class StarGenerator:
             spectrum=p_spec,
             star_type=p_type,
             color=p_col,
-            age=random.uniform(0.1, 10.0) * 1e9,
-            location=HexCoord(0, 0)
+            age=random.uniform(cfg.age_min, cfg.age_max) * cfg.age_unit,
+            location=HexCoord(0, 0),
+            image_id=self._get_image_id(p_type),
         )
         stars.append(primary)
 

@@ -92,23 +92,23 @@ class TestShipBuiltEvent:
 
         calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_cls:
+        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
             mock_lib.load_design_data.return_value = {"name": "Scout Ship"}
             mock_lib_cls.return_value = mock_lib
 
-            with patch('game.strategy.engine.production_engine.ShipInstance') as mock_si:
+            with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_si:
                 mock_ship = MagicMock()
                 mock_ship.name = "Scout Ship"
                 mock_si.create.return_value = mock_ship
 
-                with patch('game.strategy.engine.production_engine.Fleet') as mock_fleet_cls:
+                with patch('game.strategy.engine.production_spawner.Fleet') as mock_fleet_cls:
                     mock_fleet = MagicMock()
                     mock_fleet.id = 1
                     mock_fleet_cls.return_value = mock_fleet
 
-                    with patch('game.strategy.engine.production_engine.log_event', fake):
-                        engine._spawn_ship(planet, "scout_design", empire, galaxy, save_path="/test")
+                    with patch('game.strategy.engine.production_spawner.log_event', fake):
+                        engine._spawner._spawn_ship(planet, "scout_design", empire, galaxy, save_path="/test")
 
         assert len(calls) == 1
         etype, kw = calls[0]
@@ -129,22 +129,22 @@ class TestShipBuiltEvent:
 
         calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_cls:
+        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
             mock_lib.load_design_data.return_value = {"name": "Cruiser"}
             mock_lib_cls.return_value = mock_lib
 
-            with patch('game.strategy.engine.production_engine.ShipInstance') as mock_si:
+            with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_si:
                 mock_ship = MagicMock()
                 mock_si.create.return_value = mock_ship
 
-                with patch('game.strategy.engine.production_engine.Fleet') as mock_fleet_cls:
+                with patch('game.strategy.engine.production_spawner.Fleet') as mock_fleet_cls:
                     mock_fleet = MagicMock()
                     mock_fleet.id = 1
                     mock_fleet_cls.return_value = mock_fleet
 
-                    with patch('game.strategy.engine.production_engine.log_event', fake):
-                        engine._spawn_ship(planet, "cruiser_design", empire, galaxy, save_path="/test")
+                    with patch('game.strategy.engine.production_spawner.log_event', fake):
+                        engine._spawner._spawn_ship(planet, "cruiser_design", empire, galaxy, save_path="/test")
 
         assert len(calls) == 1
         _, kw = calls[0]
@@ -162,8 +162,8 @@ class TestShipBuiltEvent:
 
         calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_engine.log_event', fake):
-            engine._spawn_ship(planet, "scout", empire, galaxy, save_path=None)
+        with patch('game.strategy.engine.production_spawner.log_event', fake):
+            engine._spawner._spawn_ship(planet, "scout", empire, galaxy, save_path=None)
 
         assert len(calls) == 0
 
@@ -178,13 +178,13 @@ class TestShipBuiltEvent:
 
         calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_cls:
+        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
             mock_lib.load_design_data.return_value = None
             mock_lib_cls.return_value = mock_lib
 
-            with patch('game.strategy.engine.production_engine.log_event', fake):
-                engine._spawn_ship(planet, "bad_design", empire, galaxy, save_path="/test")
+            with patch('game.strategy.engine.production_spawner.log_event', fake):
+                engine._spawner._spawn_ship(planet, "bad_design", empire, galaxy, save_path="/test")
 
         assert len(calls) == 0
 
@@ -210,18 +210,18 @@ class TestFleetShipBuiltEvent:
 
         calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_cls:
+        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
             mock_lib.load_design_data.return_value = {"name": "Fighter"}
             mock_lib_cls.return_value = mock_lib
 
-            with patch('game.strategy.engine.production_engine.ShipInstance') as mock_si:
+            with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_si:
                 mock_ship = MagicMock()
                 mock_ship.name = "Fighter"
                 mock_si.create.return_value = mock_ship
 
-                with patch('game.strategy.engine.production_engine.log_event', fake):
-                    engine._spawn_fleet_ship(fleet, "fighter_design", empire, save_path="/test")
+                with patch('game.strategy.engine.production_spawner.log_event', fake):
+                    engine._spawner._spawn_fleet_ship(fleet, "fighter_design", empire, save_path="/test")
 
         assert len(calls) == 1
         etype, kw = calls[0]
@@ -245,8 +245,8 @@ class TestFleetShipBuiltEvent:
 
         calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_engine.log_event', fake):
-            engine._spawn_fleet_ship(fleet, "fighter", empire, save_path=None)
+        with patch('game.strategy.engine.production_spawner.log_event', fake):
+            engine._spawner._spawn_fleet_ship(fleet, "fighter", empire, save_path=None)
 
         assert len(calls) == 0
 
@@ -269,13 +269,13 @@ class TestComplexBuiltEvent:
 
         calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_cls:
+        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
             mock_lib.load_design_data.return_value = {"name": "Mining Complex"}
             mock_lib_cls.return_value = mock_lib
 
-            with patch('game.strategy.engine.production_engine.log_event', fake):
-                engine._spawn_complex(planet, "mining_complex", empire, save_path="/test")
+            with patch('game.strategy.engine.production_spawner.log_event', fake):
+                engine._spawner._create_and_place_facility(planet, "mining_complex", empire, save_path="/test")
 
         assert len(calls) == 1
         etype, kw = calls[0]
@@ -295,13 +295,13 @@ class TestComplexBuiltEvent:
 
         calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_cls:
+        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
             mock_lib.load_design_data.return_value = {"name": "Shipyard"}
             mock_lib_cls.return_value = mock_lib
 
-            with patch('game.strategy.engine.production_engine.log_event', fake):
-                engine._spawn_complex(planet, "shipyard_design", empire, save_path="/test")
+            with patch('game.strategy.engine.production_spawner.log_event', fake):
+                engine._spawner._create_and_place_facility(planet, "shipyard_design", empire, save_path="/test")
 
         _, kw = calls[0]
         assert kw["design_id"] == "shipyard_design"
@@ -317,8 +317,8 @@ class TestComplexBuiltEvent:
 
         calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_engine.log_event', fake):
-            engine._spawn_complex(planet, "basic_factory", empire, save_path=None)
+        with patch('game.strategy.engine.production_spawner.log_event', fake):
+            engine._spawner._create_and_place_facility(planet, "basic_factory", empire, save_path=None)
 
         # Complex is still created even without save_path, so event should fire
         assert len(calls) == 1
@@ -352,13 +352,13 @@ class TestFleetComplexBuiltEvent:
 
         calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_cls:
+        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
             mock_lib.load_design_data.return_value = {"name": "Orbital Refinery"}
             mock_lib_cls.return_value = mock_lib
 
-            with patch('game.strategy.engine.production_engine.log_event', fake):
-                engine._spawn_fleet_complex(fleet, "refinery_design", empire, galaxy, save_path="/test")
+            with patch('game.strategy.engine.production_spawner.log_event', fake):
+                engine._spawner._spawn_fleet_complex(fleet, "refinery_design", empire, galaxy, save_path="/test")
 
         assert len(calls) == 1
         etype, kw = calls[0]
@@ -383,8 +383,8 @@ class TestFleetComplexBuiltEvent:
 
         calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_engine.log_event', fake):
-            engine._spawn_fleet_complex(fleet, "design_x", empire, galaxy=None)
+        with patch('game.strategy.engine.production_spawner.log_event', fake):
+            engine._spawner._spawn_fleet_complex(fleet, "design_x", empire, galaxy=None)
 
         assert len(calls) == 0
 
@@ -405,8 +405,8 @@ class TestFleetComplexBuiltEvent:
 
         calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_engine.log_event', fake):
-            engine._spawn_fleet_complex(fleet, "design_y", empire, galaxy)
+        with patch('game.strategy.engine.production_spawner.log_event', fake):
+            engine._spawner._spawn_fleet_complex(fleet, "design_y", empire, galaxy)
 
         assert len(calls) == 0
 
@@ -786,22 +786,22 @@ class TestProductionEventLocationEnrichment:
 
         calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_cls:
+        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
             mock_lib.load_design_data.return_value = {"name": "Scout"}
             mock_lib_cls.return_value = mock_lib
 
-            with patch('game.strategy.engine.production_engine.ShipInstance') as mock_si:
+            with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_si:
                 mock_ship = MagicMock()
                 mock_si.create.return_value = mock_ship
 
-                with patch('game.strategy.engine.production_engine.Fleet') as mock_fleet_cls:
+                with patch('game.strategy.engine.production_spawner.Fleet') as mock_fleet_cls:
                     mock_fleet = MagicMock()
                     mock_fleet.id = 1
                     mock_fleet_cls.return_value = mock_fleet
 
-                    with patch('game.strategy.engine.production_engine.log_event', fake):
-                        engine._spawn_ship(planet, "scout", empire, galaxy, save_path="/test")
+                    with patch('game.strategy.engine.production_spawner.log_event', fake):
+                        engine._spawner._spawn_ship(planet, "scout", empire, galaxy, save_path="/test")
 
         assert len(calls) == 1
         _, kw = calls[0]
@@ -822,22 +822,22 @@ class TestProductionEventLocationEnrichment:
 
         calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_cls:
+        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
             mock_lib.load_design_data.return_value = {"name": "Scout"}
             mock_lib_cls.return_value = mock_lib
 
-            with patch('game.strategy.engine.production_engine.ShipInstance') as mock_si:
+            with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_si:
                 mock_ship = MagicMock()
                 mock_si.create.return_value = mock_ship
 
-                with patch('game.strategy.engine.production_engine.Fleet') as mock_fleet_cls:
+                with patch('game.strategy.engine.production_spawner.Fleet') as mock_fleet_cls:
                     mock_fleet = MagicMock()
                     mock_fleet.id = 1
                     mock_fleet_cls.return_value = mock_fleet
 
-                    with patch('game.strategy.engine.production_engine.log_event', fake):
-                        engine._spawn_ship(planet, "scout", empire, galaxy, save_path="/test")
+                    with patch('game.strategy.engine.production_spawner.log_event', fake):
+                        engine._spawner._spawn_ship(planet, "scout", empire, galaxy, save_path="/test")
 
         _, kw = calls[0]
         assert kw["system_name"] == ""
@@ -862,8 +862,8 @@ class TestProductionEventLocationEnrichment:
 
         calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_engine.log_event', fake):
-            engine._spawn_complex(planet, "factory", empire, save_path=None, galaxy=galaxy)
+        with patch('game.strategy.engine.production_spawner.log_event', fake):
+            engine._spawner._create_and_place_facility(planet, "factory", empire, save_path=None, galaxy=galaxy)
 
         _, kw = calls[0]
         assert kw["system_name"] == "Alpha Centauri"
@@ -882,17 +882,17 @@ class TestProductionEventLocationEnrichment:
 
         calls, fake = _capture_log_event_calls()
 
-        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_cls:
+        with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_cls:
             mock_lib = MagicMock()
             mock_lib.load_design_data.return_value = {"name": "Fighter"}
             mock_lib_cls.return_value = mock_lib
 
-            with patch('game.strategy.engine.production_engine.ShipInstance') as mock_si:
+            with patch('game.strategy.engine.production_spawner.ShipInstance') as mock_si:
                 mock_ship = MagicMock()
                 mock_si.create.return_value = mock_ship
 
-                with patch('game.strategy.engine.production_engine.log_event', fake):
-                    engine._spawn_fleet_ship(fleet, "fighter_design", empire, save_path="/test")
+                with patch('game.strategy.engine.production_spawner.log_event', fake):
+                    engine._spawner._spawn_fleet_ship(fleet, "fighter_design", empire, save_path="/test")
 
         _, kw = calls[0]
         assert kw["system_name"] == ""

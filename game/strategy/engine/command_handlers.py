@@ -25,6 +25,14 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.engine.game_session import GameSession
+    from game.strategy.engine.commands import (
+        Command, IssueColonizeCommand, IssueMoveCommand, IssueInterceptCommand,
+        IssueJoinFleetCommand, QueueColonizeMissionCommand, ClearFleetOrdersCommand,
+        IssueTransferCommand, IssueBuildOrderCommand, RemoveBuildOrderCommand,
+        IssueWarpCommand, SplitFleetCommand, DeleteFleetOrderCommand,
+        ReorderFleetOrderCommand, AddToConstructionQueueCommand,
+        RemoveFromConstructionQueueCommand, ReorderConstructionQueueCommand,
+    )
 
 
 def add_move_order_if_needed(
@@ -89,8 +97,9 @@ def create_auto_load_population_order() -> 'FleetOrder':
     Returns:
         FleetOrder for LOAD_POPULATION (always returns an order, never None).
     """
+    from game.strategy.engine.commands import TransferDirection
     transfer_params = {
-        'direction': 'load',
+        'direction': TransferDirection.LOAD,
         'cargo_type': 'passengers',
         'amount': 0,  # 0 = load as much as possible
     }
@@ -101,7 +110,7 @@ def create_auto_load_population_order() -> 'FleetOrder':
 class ICommandHandler(Protocol):
     """Protocol for command handlers."""
 
-    def execute(self, session: 'GameSession', command: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', command: 'Command') -> ValidationResult:
         """Execute the command using the session context.
 
         Args:
@@ -283,7 +292,7 @@ class CommandHandlerRegistry:
         """
         self._handlers[command_name] = handler
 
-    def dispatch(self, command_name: str, session: 'GameSession', command: Any) -> ValidationResult:
+    def dispatch(self, command_name: str, session: 'GameSession', command: 'Command') -> ValidationResult:
         """Dispatch a command to its registered handler.
 
         Args:
@@ -303,7 +312,7 @@ class CommandHandlerRegistry:
 class ColonizeCommandHandler(BaseCommandHandler):
     """Handler for IssueColonizeCommand."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'IssueColonizeCommand') -> ValidationResult:
         """Handle IssueColonizeCommand."""
         # 1. Resolve Fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
@@ -343,7 +352,7 @@ class ColonizeCommandHandler(BaseCommandHandler):
 class MoveCommandHandler(BaseCommandHandler):
     """Handler for IssueMoveCommand."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'IssueMoveCommand') -> ValidationResult:
         """Handle IssueMoveCommand."""
         # 1. Resolve Fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
@@ -377,7 +386,7 @@ class MoveCommandHandler(BaseCommandHandler):
 class InterceptCommandHandler(BaseCommandHandler):
     """Handler for IssueInterceptCommand."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'IssueInterceptCommand') -> ValidationResult:
         """Handle IssueInterceptCommand - creates a MOVE_TO_FLEET order."""
         # 1. Resolve source fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
@@ -407,7 +416,7 @@ class InterceptCommandHandler(BaseCommandHandler):
 class JoinCommandHandler(BaseCommandHandler):
     """Handler for IssueJoinFleetCommand."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'IssueJoinFleetCommand') -> ValidationResult:
         """Handle IssueJoinFleetCommand - creates MOVE_TO_FLEET and JOIN_FLEET orders."""
         # 1. Resolve source fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
@@ -445,7 +454,7 @@ class JoinCommandHandler(BaseCommandHandler):
 class ColonizeMissionCommandHandler(BaseCommandHandler):
     """Handler for QueueColonizeMissionCommand."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'QueueColonizeMissionCommand') -> ValidationResult:
         """Handle QueueColonizeMissionCommand - queues MOVE and COLONIZE orders."""
         from game.strategy.validation import ColonizeValidator
 
@@ -515,7 +524,7 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
 class ClearOrdersCommandHandler(BaseCommandHandler):
     """Handler for ClearFleetOrdersCommand."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'ClearFleetOrdersCommand') -> ValidationResult:
         """Handle ClearFleetOrdersCommand - clears all orders from fleet."""
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
@@ -532,31 +541,28 @@ class ClearOrdersCommandHandler(BaseCommandHandler):
 class TransferCommandHandler(BaseCommandHandler):
     """Handler for IssueTransferCommand."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'IssueTransferCommand') -> ValidationResult:
         """Handle IssueTransferCommand - creates TRANSFER order for cargo operations."""
         from game.strategy.validation import TransferValidator
 
-        logger.info(f"DIAG TransferCommandHandler: cmd fleet_id={cmd.fleet_id}, planet_id={cmd.planet_id}, cargo_type={cmd.cargo_type}, direction={cmd.direction}, amount={cmd.amount}, species_id={cmd.species_id}")
+        logger.debug(f"TransferCommandHandler: fleet_id={cmd.fleet_id}, planet_id={cmd.planet_id}, cargo_type={cmd.cargo_type}, direction={cmd.direction}, amount={cmd.amount}")
 
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
         if error:
-            logger.info(f"DIAG TransferCommandHandler: Fleet {cmd.fleet_id} NOT FOUND")
             return error
-        logger.info(f"DIAG TransferCommandHandler: Fleet found, location={fleet.location}, ships={len(fleet.ships)}")
+        logger.debug(f"TransferCommandHandler: Fleet {fleet.id} found, location={fleet.location}, ships={len(fleet.ships)}")
 
         # 2. Find owning empire (PROJ-204: O(1) lookup via owner_id instead of O(N) loop)
         if fleet.owner_id < 0 or fleet.owner_id >= len(session.empires):
-            logger.info(f"DIAG TransferCommandHandler: Fleet owner NOT FOUND")
             return ValidationResult.error("Fleet owner not found.")
         owning_empire = session.empires[fleet.owner_id]
 
         # 3. Resolve planet
         planet, error = self._resolve_planet(session, cmd.planet_id)
         if error:
-            logger.info(f"DIAG TransferCommandHandler: Planet {cmd.planet_id} NOT FOUND")
             return error
-        logger.info(f"DIAG TransferCommandHandler: Planet found: name={planet.name}, owner_id={planet.owner_id}, total_pop={planet.total_population}")
+        logger.debug(f"TransferCommandHandler: Planet {planet.name} found, owner_id={planet.owner_id}")
 
         # 4. Validate (skip location check — we'll auto-add a MOVE order)
         # Use projected cargo to account for earlier queued orders
@@ -564,14 +570,13 @@ class TransferCommandHandler(BaseCommandHandler):
         projected = FleetCargoProjector.get_projected_cargo(fleet, cmd.cargo_type)
         capacity = fleet.resources.get_fleet_cargo_capacity(cmd.cargo_type)
         current = fleet.resources.get_fleet_cargo_current(cmd.cargo_type)
-        logger.info(f"DIAG TransferCommandHandler: cargo capacity={capacity}, current={current}, projected={projected}")
+        logger.debug(f"TransferCommandHandler: cargo capacity={capacity}, current={current}, projected={projected}")
 
         result = TransferValidator.validate(
             session.galaxy, fleet, planet, cmd.cargo_type, cmd.direction, cmd.amount,
             cmd.species_id, skip_location_check=True, projected_cargo=projected
         )
-        # ValidationResult always has error_code attribute
-        logger.info(f"DIAG TransferCommandHandler: validation result is_valid={result.is_valid}, errors={result.errors}, error_code={result.error_code}")
+        logger.debug(f"TransferCommandHandler: validation is_valid={result.is_valid}, error_code={result.error_code}")
 
         # 5. Apply
         if result.is_valid:
@@ -596,8 +601,6 @@ class TransferCommandHandler(BaseCommandHandler):
             order = FleetOrder(OrderType.TRANSFER, target=transfer_params)
             fleet.add_order(order)
             logger.info(f"GameSession: Issued TRANSFER order for Fleet {fleet.id}, orders now={len(fleet.orders)}")
-        else:
-            logger.info(f"DIAG TransferCommandHandler: REJECTED - not adding order")
 
         return result
 
@@ -605,7 +608,7 @@ class TransferCommandHandler(BaseCommandHandler):
 class BuildOrderCommandHandler(BaseCommandHandler):
     """Handler for IssueBuildOrderCommand (PROJ-207 Phase 4)."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'IssueBuildOrderCommand') -> ValidationResult:
         """Handle IssueBuildOrderCommand - creates BUILD order for fleet construction.
 
         Inserts BUILD order at position 0 (front of queue) so it executes first.
@@ -630,7 +633,7 @@ class BuildOrderCommandHandler(BaseCommandHandler):
 class RemoveBuildOrderCommandHandler(BaseCommandHandler):
     """Handler for RemoveBuildOrderCommand (PROJ-207 Phase 4)."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'RemoveBuildOrderCommand') -> ValidationResult:
         """Handle RemoveBuildOrderCommand - removes BUILD orders from fleet."""
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
@@ -647,7 +650,7 @@ class RemoveBuildOrderCommandHandler(BaseCommandHandler):
 class WarpCommandHandler(BaseCommandHandler):
     """Handler for IssueWarpCommand (PROJ-187)."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'IssueWarpCommand') -> ValidationResult:
         """Handle IssueWarpCommand - creates WARP order with optional MOVE prefix."""
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
@@ -694,7 +697,7 @@ class WarpCommandHandler(BaseCommandHandler):
 class SplitFleetCommandHandler(BaseCommandHandler):
     """Handler for SplitFleetCommand (PROJ-208 Phase 1)."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'SplitFleetCommand') -> ValidationResult:
         """Handle SplitFleetCommand - split ships into a new fleet.
 
         Removes specified ships from source fleet and creates a new fleet
@@ -756,7 +759,7 @@ class SplitFleetCommandHandler(BaseCommandHandler):
 class DeleteFleetOrderCommandHandler(BaseCommandHandler):
     """Handler for DeleteFleetOrderCommand (PROJ-208 Phase 1)."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'DeleteFleetOrderCommand') -> ValidationResult:
         """Handle DeleteFleetOrderCommand - remove an order from the queue.
 
         If the active order (index 0) is deleted, the fleet's path is invalidated.
@@ -780,7 +783,7 @@ class DeleteFleetOrderCommandHandler(BaseCommandHandler):
 class ReorderFleetOrderCommandHandler(BaseCommandHandler):
     """Handler for ReorderFleetOrderCommand (PROJ-208 Phase 1)."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'ReorderFleetOrderCommand') -> ValidationResult:
         """Handle ReorderFleetOrderCommand - swap order positions.
 
         If the active order (index 0) is affected, the fleet's path is invalidated.
@@ -822,7 +825,7 @@ class ReorderFleetOrderCommandHandler(BaseCommandHandler):
 class AddToConstructionQueueCommandHandler(BaseCommandHandler):
     """Handler for AddToConstructionQueueCommand (PROJ-208 Phase 2)."""
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'AddToConstructionQueueCommand') -> ValidationResult:
         """Handle AddToConstructionQueueCommand - add item to construction queue.
 
         Creates a queue item dict with design_id, type, turns_remaining, and
@@ -910,7 +913,7 @@ class RemoveFromConstructionQueueCommandHandler(BaseCommandHandler):
     multi-queue entity support (facility queues).
     """
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'RemoveFromConstructionQueueCommand') -> ValidationResult:
         """Handle RemoveFromConstructionQueueCommand - remove item from queue.
 
         For fleets, if the queue becomes empty, may need BUILD order cleanup
@@ -944,7 +947,7 @@ class ReorderConstructionQueueCommandHandler(BaseCommandHandler):
     multi-queue entity support (facility queues).
     """
 
-    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+    def execute(self, session: 'GameSession', cmd: 'ReorderConstructionQueueCommand') -> ValidationResult:
         """Handle ReorderConstructionQueueCommand - move item to new position.
 
         Performs atomic pop + insert to move item from from_index to to_index.

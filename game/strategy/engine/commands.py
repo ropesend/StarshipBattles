@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, List
 from enum import Enum, auto
 
@@ -8,11 +8,26 @@ class CommandType(Enum):
     ISSUE_ORDER = auto()
     # Add other types as needed (e.g., GAME_SETTINGS, CHEAT_CODE)
 
+
+class TransferDirection(str, Enum):
+    """Direction of cargo transfer between fleet and target."""
+    LOAD = "load"
+    UNLOAD = "unload"
+
+
+class BuildEntityType(str, Enum):
+    """Entity type for construction queue commands."""
+    PLANET = "planet"
+    FLEET = "fleet"
+
 @dataclass
 class Command:
     """Base class for all game commands."""
-    type: CommandType
-    
+    type: CommandType = field(init=False)
+
+    def __post_init__(self):
+        self.type = CommandType.ISSUE_ORDER
+
     @property
     def name(self) -> str:
         return self.__class__.__name__
@@ -21,23 +36,13 @@ class Command:
 class IssueColonizeCommand(Command):
     """Command to issue a colonization order to a fleet."""
     fleet_id: int
-    planet_id: Optional[int] # None for 'Any Planet'
-    
-    def __init__(self, fleet_id: int, planet_id: Optional[int] = None):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.planet_id = planet_id
+    planet_id: Optional[int] = None  # None for 'Any Planet'
 
 @dataclass
 class IssueMoveCommand(Command):
     """Command to move a fleet to a target hex."""
     fleet_id: int
     target_hex: HexCoord
-    
-    def __init__(self, fleet_id: int, target_hex: HexCoord):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.target_hex = target_hex
 
 # NOTE: IssueBuildShipCommand removed in PROJ-208 Phase 2 (dead code).
 # Use AddToConstructionQueueCommand instead for all build queue operations.
@@ -52,11 +57,6 @@ class IssueInterceptCommand(Command):
     fleet_id: int
     target_fleet_id: int
 
-    def __init__(self, fleet_id: int, target_fleet_id: int):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.target_fleet_id = target_fleet_id
-
 
 @dataclass
 class IssueJoinFleetCommand(Command):
@@ -66,11 +66,6 @@ class IssueJoinFleetCommand(Command):
     """
     fleet_id: int
     target_fleet_id: int
-
-    def __init__(self, fleet_id: int, target_fleet_id: int):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.target_fleet_id = target_fleet_id
 
 
 @dataclass
@@ -83,23 +78,13 @@ class QueueColonizeMissionCommand(Command):
     """
     fleet_id: int
     target_hex: HexCoord
-    planet_id: Optional[int]  # None for 'colonize any/largest available planet'
-
-    def __init__(self, fleet_id: int, target_hex: HexCoord, planet_id: Optional[int] = None):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.target_hex = target_hex
-        self.planet_id = planet_id
+    planet_id: Optional[int] = None  # None for 'colonize any/largest available planet'
 
 
 @dataclass
 class ClearFleetOrdersCommand(Command):
     """Command to clear all orders from a fleet."""
     fleet_id: int
-
-    def __init__(self, fleet_id: int):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
 
 
 @dataclass
@@ -120,31 +105,12 @@ class IssueTransferCommand(Command):
         target_fleet_id: The other fleet to transfer cargo to/from (optional)
     """
     fleet_id: int
-    planet_id: Optional[int]
-    cargo_type: str
-    direction: str  # "load" or "unload"
-    amount: int  # 0 = all
+    planet_id: Optional[int] = None
+    cargo_type: str = "passengers"
+    direction: TransferDirection = TransferDirection.LOAD
+    amount: int = 0
     species_id: Optional[str] = None
     target_fleet_id: Optional[int] = None
-
-    def __init__(
-        self,
-        fleet_id: int,
-        planet_id: Optional[int] = None,
-        cargo_type: str = "passengers",
-        direction: str = "load",
-        amount: int = 0,
-        species_id: Optional[str] = None,
-        target_fleet_id: Optional[int] = None
-    ):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.planet_id = planet_id
-        self.cargo_type = cargo_type
-        self.direction = direction
-        self.amount = amount
-        self.species_id = species_id
-        self.target_fleet_id = target_fleet_id
 
 
 # =============================================================================
@@ -157,20 +123,11 @@ class IssueImplodePlanetCommand(Command):
     fleet_id: int
     planet_id: int
 
-    def __init__(self, fleet_id: int, planet_id: int):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.planet_id = planet_id
-
 
 @dataclass
 class IssueStellerateStarCommand(Command):
     """Command to issue a STELLERATE_STAR order to destroy the star at fleet location."""
     fleet_id: int
-
-    def __init__(self, fleet_id: int):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
 
 
 @dataclass
@@ -180,12 +137,6 @@ class IssueOpenWarpPointCommand(Command):
     target_hex: HexCoord
     target_system_name: str
 
-    def __init__(self, fleet_id: int, target_hex: HexCoord, target_system_name: str):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.target_hex = target_hex
-        self.target_system_name = target_system_name
-
 
 @dataclass
 class IssueCloseWarpPointCommand(Command):
@@ -193,20 +144,11 @@ class IssueCloseWarpPointCommand(Command):
     fleet_id: int
     warp_point_destination_id: str
 
-    def __init__(self, fleet_id: int, warp_point_destination_id: str):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.warp_point_destination_id = warp_point_destination_id
-
 
 @dataclass
 class IssueCreateDysonSphereCommand(Command):
     """Command to issue a CREATE_DYSON_SPHERE order to create a Dyson Sphere."""
     fleet_id: int
-
-    def __init__(self, fleet_id: int):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
 
 
 @dataclass
@@ -214,11 +156,6 @@ class IssueSelfDestructCommand(Command):
     """Command to issue a SELF_DESTRUCT order to destroy selected ships."""
     fleet_id: int
     ship_ids: List[int]
-
-    def __init__(self, fleet_id: int, ship_ids: List[int]):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.ship_ids = ship_ids
 
 
 # =============================================================================
@@ -232,23 +169,12 @@ class QueueImplodePlanetMissionCommand(Command):
     target_hex: HexCoord
     planet_id: int
 
-    def __init__(self, fleet_id: int, target_hex: HexCoord, planet_id: int):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.target_hex = target_hex
-        self.planet_id = planet_id
-
 
 @dataclass
 class QueueStellerateStarMissionCommand(Command):
     """Command to queue a move-to-hex then stellerate star mission."""
     fleet_id: int
     target_hex: HexCoord
-
-    def __init__(self, fleet_id: int, target_hex: HexCoord):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.target_hex = target_hex
 
 
 @dataclass
@@ -258,12 +184,6 @@ class QueueOpenWarpPointMissionCommand(Command):
     target_hex: HexCoord
     target_system_name: str
 
-    def __init__(self, fleet_id: int, target_hex: HexCoord, target_system_name: str):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.target_hex = target_hex
-        self.target_system_name = target_system_name
-
 
 @dataclass
 class QueueCloseWarpPointMissionCommand(Command):
@@ -272,23 +192,12 @@ class QueueCloseWarpPointMissionCommand(Command):
     target_hex: HexCoord
     warp_point_destination_id: str
 
-    def __init__(self, fleet_id: int, target_hex: HexCoord, warp_point_destination_id: str):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.target_hex = target_hex
-        self.warp_point_destination_id = warp_point_destination_id
-
 
 @dataclass
 class QueueCreateDysonSphereMissionCommand(Command):
     """Command to queue a move-to-hex then create Dyson Sphere mission."""
     fleet_id: int
     target_hex: HexCoord
-
-    def __init__(self, fleet_id: int, target_hex: HexCoord):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.target_hex = target_hex
 
 
 # =============================================================================
@@ -309,11 +218,6 @@ class IssueWarpCommand(Command):
     fleet_id: int
     warp_point_hex: HexCoord
 
-    def __init__(self, fleet_id: int, warp_point_hex: HexCoord):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.warp_point_hex = warp_point_hex
-
 
 # =============================================================================
 # BUILD Order Commands (PROJ-207)
@@ -328,10 +232,6 @@ class IssueBuildOrderCommand(Command):
     """
     fleet_id: int
 
-    def __init__(self, fleet_id: int):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-
 
 @dataclass
 class RemoveBuildOrderCommand(Command):
@@ -340,10 +240,6 @@ class RemoveBuildOrderCommand(Command):
     PROJ-207 Phase 4: Used when construction queue is emptied.
     """
     fleet_id: int
-
-    def __init__(self, fleet_id: int):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
 
 
 # =============================================================================
@@ -364,11 +260,6 @@ class SplitFleetCommand(Command):
     fleet_id: int
     ship_instance_ids: List[str]
 
-    def __init__(self, fleet_id: int, ship_instance_ids: List[str]):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.ship_instance_ids = ship_instance_ids
-
 
 @dataclass
 class DeleteFleetOrderCommand(Command):
@@ -382,11 +273,6 @@ class DeleteFleetOrderCommand(Command):
     """
     fleet_id: int
     order_index: int
-
-    def __init__(self, fleet_id: int, order_index: int):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.order_index = order_index
 
 
 @dataclass
@@ -403,12 +289,6 @@ class ReorderFleetOrderCommand(Command):
     fleet_id: int
     order_index: int
     direction: int
-
-    def __init__(self, fleet_id: int, order_index: int, direction: int):
-        self.type = CommandType.ISSUE_ORDER
-        self.fleet_id = fleet_id
-        self.order_index = order_index
-        self.direction = direction
 
 
 # =============================================================================
@@ -431,31 +311,12 @@ class AddToConstructionQueueCommand(Command):
         queue_id: Optional queue identifier for multi-queue entities (e.g., shipyard facility ID).
     """
     entity_id: int
-    entity_type: str
+    entity_type: BuildEntityType
     design_id: str
     category: str
     index: Optional[int] = None
     target_planet_id: Optional[int] = None
     queue_id: Optional[str] = None
-
-    def __init__(
-        self,
-        entity_id: int,
-        entity_type: str,
-        design_id: str,
-        category: str,
-        index: Optional[int] = None,
-        target_planet_id: Optional[int] = None,
-        queue_id: Optional[str] = None
-    ):
-        self.type = CommandType.ISSUE_ORDER
-        self.entity_id = entity_id
-        self.entity_type = entity_type
-        self.design_id = design_id
-        self.category = category
-        self.index = index
-        self.target_planet_id = target_planet_id
-        self.queue_id = queue_id
 
 
 @dataclass
@@ -472,17 +333,9 @@ class RemoveFromConstructionQueueCommand(Command):
         queue_id: Optional queue identifier for multi-queue entities (e.g., shipyard facility ID).
     """
     entity_id: int
-    entity_type: str
+    entity_type: BuildEntityType
     item_index: int
     queue_id: Optional[str] = None
-
-    def __init__(self, entity_id: int, entity_type: str, item_index: int,
-                 queue_id: Optional[str] = None):
-        self.type = CommandType.ISSUE_ORDER
-        self.entity_id = entity_id
-        self.entity_type = entity_type
-        self.item_index = item_index
-        self.queue_id = queue_id
 
 
 @dataclass
@@ -500,16 +353,7 @@ class ReorderConstructionQueueCommand(Command):
         queue_id: Optional queue identifier for multi-queue entities (e.g., shipyard facility ID).
     """
     entity_id: int
-    entity_type: str
+    entity_type: BuildEntityType
     from_index: int
     to_index: int
     queue_id: Optional[str] = None
-
-    def __init__(self, entity_id: int, entity_type: str, from_index: int, to_index: int,
-                 queue_id: Optional[str] = None):
-        self.type = CommandType.ISSUE_ORDER
-        self.entity_id = entity_id
-        self.entity_type = entity_type
-        self.from_index = from_index
-        self.to_index = to_index
-        self.queue_id = queue_id

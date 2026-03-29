@@ -17,20 +17,35 @@ Responsibilities:
 """
 
 import logging
-import uuid
-from typing import Optional, List, Dict, Any, NamedTuple
+from enum import Enum, auto
+from typing import Optional, List, Dict, Any, NamedTuple, TYPE_CHECKING
 
 from game.core.event_logging import log_event
+from game.strategy.data.build_queue_source import get_default_production_rates, _get_facility_production_rates
+from game.strategy.engine.production_math import find_limiting_resource_ticks
+from game.strategy.engine.production_spawner import ProductionSpawner
 from game.strategy.events.event_types import EventType, EventCategory
 from game.strategy.services.design_cost_calculator import DesignCostCalculator
+
+if TYPE_CHECKING:
+    from game.core.registry import GameRegistries
+    from game.strategy.data.empire import Empire
+    from game.strategy.data.galaxy import Galaxy
 
 logger = logging.getLogger(__name__)
 
 # PROJ-209 Phase 2: Named constants for production tick processing
-TICKS_PER_TURN = 100  # Number of ticks per game turn
+from game.strategy.engine.turn_engine import TICKS_PER_TURN
 TICK_CAPACITY_EPSILON = 0.0001  # Minimum tick capacity to continue processing
 COMPLETION_EPSILON = 0.001  # Tolerance for float comparison in completion check
 MAX_QUEUE_ITERATIONS = 10  # Safety limit to prevent infinite loops
+
+
+class QueueItemAction(Enum):
+    """Result of queue item validation."""
+    VALID = auto()
+    SKIP = auto()
+    STOP = auto()
 
 
 class TickExpenditure(NamedTuple):
@@ -46,10 +61,6 @@ class TickExpenditure(NamedTuple):
 
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import OrderType
-from game.strategy.data.planet import PlanetaryFacility
-from game.strategy.data.ship_instance import ShipInstance
-from game.strategy.systems.design_library import DesignLibrary
 
 
 class ProductionEngine:
@@ -73,15 +84,17 @@ class ProductionEngine:
     - ticks_in_current_turn: int - Tick counter within current turn
     """
 
-    def __init__(self, registries=None):
+    def __init__(self, registries: Optional['GameRegistries'] = None):
         """Initialize the production engine.
 
         PROJ-211: Added registries parameter for DI compliance.
+        PROJ-233: Added ProductionSpawner for spawn delegation.
 
         Args:
             registries: Optional GameRegistries for ship creation.
         """
         self._registries = registries
+        self._spawner = ProductionSpawner(registries=registries)
 
     # --- Resource Cost Methods (PROJ-75 Phase 4) ---
 
@@ -109,18 +122,15 @@ class ProductionEngine:
     def process_construction_tick(
         self,
         tick: int,
-        empires: List,
-        galaxy,
+        empires: List['Empire'],
+        galaxy: Optional['Galaxy'],
         save_path: Optional[str] = None,
     ) -> None:
         """Process per-tick resource consumption and completion for all construction queues.
 
-        PROJ-79 Refactor:
-        - Dynamic resource consumption based on limiting resource.
-        - Carry-over production capacity (mid-tick completion).
-        - Legacy turn-based decrement logic REMOVED.
-
-        PROJ-161: Removed harvesting_engine parameter (harvesting now per-tick in TurnEngine).
+        PROJ-79: Dynamic resource consumption with carry-over capacity.
+        PROJ-161: Removed harvesting_engine parameter.
+        PROJ-233: Cleaned up fleet rate resolution and removed design-discussion comment.
 
         Args:
             tick: Current tick number (1-100).
@@ -128,12 +138,9 @@ class ProductionEngine:
             galaxy: Galaxy object for spawning.
             save_path: Path to savegame folder for loading designs.
         """
-        from game.strategy.data.build_queue_source import get_default_production_rates, _get_facility_production_rates
-
         for empire in empires:
             for colony in empire.colonies:
                 # 1. Base queue (complexes only)
-                # Rate: Default planetary yard rate
                 base_rate = get_default_production_rates("planetary_yard")
                 self._process_queue_tick_dynamic(
                     colony.construction_queue, empire, tick, galaxy, save_path,
@@ -141,10 +148,9 @@ class ProductionEngine:
                     is_complex_only=True
                 )
 
-                # 2. Facility queues (shipyards)
+                # 2. Facility queues (each shipyard independently)
                 for facility in colony.facilities:
                     if facility.construction_queue and facility.is_shipyard:
-                        # Rate: specific to facility
                         fac_rate = _get_facility_production_rates(facility)
                         self._process_queue_tick_dynamic(
                             facility.construction_queue, empire, tick, galaxy, save_path,
@@ -153,63 +159,33 @@ class ProductionEngine:
                         )
 
             # 3. Fleet queues
+            # Fleet yards share one queue; multiple yards multiply build speed.
             for fleet in empire.fleets:
                 if not fleet.is_building or not fleet.capabilities.has_space_shipyard:
                     continue
-                
-                # Check for complex production location constraints early
-                # But we handle this per-item in _process_queue_tick_dynamic
-                
-                # Rate: per space yard component (assuming 1 queue per yard logic in source, 
-                # but fleet has single queue list? 
-                # Wait, BuildQueueSource splits fleet queue into multiple sources for UI, 
-                # but the Fleet data object has a single `construction_queue` list.
-                # If a fleet has 2 shipyards, does it process 2x items?
-                # The current data model seems to have one queue per fleet.
-                # We will assume total capacity = single yard rate * count, 
-                # OR process the single queue with combined rate?
-                # The UI shows "Shipyard 1", "Shipyard 2" which implies parallel queues?
-                # Looking at BuildQueueSource._collect_fleet_sources:
-                # It creates multiple sources, but they ALL point to `fleet.construction_queue`.
-                # This implies the fleet queue is shared? 
-                # If they share the same list object, they are the SAME queue.
-                # If so, "parallel" processing means applying N times the capacity to the head of the queue?
-                # OR does the fleet have multiple queues? 
-                # Fleet object has `construction_queue = []`. It is a single list.
-                # So multiple yards help build the FIRST item faster, they don't build in parallel?
-                # The UI implies distinct queues... let's check BuildQueueSource again.
-                # "sources.append(BuildQueueSource(..., construction_queue=fleet.construction_queue ...))"
-                # They share the SAME list reference!
-                # So if I add to "Shipyard 2", it goes effectively to the same list as "Shipyard 1".
-                # This means multiple yards just equal more speed for the single queue.
-                # So I should multiply rate by shipyard count.
-                
-                # However, logic in `process_fleet_production` (legacy) didn't seem to account for multiple yards speed,
-                # it just processed the queue once.
-                # To be safe and robust (and enable "parallel" if they were separate), 
-                # I will calculate total rate based on all yards.
-                # Default rate * count.
-                
-                yard_count = fleet.capabilities.space_shipyard_count
-                base_rate = get_default_production_rates("fleet_space_yard")
-                # Multiply rates by count
-                total_rate = {k: v * yard_count for k, v in base_rate.items()}
-                
+
+                total_rate = self._resolve_fleet_production_rate(fleet)
                 self._process_queue_tick_dynamic(
                     fleet.construction_queue, empire, tick, galaxy, save_path,
                     total_rate, colony_or_fleet=fleet,
                     is_complex_only=False
                 )
 
+    def _resolve_fleet_production_rate(self, fleet) -> Dict[str, float]:
+        """Calculate combined production rate for a fleet's space yards."""
+        yard_count = fleet.capabilities.space_shipyard_count
+        base_rate = get_default_production_rates("fleet_space_yard")
+        return {k: v * yard_count for k, v in base_rate.items()}
+
     def _process_queue_tick_dynamic(
         self,
         queue: List[Dict],
-        empire,
+        empire: 'Empire',
         tick: int,
-        galaxy,
+        galaxy: Optional['Galaxy'],
         save_path: Optional[str],
         production_rate: Dict[str, float],
-        colony_or_fleet,
+        colony_or_fleet: Any,
         is_complex_only: bool = False
     ) -> None:
         """Process one tick of production for a queue with dynamic resource consumption.
@@ -259,10 +235,10 @@ class ProductionEngine:
             validation_result = self._validate_queue_item(
                 item, colony_or_fleet, galaxy, is_complex_only
             )
-            if validation_result == "skip":
+            if validation_result == QueueItemAction.SKIP:
                 queue.pop(0)
                 continue
-            if validation_result == "stop":
+            if validation_result == QueueItemAction.STOP:
                 return
 
             # Calculate tick expenditure (PROJ-209: extracted to helper)
@@ -307,13 +283,14 @@ class ProductionEngine:
     def _validate_queue_item(
         self,
         item: Dict,
-        colony_or_fleet,
-        galaxy,
+        colony_or_fleet: Any,
+        galaxy: Optional['Galaxy'],
         is_complex_only: bool
-    ) -> str:
+    ) -> QueueItemAction:
         """Validate a queue item and determine if processing should continue.
 
         PROJ-209 Phase 2: Extracted from _process_queue_tick_dynamic.
+        PROJ-233: Returns QueueItemAction enum instead of magic strings.
 
         Args:
             item: The queue item dict.
@@ -322,28 +299,28 @@ class ProductionEngine:
             is_complex_only: Whether this queue only processes complexes.
 
         Returns:
-            "valid" - Item can be processed.
-            "skip" - Item is invalid, should be removed from queue and continue.
-            "stop" - Processing should halt (constraint not met).
+            QueueItemAction.VALID - Item can be processed.
+            QueueItemAction.SKIP - Item is invalid, remove from queue and continue.
+            QueueItemAction.STOP - Processing should halt (constraint not met).
         """
         # Type check
         if not isinstance(item, dict):
-            return "skip"
+            return QueueItemAction.SKIP
 
         vehicle_type = item.get('type', 'ship')
         design_id = item.get('design_id')
 
         # Filter check: complex-only queue can't build ships
         if is_complex_only and vehicle_type != 'complex':
-            return "stop"
+            return QueueItemAction.STOP
 
         # Fleet complex location check
         if isinstance(colony_or_fleet, Fleet) and vehicle_type == 'complex':
             if not galaxy:
-                return "stop"
+                return QueueItemAction.STOP
             planets_at_hex = galaxy.get_planets_at_global_hex(colony_or_fleet.location)
             if not planets_at_hex:
-                return "stop"  # Paused, not at planet
+                return QueueItemAction.STOP  # Paused, not at planet
 
         # Cost tracking check (AR-01 fix)
         if 'total_cost' not in item:
@@ -351,9 +328,9 @@ class ProductionEngine:
                 f"Queue item {design_id} missing 'total_cost' - skipping "
                 f"(should have been set by build queue controller)"
             )
-            return "skip"
+            return QueueItemAction.SKIP
 
-        return "valid"
+        return QueueItemAction.VALID
 
     def _calculate_tick_expenditure(
         self,
@@ -396,18 +373,13 @@ class ProductionEngine:
                 max_ticks_needed=0.0
             )
 
-        # Determine limiting resource and max ticks needed
-        max_ticks_needed = 0.0
-        for res, amount in remaining_cost.items():
-            p_rate_per_turn = production_rate.get(res, 0.0)
-            if p_rate_per_turn <= 0:
-                # Cannot build - zero rate for required resource
-                return None
-
-            p_rate_per_tick = p_rate_per_turn / TICKS_PER_TURN
-            ticks_needed = amount / p_rate_per_tick
-            if ticks_needed > max_ticks_needed:
-                max_ticks_needed = ticks_needed
+        # Determine limiting resource and max ticks needed (PROJ-233: shared formula)
+        max_ticks_needed = find_limiting_resource_ticks(
+            remaining_cost, production_rate, TICKS_PER_TURN
+        )
+        if max_ticks_needed is None:
+            # Cannot build - zero rate for required resource
+            return None
 
         # Calculate fraction of tick to use
         ticks_to_spend = min(tick_capacity, max_ticks_needed)
@@ -429,7 +401,7 @@ class ProductionEngine:
             max_ticks_needed=max_ticks_needed
         )
 
-    def _check_affordability(self, empire, cost_this_step: Dict[str, float]) -> bool:
+    def _check_affordability(self, empire: 'Empire', cost_this_step: Dict[str, float]) -> bool:
         """Check if empire can afford the resource cost.
 
         PROJ-209 Phase 2: Extracted from _process_queue_tick_dynamic.
@@ -445,10 +417,10 @@ class ProductionEngine:
 
     def _log_resource_shortage(
         self,
-        empire,
+        empire: 'Empire',
         item: Dict,
         cost_this_step: Dict[str, float],
-        colony_or_fleet,
+        colony_or_fleet: Any,
     ) -> None:
         """Log a RESOURCE_SHORTAGE event identifying the bottleneck resource.
 
@@ -503,7 +475,7 @@ class ProductionEngine:
 
     def _apply_resource_consumption(
         self,
-        empire,
+        empire: 'Empire',
         item: Dict,
         cost_this_step: Dict[str, float]
     ) -> None:
@@ -557,11 +529,13 @@ class ProductionEngine:
         else:
             item['turns_remaining'] = 0
 
-    def _complete_item(self, queue, item, empire, colony_or_fleet, galaxy, save_path, tick):
+    def _complete_item(self, queue: List[Dict], item: Dict, empire: 'Empire',
+                       colony_or_fleet: Any, galaxy: Optional['Galaxy'],
+                       save_path: Optional[str], tick: int) -> None:
         """Handle completion of a construction item.
 
-        PROJ-161: Removed harvesting_engine parameter. Mid-turn facilities now participate
-        in per-tick harvesting automatically on subsequent ticks.
+        PROJ-161: Removed harvesting_engine parameter.
+        PROJ-233: Delegates spawning to ProductionSpawner.
         """
         design_id = item['design_id']
         vehicle_type = item.get('type', 'ship')
@@ -572,292 +546,7 @@ class ProductionEngine:
         # Log
         logger.info(f"Production Complete (tick {tick}): {design_id} ({vehicle_type})")
 
-        # Spawn
-        if isinstance(colony_or_fleet, Fleet):
-            if vehicle_type == 'complex':
-                target_planet_id = item.get('target_planet_id')
-                self._spawn_fleet_complex(
-                    colony_or_fleet, design_id, empire, galaxy, save_path,
-                    target_planet_id=target_planet_id
-                )
-            else:
-                self._spawn_fleet_ship(colony_or_fleet, design_id, empire, save_path)
-        else:
-            # Colony/planet
-            if vehicle_type == 'complex':
-                self._spawn_complex(colony_or_fleet, design_id, empire, save_path, galaxy)
-                # PROJ-161: Harvesting is now per-tick, so mid-turn facilities
-                # automatically participate in remaining ticks' harvesting
-            else:
-                self._spawn_ship(colony_or_fleet, design_id, empire, galaxy, save_path)
-
-    def _load_design(self, design_id: str, empire, save_path: Optional[str]) -> dict:
-        """Load design data from the design library.
-
-        Args:
-            design_id: Design to load.
-            empire: Empire owning the design.
-            save_path: Path to savegame folder.
-
-        Returns:
-            Design data dict, or empty dict on failure.
-        """
-        if not save_path:
-            logger.warning(f"No savegame path - creating empty data for {design_id}")
-            return {}
-        library = DesignLibrary(save_path, empire.id)
-        loaded = library.load_design_data(design_id)
-        if loaded:
-            return loaded
-        logger.warning(f"Could not load design: {design_id}")
-        return {}
-
-    def _create_and_place_facility(
-        self, planet, design_id: str, empire, save_path: Optional[str],
-        galaxy=None, log_prefix: str = ""
-    ) -> None:
-        """Create a facility and place it on a planet.
-
-        Shared by _spawn_complex (colony production) and _spawn_fleet_complex
-        (fleet production). Handles design loading, facility creation,
-        placement, and event logging.
-
-        Args:
-            planet: Planet to add facility to.
-            design_id: ID of the complex design.
-            empire: Empire that owns the production.
-            save_path: Path to savegame folder.
-            galaxy: Galaxy for location calculation.
-            log_prefix: Optional prefix for log messages (e.g., "Fleet 5 ").
-        """
-        design_data = self._load_design(design_id, empire, save_path)
-
-        facility = PlanetaryFacility(
-            instance_id=str(uuid.uuid4()),
-            design_id=design_id,
-            name=design_data.get("name", design_id),
-            design_data=design_data,
-            is_operational=True
-        )
-
-        planet.facilities.append(facility)
-        logger.info(f"{log_prefix}Built {facility.name} on {planet.name}")
-
-        # Compute location info for event logging
-        location_hex = None
-        system_name = ""
-        local_hex = None
-        if galaxy and hasattr(galaxy, 'get_system_of_planet'):
-            parent_sys = galaxy.get_system_of_planet(planet)
-            if parent_sys:
-                system_name = parent_sys.name
-                if hasattr(planet, 'location') and planet.location is not None:
-                    loc = parent_sys.global_location + planet.location
-                    location_hex = [loc.q, loc.r]
-                    local_hex = [planet.location.q, planet.location.r]
-
-        suffix = " (fleet yard)" if log_prefix else ""
-        log_event(
-            EventType.COMPLEX_BUILT,
-            category=EventCategory.PRODUCTION,
-            empire_id=empire.id,
-            message=f"Built {facility.name} on {planet.name}{suffix}",
-            design_id=design_id,
-            planet_id=planet.id,
-            location_name=planet.name,
-            location_hex=location_hex,
-            system_name=system_name,
-            local_hex=local_hex,
-        )
-
-    def _load_and_create_ship(
-        self, design_id: str, empire, save_path: Optional[str]
-    ) -> Optional[ShipInstance]:
-        """Load design and create a ship instance.
-
-        Shared by _spawn_ship (colony production) and _spawn_fleet_ship
-        (fleet production). Handles design loading, ship creation, and
-        built count increment.
-
-        Args:
-            design_id: ID of the ship design.
-            empire: Empire that owns the design.
-            save_path: Path to savegame folder.
-
-        Returns:
-            ShipInstance if successful, None on failure.
-        """
-        if not save_path:
-            logger.warning(f"Cannot spawn {design_id}: no save_path provided")
-            return None
-
-        design_library = DesignLibrary(save_path, empire.id)
-        design_data = design_library.load_design_data(design_id)
-
-        if not design_data:
-            logger.warning(f"Cannot spawn {design_id}: design data not found")
-            return None
-
-        ship_instance = ShipInstance.create(
-            design_id=design_id,
-            design_data=design_data,
-            owner_id=empire.id,
-            name=design_data.get("name", design_id),
-            empire=empire,
-            registries=self._registries,
-        )
-
-        design_library.increment_built_count(design_id)
-        return ship_instance
-
-    def _spawn_complex(self, planet, design_id: str, empire, save_path: Optional[str] = None, galaxy=None) -> None:
-        """
-        Add completed complex to planet's facilities.
-
-        Args:
-            planet: Planet to add facility to
-            design_id: ID of the complex design
-            empire: Empire that owns the planet
-            save_path: Path to savegame folder for loading design data
-            galaxy: Galaxy for location calculation
-        """
-        self._create_and_place_facility(planet, design_id, empire, save_path, galaxy)
-
-    def _spawn_ship(
-        self,
-        planet,
-        design_id: str,
-        empire,
-        galaxy,
-        save_path: Optional[str] = None
-    ) -> None:
-        """
-        Spawn ship/satellite/fighter as fleet with ShipInstance.
-
-        Args:
-            planet: Planet where ship spawns
-            design_id: ID of the ship design
-            empire: Empire that owns the ship
-            galaxy: Galaxy for location calculation
-            save_path: Path to savegame folder for loading design data
-        """
-        ship_instance = self._load_and_create_ship(design_id, empire, save_path)
-        if ship_instance is None:
-            return
-
-        # Calculate spawn location
-        spawn_loc = planet.location
-        system_name = ""
-        local_hex = None
-        if galaxy:
-            parent_sys = galaxy.get_system_of_planet(planet)
-            if parent_sys:
-                spawn_loc = parent_sys.global_location + planet.location
-                system_name = parent_sys.name
-                local_hex = [planet.location.q, planet.location.r]
-
-        # Create fleet with unique ID
-        fleet_id = empire.get_next_fleet_id()
-        new_fleet = Fleet(fleet_id, empire.id, spawn_loc)
-        new_fleet.add_ship(ship_instance)
-        empire.add_fleet(new_fleet)  # PROJ-219: Auto-registers via empire._galaxy
-
-        logger.info(f"Spawned {ship_instance.name} at {spawn_loc} (Fleet {new_fleet.id})")
-        log_event(
-            EventType.SHIP_BUILT,
-            category=EventCategory.PRODUCTION,
-            empire_id=empire.id,
-            message=f"Built {ship_instance.name} at {planet.name}",
-            design_id=design_id,
-            planet_id=planet.id,
-            fleet_id=new_fleet.id,
-            location_name=planet.name,
-            location_hex=[spawn_loc.q, spawn_loc.r],
-            system_name=system_name,
-            local_hex=local_hex,
-        )
-
-    def _spawn_fleet_ship(
-        self,
-        fleet: Fleet,
-        design_id: str,
-        empire,
-        save_path: Optional[str] = None
-    ) -> None:
-        """
-        Spawn ship/satellite/fighter and add to the building fleet.
-
-        PROJ-67 Phase 3: Ships built by fleet yards join the fleet directly.
-
-        Args:
-            fleet: Fleet building the ship
-            design_id: ID of the ship design
-            empire: Empire that owns the fleet
-            save_path: Path to savegame folder for loading design data
-        """
-        ship_instance = self._load_and_create_ship(design_id, empire, save_path)
-        if ship_instance is None:
-            return
-
-        fleet.add_ship(ship_instance)
-
-        logger.info(f"Fleet {fleet.id} built {ship_instance.name}")
-        log_event(
-            EventType.SHIP_BUILT,
-            category=EventCategory.PRODUCTION,
-            empire_id=empire.id,
-            message=f"Fleet {fleet.id} built {ship_instance.name}",
-            design_id=design_id,
-            fleet_id=fleet.id,
-            is_fleet_production=True,
-            location_hex=[fleet.location.q, fleet.location.r],
-            system_name="",
-            local_hex=None,
-        )
-
-    def _spawn_fleet_complex(
-        self,
-        fleet: Fleet,
-        design_id: str,
-        empire,
-        galaxy,
-        save_path: Optional[str] = None,
-        target_planet_id: Optional[int] = None
-    ) -> None:
-        """
-        Spawn complex on planet at fleet's location.
-
-        PROJ-67 Phase 3: Fleet yards can build complexes when at a planet hex.
-        PROJ-79 Phase 4: Uses target_planet_id when specified.
-
-        Args:
-            fleet: Fleet building the complex
-            design_id: ID of the complex design
-            empire: Empire that owns the fleet
-            galaxy: Galaxy for planet lookup
-            save_path: Path to savegame folder for loading design data
-            target_planet_id: Specific planet ID to receive the complex (PROJ-79)
-        """
-        # Find planet at fleet's location
-        if galaxy is None:
-            logger.warning(f"Cannot spawn complex {design_id}: no galaxy provided")
-            return
-
-        planets_at_hex = galaxy.get_planets_at_global_hex(fleet.location)
-        if not planets_at_hex:
-            logger.warning(f"Cannot spawn complex {design_id}: fleet not at planet hex")
-            return
-
-        # PROJ-79: Use target_planet_id if specified, otherwise fall back to first planet
-        if target_planet_id is not None:
-            planet = next(
-                (p for p in planets_at_hex if p.id == target_planet_id),
-                planets_at_hex[0]
-            )
-        else:
-            planet = planets_at_hex[0]
-
-        self._create_and_place_facility(
-            planet, design_id, empire, save_path, galaxy,
-            log_prefix=f"Fleet {fleet.id} "
+        # Spawn via dedicated spawner
+        self._spawner.spawn_completed_item(
+            item, empire, colony_or_fleet, galaxy, save_path, tick
         )

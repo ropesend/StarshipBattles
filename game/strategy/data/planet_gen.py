@@ -99,44 +99,45 @@ class PlanetGenerator:
 
         Returns dict mapping location to list of masses at that location.
         """
-        primary = stars[0]
-        safe_start = primary.radius_hexes + 2  # radius_hexes is already the radius
-        max_dist = 20
+        from game.strategy.data.orbital_generation_config import get_orbital_generation_config
+        cfg = get_orbital_generation_config()
 
-        # Get planet count from blueprint or use default 3-10
+        primary = stars[0]
+        safe_start = primary.radius_hexes + cfg.safe_start_offset
+        max_dist = cfg.max_orbital_distance
+
+        # Get planet count from blueprint or use default
         if blueprint:
             planet_count_spec = blueprint.get("planet_count", {})
             if isinstance(planet_count_spec, int):
                 primary_count = planet_count_spec
             elif isinstance(planet_count_spec, dict):
-                min_count = planet_count_spec.get("min", 3)
-                max_count = planet_count_spec.get("max", 10)
+                min_count = planet_count_spec.get("min", cfg.default_planet_min)
+                max_count = planet_count_spec.get("max", cfg.default_planet_max)
                 primary_count = random.randint(min_count, max_count)
             else:
-                primary_count = random.randint(3, 10)
+                primary_count = random.randint(cfg.default_planet_min, cfg.default_planet_max)
 
             # Apply orbital spacing factor if specified
             spacing_spec = blueprint.get("orbital_spacing", {})
             if isinstance(spacing_spec, dict):
                 spacing_factor = spacing_spec.get("factor", 1.0)
                 max_dist = int(max_dist * spacing_factor)
-                max_dist = max(safe_start + 2, max_dist)  # Ensure room for at least some orbits
+                max_dist = max(safe_start + 2, max_dist)
         else:
-            primary_count = random.randint(3, 10)
+            primary_count = random.randint(cfg.default_planet_min, cfg.default_planet_max)
 
         # Handle 0 planet case
         if primary_count == 0:
             return {}
 
         # Collect exclusion zones for all stars (occupied hexes + buffer)
-        # Primary star is already handled by safe_start distance check.
-        # Secondary stars need explicit hex exclusion (BUG-108).
         occupied_locations = self._collect_star_exclusion_zones(stars)
         occupied_slots = {}
 
         # Get mass constraints from blueprint
         mass_spec = blueprint.get("planet_mass", {}) if blueprint else {}
-        mass_bias = mass_spec.get("bias", None)  # "small" or "large"
+        mass_bias = mass_spec.get("bias", None)
         mass_min = mass_spec.get("min", MASS_CERES)
         mass_max = mass_spec.get("max", MASS_JUPITER)
 
@@ -146,15 +147,12 @@ class PlanetGenerator:
         hot_zone_placed = False
 
         for i in range(primary_count):
-            for attempt in range(20):
-                # If hot zone required and not yet placed, force close orbit for first planet
+            for attempt in range(cfg.max_placement_attempts):
                 if hot_required and not hot_zone_placed and i == 0:
-                    # Hot Jupiter: orbit distance 2-3 (very close to star)
                     dist = random.randint(safe_start, safe_start + 1)
-                    dist = max(2, min(dist, 3))  # Ensure orbit 2-3
+                    dist = max(cfg.hot_jupiter_orbit_min, min(dist, cfg.hot_jupiter_orbit_max))
                 else:
-                    # Triangular distribution biased toward inner orbits
-                    mode = safe_start + (max_dist - safe_start) * 0.3
+                    mode = safe_start + (max_dist - safe_start) * cfg.orbital_distribution_mode
                     dist = int(random.triangular(safe_start, max_dist, mode))
 
                 ring_coords = hex_ring(dist)
@@ -164,10 +162,10 @@ class PlanetGenerator:
                 if loc not in occupied_locations:
                     occupied_locations.add(loc)
 
-                    # For hot_jupiter first planet, force gas giant mass
                     if hot_required and not hot_zone_placed and i == 0:
-                        # Force gas giant: 5e26 to 2e28 kg (Jupiter-like)
-                        hot_mass = 10 ** random.uniform(26.7, 28.0)
+                        hot_mass = 10 ** random.uniform(
+                            cfg.hot_jupiter_log_mass_min, cfg.hot_jupiter_log_mass_max
+                        )
                         occupied_slots[loc] = [hot_mass]
                         hot_zone_placed = True
                     else:
@@ -213,28 +211,23 @@ class PlanetGenerator:
         Returns:
             Mass in kg within constraints
         """
-        # Determine log-normal parameters based on bias
+        from game.strategy.data.orbital_generation_config import get_orbital_generation_config
+        cfg = get_orbital_generation_config()
+
         if bias == "small":
-            # Bias towards smaller rocky planets (Mars to Super-Earth range)
-            # log10(Earth) ~ 24.77, log10(Mars) ~ 23.8
-            log_mu = 24.0
-            log_sigma = 0.8
+            log_mu = cfg.small_bias_mu
+            log_sigma = cfg.small_bias_sigma
         elif bias == "large":
-            # Bias towards gas giants (Neptune to Jupiter range)
-            # log10(Neptune) ~ 26.0, log10(Jupiter) ~ 27.3
-            log_mu = 26.5
-            log_sigma = 0.8
+            log_mu = cfg.large_bias_mu
+            log_sigma = cfg.large_bias_sigma
         else:
-            # Default distribution centered on Mars-mass, tighter spread
-            # to keep most planets below the giant threshold (6e24 kg = log 24.78)
-            log_mu = 24.0
-            log_sigma = 1.0
+            log_mu = cfg.default_mu
+            log_sigma = cfg.default_sigma
 
         log_min = math.log10(mass_min)
         log_max = math.log10(mass_max)
 
-        # Generate mass with bias, respecting constraints
-        for _ in range(100):
+        for _ in range(cfg.mass_max_iterations):
             log_val = random.gauss(log_mu, log_sigma)
             if log_min <= log_val <= log_max:
                 return 10 ** log_val
@@ -264,8 +257,10 @@ class PlanetGenerator:
             chance = self._calculate_moon_chance(primary_mass)
 
             # Keep rolling for additional moons
+            from game.strategy.data.orbital_generation_config import get_orbital_generation_config
+            cfg_moons = get_orbital_generation_config()
             while random.random() < chance:
-                if len(masses) > 50:
+                if len(masses) > cfg_moons.max_moons_per_body:
                     break
 
                 # Check max_total constraint
@@ -293,22 +288,23 @@ class PlanetGenerator:
           Mars:             15% -> 15% have 1+
           Ceres:             2% -> rarely any
         """
+        from game.strategy.data.orbital_generation_config import get_orbital_generation_config
+        cfg = get_orbital_generation_config()
+
         log_m = math.log10(primary_mass)
 
-        if log_m >= 27.27:  # Jupiter+
-            chance = 0.88
-        elif log_m >= 24.77:  # Earth to Jupiter
-            # Linear interp: Earth(24.77)=0.35 to Jupiter(27.27)=0.88
-            t = (log_m - 24.77) / (27.27 - 24.77)
-            chance = 0.35 + t * (0.88 - 0.35)
-        elif log_m >= 20.97:  # Ceres to Earth
-            # Linear interp: Ceres(20.97)=0.02 to Earth(24.77)=0.35
-            t = (log_m - 20.97) / (24.77 - 20.97)
-            chance = 0.02 + t * (0.35 - 0.02)
+        if log_m >= cfg.jupiter_threshold_log:
+            chance = cfg.jupiter_chance
+        elif log_m >= cfg.earth_threshold_log:
+            t = (log_m - cfg.earth_threshold_log) / (cfg.jupiter_threshold_log - cfg.earth_threshold_log)
+            chance = cfg.earth_chance + t * (cfg.jupiter_chance - cfg.earth_chance)
+        elif log_m >= cfg.ceres_threshold_log:
+            t = (log_m - cfg.ceres_threshold_log) / (cfg.earth_threshold_log - cfg.ceres_threshold_log)
+            chance = cfg.ceres_chance + t * (cfg.earth_chance - cfg.ceres_chance)
         else:
-            chance = 0.02
+            chance = cfg.ceres_chance
 
-        return max(0.0, min(0.95, chance))
+        return max(0.0, min(cfg.max_chance_cap, chance))
 
     def _generate_moon_mass(self, primary_mass: float) -> float:
         """
@@ -318,8 +314,11 @@ class PlanetGenerator:
         of Jupiter's mass. Log-uniform distribution gives most moons at
         the small end with rare larger ones.
         """
-        log_min = math.log10(primary_mass * 0.00001)  # 0.001%
-        log_max = math.log10(primary_mass * 0.05)      # 5%
+        from game.strategy.data.orbital_generation_config import get_orbital_generation_config
+        cfg = get_orbital_generation_config()
+
+        log_min = math.log10(primary_mass * cfg.mass_ratio_min)
+        log_max = math.log10(primary_mass * cfg.mass_ratio_max)
 
         moon_mass = 10 ** random.uniform(log_min, log_max)
 
@@ -419,21 +418,24 @@ class PlanetGenerator:
         """
         Generate surface water, tectonic activity, and magnetic field.
         """
+        from game.strategy.data.orbital_generation_config import get_orbital_generation_config
+        cfg = get_orbital_generation_config()
+
         activity = 0.0
         mag_field = 0.0
         water = 0.0
 
         if mass > MASS_MARS:
-            activity = random.uniform(0.1, 0.8)
-            mag_field = random.uniform(0.5, 2.0)
+            activity = random.uniform(cfg.active_body_activity_min, cfg.active_body_activity_max)
+            mag_field = random.uniform(cfg.active_body_mag_min, cfg.active_body_mag_max)
         else:
-            activity = random.uniform(0, 0.2)
-            mag_field = random.uniform(0, 0.5)
+            activity = random.uniform(cfg.small_body_activity_min, cfg.small_body_activity_max)
+            mag_field = random.uniform(cfg.small_body_mag_min, cfg.small_body_mag_max)
 
         # Water presence based on temperature
-        if 250 < temp < 350:
+        if cfg.water_temp_min < temp < cfg.water_temp_max:
             water = random.uniform(0.1, 1.0)
-        elif temp <= 250:
+        elif temp <= cfg.water_temp_min:
             water = random.uniform(0.1, 1.0)  # Frozen
         else:
             water = 0  # Boiled off
@@ -463,11 +465,13 @@ class PlanetGenerator:
             # Chthonian: stripped giant core. Very hot giants close to stars
             # have their atmospheres stripped away. Probability increases
             # with temperature — represents proximity to stellar radiation.
-            if temp > 600 and pressure < cfg.chthonian_max:
+            if temp > cfg.chthonian_certain_temp and pressure < cfg.chthonian_max:
                 return PlanetType.CHTHONIAN
-            if temp > 300:
-                # Hotter giants have higher stripping chance (up to ~30% at 1500K+)
-                strip_chance = min(0.30, (temp - 300) / 4000)
+            if temp > cfg.chthonian_strip_start_temp:
+                strip_chance = min(
+                    cfg.chthonian_max_probability,
+                    (temp - cfg.chthonian_strip_start_temp) / cfg.chthonian_strip_divisor,
+                )
                 if random.random() < strip_chance:
                     return PlanetType.CHTHONIAN
 
@@ -554,14 +558,12 @@ class PlanetGenerator:
         sf_linear = max(0.001, min(1.0, sf_linear))
         # Exponential ramp: sf^2 provides a base floor, plus a steep power-law
         # ramp that creates ~1000x range between Ceres and Jupiter.
-        # C=24.8 calibrated so f(Jupiter) / f(Ceres) ~ 1000.
-        _RAMP_C = 24.8
-        size_factor = sf_linear ** 2 * (1.0 + _RAMP_C * sf_linear ** 4)
+        size_factor = sf_linear ** 2 * (1.0 + cfg.ramp_c * sf_linear ** 4)
 
         # Earth-mass size_factor for baseline calibration
         earth_log = math.log10(MASS_EARTH)
         earth_sf_linear = (earth_log - cfg.min_log_mass) / (cfg.max_log_mass - cfg.min_log_mass)
-        earth_size_factor = earth_sf_linear ** 2 * (1.0 + _RAMP_C * earth_sf_linear ** 4)
+        earth_size_factor = earth_sf_linear ** 2 * (1.0 + cfg.ramp_c * earth_sf_linear ** 4)
 
         type_name = planet_type.name
 

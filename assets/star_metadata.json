@@ -1,0 +1,254 @@
+{
+  "StarBlackAsset.png": {
+    "centerX": 0.4965630407735041,
+    "centerY": 0.49325100758948204,
+    "radiusCore": 0.1962890625,
+    "radiusCorona": 0.44921875
+  },
+  "StarBlackVariant_1.png": {
+    "centerX": 0.5004692907735041,
+    "centerY": 0.500086945089482,
+    "radiusCore": 0.1611328125,
+    "radiusCorona": 0.3662109375
+  },
+  "StarBlackVariant_2.png": {
+    "centerX": 0.5004692907735041,
+    "centerY": 0.500086945089482,
+    "radiusCore": 0.1259765625,
+    "radiusCorona": 0.5263671875
+  },
+  "StarBlackVariant_3.png": {
+    "centerX": 0.5004692907735041,
+    "centerY": 0.500086945089482,
+    "radiusCore": 0.1904296875,
+    "radiusCorona": 0.3955078125
+  },
+  "StarBlackVariant_4.png": {
+    "centerX": 0.5004692907735041,
+    "centerY": 0.500086945089482,
+    "radiusCore": 0.1220703125,
+    "radiusCorona": 0.4150390625
+  },
+  "StarBlackVariant_5.png": {
+    "centerX": 0.5004692907735041,
+    "centerY": 0.500086945089482,
+    "radiusCore": 0.1220703125,
+    "radiusCorona": 0.4833984375
+  },
+  "StarBlueAsset.png": {
+    "centerX": 0.49906929308135944,
+    "centerY": 0.5019092581783013,
+    "radiusCore": 0.275390625,
+    "radiusCorona": 0.333984375
+  },
+  "StarBlueVariant_1.png": {
+    "centerX": 0.49965761580611856,
+    "centerY": 0.4985642143963308,
+    "radiusCore": 0.3330078125,
+    "radiusCorona": 0.4599609375
+  },
+  "StarBlueVariant_2.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.4995407768963308,
+    "radiusCore": 0.392578125,
+    "radiusCorona": 0.4609375
+  },
+  "StarBlueVariant_3.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.4995407768963308,
+    "radiusCore": 0.392578125,
+    "radiusCorona": 0.48046875
+  },
+  "StarBlueVariant_4.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.4995407768963308,
+    "radiusCore": 0.349609375,
+    "radiusCorona": 0.486328125
+  },
+  "StarBlueVariant_5.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.4995407768963308,
+    "radiusCore": 0.3779296875,
+    "radiusCorona": 0.4658203125
+  },
+  "StarNeutronAsset.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.4995407768963308,
+    "radiusCore": 0.2001953125,
+    "radiusCorona": 0.4248046875
+  },
+  "StarNeutronVariant_1.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.4966110893963308,
+    "radiusCore": 0.146484375,
+    "radiusCorona": 0.390625
+  },
+  "StarNeutronVariant_2.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.4966110893963308,
+    "radiusCore": 0.1083984375,
+    "radiusCorona": 0.3134765625
+  },
+  "StarNeutronVariant_3.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.4985642143963308,
+    "radiusCore": 0.0712890625,
+    "radiusCorona": 0.2373046875
+  },
+  "StarNeutronVariant_4.png": {
+    "centerX": 0.49965761580611856,
+    "centerY": 0.4956345268963308,
+    "radiusCore": 0.2236328125,
+    "radiusCorona": 0.4580078125
+  },
+  "StarNeutronVariant_5.png": {
+    "centerX": 0.49965761580611856,
+    "centerY": 0.4975876518963308,
+    "radiusCore": 0.15234375,
+    "radiusCorona": 0.50390625
+  },
+  "StarOrangeAsset.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.5063767143963308,
+    "radiusCore": 0.2890625,
+    "radiusCorona": 0.357421875
+  },
+  "StarOrangeVariant_1.png": {
+    "centerX": 0.49965761580611856,
+    "centerY": 0.5014939018963308,
+    "radiusCore": 0.4013671875,
+    "radiusCorona": 0.4697265625
+  },
+  "StarOrangeVariant_2.png": {
+    "centerX": 0.49770449080611856,
+    "centerY": 0.5005173393963308,
+    "radiusCore": 0.423828125,
+    "radiusCorona": 0.4921875
+  },
+  "StarOrangeVariant_3.png": {
+    "centerX": 0.49965761580611856,
+    "centerY": 0.5034470268963308,
+    "radiusCore": 0.318359375,
+    "radiusCorona": 0.396484375
+  },
+  "StarOrangeVariant_4.png": {
+    "centerX": 0.49965761580611856,
+    "centerY": 0.5005173393963308,
+    "radiusCore": 0.4296875,
+    "radiusCorona": 0.498046875
+  },
+  "StarOrangeVariant_5.png": {
+    "centerX": 0.49868105330611856,
+    "centerY": 0.4995407768963308,
+    "radiusCore": 0.3369140625,
+    "radiusCorona": 0.4248046875
+  },
+  "StarRedAsset.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.5073532768963308,
+    "radiusCore": 0.27734375,
+    "radiusCorona": 0.3564453125
+  },
+  "StarRedVariant_1.png": {
+    "centerX": 0.49965761580611856,
+    "centerY": 0.4995407768963308,
+    "radiusCore": 0.330078125,
+    "radiusCorona": 0.3984375
+  },
+  "StarRedVariant_2.png": {
+    "centerX": 0.49965761580611856,
+    "centerY": 0.5014939018963308,
+    "radiusCore": 0.4169921875,
+    "radiusCorona": 0.4951171875
+  },
+  "StarRedVariant_3.png": {
+    "centerX": 0.49965761580611856,
+    "centerY": 0.5014939018963308,
+    "radiusCore": 0.3779296875,
+    "radiusCorona": 0.4560546875
+  },
+  "StarRedVariant_4.png": {
+    "centerX": 0.49477480330611856,
+    "centerY": 0.4936814018963308,
+    "radiusCore": 0.373046875,
+    "radiusCorona": 0.451171875
+  },
+  "StarRedVariant_5.png": {
+    "centerX": 0.49477480330611856,
+    "centerY": 0.4956345268963308,
+    "radiusCore": 0.3681640625,
+    "radiusCorona": 0.4462890625
+  },
+  "StarWhiteAsset.png": {
+    "centerX": 0.49965761580611856,
+    "centerY": 0.5044235893963308,
+    "radiusCore": 0.28125,
+    "radiusCorona": 0.349609375
+  },
+  "StarWhiteVariant_1.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.4995407768963308,
+    "radiusCore": 0.396484375,
+    "radiusCorona": 0.455078125
+  },
+  "StarWhiteVariant_2.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.4995407768963308,
+    "radiusCore": 0.3349609375,
+    "radiusCorona": 0.3935546875
+  },
+  "StarWhiteVariant_3.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.4995407768963308,
+    "radiusCore": 0.3349609375,
+    "radiusCorona": 0.4228515625
+  },
+  "StarWhiteVariant_4.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.5014939018963308,
+    "radiusCore": 0.37890625,
+    "radiusCorona": 0.466796875
+  },
+  "StarWhiteVariant_5.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.5014939018963308,
+    "radiusCore": 0.37890625,
+    "radiusCorona": 0.427734375
+  },
+  "StarYellowAsset.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.5063767143963308,
+    "radiusCore": 0.271484375,
+    "radiusCorona": 0.359375
+  },
+  "StarYellowVariant_1.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.5005173393963308,
+    "radiusCore": 0.3759765625,
+    "radiusCorona": 0.4541015625
+  },
+  "StarYellowVariant_2.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.5005173393963308,
+    "radiusCore": 0.3759765625,
+    "radiusCorona": 0.4736328125
+  },
+  "StarYellowVariant_3.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.4995407768963308,
+    "radiusCore": 0.3427734375,
+    "radiusCorona": 0.4208984375
+  },
+  "StarYellowVariant_4.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.5005173393963308,
+    "radiusCore": 0.40234375,
+    "radiusCorona": 0.451171875
+  },
+  "StarYellowVariant_5.png": {
+    "centerX": 0.5006341783061186,
+    "centerY": 0.5005173393963308,
+    "radiusCore": 0.294921875,
+    "radiusCorona": 0.412109375
+  }
+}
