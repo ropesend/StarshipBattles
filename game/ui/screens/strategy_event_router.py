@@ -16,7 +16,7 @@ import pygame_gui
 import logging
 
 logger = logging.getLogger(__name__)
-from game.core.protocols import is_fleet
+from game.core.protocols import is_fleet, is_planet
 
 if TYPE_CHECKING:
     from game.ui.screens.strategy_ui import StrategyUI
