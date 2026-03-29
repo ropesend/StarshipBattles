@@ -353,7 +353,7 @@ class StrategyScreen:
         elif option == "load_game":
             self._show_load_game_dialog()
         elif option == "settings":
-            self._show_coming_soon("Settings")
+            self.ui.window_manager.open_settings()
         elif option == "controls":
             if self.scene_callback:
                 self.scene_callback("open_keybindings")

@@ -56,7 +56,12 @@ class StrategyRenderer:
         self._bg_image = None
         self._bg_scaled = None
         self._bg_scaled_size = (0, 0)
+        self._bg_brightness = -1.0  # force rebuild on first draw
         self._load_background()
+
+        # Settings reference
+        from game.ui.services.game_settings import GameSettings
+        self._settings = GameSettings()
 
         # Animation state
         self._elapsed_time = 0.0
@@ -72,14 +77,30 @@ class StrategyRenderer:
             self._bg_image = img
 
     def _draw_background(self, screen, viewport_rect: pygame.Rect) -> None:
-        """Draw the static background image scaled to fill the viewport."""
+        """Draw the static background image scaled to fill the viewport.
+
+        Applies brightness dimming from game settings.
+        """
         if self._bg_image is None:
             return
 
         target_size = (viewport_rect.width, viewport_rect.height)
-        if self._bg_scaled is None or self._bg_scaled_size != target_size:
-            self._bg_scaled = pygame.transform.smoothscale(self._bg_image, target_size)
+        brightness = self._settings.background_brightness
+
+        # Rebuild scaled surface if size or brightness changed
+        if (self._bg_scaled is None
+                or self._bg_scaled_size != target_size
+                or self._bg_brightness != brightness):
+            scaled = pygame.transform.smoothscale(self._bg_image, target_size)
+            if brightness < 1.0:
+                # Dim by blitting a semi-transparent black overlay
+                dim = pygame.Surface(target_size)
+                dim.fill((0, 0, 0))
+                dim.set_alpha(int((1.0 - brightness) * 255))
+                scaled.blit(dim, (0, 0))
+            self._bg_scaled = scaled
             self._bg_scaled_size = target_size
+            self._bg_brightness = brightness
 
         screen.blit(self._bg_scaled, viewport_rect.topleft)
 
