@@ -449,11 +449,12 @@ class TestEdgeCases:
         mock_scene.ui.handle_event.assert_called_once_with(event)
 
     def test_fleet_requiring_hotkey_ignored_without_fleet(self, mock_scene, mapper):
-        """Fleet-requiring hotkeys should be ignored without fleet selected."""
+        """Fleet-requiring hotkeys should be ignored without fleet or planet selected."""
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
         mock_scene.selected_fleet = None
+        mock_scene.ui.current_selection = None  # PROJ-238: No planet selected either
 
-        # O opens orders window, requires fleet
+        # O opens orders window, requires fleet or planet
         handler.handle_event(_keydown(pygame.K_o))
 
         mock_scene.ui.open_orders_window.assert_not_called()

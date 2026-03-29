@@ -2,7 +2,7 @@
 ShipInstanceSerializer - Serialization for ShipInstance.
 
 Extracted from ShipInstance to separate persistence concerns from core game logic.
-Follows FleetOrderSerializer pattern (PROJ-210): static methods, called from ShipInstance facades.
+Follows OrderSerializer pattern (PROJ-210): static methods, called from ShipInstance facades.
 
 PROJ-234: Extracted as part of ShipInstance god object decomposition.
 """

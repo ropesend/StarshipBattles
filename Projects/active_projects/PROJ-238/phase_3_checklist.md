@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Merge PlanetActionTimeResolver into ActionTimeResolver. Single mapping dict for all order types with (ability_name, time_field) tuples. Delete planet_action_time_resolver.py.
 
 ---

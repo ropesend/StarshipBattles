@@ -82,9 +82,17 @@ class QueueColonizeMissionCommand(Command):
 
 
 @dataclass
-class ClearFleetOrdersCommand(Command):
-    """Command to clear all orders from a fleet."""
-    fleet_id: int
+class ClearOrdersCommand(Command):
+    """Command to clear all orders from a fleet or planet.
+
+    PROJ-238: Renamed from ClearFleetOrdersCommand. Uses entity_id + entity_type.
+    """
+    fleet_id: int  # Kept for backward compat; use entity_id for new code
+    entity_type: str = "fleet"  # "fleet" or "planet"
+
+
+# PROJ-238: Backward compatibility alias
+ClearFleetOrdersCommand = ClearOrdersCommand
 
 
 @dataclass
@@ -262,33 +270,34 @@ class SplitFleetCommand(Command):
 
 
 @dataclass
-class DeleteFleetOrderCommand(Command):
-    """Command to remove a specific order from a fleet's order queue.
+class DeleteOrderCommand(Command):
+    """Command to remove a specific order from a fleet's or planet's order queue.
 
-    PROJ-208 Phase 1: Routes order deletion through command pipeline.
-
-    Args:
-        fleet_id: Fleet whose order queue to modify.
-        order_index: Index of the order to remove (0-based).
+    PROJ-238: Renamed from DeleteFleetOrderCommand.
     """
     fleet_id: int
     order_index: int
+    entity_type: str = "fleet"
+
+
+# PROJ-238: Backward compatibility alias
+DeleteFleetOrderCommand = DeleteOrderCommand
 
 
 @dataclass
-class ReorderFleetOrderCommand(Command):
-    """Command to move a fleet order up or down in the queue.
+class ReorderOrderCommand(Command):
+    """Command to move an order up or down in the queue.
 
-    PROJ-208 Phase 1: Routes order reordering through command pipeline.
-
-    Args:
-        fleet_id: Fleet whose order queue to modify.
-        order_index: Index of the order to move.
-        direction: -1 for up (earlier), +1 for down (later).
+    PROJ-238: Renamed from ReorderFleetOrderCommand.
     """
     fleet_id: int
     order_index: int
     direction: int
+    entity_type: str = "fleet"
+
+
+# PROJ-238: Backward compatibility alias
+ReorderFleetOrderCommand = ReorderOrderCommand
 
 
 # =============================================================================
@@ -369,7 +378,7 @@ class IssuePlanetOrderCommand(Command):
 
     Args:
         planet_id: Planet to issue order to.
-        order_type: PlanetOrderType name (e.g., "ACTIVATE_SHIELD").
+        order_type: OrderType name (e.g., "ACTIVATE_SHIELD").
         facility_instance_id: Target facility UUID.
         component_id: Optional specific component within facility.
     """

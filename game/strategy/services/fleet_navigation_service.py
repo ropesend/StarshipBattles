@@ -28,9 +28,10 @@ from typing import Any, Dict, Optional, Tuple
 
 from game.core.hex_math import HexCoord, hex_distance
 from game.strategy.data.fleet import (
-    Fleet, FleetOrder, OrderType,
+    Fleet, OrderType,
     MOVEMENT_ORDER_TYPES, ACTION_ORDER_TYPES,
 )
+from game.strategy.data.order_types import Order
 from game.strategy.data.pathfinding import find_hybrid_path, strip_start_hex
 
 logger = logging.getLogger(__name__)
@@ -46,7 +47,7 @@ class NavigationState:
     """
     location: HexCoord
     path: tuple  # tuple[HexCoord, ...] - immutable
-    orders: tuple  # tuple[FleetOrder, ...] - immutable
+    orders: tuple  # tuple[Order, ...] - immutable
     speed: float
     can_warp: bool
 
@@ -127,7 +128,7 @@ class FleetNavigationService:
     def get_destination(
         self,
         state: NavigationState,
-        order: FleetOrder,
+        order: Order,
         galaxy
     ) -> Optional[HexCoord]:
         """
@@ -530,7 +531,7 @@ class FleetNavigationService:
     def _get_action_time_for_projection(
         self,
         fleet: Fleet,
-        order: FleetOrder,
+        order: Order,
         component_registry
     ) -> int:
         """
@@ -552,7 +553,7 @@ class FleetNavigationService:
     def _project_action_order(
         self,
         state: NavigationState,
-        order: FleetOrder,
+        order: Order,
         fleet: Fleet,
         component_registry,
         moves_left: int,
@@ -597,7 +598,7 @@ class FleetNavigationService:
     def _resolve_path_for_order(
         self,
         state: NavigationState,
-        order: FleetOrder,
+        order: Order,
         galaxy
     ) -> Optional[NavigationState]:
         """

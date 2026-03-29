@@ -270,6 +270,35 @@ class IPlanet(Protocol):
 
 
 @runtime_checkable
+class IOrderable(Protocol):
+    """Protocol for entities with an order queue (Fleet, Planet).
+
+    PROJ-238: Unified interface for any entity that can receive orders.
+    """
+
+    @property
+    def orders(self) -> List[Any]:
+        """The entity's order queue."""
+        ...
+
+    def get_current_order(self) -> Optional[Any]:
+        """Peek at the first order in the queue."""
+        ...
+
+    def add_order(self, order: Any, index: Optional[int] = None) -> None:
+        """Add an order to the queue."""
+        ...
+
+    def pop_order(self) -> Optional[Any]:
+        """Remove and return the first order."""
+        ...
+
+    def clear_orders(self) -> None:
+        """Remove all orders."""
+        ...
+
+
+@runtime_checkable
 class IZoneOccupant(Protocol):
     """
     Protocol for entities that occupy multiple hexes (PROJ-139).

@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 import pygame
 
 from game.core.input_actions import InputAction
+from game.core.protocols import is_planet
 
 if TYPE_CHECKING:
     from game.ui.screens.strategy_input_handler import StrategyInputHandler
@@ -185,6 +186,21 @@ class FleetCommandRouter:
         if action == InputAction.DETAIL_PANEL_ORDERS:
             if self.scene.selected_fleet:
                 self.scene.ui.open_orders_window(self.scene.selected_fleet)
+            else:
+                # PROJ-238: O key also opens planet orders when planet selected
+                current_sel = getattr(self.scene.ui, 'current_selection', None)
+                if current_sel and is_planet(current_sel):
+                    self.scene.ui.open_orders_window(current_sel, entity_type="planet")
+            return True
+        elif action == InputAction.DETAIL_PANEL_PLANET_ORDERS:
+            # PROJ-238: Dedicated planet orders hotkey
+            current_sel = getattr(self.scene.ui, 'current_selection', None)
+            if current_sel and is_planet(current_sel):
+                self.scene.ui.open_orders_window(current_sel, entity_type="planet")
+            return True
+        elif action == InputAction.PLANET_SHIELD_TOGGLE:
+            # PROJ-238: H key toggles shield on selected planet
+            self._handle_shield_toggle()
             return True
         elif action == InputAction.DETAIL_PANEL_FLEET_REPORT:
             if self.scene.selected_fleet:
@@ -196,6 +212,46 @@ class FleetCommandRouter:
             return True
 
         return False
+
+    def _handle_shield_toggle(self) -> None:
+        """Toggle planetary shield on selected planet.
+
+        PROJ-238: Issues ACTIVATE_SHIELD or DEACTIVATE_SHIELD based on current state.
+        """
+        current_sel = getattr(self.scene.ui, 'current_selection', None)
+        if not current_sel or not is_planet(current_sel):
+            return
+        planet = current_sel
+
+        # Find shield facility
+        shield_facility_id = None
+        for facility in planet.facilities:
+            design_data = getattr(facility, 'design_data', {})
+            for layer_data in design_data.get('layers', {}).values():
+                if not isinstance(layer_data, list):
+                    continue
+                for comp in layer_data:
+                    if isinstance(comp, dict) and 'PlanetaryShield' in comp.get('abilities', {}):
+                        shield_facility_id = facility.instance_id
+                        break
+                if shield_facility_id:
+                    break
+            if shield_facility_id:
+                break
+
+        if not shield_facility_id:
+            return  # No shield facility on this planet
+
+        # Determine order type based on current state
+        order_type = "DEACTIVATE_SHIELD" if planet.shield_active else "ACTIVATE_SHIELD"
+
+        from game.strategy.engine.commands import IssuePlanetOrderCommand
+        cmd = IssuePlanetOrderCommand(
+            planet_id=planet.id,
+            order_type=order_type,
+            facility_instance_id=shield_facility_id,
+        )
+        self.scene.facade.handle_command(cmd)
 
     def finish_move_action(self, fleet) -> None:
         """Common cleanup after move action.

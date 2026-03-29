@@ -251,10 +251,11 @@ class TestNewHotkeyButtonActions:
         args, _ = mock_scene.ui.open_orders_window.call_args
         assert args[0] is mock_fleet
 
-    def test_o_ignored_without_fleet(self, mock_scene, mapper):
-        """O key does nothing when no fleet selected."""
+    def test_o_ignored_without_fleet_or_planet(self, mock_scene, mapper):
+        """O key does nothing when no fleet or planet selected (PROJ-238)."""
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
         mock_scene.selected_fleet = None
+        mock_scene.ui.current_selection = None  # PROJ-238: No planet selected either
         initial_mode = handler.input_mode
         result = handler.handle_event(_keydown(pygame.K_o))
         mock_scene.ui.open_orders_window.assert_not_called()

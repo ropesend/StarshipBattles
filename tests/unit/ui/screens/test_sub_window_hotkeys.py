@@ -315,9 +315,9 @@ class TestBuildQueueListWindowHotkeys:
 class TestStrategyUIPassesMapper:
     """StrategyUI should pass input_mapper to sub-window constructors via window manager."""
 
-    @patch('game.ui.screens.strategy_window_manager.FleetOrdersWindow')
+    @patch('game.ui.screens.orders_window.OrdersWindow')
     def test_open_orders_passes_mapper(self, MockWindow, mapper):
-        """open_orders_window passes input_mapper to FleetOrdersWindow via window manager."""
+        """open_orders_window passes input_mapper to OrdersWindow via window manager."""
         from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
         scene = MagicMock()

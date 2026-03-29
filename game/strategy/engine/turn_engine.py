@@ -349,10 +349,10 @@ class TurnEngine:
         """Return planet action engine, lazily creating default if not injected."""
         if self._planet_action_engine is None:
             from game.strategy.engine.planet_action_engine import PlanetActionEngine
-            from game.strategy.services.planet_action_time_resolver import PlanetActionTimeResolver
+            from game.strategy.services.action_time_resolver import ActionTimeResolver
             self._planet_action_engine = PlanetActionEngine(
                 registries=self._registries,
-                action_time_resolver=PlanetActionTimeResolver(),
+                action_time_resolver=ActionTimeResolver(),
             )
         return self._planet_action_engine
 

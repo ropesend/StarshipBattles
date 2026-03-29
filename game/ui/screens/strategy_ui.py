@@ -84,6 +84,7 @@ class StrategyUI:
         self.btn_raw_data = widgets.btn_raw_data
         self.btn_colonize = widgets.btn_colonize
         self.btn_build_yard = widgets.btn_build_yard
+        self.btn_planet_orders = widgets.btn_planet_orders  # PROJ-238
         self.btn_orders = widgets.btn_orders
         self.btn_fleet_report = widgets.btn_fleet_report
         self.btn_build_fleet = widgets.btn_build_fleet
@@ -130,6 +131,7 @@ class StrategyUI:
                 'btn_raw_data': self.btn_raw_data,
                 'btn_colonize': self.btn_colonize,
                 'btn_build_yard': self.btn_build_yard,
+                'btn_planet_orders': self.btn_planet_orders,  # PROJ-238
                 'btn_orders': self.btn_orders,
                 'btn_fleet_report': self.btn_fleet_report,
                 'btn_build_fleet': self.btn_build_fleet,

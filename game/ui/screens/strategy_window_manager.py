@@ -16,7 +16,7 @@ from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 from game.ui.screens.planet_list_window import PlanetListWindow
 from game.ui.screens.star_list_window import StarListWindow
 from game.ui.screens.system_selection_window import SystemSelectionWindow
-from game.ui.screens.fleet_orders_window import FleetOrdersWindow
+# PROJ-238: OrdersWindow imported locally in open_orders_window()
 from game.ui.screens.fleet_report_window import FleetReportWindow
 from game.ui.screens.build_queue_list_window import BuildQueueListWindow
 from game.ui.screens.empire_build_queue_window import EmpireBuildQueueWindow
@@ -379,11 +379,14 @@ class StrategyWindowManager:
     # Fleet Orders Window
     # =========================================================================
 
-    def open_orders_window(self, fleet) -> None:
-        """Open the Fleet Orders Window.
+    def open_orders_window(self, entity, entity_type: str = "fleet") -> None:
+        """Open the Orders Window for a fleet or planet.
+
+        PROJ-238: Generalized from fleet-only to any IOrderable entity.
 
         Args:
-            fleet: The fleet to show orders for.
+            entity: The fleet or planet to show orders for.
+            entity_type: "fleet" or "planet".
         """
         if self.fleet_orders_window:
             self.fleet_orders_window.kill()
@@ -391,30 +394,39 @@ class StrategyWindowManager:
         w, h = 480, 500
         rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
 
-        # PROJ-207 Phase 4: Create callback closure for command dispatch
-        # PROJ-208 Phase 3: Route through facade (not session) for CQRS consistency
-        def clear_orders_callback(fleet_id: int) -> None:
-            """Dispatch ClearFleetOrdersCommand through facade command pipeline."""
-            from game.strategy.engine.commands import ClearFleetOrdersCommand
-            cmd = ClearFleetOrdersCommand(fleet_id=fleet_id)
-            self.scene.facade.handle_command(cmd)
+        if entity_type == "planet":
+            def clear_orders_callback(entity_id: int) -> None:
+                from game.strategy.engine.commands import ClearPlanetOrdersCommand
+                cmd = ClearPlanetOrdersCommand(planet_id=entity_id)
+                self.scene.facade.handle_command(cmd)
 
-        # PROJ-208 Phase 1: Callbacks for delete/reorder order commands
-        # PROJ-208 Phase 3: Route through facade (not session) for CQRS consistency
-        def delete_order_callback(fleet_id: int, order_index: int) -> None:
-            """Dispatch DeleteFleetOrderCommand through facade command pipeline."""
-            from game.strategy.engine.commands import DeleteFleetOrderCommand
-            cmd = DeleteFleetOrderCommand(fleet_id=fleet_id, order_index=order_index)
-            self.scene.facade.handle_command(cmd)
+            def delete_order_callback(entity_id: int, order_index: int) -> None:
+                from game.strategy.engine.commands import DeletePlanetOrderCommand
+                cmd = DeletePlanetOrderCommand(planet_id=entity_id, order_index=order_index)
+                self.scene.facade.handle_command(cmd)
 
-        def reorder_order_callback(fleet_id: int, order_index: int, direction: int) -> None:
-            """Dispatch ReorderFleetOrderCommand through facade command pipeline."""
-            from game.strategy.engine.commands import ReorderFleetOrderCommand
-            cmd = ReorderFleetOrderCommand(fleet_id=fleet_id, order_index=order_index, direction=direction)
-            self.scene.facade.handle_command(cmd)
+            def reorder_order_callback(entity_id: int, order_index: int, direction: int) -> None:
+                pass  # Planet order reordering not yet implemented
+        else:
+            def clear_orders_callback(entity_id: int) -> None:
+                from game.strategy.engine.commands import ClearFleetOrdersCommand
+                cmd = ClearFleetOrdersCommand(fleet_id=entity_id)
+                self.scene.facade.handle_command(cmd)
 
-        self.fleet_orders_window = FleetOrdersWindow(
-            rect, self.manager, fleet, input_mapper=self._mapper,
+            def delete_order_callback(entity_id: int, order_index: int) -> None:
+                from game.strategy.engine.commands import DeleteFleetOrderCommand
+                cmd = DeleteFleetOrderCommand(fleet_id=entity_id, order_index=order_index)
+                self.scene.facade.handle_command(cmd)
+
+            def reorder_order_callback(entity_id: int, order_index: int, direction: int) -> None:
+                from game.strategy.engine.commands import ReorderFleetOrderCommand
+                cmd = ReorderFleetOrderCommand(fleet_id=entity_id, order_index=order_index, direction=direction)
+                self.scene.facade.handle_command(cmd)
+
+        from game.ui.screens.orders_window import OrdersWindow
+        self.fleet_orders_window = OrdersWindow(
+            rect, self.manager, entity, entity_type=entity_type,
+            input_mapper=self._mapper,
             clear_orders_callback=clear_orders_callback,
             delete_order_callback=delete_order_callback,
             reorder_order_callback=reorder_order_callback

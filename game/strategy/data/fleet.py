@@ -16,10 +16,11 @@ from game.strategy.data.fleet_pursuer_tracker import FleetPursuerTracker
 from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
 from game.strategy.data.ship_instance import ShipInstance
 
-# PROJ-212: OrderType, FleetOrder, and order type sets extracted to order_types.py
+# PROJ-212: OrderType, Order, and order type sets extracted to order_types.py
+# PROJ-238: FleetOrder renamed to Order
 from game.strategy.data.order_types import (
     OrderType,
-    FleetOrder,
+    Order,
     MOVEMENT_ORDER_TYPES,
     ACTION_ORDER_TYPES,
 )
@@ -54,7 +55,7 @@ class Fleet:
 
         # Movement & Orders
         self.speed = float(speed)
-        self.orders: List[FleetOrder] = []
+        self.orders: List[Order] = []
         self.path: List[HexCoord] = []  # Current movement path for the ACTIVE Move order
 
         # Production (for fleets with space yards)
@@ -162,7 +163,7 @@ class Fleet:
     # NOTE: PROJ-210 Phase 2 removed pass-through methods.
     # Use fleet.capabilities.*, fleet.resources.*, fleet.battle.* directly.
 
-    def _unregister_from_target(self, order: FleetOrder) -> None:
+    def _unregister_from_target(self, order: Order) -> None:
         """Unregister this fleet from the target fleet's pursuer tracker.
 
         Called when an order is removed from the queue. Only acts on
@@ -182,7 +183,7 @@ class Fleet:
                 if not still_targeting:
                     target.pursuer_tracker.remove_pursuer(self)
 
-    def add_order(self, order: FleetOrder, index: Optional[int] = None) -> None:
+    def add_order(self, order: Order, index: Optional[int] = None) -> None:
         """Add an order to the queue."""
         if index is None:
             self.orders.append(order)
@@ -205,13 +206,13 @@ class Fleet:
         for target in targets_to_unregister:
             target.pursuer_tracker.remove_pursuer(self)
 
-    def get_current_order(self) -> Optional[FleetOrder]:
+    def get_current_order(self) -> Optional[Order]:
         """Get the current (first) order, or None if queue is empty."""
         if not self.orders:
             return None
         return self.orders[0]
 
-    def pop_order(self) -> Optional[FleetOrder]:
+    def pop_order(self) -> Optional[Order]:
         """Remove and return the current order, or None if queue is empty."""
         if self.orders:
             finished = self.orders.pop(0)
@@ -220,7 +221,7 @@ class Fleet:
             return finished
         return None
 
-    def remove_order_at(self, index: int) -> Optional[FleetOrder]:
+    def remove_order_at(self, index: int) -> Optional[Order]:
         """Remove and return the order at the given index.
 
         Clears the path if the active order (index 0) is removed.
@@ -234,7 +235,7 @@ class Fleet:
             self.path = []
         return removed
 
-    def remove_orders_by_type(self, order_type: OrderType) -> List[FleetOrder]:
+    def remove_orders_by_type(self, order_type: OrderType) -> List[Order]:
         """Remove all orders of the given type. Returns the removed orders."""
         removed = [o for o in self.orders if o.type == order_type]
         for order in removed:

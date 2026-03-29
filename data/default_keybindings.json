@@ -40,6 +40,9 @@
     "detail_panel.build": {},
     "detail_panel.colonize": {},
     "detail_panel.build_yard": {},
+    "detail_panel.planet_orders": {"key": "K_o", "modifiers": []},
+
+    "planet.shield_toggle": {"key": "K_h", "modifiers": []},
 
     "build_queue.close": {"key": "K_ESCAPE", "modifiers": []},
     "build_queue.add": {"key": "K_a", "modifiers": []},

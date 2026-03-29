@@ -17,7 +17,7 @@ import logging
 
 from game.core.validation import ValidationResult
 from game.strategy.data.pathfinding import find_hybrid_path, strip_start_hex
-from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.order_types import Order, OrderType
 from game.strategy.services.design_cost_calculator import DesignCostCalculator
 from game.strategy.systems.design_library import DesignLibrary
 
@@ -77,7 +77,7 @@ def add_move_order_if_needed(
         return ValidationResult.error("No path found to target.")
 
     # Queue MOVE order
-    move_order = FleetOrder(OrderType.MOVE, target=target_hex)
+    move_order = Order(OrderType.MOVE, target=target_hex)
     fleet.add_order(move_order)
 
     # Set path immediately if it's the first order and fleet is at start
@@ -87,7 +87,7 @@ def add_move_order_if_needed(
     return ValidationResult.success()
 
 
-def create_auto_load_population_order() -> 'FleetOrder':
+def create_auto_load_population_order() -> 'Order':
     """Create a generic LOAD_POPULATION order for colonize workflows.
 
     BUG-70: The order is always inserted at command time. At execution time,
@@ -95,7 +95,7 @@ def create_auto_load_population_order() -> 'FleetOrder':
     hex. If no owned colony is present, the order is a no-op.
 
     Returns:
-        FleetOrder for LOAD_POPULATION (always returns an order, never None).
+        Order for LOAD_POPULATION (always returns an order, never None).
     """
     from game.strategy.engine.commands import TransferDirection
     transfer_params = {
@@ -103,7 +103,7 @@ def create_auto_load_population_order() -> 'FleetOrder':
         'cargo_type': 'passengers',
         'amount': 0,  # 0 = load as much as possible
     }
-    return FleetOrder(OrderType.LOAD_POPULATION, target=transfer_params)
+    return Order(OrderType.LOAD_POPULATION, target=transfer_params)
 
 
 @runtime_checkable
@@ -338,11 +338,11 @@ class ColonizeCommandHandler(BaseCommandHandler):
             planet_global_hex = session.galaxy.get_planet_global_hex(target_planet)
 
             if planet_global_hex and fleet.location != planet_global_hex:
-                move_order = FleetOrder(OrderType.MOVE, target=planet_global_hex)
+                move_order = Order(OrderType.MOVE, target=planet_global_hex)
                 fleet.add_order(move_order)
 
             # Ensure we pass the OBJECT to rules
-            order = FleetOrder(OrderType.COLONIZE, target=target_planet)
+            order = Order(OrderType.COLONIZE, target=target_planet)
             fleet.add_order(order)
             logger.info(f"GameSession: Issued Colonize Order for Fleet {fleet.id}")
 
@@ -369,7 +369,7 @@ class MoveCommandHandler(BaseCommandHandler):
                 return ValidationResult.error("Target is unreachable or invalid.")
 
         # 3. Apply
-        order = FleetOrder(OrderType.MOVE, target=cmd.target_hex)
+        order = Order(OrderType.MOVE, target=cmd.target_hex)
         fleet.add_order(order)
 
         # Optimization: Set path immediately if it's the active order
@@ -403,7 +403,7 @@ class InterceptCommandHandler(BaseCommandHandler):
             return ValidationResult.error("Fleet cannot intercept itself.")
 
         # 4. Create MOVE_TO_FLEET order
-        order = FleetOrder(OrderType.MOVE_TO_FLEET, target=target_fleet)
+        order = Order(OrderType.MOVE_TO_FLEET, target=target_fleet)
         fleet.add_order(order)
 
         # 5. PROJ-222: Register as pursuer
@@ -437,11 +437,11 @@ class JoinCommandHandler(BaseCommandHandler):
             return ValidationResult.error("Cannot join fleet of another empire.")
 
         # 5. Create MOVE_TO_FLEET order first
-        move_order = FleetOrder(OrderType.MOVE_TO_FLEET, target=target_fleet)
+        move_order = Order(OrderType.MOVE_TO_FLEET, target=target_fleet)
         fleet.add_order(move_order)
 
         # 6. Then create JOIN_FLEET order
-        join_order = FleetOrder(OrderType.JOIN_FLEET, target=target_fleet)
+        join_order = Order(OrderType.JOIN_FLEET, target=target_fleet)
         fleet.add_order(join_order)
 
         # 7. PROJ-222: Register as pursuer
@@ -513,7 +513,7 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
             return move_result
 
         # 5. Queue COLONIZE order (target=None means "any available planet")
-        colonize_order = FleetOrder(OrderType.COLONIZE, target=planet)
+        colonize_order = Order(OrderType.COLONIZE, target=planet)
         fleet.add_order(colonize_order)
 
         planet_name = planet.name if planet else "Any Planet"
@@ -598,7 +598,7 @@ class TransferCommandHandler(BaseCommandHandler):
                 'planet_id': cmd.planet_id,
                 'species_id': cmd.species_id
             }
-            order = FleetOrder(OrderType.TRANSFER, target=transfer_params)
+            order = Order(OrderType.TRANSFER, target=transfer_params)
             fleet.add_order(order)
             logger.info(f"GameSession: Issued TRANSFER order for Fleet {fleet.id}, orders now={len(fleet.orders)}")
 
@@ -620,7 +620,7 @@ class BuildOrderCommandHandler(BaseCommandHandler):
             return error
 
         # 2. Create BUILD order and insert at front
-        build_order = FleetOrder(OrderType.BUILD)
+        build_order = Order(OrderType.BUILD)
         fleet.orders.insert(0, build_order)
 
         # 3. Clear movement path - fleet must stay stationary to build
@@ -683,7 +683,7 @@ class WarpCommandHandler(BaseCommandHandler):
             logger.info(f"GameSession: Auto-added MOVE to warp point at {warp_point_hex}")
 
         # 5. Queue WARP order
-        warp_order = FleetOrder(OrderType.WARP, target=warp_point_hex)
+        warp_order = Order(OrderType.WARP, target=warp_point_hex)
         fleet.add_order(warp_order)
 
         logger.info(f"GameSession: Issued WARP order for Fleet {fleet.id} -> {warp_point_hex}")
@@ -1005,7 +1005,8 @@ def create_default_registry() -> CommandHandlerRegistry:
     registry.register('IssueInterceptCommand', InterceptCommandHandler())
     registry.register('IssueJoinFleetCommand', JoinCommandHandler())
     registry.register('QueueColonizeMissionCommand', ColonizeMissionCommandHandler())
-    registry.register('ClearFleetOrdersCommand', ClearOrdersCommandHandler())
+    registry.register('ClearOrdersCommand', ClearOrdersCommandHandler())
+    registry.register('ClearFleetOrdersCommand', ClearOrdersCommandHandler())  # PROJ-238: compat alias
     registry.register('IssueTransferCommand', TransferCommandHandler())
     registry.register('IssueWarpCommand', WarpCommandHandler())  # PROJ-187
 
@@ -1015,8 +1016,10 @@ def create_default_registry() -> CommandHandlerRegistry:
 
     # Fleet management handlers (PROJ-208 Phase 1)
     registry.register('SplitFleetCommand', SplitFleetCommandHandler())
-    registry.register('DeleteFleetOrderCommand', DeleteFleetOrderCommandHandler())
-    registry.register('ReorderFleetOrderCommand', ReorderFleetOrderCommandHandler())
+    registry.register('DeleteOrderCommand', DeleteFleetOrderCommandHandler())
+    registry.register('DeleteFleetOrderCommand', DeleteFleetOrderCommandHandler())  # PROJ-238: compat
+    registry.register('ReorderOrderCommand', ReorderFleetOrderCommandHandler())
+    registry.register('ReorderFleetOrderCommand', ReorderFleetOrderCommandHandler())  # PROJ-238: compat
 
     # Construction queue handlers (PROJ-208 Phase 2)
     registry.register('AddToConstructionQueueCommand', AddToConstructionQueueCommandHandler())

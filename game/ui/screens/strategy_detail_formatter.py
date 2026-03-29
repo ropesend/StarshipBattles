@@ -98,6 +98,10 @@ class StrategyDetailFormatter:
         return self._widgets['btn_build_yard']
 
     @property
+    def btn_planet_orders(self):
+        return self._widgets.get('btn_planet_orders')
+
+    @property
     def btn_orders(self):
         return self._widgets['btn_orders']
 
@@ -189,6 +193,8 @@ class StrategyDetailFormatter:
         # Default hidden, shown based on context below
         self.btn_colonize.hide()
         self.btn_build_yard.hide()
+        if self.btn_planet_orders:
+            self.btn_planet_orders.hide()  # PROJ-238
         self.btn_orders.hide()
         self.btn_fleet_report.hide()
         self.btn_build_fleet.hide()
@@ -301,9 +307,11 @@ class StrategyDetailFormatter:
             production_rates=production_rates
         )
 
-        # Show Build Yard button for owned planets
+        # Show Build Yard and Planet Orders buttons for owned planets
         if obj.owner_id == current_empire_id:
             self.btn_build_yard.show()
+            if self.btn_planet_orders:
+                self.btn_planet_orders.show()  # PROJ-238
 
     def _format_sector_environment(self, obj) -> str:
         """Format sector environment details."""

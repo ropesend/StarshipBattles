@@ -113,6 +113,11 @@ class StrategyInputHandler:
                                                                 'WARP_TARGET', 'IMPLODE_PLANET_TARGET', 'STELLERATE_STAR_TARGET',
                                                                 'OPEN_WARP_TARGET', 'CLOSE_WARP_TARGET', 'DYSON_SPHERE_TARGET'):
             contexts.append("fleet")
+        # PROJ-238: Add planet context when planet is selected
+        from game.core.protocols import is_planet
+        current_sel = getattr(self.scene.ui, 'current_selection', None)
+        if current_sel and is_planet(current_sel):
+            contexts.append("planet")
 
         action = self._mapper.resolve(event, contexts)
         if action is None:

@@ -55,6 +55,7 @@ class StrategyWidgets:
     btn_raw_data: Any = None
     btn_colonize: Any = None
     btn_build_yard: Any = None
+    btn_planet_orders: Any = None  # PROJ-238
     btn_orders: Any = None
     btn_fleet_report: Any = None
     btn_build_fleet: Any = None
@@ -339,6 +340,15 @@ def create_strategy_panels(
     widgets.btn_build_yard = pygame_gui.elements.UIButton(
         relative_rect=pygame.Rect(350, rect_detail.height - 50, 120, 40),
         text="Build Yard",
+        manager=manager,
+        container=widgets.detail_panel,
+        visible=0
+    )
+
+    # PROJ-238: Planet orders button (shown when planet selected)
+    widgets.btn_planet_orders = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect(80, rect_detail.height - 50, 120, 40),
+        text="Orders",
         manager=manager,
         container=widgets.detail_panel,
         visible=0

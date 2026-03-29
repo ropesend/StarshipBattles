@@ -9,7 +9,8 @@ import logging
 from typing import TYPE_CHECKING
 
 from game.core.validation import ValidationResult
-from game.strategy.data.planet_order_types import PlanetOrderType, PlanetOrder
+from game.strategy.data.order_types import OrderType
+from game.strategy.data.planet_order_types import PlanetOrder
 from game.strategy.validation.planet_order_validator import PlanetOrderValidator
 
 logger = logging.getLogger(__name__)
@@ -49,18 +50,18 @@ class IssuePlanetOrderCommandHandler:
 
         # 3. Parse order type
         try:
-            order_type = PlanetOrderType[cmd.order_type]
+            order_type = OrderType[cmd.order_type]
         except KeyError:
             return ValidationResult.error(f"Unknown planet order type: {cmd.order_type}")
 
         # 4. Validate based on order type
         component_registry = session.registries.components if session.registries else None
 
-        if order_type == PlanetOrderType.ACTIVATE_SHIELD:
+        if order_type == OrderType.ACTIVATE_SHIELD:
             result = PlanetOrderValidator.validate_activate_shield(
                 planet, cmd.facility_instance_id, component_registry
             )
-        elif order_type == PlanetOrderType.DEACTIVATE_SHIELD:
+        elif order_type == OrderType.DEACTIVATE_SHIELD:
             result = PlanetOrderValidator.validate_deactivate_shield(
                 planet, cmd.facility_instance_id, component_registry
             )
@@ -78,7 +79,7 @@ class IssuePlanetOrderCommandHandler:
             target['component_id'] = cmd.component_id
 
         order = PlanetOrder(order_type, target=target)
-        planet.add_planet_order(order)
+        planet.add_order(order)
 
         logger.info(
             f"Planet {planet.name}: queued {order_type.name} order "
@@ -100,7 +101,7 @@ class ClearPlanetOrdersCommandHandler:
         if planet.owner_id != session.player_empire.id:
             return ValidationResult.error("Planet does not belong to this empire.")
 
-        planet.clear_planet_orders()
+        planet.clear_orders()
         logger.info(f"Planet {planet.name}: all orders cleared")
         return ValidationResult.success()
 
@@ -118,9 +119,9 @@ class DeletePlanetOrderCommandHandler:
         if planet.owner_id != session.player_empire.id:
             return ValidationResult.error("Planet does not belong to this empire.")
 
-        if cmd.order_index < 0 or cmd.order_index >= len(planet.planet_orders):
+        if cmd.order_index < 0 or cmd.order_index >= len(planet.orders):
             return ValidationResult.error("Invalid order index.")
 
-        removed = planet.planet_orders.pop(cmd.order_index)
+        removed = planet.orders.pop(cmd.order_index)
         logger.info(f"Planet {planet.name}: removed order {removed.type.name} at index {cmd.order_index}")
         return ValidationResult.success()

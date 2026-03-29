@@ -59,9 +59,9 @@ class PlanetOrderValidator:
             return ValidationResult.error("Planetary shield is already active.")
 
         # Check no conflicting ACTIVATE_SHIELD order already queued
-        from game.strategy.data.planet_order_types import PlanetOrderType
-        for order in planet.planet_orders:
-            if order.type == PlanetOrderType.ACTIVATE_SHIELD:
+        from game.strategy.data.order_types import OrderType
+        for order in planet.orders:
+            if order.type == OrderType.ACTIVATE_SHIELD:
                 return ValidationResult.error("Shield activation already queued.")
 
         return ValidationResult.success()
@@ -93,10 +93,10 @@ class PlanetOrderValidator:
 
         if not planet.shield_active:
             # Also check if activation is in progress
-            from game.strategy.data.planet_order_types import PlanetOrderType
+            from game.strategy.data.order_types import OrderType
             activating = any(
-                o.type == PlanetOrderType.ACTIVATE_SHIELD
-                for o in planet.planet_orders
+                o.type == OrderType.ACTIVATE_SHIELD
+                for o in planet.orders
             )
             if not activating:
                 return ValidationResult.error("Planetary shield is not active.")

@@ -20,7 +20,6 @@ import logging
 from game.strategy.interfaces.engines import IActionExecutionEngine
 from game.strategy.data.fleet import (
     Fleet,
-    FleetOrder,
     OrderType,
     MOVEMENT_ORDER_TYPES,
     ACTION_ORDER_TYPES,

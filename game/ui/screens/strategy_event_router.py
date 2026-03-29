@@ -181,6 +181,10 @@ class StrategyEventRouter:
             obj = ui.current_selection
             if obj and is_fleet(obj):
                 ui.open_orders_window(obj)
+        elif event.ui_element == ui.btn_planet_orders:  # PROJ-238
+            obj = ui.current_selection
+            if obj and is_planet(obj):
+                ui.open_orders_window(obj, entity_type="planet")
         elif event.ui_element == ui.btn_fleet_report:
             obj = ui.current_selection
             if obj and is_fleet(obj):

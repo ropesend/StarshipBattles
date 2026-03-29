@@ -15,8 +15,8 @@ import logging
 from game.core.registry import GameRegistries
 from game.core.event_logging import log_event
 from game.core.patterns.layer_iterator import iter_components
-from game.strategy.data.planet_order_types import PlanetOrderType, PLANET_ACTION_ORDER_TYPES
-from game.strategy.services.planet_action_time_resolver import PlanetActionTimeResolver
+from game.strategy.data.order_types import OrderType, PLANET_ACTION_ORDER_TYPES
+from game.strategy.services.action_time_resolver import ActionTimeResolver
 from game.strategy.engine.planet_energy_engine import get_shield_info
 
 logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 class PlanetActionTickResult:
     """Result of processing a planet action tick."""
     planet_name: str
-    order_type: PlanetOrderType
+    order_type: OrderType
     action_completed: bool
     execution_progress: int
     action_time: int
@@ -49,10 +49,10 @@ class PlanetActionEngine:
         self,
         *,
         registries: Optional[GameRegistries] = None,
-        action_time_resolver: Optional[PlanetActionTimeResolver] = None,
+        action_time_resolver: Optional[ActionTimeResolver] = None,
     ):
         self._registries = registries
-        self._action_time_resolver = action_time_resolver or PlanetActionTimeResolver()
+        self._action_time_resolver = action_time_resolver or ActionTimeResolver()
 
     def process_planet_actions_tick(
         self,
@@ -85,7 +85,7 @@ class PlanetActionEngine:
         component_registry: Optional[Dict[str, Any]] = None,
     ) -> Optional[PlanetActionTickResult]:
         """Process a single planet's current order for one tick."""
-        order = planet.get_current_planet_order()
+        order = planet.get_current_order()
         if order is None:
             return None
 
@@ -98,7 +98,7 @@ class PlanetActionEngine:
                 f"Planet {planet.name}: target facility for {order.type.name} "
                 f"no longer exists, canceling order"
             )
-            planet.pop_planet_order()
+            planet.pop_order()
             return None
 
         # Increment progress
@@ -112,7 +112,7 @@ class PlanetActionEngine:
         if order.execution_progress >= action_time:
             # Execute the order
             self._execute_order(planet, order, empire)
-            planet.pop_planet_order()
+            planet.pop_order()
             return PlanetActionTickResult(
                 planet_name=planet.name,
                 order_type=order.type,
@@ -136,9 +136,9 @@ class PlanetActionEngine:
         empire: 'Empire',
     ) -> None:
         """Execute a completed planet order."""
-        if order.type == PlanetOrderType.ACTIVATE_SHIELD:
+        if order.type == OrderType.ACTIVATE_SHIELD:
             self._execute_activate_shield(planet, order, empire)
-        elif order.type == PlanetOrderType.DEACTIVATE_SHIELD:
+        elif order.type == OrderType.DEACTIVATE_SHIELD:
             self._execute_deactivate_shield(planet, order, empire)
 
     def _execute_activate_shield(

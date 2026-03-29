@@ -289,9 +289,9 @@ class TestClearFleetOrdersCommand:
         assert cmd.type == CommandType.ISSUE_ORDER
 
     def test_clear_orders_command_has_name(self):
-        """ClearFleetOrdersCommand has correct name property."""
+        """ClearOrdersCommand has correct name property (PROJ-238 renamed)."""
         from game.strategy.engine.commands import ClearFleetOrdersCommand
 
         cmd = ClearFleetOrdersCommand(fleet_id=5)
 
-        assert cmd.name == "ClearFleetOrdersCommand"
+        assert cmd.name == "ClearOrdersCommand"

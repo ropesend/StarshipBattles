@@ -31,7 +31,7 @@ Interfaces (game.strategy.interfaces):
 
 # Data
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.order_types import OrderType, FleetOrder
+from game.strategy.data.order_types import OrderType, Order, FleetOrder  # FleetOrder alias for compat
 from game.strategy.data.ship_instance import ShipInstance
 from game.core.hex_math import HexCoord
 
@@ -60,7 +60,8 @@ __all__ = [
     'Fleet',
     'ShipInstance',
     'OrderType',
-    'FleetOrder',
+    'Order',
+    'FleetOrder',  # PROJ-238: backward compat alias
     'HexCoord',
     # Engine
     'TurnEngine',

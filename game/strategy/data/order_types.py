@@ -1,9 +1,8 @@
 """
-Fleet order types and order data class.
+Order types and order data class.
 
 Extracted from fleet.py (PROJ-212) to break transitive import chains.
-Files needing only OrderType/FleetOrder no longer pull in the heavyweight
-Fleet class and its dependencies.
+PROJ-238: Renamed FleetOrder -> Order. Unified with PlanetOrderType.
 """
 
 from enum import Enum, auto
@@ -33,6 +32,9 @@ class OrderType(Enum):
     SELF_DESTRUCT = auto()
     LOAD_POPULATION = auto()
     UNLOAD_POPULATION = auto()
+    # Planet orders (PROJ-238: unified from PlanetOrderType)
+    ACTIVATE_SHIELD = auto()
+    DEACTIVATE_SHIELD = auto()
 
 
 # PROJ-187: Order type categorization for ActionExecutionEngine
@@ -57,26 +59,35 @@ ACTION_ORDER_TYPES: frozenset = frozenset({
     OrderType.CLOSE_WARP_POINT,
     OrderType.CREATE_DYSON_SPHERE,
     OrderType.SELF_DESTRUCT,
+    OrderType.ACTIVATE_SHIELD,
+    OrderType.DEACTIVATE_SHIELD,
+})
+
+# PROJ-238: Planet-specific action orders (subset of ACTION_ORDER_TYPES)
+PLANET_ACTION_ORDER_TYPES: frozenset = frozenset({
+    OrderType.ACTIVATE_SHIELD,
+    OrderType.DEACTIVATE_SHIELD,
 })
 
 
-class FleetOrder:
+class Order:
     """
-    Represents a single order in a fleet's order queue.
+    Represents a single order in an entity's order queue.
 
+    PROJ-238: Renamed from FleetOrder. Used by both fleets and planets.
     Orders have a type (OrderType enum) and an optional target which varies
-    by order type (HexCoord for movement, Planet for colonize, etc.).
+    by order type (HexCoord for movement, Planet for colonize, dict for planet orders, etc.).
     """
 
     def __init__(self, order_type: OrderType, target: Any = None):
         self.type = order_type
-        self.target = target  # HexCoord for MOVE/WARP, Planet for COLONIZE, Fleet for MOVE_TO_FLEET/JOIN_FLEET
+        self.target = target  # HexCoord for MOVE/WARP, Planet for COLONIZE, dict for planet orders, etc.
         self.execution_progress: int = 0  # PROJ-187: Ticks spent executing this order
 
     def __repr__(self) -> str:
         if self.execution_progress > 0:
-            return f"FleetOrder({self.type.name}, {self.target}, progress={self.execution_progress})"
-        return f"FleetOrder({self.type.name}, {self.target})"
+            return f"Order({self.type.name}, {self.target}, progress={self.execution_progress})"
+        return f"Order({self.type.name}, {self.target})"
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize for save game."""
@@ -107,6 +118,9 @@ class FleetOrder:
             elif isinstance(self.target, Fleet):
                 # Fleet reference - store ID
                 target_data = {'type': 'fleet_ref', 'id': self.target.id}
+            elif isinstance(self.target, dict):
+                # PROJ-238: Dict targets (planet orders, etc.) — store as-is
+                target_data = {'type': 'dict', 'value': self.target}
             else:
                 target_data = {'type': 'raw', 'value': str(self.target)}
 
@@ -118,3 +132,31 @@ class FleetOrder:
         if self.execution_progress > 0:
             result['execution_progress'] = self.execution_progress
         return result
+
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'Order':
+        """Deserialize from save game data (simple format for planet-style orders).
+
+        PROJ-238: Added for planet order compatibility. Fleet orders use
+        FleetOrderSerializer for complex reference resolution.
+
+        Args:
+            data: Dict with 'type', optional 'target', optional 'execution_progress'.
+
+        Returns:
+            Reconstructed Order instance.
+        """
+        order_type = OrderType[data['type']]
+        target = data.get('target')
+        # Unwrap dict-wrapped targets from to_dict serialization
+        if isinstance(target, dict) and target.get('type') == 'dict':
+            target = target.get('value')
+        order = cls(order_type=order_type, target=target)
+        order.execution_progress = data.get('execution_progress', 0)
+        return order
+
+
+# PROJ-238: Backward compatibility aliases (will be removed after full migration)
+FleetOrder = Order
+PlanetOrder = Order

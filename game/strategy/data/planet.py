@@ -8,14 +8,14 @@ import math
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Dict, FrozenSet, List, Optional, Any
-from typing import TYPE_CHECKING as _TC
+from typing import TYPE_CHECKING as _TC, Any
 from game.core.hex_math import HexCoord, hex_circle_filled
 from game.core.validation_helpers import (
     require_keys, validate_enum, validate_positive, validate_non_negative
 )
 
 if _TC:
-    from game.strategy.data.planet_order_types import PlanetOrder
+    from game.strategy.data.order_types import Order
 
 # PROJ-210: Import extracted classes for backward compatibility
 from game.strategy.data.planetary_facility import PlanetaryFacility
@@ -113,8 +113,8 @@ class Planet:
     # Shield state (PROJ-237)
     shield_active: bool = False      # Whether planetary shield is currently active
 
-    # Planet order queue (PROJ-237) - parallel to Fleet.orders
-    planet_orders: List['PlanetOrder'] = field(default_factory=list)
+    # Order queue (PROJ-238: renamed from planet_orders, unified with Fleet.orders)
+    orders: List['Order'] = field(default_factory=list)
 
     def __eq__(self, other):
         if not isinstance(other, Planet):
@@ -200,31 +200,31 @@ class Planet:
 
         return False
 
-    # --- Planet Order Management (PROJ-237) ---
+    # --- Order Management (PROJ-238: unified with Fleet pattern, IOrderable) ---
 
-    def get_current_planet_order(self) -> Optional['PlanetOrder']:
+    def get_current_order(self) -> Optional['Order']:
         """Get the first order in the planet's order queue."""
-        return self.planet_orders[0] if self.planet_orders else None
+        return self.orders[0] if self.orders else None
 
-    def pop_planet_order(self) -> Optional['PlanetOrder']:
+    def pop_order(self) -> Optional['Order']:
         """Remove and return the first order from the queue."""
-        return self.planet_orders.pop(0) if self.planet_orders else None
+        return self.orders.pop(0) if self.orders else None
 
-    def add_planet_order(self, order: 'PlanetOrder', index: Optional[int] = None) -> None:
+    def add_order(self, order: 'Order', index: Optional[int] = None) -> None:
         """Add an order to the planet's queue.
 
         Args:
-            order: PlanetOrder to add.
+            order: Order to add.
             index: Optional insertion index. None = append to end.
         """
         if index is not None:
-            self.planet_orders.insert(index, order)
+            self.orders.insert(index, order)
         else:
-            self.planet_orders.append(order)
+            self.orders.append(order)
 
-    def clear_planet_orders(self) -> None:
+    def clear_orders(self) -> None:
         """Remove all orders from the planet's queue."""
-        self.planet_orders.clear()
+        self.orders.clear()
 
     def add_production(self, design_id: str, turns: int, vehicle_type: str = "ship"):
         """Add item to construction queue.
@@ -298,7 +298,7 @@ class Planet:
             'energy_capacity': self.energy_capacity,
             'energy_generation': self.energy_generation,
             'shield_active': self.shield_active,
-            'planet_orders': [o.to_dict() for o in self.planet_orders],
+            'orders': [o.to_dict() for o in self.orders],
         }
 
     @classmethod
@@ -400,7 +400,7 @@ class Planet:
             energy_capacity=data.get('energy_capacity', 0.0),
             energy_generation=data.get('energy_generation', 0.0),
             shield_active=data.get('shield_active', False),
-            planet_orders=_deserialize_planet_orders(data.get('planet_orders', [])),
+            orders=_deserialize_planet_orders(data.get('orders', data.get('planet_orders', []))),
         )
 
 
@@ -411,13 +411,13 @@ def _deserialize_planet_orders(orders_data: list) -> list:
         orders_data: List of order dicts from save data.
 
     Returns:
-        List of PlanetOrder instances. Silently skips invalid entries.
+        List of Order instances. Silently skips invalid entries.
     """
-    from game.strategy.data.planet_order_types import PlanetOrder as _PlanetOrder
+    from game.strategy.data.order_types import Order as _Order
     result = []
     for item in orders_data:
         try:
-            result.append(_PlanetOrder.from_dict(item))
+            result.append(_Order.from_dict(item))
         except (KeyError, TypeError, ValueError):
             pass  # Skip malformed orders
     return result

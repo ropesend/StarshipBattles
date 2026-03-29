@@ -24,6 +24,7 @@ class TestInputAction:
         valid_prefixes = {
             "global", "strategy", "fleet", "build_queue",
             "fleet_orders", "transfer", "detail_panel",
+            "planet",  # PROJ-238
         }
         for action in InputAction:
             prefix = action.value.split(".")[0]

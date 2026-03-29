@@ -354,7 +354,7 @@ class TestEmpirePanelWindow:
 class TestFleetOrdersWindow:
     """Tests for fleet orders window management."""
 
-    @patch('game.ui.screens.strategy_window_manager.FleetOrdersWindow')
+    @patch('game.ui.screens.orders_window.OrdersWindow')
     def test_open_orders_window_creates_window(self, mock_window_class, window_manager):
         """Test open_orders_window creates FleetOrdersWindow."""
         fleet = Mock()
@@ -363,7 +363,7 @@ class TestFleetOrdersWindow:
 
         mock_window_class.assert_called_once()
 
-    @patch('game.ui.screens.strategy_window_manager.FleetOrdersWindow')
+    @patch('game.ui.screens.orders_window.OrdersWindow')
     def test_open_orders_window_kills_existing(self, mock_window_class, window_manager):
         """Test open_orders_window kills existing window first."""
         existing = Mock()
@@ -374,7 +374,7 @@ class TestFleetOrdersWindow:
 
         existing.kill.assert_called_once()
 
-    @patch('game.ui.screens.strategy_window_manager.FleetOrdersWindow')
+    @patch('game.ui.screens.orders_window.OrdersWindow')
     def test_open_orders_window_passes_fleet(self, mock_window_class, window_manager):
         """Test open_orders_window passes fleet to window."""
         fleet = Mock()

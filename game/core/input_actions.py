@@ -71,6 +71,10 @@ class InputAction(str, Enum):
     DETAIL_PANEL_BUILD = "detail_panel.build"
     DETAIL_PANEL_COLONIZE = "detail_panel.colonize"
     DETAIL_PANEL_BUILD_YARD = "detail_panel.build_yard"
+    DETAIL_PANEL_PLANET_ORDERS = "detail_panel.planet_orders"  # PROJ-238
+
+    # --- Planet commands ---
+    PLANET_SHIELD_TOGGLE = "planet.shield_toggle"  # PROJ-238
 
     # --- Build queue screen ---
     BUILD_QUEUE_CLOSE = "build_queue.close"
@@ -132,6 +136,8 @@ ACTION_DISPLAY_NAMES: Dict[InputAction, str] = {
     InputAction.DETAIL_PANEL_BUILD: "Build Fleet",
     InputAction.DETAIL_PANEL_COLONIZE: "Colonize Planet",
     InputAction.DETAIL_PANEL_BUILD_YARD: "Build Space Yard",
+    InputAction.DETAIL_PANEL_PLANET_ORDERS: "Planet Orders",
+    InputAction.PLANET_SHIELD_TOGGLE: "Toggle Shield",
     # Build queue
     InputAction.BUILD_QUEUE_CLOSE: "Close Build Yard",
     InputAction.BUILD_QUEUE_ADD: "Add to Queue",
@@ -193,6 +199,10 @@ ACTION_GROUPS: Dict[str, List[InputAction]] = {
         InputAction.DETAIL_PANEL_BUILD,
         InputAction.DETAIL_PANEL_COLONIZE,
         InputAction.DETAIL_PANEL_BUILD_YARD,
+        InputAction.DETAIL_PANEL_PLANET_ORDERS,
+    ],
+    "Planet": [
+        InputAction.PLANET_SHIELD_TOGGLE,
     ],
     "Build Yard": [
         InputAction.BUILD_QUEUE_CLOSE,
