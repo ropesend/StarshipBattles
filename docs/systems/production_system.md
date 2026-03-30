@@ -67,7 +67,7 @@ class PlanetaryFacility:
     design_data: Dict[str, Any]   # Full complex design JSON
     is_operational: bool = True
     construction_queue: List[Dict[str, Any]] = field(default_factory=list)
-    resource_levels: Dict[str, float] = field(default_factory=dict)
+    consumable_levels: Dict[str, float] = field(default_factory=dict)
 ```
 
 Key properties and methods:

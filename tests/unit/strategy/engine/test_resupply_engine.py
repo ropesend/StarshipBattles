@@ -54,7 +54,7 @@ def _make_fuel_facility(
     fuel_storage_amount: float = 500.0,
     has_synthesizer: bool = True,
     is_operational: bool = True,
-    resource_levels: dict = None,
+    consumable_levels: dict = None,
 ) -> PlanetaryFacility:
     """Create a facility with fuel tank and optional fuel synthesizer."""
     components = []
@@ -68,8 +68,8 @@ def _make_fuel_facility(
         design_data={"layers": {"hull": components}},
         is_operational=is_operational,
     )
-    if resource_levels is not None:
-        facility.resource_levels = resource_levels.copy()
+    if consumable_levels is not None:
+        facility.consumable_levels = consumable_levels.copy()
     return facility
 
 
@@ -127,18 +127,18 @@ class TestProcessFuelGeneration:
     """Tests for ResupplyEngine.process_fuel_generation()."""
 
     def test_process_fuel_generation_adds_to_facility(self):
-        """Fuel generation should add fuel to facility's resource_levels."""
+        """Fuel generation should add fuel to facility's consumable_levels."""
         registries = _make_mock_registries(fuel_gen_amount=300.0)
         engine = ResupplyEngine(registries=registries)
 
-        facility = _make_fuel_facility(resource_levels={"fuel": 0.0})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 0.0})
         colony = _make_colony(facilities=[facility])
         empire = _make_empire(colonies=[colony])
 
         events = engine.process_fuel_generation(tick=1, empires=[empire])
 
         # 300 fuel/turn spread over 100 ticks = 3.0 per tick
-        assert facility.resource_levels["fuel"] == pytest.approx(3.0)
+        assert facility.consumable_levels["fuel"] == pytest.approx(3.0)
         assert len(events) == 1
         assert events[0].fuel_generated == pytest.approx(3.0)
         assert events[0].facility_name == "Fuel Depot"
@@ -148,7 +148,7 @@ class TestProcessFuelGeneration:
         registries = _make_mock_registries(fuel_gen_amount=300.0)
         engine = ResupplyEngine(registries=registries)
 
-        facility = _make_fuel_facility(resource_levels={"fuel": 0.0})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 0.0})
         colony = _make_colony(facilities=[facility])
         empire = _make_empire(colonies=[colony])
 
@@ -157,7 +157,7 @@ class TestProcessFuelGeneration:
             engine.process_fuel_generation(tick=tick, empires=[empire])
 
         # 3.0 per tick * 10 ticks = 30.0
-        assert facility.resource_levels["fuel"] == pytest.approx(30.0)
+        assert facility.consumable_levels["fuel"] == pytest.approx(30.0)
 
     def test_generation_respects_max_storage(self):
         """Fuel generation should not exceed facility max storage capacity."""
@@ -165,14 +165,14 @@ class TestProcessFuelGeneration:
         engine = ResupplyEngine(registries=registries)
 
         # Start nearly full
-        facility = _make_fuel_facility(resource_levels={"fuel": 499.0})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 499.0})
         colony = _make_colony(facilities=[facility])
         empire = _make_empire(colonies=[colony])
 
         events = engine.process_fuel_generation(tick=1, empires=[empire])
 
         # Should cap at 500.0 (max), not 502.0
-        assert facility.resource_levels["fuel"] == pytest.approx(500.0)
+        assert facility.consumable_levels["fuel"] == pytest.approx(500.0)
         assert events[0].fuel_generated == pytest.approx(1.0)
 
     def test_non_operational_facility_no_generation(self):
@@ -180,13 +180,13 @@ class TestProcessFuelGeneration:
         registries = _make_mock_registries()
         engine = ResupplyEngine(registries=registries)
 
-        facility = _make_fuel_facility(is_operational=False, resource_levels={"fuel": 0.0})
+        facility = _make_fuel_facility(is_operational=False, consumable_levels={"fuel": 0.0})
         colony = _make_colony(facilities=[facility])
         empire = _make_empire(colonies=[colony])
 
         events = engine.process_fuel_generation(tick=1, empires=[empire])
 
-        assert facility.resource_levels["fuel"] == 0.0
+        assert facility.consumable_levels["fuel"] == 0.0
         assert len(events) == 0
 
     def test_facility_without_synthesizer_no_generation(self):
@@ -195,13 +195,13 @@ class TestProcessFuelGeneration:
         engine = ResupplyEngine(registries=registries)
 
         # Facility with fuel tank but no synthesizer
-        facility = _make_fuel_facility(has_synthesizer=False, resource_levels={"fuel": 100.0})
+        facility = _make_fuel_facility(has_synthesizer=False, consumable_levels={"fuel": 100.0})
         colony = _make_colony(facilities=[facility])
         empire = _make_empire(colonies=[colony])
 
         events = engine.process_fuel_generation(tick=1, empires=[empire])
 
-        assert facility.resource_levels["fuel"] == 100.0  # Unchanged
+        assert facility.consumable_levels["fuel"] == 100.0  # Unchanged
         assert len(events) == 0
 
     def test_energy_generator_does_not_produce_fuel(self):
@@ -222,8 +222,8 @@ class TestProcessFuelGeneration:
         registries = _make_mock_registries(fuel_gen_amount=200.0)
         engine = ResupplyEngine(registries=registries)
 
-        f1 = _make_fuel_facility(instance_id="f1", resource_levels={"fuel": 0.0})
-        f2 = _make_fuel_facility(instance_id="f2", resource_levels={"fuel": 0.0})
+        f1 = _make_fuel_facility(instance_id="f1", consumable_levels={"fuel": 0.0})
+        f2 = _make_fuel_facility(instance_id="f2", consumable_levels={"fuel": 0.0})
         colony1 = _make_colony(facilities=[f1])
         colony2 = _make_colony(facilities=[f2])
         empire1 = _make_empire(colonies=[colony1])
@@ -232,8 +232,8 @@ class TestProcessFuelGeneration:
         events = engine.process_fuel_generation(tick=1, empires=[empire1, empire2])
 
         # Each facility gets 200/100 = 2.0 per tick
-        assert f1.resource_levels["fuel"] == pytest.approx(2.0)
-        assert f2.resource_levels["fuel"] == pytest.approx(2.0)
+        assert f1.consumable_levels["fuel"] == pytest.approx(2.0)
+        assert f2.consumable_levels["fuel"] == pytest.approx(2.0)
         assert len(events) == 2
 
     def test_facility_already_full_no_generation(self):
@@ -241,13 +241,13 @@ class TestProcessFuelGeneration:
         registries = _make_mock_registries(fuel_tank_amount=500.0, fuel_gen_amount=300.0)
         engine = ResupplyEngine(registries=registries)
 
-        facility = _make_fuel_facility(resource_levels={"fuel": 500.0})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 500.0})
         colony = _make_colony(facilities=[facility])
         empire = _make_empire(colonies=[colony])
 
         events = engine.process_fuel_generation(tick=1, empires=[empire])
 
-        assert facility.resource_levels["fuel"] == pytest.approx(500.0)
+        assert facility.consumable_levels["fuel"] == pytest.approx(500.0)
         # No event or event with 0 generated
         if events:
             assert events[0].fuel_generated == pytest.approx(0.0)
@@ -257,7 +257,7 @@ class TestProcessFuelGeneration:
         registries = _make_mock_registries()
         engine = ResupplyEngine(registries=registries)
 
-        facility = _make_fuel_facility(resource_levels={"fuel": 0.0})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 0.0})
         colony = _make_colony(facilities=[facility])
         empire = _make_empire(colonies=[colony])
 
@@ -371,7 +371,7 @@ def _make_planet_with_fuel(
         fuel_gen_amount=fuel_gen_amount,
     )
     facility = _make_fuel_facility(
-        resource_levels={"fuel": fuel_level},
+        consumable_levels={"fuel": fuel_level},
     )
     planet = MagicMock()
     planet.owner_id = owner_id
@@ -401,7 +401,7 @@ class TestFleetResupply:
         fleet = _make_mock_fleet(owner_id=0, location=location, ships=[ship])
 
         # Planet with fuel at same location
-        facility = _make_fuel_facility(resource_levels={"fuel": 300.0})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 300.0})
         planet = MagicMock()
         planet.owner_id = 0
         planet.facilities = [facility]
@@ -429,7 +429,7 @@ class TestFleetResupply:
         fleet = _make_mock_fleet(owner_id=0, location=fleet_loc, ships=[ship])
 
         # Planet at different location
-        facility = _make_fuel_facility(resource_levels={"fuel": 300.0})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 300.0})
         planet = MagicMock()
         planet.owner_id = 0
         planet.facilities = [facility]
@@ -462,7 +462,7 @@ class TestFleetResupply:
         other_fleet = _make_mock_fleet(owner_id=1, location=location, ships=[other_ship])
 
         # Planet owned by empire 0
-        facility = _make_fuel_facility(resource_levels={"fuel": 300.0})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 300.0})
         planet = MagicMock()
         planet.owner_id = 0
         planet.facilities = [facility]
@@ -499,7 +499,7 @@ class TestFleetResupply:
 
         # 240 fuel available: with 10+2=12 cost/hex -> max_range = 240/12 = 20 hexes
         # Ship A gets 10*20 = 200 fuel, Ship B gets 2*20 = 40 fuel => total = 240 ✓
-        facility = _make_fuel_facility(resource_levels={"fuel": 240.0})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 240.0})
         planet = MagicMock()
         planet.owner_id = 0
         planet.facilities = [facility]
@@ -548,7 +548,7 @@ class TestFleetResupply:
         # 110 fuel available: cost 10+1=11/hex -> max_range = 110/11 = 10 hexes
         # Combat ship target: 10*10 = 100 (exactly at capacity)
         # Tanker target: 1*10 = 10 (well below 1000 capacity)
-        facility = _make_fuel_facility(resource_levels={"fuel": 110.0})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 110.0})
         planet = MagicMock()
         planet.owner_id = 0
         planet.facilities = [facility]
@@ -578,7 +578,7 @@ class TestFleetResupply:
         fleet = _make_mock_fleet(owner_id=0, location=location, ships=[ship])
 
         # Empty facility
-        facility = _make_fuel_facility(resource_levels={"fuel": 0.0})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 0.0})
         planet = MagicMock()
         planet.owner_id = 0
         planet.facilities = [facility]

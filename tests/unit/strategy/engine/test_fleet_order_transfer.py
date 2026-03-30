@@ -72,7 +72,7 @@ def mock_planet():
     planet.populations = []
     # Required for is_planet() protocol check (IPlanet)
     planet.planet_type = MagicMock()
-    planet.resources = {}
+    planet.deposits = {}
     return planet
 
 

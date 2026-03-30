@@ -11,8 +11,8 @@ from typing import List, Dict
 
 logger = logging.getLogger(__name__)
 
-# TODO: Phase 4 will replace with ResourceCatalog
-PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+# TODO: Replace with ResourceCatalog queries
+PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry
 from game.core.hex_math import HexCoord, hex_ring, hex_circle_filled
@@ -410,7 +410,7 @@ class PlanetGenerator:
             surface_water=water,
             tectonic_activity=activity,
             magnetic_field=mag_field,
-            resources=self._generate_resources(mass, p_type),
+            deposits=self._generate_resources(mass, p_type),
             image_id=image_id,
             image_rotation=image_rotation
         )

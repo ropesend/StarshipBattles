@@ -78,7 +78,7 @@ class TestCustomResourceTypeFullPipeline:
 
         # Step 6: Verify consumption works
         # Set initial resource level
-        ship.resource_levels['plasma'] = 5000
+        ship.consumable_levels['plasma'] = 5000
 
         # Consume some plasma
         success = ship.consume_resource('plasma', 1500)
@@ -128,7 +128,7 @@ class TestPerTurnConsumptionAcrossFullTurn:
 
         # Create ship instance with full energy (PROJ-211: pass registries for DI)
         ship = make_ship_instance(design_data, registries=singleton_registries)
-        ship.resource_levels['energy'] = 10000  # Start at full
+        ship.consumable_levels['energy'] = 10000  # Start at full
 
         # Create fleet with this ship
         fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
@@ -207,7 +207,7 @@ class TestAutoDisableComponentChainOnResourceDepletion:
         # PROJ-211: pass registries for DI
         ship = make_ship_instance(design_data, registries=singleton_registries)
         # Start with only 30 energy (will deplete before turn ends)
-        ship.resource_levels['energy'] = 30
+        ship.consumable_levels['energy'] = 30
 
         # Create fleet
         fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
@@ -269,7 +269,7 @@ class TestBackwardCompatLoadOldSaveWithoutComponentToggles:
             },
             'current_hp': 800,
             'component_damage': {'engine_0': 50},
-            'resource_levels': {'fuel': 25000},
+            'consumable_levels': {'fuel': 25000},
             # Note: component_toggles is intentionally missing
             'is_alive': True,
             'is_derelict': False,
@@ -289,7 +289,7 @@ class TestBackwardCompatLoadOldSaveWithoutComponentToggles:
         assert ship.instance_id == 'test-12345'
         assert ship.name == 'USS Legacy'
         assert ship.current_hp == 800
-        assert ship.resource_levels == {'fuel': 25000}
+        assert ship.consumable_levels == {'fuel': 25000}
 
         # Verify stats calculation works
         stats = ship.get_calculated_stats()

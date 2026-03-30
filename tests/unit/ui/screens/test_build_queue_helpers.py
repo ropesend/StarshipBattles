@@ -16,7 +16,7 @@ class TestResourceAbbreviations:
 
     def test_all_resources_have_abbrevs(self):
         """Verify all planet resources have abbreviations."""
-        PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+        PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
 
         for res in PLANET_RESOURCE_NAMES:
             assert res in RESOURCE_ABBREVS, f"{res} missing from RESOURCE_ABBREVS"
@@ -42,8 +42,8 @@ class TestFormatEmpireResources:
     def test_formats_resources_with_capacity(self):
         """Verify resources with capacity are formatted as current/cap."""
         empire = MagicMock()
-        empire.resource_pool = {"Metals": 500.0, "Organics": 200.0}
-        empire.max_storage = {"Metals": 1000.0, "Organics": 500.0}
+        empire.resource_pool = {"metals": 500.0, "organics": 200.0}
+        empire.max_storage = {"metals": 1000.0, "organics": 500.0}
 
         result = format_empire_resources(empire)
 
@@ -53,8 +53,8 @@ class TestFormatEmpireResources:
     def test_formats_resources_without_capacity(self):
         """Verify resources without capacity show only current."""
         empire = MagicMock()
-        empire.resource_pool = {"Metals": 100.0, "Organics": 50.0}
-        empire.max_storage = {"Metals": 0.0, "Organics": 0.0}
+        empire.resource_pool = {"metals": 100.0, "organics": 50.0}
+        empire.max_storage = {"metals": 0.0, "organics": 0.0}
 
         result = format_empire_resources(empire)
 
@@ -65,8 +65,8 @@ class TestFormatEmpireResources:
     def test_uses_pipe_separator(self):
         """Verify parts are separated by pipe characters."""
         empire = MagicMock()
-        empire.resource_pool = {"Metals": 100.0, "Organics": 50.0}
-        empire.max_storage = {"Metals": 200.0, "Organics": 100.0}
+        empire.resource_pool = {"metals": 100.0, "organics": 50.0}
+        empire.max_storage = {"metals": 200.0, "organics": 100.0}
 
         result = format_empire_resources(empire)
 
@@ -85,8 +85,8 @@ class TestFormatEmpireResources:
     def test_zero_values_not_shown(self):
         """Verify zero-value resources are not shown."""
         empire = MagicMock()
-        empire.resource_pool = {"Metals": 0.0, "Organics": 0.0}
-        empire.max_storage = {"Metals": 0.0, "Organics": 0.0}
+        empire.resource_pool = {"metals": 0.0, "organics": 0.0}
+        empire.max_storage = {"metals": 0.0, "organics": 0.0}
 
         result = format_empire_resources(empire)
 
@@ -95,8 +95,8 @@ class TestFormatEmpireResources:
     def test_truncates_to_integers(self):
         """Verify float values are truncated to integers."""
         empire = MagicMock()
-        empire.resource_pool = {"Metals": 123.7}
-        empire.max_storage = {"Metals": 456.9}
+        empire.resource_pool = {"metals": 123.7}
+        empire.max_storage = {"metals": 456.9}
 
         result = format_empire_resources(empire)
 
@@ -120,7 +120,7 @@ class TestFormatResourceCost:
 
     def test_formats_single_resource(self):
         """Verify single resource cost is formatted."""
-        cost = {"Metals": 100}
+        cost = {"metals": 100}
 
         result = format_resource_cost(cost)
 
@@ -128,7 +128,7 @@ class TestFormatResourceCost:
 
     def test_formats_multiple_resources(self):
         """Verify multiple resource costs are formatted."""
-        cost = {"Metals": 100, "Organics": 50, "Vapors": 25}
+        cost = {"metals": 100, "organics": 50, "vapors": 25}
 
         result = format_resource_cost(cost)
 
@@ -138,7 +138,7 @@ class TestFormatResourceCost:
 
     def test_skips_zero_cost_resources(self):
         """Verify zero-cost resources are not shown."""
-        cost = {"Metals": 100, "Organics": 0, "Vapors": 25}
+        cost = {"metals": 100, "organics": 0, "vapors": 25}
 
         result = format_resource_cost(cost)
 
@@ -156,7 +156,7 @@ class TestFormatResourceCost:
 
     def test_all_zero_costs_returns_empty_string(self):
         """Verify all-zero costs return empty string."""
-        cost = {"Metals": 0, "Organics": 0, "Vapors": 0}
+        cost = {"metals": 0, "organics": 0, "vapors": 0}
 
         result = format_resource_cost(cost)
 
@@ -164,7 +164,7 @@ class TestFormatResourceCost:
 
     def test_truncates_to_integers(self):
         """Verify float values are truncated to integers."""
-        cost = {"Metals": 99.9}
+        cost = {"metals": 99.9}
 
         result = format_resource_cost(cost)
 
@@ -172,7 +172,7 @@ class TestFormatResourceCost:
 
     def test_uses_space_separator(self):
         """Verify parts are separated by spaces."""
-        cost = {"Metals": 100, "Organics": 50}
+        cost = {"metals": 100, "organics": 50}
 
         result = format_resource_cost(cost)
 
@@ -182,7 +182,7 @@ class TestFormatResourceCost:
 
     def test_respects_planet_resources_order(self):
         """Verify resources are ordered according to PLANET_RESOURCES."""
-        PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+        PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
 
         # Create cost with all resources
         cost = {res: (i + 1) * 10 for i, res in enumerate(PLANET_RESOURCE_NAMES)}
@@ -215,10 +215,10 @@ class TestPerTurnSpend:
     def test_per_turn_spend_single_resource(self):
         """Item costs 100 Metals, rate 2000/turn -> spend = 100/turn (completes in <1 turn)."""
         queue_item = {
-            "total_cost": {"Metals": 100.0},
-            "resources_consumed": {"Metals": 0.0},
+            "total_cost": {"metals": 100.0},
+            "resources_consumed": {"metals": 0.0},
         }
-        build_rate = {"Metals": 2000.0}
+        build_rate = {"metals": 2000.0}
 
         result = calculate_per_turn_spend(queue_item, build_rate)
 
@@ -231,7 +231,7 @@ class TestPerTurnSpend:
         # For single resource: limiting_turns = remaining/rate = 0.05
         # spend = min(100, 2000 * 0.05) / 0.05 = min(100, 100) / 0.05 = 100/0.05 = 2000
         # Hmm, that gives 2000, which is the full rate. That's correct for single resource.
-        assert result["Metals"] == pytest.approx(2000.0)
+        assert result["metals"] == pytest.approx(2000.0)
 
     def test_per_turn_spend_limiting_resource(self):
         """Metals 6000 at rate 3000 (2 turns), Organics 1500 at rate 3000 (0.5 turns).
@@ -241,59 +241,59 @@ class TestPerTurnSpend:
         Organics spend = 1500/2 = 750/turn (proportional).
         """
         queue_item = {
-            "total_cost": {"Metals": 6000.0, "Organics": 1500.0},
-            "resources_consumed": {"Metals": 0.0, "Organics": 0.0},
+            "total_cost": {"metals": 6000.0, "organics": 1500.0},
+            "resources_consumed": {"metals": 0.0, "organics": 0.0},
         }
-        build_rate = {"Metals": 3000.0, "Organics": 3000.0}
+        build_rate = {"metals": 3000.0, "organics": 3000.0}
 
         result = calculate_per_turn_spend(queue_item, build_rate)
 
-        assert result["Metals"] == pytest.approx(3000.0)
-        assert result["Organics"] == pytest.approx(750.0)
+        assert result["metals"] == pytest.approx(3000.0)
+        assert result["organics"] == pytest.approx(750.0)
 
     def test_per_turn_spend_with_partial_consumption(self):
         """Item partially consumed - spend based on remaining cost."""
         queue_item = {
-            "total_cost": {"Metals": 6000.0, "Organics": 1500.0},
-            "resources_consumed": {"Metals": 3000.0, "Organics": 750.0},
+            "total_cost": {"metals": 6000.0, "organics": 1500.0},
+            "resources_consumed": {"metals": 3000.0, "organics": 750.0},
         }
-        build_rate = {"Metals": 3000.0, "Organics": 3000.0}
+        build_rate = {"metals": 3000.0, "organics": 3000.0}
 
         result = calculate_per_turn_spend(queue_item, build_rate)
 
         # Remaining: Metals=3000, Organics=750
         # Limiting: Metals 3000/3000 = 1 turn
         # Metals spend = 3000/1 = 3000, Organics spend = 750/1 = 750
-        assert result["Metals"] == pytest.approx(3000.0)
-        assert result["Organics"] == pytest.approx(750.0)
+        assert result["metals"] == pytest.approx(3000.0)
+        assert result["organics"] == pytest.approx(750.0)
 
     def test_per_turn_spend_zero_cost_resource(self):
         """Resource with 0 remaining cost -> 0 spend."""
         queue_item = {
-            "total_cost": {"Metals": 6000.0, "Organics": 0.0},
-            "resources_consumed": {"Metals": 0.0, "Organics": 0.0},
+            "total_cost": {"metals": 6000.0, "organics": 0.0},
+            "resources_consumed": {"metals": 0.0, "organics": 0.0},
         }
-        build_rate = {"Metals": 3000.0, "Organics": 3000.0}
+        build_rate = {"metals": 3000.0, "organics": 3000.0}
 
         result = calculate_per_turn_spend(queue_item, build_rate)
 
-        assert result["Metals"] == pytest.approx(3000.0)
-        assert result.get("Organics", 0.0) == pytest.approx(0.0)
+        assert result["metals"] == pytest.approx(3000.0)
+        assert result.get("organics", 0.0) == pytest.approx(0.0)
 
     def test_per_turn_spend_zero_rate(self):
         """Resource with 0 production rate -> 0 spend for that resource."""
         queue_item = {
-            "total_cost": {"Metals": 6000.0, "Organics": 1500.0},
-            "resources_consumed": {"Metals": 0.0, "Organics": 0.0},
+            "total_cost": {"metals": 6000.0, "organics": 1500.0},
+            "resources_consumed": {"metals": 0.0, "organics": 0.0},
         }
-        build_rate = {"Metals": 3000.0, "Organics": 0.0}
+        build_rate = {"metals": 3000.0, "organics": 0.0}
 
         result = calculate_per_turn_spend(queue_item, build_rate)
 
         # Organics has 0 rate but is needed - item is stuck
         # All resources should be 0 spend (can't build)
-        assert result.get("Metals", 0.0) == pytest.approx(0.0)
-        assert result.get("Organics", 0.0) == pytest.approx(0.0)
+        assert result.get("metals", 0.0) == pytest.approx(0.0)
+        assert result.get("organics", 0.0) == pytest.approx(0.0)
 
     def test_per_turn_spend_empty_cost(self):
         """Empty total_cost -> empty result."""
@@ -301,7 +301,7 @@ class TestPerTurnSpend:
             "total_cost": {},
             "resources_consumed": {},
         }
-        build_rate = {"Metals": 3000.0}
+        build_rate = {"metals": 3000.0}
 
         result = calculate_per_turn_spend(queue_item, build_rate)
 
@@ -310,10 +310,10 @@ class TestPerTurnSpend:
     def test_per_turn_spend_all_consumed(self):
         """All resources fully consumed -> all zeros."""
         queue_item = {
-            "total_cost": {"Metals": 3000.0, "Organics": 1500.0},
-            "resources_consumed": {"Metals": 3000.0, "Organics": 1500.0},
+            "total_cost": {"metals": 3000.0, "organics": 1500.0},
+            "resources_consumed": {"metals": 3000.0, "organics": 1500.0},
         }
-        build_rate = {"Metals": 3000.0, "Organics": 3000.0}
+        build_rate = {"metals": 3000.0, "organics": 3000.0}
 
         result = calculate_per_turn_spend(queue_item, build_rate)
 
@@ -327,10 +327,10 @@ class TestPerTurnSpend:
         the ratio of remaining costs divided by the limiting turns.
         """
         queue_item = {
-            "total_cost": {"Metals": 9000.0, "Organics": 3000.0, "Vapors": 6000.0},
-            "resources_consumed": {"Metals": 0.0, "Organics": 0.0, "Vapors": 0.0},
+            "total_cost": {"metals": 9000.0, "organics": 3000.0, "vapors": 6000.0},
+            "resources_consumed": {"metals": 0.0, "organics": 0.0, "vapors": 0.0},
         }
-        build_rate = {"Metals": 3000.0, "Organics": 3000.0, "Vapors": 3000.0}
+        build_rate = {"metals": 3000.0, "organics": 3000.0, "vapors": 3000.0}
 
         result = calculate_per_turn_spend(queue_item, build_rate)
 
@@ -338,13 +338,13 @@ class TestPerTurnSpend:
         # Metals spend = 9000/3 = 3000 (full rate)
         # Organics spend = 3000/3 = 1000
         # Vapors spend = 6000/3 = 2000
-        assert result["Metals"] == pytest.approx(3000.0)
-        assert result["Organics"] == pytest.approx(1000.0)
-        assert result["Vapors"] == pytest.approx(2000.0)
+        assert result["metals"] == pytest.approx(3000.0)
+        assert result["organics"] == pytest.approx(1000.0)
+        assert result["vapors"] == pytest.approx(2000.0)
 
         # Verify proportions: Metals:Organics:Vapors = 9:3:6 = 3:1:2
-        assert result["Metals"] / result["Organics"] == pytest.approx(3.0)
-        assert result["Vapors"] / result["Organics"] == pytest.approx(2.0)
+        assert result["metals"] / result["organics"] == pytest.approx(3.0)
+        assert result["vapors"] / result["organics"] == pytest.approx(2.0)
 
 
 # =======================================================================
@@ -358,8 +358,8 @@ class TestQueueTurnSpend:
     def _make_item(self, metals_cost, metals_consumed=0.0):
         """Helper to create a simple metals-only queue item."""
         return {
-            "total_cost": {"Metals": metals_cost},
-            "resources_consumed": {"Metals": metals_consumed},
+            "total_cost": {"metals": metals_cost},
+            "resources_consumed": {"metals": metals_consumed},
         }
 
     def _make_multi_item(self, total_cost, resources_consumed=None):
@@ -374,35 +374,35 @@ class TestQueueTurnSpend:
     def test_single_item_gets_full_rate(self):
         """Single item that takes multiple turns gets the full build rate."""
         queue = [self._make_item(6000.0)]
-        build_rate = {"Metals": 3000.0}
+        build_rate = {"metals": 3000.0}
 
         result = calculate_queue_turn_spend(queue, build_rate)
 
         assert len(result) == 1
-        assert result[0]["Metals"] == pytest.approx(3000.0)
+        assert result[0]["metals"] == pytest.approx(3000.0)
 
     def test_single_item_completes_within_turn(self):
         """Single item that completes in <1 turn shows only remaining cost."""
         queue = [self._make_item(749.0)]
-        build_rate = {"Metals": 3000.0}
+        build_rate = {"metals": 3000.0}
 
         result = calculate_queue_turn_spend(queue, build_rate)
 
         assert len(result) == 1
-        assert result[0]["Metals"] == pytest.approx(749.0)
+        assert result[0]["metals"] == pytest.approx(749.0)
 
     def test_multiple_items_all_complete_within_turn(self):
         """Multiple cheap items that all complete within one turn."""
         queue = [self._make_item(749.0) for _ in range(3)]
-        build_rate = {"Metals": 3000.0}
+        build_rate = {"metals": 3000.0}
 
         result = calculate_queue_turn_spend(queue, build_rate)
 
         # 3 items at 749 each = 2247, well within 3000 capacity
         assert len(result) == 3
-        assert result[0]["Metals"] == pytest.approx(749.0)
-        assert result[1]["Metals"] == pytest.approx(749.0)
-        assert result[2]["Metals"] == pytest.approx(749.0)
+        assert result[0]["metals"] == pytest.approx(749.0)
+        assert result[1]["metals"] == pytest.approx(749.0)
+        assert result[2]["metals"] == pytest.approx(749.0)
 
     def test_bug_98_scenario_five_items(self):
         """BUG-98 scenario: 5 items at 749 each, 3000/turn rate.
@@ -410,27 +410,27 @@ class TestQueueTurnSpend:
         Items 1-4 complete (749 * 4 = 2996), item 5 gets remainder (4).
         """
         queue = [self._make_item(749.0) for _ in range(5)]
-        build_rate = {"Metals": 3000.0}
+        build_rate = {"metals": 3000.0}
 
         result = calculate_queue_turn_spend(queue, build_rate)
 
         assert len(result) == 5
-        assert result[0]["Metals"] == pytest.approx(749.0)
-        assert result[1]["Metals"] == pytest.approx(749.0)
-        assert result[2]["Metals"] == pytest.approx(749.0)
-        assert result[3]["Metals"] == pytest.approx(749.0)
-        assert result[4]["Metals"] == pytest.approx(4.0)
+        assert result[0]["metals"] == pytest.approx(749.0)
+        assert result[1]["metals"] == pytest.approx(749.0)
+        assert result[2]["metals"] == pytest.approx(749.0)
+        assert result[3]["metals"] == pytest.approx(749.0)
+        assert result[4]["metals"] == pytest.approx(4.0)
 
     def test_bug_98_scenario_six_items(self):
         """BUG-98 scenario with 6th item: gets zero production."""
         queue = [self._make_item(749.0) for _ in range(6)]
-        build_rate = {"Metals": 3000.0}
+        build_rate = {"metals": 3000.0}
 
         result = calculate_queue_turn_spend(queue, build_rate)
 
         assert len(result) == 6
-        assert result[4]["Metals"] == pytest.approx(4.0)
-        assert result[5]["Metals"] == pytest.approx(0.0)
+        assert result[4]["metals"] == pytest.approx(4.0)
+        assert result[5]["metals"] == pytest.approx(0.0)
 
     def test_partially_consumed_first_item(self):
         """First item already partially built — uses less capacity."""
@@ -438,27 +438,27 @@ class TestQueueTurnSpend:
             self._make_item(749.0, metals_consumed=500.0),  # 249 remaining
             self._make_item(749.0),  # 749 remaining
         ]
-        build_rate = {"Metals": 3000.0}
+        build_rate = {"metals": 3000.0}
 
         result = calculate_queue_turn_spend(queue, build_rate)
 
-        assert result[0]["Metals"] == pytest.approx(249.0)
-        assert result[1]["Metals"] == pytest.approx(749.0)
+        assert result[0]["metals"] == pytest.approx(249.0)
+        assert result[1]["metals"] == pytest.approx(749.0)
 
     def test_empty_queue(self):
         """Empty queue returns empty list."""
-        result = calculate_queue_turn_spend([], {"Metals": 3000.0})
+        result = calculate_queue_turn_spend([], {"metals": 3000.0})
         assert result == []
 
     def test_zero_rate_blocks_all_items(self):
         """Zero production rate blocks all items."""
         queue = [self._make_item(749.0), self._make_item(749.0)]
-        build_rate = {"Metals": 0.0}
+        build_rate = {"metals": 0.0}
 
         result = calculate_queue_turn_spend(queue, build_rate)
 
-        assert result[0]["Metals"] == pytest.approx(0.0)
-        assert result[1]["Metals"] == pytest.approx(0.0)
+        assert result[0]["metals"] == pytest.approx(0.0)
+        assert result[1]["metals"] == pytest.approx(0.0)
 
     def test_multi_resource_limiting_resource(self):
         """Multi-resource items: all resources consumed proportionally.
@@ -469,42 +469,42 @@ class TestQueueTurnSpend:
         # Item costs 6000 Metals + 1500 Organics, rate 3000 each
         # Limiting: Metals at 6000/3000 = 2 turns → uses full turn capacity
         queue = [
-            self._make_multi_item({"Metals": 6000.0, "Organics": 1500.0}),
-            self._make_multi_item({"Metals": 1000.0, "Organics": 500.0}),
+            self._make_multi_item({"metals": 6000.0, "organics": 1500.0}),
+            self._make_multi_item({"metals": 1000.0, "organics": 500.0}),
         ]
-        build_rate = {"Metals": 3000.0, "Organics": 3000.0}
+        build_rate = {"metals": 3000.0, "organics": 3000.0}
 
         result = calculate_queue_turn_spend(queue, build_rate)
 
         # First item takes 2 turns (Metals-limited), uses full turn capacity
         # Metals: (6000/2.0) * 1.0 = 3000
         # Organics: (1500/2.0) * 1.0 = 750 (proportional to cost ratio)
-        assert result[0]["Metals"] == pytest.approx(3000.0)
-        assert result[0]["Organics"] == pytest.approx(750.0)
+        assert result[0]["metals"] == pytest.approx(3000.0)
+        assert result[0]["organics"] == pytest.approx(750.0)
         # Second item gets 0 — no capacity left
-        assert result[1]["Metals"] == pytest.approx(0.0)
-        assert result[1]["Organics"] == pytest.approx(0.0)
+        assert result[1]["metals"] == pytest.approx(0.0)
+        assert result[1]["organics"] == pytest.approx(0.0)
 
     def test_multi_resource_item_completes_mid_turn(self):
         """Multi-resource item that completes mid-turn passes capacity to next."""
         # Item costs 1500 Metals + 750 Organics, rate 3000 each
         # Limiting: Metals at 1500/3000 = 0.5 turns → leaves 0.5 turn capacity
         queue = [
-            self._make_multi_item({"Metals": 1500.0, "Organics": 750.0}),
-            self._make_multi_item({"Metals": 6000.0, "Organics": 3000.0}),
+            self._make_multi_item({"metals": 1500.0, "organics": 750.0}),
+            self._make_multi_item({"metals": 6000.0, "organics": 3000.0}),
         ]
-        build_rate = {"Metals": 3000.0, "Organics": 3000.0}
+        build_rate = {"metals": 3000.0, "organics": 3000.0}
 
         result = calculate_queue_turn_spend(queue, build_rate)
 
         # First item: completes in 0.5 turns, spend = remaining cost
-        assert result[0]["Metals"] == pytest.approx(1500.0)
-        assert result[0]["Organics"] == pytest.approx(750.0)
+        assert result[0]["metals"] == pytest.approx(1500.0)
+        assert result[0]["organics"] == pytest.approx(750.0)
         # Second item: gets 0.5 turn capacity, Metals-limited (6000/3000=2 turns)
         # Metals: (6000/2.0) * 0.5 = 1500
         # Organics: (3000/2.0) * 0.5 = 750 (proportional to cost ratio)
-        assert result[1]["Metals"] == pytest.approx(1500.0)
-        assert result[1]["Organics"] == pytest.approx(750.0)
+        assert result[1]["metals"] == pytest.approx(1500.0)
+        assert result[1]["organics"] == pytest.approx(750.0)
 
     def test_fully_consumed_item_passes_all_capacity(self):
         """Already-complete item at head of queue passes full capacity through."""
@@ -512,12 +512,12 @@ class TestQueueTurnSpend:
             self._make_item(749.0, metals_consumed=749.0),  # Already done
             self._make_item(749.0),
         ]
-        build_rate = {"Metals": 3000.0}
+        build_rate = {"metals": 3000.0}
 
         result = calculate_queue_turn_spend(queue, build_rate)
 
-        assert result[0]["Metals"] == pytest.approx(0.0)
-        assert result[1]["Metals"] == pytest.approx(749.0)
+        assert result[0]["metals"] == pytest.approx(0.0)
+        assert result[1]["metals"] == pytest.approx(749.0)
 
     def test_missing_rate_for_required_resource(self):
         """Missing build rate for a required resource blocks that item and subsequent."""
@@ -526,7 +526,7 @@ class TestQueueTurnSpend:
 
         result = calculate_queue_turn_spend(queue, build_rate)
 
-        assert result[0]["Metals"] == pytest.approx(0.0)
+        assert result[0]["metals"] == pytest.approx(0.0)
 
     def test_partial_item_proportional_non_limiting_resources(self):
         """BUG-98 fix rejection: non-limiting resources must be proportionally reduced.
@@ -538,40 +538,40 @@ class TestQueueTurnSpend:
         - Item 5 Organics: (110/0.24967) * 0.00133 ≈ 0.587 (proportional, NOT 4.0)
         """
         queue = [
-            self._make_multi_item({"Metals": 749.0, "Organics": 110.0})
+            self._make_multi_item({"metals": 749.0, "organics": 110.0})
             for _ in range(6)
         ]
-        build_rate = {"Metals": 3000.0, "Organics": 3000.0}
+        build_rate = {"metals": 3000.0, "organics": 3000.0}
 
         result = calculate_queue_turn_spend(queue, build_rate)
 
         # Items 1-4: complete within turn, spend = remaining cost
         for i in range(4):
-            assert result[i]["Metals"] == pytest.approx(749.0)
-            assert result[i]["Organics"] == pytest.approx(110.0)
+            assert result[i]["metals"] == pytest.approx(749.0)
+            assert result[i]["organics"] == pytest.approx(110.0)
 
         # Item 5: gets remainder of turn capacity
         # Metals (limiting): 4.0
-        assert result[4]["Metals"] == pytest.approx(4.0, abs=0.1)
+        assert result[4]["metals"] == pytest.approx(4.0, abs=0.1)
         # Organics (non-limiting): must be proportionally reduced
         # ratio = 110/749 * 4.0 ≈ 0.587
-        expected_org = 110.0 / 749.0 * result[4]["Metals"]
-        assert result[4]["Organics"] == pytest.approx(expected_org, abs=0.01)
+        expected_org = 110.0 / 749.0 * result[4]["metals"]
+        assert result[4]["organics"] == pytest.approx(expected_org, abs=0.01)
         # Critically: organics must NOT equal metals (the old bug)
-        assert result[4]["Organics"] < result[4]["Metals"]
+        assert result[4]["organics"] < result[4]["metals"]
 
         # Item 6: zero production
-        assert result[5]["Metals"] == pytest.approx(0.0)
-        assert result[5]["Organics"] == pytest.approx(0.0)
+        assert result[5]["metals"] == pytest.approx(0.0)
+        assert result[5]["organics"] == pytest.approx(0.0)
 
     def test_partial_item_five_resources_proportional(self):
         """BUG-98: all 5 resource types proportionally reduced for partial items."""
         costs = {
-            "Metals": 749.0,
-            "Organics": 110.0,
-            "Vapors": 50.0,
-            "Radioactives": 249.0,
-            "Exotics": 269.0,
+            "metals": 749.0,
+            "organics": 110.0,
+            "vapors": 50.0,
+            "radioactives": 249.0,
+            "exotics": 269.0,
         }
         queue = [self._make_multi_item(dict(costs)) for _ in range(6)]
         build_rate = {res: 3000.0 for res in costs}

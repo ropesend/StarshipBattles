@@ -84,9 +84,9 @@ class Planet:
     owner_id: Optional[int] = None
     construction_queue: list = field(default_factory=list)
 
-    # Resources
+    # Mineral deposits
     # Key: Resource Name (from PLANET_RESOURCE_NAMES) -> {'quantity': int, 'quality': float}
-    resources: Dict[str, dict] = field(default_factory=dict)
+    deposits: Dict[str, dict] = field(default_factory=dict)
 
     # Planetary Facilities (built complexes)
     facilities: List['PlanetaryFacility'] = field(default_factory=list)
@@ -270,7 +270,7 @@ class Planet:
             'orbit_parent_name': self.orbit_parent_name,
             'owner_id': self.owner_id,
             'construction_queue': self.construction_queue.copy(),
-            'resources': {k: v.copy() for k, v in self.resources.items()},
+            'deposits': {k: v.copy() for k, v in self.deposits.items()},
             'facilities': [
                 {
                     'instance_id': f.instance_id,
@@ -279,7 +279,7 @@ class Planet:
                     'design_data': f.design_data,
                     'is_operational': f.is_operational,
                     'construction_queue': list(f.construction_queue),
-                    'resource_levels': f.resource_levels.copy(),
+                    'consumable_levels': f.consumable_levels.copy(),
                     'component_states': f.component_states.copy() if f.component_states else {},
                 } for f in self.facilities
             ],
@@ -388,7 +388,7 @@ class Planet:
             orbit_parent_name=data.get('orbit_parent_name'),
             owner_id=data.get('owner_id'),
             construction_queue=data.get('construction_queue', []),
-            resources=data.get('resources', {}),
+            deposits=data.get('deposits', data.get('resources', {})),
             facilities=facilities,
             populations=populations,
             id=data.get('id', -1),

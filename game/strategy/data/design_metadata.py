@@ -27,7 +27,7 @@ class DesignMetadata:
     vehicle_type: str  # "Ship", "Fighter", "Satellite", "Planetary Complex"
     mass: float
     combat_power: float  # Calculated metric for sorting/filtering
-    resource_cost: Dict[str, int] = field(default_factory=dict)
+    construction_cost: Dict[str, int] = field(default_factory=dict)
 
     created_date: str = ""  # ISO timestamp
     last_modified: str = ""
@@ -46,7 +46,7 @@ class DesignMetadata:
             "vehicle_type": self.vehicle_type,
             "mass": self.mass,
             "combat_power": self.combat_power,
-            "resource_cost": self.resource_cost,
+            "construction_cost": self.construction_cost,
             "created_date": self.created_date,
             "last_modified": self.last_modified,
             "is_obsolete": self.is_obsolete,
@@ -72,7 +72,7 @@ class DesignMetadata:
             vehicle_type=data.get("vehicle_type", "Ship"),
             mass=data.get("mass", 0.0),
             combat_power=data.get("combat_power", 0.0),
-            resource_cost=data.get("resource_cost", {}),
+            construction_cost=data.get("construction_cost", data.get("resource_cost", {})),
             created_date=data.get("created_date", ""),
             last_modified=data.get("last_modified", ""),
             is_obsolete=data.get("is_obsolete", False),
@@ -103,8 +103,8 @@ class DesignMetadata:
         # Calculate combat power (simplified metric)
         combat_power = cls._calculate_combat_power(data)
 
-        # Calculate resource costs
-        resource_cost = cls._calculate_resource_cost(data)
+        # Calculate construction costs
+        construction_cost = cls._calculate_construction_cost(data)
 
         # Get file timestamps
         stat = os.stat(file_path)
@@ -121,7 +121,7 @@ class DesignMetadata:
             vehicle_type=vehicle_type,
             mass=mass,
             combat_power=combat_power,
-            resource_cost=resource_cost,
+            construction_cost=construction_cost,
             created_date=created_date,
             last_modified=last_modified,
             is_obsolete=embedded_metadata.get("is_obsolete", False),
@@ -139,8 +139,8 @@ class DesignMetadata:
         # Calculate combat power
         combat_power = cls._calculate_combat_power_from_ship(ship)
 
-        # Calculate resource costs
-        resource_cost = cls._calculate_resource_cost_from_ship(ship)
+        # Calculate construction costs
+        construction_cost = cls._calculate_construction_cost_from_ship(ship)
 
         now = datetime.now().isoformat()
 
@@ -151,7 +151,7 @@ class DesignMetadata:
             vehicle_type=ship.vehicle_type,  # Ship always has vehicle_type
             mass=ship.mass,
             combat_power=combat_power,
-            resource_cost=resource_cost,
+            construction_cost=construction_cost,
             created_date=now,
             last_modified=now,
             is_obsolete=False,
@@ -214,14 +214,14 @@ class DesignMetadata:
         return power
 
     @staticmethod
-    def _calculate_resource_cost(data: dict) -> Dict[str, int]:
-        """Calculate resource costs from ship data dict.
+    def _calculate_construction_cost(data: dict) -> Dict[str, int]:
+        """Calculate construction costs from ship data dict.
 
         Note: This method looks for inline 'resource_cost' fields on component
         entries, but actual design files only contain component references
         (e.g., {"id": "bridge"}). The real costs are in the component registry.
 
-        For accurate costs, use _calculate_resource_cost_from_ship() with a
+        For accurate costs, use _calculate_construction_cost_from_ship() with a
         loaded Ship object, or DesignCostCalculator.calculate_total_cost()
         which uses Ship loading.
 
@@ -242,8 +242,8 @@ class DesignMetadata:
         return costs
 
     @staticmethod
-    def _calculate_resource_cost_from_ship(ship) -> Dict[str, int]:
-        """Calculate resource costs from Ship instance.
+    def _calculate_construction_cost_from_ship(ship) -> Dict[str, int]:
+        """Calculate construction costs from Ship instance.
 
         Component.cost always exists (defaults to 0 in Component.__init__).
         """

@@ -259,7 +259,7 @@ class TestComputePlanetProduction:
         """Test planet with harvester facility computes rate."""
         planet = Mock()
         planet.owner_id = 1
-        planet.resources = {'metal': {'quality': 0.8}}
+        planet.deposits = {'metal': {'quality': 0.8}}
 
         facility = Mock()
         facility.is_operational = True
@@ -297,7 +297,7 @@ class TestComputePlanetProduction:
         """Test non-operational facility is skipped."""
         planet = Mock()
         planet.owner_id = 1
-        planet.resources = {'metal': {'quality': 0.8}}
+        planet.deposits = {'metal': {'quality': 0.8}}
 
         facility = Mock()
         facility.is_operational = False

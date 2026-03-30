@@ -35,18 +35,18 @@ class BuildQueueWindowEvents:
 
 # Resource column mappings (duplicated from window for independence)
 RESOURCE_RATE_COLS = {
-    'res_metals_rate': 'Metals',
-    'res_organics_rate': 'Organics',
-    'res_vapors_rate': 'Vapors',
-    'res_radioactives_rate': 'Radioactives',
-    'res_exotics_rate': 'Exotics',
+    'res_metals_rate': 'metals',
+    'res_organics_rate': 'organics',
+    'res_vapors_rate': 'vapors',
+    'res_radioactives_rate': 'radioactives',
+    'res_exotics_rate': 'exotics',
 }
 RESOURCE_TOTAL_COLS = {
-    'res_metals_total': 'Metals',
-    'res_organics_total': 'Organics',
-    'res_vapors_total': 'Vapors',
-    'res_radioactives_total': 'Radioactives',
-    'res_exotics_total': 'Exotics',
+    'res_metals_total': 'metals',
+    'res_organics_total': 'organics',
+    'res_vapors_total': 'vapors',
+    'res_radioactives_total': 'radioactives',
+    'res_exotics_total': 'exotics',
 }
 
 

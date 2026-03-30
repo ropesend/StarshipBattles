@@ -7,8 +7,8 @@ PROJ-188 Phase 3: Migrated to VirtualTable + PlanetDataSource + SingleSelect.
 """
 import pygame
 import pygame_gui.windows
-# TODO: Phase 4 will replace with ResourceCatalog
-PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+# TODO: Replace with ResourceCatalog queries
+PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
 from pygame_gui.elements import UIWindow, UIPanel, UIButton, UIDropDownMenu
 from pygame_gui import UI_TEXT_ENTRY_FINISHED, UI_BUTTON_PRESSED
 

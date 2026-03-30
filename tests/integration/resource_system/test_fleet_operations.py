@@ -81,8 +81,8 @@ class TestWarpJumpUsesResourceConsumptionTrigger:
 
         # PROJ-211: pass registries for DI
         ship = make_ship_instance(design_data, registries=singleton_registries)
-        ship.resource_levels['plasma'] = 2000
-        ship.resource_levels['energy'] = 5000
+        ship.consumable_levels['plasma'] = 2000
+        ship.consumable_levels['energy'] = 5000
 
         # Verify get_warp_resource_costs() returns both resources
         warp_costs = ship.get_warp_resource_costs()
@@ -173,8 +173,8 @@ class TestMovementWithMultiResourceConsumption:
 
         # PROJ-211: pass registries for DI
         ship = make_ship_instance(design_data, registries=singleton_registries)
-        ship.resource_levels['fuel'] = 50000
-        ship.resource_levels['coolant'] = 1000
+        ship.consumable_levels['fuel'] = 50000
+        ship.consumable_levels['coolant'] = 1000
 
         # Create fleet
         fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
@@ -275,8 +275,8 @@ class TestComponentToggleAffectsMovementAndWarp:
 
         # PROJ-211: pass registries for DI
         ship = make_ship_instance(design_data, registries=singleton_registries)
-        ship.resource_levels['fuel'] = 50000
-        ship.resource_levels['energy'] = 5000
+        ship.consumable_levels['fuel'] = 50000
+        ship.consumable_levels['energy'] = 5000
 
         # Verify initial stats
         stats = ship.get_calculated_stats()

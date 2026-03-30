@@ -30,7 +30,7 @@ def mock_source():
         {"name": "Frigate", "type": "ship"},
         {"name": "Factory", "type": "complex"},
     ]
-    source.build_rate = {"Metals": 100, "Organics": 50}
+    source.build_rate = {"metals": 100, "organics": 50}
     source.owner_entity = Mock()
     source.owner_entity.location = (2, 3)
     # Ensure system_name is None so get_system_name uses galaxy lookup
@@ -47,7 +47,7 @@ def mock_source_fleet():
     source.can_build_ships = True
     source.can_build_complexes = False
     source.construction_queue = []
-    source.build_rate = {"Metals": 50}
+    source.build_rate = {"metals": 50}
     source.owner_entity = Mock()
     source.owner_entity.location = (5, 6)
     return source

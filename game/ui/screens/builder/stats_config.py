@@ -591,16 +591,16 @@ def get_construction_rows(ship):
     """
     Generate the list of stat rows for the Construction section.
     """
-    # TODO: Phase 4 will replace with ResourceCatalog
-    PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+    # TODO: Replace with ResourceCatalog queries
+    PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
 
     # Abbreviations for narrow label columns
     LABEL_ABBREV = {
-        "Metals": "Metals",
-        "Organics": "Organics",
-        "Vapors": "Vapors",
-        "Radioactives": "Radact",
-        "Exotics": "Exotics",
+        "metals": "Metals",
+        "organics": "Organics",
+        "vapors": "Vapors",
+        "radioactives": "Radact",
+        "exotics": "Exotics",
     }
 
     rows = []

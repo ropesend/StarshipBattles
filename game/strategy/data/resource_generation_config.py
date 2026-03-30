@@ -122,7 +122,7 @@ class ResourceGenerationConfig:
 
         Args:
             planet_type_name: PlanetType enum name (e.g., "MAGMA", "JOVIAN").
-            resource_name: Resource name (e.g., "Metals", "Vapors").
+            resource_name: Resource name (e.g., "metals", "vapors").
 
         Returns:
             Multiplier float. Defaults to 1.0 if not specified.

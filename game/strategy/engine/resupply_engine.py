@@ -46,7 +46,7 @@ class ResupplyEngine(IResupplyEngine):
     PROJ-74 Phase 3: Handles fuel generation at planetary facilities.
     Future phases add fleet resupply logic.
 
-    Follows existing engine DI pattern (see ResourceManagementEngine).
+    Follows existing engine DI pattern (see ConsumableManagementEngine).
 
     Handles:
     - Scanning facility components for ResourceGeneration with resource="fuel"
@@ -78,7 +78,7 @@ class ResupplyEngine(IResupplyEngine):
 
         Each facility with a fuel synthesizer (ResourceGeneration with resource="fuel")
         generates 1/100th of its per-turn output each tick. Fuel is added to the
-        facility's resource_levels, capped at max storage capacity.
+        facility's consumable_levels, capped at max storage capacity.
 
         Args:
             tick: Current tick number (1-100)

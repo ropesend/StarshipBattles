@@ -1,5 +1,5 @@
 """
-ShipResourceManager - Resource management for ShipInstance.
+ShipConsumableManager - Resource management for ShipInstance.
 
 Extracted from ShipInstance (PROJ-87) to centralize resource logic:
 - Fuel/energy/ammo tracking and consumption
@@ -7,7 +7,7 @@ Extracted from ShipInstance (PROJ-87) to centralize resource logic:
 - Warp resource costs
 - Resupply operations
 
-The manager operates on the ShipInstance's resource_levels dict and
+The manager operates on the ShipInstance's consumable_levels dict and
 delegates stat lookups to the ship's get_calculated_stats() method.
 """
 from typing import Dict, TYPE_CHECKING
@@ -16,13 +16,13 @@ if TYPE_CHECKING:
     from game.strategy.data.ship_instance import ShipInstance
 
 
-class ShipResourceManager:
+class ShipConsumableManager:
     """
     Manages resource tracking and consumption for a ShipInstance.
 
     This class centralizes all resource-related logic that was previously
     duplicated across ShipInstance methods. It operates on the ship's
-    resource_levels dict and gets max values from calculated stats.
+    consumable_levels dict and gets max values from calculated stats.
 
     Attributes:
         _ship: Reference to the owning ShipInstance.
@@ -63,7 +63,7 @@ class ShipResourceManager:
         Returns:
             Current resource level. Returns 0.0 if not tracked (safe fallback).
         """
-        return self._ship.resource_levels.get(resource_type, 0.0)
+        return self._ship.consumable_levels.get(resource_type, 0.0)
 
     def consume_resource(self, resource_type: str, amount: float) -> bool:
         """
@@ -81,12 +81,12 @@ class ShipResourceManager:
         if amount < 0:
             return False
 
-        current = self._ship.resource_levels.get(resource_type, 0.0)
+        current = self._ship.consumable_levels.get(resource_type, 0.0)
 
         if current < amount:
             return False
 
-        self._ship.resource_levels[resource_type] = current - amount
+        self._ship.consumable_levels[resource_type] = current - amount
         return True
 
     # --- Cost Calculation Methods ---
@@ -135,7 +135,7 @@ class ShipResourceManager:
             The actual amount resupplied.
         """
         max_val = self.get_resource_capacity(resource_name)
-        old_val = self._ship.resource_levels.get(resource_name, 0.0)
+        old_val = self._ship.consumable_levels.get(resource_name, 0.0)
         new_val = min(max_val, old_val + amount)
-        self._ship.resource_levels[resource_name] = new_val
+        self._ship.consumable_levels[resource_name] = new_val
         return new_val - old_val

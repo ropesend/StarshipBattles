@@ -13,7 +13,7 @@ from game.core.validation_helpers import require_keys
 from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
 from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
 from game.strategy.data.fleet_pursuer_tracker import FleetPursuerTracker
-from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
+from game.strategy.data.fleet_consumable_aggregator import FleetConsumableAggregator
 from game.strategy.data.ship_instance import ShipInstance
 
 # PROJ-212: OrderType, Order, and order type sets extracted to order_types.py
@@ -62,7 +62,7 @@ class Fleet:
         self.construction_queue: List[Dict[str, Any]] = []
 
         # Delegate for resource aggregation (PROJ-87 Phase 3)
-        self._resource_agg = FleetResourceAggregator(self)
+        self._resource_agg = FleetConsumableAggregator(self)
 
         # Delegate for capability queries (PROJ-87 Phase 4)
         # PROJ-211: Pass component_registry for DI
@@ -136,7 +136,7 @@ class Fleet:
         return self._capabilities
 
     @property
-    def resources(self) -> 'FleetResourceAggregator':
+    def resources(self) -> 'FleetConsumableAggregator':
         """Public access to fleet resource aggregation."""
         return self._resource_agg
 

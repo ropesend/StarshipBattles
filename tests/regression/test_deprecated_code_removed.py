@@ -149,9 +149,9 @@ class TestSingletonUsageCount:
 
     # Expected counts from PROJ-195 audit (2026-02-25)
     # game/: 11 (app.py: 2, registry.py: 9)
-    # tests/: 77 (all legitimate singleton/isolation tests)
+    # tests/: 82 (all legitimate singleton/isolation tests + resource unification integration tests)
     EXPECTED_GAME_COUNT = 11
-    EXPECTED_TESTS_COUNT = 77
+    EXPECTED_TESTS_COUNT = 82
 
     def test_singleton_usage_count_game(self):
         """RegistryManager.instance() count in game/ should not increase."""

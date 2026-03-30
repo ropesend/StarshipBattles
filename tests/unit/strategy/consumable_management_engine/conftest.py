@@ -1,5 +1,5 @@
 """
-Shared fixtures for ResourceManagementEngine tests.
+Shared fixtures for ConsumableManagementEngine tests.
 
 PROJ-50: Added mock_registries fixture for strict DI.
 """

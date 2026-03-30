@@ -19,7 +19,7 @@ def full_ship():
         design_data={'name': 'TestDesign', 'layers': {}},
         current_hp=80,
         component_damage={'comp_1': 50},
-        resource_levels={'fuel': 100.0, 'energy': 50.0},
+        consumable_levels={'fuel': 100.0, 'energy': 50.0},
         component_toggles={'comp_2': False},
         cargo_contents={'passengers': 10},
         is_alive=True,
@@ -45,7 +45,7 @@ class TestToDict:
         assert restored.design_data == full_ship.design_data
         assert restored.current_hp == full_ship.current_hp
         assert restored.component_damage == full_ship.component_damage
-        assert restored.resource_levels == full_ship.resource_levels
+        assert restored.consumable_levels == full_ship.consumable_levels
         assert restored.component_toggles == full_ship.component_toggles
         assert restored.cargo_contents == full_ship.cargo_contents
         assert restored.is_alive == full_ship.is_alive

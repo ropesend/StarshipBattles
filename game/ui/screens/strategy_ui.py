@@ -19,8 +19,8 @@ import pygame_gui
 from game.ui.config import UIConfig
 from game.ui.fonts import get_font
 from game.core.paths import Paths
-# TODO: Phase 4 will replace with ResourceCatalog
-PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+# TODO: Replace with ResourceCatalog queries
+PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
 from game.ui.screens.build_queue_helpers import RESOURCE_ABBREVS
 from game.ui.screens.strategy_menu_panel import StrategyMenuPanel, PANEL_WIDTH, PANEL_HEIGHT
 from game.ui.screens.strategy_window_manager import StrategyWindowManager

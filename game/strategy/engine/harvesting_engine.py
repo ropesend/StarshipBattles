@@ -322,7 +322,7 @@ class HarvestingEngine(IHarvestingEngine):
             return
 
         # Check planet has this resource
-        resource_data = colony.resources.get(resource_type)
+        resource_data = colony.deposits.get(resource_type)
         if resource_data is None:
             return
 

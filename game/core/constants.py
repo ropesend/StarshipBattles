@@ -85,7 +85,7 @@ class SimulationConstants:
 
 # Resource Types
 # PROJ-11: Moved from game.strategy.data.planet to eliminate simulation->strategy dependency
-PLANET_RESOURCES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+PLANET_RESOURCES = ["metals", "organics", "vapors", "radioactives", "exotics"]
 
 
 class ResourceType:

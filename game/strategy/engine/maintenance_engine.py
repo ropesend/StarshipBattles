@@ -1,5 +1,5 @@
 """
-MaintenanceEngine - Handles per-tick maintenance costs and scuttling.
+MaintenanceEngine - Handles per-tick maintenance costs and disabling.
 
 PROJ-75 Phase 5: Maintenance System.
 PROJ-161: Now per-tick only (100 ticks per turn, 1/100th cost each).
@@ -7,13 +7,12 @@ PROJ-161: Now per-tick only (100 ticks per turn, 1/100th cost each).
 Responsibilities:
 - Calculate maintenance cost (5% of total build cost per turn, 1/100th per tick)
 - Deduct maintenance costs from empire resource pools
-- Scuttle (remove) entities that cannot be maintained (immediately on tick failure)
-- Clean up empty fleets after ship scuttles
-- Return scuttle events for notification/logging
+- Disable entities that cannot be maintained (set is_operational=False on tick failure)
+- Return disable events for notification/logging
 
 Processing is one-pass: all entities are evaluated against current resources
 in order. Resources consumed by earlier entities reduce availability for later ones,
-but scuttled entities do NOT return resources (preventing cascade exploitation).
+but disabled entities do NOT return resources (preventing cascade exploitation).
 
 Called by TurnEngine._process_tick() 100 times per turn.
 """
@@ -72,11 +71,12 @@ class ScuttleEvent:
 
 
 class MaintenanceEngine:
-    """Engine for processing maintenance costs and scuttling.
+    """Engine for processing maintenance costs and disabling.
 
-    Each tick, every operational facility and every ship must pay
+    Each tick, every operational facility and every operational ship must pay
     1/100th of their maintenance (5% of build cost per turn). If the
-    empire cannot afford the payment, the entity is immediately scuttled.
+    empire cannot afford the payment, the entity is immediately disabled
+    (is_operational set to False).
 
     PROJ-161: Per-tick only (legacy full-turn method removed).
     PROJ-218: Now requires registries for cost calculation.
@@ -84,7 +84,6 @@ class MaintenanceEngine:
     Processing order:
     1. Facilities (all colonies, in colony order)
     2. Ships (all fleets, in fleet order)
-    3. Empty fleet cleanup
 
     Usage:
         engine = MaintenanceEngine(registries=session.registries)
@@ -107,7 +106,7 @@ class MaintenanceEngine:
 
         PROJ-161: Per-tick maintenance spreads costs across 100 ticks.
         Each call deducts 1/100th of the per-turn maintenance cost.
-        Entities that cannot pay are immediately scuttled.
+        Entities that cannot pay are immediately disabled.
 
         Args:
             tick: Current tick number (1-100).
@@ -133,7 +132,6 @@ class MaintenanceEngine:
             List of ScuttleEvent records.
         """
         events: List[ScuttleEvent] = []
-        fleets_with_scuttles: set = set()
 
         # [BUG-109] Track total maintenance cost for this tick
         try:
@@ -146,14 +144,8 @@ class MaintenanceEngine:
             events.extend(self._process_colony_facilities(colony, empire, tick_fraction))
 
         # Phase 2: Ship maintenance
-        for fleet in list(empire.fleets):  # Copy list since we may remove fleets
-            fleet_events = self._process_fleet_ships(fleet, empire, tick_fraction)
-            if fleet_events:
-                fleets_with_scuttles.add(fleet.id)
-            events.extend(fleet_events)
-
-        # Phase 3: Clean up fleets emptied by scuttling only
-        self._cleanup_empty_fleets(empire, fleets_with_scuttles)
+        for fleet in empire.fleets:
+            events.extend(self._process_fleet_ships(fleet, empire, tick_fraction))
 
         # [BUG-109] Log maintenance deductions for first tick only
         if tick_fraction < 1.0 and pool_before is not None:
@@ -179,7 +171,7 @@ class MaintenanceEngine:
         """Process maintenance for all facilities on a colony.
 
         Iterates facilities in order. Pays for each one if possible,
-        scuttles those that can't be paid for.
+        disables those that can't be paid for.
 
         Args:
             colony: Colony (planet) with facilities.
@@ -190,7 +182,6 @@ class MaintenanceEngine:
             List of ScuttleEvent records.
         """
         events: List[ScuttleEvent] = []
-        to_scuttle: List = []
 
         for facility in colony.facilities:
             if not facility.is_operational:
@@ -205,8 +196,8 @@ class MaintenanceEngine:
                 for res, amount in cost.items():
                     empire.consume_resources(res, amount)
             else:
-                # Mark for scuttling
-                to_scuttle.append(facility)
+                # Disable the facility
+                facility.is_operational = False
                 events.append(ScuttleEvent(
                     empire_id=empire.id,
                     entity_type="facility",
@@ -214,13 +205,9 @@ class MaintenanceEngine:
                     location=f"Planet {colony.name}",
                 ))
                 logger.warning(
-                    f"Maintenance failure: scuttling {facility.name} "
+                    f"Maintenance failure: disabling {facility.name} "
                     f"on {colony.name} (Empire {empire.id})"
                 )
-
-        # Execute scuttles after iteration (don't modify list during iteration)
-        for facility in to_scuttle:
-            colony.facilities.remove(facility)
 
         return events
 
@@ -238,9 +225,11 @@ class MaintenanceEngine:
             List of ScuttleEvent records.
         """
         events: List[ScuttleEvent] = []
-        to_scuttle: List = []
 
         for ship in fleet.ships:
+            if not ship.is_operational:
+                continue  # Non-operational ships are free
+
             cost = self._calculate_maintenance_cost(ship.design_data, tick_fraction)
             if not cost:
                 continue
@@ -249,7 +238,8 @@ class MaintenanceEngine:
                 for res, amount in cost.items():
                     empire.consume_resources(res, amount)
             else:
-                to_scuttle.append(ship)
+                # Disable the ship
+                ship.is_operational = False
                 events.append(ScuttleEvent(
                     empire_id=empire.id,
                     entity_type="ship",
@@ -257,13 +247,9 @@ class MaintenanceEngine:
                     location=f"Fleet {fleet.id}",
                 ))
                 logger.warning(
-                    f"Maintenance failure: scuttling {ship.name} "
+                    f"Maintenance failure: disabling {ship.name} "
                     f"in Fleet {fleet.id} (Empire {empire.id})"
                 )
-
-        # Execute scuttles
-        for ship in to_scuttle:
-            fleet.ships.remove(ship)
 
         return events
 
@@ -289,21 +275,3 @@ class MaintenanceEngine:
             return full_cost
         return {res: amount * tick_fraction for res, amount in full_cost.items()}
 
-    def _cleanup_empty_fleets(self, empire: 'Empire', fleets_with_scuttles: set) -> None:
-        """Remove fleets that became empty due to maintenance scuttling.
-
-        Only removes fleets that had ships scuttled AND now have no ships.
-        Pre-existing empty fleets (e.g., newly created, waiting for ships)
-        are left alone.
-
-        Args:
-            empire: Empire to clean up.
-            fleets_with_scuttles: Set of fleet IDs that had ships scuttled.
-        """
-        to_remove = [
-            f for f in empire.fleets
-            if f.id in fleets_with_scuttles and len(f.ships) == 0
-        ]
-        for fleet in to_remove:
-            empire.remove_fleet(fleet)
-            logger.info(f"Removed empty Fleet {fleet.id} (Empire {empire.id})")

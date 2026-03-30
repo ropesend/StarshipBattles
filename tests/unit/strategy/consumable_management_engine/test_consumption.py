@@ -13,9 +13,9 @@ class TestPerTurnResourceConsumption:
 
     def test_consumes_resources_each_tick(self, mock_registries, mock_empire, mock_fleet, mock_ship):
         """Resource consumption happens each tick."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
-        engine = ResourceManagementEngine(registries=mock_registries)
+        engine = ConsumableManagementEngine(registries=mock_registries)
         mock_ship.get_all_resource_costs_per_turn.return_value = {"power": 100.0}
         mock_ship.consume_resource.return_value = True
 
@@ -26,9 +26,9 @@ class TestPerTurnResourceConsumption:
 
     def test_skips_non_combat_ships(self, mock_registries, mock_empire, mock_fleet, mock_ship):
         """Non-combat capable ships are skipped."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
-        engine = ResourceManagementEngine(registries=mock_registries)
+        engine = ConsumableManagementEngine(registries=mock_registries)
         mock_ship.is_combat_capable.return_value = False
         mock_ship.get_all_resource_costs_per_turn.return_value = {"power": 100.0}
 
@@ -38,9 +38,9 @@ class TestPerTurnResourceConsumption:
 
     def test_spreads_consumption_over_100_ticks(self, mock_registries, mock_empire, mock_fleet, mock_ship):
         """Total consumption spread over 100 ticks equals per-turn cost."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
-        engine = ResourceManagementEngine(registries=mock_registries)
+        engine = ConsumableManagementEngine(registries=mock_registries)
         mock_ship.get_all_resource_costs_per_turn.return_value = {"power": 100.0}
         mock_ship.consume_resource.return_value = True
 
@@ -56,9 +56,9 @@ class TestPerTurnResourceConsumption:
 
     def test_skips_zero_cost_resources(self, mock_registries, mock_empire, mock_fleet, mock_ship):
         """Resources with zero cost are skipped."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
-        engine = ResourceManagementEngine(registries=mock_registries)
+        engine = ConsumableManagementEngine(registries=mock_registries)
         mock_ship.get_all_resource_costs_per_turn.return_value = {"power": 0.0}
 
         engine.process_per_turn_consumption(1, [mock_empire])
@@ -67,9 +67,9 @@ class TestPerTurnResourceConsumption:
 
     def test_skips_negative_cost_resources(self, mock_registries, mock_empire, mock_fleet, mock_ship):
         """Resources with negative cost are skipped (generators produce, don't consume)."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
-        engine = ResourceManagementEngine(registries=mock_registries)
+        engine = ConsumableManagementEngine(registries=mock_registries)
         mock_ship.get_all_resource_costs_per_turn.return_value = {"power": -50.0}
 
         engine.process_per_turn_consumption(1, [mock_empire])
@@ -78,9 +78,9 @@ class TestPerTurnResourceConsumption:
 
     def test_handles_multiple_resource_types(self, mock_registries, mock_empire, mock_fleet, mock_ship):
         """Multiple resource types are consumed."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
-        engine = ResourceManagementEngine(registries=mock_registries)
+        engine = ConsumableManagementEngine(registries=mock_registries)
         mock_ship.get_all_resource_costs_per_turn.return_value = {
             "power": 100.0,
             "fuel": 50.0,

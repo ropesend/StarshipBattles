@@ -12,7 +12,7 @@ Turn Phases:
     1. SUBTURN LOOP (100 ticks):
        - Phase 0:   Harvesting (via HarvestingEngine) - 1/100th per tick
        - Phase 0a:  Maintenance (via MaintenanceEngine) - 1/100th per tick, immediate scuttle
-       - Phase 0b:  Per-turn resources (via ResourceManagementEngine)
+       - Phase 0b:  Per-turn resources (via ConsumableManagementEngine)
        - Phase 0c:  Fuel generation at facilities (via ResupplyEngine)
        - Phase 0d:  Fleet resupply from facilities (via ResupplyEngine)
        - Phase 0e:  Construction resource consumption (via ProductionEngine)
@@ -29,7 +29,7 @@ Delegated Engines:
     - OrderProcessor: Order lifecycle management (instant orders only)
     - ActionExecutionEngine: Tick-based action order execution
     - ConflictResolutionEngine: Combat detection and resolution
-    - ResourceManagementEngine: Per-turn resource consumption
+    - ConsumableManagementEngine: Per-turn resource consumption
     - ResupplyEngine: Fuel generation and fleet resupply
     - HarvestingEngine: Planetary resource extraction to empire pool
     - MaintenanceEngine: Maintenance cost deduction and scuttling
@@ -70,7 +70,7 @@ if TYPE_CHECKING:
         IProductionEngine,
         IOrderProcessor,
         IConflictEngine,
-        IResourceEngine,
+        IConsumableEngine,
         IPopulationEngine,
         IResupplyEngine,
         IHarvestingEngine,
@@ -84,7 +84,7 @@ if TYPE_CHECKING:
     from game.strategy.engine.production_engine import ProductionEngine
     from game.strategy.engine.order_processor import OrderProcessor
     from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-    from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+    from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
 
 class TurnEngine:
@@ -101,7 +101,7 @@ class TurnEngine:
 
     PROJ-36: Additional delegation to:
     - ConflictResolutionEngine: Combat detection and resolution
-    - ResourceManagementEngine: Per-turn resource consumption
+    - ConsumableManagementEngine: Per-turn resource consumption
 
     PROJ-43 Phase 4: Full constructor dependency injection for all engines.
     All engines can be injected via constructor for testing and extensibility.
@@ -116,7 +116,7 @@ class TurnEngine:
         production_engine: Optional['IProductionEngine'] = None,
         order_processor: Optional['IOrderProcessor'] = None,
         conflict_engine: Optional['IConflictEngine'] = None,
-        resource_engine: Optional['IResourceEngine'] = None,
+        resource_engine: Optional['IConsumableEngine'] = None,
         population_engine: Optional['IPopulationEngine'] = None,
         resupply_engine: Optional['IResupplyEngine'] = None,
         harvesting_engine: Optional['IHarvestingEngine'] = None,
@@ -146,8 +146,8 @@ class TurnEngine:
                            If None, creates OrderProcessor.
             conflict_engine: Optional conflict engine (IConflictEngine).
                            If None, creates ConflictResolutionEngine.
-            resource_engine: Optional resource engine (IResourceEngine).
-                           If None, creates ResourceManagementEngine.
+            resource_engine: Optional resource engine (IConsumableEngine).
+                           If None, creates ConsumableManagementEngine.
             population_engine: Optional population engine (IPopulationEngine).
                            If None, creates PopulationEngine.
             resupply_engine: Optional resupply engine (IResupplyEngine).
@@ -176,7 +176,7 @@ class TurnEngine:
         self._production_engine: Optional['IProductionEngine'] = production_engine
         self._order_processor: Optional['IOrderProcessor'] = order_processor
         self._conflict_engine: Optional['IConflictEngine'] = conflict_engine
-        self._resource_engine: Optional['IResourceEngine'] = resource_engine
+        self._resource_engine: Optional['IConsumableEngine'] = resource_engine
         self._population_engine: Optional['IPopulationEngine'] = population_engine
         self._resupply_engine: Optional['IResupplyEngine'] = resupply_engine
         self._harvesting_engine: Optional['IHarvestingEngine'] = harvesting_engine
@@ -275,12 +275,12 @@ class TurnEngine:
         return self._conflict_engine
 
     @property
-    def resource_engine(self) -> 'IResourceEngine':
+    def resource_engine(self) -> 'IConsumableEngine':
         """Return resource engine, lazily creating default if not injected."""
         if self._resource_engine is None:
-            from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+            from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
             # PROJ-50: Pass registries for strict DI
-            self._resource_engine = ResourceManagementEngine(registries=self._registries)
+            self._resource_engine = ConsumableManagementEngine(registries=self._registries)
         return self._resource_engine
 
     @property

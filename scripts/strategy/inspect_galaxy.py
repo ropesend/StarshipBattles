@@ -183,7 +183,7 @@ def extract_planet_data(planet):
         'atmosphere': dict(planet.atmosphere),
         'resources': {
             name: {'quantity': r.get('quantity', 0), 'quality': r.get('quality', 0)}
-            for name, r in planet.resources.items()
+            for name, r in planet.deposits.items()
         },
         'habitability_reference': round(_ref_habitability(planet), 4),
     }

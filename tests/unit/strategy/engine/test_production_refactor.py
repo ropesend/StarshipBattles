@@ -309,7 +309,7 @@ class TestResourceShortageEventLogging:
     def empire(self):
         emp = MagicMock(spec=Empire)
         emp.id = 1
-        emp.resource_pool = {"Metals": 10.0, "Organics": 2.0}
+        emp.resource_pool = {"metals": 10.0, "organics": 2.0}
         emp.has_resources.return_value = False  # Cannot afford
         emp.consume_resources = MagicMock()
         return emp
@@ -326,11 +326,11 @@ class TestResourceShortageEventLogging:
         item = {
             "design_id": "frigate_mk1",
             "type": "ship",
-            "total_cost": {"Metals": 100, "Organics": 50},
-            "resources_consumed": {"Metals": 0, "Organics": 0},
+            "total_cost": {"metals": 100, "organics": 50},
+            "resources_consumed": {"metals": 0, "organics": 0},
         }
         colony.construction_queue = [item]
-        rates = {"Metals": 500, "Organics": 500}
+        rates = {"metals": 500, "organics": 500}
 
         with patch("game.strategy.engine.production_engine.log_event") as mock_log:
             engine._process_queue_tick_dynamic(
@@ -358,14 +358,14 @@ class TestResourceShortageEventLogging:
         item = {
             "design_id": "cruiser_mk1",
             "type": "ship",
-            "total_cost": {"Metals": 100, "Organics": 50},
-            "resources_consumed": {"Metals": 0, "Organics": 0},
+            "total_cost": {"metals": 100, "organics": 50},
+            "resources_consumed": {"metals": 0, "organics": 0},
         }
         colony.construction_queue = [item]
-        rates = {"Metals": 500, "Organics": 500}
+        rates = {"metals": 500, "organics": 500}
 
         # Empire has plenty of Metals but almost no Organics
-        empire.resource_pool = {"Metals": 1000.0, "Organics": 0.5}
+        empire.resource_pool = {"metals": 1000.0, "organics": 0.5}
 
         with patch("game.strategy.engine.production_engine.log_event") as mock_log:
             engine._process_queue_tick_dynamic(
@@ -380,7 +380,7 @@ class TestResourceShortageEventLogging:
             assert len(shortage_calls) == 1
 
             call_kwargs = shortage_calls[0][1]
-            assert call_kwargs["limiting_resource"] == "Organics"
+            assert call_kwargs["limiting_resource"] == "organics"
             assert call_kwargs["available"] == 0.5
             assert call_kwargs["needed"] == 5.0  # 500/100 = 5 per tick
 
@@ -389,11 +389,11 @@ class TestResourceShortageEventLogging:
         item = {
             "design_id": "frigate_mk1",
             "type": "ship",
-            "total_cost": {"Metals": 100},
-            "resources_consumed": {"Metals": 0},
+            "total_cost": {"metals": 100},
+            "resources_consumed": {"metals": 0},
         }
         colony.construction_queue = [item]
-        rates = {"Metals": 500}
+        rates = {"metals": 500}
 
         with patch("game.strategy.engine.production_engine.log_event") as mock_log:
             # Simulate multiple ticks within the same turn
@@ -414,17 +414,17 @@ class TestResourceShortageEventLogging:
         """If shortage persists across turns, it should log again in the next turn."""
         empire_poor = MagicMock(spec=Empire)
         empire_poor.id = 1
-        empire_poor.resource_pool = {"Metals": 0.0}
+        empire_poor.resource_pool = {"metals": 0.0}
         empire_poor.has_resources.return_value = False
 
         item = {
             "design_id": "frigate_mk1",
             "type": "ship",
-            "total_cost": {"Metals": 100},
-            "resources_consumed": {"Metals": 0},
+            "total_cost": {"metals": 100},
+            "resources_consumed": {"metals": 0},
         }
         colony.construction_queue = [item]
-        rates = {"Metals": 500}
+        rates = {"metals": 500}
 
         with patch("game.strategy.engine.production_engine.log_event") as mock_log:
             # Turn 1: tick 1 logs shortage, tick 2 does not
@@ -461,18 +461,18 @@ class TestResourceShortageEventLogging:
         """No shortage event should be logged when empire can afford production."""
         empire_rich = MagicMock(spec=Empire)
         empire_rich.id = 1
-        empire_rich.resource_pool = {"Metals": 10000.0}
+        empire_rich.resource_pool = {"metals": 10000.0}
         empire_rich.has_resources.return_value = True
         empire_rich.consume_resources = MagicMock(return_value=True)
 
         item = {
             "design_id": "frigate_mk1",
             "type": "ship",
-            "total_cost": {"Metals": 100},
-            "resources_consumed": {"Metals": 0},
+            "total_cost": {"metals": 100},
+            "resources_consumed": {"metals": 0},
         }
         colony.construction_queue = [item]
-        rates = {"Metals": 500}
+        rates = {"metals": 500}
 
         with patch("game.strategy.engine.production_engine.log_event") as mock_log:
             engine._process_queue_tick_dynamic(

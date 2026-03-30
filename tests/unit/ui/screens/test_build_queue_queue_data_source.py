@@ -31,19 +31,19 @@ def _make_queue_item(
     """Create a sample queue item dict."""
     if total_cost is None:
         total_cost = {
-            "Metals": 6000.0,
-            "Organics": 1500.0,
-            "Vapors": 3000.0,
-            "Radioactives": 0.0,
-            "Exotics": 0.0,
+            "metals": 6000.0,
+            "organics": 1500.0,
+            "vapors": 3000.0,
+            "radioactives": 0.0,
+            "exotics": 0.0,
         }
     if resources_consumed is None:
         resources_consumed = {
-            "Metals": 0.0,
-            "Organics": 0.0,
-            "Vapors": 0.0,
-            "Radioactives": 0.0,
-            "Exotics": 0.0,
+            "metals": 0.0,
+            "organics": 0.0,
+            "vapors": 0.0,
+            "radioactives": 0.0,
+            "exotics": 0.0,
         }
     return {
         "design_id": design_id,
@@ -57,11 +57,11 @@ def _make_queue_item(
 def _make_build_rate():
     """Create a sample build rate dict."""
     return {
-        "Metals": 3000.0,
-        "Organics": 3000.0,
-        "Vapors": 3000.0,
-        "Radioactives": 3000.0,
-        "Exotics": 3000.0,
+        "metals": 3000.0,
+        "organics": 3000.0,
+        "vapors": 3000.0,
+        "radioactives": 3000.0,
+        "exotics": 3000.0,
     }
 
 
@@ -197,10 +197,10 @@ class TestCellValues:
     def test_zero_remaining_shows_dash(self):
         """Zero remaining cost should show '-'."""
         item = _make_queue_item(
-            total_cost={"Metals": 100.0, "Organics": 0.0, "Vapors": 0.0,
-                        "Radioactives": 0.0, "Exotics": 0.0},
-            resources_consumed={"Metals": 0.0, "Organics": 0.0, "Vapors": 0.0,
-                                "Radioactives": 0.0, "Exotics": 0.0},
+            total_cost={"metals": 100.0, "organics": 0.0, "vapors": 0.0,
+                        "radioactives": 0.0, "exotics": 0.0},
+            resources_consumed={"metals": 0.0, "organics": 0.0, "vapors": 0.0,
+                                "radioactives": 0.0, "exotics": 0.0},
         )
         ds, _ = _make_data_source(queue=[item])
         result = ds.get_cell_value(0, "org_rem")
@@ -209,10 +209,10 @@ class TestCellValues:
     def test_zero_rate_shows_dash(self):
         """Zero per-turn spend should show '-'."""
         item = _make_queue_item(
-            total_cost={"Metals": 100.0, "Organics": 0.0, "Vapors": 0.0,
-                        "Radioactives": 0.0, "Exotics": 0.0},
-            resources_consumed={"Metals": 0.0, "Organics": 0.0, "Vapors": 0.0,
-                                "Radioactives": 0.0, "Exotics": 0.0},
+            total_cost={"metals": 100.0, "organics": 0.0, "vapors": 0.0,
+                        "radioactives": 0.0, "exotics": 0.0},
+            resources_consumed={"metals": 0.0, "organics": 0.0, "vapors": 0.0,
+                                "radioactives": 0.0, "exotics": 0.0},
         )
         ds, _ = _make_data_source(queue=[item])
         result = ds.get_cell_value(0, "org_rate")

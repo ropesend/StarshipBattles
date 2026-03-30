@@ -16,11 +16,11 @@
             },
             "major_classification": "Crewsupport",
             "resource_cost": {
-                "Metals": 80,
-                "Organics": 20,
-                "Vapors": 10,
-                "Radioactives": 5,
-                "Exotics": 10
+                "metals": 80,
+                "organics": 20,
+                "vapors": 10,
+                "radioactives": 5,
+                "exotics": 10
             }
         },
         {
@@ -39,11 +39,11 @@
             },
             "major_classification": "Crewsupport",
             "resource_cost": {
-                "Metals": 100,
-                "Organics": 25,
-                "Vapors": 15,
-                "Radioactives": 10,
-                "Exotics": 15
+                "metals": 100,
+                "organics": 25,
+                "vapors": 15,
+                "radioactives": 10,
+                "exotics": 15
             }
         },
         {
@@ -77,8 +77,8 @@
             },
             "major_classification": "Weapons",
             "resource_cost": {
-                "Metals": 150,
-                "Radioactives": 30
+                "metals": 150,
+                "radioactives": 30
             }
         },
         {
@@ -109,8 +109,8 @@
             },
             "major_classification": "Engines",
             "resource_cost": {
-                "Metals": 120,
-                "Radioactives": 40
+                "metals": 120,
+                "radioactives": 40
             }
         },
         {
@@ -128,8 +128,8 @@
             },
             "major_classification": "Engines",
             "resource_cost": {
-                "Metals": 40,
-                "Radioactives": 10
+                "metals": 40,
+                "radioactives": 10
             }
         },
         {
@@ -149,7 +149,7 @@
             },
             "major_classification": "Armor",
             "resource_cost": {
-                "Metals": 100
+                "metals": 100
             }
         },
         {
@@ -175,8 +175,8 @@
             "modifiers": [],
             "major_classification": "Armor",
             "resource_cost": {
-                "Metals": 80,
-                "Exotics": 30
+                "metals": 80,
+                "exotics": 30
             }
         },
         {
@@ -202,8 +202,8 @@
             "modifiers": [],
             "major_classification": "Armor",
             "resource_cost": {
-                "Metals": 60,
-                "Exotics": 50
+                "metals": 60,
+                "exotics": 50
             }
         },
         {
@@ -229,9 +229,9 @@
             "modifiers": [],
             "major_classification": "Armor",
             "resource_cost": {
-                "Metals": 70,
-                "Vapors": 20,
-                "Exotics": 20
+                "metals": 70,
+                "vapors": 20,
+                "exotics": 20
             }
         },
         {
@@ -256,7 +256,7 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 60
+                "metals": 60
             }
         },
         {
@@ -281,8 +281,8 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 50,
-                "Radioactives": 10
+                "metals": 50,
+                "radioactives": 10
             }
         },
         {
@@ -307,10 +307,10 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 40,
-                "Vapors": 10,
-                "Radioactives": 5,
-                "Exotics": 10
+                "metals": 40,
+                "vapors": 10,
+                "radioactives": 5,
+                "exotics": 10
             }
         },
         {
@@ -342,9 +342,9 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 70,
-                "Radioactives": 50,
-                "Exotics": 10
+                "metals": 70,
+                "radioactives": 50,
+                "exotics": 10
             }
         },
         {
@@ -368,9 +368,9 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 200,
-                "Vapors": 100,
-                "Radioactives": 50
+                "metals": 200,
+                "vapors": 100,
+                "radioactives": 50
             }
         },
         {
@@ -405,9 +405,9 @@
             },
             "major_classification": "Weapons",
             "resource_cost": {
-                "Metals": 40,
-                "Radioactives": 10,
-                "Exotics": 30
+                "metals": 40,
+                "radioactives": 10,
+                "exotics": 30
             }
         },
         {
@@ -426,9 +426,9 @@
             },
             "major_classification": "Crewsupport",
             "resource_cost": {
-                "Metals": 40,
-                "Organics": 50,
-                "Vapors": 10
+                "metals": 40,
+                "organics": 50,
+                "vapors": 10
             }
         },
         {
@@ -447,9 +447,9 @@
             },
             "major_classification": "Crewsupport",
             "resource_cost": {
-                "Metals": 30,
-                "Organics": 40,
-                "Vapors": 20
+                "metals": 30,
+                "organics": 40,
+                "vapors": 20
             }
         },
         {
@@ -472,9 +472,9 @@
             },
             "major_classification": "Sensors",
             "resource_cost": {
-                "Metals": 50,
-                "Vapors": 30,
-                "Exotics": 20
+                "metals": 50,
+                "vapors": 30,
+                "exotics": 20
             }
         },
         {
@@ -497,9 +497,9 @@
             },
             "major_classification": "Sensors",
             "resource_cost": {
-                "Metals": 60,
-                "Vapors": 40,
-                "Exotics": 30
+                "metals": 60,
+                "vapors": 40,
+                "exotics": 30
             }
         },
         {
@@ -520,9 +520,9 @@
             },
             "major_classification": "Sensors",
             "resource_cost": {
-                "Metals": 60,
-                "Vapors": 30,
-                "Exotics": 25
+                "metals": 60,
+                "vapors": 30,
+                "exotics": 25
             }
         },
         {
@@ -542,9 +542,9 @@
             },
             "major_classification": "Shields",
             "resource_cost": {
-                "Metals": 80,
-                "Radioactives": 20,
-                "Exotics": 60
+                "metals": 80,
+                "radioactives": 20,
+                "exotics": 60
             }
         },
         {
@@ -565,9 +565,9 @@
             },
             "major_classification": "Shields",
             "resource_cost": {
-                "Metals": 60,
-                "Radioactives": 20,
-                "Exotics": 40
+                "metals": 60,
+                "radioactives": 20,
+                "exotics": 40
             }
         },
         {
@@ -603,9 +603,9 @@
             },
             "major_classification": "Weapons",
             "resource_cost": {
-                "Metals": 100,
-                "Radioactives": 40,
-                "Exotics": 20
+                "metals": 100,
+                "radioactives": 40,
+                "exotics": 20
             }
         },
         {
@@ -643,9 +643,9 @@
             },
             "major_classification": "Weapons",
             "resource_cost": {
-                "Metals": 20,
-                "Radioactives": 5,
-                "Exotics": 15
+                "metals": 20,
+                "radioactives": 5,
+                "exotics": 15
             }
         },
         {
@@ -665,10 +665,10 @@
             },
             "major_classification": "Crewsupport",
             "resource_cost": {
-                "Metals": 10,
-                "Organics": 5,
-                "Vapors": 2,
-                "Exotics": 2
+                "metals": 10,
+                "organics": 5,
+                "vapors": 2,
+                "exotics": 2
             }
         },
         {
@@ -693,8 +693,8 @@
             },
             "major_classification": "Engines",
             "resource_cost": {
-                "Metals": 15,
-                "Radioactives": 5
+                "metals": 15,
+                "radioactives": 5
             }
         },
         {
@@ -712,8 +712,8 @@
             },
             "major_classification": "Engines",
             "resource_cost": {
-                "Metals": 5,
-                "Radioactives": 2
+                "metals": 5,
+                "radioactives": 2
             }
         },
         {
@@ -736,10 +736,10 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 5,
-                "Vapors": 2,
-                "Radioactives": 1,
-                "Exotics": 2
+                "metals": 5,
+                "vapors": 2,
+                "radioactives": 1,
+                "exotics": 2
             }
         },
         {
@@ -768,9 +768,9 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 10,
-                "Radioactives": 8,
-                "Exotics": 2
+                "metals": 10,
+                "radioactives": 8,
+                "exotics": 2
             }
         },
         {
@@ -793,8 +793,8 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 5,
-                "Radioactives": 2
+                "metals": 5,
+                "radioactives": 2
             }
         },
         {
@@ -817,7 +817,7 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 8
+                "metals": 8
             }
         },
         {
@@ -842,8 +842,8 @@
             },
             "major_classification": "Weapons",
             "resource_cost": {
-                "Metals": 15,
-                "Radioactives": 3
+                "metals": 15,
+                "radioactives": 3
             }
         },
         {
@@ -875,9 +875,9 @@
             },
             "major_classification": "Weapons",
             "resource_cost": {
-                "Metals": 5,
-                "Radioactives": 2,
-                "Exotics": 5
+                "metals": 5,
+                "radioactives": 2,
+                "exotics": 5
             }
         },
         {
@@ -902,9 +902,9 @@
             },
             "major_classification": "Weapons",
             "resource_cost": {
-                "Metals": 15,
-                "Radioactives": 6,
-                "Exotics": 3
+                "metals": 15,
+                "radioactives": 6,
+                "exotics": 3
             }
         },
         {
@@ -922,7 +922,7 @@
             },
             "major_classification": "Armor",
             "resource_cost": {
-                "Metals": 10
+                "metals": 10
             }
         },
         {
@@ -943,9 +943,9 @@
             },
             "major_classification": "Sensors",
             "resource_cost": {
-                "Metals": 8,
-                "Vapors": 5,
-                "Exotics": 3
+                "metals": 8,
+                "vapors": 5,
+                "exotics": 3
             }
         },
         {
@@ -966,9 +966,9 @@
             },
             "major_classification": "Sensors",
             "resource_cost": {
-                "Metals": 10,
-                "Vapors": 6,
-                "Exotics": 5
+                "metals": 10,
+                "vapors": 6,
+                "exotics": 5
             }
         },
         {
@@ -986,9 +986,9 @@
             },
             "major_classification": "Shields",
             "resource_cost": {
-                "Metals": 12,
-                "Radioactives": 3,
-                "Exotics": 10
+                "metals": 12,
+                "radioactives": 3,
+                "exotics": 10
             }
         },
         {
@@ -1010,8 +1010,8 @@
             },
             "major_classification": "Armor",
             "resource_cost": {
-                "Metals": 8,
-                "Exotics": 5
+                "metals": 8,
+                "exotics": 5
             }
         },
         {
@@ -1033,9 +1033,9 @@
             },
             "major_classification": "Armor",
             "resource_cost": {
-                "Metals": 8,
-                "Vapors": 3,
-                "Exotics": 3
+                "metals": 8,
+                "vapors": 3,
+                "exotics": 3
             }
         },
         {
@@ -1053,9 +1053,9 @@
             },
             "major_classification": "Crewsupport",
             "resource_cost": {
-                "Metals": 30,
-                "Vapors": 5,
-                "Exotics": 10
+                "metals": 30,
+                "vapors": 5,
+                "exotics": 10
             }
         },
         {
@@ -1079,10 +1079,10 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 400,
-                "Organics": 50,
-                "Radioactives": 20,
-                "Exotics": 30
+                "metals": 400,
+                "organics": 50,
+                "radioactives": 20,
+                "exotics": 30
             }
         },
         {
@@ -1110,9 +1110,9 @@
             },
             "major_classification": "Crewsupport",
             "resource_cost": {
-                "Metals": 80,
-                "Vapors": 40,
-                "Exotics": 60
+                "metals": 80,
+                "vapors": 40,
+                "exotics": 60
             }
         },
         {
@@ -1133,10 +1133,10 @@
             },
             "major_classification": "Crewsupport",
             "resource_cost": {
-                "Metals": 50,
-                "Vapors": 10,
-                "Radioactives": 10,
-                "Exotics": 30
+                "metals": 50,
+                "vapors": 10,
+                "radioactives": 10,
+                "exotics": 30
             }
         },
         {
@@ -1157,10 +1157,10 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 100,
-                "Organics": 20,
-                "Radioactives": 10,
-                "Exotics": 20
+                "metals": 100,
+                "organics": 20,
+                "radioactives": 10,
+                "exotics": 20
             }
         },
         {
@@ -1181,10 +1181,10 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 120,
-                "Vapors": 30,
-                "Radioactives": 50,
-                "Exotics": 20
+                "metals": 120,
+                "vapors": 30,
+                "radioactives": 50,
+                "exotics": 20
             }
         },
         {
@@ -1204,7 +1204,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 80
+                "metals": 80
             }
         },
         {
@@ -1224,7 +1224,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 150
+                "metals": 150
             }
         },
         {
@@ -1244,7 +1244,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 300
+                "metals": 300
             }
         },
         {
@@ -1264,7 +1264,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 450
+                "metals": 450
             }
         },
         {
@@ -1284,7 +1284,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 600
+                "metals": 600
             }
         },
         {
@@ -1304,7 +1304,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 900
+                "metals": 900
             }
         },
         {
@@ -1324,7 +1324,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 1200
+                "metals": 1200
             }
         },
         {
@@ -1344,7 +1344,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 2400
+                "metals": 2400
             }
         },
         {
@@ -1364,7 +1364,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 4800
+                "metals": 4800
             }
         },
         {
@@ -1384,7 +1384,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 9600
+                "metals": 9600
             }
         },
         {
@@ -1404,7 +1404,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 19200
+                "metals": 19200
             }
         },
         {
@@ -1424,7 +1424,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 8
+                "metals": 8
             }
         },
         {
@@ -1444,7 +1444,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 22
+                "metals": 22
             }
         },
         {
@@ -1464,7 +1464,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 8
+                "metals": 8
             }
         },
         {
@@ -1484,7 +1484,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 30
+                "metals": 30
             }
         },
         {
@@ -1503,7 +1503,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 75
+                "metals": 75
             }
         },
         {
@@ -1522,7 +1522,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 150
+                "metals": 150
             }
         },
         {
@@ -1541,7 +1541,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 300
+                "metals": 300
             }
         },
         {
@@ -1560,7 +1560,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 75
+                "metals": 75
             }
         },
         {
@@ -1579,7 +1579,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 100
+                "metals": 100
             }
         },
         {
@@ -1598,7 +1598,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 100
+                "metals": 100
             }
         },
         {
@@ -1617,7 +1617,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 100
+                "metals": 100
             }
         },
         {
@@ -1636,7 +1636,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 100
+                "metals": 100
             }
         },
         {
@@ -1655,7 +1655,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 100
+                "metals": 100
             }
         },
         {
@@ -1674,7 +1674,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 100
+                "metals": 100
             }
         },
         {
@@ -1693,7 +1693,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 100
+                "metals": 100
             }
         },
         {
@@ -1712,7 +1712,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 100
+                "metals": 100
             }
         },
         {
@@ -1731,7 +1731,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 100
+                "metals": 100
             }
         },
         {
@@ -1750,7 +1750,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 100
+                "metals": 100
             }
         },
         {
@@ -1769,7 +1769,7 @@
             },
             "major_classification": "Structure",
             "resource_cost": {
-                "Metals": 100
+                "metals": 100
             }
         },
         {
@@ -1784,17 +1784,17 @@
             "sprite_index": 200,
             "abilities": {
                 "ResourceHarvester": {
-                    "resource_type": "Metals",
+                    "resource_type": "metals",
                     "base_harvest_rate": 100.0
                 },
                 "CrewRequired": 20
             },
             "major_classification": "Resource",
             "resource_cost": {
-                "Metals": 1000,
-                "Organics": 200,
-                "Vapors": 200,
-                "Radioactives": 200
+                "metals": 1000,
+                "organics": 200,
+                "vapors": 200,
+                "radioactives": 200
             }
         },
         {
@@ -1809,17 +1809,17 @@
             "sprite_index": 201,
             "abilities": {
                 "ResourceHarvester": {
-                    "resource_type": "Organics",
+                    "resource_type": "organics",
                     "base_harvest_rate": 100.0
                 },
                 "CrewRequired": 20
             },
             "major_classification": "Resource",
             "resource_cost": {
-                "Metals": 800,
-                "Organics": 300,
-                "Vapors": 200,
-                "Radioactives": 100
+                "metals": 800,
+                "organics": 300,
+                "vapors": 200,
+                "radioactives": 100
             }
         },
         {
@@ -1834,17 +1834,17 @@
             "sprite_index": 202,
             "abilities": {
                 "ResourceHarvester": {
-                    "resource_type": "Vapors",
+                    "resource_type": "vapors",
                     "base_harvest_rate": 100.0
                 },
                 "CrewRequired": 20
             },
             "major_classification": "Resource",
             "resource_cost": {
-                "Metals": 1000,
-                "Organics": 150,
-                "Vapors": 400,
-                "Radioactives": 200
+                "metals": 1000,
+                "organics": 150,
+                "vapors": 400,
+                "radioactives": 200
             }
         },
         {
@@ -1859,18 +1859,18 @@
             "sprite_index": 203,
             "abilities": {
                 "ResourceHarvester": {
-                    "resource_type": "Radioactives",
+                    "resource_type": "radioactives",
                     "base_harvest_rate": 50.0
                 },
                 "CrewRequired": 25
             },
             "major_classification": "Resource",
             "resource_cost": {
-                "Metals": 1200,
-                "Organics": 100,
-                "Vapors": 300,
-                "Radioactives": 500,
-                "Exotics": 100
+                "metals": 1200,
+                "organics": 100,
+                "vapors": 300,
+                "radioactives": 500,
+                "exotics": 100
             }
         },
         {
@@ -1885,18 +1885,18 @@
             "sprite_index": 204,
             "abilities": {
                 "ResourceHarvester": {
-                    "resource_type": "Exotics",
+                    "resource_type": "exotics",
                     "base_harvest_rate": 25.0
                 },
                 "CrewRequired": 30
             },
             "major_classification": "Resource",
             "resource_cost": {
-                "Metals": 1500,
-                "Organics": 300,
-                "Vapors": 500,
-                "Radioactives": 600,
-                "Exotics": 200
+                "metals": 1500,
+                "organics": 300,
+                "vapors": 500,
+                "radioactives": 600,
+                "exotics": 200
             }
         },
         {
@@ -1911,7 +1911,7 @@
             "sprite_index": 210,
             "abilities": {
                 "EmpireStorage": {
-                    "resource_type": "Metals",
+                    "resource_type": "metals",
                     "capacity": 10000.0
                 },
                 "StructuralIntegrity": true,
@@ -1919,9 +1919,9 @@
             },
             "major_classification": "Resource",
             "resource_cost": {
-                "Metals": 2000,
-                "Organics": 200,
-                "Vapors": 300
+                "metals": 2000,
+                "organics": 200,
+                "vapors": 300
             }
         },
         {
@@ -1936,7 +1936,7 @@
             "sprite_index": 211,
             "abilities": {
                 "EmpireStorage": {
-                    "resource_type": "Organics",
+                    "resource_type": "organics",
                     "capacity": 10000.0
                 },
                 "StructuralIntegrity": true,
@@ -1944,9 +1944,9 @@
             },
             "major_classification": "Resource",
             "resource_cost": {
-                "Metals": 1500,
-                "Organics": 500,
-                "Vapors": 300
+                "metals": 1500,
+                "organics": 500,
+                "vapors": 300
             }
         },
         {
@@ -1961,7 +1961,7 @@
             "sprite_index": 212,
             "abilities": {
                 "EmpireStorage": {
-                    "resource_type": "Vapors",
+                    "resource_type": "vapors",
                     "capacity": 10000.0
                 },
                 "StructuralIntegrity": true,
@@ -1969,9 +1969,9 @@
             },
             "major_classification": "Resource",
             "resource_cost": {
-                "Metals": 1800,
-                "Organics": 200,
-                "Vapors": 500
+                "metals": 1800,
+                "organics": 200,
+                "vapors": 500
             }
         },
         {
@@ -1986,7 +1986,7 @@
             "sprite_index": 213,
             "abilities": {
                 "EmpireStorage": {
-                    "resource_type": "Radioactives",
+                    "resource_type": "radioactives",
                     "capacity": 5000.0
                 },
                 "StructuralIntegrity": true,
@@ -1994,10 +1994,10 @@
             },
             "major_classification": "Resource",
             "resource_cost": {
-                "Metals": 2500,
-                "Organics": 200,
-                "Vapors": 400,
-                "Radioactives": 300
+                "metals": 2500,
+                "organics": 200,
+                "vapors": 400,
+                "radioactives": 300
             }
         },
         {
@@ -2012,7 +2012,7 @@
             "sprite_index": 214,
             "abilities": {
                 "EmpireStorage": {
-                    "resource_type": "Exotics",
+                    "resource_type": "exotics",
                     "capacity": 2500.0
                 },
                 "StructuralIntegrity": true,
@@ -2020,11 +2020,11 @@
             },
             "major_classification": "Resource",
             "resource_cost": {
-                "Metals": 3000,
-                "Organics": 300,
-                "Vapors": 500,
-                "Radioactives": 400,
-                "Exotics": 200
+                "metals": 3000,
+                "organics": 300,
+                "vapors": 500,
+                "radioactives": 400,
+                "exotics": 200
             }
         },
         {
@@ -2042,22 +2042,22 @@
                     "construction_speed_bonus": 1.0,
                     "max_ship_mass": 100000,
                     "production_rates": {
-                        "Metals": 3000,
-                        "Organics": 3000,
-                        "Radioactives": 3000,
-                        "Vapors": 3000,
-                        "Exotics": 3000
+                        "metals": 3000,
+                        "organics": 3000,
+                        "radioactives": 3000,
+                        "vapors": 3000,
+                        "exotics": 3000
                     }
                 },
                 "CrewRequired": 100
             },
             "major_classification": "Production",
             "resource_cost": {
-                "Metals": 500,
-                "Organics": 100,
-                "Vapors": 50,
-                "Radioactives": 200,
-                "Exotics": 100
+                "metals": 500,
+                "organics": 100,
+                "vapors": 50,
+                "radioactives": 200,
+                "exotics": 100
             }
         },
         {
@@ -2075,22 +2075,22 @@
                     "construction_speed_bonus": 1.0,
                     "max_ship_mass": 100000,
                     "production_rates": {
-                        "Metals": 3000,
-                        "Organics": 3000,
-                        "Radioactives": 3000,
-                        "Vapors": 3000,
-                        "Exotics": 3000
+                        "metals": 3000,
+                        "organics": 3000,
+                        "radioactives": 3000,
+                        "vapors": 3000,
+                        "exotics": 3000
                     }
                 },
                 "CrewRequired": 150
             },
             "major_classification": "Production",
             "resource_cost": {
-                "Metals": 600,
-                "Organics": 150,
-                "Vapors": 75,
-                "Radioactives": 250,
-                "Exotics": 125
+                "metals": 600,
+                "organics": 150,
+                "vapors": 75,
+                "radioactives": 250,
+                "exotics": 125
             }
         },
         {
@@ -2113,9 +2113,9 @@
             },
             "major_classification": "Engines",
             "resource_cost": {
-                "Metals": "=0.03 * (ship_class_mass ** (4/3))",
-                "Radioactives": "=0.02 * (ship_class_mass ** (4/3))",
-                "Exotics": "=0.025 * (ship_class_mass ** (4/3))"
+                "metals": "=0.03 * (ship_class_mass ** (4/3))",
+                "radioactives": "=0.02 * (ship_class_mass ** (4/3))",
+                "exotics": "=0.025 * (ship_class_mass ** (4/3))"
             }
         },
         {
@@ -2131,9 +2131,9 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 300,
-                "Organics": 200,
-                "Vapors": 100
+                "metals": 300,
+                "organics": 200,
+                "vapors": 100
             }
         },
         {
@@ -2149,9 +2149,9 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 300,
-                "Organics": 200,
-                "Vapors": 100
+                "metals": 300,
+                "organics": 200,
+                "vapors": 100
             }
         },
         {
@@ -2167,9 +2167,9 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 300,
-                "Organics": 200,
-                "Vapors": 100
+                "metals": 300,
+                "organics": 200,
+                "vapors": 100
             }
         },
         {
@@ -2185,10 +2185,10 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 350,
-                "Organics": 150,
-                "Vapors": 150,
-                "Radioactives": 50
+                "metals": 350,
+                "organics": 150,
+                "vapors": 150,
+                "radioactives": 50
             }
         },
         {
@@ -2204,9 +2204,9 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 350,
-                "Organics": 150,
-                "Vapors": 150
+                "metals": 350,
+                "organics": 150,
+                "vapors": 150
             }
         },
         {
@@ -2222,9 +2222,9 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 400,
-                "Organics": 100,
-                "Vapors": 100
+                "metals": 400,
+                "organics": 100,
+                "vapors": 100
             }
         },
         {
@@ -2240,11 +2240,11 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 500,
-                "Organics": 200,
-                "Vapors": 200,
-                "Radioactives": 100,
-                "Exotics": 50
+                "metals": 500,
+                "organics": 200,
+                "vapors": 200,
+                "radioactives": 100,
+                "exotics": 50
             }
         },
         {
@@ -2260,11 +2260,11 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 500,
-                "Organics": 200,
-                "Vapors": 200,
-                "Radioactives": 100,
-                "Exotics": 50
+                "metals": 500,
+                "organics": 200,
+                "vapors": 200,
+                "radioactives": 100,
+                "exotics": 50
             }
         },
         {
@@ -2280,11 +2280,11 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 600,
-                "Organics": 150,
-                "Vapors": 150,
-                "Radioactives": 150,
-                "Exotics": 100
+                "metals": 600,
+                "organics": 150,
+                "vapors": 150,
+                "radioactives": 150,
+                "exotics": 100
             }
         },
         {
@@ -2300,9 +2300,9 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 350,
-                "Organics": 150,
-                "Vapors": 100
+                "metals": 350,
+                "organics": 150,
+                "vapors": 100
             }
         },
         {
@@ -2318,9 +2318,9 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 300,
-                "Organics": 100,
-                "Vapors": 100
+                "metals": 300,
+                "organics": 100,
+                "vapors": 100
             }
         },
         {
@@ -2338,9 +2338,9 @@
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
-                "Metals": 150,
-                "Organics": 100,
-                "Vapors": 50
+                "metals": 150,
+                "organics": 100,
+                "vapors": 50
             }
         },
         {
@@ -2356,9 +2356,9 @@
             },
             "major_classification": "Superweapon",
             "resource_cost": {
-                "Metals": 2000,
-                "Radioactives": 1000,
-                "Exotics": 500
+                "metals": 2000,
+                "radioactives": 1000,
+                "exotics": 500
             }
         },
         {
@@ -2374,9 +2374,9 @@
             },
             "major_classification": "Superweapon",
             "resource_cost": {
-                "Metals": 5000,
-                "Radioactives": 3000,
-                "Exotics": 1500
+                "metals": 5000,
+                "radioactives": 3000,
+                "exotics": 1500
             }
         },
         {
@@ -2392,9 +2392,9 @@
             },
             "major_classification": "Superweapon",
             "resource_cost": {
-                "Metals": 3000,
-                "Radioactives": 2000,
-                "Exotics": 1000
+                "metals": 3000,
+                "radioactives": 2000,
+                "exotics": 1000
             }
         },
         {
@@ -2410,9 +2410,9 @@
             },
             "major_classification": "Superweapon",
             "resource_cost": {
-                "Metals": 2500,
-                "Radioactives": 1500,
-                "Exotics": 800
+                "metals": 2500,
+                "radioactives": 1500,
+                "exotics": 800
             }
         },
         {
@@ -2428,9 +2428,9 @@
             },
             "major_classification": "Superweapon",
             "resource_cost": {
-                "Metals": 10000,
-                "Radioactives": 5000,
-                "Exotics": 3000
+                "metals": 10000,
+                "radioactives": 5000,
+                "exotics": 3000
             }
         },
         {
@@ -2446,8 +2446,8 @@
             },
             "major_classification": "Superweapon",
             "resource_cost": {
-                "Metals": 50,
-                "Radioactives": 25
+                "metals": 50,
+                "radioactives": 25
             }
         },
         {
@@ -2469,9 +2469,9 @@
             },
             "major_classification": "Defense",
             "resource_cost": {
-                "Metals": 500,
-                "Exotics": 200,
-                "Radioactives": 100
+                "metals": 500,
+                "exotics": 200,
+                "radioactives": 100
             }
         }
     ]

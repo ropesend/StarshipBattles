@@ -180,7 +180,7 @@ class IPlanet(Protocol):
         ...
 
     @property
-    def resources(self) -> Dict[str, Any]:
+    def deposits(self) -> Dict[str, Any]:
         ...
 
     @property
@@ -389,7 +389,7 @@ class IFleet(Protocol):
 
     @property
     def resources(self) -> Any:
-        """FleetResourceAggregator delegate for resource operations."""
+        """FleetConsumableAggregator delegate for resource operations."""
         ...
 
     @property
@@ -555,8 +555,8 @@ class IFacility(Protocol):
         ...
 
     @property
-    def resource_levels(self) -> Dict[str, float]:
-        """Resource levels stored in this facility."""
+    def consumable_levels(self) -> Dict[str, float]:
+        """Consumable levels stored in this facility."""
         ...
 
 

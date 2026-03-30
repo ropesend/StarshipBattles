@@ -39,7 +39,7 @@ class TestReproLoadCargoBug(unittest.TestCase):
         planet.owner_id = owner_id
         planet.location = location
         planet.planet_type = PlanetType.CONTINENTAL
-        planet.resources = {}
+        planet.deposits = {}
         planet.total_population = population
         planet.populations = [MagicMock(race_id="Human", count=population, happiness=0.8)] if population > 0 else []
         return planet

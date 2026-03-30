@@ -14,7 +14,7 @@ class TestDesignMetadataRoundTrip:
         dm = create_test_design_metadata()
         d = dm.to_dict()
         expected = ['design_id', 'name', 'ship_class', 'vehicle_type', 'mass',
-                    'combat_power', 'resource_cost', 'created_date', 'last_modified',
+                    'combat_power', 'construction_cost', 'created_date', 'last_modified',
                     'is_obsolete', 'times_built', 'theme_id']
         for key in expected:
             assert key in d, f"Missing key: {key}"
@@ -29,7 +29,7 @@ class TestDesignMetadataRoundTrip:
         assert restored.vehicle_type == original.vehicle_type
         assert restored.mass == original.mass
         assert restored.combat_power == original.combat_power
-        assert restored.resource_cost == original.resource_cost
+        assert restored.construction_cost == original.construction_cost
         assert restored.created_date == original.created_date
         assert restored.last_modified == original.last_modified
         assert restored.is_obsolete == original.is_obsolete

@@ -23,16 +23,16 @@ from game.core.hex_math import HexCoord
 
 # Expected production rates from data/production_rates.json
 EXPECTED_PLANETARY_RATES = {
-    "Metals": 2000, "Organics": 2000, "Radioactives": 2000,
-    "Vapors": 2000, "Exotics": 2000
+    "metals": 2000, "organics": 2000, "radioactives": 2000,
+    "vapors": 2000, "exotics": 2000
 }
 EXPECTED_SHIPYARD_RATES = {
-    "Metals": 3000, "Organics": 3000, "Radioactives": 3000,
-    "Vapors": 3000, "Exotics": 3000
+    "metals": 3000, "organics": 3000, "radioactives": 3000,
+    "vapors": 3000, "exotics": 3000
 }
 EXPECTED_FLEET_RATES = {
-    "Metals": 3000, "Organics": 3000, "Radioactives": 3000,
-    "Vapors": 3000, "Exotics": 3000
+    "metals": 3000, "organics": 3000, "radioactives": 3000,
+    "vapors": 3000, "exotics": 3000
 }
 
 
@@ -609,7 +609,7 @@ class TestBuildQueueSourceNewFields:
         hex_coord = HexCoord(5, 5)
         planet = _make_planet(hex_coord=hex_coord, planet_id=99)
         # Create facility with custom production rates
-        custom_rates = {"Metals": 5000, "Organics": 4000, "Exotics": 1000}
+        custom_rates = {"metals": 5000, "organics": 4000, "exotics": 1000}
         facility = _make_shipyard_facility(
             instance_id="yard-custom",
             production_rates=custom_rates
@@ -628,7 +628,7 @@ class TestBuildQueueSourceNewFields:
         hex_coord = HexCoord(5, 5)
         planet = _make_planet(hex_coord=hex_coord, planet_id=99)
         # Custom rates with 2x bonus
-        custom_rates = {"Metals": 1000, "Organics": 500}
+        custom_rates = {"metals": 1000, "organics": 500}
         facility = _make_shipyard_facility(
             instance_id="yard-custom-boosted",
             production_rates=custom_rates,
@@ -641,7 +641,7 @@ class TestBuildQueueSourceNewFields:
         sources = collect_build_queues_at_hex(hex_coord, galaxy, empire)
 
         shipyard_source = sources[1]
-        expected = {"Metals": 2000, "Organics": 1000}  # 1000*2, 500*2
+        expected = {"metals": 2000, "organics": 1000}  # 1000*2, 500*2
         assert shipyard_source.build_rate == expected
 
 
@@ -676,9 +676,9 @@ class TestGetDefaultProductionRates:
         """get_default_production_rates returns a copy, not original dict."""
         rates1 = get_default_production_rates("planetary_yard")
         rates2 = get_default_production_rates("planetary_yard")
-        rates1["Metals"] = 9999
+        rates1["metals"] = 9999
         # Original should be unchanged
-        assert rates2["Metals"] == 2000
+        assert rates2["metals"] == 2000
 
 
 # ---------------------------------------------------------------------------

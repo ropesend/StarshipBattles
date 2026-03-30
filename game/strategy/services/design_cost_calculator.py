@@ -4,7 +4,7 @@ Design Cost Calculator - Centralized design cost calculation.
 PROJ-204 Phase 1: Consolidates cost calculation logic from multiple modules:
 - ProductionEngine._calculate_design_cost()
 - MaintenanceEngine.calculate_maintenance_cost()
-- DesignMetadata._calculate_resource_cost()
+- DesignMetadata._calculate_construction_cost()
 
 PROJ-218: Fixed to resolve component costs from registry via Ship loading.
 The previous implementation looked for inline resource_cost on component entries,

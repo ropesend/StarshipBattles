@@ -137,7 +137,7 @@ class Empire:
         """Add resources to the empire pool.
 
         Args:
-            resource_type: Resource identifier (e.g. "Metals", "Organics").
+            resource_type: Resource identifier (e.g. "metals", "organics").
             amount: Amount to add.
 
         Returns:

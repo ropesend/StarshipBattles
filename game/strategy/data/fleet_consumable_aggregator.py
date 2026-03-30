@@ -1,4 +1,4 @@
-"""Fleet resource aggregation delegate.
+"""Fleet consumable aggregation delegate.
 
 Extracted from Fleet class (PROJ-87 Phase 3) to consolidate
 fleet-wide resource calculation and consumption logic.
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from game.strategy.data.ship_instance import ShipInstance
 
 
-class FleetResourceAggregator:
+class FleetConsumableAggregator:
     """
     Handles resource aggregation across all ships in a fleet.
 

@@ -18,7 +18,7 @@ from game.strategy.data.empire import Empire
 from game.strategy.data.planet import Planet, PlanetaryFacility
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.ship_instance import ShipInstance
-PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
 
 
 def _mock_colony(**kwargs):
@@ -26,7 +26,7 @@ def _mock_colony(**kwargs):
     colony = Mock(spec=Planet)
     colony.construction_queue = kwargs.pop('construction_queue', [])
     colony.facilities = kwargs.pop('facilities', [])
-    colony.resources = kwargs.pop('resources', {})
+    colony.deposits = kwargs.pop('resources', {})
     for k, v in kwargs.items():
         setattr(colony, k, v)
     return colony
@@ -105,7 +105,7 @@ class TestEmpireEconomyCalculator:
                             'id': 'metals_harvester',
                             'abilities': {
                                 'ResourceHarvester': {
-                                    'resource_type': 'Metals',
+                                    'resource_type': 'metals',
                                     'base_harvest_rate': 10.0
                                 }
                             },
@@ -117,7 +117,7 @@ class TestEmpireEconomyCalculator:
         )
 
         colony = _mock_colony(facilities=[facility],
-                              resources={'Metals': {'quality': 0.8, 'quantity': 1000}})
+                              resources={'metals': {'quality': 0.8, 'quantity': 1000}})
 
         empire = Mock(spec=Empire)
         empire.colonies = [colony]
@@ -129,8 +129,8 @@ class TestEmpireEconomyCalculator:
         snapshot = calculator.calculate(empire)
 
         # Production = base_rate * quality = 10.0 * 0.8 = 8.0
-        assert snapshot.colony_production['Metals'] == 8.0
-        assert snapshot.total_production['Metals'] == 8.0
+        assert snapshot.colony_production['metals'] == 8.0
+        assert snapshot.total_production['metals'] == 8.0
 
     def test_facility_maintenance_cost_is_5_percent(self, minimal_registries):
         """Facility maintenance is 5% of resource_cost."""
@@ -143,8 +143,8 @@ class TestEmpireEconomyCalculator:
                             'id': 'expensive_building',
                             'abilities': {},
                             'resource_cost': {
-                                'Metals': 100.0,
-                                'Organics': 50.0
+                                'metals': 100.0,
+                                'organics': 50.0
                             }
                         }
                     ]
@@ -164,8 +164,8 @@ class TestEmpireEconomyCalculator:
         snapshot = calculator.calculate(empire)
 
         # Maintenance = 5% of build cost
-        assert snapshot.maintenance_expenses['Metals'] == 5.0  # 100 * 0.05
-        assert snapshot.maintenance_expenses['Organics'] == 2.5  # 50 * 0.05
+        assert snapshot.maintenance_expenses['metals'] == 5.0  # 100 * 0.05
+        assert snapshot.maintenance_expenses['organics'] == 2.5  # 50 * 0.05
 
     def test_ship_maintenance_cost_is_5_percent(self, minimal_registries):
         """Ship maintenance is 5% of resource_cost."""
@@ -175,13 +175,13 @@ class TestEmpireEconomyCalculator:
                 'HULL': [
                     {
                         'id': 'hull_component',
-                        'resource_cost': {'Metals': 200.0}
+                        'resource_cost': {'metals': 200.0}
                     }
                 ],
                 'CORE': [
                     {
                         'id': 'core_component',
-                        'resource_cost': {'Vapors': 80.0}
+                        'resource_cost': {'vapors': 80.0}
                     }
                 ]
             }
@@ -199,8 +199,8 @@ class TestEmpireEconomyCalculator:
         snapshot = calculator.calculate(empire)
 
         # Total maintenance = 5% of total build cost
-        assert snapshot.maintenance_expenses['Metals'] == 10.0  # 200 * 0.05
-        assert snapshot.maintenance_expenses['Vapors'] == 4.0  # 80 * 0.05
+        assert snapshot.maintenance_expenses['metals'] == 10.0  # 200 * 0.05
+        assert snapshot.maintenance_expenses['vapors'] == 4.0  # 80 * 0.05
 
     def test_net_resources_equals_production_minus_expenses(self, minimal_registries):
         """net_resources = total_production - total_expenses."""
@@ -213,11 +213,11 @@ class TestEmpireEconomyCalculator:
                             'id': 'harvester',
                             'abilities': {
                                 'ResourceHarvester': {
-                                    'resource_type': 'Metals',
+                                    'resource_type': 'metals',
                                     'base_harvest_rate': 10.0
                                 }
                             },
-                            'resource_cost': {'Metals': 40.0}  # 40 * 0.05 = 2.0 maintenance
+                            'resource_cost': {'metals': 40.0}  # 40 * 0.05 = 2.0 maintenance
                         }
                     ]
                 }
@@ -225,7 +225,7 @@ class TestEmpireEconomyCalculator:
         )
 
         colony = _mock_colony(facilities=[facility],
-                              resources={'Metals': {'quality': 1.0, 'quantity': 1000}})
+                              resources={'metals': {'quality': 1.0, 'quantity': 1000}})
 
         empire = Mock(spec=Empire)
         empire.colonies = [colony]
@@ -239,23 +239,23 @@ class TestEmpireEconomyCalculator:
         # Production = 10.0 * 1.0 = 10.0
         # Maintenance = 40.0 * 0.05 = 2.0
         # Net = 10.0 - 2.0 = 8.0
-        assert snapshot.total_production['Metals'] == 10.0
-        assert snapshot.total_expenses['Metals'] == 2.0
-        assert snapshot.net_resources['Metals'] == 8.0
+        assert snapshot.total_production['metals'] == 10.0
+        assert snapshot.total_expenses['metals'] == 2.0
+        assert snapshot.net_resources['metals'] == 8.0
 
     def test_current_storage_and_max_storage_copied_from_empire(self, minimal_registries):
         """current_storage and max_storage are copied from empire."""
         empire = Mock(spec=Empire)
         empire.colonies = []
         empire.fleets = []
-        empire.resource_pool = {'Metals': 500.0, 'Organics': 300.0}
-        empire.max_storage = {'Metals': 1000.0, 'Organics': 1000.0}
+        empire.resource_pool = {'metals': 500.0, 'organics': 300.0}
+        empire.max_storage = {'metals': 1000.0, 'organics': 1000.0}
 
         calculator = EmpireEconomyCalculator(registries=minimal_registries)
         snapshot = calculator.calculate(empire)
 
-        assert snapshot.current_storage == {'Metals': 500.0, 'Organics': 300.0}
-        assert snapshot.max_storage == {'Metals': 1000.0, 'Organics': 1000.0}
+        assert snapshot.current_storage == {'metals': 500.0, 'organics': 300.0}
+        assert snapshot.max_storage == {'metals': 1000.0, 'organics': 1000.0}
 
     def test_non_operational_facility_is_skipped(self, minimal_registries):
         """Non-operational facilities contribute neither production nor maintenance."""
@@ -268,11 +268,11 @@ class TestEmpireEconomyCalculator:
                             'id': 'expensive_harvester',
                             'abilities': {
                                 'ResourceHarvester': {
-                                    'resource_type': 'Metals',
+                                    'resource_type': 'metals',
                                     'base_harvest_rate': 100.0
                                 }
                             },
-                            'resource_cost': {'Metals': 1000.0}
+                            'resource_cost': {'metals': 1000.0}
                         }
                     ]
                 }
@@ -280,7 +280,7 @@ class TestEmpireEconomyCalculator:
         )
 
         colony = _mock_colony(facilities=[facility],
-                              resources={'Metals': {'quality': 1.0, 'quantity': 5000}})
+                              resources={'metals': {'quality': 1.0, 'quantity': 5000}})
 
         empire = Mock(spec=Empire)
         empire.colonies = [colony]
@@ -292,8 +292,8 @@ class TestEmpireEconomyCalculator:
         snapshot = calculator.calculate(empire)
 
         # Both production and maintenance should be zero
-        assert snapshot.colony_production['Metals'] == 0.0
-        assert snapshot.maintenance_expenses['Metals'] == 0.0
+        assert snapshot.colony_production['metals'] == 0.0
+        assert snapshot.maintenance_expenses['metals'] == 0.0
 
     def test_dict_format_layer_with_components_key(self, minimal_registries):
         """Handles dict-format layer: {'components': [...]}."""
@@ -305,7 +305,7 @@ class TestEmpireEconomyCalculator:
                         'components': [
                             {
                                 'id': 'building',
-                                'resource_cost': {'Exotics': 60.0}
+                                'resource_cost': {'exotics': 60.0}
                             }
                         ]
                     }
@@ -325,7 +325,7 @@ class TestEmpireEconomyCalculator:
         snapshot = calculator.calculate(empire)
 
         # Maintenance = 60 * 0.05 = 3.0
-        assert snapshot.maintenance_expenses['Exotics'] == 3.0
+        assert snapshot.maintenance_expenses['exotics'] == 3.0
 
     def test_list_format_layer_direct(self, minimal_registries):
         """Handles list-format layer: [component1, component2, ...]."""
@@ -336,11 +336,11 @@ class TestEmpireEconomyCalculator:
                     'HULL': [
                         {
                             'id': 'building_a',
-                            'resource_cost': {'Radioactives': 80.0}
+                            'resource_cost': {'radioactives': 80.0}
                         },
                         {
                             'id': 'building_b',
-                            'resource_cost': {'Radioactives': 20.0}
+                            'resource_cost': {'radioactives': 20.0}
                         }
                     ]
                 }
@@ -359,7 +359,7 @@ class TestEmpireEconomyCalculator:
         snapshot = calculator.calculate(empire)
 
         # Total maintenance = (80 + 20) * 0.05 = 5.0
-        assert snapshot.maintenance_expenses['Radioactives'] == 5.0
+        assert snapshot.maintenance_expenses['radioactives'] == 5.0
 
     def test_multiple_colonies_and_fleets_aggregate(self, minimal_registries):
         """Multiple colonies and fleets aggregate correctly."""
@@ -373,18 +373,18 @@ class TestEmpireEconomyCalculator:
                             'id': 'harvester1',
                             'abilities': {
                                 'ResourceHarvester': {
-                                    'resource_type': 'Metals',
+                                    'resource_type': 'metals',
                                     'base_harvest_rate': 5.0
                                 }
                             },
-                            'resource_cost': {'Metals': 20.0}
+                            'resource_cost': {'metals': 20.0}
                         }
                     ]
                 }
             },
         )
         colony1 = _mock_colony(facilities=[facility1],
-                               resources={'Metals': {'quality': 1.0, 'quantity': 1000}})
+                               resources={'metals': {'quality': 1.0, 'quantity': 1000}})
 
         # Colony 2: Organics production
         facility2 = _mock_facility(
@@ -396,24 +396,24 @@ class TestEmpireEconomyCalculator:
                             'id': 'harvester2',
                             'abilities': {
                                 'ResourceHarvester': {
-                                    'resource_type': 'Organics',
+                                    'resource_type': 'organics',
                                     'base_harvest_rate': 8.0
                                 }
                             },
-                            'resource_cost': {'Organics': 40.0}
+                            'resource_cost': {'organics': 40.0}
                         }
                     ]
                 }
             },
         )
         colony2 = _mock_colony(facilities=[facility2],
-                               resources={'Organics': {'quality': 0.5, 'quantity': 1000}})
+                               resources={'organics': {'quality': 0.5, 'quantity': 1000}})
 
         # Fleet with ship
         ship = Mock(spec=ShipInstance)
         ship.design_data = {
             'layers': {
-                'HULL': [{'id': 'hull', 'resource_cost': {'Vapors': 100.0}}]
+                'HULL': [{'id': 'hull', 'resource_cost': {'vapors': 100.0}}]
             }
         }
         fleet = _mock_fleet(ships=[ship])
@@ -428,13 +428,13 @@ class TestEmpireEconomyCalculator:
         snapshot = calculator.calculate(empire)
 
         # Productions
-        assert snapshot.colony_production['Metals'] == 5.0  # 5.0 * 1.0
-        assert snapshot.colony_production['Organics'] == 4.0  # 8.0 * 0.5
+        assert snapshot.colony_production['metals'] == 5.0  # 5.0 * 1.0
+        assert snapshot.colony_production['organics'] == 4.0  # 8.0 * 0.5
 
         # Maintenance: facility1 + facility2 + ship
-        assert snapshot.maintenance_expenses['Metals'] == 1.0  # 20 * 0.05
-        assert snapshot.maintenance_expenses['Organics'] == 2.0  # 40 * 0.05
-        assert snapshot.maintenance_expenses['Vapors'] == 5.0  # 100 * 0.05
+        assert snapshot.maintenance_expenses['metals'] == 1.0  # 20 * 0.05
+        assert snapshot.maintenance_expenses['organics'] == 2.0  # 40 * 0.05
+        assert snapshot.maintenance_expenses['vapors'] == 5.0  # 100 * 0.05
 
     def test_missing_resource_quality_defaults_to_zero(self, minimal_registries):
         """If colony lacks a resource entry, quality defaults to 0.0 (no production)."""
@@ -447,7 +447,7 @@ class TestEmpireEconomyCalculator:
                             'id': 'harvester',
                             'abilities': {
                                 'ResourceHarvester': {
-                                    'resource_type': 'Exotics',
+                                    'resource_type': 'exotics',
                                     'base_harvest_rate': 50.0
                                 }
                             },
@@ -470,7 +470,7 @@ class TestEmpireEconomyCalculator:
         snapshot = calculator.calculate(empire)
 
         # No production because no quality
-        assert snapshot.colony_production['Exotics'] == 0.0
+        assert snapshot.colony_production['exotics'] == 0.0
 
     def test_placeholder_sources_are_zero(self, minimal_registries):
         """Placeholder production sources (ship, trade, tribute, mining) are zero."""
@@ -513,7 +513,7 @@ class TestEmpireEconomyCalculator:
         )
 
         colony = _mock_colony(facilities=[facility],
-                              resources={'Metals': {'quality': 0.8, 'quantity': 5000}})
+                              resources={'metals': {'quality': 0.8, 'quantity': 5000}})
 
         empire = Mock(spec=Empire)
         empire.colonies = [colony]
@@ -526,7 +526,7 @@ class TestEmpireEconomyCalculator:
         comp_def = Mock()
         comp_def.abilities = {
             'ResourceHarvester': {
-                'resource_type': 'Metals',
+                'resource_type': 'metals',
                 'base_harvest_rate': 100.0
             }
         }
@@ -536,8 +536,8 @@ class TestEmpireEconomyCalculator:
         snapshot = calculator.calculate(empire)
 
         # Production = 100.0 * 0.8 = 80.0
-        assert snapshot.colony_production['Metals'] == 80.0
-        assert snapshot.total_production['Metals'] == 80.0
+        assert snapshot.colony_production['metals'] == 80.0
+        assert snapshot.total_production['metals'] == 80.0
 
     def test_registry_lookup_not_found_returns_zero(self, minimal_registries):
         """Components not found in registry produce nothing (BUG-87)."""
@@ -553,7 +553,7 @@ class TestEmpireEconomyCalculator:
         )
 
         colony = _mock_colony(facilities=[facility],
-                              resources={'Metals': {'quality': 0.8, 'quantity': 5000}})
+                              resources={'metals': {'quality': 0.8, 'quantity': 5000}})
 
         empire = Mock(spec=Empire)
         empire.colonies = [colony]
@@ -565,7 +565,7 @@ class TestEmpireEconomyCalculator:
         calculator = EmpireEconomyCalculator(registries=minimal_registries)
         snapshot = calculator.calculate(empire)
 
-        assert snapshot.colony_production['Metals'] == 0.0
+        assert snapshot.colony_production['metals'] == 0.0
 
 
 class TestConstructionExpenses:
@@ -596,7 +596,7 @@ class TestConstructionExpenses:
                 {
                     "design_id": "shipyard",
                     "type": "complex",
-                    "total_cost": {"Metals": 500.0, "Organics": 200.0},
+                    "total_cost": {"metals": 500.0, "organics": 200.0},
                     "resources_consumed": {},
                 }
             ],
@@ -613,8 +613,8 @@ class TestConstructionExpenses:
 
         # Base queue uses planetary_yard rates; exact values depend on production_rates.json
         # but complexes_expenses should be nonzero and ships should be zero
-        assert snapshot.construction_expenses_complexes["Metals"] > 0
-        assert snapshot.construction_expenses_ships["Metals"] == 0.0
+        assert snapshot.construction_expenses_complexes["metals"] > 0
+        assert snapshot.construction_expenses_ships["metals"] == 0.0
 
     def test_facility_queue_ship_expenses(self, minimal_registries):
         """Shipyard facility queue items (ships) go to ships_expenses."""
@@ -625,7 +625,7 @@ class TestConstructionExpenses:
                 {
                     "design_id": "escort",
                     "type": "ship",
-                    "total_cost": {"Metals": 749.0},
+                    "total_cost": {"metals": 749.0},
                     "resources_consumed": {},
                 }
             ],
@@ -637,9 +637,9 @@ class TestConstructionExpenses:
                             'abilities': {
                                 'SpaceShipyard': {
                                     'construction_speed_bonus': 1.0,
-                                    'production_rates': {"Metals": 3000.0, "Organics": 1000.0,
-                                                         "Vapors": 500.0, "Radioactives": 500.0,
-                                                         "Exotics": 200.0}
+                                    'production_rates': {"metals": 3000.0, "organics": 1000.0,
+                                                         "vapors": 500.0, "radioactives": 500.0,
+                                                         "exotics": 200.0}
                                 }
                             },
                             'resource_cost': {}
@@ -661,8 +661,8 @@ class TestConstructionExpenses:
         snapshot = calculator.calculate(empire)
 
         # Ship costing 749 metals with 3000 rate completes within turn
-        assert snapshot.construction_expenses_ships["Metals"] == pytest.approx(749.0)
-        assert snapshot.construction_expenses_complexes["Metals"] == 0.0
+        assert snapshot.construction_expenses_ships["metals"] == pytest.approx(749.0)
+        assert snapshot.construction_expenses_complexes["metals"] == 0.0
 
     def test_construction_expenses_included_in_total(self, minimal_registries):
         """Construction expenses are included in total_expenses and net_resources."""
@@ -673,7 +673,7 @@ class TestConstructionExpenses:
                 {
                     "design_id": "escort",
                     "type": "ship",
-                    "total_cost": {"Metals": 749.0},
+                    "total_cost": {"metals": 749.0},
                     "resources_consumed": {},
                 }
             ],
@@ -685,12 +685,12 @@ class TestConstructionExpenses:
                             'abilities': {
                                 'SpaceShipyard': {
                                     'construction_speed_bonus': 1.0,
-                                    'production_rates': {"Metals": 3000.0, "Organics": 1000.0,
-                                                         "Vapors": 500.0, "Radioactives": 500.0,
-                                                         "Exotics": 200.0}
+                                    'production_rates': {"metals": 3000.0, "organics": 1000.0,
+                                                         "vapors": 500.0, "radioactives": 500.0,
+                                                         "exotics": 200.0}
                                 }
                             },
-                            'resource_cost': {'Metals': 100.0}  # 5.0 maintenance
+                            'resource_cost': {'metals': 100.0}  # 5.0 maintenance
                         }
                     ]
                 }
@@ -709,9 +709,9 @@ class TestConstructionExpenses:
         snapshot = calculator.calculate(empire)
 
         # Total = maintenance (5.0) + construction ships (749.0)
-        assert snapshot.total_expenses["Metals"] == pytest.approx(754.0)
+        assert snapshot.total_expenses["metals"] == pytest.approx(754.0)
         # Net = 0 production - 754 expenses
-        assert snapshot.net_resources["Metals"] == pytest.approx(-754.0)
+        assert snapshot.net_resources["metals"] == pytest.approx(-754.0)
 
     def test_mixed_ship_and_complex_in_facility_queue(self, minimal_registries):
         """Facility queue with both ship and complex items splits correctly."""
@@ -722,13 +722,13 @@ class TestConstructionExpenses:
                 {
                     "design_id": "escort",
                     "type": "ship",
-                    "total_cost": {"Metals": 100.0},
+                    "total_cost": {"metals": 100.0},
                     "resources_consumed": {},
                 },
                 {
                     "design_id": "shipyard",
                     "type": "complex",
-                    "total_cost": {"Metals": 200.0},
+                    "total_cost": {"metals": 200.0},
                     "resources_consumed": {},
                 },
             ],
@@ -740,9 +740,9 @@ class TestConstructionExpenses:
                             'abilities': {
                                 'SpaceShipyard': {
                                     'construction_speed_bonus': 1.0,
-                                    'production_rates': {"Metals": 3000.0, "Organics": 1000.0,
-                                                         "Vapors": 500.0, "Radioactives": 500.0,
-                                                         "Exotics": 200.0}
+                                    'production_rates': {"metals": 3000.0, "organics": 1000.0,
+                                                         "vapors": 500.0, "radioactives": 500.0,
+                                                         "exotics": 200.0}
                                 }
                             },
                             'resource_cost': {}
@@ -764,8 +764,8 @@ class TestConstructionExpenses:
         snapshot = calculator.calculate(empire)
 
         # Both items complete within turn (300 total vs 3000 rate)
-        assert snapshot.construction_expenses_ships["Metals"] == pytest.approx(100.0)
-        assert snapshot.construction_expenses_complexes["Metals"] == pytest.approx(200.0)
+        assert snapshot.construction_expenses_ships["metals"] == pytest.approx(100.0)
+        assert snapshot.construction_expenses_complexes["metals"] == pytest.approx(200.0)
 
     def test_fighter_and_satellite_count_as_ships(self, minimal_registries):
         """Fighter and satellite types are categorized as ship expenses."""
@@ -776,13 +776,13 @@ class TestConstructionExpenses:
                 {
                     "design_id": "interceptor",
                     "type": "fighter",
-                    "total_cost": {"Metals": 50.0},
+                    "total_cost": {"metals": 50.0},
                     "resources_consumed": {},
                 },
                 {
                     "design_id": "platform",
                     "type": "satellite",
-                    "total_cost": {"Metals": 75.0},
+                    "total_cost": {"metals": 75.0},
                     "resources_consumed": {},
                 },
             ],
@@ -794,9 +794,9 @@ class TestConstructionExpenses:
                             'abilities': {
                                 'SpaceShipyard': {
                                     'construction_speed_bonus': 1.0,
-                                    'production_rates': {"Metals": 3000.0, "Organics": 1000.0,
-                                                         "Vapors": 500.0, "Radioactives": 500.0,
-                                                         "Exotics": 200.0}
+                                    'production_rates': {"metals": 3000.0, "organics": 1000.0,
+                                                         "vapors": 500.0, "radioactives": 500.0,
+                                                         "exotics": 200.0}
                                 }
                             },
                             'resource_cost': {}
@@ -818,5 +818,5 @@ class TestConstructionExpenses:
         snapshot = calculator.calculate(empire)
 
         # Both fighter and satellite count as ships
-        assert snapshot.construction_expenses_ships["Metals"] == pytest.approx(125.0)
-        assert snapshot.construction_expenses_complexes["Metals"] == 0.0
+        assert snapshot.construction_expenses_ships["metals"] == pytest.approx(125.0)
+        assert snapshot.construction_expenses_complexes["metals"] == 0.0

@@ -36,7 +36,7 @@ def _valid_facility_data() -> dict:
         'design_data': {'layers': {}},
         'is_operational': True,
         'construction_queue': [],
-        'resource_levels': {}
+        'consumable_levels': {}
     }
 
 
@@ -205,7 +205,7 @@ class TestPlanetaryFacilityFromDictValidation:
 
         assert facility.is_operational is True
         assert facility.construction_queue == []
-        assert facility.resource_levels == {}
+        assert facility.consumable_levels == {}
 
 
 class TestSpeciesPopulationFromDictValidation:

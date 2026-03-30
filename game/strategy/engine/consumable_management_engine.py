@@ -1,5 +1,5 @@
 """
-ResourceManagementEngine - Per-Turn Resource Consumption
+ConsumableManagementEngine - Per-Turn Resource Consumption
 
 PROJ-36: Extracted from TurnEngine to handle resource consumption.
 PROJ-38: Added registries parameter for dependency injection.
@@ -31,7 +31,7 @@ class ResourceDepletion:
     components_disabled: List[str]
 
 
-class ResourceManagementEngine:
+class ConsumableManagementEngine:
     """
     Engine for processing per-turn resource consumption.
 
@@ -42,6 +42,8 @@ class ResourceManagementEngine:
     - Spreading per-turn costs over 100 ticks
     - Detecting resource depletion
     - Auto-disabling components when resources run out
+
+    Formerly ResourceManagementEngine; renamed to ConsumableManagementEngine.
     """
 
     def __init__(self, *, registries: GameRegistries):
@@ -57,9 +59,9 @@ class ResourceManagementEngine:
         """
         if registries is None:
             raise ValidationException(
-                "registries is required for ResourceManagementEngine",
+                "registries is required for ConsumableManagementEngine",
                 code=ErrorCode.MISSING_DEPENDENCY.value,
-                context={"class": "ResourceManagementEngine", "parameter": "registries"}
+                context={"class": "ConsumableManagementEngine", "parameter": "registries"}
             )
         self._registries = registries
 

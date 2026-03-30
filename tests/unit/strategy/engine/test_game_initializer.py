@@ -264,7 +264,7 @@ class TestEnsureHomeworldResourceQuality:
             surface_water=0.7, tectonic_activity=0.5, magnetic_field=1.0,
             planet_type=PlanetType.CONTINENTAL
         )
-        planet.resources = resources
+        planet.deposits = resources
         return planet
 
     def test_raises_low_quality_to_floor(self):
@@ -272,46 +272,46 @@ class TestEnsureHomeworldResourceQuality:
         from game.strategy.engine.game_initializer import GameInitializer
 
         planet = self._make_planet({
-            "Metals": {"quantity": 100000, "quality": 10.0},
-            "Organics": {"quantity": 200000, "quality": 3.0},
-            "Vapors": {"quantity": 150000, "quality": 25.0},
+            "metals": {"quantity": 100000, "quality": 10.0},
+            "organics": {"quantity": 200000, "quality": 3.0},
+            "vapors": {"quantity": 150000, "quality": 25.0},
         })
 
         GameInitializer._ensure_homeworld_resource_quality(planet)
 
-        assert planet.resources["Metals"]["quality"] == 50.0
-        assert planet.resources["Organics"]["quality"] == 50.0
-        assert planet.resources["Vapors"]["quality"] == 50.0
+        assert planet.deposits["metals"]["quality"] == 50.0
+        assert planet.deposits["organics"]["quality"] == 50.0
+        assert planet.deposits["vapors"]["quality"] == 50.0
 
     def test_preserves_high_quality(self):
         """Resources already above the floor should not be changed."""
         from game.strategy.engine.game_initializer import GameInitializer
 
         planet = self._make_planet({
-            "Metals": {"quantity": 100000, "quality": 75.0},
-            "Exotics": {"quantity": 50000, "quality": 90.0},
+            "metals": {"quantity": 100000, "quality": 75.0},
+            "exotics": {"quantity": 50000, "quality": 90.0},
         })
 
         GameInitializer._ensure_homeworld_resource_quality(planet)
 
-        assert planet.resources["Metals"]["quality"] == 75.0
-        assert planet.resources["Exotics"]["quality"] == 90.0
+        assert planet.deposits["metals"]["quality"] == 75.0
+        assert planet.deposits["exotics"]["quality"] == 90.0
 
     def test_mixed_resources(self):
         """Only resources below the floor should be raised; others stay."""
         from game.strategy.engine.game_initializer import GameInitializer
 
         planet = self._make_planet({
-            "Metals": {"quantity": 100000, "quality": 10.0},
-            "Organics": {"quantity": 200000, "quality": 80.0},
-            "Radioactives": {"quantity": 150000, "quality": 50.0},
+            "metals": {"quantity": 100000, "quality": 10.0},
+            "organics": {"quantity": 200000, "quality": 80.0},
+            "radioactives": {"quantity": 150000, "quality": 50.0},
         })
 
         GameInitializer._ensure_homeworld_resource_quality(planet)
 
-        assert planet.resources["Metals"]["quality"] == 50.0
-        assert planet.resources["Organics"]["quality"] == 80.0
-        assert planet.resources["Radioactives"]["quality"] == 50.0  # Exactly at floor, unchanged
+        assert planet.deposits["metals"]["quality"] == 50.0
+        assert planet.deposits["organics"]["quality"] == 80.0
+        assert planet.deposits["radioactives"]["quality"] == 50.0  # Exactly at floor, unchanged
 
     def test_uses_config_value(self):
         """Should use homeworld_quality_floor from ResourceGenerationConfig."""
@@ -319,7 +319,7 @@ class TestEnsureHomeworldResourceQuality:
         from game.strategy.data.resource_generation_config import ResourceGenerationConfig
 
         planet = self._make_planet({
-            "Metals": {"quantity": 100000, "quality": 10.0},
+            "metals": {"quantity": 100000, "quality": 10.0},
         })
 
         mock_cfg = ResourceGenerationConfig(None)
@@ -331,19 +331,19 @@ class TestEnsureHomeworldResourceQuality:
         ):
             GameInitializer._ensure_homeworld_resource_quality(planet)
 
-        assert planet.resources["Metals"]["quality"] == 70.0
+        assert planet.deposits["metals"]["quality"] == 70.0
 
     def test_quantity_not_modified(self):
         """Resource quantity should never be changed by quality enforcement."""
         from game.strategy.engine.game_initializer import GameInitializer
 
         planet = self._make_planet({
-            "Metals": {"quantity": 5000, "quality": 10.0},
+            "metals": {"quantity": 5000, "quality": 10.0},
         })
 
         GameInitializer._ensure_homeworld_resource_quality(planet)
 
-        assert planet.resources["Metals"]["quantity"] == 5000
+        assert planet.deposits["metals"]["quantity"] == 5000
 
 
 class TestGalaxyFleetRegistry:

@@ -30,7 +30,7 @@ class TestFacilityFuelPersistence:
             design_data={"layers": {"hull": [{"id": "fuel_synthesizer"}, {"id": "fuel_tank"}]}},
             is_operational=True,
         )
-        facility.resource_levels = {"fuel": 347.5}
+        facility.consumable_levels = {"fuel": 347.5}
 
         planet = Planet(
             name="TestWorld",
@@ -57,7 +57,7 @@ class TestFacilityFuelPersistence:
         restored = Planet.from_dict(data)
 
         assert len(restored.facilities) == 1
-        assert restored.facilities[0].resource_levels.get("fuel") == pytest.approx(347.5)
+        assert restored.facilities[0].consumable_levels.get("fuel") == pytest.approx(347.5)
         assert restored.facilities[0].instance_id == "fuel-001"
         assert restored.facilities[0].is_operational is True
 
@@ -69,7 +69,7 @@ class TestFacilityFuelPersistence:
             name="Empty Depot",
             design_data={"layers": {"hull": [{"id": "fuel_tank"}]}},
         )
-        # resource_levels defaults to {} (no fuel key)
+        # consumable_levels defaults to {} (no fuel key)
 
         planet = Planet(
             name="EmptyWorld",
@@ -95,7 +95,7 @@ class TestFacilityFuelPersistence:
         restored = Planet.from_dict(data)
 
         assert len(restored.facilities) == 1
-        assert restored.facilities[0].resource_levels == {}
+        assert restored.facilities[0].consumable_levels == {}
         assert restored.facilities[0].get_fuel_storage() == 0.0
 
     def test_facility_design_data_persists(self):
@@ -113,7 +113,7 @@ class TestFacilityFuelPersistence:
             design_id="fuel_depot",
             name="Design Test",
             design_data=design,
-            resource_levels={"fuel": 100.0},
+            consumable_levels={"fuel": 100.0},
         )
 
         planet = Planet(
@@ -161,16 +161,16 @@ class TestShipFuelPersistence:
             owner_id=0,
             design_data={"name": "Destroyer", "layers": {}},
         )
-        ship.resource_levels = {"fuel": 250.0}
+        ship.consumable_levels = {"fuel": 250.0}
 
         data = ship.to_dict()
         restored = ShipInstance.from_dict(data)
 
-        assert restored.resource_levels.get("fuel") == pytest.approx(250.0)
+        assert restored.consumable_levels.get("fuel") == pytest.approx(250.0)
         assert restored.instance_id == "ship-001"
 
     def test_full_fuel_ship_persists_empty_resources(self):
-        """Ship at full fuel (no resource_levels entry) round-trips correctly."""
+        """Ship at full fuel (no consumable_levels entry) round-trips correctly."""
         ship = ShipInstance(
             instance_id="ship-002",
             design_id="scout",
@@ -178,12 +178,12 @@ class TestShipFuelPersistence:
             owner_id=0,
             design_data={"name": "Scout", "layers": {}},
         )
-        # No resource_levels entry = full fuel
+        # No consumable_levels entry = full fuel
 
         data = ship.to_dict()
         restored = ShipInstance.from_dict(data)
 
-        assert restored.resource_levels == {}
+        assert restored.consumable_levels == {}
 
     def test_multiple_resources_persist(self):
         """Ship with multiple partial resources all persist."""
@@ -194,13 +194,13 @@ class TestShipFuelPersistence:
             owner_id=0,
             design_data={"name": "Cruiser", "layers": {}},
         )
-        ship.resource_levels = {"fuel": 100.0, "energy": 75.5}
+        ship.consumable_levels = {"fuel": 100.0, "energy": 75.5}
 
         data = ship.to_dict()
         restored = ShipInstance.from_dict(data)
 
-        assert restored.resource_levels.get("fuel") == pytest.approx(100.0)
-        assert restored.resource_levels.get("energy") == pytest.approx(75.5)
+        assert restored.consumable_levels.get("fuel") == pytest.approx(100.0)
+        assert restored.consumable_levels.get("energy") == pytest.approx(75.5)
 
 
 # ===========================================================================
@@ -238,7 +238,7 @@ class TestResupplyStateSaveLoad:
             design_id="fuel_depot",
             name="Save Test Fuel Depot",
             design_data={"layers": {"hull": [{"id": "fuel_synthesizer"}, {"id": "fuel_tank"}]}},
-            resource_levels={"fuel": 273.5},
+            consumable_levels={"fuel": 273.5},
         )
         target_planet.facilities.append(facility)
 
@@ -258,7 +258,7 @@ class TestResupplyStateSaveLoad:
             for colony in empire.colonies:
                 for fac in colony.facilities:
                     if fac.instance_id == "save-test-fuel-001":
-                        assert fac.resource_levels.get("fuel") == pytest.approx(273.5)
+                        assert fac.consumable_levels.get("fuel") == pytest.approx(273.5)
                         assert fac.name == "Save Test Fuel Depot"
                         found = True
                         break
@@ -283,7 +283,7 @@ class TestResupplyStateSaveLoad:
 
         # Set partial fuel on the first ship
         target_ship = target_fleet.ships[0]
-        target_ship.resource_levels["fuel"] = 123.4
+        target_ship.consumable_levels["fuel"] = 123.4
         ship_id = target_ship.instance_id
 
         # Save
@@ -302,7 +302,7 @@ class TestResupplyStateSaveLoad:
             for fleet in empire.fleets:
                 for ship in fleet.ships:
                     if ship.instance_id == ship_id:
-                        assert ship.resource_levels.get("fuel") == pytest.approx(123.4)
+                        assert ship.consumable_levels.get("fuel") == pytest.approx(123.4)
                         found = True
                         break
 

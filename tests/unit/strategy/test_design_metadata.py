@@ -21,7 +21,7 @@ class TestDesignMetadata:
             "vehicle_type": "Ship",
             "mass": 1000.0,
             "combat_power": 500.0,
-            "resource_cost": {"metal": 100, "energy": 50},
+            "construction_cost": {"metal": 100, "energy": 50},
             "created_date": "2026-01-17T10:00:00",
             "last_modified": "2026-01-17T12:00:00",
             "is_obsolete": False,
@@ -37,7 +37,7 @@ class TestDesignMetadata:
         assert metadata.vehicle_type == "Ship"
         assert metadata.mass == 1000.0
         assert metadata.combat_power == 500.0
-        assert metadata.resource_cost == {"metal": 100, "energy": 50}
+        assert metadata.construction_cost == {"metal": 100, "energy": 50}
         assert metadata.times_built == 3
         assert metadata.is_obsolete is False
 
@@ -50,7 +50,7 @@ class TestDesignMetadata:
             vehicle_type="Ship",
             mass=5000.0,
             combat_power=2000.0,
-            resource_cost={"metal": 500, "energy": 200},
+            construction_cost={"metal": 500, "energy": 200},
             created_date="2026-01-17T10:00:00",
             last_modified="2026-01-17T12:00:00",
             is_obsolete=True,
@@ -151,8 +151,8 @@ class TestDesignMetadata:
         assert metadata.times_built == 0  # New design
         assert metadata.is_obsolete is False
         # Check resource costs calculated
-        assert metadata.resource_cost["metal"] == 150
-        assert metadata.resource_cost["energy"] == 25
+        assert metadata.construction_cost["metal"] == 150
+        assert metadata.construction_cost["energy"] == 25
         # Combat power calculated
         assert metadata.combat_power > 0
 
@@ -179,7 +179,7 @@ class TestDesignMetadata:
         # Expected: (100 * 10) + (2 * 5) + (500 * 0.5) = 1000 + 10 + 250 = 1260
         assert power == 1260.0
 
-    def test_resource_cost_calculation(self):
+    def test_construction_cost_calculation(self):
         """Resource costs are summed correctly"""
         design_data = {
             "layers": {
@@ -191,7 +191,7 @@ class TestDesignMetadata:
             }
         }
 
-        costs = DesignMetadata._calculate_resource_cost(design_data)
+        costs = DesignMetadata._calculate_construction_cost(design_data)
 
         assert costs["metal"] == 30
         assert costs["energy"] == 15
@@ -238,21 +238,21 @@ class TestDesignMetadataFromDict:
         assert metadata.vehicle_type == "Ship"
         assert metadata.mass == 0.0
         assert metadata.combat_power == 0.0
-        assert metadata.resource_cost == {}
+        assert metadata.construction_cost == {}
         assert metadata.is_obsolete is False
         assert metadata.times_built == 0
 
-    def test_from_dict_empty_resource_cost(self):
-        """from_dict handles empty resource_cost."""
+    def test_from_dict_empty_construction_cost(self):
+        """from_dict handles empty construction_cost."""
         data = {
             "design_id": "test",
             "name": "Test",
-            "resource_cost": {}
+            "construction_cost": {}
         }
 
         metadata = DesignMetadata.from_dict(data)
 
-        assert metadata.resource_cost == {}
+        assert metadata.construction_cost == {}
 
 
 class TestDesignMetadataFromDesignFile:
@@ -318,7 +318,7 @@ class TestDesignMetadataFromDesignFile:
             metadata = DesignMetadata.from_design_file(filepath, "empty_layers")
 
             assert metadata.combat_power == 0.0
-            assert metadata.resource_cost == {}
+            assert metadata.construction_cost == {}
 
 
 class TestDesignMetadataFromShip:
@@ -338,7 +338,7 @@ class TestDesignMetadataFromShip:
         metadata = DesignMetadata.from_ship(ship, "empty")
 
         assert metadata.combat_power == 0.0
-        assert metadata.resource_cost == {}
+        assert metadata.construction_cost == {}
 
     def test_from_ship_component_zero_cost(self):
         """from_ship handles components with zero/default cost."""
@@ -361,7 +361,7 @@ class TestDesignMetadataFromShip:
         metadata = DesignMetadata.from_ship(ship, "no_cost")
 
         # Zero cost adds minerals: 0 entry (int/float cost path)
-        assert metadata.resource_cost == {"minerals": 0}
+        assert metadata.construction_cost == {"minerals": 0}
 
     def test_from_ship_integer_cost(self):
         """from_ship handles integer cost (single value) on components."""
@@ -382,7 +382,7 @@ class TestDesignMetadataFromShip:
 
         metadata = DesignMetadata.from_ship(ship, "int_cost")
 
-        assert metadata.resource_cost.get("minerals", 0) == 50
+        assert metadata.construction_cost.get("minerals", 0) == 50
 
 
 class TestDesignMetadataCombatPower:
@@ -435,10 +435,10 @@ class TestDesignMetadataCombatPower:
         assert power == 15.0
 
 
-class TestDesignMetadataResourceCost:
-    """Tests for resource cost calculation edge cases."""
+class TestDesignMetadataConstructionCost:
+    """Tests for construction cost calculation edge cases."""
 
-    def test_calculate_resource_cost_no_cost_field(self):
+    def test_calculate_construction_cost_no_cost_field(self):
         """Resource cost skips components without cost field."""
         design_data = {
             "layers": {
@@ -449,11 +449,11 @@ class TestDesignMetadataResourceCost:
             }
         }
 
-        costs = DesignMetadata._calculate_resource_cost(design_data)
+        costs = DesignMetadata._calculate_construction_cost(design_data)
 
         assert costs == {}
 
-    def test_calculate_resource_cost_empty_cost(self):
+    def test_calculate_construction_cost_empty_cost(self):
         """Resource cost handles empty cost dict."""
         design_data = {
             "layers": {
@@ -463,7 +463,7 @@ class TestDesignMetadataResourceCost:
             }
         }
 
-        costs = DesignMetadata._calculate_resource_cost(design_data)
+        costs = DesignMetadata._calculate_construction_cost(design_data)
 
         assert costs == {}
 
@@ -480,7 +480,7 @@ class TestDesignMetadataSerialization:
             vehicle_type="Ship",
             mass=5000.0,
             combat_power=2500.0,
-            resource_cost={"metal": 500},
+            construction_cost={"metal": 500},
             created_date="2026-01-01T00:00:00",
             last_modified="2026-01-02T00:00:00",
             is_obsolete=True,
@@ -503,7 +503,7 @@ class TestDesignMetadataSerialization:
             vehicle_type="Ship",
             mass=10000.0,
             combat_power=5000.0,
-            resource_cost={"metal": 1000, "energy": 500, "crystals": 100},
+            construction_cost={"metal": 1000, "energy": 500, "crystals": 100},
             created_date="2026-01-15T08:30:00",
             last_modified="2026-01-16T14:45:00",
             is_obsolete=True,
@@ -520,7 +520,7 @@ class TestDesignMetadataSerialization:
         assert restored.vehicle_type == original.vehicle_type
         assert restored.mass == original.mass
         assert restored.combat_power == original.combat_power
-        assert restored.resource_cost == original.resource_cost
+        assert restored.construction_cost == original.construction_cost
         assert restored.created_date == original.created_date
         assert restored.last_modified == original.last_modified
         assert restored.is_obsolete == original.is_obsolete
@@ -550,7 +550,7 @@ class TestDesignMetadataOldLayerFormat:
         # No warning logged - per CLAUDE.md, old formats are eradicated not warned
         assert "Old layer format" not in caplog.text
 
-    def test_calculate_resource_cost_old_layer_format_silently_ignored(self, caplog):
+    def test_calculate_construction_cost_old_layer_format_silently_ignored(self, caplog):
         """Old layer format in resource cost calculation is silently ignored."""
         import logging
         caplog.set_level(logging.WARNING)
@@ -563,7 +563,7 @@ class TestDesignMetadataOldLayerFormat:
             }
         }
 
-        costs = DesignMetadata._calculate_resource_cost(design_data)
+        costs = DesignMetadata._calculate_construction_cost(design_data)
 
         assert costs == {}  # Old format not processed
         # No warning logged - per CLAUDE.md, old formats are eradicated not warned
@@ -722,7 +722,7 @@ class TestDesignMetadataMultipleLayers:
         # Total: 1765
         assert power == 1765.0
 
-    def test_calculate_resource_cost_multiple_layers(self):
+    def test_calculate_construction_cost_multiple_layers(self):
         """Resource costs aggregate across multiple layers."""
         design_data = {
             "layers": {
@@ -735,7 +735,7 @@ class TestDesignMetadataMultipleLayers:
             }
         }
 
-        costs = DesignMetadata._calculate_resource_cost(design_data)
+        costs = DesignMetadata._calculate_construction_cost(design_data)
 
         assert costs["metal"] == 300
         assert costs["energy"] == 50
@@ -794,7 +794,7 @@ class TestDesignMetadataEdgeCasesExtended:
 
         metadata = DesignMetadata.from_ship(ship, "float_cost")
 
-        assert metadata.resource_cost.get("minerals", 0) == 75
+        assert metadata.construction_cost.get("minerals", 0) == 75
 
     # PROJ-191: Deleted test_from_ship_weapon_missing_damage
     # - WeaponAbility always has damage attribute

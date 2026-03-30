@@ -14,7 +14,7 @@ from game.strategy.interfaces.engines import (
     IProductionEngine,
     IOrderProcessor,
     IConflictEngine,
-    IResourceEngine,
+    IConsumableEngine,
 )
 
 __all__ = [
@@ -24,5 +24,5 @@ __all__ = [
     'IProductionEngine',
     'IOrderProcessor',
     'IConflictEngine',
-    'IResourceEngine',
+    'IConsumableEngine',
 ]

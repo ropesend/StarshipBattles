@@ -115,7 +115,7 @@ class TestTickProcessing:
         mock_conflict_engine = MagicMock()
         turn_engine._conflict_engine = mock_conflict_engine
 
-        # PROJ-36: Resource consumption delegated to ResourceManagementEngine
+        # PROJ-36: Resource consumption delegated to ConsumableManagementEngine
         mock_resource_engine = MagicMock()
         turn_engine._resource_engine = mock_resource_engine
 

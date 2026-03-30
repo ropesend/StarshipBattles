@@ -62,8 +62,8 @@ class TestProductionCompletion:
                 "design_id": "test_ship",
                 "type": "ship",
                 "turns_remaining": 1,
-                "total_cost": {"Metals": 100.0},
-                "resources_consumed": {"Metals": 0.0}
+                "total_cost": {"metals": 100.0},
+                "resources_consumed": {"metals": 0.0}
             }
         ]
         planet.facilities.append(shipyard)
@@ -94,8 +94,8 @@ class TestComplexSpawning:
             "design_id": "test_complex_design",
             "type": "complex",
             "turns_remaining": 1,
-            "total_cost": {"Metals": 100.0},
-            "resources_consumed": {"Metals": 0.0}
+            "total_cost": {"metals": 100.0},
+            "resources_consumed": {"metals": 0.0}
         }
         planet.construction_queue.append(queue_item)
 
@@ -123,8 +123,8 @@ class TestComplexSpawning:
             "design_id": "shipyard_complex",
             "type": "complex",
             "turns_remaining": 1,
-            "total_cost": {"Metals": 100.0},
-            "resources_consumed": {"Metals": 0.0}
+            "total_cost": {"metals": 100.0},
+            "resources_consumed": {"metals": 0.0}
         }
         planet.construction_queue.append(queue_item)
 
@@ -149,8 +149,8 @@ class TestComplexSpawning:
             "design_id": "harvester_complex",
             "type": "complex",
             "turns_remaining": 1,
-            "total_cost": {"Metals": 100.0},
-            "resources_consumed": {"Metals": 0.0}
+            "total_cost": {"metals": 100.0},
+            "resources_consumed": {"metals": 0.0}
         }
         planet.construction_queue.append(queue_item)
 
@@ -176,8 +176,8 @@ class TestComplexSpawning:
             "design_id": "test_complex",
             "type": "complex",
             "turns_remaining": 1,
-            "total_cost": {"Metals": 100.0},
-            "resources_consumed": {"Metals": 0.0}
+            "total_cost": {"metals": 100.0},
+            "resources_consumed": {"metals": 0.0}
         }
         planet.construction_queue.append(queue_item)
 
@@ -214,8 +214,8 @@ class TestShipSpawning:
                 "design_id": "test_ship",
                 "type": "ship",
                 "turns_remaining": 1,
-                "total_cost": {"Metals": 100.0},
-                "resources_consumed": {"Metals": 0.0}
+                "total_cost": {"metals": 100.0},
+                "resources_consumed": {"metals": 0.0}
             }
         ]
         planet.facilities.append(shipyard)
@@ -244,8 +244,8 @@ class TestShipSpawning:
                 "design_id": "test_ship",
                 "type": "ship",
                 "turns_remaining": 1,
-                "total_cost": {"Metals": 100.0},
-                "resources_consumed": {"Metals": 0.0}
+                "total_cost": {"metals": 100.0},
+                "resources_consumed": {"metals": 0.0}
             }
         ]
         planet.facilities.append(shipyard)
@@ -276,8 +276,8 @@ class TestShipSpawning:
                 "design_id": "test_ship",
                 "type": "ship",
                 "turns_remaining": 1,
-                "total_cost": {"Metals": 100.0},
-                "resources_consumed": {"Metals": 0.0}
+                "total_cost": {"metals": 100.0},
+                "resources_consumed": {"metals": 0.0}
             }
         ]
         planet.facilities.append(shipyard)
@@ -309,8 +309,8 @@ class TestShipSpawning:
                 "design_id": "test_ship",
                 "type": "ship",
                 "turns_remaining": 1,
-                "total_cost": {"Metals": 100.0},
-                "resources_consumed": {"Metals": 0.0}
+                "total_cost": {"metals": 100.0},
+                "resources_consumed": {"metals": 0.0}
             }
         ]
         planet.facilities.append(shipyard)
@@ -338,8 +338,8 @@ class TestShipSpawning:
                 "design_id": f"test_ship_{i}",
                 "type": "ship",
                 "turns_remaining": 1,
-                "total_cost": {"Metals": 100.0},
-                "resources_consumed": {"Metals": 0.0}
+                "total_cost": {"metals": 100.0},
+                "resources_consumed": {"metals": 0.0}
             })
         planet.facilities.append(shipyard)
 
@@ -379,8 +379,8 @@ class TestParallelShipyardE2E:
                 "design_id": "test_ship",
                 "type": "ship",
                 "turns_remaining": 2,
-                "total_cost": {"Metals": 6000.0},
-                "resources_consumed": {"Metals": 0.0}
+                "total_cost": {"metals": 6000.0},
+                "resources_consumed": {"metals": 0.0}
             }
         ]
         yard2 = _make_shipyard("shipyard_2")
@@ -389,8 +389,8 @@ class TestParallelShipyardE2E:
                 "design_id": "test_ship",
                 "type": "ship",
                 "turns_remaining": 1,
-                "total_cost": {"Metals": 3000.0},
-                "resources_consumed": {"Metals": 0.0}
+                "total_cost": {"metals": 3000.0},
+                "resources_consumed": {"metals": 0.0}
             }
         ]
         planet.facilities.extend([yard1, yard2])
@@ -402,7 +402,7 @@ class TestParallelShipyardE2E:
 
         # yard1 should still have item (consumed 3000/6000)
         assert len(yard1.construction_queue) == 1
-        assert yard1.construction_queue[0]["resources_consumed"]["Metals"] > 0
+        assert yard1.construction_queue[0]["resources_consumed"]["metals"] > 0
         # yard2 should be empty
         assert len(yard2.construction_queue) == 0
         assert len(empire.fleets) == initial_fleet_count + 1  # yard2's ship spawned
@@ -437,8 +437,8 @@ class TestFacilityQueueSaveLoadE2E:
                 "design_id": "test_ship",
                 "type": "ship",
                 "turns_remaining": 1,
-                "total_cost": {"Metals": 100.0},
-                "resources_consumed": {"Metals": 0.0}
+                "total_cost": {"metals": 100.0},
+                "resources_consumed": {"metals": 0.0}
             }
         ]
         planet.facilities.append(yard)
@@ -448,8 +448,8 @@ class TestFacilityQueueSaveLoadE2E:
             "design_id": "test_complex",
             "type": "complex",
             "turns_remaining": 1,
-            "total_cost": {"Metals": 100.0},
-            "resources_consumed": {"Metals": 0.0}
+            "total_cost": {"metals": 100.0},
+            "resources_consumed": {"metals": 0.0}
         })
 
         # Serialize planet (simulating save)

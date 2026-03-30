@@ -18,7 +18,7 @@ def ship():
         design_data={'name': 'TestDesign', 'layers': {}},
         current_hp=80,
         component_damage={'comp_1': 50},
-        resource_levels={'fuel': 75.0},
+        consumable_levels={'fuel': 75.0},
     )
     return s
 
@@ -163,7 +163,7 @@ class TestToShip:
         mock_sim_ship.combat_engine.take_damage.assert_called_once_with(30)
 
     @patch('game.simulation.entities.ship_serialization.ShipSerializer')
-    def test_applies_resource_levels(self, mock_serializer_cls, bridge, ship):
+    def test_applies_consumable_levels(self, mock_serializer_cls, bridge, ship):
         """to_ship applies resource levels to the simulation ship."""
         mock_resources = MagicMock()
         mock_sim_ship = MagicMock()
@@ -172,7 +172,7 @@ class TestToShip:
         mock_sim_ship.layers = {}
         mock_serializer_cls.from_dict.return_value = mock_sim_ship
         ship.current_hp = None
-        ship.resource_levels = {'fuel': 50.0}
+        ship.consumable_levels = {'fuel': 50.0}
 
         bridge.to_ship((0, 0), team_id=0, registries=MagicMock())
 

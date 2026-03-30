@@ -24,7 +24,7 @@ from game.strategy.interfaces.engines import (
     IProductionEngine,
     IOrderProcessor,
     IConflictEngine,
-    IResourceEngine,
+    IConsumableEngine,
     IMaintenanceEngine,
 )
 
@@ -172,9 +172,9 @@ class MockConflictEngine(IConflictEngine):
         return self.resolve_all_conflicts_result
 
 
-class MockResourceEngine(IResourceEngine):
+class MockConsumableEngine(IConsumableEngine):
     """
-    Mock implementation of IResourceEngine for testing.
+    Mock implementation of IConsumableEngine for testing.
 
     Tracks method calls and allows configurable return values.
 

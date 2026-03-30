@@ -461,18 +461,17 @@ class TestSaveLoadPreservesFleetRegistry:
 # Task 4.7: Maintenance scuttle unregisters empty fleet
 # ===========================================================================
 
-class TestMaintenanceScuttleUnregistersEmptyFleet:
-    """Verify maintenance_engine.py:286 auto-unregisters empty fleet after scuttle."""
+class TestMaintenanceDisableKeepsFleet:
+    """Verify maintenance engine disables ships instead of removing them."""
 
-    def test_maintenance_scuttle_unregisters_empty_fleet(
+    def test_maintenance_disable_keeps_fleet_registered(
         self, galaxy, two_empires, fresh_registries
     ):
-        """When all ships are scuttled due to lack of maintenance, fleet is unregistered."""
+        """When all ships are disabled due to lack of maintenance, fleet stays registered."""
         emp1, _ = two_empires
         loc = HexCoord(50, 50)
 
         # Create fleet with a single ship that has a non-zero maintenance cost
-        # Use inline resource_cost on components for reliable cost calculation
         fleet = Fleet(700, emp1.id, loc, speed=15.0)
         ship = make_mock_ship_instance("Expensive Ship", emp1.id, registries=fresh_registries)
         ship.design_data = {
@@ -485,7 +484,7 @@ class TestMaintenanceScuttleUnregistersEmptyFleet:
                         {
                             'component_id': 'TestEngine',
                             'count': 1,
-                            'resource_cost': {'Metals': 1000.0},
+                            'resource_cost': {'metals': 1000.0},
                         }
                     ]
                 }
@@ -503,20 +502,24 @@ class TestMaintenanceScuttleUnregistersEmptyFleet:
         engine = MaintenanceEngine(registries=fresh_registries)
         events = engine.process_maintenance_tick(tick=1, empires=[emp1])
 
-        # Ship should have been scuttled
-        assert len(events) >= 1, "Expected at least one scuttle event"
+        # Ship should have been disabled
+        assert len(events) >= 1, "Expected at least one disable event"
         assert any(e.entity_type == "ship" for e in events), (
-            "Expected a ship scuttle event"
+            "Expected a ship disable event"
         )
 
-        # Fleet should be empty and unregistered
-        assert fleet not in emp1.fleets, "Empty fleet should be removed from empire"
-        _assert_not_registered(galaxy, 700)
+        # Ship stays in fleet but is disabled
+        assert len(fleet.ships) == 1, "Ship should remain in fleet"
+        assert ship.is_operational is False, "Ship should be disabled"
 
-    def test_maintenance_partial_scuttle_keeps_fleet(
+        # Fleet stays in empire and galaxy registry
+        assert fleet in emp1.fleets, "Fleet should remain in empire"
+        _assert_registered(galaxy, fleet)
+
+    def test_maintenance_partial_disable_keeps_fleet(
         self, galaxy, two_empires, fresh_registries
     ):
-        """When only some ships are scuttled, fleet stays registered if ships remain."""
+        """When only some ships are disabled, fleet stays registered with all ships."""
         emp1, _ = two_empires
         loc = HexCoord(51, 51)
 
@@ -543,7 +546,7 @@ class TestMaintenanceScuttleUnregistersEmptyFleet:
                         {
                             'component_id': 'TestEngine',
                             'count': 1,
-                            'resource_cost': {'Metals': 1000.0},
+                            'resource_cost': {'metals': 1000.0},
                         }
                     ]
                 }
@@ -562,8 +565,9 @@ class TestMaintenanceScuttleUnregistersEmptyFleet:
         engine = MaintenanceEngine(registries=fresh_registries)
         engine.process_maintenance_tick(tick=1, empires=[emp1])
 
-        # Free ship should survive (no cost), expensive ship scuttled
-        # Fleet should still be registered because free_ship remains
-        assert len(fleet.ships) == 1, "Free ship should survive (no maintenance cost)"
-        assert fleet in emp1.fleets, "Fleet with remaining ship should stay in empire"
+        # Both ships remain in fleet; expensive one is disabled, free one stays operational
+        assert len(fleet.ships) == 2, "Both ships should remain in fleet"
+        assert free_ship.is_operational is True, "Free ship should stay operational"
+        assert expensive_ship.is_operational is False, "Expensive ship should be disabled"
+        assert fleet in emp1.fleets, "Fleet should stay in empire"
         _assert_registered(galaxy, fleet)

@@ -118,8 +118,8 @@ class TestShipyardRequirement:
                 "design_id": "test_ship",
                 "type": "ship",
                 "turns_remaining": 3,
-                "total_cost": {"Metals": 9000.0},
-                "resources_consumed": {"Metals": 0.0}
+                "total_cost": {"metals": 9000.0},
+                "resources_consumed": {"metals": 0.0}
             }
         ]
         planet.facilities.append(shipyard)
@@ -127,7 +127,7 @@ class TestShipyardRequirement:
         # Process turn - should make progress
         _process_one_turn(engine, empires, save_path=temp_dir)
         # After 100 ticks at 30/tick = 3000 consumed
-        assert shipyard.construction_queue[0]["resources_consumed"]["Metals"] > 0
+        assert shipyard.construction_queue[0]["resources_consumed"]["metals"] > 0
 
         # Remove shipyard facility
         planet.facilities.clear()
@@ -155,8 +155,8 @@ class TestShipyardRequirement:
                 "design_id": "test_ship",
                 "type": "ship",
                 "turns_remaining": 2,
-                "total_cost": {"Metals": 6000.0},
-                "resources_consumed": {"Metals": 0.0}
+                "total_cost": {"metals": 6000.0},
+                "resources_consumed": {"metals": 0.0}
             }
         ]
         planet.facilities.append(shipyard)
@@ -164,7 +164,7 @@ class TestShipyardRequirement:
         # Process turn - should now progress
         _process_one_turn(engine, empires, save_path=temp_dir)
         # After 100 ticks at 30/tick = 3000 consumed (half of 6000)
-        assert shipyard.construction_queue[0]["resources_consumed"]["Metals"] > 0
+        assert shipyard.construction_queue[0]["resources_consumed"]["metals"] > 0
 
     def test_complex_builds_without_shipyard(self, production_setup):
         """Test that complexes build even without shipyard."""
@@ -177,8 +177,8 @@ class TestShipyardRequirement:
             "design_id": "mining_complex",
             "type": "complex",
             "turns_remaining": 1,
-            "total_cost": {"Metals": 100.0},
-            "resources_consumed": {"Metals": 0.0}
+            "total_cost": {"metals": 100.0},
+            "resources_consumed": {"metals": 0.0}
         }
         planet.construction_queue.append(queue_item)
 

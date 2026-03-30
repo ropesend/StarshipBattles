@@ -10,7 +10,7 @@ Each ShipInstance tracks the current state of a ship (damage, resources)
 separate from its design template.
 
 Delegates:
-- ShipResourceManager: resource tracking (fuel, energy, ammo)
+- ShipConsumableManager: resource tracking (fuel, energy, ammo)
 - ShipCargoManager: cargo loading/unloading
 - ShipDisplayFormatter: display string formatting
 - ShipInstanceBridge: simulation bridge (to_ship, update_from_ship)
@@ -22,7 +22,7 @@ from typing import Dict, Any, Optional, Tuple, List, TYPE_CHECKING
 import uuid
 
 from game.core.protocols import IPostBattleShip
-from game.strategy.data.ship_resource_manager import ShipResourceManager
+from game.strategy.data.ship_consumable_manager import ShipConsumableManager
 from game.strategy.data.ship_cargo_manager import ShipCargoManager
 from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
 from game.strategy.data.ship_instance_bridge import ShipInstanceBridge
@@ -60,7 +60,7 @@ class ShipInstance:
     # None values mean "use design default"
     current_hp: Optional[int] = None
     component_damage: Dict[str, int] = field(default_factory=dict)  # component_id -> current_hp
-    resource_levels: Dict[str, float] = field(default_factory=dict)  # resource_name -> current
+    consumable_levels: Dict[str, float] = field(default_factory=dict)  # resource_name -> current
     component_toggles: Dict[str, bool] = field(default_factory=dict)  # component_id -> enabled
 
     # Cargo contents (cargo_type -> current amount)
@@ -69,6 +69,7 @@ class ShipInstance:
     # Status
     is_alive: bool = True
     is_derelict: bool = False
+    is_operational: bool = True
 
     # Strategy tracking
     experience: int = 0           # For future crew/veteran system
@@ -85,14 +86,14 @@ class ShipInstance:
     _registries: Optional['GameRegistries'] = field(default=None, repr=False, init=False)
 
     # Delegate managers (initialized in __post_init__)
-    _resource_mgr: Optional['ShipResourceManager'] = field(default=None, repr=False, init=False)
+    _resource_mgr: Optional['ShipConsumableManager'] = field(default=None, repr=False, init=False)
     _cargo_mgr: Optional['ShipCargoManager'] = field(default=None, repr=False, init=False)
     _display_fmt: Optional['ShipDisplayFormatter'] = field(default=None, repr=False, init=False)
     _bridge: Optional['ShipInstanceBridge'] = field(default=None, repr=False, init=False)
 
     def __post_init__(self) -> None:
         """Initialize delegate managers after dataclass init."""
-        self._resource_mgr = ShipResourceManager(self)
+        self._resource_mgr = ShipConsumableManager(self)
         self._cargo_mgr = ShipCargoManager(self)
         self._display_fmt = ShipDisplayFormatter(self)
         self._bridge = ShipInstanceBridge(self)
@@ -196,7 +197,7 @@ class ShipInstance:
         # Initialize all resources to full capacity
         stats = instance.get_calculated_stats()
         storage = stats.get('resource_storage', {})
-        instance.resource_levels = {name: float(val) for name, val in storage.items()}
+        instance.consumable_levels = {name: float(val) for name, val in storage.items()}
 
         return instance
 

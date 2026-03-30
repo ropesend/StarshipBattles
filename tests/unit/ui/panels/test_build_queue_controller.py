@@ -88,7 +88,7 @@ def _make_controller(build_context=None, entity_registry=None) -> BuildQueueCont
 
 def _default_build_rate() -> dict:
     """Return default build rate dict for testing."""
-    return {"Metals": 2000.0, "Organics": 2000.0, "Radioactives": 2000.0, "Vapors": 2000.0, "Exotics": 2000.0}
+    return {"metals": 2000.0, "organics": 2000.0, "radioactives": 2000.0, "vapors": 2000.0, "exotics": 2000.0}
 
 
 # PROJ-208: Counter for generating unique entity IDs
@@ -387,10 +387,10 @@ class TestBuildTimeCalculation:
         mock_library = MagicMock()
         mock_library.scan_designs.return_value = designs
 
-        # Build design_id -> resource_cost map for mocking
+        # Build design_id -> construction_cost map for mocking
         design_costs = {}
         for d in designs:
-            design_costs[d.design_id] = d.resource_cost
+            design_costs[d.design_id] = d.construction_cost
 
         # Mock load_design_data to return a dict with design_id
         def mock_load_design_data(design_id):
@@ -428,10 +428,10 @@ class TestBuildTimeCalculation:
         """100000 Metals at 2000/turn = 50 turns."""
         design = MagicMock()
         design.design_id = "big_complex"
-        design.resource_cost = {"Metals": 100000, "Organics": 10000}
+        design.construction_cost = {"metals": 100000, "organics": 10000}
 
         controller = self._make_controller_with_designs([design])
-        build_rate = {"Metals": 2000.0, "Organics": 2000.0}
+        build_rate = {"metals": 2000.0, "organics": 2000.0}
         turns = controller._calculate_build_turns("big_complex", build_rate)
 
         assert turns == 50  # ceil(100000/2000) = 50, ceil(10000/2000) = 5 → max = 50
@@ -440,10 +440,10 @@ class TestBuildTimeCalculation:
         """6000 Metals at 3000/turn = 2 turns."""
         design = MagicMock()
         design.design_id = "cruiser"
-        design.resource_cost = {"Metals": 6000}
+        design.construction_cost = {"metals": 6000}
 
         controller = self._make_controller_with_designs([design])
-        build_rate = {"Metals": 3000.0}
+        build_rate = {"metals": 3000.0}
         turns = controller._calculate_build_turns("cruiser", build_rate)
 
         assert turns == 2  # 6000 / 3000 = 2
@@ -452,22 +452,22 @@ class TestBuildTimeCalculation:
         """Zero-cost design returns 1 turn minimum."""
         design = MagicMock()
         design.design_id = "free_stuff"
-        design.resource_cost = {}
+        design.construction_cost = {}
 
         controller = self._make_controller_with_designs([design])
-        build_rate = {"Metals": 2000.0}
+        build_rate = {"metals": 2000.0}
         turns = controller._calculate_build_turns("free_stuff", build_rate)
 
         assert turns == 1
 
-    def test_calculate_build_turns_no_resource_cost_returns_1(self):
-        """Design with no resource_cost attribute returns 1 turn."""
+    def test_calculate_build_turns_no_construction_cost_returns_1(self):
+        """Design with no construction_cost attribute returns 1 turn."""
         design = MagicMock()
         design.design_id = "no_cost"
-        design.resource_cost = None
+        design.construction_cost = None
 
         controller = self._make_controller_with_designs([design])
-        build_rate = {"Metals": 2000.0}
+        build_rate = {"metals": 2000.0}
         turns = controller._calculate_build_turns("no_cost", build_rate)
 
         assert turns == 1
@@ -475,7 +475,7 @@ class TestBuildTimeCalculation:
     def test_calculate_build_turns_unknown_design_returns_1(self):
         """Unknown design ID returns 1 turn."""
         controller = self._make_controller_with_designs([])
-        build_rate = {"Metals": 2000.0}
+        build_rate = {"metals": 2000.0}
         turns = controller._calculate_build_turns("unknown", build_rate)
 
         assert turns == 1
@@ -484,15 +484,15 @@ class TestBuildTimeCalculation:
         """_build_cost_tracking creates required fields for dynamic engine."""
         design = MagicMock()
         design.design_id = "factory"
-        design.resource_cost = {"Metals": 4000, "Organics": 2000}
+        design.construction_cost = {"metals": 4000, "organics": 2000}
 
         controller = self._make_controller_with_designs([design])
         tracking = controller._build_cost_tracking("factory")
 
         # Dynamic engine uses total_cost and resources_consumed
         # Per-tick rates calculated dynamically from production_rates.json
-        assert tracking["total_cost"] == {"Metals": 4000, "Organics": 2000}
-        assert tracking["resources_consumed"] == {"Metals": 0.0, "Organics": 0.0}
+        assert tracking["total_cost"] == {"metals": 4000, "organics": 2000}
+        assert tracking["resources_consumed"] == {"metals": 0.0, "organics": 0.0}
 
     def test_add_to_queue_creates_cost_tracking(self):
         """Adding to queue creates required fields via command callback.
@@ -502,13 +502,13 @@ class TestBuildTimeCalculation:
         """
         design = MagicMock()
         design.design_id = "factory"
-        design.resource_cost = {"Metals": 4000}
+        design.construction_cost = {"metals": 4000}
 
         entity_registry = {}
         controller = self._make_controller_with_designs([design])
         controller._add_to_queue_callback = _make_add_callback(entity_registry)
 
-        source = _make_source(build_rate={"Metals": 2000.0}, entity_registry=entity_registry)
+        source = _make_source(build_rate={"metals": 2000.0}, entity_registry=entity_registry)
         controller.set_active_queue(source)
 
         controller.add_to_queue("factory", category="complex")
@@ -527,13 +527,13 @@ class TestBuildTimeCalculation:
         """
         design = MagicMock()
         design.design_id = "cruiser"
-        design.resource_cost = {"Metals": 9000}
+        design.construction_cost = {"metals": 9000}
 
         entity_registry = {}
         controller = self._make_controller_with_designs([design])
         controller._add_to_queue_callback = _make_add_callback(entity_registry)
 
-        source = _make_source(build_rate={"Metals": 3000.0}, entity_registry=entity_registry)
+        source = _make_source(build_rate={"metals": 3000.0}, entity_registry=entity_registry)
         controller.set_active_queue(source)
 
         controller.add_to_queue("cruiser", category="ship")
@@ -550,15 +550,15 @@ class TestBuildTimeCalculation:
         """
         design = MagicMock()
         design.design_id = "cruiser"
-        design.resource_cost = {"Metals": 6000}
+        design.construction_cost = {"metals": 6000}
 
         entity_registry = {}
         controller = self._make_controller_with_designs([design])
         # Inject callback with entity registry
         controller._add_to_queue_callback = _make_add_callback(entity_registry)
 
-        slow_source = _make_source(queue_id="slow", build_rate={"Metals": 2000.0}, entity_registry=entity_registry)
-        fast_source = _make_source(queue_id="fast", build_rate={"Metals": 3000.0}, entity_registry=entity_registry)
+        slow_source = _make_source(queue_id="slow", build_rate={"metals": 2000.0}, entity_registry=entity_registry)
+        fast_source = _make_source(queue_id="fast", build_rate={"metals": 3000.0}, entity_registry=entity_registry)
         controller.set_selected_queues([slow_source, fast_source])
 
         controller.add_to_queue("cruiser", category="ship")
@@ -577,7 +577,7 @@ class TestBuildTimeCalculation:
         """
         design = MagicMock()
         design.design_id = "factory"
-        design.resource_cost = {"Metals": 4000}
+        design.construction_cost = {"metals": 4000}
 
         entity_registry = {}
         build_context = MagicMock()
@@ -595,7 +595,7 @@ class TestBuildTimeCalculation:
         # Mock loader to return ship with construction_cost
         mock_loader = MagicMock()
         mock_ship = MagicMock()
-        mock_ship.construction_cost = {"Metals": 4000}
+        mock_ship.construction_cost = {"metals": 4000}
         mock_loader.load_ship_from_design_data.return_value = mock_ship
 
         controller = BuildQueueController(
@@ -814,7 +814,7 @@ class TestPlanetSelectionForFleetComplexes:
             hex_coord, galaxy, empire, [planet1], entity_registry=entity_registry
         )
 
-        source = _make_source(context_type="fleet", build_rate={"Metals": 2000.0}, entity_registry=entity_registry)
+        source = _make_source(context_type="fleet", build_rate={"metals": 2000.0}, entity_registry=entity_registry)
         source.context_type = "fleet"
         source.planet_id = None
         controller.set_active_queue(source)
@@ -845,7 +845,7 @@ class TestPlanetSelectionForFleetComplexes:
             hex_coord, galaxy, empire, [planet1], entity_registry=entity_registry
         )
 
-        source = _make_source(context_type="planet", build_rate={"Metals": 2000.0}, entity_registry=entity_registry, planet_id=10)
+        source = _make_source(context_type="planet", build_rate={"metals": 2000.0}, entity_registry=entity_registry, planet_id=10)
         source.context_type = "planet"
         controller.set_active_queue(source)
 
@@ -871,10 +871,10 @@ class TestPerResourceBuildRates:
         mock_library = MagicMock()
         mock_library.scan_designs.return_value = designs
 
-        # Build design_id -> resource_cost map for mocking
+        # Build design_id -> construction_cost map for mocking
         design_costs = {}
         for d in designs:
-            design_costs[d.design_id] = d.resource_cost
+            design_costs[d.design_id] = d.construction_cost
 
         def mock_load_design_data(design_id):
             if design_id in design_costs:
@@ -910,10 +910,10 @@ class TestPerResourceBuildRates:
         """5500 Metals at 3000/turn, 1000 Organics at 3000/turn → ~1.83 turns from Metals."""
         design = MagicMock()
         design.design_id = "cruiser"
-        design.resource_cost = {"Metals": 5500, "Organics": 1000}
+        design.construction_cost = {"metals": 5500, "organics": 1000}
 
         controller = self._make_controller_with_designs([design])
-        build_rate = {"Metals": 3000.0, "Organics": 3000.0}
+        build_rate = {"metals": 3000.0, "organics": 3000.0}
         turns = controller._calculate_build_turns("cruiser", build_rate)
 
         # 5500/3000 = 1.833..., 1000/3000 = 0.333... → max = 1.833...
@@ -923,10 +923,10 @@ class TestPerResourceBuildRates:
         """Metals 3000/turn, Exotics 1500/turn with 3000 of each → Exotics bottleneck."""
         design = MagicMock()
         design.design_id = "advanced_ship"
-        design.resource_cost = {"Metals": 3000, "Exotics": 3000}
+        design.construction_cost = {"metals": 3000, "exotics": 3000}
 
         controller = self._make_controller_with_designs([design])
-        build_rate = {"Metals": 3000.0, "Exotics": 1500.0}
+        build_rate = {"metals": 3000.0, "exotics": 1500.0}
         turns = controller._calculate_build_turns("advanced_ship", build_rate)
 
         # ceil(3000/3000) = 1, ceil(3000/1500) = 2 → max = 2
@@ -936,10 +936,10 @@ class TestPerResourceBuildRates:
         """Resource in cost but not in rates → only rated resources count."""
         design = MagicMock()
         design.design_id = "exotic_ship"
-        design.resource_cost = {"Metals": 2000, "Vapors": 1000}
+        design.construction_cost = {"metals": 2000, "vapors": 1000}
 
         controller = self._make_controller_with_designs([design])
-        build_rate = {"Metals": 3000.0}  # No Vapors rate
+        build_rate = {"metals": 3000.0}  # No Vapors rate
         turns = controller._calculate_build_turns("exotic_ship", build_rate)
 
         # Metals: 2000/3000 = 0.667, Vapors: not in rates (skipped) → max = 0.667
@@ -949,7 +949,7 @@ class TestPerResourceBuildRates:
         """Empty build_rate dict returns 1 turn."""
         design = MagicMock()
         design.design_id = "ship"
-        design.resource_cost = {"Metals": 5000}
+        design.construction_cost = {"metals": 5000}
 
         controller = self._make_controller_with_designs([design])
         turns = controller._calculate_build_turns("ship", {})
@@ -960,10 +960,10 @@ class TestPerResourceBuildRates:
         """Rate of 0 is skipped (no divide by zero)."""
         design = MagicMock()
         design.design_id = "ship"
-        design.resource_cost = {"Metals": 3000, "Organics": 1000}
+        design.construction_cost = {"metals": 3000, "organics": 1000}
 
         controller = self._make_controller_with_designs([design])
-        build_rate = {"Metals": 3000.0, "Organics": 0.0}
+        build_rate = {"metals": 3000.0, "organics": 0.0}
         turns = controller._calculate_build_turns("ship", build_rate)
 
         # Metals: ceil(3000/3000) = 1, Organics: rate 0 skipped → max = 1
@@ -976,13 +976,13 @@ class TestPerResourceBuildRates:
         """
         design = MagicMock()
         design.design_id = "cruiser"
-        design.resource_cost = {"Metals": 5500, "Organics": 1000}
+        design.construction_cost = {"metals": 5500, "organics": 1000}
 
         entity_registry = {}
         controller = self._make_controller_with_designs([design])
         controller._add_to_queue_callback = _make_add_callback(entity_registry)
 
-        source = _make_source(build_rate={"Metals": 3000.0, "Organics": 3000.0}, entity_registry=entity_registry)
+        source = _make_source(build_rate={"metals": 3000.0, "organics": 3000.0}, entity_registry=entity_registry)
         controller.set_active_queue(source)
 
         controller.add_to_queue("cruiser", category="ship")
@@ -998,7 +998,7 @@ class TestPerResourceBuildRates:
         """
         design = MagicMock()
         design.design_id = "cruiser"
-        design.resource_cost = {"Metals": 6000, "Exotics": 3000}
+        design.construction_cost = {"metals": 6000, "exotics": 3000}
 
         entity_registry = {}
         controller = self._make_controller_with_designs([design])
@@ -1007,13 +1007,13 @@ class TestPerResourceBuildRates:
         # Standard yard: all at 3000
         standard = _make_source(
             queue_id="standard",
-            build_rate={"Metals": 3000.0, "Exotics": 3000.0},
+            build_rate={"metals": 3000.0, "exotics": 3000.0},
             entity_registry=entity_registry,
         )
         # Advanced yard: Metals 3000, but Exotics 1500
         advanced = _make_source(
             queue_id="advanced",
-            build_rate={"Metals": 3000.0, "Exotics": 1500.0},
+            build_rate={"metals": 3000.0, "exotics": 1500.0},
             entity_registry=entity_registry,
         )
         controller.set_selected_queues([standard, advanced])

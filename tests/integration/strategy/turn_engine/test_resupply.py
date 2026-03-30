@@ -67,7 +67,7 @@ def _make_fuel_facility(
         is_operational=is_operational,
     )
     if fuel_level > 0:
-        facility.resource_levels = {"fuel": fuel_level}
+        facility.consumable_levels = {"fuel": fuel_level}
     return facility
 
 
@@ -153,7 +153,7 @@ class TestTurnProcessesFuelGeneration:
         engine._process_tick(1, [empire], MockGalaxy())
 
         # Fuel should have been generated (300/100 = 3.0 per tick)
-        assert facility.resource_levels.get("fuel", 0.0) == pytest.approx(3.0)
+        assert facility.consumable_levels.get("fuel", 0.0) == pytest.approx(3.0)
 
     def test_full_turn_accumulates_fuel(self):
         """Processing a full turn (100 ticks) generates full turn's fuel."""
@@ -170,7 +170,7 @@ class TestTurnProcessesFuelGeneration:
         engine.process_turn([empire], MockGalaxy())
 
         # Full turn: 300 fuel generated total
-        assert facility.resource_levels.get("fuel", 0.0) == pytest.approx(300.0)
+        assert facility.consumable_levels.get("fuel", 0.0) == pytest.approx(300.0)
 
 
 class TestTurnProcessesFleetResupply:

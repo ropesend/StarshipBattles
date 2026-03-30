@@ -34,7 +34,7 @@ def create_mock_ship_instance(
     owner_id=0,
     is_alive=True,
     is_derelict=False,
-    resource_levels=None,
+    consumable_levels=None,
     component_toggles=None,
     design_data=None,
     registries=None
@@ -54,8 +54,8 @@ def create_mock_ship_instance(
         is_alive=is_alive,
         is_derelict=is_derelict,
     )
-    if resource_levels:
-        ship.resource_levels = resource_levels.copy()
+    if consumable_levels:
+        ship.consumable_levels = consumable_levels.copy()
     if component_toggles:
         ship.component_toggles = component_toggles.copy()
     if design_data:

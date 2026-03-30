@@ -10,7 +10,7 @@ from tests.unit.strategy.mocks.mock_engines import (
     MockProductionEngine,
     MockOrderProcessor,
     MockConflictEngine,
-    MockResourceEngine,
+    MockConsumableEngine,
 )
 
 __all__ = [
@@ -18,5 +18,5 @@ __all__ = [
     'MockProductionEngine',
     'MockOrderProcessor',
     'MockConflictEngine',
-    'MockResourceEngine',
+    'MockConsumableEngine',
 ]

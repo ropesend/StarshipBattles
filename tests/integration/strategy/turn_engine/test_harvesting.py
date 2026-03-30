@@ -22,7 +22,7 @@ from .conftest import MockGalaxy
 # ===========================================================================
 
 def _make_harvester_facility(
-    resource_type="Metals",
+    resource_type="metals",
     base_harvest_rate=100.0,
     instance_id="harv-001",
 ):
@@ -73,7 +73,7 @@ def _make_planet_with_resources(
         planet_type=PlanetType.CONTINENTAL,
         owner_id=owner_id,
     )
-    planet.resources = resources or {}
+    planet.deposits = resources or {}
     planet.facilities = facilities or []
     return planet
 
@@ -132,9 +132,9 @@ class TestHarvestingIntegration:
         """Full E2E: facility harvests from planet into empire pool."""
         from game.strategy.engine.harvesting_engine import HarvestingEngine
 
-        facility = _make_harvester_facility("Metals", base_harvest_rate=100.0)
+        facility = _make_harvester_facility("metals", base_harvest_rate=100.0)
         planet = _make_planet_with_resources(
-            resources={"Metals": {"quantity": 5000, "quality": 0.8}},
+            resources={"metals": {"quantity": 5000, "quality": 0.8}},
             facilities=[facility],
         )
 
@@ -154,8 +154,8 @@ class TestHarvestingIntegration:
         engine.process_turn([empire], galaxy)
 
         # harvest = 100 * 0.8 = 80
-        assert empire.resource_pool.get("Metals", 0.0) == pytest.approx(80.0)
-        assert planet.resources["Metals"]["quantity"] == pytest.approx(4920.0)
+        assert empire.resource_pool.get("metals", 0.0) == pytest.approx(80.0)
+        assert planet.deposits["metals"]["quantity"] == pytest.approx(4920.0)
 
     def test_harvesting_before_production(self, fresh_registries):
         """Harvesting runs before production within each tick.
@@ -202,7 +202,7 @@ class TestHarvestingIntegration:
         """Empire storage limits are respected during harvesting."""
         from game.strategy.engine.harvesting_engine import HarvestingEngine
 
-        harvester = _make_harvester_facility("Metals", base_harvest_rate=100.0)
+        harvester = _make_harvester_facility("metals", base_harvest_rate=100.0)
         # Storage facility provides the 1000 cap
         storage = PlanetaryFacility(
             instance_id="store-001",
@@ -214,7 +214,7 @@ class TestHarvestingIntegration:
                         "id": "vault",
                         "abilities": {
                             "EmpireStorage": {
-                                "resource_type": "Metals",
+                                "resource_type": "metals",
                                 "capacity": 1000.0,
                             }
                         },
@@ -223,13 +223,13 @@ class TestHarvestingIntegration:
             },
         )
         planet = _make_planet_with_resources(
-            resources={"Metals": {"quantity": 5000, "quality": 1.0}},
+            resources={"metals": {"quantity": 5000, "quality": 1.0}},
             facilities=[storage, harvester],
         )
 
         empire = Empire(0, "Test Empire", (255, 255, 255))
         empire.add_colony(planet)
-        empire.resource_pool = {"Metals": 950.0}
+        empire.resource_pool = {"metals": 950.0}
 
         mocks = _make_mock_engines()
         harvesting = HarvestingEngine()
@@ -244,4 +244,4 @@ class TestHarvestingIntegration:
         engine.process_turn([empire], galaxy)
 
         # Cap at 1000; only 50 added from 100 harvest
-        assert empire.resource_pool["Metals"] == pytest.approx(1000.0)
+        assert empire.resource_pool["metals"] == pytest.approx(1000.0)

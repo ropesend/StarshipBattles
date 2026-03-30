@@ -14,19 +14,19 @@ from game.ui.screens.build_queue_helpers import calculate_queue_turn_spend
 
 # Resource key to column ID mapping
 _RESOURCE_RATE_COLUMNS = {
-    "Metals": "met_rate",
-    "Organics": "org_rate",
-    "Vapors": "vap_rate",
-    "Radioactives": "rad_rate",
-    "Exotics": "exo_rate",
+    "metals": "met_rate",
+    "organics": "org_rate",
+    "vapors": "vap_rate",
+    "radioactives": "rad_rate",
+    "exotics": "exo_rate",
 }
 
 _RESOURCE_REM_COLUMNS = {
-    "Metals": "met_rem",
-    "Organics": "org_rem",
-    "Vapors": "vap_rem",
-    "Radioactives": "rad_rem",
-    "Exotics": "exo_rem",
+    "metals": "met_rem",
+    "organics": "org_rem",
+    "vapors": "vap_rem",
+    "radioactives": "rad_rem",
+    "exotics": "exo_rem",
 }
 
 # Reverse mappings: column ID -> resource name

@@ -297,8 +297,8 @@ def get_resource_str(planet, resource_name):
     Returns:
         Formatted string like "100k (Q80)" or "-" if no resource
     """
-    if resource_name in planet.resources:
-        resource = planet.resources[resource_name]
+    if resource_name in planet.deposits:
+        resource = planet.deposits[resource_name]
         quantity = resource['quantity']
         quantity_str = format_compact_number(quantity)
 

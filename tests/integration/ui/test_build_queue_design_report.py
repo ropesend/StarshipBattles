@@ -111,7 +111,7 @@ class MockShip:
         # Construction cost
         self.construction_cost = {
             'Metal': 500,
-            'Organics': 100,
+            'organics': 100,
             'Rare': 50,
             'Synthetics': 200,
             'Volatiles': 150

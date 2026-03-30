@@ -107,7 +107,7 @@ Six layers with strict downward-only dependency flow:
 
 | Subpackage      | Description |
 |-----------------|-------------|
-| `data/`         | Domain entities (notable modules): Fleet, ShipInstance, Empire, Galaxy, Planet, Stars, Storm, Pathfinding, plus fleet delegates (`fleet_battle_adapter.py`, `fleet_capability_calculator.py`, `fleet_resource_aggregator.py`), ShipInstance delegates (`ship_instance_bridge.py`, `ship_instance_serializer.py`, `ship_resource_manager.py`, `ship_cargo_manager.py`, `ship_display_formatter.py`), and data-driven configs (`classification_config.py`, `resource_generation_config.py`, `star_generation_config.py`, `orbital_generation_config.py`) |
+| `data/`         | Domain entities (notable modules): Fleet, ShipInstance, Empire, Galaxy, Planet, Stars, Storm, Pathfinding, plus fleet delegates (`fleet_battle_adapter.py`, `fleet_capability_calculator.py`, `fleet_consumable_aggregator.py`), ShipInstance delegates (`ship_instance_bridge.py`, `ship_instance_serializer.py`, `ship_consumable_manager.py`, `ship_cargo_manager.py`, `ship_display_formatter.py`), and data-driven configs (`classification_config.py`, `resource_generation_config.py`, `star_generation_config.py`, `orbital_generation_config.py`) |
 | `engine/`       | Turn processing: TurnEngine, GameSession, GameConfig, GameInitializer, Commands, CommandHandlers, OrderProcessor, plus sub-engines (movement, conflict, harvesting, production + ProductionSpawner, population, economy, maintenance, resupply, action execution, planet action execution, planet energy, environmental hazards), and shared utilities (`production_math.py`, `construction_forecast.py`) |
 | `services/`     | ShipStatsCalculator, FleetSpeedCalculator, FleetNavigationService, ComponentInspector, DesignCostCalculator, CargoTransferService, AreaEffectManager, ActionTimeResolver, FleetCargoProjector |
 | `facade/`       | StrategySessionFacade (UI-to-engine communication) |
@@ -360,7 +360,7 @@ TurnEngine.process_turn() (game/strategy/engine/turn_engine.py)
        │  runs 100 sub-ticks, each executing phases in order:
        │  Phase 0:   HarvestingEngine (1/100th per tick)
        │  Phase 0a:  MaintenanceEngine (1/100th per tick, immediate scuttle)
-       │  Phase 0b:  ResourceManagementEngine (per-turn consumption)
+       │  Phase 0b:  ConsumableManagementEngine (per-turn consumption)
        │  Phase 0c:  ResupplyEngine (fuel generation at facilities)
        │  Phase 0d:  ResupplyEngine (fleet resupply from facilities)
        │  Phase 0e:  ProductionEngine (construction + mid-turn completion)

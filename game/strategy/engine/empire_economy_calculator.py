@@ -11,8 +11,8 @@ This is a read-only calculation - it doesn't modify any game state.
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple, TYPE_CHECKING
 
-# TODO: Phase 4 will replace with ResourceCatalog
-PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+# TODO: Replace with ResourceCatalog queries
+PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
 from game.core.patterns.layer_iterator import iter_components
 
 if TYPE_CHECKING:
@@ -69,7 +69,7 @@ class EmpireEconomyCalculator:
 
     Replicates formulas from:
     - HarvestingEngine: base_harvest_rate * planet_quality
-    - MaintenanceEngine: 5% of total resource_cost
+    - MaintenanceEngine: 5% of total construction_cost
     """
 
     # Use shared MAINTENANCE_RATE from maintenance_engine module
@@ -163,7 +163,7 @@ class EmpireEconomyCalculator:
             # (multiple harvesters draw from the same deposit)
             remaining_quantity: Dict[str, float] = {}
             for res in PLANET_RESOURCE_NAMES:
-                resource_data = colony.resources.get(res, {})
+                resource_data = colony.deposits.get(res, {})
                 remaining_quantity[res] = resource_data.get('quantity', 0.0)
 
             for facility in colony.facilities:
@@ -183,7 +183,7 @@ class EmpireEconomyCalculator:
                         continue
 
                     # Get planet quality for this resource
-                    resource_data = colony.resources.get(resource_type, {})
+                    resource_data = colony.deposits.get(resource_type, {})
                     quality = resource_data.get('quality', 0.0)
                     if quality <= 0:
                         continue
@@ -203,7 +203,7 @@ class EmpireEconomyCalculator:
     def _aggregate_maintenance(self, empire: 'Empire') -> Dict[str, float]:
         """Calculate total maintenance costs for facilities and ships.
 
-        Maintenance is 5% of the sum of all resource_cost values.
+        Maintenance is 5% of the sum of all construction_cost values.
 
         Args:
             empire: Empire with colonies and fleets.

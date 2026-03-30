@@ -12,8 +12,8 @@ Used by:
 
 from typing import Dict, List
 
-# TODO: Phase 4 will replace with ResourceCatalog
-PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+# TODO: Replace with ResourceCatalog queries
+PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
 from game.strategy.engine.production_math import find_limiting_resource_ticks
 
 

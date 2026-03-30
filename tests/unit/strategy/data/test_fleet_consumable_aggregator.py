@@ -1,7 +1,7 @@
 """
-Unit tests for FleetResourceAggregator.
+Unit tests for FleetConsumableAggregator.
 
-PROJ-119 Task 1.5: TCG-STR-005 - FleetResourceAggregator lacks atomic operation tests.
+PROJ-119 Task 1.5: TCG-STR-005 - FleetConsumableAggregator lacks atomic operation tests.
 Tests focus on atomic resource operations and cargo management.
 """
 
@@ -42,23 +42,23 @@ def mock_ship():
 
 @pytest.fixture
 def resource_aggregator(mock_fleet):
-    """Create a FleetResourceAggregator with mock fleet."""
-    from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
-    return FleetResourceAggregator(mock_fleet)
+    """Create a FleetConsumableAggregator with mock fleet."""
+    from game.strategy.data.fleet_consumable_aggregator import FleetConsumableAggregator
+    return FleetConsumableAggregator(mock_fleet)
 
 
 # =============================================================================
 # Test: Initialization
 # =============================================================================
 
-class TestFleetResourceAggregatorInit:
-    """Tests for FleetResourceAggregator initialization."""
+class TestFleetConsumableAggregatorInit:
+    """Tests for FleetConsumableAggregator initialization."""
 
     def test_aggregator_can_be_created(self, mock_fleet):
-        """FleetResourceAggregator can be instantiated."""
-        from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
+        """FleetConsumableAggregator can be instantiated."""
+        from game.strategy.data.fleet_consumable_aggregator import FleetConsumableAggregator
 
-        aggregator = FleetResourceAggregator(mock_fleet)
+        aggregator = FleetConsumableAggregator(mock_fleet)
 
         assert aggregator is not None
         assert aggregator._fleet is mock_fleet
@@ -451,8 +451,8 @@ class TestEmptyFleetEdgeCases:
     @pytest.fixture
     def empty_fleet_aggregator(self, empty_fleet):
         """Create aggregator with empty fleet."""
-        from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
-        return FleetResourceAggregator(empty_fleet)
+        from game.strategy.data.fleet_consumable_aggregator import FleetConsumableAggregator
+        return FleetConsumableAggregator(empty_fleet)
 
     def test_get_warp_resource_costs_empty_fleet(self, empty_fleet_aggregator):
         """Empty fleet has no warp costs."""
@@ -520,8 +520,8 @@ class TestMultipleResourceTypeEdgeCases:
     @pytest.fixture
     def multi_resource_aggregator(self, multi_resource_fleet):
         """Create aggregator with multi-resource fleet."""
-        from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
-        return FleetResourceAggregator(multi_resource_fleet)
+        from game.strategy.data.fleet_consumable_aggregator import FleetConsumableAggregator
+        return FleetConsumableAggregator(multi_resource_fleet)
 
     def test_has_movement_one_resource_insufficient(self, multi_resource_aggregator, multi_resource_fleet):
         """Returns False when any resource is insufficient."""
@@ -627,8 +627,8 @@ class TestFuelEnduranceEdgeCases:
     @pytest.fixture
     def endurance_aggregator(self, endurance_fleet):
         """Create aggregator for endurance tests."""
-        from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
-        return FleetResourceAggregator(endurance_fleet)
+        from game.strategy.data.fleet_consumable_aggregator import FleetConsumableAggregator
+        return FleetConsumableAggregator(endurance_fleet)
 
     def test_fuel_endurance_zero_cost_ship_skipped(self, endurance_aggregator, endurance_fleet):
         """Ships with 0 fuel cost don't affect endurance."""
@@ -842,8 +842,8 @@ class TestCargoDistributionEdgeCases:
     @pytest.fixture
     def cargo_aggregator(self, cargo_fleet):
         """Create aggregator for cargo tests."""
-        from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
-        return FleetResourceAggregator(cargo_fleet)
+        from game.strategy.data.fleet_consumable_aggregator import FleetConsumableAggregator
+        return FleetConsumableAggregator(cargo_fleet)
 
     def test_load_cargo_partial_capacity_multiple_ships(self, cargo_aggregator, cargo_fleet):
         """Load cargo distributes remaining to next ship."""

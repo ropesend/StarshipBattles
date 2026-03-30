@@ -288,7 +288,7 @@ class TestColonizeValidatorColonyPods:
         planet.owner_id = None
         planet.location = HexCoord(0, 0)
         planet.planet_type = MockPlanetType.ICE_DWARF
-        planet.resources = {}
+        planet.deposits = {}
         planet.id = 1
         planet.populations = []
         planet.max_population = 1000
@@ -316,7 +316,7 @@ class TestColonizeValidatorColonyPods:
         planet.owner_id = None
         planet.location = HexCoord(0, 0)
         planet.planet_type = MockPlanetType.CONTINENTAL
-        planet.resources = {}
+        planet.deposits = {}
         planet.id = 2
         planet.populations = []
         planet.max_population = 1000
@@ -779,7 +779,7 @@ class TestColonizeValidatorAnyPlanetPods:
         planet.owner_id = None
         planet.location = HexCoord(0, 0)
         planet.planet_type = MockPlanetType[planet_type_name]
-        planet.resources = {}
+        planet.deposits = {}
         # PROJ-193: Required IPlanet properties
         planet.id = 1
         planet.populations = []
@@ -945,7 +945,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
         planet.owner_id = None
         planet.location = HexCoord(0, 0)
         planet.planet_type = MockPlanetType[planet_type_name]
-        planet.resources = {}
+        planet.deposits = {}
         # PROJ-193: Required IPlanet properties
         planet.id = 1
         planet.populations = []

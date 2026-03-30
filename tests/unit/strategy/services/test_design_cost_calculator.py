@@ -54,7 +54,7 @@ class TestCalculateTotalCost:
         # Should have some cost from the hull component
         assert isinstance(result, dict)
         # The frigate hull should have Metals cost
-        assert "Metals" in result
+        assert "metals" in result
 
     def test_zero_values_stripped(self, fresh_registries):
         """Zero-value costs are not included in result."""
@@ -156,7 +156,7 @@ class TestRegistryResolution:
         # Real components from registry should have costs
         assert result, "Design with registry components should have costs"
         # Should include Metals at minimum (from hull)
-        assert "Metals" in result
+        assert "metals" in result
 
     def test_inline_resource_cost_takes_priority(self, fresh_registries):
         """Inline resource_cost on component entries is used first.
@@ -188,5 +188,5 @@ class TestRegistryResolution:
         }
         result = DesignCostCalculator.calculate_total_cost(design_data, fresh_registries)
         # Ship loading resolves cost from registry
-        assert "Metals" in result
-        assert result["Metals"] > 0
+        assert "metals" in result
+        assert result["metals"] > 0

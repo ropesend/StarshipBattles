@@ -275,9 +275,9 @@ Components are defined in a top-level `"components"` array. Each entry has:
         "CrewRequired": "=ceil(5 * sqrt(ship_class_mass / 1000))"
     },
     "major_classification": "Crewsupport",
-    "resource_cost": {
-        "Metals": 80,
-        "Organics": 20
+    "construction_cost": {
+        "metals": 80,
+        "organics": 20
     }
 }
 ```

@@ -254,7 +254,7 @@ class GameInitializer:
         cfg = get_resource_generation_config()
         floor = cfg.homeworld_quality_floor
 
-        for resource_name, resource_data in planet.resources.items():
+        for resource_name, resource_data in planet.deposits.items():
             if resource_data.get('quality', 0.0) < floor:
                 resource_data['quality'] = floor
 

@@ -28,17 +28,17 @@ class TestProductionRatesJson:
 
     def test_planetary_yard_has_all_resources(self, production_rates: dict) -> None:
         """Verify planetary_yard has all 5 resource types."""
-        expected_resources = {"Metals", "Organics", "Radioactives", "Vapors", "Exotics"}
+        expected_resources = {"metals", "organics", "radioactives", "vapors", "exotics"}
         assert set(production_rates["planetary_yard"].keys()) == expected_resources
 
     def test_space_shipyard_has_all_resources(self, production_rates: dict) -> None:
         """Verify space_shipyard has all 5 resource types."""
-        expected_resources = {"Metals", "Organics", "Radioactives", "Vapors", "Exotics"}
+        expected_resources = {"metals", "organics", "radioactives", "vapors", "exotics"}
         assert set(production_rates["space_shipyard"].keys()) == expected_resources
 
     def test_fleet_space_yard_has_all_resources(self, production_rates: dict) -> None:
         """Verify fleet_space_yard has all 5 resource types."""
-        expected_resources = {"Metals", "Organics", "Radioactives", "Vapors", "Exotics"}
+        expected_resources = {"metals", "organics", "radioactives", "vapors", "exotics"}
         assert set(production_rates["fleet_space_yard"].keys()) == expected_resources
 
     def test_planetary_yard_default_rate_is_2000(self, production_rates: dict) -> None:

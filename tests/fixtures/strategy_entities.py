@@ -136,7 +136,7 @@ def create_test_facility(**overrides) -> PlanetaryFacility:
         },
         is_operational=True,
         construction_queue=[],
-        resource_levels={"fuel": 50.0, "energy": 100.0},
+        consumable_levels={"fuel": 50.0, "energy": 100.0},
     )
     defaults.update(overrides)
     return PlanetaryFacility(**defaults)
@@ -166,7 +166,7 @@ def create_test_planet(
         planet_type=PlanetType.CONTINENTAL,
         orbit_parent_name="TestStar",
         owner_id=0,
-        resources={"minerals": {"amount": 500, "quality": 0.8}},
+        deposits={"minerals": {"amount": 500, "quality": 0.8}},
         id=1,
         image_id="planet_continental_01",
         image_rotation=45.0,
@@ -312,7 +312,7 @@ def create_test_ship_instance(
         },
         current_hp=180,
         component_damage={"laser_1": 5},
-        resource_levels={"fuel": 80.0, "energy": 50.0},
+        consumable_levels={"fuel": 80.0, "energy": 50.0},
         component_toggles={"shield_1": True, "cloak_1": False},
         cargo_contents={"minerals": 10},
         is_alive=True,
@@ -498,7 +498,7 @@ def create_test_design_metadata(**overrides) -> DesignMetadata:
         vehicle_type="Ship",
         mass=100.0,
         combat_power=25.0,
-        resource_cost={"minerals": 50, "energy": 30},
+        construction_cost={"minerals": 50, "energy": 30},
         created_date="2026-01-01T00:00:00",
         last_modified="2026-01-15T00:00:00",
         is_obsolete=False,

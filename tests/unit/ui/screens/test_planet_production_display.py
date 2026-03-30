@@ -22,7 +22,7 @@ class MockFacility:
 class MockPlanet:
     """Minimal planet for testing production calculation."""
     owner_id: int = 0
-    resources: Dict[str, dict] = field(default_factory=dict)
+    deposits: Dict[str, dict] = field(default_factory=dict)
     facilities: List = field(default_factory=list)
 
 
@@ -52,7 +52,7 @@ class TestComputePlanetProduction:
                     'id': 'test_harvester',
                     'abilities': {
                         'ResourceHarvester': {
-                            'resource_type': 'Metals',
+                            'resource_type': 'metals',
                             'base_harvest_rate': 100.0
                         }
                     }
@@ -61,12 +61,12 @@ class TestComputePlanetProduction:
         })
         planet = MockPlanet(
             owner_id=0,
-            resources={'Metals': {'quantity': 5000, 'quality': 0.8}},
+            deposits={'metals': {'quantity': 5000, 'quality': 0.8}},
             facilities=[facility]
         )
 
         result = formatter.compute_planet_production(planet)
-        assert result['Metals'] == pytest.approx(80.0)  # 100 * 0.8
+        assert result['metals'] == pytest.approx(80.0)  # 100 * 0.8
 
     def test_registry_lookup_finds_harvester(self, formatter, mock_registries):
         """Components looked up via registry detect harvester abilities (BUG-78 fix)."""
@@ -81,7 +81,7 @@ class TestComputePlanetProduction:
         })
         planet = MockPlanet(
             owner_id=0,
-            resources={'Metals': {'quantity': 5000, 'quality': 0.8}},
+            deposits={'metals': {'quantity': 5000, 'quality': 0.8}},
             facilities=[facility]
         )
 
@@ -89,7 +89,7 @@ class TestComputePlanetProduction:
         mock_comp_def = MagicMock()
         mock_comp_def.abilities = {
             'ResourceHarvester': {
-                'resource_type': 'Metals',
+                'resource_type': 'metals',
                 'base_harvest_rate': 100.0
             }
         }
@@ -97,8 +97,8 @@ class TestComputePlanetProduction:
 
         result = formatter.compute_planet_production(planet)
 
-        assert 'Metals' in result
-        assert result['Metals'] == pytest.approx(80.0)  # 100 * 0.8
+        assert 'metals' in result
+        assert result['metals'] == pytest.approx(80.0)  # 100 * 0.8
 
     def test_non_operational_facility_skipped(self, formatter):
         """Non-operational facilities are excluded from production."""
@@ -109,7 +109,7 @@ class TestComputePlanetProduction:
                         'id': 'test_harvester',
                         'abilities': {
                             'ResourceHarvester': {
-                                'resource_type': 'Metals',
+                                'resource_type': 'metals',
                                 'base_harvest_rate': 100.0
                             }
                         }
@@ -120,7 +120,7 @@ class TestComputePlanetProduction:
         )
         planet = MockPlanet(
             owner_id=0,
-            resources={'Metals': {'quantity': 5000, 'quality': 0.8}},
+            deposits={'metals': {'quantity': 5000, 'quality': 0.8}},
             facilities=[facility]
         )
 
@@ -135,7 +135,7 @@ class TestComputePlanetProduction:
                     'id': 'test_harvester',
                     'abilities': {
                         'ResourceHarvester': {
-                            'resource_type': 'Metals',
+                            'resource_type': 'metals',
                             'base_harvest_rate': 100.0
                         }
                     }
@@ -144,10 +144,10 @@ class TestComputePlanetProduction:
         })
         planet = MockPlanet(
             owner_id=0,
-            resources={'Metals': {'quantity': 5000, 'quality': 0.0}},
+            deposits={'metals': {'quantity': 5000, 'quality': 0.0}},
             facilities=[facility]
         )
 
         result = formatter.compute_planet_production(planet)
         # quality=0 means rate*0 = 0, so Metals shouldn't appear (base_rate * 0 = 0 is not > 0)
-        assert result.get('Metals', 0.0) == pytest.approx(0.0)
+        assert result.get('metals', 0.0) == pytest.approx(0.0)

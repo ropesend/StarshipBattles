@@ -10,7 +10,7 @@ class TestShipDisplayFormatter:
     def mock_ship_instance(self):
         """Create a mock ShipInstance for testing.
 
-        PROJ-95: resource_levels always contains actual values.
+        PROJ-95: consumable_levels always contains actual values.
         """
         ship = Mock()
         ship.design_data = {'name': 'TestShip'}
@@ -20,7 +20,7 @@ class TestShipDisplayFormatter:
         ship.is_derelict = False
         ship.current_hp = None
         # Resources always stored with actual values
-        ship.resource_levels = {
+        ship.consumable_levels = {
             'fuel': 500,
             'energy': 200,
             'ammo': 100,
@@ -119,7 +119,7 @@ class TestShipDisplayFormatter:
     def test_get_resource_display_partial(self, mock_ship_instance):
         """Test get_resource_display with partial resources."""
         from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
-        mock_ship_instance.resource_levels = {'fuel': 250}
+        mock_ship_instance.consumable_levels = {'fuel': 250}
         formatter = ShipDisplayFormatter(mock_ship_instance)
 
         assert formatter.get_resource_display('fuel') == "250/500"
@@ -145,7 +145,7 @@ class TestShipDisplayFormatter:
     def test_get_resource_percentage_partial(self, mock_ship_instance):
         """Test get_resource_percentage with partial resources."""
         from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
-        mock_ship_instance.resource_levels = {'fuel': 250}
+        mock_ship_instance.consumable_levels = {'fuel': 250}
         formatter = ShipDisplayFormatter(mock_ship_instance)
 
         assert formatter.get_resource_percentage('fuel') == 0.5
@@ -153,7 +153,7 @@ class TestShipDisplayFormatter:
     def test_get_resource_percentage_empty(self, mock_ship_instance):
         """Test get_resource_percentage with empty resources."""
         from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
-        mock_ship_instance.resource_levels = {'fuel': 0}
+        mock_ship_instance.consumable_levels = {'fuel': 0}
         formatter = ShipDisplayFormatter(mock_ship_instance)
 
         assert formatter.get_resource_percentage('fuel') == 0.0
@@ -161,7 +161,7 @@ class TestShipDisplayFormatter:
     def test_get_resource_percentage_zero_max(self, mock_ship_instance):
         """Test get_resource_percentage with zero max capacity."""
         from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
-        mock_ship_instance.resource_levels = {'fuel': 100}
+        mock_ship_instance.consumable_levels = {'fuel': 100}
         mock_ship_instance.get_calculated_stats = Mock(return_value={
             'max_hp': 100,
             'resource_storage': {'fuel': 0}
@@ -174,7 +174,7 @@ class TestShipDisplayFormatter:
     def test_get_resource_percentage_negative_max(self, mock_ship_instance):
         """Test get_resource_percentage with negative max capacity returns 0."""
         from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
-        mock_ship_instance.resource_levels = {'fuel': 100}
+        mock_ship_instance.consumable_levels = {'fuel': 100}
         mock_ship_instance.get_calculated_stats = Mock(return_value={
             'max_hp': 100,
             'resource_storage': {'fuel': -10}
@@ -185,9 +185,9 @@ class TestShipDisplayFormatter:
         assert formatter.get_resource_percentage('fuel') == 0.0
 
     def test_get_resource_percentage_nonexistent_resource(self, mock_ship_instance):
-        """Test get_resource_percentage for resource not in resource_levels."""
+        """Test get_resource_percentage for resource not in consumable_levels."""
         from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
-        mock_ship_instance.resource_levels = {}  # Empty
+        mock_ship_instance.consumable_levels = {}  # Empty
         formatter = ShipDisplayFormatter(mock_ship_instance)
 
         # Resource not tracked returns 0.0

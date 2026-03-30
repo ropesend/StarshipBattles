@@ -21,8 +21,8 @@ if TYPE_CHECKING:
 from game.strategy.services.component_inspector import get_component_abilities
 from game.ui.panels.strategy_widgets import AtmosphereGraph
 from game.ui.panels.build_queue_portraits import RESOURCE_PORTRAIT_FILES, RESOURCE_FALLBACK_COLORS
-# TODO: Phase 4 will replace with ResourceCatalog
-PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+# TODO: Replace with ResourceCatalog queries
+PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
 from game.ui.colors import (
     PLANET_TERRESTRIAL, PLANET_GAS_GIANT, PLANET_ICE, PLANET_ROCKY, PLANET_OCEANIC,
     TEXT_DIM, WHITE, TEXT_LIGHT
@@ -337,7 +337,7 @@ class PlanetReportPanel:
             self._resource_grid_items.append(label)
 
         # Resource columns
-        planet_resources = self.planet.resources or {}
+        planet_resources = self.planet.deposits or {}
 
         for i, resource_name in enumerate(PLANET_RESOURCE_NAMES):
             col_x = label_col_width + 10 + i * col_w
@@ -485,7 +485,7 @@ def compute_planet_production(
                     res_type = harvester.get('resource_type', '')
                     base_rate = harvester.get('base_harvest_rate', 0.0)
                     if res_type and base_rate > 0:
-                        quality = planet.resources.get(res_type, {}).get('quality', 0.0)
+                        quality = planet.deposits.get(res_type, {}).get('quality', 0.0)
                         rates[res_type] = rates.get(res_type, 0.0) + base_rate * quality
     return rates
 
