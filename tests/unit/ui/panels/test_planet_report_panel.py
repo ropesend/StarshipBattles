@@ -24,7 +24,7 @@ def _make_mock_planet():
         'Ar': 900,
         'CO2': 40
     }
-    planet.resources = {
+    planet.deposits = {
         'minerals': {'quantity': 5000, 'quality': 0.8},
         'metals': {'quantity': 3000, 'quality': 0.6},
         'organics': {'quantity': 2000, 'quality': 0.9},

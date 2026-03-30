@@ -30,7 +30,7 @@ def _make_source(queue_id="planet_1_base", display_name="Alpha - Base",
                  build_rate=None) -> BuildQueueSource:
     """Create a BuildQueueSource for testing."""
     if build_rate is None:
-        build_rate = {"Metals": 2000.0, "Organics": 2000.0}
+        build_rate = {"metals": 2000.0, "organics": 2000.0}
     return BuildQueueSource(
         queue_id=queue_id,
         display_name=display_name,

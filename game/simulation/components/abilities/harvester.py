@@ -50,7 +50,7 @@ class EmpireStorageAbility(Ability):
     Multiple storage facilities stack additively.
 
     Data fields:
-        resource_type: Resource identifier (e.g. "Metals", "Organics")
+        resource_type: Resource identifier (e.g. "metals", "organics")
         capacity: Base storage capacity units
     """
 

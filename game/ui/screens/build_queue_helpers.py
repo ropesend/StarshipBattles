@@ -3,25 +3,25 @@ Build Queue Helpers - Pure formatting functions for build queue display.
 
 Extracted from BuildQueueScreen (PROJ-86 Phase 8).
 """
-# TODO: Phase 4 will replace with ResourceCatalog
-PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+# TODO: Replace with ResourceCatalog queries
+PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
 
 # Resource abbreviations for compact UI display
 RESOURCE_ABBREVS = {
-    "Metals": "Met",
-    "Organics": "Org",
-    "Vapors": "Vap",
-    "Radioactives": "Rad",
-    "Exotics": "Exo",
+    "metals": "Met",
+    "organics": "Org",
+    "vapors": "Vap",
+    "radioactives": "Rad",
+    "exotics": "Exo",
 }
 
 # Short abbreviations for very compact displays (e.g., cost strings)
 RESOURCE_ABBREVS_SHORT = {
-    "Metals": "M",
-    "Organics": "O",
-    "Vapors": "V",
-    "Radioactives": "R",
-    "Exotics": "E",
+    "metals": "M",
+    "organics": "O",
+    "vapors": "V",
+    "radioactives": "R",
+    "exotics": "E",
 }
 
 

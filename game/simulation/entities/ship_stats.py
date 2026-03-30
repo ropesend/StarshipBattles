@@ -103,7 +103,8 @@ class ShipStatsCalculator:
 
         # Resource Costs Aggregation
         ship.construction_cost = {}
-        PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+        # TODO: Replace with ResourceCatalog queries
+        PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
         for res in PLANET_RESOURCE_NAMES:
             ship.construction_cost[res] = 0
             

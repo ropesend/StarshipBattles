@@ -32,7 +32,7 @@ class TestFacadeColonyRetrieval(unittest.TestCase):
         planet.radius_hexes = 1
         planet.construction_queue = []
         planet.facilities = {}
-        planet.resources = {}
+        planet.deposits = {}
         
         system.planets = [planet]
         
@@ -66,7 +66,7 @@ class TestFacadeColonyRetrieval(unittest.TestCase):
         planet.radius_hexes = 1
         planet.construction_queue = []
         planet.facilities = {}
-        planet.resources = {}
+        planet.deposits = {}
 
         system.planets = [planet]
         

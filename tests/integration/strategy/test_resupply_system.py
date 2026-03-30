@@ -65,7 +65,7 @@ def _make_facility(
         is_operational=is_operational,
     )
     if fuel_level > 0:
-        facility.resource_levels = {"fuel": fuel_level}
+        facility.consumable_levels = {"fuel": fuel_level}
     return facility
 
 
@@ -204,7 +204,7 @@ class TestCompleteResupplyFlow:
             engine.process_turn([empire], galaxy)
 
         # 3 turns × 200 fuel/turn = 600 fuel accumulated
-        assert facility.resource_levels.get("fuel", 0) == pytest.approx(600.0)
+        assert facility.consumable_levels.get("fuel", 0) == pytest.approx(600.0)
 
     def test_fuel_capped_at_storage_capacity(self):
         """Fuel does not exceed facility storage capacity."""
@@ -225,7 +225,7 @@ class TestCompleteResupplyFlow:
             engine.process_turn([empire], galaxy)
 
         # Fuel should be capped at 500 (tank max)
-        assert facility.resource_levels.get("fuel", 0) == pytest.approx(500.0)
+        assert facility.consumable_levels.get("fuel", 0) == pytest.approx(500.0)
 
     def test_non_operational_facility_no_generation(self):
         """Non-operational facilities produce no fuel."""
@@ -241,7 +241,7 @@ class TestCompleteResupplyFlow:
         galaxy = MockGalaxy()
         engine.process_turn([empire], galaxy)
 
-        assert facility.resource_levels.get("fuel", 0) == pytest.approx(0.0)
+        assert facility.consumable_levels.get("fuel", 0) == pytest.approx(0.0)
 
 
 # ===========================================================================

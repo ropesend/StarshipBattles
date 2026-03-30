@@ -1,10 +1,10 @@
-"""Turn engine maintenance integration tests - cost deduction and scuttling.
+"""Turn engine maintenance integration tests - cost deduction and disabling.
 
 PROJ-75 Phase 5: Integration tests for MaintenanceEngine wired into TurnEngine.
 PROJ-161: Updated for per-tick via process_maintenance_tick() (100 times per turn).
 
 Tests verify that process_maintenance_tick() is called during process_turn(),
-and that maintenance costs flow correctly and scuttling works end-to-end.
+and that maintenance costs flow correctly and disabling works end-to-end.
 """
 import pytest
 from unittest.mock import MagicMock
@@ -20,7 +20,7 @@ from tests.unit.strategy.mocks.mock_engines import (
     MockProductionEngine,
     MockOrderProcessor,
     MockConflictEngine,
-    MockResourceEngine,
+    MockConsumableEngine,
     MockMaintenanceEngine,
 )
 
@@ -59,7 +59,7 @@ def _make_empire(resources=None, empire_id=0):
 
 def _make_facility(resource_cost=None, name="Test Facility", instance_id="fac_1"):
     """Create a facility with given resource costs."""
-    cost = resource_cost or {"Metals": 1000}
+    cost = resource_cost or {"metals": 1000}
     return PlanetaryFacility(
         instance_id=instance_id,
         design_id="test_complex",
@@ -95,7 +95,7 @@ def _make_fully_mocked_engine(registries, maintenance_engine=None):
         production_engine=MockProductionEngine(),
         order_processor=MockOrderProcessor(),
         conflict_engine=MockConflictEngine(),
-        resource_engine=MockResourceEngine(),
+        resource_engine=MockConsumableEngine(),
         harvesting_engine=_MockHarvestingEngine(),
         population_engine=_MockPopulationEngine(),
         maintenance_engine=mock_maintenance,
@@ -111,7 +111,7 @@ def _make_engine_with_real_maintenance(registries):
         production_engine=MockProductionEngine(),
         order_processor=MockOrderProcessor(),
         conflict_engine=MockConflictEngine(),
-        resource_engine=MockResourceEngine(),
+        resource_engine=MockConsumableEngine(),
         harvesting_engine=_MockHarvestingEngine(),
         population_engine=_MockPopulationEngine(),
         # maintenance_engine left as None -> lazily creates real one
@@ -172,7 +172,7 @@ class TestMaintenanceTurnEngineIntegration:
             production_engine=MockProductionEngine(),
             order_processor=MockOrderProcessor(),
             conflict_engine=MockConflictEngine(),
-            resource_engine=MockResourceEngine(),
+            resource_engine=MockConsumableEngine(),
             harvesting_engine=mock_harvesting,
             population_engine=_MockPopulationEngine(),
             maintenance_engine=mock_maintenance,
@@ -196,26 +196,28 @@ class TestMaintenanceTurnEngineIntegration:
     def test_real_maintenance_deducts_facility_costs(self, fresh_registries):
         """Real maintenance engine deducts costs when wired into TurnEngine."""
         engine = _make_engine_with_real_maintenance(fresh_registries)
-        empire = _make_empire({"Metals": 1000.0})
-        facility = _make_facility(resource_cost={"Metals": 200})  # 5% = 10
+        empire = _make_empire({"metals": 1000.0})
+        facility = _make_facility(resource_cost={"metals": 200})  # 5% = 10
         colony = _make_colony(facilities=[facility])
         empire.colonies = [colony]
 
         engine.process_turn([empire], MagicMock())
 
-        assert empire.resource_pool["Metals"] == pytest.approx(990.0)
+        assert empire.resource_pool["metals"] == pytest.approx(990.0)
 
-    def test_real_maintenance_scuttles_facility(self, fresh_registries):
-        """Real maintenance engine scuttles facility when no resources."""
+    def test_real_maintenance_disables_facility(self, fresh_registries):
+        """Real maintenance engine disables facility when no resources."""
         engine = _make_engine_with_real_maintenance(fresh_registries)
-        empire = _make_empire({"Metals": 0.0})
-        facility = _make_facility(resource_cost={"Metals": 200})
+        empire = _make_empire({"metals": 0.0})
+        facility = _make_facility(resource_cost={"metals": 200})
         colony = _make_colony(facilities=[facility])
         empire.colonies = [colony]
 
         engine.process_turn([empire], MagicMock())
 
-        assert len(colony.facilities) == 0
+        # Facility remains in list but is disabled
+        assert len(colony.facilities) == 1
+        assert facility.is_operational is False
 
     def test_maintenance_engine_property_creates_default(self, fresh_registries):
         """TurnEngine.maintenance_engine lazily creates MaintenanceEngine."""
@@ -225,7 +227,7 @@ class TestMaintenanceTurnEngineIntegration:
             production_engine=MockProductionEngine(),
             order_processor=MockOrderProcessor(),
             conflict_engine=MockConflictEngine(),
-            resource_engine=MockResourceEngine(),
+            resource_engine=MockConsumableEngine(),
         )
         from game.strategy.engine.maintenance_engine import MaintenanceEngine
         assert isinstance(engine.maintenance_engine, MaintenanceEngine)
@@ -239,7 +241,7 @@ class TestMaintenanceTurnEngineIntegration:
             production_engine=MockProductionEngine(),
             order_processor=MockOrderProcessor(),
             conflict_engine=MockConflictEngine(),
-            resource_engine=MockResourceEngine(),
+            resource_engine=MockConsumableEngine(),
             maintenance_engine=mock_maintenance,
         )
         assert engine.maintenance_engine is mock_maintenance

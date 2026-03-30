@@ -19,7 +19,7 @@ references it:
 - A resource referenced in `astrophysics.json` planet affinities can appear in planet deposits
 - A resource referenced in component `ResourceStorage` abilities can be stored on ships
 - A resource referenced in component `ResourceConsumption` abilities can be consumed in combat/movement
-- A resource referenced in design `resource_cost` fields is required for construction
+- A resource referenced in design `construction_cost` fields is required for construction
 
 This means a modder can create a resource that is both mineable from planets AND consumed
 by ship engines, with no code changes.
@@ -120,7 +120,7 @@ ResourceCatalog (loaded once at startup)
        |   into empire resource pool
        |
        +-- Construction: ProductionEngine consumes from empire pool
-       |   based on design resource_cost
+       |   based on design construction_cost
        |
        +-- Ship Initialization: ResourceStorage abilities determine
        |   what consumables a ship carries
@@ -128,9 +128,17 @@ ResourceCatalog (loaded once at startup)
        +-- Combat: ResourceConsumption/ResourceGeneration abilities
        |   consume and regenerate consumables per tick
        |
-       +-- Strategic Movement: FleetResourceAggregator tracks per-hex
+       +-- Strategic Movement: FleetConsumableAggregator tracks per-hex
            and warp resource costs across fleet ships
 ```
+
+## Maintenance Behavior
+
+When an empire cannot afford maintenance costs for a facility or ship, the entity
+is **disabled** (`is_operational = False`), not destroyed. Disabled entities:
+- Do not pay maintenance costs
+- Do not harvest resources or perform production
+- Remain in the colony/fleet and can be re-enabled when resources are available
 
 ## Migration Status
 
@@ -149,8 +157,8 @@ To add a new resource type:
 1. Add an entry to `data/resources.json` with a unique `id`
 2. If the resource should appear on planets: add affinity entries to
    `data/astrophysics.json` under `planet_type_affinities`
-3. If the resource is a construction material: add it to component
-   `resource_cost` fields in `data/components.json`
+3. If the resource is a construction material: add it to the design's
+   `construction_cost` field (calculated from component `resource_cost` in JSON)
 4. If ships should store/consume/generate it: add `ResourceStorage`,
    `ResourceConsumption`, or `ResourceGeneration` abilities to components
 5. No Python code changes are required

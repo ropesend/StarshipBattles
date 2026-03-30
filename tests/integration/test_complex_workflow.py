@@ -37,7 +37,7 @@ def test_savegame_dir():
                         "position": [0, 0],
                         "abilities": {
                             "ResourceHarvester": {
-                                "resource_type": "Metals",
+                                "resource_type": "metals",
                                 "base_harvest_rate": 10.0
                             }
                         }
@@ -99,9 +99,9 @@ def empire_with_colony(test_savegame_dir):
     empire = Empire(1, "Test Empire", (255, 0, 0))
     # Give empire starting resources for production
     empire.resource_pool = {
-        "Metals": 100000.0,
-        "Organics": 100000.0,
-        "Radioactives": 100000.0,
+        "metals": 100000.0,
+        "organics": 100000.0,
+        "radioactives": 100000.0,
         "Energy": 100000.0
     }
 
@@ -197,8 +197,8 @@ def test_full_build_workflow(empire_with_colony, fresh_registries):
         "design_id": "mining_complex_mk1",
         "type": "complex",
         "turns_remaining": 2,
-        "total_cost": {"Metals": 4000.0},
-        "resources_consumed": {"Metals": 0.0}
+        "total_cost": {"metals": 4000.0},
+        "resources_consumed": {"metals": 0.0}
     }
     planet.construction_queue.append(queue_item)
     assert len(planet.construction_queue) == 1
@@ -208,7 +208,7 @@ def test_full_build_workflow(empire_with_colony, fresh_registries):
     assert len(planet.construction_queue) == 1
     item = planet.construction_queue[0]
     # After 100 ticks at 20/tick = 2000 Metals consumed
-    assert item["resources_consumed"]["Metals"] > 0
+    assert item["resources_consumed"]["metals"] > 0
     assert len(planet.facilities) == 0  # Not complete yet
 
     # Process turn 2 - should complete and spawn facility
@@ -238,8 +238,8 @@ def test_shipyard_enables_ship_building(empire_with_colony, fresh_registries):
         "design_id": "space_shipyard_mk1",
         "type": "complex",
         "turns_remaining": 1,
-        "total_cost": {"Metals": 100.0},
-        "resources_consumed": {"Metals": 0.0}
+        "total_cost": {"metals": 100.0},
+        "resources_consumed": {"metals": 0.0}
     }
     planet.construction_queue.append(shipyard_item)
 
@@ -261,8 +261,8 @@ def test_shipyard_enables_ship_building(empire_with_colony, fresh_registries):
         "design_id": "frigate_mk1",
         "type": "ship",
         "turns_remaining": 3,
-        "total_cost": {"Metals": 9000.0},
-        "resources_consumed": {"Metals": 0.0}
+        "total_cost": {"metals": 9000.0},
+        "resources_consumed": {"metals": 0.0}
     })
 
     # Process remaining turns for ship
@@ -289,22 +289,22 @@ def test_multiple_complexes_on_planet(empire_with_colony, fresh_registries):
             "design_id": "mining_complex_mk1",
             "type": "complex",
             "turns_remaining": 1,
-            "total_cost": {"Metals": 100.0},
-            "resources_consumed": {"Metals": 0.0}
+            "total_cost": {"metals": 100.0},
+            "resources_consumed": {"metals": 0.0}
         },
         {
             "design_id": "space_shipyard_mk1",
             "type": "complex",
             "turns_remaining": 1,
-            "total_cost": {"Metals": 100.0},
-            "resources_consumed": {"Metals": 0.0}
+            "total_cost": {"metals": 100.0},
+            "resources_consumed": {"metals": 0.0}
         },
         {
             "design_id": "mining_complex_mk1",
             "type": "complex",
             "turns_remaining": 1,
-            "total_cost": {"Metals": 100.0},
-            "resources_consumed": {"Metals": 0.0}
+            "total_cost": {"metals": 100.0},
+            "resources_consumed": {"metals": 0.0}
         }
     ])
 
@@ -346,15 +346,15 @@ def test_shipyard_detection_with_multiple_facilities(empire_with_colony, fresh_r
             "design_id": "mining_complex_mk1",
             "type": "complex",
             "turns_remaining": 1,
-            "total_cost": {"Metals": 100.0},
-            "resources_consumed": {"Metals": 0.0}
+            "total_cost": {"metals": 100.0},
+            "resources_consumed": {"metals": 0.0}
         },
         {
             "design_id": "mining_complex_mk1",
             "type": "complex",
             "turns_remaining": 1,
-            "total_cost": {"Metals": 100.0},
-            "resources_consumed": {"Metals": 0.0}
+            "total_cost": {"metals": 100.0},
+            "resources_consumed": {"metals": 0.0}
         }
     ])
 
@@ -369,8 +369,8 @@ def test_shipyard_detection_with_multiple_facilities(empire_with_colony, fresh_r
         "design_id": "space_shipyard_mk1",
         "type": "complex",
         "turns_remaining": 1,
-        "total_cost": {"Metals": 100.0},
-        "resources_consumed": {"Metals": 0.0}
+        "total_cost": {"metals": 100.0},
+        "resources_consumed": {"metals": 0.0}
     })
     _process_one_turn(engine, [empire], save_path=save_path)
 
@@ -388,8 +388,8 @@ def test_non_operational_shipyard_not_detected(empire_with_colony, fresh_registr
         "design_id": "space_shipyard_mk1",
         "type": "complex",
         "turns_remaining": 1,
-        "total_cost": {"Metals": 100.0},
-        "resources_consumed": {"Metals": 0.0}
+        "total_cost": {"metals": 100.0},
+        "resources_consumed": {"metals": 0.0}
     })
     _process_one_turn(engine, [empire], save_path=save_path)
 

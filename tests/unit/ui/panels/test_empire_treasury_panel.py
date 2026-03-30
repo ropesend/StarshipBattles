@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 from game.strategy.engine.empire_economy_calculator import EmpireEconomySnapshot
 
-PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
 from game.ui.panels.empire_treasury_panel import (
     EmpireTreasuryPanel,
     RESOURCE_ABBREVIATIONS,
@@ -30,8 +30,8 @@ def sample_snapshot():
 
     # Production
     snapshot.colony_production = {
-        "Metals": 100.0, "Organics": 200.0, "Vapors": 50.0,
-        "Radioactives": 25.0, "Exotics": 10.0
+        "metals": 100.0, "organics": 200.0, "vapors": 50.0,
+        "radioactives": 25.0, "exotics": 10.0
     }
     snapshot.ship_production = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
     snapshot.trade_production = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
@@ -42,8 +42,8 @@ def sample_snapshot():
     # Expenses
     snapshot.tribute_expenses = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
     snapshot.maintenance_expenses = {
-        "Metals": 10.0, "Organics": 5.0, "Vapors": 2.0,
-        "Radioactives": 1.0, "Exotics": 0.5
+        "metals": 10.0, "organics": 5.0, "vapors": 2.0,
+        "radioactives": 1.0, "exotics": 0.5
     }
     snapshot.construction_expenses_ships = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
     snapshot.construction_expenses_complexes = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
@@ -51,16 +51,16 @@ def sample_snapshot():
 
     # Treasury
     snapshot.net_resources = {
-        "Metals": 90.0, "Organics": 195.0, "Vapors": 48.0,
-        "Radioactives": 24.0, "Exotics": 9.5
+        "metals": 90.0, "organics": 195.0, "vapors": 48.0,
+        "radioactives": 24.0, "exotics": 9.5
     }
     snapshot.current_storage = {
-        "Metals": 5000.0, "Organics": 3000.0, "Vapors": 1000.0,
-        "Radioactives": 500.0, "Exotics": 100.0
+        "metals": 5000.0, "organics": 3000.0, "vapors": 1000.0,
+        "radioactives": 500.0, "exotics": 100.0
     }
     snapshot.max_storage = {
-        "Metals": 10000.0, "Organics": 10000.0, "Vapors": 10000.0,
-        "Radioactives": 10000.0, "Exotics": 10000.0
+        "metals": 10000.0, "organics": 10000.0, "vapors": 10000.0,
+        "radioactives": 10000.0, "exotics": 10000.0
     }
 
     return snapshot
@@ -110,11 +110,11 @@ class TestResourceAbbreviations:
 
     def test_expected_abbreviations(self):
         """Check expected abbreviation values."""
-        assert RESOURCE_ABBREVIATIONS["Metals"] == "Met"
-        assert RESOURCE_ABBREVIATIONS["Organics"] == "Org"
-        assert RESOURCE_ABBREVIATIONS["Vapors"] == "Vap"
-        assert RESOURCE_ABBREVIATIONS["Radioactives"] == "Rad"
-        assert RESOURCE_ABBREVIATIONS["Exotics"] == "Exo"
+        assert RESOURCE_ABBREVIATIONS["metals"] == "Met"
+        assert RESOURCE_ABBREVIATIONS["organics"] == "Org"
+        assert RESOURCE_ABBREVIATIONS["vapors"] == "Vap"
+        assert RESOURCE_ABBREVIATIONS["radioactives"] == "Rad"
+        assert RESOURCE_ABBREVIATIONS["exotics"] == "Exo"
 
 
 # =============================================================================
@@ -301,7 +301,7 @@ class TestRefresh:
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
 
         new_snapshot = EmpireEconomySnapshot()
-        new_snapshot.colony_production = {"Metals": 999.0}
+        new_snapshot.colony_production = {"metals": 999.0}
         panel.refresh(new_snapshot)
 
         assert panel.snapshot is new_snapshot

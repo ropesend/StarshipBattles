@@ -187,10 +187,10 @@ class TestResourceHarvesterAbility:
 
     def test_init_with_dict_data(self, mock_component):
         """Dict data sets resource_type and base_harvest_rate."""
-        data = {"resource_type": "Metals", "base_harvest_rate": 10.5}
+        data = {"resource_type": "metals", "base_harvest_rate": 10.5}
         ability = ResourceHarvesterAbility(mock_component, data)
 
-        assert ability.resource_type == "Metals"
+        assert ability.resource_type == "metals"
         assert ability.base_harvest_rate == 10.5
 
     def test_init_with_empty_dict(self, mock_component):
@@ -210,10 +210,10 @@ class TestResourceHarvesterAbility:
 
     def test_init_partial_dict_uses_defaults(self, mock_component):
         """Partial dict uses defaults for missing keys."""
-        data = {"resource_type": "Organics"}
+        data = {"resource_type": "organics"}
         ability = ResourceHarvesterAbility(mock_component, data)
 
-        assert ability.resource_type == "Organics"
+        assert ability.resource_type == "organics"
         assert ability.base_harvest_rate == 0.0
 
     def test_stat_bindings_empty(self, mock_component):
@@ -238,14 +238,14 @@ class TestResourceHarvesterAbility:
 
     def test_get_ui_rows_shows_resource_and_rate(self, mock_component):
         """UI rows display resource type and harvest rate."""
-        data = {"resource_type": "Metals", "base_harvest_rate": 15.0}
+        data = {"resource_type": "metals", "base_harvest_rate": 15.0}
         ability = ResourceHarvesterAbility(mock_component, data)
 
         rows = ability.get_ui_rows()
 
         assert len(rows) == 2
         assert rows[0]["label"] == "Resource Type"
-        assert rows[0]["value"] == "Metals"
+        assert rows[0]["value"] == "metals"
         assert rows[0]["color_hint"] == HINT_COLONIZE
         assert rows[1]["label"] == "Harvest Rate"
         assert rows[1]["value"] == "15.0/turn"
@@ -253,7 +253,7 @@ class TestResourceHarvesterAbility:
 
     def test_get_ui_rows_formats_decimal_rate(self, mock_component):
         """UI rows format decimal harvest rates correctly."""
-        data = {"resource_type": "Organics", "base_harvest_rate": 3.75}
+        data = {"resource_type": "organics", "base_harvest_rate": 3.75}
         ability = ResourceHarvesterAbility(mock_component, data)
 
         rows = ability.get_ui_rows()
@@ -262,7 +262,7 @@ class TestResourceHarvesterAbility:
 
     def test_various_resource_types(self, mock_component):
         """Various resource types are stored correctly."""
-        resource_types = ["Metals", "Organics", "Crystals", "Fuel", "RareEarths"]
+        resource_types = ["metals", "organics", "Crystals", "Fuel", "RareEarths"]
 
         for resource_type in resource_types:
             data = {"resource_type": resource_type, "base_harvest_rate": 5.0}
@@ -287,10 +287,10 @@ class TestEmpireStorageAbility:
 
     def test_init_with_dict_data(self, mock_component):
         """Dict data sets resource_type and capacity."""
-        data = {"resource_type": "Metals", "capacity": 5000.0}
+        data = {"resource_type": "metals", "capacity": 5000.0}
         ability = EmpireStorageAbility(mock_component, data)
 
-        assert ability.resource_type == "Metals"
+        assert ability.resource_type == "metals"
         assert ability.capacity == 5000.0
         assert ability._base_capacity == 5000.0
 
@@ -326,14 +326,14 @@ class TestEmpireStorageAbility:
 
     def test_get_primary_value_returns_capacity(self, mock_component):
         """Primary value is the storage capacity."""
-        data = {"resource_type": "Organics", "capacity": 2500.0}
+        data = {"resource_type": "organics", "capacity": 2500.0}
         ability = EmpireStorageAbility(mock_component, data)
 
         assert ability.get_primary_value() == 2500.0
 
     def test_recalculate_applies_storage_modifier(self, mock_component):
         """Recalculate applies storage_mult modifier."""
-        data = {"resource_type": "Metals", "capacity": 1000.0}
+        data = {"resource_type": "metals", "capacity": 1000.0}
         ability = EmpireStorageAbility(mock_component, data)
         mock_component.stats = {"storage_mult": 1.5}
 
@@ -369,14 +369,14 @@ class TestEmpireStorageAbility:
 
     def test_get_ui_rows_shows_resource_and_capacity(self, mock_component):
         """UI rows display resource type and storage capacity."""
-        data = {"resource_type": "Metals", "capacity": 10000.0}
+        data = {"resource_type": "metals", "capacity": 10000.0}
         ability = EmpireStorageAbility(mock_component, data)
 
         rows = ability.get_ui_rows()
 
         assert len(rows) == 2
         assert rows[0]["label"] == "Resource Type"
-        assert rows[0]["value"] == "Metals"
+        assert rows[0]["value"] == "metals"
         assert rows[0]["color_hint"] == HINT_COLONIZE
         assert rows[1]["label"] == "Storage Capacity"
         assert rows[1]["value"] == "10,000"
@@ -410,13 +410,13 @@ class TestSpaceShipyardAbility:
         data = {
             "construction_speed_bonus": 1.5,
             "max_ship_mass": 200000,
-            "production_rates": {"Metals": 100.0, "Crystals": 50.0}
+            "production_rates": {"metals": 100.0, "Crystals": 50.0}
         }
         ability = SpaceShipyardAbility(mock_component, data)
 
         assert ability.construction_speed_bonus == 1.5
         assert ability.max_ship_mass == 200000
-        assert ability.production_rates == {"Metals": 100.0, "Crystals": 50.0}
+        assert ability.production_rates == {"metals": 100.0, "Crystals": 50.0}
 
     def test_init_with_empty_dict(self, mock_component):
         """Empty dict uses default values."""
@@ -477,7 +477,7 @@ class TestSpaceShipyardAbility:
         data = {
             "construction_speed_bonus": 1.0,
             "max_ship_mass": 100000,
-            "production_rates": {"Metals": 200.0, "Crystals": 200.0, "Organics": 200.0}
+            "production_rates": {"metals": 200.0, "Crystals": 200.0, "organics": 200.0}
         }
         ability = SpaceShipyardAbility(mock_component, data)
 
@@ -493,7 +493,7 @@ class TestSpaceShipyardAbility:
         data = {
             "construction_speed_bonus": 1.0,
             "max_ship_mass": 100000,
-            "production_rates": {"Metals": 100.0, "Crystals": 300.0}
+            "production_rates": {"metals": 100.0, "Crystals": 300.0}
         }
         ability = SpaceShipyardAbility(mock_component, data)
 
@@ -508,7 +508,7 @@ class TestSpaceShipyardAbility:
         data = {
             "construction_speed_bonus": 1.2,
             "max_ship_mass": 50000,
-            "production_rates": {"Metals": 150.0}
+            "production_rates": {"metals": 150.0}
         }
         ability = SpaceShipyardAbility(mock_component, data)
 
@@ -570,7 +570,7 @@ class TestAbilityEdgeCases:
 
     def test_storage_ability_stats_lookup(self, mock_component):
         """EmpireStorageAbility uses get_effective_stat for modifiers."""
-        data = {"resource_type": "Metals", "capacity": 1000.0}
+        data = {"resource_type": "metals", "capacity": 1000.0}
         ability = EmpireStorageAbility(mock_component, data)
 
         # Set up ability-specific stats
@@ -597,7 +597,7 @@ class TestAbilityEdgeCases:
 
     def test_harvester_update_returns_true(self, mock_component):
         """Harvester abilities always return True from update (operational)."""
-        ability = ResourceHarvesterAbility(mock_component, {"resource_type": "Metals"})
+        ability = ResourceHarvesterAbility(mock_component, {"resource_type": "metals"})
 
         assert ability.update() is True
 

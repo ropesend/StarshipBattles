@@ -21,7 +21,7 @@ class PlanetaryFacility:
     design_data: Dict[str, Any]  # Full complex design (from JSON)
     is_operational: bool = True
     construction_queue: List[Dict[str, Any]] = field(default_factory=list)
-    resource_levels: Dict[str, float] = field(default_factory=dict)
+    consumable_levels: Dict[str, float] = field(default_factory=dict)
     # PROJ-237: Per-component state tracking (e.g., shield active/inactive)
     component_states: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
@@ -47,7 +47,7 @@ class PlanetaryFacility:
             design_data=data['design_data'],
             is_operational=data.get('is_operational', True),
             construction_queue=data.get('construction_queue', []),
-            resource_levels=data.get('resource_levels', {}),
+            consumable_levels=data.get('consumable_levels', data.get('resource_levels', {})),
             component_states=data.get('component_states', {}),
         )
 
@@ -76,7 +76,7 @@ class PlanetaryFacility:
 
     def get_fuel_storage(self) -> float:
         """Get current fuel level in this facility."""
-        return self.resource_levels.get("fuel", 0.0)
+        return self.consumable_levels.get("fuel", 0.0)
 
     def get_max_fuel_storage(self, registries) -> float:
         """Calculate max fuel capacity from design_data components.
@@ -116,7 +116,7 @@ class PlanetaryFacility:
         current = self.get_fuel_storage()
         space = max_storage - current
         added = min(amount, space)
-        self.resource_levels["fuel"] = current + added
+        self.consumable_levels["fuel"] = current + added
         return amount - added
 
     def withdraw_fuel(self, amount: float) -> float:
@@ -130,7 +130,7 @@ class PlanetaryFacility:
         """
         current = self.get_fuel_storage()
         withdrawn = min(amount, current)
-        self.resource_levels["fuel"] = current - withdrawn
+        self.consumable_levels["fuel"] = current - withdrawn
         return withdrawn
 
     @property

@@ -593,7 +593,7 @@ class TestResourceGeneration:
         from game.strategy.data.planet_physics import MASS_EARTH
 
         # Run multiple times and average to reduce randomness impact
-        totals = {res: 0 for res in ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]}
+        totals = {res: 0 for res in ["metals", "organics", "vapors", "radioactives", "exotics"]}
         n_samples = 50
         for _ in range(n_samples):
             resources = planet_generator._generate_resources(MASS_EARTH, PlanetType.CONTINENTAL)
@@ -645,16 +645,16 @@ class TestResourceGeneration:
         from game.strategy.data.planet_physics import MASS_EARTH
 
         # MAGMA should favor Radioactives and Metals over Organics
-        magma_totals = {"Metals": 0, "Organics": 0, "Radioactives": 0}
+        magma_totals = {"metals": 0, "organics": 0, "radioactives": 0}
         n_samples = 50
         for _ in range(n_samples):
             resources = planet_generator._generate_resources(MASS_EARTH, PlanetType.MAGMA)
             for res in magma_totals:
                 magma_totals[res] += resources[res]['quantity']
 
-        avg_metals = magma_totals["Metals"] / n_samples
-        avg_organics = magma_totals["Organics"] / n_samples
-        avg_radioactives = magma_totals["Radioactives"] / n_samples
+        avg_metals = magma_totals["metals"] / n_samples
+        avg_organics = magma_totals["organics"] / n_samples
+        avg_radioactives = magma_totals["radioactives"] / n_samples
 
         # MAGMA: Metals=2.0, Organics=0.2, Radioactives=2.5
         assert avg_metals > avg_organics * 3, "MAGMA should have much more Metals than Organics"
@@ -669,8 +669,8 @@ class TestResourceGeneration:
         n_samples = 50
         for _ in range(n_samples):
             resources = planet_generator._generate_resources(MASS_JUPITER, PlanetType.JOVIAN)
-            vapors_total += resources['Vapors']['quantity']
-            metals_total += resources['Metals']['quantity']
+            vapors_total += resources['vapors']['quantity']
+            metals_total += resources['metals']['quantity']
 
         avg_vapors = vapors_total / n_samples
         avg_metals = metals_total / n_samples

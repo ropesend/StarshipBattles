@@ -29,8 +29,8 @@ class TestResourceMethodInteractions:
         # Cache was invalidated, will recalculate
         # Result depends on stats service behavior with toggles
 
-    def test_consume_resource_updates_resource_levels(self, make_design_data_with_stats):
-        """consume_resource updates resource_levels dict.
+    def test_consume_resource_updates_consumable_levels(self, make_design_data_with_stats):
+        """consume_resource updates consumable_levels dict.
 
         PROJ-95: Resources always stored with actual values.
         """
@@ -43,13 +43,13 @@ class TestResourceMethodInteractions:
             name='Test Ship',
             owner_id=0,
             design_data=design_data,
-            resource_levels={'fuel': 5000, 'energy': 2000}
+            consumable_levels={'fuel': 5000, 'energy': 2000}
         )
 
         ship.consume_resource('fuel', 1000)
         ship.consume_resource('energy', 500)
 
-        assert ship.resource_levels == {'fuel': 4000, 'energy': 1500}
+        assert ship.consumable_levels == {'fuel': 4000, 'energy': 1500}
 
     def test_get_all_resource_costs_multiple_calls_consistent(self, make_ship_with_stats):
         """Multiple calls to get_all_resource_costs_* are consistent."""
@@ -88,7 +88,7 @@ class TestResupply:
         ship = make_ship_with_stats(expected_stats={
             'resource_storage': {'fuel': 250}
         })
-        ship.resource_levels['fuel'] = 100  # Depleted fuel
+        ship.consumable_levels['fuel'] = 100  # Depleted fuel
 
         # Resupply should correctly use 250 as max (from resource_storage)
         # not 100 (default fallback from old buggy code)
@@ -97,16 +97,16 @@ class TestResupply:
         # Should be clamped to max of 250
         assert actual == 150  # 250 - 100 = 150 actual resupplied
         # fuel should remain at max value (PROJ-95: always store)
-        assert ship.resource_levels['fuel'] == 250
+        assert ship.consumable_levels['fuel'] == 250
 
     def test_resupply_partial(self, make_ship_with_stats):
         """resupply partial amount works correctly."""
         ship = make_ship_with_stats(expected_stats={
             'resource_storage': {'fuel': 1000}
         })
-        ship.resource_levels['fuel'] = 500
+        ship.consumable_levels['fuel'] = 500
 
         actual = ship.resupply('fuel', 200)
 
         assert actual == 200
-        assert ship.resource_levels['fuel'] == 700
+        assert ship.consumable_levels['fuel'] == 700

@@ -246,7 +246,7 @@ class TestPlanetQueries:
         planet.total_population = 0
         planet.max_population = 1000
         planet.populations = []  # Used for population_details
-        planet.resources = {}  # Required for PlanetInfo.from_planet
+        planet.deposits = {}  # Required for PlanetInfo.from_planet
         return planet
 
     def _make_mock_system(self, hex_coord: HexCoord, planets: list = None):

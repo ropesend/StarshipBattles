@@ -44,7 +44,7 @@ def make_mock_planet(planet_type_name: str, planet_id: int = 1):
     planet.name = f"Test Planet {planet_id}"
     planet.location = HexCoord(0, 0)
     planet.owner_id = None
-    planet.resources = {}
+    planet.deposits = {}
 
     # Create planet_type mock
     planet_type = MagicMock()

@@ -2,7 +2,7 @@
 Tests for PlanetaryFacility resource tracking.
 
 PROJ-74 Phase 2: Verifies that facilities can track fuel storage levels,
-serialize/deserialize resource_levels, and use helper methods for
+serialize/deserialize consumable_levels, and use helper methods for
 fuel operations.
 """
 import pytest
@@ -37,7 +37,7 @@ def _make_fuel_facility(
     instance_id: str = "fuel-001",
     fuel_storage_amount: float = 500.0,
     has_synthesizer: bool = True,
-    resource_levels: dict = None,
+    consumable_levels: dict = None,
 ) -> PlanetaryFacility:
     """Create a facility with fuel tank and optional fuel synthesizer."""
     components = []
@@ -57,8 +57,8 @@ def _make_fuel_facility(
         design_data={"layers": {"hull": components}},
         is_operational=True,
     )
-    if resource_levels is not None:
-        facility.resource_levels = resource_levels.copy()
+    if consumable_levels is not None:
+        facility.consumable_levels = consumable_levels.copy()
     return facility
 
 
@@ -89,33 +89,33 @@ def _make_mock_registries(fuel_tank_amount: float = 500.0):
 
 
 # ===========================================================================
-# Task 2.1: resource_levels field
+# Task 2.1: consumable_levels field
 # ===========================================================================
 
 class TestFacilityResourceLevelsField:
-    """Test PlanetaryFacility.resource_levels field."""
+    """Test PlanetaryFacility.consumable_levels field."""
 
-    def test_facility_defaults_to_empty_resource_levels(self):
-        """PlanetaryFacility should default to empty resource_levels dict."""
+    def test_facility_defaults_to_empty_consumable_levels(self):
+        """PlanetaryFacility should default to empty consumable_levels dict."""
         facility = PlanetaryFacility(
             instance_id="test-001",
             design_id="power_plant",
             name="Power Plant",
             design_data={"layers": {}},
         )
-        assert facility.resource_levels == {}
+        assert facility.consumable_levels == {}
 
-    def test_facility_accepts_resource_levels(self):
-        """PlanetaryFacility should accept resource_levels values."""
-        facility = _make_fuel_facility(resource_levels={"fuel": 250.0})
-        assert facility.resource_levels == {"fuel": 250.0}
+    def test_facility_accepts_consumable_levels(self):
+        """PlanetaryFacility should accept consumable_levels values."""
+        facility = _make_fuel_facility(consumable_levels={"fuel": 250.0})
+        assert facility.consumable_levels == {"fuel": 250.0}
 
-    def test_resource_levels_are_independent_per_instance(self):
-        """Each facility should have independent resource_levels."""
+    def test_consumable_levels_are_independent_per_instance(self):
+        """Each facility should have independent consumable_levels."""
         f1 = _make_fuel_facility(instance_id="f1")
         f2 = _make_fuel_facility(instance_id="f2")
-        f1.resource_levels["fuel"] = 100.0
-        assert f2.resource_levels == {}
+        f1.consumable_levels["fuel"] = 100.0
+        assert f2.consumable_levels == {}
 
 
 # ===========================================================================
@@ -123,36 +123,36 @@ class TestFacilityResourceLevelsField:
 # ===========================================================================
 
 class TestFacilityResourceSerialization:
-    """Test Planet.to_dict()/from_dict() with facility resource_levels."""
+    """Test Planet.to_dict()/from_dict() with facility consumable_levels."""
 
-    def test_resource_levels_serializes_in_to_dict(self):
-        """Planet.to_dict() should include facility resource_levels."""
+    def test_consumable_levels_serializes_in_to_dict(self):
+        """Planet.to_dict() should include facility consumable_levels."""
         planet = _make_planet()
-        facility = _make_fuel_facility(resource_levels={"fuel": 200.0})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 200.0})
         planet.facilities.append(facility)
 
         data = planet.to_dict()
         facility_data = data["facilities"][0]
-        assert "resource_levels" in facility_data
-        assert facility_data["resource_levels"] == {"fuel": 200.0}
+        assert "consumable_levels" in facility_data
+        assert facility_data["consumable_levels"] == {"fuel": 200.0}
 
-    def test_resource_levels_roundtrips_via_from_dict(self):
-        """Planet.from_dict() should restore facility resource_levels."""
+    def test_consumable_levels_roundtrips_via_from_dict(self):
+        """Planet.from_dict() should restore facility consumable_levels."""
         planet = _make_planet()
-        facility = _make_fuel_facility(resource_levels={"fuel": 350.5})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 350.5})
         planet.facilities.append(facility)
 
         data = planet.to_dict()
         restored = Planet.from_dict(data)
 
         assert len(restored.facilities) == 1
-        assert restored.facilities[0].resource_levels == {"fuel": 350.5}
+        assert restored.facilities[0].consumable_levels == {"fuel": 350.5}
 
-    def test_old_save_without_resource_levels_defaults_empty(self):
-        """from_dict() with old save data (no resource_levels) defaults to empty dict."""
+    def test_old_save_without_consumable_levels_defaults_empty(self):
+        """from_dict() with old save data (no consumable_levels) defaults to empty dict."""
         planet = _make_planet()
         data = planet.to_dict()
-        # Simulate old save format without resource_levels
+        # Simulate old save format without consumable_levels
         data["facilities"] = [
             {
                 "instance_id": "old-001",
@@ -161,42 +161,42 @@ class TestFacilityResourceSerialization:
                 "design_data": {"layers": {}},
                 "is_operational": True,
                 "construction_queue": [],
-                # No resource_levels key
+                # No consumable_levels key
             }
         ]
         restored = Planet.from_dict(data)
-        assert restored.facilities[0].resource_levels == {}
+        assert restored.facilities[0].consumable_levels == {}
 
-    def test_empty_resource_levels_serializes(self):
-        """Empty resource_levels should serialize as empty dict."""
+    def test_empty_consumable_levels_serializes(self):
+        """Empty consumable_levels should serialize as empty dict."""
         planet = _make_planet()
         facility = _make_fuel_facility()
         planet.facilities.append(facility)
 
         data = planet.to_dict()
-        assert data["facilities"][0]["resource_levels"] == {}
+        assert data["facilities"][0]["consumable_levels"] == {}
 
-    def test_serialized_resource_levels_is_independent_copy(self):
-        """Serialized resource_levels should be a copy, not a reference."""
+    def test_serialized_consumable_levels_is_independent_copy(self):
+        """Serialized consumable_levels should be a copy, not a reference."""
         planet = _make_planet()
-        facility = _make_fuel_facility(resource_levels={"fuel": 100.0})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 100.0})
         planet.facilities.append(facility)
 
         data = planet.to_dict()
         # Mutate original
-        facility.resource_levels["fuel"] = 999.0
+        facility.consumable_levels["fuel"] = 999.0
         # Serialized data should not be affected
-        assert data["facilities"][0]["resource_levels"]["fuel"] == 100.0
+        assert data["facilities"][0]["consumable_levels"]["fuel"] == 100.0
 
     def test_multiple_resource_types_roundtrip(self):
         """Multiple resource types should serialize and restore correctly."""
         planet = _make_planet()
-        facility = _make_fuel_facility(resource_levels={"fuel": 200.0, "energy": 50.0})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 200.0, "energy": 50.0})
         planet.facilities.append(facility)
 
         data = planet.to_dict()
         restored = Planet.from_dict(data)
-        assert restored.facilities[0].resource_levels == {"fuel": 200.0, "energy": 50.0}
+        assert restored.facilities[0].consumable_levels == {"fuel": 200.0, "energy": 50.0}
 
 
 # ===========================================================================
@@ -213,12 +213,12 @@ class TestGetFuelStorage:
 
     def test_returns_current_fuel_level(self):
         """get_fuel_storage() returns the current fuel level."""
-        facility = _make_fuel_facility(resource_levels={"fuel": 250.0})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 250.0})
         assert facility.get_fuel_storage() == 250.0
 
     def test_ignores_other_resource_types(self):
         """get_fuel_storage() only returns fuel, not other resources."""
-        facility = _make_fuel_facility(resource_levels={"energy": 100.0})
+        facility = _make_fuel_facility(consumable_levels={"energy": 100.0})
         assert facility.get_fuel_storage() == 0.0
 
 
@@ -304,7 +304,7 @@ class TestAddFuel:
         """add_fuel() should add to existing fuel level."""
         facility = _make_fuel_facility(
             fuel_storage_amount=500.0,
-            resource_levels={"fuel": 200.0},
+            consumable_levels={"fuel": 200.0},
         )
         registries = _make_mock_registries(fuel_tank_amount=500.0)
         overflow = facility.add_fuel(100.0, registries)
@@ -315,7 +315,7 @@ class TestAddFuel:
         """add_fuel() returns overflow when adding more than remaining space."""
         facility = _make_fuel_facility(
             fuel_storage_amount=500.0,
-            resource_levels={"fuel": 450.0},
+            consumable_levels={"fuel": 450.0},
         )
         registries = _make_mock_registries(fuel_tank_amount=500.0)
         overflow = facility.add_fuel(100.0, registries)
@@ -344,14 +344,14 @@ class TestWithdrawFuel:
 
     def test_withdraws_available_fuel(self):
         """withdraw_fuel() should return requested amount when available."""
-        facility = _make_fuel_facility(resource_levels={"fuel": 300.0})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 300.0})
         withdrawn = facility.withdraw_fuel(100.0)
         assert withdrawn == 100.0
         assert facility.get_fuel_storage() == 200.0
 
     def test_withdraws_all_when_requesting_more(self):
         """withdraw_fuel() should return actual amount when requesting more than available."""
-        facility = _make_fuel_facility(resource_levels={"fuel": 50.0})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 50.0})
         withdrawn = facility.withdraw_fuel(100.0)
         assert withdrawn == 50.0
         assert facility.get_fuel_storage() == 0.0
@@ -365,7 +365,7 @@ class TestWithdrawFuel:
 
     def test_exact_withdrawal(self):
         """withdraw_fuel() works correctly for exact amount available."""
-        facility = _make_fuel_facility(resource_levels={"fuel": 100.0})
+        facility = _make_fuel_facility(consumable_levels={"fuel": 100.0})
         withdrawn = facility.withdraw_fuel(100.0)
         assert withdrawn == 100.0
         assert facility.get_fuel_storage() == 0.0

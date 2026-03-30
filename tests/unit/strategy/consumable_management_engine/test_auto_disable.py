@@ -14,9 +14,9 @@ class TestAutoDisableComponents:
 
     def test_auto_disables_on_depletion(self, mock_registries, mock_empire, mock_fleet, mock_ship):
         """Components are disabled when resources deplete."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
-        engine = ResourceManagementEngine(registries=mock_registries)
+        engine = ConsumableManagementEngine(registries=mock_registries)
         mock_ship.get_all_resource_costs_per_turn.return_value = {"power": 100.0}
         mock_ship.consume_resource.return_value = False  # Resource depleted
 
@@ -27,7 +27,7 @@ class TestAutoDisableComponents:
 
     def test_finds_components_with_per_turn_trigger(self, mock_ship):
         """Finds components with per_turn ResourceConsumption trigger."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
         # Set up mock component with per_turn ResourceConsumption
         mock_comp_def = MagicMock()
@@ -52,7 +52,7 @@ class TestAutoDisableComponents:
             vehicle_classes={},
             resources={}
         )
-        engine = ResourceManagementEngine(registries=registries)
+        engine = ConsumableManagementEngine(registries=registries)
 
         engine._auto_disable_components_for_resource(mock_ship, 'power')
 
@@ -60,7 +60,7 @@ class TestAutoDisableComponents:
 
     def test_disables_matching_resource_type(self, mock_ship):
         """Only disables components consuming the depleted resource type."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
         # Set up mock components - one uses power, one uses fuel
         mock_power_comp = MagicMock()
@@ -95,7 +95,7 @@ class TestAutoDisableComponents:
             vehicle_classes={},
             resources={}
         )
-        engine = ResourceManagementEngine(registries=registries)
+        engine = ConsumableManagementEngine(registries=registries)
 
         # Deplete power - only power_comp should be disabled
         engine._auto_disable_components_for_resource(mock_ship, 'power')
@@ -107,7 +107,7 @@ class TestAutoDisableComponents:
 
     def test_handles_list_format_components(self, mock_ship):
         """Handles layer format where components is a simple list."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
         mock_comp_def = MagicMock()
         mock_comp_def.abilities = {
@@ -128,7 +128,7 @@ class TestAutoDisableComponents:
             vehicle_classes={},
             resources={}
         )
-        engine = ResourceManagementEngine(registries=registries)
+        engine = ConsumableManagementEngine(registries=registries)
 
         engine._auto_disable_components_for_resource(mock_ship, 'power')
 
@@ -136,7 +136,7 @@ class TestAutoDisableComponents:
 
     def test_handles_string_component_id(self, mock_ship):
         """Handles components specified as strings instead of dicts."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
         mock_comp_def = MagicMock()
         mock_comp_def.abilities = {
@@ -157,7 +157,7 @@ class TestAutoDisableComponents:
             vehicle_classes={},
             resources={}
         )
-        engine = ResourceManagementEngine(registries=registries)
+        engine = ConsumableManagementEngine(registries=registries)
 
         engine._auto_disable_components_for_resource(mock_ship, 'power')
 
@@ -165,7 +165,7 @@ class TestAutoDisableComponents:
 
     def test_skips_non_per_turn_triggers(self, mock_ship):
         """Components with non-per_turn triggers are not disabled."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
         mock_comp_def = MagicMock()
         mock_comp_def.abilities = {
@@ -186,7 +186,7 @@ class TestAutoDisableComponents:
             vehicle_classes={},
             resources={}
         )
-        engine = ResourceManagementEngine(registries=registries)
+        engine = ConsumableManagementEngine(registries=registries)
 
         engine._auto_disable_components_for_resource(mock_ship, 'power')
 
@@ -194,7 +194,7 @@ class TestAutoDisableComponents:
 
     def test_handles_missing_component_definition(self, mock_ship):
         """Gracefully handles components not found in registry."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
         mock_ship.design_data = {
             'layers': {
@@ -209,7 +209,7 @@ class TestAutoDisableComponents:
             vehicle_classes={},
             resources={}
         )
-        engine = ResourceManagementEngine(registries=registries)
+        engine = ConsumableManagementEngine(registries=registries)
 
         # Should not raise an error
         engine._auto_disable_components_for_resource(mock_ship, 'power')
@@ -218,7 +218,7 @@ class TestAutoDisableComponents:
 
     def test_handles_empty_abilities(self, mock_ship):
         """Handles components with empty or missing abilities."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
         mock_comp_def = MagicMock()
         mock_comp_def.abilities = {}  # Empty abilities
@@ -235,7 +235,7 @@ class TestAutoDisableComponents:
             vehicle_classes={},
             resources={}
         )
-        engine = ResourceManagementEngine(registries=registries)
+        engine = ConsumableManagementEngine(registries=registries)
 
         engine._auto_disable_components_for_resource(mock_ship, 'power')
 
@@ -247,9 +247,9 @@ class TestResourceManagementEdgeCases:
 
     def test_resource_depletion_cascade(self, mock_registries, mock_empire, mock_fleet, mock_ship):
         """Multiple resources deplete in the same tick."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
-        engine = ResourceManagementEngine(registries=mock_registries)
+        engine = ConsumableManagementEngine(registries=mock_registries)
         mock_ship.get_all_resource_costs_per_turn.return_value = {
             "power": 100.0,
             "fuel": 50.0
@@ -264,7 +264,7 @@ class TestResourceManagementEdgeCases:
 
     def test_component_already_disabled(self, mock_ship):
         """Auto-disable is idempotent - calling twice doesn't break anything."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
         mock_comp_def = MagicMock()
         mock_comp_def.abilities = {
@@ -285,7 +285,7 @@ class TestResourceManagementEdgeCases:
             vehicle_classes={},
             resources={}
         )
-        engine = ResourceManagementEngine(registries=registries)
+        engine = ConsumableManagementEngine(registries=registries)
 
         # Call twice - should not raise error
         engine._auto_disable_components_for_resource(mock_ship, 'power')
@@ -295,9 +295,9 @@ class TestResourceManagementEdgeCases:
 
     def test_rounding_check_100_ticks(self, mock_registries, mock_empire, mock_fleet, mock_ship):
         """Verify no phantom resource loss over 100 ticks due to rounding."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
-        engine = ResourceManagementEngine(registries=mock_registries)
+        engine = ConsumableManagementEngine(registries=mock_registries)
         mock_ship.get_all_resource_costs_per_turn.return_value = {"power": 33.33}  # Awkward division
         mock_ship.consume_resource.return_value = True
 
@@ -312,9 +312,9 @@ class TestResourceManagementEdgeCases:
 
     def test_empty_fleets_list(self, mock_registries, mock_empire):
         """Handles empire with no fleets."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
-        engine = ResourceManagementEngine(registries=mock_registries)
+        engine = ConsumableManagementEngine(registries=mock_registries)
         mock_empire.fleets = []
 
         # Should not raise error
@@ -324,9 +324,9 @@ class TestResourceManagementEdgeCases:
 
     def test_empty_ships_list(self, mock_registries, mock_empire, mock_fleet):
         """Handles fleet with no ships."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
-        engine = ResourceManagementEngine(registries=mock_registries)
+        engine = ConsumableManagementEngine(registries=mock_registries)
         mock_fleet.ships = []
         mock_empire.fleets = [mock_fleet]
 
@@ -337,7 +337,7 @@ class TestResourceManagementEdgeCases:
 
     def test_returns_depletion_list(self, mock_empire, mock_fleet, mock_ship):
         """Returns list of ResourceDepletion objects."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine, ResourceDepletion
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine, ResourceDepletion
 
         mock_ship.name = "USS Test"
         mock_ship.get_all_resource_costs_per_turn.return_value = {"power": 100.0}
@@ -363,7 +363,7 @@ class TestResourceManagementEdgeCases:
             vehicle_classes={},
             resources={}
         )
-        engine = ResourceManagementEngine(registries=registries)
+        engine = ConsumableManagementEngine(registries=registries)
 
         result = engine.process_per_turn_consumption(1, [mock_empire])
 

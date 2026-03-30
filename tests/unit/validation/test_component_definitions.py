@@ -85,7 +85,7 @@ class TestComponentDefinitions:
     def test_component_resource_costs(self, comp):
         """Verify resource costs logic if present."""
         if 'resource_cost' in comp:
-            PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+            PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
             costs = comp['resource_cost']
             assert isinstance(costs, dict), "resource_cost must be a dictionary"
             for res, amount in costs.items():

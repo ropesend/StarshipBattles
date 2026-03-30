@@ -67,7 +67,7 @@ class PlanetaryFacility:
     design_data: Dict[str, Any]   # Full complex design JSON
     is_operational: bool = True
     construction_queue: List[Dict[str, Any]] = field(default_factory=list)
-    resource_levels: Dict[str, float] = field(default_factory=dict)
+    consumable_levels: Dict[str, float] = field(default_factory=dict)
 ```
 
 Key properties and methods:
@@ -192,11 +192,11 @@ Six components restricted to `"Planetary Complex"` vehicle type, defined in `dat
 
 | Component | Ability |
 |-----------|---------|
-| `metal_harvester` | `ResourceHarvesterAbility` (Metals) |
-| `organic_harvester` | `ResourceHarvesterAbility` (Organics) |
-| `vapor_harvester` | `ResourceHarvesterAbility` (Vapors) |
-| `radioactive_harvester` | `ResourceHarvesterAbility` (Radioactives) |
-| `exotic_harvester` | `ResourceHarvesterAbility` (Exotics) |
+| `metal_harvester` | `ResourceHarvesterAbility` (metals) |
+| `organic_harvester` | `ResourceHarvesterAbility` (organics) |
+| `vapor_harvester` | `ResourceHarvesterAbility` (vapors) |
+| `radioactive_harvester` | `ResourceHarvesterAbility` (radioactives) |
+| `exotic_harvester` | `ResourceHarvesterAbility` (exotics) |
 | `space_shipyard` | `SpaceShipyardAbility` |
 
 **Ability classes:** `game/simulation/components/abilities/harvester.py`

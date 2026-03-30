@@ -153,7 +153,7 @@ class TestShipInstanceResourceDisplay:
     def test_get_resource_display_partial(self, design_data, ship_factory):
         """Partial resources should show current/max."""
         instance = ship_factory(design_data, owner_id=0)
-        instance.resource_levels['fuel'] = 250
+        instance.consumable_levels['fuel'] = 250
 
         fuel_display = instance.get_resource_display('fuel')
 

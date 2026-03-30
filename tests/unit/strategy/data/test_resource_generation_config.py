@@ -38,8 +38,8 @@ class TestResourceGenerationConfigDefaults:
         """Missing affinities default to 1.0."""
         cfg = ResourceGenerationConfig(None)
 
-        assert cfg.get_affinity("MAGMA", "Metals") == 1.0
-        assert cfg.get_affinity("NONEXISTENT", "Metals") == 1.0
+        assert cfg.get_affinity("MAGMA", "metals") == 1.0
+        assert cfg.get_affinity("NONEXISTENT", "metals") == 1.0
 
 
 class TestResourceGenerationConfigFromJson:
@@ -68,8 +68,8 @@ class TestResourceGenerationConfigFromJson:
                 },
                 "planet_type_affinities": {
                     "MAGMA": {
-                        "Metals": 2.0,
-                        "Organics": 0.3
+                        "metals": 2.0,
+                        "organics": 0.3
                     }
                 }
             }
@@ -119,17 +119,17 @@ class TestResourceGenerationConfigFromJson:
         """Planet type affinities loaded from JSON."""
         cfg = ResourceGenerationConfig(sample_json)
 
-        assert cfg.get_affinity("MAGMA", "Metals") == 2.0
-        assert cfg.get_affinity("MAGMA", "Organics") == 0.3
+        assert cfg.get_affinity("MAGMA", "metals") == 2.0
+        assert cfg.get_affinity("MAGMA", "organics") == 0.3
 
     def test_missing_affinity_defaults_to_one(self, sample_json):
         """Unspecified affinities default to 1.0."""
         cfg = ResourceGenerationConfig(sample_json)
 
         # MAGMA has no Vapors entry
-        assert cfg.get_affinity("MAGMA", "Vapors") == 1.0
+        assert cfg.get_affinity("MAGMA", "vapors") == 1.0
         # CONTINENTAL has no entries at all
-        assert cfg.get_affinity("CONTINENTAL", "Metals") == 1.0
+        assert cfg.get_affinity("CONTINENTAL", "metals") == 1.0
 
     def test_partial_json_uses_defaults_for_missing(self):
         """Partial JSON falls back to defaults for missing fields."""

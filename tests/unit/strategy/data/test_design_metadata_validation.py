@@ -21,7 +21,7 @@ class TestDesignMetadataValidation:
             'vehicle_type': 'Ship',
             'mass': 5000.0,
             'combat_power': 150.0,
-            'resource_cost': {'minerals': 100, 'energy': 50}
+            'construction_cost': {'minerals': 100, 'energy': 50}
         }
 
     def test_valid_data_creates_design_metadata(self, valid_metadata_data):
@@ -70,11 +70,11 @@ class TestDesignMetadataValidation:
         meta = DesignMetadata.from_dict(valid_metadata_data)
         assert meta.combat_power == 0.0
 
-    def test_missing_resource_cost_uses_default(self, valid_metadata_data):
-        """Missing resource_cost should use default empty dict."""
-        del valid_metadata_data['resource_cost']
+    def test_missing_construction_cost_uses_default(self, valid_metadata_data):
+        """Missing construction_cost should use default empty dict."""
+        del valid_metadata_data['construction_cost']
         meta = DesignMetadata.from_dict(valid_metadata_data)
-        assert meta.resource_cost == {}
+        assert meta.construction_cost == {}
 
     def test_minimal_required_fields_only(self):
         """Only design_id and name are required."""

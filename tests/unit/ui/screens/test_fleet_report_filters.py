@@ -64,7 +64,7 @@ def make_mock_ship(
         ship.current_hp = None
 
     # PROJ-95: Resource levels always store actual values (no sparse dict convention)
-    ship.resource_levels = {
+    ship.consumable_levels = {
         'fuel': current_fuel,
         'energy': current_energy,
     }

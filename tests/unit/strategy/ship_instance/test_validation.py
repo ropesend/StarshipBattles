@@ -100,7 +100,7 @@ class TestShipInstanceValidation:
         assert ship.kills == 0
         assert ship.battles_survived == 0
         assert ship.component_damage == {}
-        assert ship.resource_levels == {}
+        assert ship.consumable_levels == {}
 
     @pytest.mark.parametrize("field_name", [
         'current_hp',

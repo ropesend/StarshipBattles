@@ -12,8 +12,8 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIImage, UIScrollingContainer
 
-# TODO: Phase 4 will replace with ResourceCatalog
-PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+# TODO: Replace with ResourceCatalog queries
+PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
 from game.core.paths import Paths
 from game.strategy.engine.empire_economy_calculator import EmpireEconomySnapshot
 from game.ui.utils import create_section_header
@@ -31,11 +31,11 @@ TOP_MARGIN = 10
 
 # Abbreviated resource names for column headers
 RESOURCE_ABBREVIATIONS = {
-    "Metals": "Met",
-    "Organics": "Org",
-    "Vapors": "Vap",
-    "Radioactives": "Rad",
-    "Exotics": "Exo",
+    "metals": "Met",
+    "organics": "Org",
+    "vapors": "Vap",
+    "radioactives": "Rad",
+    "exotics": "Exo",
 }
 
 

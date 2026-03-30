@@ -10,7 +10,7 @@ from unittest.mock import MagicMock
 class TestEmpireStorageAbility:
     """Tests for EmpireStorageAbility creation and behavior."""
 
-    def _make_ability(self, resource_type="Metals", capacity=10000.0, stats=None):
+    def _make_ability(self, resource_type="metals", capacity=10000.0, stats=None):
         """Create an EmpireStorageAbility with given data."""
         from game.simulation.components.abilities.harvester import EmpireStorageAbility
 
@@ -26,9 +26,9 @@ class TestEmpireStorageAbility:
 
     def test_creation_with_resource_type_and_capacity(self):
         """EmpireStorageAbility stores resource_type and capacity from data."""
-        ability = self._make_ability(resource_type="Metals", capacity=10000.0)
+        ability = self._make_ability(resource_type="metals", capacity=10000.0)
 
-        assert ability.resource_type == "Metals"
+        assert ability.resource_type == "metals"
         assert ability.capacity == pytest.approx(10000.0)
 
     def test_creation_defaults(self):
@@ -81,19 +81,19 @@ class TestEmpireStorageAbility:
 
     def test_get_ui_rows(self):
         """get_ui_rows returns resource type and capacity info."""
-        ability = self._make_ability(resource_type="Organics", capacity=12000.0)
+        ability = self._make_ability(resource_type="organics", capacity=12000.0)
 
         rows = ability.get_ui_rows()
 
         assert len(rows) == 2
         assert rows[0]['label'] == 'Resource Type'
-        assert rows[0]['value'] == 'Organics'
+        assert rows[0]['value'] == 'organics'
         assert rows[1]['label'] == 'Storage Capacity'
         assert '12,000' in rows[1]['value'] or '12000' in rows[1]['value']
 
     def test_different_resource_types(self):
         """EmpireStorageAbility works with all resource types."""
-        for rtype in ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]:
+        for rtype in ["metals", "organics", "vapors", "radioactives", "exotics"]:
             ability = self._make_ability(resource_type=rtype, capacity=5000.0)
             assert ability.resource_type == rtype
 
@@ -116,10 +116,10 @@ class TestEmpireStorageAbilityRegistry:
         component.ability_stats = {}
 
         ability = create_ability("EmpireStorage", component, {
-            "resource_type": "Metals",
+            "resource_type": "metals",
             "capacity": 10000.0,
         })
 
         assert ability is not None
-        assert ability.resource_type == "Metals"
+        assert ability.resource_type == "metals"
         assert ability.capacity == pytest.approx(10000.0)

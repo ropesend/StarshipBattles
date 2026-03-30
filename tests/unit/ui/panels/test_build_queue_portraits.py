@@ -50,7 +50,7 @@ class TestResourceIconLoading:
 
         assert isinstance(icons, dict)
         assert len(icons) == 5
-        expected_resources = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+        expected_resources = ["metals", "organics", "vapors", "radioactives", "exotics"]
         for resource in expected_resources:
             assert resource in icons
 
@@ -110,7 +110,7 @@ class TestResourcePortraitConstants:
         """RESOURCE_PORTRAIT_FILES contains all 5 resources."""
         from game.ui.panels.build_queue_portraits import RESOURCE_PORTRAIT_FILES
 
-        expected = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+        expected = ["metals", "organics", "vapors", "radioactives", "exotics"]
         for resource in expected:
             assert resource in RESOURCE_PORTRAIT_FILES
 
@@ -118,7 +118,7 @@ class TestResourcePortraitConstants:
         """RESOURCE_FALLBACK_COLORS contains all 5 resources."""
         from game.ui.panels.build_queue_portraits import RESOURCE_FALLBACK_COLORS
 
-        expected = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+        expected = ["metals", "organics", "vapors", "radioactives", "exotics"]
         for resource in expected:
             assert resource in RESOURCE_FALLBACK_COLORS
 

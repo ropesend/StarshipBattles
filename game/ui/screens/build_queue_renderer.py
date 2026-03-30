@@ -69,7 +69,7 @@ class BuildQueueRenderer:
         btn_height = 40
 
         for design in designs:
-            raw_cost = getattr(design, 'resource_cost', None)
+            raw_cost = getattr(design, 'construction_cost', None)
             cost = raw_cost if isinstance(raw_cost, dict) else {}
             row_height = btn_height + (18 if cost else 0)
 

@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from game.core.hex_math import HexCoord
     from game.strategy.engine.fleet_movement_engine import MovementResult
     from game.strategy.engine.conflict_resolution_engine import ConflictResult
-    from game.strategy.engine.resource_management_engine import ResourceDepletion
+    from game.strategy.engine.consumable_management_engine import ResourceDepletion
     from game.strategy.data.galaxy import Galaxy
 
 
@@ -31,7 +31,7 @@ __all__ = [
     'IProductionEngine',
     'IOrderProcessor',
     'IConflictEngine',
-    'IResourceEngine',
+    'IConsumableEngine',
     'IPopulationEngine',
     'IResupplyEngine',
     'IHarvestingEngine',
@@ -262,7 +262,7 @@ class IConflictEngine(ABC):
         pass
 
 
-class IResourceEngine(ABC):
+class IConsumableEngine(ABC):
     """
     Abstract interface for resource consumption processing.
 
@@ -272,7 +272,7 @@ class IResourceEngine(ABC):
     - Auto-disabling components when resources run out
 
     Example usage:
-        engine = ResourceManagementEngine()
+        engine = ConsumableManagementEngine()
         depletions = engine.process_per_turn_consumption(tick, empires)
     """
 

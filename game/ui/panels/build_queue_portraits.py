@@ -24,20 +24,20 @@ logger = logging.getLogger(__name__)
 
 # Resource portrait filenames in assets/Images/Resource Portraits/
 RESOURCE_PORTRAIT_FILES = {
-    "Metals": "resource_metals_portrait.png",
-    "Organics": "resource_organics_portrait.png",
-    "Vapors": "resource_vapors_portrait.png",
-    "Radioactives": "resource_radioactives_portrait.png",
-    "Exotics": "resource_exotics_portrait.png",
+    "metals": "resource_metals_portrait.png",
+    "organics": "resource_organics_portrait.png",
+    "vapors": "resource_vapors_portrait.png",
+    "radioactives": "resource_radioactives_portrait.png",
+    "exotics": "resource_exotics_portrait.png",
 }
 
 # Fallback colors if portrait not found
 RESOURCE_FALLBACK_COLORS = {
-    "Metals": RESOURCE_METALS,
-    "Organics": RESOURCE_ORGANICS,
-    "Vapors": RESOURCE_VAPORS,
-    "Radioactives": RESOURCE_RADIOACTIVES,
-    "Exotics": RESOURCE_EXOTICS,
+    "metals": RESOURCE_METALS,
+    "organics": RESOURCE_ORGANICS,
+    "vapors": RESOURCE_VAPORS,
+    "radioactives": RESOURCE_RADIOACTIVES,
+    "exotics": RESOURCE_EXOTICS,
 }
 
 if TYPE_CHECKING:

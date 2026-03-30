@@ -19,7 +19,7 @@ class TestPerTurnResourceConsumption:
 
         # Create ship with mocked per-turn cost
         ship = create_mock_ship_instance(
-            resource_levels={'energy': 100.0}
+            consumable_levels={'energy': 100.0}
         )
         # Mock get_all_resource_costs_per_turn to return energy cost of 50 per turn
         ship.get_all_resource_costs_per_turn = MagicMock(return_value={'energy': 50.0})
@@ -50,7 +50,7 @@ class TestPerTurnResourceConsumption:
         engine = TurnEngine(registries=fresh_registries)
 
         ship = create_mock_ship_instance(
-            resource_levels={'energy': 100.0, 'fuel': 200.0}
+            consumable_levels={'energy': 100.0, 'fuel': 200.0}
         )
         # Multiple resources with per-turn costs
         ship.get_all_resource_costs_per_turn = MagicMock(return_value={

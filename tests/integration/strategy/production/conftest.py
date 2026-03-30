@@ -71,9 +71,9 @@ def production_setup(fresh_registries):
     empire.savegame_path = temp_dir  # Use temp directory for designs
     # Give empire starting resources for tick-based production
     empire.resource_pool = {
-        "Metals": 100000.0,
-        "Organics": 100000.0,
-        "Radioactives": 100000.0,
+        "metals": 100000.0,
+        "organics": 100000.0,
+        "radioactives": 100000.0,
         "Energy": 100000.0
     }
     empire.add_colony(planet)

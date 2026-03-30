@@ -104,7 +104,7 @@ class ShipDisplayFormatter:
         if max_val is None or max_val <= 0:
             return "N/A"
 
-        current = int(self._ship.resource_levels.get(resource_name, 0))
+        current = int(self._ship.consumable_levels.get(resource_name, 0))
         return f"{current}/{int(max_val)}"
 
     def get_resource_percentage(self, resource_name: str) -> float:
@@ -117,7 +117,7 @@ class ShipDisplayFormatter:
         Returns:
             Percentage (0.0 to 1.0).
         """
-        current = self._ship.resource_levels.get(resource_name, 0.0)
+        current = self._ship.consumable_levels.get(resource_name, 0.0)
         stats = self._ship.get_calculated_stats()
         resource_storage = stats.get('resource_storage', {})
         max_val = resource_storage.get(resource_name, 0)

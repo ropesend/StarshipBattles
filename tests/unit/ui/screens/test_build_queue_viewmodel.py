@@ -37,7 +37,7 @@ def mock_queue_source():
     source.construction_queue = []
     source.can_build_ships = True
     source.can_build_complexes = True
-    source.build_rate = {"Metals": 10, "Organics": 5}
+    source.build_rate = {"metals": 10, "organics": 5}
     return source
 
 
@@ -53,7 +53,7 @@ def mock_queue_sources(mock_queue_source):
     source2.construction_queue = []
     source2.can_build_ships = True
     source2.can_build_complexes = False
-    source2.build_rate = {"Metals": 20, "Organics": 10}
+    source2.build_rate = {"metals": 20, "organics": 10}
 
     source3 = MagicMock()
     source3.display_name = "Planet Gamma"
@@ -61,7 +61,7 @@ def mock_queue_sources(mock_queue_source):
     source3.construction_queue = []
     source3.can_build_ships = True
     source3.can_build_complexes = True
-    source3.build_rate = {"Metals": 15, "Organics": 8}
+    source3.build_rate = {"metals": 15, "organics": 8}
 
     return [source1, source2, source3]
 

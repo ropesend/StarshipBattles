@@ -165,7 +165,7 @@ class TestTurnEngineConstructorDI:
         from game.strategy.engine.production_engine import ProductionEngine
         from game.strategy.engine.order_processor import OrderProcessor
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
         engine = TurnEngine(registries=fresh_registries)
 
@@ -173,7 +173,7 @@ class TestTurnEngineConstructorDI:
         assert isinstance(engine.production_engine, ProductionEngine)
         assert isinstance(engine.order_processor, OrderProcessor)
         assert isinstance(engine.conflict_engine, ConflictResolutionEngine)
-        assert isinstance(engine.resource_engine, ResourceManagementEngine)
+        assert isinstance(engine.resource_engine, ConsumableManagementEngine)
 
     def test_movement_engine_injection(self, fresh_registries):
         """TurnEngine uses injected movement engine."""
@@ -213,9 +213,9 @@ class TestTurnEngineConstructorDI:
 
     def test_resource_engine_injection(self, fresh_registries):
         """TurnEngine uses injected resource engine."""
-        from game.strategy.interfaces.engines import IResourceEngine
+        from game.strategy.interfaces.engines import IConsumableEngine
 
-        mock_resource = MagicMock(spec=IResourceEngine)
+        mock_resource = MagicMock(spec=IConsumableEngine)
         engine = TurnEngine(registries=fresh_registries, resource_engine=mock_resource)
 
         assert engine.resource_engine is mock_resource
@@ -236,7 +236,7 @@ class TestTurnEngineConstructorDI:
         from game.strategy.interfaces.engines import IMovementEngine, IProductionEngine
         from game.strategy.engine.order_processor import OrderProcessor
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
         mock_movement = MagicMock(spec=IMovementEngine)
         mock_production = MagicMock(spec=IProductionEngine)
@@ -254,18 +254,18 @@ class TestTurnEngineConstructorDI:
         # Non-injected engines should be defaults
         assert isinstance(engine.order_processor, OrderProcessor)
         assert isinstance(engine.conflict_engine, ConflictResolutionEngine)
-        assert isinstance(engine.resource_engine, ResourceManagementEngine)
+        assert isinstance(engine.resource_engine, ConsumableManagementEngine)
 
     def test_injected_movement_engine_used_in_tick(self, fresh_registries):
         """Injected movement engine is called during tick processing."""
-        from game.strategy.interfaces.engines import IMovementEngine, IConflictEngine, IResourceEngine, IOrderProcessor
+        from game.strategy.interfaces.engines import IMovementEngine, IConflictEngine, IConsumableEngine, IOrderProcessor
 
         mock_movement = MagicMock(spec=IMovementEngine)
         mock_movement.collect_movements.return_value = []
         mock_movement.apply_movements.return_value = []
 
         mock_conflict = MagicMock(spec=IConflictEngine)
-        mock_resource = MagicMock(spec=IResourceEngine)
+        mock_resource = MagicMock(spec=IConsumableEngine)
         mock_resource.process_per_turn_consumption.return_value = []
         mock_order = MagicMock(spec=IOrderProcessor)
         mock_order.process_instant_orders.return_value = []
@@ -293,10 +293,10 @@ class TestTurnEngineConstructorDI:
         PROJ-158: Production is now entirely tick-based. TurnEngine.process_production
         was deleted as it was just a stub after PROJ-79 migration.
         """
-        from game.strategy.interfaces.engines import IProductionEngine, IResourceEngine, IMovementEngine, IOrderProcessor, IConflictEngine, IResupplyEngine
+        from game.strategy.interfaces.engines import IProductionEngine, IConsumableEngine, IMovementEngine, IOrderProcessor, IConflictEngine, IResupplyEngine
 
         mock_production = MagicMock(spec=IProductionEngine)
-        mock_resource = MagicMock(spec=IResourceEngine)
+        mock_resource = MagicMock(spec=IConsumableEngine)
         mock_resource.process_per_turn_consumption.return_value = []
         mock_movement = MagicMock(spec=IMovementEngine)
         mock_movement.collect_movements.return_value = []
@@ -359,7 +359,7 @@ class TestTurnEngineFactory:
         from game.strategy.engine.production_engine import ProductionEngine
         from game.strategy.engine.order_processor import OrderProcessor
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
         engine = create_default_turn_engine(fresh_registries)
 
@@ -367,7 +367,7 @@ class TestTurnEngineFactory:
         assert isinstance(engine.production_engine, ProductionEngine)
         assert isinstance(engine.order_processor, OrderProcessor)
         assert isinstance(engine.conflict_engine, ConflictResolutionEngine)
-        assert isinstance(engine.resource_engine, ResourceManagementEngine)
+        assert isinstance(engine.resource_engine, ConsumableManagementEngine)
 
 
 # =============================================================================
@@ -419,13 +419,13 @@ class TestMockEngines:
             MockMovementEngine,
             MockOrderProcessor,
             MockConflictEngine,
-            MockResourceEngine,
+            MockConsumableEngine,
         )
 
         mock_movement = MockMovementEngine()
         mock_order = MockOrderProcessor()
         mock_conflict = MockConflictEngine()
-        mock_resource = MockResourceEngine()
+        mock_resource = MockConsumableEngine()
 
         engine = TurnEngine(
             registries=fresh_registries,

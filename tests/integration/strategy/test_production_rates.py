@@ -108,11 +108,11 @@ class TestPerResourceTurnCalculation:
     def test_high_metal_cost_creates_multi_turn_build(self):
         """5500 Metals at 3000/turn rate takes 2 turns (bottleneck)."""
         # Build rate: 3000/turn for all resources
-        build_rate = {"Metals": 3000, "Organics": 3000, "Radioactives": 3000}
+        build_rate = {"metals": 3000, "organics": 3000, "radioactives": 3000}
 
         # Design costs 5500 Metals -> ceil(5500/3000) = 2 turns
         # Using controller's turn calculation logic
-        cost = {"Metals": 5500}
+        cost = {"metals": 5500}
 
         turns_per_resource = []
         for res, rate in build_rate.items():
@@ -127,12 +127,12 @@ class TestPerResourceTurnCalculation:
     def test_mixed_resources_bottleneck_determines_turns(self):
         """When different resources have different rates, slowest determines turns."""
         # Metals fast (3000/turn), Exotics slow (1500/turn)
-        build_rate = {"Metals": 3000, "Exotics": 1500}
+        build_rate = {"metals": 3000, "exotics": 1500}
 
         # Costs: 2000 Metals, 2000 Exotics
         # Metals: ceil(2000/3000) = 1 turn
         # Exotics: ceil(2000/1500) = 2 turns -> bottleneck
-        cost = {"Metals": 2000, "Exotics": 2000}
+        cost = {"metals": 2000, "exotics": 2000}
 
         turns_per_resource = []
         for res, rate in build_rate.items():
@@ -148,11 +148,11 @@ class TestPerResourceTurnCalculation:
         """Shipyard with 1.5x construction_speed_bonus multiplies all per-resource rates."""
         # Base rates: 3000/turn for each resource
         base_rates = {
-            "Metals": 3000,
-            "Organics": 3000,
-            "Radioactives": 3000,
-            "Vapors": 3000,
-            "Exotics": 3000,
+            "metals": 3000,
+            "organics": 3000,
+            "radioactives": 3000,
+            "vapors": 3000,
+            "exotics": 3000,
         }
 
         facility = _make_shipyard_facility(
@@ -163,11 +163,11 @@ class TestPerResourceTurnCalculation:
         rates = _get_facility_production_rates(facility)
 
         # Each rate should be multiplied by 1.5
-        assert rates["Metals"] == pytest.approx(4500.0)
-        assert rates["Organics"] == pytest.approx(4500.0)
-        assert rates["Radioactives"] == pytest.approx(4500.0)
-        assert rates["Vapors"] == pytest.approx(4500.0)
-        assert rates["Exotics"] == pytest.approx(4500.0)
+        assert rates["metals"] == pytest.approx(4500.0)
+        assert rates["organics"] == pytest.approx(4500.0)
+        assert rates["radioactives"] == pytest.approx(4500.0)
+        assert rates["vapors"] == pytest.approx(4500.0)
+        assert rates["exotics"] == pytest.approx(4500.0)
 
 
 # ===========================================================================
@@ -179,17 +179,17 @@ class TestCostPerTickCapping:
 
     def test_cost_per_tick_respects_rate_cap(self):
         """cost_per_tick for each resource is capped at rate/100."""
-        build_rate = {"Metals": 3000, "Exotics": 1500}
+        build_rate = {"metals": 3000, "exotics": 1500}
 
         # Max per tick: Metals 30, Exotics 15
         max_per_tick = {res: rate / 100 for res, rate in build_rate.items()}
 
-        assert max_per_tick["Metals"] == pytest.approx(30.0)
-        assert max_per_tick["Exotics"] == pytest.approx(15.0)
+        assert max_per_tick["metals"] == pytest.approx(30.0)
+        assert max_per_tick["exotics"] == pytest.approx(15.0)
 
     def test_non_bottleneck_resource_gets_capped(self):
         """Non-bottleneck resources are capped to prevent front-loading."""
-        build_rate = {"Metals": 3000, "Exotics": 1500}
+        build_rate = {"metals": 3000, "exotics": 1500}
 
         # Costs: 2000 Metals, 2000 Exotics
         # Turns: 2 (from Exotics bottleneck)
@@ -197,7 +197,7 @@ class TestCostPerTickCapping:
         # Metals cap: 30/tick (no issue, 10 < 30)
         # Exotics cap: 15/tick (no issue, 10 < 15)
 
-        cost = {"Metals": 2000, "Exotics": 2000}
+        cost = {"metals": 2000, "exotics": 2000}
         turns = 2
         total_ticks = turns * 100
 
@@ -210,19 +210,19 @@ class TestCostPerTickCapping:
             cost_per_tick[res] = min(natural_rate, cap)
 
         # Both resources at 10/tick (no capping needed)
-        assert cost_per_tick["Metals"] == pytest.approx(10.0)
-        assert cost_per_tick["Exotics"] == pytest.approx(10.0)
+        assert cost_per_tick["metals"] == pytest.approx(10.0)
+        assert cost_per_tick["exotics"] == pytest.approx(10.0)
 
     def test_single_turn_high_cost_gets_capped(self):
         """When cost fits in 1 turn but exceeds per-tick rate, it gets capped."""
         # Rate: 3000/turn = 30/tick max
-        build_rate = {"Metals": 3000}
+        build_rate = {"metals": 3000}
 
         # Cost: 2500 Metals = 1 turn (ceil(2500/3000) = 1)
         # Natural rate: 2500/100 = 25/tick
         # Cap: 30/tick (no capping needed here)
 
-        cost = {"Metals": 2500}
+        cost = {"metals": 2500}
         turns = 1
         total_ticks = turns * 100
 
@@ -234,7 +234,7 @@ class TestCostPerTickCapping:
             cap = max_per_tick.get(res, float('inf'))
             cost_per_tick[res] = min(natural_rate, cap)
 
-        assert cost_per_tick["Metals"] == pytest.approx(25.0)
+        assert cost_per_tick["metals"] == pytest.approx(25.0)
 
 
 # ===========================================================================
@@ -246,13 +246,13 @@ class TestResourceConsumptionOverTurns:
 
     def test_first_turn_consumption_capped_at_rate(self):
         """After 100 ticks (turn 1), consumption doesn't exceed rate limit."""
-        build_rate = {"Metals": 3000}
+        build_rate = {"metals": 3000}
 
         # Cost: 5500 Metals at 3000/turn = 2 turns
         # Turn 1: consume up to 3000 Metals
         # Turn 2: consume remaining 2500 Metals
 
-        cost = {"Metals": 5500}
+        cost = {"metals": 5500}
         turns = 2
         total_ticks = turns * 100
 
@@ -261,8 +261,8 @@ class TestResourceConsumptionOverTurns:
         # But with per-tick cap of 30, it's min(27.5, 30) = 27.5
 
         max_per_tick = {res: rate / 100 for res, rate in build_rate.items()}
-        natural_rate = cost["Metals"] / total_ticks
-        capped_rate = min(natural_rate, max_per_tick["Metals"])
+        natural_rate = cost["metals"] / total_ticks
+        capped_rate = min(natural_rate, max_per_tick["metals"])
 
         turn_1_consumption = capped_rate * 100
 
@@ -272,12 +272,12 @@ class TestResourceConsumptionOverTurns:
 
     def test_all_resources_consumed_after_all_turns(self):
         """After all turns complete (200 ticks), all 5500 Metals are consumed."""
-        cost = {"Metals": 5500}
+        cost = {"metals": 5500}
         turns = 2
         total_ticks = turns * 100
 
         # At natural rate without capping (since 27.5 < 30)
-        natural_rate = cost["Metals"] / total_ticks
+        natural_rate = cost["metals"] / total_ticks
         total_consumed = natural_rate * total_ticks
 
         assert total_consumed == pytest.approx(5500.0)
@@ -295,27 +295,27 @@ class TestProductionRatesFromJSON:
         rates = get_default_production_rates("planetary_yard")
 
         # Should have all 5 resource types at 2000/turn
-        assert "Metals" in rates
-        assert "Organics" in rates
-        assert "Radioactives" in rates
-        assert "Vapors" in rates
-        assert "Exotics" in rates
+        assert "metals" in rates
+        assert "organics" in rates
+        assert "radioactives" in rates
+        assert "vapors" in rates
+        assert "exotics" in rates
 
-        assert rates["Metals"] == 2000
+        assert rates["metals"] == 2000
 
     def test_space_shipyard_has_default_rates(self):
         """Space shipyard loads default rates from JSON (3000/turn)."""
         rates = get_default_production_rates("space_shipyard")
 
-        assert rates["Metals"] == 3000
-        assert rates["Exotics"] == 3000
+        assert rates["metals"] == 3000
+        assert rates["exotics"] == 3000
 
     def test_fleet_space_yard_has_default_rates(self):
         """Fleet space yard loads default rates from JSON (3000/turn)."""
         rates = get_default_production_rates("fleet_space_yard")
 
-        assert rates["Metals"] == 3000
-        assert rates["Exotics"] == 3000
+        assert rates["metals"] == 3000
+        assert rates["exotics"] == 3000
 
     def test_unknown_yard_type_returns_empty(self):
         """Unknown yard type returns empty dict."""
@@ -333,31 +333,31 @@ class TestBuildQueueSourceIntegration:
 
     def test_source_build_rate_is_dict(self):
         """BuildQueueSource.build_rate is Dict[str, float]."""
-        rates = {"Metals": 3000, "Organics": 3000}
+        rates = {"metals": 3000, "organics": 3000}
         source = _make_build_queue_source(build_rate=rates)
 
         assert isinstance(source.build_rate, dict)
-        assert source.build_rate["Metals"] == 3000
-        assert source.build_rate["Organics"] == 3000
+        assert source.build_rate["metals"] == 3000
+        assert source.build_rate["organics"] == 3000
 
     def test_facility_production_rates_extracted(self):
         """Facility production_rates are extracted from SpaceShipyard ability."""
         rates = {
-            "Metals": 4000,
-            "Organics": 3500,
-            "Radioactives": 3000,
-            "Vapors": 2500,
-            "Exotics": 2000,
+            "metals": 4000,
+            "organics": 3500,
+            "radioactives": 3000,
+            "vapors": 2500,
+            "exotics": 2000,
         }
 
         facility = _make_shipyard_facility(production_rates=rates)
         extracted = _get_facility_production_rates(facility)
 
-        assert extracted["Metals"] == 4000
-        assert extracted["Organics"] == 3500
-        assert extracted["Radioactives"] == 3000
-        assert extracted["Vapors"] == 2500
-        assert extracted["Exotics"] == 2000
+        assert extracted["metals"] == 4000
+        assert extracted["organics"] == 3500
+        assert extracted["radioactives"] == 3000
+        assert extracted["vapors"] == 2500
+        assert extracted["exotics"] == 2000
 
     def test_facility_without_production_rates_uses_defaults(self):
         """Facility without explicit production_rates falls back to defaults."""
@@ -365,4 +365,4 @@ class TestBuildQueueSourceIntegration:
         rates = _get_facility_production_rates(facility)
 
         # Should fall back to space_shipyard defaults (3000)
-        assert rates["Metals"] == 3000
+        assert rates["metals"] == 3000

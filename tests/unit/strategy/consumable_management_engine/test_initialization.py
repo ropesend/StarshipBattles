@@ -1,5 +1,5 @@
 """
-Tests for ResourceManagementEngine initialization and ResourceDepletion dataclass.
+Tests for ConsumableManagementEngine initialization and ResourceDepletion dataclass.
 
 PROJ-50: Updated to use strict DI (registries required).
 """
@@ -20,24 +20,24 @@ def mock_registries():
     )
 
 
-class TestResourceManagementEngineInit:
-    """Tests for ResourceManagementEngine initialization."""
+class TestConsumableManagementEngineInit:
+    """Tests for ConsumableManagementEngine initialization."""
 
     def test_engine_can_be_created(self, mock_registries):
-        """ResourceManagementEngine can be instantiated with registries."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        """ConsumableManagementEngine can be instantiated with registries."""
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
-        engine = ResourceManagementEngine(registries=mock_registries)
+        engine = ConsumableManagementEngine(registries=mock_registries)
 
         assert engine is not None
 
     def test_engine_requires_registries(self):
-        """ResourceManagementEngine should require registries (strict DI)."""
-        from game.strategy.engine.resource_management_engine import ResourceManagementEngine
+        """ConsumableManagementEngine should require registries (strict DI)."""
+        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
 
         # PROJ-50: Should raise ValidationException when registries is None
         with pytest.raises(ValidationException) as exc_info:
-            ResourceManagementEngine(registries=None)
+            ConsumableManagementEngine(registries=None)
         assert "registries is required" in str(exc_info.value)
 
 
@@ -46,7 +46,7 @@ class TestResourceDepletion:
 
     def test_resource_depletion_can_be_created(self):
         """ResourceDepletion can be instantiated."""
-        from game.strategy.engine.resource_management_engine import ResourceDepletion
+        from game.strategy.engine.consumable_management_engine import ResourceDepletion
 
         depletion = ResourceDepletion(
             ship_name="Test Ship",
@@ -60,7 +60,7 @@ class TestResourceDepletion:
 
     def test_resource_depletion_empty_components(self):
         """ResourceDepletion with no components disabled."""
-        from game.strategy.engine.resource_management_engine import ResourceDepletion
+        from game.strategy.engine.consumable_management_engine import ResourceDepletion
 
         depletion = ResourceDepletion(
             ship_name="Test Ship",

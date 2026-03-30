@@ -338,13 +338,13 @@ class Ship(PhysicsBody, ShipPhysicsMixin):   # NOTE: No ShipCombatMixin
 
 **Fleet delegates:** Fleet also uses the delegate pattern to decompose responsibilities:
 - `FleetCapabilityCalculator` -- computes fleet-level capabilities from ship components
-- `FleetResourceAggregator` -- aggregates resource totals across all ships in a fleet
+- `FleetConsumableAggregator` -- aggregates resource totals across all ships in a fleet
 - `FleetBattleAdapter` -- adapts fleet data for the combat simulation layer
 
 **ShipInstance delegates:** ShipInstance uses delegation to separate concerns:
 - `ShipInstanceBridge` -- conversion between strategy ShipInstance and simulation Ship (`to_ship`, `update_from_ship`)
 - `ShipInstanceSerializer` -- serialization/deserialization (`to_dict`, `from_dict`, `clone`)
-- `ShipResourceManager` -- resource tracking (fuel, energy, ammo)
+- `ShipConsumableManager` -- consumable tracking (fuel, energy, ammo)
 - `ShipCargoManager` -- cargo loading/unloading
 - `ShipDisplayFormatter` -- display string formatting
 

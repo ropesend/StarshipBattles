@@ -41,10 +41,10 @@ class TestShipInstanceRoundTrip:
         restored = assert_round_trip_fidelity(si, ShipInstance)
         assert restored.design_data == si.design_data
 
-    def test_resource_levels(self):
-        si = create_test_ship_instance(resource_levels={"fuel": 80.0, "energy": 50.0, "ammo": 30.0})
+    def test_consumable_levels(self):
+        si = create_test_ship_instance(consumable_levels={"fuel": 80.0, "energy": 50.0, "ammo": 30.0})
         restored = assert_round_trip_fidelity(si, ShipInstance)
-        assert restored.resource_levels == si.resource_levels
+        assert restored.consumable_levels == si.consumable_levels
 
     def test_component_toggles(self):
         si = create_test_ship_instance(component_toggles={"shield_1": True, "cloak_1": False, "engine_2": True})

@@ -48,8 +48,8 @@ class TestDesignCostCalculation:
         cost = production_engine._calculate_design_cost(design)
 
         # Hull component should have Metals cost
-        assert "Metals" in cost
-        assert cost["Metals"] > 0
+        assert "metals" in cost
+        assert cost["metals"] > 0
 
     def test_multiple_components_summed(self, production_engine):
         """Costs from multiple components are summed per resource."""
@@ -60,8 +60,8 @@ class TestDesignCostCalculation:
         cost = production_engine._calculate_design_cost(design)
 
         # Should have costs from hull + sensor
-        assert "Metals" in cost
-        assert cost["Metals"] > 0
+        assert "metals" in cost
+        assert cost["metals"] > 0
 
     def test_invalid_component_skipped(self, production_engine):
         """Invalid component IDs don't cause failure."""
@@ -100,12 +100,12 @@ class TestDesignCostCalculation:
         cost1 = production_engine._calculate_design_cost(design)
 
         # Modify cached value to verify cache is used
-        design["total_resource_cost"]["Metals"] = 999
+        design["total_resource_cost"]["metals"] = 999
 
         cost2 = production_engine._calculate_design_cost(design)
 
         # Should return cached value (999), not recalculated
-        assert cost2["Metals"] == 999
+        assert cost2["metals"] == 999
 
     def test_design_with_no_layers_key(self, production_engine):
         """Design missing layers key returns empty cost."""

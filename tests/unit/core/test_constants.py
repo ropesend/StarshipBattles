@@ -23,7 +23,7 @@ class TestPlanetResources:
         """PLANET_RESOURCES should contain the expected resource types."""
         from game.core.constants import PLANET_RESOURCES
 
-        expected = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+        expected = ["metals", "organics", "vapors", "radioactives", "exotics"]
         assert PLANET_RESOURCES == expected
 
     def test_planet_resources_has_five_elements(self):

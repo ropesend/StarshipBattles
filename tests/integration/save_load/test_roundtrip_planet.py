@@ -60,14 +60,14 @@ class TestPlanetaryFacilityRoundTrip:
             'design_data': f.design_data,
             'is_operational': f.is_operational,
             'construction_queue': f.construction_queue,
-            'resource_levels': f.resource_levels,
+            'consumable_levels': f.consumable_levels,
         }
 
     def test_to_dict_includes_all_7_fields(self):
         f = create_test_facility()
         d = self._to_dict(f)
         expected = ['instance_id', 'design_id', 'name', 'design_data',
-                    'is_operational', 'construction_queue', 'resource_levels']
+                    'is_operational', 'construction_queue', 'consumable_levels']
         for key in expected:
             assert key in d, f"Missing key: {key}"
 
@@ -82,17 +82,17 @@ class TestPlanetaryFacilityRoundTrip:
         assert restored.is_operational == original.is_operational
         assert restored.construction_queue == original.construction_queue
 
-    def test_resource_levels_with_values(self):
-        f = create_test_facility(resource_levels={"fuel": 50.0, "energy": 100.0})
+    def test_consumable_levels_with_values(self):
+        f = create_test_facility(consumable_levels={"fuel": 50.0, "energy": 100.0})
         d = self._to_dict(f)
         restored = PlanetaryFacility.from_dict(d)
-        assert restored.resource_levels == {"fuel": 50.0, "energy": 100.0}
+        assert restored.consumable_levels == {"fuel": 50.0, "energy": 100.0}
 
-    def test_empty_resource_levels(self):
-        f = create_test_facility(resource_levels={})
+    def test_empty_consumable_levels(self):
+        f = create_test_facility(consumable_levels={})
         d = self._to_dict(f)
         restored = PlanetaryFacility.from_dict(d)
-        assert restored.resource_levels == {}
+        assert restored.consumable_levels == {}
 
     def test_round_trip_preserves_design_data(self):
         """Complex nested design_data dict survives round-trip."""
@@ -138,9 +138,9 @@ class TestPlanetRoundTrip:
         assert restored.populations[0].count == p.populations[0].count
 
     def test_resources_dict_round_trip(self):
-        p = create_test_planet(resources={"minerals": {"amount": 500, "quality": 0.8}})
+        p = create_test_planet(deposits={"minerals": {"amount": 500, "quality": 0.8}})
         restored = assert_round_trip_fidelity(p, Planet)
-        assert restored.resources == p.resources
+        assert restored.deposits == p.deposits
 
     def test_atmosphere_dict_round_trip(self):
         p = create_test_planet(atmosphere={"nitrogen": 0.78, "oxygen": 0.21})

@@ -216,8 +216,8 @@ class TestClonePreservation:
 class TestAdditionalCoverage:
     """Additional tests for comprehensive coverage."""
 
-    def test_resource_levels_preserved_through_serialization(self, make_design_data_with_stats):
-        """resource_levels are preserved through to_dict/from_dict round trip.
+    def test_consumable_levels_preserved_through_serialization(self, make_design_data_with_stats):
+        """consumable_levels are preserved through to_dict/from_dict round trip.
 
         PROJ-95: Resources always stored with actual values.
         """
@@ -230,7 +230,7 @@ class TestAdditionalCoverage:
             name='Test Ship',
             owner_id=0,
             design_data=design_data,
-            resource_levels={'fuel': 5000, 'energy': 2000}
+            consumable_levels={'fuel': 5000, 'energy': 2000}
         )
 
         ship.consume_resource('fuel', 1000)
@@ -239,7 +239,7 @@ class TestAdditionalCoverage:
         data = ship.to_dict()
         restored = ShipInstance.from_dict(data)
 
-        assert restored.resource_levels == {'fuel': 4000, 'energy': 1500}
+        assert restored.consumable_levels == {'fuel': 4000, 'energy': 1500}
 
     def test_multiple_toggles_with_stats_refresh(self, make_ship_with_stats):
         """Multiple component toggles correctly invalidate and refresh cache."""
@@ -277,8 +277,8 @@ class TestAdditionalCoverage:
         # Zero capacity means current is also 0 (assumed full of 0)
         assert ship.get_current_resource('fuel') == 0
 
-    def test_clone_preserves_resource_levels(self, make_design_data_with_stats):
-        """clone preserves resource_levels state.
+    def test_clone_preserves_consumable_levels(self, make_design_data_with_stats):
+        """clone preserves consumable_levels state.
 
         PROJ-95: Resources always stored with actual values.
         """
@@ -291,18 +291,18 @@ class TestAdditionalCoverage:
             name='Test Ship',
             owner_id=0,
             design_data=design_data,
-            resource_levels={'fuel': 5000, 'energy': 2000}
+            consumable_levels={'fuel': 5000, 'energy': 2000}
         )
 
         ship.consume_resource('fuel', 1000)
 
         cloned = ship.clone()
 
-        assert cloned.resource_levels == {'fuel': 4000, 'energy': 2000}
+        assert cloned.consumable_levels == {'fuel': 4000, 'energy': 2000}
         # Modify clone should not affect original
         cloned.consume_resource('fuel', 500)
-        assert ship.resource_levels == {'fuel': 4000, 'energy': 2000}
-        assert cloned.resource_levels == {'fuel': 3500, 'energy': 2000}
+        assert ship.consumable_levels == {'fuel': 4000, 'energy': 2000}
+        assert cloned.consumable_levels == {'fuel': 3500, 'energy': 2000}
 
 
 class TestEdgeCases:
@@ -320,14 +320,14 @@ class TestEdgeCases:
             owner_id=0,
             design_data=design_data
         )
-        ship.resource_levels['fuel'] = 3000
+        ship.consumable_levels['fuel'] = 3000
 
         # Negative amount should be rejected - cannot "consume" a negative amount
         result = ship.consume_resource('fuel', -100)
 
         # Should return False and leave resource unchanged
         assert result is False
-        assert ship.resource_levels['fuel'] == 3000
+        assert ship.consumable_levels['fuel'] == 3000
 
     def test_get_resource_capacity_empty_stats(self, make_ship_with_stats):
         """get_resource_capacity handles empty expected_stats."""

@@ -90,12 +90,12 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
         # Fuel
         ship_max_fuel = resource_storage.get("fuel", 0)
         max_fuel += ship_max_fuel
-        total_fuel += ship.resource_levels.get("fuel", 0)
+        total_fuel += ship.consumable_levels.get("fuel", 0)
 
         # Energy
         ship_max_energy = resource_storage.get("energy", 0)
         max_energy += ship_max_energy
-        total_energy += ship.resource_levels.get("energy", 0)
+        total_energy += ship.consumable_levels.get("energy", 0)
 
         # Passenger and General Cargo calculations
         cargo_storage = calculated_stats.get('cargo_storage', {})

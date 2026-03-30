@@ -151,9 +151,9 @@ class TestMultipleTurns:
 
         # Give empire resources for tick-based production
         empire1.resource_pool = {
-            "Metals": 100000.0,
-            "Organics": 100000.0,
-            "Radioactives": 100000.0,
+            "metals": 100000.0,
+            "organics": 100000.0,
+            "radioactives": 100000.0,
             "Energy": 100000.0
         }
 
@@ -163,8 +163,8 @@ class TestMultipleTurns:
             "design_id": "test_complex",
             "type": "complex",
             "turns_remaining": 3,
-            "total_cost": {"Metals": 6000.0},
-            "resources_consumed": {"Metals": 0.0}
+            "total_cost": {"metals": 6000.0},
+            "resources_consumed": {"metals": 0.0}
         }
         colony.construction_queue.append(queue_item)
         assert len(colony.construction_queue) == 1
@@ -173,14 +173,14 @@ class TestMultipleTurns:
         turn_engine.process_turn(empires, galaxy, save_path=test_savegame_dir)
         if colony.construction_queue:
             item = colony.construction_queue[0]
-            consumed = item.get("resources_consumed", {}).get("Metals", 0)
+            consumed = item.get("resources_consumed", {}).get("metals", 0)
             assert consumed > 0  # Progress made
 
         # Turn 2 - consumes more resources
         turn_engine.process_turn(empires, galaxy, save_path=test_savegame_dir)
         if colony.construction_queue:
             item = colony.construction_queue[0]
-            consumed = item.get("resources_consumed", {}).get("Metals", 0)
+            consumed = item.get("resources_consumed", {}).get("metals", 0)
             assert consumed > 2000  # More progress
 
     def test_state_persists_between_turns(self, game_session):

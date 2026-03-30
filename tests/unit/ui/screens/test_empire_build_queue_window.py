@@ -25,7 +25,7 @@ def _make_source(queue_id="planet_1_base", display_name="Alpha - Base",
     """Create a BuildQueueSource for testing."""
     # Default to standard per-resource rates for testing
     if build_rate is None:
-        build_rate = {"Metals": 2000.0, "Organics": 2000.0, "Radioactives": 2000.0, "Vapors": 2000.0, "Exotics": 2000.0}
+        build_rate = {"metals": 2000.0, "organics": 2000.0, "radioactives": 2000.0, "vapors": 2000.0, "exotics": 2000.0}
     return BuildQueueSource(
         queue_id=queue_id,
         display_name=display_name,
@@ -522,7 +522,7 @@ class TestGetColumnValue:
 
     def test_resource_rate_column_with_cost_per_tick(self):
         """Resource rate columns return formatted per-turn consumption."""
-        items = [{"design_id": "cruiser", "cost_per_tick": {"Metals": 20.0}}]
+        items = [{"design_id": "cruiser", "cost_per_tick": {"metals": 20.0}}]
         source = _make_source(queue_items=items)
         win = _make_window(sources=[source])
         # 20 per tick * 100 = 2000 per turn
@@ -536,7 +536,7 @@ class TestGetColumnValue:
 
     def test_resource_total_column_with_total_cost(self):
         """Resource total columns return formatted total cost."""
-        items = [{"design_id": "cruiser", "total_cost": {"Organics": 5000}}]
+        items = [{"design_id": "cruiser", "total_cost": {"organics": 5000}}]
         source = _make_source(queue_items=items)
         win = _make_window(sources=[source])
         assert win._get_column_value(source, 'res_organics_total') == "5k"

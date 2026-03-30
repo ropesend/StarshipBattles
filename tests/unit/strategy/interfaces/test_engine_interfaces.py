@@ -158,34 +158,34 @@ class TestIConflictEngineInterface:
 
 
 # =============================================================================
-# IResourceEngine Interface Tests
+# IConsumableEngine Interface Tests
 # =============================================================================
 
 
-class TestIResourceEngineInterface:
-    """Test IResourceEngine abstract base class interface contract."""
+class TestIConsumableEngineInterface:
+    """Test IConsumableEngine abstract base class interface contract."""
 
     def test_iresource_engine_importable(self):
-        """IResourceEngine should be importable from interfaces module."""
-        from game.strategy.interfaces.engines import IResourceEngine
-        assert IResourceEngine is not None
+        """IConsumableEngine should be importable from interfaces module."""
+        from game.strategy.interfaces.engines import IConsumableEngine
+        assert IConsumableEngine is not None
 
     def test_iresource_engine_is_abstract(self):
-        """IResourceEngine should be an abstract base class."""
-        from game.strategy.interfaces.engines import IResourceEngine
-        assert issubclass(IResourceEngine, ABC)
+        """IConsumableEngine should be an abstract base class."""
+        from game.strategy.interfaces.engines import IConsumableEngine
+        assert issubclass(IConsumableEngine, ABC)
 
     def test_iresource_engine_cannot_instantiate(self):
-        """IResourceEngine should not be directly instantiable."""
-        from game.strategy.interfaces.engines import IResourceEngine
+        """IConsumableEngine should not be directly instantiable."""
+        from game.strategy.interfaces.engines import IConsumableEngine
         with pytest.raises(TypeError):
-            IResourceEngine()
+            IConsumableEngine()
 
     def test_iresource_engine_has_process_per_turn_consumption_method(self):
-        """IResourceEngine should define process_per_turn_consumption abstract method."""
-        from game.strategy.interfaces.engines import IResourceEngine
-        assert hasattr(IResourceEngine, 'process_per_turn_consumption')
-        assert getattr(IResourceEngine.process_per_turn_consumption, '__isabstractmethod__', False)
+        """IConsumableEngine should define process_per_turn_consumption abstract method."""
+        from game.strategy.interfaces.engines import IConsumableEngine
+        assert hasattr(IConsumableEngine, 'process_per_turn_consumption')
+        assert getattr(IConsumableEngine.process_per_turn_consumption, '__isabstractmethod__', False)
 
 
 # =============================================================================
@@ -382,14 +382,14 @@ class TestConcreteImplementations:
         assert engine is not None
 
     def test_concrete_resource_engine_implementation(self):
-        """Concrete IResourceEngine implementation should work."""
-        from game.strategy.interfaces.engines import IResourceEngine
+        """Concrete IConsumableEngine implementation should work."""
+        from game.strategy.interfaces.engines import IConsumableEngine
 
-        class MockResourceEngine(IResourceEngine):
+        class MockConsumableEngine(IConsumableEngine):
             def process_per_turn_consumption(self, tick, empires):
                 return []
 
-        engine = MockResourceEngine()
+        engine = MockConsumableEngine()
         assert engine is not None
 
     def test_concrete_maintenance_engine_implementation(self):
@@ -456,13 +456,13 @@ class TestInterfacesModuleExports:
             IProductionEngine,
             IOrderProcessor,
             IConflictEngine,
-            IResourceEngine,
+            IConsumableEngine,
         )
         assert IMovementEngine is not None
         assert IProductionEngine is not None
         assert IOrderProcessor is not None
         assert IConflictEngine is not None
-        assert IResourceEngine is not None
+        assert IConsumableEngine is not None
 
     def test_engines_module_exports_via_all(self):
         """engines.py should export all interfaces via __all__."""
@@ -472,7 +472,7 @@ class TestInterfacesModuleExports:
         assert 'IProductionEngine' in engines.__all__
         assert 'IOrderProcessor' in engines.__all__
         assert 'IConflictEngine' in engines.__all__
-        assert 'IResourceEngine' in engines.__all__
+        assert 'IConsumableEngine' in engines.__all__
         assert 'IMaintenanceEngine' in engines.__all__
         assert 'IPopulationEngine' in engines.__all__
         assert 'IResupplyEngine' in engines.__all__
@@ -486,7 +486,7 @@ class TestInterfacesModuleExports:
             'IProductionEngine',
             'IOrderProcessor',
             'IConflictEngine',
-            'IResourceEngine',
+            'IConsumableEngine',
             'IPopulationEngine',
             'IResupplyEngine',
             'IHarvestingEngine',
@@ -502,7 +502,7 @@ class TestInterfacesModuleExports:
             IProductionEngine,
             IOrderProcessor,
             IConflictEngine,
-            IResourceEngine,
+            IConsumableEngine,
             IPopulationEngine,
             IResupplyEngine,
             IHarvestingEngine,
@@ -514,7 +514,7 @@ class TestInterfacesModuleExports:
             IProductionEngine,
             IOrderProcessor,
             IConflictEngine,
-            IResourceEngine,
+            IConsumableEngine,
             IPopulationEngine,
             IResupplyEngine,
             IHarvestingEngine,

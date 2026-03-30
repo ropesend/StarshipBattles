@@ -130,8 +130,8 @@ All sub-engines are dependency-injected: `registries` is a **required** keyword-
 | Phase | Engine | Description |
 |-------|--------|-------------|
 | 0 | `HarvestingEngine` | Planetary resource extraction (1/100th per tick) |
-| 0a | `MaintenanceEngine` | Maintenance cost deduction, immediate scuttle (1/100th per tick) |
-| 0b | `ResourceManagementEngine` | Per-turn resource consumption (1/100th per tick) |
+| 0a | `MaintenanceEngine` | Maintenance cost deduction, immediate disable (1/100th per tick) |
+| 0b | `ConsumableManagementEngine` | Per-turn resource consumption (1/100th per tick) |
 | 0c | `ResupplyEngine` | Fuel generation at facilities |
 | 0d | `ResupplyEngine` | Fleet resupply from facilities |
 | 0e | `ProductionEngine` | Construction resource consumption + mid-turn completion |
@@ -155,7 +155,7 @@ All sub-engines implement interfaces from `game/strategy/interfaces/engines.py`:
 | `IProductionEngine` | `ProductionEngine` |
 | `IOrderProcessor` | `OrderProcessor` |
 | `IConflictEngine` | `ConflictResolutionEngine` |
-| `IResourceEngine` | `ResourceManagementEngine` |
+| `IConsumableEngine` | `ConsumableManagementEngine` |
 | `IPopulationEngine` | `PopulationEngine` |
 | `IResupplyEngine` | `ResupplyEngine` |
 | `IHarvestingEngine` | `HarvestingEngine` |
@@ -204,9 +204,9 @@ Core state:
 
 Fleet uses composition with 3 delegates:
 
-#### FleetResourceAggregator (`fleet.resources`)
+#### FleetConsumableAggregator (`fleet.resources`)
 
-**File:** `game/strategy/data/fleet_resource_aggregator.py`
+**File:** `game/strategy/data/fleet_consumable_aggregator.py`
 
 Handles fleet-wide resource calculations across all combat-capable ships:
 

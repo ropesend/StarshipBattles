@@ -149,7 +149,7 @@ def get_resource_rate_text(source: BuildQueueSource, resource_name: str) -> str:
 
     Args:
         source: The build queue source.
-        resource_name: Name of the resource (e.g. 'Metals', 'Organics').
+        resource_name: Name of the resource (e.g. 'metals', 'organics').
 
     Returns:
         Formatted per-turn rate (cost_per_tick * 100), or '-' if empty/legacy.
@@ -172,7 +172,7 @@ def get_resource_total_text(source: BuildQueueSource, resource_name: str) -> str
 
     Args:
         source: The build queue source.
-        resource_name: Name of the resource (e.g. 'Metals', 'Organics').
+        resource_name: Name of the resource (e.g. 'metals', 'organics').
 
     Returns:
         Formatted total cost with suffix, or '-' if empty/legacy.

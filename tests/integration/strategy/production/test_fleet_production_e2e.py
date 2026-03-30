@@ -101,8 +101,8 @@ class TestFleetProductionE2E:
                 "design_id": "test_fighter",
                 "type": "ship",
                 "turns_remaining": 2,
-                "total_cost": {"Metals": 6000.0},
-                "resources_consumed": {"Metals": 0.0}
+                "total_cost": {"metals": 6000.0},
+                "resources_consumed": {"metals": 0.0}
             }
         ]
         fleet.orders = [FleetOrder(OrderType.BUILD)]
@@ -114,7 +114,7 @@ class TestFleetProductionE2E:
         empire.fleets = [fleet]
         empire.colonies = []  # No colonies
         # Give empire resources
-        empire.resource_pool = {"Metals": 100000.0}
+        empire.resource_pool = {"metals": 100000.0}
 
         # PROJ-210: Mock capabilities property for has_space_shipyard
         fleet._capabilities = MagicMock()
@@ -124,7 +124,7 @@ class TestFleetProductionE2E:
         # Turn 1: progress but not complete
         _process_fleet_turn(engine, [empire], None, temp_save_dir)
         assert len(fleet.construction_queue) == 1
-        assert fleet.construction_queue[0]["resources_consumed"]["Metals"] > 0
+        assert fleet.construction_queue[0]["resources_consumed"]["metals"] > 0
         assert len(fleet.ships) == initial_ship_count  # Not yet spawned
 
         # Turn 2: ship completes and spawns
@@ -147,8 +147,8 @@ class TestFleetProductionE2E:
                 "design_id": "test_factory",
                 "type": "complex",
                 "turns_remaining": 1,
-                "total_cost": {"Metals": 100.0},
-                "resources_consumed": {"Metals": 0.0}
+                "total_cost": {"metals": 100.0},
+                "resources_consumed": {"metals": 0.0}
             }
         ]
         fleet.orders = [FleetOrder(OrderType.BUILD)]
@@ -159,7 +159,7 @@ class TestFleetProductionE2E:
         empire.id = 0
         empire.fleets = [fleet]
         empire.colonies = []
-        empire.resource_pool = {"Metals": 100000.0}
+        empire.resource_pool = {"metals": 100000.0}
 
         # PROJ-210: Mock capabilities property for has_space_shipyard
         fleet._capabilities = MagicMock()
@@ -268,8 +268,8 @@ class TestFleetProductionE2E:
                 "design_id": "test_factory",
                 "type": "complex",
                 "turns_remaining": 3,
-                "total_cost": {"Metals": 9000.0},
-                "resources_consumed": {"Metals": 0.0}
+                "total_cost": {"metals": 9000.0},
+                "resources_consumed": {"metals": 0.0}
             }
         ]
         fleet.orders = [FleetOrder(OrderType.BUILD)]
@@ -278,7 +278,7 @@ class TestFleetProductionE2E:
         empire.id = 0
         empire.fleets = [fleet]
         empire.colonies = []
-        empire.resource_pool = {"Metals": 100000.0}
+        empire.resource_pool = {"metals": 100000.0}
 
         # PROJ-210: Mock capabilities property for has_space_shipyard
         fleet._capabilities = MagicMock()
@@ -287,7 +287,7 @@ class TestFleetProductionE2E:
 
         # Turn 1: at planet - production proceeds
         _process_fleet_turn(engine, [empire], mock_galaxy, temp_save_dir)
-        consumed_turn1 = fleet.construction_queue[0]["resources_consumed"]["Metals"]
+        consumed_turn1 = fleet.construction_queue[0]["resources_consumed"]["metals"]
         assert consumed_turn1 > 0  # Made progress
 
         # "Move" fleet away from planet
@@ -295,7 +295,7 @@ class TestFleetProductionE2E:
 
         # Turn 2: not at planet - production pauses for complex
         _process_fleet_turn(engine, [empire], mock_galaxy, temp_save_dir)
-        consumed_turn2 = fleet.construction_queue[0]["resources_consumed"]["Metals"]
+        consumed_turn2 = fleet.construction_queue[0]["resources_consumed"]["metals"]
         assert consumed_turn2 == consumed_turn1  # No additional progress
 
         # "Move" fleet back to planet
@@ -303,7 +303,7 @@ class TestFleetProductionE2E:
 
         # Turn 3: at planet - production resumes
         _process_fleet_turn(engine, [empire], mock_galaxy, temp_save_dir)
-        consumed_turn3 = fleet.construction_queue[0]["resources_consumed"]["Metals"]
+        consumed_turn3 = fleet.construction_queue[0]["resources_consumed"]["metals"]
         assert consumed_turn3 > consumed_turn2  # Made progress again
 
 
@@ -348,22 +348,22 @@ class TestFleetProductionMultiQueue:
                 "design_id": "ship_a",
                 "type": "ship",
                 "turns_remaining": 1,
-                "total_cost": {"Metals": 3000.0},
-                "resources_consumed": {"Metals": 0.0}
+                "total_cost": {"metals": 3000.0},
+                "resources_consumed": {"metals": 0.0}
             },
             {
                 "design_id": "ship_b",
                 "type": "ship",
                 "turns_remaining": 2,
-                "total_cost": {"Metals": 6000.0},
-                "resources_consumed": {"Metals": 0.0}
+                "total_cost": {"metals": 6000.0},
+                "resources_consumed": {"metals": 0.0}
             },
             {
                 "design_id": "ship_c",
                 "type": "ship",
                 "turns_remaining": 1,
-                "total_cost": {"Metals": 3000.0},
-                "resources_consumed": {"Metals": 0.0}
+                "total_cost": {"metals": 3000.0},
+                "resources_consumed": {"metals": 0.0}
             },
         ]
         fleet.orders = [FleetOrder(OrderType.BUILD)]
@@ -372,7 +372,7 @@ class TestFleetProductionMultiQueue:
         empire.id = 0
         empire.fleets = [fleet]
         empire.colonies = []
-        empire.resource_pool = {"Metals": 100000.0}
+        empire.resource_pool = {"metals": 100000.0}
 
         # PROJ-210: Mock capabilities property for has_space_shipyard
         fleet._capabilities = MagicMock()
@@ -386,7 +386,7 @@ class TestFleetProductionMultiQueue:
 
         # Turn 2: ship_b progress
         _process_fleet_turn(engine, [empire], None, temp_save_dir)
-        assert fleet.construction_queue[0]["resources_consumed"]["Metals"] > 0
+        assert fleet.construction_queue[0]["resources_consumed"]["metals"] > 0
 
         # Turn 3: ship_b completes
         _process_fleet_turn(engine, [empire], None, temp_save_dir)

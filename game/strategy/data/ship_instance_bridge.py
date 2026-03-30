@@ -91,7 +91,7 @@ class ShipInstanceBridge:
 
         # Apply resource levels
         if ship.resources:
-            for resource_name, current in self._ship.resource_levels.items():
+            for resource_name, current in self._ship.consumable_levels.items():
                 ship.resources.set_value(resource_name, current)
 
         # Recalculate stats after applying damage
@@ -126,7 +126,7 @@ class ShipInstanceBridge:
                     self._ship.component_damage[comp.id] = comp.current_hp
 
         # Update resource levels
-        self._ship.resource_levels = self._capture_resource_levels(ship)
+        self._ship.consumable_levels = self._capture_resource_levels(ship)
 
         # Update battle stats
         self._ship.battles_survived += 1

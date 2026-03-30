@@ -272,81 +272,81 @@
         "planet_type_affinities": {
             "description": "Per-planet-type resource multipliers. Values > 1.0 boost, < 1.0 reduce. Absent entries default to 1.0. Designed for moderate specialization (1.5-2.5x favored, 0.5-0.8x reduced).",
             "CONTINENTAL": {
-                "Metals": 1.2,
-                "Organics": 1.5,
-                "Vapors": 0.8,
-                "Radioactives": 1.0,
-                "Exotics": 0.9
+                "metals": 1.2,
+                "organics": 1.5,
+                "vapors": 0.8,
+                "radioactives": 1.0,
+                "exotics": 0.9
             },
             "ARID": {
-                "Metals": 1.5,
-                "Organics": 0.4,
-                "Vapors": 0.3,
-                "Radioactives": 1.8,
-                "Exotics": 1.3
+                "metals": 1.5,
+                "organics": 0.4,
+                "vapors": 0.3,
+                "radioactives": 1.8,
+                "exotics": 1.3
             },
             "PELAGIC": {
-                "Metals": 0.6,
-                "Organics": 2.0,
-                "Vapors": 1.8,
-                "Radioactives": 0.5,
-                "Exotics": 0.8
+                "metals": 0.6,
+                "organics": 2.0,
+                "vapors": 1.8,
+                "radioactives": 0.5,
+                "exotics": 0.8
             },
             "MAGMA": {
-                "Metals": 2.0,
-                "Organics": 0.2,
-                "Vapors": 0.5,
-                "Radioactives": 2.5,
-                "Exotics": 1.5
+                "metals": 2.0,
+                "organics": 0.2,
+                "vapors": 0.5,
+                "radioactives": 2.5,
+                "exotics": 1.5
             },
             "CRYOPLANET": {
-                "Metals": 0.7,
-                "Organics": 0.5,
-                "Vapors": 2.0,
-                "Radioactives": 0.6,
-                "Exotics": 1.8
+                "metals": 0.7,
+                "organics": 0.5,
+                "vapors": 2.0,
+                "radioactives": 0.6,
+                "exotics": 1.8
             },
             "BARREN": {
-                "Metals": 1.8,
-                "Organics": 0.2,
-                "Vapors": 0.3,
-                "Radioactives": 1.5,
-                "Exotics": 1.0
+                "metals": 1.8,
+                "organics": 0.2,
+                "vapors": 0.3,
+                "radioactives": 1.5,
+                "exotics": 1.0
             },
             "JOVIAN": {
-                "Metals": 0.3,
-                "Organics": 0.5,
-                "Vapors": 2.5,
-                "Radioactives": 0.4,
-                "Exotics": 1.5
+                "metals": 0.3,
+                "organics": 0.5,
+                "vapors": 2.5,
+                "radioactives": 0.4,
+                "exotics": 1.5
             },
             "ICE_GIANT": {
-                "Metals": 0.4,
-                "Organics": 0.6,
-                "Vapors": 2.2,
-                "Radioactives": 0.5,
-                "Exotics": 1.8
+                "metals": 0.4,
+                "organics": 0.6,
+                "vapors": 2.2,
+                "radioactives": 0.5,
+                "exotics": 1.8
             },
             "CHTHONIAN": {
-                "Metals": 2.5,
-                "Organics": 0.1,
-                "Vapors": 0.2,
-                "Radioactives": 2.0,
-                "Exotics": 2.0
+                "metals": 2.5,
+                "organics": 0.1,
+                "vapors": 0.2,
+                "radioactives": 2.0,
+                "exotics": 2.0
             },
             "ICE_DWARF": {
-                "Metals": 0.5,
-                "Organics": 0.3,
-                "Vapors": 1.8,
-                "Radioactives": 0.4,
-                "Exotics": 2.0
+                "metals": 0.5,
+                "organics": 0.3,
+                "vapors": 1.8,
+                "radioactives": 0.4,
+                "exotics": 2.0
             },
             "PLANETOID": {
-                "Metals": 1.5,
-                "Organics": 0.2,
-                "Vapors": 0.3,
-                "Radioactives": 1.2,
-                "Exotics": 1.5
+                "metals": 1.5,
+                "organics": 0.2,
+                "vapors": 0.3,
+                "radioactives": 1.2,
+                "exotics": 1.5
             }
         }
     },

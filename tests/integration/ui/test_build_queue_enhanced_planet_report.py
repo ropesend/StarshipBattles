@@ -77,12 +77,12 @@ def test_planet():
     }
 
     # Add resource data (PROJ-82)
-    planet.resources = {
-        "Metals": {"quantity": 250000, "quality": 85.0},
-        "Organics": {"quantity": 120000, "quality": 72.0},
-        "Vapors": {"quantity": 80000, "quality": 91.0},
-        "Radioactives": {"quantity": 45000, "quality": 43.0},
-        "Exotics": {"quantity": 12000, "quality": 67.0},
+    planet.deposits = {
+        "metals": {"quantity": 250000, "quality": 85.0},
+        "organics": {"quantity": 120000, "quality": 72.0},
+        "vapors": {"quantity": 80000, "quality": 91.0},
+        "radioactives": {"quantity": 45000, "quality": 43.0},
+        "exotics": {"quantity": 12000, "quality": 67.0},
     }
 
     return planet
@@ -392,11 +392,11 @@ def test_resource_grid_shows_all_resources(test_planet, mock_design_library):
 
     # Should have icons for all 5 resources
     assert len(panel._resource_icons) == 5
-    assert "Metals" in panel._resource_icons
-    assert "Organics" in panel._resource_icons
-    assert "Vapors" in panel._resource_icons
-    assert "Radioactives" in panel._resource_icons
-    assert "Exotics" in panel._resource_icons
+    assert "metals" in panel._resource_icons
+    assert "organics" in panel._resource_icons
+    assert "vapors" in panel._resource_icons
+    assert "radioactives" in panel._resource_icons
+    assert "exotics" in panel._resource_icons
 
     pygame.quit()
 
@@ -408,7 +408,7 @@ def test_resource_grid_with_production(test_planet, mock_design_library):
     manager = pygame_gui.UIManager((1024, 768))
 
     from game.ui.panels.planet_report_panel import PlanetReportPanel
-    production_rates = {"Metals": 100.0, "Organics": 50.0}
+    production_rates = {"metals": 100.0, "organics": 50.0}
 
     panel = PlanetReportPanel(
         manager=manager,
@@ -477,12 +477,12 @@ def test_resource_grid_updates_on_planet_change(test_planet, mock_design_library
     )
     new_planet.owner_id = 1
     new_planet.id = 200
-    new_planet.resources = {
-        "Metals": {"quantity": 500000, "quality": 95.0},
+    new_planet.deposits = {
+        "metals": {"quantity": 500000, "quality": 95.0},
     }
 
     # Update panel with new planet and production rates
-    new_rates = {"Metals": 200.0}
+    new_rates = {"metals": 200.0}
     panel.update_planet(new_planet, production_rates=new_rates)
 
     # Verify state updated
@@ -519,7 +519,7 @@ def test_resource_panel_no_resources(mock_design_library):
     )
     empty_planet.owner_id = 1
     empty_planet.id = 300
-    empty_planet.resources = {}
+    empty_planet.deposits = {}
     empty_planet.atmosphere = {}
 
     from game.ui.panels.planet_report_panel import PlanetReportPanel

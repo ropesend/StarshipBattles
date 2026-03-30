@@ -1,20 +1,20 @@
-"""Tests for ShipResourceManager - extracted resource management from ShipInstance."""
+"""Tests for ShipConsumableManager - extracted resource management from ShipInstance."""
 import pytest
 from unittest.mock import Mock, MagicMock
 
 
-class TestShipResourceManager:
-    """Test suite for ShipResourceManager."""
+class TestShipConsumableManager:
+    """Test suite for ShipConsumableManager."""
 
     @pytest.fixture
     def mock_ship_instance(self):
         """Create a mock ShipInstance with required attributes.
 
-        PROJ-95: resource_levels always contains actual values (no None-means-full).
+        PROJ-95: consumable_levels always contains actual values (no None-means-full).
         """
         ship = Mock()
         # Resources always stored with actual values
-        ship.resource_levels = {
+        ship.consumable_levels = {
             'fuel': 1000,
             'energy': 500,
             'ammo': 100,
@@ -40,9 +40,9 @@ class TestShipResourceManager:
 
     @pytest.fixture
     def resource_manager(self, mock_ship_instance):
-        """Create a ShipResourceManager with a mock ship."""
-        from game.strategy.data.ship_resource_manager import ShipResourceManager
-        return ShipResourceManager(mock_ship_instance)
+        """Create a ShipConsumableManager with a mock ship."""
+        from game.strategy.data.ship_consumable_manager import ShipConsumableManager
+        return ShipConsumableManager(mock_ship_instance)
 
     # --- Generic Resource Tests ---
 
@@ -58,7 +58,7 @@ class TestShipResourceManager:
 
     def test_get_current_resource(self, resource_manager, mock_ship_instance):
         """Get current level of any resource."""
-        mock_ship_instance.resource_levels['ammo'] = 75
+        mock_ship_instance.consumable_levels['ammo'] = 75
         assert resource_manager.get_current_resource('ammo') == 75
 
     def test_get_current_resource_full(self, resource_manager, mock_ship_instance):
@@ -66,43 +66,43 @@ class TestShipResourceManager:
 
         PROJ-95: Resources are always stored with actual values.
         """
-        # ammo is already 100 (full) in mock_ship_instance.resource_levels
+        # ammo is already 100 (full) in mock_ship_instance.consumable_levels
         assert resource_manager.get_current_resource('ammo') == 100
 
     def test_consume_resource_success(self, resource_manager, mock_ship_instance):
         """Consume any resource type."""
-        mock_ship_instance.resource_levels['ammo'] = 80
+        mock_ship_instance.consumable_levels['ammo'] = 80
         result = resource_manager.consume_resource('ammo', 30)
         assert result is True
-        assert mock_ship_instance.resource_levels['ammo'] == 50
+        assert mock_ship_instance.consumable_levels['ammo'] == 50
 
     def test_consume_resource_insufficient(self, resource_manager, mock_ship_instance):
         """Consume resource when insufficient."""
-        mock_ship_instance.resource_levels['ammo'] = 20
+        mock_ship_instance.consumable_levels['ammo'] = 20
         result = resource_manager.consume_resource('ammo', 50)
         assert result is False
-        assert mock_ship_instance.resource_levels['ammo'] == 20
+        assert mock_ship_instance.consumable_levels['ammo'] == 20
 
     def test_consume_resource_negative_amount(self, resource_manager, mock_ship_instance):
         """Cannot consume negative amount."""
-        mock_ship_instance.resource_levels['ammo'] = 50
+        mock_ship_instance.consumable_levels['ammo'] = 50
         result = resource_manager.consume_resource('ammo', -10)
         assert result is False
-        assert mock_ship_instance.resource_levels['ammo'] == 50
+        assert mock_ship_instance.consumable_levels['ammo'] == 50
 
     def test_consume_resource_zero_amount(self, resource_manager, mock_ship_instance):
         """Consuming zero amount succeeds without changing resource."""
-        mock_ship_instance.resource_levels['ammo'] = 50
+        mock_ship_instance.consumable_levels['ammo'] = 50
         result = resource_manager.consume_resource('ammo', 0)
         assert result is True
-        assert mock_ship_instance.resource_levels['ammo'] == 50
+        assert mock_ship_instance.consumable_levels['ammo'] == 50
 
     def test_consume_resource_exact_amount(self, resource_manager, mock_ship_instance):
         """Consuming exact remaining amount succeeds."""
-        mock_ship_instance.resource_levels['ammo'] = 30
+        mock_ship_instance.consumable_levels['ammo'] = 30
         result = resource_manager.consume_resource('ammo', 30)
         assert result is True
-        assert mock_ship_instance.resource_levels['ammo'] == 0
+        assert mock_ship_instance.consumable_levels['ammo'] == 0
 
     def test_consume_resource_nonexistent_type(self, resource_manager, mock_ship_instance):
         """Consuming nonexistent resource type fails gracefully."""
@@ -137,11 +137,11 @@ class TestShipResourceManager:
         """Resupply resource partially."""
         # Need to set up max_fuel key in stats
         mock_ship_instance.get_calculated_stats.return_value['max_fuel'] = 1000
-        mock_ship_instance.resource_levels['fuel'] = 500
+        mock_ship_instance.consumable_levels['fuel'] = 500
 
         result = resource_manager.resupply('fuel', 200)
         assert result == 200
-        assert mock_ship_instance.resource_levels['fuel'] == 700
+        assert mock_ship_instance.consumable_levels['fuel'] == 700
 
     def test_resupply_to_full(self, resource_manager, mock_ship_instance):
         """Resupply to full keeps value stored at max.
@@ -149,28 +149,28 @@ class TestShipResourceManager:
         PROJ-95: Resources always stored (no sparse dict convention).
         """
         mock_ship_instance.get_calculated_stats.return_value['max_fuel'] = 1000
-        mock_ship_instance.resource_levels['fuel'] = 800
+        mock_ship_instance.consumable_levels['fuel'] = 800
 
         result = resource_manager.resupply('fuel', 300)
         assert result == 200  # Capped at max
-        assert mock_ship_instance.resource_levels['fuel'] == 1000  # Full value stored
+        assert mock_ship_instance.consumable_levels['fuel'] == 1000  # Full value stored
 
     def test_resupply_already_full(self, resource_manager, mock_ship_instance):
         """Resupply when already full returns 0.
 
         PROJ-95: Resources always stored, so check against stored max value.
         """
-        # fuel is already at max (1000) in resource_levels
+        # fuel is already at max (1000) in consumable_levels
         result = resource_manager.resupply('fuel', 100)
         assert result == 0
 
     def test_resupply_negative_amount(self, resource_manager, mock_ship_instance):
         """Resupply with negative amount effectively removes resource."""
-        mock_ship_instance.resource_levels['fuel'] = 500
+        mock_ship_instance.consumable_levels['fuel'] = 500
         result = resource_manager.resupply('fuel', -100)
         # Negative amount reduces current level (400), but capped at 0 minimum
         assert result == -100
-        assert mock_ship_instance.resource_levels['fuel'] == 400
+        assert mock_ship_instance.consumable_levels['fuel'] == 400
 
     def test_resupply_zero_capacity(self, resource_manager, mock_ship_instance):
         """Resupply when max capacity is 0 returns 0."""
@@ -178,10 +178,10 @@ class TestShipResourceManager:
         mock_ship_instance.get_calculated_stats.return_value['resource_storage'] = {
             'special': 0,
         }
-        mock_ship_instance.resource_levels['special'] = 0
+        mock_ship_instance.consumable_levels['special'] = 0
         result = resource_manager.resupply('special', 100)
         assert result == 0
-        assert mock_ship_instance.resource_levels['special'] == 0
+        assert mock_ship_instance.consumable_levels['special'] == 0
 
     def test_resupply_nonexistent_resource(self, resource_manager, mock_ship_instance):
         """Resupply nonexistent resource returns 0 (no capacity)."""
@@ -192,30 +192,30 @@ class TestShipResourceManager:
 
     def test_get_all_resource_costs_per_hex_empty(self, mock_ship_instance):
         """Get per-hex costs when stats have empty dict."""
-        from game.strategy.data.ship_resource_manager import ShipResourceManager
+        from game.strategy.data.ship_consumable_manager import ShipConsumableManager
         mock_ship_instance.get_calculated_stats.return_value = {}
-        manager = ShipResourceManager(mock_ship_instance)
+        manager = ShipConsumableManager(mock_ship_instance)
         result = manager.get_all_resource_costs_per_hex()
         assert result == {}
 
     def test_get_all_resource_costs_per_turn_empty(self, mock_ship_instance):
         """Get per-turn costs when stats have empty dict."""
-        from game.strategy.data.ship_resource_manager import ShipResourceManager
+        from game.strategy.data.ship_consumable_manager import ShipConsumableManager
         mock_ship_instance.get_calculated_stats.return_value = {}
-        manager = ShipResourceManager(mock_ship_instance)
+        manager = ShipConsumableManager(mock_ship_instance)
         result = manager.get_all_resource_costs_per_turn()
         assert result == {}
 
     def test_get_warp_resource_costs_empty(self, mock_ship_instance):
         """Get warp costs when stats have empty dict."""
-        from game.strategy.data.ship_resource_manager import ShipResourceManager
+        from game.strategy.data.ship_consumable_manager import ShipConsumableManager
         mock_ship_instance.get_calculated_stats.return_value = {}
-        manager = ShipResourceManager(mock_ship_instance)
+        manager = ShipConsumableManager(mock_ship_instance)
         result = manager.get_warp_resource_costs()
         assert result == {}
 
 
-class TestShipResourceManagerIntegration:
+class TestShipConsumableManagerIntegration:
     """Integration tests with real ShipInstance."""
 
     @pytest.fixture

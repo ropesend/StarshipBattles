@@ -56,7 +56,7 @@ class TestPlanetaryFacilities:
                         "id": "metal_harvester",
                         "abilities": {
                             "ResourceHarvester": {
-                                "resource_type": "Metals",
+                                "resource_type": "metals",
                                 "base_harvest_rate": 10.0
                             }
                         }
@@ -121,7 +121,7 @@ class TestPlanetaryFacilities:
                         "id": "metal_harvester",
                         "abilities": {
                             "ResourceHarvester": {
-                                "resource_type": "Metals"
+                                "resource_type": "metals"
                             }
                         }
                     }

@@ -1,4 +1,4 @@
-"""Tests for MaintenanceEngine - maintenance cost deduction and scuttling.
+"""Tests for MaintenanceEngine - maintenance cost deduction and disabling.
 
 PROJ-75 Phase 5: Maintenance System.
 PROJ-161: Now per-tick only via process_maintenance_tick().
@@ -6,8 +6,8 @@ PROJ-191 Phase 3: Updated mocks to use spec= for type safety.
 
 MaintenanceEngine deducts 5% of build cost per turn for each facility and ship
 (1/100th per tick = 0.05% per tick). If the empire cannot afford maintenance
-on any tick, the entity is scuttled immediately.
-Processing is one-pass to prevent cascading scuttles.
+on any tick, the entity is disabled immediately (is_operational set to False).
+Processing is one-pass to prevent cascading disables.
 """
 import pytest
 from unittest.mock import MagicMock
@@ -52,7 +52,7 @@ def _make_facility(
             "layers": {
                 "CORE": {
                     "components": [
-                        {"id": "metals_harvester", "resource_cost": {"Metals": 1000, "Radioactives": 200}}
+                        {"id": "metals_harvester", "resource_cost": {"metals": 1000, "radioactives": 200}}
                     ]
                 }
             }
@@ -89,7 +89,7 @@ def _make_ship_instance(
             "layers": {
                 "HULL": {
                     "components": [
-                        {"id": "light_hull", "resource_cost": {"Metals": 500, "Organics": 100}}
+                        {"id": "light_hull", "resource_cost": {"metals": 500, "organics": 100}}
                     ]
                 }
             }
@@ -129,15 +129,15 @@ class TestMaintenanceEngine:
             "layers": {
                 "CORE": {
                     "components": [
-                        {"id": "comp_a", "resource_cost": {"Metals": 1000}},
-                        {"id": "comp_b", "resource_cost": {"Organics": 200}},
+                        {"id": "comp_a", "resource_cost": {"metals": 1000}},
+                        {"id": "comp_b", "resource_cost": {"organics": 200}},
                     ]
                 }
             }
         })
         cost = engine._calculate_maintenance_cost(facility.design_data)
         # 5% of Metals=1000 -> 50, 5% of Organics=200 -> 10
-        assert cost == {"Metals": pytest.approx(50.0), "Organics": pytest.approx(10.0)}
+        assert cost == {"metals": pytest.approx(50.0), "organics": pytest.approx(10.0)}
 
     def test_maintenance_cost_multiple_layers(self):
         """Maintenance cost sums resource_cost across all layers."""
@@ -146,19 +146,19 @@ class TestMaintenanceEngine:
             "layers": {
                 "CORE": {
                     "components": [
-                        {"id": "comp_a", "resource_cost": {"Metals": 400}}
+                        {"id": "comp_a", "resource_cost": {"metals": 400}}
                     ]
                 },
                 "OUTER": {
                     "components": [
-                        {"id": "comp_b", "resource_cost": {"Metals": 600, "Vapors": 100}}
+                        {"id": "comp_b", "resource_cost": {"metals": 600, "vapors": 100}}
                     ]
                 }
             }
         })
         cost = engine._calculate_maintenance_cost(facility.design_data)
         # 5% of Metals=1000 -> 50, 5% of Vapors=100 -> 5
-        assert cost == {"Metals": pytest.approx(50.0), "Vapors": pytest.approx(5.0)}
+        assert cost == {"metals": pytest.approx(50.0), "vapors": pytest.approx(5.0)}
 
     def test_maintenance_cost_zero_for_empty_design(self):
         """Design with no components has zero maintenance cost."""
@@ -174,24 +174,24 @@ class TestMaintenanceEngine:
                 "CORE": {
                     "components": [
                         {"id": "sensor_array"},  # No resource_cost
-                        {"id": "metals_harvester", "resource_cost": {"Metals": 200}},
+                        {"id": "metals_harvester", "resource_cost": {"metals": 200}},
                     ]
                 }
             }
         })
-        assert cost == {"Metals": pytest.approx(10.0)}
+        assert cost == {"metals": pytest.approx(10.0)}
 
     # --- Successful facility payment ---
 
     def test_facility_maintenance_deducts_from_empire(self):
         """Successful maintenance payment deducts resources from empire pool (full turn)."""
         engine = self._get_engine()
-        empire = _make_empire({"Metals": 1000.0})
+        empire = _make_empire({"metals": 1000.0})
         facility = _make_facility(design_data={
             "layers": {
                 "CORE": {
                     "components": [
-                        {"id": "comp_a", "resource_cost": {"Metals": 1000}}
+                        {"id": "comp_a", "resource_cost": {"metals": 1000}}
                     ]
                 }
             }
@@ -202,20 +202,20 @@ class TestMaintenanceEngine:
         events = self._process_full_turn(engine, [empire])
 
         # 5% of 1000 = 50 Metals deducted
-        assert empire.resource_pool["Metals"] == pytest.approx(950.0)
+        assert empire.resource_pool["metals"] == pytest.approx(950.0)
         assert len(events) == 0
 
     def test_multiple_facilities_all_checked(self):
         """All facilities on all colonies are processed in one pass (full turn)."""
         engine = self._get_engine()
-        empire = _make_empire({"Metals": 1000.0})
+        empire = _make_empire({"metals": 1000.0})
         fac1 = _make_facility(
             instance_id="fac_1",
-            design_data={"layers": {"CORE": {"components": [{"id": "a", "resource_cost": {"Metals": 200}}]}}},
+            design_data={"layers": {"CORE": {"components": [{"id": "a", "resource_cost": {"metals": 200}}]}}},
         )
         fac2 = _make_facility(
             instance_id="fac_2",
-            design_data={"layers": {"CORE": {"components": [{"id": "b", "resource_cost": {"Metals": 400}}]}}},
+            design_data={"layers": {"CORE": {"components": [{"id": "b", "resource_cost": {"metals": 400}}]}}},
         )
         colony = _make_colony(facilities=[fac1, fac2])
         empire.colonies = [colony]
@@ -223,20 +223,20 @@ class TestMaintenanceEngine:
         events = self._process_full_turn(engine, [empire])
 
         # fac1: 5% of 200 = 10, fac2: 5% of 400 = 20
-        assert empire.resource_pool["Metals"] == pytest.approx(970.0)
+        assert empire.resource_pool["metals"] == pytest.approx(970.0)
         assert len(events) == 0
 
-    # --- Facility scuttling ---
+    # --- Facility disabling ---
 
-    def test_facility_scuttled_when_payment_fails(self):
-        """Facility is removed from planet when empire can't afford maintenance."""
+    def test_facility_disabled_when_payment_fails(self):
+        """Facility is disabled (not removed) when empire can't afford maintenance."""
         engine = self._get_engine()
-        empire = _make_empire({"Metals": 0.0})
+        empire = _make_empire({"metals": 0.0})
         facility = _make_facility(design_data={
             "layers": {
                 "CORE": {
                     "components": [
-                        {"id": "comp_a", "resource_cost": {"Metals": 1000}}
+                        {"id": "comp_a", "resource_cost": {"metals": 1000}}
                     ]
                 }
             }
@@ -244,21 +244,22 @@ class TestMaintenanceEngine:
         colony = _make_colony(facilities=[facility])
         empire.colonies = [colony]
 
-        # First tick should scuttle immediately
+        # First tick should disable immediately
         events = engine.process_maintenance_tick(1, [empire])
 
-        assert len(colony.facilities) == 0
+        assert len(colony.facilities) == 1  # Facility still present
+        assert facility.is_operational == False  # But disabled
         assert len(events) == 1
         assert events[0].entity_type == "facility"
         assert events[0].entity_name == "Test Facility"
 
-    def test_scuttle_event_has_correct_fields(self):
-        """ScuttleEvent has all expected fields."""
+    def test_disable_event_has_correct_fields(self):
+        """ScuttleEvent has all expected fields when facility is disabled."""
         engine = self._get_engine()
-        empire = _make_empire({"Metals": 0.0})
+        empire = _make_empire({"metals": 0.0})
         facility = _make_facility(
             name="Metals Harvester",
-            design_data={"layers": {"CORE": {"components": [{"id": "a", "resource_cost": {"Metals": 100}}]}}},
+            design_data={"layers": {"CORE": {"components": [{"id": "a", "resource_cost": {"metals": 100}}]}}},
         )
         colony = _make_colony(facilities=[facility], name="Alpha Prime", planet_id=42)
         empire.colonies = [colony]
@@ -277,10 +278,10 @@ class TestMaintenanceEngine:
     def test_non_operational_facility_no_maintenance(self):
         """Non-operational facilities have zero maintenance cost."""
         engine = self._get_engine()
-        empire = _make_empire({"Metals": 0.0})  # No resources at all
+        empire = _make_empire({"metals": 0.0})  # No resources at all
         facility = _make_facility(
             is_operational=False,
-            design_data={"layers": {"CORE": {"components": [{"id": "a", "resource_cost": {"Metals": 1000}}]}}},
+            design_data={"layers": {"CORE": {"components": [{"id": "a", "resource_cost": {"metals": 1000}}]}}},
         )
         colony = _make_colony(facilities=[facility])
         empire.colonies = [colony]
@@ -293,8 +294,8 @@ class TestMaintenanceEngine:
 
     # --- Scuttle cascade prevention ---
 
-    def test_scuttle_cascade_prevention(self):
-        """One-pass processing prevents cascading scuttles.
+    def test_disable_cascade_prevention(self):
+        """One-pass processing prevents cascading disables.
 
         If facility A is paid for and facility B fails, the resources
         from A's maintenance should NOT retroactively save B.
@@ -304,38 +305,39 @@ class TestMaintenanceEngine:
         # fac1 costs 0.1 per tick (5% of 200 = 10 per turn / 100)
         # fac2 costs 0.2 per tick (5% of 400 = 20 per turn / 100)
         # With 0.15 Metals, fac1 can pay (0.1), fac2 can't (need 0.2 but only 0.05 left)
-        empire = _make_empire({"Metals": 0.15})
+        empire = _make_empire({"metals": 0.15})
         fac1 = _make_facility(
             instance_id="fac_1", name="Cheap Facility",
-            design_data={"layers": {"CORE": {"components": [{"id": "a", "resource_cost": {"Metals": 200}}]}}},
+            design_data={"layers": {"CORE": {"components": [{"id": "a", "resource_cost": {"metals": 200}}]}}},
         )  # cost: 0.1 Metals per tick
         fac2 = _make_facility(
             instance_id="fac_2", name="Expensive Facility",
-            design_data={"layers": {"CORE": {"components": [{"id": "b", "resource_cost": {"Metals": 400}}]}}},
+            design_data={"layers": {"CORE": {"components": [{"id": "b", "resource_cost": {"metals": 400}}]}}},
         )  # cost: 0.2 Metals per tick
         colony = _make_colony(facilities=[fac1, fac2])
         empire.colonies = [colony]
 
         events = engine.process_maintenance_tick(1, [empire])
 
-        # fac1 paid (0.1), fac2 can't pay (need 0.2 but only 0.05 left) -> scuttled
-        assert len(colony.facilities) == 1
-        assert colony.facilities[0].instance_id == "fac_1"
+        # fac1 paid (0.1), fac2 can't pay (need 0.2 but only 0.05 left) -> disabled
+        assert len(colony.facilities) == 2  # Both still present
+        assert fac2.is_operational == False  # fac2 disabled
+        assert fac1.is_operational == True   # fac1 still operational
         assert len(events) == 1
         assert events[0].entity_name == "Expensive Facility"
-        assert empire.resource_pool["Metals"] == pytest.approx(0.05)
+        assert empire.resource_pool["metals"] == pytest.approx(0.05)
 
     # --- Ship maintenance ---
 
     def test_ship_maintenance_deducts_from_empire(self):
         """Ship maintenance deducts 5% of build cost from empire pool (full turn)."""
         engine = self._get_engine()
-        empire = _make_empire({"Metals": 1000.0, "Organics": 500.0})
+        empire = _make_empire({"metals": 1000.0, "organics": 500.0})
         ship = _make_ship_instance(design_data={
             "layers": {
                 "HULL": {
                     "components": [
-                        {"id": "hull", "resource_cost": {"Metals": 500, "Organics": 100}}
+                        {"id": "hull", "resource_cost": {"metals": 500, "organics": 100}}
                     ]
                 }
             }
@@ -346,24 +348,25 @@ class TestMaintenanceEngine:
         events = self._process_full_turn(engine, [empire])
 
         # 5% of 500=25 Metals, 5% of 100=5 Organics
-        assert empire.resource_pool["Metals"] == pytest.approx(975.0)
-        assert empire.resource_pool["Organics"] == pytest.approx(495.0)
+        assert empire.resource_pool["metals"] == pytest.approx(975.0)
+        assert empire.resource_pool["organics"] == pytest.approx(495.0)
         assert len(events) == 0
 
-    def test_ship_scuttled_when_payment_fails(self):
-        """Ship is removed from fleet when empire can't afford maintenance."""
+    def test_ship_disabled_when_payment_fails(self):
+        """Ship is disabled (not removed) when empire can't afford maintenance."""
         engine = self._get_engine()
-        empire = _make_empire({"Metals": 0.0})
+        empire = _make_empire({"metals": 0.0})
         ship = _make_ship_instance(
             name="Doomed Scout",
-            design_data={"layers": {"HULL": {"components": [{"id": "h", "resource_cost": {"Metals": 200}}]}}},
+            design_data={"layers": {"HULL": {"components": [{"id": "h", "resource_cost": {"metals": 200}}]}}},
         )
         fleet = _make_fleet(ships=[ship])
         empire.fleets = [fleet]
 
         events = engine.process_maintenance_tick(1, [empire])
 
-        assert len(fleet.ships) == 0
+        assert len(fleet.ships) == 1  # Ship still present
+        assert ship.is_operational == False  # But disabled
         assert len(events) == 1
         assert events[0].entity_type == "ship"
         assert events[0].entity_name == "Doomed Scout"
@@ -374,40 +377,43 @@ class TestMaintenanceEngine:
         # ship1 costs 0.25 per tick (5% of 500 = 25 per turn / 100)
         # ship2 costs 0.5 per tick (5% of 1000 = 50 per turn / 100)
         # With 0.4 Metals, ship1 can pay (0.25), ship2 can't (need 0.5 but only 0.15 left)
-        empire = _make_empire({"Metals": 0.4})
+        empire = _make_empire({"metals": 0.4})
         ship1 = _make_ship_instance(
             instance_id="s1", name="Cheap Ship",
-            design_data={"layers": {"HULL": {"components": [{"id": "h", "resource_cost": {"Metals": 500}}]}}},
+            design_data={"layers": {"HULL": {"components": [{"id": "h", "resource_cost": {"metals": 500}}]}}},
         )  # cost: 0.25 Metals per tick
         ship2 = _make_ship_instance(
             instance_id="s2", name="Expensive Ship",
-            design_data={"layers": {"HULL": {"components": [{"id": "h", "resource_cost": {"Metals": 1000}}]}}},
+            design_data={"layers": {"HULL": {"components": [{"id": "h", "resource_cost": {"metals": 1000}}]}}},
         )  # cost: 0.5 Metals per tick
         fleet = _make_fleet(ships=[ship1, ship2])
         empire.fleets = [fleet]
 
         events = engine.process_maintenance_tick(1, [empire])
 
-        assert len(fleet.ships) == 1
-        assert fleet.ships[0].name == "Cheap Ship"
+        assert len(fleet.ships) == 2  # Both still present
+        assert ship2.is_operational == False  # ship2 disabled
+        assert ship1.is_operational == True   # ship1 still operational
         assert len(events) == 1
         assert events[0].entity_name == "Expensive Ship"
-        assert empire.resource_pool["Metals"] == pytest.approx(0.15)
+        assert empire.resource_pool["metals"] == pytest.approx(0.15)
 
-    def test_empty_fleet_removed_after_scuttle(self):
-        """Fleets with no ships remaining are cleaned up after scuttles."""
+    def test_fleet_persists_after_ship_disabled(self):
+        """Fleet remains when its ships are disabled (not removed)."""
         engine = self._get_engine()
-        empire = _make_empire({"Metals": 0.0})
+        empire = _make_empire({"metals": 0.0})
         ship = _make_ship_instance(
-            design_data={"layers": {"HULL": {"components": [{"id": "h", "resource_cost": {"Metals": 200}}]}}},
+            design_data={"layers": {"HULL": {"components": [{"id": "h", "resource_cost": {"metals": 200}}]}}},
         )
         fleet = _make_fleet(ships=[ship])
         empire.fleets = [fleet]
 
         events = engine.process_maintenance_tick(1, [empire])
 
-        # Fleet should be removed from empire
-        assert len(empire.fleets) == 0
+        # Fleet still exists, ship disabled but present
+        assert len(empire.fleets) == 1
+        assert len(fleet.ships) == 1
+        assert ship.is_operational == False
         assert len(events) == 1
 
     def test_empty_empire_no_crash(self):
@@ -424,34 +430,34 @@ class TestMaintenanceEngine:
     def test_multiple_empires_processed(self):
         """Multiple empires are all processed (full turn)."""
         engine = self._get_engine()
-        empire1 = _make_empire({"Metals": 1000.0}, empire_id=0)
-        empire2 = _make_empire({"Metals": 1000.0}, empire_id=1)
+        empire1 = _make_empire({"metals": 1000.0}, empire_id=0)
+        empire2 = _make_empire({"metals": 1000.0}, empire_id=1)
         fac1 = _make_facility(
             instance_id="f1",
-            design_data={"layers": {"CORE": {"components": [{"id": "a", "resource_cost": {"Metals": 200}}]}}},
+            design_data={"layers": {"CORE": {"components": [{"id": "a", "resource_cost": {"metals": 200}}]}}},
         )
         fac2 = _make_facility(
             instance_id="f2",
-            design_data={"layers": {"CORE": {"components": [{"id": "b", "resource_cost": {"Metals": 400}}]}}},
+            design_data={"layers": {"CORE": {"components": [{"id": "b", "resource_cost": {"metals": 400}}]}}},
         )
         empire1.colonies = [_make_colony(facilities=[fac1])]
         empire2.colonies = [_make_colony(facilities=[fac2])]
 
         events = self._process_full_turn(engine, [empire1, empire2])
 
-        assert empire1.resource_pool["Metals"] == pytest.approx(990.0)  # 5% of 200 = 10
-        assert empire2.resource_pool["Metals"] == pytest.approx(980.0)  # 5% of 400 = 20
+        assert empire1.resource_pool["metals"] == pytest.approx(990.0)  # 5% of 200 = 10
+        assert empire2.resource_pool["metals"] == pytest.approx(980.0)  # 5% of 400 = 20
         assert len(events) == 0
 
     def test_facilities_and_ships_both_processed(self):
         """Both facilities and ships are charged maintenance in the same pass (full turn)."""
         engine = self._get_engine()
-        empire = _make_empire({"Metals": 1000.0})
+        empire = _make_empire({"metals": 1000.0})
         facility = _make_facility(
-            design_data={"layers": {"CORE": {"components": [{"id": "a", "resource_cost": {"Metals": 200}}]}}},
+            design_data={"layers": {"CORE": {"components": [{"id": "a", "resource_cost": {"metals": 200}}]}}},
         )
         ship = _make_ship_instance(
-            design_data={"layers": {"HULL": {"components": [{"id": "h", "resource_cost": {"Metals": 400}}]}}},
+            design_data={"layers": {"HULL": {"components": [{"id": "h", "resource_cost": {"metals": 400}}]}}},
         )
         colony = _make_colony(facilities=[facility])
         fleet = _make_fleet(ships=[ship])
@@ -461,7 +467,7 @@ class TestMaintenanceEngine:
         events = self._process_full_turn(engine, [empire])
 
         # fac: 5% of 200 = 10, ship: 5% of 400 = 20 => total 30
-        assert empire.resource_pool["Metals"] == pytest.approx(970.0)
+        assert empire.resource_pool["metals"] == pytest.approx(970.0)
         assert len(events) == 0
 
 
@@ -481,14 +487,14 @@ class TestPerTickMaintenance:
     def test_single_tick_deducts_one_hundredth(self):
         """Single tick deducts 1/100th of the per-turn maintenance cost."""
         engine = self._get_engine()
-        empire = _make_empire({"Metals": 1000.0})
+        empire = _make_empire({"metals": 1000.0})
         # Facility with 1000 Metals build cost -> 50 Metals/turn maintenance
         # Per tick: 50 / 100 = 0.5 Metals
         facility = _make_facility(design_data={
             "layers": {
                 "CORE": {
                     "components": [
-                        {"id": "comp_a", "resource_cost": {"Metals": 1000}}
+                        {"id": "comp_a", "resource_cost": {"metals": 1000}}
                     ]
                 }
             }
@@ -499,21 +505,21 @@ class TestPerTickMaintenance:
         events = engine.process_maintenance_tick(tick=1, empires=[empire])
 
         # 5% of 1000 = 50 per turn, 50 / 100 = 0.5 per tick
-        assert empire.resource_pool["Metals"] == pytest.approx(999.5)
+        assert empire.resource_pool["metals"] == pytest.approx(999.5)
         assert len(events) == 0
 
     def test_100_ticks_produces_expected_total_cost(self):
         """Calling 100 times produces expected per-turn total deduction."""
         engine = self._get_engine()
 
-        empire = _make_empire({"Metals": 1000.0, "Organics": 500.0})
+        empire = _make_empire({"metals": 1000.0, "organics": 500.0})
         facility = _make_facility(
             instance_id="fac_tick",
             design_data={
                 "layers": {
                     "CORE": {
                         "components": [
-                            {"id": "comp_a", "resource_cost": {"Metals": 1000, "Organics": 200}}
+                            {"id": "comp_a", "resource_cost": {"metals": 1000, "organics": 200}}
                         ]
                     }
                 }
@@ -525,7 +531,7 @@ class TestPerTickMaintenance:
                 "layers": {
                     "HULL": {
                         "components": [
-                            {"id": "hull", "resource_cost": {"Metals": 500}}
+                            {"id": "hull", "resource_cost": {"metals": 500}}
                         ]
                     }
                 }
@@ -544,19 +550,19 @@ class TestPerTickMaintenance:
         # Facility: 5% of (1000M + 200O) = 50M + 10O
         # Ship: 5% of 500M = 25M
         # Total: 75M + 10O
-        assert empire.resource_pool["Metals"] == pytest.approx(925.0)  # 1000 - 75
-        assert empire.resource_pool["Organics"] == pytest.approx(490.0)  # 500 - 10
+        assert empire.resource_pool["metals"] == pytest.approx(925.0)  # 1000 - 75
+        assert empire.resource_pool["organics"] == pytest.approx(490.0)  # 500 - 10
 
-    def test_immediate_scuttle_on_tick_failure(self):
-        """Entity is scuttled when a single tick's payment fails."""
+    def test_immediate_disable_on_tick_failure(self):
+        """Entity is disabled when a single tick's payment fails."""
         engine = self._get_engine()
         # Only 0.25 Metals - not enough for 0.5 per tick
-        empire = _make_empire({"Metals": 0.25})
+        empire = _make_empire({"metals": 0.25})
         facility = _make_facility(design_data={
             "layers": {
                 "CORE": {
                     "components": [
-                        {"id": "comp_a", "resource_cost": {"Metals": 1000}}
+                        {"id": "comp_a", "resource_cost": {"metals": 1000}}
                     ]
                 }
             }
@@ -566,22 +572,23 @@ class TestPerTickMaintenance:
 
         events = engine.process_maintenance_tick(tick=1, empires=[empire])
 
-        # Facility should be scuttled
-        assert len(colony.facilities) == 0
+        # Facility should be disabled but still present
+        assert len(colony.facilities) == 1
+        assert facility.is_operational == False
         assert len(events) == 1
         assert events[0].entity_type == "facility"
 
     def test_non_operational_facility_free_per_tick(self):
         """Non-operational facilities have zero per-tick maintenance cost."""
         engine = self._get_engine()
-        empire = _make_empire({"Metals": 0.0})  # No resources at all
+        empire = _make_empire({"metals": 0.0})  # No resources at all
         facility = _make_facility(
             is_operational=False,
             design_data={
                 "layers": {
                     "CORE": {
                         "components": [
-                            {"id": "a", "resource_cost": {"Metals": 1000}}
+                            {"id": "a", "resource_cost": {"metals": 1000}}
                         ]
                     }
                 }
@@ -596,17 +603,17 @@ class TestPerTickMaintenance:
         assert len(colony.facilities) == 1
         assert len(events) == 0
 
-    def test_scuttle_event_fields_correct(self):
+    def test_disable_event_fields_correct(self):
         """ScuttleEvent from per-tick processing has correct fields."""
         engine = self._get_engine()
-        empire = _make_empire({"Metals": 0.0})
+        empire = _make_empire({"metals": 0.0})
         ship = _make_ship_instance(
             name="Doomed Cruiser",
             design_data={
                 "layers": {
                     "HULL": {
                         "components": [
-                            {"id": "hull", "resource_cost": {"Metals": 200}}
+                            {"id": "hull", "resource_cost": {"metals": 200}}
                         ]
                     }
                 }
@@ -629,14 +636,14 @@ class TestPerTickMaintenance:
         engine = self._get_engine()
         # Enough for one facility's tick cost but not both
         # Each costs 0.5 Metals per tick (5% of 1000 = 50, /100 = 0.5)
-        empire = _make_empire({"Metals": 0.6})
+        empire = _make_empire({"metals": 0.6})
         fac1 = _make_facility(
             instance_id="fac_1", name="Survivor",
             design_data={
                 "layers": {
                     "CORE": {
                         "components": [
-                            {"id": "a", "resource_cost": {"Metals": 1000}}
+                            {"id": "a", "resource_cost": {"metals": 1000}}
                         ]
                     }
                 }
@@ -648,7 +655,7 @@ class TestPerTickMaintenance:
                 "layers": {
                     "CORE": {
                         "components": [
-                            {"id": "b", "resource_cost": {"Metals": 1000}}
+                            {"id": "b", "resource_cost": {"metals": 1000}}
                         ]
                     }
                 }
@@ -659,9 +666,10 @@ class TestPerTickMaintenance:
 
         events = engine.process_maintenance_tick(tick=1, empires=[empire])
 
-        # fac1 paid (0.5), fac2 can't pay (need 0.5 but only 0.1 left) -> scuttled
-        assert len(colony.facilities) == 1
-        assert colony.facilities[0].instance_id == "fac_1"
+        # fac1 paid (0.5), fac2 can't pay (need 0.5 but only 0.1 left) -> disabled
+        assert len(colony.facilities) == 2  # Both still present
+        assert fac2.is_operational == False  # fac2 disabled
+        assert fac1.is_operational == True   # fac1 still operational
         assert len(events) == 1
         assert events[0].entity_name == "Doomed"
-        assert empire.resource_pool["Metals"] == pytest.approx(0.1)
+        assert empire.resource_pool["metals"] == pytest.approx(0.1)
