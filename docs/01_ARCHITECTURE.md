@@ -359,7 +359,7 @@ GameSession (game/strategy/engine/game_session.py)
 TurnEngine.process_turn() (game/strategy/engine/turn_engine.py)
        │  runs 100 sub-ticks, each executing phases in order:
        │  Phase 0:   HarvestingEngine (1/100th per tick)
-       │  Phase 0a:  MaintenanceEngine (1/100th per tick, immediate scuttle)
+       │  Phase 0a:  MaintenanceEngine (1/100th per tick, immediate disable)
        │  Phase 0b:  ConsumableManagementEngine (per-turn consumption)
        │  Phase 0c:  ResupplyEngine (fuel generation at facilities)
        │  Phase 0d:  ResupplyEngine (fleet resupply from facilities)

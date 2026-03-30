@@ -192,11 +192,11 @@ Six components restricted to `"Planetary Complex"` vehicle type, defined in `dat
 
 | Component | Ability |
 |-----------|---------|
-| `metal_harvester` | `ResourceHarvesterAbility` (Metals) |
-| `organic_harvester` | `ResourceHarvesterAbility` (Organics) |
-| `vapor_harvester` | `ResourceHarvesterAbility` (Vapors) |
-| `radioactive_harvester` | `ResourceHarvesterAbility` (Radioactives) |
-| `exotic_harvester` | `ResourceHarvesterAbility` (Exotics) |
+| `metal_harvester` | `ResourceHarvesterAbility` (metals) |
+| `organic_harvester` | `ResourceHarvesterAbility` (organics) |
+| `vapor_harvester` | `ResourceHarvesterAbility` (vapors) |
+| `radioactive_harvester` | `ResourceHarvesterAbility` (radioactives) |
+| `exotic_harvester` | `ResourceHarvesterAbility` (exotics) |
 | `space_shipyard` | `SpaceShipyardAbility` |
 
 **Ability classes:** `game/simulation/components/abilities/harvester.py`
