@@ -5,8 +5,6 @@ fleet-wide resource calculation and consumption logic.
 """
 
 from typing import Callable, Dict, Any, TYPE_CHECKING
-from game.core.constants import ResourceType
-
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.ship_instance import ShipInstance
@@ -194,11 +192,11 @@ class FleetResourceAggregator:
         min_endurance = float('inf')
 
         for ship in self._fleet.get_combat_capable_ships():
-            cost_per_hex = ship.get_all_resource_costs_per_hex().get(ResourceType.FUEL, 0.0)
+            cost_per_hex = ship.get_all_resource_costs_per_hex().get("fuel", 0.0)
             if cost_per_hex <= 0:
                 continue  # This ship doesn't consume fuel
 
-            current_fuel = ship.get_current_resource(ResourceType.FUEL)
+            current_fuel = ship.get_current_resource("fuel")
             endurance = int(current_fuel / cost_per_hex) if cost_per_hex > 0 else float('inf')
             min_endurance = min(min_endurance, endurance)
 

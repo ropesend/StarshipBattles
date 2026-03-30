@@ -308,23 +308,20 @@ class TestResourceColors:
     def test_fuel_color_is_orange(self):
         """Fuel color is orange."""
         from game.ui.panels.ship_stats_renderer import RESOURCE_COLORS
-        from game.core.constants import ResourceType
 
-        assert RESOURCE_COLORS[ResourceType.FUEL] == (255, 165, 0)
+        assert RESOURCE_COLORS["fuel"] == (255, 165, 0)
 
     def test_energy_color_is_blue(self):
         """Energy color is blue."""
         from game.ui.panels.ship_stats_renderer import RESOURCE_COLORS
-        from game.core.constants import ResourceType
 
-        assert RESOURCE_COLORS[ResourceType.ENERGY] == (100, 200, 255)
+        assert RESOURCE_COLORS["energy"] == (100, 200, 255)
 
     def test_ammo_color_is_yellowish(self):
         """Ammo color is yellow-ish."""
         from game.ui.panels.ship_stats_renderer import RESOURCE_COLORS
-        from game.core.constants import ResourceType
 
-        assert RESOURCE_COLORS[ResourceType.AMMO] == (200, 200, 100)
+        assert RESOURCE_COLORS["ammo"] == (200, 200, 100)
 
 
 # --- RESOURCE_ORDER_PRIORITY Tests ---
@@ -335,20 +332,17 @@ class TestResourceOrderPriority:
     def test_fuel_has_highest_priority(self):
         """Fuel has priority 0 (highest)."""
         from game.ui.panels.ship_stats_renderer import RESOURCE_ORDER_PRIORITY
-        from game.core.constants import ResourceType
 
-        assert RESOURCE_ORDER_PRIORITY[ResourceType.FUEL] == 0
+        assert RESOURCE_ORDER_PRIORITY["fuel"] == 0
 
     def test_energy_has_second_priority(self):
         """Energy has priority 1."""
         from game.ui.panels.ship_stats_renderer import RESOURCE_ORDER_PRIORITY
-        from game.core.constants import ResourceType
 
-        assert RESOURCE_ORDER_PRIORITY[ResourceType.ENERGY] == 1
+        assert RESOURCE_ORDER_PRIORITY["energy"] == 1
 
     def test_ammo_has_third_priority(self):
         """Ammo has priority 2."""
         from game.ui.panels.ship_stats_renderer import RESOURCE_ORDER_PRIORITY
-        from game.core.constants import ResourceType
 
-        assert RESOURCE_ORDER_PRIORITY[ResourceType.AMMO] == 2
+        assert RESOURCE_ORDER_PRIORITY["ammo"] == 2

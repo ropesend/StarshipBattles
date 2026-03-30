@@ -63,7 +63,7 @@ Six layers with strict downward-only dependency flow:
 | `math.py`             | Vector2, clamp, lerp, angle_diff |
 | `hex_math.py`         | HexCoord axial coordinate system for galaxy map |
 | `config.py`           | DisplayConfig, AIConfig, PhysicsConfig, BattleConfig |
-| `constants.py`        | GameState, LayerType, AttackType, LayerDefaults, CombatConstants, PLANET_RESOURCES |
+| `constants.py`        | GameState, LayerType, AttackType, LayerDefaults, CombatConstants, PLANET_RESOURCES (deprecated) |
 | `protocols.py`        | All cross-layer Protocol definitions (see Protocols section) |
 | `registry.py`         | GameRegistries container, RegistryManager singleton, DI providers |
 | `exceptions.py`       | GameException hierarchy (10 exception classes) |
@@ -71,7 +71,7 @@ Six layers with strict downward-only dependency flow:
 | `event_logging.py`    | log_event, set_event_handler, get_event_handler |
 | `validation.py`       | ValidationResult, IValidationRule |
 | `paths.py`            | Paths constants for file locations |
-| `resources.py`        | Resource data loading from JSON |
+| `resources.py`        | ResourceCatalog (unified resource definitions), ResourceDefinition, legacy load_resources_data |
 | `input_actions.py`    | InputAction enum for key bindings |
 | `json_utils.py`       | JSON serialization helpers |
 | `singleton.py`        | SingletonMeta metaclass |
@@ -170,7 +170,8 @@ Exports defined in each package's `__init__.py` via `__all__`.
 - **Error Codes:** ErrorCode
 - **Math:** Vector2, clamp, lerp, angle_diff
 - **Registry/DI:** GameRegistries, RegistryManager, DefaultRegistryProvider, TestRegistryProvider, get_default_registry_provider
-- **Constants:** GameState, LayerType, AttackType, LayerDefaults, CombatConstants, PLANET_RESOURCES
+- **Constants:** GameState, LayerType, AttackType, LayerDefaults, CombatConstants, PLANET_RESOURCES (deprecated — use ResourceCatalog)
+- **Resources:** ResourceCatalog, ResourceDefinition
 - **Event Logging:** log_event, set_event_handler, get_event_handler
 - **Validation:** ValidationResult, IValidationRule
 - **Configuration:** DisplayConfig, AIConfig, PhysicsConfig, BattleConfig
@@ -308,7 +309,7 @@ RegistryLoader (game/simulation/services/registry_loader.py)
        │
        ▼
 RegistryManager (game/core/registry.py)
-  singleton holding GameRegistries(components, modifiers, vehicle_classes, resources)
+  singleton holding GameRegistries(components, modifiers, vehicle_classes, resources, resource_catalog)
        │
        ▼
 IRegistryProvider (injected into services)

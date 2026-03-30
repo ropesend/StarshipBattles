@@ -7,7 +7,8 @@ PROJ-188 Phase 3: Migrated to VirtualTable + PlanetDataSource + SingleSelect.
 """
 import pygame
 import pygame_gui.windows
-from game.core.constants import PLANET_RESOURCES
+# TODO: Phase 4 will replace with ResourceCatalog
+PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
 from pygame_gui.elements import UIWindow, UIPanel, UIButton, UIDropDownMenu
 from pygame_gui import UI_TEXT_ENTRY_FINISHED, UI_BUTTON_PRESSED
 
@@ -88,7 +89,7 @@ class PlanetListWindow(UIWindow):
             {'id': 'pressure', 'width': 100, 'title': 'Press (atm)', 'attr': 'total_pressure_atm', 'fmt': "{:.2f}", 'visible': False}
         ]
         # Add Resource Columns
-        for res in PLANET_RESOURCES:
+        for res in PLANET_RESOURCE_NAMES:
             self.columns.append({
                 'id': f'res_{res}',
                 'width': 110,

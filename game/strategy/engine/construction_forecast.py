@@ -12,7 +12,8 @@ Used by:
 
 from typing import Dict, List
 
-from game.core.constants import PLANET_RESOURCES
+# TODO: Phase 4 will replace with ResourceCatalog
+PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
 from game.strategy.engine.production_math import find_limiting_resource_ticks
 
 
@@ -36,7 +37,7 @@ def forecast_queue_turn_spend(
         Items beyond production capacity get all-zero dicts.
     """
     if not queue or not build_rate:
-        return [{r: 0.0 for r in PLANET_RESOURCES} for _ in queue]
+        return [{r: 0.0 for r in PLANET_RESOURCE_NAMES} for _ in queue]
 
     remaining_capacity = 1.0  # Fraction of turn remaining
     result: List[Dict[str, float]] = []
@@ -44,14 +45,14 @@ def forecast_queue_turn_spend(
     for item in queue:
         if remaining_capacity <= 0.0001:
             # No capacity left — zero spend for remaining items
-            result.append({r: 0.0 for r in PLANET_RESOURCES})
+            result.append({r: 0.0 for r in PLANET_RESOURCE_NAMES})
             continue
 
         total_cost = item.get("total_cost", {})
         resources_consumed = item.get("resources_consumed", {})
 
         if not total_cost:
-            result.append({r: 0.0 for r in PLANET_RESOURCES})
+            result.append({r: 0.0 for r in PLANET_RESOURCE_NAMES})
             continue
 
         # Calculate remaining cost per resource
@@ -63,7 +64,7 @@ def forecast_queue_turn_spend(
 
         if not remaining_cost:
             # Item already complete — zero spend, no capacity consumed
-            result.append({r: 0.0 for r in PLANET_RESOURCES})
+            result.append({r: 0.0 for r in PLANET_RESOURCE_NAMES})
             continue
 
         # Find limiting resource (PROJ-233: shared formula, ticks_per_turn=1 for turns)
@@ -71,7 +72,7 @@ def forecast_queue_turn_spend(
             remaining_cost, build_rate, ticks_per_turn=1
         )
         if turns_needed is None or turns_needed <= 0:
-            result.append({r: 0.0 for r in PLANET_RESOURCES})
+            result.append({r: 0.0 for r in PLANET_RESOURCE_NAMES})
             continue
 
         # How much of the turn this item uses
@@ -79,7 +80,7 @@ def forecast_queue_turn_spend(
 
         # Calculate per-resource spend for this item
         item_spend = {}
-        for res in PLANET_RESOURCES:
+        for res in PLANET_RESOURCE_NAMES:
             rate = build_rate.get(res, 0.0)
             rem = remaining_cost.get(res, 0.0)
             spend = rate * turns_to_spend

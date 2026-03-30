@@ -11,7 +11,8 @@ from typing import List, Dict
 
 logger = logging.getLogger(__name__)
 
-from game.core.constants import PLANET_RESOURCES
+# TODO: Phase 4 will replace with ResourceCatalog
+PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry
 from game.core.hex_math import HexCoord, hex_ring, hex_circle_filled
@@ -567,7 +568,7 @@ class PlanetGenerator:
 
         type_name = planet_type.name
 
-        for res in PLANET_RESOURCES:
+        for res in PLANET_RESOURCE_NAMES:
             # Quantity: proportional to mass, calibrated so Earth-mass = baseline
             r_qty = random.random()
             qty_norm = (size_factor * cfg.qty_determinism) + (r_qty * cfg.qty_randomness)

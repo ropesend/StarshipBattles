@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 import pygame
 
-from game.core.constants import ResourceType
 from game.ui.components.table.data_source import ITableDataSource
 from game.ui.config import UIConfig
 from game.ui.utils import scale_image_by_visible_portion, scale_image_to_fit
@@ -190,9 +189,9 @@ class FleetDataSource(ITableDataSource):
         """Format resource percentages for display."""
         parts = []
         resource_abbrevs = [
-            (ResourceType.ENERGY, "E"),
-            (ResourceType.FUEL, "F"),
-            (ResourceType.AMMO, "A"),
+            ("energy", "E"),
+            ("fuel", "F"),
+            ("ammo", "A"),
         ]
         for res_type, abbrev in resource_abbrevs:
             pct = ship.get_resource_percentage(res_type)

@@ -318,14 +318,13 @@ class TestHasWarpCapability:
     def test_warp_insufficient_energy_storage(self):
         """Ship with insufficient energy storage should not have warp capability."""
         from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
-        from game.core.constants import ResourceType
 
         ship = MagicMock()
         ship.get_calculated_stats.return_value = {
             'mass': 1000,
             'warp_max_tonnage': 2000,
-            'warp_resource_costs': {ResourceType.ENERGY: 500},
-            'resource_storage': {ResourceType.ENERGY: 100},  # Not enough
+            'warp_resource_costs': {"energy": 500},
+            'resource_storage': {"energy": 100},  # Not enough
         }
 
         assert ShipStatsCalculator.has_warp_capability(ship) is False
@@ -333,14 +332,13 @@ class TestHasWarpCapability:
     def test_warp_insufficient_fuel_storage(self):
         """Ship with insufficient fuel storage should not have warp capability."""
         from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
-        from game.core.constants import ResourceType
 
         ship = MagicMock()
         ship.get_calculated_stats.return_value = {
             'mass': 1000,
             'warp_max_tonnage': 2000,
-            'warp_resource_costs': {ResourceType.FUEL: 1000},
-            'resource_storage': {ResourceType.FUEL: 500},  # Not enough
+            'warp_resource_costs': {"fuel": 1000},
+            'resource_storage': {"fuel": 500},  # Not enough
         }
 
         assert ShipStatsCalculator.has_warp_capability(ship) is False
@@ -348,14 +346,13 @@ class TestHasWarpCapability:
     def test_warp_sufficient_storage(self):
         """Ship with sufficient resource storage should have warp capability."""
         from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
-        from game.core.constants import ResourceType
 
         ship = MagicMock()
         ship.get_calculated_stats.return_value = {
             'mass': 1000,
             'warp_max_tonnage': 2000,
-            'warp_resource_costs': {ResourceType.ENERGY: 500, ResourceType.FUEL: 200},
-            'resource_storage': {ResourceType.ENERGY: 600, ResourceType.FUEL: 300},
+            'warp_resource_costs': {"energy": 500, "fuel": 200},
+            'resource_storage': {"energy": 600, "fuel": 300},
         }
 
         assert ShipStatsCalculator.has_warp_capability(ship) is True

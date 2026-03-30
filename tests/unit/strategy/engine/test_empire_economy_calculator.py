@@ -18,7 +18,7 @@ from game.strategy.data.empire import Empire
 from game.strategy.data.planet import Planet, PlanetaryFacility
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.ship_instance import ShipInstance
-from game.core.constants import PLANET_RESOURCES
+PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
 
 
 def _mock_colony(**kwargs):
@@ -87,7 +87,7 @@ class TestEmpireEconomyCalculator:
         calculator = EmpireEconomyCalculator(registries=minimal_registries)
         snapshot = calculator.calculate(empire)
 
-        for res in PLANET_RESOURCES:
+        for res in PLANET_RESOURCE_NAMES:
             assert snapshot.colony_production.get(res, 0.0) == 0.0
             assert snapshot.maintenance_expenses.get(res, 0.0) == 0.0
             assert snapshot.total_production.get(res, 0.0) == 0.0
@@ -483,7 +483,7 @@ class TestEmpireEconomyCalculator:
         calculator = EmpireEconomyCalculator(registries=minimal_registries)
         snapshot = calculator.calculate(empire)
 
-        for res in PLANET_RESOURCES:
+        for res in PLANET_RESOURCE_NAMES:
             assert snapshot.ship_production[res] == 0.0
             assert snapshot.trade_production[res] == 0.0
             assert snapshot.tribute_production[res] == 0.0
@@ -584,7 +584,7 @@ class TestConstructionExpenses:
         calculator = EmpireEconomyCalculator(registries=minimal_registries)
         snapshot = calculator.calculate(empire)
 
-        for res in PLANET_RESOURCES:
+        for res in PLANET_RESOURCE_NAMES:
             assert snapshot.construction_expenses_ships[res] == 0.0
             assert snapshot.construction_expenses_complexes[res] == 0.0
 

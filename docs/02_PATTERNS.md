@@ -255,12 +255,15 @@ if 'PlanetaryShield' in comp.get('abilities', {}):
 
 - `game/core/registry.py` -- `RegistryManager`, `GameRegistries`
 - Data files: `data/components.json`, `data/modifiers.json`, `data/vehicleclasses.json`, `data/resources.json`
+- `game/core/resources.py` -- `ResourceCatalog`, `ResourceDefinition`
 
 ### How It Works
 
 `RegistryManager` is a singleton holding four dictionaries: `components`, `modifiers`,
 `vehicle_classes`, and `resources`. `GameRegistries` is an immutable (`@dataclass(frozen=True)`)
-container that bundles these together for DI.
+container that bundles these together for DI. It also holds an optional `ResourceCatalog`
+which provides typed, immutable access to all resource definitions (both planetary materials
+and operational consumables).
 
 ```python
 # game/core/registry.py (actual code)
@@ -270,6 +273,7 @@ class GameRegistries:
     modifiers: Dict[str, Any]
     vehicle_classes: Dict[str, Any]
     resources: Dict[str, Any]
+    resource_catalog: Optional[ResourceCatalog] = None
 
     # Also implements IRegistryProvider interface
     def get_components(self) -> Dict[str, Any]:

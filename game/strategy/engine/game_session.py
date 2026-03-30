@@ -110,12 +110,14 @@ class GameSession:
         Shared by __init__ and from_dict to avoid duplicating the
         provider resolution and GameRegistries construction.
         """
+        from game.core.resources import ResourceCatalog
         provider = get_default_registry_provider()
         return GameRegistries(
             components=provider.get_components(),
             modifiers=provider.get_modifiers(),
             vehicle_classes=provider.get_vehicle_classes(),
             resources=provider.get_resources(),
+            resource_catalog=ResourceCatalog.from_json(),
         )
 
     @property

@@ -21,7 +21,8 @@ if TYPE_CHECKING:
 from game.strategy.services.component_inspector import get_component_abilities
 from game.ui.panels.strategy_widgets import AtmosphereGraph
 from game.ui.panels.build_queue_portraits import RESOURCE_PORTRAIT_FILES, RESOURCE_FALLBACK_COLORS
-from game.core.constants import PLANET_RESOURCES
+# TODO: Phase 4 will replace with ResourceCatalog
+PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
 from game.ui.colors import (
     PLANET_TERRESTRIAL, PLANET_GAS_GIANT, PLANET_ICE, PLANET_ROCKY, PLANET_OCEANIC,
     TEXT_DIM, WHITE, TEXT_LIGHT
@@ -338,7 +339,7 @@ class PlanetReportPanel:
         # Resource columns
         planet_resources = self.planet.resources or {}
 
-        for i, resource_name in enumerate(PLANET_RESOURCES):
+        for i, resource_name in enumerate(PLANET_RESOURCE_NAMES):
             col_x = label_col_width + 10 + i * col_w
 
             # Icon header (centered within column)
@@ -399,7 +400,7 @@ class PlanetReportPanel:
         """
         base_path = os.path.join("assets", "Images", "Resource Portraits")
 
-        for resource in PLANET_RESOURCES:
+        for resource in PLANET_RESOURCE_NAMES:
             filename = RESOURCE_PORTRAIT_FILES.get(resource)
             if filename:
                 path = os.path.join(base_path, filename)

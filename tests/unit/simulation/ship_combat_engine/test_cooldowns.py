@@ -10,7 +10,7 @@ PROJ-118: Phase 2 Task 2.17 - ShipCombatEngine cooldown test coverage.
 import pytest
 from unittest.mock import MagicMock, PropertyMock
 
-from game.core.constants import ResourceType, CombatConstants
+from game.core.constants import CombatConstants
 from game.simulation.components.component_constants import ComponentStatus
 
 

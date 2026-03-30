@@ -265,8 +265,6 @@ class TestAbilityLossCascade:
         """
         Destroying resource storage components reduces resource capacity.
         """
-        from game.core.constants import ResourceType
-
         ship = create_test_ship(
             name="ResourceTestShip",
             add_bridge=True,
@@ -274,21 +272,21 @@ class TestAbilityLossCascade:
             registries=fresh_registries
         )
 
-        initial_max_energy = ship.resources.get_max_value(ResourceType.ENERGY)
+        initial_max_energy = ship.resources.get_max_value("energy")
 
         # Find and destroy components with ResourceStorage(energy)
         destroyed_any = False
         for layer_type, comp in ship.iter_components():
             for ability in comp.ability_instances:
                 if ability.__class__.__name__ == 'ResourceStorage':
-                    if getattr(ability, 'resource_type', None) == ResourceType.ENERGY:
+                    if getattr(ability, 'resource_type', None) == "energy":
                         comp.take_damage(comp.current_hp + 1)
                         destroyed_any = True
                         break
 
         if destroyed_any:
             ship.recalculate_stats()
-            new_max_energy = ship.resources.get_max_value(ResourceType.ENERGY)
+            new_max_energy = ship.resources.get_max_value("energy")
             assert new_max_energy < initial_max_energy, (
                 f"Max energy should decrease after storage destroyed. "
                 f"Initial: {initial_max_energy}, Current: {new_max_energy}"

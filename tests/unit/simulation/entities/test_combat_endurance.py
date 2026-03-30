@@ -17,7 +17,6 @@ from game.simulation.entities.combat_endurance import (
     calculate_combat_endurance,
     _calculate_cached_summary,
 )
-from game.core.constants import ResourceType
 from game.simulation.interfaces import IResourceConsumptionAbility, IWeaponAbility
 
 
@@ -44,11 +43,11 @@ def mock_resource_registry(mock_resource):
 
         # get_max_value returns max for each resource type
         def get_max_value(resource_type):
-            if resource_type == ResourceType.FUEL:
+            if resource_type == "fuel":
                 return fuel_max
-            elif resource_type == ResourceType.AMMO:
+            elif resource_type == "ammo":
                 return ammo_max
-            elif resource_type == ResourceType.ENERGY:
+            elif resource_type == "energy":
                 return energy_max
             return 0
 
@@ -56,7 +55,7 @@ def mock_resource_registry(mock_resource):
 
         # get_resource returns a resource object with regen_rate
         def get_resource(resource_type):
-            if resource_type == ResourceType.ENERGY:
+            if resource_type == "energy":
                 return mock_resource(energy_max, energy_regen)
             return None
 
@@ -164,7 +163,7 @@ class TestFuelEnduranceCalculation:
         ship = mock_ship(fuel_max=1000)
 
         # Component with constant fuel consumption of 10/s
-        fuel_ability = mock_resource_consumption_ability(ResourceType.FUEL, 10.0, 'constant')
+        fuel_ability = mock_resource_consumption_ability("fuel", 10.0, 'constant')
         component = mock_component(is_active=True, abilities=[fuel_ability])
 
         calculate_combat_endurance(ship, [component])
@@ -177,8 +176,8 @@ class TestFuelEnduranceCalculation:
         ship = mock_ship(fuel_max=1000)
 
         # Two engines consuming fuel
-        fuel1 = mock_resource_consumption_ability(ResourceType.FUEL, 10.0, 'constant')
-        fuel2 = mock_resource_consumption_ability(ResourceType.FUEL, 15.0, 'constant')
+        fuel1 = mock_resource_consumption_ability("fuel", 10.0, 'constant')
+        fuel2 = mock_resource_consumption_ability("fuel", 15.0, 'constant')
 
         comp1 = mock_component(is_active=True, abilities=[fuel1])
         comp2 = mock_component(is_active=True, abilities=[fuel2])
@@ -202,7 +201,7 @@ class TestFuelEnduranceCalculation:
         """Inactive components contribute to potential but not actual consumption."""
         ship = mock_ship(fuel_max=1000)
 
-        fuel_ability = mock_resource_consumption_ability(ResourceType.FUEL, 10.0, 'constant')
+        fuel_ability = mock_resource_consumption_ability("fuel", 10.0, 'constant')
         component = mock_component(is_active=False, abilities=[fuel_ability])
 
         calculate_combat_endurance(ship, [component])
@@ -225,7 +224,7 @@ class TestAmmoEnduranceCalculation:
         """Ammo endurance with constant consumption trigger."""
         ship = mock_ship(ammo_max=500)
 
-        ammo_ability = mock_resource_consumption_ability(ResourceType.AMMO, 5.0, 'constant')
+        ammo_ability = mock_resource_consumption_ability("ammo", 5.0, 'constant')
         component = mock_component(is_active=True, abilities=[ammo_ability])
 
         calculate_combat_endurance(ship, [component])
@@ -242,7 +241,7 @@ class TestAmmoEnduranceCalculation:
         # Weapon with 2s reload time
         weapon = mock_weapon_ability(reload_time=2.0)
         # Activation cost of 10 ammo per shot = 5 ammo/s
-        ammo_ability = mock_resource_consumption_ability(ResourceType.AMMO, 10.0, 'activation')
+        ammo_ability = mock_resource_consumption_ability("ammo", 10.0, 'activation')
 
         component = mock_component(is_active=True, abilities=[weapon, ammo_ability])
 
@@ -274,7 +273,7 @@ class TestEnergyEnduranceCalculation:
         # 50 regen, 100 consumption = -50 net = drain 1000 in 20s
         ship = mock_ship(energy_max=1000, energy_regen=50)
 
-        energy_ability = mock_resource_consumption_ability(ResourceType.ENERGY, 100.0, 'constant')
+        energy_ability = mock_resource_consumption_ability("energy", 100.0, 'constant')
         component = mock_component(is_active=True, abilities=[energy_ability])
 
         calculate_combat_endurance(ship, [component])
@@ -288,7 +287,7 @@ class TestEnergyEnduranceCalculation:
         # 50 regen, 25 consumption = +25 net = sustainable
         ship = mock_ship(energy_max=1000, energy_regen=50)
 
-        energy_ability = mock_resource_consumption_ability(ResourceType.ENERGY, 25.0, 'constant')
+        energy_ability = mock_resource_consumption_ability("energy", 25.0, 'constant')
         component = mock_component(is_active=True, abilities=[energy_ability])
 
         calculate_combat_endurance(ship, [component])
@@ -302,7 +301,7 @@ class TestEnergyEnduranceCalculation:
         # 50 regen, 50 consumption = 0 net = sustainable (no drain)
         ship = mock_ship(energy_max=1000, energy_regen=50)
 
-        energy_ability = mock_resource_consumption_ability(ResourceType.ENERGY, 50.0, 'constant')
+        energy_ability = mock_resource_consumption_ability("energy", 50.0, 'constant')
         component = mock_component(is_active=True, abilities=[energy_ability])
 
         calculate_combat_endurance(ship, [component])
@@ -346,7 +345,7 @@ class TestActivationTriggerHandling:
         # Weapon with 0.5s reload = 2 shots per second
         weapon = mock_weapon_ability(reload_time=0.5)
         # 20 energy per shot = 40 energy/s
-        energy_ability = mock_resource_consumption_ability(ResourceType.ENERGY, 20.0, 'activation')
+        energy_ability = mock_resource_consumption_ability("energy", 20.0, 'activation')
 
         component = mock_component(is_active=True, abilities=[weapon, energy_ability])
 
@@ -361,7 +360,7 @@ class TestActivationTriggerHandling:
         ship = mock_ship(ammo_max=500)
 
         # No weapon ability, activation cost of 10
-        ammo_ability = mock_resource_consumption_ability(ResourceType.AMMO, 10.0, 'activation')
+        ammo_ability = mock_resource_consumption_ability("ammo", 10.0, 'activation')
         component = mock_component(is_active=True, abilities=[ammo_ability])
 
         calculate_combat_endurance(ship, [component])
@@ -377,7 +376,7 @@ class TestActivationTriggerHandling:
 
         # Weapon with 0 reload time (edge case)
         weapon = mock_weapon_ability(reload_time=0)
-        ammo_ability = mock_resource_consumption_ability(ResourceType.AMMO, 10.0, 'activation')
+        ammo_ability = mock_resource_consumption_ability("ammo", 10.0, 'activation')
 
         component = mock_component(is_active=True, abilities=[weapon, ammo_ability])
 
@@ -400,8 +399,8 @@ class TestPotentialConsumption:
         """Potential consumption includes inactive components."""
         ship = mock_ship(fuel_max=1000)
 
-        fuel1 = mock_resource_consumption_ability(ResourceType.FUEL, 10.0, 'constant')
-        fuel2 = mock_resource_consumption_ability(ResourceType.FUEL, 15.0, 'constant')
+        fuel1 = mock_resource_consumption_ability("fuel", 10.0, 'constant')
+        fuel2 = mock_resource_consumption_ability("fuel", 15.0, 'constant')
 
         active_comp = mock_component(is_active=True, abilities=[fuel1])
         inactive_comp = mock_component(is_active=False, abilities=[fuel2])
@@ -417,9 +416,9 @@ class TestPotentialConsumption:
         """All resource types track potential consumption."""
         ship = mock_ship()
 
-        fuel_ability = mock_resource_consumption_ability(ResourceType.FUEL, 5.0, 'constant')
-        ammo_ability = mock_resource_consumption_ability(ResourceType.AMMO, 3.0, 'constant')
-        energy_ability = mock_resource_consumption_ability(ResourceType.ENERGY, 10.0, 'constant')
+        fuel_ability = mock_resource_consumption_ability("fuel", 5.0, 'constant')
+        ammo_ability = mock_resource_consumption_ability("ammo", 3.0, 'constant')
+        energy_ability = mock_resource_consumption_ability("energy", 10.0, 'constant')
 
         component = mock_component(is_active=False, abilities=[fuel_ability, ammo_ability, energy_ability])
 
@@ -570,7 +569,7 @@ class TestBoundaryConditions:
         """Very small consumption rates produce very large endurance."""
         ship = mock_ship(fuel_max=1000)
 
-        fuel_ability = mock_resource_consumption_ability(ResourceType.FUEL, 0.001, 'constant')
+        fuel_ability = mock_resource_consumption_ability("fuel", 0.001, 'constant')
         component = mock_component(is_active=True, abilities=[fuel_ability])
 
         calculate_combat_endurance(ship, [component])
@@ -582,7 +581,7 @@ class TestBoundaryConditions:
         """Very high consumption rates produce very small endurance."""
         ship = mock_ship(fuel_max=1000)
 
-        fuel_ability = mock_resource_consumption_ability(ResourceType.FUEL, 10000.0, 'constant')
+        fuel_ability = mock_resource_consumption_ability("fuel", 10000.0, 'constant')
         component = mock_component(is_active=True, abilities=[fuel_ability])
 
         calculate_combat_endurance(ship, [component])
@@ -594,7 +593,7 @@ class TestBoundaryConditions:
         """Zero max resource capacity results in zero endurance."""
         ship = mock_ship(fuel_max=0)
 
-        fuel_ability = mock_resource_consumption_ability(ResourceType.FUEL, 10.0, 'constant')
+        fuel_ability = mock_resource_consumption_ability("fuel", 10.0, 'constant')
         component = mock_component(is_active=True, abilities=[fuel_ability])
 
         calculate_combat_endurance(ship, [component])
@@ -619,7 +618,7 @@ class TestWeaponAbilityTypeDetection:
         weapon.__class__.__name__ = 'ProjectileWeaponAbility'
         weapon.reload_time = 2.0
 
-        ammo_ability = mock_resource_consumption_ability(ResourceType.AMMO, 10.0, 'activation')
+        ammo_ability = mock_resource_consumption_ability("ammo", 10.0, 'activation')
         component = mock_component(is_active=True, abilities=[weapon, ammo_ability])
 
         calculate_combat_endurance(ship, [component])
@@ -636,7 +635,7 @@ class TestWeaponAbilityTypeDetection:
         weapon.__class__.__name__ = 'BeamWeaponAbility'
         weapon.reload_time = 0.5
 
-        energy_ability = mock_resource_consumption_ability(ResourceType.ENERGY, 25.0, 'activation')
+        energy_ability = mock_resource_consumption_ability("energy", 25.0, 'activation')
         component = mock_component(is_active=True, abilities=[weapon, energy_ability])
 
         calculate_combat_endurance(ship, [component])
@@ -653,7 +652,7 @@ class TestWeaponAbilityTypeDetection:
         weapon.__class__.__name__ = 'SeekerWeaponAbility'
         weapon.reload_time = 4.0
 
-        ammo_ability = mock_resource_consumption_ability(ResourceType.AMMO, 20.0, 'activation')
+        ammo_ability = mock_resource_consumption_ability("ammo", 20.0, 'activation')
         component = mock_component(is_active=True, abilities=[weapon, ammo_ability])
 
         calculate_combat_endurance(ship, [component])
@@ -675,15 +674,15 @@ class TestMixedComponentScenarios:
         ship = mock_ship(fuel_max=1000, ammo_max=500, energy_max=2000, energy_regen=100)
 
         # Active engine with fuel consumption
-        fuel_ability = mock_resource_consumption_ability(ResourceType.FUEL, 20.0, 'constant')
+        fuel_ability = mock_resource_consumption_ability("fuel", 20.0, 'constant')
         engine = mock_component(is_active=True, abilities=[fuel_ability])
 
         # Active weapon with energy consumption
-        energy_ability = mock_resource_consumption_ability(ResourceType.ENERGY, 50.0, 'constant')
+        energy_ability = mock_resource_consumption_ability("energy", 50.0, 'constant')
         weapon = mock_component(is_active=True, abilities=[energy_ability])
 
         # Inactive secondary weapon with ammo consumption
-        ammo_ability = mock_resource_consumption_ability(ResourceType.AMMO, 10.0, 'constant')
+        ammo_ability = mock_resource_consumption_ability("ammo", 10.0, 'constant')
         inactive_weapon = mock_component(is_active=False, abilities=[ammo_ability])
 
         calculate_combat_endurance(ship, [engine, weapon, inactive_weapon])
@@ -709,8 +708,8 @@ class TestMixedComponentScenarios:
         """Single component can have multiple resource consumptions."""
         ship = mock_ship(fuel_max=1000, energy_max=1000, energy_regen=0)
 
-        fuel_ability = mock_resource_consumption_ability(ResourceType.FUEL, 10.0, 'constant')
-        energy_ability = mock_resource_consumption_ability(ResourceType.ENERGY, 20.0, 'constant')
+        fuel_ability = mock_resource_consumption_ability("fuel", 10.0, 'constant')
+        energy_ability = mock_resource_consumption_ability("energy", 20.0, 'constant')
 
         component = mock_component(is_active=True, abilities=[fuel_ability, energy_ability])
 
@@ -736,7 +735,7 @@ class TestAdditionalCombatEnduranceEdgeCases:
         ship = mock_ship(fuel_max=1000)
 
         # Unknown trigger type (not 'constant' or 'activation')
-        fuel_ability = mock_resource_consumption_ability(ResourceType.FUEL, 10.0, 'unknown_trigger')
+        fuel_ability = mock_resource_consumption_ability("fuel", 10.0, 'unknown_trigger')
         component = mock_component(is_active=True, abilities=[fuel_ability])
 
         calculate_combat_endurance(ship, [component])
@@ -770,11 +769,11 @@ class TestAdditionalCombatEnduranceEdgeCases:
 
         # First weapon: 1s reload, 10 ammo per shot = 10 ammo/s
         weapon1 = mock_weapon_ability(reload_time=1.0)
-        ammo1 = mock_resource_consumption_ability(ResourceType.AMMO, 10.0, 'activation')
+        ammo1 = mock_resource_consumption_ability("ammo", 10.0, 'activation')
 
         # Second weapon: 2s reload, 20 energy per shot = 10 energy/s
         weapon2 = mock_weapon_ability(reload_time=2.0)
-        energy2 = mock_resource_consumption_ability(ResourceType.ENERGY, 20.0, 'activation')
+        energy2 = mock_resource_consumption_ability("energy", 20.0, 'activation')
 
         comp1 = mock_component(is_active=True, abilities=[weapon1, ammo1])
         comp2 = mock_component(is_active=True, abilities=[weapon2, energy2])
@@ -800,7 +799,7 @@ class TestAdditionalCombatEnduranceEdgeCases:
         """energy_net is negative when consumption exceeds generation."""
         ship = mock_ship(energy_max=1000, energy_regen=30)
 
-        energy_ability = mock_resource_consumption_ability(ResourceType.ENERGY, 80.0, 'constant')
+        energy_ability = mock_resource_consumption_ability("energy", 80.0, 'constant')
         component = mock_component(is_active=True, abilities=[energy_ability])
 
         calculate_combat_endurance(ship, [component])
@@ -814,7 +813,7 @@ class TestAdditionalCombatEnduranceEdgeCases:
         """energy_net is positive when generation exceeds consumption."""
         ship = mock_ship(energy_max=1000, energy_regen=100)
 
-        energy_ability = mock_resource_consumption_ability(ResourceType.ENERGY, 40.0, 'constant')
+        energy_ability = mock_resource_consumption_ability("energy", 40.0, 'constant')
         component = mock_component(is_active=True, abilities=[energy_ability])
 
         calculate_combat_endurance(ship, [component])
@@ -828,7 +827,7 @@ class TestAdditionalCombatEnduranceEdgeCases:
         """When all components inactive, fuel endurance uses potential consumption."""
         ship = mock_ship(fuel_max=500)
 
-        fuel_ability = mock_resource_consumption_ability(ResourceType.FUEL, 25.0, 'constant')
+        fuel_ability = mock_resource_consumption_ability("fuel", 25.0, 'constant')
         inactive_comp = mock_component(is_active=False, abilities=[fuel_ability])
 
         calculate_combat_endurance(ship, [inactive_comp])
@@ -845,9 +844,9 @@ class TestAdditionalCombatEnduranceEdgeCases:
         """All inactive components still contribute to potential consumption."""
         ship = mock_ship(fuel_max=1000, ammo_max=500, energy_max=2000, energy_regen=0)
 
-        fuel_ab = mock_resource_consumption_ability(ResourceType.FUEL, 10.0, 'constant')
-        ammo_ab = mock_resource_consumption_ability(ResourceType.AMMO, 5.0, 'constant')
-        energy_ab = mock_resource_consumption_ability(ResourceType.ENERGY, 20.0, 'constant')
+        fuel_ab = mock_resource_consumption_ability("fuel", 10.0, 'constant')
+        ammo_ab = mock_resource_consumption_ability("ammo", 5.0, 'constant')
+        energy_ab = mock_resource_consumption_ability("energy", 20.0, 'constant')
 
         comp = mock_component(is_active=False, abilities=[fuel_ab, ammo_ab, energy_ab])
 
@@ -907,7 +906,7 @@ class TestAdditionalCombatEnduranceEdgeCases:
         ship = mock_ship(fuel_max=100)
 
         # Very precise fractional consumption
-        fuel_ability = mock_resource_consumption_ability(ResourceType.FUEL, 0.333, 'constant')
+        fuel_ability = mock_resource_consumption_ability("fuel", 0.333, 'constant')
         component = mock_component(is_active=True, abilities=[fuel_ability])
 
         calculate_combat_endurance(ship, [component])
@@ -925,7 +924,7 @@ class TestAdditionalCombatEnduranceEdgeCases:
         # Create 100 components each consuming 1 fuel
         components = []
         for _ in range(100):
-            fuel_ability = mock_resource_consumption_ability(ResourceType.FUEL, 1.0, 'constant')
+            fuel_ability = mock_resource_consumption_ability("fuel", 1.0, 'constant')
             comp = mock_component(is_active=True, abilities=[fuel_ability])
             components.append(comp)
 

@@ -104,7 +104,7 @@ defense.py        # ShieldProjection, ShieldRegeneration, EmissiveArmor, ToHit*M
 harvester.py      # ResourceHarvesterAbility, SpaceShipyardAbility, EmpireStorageAbility
 markers.py        # VehicleLaunchAbility, CommandAndControl, StructuralIntegrity
 propulsion.py     # CombatPropulsion, ManeuveringThruster, StrategicMovement, WarpJump
-resources.py      # ResourceConsumption, ResourceStorage, ResourceGeneration
+resources.py      # ResourceConsumption, ResourceStorage, ResourceGeneration (component abilities; see also game/core/resources.py for ResourceCatalog)
 stat_keys.py      # StatKey, AbilityStatBinding
 planetary.py      # PlanetaryShieldAbility, StrategicResourceGenerationAbility (PROJ-237/238)
 superweapons.py   # DestroyPlanet, DestroyStar, OpenWarpPoint, CloseWarpPoint, etc.

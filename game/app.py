@@ -129,12 +129,14 @@ class Game:
         # PROJ-181: Deprecated set_default_registries() removed.
         # All DI consumers now use get_default_registry_provider() which reads
         # from RegistryManager (hydrated via load_components/load_modifiers above).
+        from game.core.resources import ResourceCatalog
         registry = RegistryManager.instance()
         self.registries = GameRegistries(
             components=registry.components,
             modifiers=registry.modifiers,
             vehicle_classes=registry.vehicle_classes,
-            resources=registry.resources
+            resources=registry.resources,
+            resource_catalog=ResourceCatalog.from_json(),
         )
 
         # Initialize input mapper (PROJ-71: centralized keybindings)

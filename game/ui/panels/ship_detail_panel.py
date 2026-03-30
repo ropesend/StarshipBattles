@@ -18,7 +18,7 @@ from typing import Dict, Optional, List, TYPE_CHECKING
 
 logger = logging.getLogger(__name__)
 
-from game.core.constants import LayerType, ResourceType  # Canonical location for LayerType
+from game.core.constants import LayerType  # Canonical location for LayerType
 from game.core.string_utils import display_name
 from game.ui.assets import ShipThemeManager
 from game.ui.colors import BAR_BG, BAR_BORDER
@@ -254,7 +254,7 @@ class ShipDetailPanel:
         # --- Resources Section ---
         y = self._add_section_header("RESOURCES", 10, y, width)
 
-        for resource in [ResourceType.FUEL, ResourceType.ENERGY, ResourceType.AMMO]:
+        for resource in ["fuel", "energy", "ammo"]:
             display = ship.get_resource_display(resource)
             if display != "N/A":
                 pct = ship.get_resource_percentage(resource)

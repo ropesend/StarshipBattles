@@ -86,8 +86,6 @@ class EnvironmentalHazardEngine:
         Returns:
             List of EnvironmentalEvent records for fleets affected this tick.
         """
-        from game.core.constants import ResourceType
-
         events: List[EnvironmentalEvent] = []
 
         for empire in empires:
@@ -185,12 +183,10 @@ class EnvironmentalHazardEngine:
         Returns:
             Actual fuel drained.
         """
-        from game.core.constants import ResourceType
-
-        current_fuel = ship.get_current_resource(ResourceType.FUEL)
+        current_fuel = ship.get_current_resource("fuel")
         drain_amount = min(amount, current_fuel)
 
         if drain_amount > 0:
-            ship.consume_resource(ResourceType.FUEL, drain_amount)
+            ship.consume_resource("fuel", drain_amount)
 
         return drain_amount

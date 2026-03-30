@@ -6,8 +6,9 @@ PROJ-99 Phase 2: Tests for treasury panel layout, formatting, and data binding.
 import pytest
 from unittest.mock import MagicMock, patch
 
-from game.core.constants import PLANET_RESOURCES
 from game.strategy.engine.empire_economy_calculator import EmpireEconomySnapshot
+
+PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
 from game.ui.panels.empire_treasury_panel import (
     EmpireTreasuryPanel,
     RESOURCE_ABBREVIATIONS,
@@ -32,20 +33,20 @@ def sample_snapshot():
         "Metals": 100.0, "Organics": 200.0, "Vapors": 50.0,
         "Radioactives": 25.0, "Exotics": 10.0
     }
-    snapshot.ship_production = {r: 0.0 for r in PLANET_RESOURCES}
-    snapshot.trade_production = {r: 0.0 for r in PLANET_RESOURCES}
-    snapshot.tribute_production = {r: 0.0 for r in PLANET_RESOURCES}
-    snapshot.mining_production = {r: 0.0 for r in PLANET_RESOURCES}
+    snapshot.ship_production = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
+    snapshot.trade_production = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
+    snapshot.tribute_production = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
+    snapshot.mining_production = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
     snapshot.total_production = snapshot.colony_production.copy()
 
     # Expenses
-    snapshot.tribute_expenses = {r: 0.0 for r in PLANET_RESOURCES}
+    snapshot.tribute_expenses = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
     snapshot.maintenance_expenses = {
         "Metals": 10.0, "Organics": 5.0, "Vapors": 2.0,
         "Radioactives": 1.0, "Exotics": 0.5
     }
-    snapshot.construction_expenses_ships = {r: 0.0 for r in PLANET_RESOURCES}
-    snapshot.construction_expenses_complexes = {r: 0.0 for r in PLANET_RESOURCES}
+    snapshot.construction_expenses_ships = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
+    snapshot.construction_expenses_complexes = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
     snapshot.total_expenses = snapshot.maintenance_expenses.copy()
 
     # Treasury
@@ -83,7 +84,7 @@ def mock_panel():
 def mock_resource_icons():
     """Create mock resource icons dict."""
     icons = {}
-    for resource in PLANET_RESOURCES:
+    for resource in PLANET_RESOURCE_NAMES:
         mock_surface = MagicMock()
         mock_surface.get_size.return_value = (ICON_SIZE, ICON_SIZE)
         icons[resource] = mock_surface
@@ -99,7 +100,7 @@ class TestResourceAbbreviations:
 
     def test_all_resources_have_abbreviations(self):
         """All planet resources should have abbreviations defined."""
-        for resource in PLANET_RESOURCES:
+        for resource in PLANET_RESOURCE_NAMES:
             assert resource in RESOURCE_ABBREVIATIONS
 
     def test_abbreviations_are_short(self):

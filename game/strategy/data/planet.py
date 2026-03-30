@@ -85,7 +85,7 @@ class Planet:
     construction_queue: list = field(default_factory=list)
 
     # Resources
-    # Key: Resource Name (from PLANET_RESOURCES) -> {'quantity': int, 'quality': float}
+    # Key: Resource Name (from PLANET_RESOURCE_NAMES) -> {'quantity': int, 'quality': float}
     resources: Dict[str, dict] = field(default_factory=dict)
 
     # Planetary Facilities (built complexes)

@@ -425,16 +425,15 @@ class TestFleetDataSourceCellValueResources:
     def test_resources_with_values(self):
         """Resources column shows E:xx F:xx A:xx format."""
         from game.ui.screens.fleet_data_source import FleetDataSource
-        from game.core.constants import ResourceType
 
         ship = Mock()
 
         def mock_get_resource_pct(res_type):
-            if res_type == ResourceType.ENERGY:
+            if res_type == "energy":
                 return 0.8
-            elif res_type == ResourceType.FUEL:
+            elif res_type == "fuel":
                 return 0.9
-            elif res_type == ResourceType.AMMO:
+            elif res_type == "ammo":
                 return 1.0
             return None
 

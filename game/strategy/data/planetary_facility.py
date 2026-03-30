@@ -7,7 +7,6 @@ Extracted from planet.py (PROJ-210) to reduce module size.
 from dataclasses import dataclass, field
 from typing import Dict, List, Any
 
-from game.core.constants import ResourceType
 from game.core.patterns.layer_iterator import iter_components, get_component_id
 from game.core.validation_helpers import require_keys
 from game.strategy.services.component_inspector import get_component_abilities
@@ -77,7 +76,7 @@ class PlanetaryFacility:
 
     def get_fuel_storage(self) -> float:
         """Get current fuel level in this facility."""
-        return self.resource_levels.get(ResourceType.FUEL, 0.0)
+        return self.resource_levels.get("fuel", 0.0)
 
     def get_max_fuel_storage(self, registries) -> float:
         """Calculate max fuel capacity from design_data components.
@@ -99,7 +98,7 @@ class PlanetaryFacility:
                 continue
             abilities = get_component_abilities(comp_def)
             for storage in (abilities.get('ResourceStorage') or []):
-                if isinstance(storage, dict) and storage.get('resource') == ResourceType.FUEL:
+                if isinstance(storage, dict) and storage.get('resource') == "fuel":
                     total += storage.get('amount', 0)
         return total
 
@@ -117,7 +116,7 @@ class PlanetaryFacility:
         current = self.get_fuel_storage()
         space = max_storage - current
         added = min(amount, space)
-        self.resource_levels[ResourceType.FUEL] = current + added
+        self.resource_levels["fuel"] = current + added
         return amount - added
 
     def withdraw_fuel(self, amount: float) -> float:
@@ -131,7 +130,7 @@ class PlanetaryFacility:
         """
         current = self.get_fuel_storage()
         withdrawn = min(amount, current)
-        self.resource_levels[ResourceType.FUEL] = current - withdrawn
+        self.resource_levels["fuel"] = current - withdrawn
         return withdrawn
 
     @property

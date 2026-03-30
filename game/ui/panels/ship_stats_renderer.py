@@ -25,20 +25,20 @@ from game.ui.colors import (
     CREW_LOW
 )
 from game.ui.utils.formatters import get_damage_color
-from game.core.constants import CombatConstants, LayerType, ResourceType
+from game.core.constants import CombatConstants, LayerType
 
 
 # Define standard colors for known resources (fallback to gray)
 RESOURCE_COLORS = {
-    ResourceType.FUEL: RESOURCE_FUEL,
-    ResourceType.ENERGY: RESOURCE_ENERGY,
-    ResourceType.AMMO: RESOURCE_AMMO,
+    "fuel": RESOURCE_FUEL,
+    "energy": RESOURCE_ENERGY,
+    "ammo": RESOURCE_AMMO,
     'biomass': RESOURCE_BIOMASS,
     'shield': RESOURCE_SHIELD
 }
 
 # Resource display order priority
-RESOURCE_ORDER_PRIORITY = {ResourceType.FUEL: 0, ResourceType.ENERGY: 1, ResourceType.AMMO: 2}
+RESOURCE_ORDER_PRIORITY = {"fuel": 0, "energy": 1, "ammo": 2}
 
 
 def draw_stat_bar(surface, x, y, width, height, pct, color):

@@ -85,7 +85,7 @@ class TestComponentDefinitions:
     def test_component_resource_costs(self, comp):
         """Verify resource costs logic if present."""
         if 'resource_cost' in comp:
-            from game.core.constants import PLANET_RESOURCES
+            PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
             costs = comp['resource_cost']
             assert isinstance(costs, dict), "resource_cost must be a dictionary"
             for res, amount in costs.items():
@@ -95,7 +95,7 @@ class TestComponentDefinitions:
                 assert is_formula or is_valid_int, (
                     f"Resource cost {res} for {comp['id']} must be non-negative number or formula"
                 )
-                assert res in PLANET_RESOURCES, f"Unknown resource: {res}"
+                assert res in PLANET_RESOURCE_NAMES, f"Unknown resource: {res}"
 
     @pytest.mark.parametrize("comp", COMPONENTS, ids=lambda c: c.get('id', 'unknown'))
     def test_component_abilities_format(self, comp):

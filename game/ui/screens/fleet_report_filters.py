@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Dict, Any, List
 
-from game.core.constants import ResourceType
 from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 from game.ui.filters.filter_state import FilterState
 from game.ui.screens.fleet_data_source import SPECIAL_CAPABILITY_COLUMNS
@@ -89,14 +88,14 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
         resource_storage = calculated_stats.get('resource_storage', {})
 
         # Fuel
-        ship_max_fuel = resource_storage.get(ResourceType.FUEL, 0)
+        ship_max_fuel = resource_storage.get("fuel", 0)
         max_fuel += ship_max_fuel
-        total_fuel += ship.resource_levels.get(ResourceType.FUEL, 0)
+        total_fuel += ship.resource_levels.get("fuel", 0)
 
         # Energy
-        ship_max_energy = resource_storage.get(ResourceType.ENERGY, 0)
+        ship_max_energy = resource_storage.get("energy", 0)
         max_energy += ship_max_energy
-        total_energy += ship.resource_levels.get(ResourceType.ENERGY, 0)
+        total_energy += ship.resource_levels.get("energy", 0)
 
         # Passenger and General Cargo calculations
         cargo_storage = calculated_stats.get('cargo_storage', {})

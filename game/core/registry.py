@@ -39,12 +39,15 @@ __all__ = [
     'clear_registry',
     'set_validator',
 ]
-from dataclasses import dataclass
-from typing import Dict, Any, Optional
+from dataclasses import dataclass, field
+from typing import Dict, Any, Optional, TYPE_CHECKING
 
 from game.core.exceptions import StateException, FrozenStateException
 from game.core.error_codes import ErrorCode
 from game.core.singleton import SingletonMeta
+
+if TYPE_CHECKING:
+    from game.core.resources import ResourceCatalog
 
 
 # =============================================================================
@@ -71,11 +74,13 @@ class GameRegistries:
         modifiers: Dict of modifier definitions keyed by ID
         vehicle_classes: Dict of vehicle class definitions keyed by name
         resources: Dict of resource definitions keyed by ID
+        resource_catalog: Unified ResourceCatalog for all resource definitions
     """
     components: Dict[str, Any]
     modifiers: Dict[str, Any]
     vehicle_classes: Dict[str, Any]
     resources: Dict[str, Any]
+    resource_catalog: Optional['ResourceCatalog'] = field(default=None)
 
     # PROJ-211: IRegistryProvider interface methods
     def get_components(self) -> Dict[str, Any]:
@@ -93,6 +98,10 @@ class GameRegistries:
     def get_resources(self) -> Dict[str, Any]:
         """Get the resources registry dictionary."""
         return self.resources
+
+    def get_resource_catalog(self) -> Optional['ResourceCatalog']:
+        """Get the unified ResourceCatalog, or None if not loaded."""
+        return self.resource_catalog
 
 
 class RegistryManager(metaclass=SingletonMeta):
@@ -321,6 +330,16 @@ class DefaultRegistryProvider:
     def get_resources(self) -> Dict[str, Any]:
         """Get the resources registry dictionary from singleton."""
         return RegistryManager.instance().resources
+
+    def get_resource_catalog(self) -> Optional['ResourceCatalog']:
+        """Get the unified ResourceCatalog.
+
+        Lazily loads from data/resources.json on first access.
+        """
+        if not hasattr(self, '_resource_catalog'):
+            from game.core.resources import ResourceCatalog
+            self._resource_catalog = ResourceCatalog.from_json()
+        return self._resource_catalog
 
 
 class TestRegistryProvider:

@@ -108,10 +108,10 @@ class TestForecastQueueTurnSpend:
 
     def test_result_includes_all_planet_resources(self):
         """Result dicts should include all PLANET_RESOURCES, even if zero."""
-        from game.core.constants import PLANET_RESOURCES
+        PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
         item = _make_item({"Metals": 100.0})
         result = forecast_queue_turn_spend([item], {"Metals": 3000.0})
-        for res in PLANET_RESOURCES:
+        for res in PLANET_RESOURCE_NAMES:
             assert res in result[0]
 
     def test_item_without_total_cost_gets_zero(self):

@@ -3,7 +3,8 @@ Build Queue Helpers - Pure formatting functions for build queue display.
 
 Extracted from BuildQueueScreen (PROJ-86 Phase 8).
 """
-from game.core.constants import PLANET_RESOURCES
+# TODO: Phase 4 will replace with ResourceCatalog
+PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
 
 # Resource abbreviations for compact UI display
 RESOURCE_ABBREVS = {
@@ -34,7 +35,7 @@ def format_empire_resources(empire) -> str:
         Formatted string like "Met: 500/1000  Org: 200/500  Vap: 0"
     """
     parts = []
-    for res in PLANET_RESOURCES:
+    for res in PLANET_RESOURCE_NAMES:
         current = empire.resource_pool.get(res, 0.0)
         cap = empire.max_storage.get(res, 0.0)
         abbr = RESOURCE_ABBREVS.get(res, res[:3])
@@ -195,7 +196,7 @@ def format_resource_cost(cost: dict) -> str:
         Compact string like "M:100 O:50 V:20"
     """
     parts = []
-    for res in PLANET_RESOURCES:
+    for res in PLANET_RESOURCE_NAMES:
         amount = cost.get(res, 0)
         if amount > 0:
             abbr = RESOURCE_ABBREVS_SHORT.get(res, res[0])

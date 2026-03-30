@@ -6,7 +6,7 @@ Cross-layer imports (acceptable for builder UI):
 - LayerType: Runtime - layer stat organization
 """
 import logging
-from game.core.constants import LayerType, ResourceType  # Canonical location for LayerType
+from game.core.constants import LayerType  # Canonical location for LayerType
 from game.core.json_utils import load_json
 
 logger = logging.getLogger(__name__)
@@ -227,9 +227,9 @@ def get_resource_max_usage(ship, res_name):
     # PROJ-194: Use typed accessor instead of dynamic attr lookup
     # Try potential consumption first (e.g., 'potential_fuel' + '_consumption')
     potential_map = {
-        ResourceType.FUEL: 'potential_fuel',
-        ResourceType.AMMO: 'potential_ammo',
-        ResourceType.ENERGY: 'potential_energy'
+        "fuel": 'potential_fuel',
+        "ammo": 'potential_ammo',
+        "energy": 'potential_energy'
     }
     potential_res = potential_map.get(res_name)
     if potential_res:
@@ -404,7 +404,7 @@ def _discover_resources(ship):
 
     Returns sorted list: Fuel, Energy, Ammo first, then others alphabetically.
     """
-    resource_order = [ResourceType.FUEL, ResourceType.ENERGY, ResourceType.AMMO]
+    resource_order = ["fuel", "energy", "ammo"]
 
     # Get all resource names from registry
     res_names = set(ship.resources.get_resource_names())
@@ -591,7 +591,8 @@ def get_construction_rows(ship):
     """
     Generate the list of stat rows for the Construction section.
     """
-    from game.core.constants import PLANET_RESOURCES
+    # TODO: Phase 4 will replace with ResourceCatalog
+    PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
 
     # Abbreviations for narrow label columns
     LABEL_ABBREV = {
@@ -605,7 +606,7 @@ def get_construction_rows(ship):
     rows = []
 
     # Construction costs from ship.construction_cost
-    for res in PLANET_RESOURCES:
+    for res in PLANET_RESOURCE_NAMES:
         # Use a closure to capture res
         # ship.construction_cost is always present (initialized as {} in Ship.__init__)
         def res_getter(ship, r=res):

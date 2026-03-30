@@ -19,7 +19,8 @@ import pygame_gui
 from game.ui.config import UIConfig
 from game.ui.fonts import get_font
 from game.core.paths import Paths
-from game.core.constants import PLANET_RESOURCES
+# TODO: Phase 4 will replace with ResourceCatalog
+PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
 from game.ui.screens.build_queue_helpers import RESOURCE_ABBREVS
 from game.ui.screens.strategy_menu_panel import StrategyMenuPanel, PANEL_WIDTH, PANEL_HEIGHT
 from game.ui.screens.strategy_window_manager import StrategyWindowManager
@@ -292,7 +293,7 @@ class StrategyUI:
         empire = self.scene.current_empire
 
         parts = []
-        for res in PLANET_RESOURCES:
+        for res in PLANET_RESOURCE_NAMES:
             current = empire.get_resource(res)
             cap = empire.max_storage.get(res, 0.0)
             abbr = RESOURCE_ABBREVS.get(res, res[:3])

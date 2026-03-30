@@ -11,7 +11,8 @@ This is a read-only calculation - it doesn't modify any game state.
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple, TYPE_CHECKING
 
-from game.core.constants import PLANET_RESOURCES
+# TODO: Phase 4 will replace with ResourceCatalog
+PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
 from game.core.patterns.layer_iterator import iter_components
 
 if TYPE_CHECKING:
@@ -99,7 +100,7 @@ class EmpireEconomyCalculator:
         snapshot.colony_production = self._aggregate_colony_production(empire)
 
         # Placeholder production sources (future implementation)
-        zero_resources = {r: 0.0 for r in PLANET_RESOURCES}
+        zero_resources = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
         snapshot.ship_production = zero_resources.copy()
         snapshot.trade_production = zero_resources.copy()
         snapshot.tribute_production = zero_resources.copy()
@@ -121,7 +122,7 @@ class EmpireEconomyCalculator:
 
         # Total expenses = sum of all expense categories
         snapshot.total_expenses = {}
-        for r in PLANET_RESOURCES:
+        for r in PLANET_RESOURCE_NAMES:
             snapshot.total_expenses[r] = (
                 snapshot.tribute_expenses.get(r, 0.0)
                 + snapshot.maintenance_expenses.get(r, 0.0)
@@ -131,7 +132,7 @@ class EmpireEconomyCalculator:
 
         # Net resources per turn
         snapshot.net_resources = {}
-        for r in PLANET_RESOURCES:
+        for r in PLANET_RESOURCE_NAMES:
             prod = snapshot.total_production.get(r, 0.0)
             exp = snapshot.total_expenses.get(r, 0.0)
             snapshot.net_resources[r] = prod - exp
@@ -155,13 +156,13 @@ class EmpireEconomyCalculator:
         Returns:
             Dict mapping resource type to total production per turn.
         """
-        totals = {r: 0.0 for r in PLANET_RESOURCES}
+        totals = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
 
         for colony in empire.colonies:
             # Track remaining quantity per resource for this colony
             # (multiple harvesters draw from the same deposit)
             remaining_quantity: Dict[str, float] = {}
-            for res in PLANET_RESOURCES:
+            for res in PLANET_RESOURCE_NAMES:
                 resource_data = colony.resources.get(res, {})
                 remaining_quantity[res] = resource_data.get('quantity', 0.0)
 
@@ -210,7 +211,7 @@ class EmpireEconomyCalculator:
         Returns:
             Dict mapping resource type to total maintenance cost per turn.
         """
-        totals = {r: 0.0 for r in PLANET_RESOURCES}
+        totals = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
 
         # Facility maintenance
         for colony in empire.colonies:
@@ -272,8 +273,8 @@ class EmpireEconomyCalculator:
         )
         from game.strategy.data.fleet import Fleet
 
-        ships = {r: 0.0 for r in PLANET_RESOURCES}
-        complexes = {r: 0.0 for r in PLANET_RESOURCES}
+        ships = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
+        complexes = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
 
         def _accumulate(queue: List[Dict], build_rate: Dict[str, float]) -> None:
             """Forecast spend for a queue and accumulate into ships/complexes."""

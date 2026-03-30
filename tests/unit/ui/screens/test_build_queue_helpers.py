@@ -16,9 +16,9 @@ class TestResourceAbbreviations:
 
     def test_all_resources_have_abbrevs(self):
         """Verify all planet resources have abbreviations."""
-        from game.core.constants import PLANET_RESOURCES
+        PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
 
-        for res in PLANET_RESOURCES:
+        for res in PLANET_RESOURCE_NAMES:
             assert res in RESOURCE_ABBREVS, f"{res} missing from RESOURCE_ABBREVS"
             assert res in RESOURCE_ABBREVS_SHORT, f"{res} missing from RESOURCE_ABBREVS_SHORT"
 
@@ -182,10 +182,10 @@ class TestFormatResourceCost:
 
     def test_respects_planet_resources_order(self):
         """Verify resources are ordered according to PLANET_RESOURCES."""
-        from game.core.constants import PLANET_RESOURCES
+        PLANET_RESOURCE_NAMES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
 
         # Create cost with all resources
-        cost = {res: (i + 1) * 10 for i, res in enumerate(PLANET_RESOURCES)}
+        cost = {res: (i + 1) * 10 for i, res in enumerate(PLANET_RESOURCE_NAMES)}
 
         result = format_resource_cost(cost)
 
@@ -193,8 +193,8 @@ class TestFormatResourceCost:
         parts = result.split(" ")
         result_abbrevs = [p.split(":")[0] for p in parts]
 
-        # Expected order based on PLANET_RESOURCES
-        expected_abbrevs = [RESOURCE_ABBREVS_SHORT[res] for res in PLANET_RESOURCES]
+        # Expected order based on PLANET_RESOURCE_NAMES
+        expected_abbrevs = [RESOURCE_ABBREVS_SHORT[res] for res in PLANET_RESOURCE_NAMES]
 
         assert result_abbrevs == expected_abbrevs
 

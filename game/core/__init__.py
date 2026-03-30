@@ -23,8 +23,10 @@ Registry and DI (game.core.registry):
     DefaultRegistryProvider, RegistryManager
 
 Constants (game.core.constants):
-    GameState, LayerType, AttackType, LayerDefaults, CombatConstants,
-    PLANET_RESOURCES
+    GameState, LayerType, AttackType, LayerDefaults, CombatConstants
+
+Resources (game.core.resources):
+    ResourceCatalog, ResourceDefinition
 
 Event Logging (game.core.event_logging):
     log_event, set_event_handler, get_event_handler
@@ -80,7 +82,6 @@ from game.core.constants import (
     AttackType,
     LayerDefaults,
     CombatConstants,
-    PLANET_RESOURCES,
 )
 
 # Event Logging (PROJ-175)
@@ -132,7 +133,7 @@ __all__ = [
     'get_default_registry_provider',
     # Constants
     'GameState', 'LayerType', 'AttackType', 'LayerDefaults', 'CombatConstants',
-    'PLANET_RESOURCES',
+    # PLANET_RESOURCES removed — use ResourceCatalog from game.core.resources
     # Event Logging
     'log_event', 'set_event_handler', 'get_event_handler',
     # Validation

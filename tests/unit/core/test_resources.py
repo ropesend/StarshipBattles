@@ -17,7 +17,6 @@ from game.core.resources import (
     _get_default_resources,
     _resolve_resource_path,
 )
-from game.core.constants import ResourceType
 
 
 class TestGetDefaultResources:
@@ -31,20 +30,20 @@ class TestGetDefaultResources:
     def test_contains_fuel(self):
         """Contains FUEL resource."""
         result = _get_default_resources()
-        assert ResourceType.FUEL in result
-        assert result[ResourceType.FUEL]['id'] == ResourceType.FUEL
+        assert "fuel" in result
+        assert result["fuel"]['id'] == "fuel"
 
     def test_contains_energy(self):
         """Contains ENERGY resource."""
         result = _get_default_resources()
-        assert ResourceType.ENERGY in result
-        assert result[ResourceType.ENERGY]['id'] == ResourceType.ENERGY
+        assert "energy" in result
+        assert result["energy"]['id'] == "energy"
 
     def test_contains_ammo(self):
         """Contains AMMO resource."""
         result = _get_default_resources()
-        assert ResourceType.AMMO in result
-        assert result[ResourceType.AMMO]['id'] == ResourceType.AMMO
+        assert "ammo" in result
+        assert result["ammo"]['id'] == "ammo"
 
     def test_returns_new_dict_each_time(self):
         """Returns independent copies each call."""
@@ -53,8 +52,8 @@ class TestGetDefaultResources:
 
         assert result1 is not result2
         # Modifying one doesn't affect other
-        result1[ResourceType.FUEL]['test'] = 'modified'
-        assert 'test' not in result2[ResourceType.FUEL]
+        result1["fuel"]['test'] = 'modified'
+        assert 'test' not in result2["fuel"]
 
 
 class TestResolveResourcePath:
@@ -142,9 +141,9 @@ class TestLoadResourcesData:
             with patch('game.core.resources.logger') as mock_log:
                 result = load_resources_data("nonexistent.json")
 
-        assert ResourceType.FUEL in result
-        assert ResourceType.ENERGY in result
-        assert ResourceType.AMMO in result
+        assert "fuel" in result
+        assert "energy" in result
+        assert "ammo" in result
         mock_log.warning.assert_called()
 
     def test_json_decode_error_returns_defaults(self, tmp_path):
@@ -156,7 +155,7 @@ class TestLoadResourcesData:
             with patch('game.core.resources.logger') as mock_log:
                 result = load_resources_data(str(test_file))
 
-        assert ResourceType.FUEL in result
+        assert "fuel" in result
         mock_log.warning.assert_called()
         assert 'Invalid JSON' in str(mock_log.warning.call_args)
 
@@ -170,7 +169,7 @@ class TestLoadResourcesData:
                 with patch('game.core.resources.logger') as mock_log:
                     result = load_resources_data(str(test_file))
 
-        assert ResourceType.FUEL in result
+        assert "fuel" in result
         mock_log.warning.assert_called()
 
     def test_os_error_returns_defaults(self, tmp_path):
@@ -183,7 +182,7 @@ class TestLoadResourcesData:
                 with patch('game.core.resources.logger') as mock_log:
                     result = load_resources_data(str(test_file))
 
-        assert ResourceType.FUEL in result
+        assert "fuel" in result
         mock_log.warning.assert_called()
 
     def test_malformed_data_returns_defaults(self, tmp_path):
@@ -197,7 +196,7 @@ class TestLoadResourcesData:
                 result = load_resources_data(str(test_file))
 
         # Should fall back to defaults due to TypeError when iterating
-        assert ResourceType.FUEL in result
+        assert "fuel" in result
 
     def test_empty_resources_list(self, tmp_path):
         """Empty resources list returns empty dict."""

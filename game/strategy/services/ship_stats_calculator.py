@@ -19,7 +19,6 @@ Key design decisions:
 
 import logging
 from typing import Dict, Any, Optional, List, Tuple, TYPE_CHECKING
-from game.core.constants import ResourceType
 from game.core.registry import GameRegistries
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
@@ -702,15 +701,15 @@ class ShipStatsCalculator:
         warp_resource_costs = calculated_stats.get('warp_resource_costs', {})
         resource_storage = calculated_stats.get('resource_storage', {})
 
-        warp_energy_cost = warp_resource_costs.get(ResourceType.ENERGY, 0)
+        warp_energy_cost = warp_resource_costs.get("energy", 0)
         if warp_energy_cost > 0:
-            max_energy = resource_storage.get(ResourceType.ENERGY, 0)
+            max_energy = resource_storage.get("energy", 0)
             if max_energy < warp_energy_cost:
                 return False
 
-        warp_fuel_cost = warp_resource_costs.get(ResourceType.FUEL, 0)
+        warp_fuel_cost = warp_resource_costs.get("fuel", 0)
         if warp_fuel_cost > 0:
-            max_fuel = resource_storage.get(ResourceType.FUEL, 0)
+            max_fuel = resource_storage.get("fuel", 0)
             if max_fuel < warp_fuel_cost:
                 return False
 

@@ -1,7 +1,6 @@
 from typing import Dict, Any, List
 
 from game.core.config import PhysicsConfig
-from game.core.constants import ResourceType
 from .base import Ability
 from .stat_keys import StatKey, AbilityStatBinding
 from .ui_colors import HINT_DEFAULT, HINT_RANGE, HINT_WARP_ENERGY, HINT_PROJECTILE_SPEED, HINT_EVASION, HINT_SHIELD_CAP, HINT_ACCURACY
@@ -131,11 +130,11 @@ class ResourceConsumption(Ability):
 
         # Color mapping based on resource type
         color = HINT_DEFAULT
-        if self.resource_type == ResourceType.FUEL:
+        if self.resource_type == "fuel":
             color = HINT_RANGE
-        elif self.resource_type == ResourceType.ENERGY:
+        elif self.resource_type == "energy":
             color = HINT_WARP_ENERGY
-        elif self.resource_type == ResourceType.AMMO:
+        elif self.resource_type == "ammo":
             color = HINT_PROJECTILE_SPEED
 
         label_text = f"{self.resource_type.title()} {'Cost' if self.trigger != 'constant' else 'Use'}"
@@ -221,7 +220,7 @@ class ResourceGeneration(Ability):
 
     def get_ui_rows(self):
         color = HINT_DEFAULT
-        if self.resource_type == ResourceType.ENERGY:
+        if self.resource_type == "energy":
             color = HINT_ACCURACY
 
         return [{'label': f"{self.resource_type.title()} Gen", 'value': f"{self.rate:.1f}/s", 'color_hint': color}]

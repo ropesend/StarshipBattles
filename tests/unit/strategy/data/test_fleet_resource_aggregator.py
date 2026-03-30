@@ -8,7 +8,6 @@ Tests focus on atomic resource operations and cargo management.
 import pytest
 from unittest.mock import MagicMock
 
-from game.core.constants import ResourceType
 
 
 # =============================================================================
@@ -30,10 +29,10 @@ def mock_fleet():
 def mock_ship():
     """Create a mock ship with resource methods."""
     ship = MagicMock()
-    ship.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+    ship.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
     ship.get_current_resource.return_value = 100.0
     ship.consume_resource = MagicMock()
-    ship.get_warp_resource_costs.return_value = {ResourceType.FUEL: 50.0}
+    ship.get_warp_resource_costs.return_value = {"fuel": 50.0}
     ship.get_cargo_capacity.return_value = 100
     ship.get_current_cargo.return_value = 0
     ship.load_cargo = MagicMock(return_value=100)
@@ -86,18 +85,18 @@ class TestMovementResources:
 
         result = resource_aggregator.get_movement_resource_costs()
 
-        assert ResourceType.FUEL in result
-        assert result[ResourceType.FUEL] == 10.0
+        assert "fuel" in result
+        assert result["fuel"] == 10.0
 
     def test_get_movement_resource_costs_multiple_ships(self, resource_aggregator, mock_fleet, mock_ship):
         """Multiple ship movement costs are summed."""
         ship2 = MagicMock()
-        ship2.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 15.0}
+        ship2.get_all_resource_costs_per_hex.return_value = {"fuel": 15.0}
         mock_fleet.get_combat_capable_ships.return_value = [mock_ship, ship2]
 
         result = resource_aggregator.get_movement_resource_costs()
 
-        assert result[ResourceType.FUEL] == 25.0  # 10 + 15
+        assert result["fuel"] == 25.0  # 10 + 15
 
     def test_has_resources_for_movement_true(self, resource_aggregator, mock_fleet, mock_ship):
         """Returns True when ship has enough resources."""
@@ -163,11 +162,11 @@ class TestAtomicMovementConsumption:
     def test_consume_all_ships_checked_before_consuming(self, resource_aggregator, mock_fleet):
         """All ships verified before any consumption (atomic)."""
         ship1 = MagicMock()
-        ship1.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        ship1.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
         ship1.get_current_resource.return_value = 100.0  # Has enough
 
         ship2 = MagicMock()
-        ship2.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        ship2.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
         ship2.get_current_resource.return_value = 5.0  # Not enough
 
         mock_fleet.get_combat_capable_ships.return_value = [ship1, ship2]
@@ -187,7 +186,7 @@ class TestAtomicMovementConsumption:
         resource_aggregator.consume_movement_resources(hexes=5)
 
         # Should consume 10 * 5 = 50 fuel
-        mock_ship.consume_resource.assert_called_with(ResourceType.FUEL, 50.0)
+        mock_ship.consume_resource.assert_called_with("fuel", 50.0)
 
 
 # =============================================================================
@@ -203,8 +202,8 @@ class TestWarpResources:
 
         result = resource_aggregator.get_warp_resource_costs()
 
-        assert ResourceType.FUEL in result
-        assert result[ResourceType.FUEL] == 50.0
+        assert "fuel" in result
+        assert result["fuel"] == 50.0
 
     def test_has_resources_for_warp_true(self, resource_aggregator, mock_fleet, mock_ship):
         """Returns True when ship has enough warp resources."""
@@ -270,7 +269,7 @@ class TestCapabilitySummary:
     def test_fuel_endurance_calculation(self, resource_aggregator, mock_fleet, mock_ship):
         """Fuel endurance calculated correctly."""
         mock_ship.get_current_resource.return_value = 100.0
-        mock_ship.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        mock_ship.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
         mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
 
         result = resource_aggregator.fuel_endurance()
@@ -290,11 +289,11 @@ class TestCapabilitySummary:
         """Endurance limited by ship with least fuel."""
         ship1 = MagicMock()
         ship1.get_current_resource.return_value = 100.0
-        ship1.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        ship1.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
 
         ship2 = MagicMock()
         ship2.get_current_resource.return_value = 30.0  # Less fuel
-        ship2.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        ship2.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
 
         mock_fleet.get_combat_capable_ships.return_value = [ship1, ship2]
 
@@ -313,7 +312,7 @@ class TestCapabilitySummary:
     def test_warp_jumps_remaining_calculation(self, resource_aggregator, mock_fleet, mock_ship):
         """Warp jumps calculated correctly."""
         mock_ship.get_current_resource.return_value = 150.0
-        mock_ship.get_warp_resource_costs.return_value = {ResourceType.FUEL: 50.0}
+        mock_ship.get_warp_resource_costs.return_value = {"fuel": 50.0}
         mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
         mock_fleet.capabilities.can_use_warp.return_value = True
 
@@ -528,12 +527,12 @@ class TestMultipleResourceTypeEdgeCases:
         """Returns False when any resource is insufficient."""
         ship = MagicMock()
         ship.get_all_resource_costs_per_hex.return_value = {
-            ResourceType.FUEL: 10.0,
+            "fuel": 10.0,
             "energy": 5.0
         }
         # Enough fuel, not enough energy
         def get_resource(resource_type):
-            if resource_type == ResourceType.FUEL:
+            if resource_type == "fuel":
                 return 100.0
             return 2.0  # Less than 5.0 needed
         ship.get_current_resource.side_effect = get_resource
@@ -547,11 +546,11 @@ class TestMultipleResourceTypeEdgeCases:
         """Consumption fails atomically when one resource insufficient."""
         ship = MagicMock()
         ship.get_all_resource_costs_per_hex.return_value = {
-            ResourceType.FUEL: 10.0,
+            "fuel": 10.0,
             "energy": 5.0
         }
         def get_resource(resource_type):
-            if resource_type == ResourceType.FUEL:
+            if resource_type == "fuel":
                 return 100.0
             return 2.0
         ship.get_current_resource.side_effect = get_resource
@@ -566,11 +565,11 @@ class TestMultipleResourceTypeEdgeCases:
         """Returns False when any warp resource is insufficient."""
         ship = MagicMock()
         ship.get_warp_resource_costs.return_value = {
-            ResourceType.FUEL: 50.0,
+            "fuel": 50.0,
             "antimatter": 25.0
         }
         def get_resource(resource_type):
-            if resource_type == ResourceType.FUEL:
+            if resource_type == "fuel":
                 return 100.0
             return 10.0  # Less than 25.0 needed
         ship.get_current_resource.side_effect = get_resource
@@ -584,11 +583,11 @@ class TestMultipleResourceTypeEdgeCases:
         """Warp jumps limited by scarcest resource across types."""
         ship = MagicMock()
         ship.get_warp_resource_costs.return_value = {
-            ResourceType.FUEL: 25.0,
+            "fuel": 25.0,
             "antimatter": 50.0
         }
         def get_resource(resource_type):
-            if resource_type == ResourceType.FUEL:
+            if resource_type == "fuel":
                 return 100.0  # 4 jumps
             return 100.0  # 2 jumps (scarcer)
         ship.get_current_resource.side_effect = get_resource
@@ -634,11 +633,11 @@ class TestFuelEnduranceEdgeCases:
     def test_fuel_endurance_zero_cost_ship_skipped(self, endurance_aggregator, endurance_fleet):
         """Ships with 0 fuel cost don't affect endurance."""
         ship1 = MagicMock()
-        ship1.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        ship1.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
         ship1.get_current_resource.return_value = 100.0  # 10 hexes
 
         ship2 = MagicMock()
-        ship2.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 0.0}  # No cost
+        ship2.get_all_resource_costs_per_hex.return_value = {"fuel": 0.0}  # No cost
         ship2.get_current_resource.return_value = 5.0
 
         endurance_fleet.get_combat_capable_ships.return_value = [ship1, ship2]
@@ -651,7 +650,7 @@ class TestFuelEnduranceEdgeCases:
         """Only FUEL resource affects fuel endurance."""
         ship = MagicMock()
         ship.get_all_resource_costs_per_hex.return_value = {
-            ResourceType.FUEL: 10.0,
+            "fuel": 10.0,
             "energy": 50.0  # Should not affect fuel endurance
         }
         ship.get_current_resource.return_value = 100.0
@@ -678,7 +677,7 @@ class TestVerifyAndConsumeResources:
         self, resource_aggregator, mock_fleet, mock_ship
     ):
         """Verify-only mode returns True when all ships have sufficient resources."""
-        mock_ship.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        mock_ship.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
         mock_ship.get_current_resource.return_value = 100.0
         mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
 
@@ -694,7 +693,7 @@ class TestVerifyAndConsumeResources:
         self, resource_aggregator, mock_fleet, mock_ship
     ):
         """Verify-only mode returns False when resources insufficient."""
-        mock_ship.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        mock_ship.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
         mock_ship.get_current_resource.return_value = 5.0  # Less than 10 cost
         mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
 
@@ -709,7 +708,7 @@ class TestVerifyAndConsumeResources:
         self, resource_aggregator, mock_fleet, mock_ship
     ):
         """Consume mode consumes resources when all ships have enough."""
-        mock_ship.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        mock_ship.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
         mock_ship.get_current_resource.return_value = 100.0
         mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
 
@@ -719,13 +718,13 @@ class TestVerifyAndConsumeResources:
         )
 
         assert result is True
-        mock_ship.consume_resource.assert_called_with(ResourceType.FUEL, 10.0)
+        mock_ship.consume_resource.assert_called_with("fuel", 10.0)
 
     def test_consume_mode_no_consumption_when_insufficient(
         self, resource_aggregator, mock_fleet, mock_ship
     ):
         """Consume mode doesn't consume when verification fails (atomic)."""
-        mock_ship.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        mock_ship.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
         mock_ship.get_current_resource.return_value = 5.0  # Insufficient
         mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
 
@@ -741,7 +740,7 @@ class TestVerifyAndConsumeResources:
         self, resource_aggregator, mock_fleet, mock_ship
     ):
         """Consume mode applies multiplier to costs."""
-        mock_ship.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        mock_ship.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
         mock_ship.get_current_resource.return_value = 100.0
         mock_fleet.get_combat_capable_ships.return_value = [mock_ship]
 
@@ -752,7 +751,7 @@ class TestVerifyAndConsumeResources:
         )
 
         assert result is True
-        mock_ship.consume_resource.assert_called_with(ResourceType.FUEL, 50.0)  # 10 * 5
+        mock_ship.consume_resource.assert_called_with("fuel", 50.0)  # 10 * 5
 
     def test_verify_empty_fleet_returns_true(self, resource_aggregator, mock_fleet):
         """Empty fleet has resources (vacuously true)."""
@@ -768,11 +767,11 @@ class TestVerifyAndConsumeResources:
     def test_verify_multiple_ships_all_checked(self, resource_aggregator, mock_fleet):
         """All ships must have resources for verify to pass."""
         ship1 = MagicMock()
-        ship1.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        ship1.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
         ship1.get_current_resource.return_value = 100.0  # Sufficient
 
         ship2 = MagicMock()
-        ship2.get_all_resource_costs_per_hex.return_value = {ResourceType.FUEL: 10.0}
+        ship2.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
         ship2.get_current_resource.return_value = 5.0  # Insufficient
 
         mock_fleet.get_combat_capable_ships.return_value = [ship1, ship2]
@@ -792,11 +791,11 @@ class TestVerifyAndConsumeResources:
         """All resource types must be sufficient."""
         ship = MagicMock()
         ship.get_all_resource_costs_per_hex.return_value = {
-            ResourceType.FUEL: 10.0,
+            "fuel": 10.0,
             "energy": 5.0
         }
         def get_resource(resource_type):
-            if resource_type == ResourceType.FUEL:
+            if resource_type == "fuel":
                 return 100.0  # Sufficient
             return 2.0  # Insufficient
         ship.get_current_resource.side_effect = get_resource
@@ -814,7 +813,7 @@ class TestVerifyAndConsumeResources:
         """Resources with 0 cost don't prevent verification."""
         ship = MagicMock()
         ship.get_all_resource_costs_per_hex.return_value = {
-            ResourceType.FUEL: 10.0,
+            "fuel": 10.0,
             "energy": 0.0  # Zero cost
         }
         ship.get_current_resource.return_value = 100.0
@@ -827,7 +826,7 @@ class TestVerifyAndConsumeResources:
 
         assert result is True
         # Only non-zero resource consumed
-        ship.consume_resource.assert_called_once_with(ResourceType.FUEL, 10.0)
+        ship.consume_resource.assert_called_once_with("fuel", 10.0)
 
 
 class TestCargoDistributionEdgeCases:

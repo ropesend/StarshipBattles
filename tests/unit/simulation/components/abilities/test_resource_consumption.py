@@ -950,9 +950,7 @@ class TestResourceConsumptionUIColors:
 
     def test_fuel_resource_has_orange_color(self, mock_component):
         """Fuel resource shows orange color hint."""
-        from game.core.constants import ResourceType
-
-        data = {'resource': ResourceType.FUEL, 'amount': 10.0, 'trigger': 'activation'}
+        data = {'resource': "fuel", 'amount': 10.0, 'trigger': 'activation'}
         ability = ResourceConsumption(mock_component, data)
 
         rows = ability.get_ui_rows()
@@ -960,9 +958,7 @@ class TestResourceConsumptionUIColors:
 
     def test_energy_resource_has_blue_color(self, mock_component):
         """Energy resource shows light blue color hint."""
-        from game.core.constants import ResourceType
-
-        data = {'resource': ResourceType.ENERGY, 'amount': 10.0, 'trigger': 'activation'}
+        data = {'resource': "energy", 'amount': 10.0, 'trigger': 'activation'}
         ability = ResourceConsumption(mock_component, data)
 
         rows = ability.get_ui_rows()
@@ -970,9 +966,7 @@ class TestResourceConsumptionUIColors:
 
     def test_ammo_resource_has_yellow_color(self, mock_component):
         """Ammo resource shows dirty yellow color hint."""
-        from game.core.constants import ResourceType
-
-        data = {'resource': ResourceType.AMMO, 'amount': 10.0, 'trigger': 'activation'}
+        data = {'resource': "ammo", 'amount': 10.0, 'trigger': 'activation'}
         ability = ResourceConsumption(mock_component, data)
 
         rows = ability.get_ui_rows()
