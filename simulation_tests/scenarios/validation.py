@@ -44,6 +44,11 @@ class Check:
     passed: bool
     detail: str = ""
 
+    def __post_init__(self):
+        # Enforce native bool — scipy/numpy comparisons produce numpy.bool_
+        # which is not JSON-serializable.  Coerce at the boundary.
+        self.passed = bool(self.passed)
+
 
 @dataclass
 class ValidationReport:
@@ -97,13 +102,34 @@ class ValidationReport:
 
 
 def _safe_serialize(value: Any) -> Any:
-    """Convert value to a JSON-safe type."""
+    """Convert value to a JSON-safe type.
+
+    Handles native Python types directly and coerces numpy numeric types
+    (from scipy dependency) to their Python equivalents.  Numpy scalars
+    are converted FIRST via ``.item()`` so downstream checks always see
+    native ``int``, ``float``, or ``bool``.
+    """
+    if value is None:
+        return None
+    # Numpy scalars (float64, int64, bool_) — coerce to native Python
+    # BEFORE the isinstance checks, since some numpy types (float64)
+    # are subclasses of Python float and would pass through unconverted.
+    if hasattr(value, 'item'):
+        return _safe_serialize(value.item())
+    # Native scalar types (bool before int — bool is a subclass of int)
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int):
+        return value
     if isinstance(value, float):
         if value != value:  # NaN
             return None
         return value
-    if isinstance(value, (int, str, bool, type(None))):
+    if isinstance(value, str):
         return value
+    # Containers
+    if isinstance(value, dict):
+        return {k: _safe_serialize(v) for k, v in value.items()}
     if isinstance(value, (list, tuple)):
         return [_safe_serialize(v) for v in value]
     return str(value)
@@ -208,8 +234,8 @@ def check_tost(
     z2 = (observed - upper) / se
     p2 = norm.cdf(z2)
 
-    p_value = max(p1, p2)
-    passed = p_value < 0.05
+    p_value = float(max(p1, p2))
+    passed = bool(p_value < 0.05)
 
     return Check(
         phase=phase,
