@@ -12,9 +12,6 @@ from game.simulation.components.abilities.base import AbilityLayer, AbilityScope
 from game.simulation.interfaces import IAbility, is_ability
 
 
-# Abilities that should multiply instead of sum
-MULTIPLICATIVE_ABILITIES = {'ToHitAttackModifier', 'ToHitDefenseModifier'}
-
 # Marker abilities that use boolean True semantics
 MARKER_ABILITIES = {'CommandAndControl', 'Armor', 'RequiresCommandAndControl', 'RequiresCombatMovement'}
 
@@ -24,7 +21,7 @@ def _aggregate_ability_groups(ability_groups: Dict[str, Dict[Any, List[Any]]]) -
 
     Two-phase aggregation:
     1. Intra-group: Take MAX within each named group (redundancy)
-    2. Inter-group: Sum across different groups (or multiply for special abilities)
+    2. Inter-group: Sum across different groups
 
     Args:
         ability_groups: Dict mapping ability_name -> {group_key -> [values]}
@@ -50,22 +47,16 @@ def _aggregate_ability_groups(ability_groups: Dict[str, Dict[Any, List[Any]]]) -
         if not group_contributions:
             continue
 
-        # 2. Inter-Group Aggregation (Sum or Multiply)
+        # 2. Inter-Group Aggregation (Sum)
         first = group_contributions[0]
 
         if isinstance(first, bool):
             # If any group contributes True, result is True
             totals[ability_name] = True
         else:
-            if ability_name in MULTIPLICATIVE_ABILITIES:
-                val = 1.0
-                for v in group_contributions:
-                    if isinstance(v, (int, float)):
-                        val *= v
-                totals[ability_name] = val
-            else:
-                val = sum(v for v in group_contributions if isinstance(v, (int, float)))
-                totals[ability_name] = val
+            totals[ability_name] = sum(
+                v for v in group_contributions if isinstance(v, (int, float))
+            )
 
     return totals
 

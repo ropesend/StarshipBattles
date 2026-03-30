@@ -83,7 +83,7 @@ class ShipStatQuerier:
 
         Uses stack_group rules:
         - Same stack_group: MAX (redundancy)
-        - Different stack_groups: MULTIPLY (stacking)
+        - Different stack_groups: SUM (stacking)
 
         Returns:
             Total sensor/targeting score as float.
@@ -97,7 +97,7 @@ class ShipStatQuerier:
 
         Uses stack_group rules:
         - Same stack_group: MAX (redundancy)
-        - Different stack_groups: MULTIPLY (stacking)
+        - Different stack_groups: SUM (stacking)
 
         Returns:
             Total ECM/defense score as float.

@@ -160,11 +160,11 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.just_fired_projectiles: List[Any] = []
         self.total_shots_fired: int = 0
         
-        # To-Hit Calculation Stats
-        # total_defense_score: 1.0 = neutral baseline before ShipStatsCalculator computes
-        # actual value from size_score + maneuver_score + ecm_score
-        self.total_defense_score: float = 1.0
-        self.baseline_to_hit_offense: float = 1.0  # Offensive multiplier (sensor strength)
+        # To-Hit Calculation Stats (additive bonuses in sigmoid formula)
+        # ShipStatsCalculator computes these from component abilities.
+        # Defaults are additive neutral (0.0) before stats are calculated.
+        self.total_defense_score: float = 0.0
+        self.baseline_to_hit_offense: float = 0.0  # Sensor strength (attack bonus)
         
         # Strategic layer stats (computed by ShipStatsCalculator, initialized here for safety)
         self.total_strategic_movement: float = 0.0

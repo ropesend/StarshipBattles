@@ -71,6 +71,18 @@ from simulation_tests.scenarios.modifier_scenarios import (
     AccuracyBoostScenario,
     TurretArcSetScenario,
 )
+from simulation_tests.scenarios.tohit_defense_scenarios import (
+    ECMReducesHitRateComparisonScenario,
+    ECMSameGroupDoesNotStackScenario,
+    ECMDifferentGroupsStackScenario,
+    NegativeDefenseModifierScenario,
+)
+from simulation_tests.scenarios.tohit_attack_scenarios import (
+    SensorIncreasesAccuracyScenario,
+    SameGroupDoesNotStackScenario,
+    DifferentGroupsStackScenario,
+    NegativeModifierReducesAccuracyScenario,
+)
 from simulation_tests.scenarios.propulsion_scenarios import (
     PropEngineAccelerationScenario,
     PropDualEngineScenario,
@@ -128,4 +140,14 @@ __all__ = [
     'PropNoEngineStationaryScenario',
     'PropThrusterOnlyScenario',
     'PropMassAffectsTurnRateScenario',
+    # ToHitDefenseModifier scenarios
+    'ECMReducesHitRateComparisonScenario',
+    'ECMSameGroupDoesNotStackScenario',
+    'ECMDifferentGroupsStackScenario',
+    'NegativeDefenseModifierScenario',
+    # ToHitAttackModifier scenarios
+    'SensorIncreasesAccuracyScenario',
+    'SameGroupDoesNotStackScenario',
+    'DifferentGroupsStackScenario',
+    'NegativeModifierReducesAccuracyScenario',
 ]

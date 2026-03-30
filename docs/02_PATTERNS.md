@@ -838,12 +838,13 @@ Abilities on ship components support stacking groups. Aggregation is two-phase:
 
 1. **Intra-group (MAX):** Within the same named stack group, take the highest value.
    This models redundancy -- two sensors in the same group do not stack.
-2. **Inter-group (SUM or MULTIPLY):** Across different groups, sum the contributions.
-   Special abilities (`ToHitAttackModifier`, `ToHitDefenseModifier`) multiply instead.
+2. **Inter-group (SUM):** Across different groups, sum the contributions.
+
+Marker abilities (`CommandAndControl`, `Armor`, etc.) use boolean True semantics
+instead of numeric aggregation.
 
 ```python
-# game/simulation/entities/ability_aggregator.py (actual code)
-MULTIPLICATIVE_ABILITIES = {'ToHitAttackModifier', 'ToHitDefenseModifier'}
+# game/simulation/entities/ability_aggregator.py
 MARKER_ABILITIES = {'CommandAndControl', 'Armor', 'RequiresCommandAndControl', ...}
 
 def _aggregate_ability_groups(ability_groups):
@@ -864,23 +865,17 @@ def _aggregate_ability_groups(ability_groups):
         if isinstance(first, bool):
             totals[ability_name] = True
         else:
-            if ability_name in MULTIPLICATIVE_ABILITIES:
-                val = 1.0
-                for v in group_contributions:
-                    if isinstance(v, (int, float)):             # Type guard
-                        val *= v                                # Phase 2: MULTIPLY
-                totals[ability_name] = val
-            else:
-                val = sum(v for v in group_contributions if isinstance(v, (int, float)))  # Phase 2: SUM
-                totals[ability_name] = val
+            totals[ability_name] = sum(                        # Phase 2: SUM
+                v for v in group_contributions if isinstance(v, (int, float))
+            )
     return totals
 ```
 
 ### When to Use
 
 - Calculating effective ship stats from components.
-- New abilities default to SUM across groups. Add to `MULTIPLICATIVE_ABILITIES`
-  if the ability should multiply. Add to `MARKER_ABILITIES` for boolean presence checks.
+- All numeric abilities use SUM across groups by default.
+  Add to `MARKER_ABILITIES` for boolean presence checks.
 - Stack groups are defined in component JSON via the `stack_group` field.
 
 ---
