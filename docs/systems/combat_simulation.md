@@ -259,8 +259,7 @@ Across different groups:
 
 Example: Two sensors in stack_group "basic_sensor" with values 1.2 and 1.5
 contribute MAX(1.2, 1.5) = 1.5. A third sensor in stack_group "advanced_sensor"
-with value 1.3 is in a different group. For ToHitAttackModifier (multiplicative),
-the total = 1.5 * 1.3 = 1.95.
+with value 1.3 is in a different group. Inter-group SUM gives total = 1.5 + 1.3 = 2.8.
 
 ### Ability Categories
 

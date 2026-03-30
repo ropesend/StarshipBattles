@@ -384,23 +384,18 @@ class TestTotalDefenseScoreInitialization:
         if pygame.get_init():
             pygame.quit()
 
-    def test_total_defense_score_initial_value_is_one(self, fresh_registries):
-        """Verify total_defense_score is initialized to 1.0 (not 0.0).
+    def test_total_defense_score_initial_value_is_zero(self, fresh_registries):
+        """Verify total_defense_score is initialized to 0.0 (additive neutral).
 
-        NEW-SIM-001: The attribute was previously initialized twice:
-        - First to 0.0 (immediately overwritten)
-        - Then to 1.0 (the actual initial value)
-
-        The value 1.0 is correct because:
-        - It avoids division-by-zero issues if used as a denominator
-        - It represents a baseline "neutral" defense before stats calculation
-        - The actual value is computed by ShipStatsCalculator.calculate()
+        Defense score is an additive term subtracted in the sigmoid hit formula:
+        net_score = (base_accuracy + attack_bonus) - (range_penalty + defense_score)
+        A default of 0.0 means no defense modifier before stats are calculated.
+        The actual value is computed by ShipStatsCalculator.calculate().
         """
         ship = Ship("TestShip", 0, 0, (255, 255, 255), registries=fresh_registries)
 
-        # The initial value should be 1.0 (baseline defense score)
-        assert ship.total_defense_score == 1.0, (
-            f"total_defense_score should be initialized to 1.0, got {ship.total_defense_score}"
+        assert ship.total_defense_score == 0.0, (
+            f"total_defense_score should be initialized to 0.0, got {ship.total_defense_score}"
         )
 
     def test_total_defense_score_is_recalculated_by_stats(self, fresh_registries):

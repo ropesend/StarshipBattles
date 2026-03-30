@@ -71,6 +71,12 @@ from simulation_tests.scenarios.modifier_scenarios import (
     AccuracyBoostScenario,
     TurretArcSetScenario,
 )
+from simulation_tests.scenarios.tohit_attack_scenarios import (
+    SensorIncreasesAccuracyScenario,
+    SameGroupDoesNotStackScenario,
+    DifferentGroupsStackScenario,
+    NegativeModifierReducesAccuracyScenario,
+)
 from simulation_tests.scenarios.propulsion_scenarios import (
     PropEngineAccelerationScenario,
     PropDualEngineScenario,
@@ -128,4 +134,9 @@ __all__ = [
     'PropNoEngineStationaryScenario',
     'PropThrusterOnlyScenario',
     'PropMassAffectsTurnRateScenario',
+    # ToHitAttackModifier scenarios
+    'SensorIncreasesAccuracyScenario',
+    'SameGroupDoesNotStackScenario',
+    'DifferentGroupsStackScenario',
+    'NegativeModifierReducesAccuracyScenario',
 ]

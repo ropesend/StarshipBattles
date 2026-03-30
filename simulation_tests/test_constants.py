@@ -101,6 +101,7 @@ EMISSIVE_ARMOR_REDUCTION = 5  # Flat damage reduction per hit
 # To-hit modifiers
 ECM_DEFENSE_VALUE = 1.0     # Defense score bonus from test_ecm_1
 SENSOR_ATTACK_VALUE = 1.0   # Attack score bonus from test_sensor_1
+TOHIT_PENALTY_VALUE = -0.5  # Negative attack modifier from test_tohit_penalty
 
 # Defense test ship filenames
 SHIELDED_TARGET_SHIP = "Test_Target_Shielded.json"

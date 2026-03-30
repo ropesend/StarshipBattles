@@ -966,6 +966,39 @@
       }
     },
     {
+      "id": "test_sensor_1_group_a",
+      "name": "Test Sensor (1.0 Attack, Group A)",
+      "type": "Sensor",
+      "mass": 0,
+      "hp": 100,
+      "sprite_index": 25,
+      "abilities": {
+        "ToHitAttackModifier": {"value": 1.0, "stack_group": "sensors_a"}
+      }
+    },
+    {
+      "id": "test_sensor_1_group_b",
+      "name": "Test Sensor (1.0 Attack, Group B)",
+      "type": "Sensor",
+      "mass": 0,
+      "hp": 100,
+      "sprite_index": 25,
+      "abilities": {
+        "ToHitAttackModifier": {"value": 1.0, "stack_group": "sensors_b"}
+      }
+    },
+    {
+      "id": "test_tohit_penalty",
+      "name": "Test Targeting Penalty (-0.5)",
+      "type": "Sensor",
+      "mass": 0,
+      "hp": 100,
+      "sprite_index": 25,
+      "abilities": {
+        "ToHitAttackModifier": -0.5
+      }
+    },
+    {
       "id": "test_emissive_armor_5",
       "name": "Test Emissive Armor (5 Reduction)",
       "type": "Armor",

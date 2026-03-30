@@ -7,9 +7,8 @@ PROJ-118 Phase 2: Tests for ability_aggregator.py which provides:
 - _aggregate_ability_groups: Internal aggregation logic
 
 Tests focus on:
-- Stacking rules (max within group, sum/multiply across groups)
+- Stacking rules (max within group, sum across groups)
 - Marker abilities (boolean True semantics)
-- Multiplicative abilities (ToHitAttackModifier, ToHitDefenseModifier)
 - Layer and scope filtering
 - Edge cases (empty, no abilities, mixed types)
 """
@@ -22,7 +21,6 @@ from game.simulation.entities.ability_aggregator import (
     get_ability_total,
     get_ability_instances_by_class,
     _aggregate_ability_groups,
-    MULTIPLICATIVE_ABILITIES,
     MARKER_ABILITIES,
 )
 from game.simulation.components.abilities.base import Ability, AbilityLayer, AbilityScope
@@ -130,8 +128,8 @@ class TestAggregateAbilityGroups:
         result = _aggregate_ability_groups(groups)
         assert result["CombatPropulsion"] == 800.0  # Sum of groups
 
-    def test_multiplicative_ability_multiplies_across_groups(self):
-        """ToHitAttackModifier multiplies across groups instead of summing."""
+    def test_tohitattackmodifier_sums_across_groups(self):
+        """ToHitAttackModifier sums across groups (additive stacking)."""
         groups = {
             "ToHitAttackModifier": {
                 "comp1": [0.9],
@@ -139,10 +137,10 @@ class TestAggregateAbilityGroups:
             }
         }
         result = _aggregate_ability_groups(groups)
-        assert result["ToHitAttackModifier"] == pytest.approx(0.72)  # 0.9 * 0.8
+        assert result["ToHitAttackModifier"] == pytest.approx(1.7)  # 0.9 + 0.8
 
-    def test_tohitdefensemodifier_is_multiplicative(self):
-        """ToHitDefenseModifier is also multiplicative."""
+    def test_tohitdefensemodifier_sums_across_groups(self):
+        """ToHitDefenseModifier sums across groups (additive stacking)."""
         groups = {
             "ToHitDefenseModifier": {
                 "comp1": [1.1],
@@ -150,7 +148,7 @@ class TestAggregateAbilityGroups:
             }
         }
         result = _aggregate_ability_groups(groups)
-        assert result["ToHitDefenseModifier"] == pytest.approx(1.32)  # 1.1 * 1.2
+        assert result["ToHitDefenseModifier"] == pytest.approx(2.3)  # 1.1 + 1.2
 
     def test_boolean_ability_any_true_makes_result_true(self):
         """Boolean abilities return True if any group contributes True."""
@@ -322,8 +320,8 @@ class TestCalculateAbilityTotals:
         result = calculate_ability_totals([comp])
         assert result["RequiresCombatMovement"] is True
 
-    def test_multiplicative_ability_stacking(self):
-        """ToHitAttackModifier multiplies across components."""
+    def test_tohit_attack_modifier_sums_across_components(self):
+        """ToHitAttackModifier sums across components (additive stacking)."""
         comp1 = MockComponent(ability_instances=[
             MockAbility("ToHitAttackModifier", 0.9)
         ])
@@ -332,7 +330,7 @@ class TestCalculateAbilityTotals:
         ])
 
         result = calculate_ability_totals([comp1, comp2])
-        assert result["ToHitAttackModifier"] == pytest.approx(0.72)
+        assert result["ToHitAttackModifier"] == pytest.approx(1.7)  # 0.9 + 0.8
 
 
 class TestCalculateAbilityTotalsWithLayerFilter:
@@ -608,11 +606,6 @@ class TestGetAbilityInstancesByClass:
 class TestModuleConstants:
     """Tests for module-level constants."""
 
-    def test_multiplicative_abilities_contains_expected(self):
-        """MULTIPLICATIVE_ABILITIES contains the expected entries."""
-        assert 'ToHitAttackModifier' in MULTIPLICATIVE_ABILITIES
-        assert 'ToHitDefenseModifier' in MULTIPLICATIVE_ABILITIES
-
     def test_marker_abilities_contains_expected(self):
         """MARKER_ABILITIES contains the expected entries."""
         assert 'CommandAndControl' in MARKER_ABILITIES
@@ -767,8 +760,8 @@ class TestAbilityAggregatorAdditionalEdgeCases:
         result = _aggregate_ability_groups(groups)
         assert result["ToHitAttackModifier"] == pytest.approx(0.95)
 
-    def test_three_multiplicative_groups(self):
-        """Three multiplicative groups multiply correctly."""
+    def test_three_groups_sum_additively(self):
+        """Three groups sum additively."""
         groups = {
             "ToHitDefenseModifier": {
                 "comp1": [0.9],
@@ -777,7 +770,7 @@ class TestAbilityAggregatorAdditionalEdgeCases:
             }
         }
         result = _aggregate_ability_groups(groups)
-        assert result["ToHitDefenseModifier"] == pytest.approx(0.729)  # 0.9^3
+        assert result["ToHitDefenseModifier"] == pytest.approx(2.7)  # 0.9 + 0.9 + 0.9
 
     def test_boolean_all_false_excludes_from_result(self):
         """Boolean groups with only False values are excluded."""
