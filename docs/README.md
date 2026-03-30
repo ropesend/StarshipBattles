@@ -33,6 +33,7 @@
 | System | Document | Covers |
 |--------|----------|--------|
 | Combat/Simulation | [combat_simulation.md](systems/combat_simulation.md) | Battle modes, damage pipeline, ship architecture, abilities |
+| Abilities | [ability_reference.md](systems/ability_reference.md) | All 39 component abilities: registry keys, parameters, stat bindings |
 | Strategy/Turn Engine | [strategy_layer.md](systems/strategy_layer.md) | Facade, command dispatch, turn engine, fleet delegates, events |
 | AI | [ai_system.md](systems/ai_system.md) | Behaviors, strategy manager, target evaluator, adapters |
 | Research | [research_system.md](systems/research_system.md) | Tech tree, research tracker, leaky bucket algorithm |
@@ -73,6 +74,7 @@ docs/
 │   └── testing_infrastructure.md  DI fixtures, conftest, test helpers
 │
 └── systems/                     # Domain-specific architecture
+    ├── ability_reference.md       All 39 abilities: keys, parameters, stat bindings
     ├── combat_simulation.md       Battle orchestration, damage pipeline
     ├── strategy_layer.md          Facade, turn engine, commands, events
     ├── ai_system.md               AI behaviors, targeting, adapters

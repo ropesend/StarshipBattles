@@ -13,7 +13,7 @@ Each test isolates ONE defense ability against a calibrated beam attacker.
 
 from simulation_tests.scenarios import TestMetadata
 from simulation_tests.scenarios.validation import check_exact, check_tost, check_true
-from simulation_tests.scenarios.templates import StaticTargetScenario
+from simulation_tests.scenarios.templates import StaticTargetScenario, ComparisonScenario
 from simulation_tests.scenarios.beam_scenarios import compute_beam_hit_chance
 from simulation_tests.test_constants import (
     POINT_BLANK_DISTANCE,
@@ -533,6 +533,92 @@ class SensorImprovesHitRateScenario(StaticTargetScenario):
             "Damage Dealt", self.damage_dealt > 0,
             actual=self.damage_dealt, phase="outcome",
         ))
+        return checks
+
+
+# ============================================================================
+# COMPARISON TESTS (A/B measured outcome comparisons)
+# ============================================================================
+
+class SensorDamageComparisonScenario(ComparisonScenario):
+    """
+    SENSOR-002: Sensor Improves Damage (A/B Comparison)
+
+    Runs two battles with the same target at mid-range:
+    - Baseline: standard beam attacker (no sensor)
+    - Variant: beam attacker with ToHitAttackModifier (+1.0)
+
+    Compares measured damage to prove the sensor actually increases
+    combat effectiveness, not just the calculated hit probability.
+    """
+
+    metadata = TestMetadata(
+        test_id="SENSOR-002",
+        category="Defense Abilities",
+        subcategory="Sensors",
+        name="Sensor Damage Comparison (A/B)",
+        summary="Compares measured damage: no sensor (baseline) vs sensor (variant)",
+        conditions=[
+            "Baseline Attacker: Test_Attacker_Beam360_Med.json (no sensor)",
+            f"Variant Attacker: {SENSOR_ATTACKER_SHIP} (sensor +{SENSOR_ATTACK_VALUE})",
+            "Target: Test_Target_Stationary.json (both battles)",
+            f"Distance: {MID_RANGE_DISTANCE} pixels (mid range)",
+            f"Test Duration: {DEFENSE_TEST_TICKS} ticks per battle",
+            "Beam Damage: 1 per hit (damage_dealt == hits)",
+        ],
+        edge_cases=[
+            "Sensor adds attack bonus → higher hit probability → more damage",
+            "Both battles use identical seed for fair comparison",
+            "Measured damage, not calculated probability",
+        ],
+        expected_outcome="Variant (with sensor) deals more damage than baseline",
+        pass_criteria="variant_damage_dealt > baseline_damage_dealt",
+        max_ticks=DEFENSE_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        ui_priority=10,
+        tags=["defense", "sensor", "comparison", "to-hit", "attack-modifier"],
+    )
+
+    baseline_attacker_ship = "Test_Attacker_Beam360_Med.json"
+    baseline_target_ship = "Test_Target_Stationary.json"
+    variant_attacker_ship = SENSOR_ATTACKER_SHIP
+    variant_target_ship = "Test_Target_Stationary.json"
+    distance = MID_RANGE_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Data: verify sensor is present on variant attacker
+        sensor = self.get_ability(self.attacker, 'ToHitAttackModifier')
+        checks.append(check_exact(
+            "Sensor Attack Value", SENSOR_ATTACK_VALUE,
+            sensor.value if sensor else 0.0,
+            phase="data",
+        ))
+
+        # Precondition: both battles dealt some damage
+        checks.append(check_true(
+            "Baseline Dealt Damage",
+            self.baseline_damage_dealt > 0,
+            actual=self.baseline_damage_dealt,
+        ))
+        checks.append(check_true(
+            "Variant Dealt Damage",
+            self.variant_damage_dealt > 0,
+            actual=self.variant_damage_dealt,
+        ))
+
+        # Outcome: sensor should increase measured damage
+        checks.append(check_true(
+            "Sensor Increases Damage",
+            self.variant_damage_dealt > self.baseline_damage_dealt,
+            actual=f"baseline={self.baseline_damage_dealt}, "
+                   f"variant={self.variant_damage_dealt}, "
+                   f"delta=+{self.variant_damage_dealt - self.baseline_damage_dealt}",
+            phase="outcome",
+        ))
+
         return checks
 
 

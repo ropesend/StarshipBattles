@@ -67,6 +67,7 @@ class TestLabViewModel:
         # Button rects (set by renderer, used by input handler)
         self._run_test_btn_rect: Optional[Any] = None
         self._run_headless_btn_rect: Optional[Any] = None
+        self._run_baseline_btn_rect: Optional[Any] = None
         self._run_all_tests_btn_rect: Optional[Any] = None
         self._update_expected_button_rect: Optional[Any] = None
         self._update_expected_button_visible: bool = False
@@ -280,6 +281,15 @@ class TestLabViewModel:
     @run_headless_btn_rect.setter
     def run_headless_btn_rect(self, value) -> None:
         self._run_headless_btn_rect = value
+
+    @property
+    def run_baseline_btn_rect(self) -> Optional[Any]:
+        """Rect for Visual Baseline button (ComparisonScenario only)."""
+        return self._run_baseline_btn_rect
+
+    @run_baseline_btn_rect.setter
+    def run_baseline_btn_rect(self, value) -> None:
+        self._run_baseline_btn_rect = value
 
     @property
     def run_all_tests_btn_rect(self) -> Optional[Any]:

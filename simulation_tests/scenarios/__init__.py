@@ -50,6 +50,7 @@ from simulation_tests.scenarios.defense_scenarios import (
     EmissiveArmorReducesHighDamageScenario,
     ECMReducesHitRateScenario,
     SensorImprovesHitRateScenario,
+    SensorDamageComparisonScenario,
 )
 from simulation_tests.scenarios.resource_scenarios import (
     EngineFuelConsumptionScenario,
@@ -99,6 +100,7 @@ __all__ = [
     'EmissiveArmorReducesHighDamageScenario',
     'ECMReducesHitRateScenario',
     'SensorImprovesHitRateScenario',
+    'SensorDamageComparisonScenario',
     # Resource scenarios
     'EngineFuelConsumptionScenario',
     'EngineFuelDepletionScenario',

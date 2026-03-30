@@ -264,13 +264,17 @@ data = load_json_required("critical_config.json")
 
 ### save_json()
 
-Save with automatic parent directory creation. Returns `True`/`False`.
+Atomic save with automatic parent directory creation. Returns `True`/`False`.
+Writes to a temp file first, then replaces the original — if serialization or
+writing fails the original file is untouched.
 
 ```python
 from game.core.json_utils import save_json
 
 success = save_json("output.json", data, indent=2)
 ```
+
+Handles: `PermissionError` (returns `False`, logs error), `OSError` (returns `False`, logs error), `TypeError` (non-serializable data, returns `False`, logs error, cleans up temp file), `ValueError` (out-of-range floats like `inf`/`NaN`, returns `False`, logs error, cleans up temp file).
 
 ### deserialize_list()
 

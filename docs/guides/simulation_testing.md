@@ -521,7 +521,46 @@ class TeamBattleTest(TestScenario):
         return all(ship.is_alive for ship in battle_engine.teams[0])
 ```
 
-### Pattern 5: Negative Tests
+### Pattern 5: A/B Comparison Tests
+
+Compare measured outcomes between a baseline and a variant using `ComparisonScenario`.
+The template runs two separate battles — one internally during `setup()`, one through
+the normal runner loop — then compares their results in `validate()`.
+
+```python
+from simulation_tests.scenarios.templates import ComparisonScenario
+
+class SensorDamageTest(ComparisonScenario):
+    metadata = TestMetadata(test_id="SENSOR-002", name="Sensor damage comparison", ...)
+
+    # Baseline: standard beam attacker (no sensor)
+    baseline_attacker_ship = "Test_Attacker_Beam360_Med.json"
+    baseline_target_ship = "Test_Target_Stationary.json"
+
+    # Variant: beam attacker with sensor
+    variant_attacker_ship = "Test_Attacker_Beam360_WithSensor.json"
+    variant_target_ship = "Test_Target_Stationary.json"
+
+    distance = 400
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        checks.append(check_true(
+            "Sensor Increases Damage",
+            self.variant_damage_dealt > self.baseline_damage_dealt,
+            actual=f"baseline={self.baseline_damage_dealt}, variant={self.variant_damage_dealt}",
+            phase="outcome",
+        ))
+        return checks
+```
+
+**Key features:**
+- Both battles use the same seed for deterministic comparison
+- `configure_baseline(engine)` / `configure_variant(engine)` hooks for customization
+- Combat Lab shows three buttons: "Visual Run" (variant), "Headless Run" (both), "Visual Baseline" (baseline)
+- Results dict stores both `baseline_*` and `variant_*` metrics
+
+### Pattern 6: Negative Tests
 
 Verify that something does NOT happen.
 

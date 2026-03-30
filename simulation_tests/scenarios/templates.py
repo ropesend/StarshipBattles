@@ -10,6 +10,7 @@ Template Hierarchy:
   - DuelScenario: Two ships engaging each other
   - PropulsionScenario: Single ship movement/physics tests
   - ResourceScenario: Resource consumption/depletion/regeneration tests
+  - ComparisonScenario: A/B comparison (baseline vs variant)
 
 Usage Example:
     class MyWeaponTest(StaticTargetScenario):
@@ -144,6 +145,8 @@ class StaticTargetScenario(TestScenario):
         seed_to_use = getattr(self, '_override_seed', None)
         if seed_to_use is None:
             seed_to_use = self.metadata.seed
+        # Expose to custom_setup so movement controllers can derive their seed
+        self._effective_seed = seed_to_use
 
         # Start battle with time-based end condition
         battle_engine.start([self.attacker], [self.target],
@@ -803,6 +806,8 @@ class ResourceScenario(TestScenario):
         seed_to_use = getattr(self, '_override_seed', None)
         if seed_to_use is None:
             seed_to_use = self.metadata.seed
+        # Expose to custom_setup so movement controllers can derive their seed
+        self._effective_seed = seed_to_use
 
         battle_engine.start(team_a, team_b,
                            seed=seed_to_use,
@@ -892,4 +897,320 @@ class ResourceScenario(TestScenario):
         self.collect_results(battle_engine)
         raise NotImplementedError(
             f"{self.__class__.__name__} must implement validate() or verify()"
+        )
+
+
+# ============================================================================
+# COMPARISON SCENARIO TEMPLATE
+# ============================================================================
+
+class ComparisonScenario(TestScenario):
+    """
+    Base template for A/B comparison scenarios.
+
+    Runs two separate battles — a baseline and a variant — then compares
+    their measured outcomes in validate().
+
+    The baseline battle runs privately inside setup(). The variant battle
+    runs normally through the TestRunner's simulation loop. Both battles
+    use the same seed for deterministic comparison.
+
+    Visual Modes:
+    - "Visual Run" renders the variant battle (default)
+    - "Visual Baseline" renders the baseline battle (set _visual_baseline=True)
+    - "Headless Run" runs both internally, compares results
+
+    Subclass Configuration (required):
+    - baseline_attacker_ship: str - Filename of baseline attacker
+    - baseline_target_ship: str - Filename of baseline target
+    - variant_attacker_ship: str - Filename of variant attacker
+    - variant_target_ship: str - Filename of variant target
+    - distance: float - Distance between ships (same for both battles)
+
+    Subclass Configuration (optional):
+    - force_fire: bool - Auto-fire weapons each tick (default: True)
+    - attacker_angle: float - Attacker rotation (default: 0)
+    - target_angle: float - Target rotation (default: 0)
+
+    Subclass Hooks:
+    - configure_baseline(engine): Customize after baseline ships are loaded
+    - configure_variant(engine): Customize after variant ships are loaded
+
+    Measurement Attributes (populated by collect_results):
+    - baseline_damage_dealt, baseline_initial_hp, baseline_final_hp, baseline_ticks
+    - variant_damage_dealt, variant_initial_hp, variant_final_hp, variant_ticks
+    - Per-weapon stats under baseline_attacker_* and variant_attacker_* prefixes
+
+    Example Usage:
+        class ECMComparisonTest(ComparisonScenario):
+            metadata = TestMetadata(...)
+            baseline_attacker_ship = "Test_Attacker_Beam.json"
+            baseline_target_ship = "Test_Target.json"         # No ECM
+            variant_attacker_ship = "Test_Attacker_Beam.json"
+            variant_target_ship = "Test_Target_ECM.json"      # Has ECM
+            distance = 400
+
+            def validate(self, engine) -> list:
+                checks = self._template_preconditions()
+                checks.append(check_true(
+                    "ECM Reduces Damage",
+                    self.variant_damage_dealt < self.baseline_damage_dealt,
+                    actual=f"baseline={self.baseline_damage_dealt}, "
+                           f"variant={self.variant_damage_dealt}",
+                    phase="outcome",
+                ))
+                return checks
+    """
+
+    # Configuration — subclasses must set these
+    baseline_attacker_ship: Optional[str] = None
+    baseline_target_ship: Optional[str] = None
+    variant_attacker_ship: Optional[str] = None
+    variant_target_ship: Optional[str] = None
+    distance: Optional[float] = None
+
+    # Optional configuration
+    attacker_angle: float = 0.0
+    target_angle: float = 0.0
+    force_fire: bool = True
+
+    # Visual Baseline mode — set by the Combat Lab UI to render the baseline
+    # battle instead of the variant.  When True, setup() puts the baseline
+    # config on the runner's engine and skips the variant entirely.
+    _visual_baseline: bool = False
+
+    def setup(self, battle_engine):
+        """
+        Set up the comparison scenario.
+
+        Normal mode: runs baseline internally, configures variant on runner's engine.
+        Visual Baseline mode: configures baseline on runner's engine for observation.
+        """
+        self._validate_config()
+
+        # Resolve seed (same logic as StaticTargetScenario)
+        seed_to_use = getattr(self, '_override_seed', None)
+        if seed_to_use is None:
+            seed_to_use = self.metadata.seed
+        self._effective_seed = seed_to_use
+
+        if self._visual_baseline:
+            # Visual Baseline mode: baseline on runner's engine for observation
+            self._setup_battle(
+                battle_engine,
+                self.baseline_attacker_ship,
+                self.baseline_target_ship,
+            )
+            self.configure_baseline(battle_engine)
+        else:
+            # Normal mode: baseline internally, variant on runner's engine
+            self._run_baseline_battle()
+            self._setup_battle(
+                battle_engine,
+                self.variant_attacker_ship,
+                self.variant_target_ship,
+            )
+            self.configure_variant(battle_engine)
+
+    def _validate_config(self):
+        """Validate that required class attributes are set."""
+        cls_name = self.__class__.__name__
+        if self.baseline_attacker_ship is None:
+            raise ValueError(f"{cls_name} must set 'baseline_attacker_ship'")
+        if self.baseline_target_ship is None:
+            raise ValueError(f"{cls_name} must set 'baseline_target_ship'")
+        if self.variant_attacker_ship is None:
+            raise ValueError(f"{cls_name} must set 'variant_attacker_ship'")
+        if self.variant_target_ship is None:
+            raise ValueError(f"{cls_name} must set 'variant_target_ship'")
+        if self.distance is None:
+            raise ValueError(f"{cls_name} must set 'distance'")
+
+    def _setup_battle(self, engine, attacker_file, target_file):
+        """
+        Load ships, position them, and start a battle on the given engine.
+
+        Sets self.attacker, self.target, and self.initial_hp for use by
+        update() and collect_results().
+        """
+        self.attacker = self._load_ship(attacker_file)
+        self.target = self._load_ship(target_file)
+
+        self.attacker.position = pygame.math.Vector2(0, 0)
+        self.attacker.angle = self.attacker_angle
+        self.target.position = pygame.math.Vector2(self.distance, 0)
+        self.target.angle = self.target_angle
+
+        self.initial_hp = self.target.hp
+
+        end_condition = self._create_end_condition()
+        engine.start(
+            [self.attacker], [self.target],
+            seed=self._effective_seed,
+            end_condition=end_condition,
+        )
+        self.attacker.current_target = self.target
+
+    def _run_baseline_battle(self):
+        """
+        Run the baseline battle on a private engine, store results.
+
+        Creates a throwaway BattleEngine, runs the full simulation loop,
+        then collects baseline measurements.
+        """
+        from game.simulation.systems.battle_engine import BattleEngine, BattleLogger
+        from game.ai.ai_factory import AIControllerFactory
+
+        baseline_engine = BattleEngine(
+            logger=BattleLogger(enabled=False),
+            ai_factory=AIControllerFactory(),
+        )
+
+        self._setup_battle(
+            baseline_engine,
+            self.baseline_attacker_ship,
+            self.baseline_target_ship,
+        )
+        # Stash references before _setup_battle overwrites self.attacker/target
+        baseline_attacker = self.attacker
+        baseline_target = self.target
+        baseline_initial_hp = self.initial_hp
+
+        self.configure_baseline(baseline_engine)
+
+        # Run simulation loop
+        for tick in range(self.max_ticks):
+            if self.force_fire and baseline_attacker.is_alive:
+                baseline_attacker.comp_trigger_pulled = True
+            baseline_engine.update()
+            if baseline_engine.is_battle_over():
+                break
+
+        # Collect baseline results
+        self._baseline_initial_hp = baseline_initial_hp
+        self._baseline_final_hp = baseline_target.hp
+        self._baseline_damage_dealt = baseline_initial_hp - baseline_target.hp
+        self._baseline_ticks = baseline_engine.tick_counter
+        self._baseline_target_alive = baseline_target.is_alive
+
+        # Collect baseline weapon stats
+        self._collect_weapon_stats(
+            baseline_attacker, 'baseline_attacker', engine=baseline_engine
+        )
+        self._collect_weapon_stats(
+            baseline_target, 'baseline_target', engine=baseline_engine
+        )
+
+    def configure_baseline(self, engine):
+        """
+        Optional hook for subclasses to customize the baseline battle.
+
+        Called after baseline ships are loaded and engine is started,
+        before the simulation loop runs.  Use this to add movement
+        controllers, extract ability references, etc.
+        """
+        pass
+
+    def configure_variant(self, engine):
+        """
+        Optional hook for subclasses to customize the variant battle.
+
+        Called after variant ships are loaded and engine is started,
+        before the runner's simulation loop begins.
+        """
+        pass
+
+    def update(self, battle_engine):
+        """
+        Per-tick update for the active battle (variant or visual baseline).
+
+        Forces attacker to fire each tick if force_fire is True.
+        """
+        if self.force_fire and self.attacker and self.attacker.is_alive:
+            self.attacker.comp_trigger_pulled = True
+
+        self._track_tick(battle_engine.tick_counter)
+
+    def collect_results(self, engine):
+        """
+        Populate measurement attributes for both battles.
+
+        In Visual Baseline mode, only baseline results are stored.
+        In normal mode, both baseline and variant results are stored.
+        """
+        current_damage = self.initial_hp - self.target.hp
+        current_ticks = engine.tick_counter
+
+        if self._visual_baseline:
+            # Visual Baseline mode — only baseline ran on runner's engine
+            self.baseline_damage_dealt = current_damage
+            self.baseline_initial_hp = self.initial_hp
+            self.baseline_final_hp = self.target.hp
+            self.baseline_ticks = current_ticks
+
+            self.results['baseline_damage_dealt'] = self.baseline_damage_dealt
+            self.results['baseline_initial_hp'] = self.baseline_initial_hp
+            self.results['baseline_final_hp'] = self.baseline_final_hp
+            self.results['baseline_ticks'] = self.baseline_ticks
+            self.results['ticks_run'] = current_ticks
+
+            self._collect_weapon_stats(self.attacker, 'baseline_attacker', engine=engine)
+            self._collect_weapon_stats(self.target, 'baseline_target', engine=engine)
+        else:
+            # Normal mode — baseline ran internally, variant on runner's engine
+            self.variant_damage_dealt = current_damage
+            self.variant_initial_hp = self.initial_hp
+            self.variant_final_hp = self.target.hp
+            self.variant_ticks = current_ticks
+
+            self.baseline_damage_dealt = self._baseline_damage_dealt
+            self.baseline_initial_hp = self._baseline_initial_hp
+            self.baseline_final_hp = self._baseline_final_hp
+            self.baseline_ticks = self._baseline_ticks
+
+            self.results['baseline_damage_dealt'] = self.baseline_damage_dealt
+            self.results['baseline_initial_hp'] = self.baseline_initial_hp
+            self.results['baseline_final_hp'] = self.baseline_final_hp
+            self.results['baseline_ticks'] = self.baseline_ticks
+            self.results['variant_damage_dealt'] = self.variant_damage_dealt
+            self.results['variant_initial_hp'] = self.variant_initial_hp
+            self.results['variant_final_hp'] = self.variant_final_hp
+            self.results['variant_ticks'] = self.variant_ticks
+            self.results['ticks_run'] = current_ticks
+
+            self._collect_weapon_stats(self.attacker, 'variant_attacker', engine=engine)
+            self._collect_weapon_stats(self.target, 'variant_target', engine=engine)
+
+        self._finalize_tracking()
+
+        if hasattr(self, '_collect_extra_results'):
+            self._collect_extra_results(engine)
+
+    def _template_preconditions(self):
+        """
+        Return automatic precondition checks for ComparisonScenario.
+
+        In Visual Baseline mode, only checks that the baseline ran.
+        In normal mode, checks that both battles ran.
+        """
+        from simulation_tests.scenarios.validation import check_true
+        checks = []
+        checks.append(check_true(
+            "Baseline Ran",
+            self.baseline_ticks > 0,
+            actual=self.baseline_ticks,
+        ))
+        if not self._visual_baseline:
+            checks.append(check_true(
+                "Variant Ran",
+                self.variant_ticks > 0,
+                actual=self.variant_ticks,
+            ))
+        return checks
+
+    def verify(self, battle_engine) -> bool:
+        """Legacy pass/fail. Implement validate() instead."""
+        self.collect_results(battle_engine)
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement validate()"
         )

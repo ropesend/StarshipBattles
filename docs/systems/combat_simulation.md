@@ -278,6 +278,9 @@ Defined across files in `game/simulation/components/abilities/`:
 | `superweapons.py` | DestroyPlanet, DestroyStar, OpenWarpPoint, CloseWarpPoint, CreateDysonSphere, SelfDestruct, SuperweaponMarker |
 | `harvester.py` | ResourceHarvesterAbility, EmpireStorageAbility, SpaceShipyardAbility |
 | `colonize.py` | ColonizePlanet |
+| `planetary.py` | PlanetaryShieldAbility, PlanetaryEnergyGeneratorAbility, PlanetaryEnergyStorageAbility |
+
+> For complete details on every ability (registry keys, required parameters, data formats, stat bindings), see [ability_reference.md](ability_reference.md).
 
 ---
 

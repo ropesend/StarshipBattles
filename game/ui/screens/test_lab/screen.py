@@ -122,6 +122,7 @@ class TestLabScreen:
             callbacks={
                 'on_run': self._on_run,
                 'on_run_headless': self._on_run_headless,
+                'on_run_visual_baseline': self._on_run_visual_baseline,
                 'on_run_all': self._on_run_all_tests,
                 'on_update_expected': self._handle_update_expected_values,
                 'create_ship_panels': self._create_ship_panels,
@@ -508,6 +509,10 @@ class TestLabScreen:
     def _on_run(self):
         """Run the selected test scenario visually in Combat Lab."""
         self._executor.run_visual(self.selected_test_id)
+
+    def _on_run_visual_baseline(self):
+        """Run the baseline battle of a ComparisonScenario visually."""
+        self._executor.run_visual_baseline(self.selected_test_id)
 
     def _on_run_headless(self):
         """Run the selected test scenario in headless mode (fast, no visuals)."""
