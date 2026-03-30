@@ -955,6 +955,39 @@
       }
     },
     {
+      "id": "test_ecm_1_group_a",
+      "name": "Test ECM (1.0 Defense, Group A)",
+      "type": "Electronics",
+      "mass": 0,
+      "hp": 100,
+      "sprite_index": 26,
+      "abilities": {
+        "ToHitDefenseModifier": {"value": 1.0, "stack_group": "ecm_a"}
+      }
+    },
+    {
+      "id": "test_ecm_1_group_b",
+      "name": "Test ECM (1.0 Defense, Group B)",
+      "type": "Electronics",
+      "mass": 0,
+      "hp": 100,
+      "sprite_index": 26,
+      "abilities": {
+        "ToHitDefenseModifier": {"value": 1.0, "stack_group": "ecm_b"}
+      }
+    },
+    {
+      "id": "test_ecm_penalty",
+      "name": "Test ECM Penalty (-0.5 Defense)",
+      "type": "Electronics",
+      "mass": 0,
+      "hp": 100,
+      "sprite_index": 26,
+      "abilities": {
+        "ToHitDefenseModifier": -0.5
+      }
+    },
+    {
       "id": "test_sensor_1",
       "name": "Test Sensor (1.0 Attack, No Resource)",
       "type": "Sensor",

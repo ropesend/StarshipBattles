@@ -60,8 +60,8 @@ class SensorIncreasesAccuracyScenario(ComparisonScenario):
     """
     TOHIT-ATK-001: Sensor Increases Accuracy
 
-    Baseline: Low accuracy beam, no sensor → ~44% hit rate
-    Variant:  Low accuracy beam + ToHitAttackModifier(1.0) → ~68% hit rate
+    Battle A: Low accuracy beam, no sensor → ~36% hit rate
+    Battle B: Low accuracy beam + ToHitAttackModifier(1.0) → ~61% hit rate
 
     Proves that the ToHitAttackModifier ability increases the attacker's
     hit probability via the sigmoid formula.
@@ -72,11 +72,11 @@ class SensorIncreasesAccuracyScenario(ComparisonScenario):
         category="ToHitAttackModifier",
         subcategory="Basic Effect",
         name="Sensor Increases Accuracy",
-        summary="Compares measured hit rate: no sensor (baseline) vs +1.0 sensor (variant)",
+        summary="Compares measured hit rate: no sensor vs +1.0 sensor",
         conditions=[
-            "Baseline: Test_Attacker_Beam360_Low.json (no sensor)",
-            "Variant: Test_Attacker_Beam360_Low_Sensor.json (+1.0 attack bonus)",
-            "Target: Test_Target_Stationary.json (stationary, no defense)",
+            "Attacker (no sensor): Test_Attacker_Beam360_Low.json",
+            "Attacker (with sensor): Test_Attacker_Beam360_Low_Sensor.json (+1.0 attack bonus)",
+            "Target: Test_Target_Stationary.json (stationary, no defense modifiers)",
             f"Distance: {MID_RANGE_DISTANCE} pixels (mid range)",
             f"Beam: base_accuracy={BEAM_LOW_ACCURACY}, falloff={BEAM_LOW_FALLOFF}",
             f"Test Duration: {TOHIT_ATK_TEST_TICKS} ticks per battle",
@@ -158,8 +158,8 @@ class SameGroupDoesNotStackScenario(ComparisonScenario):
     """
     TOHIT-ATK-002: Same Stacking Group Does Not Stack
 
-    Baseline: Low accuracy beam + 1 sensor (group_a) → ~68% hit rate
-    Variant:  Low accuracy beam + 2 sensors (both group_a) → ~68% hit rate
+    Battle A: Low accuracy beam + 1 sensor (group_a) → ~61% hit rate
+    Battle B: Low accuracy beam + 2 sensors (both group_a) → ~61% hit rate
 
     Proves that intra-group MAX applies: two identical sensors in the same
     stacking group provide no additional benefit over one.
@@ -172,15 +172,15 @@ class SameGroupDoesNotStackScenario(ComparisonScenario):
         name="Same Group Does Not Stack",
         summary="Two sensors in the same stacking group provide no additional benefit",
         conditions=[
-            "Baseline: Test_Attacker_Beam360_Low_SensorA.json (1x group_a)",
-            "Variant: Test_Attacker_Beam360_Low_2xSensorA.json (2x group_a)",
-            "Target: Test_Target_Stationary.json (stationary, no defense)",
+            "Attacker (1 sensor): Test_Attacker_Beam360_Low_SensorA.json (1x group_a)",
+            "Attacker (2 sensors): Test_Attacker_Beam360_Low_2xSensorA.json (2x group_a)",
+            "Target: Test_Target_Stationary.json (stationary, no defense modifiers)",
             f"Distance: {MID_RANGE_DISTANCE} pixels",
             f"Test Duration: {TOHIT_ATK_TEST_TICKS} ticks per battle",
         ],
         edge_cases=[
             "Intra-group MAX: MAX(1.0, 1.0) = 1.0",
-            "Redundant sensors provide no stacking benefit",
+            "Redundant sensors in same group provide no stacking benefit",
         ],
         expected_outcome=f"Both battles ~{TOHIT_ATK_SENSOR_HIT_RATE:.0%} (identical — same group MAX)",
         pass_criteria="variant_damage ≈ baseline_damage",
@@ -225,8 +225,8 @@ class DifferentGroupsStackScenario(ComparisonScenario):
     """
     TOHIT-ATK-003: Different Stacking Groups Stack Additively
 
-    Baseline: Low accuracy beam + 1 sensor (group_a) → ~68% hit rate
-    Variant:  Low accuracy beam + sensor_a + sensor_b → ~85% hit rate
+    Battle A: Low accuracy beam + 1 sensor (group_a) → ~61% hit rate
+    Battle B: Low accuracy beam + sensor_a + sensor_b → ~81% hit rate
 
     Proves that inter-group SUM applies: sensors from different stacking
     groups combine additively (1.0 + 1.0 = 2.0 total bonus).
@@ -239,9 +239,9 @@ class DifferentGroupsStackScenario(ComparisonScenario):
         name="Different Groups Stack Additively",
         summary="Sensors from different stacking groups combine additively",
         conditions=[
-            "Baseline: Test_Attacker_Beam360_Low_SensorA.json (group_a only)",
-            "Variant: Test_Attacker_Beam360_Low_SensorAB.json (group_a + group_b)",
-            "Target: Test_Target_Stationary.json (stationary, no defense)",
+            "Attacker (1 group): Test_Attacker_Beam360_Low_SensorA.json (group_a only)",
+            "Attacker (2 groups): Test_Attacker_Beam360_Low_SensorAB.json (group_a + group_b)",
+            "Target: Test_Target_Stationary.json (stationary, no defense modifiers)",
             f"Distance: {MID_RANGE_DISTANCE} pixels",
             f"Test Duration: {TOHIT_ATK_TEST_TICKS} ticks per battle",
         ],
@@ -306,8 +306,8 @@ class NegativeModifierReducesAccuracyScenario(ComparisonScenario):
     """
     TOHIT-ATK-004: Negative Modifier Reduces Accuracy
 
-    Baseline: Low accuracy beam, no modifier → ~44% hit rate
-    Variant:  Low accuracy beam + ToHitAttackModifier(-0.5) → ~32% hit rate
+    Battle A: Low accuracy beam, no modifier → ~36% hit rate
+    Battle B: Low accuracy beam + ToHitAttackModifier(-0.5) → ~25% hit rate
 
     Proves that negative ToHitAttackModifier values reduce hit probability.
     """
@@ -319,9 +319,9 @@ class NegativeModifierReducesAccuracyScenario(ComparisonScenario):
         name="Negative Modifier Reduces Accuracy",
         summary="Negative ToHitAttackModifier reduces measured hit rate",
         conditions=[
-            "Baseline: Test_Attacker_Beam360_Low.json (no modifier)",
-            "Variant: Test_Attacker_Beam360_Low_Penalty.json (-0.5 penalty)",
-            "Target: Test_Target_Stationary.json (stationary, no defense)",
+            "Attacker (no modifier): Test_Attacker_Beam360_Low.json",
+            "Attacker (penalty): Test_Attacker_Beam360_Low_Penalty.json (-0.5 attack penalty)",
+            "Target: Test_Target_Stationary.json (stationary, no defense modifiers)",
             f"Distance: {MID_RANGE_DISTANCE} pixels",
             f"Test Duration: {TOHIT_ATK_TEST_TICKS} ticks per battle",
         ],
