@@ -1,12 +1,11 @@
-"""Tests for planetary ability classes (PROJ-237)."""
+"""Tests for planetary and strategic ability classes (PROJ-237/238)."""
 
 import pytest
 from unittest.mock import MagicMock
 
 from game.simulation.components.abilities.planetary import (
     PlanetaryShieldAbility,
-    PlanetaryEnergyGeneratorAbility,
-    PlanetaryEnergyStorageAbility,
+    StrategicResourceGenerationAbility,
 )
 from game.simulation.components.abilities import create_ability
 
@@ -83,81 +82,52 @@ class TestPlanetaryShieldAbility:
 
 
 # =============================================================================
-# PlanetaryEnergyGeneratorAbility
+# StrategicResourceGenerationAbility
 # =============================================================================
 
-class TestPlanetaryEnergyGeneratorAbility:
-    """Tests for PlanetaryEnergyGeneratorAbility."""
+class TestStrategicResourceGenerationAbility:
+    """Tests for StrategicResourceGenerationAbility."""
 
     def test_construction_from_dict(self, mock_component):
-        data = {"generation_rate": 50.0}
-        ability = PlanetaryEnergyGeneratorAbility(mock_component, data)
-        assert ability.generation_rate == 50.0
-
-    def test_construction_from_number(self, mock_component):
-        ability = PlanetaryEnergyGeneratorAbility(mock_component, 75.0)
-        assert ability.generation_rate == 75.0
+        data = {"resource": "energy", "generation_rate": 25000.0}
+        ability = StrategicResourceGenerationAbility(mock_component, data)
+        assert ability.resource == "energy"
+        assert ability.generation_rate == 25000.0
 
     def test_construction_empty_dict(self, mock_component):
-        ability = PlanetaryEnergyGeneratorAbility(mock_component, {})
+        ability = StrategicResourceGenerationAbility(mock_component, {})
+        assert ability.resource == ""
+        assert ability.generation_rate == 0.0
+
+    def test_construction_non_dict(self, mock_component):
+        ability = StrategicResourceGenerationAbility(mock_component, 42)
+        assert ability.resource == ""
         assert ability.generation_rate == 0.0
 
     def test_get_primary_value(self, mock_component):
-        data = {"generation_rate": 50.0}
-        ability = PlanetaryEnergyGeneratorAbility(mock_component, data)
-        assert ability.get_primary_value() == 50.0
-
-    def test_get_ui_rows(self, mock_component):
-        data = {"generation_rate": 50.0}
-        ability = PlanetaryEnergyGeneratorAbility(mock_component, data)
-        rows = ability.get_ui_rows()
-
-        assert len(rows) == 1
-        assert rows[0]['label'] == 'Generation Rate'
-        assert '50.0' in rows[0]['value']
-
-    def test_stat_bindings_empty(self, mock_component):
-        ability = PlanetaryEnergyGeneratorAbility(mock_component, {})
-        assert ability.STAT_BINDINGS == []
-
-
-# =============================================================================
-# PlanetaryEnergyStorageAbility
-# =============================================================================
-
-class TestPlanetaryEnergyStorageAbility:
-    """Tests for PlanetaryEnergyStorageAbility."""
-
-    def test_construction_from_dict(self, mock_component):
-        data = {"capacity": 5000.0}
-        ability = PlanetaryEnergyStorageAbility(mock_component, data)
-        assert ability.capacity == 5000.0
-
-    def test_construction_from_number(self, mock_component):
-        ability = PlanetaryEnergyStorageAbility(mock_component, 3000)
-        assert ability.capacity == 3000.0
-
-    def test_construction_empty_dict(self, mock_component):
-        ability = PlanetaryEnergyStorageAbility(mock_component, {})
-        assert ability.capacity == 0.0
-
-    def test_get_primary_value(self, mock_component):
-        data = {"capacity": 5000.0}
-        ability = PlanetaryEnergyStorageAbility(mock_component, data)
+        data = {"resource": "fuel", "generation_rate": 5000.0}
+        ability = StrategicResourceGenerationAbility(mock_component, data)
         assert ability.get_primary_value() == 5000.0
 
     def test_get_ui_rows(self, mock_component):
-        data = {"capacity": 5000.0}
-        ability = PlanetaryEnergyStorageAbility(mock_component, data)
+        data = {"resource": "energy", "generation_rate": 25000.0}
+        ability = StrategicResourceGenerationAbility(mock_component, data)
         rows = ability.get_ui_rows()
 
-        assert len(rows) == 1
-        assert rows[0]['label'] == 'Energy Capacity'
-        assert '5,000' in rows[0]['value']
+        assert len(rows) == 2
+        assert rows[0]['label'] == 'Resource'
+        assert rows[0]['value'] == 'energy'
+        assert rows[1]['label'] == 'Strategic Rate'
+        assert '25,000' in rows[1]['value']
 
     def test_stat_bindings_empty(self, mock_component):
-        ability = PlanetaryEnergyStorageAbility(mock_component, {})
+        ability = StrategicResourceGenerationAbility(mock_component, {})
         assert ability.STAT_BINDINGS == []
+
+    def test_resource_type_is_required_not_defaulted(self, mock_component):
+        """Resource type must be explicitly specified — empty string if missing."""
+        ability = StrategicResourceGenerationAbility(mock_component, {"generation_rate": 100})
+        assert ability.resource == ""
 
 
 # =============================================================================
@@ -165,7 +135,7 @@ class TestPlanetaryEnergyStorageAbility:
 # =============================================================================
 
 class TestAbilityRegistration:
-    """Tests that planetary abilities are properly registered in the factory."""
+    """Tests that abilities are properly registered in the factory."""
 
     def test_create_planetary_shield(self, mock_component):
         data = {"energy_drain_rate": 25.0, "activation_time": 50}
@@ -174,16 +144,10 @@ class TestAbilityRegistration:
         assert isinstance(ability, PlanetaryShieldAbility)
         assert ability.energy_drain_rate == 25.0
 
-    def test_create_planetary_energy_generator(self, mock_component):
-        data = {"generation_rate": 50.0}
-        ability = create_ability("PlanetaryEnergyGenerator", mock_component, data)
+    def test_create_strategic_resource_generation(self, mock_component):
+        data = {"resource": "energy", "generation_rate": 25000.0}
+        ability = create_ability("StrategicResourceGeneration", mock_component, data)
         assert ability is not None
-        assert isinstance(ability, PlanetaryEnergyGeneratorAbility)
-        assert ability.generation_rate == 50.0
-
-    def test_create_planetary_energy_storage(self, mock_component):
-        data = {"capacity": 5000.0}
-        ability = create_ability("PlanetaryEnergyStorage", mock_component, data)
-        assert ability is not None
-        assert isinstance(ability, PlanetaryEnergyStorageAbility)
-        assert ability.capacity == 5000.0
+        assert isinstance(ability, StrategicResourceGenerationAbility)
+        assert ability.generation_rate == 25000.0
+        assert ability.resource == "energy"

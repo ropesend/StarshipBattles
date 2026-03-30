@@ -1,15 +1,16 @@
 """
-Planetary abilities for energy generation, storage, and shields.
+Strategic-layer abilities for shields and resource generation.
 
-PROJ-237: Strategic-layer abilities for planetary complexes.
-These are marker abilities (no combat stat bindings) used by the
-PlanetEnergyEngine and PlanetActionEngine in the strategy layer.
+PROJ-237: Created for planetary complexes.
+PROJ-238: PlanetaryEnergyGeneratorAbility renamed to StrategicResourceGenerationAbility
+          (generic, works on ships and planets). PlanetaryEnergyStorageAbility deleted
+          (reuse combat ResourceStorage).
 """
 
 from typing import Dict, Any, List
 from .base import Ability
 from .stat_keys import AbilityStatBinding
-from .ui_colors import HINT_SHIELD_CAP, HINT_ACCURACY, HINT_DEFAULT, HINT_WARP_ENERGY
+from .ui_colors import HINT_ACCURACY, HINT_DEFAULT, HINT_WARP_ENERGY, HINT_COLONIZE
 
 
 class PlanetaryShieldAbility(Ability):
@@ -70,14 +71,18 @@ class PlanetaryShieldAbility(Ability):
         ]
 
 
-class PlanetaryEnergyGeneratorAbility(Ability):
-    """Generates energy for planetary systems.
+class StrategicResourceGenerationAbility(Ability):
+    """Generates resources per turn on the strategy layer.
 
-    Energy is stored in a per-planet pool and consumed by active
-    planetary shields and other energy-dependent facilities.
+    Each instance generates a specific resource type at a given rate per turn
+    (spread across 100 ticks). Works on any entity with facilities (planets,
+    space stations, ships).
+
+    Separate from combat ResourceGeneration which operates per second.
 
     Data fields:
-        generation_rate: Energy produced per turn
+        resource: Resource type identifier (e.g. from resources.json). Required.
+        generation_rate: Amount produced per turn.
     """
 
     STAT_BINDINGS: List[AbilityStatBinding] = []  # Strategic marker ability
@@ -86,55 +91,27 @@ class PlanetaryEnergyGeneratorAbility(Ability):
         super().__init__(component, data)
 
         if isinstance(data, dict):
+            self.resource = data.get("resource", "")
             self.generation_rate = data.get("generation_rate", 0.0)
         else:
-            self.generation_rate = float(data) if isinstance(data, (int, float)) else 0.0
+            self.resource = ""
+            self.generation_rate = 0.0
 
     def get_primary_value(self) -> float:
         """Return the generation rate as primary value."""
         return self.generation_rate
 
     def get_ui_rows(self) -> List[Dict[str, str]]:
-        """Return UI rows showing generator stats."""
+        """Return UI rows showing strategic generation stats."""
         return [
             {
-                'label': 'Generation Rate',
-                'value': f'{self.generation_rate:.1f}/turn',
-                'color_hint': HINT_ACCURACY
+                'label': 'Resource',
+                'value': self.resource,
+                'color_hint': HINT_COLONIZE
             },
-        ]
-
-
-class PlanetaryEnergyStorageAbility(Ability):
-    """Provides energy storage capacity for a planet.
-
-    Multiple storage facilities stack additively to increase
-    the planet's total energy capacity.
-
-    Data fields:
-        capacity: Maximum energy units this component can store
-    """
-
-    STAT_BINDINGS: List[AbilityStatBinding] = []  # Strategic marker ability
-
-    def __init__(self, component, data: Dict[str, Any]):
-        super().__init__(component, data)
-
-        if isinstance(data, dict):
-            self.capacity = data.get("capacity", 0.0)
-        else:
-            self.capacity = float(data) if isinstance(data, (int, float)) else 0.0
-
-    def get_primary_value(self) -> float:
-        """Return the storage capacity as primary value."""
-        return self.capacity
-
-    def get_ui_rows(self) -> List[Dict[str, str]]:
-        """Return UI rows showing storage stats."""
-        return [
             {
-                'label': 'Energy Capacity',
-                'value': f'{self.capacity:,.0f}',
-                'color_hint': HINT_SHIELD_CAP
+                'label': 'Strategic Rate',
+                'value': f'{self.generation_rate:,.0f}/turn',
+                'color_hint': HINT_ACCURACY
             },
         ]

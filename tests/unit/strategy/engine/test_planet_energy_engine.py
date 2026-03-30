@@ -41,14 +41,16 @@ def _make_empire(colonies=None):
 
 
 def _generator_design(generation_rate=50.0):
-    """Design data with a PlanetaryEnergyGenerator component."""
+    """Design data with a StrategicResourceGeneration component."""
     return {
         "layers": {
             "OUTER": [
                 {
-                    "id": "planetary_energy_generator",
+                    "id": "generator",
                     "abilities": {
-                        "PlanetaryEnergyGenerator": {"generation_rate": generation_rate}
+                        "StrategicResourceGeneration": [
+                            {"resource": "energy", "generation_rate": generation_rate}
+                        ]
                     }
                 }
             ]
@@ -57,14 +59,16 @@ def _generator_design(generation_rate=50.0):
 
 
 def _battery_design(capacity=5000.0):
-    """Design data with a PlanetaryEnergyStorage component."""
+    """Design data with a ResourceStorage (energy) component."""
     return {
         "layers": {
             "OUTER": [
                 {
-                    "id": "planetary_energy_battery",
+                    "id": "battery",
                     "abilities": {
-                        "PlanetaryEnergyStorage": {"capacity": capacity}
+                        "ResourceStorage": [
+                            {"resource": "energy", "amount": capacity}
+                        ]
                     }
                 }
             ]

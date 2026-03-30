@@ -189,6 +189,9 @@ class GameInitializer:
                     if empire.race_config is not None:
                         GameInitializer._adjust_homeworld_to_race(home_planet, empire.race_config)
 
+                    # Ensure minimum resource quality for fair starts
+                    GameInitializer._ensure_homeworld_resource_quality(home_planet)
+
                     empire.add_colony(home_planet)
 
                     # Seed initial population if empire has race_config
@@ -243,3 +246,16 @@ class GameInitializer:
         logger.info(f"GameInitializer: Adjusted {planet.name} to match species preferences "
                  f"(type={planet.planet_type.name}, gravity={planet.surface_gravity/9.81:.1f}g, "
                  f"temp={planet.surface_temperature:.0f}K, water={planet.surface_water:.0%})")
+
+    @staticmethod
+    def _ensure_homeworld_resource_quality(planet) -> None:
+        """Ensure homeworld resources meet minimum quality floor for fair starts."""
+        from game.strategy.data.resource_generation_config import get_resource_generation_config
+        cfg = get_resource_generation_config()
+        floor = cfg.homeworld_quality_floor
+
+        for resource_name, resource_data in planet.resources.items():
+            if resource_data.get('quality', 0.0) < floor:
+                resource_data['quality'] = floor
+
+        logger.info(f"GameInitializer: Enforced quality floor {floor} on {planet.name}")

@@ -265,7 +265,8 @@
             "max_quality": 100.0,
             "determinism_weight": 0.7,
             "randomness_weight": 0.3,
-            "minimum_floor": 5.0
+            "minimum_floor": 5.0,
+            "homeworld_quality_floor": 50.0
         },
 
         "planet_type_affinities": {

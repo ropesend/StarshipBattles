@@ -2,10 +2,12 @@
 PlanetEnergyEngine - Planetary Energy Generation, Storage & Consumption
 
 PROJ-237: Engine for managing per-planet energy pools.
+PROJ-238: Updated to use StrategicResourceGeneration and ResourceStorage
+          abilities. No hardcoded resource type names.
 
 Responsibilities:
-- Scan facilities for PlanetaryEnergyGenerator abilities (sum generation_rate)
-- Scan facilities for PlanetaryEnergyStorage abilities (sum capacity)
+- Scan facilities for StrategicResourceGeneration abilities (sum generation_rate by resource)
+- Scan facilities for ResourceStorage abilities (sum capacity by resource)
 - Generate energy per tick (generation_rate / 100)
 - Consume energy for active shields (energy_drain_rate / 100)
 - Auto-deactivate shields when energy runs out
@@ -30,45 +32,53 @@ if TYPE_CHECKING:
     from game.strategy.data.planetary_facility import PlanetaryFacility
 
 
-def get_energy_generator_info(comp, registries: Optional[GameRegistries] = None) -> Optional[dict]:
-    """Extract PlanetaryEnergyGenerator info from a component entry.
+def get_strategic_generation_info(comp, resource_type: str, registries: Optional[GameRegistries] = None) -> Optional[dict]:
+    """Extract StrategicResourceGeneration info for a specific resource from a component.
 
-    Supports:
-    - Dict with inline abilities: {"id": "x", "abilities": {"PlanetaryEnergyGenerator": {...}}}
-    - Plain string ID: resolved via registries
+    Scans for StrategicResourceGeneration ability entries matching the given
+    resource type. Supports both inline abilities and registry lookup.
+
+    Args:
+        comp: Component entry from design_data layers (dict or str).
+        resource_type: Resource type to match (e.g. value from resources.json).
+        registries: Optional GameRegistries for component lookup.
 
     Returns:
-        Dict with 'generation_rate', or None
+        Dict with 'generation_rate' and 'resource', or None.
     """
-    if isinstance(comp, dict):
-        abilities = comp.get('abilities', {})
-        gen_data = abilities.get('PlanetaryEnergyGenerator')
-        if isinstance(gen_data, dict):
-            return gen_data
-        comp_id = comp.get('id')
-        if comp_id and registries is not None:
-            return _get_from_registry(comp_id, 'PlanetaryEnergyGenerator', registries)
-    elif isinstance(comp, str) and registries is not None:
-        return _get_from_registry(comp, 'PlanetaryEnergyGenerator', registries)
+    abilities = _extract_abilities(comp, registries)
+    gen_data = abilities.get('StrategicResourceGeneration')
+    if gen_data is None:
+        return None
+    # Can be a list (multiple resources) or a single dict
+    entries = gen_data if isinstance(gen_data, list) else [gen_data]
+    for entry in entries:
+        if isinstance(entry, dict) and entry.get('resource') == resource_type:
+            return entry
     return None
 
 
-def get_energy_storage_info(comp, registries: Optional[GameRegistries] = None) -> Optional[dict]:
-    """Extract PlanetaryEnergyStorage info from a component entry.
+def get_resource_storage_info(comp, resource_type: str, registries: Optional[GameRegistries] = None) -> Optional[dict]:
+    """Extract ResourceStorage info for a specific resource from a component.
+
+    Scans for ResourceStorage ability entries matching the given resource type.
+
+    Args:
+        comp: Component entry from design_data layers (dict or str).
+        resource_type: Resource type to match.
+        registries: Optional GameRegistries for component lookup.
 
     Returns:
-        Dict with 'capacity', or None
+        Dict with 'amount' (capacity) and 'resource', or None.
     """
-    if isinstance(comp, dict):
-        abilities = comp.get('abilities', {})
-        storage_data = abilities.get('PlanetaryEnergyStorage')
-        if isinstance(storage_data, dict):
-            return storage_data
-        comp_id = comp.get('id')
-        if comp_id and registries is not None:
-            return _get_from_registry(comp_id, 'PlanetaryEnergyStorage', registries)
-    elif isinstance(comp, str) and registries is not None:
-        return _get_from_registry(comp, 'PlanetaryEnergyStorage', registries)
+    abilities = _extract_abilities(comp, registries)
+    storage_data = abilities.get('ResourceStorage')
+    if storage_data is None:
+        return None
+    entries = storage_data if isinstance(storage_data, list) else [storage_data]
+    for entry in entries:
+        if isinstance(entry, dict) and entry.get('resource') == resource_type:
+            return entry
     return None
 
 
@@ -76,31 +86,31 @@ def get_shield_info(comp, registries: Optional[GameRegistries] = None) -> Option
     """Extract PlanetaryShield info from a component entry.
 
     Returns:
-        Dict with 'energy_drain_rate', 'activation_time', 'deactivation_time', or None
+        Dict with 'energy_drain_rate', 'activation_time', 'deactivation_time', or None.
     """
+    abilities = _extract_abilities(comp, registries)
+    shield_data = abilities.get('PlanetaryShield')
+    if isinstance(shield_data, dict):
+        return shield_data
+    return None
+
+
+def _extract_abilities(comp, registries: Optional[GameRegistries] = None) -> dict:
+    """Extract abilities dict from a component entry (inline or registry lookup)."""
     if isinstance(comp, dict):
         abilities = comp.get('abilities', {})
-        shield_data = abilities.get('PlanetaryShield')
-        if isinstance(shield_data, dict):
-            return shield_data
+        if abilities:
+            return abilities
         comp_id = comp.get('id')
         if comp_id and registries is not None:
-            return _get_from_registry(comp_id, 'PlanetaryShield', registries)
+            comp_def = registries.components.get(comp_id)
+            if comp_def is not None:
+                return get_component_abilities(comp_def)
     elif isinstance(comp, str) and registries is not None:
-        return _get_from_registry(comp, 'PlanetaryShield', registries)
-    return None
-
-
-def _get_from_registry(comp_id: str, ability_name: str, registries: GameRegistries) -> Optional[dict]:
-    """Look up an ability from the component registry."""
-    comp_def = registries.components.get(comp_id)
-    if comp_def is None:
-        return None
-    abilities = get_component_abilities(comp_def)
-    data = abilities.get(ability_name)
-    if isinstance(data, dict):
-        return data
-    return None
+        comp_def = registries.components.get(comp)
+        if comp_def is not None:
+            return get_component_abilities(comp_def)
+    return {}
 
 
 class PlanetEnergyEngine:
@@ -109,15 +119,22 @@ class PlanetEnergyEngine:
 
     PROJ-237: Scans planetary facilities for energy abilities and manages
     the per-planet energy pool each tick.
+    PROJ-238: Uses StrategicResourceGeneration and ResourceStorage abilities.
+              Resource type is determined by what the shield consumes (from
+              PlanetaryShield.energy_drain_rate field name implies energy,
+              but the engine scans generically).
 
     Energy flow per tick:
-        1. Recalculate capacity (from PlanetaryEnergyStorage abilities)
-        2. Recalculate generation rate (from PlanetaryEnergyGenerator abilities)
+        1. Recalculate capacity (from ResourceStorage abilities for the resource)
+        2. Recalculate generation rate (from StrategicResourceGeneration abilities)
         3. Generate energy (generation_rate / 100 per tick)
         4. Consume energy for active shields (drain_rate / 100 per tick)
         5. Auto-deactivate shield if energy insufficient
         6. Clamp energy to [0, capacity]
     """
+
+    # The resource type used for planetary energy. Configurable if needed.
+    ENERGY_RESOURCE = "energy"
 
     def __init__(self, *, registries: Optional[GameRegistries] = None):
         self._registries = registries
@@ -135,6 +152,8 @@ class PlanetEnergyEngine:
 
     def _process_planet(self, planet: 'Planet', tick: int) -> None:
         """Process energy for a single planet."""
+        resource = self.ENERGY_RESOURCE
+
         # 1. Recalculate capacity and generation from current facilities
         new_capacity = 0.0
         new_generation = 0.0
@@ -145,13 +164,13 @@ class PlanetEnergyEngine:
             if not facility.is_operational:
                 continue
             for comp in iter_components(facility.design_data):
-                # Check for energy storage
-                storage_info = get_energy_storage_info(comp, self._registries)
+                # Check for resource storage
+                storage_info = get_resource_storage_info(comp, resource, self._registries)
                 if storage_info is not None:
-                    new_capacity += storage_info.get('capacity', 0.0)
+                    new_capacity += storage_info.get('amount', 0.0)
 
-                # Check for energy generation
-                gen_info = get_energy_generator_info(comp, self._registries)
+                # Check for strategic resource generation
+                gen_info = get_strategic_generation_info(comp, resource, self._registries)
                 if gen_info is not None:
                     new_generation += gen_info.get('generation_rate', 0.0)
 

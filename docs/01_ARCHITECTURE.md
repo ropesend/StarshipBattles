@@ -108,7 +108,7 @@ Six layers with strict downward-only dependency flow:
 | Subpackage      | Description |
 |-----------------|-------------|
 | `data/`         | Domain entities (notable modules): Fleet, ShipInstance, Empire, Galaxy, Planet, Stars, Storm, Pathfinding, plus fleet delegates (`fleet_battle_adapter.py`, `fleet_capability_calculator.py`, `fleet_resource_aggregator.py`), ShipInstance delegates (`ship_instance_bridge.py`, `ship_instance_serializer.py`, `ship_resource_manager.py`, `ship_cargo_manager.py`, `ship_display_formatter.py`), and data-driven configs (`classification_config.py`, `resource_generation_config.py`, `star_generation_config.py`, `orbital_generation_config.py`) |
-| `engine/`       | Turn processing: TurnEngine, GameSession, GameConfig, GameInitializer, Commands, CommandHandlers, FleetOrderProcessor, plus sub-engines (movement, conflict, harvesting, production + ProductionSpawner, population, economy, maintenance, resupply, action execution, environmental hazards), and shared utilities (`production_math.py`, `construction_forecast.py`) |
+| `engine/`       | Turn processing: TurnEngine, GameSession, GameConfig, GameInitializer, Commands, CommandHandlers, OrderProcessor, plus sub-engines (movement, conflict, harvesting, production + ProductionSpawner, population, economy, maintenance, resupply, action execution, planet action execution, planet energy, environmental hazards), and shared utilities (`production_math.py`, `construction_forecast.py`) |
 | `services/`     | ShipStatsCalculator, FleetSpeedCalculator, FleetNavigationService, ComponentInspector, DesignCostCalculator, CargoTransferService, AreaEffectManager, ActionTimeResolver, FleetCargoProjector |
 | `facade/`       | StrategySessionFacade (UI-to-engine communication) |
 | `facade/dto/`   | Read-only DTOs: FleetInfo, SystemInfo, PlanetInfo, EmpireInfo |
@@ -117,7 +117,7 @@ Six layers with strict downward-only dependency flow:
 | `generation/`   | Galaxy generation: density maps, planet gen, star placement, storm gen |
 | `events/`       | EventLog, EventTypes for strategy-layer event tracking |
 | `formulas/`     | Habitability formulas |
-| `validation/`   | ColonizeValidator, SuperweaponValidator, TransferValidator |
+| `validation/`   | ColonizeValidator, SuperweaponValidator, TransferValidator, PlanetOrderValidator |
 | `systems/`      | DesignLibrary, RaceLibrary, RaceRandomizer, SaveGameService |
 
 ### `game/ai/` -- Combat AI
@@ -187,7 +187,7 @@ Ship, ShipSerializer, Component, create_component, BattleEngine, BattleLogger, B
 
 ### `game.strategy` (15 exports)
 
-Fleet, ShipInstance, OrderType, FleetOrder, HexCoord, TurnEngine, GameSession, GameConfig, StrategySessionFacade, FleetInfo, SystemInfo, PlanetInfo, EmpireInfo, IBattleResolver, BattleResult
+Fleet, ShipInstance, OrderType, Order, HexCoord, TurnEngine, GameSession, GameConfig, StrategySessionFacade, FleetInfo, SystemInfo, PlanetInfo, EmpireInfo, IBattleResolver, BattleResult
 
 ### `game.ai` (13 exports)
 
@@ -241,7 +241,8 @@ All defined in `game/core/protocols.py`. Uses `@runtime_checkable` Protocol clas
 | Protocol      | Distinguishing Properties | TypeGuard |
 |---------------|---------------------------|-----------|
 | IFleet        | ships, orders, location, owner_id, capabilities, resources, battle | is_fleet |
-| IPlanet       | planet_type, resources, owner_id, populations, facilities, atmosphere | is_planet |
+| IPlanet       | planet_type, resources, owner_id, populations, facilities, atmosphere, energy, energy_capacity, shield_active | is_planet |
+| IOrderable    | orders, get_current_order(), add_order(), pop_order(), clear_orders() | — |
 | IStarSystem   | stars, planets, warp_points, global_location, storms | is_star_system |
 | IEmpire       | id, name, color, colonies, fleets, resource_pool | is_empire |
 | IStorm        | storm_type, effects, occupied_hexes | is_storm |

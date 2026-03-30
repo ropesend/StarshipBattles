@@ -7,8 +7,11 @@ PROJ-71: Refactored to use InputMapper for data-driven keybinding resolution.
 """
 from __future__ import annotations
 
+import logging
 import pygame
 import pygame_gui
+
+logger = logging.getLogger(__name__)
 from game.ui.config import UIConfig
 from game.ui.screens.strategy_fleet_command_router import FleetCommandRouter
 from game.ui.screens.strategy_click_dispatcher import ClickModeDispatcher

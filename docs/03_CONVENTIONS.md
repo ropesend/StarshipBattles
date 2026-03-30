@@ -106,6 +106,7 @@ markers.py        # VehicleLaunchAbility, CommandAndControl, StructuralIntegrity
 propulsion.py     # CombatPropulsion, ManeuveringThruster, StrategicMovement, WarpJump
 resources.py      # ResourceConsumption, ResourceStorage, ResourceGeneration
 stat_keys.py      # StatKey, AbilityStatBinding
+planetary.py      # PlanetaryShieldAbility, StrategicResourceGenerationAbility (PROJ-237/238)
 superweapons.py   # DestroyPlanet, DestroyStar, OpenWarpPoint, CloseWarpPoint, etc.
 ui_colors.py      # HINT_SHIELD_CAP, HINT_DAMAGE, etc. (UI hint color constants)
 weapons.py        # WeaponAbility, BeamWeaponAbility, etc.
@@ -115,6 +116,22 @@ weapons.py        # WeaponAbility, BeamWeaponAbility, etc.
   ```python
   from game.simulation.components.abilities import CombatPropulsion, WeaponAbility
   ```
+
+### 1.8 Order System Names (PROJ-238)
+
+`FleetOrder` was renamed to `Order` to support both fleet and planet orders.
+`PlanetOrderType` was merged into the unified `OrderType` enum.
+
+| Old Name | New Name | Notes |
+|----------|----------|-------|
+| `FleetOrder` | `Order` | `from game.strategy.data.order_types import Order` |
+| `PlanetOrderType` | merged into `OrderType` | `ACTIVATE_SHIELD`, `DEACTIVATE_SHIELD` added |
+| `FleetOrderProcessor` | `OrderProcessor` | Re-exported from `order_processor.py` |
+| `FleetOrderSerializer` | `OrderSerializer` | Re-exported from `order_serializer.py` |
+| `FleetOrdersWindow` | `OrdersWindow` | Re-exported from `orders_window.py` |
+
+Backward compatibility aliases exist in the old file locations but new code
+should use the new names and import paths.
 
 ---
 

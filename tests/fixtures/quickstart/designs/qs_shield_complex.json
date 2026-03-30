@@ -72,7 +72,7 @@
                 ]
             },
             {
-                "id": "planetary_energy_generator",
+                "id": "generator",
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
@@ -85,7 +85,7 @@
                 ]
             },
             {
-                "id": "planetary_energy_battery",
+                "id": "battery",
                 "modifiers": [
                     {
                         "id": "simple_size_mount",

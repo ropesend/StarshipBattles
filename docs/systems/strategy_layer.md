@@ -250,15 +250,42 @@ Bridges strategy Fleet with simulation Ship for combat:
 - `update_from_battle_results(surviving_ships)` -- updates fleet from
   `IPostBattleShip` protocol; ships not in survivors are removed (destroyed)
 
-### Order System
+### Order System (PROJ-238: Unified)
 
 Order types defined in `game/strategy/data/order_types.py`:
-- Movement: `MOVE`, `MOVE_TO_FLEET`, `WARP`
-- Actions: `COLONIZE`, `TRANSFER`, `LOAD_POPULATION`, superweapons
+- Movement: `MOVE`, `MOVE_TO_FLEET`, `WARP` (fleet-only)
+- Actions: `COLONIZE`, `TRANSFER`, `LOAD_POPULATION`, superweapons (fleet)
+- Planet actions: `ACTIVATE_SHIELD`, `DEACTIVATE_SHIELD` (planet)
 - Fleet: `JOIN_FLEET`, `BUILD`
 
-Orders are processed as a FIFO queue. `fleet.pop_order()` removes the active
-order and clears the path.
+Both Fleet and Planet implement the `IOrderable` protocol (`game/core/protocols.py`),
+providing a unified interface: `orders` list, `get_current_order()`, `add_order()`,
+`pop_order()`, `clear_orders()`.
+
+The unified `Order` class (renamed from `FleetOrder` in PROJ-238) and `OrderType`
+enum are used by both entity types. Import from `game.strategy.data.order_types`.
+
+**Planet orders** are processed by `PlanetActionEngine` (every tick, no speed concept).
+**Fleet orders** are processed by `ActionExecutionEngine` (speed-based tick interval).
+
+### Planet Energy System (PROJ-237/238)
+
+**File:** `game/strategy/engine/planet_energy_engine.py`
+
+Each planet tracks an energy pool fed by `StrategicResourceGeneration` abilities
+and bounded by `ResourceStorage` abilities (both scanned from facility components
+via registry lookup). Active planetary shields consume energy per turn.
+
+**Turn processing (100 ticks per turn):**
+1. Recalculate capacity from `ResourceStorage` abilities (per resource type)
+2. Recalculate generation from `StrategicResourceGeneration` abilities
+3. Generate: `energy += generation_rate / 100`
+4. Consume: if shield active, `energy -= drain_rate / 100`
+5. Auto-deactivate shield if energy depleted
+6. Clamp energy to `[0, capacity]`
+
+**Critical:** Uses `get_default_registry_provider()` for ability lookup on facility
+components. See Pattern 3 in `02_PATTERNS.md` for the registry lookup requirement.
 
 ---
 

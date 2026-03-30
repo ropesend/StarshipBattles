@@ -159,16 +159,35 @@ def format_planet_info(planet: IPlanet) -> str:
 
 
 def _planet_has_shield_facility(planet) -> bool:
-    """Check if a planet has any facility with a PlanetaryShield ability."""
+    """Check if a planet has any facility with a PlanetaryShield ability.
+
+    Checks both inline abilities in design_data and the component registry.
+    """
+    from game.core.patterns.layer_iterator import iter_components
+    from game.strategy.services.component_inspector import get_component_abilities
+    from game.core.registry import get_default_registry_provider
+
+    # Try to get component registry for lookup
+    component_registry = None
+    try:
+        provider = get_default_registry_provider()
+        component_registry = provider.get_components()
+    except Exception:
+        pass
+
     for facility in planet.facilities:
         design_data = getattr(facility, 'design_data', None)
         if not isinstance(design_data, dict):
             continue
-        for layer_data in design_data.get('layers', {}).values():
-            if not isinstance(layer_data, list):
-                continue
-            for comp in layer_data:
-                if isinstance(comp, dict) and 'PlanetaryShield' in comp.get('abilities', {}):
+        for comp in iter_components(design_data):
+            # Check inline abilities
+            if isinstance(comp, dict) and 'PlanetaryShield' in comp.get('abilities', {}):
+                return True
+            # Check registry
+            comp_id = comp.get('id', '') if isinstance(comp, dict) else str(comp)
+            if comp_id and component_registry:
+                comp_def = component_registry.get(comp_id)
+                if comp_def and 'PlanetaryShield' in get_component_abilities(comp_def):
                     return True
     return False
 
