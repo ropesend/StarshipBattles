@@ -25,7 +25,6 @@ from game.strategy.interfaces.engines import (
     IOrderProcessor,
     IConflictEngine,
     IConsumableEngine,
-    IMaintenanceEngine,
 )
 
 
@@ -196,28 +195,3 @@ class MockConsumableEngine(IConsumableEngine):
         return self.process_per_turn_consumption_result
 
 
-class MockMaintenanceEngine(IMaintenanceEngine):
-    """
-    Mock implementation of IMaintenanceEngine for testing.
-
-    PROJ-75 Phase 5: Maintenance engine mock.
-    PROJ-161: Per-tick only (legacy full-turn method removed).
-
-    Tracks method calls and allows configurable return values.
-
-    Attributes:
-        process_maintenance_tick_result: Return value for process_maintenance_tick()
-        process_maintenance_tick_calls: List of (tick, empires) call args
-    """
-
-    def __init__(self):
-        self.process_maintenance_tick_result: List = []
-        self.process_maintenance_tick_calls: List[Tuple] = []
-
-    @property
-    def process_maintenance_tick_called(self) -> bool:
-        return len(self.process_maintenance_tick_calls) > 0
-
-    def process_maintenance_tick(self, tick, empires):
-        self.process_maintenance_tick_calls.append((tick, empires))
-        return self.process_maintenance_tick_result

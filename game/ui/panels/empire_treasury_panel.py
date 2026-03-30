@@ -45,7 +45,7 @@ class EmpireTreasuryPanel:
 
     Shows three sections:
     - Resource Production Per Turn: colony, ship, trade, tribute, mining sources
-    - Resource Expenses Per Turn: tributes, maintenance, construction
+    - Resource Expenses Per Turn: tributes, construction
     - Treasury: net resources, current storage, max storage
 
     Each section shows values for all 5 resource types in columns.
@@ -262,7 +262,6 @@ class EmpireTreasuryPanel:
         """Get expense section row data."""
         return [
             ("Tributes", self.snapshot.tribute_expenses, False),
-            ("Maintenance Costs", self.snapshot.maintenance_expenses, False),
             ("Construction Queues (Ships)", self.snapshot.construction_expenses_ships, False),
             ("Construction Queues (Complexes)", self.snapshot.construction_expenses_complexes, False),
             ("Total", self.snapshot.total_expenses, True),

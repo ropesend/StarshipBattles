@@ -6,12 +6,11 @@ to specialized engines.
 
 PROJ-43 Phase 4: Full constructor dependency injection for all engines.
 
-PROJ-161: Moved harvesting and maintenance into per-tick processing.
+PROJ-161: Moved harvesting into per-tick processing.
 
 Turn Phases:
     1. SUBTURN LOOP (100 ticks):
        - Phase 0:   Harvesting (via HarvestingEngine) - 1/100th per tick
-       - Phase 0a:  Maintenance (via MaintenanceEngine) - 1/100th per tick, immediate scuttle
        - Phase 0b:  Per-turn resources (via ConsumableManagementEngine)
        - Phase 0c:  Fuel generation at facilities (via ResupplyEngine)
        - Phase 0d:  Fleet resupply from facilities (via ResupplyEngine)
@@ -32,7 +31,6 @@ Delegated Engines:
     - ConsumableManagementEngine: Per-turn resource consumption
     - ResupplyEngine: Fuel generation and fleet resupply
     - HarvestingEngine: Planetary resource extraction to empire pool
-    - MaintenanceEngine: Maintenance cost deduction and scuttling
 
 Dependency Injection:
     TurnEngine accepts optional engine parameters for all sub-engines.
@@ -74,7 +72,6 @@ if TYPE_CHECKING:
         IPopulationEngine,
         IResupplyEngine,
         IHarvestingEngine,
-        IMaintenanceEngine,
         IActionExecutionEngine,
         IEnvironmentalHazardEngine,
         IPlanetEnergyEngine,
@@ -120,7 +117,6 @@ class TurnEngine:
         population_engine: Optional['IPopulationEngine'] = None,
         resupply_engine: Optional['IResupplyEngine'] = None,
         harvesting_engine: Optional['IHarvestingEngine'] = None,
-        maintenance_engine: Optional['IMaintenanceEngine'] = None,
         action_engine: Optional['IActionExecutionEngine'] = None,
         environmental_engine: Optional['IEnvironmentalHazardEngine'] = None,
         planet_energy_engine: Optional['IPlanetEnergyEngine'] = None,
@@ -132,7 +128,6 @@ class TurnEngine:
         PROJ-43 Phase 4: All engines can be injected for testing.
         PROJ-50: Added registries parameter for DI to sub-engines.
         PROJ-75 Phase 2: Added harvesting_engine parameter.
-        PROJ-75 Phase 5: Added maintenance_engine parameter.
 
         Args:
             battle_resolver: Optional battle resolver implementation.
@@ -154,8 +149,6 @@ class TurnEngine:
                            If None, creates ResupplyEngine.
             harvesting_engine: Optional harvesting engine (IHarvestingEngine).
                            If None, creates HarvestingEngine.
-            maintenance_engine: Optional maintenance engine (IMaintenanceEngine).
-                           If None, creates MaintenanceEngine.
             action_engine: Optional action execution engine (IActionExecutionEngine).
                            If None, creates ActionExecutionEngine.
             environmental_engine: Optional environmental hazard engine (IEnvironmentalHazardEngine).
@@ -180,15 +173,11 @@ class TurnEngine:
         self._population_engine: Optional['IPopulationEngine'] = population_engine
         self._resupply_engine: Optional['IResupplyEngine'] = resupply_engine
         self._harvesting_engine: Optional['IHarvestingEngine'] = harvesting_engine
-        self._maintenance_engine: Optional['IMaintenanceEngine'] = maintenance_engine
         self._action_engine: Optional['IActionExecutionEngine'] = action_engine
         self._environmental_engine: Optional['IEnvironmentalHazardEngine'] = environmental_engine
         # PROJ-237: Planet energy and action engines
         self._planet_energy_engine: Optional['IPlanetEnergyEngine'] = planet_energy_engine
         self._planet_action_engine: Optional['IPlanetActionEngine'] = planet_action_engine
-
-        # PROJ-75 Phase 6: Scuttle event storage for UI notification
-        self.last_scuttle_events: list = []
 
         # PROJ-189: Environmental event storage for UI notification
         self.last_environmental_events: list = []
@@ -199,7 +188,7 @@ class TurnEngine:
     def _reset_phase_times(self) -> None:
         """Reset performance timing accumulators to zero."""
         self._phase_times: dict[str, float] = {
-            'harvesting': 0.0, 'maintenance': 0.0, 'resources': 0.0,
+            'harvesting': 0.0, 'resources': 0.0,
             'fuel_gen': 0.0, 'resupply': 0.0, 'production': 0.0,
             'environmental': 0.0, 'instant_orders': 0.0, 'actions': 0.0,
             'planet_energy': 0.0, 'planet_actions': 0.0,
@@ -308,15 +297,6 @@ class TurnEngine:
         return self._harvesting_engine
 
     @property
-    def maintenance_engine(self) -> 'IMaintenanceEngine':
-        """Return maintenance engine, lazily creating default if not injected."""
-        if self._maintenance_engine is None:
-            from game.strategy.engine.maintenance_engine import MaintenanceEngine
-            # PROJ-218: Pass registries for cost calculation
-            self._maintenance_engine = MaintenanceEngine(registries=self._registries)
-        return self._maintenance_engine
-
-    @property
     def action_engine(self) -> 'IActionExecutionEngine':
         """Return action execution engine, lazily creating default if not injected."""
         if self._action_engine is None:
@@ -366,15 +346,11 @@ class TurnEngine:
             save_path: Path to savegame folder for loading designs during production
 
         Side Effects:
-            Populates self.last_scuttle_events (List[ScuttleEvent]) from maintenance.
             Populates self.last_environmental_events (List[EnvironmentalEvent]) from storms.
-            Both lists are cleared at turn start and readable after this method returns.
+            This list is cleared at turn start and readable after this method returns.
         """
         # Store save_path for tick processing (PROJ-79)
         self._current_save_path = save_path
-
-        # PROJ-161: Initialize scuttle event accumulator (cleared each turn)
-        self.last_scuttle_events = []
 
         # PROJ-189: Initialize environmental event accumulator (cleared each turn)
         self.last_environmental_events = []
@@ -403,11 +379,11 @@ class TurnEngine:
 
         total_time = time.perf_counter() - turn_start
         logger.warning(
-            "TURN PERF: total=%.3fs | harvesting=%.3fs maintenance=%.3fs "
+            "TURN PERF: total=%.3fs | harvesting=%.3fs "
             "resources=%.3fs fuel_gen=%.3fs planet_energy=%.3fs resupply=%.3fs production=%.3fs "
             "environmental=%.3fs orders=%.3fs actions=%.3fs planet_actions=%.3fs "
             "move_calc=%.3fs move_apply=%.3fs combat=%.3fs population=%.3fs",
-            total_time, self._phase_times['harvesting'], self._phase_times['maintenance'],
+            total_time, self._phase_times['harvesting'],
             self._phase_times['resources'], self._phase_times['fuel_gen'],
             self._phase_times['planet_energy'], self._phase_times['resupply'],
             self._phase_times['production'],
@@ -445,11 +421,10 @@ class TurnEngine:
         PROJ-74 Phase 5: Added fuel generation and fleet resupply phases.
         PROJ-75 Phase 4: Added per-tick construction resource consumption.
         PROJ-79 Phase 2: Added save_path for mid-turn spawning.
-        PROJ-161: Added per-tick harvesting and maintenance.
+        PROJ-161: Added per-tick harvesting.
 
-        Twelve-phase processing:
+        Eleven-phase processing:
         Phase 0:   Harvesting (1/100th of per-turn extraction)
-        Phase 0a:  Maintenance (1/100th of per-turn cost, immediate scuttle)
         Phase 0b:  Per-turn resource consumption (1/100th of per_turn costs)
         Phase 0c:  Fuel generation at facilities (via ResupplyEngine)
         Phase 0d:  Fleet resupply from facilities (via ResupplyEngine)
@@ -466,12 +441,6 @@ class TurnEngine:
         if tick == 1:
             self._log_empire_state(empires, "TURN START tick=1")
         self._time_phase('harvesting', self.harvesting_engine.process_harvesting_tick, tick, empires)
-
-        # --- Phase 0a: Maintenance (1/100th per tick, immediate scuttle) ---
-        tick_scuttles = self._time_phase('maintenance', self.maintenance_engine.process_maintenance_tick, tick, empires)
-        self.last_scuttle_events.extend(tick_scuttles)
-        if tick == 1:
-            self._log_empire_state(empires, "Tick 1 AFTER MAINTENANCE")
 
         # --- Phase 0b: Per-turn Resource Consumption ---
         self._time_phase('resources', self.resource_engine.process_per_turn_consumption, tick, empires)

@@ -400,8 +400,6 @@ class TestTurnEngineIntegration:
         mock_population = MagicMock()
         mock_resupply = MagicMock()
         mock_harvesting = MagicMock()
-        mock_maintenance = MagicMock()
-        mock_maintenance.process_maintenance_tick.return_value = []
         mock_action = MagicMock()
         mock_action.process_action_ticks.return_value = []
 
@@ -415,7 +413,6 @@ class TestTurnEngineIntegration:
             population_engine=mock_population,
             resupply_engine=mock_resupply,
             harvesting_engine=mock_harvesting,
-            maintenance_engine=mock_maintenance,
             action_engine=mock_action,
             environmental_engine=mock_env_engine,
         )
@@ -463,8 +460,6 @@ class TestTurnEngineIntegration:
         mock_population = MagicMock()
         mock_resupply = MagicMock()
         mock_harvesting = MagicMock()
-        mock_maintenance = MagicMock()
-        mock_maintenance.process_maintenance_tick.return_value = []
         mock_action = MagicMock()
         mock_action.process_action_ticks.return_value = []
 
@@ -478,7 +473,6 @@ class TestTurnEngineIntegration:
             population_engine=mock_population,
             resupply_engine=mock_resupply,
             harvesting_engine=mock_harvesting,
-            maintenance_engine=mock_maintenance,
             action_engine=mock_action,
             environmental_engine=mock_env_engine,
         )

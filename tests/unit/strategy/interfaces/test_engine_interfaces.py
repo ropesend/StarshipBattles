@@ -189,37 +189,6 @@ class TestIConsumableEngineInterface:
 
 
 # =============================================================================
-# IMaintenanceEngine Interface Tests
-# =============================================================================
-
-
-class TestIMaintenanceEngineInterface:
-    """Test IMaintenanceEngine abstract base class interface contract."""
-
-    def test_imaintenance_engine_importable(self):
-        """IMaintenanceEngine should be importable from interfaces module."""
-        from game.strategy.interfaces.engines import IMaintenanceEngine
-        assert IMaintenanceEngine is not None
-
-    def test_imaintenance_engine_is_abstract(self):
-        """IMaintenanceEngine should be an abstract base class."""
-        from game.strategy.interfaces.engines import IMaintenanceEngine
-        assert issubclass(IMaintenanceEngine, ABC)
-
-    def test_imaintenance_engine_cannot_instantiate(self):
-        """IMaintenanceEngine should not be directly instantiable."""
-        from game.strategy.interfaces.engines import IMaintenanceEngine
-        with pytest.raises(TypeError):
-            IMaintenanceEngine()
-
-    def test_imaintenance_engine_has_process_maintenance_tick_method(self):
-        """IMaintenanceEngine should define process_maintenance_tick abstract method (PROJ-161)."""
-        from game.strategy.interfaces.engines import IMaintenanceEngine
-        assert hasattr(IMaintenanceEngine, 'process_maintenance_tick')
-        assert getattr(IMaintenanceEngine.process_maintenance_tick, '__isabstractmethod__', False) is True
-
-
-# =============================================================================
 # IPopulationEngine Interface Tests
 # =============================================================================
 
@@ -392,18 +361,6 @@ class TestConcreteImplementations:
         engine = MockConsumableEngine()
         assert engine is not None
 
-    def test_concrete_maintenance_engine_implementation(self):
-        """Concrete IMaintenanceEngine implementation should work."""
-        from game.strategy.interfaces.engines import IMaintenanceEngine
-
-        class MockMaintenanceEngine(IMaintenanceEngine):
-            def process_maintenance_tick(self, tick, empires):
-                return []
-
-        engine = MockMaintenanceEngine()
-        assert engine is not None
-        assert engine.process_maintenance_tick(1, []) == []
-
     def test_concrete_population_engine_implementation(self):
         """Concrete IPopulationEngine with all methods implemented works."""
         from game.strategy.interfaces.engines import IPopulationEngine
@@ -473,7 +430,6 @@ class TestInterfacesModuleExports:
         assert 'IOrderProcessor' in engines.__all__
         assert 'IConflictEngine' in engines.__all__
         assert 'IConsumableEngine' in engines.__all__
-        assert 'IMaintenanceEngine' in engines.__all__
         assert 'IPopulationEngine' in engines.__all__
         assert 'IResupplyEngine' in engines.__all__
         assert 'IHarvestingEngine' in engines.__all__
@@ -490,7 +446,6 @@ class TestInterfacesModuleExports:
             'IPopulationEngine',
             'IResupplyEngine',
             'IHarvestingEngine',
-            'IMaintenanceEngine',
         ]
         for interface_name in expected_exports:
             assert interface_name in engines.__all__, f"{interface_name} missing from __all__"
@@ -506,7 +461,6 @@ class TestInterfacesModuleExports:
             IPopulationEngine,
             IResupplyEngine,
             IHarvestingEngine,
-            IMaintenanceEngine,
         )
         # Just verify they're all ABC subclasses
         for interface in [
@@ -518,6 +472,5 @@ class TestInterfacesModuleExports:
             IPopulationEngine,
             IResupplyEngine,
             IHarvestingEngine,
-            IMaintenanceEngine,
         ]:
             assert issubclass(interface, ABC)

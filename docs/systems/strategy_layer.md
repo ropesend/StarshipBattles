@@ -45,7 +45,7 @@ Each DTO has a `from_<domain_object>()` class method for conversion.
 | Game State | `get_turn_number()`, `get_human_player_ids()`, `get_save_path()` |
 | Events | `get_turn_events()`, `get_all_events()`, `get_events_by_category()` |
 | Validation | `can_colonize()`, `can_move_to()`, `get_fleet_remaining_pods()` |
-| Environment | `get_storm_names_at_hex()`, `get_scuttle_events()` |
+| Environment | `get_storm_names_at_hex()` |
 
 ---
 
@@ -130,8 +130,7 @@ All sub-engines are dependency-injected: `registries` is a **required** keyword-
 | Phase | Engine | Description |
 |-------|--------|-------------|
 | 0 | `HarvestingEngine` | Planetary resource extraction (1/100th per tick) |
-| 0a | `MaintenanceEngine` | Maintenance cost deduction, immediate disable (1/100th per tick) |
-| 0b | `ConsumableManagementEngine` | Per-turn resource consumption (1/100th per tick) |
+| 0a | `ConsumableManagementEngine` | Per-turn resource consumption (1/100th per tick) |
 | 0c | `ResupplyEngine` | Fuel generation at facilities |
 | 0d | `ResupplyEngine` | Fleet resupply from facilities |
 | 0e | `ProductionEngine` | Construction resource consumption + mid-turn completion |
@@ -159,7 +158,6 @@ All sub-engines implement interfaces from `game/strategy/interfaces/engines.py`:
 | `IPopulationEngine` | `PopulationEngine` |
 | `IResupplyEngine` | `ResupplyEngine` |
 | `IHarvestingEngine` | `HarvestingEngine` |
-| `IMaintenanceEngine` | `MaintenanceEngine` |
 | `IActionExecutionEngine` | `ActionExecutionEngine` |
 | `IEnvironmentalHazardEngine` | `EnvironmentalHazardEngine` |
 

@@ -27,7 +27,7 @@ game/strategy/services/
     area_effect_manager.py      # Aggregate environmental effects at hex locations
     cargo_transfer_service.py   # Cargo transfer business logic
     component_inspector.py      # Inspect design components and abilities
-    design_cost_calculator.py   # Calculate design resource and maintenance costs
+    design_cost_calculator.py   # Calculate design resource costs
     fleet_cargo_projector.py    # Project future cargo state from order queue
     fleet_navigation_service.py # Fleet pathfinding and movement
     fleet_speed_calculator.py   # Strategic movement speed calculation
@@ -560,28 +560,21 @@ cmd = CargoTransferService.build_transfer_command(
 
 **Location:** `game/strategy/services/design_cost_calculator.py`
 
-**Purpose:** Centralized calculator for design resource costs and maintenance. Resolves component costs from the registry via Ship loading, handling formula-based values and modifier multipliers.
+**Purpose:** Centralized calculator for design resource costs. Resolves component costs from the registry via Ship loading, handling formula-based values and modifier multipliers.
 
 **Dependencies:** None (all methods are `@staticmethod`). Accepts `GameRegistries` as a method parameter.
-
-**Constants:**
-```python
-DEFAULT_MAINTENANCE_RATE = 0.05  # 5% of build cost per turn
-```
 
 **Key Methods:**
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `calculate_total_cost` | `(design_data, registries) -> Dict[str, float]` | Calculate total resource cost; tries inline costs first, then Ship loading from registry |
-| `calculate_maintenance_cost` | `(design_data, registries, rate=0.05) -> Dict[str, float]` | Calculate maintenance as a percentage of total build cost |
 
 **Usage:**
 ```python
 from game.strategy.services.design_cost_calculator import DesignCostCalculator
 
 cost = DesignCostCalculator.calculate_total_cost(design_data, registries)
-maintenance = DesignCostCalculator.calculate_maintenance_cost(design_data, registries)
 ```
 
 ---

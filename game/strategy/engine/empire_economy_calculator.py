@@ -2,8 +2,7 @@
 EmpireEconomyCalculator - Aggregates empire-wide production and expense data.
 
 PROJ-99 Phase 1: Pure strategy-layer class that calculates production from
-facilities, maintenance from facilities and ships, and provides a snapshot
-of the empire economy.
+facilities, construction expenses, and provides a snapshot of the empire economy.
 
 This is a read-only calculation - it doesn't modify any game state.
 """
@@ -18,10 +17,6 @@ from game.core.patterns.layer_iterator import iter_components
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
 from game.core.registry import GameRegistries
-from game.strategy.engine.maintenance_engine import (
-    MAINTENANCE_RATE,
-    calculate_maintenance_cost,
-)
 from game.strategy.engine.harvesting_engine import get_harvester_info
 from game.strategy.engine.construction_forecast import forecast_queue_turn_spend
 
@@ -45,7 +40,6 @@ class EmpireEconomySnapshot:
 
     # Expense categories
     tribute_expenses: Dict[str, float] = field(default_factory=dict)
-    maintenance_expenses: Dict[str, float] = field(default_factory=dict)
     construction_expenses_ships: Dict[str, float] = field(default_factory=dict)
     construction_expenses_complexes: Dict[str, float] = field(default_factory=dict)
     total_expenses: Dict[str, float] = field(default_factory=dict)
@@ -65,14 +59,11 @@ class EmpireEconomyCalculator:
         # From GameSession context
         calculator = EmpireEconomyCalculator(registries=session.registries)
         snapshot = calculator.calculate(empire)
-        # Access snapshot.colony_production, snapshot.maintenance_expenses, etc.
+        # Access snapshot.colony_production, snapshot.total_expenses, etc.
 
     Replicates formulas from:
     - HarvestingEngine: base_harvest_rate * planet_quality
-    - MaintenanceEngine: 5% of total construction_cost
     """
-
-    # Use shared MAINTENANCE_RATE from maintenance_engine module
 
     def __init__(self, *, registries: GameRegistries) -> None:
         """Initialize the calculator.
@@ -109,9 +100,6 @@ class EmpireEconomyCalculator:
         # Total production = colony production only for now
         snapshot.total_production = snapshot.colony_production.copy()
 
-        # Expense aggregation
-        snapshot.maintenance_expenses = self._aggregate_maintenance(empire)
-
         # Construction expenses split by type
         ships_exp, complexes_exp = self._aggregate_construction_expenses(empire)
         snapshot.construction_expenses_ships = ships_exp
@@ -125,7 +113,6 @@ class EmpireEconomyCalculator:
         for r in PLANET_RESOURCE_NAMES:
             snapshot.total_expenses[r] = (
                 snapshot.tribute_expenses.get(r, 0.0)
-                + snapshot.maintenance_expenses.get(r, 0.0)
                 + snapshot.construction_expenses_ships.get(r, 0.0)
                 + snapshot.construction_expenses_complexes.get(r, 0.0)
             )
@@ -199,57 +186,6 @@ class EmpireEconomyCalculator:
                     remaining_quantity[resource_type] = max(0.0, available - production)
 
         return totals
-
-    def _aggregate_maintenance(self, empire: 'Empire') -> Dict[str, float]:
-        """Calculate total maintenance costs for facilities and ships.
-
-        Maintenance is 5% of the sum of all construction_cost values.
-
-        Args:
-            empire: Empire with colonies and fleets.
-
-        Returns:
-            Dict mapping resource type to total maintenance cost per turn.
-        """
-        totals = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
-
-        # Facility maintenance
-        for colony in empire.colonies:
-            for facility in colony.facilities:
-                # Skip non-operational facilities
-                if not facility.is_operational:
-                    continue
-
-                design_data = facility.design_data
-                cost = self._calculate_maintenance_cost(design_data)
-                for r, amount in cost.items():
-                    if r in totals:
-                        totals[r] += amount
-
-        # Ship maintenance
-        for fleet in empire.fleets:
-            for ship in fleet.ships:
-                design_data = ship.design_data
-                cost = self._calculate_maintenance_cost(design_data)
-                for r, amount in cost.items():
-                    if r in totals:
-                        totals[r] += amount
-
-        return totals
-
-    def _calculate_maintenance_cost(self, design_data: Dict) -> Dict[str, float]:
-        """Calculate maintenance cost from a design's resource costs.
-
-        Delegates to shared calculate_maintenance_cost() function.
-
-        Args:
-            design_data: Design data dict containing layers with components.
-
-        Returns:
-            Dict mapping resource type to maintenance cost amount.
-        """
-        # PROJ-218: Pass registries for Ship-loading cost calculation
-        return calculate_maintenance_cost(design_data, self._registries, MAINTENANCE_RATE)
 
     def _aggregate_construction_expenses(
         self, empire: 'Empire'

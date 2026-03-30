@@ -546,31 +546,6 @@ class StrategySessionFacade:
         """
         return self._session.save_path
 
-    def get_scuttle_events(self) -> List[dict]:
-        """Get scuttle events from the last turn processing.
-
-        Returns:
-            List of scuttle event dicts with keys:
-            - empire_id: int
-            - entity_type: str ("facility" or "ship")
-            - entity_name: str
-            - location: str
-        """
-        turn_engine = self._session.turn_engine
-        if turn_engine is None:
-            return []
-        events = turn_engine.last_scuttle_events
-        # Convert ScuttleEvent dataclasses to dicts
-        return [
-            {
-                'empire_id': e.empire_id,
-                'entity_type': e.entity_type,
-                'entity_name': e.entity_name,
-                'location': e.location,
-            }
-            for e in events
-        ]
-
     # --- Storm Queries (PROJ-215 Phase 5) ---
 
     def get_storm_names_at_hex(self, hex_coord: HexCoord) -> List[str]:

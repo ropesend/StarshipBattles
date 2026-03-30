@@ -132,13 +132,16 @@ ResourceCatalog (loaded once at startup)
            and warp resource costs across fleet ships
 ```
 
-## Maintenance Behavior
+## Per-Turn Resource Costs
 
-When an empire cannot afford maintenance costs for a facility or ship, the entity
-is **disabled** (`is_operational = False`), not destroyed. Disabled entities:
-- Do not pay maintenance costs
-- Do not harvest resources or perform production
-- Remain in the colony/fleet and can be re-enabled when resources are available
+There is no blanket maintenance cost. Instead, individual components can define
+per-turn resource consumption via `ResourceConsumption` abilities with
+`trigger='per_turn'` in their JSON definitions. The `ConsumableManagementEngine`
+processes these each tick (1/100th of per-turn cost per tick).
+
+When a ship's per-turn resource is depleted, the consuming components are
+automatically disabled. The `is_operational` field on `ShipInstance` and
+`PlanetaryFacility` can also be used to manually disable entities.
 
 ## Migration Status
 

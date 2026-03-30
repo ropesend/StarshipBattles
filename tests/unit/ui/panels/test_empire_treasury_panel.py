@@ -41,18 +41,14 @@ def sample_snapshot():
 
     # Expenses
     snapshot.tribute_expenses = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
-    snapshot.maintenance_expenses = {
-        "metals": 10.0, "organics": 5.0, "vapors": 2.0,
-        "radioactives": 1.0, "exotics": 0.5
-    }
     snapshot.construction_expenses_ships = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
     snapshot.construction_expenses_complexes = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
-    snapshot.total_expenses = snapshot.maintenance_expenses.copy()
+    snapshot.total_expenses = {r: 0.0 for r in PLANET_RESOURCE_NAMES}
 
     # Treasury
     snapshot.net_resources = {
-        "metals": 90.0, "organics": 195.0, "vapors": 48.0,
-        "radioactives": 24.0, "exotics": 9.5
+        "metals": 100.0, "organics": 200.0, "vapors": 50.0,
+        "radioactives": 25.0, "exotics": 10.0
     }
     snapshot.current_storage = {
         "metals": 5000.0, "organics": 3000.0, "vapors": 1000.0,
@@ -208,13 +204,12 @@ class TestRowData:
         panel = EmpireTreasuryPanel(mock_panel, mock_ui_manager, sample_snapshot, mock_resource_icons)
         rows = panel._get_expense_rows()
 
-        assert len(rows) == 5  # 4 categories + total
+        assert len(rows) == 4  # 3 categories + total
         assert rows[0][0] == "Tributes"
-        assert rows[1][0] == "Maintenance Costs"
-        assert rows[2][0] == "Construction Queues (Ships)"
-        assert rows[3][0] == "Construction Queues (Complexes)"
-        assert rows[4][0] == "Total"
-        assert rows[4][2] is True
+        assert rows[1][0] == "Construction Queues (Ships)"
+        assert rows[2][0] == "Construction Queues (Complexes)"
+        assert rows[3][0] == "Total"
+        assert rows[3][2] is True
 
     @patch('game.ui.panels.empire_treasury_panel.create_section_header')
     @patch('game.ui.panels.empire_treasury_panel.UIScrollingContainer')

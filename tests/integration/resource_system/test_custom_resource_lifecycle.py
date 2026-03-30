@@ -22,7 +22,6 @@ from game.core.registry import GameRegistries, RegistryManager
 from game.strategy.data.empire import Empire
 from game.strategy.data.planet import PlanetaryFacility
 from game.strategy.engine.harvesting_engine import HarvestingEngine
-from game.strategy.engine.maintenance_engine import MaintenanceEngine
 from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 from tests.fixtures.strategy_entities import create_test_planet
 
@@ -170,46 +169,6 @@ class TestCustomResourceEmpirePool:
         assert empire.has_resources({"dilithium": 400.0}) is True
         assert empire.has_resources({"dilithium": 500.0}) is False
 
-    def test_maintenance_works_with_custom_resource_costs(self):
-        """MaintenanceEngine correctly deducts custom resource maintenance costs."""
-        empire = _make_empire(
-            resources={"dilithium": 100.0},
-            storage={"dilithium": 10000.0},
-        )
-
-        # Facility with dilithium construction cost -> maintenance costs dilithium
-        facility = PlanetaryFacility(
-            instance_id="fac-001",
-            design_id="crystal_refinery",
-            name="Crystal Refinery",
-            design_data={
-                "layers": {
-                    "CORE": {
-                        "components": [
-                            {"id": "crystal_core", "resource_cost": {"dilithium": 1000}}
-                        ]
-                    }
-                }
-            },
-        )
-
-        planet = create_test_planet(has_facilities=False, has_population=False)
-        planet.facilities = [facility]
-        empire.add_colony(planet)
-
-        engine = MaintenanceEngine(registries=GameRegistries(
-            components=RegistryManager.instance().components,
-            modifiers=RegistryManager.instance().modifiers,
-            vehicle_classes=RegistryManager.instance().vehicle_classes,
-            resources=RegistryManager.instance().resources,
-        ))
-
-        # Run full turn of maintenance
-        for tick in range(1, 101):
-            engine.process_maintenance_tick(tick, [empire])
-
-        # 5% of 1000 dilithium = 50 dilithium deducted
-        assert empire.resource_pool["dilithium"] == pytest.approx(50.0)
 
 
 class TestCustomResourceShipStorage:

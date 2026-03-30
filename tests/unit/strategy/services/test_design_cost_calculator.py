@@ -5,7 +5,6 @@ PROJ-204 Phase 1: Tests for centralized design cost calculation.
 PROJ-218: Updated to pass registries parameter (required for Ship loading).
 """
 
-import pytest
 from game.strategy.services.design_cost_calculator import DesignCostCalculator
 
 
@@ -70,67 +69,6 @@ class TestCalculateTotalCost:
         # Verify no zero values in result
         for res, amount in result.items():
             assert amount > 0, f"Resource {res} has zero value"
-
-
-class TestCalculateMaintenanceCost:
-    """Tests for calculate_maintenance_cost method."""
-
-    def test_default_rate(self, fresh_registries):
-        """Default 5% maintenance rate is applied."""
-        design_data = {
-            "name": "Test Ship",
-            "ship_class": "frigate",
-            "layers": {
-                "CORE": [{"id": "hull_frigate"}]
-            }
-        }
-        total_cost = DesignCostCalculator.calculate_total_cost(design_data, fresh_registries)
-        maintenance = DesignCostCalculator.calculate_maintenance_cost(design_data, fresh_registries)
-
-        # Verify maintenance is 5% of total for each resource
-        for res in total_cost:
-            if res in maintenance:
-                assert pytest.approx(maintenance[res], rel=0.01) == total_cost[res] * 0.05
-
-    def test_custom_rate(self, fresh_registries):
-        """Custom maintenance rate is applied."""
-        design_data = {
-            "name": "Test Ship",
-            "ship_class": "frigate",
-            "layers": {
-                "CORE": [{"id": "hull_frigate"}]
-            }
-        }
-        total_cost = DesignCostCalculator.calculate_total_cost(design_data, fresh_registries)
-        maintenance = DesignCostCalculator.calculate_maintenance_cost(
-            design_data, fresh_registries, rate=0.10
-        )
-
-        # Verify maintenance is 10% of total for each resource
-        for res in total_cost:
-            if res in maintenance:
-                assert pytest.approx(maintenance[res], rel=0.01) == total_cost[res] * 0.10
-
-    def test_zero_rate(self, fresh_registries):
-        """Zero rate returns zero costs."""
-        design_data = {
-            "name": "Test Ship",
-            "ship_class": "frigate",
-            "layers": {
-                "CORE": [{"id": "hull_frigate"}]
-            }
-        }
-        result = DesignCostCalculator.calculate_maintenance_cost(
-            design_data, fresh_registries, rate=0.0
-        )
-        for res, amount in result.items():
-            assert amount == 0.0
-
-    def test_empty_design(self, fresh_registries):
-        """Empty design returns empty maintenance dict."""
-        design_data = {}
-        result = DesignCostCalculator.calculate_maintenance_cost(design_data, fresh_registries)
-        assert result == {}
 
 
 class TestRegistryResolution:

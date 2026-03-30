@@ -185,54 +185,6 @@ class TestProcessFullTurn:
         screen.on_ui_selection.assert_called_once_with(screen.selected_object)
 
 
-class TestShowScuttleNotifications:
-    """Test _show_scuttle_notifications() method."""
-
-    def test_does_nothing_when_no_turn_engine(self):
-        """Should return early if session has no turn_engine."""
-        manager, screen = _make_game_state_manager()
-        screen.session.turn_engine = None
-
-        # Should not raise
-        manager._show_scuttle_notifications()
-
-    def test_does_nothing_when_no_scuttle_events(self):
-        """Should return early if no scuttle events."""
-        manager, screen = _make_game_state_manager()
-        screen.session.turn_engine = MagicMock()
-        screen.session.turn_engine.last_scuttle_events = []
-
-        manager._show_scuttle_notifications()
-
-        # No message window should be created
-
-    def test_filters_events_by_current_empire(self):
-        """Should only show events for current player's empire."""
-        manager, screen = _make_game_state_manager()
-
-        # PROJ-208: Mock facade.get_scuttle_events() - events are now dicts
-        event_player = {
-            'empire_id': 0,  # Current player
-            'entity_name': "Test Ship",
-            'entity_type': "ship",
-            'location': "Sector 1",
-        }
-        event_enemy = {
-            'empire_id': 1,  # Enemy
-            'entity_name': "Enemy Ship",
-            'entity_type': "ship",
-            'location': "Sector 2",
-        }
-
-        screen._facade.get_scuttle_events.return_value = [event_player, event_enemy]
-
-        with patch('pygame_gui.windows.UIMessageWindow') as MockWindow:
-            manager._show_scuttle_notifications()
-
-            # Should create a window
-            MockWindow.assert_called_once()
-
-
 class TestUpdatePlayerLabel:
     """Test _update_player_label() method."""
 

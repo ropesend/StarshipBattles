@@ -79,8 +79,6 @@ class TestTickProcessing:
 
         turn_engine._harvesting_engine = MagicMock()
         turn_engine._harvesting_engine.process_harvesting_tick = MagicMock(side_effect=make_tracker('harvest'))
-        turn_engine._maintenance_engine = MagicMock()
-        turn_engine._maintenance_engine.process_maintenance_tick = MagicMock(side_effect=make_tracker('maint', []))
         turn_engine._resource_engine = MagicMock()
         turn_engine._resource_engine.process_per_turn_consumption = MagicMock(side_effect=make_tracker('resource', []))
         turn_engine._resupply_engine = MagicMock()
@@ -104,7 +102,7 @@ class TestTickProcessing:
 
         # Verify phase order
         expected_order = [
-            'harvest', 'maint', 'resource', 'fuel_gen', 'resupply',
+            'harvest', 'resource', 'fuel_gen', 'resupply',
             'construct', 'instant', 'action', 'collect', 'apply', 'combat'
         ]
         assert call_order == expected_order
