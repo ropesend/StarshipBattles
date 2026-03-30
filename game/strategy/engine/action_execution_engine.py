@@ -61,7 +61,7 @@ class ActionExecutionEngine(IActionExecutionEngine):
         Initialize the ActionExecutionEngine.
 
         Args:
-            order_processor: FleetOrderProcessor for executing completed actions
+            order_processor: OrderProcessor for executing completed actions
             action_time_resolver: Optional ActionTimeResolver (defaults to static methods)
         """
         self._order_processor = order_processor

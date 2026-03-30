@@ -136,7 +136,7 @@ All sub-engines are dependency-injected: `registries` is a **required** keyword-
 | 0d | `ResupplyEngine` | Fleet resupply from facilities |
 | 0e | `ProductionEngine` | Construction resource consumption + mid-turn completion |
 | 0f | `EnvironmentalHazardEngine` | Storm damage, fuel drain |
-| 1 | `FleetOrderProcessor` | Instant orders (JOIN_FLEET) |
+| 1 | `OrderProcessor` | Instant orders (JOIN_FLEET) |
 | 1.5 | `ActionExecutionEngine` | Action orders (COLONIZE, TRANSFER, superweapons) |
 | 2 | `FleetMovementEngine` | Calculate paths/next moves |
 | 3 | `FleetMovementEngine` | Apply all movements simultaneously |
@@ -153,7 +153,7 @@ All sub-engines implement interfaces from `game/strategy/interfaces/engines.py`:
 |-----------|----------------------|
 | `IMovementEngine` | `FleetMovementEngine` |
 | `IProductionEngine` | `ProductionEngine` |
-| `IOrderProcessor` | `FleetOrderProcessor` |
+| `IOrderProcessor` | `OrderProcessor` |
 | `IConflictEngine` | `ConflictResolutionEngine` |
 | `IResourceEngine` | `ResourceManagementEngine` |
 | `IPopulationEngine` | `PopulationEngine` |

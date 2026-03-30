@@ -1,6 +1,6 @@
 """Tests for engine event emission (PROJ-77 Phase 3).
 
-Verifies that ProductionEngine, FleetOrderProcessor, and ConflictResolutionEngine
+Verifies that ProductionEngine, OrderProcessor, and ConflictResolutionEngine
 emit the correct events via log_event() when significant actions occur.
 """
 
@@ -417,7 +417,7 @@ class TestFleetComplexBuiltEvent:
 
 
 class TestColonyFoundedEvent:
-    """FleetOrderProcessor emits colony_founded event on colonization."""
+    """OrderProcessor emits colony_founded event on colonization."""
 
     def _make_colonize_fleet(self):
         """Create a fleet with a COLONIZE order."""
@@ -466,9 +466,9 @@ class TestColonyFoundedEvent:
 
     def test_process_colonize_emits_colony_founded_event(self):
         """process_colonize() emits colony_founded on success."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         fleet, target_planet = self._make_colonize_fleet()
         empire = _make_mock_empire(name="Human Empire")
         galaxy = _make_mock_galaxy()
@@ -483,7 +483,7 @@ class TestColonyFoundedEvent:
             # Mock find_ship_with_colony_pod to return the colony ship
             mock_val.find_ship_with_colony_pod.return_value = fleet.ships[0]
 
-            with patch('game.strategy.engine.fleet_order_processor.log_event', fake):
+            with patch('game.strategy.engine.order_processor.log_event', fake):
                 result = processor.process_colonize(
                     fleet, empire, galaxy,
                     component_registry=component_registry
@@ -501,9 +501,9 @@ class TestColonyFoundedEvent:
 
     def test_process_colonize_no_event_on_failure(self):
         """No event emitted when colonization fails validation."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         fleet, target_planet = self._make_colonize_fleet()
         empire = _make_mock_empire()
         galaxy = _make_mock_galaxy()
@@ -517,7 +517,7 @@ class TestColonyFoundedEvent:
             mock_result.message = "Invalid"
             mock_val.validate.return_value = mock_result
 
-            with patch('game.strategy.engine.fleet_order_processor.log_event', fake):
+            with patch('game.strategy.engine.order_processor.log_event', fake):
                 result = processor.process_colonize(
                     fleet, empire, galaxy,
                     component_registry=component_registry
@@ -528,7 +528,7 @@ class TestColonyFoundedEvent:
 
     def test_colonize_any_planet_emits_event_with_resolved_name(self):
         """Colonizing 'any planet' emits event with the resolved planet name."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
         from game.strategy.data.fleet import Fleet
         from game.strategy.data.order_types import FleetOrder, OrderType
         from game.strategy.data.planet import Planet
@@ -537,7 +537,7 @@ class TestColonyFoundedEvent:
         class MockPlanetType(Enum):
             CONTINENTAL = "CONTINENTAL"
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         empire = _make_mock_empire()
         galaxy = _make_mock_galaxy()
         component_registry = self._make_component_registry()
@@ -584,7 +584,7 @@ class TestColonyFoundedEvent:
             # Mock find_ship_with_colony_pod to return the colony ship
             mock_val.find_ship_with_colony_pod.return_value = mock_ship
 
-            with patch('game.strategy.engine.fleet_order_processor.log_event', fake):
+            with patch('game.strategy.engine.order_processor.log_event', fake):
                 result = processor.process_colonize(
                     fleet, empire, galaxy,
                     component_registry=component_registry
@@ -990,7 +990,7 @@ class TestColonizationEventLocationEnrichment:
 
     def test_colonize_event_includes_system_name_and_local_hex(self):
         """colony_founded event includes system_name and local_hex."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
         from game.strategy.data.fleet import Fleet
         from game.strategy.data.order_types import FleetOrder, OrderType
         from game.core.hex_math import HexCoord
@@ -999,7 +999,7 @@ class TestColonizationEventLocationEnrichment:
         class MockPlanetType(Enum):
             CONTINENTAL = "CONTINENTAL"
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         empire = _make_mock_empire()
         galaxy = _make_mock_galaxy()
 
@@ -1044,7 +1044,7 @@ class TestColonizationEventLocationEnrichment:
             mock_val.validate.return_value = mock_result
             mock_val.find_ship_with_colony_pod.return_value = mock_ship
 
-            with patch('game.strategy.engine.fleet_order_processor.log_event', fake):
+            with patch('game.strategy.engine.order_processor.log_event', fake):
                 processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
 
         _, kw = calls[0]
@@ -1053,7 +1053,7 @@ class TestColonizationEventLocationEnrichment:
 
     def test_colonize_event_empty_system_name_when_no_system(self):
         """colony_founded event has empty system_name when no parent system."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
         from game.strategy.data.fleet import Fleet
         from game.strategy.data.order_types import FleetOrder, OrderType
         from game.core.hex_math import HexCoord
@@ -1062,7 +1062,7 @@ class TestColonizationEventLocationEnrichment:
         class MockPlanetType(Enum):
             CONTINENTAL = "CONTINENTAL"
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         empire = _make_mock_empire()
         galaxy = _make_mock_galaxy()
         galaxy.get_system_of_planet.return_value = None
@@ -1102,7 +1102,7 @@ class TestColonizationEventLocationEnrichment:
             mock_val.validate.return_value = mock_result
             mock_val.find_ship_with_colony_pod.return_value = mock_ship
 
-            with patch('game.strategy.engine.fleet_order_processor.log_event', fake):
+            with patch('game.strategy.engine.order_processor.log_event', fake):
                 processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
 
         _, kw = calls[0]

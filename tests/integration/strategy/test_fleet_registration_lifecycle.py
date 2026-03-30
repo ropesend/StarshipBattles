@@ -14,7 +14,7 @@ from game.strategy.data.fleet import Fleet
 from game.strategy.data.galaxy import Galaxy
 from game.strategy.data.order_types import FleetOrder, OrderType
 from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+from game.strategy.engine.order_processor import OrderProcessor
 from game.strategy.engine.game_config import GameConfig, PlayerConfig
 from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.maintenance_engine import MaintenanceEngine
@@ -157,7 +157,7 @@ class TestCombatUnregistersDestroyedFleet:
 # ===========================================================================
 
 class TestJoinFleetUnregistersMergedFleet:
-    """Verify fleet_order_processor.py:113 and :663 auto-unregister merged fleet."""
+    """Verify order_processor.py:113 and :663 auto-unregister merged fleet."""
 
     def test_join_fleet_unregisters_merged_fleet(
         self, galaxy, two_empires, fresh_registries
@@ -179,8 +179,8 @@ class TestJoinFleetUnregistersMergedFleet:
         # Give source fleet a JOIN_FLEET order targeting the target
         source_fleet.orders.append(FleetOrder(OrderType.JOIN_FLEET, target=target_fleet))
 
-        # Process via FleetOrderProcessor.process_join_fleet
-        processor = FleetOrderProcessor()
+        # Process via OrderProcessor.process_join_fleet
+        processor = OrderProcessor()
         result = processor.process_join_fleet(source_fleet, emp1, galaxy)
 
         assert result.merged is True
@@ -212,7 +212,7 @@ class TestJoinFleetUnregistersMergedFleet:
         source_fleet.orders.append(FleetOrder(OrderType.JOIN_FLEET, target=target_fleet))
 
         # Process via instant orders (tick-based code path at line 663)
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         removed = processor.process_instant_orders([emp1])
 
         assert len(removed) == 1
@@ -231,7 +231,7 @@ class TestJoinFleetUnregistersMergedFleet:
 # ===========================================================================
 
 class TestColonizeEmptyFleetUnregistered:
-    """Verify fleet_order_processor.py:216 auto-unregisters empty fleet after colonization."""
+    """Verify order_processor.py:216 auto-unregisters empty fleet after colonization."""
 
     def test_colonize_empty_fleet_unregistered(
         self, galaxy, two_empires, fresh_registries
@@ -253,11 +253,11 @@ class TestColonizeEmptyFleetUnregistered:
         emp1.add_fleet(fleet)
         _assert_registered(galaxy, fleet)
 
-        # Simulate the colonize code path at fleet_order_processor.py:211-216
+        # Simulate the colonize code path at order_processor.py:211-216
         fleet.remove_ship(colony_ship)
         assert len(fleet.ships) == 0
 
-        # This is what fleet_order_processor does when fleet becomes empty
+        # This is what order_processor does when fleet becomes empty
         emp1.remove_fleet(fleet)
 
         # Fleet should be unregistered

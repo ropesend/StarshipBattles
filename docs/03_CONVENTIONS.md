@@ -126,12 +126,12 @@ weapons.py        # WeaponAbility, BeamWeaponAbility, etc.
 |----------|----------|-------|
 | `FleetOrder` | `Order` | `from game.strategy.data.order_types import Order` |
 | `PlanetOrderType` | merged into `OrderType` | `ACTIVATE_SHIELD`, `DEACTIVATE_SHIELD` added |
-| `FleetOrderProcessor` | `OrderProcessor` | Re-exported from `order_processor.py` |
-| `FleetOrderSerializer` | `OrderSerializer` | Re-exported from `order_serializer.py` |
-| `FleetOrdersWindow` | `OrdersWindow` | Re-exported from `orders_window.py` |
+| `FleetOrderProcessor` | `OrderProcessor` | Old module deleted; import from `order_processor.py` |
+| `FleetOrderSerializer` | `OrderSerializer` | Old module deleted; import from `order_serializer.py` |
+| `FleetOrdersWindow` | `OrdersWindow` | Old module deleted; import from `orders_window.py` |
 
-Backward compatibility aliases exist in the old file locations but new code
-should use the new names and import paths.
+Old backward compatibility alias modules have been deleted. All code must use
+the new names and import paths directly.
 
 ---
 

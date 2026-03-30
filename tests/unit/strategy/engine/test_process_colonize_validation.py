@@ -22,7 +22,7 @@ from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.data.planet import Planet, PlanetType
-from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+from game.strategy.engine.order_processor import OrderProcessor
 
 
 # =============================================================================
@@ -185,7 +185,7 @@ class TestProcessColonizeValidation:
         empire.fleets.append(fleet)
 
         # Execute colonization WITH component registry
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=component_registry
@@ -219,7 +219,7 @@ class TestProcessColonizeValidation:
         empire.fleets.append(fleet)
 
         # Execute colonization WITH component registry
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=component_registry
@@ -256,7 +256,7 @@ class TestProcessColonizeValidation:
         initial_ship_count = len(fleet.ships)
 
         # Execute colonization WITH component registry
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=component_registry
@@ -291,7 +291,7 @@ class TestProcessColonizeValidation:
         assert len(fleet.orders) == 1
 
         # Execute colonization WITH component registry
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=component_registry
@@ -370,7 +370,7 @@ class TestProcessColonizeAnyPlanet:
         empire.fleets.append(fleet)
 
         # Execute colonization
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=component_registry
@@ -408,7 +408,7 @@ class TestProcessColonizeAnyPlanet:
         empire.fleets.append(fleet)
 
         # Execute colonization
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=component_registry

@@ -130,17 +130,17 @@ class OrderProcessor:
 
         # Validation: target must be a valid Fleet (Fleet always has location)
         if target_fleet is None:
-            logger.warning("FleetOrderProcessor: Join Fleet failed - Target invalid/destroyed.")
+            logger.warning("OrderProcessor: Join Fleet failed - Target invalid/destroyed.")
             fleet.pop_order()
             return JoinFleetResult(merged=False, cancelled=True)
 
         if fleet.location == target_fleet.location:
-            logger.debug(f"FleetOrderProcessor: Fleet {fleet.id} merging into {target_fleet.id}")
+            logger.debug(f"OrderProcessor: Fleet {fleet.id} merging into {target_fleet.id}")
             self._execute_fleet_merge(fleet, target_fleet, empire)
             return JoinFleetResult(merged=True)
         else:
             # Not at location yet
-            logger.warning("FleetOrderProcessor: Join Fleet failed - Not at same location.")
+            logger.warning("OrderProcessor: Join Fleet failed - Not at same location.")
             fleet.pop_order()
             return JoinFleetResult(merged=False)
 
@@ -184,7 +184,7 @@ class OrderProcessor:
             galaxy, fleet, target_planet, component_registry, skip_chain_check=True
         )
         if not validation.is_valid:
-            logger.warning(f"FleetOrderProcessor: Colonize failed - {validation.message}")
+            logger.warning(f"OrderProcessor: Colonize failed - {validation.message}")
             fleet.pop_order()
             return ColonizeResult(colonized=False)
 
@@ -210,7 +210,7 @@ class OrderProcessor:
 
             if final_planet is None:
                 # No matching pod for any candidate
-                logger.warning("FleetOrderProcessor: No matching pod for any candidate planet")
+                logger.warning("OrderProcessor: No matching pod for any candidate planet")
                 fleet.pop_order()
                 return ColonizeResult(colonized=False)
 
@@ -222,7 +222,7 @@ class OrderProcessor:
         )
         if colony_ship is None:
             # Defensive: shouldn't happen if validation passed, but fail safely
-            logger.warning(f"FleetOrderProcessor: No matching colony pod for {planet_type_str}")
+            logger.warning(f"OrderProcessor: No matching colony pod for {planet_type_str}")
             fleet.pop_order()
             return ColonizeResult(colonized=False)
 
@@ -235,14 +235,14 @@ class OrderProcessor:
 
         # PROJ-55: Remove only colony ship
         fleet.remove_ship(colony_ship)
-        logger.debug(f"FleetOrderProcessor: Removed colony ship '{colony_ship.name}' from fleet")
+        logger.debug(f"OrderProcessor: Removed colony ship '{colony_ship.name}' from fleet")
 
         # If fleet now empty, remove it
         if len(fleet.ships) == 0:
             empire.remove_fleet(fleet)
-            logger.debug(f"FleetOrderProcessor: Fleet {fleet.id} removed (no ships remaining)")
+            logger.debug(f"OrderProcessor: Fleet {fleet.id} removed (no ships remaining)")
 
-        logger.info(f"FleetOrderProcessor: Colonization successful. {empire.name} claimed {final_planet.name}")
+        logger.info(f"OrderProcessor: Colonization successful. {empire.name} claimed {final_planet.name}")
 
         # PROJ-215: Look up system name and local hex for granular event log columns
         system_name = ""
@@ -328,7 +328,7 @@ class OrderProcessor:
                 fleet.pop_order()
                 return TransferResult(success=True, message="No colony at location, skipped")
         elif target_fleet_id:
-            # Need to find fleet by ID. FleetOrderProcessor doesn't have session access here usually,
+            # Need to find fleet by ID. OrderProcessor doesn't have session access here usually,
             # but we can look through the empire's fleets or all empires.
             from game.core.protocols import is_planet, is_fleet
             # Search all empires for the target fleet
@@ -353,7 +353,7 @@ class OrderProcessor:
         )
 
         if not validation.is_valid:
-            logger.warning(f"FleetOrderProcessor: Transfer failed - {validation.message}")
+            logger.warning(f"OrderProcessor: Transfer failed - {validation.message}")
             fleet.pop_order()
             return TransferResult(success=False, message=validation.message)
 
@@ -370,7 +370,7 @@ class OrderProcessor:
             transferred = self._execute_fleet_transfer(fleet, target, cargo_type, direction, amount, species_id)
 
         fleet.pop_order()
-        logger.info(f"FleetOrderProcessor: Transfer complete. {direction}ed {transferred} {cargo_type}")
+        logger.info(f"OrderProcessor: Transfer complete. {direction}ed {transferred} {cargo_type}")
         return TransferResult(success=True, amount_transferred=transferred)
 
     def _execute_fleet_transfer(
@@ -612,7 +612,7 @@ class OrderProcessor:
         # COLONIZE handler
         if order.type == OrderType.COLONIZE:
             if component_registry is None:
-                logger.error("FleetOrderProcessor: COLONIZE order requires component_registry")
+                logger.error("OrderProcessor: COLONIZE order requires component_registry")
                 fleet.pop_order()
                 return False
             result = self.process_colonize(
@@ -689,7 +689,3 @@ class OrderProcessor:
             result.append((empire, fleet))
 
         return result
-
-
-# PROJ-238: Backward compatibility alias
-FleetOrderProcessor = OrderProcessor

@@ -18,7 +18,7 @@ from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.planet import Planet, PlanetType, SpeciesPopulation
 from game.strategy.data.ship_instance import ShipInstance
-from game.strategy.engine.fleet_order_processor import FleetOrderProcessor, ColonizeResult
+from game.strategy.engine.order_processor import OrderProcessor, ColonizeResult
 from game.core.registry import GameRegistries
 
 
@@ -161,7 +161,7 @@ class TestColonizeTransfersPassengers:
         empire.add_fleet(fleet)
 
         # Process colonization
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=_make_component_registry()
@@ -197,7 +197,7 @@ class TestColonizeTransfersPassengers:
         # Verify cargo before
         assert fleet.resources.get_fleet_cargo_current("passengers") == 75
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=_make_component_registry()
@@ -212,7 +212,7 @@ class TestColonizeWithoutPassengers:
 
     # NOTE: test_colonize_without_passengers_seeds_minimum was removed because
     # the auto-seeding feature was intentionally disabled per user request.
-    # See fleet_order_processor.py:545-547 for the commented-out code.
+    # See order_processor.py:545-547 for the commented-out code.
 
     def test_colonize_no_race_config_no_population(self, fresh_registries):
         """No race_config means no population is seeded."""
@@ -230,7 +230,7 @@ class TestColonizeWithoutPassengers:
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
         empire.add_fleet(fleet)
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=_make_component_registry()
@@ -267,7 +267,7 @@ class TestColonizeMultipleShips:
         # Total passengers = 30 + 45 = 75
         assert fleet.resources.get_fleet_cargo_current("passengers") == 75
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=_make_component_registry()
@@ -295,7 +295,7 @@ class TestExistingColonizationBehavior:
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
         empire.add_fleet(fleet)
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=_make_component_registry()
@@ -334,7 +334,7 @@ class TestExistingColonizationBehavior:
             }
         }
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         result = processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
 
         assert result.colonized is True

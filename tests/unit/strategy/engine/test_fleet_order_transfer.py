@@ -1,7 +1,7 @@
 """
-Unit tests for FleetOrderProcessor TRANSFER operations.
+Unit tests for OrderProcessor TRANSFER operations.
 
-PROJ-119 Task 1.2: TCG-STR-002 - FleetOrderProcessor Transfer logic has minimal tests.
+PROJ-119 Task 1.2: TCG-STR-002 - OrderProcessor Transfer logic has minimal tests.
 Tests focus on cargo transfer between fleets and colonies.
 """
 
@@ -78,9 +78,9 @@ def mock_planet():
 
 @pytest.fixture
 def processor():
-    """Create a FleetOrderProcessor."""
-    from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
-    return FleetOrderProcessor()
+    """Create a OrderProcessor."""
+    from game.strategy.engine.order_processor import OrderProcessor
+    return OrderProcessor()
 
 
 # =============================================================================
@@ -370,7 +370,7 @@ class TestTransferResult:
 
     def test_transfer_result_has_required_fields(self):
         """TransferResult has expected fields."""
-        from game.strategy.engine.fleet_order_processor import TransferResult
+        from game.strategy.engine.order_processor import TransferResult
 
         result = TransferResult(success=True, amount_transferred=100, message="OK")
 
@@ -380,7 +380,7 @@ class TestTransferResult:
 
     def test_transfer_result_defaults(self):
         """TransferResult has sensible defaults."""
-        from game.strategy.engine.fleet_order_processor import TransferResult
+        from game.strategy.engine.order_processor import TransferResult
 
         result = TransferResult(success=False)
 

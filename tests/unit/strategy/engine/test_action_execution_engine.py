@@ -37,7 +37,7 @@ def _make_fleet(
 
 
 def _make_mock_order_processor():
-    """Create a mock FleetOrderProcessor."""
+    """Create a mock OrderProcessor."""
     processor = MagicMock()
     processor.execute_action_order.return_value = False  # Fleet not consumed
     return processor

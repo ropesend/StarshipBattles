@@ -3,13 +3,13 @@ from unittest.mock import MagicMock, patch
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import FleetOrder, OrderType
 from game.strategy.engine.command_handlers import ColonizeCommandHandler, ColonizeMissionCommandHandler
-from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+from game.strategy.engine.order_processor import OrderProcessor
 from game.core.hex_math import HexCoord
 
 
 class TestExplicitColonizeOrders(unittest.TestCase):
     def setUp(self):
-        self.processor = FleetOrderProcessor()
+        self.processor = OrderProcessor()
         self.session = MagicMock()
         self.fleet = Fleet(1, 0, HexCoord(0, 0))
         self.empire = MagicMock()
@@ -52,7 +52,7 @@ class TestExplicitColonizeOrders(unittest.TestCase):
         self.assertNotIn('species_id', self.fleet.orders[0].target)
 
     def test_processor_handles_load_population_as_transfer(self):
-        """FleetOrderProcessor should recognize LOAD_POPULATION as a valid transfer order."""
+        """OrderProcessor should recognize LOAD_POPULATION as a valid transfer order."""
         self.fleet.add_order(FleetOrder(OrderType.LOAD_POPULATION, {'direction': 'load', 'cargo_type': 'passengers', 'amount': 100, 'planet_id': 10}))
 
         from game.core.validation import ValidationResult

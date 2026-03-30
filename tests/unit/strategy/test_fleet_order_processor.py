@@ -1,5 +1,5 @@
 """
-Unit tests for FleetOrderProcessor.
+Unit tests for OrderProcessor.
 
 PROJ-12 Phase 3: TDD tests written before implementation.
 Tests order lifecycle management - advance, complete, cancel operations.
@@ -54,17 +54,17 @@ def mock_galaxy():
 
 
 # =============================================================================
-# Test: FleetOrderProcessor Creation
+# Test: OrderProcessor Creation
 # =============================================================================
 
-class TestFleetOrderProcessorCreation:
-    """Tests for FleetOrderProcessor initialization."""
+class TestOrderProcessorCreation:
+    """Tests for OrderProcessor initialization."""
 
-    def test_fleet_order_processor_can_be_created(self):
-        """FleetOrderProcessor can be instantiated."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+    def test_order_processor_can_be_created(self):
+        """OrderProcessor can be instantiated."""
+        from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         assert processor is not None
 
@@ -79,9 +79,9 @@ class TestJoinFleetProcessing:
 
     def test_process_join_fleet_merges_at_same_location(self, mock_fleet, mock_empire, mock_galaxy):
         """JOIN_FLEET merges fleets when at same location."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         target_fleet = MagicMock()
         target_fleet.id = 2
@@ -99,9 +99,9 @@ class TestJoinFleetProcessing:
 
     def test_process_join_fleet_fails_at_different_location(self, mock_fleet, mock_empire, mock_galaxy):
         """JOIN_FLEET fails when not at same location."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         target_fleet = MagicMock()
         target_fleet.id = 2
@@ -118,9 +118,9 @@ class TestJoinFleetProcessing:
 
     def test_process_join_fleet_cancels_with_invalid_target(self, mock_fleet, mock_empire, mock_galaxy):
         """JOIN_FLEET is cancelled when target is invalid."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         order = FleetOrder(OrderType.JOIN_FLEET, None)  # Invalid target
         mock_fleet.get_current_order.return_value = order
@@ -133,9 +133,9 @@ class TestJoinFleetProcessing:
 
     def test_process_join_fleet_no_order(self, mock_fleet, mock_empire, mock_galaxy):
         """process_join_fleet returns empty result when no order."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         mock_fleet.get_current_order.return_value = None
 
         result = processor.process_join_fleet(mock_fleet, mock_empire, mock_galaxy)
@@ -190,9 +190,9 @@ class TestColonizeProcessing:
         mock_planet_continental, mock_ship_with_continental_pod, component_registry
     ):
         """COLONIZE succeeds when valid planet at location."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         # Setup fleet with colony ship
         mock_fleet.ships = [mock_ship_with_continental_pod]
@@ -221,9 +221,9 @@ class TestColonizeProcessing:
         mock_planet_continental, mock_ship_with_continental_pod, component_registry
     ):
         """COLONIZE with None target picks matching planet."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         # Setup fleet with colony ship
         mock_fleet.ships = [mock_ship_with_continental_pod]
@@ -249,9 +249,9 @@ class TestColonizeProcessing:
         self, mock_fleet, mock_empire, mock_galaxy, component_registry
     ):
         """COLONIZE fails when no valid planet at location."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         mock_galaxy.get_planets_at_global_hex.return_value = []  # No planets
 
@@ -271,9 +271,9 @@ class TestColonizeProcessing:
         mock_planet_continental, component_registry
     ):
         """COLONIZE fails when planet is already owned."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         mock_planet_continental.owner_id = 1  # Already owned
 
@@ -299,14 +299,14 @@ class TestEndTurnOrderProcessing:
 
     def test_execute_action_order_colonize(self, mock_fleet, mock_empire, mock_galaxy):
         """Action order processing handles COLONIZE orders."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
         from game.strategy.data.planet import Planet
         from enum import Enum
 
         class MockPlanetType(Enum):
             CONTINENTAL = "CONTINENTAL"
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         mock_planet = MagicMock(spec=Planet)
         mock_planet.owner_id = None
@@ -349,9 +349,9 @@ class TestEndTurnOrderProcessing:
 
     def test_process_end_turn_orders_no_order(self, mock_fleet, mock_empire, mock_galaxy):
         """End-turn processing with no order returns False."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         mock_fleet.get_current_order.return_value = None
 
         result = processor.execute_action_order(mock_fleet, mock_empire, mock_galaxy)
@@ -368,9 +368,9 @@ class TestInstantOrderProcessing:
 
     def test_process_instant_join_fleet_at_location(self, mock_empire, mock_galaxy):
         """Instant JOIN_FLEET processing merges co-located fleets."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         target_fleet = MagicMock()
         target_fleet.id = 2
@@ -395,9 +395,9 @@ class TestInstantOrderProcessing:
 
     def test_process_instant_join_fleet_not_at_location(self, mock_empire, mock_galaxy):
         """Instant JOIN_FLEET doesn't merge when not co-located."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         target_fleet = MagicMock()
         target_fleet.id = 2
@@ -426,9 +426,9 @@ class TestInstantOrderProcessing:
         the order should remain in the queue (not be popped or cleared).
         The preceding MOVE_TO_FLEET will bring the fleet to the target.
         """
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         target_fleet = MagicMock()
         target_fleet.id = 2
@@ -474,7 +474,7 @@ class TestOrderResult:
 
     def test_join_fleet_result_has_required_fields(self):
         """JoinFleetResult has expected fields."""
-        from game.strategy.engine.fleet_order_processor import JoinFleetResult
+        from game.strategy.engine.order_processor import JoinFleetResult
 
         result = JoinFleetResult(merged=True, cancelled=False)
 
@@ -483,7 +483,7 @@ class TestOrderResult:
 
     def test_colonize_result_has_required_fields(self):
         """ColonizeResult has expected fields."""
-        from game.strategy.engine.fleet_order_processor import ColonizeResult
+        from game.strategy.engine.order_processor import ColonizeResult
 
         result = ColonizeResult(colonized=True, planet_name="Earth")
 
@@ -492,7 +492,7 @@ class TestOrderResult:
 
     def test_colonize_result_defaults(self):
         """ColonizeResult has sensible defaults."""
-        from game.strategy.engine.fleet_order_processor import ColonizeResult
+        from game.strategy.engine.order_processor import ColonizeResult
 
         result = ColonizeResult(colonized=False)
 
@@ -561,9 +561,9 @@ class TestColonizeShipRemoval:
         mock_planet_ice_dwarf, mock_component_registry
     ):
         """With registry, colonize removes specific ship, not fleet."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         # Setup fleet with ships list
         mock_fleet.ships = [mock_ship_with_pod, mock_ship_combat]
@@ -588,9 +588,9 @@ class TestColonizeShipRemoval:
         mock_ship_with_pod, mock_planet_ice_dwarf, mock_component_registry
     ):
         """With registry, removes fleet when ship removal leaves it empty."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         # Setup fleet with only one ship - will be empty after removal
         mock_fleet.ships = [mock_ship_with_pod]
@@ -620,9 +620,9 @@ class TestColonizeShipRemoval:
         mock_planet_ice_dwarf, mock_component_registry
     ):
         """With registry, keeps fleet when other ships remain."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         # Setup fleet with two ships
         mock_fleet.ships = [mock_ship_with_pod, mock_ship_combat]

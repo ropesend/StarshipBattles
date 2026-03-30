@@ -177,7 +177,7 @@ class IOrderProcessor(ABC):
     - Order completion and cancellation
 
     Example usage:
-        processor = FleetOrderProcessor()  # or MockOrderProcessor for tests
+        processor = OrderProcessor()  # or MockOrderProcessor for tests
         removed = processor.process_instant_orders(empires)
         # execute_action_order called by ActionExecutionEngine, not TurnEngine
         consumed = processor.execute_action_order(fleet, empire, galaxy)

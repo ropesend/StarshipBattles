@@ -105,7 +105,7 @@ Handled by `ActionExecutionEngine`. Progress accumulates until `action_time` rea
 
 | OrderType | Behavior |
 |-----------|----------|
-| `JOIN_FLEET` | Processed instantly by `FleetOrderProcessor` (not tick-based); merges fleet into target fleet |
+| `JOIN_FLEET` | Processed instantly by `OrderProcessor` (not tick-based); merges fleet into target fleet |
 
 ### Special: BUILD Order
 
@@ -323,7 +323,7 @@ Then in `data/components.json`:
 
 ### 4. Add Processing Method
 
-For action orders, add to `FleetOrderProcessor` or `SuperweaponOrderProcessor`:
+For action orders, add to `OrderProcessor` or `SuperweaponOrderProcessor`:
 
 ```python
 def process_your_new_order(self, fleet, empire, galaxy, ...):
@@ -385,7 +385,7 @@ registry.register('YourNewOrderCommand', YourNewOrderCommandHandler())
 | Order categories | `game/strategy/data/order_types.py` |
 | ActionExecutionEngine | `game/strategy/engine/action_execution_engine.py` |
 | ActionTimeResolver | `game/strategy/services/action_time_resolver.py` |
-| FleetOrderProcessor | `game/strategy/engine/fleet_order_processor.py` |
+| OrderProcessor | `game/strategy/engine/order_processor.py` |
 | FleetMovementEngine | `game/strategy/engine/fleet_movement_engine.py` |
 | SuperweaponOrderProcessor | `game/strategy/engine/superweapon_order_processor.py` |
 | Command Handlers | `game/strategy/engine/command_handlers.py` |
