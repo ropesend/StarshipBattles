@@ -1,6 +1,7 @@
 # Modifier System Architecture
 
 > Overview of the V2 modifier system with formula-based effects.
+> For a complete catalog of all abilities and their stat bindings, see [ability_reference.md](../systems/ability_reference.md).
 
 ## Core Concepts
 

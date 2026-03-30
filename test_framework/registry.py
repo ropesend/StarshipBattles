@@ -193,7 +193,8 @@ class TestRegistry:
                             'metadata': metadata,
                             'module': module_name,
                             'file': str(file_path),
-                            'last_run_results': None  # Will be populated after test runs
+                            'last_run_results': None,  # Will be populated after test runs
+                            'is_comparison': hasattr(attr, '_visual_baseline'),
                         }
 
                         logger.debug(f"Registered scenario: {test_id} - {metadata.name}")

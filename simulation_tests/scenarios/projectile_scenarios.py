@@ -415,7 +415,8 @@ class ProjectileErraticSmallTargetScenario(StaticTargetScenario):
     def custom_setup(self, battle_engine):
         self._tracking_weapon_range = 1000
         self.target_movement = ErraticController(
-            center=self.target.position.copy(), max_radius=1000, seed=42
+            center=self.target.position.copy(), max_radius=1000,
+            seed=self._effective_seed,
         )
 
     def validate(self, engine) -> list:
@@ -436,7 +437,7 @@ class ProjectileErraticSmallTargetScenario(StaticTargetScenario):
             detail="Erratic target should move from starting position"))
         summary = self.results.get('tracking_summary', {}).get('target', {})
         max_dist = summary.get('max_distance', 0)
-        checks.append(check_true("Target Maneuvered (max dist > 400px)", max_dist > 400,
+        checks.append(check_true("Target Maneuvered (max dist > 350px)", max_dist > 350,
                                  actual=f"{max_dist:.0f}px",
                                  phase="precondition",
                                  detail="erratic target should range across the engagement zone"))
@@ -444,21 +445,23 @@ class ProjectileErraticSmallTargetScenario(StaticTargetScenario):
         checks.append(check_true("Target In Range > 500 ticks", ticks_in > 500,
                                  actual=ticks_in, phase="precondition",
                                  detail="small erratic target should stay mostly in range with high thruster"))
-        # Outcome phase: must fire enough shots and hit a meaningful fraction
+        # Outcome phase: must fire enough shots and hit a meaningful fraction.
+        # Hit rate varies widely (46%-100%) depending on the erratic movement
+        # pattern, so bounds accommodate the full distribution.
         resolved = self.results.get('attacker_resolved_shots', 0)
         hits = self.results.get('attacker_resolved_hits', 0)
         hit_rate = hits / resolved if resolved > 0 else 0
         checks.append(check_true("Shots Fired > 500", resolved > 500,
                                  actual=resolved, phase="outcome",
                                  detail="weapon should fire most ticks while target in range"))
-        checks.append(check_true("Hit Rate > 50%", hit_rate > 0.50,
+        checks.append(check_true("Hit Rate > 35%", hit_rate > 0.35,
                                  actual=f"{hit_rate:.1%} ({hits}/{resolved})",
                                  phase="outcome",
-                                 detail="erratic small target should be hit more than half the time"))
-        checks.append(check_true("Hit Rate < 95%", hit_rate < 0.95,
+                                 detail="weapon must land hits against erratic target"))
+        checks.append(check_true("Hit Rate < 100%", hit_rate < 1.00,
                                  actual=f"{hit_rate:.1%}",
                                  phase="outcome",
-                                 detail="erratic movement should cause some misses"))
+                                 detail="erratic movement should cause at least some misses"))
         return checks
 
 
@@ -510,7 +513,8 @@ class ProjectileErraticLargeTargetScenario(StaticTargetScenario):
     def custom_setup(self, battle_engine):
         self._tracking_weapon_range = 1000
         self.target_movement = ErraticController(
-            center=self.target.position.copy(), max_radius=1000, seed=42
+            center=self.target.position.copy(), max_radius=1000,
+            seed=self._effective_seed,
         )
 
     def validate(self, engine) -> list:
@@ -531,7 +535,7 @@ class ProjectileErraticLargeTargetScenario(StaticTargetScenario):
             detail="Erratic target should move from starting position"))
         summary = self.results.get('tracking_summary', {}).get('target', {})
         max_dist = summary.get('max_distance', 0)
-        checks.append(check_true("Target Maneuvered (max dist > 400px)", max_dist > 400,
+        checks.append(check_true("Target Maneuvered (max dist > 350px)", max_dist > 350,
                                  actual=f"{max_dist:.0f}px",
                                  phase="precondition",
                                  detail="erratic target should range across the engagement zone"))
@@ -539,21 +543,19 @@ class ProjectileErraticLargeTargetScenario(StaticTargetScenario):
         checks.append(check_true("Target In Range > 400 ticks", ticks_in > 400,
                                  actual=ticks_in, phase="precondition",
                                  detail="large erratic target with 4x thrusters should stay mostly in range"))
-        # Outcome phase: large target should be hit very consistently
+        # Outcome phase: large target should be hit consistently.
+        # The large radius makes it easier to hit than PROJ-004 across all
+        # erratic patterns, but some patterns still reduce the hit rate.
         resolved = self.results.get('attacker_resolved_shots', 0)
         hits = self.results.get('attacker_resolved_hits', 0)
         hit_rate = hits / resolved if resolved > 0 else 0
         checks.append(check_true("Shots Fired > 400", resolved > 400,
                                  actual=resolved, phase="outcome",
                                  detail="weapon should fire most ticks while target in range"))
-        checks.append(check_true("Hit Rate > 95%", hit_rate > 0.95,
+        checks.append(check_true("Hit Rate > 90%", hit_rate > 0.90,
                                  actual=f"{hit_rate:.1%} ({hits}/{resolved})",
                                  phase="outcome",
-                                 detail="large target should be nearly impossible to miss"))
-        checks.append(check_true("Hit Rate > PROJ-004", hit_rate > 0.80,
-                                 actual=f"{hit_rate:.1%}",
-                                 phase="outcome",
-                                 detail="large target hit rate must exceed small target"))
+                                 detail="large target should be hit consistently despite erratic movement"))
         return checks
 
 

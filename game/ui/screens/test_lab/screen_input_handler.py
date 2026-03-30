@@ -357,6 +357,12 @@ class TestLabInputHandler:
             self.callbacks['on_run_headless']()
             return True
 
+        # Check Visual Baseline button click (ComparisonScenario only)
+        run_baseline_rect = self.viewmodel.run_baseline_btn_rect
+        if run_baseline_rect and run_baseline_rect.collidepoint(mx, my):
+            self.callbacks['on_run_visual_baseline']()
+            return True
+
         # Check "Update Expected Values" button click
         if self.viewmodel.update_expected_button_visible:
             update_rect = self.viewmodel.update_expected_button_rect

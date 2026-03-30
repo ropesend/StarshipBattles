@@ -257,6 +257,7 @@ Ability data supports three formats:
 
 ## Related Documentation
 
+- [ability_reference.md](../systems/ability_reference.md) - Complete catalog of all 39 abilities with registry keys, parameters, and stat bindings
 - [adding_abilities.md](adding_abilities.md) - How to create new abilities
 - [adding_modifiers.md](adding_modifiers.md) - How to create new modifiers
 - [modifier_system.md](modifier_system.md) - Detailed modifier documentation

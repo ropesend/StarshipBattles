@@ -1,6 +1,7 @@
 # Adding New Abilities
 
 > Step-by-step guide for adding new abilities to the game.
+> For a complete catalog of all existing abilities, see [ability_reference.md](../systems/ability_reference.md).
 
 ## Overview
 

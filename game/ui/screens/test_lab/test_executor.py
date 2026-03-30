@@ -120,6 +120,50 @@ class TestLabExecutor:
             logger.error(f"Error running visual test: {e}", exc_info=True)
             self.output_log.append(f"ERROR: {e}")
 
+    def run_visual_baseline(self, test_id):
+        """
+        Run the baseline battle of a ComparisonScenario visually.
+
+        Sets _visual_baseline=True on the scenario so setup() configures
+        the baseline configuration on the runner's engine for rendering.
+        """
+        if test_id is None:
+            self.output_log.append("ERROR: No test selected!")
+            return
+
+        scenario_info = self.registry.get_by_id(test_id)
+        if scenario_info is None:
+            self.output_log.append(f"ERROR: Test {test_id} not found!")
+            return
+
+        if not scenario_info.get('is_comparison'):
+            self.output_log.append(f"ERROR: {test_id} is not a comparison scenario")
+            return
+
+        metadata = scenario_info['metadata']
+        self.output_log.append(f"Running {metadata.name} (baseline)...")
+
+        runner = TestRunner()
+
+        try:
+            scenario_cls = scenario_info['class']
+            scenario = scenario_cls()
+            scenario._visual_baseline = True
+
+            runner.load_data_for_scenario(scenario)
+            self.ensure_engine()
+
+            if self.get_engine() is None:
+                self.output_log.append("ERROR: Could not create battle engine!")
+                return
+
+            self.switch_to_battle(scenario)
+            self.output_log.append(f"Started baseline for {test_id}")
+
+        except (OSError, ValueError, KeyError, TypeError) as e:
+            logger.error(f"Error running visual baseline: {e}", exc_info=True)
+            self.output_log.append(f"ERROR: {e}")
+
     def run_headless(self, test_id):
         """
         Run the selected test scenario in headless mode (fast, no visuals).

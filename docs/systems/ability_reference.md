@@ -1,0 +1,1048 @@
+# Ability Reference
+
+> Comprehensive catalog of all component abilities available in the game.
+> Source: `game/simulation/components/abilities/`
+> Registry: `ABILITY_REGISTRY` in `abilities/__init__.py`
+
+---
+
+## How to Read This Document
+
+Each ability entry lists:
+- **Registry Key** — the string used in `components.json` to attach the ability
+- **Class** — the Python class that implements it
+- **Source File** — location under `game/simulation/components/abilities/`
+- **Layer** — COMBAT (default) or STRATEGIC
+- **Data Format** — how to specify values in JSON (scalar, dict, or boolean)
+- **Required/Optional Values** — parameters the ability expects
+- **Stat Bindings** — modifier stats that affect the ability at runtime
+
+Data format conventions:
+- **Scalar**: `100` or `5.0` — a single numeric value
+- **Dict**: `{"damage": 100, "range": 5000}` — named parameters
+- **Boolean**: `true` — marker presence
+- **Formula**: `"=50 + range_to_target * 0.1"` — runtime-evaluated expression (weapons only)
+
+---
+
+## Weapons
+
+### WeaponAbility
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `WeaponAbility` |
+| Class | `WeaponAbility` |
+| Source | `weapons.py` |
+| Layer | COMBAT |
+| Base Class | `Ability` |
+
+Generic weapon base. Supports damage formulas, firing arcs, and reload cycles.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `damage` | float or formula | Yes | — | Base weapon damage per shot |
+| `range` | float or formula | Yes | — | Maximum engagement range (px) |
+| `reload` | float | No | 1.0 | Reload time in seconds |
+| `firing_arc` | float | No | 360 | Firing arc in degrees |
+| `facing_angle` | float | No | 0 | Angle offset from ship facing |
+| `tags` | list | No | [] | Classification tags |
+
+**Stat Bindings:**
+
+| StatKey | Attribute | Operation |
+|---------|-----------|-----------|
+| DAMAGE_MULT | damage | multiply |
+| RANGE_MULT | range | multiply |
+| RELOAD_MULT | reload_time | multiply |
+| ARC_SET | firing_arc | set (override) |
+| ARC_ADD | firing_arc | add |
+
+---
+
+### BeamWeaponAbility
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `BeamWeaponAbility` |
+| Class | `BeamWeaponAbility` |
+| Source | `weapons.py` |
+| Layer | COMBAT |
+| Base Class | `WeaponAbility` |
+
+Beam weapon with accuracy falloff over distance. Hit chance uses logistic/sigmoid function.
+
+**Data Format:** Dict (all WeaponAbility parameters plus below)
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `accuracy_falloff` | float | No | 0.001 | Accuracy penalty per unit distance |
+| `base_accuracy` | float | No | 1.0 | Base accuracy (0.0-1.0 or percentage) |
+
+**Additional Stat Bindings (extends WeaponAbility):**
+
+| StatKey | Attribute | Operation |
+|---------|-----------|-----------|
+| ACCURACY_ADD | base_accuracy | add |
+
+---
+
+### ProjectileWeaponAbility
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `ProjectileWeaponAbility` |
+| Class | `ProjectileWeaponAbility` |
+| Source | `weapons.py` |
+| Layer | COMBAT |
+| Base Class | `WeaponAbility` |
+
+Projectile-based weapon (bullets, railgun rounds, unguided missiles).
+
+**Data Format:** Dict (all WeaponAbility parameters plus below)
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `projectile_speed` | float | No | 500 | Speed of projectile (divided by PROJECTILE_SPEED_SCALE=100 at runtime) |
+
+---
+
+### SeekerWeaponAbility
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `SeekerWeaponAbility` |
+| Class | `SeekerWeaponAbility` |
+| Source | `weapons.py` |
+| Layer | COMBAT |
+| Base Class | `WeaponAbility` |
+
+Guided seeking missile with tracking, HP, and stealth properties. Fires omni-directionally (ignores firing arc for launch).
+
+**Data Format:** Dict (all WeaponAbility parameters plus below)
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `projectile_speed` | float | No | 500 | Missile flight speed |
+| `endurance` | float | No | 3.0 | Flight duration in seconds |
+| `turn_rate` | float | No | 30.0 | Turning speed (degrees/sec) |
+| `to_hit_defense` | float | No | 0 | Defensive modifier for the missile |
+| `projectile_damage` | float | Yes | — | Warhead explosion damage |
+| `projectile_hp` | float | No | 1.0 | Missile durability (HP) |
+| `projectile_stealth` | float | No | 0.0 | Stealth level |
+
+**Additional Stat Bindings (extends WeaponAbility):**
+
+| StatKey | Attribute | Operation |
+|---------|-----------|-----------|
+| ENDURANCE_MULT | endurance | multiply |
+| PROJECTILE_DAMAGE_MULT | projectile_damage | multiply |
+| PROJECTILE_HP_MULT | projectile_hp | multiply |
+| PROJECTILE_STEALTH_LEVEL | projectile_stealth | add |
+
+---
+
+## Defense
+
+### ShieldProjection
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `ShieldProjection` |
+| Class | `ShieldProjection` |
+| Source | `defense.py` |
+| Layer | COMBAT |
+| Base Class | `SimpleMultiplierAbility` |
+
+Provides shield capacity (HP pool).
+
+**Data Format:** Scalar (shield HP)
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| value | float | Yes | Shield capacity in HP |
+
+**Stat Bindings:**
+
+| StatKey | Attribute | Operation |
+|---------|-----------|-----------|
+| CAPACITY_MULT | capacity | multiply |
+| SHIELD_CAPACITY_MULT | capacity | multiply (stacked) |
+
+---
+
+### ShieldRegeneration
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `ShieldRegeneration` |
+| Class | `ShieldRegeneration` |
+| Source | `defense.py` |
+| Layer | COMBAT |
+| Base Class | `SimpleMultiplierAbility` |
+
+Regenerates shields per second.
+
+**Data Format:** Scalar (regen rate)
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| value | float | Yes | Shield regeneration rate per second |
+
+**Stat Bindings:**
+
+| StatKey | Attribute | Operation |
+|---------|-----------|-----------|
+| ENERGY_GEN_MULT | rate | multiply |
+
+---
+
+### ToHitAttackModifier
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `ToHitAttackModifier` |
+| Class | `ToHitAttackModifier` |
+| Source | `defense.py` |
+| Layer | COMBAT |
+| Base Class | `StaticValueAbility` |
+
+Provides sensor/targeting attack bonus for to-hit calculations.
+
+**Data Format:** Scalar (bonus value, positive or negative)
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| value | float | Yes | Attack bonus (+) or penalty (-) |
+
+**Stat Bindings:** None (static value, not modified)
+
+---
+
+### ToHitDefenseModifier
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `ToHitDefenseModifier` |
+| Class | `ToHitDefenseModifier` |
+| Source | `defense.py` |
+| Layer | COMBAT |
+| Base Class | `StaticValueAbility` |
+
+Provides evasion/defense bonus for to-hit calculations.
+
+**Data Format:** Scalar (bonus value, positive or negative)
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| value | float | Yes | Defense bonus (+) or penalty (-) |
+
+**Stat Bindings:** None (static value, not modified)
+
+---
+
+### EmissiveArmor
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `EmissiveArmor` |
+| Class | `EmissiveArmor` |
+| Source | `defense.py` |
+| Layer | COMBAT |
+| Base Class | `StaticValueAbility` |
+
+Flat damage reduction per hit (damage ignored). First in the damage pipeline: EmissiveArmor > Crystalline Armor > Shields > Hull.
+
+**Data Format:** Scalar (integer, damage points ignored)
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| value | int | Yes | Damage points ignored per hit |
+
+**Stat Bindings:** None (static value, not modified)
+
+---
+
+### Armor
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `Armor` |
+| Class | `Ability` (lambda) |
+| Source | `__init__.py` |
+| Layer | COMBAT |
+
+Dummy ability for armor tag/existence checks. No functional behavior.
+
+**Data Format:** Any (ignored)
+
+---
+
+## Propulsion
+
+### CombatPropulsion
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `CombatPropulsion` |
+| Class | `CombatPropulsion` |
+| Source | `propulsion.py` |
+| Layer | COMBAT |
+| Base Class | `SimpleMultiplierAbility` |
+
+Provides thrust for combat maneuvering. Ship speed = `(thrust * 25) / mass` px/tick.
+
+**Data Format:** Scalar (thrust in Newtons)
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| value | float | Yes | Thrust force in Newtons |
+
+**Stat Bindings:**
+
+| StatKey | Attribute | Operation |
+|---------|-----------|-----------|
+| THRUST_MULT | thrust_force | multiply |
+
+---
+
+### ManeuveringThruster
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `ManeuveringThruster` |
+| Class | `ManeuveringThruster` |
+| Source | `propulsion.py` |
+| Layer | COMBAT |
+| Base Class | `SimpleMultiplierAbility` |
+
+Provides rotation/turn speed for combat maneuvering. Turn speed = `(raw * 25000) / mass^1.5` degrees per 100 ticks.
+
+**Data Format:** Scalar (rotation degrees/sec)
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| value | float | Yes | Raw rotation rate |
+
+**Stat Bindings:**
+
+| StatKey | Attribute | Operation |
+|---------|-----------|-----------|
+| TURN_MULT | turn_rate | multiply |
+
+---
+
+### StrategicMovement
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `StrategicMovement` |
+| Class | `StrategicMovement` |
+| Source | `propulsion.py` |
+| Layer | STRATEGIC |
+| Base Class | `SimpleMultiplierAbility` |
+| Allowed Scopes | SELF, ALLIED_SECTOR, ALLIED_SYSTEM |
+
+Provides strategic map movement points for interstellar travel.
+
+**Data Format:** Scalar (movement points)
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| value | float | Yes | Movement points per turn |
+
+**Stat Bindings:**
+
+| StatKey | Attribute | Operation |
+|---------|-----------|-----------|
+| STRATEGIC_MULT | movement_points | multiply |
+
+---
+
+### WarpJump
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `WarpJump` |
+| Class | `WarpJump` |
+| Source | `propulsion.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Binary capability for warp transit between star systems.
+
+**Data Format:** Scalar or Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `max_tonnage` | float | Yes | — | Maximum ship mass for warp transit |
+| `energy_cost` | float | No | 0 | Energy consumed per jump |
+
+Scalar format: `5000` is interpreted as `max_tonnage = 5000`.
+
+**Stat Bindings:** None
+
+---
+
+## Resources
+
+### ResourceConsumption
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `ResourceConsumption` |
+| Class | `ResourceConsumption` |
+| Source | `resources.py` |
+| Layer | COMBAT |
+| Base Class | `Ability` |
+
+Consumes resources (fuel, ammo, energy) based on a trigger type.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `resource` | string | Yes | Resource type to consume (fuel, ammo, energy) |
+| `amount` | float | Yes | Consumption amount per trigger |
+| `trigger` | string | Yes | `"constant"` (per-tick), `"activation"` (per-use), or `"strategic_per_hex"` (per-hex movement) |
+
+**Stat Bindings:**
+
+| StatKey | Attribute | Operation |
+|---------|-----------|-----------|
+| CONSUMPTION_MULT | amount | multiply |
+
+---
+
+### ResourceStorage
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `ResourceStorage` |
+| Class | `ResourceStorage` |
+| Source | `resources.py` |
+| Layer | COMBAT |
+| Base Class | `Ability` |
+
+Stores resources with capacity limits.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `resource` | string | Yes | Resource type to store |
+| `amount` | float | Yes | Storage capacity |
+
+**Stat Bindings:**
+
+| StatKey | Attribute | Operation |
+|---------|-----------|-----------|
+| CAPACITY_MULT | max_amount | multiply |
+
+---
+
+### ResourceGeneration
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `ResourceGeneration` |
+| Class | `ResourceGeneration` |
+| Source | `resources.py` |
+| Layer | COMBAT |
+| Base Class | `Ability` |
+
+Generates resources (energy, fuel) per second.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `resource` | string | Yes | Resource type generated |
+| `amount` | float | Yes | Generation rate per second |
+
+**Stat Bindings:**
+
+| StatKey | Attribute | Operation |
+|---------|-----------|-----------|
+| ENERGY_GEN_MULT | rate | multiply |
+
+---
+
+## Crew
+
+### CrewCapacity
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `CrewCapacity` |
+| Class | `CrewCapacity` |
+| Source | `crew.py` |
+| Layer | COMBAT |
+| Base Class | `SimpleMultiplierAbility` |
+
+Provides crew quarters capacity.
+
+**Data Format:** Scalar (integer, crew count)
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| value | int | Yes | Number of crew housed |
+
+**Stat Bindings:**
+
+| StatKey | Attribute | Operation |
+|---------|-----------|-----------|
+| CREW_CAPACITY_MULT | amount | multiply |
+
+---
+
+### LifeSupportCapacity
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `LifeSupportCapacity` |
+| Class | `LifeSupportCapacity` |
+| Source | `crew.py` |
+| Layer | COMBAT |
+| Base Class | `SimpleMultiplierAbility` |
+
+Provides life support capacity for crew.
+
+**Data Format:** Scalar (integer, support units)
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| value | int | Yes | Life support capacity |
+
+**Stat Bindings:**
+
+| StatKey | Attribute | Operation |
+|---------|-----------|-----------|
+| LIFE_SUPPORT_CAPACITY_MULT | amount | multiply |
+
+---
+
+### CrewRequired
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `CrewRequired` |
+| Class | `CrewRequired` |
+| Source | `crew.py` |
+| Layer | COMBAT |
+| Base Class | `Ability` |
+
+Specifies crew required to operate the component. Also scales with mass via sqrt scaling (custom, not via STAT_BINDINGS).
+
+**Data Format:** Scalar (integer, crew count)
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| value | int | Yes | Crew members required to operate |
+
+**Stat Bindings:**
+
+| StatKey | Attribute | Operation |
+|---------|-----------|-----------|
+| CREW_REQ_MULT | amount | multiply |
+
+---
+
+## Cargo
+
+### CargoStorage
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `CargoStorage` |
+| Class | `CargoStorage` |
+| Source | `cargo.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Cargo transport capability for passengers or generic goods.
+
+**Data Format:** Scalar or Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `cargo_type` | string | No | `"generic"` | `"passengers"` or `"generic"` |
+| `capacity` | float | No | 0 | Cargo capacity |
+
+Scalar format: `5000` is interpreted as generic cargo with capacity 5000.
+
+**Stat Bindings:**
+
+| StatKey | Attribute | Operation |
+|---------|-----------|-----------|
+| CAPACITY_MULT | capacity | multiply |
+
+---
+
+## Markers / Special
+
+### VehicleLaunch
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `VehicleLaunch` |
+| Class | `VehicleLaunchAbility` |
+| Source | `markers.py` |
+| Layer | COMBAT |
+| Base Class | `Ability` |
+
+Fighter hangar bay. Stores and launches fighters on a cycle timer.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `fighter_class` | string | No | `"Fighter (Small)"` | Fighter type name |
+| `capacity` | int | No | 0 | Hangar capacity |
+| `cycle_time` | float | No | 5.0 | Seconds between launches |
+
+**Stat Bindings:**
+
+| StatKey | Attribute | Operation |
+|---------|-----------|-----------|
+| CAPACITY_MULT | capacity | multiply |
+
+---
+
+### CommandAndControl
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `CommandAndControl` |
+| Class | `CommandAndControl` |
+| Source | `markers.py` |
+| Layer | COMBAT |
+| Base Class | `Ability` |
+
+Marker — component provides command capability (bridge, CIC).
+
+**Data Format:** Boolean (`true`)
+
+**Stat Bindings:** None
+
+---
+
+### RequiresCommandAndControl
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `RequiresCommandAndControl` |
+| Class | `RequiresCommandAndControl` |
+| Source | `markers.py` |
+| Layer | COMBAT |
+| Base Class | `Ability` |
+
+Marker — component requires command capability to operate.
+
+**Data Format:** Boolean (`true`)
+
+**Stat Bindings:** None
+
+---
+
+### RequiresCombatMovement
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `RequiresCombatMovement` |
+| Class | `RequiresCombatMovement` |
+| Source | `markers.py` |
+| Layer | COMBAT |
+| Base Class | `Ability` |
+
+Marker — component requires combat propulsion to operate.
+
+**Data Format:** Boolean (`true`)
+
+**Stat Bindings:** None
+
+---
+
+### StructuralIntegrity
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `StructuralIntegrity` |
+| Class | `StructuralIntegrity` |
+| Source | `markers.py` |
+| Layer | COMBAT |
+| Base Class | `Ability` |
+
+Marker — hull provides structural integrity for the ship.
+
+**Data Format:** Boolean (`true`)
+
+**Stat Bindings:** None
+
+---
+
+## Colonization
+
+### ColonizePlanet
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `ColonizePlanet` |
+| Class | `ColonizePlanet` |
+| Source | `colonize.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Colony pod for a specific planet type. Enables colonization when the carrying ship reaches the target planet.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `planet_type` | string | Yes | — | Planet type ID (see list below) |
+| `action_time` | int | No | 1 | Ticks required for colonization |
+
+**Valid planet types:** CONTINENTAL, ARID, PELAGIC, MAGMA, CRYOPLANET, BARREN, JOVIAN, ICE_GIANT, CHTHONIAN, ICE_DWARF, PLANETOID
+
+**Stat Bindings:** None
+
+---
+
+## Harvester & Empire
+
+### ResourceHarvester
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `ResourceHarvester` |
+| Class | `ResourceHarvesterAbility` |
+| Source | `harvester.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Enables resource harvesting on planets.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `resource_type` | string | Yes | Type of resource harvested |
+| `base_harvest_rate` | float | Yes | Resources per turn |
+
+**Stat Bindings:** None
+
+---
+
+### EmpireStorage
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `EmpireStorage` |
+| Class | `EmpireStorageAbility` |
+| Source | `harvester.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Empire-level resource storage capacity.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `resource_type` | string | Yes | Resource type stored |
+| `capacity` | float | Yes | Storage capacity |
+
+**Stat Bindings:** Uses `storage_mult` modifier
+
+---
+
+### SpaceShipyard
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `SpaceShipyard` |
+| Class | `SpaceShipyardAbility` |
+| Source | `harvester.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Enables ship construction at colonies.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `construction_speed_bonus` | float | No | 1.0 | Construction speed multiplier |
+| `max_ship_mass` | float | No | 100000 | Maximum constructible ship mass |
+| `production_rates` | dict | No | — | Per-type production rates |
+
+**Stat Bindings:** None
+
+---
+
+## Planetary
+
+### PlanetaryShield
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `PlanetaryShield` |
+| Class | `PlanetaryShieldAbility` |
+| Source | `planetary.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Planetary shield protection against superweapons.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `energy_drain_rate` | float | No | 0 | Energy per turn while active |
+| `activation_time` | int | No | 1 | Ticks to activate |
+| `deactivation_time` | int | No | 1 | Ticks to deactivate |
+| `shield_hp` | float | No | 0 | Combat shield HP (placeholder) |
+| `shield_regen` | float | No | 0 | Combat regen (placeholder) |
+
+**Stat Bindings:** None
+
+---
+
+### PlanetaryEnergyGenerator
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `PlanetaryEnergyGenerator` |
+| Class | `PlanetaryEnergyGeneratorAbility` |
+| Source | `planetary.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Generates energy for planetary systems.
+
+**Data Format:** Scalar or Dict
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `generation_rate` | float | Yes | Energy generated per turn |
+
+Scalar format: `10.0` is interpreted as `generation_rate = 10.0`.
+
+**Stat Bindings:** None
+
+---
+
+### PlanetaryEnergyStorage
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `PlanetaryEnergyStorage` |
+| Class | `PlanetaryEnergyStorageAbility` |
+| Source | `planetary.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Provides energy storage capacity for a planet.
+
+**Data Format:** Scalar or Dict
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `capacity` | float | Yes | Energy storage capacity |
+
+Scalar format: `1000.0` is interpreted as `capacity = 1000.0`.
+
+**Stat Bindings:** None
+
+---
+
+## Superweapons
+
+All superweapons share the same structure: boolean or dict with optional `action_time`. All are STRATEGIC layer, SELF scope only.
+
+### DestroyPlanet
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `DestroyPlanet` |
+| Class | `DestroyPlanet` |
+| Source | `superweapons.py` |
+
+Planet Imploder. Destroys a single planet.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `action_time` | int | No | 1 | Ticks to execute |
+
+---
+
+### DestroyStar
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `DestroyStar` |
+| Class | `DestroyStar` |
+| Source | `superweapons.py` |
+
+Stellerator. Destroys a star and everything in the system (ships, planets).
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `action_time` | int | No | 1 | Ticks to execute |
+
+---
+
+### OpenWarpPoint
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `OpenWarpPoint` |
+| Class | `OpenWarpPoint` |
+| Source | `superweapons.py` |
+
+Warp Point Creator. Creates a new warp connection between star systems.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `action_time` | int | No | 1 | Ticks to execute |
+
+---
+
+### CloseWarpPoint
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `CloseWarpPoint` |
+| Class | `CloseWarpPoint` |
+| Source | `superweapons.py` |
+
+Warp Point Closer. Permanently closes a warp point.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `action_time` | int | No | 1 | Ticks to execute |
+
+---
+
+### CreateDysonSphere
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `CreateDysonSphere` |
+| Class | `CreateDysonSphere` |
+| Source | `superweapons.py` |
+
+Dyson Sphere Constructor. Builds a megastructure around a star.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `action_time` | int | No | 1 | Ticks to execute |
+
+---
+
+### SelfDestruct
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `SelfDestruct` |
+| Class | `SelfDestruct` |
+| Source | `superweapons.py` |
+
+Self-Destruct Device. Schedules ship for destruction.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `action_time` | int | No | 1 | Ticks to execute |
+
+---
+
+## Quick Reference: Registry Key to Class
+
+| Registry Key | Class | Category |
+|---|---|---|
+| `WeaponAbility` | WeaponAbility | Weapons |
+| `BeamWeaponAbility` | BeamWeaponAbility | Weapons |
+| `ProjectileWeaponAbility` | ProjectileWeaponAbility | Weapons |
+| `SeekerWeaponAbility` | SeekerWeaponAbility | Weapons |
+| `ShieldProjection` | ShieldProjection | Defense |
+| `ShieldRegeneration` | ShieldRegeneration | Defense |
+| `ToHitAttackModifier` | ToHitAttackModifier | Defense |
+| `ToHitDefenseModifier` | ToHitDefenseModifier | Defense |
+| `EmissiveArmor` | EmissiveArmor | Defense |
+| `Armor` | Ability (lambda) | Defense |
+| `CombatPropulsion` | CombatPropulsion | Propulsion |
+| `ManeuveringThruster` | ManeuveringThruster | Propulsion |
+| `StrategicMovement` | StrategicMovement | Propulsion |
+| `WarpJump` | WarpJump | Propulsion |
+| `ResourceConsumption` | ResourceConsumption | Resources |
+| `ResourceStorage` | ResourceStorage | Resources |
+| `ResourceGeneration` | ResourceGeneration | Resources |
+| `CrewCapacity` | CrewCapacity | Crew |
+| `LifeSupportCapacity` | LifeSupportCapacity | Crew |
+| `CrewRequired` | CrewRequired | Crew |
+| `CargoStorage` | CargoStorage | Cargo |
+| `VehicleLaunch` | VehicleLaunchAbility | Markers |
+| `CommandAndControl` | CommandAndControl | Markers |
+| `RequiresCommandAndControl` | RequiresCommandAndControl | Markers |
+| `RequiresCombatMovement` | RequiresCombatMovement | Markers |
+| `StructuralIntegrity` | StructuralIntegrity | Markers |
+| `ColonizePlanet` | ColonizePlanet | Colonization |
+| `ResourceHarvester` | ResourceHarvesterAbility | Harvester |
+| `EmpireStorage` | EmpireStorageAbility | Harvester |
+| `SpaceShipyard` | SpaceShipyardAbility | Harvester |
+| `PlanetaryShield` | PlanetaryShieldAbility | Planetary |
+| `PlanetaryEnergyGenerator` | PlanetaryEnergyGeneratorAbility | Planetary |
+| `PlanetaryEnergyStorage` | PlanetaryEnergyStorageAbility | Planetary |
+| `DestroyPlanet` | DestroyPlanet | Superweapons |
+| `DestroyStar` | DestroyStar | Superweapons |
+| `OpenWarpPoint` | OpenWarpPoint | Superweapons |
+| `CloseWarpPoint` | CloseWarpPoint | Superweapons |
+| `CreateDysonSphere` | CreateDysonSphere | Superweapons |
+| `SelfDestruct` | SelfDestruct | Superweapons |
+
+---
+
+## Stat Key Reference
+
+All modifier stat keys that affect abilities at runtime.
+
+### Multiplicative (default 1.0)
+
+| StatKey | Typical Consumers |
+|---------|-------------------|
+| MASS_MULT | Component mass |
+| HP_MULT | Component HP |
+| DAMAGE_MULT | WeaponAbility |
+| RANGE_MULT | WeaponAbility |
+| COST_MULT | Component cost |
+| THRUST_MULT | CombatPropulsion |
+| TURN_MULT | ManeuveringThruster |
+| STRATEGIC_MULT | StrategicMovement |
+| ENERGY_GEN_MULT | ResourceGeneration, ShieldRegeneration |
+| CAPACITY_MULT | ResourceStorage, ShieldProjection, CargoStorage, VehicleLaunch |
+| SHIELD_CAPACITY_MULT | ShieldProjection (stacked with CAPACITY_MULT) |
+| CREW_CAPACITY_MULT | CrewCapacity |
+| LIFE_SUPPORT_CAPACITY_MULT | LifeSupportCapacity |
+| CONSUMPTION_MULT | ResourceConsumption |
+| RELOAD_MULT | WeaponAbility |
+| ENDURANCE_MULT | SeekerWeaponAbility |
+| PROJECTILE_HP_MULT | SeekerWeaponAbility |
+| PROJECTILE_DAMAGE_MULT | SeekerWeaponAbility |
+| CREW_REQ_MULT | CrewRequired |
+
+### Additive (default 0.0)
+
+| StatKey | Typical Consumers |
+|---------|-------------------|
+| MASS_ADD | Component mass |
+| ARC_ADD | WeaponAbility firing arc |
+| ACCURACY_ADD | BeamWeaponAbility base accuracy |
+| PROJECTILE_STEALTH_LEVEL | SeekerWeaponAbility stealth |
+
+### Set/Override (default None)
+
+| StatKey | Typical Consumers |
+|---------|-------------------|
+| ARC_SET | WeaponAbility firing arc (overrides base value) |

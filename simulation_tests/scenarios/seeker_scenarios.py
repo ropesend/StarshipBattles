@@ -539,7 +539,8 @@ class SeekerTrackingErraticScenario(StaticTargetScenario):
 
     def custom_setup(self, battle_engine):
         self.target_movement = ErraticController(
-            center=self.target.position.copy(), max_radius=600, seed=42
+            center=self.target.position.copy(), max_radius=600,
+            seed=self._effective_seed,
         )
 
     def validate(self, engine) -> list:

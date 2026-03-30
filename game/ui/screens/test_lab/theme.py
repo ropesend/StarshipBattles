@@ -114,6 +114,11 @@ BUTTON_HEADLESS_HOVER = (70, 70, 100)      # Headless button hover
 BUTTON_HEADLESS_BORDER = (100, 100, 150)   # Headless button border
 BUTTON_HEADLESS_TEXT = (200, 200, 255)     # Headless button text
 
+# === Visual Baseline Button (ComparisonScenario only) ===
+BUTTON_BASELINE_BG = (80, 60, 30)          # Baseline button background (amber)
+BUTTON_BASELINE_HOVER = (100, 80, 40)      # Baseline button hover
+BUTTON_BASELINE_BORDER = (150, 120, 60)    # Baseline button border
+BUTTON_BASELINE_TEXT = (255, 220, 150)     # Baseline button text
 
 # === Visual Run Button ===
 BUTTON_RUN_BG = (50, 80, 50)               # Run button background (green)

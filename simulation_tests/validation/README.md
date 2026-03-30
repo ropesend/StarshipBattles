@@ -49,6 +49,10 @@ TOST (Two One-Sided Tests) equivalence test for proportions. Proves the
 observed proportion is within `+/- margin` of `expected_p` at 95% confidence.
 `p < 0.05` means equivalence is proven (PASS). Requires `scipy`.
 
+Scipy's `norm.cdf()` returns `numpy.float64`, so `check_tost` explicitly casts
+the p-value to `float()` and the pass/fail result to `bool()` before constructing
+the `Check`. This prevents numpy types from leaking into downstream serialization.
+
 ```python
 check_tost("Hit Rate", expected_p=0.5318, successes=260, trials=500, margin=0.06)
 ```
@@ -69,6 +73,27 @@ check_true("Target Alive", target.hp > 0, actual=target.hp)
 ### `Check`
 
 Dataclass with fields: `phase`, `name`, `expected`, `actual`, `passed`, `detail`.
+
+`__post_init__` coerces `passed` to native Python `bool`. This is necessary
+because `check_tost` uses scipy, which returns `numpy.bool_` from comparisons
+— a type that is not JSON-serializable. The coercion happens at the data-model
+boundary so all consumers (serialization, UI, history) receive a native `bool`.
+
+### `_safe_serialize(value)`
+
+Converts `expected` and `actual` values to JSON-safe types for
+`ValidationReport.to_dict()`. Handles:
+
+- Native Python types (`bool`, `int`, `float`, `str`, `None`) — passed through
+- `float('nan')` — converted to `None`
+- Numpy scalars (`float64`, `int64`, `bool_`) — coerced to native Python via `.item()`
+- `dict` — recursively serialized
+- `list` / `tuple` — recursively serialized
+- Unknown types — converted to `str(value)`
+
+Numpy scalars are checked **first** (before `isinstance` checks on native types)
+because `numpy.float64` is a subclass of Python `float` and would otherwise pass
+through unconverted.
 
 ### `ValidationReport`
 
