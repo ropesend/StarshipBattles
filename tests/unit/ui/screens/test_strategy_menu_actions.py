@@ -62,14 +62,13 @@ class TestOnMenuOption:
 
         screen._show_load_game_dialog.assert_called_once()
 
-    def test_settings_calls_show_coming_soon(self):
-        """'settings' option should call _show_coming_soon('Settings')."""
-        screen, _, _ = _make_strategy_screen()
-        screen._show_coming_soon = MagicMock()
+    def test_settings_calls_open_settings(self):
+        """'settings' option should call window_manager.open_settings()."""
+        screen, _, ui = _make_strategy_screen()
 
         screen.on_menu_option("settings")
 
-        screen._show_coming_soon.assert_called_once_with("Settings")
+        ui.window_manager.open_settings.assert_called_once()
 
     def test_controls_calls_scene_callback(self):
         """'controls' option should call scene_callback('open_keybindings')."""

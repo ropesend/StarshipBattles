@@ -58,6 +58,8 @@ Ability (base)
 +-- ResourceConsumption
 +-- ResourceStorage
 +-- ResourceGeneration
++-- StrategicResourceGeneration  (PROJ-238: per-turn generation for strategy layer)
++-- PlanetaryShieldAbility       (PROJ-237: planetary shield, strategy marker)
 +-- ToHitAttackModifier
 +-- ToHitDefenseModifier
 +-- EmissiveArmor
@@ -83,6 +85,28 @@ Ability (base)
 | `ShieldRegeneration` | `abilities/defense.py` | Shield regen rate |
 | `CombatPropulsion` | `abilities/propulsion.py` | Thrust force |
 | `ResourceConsumption` | `abilities/resources.py` | Fuel, ammo, energy consumption |
+| `PlanetaryShieldAbility` | `abilities/planetary.py` | Planetary shield (energy drain, activation time) |
+| `StrategicResourceGenerationAbility` | `abilities/planetary.py` | Per-turn resource generation (strategy layer) |
+
+### Strategic-Layer Abilities (PROJ-237/238)
+
+Components on planetary complexes (and ships) can have strategic abilities that
+operate per-turn on the strategy layer, independent of combat:
+
+| Ability | Purpose | Data Fields |
+|---------|---------|-------------|
+| `PlanetaryShield` | Planet defense; blocks superweapons, consumes energy | `energy_drain_rate`, `activation_time`, `deactivation_time` |
+| `StrategicResourceGeneration` | Per-turn resource generation | `resource` (type name, required), `generation_rate` (per turn) |
+
+These are separate from combat abilities (`ResourceGeneration` operates per-second
+in combat; `StrategicResourceGeneration` operates per-turn on the strategy map).
+A component can have both — e.g., `generator` has `ResourceGeneration` for combat
+AND `StrategicResourceGeneration` for strategy.
+
+**Important — Registry Lookup Required:**
+When checking if a facility has a strategic ability, you MUST use the component
+registry. Facility `design_data` stores components by ID reference only — abilities
+are NOT inline. See Pattern 3 in `docs/02_PATTERNS.md` for the correct lookup pattern.
 
 ### Ability Stat Bindings
 

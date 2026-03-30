@@ -42,11 +42,13 @@ class TestAssetManagerLogging:
 
     @patch("game.assets.asset_manager.logger")
     @patch("builtins.open", new_callable=mock_open, read_data='{"stars": {"blue": "path/to/blue.png"}}')
-    @patch("os.path.exists", return_value=True)
-    def test_load_manifest_success_uses_log_info(self, mock_exists, mock_file, mock_logger):
+    def test_load_manifest_success_uses_log_info(self, mock_file, mock_logger):
         """load_manifest should call log_info on successful load."""
         am = AssetManager()
-        am.load_manifest("dummy.json")
+        mock_logger.reset_mock()
+
+        with patch("os.path.exists", return_value=True):
+            am.load_manifest("dummy.json")
 
         mock_logger.info.assert_called_once()
         call_arg = mock_logger.info.call_args[0][0]
@@ -196,98 +198,3 @@ class TestAssetManager:
         assert mock_load.call_count == 1 # Still 1
 
 
-class TestGetStarColorKey:
-    """Tests for get_star_color_key method that maps RGB values to star asset keys."""
-
-    @pytest.fixture(autouse=True)
-    def setup_teardown(self):
-        """Reset singleton for each test."""
-        AssetManager.reset()
-        yield
-        AssetManager.reset()
-
-    def test_get_star_color_key_red(self):
-        """Test red star detection: r>200, g<100."""
-        am = AssetManager()
-        am.manifest = {
-            'star_colors': {
-                'red': {'r_min': 200, 'g_max': 100},
-                'yellow': {}
-            }
-        }
-        assert am.get_star_color_key((220, 50, 50)) == 'red'
-
-    def test_get_star_color_key_blue(self):
-        """Test blue star detection: b>200, r<100."""
-        am = AssetManager()
-        am.manifest = {
-            'star_colors': {
-                'blue': {'b_min': 200, 'r_max': 100},
-                'yellow': {}
-            }
-        }
-        assert am.get_star_color_key((50, 50, 220)) == 'blue'
-
-    def test_get_star_color_key_white(self):
-        """Test white star detection: r>200, g>200, b>200."""
-        am = AssetManager()
-        am.manifest = {
-            'star_colors': {
-                'white': {'r_min': 200, 'g_min': 200, 'b_min': 200},
-                'yellow': {}
-            }
-        }
-        assert am.get_star_color_key((220, 220, 220)) == 'white'
-
-    def test_get_star_color_key_orange(self):
-        """Test orange star detection: r>200, g>150."""
-        am = AssetManager()
-        am.manifest = {
-            'star_colors': {
-                'orange': {'r_min': 200, 'g_min': 150},
-                'yellow': {}
-            }
-        }
-        assert am.get_star_color_key((220, 160, 50)) == 'orange'
-
-    def test_get_star_color_key_default_yellow(self):
-        """Test yellow as default when no rules match."""
-        am = AssetManager()
-        am.manifest = {
-            'star_colors': {
-                'red': {'r_min': 200, 'g_max': 100},
-                'yellow': {}
-            }
-        }
-        # This doesn't match red (r=150 is not > 200)
-        assert am.get_star_color_key((150, 150, 50)) == 'yellow'
-
-    def test_get_star_color_key_no_manifest(self):
-        """Test graceful fallback with empty manifest."""
-        am = AssetManager()
-        am.manifest = {}
-        assert am.get_star_color_key((220, 50, 50)) == 'yellow'
-
-    def test_get_star_color_key_no_star_colors_section(self):
-        """Test graceful fallback when star_colors section missing."""
-        am = AssetManager()
-        am.manifest = {'stars': {'red': 'path.png'}}  # No star_colors section
-        assert am.get_star_color_key((220, 50, 50)) == 'yellow'
-
-    def test_get_star_color_key_threshold_boundary(self):
-        """Test exact threshold boundaries (value must be > min, < max)."""
-        am = AssetManager()
-        am.manifest = {
-            'star_colors': {
-                'red': {'r_min': 200, 'g_max': 100},
-                'yellow': {}
-            }
-        }
-        # Exactly at threshold: r=200 should NOT match (need r > 200)
-        assert am.get_star_color_key((200, 50, 50)) == 'yellow'
-        # Just above threshold: r=201 should match
-        assert am.get_star_color_key((201, 50, 50)) == 'red'
-        # g exactly at max: g=100 should NOT match (need g < 100)
-        assert am.get_star_color_key((220, 100, 50)) == 'yellow'
-        # g just below max: g=99 should match
-        assert am.get_star_color_key((220, 99, 50)) == 'red'

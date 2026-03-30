@@ -11,7 +11,7 @@ from game.strategy.data.order_types import FleetOrder, OrderType
 from game.strategy.data.ship_instance import ShipInstance
 from game.core.hex_math import HexCoord
 from game.strategy.data.planet import Planet, PlanetType, SpeciesPopulation
-from game.strategy.engine.fleet_order_processor import FleetOrderProcessor, TransferResult
+from game.strategy.engine.order_processor import OrderProcessor, TransferResult
 from game.strategy.engine.commands import IssueTransferCommand
 
 
@@ -98,8 +98,8 @@ class TestTransferCommand:
         assert cmd.species_id == 'vulcan'
 
 
-class TestFleetOrderProcessorTransfer:
-    """Tests for FleetOrderProcessor.process_transfer()."""
+class TestOrderProcessorTransfer:
+    """Tests for OrderProcessor.process_transfer()."""
 
     def make_mock_galaxy_with_planet(self, planet):
         """Create a mock galaxy with proper system containment for the planet.
@@ -166,7 +166,7 @@ class TestFleetOrderProcessorTransfer:
 
     def test_process_transfer_load_passengers_from_colony(self):
         """Load passengers from colony to fleet."""
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         planet = self.make_planet_with_pop(pop_count=500)
         fleet = self.make_fleet_with_cargo_ship(capacity=100, current=0)
@@ -199,7 +199,7 @@ class TestFleetOrderProcessorTransfer:
 
     def test_process_transfer_unload_passengers_to_colony(self):
         """Unload passengers from fleet to colony."""
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         planet = self.make_planet_with_pop(pop_count=100)
         fleet = self.make_fleet_with_cargo_ship(capacity=100, current=80)
@@ -233,7 +233,7 @@ class TestFleetOrderProcessorTransfer:
 
     def test_transfer_partial_amount(self):
         """Transfer transfers only what's available when amount exceeds supply."""
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         planet = self.make_planet_with_pop(pop_count=20)  # Only 20 pop
         fleet = self.make_fleet_with_cargo_ship(capacity=100, current=0)
@@ -263,7 +263,7 @@ class TestFleetOrderProcessorTransfer:
 
     def test_transfer_all_when_amount_zero(self):
         """Amount=0 transfers all available."""
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         planet = self.make_planet_with_pop(pop_count=100)
         fleet = self.make_fleet_with_cargo_ship(capacity=100, current=75)
@@ -293,7 +293,7 @@ class TestFleetOrderProcessorTransfer:
 
     def test_transfer_creates_species_population_if_missing(self):
         """Unloading to a colony without that species creates new SpeciesPopulation."""
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         # Planet with different species
         planet = self.make_planet_with_pop(pop_count=100)
@@ -336,7 +336,7 @@ class TestFleetOrderProcessorTransfer:
 
     def test_process_transfer_species_specific_load(self):
         """Load a specific species from colony to fleet."""
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         planet = self.make_planet_with_pop(pop_count=500)
         planet.populations[0].race_id = "human"
@@ -377,7 +377,7 @@ class TestFleetOrderProcessorTransfer:
 
     def test_process_transfer_species_specific_unload(self):
         """Unload a specific species from fleet to colony."""
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         planet = self.make_planet_with_pop(pop_count=100)
         planet.populations[0].race_id = "human"

@@ -214,6 +214,39 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 - All services and domain objects that need component/modifier/vehicle-class data.
 - Tests: use `TestRegistryProvider` for isolation; never depend on global singleton state.
 
+### Critical: Registry Lookup for Facility Ability Checks (PROJ-237/238)
+
+**When checking if a facility/complex has a specific ability, you MUST use registry lookup.**
+
+Facility `design_data` stores components as ID references (`{"id": "generator", "modifiers": [...]}`), **not** with inline abilities. The abilities are defined in `data/components.json` and accessed via the component registry. Checking `comp.get('abilities', {})` directly will silently return empty and miss the ability.
+
+**Correct pattern:**
+```python
+from game.strategy.services.component_inspector import get_component_abilities
+from game.core.registry import get_default_registry_provider
+
+provider = get_default_registry_provider()
+comp_registry = provider.get_components()
+
+# For each component in facility.design_data:
+comp_id = comp.get('id')
+comp_def = comp_registry.get(comp_id)
+abilities = get_component_abilities(comp_def)
+if 'PlanetaryShield' in abilities:
+    # Found it
+```
+
+**Anti-pattern (WILL FAIL on loaded designs):**
+```python
+# WRONG: Only checks inline abilities — these don't exist in loaded designs
+if 'PlanetaryShield' in comp.get('abilities', {}):
+    pass  # Never reaches here for registry-defined abilities
+```
+
+**Helper:** Use `_facility_has_ability(facility, ability_name, component_registry)` from `game/strategy/validation/planet_order_validator.py` — it handles both inline and registry lookup.
+
+**In UI code:** Use `get_default_registry_provider()` (factory function pattern #2 above) to get the registry. Do NOT try to access registries via `scene.facade` — the facade does not expose registries.
+
 ---
 
 ## 4. Registry Pattern

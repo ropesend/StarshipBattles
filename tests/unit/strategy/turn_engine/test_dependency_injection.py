@@ -163,7 +163,7 @@ class TestTurnEngineConstructorDI:
         """TurnEngine creates default engines when none provided."""
         from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
         from game.strategy.engine.production_engine import ProductionEngine
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.engine.resource_management_engine import ResourceManagementEngine
 
@@ -171,7 +171,7 @@ class TestTurnEngineConstructorDI:
 
         assert isinstance(engine.movement_engine, FleetMovementEngine)
         assert isinstance(engine.production_engine, ProductionEngine)
-        assert isinstance(engine.order_processor, FleetOrderProcessor)
+        assert isinstance(engine.order_processor, OrderProcessor)
         assert isinstance(engine.conflict_engine, ConflictResolutionEngine)
         assert isinstance(engine.resource_engine, ResourceManagementEngine)
 
@@ -234,7 +234,7 @@ class TestTurnEngineConstructorDI:
     def test_mixed_injection_and_defaults(self, fresh_registries):
         """TurnEngine handles mix of injected and default engines."""
         from game.strategy.interfaces.engines import IMovementEngine, IProductionEngine
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.engine.resource_management_engine import ResourceManagementEngine
 
@@ -252,7 +252,7 @@ class TestTurnEngineConstructorDI:
         assert engine.production_engine is mock_production
 
         # Non-injected engines should be defaults
-        assert isinstance(engine.order_processor, FleetOrderProcessor)
+        assert isinstance(engine.order_processor, OrderProcessor)
         assert isinstance(engine.conflict_engine, ConflictResolutionEngine)
         assert isinstance(engine.resource_engine, ResourceManagementEngine)
 
@@ -357,7 +357,7 @@ class TestTurnEngineFactory:
         from game.strategy.engine.turn_engine import create_default_turn_engine
         from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
         from game.strategy.engine.production_engine import ProductionEngine
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.engine.resource_management_engine import ResourceManagementEngine
 
@@ -365,7 +365,7 @@ class TestTurnEngineFactory:
 
         assert isinstance(engine.movement_engine, FleetMovementEngine)
         assert isinstance(engine.production_engine, ProductionEngine)
-        assert isinstance(engine.order_processor, FleetOrderProcessor)
+        assert isinstance(engine.order_processor, OrderProcessor)
         assert isinstance(engine.conflict_engine, ConflictResolutionEngine)
         assert isinstance(engine.resource_engine, ResourceManagementEngine)
 

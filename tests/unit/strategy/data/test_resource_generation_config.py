@@ -25,6 +25,7 @@ class TestResourceGenerationConfigDefaults:
         assert cfg.qual_determinism == 0.7
         assert cfg.qual_randomness == 0.3
         assert cfg.qual_minimum_floor == 5.0
+        assert cfg.homeworld_quality_floor == 50.0
 
     def test_defaults_when_empty_data(self):
         """Config uses defaults when data has no resource_generation key."""
@@ -98,6 +99,21 @@ class TestResourceGenerationConfigFromJson:
         assert cfg.qual_determinism == 0.8
         assert cfg.qual_randomness == 0.2
         assert cfg.qual_minimum_floor == 10.0
+        # homeworld_quality_floor not in sample_json, should use default
+        assert cfg.homeworld_quality_floor == 50.0
+
+    def test_loads_homeworld_quality_floor(self):
+        """Homeworld quality floor loaded from JSON when present."""
+        data = {
+            "resource_generation": {
+                "quality": {
+                    "homeworld_quality_floor": 60.0
+                }
+            }
+        }
+        cfg = ResourceGenerationConfig(data)
+
+        assert cfg.homeworld_quality_floor == 60.0
 
     def test_loads_affinities(self, sample_json):
         """Planet type affinities loaded from JSON."""
@@ -132,3 +148,4 @@ class TestResourceGenerationConfigFromJson:
         assert cfg.min_log_mass == 20.0
         assert cfg.qty_determinism == 0.7
         assert cfg.max_quality == 100.0
+        assert cfg.homeworld_quality_floor == 50.0

@@ -1,13 +1,13 @@
 """
 Integration tests for colonize order logic.
 
-PROJ-187: Updated to use FleetOrderProcessor.process_end_turn_orders directly
+PROJ-187: Updated to use OrderProcessor.process_end_turn_orders directly
 instead of TurnEngine._process_end_turn_orders (which was removed when
 action orders moved to tick-based processing).
 """
 import pytest
 from enum import Enum
-from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+from game.strategy.engine.order_processor import OrderProcessor
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import FleetOrder, OrderType
@@ -77,8 +77,8 @@ def make_colony_ship(name: str, owner_id: int, pod_type: str = "ICE_DWARF") -> S
 
 @pytest.fixture
 def order_processor():
-    """FleetOrderProcessor for colonize order tests."""
-    return FleetOrderProcessor()
+    """OrderProcessor for colonize order tests."""
+    return OrderProcessor()
 
 @pytest.fixture
 def component_registry():
@@ -117,7 +117,7 @@ def test_colonize_specific_success_at_exact_location(order_processor, galaxy_set
     empire = Empire(1, "Player 1", (255, 0, 0))
     empire.fleets.append(fleet)
 
-    # Execute via FleetOrderProcessor (PROJ-187)
+    # Execute via OrderProcessor (PROJ-187)
     result = order_processor.execute_action_order(
         fleet, empire, galaxy, component_registry=component_registry
     )
@@ -272,7 +272,7 @@ class TestColonizePodShipRemoval:
         self, galaxy_with_typed_planets, mock_component_registry
     ):
         """Colonization removes only the ship with colony pod, not entire fleet."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
         galaxy, ice_planet, continental_planet = galaxy_with_typed_planets
 
@@ -294,7 +294,7 @@ class TestColonizePodShipRemoval:
         empire.fleets.append(fleet)
 
         # Execute with component registry
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=mock_component_registry
@@ -316,7 +316,7 @@ class TestColonizePodShipRemoval:
         self, galaxy_with_typed_planets, mock_component_registry
     ):
         """Colonization removes fleet when colony ship is the last ship."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
         galaxy, ice_planet, continental_planet = galaxy_with_typed_planets
 
@@ -333,7 +333,7 @@ class TestColonizePodShipRemoval:
         empire.fleets.append(fleet)
 
         # Execute with component registry
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=mock_component_registry
@@ -353,7 +353,7 @@ class TestColonizePodShipRemoval:
         self, galaxy_with_typed_planets, mock_component_registry
     ):
         """Colonizing Ice Dwarf removes ice pod ship, not continental pod ship."""
-        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+        from game.strategy.engine.order_processor import OrderProcessor
 
         galaxy, ice_planet, continental_planet = galaxy_with_typed_planets
 
@@ -374,7 +374,7 @@ class TestColonizePodShipRemoval:
         empire.fleets.append(fleet)
 
         # Execute
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=mock_component_registry

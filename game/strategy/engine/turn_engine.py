@@ -16,7 +16,7 @@ Turn Phases:
        - Phase 0c:  Fuel generation at facilities (via ResupplyEngine)
        - Phase 0d:  Fleet resupply from facilities (via ResupplyEngine)
        - Phase 0e:  Construction resource consumption (via ProductionEngine)
-       - Phase 1:   Instant orders (via FleetOrderProcessor)
+       - Phase 1:   Instant orders (via OrderProcessor)
        - Phase 1.5: Action orders (via ActionExecutionEngine) - COLONIZE, TRANSFER, superweapons
        - Phase 2:   Calculate moves (via FleetMovementEngine)
        - Phase 3:   Apply moves (via FleetMovementEngine)
@@ -26,7 +26,7 @@ Turn Phases:
 Delegated Engines:
     - FleetMovementEngine: Movement calculation and application
     - ProductionEngine: Construction queue processing
-    - FleetOrderProcessor: Order lifecycle management (instant orders only)
+    - OrderProcessor: Order lifecycle management (instant orders only)
     - ActionExecutionEngine: Tick-based action order execution
     - ConflictResolutionEngine: Combat detection and resolution
     - ResourceManagementEngine: Per-turn resource consumption
@@ -82,7 +82,7 @@ if TYPE_CHECKING:
     )
     from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
     from game.strategy.engine.production_engine import ProductionEngine
-    from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+    from game.strategy.engine.order_processor import OrderProcessor
     from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
     from game.strategy.engine.resource_management_engine import ResourceManagementEngine
 
@@ -97,7 +97,7 @@ class TurnEngine:
     PROJ-12 Phase 3: Delegates to specialized engines:
     - FleetMovementEngine: Movement calculation and application
     - ProductionEngine: Construction queue processing
-    - FleetOrderProcessor: Order lifecycle management
+    - OrderProcessor: Order lifecycle management
 
     PROJ-36: Additional delegation to:
     - ConflictResolutionEngine: Combat detection and resolution
@@ -143,7 +143,7 @@ class TurnEngine:
             production_engine: Optional production engine (IProductionEngine).
                            If None, creates ProductionEngine.
             order_processor: Optional order processor (IOrderProcessor).
-                           If None, creates FleetOrderProcessor.
+                           If None, creates OrderProcessor.
             conflict_engine: Optional conflict engine (IConflictEngine).
                            If None, creates ConflictResolutionEngine.
             resource_engine: Optional resource engine (IResourceEngine).
@@ -255,8 +255,8 @@ class TurnEngine:
     def order_processor(self) -> 'IOrderProcessor':
         """Return order processor, lazily creating default if not injected."""
         if self._order_processor is None:
-            from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
-            self._order_processor = FleetOrderProcessor()
+            from game.strategy.engine.order_processor import OrderProcessor
+            self._order_processor = OrderProcessor()
         return self._order_processor
 
     @property

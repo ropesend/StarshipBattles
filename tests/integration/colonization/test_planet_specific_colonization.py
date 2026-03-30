@@ -9,7 +9,7 @@ PROJ-55: Tests the full end-to-end flow of planet-type-specific colonization:
 
 These tests verify the integration between:
 - ColonizeValidator (validation layer)
-- FleetOrderProcessor (execution layer)
+- OrderProcessor (execution layer)
 - StrategySessionFacade (UI layer integration)
 """
 
@@ -22,7 +22,7 @@ from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.data.ship_instance import ShipInstance
-from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+from game.strategy.engine.order_processor import OrderProcessor
 from game.strategy.validation.colonize_validator import ColonizeValidator
 
 
@@ -273,7 +273,7 @@ class TestColonizeWithMatchingPod:
         empire.fleets.append(fleet)
 
         # Execute colonization with component registry
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=component_registry
@@ -364,7 +364,7 @@ class TestChainColonization:
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         # Process first colonization
         result1 = processor.process_colonize(
@@ -459,7 +459,7 @@ class TestMixedFleetColonization:
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
 
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
 
         # Process ice colonization
         result1 = processor.process_colonize(
@@ -516,7 +516,7 @@ class TestFleetRemovalBehavior:
         empire.fleets.append(fleet)
 
         # Execute colonization
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=component_registry
@@ -559,7 +559,7 @@ class TestFleetRemovalBehavior:
         empire.fleets.append(fleet)
 
         # Execute colonization
-        processor = FleetOrderProcessor()
+        processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=component_registry

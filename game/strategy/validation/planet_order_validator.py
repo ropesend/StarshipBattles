@@ -91,6 +91,12 @@ class PlanetOrderValidator:
         if facility is None:
             return ValidationResult.error("Facility not found on planet.")
 
+        if not facility.is_operational:
+            return ValidationResult.error("Facility is not operational.")
+
+        if not _facility_has_ability(facility, 'PlanetaryShield', component_registry):
+            return ValidationResult.error("Facility does not have a planetary shield.")
+
         if not planet.shield_active:
             # Also check if activation is in progress
             from game.strategy.data.order_types import OrderType

@@ -251,6 +251,101 @@ class TestGameInitializer:
         assert planet.planet_type == original_type
 
 
+class TestEnsureHomeworldResourceQuality:
+    """Tests for _ensure_homeworld_resource_quality method."""
+
+    def _make_planet(self, resources):
+        """Create a Planet with given resources dict."""
+        from game.strategy.data.planet import Planet, PlanetType
+        planet = Planet(
+            name="Test", location=HexCoord(0, 0), orbit_distance=1,
+            mass=5.9e24, radius=6.3e6, surface_area=5.1e14, density=5500.0,
+            surface_gravity=9.81, surface_pressure=101325.0, surface_temperature=288.0,
+            surface_water=0.7, tectonic_activity=0.5, magnetic_field=1.0,
+            planet_type=PlanetType.CONTINENTAL
+        )
+        planet.resources = resources
+        return planet
+
+    def test_raises_low_quality_to_floor(self):
+        """Resources below the homeworld floor should be raised to it."""
+        from game.strategy.engine.game_initializer import GameInitializer
+
+        planet = self._make_planet({
+            "Metals": {"quantity": 100000, "quality": 10.0},
+            "Organics": {"quantity": 200000, "quality": 3.0},
+            "Vapors": {"quantity": 150000, "quality": 25.0},
+        })
+
+        GameInitializer._ensure_homeworld_resource_quality(planet)
+
+        assert planet.resources["Metals"]["quality"] == 50.0
+        assert planet.resources["Organics"]["quality"] == 50.0
+        assert planet.resources["Vapors"]["quality"] == 50.0
+
+    def test_preserves_high_quality(self):
+        """Resources already above the floor should not be changed."""
+        from game.strategy.engine.game_initializer import GameInitializer
+
+        planet = self._make_planet({
+            "Metals": {"quantity": 100000, "quality": 75.0},
+            "Exotics": {"quantity": 50000, "quality": 90.0},
+        })
+
+        GameInitializer._ensure_homeworld_resource_quality(planet)
+
+        assert planet.resources["Metals"]["quality"] == 75.0
+        assert planet.resources["Exotics"]["quality"] == 90.0
+
+    def test_mixed_resources(self):
+        """Only resources below the floor should be raised; others stay."""
+        from game.strategy.engine.game_initializer import GameInitializer
+
+        planet = self._make_planet({
+            "Metals": {"quantity": 100000, "quality": 10.0},
+            "Organics": {"quantity": 200000, "quality": 80.0},
+            "Radioactives": {"quantity": 150000, "quality": 50.0},
+        })
+
+        GameInitializer._ensure_homeworld_resource_quality(planet)
+
+        assert planet.resources["Metals"]["quality"] == 50.0
+        assert planet.resources["Organics"]["quality"] == 80.0
+        assert planet.resources["Radioactives"]["quality"] == 50.0  # Exactly at floor, unchanged
+
+    def test_uses_config_value(self):
+        """Should use homeworld_quality_floor from ResourceGenerationConfig."""
+        from game.strategy.engine.game_initializer import GameInitializer
+        from game.strategy.data.resource_generation_config import ResourceGenerationConfig
+
+        planet = self._make_planet({
+            "Metals": {"quantity": 100000, "quality": 10.0},
+        })
+
+        mock_cfg = ResourceGenerationConfig(None)
+        mock_cfg.homeworld_quality_floor = 70.0
+
+        with patch(
+            'game.strategy.data.resource_generation_config.get_resource_generation_config',
+            return_value=mock_cfg
+        ):
+            GameInitializer._ensure_homeworld_resource_quality(planet)
+
+        assert planet.resources["Metals"]["quality"] == 70.0
+
+    def test_quantity_not_modified(self):
+        """Resource quantity should never be changed by quality enforcement."""
+        from game.strategy.engine.game_initializer import GameInitializer
+
+        planet = self._make_planet({
+            "Metals": {"quantity": 5000, "quality": 10.0},
+        })
+
+        GameInitializer._ensure_homeworld_resource_quality(planet)
+
+        assert planet.resources["Metals"]["quantity"] == 5000
+
+
 class TestGalaxyFleetRegistry:
     """Tests for Galaxy fleet registry (O(1) lookup)."""
 

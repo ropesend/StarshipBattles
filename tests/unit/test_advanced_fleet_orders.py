@@ -1,7 +1,7 @@
 """
 Tests for advanced fleet order operations.
 
-PROJ-187: Updated join fleet tests to use FleetOrderProcessor directly
+PROJ-187: Updated join fleet tests to use OrderProcessor directly
 instead of TurnEngine._process_end_turn_orders (which was removed when
 action orders moved to tick-based processing).
 """
@@ -11,7 +11,7 @@ from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from game.strategy.engine.turn_engine import TurnEngine
-from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+from game.strategy.engine.order_processor import OrderProcessor
 from game.strategy.data.empire import Empire
 from game.strategy.data.ship_instance import ShipInstance
 
@@ -47,8 +47,8 @@ def turn_engine(fresh_registries):
 
 @pytest.fixture
 def order_processor():
-    """Create a fresh FleetOrderProcessor for each test."""
-    processor = FleetOrderProcessor()
+    """Create a fresh OrderProcessor for each test."""
+    processor = OrderProcessor()
     yield processor
 
 

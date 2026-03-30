@@ -39,6 +39,7 @@ class ResourceGenerationConfig:
         "determinism_weight": 0.7,
         "randomness_weight": 0.3,
         "minimum_floor": 5.0,
+        "homeworld_quality_floor": 50.0,
     }
 
     def __init__(self, data: Optional[Dict[str, Any]] = None):
@@ -89,6 +90,9 @@ class ResourceGenerationConfig:
         self.qual_minimum_floor = qual.get(
             "minimum_floor", self.DEFAULT_QUALITY["minimum_floor"]
         )
+        self.homeworld_quality_floor = qual.get(
+            "homeworld_quality_floor", self.DEFAULT_QUALITY["homeworld_quality_floor"]
+        )
 
         # Planet type affinities
         self._affinities = res_gen.get("planet_type_affinities", {})
@@ -108,6 +112,7 @@ class ResourceGenerationConfig:
         self.qual_determinism = self.DEFAULT_QUALITY["determinism_weight"]
         self.qual_randomness = self.DEFAULT_QUALITY["randomness_weight"]
         self.qual_minimum_floor = self.DEFAULT_QUALITY["minimum_floor"]
+        self.homeworld_quality_floor = self.DEFAULT_QUALITY["homeworld_quality_floor"]
 
         self._affinities = {}
 

@@ -223,20 +223,20 @@ class FleetCommandRouter:
             return
         planet = current_sel
 
-        # Find shield facility
+        # Find shield facility — MUST use registry lookup (not inline abilities)
+        from game.strategy.validation.planet_order_validator import _facility_has_ability
+        from game.core.registry import get_default_registry_provider
+        component_registry = None
+        try:
+            provider = get_default_registry_provider()
+            component_registry = provider.get_components()
+        except Exception:
+            pass
+
         shield_facility_id = None
         for facility in planet.facilities:
-            design_data = getattr(facility, 'design_data', {})
-            for layer_data in design_data.get('layers', {}).values():
-                if not isinstance(layer_data, list):
-                    continue
-                for comp in layer_data:
-                    if isinstance(comp, dict) and 'PlanetaryShield' in comp.get('abilities', {}):
-                        shield_facility_id = facility.instance_id
-                        break
-                if shield_facility_id:
-                    break
-            if shield_facility_id:
+            if _facility_has_ability(facility, 'PlanetaryShield', component_registry):
+                shield_facility_id = facility.instance_id
                 break
 
         if not shield_facility_id:
@@ -251,7 +251,9 @@ class FleetCommandRouter:
             order_type=order_type,
             facility_instance_id=shield_facility_id,
         )
-        self.scene.facade.handle_command(cmd)
+        result = self.scene.facade.handle_command(cmd)
+        if result and not result.is_valid:
+            logger.warning(f"Shield toggle failed: {result.message}")
 
     def finish_move_action(self, fleet) -> None:
         """Common cleanup after move action.

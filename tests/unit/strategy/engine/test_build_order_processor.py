@@ -1,20 +1,20 @@
-"""Tests for BUILD order processing in FleetOrderProcessor (PROJ-67 Phase 2)."""
+"""Tests for BUILD order processing in OrderProcessor (PROJ-67 Phase 2)."""
 import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import FleetOrder, OrderType
 from game.core.hex_math import HexCoord
-from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+from game.strategy.engine.order_processor import OrderProcessor
 
 
 class TestBuildOrderProcessing:
-    """Test cases for BUILD order processing in FleetOrderProcessor."""
+    """Test cases for BUILD order processing in OrderProcessor."""
 
     @pytest.fixture
     def order_processor(self):
-        """Create a FleetOrderProcessor instance."""
-        return FleetOrderProcessor()
+        """Create a OrderProcessor instance."""
+        return OrderProcessor()
 
     @pytest.fixture
     def mock_empire(self):
@@ -61,7 +61,7 @@ class TestBuildOrderProcessing:
     ):
         """Test BUILD order auto-completes when construction_queue empties.
 
-        Note: BUILD auto-pop is handled by ActionExecutionEngine, not FleetOrderProcessor.
+        Note: BUILD auto-pop is handled by ActionExecutionEngine, not OrderProcessor.
         """
         from game.strategy.engine.action_execution_engine import ActionExecutionEngine
 
@@ -70,7 +70,7 @@ class TestBuildOrderProcessing:
         fleet.construction_queue = []  # Empty queue
         mock_empire.fleets = [fleet]
 
-        order_processor = FleetOrderProcessor()
+        order_processor = OrderProcessor()
         engine = ActionExecutionEngine(order_processor)
 
         # Process tick - BUILD order should auto-pop when queue empty
@@ -129,7 +129,7 @@ class TestBuildOrderProcessing:
     ):
         """Test orders queued after BUILD remain when BUILD completes.
 
-        Note: BUILD auto-pop is handled by ActionExecutionEngine, not FleetOrderProcessor.
+        Note: BUILD auto-pop is handled by ActionExecutionEngine, not OrderProcessor.
         """
         from game.strategy.engine.action_execution_engine import ActionExecutionEngine
 
@@ -139,7 +139,7 @@ class TestBuildOrderProcessing:
         fleet.construction_queue = []  # Empty, BUILD will complete
         mock_empire.fleets = [fleet]
 
-        order_processor = FleetOrderProcessor()
+        order_processor = OrderProcessor()
         engine = ActionExecutionEngine(order_processor)
 
         engine.process_action_ticks([mock_empire], mock_galaxy, tick=20)
