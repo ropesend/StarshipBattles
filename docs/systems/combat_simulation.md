@@ -251,10 +251,9 @@ modified by one stat multiplier (7+ subclasses use this).
 Within each `stack_group`, take the MAX value. Components without a stack_group
 are each treated as their own group (unique key = component instance).
 
-**Phase 2 -- Inter-group (SUM or MULTIPLY):**
+**Phase 2 -- Inter-group (SUM):**
 Across different groups:
-- **Standard abilities:** SUM all group contributions
-- **Multiplicative abilities** (`ToHitAttackModifier`, `ToHitDefenseModifier`): MULTIPLY
+- **Numeric abilities:** SUM all group contributions (all abilities use SUM)
 - **Marker abilities** (`CommandAndControl`, `Armor`, etc.): Boolean OR (any True = True)
 
 Example: Two sensors in stack_group "basic_sensor" with values 1.2 and 1.5

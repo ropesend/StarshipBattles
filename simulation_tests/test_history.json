@@ -226984,5 +226984,775 @@
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\TOHIT-ATK-004_2026-03-30T06-55-35-961429_final.json",
       "seed": 1371588179
     }
+  ],
+  "TOHIT-DEF-001": [
+    {
+      "timestamp": "2026-03-30T08:06:03.461443",
+      "ticks_run": 1000,
+      "passed": true,
+      "metrics": {
+        "test_id": "TOHIT-DEF-001",
+        "baseline_attacker_total_shots_fired": 1000,
+        "baseline_attacker_weapons": [
+          {
+            "name": "Test Beam (Low Accuracy, 1 Damage)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 1000,
+            "shots_hit": 1000
+          }
+        ],
+        "baseline_attacker_in_flight": 0,
+        "baseline_attacker_resolved_shots": 1000,
+        "baseline_attacker_resolved_hits": 1000,
+        "baseline_target_total_shots_fired": 0,
+        "baseline_target_weapons": [],
+        "baseline_target_in_flight": 0,
+        "baseline_target_resolved_shots": 0,
+        "baseline_target_resolved_hits": 0,
+        "baseline_damage_dealt": 348.0,
+        "baseline_initial_hp": 1000000100,
+        "baseline_final_hp": 999999752.0,
+        "baseline_ticks": 1000,
+        "variant_damage_dealt": 171.0,
+        "variant_initial_hp": 1000000200,
+        "variant_final_hp": 1000000029.0,
+        "variant_ticks": 1000,
+        "ticks_run": 1000,
+        "variant_attacker_total_shots_fired": 1000,
+        "variant_attacker_weapons": [
+          {
+            "name": "Test Beam (Low Accuracy, 1 Damage)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 1000,
+            "shots_hit": 1000
+          }
+        ],
+        "variant_attacker_in_flight": 0,
+        "variant_attacker_resolved_shots": 1000,
+        "variant_attacker_resolved_hits": 1000,
+        "variant_target_total_shots_fired": 0,
+        "variant_target_weapons": [],
+        "variant_target_in_flight": 0,
+        "variant_target_resolved_shots": 0,
+        "variant_target_resolved_hits": 0,
+        "validation": {
+          "passed": true,
+          "failed_phase": null,
+          "summary": {
+            "data": {
+              "total": 1,
+              "passed": 1,
+              "failed": 0
+            },
+            "precondition": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0
+            },
+            "outcome": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0
+            }
+          },
+          "checks": [
+            {
+              "phase": "precondition",
+              "name": "Baseline Ran",
+              "expected": true,
+              "actual": 1000,
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "precondition",
+              "name": "Variant Ran",
+              "expected": true,
+              "actual": 1000,
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "data",
+              "name": "ECM Defense Value",
+              "expected": 1.0,
+              "actual": 1.0,
+              "passed": true,
+              "detail": "expected=1.0, actual=1.0"
+            },
+            {
+              "phase": "precondition",
+              "name": "Undefended Target Took Damage",
+              "expected": true,
+              "actual": 348.0,
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "outcome",
+              "name": "ECM Reduces Damage Taken",
+              "expected": true,
+              "actual": "no_ecm=348.0, with_ecm=171.0, reduction=177.0",
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "outcome",
+              "name": "Hit Rate (no ECM)",
+              "expected": 0.3606,
+              "actual": 0.348,
+              "passed": true,
+              "detail": "TOST p=0.0000, observed=0.3480 (348/1000), margin=+/-10.00%, bounds=[0.2606, 0.4606]"
+            },
+            {
+              "phase": "outcome",
+              "name": "Hit Rate (with ECM)",
+              "expected": 0.1718,
+              "actual": 0.171,
+              "passed": true,
+              "detail": "TOST p=0.0000, observed=0.1710 (171/1000), margin=+/-10.00%, bounds=[0.0718, 0.2718]"
+            }
+          ]
+        },
+        "duration_real": 0.10668635368347168,
+        "ticks": 1000
+      },
+      "validation_summary": {
+        "pass": 7,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Baseline Ran",
+          "status": "PASS",
+          "expected": true,
+          "actual": 1000,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "Variant Ran",
+          "status": "PASS",
+          "expected": true,
+          "actual": 1000,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "ECM Defense Value",
+          "status": "PASS",
+          "expected": 1.0,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "data",
+          "detail": "expected=1.0, actual=1.0"
+        },
+        {
+          "name": "Undefended Target Took Damage",
+          "status": "PASS",
+          "expected": true,
+          "actual": 348.0,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "ECM Reduces Damage Taken",
+          "status": "PASS",
+          "expected": true,
+          "actual": "no_ecm=348.0, with_ecm=171.0, reduction=177.0",
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": ""
+        },
+        {
+          "name": "Hit Rate (no ECM)",
+          "status": "PASS",
+          "expected": 0.3606,
+          "actual": 0.348,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "TOST p=0.0000, observed=0.3480 (348/1000), margin=+/-10.00%, bounds=[0.2606, 0.4606]"
+        },
+        {
+          "name": "Hit Rate (with ECM)",
+          "status": "PASS",
+          "expected": 0.1718,
+          "actual": 0.171,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "TOST p=0.0000, observed=0.1710 (171/1000), margin=+/-10.00%, bounds=[0.0718, 0.2718]"
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\TOHIT-DEF-001_2026-03-30T08-06-03-034291_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\TOHIT-DEF-001_2026-03-30T08-06-03-034291_final.json",
+      "seed": 1099639895
+    }
+  ],
+  "TOHIT-DEF-002": [
+    {
+      "timestamp": "2026-03-30T08:06:04.164399",
+      "ticks_run": 1000,
+      "passed": true,
+      "metrics": {
+        "test_id": "TOHIT-DEF-002",
+        "baseline_attacker_total_shots_fired": 1000,
+        "baseline_attacker_weapons": [
+          {
+            "name": "Test Beam (Low Accuracy, 1 Damage)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 1000,
+            "shots_hit": 1000
+          }
+        ],
+        "baseline_attacker_in_flight": 0,
+        "baseline_attacker_resolved_shots": 1000,
+        "baseline_attacker_resolved_hits": 1000,
+        "baseline_target_total_shots_fired": 0,
+        "baseline_target_weapons": [],
+        "baseline_target_in_flight": 0,
+        "baseline_target_resolved_shots": 0,
+        "baseline_target_resolved_hits": 0,
+        "baseline_damage_dealt": 173.0,
+        "baseline_initial_hp": 1000000200,
+        "baseline_final_hp": 1000000027.0,
+        "baseline_ticks": 1000,
+        "variant_damage_dealt": 173.0,
+        "variant_initial_hp": 1000000300,
+        "variant_final_hp": 1000000127.0,
+        "variant_ticks": 1000,
+        "ticks_run": 1000,
+        "variant_attacker_total_shots_fired": 1000,
+        "variant_attacker_weapons": [
+          {
+            "name": "Test Beam (Low Accuracy, 1 Damage)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 1000,
+            "shots_hit": 1000
+          }
+        ],
+        "variant_attacker_in_flight": 0,
+        "variant_attacker_resolved_shots": 1000,
+        "variant_attacker_resolved_hits": 1000,
+        "variant_target_total_shots_fired": 0,
+        "variant_target_weapons": [],
+        "variant_target_in_flight": 0,
+        "variant_target_resolved_shots": 0,
+        "variant_target_resolved_hits": 0,
+        "validation": {
+          "passed": true,
+          "failed_phase": null,
+          "summary": {
+            "data": {
+              "total": 0,
+              "passed": 0,
+              "failed": 0
+            },
+            "precondition": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0
+            },
+            "outcome": {
+              "total": 1,
+              "passed": 1,
+              "failed": 0
+            }
+          },
+          "checks": [
+            {
+              "phase": "precondition",
+              "name": "Baseline Ran",
+              "expected": true,
+              "actual": 1000,
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "precondition",
+              "name": "Variant Ran",
+              "expected": true,
+              "actual": 1000,
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "precondition",
+              "name": "ECM Target Took Damage",
+              "expected": true,
+              "actual": 173.0,
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "outcome",
+              "name": "Same Group No Extra Defense",
+              "expected": 173.0,
+              "actual": 173.0,
+              "passed": true,
+              "detail": "expected=173.0, actual=173.0"
+            }
+          ]
+        },
+        "duration_real": 0.12227559089660645,
+        "ticks": 1000
+      },
+      "validation_summary": {
+        "pass": 4,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Baseline Ran",
+          "status": "PASS",
+          "expected": true,
+          "actual": 1000,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "Variant Ran",
+          "status": "PASS",
+          "expected": true,
+          "actual": 1000,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "ECM Target Took Damage",
+          "status": "PASS",
+          "expected": true,
+          "actual": 173.0,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "Same Group No Extra Defense",
+          "status": "PASS",
+          "expected": 173.0,
+          "actual": 173.0,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "expected=173.0, actual=173.0"
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\TOHIT-DEF-002_2026-03-30T08-06-04-042123_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\TOHIT-DEF-002_2026-03-30T08-06-04-042123_final.json",
+      "seed": 1300056608
+    }
+  ],
+  "TOHIT-DEF-003": [
+    {
+      "timestamp": "2026-03-30T08:06:04.826695",
+      "ticks_run": 1000,
+      "passed": true,
+      "metrics": {
+        "test_id": "TOHIT-DEF-003",
+        "baseline_attacker_total_shots_fired": 1000,
+        "baseline_attacker_weapons": [
+          {
+            "name": "Test Beam (Low Accuracy, 1 Damage)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 1000,
+            "shots_hit": 1000
+          }
+        ],
+        "baseline_attacker_in_flight": 0,
+        "baseline_attacker_resolved_shots": 1000,
+        "baseline_attacker_resolved_hits": 1000,
+        "baseline_target_total_shots_fired": 0,
+        "baseline_target_weapons": [],
+        "baseline_target_in_flight": 0,
+        "baseline_target_resolved_shots": 0,
+        "baseline_target_resolved_hits": 0,
+        "baseline_damage_dealt": 186.0,
+        "baseline_initial_hp": 1000000200,
+        "baseline_final_hp": 1000000014.0,
+        "baseline_ticks": 1000,
+        "variant_damage_dealt": 66.0,
+        "variant_initial_hp": 1000000300,
+        "variant_final_hp": 1000000234.0,
+        "variant_ticks": 1000,
+        "ticks_run": 1000,
+        "variant_attacker_total_shots_fired": 1000,
+        "variant_attacker_weapons": [
+          {
+            "name": "Test Beam (Low Accuracy, 1 Damage)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 1000,
+            "shots_hit": 1000
+          }
+        ],
+        "variant_attacker_in_flight": 0,
+        "variant_attacker_resolved_shots": 1000,
+        "variant_attacker_resolved_hits": 1000,
+        "variant_target_total_shots_fired": 0,
+        "variant_target_weapons": [],
+        "variant_target_in_flight": 0,
+        "variant_target_resolved_shots": 0,
+        "variant_target_resolved_hits": 0,
+        "validation": {
+          "passed": true,
+          "failed_phase": null,
+          "summary": {
+            "data": {
+              "total": 0,
+              "passed": 0,
+              "failed": 0
+            },
+            "precondition": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0
+            },
+            "outcome": {
+              "total": 2,
+              "passed": 2,
+              "failed": 0
+            }
+          },
+          "checks": [
+            {
+              "phase": "precondition",
+              "name": "Baseline Ran",
+              "expected": true,
+              "actual": 1000,
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "precondition",
+              "name": "Variant Ran",
+              "expected": true,
+              "actual": 1000,
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "precondition",
+              "name": "Single ECM Target Took Damage",
+              "expected": true,
+              "actual": 186.0,
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "outcome",
+              "name": "Additional ECM Group Reduces Damage",
+              "expected": true,
+              "actual": "single_ecm=186.0, dual_ecm=66.0, reduction=120.0",
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "outcome",
+              "name": "Hit Rate (2 ECM groups)",
+              "expected": 0.0709,
+              "actual": 0.066,
+              "passed": true,
+              "detail": "TOST p=0.0000, observed=0.0660 (66/1000), margin=+/-10.00%, bounds=[-0.0291, 0.1709]"
+            }
+          ]
+        },
+        "duration_real": 0.08263301849365234,
+        "ticks": 1000
+      },
+      "validation_summary": {
+        "pass": 5,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Baseline Ran",
+          "status": "PASS",
+          "expected": true,
+          "actual": 1000,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "Variant Ran",
+          "status": "PASS",
+          "expected": true,
+          "actual": 1000,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "Single ECM Target Took Damage",
+          "status": "PASS",
+          "expected": true,
+          "actual": 186.0,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "Additional ECM Group Reduces Damage",
+          "status": "PASS",
+          "expected": true,
+          "actual": "single_ecm=186.0, dual_ecm=66.0, reduction=120.0",
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": ""
+        },
+        {
+          "name": "Hit Rate (2 ECM groups)",
+          "status": "PASS",
+          "expected": 0.0709,
+          "actual": 0.066,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "TOST p=0.0000, observed=0.0660 (66/1000), margin=+/-10.00%, bounds=[-0.0291, 0.1709]"
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\TOHIT-DEF-003_2026-03-30T08-06-04-745065_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\TOHIT-DEF-003_2026-03-30T08-06-04-745065_final.json",
+      "seed": 397881488
+    }
+  ],
+  "TOHIT-DEF-004": [
+    {
+      "timestamp": "2026-03-30T08:06:05.575451",
+      "ticks_run": 1000,
+      "passed": true,
+      "metrics": {
+        "test_id": "TOHIT-DEF-004",
+        "baseline_attacker_total_shots_fired": 1000,
+        "baseline_attacker_weapons": [
+          {
+            "name": "Test Beam (Low Accuracy, 1 Damage)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 1000,
+            "shots_hit": 1000
+          }
+        ],
+        "baseline_attacker_in_flight": 0,
+        "baseline_attacker_resolved_shots": 1000,
+        "baseline_attacker_resolved_hits": 1000,
+        "baseline_target_total_shots_fired": 0,
+        "baseline_target_weapons": [],
+        "baseline_target_in_flight": 0,
+        "baseline_target_resolved_shots": 0,
+        "baseline_target_resolved_hits": 0,
+        "baseline_damage_dealt": 341.0,
+        "baseline_initial_hp": 1000000100,
+        "baseline_final_hp": 999999759.0,
+        "baseline_ticks": 1000,
+        "variant_damage_dealt": 453.0,
+        "variant_initial_hp": 1000000200,
+        "variant_final_hp": 999999747.0,
+        "variant_ticks": 1000,
+        "ticks_run": 1000,
+        "variant_attacker_total_shots_fired": 1000,
+        "variant_attacker_weapons": [
+          {
+            "name": "Test Beam (Low Accuracy, 1 Damage)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 1000,
+            "shots_hit": 1000
+          }
+        ],
+        "variant_attacker_in_flight": 0,
+        "variant_attacker_resolved_shots": 1000,
+        "variant_attacker_resolved_hits": 1000,
+        "variant_target_total_shots_fired": 0,
+        "variant_target_weapons": [],
+        "variant_target_in_flight": 0,
+        "variant_target_resolved_shots": 0,
+        "variant_target_resolved_hits": 0,
+        "validation": {
+          "passed": true,
+          "failed_phase": null,
+          "summary": {
+            "data": {
+              "total": 1,
+              "passed": 1,
+              "failed": 0
+            },
+            "precondition": {
+              "total": 4,
+              "passed": 4,
+              "failed": 0
+            },
+            "outcome": {
+              "total": 2,
+              "passed": 2,
+              "failed": 0
+            }
+          },
+          "checks": [
+            {
+              "phase": "precondition",
+              "name": "Baseline Ran",
+              "expected": true,
+              "actual": 1000,
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "precondition",
+              "name": "Variant Ran",
+              "expected": true,
+              "actual": 1000,
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "data",
+              "name": "Defense Penalty Value",
+              "expected": -0.5,
+              "actual": -0.5,
+              "passed": true,
+              "detail": "expected=-0.5, actual=-0.5"
+            },
+            {
+              "phase": "precondition",
+              "name": "Unmodified Target Took Damage",
+              "expected": true,
+              "actual": 341.0,
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "precondition",
+              "name": "Penalized Target Took Damage",
+              "expected": true,
+              "actual": 453.0,
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "outcome",
+              "name": "Penalty Increases Damage Taken",
+              "expected": true,
+              "actual": "unmodified=341.0, penalized=453.0, increase=+112.0",
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "outcome",
+              "name": "Hit Rate (defense penalty)",
+              "expected": 0.4818,
+              "actual": 0.453,
+              "passed": true,
+              "detail": "TOST p=0.0000, observed=0.4530 (453/1000), margin=+/-10.00%, bounds=[0.3818, 0.5818]"
+            }
+          ]
+        },
+        "duration_real": 0.17886853218078613,
+        "ticks": 1000
+      },
+      "validation_summary": {
+        "pass": 7,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Baseline Ran",
+          "status": "PASS",
+          "expected": true,
+          "actual": 1000,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "Variant Ran",
+          "status": "PASS",
+          "expected": true,
+          "actual": 1000,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "Defense Penalty Value",
+          "status": "PASS",
+          "expected": -0.5,
+          "actual": -0.5,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "data",
+          "detail": "expected=-0.5, actual=-0.5"
+        },
+        {
+          "name": "Unmodified Target Took Damage",
+          "status": "PASS",
+          "expected": true,
+          "actual": 341.0,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "Penalized Target Took Damage",
+          "status": "PASS",
+          "expected": true,
+          "actual": 453.0,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "Penalty Increases Damage Taken",
+          "status": "PASS",
+          "expected": true,
+          "actual": "unmodified=341.0, penalized=453.0, increase=+112.0",
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": ""
+        },
+        {
+          "name": "Hit Rate (defense penalty)",
+          "status": "PASS",
+          "expected": 0.4818,
+          "actual": 0.453,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "TOST p=0.0000, observed=0.4530 (453/1000), margin=+/-10.00%, bounds=[0.3818, 0.5818]"
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\TOHIT-DEF-004_2026-03-30T08-06-05-396583_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\TOHIT-DEF-004_2026-03-30T08-06-05-396583_final.json",
+      "seed": 971268033
+    }
   ]
 }

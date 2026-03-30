@@ -80,25 +80,56 @@ Combat Lab provides:
 
 ---
 
-## Current Test Suite
+## Test Organization: One Category Per Ability
 
-### Beam Weapon Tests (21 tests)
+The test suite is organized so that **each combat-relevant ability gets its own
+test category**. Each category is a dedicated scenario file containing tests that
+validate all expected behaviors and rule out unexpected behaviors for that one
+ability. Other components are only included when necessary (e.g., a beam weapon
+to measure the effect of a sensor).
 
-Test IDs follow the pattern: `BEAMWEAPON-XXX` for standard, `BEAMWEAPON-XXX-HT` for high-tick.
+Every ability category should include:
 
-| Category | Tests | Description |
-|----------|-------|-------------|
+1. **Basic effect** — the ability does what it claims (positive value)
+2. **Same-group stacking** — redundant components don't stack (intra-group MAX)
+3. **Different-group stacking** — diverse components DO stack (inter-group SUM)
+4. **Negative value** — the ability works bidirectionally (penalty/bonus)
+
+Ability categories use the `ComparisonScenario` template to run A/B battles and
+compare measured outcomes.
+
+### Ability-Specific Categories (New Pattern)
+
+| Category | File | Tests | Status |
+|----------|------|-------|--------|
+| **ToHitAttackModifier** | `tohit_attack_scenarios.py` | TOHIT-ATK-001 to 004 | Complete |
+| **ToHitDefenseModifier** | `tohit_defense_scenarios.py` | TOHIT-DEF-001 to 004 | Complete |
+| **ShieldProjection** | *(pending — migrate from defense_scenarios.py)* | | Planned |
+| **ShieldRegeneration** | *(pending)* | | Planned |
+| **EmissiveArmor** | *(pending — migrate from defense_scenarios.py)* | | Planned |
+
+### Weapon & System Tests (Original Pattern)
+
+These test files validate weapon systems and mechanics that span multiple abilities.
+Over time, ability-specific aspects will be migrated to dedicated ability categories.
+
+#### Beam Weapon Tests (21 tests)
+
+Test IDs: `BEAMWEAPON-XXX` (standard), `BEAMWEAPON-XXX-HT` (high-tick).
+
+| Subcategory | Tests | Description |
+|-------------|-------|-------------|
 | **Standard Accuracy** | 8 tests | Low/Med/High accuracy at various ranges (500 ticks, ±10%) |
 | **Moving Targets** | 2 tests | Erratic small targets with high defense (500 ticks) |
 | **Boundary Tests** | 1 test | Out of range (deterministic) |
 | **High-Tick Precision** | 7 tests | Same as standard but 100k ticks, ±1% margin |
 
-### Projectile Weapon Tests (9 tests)
+#### Projectile Weapon Tests (9 tests)
 
-Test IDs follow the pattern: `PROJECTILE-XXX` and `PROJECTILE-DMG-XXX`.
+Test IDs: `PROJECTILE-XXX` and `PROJECTILE-DMG-XXX`.
 
-| Category | Tests | Description |
-|----------|-------|-------------|
+| Subcategory | Tests | Description |
+|-------------|-------|-------------|
 | **Stationary Target** | 1 test | 100% accuracy baseline at 200px |
 | **Moving Targets** | 4 tests | Slow/fast linear + small/large erratic targets |
 | **Boundary Tests** | 1 test | Out of range (1200px > 1000px max) |
@@ -110,36 +141,36 @@ range heading upward, ensuring they reach full speed before engagement.
 Hit rates are computed from *resolved* shots only — projectiles still in
 flight when the test ends are excluded from the hit/miss count.
 
-### Defense & Modifier Tests (13 tests)
+#### Defense & Modifier Tests (14 tests)
 
-| Category | Tests | Description |
-|----------|-------|-------------|
+| Subcategory | Tests | Description |
+|-------------|-------|-------------|
 | **Shields** | 3 tests | Absorption, overflow to hull, regeneration |
 | **Armor** | 2 tests | Emissive armor blocks/reduces damage |
-| **ECM/Sensors** | 2 tests | Hit rate modifiers |
+| **ECM/Sensors** | 3 tests | Hit rate modifiers (including A/B comparison) |
 | **Stat Modifiers** | 6 tests | Damage/range/reload/thrust/accuracy/arc multipliers |
 
-### Propulsion Tests (9 tests)
+#### Propulsion Tests (9 tests)
 
-| Category | Tests | Description |
-|----------|-------|-------------|
+| Subcategory | Tests | Description |
+|-------------|-------|-------------|
 | **Engine Physics** | 5 tests | Acceleration, max speed, dual engines, thrust/mass |
 | **Thruster Physics** | 4 tests | Turn rate, rotation, dual thrusters, mass effects |
 
-### Seeker Weapon Tests (11 tests)
+#### Seeker Weapon Tests (11 tests)
 
-| Category | Tests | Description |
-|----------|-------|-------------|
+| Subcategory | Tests | Description |
+|-------------|-------|-------------|
 | **Endurance** | 4 tests | Close/mid/beyond/edge range lifetime |
 | **Tracking** | 4 tests | Stationary/linear/orbiting/erratic targets |
 | **Point Defense** | 3 tests | PDC interaction (placeholders, skipped) |
 
-### Resource System Tests (9 tests)
+#### Resource System Tests (9 tests)
 
-Test IDs follow the pattern: `RESOURCE-XXX`.
+Test IDs: `RESOURCE-XXX`.
 
-| Category | Tests | Description |
-|----------|-------|-------------|
+| Subcategory | Tests | Description |
+|-------------|-------|-------------|
 | **Fuel** | 3 tests | Engine fuel consumption, depletion/starvation, regeneration (500 ticks) |
 | **Energy** | 3 tests | Beam energy consumption, depletion, regeneration (100 ticks) |
 | **Ammo** | 3 tests | Projectile/seeker ammo consumption, depletion (100 ticks) |
@@ -347,16 +378,22 @@ Starship Battles/
     ├── validation/                 # Validation system docs
     │
     └── scenarios/
-        ├── base.py                 # TestScenario, TestMetadata
-        ├── validation.py           # Check, ValidationReport, check functions
-        ├── templates.py            # Reusable scenario templates
-        ├── beam_scenarios.py       # Beam weapon tests
-        ├── defense_scenarios.py    # Defense/armor/shield tests
-        ├── modifier_scenarios.py   # Stat modifier tests
-        ├── projectile_scenarios.py # Projectile tests
-        ├── seeker_scenarios.py     # Seeker/missile tests
-        ├── propulsion_scenarios.py # Movement tests
-        └── resource_scenarios.py   # Energy/ammo tests
+        ├── base.py                     # TestScenario, TestMetadata
+        ├── validation.py               # Check, ValidationReport, check functions
+        ├── templates.py                # Templates: Static, Duel, Propulsion, Resource, Comparison
+        │
+        │   # Ability-specific categories (one file per ability)
+        ├── tohit_attack_scenarios.py   # ToHitAttackModifier tests (TOHIT-ATK-*)
+        ├── tohit_defense_scenarios.py  # ToHitDefenseModifier tests (TOHIT-DEF-*)
+        │
+        │   # Weapon/system-level tests
+        ├── beam_scenarios.py           # Beam weapon tests (BEAMWEAPON-*)
+        ├── projectile_scenarios.py     # Projectile tests (PROJECTILE-*)
+        ├── seeker_scenarios.py         # Seeker/missile tests (SEEKER-*)
+        ├── defense_scenarios.py        # Shield/armor/ECM tests (SHIELD-*, ARMOR-*, etc.)
+        ├── modifier_scenarios.py       # Stat modifier tests (MOD-*)
+        ├── propulsion_scenarios.py     # Movement tests (PROP-*)
+        └── resource_scenarios.py       # Resource tests (RESOURCE-*)
 ```
 
 ---
@@ -396,6 +433,10 @@ Starship Battles/
 | **Corrupt file recovery** | Corrupt test_history.json is backed up to .corrupt and system starts fresh |
 | **Always-visible ships** | Colored dot always drawn in battle view — prevents transparent-image invisibility |
 | **Verify assumptions** | Preconditions check movement, speed, distance — not just outcomes |
+| **ComparisonScenario** | A/B template runs baseline + variant battles, compares measured outcomes |
+| **Visual Baseline button** | Amber button renders the baseline battle for debugging (ComparisonScenario only) |
+| **Additive ability stacking** | All numeric abilities use intra-group MAX, inter-group SUM — no multiplicative exceptions |
+| **One category per ability** | Each combat ability gets a dedicated scenario file with basic effect + stacking + negative tests |
 
 ---
 

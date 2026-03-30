@@ -1,13 +1,51 @@
-> **Status: Partially Implemented**
+> **Status: In Progress**
 > Scenario classes live in `simulation_tests/scenarios/*_scenarios.py` and are
 > run via `python -m simulation_tests.run_tests`.
-> Current baseline: **64 passed, 2 failed (game bugs), 3 skipped (69 total)**.
+> Current baseline: **73 passed, 2 failed (game bugs), 3 skipped (78 total)**.
 
 # Comprehensive Ability Test Coverage Plan
 
 ## Objective
 
-Create minimal component/ship designs to test **every ability** in the combat simulator, following the isolation principle: **each test tests ONE thing**.
+Create a **dedicated test category for every combat-relevant ability** in the
+simulator. Each category is a scenario file named after the ability it tests
+(e.g., `tohit_attack_scenarios.py` for `ToHitAttackModifier`). Tests within a
+category capture both **expected** and **unexpected** behaviors, including:
+
+- The ability's basic effect (positive and negative values)
+- Stacking rules: same group does NOT stack (intra-group MAX), different groups DO stack (inter-group SUM)
+- Edge cases specific to the ability
+
+### One Category Per Ability
+
+Every combat ability gets its own category with a test ID prefix matching the
+ability name. The test file contains only tests for that one ability. Other
+components are included only when necessary to create the test scenario (e.g., a
+beam weapon is needed to measure the effect of a sensor on hit rate).
+
+### Stacking Must Always Be Tested
+
+Different abilities may stack differently. Currently all numeric abilities use
+**intra-group MAX, inter-group SUM**. Marker abilities use boolean OR. Each
+ability category must include stacking tests to lock in the correct behavior:
+
+| Scenario | What it proves |
+|----------|---------------|
+| 1 component | Basic effect works |
+| 2 components, same group | Intra-group MAX (no extra benefit) |
+| 2 components, different groups | Inter-group SUM (additive stacking) |
+| Negative value | Ability works bidirectionally |
+
+### Comparison Scenarios
+
+Ability tests use the `ComparisonScenario` template which runs two battles (A/B)
+and compares measured outcomes. This proves the ability actually changes combat
+results, not just that a formula computes the right number.
+
+### Isolation Principle
+
+Each test tests ONE thing. Minimal components — only what's needed to observe the
+ability under test.
 
 ---
 
@@ -43,17 +81,17 @@ Create minimal component/ship designs to test **every ability** in the combat si
 | `ManeuveringThruster` | Turn rate, rotation behavior | HIGH |
 
 ### Category D: Defense Systems (4 abilities)
-| Ability | What to Test | Priority |
-|---------|--------------|----------|
-| `ShieldProjection` | Shield capacity, damage absorption, overflow to hull | HIGH |
-| `ShieldRegeneration` | Regeneration rate, energy consumption coupling | MEDIUM |
-| `ToHitDefenseModifier` | Defense bonus applies to hit calculations | MEDIUM |
-| `EmissiveArmor` | Damage reduction threshold | MEDIUM |
+| Ability | Test File | Status | Tests |
+|---------|-----------|--------|-------|
+| `ShieldProjection` | `defense_scenarios.py` | Partial (3 tests, needs stacking) | SHIELD-001/002/003 |
+| `ShieldRegeneration` | `defense_scenarios.py` | Partial (1 test in SHIELD-003) | Needs own category |
+| `ToHitDefenseModifier` | `tohit_defense_scenarios.py` | **Complete** (4 tests) | TOHIT-DEF-001/002/003/004 |
+| `EmissiveArmor` | `defense_scenarios.py` | Partial (2 tests, needs stacking) | ARMOR-001/002 |
 
 ### Category E: Combat Modifiers (1 ability)
-| Ability | What to Test | Priority |
-|---------|--------------|----------|
-| `ToHitAttackModifier` | Attack bonus applies to beam hit calculations | MEDIUM |
+| Ability | Test File | Status | Tests |
+|---------|-----------|--------|-------|
+| `ToHitAttackModifier` | `tohit_attack_scenarios.py` | **Complete** (4 tests) | TOHIT-ATK-001/002/003/004 |
 
 ### Category F: Carrier Operations (1 ability)
 | Ability | What to Test | Priority |
@@ -211,16 +249,26 @@ Create carrier/hangar tests in simulation_tests/.
 
 ## Execution Order
 
-1. **Phase 1** (Complete): Beam weapon tests (21 scenarios)
-2. **Phase 2** (Complete): Propulsion tests (9 scenarios)
-3. **Phase 3** (Complete): Shield tests (3 scenarios)
-4. **Phase 4** (Complete): Defense/Attack modifier tests (9 scenarios: armor, ECM, sensor, stat modifiers)
-5. **Phase 5** (Complete): Projectile weapon tests (9 scenarios)
-6. **Phase 6** (Complete): Seeker weapon tests (8 scenarios + 3 PDC placeholders)
-7. **Phase 7** (Complete): Resource system tests (9 scenarios)
-8. **Phase 8** (Pending): Point Defense tests - flesh out SEEKER-PD-001/002/003
-9. **Phase 9** (Pending): Carrier/VehicleLaunch tests
-10. **Phase 10** (Pending): Crystalline armor, component damage, derelict detection
+### Completed (weapon/system-level test files)
+1. **Phase 1** (Complete): Beam weapon tests — 21 scenarios in `beam_scenarios.py`
+2. **Phase 2** (Complete): Propulsion tests — 9 scenarios in `propulsion_scenarios.py`
+3. **Phase 3** (Complete): Shield/Armor/ECM/Sensor tests — 9 scenarios in `defense_scenarios.py`
+4. **Phase 4** (Complete): Stat modifier tests — 6 scenarios in `modifier_scenarios.py`
+5. **Phase 5** (Complete): Projectile weapon tests — 9 scenarios in `projectile_scenarios.py`
+6. **Phase 6** (Complete): Seeker weapon tests — 8+3 scenarios in `seeker_scenarios.py`
+7. **Phase 7** (Complete): Resource system tests — 9 scenarios in `resource_scenarios.py`
+
+### In Progress (ability-specific categories using ComparisonScenario)
+8. **ToHitAttackModifier** (Complete): 4 scenarios in `tohit_attack_scenarios.py`
+9. **ToHitDefenseModifier** (Complete): 4 scenarios in `tohit_defense_scenarios.py`
+
+### Pending (ability-specific categories)
+10. **ShieldProjection**: Absorption, overflow, stacking — migrate from `defense_scenarios.py`
+11. **ShieldRegeneration**: Regen rate, energy coupling, stacking
+12. **EmissiveArmor**: Damage reduction, threshold, stacking
+13. **Point Defense**: Flesh out SEEKER-PD-001/002/003
+14. **VehicleLaunch**: Carrier/hangar tests
+15. **CrystallineArmor**: Absorption + shield recharge interaction
 
 ---
 
@@ -271,7 +319,9 @@ Examples:
 
 ## Success Criteria
 
-- Each ability has at least one dedicated test
+- Each combat ability has its own test category (scenario file + test ID prefix)
+- Each category includes: basic effect, same-group stacking, different-group stacking, negative value
+- Tests use ComparisonScenario template for measured A/B comparisons
 - Tests use minimal components (no unnecessary batteries/generators)
 - All tests pass: `python -m simulation_tests.run_tests`
 - New components follow naming: `test_<type>_<variant>`

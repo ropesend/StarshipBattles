@@ -195,7 +195,7 @@ DO:
 - **Dependency Injection** - IRegistryProvider for production/test split
 - **Facade/Delegate** - StrategySessionFacade, Ship→ShipCombatEngine
 - **CQRS-lite** - Command/query separation with frozen DTOs
-- **Two-Phase Ability Aggregation** - Intra-group MAX, inter-group SUM/MULTIPLY
+- **Two-Phase Ability Aggregation** - Intra-group MAX, inter-group SUM
 
 ---
 

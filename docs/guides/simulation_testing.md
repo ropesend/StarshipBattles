@@ -822,40 +822,83 @@ This should not happen if tests are written correctly. Check:
 
 ---
 
-## 9. Future Work
+## 9. One Category Per Ability (Active Direction)
 
-### NOT YET IMPLEMENTED -- Suite Documents
+The test suite is moving toward **one dedicated test category per combat ability**.
+Each category is a scenario file named after the ability (e.g., `tohit_attack_scenarios.py`
+for `ToHitAttackModifier`). Categories use `ComparisonScenario` to run A/B battles
+and compare measured outcomes.
 
-Only `BeamWeaponAbility.md` exists in `simulation_tests/suites/`. The following suite documents are planned but not yet created:
+### Standard Test Set Per Ability
 
-- `EngineAbility.md`
-- `ManeuveringThruster.md`
-- `ProjectileWeaponAbility.md`
-- `SeekerWeaponAbility.md`
-- `ShieldAbility.md`
-- `ArmorAbility.md`
-- `ECMAbility.md`
-- `ResourceAbility.md`
+Every ability category should include at minimum:
 
-### NOT YET IMPLEMENTED -- Additional Test Categories
+| Test | What it proves |
+|------|---------------|
+| Basic positive effect | The ability does what it claims |
+| Same-group stacking | Intra-group MAX — redundant components don't stack |
+| Different-group stacking | Inter-group SUM — diverse components combine additively |
+| Negative value | The ability works bidirectionally (penalty/debuff) |
 
-The simulation test protocol identifies these categories as planned but not yet implemented:
+Additional tests capture ability-specific edge cases (range interactions,
+threshold behaviors, resource coupling, etc.).
 
-- **ECM tests** -- Lock-on reduction, countermeasure effectiveness
-- **Advanced armor tests** -- Emissive armor, damage type interactions
-- **Formation tests** -- Multi-ship coordination, formation flying
-- **Advanced propulsion** -- Fuel depletion edge cases, multi-engine interactions
+### Completed Ability Categories
 
-### ASPIRATIONAL -- Full Coverage Matrix
+| Ability | File | Tests |
+|---------|------|-------|
+| `ToHitAttackModifier` | `tohit_attack_scenarios.py` | TOHIT-ATK-001 to 004 |
+| `ToHitDefenseModifier` | `tohit_defense_scenarios.py` | TOHIT-DEF-001 to 004 |
 
-Each suite document should contain a complete coverage matrix mapping every expected/unexpected behavior to a test ID. Currently only BeamWeaponAbility has a partial matrix.
+### Pending Ability Categories
 
-### ASPIRATIONAL -- Combat Lab Integration
+| Ability | Priority | Notes |
+|---------|----------|-------|
+| `ShieldProjection` | High | Migrate from `defense_scenarios.py`, add stacking tests |
+| `ShieldRegeneration` | Medium | Separate from projection, test regen rate + energy coupling |
+| `EmissiveArmor` | Medium | Migrate from `defense_scenarios.py`, add stacking/threshold tests |
+| `CrystallineArmor` | Medium | Absorption + shield recharge interaction |
+| `PointDefense` | High | Flesh out SEEKER-PD-001/002/003 placeholders |
+| `VehicleLaunch` | Low | Carrier/hangar launch cycle and capacity |
 
-Full Combat Lab UI integration where:
-- TestRegistry drives the test selection UI
-- Suite documents display alongside tests
-- Test run history persists and trends over time
-- Visual replay of any test with state inspection
+See `simulation_tests/ABILITY_TEST_COVERAGE_PLAN.md` for the full inventory.
 
-The `test_framework/services/` layer (test_lab_controller, ui_state_service, etc.) provides the foundation for this but full integration is ongoing.
+---
+
+## 10. Stacking Rules Reference
+
+All numeric abilities use the same two-phase aggregation:
+
+1. **Intra-group MAX:** Components with the same `stack_group` — only the highest value counts
+2. **Inter-group SUM:** Components with different `stack_group` values — values are summed
+
+Marker abilities (`CommandAndControl`, `Armor`, etc.) use boolean OR.
+
+There are no multiplicative exceptions. The aggregated value is then used
+additively in whatever formula consumes it (e.g., added to `net_score` in the
+beam hit chance sigmoid).
+
+Test components define their `stack_group` in `components.json`:
+```json
+{
+    "ToHitAttackModifier": {"value": 1.0, "stack_group": "sensors_a"}
+}
+```
+
+Components without a `stack_group` are each treated as their own group (all stack).
+
+---
+
+## 11. Future Work
+
+### Suite Documents
+
+Only `BeamWeaponAbility.md` exists in `simulation_tests/suites/`. Suite documents
+for other abilities will be created as their test categories are built out.
+
+### Combat Lab Integration
+
+The Combat Lab UI supports ability-specific test categories:
+- TestRegistry auto-discovers scenarios and groups by category
+- ComparisonScenario tests show three buttons: Visual Run, Headless Run, Visual Baseline
+- Test run history persists across sessions
