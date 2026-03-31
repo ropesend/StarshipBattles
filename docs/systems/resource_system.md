@@ -193,8 +193,9 @@ To add a new resource type:
 1. Add an entry to `data/resources.json` with a unique `id`
 2. If the resource should appear on planets: add affinity entries to
    `data/astrophysics.json` under `planet_type_affinities`
-3. If the resource is a construction material: add it to the design's
-   `construction_cost` field (calculated from component `resource_cost` in JSON)
+3. If the resource is a construction material: add `resource_cost` entries to
+   component definitions in `data/components.json` (these are summed into the
+   design's `construction_cost` by `DesignCostCalculator`)
 4. If ships should store/consume/generate it: add `ResourceStorage`,
    `ResourceConsumption`, or `ResourceGeneration` abilities to components
 5. No Python code changes are required
