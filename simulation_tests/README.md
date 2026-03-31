@@ -104,7 +104,7 @@ compare measured outcomes.
 |----------|------|-------|--------|
 | **ToHitAttackModifier** | `tohit_attack_scenarios.py` | TOHIT-ATK-001 to 004 | Complete |
 | **ToHitDefenseModifier** | `tohit_defense_scenarios.py` | TOHIT-DEF-001 to 004 | Complete |
-| **ShieldProjection** | `shield_projection_scenarios.py` | SHIELD-PROJ-001 to 007 | Complete |
+| **ShieldProjection** | `shield_projection_scenarios.py` | SHIELD-PROJ-001 to 007, 005B | Complete (8 tests) |
 | **ShieldRegeneration** | *(pending)* | | Planned |
 | **EmissiveArmor** | *(pending — migrate from defense_scenarios.py)* | | Planned |
 
@@ -113,9 +113,9 @@ compare measured outcomes.
 These test files validate weapon systems and mechanics that span multiple abilities.
 Over time, ability-specific aspects will be migrated to dedicated ability categories.
 
-#### Beam Weapon Tests (21 tests)
+#### Beam Weapon Tests (24 tests)
 
-Test IDs: `BEAMWEAPON-XXX` (standard), `BEAMWEAPON-XXX-HT` (high-tick).
+Test IDs: `BEAMWEAPON-XXX` (standard), `BEAMWEAPON-XXX-HT` (high-tick), `BEAMWEAPON-RES-XXX` (resource).
 
 | Subcategory | Tests | Description |
 |-------------|-------|-------------|
@@ -123,10 +123,11 @@ Test IDs: `BEAMWEAPON-XXX` (standard), `BEAMWEAPON-XXX-HT` (high-tick).
 | **Moving Targets** | 2 tests | Erratic small targets with high defense (500 ticks) |
 | **Boundary Tests** | 1 test | Out of range (deterministic) |
 | **High-Tick Precision** | 7 tests | Same as standard but 100k ticks, ±1% margin |
+| **Resource Dependency** | 3 tests | Energy depletion: no energy, 50% energy, control (ComparisonScenario) |
 
-#### Projectile Weapon Tests (9 tests)
+#### Projectile Weapon Tests (12 tests)
 
-Test IDs: `PROJECTILE-XXX` and `PROJECTILE-DMG-XXX`.
+Test IDs: `PROJECTILE-XXX`, `PROJECTILE-DMG-XXX`, `PROJECTILE-RES-XXX`.
 
 | Subcategory | Tests | Description |
 |-------------|-------|-------------|
@@ -134,6 +135,7 @@ Test IDs: `PROJECTILE-XXX` and `PROJECTILE-DMG-XXX`.
 | **Moving Targets** | 4 tests | Slow/fast linear + small/large erratic targets |
 | **Boundary Tests** | 1 test | Out of range (1200px > 1000px max) |
 | **Damage Consistency** | 3 tests | No damage falloff at 10%, 50%, 90% of max range |
+| **Resource Dependency** | 3 tests | Ammo depletion: no ammo, 50% ammo, control (ComparisonScenario) |
 
 Projectile tests fire every tick (reload=0) with 1 damage per hit, so
 `damage_dealt == hits`. Moving targets start at (100, -1200) out of weapon
@@ -347,6 +349,146 @@ print(f"Hit Rate: {scenario.results.get('hit_rate', 0):.2%}")
 
 ---
 
+## Creating New Ability Tests
+
+### Step-by-Step: Add a New Ability Category
+
+Each combat ability should have a dedicated test category. Follow this process:
+
+**1. Identify the standard test set.** Every ability needs at minimum:
+
+| Test | Purpose | Template |
+|------|---------|----------|
+| Basic positive effect | Ability does what it claims | ComparisonScenario |
+| Same-group stacking | Intra-group MAX (redundancy) | ComparisonScenario |
+| Different-group stacking | Inter-group SUM (diversity) | ComparisonScenario |
+| Negative value | Bidirectional behavior | ComparisonScenario |
+| Resource dependency (if applicable) | Stops working without power/ammo | ComparisonScenario |
+
+**2. Create test components** in `simulation_tests/data/components.json`:
+- Zero mass (isolate the ability from physics side effects)
+- Minimal abilities (only what's needed for the test)
+- Explicit `stack_group` for stacking tests
+- Grouped variants: `test_sensor_1_group_a`, `test_sensor_1_group_b`
+
+**3. Create test ships** in `simulation_tests/data/ships/`:
+- One ship per configuration (no runtime ship building)
+- Ship names describe their config, not their role in a comparison
+- Use existing hulls (`TestS_2L`) and armor (`test_armor_extreme_hp`)
+
+**4. Create the scenario file** `simulation_tests/scenarios/<ability>_scenarios.py`:
+
+```python
+from simulation_tests.scenarios import TestMetadata
+from simulation_tests.scenarios.templates import ComparisonScenario
+from simulation_tests.scenarios.validation import check_exact, check_true
+
+class MyAbilityBasicEffectScenario(ComparisonScenario):
+    metadata = TestMetadata(
+        test_id="MYABILITY-001",
+        category="MyAbility",        # Named after the ability class
+        subcategory="Basic Effect",
+        name="My Ability Increases X",
+        summary="Compares X: without ability vs with ability",
+        conditions=[...],
+        edge_cases=[...],
+        expected_outcome="Variant has higher X than baseline",
+        pass_criteria="variant_X > baseline_X",
+        max_ticks=1000,
+        seed=42,
+        battle_end_mode="time_based",
+        tags=["myability", "comparison"],
+    )
+
+    baseline_attacker_ship = "Test_Ship_NoAbility.json"
+    baseline_target_ship = "Test_Target_Stationary.json"
+    variant_attacker_ship = "Test_Ship_WithAbility.json"
+    variant_target_ship = "Test_Target_Stationary.json"
+    distance = 100
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        # Data: verify the ability is present and has expected value
+        # Precondition: both battles ran and produced results
+        # Outcome: the ability caused the expected difference
+        return checks
+```
+
+**5. Export the scenarios** in `simulation_tests/scenarios/__init__.py`:
+```python
+from simulation_tests.scenarios.myability_scenarios import (
+    MyAbilityBasicEffectScenario,
+    ...
+)
+```
+
+**6. Run and verify:**
+```bash
+python -m simulation_tests.run_tests MYABILITY    # New tests only
+python -m simulation_tests.run_tests              # Full suite
+```
+
+### ComparisonScenario: Which Ship Varies?
+
+The key design decision for each test: **which ship carries the ability under test?**
+
+| Ability type | What varies | Example |
+|-------------|-------------|---------|
+| Attack modifier (sensor) | **Attacker** — different attackers, same target | TOHIT-ATK-001 |
+| Defense modifier (ECM) | **Target** — same attacker, different targets | TOHIT-DEF-001 |
+| Shield | **Target** — shielded vs unshielded target | SHIELD-PROJ-001 |
+| Weapon resource | **Attacker** — different resource levels | BEAMWEAPON-RES-001 |
+
+### Stacking Test Design
+
+For abilities with `stack_group` support:
+
+```json
+// Component A: explicit group
+"ToHitAttackModifier": {"value": 1.0, "stack_group": "sensors_a"}
+
+// Component B: different group (stacks with A)
+"ToHitAttackModifier": {"value": 1.0, "stack_group": "sensors_b"}
+```
+
+**Same-group test:** Two components with identical `stack_group`. Intra-group MAX
+means the second adds no benefit. Both battles should produce identical results.
+
+**Different-group test:** Components from `group_a` + `group_b`. Inter-group SUM
+means values combine additively (1.0 + 1.0 = 2.0). The variant should show
+a measurably stronger effect than the single-group baseline.
+
+For abilities WITHOUT stack_group (like ShieldProjection): all components always
+SUM. The stacking test uses 1 component vs 2 components — no groups needed.
+
+### Resource Dependency Test Design
+
+If a component has `ResourceConsumption`, test three resource levels:
+
+| Test | Storage | Expected behavior |
+|------|---------|-------------------|
+| No resource | None | Component never functions (0 shots / 0 protection) |
+| 50% resource | Enough for ~500 ticks | Functions for half the test, then stops |
+| Full resource (control) | Abundant | Functions identically to baseline |
+
+Two resource trigger types behave differently:
+
+| Trigger | Example | Deactivation mechanism |
+|---------|---------|----------------------|
+| `"constant"` (per-tick) | Shield energy, engine fuel | `is_operational = False` → component loses stat contributions |
+| `"activation"` (per-shot) | Weapon energy/ammo | `can_afford_activation() = False` → weapon refuses to fire |
+
+### Validation Best Practices for Comparison Tests
+
+- Use `check_exact` for deterministic outcomes (same seed, guaranteed-hit weapons)
+- Use `check_true` with `detail=` (not `actual=`) for boolean assertions
+- Use `check_tost` for stochastic outcomes (hit rates with non-guaranteed beams)
+- Always verify preconditions: weapon fired, target took damage, ticks ran
+- For resource tests: verify exact shot count matches expected resource capacity
+- For stacking tests: verify the aggregated stat value in the data phase
+
+---
+
 ## File Structure
 
 ```
@@ -378,22 +520,24 @@ Starship Battles/
     ├── validation/                 # Validation system docs
     │
     └── scenarios/
-        ├── base.py                     # TestScenario, TestMetadata
-        ├── validation.py               # Check, ValidationReport, check functions
-        ├── templates.py                # Templates: Static, Duel, Propulsion, Resource, Comparison
+        ├── base.py                          # TestScenario, TestMetadata
+        ├── validation.py                    # Check, ValidationReport, check functions
+        ├── templates.py                     # Templates: Static, Duel, Propulsion, Resource, Comparison
+        ├── movement.py                      # StraightLine, CircularOrbit, Erratic controllers
         │
         │   # Ability-specific categories (one file per ability)
-        ├── tohit_attack_scenarios.py   # ToHitAttackModifier tests (TOHIT-ATK-*)
-        ├── tohit_defense_scenarios.py  # ToHitDefenseModifier tests (TOHIT-DEF-*)
+        ├── tohit_attack_scenarios.py        # ToHitAttackModifier (TOHIT-ATK-001 to 004)
+        ├── tohit_defense_scenarios.py       # ToHitDefenseModifier (TOHIT-DEF-001 to 004)
+        ├── shield_projection_scenarios.py   # ShieldProjection (SHIELD-PROJ-001 to 007, 005B)
         │
-        │   # Weapon/system-level tests
-        ├── beam_scenarios.py           # Beam weapon tests (BEAMWEAPON-*)
-        ├── projectile_scenarios.py     # Projectile tests (PROJECTILE-*)
-        ├── seeker_scenarios.py         # Seeker/missile tests (SEEKER-*)
-        ├── defense_scenarios.py        # Shield/armor/ECM tests (SHIELD-*, ARMOR-*, etc.)
-        ├── modifier_scenarios.py       # Stat modifier tests (MOD-*)
-        ├── propulsion_scenarios.py     # Movement tests (PROP-*)
-        └── resource_scenarios.py       # Resource tests (RESOURCE-*)
+        │   # Weapon/system-level tests (include resource dependency tests)
+        ├── beam_scenarios.py                # BeamWeapon (BEAMWEAPON-*, BEAMWEAPON-RES-*)
+        ├── projectile_scenarios.py          # Projectile (PROJECTILE-*, PROJECTILE-RES-*)
+        ├── seeker_scenarios.py              # Seeker (SEEKER-*)
+        ├── defense_scenarios.py             # Shield/armor/ECM (SHIELD-*, ARMOR-*, SENSOR-*)
+        ├── modifier_scenarios.py            # Stat modifiers (MOD-*)
+        ├── propulsion_scenarios.py          # Movement (PROP-*)
+        └── resource_scenarios.py            # Resources (RESOURCE-*)
 ```
 
 ---

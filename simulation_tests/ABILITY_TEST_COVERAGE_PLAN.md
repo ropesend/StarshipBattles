@@ -35,6 +35,9 @@ ability category must include stacking tests to lock in the correct behavior:
 | 2 components, same group | Intra-group MAX (no extra benefit) |
 | 2 components, different groups | Inter-group SUM (additive stacking) |
 | Negative value | Ability works bidirectionally |
+| No resource | Component without power/ammo provides no benefit |
+| 50% resource | Component stops functioning when resource depletes mid-battle |
+| Full resource (control) | Identical setups produce identical results |
 
 ### Comparison Scenarios
 
@@ -68,11 +71,11 @@ ability under test.
 | `ResourceGeneration` | Energy regen rate, regeneration occurs each tick | MEDIUM |
 
 ### Category B: Weapons (3 types)
-| Ability | What to Test | Priority |
-|---------|--------------|----------|
-| `BeamWeaponAbility` | Accuracy formula, range falloff, firing arc, damage | HIGH |
-| `ProjectileWeaponAbility` | Projectile spawning, speed, travel time, damage | HIGH |
-| `SeekerWeaponAbility` | Tracking behavior, endurance, turn rate, PDC interaction | HIGH |
+| Ability | Test File | Status | Tests |
+|---------|-----------|--------|-------|
+| `BeamWeaponAbility` | `beam_scenarios.py` | Partial (24 tests, incl. 3 resource) | BEAMWEAPON-*, BEAMWEAPON-RES-* |
+| `ProjectileWeaponAbility` | `projectile_scenarios.py` | Partial (12 tests, incl. 3 resource) | PROJECTILE-*, PROJECTILE-RES-* |
+| `SeekerWeaponAbility` | `seeker_scenarios.py` | Partial (11 tests, 3 PDC skipped) | SEEKER-* |
 
 ### Category C: Propulsion (2 abilities)
 | Ability | What to Test | Priority |
@@ -83,7 +86,7 @@ ability under test.
 ### Category D: Defense Systems (4 abilities)
 | Ability | Test File | Status | Tests |
 |---------|-----------|--------|-------|
-| `ShieldProjection` | `shield_projection_scenarios.py` | **Complete** (7 tests) | SHIELD-PROJ-001 to 007 |
+| `ShieldProjection` | `shield_projection_scenarios.py` | **Complete** (8 tests) | SHIELD-PROJ-001 to 007, 005B |
 | `ShieldRegeneration` | `defense_scenarios.py` | Partial (1 test in SHIELD-003) | Needs own category |
 | `ToHitDefenseModifier` | `tohit_defense_scenarios.py` | **Complete** (4 tests) | TOHIT-DEF-001/002/003/004 |
 | `EmissiveArmor` | `defense_scenarios.py` | Partial (2 tests, needs stacking) | ARMOR-001/002 |
@@ -261,7 +264,7 @@ Create carrier/hangar tests in simulation_tests/.
 ### In Progress (ability-specific categories using ComparisonScenario)
 8. **ToHitAttackModifier** (Complete): 4 scenarios in `tohit_attack_scenarios.py`
 9. **ToHitDefenseModifier** (Complete): 4 scenarios in `tohit_defense_scenarios.py`
-10. **ShieldProjection** (Complete): 4 scenarios in `shield_projection_scenarios.py`
+10. **ShieldProjection** (Complete): 8 scenarios in `shield_projection_scenarios.py`
 
 ### Pending (ability-specific categories)
 11. **ShieldRegeneration**: Regen rate, energy coupling, stacking

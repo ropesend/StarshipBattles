@@ -176,8 +176,20 @@ current HP. Damage absorbed = min(component.current_hp, remaining_damage).
 Components with more HP are more likely to be hit.
 
 After damage is applied:
-- `ship.recalculate_stats()` -- updates derived stats
+- `ship.recalculate_stats()` -- updates derived stats (skips non-operational components)
 - `ship.update_derelict_status()` -- checks CommandAndControl and crew requirements
+
+### Component Operational Status and Stats
+
+During `recalculate_stats()`, only **active AND operational** components contribute
+stats. A component is non-operational when its constant-trigger `ResourceConsumption`
+cannot be satisfied (e.g., a shield that requires energy but the ship has none).
+Resource storage components always contribute their capacity regardless of
+operational status.
+
+When `max_shields` decreases (e.g., shield component loses power), `current_shields`
+is capped to the new max — preventing orphaned shield HP from lingering after
+deactivation.
 
 ---
 
