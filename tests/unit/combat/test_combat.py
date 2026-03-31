@@ -95,56 +95,31 @@ class TestDamageLayerLogic:
             assert self.ship.current_shields < initial_shields
             assert armor.current_hp == initial_armor_hp
 
-    def test_bridge_destruction_kills_ship(self):
-        """Destroying the bridge SHOULD make the ship derelict (ability-based detection).
+    def test_derelict_functional_definition(self):
+        """Ship becomes derelict when it has no operational weapons AND no engines.
 
-        Post-Phase 5: Derelict status is determined by CommandAndControl ability.
-        If no operational component has CommandAndControl, ship becomes derelict.
-        The ship needs a hull component with RequiresCommandAndControl for this to work.
+        Derelict is now a functional definition (can't fight), not tied to
+        a specific component like the bridge. Per-component C&C requirements
+        are tested in simulation_tests (CNC category).
         """
-        self.registries.vehicle_classes["TestShip"] = {
-            "max_mass": 1000,
-            "layers": [
-                {"type": "CORE", "radius_pct": 0.5, "max_mass_pct": 0.5},
-                {"type": "ARMOR", "radius_pct": 1.0, "max_mass_pct": 0.5}
-            ]
-        }
-        self.ship.ship_class = "TestShip"
-
-        # Add a hull component to require command and control
-        # Without this, the ship has no requirements and won't become derelict
-        hull = create_component('hull_escort', registries=self.registries)
-        self.ship.add_component(hull, LayerType.CORE)
-
-        # Remove armor first to make bridge accessible
-        self.ship.layers[LayerType.ARMOR].components = []
+        # The ship (Frigate) starts with no weapons/engines → derelict
         self.ship.recalculate_stats()
-
-        bridge = None
-        for c in self.ship.layers[LayerType.CORE].components:
-            if c.type_str == 'Bridge':
-                bridge = c
-                break
-
-        assert bridge is not None
-        assert self.ship.is_alive
-
-        # Update derelict status - should NOT be derelict initially (has bridge)
         self.ship.update_derelict_status()
-        assert not self.ship.is_derelict, "Ship should not be derelict with operational bridge"
+        assert self.ship.is_derelict, "Ship with no weapons/engines should be derelict"
 
-        # Directly destroy the bridge instead of using take_damage
-        # take_damage might hit other components first due to random distribution
-        bridge.current_hp = 0
-        bridge.is_active = False
-
-        # Bridge should be destroyed
-        assert not bridge.is_active
-
-        # Update derelict status - should BE derelict now (no CommandAndControl)
+        # Add a weapon to OUTER layer — ship should not be derelict
+        railgun = create_component('railgun', registries=self.registries)
+        self.ship.add_component(railgun, LayerType.OUTER)
+        self.ship.recalculate_stats()
         self.ship.update_derelict_status()
-        assert self.ship.is_derelict, "Ship should be derelict after bridge destruction"
-        assert self.ship.bridge_destroyed, "bridge_destroyed flag should be set"
+        assert not self.ship.is_derelict, "Ship with operational weapon should not be derelict"
+
+        # Destroy the weapon — no weapons, no engines → derelict
+        railgun.current_hp = 0
+        railgun.is_active = False
+        self.ship.recalculate_stats()
+        self.ship.update_derelict_status()
+        assert self.ship.is_derelict, "Ship with no weapons or engines should be derelict"
 
 class TestEnergyRegeneration:
     """Test energy and shield regeneration mechanics."""

@@ -1,0 +1,8 @@
+{
+  "_metadata": {"_schema_version": "1.0", "_data_version": "1.0", "_description": "Attacker with C&C bridge + projectile requiring C&C"},
+  "name": "Test Attacker Proj CNC",
+  "color": [255, 0, 0], "team_id": 1, "ship_class": "TestS_2L_CNC", "theme_id": "Federation", "ai_strategy": "test_do_nothing",
+  "layers": {"CORE": [{"id": "test_bridge_indestructible"}, {"id": "test_proj_rapid_360_cnc"}], "ARMOR": []},
+  "_test_notes": "Bridge provides C&C, projectile requires C&C. Should fire normally.",
+  "expected_stats": {"mass": 400.0}
+}

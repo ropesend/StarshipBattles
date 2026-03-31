@@ -59,9 +59,34 @@ class CommandAndControl(Ability):
 
 
 class RequiresCommandAndControl(Ability):
-    """Marker ability: Component (e.g. Hull) requires Command and Control to be operational."""
+    """Component requires an operational CommandAndControl provider on the ship.
 
-    STAT_BINDINGS: List[AbilityStatBinding] = []  # Marker ability
+    When update() is called each tick, checks if the ship has at least one
+    active component with the CommandAndControl ability. Returns False if
+    not found, which marks this component as non-operational (its stats
+    won't contribute to the ship).
+    """
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []
+
+    def update(self, resources=None) -> bool:
+        """Check if ship has an active C&C provider. Returns False if not."""
+        comp = self.component
+        if comp is None or comp.ship is None:
+            return True  # No ship context yet, assume OK
+        ship = comp.ship
+        # Check for any active CommandAndControl provider on the ship.
+        # Uses is_active (not is_operational) to avoid circular dependency:
+        # checking operational status would trigger another C&C check.
+        for layer_data in ship.layers.values():
+            for c in layer_data.components:
+                if c is comp:
+                    continue
+                if not c.is_active:
+                    continue
+                if c.has_ability('CommandAndControl'):
+                    return True
+        return False
 
     def get_ui_rows(self):
         return [{'label': 'Requires C&C', 'value': 'Yes', 'color_hint': HINT_REQUIREMENT}]

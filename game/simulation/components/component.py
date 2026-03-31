@@ -320,18 +320,24 @@ class Component:
                 self._ability_index[cls_name].append(ab)
             
     def update(self):
-        """Update component state for one tick (resource consumption, cooldowns)."""
-        # 1. Update Abilities (Constant Consumption)
+        """Update component state for one tick (resource consumption, cooldowns).
+
+        Any ability returning False from update() marks the component as
+        non-operational. This covers:
+        - ResourceConsumption (constant trigger): resource starved
+        - RequiresCommandAndControl: no C&C provider on ship
+        - Any future requirement-style abilities
+        """
         all_satisfied = True
 
         for ability in self.ability_instances:
             if not ability.update():
-                # Check if this is a constant resource consumption ability
-                # ResourceConsumption has trigger attr; other abilities don't
-                # Using safe access since trigger is not on IAbility protocol
+                # Activation-trigger resources (per-shot) don't affect
+                # operational status — they're checked at fire time.
                 trigger = getattr(ability, 'trigger', None)
-                if trigger == 'constant':
-                    all_satisfied = False
+                if trigger == 'activation':
+                    continue
+                all_satisfied = False
 
         self._is_operational = all_satisfied and self.is_active
 

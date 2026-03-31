@@ -332,34 +332,16 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
     def update_derelict_status(self) -> None:
         """
-        Update derelict status based on component requirements.
+        Update derelict status based on functional capability.
 
-        Ship becomes derelict when declared requirements are not met:
-        1. If ANY component has RequiresCommandAndControl ability:
-           → Must have operational CommandAndControl component
-        2. If ANY component has CrewRequired ability:
-           → Must have sufficient CrewCapacity
+        A ship is derelict when it cannot fight: no operational weapons
+        AND no operational engines. This is a derived flag — the actual
+        enforcement happens per-component (e.g., RequiresCommandAndControl
+        marks individual components non-operational when C&C is missing).
 
-        Ships without requirements (e.g., autonomous drones, test ships)
-        operate normally regardless of available components.
+        The crew check remains as a ship-level requirement.
         """
-        # Check 1: CommandAndControl requirement (conditional)
-        # Only check if ANY component declares this requirement
-        requires_command = self.get_total_ability_value('RequiresCommandAndControl') > 0
-
-        if requires_command:
-            # Use get_components_by_ability with operational_only=True
-            has_command = len(self.get_components_by_ability('CommandAndControl', operational_only=True)) > 0
-
-            if not has_command:
-                if not self.is_derelict:
-                    logger.info(f"{self.name} has become DERELICT (Command and Control lost)")
-                self.is_derelict = True
-                self.bridge_destroyed = True
-                return
-
-        # Check 2: Crew capacity requirement (conditional)
-        # Only check if ANY component declares crew requirement
+        # Check 1: Crew capacity requirement (ship-level)
         crew_required = self.get_total_ability_value('CrewRequired')
 
         if crew_required > 0:
@@ -371,8 +353,18 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
                 self.is_derelict = True
                 return
 
-        # All checks passed - ship is operational
-        self.is_derelict = False
+        # Check 2: Functional capability — can the ship fight?
+        has_weapons = len(self.get_components_by_ability('WeaponAbility', operational_only=True)) > 0
+        has_engines = len(self.get_components_by_ability('CombatPropulsion', operational_only=True)) > 0
+
+        was_derelict = self.is_derelict
+        self.is_derelict = not has_weapons and not has_engines
+
+        if self.is_derelict and not was_derelict:
+            logger.info(f"{self.name} has become DERELICT (no operational weapons or engines)")
+        elif not self.is_derelict and was_derelict:
+            logger.info(f"{self.name} is no longer derelict")
+
         self.bridge_destroyed = False
 
     def _initialize_layers(self) -> None:

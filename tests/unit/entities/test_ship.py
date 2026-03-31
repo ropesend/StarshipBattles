@@ -174,50 +174,36 @@ class TestShipClassMutation:
 
     def test_derelict_status_logic(self):
         """
-        Verify is_derelict update logic when key components are destroyed.
+        Verify is_derelict uses functional definition: no operational
+        weapons AND no operational engines = derelict.
 
-        The new data-driven system:
-        - Ships with hulls have RequiresCommandAndControl ability
-        - Ships only become derelict if they have components requiring command
-        - CommandAndControl is provided by bridges or similar components
-        - Destroying all command components makes the ship derelict
+        The per-component RequiresCommandAndControl check is tested
+        separately in simulation_tests (CNC category).
         """
-        # Frigate ships automatically get a hull with RequiresCommandAndControl ability
-        # Verify the ship requires command and control
-        requires_command = self.ship.get_total_ability_value('RequiresCommandAndControl')
-        assert requires_command > 0, "Frigate hull should require CommandAndControl"
-
-        # Add bridge to provide CommandAndControl
+        # Add bridge and crew support
         bridge = create_component('bridge', registries=self.registries)
         self.ship.add_component(bridge, LayerType.CORE)
-
-        # Add crew support to keep bridge operational
         self.ship.add_component(create_component('crew_quarters', registries=self.registries), LayerType.CORE)
         self.ship.add_component(create_component('life_support', registries=self.registries), LayerType.CORE)
 
-        # Recalculate and verify ship is operational
+        # Ship with no weapons and no engines → derelict
         self.ship.recalculate_stats()
         self.ship.update_derelict_status()
-        assert self.ship.is_derelict is False, "Ship should be operational with active bridge"
+        assert self.ship.is_derelict is True, "Ship with no weapons/engines should be derelict"
 
-        # Verify bridge provides CommandAndControl
-        has_command = self.ship.get_total_ability_value('CommandAndControl', operational_only=True)
-        assert has_command > 0, "Bridge should provide CommandAndControl"
-
-        # Destroy the bridge
-        bridge.current_hp = 0
-        bridge.is_active = False
-
-        # Update status and verify ship becomes derelict
+        # Add a weapon → no longer derelict
+        railgun = create_component('railgun', registries=self.registries)
+        self.ship.add_component(railgun, LayerType.OUTER)
         self.ship.recalculate_stats()
         self.ship.update_derelict_status()
+        assert self.ship.is_derelict is False, "Ship with operational weapon should not be derelict"
 
-        # Verify no operational command remaining
-        has_command_after = self.ship.get_total_ability_value('CommandAndControl', operational_only=True)
-        assert has_command_after == 0, "No CommandAndControl should remain after bridge destruction"
-
-        # Ship should now be derelict
-        assert self.ship.is_derelict is True, "Ship should be derelict after losing all CommandAndControl"
+        # Destroy the weapon → derelict again
+        railgun.current_hp = 0
+        railgun.is_active = False
+        self.ship.recalculate_stats()
+        self.ship.update_derelict_status()
+        assert self.ship.is_derelict is True, "Ship should be derelict after losing all weapons"
 
 
 # --- Pytest-style Tests (merged from test_ship_core.py) ---

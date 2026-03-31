@@ -274,6 +274,16 @@ class BattleEngine:
                 context={"missing": "ai_controllers and ai_factory", "operation": "start"}
             )
 
+        # Run initial component update cycle so requirement-based abilities
+        # (like RequiresCommandAndControl) can mark components non-operational
+        # before the first tick. Then recalculate stats to reflect this.
+        for s in self.ships:
+            for comp in s.get_all_components():
+                if comp.is_active:
+                    comp.update()
+            s.recalculate_stats()
+            s.update_derelict_status()
+
         # Logging
         self.logger.start_session()
         self.logger.log(f"Battle started: {len(team1_ships)} vs {len(team2_ships)} ships")

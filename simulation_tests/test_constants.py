@@ -104,15 +104,14 @@ SENSOR_ATTACK_VALUE = 1.0   # Attack score bonus from test_sensor_1
 TOHIT_PENALTY_VALUE = -0.5  # Negative attack modifier from test_tohit_penalty
 ECM_PENALTY_VALUE = -0.5    # Negative defense modifier from test_ecm_penalty
 
-# Defense test ship filenames
-SHIELDED_TARGET_SHIP = "Test_Target_Shielded.json"
-SHIELD_REGEN_TARGET_SHIP = "Test_Target_Shield_Regen.json"
-EMISSIVE_ARMOR_TARGET_SHIP = "Test_Target_EmissiveArmor.json"
-ECM_TARGET_SHIP = "Test_Target_ECM.json"
-SENSOR_ATTACKER_SHIP = "Test_Attacker_Beam360_WithSensor.json"
+# CommandAndControl test constants
+CNC_TEST_TICKS = 500
+CNC_BRIDGE_HP = 50          # Destructible bridge HP (in ARMOR layer, hit first)
 
-# Defense test durations
-DEFENSE_TEST_TICKS = 500    # Standard duration for defense tests
+# EmissiveArmor test constants
+EMISSIVE_TEST_TICKS = 500
+EMISSIVE_ARMOR_VALUE = 5           # Flat damage reduction from test_emissive_armor_5
+EMISSIVE_HIGH_BEAM_DAMAGE = 10     # Beam damage that exceeds armor value
 
 # Armor Layer test category
 ARMOR_LAYER_TEST_TICKS = 500

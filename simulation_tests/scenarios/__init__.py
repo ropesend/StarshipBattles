@@ -42,16 +42,6 @@ from simulation_tests.scenarios.validation import (
     check_tost,
     check_true,
 )
-from simulation_tests.scenarios.defense_scenarios import (
-    ShieldAbsorbsDamageScenario,
-    ShieldOverflowToHullScenario,
-    ShieldRegenerationScenario,
-    EmissiveArmorBlocksLowDamageScenario,
-    EmissiveArmorReducesHighDamageScenario,
-    ECMReducesHitRateScenario,
-    SensorImprovesHitRateScenario,
-    SensorDamageComparisonScenario,
-)
 from simulation_tests.scenarios.resource_scenarios import (
     EngineFuelConsumptionScenario,
     EngineFuelDepletionScenario,
@@ -83,10 +73,24 @@ from simulation_tests.scenarios.shield_projection_scenarios import (
     ShieldWithMetalsProtects,
     ShieldWithoutMetalsNoProtection,
 )
+from simulation_tests.scenarios.cnc_scenarios import (
+    CNCBeamDisabledScenario,
+    CNCProjectileDisabledScenario,
+    CNCShieldDisabledScenario,
+    CNCEngineDisabledScenario,
+    CNCBridgeDestroyedScenario,
+)
 from simulation_tests.scenarios.armor_layer_scenarios import (
     ArmorAbsorbsAllScenario,
     ArmorDepletesOverflowScenario,
     ArmorStackingScenario,
+)
+from simulation_tests.scenarios.emissive_armor_scenarios import (
+    EmissiveBlocksLowDamageScenario,
+    EmissiveReducesHighDamageScenario,
+    EmissiveSameGroupNoStackScenario,
+    EmissiveDiffGroupStackScenario,
+    EmissiveNegativeValueScenario,
 )
 from simulation_tests.scenarios.shield_regen_scenarios import (
     RegenReducesNetDamageScenario,
@@ -129,15 +133,6 @@ __all__ = [
     'check_approx',
     'check_tost',
     'check_true',
-    # Defense scenarios
-    'ShieldAbsorbsDamageScenario',
-    'ShieldOverflowToHullScenario',
-    'ShieldRegenerationScenario',
-    'EmissiveArmorBlocksLowDamageScenario',
-    'EmissiveArmorReducesHighDamageScenario',
-    'ECMReducesHitRateScenario',
-    'SensorImprovesHitRateScenario',
-    'SensorDamageComparisonScenario',
     # Resource scenarios
     'EngineFuelConsumptionScenario',
     'EngineFuelDepletionScenario',
@@ -176,6 +171,18 @@ __all__ = [
     'ShieldWithoutEnergyScenario',
     'ShieldWithMetalsProtects',
     'ShieldWithoutMetalsNoProtection',
+    # CommandAndControl scenarios
+    'CNCBeamDisabledScenario',
+    'CNCProjectileDisabledScenario',
+    'CNCShieldDisabledScenario',
+    'CNCEngineDisabledScenario',
+    'CNCBridgeDestroyedScenario',
+    # EmissiveArmor scenarios
+    'EmissiveBlocksLowDamageScenario',
+    'EmissiveReducesHighDamageScenario',
+    'EmissiveSameGroupNoStackScenario',
+    'EmissiveDiffGroupStackScenario',
+    'EmissiveNegativeValueScenario',
     # ArmorLayer scenarios
     'ArmorAbsorbsAllScenario',
     'ArmorDepletesOverflowScenario',

@@ -553,6 +553,103 @@
       }
     },
     {
+      "id": "hull_test_s_cnc",
+      "name": "Test Hull (Small, Requires C&C)",
+      "type": "Hull",
+      "mass": 400,
+      "hp": 100,
+      "major_classification": "Hull",
+      "sprite_index": 0,
+      "abilities": {
+        "HullMass": 400,
+        "StructuralIntegrity": true,
+        "RequiresCommandAndControl": true
+      }
+    },
+    {
+      "id": "test_bridge",
+      "name": "Test Bridge (C&C, 50 HP)",
+      "type": "Bridge",
+      "mass": 0,
+      "hp": 50,
+      "sprite_index": 20,
+      "abilities": {
+        "CommandAndControl": true
+      }
+    },
+    {
+      "id": "test_bridge_indestructible",
+      "name": "Test Bridge (C&C, 1B HP)",
+      "type": "Bridge",
+      "mass": 0,
+      "hp": 1000000000,
+      "sprite_index": 20,
+      "abilities": {
+        "CommandAndControl": true
+      }
+    },
+    {
+      "id": "test_beam_1dmg_guaranteed_cnc",
+      "name": "Test Beam (1 Damage, Guaranteed Hit, Requires C&C)",
+      "type": "Weapon",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 1,
+          "range": 1000,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 10.0,
+          "accuracy_falloff": 0
+        },
+        "RequiresCommandAndControl": true
+      }
+    },
+    {
+      "id": "test_proj_rapid_360_cnc",
+      "name": "Test Projectile (Rapid, 360, Requires C&C)",
+      "type": "Weapon",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "ProjectileWeaponAbility": {
+          "damage": 1,
+          "range": 1000,
+          "projectile_speed": 20000,
+          "reload": 0.0,
+          "firing_arc": 360
+        },
+        "RequiresCommandAndControl": true
+      }
+    },
+    {
+      "id": "test_shield_200_cnc",
+      "name": "Test Shield (200 HP, Requires C&C)",
+      "type": "Shield",
+      "mass": 0,
+      "hp": 50,
+      "sprite_index": 16,
+      "abilities": {
+        "ShieldProjection": 200,
+        "RequiresCommandAndControl": true
+      }
+    },
+    {
+      "id": "test_engine_no_fuel_cnc",
+      "name": "Test Engine (No Fuel, Requires C&C)",
+      "type": "Engine",
+      "mass": 0,
+      "hp": 50,
+      "sprite_index": 4,
+      "abilities": {
+        "CombatPropulsion": 500,
+        "RequiresCommandAndControl": true
+      }
+    },
+    {
       "id": "hull_test_m",
       "name": "Test Hull (Medium)",
       "type": "Hull",
@@ -1286,6 +1383,57 @@
       "sprite_index": 14,
       "abilities": {
         "EmissiveArmor": 5
+      }
+    },
+    {
+      "id": "test_emissive_armor_5_group_a",
+      "name": "Test Emissive Armor (5, Group A)",
+      "type": "Armor",
+      "mass": 0,
+      "hp": 100,
+      "sprite_index": 14,
+      "abilities": {
+        "EmissiveArmor": {"value": 5, "stack_group": "armor_a"}
+      }
+    },
+    {
+      "id": "test_emissive_armor_5_group_b",
+      "name": "Test Emissive Armor (5, Group B)",
+      "type": "Armor",
+      "mass": 0,
+      "hp": 100,
+      "sprite_index": 14,
+      "abilities": {
+        "EmissiveArmor": {"value": 5, "stack_group": "armor_b"}
+      }
+    },
+    {
+      "id": "test_emissive_armor_neg3",
+      "name": "Test Emissive Armor (-3, Group B)",
+      "type": "Armor",
+      "mass": 0,
+      "hp": 100,
+      "sprite_index": 14,
+      "abilities": {
+        "EmissiveArmor": {"value": -3, "stack_group": "armor_b"}
+      }
+    },
+    {
+      "id": "test_beam_10dmg_guaranteed",
+      "name": "Test Beam (10 Damage, Guaranteed Hit)",
+      "type": "Weapon",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 10,
+          "range": 1000,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 10.0,
+          "accuracy_falloff": 0
+        }
       }
     }
   ]
