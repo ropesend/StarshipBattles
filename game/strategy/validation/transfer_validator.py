@@ -13,11 +13,15 @@ logger = logging.getLogger(__name__)
 class TransferValidator:
     """Validates TRANSFER orders for cargo operations between fleets and colonies."""
 
-    # Valid cargo types (resources + passengers)
+    # Valid cargo types (resources + passengers + colony pods)
     VALID_CARGO_TYPES = {
         "passengers",
         "metals", "organics", "vapors", "radioactives", "exotics",
         "fuel", "energy", "ammo",
+        "colony_pod_continental", "colony_pod_arid", "colony_pod_pelagic",
+        "colony_pod_magma", "colony_pod_cryoplanet", "colony_pod_barren",
+        "colony_pod_jovian", "colony_pod_ice_giant", "colony_pod_chthonian",
+        "colony_pod_ice_dwarf", "colony_pod_planetoid",
     }
 
     # Valid directions

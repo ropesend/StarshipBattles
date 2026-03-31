@@ -33,8 +33,9 @@ RESOURCE_DISPLAY_NAMES = {
     "fuel": "Fuel", "energy": "Energy", "ammo": "Ammo",
 }
 
-# Arrow button increments (left-to-right for load direction)
-ARROW_INCREMENTS = [1000, 10, 1]
+# Arrow button increments
+ARROW_INCREMENTS_LOAD = [1000, 10, 1]    # Load: largest to smallest (left to right)
+ARROW_INCREMENTS_DROP = [1, 10, 1000]    # Drop: smallest to largest (left to right)
 ARROW_LABELS_LOAD = ["<<<<", "<<", "<"]
 ARROW_LABELS_DROP = [">", ">>", ">>>>"]
 
@@ -406,7 +407,7 @@ class TransferDialog(UIWindow):
 
         # Load arrow buttons (left: <<<<, <<, <)
         x = self.LOAD_ARROWS_X
-        for i, (inc, label, w) in enumerate(zip(ARROW_INCREMENTS, ARROW_LABELS_LOAD, self.ARROW_WIDTHS)):
+        for i, (inc, label, w) in enumerate(zip(ARROW_INCREMENTS_LOAD, ARROW_LABELS_LOAD, self.ARROW_WIDTHS)):
             btn = UIButton(
                 pygame.Rect(x, y + 2, w, self.ROW_HEIGHT - 4),
                 label, self.ui_manager, container=container
@@ -427,7 +428,7 @@ class TransferDialog(UIWindow):
 
         # Drop arrow buttons (right: >, >>, >>>>)
         x = self.DROP_ARROWS_X
-        for i, (inc, label, w) in enumerate(zip(ARROW_INCREMENTS, ARROW_LABELS_DROP, self.ARROW_WIDTHS)):
+        for i, (inc, label, w) in enumerate(zip(ARROW_INCREMENTS_DROP, ARROW_LABELS_DROP, self.ARROW_WIDTHS)):
             btn = UIButton(
                 pygame.Rect(x, y + 2, w, self.ROW_HEIGHT - 4),
                 label, self.ui_manager, container=container
@@ -451,33 +452,37 @@ class TransferDialog(UIWindow):
         )
         self._grid_widgets.append(tgt_lbl)
 
-    def _format_pending(self, amount: int) -> str:
+    # Sentinel values for "transfer all available"
+    MAX_LOAD = float('inf')
+    MAX_DROP = float('-inf')
+
+    def _format_pending(self, amount) -> str:
         """Format pending transfer amount for display."""
-        if amount > 0:
-            return f"Load {amount}"
-        elif amount < 0:
-            return f"Drop {abs(amount)}"
+        if amount == self.MAX_LOAD:
+            return "Load Max"
+        if amount == self.MAX_DROP:
+            return "Drop Max"
+        if isinstance(amount, (int, float)) and amount > 0:
+            return f"Load {int(amount)}"
+        elif isinstance(amount, (int, float)) and amount < 0:
+            return f"Drop {int(abs(amount))}"
         return "0"
 
     def _on_arrow_click(self, cargo_key: str, delta: int):
-        """Adjust pending transfer by delta."""
+        """Adjust pending transfer by delta. Resets from Max to specific amount."""
         current = self.pending_transfers.get(cargo_key, 0)
+        # If currently at Max, reset to 0 before applying delta
+        if current in (self.MAX_LOAD, self.MAX_DROP):
+            current = 0
         self.pending_transfers[cargo_key] = current + delta
         self._update_pending_label(cargo_key)
 
     def _on_max_click(self, cargo_key: str, direction: str):
-        """Set pending to max load or max drop."""
-        row = next((r for r in self._row_data if r['cargo_key'] == cargo_key), None)
-        if not row:
-            return
-
+        """Set pending to Max (all available at execution time)."""
         if direction == 'load':
-            # Load all from target
-            self.pending_transfers[cargo_key] = row['target_amt']
+            self.pending_transfers[cargo_key] = self.MAX_LOAD
         else:
-            # Drop all from source
-            self.pending_transfers[cargo_key] = -row['source_amt']
-
+            self.pending_transfers[cargo_key] = self.MAX_DROP
         self._update_pending_label(cargo_key)
 
     def _update_pending_label(self, cargo_key: str):
@@ -535,23 +540,26 @@ class TransferDialog(UIWindow):
                 cargo_type = cargo_key
                 species_id = None
 
+            # Handle Max sentinel: amount=0 means "transfer all" in engine convention
+            is_max = amount in (self.MAX_LOAD, self.MAX_DROP)
+
             # Determine direction (commands are fleet-centric)
             if source_is_fleet:
                 direction = 'load' if amount > 0 else 'unload'
             elif target_is_fleet:
-                # Source is planet: positive pending = "load from target to source"
-                # But commands are fleet-centric, so this means fleet unloads to planet
                 direction = 'unload' if amount > 0 else 'load'
             else:
-                # Fleet-to-fleet: source fleet perspective
                 direction = 'load' if amount > 0 else 'unload'
+
+            # amount=0 means "all" for the engine; otherwise use explicit amount
+            transfer_amount = 0 if is_max else int(abs(amount))
 
             cmd = IssueTransferCommand(
                 fleet_id=fleet_id,
                 planet_id=planet_id,
                 cargo_type=cargo_type,
                 direction=direction,
-                amount=abs(amount),
+                amount=transfer_amount,
                 species_id=species_id,
                 target_fleet_id=target_fleet_id,
             )

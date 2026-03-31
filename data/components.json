@@ -2371,6 +2371,24 @@
             }
         },
         {
+            "id": "planetary_yard_module",
+            "name": "Planetary Yard",
+            "type": "Infrastructure",
+            "mass": 200,
+            "hp": 300,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 241,
+            "abilities": {
+                "PlanetaryYard": true,
+                "CrewRequired": 20
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 200,
+                "organics": 50
+            }
+        },
+        {
             "id": "starter_colony_hub",
             "name": "Colony Hub",
             "type": "Infrastructure",
