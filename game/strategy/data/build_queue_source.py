@@ -189,7 +189,8 @@ def _collect_planet_sources(planet, sources: List[BuildQueueSource]) -> None:
     """
     # Base queue (complexes only) — only if colony has PlanetaryYard facility
     from game.strategy.engine.production_engine import _colony_has_planetary_yard
-    if _colony_has_planetary_yard(planet):
+    from game.core.registry import RegistryManager
+    if _colony_has_planetary_yard(planet, RegistryManager.instance()):
         sources.append(BuildQueueSource(
             queue_id=f"planet_{planet.id}_base",
             display_name=f"{planet.name} - Planetary Yard",
