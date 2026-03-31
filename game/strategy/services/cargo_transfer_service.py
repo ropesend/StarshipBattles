@@ -185,7 +185,7 @@ class CargoTransferService:
         if not obj_info:
             return items
 
-        # FleetInfo: has passengers_current
+        # FleetInfo: passengers + cargo resources
         if isinstance(obj_info, FleetInfo):
             passengers = obj_info.passengers_current
             if passengers > 0:
@@ -195,9 +195,32 @@ class CargoTransferService:
                     'species_id': None,
                     'max_amount': passengers
                 })
-        # PlanetInfo: has population_details and total_population
+            # Add all resource cargo types (show even if empty, per user preference)
+            cap_map = dict(getattr(obj_info, 'cargo_capacities', ()))
+            for res_type, amount in getattr(obj_info, 'cargo_resources', ()):
+                capacity = cap_map.get(res_type, 0)
+                if capacity > 0 or amount > 0:
+                    display_name = res_type.capitalize()
+                    items.append({
+                        'label': f"{display_name} ({amount})",
+                        'cargo_type': res_type,
+                        'species_id': None,
+                        'max_amount': amount,
+                    })
+
+        # PlanetInfo: population + stockpile resources
         elif isinstance(obj_info, PlanetInfo):
             items.extend(_extract_population_items(obj_info))
+            # Add stockpile resources
+            for res_type, amount in getattr(obj_info, 'stockpile', ()):
+                if amount > 0:
+                    display_name = res_type.capitalize()
+                    items.append({
+                        'label': f"{display_name} ({int(amount)})",
+                        'cargo_type': res_type,
+                        'species_id': None,
+                        'max_amount': int(amount),
+                    })
 
         return items
 

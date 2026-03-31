@@ -11,6 +11,16 @@ if TYPE_CHECKING:
     from game.strategy.data.planet import Planet
 
 
+def _dict_to_tuple(d) -> Tuple[Tuple[str, float], ...]:
+    """Convert a dict to a frozen tuple of (key, value) pairs.
+
+    Returns empty tuple if d is None, not a dict, or not iterable.
+    """
+    if isinstance(d, dict):
+        return tuple((k, v) for k, v in d.items())
+    return ()
+
+
 @dataclass(frozen=True)
 class PlanetInfo:
     """Immutable DTO representing a planet.
@@ -44,6 +54,9 @@ class PlanetInfo:
     energy: float = 0.0
     energy_capacity: float = 0.0
     shield_active: bool = False
+    # Local resource stockpile
+    stockpile: Tuple[Tuple[str, float], ...] = field(default_factory=tuple)
+    max_stockpile: Tuple[Tuple[str, float], ...] = field(default_factory=tuple)
 
     @classmethod
     def from_planet(cls, planet: 'Planet') -> 'PlanetInfo':
@@ -76,4 +89,6 @@ class PlanetInfo:
             energy=getattr(planet, 'energy', 0.0),
             energy_capacity=getattr(planet, 'energy_capacity', 0.0),
             shield_active=getattr(planet, 'shield_active', False),
+            stockpile=_dict_to_tuple(getattr(planet, 'stockpile', None)),
+            max_stockpile=_dict_to_tuple(getattr(planet, 'max_stockpile', None)),
         )

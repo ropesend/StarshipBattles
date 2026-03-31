@@ -91,6 +91,9 @@ class FleetInfo:
     passenger_capacity: int = 0
     passengers_current: int = 0
     capabilities: Tuple[str, ...] = field(default_factory=tuple)
+    # Cargo resource amounts and capacities (all resource types)
+    cargo_resources: Tuple[Tuple[str, int], ...] = field(default_factory=tuple)
+    cargo_capacities: Tuple[Tuple[str, int], ...] = field(default_factory=tuple)
 
     @classmethod
     def from_fleet(cls, fleet: 'Fleet') -> 'FleetInfo':
@@ -186,4 +189,14 @@ class FleetInfo:
             passenger_capacity=fleet.resources.get_fleet_cargo_capacity('passengers'),
             passengers_current=fleet.resources.get_fleet_cargo_current('passengers'),
             capabilities=capabilities,
+            cargo_resources=tuple(
+                (res, fleet.resources.get_fleet_cargo_current(res))
+                for res in ("metals", "organics", "vapors", "radioactives", "exotics",
+                            "fuel", "energy", "ammo")
+            ),
+            cargo_capacities=tuple(
+                (res, fleet.resources.get_fleet_cargo_capacity(res))
+                for res in ("metals", "organics", "vapors", "radioactives", "exotics",
+                            "fuel", "energy", "ammo")
+            ),
         )
