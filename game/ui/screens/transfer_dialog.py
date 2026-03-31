@@ -1,47 +1,103 @@
 """
-Transfer Dialog - Resource and cargo transfer between fleets and planets.
+Transfer Dialog - Grid-based resource and cargo transfer between fleets and planets.
 
-Handles transfer commands for moving resources between ships and colonies.
+Shows all resource types and species in a grid with arrow buttons for adjusting
+pending transfer amounts. Confirm issues batch transfer orders.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Dict, List, Tuple, Any
 
 import logging
 
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIWindow, UIButton, UILabel, UIDropDownMenu, UIHorizontalSlider
+from pygame_gui.elements import UIWindow, UIButton, UILabel, UIDropDownMenu, UIScrollingContainer
 from game.core.input_actions import InputAction
 from game.strategy.engine.commands import IssueTransferCommand
 
 logger = logging.getLogger(__name__)
-from game.strategy.services.cargo_transfer_service import CargoTransferService
 
 if TYPE_CHECKING:
     from game.ui.services.input_mapper import InputMapper
 
-class TransferDialog(UIWindow):
-    """
-    Hex-aware cargo and population transfer dialog.
+# All resource types in display order
+RESOURCE_TYPES = [
+    "metals", "organics", "vapors", "radioactives", "exotics",
+    "fuel", "energy", "ammo",
+]
 
-    Allows selecting a source and target within the same sector, specifying
-    cargo/species types, and the amount to transfer.
+RESOURCE_DISPLAY_NAMES = {
+    "metals": "Metals", "organics": "Organics", "vapors": "Vapors",
+    "radioactives": "Radioactives", "exotics": "Exotics",
+    "fuel": "Fuel", "energy": "Energy", "ammo": "Ammo",
+}
+
+# Arrow button increments (left-to-right for load direction)
+ARROW_INCREMENTS = [1000, 10, 1]
+ARROW_LABELS_LOAD = ["<<<<", "<<", "<"]
+ARROW_LABELS_DROP = [">", ">>", ">>>>"]
+
+
+class TransferDialog(UIWindow):
+    """Grid-based resource transfer dialog.
+
+    Shows all resource types and species with arrow buttons for adjusting
+    pending transfer amounts. Confirm issues all non-zero as transfer orders.
     """
+
+    ROW_HEIGHT = 32
+
+    # Layout X positions and widths (inside scrolling container)
+    NAME_X = 5
+    NAME_W = 95
+    SOURCE_AMT_X = 105
+    SOURCE_AMT_W = 60
+    MAX_LOAD_X = 170
+    MAX_LOAD_W = 36
+    # 3 load arrow buttons start after Max<
+    LOAD_ARROWS_X = 210
+    ARROW_WIDTHS = [36, 30, 26]  # Widths for 1000, 10, 1
+    # Pending label in center
+    PENDING_X = 310
+    PENDING_W = 85
+    # 3 drop arrow buttons
+    DROP_ARROWS_X = 400
+    MAX_DROP_X = 496
+    MAX_DROP_W = 36
+    TARGET_AMT_X = 537
+    TARGET_AMT_W = 60
+
     def __init__(self, relative_rect, manager, source_fleet, hex_coord, scene,
                  input_mapper: Optional['InputMapper'] = None):
-        super().__init__(relative_rect, manager, window_display_title="Cargo & Population Transfer")
+        super().__init__(relative_rect, manager, window_display_title="Resource Transfer")
         self.source_fleet = source_fleet
         self.hex_coord = hex_coord
         self.scene = scene
         self.facade = scene.facade
         self._mapper = input_mapper
-        
+
         # UI State
-        self.available_sources = []
-        self.available_targets = []
-        self.available_cargo = [] # List of (label, type, species_id, max_amount)
-        
+        self.available_sources: List[dict] = []
+        self.available_targets: List[dict] = []
+
+        # Pending transfers: cargo_key -> int (positive=load, negative=drop)
+        self.pending_transfers: Dict[str, int] = {}
+
+        # Widget mappings for event routing
+        self._arrow_buttons: Dict[int, Tuple[str, int]] = {}  # button id -> (cargo_key, delta)
+        self._max_buttons: Dict[int, Tuple[str, str]] = {}  # button id -> (cargo_key, 'load'|'drop')
+        self._pending_labels: Dict[str, UILabel] = {}  # cargo_key -> label widget
+        self._grid_widgets: List[Any] = []  # All widgets in the grid (for cleanup)
+
+        # Row data for current grid
+        self._row_data: List[dict] = []  # [{cargo_key, display_name, source_amt, target_amt}, ...]
+        self._filter_empty = False
+
+        # Current source/target info
+        self._current_source: Optional[dict] = None
+        self._current_target: Optional[dict] = None
+
         self._setup_ui()
         self._apply_tooltips()
         self._populate_initial_data()
@@ -51,83 +107,72 @@ class TransferDialog(UIWindow):
         padding = 10
         label_h = 20
         element_h = 30
-        
+        content_w = self.rect.width - 40  # Account for window chrome
+
         curr_y = padding
-        
-        # --- Sector ---
-        UILabel(pygame.Rect(padding, curr_y, self.rect.width - 20, label_h), 
-                f"Sector: {self.hex_coord}", 
-                self.ui_manager, 
-                container=self)
-        curr_y += element_h + padding
 
-        # --- Debug Info ---
-        self.lbl_debug = UILabel(pygame.Rect(padding, curr_y, self.rect.width - 20, label_h), 
-                                "Debug: Init", 
-                                self.ui_manager, 
-                                container=self)
-        curr_y += element_h + padding
-
-        # --- Source ---
-        UILabel(pygame.Rect(padding, curr_y, 100, label_h), "Source:", self.ui_manager, container=self)
+        # --- Source Dropdown ---
+        UILabel(pygame.Rect(padding, curr_y, 60, label_h),
+                "Source:", self.ui_manager, container=self)
         self.drop_source = UIDropDownMenu(
             options_list=[""],
             starting_option="",
-            relative_rect=pygame.Rect(110, curr_y, self.rect.width - 150, element_h),
+            relative_rect=pygame.Rect(75, curr_y, content_w // 2 - 80, element_h),
             manager=self.ui_manager,
             container=self
         )
-        curr_y += element_h + padding
-        
-        # --- Target ---
-        UILabel(pygame.Rect(padding, curr_y, 100, label_h), "Target:", self.ui_manager, container=self)
+
+        # --- Target Dropdown ---
+        target_x = content_w // 2 + 10
+        UILabel(pygame.Rect(target_x, curr_y, 60, label_h),
+                "Target:", self.ui_manager, container=self)
         self.drop_target = UIDropDownMenu(
             options_list=[""],
             starting_option="",
-            relative_rect=pygame.Rect(110, curr_y, self.rect.width - 150, element_h),
+            relative_rect=pygame.Rect(target_x + 65, curr_y, content_w // 2 - 80, element_h),
             manager=self.ui_manager,
             container=self
         )
-        curr_y += element_h + padding
-        
-        # --- Item/Cargo ---
-        UILabel(pygame.Rect(padding, curr_y, 100, label_h), "Item:", self.ui_manager, container=self)
-        self.drop_item = UIDropDownMenu(
-            options_list=[""],
-            starting_option="",
-            relative_rect=pygame.Rect(110, curr_y, self.rect.width - 150, element_h),
-            manager=self.ui_manager,
-            container=self
-        )
-        curr_y += element_h + padding
-        
-        # --- Amount ---
-        UILabel(pygame.Rect(padding, curr_y, 100, label_h), "Amount:", self.ui_manager, container=self)
-        self.slider_amount = UIHorizontalSlider(
-            relative_rect=pygame.Rect(110, curr_y, self.rect.width - 200, element_h),
-            start_value=0,
-            value_range=(0, 100),
-            manager=self.ui_manager,
-            container=self
-        )
-        self.lbl_amount = UILabel(
-            pygame.Rect(self.rect.width - 80, curr_y, 60, element_h),
-            "0",
+
+        # --- Filter button ---
+        self.btn_filter = UIButton(
+            pygame.Rect(content_w - 100, curr_y, 110, element_h),
+            "Filter Empty",
             self.ui_manager,
             container=self
         )
-        curr_y += element_h + (padding * 2)
-        
-        # --- Buttons ---
+        curr_y += element_h + padding
+
+        # --- Column Headers ---
+        UILabel(pygame.Rect(self.SOURCE_AMT_X, curr_y, self.SOURCE_AMT_W, label_h),
+                "Source", self.ui_manager, container=self)
+        UILabel(pygame.Rect(self.PENDING_X, curr_y, self.PENDING_W, label_h),
+                "Transfer", self.ui_manager, container=self)
+        UILabel(pygame.Rect(self.TARGET_AMT_X, curr_y, self.TARGET_AMT_W, label_h),
+                "Target", self.ui_manager, container=self)
+        curr_y += label_h + 5
+
+        # --- Scrolling Grid Container ---
+        grid_bottom_margin = 60  # Space for buttons
+        grid_h = self.rect.height - curr_y - grid_bottom_margin - 40  # 40 for window chrome
+        self.grid_container = UIScrollingContainer(
+            relative_rect=pygame.Rect(padding, curr_y, content_w, grid_h),
+            manager=self.ui_manager,
+            container=self,
+        )
+        self._grid_top_y = curr_y
+
+        # --- Buttons at bottom ---
+        btn_y = self.rect.height - 80
         btn_w = 150
         self.btn_confirm = UIButton(
-            pygame.Rect(padding, self.rect.height - 80, btn_w, 40),
-            "Issue Order",
+            pygame.Rect(padding, btn_y, btn_w, 40),
+            "Confirm All",
             self.ui_manager,
             container=self
         )
         self.btn_cancel = UIButton(
-            pygame.Rect(self.rect.width - btn_w - padding - 30, self.rect.height - 80, btn_w, 40),
+            pygame.Rect(content_w - btn_w + padding, btn_y, btn_w, 40),
             "Cancel",
             self.ui_manager,
             container=self
@@ -135,75 +180,54 @@ class TransferDialog(UIWindow):
 
     def _populate_initial_data(self):
         """Find fleets and planets at the hex and populate dropdowns."""
-        # 1. Get all objects at hex
         fleets = self.facade.get_fleets_at_hex(self.hex_coord)
         planets = self.facade.get_planets_at_hex(self.hex_coord)
-        
-        # Determine system name for debug
-        sys_name = "Unknown"
-        if planets:
-            # Assuming planets have system reference or we can infer
-            # PlanetInfo doesn't have system name usually, but let's check
-            # We can use facade to get system
-            sys = self.facade._session.galaxy.get_system_at_location(self.hex_coord) 
-            if not sys:
-                 from game.strategy.data.pathfinding import get_system_at_hex
-                 sys = get_system_at_hex(self.facade._session.galaxy, self.hex_coord)
-            if sys:
-                sys_name = sys.name
-            else:
-                sys_name = "Failed"
 
-        debug_msg = f"Sys: {sys_name} | Plts: {len(planets)} | Hex: {self.hex_coord}"
-        self.lbl_debug.set_text(debug_msg)
-        
-        # Filter for colonized planets
-        colonies = [p for p in planets if p.owner_id is not None]
-        
-        # 2. Build options
+        # Build source options
         self.available_sources = []
-        
-        # PROJ-FIX: Always add the source fleet to available sources, regardless of where we clicked
-        logger.info(f"TransferDialog._populate_initial_data: Scanning hex {self.hex_coord}")
-        
+
+        # Always include the source fleet
         if self.source_fleet:
-            # Check if already added (if clicked on fleet itself)
             fleet_in_list = any(f.fleet_id == self.source_fleet.id for f in fleets)
             if not fleet_in_list:
-                # Add it manually since we are using it as source
-                self.available_sources.append({'label': f"Fleet {self.source_fleet.id}", 'type': 'fleet', 'id': self.source_fleet.id})
+                self.available_sources.append({
+                    'label': f"Fleet {self.source_fleet.id}",
+                    'type': 'fleet', 'id': self.source_fleet.id
+                })
 
         for f in fleets:
-            self.available_sources.append({'label': f"Fleet {f.fleet_id}", 'type': 'fleet', 'id': f.fleet_id})
-            
-        # Add planets at this hex (facade now returns only those at this specific hex)
+            self.available_sources.append({
+                'label': f"Fleet {f.fleet_id}",
+                'type': 'fleet', 'id': f.fleet_id
+            })
+
         for p in planets:
             if p.owner_id is not None:
-                label = f"Colony: {p.name}"
-                p_type = 'colony'
+                self.available_sources.append({
+                    'label': f"Colony: {p.name}",
+                    'type': 'colony', 'id': p.planet_id
+                })
             else:
-                label = f"Planet: {p.name} (Uncolonized)"
-                p_type = 'planet'
-            
-            logger.info(f"Adding source: {label} (Type: {p_type}, ID: {p.planet_id})")
-            self.available_sources.append({'label': label, 'type': p_type, 'id': p.planet_id})
-            
+                self.available_sources.append({
+                    'label': f"Planet: {p.name}",
+                    'type': 'planet', 'id': p.planet_id
+                })
+
         source_labels = [s['label'] for s in self.available_sources]
-        logger.info(f"Final Source Labels: {source_labels}")
-        
-        # Default select source_fleet if possible
-        starting_option = ""
-        for s in self.available_sources:
-            if s['type'] == 'fleet' and s['id'] == self.source_fleet.id:
-                starting_option = s['label']
-                break
-        
-        self.drop_source = self._recreate_dropdown(self.drop_source, source_labels, starting_option)
-        # Always trigger changed handler to populate targets/cargo based on whatever is selected
+
+        # Default: select source_fleet
+        starting = ""
+        if self.source_fleet:
+            for s in self.available_sources:
+                if s['type'] == 'fleet' and s['id'] == self.source_fleet.id:
+                    starting = s['label']
+                    break
+
+        self.drop_source = self._recreate_dropdown(self.drop_source, source_labels, starting)
         self._on_source_changed(self.drop_source.selected_option)
 
     def _recreate_dropdown(self, old_dropdown, options, selected):
-        """Recreate a dropdown as UIDropDownMenu lacks an update method."""
+        """Recreate a dropdown (UIDropDownMenu lacks dynamic update)."""
         rect = old_dropdown.relative_rect
         container = old_dropdown.ui_container
         old_dropdown.kill()
@@ -216,95 +240,331 @@ class TransferDialog(UIWindow):
         )
 
     def _extract_dropdown_value(self, value):
-        """Extract value from dropdown selection which might be a tuple (label, id)."""
+        """Extract string value from dropdown selection (may be tuple)."""
         if isinstance(value, tuple):
             return value[0]
         return value
 
     def _on_source_changed(self, label):
-        """Update targets and cargo when source changes."""
+        """Update targets and grid when source changes."""
         label = self._extract_dropdown_value(label)
-        
         source = next((s for s in self.available_sources if s['label'] == label), None)
-        if not source: return
-        
-        # 1. Populate Targets (all objects at hex except source)
+        if not source:
+            return
+
+        self._current_source = source
+
+        # Populate targets: everything except selected source
         self.available_targets = [s for s in self.available_sources if s['label'] != label]
         target_labels = [t['label'] for t in self.available_targets]
-        self.drop_target = self._recreate_dropdown(self.drop_target, target_labels, 
-                                                  target_labels[0] if target_labels else "")
-            
-        # 2. Populate Cargo
-        # Need current target to populate bidirectional items
-        curr_target_label = self._extract_dropdown_value(self.drop_target.selected_option)
-        target = next((t for t in self.available_targets if t['label'] == curr_target_label), None)
-        self._update_cargo_list(source, target)
+        self.drop_target = self._recreate_dropdown(
+            self.drop_target, target_labels,
+            target_labels[0] if target_labels else ""
+        )
 
-    def _update_cargo_list(self, source, target):
-        """Populate drop_item based on source (unload) and target (load) content."""
-        self.available_cargo = []
+        target_label = self._extract_dropdown_value(self.drop_target.selected_option)
+        self._current_target = next(
+            (t for t in self.available_targets if t['label'] == target_label), None
+        )
 
-        # Determine the PRIMARY direction based on Source Type.
-        # 'unload' if Source=Fleet, Target=Planet; 'load' if Source=Planet, Target=Fleet.
-        primary_direction = 'unload'  # Default: Source gives to Target
+        self._reset_and_build_grid()
 
+    def _on_target_changed(self, label):
+        """Update grid when target changes."""
+        label = self._extract_dropdown_value(label)
+        self._current_target = next(
+            (t for t in self.available_targets if t['label'] == label), None
+        )
+        self._reset_and_build_grid()
+
+    def _reset_and_build_grid(self):
+        """Clear pending transfers and rebuild the grid."""
+        self.pending_transfers.clear()
+        self._build_grid()
+
+    def _get_amounts(self, info_obj) -> Dict[str, int]:
+        """Extract resource/population amounts from a DTO."""
+        amounts: Dict[str, int] = {}
+        if not info_obj:
+            return amounts
+
+        from game.strategy.facade.dto.fleet_dto import FleetInfo
+        from game.strategy.facade.dto.planet_dto import PlanetInfo
+
+        if isinstance(info_obj, FleetInfo):
+            for res, amt in getattr(info_obj, 'cargo_resources', ()):
+                amounts[res] = int(amt)
+            amounts['passengers'] = info_obj.passengers_current
+        elif isinstance(info_obj, PlanetInfo):
+            for res, amt in getattr(info_obj, 'stockpile', ()):
+                amounts[res] = int(amt)
+            # Per-species population
+            for race_id, count, _ in info_obj.population_details:
+                amounts[f'passengers_{race_id}'] = count
+
+        return amounts
+
+    def _build_grid(self):
+        """Build all grid rows inside the scrolling container."""
+        # Clear old grid
+        for w in self._grid_widgets:
+            w.kill()
+        self._grid_widgets.clear()
+        self._arrow_buttons.clear()
+        self._max_buttons.clear()
+        self._pending_labels.clear()
+
+        # Get data from facade
         source_obj = None
-        if source['type'] == 'fleet':
-            source_obj = self.facade.get_fleet(source['id'])
-            if target and target['type'] in ('colony', 'planet'):
-                primary_direction = 'unload'  # Fleet -> Planet
-            elif target and target['type'] == 'fleet':
-                primary_direction = 'unload'  # Fleet -> Fleet
-        elif source['type'] in ('colony', 'planet'):
-            source_obj = self.facade.get_planet(source['id'])
-            if target and target['type'] == 'fleet':
-                primary_direction = 'load'  # Planet -> Fleet
-
-        if source_obj:
-            s_items = CargoTransferService.get_inventory_items(source_obj)
-            for item in s_items:
-                # Convert service keys to dialog keys
-                item['max'] = item.pop('max_amount')
-                item['type'] = item.pop('cargo_type')
-                item['direction'] = primary_direction
-                self.available_cargo.append(item)
-
-        # Target Items (Reverse Direction)
         target_obj = None
-        reverse_direction = 'load' if primary_direction == 'unload' else 'unload'
 
-        if target:
-            if target['type'] == 'fleet':
-                target_obj = self.facade.get_fleet(target['id'])
-            elif target['type'] in ('colony', 'planet'):
-                target_obj = self.facade.get_planet(target['id'])
+        if self._current_source:
+            if self._current_source['type'] == 'fleet':
+                source_obj = self.facade.get_fleet(self._current_source['id'])
+            else:
+                source_obj = self.facade.get_planet(self._current_source['id'])
 
-            if target_obj:
-                t_items = CargoTransferService.get_inventory_items(target_obj)
-                for item in t_items:
-                    # Convert service keys to dialog keys
-                    item['max'] = item.pop('max_amount')
-                    item['type'] = item.pop('cargo_type')
-                    item['direction'] = reverse_direction
-                    # Differentiate label for items coming from Target
-                    action_label = "Load" if reverse_direction == 'load' else "Pull"
-                    item['label'] = f"{action_label}: {item['label']}"
-                    self.available_cargo.append(item)
+        if self._current_target:
+            if self._current_target['type'] == 'fleet':
+                target_obj = self.facade.get_fleet(self._current_target['id'])
+            else:
+                target_obj = self.facade.get_planet(self._current_target['id'])
 
-        item_labels = [c['label'] for c in self.available_cargo]
-        self.drop_item = self._recreate_dropdown(self.drop_item, item_labels,
-                                                 item_labels[0] if item_labels else "")
-        if self.available_cargo:
-            self._update_amount_ui(self.available_cargo[0]['max'])
+        source_amounts = self._get_amounts(source_obj)
+        target_amounts = self._get_amounts(target_obj)
+
+        # Build row data: 8 resources + species
+        self._row_data = []
+        for res in RESOURCE_TYPES:
+            self._row_data.append({
+                'cargo_key': res,
+                'display_name': RESOURCE_DISPLAY_NAMES.get(res, res.capitalize()),
+                'source_amt': source_amounts.get(res, 0),
+                'target_amt': target_amounts.get(res, 0),
+            })
+
+        # Collect all species from both source and target
+        species_seen = set()
+        for key in list(source_amounts.keys()) + list(target_amounts.keys()):
+            if key.startswith('passengers_'):
+                species_seen.add(key)
+            elif key == 'passengers':
+                species_seen.add('passengers')
+
+        for species_key in sorted(species_seen):
+            if species_key == 'passengers':
+                display = "Population"
+            else:
+                display = species_key.replace('passengers_', '')
+            self._row_data.append({
+                'cargo_key': species_key,
+                'display_name': display,
+                'source_amt': source_amounts.get(species_key, 0),
+                'target_amt': target_amounts.get(species_key, 0),
+            })
+
+        # Render visible rows (apply filter)
+        y = 5
+        for row in self._row_data:
+            if self._filter_empty and row['source_amt'] == 0 and row['target_amt'] == 0:
+                continue
+            self._add_row(y, row['cargo_key'], row['display_name'],
+                          row['source_amt'], row['target_amt'])
+            y += self.ROW_HEIGHT
+
+        # Set scrollable area
+        total_h = max(y + 10, 100)
+        container_w = self.grid_container.relative_rect.width - 20
+        self.grid_container.set_scrollable_area_dimensions((container_w, total_h))
+
+    def _add_row(self, y: int, cargo_key: str, display_name: str,
+                 source_amt: int, target_amt: int):
+        """Add one row to the grid."""
+        container = self.grid_container
+
+        # Resource name
+        lbl = UILabel(
+            pygame.Rect(self.NAME_X, y, self.NAME_W, self.ROW_HEIGHT),
+            display_name, self.ui_manager, container=container
+        )
+        self._grid_widgets.append(lbl)
+
+        # Source amount (right-aligned via text)
+        src_lbl = UILabel(
+            pygame.Rect(self.SOURCE_AMT_X, y, self.SOURCE_AMT_W, self.ROW_HEIGHT),
+            str(source_amt), self.ui_manager, container=container
+        )
+        self._grid_widgets.append(src_lbl)
+
+        # Max Load button
+        btn = UIButton(
+            pygame.Rect(self.MAX_LOAD_X, y + 2, self.MAX_LOAD_W, self.ROW_HEIGHT - 4),
+            "Max<", self.ui_manager, container=container
+        )
+        self._max_buttons[id(btn)] = (cargo_key, 'load')
+        self._grid_widgets.append(btn)
+
+        # Load arrow buttons (left: <<<<, <<, <)
+        x = self.LOAD_ARROWS_X
+        for i, (inc, label, w) in enumerate(zip(ARROW_INCREMENTS, ARROW_LABELS_LOAD, self.ARROW_WIDTHS)):
+            btn = UIButton(
+                pygame.Rect(x, y + 2, w, self.ROW_HEIGHT - 4),
+                label, self.ui_manager, container=container
+            )
+            self._arrow_buttons[id(btn)] = (cargo_key, inc)  # positive = load
+            self._grid_widgets.append(btn)
+            x += w + 2
+
+        # Pending transfer label (center)
+        pending_val = self.pending_transfers.get(cargo_key, 0)
+        pending_lbl = UILabel(
+            pygame.Rect(self.PENDING_X, y, self.PENDING_W, self.ROW_HEIGHT),
+            self._format_pending(pending_val),
+            self.ui_manager, container=container
+        )
+        self._pending_labels[cargo_key] = pending_lbl
+        self._grid_widgets.append(pending_lbl)
+
+        # Drop arrow buttons (right: >, >>, >>>>)
+        x = self.DROP_ARROWS_X
+        for i, (inc, label, w) in enumerate(zip(ARROW_INCREMENTS, ARROW_LABELS_DROP, self.ARROW_WIDTHS)):
+            btn = UIButton(
+                pygame.Rect(x, y + 2, w, self.ROW_HEIGHT - 4),
+                label, self.ui_manager, container=container
+            )
+            self._arrow_buttons[id(btn)] = (cargo_key, -inc)  # negative = drop
+            self._grid_widgets.append(btn)
+            x += w + 2
+
+        # Max Drop button
+        btn = UIButton(
+            pygame.Rect(self.MAX_DROP_X, y + 2, self.MAX_DROP_W, self.ROW_HEIGHT - 4),
+            ">Max", self.ui_manager, container=container
+        )
+        self._max_buttons[id(btn)] = (cargo_key, 'drop')
+        self._grid_widgets.append(btn)
+
+        # Target amount
+        tgt_lbl = UILabel(
+            pygame.Rect(self.TARGET_AMT_X, y, self.TARGET_AMT_W, self.ROW_HEIGHT),
+            str(target_amt), self.ui_manager, container=container
+        )
+        self._grid_widgets.append(tgt_lbl)
+
+    def _format_pending(self, amount: int) -> str:
+        """Format pending transfer amount for display."""
+        if amount > 0:
+            return f"Load {amount}"
+        elif amount < 0:
+            return f"Drop {abs(amount)}"
+        return "0"
+
+    def _on_arrow_click(self, cargo_key: str, delta: int):
+        """Adjust pending transfer by delta."""
+        current = self.pending_transfers.get(cargo_key, 0)
+        self.pending_transfers[cargo_key] = current + delta
+        self._update_pending_label(cargo_key)
+
+    def _on_max_click(self, cargo_key: str, direction: str):
+        """Set pending to max load or max drop."""
+        row = next((r for r in self._row_data if r['cargo_key'] == cargo_key), None)
+        if not row:
+            return
+
+        if direction == 'load':
+            # Load all from target
+            self.pending_transfers[cargo_key] = row['target_amt']
         else:
-            self._update_amount_ui(0)
+            # Drop all from source
+            self.pending_transfers[cargo_key] = -row['source_amt']
 
-    def _update_amount_ui(self, max_val):
-        """Reset slider for a new item. Ensure max_val is int for slider.range."""
-        max_val = int(max_val)
-        self.slider_amount.value_range = (0, max_val)
-        self.slider_amount.set_current_value(max_val)  # Default to all
-        self.lbl_amount.set_text(str(max_val))
+        self._update_pending_label(cargo_key)
+
+    def _update_pending_label(self, cargo_key: str):
+        """Update the pending label for a cargo key."""
+        lbl = self._pending_labels.get(cargo_key)
+        if lbl:
+            val = self.pending_transfers.get(cargo_key, 0)
+            lbl.set_text(self._format_pending(val))
+
+    def _on_filter_toggle(self):
+        """Toggle filter and rebuild grid."""
+        self._filter_empty = not self._filter_empty
+        self.btn_filter.set_text("Show All" if self._filter_empty else "Filter Empty")
+        self._build_grid()
+
+    def _on_confirm(self):
+        """Issue all non-zero transfers as commands."""
+        if not self._current_source or not self._current_target:
+            return
+
+        # Determine which entity is the fleet
+        source_is_fleet = self._current_source['type'] == 'fleet'
+        target_is_fleet = self._current_target['type'] == 'fleet'
+
+        fleet_id = None
+        planet_id = None
+        target_fleet_id = None
+
+        if source_is_fleet and not target_is_fleet:
+            fleet_id = self._current_source['id']
+            planet_id = self._current_target['id']
+        elif not source_is_fleet and target_is_fleet:
+            fleet_id = self._current_target['id']
+            planet_id = self._current_source['id']
+        elif source_is_fleet and target_is_fleet:
+            fleet_id = self._current_source['id']
+            target_fleet_id = self._current_target['id']
+        else:
+            logger.info("Transfer between two non-fleet entities not supported.")
+            return
+
+        orders_issued = 0
+        for cargo_key, amount in self.pending_transfers.items():
+            if amount == 0:
+                continue
+
+            # Parse cargo key
+            if cargo_key.startswith('passengers_'):
+                cargo_type = 'passengers'
+                species_id = cargo_key[len('passengers_'):]
+            elif cargo_key == 'passengers':
+                cargo_type = 'passengers'
+                species_id = None
+            else:
+                cargo_type = cargo_key
+                species_id = None
+
+            # Determine direction (commands are fleet-centric)
+            if source_is_fleet:
+                direction = 'load' if amount > 0 else 'unload'
+            elif target_is_fleet:
+                # Source is planet: positive pending = "load from target to source"
+                # But commands are fleet-centric, so this means fleet unloads to planet
+                direction = 'unload' if amount > 0 else 'load'
+            else:
+                # Fleet-to-fleet: source fleet perspective
+                direction = 'load' if amount > 0 else 'unload'
+
+            cmd = IssueTransferCommand(
+                fleet_id=fleet_id,
+                planet_id=planet_id,
+                cargo_type=cargo_type,
+                direction=direction,
+                amount=abs(amount),
+                species_id=species_id,
+                target_fleet_id=target_fleet_id,
+            )
+
+            result = self.facade.handle_command(cmd)
+            if result.is_valid:
+                orders_issued += 1
+            else:
+                logger.info(f"Transfer failed for {cargo_type}: {result.message}")
+
+        if orders_issued > 0:
+            logger.info(f"TransferDialog: {orders_issued} transfer order(s) issued.")
+        self.kill()
 
     def _apply_tooltips(self) -> None:
         """Enrich buttons with hotkey hint tooltips from InputMapper."""
@@ -312,25 +572,18 @@ class TransferDialog(UIWindow):
             return
         confirm_hint = self._mapper.get_display_text(InputAction.TRANSFER_CONFIRM)
         if confirm_hint:
-            self.btn_confirm.set_tooltip(f"Issue Order ({confirm_hint})")
+            self.btn_confirm.set_tooltip(f"Confirm All ({confirm_hint})")
         cancel_hint = self._mapper.get_display_text(InputAction.TRANSFER_CANCEL)
         if cancel_hint:
             self.btn_cancel.set_tooltip(f"Cancel ({cancel_hint})")
 
     def _handle_keydown(self, event: pygame.event.Event) -> bool:
-        """Dispatch keyboard events via InputMapper.
-
-        Args:
-            event: A pygame KEYDOWN event.
-
-        Returns:
-            True if the event was handled.
-        """
+        """Dispatch keyboard events via InputMapper."""
         if not self._mapper:
             return False
         action = self._mapper.resolve(event, contexts=["transfer"])
         if action == InputAction.TRANSFER_CONFIRM:
-            self._issue_order()
+            self._on_confirm()
             return True
         if action == InputAction.TRANSFER_CANCEL:
             self.kill()
@@ -341,112 +594,35 @@ class TransferDialog(UIWindow):
         """Handle UI events."""
         super().process_event(event)
 
-        # Keyboard hotkeys via InputMapper
         if event.type == pygame.KEYDOWN:
             if self._handle_keydown(event):
                 return
-        
+
         if event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
             if event.ui_element == self.drop_source:
                 self._on_source_changed(event.text)
             elif event.ui_element == self.drop_target:
-                # Update cargo if target changes (since target inventory might change)
-                source_label = self._extract_dropdown_value(self.drop_source.selected_option)
-                target_label = self._extract_dropdown_value(event.text)
-                source = next((s for s in self.available_sources if s['label'] == source_label), None)
-                target = next((t for t in self.available_targets if t['label'] == target_label), None)
-                if source:
-                    self._update_cargo_list(source, target)
-            elif event.ui_element == self.drop_item:
-                # Find item and update slider
-                text_val = self._extract_dropdown_value(event.text)
-                item = next((c for c in self.available_cargo if c['label'] == text_val), None)
-                if item:
-                    self._update_amount_ui(item['max'])
-                    
-        if event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
-            if event.ui_element == self.slider_amount:
-                self.lbl_amount.set_text(str(int(event.value)))
-                
+                self._on_target_changed(event.text)
+
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.btn_cancel:
+            btn = event.ui_element
+            if btn == self.btn_cancel:
                 self.kill()
-            elif event.ui_element == self.btn_confirm:
-                self._issue_order()
-
-    def _issue_order(self):
-        """Create and dispatch the transfer command."""
-        source_label = self._extract_dropdown_value(self.drop_source.selected_option)
-        target_label = self._extract_dropdown_value(self.drop_target.selected_option)
-        item_label = self._extract_dropdown_value(self.drop_item.selected_option)
-
-        source = next((s for s in self.available_sources if s['label'] == source_label), None)
-        target = next((t for t in self.available_targets if t['label'] == target_label), None)
-        item = next((c for c in self.available_cargo if c['label'] == item_label), None)
-
-        if not source or not target or not item:
-            logger.debug("TransferDialog: Selection incomplete.")
-            return
-
-        amount = int(self.slider_amount.get_current_value())
-        direction = item.get('direction', 'unload')
-
-        # Determine IDs based on types
-        fleet_id = None
-        planet_id = None
-        target_fleet_id = None
-
-        if source['type'] == 'fleet' and target['type'] in ('colony', 'planet'):
-            fleet_id = source['id']
-            planet_id = target['id']
-        elif source['type'] in ('colony', 'planet') and target['type'] == 'fleet':
-            fleet_id = target['id']
-            planet_id = source['id']
-        elif source['type'] == 'fleet' and target['type'] == 'fleet':
-            # Fleet to Fleet: requires target_fleet_id, can't use service
-            fleet_id = source['id']
-            target_fleet_id = target['id']
-        else:
-            logger.info(f"Transfer between {source['type']} and {target['type']} not supported.")
-            return
-
-        # Build command - use service for fleet-to-planet, manual for fleet-to-fleet
-        if target_fleet_id is None:
-            cmd = CargoTransferService.build_transfer_command(
-                fleet_id=fleet_id,
-                planet_id=planet_id,
-                cargo_type=item['type'],
-                direction=direction,
-                amount=amount,
-                max_amount=item['max'],
-                species_id=item['species_id']
-            )
-        else:
-            # Fleet-to-fleet: Engine convention for amount=0 (all)
-            if amount >= item['max']:
-                amount = 0
-            cmd = IssueTransferCommand(
-                fleet_id=fleet_id,
-                planet_id=planet_id,
-                cargo_type=item['type'],
-                direction=direction,
-                amount=amount,
-                species_id=item['species_id'],
-                target_fleet_id=target_fleet_id
-            )
-
-        result = self.facade.handle_command(cmd)
-        if result.is_valid:
-            logger.info("TransferDialog: Order issued successfully.")
-            self.kill()
-        else:
-            logger.info(f"TransferDialog: Validation failed: {result.message}")
-            # Could show a popup error here
+            elif btn == self.btn_confirm:
+                self._on_confirm()
+            elif btn == self.btn_filter:
+                self._on_filter_toggle()
+            elif id(btn) in self._arrow_buttons:
+                cargo_key, delta = self._arrow_buttons[id(btn)]
+                self._on_arrow_click(cargo_key, delta)
+            elif id(btn) in self._max_buttons:
+                cargo_key, direction = self._max_buttons[id(btn)]
+                self._on_max_click(cargo_key, direction)
 
     def handle_external_selection(self, obj):
-        """Update source/target selection based on an external selection (e.g. from map or list)."""
+        """Update source/target selection based on an external selection."""
         from game.core.protocols import is_fleet, is_planet
-        
+
         target_label = None
         if is_fleet(obj):
             target_label = f"Fleet {obj.id}"
@@ -454,28 +630,14 @@ class TransferDialog(UIWindow):
             if obj.owner_id is not None:
                 target_label = f"Colony: {obj.name}"
             else:
-                target_label = f"Planet: {obj.name} (Uncolonized)"
-            
+                target_label = f"Planet: {obj.name}"
+
         if not target_label:
             return
-            
-        # If the clicked object is in available_sources/targets, select it
-        if target_label in [s['label'] for s in self.available_sources]:
-            curr_source = self._extract_dropdown_value(self.drop_source.selected_option)
-            
-            if curr_source != target_label:
-                # Check if it's already source
-                # Update target if it matches in target list
-                if target_label in [t['label'] for t in self.available_targets]:
-                    # Update target dropdown
-                    updated_labels = [t['label'] for t in self.available_targets]
-                    self.drop_target = self._recreate_dropdown(self.drop_target, updated_labels, target_label)
-                else:
-                    # If not a target, assume source swap
-                    updated_labels = [s['label'] for s in self.available_sources]
-                    self.drop_source = self._recreate_dropdown(self.drop_source, updated_labels, target_label)
-                    self._on_source_changed(target_label)
-        elif target_label in [t['label'] for t in self.available_targets]:
-            # Update target directly if it's a valid target
+
+        if target_label in [t['label'] for t in self.available_targets]:
             updated_labels = [t['label'] for t in self.available_targets]
-            self.drop_target = self._recreate_dropdown(self.drop_target, updated_labels, target_label)
+            self.drop_target = self._recreate_dropdown(
+                self.drop_target, updated_labels, target_label
+            )
+            self._on_target_changed(target_label)

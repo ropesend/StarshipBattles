@@ -48,37 +48,36 @@ class TestTransferDialogEnhanced:
         target_options = [opt[0] if isinstance(opt, tuple) else opt for opt in dialog.drop_target.options_list]
         assert "Fleet 2" in target_options
 
-    def test_issue_order_fleet_to_fleet(self, mock_manager, mock_scene, mock_fleet):
+    def test_confirm_fleet_to_fleet_dispatches_with_target_fleet_id(self, mock_manager, mock_scene, mock_fleet):
         """Confirming fleet-to-fleet transfer should dispatch command with target_fleet_id."""
         # Arrange
+        f1 = MagicMock(fleet_id=1, owner_id=0)
+        f2 = MagicMock(fleet_id=2, owner_id=0)
+        mock_scene._facade.get_fleets_at_hex.return_value = [f1, f2]
+        mock_scene._facade.get_planets_at_hex.return_value = []
+
         mock_fleet_info = MagicMock(spec=FleetInfo)
         mock_fleet_info.passengers_current = 50
+        mock_fleet_info.cargo_resources = ()
+        mock_fleet_info.cargo_capacities = ()
         mock_scene._facade.get_fleet.return_value = mock_fleet_info
-        
-        rect = pygame.Rect(0, 0, 600, 500)
+        mock_scene._facade.handle_command.return_value = MagicMock(is_valid=True)
+
+        rect = pygame.Rect(0, 0, 900, 700)
         dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene)
-        
-        # Manually setup valid state for fleet-to-fleet
-        dialog.available_sources = [{'label': 'Fleet 1', 'type': 'fleet', 'id': 1}]
-        dialog.available_targets = [{'label': 'Fleet 2', 'type': 'fleet', 'id': 2}]
-        dialog.available_cargo = [{'label': 'Passengers (50)', 'type': 'passengers', 'species_id': None, 'max': 50}]
-        
-        dialog.drop_source.selected_option = "Fleet 1"
-        dialog.drop_target.selected_option = "Fleet 2"
-        dialog.drop_item.selected_option = "Passengers (50)"
-        dialog.slider_amount.set_current_value(20)
-        
+
+        # Set up: source=Fleet 1, target=Fleet 2, pending drop of 20 passengers
+        dialog._current_source = {'type': 'fleet', 'id': 1, 'label': 'Fleet 1'}
+        dialog._current_target = {'type': 'fleet', 'id': 2, 'label': 'Fleet 2'}
+        dialog.pending_transfers = {"passengers": -20}  # Drop 20 passengers
+
         # Act
-        with patch('game.ui.screens.transfer_dialog.IssueTransferCommand') as mock_cmd_class:
-            dialog._issue_order()
-            
-            # Assert
-            mock_cmd_class.assert_called_once()
-            args, kwargs = mock_cmd_class.call_args
-            # We expect fleet_id=1, target_fleet_id=2, direction='unload' (from 1 to 2) 
-            # OR fleet_id=1, target_fleet_id=2, direction='unload' might be interpreted differently.
-            # In process_transfer: source = fleet if direction == "unload" else target_fleet
-            assert kwargs['fleet_id'] == 1
-            assert kwargs['target_fleet_id'] == 2
-            assert kwargs['direction'] == 'unload'
-            assert kwargs['amount'] == 20
+        dialog._on_confirm()
+
+        # Assert
+        mock_scene._facade.handle_command.assert_called_once()
+        cmd = mock_scene._facade.handle_command.call_args[0][0]
+        assert cmd.fleet_id == 1
+        assert cmd.target_fleet_id == 2
+        assert cmd.direction == 'unload'
+        assert cmd.amount == 20
