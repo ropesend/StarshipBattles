@@ -9,8 +9,6 @@ __all__ = [
     'LayerDefaults',
     'CombatConstants',
     'SimulationConstants',
-    'PLANET_RESOURCES',
-    'ResourceType',
     'EARTH_MASS',
     # Feature flags
     'ENABLE_SCREENSHOTS',
@@ -82,22 +80,6 @@ class SimulationConstants:
     PROJECTILE_SPEED_SCALE = 100.0    # Divisor to convert projectile_speed stat to world units/tick
     SEEKER_MAX_RANGE_MULTIPLIER = 2.0  # Seekers can track targets up to 2x their theoretical range
 
-
-# Resource Types
-# PROJ-11: Moved from game.strategy.data.planet to eliminate simulation->strategy dependency
-PLANET_RESOURCES = ["metals", "organics", "vapors", "radioactives", "exotics"]
-
-
-class ResourceType:
-    """Ship resource type constants for fuel, energy, and ammo."""
-    FUEL = 'fuel'
-    ENERGY = 'energy'
-    AMMO = 'ammo'
-
-    @classmethod
-    def all(cls) -> list:
-        """Return all resource types in display order."""
-        return [cls.FUEL, cls.ENERGY, cls.AMMO]
 
 
 # Layer Types - Ship layer zones for component placement and damage distribution

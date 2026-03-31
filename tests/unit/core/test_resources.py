@@ -1,10 +1,9 @@
 """
 Tests for game/core/resources.py module.
 
-TCG-FND-007: Tests for resource loading functionality:
-- load_resources_data() pure function
+Tests for resource loading functionality:
+- ResourceCatalog.from_json() and from_data()
 - Path resolution (_resolve_resource_path)
-- Default resource fallbacks
 - Error handling (JSON errors, missing files, permission errors)
 """
 import pytest
@@ -13,47 +12,9 @@ import os
 from unittest.mock import patch, MagicMock
 
 from game.core.resources import (
-    load_resources_data,
-    _get_default_resources,
+    ResourceCatalog,
     _resolve_resource_path,
 )
-
-
-class TestGetDefaultResources:
-    """Tests for _get_default_resources()."""
-
-    def test_returns_dict(self):
-        """Returns a dictionary."""
-        result = _get_default_resources()
-        assert isinstance(result, dict)
-
-    def test_contains_fuel(self):
-        """Contains FUEL resource."""
-        result = _get_default_resources()
-        assert "fuel" in result
-        assert result["fuel"]['id'] == "fuel"
-
-    def test_contains_energy(self):
-        """Contains ENERGY resource."""
-        result = _get_default_resources()
-        assert "energy" in result
-        assert result["energy"]['id'] == "energy"
-
-    def test_contains_ammo(self):
-        """Contains AMMO resource."""
-        result = _get_default_resources()
-        assert "ammo" in result
-        assert result["ammo"]['id'] == "ammo"
-
-    def test_returns_new_dict_each_time(self):
-        """Returns independent copies each call."""
-        result1 = _get_default_resources()
-        result2 = _get_default_resources()
-
-        assert result1 is not result2
-        # Modifying one doesn't affect other
-        result1["fuel"]['test'] = 'modified'
-        assert 'test' not in result2["fuel"]
 
 
 class TestResolveResourcePath:
@@ -101,112 +62,62 @@ class TestResolveResourcePath:
             assert result is None
 
 
-class TestLoadResourcesData:
-    """Tests for load_resources_data() pure function."""
+class TestResourceCatalogFromJson:
+    """Tests for ResourceCatalog.from_json()."""
 
-    def test_returns_dict(self, tmp_path):
-        """Returns a dictionary."""
+    def test_returns_catalog(self, tmp_path):
+        """Returns a ResourceCatalog."""
         test_file = tmp_path / "resources.json"
         test_file.write_text('{"resources": []}')
 
-        with patch('game.core.resources._resolve_resource_path', return_value=str(test_file)):
-            result = load_resources_data(str(test_file))
+        catalog = ResourceCatalog.from_json(str(test_file))
 
-        assert isinstance(result, dict)
+        assert isinstance(catalog, ResourceCatalog)
 
     def test_parses_resources_list(self, tmp_path):
-        """Parses resources list into dict keyed by ID."""
+        """Parses resources list into catalog."""
         test_data = {
             "resources": [
-                {"id": "fuel", "name": "Fuel", "max": 100},
-                {"id": "energy", "name": "Energy", "max": 50}
+                {"id": "fuel", "name": "Fuel", "description": "Ship fuel"},
+                {"id": "energy", "name": "Energy"}
             ]
         }
         test_file = tmp_path / "resources.json"
         test_file.write_text(json.dumps(test_data))
 
-        with patch('game.core.resources._resolve_resource_path', return_value=str(test_file)):
-            result = load_resources_data(str(test_file))
+        catalog = ResourceCatalog.from_json(str(test_file))
 
-        assert 'fuel' in result
-        assert result['fuel']['name'] == 'Fuel'
-        assert result['fuel']['max'] == 100
+        assert catalog.has('fuel')
+        assert catalog.get('fuel').name == 'Fuel'
+        assert catalog.has('energy')
+        assert catalog.get('energy').name == 'Energy'
 
-        assert 'energy' in result
-        assert result['energy']['name'] == 'Energy'
+    def test_file_not_found_returns_empty_catalog(self):
+        """Missing file returns empty catalog."""
+        with patch('game.core.resources.logger') as mock_log:
+            catalog = ResourceCatalog.from_json("nonexistent_xyz.json")
 
-    def test_file_not_found_returns_defaults(self):
-        """Missing file returns default resources."""
-        with patch('game.core.resources._resolve_resource_path', return_value=None):
-            with patch('game.core.resources.logger') as mock_log:
-                result = load_resources_data("nonexistent.json")
-
-        assert "fuel" in result
-        assert "energy" in result
-        assert "ammo" in result
+        assert len(catalog.all_ids()) == 0
         mock_log.warning.assert_called()
 
-    def test_json_decode_error_returns_defaults(self, tmp_path):
-        """Invalid JSON returns default resources."""
+    def test_json_decode_error_returns_empty_catalog(self, tmp_path):
+        """Invalid JSON returns empty catalog."""
         test_file = tmp_path / "bad.json"
         test_file.write_text("not valid json {{{")
 
-        with patch('game.core.resources._resolve_resource_path', return_value=str(test_file)):
-            with patch('game.core.resources.logger') as mock_log:
-                result = load_resources_data(str(test_file))
+        with patch('game.core.resources.logger') as mock_log:
+            catalog = ResourceCatalog.from_json(str(test_file))
 
-        assert "fuel" in result
-        mock_log.warning.assert_called()
-        assert 'Invalid JSON' in str(mock_log.warning.call_args)
-
-    def test_permission_error_returns_defaults(self, tmp_path):
-        """Permission error returns default resources."""
-        test_file = tmp_path / "resources.json"
-        test_file.write_text("{}")
-
-        with patch('game.core.resources._resolve_resource_path', return_value=str(test_file)):
-            with patch('game.core.resources.load_json_required', side_effect=PermissionError("Access denied")):
-                with patch('game.core.resources.logger') as mock_log:
-                    result = load_resources_data(str(test_file))
-
-        assert "fuel" in result
-        mock_log.warning.assert_called()
-
-    def test_os_error_returns_defaults(self, tmp_path):
-        """OS error returns default resources."""
-        test_file = tmp_path / "resources.json"
-        test_file.write_text("{}")
-
-        with patch('game.core.resources._resolve_resource_path', return_value=str(test_file)):
-            with patch('game.core.resources.load_json_required', side_effect=OSError("Disk error")):
-                with patch('game.core.resources.logger') as mock_log:
-                    result = load_resources_data(str(test_file))
-
-        assert "fuel" in result
-        mock_log.warning.assert_called()
-
-    def test_malformed_data_returns_defaults(self, tmp_path):
-        """Malformed data structure returns defaults."""
-        test_file = tmp_path / "resources.json"
-        # resources is not a list
-        test_file.write_text('{"resources": "not a list"}')
-
-        with patch('game.core.resources._resolve_resource_path', return_value=str(test_file)):
-            with patch('game.core.resources.logger') as mock_log:
-                result = load_resources_data(str(test_file))
-
-        # Should fall back to defaults due to TypeError when iterating
-        assert "fuel" in result
+        assert len(catalog.all_ids()) == 0
 
     def test_empty_resources_list(self, tmp_path):
-        """Empty resources list returns empty dict."""
+        """Empty resources list returns empty catalog."""
         test_file = tmp_path / "resources.json"
         test_file.write_text('{"resources": []}')
 
-        with patch('game.core.resources._resolve_resource_path', return_value=str(test_file)):
-            result = load_resources_data(str(test_file))
+        catalog = ResourceCatalog.from_json(str(test_file))
 
-        assert result == {}
+        assert catalog.all_ids() == []
 
     def test_resource_without_id_skipped(self, tmp_path):
         """Resources without id field are skipped."""
@@ -219,41 +130,14 @@ class TestLoadResourcesData:
         test_file = tmp_path / "resources.json"
         test_file.write_text(json.dumps(test_data))
 
-        with patch('game.core.resources._resolve_resource_path', return_value=str(test_file)):
-            result = load_resources_data(str(test_file))
+        catalog = ResourceCatalog.from_json(str(test_file))
 
-        assert 'valid' in result
-        assert len(result) == 1
-
-    def test_returns_deep_copy(self, tmp_path):
-        """Returns deep copies of resource data."""
-        test_data = {
-            "resources": [
-                {"id": "fuel", "nested": {"value": 100}}
-            ]
-        }
-        test_file = tmp_path / "resources.json"
-        test_file.write_text(json.dumps(test_data))
-
-        with patch('game.core.resources._resolve_resource_path', return_value=str(test_file)):
-            result1 = load_resources_data(str(test_file))
-            result2 = load_resources_data(str(test_file))
-
-        # Modifying nested value in result1 shouldn't affect result2
-        result1['fuel']['nested']['value'] = 999
-        assert result2['fuel']['nested']['value'] == 100
-
-    def test_default_file_path(self):
-        """Default path is data/resources.json."""
-        with patch('game.core.resources._resolve_resource_path', return_value=None) as mock_resolve:
-            with patch('game.core.resources.logger'):
-                load_resources_data()
-
-        mock_resolve.assert_called_with("data/resources.json")
+        assert catalog.has('valid')
+        assert len(catalog.all_ids()) == 1
 
 
-class TestEdgeCases:
-    """Edge case tests."""
+class TestResourceCatalogEdgeCases:
+    """Edge case tests for ResourceCatalog."""
 
     def test_none_id_in_resource(self, tmp_path):
         """Resource with id=None is skipped."""
@@ -266,12 +150,10 @@ class TestEdgeCases:
         test_file = tmp_path / "resources.json"
         test_file.write_text(json.dumps(test_data))
 
-        with patch('game.core.resources._resolve_resource_path', return_value=str(test_file)):
-            result = load_resources_data(str(test_file))
+        catalog = ResourceCatalog.from_json(str(test_file))
 
-        assert 'valid' in result
-        assert None not in result
-        assert len(result) == 1
+        assert catalog.has('valid')
+        assert len(catalog.all_ids()) == 1
 
     def test_empty_string_id(self, tmp_path):
         """Resource with empty string id is skipped."""
@@ -284,12 +166,11 @@ class TestEdgeCases:
         test_file = tmp_path / "resources.json"
         test_file.write_text(json.dumps(test_data))
 
-        with patch('game.core.resources._resolve_resource_path', return_value=str(test_file)):
-            result = load_resources_data(str(test_file))
+        catalog = ResourceCatalog.from_json(str(test_file))
 
-        assert 'valid' in result
-        assert '' not in result
-        assert len(result) == 1
+        assert catalog.has('valid')
+        assert not catalog.has('')
+        assert len(catalog.all_ids()) == 1
 
     def test_duplicate_ids_last_wins(self, tmp_path):
         """Duplicate IDs use last value."""
@@ -302,7 +183,6 @@ class TestEdgeCases:
         test_file = tmp_path / "resources.json"
         test_file.write_text(json.dumps(test_data))
 
-        with patch('game.core.resources._resolve_resource_path', return_value=str(test_file)):
-            result = load_resources_data(str(test_file))
+        catalog = ResourceCatalog.from_json(str(test_file))
 
-        assert result['dupe']['name'] == "Second"
+        assert catalog.get('dupe').name == "Second"

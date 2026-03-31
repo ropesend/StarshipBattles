@@ -139,14 +139,31 @@ Resources are stored locally on each planet, not in a global empire pool.
 
 - **`planet.deposits`**: Raw mineral data (`{quantity, quality}`) — what's underground
 - **`planet.stockpile`**: Harvested resources available for use (`Dict[str, float]`)
-- **`planet.max_stockpile`**: Storage capacity per resource (`Dict[str, float]`), set by `EmpireStorageAbility` components on facilities
+- **`planet.max_stockpile`**: Storage capacity per resource (`Dict[str, float]`), set by `LocalStorageAbility` components on facilities
 
 The `HarvestingEngine` extracts from `deposits` into `stockpile`. The `ProductionEngine`
 draws from `stockpile` for construction. Resources must be transferred between planets
 via cargo ships.
 
-The empire-level `resource_pool` is a read-only aggregate (sum of all colony stockpiles)
-used for UI display only.
+The empire-level `resource_pool` is a read-only computed property (sum of all colony
+stockpiles plus `_fleet_resource_pool`). It cannot be mutated directly — to add
+resources, use `planet.add_to_stockpile()` on each colony.
+
+## Resource Transfers
+
+Resources are moved between planets and fleets via the transfer order system:
+
+1. **UI**: Player opens the Transfer Dialog (T key) and adjusts transfer amounts per resource
+2. **Command**: Each non-zero transfer creates an `IssueTransferCommand` with `cargo_type`, `direction` (load/unload), and `amount`
+3. **Handler**: `TransferCommandHandler` validates the transfer and auto-adds a MOVE order if the fleet isn't at the target location
+4. **Order**: A `TRANSFER` order is added to the fleet's order queue
+5. **Execution**: `OrderProcessor` executes the transfer in Phase 1.5 via `_execute_load()` or `_execute_unload()`
+   - **Load** (planet → fleet): Deducts from `planet.stockpile`, adds to fleet ship cargo
+   - **Unload** (fleet → planet): Deducts from fleet ship cargo, adds to `planet.stockpile`
+   - **Fleet-to-fleet**: Uses `source.resources.unload_cargo_from_fleet()` → `dest.resources.load_cargo_to_fleet()`
+
+Fleet construction also draws from fleet cargo via `fleet.has_cargo_resources()` and
+`fleet.consume_cargo_resource()`, aggregated across all ships in the fleet.
 
 ## Per-Turn Resource Costs
 
@@ -161,13 +178,10 @@ automatically disabled. The `is_operational` field on `ShipInstance` and
 
 ## Migration Status
 
-The resource system is being unified from two previously separate concepts:
-- `PLANET_RESOURCES` constant (deprecated, will be removed)
-- `ResourceType` class (deprecated, will be removed)
-
-New code should use `ResourceCatalog` instead of these constants. The legacy
-`load_resources_data()` function is maintained for backward compatibility during
-migration.
+The resource system has been unified under `ResourceCatalog`. The legacy
+`PLANET_RESOURCES` constant, `ResourceType` class, and `load_resources_data()`
+function have been removed. All code now uses `ResourceCatalog.from_json()`
+and queries like `catalog.by_display_group("planetary")` to get resource lists.
 
 ## Modding Guide
 

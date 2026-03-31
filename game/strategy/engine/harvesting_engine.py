@@ -11,7 +11,7 @@ Responsibilities:
 - Deduct from planet quantity (clamped to zero)
 - Add to empire resource pool (respecting storage limits)
 - Skip non-operational facilities and missing resource types
-- Aggregate EmpireStorage abilities to set empire max_storage
+- Aggregate LocalStorage abilities to set empire max_storage
 - Recalculate storage each tick for mid-turn facility changes
 
 Called by TurnEngine._process_tick() 100 times per turn.
@@ -128,7 +128,7 @@ class HarvestingEngine(IHarvestingEngine):
         """
         Recalculate empire-wide storage capacity from storage facilities.
 
-        Scans all colonies' facilities for EmpireStorage abilities and
+        Scans all colonies' facilities for LocalStorage abilities and
         sums their capacity per resource type into empire.max_storage.
 
         Resets max_storage before recalculating so destroyed/removed
@@ -161,7 +161,7 @@ class HarvestingEngine(IHarvestingEngine):
         facility: 'PlanetaryFacility',
         storage_totals: dict,
     ) -> None:
-        """Scan a facility's components for EmpireStorage abilities."""
+        """Scan a facility's components for LocalStorage abilities."""
         for comp in iter_components(facility.design_data):
             storage_info = self._get_storage_info(comp)
             if storage_info is not None:
@@ -173,10 +173,10 @@ class HarvestingEngine(IHarvestingEngine):
                     )
 
     def _get_storage_info(self, comp) -> Optional[dict]:
-        """Extract EmpireStorage info from a component entry.
+        """Extract LocalStorage info from a component entry.
 
         Supports:
-        - Dict with inline abilities: {"id": "x", "abilities": {"EmpireStorage": {...}}}
+        - Dict with inline abilities: {"id": "x", "abilities": {"LocalStorage": {...}}}
         - Plain string ID: resolved via registries
 
         Args:
@@ -187,7 +187,7 @@ class HarvestingEngine(IHarvestingEngine):
         """
         if isinstance(comp, dict):
             abilities = comp.get('abilities', {})
-            storage_data = abilities.get('EmpireStorage')
+            storage_data = abilities.get('LocalStorage')
             if isinstance(storage_data, dict):
                 return storage_data
             # Also check by component ID via registry
@@ -211,7 +211,7 @@ class HarvestingEngine(IHarvestingEngine):
         if comp_def is None:
             return None
         abilities = get_component_abilities(comp_def)
-        storage_data = abilities.get('EmpireStorage')
+        storage_data = abilities.get('LocalStorage')
         if isinstance(storage_data, dict):
             return storage_data
         return None

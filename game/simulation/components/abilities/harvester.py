@@ -43,8 +43,8 @@ class ResourceHarvesterAbility(Ability):
         ]
 
 
-class EmpireStorageAbility(Ability):
-    """Provides storage capacity for empire resource pool.
+class LocalStorageAbility(Ability):
+    """Provides storage capacity for local colony storage.
 
     Each instance adds capacity for a specific resource type.
     Multiple storage facilities stack additively.

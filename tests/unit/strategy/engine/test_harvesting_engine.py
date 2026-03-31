@@ -290,7 +290,7 @@ class TestHarvestingEngine:
                     "core": [{
                         "id": "vault",
                         "abilities": {
-                            "EmpireStorage": {
+                            "LocalStorage": {
                                 "resource_type": "metals",
                                 "capacity": 1000.0,
                             }
@@ -486,7 +486,7 @@ def _make_storage_facility(
     instance_id="store-001",
     is_operational=True,
 ):
-    """Create a facility with an EmpireStorage ability in design_data."""
+    """Create a facility with an LocalStorage ability in design_data."""
     facility = PlanetaryFacility(
         instance_id=instance_id,
         design_id=f"{resource_type.lower()}_vault_complex",
@@ -497,7 +497,7 @@ def _make_storage_facility(
                     {
                         "id": f"resource_vault_{resource_type.lower()}",
                         "abilities": {
-                            "EmpireStorage": {
+                            "LocalStorage": {
                                 "resource_type": resource_type,
                                 "capacity": capacity,
                             }
@@ -663,7 +663,7 @@ class TestStorageAggregation:
         # Add storage component to registry
         storage_comp = MagicMock()
         storage_comp.abilities = {
-            "EmpireStorage": {
+            "LocalStorage": {
                 "resource_type": "metals",
                 "capacity": 10000.0,
             }

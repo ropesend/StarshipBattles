@@ -51,6 +51,7 @@ Example:
 """
 from game.simulation.components.component_constants import ComponentStatus
 from game.core.constants import LayerType
+from game.core.resources import ResourceCatalog
 from game.simulation.physics_constants import K_TURN, compute_acceleration, compute_max_speed, DEFAULT_MAX_MASS
 from game.simulation.entities.ability_aggregator import calculate_ability_totals, get_ability_total
 from game.simulation.entities.combat_endurance import calculate_combat_endurance
@@ -67,6 +68,12 @@ from game.simulation.interfaces import (
     is_warp_jump,
 )
 import math
+
+
+def _get_planetary_resource_ids():
+    """Get planetary resource IDs from the ResourceCatalog."""
+    return [d.id for d in ResourceCatalog.from_json().by_display_group("planetary")]
+
 
 class ShipStatsCalculator:
     """
@@ -103,9 +110,7 @@ class ShipStatsCalculator:
 
         # Resource Costs Aggregation
         ship.construction_cost = {}
-        # TODO: Replace with ResourceCatalog queries
-        PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
-        for res in PLANET_RESOURCE_NAMES:
+        for res in _get_planetary_resource_ids():
             ship.construction_cost[res] = 0
             
         for comp in all_components:

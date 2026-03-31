@@ -1,18 +1,18 @@
 """
-Tests for EmpireStorageAbility - provides storage capacity for empire resource pool.
+Tests for LocalStorageAbility - provides storage capacity for empire resource pool.
 
-PROJ-75 Phase 3: TDD tests for EmpireStorageAbility.
+PROJ-75 Phase 3: TDD tests for LocalStorageAbility.
 """
 import pytest
 from unittest.mock import MagicMock
 
 
-class TestEmpireStorageAbility:
-    """Tests for EmpireStorageAbility creation and behavior."""
+class TestLocalStorageAbility:
+    """Tests for LocalStorageAbility creation and behavior."""
 
     def _make_ability(self, resource_type="metals", capacity=10000.0, stats=None):
-        """Create an EmpireStorageAbility with given data."""
-        from game.simulation.components.abilities.harvester import EmpireStorageAbility
+        """Create an LocalStorageAbility with given data."""
+        from game.simulation.components.abilities.harvester import LocalStorageAbility
 
         component = MagicMock()
         component.stats = stats or {}
@@ -22,37 +22,37 @@ class TestEmpireStorageAbility:
             "resource_type": resource_type,
             "capacity": capacity,
         }
-        return EmpireStorageAbility(component, data)
+        return LocalStorageAbility(component, data)
 
     def test_creation_with_resource_type_and_capacity(self):
-        """EmpireStorageAbility stores resource_type and capacity from data."""
+        """LocalStorageAbility stores resource_type and capacity from data."""
         ability = self._make_ability(resource_type="metals", capacity=10000.0)
 
         assert ability.resource_type == "metals"
         assert ability.capacity == pytest.approx(10000.0)
 
     def test_creation_defaults(self):
-        """EmpireStorageAbility uses defaults when data is missing."""
-        from game.simulation.components.abilities.harvester import EmpireStorageAbility
+        """LocalStorageAbility uses defaults when data is missing."""
+        from game.simulation.components.abilities.harvester import LocalStorageAbility
 
         component = MagicMock()
         component.stats = {}
         component.ability_stats = {}
 
-        ability = EmpireStorageAbility(component, {})
+        ability = LocalStorageAbility(component, {})
 
         assert ability.resource_type == ""
         assert ability.capacity == pytest.approx(0.0)
 
     def test_creation_with_non_dict_data(self):
-        """EmpireStorageAbility handles non-dict data gracefully."""
-        from game.simulation.components.abilities.harvester import EmpireStorageAbility
+        """LocalStorageAbility handles non-dict data gracefully."""
+        from game.simulation.components.abilities.harvester import LocalStorageAbility
 
         component = MagicMock()
         component.stats = {}
         component.ability_stats = {}
 
-        ability = EmpireStorageAbility(component, True)
+        ability = LocalStorageAbility(component, True)
 
         assert ability.resource_type == ""
         assert ability.capacity == pytest.approx(0.0)
@@ -92,30 +92,30 @@ class TestEmpireStorageAbility:
         assert '12,000' in rows[1]['value'] or '12000' in rows[1]['value']
 
     def test_different_resource_types(self):
-        """EmpireStorageAbility works with all resource types."""
+        """LocalStorageAbility works with all resource types."""
         for rtype in ["metals", "organics", "vapors", "radioactives", "exotics"]:
             ability = self._make_ability(resource_type=rtype, capacity=5000.0)
             assert ability.resource_type == rtype
 
 
-class TestEmpireStorageAbilityRegistry:
-    """Test that EmpireStorageAbility is properly registered."""
+class TestLocalStorageAbilityRegistry:
+    """Test that LocalStorageAbility is properly registered."""
 
     def test_in_registry(self):
-        """EmpireStorageAbility is available in ABILITY_REGISTRY."""
+        """LocalStorageAbility is available in ABILITY_REGISTRY."""
         from game.simulation.components.abilities import ABILITY_REGISTRY
 
-        assert "EmpireStorage" in ABILITY_REGISTRY
+        assert "LocalStorage" in ABILITY_REGISTRY
 
     def test_create_via_registry(self):
-        """Can create EmpireStorageAbility via create_ability."""
+        """Can create LocalStorageAbility via create_ability."""
         from game.simulation.components.abilities import create_ability
 
         component = MagicMock()
         component.stats = {}
         component.ability_stats = {}
 
-        ability = create_ability("EmpireStorage", component, {
+        ability = create_ability("LocalStorage", component, {
             "resource_type": "metals",
             "capacity": 10000.0,
         })

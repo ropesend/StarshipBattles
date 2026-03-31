@@ -131,11 +131,11 @@ def _make_storage_facility(
     resource_cost=None,
     instance_id="store-001",
 ):
-    """Create a facility with an EmpireStorage component."""
+    """Create a facility with an LocalStorage component."""
     comp = {
         "id": f"{resource_type.lower()}_vault",
         "abilities": {
-            "EmpireStorage": {
+            "LocalStorage": {
                 "resource_type": resource_type,
                 "capacity": capacity,
             }

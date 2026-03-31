@@ -72,7 +72,7 @@ class DesignMetadata:
             vehicle_type=data.get("vehicle_type", "Ship"),
             mass=data.get("mass", 0.0),
             combat_power=data.get("combat_power", 0.0),
-            construction_cost=data.get("construction_cost", data.get("resource_cost", {})),
+            construction_cost=data.get("construction_cost", {}),
             created_date=data.get("created_date", ""),
             last_modified=data.get("last_modified", ""),
             is_obsolete=data.get("is_obsolete", False),

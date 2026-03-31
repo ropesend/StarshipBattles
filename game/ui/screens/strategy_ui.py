@@ -19,9 +19,10 @@ import pygame_gui
 from game.ui.config import UIConfig
 from game.ui.fonts import get_font
 from game.core.paths import Paths
-# TODO: Replace with ResourceCatalog queries
-PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
+from game.core.resources import ResourceCatalog
 from game.ui.screens.build_queue_helpers import RESOURCE_ABBREVS
+
+_PLANETARY_IDS = [d.id for d in ResourceCatalog.from_json().by_display_group("planetary")]
 from game.ui.screens.strategy_menu_panel import StrategyMenuPanel, PANEL_WIDTH, PANEL_HEIGHT
 from game.ui.screens.strategy_window_manager import StrategyWindowManager
 from game.ui.screens.strategy_detail_formatter import StrategyDetailFormatter
@@ -293,7 +294,7 @@ class StrategyUI:
         empire = self.scene.current_empire
 
         parts = []
-        for res in PLANET_RESOURCE_NAMES:
+        for res in _PLANETARY_IDS:
             current = empire.get_resource(res)
             cap = empire.max_storage.get(res, 0.0)
             abbr = RESOURCE_ABBREVS.get(res, res[:3])

@@ -5,15 +5,11 @@ Resource Catalog and Loading
 Provides the unified ResourceCatalog for all resource definitions (planetary
 materials and operational consumables), loaded from data/resources.json.
 
-Also maintains the legacy load_resources_data() function for backward
-compatibility during the migration to ResourceCatalog.
-
 Error Handling:
     All loading errors (FileNotFoundError, JSONDecodeError, PermissionError,
     TypeError) are caught and logged, with graceful fallback to default resources.
 """
 
-import copy
 import json
 import logging
 import os
@@ -154,17 +150,8 @@ class ResourceCatalog:
 
 
 # =============================================================================
-# Legacy Loading Functions
+# Path Resolution
 # =============================================================================
-
-def _get_default_resources() -> dict:
-    """Return default resource definitions."""
-    return {
-        'fuel': {'id': 'fuel'},
-        'energy': {'id': 'energy'},
-        'ammo': {'id': 'ammo'},
-    }
-
 
 def _resolve_resource_path(file_path: str) -> Optional[str]:
     """
@@ -186,51 +173,3 @@ def _resolve_resource_path(file_path: str) -> Optional[str]:
         return abs_path
 
     return None
-
-
-def load_resources_data(file_path: str = "data/resources.json") -> dict:
-    """
-    Pure function to load resource definitions from JSON.
-
-    PROJ-38: Returns a dictionary of resource definitions without
-    modifying any global state. Use this for DI patterns.
-
-    Note: This is a legacy function maintained for backward compatibility.
-    New code should use ResourceCatalog.from_json() instead.
-
-    Args:
-        file_path: Path to the resources JSON file. Defaults to data/resources.json.
-
-    Returns:
-        Dict[str, dict]: Resource definitions keyed by resource ID
-    """
-    resolved_path = _resolve_resource_path(file_path)
-    if resolved_path is None:
-        logger.warning(f"Resources file not found at {file_path}, using defaults")
-        return copy.deepcopy(_get_default_resources())
-
-    try:
-        data = load_json_required(resolved_path)
-
-        result = {}
-        # Parse resources list into dict keyed by ID
-        for res_def in data.get('resources', []):
-            res_id = res_def.get('id')
-            if res_id:
-                result[res_id] = copy.deepcopy(res_def)
-
-        return result
-
-    except FileNotFoundError:
-        logger.warning(f"Resources file not found: {resolved_path}, using defaults")
-        return copy.deepcopy(_get_default_resources())
-    except json.JSONDecodeError as e:
-        logger.warning(f"Invalid JSON in resources file {resolved_path}: {e}, using defaults")
-        return copy.deepcopy(_get_default_resources())
-    except (PermissionError, OSError) as e:
-        logger.warning(f"Cannot read resources file {resolved_path}: {e}, using defaults")
-        return copy.deepcopy(_get_default_resources())
-    except (TypeError, AttributeError) as e:
-        # Malformed data structure (e.g., resources is not a list)
-        logger.warning(f"Malformed resources data in {resolved_path}: {e}, using defaults")
-        return copy.deepcopy(_get_default_resources())

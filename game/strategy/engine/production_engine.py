@@ -418,9 +418,10 @@ class ProductionEngine:
         Returns:
             True if sufficient resources available, False otherwise.
         """
-        if colony_or_fleet is not None and hasattr(colony_or_fleet, 'has_stockpile'):
+        ctx = getattr(colony_or_fleet, 'context_type', None)
+        if ctx == 'planet':
             return colony_or_fleet.has_stockpile(cost_this_step)
-        if colony_or_fleet is not None and hasattr(colony_or_fleet, 'has_cargo_resources'):
+        if ctx == 'fleet':
             return colony_or_fleet.has_cargo_resources(cost_this_step)
         return empire.has_resources(cost_this_step)
 
@@ -450,9 +451,10 @@ class ProductionEngine:
         for resource, needed in cost_this_step.items():
             if needed <= 0:
                 continue
-            if colony_or_fleet is not None and hasattr(colony_or_fleet, 'get_stockpile'):
+            ctx = getattr(colony_or_fleet, 'context_type', None)
+            if ctx == 'planet':
                 available = colony_or_fleet.get_stockpile(resource)
-            elif colony_or_fleet is not None and hasattr(colony_or_fleet, 'get_cargo_resource'):
+            elif ctx == 'fleet':
                 available = colony_or_fleet.get_cargo_resource(resource)
             else:
                 available = empire.resource_pool.get(resource, 0.0)
@@ -505,11 +507,12 @@ class ProductionEngine:
             cost_this_step: Resources to consume.
             colony_or_fleet: Build location (Planet or Fleet).
         """
+        ctx = getattr(colony_or_fleet, 'context_type', None)
         for res, amount in cost_this_step.items():
             if amount > 0:
-                if colony_or_fleet is not None and hasattr(colony_or_fleet, 'consume_from_stockpile'):
+                if ctx == 'planet':
                     colony_or_fleet.consume_from_stockpile(res, amount)
-                elif colony_or_fleet is not None and hasattr(colony_or_fleet, 'consume_cargo_resource'):
+                elif ctx == 'fleet':
                     colony_or_fleet.consume_cargo_resource(res, amount)
                 else:
                     empire.consume_resources(res, amount)

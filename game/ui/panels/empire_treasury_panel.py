@@ -12,9 +12,10 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIImage, UIScrollingContainer
 
-# TODO: Replace with ResourceCatalog queries
-PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
+from game.core.resources import ResourceCatalog
 from game.core.paths import Paths
+
+_PLANETARY_IDS = [d.id for d in ResourceCatalog.from_json().by_display_group("planetary")]
 from game.strategy.engine.empire_economy_calculator import EmpireEconomySnapshot
 from game.ui.utils import create_section_header
 
@@ -124,7 +125,7 @@ class EmpireTreasuryPanel:
         Returns:
             New y offset after header
         """
-        for i, resource in enumerate(PLANET_RESOURCE_NAMES):
+        for i, resource in enumerate(_PLANETARY_IDS):
             x = LABEL_COL_WIDTH + i * RESOURCE_COL_WIDTH
 
             # Resource icon
@@ -170,7 +171,7 @@ class EmpireTreasuryPanel:
         # Section title
         title_label = create_section_header(
             title, y,
-            LABEL_COL_WIDTH + len(PLANET_RESOURCE_NAMES) * RESOURCE_COL_WIDTH,
+            LABEL_COL_WIDTH + len(_PLANETARY_IDS) * RESOURCE_COL_WIDTH,
             self.ui_manager, self._scroll_container,
             x=LEFT_MARGIN, height=ROW_HEIGHT
         )
@@ -215,7 +216,7 @@ class EmpireTreasuryPanel:
         self._elements.append(label)
 
         # Resource values
-        for i, resource in enumerate(PLANET_RESOURCE_NAMES):
+        for i, resource in enumerate(_PLANETARY_IDS):
             x = LABEL_COL_WIDTH + i * RESOURCE_COL_WIDTH
             value = values.get(resource, 0.0)
             formatted = self._format_value(value)
@@ -307,7 +308,7 @@ def load_resource_icons() -> Dict[str, pygame.Surface]:
     icons = {}
     resource_icons_dir = os.path.join(Paths.ASSET_DIR, "Images", "Resource Icons")
 
-    for resource in PLANET_RESOURCE_NAMES:
+    for resource in _PLANETARY_IDS:
         filename = f"resource_{resource.lower()}_icon.png"
         filepath = os.path.join(resource_icons_dir, filename)
 

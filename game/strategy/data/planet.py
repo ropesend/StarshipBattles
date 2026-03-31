@@ -85,7 +85,7 @@ class Planet:
     construction_queue: list = field(default_factory=list)
 
     # Mineral deposits
-    # Key: Resource Name (from PLANET_RESOURCE_NAMES) -> {'quantity': int, 'quality': float}
+    # Key: Resource ID (planetary resource from ResourceCatalog) -> {'quantity': int, 'quality': float}
     deposits: Dict[str, dict] = field(default_factory=dict)
 
     # Local resource stockpile (harvested/stored resources available for construction)

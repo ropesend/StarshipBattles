@@ -382,35 +382,28 @@ class OrderProcessor:
         amount: int,
         species_id: str = None
     ) -> int:
-        """Execute a transfer between two fleets."""
-        if cargo_type == "passengers":
-            source = fleet if direction == "unload" else target_fleet
-            dest = target_fleet if direction == "unload" else fleet
-            
-            # Determine how much to transfer
-            current_cargo = source.get_fleet_cargo_current("passengers")
-            capacity = dest.get_fleet_cargo_capacity("passengers")
-            current_dest = dest.get_fleet_cargo_current("passengers")
-            available_space = capacity - current_dest
-            
-            # If amount is 0, transfer all available
-            to_transfer = amount if amount > 0 else current_cargo
-            
-            # Cap by source cargo and destination space
-            to_transfer = min(to_transfer, current_cargo, available_space)
-            
-            if to_transfer <= 0:
-                return 0
-                
-            # Unload from source
-            actual_transferred = source.unload_cargo_from_fleet("passengers", to_transfer)
-            
-            # Load to destination
-            dest.load_cargo_to_fleet("passengers", actual_transferred)
-            
-            return actual_transferred
-            
-        return 0
+        """Execute a transfer between two fleets.
+
+        Works for all cargo types: passengers, resources (metals, fuel, etc.).
+        """
+        source = fleet if direction == "unload" else target_fleet
+        dest = target_fleet if direction == "unload" else fleet
+
+        current_cargo = source.resources.get_fleet_cargo_current(cargo_type)
+        capacity = dest.resources.get_fleet_cargo_capacity(cargo_type)
+        current_dest = dest.resources.get_fleet_cargo_current(cargo_type)
+        available_space = capacity - current_dest
+
+        to_transfer = amount if amount > 0 else current_cargo
+        to_transfer = min(to_transfer, current_cargo, available_space)
+
+        if to_transfer <= 0:
+            return 0
+
+        actual_transferred = source.resources.unload_cargo_from_fleet(cargo_type, to_transfer)
+        dest.resources.load_cargo_to_fleet(cargo_type, actual_transferred)
+
+        return actual_transferred
 
     def _execute_load(
         self,
@@ -467,8 +460,8 @@ class OrderProcessor:
         to_load = amount if amount > 0 else available_space
         to_load = min(to_load, available_space)
 
-        # Cap by planet stockpile
-        planet_available = int(planet.get_stockpile(cargo_type))
+        # Cap by planet stockpile (convert to int for cargo API)
+        planet_available = int(round(planet.get_stockpile(cargo_type)))
         to_load = min(to_load, planet_available)
 
         if to_load <= 0:

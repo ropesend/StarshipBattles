@@ -3,39 +3,42 @@ Tests for game.core.constants module.
 
 PROJ-11: Verifies constants are properly exported from core layer.
 """
-import pytest
+from game.core.resources import ResourceCatalog
 
 
-class TestPlanetResources:
-    """Test PLANET_RESOURCES constant from core.constants."""
+class TestPlanetaryResources:
+    """Test planetary resources via ResourceCatalog (replaces legacy PLANET_RESOURCES)."""
 
-    def test_planet_resources_importable_from_core(self):
-        """PLANET_RESOURCES should be importable from game.core.constants."""
-        from game.core.constants import PLANET_RESOURCES
-        assert PLANET_RESOURCES is not None
+    def test_planetary_resources_from_catalog(self):
+        """ResourceCatalog should provide planetary resource IDs."""
+        catalog = ResourceCatalog.from_json()
+        ids = [d.id for d in catalog.by_display_group("planetary")]
+        assert ids is not None
 
-    def test_planet_resources_is_list(self):
-        """PLANET_RESOURCES should be a list."""
-        from game.core.constants import PLANET_RESOURCES
-        assert isinstance(PLANET_RESOURCES, list)
+    def test_planetary_resources_is_list(self):
+        """Planetary resource IDs should be a list."""
+        catalog = ResourceCatalog.from_json()
+        ids = [d.id for d in catalog.by_display_group("planetary")]
+        assert isinstance(ids, list)
 
-    def test_planet_resources_has_expected_values(self):
-        """PLANET_RESOURCES should contain the expected resource types."""
-        from game.core.constants import PLANET_RESOURCES
-
+    def test_planetary_resources_has_expected_values(self):
+        """Planetary resources should contain the expected resource types."""
+        catalog = ResourceCatalog.from_json()
+        ids = [d.id for d in catalog.by_display_group("planetary")]
         expected = ["metals", "organics", "vapors", "radioactives", "exotics"]
-        assert PLANET_RESOURCES == expected
+        assert ids == expected
 
-    def test_planet_resources_has_five_elements(self):
-        """PLANET_RESOURCES should have exactly 5 resource types."""
-        from game.core.constants import PLANET_RESOURCES
-        assert len(PLANET_RESOURCES) == 5
+    def test_planetary_resources_has_five_elements(self):
+        """Planetary resources should have exactly 5 resource types."""
+        catalog = ResourceCatalog.from_json()
+        ids = [d.id for d in catalog.by_display_group("planetary")]
+        assert len(ids) == 5
 
-    def test_planet_resources_elements_are_strings(self):
-        """All elements of PLANET_RESOURCES should be strings."""
-        from game.core.constants import PLANET_RESOURCES
-
-        for resource in PLANET_RESOURCES:
+    def test_planetary_resources_elements_are_strings(self):
+        """All planetary resource IDs should be strings."""
+        catalog = ResourceCatalog.from_json()
+        ids = [d.id for d in catalog.by_display_group("planetary")]
+        for resource in ids:
             assert isinstance(resource, str)
 
 

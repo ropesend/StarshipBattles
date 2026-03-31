@@ -30,6 +30,7 @@ def _make_colony(construction_queue=None, facilities=None, stockpile=None, max_s
     """
     colony = MagicMock()
     colony.name = "Test Colony"
+    colony.context_type = "planet"
     colony.construction_queue = construction_queue or []
     colony.facilities = facilities or []
     colony.stockpile = dict(stockpile) if stockpile else {}
@@ -511,6 +512,7 @@ class TestMidTurnCompletion:
         )
 
         fleet = MagicMock(spec=Fleet)
+        fleet.context_type = "fleet"
         fleet.is_building = True
         fleet.capabilities = MagicMock()
         fleet.capabilities.has_space_shipyard = True
@@ -545,6 +547,7 @@ class TestMidTurnCompletion:
         )
 
         fleet = MagicMock(spec=Fleet)
+        fleet.context_type = "fleet"
         fleet.is_building = True
         fleet.capabilities = MagicMock()
         fleet.capabilities.has_space_shipyard = True

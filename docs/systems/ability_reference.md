@@ -710,7 +710,7 @@ Colony pod for a specific planet type. Enables colonization when the carrying sh
 
 ---
 
-## Harvester & Empire
+## Harvester & Storage
 
 ### ResourceHarvester
 
@@ -735,17 +735,17 @@ Enables resource harvesting on planets.
 
 ---
 
-### EmpireStorage
+### LocalStorage
 
 | Field | Value |
 |-------|-------|
-| Registry Key | `EmpireStorage` |
-| Class | `EmpireStorageAbility` |
+| Registry Key | `LocalStorage` |
+| Class | `LocalStorageAbility` |
 | Source | `harvester.py` |
 | Layer | STRATEGIC |
 | Base Class | `Ability` |
 
-Empire-level resource storage capacity.
+Local colony resource storage capacity.
 
 **Data Format:** Dict
 
@@ -990,7 +990,7 @@ Self-Destruct Device. Schedules ship for destruction.
 | `StructuralIntegrity` | StructuralIntegrity | Markers |
 | `ColonizePlanet` | ColonizePlanet | Colonization |
 | `ResourceHarvester` | ResourceHarvesterAbility | Harvester |
-| `EmpireStorage` | EmpireStorageAbility | Harvester |
+| `LocalStorage` | LocalStorageAbility | Harvester |
 | `SpaceShipyard` | SpaceShipyardAbility | Harvester |
 | `PlanetaryShield` | PlanetaryShieldAbility | Planetary |
 | `PlanetaryEnergyGenerator` | PlanetaryEnergyGeneratorAbility | Planetary |

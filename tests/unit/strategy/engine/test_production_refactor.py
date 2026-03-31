@@ -317,6 +317,7 @@ class TestResourceShortageEventLogging:
     @pytest.fixture
     def colony(self):
         colony = MagicMock(spec=Planet)
+        colony.context_type = "planet"
         colony.construction_queue = []
         colony.facilities = []
         # Default: insufficient stockpile (triggers shortage)

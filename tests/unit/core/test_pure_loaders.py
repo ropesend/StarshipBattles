@@ -245,83 +245,64 @@ class TestLoadVehicleClassesData:
 
 
 # =============================================================================
-# Test: load_resources_data Pure Function
+# Test: ResourceCatalog Loading
 # =============================================================================
 
-class TestLoadResourcesData:
-    """Tests for the load_resources_data pure loading function."""
+class TestResourceCatalogLoading:
+    """Tests for the ResourceCatalog resource loading."""
 
-    def test_load_resources_data_returns_dict(self):
-        """load_resources_data() should return a dictionary."""
-        from game.core.resources import load_resources_data
+    def test_resource_catalog_returns_catalog(self):
+        """ResourceCatalog.from_json() should return a ResourceCatalog."""
+        from game.core.resources import ResourceCatalog
 
-        result = load_resources_data()
+        catalog = ResourceCatalog.from_json()
 
-        assert isinstance(result, dict)
+        assert isinstance(catalog, ResourceCatalog)
 
-    def test_load_resources_data_contains_resources(self):
-        """load_resources_data() should return resource definitions keyed by ID."""
-        from game.core.resources import load_resources_data
+    def test_resource_catalog_contains_resources(self):
+        """ResourceCatalog.from_json() should contain resource definitions."""
+        from game.core.resources import ResourceCatalog
 
-        result = load_resources_data()
+        catalog = ResourceCatalog.from_json()
 
-        assert len(result) > 0
-        # Check structure - each entry should have an 'id' field
-        for res_id, res_def in result.items():
-            assert isinstance(res_def, dict)
-            assert res_def.get('id') == res_id
+        assert len(catalog.all_ids()) > 0
+        # Check structure - each definition should have an id
+        for defn in catalog.all_definitions():
+            assert defn.id
+            assert isinstance(defn.id, str)
 
-    def test_load_resources_data_does_not_modify_registry(self):
-        """load_resources_data() should NOT modify the global registry."""
-        from game.core.resources import load_resources_data
+    def test_resource_catalog_does_not_modify_registry(self):
+        """ResourceCatalog.from_json() should NOT modify the global registry."""
+        from game.core.resources import ResourceCatalog
         from game.core.registry import RegistryManager
 
         # Ensure registry is empty
         registry = RegistryManager.instance().resources
         assert len(registry) == 0
 
-        # Call pure function
-        result = load_resources_data()
+        # Load catalog
+        catalog = ResourceCatalog.from_json()
 
         # Registry should still be empty
         assert len(registry) == 0
-        # But result should have data
-        assert len(result) > 0
+        # But catalog should have data
+        assert len(catalog.all_ids()) > 0
 
-    def test_load_resources_data_returns_fresh_copies(self):
-        """Each call to load_resources_data() should return independent data."""
-        from game.core.resources import load_resources_data
+    def test_resource_catalog_contains_expected_resource(self):
+        """ResourceCatalog.from_json() should include known resources like 'fuel'."""
+        from game.core.resources import ResourceCatalog
 
-        result1 = load_resources_data()
-        result2 = load_resources_data()
+        catalog = ResourceCatalog.from_json()
 
-        # Should be equal in keys
-        assert set(result1.keys()) == set(result2.keys())
-        # Modifying one should not affect the other
-        first_key = list(result1.keys())[0]
-        result1[first_key]['test_marker'] = True
+        assert catalog.has("fuel") or catalog.has("energy") or len(catalog.all_ids()) > 0
 
-        assert 'test_marker' not in result2[first_key]
+    def test_resource_catalog_returns_empty_on_missing_file(self):
+        """ResourceCatalog.from_json() should return empty catalog when file is missing."""
+        from game.core.resources import ResourceCatalog
 
-    def test_load_resources_data_contains_expected_resource(self):
-        """load_resources_data() should include known resources like 'fuel'."""
-        from game.core.resources import load_resources_data
+        catalog = ResourceCatalog.from_json("nonexistent_file_xyz.json")
 
-        result = load_resources_data()
-
-        # Check for common resources
-        assert "fuel" in result or "energy" in result or len(result) > 0
-
-    def test_load_resources_data_returns_defaults_on_missing_file(self):
-        """load_resources_data() should return defaults when file is missing."""
-        from game.core.resources import load_resources_data
-
-        result = load_resources_data("nonexistent_file_xyz.json")
-
-        # Should have default resources
-        assert "fuel" in result
-        assert "energy" in result
-        assert "ammo" in result
+        assert len(catalog.all_ids()) == 0
 
 
 # =============================================================================
