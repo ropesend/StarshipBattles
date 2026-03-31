@@ -1,13 +1,15 @@
-"""Turn engine harvesting integration tests - resource extraction to empire pool.
+"""Turn engine harvesting integration tests - resource extraction to colony stockpile.
 
 PROJ-75 Phase 2: Integration tests for HarvestingEngine wired into TurnEngine.
 PROJ-161: Updated for per-tick via process_harvesting_tick() (100 times per turn).
+PROJ-XXX: Updated for local stockpile system — harvest deposits into
+colony.stockpile instead of empire.resource_pool.
 
 Tests verify that process_harvesting_tick() is called during process_turn(),
-and that planetary resources flow correctly into empire pools.
+and that planetary resources flow correctly into colony stockpiles.
 """
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.data.empire import Empire
@@ -129,7 +131,7 @@ class TestHarvestingIntegration:
             assert empires == [empire]
 
     def test_harvesting_extracts_resources_end_to_end(self, fresh_registries):
-        """Full E2E: facility harvests from planet into empire pool."""
+        """Full E2E: facility harvests from planet into colony stockpile."""
         from game.strategy.engine.harvesting_engine import HarvestingEngine
 
         facility = _make_harvester_facility("metals", base_harvest_rate=100.0)
@@ -153,8 +155,8 @@ class TestHarvestingIntegration:
         galaxy = MockGalaxy()
         engine.process_turn([empire], galaxy)
 
-        # harvest = 100 * 0.8 = 80
-        assert empire.resource_pool.get("metals", 0.0) == pytest.approx(80.0)
+        # harvest = 100 * 0.8 = 80, deposited into colony stockpile
+        assert planet.stockpile.get("metals", 0.0) == pytest.approx(80.0)
         assert planet.deposits["metals"]["quantity"] == pytest.approx(4920.0)
 
     def test_harvesting_before_production(self, fresh_registries):
@@ -199,7 +201,7 @@ class TestHarvestingIntegration:
         # if tick order is correct (1,1,2,2,3,3...) then order is preserved.
 
     def test_harvesting_with_storage_cap(self, fresh_registries):
-        """Empire storage limits are respected during harvesting."""
+        """Colony stockpile limits are respected during harvesting."""
         from game.strategy.engine.harvesting_engine import HarvestingEngine
 
         harvester = _make_harvester_facility("metals", base_harvest_rate=100.0)
@@ -226,10 +228,10 @@ class TestHarvestingIntegration:
             resources={"metals": {"quantity": 5000, "quality": 1.0}},
             facilities=[storage, harvester],
         )
+        planet.stockpile = {"metals": 950.0}
 
         empire = Empire(0, "Test Empire", (255, 255, 255))
         empire.add_colony(planet)
-        empire.resource_pool = {"metals": 950.0}
 
         mocks = _make_mock_engines()
         harvesting = HarvestingEngine()
@@ -243,5 +245,5 @@ class TestHarvestingIntegration:
         galaxy = MockGalaxy()
         engine.process_turn([empire], galaxy)
 
-        # Cap at 1000; only 50 added from 100 harvest
-        assert empire.resource_pool["metals"] == pytest.approx(1000.0)
+        # Cap at 1000; only 50 added from 100 harvest into colony stockpile
+        assert planet.stockpile["metals"] == pytest.approx(1000.0)

@@ -13,8 +13,12 @@ logger = logging.getLogger(__name__)
 class TransferValidator:
     """Validates TRANSFER orders for cargo operations between fleets and colonies."""
 
-    # Valid cargo types
-    VALID_CARGO_TYPES = {"passengers"}  # Extensible for future cargo types
+    # Valid cargo types (resources + passengers)
+    VALID_CARGO_TYPES = {
+        "passengers",
+        "metals", "organics", "vapors", "radioactives", "exotics",
+        "fuel", "energy", "ammo",
+    }
 
     # Valid directions
     VALID_DIRECTIONS = {"load", "unload"}  # str values match TransferDirection enum

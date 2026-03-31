@@ -184,6 +184,16 @@ class IPlanet(Protocol):
         ...
 
     @property
+    def stockpile(self) -> Dict[str, float]:
+        """Local resource stockpile (harvested/stored resources)."""
+        ...
+
+    @property
+    def max_stockpile(self) -> Dict[str, float]:
+        """Maximum local stockpile capacity per resource type."""
+        ...
+
+    @property
     def owner_id(self) -> Optional[int]:
         ...
 

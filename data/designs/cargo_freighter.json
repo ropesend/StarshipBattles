@@ -1,0 +1,41 @@
+{
+    "name": "Cargo Freighter",
+    "ship_class": "Destroyer",
+    "vehicle_type": "Ship",
+    "theme_id": "Federation",
+    "team_id": 0,
+    "color": [100, 100, 255],
+    "ai_strategy": "standard_ranged",
+    "layers": {
+        "CORE": [
+            {"id": "bridge", "modifiers": [
+                {"id": "simple_size_mount", "value": 1.0},
+                {"id": "hardened_mount", "value": 1.0},
+                {"id": "automation", "value": 0.0}
+            ]},
+            {"id": "planetary_resource_container", "modifiers": [
+                {"id": "simple_size_mount", "value": 1.0},
+                {"id": "hardened_mount", "value": 1.0}
+            ]},
+            {"id": "planetary_resource_container", "modifiers": [
+                {"id": "simple_size_mount", "value": 1.0},
+                {"id": "hardened_mount", "value": 1.0}
+            ]}
+        ],
+        "OUTER": [
+            {"id": "standard_engine", "modifiers": [
+                {"id": "simple_size_mount", "value": 1.0},
+                {"id": "hardened_mount", "value": 1.0}
+            ]},
+            {"id": "fuel_tank", "modifiers": [
+                {"id": "simple_size_mount", "value": 1.0},
+                {"id": "hardened_mount", "value": 1.0}
+            ]}
+        ]
+    },
+    "resources": {
+        "fuel": 50000.0,
+        "energy": 2000.0,
+        "ammo": 0.0
+    }
+}

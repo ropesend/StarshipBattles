@@ -390,13 +390,16 @@ def test_resource_grid_shows_all_resources(test_planet, mock_design_library):
         planet=test_planet
     )
 
-    # Should have icons for all 5 resources
-    assert len(panel._resource_icons) == 5
+    # Should have icons for all 8 resources
+    assert len(panel._resource_icons) == 8
     assert "metals" in panel._resource_icons
     assert "organics" in panel._resource_icons
     assert "vapors" in panel._resource_icons
     assert "radioactives" in panel._resource_icons
     assert "exotics" in panel._resource_icons
+    assert "fuel" in panel._resource_icons
+    assert "energy" in panel._resource_icons
+    assert "ammo" in panel._resource_icons
 
     pygame.quit()
 
@@ -538,10 +541,10 @@ def test_resource_panel_no_resources(mock_design_library):
 
 def test_resource_icons_loaded(planet_report_panel):
     """Test that resource icons are loaded or fallback created."""
-    # All 5 resources should have icons
-    assert len(planet_report_panel._resource_icons) == 5
+    # All 8 resources should have icons
+    assert len(planet_report_panel._resource_icons) == 8
 
     for resource_name, icon_surface in planet_report_panel._resource_icons.items():
         assert isinstance(icon_surface, pygame.Surface)
-        assert icon_surface.get_width() == 24
-        assert icon_surface.get_height() == 24
+        assert icon_surface.get_width() == 20
+        assert icon_surface.get_height() == 20

@@ -122,24 +122,7 @@ class HarvestingEngine(IHarvestingEngine):
         """
         self.recalculate_storage(empires)
         for empire in empires:
-            if tick == 1:
-                try:
-                    logger.debug(
-                        f"[BUG-109] Tick 1 START: empire {empire.id} "
-                        f"resource_pool={dict(empire.resource_pool)}, "
-                        f"max_storage={dict(empire.max_storage)}"
-                    )
-                except (AttributeError, TypeError):
-                    pass
             self._process_empire(empire, tick_fraction=0.01)
-            if tick == 1:
-                try:
-                    logger.debug(
-                        f"[BUG-109] Tick 1 AFTER HARVEST: empire {empire.id} "
-                        f"resource_pool={dict(empire.resource_pool)}"
-                    )
-                except (AttributeError, TypeError):
-                    pass
 
     def recalculate_storage(self, empires: List) -> None:
         """
@@ -158,14 +141,20 @@ class HarvestingEngine(IHarvestingEngine):
             self._aggregate_empire_storage(empire)
 
     def _aggregate_empire_storage(self, empire: 'Empire') -> None:
-        """Aggregate storage capacity for a single empire."""
-        new_storage = {}
+        """Aggregate storage capacity per colony into local max_stockpile."""
         for colony in empire.colonies:
+            colony_storage = {}
             for facility in colony.facilities:
                 if not facility.is_operational:
                     continue
-                self._collect_storage_from_facility(facility, new_storage)
-        empire.max_storage = new_storage
+                self._collect_storage_from_facility(facility, colony_storage)
+            colony.max_stockpile = colony_storage
+        # Keep empire.max_storage as aggregate for read-only UI display
+        empire_total = {}
+        for colony in empire.colonies:
+            for res, cap in colony.max_stockpile.items():
+                empire_total[res] = empire_total.get(res, 0.0) + cap
+        empire.max_storage = empire_total
 
     def _collect_storage_from_facility(
         self,
@@ -235,41 +224,38 @@ class HarvestingEngine(IHarvestingEngine):
             tick_fraction: Fraction of per-turn harvest to extract (1.0 = full turn, 0.01 = one tick)
         """
         for colony in empire.colonies:
-            self._process_colony(colony, empire, tick_fraction)
+            self._process_colony(colony, tick_fraction)
 
-    def _process_colony(self, colony: 'Planet', empire: 'Empire', tick_fraction: float = 1.0) -> None:
+    def _process_colony(self, colony: 'Planet', tick_fraction: float = 1.0) -> None:
         """Process harvesting for a single colony.
 
         Args:
-            colony: Colony to process
-            empire: Empire receiving resources
+            colony: Colony to process (resources deposited to colony.stockpile)
             tick_fraction: Fraction of per-turn harvest to extract
         """
         for facility in colony.facilities:
             if not facility.is_operational:
                 continue
-            self._process_facility(facility, colony, empire, tick_fraction)
+            self._process_facility(facility, colony, tick_fraction)
 
     def _process_facility(
         self,
         facility: 'PlanetaryFacility',
         colony: 'Planet',
-        empire: 'Empire',
         tick_fraction: float = 1.0,
     ) -> None:
         """Scan a facility's components for ResourceHarvester abilities.
 
         Args:
             facility: Facility to scan
-            colony: Colony containing the facility
-            empire: Empire receiving resources
+            colony: Colony containing the facility (resources deposited to colony.stockpile)
             tick_fraction: Fraction of per-turn harvest to extract
         """
         for comp in iter_components(facility.design_data):
             harvester_info = get_harvester_info(comp, self._registries)
             if harvester_info is not None:
                 self._harvest_resource(
-                    harvester_info, colony, empire, tick_fraction
+                    harvester_info, colony, tick_fraction
                 )
 
     def _get_harvester_info(self, comp) -> Optional[dict]:
@@ -304,15 +290,13 @@ class HarvestingEngine(IHarvestingEngine):
         self,
         harvester_info: dict,
         colony: 'Planet',
-        empire: 'Empire',
         tick_fraction: float = 1.0,
     ) -> None:
         """Execute one harvester's resource extraction.
 
         Args:
             harvester_info: Dict with 'resource_type' and 'base_harvest_rate'
-            colony: Planet being harvested
-            empire: Empire receiving resources
+            colony: Planet being harvested (resources deposited to colony.stockpile)
             tick_fraction: Fraction of per-turn harvest to extract (1.0 = full turn, 0.01 = one tick)
         """
         resource_type = harvester_info.get('resource_type', '')
@@ -339,8 +323,8 @@ class HarvestingEngine(IHarvestingEngine):
         # Deduct from planet
         resource_data['quantity'] = quantity - actual_harvest
 
-        # Add to empire pool
-        empire.add_resources(resource_type, actual_harvest)
+        # Add to planet local stockpile
+        colony.add_to_stockpile(resource_type, actual_harvest)
 
         logger.debug(
             f"Harvested {actual_harvest:.1f} {resource_type} from "

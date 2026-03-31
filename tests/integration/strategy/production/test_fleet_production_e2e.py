@@ -21,6 +21,39 @@ from game.strategy.engine.production_engine import ProductionEngine
 from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
 
 
+def _make_cargo_ship(resources=None):
+    """Create a mock ship carrying construction resources as cargo."""
+    ship = MagicMock()
+    ship.cargo_contents = dict(resources or {"metals": 200000})
+    ship.is_combat_capable = lambda: True
+    ship.get_calculated_stats = lambda: {
+        'mass': 1000, 'strategic_movement': 5, 'max_hp': 500,
+    }
+
+    def get_cargo_capacity(ct):
+        return 500000
+
+    def get_current_cargo(ct):
+        return ship.cargo_contents.get(ct, 0)
+
+    def unload_cargo(ct, amt):
+        cur = ship.cargo_contents.get(ct, 0)
+        actual = min(amt, cur)
+        if actual > 0:
+            ship.cargo_contents[ct] = cur - actual
+        return actual
+
+    def load_cargo(ct, amt):
+        ship.cargo_contents[ct] = ship.cargo_contents.get(ct, 0) + amt
+        return amt
+
+    ship.get_cargo_capacity = get_cargo_capacity
+    ship.get_current_cargo = get_current_cargo
+    ship.unload_cargo = unload_cargo
+    ship.load_cargo = load_cargo
+    return ship
+
+
 def _process_fleet_turn(engine, empires, galaxy=None, save_path=None):
     """Process 100 ticks of construction for one turn.
 
@@ -107,14 +140,14 @@ class TestFleetProductionE2E:
         ]
         fleet.orders = [FleetOrder(OrderType.BUILD)]
 
+        # Add a cargo ship carrying construction resources
+        fleet.ships.append(_make_cargo_ship({"metals": 100000}))
         initial_ship_count = len(fleet.ships)
 
         empire = MagicMock()
         empire.id = 0
         empire.fleets = [fleet]
-        empire.colonies = []  # No colonies
-        # Give empire resources
-        empire.resource_pool = {"metals": 100000.0}
+        empire.colonies = []
 
         # PROJ-210: Mock capabilities property for has_space_shipyard
         fleet._capabilities = MagicMock()
@@ -153,13 +186,14 @@ class TestFleetProductionE2E:
         ]
         fleet.orders = [FleetOrder(OrderType.BUILD)]
 
+        # Add a cargo ship carrying construction resources
+        fleet.ships.append(_make_cargo_ship({"metals": 100000}))
         initial_facility_count = len(mock_planet.facilities)
 
         empire = MagicMock()
         empire.id = 0
         empire.fleets = [fleet]
         empire.colonies = []
-        empire.resource_pool = {"metals": 100000.0}
 
         # PROJ-210: Mock capabilities property for has_space_shipyard
         fleet._capabilities = MagicMock()
@@ -274,11 +308,13 @@ class TestFleetProductionE2E:
         ]
         fleet.orders = [FleetOrder(OrderType.BUILD)]
 
+        # Add a cargo ship carrying construction resources
+        fleet.ships.append(_make_cargo_ship({"metals": 100000}))
+
         empire = MagicMock()
         empire.id = 0
         empire.fleets = [fleet]
         empire.colonies = []
-        empire.resource_pool = {"metals": 100000.0}
 
         # PROJ-210: Mock capabilities property for has_space_shipyard
         fleet._capabilities = MagicMock()
@@ -368,11 +404,13 @@ class TestFleetProductionMultiQueue:
         ]
         fleet.orders = [FleetOrder(OrderType.BUILD)]
 
+        # Add a cargo ship carrying construction resources
+        fleet.ships.append(_make_cargo_ship({"metals": 100000}))
+
         empire = MagicMock()
         empire.id = 0
         empire.fleets = [fleet]
         empire.colonies = []
-        empire.resource_pool = {"metals": 100000.0}
 
         # PROJ-210: Mock capabilities property for has_space_shipyard
         fleet._capabilities = MagicMock()

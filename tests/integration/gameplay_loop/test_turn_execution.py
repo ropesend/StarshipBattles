@@ -149,12 +149,18 @@ class TestMultipleTurns:
 
         colony = empire1.colonies[0]
 
-        # Give empire resources for tick-based production
-        empire1.resource_pool = {
+        # Give colony local stockpile for tick-based production
+        colony.stockpile = {
             "metals": 100000.0,
             "organics": 100000.0,
             "radioactives": 100000.0,
             "Energy": 100000.0
+        }
+        colony.max_stockpile = {
+            "metals": 200000.0,
+            "organics": 200000.0,
+            "radioactives": 200000.0,
+            "Energy": 200000.0
         }
 
         # Use complex type which doesn't require shipyard

@@ -319,6 +319,10 @@ class TestResourceShortageEventLogging:
         colony = MagicMock(spec=Planet)
         colony.construction_queue = []
         colony.facilities = []
+        # Default: insufficient stockpile (triggers shortage)
+        colony.stockpile = {"metals": 10.0, "organics": 2.0}
+        colony.has_stockpile.return_value = False
+        colony.get_stockpile.side_effect = lambda res: colony.stockpile.get(res, 0.0)
         return colony
 
     def test_shortage_event_logged_on_affordability_failure(self, engine, empire, colony):
@@ -364,8 +368,9 @@ class TestResourceShortageEventLogging:
         colony.construction_queue = [item]
         rates = {"metals": 500, "organics": 500}
 
-        # Empire has plenty of Metals but almost no Organics
-        empire.resource_pool = {"metals": 1000.0, "organics": 0.5}
+        # Planet stockpile has plenty of Metals but almost no Organics
+        colony.stockpile = {"metals": 1000.0, "organics": 0.5}
+        colony.get_stockpile.side_effect = lambda res: colony.stockpile.get(res, 0.0)
 
         with patch("game.strategy.engine.production_engine.log_event") as mock_log:
             engine._process_queue_tick_dynamic(
@@ -416,6 +421,10 @@ class TestResourceShortageEventLogging:
         empire_poor.id = 1
         empire_poor.resource_pool = {"metals": 0.0}
         empire_poor.has_resources.return_value = False
+        # Set planet stockpile to empty so affordability check fails
+        colony.stockpile = {"metals": 0.0}
+        colony.has_stockpile.return_value = False
+        colony.get_stockpile.side_effect = lambda res: colony.stockpile.get(res, 0.0)
 
         item = {
             "design_id": "frigate_mk1",
@@ -464,6 +473,10 @@ class TestResourceShortageEventLogging:
         empire_rich.resource_pool = {"metals": 10000.0}
         empire_rich.has_resources.return_value = True
         empire_rich.consume_resources = MagicMock(return_value=True)
+        # Planet stockpile is rich - affordability check passes
+        colony.stockpile = {"metals": 10000.0}
+        colony.has_stockpile.return_value = True
+        colony.get_stockpile.side_effect = lambda res: colony.stockpile.get(res, 0.0)
 
         item = {
             "design_id": "frigate_mk1",
