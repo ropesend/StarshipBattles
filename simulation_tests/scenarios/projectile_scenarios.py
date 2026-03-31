@@ -1092,6 +1092,122 @@ class ProjectileControlWithAmmoScenario(ComparisonScenario):
         return checks
 
 
+# =============================================================================
+# GENERIC RESOURCE TESTS — METALS (PROJECTILE-RES-METALS-001 to 002)
+# =============================================================================
+
+PROJ_METALS_ATTACKER_FULL = "Test_Attacker_ProjRapid_HighMetals.json"
+PROJ_METALS_ATTACKER_NONE = "Test_Attacker_ProjRapid_NoMetals.json"
+
+
+class ProjectileWithMetalsFires(ComparisonScenario):
+    """
+    PROJECTILE-RES-METALS-001: Projectile With Metals Fires
+
+    Proves the resource system is generic: a projectile consuming "metals"
+    works identically to one consuming "ammo".
+    """
+
+    metadata = TestMetadata(
+        test_id="PROJECTILE-RES-METALS-001",
+        category="ProjectileWeaponAbility",
+        subcategory="Generic Resource",
+        name="Projectile With Metals Fires",
+        summary="Projectile consuming metals (planetary resource) fires normally with supply",
+        conditions=[
+            f"Attacker (with metals): {PROJ_METALS_ATTACKER_FULL}",
+            f"Attacker (no metals): {PROJ_METALS_ATTACKER_NONE}",
+            f"Target: {PROJ_RES_TARGET}",
+            f"Distance: {POINT_BLANK_DISTANCE} pixels",
+            f"Test Duration: {PROJ_RES_TEST_TICKS} ticks",
+        ],
+        edge_cases=[
+            "'metals' is a planetary resource, not a standard operational resource",
+            "Proves resource system accepts any resource type from data files",
+        ],
+        expected_outcome="With metals: fires and deals damage. Without: zero shots.",
+        pass_criteria="baseline damage > 0, variant damage == 0, variant shots == 0",
+        max_ticks=PROJ_RES_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["projectile", "metals", "generic-resource", "comparison"],
+    )
+
+    baseline_attacker_ship = PROJ_METALS_ATTACKER_FULL
+    baseline_target_ship = PROJ_RES_TARGET
+    variant_attacker_ship = PROJ_METALS_ATTACKER_NONE
+    variant_target_ship = PROJ_RES_TARGET
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        checks.append(check_true(
+            "With-Metals Attacker Dealt Damage",
+            self.baseline_damage_dealt > 0,
+            detail=f"damage={self.baseline_damage_dealt}",
+        ))
+
+        checks.append(check_exact(
+            "No-Metals Attacker — Zero Damage",
+            0.0, self.variant_damage_dealt,
+            phase="outcome",
+        ))
+
+        variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        checks.append(check_exact(
+            "No-Metals Attacker — Zero Shots",
+            0, variant_shots,
+            phase="outcome",
+        ))
+
+        return checks
+
+
+class ProjectileWithMetalsControl(ComparisonScenario):
+    """
+    PROJECTILE-RES-METALS-002: Projectile With Metals Control
+
+    Control: identical metals-consuming projectiles produce identical damage.
+    """
+
+    metadata = TestMetadata(
+        test_id="PROJECTILE-RES-METALS-002",
+        category="ProjectileWeaponAbility",
+        subcategory="Generic Resource",
+        name="Projectile With Metals Control",
+        summary="Control: identical metals-consuming projectiles produce identical damage",
+        conditions=[
+            f"Attacker (both): {PROJ_METALS_ATTACKER_FULL}",
+            f"Target: {PROJ_RES_TARGET}",
+            f"Distance: {POINT_BLANK_DISTANCE} pixels",
+            f"Test Duration: {PROJ_RES_TEST_TICKS} ticks",
+        ],
+        edge_cases=["Control test for generic resource support"],
+        expected_outcome="Both battles produce identical damage.",
+        pass_criteria="variant damage == baseline damage",
+        max_ticks=PROJ_RES_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["projectile", "metals", "generic-resource", "control", "comparison"],
+    )
+
+    baseline_attacker_ship = PROJ_METALS_ATTACKER_FULL
+    baseline_target_ship = PROJ_RES_TARGET
+    variant_attacker_ship = PROJ_METALS_ATTACKER_FULL
+    variant_target_ship = PROJ_RES_TARGET
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        checks.append(check_exact(
+            "Control — Identical Damage",
+            self.baseline_damage_dealt, self.variant_damage_dealt,
+            phase="outcome",
+        ))
+        return checks
+
+
 # ============================================================================
 # EXPORT ALL SCENARIOS
 # ============================================================================
@@ -1109,4 +1225,6 @@ __all__ = [
     'ProjectileStopsWithoutAmmoScenario',
     'ProjectileStopsAtHalfAmmoScenario',
     'ProjectileControlWithAmmoScenario',
+    'ProjectileWithMetalsFires',
+    'ProjectileWithMetalsControl',
 ]

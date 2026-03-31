@@ -1,0 +1,21 @@
+{
+  "_metadata": {
+    "_schema_version": "1.0",
+    "_data_version": "1.0",
+    "_description": "Rapid projectile (1 metals/shot) with NO metals storage"
+  },
+  "name": "Test Attacker Proj Rapid + No Metals",
+  "color": [255, 0, 0],
+  "team_id": 1,
+  "ship_class": "TestS_2L",
+  "theme_id": "Federation",
+  "ai_strategy": "test_do_nothing",
+  "layers": {
+    "CORE": [
+      {"id": "test_proj_rapid_metals"}
+    ],
+    "ARMOR": []
+  },
+  "_test_notes": "Projectile requires metals but has none. Cannot fire.",
+  "expected_stats": {"mass": 400.0}
+}

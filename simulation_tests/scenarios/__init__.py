@@ -80,6 +80,8 @@ from simulation_tests.scenarios.shield_projection_scenarios import (
     ShieldWithEnergyZeroDamageScenario,
     ShieldFailsOnEnergyDepletionScenario,
     ShieldWithoutEnergyScenario,
+    ShieldWithMetalsProtects,
+    ShieldWithoutMetalsNoProtection,
 )
 from simulation_tests.scenarios.tohit_defense_scenarios import (
     ECMReducesHitRateComparisonScenario,
@@ -159,6 +161,8 @@ __all__ = [
     'ShieldWithEnergyZeroDamageScenario',
     'ShieldFailsOnEnergyDepletionScenario',
     'ShieldWithoutEnergyScenario',
+    'ShieldWithMetalsProtects',
+    'ShieldWithoutMetalsNoProtection',
     # ToHitDefenseModifier scenarios
     'ECMReducesHitRateComparisonScenario',
     'ECMSameGroupDoesNotStackScenario',

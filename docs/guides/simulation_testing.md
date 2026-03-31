@@ -613,6 +613,12 @@ class BeamStopsWithoutEnergy(ComparisonScenario):
 | `"constant"` | Shield energy | Component becomes non-operational → loses stat contributions |
 | `"activation"` | Weapon ammo | `can_afford_activation()` returns False → weapon refuses to fire |
 
+**Generic resource support:** The resource system is fully data-driven. Any resource
+type defined in `data/resources.json` works — including planetary resources like
+`"metals"`, `"organics"`, etc. The stats aggregation discovers resource types
+dynamically from component abilities. Tests validate this with `BEAMWEAPON-RES-METALS-*`,
+`PROJECTILE-RES-METALS-*`, and `SHIELD-PROJ-METALS-*` scenarios.
+
 ---
 
 ## 6. Migration Guide

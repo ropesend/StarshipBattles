@@ -104,9 +104,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         
         # Resource initialization tracking
         self._resources_initialized: bool = False
-        self._prev_max_fuel: float = 0
-        self._prev_max_ammo: float = 0
-        self._prev_max_energy: float = 0
+        self._prev_max_resources: dict = {}  # {resource_name: prev_max_value}
         self._prev_max_shields: int = 0
         
         # To-Hit stats (total_defense_score initialized below with other combat stats)

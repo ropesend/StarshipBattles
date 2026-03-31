@@ -722,3 +722,156 @@ class ShieldWithoutEnergyScenario(ComparisonScenario):
         ))
 
         return checks
+
+
+# =============================================================================
+# GENERIC RESOURCE TESTS — METALS (SHIELD-PROJ-METALS-001 to 002)
+# =============================================================================
+# Prove shields work with ANY resource type, not just energy.
+# Uses "metals" (a real planetary resource defined in data/resources.json).
+
+SHIELD_METALS_TARGET_FULL = "Test_Target_Shield_100_HighMetals.json"
+SHIELD_METALS_TARGET_NONE = "Test_Target_Shield_100_NoMetals.json"
+
+
+class ShieldWithMetalsProtects(ComparisonScenario):
+    """
+    SHIELD-PROJ-METALS-001: Shield With Metals Protects
+
+    Battle A: Unshielded target — all damage hits armor
+    Battle B: Target with 100 HP metals-consuming shield + 100k metals
+
+    Proves the resource system is generic: a shield consuming "metals"
+    works identically to one consuming "energy".
+    """
+
+    metadata = TestMetadata(
+        test_id="SHIELD-PROJ-METALS-001",
+        category="ShieldProjection",
+        subcategory="Generic Resource",
+        name="Shield With Metals Protects",
+        summary="Shield consuming metals (planetary resource) functions normally with supply",
+        conditions=[
+            f"Attacker: {SHIELD_ATTACKER} (guaranteed-hit beam, 1 dmg/tick)",
+            f"Target (no shield): {UNSHIELDED_TARGET}",
+            f"Target (metals shield): {SHIELD_METALS_TARGET_FULL} (100 HP shield, 1.0 metals/sec)",
+            f"Distance: {POINT_BLANK_DISTANCE} pixels",
+            f"Test Duration: {SHIELD_PROJ_TEST_TICKS} ticks",
+        ],
+        edge_cases=[
+            "'metals' is a planetary resource, not a standard operational resource",
+            "Shield with constant metals consumption should function like energy shield",
+        ],
+        expected_outcome="Metals shield absorbs 100 damage, variant takes less armor damage.",
+        pass_criteria="variant took less damage than baseline, shield depleted",
+        max_ticks=SHIELD_PROJ_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["shield", "metals", "generic-resource", "shield-projection", "comparison"],
+    )
+
+    baseline_attacker_ship = SHIELD_ATTACKER
+    baseline_target_ship = UNSHIELDED_TARGET
+    variant_attacker_ship = SHIELD_ATTACKER
+    variant_target_ship = SHIELD_METALS_TARGET_FULL
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Precondition: baseline took damage
+        checks.append(check_true(
+            "Unshielded Target Took Damage",
+            self.baseline_damage_dealt > 0,
+            detail=f"damage={self.baseline_damage_dealt}",
+        ))
+
+        # Outcome: metals shield absorbed damage
+        checks.append(check_true(
+            "Metals Shield Reduced Damage",
+            self.variant_damage_dealt < self.baseline_damage_dealt,
+            detail=f"unshielded={self.baseline_damage_dealt}, "
+                   f"shielded={self.variant_damage_dealt}",
+            phase="outcome",
+        ))
+
+        # Outcome: shield depleted
+        checks.append(check_exact(
+            "Shield Depleted", 0.0, self.target.current_shields,
+            phase="outcome",
+        ))
+
+        # Outcome: damage difference equals shield capacity
+        damage_diff = self.baseline_damage_dealt - self.variant_damage_dealt
+        checks.append(check_exact(
+            "Shield Absorbed Full Capacity",
+            float(SHIELD_PROJ_100_CAPACITY), damage_diff,
+            phase="outcome",
+        ))
+
+        return checks
+
+
+class ShieldWithoutMetalsNoProtection(ComparisonScenario):
+    """
+    SHIELD-PROJ-METALS-002: Shield Without Metals Provides No Protection
+
+    Battle A: Unshielded target — all damage hits armor
+    Battle B: Target with metals-consuming shield but NO metals storage
+
+    Proves that a shield consuming a planetary resource correctly deactivates
+    when that resource is unavailable.
+    """
+
+    metadata = TestMetadata(
+        test_id="SHIELD-PROJ-METALS-002",
+        category="ShieldProjection",
+        subcategory="Generic Resource",
+        name="Shield Without Metals — No Protection",
+        summary="Shield consuming metals but with no supply provides negligible protection",
+        conditions=[
+            f"Attacker: {SHIELD_ATTACKER} (guaranteed-hit beam, 1 dmg/tick)",
+            f"Target (no shield): {UNSHIELDED_TARGET}",
+            f"Target (unpowered metals shield): {SHIELD_METALS_TARGET_NONE}",
+            f"Distance: {POINT_BLANK_DISTANCE} pixels",
+            f"Test Duration: {SHIELD_PROJ_TEST_TICKS} ticks",
+        ],
+        edge_cases=[
+            "Shield requires metals but has none — should not function",
+            "1-tick initialization delay may allow 1 hit of absorption",
+        ],
+        expected_outcome="Unpowered metals shield provides at most 1 tick of protection.",
+        pass_criteria="damage_diff <= 1",
+        max_ticks=SHIELD_PROJ_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["shield", "metals", "generic-resource", "no-power", "shield-projection", "comparison"],
+    )
+
+    baseline_attacker_ship = SHIELD_ATTACKER
+    baseline_target_ship = UNSHIELDED_TARGET
+    variant_attacker_ship = SHIELD_ATTACKER
+    variant_target_ship = SHIELD_METALS_TARGET_NONE
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        checks.append(check_true(
+            "Unshielded Target Took Damage",
+            self.baseline_damage_dealt > 0,
+            detail=f"damage={self.baseline_damage_dealt}",
+        ))
+
+        # Outcome: unpowered metals shield provided at most 1 tick of protection
+        damage_diff = self.baseline_damage_dealt - self.variant_damage_dealt
+        checks.append(check_true(
+            "Unpowered Metals Shield — Negligible Protection",
+            damage_diff <= 1,
+            detail=f"baseline={self.baseline_damage_dealt}, "
+                   f"variant={self.variant_damage_dealt}, "
+                   f"diff={damage_diff} (max allowed: 1)",
+            phase="outcome",
+        ))
+
+        return checks

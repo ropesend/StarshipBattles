@@ -1060,6 +1060,66 @@
       }
     },
     {
+      "id": "test_storage_metals_100k",
+      "name": "Test Metals Storage (100k)",
+      "type": "Tank",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 19,
+      "abilities": {
+        "ResourceStorage": [{"resource": "metals", "amount": 100000}]
+      }
+    },
+    {
+      "id": "test_beam_1dmg_guaranteed_metals",
+      "name": "Test Beam (1 Damage, Guaranteed Hit, 1 Metals/Shot)",
+      "type": "Weapon",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 1,
+          "range": 1000,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 10.0,
+          "accuracy_falloff": 0
+        },
+        "ResourceConsumption": [{"resource": "metals", "amount": 1, "trigger": "activation"}]
+      }
+    },
+    {
+      "id": "test_proj_rapid_metals",
+      "name": "Test Projectile (Rapid, 1 Metals/Shot)",
+      "type": "Weapon",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 94,
+      "abilities": {
+        "ProjectileWeaponAbility": {
+          "damage": 1,
+          "range": 1000,
+          "projectile_speed": 20000,
+          "reload": 0.0,
+          "firing_arc": 360
+        },
+        "ResourceConsumption": [{"resource": "metals", "amount": 1, "trigger": "activation"}]
+      }
+    },
+    {
+      "id": "test_shield_100_metals",
+      "name": "Test Shield (100 HP, 1.0 Metals/sec)",
+      "type": "Shield",
+      "mass": 0,
+      "hp": 50,
+      "sprite_index": 16,
+      "abilities": {
+        "ShieldProjection": 100,
+        "ResourceConsumption": [{"resource": "metals", "amount": 1.0, "trigger": "constant"}]
+      }
+    },
+    {
       "id": "test_beam_150dmg_single_shot",
       "name": "Test Beam (150 Damage, Single Shot)",
       "type": "Weapon",

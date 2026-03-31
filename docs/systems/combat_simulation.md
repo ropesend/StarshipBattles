@@ -191,6 +191,14 @@ When `max_shields` decreases (e.g., shield component loses power), `current_shie
 is capped to the new max — preventing orphaned shield HP from lingering after
 deactivation.
 
+### Generic Resource Support
+
+Resource aggregation is fully data-driven. `ShipStatsCalculator._aggregate_resource_abilities()`
+discovers resource types dynamically from component `ResourceStorage`, `ResourceGeneration`,
+and `ResourceConsumption` abilities. Any resource defined in `data/resources.json` works —
+including planetary resources like metals, organics, vapors, radioactives, and exotics.
+No hardcoded fuel/energy/ammo assumptions in the combat simulation layer.
+
 ---
 
 ## 5. Targeting and Firing

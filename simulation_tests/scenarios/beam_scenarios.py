@@ -976,6 +976,130 @@ class BeamControlWithEnergyScenario(ComparisonScenario):
         return checks
 
 
+# =============================================================================
+# GENERIC RESOURCE TESTS — METALS (BEAMWEAPON-RES-METALS-001 to 002)
+# =============================================================================
+# Prove beam weapons work with ANY resource type, not just energy.
+# Uses "metals" (a real planetary resource defined in data/resources.json).
+
+BEAM_METALS_ATTACKER_FULL = "Test_Attacker_BeamGuaranteed_HighMetals.json"
+BEAM_METALS_ATTACKER_NONE = "Test_Attacker_BeamGuaranteed_NoMetals.json"
+
+
+class BeamWithMetalsFires(ComparisonScenario):
+    """
+    BEAMWEAPON-RES-METALS-001: Beam With Metals Fires Normally
+
+    Battle A: Beam (metals cost) + 100k metals — fires every tick
+    Battle B: Beam (metals cost) + no metals — cannot fire
+
+    Proves the resource system is generic: a beam consuming "metals"
+    works identically to one consuming "energy".
+    """
+
+    metadata = TestMetadata(
+        test_id="BEAMWEAPON-RES-METALS-001",
+        category="BeamWeaponAbility",
+        subcategory="Generic Resource",
+        name="Beam With Metals Fires",
+        summary="Beam consuming metals (planetary resource) fires normally with supply",
+        conditions=[
+            f"Attacker (with metals): {BEAM_METALS_ATTACKER_FULL}",
+            f"Attacker (no metals): {BEAM_METALS_ATTACKER_NONE}",
+            f"Target: {BEAM_RES_TARGET}",
+            f"Distance: {POINT_BLANK_DISTANCE} pixels",
+            f"Test Duration: {BEAM_RES_TEST_TICKS} ticks",
+        ],
+        edge_cases=[
+            "'metals' is a planetary resource, not a standard operational resource",
+            "Proves resource system accepts any resource type from data files",
+        ],
+        expected_outcome="With metals: fires and deals damage. Without: zero shots.",
+        pass_criteria="baseline damage > 0, variant damage == 0, variant shots == 0",
+        max_ticks=BEAM_RES_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["beam", "metals", "generic-resource", "comparison"],
+    )
+
+    baseline_attacker_ship = BEAM_METALS_ATTACKER_FULL
+    baseline_target_ship = BEAM_RES_TARGET
+    variant_attacker_ship = BEAM_METALS_ATTACKER_NONE
+    variant_target_ship = BEAM_RES_TARGET
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        checks.append(check_true(
+            "With-Metals Attacker Dealt Damage",
+            self.baseline_damage_dealt > 0,
+            detail=f"damage={self.baseline_damage_dealt}",
+        ))
+
+        checks.append(check_exact(
+            "No-Metals Attacker — Zero Damage",
+            0.0, self.variant_damage_dealt,
+            phase="outcome",
+        ))
+
+        variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        checks.append(check_exact(
+            "No-Metals Attacker — Zero Shots",
+            0, variant_shots,
+            phase="outcome",
+        ))
+
+        return checks
+
+
+class BeamWithMetalsControl(ComparisonScenario):
+    """
+    BEAMWEAPON-RES-METALS-002: Beam With Metals Control
+
+    Battle A: Beam (metals cost) + 100k metals
+    Battle B: Beam (metals cost) + 100k metals (identical)
+
+    Control: proves metals-consuming beam works consistently.
+    """
+
+    metadata = TestMetadata(
+        test_id="BEAMWEAPON-RES-METALS-002",
+        category="BeamWeaponAbility",
+        subcategory="Generic Resource",
+        name="Beam With Metals Control",
+        summary="Control: identical metals-consuming beams produce identical damage",
+        conditions=[
+            f"Attacker (both): {BEAM_METALS_ATTACKER_FULL}",
+            f"Target: {BEAM_RES_TARGET}",
+            f"Distance: {POINT_BLANK_DISTANCE} pixels",
+            f"Test Duration: {BEAM_RES_TEST_TICKS} ticks",
+        ],
+        edge_cases=["Control test for generic resource support"],
+        expected_outcome="Both battles produce identical damage.",
+        pass_criteria="variant damage == baseline damage",
+        max_ticks=BEAM_RES_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["beam", "metals", "generic-resource", "control", "comparison"],
+    )
+
+    baseline_attacker_ship = BEAM_METALS_ATTACKER_FULL
+    baseline_target_ship = BEAM_RES_TARGET
+    variant_attacker_ship = BEAM_METALS_ATTACKER_FULL
+    variant_target_ship = BEAM_RES_TARGET
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        checks.append(check_exact(
+            "Control — Identical Damage",
+            self.baseline_damage_dealt, self.variant_damage_dealt,
+            phase="outcome",
+        ))
+        return checks
+
+
 __all__ = [
     'BeamLowAccuracyPointBlankScenario',
     'BeamLowAccuracyPointBlankHighTickScenario',
@@ -998,4 +1122,6 @@ __all__ = [
     'BeamStopsWithoutEnergyScenario',
     'BeamStopsAtHalfEnergyScenario',
     'BeamControlWithEnergyScenario',
+    'BeamWithMetalsFires',
+    'BeamWithMetalsControl',
 ]
