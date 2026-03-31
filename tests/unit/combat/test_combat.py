@@ -346,6 +346,9 @@ class TestCombatFlow:
         assert c.current_hp == prev_hp
 
         # 2. Crystalline Armor (Absorb + Shield Recharge)
+        # This test sets shield values directly without ShieldProjection components.
+        # Disable recalculate_stats so damage_calculator doesn't zero out shields.
+        ship.recalculate_stats = lambda: None
         ship.emissive_armor = 0
         ship.crystalline_armor = 10
         ship.max_shields = 100

@@ -119,6 +119,16 @@ def test_laser_cannon_consumption(fresh_registries):
 
     ship.layers[LayerType.INNER].components.append(comp)
 
+    # The laser cannon requires crew.  Add crew capacity so the component
+    # stays active during stats calculation (Phase 2 crew allocation).
+    crew_data = {
+        "id": "test_crew", "name": "Test Crew", "type": "Bridge",
+        "mass": 0, "hp": 10,
+        "abilities": {"CrewCapacity": 10, "LifeSupportCapacity": 10, "CommandAndControl": True}
+    }
+    crew_comp = Component(crew_data, registries=fresh_registries)
+    ship.layers[LayerType.CORE].components.append(crew_comp)
+
     calc = ShipStatsCalculator(fresh_registries.vehicle_classes)
     calc.calculate(ship)
 
@@ -128,10 +138,10 @@ def test_laser_cannon_consumption(fresh_registries):
     # Check 2: Max Usage Calculation
     # Cost 5, unit per shot. Reload 0.2s.
     # Rate = 5 / 0.2 = 25.0 per sec.
+    # Component is active (has crew), so consumption == potential == 25.0
     print(f"Energy Consump: {ship.energy_consumption}")
-    assert ship.energy_consumption == 0.0, f"Expected 0.0 (inactive), got {ship.energy_consumption}"
+    assert ship.energy_consumption == 25.0, f"Expected 25.0 (active), got {ship.energy_consumption}"
 
-    # NEW CHECK: potential_energy_consumption should be 25.0
     potential = getattr(ship, 'potential_energy_consumption', 0.0)
     print(f"Potential Energy: {potential}")
     assert potential == 25.0, f"Expected Potential 25.0, got {potential}"

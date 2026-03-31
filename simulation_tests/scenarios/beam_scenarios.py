@@ -1,5 +1,5 @@
 """
-BeamWeaponAbility Test Scenarios (BEAMWEAPON-001 to BEAMWEAPON-011)
+BeamWeaponAbility Test Scenarios (BEAMWEAPON-001 to BEAMWEAPON-011, BEAMWEAPON-RES-001 to 003)
 
 Suite Document: simulation_tests/suites/BeamWeaponAbility.md
 
@@ -22,7 +22,7 @@ Test Coverage:
 import math
 from simulation_tests.scenarios import TestMetadata
 from simulation_tests.scenarios.validation import check_exact, check_approx, check_tost, check_true
-from simulation_tests.scenarios.templates import StaticTargetScenario
+from simulation_tests.scenarios.templates import StaticTargetScenario, ComparisonScenario
 from simulation_tests.test_constants import (
     STANDARD_TEST_TICKS,
     HIGH_TICK_TEST_TICKS,
@@ -760,6 +760,346 @@ class BeamOutOfRangeScenario(StaticTargetScenario):
 # EXPORT ALL SCENARIOS
 # ============================================================================
 
+# =============================================================================
+# RESOURCE DEPENDENCY TESTS (BEAMWEAPON-RES-001 to 003)
+# =============================================================================
+# These ComparisonScenarios prove beam weapons with ResourceConsumption(energy)
+# stop firing when energy depletes.  All use a guaranteed-hit beam (acc=10.0,
+# falloff=0) at point blank for deterministic shot counting.
+
+BEAM_RES_TEST_TICKS = 1000
+BEAM_RES_ATTACKER_FULL = "Test_Attacker_BeamGuaranteed_HighEnergy.json"
+BEAM_RES_ATTACKER_HALF = "Test_Attacker_BeamGuaranteed_HalfEnergy.json"
+BEAM_RES_ATTACKER_NONE = "Test_Attacker_BeamGuaranteed_NoEnergy.json"
+BEAM_RES_TARGET = "Test_Target_Stationary.json"
+
+
+class BeamStopsWithoutEnergyScenario(ComparisonScenario):
+    """
+    BEAMWEAPON-RES-001: Beam Stops Without Energy
+
+    Battle A: Beam + 100k energy (fires every tick)
+    Battle B: Beam + no energy (cannot fire)
+
+    Proves that a beam weapon with activation energy cost cannot fire
+    without an energy source.
+    """
+
+    metadata = TestMetadata(
+        test_id="BEAMWEAPON-RES-001",
+        category="BeamWeaponAbility",
+        subcategory="Resource Dependency",
+        name="Beam Stops Without Energy",
+        summary="Beam weapon with energy cost but no battery cannot fire",
+        conditions=[
+            f"Attacker (full energy): {BEAM_RES_ATTACKER_FULL}",
+            f"Attacker (no energy): {BEAM_RES_ATTACKER_NONE}",
+            f"Target: {BEAM_RES_TARGET} (stationary, extreme HP armor)",
+            f"Distance: {POINT_BLANK_DISTANCE} pixels",
+            f"Test Duration: {BEAM_RES_TEST_TICKS} ticks",
+        ],
+        edge_cases=[
+            "Weapon exists and is operational but cannot afford activation cost",
+            "Zero shots fired, zero damage dealt",
+        ],
+        expected_outcome="Full-energy attacker deals ~1000 damage. No-energy attacker deals 0.",
+        pass_criteria="variant damage == 0, variant shots_fired == 0",
+        max_ticks=BEAM_RES_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["beam", "energy", "resource", "no-power", "comparison"],
+    )
+
+    baseline_attacker_ship = BEAM_RES_ATTACKER_FULL
+    baseline_target_ship = BEAM_RES_TARGET
+    variant_attacker_ship = BEAM_RES_ATTACKER_NONE
+    variant_target_ship = BEAM_RES_TARGET
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Precondition: baseline fired and dealt damage
+        checks.append(check_true(
+            "Full-Energy Attacker Dealt Damage",
+            self.baseline_damage_dealt > 0,
+            detail=f"damage={self.baseline_damage_dealt}",
+        ))
+
+        # Outcome: no-energy attacker dealt zero damage
+        checks.append(check_exact(
+            "No-Energy Attacker — Zero Damage",
+            0.0, self.variant_damage_dealt,
+            phase="outcome",
+        ))
+
+        # Outcome: no-energy attacker fired zero shots
+        variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        checks.append(check_exact(
+            "No-Energy Attacker — Zero Shots",
+            0, variant_shots,
+            phase="outcome",
+        ))
+
+        return checks
+
+
+class BeamStopsAtHalfEnergyScenario(ComparisonScenario):
+    """
+    BEAMWEAPON-RES-002: Beam Stops At 50% Energy
+
+    Battle A: Beam + 100k energy (fires all 1000 ticks)
+    Battle B: Beam + 500 energy (fires ~500 ticks then stops)
+
+    Proves that a beam weapon fires until energy depletes, then stops.
+    """
+
+    metadata = TestMetadata(
+        test_id="BEAMWEAPON-RES-002",
+        category="BeamWeaponAbility",
+        subcategory="Resource Dependency",
+        name="Beam Stops At 50% Energy",
+        summary="Beam fires ~500 shots with 500 energy then stops",
+        conditions=[
+            f"Attacker (full energy): {BEAM_RES_ATTACKER_FULL}",
+            f"Attacker (half energy): {BEAM_RES_ATTACKER_HALF} (500 energy = 500 shots)",
+            f"Target: {BEAM_RES_TARGET} (stationary, extreme HP armor)",
+            f"Distance: {POINT_BLANK_DISTANCE} pixels",
+            f"Test Duration: {BEAM_RES_TEST_TICKS} ticks",
+        ],
+        edge_cases=[
+            "Weapon fires until energy runs out, then silently stops",
+            "Damage should be roughly half of full-energy baseline",
+        ],
+        expected_outcome="Half-energy attacker deals ~500 damage (half of baseline ~1000).",
+        pass_criteria="variant damage < baseline, variant damage > 0, variant shots ≈ 500",
+        max_ticks=BEAM_RES_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["beam", "energy", "resource", "depletion", "comparison"],
+    )
+
+    baseline_attacker_ship = BEAM_RES_ATTACKER_FULL
+    baseline_target_ship = BEAM_RES_TARGET
+    variant_attacker_ship = BEAM_RES_ATTACKER_HALF
+    variant_target_ship = BEAM_RES_TARGET
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Precondition: baseline fired all ticks
+        checks.append(check_true(
+            "Full-Energy Attacker Dealt Damage",
+            self.baseline_damage_dealt > 0,
+            detail=f"damage={self.baseline_damage_dealt}",
+        ))
+
+        # Outcome: half-energy attacker dealt some damage
+        checks.append(check_true(
+            "Half-Energy Attacker Dealt Damage",
+            self.variant_damage_dealt > 0,
+            detail=f"damage={self.variant_damage_dealt}",
+            phase="outcome",
+        ))
+
+        # Outcome: half-energy dealt less than full-energy
+        checks.append(check_true(
+            "Half-Energy Dealt Less Damage",
+            self.variant_damage_dealt < self.baseline_damage_dealt,
+            detail=f"full={self.baseline_damage_dealt}, half={self.variant_damage_dealt}",
+            phase="outcome",
+        ))
+
+        # Outcome: half-energy fired approximately 500 shots
+        variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        checks.append(check_exact(
+            "Half-Energy Shots Fired", 500, variant_shots,
+            phase="outcome",
+        ))
+
+        return checks
+
+
+class BeamControlWithEnergyScenario(ComparisonScenario):
+    """
+    BEAMWEAPON-RES-003: Beam Functions With Sufficient Energy (Control)
+
+    Battle A: Beam + 100k energy
+    Battle B: Beam + 100k energy (identical)
+
+    Control test: both battles use the same ship. Damage should be identical.
+    Proves the comparison infrastructure works and no seed artifacts exist.
+    """
+
+    metadata = TestMetadata(
+        test_id="BEAMWEAPON-RES-003",
+        category="BeamWeaponAbility",
+        subcategory="Resource Dependency",
+        name="Beam Functions With Energy (Control)",
+        summary="Control: identical attackers with sufficient energy produce identical damage",
+        conditions=[
+            f"Attacker (both): {BEAM_RES_ATTACKER_FULL} (100k energy)",
+            f"Target: {BEAM_RES_TARGET} (stationary, extreme HP armor)",
+            f"Distance: {POINT_BLANK_DISTANCE} pixels",
+            f"Test Duration: {BEAM_RES_TEST_TICKS} ticks",
+        ],
+        edge_cases=[
+            "Control test — no difference between battles",
+            "Validates comparison infrastructure with identical setups",
+        ],
+        expected_outcome="Both battles produce identical damage.",
+        pass_criteria="variant damage == baseline damage",
+        max_ticks=BEAM_RES_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["beam", "energy", "resource", "control", "comparison"],
+    )
+
+    baseline_attacker_ship = BEAM_RES_ATTACKER_FULL
+    baseline_target_ship = BEAM_RES_TARGET
+    variant_attacker_ship = BEAM_RES_ATTACKER_FULL
+    variant_target_ship = BEAM_RES_TARGET
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Outcome: identical damage
+        checks.append(check_exact(
+            "Control — Identical Damage",
+            self.baseline_damage_dealt,
+            self.variant_damage_dealt,
+            phase="outcome",
+        ))
+
+        return checks
+
+
+# =============================================================================
+# GENERIC RESOURCE TESTS — METALS (BEAMWEAPON-RES-METALS-001 to 002)
+# =============================================================================
+# Prove beam weapons work with ANY resource type, not just energy.
+# Uses "metals" (a real planetary resource defined in data/resources.json).
+
+BEAM_METALS_ATTACKER_FULL = "Test_Attacker_BeamGuaranteed_HighMetals.json"
+BEAM_METALS_ATTACKER_NONE = "Test_Attacker_BeamGuaranteed_NoMetals.json"
+
+
+class BeamWithMetalsFires(ComparisonScenario):
+    """
+    BEAMWEAPON-RES-METALS-001: Beam With Metals Fires Normally
+
+    Battle A: Beam (metals cost) + 100k metals — fires every tick
+    Battle B: Beam (metals cost) + no metals — cannot fire
+
+    Proves the resource system is generic: a beam consuming "metals"
+    works identically to one consuming "energy".
+    """
+
+    metadata = TestMetadata(
+        test_id="BEAMWEAPON-RES-METALS-001",
+        category="BeamWeaponAbility",
+        subcategory="Generic Resource",
+        name="Beam With Metals Fires",
+        summary="Beam consuming metals (planetary resource) fires normally with supply",
+        conditions=[
+            f"Attacker (with metals): {BEAM_METALS_ATTACKER_FULL}",
+            f"Attacker (no metals): {BEAM_METALS_ATTACKER_NONE}",
+            f"Target: {BEAM_RES_TARGET}",
+            f"Distance: {POINT_BLANK_DISTANCE} pixels",
+            f"Test Duration: {BEAM_RES_TEST_TICKS} ticks",
+        ],
+        edge_cases=[
+            "'metals' is a planetary resource, not a standard operational resource",
+            "Proves resource system accepts any resource type from data files",
+        ],
+        expected_outcome="With metals: fires and deals damage. Without: zero shots.",
+        pass_criteria="baseline damage > 0, variant damage == 0, variant shots == 0",
+        max_ticks=BEAM_RES_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["beam", "metals", "generic-resource", "comparison"],
+    )
+
+    baseline_attacker_ship = BEAM_METALS_ATTACKER_FULL
+    baseline_target_ship = BEAM_RES_TARGET
+    variant_attacker_ship = BEAM_METALS_ATTACKER_NONE
+    variant_target_ship = BEAM_RES_TARGET
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        checks.append(check_true(
+            "With-Metals Attacker Dealt Damage",
+            self.baseline_damage_dealt > 0,
+            detail=f"damage={self.baseline_damage_dealt}",
+        ))
+
+        checks.append(check_exact(
+            "No-Metals Attacker — Zero Damage",
+            0.0, self.variant_damage_dealt,
+            phase="outcome",
+        ))
+
+        variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        checks.append(check_exact(
+            "No-Metals Attacker — Zero Shots",
+            0, variant_shots,
+            phase="outcome",
+        ))
+
+        return checks
+
+
+class BeamWithMetalsControl(ComparisonScenario):
+    """
+    BEAMWEAPON-RES-METALS-002: Beam With Metals Control
+
+    Battle A: Beam (metals cost) + 100k metals
+    Battle B: Beam (metals cost) + 100k metals (identical)
+
+    Control: proves metals-consuming beam works consistently.
+    """
+
+    metadata = TestMetadata(
+        test_id="BEAMWEAPON-RES-METALS-002",
+        category="BeamWeaponAbility",
+        subcategory="Generic Resource",
+        name="Beam With Metals Control",
+        summary="Control: identical metals-consuming beams produce identical damage",
+        conditions=[
+            f"Attacker (both): {BEAM_METALS_ATTACKER_FULL}",
+            f"Target: {BEAM_RES_TARGET}",
+            f"Distance: {POINT_BLANK_DISTANCE} pixels",
+            f"Test Duration: {BEAM_RES_TEST_TICKS} ticks",
+        ],
+        edge_cases=["Control test for generic resource support"],
+        expected_outcome="Both battles produce identical damage.",
+        pass_criteria="variant damage == baseline damage",
+        max_ticks=BEAM_RES_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["beam", "metals", "generic-resource", "control", "comparison"],
+    )
+
+    baseline_attacker_ship = BEAM_METALS_ATTACKER_FULL
+    baseline_target_ship = BEAM_RES_TARGET
+    variant_attacker_ship = BEAM_METALS_ATTACKER_FULL
+    variant_target_ship = BEAM_RES_TARGET
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        checks.append(check_exact(
+            "Control — Identical Damage",
+            self.baseline_damage_dealt, self.variant_damage_dealt,
+            phase="outcome",
+        ))
+        return checks
+
+
 __all__ = [
     'BeamLowAccuracyPointBlankScenario',
     'BeamLowAccuracyPointBlankHighTickScenario',
@@ -778,5 +1118,10 @@ __all__ = [
     'BeamHighAccuracyMaxRangeHighTickScenario',
     'BeamMediumAccuracyErraticMidRangeScenario',
     'BeamMediumAccuracyErraticMaxRangeScenario',
-    'BeamOutOfRangeScenario'
+    'BeamOutOfRangeScenario',
+    'BeamStopsWithoutEnergyScenario',
+    'BeamStopsAtHalfEnergyScenario',
+    'BeamControlWithEnergyScenario',
+    'BeamWithMetalsFires',
+    'BeamWithMetalsControl',
 ]

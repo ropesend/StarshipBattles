@@ -114,6 +114,16 @@ SENSOR_ATTACKER_SHIP = "Test_Attacker_Beam360_WithSensor.json"
 # Defense test durations
 DEFENSE_TEST_TICKS = 500    # Standard duration for defense tests
 
+# ShieldProjection test category
+SHIELD_PROJ_1B_CAPACITY = 1_000_000_000
+SHIELD_PROJ_100_CAPACITY = 100
+SHIELD_PROJ_SINGLE_SHOT_DAMAGE = 150
+SHIELD_PROJ_TEST_TICKS = 1000        # Tests 001-003 (guaranteed-hit beam, 1 dmg/tick)
+SHIELD_PROJ_SINGLE_SHOT_TICKS = 100  # Test 004 (single 150-dmg shot)
+SHIELD_PROJ_ENERGY_RATE = 1.0        # Energy consumption per second for energy shield
+SHIELD_PROJ_LARGE_BATTERY = 15       # Energy: lasts 1500 ticks (> test duration)
+SHIELD_PROJ_SMALL_BATTERY = 5        # Energy: lasts 500 ticks (depletes mid-test)
+
 
 # ============================================================================
 # MODIFIER TEST CONSTANTS

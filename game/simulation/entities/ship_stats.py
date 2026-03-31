@@ -260,10 +260,10 @@ class ShipStatsCalculator:
         Iterates all active components and aggregates resource storage, generation,
         thrust, shields, hangar capacity, and other combat stats.
         """
-        # Local accumulators for atomic updates (prevents premature clamping)
+        # Local accumulators for atomic updates (prevents premature clamping).
+        # Resource keys (max_*, gen_*) are added dynamically by
+        # _aggregate_resource_abilities — any resource type from data files works.
         acc = {
-            'max_fuel': 0, 'max_ammo': 0, 'max_energy': 0,
-            'energy_gen': 0, 'ammo_gen': 0,
             'thrust': 0, 'strategic_movement': 0, 'turn_speed': 0,
             'maneuver_points': 0,
             'max_shields': 0, 'shield_regen': 0, 'shield_cost': 0,
@@ -274,7 +274,16 @@ class ShipStatsCalculator:
             if not comp.is_active:
                 continue
 
+            # Resource storage is always aggregated (batteries provide capacity
+            # even if their own consumption isn't met — they have no consumption).
             self._aggregate_resource_abilities(comp, acc)
+
+            # All other stats require the component to be operational
+            # (has resources to function).  A shield that can't afford its
+            # energy cost should not contribute shield capacity.
+            if not comp.is_operational:
+                continue
+
             self._aggregate_propulsion_abilities(comp, acc)
             self._aggregate_defense_abilities(ship, comp, acc)
             self._aggregate_hangar_abilities(ship, comp)
@@ -288,22 +297,26 @@ class ShipStatsCalculator:
         self._apply_aggregated_stats(ship, acc)
 
     def _aggregate_resource_abilities(self, comp, acc) -> None:
-        """Aggregate ResourceStorage and ResourceGeneration abilities."""
-        for ability in comp.ability_instances:
-            # Use protocol checks instead of class name introspection
-            if is_resource_storage(ability):
-                if ability.resource_type == "fuel":
-                    acc['max_fuel'] += ability.max_amount
-                elif ability.resource_type == "ammo":
-                    acc['max_ammo'] += ability.max_amount
-                elif ability.resource_type == "energy":
-                    acc['max_energy'] += ability.max_amount
+        """Aggregate ResourceStorage and ResourceGeneration abilities.
 
+        Discovers resource types dynamically from component abilities so any
+        resource defined in data files (fuel, energy, ammo, metals, etc.) works
+        without code changes.  Also registers resources from consumption
+        abilities (with 0 capacity) so the ResourceRegistry knows about all
+        resource types even when no storage is present.
+        """
+        for ability in comp.ability_instances:
+            if is_resource_storage(ability):
+                key = f'max_{ability.resource_type}'
+                acc[key] = acc.get(key, 0) + ability.max_amount
             elif is_resource_generation(ability):
-                if ability.resource_type == "energy":
-                    acc['energy_gen'] += ability.rate
-                elif ability.resource_type == "ammo":
-                    acc['ammo_gen'] += ability.rate
+                key = f'gen_{ability.resource_type}'
+                acc[key] = acc.get(key, 0) + ability.rate
+            elif is_resource_consumption(ability):
+                # Ensure the resource type is registered even without storage
+                key = f'max_{ability.resource_type}'
+                if key not in acc:
+                    acc[key] = 0
 
     def _aggregate_propulsion_abilities(self, comp, acc) -> None:
         """Aggregate CombatPropulsion, StrategicMovement, WarpJump, ManeuveringThruster."""
@@ -367,11 +380,12 @@ class ShipStatsCalculator:
 
     def _apply_aggregated_stats(self, ship, acc) -> None:
         """Atomic application of accumulated totals to ship."""
-        ship.resources.register_storage("fuel", acc['max_fuel'])
-        ship.resources.register_storage("ammo", acc['max_ammo'])
-        ship.resources.register_storage("energy", acc['max_energy'])
-        ship.resources.register_generation("energy", acc['energy_gen'])
-        ship.resources.register_generation("ammo", acc['ammo_gen'])
+        # Register all discovered resource types dynamically
+        for key, value in acc.items():
+            if key.startswith('max_') and key != 'max_shields':
+                ship.resources.register_storage(key[4:], value)
+            elif key.startswith('gen_'):
+                ship.resources.register_generation(key[4:], value)
         ship.total_thrust = acc['thrust']
         ship.total_strategic_movement = acc['strategic_movement']
         ship.turn_speed = acc['turn_speed']
@@ -498,48 +512,42 @@ class ShipStatsCalculator:
             ship.mass_limits_ok = False
 
     def _initialize_resources(self, ship) -> None:
-        # Resource Initialization (Auto-fill on first load only, or when capacity increases)
-        # PROJ-190: Direct attribute access - fields initialized in Ship.__init__
-        prev_max_fuel = ship._prev_max_fuel
-        prev_max_ammo = ship._prev_max_ammo
-        prev_max_energy = ship._prev_max_energy
+        """Initialize or update resource values after stats aggregation.
+
+        On first load, fills all resources to max capacity.  On subsequent
+        recalculations, adds capacity deltas (preserves current usage).
+        Handles any resource type dynamically — no hardcoded fuel/energy/ammo.
+        """
+        prev_max = ship._prev_max_resources
         prev_max_shields = ship._prev_max_shields
 
-        # Get current max values directly from registry
-        curr_max_fuel = ship.resources.get_max_value("fuel")
-        curr_max_ammo = ship.resources.get_max_value("ammo")
-        curr_max_energy = ship.resources.get_max_value("energy")
-
         if not ship._resources_initialized:
-            # First init - fill to max
-            if curr_max_fuel > 0:
-                ship.resources.set_value("fuel", curr_max_fuel)
-            if curr_max_ammo > 0:
-                ship.resources.set_value("ammo", curr_max_ammo)
-            if curr_max_energy > 0:
-                ship.resources.set_value("energy", curr_max_energy)
+            # First init — fill all resources to max
+            for name in ship.resources.get_resource_names():
+                max_val = ship.resources.get_max_value(name)
+                if max_val > 0:
+                    ship.resources.set_value(name, max_val)
             if ship.max_shields > 0:
                 ship.current_shields = ship.max_shields
             ship._resources_initialized = True
         else:
-            # Handle capacity increases (preserve current relative usage or just add delta?)
-            # Logic: If max increased, add difference to current.
-            if curr_max_fuel > prev_max_fuel:
-                delta = curr_max_fuel - prev_max_fuel
-                ship.resources.modify_value("fuel", delta)
-            if curr_max_ammo > prev_max_ammo:
-                delta = curr_max_ammo - prev_max_ammo
-                ship.resources.modify_value("ammo", delta)
-            if curr_max_energy > prev_max_energy:
-                delta = curr_max_energy - prev_max_energy
-                ship.resources.modify_value("energy", delta)
+            # Handle capacity increases for all resources
+            for name in ship.resources.get_resource_names():
+                curr_max = ship.resources.get_max_value(name)
+                prev = prev_max.get(name, 0)
+                if curr_max > prev:
+                    ship.resources.modify_value(name, curr_max - prev)
+            # Shield capacity changes
             if ship.max_shields > prev_max_shields:
                 ship.current_shields += (ship.max_shields - prev_max_shields)
-        
-        # Remember current max for next recalculate
-        ship._prev_max_fuel = curr_max_fuel
-        ship._prev_max_ammo = curr_max_ammo
-        ship._prev_max_energy = curr_max_energy
+            if ship.current_shields > ship.max_shields:
+                ship.current_shields = ship.max_shields
+
+        # Remember current max for all resources
+        ship._prev_max_resources = {
+            name: ship.resources.get_max_value(name)
+            for name in ship.resources.get_resource_names()
+        }
         ship._prev_max_shields = ship.max_shields
 
     def calculate_ability_totals(self, components) -> dict:

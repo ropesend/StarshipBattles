@@ -884,13 +884,19 @@ Generators produce resources via `ResourceGeneration` ability:
 ]
 ```
 
-#### Fuel Starvation Behavior
+#### Resource Starvation Behavior
 
-When fuel runs out:
+When a constant-trigger resource runs out:
 1. `ResourceConsumption.update()` returns `False`
 2. `Component._is_operational` set to `False`
-3. Engine contributes 0 thrust (via `operational_only=True`)
-4. Ship decelerates to 0
+3. `ShipStatsCalculator` skips non-operational components during aggregation
+4. Component loses all stat contributions (thrust, shields, defense, etc.)
+5. `current_shields` capped to new `max_shields` if shield capacity decreased
+
+When an activation-trigger resource runs out (weapons):
+1. `can_afford_activation()` returns `False`
+2. Weapon refuses to fire (0 shots, 0 damage)
+3. Component remains `is_operational = True` (not a constant drain)
 
 ### UI Display for Resource Tests
 

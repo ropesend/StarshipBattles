@@ -1,0 +1,24 @@
+{
+  "_metadata": {
+    "_schema_version": "1.0",
+    "_data_version": "1.0",
+    "_description": "Combat Lab test ship: Stationary target with 100 HP shield + extreme armor"
+  },
+  "name": "Test Target Shield 100",
+  "color": [0, 0, 255],
+  "team_id": 2,
+  "ship_class": "TestS_2L",
+  "theme_id": "Federation",
+  "ai_strategy": "test_do_nothing",
+  "layers": {
+    "CORE": [
+      {"id": "test_armor_extreme_hp"},
+      {"id": "test_shield_100"}
+    ],
+    "ARMOR": []
+  },
+  "_test_notes": "100 HP shield depletes after 100 hits of 1 damage. For SHIELD-PROJ-002/004.",
+  "expected_stats": {
+    "mass": 400.0
+  }
+}

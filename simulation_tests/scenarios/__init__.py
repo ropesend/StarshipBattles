@@ -71,6 +71,18 @@ from simulation_tests.scenarios.modifier_scenarios import (
     AccuracyBoostScenario,
     TurretArcSetScenario,
 )
+from simulation_tests.scenarios.shield_projection_scenarios import (
+    ShieldAbsorbsDamageComparisonScenario,
+    ShieldDepletionOverflowScenario,
+    MultipleShieldsStackScenario,
+    SingleHitOverflowScenario,
+    ShieldWithSufficientEnergyScenario,
+    ShieldWithEnergyZeroDamageScenario,
+    ShieldFailsOnEnergyDepletionScenario,
+    ShieldWithoutEnergyScenario,
+    ShieldWithMetalsProtects,
+    ShieldWithoutMetalsNoProtection,
+)
 from simulation_tests.scenarios.tohit_defense_scenarios import (
     ECMReducesHitRateComparisonScenario,
     ECMSameGroupDoesNotStackScenario,
@@ -140,6 +152,17 @@ __all__ = [
     'PropNoEngineStationaryScenario',
     'PropThrusterOnlyScenario',
     'PropMassAffectsTurnRateScenario',
+    # ShieldProjection scenarios
+    'ShieldAbsorbsDamageComparisonScenario',
+    'ShieldDepletionOverflowScenario',
+    'MultipleShieldsStackScenario',
+    'SingleHitOverflowScenario',
+    'ShieldWithSufficientEnergyScenario',
+    'ShieldWithEnergyZeroDamageScenario',
+    'ShieldFailsOnEnergyDepletionScenario',
+    'ShieldWithoutEnergyScenario',
+    'ShieldWithMetalsProtects',
+    'ShieldWithoutMetalsNoProtection',
     # ToHitDefenseModifier scenarios
     'ECMReducesHitRateComparisonScenario',
     'ECMSameGroupDoesNotStackScenario',

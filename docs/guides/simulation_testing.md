@@ -548,7 +548,7 @@ class SensorDamageTest(ComparisonScenario):
         checks.append(check_true(
             "Sensor Increases Damage",
             self.variant_damage_dealt > self.baseline_damage_dealt,
-            actual=f"baseline={self.baseline_damage_dealt}, variant={self.variant_damage_dealt}",
+            detail=f"baseline={self.baseline_damage_dealt}, variant={self.variant_damage_dealt}",
             phase="outcome",
         ))
         return checks
@@ -578,6 +578,46 @@ class NoEngineStaysStationary(TestScenario):
         self.results['distance_traveled'] = distance
         return distance == 0.0
 ```
+
+### Pattern 7: Resource Dependency Tests
+
+Prove that components with `ResourceConsumption` stop functioning when resources
+deplete.  Test three levels: full resource (control), 50% resource, and no resource.
+
+```python
+class BeamStopsWithoutEnergy(ComparisonScenario):
+    metadata = TestMetadata(test_id="BEAMWEAPON-RES-001", ...)
+
+    # Baseline: weapon with abundant energy
+    baseline_attacker_ship = "Test_Attacker_BeamGuaranteed_HighEnergy.json"
+    baseline_target_ship = "Test_Target_Stationary.json"
+
+    # Variant: weapon with NO energy source
+    variant_attacker_ship = "Test_Attacker_BeamGuaranteed_NoEnergy.json"
+    variant_target_ship = "Test_Target_Stationary.json"
+    distance = 100
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        checks.append(check_exact(
+            "No-Energy — Zero Damage", 0.0, self.variant_damage_dealt,
+            phase="outcome",
+        ))
+        return checks
+```
+
+**Two resource trigger types:**
+
+| Trigger | Example | How it stops |
+|---------|---------|--------------|
+| `"constant"` | Shield energy | Component becomes non-operational → loses stat contributions |
+| `"activation"` | Weapon ammo | `can_afford_activation()` returns False → weapon refuses to fire |
+
+**Generic resource support:** The resource system is fully data-driven. Any resource
+type defined in `data/resources.json` works — including planetary resources like
+`"metals"`, `"organics"`, etc. The stats aggregation discovers resource types
+dynamically from component abilities. Tests validate this with `BEAMWEAPON-RES-METALS-*`,
+`PROJECTILE-RES-METALS-*`, and `SHIELD-PROJ-METALS-*` scenarios.
 
 ---
 
@@ -849,6 +889,7 @@ threshold behaviors, resource coupling, etc.).
 |---------|------|-------|
 | `ToHitAttackModifier` | `tohit_attack_scenarios.py` | TOHIT-ATK-001 to 004 |
 | `ToHitDefenseModifier` | `tohit_defense_scenarios.py` | TOHIT-DEF-001 to 004 |
+| `ShieldProjection` | `shield_projection_scenarios.py` | SHIELD-PROJ-001 to 007 |
 
 ### Pending Ability Categories
 
