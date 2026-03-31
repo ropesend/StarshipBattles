@@ -52,6 +52,10 @@
       "tags": [],
       "amount": 1,
       "base_amount": 1
+    },
+    {
+      "class_name": "RequiresCommandAndControl",
+      "tags": []
     }
   ]
 }

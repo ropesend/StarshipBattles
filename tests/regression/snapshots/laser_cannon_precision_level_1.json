@@ -19,20 +19,21 @@
       "strategic_mult": 1.0,
       "energy_gen_mult": 1.0,
       "capacity_mult": 1.0,
+      "shield_capacity_mult": 1.0,
       "crew_capacity_mult": 1.0,
       "life_support_capacity_mult": 1.0,
       "consumption_mult": 1.0,
-      "mass_add": 0.0,
-      "arc_add": 0.0,
-      "accuracy_add": 0.5,
-      "arc_set": null,
-      "properties": {},
       "reload_mult": 1.0,
       "endurance_mult": 1.0,
       "projectile_hp_mult": 1.0,
       "projectile_damage_mult": 1.0,
+      "crew_req_mult": 1.0,
+      "mass_add": 0.0,
+      "arc_add": 0.0,
+      "accuracy_add": 0.5,
       "projectile_stealth_level": 0.0,
-      "crew_req_mult": 1.0
+      "arc_set": null,
+      "properties": {}
     },
     "modifiers": [
       {
@@ -67,6 +68,10 @@
       "base_firing_arc": 1.0,
       "base_accuracy": 2.5,
       "_base_accuracy": 2.0
+    },
+    {
+      "class_name": "RequiresCommandAndControl",
+      "tags": []
     }
   ]
 }

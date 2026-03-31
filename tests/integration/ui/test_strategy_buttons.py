@@ -75,9 +75,16 @@ def create_dummy_planet(name, owner_id=None):
     return p
 
 def test_build_button_visibility_owned_planet(strategy_ui):
-    """Test that build button is visible for owned planets."""
+    """Test that build button is visible for owned planets with a yard."""
     # Setup
     planet = create_dummy_planet("Test Planet", strategy_ui.scene.current_empire.id)
+    # Add a PlanetaryYard facility so the build button shows
+    from game.strategy.data.planet import PlanetaryFacility
+    yard = PlanetaryFacility(
+        instance_id="yard_test", design_id="colony_hub", name="Colony Hub",
+        design_data={"layers": {"CORE": [{"id": "hub", "abilities": {"PlanetaryYard": True}}]}},
+    )
+    planet.facilities = [yard]
 
     # Debug: Verify empire IDs match
     assert planet.owner_id == strategy_ui.scene.current_empire.id, (

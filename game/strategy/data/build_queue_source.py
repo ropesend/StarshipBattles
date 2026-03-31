@@ -187,18 +187,20 @@ def _collect_planet_sources(planet, sources: List[BuildQueueSource]) -> None:
         planet: Planet instance to collect queues from.
         sources: List to append BuildQueueSource objects to.
     """
-    # Base queue (complexes only)
-    sources.append(BuildQueueSource(
-        queue_id=f"planet_{planet.id}_base",
-        display_name=f"{planet.name} - Planetary Yard",
-        owner_entity=planet,
-        construction_queue=planet.construction_queue,
-        can_build_ships=False,
-        can_build_complexes=True,
-        context_type="planet",
-        build_rate=get_default_production_rates("planetary_yard"),
-        planet_id=planet.id,
-    ))
+    # Base queue (complexes only) — only if colony has PlanetaryYard facility
+    from game.strategy.engine.production_engine import _colony_has_planetary_yard
+    if _colony_has_planetary_yard(planet):
+        sources.append(BuildQueueSource(
+            queue_id=f"planet_{planet.id}_base",
+            display_name=f"{planet.name} - Planetary Yard",
+            owner_entity=planet,
+            construction_queue=planet.construction_queue,
+            can_build_ships=False,
+            can_build_complexes=True,
+            context_type="planet",
+            build_rate=get_default_production_rates("planetary_yard"),
+            planet_id=planet.id,
+        ))
 
     # Shipyard facility queues
     shipyard_index = 0
