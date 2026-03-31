@@ -140,6 +140,48 @@ class Fleet:
         """Public access to fleet resource aggregation."""
         return self._resource_agg
 
+    # --- Cargo Resource Methods (for fleet construction) ---
+
+    def has_cargo_resources(self, costs: Dict[str, float]) -> bool:
+        """Check if fleet cargo contains all required resources.
+
+        Aggregates cargo_contents across all ships in the fleet.
+
+        Args:
+            costs: Dict mapping resource_type -> required amount.
+
+        Returns:
+            True if all resources are available as cargo.
+        """
+        for resource_type, amount in costs.items():
+            total = self._resource_agg.get_fleet_cargo_current(resource_type)
+            if total < amount:
+                return False
+        return True
+
+    def consume_cargo_resource(self, resource_type: str, amount: float) -> bool:
+        """Consume resources from fleet cargo (all-or-nothing).
+
+        Unloads the specified amount across fleet ships. If insufficient
+        cargo exists, no deduction is made.
+
+        Args:
+            resource_type: Resource identifier (e.g., "metals").
+            amount: Amount to consume.
+
+        Returns:
+            True if successful, False if insufficient.
+        """
+        total = self._resource_agg.get_fleet_cargo_current(resource_type)
+        if total < amount:
+            return False
+        self._resource_agg.unload_cargo_from_fleet(resource_type, int(amount))
+        return True
+
+    def get_cargo_resource(self, resource_type: str) -> float:
+        """Get total cargo of a resource type across all fleet ships."""
+        return float(self._resource_agg.get_fleet_cargo_current(resource_type))
+
     @property
     def battle(self) -> 'FleetBattleAdapter':
         """Public access to fleet battle conversion."""

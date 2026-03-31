@@ -43,9 +43,11 @@ class Empire:
         # Galaxy back-reference for auto fleet registration (PROJ-219)
         self._galaxy: Optional['Galaxy'] = None
 
-        # Empire-wide resource economy (PROJ-75)
-        self.resource_pool = {}   # Dict[str, float] - current resource amounts
-        self.max_storage = {}     # Dict[str, float] - storage capacity per type
+        # Empire-wide resource economy
+        # resource_pool is now a read-only aggregate of colony stockpiles (see property below).
+        # _fleet_resource_pool is temporary storage for fleet construction until Phase 6 (fleet cargo).
+        self._fleet_resource_pool = {}  # Dict[str, float] - fleet construction resources
+        self.max_storage = {}     # Dict[str, float] - aggregate storage capacity (set by HarvestingEngine)
 
     def add_colony(self, planet):
         if planet not in self.colonies:
@@ -131,10 +133,42 @@ class Empire:
         """
         self._galaxy = galaxy
 
-    # --- Resource Economy Methods (PROJ-75) ---
+    # --- Resource Economy Methods ---
+
+    @property
+    def resource_pool(self) -> Dict[str, float]:
+        """Read-only aggregate of all colony stockpiles.
+
+        Returns the sum of stockpile values across all colonies.
+        Used for UI display and economy reporting.
+        """
+        totals: Dict[str, float] = {}
+        for colony in self.colonies:
+            for res, amount in colony.stockpile.items():
+                totals[res] = totals.get(res, 0.0) + amount
+        # Include fleet resource pool (temporary, until Phase 6 fleet cargo)
+        for res, amount in self._fleet_resource_pool.items():
+            totals[res] = totals.get(res, 0.0) + amount
+        return totals
+
+    @resource_pool.setter
+    def resource_pool(self, value: Dict[str, float]) -> None:
+        """Setter for backward compatibility (used by deserialization).
+
+        Distributes resources to first colony's stockpile if colonies exist,
+        otherwise stores in fleet resource pool.
+        """
+        if self.colonies:
+            # Distribute to first colony (for save game loading)
+            self.colonies[0].stockpile = dict(value)
+        else:
+            self._fleet_resource_pool = dict(value)
 
     def add_resources(self, resource_type: str, amount: float) -> float:
-        """Add resources to the empire pool.
+        """Add resources to the fleet resource pool.
+
+        Used for fleet construction resources. For planet resources,
+        use planet.add_to_stockpile() directly.
 
         Args:
             resource_type: Resource identifier (e.g. "metals", "organics").
@@ -143,17 +177,20 @@ class Empire:
         Returns:
             Overflow amount (0.0 if all fit within storage).
         """
-        current = self.resource_pool.get(resource_type, 0.0)
+        current = self._fleet_resource_pool.get(resource_type, 0.0)
         max_cap = self.max_storage.get(resource_type, float('inf'))
         new_total = current + amount
         if new_total > max_cap:
-            self.resource_pool[resource_type] = max_cap
+            self._fleet_resource_pool[resource_type] = max_cap
             return new_total - max_cap
-        self.resource_pool[resource_type] = new_total
+        self._fleet_resource_pool[resource_type] = new_total
         return 0.0
 
     def consume_resources(self, resource_type: str, amount: float) -> bool:
-        """Consume resources from the empire pool (all-or-nothing).
+        """Consume resources from the fleet resource pool (all-or-nothing).
+
+        Used for fleet construction. For planet resources,
+        use planet.consume_from_stockpile() directly.
 
         Args:
             resource_type: Resource identifier.
@@ -162,14 +199,16 @@ class Empire:
         Returns:
             True if successful, False if insufficient (no deduction made).
         """
-        current = self.resource_pool.get(resource_type, 0.0)
+        current = self._fleet_resource_pool.get(resource_type, 0.0)
         if current >= amount:
-            self.resource_pool[resource_type] = current - amount
+            self._fleet_resource_pool[resource_type] = current - amount
             return True
         return False
 
     def has_resources(self, costs: dict) -> bool:
-        """Check if the empire has all required resources.
+        """Check if the empire has all required resources (aggregate).
+
+        Checks across all colony stockpiles plus fleet resource pool.
 
         Args:
             costs: Dict mapping resource_type -> required amount.
@@ -177,13 +216,14 @@ class Empire:
         Returns:
             True if all resources are available.
         """
+        pool = self.resource_pool  # computed aggregate
         for resource_type, amount in costs.items():
-            if self.resource_pool.get(resource_type, 0.0) < amount:
+            if pool.get(resource_type, 0.0) < amount:
                 return False
         return True
 
     def get_resource(self, resource_type: str) -> float:
-        """Get current amount of a resource type.
+        """Get current amount of a resource type (aggregate).
 
         Returns 0.0 if the resource type is not in the pool.
         """
@@ -207,7 +247,7 @@ class Empire:
             'built_ship_designs': sorted(self.built_ship_designs),
             '_next_fleet_id': self._next_fleet_id,
             '_design_serial_counters': self._design_serial_counters,
-            'resource_pool': dict(self.resource_pool),
+            'resource_pool': dict(self._fleet_resource_pool),
             'max_storage': dict(self.max_storage),
         }
         # Include race visual identity if set (optional fields)
@@ -272,8 +312,10 @@ class Empire:
         # Restore ship serial counters
         empire._design_serial_counters = data.get('_design_serial_counters', {})
 
-        # Restore resource economy (PROJ-75)
-        empire.resource_pool = data.get('resource_pool', {})
+        # Restore resource economy
+        # For old saves: resources stored at empire level go to _fleet_resource_pool
+        # (colonies loaded below will have their own stockpiles in new saves)
+        empire._fleet_resource_pool = data.get('resource_pool', {})
         empire.max_storage = data.get('max_storage', {})
 
         # Restore fleets (skip corrupt entries with warning)

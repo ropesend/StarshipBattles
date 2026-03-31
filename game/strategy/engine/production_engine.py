@@ -257,7 +257,7 @@ class ProductionEngine:
                 continue
 
             # Check affordability (PROJ-209: extracted to helper)
-            if not self._check_affordability(empire, expenditure.cost_this_step):
+            if not self._check_affordability(empire, expenditure.cost_this_step, colony_or_fleet):
                 # FEAT-09: Log shortage event once per item per turn
                 if not item.get('_shortage_logged'):
                     self._log_resource_shortage(
@@ -267,7 +267,7 @@ class ProductionEngine:
                 return  # Paused - insufficient resources
 
             # Consume resources (PROJ-209: extracted to helper)
-            self._apply_resource_consumption(empire, item, expenditure.cost_this_step)
+            self._apply_resource_consumption(empire, item, expenditure.cost_this_step, colony_or_fleet)
 
             # Decrement capacity
             tick_capacity -= expenditure.ticks_to_spend
@@ -401,18 +401,27 @@ class ProductionEngine:
             max_ticks_needed=max_ticks_needed
         )
 
-    def _check_affordability(self, empire: 'Empire', cost_this_step: Dict[str, float]) -> bool:
-        """Check if empire can afford the resource cost.
+    def _check_affordability(
+        self, empire: 'Empire', cost_this_step: Dict[str, float],
+        colony_or_fleet: Any = None,
+    ) -> bool:
+        """Check if the build location can afford the resource cost.
 
-        PROJ-209 Phase 2: Extracted from _process_queue_tick_dynamic.
+        For planet construction: checks planet.stockpile (local storage).
+        For fleet construction: checks empire pool (Phase 6 will switch to fleet cargo).
 
         Args:
-            empire: The empire to check resources for.
+            empire: The empire (fallback for fleet construction).
             cost_this_step: Resources needed this step.
+            colony_or_fleet: Build location (Planet or Fleet).
 
         Returns:
-            True if empire has sufficient resources, False otherwise.
+            True if sufficient resources available, False otherwise.
         """
+        if colony_or_fleet is not None and hasattr(colony_or_fleet, 'has_stockpile'):
+            return colony_or_fleet.has_stockpile(cost_this_step)
+        if colony_or_fleet is not None and hasattr(colony_or_fleet, 'has_cargo_resources'):
+            return colony_or_fleet.has_cargo_resources(cost_this_step)
         return empire.has_resources(cost_this_step)
 
     def _log_resource_shortage(
@@ -441,7 +450,12 @@ class ProductionEngine:
         for resource, needed in cost_this_step.items():
             if needed <= 0:
                 continue
-            available = empire.resource_pool.get(resource, 0.0)
+            if colony_or_fleet is not None and hasattr(colony_or_fleet, 'get_stockpile'):
+                available = colony_or_fleet.get_stockpile(resource)
+            elif colony_or_fleet is not None and hasattr(colony_or_fleet, 'get_cargo_resource'):
+                available = colony_or_fleet.get_cargo_resource(resource)
+            else:
+                available = empire.resource_pool.get(resource, 0.0)
             if available >= needed:
                 continue
             shortfall_ratio = needed / max(available, 0.0001)
@@ -477,20 +491,28 @@ class ProductionEngine:
         self,
         empire: 'Empire',
         item: Dict,
-        cost_this_step: Dict[str, float]
+        cost_this_step: Dict[str, float],
+        colony_or_fleet: Any = None,
     ) -> None:
         """Consume resources and update item's consumption tracking.
 
-        PROJ-209 Phase 2: Extracted from _process_queue_tick_dynamic.
+        For planet construction: consumes from planet.stockpile (local storage).
+        For fleet construction: consumes from fleet cargo.
 
         Args:
-            empire: Empire to deduct resources from.
+            empire: Empire (unused fallback).
             item: Queue item to update resources_consumed on.
             cost_this_step: Resources to consume.
+            colony_or_fleet: Build location (Planet or Fleet).
         """
         for res, amount in cost_this_step.items():
             if amount > 0:
-                empire.consume_resources(res, amount)
+                if colony_or_fleet is not None and hasattr(colony_or_fleet, 'consume_from_stockpile'):
+                    colony_or_fleet.consume_from_stockpile(res, amount)
+                elif colony_or_fleet is not None and hasattr(colony_or_fleet, 'consume_cargo_resource'):
+                    colony_or_fleet.consume_cargo_resource(res, amount)
+                else:
+                    empire.consume_resources(res, amount)
                 item['resources_consumed'][res] = (
                     item.get('resources_consumed', {}).get(res, 0.0) + amount
                 )

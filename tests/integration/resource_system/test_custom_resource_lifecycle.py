@@ -31,7 +31,7 @@ def _make_empire(resources=None, storage=None, empire_id=0):
     empire = Empire(empire_id=empire_id, name="Test Empire", color=(0, 0, 255))
     if resources:
         for res, amount in resources.items():
-            empire.resource_pool[res] = amount
+            empire._fleet_resource_pool[res] = amount
     if storage:
         for res, cap in storage.items():
             empire.max_storage[res] = cap
@@ -119,27 +119,25 @@ class TestCustomResourcePlanetDeposits:
 class TestCustomResourceHarvesting:
     """Tests for harvesting custom resources from planets."""
 
-    def test_harvest_custom_resource_into_empire_pool(self):
-        """HarvestingEngine extracts a custom resource from planet deposits."""
+    def test_harvest_custom_resource_into_local_stockpile(self):
+        """HarvestingEngine extracts a custom resource into planet stockpile."""
         harvester = _make_harvester_facility("dilithium", base_harvest_rate=100.0)
         planet = create_test_planet(
             has_facilities=False,
             has_population=False,
             deposits={"dilithium": {"quantity": 50000, "quality": 0.8}},
+            max_stockpile={"dilithium": 100000.0},
         )
         planet.facilities = [harvester]
 
-        empire = _make_empire(
-            resources={"dilithium": 0.0},
-            storage={"dilithium": 100000.0},
-        )
+        empire = _make_empire()
         empire.add_colony(planet)
 
         engine = HarvestingEngine()
         engine.process_harvesting_tick(1, [empire])
 
-        # Empire should have received some dilithium
-        assert empire.resource_pool.get("dilithium", 0.0) > 0.0
+        # Planet stockpile should have received some dilithium
+        assert planet.stockpile.get("dilithium", 0.0) > 0.0
         # Planet deposit should have decreased
         assert planet.deposits["dilithium"]["quantity"] < 50000
 

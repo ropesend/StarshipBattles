@@ -117,9 +117,10 @@ ResourceCatalog (loaded once at startup)
        |   which resources appear in planet deposits
        |
        +-- Harvesting: ResourceHarvesterAbility extracts from deposits
-       |   into empire resource pool
+       |   into planet.stockpile (local storage)
        |
-       +-- Construction: ProductionEngine consumes from empire pool
+       +-- Construction: ProductionEngine consumes from planet.stockpile
+       |   (or fleet cargo for fleet-bound shipyards)
        |   based on design construction_cost
        |
        +-- Ship Initialization: ResourceStorage abilities determine
@@ -131,6 +132,21 @@ ResourceCatalog (loaded once at startup)
        +-- Strategic Movement: FleetConsumableAggregator tracks per-hex
            and warp resource costs across fleet ships
 ```
+
+## Local Resource Storage
+
+Resources are stored locally on each planet, not in a global empire pool.
+
+- **`planet.deposits`**: Raw mineral data (`{quantity, quality}`) — what's underground
+- **`planet.stockpile`**: Harvested resources available for use (`Dict[str, float]`)
+- **`planet.max_stockpile`**: Storage capacity per resource (`Dict[str, float]`), set by `EmpireStorageAbility` components on facilities
+
+The `HarvestingEngine` extracts from `deposits` into `stockpile`. The `ProductionEngine`
+draws from `stockpile` for construction. Resources must be transferred between planets
+via cargo ships.
+
+The empire-level `resource_pool` is a read-only aggregate (sum of all colony stockpiles)
+used for UI display only.
 
 ## Per-Turn Resource Costs
 

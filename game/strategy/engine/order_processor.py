@@ -458,7 +458,27 @@ class OrderProcessor:
 
                 return to_load
 
-        return 0
+        # Resource cargo (metals, organics, fuel, etc.)
+        # Load from planet stockpile → fleet cargo
+        capacity = fleet.resources.get_fleet_cargo_capacity(cargo_type)
+        current = fleet.resources.get_fleet_cargo_current(cargo_type)
+        available_space = capacity - current
+
+        to_load = amount if amount > 0 else available_space
+        to_load = min(to_load, available_space)
+
+        # Cap by planet stockpile
+        planet_available = int(planet.get_stockpile(cargo_type))
+        to_load = min(to_load, planet_available)
+
+        if to_load <= 0:
+            return 0
+
+        # Subtract from planet stockpile
+        planet.consume_from_stockpile(cargo_type, float(to_load))
+        # Add to fleet cargo
+        fleet.resources.load_cargo_to_fleet(cargo_type, to_load)
+        return to_load
 
     def _execute_unload(
         self,
@@ -507,7 +527,18 @@ class OrderProcessor:
             species_pop.count += actual_unloaded
             return actual_unloaded
 
-        return 0
+        # Resource cargo (metals, organics, fuel, etc.)
+        # Unload from fleet cargo → planet stockpile
+        current_cargo = fleet.resources.get_fleet_cargo_current(cargo_type)
+        to_unload = amount if amount > 0 else current_cargo
+        to_unload = min(to_unload, current_cargo)
+
+        if to_unload <= 0:
+            return 0
+
+        actual_unloaded = fleet.resources.unload_cargo_from_fleet(cargo_type, to_unload)
+        planet.add_to_stockpile(cargo_type, float(actual_unloaded))
+        return actual_unloaded
 
     def _transfer_founding_population(
         self,

@@ -69,24 +69,24 @@ class TestConsumeResources:
 
     def test_consume_resources_success(self, empire):
         """Successful consumption deducts and returns True."""
-        empire.resource_pool["metals"] = 500.0
+        empire._fleet_resource_pool["metals"] = 500.0
         result = empire.consume_resources("metals", 200.0)
         assert result is True
-        assert empire.resource_pool["metals"] == 300.0
+        assert empire.resource_pool.get("metals", 0.0) == 300.0
 
     def test_consume_resources_failure_insufficient(self, empire):
         """Insufficient resources returns False, no deduction."""
-        empire.resource_pool["metals"] = 100.0
+        empire._fleet_resource_pool["metals"] = 100.0
         result = empire.consume_resources("metals", 200.0)
         assert result is False
-        assert empire.resource_pool["metals"] == 100.0
+        assert empire.resource_pool.get("metals", 0.0) == 100.0
 
     def test_consume_resources_exact_amount(self, empire):
         """Consuming exactly available amount succeeds."""
-        empire.resource_pool["metals"] = 500.0
+        empire._fleet_resource_pool["metals"] = 500.0
         result = empire.consume_resources("metals", 500.0)
         assert result is True
-        assert empire.resource_pool["metals"] == 0.0
+        assert empire.resource_pool.get("metals", 0.0) == 0.0
 
     def test_consume_resources_missing_type(self, empire):
         """Consuming a type not in pool fails."""
@@ -95,32 +95,32 @@ class TestConsumeResources:
 
     def test_consume_resources_partial_not_allowed(self, empire):
         """All-or-nothing: partial consumption not performed."""
-        empire.resource_pool["metals"] = 50.0
+        empire._fleet_resource_pool["metals"] = 50.0
         result = empire.consume_resources("metals", 100.0)
         assert result is False
-        assert empire.resource_pool["metals"] == 50.0
+        assert empire.resource_pool.get("metals", 0.0) == 50.0
 
 
 class TestHasResources:
     """Test has_resources() method."""
 
     def test_has_resources_single_type_sufficient(self, empire):
-        empire.resource_pool["metals"] = 500.0
+        empire._fleet_resource_pool["metals"] = 500.0
         assert empire.has_resources({"metals": 300.0}) is True
 
     def test_has_resources_single_type_insufficient(self, empire):
-        empire.resource_pool["metals"] = 100.0
+        empire._fleet_resource_pool["metals"] = 100.0
         assert empire.has_resources({"metals": 300.0}) is False
 
     def test_has_resources_multiple_types_all_sufficient(self, empire):
-        empire.resource_pool["metals"] = 500.0
-        empire.resource_pool["organics"] = 300.0
+        empire._fleet_resource_pool["metals"] = 500.0
+        empire._fleet_resource_pool["organics"] = 300.0
         assert empire.has_resources({"metals": 200.0, "organics": 100.0}) is True
 
     def test_has_resources_multiple_types_one_insufficient(self, empire):
         """Returns False if ANY resource is insufficient."""
-        empire.resource_pool["metals"] = 500.0
-        empire.resource_pool["organics"] = 50.0
+        empire._fleet_resource_pool["metals"] = 500.0
+        empire._fleet_resource_pool["organics"] = 50.0
         assert empire.has_resources({"metals": 200.0, "organics": 100.0}) is False
 
     def test_has_resources_empty_costs(self, empire):
@@ -136,7 +136,7 @@ class TestGetResource:
     """Test get_resource() method."""
 
     def test_get_resource_existing(self, empire):
-        empire.resource_pool["metals"] = 500.0
+        empire._fleet_resource_pool["metals"] = 500.0
         assert empire.get_resource("metals") == 500.0
 
     def test_get_resource_missing_returns_zero(self, empire):

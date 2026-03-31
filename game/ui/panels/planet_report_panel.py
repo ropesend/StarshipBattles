@@ -21,8 +21,8 @@ if TYPE_CHECKING:
 from game.strategy.services.component_inspector import get_component_abilities
 from game.ui.panels.strategy_widgets import AtmosphereGraph
 from game.ui.panels.build_queue_portraits import RESOURCE_PORTRAIT_FILES, RESOURCE_FALLBACK_COLORS
-# TODO: Replace with ResourceCatalog queries
-PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
+# All resource types displayed in the planet report panel
+ALL_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics", "fuel", "energy", "ammo"]
 from game.ui.colors import (
     PLANET_TERRESTRIAL, PLANET_GAS_GIANT, PLANET_ICE, PLANET_ROCKY, PLANET_OCEANIC,
     TEXT_DIM, WHITE, TEXT_LIGHT
@@ -31,7 +31,7 @@ from collections import Counter
 
 
 # Height reserved for resource grid at bottom of panel
-RESOURCE_PANEL_HEIGHT = 100
+RESOURCE_PANEL_HEIGHT = 140
 
 
 class PlanetReportPanel:
@@ -80,7 +80,7 @@ class PlanetReportPanel:
         self._resource_grid_items: List = []
 
         # Load resource icons
-        self._load_resource_icons()
+        self._load_resource_icons(icon_size=20)
 
         # Create panel container
         self.panel = UIPanel(
@@ -312,24 +312,28 @@ class PlanetReportPanel:
 
     def _build_resource_grid(self) -> None:
         """
-        Build the resource grid panel with icons, quantity, quality, and production rows.
+        Build the resource grid panel with icons and rows for all 8 resource types.
+
+        Rows: Qty (deposit quantity), Qual (deposit quality), Prod (harvest rate),
+              Stored (current stockpile), Cap (max stockpile capacity).
         """
         # Clear any existing grid items
         for item in self._resource_grid_items:
             item.kill()
         self._resource_grid_items = []
 
+        num_resources = len(ALL_RESOURCE_NAMES)
         grid_width = self.resource_panel.relative_rect.width
-        label_col_width = 40  # Width for row labels (Qty, Qual, Prod)
-        col_w = (grid_width - label_col_width - 20) // 5  # 5 resources, 20px padding
+        label_col_width = 40  # Width for row labels
+        col_w = (grid_width - label_col_width - 20) // num_resources
 
         # Row labels column (left side)
-        row_labels = ["Qty", "Qual", "Prod"]
-        row_y_offsets = [28, 48, 68]
+        row_labels = ["Qty", "Qual", "Prod", "Stor", "Cap"]
+        row_y_offsets = [28, 44, 60, 76, 92]
 
         for label_text, y_offset in zip(row_labels, row_y_offsets):
             label = UILabel(
-                relative_rect=pygame.Rect(5, y_offset, label_col_width, 20),
+                relative_rect=pygame.Rect(5, y_offset, label_col_width, 16),
                 text=label_text,
                 manager=self.manager,
                 container=self.resource_panel
@@ -337,55 +341,77 @@ class PlanetReportPanel:
             self._resource_grid_items.append(label)
 
         # Resource columns
-        planet_resources = self.planet.deposits or {}
+        planet_deposits = self.planet.deposits or {}
+        planet_stockpile = getattr(self.planet, 'stockpile', {}) or {}
+        planet_max_stockpile = getattr(self.planet, 'max_stockpile', {}) or {}
 
-        for i, resource_name in enumerate(PLANET_RESOURCE_NAMES):
+        for i, resource_name in enumerate(ALL_RESOURCE_NAMES):
             col_x = label_col_width + 10 + i * col_w
 
             # Icon header (centered within column)
             icon_surf = self._resource_icons.get(resource_name)
             if icon_surf:
-                icon_x = col_x + (col_w - 24) // 2
+                icon_x = col_x + (col_w - 20) // 2
                 icon_image = UIImage(
-                    relative_rect=pygame.Rect(icon_x, 2, 24, 24),
+                    relative_rect=pygame.Rect(icon_x, 2, 20, 20),
                     image_surface=icon_surf,
                     manager=self.manager,
                     container=self.resource_panel
                 )
                 self._resource_grid_items.append(icon_image)
 
-            # Get resource data
-            r_data = planet_resources.get(resource_name, {})
+            # Get deposit data (quantity/quality)
+            r_data = planet_deposits.get(resource_name, {})
             quantity = r_data.get('quantity', 0) if isinstance(r_data, dict) else 0
             quality = r_data.get('quality', 0) if isinstance(r_data, dict) else 0
             production = self.production_rates.get(resource_name, 0.0)
+            stored = planet_stockpile.get(resource_name, 0.0)
+            capacity = planet_max_stockpile.get(resource_name, 0.0)
 
-            # Quantity label
+            # Quantity label (deposit)
             qty_label = UILabel(
-                relative_rect=pygame.Rect(col_x, 28, col_w, 20),
-                text=format_compact_number(quantity),
+                relative_rect=pygame.Rect(col_x, 28, col_w, 16),
+                text=format_compact_number(quantity) if quantity else "-",
                 manager=self.manager,
                 container=self.resource_panel
             )
             self._resource_grid_items.append(qty_label)
 
-            # Quality label
+            # Quality label (deposit)
             qual_label = UILabel(
-                relative_rect=pygame.Rect(col_x, 48, col_w, 20),
-                text=f"{quality:.0f}" if quality else "0",
+                relative_rect=pygame.Rect(col_x, 44, col_w, 16),
+                text=f"{quality:.0f}" if quality else "-",
                 manager=self.manager,
                 container=self.resource_panel
             )
             self._resource_grid_items.append(qual_label)
 
-            # Production label
+            # Production label (harvest rate)
             prod_label = UILabel(
-                relative_rect=pygame.Rect(col_x, 68, col_w, 20),
+                relative_rect=pygame.Rect(col_x, 60, col_w, 16),
                 text=format_compact_number(production) if production else "0",
                 manager=self.manager,
                 container=self.resource_panel
             )
             self._resource_grid_items.append(prod_label)
+
+            # Stored label (current stockpile)
+            stored_label = UILabel(
+                relative_rect=pygame.Rect(col_x, 76, col_w, 16),
+                text=format_compact_number(stored) if stored else "0",
+                manager=self.manager,
+                container=self.resource_panel
+            )
+            self._resource_grid_items.append(stored_label)
+
+            # Capacity label (max stockpile)
+            cap_label = UILabel(
+                relative_rect=pygame.Rect(col_x, 92, col_w, 16),
+                text=format_compact_number(capacity) if capacity else "0",
+                manager=self.manager,
+                container=self.resource_panel
+            )
+            self._resource_grid_items.append(cap_label)
 
     def _update_resource_grid(self) -> None:
         """Refresh resource grid values when planet changes."""
@@ -400,7 +426,7 @@ class PlanetReportPanel:
         """
         base_path = os.path.join("assets", "Images", "Resource Portraits")
 
-        for resource in PLANET_RESOURCE_NAMES:
+        for resource in ALL_RESOURCE_NAMES:
             filename = RESOURCE_PORTRAIT_FILES.get(resource)
             if filename:
                 path = os.path.join(base_path, filename)

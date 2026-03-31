@@ -2344,6 +2344,31 @@
             }
         },
         {
+            "id": "planetary_resource_container",
+            "name": "Planetary Resource Container",
+            "type": "Infrastructure",
+            "mass": 300,
+            "hp": 200,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 231,
+            "abilities": {
+                "CargoStorage": [
+                    {"cargo_type": "metals", "capacity": 10000},
+                    {"cargo_type": "organics", "capacity": 10000},
+                    {"cargo_type": "vapors", "capacity": 10000},
+                    {"cargo_type": "radioactives", "capacity": 10000},
+                    {"cargo_type": "exotics", "capacity": 10000}
+                ],
+                "CrewRequired": 5
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 200,
+                "organics": 50,
+                "vapors": 30
+            }
+        },
+        {
             "id": "planet_imploder",
             "name": "Planet Imploder",
             "type": "Superweapon",

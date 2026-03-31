@@ -88,6 +88,10 @@ class Planet:
     # Key: Resource Name (from PLANET_RESOURCE_NAMES) -> {'quantity': int, 'quality': float}
     deposits: Dict[str, dict] = field(default_factory=dict)
 
+    # Local resource stockpile (harvested/stored resources available for construction)
+    stockpile: Dict[str, float] = field(default_factory=dict)
+    max_stockpile: Dict[str, float] = field(default_factory=dict)
+
     # Planetary Facilities (built complexes)
     facilities: List['PlanetaryFacility'] = field(default_factory=list)
 
@@ -177,6 +181,64 @@ class Planet:
     def context_type(self) -> str:
         """Return 'planet' for BuildContext protocol compliance."""
         return "planet"
+
+    # --- Local Stockpile Methods ---
+
+    def add_to_stockpile(self, resource_type: str, amount: float) -> float:
+        """Add resources to the local stockpile.
+
+        Args:
+            resource_type: Resource identifier (e.g. "metals", "fuel").
+            amount: Amount to add.
+
+        Returns:
+            Overflow amount (0.0 if all fit within storage).
+        """
+        current = self.stockpile.get(resource_type, 0.0)
+        max_cap = self.max_stockpile.get(resource_type, float('inf'))
+        new_total = current + amount
+        if new_total > max_cap:
+            self.stockpile[resource_type] = max_cap
+            return new_total - max_cap
+        self.stockpile[resource_type] = new_total
+        return 0.0
+
+    def consume_from_stockpile(self, resource_type: str, amount: float) -> bool:
+        """Consume resources from the local stockpile (all-or-nothing).
+
+        Args:
+            resource_type: Resource identifier.
+            amount: Amount to consume.
+
+        Returns:
+            True if successful, False if insufficient (no deduction made).
+        """
+        current = self.stockpile.get(resource_type, 0.0)
+        if current >= amount:
+            self.stockpile[resource_type] = current - amount
+            return True
+        return False
+
+    def has_stockpile(self, costs: dict) -> bool:
+        """Check if the planet has all required resources in stockpile.
+
+        Args:
+            costs: Dict mapping resource_type -> required amount.
+
+        Returns:
+            True if all resources are available.
+        """
+        for resource_type, amount in costs.items():
+            if self.stockpile.get(resource_type, 0.0) < amount:
+                return False
+        return True
+
+    def get_stockpile(self, resource_type: str) -> float:
+        """Get current amount of a resource in the local stockpile.
+
+        Returns 0.0 if the resource type is not in the stockpile.
+        """
+        return self.stockpile.get(resource_type, 0.0)
 
     def can_build_type(self, vehicle_type: str) -> bool:
         """
@@ -271,6 +333,8 @@ class Planet:
             'owner_id': self.owner_id,
             'construction_queue': self.construction_queue.copy(),
             'deposits': {k: v.copy() for k, v in self.deposits.items()},
+            'stockpile': dict(self.stockpile),
+            'max_stockpile': dict(self.max_stockpile),
             'facilities': [
                 {
                     'instance_id': f.instance_id,
@@ -389,6 +453,8 @@ class Planet:
             owner_id=data.get('owner_id'),
             construction_queue=data.get('construction_queue', []),
             deposits=data.get('deposits', data.get('resources', {})),
+            stockpile=data.get('stockpile', {}),
+            max_stockpile=data.get('max_stockpile', {}),
             facilities=facilities,
             populations=populations,
             id=data.get('id', -1),

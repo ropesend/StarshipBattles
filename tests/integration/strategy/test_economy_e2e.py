@@ -57,10 +57,14 @@ def _make_mock_non_economy_engines():
 # ===========================================================================
 
 def _make_empire(resources=None, max_storage=None, empire_id=0):
-    """Create an empire with optional starting resources and storage."""
+    """Create an empire with optional starting resources and storage.
+
+    Resources go to _fleet_resource_pool since colonies haven't been added yet.
+    empire.resource_pool is a computed aggregate of colony stockpiles + fleet pool.
+    """
     empire = Empire(empire_id=empire_id, name="Test Empire", color=(255, 0, 0))
     if resources:
-        empire.resource_pool = dict(resources)
+        empire._fleet_resource_pool = dict(resources)
     if max_storage:
         empire.max_storage = dict(max_storage)
     return empire
@@ -240,7 +244,7 @@ class TestEconomyE2E:
     """End-to-end economy pipeline tests."""
 
     def test_empire_starts_with_resources_harvests_more(self, fresh_registries):
-        """Pre-existing empire resources combine with harvested amounts."""
+        """Harvested resources go to colony stockpile, empire pool unchanged by harvest."""
         engine = _make_economy_turn_engine(fresh_registries)
         galaxy = MockGalaxy()
 
@@ -258,12 +262,15 @@ class TestEconomyE2E:
 
         engine.process_turn([empire], galaxy)
 
-        # Harvest: 50 * 0.8 = 40
-        # Final: 500 + 40 = 540
+        # Harvest: 50 * 0.8 = 40, deposited into colony stockpile
+        assert planet.stockpile.get("metals", 0.0) == pytest.approx(40.0)
+        # Fleet resource pool unchanged by harvesting (harvest goes to colony stockpile)
+        assert empire._fleet_resource_pool.get("metals", 0.0) == pytest.approx(500.0)
+        # Aggregate resource_pool = fleet pool (500) + colony stockpile (40) = 540
         assert empire.resource_pool["metals"] == pytest.approx(540.0)
 
     def test_construction_consumes_resources_per_tick(self, fresh_registries):
-        """Construction uses tick-based dynamic consumption from production rates.
+        """Construction uses tick-based dynamic consumption from planet stockpile.
 
         Dynamic system uses production_rates.json: planetary_yard = 2000/turn = 20/tick.
         Item with total_cost=150 at 20/tick completes in 7.5 ticks, consuming all 150.
@@ -275,6 +282,8 @@ class TestEconomyE2E:
         planet = _make_planet(
             facilities=[storage],
         )
+        # Give planet stockpile for construction to draw from
+        planet.stockpile = {"metals": 1000.0}
         # Queue item: 150 Metals total. At 20/tick rate, completes in 7.5 ticks.
         planet.construction_queue = [{
             "design_id": "test_complex",
@@ -284,22 +293,22 @@ class TestEconomyE2E:
             "resources_consumed": {"metals": 0.0},
         }]
 
-        empire = _make_empire(resources={"metals": 1000.0})
+        empire = _make_empire(resources={})
         empire.add_colony(planet)
 
         engine.process_turn([empire], galaxy)
 
-        # Item completes mid-turn (tick 8), consuming all 150 Metals
+        # Item completes mid-turn (tick 8), consuming all 150 Metals from stockpile
         # Queue should be empty after completion
-        assert empire.resource_pool["metals"] == pytest.approx(850.0)
+        assert planet.stockpile["metals"] == pytest.approx(850.0)
         assert len(planet.construction_queue) == 0  # Item completed
 
     def test_resource_depletion_pauses_construction(self, fresh_registries):
-        """When empire runs out of resources, construction pauses.
+        """When planet stockpile runs out, construction pauses.
 
-        Dynamic system rate = 20/tick. Empire has 30 Metals.
+        Dynamic system rate = 20/tick. Stockpile has 30 Metals.
         Tick 1: consumes 20 (10 left). Tick 2: can't afford 20, pauses.
-        System pauses when empire can't afford a full tick's consumption.
+        System pauses when stockpile can't afford a full tick's consumption.
         Track progress via resources_consumed, not ticks_in_current_turn (dead field).
         """
         engine = _make_economy_turn_engine(fresh_registries)
@@ -309,7 +318,8 @@ class TestEconomyE2E:
         planet = _make_planet(facilities=[storage])
 
         # Item needs 300 Metals. At 20/tick, needs 15 ticks if resources available.
-        # Empire has 30 Metals. Tick 1: 20 consumed (10 left). Tick 2: can't afford 20, pauses.
+        # Stockpile has 30 Metals. Tick 1: 20 consumed (10 left). Tick 2: can't afford 20, pauses.
+        planet.stockpile = {"metals": 30.0}
         planet.construction_queue = [{
             "design_id": "test_complex",
             "type": "complex",
@@ -318,20 +328,20 @@ class TestEconomyE2E:
             "resources_consumed": {"metals": 0.0},
         }]
 
-        empire = _make_empire(resources={"metals": 30.0})
+        empire = _make_empire(resources={})
         empire.add_colony(planet)
 
         engine.process_turn([empire], galaxy)
 
-        # After tick 1: 20 consumed, 10 remaining. Tick 2 pauses (can't afford 20).
-        assert empire.resource_pool["metals"] == pytest.approx(10.0)
+        # After tick 1: 20 consumed from stockpile, 10 remaining. Tick 2 pauses (can't afford 20).
+        assert planet.stockpile["metals"] == pytest.approx(10.0)
         # Progress tracked via resources_consumed
         assert planet.construction_queue[0]["resources_consumed"]["metals"] == pytest.approx(20.0)
         # Item still in queue (not complete)
         assert len(planet.construction_queue) == 1
 
     def test_harvesting_respects_storage_cap(self, fresh_registries):
-        """Harvested resources are capped at empire storage limit."""
+        """Harvested resources are capped at colony stockpile limit."""
         engine = _make_economy_turn_engine(fresh_registries)
         galaxy = MockGalaxy()
 
@@ -341,15 +351,15 @@ class TestEconomyE2E:
             resources={"metals": {"quantity": 5000, "quality": 1.0}},
             facilities=[storage, harvester],
         )
+        planet.stockpile = {"metals": 900.0}
 
         empire = _make_empire(resources={"metals": 900.0})
         empire.add_colony(planet)
 
         engine.process_turn([empire], galaxy)
 
-        # Harvest: 200, but cap at 1000 (only 100 fits)
-        # After cap: 1000, maintenance on harvester: 0 (no resource_cost)
-        assert empire.resource_pool["metals"] == pytest.approx(1000.0)
+        # Harvest: 200, but colony stockpile cap at 1000 (only 100 fits)
+        assert planet.stockpile["metals"] == pytest.approx(1000.0)
 
     def test_save_load_preserves_economy_state(self):
         """Empire resource pool and storage survive serialization round-trip."""
@@ -385,6 +395,9 @@ class TestEconomyE2E:
         storage_o = _make_storage_facility("organics", 10000.0, instance_id="store-o")
         planet = _make_planet(facilities=[storage_m, storage_o])
 
+        # Give planet stockpile for construction
+        planet.stockpile = {"metals": 1000.0, "organics": 500.0}
+
         # Costs 100 Metals + 60 Organics. Completes in 5 ticks at 20/tick rate.
         planet.construction_queue = [{
             "design_id": "multi_res_ship",
@@ -394,21 +407,21 @@ class TestEconomyE2E:
             "resources_consumed": {"metals": 0.0, "organics": 0.0},
         }]
 
-        empire = _make_empire(resources={"metals": 1000.0, "organics": 500.0})
+        empire = _make_empire(resources={})
         empire.add_colony(planet)
 
         engine.process_turn([empire], galaxy)
 
-        # Item completes at tick 5, consuming all resources
-        assert empire.resource_pool["metals"] == pytest.approx(900.0)  # 1000 - 100
-        assert empire.resource_pool["organics"] == pytest.approx(440.0)  # 500 - 60
+        # Item completes at tick 5, consuming all resources from stockpile
+        assert planet.stockpile["metals"] == pytest.approx(900.0)  # 1000 - 100
+        assert planet.stockpile["organics"] == pytest.approx(440.0)  # 500 - 60
         assert len(planet.construction_queue) == 0  # Item completed
 
     def test_multi_resource_pauses_if_one_depletes(self, fresh_registries):
-        """Construction pauses when ANY resource is insufficient.
+        """Construction pauses when ANY resource is insufficient in stockpile.
 
         Dynamic system rate = 20/tick per resource. Both 200/200 cost.
-        Empire has 1000 Metals but only 20 Organics.
+        Stockpile has 1000 Metals but only 20 Organics.
         After tick 1: 20 of each consumed. Organics exhausted, pauses.
         Track progress via resources_consumed, not ticks_in_current_turn.
         """
@@ -419,6 +432,9 @@ class TestEconomyE2E:
         storage_o = _make_storage_facility("organics", 10000.0, instance_id="store-o")
         planet = _make_planet(facilities=[storage_m, storage_o])
 
+        # Give planet stockpile: plenty of Metals but only 20 Organics
+        planet.stockpile = {"metals": 1000.0, "organics": 20.0}
+
         # Costs 200 Metals + 200 Organics. At 20/tick each, needs 10 ticks.
         planet.construction_queue = [{
             "design_id": "expensive_thing",
@@ -428,15 +444,14 @@ class TestEconomyE2E:
             "resources_consumed": {"metals": 0.0, "organics": 0.0},
         }]
 
-        # Plenty of Metals but only 20 Organics -> pauses after 1 tick
-        empire = _make_empire(resources={"metals": 1000.0, "organics": 20.0})
+        empire = _make_empire(resources={})
         empire.add_colony(planet)
 
         engine.process_turn([empire], galaxy)
 
-        # After 1 tick: 20 Metals, 20 Organics consumed. Then Organics exhausted.
-        assert empire.resource_pool["metals"] == pytest.approx(980.0)
-        assert empire.resource_pool["organics"] == pytest.approx(0.0)
+        # After 1 tick: 20 Metals, 20 Organics consumed from stockpile. Then Organics exhausted.
+        assert planet.stockpile["metals"] == pytest.approx(980.0)
+        assert planet.stockpile["organics"] == pytest.approx(0.0)
         # Track progress via resources_consumed
         assert planet.construction_queue[0]["resources_consumed"]["metals"] == pytest.approx(20.0)
         assert planet.construction_queue[0]["resources_consumed"]["organics"] == pytest.approx(20.0)

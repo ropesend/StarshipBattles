@@ -15,6 +15,7 @@ import pygame
 from game.ui.colors import (
     RESOURCE_METALS, RESOURCE_ORGANICS, RESOURCE_VAPORS,
     RESOURCE_RADIOACTIVES, RESOURCE_EXOTICS,
+    RESOURCE_FUEL, RESOURCE_ENERGY, RESOURCE_AMMO,
     VEHICLE_SHIP, VEHICLE_FIGHTER, VEHICLE_STATION, VEHICLE_COMPLEX,
     TEXT_DIM, WHITE
 )
@@ -29,6 +30,9 @@ RESOURCE_PORTRAIT_FILES = {
     "vapors": "resource_vapors_portrait.png",
     "radioactives": "resource_radioactives_portrait.png",
     "exotics": "resource_exotics_portrait.png",
+    "fuel": "resource_fuel_portrait.png",
+    "energy": "resource_energy_portrait.png",
+    "ammo": "resource_ammo_portrait.png",
 }
 
 # Fallback colors if portrait not found
@@ -38,6 +42,9 @@ RESOURCE_FALLBACK_COLORS = {
     "vapors": RESOURCE_VAPORS,
     "radioactives": RESOURCE_RADIOACTIVES,
     "exotics": RESOURCE_EXOTICS,
+    "fuel": RESOURCE_FUEL,
+    "energy": RESOURCE_ENERGY,
+    "ammo": RESOURCE_AMMO,
 }
 
 if TYPE_CHECKING:

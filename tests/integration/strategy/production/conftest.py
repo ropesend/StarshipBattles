@@ -69,14 +69,22 @@ def production_setup(fresh_registries):
 
     empire = Empire(0, "Terran", (0, 0, 255))
     empire.savegame_path = temp_dir  # Use temp directory for designs
-    # Give empire starting resources for tick-based production
-    empire.resource_pool = {
+    empire.add_colony(planet)
+
+    # Give planet starting stockpile for tick-based production
+    # (production engine draws from planet.stockpile, not empire.resource_pool)
+    planet.stockpile = {
         "metals": 100000.0,
         "organics": 100000.0,
         "radioactives": 100000.0,
-        "Energy": 100000.0
+        "Energy": 100000.0,
     }
-    empire.add_colony(planet)
+    planet.max_stockpile = {
+        "metals": 1000000.0,
+        "organics": 1000000.0,
+        "radioactives": 1000000.0,
+        "Energy": 1000000.0,
+    }
 
     engine = TurnEngine(registries=fresh_registries)
     empires = [empire]

@@ -242,10 +242,10 @@ All defined in `game/core/protocols.py`. Uses `@runtime_checkable` Protocol clas
 | Protocol      | Distinguishing Properties | TypeGuard |
 |---------------|---------------------------|-----------|
 | IFleet        | ships, orders, location, owner_id, capabilities, resources, battle | is_fleet |
-| IPlanet       | planet_type, resources, owner_id, populations, facilities, atmosphere, energy, energy_capacity, shield_active | is_planet |
+| IPlanet       | planet_type, deposits, stockpile, max_stockpile, owner_id, populations, facilities, atmosphere, energy, energy_capacity, shield_active | is_planet |
 | IOrderable    | orders, get_current_order(), add_order(), pop_order(), clear_orders() | — |
 | IStarSystem   | stars, planets, warp_points, global_location, storms | is_star_system |
-| IEmpire       | id, name, color, colonies, fleets, resource_pool | is_empire |
+| IEmpire       | id, name, color, colonies, fleets, resource_pool (read-only aggregate) | is_empire |
 | IStorm        | storm_type, effects, occupied_hexes | is_storm |
 | IWarpPoint    | destination_id, location | is_warp_point |
 | IZoneOccupant | occupied_hexes (FrozenSet) | is_zone_occupant |

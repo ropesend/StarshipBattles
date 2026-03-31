@@ -49,8 +49,8 @@ class TestResourceIconLoading:
         icons = portrait_loader.load_resource_icons(icon_size=20)
 
         assert isinstance(icons, dict)
-        assert len(icons) == 5
-        expected_resources = ["metals", "organics", "vapors", "radioactives", "exotics"]
+        assert len(icons) == 8
+        expected_resources = ["metals", "organics", "vapors", "radioactives", "exotics", "fuel", "energy", "ammo"]
         for resource in expected_resources:
             assert resource in icons
 
@@ -96,7 +96,7 @@ class TestResourceIconLoading:
             icons = loader.load_resource_icons(icon_size=20)
 
             # Should still return all 5 resources with fallback surfaces
-            assert len(icons) == 5
+            assert len(icons) == 8
             for resource, surface in icons.items():
                 assert isinstance(surface, pygame.Surface)
                 assert surface.get_width() == 20
@@ -110,7 +110,7 @@ class TestResourcePortraitConstants:
         """RESOURCE_PORTRAIT_FILES contains all 5 resources."""
         from game.ui.panels.build_queue_portraits import RESOURCE_PORTRAIT_FILES
 
-        expected = ["metals", "organics", "vapors", "radioactives", "exotics"]
+        expected = ["metals", "organics", "vapors", "radioactives", "exotics", "fuel", "energy", "ammo"]
         for resource in expected:
             assert resource in RESOURCE_PORTRAIT_FILES
 
@@ -118,7 +118,7 @@ class TestResourcePortraitConstants:
         """RESOURCE_FALLBACK_COLORS contains all 5 resources."""
         from game.ui.panels.build_queue_portraits import RESOURCE_FALLBACK_COLORS
 
-        expected = ["metals", "organics", "vapors", "radioactives", "exotics"]
+        expected = ["metals", "organics", "vapors", "radioactives", "exotics", "fuel", "energy", "ammo"]
         for resource in expected:
             assert resource in RESOURCE_FALLBACK_COLORS
 
