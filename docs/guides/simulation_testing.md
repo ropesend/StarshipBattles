@@ -536,15 +536,15 @@ the normal runner loop — then compares their results in `validate()`.
 ```python
 from simulation_tests.scenarios.templates import ComparisonScenario
 
-class SensorDamageTest(ComparisonScenario):
-    metadata = TestMetadata(test_id="SENSOR-002", name="Sensor damage comparison", ...)
+class SensorIncreasesAccuracyScenario(ComparisonScenario):
+    metadata = TestMetadata(test_id="TOHIT-ATK-001", name="Sensor Increases Accuracy", ...)
 
     # Baseline: standard beam attacker (no sensor)
-    baseline_attacker_ship = "Test_Attacker_Beam360_Med.json"
+    baseline_attacker_ship = "Test_Attacker_Beam_Med_NoSensor.json"
     baseline_target_ship = "Test_Target_Stationary.json"
 
-    # Variant: beam attacker with sensor
-    variant_attacker_ship = "Test_Attacker_Beam360_WithSensor.json"
+    # Variant: beam attacker with sensor (+1.0 attack bonus)
+    variant_attacker_ship = "Test_Attacker_Beam_Med_Sensor.json"
     variant_target_ship = "Test_Target_Stationary.json"
 
     distance = 400
