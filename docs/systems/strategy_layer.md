@@ -129,11 +129,12 @@ All sub-engines are dependency-injected: `registries` is a **required** keyword-
 
 | Phase | Engine | Description |
 |-------|--------|-------------|
-| 0 | `HarvestingEngine` | Planetary resource extraction (1/100th per tick) |
+| 0 | `HarvestingEngine` | Planetary resource extraction to planet.stockpile (1/100th per tick) |
 | 0a | `ConsumableManagementEngine` | Per-turn resource consumption (1/100th per tick) |
-| 0c | `ResupplyEngine` | Fuel generation at facilities |
+| 0b | `ResupplyEngine` | Fuel generation at facilities |
+| 0c | `PlanetEnergyEngine` | Planet energy generation, consumption, auto-deactivation |
 | 0d | `ResupplyEngine` | Fleet resupply from facilities |
-| 0e | `ProductionEngine` | Construction resource consumption + mid-turn completion |
+| 0e | `ProductionEngine` | Construction from local stockpile/fleet cargo + mid-turn completion |
 | 0f | `EnvironmentalHazardEngine` | Storm damage, fuel drain |
 | 1 | `OrderProcessor` | Instant orders (JOIN_FLEET) |
 | 1.5 | `ActionExecutionEngine` | Action orders (COLONIZE, TRANSFER, superweapons) |
