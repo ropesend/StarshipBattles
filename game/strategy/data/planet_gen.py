@@ -11,9 +11,10 @@ from typing import List, Dict
 
 logger = logging.getLogger(__name__)
 
-# TODO: Replace with ResourceCatalog queries
-PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
+from game.core.resources import ResourceCatalog
 from game.strategy.data.planet import Planet, PlanetType
+
+_PLANETARY_IDS = [d.id for d in ResourceCatalog.from_json().by_display_group("planetary")]
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry
 from game.core.hex_math import HexCoord, hex_ring, hex_circle_filled
 from game.strategy.data.physics import calculate_incident_radiation
@@ -568,7 +569,7 @@ class PlanetGenerator:
 
         type_name = planet_type.name
 
-        for res in PLANET_RESOURCE_NAMES:
+        for res in _PLANETARY_IDS:
             # Quantity: proportional to mass, calibrated so Earth-mass = baseline
             r_qty = random.random()
             qty_norm = (size_factor * cfg.qty_determinism) + (r_qty * cfg.qty_randomness)

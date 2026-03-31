@@ -40,7 +40,7 @@ def custom_resource_registry(fresh_registries, reset_resource_registry, temp_res
 
     Uses DI pattern: populates fresh_registries instead of singleton.
     """
-    from game.core.resources import load_resources_data
+    from game.core.resources import ResourceCatalog
 
     filepath = temp_resources_json([
         {"id": "fuel"},
@@ -48,7 +48,9 @@ def custom_resource_registry(fresh_registries, reset_resource_registry, temp_res
         {"id": "ammo"},
         {"id": "glag", "display_name": "Glag Units"},
     ])
-    fresh_registries.resources.update(load_resources_data(filepath))
+    catalog = ResourceCatalog.from_json(filepath)
+    for defn in catalog.all_definitions():
+        fresh_registries.resources[defn.id] = {'id': defn.id, 'name': defn.name}
     return fresh_registries
 
 

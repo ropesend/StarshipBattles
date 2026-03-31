@@ -65,7 +65,7 @@ from .weapons import (
 )
 
 # Harvester and storage abilities
-from .harvester import ResourceHarvesterAbility, SpaceShipyardAbility, EmpireStorageAbility
+from .harvester import ResourceHarvesterAbility, SpaceShipyardAbility, LocalStorageAbility
 
 # Planetary abilities (PROJ-237)
 from .planetary import PlanetaryShieldAbility, StrategicResourceGenerationAbility
@@ -101,7 +101,7 @@ ABILITY_REGISTRY = {
     "StructuralIntegrity": StructuralIntegrity,
     "ResourceHarvester": ResourceHarvesterAbility,
     "SpaceShipyard": SpaceShipyardAbility,
-    "EmpireStorage": EmpireStorageAbility,
+    "LocalStorage": LocalStorageAbility,
     "CargoStorage": CargoStorage,
     # Planetary & strategic abilities (PROJ-237/238)
     "PlanetaryShield": PlanetaryShieldAbility,
@@ -174,7 +174,7 @@ __all__ = [
     # Harvester and storage
     'ResourceHarvesterAbility',
     'SpaceShipyardAbility',
-    'EmpireStorageAbility',
+    'LocalStorageAbility',
     # Cargo
     'CargoStorage',
     # Planetary & strategic (PROJ-237/238)

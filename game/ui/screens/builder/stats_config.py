@@ -591,8 +591,8 @@ def get_construction_rows(ship):
     """
     Generate the list of stat rows for the Construction section.
     """
-    # TODO: Replace with ResourceCatalog queries
-    PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
+    from game.core.resources import ResourceCatalog
+    PLANET_RESOURCE_NAMES = [d.id for d in ResourceCatalog.from_json().by_display_group("planetary")]
 
     # Abbreviations for narrow label columns
     LABEL_ABBREV = {

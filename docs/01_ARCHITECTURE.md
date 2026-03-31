@@ -63,7 +63,7 @@ Six layers with strict downward-only dependency flow:
 | `math.py`             | Vector2, clamp, lerp, angle_diff |
 | `hex_math.py`         | HexCoord axial coordinate system for galaxy map |
 | `config.py`           | DisplayConfig, AIConfig, PhysicsConfig, BattleConfig |
-| `constants.py`        | GameState, LayerType, AttackType, LayerDefaults, CombatConstants, PLANET_RESOURCES (deprecated) |
+| `constants.py`        | GameState, LayerType, AttackType, LayerDefaults, CombatConstants |
 | `protocols.py`        | All cross-layer Protocol definitions (see Protocols section) |
 | `registry.py`         | GameRegistries container, RegistryManager singleton, DI providers |
 | `exceptions.py`       | GameException hierarchy (10 exception classes) |
@@ -71,7 +71,7 @@ Six layers with strict downward-only dependency flow:
 | `event_logging.py`    | log_event, set_event_handler, get_event_handler |
 | `validation.py`       | ValidationResult, IValidationRule |
 | `paths.py`            | Paths constants for file locations |
-| `resources.py`        | ResourceCatalog (unified resource definitions), ResourceDefinition, legacy load_resources_data |
+| `resources.py`        | ResourceCatalog (unified resource definitions), ResourceDefinition |
 | `input_actions.py`    | InputAction enum for key bindings |
 | `json_utils.py`       | JSON serialization helpers |
 | `singleton.py`        | SingletonMeta metaclass |
@@ -170,7 +170,7 @@ Exports defined in each package's `__init__.py` via `__all__`.
 - **Error Codes:** ErrorCode
 - **Math:** Vector2, clamp, lerp, angle_diff
 - **Registry/DI:** GameRegistries, RegistryManager, DefaultRegistryProvider, TestRegistryProvider, get_default_registry_provider
-- **Constants:** GameState, LayerType, AttackType, LayerDefaults, CombatConstants, PLANET_RESOURCES (deprecated — use ResourceCatalog)
+- **Constants:** GameState, LayerType, AttackType, LayerDefaults, CombatConstants
 - **Resources:** ResourceCatalog, ResourceDefinition
 - **Event Logging:** log_event, set_event_handler, get_event_handler
 - **Validation:** ValidationResult, IValidationRule
@@ -358,18 +358,19 @@ GameSession (game/strategy/engine/game_session.py)
        ▼
 TurnEngine.process_turn() (game/strategy/engine/turn_engine.py)
        │  runs 100 sub-ticks, each executing phases in order:
-       │  Phase 0:   HarvestingEngine (1/100th per tick, deposits to planet.stockpile)
-       │  Phase 0a:  ConsumableManagementEngine (per-turn consumption)
-       │  Phase 0b:  ResupplyEngine (fuel generation at facilities)
-       │  Phase 0c:  PlanetEnergyEngine (energy generation/consumption)
-       │  Phase 0d:  ResupplyEngine (fleet resupply from facilities)
-       │  Phase 0e:  ProductionEngine (construction from local stockpile + mid-turn completion)
-       │  Phase 0f:  EnvironmentalHazardEngine (storm damage, fuel drain)
-       │  Phase 1:   OrderProcessor (instant orders)
-       │  Phase 1.5: ActionExecutionEngine (COLONIZE, TRANSFER, superweapons)
-       │  Phase 2:   FleetMovementEngine (calculate moves)
-       │  Phase 3:   FleetMovementEngine (apply moves)
-       │  Phase 4:   ConflictResolutionEngine (triggers IBattleResolver)
+       │  Phase 0:    HarvestingEngine (1/100th per tick, deposits to planet.stockpile)
+       │  Phase 0b:   ConsumableManagementEngine (per-turn consumption)
+       │  Phase 0c:   ResupplyEngine (fuel generation at facilities)
+       │  Phase 0c1:  PlanetEnergyEngine (energy generation/consumption)
+       │  Phase 0d:   ResupplyEngine (fleet resupply from facilities)
+       │  Phase 0e:   ProductionEngine (construction from local stockpile/fleet cargo)
+       │  Phase 0f:   EnvironmentalHazardEngine (storm damage, fuel drain)
+       │  Phase 1:    OrderProcessor (instant orders)
+       │  Phase 1.5:  ActionExecutionEngine (COLONIZE, TRANSFER, superweapons)
+       │  Phase 1.6:  PlanetActionEngine (shield activation, etc.)
+       │  Phase 2:    FleetMovementEngine (calculate moves)
+       │  Phase 3:    FleetMovementEngine (apply moves)
+       │  Phase 4:    ConflictResolutionEngine (triggers IBattleResolver)
        │  After tick loop: PopulationEngine
        ▼
 Updated Galaxy/Empire/Fleet state

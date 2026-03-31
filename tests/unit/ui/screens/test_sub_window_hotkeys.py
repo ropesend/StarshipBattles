@@ -230,7 +230,7 @@ class TestTransferDialogHotkeys:
         dialog._mapper = mapper
         dialog.btn_confirm = MagicMock()
         dialog.btn_cancel = MagicMock()
-        dialog._issue_order = MagicMock()
+        dialog._on_confirm = MagicMock()
         dialog.kill = MagicMock()
         dialog._handle_keydown = TransferDialog._handle_keydown.__get__(dialog, TransferDialog)
         return dialog
@@ -240,7 +240,7 @@ class TestTransferDialogHotkeys:
         dialog = self._make_dialog(mapper)
         event = _keydown(pygame.K_RETURN)
         dialog._handle_keydown(event)
-        dialog._issue_order.assert_called_once()
+        dialog._on_confirm.assert_called_once()
 
     def test_escape_cancels(self, mapper):
         """ESC triggers kill() via InputMapper."""
@@ -254,7 +254,7 @@ class TestTransferDialogHotkeys:
         dialog = self._make_dialog(None)
         event = _keydown(pygame.K_RETURN)
         dialog._handle_keydown(event)
-        dialog._issue_order.assert_not_called()
+        dialog._on_confirm.assert_not_called()
 
     def test_confirm_button_tooltip(self, mapper):
         """Confirm button shows Enter tooltip."""

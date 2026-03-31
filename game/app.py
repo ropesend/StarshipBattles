@@ -27,7 +27,7 @@ def configure_logging():
     root_logger.addHandler(fh)
 from game.ui.utils import create_centered_rect
 from game.simulation.components.component import load_components, load_modifiers
-from game.core.resources import load_resources_data
+from game.core.resources import ResourceCatalog
 from game.core.registry import GameRegistries, RegistryManager, get_default_registry_provider
 from pygame_gui.elements import UIButton
 from game.ui.screens.workshop_screen import DesignWorkshopScreen
@@ -117,9 +117,14 @@ class Game:
         provider = get_default_registry_provider()
         load_components(Paths.COMPONENTS_FILE, registry_provider=provider)
         load_modifiers(Paths.MODIFIERS_FILE, registry_provider=provider)
-        # PROJ-121: Use DI-friendly load_resources_data() directly
+        # Populate resources registry from ResourceCatalog
+        catalog = ResourceCatalog.from_json(Paths.RESOURCES_FILE)
         resources_registry = RegistryManager.instance().resources
-        resources_registry.update(load_resources_data(Paths.RESOURCES_FILE))
+        for defn in catalog.all_definitions():
+            resources_registry[defn.id] = {'id': defn.id, 'name': defn.name,
+                                           'description': defn.description,
+                                           'display_group': defn.display_group,
+                                           'has_quality': defn.has_quality}
 
         # Initialize ship data
         from game.simulation.entities.ship_loader import initialize_ship_data
@@ -129,7 +134,6 @@ class Game:
         # PROJ-181: Deprecated set_default_registries() removed.
         # All DI consumers now use get_default_registry_provider() which reads
         # from RegistryManager (hydrated via load_components/load_modifiers above).
-        from game.core.resources import ResourceCatalog
         registry = RegistryManager.instance()
         self.registries = GameRegistries(
             components=registry.components,

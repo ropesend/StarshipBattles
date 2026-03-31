@@ -10,9 +10,6 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIWindow, UIPanel, UIButton, UILabel, UIImage, UITextBox, UIScrollingContainer
 
-# TODO: Replace with ResourceCatalog queries
-PLANET_RESOURCE_NAMES = ["metals", "organics", "vapors", "radioactives", "exotics"]
-
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
     from game.core.protocols import IEmpire

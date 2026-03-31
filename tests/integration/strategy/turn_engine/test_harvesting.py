@@ -215,7 +215,7 @@ class TestHarvestingIntegration:
                     "core": [{
                         "id": "vault",
                         "abilities": {
-                            "EmpireStorage": {
+                            "LocalStorage": {
                                 "resource_type": "metals",
                                 "capacity": 1000.0,
                             }

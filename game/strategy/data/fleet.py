@@ -175,7 +175,7 @@ class Fleet:
         total = self._resource_agg.get_fleet_cargo_current(resource_type)
         if total < amount:
             return False
-        self._resource_agg.unload_cargo_from_fleet(resource_type, int(amount))
+        self._resource_agg.unload_cargo_from_fleet(resource_type, int(round(amount)))
         return True
 
     def get_cargo_resource(self, resource_type: str) -> float:

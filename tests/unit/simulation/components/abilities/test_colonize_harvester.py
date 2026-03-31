@@ -1,7 +1,7 @@
 """
 Unit tests for ColonizePlanet and Harvester-related abilities.
 
-Tests ColonizePlanet, ResourceHarvesterAbility, EmpireStorageAbility,
+Tests ColonizePlanet, ResourceHarvesterAbility, LocalStorageAbility,
 and SpaceShipyardAbility.
 """
 import pytest
@@ -11,7 +11,7 @@ from game.core.exceptions import ValidationException
 from game.simulation.components.abilities.colonize import ColonizePlanet
 from game.simulation.components.abilities.harvester import (
     ResourceHarvesterAbility,
-    EmpireStorageAbility,
+    LocalStorageAbility,
     SpaceShipyardAbility,
 )
 from game.simulation.components.abilities.base import AbilityLayer, AbilityScope
@@ -271,12 +271,12 @@ class TestResourceHarvesterAbility:
 
 
 # =============================================================================
-# EmpireStorageAbility Tests
+# LocalStorageAbility Tests
 # =============================================================================
 
 
-class TestEmpireStorageAbility:
-    """Tests for EmpireStorageAbility class."""
+class TestLocalStorageAbility:
+    """Tests for LocalStorageAbility class."""
 
     @pytest.fixture
     def mock_component(self):
@@ -288,7 +288,7 @@ class TestEmpireStorageAbility:
     def test_init_with_dict_data(self, mock_component):
         """Dict data sets resource_type and capacity."""
         data = {"resource_type": "metals", "capacity": 5000.0}
-        ability = EmpireStorageAbility(mock_component, data)
+        ability = LocalStorageAbility(mock_component, data)
 
         assert ability.resource_type == "metals"
         assert ability.capacity == 5000.0
@@ -297,7 +297,7 @@ class TestEmpireStorageAbility:
     def test_init_with_empty_dict(self, mock_component):
         """Empty dict uses default values."""
         data = {}
-        ability = EmpireStorageAbility(mock_component, data)
+        ability = LocalStorageAbility(mock_component, data)
 
         assert ability.resource_type == ""
         assert ability.capacity == 0.0
@@ -305,7 +305,7 @@ class TestEmpireStorageAbility:
 
     def test_init_with_non_dict_data(self, mock_component):
         """Non-dict data uses default values."""
-        ability = EmpireStorageAbility(mock_component, 12345)
+        ability = LocalStorageAbility(mock_component, 12345)
 
         assert ability.resource_type == ""
         assert ability.capacity == 0.0
@@ -313,28 +313,28 @@ class TestEmpireStorageAbility:
     def test_init_partial_dict_uses_defaults(self, mock_component):
         """Partial dict uses defaults for missing keys."""
         data = {"capacity": 10000.0}
-        ability = EmpireStorageAbility(mock_component, data)
+        ability = LocalStorageAbility(mock_component, data)
 
         assert ability.resource_type == ""
         assert ability.capacity == 10000.0
 
     def test_stat_bindings_empty(self, mock_component):
-        """EmpireStorageAbility has no stat bindings."""
-        ability = EmpireStorageAbility(mock_component, {})
+        """LocalStorageAbility has no stat bindings."""
+        ability = LocalStorageAbility(mock_component, {})
 
         assert ability.STAT_BINDINGS == []
 
     def test_get_primary_value_returns_capacity(self, mock_component):
         """Primary value is the storage capacity."""
         data = {"resource_type": "organics", "capacity": 2500.0}
-        ability = EmpireStorageAbility(mock_component, data)
+        ability = LocalStorageAbility(mock_component, data)
 
         assert ability.get_primary_value() == 2500.0
 
     def test_recalculate_applies_storage_modifier(self, mock_component):
         """Recalculate applies storage_mult modifier."""
         data = {"resource_type": "metals", "capacity": 1000.0}
-        ability = EmpireStorageAbility(mock_component, data)
+        ability = LocalStorageAbility(mock_component, data)
         mock_component.stats = {"storage_mult": 1.5}
 
         ability.recalculate()
@@ -345,7 +345,7 @@ class TestEmpireStorageAbility:
     def test_recalculate_without_modifier(self, mock_component):
         """Recalculate without modifier uses default multiplier of 1.0."""
         data = {"resource_type": "Crystals", "capacity": 3000.0}
-        ability = EmpireStorageAbility(mock_component, data)
+        ability = LocalStorageAbility(mock_component, data)
         mock_component.stats = {}
 
         ability.recalculate()
@@ -355,7 +355,7 @@ class TestEmpireStorageAbility:
     def test_recalculate_multiple_times(self, mock_component):
         """Multiple recalculations use base capacity."""
         data = {"resource_type": "Fuel", "capacity": 2000.0}
-        ability = EmpireStorageAbility(mock_component, data)
+        ability = LocalStorageAbility(mock_component, data)
 
         # First recalculation with 1.5x modifier
         mock_component.stats = {"storage_mult": 1.5}
@@ -370,7 +370,7 @@ class TestEmpireStorageAbility:
     def test_get_ui_rows_shows_resource_and_capacity(self, mock_component):
         """UI rows display resource type and storage capacity."""
         data = {"resource_type": "metals", "capacity": 10000.0}
-        ability = EmpireStorageAbility(mock_component, data)
+        ability = LocalStorageAbility(mock_component, data)
 
         rows = ability.get_ui_rows()
 
@@ -385,7 +385,7 @@ class TestEmpireStorageAbility:
     def test_get_ui_rows_formats_large_capacity(self, mock_component):
         """UI rows format large capacities with thousands separator."""
         data = {"resource_type": "RareEarths", "capacity": 1234567.0}
-        ability = EmpireStorageAbility(mock_component, data)
+        ability = LocalStorageAbility(mock_component, data)
 
         rows = ability.get_ui_rows()
 
@@ -569,13 +569,13 @@ class TestAbilityEdgeCases:
         assert ability.component is mock_component
 
     def test_storage_ability_stats_lookup(self, mock_component):
-        """EmpireStorageAbility uses get_effective_stat for modifiers."""
+        """LocalStorageAbility uses get_effective_stat for modifiers."""
         data = {"resource_type": "metals", "capacity": 1000.0}
-        ability = EmpireStorageAbility(mock_component, data)
+        ability = LocalStorageAbility(mock_component, data)
 
         # Set up ability-specific stats
         mock_component.ability_stats = {
-            "EmpireStorageAbility": {"storage_mult": 2.0}
+            "LocalStorageAbility": {"storage_mult": 2.0}
         }
 
         ability.recalculate()
@@ -609,7 +609,7 @@ class TestAbilityEdgeCases:
 
     def test_storage_update_returns_true(self, mock_component):
         """Storage abilities always return True from update (operational)."""
-        ability = EmpireStorageAbility(mock_component, {"capacity": 1000})
+        ability = LocalStorageAbility(mock_component, {"capacity": 1000})
 
         assert ability.update() is True
 

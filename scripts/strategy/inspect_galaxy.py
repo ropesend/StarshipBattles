@@ -38,7 +38,9 @@ from game.strategy.data.galaxy import Galaxy
 from game.strategy.data.planet import PlanetType
 from game.strategy.data.stars import StarType
 from game.core.hex_math import hex_distance, hex_to_pixel
-from game.core.constants import PLANET_RESOURCES
+from game.core.resources import ResourceCatalog
+
+PLANET_RESOURCES = [d.id for d in ResourceCatalog.from_json().by_display_group("planetary")]
 from game.strategy.generation.placement_strategies import (
     RandomPlacementStrategy,
     DensityBasedPlacementStrategy

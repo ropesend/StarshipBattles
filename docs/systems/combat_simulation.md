@@ -294,7 +294,7 @@ Defined across files in `game/simulation/components/abilities/`:
 | `markers.py` | CommandAndControl, RequiresCommandAndControl, RequiresCombatMovement, StructuralIntegrity, VehicleLaunchAbility |
 | `cargo.py` | CargoStorage |
 | `superweapons.py` | DestroyPlanet, DestroyStar, OpenWarpPoint, CloseWarpPoint, CreateDysonSphere, SelfDestruct, SuperweaponMarker |
-| `harvester.py` | ResourceHarvesterAbility, EmpireStorageAbility, SpaceShipyardAbility |
+| `harvester.py` | ResourceHarvesterAbility, LocalStorageAbility, SpaceShipyardAbility |
 | `colonize.py` | ColonizePlanet |
 | `planetary.py` | PlanetaryShieldAbility, PlanetaryEnergyGeneratorAbility, PlanetaryEnergyStorageAbility |
 

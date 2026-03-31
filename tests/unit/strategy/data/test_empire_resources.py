@@ -181,3 +181,67 @@ class TestEmpireResourceSerialization:
         data = empire.to_dict()
         assert data["resource_pool"] == {}
         assert data["max_storage"] == {}
+
+
+class TestResourcePoolComputedProperty:
+    """Test that resource_pool is a computed aggregate of colony stockpiles."""
+
+    def test_resource_pool_sums_colony_stockpiles(self):
+        """resource_pool returns sum of all colony stockpiles."""
+        from tests.fixtures.strategy_entities import create_test_planet
+
+        empire = Empire(empire_id=1, name="Test", color=(255, 0, 0))
+        colony1 = create_test_planet(
+            has_facilities=False, has_population=False,
+            stockpile={"metals": 100.0, "organics": 50.0},
+        )
+        colony2 = create_test_planet(
+            has_facilities=False, has_population=False,
+            name="Colony2",
+            stockpile={"metals": 200.0, "fuel": 30.0},
+        )
+        empire.colonies = [colony1, colony2]
+
+        pool = empire.resource_pool
+        assert pool["metals"] == pytest.approx(300.0)
+        assert pool["organics"] == pytest.approx(50.0)
+        assert pool["fuel"] == pytest.approx(30.0)
+
+    def test_resource_pool_includes_fleet_pool(self):
+        """resource_pool includes _fleet_resource_pool for backward compat."""
+        empire = Empire(empire_id=1, name="Test", color=(255, 0, 0))
+        empire._fleet_resource_pool = {"metals": 500.0}
+
+        pool = empire.resource_pool
+        assert pool["metals"] == 500.0
+
+    def test_resource_pool_combines_colonies_and_fleet_pool(self):
+        """resource_pool sums colony stockpiles + fleet pool."""
+        from tests.fixtures.strategy_entities import create_test_planet
+
+        empire = Empire(empire_id=1, name="Test", color=(255, 0, 0))
+        colony = create_test_planet(
+            has_facilities=False, has_population=False,
+            stockpile={"metals": 100.0},
+        )
+        empire.colonies = [colony]
+        empire._fleet_resource_pool = {"metals": 200.0}
+
+        pool = empire.resource_pool
+        assert pool["metals"] == pytest.approx(300.0)
+
+    def test_resource_pool_empty_with_no_colonies(self):
+        """resource_pool returns empty dict with no colonies and no fleet pool."""
+        empire = Empire(empire_id=1, name="Test", color=(255, 0, 0))
+        assert empire.resource_pool == {}
+
+    def test_resource_pool_is_not_mutable(self):
+        """Mutating the returned dict doesn't affect the empire."""
+        empire = Empire(empire_id=1, name="Test", color=(255, 0, 0))
+        empire._fleet_resource_pool = {"metals": 100.0}
+
+        pool = empire.resource_pool
+        pool["metals"] = 999.0  # Mutate the returned dict
+
+        # Should not affect the actual pool
+        assert empire.resource_pool["metals"] == 100.0

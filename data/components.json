@@ -1902,7 +1902,7 @@
         {
             "id": "resource_vault_metals",
             "name": "Metals Storage Vault",
-            "type": "EmpireStorage",
+            "type": "LocalStorage",
             "mass": 300,
             "hp": 500,
             "allowed_vehicle_types": [
@@ -1910,7 +1910,7 @@
             ],
             "sprite_index": 210,
             "abilities": {
-                "EmpireStorage": {
+                "LocalStorage": {
                     "resource_type": "metals",
                     "capacity": 10000.0
                 },
@@ -1927,7 +1927,7 @@
         {
             "id": "resource_vault_organics",
             "name": "Organics Storage Vault",
-            "type": "EmpireStorage",
+            "type": "LocalStorage",
             "mass": 300,
             "hp": 500,
             "allowed_vehicle_types": [
@@ -1935,7 +1935,7 @@
             ],
             "sprite_index": 211,
             "abilities": {
-                "EmpireStorage": {
+                "LocalStorage": {
                     "resource_type": "organics",
                     "capacity": 10000.0
                 },
@@ -1952,7 +1952,7 @@
         {
             "id": "resource_vault_vapors",
             "name": "Vapors Storage Vault",
-            "type": "EmpireStorage",
+            "type": "LocalStorage",
             "mass": 300,
             "hp": 500,
             "allowed_vehicle_types": [
@@ -1960,7 +1960,7 @@
             ],
             "sprite_index": 212,
             "abilities": {
-                "EmpireStorage": {
+                "LocalStorage": {
                     "resource_type": "vapors",
                     "capacity": 10000.0
                 },
@@ -1977,7 +1977,7 @@
         {
             "id": "resource_vault_radioactives",
             "name": "Radioactives Storage Vault",
-            "type": "EmpireStorage",
+            "type": "LocalStorage",
             "mass": 400,
             "hp": 600,
             "allowed_vehicle_types": [
@@ -1985,7 +1985,7 @@
             ],
             "sprite_index": 213,
             "abilities": {
-                "EmpireStorage": {
+                "LocalStorage": {
                     "resource_type": "radioactives",
                     "capacity": 5000.0
                 },
@@ -2003,7 +2003,7 @@
         {
             "id": "resource_vault_exotics",
             "name": "Exotics Storage Vault",
-            "type": "EmpireStorage",
+            "type": "LocalStorage",
             "mass": 500,
             "hp": 800,
             "allowed_vehicle_types": [
@@ -2011,7 +2011,7 @@
             ],
             "sprite_index": 214,
             "abilities": {
-                "EmpireStorage": {
+                "LocalStorage": {
                     "resource_type": "exotics",
                     "capacity": 2500.0
                 },

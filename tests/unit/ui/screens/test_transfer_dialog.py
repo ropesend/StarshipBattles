@@ -73,7 +73,7 @@ class TestTransferDialog:
         assert "Fleet 1" in options
         assert "Fleet 2" in options
         assert "Colony: Alpha" in options
-        assert "Planet: Beta (Uncolonized)" in options
+        assert "Planet: Beta" in options
 
     def test_source_change_updates_targets(self, mock_manager, mock_scene, mock_fleet):
         """Changing source should remove it from target options."""
@@ -99,94 +99,68 @@ class TestTransferDialog:
         assert "Fleet 2" not in options
         assert "Fleet 1" in options
 
-    def test_update_cargo_list_for_colony(self, mock_manager, mock_scene, mock_fleet):
-        """Colony source should show population details from DTO."""
-        # Arrange
-        mock_scene._facade.get_fleets_at_hex.return_value = [mock_fleet]
-        # Colony ID 10
-        p1 = MagicMock(planet_id=10, owner_id=0)
-        p1.name = "Alpha"
-        mock_scene._facade.get_planets_at_hex.return_value = [p1]
-
-        # Mock FleetInfo DTO
-        dummy_f_info = MagicMock(spec=FleetInfo)
-        dummy_f_info.passengers_current = 0
-        mock_scene._facade.get_fleet.return_value = dummy_f_info
-
-        # Mock PlanetInfo DTO
-        mock_planet_info = MagicMock(spec=PlanetInfo)
-        mock_planet_info.population_details = (
-            ("human", 100, 1.0),
-            ("vulcan", 50, 0.8)
-        )
-        mock_scene._facade.get_planet.return_value = mock_planet_info
-
-        rect = pygame.Rect(0, 0, 600, 500)
-        dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene)
-
-        # Act - Test explicit colony source update with proper 2-arg signature
-        source = {'type': 'colony', 'id': 10, 'label': 'Colony: Alpha'}
-        target = {'type': 'fleet', 'id': 1, 'label': 'Fleet 1'}
-        dialog._update_cargo_list(source, target)
-
-        # Assert - source cargo items (from colony) + target cargo items (from fleet)
-        # Colony has 2 population types, fleet has 0 passengers
-        assert len(dialog.available_cargo) == 2
-        assert any(c['species_id'] == 'human' for c in dialog.available_cargo)
-        assert any(c['species_id'] == 'vulcan' for c in dialog.available_cargo)
-        assert self._get_options(dialog.drop_item) == [
-            "Population: human (100)",
-            "Population: vulcan (50)"
-        ]
-
-    def test_issue_order_dispatches_command(self, mock_manager, mock_scene, mock_fleet):
-        """Confirming transfer should dispatch IssueTransferCommand via facade."""
+    def test_grid_builds_resource_rows(self, mock_manager, mock_scene, mock_fleet):
+        """Grid should include rows for all 8 resource types."""
         # Arrange
         mock_scene._facade.get_fleets_at_hex.return_value = [mock_fleet]
         p1 = MagicMock(planet_id=10, owner_id=0)
         p1.name = "Alpha"
         mock_scene._facade.get_planets_at_hex.return_value = [p1]
 
-        # Mock DTOs - must be set BEFORE dialog construction
         mock_fleet_info = MagicMock(spec=FleetInfo)
-        mock_fleet_info.passengers_current = 80
+        mock_fleet_info.passengers_current = 0
+        mock_fleet_info.cargo_resources = (("metals", 100),)
+        mock_fleet_info.cargo_capacities = (("metals", 1000),)
         mock_scene._facade.get_fleet.return_value = mock_fleet_info
 
         mock_planet_info = MagicMock(spec=PlanetInfo)
-        mock_planet_info.population_details = []
-        mock_planet_info.total_population = 0
+        mock_planet_info.population_details = ()
+        mock_planet_info.stockpile = (("metals", 500.0),)
+        mock_planet_info.max_stockpile = ()
         mock_scene._facade.get_planet.return_value = mock_planet_info
 
-        rect = pygame.Rect(0, 0, 600, 500)
+        rect = pygame.Rect(0, 0, 900, 700)
         dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene)
 
-        # Setup selection state manually
-        dialog.available_sources = [{'label': 'Fleet 1', 'type': 'fleet', 'id': 1}]
-        dialog.available_targets = [{'label': 'Colony: Alpha', 'type': 'colony', 'id': 10}]
-        dialog.available_cargo = [{'label': 'Passengers (80)', 'type': 'passengers', 'species_id': None, 'max': 80, 'direction': 'unload'}]
+        # Assert - should have 8 resource rows
+        resource_keys = [r['cargo_key'] for r in dialog._row_data
+                         if not r['cargo_key'].startswith('passengers')]
+        assert len(resource_keys) == 8
+        assert "metals" in resource_keys
+        assert "fuel" in resource_keys
 
-        dialog.drop_source = MagicMock()
-        dialog.drop_source.selected_option = "Fleet 1"
-        dialog.drop_target = MagicMock()
-        dialog.drop_target.selected_option = "Colony: Alpha"
-        dialog.drop_item = MagicMock()
-        dialog.drop_item.selected_option = "Passengers (80)"
-        dialog.slider_amount = MagicMock()
-        dialog.slider_amount.get_current_value.return_value = 30.0
+    def test_confirm_dispatches_pending_transfers(self, mock_manager, mock_scene, mock_fleet):
+        """Confirm should dispatch IssueTransferCommand for each non-zero pending."""
+        # Arrange
+        mock_scene._facade.get_fleets_at_hex.return_value = [mock_fleet]
+        p1 = MagicMock(planet_id=10, owner_id=0)
+        p1.name = "Alpha"
+        mock_scene._facade.get_planets_at_hex.return_value = [p1]
 
-        # Act - patch the service since it's now called from there
-        with patch('game.strategy.services.cargo_transfer_service.IssueTransferCommand') as mock_cmd_class:
-            mock_cmd_instance = MagicMock()
-            mock_cmd_class.return_value = mock_cmd_instance
-            dialog._issue_order()
+        mock_fleet_info = MagicMock(spec=FleetInfo)
+        mock_fleet_info.passengers_current = 0
+        mock_fleet_info.cargo_resources = ()
+        mock_fleet_info.cargo_capacities = ()
+        mock_scene._facade.get_fleet.return_value = mock_fleet_info
 
-            # Assert
-            mock_cmd_class.assert_called_once_with(
-                fleet_id=1,
-                planet_id=10,
-                cargo_type='passengers',
-                direction='unload',
-                amount=30,
-                species_id=None
-            )
-            mock_scene._facade.handle_command.assert_called_once()
+        mock_planet_info = MagicMock(spec=PlanetInfo)
+        mock_planet_info.population_details = ()
+        mock_planet_info.stockpile = ()
+        mock_planet_info.max_stockpile = ()
+        mock_scene._facade.get_planet.return_value = mock_planet_info
+
+        mock_scene._facade.handle_command.return_value = MagicMock(is_valid=True)
+
+        rect = pygame.Rect(0, 0, 900, 700)
+        dialog = TransferDialog(rect, mock_manager, mock_fleet, (0, 0), mock_scene)
+
+        # Set up pending transfers manually
+        dialog._current_source = {'type': 'fleet', 'id': 1, 'label': 'Fleet 1'}
+        dialog._current_target = {'type': 'colony', 'id': 10, 'label': 'Colony: Alpha'}
+        dialog.pending_transfers = {"metals": 50, "fuel": -100}  # Load 50 metals, drop 100 fuel
+
+        # Act
+        dialog._on_confirm()
+
+        # Assert - should have called handle_command twice (one per non-zero transfer)
+        assert mock_scene._facade.handle_command.call_count == 2

@@ -101,7 +101,7 @@ cargo.py          # CargoStorage
 colonize.py       # ColonizePlanet
 crew.py           # CrewCapacity, LifeSupportCapacity, CrewRequired
 defense.py        # ShieldProjection, ShieldRegeneration, EmissiveArmor, ToHit*Modifier
-harvester.py      # ResourceHarvesterAbility, SpaceShipyardAbility, EmpireStorageAbility
+harvester.py      # ResourceHarvesterAbility, SpaceShipyardAbility, LocalStorageAbility
 markers.py        # VehicleLaunchAbility, CommandAndControl, StructuralIntegrity
 propulsion.py     # CombatPropulsion, ManeuveringThruster, StrategicMovement, WarpJump
 resources.py      # ResourceConsumption, ResourceStorage, ResourceGeneration (component abilities; see also game/core/resources.py for ResourceCatalog)
