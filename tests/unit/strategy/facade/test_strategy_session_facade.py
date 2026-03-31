@@ -717,66 +717,6 @@ class TestGameStateQueries:
 
         assert result is None
 
-    def test_get_scuttle_events_returns_empty_when_no_turn_engine(self):
-        """get_scuttle_events returns empty list when turn_engine is None."""
-        session = Mock()
-        session.turn_engine = None
-
-        facade = StrategySessionFacade(session)
-
-        result = facade.get_scuttle_events()
-
-        assert result == []
-
-    def test_get_scuttle_events_returns_empty_when_no_events(self):
-        """get_scuttle_events returns empty list when no scuttle events."""
-        session = Mock()
-        session.turn_engine = Mock()
-        session.turn_engine.last_scuttle_events = []
-
-        facade = StrategySessionFacade(session)
-
-        result = facade.get_scuttle_events()
-
-        assert result == []
-
-    def test_get_scuttle_events_converts_to_dicts(self):
-        """get_scuttle_events converts ScuttleEvent objects to dicts."""
-        session = Mock()
-        session.turn_engine = Mock()
-
-        # Mock ScuttleEvent-like objects (dataclass with attributes)
-        event1 = Mock()
-        event1.empire_id = 1
-        event1.entity_type = "ship"
-        event1.entity_name = "Scout 1"
-        event1.location = "(3, 4)"
-
-        event2 = Mock()
-        event2.empire_id = 2
-        event2.entity_type = "facility"
-        event2.entity_name = "Mine"
-        event2.location = "Terra (1, 2)"
-
-        session.turn_engine.last_scuttle_events = [event1, event2]
-
-        facade = StrategySessionFacade(session)
-
-        result = facade.get_scuttle_events()
-
-        assert len(result) == 2
-        assert result[0] == {
-            'empire_id': 1,
-            'entity_type': 'ship',
-            'entity_name': 'Scout 1',
-            'location': '(3, 4)',
-        }
-        assert result[1] == {
-            'empire_id': 2,
-            'entity_type': 'facility',
-            'entity_name': 'Mine',
-            'location': 'Terra (1, 2)',
-        }
 
 
 class TestStormQueries:

@@ -2,7 +2,7 @@
 Strategy Engine Interfaces for Dependency Injection.
 
 PROJ-43 Phase 4: Interface contracts for TurnEngine sub-engines.
-PROJ-161: Harvesting and Maintenance interfaces now per-tick only.
+PROJ-161: Harvesting interface now per-tick only.
 
 These interfaces enable:
 - Constructor dependency injection in TurnEngine
@@ -35,7 +35,6 @@ __all__ = [
     'IPopulationEngine',
     'IResupplyEngine',
     'IHarvestingEngine',
-    'IMaintenanceEngine',
     'IActionExecutionEngine',
     'IEnvironmentalHazardEngine',
     'IPlanetEnergyEngine',
@@ -389,48 +388,6 @@ class IHarvestingEngine(ABC):
         Args:
             tick: Current tick number (1-100)
             empires: List of Empire objects to process
-        """
-        pass
-
-
-class IMaintenanceEngine(ABC):
-    """
-    Abstract interface for maintenance cost processing.
-
-    PROJ-75 Phase 5: Interface for MaintenanceEngine.
-    PROJ-161: Per-tick maintenance only (legacy full-turn method removed).
-
-    Implementations handle:
-    - Calculating maintenance costs (5% of build cost per turn, 1/100th per tick)
-    - Deducting maintenance from empire resource pools
-    - Scuttling entities that cannot be maintained (immediately on tick failure)
-    - Cleaning up empty fleets after ship scuttles
-
-    Example usage:
-        engine = MaintenanceEngine()
-        # Called 100 times per turn in TurnEngine._process_tick():
-        events = engine.process_maintenance_tick(tick, empires)
-    """
-
-    @abstractmethod
-    def process_maintenance_tick(
-        self,
-        tick: int,
-        empires: List
-    ) -> List:
-        """
-        Process maintenance for one tick (1/100th of turn).
-
-        PROJ-161: Per-tick maintenance spreads costs across 100 ticks.
-        Each call deducts 1/100th of the per-turn maintenance cost.
-        Entities that cannot pay are immediately scuttled.
-
-        Args:
-            tick: Current tick number (1-100)
-            empires: List of Empire objects to process
-
-        Returns:
-            List of ScuttleEvent records for scuttled entities
         """
         pass
 

@@ -3,7 +3,6 @@ Design Cost Calculator - Centralized design cost calculation.
 
 PROJ-204 Phase 1: Consolidates cost calculation logic from multiple modules:
 - ProductionEngine._calculate_design_cost()
-- MaintenanceEngine.calculate_maintenance_cost()
 - DesignMetadata._calculate_construction_cost()
 
 PROJ-218: Fixed to resolve component costs from registry via Ship loading.
@@ -21,9 +20,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# Standard maintenance rate (5% of build cost per turn)
-DEFAULT_MAINTENANCE_RATE = 0.05
-
 
 class DesignCostCalculator:
     """Centralized calculator for design resource costs.
@@ -35,7 +31,6 @@ class DesignCostCalculator:
 
     Usage:
         total_cost = DesignCostCalculator.calculate_total_cost(design_data, registries)
-        maintenance = DesignCostCalculator.calculate_maintenance_cost(design_data, registries)
     """
 
     @staticmethod
@@ -114,29 +109,3 @@ class DesignCostCalculator:
                 total_cost[res] = total_cost.get(res, 0) + amount
 
         return total_cost
-
-    @staticmethod
-    def calculate_maintenance_cost(
-        design_data: Dict[str, Any],
-        registries: 'GameRegistries',
-        rate: float = DEFAULT_MAINTENANCE_RATE
-    ) -> Dict[str, float]:
-        """Calculate maintenance cost from a design's resource costs.
-
-        Maintenance is a percentage of the total build cost.
-
-        Args:
-            design_data: Design data dict containing layers with components.
-            registries: GameRegistries for component resolution (required).
-            rate: Maintenance rate to apply (default: 5% = 0.05).
-
-        Returns:
-            Dict mapping resource type to maintenance cost amount.
-        """
-        total_cost = DesignCostCalculator.calculate_total_cost(design_data, registries)
-
-        maintenance: Dict[str, float] = {}
-        for res, amount in total_cost.items():
-            maintenance[res] = amount * rate
-
-        return maintenance

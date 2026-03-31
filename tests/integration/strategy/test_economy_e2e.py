@@ -1,13 +1,12 @@
 """End-to-end economy integration tests.
 
 PROJ-75 Phase 6: Tests the full economy pipeline through TurnEngine,
-using REAL HarvestingEngine, MaintenanceEngine, and ProductionEngine,
+using REAL HarvestingEngine and ProductionEngine,
 with other engines mocked out.
 
 Tests cover:
-- Full turn cycle: harvesting -> maintenance -> construction
+- Full turn cycle: harvesting -> construction
 - Resource depletion and build pausing
-- Maintenance failure causing entity disabling
 - Storage cap enforcement
 - Save/load round-trip of economy state
 """
@@ -16,7 +15,6 @@ from unittest.mock import MagicMock
 
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.engine.harvesting_engine import HarvestingEngine
-from game.strategy.engine.maintenance_engine import MaintenanceEngine
 from game.strategy.engine.production_engine import ProductionEngine
 from game.strategy.data.empire import Empire
 from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
@@ -214,8 +212,6 @@ def _make_economy_turn_engine(registries):
         registries=registries,
         **mocks,
         harvesting_engine=HarvestingEngine(),
-        # PROJ-218: MaintenanceEngine now requires registries
-        maintenance_engine=MaintenanceEngine(registries=registries),
         production_engine=ProductionEngine(),
     )
 
@@ -243,33 +239,6 @@ class MockGalaxy:
 class TestEconomyE2E:
     """End-to-end economy pipeline tests."""
 
-    def test_full_turn_cycle_harvest_then_maintenance(self, fresh_registries):
-        """Harvest fills pool, then maintenance deducts costs."""
-        engine = _make_economy_turn_engine(fresh_registries)
-        galaxy = MockGalaxy()
-
-        # Harvester: 100 rate * 1.0 quality = 100 Metals per turn
-        # Build cost: 200 Metals -> maintenance: 200 * 0.05 = 10 Metals
-        harvester = _make_harvester_facility(
-            "metals", base_harvest_rate=100.0,
-            resource_cost={"metals": 200},
-        )
-        storage = _make_storage_facility("metals", capacity=10000.0)
-        planet = _make_planet(
-            resources={"metals": {"quantity": 5000, "quality": 1.0}},
-            facilities=[storage, harvester],
-        )
-
-        empire = _make_empire()
-        empire.add_colony(planet)
-
-        engine.process_turn([empire], galaxy)
-
-        # Harvest: 100, Maintenance: 10 -> Net: 90
-        assert empire.resource_pool["metals"] == pytest.approx(90.0)
-        # Planet depleted by 100
-        assert planet.deposits["metals"]["quantity"] == pytest.approx(4900.0)
-
     def test_empire_starts_with_resources_harvests_more(self, fresh_registries):
         """Pre-existing empire resources combine with harvested amounts."""
         engine = _make_economy_turn_engine(fresh_registries)
@@ -277,7 +246,6 @@ class TestEconomyE2E:
 
         harvester = _make_harvester_facility(
             "metals", base_harvest_rate=50.0,
-            resource_cost={"metals": 100},  # maintenance: 5
         )
         storage = _make_storage_facility("metals", capacity=10000.0)
         planet = _make_planet(
@@ -290,9 +258,9 @@ class TestEconomyE2E:
 
         engine.process_turn([empire], galaxy)
 
-        # Harvest: 50 * 0.8 = 40, Maintenance: 5
-        # Final: 500 + 40 - 5 = 535
-        assert empire.resource_pool["metals"] == pytest.approx(535.0)
+        # Harvest: 50 * 0.8 = 40
+        # Final: 500 + 40 = 540
+        assert empire.resource_pool["metals"] == pytest.approx(540.0)
 
     def test_construction_consumes_resources_per_tick(self, fresh_registries):
         """Construction uses tick-based dynamic consumption from production rates.
@@ -361,60 +329,6 @@ class TestEconomyE2E:
         assert planet.construction_queue[0]["resources_consumed"]["metals"] == pytest.approx(20.0)
         # Item still in queue (not complete)
         assert len(planet.construction_queue) == 1
-
-    def test_maintenance_failure_disables_facility(self, fresh_registries):
-        """Facility is disabled when empire can't pay maintenance.
-
-        PROJ-161: With per-tick maintenance, partial payment occurs before disable.
-        - Facility cost: 1000 Metals -> maintenance: 50 Metals/turn -> 0.5 per tick
-        - Empire has 20.0 Metals -> can pay 40 ticks of maintenance
-        - Tick 41: Cannot pay 0.5 -> facility disabled
-        - Final resources: 0.0 (all used before failure)
-        """
-        engine = _make_economy_turn_engine(fresh_registries)
-        galaxy = MockGalaxy()
-
-        # Facility costs 1000 Metals -> maintenance: 50 Metals/turn -> 0.5/tick
-        facility = _make_plain_facility(
-            resource_cost={"metals": 1000},
-            name="Expensive Complex",
-        )
-        colony = _make_planet(facilities=[facility])
-
-        # Empire has 20 Metals - enough for 40 ticks (20/0.5) then fails
-        empire = _make_empire(resources={"metals": 20.0})
-        empire.add_colony(colony)
-
-        engine.process_turn([empire], galaxy)
-
-        # Facility remains but is disabled
-        assert len(colony.facilities) == 1
-        assert facility.is_operational is False
-        # Resources drained before failure (per-tick deducts until insufficient)
-        assert empire.resource_pool["metals"] == pytest.approx(0.0)
-
-    def test_maintenance_failure_disables_ship(self, fresh_registries):
-        """Ship is disabled when empire can't pay maintenance."""
-        engine = _make_economy_turn_engine(fresh_registries)
-        galaxy = MockGalaxy()
-
-        # Ship costs 500 Metals -> maintenance: 25 Metals
-        fleet = _make_fleet_with_ship(
-            ship_resource_cost={"metals": 500},
-            ship_name="Destroyer",
-        )
-
-        empire = _make_empire(resources={"metals": 10.0})
-        empire.add_fleet(fleet)
-        # No colonies needed - just testing ship maintenance
-        empire.colonies = []
-
-        engine.process_turn([empire], galaxy)
-
-        # Ship remains in fleet but is disabled; fleet stays
-        assert len(empire.fleets) == 1
-        ship = fleet.ships[0]
-        assert ship.is_operational is False
 
     def test_harvesting_respects_storage_cap(self, fresh_registries):
         """Harvested resources are capped at empire storage limit."""
@@ -527,69 +441,6 @@ class TestEconomyE2E:
         assert planet.construction_queue[0]["resources_consumed"]["metals"] == pytest.approx(20.0)
         assert planet.construction_queue[0]["resources_consumed"]["organics"] == pytest.approx(20.0)
 
-    def test_harvesting_before_maintenance_order(self, fresh_registries):
-        """Harvesting runs first, making resources available for maintenance."""
-        engine = _make_economy_turn_engine(fresh_registries)
-        galaxy = MockGalaxy()
-
-        # Harvester gives 100 Metals, and also costs 200 to build (maintenance: 10)
-        harvester = _make_harvester_facility(
-            "metals", base_harvest_rate=100.0,
-            resource_cost={"metals": 200},
-        )
-        storage = _make_storage_facility("metals", capacity=10000.0)
-        planet = _make_planet(
-            resources={"metals": {"quantity": 5000, "quality": 1.0}},
-            facilities=[storage, harvester],
-        )
-
-        # Empire starts with 0 - but harvesting will give 100 before maintenance needs 10
-        empire = _make_empire(resources={"metals": 0.0})
-        empire.add_colony(planet)
-
-        engine.process_turn([empire], galaxy)
-
-        # Harvest: 100, Maintenance: 10 -> Net: 90
-        # Facility should NOT be scuttled because harvesting ran first
-        assert len(planet.facilities) == 2  # storage + harvester
-        assert empire.resource_pool["metals"] == pytest.approx(90.0)
-
-    def test_maintenance_paid_before_construction_tick(self, fresh_registries):
-        """Maintenance costs reduce pool before construction ticks.
-
-        Facility maintenance: 1000 * 5% = 50 Metals.
-        Construction: 100 Metals at 20/tick = 5 ticks to complete.
-        Empire starts with 200 -> 200 - 50 (maintenance) - 100 (construction) = 50.
-        """
-        engine = _make_economy_turn_engine(fresh_registries)
-        galaxy = MockGalaxy()
-
-        # Facility with 1000 Metal build cost -> maintenance: 50
-        expensive = _make_plain_facility(
-            resource_cost={"metals": 1000},
-            name="Expensive Facility",
-        )
-        storage = _make_storage_facility("metals", capacity=10000.0, instance_id="store-1")
-        planet = _make_planet(facilities=[storage, expensive])
-
-        # Queue: 100 Metals total. At 20/tick, completes in 5 ticks.
-        planet.construction_queue = [{
-            "design_id": "new_complex",
-            "type": "complex",
-            "turns_remaining": 2,
-            "total_cost": {"metals": 100.0},
-            "resources_consumed": {"metals": 0.0},
-        }]
-
-        empire = _make_empire(resources={"metals": 200.0})
-        empire.add_colony(planet)
-
-        engine.process_turn([empire], galaxy)
-
-        # Maintenance: 50, Construction: 100 (item completes) -> 200 - 50 - 100 = 50
-        assert empire.resource_pool["metals"] == pytest.approx(50.0)
-        assert len(planet.construction_queue) == 0  # Item completed
-
     def test_planet_save_load_preserves_resources(self):
         """Planet resources and facilities survive serialization."""
         harvester = _make_harvester_facility("metals", base_harvest_rate=75.0)
@@ -606,33 +457,6 @@ class TestEconomyE2E:
         assert restored.deposits["metals"]["quality"] == pytest.approx(0.9)
         assert len(restored.facilities) == 1
         assert restored.facilities[0].name == "Metals Harvester"
-
-    def test_non_operational_facilities_skip_harvest_and_maintenance(self, fresh_registries):
-        """Non-operational facilities don't harvest and don't pay maintenance."""
-        engine = _make_economy_turn_engine(fresh_registries)
-        galaxy = MockGalaxy()
-
-        harvester = _make_harvester_facility(
-            "metals", base_harvest_rate=100.0,
-            resource_cost={"metals": 200},  # would cost 10 maintenance
-        )
-        harvester.is_operational = False
-
-        storage = _make_storage_facility("metals", capacity=10000.0)
-        planet = _make_planet(
-            resources={"metals": {"quantity": 5000, "quality": 1.0}},
-            facilities=[storage, harvester],
-        )
-
-        empire = _make_empire(resources={"metals": 0.0})
-        empire.add_colony(planet)
-
-        engine.process_turn([empire], galaxy)
-
-        # No harvesting (non-operational), no maintenance
-        assert empire.resource_pool.get("metals", 0.0) == pytest.approx(0.0)
-        # Facility still exists (no scuttle - non-operational is free)
-        assert len(planet.facilities) == 2
 
     def test_construction_queue_save_load(self):
         """Queue items with cost tracking survive planet serialization.
