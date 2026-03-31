@@ -73,7 +73,8 @@
                     "reload": 2.0,
                     "projectile_speed": 20000,
                     "firing_arc": 1
-                }
+                },
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Weapons",
             "resource_cost": {
@@ -105,7 +106,8 @@
                         "amount": 100,
                         "trigger": "strategic_per_hex"
                     }
-                ]
+                ],
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Engines",
             "resource_cost": {
@@ -124,7 +126,8 @@
             ],
             "sprite_index": 78,
             "abilities": {
-                "ManeuveringThruster": 30
+                "ManeuveringThruster": 30,
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Engines",
             "resource_cost": {
@@ -338,7 +341,8 @@
                         "generation_rate": 25000
                     }
                 ],
-                "CrewRequired": 1
+                "CrewRequired": 1,
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -364,7 +368,8 @@
                         "amount": 300
                     }
                 ],
-                "CrewRequired": 10
+                "CrewRequired": 10,
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -401,7 +406,8 @@
                     "firing_arc": 1,
                     "base_accuracy": 2.0,
                     "accuracy_falloff": 0.001
-                }
+                },
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Weapons",
             "resource_cost": {
@@ -468,7 +474,8 @@
                 "ToHitAttackModifier": {
                     "value": 1.0,
                     "stack_group": "Sensor"
-                }
+                },
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Sensors",
             "resource_cost": {
@@ -493,7 +500,8 @@
                 "ToHitDefenseModifier": {
                     "value": 1.0,
                     "stack_group": "ECM"
-                }
+                },
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Sensors",
             "resource_cost": {
@@ -516,7 +524,8 @@
             "sprite_index": 27,
             "abilities": {
                 "MultiplexTracking": 10,
-                "CrewRequired": 2
+                "CrewRequired": 2,
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Sensors",
             "resource_cost": {
@@ -538,7 +547,8 @@
             ],
             "sprite_index": 16,
             "abilities": {
-                "ShieldProjection": 500
+                "ShieldProjection": 500,
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Shields",
             "resource_cost": {
@@ -561,7 +571,14 @@
             "sprite_index": 18,
             "abilities": {
                 "ShieldRegeneration": 5.0,
-                "ResourceConsumption": [{"resource": "energy", "amount": 2.0, "trigger": "constant"}]
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 2.0,
+                        "trigger": "constant"
+                    }
+                ],
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Shields",
             "resource_cost": {
@@ -599,7 +616,8 @@
                     "endurance": 3.0,
                     "turn_rate": 200,
                     "to_hit_defense": 0.0
-                }
+                },
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Weapons",
             "resource_cost": {
@@ -639,7 +657,8 @@
                     "tags": [
                         "pdc"
                     ]
-                }
+                },
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Weapons",
             "resource_cost": {
@@ -689,7 +708,8 @@
                         "amount": 0.2,
                         "trigger": "constant"
                     }
-                ]
+                ],
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Engines",
             "resource_cost": {
@@ -708,7 +728,8 @@
             ],
             "sprite_index": 79,
             "abilities": {
-                "ManeuveringThruster": 50
+                "ManeuveringThruster": 50,
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Engines",
             "resource_cost": {
@@ -764,7 +785,8 @@
                         "resource": "energy",
                         "generation_rate": 10000
                     }
-                ]
+                ],
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -838,7 +860,8 @@
                     "firing_arc": 1,
                     "base_accuracy": 2.0,
                     "accuracy_falloff": 0.001
-                }
+                },
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Weapons",
             "resource_cost": {
@@ -871,7 +894,8 @@
                     "firing_arc": 1,
                     "base_accuracy": 2.0,
                     "accuracy_falloff": 0.001
-                }
+                },
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Weapons",
             "resource_cost": {
@@ -898,7 +922,8 @@
                     "firing_arc": 10,
                     "base_accuracy": 2.0,
                     "accuracy_falloff": 0.0
-                }
+                },
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Weapons",
             "resource_cost": {
@@ -939,7 +964,8 @@
                 "ToHitAttackModifier": {
                     "value": 0.2,
                     "stack_group": "Sensor"
-                }
+                },
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Sensors",
             "resource_cost": {
@@ -962,7 +988,8 @@
                 "ToHitDefenseModifier": {
                     "value": 0.2,
                     "stack_group": "ECM"
-                }
+                },
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Sensors",
             "resource_cost": {
@@ -982,7 +1009,8 @@
             ],
             "sprite_index": 16,
             "abilities": {
-                "ShieldProjection": 50
+                "ShieldProjection": 50,
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Shields",
             "resource_cost": {
@@ -1075,7 +1103,8 @@
                     "max_launch_mass": 50,
                     "cycle_time": 5.0
                 },
-                "CrewRequired": 5
+                "CrewRequired": 5,
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -1106,7 +1135,13 @@
                     "value": 0.5,
                     "stack_group": "MasterComputer"
                 },
-                "ResourceConsumption": [{"resource": "energy", "amount": 10.0, "trigger": "constant"}]
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 10.0,
+                        "trigger": "constant"
+                    }
+                ]
             },
             "major_classification": "Crewsupport",
             "resource_cost": {
@@ -1129,7 +1164,13 @@
             "abilities": {
                 "CrewCapacity": 10,
                 "LifeSupportCapacity": 10,
-                "ResourceConsumption": [{"resource": "energy", "amount": 5.0, "trigger": "constant"}]
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 5.0,
+                        "trigger": "constant"
+                    }
+                ]
             },
             "major_classification": "Crewsupport",
             "resource_cost": {
@@ -1153,7 +1194,14 @@
             "abilities": {
                 "ShipRepair": 5.0,
                 "CrewRequired": 5,
-                "ResourceConsumption": [{"resource": "energy", "amount": 2.0, "trigger": "constant"}]
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 2.0,
+                        "trigger": "constant"
+                    }
+                ],
+                "RequiresCommandAndControl": true
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -1175,9 +1223,20 @@
             ],
             "sprite_index": 19,
             "abilities": {
-                "ResourceGeneration": [{"resource": "ammo", "amount": 2.0}],
+                "ResourceGeneration": [
+                    {
+                        "resource": "ammo",
+                        "amount": 2.0
+                    }
+                ],
                 "CrewRequired": 5,
-                "ResourceConsumption": [{"resource": "energy", "amount": 15.0, "trigger": "constant"}]
+                "ResourceConsumption": [
+                    {
+                        "resource": "energy",
+                        "amount": 15.0,
+                        "trigger": "constant"
+                    }
+                ]
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -2108,7 +2167,11 @@
                     "max_tonnage": "=ship_class_mass"
                 },
                 "ResourceConsumption": [
-                    {"resource": "energy", "amount": "=5 * (ship_class_mass ** (2/3))", "trigger": "warp_jump"}
+                    {
+                        "resource": "energy",
+                        "amount": "=5 * (ship_class_mass ** (2/3))",
+                        "trigger": "warp_jump"
+                    }
                 ]
             },
             "major_classification": "Engines",
@@ -2124,20 +2187,55 @@
             "type": "Infrastructure",
             "mass": 100,
             "hp": 200,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "abilities": {
                 "CargoStorage": [
-                    {"cargo_type": "colony_pod_continental", "capacity": 1},
-                    {"cargo_type": "colony_pod_arid", "capacity": 1},
-                    {"cargo_type": "colony_pod_pelagic", "capacity": 1},
-                    {"cargo_type": "colony_pod_magma", "capacity": 1},
-                    {"cargo_type": "colony_pod_cryoplanet", "capacity": 1},
-                    {"cargo_type": "colony_pod_barren", "capacity": 1},
-                    {"cargo_type": "colony_pod_jovian", "capacity": 1},
-                    {"cargo_type": "colony_pod_ice_giant", "capacity": 1},
-                    {"cargo_type": "colony_pod_chthonian", "capacity": 1},
-                    {"cargo_type": "colony_pod_ice_dwarf", "capacity": 1},
-                    {"cargo_type": "colony_pod_planetoid", "capacity": 1}
+                    {
+                        "cargo_type": "colony_pod_continental",
+                        "capacity": 1
+                    },
+                    {
+                        "cargo_type": "colony_pod_arid",
+                        "capacity": 1
+                    },
+                    {
+                        "cargo_type": "colony_pod_pelagic",
+                        "capacity": 1
+                    },
+                    {
+                        "cargo_type": "colony_pod_magma",
+                        "capacity": 1
+                    },
+                    {
+                        "cargo_type": "colony_pod_cryoplanet",
+                        "capacity": 1
+                    },
+                    {
+                        "cargo_type": "colony_pod_barren",
+                        "capacity": 1
+                    },
+                    {
+                        "cargo_type": "colony_pod_jovian",
+                        "capacity": 1
+                    },
+                    {
+                        "cargo_type": "colony_pod_ice_giant",
+                        "capacity": 1
+                    },
+                    {
+                        "cargo_type": "colony_pod_chthonian",
+                        "capacity": 1
+                    },
+                    {
+                        "cargo_type": "colony_pod_ice_dwarf",
+                        "capacity": 1
+                    },
+                    {
+                        "cargo_type": "colony_pod_planetoid",
+                        "capacity": 1
+                    }
                 ]
             },
             "major_classification": "Infrastructure",
@@ -2151,7 +2249,9 @@
             "type": "Colony",
             "mass": 500,
             "hp": 300,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 210,
             "abilities": {
                 "ColonizePlanet": "CONTINENTAL"
@@ -2169,7 +2269,9 @@
             "type": "Colony",
             "mass": 500,
             "hp": 300,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 211,
             "abilities": {
                 "ColonizePlanet": "ARID"
@@ -2187,7 +2289,9 @@
             "type": "Colony",
             "mass": 500,
             "hp": 300,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 212,
             "abilities": {
                 "ColonizePlanet": "PELAGIC"
@@ -2205,7 +2309,9 @@
             "type": "Colony",
             "mass": 500,
             "hp": 300,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 213,
             "abilities": {
                 "ColonizePlanet": "MAGMA"
@@ -2224,7 +2330,9 @@
             "type": "Colony",
             "mass": 500,
             "hp": 300,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 214,
             "abilities": {
                 "ColonizePlanet": "CRYOPLANET"
@@ -2242,7 +2350,9 @@
             "type": "Colony",
             "mass": 500,
             "hp": 300,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 215,
             "abilities": {
                 "ColonizePlanet": "BARREN"
@@ -2260,7 +2370,9 @@
             "type": "Colony",
             "mass": 800,
             "hp": 400,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 216,
             "abilities": {
                 "ColonizePlanet": "JOVIAN"
@@ -2280,7 +2392,9 @@
             "type": "Colony",
             "mass": 800,
             "hp": 400,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 217,
             "abilities": {
                 "ColonizePlanet": "ICE_GIANT"
@@ -2300,7 +2414,9 @@
             "type": "Colony",
             "mass": 800,
             "hp": 400,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 218,
             "abilities": {
                 "ColonizePlanet": "CHTHONIAN"
@@ -2320,7 +2436,9 @@
             "type": "Colony",
             "mass": 500,
             "hp": 300,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 219,
             "abilities": {
                 "ColonizePlanet": "ICE_DWARF"
@@ -2338,7 +2456,9 @@
             "type": "Colony",
             "mass": 500,
             "hp": 300,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 220,
             "abilities": {
                 "ColonizePlanet": "PLANETOID"
@@ -2356,10 +2476,15 @@
             "type": "Infrastructure",
             "mass": 200,
             "hp": 150,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 230,
             "abilities": {
-                "CargoStorage": {"cargo_type": "passengers", "capacity": 5000},
+                "CargoStorage": {
+                    "cargo_type": "passengers",
+                    "capacity": 5000
+                },
                 "LifeSupportCapacity": 5000,
                 "CrewRequired": 10
             },
@@ -2394,23 +2519,55 @@
             "type": "Infrastructure",
             "mass": 500,
             "hp": 500,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 240,
             "abilities": {
                 "PlanetaryYard": true,
                 "LocalStorage": [
-                    {"resource_type": "metals", "capacity": 5000},
-                    {"resource_type": "organics", "capacity": 5000},
-                    {"resource_type": "vapors", "capacity": 5000},
-                    {"resource_type": "radioactives", "capacity": 5000},
-                    {"resource_type": "exotics", "capacity": 5000}
+                    {
+                        "resource_type": "metals",
+                        "capacity": 5000
+                    },
+                    {
+                        "resource_type": "organics",
+                        "capacity": 5000
+                    },
+                    {
+                        "resource_type": "vapors",
+                        "capacity": 5000
+                    },
+                    {
+                        "resource_type": "radioactives",
+                        "capacity": 5000
+                    },
+                    {
+                        "resource_type": "exotics",
+                        "capacity": 5000
+                    }
                 ],
                 "ResourceHarvester": [
-                    {"resource_type": "metals", "base_harvest_rate": 25},
-                    {"resource_type": "organics", "base_harvest_rate": 25},
-                    {"resource_type": "vapors", "base_harvest_rate": 25},
-                    {"resource_type": "radioactives", "base_harvest_rate": 25},
-                    {"resource_type": "exotics", "base_harvest_rate": 25}
+                    {
+                        "resource_type": "metals",
+                        "base_harvest_rate": 25
+                    },
+                    {
+                        "resource_type": "organics",
+                        "base_harvest_rate": 25
+                    },
+                    {
+                        "resource_type": "vapors",
+                        "base_harvest_rate": 25
+                    },
+                    {
+                        "resource_type": "radioactives",
+                        "base_harvest_rate": 25
+                    },
+                    {
+                        "resource_type": "exotics",
+                        "base_harvest_rate": 25
+                    }
                 ],
                 "CrewRequired": 50
             },
@@ -2429,15 +2586,32 @@
             "type": "Infrastructure",
             "mass": 300,
             "hp": 200,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 231,
             "abilities": {
                 "CargoStorage": [
-                    {"cargo_type": "metals", "capacity": 10000},
-                    {"cargo_type": "organics", "capacity": 10000},
-                    {"cargo_type": "vapors", "capacity": 10000},
-                    {"cargo_type": "radioactives", "capacity": 10000},
-                    {"cargo_type": "exotics", "capacity": 10000}
+                    {
+                        "cargo_type": "metals",
+                        "capacity": 10000
+                    },
+                    {
+                        "cargo_type": "organics",
+                        "capacity": 10000
+                    },
+                    {
+                        "cargo_type": "vapors",
+                        "capacity": 10000
+                    },
+                    {
+                        "cargo_type": "radioactives",
+                        "capacity": 10000
+                    },
+                    {
+                        "cargo_type": "exotics",
+                        "capacity": 10000
+                    }
                 ],
                 "CrewRequired": 5
             },
@@ -2454,10 +2628,14 @@
             "type": "Superweapon",
             "mass": 2000,
             "hp": 500,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 230,
             "abilities": {
-                "DestroyPlanet": {"action_time": 3}
+                "DestroyPlanet": {
+                    "action_time": 3
+                }
             },
             "major_classification": "Superweapon",
             "resource_cost": {
@@ -2472,10 +2650,14 @@
             "type": "Superweapon",
             "mass": 5000,
             "hp": 800,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 230,
             "abilities": {
-                "DestroyStar": {"action_time": 5}
+                "DestroyStar": {
+                    "action_time": 5
+                }
             },
             "major_classification": "Superweapon",
             "resource_cost": {
@@ -2490,10 +2672,14 @@
             "type": "Superweapon",
             "mass": 3000,
             "hp": 600,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 230,
             "abilities": {
-                "OpenWarpPoint": {"action_time": 3}
+                "OpenWarpPoint": {
+                    "action_time": 3
+                }
             },
             "major_classification": "Superweapon",
             "resource_cost": {
@@ -2508,10 +2694,14 @@
             "type": "Superweapon",
             "mass": 2500,
             "hp": 500,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 230,
             "abilities": {
-                "CloseWarpPoint": {"action_time": 3}
+                "CloseWarpPoint": {
+                    "action_time": 3
+                }
             },
             "major_classification": "Superweapon",
             "resource_cost": {
@@ -2526,10 +2716,14 @@
             "type": "Superweapon",
             "mass": 8000,
             "hp": 1000,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 230,
             "abilities": {
-                "CreateDysonSphere": {"action_time": 5}
+                "CreateDysonSphere": {
+                    "action_time": 5
+                }
             },
             "major_classification": "Superweapon",
             "resource_cost": {
@@ -2544,7 +2738,9 @@
             "type": "Superweapon",
             "mass": 50,
             "hp": 100,
-            "allowed_vehicle_types": ["Ship"],
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
             "sprite_index": 230,
             "abilities": {
                 "SelfDestruct": true
@@ -2561,7 +2757,9 @@
             "type": "PlanetaryDefense",
             "mass": 500,
             "hp": 300,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "PlanetaryShield": {

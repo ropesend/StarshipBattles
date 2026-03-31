@@ -105,7 +105,7 @@ Ship extends `PhysicsBody` (position, velocity, angle) and `ShipPhysicsMixin` (a
 **Key state:**
 - `layers: Dict[LayerType, LayerData]` -- HULL, CORE, INNER, OUTER, ARMOR
 - `resources: ResourceRegistry` -- fuel, ammo, energy pools
-- `is_alive`, `is_derelict`, `bridge_destroyed` -- survival state
+- `is_alive`, `is_derelict` -- survival state (derelict = no operational weapons AND no engines)
 - `current_target`, `secondary_targets`, `max_targets` -- targeting
 - Defense stats: `emissive_armor`, `crystalline_armor`, `current_shields`, `max_shields`
 - Offense: `baseline_to_hit_offense`, `total_defense_score`
@@ -177,15 +177,43 @@ Components with more HP are more likely to be hit.
 
 After damage is applied:
 - `ship.recalculate_stats()` -- updates derived stats (skips non-operational components)
-- `ship.update_derelict_status()` -- checks CommandAndControl and crew requirements
+- `ship.update_derelict_status()` -- functional check: ship is derelict when it has no operational weapons AND no operational engines
 
 ### Component Operational Status and Stats
 
 During `recalculate_stats()`, only **active AND operational** components contribute
-stats. A component is non-operational when its constant-trigger `ResourceConsumption`
-cannot be satisfied (e.g., a shield that requires energy but the ship has none).
+stats. A component becomes non-operational when:
+- Its constant-trigger `ResourceConsumption` cannot be satisfied (e.g., shield without energy)
+- It has `RequiresCommandAndControl` but the ship has no active `CommandAndControl` provider (e.g., bridge destroyed)
+
 Resource storage components always contribute their capacity regardless of
 operational status.
+
+### RequiresCommandAndControl (Per-Component)
+
+Individual components declare `RequiresCommandAndControl: true` to indicate they
+need a bridge or command center to function. Each tick, `RequiresCommandAndControl.update()`
+checks if the ship has an active `CommandAndControl` provider. If not, the component
+becomes non-operational — its stats don't contribute (no thrust, no shields, no weapon firing).
+
+This is enforced per-component, not ship-wide. A ship that loses its bridge will have
+all C&C-dependent components (weapons, engines, shields, sensors, ECM, generators)
+go non-operational while passive components (armor, storage, crew quarters) continue.
+
+**Production components with RequiresCommandAndControl (24 total):**
+All weapons, shields, engines, thrusters, sensors, ECM, generators, hangars, and repair bays.
+Armor, storage tanks, crew quarters, life support, and strategy-only components are exempt.
+
+### Derelict Status
+
+`is_derelict` is a **functional flag** (not tied to a specific component):
+- `True` when the ship has **no operational weapons AND no operational engines**
+- Used by UI for status display, by battle engine for victory counting, by AI for formation control
+- Can result from C&C loss, resource depletion, crew shortage, or component destruction
+
+`battle_engine.start()` runs an initial component update cycle so that RequiresCommandAndControl
+checks take effect before the first tick. This ensures ships without bridges start
+the battle with correct operational status.
 
 When `max_shields` decreases (e.g., shield component loses power), `current_shields`
 is capped to the new max — preventing orphaned shield HP from lingering after

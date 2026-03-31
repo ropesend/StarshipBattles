@@ -639,11 +639,18 @@ Marker — component provides command capability (bridge, CIC).
 | Layer | COMBAT |
 | Base Class | `Ability` |
 
-Marker — component requires command capability to operate.
+Per-component requirement — component requires an operational `CommandAndControl`
+provider on the ship to function. Checked each tick via `update()`: if no active
+C&C component exists on the ship, this component becomes non-operational (its stats
+don't contribute, weapons won't fire).
+
+**Applied to:** All combat-relevant production components (weapons, shields, engines,
+thrusters, sensors, ECM, generators, hangars, repair bays — 24 components total).
+NOT applied to passive components (armor, storage, crew quarters, life support).
 
 **Data Format:** Boolean (`true`)
 
-**Stat Bindings:** None
+**Stat Bindings:** None (operational check via `update()` return value)
 
 ---
 
