@@ -37,7 +37,7 @@ test duration regardless of hit count.
 
 import pygame
 from simulation_tests.scenarios import TestMetadata
-from simulation_tests.scenarios.templates import StaticTargetScenario
+from simulation_tests.scenarios.templates import StaticTargetScenario, ComparisonScenario
 from simulation_tests.scenarios.validation import check_exact, check_approx, check_true
 from simulation_tests.scenarios.movement import StraightLineController, ErraticController
 from simulation_tests.test_constants import (
@@ -45,6 +45,7 @@ from simulation_tests.test_constants import (
     STANDARD_SEED,
     STATIONARY_TARGET_MASS,
     PROJECTILE_OUT_OF_RANGE_DISTANCE,
+    POINT_BLANK_DISTANCE,
 )
 
 
@@ -877,6 +878,220 @@ class ProjectileDamageLongRangeScenario(StaticTargetScenario):
         return checks
 
 
+# =============================================================================
+# RESOURCE DEPENDENCY TESTS (PROJECTILE-RES-001 to 003)
+# =============================================================================
+# These ComparisonScenarios prove projectile weapons with
+# ResourceConsumption(ammo) stop firing when ammo depletes.
+
+PROJ_RES_TEST_TICKS = 1000
+PROJ_RES_ATTACKER_FULL = "Test_Attacker_ProjRapid_HighAmmo.json"
+PROJ_RES_ATTACKER_HALF = "Test_Attacker_ProjRapid_HalfAmmo.json"
+PROJ_RES_ATTACKER_NONE = "Test_Attacker_ProjRapid_NoAmmo.json"
+PROJ_RES_TARGET = "Test_Target_Stationary.json"
+
+
+class ProjectileStopsWithoutAmmoScenario(ComparisonScenario):
+    """
+    PROJECTILE-RES-001: Projectile Stops Without Ammo
+
+    Battle A: Projectile + 100k ammo (fires every tick)
+    Battle B: Projectile + no ammo (cannot fire)
+
+    Proves that a projectile weapon with activation ammo cost cannot fire
+    without an ammo source.
+    """
+
+    metadata = TestMetadata(
+        test_id="PROJECTILE-RES-001",
+        category="ProjectileWeaponAbility",
+        subcategory="Resource Dependency",
+        name="Projectile Stops Without Ammo",
+        summary="Projectile weapon with ammo cost but no magazine cannot fire",
+        conditions=[
+            f"Attacker (full ammo): {PROJ_RES_ATTACKER_FULL}",
+            f"Attacker (no ammo): {PROJ_RES_ATTACKER_NONE}",
+            f"Target: {PROJ_RES_TARGET} (stationary, extreme HP armor)",
+            f"Distance: {POINT_BLANK_DISTANCE} pixels",
+            f"Test Duration: {PROJ_RES_TEST_TICKS} ticks",
+        ],
+        edge_cases=[
+            "Weapon exists and is operational but cannot afford activation cost",
+            "Zero shots fired, zero damage dealt",
+        ],
+        expected_outcome="Full-ammo attacker deals damage. No-ammo attacker deals 0.",
+        pass_criteria="variant damage == 0, variant shots_fired == 0",
+        max_ticks=PROJ_RES_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["projectile", "ammo", "resource", "no-ammo", "comparison"],
+    )
+
+    baseline_attacker_ship = PROJ_RES_ATTACKER_FULL
+    baseline_target_ship = PROJ_RES_TARGET
+    variant_attacker_ship = PROJ_RES_ATTACKER_NONE
+    variant_target_ship = PROJ_RES_TARGET
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Precondition: baseline fired and dealt damage
+        checks.append(check_true(
+            "Full-Ammo Attacker Dealt Damage",
+            self.baseline_damage_dealt > 0,
+            detail=f"damage={self.baseline_damage_dealt}",
+        ))
+
+        # Outcome: no-ammo attacker dealt zero damage
+        checks.append(check_exact(
+            "No-Ammo Attacker — Zero Damage",
+            0.0, self.variant_damage_dealt,
+            phase="outcome",
+        ))
+
+        # Outcome: no-ammo attacker fired zero shots
+        variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        checks.append(check_exact(
+            "No-Ammo Attacker — Zero Shots",
+            0, variant_shots,
+            phase="outcome",
+        ))
+
+        return checks
+
+
+class ProjectileStopsAtHalfAmmoScenario(ComparisonScenario):
+    """
+    PROJECTILE-RES-002: Projectile Stops At 50% Ammo
+
+    Battle A: Projectile + 100k ammo (fires all 1000 ticks)
+    Battle B: Projectile + 500 ammo (fires ~500 ticks then stops)
+
+    Proves that a projectile weapon fires until ammo depletes, then stops.
+    """
+
+    metadata = TestMetadata(
+        test_id="PROJECTILE-RES-002",
+        category="ProjectileWeaponAbility",
+        subcategory="Resource Dependency",
+        name="Projectile Stops At 50% Ammo",
+        summary="Projectile fires ~500 shots with 500 ammo then stops",
+        conditions=[
+            f"Attacker (full ammo): {PROJ_RES_ATTACKER_FULL}",
+            f"Attacker (half ammo): {PROJ_RES_ATTACKER_HALF} (500 ammo = 500 shots)",
+            f"Target: {PROJ_RES_TARGET} (stationary, extreme HP armor)",
+            f"Distance: {POINT_BLANK_DISTANCE} pixels",
+            f"Test Duration: {PROJ_RES_TEST_TICKS} ticks",
+        ],
+        edge_cases=[
+            "Weapon fires until ammo runs out, then silently stops",
+            "Damage should be roughly half of full-ammo baseline",
+        ],
+        expected_outcome="Half-ammo attacker fires ~500 shots (~half of baseline).",
+        pass_criteria="variant damage < baseline, variant shots ≈ 500",
+        max_ticks=PROJ_RES_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["projectile", "ammo", "resource", "depletion", "comparison"],
+    )
+
+    baseline_attacker_ship = PROJ_RES_ATTACKER_FULL
+    baseline_target_ship = PROJ_RES_TARGET
+    variant_attacker_ship = PROJ_RES_ATTACKER_HALF
+    variant_target_ship = PROJ_RES_TARGET
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Precondition: baseline dealt damage
+        checks.append(check_true(
+            "Full-Ammo Attacker Dealt Damage",
+            self.baseline_damage_dealt > 0,
+            detail=f"damage={self.baseline_damage_dealt}",
+        ))
+
+        # Outcome: half-ammo dealt some damage
+        checks.append(check_true(
+            "Half-Ammo Attacker Dealt Damage",
+            self.variant_damage_dealt > 0,
+            detail=f"damage={self.variant_damage_dealt}",
+            phase="outcome",
+        ))
+
+        # Outcome: half-ammo dealt less than full-ammo
+        checks.append(check_true(
+            "Half-Ammo Dealt Less Damage",
+            self.variant_damage_dealt < self.baseline_damage_dealt,
+            detail=f"full={self.baseline_damage_dealt}, half={self.variant_damage_dealt}",
+            phase="outcome",
+        ))
+
+        # Outcome: half-ammo fired approximately 500 shots
+        variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        checks.append(check_exact(
+            "Half-Ammo Shots Fired", 500, variant_shots,
+            phase="outcome",
+        ))
+
+        return checks
+
+
+class ProjectileControlWithAmmoScenario(ComparisonScenario):
+    """
+    PROJECTILE-RES-003: Projectile Functions With Sufficient Ammo (Control)
+
+    Battle A: Projectile + 100k ammo
+    Battle B: Projectile + 100k ammo (identical)
+
+    Control test: both battles use the same ship. Damage should be identical.
+    """
+
+    metadata = TestMetadata(
+        test_id="PROJECTILE-RES-003",
+        category="ProjectileWeaponAbility",
+        subcategory="Resource Dependency",
+        name="Projectile Functions With Ammo (Control)",
+        summary="Control: identical attackers with sufficient ammo produce identical damage",
+        conditions=[
+            f"Attacker (both): {PROJ_RES_ATTACKER_FULL} (100k ammo)",
+            f"Target: {PROJ_RES_TARGET} (stationary, extreme HP armor)",
+            f"Distance: {POINT_BLANK_DISTANCE} pixels",
+            f"Test Duration: {PROJ_RES_TEST_TICKS} ticks",
+        ],
+        edge_cases=[
+            "Control test — no difference between battles",
+            "Validates comparison infrastructure with identical setups",
+        ],
+        expected_outcome="Both battles produce identical damage.",
+        pass_criteria="variant damage == baseline damage",
+        max_ticks=PROJ_RES_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["projectile", "ammo", "resource", "control", "comparison"],
+    )
+
+    baseline_attacker_ship = PROJ_RES_ATTACKER_FULL
+    baseline_target_ship = PROJ_RES_TARGET
+    variant_attacker_ship = PROJ_RES_ATTACKER_FULL
+    variant_target_ship = PROJ_RES_TARGET
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Outcome: identical damage
+        checks.append(check_exact(
+            "Control — Identical Damage",
+            self.baseline_damage_dealt,
+            self.variant_damage_dealt,
+            phase="outcome",
+        ))
+
+        return checks
+
+
 # ============================================================================
 # EXPORT ALL SCENARIOS
 # ============================================================================
@@ -890,5 +1105,8 @@ __all__ = [
     'ProjectileOutOfRangeScenario',
     'ProjectileDamageCloseRangeScenario',
     'ProjectileDamageMidRangeScenario',
-    'ProjectileDamageLongRangeScenario'
+    'ProjectileDamageLongRangeScenario',
+    'ProjectileStopsWithoutAmmoScenario',
+    'ProjectileStopsAtHalfAmmoScenario',
+    'ProjectileControlWithAmmoScenario',
 ]

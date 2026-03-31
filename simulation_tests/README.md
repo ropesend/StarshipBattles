@@ -104,7 +104,7 @@ compare measured outcomes.
 |----------|------|-------|--------|
 | **ToHitAttackModifier** | `tohit_attack_scenarios.py` | TOHIT-ATK-001 to 004 | Complete |
 | **ToHitDefenseModifier** | `tohit_defense_scenarios.py` | TOHIT-DEF-001 to 004 | Complete |
-| **ShieldProjection** | *(pending — migrate from defense_scenarios.py)* | | Planned |
+| **ShieldProjection** | `shield_projection_scenarios.py` | SHIELD-PROJ-001 to 007 | Complete |
 | **ShieldRegeneration** | *(pending)* | | Planned |
 | **EmissiveArmor** | *(pending — migrate from defense_scenarios.py)* | | Planned |
 

@@ -849,6 +849,7 @@ threshold behaviors, resource coupling, etc.).
 |---------|------|-------|
 | `ToHitAttackModifier` | `tohit_attack_scenarios.py` | TOHIT-ATK-001 to 004 |
 | `ToHitDefenseModifier` | `tohit_defense_scenarios.py` | TOHIT-DEF-001 to 004 |
+| `ShieldProjection` | `shield_projection_scenarios.py` | SHIELD-PROJ-001 to 007 |
 
 ### Pending Ability Categories
 

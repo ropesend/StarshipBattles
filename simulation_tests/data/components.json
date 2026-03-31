@@ -933,6 +933,151 @@
       }
     },
     {
+      "id": "test_shield_1b",
+      "name": "Test Shield (1B HP)",
+      "type": "Shield",
+      "mass": 0,
+      "hp": 50,
+      "sprite_index": 16,
+      "abilities": {
+        "ShieldProjection": 1000000000
+      }
+    },
+    {
+      "id": "test_shield_1b_energy",
+      "name": "Test Shield (1B HP, 1.0 energy/sec)",
+      "type": "Shield",
+      "mass": 0,
+      "hp": 50,
+      "sprite_index": 16,
+      "abilities": {
+        "ShieldProjection": 1000000000,
+        "ResourceConsumption": [{"resource": "energy", "amount": 1.0, "trigger": "constant"}]
+      }
+    },
+    {
+      "id": "test_shield_100",
+      "name": "Test Shield (100 HP)",
+      "type": "Shield",
+      "mass": 0,
+      "hp": 50,
+      "sprite_index": 16,
+      "abilities": {
+        "ShieldProjection": 100
+      }
+    },
+    {
+      "id": "test_shield_100_energy",
+      "name": "Test Shield (100 HP, 1.0 energy/sec)",
+      "type": "Shield",
+      "mass": 0,
+      "hp": 50,
+      "sprite_index": 16,
+      "abilities": {
+        "ShieldProjection": 100,
+        "ResourceConsumption": [{"resource": "energy", "amount": 1.0, "trigger": "constant"}]
+      }
+    },
+    {
+      "id": "test_storage_energy_15",
+      "name": "Test Battery (15 energy)",
+      "type": "Tank",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 19,
+      "abilities": {
+        "ResourceStorage": [{"resource": "energy", "amount": 15}]
+      }
+    },
+    {
+      "id": "test_storage_energy_5",
+      "name": "Test Battery (5 energy)",
+      "type": "Tank",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 19,
+      "abilities": {
+        "ResourceStorage": [{"resource": "energy", "amount": 5}]
+      }
+    },
+    {
+      "id": "test_beam_1dmg_guaranteed",
+      "name": "Test Beam (1 Damage, Guaranteed Hit)",
+      "type": "Weapon",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 1,
+          "range": 1000,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 10.0,
+          "accuracy_falloff": 0
+        }
+      }
+    },
+    {
+      "id": "test_beam_1dmg_guaranteed_energy",
+      "name": "Test Beam (1 Damage, Guaranteed Hit, 1 Energy/Shot)",
+      "type": "Weapon",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 1,
+          "range": 1000,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 10.0,
+          "accuracy_falloff": 0
+        },
+        "ResourceConsumption": [{"resource": "energy", "amount": 1, "trigger": "activation"}]
+      }
+    },
+    {
+      "id": "test_storage_energy_500",
+      "name": "Test Battery (500 energy)",
+      "type": "Tank",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 19,
+      "abilities": {
+        "ResourceStorage": [{"resource": "energy", "amount": 500}]
+      }
+    },
+    {
+      "id": "test_storage_ammo_500",
+      "name": "Test Magazine (500 ammo)",
+      "type": "Tank",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 19,
+      "abilities": {
+        "ResourceStorage": [{"resource": "ammo", "amount": 500}]
+      }
+    },
+    {
+      "id": "test_beam_150dmg_single_shot",
+      "name": "Test Beam (150 Damage, Single Shot)",
+      "type": "Weapon",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 150,
+          "range": 1000,
+          "reload": 999.0,
+          "firing_arc": 360,
+          "base_accuracy": 10.0,
+          "accuracy_falloff": 0
+        }
+      }
+    },
+    {
       "id": "test_shield_regen_10",
       "name": "Test Shield Regen (10/sec, No Resource)",
       "type": "ShieldRegenerator",

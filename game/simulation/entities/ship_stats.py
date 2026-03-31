@@ -274,7 +274,16 @@ class ShipStatsCalculator:
             if not comp.is_active:
                 continue
 
+            # Resource storage is always aggregated (batteries provide capacity
+            # even if their own consumption isn't met — they have no consumption).
             self._aggregate_resource_abilities(comp, acc)
+
+            # All other stats require the component to be operational
+            # (has resources to function).  A shield that can't afford its
+            # energy cost should not contribute shield capacity.
+            if not comp.is_operational:
+                continue
+
             self._aggregate_propulsion_abilities(comp, acc)
             self._aggregate_defense_abilities(ship, comp, acc)
             self._aggregate_hangar_abilities(ship, comp)
@@ -535,7 +544,10 @@ class ShipStatsCalculator:
                 ship.resources.modify_value("energy", delta)
             if ship.max_shields > prev_max_shields:
                 ship.current_shields += (ship.max_shields - prev_max_shields)
-        
+            # Cap current shields if max decreased (e.g., shield component lost power)
+            if ship.current_shields > ship.max_shields:
+                ship.current_shields = ship.max_shields
+
         # Remember current max for next recalculate
         ship._prev_max_fuel = curr_max_fuel
         ship._prev_max_ammo = curr_max_ammo

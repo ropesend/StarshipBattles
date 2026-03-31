@@ -83,7 +83,7 @@ ability under test.
 ### Category D: Defense Systems (4 abilities)
 | Ability | Test File | Status | Tests |
 |---------|-----------|--------|-------|
-| `ShieldProjection` | `defense_scenarios.py` | Partial (3 tests, needs stacking) | SHIELD-001/002/003 |
+| `ShieldProjection` | `shield_projection_scenarios.py` | **Complete** (7 tests) | SHIELD-PROJ-001 to 007 |
 | `ShieldRegeneration` | `defense_scenarios.py` | Partial (1 test in SHIELD-003) | Needs own category |
 | `ToHitDefenseModifier` | `tohit_defense_scenarios.py` | **Complete** (4 tests) | TOHIT-DEF-001/002/003/004 |
 | `EmissiveArmor` | `defense_scenarios.py` | Partial (2 tests, needs stacking) | ARMOR-001/002 |
@@ -261,9 +261,9 @@ Create carrier/hangar tests in simulation_tests/.
 ### In Progress (ability-specific categories using ComparisonScenario)
 8. **ToHitAttackModifier** (Complete): 4 scenarios in `tohit_attack_scenarios.py`
 9. **ToHitDefenseModifier** (Complete): 4 scenarios in `tohit_defense_scenarios.py`
+10. **ShieldProjection** (Complete): 4 scenarios in `shield_projection_scenarios.py`
 
 ### Pending (ability-specific categories)
-10. **ShieldProjection**: Absorption, overflow, stacking — migrate from `defense_scenarios.py`
 11. **ShieldRegeneration**: Regen rate, energy coupling, stacking
 12. **EmissiveArmor**: Damage reduction, threshold, stacking
 13. **Point Defense**: Flesh out SEEKER-PD-001/002/003
