@@ -145,6 +145,25 @@
       }
     },
     {
+      "id": "test_armor_100",
+      "name": "Test Armor (100 HP)",
+      "type": "Armor",
+      "mass": 0,
+      "hp": 100,
+      "sprite_index": 14,
+      "abilities": {
+        "Armor": true
+      }
+    },
+    {
+      "id": "test_hull_extreme_hp",
+      "name": "Test Hull Structure (1 Billion HP)",
+      "type": "Structure",
+      "mass": 0,
+      "hp": 1000000000,
+      "sprite_index": 16
+    },
+    {
       "id": "test_weapon_proj_omni",
       "name": "Test Weapon (Proj, Omni)",
       "type": "ProjectileWeaponAbility",
@@ -1146,6 +1165,28 @@
       "sprite_index": 18,
       "abilities": {
         "ShieldRegeneration": 10
+      }
+    },
+    {
+      "id": "test_shield_regen_200",
+      "name": "Test Shield Regen (200/sec, No Resource)",
+      "type": "ShieldRegenerator",
+      "mass": 0,
+      "hp": 50,
+      "sprite_index": 18,
+      "abilities": {
+        "ShieldRegeneration": 200
+      }
+    },
+    {
+      "id": "test_shield_regen_5_no_resource",
+      "name": "Test Shield Regen (5/sec, No Resource)",
+      "type": "ShieldRegenerator",
+      "mass": 0,
+      "hp": 50,
+      "sprite_index": 18,
+      "abilities": {
+        "ShieldRegeneration": 5.0
       }
     },
     {

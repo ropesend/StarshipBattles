@@ -102,10 +102,11 @@ compare measured outcomes.
 
 | Category | File | Tests | Status |
 |----------|------|-------|--------|
-| **ToHitAttackModifier** | `tohit_attack_scenarios.py` | TOHIT-ATK-001 to 004 | Complete |
-| **ToHitDefenseModifier** | `tohit_defense_scenarios.py` | TOHIT-DEF-001 to 004 | Complete |
+| **ToHitAttackModifier** | `tohit_attack_scenarios.py` | TOHIT-ATK-001 to 004 | Complete (4 tests) |
+| **ToHitDefenseModifier** | `tohit_defense_scenarios.py` | TOHIT-DEF-001 to 004 | Complete (4 tests) |
 | **ShieldProjection** | `shield_projection_scenarios.py` | SHIELD-PROJ-001 to 007, 005B, METALS-001/002 | Complete (10 tests) |
-| **ShieldRegeneration** | *(pending)* | | Planned |
+| **ShieldRegeneration** | `shield_regen_scenarios.py` | SHIELD-REGEN-001 to 006 | Complete (6 tests) |
+| **ArmorLayer** | `armor_layer_scenarios.py` | ARMOR-LAYER-001 to 003 | Complete (3 tests) |
 | **EmissiveArmor** | *(pending — migrate from defense_scenarios.py)* | | Planned |
 
 ### Weapon & System Tests (Original Pattern)
@@ -113,7 +114,7 @@ compare measured outcomes.
 These test files validate weapon systems and mechanics that span multiple abilities.
 Over time, ability-specific aspects will be migrated to dedicated ability categories.
 
-#### Beam Weapon Tests (26 tests)
+#### Beam Weapon Tests (23 tests)
 
 Test IDs: `BEAMWEAPON-XXX` (standard), `BEAMWEAPON-XXX-HT` (high-tick), `BEAMWEAPON-RES-XXX` (resource).
 
@@ -123,7 +124,7 @@ Test IDs: `BEAMWEAPON-XXX` (standard), `BEAMWEAPON-XXX-HT` (high-tick), `BEAMWEA
 | **Moving Targets** | 2 tests | Erratic small targets with high defense (500 ticks) |
 | **Boundary Tests** | 1 test | Out of range (deterministic) |
 | **High-Tick Precision** | 7 tests | Same as standard but 100k ticks, ±1% margin |
-| **Resource Dependency** | 3 tests | Energy depletion: no energy, 50% energy, control (ComparisonScenario) |
+| **Resource Dependency** | 3 tests | Energy depletion: no energy, 50% energy, control |
 | **Generic Resource (Metals)** | 2 tests | Beam consuming planetary resource "metals" fires/stops correctly |
 
 #### Projectile Weapon Tests (14 tests)
@@ -333,7 +334,12 @@ python -m simulation_tests.run_tests                # Run all
 python -m simulation_tests.run_tests BEAM           # Filter by ID prefix
 python -m simulation_tests.run_tests PROP-001       # Run specific test
 python -m simulation_tests.run_tests --list         # List all tests
+python -m simulation_tests.run_tests --fast         # Skip high-tick (-HT) tests (~2min → ~30s)
+python -m simulation_tests.run_tests --no-history   # Don't record results to test_history.json
 ```
+
+By default, CLI runs record results to `simulation_tests/test_history.json`
+(same file the Combat Lab UI uses). Use `--no-history` to skip recording.
 
 ### Headless (Python)
 
@@ -530,7 +536,9 @@ Starship Battles/
         │   # Ability-specific categories (one file per ability)
         ├── tohit_attack_scenarios.py        # ToHitAttackModifier (TOHIT-ATK-001 to 004)
         ├── tohit_defense_scenarios.py       # ToHitDefenseModifier (TOHIT-DEF-001 to 004)
-        ├── shield_projection_scenarios.py   # ShieldProjection (SHIELD-PROJ-001 to 007, 005B)
+        ├── shield_projection_scenarios.py   # ShieldProjection (SHIELD-PROJ-001 to 007, 005B, METALS)
+        ├── shield_regen_scenarios.py        # ShieldRegeneration (SHIELD-REGEN-001 to 006)
+        ├── armor_layer_scenarios.py         # ArmorLayer (ARMOR-LAYER-001 to 003)
         │
         │   # Weapon/system-level tests (include resource dependency tests)
         ├── beam_scenarios.py                # BeamWeapon (BEAMWEAPON-*, BEAMWEAPON-RES-*)
@@ -583,6 +591,10 @@ Starship Battles/
 | **Visual Baseline button** | Amber button renders the baseline battle for debugging (ComparisonScenario only) |
 | **Additive ability stacking** | All numeric abilities use intra-group MAX, inter-group SUM — no multiplicative exceptions |
 | **One category per ability** | Each combat ability gets a dedicated scenario file with basic effect + stacking + negative tests |
+| **Auto-discovery** | `run_tests.py` globs `*_scenarios.py` — new scenario files are found automatically |
+| **CLI records history** | `run_tests.py` writes results to `test_history.json` by default — Combat Lab UI sees CLI results |
+| **`--fast` flag** | Skips `-HT` (high-tick) tests for quick validation during development |
+| **`_`-prefixed JSON keys skipped** | Component loader skips keys like `_comment` during formula parsing to avoid spam |
 
 ---
 
