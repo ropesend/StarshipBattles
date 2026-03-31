@@ -491,6 +491,10 @@ class TestRunDetailsPanel:
         """
         if not (isinstance(expected, (int, float)) and isinstance(actual, (int, float))):
             return y_offset
+        # Skip difference for boolean checks — True/False are int subclasses
+        # but computing "1000 vs True = +99900%" is meaningless
+        if isinstance(expected, bool) or isinstance(actual, bool):
+            return y_offset
 
         label_color = theme.TEXT_LABEL
         diff = actual - expected

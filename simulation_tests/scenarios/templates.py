@@ -1191,20 +1191,18 @@ class ComparisonScenario(TestScenario):
         Return automatic precondition checks for ComparisonScenario.
 
         In Visual Baseline mode, only checks that the baseline ran.
-        In normal mode, checks that both battles ran.
+        In normal mode, checks that both battles ran the expected number of ticks.
         """
-        from simulation_tests.scenarios.validation import check_true
+        from simulation_tests.scenarios.validation import check_exact
         checks = []
-        checks.append(check_true(
-            "Baseline Ran",
-            self.baseline_ticks > 0,
-            actual=self.baseline_ticks,
+        checks.append(check_exact(
+            "Baseline Ticks", self.max_ticks, self.baseline_ticks,
+            phase="precondition",
         ))
         if not self._visual_baseline:
-            checks.append(check_true(
-                "Variant Ran",
-                self.variant_ticks > 0,
-                actual=self.variant_ticks,
+            checks.append(check_exact(
+                "Variant Ticks", self.max_ticks, self.variant_ticks,
+                phase="precondition",
             ))
         return checks
 

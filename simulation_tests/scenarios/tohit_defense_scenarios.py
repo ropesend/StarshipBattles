@@ -117,14 +117,14 @@ class ECMReducesHitRateComparisonScenario(ComparisonScenario):
         checks.append(check_true(
             "Undefended Target Took Damage",
             self.baseline_damage_dealt > 0,
-            actual=self.baseline_damage_dealt,
+            detail=f"damage={self.baseline_damage_dealt}",
         ))
 
         # Outcome: ECM reduces measured damage
         checks.append(check_true(
             "ECM Reduces Damage Taken",
             self.variant_damage_dealt < self.baseline_damage_dealt,
-            actual=f"no_ecm={self.baseline_damage_dealt}, "
+            detail=f"no_ecm={self.baseline_damage_dealt}, "
                    f"with_ecm={self.variant_damage_dealt}, "
                    f"reduction={self.baseline_damage_dealt - self.variant_damage_dealt}",
             phase="outcome",
@@ -206,7 +206,7 @@ class ECMSameGroupDoesNotStackScenario(ComparisonScenario):
         checks.append(check_true(
             "ECM Target Took Damage",
             self.baseline_damage_dealt > 0,
-            actual=self.baseline_damage_dealt,
+            detail=f"damage={self.baseline_damage_dealt}",
         ))
 
         # Outcome: damage should be identical (same seed, same effective defense)
@@ -274,14 +274,14 @@ class ECMDifferentGroupsStackScenario(ComparisonScenario):
         checks.append(check_true(
             "Single ECM Target Took Damage",
             self.baseline_damage_dealt > 0,
-            actual=self.baseline_damage_dealt,
+            detail=f"damage={self.baseline_damage_dealt}",
         ))
 
         # Outcome: dual-ECM target takes less damage
         checks.append(check_true(
             "Additional ECM Group Reduces Damage",
             self.variant_damage_dealt < self.baseline_damage_dealt,
-            actual=f"single_ecm={self.baseline_damage_dealt}, "
+            detail=f"single_ecm={self.baseline_damage_dealt}, "
                    f"dual_ecm={self.variant_damage_dealt}, "
                    f"reduction={self.baseline_damage_dealt - self.variant_damage_dealt}",
             phase="outcome",
@@ -362,19 +362,19 @@ class NegativeDefenseModifierScenario(ComparisonScenario):
         checks.append(check_true(
             "Unmodified Target Took Damage",
             self.baseline_damage_dealt > 0,
-            actual=self.baseline_damage_dealt,
+            detail=f"damage={self.baseline_damage_dealt}",
         ))
         checks.append(check_true(
             "Penalized Target Took Damage",
             self.variant_damage_dealt > 0,
-            actual=self.variant_damage_dealt,
+            detail=f"damage={self.variant_damage_dealt}",
         ))
 
         # Outcome: penalized target takes MORE damage (easier to hit)
         checks.append(check_true(
             "Penalty Increases Damage Taken",
             self.variant_damage_dealt > self.baseline_damage_dealt,
-            actual=f"unmodified={self.baseline_damage_dealt}, "
+            detail=f"unmodified={self.baseline_damage_dealt}, "
                    f"penalized={self.variant_damage_dealt}, "
                    f"increase=+{self.variant_damage_dealt - self.baseline_damage_dealt}",
             phase="outcome",

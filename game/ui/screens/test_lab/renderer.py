@@ -588,13 +588,13 @@ class TestLabRenderer:
             text_rect = headless_text.get_rect(center=run_headless_btn_rect.center)
             screen.blit(headless_text, text_rect)
 
-            # Visual Baseline button (amber) — only for ComparisonScenario tests
+            # Visual Baseline button (amber) — second row, only for ComparisonScenario
             scenario_info = registry.get_by_id(selected_test_id)
             if scenario_info and scenario_info.get('is_comparison'):
-                baseline_btn_width = 110
-                baseline_btn_x = headless_btn_x + headless_btn_width + btn_spacing
+                baseline_btn_width = 120
+                baseline_btn_y = header_btn_y + btn_height + 4
                 run_baseline_btn_rect = pygame.Rect(
-                    baseline_btn_x, header_btn_y, baseline_btn_width, btn_height
+                    visual_btn_x, baseline_btn_y, baseline_btn_width, btn_height
                 )
                 viewmodel.run_baseline_btn_rect = run_baseline_btn_rect
                 baseline_hover = run_baseline_btn_rect.collidepoint(mouse_pos)

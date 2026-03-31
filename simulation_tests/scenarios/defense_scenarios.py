@@ -601,19 +601,19 @@ class SensorDamageComparisonScenario(ComparisonScenario):
         checks.append(check_true(
             "Baseline Dealt Damage",
             self.baseline_damage_dealt > 0,
-            actual=self.baseline_damage_dealt,
+            detail=f"damage={self.baseline_damage_dealt}",
         ))
         checks.append(check_true(
             "Variant Dealt Damage",
             self.variant_damage_dealt > 0,
-            actual=self.variant_damage_dealt,
+            detail=f"damage={self.variant_damage_dealt}",
         ))
 
         # Outcome: sensor should increase measured damage
         checks.append(check_true(
             "Sensor Increases Damage",
             self.variant_damage_dealt > self.baseline_damage_dealt,
-            actual=f"baseline={self.baseline_damage_dealt}, "
+            detail=f"baseline={self.baseline_damage_dealt}, "
                    f"variant={self.variant_damage_dealt}, "
                    f"delta=+{self.variant_damage_dealt - self.baseline_damage_dealt}",
             phase="outcome",

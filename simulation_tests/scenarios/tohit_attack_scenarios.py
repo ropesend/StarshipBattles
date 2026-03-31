@@ -114,14 +114,14 @@ class SensorIncreasesAccuracyScenario(ComparisonScenario):
         checks.append(check_true(
             "Baseline Dealt Damage",
             self.baseline_damage_dealt > 0,
-            actual=self.baseline_damage_dealt,
+            detail=f"damage={self.baseline_damage_dealt}",
         ))
 
         # Outcome: sensor increases measured damage
         checks.append(check_true(
             "Sensor Increases Damage",
             self.variant_damage_dealt > self.baseline_damage_dealt,
-            actual=f"baseline={self.baseline_damage_dealt}, "
+            detail=f"baseline={self.baseline_damage_dealt}, "
                    f"variant={self.variant_damage_dealt}, "
                    f"delta=+{self.variant_damage_dealt - self.baseline_damage_dealt}",
             phase="outcome",
@@ -203,7 +203,7 @@ class SameGroupDoesNotStackScenario(ComparisonScenario):
         checks.append(check_true(
             "Baseline Dealt Damage",
             self.baseline_damage_dealt > 0,
-            actual=self.baseline_damage_dealt,
+            detail=f"damage={self.baseline_damage_dealt}",
         ))
 
         # Outcome: damage should be identical (same seed, same effective bonus)
@@ -271,14 +271,14 @@ class DifferentGroupsStackScenario(ComparisonScenario):
         checks.append(check_true(
             "Baseline Dealt Damage",
             self.baseline_damage_dealt > 0,
-            actual=self.baseline_damage_dealt,
+            detail=f"damage={self.baseline_damage_dealt}",
         ))
 
         # Outcome: variant (2 groups) should deal more damage than baseline (1 group)
         checks.append(check_true(
             "Additional Group Increases Damage",
             self.variant_damage_dealt > self.baseline_damage_dealt,
-            actual=f"baseline={self.baseline_damage_dealt}, "
+            detail=f"baseline={self.baseline_damage_dealt}, "
                    f"variant={self.variant_damage_dealt}, "
                    f"delta=+{self.variant_damage_dealt - self.baseline_damage_dealt}",
             phase="outcome",
@@ -358,19 +358,19 @@ class NegativeModifierReducesAccuracyScenario(ComparisonScenario):
         checks.append(check_true(
             "Baseline Dealt Damage",
             self.baseline_damage_dealt > 0,
-            actual=self.baseline_damage_dealt,
+            detail=f"damage={self.baseline_damage_dealt}",
         ))
         checks.append(check_true(
             "Variant Dealt Damage",
             self.variant_damage_dealt > 0,
-            actual=self.variant_damage_dealt,
+            detail=f"damage={self.variant_damage_dealt}",
         ))
 
         # Outcome: penalty reduces measured damage
         checks.append(check_true(
             "Penalty Reduces Damage",
             self.variant_damage_dealt < self.baseline_damage_dealt,
-            actual=f"baseline={self.baseline_damage_dealt}, "
+            detail=f"baseline={self.baseline_damage_dealt}, "
                    f"variant={self.variant_damage_dealt}, "
                    f"delta={self.variant_damage_dealt - self.baseline_damage_dealt}",
             phase="outcome",

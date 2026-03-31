@@ -85,6 +85,14 @@ class ResultsPanel:
         # Calculate max scroll
         self._recalculate_scroll()
 
+        # Auto-select the most recent run so details show immediately
+        if self.run_cards:
+            self.selected_card_index = 0
+            self.run_cards[0].is_selected = True
+            if self.details_panel:
+                card = self.run_cards[0]
+                self.details_panel.set_run(card.run_record, card.run_number)
+
     def _recalculate_scroll(self):
         """Recalculate maximum scroll offset."""
         if not self.run_cards:
