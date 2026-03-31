@@ -73,9 +73,9 @@ ability under test.
 ### Category B: Weapons (3 types)
 | Ability | Test File | Status | Tests |
 |---------|-----------|--------|-------|
-| `BeamWeaponAbility` | `beam_scenarios.py` | Partial (24 tests, incl. 3 resource) | BEAMWEAPON-*, BEAMWEAPON-RES-* |
-| `ProjectileWeaponAbility` | `projectile_scenarios.py` | Partial (12 tests, incl. 3 resource) | PROJECTILE-*, PROJECTILE-RES-* |
-| `SeekerWeaponAbility` | `seeker_scenarios.py` | Partial (11 tests, 3 PDC skipped) | SEEKER-* |
+| `BeamWeaponAbility` | `beam_scenarios.py` | Partial (23 tests: 11 base + 7 high-tick + 5 resource) | BEAMWEAPON-*, BEAMWEAPON-RES-* |
+| `ProjectileWeaponAbility` | `projectile_scenarios.py` | Partial (14 tests: 6 base + 3 damage + 5 resource) | PROJECTILE-*, PROJECTILE-RES-* |
+| `SeekerWeaponAbility` | `seeker_scenarios.py` | Partial (11 tests: 4 range + 4 tracking + 3 PDC skipped) | SEEKER-* |
 
 ### Category C: Propulsion (2 abilities)
 | Ability | What to Test | Priority |
@@ -119,149 +119,18 @@ ability under test.
 
 ---
 
-## Sub-Agent Task Breakdown
-
-### Task 1: Propulsion Tests (HIGH PRIORITY)
-**File**: `simulation_tests/tests/test_propulsion.py`
-
-**Goal**: Verify CombatPropulsion and ManeuveringThruster work correctly in isolation.
-
-**Sub-agent Prompt**:
-```
-Create minimal propulsion tests in simulation_tests/.
-
-1. Add to components.json:
-   - `test_engine_no_fuel` (already exists, verify no ResourceConsumption)
-   - `test_thruster_std` (already exists, verify no ResourceConsumption)
-
-2. Create `test_propulsion.py` with tests:
-   - PROP-001: Engine provides thrust, ship accelerates
-   - PROP-002: Thrust/mass ratio affects max speed
-   - PROP-003: Thruster provides turn rate
-   - PROP-004: Turn rate allows rotation
-
-3. Ships: Use minimal ships with ONLY engine/thruster + hull
-```
-
----
-
-### Task 2: Shield Tests (HIGH PRIORITY)
-**File**: `simulation_tests/tests/test_shields.py`
-
-**Sub-agent Prompt**:
-```
-Create shield system tests in simulation_tests/.
-
-1. Add to components.json:
-   - `test_shield_no_regen` (ShieldProjection only, no energy cost)
-   - `test_shield_regen_no_energy` (ShieldRegeneration without energy dep)
-
-2. Create `test_shields.py` with tests:
-   - SHIELD-001: Shield absorbs damage before hull
-   - SHIELD-002: Damage overflow goes to hull
-   - SHIELD-003: Shield regenerates over time
-   - SHIELD-004: Multiple shields stack capacity
-
-3. Ships: Minimal defender with shield + hull, attacker with beam weapon
-```
-
----
-
-### Task 3: Defense Modifier Tests (MEDIUM PRIORITY)
-**File**: `simulation_tests/tests/test_defense_modifiers.py`
-
-**Sub-agent Prompt**:
-```
-Create defense modifier tests in simulation_tests/.
-
-1. Add to components.json:
-   - `test_ecm_no_energy` (ToHitDefenseModifier without power req)
-   - `test_emissive_armor` (EmissiveArmor component)
-
-2. Create `test_defense_modifiers.py` with tests:
-   - DEF-001: ToHitDefenseModifier reduces enemy hit chance
-   - DEF-002: Multiple ECMs don't stack (same stack_group)
-   - DEF-003: EmissiveArmor ignores small damage hits
-   - DEF-004: Stacking rules for different defense types
-
-3. Ships: Target with defense components, attacker with beam
-```
-
----
-
-### Task 4: Attack Modifier Tests (MEDIUM PRIORITY)
-**File**: `simulation_tests/tests/test_attack_modifiers.py`
-
-**Sub-agent Prompt**:
-```
-Create attack modifier tests in simulation_tests/.
-
-1. Add to components.json:
-   - `test_sensor_no_energy` (ToHitAttackModifier without power req)
-
-2. Create `test_attack_modifiers.py` with tests:
-   - ATK-001: ToHitAttackModifier improves hit chance
-   - ATK-002: Multiple sensors don't stack (same stack_group)
-   - ATK-003: Different sensor types stack
-
-3. Ships: Attacker with sensor + beam, stationary target
-```
-
----
-
-### Task 5: Point Defense Tests (HIGH PRIORITY)
-**File**: `simulation_tests/tests/test_point_defense.py`
-
-**Sub-agent Prompt**:
-```
-Create point defense interaction tests in simulation_tests/.
-
-1. Add to components.json:
-   - `test_pd_no_energy` (BeamWeaponAbility with "pdc" tag, no energy)
-
-2. Create `test_point_defense.py` with tests:
-   - PDC-001: PDC targets incoming seekers
-   - PDC-002: PDC destroys seekers before impact
-   - PDC-003: PDC ignores non-seeker projectiles
-   - PDC-004: Multiple PDCs intercept more seekers
-
-3. Ships: Target with PDC + hull, attacker with seeker launcher
-```
-
----
-
-### Task 6: Carrier Operations Tests (LOW PRIORITY)
-**File**: `simulation_tests/tests/test_carriers.py`
-
-**Sub-agent Prompt**:
-```
-Create carrier/hangar tests in simulation_tests/.
-
-1. Add to components.json:
-   - `test_hangar_simple` (VehicleLaunch with basic fighter)
-
-2. Create `test_carriers.py` with tests:
-   - CARRIER-001: Hangar launches fighter
-   - CARRIER-002: Cycle time limits launches
-   - CARRIER-003: Fighter attacks enemy
-
-3. Ships: Carrier with hangar, target ship
-```
-
----
-
 ## Execution Order
 
 ### Completed (weapon/system-level test files)
-1. **Phase 1** (Complete): Beam weapon tests — 21 scenarios in `beam_scenarios.py`
+1. **Phase 1** (Complete): Beam weapon tests — 23 scenarios in `beam_scenarios.py`
 2. **Phase 2** (Complete): Propulsion tests — 9 scenarios in `propulsion_scenarios.py`
-3. **Phase 3** (Complete): Shield/Armor/ECM/Sensor tests — 9 scenarios in `defense_scenarios.py`
+3. **Phase 3** (Complete): Shield/Armor/ECM/Sensor tests — 8 scenarios in `defense_scenarios.py`
 4. **Phase 4** (Complete): Stat modifier tests — 6 scenarios in `modifier_scenarios.py`
-5. **Phase 5** (Complete): Projectile weapon tests — 9 scenarios in `projectile_scenarios.py`
-6. **Phase 6** (Complete): Seeker weapon tests — 8+3 scenarios in `seeker_scenarios.py`
+5. **Phase 5** (Complete): Projectile weapon tests — 14 scenarios in `projectile_scenarios.py`
+6. **Phase 6** (Complete): Seeker weapon tests — 11 scenarios in `seeker_scenarios.py`
 7. **Phase 7** (Complete): Resource system tests — 9 scenarios in `resource_scenarios.py`
 
-### In Progress (ability-specific categories using ComparisonScenario)
+### Completed (ability-specific categories using ComparisonScenario)
 8. **ToHitAttackModifier** (Complete): 4 scenarios in `tohit_attack_scenarios.py`
 9. **ToHitDefenseModifier** (Complete): 4 scenarios in `tohit_defense_scenarios.py`
 10. **ShieldProjection** (Complete): 10 scenarios in `shield_projection_scenarios.py`

@@ -9,11 +9,14 @@ Usage:
     python -m simulation_tests.run_tests BEAM           # Filter by ID prefix
     python -m simulation_tests.run_tests PROP-001       # Run specific test
     python -m simulation_tests.run_tests --list         # List all tests
+    python -m simulation_tests.run_tests --fast         # Skip high-tick (-HT) tests
+    python -m simulation_tests.run_tests --no-history   # Don't record to test_history.json
 """
 
 import sys
 import os
 import time
+import glob
 import argparse
 import importlib
 
@@ -40,23 +43,17 @@ def discover_scenarios():
     """
     Import all scenario modules and return a sorted list of scenario classes.
 
+    Auto-discovers all *_scenarios.py files in the scenarios/ directory.
+
     Returns:
         List of (test_id, scenario_class) tuples sorted by test_id.
     """
     from simulation_tests.scenarios.base import TestScenario
 
-    # Import all scenario modules to register subclasses
-    scenario_modules = [
-        'simulation_tests.scenarios.beam_scenarios',
-        'simulation_tests.scenarios.projectile_scenarios',
-        'simulation_tests.scenarios.seeker_scenarios',
-        'simulation_tests.scenarios.propulsion_scenarios',
-        'simulation_tests.scenarios.resource_scenarios',
-        'simulation_tests.scenarios.defense_scenarios',
-        'simulation_tests.scenarios.modifier_scenarios',
-    ]
-
-    for module_name in scenario_modules:
+    # Auto-discover all scenario modules
+    scenario_dir = os.path.join(_THIS_DIR, 'scenarios')
+    for path in glob.glob(os.path.join(scenario_dir, '*_scenarios.py')):
+        module_name = f'simulation_tests.scenarios.{os.path.basename(path)[:-3]}'
         try:
             importlib.import_module(module_name)
         except Exception as e:
@@ -82,7 +79,8 @@ def run_scenario(scenario_cls, runner):
     Run a single scenario with isolated registry.
 
     Returns:
-        (test_id, passed, skip_reason, duration, failure_detail)
+        (test_id, passed, skip_reason, duration, failure_detail, scenario_results)
+        scenario_results is the dict from scenario.results, or None if skipped/crashed.
     """
     from game.core.registry import RegistryManager
 
@@ -91,18 +89,19 @@ def run_scenario(scenario_cls, runner):
     # Check skip
     if getattr(scenario_cls, 'skip_test', False):
         reason = getattr(scenario_cls, 'skip_reason', '')
-        return test_id, None, reason, 0.0, None
+        return test_id, None, reason, 0.0, None, None
 
     start = time.time()
     try:
         scenario = runner.run_scenario(scenario_cls, headless=True, log_results=False)
         duration = time.time() - start
+        scenario_results = scenario.results
 
         if scenario.passed:
-            return test_id, True, None, duration, None
+            return test_id, True, None, duration, None, scenario_results
 
         # Build failure detail from validation report
-        report = scenario.results.get('validation', {})
+        report = scenario_results.get('validation', {})
         phase = report.get('failed_phase', '?')
         failed_checks = [c for c in report.get('checks', []) if not c['passed']]
         lines = [f"phase: {phase}"]
@@ -111,17 +110,17 @@ def run_scenario(scenario_cls, runner):
             if c.get('detail'):
                 lines.append(f"    {c['detail']}")
         if not failed_checks and not report:
-            lines = [f"results: {scenario.results}"]
-        return test_id, False, None, duration, "\n".join(lines)
+            lines = [f"results: {scenario_results}"]
+        return test_id, False, None, duration, "\n".join(lines), scenario_results
 
     except Exception as e:
         duration = time.time() - start
-        return test_id, False, None, duration, f"CRASH: {e}"
+        return test_id, False, None, duration, f"CRASH: {e}", None
     finally:
         RegistryManager.instance().clear()
 
 
-def format_result(test_id, passed, skip_reason, duration, detail):
+def format_result(test_id, passed, skip_reason, duration, detail, _results):
     """Format a single test result line."""
     if skip_reason is not None:
         return f"  SKIP  {test_id}  ({skip_reason})"
@@ -137,6 +136,10 @@ def main():
                         help="Filter tests by ID prefix (e.g., BEAM, PROP-001)")
     parser.add_argument('--list', action='store_true',
                         help="List all tests without running them")
+    parser.add_argument('--fast', action='store_true',
+                        help="Skip high-tick (-HT) tests for faster runs")
+    parser.add_argument('--no-history', action='store_true',
+                        help="Don't record results to test_history.json")
     args = parser.parse_args()
 
     init_environment()
@@ -146,6 +149,10 @@ def main():
     if args.filter:
         prefix = args.filter.upper()
         scenarios = [(tid, cls) for tid, cls in scenarios if tid.upper().startswith(prefix)]
+
+    # Apply --fast filter
+    if args.fast:
+        scenarios = [(tid, cls) for tid, cls in scenarios if '-HT' not in tid]
 
     if not scenarios:
         print("No tests matched." if args.filter else "No tests found.")
@@ -163,6 +170,12 @@ def main():
     from test_framework.runner import TestRunner
     runner = TestRunner()
 
+    # Initialize history recording
+    history = None
+    if not args.no_history:
+        from test_framework.test_history import TestHistory
+        history = TestHistory()
+
     print(f"\nRunning {len(scenarios)} tests...\n")
 
     results = []
@@ -173,7 +186,7 @@ def main():
     for test_id, cls in scenarios:
         result = run_scenario(cls, runner)
         results.append(result)
-        tid, passed, skip_reason, duration, detail = result
+        tid, passed, skip_reason, duration, detail, scenario_results = result
 
         line = format_result(*result)
         print(line)
@@ -185,6 +198,10 @@ def main():
         else:
             fail_count += 1
 
+        # Record to history
+        if history and scenario_results is not None:
+            history.add_run(tid, scenario_results)
+
     # Summary
     total = len(results)
     print(f"\n{'=' * 60}")
@@ -192,7 +209,7 @@ def main():
     print(f"{'=' * 60}")
 
     # Print failure details
-    failures = [(tid, detail) for tid, passed, _, _, detail in results if passed is False]
+    failures = [(tid, detail) for tid, passed, _, _, detail, _ in results if passed is False]
     if failures:
         print(f"\nFailures:\n")
         for tid, detail in failures:

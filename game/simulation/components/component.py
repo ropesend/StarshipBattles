@@ -179,9 +179,11 @@ class Component:
                 else:
                     logger.warning(f"Component '{self.id}': Modifier '{mod_id}' not found in registry, skipping")
                     
-        # Parse Formulas
+        # Parse Formulas (skip _-prefixed metadata keys like _comment)
         self.formulas = {}
         for key, value in self.data.items():
+            if key.startswith('_'):
+                continue
             if isinstance(value, str) and value.startswith("="):
                 # It's a formula!
                 self.formulas[key] = value[1:] # Store without '='
