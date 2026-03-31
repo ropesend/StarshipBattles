@@ -1,7 +1,7 @@
 > **Status: In Progress**
 > Scenario classes live in `simulation_tests/scenarios/*_scenarios.py` and are
 > run via `python -m simulation_tests.run_tests`.
-> Current baseline: **73 passed, 2 failed (game bugs), 3 skipped (78 total)**.
+> Current baseline: **94 passed, 1 failed (RESOURCE-002 game bug), 3 skipped (98 total)**.
 
 # Comprehensive Ability Test Coverage Plan
 
@@ -86,7 +86,7 @@ ability under test.
 ### Category D: Defense Systems (4 abilities)
 | Ability | Test File | Status | Tests |
 |---------|-----------|--------|-------|
-| `ShieldProjection` | `shield_projection_scenarios.py` | **Complete** (8 tests) | SHIELD-PROJ-001 to 007, 005B |
+| `ShieldProjection` | `shield_projection_scenarios.py` | **Complete** (10 tests) | SHIELD-PROJ-001 to 007, 005B, METALS-001/002 |
 | `ShieldRegeneration` | `defense_scenarios.py` | Partial (1 test in SHIELD-003) | Needs own category |
 | `ToHitDefenseModifier` | `tohit_defense_scenarios.py` | **Complete** (4 tests) | TOHIT-DEF-001/002/003/004 |
 | `EmissiveArmor` | `defense_scenarios.py` | Partial (2 tests, needs stacking) | ARMOR-001/002 |
@@ -264,7 +264,7 @@ Create carrier/hangar tests in simulation_tests/.
 ### In Progress (ability-specific categories using ComparisonScenario)
 8. **ToHitAttackModifier** (Complete): 4 scenarios in `tohit_attack_scenarios.py`
 9. **ToHitDefenseModifier** (Complete): 4 scenarios in `tohit_defense_scenarios.py`
-10. **ShieldProjection** (Complete): 8 scenarios in `shield_projection_scenarios.py`
+10. **ShieldProjection** (Complete): 10 scenarios in `shield_projection_scenarios.py`
 
 ### Pending (ability-specific categories)
 11. **ShieldRegeneration**: Regen rate, energy coupling, stacking

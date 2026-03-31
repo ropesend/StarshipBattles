@@ -887,16 +887,19 @@ threshold behaviors, resource coupling, etc.).
 
 | Ability | File | Tests |
 |---------|------|-------|
-| `ToHitAttackModifier` | `tohit_attack_scenarios.py` | TOHIT-ATK-001 to 004 |
-| `ToHitDefenseModifier` | `tohit_defense_scenarios.py` | TOHIT-DEF-001 to 004 |
-| `ShieldProjection` | `shield_projection_scenarios.py` | SHIELD-PROJ-001 to 007 |
+| `ToHitAttackModifier` | `tohit_attack_scenarios.py` | TOHIT-ATK-001 to 004 (basic, same-group, diff-group, negative) |
+| `ToHitDefenseModifier` | `tohit_defense_scenarios.py` | TOHIT-DEF-001 to 004 (basic, same-group, diff-group, negative) |
+| `ShieldProjection` | `shield_projection_scenarios.py` | SHIELD-PROJ-001 to 007, 005B, METALS-001/002 (absorption, overflow, stacking, single-hit, energy/metals resource) |
+
+Weapon-level resource dependency tests also exist within their weapon files:
+- `beam_scenarios.py`: BEAMWEAPON-RES-001 to 003 (energy), BEAMWEAPON-RES-METALS-001/002
+- `projectile_scenarios.py`: PROJECTILE-RES-001 to 003 (ammo), PROJECTILE-RES-METALS-001/002
 
 ### Pending Ability Categories
 
 | Ability | Priority | Notes |
 |---------|----------|-------|
-| `ShieldProjection` | High | Migrate from `defense_scenarios.py`, add stacking tests |
-| `ShieldRegeneration` | Medium | Separate from projection, test regen rate + energy coupling |
+| `ShieldRegeneration` | Medium | Regen rate, energy coupling, stacking |
 | `EmissiveArmor` | Medium | Migrate from `defense_scenarios.py`, add stacking/threshold tests |
 | `CrystallineArmor` | Medium | Absorption + shield recharge interaction |
 | `PointDefense` | High | Flesh out SEEKER-PD-001/002/003 placeholders |
@@ -930,16 +933,53 @@ Components without a `stack_group` are each treated as their own group (all stac
 
 ---
 
-## 11. Future Work
+## 11. Engine Design Decisions (for test authors)
 
-### Suite Documents
+These engine behaviors affect how tests should be designed:
 
-Only `BeamWeaponAbility.md` exists in `simulation_tests/suites/`. Suite documents
-for other abilities will be created as their test categories are built out.
+### Resource System
+- Resource types are **data-driven**: any resource from `data/resources.json` works
+  (fuel, energy, ammo, metals, organics, etc.). No hardcoded resource assumptions
+  in the combat simulation layer.
+- `"constant"` trigger consumption: checked per-tick in `component.update()`.
+  Starvation sets `is_operational = False` → component loses stat contributions.
+- `"activation"` trigger consumption: checked per-shot via `can_afford_activation()`.
+  Component stays operational but refuses to fire.
+- Resource storage components always contribute capacity regardless of operational status.
+
+### Stats Aggregation
+- `ShipStatsCalculator` skips non-operational components during Phase 3 aggregation.
+- `current_shields` is capped when `max_shields` decreases (e.g., shield loses power).
+- Ship defaults: `total_defense_score = 0.0`, `baseline_to_hit_offense = 0.0` (additive neutral).
+- Resource tracking uses a generic `_prev_max_resources: dict` (not hardcoded per type).
+
+### ComparisonScenario
+- Runs baseline battle internally during `setup()`, variant on runner's engine.
+- Both battles use the same seed (`_effective_seed`).
+- `_visual_baseline = True` flag renders the baseline battle for debugging.
+- Combat Lab shows an amber "Visual Baseline" button for comparison tests.
+- Erratic controller seeds are derived from `_effective_seed` for reproducibility.
+
+### Validation
+- `Check.__post_init__` coerces `passed` to native `bool` (scipy returns `numpy.bool_`).
+- `_safe_serialize` converts numpy scalars via `.item()` before type checks.
+- `check_true` uses `detail=` for descriptive context (not `actual=` with raw numbers).
+- UI `_draw_numeric_difference` skips boolean values to prevent "99900%" nonsense.
+
+---
+
+## 12. Future Work
+
+### Pending Ability Categories
+
+See Section 9 for the list. Each new ability should follow the standard test set:
+basic effect, stacking (if applicable), negative value, resource dependency (if applicable),
+and generic resource (metals) variant.
 
 ### Combat Lab Integration
 
 The Combat Lab UI supports ability-specific test categories:
 - TestRegistry auto-discovers scenarios and groups by category
 - ComparisonScenario tests show three buttons: Visual Run, Headless Run, Visual Baseline
+- Selecting a test auto-selects the most recent run and shows detailed results
 - Test run history persists across sessions

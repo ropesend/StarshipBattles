@@ -104,7 +104,7 @@ compare measured outcomes.
 |----------|------|-------|--------|
 | **ToHitAttackModifier** | `tohit_attack_scenarios.py` | TOHIT-ATK-001 to 004 | Complete |
 | **ToHitDefenseModifier** | `tohit_defense_scenarios.py` | TOHIT-DEF-001 to 004 | Complete |
-| **ShieldProjection** | `shield_projection_scenarios.py` | SHIELD-PROJ-001 to 007, 005B | Complete (8 tests) |
+| **ShieldProjection** | `shield_projection_scenarios.py` | SHIELD-PROJ-001 to 007, 005B, METALS-001/002 | Complete (10 tests) |
 | **ShieldRegeneration** | *(pending)* | | Planned |
 | **EmissiveArmor** | *(pending — migrate from defense_scenarios.py)* | | Planned |
 
@@ -113,7 +113,7 @@ compare measured outcomes.
 These test files validate weapon systems and mechanics that span multiple abilities.
 Over time, ability-specific aspects will be migrated to dedicated ability categories.
 
-#### Beam Weapon Tests (24 tests)
+#### Beam Weapon Tests (26 tests)
 
 Test IDs: `BEAMWEAPON-XXX` (standard), `BEAMWEAPON-XXX-HT` (high-tick), `BEAMWEAPON-RES-XXX` (resource).
 
@@ -124,8 +124,9 @@ Test IDs: `BEAMWEAPON-XXX` (standard), `BEAMWEAPON-XXX-HT` (high-tick), `BEAMWEA
 | **Boundary Tests** | 1 test | Out of range (deterministic) |
 | **High-Tick Precision** | 7 tests | Same as standard but 100k ticks, ±1% margin |
 | **Resource Dependency** | 3 tests | Energy depletion: no energy, 50% energy, control (ComparisonScenario) |
+| **Generic Resource (Metals)** | 2 tests | Beam consuming planetary resource "metals" fires/stops correctly |
 
-#### Projectile Weapon Tests (12 tests)
+#### Projectile Weapon Tests (14 tests)
 
 Test IDs: `PROJECTILE-XXX`, `PROJECTILE-DMG-XXX`, `PROJECTILE-RES-XXX`.
 
@@ -136,6 +137,7 @@ Test IDs: `PROJECTILE-XXX`, `PROJECTILE-DMG-XXX`, `PROJECTILE-RES-XXX`.
 | **Boundary Tests** | 1 test | Out of range (1200px > 1000px max) |
 | **Damage Consistency** | 3 tests | No damage falloff at 10%, 50%, 90% of max range |
 | **Resource Dependency** | 3 tests | Ammo depletion: no ammo, 50% ammo, control (ComparisonScenario) |
+| **Generic Resource (Metals)** | 2 tests | Projectile consuming planetary resource "metals" fires/stops correctly |
 
 Projectile tests fire every tick (reload=0) with 1 damage per hit, so
 `damage_dealt == hits`. Moving targets start at (100, -1200) out of weapon
