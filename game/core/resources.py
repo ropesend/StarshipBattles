@@ -21,7 +21,6 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
 
 from game.core.json_utils import load_json_required
-from game.core.constants import ResourceType
 from game.core.paths import Paths
 
 logger = logging.getLogger(__name__)
@@ -155,15 +154,15 @@ class ResourceCatalog:
 
 
 # =============================================================================
-# Legacy Loading Functions (to be removed after Phase 2 migration)
+# Legacy Loading Functions
 # =============================================================================
 
 def _get_default_resources() -> dict:
     """Return default resource definitions."""
     return {
-        ResourceType.FUEL: {'id': ResourceType.FUEL},
-        ResourceType.ENERGY: {'id': ResourceType.ENERGY},
-        ResourceType.AMMO: {'id': ResourceType.AMMO},
+        'fuel': {'id': 'fuel'},
+        'energy': {'id': 'energy'},
+        'ammo': {'id': 'ammo'},
     }
 
 

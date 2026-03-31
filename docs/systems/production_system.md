@@ -131,8 +131,8 @@ Each tick, `_process_queue_tick_dynamic()` processes the head of each queue:
 2. **Calculate remaining cost** -- `total_cost - resources_consumed` per resource.
 3. **Find limiting resource** -- resource requiring the most ticks at current production rate.
 4. **Calculate tick expenditure** -- `min(available_capacity, ticks_needed)`.
-5. **Check affordability** -- `empire.has_resources(cost_this_step)`.
-6. **Consume resources** -- deduct from empire, add to `resources_consumed`.
+5. **Check affordability** -- `planet.has_stockpile(cost_this_step)` for planet construction, `fleet.has_cargo_resources()` for fleet construction.
+6. **Consume resources** -- deduct from local stockpile (planet) or cargo (fleet), add to `resources_consumed`.
 7. **Check completion** -- if all `resources_consumed >= total_cost`, spawn the item.
 8. **Carry-over** -- remaining tick capacity continues to next queue item (mid-tick completion).
 
