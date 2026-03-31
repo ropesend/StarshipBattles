@@ -85,19 +85,9 @@ def create_mock_component_def(
 
 
 def create_colony_ship(name="Colony Ship", owner_id=0, pod_type="ICE_DWARF", registries=None):
-    """Helper to create a colony ship with proper pod for colonization.
+    """Helper to create a colony ship with pod loaded as cargo.
 
-    PROJ-140: Colony ships need a proper colony pod in design_data to colonize.
-    PROJ-211: Added registries parameter for DI compliance.
-
-    Args:
-        name: Ship name
-        owner_id: Owner empire ID
-        pod_type: Planet type this ship can colonize (e.g. "ICE_DWARF")
-        registries: Optional GameRegistries for DI compliance
-
-    Returns:
-        ShipInstance with colony pod ability
+    Phase 2: Colony pods are cargo items. Ship is reusable after colonization.
     """
     from game.strategy.data.ship_instance import ShipInstance
 
@@ -110,12 +100,14 @@ def create_colony_ship(name="Colony Ship", owner_id=0, pod_type="ICE_DWARF", reg
             'name': name,
             'vehicle_type': 'Ship',
             'stats': {'mass': 100},
-            'expected_stats': {'speed': 10.0},  # PROJ-211: For Fleet speed calc
+            'expected_stats': {'speed': 10.0},
             'layers': {
-                'HULL': [{'id': f'{pod_type.lower()}_colony_pod'}]
+                'HULL': [{'id': 'colony_pod_bay'}]
             }
         },
     )
+    # Load colony pod as cargo
+    ship.cargo_contents[f"colony_pod_{pod_type.lower()}"] = 1
     if registries is not None:
         ship.set_registries(registries)
     return ship

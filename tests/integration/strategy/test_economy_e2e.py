@@ -70,13 +70,32 @@ def _make_empire(resources=None, max_storage=None, empire_id=0):
     return empire
 
 
+def _make_planetary_yard():
+    """Create a PlanetaryYard facility for base construction queue processing."""
+    return PlanetaryFacility(
+        instance_id="yard_starter",
+        design_id="colony_hub",
+        name="Colony Hub",
+        design_data={
+            "layers": {
+                "CORE": [{"id": "yard", "abilities": {"PlanetaryYard": True}}]
+            }
+        },
+        is_operational=True,
+    )
+
+
 def _make_planet(
     name="Test World",
     resources=None,
     facilities=None,
     owner_id=0,
 ):
-    """Create a minimal planet for economy testing."""
+    """Create a minimal planet for economy testing.
+
+    Always includes a PlanetaryYard facility so the base construction
+    queue is processed by ProductionEngine.
+    """
     planet = Planet(
         name=name,
         location=HexCoord(0, 0),
@@ -95,7 +114,8 @@ def _make_planet(
         owner_id=owner_id,
     )
     planet.deposits = resources or {}
-    planet.facilities = facilities or []
+    # Always include PlanetaryYard; append any additional facilities
+    planet.facilities = [_make_planetary_yard()] + (facilities or [])
     return planet
 
 
@@ -470,8 +490,10 @@ class TestEconomyE2E:
 
         assert restored.deposits["metals"]["quantity"] == 3000
         assert restored.deposits["metals"]["quality"] == pytest.approx(0.9)
-        assert len(restored.facilities) == 1
-        assert restored.facilities[0].name == "Metals Harvester"
+        # Starter PlanetaryYard + harvester = 2 facilities
+        assert len(restored.facilities) == 2
+        harvester_names = [f.name for f in restored.facilities]
+        assert "Metals Harvester" in harvester_names
 
     def test_construction_queue_save_load(self):
         """Queue items with cost tracking survive planet serialization.

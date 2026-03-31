@@ -58,6 +58,7 @@ class MockPlanet:
         self.populations = []
         self.max_population = 1000
         self.facilities = []
+        self.stockpile = {}
         self.atmosphere = {}
         self.surface_gravity = 9.8
         self.surface_temperature = 300.0
@@ -65,6 +66,10 @@ class MockPlanet:
         self.radius_hexes = 0
         self.image_id = ""
         self.image_rotation = 0.0
+
+    def add_to_stockpile(self, resource, amount):
+        """Add resources to planet stockpile."""
+        self.stockpile[resource] = self.stockpile.get(resource, 0.0) + amount
 
 
 class MockSystem:
@@ -97,16 +102,9 @@ class MockGalaxy:
 
 
 def make_colony_ship(name: str, owner_id: int, pod_type: str, registries=None) -> ShipInstance:
-    """Create a ship with a colony pod component.
+    """Create a ship with a colony pod loaded as cargo.
 
-    Args:
-        name: Ship name
-        owner_id: Owner empire ID
-        pod_type: Planet type the pod can colonize (e.g., "ICE_DWARF")
-        registries: Optional GameRegistries for DI compliance (PROJ-211)
-
-    Returns:
-        ShipInstance with colony pod in design_data
+    Phase 2: Colony pods are cargo items. Ship is reusable after colonization.
     """
     ship = ShipInstance(
         instance_id=f"colony-{name.lower().replace(' ', '-')}-{id(name)}",
@@ -117,12 +115,14 @@ def make_colony_ship(name: str, owner_id: int, pod_type: str, registries=None) -
             'name': name,
             'vehicle_type': 'Ship',
             'stats': {'mass': 100},
-            'expected_stats': {'speed': 10.0},  # PROJ-211: For Fleet speed calc
+            'expected_stats': {'speed': 10.0},
             'layers': {
-                'HULL': [{'id': f'{pod_type.lower()}_colony_pod'}]
+                'HULL': [{'id': 'colony_pod_bay'}]
             }
         },
     )
+    # Load colony pod as cargo
+    ship.cargo_contents[f"colony_pod_{pod_type.lower()}"] = 1
     if registries is not None:
         ship.set_registries(registries)
     return ship
@@ -284,12 +284,15 @@ class TestColonizeWithMatchingPod:
         assert ice_planet.owner_id == 1
         assert ice_planet in empire.colonies
 
-        # Assert: Only colony ship was removed, combat ship remains
-        assert colony_ship not in fleet.ships
+        # Phase 2: Both ships stay (ship is reusable)
+        assert colony_ship in fleet.ships
         assert combat_ship in fleet.ships
-        assert len(fleet.ships) == 1
+        assert len(fleet.ships) == 2
 
-        # Assert: Fleet still exists (has remaining ship)
+        # Pod consumed from cargo
+        assert colony_ship.cargo_contents.get("colony_pod_ice_dwarf", 0) == 0
+
+        # Fleet still exists
         assert fleet in empire.fleets
 
 
@@ -373,7 +376,8 @@ class TestChainColonization:
         )
         assert result1.colonized is True
         assert continental1.owner_id == 1
-        assert len(fleet.ships) == 1  # One ship removed
+        # Phase 2: Ships stay, pods consumed from cargo
+        assert len(fleet.ships) == 2
 
         # Process second colonization
         result2 = processor.process_colonize(
@@ -382,10 +386,10 @@ class TestChainColonization:
         )
         assert result2.colonized is True
         assert continental2.owner_id == 1
-        assert len(fleet.ships) == 0  # Both ships removed
+        assert len(fleet.ships) == 2  # Both ships stay
 
-        # Fleet should be removed (no ships left)
-        assert fleet not in empire.fleets
+        # Fleet stays
+        assert fleet in empire.fleets
 
     def test_chain_exhaustion_prevents_overcommit(
         self, galaxy_with_three_ice_planets, component_registry
@@ -468,8 +472,8 @@ class TestMixedFleetColonization:
         )
         assert result1.colonized is True
         assert ice_planet.owner_id == 1
-        # Ice colony ship should be removed
-        assert ice_colony_ship not in fleet.ships
+        # Phase 2: Both ships stay
+        assert ice_colony_ship in fleet.ships
         assert continental_colony_ship in fleet.ships
 
         # Process continental colonization
@@ -479,11 +483,11 @@ class TestMixedFleetColonization:
         )
         assert result2.colonized is True
         assert continental_planet.owner_id == 1
-        # Both ships should now be removed
-        assert len(fleet.ships) == 0
+        # Both ships stay
+        assert len(fleet.ships) == 2
 
-        # Fleet should be removed (empty)
-        assert fleet not in empire.fleets
+        # Fleet stays
+        assert fleet in empire.fleets
 
 
 # =============================================================================
@@ -491,21 +495,14 @@ class TestMixedFleetColonization:
 # =============================================================================
 
 class TestFleetRemovalBehavior:
-    """Tests for fleet removal when ships are consumed."""
+    """Tests for Phase 2: Fleet stays after colonization."""
 
-    def test_last_ship_colonization_removes_fleet(
+    def test_last_ship_colonization_fleet_stays(
         self, galaxy_with_ice_planet, component_registry
     ):
-        """
-        PROJ-55: Colonization removes fleet when colony ship is the last ship.
-
-        Create planet, fleet with single colony ship.
-        Execute colonization.
-        Assert: Planet colonized, fleet removed from empire.
-        """
+        """Phase 2: Single-ship fleet stays after colonization."""
         galaxy, ice_planet = galaxy_with_ice_planet
 
-        # Fleet with only one ship (colony ship)
         colony_ship = make_colony_ship("Lone Colony Ship", 1, "ICE_DWARF")
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
@@ -515,38 +512,25 @@ class TestFleetRemovalBehavior:
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
 
-        # Execute colonization
         processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=component_registry
         )
 
-        # Assert: Colonization succeeded
         assert result.colonized is True
         assert ice_planet.owner_id == 1
 
-        # Assert: Ship was removed
-        assert len(fleet.ships) == 0
-
-        # Assert: Fleet was removed (no ships left)
-        assert fleet not in empire.fleets
+        # Phase 2: Ship stays, fleet stays
+        assert len(fleet.ships) == 1
+        assert fleet in empire.fleets
 
     def test_partial_fleet_colonization_preserves_fleet(
         self, galaxy_with_ice_planet, component_registry, fresh_registries
     ):
-        """
-        PROJ-55: Colonization preserves fleet when other ships remain.
-        PROJ-211: Updated to pass registries for DI compliance.
-
-        Create planet, fleet with colony ship + combat ship.
-        Execute colonization.
-        Assert: Planet colonized, colony ship removed, combat ship remains, fleet exists.
-        """
+        """Phase 2: Fleet with multiple ships all stay after colonization."""
         galaxy, ice_planet = galaxy_with_ice_planet
 
-        # Fleet with colony ship and combat ship
-        # PROJ-211: Pass registries for DI compliance
         colony_ship = make_colony_ship("Ice Colony Ship", 1, "ICE_DWARF", fresh_registries)
         combat_ship = make_combat_ship("Escort Ship", 1, fresh_registries)
 
@@ -558,23 +542,19 @@ class TestFleetRemovalBehavior:
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
 
-        # Execute colonization
         processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=component_registry
         )
 
-        # Assert: Colonization succeeded
         assert result.colonized is True
         assert ice_planet.owner_id == 1
 
-        # Assert: Only colony ship was removed
-        assert colony_ship not in fleet.ships
+        # Phase 2: Both ships stay
+        assert colony_ship in fleet.ships
         assert combat_ship in fleet.ships
-        assert len(fleet.ships) == 1
-
-        # Assert: Fleet still exists
+        assert len(fleet.ships) == 2
         assert fleet in empire.fleets
 
 

@@ -10,6 +10,7 @@ from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.order_types import FleetOrder, OrderType
+from game.strategy.data.planet import PlanetaryFacility
 from game.core.hex_math import HexCoord
 from tests.conftest import make_mock_ship_instance
 
@@ -148,6 +149,20 @@ class TestMultipleTurns:
             pytest.skip("No colony available for test")
 
         colony = empire1.colonies[0]
+
+        # Add PlanetaryYard facility so base construction queue is processed
+        yard = PlanetaryFacility(
+            instance_id="yard_test",
+            design_id="colony_hub",
+            name="Colony Hub",
+            design_data={
+                "layers": {
+                    "CORE": [{"id": "yard", "abilities": {"PlanetaryYard": True}}]
+                }
+            },
+            is_operational=True,
+        )
+        colony.facilities.append(yard)
 
         # Give colony local stockpile for tick-based production
         colony.stockpile = {

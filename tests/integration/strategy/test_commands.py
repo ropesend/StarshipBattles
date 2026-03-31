@@ -20,18 +20,10 @@ class MockPlanetType(Enum):
 
 
 def create_mock_fleet_with_colony_pod(fleet_id, location, planet_type_str="CONTINENTAL"):
-    """Create a mock fleet with a ship that has a colony pod.
-
-    PROJ-55: Ships now need colony pods to colonize specific planet types.
-    """
-    # Create mock ship with design_data containing colony pod
+    """Create a mock fleet with a ship carrying a colony pod as cargo."""
     mock_ship = MagicMock()
     mock_ship.name = "Colony Ship"
-    mock_ship.design_data = {
-        'layers': {
-            'HULL': [{'id': f'{planet_type_str.lower()}_colony_pod'}]
-        }
-    }
+    mock_ship.cargo_contents = {f"colony_pod_{planet_type_str.lower()}": 1}
 
     fleet = MagicMock(spec=Fleet)
     fleet.id = fleet_id
@@ -159,9 +151,7 @@ class TestCommands:
             CONTINENTAL = "CONTINENTAL"
 
         mock_ship = MagicMock()
-        mock_ship.design_data = {
-            'layers': {'HULL': [{'id': 'continental_colony_pod'}]}
-        }
+        mock_ship.cargo_contents = {"colony_pod_continental": 1}
         fleet.ships = [mock_ship]
 
         planet = MagicMock(spec=Planet)

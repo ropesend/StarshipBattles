@@ -82,8 +82,8 @@ class MockGalaxy:
 
 
 def make_colony_ship(name: str, owner_id: int, pod_type: str) -> ShipInstance:
-    """Create a ship with a colony pod component."""
-    return ShipInstance(
+    """Create a ship with a colony pod loaded as cargo."""
+    ship = ShipInstance(
         instance_id=f"colony-{name.lower().replace(' ', '-')}-{id(name)}",
         design_id=f"{pod_type}_colony_ship",
         name=name,
@@ -93,10 +93,13 @@ def make_colony_ship(name: str, owner_id: int, pod_type: str) -> ShipInstance:
             'vehicle_type': 'Ship',
             'stats': {'mass': 100},
             'layers': {
-                'HULL': [{'id': f'{pod_type.lower()}_colony_pod'}]
+                'HULL': [{'id': 'colony_pod_bay'}]
             }
         },
     )
+    # Load colony pod as cargo
+    ship.cargo_contents[f"colony_pod_{pod_type.lower()}"] = 1
+    return ship
 
 
 def make_combat_ship(name: str, owner_id: int) -> ShipInstance:

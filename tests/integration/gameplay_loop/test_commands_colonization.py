@@ -16,13 +16,9 @@ from tests.conftest import make_mock_ship_instance
 
 
 def make_colony_ship_for_planet(planet, owner_id: int, registries=None) -> ShipInstance:
-    """Create a ship with a colony pod matching the planet's type.
-
-    PROJ-55: Ships now need colony pods to colonize specific planet types.
-    PROJ-211: Added registries parameter for DI compliance.
-    """
+    """Create a ship with a colony pod loaded as cargo."""
     planet_type_str = planet.planet_type.name
-    pod_id = f"{planet_type_str.lower()}_colony_pod"
+    pod_cargo_type = f"colony_pod_{planet_type_str.lower()}"
 
     ship = ShipInstance(
         instance_id=f"colony-ship-{planet_type_str.lower()}-{id(planet)}",
@@ -33,12 +29,13 @@ def make_colony_ship_for_planet(planet, owner_id: int, registries=None) -> ShipI
             'name': f"Colony Ship ({planet_type_str})",
             'vehicle_type': 'Ship',
             'stats': {'mass': 100},
-            'expected_stats': {'speed': 10.0},  # PROJ-211: For Fleet speed calc
+            'expected_stats': {'speed': 10.0},
             'layers': {
-                'HULL': [{'id': pod_id}]
+                'HULL': [{'id': 'colony_pod_bay'}]
             }
         },
     )
+    ship.cargo_contents[pod_cargo_type] = 1
     if registries is not None:
         ship.set_registries(registries)
     return ship
@@ -286,5 +283,5 @@ class TestColonizationWorkflow:
 
         turn_engine.process_turn(empires, galaxy)
 
-        # Fleet should have been consumed
-        assert len(empire1.fleets) < initial_fleets
+        # Phase 2: Fleet stays (ship is reusable)
+        assert len(empire1.fleets) == initial_fleets

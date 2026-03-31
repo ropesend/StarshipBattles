@@ -154,22 +154,21 @@ class OrderProcessor:
         """
         Process a COLONIZE order.
 
-        PROJ-36: Uses ColonizeValidator for validation.
-        PROJ-55: Removes only the colony ship, keeping remaining ships in fleet.
-
-        Claims a planet for the empire if valid.
+        Phase 2 Rework: Colony pods are cargo items. The pod is consumed from
+        fleet cargo, but the ship is reusable and stays in the fleet.
 
         Args:
             fleet: Fleet with COLONIZE order
             empire: Empire that owns the fleet
             galaxy: Galaxy for planet lookup
-            component_registry: Component registry for pod lookup.
-                               Used to find and remove only the colony ship.
+            component_registry: Kept for API compatibility. Pod lookup is now
+                               cargo-based.
 
         Returns:
             ColonizeResult with colonization status
         """
         from game.strategy.validation import ColonizeValidator
+        from game.strategy.validation.colonize_validator import COLONY_POD_PREFIX
 
         order = fleet.get_current_order()
         if not order or order.type != OrderType.COLONIZE:
@@ -177,9 +176,8 @@ class OrderProcessor:
 
         target_planet = order.target
 
-        # PROJ-36: Use centralized validation
-        # PROJ-140: Pass component_registry to validator for pod type checking
-        # PROJ-140: skip_chain_check=True because we're executing, not adding an order
+        # Use centralized validation (now cargo-based)
+        # skip_chain_check=True because we're executing, not adding an order
         validation = ColonizeValidator.validate(
             galaxy, fleet, target_planet, component_registry, skip_chain_check=True
         )
@@ -195,33 +193,23 @@ class OrderProcessor:
             planets_at_loc = galaxy.get_planets_at_global_hex(fleet.location)
             valid_candidates = [p for p in planets_at_loc if p.owner_id is None]
 
-            # PROJ-140 Phase 2: Pick planet that matches available pod
+            # Pick planet that matches available cargo pod
             final_planet = None
             for candidate in valid_candidates:
-                # Duck typing: check for planet_type attribute (works with mocks too)
                 if hasattr(candidate, 'planet_type') and candidate.planet_type is not None:
                     planet_type_str = candidate.planet_type.name
-                    ship_with_pod = ColonizeValidator.find_ship_with_colony_pod(
-                        fleet, planet_type_str, component_registry
-                    )
-                    if ship_with_pod is not None:
+                    if ColonizeValidator.fleet_has_colony_pod(fleet, planet_type_str):
                         final_planet = candidate
                         break
 
             if final_planet is None:
-                # No matching pod for any candidate
                 logger.warning("OrderProcessor: No matching pod for any candidate planet")
                 fleet.pop_order()
                 return ColonizeResult(colonized=False)
 
-        # PROJ-140 Bug 2: Pre-check colony ship availability BEFORE any mutation
-        # This ensures we never colonize without a valid colony ship to consume
+        # Pre-check pod availability BEFORE any mutation
         planet_type_str = final_planet.planet_type.name
-        colony_ship = ColonizeValidator.find_ship_with_colony_pod(
-            fleet, planet_type_str, component_registry
-        )
-        if colony_ship is None:
-            # Defensive: shouldn't happen if validation passed, but fail safely
+        if not ColonizeValidator.fleet_has_colony_pod(fleet, planet_type_str):
             logger.warning(f"OrderProcessor: No matching colony pod for {planet_type_str}")
             fleet.pop_order()
             return ColonizeResult(colonized=False)
@@ -233,25 +221,28 @@ class OrderProcessor:
         # PROJ-68: Transfer passengers from fleet to colony as founding population
         self._transfer_founding_population(fleet, final_planet, empire)
 
-        # PROJ-55: Remove only colony ship
-        fleet.remove_ship(colony_ship)
-        logger.debug(f"OrderProcessor: Removed colony ship '{colony_ship.name}' from fleet")
+        # Place starter complex (Colony Hub) on the new colony
+        self._place_starter_complex(final_planet)
 
-        # If fleet now empty, remove it
-        if len(fleet.ships) == 0:
-            empire.remove_fleet(fleet)
-            logger.debug(f"OrderProcessor: Fleet {fleet.id} removed (no ships remaining)")
+        # Phase 2: Consume colony pod from fleet cargo (ship stays)
+        pod_cargo_type = f"{COLONY_POD_PREFIX}{planet_type_str.lower()}"
+        fleet.resources.unload_cargo_from_fleet(pod_cargo_type, 1)
+        logger.debug(f"OrderProcessor: Consumed colony pod '{pod_cargo_type}' from fleet cargo")
+
+        # Ship stays in fleet - it's reusable
+
+        # Phase 3: Transfer resource cargo from fleet to planet stockpile
+        self._transfer_cargo_resources_to_colony(fleet, final_planet)
 
         logger.info(f"OrderProcessor: Colonization successful. {empire.name} claimed {final_planet.name}")
 
-        # PROJ-215: Look up system name and local hex for granular event log columns
+        # Look up system name and local hex for granular event log columns
         system_name = ""
         local_hex = None
         if galaxy and hasattr(galaxy, 'get_system_of_planet'):
             sys = galaxy.get_system_of_planet(final_planet)
             if sys:
                 system_name = sys.name
-                # Only compute local_hex if planet has location attribute
                 if hasattr(final_planet, 'location') and final_planet.location is not None:
                     local_hex = [final_planet.location.q, final_planet.location.r]
 
@@ -260,7 +251,7 @@ class OrderProcessor:
             category=EventCategory.COLONIES,
             empire_id=empire.id,
             message=f"Founded colony on {final_planet.name}",
-            planet_id=final_planet.id,  # Planet always has id
+            planet_id=final_planet.id,
             planet_name=final_planet.name,
             fleet_id=fleet.id,
             location_name=final_planet.name,
@@ -532,6 +523,68 @@ class OrderProcessor:
         actual_unloaded = fleet.resources.unload_cargo_from_fleet(cargo_type, to_unload)
         planet.add_to_stockpile(cargo_type, float(actual_unloaded))
         return actual_unloaded
+
+    def _transfer_cargo_resources_to_colony(self, fleet: Fleet, planet) -> None:
+        """Transfer all resource cargo from fleet to the new colony's stockpile.
+
+        Moves metals, organics, vapors, radioactives, exotics, fuel, energy, ammo
+        from fleet ship cargo to planet.stockpile. Colony pod cargo types are
+        excluded (already consumed).
+        """
+        from game.strategy.validation.colonize_validator import COLONY_POD_PREFIX
+
+        resource_types = [
+            "metals", "organics", "vapors", "radioactives", "exotics",
+            "fuel", "energy", "ammo",
+        ]
+        transferred = {}
+        for res in resource_types:
+            amount = fleet.resources.get_fleet_cargo_current(res)
+            if amount > 0:
+                actual = fleet.resources.unload_cargo_from_fleet(res, amount)
+                if actual > 0:
+                    planet.add_to_stockpile(res, float(actual))
+                    transferred[res] = actual
+
+        if transferred:
+            logger.info(f"Transferred cargo to {planet.name}: {transferred}")
+
+    def _place_starter_complex(self, planet) -> None:
+        """Place the starter Colony Hub complex on a newly colonized planet.
+
+        Loads the starter_complex design and creates a PlanetaryFacility
+        from it. Also seeds the planet stockpile with initial resources
+        defined in the design's initial_stockpile field.
+        """
+        import json
+        import os
+        from uuid import uuid4
+        from game.strategy.data.planet import PlanetaryFacility
+        from game.core.paths import Paths
+
+        design_path = os.path.join(Paths.ROOT_DIR, "data", "designs", "starter_complex.json")
+        try:
+            with open(design_path, 'r') as f:
+                design_data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logger.warning(f"Failed to load starter complex design: {e}")
+            return
+
+        facility = PlanetaryFacility(
+            instance_id=uuid4().hex,
+            design_id="starter_complex",
+            name=design_data.get("name", "Colony Hub"),
+            design_data=design_data,
+            is_operational=True,
+        )
+        planet.facilities.append(facility)
+
+        # Seed planet stockpile from design's initial_stockpile
+        initial_stock = design_data.get("initial_stockpile", {})
+        for resource, amount in initial_stock.items():
+            planet.add_to_stockpile(resource, float(amount))
+
+        logger.info(f"Placed starter complex on {planet.name} with initial stockpile: {initial_stock}")
 
     def _transfer_founding_population(
         self,

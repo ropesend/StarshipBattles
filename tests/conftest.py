@@ -324,9 +324,8 @@ def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship", registri
     """
     Create a colony ship that can colonize a specific planet.
 
-    PROJ-140: Creates a ship with a colony pod matching the planet's type.
-    PROJ-211: Accepts optional registries for DI compliance.
-    Use this for integration tests that need working colonization.
+    Phase 2: Colony pods are now cargo items. Ship carries the pod in
+    cargo_contents and is reusable after colonization.
 
     Args:
         planet: The Planet object to create a colony ship for
@@ -335,12 +334,12 @@ def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship", registri
         registries: Optional GameRegistries for DI compliance
 
     Returns:
-        ShipInstance: A colony ship that can colonize the given planet type
+        ShipInstance: A colony ship with the matching pod loaded as cargo
     """
     from game.strategy.data.ship_instance import ShipInstance
 
     planet_type_str = planet.planet_type.name
-    pod_id = f"{planet_type_str.lower()}_colony_pod"
+    pod_cargo_type = f"colony_pod_{planet_type_str.lower()}"
 
     ship = ShipInstance(
         instance_id=f"colony-{name.lower().replace(' ', '-')}-{id(name)}",
@@ -351,12 +350,14 @@ def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship", registri
             'name': name,
             'vehicle_type': 'Ship',
             'stats': {'mass': 100},
-            'expected_stats': {'speed': 10.0},  # PROJ-211: For Fleet speed calc
+            'expected_stats': {'speed': 10.0},
             'layers': {
-                'HULL': [{'id': pod_id}]
+                'HULL': [{'id': 'colony_pod_bay'}]
             }
         },
     )
+    # Load colony pod as cargo
+    ship.cargo_contents[pod_cargo_type] = 1
     if registries is not None:
         ship.set_registries(registries)
     return ship

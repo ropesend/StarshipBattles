@@ -10,11 +10,11 @@ Players design items in the Workshop (ships, complexes, satellites, fighters), q
 
 ### Build Contexts
 
-| Context | Queue Source | Can Build | Production Rate |
-|---------|-------------|-----------|-----------------|
-| Planet base queue | `planet.construction_queue` | Complexes only | `planetary_yard` (2000/resource/turn) |
-| Planet shipyard facility | `facility.construction_queue` | Ships + complexes | Per-facility rate (default 3000, with bonus) |
-| Fleet space yard | `fleet.construction_queue` | Ships + complexes | `fleet_space_yard` × yard count |
+| Context | Queue Source | Can Build | Production Rate | Requirement |
+|---------|-------------|-----------|-----------------|-------------|
+| Planet base queue | `planet.construction_queue` | Complexes only | `planetary_yard` (2000/resource/turn) | Facility with `PlanetaryYard` ability |
+| Planet shipyard facility | `facility.construction_queue` | Ships + complexes | Per-facility rate (default 3000, with bonus) | `SpaceShipyard` ability on facility |
+| Fleet space yard | `fleet.construction_queue` | Ships + complexes | `fleet_space_yard` × yard count | `SpaceShipyard` ability on fleet ship |
 
 ### User Workflow
 

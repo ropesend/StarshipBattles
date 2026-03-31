@@ -30,16 +30,24 @@ def mock_fleet():
     fleet.id = 1
     fleet.owner_id = 0
     fleet.location = HexCoord(0, 0)
+    fleet.ships = []
+    fleet.orders = []
     return fleet
 
 
 @pytest.fixture
 def mock_planet():
     """Create a mock unowned planet."""
+    from enum import Enum
+
+    class MockPlanetType(Enum):
+        CONTINENTAL = "CONTINENTAL"
+
     planet = MagicMock()
     planet.name = "Test Planet"
     planet.owner_id = None  # Unowned
     planet.location = HexCoord(0, 0)
+    planet.planet_type = MockPlanetType.CONTINENTAL
     return planet
 
 
@@ -66,6 +74,11 @@ class TestColonizeValidatorBasic:
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
         mock_fleet.location = mock_planet.location
+
+        # Give fleet a matching pod in cargo
+        ship = MagicMock()
+        ship.cargo_contents = {"colony_pod_continental": 1}
+        mock_fleet.ships = [ship]
 
         result = ColonizeValidator.validate(mock_galaxy, mock_fleet, mock_planet)
 
@@ -112,6 +125,11 @@ class TestColonizeValidatorAnyPlanet:
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
         mock_fleet.location = mock_planet.location
 
+        # Give fleet a matching pod in cargo
+        ship = MagicMock()
+        ship.cargo_contents = {"colony_pod_continental": 1}
+        mock_fleet.ships = [ship]
+
         result = ColonizeValidator.validate(mock_galaxy, mock_fleet, None)
 
         assert result.is_valid is True
@@ -153,6 +171,10 @@ class TestColonizeValidatorEdgeCases:
     def test_multiple_planets_finds_valid_candidate(self, mock_galaxy, mock_fleet):
         """When multiple planets exist, finds a valid unowned candidate."""
         from game.strategy.validation import ColonizeValidator
+        from enum import Enum
+
+        class MockPlanetType(Enum):
+            CONTINENTAL = "CONTINENTAL"
 
         owned_planet = MagicMock()
         owned_planet.owner_id = 1
@@ -161,9 +183,15 @@ class TestColonizeValidatorEdgeCases:
         unowned_planet = MagicMock()
         unowned_planet.owner_id = None
         unowned_planet.name = "Unowned Planet"
+        unowned_planet.planet_type = MockPlanetType.CONTINENTAL
 
         mock_galaxy.get_planets_at_global_hex.return_value = [owned_planet, unowned_planet]
         mock_fleet.location = HexCoord(0, 0)
+
+        # Give fleet a matching pod in cargo
+        ship = MagicMock()
+        ship.cargo_contents = {"colony_pod_continental": 1}
+        mock_fleet.ships = [ship]
 
         result = ColonizeValidator.validate(mock_galaxy, mock_fleet, None)
 
@@ -190,6 +218,11 @@ class TestColonizeValidatorEdgeCases:
         """Validation reflects current fleet location, not cached location."""
         from game.strategy.validation import ColonizeValidator
 
+        # Give fleet a matching pod in cargo
+        ship = MagicMock()
+        ship.cargo_contents = {"colony_pod_continental": 1}
+        mock_fleet.ships = [ship]
+
         # Initially valid
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
         mock_fleet.location = mock_planet.location
@@ -208,6 +241,11 @@ class TestColonizeValidatorEdgeCases:
     def test_planet_colonized_between_validation_and_execution(self, mock_galaxy, mock_fleet, mock_planet):
         """Validation reflects current planet ownership, not cached state."""
         from game.strategy.validation import ColonizeValidator
+
+        # Give fleet a matching pod in cargo
+        ship = MagicMock()
+        ship.cargo_contents = {"colony_pod_continental": 1}
+        mock_fleet.ships = [ship]
 
         # Initially valid
         mock_planet.owner_id = None
@@ -331,31 +369,19 @@ class TestColonizeValidatorColonyPods:
 
     @pytest.fixture
     def mock_ship_with_ice_dwarf_pod(self):
-        """Create a mock ship with an Ice Dwarf colony pod."""
+        """Create a mock ship with an Ice Dwarf colony pod in cargo."""
         ship = MagicMock()
         ship.name = "Colony Ship Alpha"
-        ship.design_data = {
-            'layers': {
-                'HULL': [
-                    {'id': 'ice_dwarf_colony_pod'}
-                ]
-            }
-        }
+        ship.cargo_contents = {"colony_pod_ice_dwarf": 1}
         ship.is_combat_capable = MagicMock(return_value=True)
         return ship
 
     @pytest.fixture
     def mock_ship_with_continental_pod(self):
-        """Create a mock ship with a Continental colony pod."""
+        """Create a mock ship with a Continental colony pod in cargo."""
         ship = MagicMock()
         ship.name = "Colony Ship Beta"
-        ship.design_data = {
-            'layers': {
-                'HULL': [
-                    {'id': 'continental_colony_pod'}
-                ]
-            }
-        }
+        ship.cargo_contents = {"colony_pod_continental": 1}
         ship.is_combat_capable = MagicMock(return_value=True)
         return ship
 
@@ -364,39 +390,14 @@ class TestColonizeValidatorColonyPods:
         """Create a mock ship without any colony pod."""
         ship = MagicMock()
         ship.name = "Combat Ship"
-        ship.design_data = {
-            'layers': {
-                'HULL': [
-                    {'id': 'basic_engine'},
-                    {'id': 'laser_cannon'}
-                ]
-            }
-        }
+        ship.cargo_contents = {}
         ship.is_combat_capable = MagicMock(return_value=True)
         return ship
 
     @pytest.fixture
     def mock_component_registry(self):
-        """Create a mock component registry with colony pod components."""
-        registry = {
-            'ice_dwarf_colony_pod': {
-                'id': 'ice_dwarf_colony_pod',
-                'abilities': {'ColonizePlanet': 'ICE_DWARF'}
-            },
-            'continental_colony_pod': {
-                'id': 'continental_colony_pod',
-                'abilities': {'ColonizePlanet': 'CONTINENTAL'}
-            },
-            'basic_engine': {
-                'id': 'basic_engine',
-                'abilities': {}
-            },
-            'laser_cannon': {
-                'id': 'laser_cannon',
-                'abilities': {}
-            },
-        }
-        return registry
+        """Create a mock component registry (kept for API compatibility)."""
+        return {}
 
     def test_validate_requires_matching_colony_pod(
         self, mock_galaxy, mock_planet_ice_dwarf, mock_ship_with_continental_pod, mock_component_registry
@@ -487,13 +488,9 @@ class TestColonizeValidatorColonyPods:
         """Should count multiple pods of the same type."""
         from game.strategy.validation import ColonizeValidator
 
-        # Create another ice dwarf ship
+        # Create another ice dwarf ship with pod in cargo
         ship2 = MagicMock()
-        ship2.design_data = {
-            'layers': {
-                'HULL': [{'id': 'ice_dwarf_colony_pod'}]
-            }
-        }
+        ship2.cargo_contents = {"colony_pod_ice_dwarf": 1}
 
         fleet = MagicMock()
         fleet.ships = [mock_ship_with_ice_dwarf_pod, ship2]
@@ -626,14 +623,12 @@ class TestColonizeValidatorZoneColonization:
         class MockPlanetType(Enum):
             DYSON_SPHERE = "DYSON_SPHERE"
 
-        # PROJ-193: Use spec=Planet but set all IPlanet protocol properties
-        # Create a Dyson Sphere at center (0,0) with zone extending to fleet hex (2,0)
         mock_dyson = MagicMock(spec=Planet)
         mock_dyson.name = "Dyson Sphere"
         mock_dyson.owner_id = None
         mock_dyson.location = HexCoord(0, 0)
         mock_dyson.planet_type = MockPlanetType.DYSON_SPHERE
-        mock_dyson.radius_hexes = 6  # Multi-hex zone
+        mock_dyson.radius_hexes = 6
         mock_dyson.resources = {}
         mock_dyson.id = 1
         mock_dyson.populations = []
@@ -648,10 +643,12 @@ class TestColonizeValidatorZoneColonization:
         # Fleet is at zone hex (2, 0), not at center
         mock_fleet.location = HexCoord(2, 0)
 
-        # get_planets_at_global_hex returns empty (Dyson center is not at fleet location)
-        mock_galaxy.get_planets_at_global_hex.return_value = []
+        # Give fleet a matching pod in cargo
+        ship = MagicMock()
+        ship.cargo_contents = {"colony_pod_dyson_sphere": 1}
+        mock_fleet.ships = [ship]
 
-        # Zone registry returns the Dyson Sphere
+        mock_galaxy.get_planets_at_global_hex.return_value = []
         mock_galaxy.get_zones_at_global_hex = MagicMock(return_value=[mock_dyson])
 
         result = ColonizeValidator.validate(mock_galaxy, mock_fleet, mock_dyson)
@@ -674,7 +671,11 @@ class TestColonizeValidatorZoneColonization:
 
         mock_fleet.location = HexCoord(0, 0)
 
-        # Standard case: planet found at fleet location
+        # Give fleet a matching pod in cargo
+        ship = MagicMock()
+        ship.cargo_contents = {"colony_pod_dyson_sphere": 1}
+        mock_fleet.ships = [ship]
+
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_dyson]
         mock_galaxy.get_zones_at_global_hex = MagicMock(return_value=[])
 
@@ -685,13 +686,24 @@ class TestColonizeValidatorZoneColonization:
     def test_validate_colonize_normal_planet_unchanged(self, mock_galaxy, mock_fleet):
         """Normal planets (no zone) work without zone lookup."""
         from game.strategy.validation import ColonizeValidator
+        from enum import Enum
+
+        class MockPlanetType(Enum):
+            CONTINENTAL = "CONTINENTAL"
 
         mock_planet = MagicMock()
         mock_planet.name = "Normal Planet"
         mock_planet.owner_id = None
         mock_planet.location = HexCoord(0, 0)
+        mock_planet.planet_type = MockPlanetType.CONTINENTAL
 
         mock_fleet.location = HexCoord(0, 0)
+
+        # Give fleet a matching pod in cargo
+        ship = MagicMock()
+        ship.cargo_contents = {"colony_pod_continental": 1}
+        mock_fleet.ships = [ship]
+
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
         mock_galaxy.get_zones_at_global_hex = MagicMock(return_value=[])
 
@@ -747,22 +759,14 @@ class TestColonizeValidatorAnyPlanetPods:
         fleet.id = 1
         fleet.owner_id = 0
         fleet.location = HexCoord(0, 0)
+        fleet.ships = []
         fleet.orders = []
         return fleet
 
     @pytest.fixture
     def mock_component_registry(self):
-        """Create a mock component registry with colony pod components."""
-        return {
-            'ice_dwarf_colony_pod': {
-                'id': 'ice_dwarf_colony_pod',
-                'abilities': {'ColonizePlanet': 'ICE_DWARF'}
-            },
-            'continental_colony_pod': {
-                'id': 'continental_colony_pod',
-                'abilities': {'ColonizePlanet': 'CONTINENTAL'}
-            },
-        }
+        """Create a mock component registry (kept for API compatibility)."""
+        return {}
 
     def _make_planet(self, planet_type_name: str, name: str = "Test Planet"):
         """Create a mock planet of the given type."""
@@ -773,14 +777,12 @@ class TestColonizeValidatorAnyPlanetPods:
             ICE_DWARF = "ICE_DWARF"
             CONTINENTAL = "CONTINENTAL"
 
-        # PROJ-193: Use spec=Planet but set all IPlanet protocol properties
         planet = MagicMock(spec=Planet)
         planet.name = name
         planet.owner_id = None
         planet.location = HexCoord(0, 0)
         planet.planet_type = MockPlanetType[planet_type_name]
         planet.deposits = {}
-        # PROJ-193: Required IPlanet properties
         planet.id = 1
         planet.populations = []
         planet.max_population = 1000
@@ -794,15 +796,11 @@ class TestColonizeValidatorAnyPlanetPods:
         return planet
 
     def _make_ship_with_pod(self, pod_type: str):
-        """Create a mock ship with a specific colony pod type."""
+        """Create a mock ship with a colony pod in cargo."""
         ship = MagicMock()
         ship.name = f"{pod_type} Colony Ship"
-        pod_id = f"{pod_type.lower()}_colony_pod"
-        ship.design_data = {
-            'layers': {
-                'HULL': [{'id': pod_id}]
-            }
-        }
+        cargo_type = f"colony_pod_{pod_type.lower()}"
+        ship.cargo_contents = {cargo_type: 1}
         return ship
 
     def test_any_planet_with_registry_no_matching_pod_fails(
@@ -846,13 +844,13 @@ class TestColonizeValidatorAnyPlanetPods:
 
         assert result.is_valid is True
 
-    def test_any_planet_without_registry_skips_pod_check(
+    def test_any_planet_without_matching_pod_fails(
         self, mock_galaxy, mock_fleet
     ):
-        """Any Planet without registry skips pod check (backward compat)."""
+        """Any Planet with no matching pod in cargo fails."""
         from game.strategy.validation import ColonizeValidator
 
-        # Fleet has no ships (would fail pod check if it ran)
+        # Fleet has no ships (no pods in cargo)
         mock_fleet.ships = []
 
         # ICE_DWARF planet available
@@ -861,10 +859,11 @@ class TestColonizeValidatorAnyPlanetPods:
 
         result = ColonizeValidator.validate(
             mock_galaxy, mock_fleet, None,  # None = "Any Planet"
-            component_registry=None  # No registry = skip pod check
         )
 
-        assert result.is_valid is True
+        # Phase 2: Always checks cargo for pods
+        assert result.is_valid is False
+        assert result.error_code == "NO_COLONY_POD"
 
     def test_any_planet_with_registry_exhausted_pods_fails(
         self, mock_galaxy, mock_fleet, mock_component_registry
@@ -910,25 +909,8 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
     @pytest.fixture
     def mock_component_registry(self):
-        """Create a mock component registry with colony pod components."""
-        return {
-            'ice_dwarf_colony_pod': {
-                'id': 'ice_dwarf_colony_pod',
-                'abilities': {'ColonizePlanet': 'ICE_DWARF'}
-            },
-            'continental_colony_pod_dict': {
-                'id': 'continental_colony_pod_dict',
-                'abilities': {'ColonizePlanet': {'planet_type': 'CONTINENTAL'}}
-            },
-            'malformed_pod': {
-                'id': 'malformed_pod',
-                'abilities': {'ColonizePlanet': 12345}  # Invalid type (not str or dict)
-            },
-            'basic_engine': {
-                'id': 'basic_engine',
-                'abilities': {}
-            },
-        }
+        """Create a mock component registry (kept for API compatibility)."""
+        return {}
 
     def _make_planet(self, planet_type_name: str, name: str = "Test Planet"):
         """Create a mock planet of the given type."""
@@ -964,14 +946,13 @@ class TestColonizeValidatorAdvancedEdgeCases:
         from game.strategy.validation import ColonizeValidator
         from game.strategy.data.order_types import OrderType
 
-        # Create galaxy and planet
         galaxy = MagicMock()
         planet = self._make_planet("ICE_DWARF")
         galaxy.get_planets_at_global_hex = MagicMock(return_value=[planet])
 
-        # Fleet with one pod, already committed
+        # Fleet with one pod in cargo, already committed
         ship = MagicMock()
-        ship.design_data = {'layers': {'HULL': [{'id': 'ice_dwarf_colony_pod'}]}}
+        ship.cargo_contents = {"colony_pod_ice_dwarf": 1}
 
         existing_order = MagicMock()
         existing_order.type = OrderType.COLONIZE
@@ -999,17 +980,17 @@ class TestColonizeValidatorAdvancedEdgeCases:
         )
         assert result_with_skip.is_valid is True
 
-    def test_dict_format_colonize_planet_ability(self, mock_component_registry):
-        """ColonizePlanet ability in dict format with planet_type key works."""
+    def test_cargo_pod_with_matching_type_validates(self, mock_component_registry):
+        """Colony pod in cargo with matching planet type validates."""
         from game.strategy.validation import ColonizeValidator
 
         galaxy = MagicMock()
         planet = self._make_planet("CONTINENTAL")
         galaxy.get_planets_at_global_hex = MagicMock(return_value=[planet])
 
-        # Ship with dict-format ability
+        # Ship with continental pod in cargo
         ship = MagicMock()
-        ship.design_data = {'layers': {'HULL': [{'id': 'continental_colony_pod_dict'}]}}
+        ship.cargo_contents = {"colony_pod_continental": 1}
 
         fleet = MagicMock()
         fleet.id = 1
@@ -1017,24 +998,21 @@ class TestColonizeValidatorAdvancedEdgeCases:
         fleet.ships = [ship]
         fleet.orders = []
 
-        result = ColonizeValidator.validate(
-            galaxy, fleet, planet,
-            component_registry=mock_component_registry
-        )
+        result = ColonizeValidator.validate(galaxy, fleet, planet)
 
         assert result.is_valid is True
 
-    def test_malformed_ability_data_type_skipped(self, mock_component_registry):
-        """Malformed ability data (not str or dict) is skipped gracefully."""
+    def test_non_pod_cargo_does_not_satisfy_requirement(self, mock_component_registry):
+        """Non-colony-pod cargo does not satisfy pod requirement."""
         from game.strategy.validation import ColonizeValidator
 
         galaxy = MagicMock()
         planet = self._make_planet("ICE_DWARF")
         galaxy.get_planets_at_global_hex = MagicMock(return_value=[planet])
 
-        # Ship with malformed ability data
+        # Ship with only regular cargo (no colony pods)
         ship = MagicMock()
-        ship.design_data = {'layers': {'HULL': [{'id': 'malformed_pod'}]}}
+        ship.cargo_contents = {"metals": 100, "passengers": 50}
 
         fleet = MagicMock()
         fleet.id = 1
@@ -1042,11 +1020,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
         fleet.ships = [ship]
         fleet.orders = []
 
-        # Should fail because malformed ability is skipped (no valid pod found)
-        result = ColonizeValidator.validate(
-            galaxy, fleet, planet,
-            component_registry=mock_component_registry
-        )
+        result = ColonizeValidator.validate(galaxy, fleet, planet)
 
         assert result.is_valid is False
         assert result.error_code == "NO_COLONY_POD"
@@ -1109,61 +1083,54 @@ class TestColonizeValidatorAdvancedEdgeCases:
         fleet = MagicMock()
         fleet.ships = []
 
-        result = ColonizeValidator.get_available_colony_pods(fleet, mock_component_registry)
+        result = ColonizeValidator.get_available_colony_pods(fleet)
 
         assert result == {}
 
-    def test_get_available_ships_without_design_data(self, mock_component_registry):
-        """get_available_colony_pods handles ships with empty design_data."""
+    def test_get_available_ships_without_cargo(self, mock_component_registry):
+        """get_available_colony_pods handles ships with empty cargo."""
         from game.strategy.validation import ColonizeValidator
 
         ship = MagicMock()
-        ship.design_data = {}  # Empty design data (no layers)
+        ship.cargo_contents = {}
 
         fleet = MagicMock()
         fleet.ships = [ship]
 
-        result = ColonizeValidator.get_available_colony_pods(fleet, mock_component_registry)
+        result = ColonizeValidator.get_available_colony_pods(fleet)
 
-        # Should handle gracefully
         assert result == {}
 
-    def test_find_ship_with_colony_pod_returns_first_match(self, mock_component_registry):
-        """find_ship_with_colony_pod returns first matching ship."""
+    def test_fleet_has_colony_pod_returns_true_on_match(self, mock_component_registry):
+        """fleet_has_colony_pod returns True when matching pod in cargo."""
         from game.strategy.validation import ColonizeValidator
 
         ship1 = MagicMock()
-        ship1.name = "Ship 1"
-        ship1.design_data = {'layers': {'HULL': [{'id': 'ice_dwarf_colony_pod'}]}}
+        ship1.cargo_contents = {"colony_pod_ice_dwarf": 1}
 
         ship2 = MagicMock()
-        ship2.name = "Ship 2"
-        ship2.design_data = {'layers': {'HULL': [{'id': 'ice_dwarf_colony_pod'}]}}
+        ship2.cargo_contents = {"colony_pod_ice_dwarf": 1}
 
         fleet = MagicMock()
         fleet.ships = [ship1, ship2]
 
-        result = ColonizeValidator.find_ship_with_colony_pod(
-            fleet, "ICE_DWARF", mock_component_registry
-        )
+        result = ColonizeValidator.fleet_has_colony_pod(fleet, "ICE_DWARF")
 
-        assert result is ship1
+        assert result is True
 
-    def test_find_ship_with_colony_pod_no_match(self, mock_component_registry):
-        """find_ship_with_colony_pod returns None when no match."""
+    def test_fleet_has_colony_pod_returns_false_on_no_match(self, mock_component_registry):
+        """fleet_has_colony_pod returns False when no matching pod."""
         from game.strategy.validation import ColonizeValidator
 
         ship = MagicMock()
-        ship.design_data = {'layers': {'HULL': [{'id': 'basic_engine'}]}}
+        ship.cargo_contents = {"metals": 100}
 
         fleet = MagicMock()
         fleet.ships = [ship]
 
-        result = ColonizeValidator.find_ship_with_colony_pod(
-            fleet, "ICE_DWARF", mock_component_registry
-        )
+        result = ColonizeValidator.fleet_has_colony_pod(fleet, "ICE_DWARF")
 
-        assert result is None
+        assert result is False
 
     def test_any_planet_candidates_without_planet_type(self, mock_component_registry):
         """Candidates without planet_type attribute are skipped in pod matching."""
@@ -1181,7 +1148,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
         galaxy.get_planets_at_global_hex = MagicMock(return_value=[weird_planet])
 
         ship = MagicMock()
-        ship.design_data = {'layers': {'HULL': [{'id': 'ice_dwarf_colony_pod'}]}}
+        ship.cargo_contents = {"colony_pod_ice_dwarf": 1}
 
         fleet = MagicMock()
         fleet.id = 1
@@ -1191,7 +1158,6 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
         result = ColonizeValidator.validate(
             galaxy, fleet, None,  # "Any Planet"
-            component_registry=mock_component_registry
         )
 
         # Should fail - no candidate matched because weird_planet has no planet_type
@@ -1211,12 +1177,12 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
         galaxy.get_planets_at_global_hex = MagicMock(return_value=[ice_planet, cont_planet])
 
-        # Fleet has only CONTINENTAL pod, with ICE_DWARF committed
+        # Fleet has ICE_DWARF and CONTINENTAL pods in cargo
         ice_ship = MagicMock()
-        ice_ship.design_data = {'layers': {'HULL': [{'id': 'ice_dwarf_colony_pod'}]}}
+        ice_ship.cargo_contents = {"colony_pod_ice_dwarf": 1}
 
         cont_ship = MagicMock()
-        cont_ship.design_data = {'layers': {'HULL': [{'id': 'continental_colony_pod_dict'}]}}
+        cont_ship.cargo_contents = {"colony_pod_continental": 1}
 
         # Commit the ICE_DWARF pod
         ice_order = MagicMock()
@@ -1231,7 +1197,6 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
         result = ColonizeValidator.validate(
             galaxy, fleet, None,  # "Any Planet"
-            component_registry=mock_component_registry
         )
 
         # Should succeed because CONTINENTAL pod is still available for cont_planet
@@ -1250,7 +1215,6 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
         galaxy = MagicMock()
 
-        # PROJ-193: Use spec=Planet but set all IPlanet protocol properties
         dyson = MagicMock(spec=Planet)
         dyson.name = "Dyson Sphere"
         dyson.owner_id = None
@@ -1272,9 +1236,15 @@ class TestColonizeValidatorAdvancedEdgeCases:
         galaxy.get_planets_at_global_hex = MagicMock(return_value=[dyson])
         galaxy.get_zones_at_global_hex = MagicMock(return_value=[dyson])
 
+        # Give fleet a matching pod in cargo
+        ship = MagicMock()
+        ship.cargo_contents = {"colony_pod_dyson_sphere": 1}
+
         fleet = MagicMock()
         fleet.id = 1
         fleet.location = HexCoord(0, 0)
+        fleet.ships = [ship]
+        fleet.orders = []
 
         result = ColonizeValidator.validate(galaxy, fleet, dyson)
 

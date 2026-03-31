@@ -132,6 +132,20 @@ def empire_with_colony(test_savegame_dir):
 
     empire.colonies.append(planet)
 
+    # Add PlanetaryYard facility so base construction queue is processed
+    yard = PlanetaryFacility(
+        instance_id="yard_starter",
+        design_id="colony_hub",
+        name="Colony Hub",
+        design_data={
+            "layers": {
+                "CORE": [{"id": "yard", "abilities": {"PlanetaryYard": True}}]
+            }
+        },
+        is_operational=True,
+    )
+    planet.facilities.append(yard)
+
     return empire, planet, test_savegame_dir
 
 
@@ -194,8 +208,9 @@ def test_full_build_workflow(empire_with_colony, fresh_registries):
     empire, planet, save_path = empire_with_colony
     engine = TurnEngine(registries=fresh_registries)
 
-    # Initial state: no facilities
-    assert len(planet.facilities) == 0
+    # Initial state: only the starter PlanetaryYard facility
+    initial_facility_count = len(planet.facilities)
+    assert initial_facility_count == 1
 
     # Add complex with proper tick-based fields
     # At 20 Metals/tick (planetary_yard rate), 4000 Metals = 200 ticks = 2 turns
@@ -215,15 +230,15 @@ def test_full_build_workflow(empire_with_colony, fresh_registries):
     item = planet.construction_queue[0]
     # After 100 ticks at 20/tick = 2000 Metals consumed
     assert item["resources_consumed"]["metals"] > 0
-    assert len(planet.facilities) == 0  # Not complete yet
+    assert len(planet.facilities) == initial_facility_count  # Not complete yet
 
     # Process turn 2 - should complete and spawn facility
     _process_one_turn(engine, [empire], save_path=save_path)
     assert len(planet.construction_queue) == 0  # Queue empty
-    assert len(planet.facilities) == 1  # Facility built
+    assert len(planet.facilities) == initial_facility_count + 1  # Facility built
 
-    # Verify facility
-    facility = planet.facilities[0]
+    # Verify the newly built facility (last one added)
+    facility = planet.facilities[-1]
     assert isinstance(facility, PlanetaryFacility)
     assert facility.design_id == "mining_complex_mk1"
     assert facility.is_operational is True
@@ -252,9 +267,9 @@ def test_shipyard_enables_ship_building(empire_with_colony, fresh_registries):
     # Process turn - shipyard completes
     _process_one_turn(engine, [empire], save_path=save_path)
 
-    # Verify shipyard built and detected
-    assert len(planet.facilities) == 1
-    facility = planet.facilities[0]
+    # Verify shipyard built and detected (starter yard + new shipyard)
+    assert len(planet.facilities) == 2
+    facility = planet.facilities[-1]
     assert facility.design_id == "space_shipyard_mk1"
 
     # Planet should now have shipyard
@@ -319,7 +334,7 @@ def test_multiple_complexes_on_planet(empire_with_colony, fresh_registries):
     # Process turns - with carry-over capacity, all 3 items complete in 1 turn
     # (100 Metals each at 20/tick = 5 ticks each = 15 ticks total, well under 100)
     _process_one_turn(engine, [empire], save_path=save_path)
-    assert len(planet.facilities) >= 1
+    assert len(planet.facilities) >= 2  # Starter yard + at least 1 new
 
     # Continue if needed
     if len(planet.construction_queue) > 0:
@@ -327,15 +342,15 @@ def test_multiple_complexes_on_planet(empire_with_colony, fresh_registries):
     if len(planet.construction_queue) > 0:
         _process_one_turn(engine, [empire], save_path=save_path)
 
-    # Verify all facilities
+    # Verify all facilities (starter yard + 3 built = 4)
     assert len(planet.construction_queue) == 0
-    assert len(planet.facilities) == 3
+    assert len(planet.facilities) == 4
 
     # Check unique instance IDs
     instance_ids = [f.instance_id for f in planet.facilities]
-    assert len(set(instance_ids)) == 3  # All unique
+    assert len(set(instance_ids)) == 4  # All unique
 
-    # Check design IDs
+    # Check design IDs of built facilities (excluding starter yard)
     design_ids = [f.design_id for f in planet.facilities]
     assert design_ids.count("mining_complex_mk1") == 2
     assert design_ids.count("space_shipyard_mk1") == 1
@@ -367,7 +382,8 @@ def test_shipyard_detection_with_multiple_facilities(empire_with_colony, fresh_r
     # Process turn - both complete due to carry-over
     _process_one_turn(engine, [empire], save_path=save_path)
 
-    assert len(planet.facilities) == 2
+    # Starter yard + 2 mining = 3
+    assert len(planet.facilities) == 3
     assert planet.has_space_shipyard is False
 
     # Build shipyard
@@ -380,7 +396,8 @@ def test_shipyard_detection_with_multiple_facilities(empire_with_colony, fresh_r
     })
     _process_one_turn(engine, [empire], save_path=save_path)
 
-    assert len(planet.facilities) == 3
+    # Starter yard + 2 mining + 1 shipyard = 4
+    assert len(planet.facilities) == 4
     assert planet.has_space_shipyard is True
 
 
@@ -401,8 +418,8 @@ def test_non_operational_shipyard_not_detected(empire_with_colony, fresh_registr
 
     assert planet.has_space_shipyard is True
 
-    # Damage shipyard
-    planet.facilities[0].is_operational = False
+    # Damage the shipyard (last facility added)
+    planet.facilities[-1].is_operational = False
 
     # Should no longer detect shipyard
     assert planet.has_space_shipyard is False

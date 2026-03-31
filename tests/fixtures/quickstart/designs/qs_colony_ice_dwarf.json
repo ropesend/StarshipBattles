@@ -127,7 +127,7 @@
                 ]
             },
             {
-                "id": "ice_dwarf_colony_pod",
+                "id": "colony_pod_bay",
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
@@ -148,16 +148,16 @@
         "ammo": 0.0
     },
     "expected_stats": {
-        "max_hp": 3009,
+        "max_hp": 2909,
         "max_fuel": 50000.0,
         "max_energy": 2000.0,
         "max_ammo": 0.0,
-        "max_speed": 8.7,
+        "max_speed": 0.9,
         "acceleration_rate": 0.41,
         "turn_speed": 0.0,
         "total_thrust": 750.0,
         "strategic_movement": 500.0,
-        "mass": 2150.0,
+        "mass": 1750.0,
         "armor_hp_pool": 0,
         "warp_max_tonnage": 4000,
         "warp_energy_cost": 2500,
@@ -168,5 +168,8 @@
         "times_built": 0,
         "created_date": "2026-02-10T00:00:00.000000",
         "last_modified": "2026-02-10T00:00:00.000000"
+    },
+    "cargo": {
+        "colony_pod_ice_dwarf": 1
     }
 }

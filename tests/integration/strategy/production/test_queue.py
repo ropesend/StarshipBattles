@@ -182,8 +182,8 @@ class TestShipyardRequirement:
         }
         planet.construction_queue.append(queue_item)
 
-        # No shipyard on planet
-        assert len(planet.facilities) == 0
+        # Only starter PlanetaryYard, no shipyard
+        assert not planet.has_space_shipyard
 
         # Process turn - complex should complete
         initial_facility_count = len(planet.facilities)

@@ -190,7 +190,7 @@ def test_colonize_deletes_fleet(fresh_registries):
 
     engine.process_turn([e1], galaxy)
 
-    # Fleet should be removed (consumed to create colony)
-    assert len(e1.fleets) == 0
+    # Phase 2: Fleet stays (ship is reusable)
+    assert len(e1.fleets) == 1
     assert planet.owner_id == 0
     assert planet in e1.colonies

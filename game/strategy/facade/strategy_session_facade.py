@@ -521,11 +521,8 @@ class StrategySessionFacade:
         if fleet is None:
             return {}
 
-        # Get component registry from session (PROJ-211: strict DI)
-        component_registry = self._session.registries.components
-
-        # Calculate available and committed pods
-        available = ColonizeValidator.get_available_colony_pods(fleet, component_registry)
+        # Phase 2: Calculate available and committed pods (cargo-based)
+        available = ColonizeValidator.get_available_colony_pods(fleet)
         committed = ColonizeValidator.get_committed_colony_pods(fleet)
 
         # Calculate remaining (include zero values per docstring contract)

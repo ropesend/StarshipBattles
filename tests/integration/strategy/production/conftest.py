@@ -86,6 +86,20 @@ def production_setup(fresh_registries):
         "Energy": 1000000.0,
     }
 
+    # Add PlanetaryYard facility so base construction queue is processed
+    yard = PlanetaryFacility(
+        instance_id="yard_starter",
+        design_id="colony_hub",
+        name="Colony Hub",
+        design_data={
+            "layers": {
+                "CORE": [{"id": "yard", "abilities": {"PlanetaryYard": True}}]
+            }
+        },
+        is_operational=True,
+    )
+    planet.facilities.append(yard)
+
     engine = TurnEngine(registries=fresh_registries)
     empires = [empire]
 

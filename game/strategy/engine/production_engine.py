@@ -41,6 +41,40 @@ COMPLETION_EPSILON = 0.001  # Tolerance for float comparison in completion check
 MAX_QUEUE_ITERATIONS = 10  # Safety limit to prevent infinite loops
 
 
+def _colony_has_planetary_yard(colony, registries=None) -> bool:
+    """Check if a colony has an operational facility with PlanetaryYard ability.
+
+    Scans facility design data for the PlanetaryYard ability key.
+    """
+    from game.core.patterns.layer_iterator import iter_components
+    from game.strategy.services.component_inspector import get_component_abilities
+
+    for facility in colony.facilities:
+        if not facility.is_operational:
+            continue
+        for comp in iter_components(facility.design_data):
+            # Check inline abilities
+            if isinstance(comp, dict):
+                abilities = comp.get('abilities', {})
+                if 'PlanetaryYard' in abilities:
+                    return True
+                # Check registry
+                comp_id = comp.get('id')
+                if comp_id and registries:
+                    comp_def = registries.components.get(comp_id)
+                    if comp_def:
+                        reg_abilities = get_component_abilities(comp_def)
+                        if 'PlanetaryYard' in reg_abilities:
+                            return True
+            elif isinstance(comp, str) and registries:
+                comp_def = registries.components.get(comp)
+                if comp_def:
+                    reg_abilities = get_component_abilities(comp_def)
+                    if 'PlanetaryYard' in reg_abilities:
+                        return True
+    return False
+
+
 class QueueItemAction(Enum):
     """Result of queue item validation."""
     VALID = auto()
@@ -140,13 +174,14 @@ class ProductionEngine:
         """
         for empire in empires:
             for colony in empire.colonies:
-                # 1. Base queue (complexes only)
-                base_rate = get_default_production_rates("planetary_yard")
-                self._process_queue_tick_dynamic(
-                    colony.construction_queue, empire, tick, galaxy, save_path,
-                    base_rate, colony_or_fleet=colony,
-                    is_complex_only=True
-                )
+                # 1. Base queue (complexes only) — requires PlanetaryYard facility
+                if colony.construction_queue and _colony_has_planetary_yard(colony, self._registries):
+                    base_rate = get_default_production_rates("planetary_yard")
+                    self._process_queue_tick_dynamic(
+                        colony.construction_queue, empire, tick, galaxy, save_path,
+                        base_rate, colony_or_fleet=colony,
+                        is_complex_only=True
+                    )
 
                 # 2. Facility queues (each shipyard independently)
                 for facility in colony.facilities:

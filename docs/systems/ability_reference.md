@@ -685,7 +685,7 @@ Marker — hull provides structural integrity for the ship.
 
 ## Colonization
 
-### ColonizePlanet
+### ColonizePlanet (DEPRECATED)
 
 | Field | Value |
 |-------|-------|
@@ -695,16 +695,15 @@ Marker — hull provides structural integrity for the ship.
 | Layer | STRATEGIC |
 | Base Class | `Ability` |
 
-Colony pod for a specific planet type. Enables colonization when the carrying ship reaches the target planet.
+**DEPRECATED in Phase 2 Colonization Rework.** Colony pods are now cargo items carried in a `colony_pod_bay` component (which uses `CargoStorage` ability). The old `ColonizePlanet` ability on individual pod components is no longer used for validation or execution. Colony pod detection now scans `ship.cargo_contents` for items matching the `colony_pod_<type>` naming convention.
 
-**Data Format:** Dict
+**New colonization flow:**
+1. Ship has `colony_pod_bay` component (provides `CargoStorage` for all pod types)
+2. Colony pod loaded as cargo: `cargo_contents["colony_pod_continental"] = 1`
+3. `ColonizeValidator` checks fleet cargo for matching `colony_pod_<planet_type>` items
+4. `OrderProcessor.process_colonize()` consumes the pod from cargo (ship stays in fleet)
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `planet_type` | string | Yes | — | Planet type ID (see list below) |
-| `action_time` | int | No | 1 | Ticks required for colonization |
-
-**Valid planet types:** CONTINENTAL, ARID, PELAGIC, MAGMA, CRYOPLANET, BARREN, JOVIAN, ICE_GIANT, CHTHONIAN, ICE_DWARF, PLANETOID
+**Valid cargo pod types:** colony_pod_continental, colony_pod_arid, colony_pod_pelagic, colony_pod_magma, colony_pod_cryoplanet, colony_pod_barren, colony_pod_jovian, colony_pod_ice_giant, colony_pod_chthonian, colony_pod_ice_dwarf, colony_pod_planetoid
 
 **Stat Bindings:** None
 

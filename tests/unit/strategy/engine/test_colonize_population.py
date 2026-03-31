@@ -48,19 +48,15 @@ def _make_ship_with_cargo(
     current_cargo: int = 0,
     registries: GameRegistries = None,
 ) -> ShipInstance:
-    """Create a ship with passenger cargo capacity.
+    """Create a ship with passenger cargo capacity and a colony pod in cargo.
 
-    PROJ-211: Added registries parameter for DI compliance.
+    Phase 2: Colony pod is a cargo item, not a component.
     """
     design = {
         "name": name,
         "hull_id": "test_hull",
         "layers": {
             "internal": [
-                {
-                    "id": "colony_pod_continental",
-                    "abilities": {"ColonyPod": {"planet_types": ["continental"]}}
-                },
                 {
                     "id": "passenger_quarters",
                     "abilities": {"CargoStorage": {"cargo_type": "passengers", "capacity": cargo_capacity}}
@@ -69,7 +65,9 @@ def _make_ship_with_cargo(
         }
     }
     ship = ShipInstance.create(design, owner_id=0, name=name, registries=registries)
-    # Load cargo if specified
+    # Load colony pod as cargo
+    ship.cargo_contents["colony_pod_continental"] = 1
+    # Load passengers if specified
     if current_cargo > 0:
         ship.cargo_contents["passengers"] = current_cargo
     return ship
@@ -80,23 +78,21 @@ def _make_ship_with_colony_pod(
     planet_type: str = "continental",
     registries: GameRegistries = None,
 ) -> ShipInstance:
-    """Create a ship with only a colony pod (no cargo).
+    """Create a ship with a colony pod in cargo (no passenger capacity).
 
-    PROJ-211: Added registries parameter for DI compliance.
+    Phase 2: Colony pod is a cargo item.
     """
     design = {
         "name": name,
         "hull_id": "test_hull",
         "layers": {
-            "internal": [
-                {
-                    "id": f"colony_pod_{planet_type}",
-                    "abilities": {"ColonyPod": {"planet_types": [planet_type]}}
-                }
-            ]
+            "internal": []
         }
     }
-    return ShipInstance.create(design, owner_id=0, name=name, registries=registries)
+    ship = ShipInstance.create(design, owner_id=0, name=name, registries=registries)
+    # Load colony pod as cargo
+    ship.cargo_contents[f"colony_pod_{planet_type}"] = 1
+    return ship
 
 
 def _make_component_registry() -> dict:
@@ -306,8 +302,8 @@ class TestExistingColonizationBehavior:
         assert planet.owner_id == empire.id
         assert planet in empire.colonies
 
-    def test_colonize_still_removes_colony_ship(self, fresh_registries):
-        """Colony ship is still removed when registry provided."""
+    def test_colonize_ship_stays_in_fleet(self, fresh_registries):
+        """Phase 2: Colony ship stays in fleet after colonization (reusable)."""
         location = HexCoord(0, 0)
         planet = _make_planet(location)
         planet.id = 1
@@ -326,19 +322,12 @@ class TestExistingColonizationBehavior:
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
         empire.add_fleet(fleet)
 
-        # Component registry for ship removal logic
-        # ColonizeValidator looks for ColonizePlanet ability with planet_type
-        component_registry = {
-            "colony_pod_continental": {
-                "abilities": {"ColonizePlanet": {"planet_type": "CONTINENTAL"}}
-            }
-        }
-
         processor = OrderProcessor()
-        result = processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
+        result = processor.process_colonize(fleet, empire, galaxy, component_registry={})
 
         assert result.colonized is True
-        # Fleet still exists with escort
+        # Phase 2: Both ships stay in fleet
         assert fleet in empire.fleets
-        assert len(fleet.ships) == 1
-        assert fleet.ships[0].name == "Escort"
+        assert len(fleet.ships) == 2
+        # Pod consumed from cargo
+        assert colony_ship.cargo_contents.get("colony_pod_continental", 0) == 0

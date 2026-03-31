@@ -459,10 +459,10 @@ class TestFacilityQueueSaveLoadE2E:
         restored_planet = Planet.from_dict(planet_data)
         restored_planet.owner_id = planet.owner_id
 
-        # Verify facility queue was preserved
-        assert len(restored_planet.facilities) == 1
-        restored_yard = restored_planet.facilities[0]
-        assert restored_yard.instance_id == "shipyard_save_test"
+        # Verify facility queue was preserved (starter yard + shipyard = 2)
+        assert len(restored_planet.facilities) == 2
+        # Find the shipyard by instance_id
+        restored_yard = next(f for f in restored_planet.facilities if f.instance_id == "shipyard_save_test")
         assert len(restored_yard.construction_queue) == 1
         assert restored_yard.construction_queue[0]["design_id"] == "test_ship"
 

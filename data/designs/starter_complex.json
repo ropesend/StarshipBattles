@@ -1,0 +1,16 @@
+{
+    "name": "Colony Hub",
+    "vehicle_type": "Planetary Complex",
+    "layers": {
+        "CORE": [
+            {"id": "starter_colony_hub"}
+        ]
+    },
+    "initial_stockpile": {
+        "metals": 500,
+        "organics": 200,
+        "vapors": 100,
+        "radioactives": 100,
+        "exotics": 50
+    }
+}

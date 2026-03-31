@@ -199,6 +199,11 @@ class ShipInstance:
         storage = stats.get('resource_storage', {})
         instance.consumable_levels = {name: float(val) for name, val in storage.items()}
 
+        # Initialize cargo from design data (Phase 2: colony pods as cargo)
+        initial_cargo = design_data.get('cargo', {})
+        for cargo_type, amount in initial_cargo.items():
+            instance.cargo_contents[cargo_type] = int(amount)
+
         return instance
 
     def is_damaged(self) -> bool:

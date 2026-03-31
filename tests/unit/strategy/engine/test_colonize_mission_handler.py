@@ -15,10 +15,8 @@ from game.strategy.data.ship_instance import ShipInstance
 
 
 def make_colony_ship(planet_type: str, owner_id: int, instance_id: str = "colony-ship-1") -> ShipInstance:
-    """Create a ship with a colony pod for the specified planet type."""
-    pod_id = f"{planet_type.lower()}_colony_pod"
-
-    return ShipInstance(
+    """Create a ship with a colony pod loaded as cargo."""
+    ship = ShipInstance(
         instance_id=instance_id,
         design_id=f"{planet_type}_colony_ship",
         name=f"Colony Ship ({planet_type})",
@@ -28,10 +26,12 @@ def make_colony_ship(planet_type: str, owner_id: int, instance_id: str = "colony
             'vehicle_type': 'Ship',
             'stats': {'mass': 100},
             'layers': {
-                'HULL': [{'id': pod_id}]
+                'HULL': [{'id': 'colony_pod_bay'}]
             }
         },
     )
+    ship.cargo_contents[f"colony_pod_{planet_type.lower()}"] = 1
+    return ship
 
 
 def make_mock_planet(planet_type_name: str, planet_id: int = 1):

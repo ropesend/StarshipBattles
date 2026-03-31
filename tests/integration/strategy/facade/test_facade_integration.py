@@ -17,14 +17,11 @@ from game.strategy.data.ship_instance import ShipInstance
 
 
 def make_colony_ship_for_planet(planet, owner_id: int) -> ShipInstance:
-    """Create a ship with a colony pod matching the planet's type.
-
-    PROJ-55: Ships now need colony pods to colonize specific planet types.
-    """
+    """Create a ship with a colony pod loaded as cargo."""
     planet_type_str = planet.planet_type.name
-    pod_id = f"{planet_type_str.lower()}_colony_pod"
+    pod_cargo_type = f"colony_pod_{planet_type_str.lower()}"
 
-    return ShipInstance(
+    ship = ShipInstance(
         instance_id=f"colony-ship-{planet_type_str.lower()}-{id(planet)}",
         design_id=f"{planet_type_str}_colony_ship",
         name=f"Colony Ship ({planet_type_str})",
@@ -34,10 +31,12 @@ def make_colony_ship_for_planet(planet, owner_id: int) -> ShipInstance:
             'vehicle_type': 'Ship',
             'stats': {'mass': 100},
             'layers': {
-                'HULL': [{'id': pod_id}]
+                'HULL': [{'id': 'colony_pod_bay'}]
             }
         },
     )
+    ship.cargo_contents[pod_cargo_type] = 1
+    return ship
 
 
 class TestMoveCommandIntegration:

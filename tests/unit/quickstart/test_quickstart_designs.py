@@ -217,13 +217,19 @@ class TestColonyShipDesigns:
 
     @pytest.mark.parametrize("filename", COLONY_DESIGN_FILES)
     def test_colony_ship_has_colony_pod(self, filename, quickstart_designs_dir, quickstart_ship_data, fresh_registries):
-        """Each colony ship should have a ColonizePlanet ability."""
+        """Each colony ship should have a colony pod bay and pre-loaded cargo."""
         data = load_json(str(quickstart_designs_dir / filename))
-        ship = Ship.from_dict(data, registries=fresh_registries)
 
+        # Phase 2: Colony pod bay provides CargoStorage for pod types
+        ship = Ship.from_dict(data, registries=fresh_registries)
         all_comps = ship.get_all_components()
-        has_colony = any(c.has_ability("ColonizePlanet") for c in all_comps)
-        assert has_colony, f"{filename} should have a ColonizePlanet ability"
+        has_cargo = any(c.has_ability("CargoStorage") for c in all_comps)
+        assert has_cargo, f"{filename} should have a colony_pod_bay with CargoStorage"
+
+        # Design should have pre-loaded cargo with a colony pod
+        cargo = data.get("cargo", {})
+        has_pod = any(k.startswith("colony_pod_") for k in cargo)
+        assert has_pod, f"{filename} should have pre-loaded colony pod cargo"
 
     @pytest.mark.parametrize("filename", COLONY_DESIGN_FILES)
     def test_colony_ship_has_passenger_quarters(self, filename, quickstart_designs_dir, quickstart_ship_data, fresh_registries):

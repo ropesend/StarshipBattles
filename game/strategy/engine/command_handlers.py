@@ -470,36 +470,28 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
             if error:
                 return error
 
-            # PROJ-140 Phase 4: Validate pod match for specific planet targets
-            # Get component registry from turn_engine (always available after init)
-            component_registry = session.registries.components
+            # Phase 2: Validate pod match using cargo-based detection
+            planet_type_str = planet.planet_type.name
 
-            if component_registry:
-                planet_type_str = planet.planet_type.name
-
-                # Check if fleet has a matching colony pod
-                ship_with_pod = ColonizeValidator.find_ship_with_colony_pod(
-                    fleet, planet_type_str, component_registry
+            # Check if fleet has a matching colony pod in cargo
+            if not ColonizeValidator.fleet_has_colony_pod(fleet, planet_type_str):
+                return ValidationResult.error(
+                    f"No ship in fleet has {planet_type_str} colony pod.",
+                    code="NO_COLONY_POD"
                 )
 
-                if ship_with_pod is None:
-                    return ValidationResult.error(
-                        f"No ship in fleet has {planet_type_str} colony pod.",
-                        code="NO_COLONY_POD"
-                    )
+            # Check chain limits - ensure not over-committed
+            available = ColonizeValidator.get_available_colony_pods(fleet)
+            committed = ColonizeValidator.get_committed_colony_pods(fleet)
 
-                # Check chain limits - ensure not over-committed
-                available = ColonizeValidator.get_available_colony_pods(fleet, component_registry)
-                committed = ColonizeValidator.get_committed_colony_pods(fleet)
+            available_count = available.get(planet_type_str, 0)
+            committed_count = committed.get(planet_type_str, 0)
 
-                available_count = available.get(planet_type_str, 0)
-                committed_count = committed.get(planet_type_str, 0)
-
-                if committed_count >= available_count:
-                    return ValidationResult.error(
-                        f"All {planet_type_str} colony pods already assigned.",
-                        code="COLONY_POD_EXHAUSTED"
-                    )
+            if committed_count >= available_count:
+                return ValidationResult.error(
+                    f"All {planet_type_str} colony pods already assigned.",
+                    code="COLONY_POD_EXHAUSTED"
+                )
 
         # 3. BUG-70: Always insert LOAD_POPULATION before MOVE/COLONIZE.
         # Colony is resolved at execution time, not command time.

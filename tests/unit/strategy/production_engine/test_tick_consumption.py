@@ -22,17 +22,35 @@ def _make_empire(resources: dict = None) -> Empire:
     return empire
 
 
+def _make_planetary_yard_facility():
+    """Create a facility with PlanetaryYard ability for base queue processing."""
+    return PlanetaryFacility(
+        instance_id="yard_base",
+        design_id="colony_hub",
+        name="Colony Hub",
+        design_data={
+            "layers": {
+                "CORE": [{"id": "yard", "abilities": {"PlanetaryYard": True}}]
+            }
+        },
+        is_operational=True,
+    )
+
+
 def _make_colony(construction_queue=None, facilities=None, stockpile=None, max_stockpile=None):
     """Create a mock colony with local stockpile support.
 
     Production engine draws from colony.stockpile (not empire.resource_pool)
-    for planet-based construction.
+    for planet-based construction.  Includes a PlanetaryYard facility by default
+    so the base construction queue is processed.
     """
     colony = MagicMock()
     colony.name = "Test Colony"
     colony.context_type = "planet"
     colony.construction_queue = construction_queue or []
-    colony.facilities = facilities or []
+    # Always include a PlanetaryYard facility so base queue is processed
+    default_facilities = [_make_planetary_yard_facility()]
+    colony.facilities = facilities if facilities is not None else default_facilities
     colony.stockpile = dict(stockpile) if stockpile else {}
     colony.max_stockpile = dict(max_stockpile) if max_stockpile else {}
 
@@ -126,7 +144,6 @@ class TestTickConsumption:
             total_cost={"metals": 500},
         )
         colony = _make_colony(construction_queue=[item], stockpile={"metals": 1000.0})
-        colony.facilities = []
         colony.resource_qualities = {}
         colony.id = 1
         empire.id = 0
@@ -151,7 +168,6 @@ class TestTickConsumption:
             total_cost={"metals": 500},
         )
         colony = _make_colony(construction_queue=[item], stockpile={"metals": 1000.0})
-        colony.facilities = []
         colony.resource_qualities = {}
         colony.id = 1
         empire.id = 0
@@ -173,7 +189,6 @@ class TestTickConsumption:
             total_cost={"metals": 500},
         )
         colony = _make_colony(construction_queue=[item], stockpile={"metals": 0.0})
-        colony.facilities = []
         colony.resource_qualities = {}
         colony.id = 1
         empire.id = 0
@@ -198,7 +213,6 @@ class TestTickConsumption:
             total_cost={"metals": 500},
         )
         colony = _make_colony(construction_queue=[item], stockpile={"metals": 0.0})
-        colony.facilities = []
         colony.resource_qualities = {}
         colony.id = 1
         empire.id = 0
@@ -231,7 +245,6 @@ class TestTickConsumption:
             total_cost={"metals": 1000},  # Needs 50 ticks at 20/tick
         )
         colony = _make_colony(construction_queue=[item], stockpile={"metals": 10000.0})
-        colony.facilities = []
         colony.resource_qualities = {}
         colony.id = 1
         empire.id = 0
@@ -264,7 +277,6 @@ class TestTickConsumption:
             total_cost={"metals": 2000},
         )
         colony = _make_colony(construction_queue=[item1, item2], stockpile={"metals": 1000.0})
-        colony.facilities = []
         colony.resource_qualities = {}
         colony.id = 1
         empire.id = 0
@@ -282,7 +294,6 @@ class TestTickConsumption:
         engine = ProductionEngine()
         empire = _make_empire({})
         colony = _make_colony(construction_queue=[], stockpile={"metals": 1000.0})
-        colony.facilities = []
         empire.colonies = [colony]
 
         engine.process_construction_tick(1, [empire], None)
@@ -340,7 +351,6 @@ class TestTickConsumption:
             construction_queue=[item],
             stockpile={"metals": 1000.0, "organics": 500.0, "radioactives": 200.0},
         )
-        colony.facilities = []
         colony.resource_qualities = {}
         colony.id = 1
         empire.id = 0
@@ -366,7 +376,6 @@ class TestTickConsumption:
             construction_queue=[item],
             stockpile={"metals": 1000.0, "organics": 0.0},
         )
-        colony.facilities = []
         colony.resource_qualities = {}
         colony.id = 1
         empire.id = 0
@@ -389,7 +398,6 @@ class TestTickConsumption:
             total_cost={},
         )
         colony = _make_colony(construction_queue=[item], stockpile={})
-        colony.facilities = []
         colony.resource_qualities = {}
         colony.id = 1
         empire.id = 0
@@ -416,7 +424,6 @@ class TestTickConsumption:
             "turns_remaining": 5,
         }
         colony = _make_colony(construction_queue=[malformed_item], stockpile={"metals": 1000.0})
-        colony.facilities = []
         colony.resource_qualities = {}
         colony.id = 1
         empire.id = 0
@@ -450,7 +457,6 @@ class TestMidTurnCompletion:
             resources_consumed={"metals": 99.0},  # Need 1 more
         )
         colony = _make_colony(construction_queue=[item], stockpile={"metals": 1000.0})
-        colony.facilities = []
         colony.resource_qualities = {}
         colony.id = 1
         empire.id = 0
@@ -483,7 +489,6 @@ class TestMidTurnCompletion:
             total_cost={"metals": 500},
         )
         colony = _make_colony(construction_queue=[item1, item2], stockpile={"metals": 1000.0})
-        colony.facilities = []
         colony.resource_qualities = {}
         colony.id = 1
         empire.id = 0
@@ -592,7 +597,6 @@ class TestMidTurnCompletion:
             construction_queue=[item],
             stockpile={"metals": 1000.0, "organics": 1000.0},
         )
-        colony.facilities = []
         colony.id = 1
         empire.colonies = [colony]
 

@@ -47,18 +47,18 @@ class TestColonizationExecution:
         assert len(empire.colonies) == initial_colonies + 1
         assert planet in empire.colonies
 
-    def test_colonize_consumes_fleet(self, turn_engine, empire_with_fleet):
-        """Colonizing fleet is removed from game."""
+    def test_colonize_fleet_stays(self, turn_engine, empire_with_fleet):
+        """Phase 2: Fleet stays after colonization (ship is reusable)."""
         empire, fleet, planet, galaxy = empire_with_fleet
-        # PROJ-40: Deterministic fixture guarantees setup
 
         initial_fleets = len(empire.fleets)
 
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
         turn_engine.process_turn([empire], galaxy)
 
-        assert len(empire.fleets) == initial_fleets - 1
-        assert fleet not in empire.fleets
+        # Phase 2: Fleet stays (ship is reusable)
+        assert len(empire.fleets) == initial_fleets
+        assert fleet in empire.fleets
 
     def test_colonize_pops_order(self, turn_engine, empire_with_fleet):
         """Colonize order is removed after execution (if fleet survives the process)."""

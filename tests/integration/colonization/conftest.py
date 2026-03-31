@@ -21,10 +21,10 @@ GALAXY_SEED = 42
 
 
 def make_colony_ship_for_planet(planet, owner_id: int, registries=None) -> ShipInstance:
-    """Create a ship with a colony pod matching the planet's type.
+    """Create a ship with a colony pod loaded as cargo.
 
-    PROJ-55: Ships now need colony pods to colonize specific planet types.
-    PROJ-211: Accepts optional registries for DI compliance.
+    Phase 2: Colony pods are cargo items. Ship carries the pod in cargo
+    and is reusable after colonization.
 
     Args:
         planet: Planet object with planet_type attribute
@@ -32,10 +32,10 @@ def make_colony_ship_for_planet(planet, owner_id: int, registries=None) -> ShipI
         registries: Optional GameRegistries for DI compliance
 
     Returns:
-        ShipInstance with appropriate colony pod in design_data
+        ShipInstance with the matching pod loaded as cargo
     """
     planet_type_str = planet.planet_type.name
-    pod_id = f"{planet_type_str.lower()}_colony_pod"
+    pod_cargo_type = f"colony_pod_{planet_type_str.lower()}"
 
     ship = ShipInstance(
         instance_id=f"colony-ship-{planet_type_str.lower()}-{id(planet)}",
@@ -46,12 +46,14 @@ def make_colony_ship_for_planet(planet, owner_id: int, registries=None) -> ShipI
             'name': f"Colony Ship ({planet_type_str})",
             'vehicle_type': 'Ship',
             'stats': {'mass': 100},
-            'expected_stats': {'speed': 10.0},  # PROJ-211: Add expected_stats for Fleet speed calc
+            'expected_stats': {'speed': 10.0},
             'layers': {
-                'HULL': [{'id': pod_id}]
+                'HULL': [{'id': 'colony_pod_bay'}]
             }
         },
     )
+    # Load colony pod as cargo
+    ship.cargo_contents[pod_cargo_type] = 1
     if registries is not None:
         ship.set_registries(registries)
     return ship

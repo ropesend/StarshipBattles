@@ -2119,6 +2119,33 @@
             }
         },
         {
+            "id": "colony_pod_bay",
+            "name": "Colony Pod Bay",
+            "type": "Infrastructure",
+            "mass": 100,
+            "hp": 200,
+            "allowed_vehicle_types": ["Ship"],
+            "abilities": {
+                "CargoStorage": [
+                    {"cargo_type": "colony_pod_continental", "capacity": 1},
+                    {"cargo_type": "colony_pod_arid", "capacity": 1},
+                    {"cargo_type": "colony_pod_pelagic", "capacity": 1},
+                    {"cargo_type": "colony_pod_magma", "capacity": 1},
+                    {"cargo_type": "colony_pod_cryoplanet", "capacity": 1},
+                    {"cargo_type": "colony_pod_barren", "capacity": 1},
+                    {"cargo_type": "colony_pod_jovian", "capacity": 1},
+                    {"cargo_type": "colony_pod_ice_giant", "capacity": 1},
+                    {"cargo_type": "colony_pod_chthonian", "capacity": 1},
+                    {"cargo_type": "colony_pod_ice_dwarf", "capacity": 1},
+                    {"cargo_type": "colony_pod_planetoid", "capacity": 1}
+                ]
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 100
+            }
+        },
+        {
             "id": "continental_colony_pod",
             "name": "Continental Colony Pod",
             "type": "Colony",
@@ -2341,6 +2368,41 @@
                 "metals": 150,
                 "organics": 100,
                 "vapors": 50
+            }
+        },
+        {
+            "id": "starter_colony_hub",
+            "name": "Colony Hub",
+            "type": "Infrastructure",
+            "mass": 500,
+            "hp": 500,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 240,
+            "abilities": {
+                "PlanetaryYard": true,
+                "LocalStorage": [
+                    {"resource_type": "metals", "capacity": 5000},
+                    {"resource_type": "organics", "capacity": 5000},
+                    {"resource_type": "vapors", "capacity": 5000},
+                    {"resource_type": "radioactives", "capacity": 5000},
+                    {"resource_type": "exotics", "capacity": 5000}
+                ],
+                "ResourceHarvester": [
+                    {"resource_type": "metals", "base_harvest_rate": 25},
+                    {"resource_type": "organics", "base_harvest_rate": 25},
+                    {"resource_type": "vapors", "base_harvest_rate": 25},
+                    {"resource_type": "radioactives", "base_harvest_rate": 25},
+                    {"resource_type": "exotics", "base_harvest_rate": 25}
+                ],
+                "CrewRequired": 50
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "metals": 500,
+                "organics": 200,
+                "vapors": 100,
+                "radioactives": 100,
+                "exotics": 50
             }
         },
         {

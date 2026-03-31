@@ -1,9 +1,7 @@
 """
 Integration tests for colonize order logic.
 
-PROJ-187: Updated to use OrderProcessor.process_end_turn_orders directly
-instead of TurnEngine._process_end_turn_orders (which was removed when
-action orders moved to tick-based processing).
+Phase 2: Colony pods are cargo items. Ships are reusable after colonization.
 """
 import pytest
 from enum import Enum
@@ -18,9 +16,9 @@ from game.core.hex_math import HexCoord
 class MockPlanetType(Enum):
     """Mock planet types for testing."""
     ICE_DWARF = "ICE_DWARF"
+    CONTINENTAL = "CONTINENTAL"
 
 
-# Mock Data Structures matching the actual implementation usage
 class MockSystem:
     def __init__(self, global_loc, planets):
         self.global_location = global_loc
@@ -32,20 +30,24 @@ class MockPlanet:
 
     def __init__(self, name, relative_loc, owner_id=None):
         self.name = name
-        self.location = relative_loc # Relative to system
+        self.location = relative_loc
         self.owner_id = owner_id
-        self.construction_queue = [] # Required by Engine
+        self.construction_queue = []
         self.planet_type = MockPlanetType.ICE_DWARF
         self.populations = []
-        self.id = MockPlanet._next_id  # PROJ-191: Planet always has id
-        MockPlanet._next_id += 1 
+        self.facilities = []
+        self.stockpile = {}
+        self.id = MockPlanet._next_id
+        MockPlanet._next_id += 1
+
+    def add_to_stockpile(self, resource, amount):
+        self.stockpile[resource] = self.stockpile.get(resource, 0.0) + amount
 
 class MockGalaxy:
     def __init__(self):
-        self.systems = {} # Map global_loc -> System
+        self.systems = {}
 
     def get_planets_at_global_hex(self, global_hex):
-        """Return planets at the given global hex (calculates from system data)."""
         result = []
         for sys in self.systems.values():
             for p in sys.planets:
@@ -54,13 +56,15 @@ class MockGalaxy:
         return result
 
     def get_zones_at_global_hex(self, global_hex):
-        """Return zone objects at location (empty for these tests)."""
         return []
+
+    def get_system_of_planet(self, planet):
+        return None
 
 
 def make_colony_ship(name: str, owner_id: int, pod_type: str = "ICE_DWARF") -> ShipInstance:
-    """Create a ship with a colony pod component for testing."""
-    return ShipInstance(
+    """Create a ship with a colony pod loaded as cargo."""
+    ship = ShipInstance(
         instance_id=f"colony-{name.lower().replace(' ', '-')}-{id(name)}",
         design_id=f"{pod_type}_colony_ship",
         name=name,
@@ -70,54 +74,44 @@ def make_colony_ship(name: str, owner_id: int, pod_type: str = "ICE_DWARF") -> S
             'vehicle_type': 'Ship',
             'stats': {'mass': 100},
             'layers': {
-                'HULL': [{'id': f'{pod_type.lower()}_colony_pod'}]
+                'HULL': [{'id': 'colony_pod_bay'}]
             }
         },
     )
+    # Load colony pod as cargo
+    ship.cargo_contents[f"colony_pod_{pod_type.lower()}"] = 1
+    return ship
 
 @pytest.fixture
 def order_processor():
-    """OrderProcessor for colonize order tests."""
     return OrderProcessor()
 
 @pytest.fixture
 def component_registry():
-    """Component registry with colony pod definitions."""
-    return {
-        'ice_dwarf_colony_pod': {
-            'id': 'ice_dwarf_colony_pod',
-            'abilities': {'ColonizePlanet': 'ICE_DWARF'}
-        },
-    }
+    return {}
 
 @pytest.fixture
 def galaxy_setup():
     galaxy = MockGalaxy()
-    
-    # System at (10, 10)
-    # Planet A at (0, 0) relative -> Global (10, 10)
-    # Planet B at (1, 0) relative -> Global (11, 10)
-    
+
     pA = MockPlanet("Planet A", HexCoord(0,0))
     pB = MockPlanet("Planet B", HexCoord(1,0))
-    
+
     system = MockSystem(HexCoord(10, 10), [pA, pB])
     galaxy.systems[HexCoord(10, 10)] = system
-    
+
     return galaxy, system, pA, pB
 
 def test_colonize_specific_success_at_exact_location(order_processor, galaxy_setup, component_registry):
     galaxy, system, pA, pB = galaxy_setup
 
-    # Fleet at (11, 10) trying to colonize Planet B (which is globally at 11, 10)
     fleet = Fleet(1, 1, HexCoord(11, 10))
-    fleet.ships.append(make_colony_ship("Colony Ship", 1))  # PROJ-140: Add proper colony ship
+    fleet.ships.append(make_colony_ship("Colony Ship", 1))
     fleet.orders.append(FleetOrder(OrderType.COLONIZE, pB))
 
     empire = Empire(1, "Player 1", (255, 0, 0))
     empire.fleets.append(fleet)
 
-    # Execute via OrderProcessor (PROJ-187)
     result = order_processor.execute_action_order(
         fleet, empire, galaxy, component_registry=component_registry
     )
@@ -125,15 +119,14 @@ def test_colonize_specific_success_at_exact_location(order_processor, galaxy_set
     assert result is True
     assert pB.owner_id == 1
     assert pB in empire.colonies
-    assert len(empire.fleets) == 0 # Fleet consumed
+    # Phase 2: Fleet stays (ship is reusable)
+    assert fleet in empire.fleets
 
 def test_colonize_specific_fail_wrong_location(order_processor, galaxy_setup, component_registry):
     galaxy, system, pA, pB = galaxy_setup
 
-    # Fleet at (10, 10) (System Center / Planet A) trying to colonize Planet B (at 11, 10)
-    # Current Logic Rule: Must be at specific hex
     fleet = Fleet(1, 1, HexCoord(10, 10))
-    fleet.ships.append(make_colony_ship("Colony Ship", 1))  # PROJ-140: Add proper colony ship
+    fleet.ships.append(make_colony_ship("Colony Ship", 1))
     fleet.orders.append(FleetOrder(OrderType.COLONIZE, pB))
 
     empire = Empire(1, "Player 1", (255, 0, 0))
@@ -144,17 +137,16 @@ def test_colonize_specific_fail_wrong_location(order_processor, galaxy_setup, co
     )
 
     assert result is False
-    assert pB.owner_id is None # Not colonized
-    assert len(fleet.orders) == 0 # Order popped (failed)
-    assert len(empire.fleets) == 1 # Fleet still exists
+    assert pB.owner_id is None
+    assert len(fleet.orders) == 0
+    assert len(empire.fleets) == 1
 
 def test_colonize_any_success_at_location(order_processor, galaxy_setup, component_registry):
     galaxy, system, pA, pB = galaxy_setup
 
-    # Fleet at (10, 10). Should define Planet A as target because it matches location
     fleet = Fleet(1, 1, HexCoord(10, 10))
-    fleet.ships.append(make_colony_ship("Colony Ship", 1))  # PROJ-140: Add proper colony ship
-    fleet.orders.append(FleetOrder(OrderType.COLONIZE, None)) # ANY
+    fleet.ships.append(make_colony_ship("Colony Ship", 1))
+    fleet.orders.append(FleetOrder(OrderType.COLONIZE, None))
 
     empire = Empire(1, "Player 1", (255, 0, 0))
     empire.fleets.append(fleet)
@@ -170,21 +162,19 @@ def test_colonize_any_success_at_location(order_processor, galaxy_setup, compone
 def test_colonize_any_fail_no_candidates(order_processor, galaxy_setup):
     galaxy, system, pA, pB = galaxy_setup
 
-    # Fleet at (50, 50) - Empty space
     fleet = Fleet(1, 1, HexCoord(50, 50))
-    fleet.orders.append(FleetOrder(OrderType.COLONIZE, None)) # ANY
+    fleet.orders.append(FleetOrder(OrderType.COLONIZE, None))
 
     empire = Empire(1, "Player 1", (255, 0, 0))
 
     result = order_processor.execute_action_order(fleet, empire, galaxy)
 
     assert result is False
-    assert len(fleet.orders) == 0 # Popped
+    assert len(fleet.orders) == 0
 
 def test_colonize_specific_fail_owned(order_processor, galaxy_setup):
     galaxy, system, pA, pB = galaxy_setup
 
-    # Planet A is already owned by Player 2 (ID: 2)
     pA.owner_id = 2
 
     fleet = Fleet(1, 1, HexCoord(10, 10))
@@ -196,63 +186,18 @@ def test_colonize_specific_fail_owned(order_processor, galaxy_setup):
 
     assert result is False
     assert len(fleet.orders) == 0
-    assert pA.owner_id == 2 # Unchanged
+    assert pA.owner_id == 2
 
 
 # =============================================================================
-# PROJ-55: Colony Pod Ship Removal Tests
+# Phase 2: Colony Pod Cargo Consumption Tests
 # =============================================================================
-
-class MockShip:
-    """Mock ship with design_data for testing colony pod behavior."""
-
-    def __init__(self, name: str, design_data: dict):
-        self.name = name
-        self.design_data = design_data
-
-    def is_combat_capable(self):
-        return True
-
-    def get_calculated_stats(self):
-        """Return minimal stats for fleet speed calculation."""
-        return {'strategic_movement': 50}
-
-
-@pytest.fixture
-def mock_component_registry():
-    """Component registry with colony pod definitions."""
-    return {
-        'ice_dwarf_colony_pod': {
-            'id': 'ice_dwarf_colony_pod',
-            'abilities': {'ColonizePlanet': 'ICE_DWARF'}
-        },
-        'continental_colony_pod': {
-            'id': 'continental_colony_pod',
-            'abilities': {'ColonizePlanet': 'CONTINENTAL'}
-        },
-        'basic_engine': {
-            'id': 'basic_engine',
-            'abilities': {}
-        },
-        'laser_cannon': {
-            'id': 'laser_cannon',
-            'abilities': {}
-        },
-    }
 
 
 @pytest.fixture
 def galaxy_with_typed_planets():
-    """Galaxy with planets that have specific planet_type attributes."""
-    from enum import Enum
-
-    class MockPlanetType(Enum):
-        ICE_DWARF = "ICE_DWARF"
-        CONTINENTAL = "CONTINENTAL"
-
     galaxy = MockGalaxy()
 
-    # System at (10, 10)
     ice_planet = MockPlanet("Ice World", HexCoord(0, 0))
     ice_planet.planet_type = MockPlanetType.ICE_DWARF
 
@@ -265,26 +210,22 @@ def galaxy_with_typed_planets():
     return galaxy, ice_planet, continental_planet
 
 
-class TestColonizePodShipRemoval:
-    """Tests for PROJ-55: Colony ship removal instead of fleet removal."""
+class TestColonizePodCargoConsumption:
+    """Tests for Phase 2: Colony pod consumed from cargo, ship stays."""
 
-    def test_colonize_removes_only_colony_ship_not_fleet(
-        self, galaxy_with_typed_planets, mock_component_registry
+    def test_colonize_consumes_pod_from_cargo_ship_stays(
+        self, galaxy_with_typed_planets
     ):
-        """Colonization removes only the ship with colony pod, not entire fleet."""
-        from game.strategy.engine.order_processor import OrderProcessor
-
+        """Colonization consumes pod from cargo. Ship and fleet stay."""
         galaxy, ice_planet, continental_planet = galaxy_with_typed_planets
 
-        # Create ships: one with ice dwarf pod, one combat ship
-        colony_ship = MockShip("Colony Ship", {
-            'layers': {'HULL': [{'id': 'ice_dwarf_colony_pod'}]}
-        })
-        combat_ship = MockShip("Combat Ship", {
-            'layers': {'HULL': [{'id': 'laser_cannon'}]}
-        })
+        colony_ship = make_colony_ship("Colony Ship", 1, "ICE_DWARF")
+        combat_ship = ShipInstance(
+            instance_id="combat-1", design_id="combat", name="Combat Ship",
+            owner_id=1, design_data={'name': 'Combat', 'vehicle_type': 'Ship',
+            'stats': {'mass': 100}, 'layers': {'HULL': [{'id': 'laser_cannon'}]}}
+        )
 
-        # Fleet at ice planet location (10, 10)
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(colony_ship)
         fleet.ships.append(combat_ship)
@@ -293,37 +234,30 @@ class TestColonizePodShipRemoval:
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
 
-        # Execute with component registry
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=mock_component_registry
-        )
+        result = processor.process_colonize(fleet, empire, galaxy, component_registry={})
 
-        # Assert: Colonization succeeded
         assert result.colonized is True
         assert ice_planet.owner_id == 1
 
-        # Assert: Only colony ship was removed, combat ship remains
-        assert colony_ship not in fleet.ships
+        # Both ships stay in fleet
+        assert colony_ship in fleet.ships
         assert combat_ship in fleet.ships
-        assert len(fleet.ships) == 1
+        assert len(fleet.ships) == 2
 
-        # Assert: Fleet still exists (has remaining ship)
+        # Pod consumed from cargo
+        assert colony_ship.cargo_contents.get("colony_pod_ice_dwarf", 0) == 0
+
+        # Fleet still exists
         assert fleet in empire.fleets
 
-    def test_colonize_removes_fleet_if_last_ship(
-        self, galaxy_with_typed_planets, mock_component_registry
+    def test_colonize_single_ship_fleet_stays(
+        self, galaxy_with_typed_planets
     ):
-        """Colonization removes fleet when colony ship is the last ship."""
-        from game.strategy.engine.order_processor import OrderProcessor
-
+        """Single-ship fleet stays after colonization."""
         galaxy, ice_planet, continental_planet = galaxy_with_typed_planets
 
-        # Fleet with only one ship (colony ship)
-        colony_ship = MockShip("Lone Colony Ship", {
-            'layers': {'HULL': [{'id': 'ice_dwarf_colony_pod'}]}
-        })
+        colony_ship = make_colony_ship("Lone Colony Ship", 1, "ICE_DWARF")
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(colony_ship)
@@ -332,62 +266,43 @@ class TestColonizePodShipRemoval:
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
 
-        # Execute with component registry
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=mock_component_registry
-        )
+        result = processor.process_colonize(fleet, empire, galaxy, component_registry={})
 
-        # Assert: Colonization succeeded
         assert result.colonized is True
         assert ice_planet.owner_id == 1
 
-        # Assert: Ship was removed
-        assert len(fleet.ships) == 0
+        # Ship stays
+        assert colony_ship in fleet.ships
+        # Fleet stays
+        assert fleet in empire.fleets
 
-        # Assert: Fleet was removed (no ships left)
-        assert fleet not in empire.fleets
-
-    def test_colonize_with_multiple_pod_types_removes_correct_ship(
-        self, galaxy_with_typed_planets, mock_component_registry
+    def test_colonize_consumes_correct_pod_type(
+        self, galaxy_with_typed_planets
     ):
-        """Colonizing Ice Dwarf removes ice pod ship, not continental pod ship."""
-        from game.strategy.engine.order_processor import OrderProcessor
-
+        """Colonizing Ice Dwarf consumes ice pod, not continental pod."""
         galaxy, ice_planet, continental_planet = galaxy_with_typed_planets
 
-        # Fleet with both types of colony pods
-        ice_colony_ship = MockShip("Ice Colony Ship", {
-            'layers': {'HULL': [{'id': 'ice_dwarf_colony_pod'}]}
-        })
-        continental_colony_ship = MockShip("Continental Colony Ship", {
-            'layers': {'HULL': [{'id': 'continental_colony_pod'}]}
-        })
+        # Ship carrying both types of pods
+        ship = ShipInstance(
+            instance_id="multi-pod-1", design_id="multi_carrier", name="Multi Carrier",
+            owner_id=1, design_data={'name': 'Multi', 'vehicle_type': 'Ship',
+            'stats': {'mass': 100}, 'layers': {'HULL': [{'id': 'colony_pod_bay'}]}}
+        )
+        ship.cargo_contents["colony_pod_ice_dwarf"] = 1
+        ship.cargo_contents["colony_pod_continental"] = 1
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
-        fleet.ships.append(ice_colony_ship)
-        fleet.ships.append(continental_colony_ship)
+        fleet.ships.append(ship)
         fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice_planet))
 
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
 
-        # Execute
         processor = OrderProcessor()
-        result = processor.process_colonize(
-            fleet, empire, galaxy,
-            component_registry=mock_component_registry
-        )
+        result = processor.process_colonize(fleet, empire, galaxy, component_registry={})
 
-        # Assert: Colonization succeeded
         assert result.colonized is True
-        assert ice_planet.owner_id == 1
-
-        # Assert: Only ice pod ship was removed
-        assert ice_colony_ship not in fleet.ships
-        assert continental_colony_ship in fleet.ships
-        assert len(fleet.ships) == 1
-
-        # Assert: Fleet still exists
-        assert fleet in empire.fleets
+        # Ice pod consumed, continental pod still there
+        assert ship.cargo_contents.get("colony_pod_ice_dwarf", 0) == 0
+        assert ship.cargo_contents.get("colony_pod_continental", 0) == 1

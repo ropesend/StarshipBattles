@@ -377,11 +377,9 @@ class TestFacadeColonyPodMethods:
         class MockPlanetType(Enum):
             ICE_DWARF = "ICE_DWARF"
 
-        # Create mock ship with ice dwarf pod
+        # Phase 2: Colony pod in cargo
         mock_ship = Mock()
-        mock_ship.design_data = {
-            'layers': {'HULL': [{'id': 'ice_dwarf_colony_pod'}]}
-        }
+        mock_ship.cargo_contents = {"colony_pod_ice_dwarf": 1}
 
         # Create mock planet target
         mock_target_planet = Mock()
@@ -400,16 +398,7 @@ class TestFacadeColonyPodMethods:
         mock_empire = Mock()
         mock_empire.fleets = [mock_fleet]
 
-        # Need to provide component registry
-        mock_registries = Mock()
-        mock_registries.components = {
-            'ice_dwarf_colony_pod': {
-                'id': 'ice_dwarf_colony_pod',
-                'abilities': {'ColonizePlanet': 'ICE_DWARF'}
-            }
-        }
-
-        mock_session = _create_mock_session_with_fleet_lookup([mock_empire], registries=mock_registries)
+        mock_session = _create_mock_session_with_fleet_lookup([mock_empire])
 
         facade = StrategySessionFacade(mock_session)
         result = facade.get_fleet_remaining_pods(10)

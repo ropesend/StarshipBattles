@@ -177,12 +177,10 @@ class TestColonizeProcessing:
 
     @pytest.fixture
     def mock_ship_with_continental_pod(self):
-        """Create a mock ship with continental colony pod."""
+        """Create a mock ship with continental colony pod in cargo."""
         ship = MagicMock()
         ship.name = "Colony Ship"
-        ship.design_data = {
-            'layers': {'HULL': [{'id': 'continental_colony_pod'}]}
-        }
+        ship.cargo_contents = {"colony_pod_continental": 1}
         return ship
 
     def test_process_colonize_success(
@@ -194,11 +192,12 @@ class TestColonizeProcessing:
 
         processor = OrderProcessor()
 
-        # Setup fleet with colony ship
+        # Setup fleet with colony ship carrying pod as cargo
         mock_fleet.ships = [mock_ship_with_continental_pod]
-        def remove_ship_effect(ship):
-            mock_fleet.ships.remove(ship)
-        mock_fleet.remove_ship = MagicMock(side_effect=remove_ship_effect)
+
+        # Setup fleet resources for cargo unloading
+        mock_fleet.resources = MagicMock()
+        mock_fleet.resources.unload_cargo_from_fleet = MagicMock(return_value=1)
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_continental]
 
@@ -206,15 +205,18 @@ class TestColonizeProcessing:
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 
-        result = processor.process_colonize(
-            mock_fleet, mock_empire, mock_galaxy,
-            component_registry=component_registry
-        )
+        with patch.object(processor, '_place_starter_complex'), \
+             patch.object(processor, '_transfer_cargo_resources_to_colony'):
+            result = processor.process_colonize(
+                mock_fleet, mock_empire, mock_galaxy,
+                component_registry=component_registry
+            )
 
         assert result.colonized is True
         mock_empire.add_colony.assert_called_with(mock_planet_continental)
-        # Fleet should be removed since it's now empty
-        mock_empire.remove_fleet.assert_called_with(mock_fleet)
+        # Phase 2: Ship stays, fleet stays. Pod consumed from cargo.
+        mock_fleet.resources.unload_cargo_from_fleet.assert_called_with("colony_pod_continental", 1)
+        mock_empire.remove_fleet.assert_not_called()
 
     def test_process_colonize_any_planet(
         self, mock_fleet, mock_empire, mock_galaxy,
@@ -225,11 +227,10 @@ class TestColonizeProcessing:
 
         processor = OrderProcessor()
 
-        # Setup fleet with colony ship
+        # Setup fleet with colony ship carrying pod as cargo
         mock_fleet.ships = [mock_ship_with_continental_pod]
-        def remove_ship_effect(ship):
-            mock_fleet.ships.remove(ship)
-        mock_fleet.remove_ship = MagicMock(side_effect=remove_ship_effect)
+        mock_fleet.resources = MagicMock()
+        mock_fleet.resources.unload_cargo_from_fleet = MagicMock(return_value=1)
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_continental]
 
@@ -237,10 +238,12 @@ class TestColonizeProcessing:
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 
-        result = processor.process_colonize(
-            mock_fleet, mock_empire, mock_galaxy,
-            component_registry=component_registry
-        )
+        with patch.object(processor, '_place_starter_complex'), \
+             patch.object(processor, '_transfer_cargo_resources_to_colony'):
+            result = processor.process_colonize(
+                mock_fleet, mock_empire, mock_galaxy,
+                component_registry=component_registry
+            )
 
         assert result.colonized is True
         mock_empire.add_colony.assert_called_with(mock_planet_continental)
@@ -315,32 +318,29 @@ class TestEndTurnOrderProcessing:
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
 
-        # Setup fleet with colony ship
+        # Setup fleet with colony ship carrying pod as cargo
         mock_ship = MagicMock()
         mock_ship.name = "Colony Ship"
-        mock_ship.design_data = {'layers': {'HULL': [{'id': 'continental_colony_pod'}]}}
+        mock_ship.cargo_contents = {"colony_pod_continental": 1}
         mock_fleet.ships = [mock_ship]
-        def remove_ship_effect(ship):
-            mock_fleet.ships.remove(ship)
-        mock_fleet.remove_ship = MagicMock(side_effect=remove_ship_effect)
+        mock_fleet.resources = MagicMock()
+        mock_fleet.resources.unload_cargo_from_fleet = MagicMock(return_value=1)
 
-        component_registry = {
-            'continental_colony_pod': {
-                'id': 'continental_colony_pod',
-                'abilities': {'ColonizePlanet': 'CONTINENTAL'}
-            },
-        }
+        component_registry = {}
 
         order = FleetOrder(OrderType.COLONIZE, mock_planet)
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 
-        result = processor.execute_action_order(
-            mock_fleet, mock_empire, mock_galaxy,
-            component_registry=component_registry
-        )
+        with patch.object(processor, '_place_starter_complex'), \
+             patch.object(processor, '_transfer_cargo_resources_to_colony'):
+            result = processor.execute_action_order(
+                mock_fleet, mock_empire, mock_galaxy,
+                component_registry=component_registry
+            )
 
-        assert result is True  # Fleet consumed
+        # Phase 2: colonized=True but fleet NOT consumed (ship stays)
+        assert result is True
         mock_empire.add_colony.assert_called()
 
     # PROJ-207 EP-001: Removed test_process_end_turn_orders_join_fleet
@@ -504,17 +504,15 @@ class TestOrderResult:
 # Test: PROJ-55 Colony Ship Removal
 # =============================================================================
 
-class TestColonizeShipRemoval:
-    """Tests for PROJ-55: Colony ship removal instead of fleet removal."""
+class TestColonizeCargoConsumption:
+    """Tests for Phase 2: Colony pod consumed from cargo, ship stays."""
 
     @pytest.fixture
     def mock_ship_with_pod(self):
-        """Create a mock ship with colony pod."""
+        """Create a mock ship with colony pod in cargo."""
         ship = MagicMock()
         ship.name = "Colony Ship"
-        ship.design_data = {
-            'layers': {'HULL': [{'id': 'ice_dwarf_colony_pod'}]}
-        }
+        ship.cargo_contents = {"colony_pod_ice_dwarf": 1}
         return ship
 
     @pytest.fixture
@@ -522,24 +520,13 @@ class TestColonizeShipRemoval:
         """Create a mock combat ship without colony pod."""
         ship = MagicMock()
         ship.name = "Combat Ship"
-        ship.design_data = {
-            'layers': {'HULL': [{'id': 'laser_cannon'}]}
-        }
+        ship.cargo_contents = {}
         return ship
 
     @pytest.fixture
     def mock_component_registry(self):
-        """Component registry with colony pod definitions."""
-        return {
-            'ice_dwarf_colony_pod': {
-                'id': 'ice_dwarf_colony_pod',
-                'abilities': {'ColonizePlanet': 'ICE_DWARF'}
-            },
-            'laser_cannon': {
-                'id': 'laser_cannon',
-                'abilities': {}
-            },
-        }
+        """Component registry (kept for API compatibility)."""
+        return {}
 
     @pytest.fixture
     def mock_planet_ice_dwarf(self):
@@ -555,19 +542,19 @@ class TestColonizeShipRemoval:
         planet.planet_type = MockPlanetType.ICE_DWARF
         return planet
 
-    def test_process_colonize_with_registry_removes_ship(
+    def test_process_colonize_consumes_pod_from_cargo(
         self, mock_fleet, mock_empire, mock_galaxy,
         mock_ship_with_pod, mock_ship_combat,
         mock_planet_ice_dwarf, mock_component_registry
     ):
-        """With registry, colonize removes specific ship, not fleet."""
+        """Colonize consumes pod from cargo, ship stays in fleet."""
         from game.strategy.engine.order_processor import OrderProcessor
 
         processor = OrderProcessor()
 
-        # Setup fleet with ships list
         mock_fleet.ships = [mock_ship_with_pod, mock_ship_combat]
-        mock_fleet.remove_ship = MagicMock()
+        mock_fleet.resources = MagicMock()
+        mock_fleet.resources.unload_cargo_from_fleet = MagicMock(return_value=1)
 
         order = FleetOrder(OrderType.COLONIZE, mock_planet_ice_dwarf)
         mock_fleet.get_current_order.return_value = order
@@ -575,29 +562,31 @@ class TestColonizeShipRemoval:
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf]
 
-        result = processor.process_colonize(
-            mock_fleet, mock_empire, mock_galaxy,
-            component_registry=mock_component_registry
-        )
+        with patch.object(processor, '_place_starter_complex'), \
+             patch.object(processor, '_transfer_cargo_resources_to_colony'):
+            result = processor.process_colonize(
+                mock_fleet, mock_empire, mock_galaxy,
+                component_registry=mock_component_registry
+            )
 
         assert result.colonized is True
-        mock_fleet.remove_ship.assert_called_with(mock_ship_with_pod)
+        # Pod consumed from cargo
+        mock_fleet.resources.unload_cargo_from_fleet.assert_called_with("colony_pod_ice_dwarf", 1)
+        # Ship NOT removed
+        mock_empire.remove_fleet.assert_not_called()
 
-    def test_process_colonize_with_registry_removes_fleet_when_empty(
+    def test_process_colonize_single_ship_fleet_stays(
         self, mock_fleet, mock_empire, mock_galaxy,
         mock_ship_with_pod, mock_planet_ice_dwarf, mock_component_registry
     ):
-        """With registry, removes fleet when ship removal leaves it empty."""
+        """Single-ship fleet stays after colonization (ship is reusable)."""
         from game.strategy.engine.order_processor import OrderProcessor
 
         processor = OrderProcessor()
 
-        # Setup fleet with only one ship - will be empty after removal
         mock_fleet.ships = [mock_ship_with_pod]
-
-        def remove_ship_effect(ship):
-            mock_fleet.ships.remove(ship)
-        mock_fleet.remove_ship = MagicMock(side_effect=remove_ship_effect)
+        mock_fleet.resources = MagicMock()
+        mock_fleet.resources.unload_cargo_from_fleet = MagicMock(return_value=1)
 
         order = FleetOrder(OrderType.COLONIZE, mock_planet_ice_dwarf)
         mock_fleet.get_current_order.return_value = order
@@ -605,31 +594,30 @@ class TestColonizeShipRemoval:
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf]
 
-        result = processor.process_colonize(
-            mock_fleet, mock_empire, mock_galaxy,
-            component_registry=mock_component_registry
-        )
+        with patch.object(processor, '_place_starter_complex'), \
+             patch.object(processor, '_transfer_cargo_resources_to_colony'):
+            result = processor.process_colonize(
+                mock_fleet, mock_empire, mock_galaxy,
+                component_registry=mock_component_registry
+            )
 
         assert result.colonized is True
-        mock_fleet.remove_ship.assert_called()
-        mock_empire.remove_fleet.assert_called_with(mock_fleet)
+        # Fleet NOT removed - ship is reusable
+        mock_empire.remove_fleet.assert_not_called()
 
-    def test_process_colonize_with_registry_keeps_fleet_when_ships_remain(
+    def test_process_colonize_multi_ship_fleet_all_stay(
         self, mock_fleet, mock_empire, mock_galaxy,
         mock_ship_with_pod, mock_ship_combat,
         mock_planet_ice_dwarf, mock_component_registry
     ):
-        """With registry, keeps fleet when other ships remain."""
+        """Multi-ship fleet: all ships stay after colonization."""
         from game.strategy.engine.order_processor import OrderProcessor
 
         processor = OrderProcessor()
 
-        # Setup fleet with two ships
         mock_fleet.ships = [mock_ship_with_pod, mock_ship_combat]
-
-        def remove_ship_effect(ship):
-            mock_fleet.ships.remove(ship)
-        mock_fleet.remove_ship = MagicMock(side_effect=remove_ship_effect)
+        mock_fleet.resources = MagicMock()
+        mock_fleet.resources.unload_cargo_from_fleet = MagicMock(return_value=1)
 
         order = FleetOrder(OrderType.COLONIZE, mock_planet_ice_dwarf)
         mock_fleet.get_current_order.return_value = order
@@ -637,12 +625,13 @@ class TestColonizeShipRemoval:
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf]
 
-        result = processor.process_colonize(
-            mock_fleet, mock_empire, mock_galaxy,
-            component_registry=mock_component_registry
-        )
+        with patch.object(processor, '_place_starter_complex'), \
+             patch.object(processor, '_transfer_cargo_resources_to_colony'):
+            result = processor.process_colonize(
+                mock_fleet, mock_empire, mock_galaxy,
+                component_registry=mock_component_registry
+            )
 
         assert result.colonized is True
-        mock_fleet.remove_ship.assert_called()
-        # Fleet should NOT be removed since combat ship remains
+        # No ships removed, fleet stays
         mock_empire.remove_fleet.assert_not_called()

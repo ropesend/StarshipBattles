@@ -483,7 +483,9 @@ class TestColonyFoundedEvent:
             # Mock find_ship_with_colony_pod to return the colony ship
             mock_val.find_ship_with_colony_pod.return_value = fleet.ships[0]
 
-            with patch('game.strategy.engine.order_processor.log_event', fake):
+            with patch.object(processor, '_place_starter_complex'), \
+                 patch.object(processor, '_transfer_cargo_resources_to_colony'), \
+                 patch('game.strategy.engine.order_processor.log_event', fake):
                 result = processor.process_colonize(
                     fleet, empire, galaxy,
                     component_registry=component_registry
@@ -584,11 +586,13 @@ class TestColonyFoundedEvent:
             # Mock find_ship_with_colony_pod to return the colony ship
             mock_val.find_ship_with_colony_pod.return_value = mock_ship
 
-            with patch('game.strategy.engine.order_processor.log_event', fake):
-                result = processor.process_colonize(
-                    fleet, empire, galaxy,
-                    component_registry=component_registry
-                )
+            with patch.object(processor, '_place_starter_complex'), \
+                 patch.object(processor, '_transfer_cargo_resources_to_colony'):
+                with patch('game.strategy.engine.order_processor.log_event', fake):
+                    result = processor.process_colonize(
+                        fleet, empire, galaxy,
+                        component_registry=component_registry
+                    )
 
         assert result.colonized is True
         assert len(calls) == 1
@@ -1044,7 +1048,9 @@ class TestColonizationEventLocationEnrichment:
             mock_val.validate.return_value = mock_result
             mock_val.find_ship_with_colony_pod.return_value = mock_ship
 
-            with patch('game.strategy.engine.order_processor.log_event', fake):
+            with patch.object(processor, '_place_starter_complex'), \
+                 patch.object(processor, '_transfer_cargo_resources_to_colony'), \
+                 patch('game.strategy.engine.order_processor.log_event', fake):
                 processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
 
         _, kw = calls[0]
@@ -1102,7 +1108,9 @@ class TestColonizationEventLocationEnrichment:
             mock_val.validate.return_value = mock_result
             mock_val.find_ship_with_colony_pod.return_value = mock_ship
 
-            with patch('game.strategy.engine.order_processor.log_event', fake):
+            with patch.object(processor, '_place_starter_complex'), \
+                 patch.object(processor, '_transfer_cargo_resources_to_colony'), \
+                 patch('game.strategy.engine.order_processor.log_event', fake):
                 processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
 
         _, kw = calls[0]

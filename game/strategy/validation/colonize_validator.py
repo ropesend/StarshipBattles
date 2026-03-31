@@ -4,51 +4,44 @@ ColonizeValidator - Validates COLONIZE orders for fleets.
 PROJ-36: Extracted from TurnEngine to centralize validation.
 PROJ-55: Added colony pod detection and chain validation.
 PROJ-127: Extracted _iterate_colony_pods helper to reduce duplication.
+Phase 2: Colony pods are now cargo items, not ship components.
+         Ships are reusable after colonization.
 """
 from typing import Dict, Any, Iterator, Optional, Tuple, TYPE_CHECKING
 from game.core.validation import ValidationResult
-from game.strategy.services.component_inspector import iterate_design_components
 from game.strategy.data.order_types import OrderType
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.galaxy import Galaxy
-    from game.strategy.data.ship_instance import ShipInstance
 
 from game.strategy.data.planet import Planet
 from game.core.protocols import is_planet
 
 
-def _iterate_colony_pods(
-    fleet: 'Fleet',
-    component_registry: Dict[str, Any]
-) -> Iterator[Tuple['ShipInstance', str]]:
-    """Iterate over colony pod abilities in a fleet's ships.
+COLONY_POD_PREFIX = "colony_pod_"
 
-    Yields (ship, planet_type_str) tuples for each ColonizePlanet ability found.
+
+def _iterate_colony_pods_in_cargo(
+    fleet: 'Fleet',
+) -> Iterator[Tuple[str, str]]:
+    """Iterate over colony pods in fleet cargo.
+
+    Scans all ships' cargo_contents for items starting with "colony_pod_".
+    Yields (cargo_type, planet_type_str) tuples.
 
     Args:
         fleet: The Fleet object
-        component_registry: Component registry dict for ability lookup
 
     Yields:
-        Tuple of (ship object, planet_type string).
+        Tuple of (cargo_type string, planet_type string in UPPER_CASE).
+        Example: ("colony_pod_continental", "CONTINENTAL")
     """
     for ship in fleet.ships:
-        for _comp_entry, _comp_def, abilities in iterate_design_components(
-            ship.design_data, component_registry
-        ):
-            if 'ColonizePlanet' in abilities:
-                ability_data = abilities['ColonizePlanet']
-                # Handle both string shorthand and dict format
-                if isinstance(ability_data, str):
-                    pod_planet_type = ability_data
-                elif isinstance(ability_data, dict):
-                    pod_planet_type = ability_data.get('planet_type', '')
-                else:
-                    continue
-
-                yield ship, pod_planet_type
+        for cargo_type, amount in ship.cargo_contents.items():
+            if cargo_type.startswith(COLONY_POD_PREFIX) and amount > 0:
+                planet_type = cargo_type[len(COLONY_POD_PREFIX):].upper()
+                yield cargo_type, planet_type
 
 
 class ColonizeValidator:
@@ -65,12 +58,15 @@ class ColonizeValidator:
         """
         Validate if a fleet can colonize a specific planet.
 
+        Phase 2: Colony pod detection is now cargo-based. The component_registry
+        parameter is kept for API compatibility but is no longer needed for pod
+        detection. Pods are checked via fleet cargo contents.
+
         Args:
             galaxy: The Galaxy object
             fleet: The Fleet object attempting to colonize
             target_planet: The Planet object or None for 'Any'
-            component_registry: Optional component registry dict for pod lookup.
-                               If provided, validates colony pod requirements.
+            component_registry: Kept for API compatibility. Not used for pod lookup.
             skip_chain_check: If True, skip chain exhaustion check. Use during
                              execution (we're processing the order, not adding it).
 
@@ -109,31 +105,29 @@ class ColonizeValidator:
                     code="NO_CANDIDATES"
                 )
 
-            # PROJ-140 Phase 2: When registry provided, check if ANY candidate matches available pods
-            if component_registry is not None:
-                # Get available pods by type
-                available = ColonizeValidator.get_available_colony_pods(fleet, component_registry)
+            # Phase 2: Check if ANY candidate matches available cargo pods
+            available = ColonizeValidator.get_available_colony_pods(fleet)
 
-                # Get committed pods by type (skip during execution)
-                committed = ColonizeValidator.get_committed_colony_pods(fleet) if not skip_chain_check else {}
+            # Get committed pods by type (skip during execution)
+            committed = ColonizeValidator.get_committed_colony_pods(fleet) if not skip_chain_check else {}
 
-                # Check if any valid candidate planet matches an available (uncommitted) pod
-                found_match = False
-                for candidate in valid_candidates:
-                    # Duck typing: check for planet_type attribute (works with mocks too)
-                    if hasattr(candidate, 'planet_type') and candidate.planet_type is not None:
-                        planet_type_str = candidate.planet_type.name
-                        available_count = available.get(planet_type_str, 0)
-                        committed_count = committed.get(planet_type_str, 0)
-                        if available_count > committed_count:
-                            found_match = True
-                            break
+            # Check if any valid candidate planet matches an available (uncommitted) pod
+            found_match = False
+            for candidate in valid_candidates:
+                # Duck typing: check for planet_type attribute (works with mocks too)
+                if hasattr(candidate, 'planet_type') and candidate.planet_type is not None:
+                    planet_type_str = candidate.planet_type.name
+                    available_count = available.get(planet_type_str, 0)
+                    committed_count = committed.get(planet_type_str, 0)
+                    if available_count > committed_count:
+                        found_match = True
+                        break
 
-                if not found_match:
-                    return ValidationResult.error(
-                        "No matching colony pod for any planet at this location.",
-                        code="NO_COLONY_POD"
-                    )
+            if not found_match:
+                return ValidationResult.error(
+                    "No matching colony pod for any planet at this location.",
+                    code="NO_COLONY_POD"
+                )
 
             return ValidationResult.success()
 
@@ -146,80 +140,76 @@ class ColonizeValidator:
                 )
 
             # Check if planet is in valid candidates (verifies location)
-            # We strictly check reference equality or ID equality if we had IDs
             if target_planet not in valid_candidates:
-                # Determine detailed reason for better feedback
-                # If owner is none (checked above), then it must be location.
                 return ValidationResult.error(
                     f"Planet {target_planet.name} is not at fleet location.",
                     code="WRONG_LOCATION"
                 )
 
-            # 4. Check for colony pod (PROJ-55)
-            if component_registry is not None:
-                planet_type_str = target_planet.planet_type.name
+            # 4. Check for colony pod in cargo (Phase 2)
+            planet_type_str = target_planet.planet_type.name
 
-                # Check if fleet has a matching colony pod
-                ship_with_pod = ColonizeValidator.find_ship_with_colony_pod(
-                    fleet, planet_type_str, component_registry
+            if not ColonizeValidator.fleet_has_colony_pod(fleet, planet_type_str):
+                return ValidationResult.error(
+                    f"No ship in fleet has {planet_type_str} colony pod",
+                    code="NO_COLONY_POD"
                 )
 
-                if ship_with_pod is None:
+            # Check chain limits - ensure not over-committed
+            if not skip_chain_check:
+                available = ColonizeValidator.get_available_colony_pods(fleet)
+                committed = ColonizeValidator.get_committed_colony_pods(fleet)
+
+                available_count = available.get(planet_type_str, 0)
+                committed_count = committed.get(planet_type_str, 0)
+
+                if committed_count >= available_count:
                     return ValidationResult.error(
-                        f"No ship in fleet has {planet_type_str} colony pod",
-                        code="NO_COLONY_POD"
+                        f"All {planet_type_str} colony pods already assigned",
+                        code="COLONY_POD_EXHAUSTED"
                     )
-
-                # Check chain limits - ensure not over-committed
-                # PROJ-140: Skip chain check during execution (order is already in queue)
-                if not skip_chain_check:
-                    available = ColonizeValidator.get_available_colony_pods(fleet, component_registry)
-                    committed = ColonizeValidator.get_committed_colony_pods(fleet)
-
-                    available_count = available.get(planet_type_str, 0)
-                    committed_count = committed.get(planet_type_str, 0)
-
-                    if committed_count >= available_count:
-                        return ValidationResult.error(
-                            f"All {planet_type_str} colony pods already assigned",
-                            code="COLONY_POD_EXHAUSTED"
-                        )
 
             return ValidationResult.success()
 
     @staticmethod
-    def find_ship_with_colony_pod(
+    def fleet_has_colony_pod(
         fleet: 'Fleet',
         planet_type_str: str,
-        component_registry: Dict[str, Any]
-    ) -> Optional['ShipInstance']:
+    ) -> bool:
         """
-        Find a ship in the fleet with a colony pod matching the planet type.
+        Check if any ship in the fleet has a colony pod matching the planet type
+        in its cargo.
+
+        Phase 2: Replaces find_ship_with_colony_pod. Returns bool instead of
+        ship reference since ships are no longer consumed.
 
         Args:
             fleet: The Fleet object
             planet_type_str: Planet type string (e.g., "ICE_DWARF")
-            component_registry: Component registry dict for ability lookup
 
         Returns:
-            The first ship with a matching colony pod, or None if not found.
+            True if the fleet has a matching colony pod in cargo, False otherwise.
         """
-        for ship, pod_planet_type in _iterate_colony_pods(fleet, component_registry):
+        for _cargo_type, pod_planet_type in _iterate_colony_pods_in_cargo(fleet):
             if pod_planet_type == planet_type_str:
-                return ship
-        return None
+                return True
+        return False
 
     @staticmethod
     def get_available_colony_pods(
         fleet: 'Fleet',
-        component_registry: Dict[str, Any]
+        component_registry: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, int]:
         """
         Count available colony pods in the fleet by planet type.
 
+        Phase 2: Reads from fleet cargo instead of component abilities.
+        The component_registry parameter is kept for API compatibility but
+        is no longer used.
+
         Args:
             fleet: The Fleet object
-            component_registry: Component registry dict for ability lookup
+            component_registry: Kept for API compatibility. Not used.
 
         Returns:
             Dict mapping planet type string to count of available pods.
@@ -227,7 +217,7 @@ class ColonizeValidator:
         """
         pod_counts: Dict[str, int] = {}
 
-        for _ship, pod_planet_type in _iterate_colony_pods(fleet, component_registry):
+        for _cargo_type, pod_planet_type in _iterate_colony_pods_in_cargo(fleet):
             pod_counts[pod_planet_type] = pod_counts.get(pod_planet_type, 0) + 1
 
         return pod_counts

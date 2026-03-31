@@ -93,6 +93,26 @@ class LocalStorageAbility(Ability):
         ]
 
 
+class PlanetaryYardAbility(Ability):
+    """Enables base planetary construction queue on a colony.
+
+    A colony must have at least one operational facility with this ability
+    to use its base construction queue (for building complexes).
+    The starter complex placed during colonization provides this ability.
+    """
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []  # Marker ability
+
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+
+    def get_primary_value(self) -> float:
+        return 1.0
+
+    def get_ui_rows(self) -> List[Dict[str, str]]:
+        return [{'label': 'Planetary Yard', 'value': 'Yes', 'hint_color': None}]
+
+
 class SpaceShipyardAbility(Ability):
     """Enables ship construction at colonies."""
 

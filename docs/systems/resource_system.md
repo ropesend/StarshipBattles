@@ -116,6 +116,9 @@ ResourceCatalog (loaded once at startup)
        +-- Planet Generation: astrophysics.json affinities determine
        |   which resources appear in planet deposits
        |
+       +-- Colonization: Colony Hub (starter complex) placed on planet
+       |   with PlanetaryYard + basic harvesters + storage + seed resources
+       |
        +-- Harvesting: ResourceHarvesterAbility extracts from deposits
        |   into planet.stockpile (local storage)
        |
