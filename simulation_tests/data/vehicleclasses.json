@@ -25,6 +25,24 @@
         }
       ]
     },
+    "TestS_2L_CNC": {
+      "name": "TestS_2L_CNC",
+      "type": "Ship",
+      "max_mass": 2000,
+      "default_hull_id": "hull_test_s_cnc",
+      "layers": [
+        {
+          "type": "CORE",
+          "radius_pct": 0.6,
+          "max_mass_pct": 1.0
+        },
+        {
+          "type": "ARMOR",
+          "radius_pct": 1.0,
+          "max_mass_pct": 1.0
+        }
+      ]
+    },
     "TestS_3L": {
       "name": "TestS_3L",
       "type": "Ship",

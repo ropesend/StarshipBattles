@@ -647,12 +647,13 @@ class TestInactiveWeapons:
         target.type = 'ship'
         ship.current_target = target
 
-        # Inactive weapon
+        # Non-operational weapon (inactive)
         weapon_ab = MagicMock()
         weapon_ab.can_fire = MagicMock(return_value=True)
 
         weapon = MagicMock()
         weapon.is_active = False  # INACTIVE
+        weapon.is_operational = False  # NON-OPERATIONAL (checked by fire_weapons)
         weapon.has_ability = lambda name: name == 'WeaponAbility'
         weapon.get_ability = lambda name: weapon_ab
 
@@ -701,6 +702,7 @@ class TestInactiveWeapons:
 
             weapon = MagicMock()
             weapon.is_active = is_active
+            weapon.is_operational = is_active  # fire_weapons checks is_operational
             weapon.has_ability = lambda name: name in ['WeaponAbility', 'BeamWeaponAbility']
             weapon.get_ability = lambda name: weapon_ab if name == 'WeaponAbility' else beam_ab
             weapon.can_afford_activation = MagicMock(return_value=True)
@@ -1078,6 +1080,7 @@ class TestHangarLaunchEdgeCases:
 
         hangar = MagicMock()
         hangar.is_active = False  # Inactive
+        hangar.is_operational = False  # Non-operational (checked by fire_weapons)
         hangar.has_ability = lambda name: name == 'VehicleLaunch'
         hangar.get_ability = lambda name: vl_ability if name == 'VehicleLaunch' else None
 

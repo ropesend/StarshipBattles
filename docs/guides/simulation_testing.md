@@ -40,9 +40,15 @@ simulation_tests/                    # Simulation-specific test ecosystem
 │   ├── projectile_scenarios.py      # Projectile weapon scenarios
 │   ├── seeker_scenarios.py          # Seeker weapon scenarios
 │   ├── propulsion_scenarios.py      # Engine/thruster scenarios
-│   ├── defense_scenarios.py         # Shield/armor scenarios
 │   ├── modifier_scenarios.py        # Modifier scenarios
 │   ├── resource_scenarios.py        # Fuel/energy/ammo scenarios
+│   │   # Ability-specific categories
+│   ├── tohit_attack_scenarios.py    # ToHitAttackModifier
+│   ├── tohit_defense_scenarios.py   # ToHitDefenseModifier
+│   ├── shield_projection_scenarios.py # ShieldProjection
+│   ├── shield_regen_scenarios.py    # ShieldRegeneration
+│   ├── armor_layer_scenarios.py     # ArmorLayer
+│   ├── emissive_armor_scenarios.py  # EmissiveArmor
 │   └── example_beam_test.py         # Example scenario for reference
 ├── tests/                           # Pytest wrappers for scenarios
 │   ├── test_beam_weapons.py
@@ -231,7 +237,7 @@ class MyTest(TestScenario):
         """Optional: per-tick logic (e.g., force weapon firing)."""
         pass
 
-    def verify(self, battle_engine):
+    def validate(self, battle_engine):
         """Return True if test passed. Store results in self.results."""
         return True
 ```
@@ -382,7 +388,7 @@ max_speed:
 
 **7. Define validation rules** covering both formula correctness and outcome correctness.
 
-**8. Store results BEFORE calling `super().verify()`** (see Troubleshooting, Issue 3).
+**8. Store results BEFORE calling `super().validate()`** (see Troubleshooting, Issue 3).
 
 **9. Create the pytest wrapper** in `simulation_tests/tests/`.
 
@@ -446,7 +452,7 @@ class BeamRangeTest(TestScenario):
     def update(self, battle_engine):
         self.attacker.comp_trigger_pulled = True
 
-    def verify(self, battle_engine):
+    def validate(self, battle_engine):
         damage = self.initial_target_hp - self.target.hp
         self.results['damage_dealt'] = damage
         return damage > 0
@@ -465,7 +471,7 @@ class EnergyConsumptionTest(TestScenario):
         self.initial_energy = self.attacker.current_energy
         # ... position ships, start engine
 
-    def verify(self, battle_engine):
+    def validate(self, battle_engine):
         energy_used = self.initial_energy - self.attacker.current_energy
         shots_fired = self.results['shots_fired']
         expected_energy = shots_fired * 10  # 10 energy per shot
@@ -489,7 +495,7 @@ class WeaponCooldownTest(TestScenario):
         if weapon.just_fired:
             self.shot_ticks.append(battle_engine.tick_counter)
 
-    def verify(self, battle_engine):
+    def validate(self, battle_engine):
         if len(self.shot_ticks) < 2:
             return False
         intervals = [self.shot_ticks[i+1] - self.shot_ticks[i]
@@ -517,7 +523,7 @@ class TeamBattleTest(TestScenario):
         t2.position = pygame.math.Vector2(500, 100)
         battle_engine.start([a1, a2], [t1, t2], seed=self.metadata.seed)
 
-    def verify(self, battle_engine):
+    def validate(self, battle_engine):
         return all(ship.is_alive for ship in battle_engine.teams[0])
 ```
 
@@ -573,7 +579,7 @@ class NoEngineStaysStationary(TestScenario):
         self.start_pos = pygame.math.Vector2(self.ship.position)
         # ...
 
-    def verify(self, battle_engine):
+    def validate(self, battle_engine):
         distance = self.ship.position.distance_to(self.start_pos)
         self.results['distance_traveled'] = distance
         return distance == 0.0
@@ -633,7 +639,7 @@ The following scenario categories have been implemented using the TestScenario p
 | Projectile Weapons | `projectile_scenarios.py` | `test_projectile_weapons.py` | Migrated |
 | Seeker Weapons | `seeker_scenarios.py` | `test_seeker_weapons.py` | Migrated |
 | Propulsion (Engine) | `propulsion_scenarios.py` | `test_propulsion.py`, `test_engine_physics.py` | Migrated |
-| Defense (Shields/Armor) | `defense_scenarios.py` | `test_defense.py` | Migrated |
+| Defense (Shields/Armor) | *(split into ability-specific files)* | `test_defense.py` | Migrated → split |
 | Modifiers | `modifier_scenarios.py` | `test_modifiers.py` | Migrated |
 | Resource Consumption | `resource_scenarios.py` | `test_resource_consumption.py` | Migrated |
 
@@ -680,7 +686,7 @@ class BEAM360_001_LowAccPointBlank(TestScenario):
     def update(self, battle_engine):
         self.attacker.comp_trigger_pulled = True
 
-    def verify(self, battle_engine):
+    def validate(self, battle_engine):
         damage = self.initial_target_hp - self.target.hp
         self.results['damage_dealt'] = damage
         return damage > 0
@@ -754,11 +760,11 @@ path='results.initial_velocity_magnitude'
 
 ### Issue: Validation runs before results are stored
 
-**Root Cause:** The parent template's `verify()` calls `run_validation()` BEFORE the subclass stores its results.
+**Root Cause:** The parent template's `validate()` calls `run_validation()` BEFORE the subclass stores its results.
 
-**Fix:** Store results BEFORE calling `super().verify()`:
+**Fix:** Store results BEFORE calling `super().validate()`:
 ```python
-def verify(self, battle_engine):
+def validate(self, battle_engine):
     # 1. Calculate values
     actual_value = self.ship.some_attribute
 
@@ -768,7 +774,7 @@ def verify(self, battle_engine):
 
     # 3. THEN call parent (which runs validation)
     try:
-        super().verify(battle_engine)
+        super().validate(battle_engine)
     except NotImplementedError:
         pass
 
@@ -816,7 +822,7 @@ This should not happen if tests are written correctly. Check:
 |------|-------|-----|------|
 | PROP-001 | `ship.total_thrust` path returned None | Added propulsion attrs to `_extract_ship_validation_data()` | 2026-01-17 |
 | PROP-001 | `results.initial_velocity` was tuple | Changed to `results.initial_velocity_magnitude` | 2026-01-17 |
-| PROP-003 | Results stored after validation ran | Moved results storage before `super().verify()` | 2026-01-17 |
+| PROP-003 | Results stored after validation ran | Moved results storage before `super().validate()` | 2026-01-17 |
 | PROP-003 | Ship JSON turn_speed 826.45 vs correct 414.09 | Recalculated with correct K constants | 2026-01-17 |
 | PROP-001b | `results.final_velocity` was tuple | Changed to `results.final_velocity_magnitude` | 2026-01-17 |
 | PROP-003b | `results.final_velocity` was tuple | Changed to `results.final_velocity_magnitude` | 2026-01-17 |
@@ -890,6 +896,9 @@ threshold behaviors, resource coupling, etc.).
 | `ToHitAttackModifier` | `tohit_attack_scenarios.py` | TOHIT-ATK-001 to 004 (basic, same-group, diff-group, negative) |
 | `ToHitDefenseModifier` | `tohit_defense_scenarios.py` | TOHIT-DEF-001 to 004 (basic, same-group, diff-group, negative) |
 | `ShieldProjection` | `shield_projection_scenarios.py` | SHIELD-PROJ-001 to 007, 005B, METALS-001/002 (absorption, overflow, stacking, single-hit, energy/metals resource) |
+| `ShieldRegeneration` | `shield_regen_scenarios.py` | SHIELD-REGEN-001 to 006 (basic, regen > damage, stacking, energy resource) |
+| `ArmorLayer` | `armor_layer_scenarios.py` | ARMOR-LAYER-001 to 003 (absorption, overflow to CORE, stacking) |
+| `EmissiveArmor` | `emissive_armor_scenarios.py` | EMISSIVE-001 to 005 (blocks low, reduces high, same-group, diff-group, negative) |
 
 Weapon-level resource dependency tests also exist within their weapon files:
 - `beam_scenarios.py`: BEAMWEAPON-RES-001 to 003 (energy), BEAMWEAPON-RES-METALS-001/002
@@ -899,8 +908,8 @@ Weapon-level resource dependency tests also exist within their weapon files:
 
 | Ability | Priority | Notes |
 |---------|----------|-------|
-| `ShieldRegeneration` | Medium | Regen rate, energy coupling, stacking |
-| `EmissiveArmor` | Medium | Migrate from `defense_scenarios.py`, add stacking/threshold tests |
+| `ShieldRegeneration` | **Complete** | `shield_regen_scenarios.py` (SHIELD-REGEN-001 to 006) |
+| `EmissiveArmor` | **Complete** | `emissive_armor_scenarios.py` (EMISSIVE-001 to 005) |
 | `CrystallineArmor` | Medium | Absorption + shield recharge interaction |
 | `PointDefense` | High | Flesh out SEEKER-PD-001/002/003 placeholders |
 | `VehicleLaunch` | Low | Carrier/hangar launch cycle and capacity |

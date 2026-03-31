@@ -107,7 +107,8 @@ compare measured outcomes.
 | **ShieldProjection** | `shield_projection_scenarios.py` | SHIELD-PROJ-001 to 007, 005B, METALS-001/002 | Complete (10 tests) |
 | **ShieldRegeneration** | `shield_regen_scenarios.py` | SHIELD-REGEN-001 to 006 | Complete (6 tests) |
 | **ArmorLayer** | `armor_layer_scenarios.py` | ARMOR-LAYER-001 to 003 | Complete (3 tests) |
-| **EmissiveArmor** | *(pending — migrate from defense_scenarios.py)* | | Planned |
+| **EmissiveArmor** | `emissive_armor_scenarios.py` | EMISSIVE-001 to 005 | Complete (5 tests) |
+| **CommandAndControl** | `cnc_scenarios.py` | CNC-001 to 005 | Complete (5 tests) |
 
 ### Weapon & System Tests (Original Pattern)
 
@@ -146,13 +147,10 @@ range heading upward, ensuring they reach full speed before engagement.
 Hit rates are computed from *resolved* shots only — projectiles still in
 flight when the test ends are excluded from the hit/miss count.
 
-#### Defense & Modifier Tests (14 tests)
+#### Modifier Tests (6 tests)
 
 | Subcategory | Tests | Description |
 |-------------|-------|-------------|
-| **Shields** | 3 tests | Absorption, overflow to hull, regeneration |
-| **Armor** | 2 tests | Emissive armor blocks/reduces damage |
-| **ECM/Sensors** | 3 tests | Hit rate modifiers (including A/B comparison) |
 | **Stat Modifiers** | 6 tests | Damage/range/reload/thrust/accuracy/arc multipliers |
 
 #### Propulsion Tests (9 tests)
@@ -539,12 +537,13 @@ Starship Battles/
         ├── shield_projection_scenarios.py   # ShieldProjection (SHIELD-PROJ-001 to 007, 005B, METALS)
         ├── shield_regen_scenarios.py        # ShieldRegeneration (SHIELD-REGEN-001 to 006)
         ├── armor_layer_scenarios.py         # ArmorLayer (ARMOR-LAYER-001 to 003)
+        ├── emissive_armor_scenarios.py     # EmissiveArmor (EMISSIVE-001 to 005)
+        ├── cnc_scenarios.py                # CommandAndControl (CNC-001 to 005)
         │
         │   # Weapon/system-level tests (include resource dependency tests)
         ├── beam_scenarios.py                # BeamWeapon (BEAMWEAPON-*, BEAMWEAPON-RES-*)
         ├── projectile_scenarios.py          # Projectile (PROJECTILE-*, PROJECTILE-RES-*)
         ├── seeker_scenarios.py              # Seeker (SEEKER-*)
-        ├── defense_scenarios.py             # Shield/armor/ECM (SHIELD-*, ARMOR-*, SENSOR-*)
         ├── modifier_scenarios.py            # Stat modifiers (MOD-*)
         ├── propulsion_scenarios.py          # Movement (PROP-*)
         └── resource_scenarios.py            # Resources (RESOURCE-*)

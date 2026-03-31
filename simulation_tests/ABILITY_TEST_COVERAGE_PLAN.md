@@ -1,7 +1,9 @@
 > **Status: In Progress**
 > Scenario classes live in `simulation_tests/scenarios/*_scenarios.py` and are
 > run via `python -m simulation_tests.run_tests`.
-> Current baseline: **103 passed, 1 failed (RESOURCE-002 game bug), 3 skipped (107 total)**.
+> Current baseline: **105 passed, 1 failed (RESOURCE-002 game bug), 3 skipped (109 total)**.
+> Note: `defense_scenarios.py` was deleted — its 8 tests were redundant with
+> dedicated ability files or replaced by the EmissiveArmor category.
 
 # Comprehensive Ability Test Coverage Plan
 
@@ -90,7 +92,7 @@ ability under test.
 | `ShieldRegeneration` | `shield_regen_scenarios.py` | **Complete** (6 tests) | SHIELD-REGEN-001 to 006 |
 | `ToHitDefenseModifier` | `tohit_defense_scenarios.py` | **Complete** (4 tests) | TOHIT-DEF-001/002/003/004 |
 | `ArmorLayer` | `armor_layer_scenarios.py` | **Complete** (3 tests) | ARMOR-LAYER-001 to 003 |
-| `EmissiveArmor` | `defense_scenarios.py` | Partial (2 tests, needs stacking) | ARMOR-001/002 |
+| `EmissiveArmor` | `emissive_armor_scenarios.py` | **Complete** (5 tests) | EMISSIVE-001 to 005 |
 
 ### Category E: Combat Modifiers (1 ability)
 | Ability | Test File | Status | Tests |
@@ -125,7 +127,7 @@ ability under test.
 ### Completed (weapon/system-level test files)
 1. **Phase 1** (Complete): Beam weapon tests — 23 scenarios in `beam_scenarios.py`
 2. **Phase 2** (Complete): Propulsion tests — 9 scenarios in `propulsion_scenarios.py`
-3. **Phase 3** (Complete): Shield/Armor/ECM/Sensor tests — 8 scenarios in `defense_scenarios.py`
+3. **Phase 3** (Complete → Deleted): Shield/Armor/ECM/Sensor tests — `defense_scenarios.py` (redundant, replaced by ability-specific files)
 4. **Phase 4** (Complete): Stat modifier tests — 6 scenarios in `modifier_scenarios.py`
 5. **Phase 5** (Complete): Projectile weapon tests — 14 scenarios in `projectile_scenarios.py`
 6. **Phase 6** (Complete): Seeker weapon tests — 11 scenarios in `seeker_scenarios.py`
@@ -139,9 +141,19 @@ ability under test.
 ### Completed (ability-specific categories, continued)
 11. **ShieldRegeneration** (Complete): 6 scenarios in `shield_regen_scenarios.py`
 12. **ArmorLayer** (Complete): 3 scenarios in `armor_layer_scenarios.py`
+13. **EmissiveArmor** (Complete): 5 scenarios in `emissive_armor_scenarios.py`
+
+### Cleanup
+- Deleted `defense_scenarios.py` — 8 tests removed (SHIELD-001/002/003, ECM-001, SENSOR-001/002, ARMOR-001/002)
+  - SHIELD-001/002 redundant with SHIELD-PROJ-001/002
+  - SHIELD-003 redundant with SHIELD-REGEN-001 to 006
+  - ECM-001 redundant with TOHIT-DEF-001
+  - SENSOR-001/002 redundant with TOHIT-ATK-001
+  - ARMOR-001/002 replaced by EMISSIVE-001 to 005 (better tests with ComparisonScenario + stacking)
+
+14. **CommandAndControl** (Complete): 5 scenarios in `cnc_scenarios.py`
 
 ### Pending (ability-specific categories)
-13. **EmissiveArmor**: Damage reduction, threshold, stacking
 13. **Point Defense**: Flesh out SEEKER-PD-001/002/003
 14. **VehicleLaunch**: Carrier/hangar tests
 15. **CrystallineArmor**: Absorption + shield recharge interaction

@@ -65,14 +65,15 @@ class WeaponFiringSystem:
 
         for layer_type, comp in ship.iter_components():
             # Handle Hangar Launch
-            if comp.has_ability('VehicleLaunch') and comp.is_active:
+            if comp.has_ability('VehicleLaunch') and comp.is_operational:
                 attack = self._process_hangar_launch(ship, comp)
                 if attack:
                     attacks.append(attack)
                 continue
 
-            # Handle Weapons
-            if comp.has_ability('WeaponAbility') and comp.is_active:
+            # Handle Weapons (is_operational checks both is_active AND
+            # requirement satisfaction like RequiresCommandAndControl)
+            if comp.has_ability('WeaponAbility') and comp.is_operational:
                 attack_result = self._process_weapon_fire(ship, comp, context)
                 if attack_result:
                     if isinstance(attack_result, list):

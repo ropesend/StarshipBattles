@@ -1,0 +1,23 @@
+{
+  "_metadata": {
+    "_schema_version": "1.0",
+    "_data_version": "1.0",
+    "_description": "Combat Lab test ship: Attacker with 10-damage guaranteed-hit beam"
+  },
+  "name": "Test Attacker Beam 10dmg Guaranteed",
+  "color": [255, 0, 0],
+  "team_id": 1,
+  "ship_class": "TestS_2L",
+  "theme_id": "Federation",
+  "ai_strategy": "test_do_nothing",
+  "layers": {
+    "CORE": [
+      {"id": "test_beam_10dmg_guaranteed"}
+    ],
+    "ARMOR": []
+  },
+  "_test_notes": "10 damage per hit, guaranteed hit (base_accuracy=10.0, falloff=0), fires every tick. For EmissiveArmor tests where damage exceeds armor value.",
+  "expected_stats": {
+    "mass": 400.0
+  }
+}

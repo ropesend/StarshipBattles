@@ -86,12 +86,18 @@ Starship Battles/
 │       ├── validation.py               # Check, ValidationReport, check functions
 │       ├── templates.py                # Reusable scenario templates
 │       ├── beam_scenarios.py           # Beam weapon tests
-│       ├── defense_scenarios.py        # Defense/armor/shield tests
-│       ├── modifier_scenarios.py       # Stat modifier tests
 │       ├── projectile_scenarios.py     # Projectile weapon tests
 │       ├── seeker_scenarios.py         # Seeker/missile tests
+│       ├── modifier_scenarios.py       # Stat modifier tests
 │       ├── propulsion_scenarios.py     # Movement/physics tests
-│       └── resource_scenarios.py       # Energy/ammo tests
+│       ├── resource_scenarios.py       # Energy/ammo tests
+│       │   # Ability-specific categories (one file per ability)
+│       ├── tohit_attack_scenarios.py   # ToHitAttackModifier (TOHIT-ATK-001 to 004)
+│       ├── tohit_defense_scenarios.py  # ToHitDefenseModifier (TOHIT-DEF-001 to 004)
+│       ├── shield_projection_scenarios.py # ShieldProjection (SHIELD-PROJ-001 to 007+)
+│       ├── shield_regen_scenarios.py   # ShieldRegeneration (SHIELD-REGEN-001 to 006)
+│       ├── armor_layer_scenarios.py    # ArmorLayer (ARMOR-LAYER-001 to 003)
+│       └── emissive_armor_scenarios.py # EmissiveArmor (EMISSIVE-001 to 005)
 ```
 
 ---
