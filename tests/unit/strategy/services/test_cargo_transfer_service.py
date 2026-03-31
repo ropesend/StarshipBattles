@@ -429,3 +429,82 @@ class TestBuildTransferCommand:
 
         # Assert
         assert cmd.species_id is None
+
+
+class TestGetInventoryItemsResources:
+    """Tests for resource items in CargoTransferService.get_inventory_items()."""
+
+    def test_planet_with_stockpile_returns_resource_items(self):
+        """PlanetInfo with stockpile data returns resource items."""
+        planet_info = PlanetInfo(
+            planet_id=1, name="Test", planet_type="TERRESTRIAL",
+            location=HexCoord(0, 0), orbit_distance=1,
+            stockpile=(("metals", 500.0), ("organics", 200.0)),
+        )
+
+        result = CargoTransferService.get_inventory_items(planet_info)
+
+        resource_items = [r for r in result if r['cargo_type'] != 'passengers']
+        assert len(resource_items) == 2
+        metals_item = next(r for r in resource_items if r['cargo_type'] == 'metals')
+        assert metals_item['max_amount'] == 500
+        assert 'Metals' in metals_item['label'] or 'metals' in metals_item['label']
+
+    def test_planet_with_population_and_stockpile_returns_both(self):
+        """PlanetInfo with both population and stockpile returns all items."""
+        planet_info = PlanetInfo(
+            planet_id=1, name="Test", planet_type="TERRESTRIAL",
+            location=HexCoord(0, 0), orbit_distance=1,
+            population_details=(("Human", 1000, 75.0),),
+            stockpile=(("metals", 300.0),),
+        )
+
+        result = CargoTransferService.get_inventory_items(planet_info)
+
+        passenger_items = [r for r in result if r['cargo_type'] == 'passengers']
+        resource_items = [r for r in result if r['cargo_type'] != 'passengers']
+        assert len(passenger_items) == 1
+        assert len(resource_items) == 1
+
+    def test_planet_empty_stockpile_returns_no_resource_items(self):
+        """PlanetInfo with empty stockpile returns no resource items."""
+        planet_info = PlanetInfo(
+            planet_id=1, name="Test", planet_type="TERRESTRIAL",
+            location=HexCoord(0, 0), orbit_distance=1,
+        )
+
+        result = CargoTransferService.get_inventory_items(planet_info)
+
+        resource_items = [r for r in result if r['cargo_type'] != 'passengers']
+        assert len(resource_items) == 0
+
+    def test_fleet_with_cargo_resources_returns_items(self):
+        """FleetInfo with cargo resources returns resource items."""
+        fleet_info = FleetInfo(
+            fleet_id=1, owner_id=1, location=HexCoord(0, 0),
+            speed=5.0, ship_count=1,
+            cargo_resources=(("metals", 300), ("fuel", 100)),
+            cargo_capacities=(("metals", 1000), ("fuel", 500)),
+        )
+
+        result = CargoTransferService.get_inventory_items(fleet_info)
+
+        resource_items = [r for r in result if r['cargo_type'] != 'passengers']
+        assert len(resource_items) >= 2
+        metals_item = next(r for r in resource_items if r['cargo_type'] == 'metals')
+        assert metals_item['max_amount'] == 300
+
+    def test_fleet_shows_all_capacity_types_even_empty(self):
+        """FleetInfo with cargo capacity but zero current shows item with 0."""
+        fleet_info = FleetInfo(
+            fleet_id=1, owner_id=1, location=HexCoord(0, 0),
+            speed=5.0, ship_count=1,
+            cargo_resources=(("metals", 0),),
+            cargo_capacities=(("metals", 1000),),
+        )
+
+        result = CargoTransferService.get_inventory_items(fleet_info)
+
+        resource_items = [r for r in result if r['cargo_type'] == 'metals']
+        assert len(resource_items) == 1
+        assert resource_items[0]['max_amount'] == 0
