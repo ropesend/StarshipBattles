@@ -3,20 +3,41 @@
 ## Overview
 
 This directory contains all test scenario implementations for Combat Lab.
+Scenario files are auto-discovered by `run_tests.py` — any file matching
+`*_scenarios.py` is imported and its `TestScenario` subclasses are registered.
 
-## Current Scenario Files
+## Scenario Files
 
-### beam_scenarios.py
+### Ability-Specific Categories (ComparisonScenario pattern)
 
-Complete test suite for beam weapon mechanics (18 tests).
+| File | Ability | Tests | Description |
+|------|---------|-------|-------------|
+| `tohit_attack_scenarios.py` | ToHitAttackModifier | 4 | Sensor accuracy: basic, stacking, negative |
+| `tohit_defense_scenarios.py` | ToHitDefenseModifier | 4 | ECM defense: basic, stacking, negative |
+| `shield_projection_scenarios.py` | ShieldProjection | 10 | Shield absorption, overflow, stacking, energy/metals |
+| `shield_regen_scenarios.py` | ShieldRegeneration | 6 | Regen rate, regen > damage, stacking, energy resource |
+| `armor_layer_scenarios.py` | ArmorLayer | 3 | Layer damage flow, overflow to CORE, stacking |
 
-**Test Categories**:
-- Accuracy tests (point blank, mid-range, max range)
-- Moving target tests (erratic small targets)
-- Boundary tests (out of range)
-- High-tick precision tests (100k ticks)
+### Weapon & System Tests
 
-**See**: Full beam weapon test documentation below.
+| File | System | Tests | Description |
+|------|--------|-------|-------------|
+| `beam_scenarios.py` | BeamWeapon | 23 | Accuracy at ranges, moving targets, HT precision, resource |
+| `projectile_scenarios.py` | Projectile | 14 | Stationary/moving targets, damage consistency, resource |
+| `seeker_scenarios.py` | Seeker | 11 | Endurance, tracking, point defense (3 skipped) |
+| `defense_scenarios.py` | Defense | 8 | Shields, emissive armor, ECM, sensors |
+| `modifier_scenarios.py` | Modifiers | 6 | Damage, range, reload, thrust, accuracy, arc |
+| `propulsion_scenarios.py` | Propulsion | 9 | Engine physics, thruster rotation, mass effects |
+| `resource_scenarios.py` | Resources | 9 | Fuel, energy, ammo consumption/depletion |
+
+### Framework Files
+
+| File | Purpose |
+|------|---------|
+| `base.py` | TestScenario base class, TestMetadata dataclass |
+| `templates.py` | StaticTarget, Duel, Propulsion, Resource, Comparison templates |
+| `validation.py` | Check, ValidationReport, check_exact/approx/tost/true |
+| `movement.py` | StraightLine, CircularOrbit, Erratic movement controllers |
 
 ## Beam Weapon Tests
 

@@ -1044,11 +1044,21 @@ print(f"Hit Rate: {scenario.results.get('hit_rate', 0):.2%}")
 ### Command Line
 
 ```bash
-python -m simulation_tests.run_tests                # Run all
+python -m simulation_tests.run_tests                # Run all tests
 python -m simulation_tests.run_tests BEAM           # Filter by ID prefix
 python -m simulation_tests.run_tests PROP-001       # Run specific test
 python -m simulation_tests.run_tests --list         # List all tests
+python -m simulation_tests.run_tests --fast         # Skip high-tick (-HT) tests
+python -m simulation_tests.run_tests --no-history   # Don't record to test_history.json
 ```
+
+**Auto-discovery**: The runner automatically finds all `*_scenarios.py` files
+in the `scenarios/` directory — no need to register new scenario files manually.
+
+**Test history**: By default, CLI runs record results to
+`simulation_tests/test_history.json` (the same file the Combat Lab UI uses).
+This means `--fast` runs during development will populate the UI's pass/fail
+status dots. Use `--no-history` to skip recording when debugging.
 
 ---
 

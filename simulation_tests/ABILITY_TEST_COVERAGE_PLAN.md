@@ -1,7 +1,7 @@
 > **Status: In Progress**
 > Scenario classes live in `simulation_tests/scenarios/*_scenarios.py` and are
 > run via `python -m simulation_tests.run_tests`.
-> Current baseline: **94 passed, 1 failed (RESOURCE-002 game bug), 3 skipped (98 total)**.
+> Current baseline: **103 passed, 1 failed (RESOURCE-002 game bug), 3 skipped (107 total)**.
 
 # Comprehensive Ability Test Coverage Plan
 
@@ -87,8 +87,9 @@ ability under test.
 | Ability | Test File | Status | Tests |
 |---------|-----------|--------|-------|
 | `ShieldProjection` | `shield_projection_scenarios.py` | **Complete** (10 tests) | SHIELD-PROJ-001 to 007, 005B, METALS-001/002 |
-| `ShieldRegeneration` | `defense_scenarios.py` | Partial (1 test in SHIELD-003) | Needs own category |
+| `ShieldRegeneration` | `shield_regen_scenarios.py` | **Complete** (6 tests) | SHIELD-REGEN-001 to 006 |
 | `ToHitDefenseModifier` | `tohit_defense_scenarios.py` | **Complete** (4 tests) | TOHIT-DEF-001/002/003/004 |
+| `ArmorLayer` | `armor_layer_scenarios.py` | **Complete** (3 tests) | ARMOR-LAYER-001 to 003 |
 | `EmissiveArmor` | `defense_scenarios.py` | Partial (2 tests, needs stacking) | ARMOR-001/002 |
 
 ### Category E: Combat Modifiers (1 ability)
@@ -135,9 +136,12 @@ ability under test.
 9. **ToHitDefenseModifier** (Complete): 4 scenarios in `tohit_defense_scenarios.py`
 10. **ShieldProjection** (Complete): 10 scenarios in `shield_projection_scenarios.py`
 
+### Completed (ability-specific categories, continued)
+11. **ShieldRegeneration** (Complete): 6 scenarios in `shield_regen_scenarios.py`
+12. **ArmorLayer** (Complete): 3 scenarios in `armor_layer_scenarios.py`
+
 ### Pending (ability-specific categories)
-11. **ShieldRegeneration**: Regen rate, energy coupling, stacking
-12. **EmissiveArmor**: Damage reduction, threshold, stacking
+13. **EmissiveArmor**: Damage reduction, threshold, stacking
 13. **Point Defense**: Flesh out SEEKER-PD-001/002/003
 14. **VehicleLaunch**: Carrier/hangar tests
 15. **CrystallineArmor**: Absorption + shield recharge interaction

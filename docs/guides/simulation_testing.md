@@ -968,13 +968,25 @@ These engine behaviors affect how tests should be designed:
 
 ---
 
-## 12. Future Work
+## 12. CLI Test Runner
 
-### Pending Ability Categories
+### Command Line Usage
 
-See Section 9 for the list. Each new ability should follow the standard test set:
-basic effect, stacking (if applicable), negative value, resource dependency (if applicable),
-and generic resource (metals) variant.
+```bash
+python -m simulation_tests.run_tests                # Run all tests
+python -m simulation_tests.run_tests BEAM           # Filter by ID prefix
+python -m simulation_tests.run_tests PROP-001       # Run specific test
+python -m simulation_tests.run_tests --list         # List all tests
+python -m simulation_tests.run_tests --fast         # Skip high-tick (-HT) tests
+python -m simulation_tests.run_tests --no-history   # Don't record to test_history.json
+```
+
+### Key Features
+
+- **Auto-discovery**: Globs `scenarios/*_scenarios.py` — new files found automatically
+- **History recording**: CLI runs write to `test_history.json` by default (same file
+  as Combat Lab UI). Pass `--no-history` to skip.
+- **`--fast` mode**: Filters out `-HT` (high-tick 100k) tests for quick validation
 
 ### Combat Lab Integration
 
@@ -982,4 +994,14 @@ The Combat Lab UI supports ability-specific test categories:
 - TestRegistry auto-discovers scenarios and groups by category
 - ComparisonScenario tests show three buttons: Visual Run, Headless Run, Visual Baseline
 - Selecting a test auto-selects the most recent run and shows detailed results
-- Test run history persists across sessions
+- Test run history persists across sessions (shared with CLI via test_history.json)
+
+---
+
+## 13. Future Work
+
+### Pending Ability Categories
+
+See the ABILITY_TEST_COVERAGE_PLAN.md for the current list. Each new ability should
+follow the standard test set: basic effect, stacking (if applicable), negative value,
+resource dependency (if applicable), and generic resource (metals) variant.

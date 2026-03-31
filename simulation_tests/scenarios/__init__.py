@@ -83,6 +83,19 @@ from simulation_tests.scenarios.shield_projection_scenarios import (
     ShieldWithMetalsProtects,
     ShieldWithoutMetalsNoProtection,
 )
+from simulation_tests.scenarios.armor_layer_scenarios import (
+    ArmorAbsorbsAllScenario,
+    ArmorDepletesOverflowScenario,
+    ArmorStackingScenario,
+)
+from simulation_tests.scenarios.shield_regen_scenarios import (
+    RegenReducesNetDamageScenario,
+    RegenExceedsDamageScenario,
+    RegenStackingScenario,
+    RegenWithFullEnergyScenario,
+    RegenWithNoEnergyScenario,
+    RegenStopsMidBattleScenario,
+)
 from simulation_tests.scenarios.tohit_defense_scenarios import (
     ECMReducesHitRateComparisonScenario,
     ECMSameGroupDoesNotStackScenario,
@@ -163,6 +176,17 @@ __all__ = [
     'ShieldWithoutEnergyScenario',
     'ShieldWithMetalsProtects',
     'ShieldWithoutMetalsNoProtection',
+    # ArmorLayer scenarios
+    'ArmorAbsorbsAllScenario',
+    'ArmorDepletesOverflowScenario',
+    'ArmorStackingScenario',
+    # ShieldRegeneration scenarios
+    'RegenReducesNetDamageScenario',
+    'RegenExceedsDamageScenario',
+    'RegenStackingScenario',
+    'RegenWithFullEnergyScenario',
+    'RegenWithNoEnergyScenario',
+    'RegenStopsMidBattleScenario',
     # ToHitDefenseModifier scenarios
     'ECMReducesHitRateComparisonScenario',
     'ECMSameGroupDoesNotStackScenario',

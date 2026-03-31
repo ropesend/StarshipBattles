@@ -114,6 +114,18 @@ SENSOR_ATTACKER_SHIP = "Test_Attacker_Beam360_WithSensor.json"
 # Defense test durations
 DEFENSE_TEST_TICKS = 500    # Standard duration for defense tests
 
+# Armor Layer test category
+ARMOR_LAYER_TEST_TICKS = 500
+ARMOR_LAYER_1B_HP = 1_000_000_000
+ARMOR_LAYER_100_HP = 100
+
+# ShieldRegeneration test category
+SHIELD_REGEN_TEST_TICKS = 500
+SHIELD_REGEN_RATE_200 = 200.0    # HP/sec (regen > damage)
+SHIELD_REGEN_RATE_5 = 5.0        # HP/sec (resource variant, matches test_shield_regen)
+SHIELD_REGEN_ENERGY_COST = 5.0   # Energy/sec cost on test_shield_regen
+SHIELD_REGEN_SMALL_BATTERY = 25  # Energy units (lasts ~500 ticks at 5/sec cost)
+
 # ShieldProjection test category
 SHIELD_PROJ_1B_CAPACITY = 1_000_000_000
 SHIELD_PROJ_100_CAPACITY = 100
