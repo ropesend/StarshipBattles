@@ -15,7 +15,7 @@ from game.strategy.data.ship_instance import ShipInstance
 
 
 def make_colony_ship(planet_type: str, owner_id: int, instance_id: str = "colony-ship-1") -> ShipInstance:
-    """Create a ship with a colony pod loaded as cargo."""
+    """Create a ship with a drop pod in carried_items."""
     ship = ShipInstance(
         instance_id=instance_id,
         design_id=f"{planet_type}_colony_ship",
@@ -30,7 +30,13 @@ def make_colony_ship(planet_type: str, owner_id: int, instance_id: str = "colony
             }
         },
     )
-    ship.cargo_contents[f"colony_pod_{planet_type.lower()}"] = 1
+    ship.carried_items.append({
+        "vehicle_type": "drop_pod",
+        "design_id": f"{planet_type.lower()}_drop_pod",
+        "name": f"Drop Pod ({planet_type})",
+        "design_data": {"layers": {"CORE": []}},
+        "mass": 500,
+    })
     return ship
 
 
@@ -117,13 +123,13 @@ def make_component_registry():
 class TestColonizeMissionHandlerPodValidation:
     """Tests for pod validation in ColonizeMissionCommandHandler."""
 
-    def test_mission_rejects_wrong_pod_type(self):
-        """Fleet with CONTINENTAL pod cannot queue mission to ICE_DWARF planet."""
-        # Create fleet with CONTINENTAL colony pod
+    def test_mission_accepts_universal_drop_pod(self):
+        """Phase 3: Any drop pod works on any planet type."""
+        # Create fleet with any drop pod (originally labelled CONTINENTAL)
         fleet = Fleet(1, owner_id=1, location=HexCoord(0, 0), speed=10.0)
         fleet.ships = [make_colony_ship("CONTINENTAL", owner_id=1)]
 
-        # Create ICE_DWARF planet
+        # Create ICE_DWARF planet -- drop pods are universal
         planet = make_mock_planet("ICE_DWARF", planet_id=1)
 
         # Create mock session with component registry
@@ -140,9 +146,8 @@ class TestColonizeMissionHandlerPodValidation:
         handler = ColonizeMissionCommandHandler()
         result = handler.execute(session, cmd)
 
-        # Should reject due to wrong pod type
-        assert result.is_valid is False
-        assert result.error_code == "NO_COLONY_POD"
+        # Phase 3: Drop pods are universal -- should accept
+        assert result.is_valid is True
 
     def test_mission_accepts_matching_pod(self):
         """Fleet with ICE_DWARF pod can queue mission to ICE_DWARF planet."""

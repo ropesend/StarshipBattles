@@ -54,10 +54,10 @@ class ProductionSpawner:
             tick: Current tick number (for logging).
         """
         design_id = item['design_id']
-        vehicle_type = item.get('type', 'ship')
+        vehicle_type = item.get('type', 'ship').lower().replace(' ', '_')
 
         if isinstance(colony_or_fleet, Fleet):
-            if vehicle_type == 'complex':
+            if vehicle_type in ('complex', 'planetary_complex'):
                 target_planet_id = item.get('target_planet_id')
                 self._spawn_fleet_complex(
                     colony_or_fleet, design_id, empire, galaxy, save_path,
@@ -67,9 +67,13 @@ class ProductionSpawner:
                 self._spawn_fleet_ship(colony_or_fleet, design_id, empire, save_path)
         else:
             # Colony/planet
-            if vehicle_type == 'complex':
+            if vehicle_type in ('complex', 'planetary_complex'):
                 self._create_and_place_facility(
                     colony_or_fleet, design_id, empire, save_path, galaxy
+                )
+            elif vehicle_type in ('drop_pod', 'fighter'):
+                self._spawn_to_staging_yard(
+                    colony_or_fleet, design_id, item, empire, save_path
                 )
             else:
                 self._spawn_ship(colony_or_fleet, design_id, empire, galaxy, save_path)
@@ -215,6 +219,60 @@ class ProductionSpawner:
             system_name=system_name,
             local_hex=local_hex,
         )
+
+    def _spawn_to_staging_yard(
+        self,
+        planet: 'Planet',
+        design_id: str,
+        item: Dict,
+        empire: 'Empire',
+        save_path: Optional[str],
+    ) -> None:
+        """Spawn a completed drop pod or fighter to the planet's staging yard.
+
+        Args:
+            planet: Planet where the item was built.
+            design_id: Design identifier.
+            item: Queue item dict with design_data.
+            empire: Empire that owns the production.
+            save_path: Path to savegame folder.
+        """
+        design_data = item.get('design_data')
+        if not design_data:
+            design_data = self._load_design(design_id, empire.id, save_path)
+        if not design_data:
+            logger.warning(f"Cannot spawn to staging yard: design '{design_id}' not found")
+            return
+
+        # Calculate mass from design
+        total_mass = 0.0
+        if self._registries:
+            from game.core.patterns.layer_iterator import iter_components
+            for comp in iter_components(design_data):
+                if isinstance(comp, dict):
+                    comp_id = comp.get('id', '')
+                    comp_def = self._registries.components.get(comp_id, {})
+                    total_mass += comp_def.get('mass', comp.get('mass', 0))
+
+        staging_item = {
+            'design_id': design_id,
+            'name': design_data.get('name', design_id),
+            'vehicle_type': item.get('type', 'drop_pod'),
+            'design_data': design_data,
+            'mass': total_mass,
+            'owner_id': empire.id,
+        }
+
+        if planet.add_to_staging_yard(staging_item):
+            logger.info(
+                f"Spawned {staging_item['vehicle_type']} '{staging_item['name']}' "
+                f"to staging yard on {planet.name} (mass: {total_mass:.0f})"
+            )
+        else:
+            logger.warning(
+                f"Staging yard full on {planet.name}: cannot store "
+                f"'{staging_item['name']}' (mass: {total_mass:.0f})"
+            )
 
     def _spawn_ship(
         self,

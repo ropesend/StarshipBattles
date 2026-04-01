@@ -63,8 +63,9 @@ class DesignCostCalculator:
         # First: Check for inline resource_cost on components
         inline_cost = DesignCostCalculator._calculate_inline_cost(design_data)
         if inline_cost:
-            design_data['total_resource_cost'] = inline_cost
-            return inline_cost
+            cost = DesignCostCalculator._apply_cost_multiplier(inline_cost, design_data, registries)
+            design_data['total_resource_cost'] = cost
+            return cost
 
         # Second: Ship loading from registry (for ship designs only)
         # Only use Ship loading if design has a ship_class (indicates it's a ship design)
@@ -77,12 +78,43 @@ class DesignCostCalculator:
                 if ship is not None:
                     # Extract construction_cost, stripping zero values
                     cost = {res: amount for res, amount in (ship.construction_cost or {}).items() if amount > 0}
+                    cost = DesignCostCalculator._apply_cost_multiplier(cost, design_data, registries)
                     design_data['total_resource_cost'] = cost
                     return cost
             except Exception as e:
                 logger.debug(f"Ship loading failed: {e}")
 
         return {}
+
+    @staticmethod
+    def _apply_cost_multiplier(
+        base_cost: Dict[str, float],
+        design_data: Dict[str, Any],
+        registries: 'GameRegistries'
+    ) -> Dict[str, float]:
+        """Apply vehicle class cost multiplier to base costs.
+
+        Looks up cost_multiplier from vehicleclasses.json via the design's
+        ship_class. Default multiplier is 1.0 (no change).
+
+        Args:
+            base_cost: Base resource costs before multiplier.
+            design_data: Design data with ship_class field.
+            registries: GameRegistries for vehicle class lookup.
+
+        Returns:
+            Cost dict with multiplier applied.
+        """
+        multiplier = 1.0
+        ship_class = design_data.get('ship_class', '')
+        if ship_class and registries is not None:
+            class_def = registries.vehicle_classes.get(ship_class, {})
+            multiplier = class_def.get('cost_multiplier', 1.0)
+
+        if multiplier == 1.0:
+            return base_cost
+
+        return {res: amount * multiplier for res, amount in base_cost.items()}
 
     @staticmethod
     def _calculate_inline_cost(design_data: Dict[str, Any]) -> Dict[str, float]:

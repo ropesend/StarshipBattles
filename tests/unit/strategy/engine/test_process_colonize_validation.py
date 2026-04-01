@@ -82,7 +82,7 @@ class MockGalaxy:
 
 
 def make_colony_ship(name: str, owner_id: int, pod_type: str) -> ShipInstance:
-    """Create a ship with a colony pod loaded as cargo."""
+    """Create a ship with a drop pod in carried_items."""
     ship = ShipInstance(
         instance_id=f"colony-{name.lower().replace(' ', '-')}-{id(name)}",
         design_id=f"{pod_type}_colony_ship",
@@ -97,8 +97,14 @@ def make_colony_ship(name: str, owner_id: int, pod_type: str) -> ShipInstance:
             }
         },
     )
-    # Load colony pod as cargo
-    ship.cargo_contents[f"colony_pod_{pod_type.lower()}"] = 1
+    # Load drop pod as carried item
+    ship.carried_items.append({
+        "vehicle_type": "drop_pod",
+        "design_id": f"{pod_type.lower()}_drop_pod",
+        "name": f"Drop Pod ({pod_type})",
+        "design_data": {"layers": {"CORE": []}},
+        "mass": 500,
+    })
     return ship
 
 
@@ -166,18 +172,18 @@ def galaxy_with_ice_planet():
 class TestProcessColonizeValidation:
     """Tests for process_colonize() execution-time validation (PROJ-140 Bug 1+2)."""
 
-    def test_process_colonize_wrong_pod_type_fails(
+    def test_process_colonize_universal_drop_pod_succeeds(
         self, galaxy_with_ice_planet, component_registry
     ):
         """
-        PROJ-140 Bug 1: process_colonize should fail when pod type doesn't match.
+        Phase 3: Drop pods are universal -- any drop pod works on any planet type.
 
-        Fleet with CONTINENTAL pod at ICE_DWARF planet, component_registry provided.
-        Assert: colonized=False, planet owner_id remains None.
+        Fleet with any drop pod at ICE_DWARF planet.
+        Assert: colonized=True, planet owner_id set to empire.
         """
         galaxy, ice_planet = galaxy_with_ice_planet
 
-        # Create fleet with CONTINENTAL colony ship (wrong type for Ice Dwarf planet)
+        # Create fleet with any drop pod (originally labelled CONTINENTAL)
         colony_ship = make_colony_ship("Continental Colony Ship", 1, "CONTINENTAL")
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
@@ -187,18 +193,17 @@ class TestProcessColonizeValidation:
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
 
-        # Execute colonization WITH component registry
+        # Execute colonization
         processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=component_registry
         )
 
-        # Assert: Colonization failed
-        assert result.colonized is False
-        # Assert: Planet was NOT colonized
-        assert ice_planet.owner_id is None
-        assert ice_planet not in empire.colonies
+        # Phase 3: Drop pods are universal
+        assert result.colonized is True
+        assert ice_planet.owner_id == 1
+        assert ice_planet in empire.colonies
 
     def test_process_colonize_correct_pod_type_succeeds(
         self, galaxy_with_ice_planet, component_registry
@@ -233,24 +238,24 @@ class TestProcessColonizeValidation:
         assert ice_planet.owner_id == 1
         assert ice_planet in empire.colonies
 
-    def test_process_colonize_no_matching_pod_does_not_consume_ship(
+    def test_process_colonize_no_drop_pod_does_not_consume_ship(
         self, galaxy_with_ice_planet, component_registry
     ):
         """
-        PROJ-140 Bug 2: No matching pod should not remove any ships.
+        Phase 3: No drop pod should not remove any ships.
 
-        Fleet has ships but none with matching pod.
+        Fleet has ships but none with drop pods.
         Assert: No ships removed from fleet.
         """
         galaxy, ice_planet = galaxy_with_ice_planet
 
-        # Create fleet with CONTINENTAL pod (wrong) and combat ship
-        colony_ship = make_colony_ship("Continental Colony Ship", 1, "CONTINENTAL")
-        combat_ship = make_combat_ship("Escort Ship", 1)
+        # Create fleet with only combat ships (no drop pods)
+        combat_ship1 = make_combat_ship("Escort Ship 1", 1)
+        combat_ship2 = make_combat_ship("Escort Ship 2", 1)
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
-        fleet.ships.append(colony_ship)
-        fleet.ships.append(combat_ship)
+        fleet.ships.append(combat_ship1)
+        fleet.ships.append(combat_ship2)
         fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice_planet))
 
         empire = Empire(1, "Player 1", (255, 0, 0))
@@ -258,34 +263,35 @@ class TestProcessColonizeValidation:
 
         initial_ship_count = len(fleet.ships)
 
-        # Execute colonization WITH component registry
+        # Execute colonization
         processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
             component_registry=component_registry
         )
 
-        # Assert: No ships were removed
+        # Assert: Colonization failed, no ships removed
+        assert result.colonized is False
         assert len(fleet.ships) == initial_ship_count
-        assert colony_ship in fleet.ships
-        assert combat_ship in fleet.ships
+        assert combat_ship1 in fleet.ships
+        assert combat_ship2 in fleet.ships
 
-    def test_process_colonize_no_matching_pod_pops_order(
+    def test_process_colonize_no_drop_pod_pops_order(
         self, galaxy_with_ice_planet, component_registry
     ):
         """
-        PROJ-140: Failed colonization should pop the order from queue.
+        Phase 3: Failed colonization (no drop pod) should pop the order.
 
-        Fleet has ships but none with matching pod.
+        Fleet has ships but no drop pods.
         Assert: COLONIZE order was popped from queue.
         """
         galaxy, ice_planet = galaxy_with_ice_planet
 
-        # Create fleet with CONTINENTAL pod (wrong type)
-        colony_ship = make_colony_ship("Continental Colony Ship", 1, "CONTINENTAL")
+        # Create fleet with only combat ship (no drop pods)
+        combat_ship = make_combat_ship("Escort Ship", 1)
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
-        fleet.ships.append(colony_ship)
+        fleet.ships.append(combat_ship)
         fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice_planet))
 
         empire = Empire(1, "Player 1", (255, 0, 0))
@@ -293,7 +299,7 @@ class TestProcessColonizeValidation:
 
         assert len(fleet.orders) == 1
 
-        # Execute colonization WITH component registry
+        # Execute colonization
         processor = OrderProcessor()
         result = processor.process_colonize(
             fleet, empire, galaxy,
@@ -350,19 +356,19 @@ class TestProcessColonizeAnyPlanet:
 
         return galaxy, ice_1, ice_2
 
-    def test_any_planet_selects_matching_pod_planet(
+    def test_any_planet_selects_first_unowned(
         self, galaxy_with_mixed_planets, component_registry
     ):
         """
-        PROJ-140: "Any Planet" should select a planet matching an available pod.
+        Phase 3: "Any Planet" selects the first unowned planet (pods are universal).
 
-        Fleet with ICE_DWARF pod at location with [CONTINENTAL, ICE_DWARF].
-        Assert: ICE_DWARF planet is colonized (not CONTINENTAL).
+        Fleet with drop pod at location with [CONTINENTAL, ICE_DWARF].
+        Assert: First unowned planet is colonized.
         """
         galaxy, continental, ice_dwarf = galaxy_with_mixed_planets
 
-        # Create fleet with ICE_DWARF colony ship
-        colony_ship = make_colony_ship("Ice Colony Ship", 1, "ICE_DWARF")
+        # Create fleet with a drop pod
+        colony_ship = make_colony_ship("Colony Ship", 1, "ICE_DWARF")
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(colony_ship)
@@ -379,31 +385,27 @@ class TestProcessColonizeAnyPlanet:
             component_registry=component_registry
         )
 
-        # Assert: ICE_DWARF planet was colonized (matches available pod)
+        # Assert: First unowned planet colonized (pods are universal)
         assert result.colonized is True
-        assert ice_dwarf.owner_id == 1
-        assert ice_dwarf in empire.colonies
+        assert continental.owner_id == 1
+        assert continental in empire.colonies
 
-        # Assert: CONTINENTAL planet was NOT colonized
-        assert continental.owner_id is None
-        assert continental not in empire.colonies
-
-    def test_any_planet_no_matching_pod_fails(
+    def test_any_planet_no_drop_pod_fails(
         self, galaxy_with_only_ice, component_registry
     ):
         """
-        PROJ-140: "Any Planet" fails if no pod matches any candidate.
+        Phase 3: "Any Planet" fails if fleet has no drop pod at all.
 
-        Fleet with CONTINENTAL pod at location with only ICE_DWARF planets.
+        Fleet with no drop pods at location with ICE_DWARF planets.
         Assert: colonized=False.
         """
         galaxy, ice_1, ice_2 = galaxy_with_only_ice
 
-        # Create fleet with CONTINENTAL colony ship (wrong type)
-        colony_ship = make_colony_ship("Continental Colony Ship", 1, "CONTINENTAL")
+        # Create fleet with only combat ship (no drop pods)
+        combat_ship = make_combat_ship("Combat Ship", 1)
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
-        fleet.ships.append(colony_ship)
+        fleet.ships.append(combat_ship)
         # "Any Planet" = target is None
         fleet.orders.append(FleetOrder(OrderType.COLONIZE, None))
 

@@ -45,6 +45,8 @@ class ShipInstanceSerializer:
         # Only include cargo_contents if non-empty
         if ship.cargo_contents:
             data['cargo_contents'] = ship.cargo_contents
+        if ship.carried_items:
+            data['carried_items'] = ship.carried_items
         return data
 
     @staticmethod
@@ -92,6 +94,7 @@ class ShipInstanceSerializer:
             consumable_levels=data.get('consumable_levels', data.get('resource_levels', {})),
             component_toggles=data.get('component_toggles', {}),
             cargo_contents=data.get('cargo_contents', {}),
+            carried_items=data.get('carried_items', []),
             is_alive=data.get('is_alive', True),
             is_derelict=data.get('is_derelict', False),
             is_operational=data.get('is_operational', True),
@@ -130,6 +133,7 @@ class ShipInstanceSerializer:
             consumable_levels=copy.deepcopy(ship.consumable_levels),
             component_toggles=copy.deepcopy(ship.component_toggles),
             cargo_contents=copy.deepcopy(ship.cargo_contents),
+            carried_items=copy.deepcopy(ship.carried_items),
             is_alive=ship.is_alive,
             is_derelict=ship.is_derelict,
             is_operational=ship.is_operational,

@@ -433,12 +433,10 @@ class TestColonyFoundedEvent:
         fleet.owner_id = 0
         fleet.location = MagicMock(q=2, r=-1)
 
-        # Mock ship with colony pod
+        # Mock ship with drop pod in carried_items
         mock_ship = MagicMock()
         mock_ship.name = "Colony Ship"
-        mock_ship.design_data = {
-            'layers': {'HULL': [{'id': 'continental_colony_pod'}]}
-        }
+        mock_ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {"layers": {"CORE": []}}, "mass": 500}]
         fleet.ships = [mock_ship]
 
         target_planet = _make_mock_planet(planet_id=10, name="New Earth")
@@ -449,9 +447,6 @@ class TestColonyFoundedEvent:
         order = FleetOrder(OrderType.COLONIZE, target=target_planet)
         fleet.get_current_order.return_value = order
         fleet.pop_order = MagicMock()
-        fleet.get_fleet_cargo_current = MagicMock(return_value=0)
-        fleet.unload_cargo_from_fleet = MagicMock(return_value=0)
-        fleet.remove_ship = MagicMock(side_effect=lambda s: fleet.ships.remove(s))
 
         return fleet, target_planet
 
@@ -480,11 +475,12 @@ class TestColonyFoundedEvent:
             mock_result = MagicMock()
             mock_result.is_valid = True
             mock_val.validate.return_value = mock_result
-            # Mock find_ship_with_colony_pod to return the colony ship
-            mock_val.find_ship_with_colony_pod.return_value = fleet.ships[0]
+            mock_val.fleet_has_drop_pod.return_value = True
+            mock_val.find_ship_with_drop_pod.return_value = (fleet.ships[0], 0)
 
-            with patch.object(processor, '_place_starter_complex'), \
+            with patch.object(processor, '_deploy_drop_pod'), \
                  patch.object(processor, '_transfer_cargo_resources_to_colony'), \
+                 patch.object(processor, '_transfer_founding_population'), \
                  patch('game.strategy.engine.order_processor.log_event', fake):
                 result = processor.process_colonize(
                     fleet, empire, galaxy,
@@ -549,16 +545,11 @@ class TestColonyFoundedEvent:
         fleet.id = 5
         fleet.owner_id = 0
 
-        # Mock ship with colony pod
+        # Mock ship with drop pod
         mock_ship = MagicMock()
         mock_ship.name = "Colony Ship"
-        mock_ship.design_data = {
-            'layers': {'HULL': [{'id': 'continental_colony_pod'}]}
-        }
+        mock_ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {"layers": {"CORE": []}}, "mass": 500}]
         fleet.ships = [mock_ship]
-        fleet.get_fleet_cargo_current = MagicMock(return_value=0)
-        fleet.unload_cargo_from_fleet = MagicMock(return_value=0)
-        fleet.remove_ship = MagicMock(side_effect=lambda s: fleet.ships.remove(s))
 
         order = FleetOrder(OrderType.COLONIZE, target=None)
         fleet.get_current_order.return_value = order
@@ -583,11 +574,12 @@ class TestColonyFoundedEvent:
             mock_result = MagicMock()
             mock_result.is_valid = True
             mock_val.validate.return_value = mock_result
-            # Mock find_ship_with_colony_pod to return the colony ship
-            mock_val.find_ship_with_colony_pod.return_value = mock_ship
+            mock_val.fleet_has_drop_pod.return_value = True
+            mock_val.find_ship_with_drop_pod.return_value = (mock_ship, 0)
 
-            with patch.object(processor, '_place_starter_complex'), \
-                 patch.object(processor, '_transfer_cargo_resources_to_colony'):
+            with patch.object(processor, '_deploy_drop_pod'), \
+                 patch.object(processor, '_transfer_cargo_resources_to_colony'), \
+                 patch.object(processor, '_transfer_founding_population'):
                 with patch('game.strategy.engine.order_processor.log_event', fake):
                     result = processor.process_colonize(
                         fleet, empire, galaxy,
@@ -1020,11 +1012,8 @@ class TestColonizationEventLocationEnrichment:
 
         mock_ship = MagicMock()
         mock_ship.name = "Colony Ship"
-        mock_ship.design_data = {'layers': {'HULL': [{'id': 'continental_colony_pod'}]}}
+        mock_ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {"layers": {"CORE": []}}, "mass": 500}]
         fleet.ships = [mock_ship]
-        fleet.get_fleet_cargo_current = MagicMock(return_value=0)
-        fleet.unload_cargo_from_fleet = MagicMock(return_value=0)
-        fleet.remove_ship = MagicMock(side_effect=lambda s: fleet.ships.remove(s))
 
         target_planet = _make_mock_planet(planet_id=10, name="New Earth")
         target_planet.owner_id = None
@@ -1036,9 +1025,7 @@ class TestColonizationEventLocationEnrichment:
         fleet.get_current_order.return_value = order
         fleet.pop_order = MagicMock()
 
-        component_registry = {
-            'continental_colony_pod': {'id': 'continental_colony_pod', 'abilities': {'ColonizePlanet': 'CONTINENTAL'}}
-        }
+        component_registry = {}
 
         calls, fake = _capture_log_event_calls()
 
@@ -1046,10 +1033,12 @@ class TestColonizationEventLocationEnrichment:
             mock_result = MagicMock()
             mock_result.is_valid = True
             mock_val.validate.return_value = mock_result
-            mock_val.find_ship_with_colony_pod.return_value = mock_ship
+            mock_val.fleet_has_drop_pod.return_value = True
+            mock_val.find_ship_with_drop_pod.return_value = (mock_ship, 0)
 
-            with patch.object(processor, '_place_starter_complex'), \
+            with patch.object(processor, '_deploy_drop_pod'), \
                  patch.object(processor, '_transfer_cargo_resources_to_colony'), \
+                 patch.object(processor, '_transfer_founding_population'), \
                  patch('game.strategy.engine.order_processor.log_event', fake):
                 processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
 
@@ -1080,11 +1069,8 @@ class TestColonizationEventLocationEnrichment:
 
         mock_ship = MagicMock()
         mock_ship.name = "Colony Ship"
-        mock_ship.design_data = {'layers': {'HULL': [{'id': 'continental_colony_pod'}]}}
+        mock_ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {"layers": {"CORE": []}}, "mass": 500}]
         fleet.ships = [mock_ship]
-        fleet.get_fleet_cargo_current = MagicMock(return_value=0)
-        fleet.unload_cargo_from_fleet = MagicMock(return_value=0)
-        fleet.remove_ship = MagicMock(side_effect=lambda s: fleet.ships.remove(s))
 
         target_planet = _make_mock_planet(planet_id=10, name="Lone Rock")
         target_planet.owner_id = None
@@ -1096,9 +1082,7 @@ class TestColonizationEventLocationEnrichment:
         fleet.get_current_order.return_value = order
         fleet.pop_order = MagicMock()
 
-        component_registry = {
-            'continental_colony_pod': {'id': 'continental_colony_pod', 'abilities': {'ColonizePlanet': 'CONTINENTAL'}}
-        }
+        component_registry = {}
 
         calls, fake = _capture_log_event_calls()
 
@@ -1106,10 +1090,12 @@ class TestColonizationEventLocationEnrichment:
             mock_result = MagicMock()
             mock_result.is_valid = True
             mock_val.validate.return_value = mock_result
-            mock_val.find_ship_with_colony_pod.return_value = mock_ship
+            mock_val.fleet_has_drop_pod.return_value = True
+            mock_val.find_ship_with_drop_pod.return_value = (mock_ship, 0)
 
-            with patch.object(processor, '_place_starter_complex'), \
+            with patch.object(processor, '_deploy_drop_pod'), \
                  patch.object(processor, '_transfer_cargo_resources_to_colony'), \
+                 patch.object(processor, '_transfer_founding_population'), \
                  patch('game.strategy.engine.order_processor.log_event', fake):
                 processor.process_colonize(fleet, empire, galaxy, component_registry=component_registry)
 

@@ -63,7 +63,7 @@ class MockGalaxy:
 
 
 def make_colony_ship(name: str, owner_id: int, pod_type: str = "ICE_DWARF") -> ShipInstance:
-    """Create a ship with a colony pod loaded as cargo."""
+    """Create a ship with a drop pod in carried_items."""
     ship = ShipInstance(
         instance_id=f"colony-{name.lower().replace(' ', '-')}-{id(name)}",
         design_id=f"{pod_type}_colony_ship",
@@ -78,8 +78,14 @@ def make_colony_ship(name: str, owner_id: int, pod_type: str = "ICE_DWARF") -> S
             }
         },
     )
-    # Load colony pod as cargo
-    ship.cargo_contents[f"colony_pod_{pod_type.lower()}"] = 1
+    # Load drop pod as carried item
+    ship.carried_items.append({
+        "vehicle_type": "drop_pod",
+        "design_id": f"{pod_type.lower()}_drop_pod",
+        "name": f"Drop Pod ({pod_type})",
+        "design_data": {"layers": {"CORE": []}},
+        "mass": 500,
+    })
     return ship
 
 @pytest.fixture
@@ -245,8 +251,9 @@ class TestColonizePodCargoConsumption:
         assert combat_ship in fleet.ships
         assert len(fleet.ships) == 2
 
-        # Pod consumed from cargo
-        assert colony_ship.cargo_contents.get("colony_pod_ice_dwarf", 0) == 0
+        # Drop pod consumed from carried_items
+        drop_pods = [i for i in colony_ship.carried_items if i.get("vehicle_type") == "drop_pod"]
+        assert len(drop_pods) == 0
 
         # Fleet still exists
         assert fleet in empire.fleets
@@ -277,20 +284,26 @@ class TestColonizePodCargoConsumption:
         # Fleet stays
         assert fleet in empire.fleets
 
-    def test_colonize_consumes_correct_pod_type(
+    def test_colonize_consumes_one_drop_pod(
         self, galaxy_with_typed_planets
     ):
-        """Colonizing Ice Dwarf consumes ice pod, not continental pod."""
+        """Colonizing consumes exactly one drop pod from carried_items."""
         galaxy, ice_planet, continental_planet = galaxy_with_typed_planets
 
-        # Ship carrying both types of pods
+        # Ship carrying two drop pods
         ship = ShipInstance(
             instance_id="multi-pod-1", design_id="multi_carrier", name="Multi Carrier",
             owner_id=1, design_data={'name': 'Multi', 'vehicle_type': 'Ship',
             'stats': {'mass': 100}, 'layers': {'HULL': [{'id': 'colony_pod_bay'}]}}
         )
-        ship.cargo_contents["colony_pod_ice_dwarf"] = 1
-        ship.cargo_contents["colony_pod_continental"] = 1
+        ship.carried_items.append({
+            "vehicle_type": "drop_pod", "design_id": "pod_1",
+            "name": "Pod 1", "design_data": {"layers": {"CORE": []}}, "mass": 500,
+        })
+        ship.carried_items.append({
+            "vehicle_type": "drop_pod", "design_id": "pod_2",
+            "name": "Pod 2", "design_data": {"layers": {"CORE": []}}, "mass": 500,
+        })
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(ship)
@@ -303,6 +316,6 @@ class TestColonizePodCargoConsumption:
         result = processor.process_colonize(fleet, empire, galaxy, component_registry={})
 
         assert result.colonized is True
-        # Ice pod consumed, continental pod still there
-        assert ship.cargo_contents.get("colony_pod_ice_dwarf", 0) == 0
-        assert ship.cargo_contents.get("colony_pod_continental", 0) == 1
+        # One pod consumed, one remains
+        drop_pods = [i for i in ship.carried_items if i.get("vehicle_type") == "drop_pod"]
+        assert len(drop_pods) == 1

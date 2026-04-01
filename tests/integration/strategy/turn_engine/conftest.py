@@ -85,9 +85,9 @@ def create_mock_component_def(
 
 
 def create_colony_ship(name="Colony Ship", owner_id=0, pod_type="ICE_DWARF", registries=None):
-    """Helper to create a colony ship with pod loaded as cargo.
+    """Helper to create a colony ship with a drop pod in carried_items.
 
-    Phase 2: Colony pods are cargo items. Ship is reusable after colonization.
+    Phase 3: Drop pods are carried items. Ship is reusable after colonization.
     """
     from game.strategy.data.ship_instance import ShipInstance
 
@@ -106,8 +106,14 @@ def create_colony_ship(name="Colony Ship", owner_id=0, pod_type="ICE_DWARF", reg
             }
         },
     )
-    # Load colony pod as cargo
-    ship.cargo_contents[f"colony_pod_{pod_type.lower()}"] = 1
+    # Load drop pod as carried item
+    ship.carried_items.append({
+        "vehicle_type": "drop_pod",
+        "design_id": f"{pod_type.lower()}_drop_pod",
+        "name": f"Drop Pod ({pod_type})",
+        "design_data": {"layers": {"CORE": []}},
+        "mass": 500,
+    })
     if registries is not None:
         ship.set_registries(registries)
     return ship

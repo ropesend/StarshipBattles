@@ -3,11 +3,23 @@ Tests for ColonizeValidator.
 
 PROJ-36: Tests for centralized colonize order validation.
 Migrated from test_turn_engine.py::TestColonizeValidation.
+Phase 3: Updated to use carried_items with drop pods instead of cargo_contents.
 """
 import pytest
 from unittest.mock import MagicMock
 
 from game.core.hex_math import HexCoord
+
+
+# Helper to create a standard drop pod item dict
+def _drop_pod_item(design_id="test_pod", name="Test Pod"):
+    return {
+        "vehicle_type": "drop_pod",
+        "design_id": design_id,
+        "name": name,
+        "design_data": {"layers": {"CORE": []}},
+        "mass": 500,
+    }
 
 
 # =============================================================================
@@ -75,9 +87,9 @@ class TestColonizeValidatorBasic:
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
         mock_fleet.location = mock_planet.location
 
-        # Give fleet a matching pod in cargo
+        # Give fleet a ship with a drop pod in carried_items
         ship = MagicMock()
-        ship.cargo_contents = {"colony_pod_continental": 1}
+        ship.carried_items = [_drop_pod_item()]
         mock_fleet.ships = [ship]
 
         result = ColonizeValidator.validate(mock_galaxy, mock_fleet, mock_planet)
@@ -125,9 +137,9 @@ class TestColonizeValidatorAnyPlanet:
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
         mock_fleet.location = mock_planet.location
 
-        # Give fleet a matching pod in cargo
+        # Give fleet a ship with a drop pod in carried_items
         ship = MagicMock()
-        ship.cargo_contents = {"colony_pod_continental": 1}
+        ship.carried_items = [_drop_pod_item()]
         mock_fleet.ships = [ship]
 
         result = ColonizeValidator.validate(mock_galaxy, mock_fleet, None)
@@ -188,9 +200,9 @@ class TestColonizeValidatorEdgeCases:
         mock_galaxy.get_planets_at_global_hex.return_value = [owned_planet, unowned_planet]
         mock_fleet.location = HexCoord(0, 0)
 
-        # Give fleet a matching pod in cargo
+        # Give fleet a ship with a drop pod in carried_items
         ship = MagicMock()
-        ship.cargo_contents = {"colony_pod_continental": 1}
+        ship.carried_items = [_drop_pod_item()]
         mock_fleet.ships = [ship]
 
         result = ColonizeValidator.validate(mock_galaxy, mock_fleet, None)
@@ -218,9 +230,9 @@ class TestColonizeValidatorEdgeCases:
         """Validation reflects current fleet location, not cached location."""
         from game.strategy.validation import ColonizeValidator
 
-        # Give fleet a matching pod in cargo
+        # Give fleet a ship with a drop pod in carried_items
         ship = MagicMock()
-        ship.cargo_contents = {"colony_pod_continental": 1}
+        ship.carried_items = [_drop_pod_item()]
         mock_fleet.ships = [ship]
 
         # Initially valid
@@ -242,9 +254,9 @@ class TestColonizeValidatorEdgeCases:
         """Validation reflects current planet ownership, not cached state."""
         from game.strategy.validation import ColonizeValidator
 
-        # Give fleet a matching pod in cargo
+        # Give fleet a ship with a drop pod in carried_items
         ship = MagicMock()
-        ship.cargo_contents = {"colony_pod_continental": 1}
+        ship.carried_items = [_drop_pod_item()]
         mock_fleet.ships = [ship]
 
         # Initially valid
@@ -369,19 +381,19 @@ class TestColonizeValidatorColonyPods:
 
     @pytest.fixture
     def mock_ship_with_ice_dwarf_pod(self):
-        """Create a mock ship with an Ice Dwarf colony pod in cargo."""
+        """Create a mock ship with a drop pod in carried_items."""
         ship = MagicMock()
         ship.name = "Colony Ship Alpha"
-        ship.cargo_contents = {"colony_pod_ice_dwarf": 1}
+        ship.carried_items = [_drop_pod_item("ice_dwarf_pod", "Ice Dwarf Pod")]
         ship.is_combat_capable = MagicMock(return_value=True)
         return ship
 
     @pytest.fixture
     def mock_ship_with_continental_pod(self):
-        """Create a mock ship with a Continental colony pod in cargo."""
+        """Create a mock ship with a drop pod in carried_items."""
         ship = MagicMock()
         ship.name = "Colony Ship Beta"
-        ship.cargo_contents = {"colony_pod_continental": 1}
+        ship.carried_items = [_drop_pod_item("continental_pod", "Continental Pod")]
         ship.is_combat_capable = MagicMock(return_value=True)
         return ship
 
@@ -390,7 +402,7 @@ class TestColonizeValidatorColonyPods:
         """Create a mock ship without any colony pod."""
         ship = MagicMock()
         ship.name = "Combat Ship"
-        ship.cargo_contents = {}
+        ship.carried_items = []
         ship.is_combat_capable = MagicMock(return_value=True)
         return ship
 
@@ -399,13 +411,13 @@ class TestColonizeValidatorColonyPods:
         """Create a mock component registry (kept for API compatibility)."""
         return {}
 
-    def test_validate_requires_matching_colony_pod(
+    def test_validate_with_drop_pod_succeeds_any_planet_type(
         self, mock_galaxy, mock_planet_ice_dwarf, mock_ship_with_continental_pod, mock_component_registry
     ):
-        """Validation fails when fleet has wrong type of colony pod."""
+        """Phase 3: Drop pods are universal -- any drop pod works on any planet type."""
         from game.strategy.validation import ColonizeValidator
 
-        # Fleet with Continental pod trying to colonize Ice Dwarf planet
+        # Fleet with any drop pod can colonize any planet type
         fleet = MagicMock()
         fleet.id = 1
         fleet.owner_id = 0
@@ -420,16 +432,16 @@ class TestColonizeValidatorColonyPods:
             component_registry=mock_component_registry
         )
 
-        assert result.is_valid is False
-        assert result.error_code == "NO_COLONY_POD"
+        # Drop pods are universal
+        assert result.is_valid is True
 
-    def test_validate_accepts_matching_colony_pod(
+    def test_validate_accepts_drop_pod(
         self, mock_galaxy, mock_planet_ice_dwarf, mock_ship_with_ice_dwarf_pod, mock_component_registry
     ):
-        """Validation passes when fleet has matching colony pod."""
+        """Validation passes when fleet has a drop pod."""
         from game.strategy.validation import ColonizeValidator
 
-        # Fleet with Ice Dwarf pod colonizing Ice Dwarf planet
+        # Fleet with drop pod colonizing planet
         fleet = MagicMock()
         fleet.id = 1
         fleet.owner_id = 0
@@ -472,7 +484,7 @@ class TestColonizeValidatorColonyPods:
     def test_get_available_colony_pods(
         self, mock_ship_with_ice_dwarf_pod, mock_ship_with_continental_pod, mock_component_registry
     ):
-        """Should correctly count available colony pods by type."""
+        """Should correctly count available drop pods."""
         from game.strategy.validation import ColonizeValidator
 
         fleet = MagicMock()
@@ -480,27 +492,28 @@ class TestColonizeValidatorColonyPods:
 
         result = ColonizeValidator.get_available_colony_pods(fleet, mock_component_registry)
 
-        assert result == {"ICE_DWARF": 1, "CONTINENTAL": 1}
+        # Phase 3: Returns {'drop_pod': N} -- pods are universal
+        assert result == {"drop_pod": 2}
 
     def test_get_available_colony_pods_multiple_same_type(
         self, mock_ship_with_ice_dwarf_pod, mock_component_registry
     ):
-        """Should count multiple pods of the same type."""
+        """Should count multiple drop pods."""
         from game.strategy.validation import ColonizeValidator
 
-        # Create another ice dwarf ship with pod in cargo
+        # Create another ship with a drop pod
         ship2 = MagicMock()
-        ship2.cargo_contents = {"colony_pod_ice_dwarf": 1}
+        ship2.carried_items = [_drop_pod_item("pod_2", "Pod 2")]
 
         fleet = MagicMock()
         fleet.ships = [mock_ship_with_ice_dwarf_pod, ship2]
 
         result = ColonizeValidator.get_available_colony_pods(fleet, mock_component_registry)
 
-        assert result == {"ICE_DWARF": 2}
+        assert result == {"drop_pod": 2}
 
     def test_get_committed_colony_pods(self, mock_planet_ice_dwarf, mock_planet_continental):
-        """Should correctly count committed colony pods from orders."""
+        """Should correctly count committed colonize orders."""
         from game.strategy.validation import ColonizeValidator
         from game.strategy.data.order_types import OrderType
 
@@ -521,58 +534,59 @@ class TestColonizeValidatorColonyPods:
 
         result = ColonizeValidator.get_committed_colony_pods(fleet)
 
-        assert result == {"ICE_DWARF": 2, "CONTINENTAL": 1}
+        # Phase 3: Returns {'drop_pod': N} -- counts all COLONIZE orders
+        assert result == {"drop_pod": 3}
 
     def test_validate_rejects_overcommitted_pods(
         self, mock_galaxy, mock_planet_ice_dwarf, mock_ship_with_ice_dwarf_pod, mock_component_registry
     ):
-        """Cannot queue colonization when all matching pods are committed."""
+        """Cannot queue colonization when all drop pods are committed."""
         from game.strategy.validation import ColonizeValidator
         from game.strategy.data.order_types import OrderType
 
-        # Create an existing colonize order for the ice dwarf pod
+        # Create an existing colonize order
         existing_order = MagicMock()
         existing_order.type = OrderType.COLONIZE
-        existing_order.target = mock_planet_ice_dwarf  # Committed to colonize ice dwarf
+        existing_order.target = mock_planet_ice_dwarf
 
         fleet = MagicMock()
         fleet.id = 1
         fleet.owner_id = 0
         fleet.location = HexCoord(0, 0)
-        fleet.ships = [mock_ship_with_ice_dwarf_pod]  # Only 1 ice dwarf pod
+        fleet.ships = [mock_ship_with_ice_dwarf_pod]  # Only 1 drop pod
         fleet.orders = [existing_order]  # Already committed
 
-        # Create a second ice dwarf planet
-        another_ice_dwarf = MagicMock()
-        another_ice_dwarf.name = "Frostworld 2"
-        another_ice_dwarf.owner_id = None
-        another_ice_dwarf.location = HexCoord(0, 0)
+        # Create a second planet
+        another_planet = MagicMock()
+        another_planet.name = "Frostworld 2"
+        another_planet.owner_id = None
+        another_planet.location = HexCoord(0, 0)
 
         from enum import Enum
         class MockPlanetType(Enum):
             ICE_DWARF = "ICE_DWARF"
-        another_ice_dwarf.planet_type = MockPlanetType.ICE_DWARF
+        another_planet.planet_type = MockPlanetType.ICE_DWARF
 
-        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf, another_ice_dwarf]
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf, another_planet]
 
-        # Try to queue second colonization
+        # Try to queue second colonization -- should fail (1 pod, 1 committed)
         result = ColonizeValidator.validate(
-            mock_galaxy, fleet, another_ice_dwarf,
+            mock_galaxy, fleet, another_planet,
             component_registry=mock_component_registry
         )
 
         assert result.is_valid is False
         assert result.error_code == "COLONY_POD_EXHAUSTED"
 
-    def test_validate_allows_different_pod_types_independently(
+    def test_validate_allows_second_pod_when_available(
         self, mock_galaxy, mock_planet_continental, mock_ship_with_ice_dwarf_pod,
         mock_ship_with_continental_pod, mock_component_registry
     ):
-        """Different pod types are tracked independently."""
+        """Phase 3: Two drop pods allow two colonize orders."""
         from game.strategy.validation import ColonizeValidator
         from game.strategy.data.order_types import OrderType
 
-        # Create an ice dwarf planet that's already targeted
+        # Create a planet that's already targeted
         ice_dwarf_planet = MagicMock()
         ice_dwarf_planet.name = "Frostworld"
         ice_dwarf_planet.owner_id = None
@@ -583,7 +597,7 @@ class TestColonizeValidatorColonyPods:
             ICE_DWARF = "ICE_DWARF"
         ice_dwarf_planet.planet_type = MockPlanetType.ICE_DWARF
 
-        # Existing order for ice dwarf
+        # Existing order uses one pod
         existing_order = MagicMock()
         existing_order.type = OrderType.COLONIZE
         existing_order.target = ice_dwarf_planet
@@ -592,12 +606,13 @@ class TestColonizeValidatorColonyPods:
         fleet.id = 1
         fleet.owner_id = 0
         fleet.location = HexCoord(0, 0)
+        # Two ships, each with a drop pod = 2 pods total
         fleet.ships = [mock_ship_with_ice_dwarf_pod, mock_ship_with_continental_pod]
-        fleet.orders = [existing_order]  # Ice dwarf pod committed
+        fleet.orders = [existing_order]  # 1 committed, 1 remaining
 
         mock_galaxy.get_planets_at_global_hex.return_value = [ice_dwarf_planet, mock_planet_continental]
 
-        # Should still be able to colonize continental (different pod type)
+        # Should succeed -- 2 pods, 1 committed, 1 remaining
         result = ColonizeValidator.validate(
             mock_galaxy, fleet, mock_planet_continental,
             component_registry=mock_component_registry
@@ -643,9 +658,9 @@ class TestColonizeValidatorZoneColonization:
         # Fleet is at zone hex (2, 0), not at center
         mock_fleet.location = HexCoord(2, 0)
 
-        # Give fleet a matching pod in cargo
+        # Give fleet a ship with a drop pod in carried_items
         ship = MagicMock()
-        ship.cargo_contents = {"colony_pod_dyson_sphere": 1}
+        ship.carried_items = [_drop_pod_item()]
         mock_fleet.ships = [ship]
 
         mock_galaxy.get_planets_at_global_hex.return_value = []
@@ -671,9 +686,9 @@ class TestColonizeValidatorZoneColonization:
 
         mock_fleet.location = HexCoord(0, 0)
 
-        # Give fleet a matching pod in cargo
+        # Give fleet a ship with a drop pod
         ship = MagicMock()
-        ship.cargo_contents = {"colony_pod_dyson_sphere": 1}
+        ship.carried_items = [_drop_pod_item()]
         mock_fleet.ships = [ship]
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_dyson]
@@ -699,9 +714,9 @@ class TestColonizeValidatorZoneColonization:
 
         mock_fleet.location = HexCoord(0, 0)
 
-        # Give fleet a matching pod in cargo
+        # Give fleet a ship with a drop pod
         ship = MagicMock()
-        ship.cargo_contents = {"colony_pod_continental": 1}
+        ship.carried_items = [_drop_pod_item()]
         mock_fleet.ships = [ship]
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
@@ -796,92 +811,90 @@ class TestColonizeValidatorAnyPlanetPods:
         return planet
 
     def _make_ship_with_pod(self, pod_type: str):
-        """Create a mock ship with a colony pod in cargo."""
+        """Create a mock ship with a drop pod in carried_items."""
         ship = MagicMock()
         ship.name = f"{pod_type} Colony Ship"
-        cargo_type = f"colony_pod_{pod_type.lower()}"
-        ship.cargo_contents = {cargo_type: 1}
+        ship.carried_items = [_drop_pod_item(f"{pod_type.lower()}_pod", f"{pod_type} Pod")]
         return ship
 
-    def test_any_planet_with_registry_no_matching_pod_fails(
+    def test_any_planet_no_ships_fails(
         self, mock_galaxy, mock_fleet, mock_component_registry
     ):
-        """Any Planet with registry fails if no pod matches any candidate."""
+        """Any Planet fails when fleet has no ships (no drop pods)."""
         from game.strategy.validation import ColonizeValidator
 
-        # Fleet has CONTINENTAL pod
-        mock_fleet.ships = [self._make_ship_with_pod("CONTINENTAL")]
+        # Fleet has no ships
+        mock_fleet.ships = []
 
-        # Only ICE_DWARF planets available
+        # Planet available
         ice_dwarf_planet = self._make_planet("ICE_DWARF", "Frostworld")
         mock_galaxy.get_planets_at_global_hex.return_value = [ice_dwarf_planet]
 
         result = ColonizeValidator.validate(
-            mock_galaxy, mock_fleet, None,  # None = "Any Planet"
+            mock_galaxy, mock_fleet, None,
             component_registry=mock_component_registry
         )
 
         assert result.is_valid is False
         assert result.error_code == "NO_COLONY_POD"
 
-    def test_any_planet_with_registry_matching_pod_succeeds(
+    def test_any_planet_with_drop_pod_succeeds(
         self, mock_galaxy, mock_fleet, mock_component_registry
     ):
-        """Any Planet with registry succeeds if a pod matches a candidate."""
+        """Any Planet succeeds when fleet has a drop pod."""
         from game.strategy.validation import ColonizeValidator
 
-        # Fleet has ICE_DWARF pod
+        # Fleet has a drop pod
         mock_fleet.ships = [self._make_ship_with_pod("ICE_DWARF")]
 
-        # ICE_DWARF planet available
+        # Planet available
         ice_dwarf_planet = self._make_planet("ICE_DWARF", "Frostworld")
         mock_galaxy.get_planets_at_global_hex.return_value = [ice_dwarf_planet]
 
         result = ColonizeValidator.validate(
-            mock_galaxy, mock_fleet, None,  # None = "Any Planet"
+            mock_galaxy, mock_fleet, None,
             component_registry=mock_component_registry
         )
 
         assert result.is_valid is True
 
-    def test_any_planet_without_matching_pod_fails(
+    def test_any_planet_without_drop_pod_fails(
         self, mock_galaxy, mock_fleet
     ):
-        """Any Planet with no matching pod in cargo fails."""
+        """Any Planet with no drop pods fails."""
         from game.strategy.validation import ColonizeValidator
 
-        # Fleet has no ships (no pods in cargo)
-        mock_fleet.ships = []
+        # Fleet has ship but no drop pods
+        ship = MagicMock()
+        ship.carried_items = []
+        mock_fleet.ships = [ship]
 
-        # ICE_DWARF planet available
+        # Planet available
         ice_dwarf_planet = self._make_planet("ICE_DWARF", "Frostworld")
         mock_galaxy.get_planets_at_global_hex.return_value = [ice_dwarf_planet]
 
         result = ColonizeValidator.validate(
-            mock_galaxy, mock_fleet, None,  # None = "Any Planet"
+            mock_galaxy, mock_fleet, None,
         )
 
-        # Phase 2: Always checks cargo for pods
         assert result.is_valid is False
         assert result.error_code == "NO_COLONY_POD"
 
-    def test_any_planet_with_registry_exhausted_pods_fails(
+    def test_any_planet_exhausted_pods_fails(
         self, mock_galaxy, mock_fleet, mock_component_registry
     ):
-        """Any Planet fails if all matching pods are already committed."""
+        """Any Planet fails if all drop pods are already committed."""
         from game.strategy.validation import ColonizeValidator
         from game.strategy.data.order_types import OrderType
 
-        # Fleet has one ICE_DWARF pod
+        # Fleet has one drop pod
         mock_fleet.ships = [self._make_ship_with_pod("ICE_DWARF")]
 
-        # ICE_DWARF planet 1 (already targeted by existing order)
+        # Two planets
         ice_dwarf_1 = self._make_planet("ICE_DWARF", "Frostworld 1")
-
-        # ICE_DWARF planet 2 (another candidate)
         ice_dwarf_2 = self._make_planet("ICE_DWARF", "Frostworld 2")
 
-        # Existing order commits the only ICE_DWARF pod
+        # Existing order commits the only drop pod
         existing_order = MagicMock()
         existing_order.type = OrderType.COLONIZE
         existing_order.target = ice_dwarf_1
@@ -890,12 +903,11 @@ class TestColonizeValidatorAnyPlanetPods:
         mock_galaxy.get_planets_at_global_hex.return_value = [ice_dwarf_1, ice_dwarf_2]
 
         result = ColonizeValidator.validate(
-            mock_galaxy, mock_fleet, None,  # None = "Any Planet"
+            mock_galaxy, mock_fleet, None,
             component_registry=mock_component_registry
         )
 
         assert result.is_valid is False
-        # Could be either error code depending on implementation
         assert result.error_code in ("NO_COLONY_POD", "COLONY_POD_EXHAUSTED")
 
 
@@ -950,9 +962,9 @@ class TestColonizeValidatorAdvancedEdgeCases:
         planet = self._make_planet("ICE_DWARF")
         galaxy.get_planets_at_global_hex = MagicMock(return_value=[planet])
 
-        # Fleet with one pod in cargo, already committed
+        # Fleet with one drop pod, already committed
         ship = MagicMock()
-        ship.cargo_contents = {"colony_pod_ice_dwarf": 1}
+        ship.carried_items = [_drop_pod_item()]
 
         existing_order = MagicMock()
         existing_order.type = OrderType.COLONIZE
@@ -980,17 +992,17 @@ class TestColonizeValidatorAdvancedEdgeCases:
         )
         assert result_with_skip.is_valid is True
 
-    def test_cargo_pod_with_matching_type_validates(self, mock_component_registry):
-        """Colony pod in cargo with matching planet type validates."""
+    def test_drop_pod_validates(self, mock_component_registry):
+        """Drop pod in carried_items validates for colonization."""
         from game.strategy.validation import ColonizeValidator
 
         galaxy = MagicMock()
         planet = self._make_planet("CONTINENTAL")
         galaxy.get_planets_at_global_hex = MagicMock(return_value=[planet])
 
-        # Ship with continental pod in cargo
+        # Ship with drop pod in carried_items
         ship = MagicMock()
-        ship.cargo_contents = {"colony_pod_continental": 1}
+        ship.carried_items = [_drop_pod_item()]
 
         fleet = MagicMock()
         fleet.id = 1
@@ -1002,17 +1014,17 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
         assert result.is_valid is True
 
-    def test_non_pod_cargo_does_not_satisfy_requirement(self, mock_component_registry):
-        """Non-colony-pod cargo does not satisfy pod requirement."""
+    def test_no_drop_pod_does_not_satisfy_requirement(self, mock_component_registry):
+        """Ship without drop pod in carried_items cannot colonize."""
         from game.strategy.validation import ColonizeValidator
 
         galaxy = MagicMock()
         planet = self._make_planet("ICE_DWARF")
         galaxy.get_planets_at_global_hex = MagicMock(return_value=[planet])
 
-        # Ship with only regular cargo (no colony pods)
+        # Ship with empty carried_items (no drop pods)
         ship = MagicMock()
-        ship.cargo_contents = {"metals": 100, "passengers": 50}
+        ship.carried_items = []
 
         fleet = MagicMock()
         fleet.id = 1
@@ -1034,7 +1046,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
         result = ColonizeValidator.get_committed_colony_pods(fleet)
 
-        assert result == {}
+        assert result == {"drop_pod": 0}
 
     def test_get_committed_skips_non_colonize_orders(self):
         """get_committed_colony_pods ignores non-COLONIZE orders."""
@@ -1057,10 +1069,10 @@ class TestColonizeValidatorAdvancedEdgeCases:
         result = ColonizeValidator.get_committed_colony_pods(fleet)
 
         # Only counts the COLONIZE order
-        assert result == {"ICE_DWARF": 1}
+        assert result == {"drop_pod": 1}
 
-    def test_get_committed_skips_colonize_with_none_target(self):
-        """get_committed_colony_pods skips COLONIZE orders with target=None."""
+    def test_get_committed_counts_colonize_with_none_target(self):
+        """get_committed_colony_pods counts COLONIZE orders with target=None."""
         from game.strategy.validation import ColonizeValidator
         from game.strategy.data.order_types import OrderType
 
@@ -1073,8 +1085,8 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
         result = ColonizeValidator.get_committed_colony_pods(fleet)
 
-        # None target means no specific commitment
-        assert result == {}
+        # Phase 3: All COLONIZE orders count (pods are universal)
+        assert result == {"drop_pod": 1}
 
     def test_get_available_empty_ships_list(self, mock_component_registry):
         """get_available_colony_pods handles empty ships list."""
@@ -1085,31 +1097,31 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
         result = ColonizeValidator.get_available_colony_pods(fleet)
 
-        assert result == {}
+        assert result == {"drop_pod": 0}
 
-    def test_get_available_ships_without_cargo(self, mock_component_registry):
-        """get_available_colony_pods handles ships with empty cargo."""
+    def test_get_available_ships_without_pods(self, mock_component_registry):
+        """get_available_colony_pods handles ships with no drop pods."""
         from game.strategy.validation import ColonizeValidator
 
         ship = MagicMock()
-        ship.cargo_contents = {}
+        ship.carried_items = []
 
         fleet = MagicMock()
         fleet.ships = [ship]
 
         result = ColonizeValidator.get_available_colony_pods(fleet)
 
-        assert result == {}
+        assert result == {"drop_pod": 0}
 
-    def test_fleet_has_colony_pod_returns_true_on_match(self, mock_component_registry):
-        """fleet_has_colony_pod returns True when matching pod in cargo."""
+    def test_fleet_has_colony_pod_returns_true_with_drop_pod(self, mock_component_registry):
+        """fleet_has_colony_pod returns True when ship has drop pod."""
         from game.strategy.validation import ColonizeValidator
 
         ship1 = MagicMock()
-        ship1.cargo_contents = {"colony_pod_ice_dwarf": 1}
+        ship1.carried_items = [_drop_pod_item()]
 
         ship2 = MagicMock()
-        ship2.cargo_contents = {"colony_pod_ice_dwarf": 1}
+        ship2.carried_items = [_drop_pod_item()]
 
         fleet = MagicMock()
         fleet.ships = [ship1, ship2]
@@ -1118,12 +1130,12 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
         assert result is True
 
-    def test_fleet_has_colony_pod_returns_false_on_no_match(self, mock_component_registry):
-        """fleet_has_colony_pod returns False when no matching pod."""
+    def test_fleet_has_colony_pod_returns_false_without_drop_pod(self, mock_component_registry):
+        """fleet_has_colony_pod returns False when no drop pods."""
         from game.strategy.validation import ColonizeValidator
 
         ship = MagicMock()
-        ship.cargo_contents = {"metals": 100}
+        ship.carried_items = []
 
         fleet = MagicMock()
         fleet.ships = [ship]
@@ -1132,8 +1144,8 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
         assert result is False
 
-    def test_any_planet_candidates_without_planet_type(self, mock_component_registry):
-        """Candidates without planet_type attribute are skipped in pod matching."""
+    def test_any_planet_with_drop_pod_colonizes_any_type(self, mock_component_registry):
+        """Phase 3: Drop pods are universal -- any unowned planet can be colonized."""
         from game.strategy.validation import ColonizeValidator
 
         galaxy = MagicMock()
@@ -1148,7 +1160,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
         galaxy.get_planets_at_global_hex = MagicMock(return_value=[weird_planet])
 
         ship = MagicMock()
-        ship.cargo_contents = {"colony_pod_ice_dwarf": 1}
+        ship.carried_items = [_drop_pod_item()]
 
         fleet = MagicMock()
         fleet.id = 1
@@ -1160,31 +1172,30 @@ class TestColonizeValidatorAdvancedEdgeCases:
             galaxy, fleet, None,  # "Any Planet"
         )
 
-        # Should fail - no candidate matched because weird_planet has no planet_type
-        assert result.is_valid is False
-        assert result.error_code == "NO_COLONY_POD"
+        # Phase 3: Drop pods are universal -- should succeed
+        assert result.is_valid is True
 
-    def test_any_planet_mixed_candidates_one_match(self, mock_component_registry):
-        """Any Planet succeeds when at least one candidate matches available pod."""
+    def test_any_planet_two_pods_one_committed_succeeds(self, mock_component_registry):
+        """Any Planet succeeds when fleet has 2 drop pods and 1 is committed."""
         from game.strategy.validation import ColonizeValidator
         from game.strategy.data.order_types import OrderType
 
         galaxy = MagicMock()
 
-        # Two planets: ICE_DWARF and CONTINENTAL
+        # Two planets
         ice_planet = self._make_planet("ICE_DWARF", "Frostworld")
         cont_planet = self._make_planet("CONTINENTAL", "Earth-like")
 
         galaxy.get_planets_at_global_hex = MagicMock(return_value=[ice_planet, cont_planet])
 
-        # Fleet has ICE_DWARF and CONTINENTAL pods in cargo
+        # Fleet has two ships, each with a drop pod
         ice_ship = MagicMock()
-        ice_ship.cargo_contents = {"colony_pod_ice_dwarf": 1}
+        ice_ship.carried_items = [_drop_pod_item("pod_1")]
 
         cont_ship = MagicMock()
-        cont_ship.cargo_contents = {"colony_pod_continental": 1}
+        cont_ship.carried_items = [_drop_pod_item("pod_2")]
 
-        # Commit the ICE_DWARF pod
+        # Commit one pod
         ice_order = MagicMock()
         ice_order.type = OrderType.COLONIZE
         ice_order.target = ice_planet
@@ -1193,13 +1204,13 @@ class TestColonizeValidatorAdvancedEdgeCases:
         fleet.id = 1
         fleet.location = HexCoord(0, 0)
         fleet.ships = [ice_ship, cont_ship]
-        fleet.orders = [ice_order]  # ICE_DWARF committed
+        fleet.orders = [ice_order]  # 1 committed, 1 remaining
 
         result = ColonizeValidator.validate(
             galaxy, fleet, None,  # "Any Planet"
         )
 
-        # Should succeed because CONTINENTAL pod is still available for cont_planet
+        # Should succeed -- 2 pods, 1 committed, 1 still available
         assert result.is_valid is True
 
     # PROJ-191: test_galaxy_without_zone_registry deleted - Galaxy always has get_zones_at_global_hex
@@ -1236,9 +1247,9 @@ class TestColonizeValidatorAdvancedEdgeCases:
         galaxy.get_planets_at_global_hex = MagicMock(return_value=[dyson])
         galaxy.get_zones_at_global_hex = MagicMock(return_value=[dyson])
 
-        # Give fleet a matching pod in cargo
+        # Give fleet a ship with a drop pod
         ship = MagicMock()
-        ship.cargo_contents = {"colony_pod_dyson_sphere": 1}
+        ship.carried_items = [_drop_pod_item()]
 
         fleet = MagicMock()
         fleet.id = 1

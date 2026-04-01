@@ -11,7 +11,7 @@ from game.strategy.data.ship_instance import ShipInstance
 
 
 def make_colony_ship(planet_type: str, owner_id: int, instance_id: str = "colony-ship-1") -> ShipInstance:
-    """Create a ship with a colony pod loaded as cargo."""
+    """Create a ship with a drop pod in carried_items."""
     ship = ShipInstance(
         instance_id=instance_id,
         design_id=f"{planet_type}_colony_ship",
@@ -26,7 +26,13 @@ def make_colony_ship(planet_type: str, owner_id: int, instance_id: str = "colony
             }
         },
     )
-    ship.cargo_contents[f"colony_pod_{planet_type.lower()}"] = 1
+    ship.carried_items.append({
+        "vehicle_type": "drop_pod",
+        "design_id": f"{planet_type.lower()}_drop_pod",
+        "name": f"Drop Pod ({planet_type})",
+        "design_data": {"layers": {"CORE": []}},
+        "mass": 500,
+    })
     return ship
 
 # Mock Galaxy and related classes to avoid full initialization

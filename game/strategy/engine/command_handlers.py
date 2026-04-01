@@ -470,26 +470,20 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
             if error:
                 return error
 
-            # Phase 2: Validate pod match using cargo-based detection
-            planet_type_str = planet.planet_type.name
-
-            # Check if fleet has a matching colony pod in cargo
-            if not ColonizeValidator.fleet_has_colony_pod(fleet, planet_type_str):
+            # Phase 3: Validate fleet has a drop pod
+            if not ColonizeValidator.fleet_has_drop_pod(fleet):
                 return ValidationResult.error(
-                    f"No ship in fleet has {planet_type_str} colony pod.",
+                    "No drop pod carried by any ship in fleet.",
                     code="NO_COLONY_POD"
                 )
 
             # Check chain limits - ensure not over-committed
-            available = ColonizeValidator.get_available_colony_pods(fleet)
-            committed = ColonizeValidator.get_committed_colony_pods(fleet)
-
-            available_count = available.get(planet_type_str, 0)
-            committed_count = committed.get(planet_type_str, 0)
+            available_count = ColonizeValidator.count_drop_pods(fleet)
+            committed_count = ColonizeValidator.count_committed_colonize_orders(fleet)
 
             if committed_count >= available_count:
                 return ValidationResult.error(
-                    f"All {planet_type_str} colony pods already assigned.",
+                    "All drop pods already assigned to colonize orders.",
                     code="COLONY_POD_EXHAUSTED"
                 )
 

@@ -377,9 +377,9 @@ class TestFacadeColonyPodMethods:
         class MockPlanetType(Enum):
             ICE_DWARF = "ICE_DWARF"
 
-        # Phase 2: Colony pod in cargo
+        # Phase 3: Drop pod in carried_items
         mock_ship = Mock()
-        mock_ship.cargo_contents = {"colony_pod_ice_dwarf": 1}
+        mock_ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {}, "mass": 500}]
 
         # Create mock planet target
         mock_target_planet = Mock()
@@ -404,7 +404,7 @@ class TestFacadeColonyPodMethods:
         result = facade.get_fleet_remaining_pods(10)
 
         # 1 available - 1 committed = 0 remaining
-        assert result.get('ICE_DWARF', 0) == 0
+        assert result.get('drop_pod', 0) == 0
 
     def test_get_fleet_remaining_pods_fleet_not_found_returns_empty(self):
         """get_fleet_remaining_pods returns empty dict if fleet not found."""

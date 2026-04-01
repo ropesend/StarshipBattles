@@ -93,6 +93,29 @@ class LocalStorageAbility(Ability):
         ]
 
 
+class StagingYardAbility(Ability):
+    """Provides planet-side storage for constructed items (fighters, drop pods).
+
+    Each instance adds mass capacity for storing assembled vehicles on the planet.
+    Multiple staging yard facilities stack additively.
+    """
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []
+
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+        if isinstance(data, dict):
+            self.capacity_mass = data.get('capacity_mass', 0.0)
+        else:
+            self.capacity_mass = float(data) if data else 0.0
+
+    def get_primary_value(self) -> float:
+        return self.capacity_mass
+
+    def get_ui_rows(self) -> List[Dict[str, str]]:
+        return [{'label': 'Staging Capacity', 'value': f'{self.capacity_mass:.0f} mass', 'hint_color': None}]
+
+
 class PlanetaryYardAbility(Ability):
     """Enables base planetary construction queue on a colony.
 

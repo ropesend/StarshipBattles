@@ -102,9 +102,9 @@ class MockGalaxy:
 
 
 def make_colony_ship(name: str, owner_id: int, pod_type: str, registries=None) -> ShipInstance:
-    """Create a ship with a colony pod loaded as cargo.
+    """Create a ship with a drop pod in carried_items.
 
-    Phase 2: Colony pods are cargo items. Ship is reusable after colonization.
+    Phase 3: Drop pods are carried items. Ship is reusable after colonization.
     """
     ship = ShipInstance(
         instance_id=f"colony-{name.lower().replace(' ', '-')}-{id(name)}",
@@ -121,8 +121,14 @@ def make_colony_ship(name: str, owner_id: int, pod_type: str, registries=None) -
             }
         },
     )
-    # Load colony pod as cargo
-    ship.cargo_contents[f"colony_pod_{pod_type.lower()}"] = 1
+    # Load drop pod as carried item
+    ship.carried_items.append({
+        "vehicle_type": "drop_pod",
+        "design_id": f"{pod_type.lower()}_drop_pod",
+        "name": f"Drop Pod ({pod_type})",
+        "design_data": {"layers": {"CORE": []}},
+        "mass": 500,
+    })
     if registries is not None:
         ship.set_registries(registries)
     return ship
@@ -284,38 +290,39 @@ class TestColonizeWithMatchingPod:
         assert ice_planet.owner_id == 1
         assert ice_planet in empire.colonies
 
-        # Phase 2: Both ships stay (ship is reusable)
+        # Phase 3: Both ships stay (ship is reusable)
         assert colony_ship in fleet.ships
         assert combat_ship in fleet.ships
         assert len(fleet.ships) == 2
 
-        # Pod consumed from cargo
-        assert colony_ship.cargo_contents.get("colony_pod_ice_dwarf", 0) == 0
+        # Drop pod consumed from carried_items
+        drop_pods = [i for i in colony_ship.carried_items if i.get("vehicle_type") == "drop_pod"]
+        assert len(drop_pods) == 0
 
         # Fleet still exists
         assert fleet in empire.fleets
 
 
 class TestColonizeWithWrongPod:
-    """Tests for colonization with mismatched colony pod."""
+    """Tests for colonization without any drop pod."""
 
-    def test_colonize_with_wrong_pod_fails(
+    def test_colonize_without_drop_pod_fails(
         self, galaxy_with_ice_planet, component_registry
     ):
         """
-        PROJ-55: Colonization fails when fleet has wrong pod type.
+        Phase 3: Colonization fails when fleet has no drop pod at all.
 
-        Create Ice Dwarf planet, fleet with Continental pod ship.
+        Create Ice Dwarf planet, fleet with only a combat ship (no drop pod).
         Try to issue colonize command.
         Assert: Validation fails with NO_COLONY_POD error.
         """
         galaxy, ice_planet = galaxy_with_ice_planet
 
-        # Create fleet with CONTINENTAL colony ship (wrong type for Ice Dwarf planet)
-        colony_ship = make_colony_ship("Continental Colony Ship", 1, "CONTINENTAL")
+        # Create fleet with only a combat ship (no drop pods)
+        combat_ship = make_combat_ship("Combat Ship", 1)
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
-        fleet.ships.append(colony_ship)
+        fleet.ships.append(combat_ship)
 
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
@@ -329,7 +336,7 @@ class TestColonizeWithWrongPod:
         # Assert: Validation fails with NO_COLONY_POD error
         assert result.is_valid is False
         assert result.error_code == "NO_COLONY_POD"
-        assert "colony pod" in result.message.lower()
+        assert "drop pod" in result.message.lower()
 
 
 # =============================================================================
@@ -569,15 +576,15 @@ class TestUIFiltering:
         self, galaxy_with_multiple_planets, component_registry
     ):
         """
-        PROJ-55: UI filters planets by available pod types.
+        Phase 3: UI shows drop pod count for fleet.
 
         Create sector with Ice + Continental planets.
-        Fleet with only Ice pod.
-        Assert: Only Ice planet shown as option.
+        Fleet with one drop pod.
+        Assert: Drop pod available, both planets colonizable (pods are universal).
         """
         galaxy, ice_planet, continental_planet = galaxy_with_multiple_planets
 
-        # Create fleet with only ice dwarf colony ship
+        # Create fleet with one colony ship (one drop pod)
         colony_ship = make_colony_ship("Ice Colony Ship", 1, "ICE_DWARF")
 
         fleet = Fleet(1, 1, HexCoord(10, 10))
@@ -588,38 +595,36 @@ class TestUIFiltering:
             fleet, component_registry
         )
 
-        # Assert: Only Ice Dwarf pod available
-        assert "ICE_DWARF" in available_pods
-        assert available_pods["ICE_DWARF"] == 1
-        assert "CONTINENTAL" not in available_pods
+        # Phase 3: Returns {'drop_pod': N} -- pods are universal
+        assert "drop_pod" in available_pods
+        assert available_pods["drop_pod"] == 1
 
-        # Validate ice planet - should succeed
+        # Validate ice planet - should succeed (has drop pod)
         ice_result = ColonizeValidator.validate(
             galaxy, fleet, ice_planet,
             component_registry=component_registry
         )
         assert ice_result.is_valid is True
 
-        # Validate continental planet - should fail (wrong pod)
+        # Validate continental planet - should also succeed (pods are universal)
         continental_result = ColonizeValidator.validate(
             galaxy, fleet, continental_planet,
             component_registry=component_registry
         )
-        assert continental_result.is_valid is False
-        assert continental_result.error_code == "NO_COLONY_POD"
+        assert continental_result.is_valid is True
 
     def test_remaining_pods_after_commitment(
         self, galaxy_with_three_ice_planets, component_registry
     ):
         """
-        PROJ-55: Remaining pods correctly calculated after orders queued.
+        Phase 3: Remaining drop pods correctly calculated after orders queued.
 
-        Fleet with 2 Ice Dwarf pods, queue 1 colonization.
-        Assert: Remaining = 1 Ice Dwarf pod.
+        Fleet with 2 drop pods, queue 1 colonization.
+        Assert: Remaining = 1 drop pod.
         """
         galaxy, ice1, ice2, ice3 = galaxy_with_three_ice_planets
 
-        # Create fleet with 2 ice dwarf colony ships
+        # Create fleet with 2 colony ships (2 drop pods)
         colony_ship1 = make_colony_ship("Ice Colony 1", 1, "ICE_DWARF")
         colony_ship2 = make_colony_ship("Ice Colony 2", 1, "ICE_DWARF")
 
@@ -630,18 +635,18 @@ class TestUIFiltering:
         # Before any orders
         available = ColonizeValidator.get_available_colony_pods(fleet, component_registry)
         committed = ColonizeValidator.get_committed_colony_pods(fleet)
-        assert available.get("ICE_DWARF", 0) == 2
-        assert committed.get("ICE_DWARF", 0) == 0
+        assert available.get("drop_pod", 0) == 2
+        assert committed.get("drop_pod", 0) == 0
 
         # Queue 1 colonization
         fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice1))
 
         # After 1 order
         committed_after = ColonizeValidator.get_committed_colony_pods(fleet)
-        assert committed_after.get("ICE_DWARF", 0) == 1
+        assert committed_after.get("drop_pod", 0) == 1
 
         # Remaining = available - committed = 2 - 1 = 1
-        remaining = available.get("ICE_DWARF", 0) - committed_after.get("ICE_DWARF", 0)
+        remaining = available.get("drop_pod", 0) - committed_after.get("drop_pod", 0)
         assert remaining == 1
 
 
@@ -686,9 +691,9 @@ class TestEdgeCases:
         # Empty fleet
         fleet = Fleet(1, 1, HexCoord(10, 10))
 
-        # Get available pods - should be empty
+        # Get available pods - should be zero
         available = ColonizeValidator.get_available_colony_pods(fleet, component_registry)
-        assert available == {}
+        assert available == {"drop_pod": 0}
 
         # Validate - should fail
         result = ColonizeValidator.validate(
