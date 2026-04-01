@@ -5,210 +5,272 @@
             "code": "ES",
             "max_mass": 1000,
             "layer_config": "Capital_Escort",
-            "default_hull_id": "hull_escort"
+            "default_hull_id": "hull_escort",
+            "cost_multiplier": 1.0
         },
         "Frigate": {
             "type": "Ship",
             "code": "FR",
             "max_mass": 2000,
             "layer_config": "Capital_Escort",
-            "default_hull_id": "hull_frigate"
+            "default_hull_id": "hull_frigate",
+            "cost_multiplier": 1.0
         },
         "Destroyer": {
             "type": "Ship",
             "code": "DS",
             "max_mass": 4000,
             "layer_config": "Capital_Escort",
-            "default_hull_id": "hull_destroyer"
+            "default_hull_id": "hull_destroyer",
+            "cost_multiplier": 1.0
         },
         "Light Cruiser": {
             "type": "Ship",
             "code": "LC",
             "max_mass": 8000,
             "layer_config": "Capital_Escort",
-            "default_hull_id": "hull_light_cruiser"
+            "default_hull_id": "hull_light_cruiser",
+            "cost_multiplier": 1.0
         },
         "Cruiser": {
             "type": "Ship",
             "code": "CR",
             "max_mass": 16000,
             "layer_config": "Capital_Standard",
-            "default_hull_id": "hull_cruiser"
+            "default_hull_id": "hull_cruiser",
+            "cost_multiplier": 1.0
         },
         "Heavy Cruiser": {
             "type": "Ship",
             "code": "HC",
             "max_mass": 32000,
             "layer_config": "Capital_Standard",
-            "default_hull_id": "hull_heavy_cruiser"
+            "default_hull_id": "hull_heavy_cruiser",
+            "cost_multiplier": 1.0
         },
         "Battle Cruiser": {
             "type": "Ship",
             "code": "BC",
             "max_mass": 64000,
             "layer_config": "Capital_Standard",
-            "default_hull_id": "hull_battle_cruiser"
+            "default_hull_id": "hull_battle_cruiser",
+            "cost_multiplier": 1.0
         },
         "Battleship": {
             "type": "Ship",
             "code": "BS",
             "max_mass": 128000,
             "layer_config": "Capital_Standard",
-            "default_hull_id": "hull_battleship"
+            "default_hull_id": "hull_battleship",
+            "cost_multiplier": 1.0
         },
         "Dreadnought": {
             "type": "Ship",
             "code": "DN",
             "max_mass": 256000,
             "layer_config": "Capital_Standard",
-            "default_hull_id": "hull_dreadnought"
+            "default_hull_id": "hull_dreadnought",
+            "cost_multiplier": 1.0
         },
         "Superdreadnought": {
             "type": "Ship",
             "code": "SD",
             "max_mass": 512000,
             "layer_config": "Capital_Standard",
-            "default_hull_id": "hull_superdreadnought"
+            "default_hull_id": "hull_superdreadnought",
+            "cost_multiplier": 1.0
         },
         "Monitor": {
             "type": "Ship",
             "code": "MO",
             "max_mass": 1024000,
             "layer_config": "Capital_Standard",
-            "default_hull_id": "hull_monitor"
+            "default_hull_id": "hull_monitor",
+            "cost_multiplier": 1.0
         },
         "Fighter (Small)": {
             "type": "Fighter",
             "code": "SF",
             "max_mass": 25,
             "layer_config": "Fighter_Standard",
-            "default_hull_id": "hull_fighter_small"
+            "default_hull_id": "hull_fighter_small",
+            "cost_multiplier": 1.0
         },
         "Fighter (Medium)": {
             "type": "Fighter",
             "code": "MF",
             "max_mass": 35,
             "layer_config": "Fighter_Standard",
-            "default_hull_id": "hull_fighter_medium"
+            "default_hull_id": "hull_fighter_medium",
+            "cost_multiplier": 1.0
         },
         "Fighter (Large)": {
             "type": "Fighter",
             "code": "LF",
             "max_mass": 50,
             "layer_config": "Fighter_Standard",
-            "default_hull_id": "hull_fighter_large"
+            "default_hull_id": "hull_fighter_large",
+            "cost_multiplier": 1.0
         },
         "Fighter (Heavy)": {
             "type": "Fighter",
             "code": "HF",
             "max_mass": 70,
             "layer_config": "Fighter_Standard",
-            "default_hull_id": "hull_fighter_heavy"
+            "default_hull_id": "hull_fighter_heavy",
+            "cost_multiplier": 1.0
         },
         "Satellite (Small)": {
             "type": "Satellite",
             "code": "SS",
             "max_mass": 250,
             "layer_config": "Satellite_Standard",
-            "default_hull_id": "hull_satellite_small"
+            "default_hull_id": "hull_satellite_small",
+            "cost_multiplier": 1.0
         },
         "Satellite (Medium)": {
             "type": "Satellite",
             "code": "MS",
             "max_mass": 500,
             "layer_config": "Satellite_Standard",
-            "default_hull_id": "hull_satellite_medium"
+            "default_hull_id": "hull_satellite_medium",
+            "cost_multiplier": 1.0
         },
         "Satellite (Large)": {
             "type": "Satellite",
             "code": "LS",
             "max_mass": 1000,
             "layer_config": "Satellite_Standard",
-            "default_hull_id": "hull_satellite_large"
+            "default_hull_id": "hull_satellite_large",
+            "cost_multiplier": 1.0
         },
         "Satellite (Heavy)": {
             "type": "Satellite",
             "code": "HS",
             "max_mass": 2000,
             "layer_config": "Satellite_Standard",
-            "default_hull_id": "hull_satellite_heavy"
+            "default_hull_id": "hull_satellite_heavy",
+            "cost_multiplier": 1.0
         },
         "Planetary Complex (Tier 1)": {
             "type": "Planetary Complex",
             "code": "PC1",
             "max_mass": 1000,
             "layer_config": "Planetary_Complex",
-            "default_hull_id": "hull_planetary_complex_t1"
+            "default_hull_id": "hull_planetary_complex_t1",
+            "cost_multiplier": 1.0
         },
         "Planetary Complex (Tier 2)": {
             "type": "Planetary Complex",
             "code": "PC2",
             "max_mass": 2000,
             "layer_config": "Planetary_Complex",
-            "default_hull_id": "hull_planetary_complex_t2"
+            "default_hull_id": "hull_planetary_complex_t2",
+            "cost_multiplier": 1.0
         },
         "Planetary Complex (Tier 3)": {
             "type": "Planetary Complex",
             "code": "PC3",
             "max_mass": 4000,
             "layer_config": "Planetary_Complex",
-            "default_hull_id": "hull_planetary_complex_t3"
+            "default_hull_id": "hull_planetary_complex_t3",
+            "cost_multiplier": 1.0
         },
         "Planetary Complex (Tier 4)": {
             "type": "Planetary Complex",
             "code": "PC4",
             "max_mass": 8000,
             "layer_config": "Planetary_Complex",
-            "default_hull_id": "hull_planetary_complex_t4"
+            "default_hull_id": "hull_planetary_complex_t4",
+            "cost_multiplier": 1.0
         },
         "Planetary Complex (Tier 5)": {
             "type": "Planetary Complex",
             "code": "PC5",
             "max_mass": 16000,
             "layer_config": "Planetary_Complex",
-            "default_hull_id": "hull_planetary_complex_t5"
+            "default_hull_id": "hull_planetary_complex_t5",
+            "cost_multiplier": 1.0
         },
         "Planetary Complex (Tier 6)": {
             "type": "Planetary Complex",
             "code": "PC6",
             "max_mass": 32000,
             "layer_config": "Planetary_Complex",
-            "default_hull_id": "hull_planetary_complex_t6"
+            "default_hull_id": "hull_planetary_complex_t6",
+            "cost_multiplier": 1.0
         },
         "Planetary Complex (Tier 7)": {
             "type": "Planetary Complex",
             "code": "PC7",
             "max_mass": 64000,
             "layer_config": "Planetary_Complex",
-            "default_hull_id": "hull_planetary_complex_t7"
+            "default_hull_id": "hull_planetary_complex_t7",
+            "cost_multiplier": 1.0
         },
         "Planetary Complex (Tier 8)": {
             "type": "Planetary Complex",
             "code": "PC8",
             "max_mass": 128000,
             "layer_config": "Planetary_Complex",
-            "default_hull_id": "hull_planetary_complex_t8"
+            "default_hull_id": "hull_planetary_complex_t8",
+            "cost_multiplier": 1.0
         },
         "Planetary Complex (Tier 9)": {
             "type": "Planetary Complex",
             "code": "PC9",
             "max_mass": 256000,
             "layer_config": "Planetary_Complex",
-            "default_hull_id": "hull_planetary_complex_t9"
+            "default_hull_id": "hull_planetary_complex_t9",
+            "cost_multiplier": 1.0
         },
         "Planetary Complex (Tier 10)": {
             "type": "Planetary Complex",
             "code": "PC10",
             "max_mass": 512000,
             "layer_config": "Planetary_Complex",
-            "default_hull_id": "hull_planetary_complex_t10"
+            "default_hull_id": "hull_planetary_complex_t10",
+            "cost_multiplier": 1.0
         },
         "Planetary Complex (Tier 11)": {
             "type": "Planetary Complex",
             "code": "PC11",
             "max_mass": 1024000,
             "layer_config": "Planetary_Complex",
-            "default_hull_id": "hull_planetary_complex_t11"
+            "default_hull_id": "hull_planetary_complex_t11",
+            "cost_multiplier": 1.0
+        },
+        "Drop Pod (Small)": {
+            "type": "Drop Pod",
+            "code": "DPS",
+            "max_mass": 1000,
+            "cost_multiplier": 5.0,
+            "layer_config": "Planetary_Complex",
+            "default_hull_id": "hull_drop_pod_small"
+        },
+        "Drop Pod (Medium)": {
+            "type": "Drop Pod",
+            "code": "DPM",
+            "max_mass": 2000,
+            "cost_multiplier": 5.0,
+            "layer_config": "Planetary_Complex",
+            "default_hull_id": "hull_drop_pod_medium"
+        },
+        "Drop Pod (Large)": {
+            "type": "Drop Pod",
+            "code": "DPL",
+            "max_mass": 4000,
+            "cost_multiplier": 5.0,
+            "layer_config": "Planetary_Complex",
+            "default_hull_id": "hull_drop_pod_large"
+        },
+        "Drop Pod (Heavy)": {
+            "type": "Drop Pod",
+            "code": "DPH",
+            "max_mass": 8000,
+            "cost_multiplier": 5.0,
+            "layer_config": "Planetary_Complex",
+            "default_hull_id": "hull_drop_pod_heavy"
         }
     }
 }

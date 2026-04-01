@@ -92,6 +92,10 @@ class Planet:
     stockpile: Dict[str, float] = field(default_factory=dict)
     max_stockpile: Dict[str, float] = field(default_factory=dict)
 
+    # Staging Yard: planet-side storage for constructed items (fighters, drop pods)
+    staging_yard: List[Dict[str, Any]] = field(default_factory=list)
+    max_staging_mass: float = 0.0
+
     # Planetary Facilities (built complexes)
     facilities: List['PlanetaryFacility'] = field(default_factory=list)
 
@@ -240,6 +244,37 @@ class Planet:
         """
         return self.stockpile.get(resource_type, 0.0)
 
+    # --- Staging Yard Methods ---
+
+    def get_staging_mass(self) -> float:
+        """Get total mass of items currently in the staging yard."""
+        return sum(item.get('mass', 0.0) for item in self.staging_yard)
+
+    def add_to_staging_yard(self, item: Dict[str, Any]) -> bool:
+        """Add a constructed item to the staging yard.
+
+        Args:
+            item: Dict with at minimum 'design_id', 'design_data', 'mass', 'vehicle_type', 'name'.
+
+        Returns:
+            True if added, False if insufficient capacity.
+        """
+        item_mass = item.get('mass', 0.0)
+        if self.max_staging_mass > 0 and self.get_staging_mass() + item_mass > self.max_staging_mass:
+            return False
+        self.staging_yard.append(item)
+        return True
+
+    def remove_from_staging_yard(self, index: int) -> Optional[Dict[str, Any]]:
+        """Remove an item from the staging yard by index.
+
+        Returns:
+            The removed item, or None if index out of range.
+        """
+        if 0 <= index < len(self.staging_yard):
+            return self.staging_yard.pop(index)
+        return None
+
     def can_build_type(self, vehicle_type: str) -> bool:
         """
         Check if this planet can build the given vehicle type.
@@ -335,6 +370,8 @@ class Planet:
             'deposits': {k: v.copy() for k, v in self.deposits.items()},
             'stockpile': dict(self.stockpile),
             'max_stockpile': dict(self.max_stockpile),
+            'staging_yard': list(self.staging_yard),
+            'max_staging_mass': self.max_staging_mass,
             'facilities': [
                 {
                     'instance_id': f.instance_id,
@@ -455,6 +492,8 @@ class Planet:
             deposits=data.get('deposits', data.get('resources', {})),
             stockpile=data.get('stockpile', {}),
             max_stockpile=data.get('max_stockpile', {}),
+            staging_yard=data.get('staging_yard', []),
+            max_staging_mass=data.get('max_staging_mass', 0.0),
             facilities=facilities,
             populations=populations,
             id=data.get('id', -1),

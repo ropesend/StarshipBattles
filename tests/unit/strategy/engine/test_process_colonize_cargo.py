@@ -45,7 +45,7 @@ def _make_planet(name: str, relative_loc: HexCoord, planet_type_name: str) -> Pl
 
 
 def _make_ship_with_cargo_pod(name: str, owner_id: int, planet_type: str) -> ShipInstance:
-    """Create a ship with a colony pod loaded as cargo."""
+    """Create a ship with a drop pod in carried_items."""
     ship = ShipInstance(
         instance_id=f"cargo-pod-{name.lower().replace(' ', '-')}-{id(name)}",
         design_id="colony_carrier",
@@ -60,8 +60,13 @@ def _make_ship_with_cargo_pod(name: str, owner_id: int, planet_type: str) -> Shi
             }
         },
     )
-    cargo_type = f"colony_pod_{planet_type.lower()}"
-    ship.cargo_contents[cargo_type] = 1
+    ship.carried_items.append({
+        "vehicle_type": "drop_pod",
+        "design_id": f"{planet_type.lower()}_drop_pod",
+        "name": f"Drop Pod ({planet_type})",
+        "design_data": {"layers": {"CORE": []}},
+        "mass": 500,
+    })
     return ship
 
 
@@ -106,8 +111,8 @@ class TestProcessColonizeCargo:
         galaxy.systems[HexCoord(10, 10)] = system
         return galaxy, ice_planet
 
-    def test_colonize_consumes_pod_from_cargo(self, galaxy_with_ice_planet):
-        """Colonization removes the colony pod from ship cargo."""
+    def test_colonize_consumes_drop_pod(self, galaxy_with_ice_planet):
+        """Colonization removes the drop pod from carried_items."""
         galaxy, ice_planet = galaxy_with_ice_planet
 
         ship = _make_ship_with_cargo_pod("Ice Carrier", 1, "ICE_DWARF")
@@ -122,8 +127,9 @@ class TestProcessColonizeCargo:
         result = processor.process_colonize(fleet, empire, galaxy, component_registry={})
 
         assert result.colonized is True
-        # Pod should be consumed from cargo
-        assert ship.cargo_contents.get("colony_pod_ice_dwarf", 0) == 0
+        # Drop pod should be consumed from carried_items
+        drop_pods = [i for i in ship.carried_items if i.get("vehicle_type") == "drop_pod"]
+        assert len(drop_pods) == 0
 
     def test_colonize_ship_stays_in_fleet(self, galaxy_with_ice_planet):
         """Ship is NOT removed from fleet after colonization (reusable)."""
@@ -164,10 +170,11 @@ class TestProcessColonizeCargo:
         # Fleet should still exist
         assert fleet in empire.fleets
 
-    def test_colonize_wrong_pod_type_fails(self, galaxy_with_ice_planet):
-        """Wrong pod type in cargo fails colonization, pod is NOT consumed."""
+    def test_colonize_universal_drop_pod_succeeds(self, galaxy_with_ice_planet):
+        """Phase 3: Any drop pod works on any planet type."""
         galaxy, ice_planet = galaxy_with_ice_planet
 
+        # Ship with a drop pod (originally labelled CONTINENTAL but pods are universal)
         ship = _make_ship_with_cargo_pod("Continental Carrier", 1, "CONTINENTAL")
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(ship)
@@ -179,19 +186,21 @@ class TestProcessColonizeCargo:
         processor = OrderProcessor()
         result = processor.process_colonize(fleet, empire, galaxy, component_registry={})
 
-        assert result.colonized is False
-        # Pod should NOT be consumed
-        assert ship.cargo_contents.get("colony_pod_continental", 0) == 1
+        # Phase 3: Drop pods are universal -- colonization succeeds
+        assert result.colonized is True
+        # Drop pod consumed
+        drop_pods = [i for i in ship.carried_items if i.get("vehicle_type") == "drop_pod"]
+        assert len(drop_pods) == 0
 
-    def test_colonize_any_planet_picks_matching_cargo_pod(self):
-        """'Any planet' colonization picks planet matching cargo pod type."""
+    def test_colonize_any_planet_picks_first_unowned(self):
+        """'Any planet' colonization picks first unowned planet."""
         galaxy = MockGalaxy()
         continental = _make_planet("Green World", HexCoord(0, 0), "CONTINENTAL")
         ice_dwarf = _make_planet("Ice World", HexCoord(0, 0), "ICE_DWARF")
         system = MockSystem(HexCoord(10, 10), [continental, ice_dwarf])
         galaxy.systems[HexCoord(10, 10)] = system
 
-        ship = _make_ship_with_cargo_pod("Ice Carrier", 1, "ICE_DWARF")
+        ship = _make_ship_with_cargo_pod("Colony Carrier", 1, "ICE_DWARF")
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(ship)
         fleet.orders.append(FleetOrder(OrderType.COLONIZE, None))
@@ -203,8 +212,8 @@ class TestProcessColonizeCargo:
         result = processor.process_colonize(fleet, empire, galaxy, component_registry={})
 
         assert result.colonized is True
-        # ICE_DWARF planet should be colonized
-        assert ice_dwarf.owner_id == 1
-        assert continental.owner_id is None
-        # Pod consumed
-        assert ship.cargo_contents.get("colony_pod_ice_dwarf", 0) == 0
+        # First unowned planet should be colonized
+        assert continental.owner_id == 1
+        # Drop pod consumed
+        drop_pods = [i for i in ship.carried_items if i.get("vehicle_type") == "drop_pod"]
+        assert len(drop_pods) == 0

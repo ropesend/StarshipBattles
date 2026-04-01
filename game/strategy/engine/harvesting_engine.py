@@ -142,20 +142,61 @@ class HarvestingEngine(IHarvestingEngine):
             self._aggregate_empire_storage(empire)
 
     def _aggregate_empire_storage(self, empire: 'Empire') -> None:
-        """Aggregate storage capacity per colony into local max_stockpile."""
+        """Aggregate storage capacity per colony into local max_stockpile and staging yard."""
         for colony in empire.colonies:
             colony_storage = {}
+            staging_mass = 0.0
             for facility in colony.facilities:
                 if not facility.is_operational:
                     continue
                 self._collect_storage_from_facility(facility, colony_storage)
+                staging_mass += self._collect_staging_capacity(facility)
             colony.max_stockpile = colony_storage
+            colony.max_staging_mass = staging_mass
         # Keep empire.max_storage as aggregate for read-only UI display
         empire_total = {}
         for colony in empire.colonies:
             for res, cap in colony.max_stockpile.items():
                 empire_total[res] = empire_total.get(res, 0.0) + cap
         empire.max_storage = empire_total
+
+    def _collect_staging_capacity(self, facility: 'PlanetaryFacility') -> float:
+        """Sum StagingYard capacity from a facility's components."""
+        from game.core.patterns.layer_iterator import iter_components
+        total = 0.0
+        for comp in iter_components(facility.design_data):
+            staging_info = self._get_staging_info(comp)
+            if staging_info is not None:
+                # Handle single dict or list of dicts
+                if isinstance(staging_info, dict):
+                    staging_info = [staging_info]
+                for entry in staging_info:
+                    total += entry.get('capacity_mass', 0.0)
+        return total
+
+    def _get_staging_info(self, comp):
+        """Extract StagingYard info from a component entry."""
+        if isinstance(comp, dict):
+            abilities = comp.get('abilities', {})
+            data = abilities.get('StagingYard')
+            if isinstance(data, (dict, list)):
+                return data
+            comp_id = comp.get('id')
+            if comp_id and self._registries is not None:
+                comp_def = self._registries.components.get(comp_id)
+                if comp_def:
+                    reg_abilities = get_component_abilities(comp_def)
+                    data = reg_abilities.get('StagingYard')
+                    if isinstance(data, (dict, list)):
+                        return data
+        elif isinstance(comp, str) and self._registries is not None:
+            comp_def = self._registries.components.get(comp)
+            if comp_def:
+                reg_abilities = get_component_abilities(comp_def)
+                data = reg_abilities.get('StagingYard')
+                if isinstance(data, (dict, list)):
+                    return data
+        return None
 
     def _collect_storage_from_facility(
         self,

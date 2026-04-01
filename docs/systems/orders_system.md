@@ -90,7 +90,7 @@ Handled by `ActionExecutionEngine`. Progress accumulates until `action_time` rea
 
 | OrderType | Target | action_time Source |
 |-----------|--------|-------------------|
-| `COLONIZE` | Planet | Default (1). Colony pod consumed from fleet cargo. |
+| `COLONIZE` | Planet | Default (1). Drop pod deployed from `ship.carried_items`; full design becomes `PlanetaryFacility`. Ship stays in fleet. |
 | `TRANSFER` | params dict | Default (1) |
 | `LOAD_POPULATION` | params dict | Default (1) |
 | `UNLOAD_POPULATION` | params dict | Default (1) |

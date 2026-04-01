@@ -249,7 +249,7 @@ All defined in `game/core/protocols.py`. Uses `@runtime_checkable` Protocol clas
 | IStorm        | storm_type, effects, occupied_hexes | is_storm |
 | IWarpPoint    | destination_id, location | is_warp_point |
 | IZoneOccupant | occupied_hexes (FrozenSet) | is_zone_occupant |
-| IShipInstance | design_id, design_data, hull_class, cargo_contents | is_ship_instance |
+| IShipInstance | design_id, design_data, hull_class, cargo_contents, carried_items | is_ship_instance |
 | IFacility     | instance_id, design_id, design_data, is_operational | is_facility |
 
 ### Combat Protocols

@@ -324,8 +324,8 @@ def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship", registri
     """
     Create a colony ship that can colonize a specific planet.
 
-    Phase 2: Colony pods are now cargo items. Ship carries the pod in
-    cargo_contents and is reusable after colonization.
+    Phase 3: Drop pods are carried items in ship.carried_items.
+    Ship is reusable after colonization.
 
     Args:
         planet: The Planet object to create a colony ship for
@@ -334,12 +334,11 @@ def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship", registri
         registries: Optional GameRegistries for DI compliance
 
     Returns:
-        ShipInstance: A colony ship with the matching pod loaded as cargo
+        ShipInstance: A colony ship with a drop pod in carried_items
     """
     from game.strategy.data.ship_instance import ShipInstance
 
     planet_type_str = planet.planet_type.name
-    pod_cargo_type = f"colony_pod_{planet_type_str.lower()}"
 
     ship = ShipInstance(
         instance_id=f"colony-{name.lower().replace(' ', '-')}-{id(name)}",
@@ -356,8 +355,14 @@ def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship", registri
             }
         },
     )
-    # Load colony pod as cargo
-    ship.cargo_contents[pod_cargo_type] = 1
+    # Load drop pod as carried item
+    ship.carried_items.append({
+        "vehicle_type": "drop_pod",
+        "design_id": f"{planet_type_str.lower()}_drop_pod",
+        "name": f"Drop Pod ({planet_type_str})",
+        "design_data": {"layers": {"CORE": []}},
+        "mass": 500,
+    })
     if registries is not None:
         ship.set_registries(registries)
     return ship

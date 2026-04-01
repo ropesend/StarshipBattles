@@ -66,6 +66,9 @@ class ShipInstance:
     # Cargo contents (cargo_type -> current amount)
     cargo_contents: Dict[str, int] = field(default_factory=dict)
 
+    # Carried constructed items (drop pods, etc.) — full design data preserved
+    carried_items: List[Dict[str, Any]] = field(default_factory=list)
+
     # Status
     is_alive: bool = True
     is_derelict: bool = False

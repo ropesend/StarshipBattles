@@ -177,10 +177,10 @@ class TestColonizeProcessing:
 
     @pytest.fixture
     def mock_ship_with_continental_pod(self):
-        """Create a mock ship with continental colony pod in cargo."""
+        """Create a mock ship with a drop pod in carried_items."""
         ship = MagicMock()
         ship.name = "Colony Ship"
-        ship.cargo_contents = {"colony_pod_continental": 1}
+        ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {"layers": {"CORE": []}}, "mass": 500}]
         return ship
 
     def test_process_colonize_success(
@@ -192,12 +192,8 @@ class TestColonizeProcessing:
 
         processor = OrderProcessor()
 
-        # Setup fleet with colony ship carrying pod as cargo
+        # Setup fleet with colony ship carrying drop pod
         mock_fleet.ships = [mock_ship_with_continental_pod]
-
-        # Setup fleet resources for cargo unloading
-        mock_fleet.resources = MagicMock()
-        mock_fleet.resources.unload_cargo_from_fleet = MagicMock(return_value=1)
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_continental]
 
@@ -205,8 +201,9 @@ class TestColonizeProcessing:
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 
-        with patch.object(processor, '_place_starter_complex'), \
-             patch.object(processor, '_transfer_cargo_resources_to_colony'):
+        with patch.object(processor, '_deploy_drop_pod'), \
+             patch.object(processor, '_transfer_cargo_resources_to_colony'), \
+             patch.object(processor, '_transfer_founding_population'):
             result = processor.process_colonize(
                 mock_fleet, mock_empire, mock_galaxy,
                 component_registry=component_registry
@@ -214,8 +211,6 @@ class TestColonizeProcessing:
 
         assert result.colonized is True
         mock_empire.add_colony.assert_called_with(mock_planet_continental)
-        # Phase 2: Ship stays, fleet stays. Pod consumed from cargo.
-        mock_fleet.resources.unload_cargo_from_fleet.assert_called_with("colony_pod_continental", 1)
         mock_empire.remove_fleet.assert_not_called()
 
     def test_process_colonize_any_planet(
@@ -227,10 +222,8 @@ class TestColonizeProcessing:
 
         processor = OrderProcessor()
 
-        # Setup fleet with colony ship carrying pod as cargo
+        # Setup fleet with colony ship carrying drop pod
         mock_fleet.ships = [mock_ship_with_continental_pod]
-        mock_fleet.resources = MagicMock()
-        mock_fleet.resources.unload_cargo_from_fleet = MagicMock(return_value=1)
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_continental]
 
@@ -238,8 +231,9 @@ class TestColonizeProcessing:
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 
-        with patch.object(processor, '_place_starter_complex'), \
-             patch.object(processor, '_transfer_cargo_resources_to_colony'):
+        with patch.object(processor, '_deploy_drop_pod'), \
+             patch.object(processor, '_transfer_cargo_resources_to_colony'), \
+             patch.object(processor, '_transfer_founding_population'):
             result = processor.process_colonize(
                 mock_fleet, mock_empire, mock_galaxy,
                 component_registry=component_registry
@@ -318,13 +312,11 @@ class TestEndTurnOrderProcessing:
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
 
-        # Setup fleet with colony ship carrying pod as cargo
+        # Setup fleet with colony ship carrying drop pod
         mock_ship = MagicMock()
         mock_ship.name = "Colony Ship"
-        mock_ship.cargo_contents = {"colony_pod_continental": 1}
+        mock_ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {"layers": {"CORE": []}}, "mass": 500}]
         mock_fleet.ships = [mock_ship]
-        mock_fleet.resources = MagicMock()
-        mock_fleet.resources.unload_cargo_from_fleet = MagicMock(return_value=1)
 
         component_registry = {}
 
@@ -332,8 +324,9 @@ class TestEndTurnOrderProcessing:
         mock_fleet.get_current_order.return_value = order
         mock_fleet.location = HexCoord(5, 5)
 
-        with patch.object(processor, '_place_starter_complex'), \
-             patch.object(processor, '_transfer_cargo_resources_to_colony'):
+        with patch.object(processor, '_deploy_drop_pod'), \
+             patch.object(processor, '_transfer_cargo_resources_to_colony'), \
+             patch.object(processor, '_transfer_founding_population'):
             result = processor.execute_action_order(
                 mock_fleet, mock_empire, mock_galaxy,
                 component_registry=component_registry
@@ -504,23 +497,23 @@ class TestOrderResult:
 # Test: PROJ-55 Colony Ship Removal
 # =============================================================================
 
-class TestColonizeCargoConsumption:
-    """Tests for Phase 2: Colony pod consumed from cargo, ship stays."""
+class TestColonizeDropPodDeployment:
+    """Tests for Phase 3: Drop pod deployed from carried_items, ship stays."""
 
     @pytest.fixture
     def mock_ship_with_pod(self):
-        """Create a mock ship with colony pod in cargo."""
+        """Create a mock ship with drop pod in carried_items."""
         ship = MagicMock()
         ship.name = "Colony Ship"
-        ship.cargo_contents = {"colony_pod_ice_dwarf": 1}
+        ship.carried_items = [{"vehicle_type": "drop_pod", "design_id": "test_pod", "name": "Test Pod", "design_data": {"layers": {"CORE": []}}, "mass": 500}]
         return ship
 
     @pytest.fixture
     def mock_ship_combat(self):
-        """Create a mock combat ship without colony pod."""
+        """Create a mock combat ship without drop pod."""
         ship = MagicMock()
         ship.name = "Combat Ship"
-        ship.cargo_contents = {}
+        ship.carried_items = []
         return ship
 
     @pytest.fixture
@@ -542,19 +535,17 @@ class TestColonizeCargoConsumption:
         planet.planet_type = MockPlanetType.ICE_DWARF
         return planet
 
-    def test_process_colonize_consumes_pod_from_cargo(
+    def test_process_colonize_deploys_drop_pod(
         self, mock_fleet, mock_empire, mock_galaxy,
         mock_ship_with_pod, mock_ship_combat,
         mock_planet_ice_dwarf, mock_component_registry
     ):
-        """Colonize consumes pod from cargo, ship stays in fleet."""
+        """Colonize deploys drop pod, ship stays in fleet."""
         from game.strategy.engine.order_processor import OrderProcessor
 
         processor = OrderProcessor()
 
         mock_fleet.ships = [mock_ship_with_pod, mock_ship_combat]
-        mock_fleet.resources = MagicMock()
-        mock_fleet.resources.unload_cargo_from_fleet = MagicMock(return_value=1)
 
         order = FleetOrder(OrderType.COLONIZE, mock_planet_ice_dwarf)
         mock_fleet.get_current_order.return_value = order
@@ -562,16 +553,17 @@ class TestColonizeCargoConsumption:
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf]
 
-        with patch.object(processor, '_place_starter_complex'), \
-             patch.object(processor, '_transfer_cargo_resources_to_colony'):
+        with patch.object(processor, '_deploy_drop_pod') as mock_deploy, \
+             patch.object(processor, '_transfer_cargo_resources_to_colony'), \
+             patch.object(processor, '_transfer_founding_population'):
             result = processor.process_colonize(
                 mock_fleet, mock_empire, mock_galaxy,
                 component_registry=mock_component_registry
             )
 
         assert result.colonized is True
-        # Pod consumed from cargo
-        mock_fleet.resources.unload_cargo_from_fleet.assert_called_with("colony_pod_ice_dwarf", 1)
+        # Drop pod deployed
+        mock_deploy.assert_called_once()
         # Ship NOT removed
         mock_empire.remove_fleet.assert_not_called()
 
@@ -585,8 +577,6 @@ class TestColonizeCargoConsumption:
         processor = OrderProcessor()
 
         mock_fleet.ships = [mock_ship_with_pod]
-        mock_fleet.resources = MagicMock()
-        mock_fleet.resources.unload_cargo_from_fleet = MagicMock(return_value=1)
 
         order = FleetOrder(OrderType.COLONIZE, mock_planet_ice_dwarf)
         mock_fleet.get_current_order.return_value = order
@@ -594,8 +584,9 @@ class TestColonizeCargoConsumption:
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf]
 
-        with patch.object(processor, '_place_starter_complex'), \
-             patch.object(processor, '_transfer_cargo_resources_to_colony'):
+        with patch.object(processor, '_deploy_drop_pod'), \
+             patch.object(processor, '_transfer_cargo_resources_to_colony'), \
+             patch.object(processor, '_transfer_founding_population'):
             result = processor.process_colonize(
                 mock_fleet, mock_empire, mock_galaxy,
                 component_registry=mock_component_registry
@@ -616,8 +607,6 @@ class TestColonizeCargoConsumption:
         processor = OrderProcessor()
 
         mock_fleet.ships = [mock_ship_with_pod, mock_ship_combat]
-        mock_fleet.resources = MagicMock()
-        mock_fleet.resources.unload_cargo_from_fleet = MagicMock(return_value=1)
 
         order = FleetOrder(OrderType.COLONIZE, mock_planet_ice_dwarf)
         mock_fleet.get_current_order.return_value = order
@@ -625,8 +614,9 @@ class TestColonizeCargoConsumption:
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf]
 
-        with patch.object(processor, '_place_starter_complex'), \
-             patch.object(processor, '_transfer_cargo_resources_to_colony'):
+        with patch.object(processor, '_deploy_drop_pod'), \
+             patch.object(processor, '_transfer_cargo_resources_to_colony'), \
+             patch.object(processor, '_transfer_founding_population'):
             result = processor.process_colonize(
                 mock_fleet, mock_empire, mock_galaxy,
                 component_registry=mock_component_registry

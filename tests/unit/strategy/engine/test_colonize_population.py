@@ -48,9 +48,9 @@ def _make_ship_with_cargo(
     current_cargo: int = 0,
     registries: GameRegistries = None,
 ) -> ShipInstance:
-    """Create a ship with passenger cargo capacity and a colony pod in cargo.
+    """Create a ship with passenger cargo capacity and a drop pod.
 
-    Phase 2: Colony pod is a cargo item, not a component.
+    Phase 3: Drop pod is a carried item, not cargo.
     """
     design = {
         "name": name,
@@ -65,8 +65,14 @@ def _make_ship_with_cargo(
         }
     }
     ship = ShipInstance.create(design, owner_id=0, name=name, registries=registries)
-    # Load colony pod as cargo
-    ship.cargo_contents["colony_pod_continental"] = 1
+    # Load drop pod as carried item
+    ship.carried_items.append({
+        "vehicle_type": "drop_pod",
+        "design_id": "continental_drop_pod",
+        "name": "Drop Pod (Continental)",
+        "design_data": {"layers": {"CORE": []}},
+        "mass": 500,
+    })
     # Load passengers if specified
     if current_cargo > 0:
         ship.cargo_contents["passengers"] = current_cargo
@@ -78,9 +84,9 @@ def _make_ship_with_colony_pod(
     planet_type: str = "continental",
     registries: GameRegistries = None,
 ) -> ShipInstance:
-    """Create a ship with a colony pod in cargo (no passenger capacity).
+    """Create a ship with a drop pod in carried_items (no passenger capacity).
 
-    Phase 2: Colony pod is a cargo item.
+    Phase 3: Drop pod is a carried item.
     """
     design = {
         "name": name,
@@ -90,8 +96,14 @@ def _make_ship_with_colony_pod(
         }
     }
     ship = ShipInstance.create(design, owner_id=0, name=name, registries=registries)
-    # Load colony pod as cargo
-    ship.cargo_contents[f"colony_pod_{planet_type}"] = 1
+    # Load drop pod as carried item
+    ship.carried_items.append({
+        "vehicle_type": "drop_pod",
+        "design_id": f"{planet_type}_drop_pod",
+        "name": f"Drop Pod ({planet_type})",
+        "design_data": {"layers": {"CORE": []}},
+        "mass": 500,
+    })
     return ship
 
 
@@ -326,8 +338,9 @@ class TestExistingColonizationBehavior:
         result = processor.process_colonize(fleet, empire, galaxy, component_registry={})
 
         assert result.colonized is True
-        # Phase 2: Both ships stay in fleet
+        # Phase 3: Both ships stay in fleet
         assert fleet in empire.fleets
         assert len(fleet.ships) == 2
-        # Pod consumed from cargo
-        assert colony_ship.cargo_contents.get("colony_pod_continental", 0) == 0
+        # Drop pod consumed from carried_items
+        drop_pods = [i for i in colony_ship.carried_items if i.get("vehicle_type") == "drop_pod"]
+        assert len(drop_pods) == 0

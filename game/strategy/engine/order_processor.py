@@ -168,7 +168,6 @@ class OrderProcessor:
             ColonizeResult with colonization status
         """
         from game.strategy.validation import ColonizeValidator
-        from game.strategy.validation.colonize_validator import COLONY_POD_PREFIX
 
         order = fleet.get_current_order()
         if not order or order.type != OrderType.COLONIZE:
@@ -176,8 +175,7 @@ class OrderProcessor:
 
         target_planet = order.target
 
-        # Use centralized validation (now cargo-based)
-        # skip_chain_check=True because we're executing, not adding an order
+        # Validate (skip chain check — we're executing, not adding)
         validation = ColonizeValidator.validate(
             galaxy, fleet, target_planet, component_registry, skip_chain_check=True
         )
@@ -186,52 +184,36 @@ class OrderProcessor:
             fleet.pop_order()
             return ColonizeResult(colonized=False)
 
-        # Determine final planet (for "Any" case, pick matching candidate)
+        # Determine final planet (for "Any" case, pick first unowned)
         if target_planet is not None:
             final_planet = target_planet
         else:
             planets_at_loc = galaxy.get_planets_at_global_hex(fleet.location)
             valid_candidates = [p for p in planets_at_loc if p.owner_id is None]
-
-            # Pick planet that matches available cargo pod
-            final_planet = None
-            for candidate in valid_candidates:
-                if hasattr(candidate, 'planet_type') and candidate.planet_type is not None:
-                    planet_type_str = candidate.planet_type.name
-                    if ColonizeValidator.fleet_has_colony_pod(fleet, planet_type_str):
-                        final_planet = candidate
-                        break
+            final_planet = valid_candidates[0] if valid_candidates else None
 
             if final_planet is None:
-                logger.warning("OrderProcessor: No matching pod for any candidate planet")
+                logger.warning("OrderProcessor: No candidate planet for colonization")
                 fleet.pop_order()
                 return ColonizeResult(colonized=False)
 
-        # Pre-check pod availability BEFORE any mutation
-        planet_type_str = final_planet.planet_type.name
-        if not ColonizeValidator.fleet_has_colony_pod(fleet, planet_type_str):
-            logger.warning(f"OrderProcessor: No matching colony pod for {planet_type_str}")
+        # Pre-check drop pod availability BEFORE any mutation
+        if not ColonizeValidator.fleet_has_drop_pod(fleet):
+            logger.warning("OrderProcessor: No drop pod in fleet")
             fleet.pop_order()
             return ColonizeResult(colonized=False)
 
-        # Execute colonization (mutations happen only after pre-check passes)
+        # Execute colonization
         empire.add_colony(final_planet)
         fleet.pop_order()
 
-        # PROJ-68: Transfer passengers from fleet to colony as founding population
+        # Transfer passengers from fleet to colony as founding population
         self._transfer_founding_population(fleet, final_planet, empire)
 
-        # Place starter complex (Colony Hub) on the new colony
-        self._place_starter_complex(final_planet)
+        # Deploy drop pod as facility on the new colony
+        self._deploy_drop_pod(fleet, final_planet)
 
-        # Phase 2: Consume colony pod from fleet cargo (ship stays)
-        pod_cargo_type = f"{COLONY_POD_PREFIX}{planet_type_str.lower()}"
-        fleet.resources.unload_cargo_from_fleet(pod_cargo_type, 1)
-        logger.debug(f"OrderProcessor: Consumed colony pod '{pod_cargo_type}' from fleet cargo")
-
-        # Ship stays in fleet - it's reusable
-
-        # Phase 3: Transfer resource cargo from fleet to planet stockpile
+        # Transfer resource cargo from fleet to planet stockpile
         self._transfer_cargo_resources_to_colony(fleet, final_planet)
 
         logger.info(f"OrderProcessor: Colonization successful. {empire.name} claimed {final_planet.name}")
@@ -528,10 +510,8 @@ class OrderProcessor:
         """Transfer all resource cargo from fleet to the new colony's stockpile.
 
         Moves metals, organics, vapors, radioactives, exotics, fuel, energy, ammo
-        from fleet ship cargo to planet.stockpile. Colony pod cargo types are
-        excluded (already consumed).
+        from fleet ship cargo to planet.stockpile.
         """
-        from game.strategy.validation.colonize_validator import COLONY_POD_PREFIX
 
         resource_types = [
             "metals", "organics", "vapors", "radioactives", "exotics",
@@ -549,42 +529,41 @@ class OrderProcessor:
         if transferred:
             logger.info(f"Transferred cargo to {planet.name}: {transferred}")
 
-    def _place_starter_complex(self, planet) -> None:
-        """Place the starter Colony Hub complex on a newly colonized planet.
+    def _deploy_drop_pod(self, fleet: Fleet, planet) -> None:
+        """Deploy a drop pod from fleet cargo as a facility on the planet.
 
-        Loads the starter_complex design and creates a PlanetaryFacility
-        from it. Also seeds the planet stockpile with initial resources
-        defined in the design's initial_stockpile field.
+        Finds the first drop pod in any ship's carried_items, removes it,
+        and creates a PlanetaryFacility from its design_data. The full
+        design (all components the player chose) becomes the facility.
         """
-        import json
-        import os
         from uuid import uuid4
         from game.strategy.data.planet import PlanetaryFacility
-        from game.core.paths import Paths
+        from game.strategy.validation.colonize_validator import ColonizeValidator
 
-        design_path = os.path.join(Paths.ROOT_DIR, "data", "designs", "starter_complex.json")
-        try:
-            with open(design_path, 'r') as f:
-                design_data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            logger.warning(f"Failed to load starter complex design: {e}")
+        ship, item_index = ColonizeValidator.find_ship_with_drop_pod(fleet)
+        if ship is None:
+            logger.warning("_deploy_drop_pod: No drop pod found in fleet")
             return
+
+        # Remove the drop pod from the ship
+        drop_pod = ship.carried_items.pop(item_index)
+        design_data = drop_pod.get('design_data', {})
 
         facility = PlanetaryFacility(
             instance_id=uuid4().hex,
-            design_id="starter_complex",
-            name=design_data.get("name", "Colony Hub"),
+            design_id=drop_pod.get('design_id', 'drop_pod'),
+            name=drop_pod.get('name', 'Colony Drop Pod'),
             design_data=design_data,
             is_operational=True,
         )
         planet.facilities.append(facility)
 
-        # Seed planet stockpile from design's initial_stockpile
+        # Seed planet stockpile from design's initial_stockpile if present
         initial_stock = design_data.get("initial_stockpile", {})
         for resource, amount in initial_stock.items():
             planet.add_to_stockpile(resource, float(amount))
 
-        logger.info(f"Placed starter complex on {planet.name} with initial stockpile: {initial_stock}")
+        logger.info(f"Deployed drop pod '{facility.name}' on {planet.name}")
 
     def _transfer_founding_population(
         self,
