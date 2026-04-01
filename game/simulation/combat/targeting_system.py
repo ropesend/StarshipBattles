@@ -160,11 +160,17 @@ class TargetingSystem:
             if candidate.team_id == ship.team_id:
                 continue
 
-            # PDC check - non-PDC weapons should not fire at missiles
+            # PDC targeting restrictions:
+            # - Non-PDC weapons cannot fire at missiles
+            # - PDC weapons can only fire at missiles and fighters
             is_pdc = comp.has_pdc_ability()
-            # Check if candidate is a projectile with MISSILE type
-            if is_projectile(candidate) and candidate.type == AttackType.MISSILE and not is_pdc:
-                continue
+            is_missile = is_projectile(candidate) and candidate.type == AttackType.MISSILE
+            is_fighter = hasattr(candidate, 'ship_class') and 'Fighter' in str(getattr(candidate, 'ship_class', ''))
+
+            if is_missile and not is_pdc:
+                continue  # Non-PDC cannot target missiles
+            if is_pdc and not is_missile and not is_fighter:
+                continue  # PDC can only target missiles and fighters
 
             # Validate firing solution
             if comp.has_ability('SeekerWeaponAbility'):

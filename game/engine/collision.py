@@ -115,7 +115,12 @@ class CollisionSystem:
                     if random.random() < chance:
                         # Evaluate damage at hit distance using ability
                         damage = beam_ab.get_damage(hit_dist)
-                        target.combat_engine.take_damage(damage)
+                        # Handle both Ship targets (have combat_engine) and
+                        # Projectile targets (PDC shooting at missiles)
+                        if hasattr(target, 'combat_engine'):
+                            target.combat_engine.take_damage(damage)
+                        elif hasattr(target, 'take_damage'):
+                            target.take_damage(damage)
                         end_pos = start_pos + direction * hit_dist
         
         # Store for visualization

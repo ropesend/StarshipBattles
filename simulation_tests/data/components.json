@@ -992,6 +992,176 @@
       }
     },
     {
+      "_comment": "=== SEEKER PARAMETER TEST VARIANTS ===",
+      "id": "test_seeker_slow",
+      "name": "Test Seeker (Slow, 500px/s)",
+      "type": "SeekerWeaponAbility",
+      "mass": 0, "hp": 20, "sprite_index": 86,
+      "abilities": {
+        "SeekerWeaponAbility": {
+          "damage": 100, "projectile_damage": 100, "range": 3000,
+          "projectile_speed": 500, "turn_rate": 90, "endurance": 10.0,
+          "reload": 999.0, "firing_arc": 360
+        }
+      }
+    },
+    {
+      "id": "test_seeker_fast",
+      "name": "Test Seeker (Fast, 2000px/s)",
+      "type": "SeekerWeaponAbility",
+      "mass": 0, "hp": 20, "sprite_index": 86,
+      "abilities": {
+        "SeekerWeaponAbility": {
+          "damage": 100, "projectile_damage": 100, "range": 3000,
+          "projectile_speed": 2000, "turn_rate": 90, "endurance": 10.0,
+          "reload": 999.0, "firing_arc": 360
+        }
+      }
+    },
+    {
+      "id": "test_seeker_short_endurance",
+      "name": "Test Seeker (Endurance 2.0s)",
+      "type": "SeekerWeaponAbility",
+      "mass": 0, "hp": 20, "sprite_index": 86,
+      "abilities": {
+        "SeekerWeaponAbility": {
+          "damage": 100, "projectile_damage": 100, "range": 3000,
+          "projectile_speed": 1000, "turn_rate": 90, "endurance": 2.0,
+          "reload": 999.0, "firing_arc": 360
+        }
+      }
+    },
+    {
+      "id": "test_seeker_long_endurance",
+      "name": "Test Seeker (Endurance 5.0s)",
+      "type": "SeekerWeaponAbility",
+      "mass": 0, "hp": 20, "sprite_index": 86,
+      "abilities": {
+        "SeekerWeaponAbility": {
+          "damage": 100, "projectile_damage": 100, "range": 5000,
+          "projectile_speed": 1000, "turn_rate": 90, "endurance": 5.0,
+          "reload": 999.0, "firing_arc": 360
+        }
+      }
+    },
+    {
+      "id": "test_seeker_slow_turn",
+      "name": "Test Seeker (Slow Turn 30deg/s, narrow arc)",
+      "type": "SeekerWeaponAbility",
+      "mass": 0, "hp": 20, "sprite_index": 86,
+      "abilities": {
+        "SeekerWeaponAbility": {
+          "damage": 100, "projectile_damage": 100, "range": 5000,
+          "projectile_speed": 1000, "turn_rate": 30, "endurance": 3.0,
+          "reload": 999.0, "firing_arc": 10
+        }
+      }
+    },
+    {
+      "id": "test_seeker_fast_turn",
+      "name": "Test Seeker (Fast Turn 180deg/s, narrow arc)",
+      "type": "SeekerWeaponAbility",
+      "mass": 0, "hp": 20, "sprite_index": 86,
+      "abilities": {
+        "SeekerWeaponAbility": {
+          "damage": 100, "projectile_damage": 100, "range": 5000,
+          "projectile_speed": 1000, "turn_rate": 180, "endurance": 5.0,
+          "reload": 999.0, "firing_arc": 10
+        }
+      }
+    },
+    {
+      "id": "test_seeker_dmg_50",
+      "name": "Test Seeker (50 Damage)",
+      "type": "SeekerWeaponAbility",
+      "mass": 0, "hp": 20, "sprite_index": 86,
+      "abilities": {
+        "SeekerWeaponAbility": {
+          "damage": 50, "projectile_damage": 50, "range": 3000,
+          "projectile_speed": 1000, "turn_rate": 90, "endurance": 5.0,
+          "reload": 999.0, "firing_arc": 360
+        }
+      }
+    },
+    {
+      "id": "test_seeker_dmg_200",
+      "name": "Test Seeker (200 Damage)",
+      "type": "SeekerWeaponAbility",
+      "mass": 0, "hp": 20, "sprite_index": 86,
+      "abilities": {
+        "SeekerWeaponAbility": {
+          "damage": 200, "projectile_damage": 200, "range": 3000,
+          "projectile_speed": 1000, "turn_rate": 90, "endurance": 5.0,
+          "reload": 999.0, "firing_arc": 360
+        }
+      }
+    },
+    {
+      "id": "test_seeker_low_hp",
+      "name": "Test Seeker (HP 1)",
+      "type": "SeekerWeaponAbility",
+      "mass": 0, "hp": 20, "sprite_index": 86,
+      "abilities": {
+        "SeekerWeaponAbility": {
+          "damage": 100, "projectile_damage": 100, "range": 3000,
+          "projectile_speed": 1000, "turn_rate": 90, "endurance": 5.0,
+          "reload": 0.5, "firing_arc": 360, "projectile_hp": 1
+        }
+      }
+    },
+    {
+      "id": "test_seeker_high_hp",
+      "name": "Test Seeker (HP 10)",
+      "type": "SeekerWeaponAbility",
+      "mass": 0, "hp": 20, "sprite_index": 86,
+      "abilities": {
+        "SeekerWeaponAbility": {
+          "damage": 100, "projectile_damage": 100, "range": 3000,
+          "projectile_speed": 1000, "turn_rate": 90, "endurance": 5.0,
+          "reload": 0.5, "firing_arc": 360, "projectile_hp": 10
+        }
+      }
+    },
+    {
+      "id": "test_seeker_low_defense",
+      "name": "Test Seeker (Defense 0)",
+      "type": "SeekerWeaponAbility",
+      "mass": 0, "hp": 20, "sprite_index": 86,
+      "abilities": {
+        "SeekerWeaponAbility": {
+          "damage": 100, "projectile_damage": 100, "range": 3000,
+          "projectile_speed": 1000, "turn_rate": 90, "endurance": 5.0,
+          "reload": 0.5, "firing_arc": 360, "to_hit_defense": 0.0
+        }
+      }
+    },
+    {
+      "id": "test_seeker_high_defense",
+      "name": "Test Seeker (Defense 3.0)",
+      "type": "SeekerWeaponAbility",
+      "mass": 0, "hp": 20, "sprite_index": 86,
+      "abilities": {
+        "SeekerWeaponAbility": {
+          "damage": 100, "projectile_damage": 100, "range": 3000,
+          "projectile_speed": 1000, "turn_rate": 90, "endurance": 5.0,
+          "reload": 0.5, "firing_arc": 360, "to_hit_defense": 3.0
+        }
+      }
+    },
+    {
+      "id": "test_pdc_beam",
+      "name": "Test PDC Beam (Medium Accuracy)",
+      "type": "Weapon",
+      "mass": 0, "hp": 20, "sprite_index": 151,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 2, "range": 500, "reload": 0.1,
+          "firing_arc": 360, "base_accuracy": 2.0, "accuracy_falloff": 0.005,
+          "tags": ["pdc"]
+        }
+      }
+    },
+    {
       "id": "test_storage_energy_100",
       "name": "Test Battery (100 units)",
       "type": "Tank",

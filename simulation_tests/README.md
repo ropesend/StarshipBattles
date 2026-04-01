@@ -160,13 +160,19 @@ flight when the test ends are excluded from the hit/miss count.
 | **Engine Physics** | 5 tests | Acceleration, max speed, dual engines, thrust/mass |
 | **Thruster Physics** | 4 tests | Turn rate, rotation, dual thrusters, mass effects |
 
-#### Seeker Weapon Tests (11 tests)
+#### Seeker Weapon Tests (10 tests)
+
+Test IDs: `SEEKER-SPEED-XXX`, `SEEKER-ENDUR-XXX`, `SEEKER-TURN-XXX`, `SEEKER-DMG-XXX`, `SEEKER-HP-XXX`, `SEEKER-RES-XXX`, `SEEKER-PD-XXX`.
 
 | Subcategory | Tests | Description |
 |-------------|-------|-------------|
-| **Endurance** | 4 tests | Close/mid/beyond/edge range lifetime |
-| **Tracking** | 4 tests | Stationary/linear/orbiting/erratic targets |
-| **Point Defense** | 3 tests | PDC interaction (placeholders, skipped) |
+| **Speed** | 1 test | Fast vs slow projectile speed — travel time comparison |
+| **Endurance** | 1 test | Long vs short endurance — range reach comparison |
+| **Turn Rate** | 1 test | Fast vs slow turn — off-axis launch, redirect to target |
+| **Damage** | 1 test | 4x warhead damage produces 4x hull damage |
+| **HP** | 1 test | Higher missile HP survives PDC better |
+| **Resource** | 3 tests | Ammo dependency: no ammo, limited ammo, control |
+| **Point Defense** | 2 tests | PDC intercepts seekers; to_hit_defense reduces PDC accuracy |
 
 #### Resource System Tests (9 tests)
 

@@ -138,8 +138,8 @@ class WeaponFiringSystem:
         if not weapon_ab.can_fire():
             return None
 
-        # Find valid target
-        target = self._find_valid_target(ship, comp, weapon_ab)
+        # Find valid target (pass context for PDC missile targeting)
+        target = self._find_valid_target(ship, comp, weapon_ab, context)
         if not target:
             return None
 
@@ -158,15 +158,19 @@ class WeaponFiringSystem:
         self,
         ship: 'Ship',
         comp: 'Component',
-        weapon_ab: Any
+        weapon_ab: Any,
+        context: Optional[dict] = None
     ) -> Optional[Any]:
         """
         Find a valid target for the weapon.
+
+        For PDC weapons, includes enemy missiles from context as candidates.
 
         Args:
             ship: The ship targeting
             comp: Weapon component
             weapon_ab: Weapon ability instance
+            context: Optional context dict with projectiles list
 
         Returns:
             Valid target or None
@@ -174,7 +178,14 @@ class WeaponFiringSystem:
         # Build secondary targets list
         secondary_targets = []
         if ship.max_targets > CombatConstants.DEFAULT_MAX_TARGETS:
-            secondary_targets = ship.secondary_targets
+            secondary_targets = list(ship.secondary_targets)
+
+        # PDC weapons: inject enemy missiles into candidate list
+        if comp.has_pdc_ability() and context:
+            projectiles = context.get('projectiles', [])
+            for p in projectiles:
+                if p.is_alive and p.team_id != ship.team_id and p.type == AttackType.MISSILE:
+                    secondary_targets.append(p)
 
         return self._targeting.find_valid_target(
             ship,
@@ -265,7 +276,7 @@ class WeaponFiringSystem:
             owner=ship,
             position=Vector2(ship.position),
             velocity=p_vel,
-            damage=seeker_ab.damage,
+            damage=seeker_ab.projectile_damage,
             range_val=seeker_ab.projectile_speed * seeker_ab.endurance,
             endurance=seeker_ab.endurance,
             proj_type=AttackType.MISSILE,
@@ -273,6 +284,7 @@ class WeaponFiringSystem:
             max_speed=speed,
             target=target,
             hp=seeker_ab.projectile_hp,
+            to_hit_defense=seeker_ab.to_hit_defense,
             source_weapon=comp
         )
 

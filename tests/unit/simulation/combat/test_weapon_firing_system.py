@@ -727,8 +727,8 @@ class TestInactiveWeapons:
 class TestPointDefenseWeapons:
     """Tests for Point Defense (PDC) weapon behavior."""
 
-    def test_pdc_weapon_can_fire_at_ships(self):
-        """PDC weapons can still fire at ship targets if valid."""
+    def test_pdc_weapon_cannot_fire_at_regular_ships(self):
+        """PDC weapons should NOT fire at regular ship targets (only missiles/fighters)."""
         from game.simulation.combat.weapon_firing_system import WeaponFiringSystem
         from game.simulation.combat.targeting_system import TargetingSystem
 
@@ -746,13 +746,14 @@ class TestPointDefenseWeapons:
         ship.max_targets = 1
         ship.secondary_targets = []
 
-        # Ship target
+        # Regular ship target (not a fighter)
         target = MagicMock()
         target.is_alive = True
         target.team_id = 1
         target.position = Vector2(100, 0)
         target.velocity = Vector2(0, 0)
         target.type = 'ship'
+        target.ship_class = 'Frigate'  # Regular ship, not Fighter
         ship.current_target = target
 
         # PDC weapon (beam type)
@@ -766,6 +767,7 @@ class TestPointDefenseWeapons:
 
         pdc_weapon = MagicMock()
         pdc_weapon.is_active = True
+        pdc_weapon.is_operational = True
         pdc_weapon.has_ability = lambda name: name in ['WeaponAbility', 'BeamWeaponAbility']
         pdc_weapon.get_ability = lambda name: weapon_ab if name == 'WeaponAbility' else beam_ab
         pdc_weapon.can_afford_activation = MagicMock(return_value=True)
@@ -777,9 +779,8 @@ class TestPointDefenseWeapons:
 
         attacks = system.fire_weapons(ship)
 
-        # PDC can fire at ships
-        assert len(attacks) == 1
-        assert attacks[0]['type'] == AttackType.BEAM
+        # PDC should NOT fire at regular ships
+        assert len(attacks) == 0
 
 
 class TestWeaponFireFails:

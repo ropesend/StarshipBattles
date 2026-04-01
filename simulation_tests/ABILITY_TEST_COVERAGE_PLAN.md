@@ -1,7 +1,7 @@
 > **Status: In Progress**
 > Scenario classes live in `simulation_tests/scenarios/*_scenarios.py` and are
 > run via `python -m simulation_tests.run_tests`.
-> Current baseline: **105 passed, 1 failed (RESOURCE-002 game bug), 3 skipped (109 total)**.
+> Current baseline: **107 passed, 2 failed (RESOURCE-002 game bug, SEEKER-TURN-002 known oscillation), 0 skipped (109 total)**.
 > Note: `defense_scenarios.py` was deleted — its 8 tests were redundant with
 > dedicated ability files or replaced by the EmissiveArmor category.
 
@@ -77,7 +77,7 @@ ability under test.
 |---------|-----------|--------|-------|
 | `BeamWeaponAbility` | `beam_scenarios.py` | Partial (23 tests: 11 base + 7 high-tick + 5 resource) | BEAMWEAPON-*, BEAMWEAPON-RES-* |
 | `ProjectileWeaponAbility` | `projectile_scenarios.py` | Partial (14 tests: 6 base + 3 damage + 5 resource) | PROJECTILE-*, PROJECTILE-RES-* |
-| `SeekerWeaponAbility` | `seeker_scenarios.py` | Partial (11 tests: 4 range + 4 tracking + 3 PDC skipped) | SEEKER-* |
+| `SeekerWeaponAbility` | `seeker_scenarios.py` | **Complete** (11 tests: speed, endurance, turn×2, damage, HP, resource, PDC) | SEEKER-* |
 
 ### Category C: Propulsion (2 abilities)
 | Ability | What to Test | Priority |
@@ -130,7 +130,7 @@ ability under test.
 3. **Phase 3** (Complete → Deleted): Shield/Armor/ECM/Sensor tests — `defense_scenarios.py` (redundant, replaced by ability-specific files)
 4. **Phase 4** (Complete): Stat modifier tests — 6 scenarios in `modifier_scenarios.py`
 5. **Phase 5** (Complete): Projectile weapon tests — 14 scenarios in `projectile_scenarios.py`
-6. **Phase 6** (Complete): Seeker weapon tests — 11 scenarios in `seeker_scenarios.py`
+6. **Phase 6** (Rewritten): Seeker weapon tests — 10 ComparisonScenario tests in `seeker_scenarios.py`
 7. **Phase 7** (Complete): Resource system tests — 9 scenarios in `resource_scenarios.py`
 
 ### Completed (ability-specific categories using ComparisonScenario)

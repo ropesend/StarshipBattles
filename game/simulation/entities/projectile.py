@@ -72,6 +72,9 @@ class Projectile(PhysicsBody):
         self.distance_traveled = 0
         self.is_alive = True
         
+        # Defense score for PDC beam hit-chance calculation (from seeker's to_hit_defense)
+        self.total_defense_score = kwargs.get('to_hit_defense', 0.0)
+
         # Flag for targeting systems
         self.is_derelict = False # Projectiles aren't ships, but this helps unified filtering
         

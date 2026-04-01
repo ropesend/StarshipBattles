@@ -104,6 +104,19 @@ SENSOR_ATTACK_VALUE = 1.0   # Attack score bonus from test_sensor_1
 TOHIT_PENALTY_VALUE = -0.5  # Negative attack modifier from test_tohit_penalty
 ECM_PENALTY_VALUE = -0.5    # Negative defense modifier from test_ecm_penalty
 
+# Seeker test constants
+SEEKER_TEST_TICKS = 500
+SEEKER_SPEED_TEST_TICKS = 100     # Short test: fast seeker hits, slow doesn't
+SEEKER_SPEED_SLOW = 500           # px/s
+SEEKER_SPEED_FAST = 2000          # px/s
+SEEKER_ENDUR_SHORT = 2.0          # seconds
+SEEKER_ENDUR_LONG = 5.0           # seconds
+SEEKER_TURN_SLOW = 30             # deg/s
+SEEKER_TURN_FAST = 180            # deg/s
+SEEKER_DMG_LOW = 50
+SEEKER_DMG_HIGH = 200
+SEEKER_ENDURANCE_TEST_DISTANCE = 3000  # px — within long endurance, beyond short
+
 # CommandAndControl test constants
 CNC_TEST_TICKS = 500
 CNC_BRIDGE_HP = 50          # Destructible bridge HP (in ARMOR layer, hit first)

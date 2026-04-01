@@ -1,728 +1,616 @@
 """
-Seeker Weapon Test Scenarios (SEEKER-001 to SEEKER-TRACK-004, SEEKER-PD-001 to PD-003)
+SeekerWeaponAbility Test Scenarios
 
-These tests validate seeker/missile weapon behavior including:
-- Lifetime/endurance mechanics (5.0 second endurance)
-- Tracking behavior (90°/sec turn rate, 1000 px/s speed)
-- Damage delivery (100 damage per missile)
-- Point defense interaction (placeholder - requires PD implementation)
+Comprehensive tests for seeker/missile weapon parameters using A/B comparison
+battles. Each test isolates ONE parameter by varying it between baseline and
+variant while keeping everything else identical.
 
-Seeker Properties (from test_seeker_no_resource component):
-    - projectile_speed: 1000 px/s
-    - turn_rate: 90°/sec
-    - endurance: 5.0 sec (max lifetime = 5000 px at full speed)
-    - range: 3000 px (firing range, not projectile range)
-    - damage: 100 per missile
-    - reload: 5.0 sec
+Seeker mechanics:
+- Projectiles with guidance: track target using predicted intercept
+- Speed: projectile_speed / PROJECTILE_SPEED_SCALE (100) = px/tick
+- Endurance: seconds of flight time (decremented each tick by TICK_RATE)
+- Turn rate: degrees/second of heading change (limits tracking agility)
+- Damage: flat warhead damage on impact (projectile_damage)
+- HP: missile durability (PDC can destroy before impact)
+- to_hit_defense: defense bonus against PDC beam hit-chance (sigmoid penalty)
 
-Test Coverage:
-- Lifetime Tests: 4 scenarios (close, mid, beyond, edge case ranges)
-- Tracking Tests: 4 scenarios (stationary, linear, orbiting, erratic)
-- Point Defense: 3 placeholder scenarios (not yet implemented)
+Resource: SeekerWeaponAbility uses activation-trigger ResourceConsumption
+(ammo per launch). Weapon won't fire when ammo is depleted.
 """
 
 from simulation_tests.scenarios import TestMetadata
-from simulation_tests.scenarios.templates import StaticTargetScenario
-from simulation_tests.scenarios.validation import check_exact, check_approx, check_true
-from simulation_tests.scenarios.movement import (
-    StraightLineController, CircularOrbitController, ErraticController
-)
+from simulation_tests.scenarios.templates import ComparisonScenario
+from simulation_tests.scenarios.validation import check_exact, check_true
 from simulation_tests.test_constants import (
-    STANDARD_DISTANCE,
+    POINT_BLANK_DISTANCE,
     STANDARD_SEED,
-    SEEKER_TRACKING_DISTANCE,
+    SEEKER_TEST_TICKS,
+    SEEKER_SPEED_TEST_TICKS,
+    SEEKER_SPEED_SLOW,
+    SEEKER_SPEED_FAST,
+    SEEKER_ENDUR_SHORT,
+    SEEKER_ENDUR_LONG,
+    SEEKER_TURN_SLOW,
+    SEEKER_TURN_FAST,
+    SEEKER_DMG_LOW,
+    SEEKER_DMG_HIGH,
+    SEEKER_ENDURANCE_TEST_DISTANCE,
 )
 
 
+# =============================================================================
+# COMMON SHIP REFERENCES
+# =============================================================================
 
-# ============================================================================
-# SEEKER LIFETIME/ENDURANCE TESTS
-# ============================================================================
+STANDARD_TARGET = "Test_Target_Stationary.json"
+PDC_TARGET = "Test_Target_PDC.json"
 
-class SeekerCloseRangeImpactScenario(StaticTargetScenario):
+
+class _PDCMixin:
+    """Mixin to force PDC target to fire each tick (its AI is test_do_nothing)."""
+
+    def update(self, battle_engine):
+        if self.attacker and self.attacker.is_alive:
+            self.attacker.comp_trigger_pulled = True
+        if self.target and self.target.is_alive:
+            self.target.comp_trigger_pulled = True
+        self._track_tick(battle_engine.tick_counter)
+
+
+# =============================================================================
+# SEEKER-SPEED-001: Fast Seeker Hits, Slow Seeker Still In Flight
+# =============================================================================
+
+class SeekerSpeedComparisonScenario(ComparisonScenario):
     """
-    SEEKER-001: Seeker Impact at Close Range
+    SEEKER-SPEED-001: Projectile Speed Affects Travel Time
 
-    Tests that seeker missiles successfully launch, track, and impact
-    a stationary target at close range (500px) well before endurance expires.
+    Both seekers fire at a target at 1000px. Short test (100 ticks = 1 sec).
+    Fast seeker (2000 px/s = 20 px/tick) reaches target in ~50 ticks.
+    Slow seeker (500 px/s = 5 px/tick) needs ~200 ticks — still in flight.
+
+    Validates: fast seeker deals damage, slow seeker doesn't (in 100 ticks).
     """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Seeker360.json"
-    target_ship = "Test_Target_Stationary.json"
-    distance = STANDARD_DISTANCE
 
     metadata = TestMetadata(
-        test_id="SEEKER-001",
-        category="Seeker Weapons",
+        test_id="SEEKER-SPEED-001",
+        category="SeekerWeaponAbility",
+        subcategory="Speed",
+        name="Fast Seeker Hits Before Slow Seeker",
+        summary="Faster seeker impacts target in fewer ticks than slower seeker",
+        conditions=[
+            "Baseline: test_seeker_slow (500 px/s) at 1000px",
+            "Variant: test_seeker_fast (2000 px/s) at 1000px",
+            f"Test Duration: {SEEKER_SPEED_TEST_TICKS} ticks (1 second)",
+        ],
+        edge_cases=["Slow seeker still in flight at test end"],
+        expected_outcome="Fast seeker deals 100 damage, slow seeker deals 0.",
+        pass_criteria="variant_damage > 0, baseline_damage == 0",
+        max_ticks=SEEKER_SPEED_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["seeker", "speed", "comparison"],
+    )
+
+    baseline_attacker_ship = "Test_Attacker_Seeker_Slow.json"
+    baseline_target_ship = STANDARD_TARGET
+    variant_attacker_ship = "Test_Attacker_Seeker_Fast.json"
+    variant_target_ship = STANDARD_TARGET
+    distance = 1000
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        checks.append(check_true(
+            "Fast Seeker Hit",
+            self.variant_damage_dealt > 0,
+            detail=f"damage={self.variant_damage_dealt}",
+            phase="outcome",
+        ))
+
+        checks.append(check_exact(
+            "Slow Seeker No Damage Yet", 0.0, self.baseline_damage_dealt,
+            phase="outcome",
+        ))
+
+        return checks
+
+
+# =============================================================================
+# SEEKER-ENDUR-001: Long Endurance Reaches Target, Short Expires
+# =============================================================================
+
+class SeekerEnduranceComparisonScenario(ComparisonScenario):
+    """
+    SEEKER-ENDUR-001: Endurance Determines Effective Range
+
+    Target at 3000px. Both seekers at 1000 px/s.
+    Long endurance (5.0s = 5000px max travel) → reaches target, impacts.
+    Short endurance (2.0s = 2000px max travel) → expires before reaching target.
+    """
+
+    metadata = TestMetadata(
+        test_id="SEEKER-ENDUR-001",
+        category="SeekerWeaponAbility",
         subcategory="Endurance",
-        name="Seeker Impact - Close Range (500px)",
-        summary="Validates seekers successfully track and impact stationary target at close range before endurance expires",
+        name="Long Endurance Reaches Target, Short Expires",
+        summary="Seeker with sufficient endurance impacts; insufficient endurance expires",
         conditions=[
-            "Attacker: Test_Attacker_Seeker360.json",
-            "Target: Test_Target_Stationary.json",
-            "Distance: 500 pixels",
-            "Seeker Speed: 1000 px/s",
-            "Seeker Turn Rate: 90°/sec",
-            "Seeker Endurance: 5.0 seconds (5000px max)",
-            "Time to Impact: ~0.5 seconds (50 ticks)",
-            "Missile Damage: 100 per impact",
-            "Test Duration: 600 ticks (6 seconds)"
+            f"Target distance: {SEEKER_ENDURANCE_TEST_DISTANCE}px",
+            f"Baseline: endurance={SEEKER_ENDUR_SHORT}s (max travel=2000px < {SEEKER_ENDURANCE_TEST_DISTANCE}px)",
+            f"Variant: endurance={SEEKER_ENDUR_LONG}s (max travel=5000px > {SEEKER_ENDURANCE_TEST_DISTANCE}px)",
+            f"Test Duration: {SEEKER_TEST_TICKS} ticks",
         ],
-        edge_cases=[
-            "Target is stationary - direct flight path",
-            "Well within endurance limit (500px << 5000px max)",
-            "Seeker should impact quickly and efficiently",
-            "Multiple missiles may be fired (5.0s reload)"
-        ],
-        expected_outcome="Seeker impacts target and deals 100+ damage within 1 second",
-        pass_criteria="damage_dealt >= 100",
-        max_ticks=600,
+        edge_cases=["Short endurance seeker expires mid-flight"],
+        expected_outcome="Long endurance seeker deals damage, short expires (0 damage).",
+        pass_criteria="variant_damage > 0, baseline_damage == 0",
+        max_ticks=SEEKER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
-        ui_priority=10,
-        tags=["seeker", "missile", "tracking", "close-range", "guided"]
+        battle_end_mode="time_based",
+        tags=["seeker", "endurance", "comparison"],
     )
 
-    def _collect_extra_results(self, battle_engine):
-        self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
-        # Read weapon stats from loaded ship data
-        seeker_ability = self.get_ability(self.attacker, 'SeekerWeaponAbility')
-        if seeker_ability:
-            self.results['weapon_type'] = 'Seeker360'
-            self.results['missile_speed'] = seeker_ability.projectile_speed
-            self.results['missile_turn_rate'] = seeker_ability.turn_rate
-            self.results['missile_damage'] = seeker_ability.projectile_damage
-            self.results['missile_endurance'] = seeker_ability.endurance
-            self.results['expected_travel_time_ticks'] = int(self.distance / seeker_ability.projectile_speed * 100)
+    baseline_attacker_ship = "Test_Attacker_Seeker_ShortEndurance.json"
+    baseline_target_ship = STANDARD_TARGET
+    variant_attacker_ship = "Test_Attacker_Seeker_LongEndurance.json"
+    variant_target_ship = STANDARD_TARGET
+    distance = SEEKER_ENDURANCE_TEST_DISTANCE
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data
-        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
-        if seeker:
-            checks.append(check_exact("Seeker Damage", 100, seeker.projectile_damage))
-            checks.append(check_exact("Seeker Speed", 1000, seeker.projectile_speed))
-            checks.append(check_exact("Seeker Endurance", 5.0, seeker.endurance))
-        # Precondition
-        center_dist = self.attacker.position.distance_to(self.target.position)
-        checks.append(check_approx("Center Distance", float(STANDARD_DISTANCE), center_dist,
-                                   tolerance=0.01, phase="precondition"))
-        # Outcome
-        checks.append(check_true("Damage >= 100", self.damage_dealt >= 100,
-                                 actual=self.damage_dealt, phase="outcome",
-                                 detail="expected >= 100 (1+ missile impact)"))
+
+        checks.append(check_true(
+            "Long Endurance Seeker Hit",
+            self.variant_damage_dealt > 0,
+            detail=f"damage={self.variant_damage_dealt}",
+            phase="outcome",
+        ))
+
+        checks.append(check_exact(
+            "Short Endurance Seeker Expired", 0.0, self.baseline_damage_dealt,
+            phase="outcome",
+        ))
+
         return checks
 
 
-class SeekerMidRangeImpactScenario(StaticTargetScenario):
-    """
-    SEEKER-002: Seeker Impact at Mid Range
+# =============================================================================
+# SEEKER-TURN-001: Fast Turn Hits When Fired Backwards
+# =============================================================================
 
-    Tests that seeker missiles successfully reach and impact a target
-    at mid range (2500px) within endurance limit.
+class SeekerTurnRateComparisonScenario(ComparisonScenario):
     """
+    SEEKER-TURN-001: Turn Rate Affects Intercept
 
-    # Template configuration
-    attacker_ship = "Test_Attacker_Seeker360.json"
-    target_ship = "Test_Target_Stationary.json"
-    distance = 2500
+    Both seekers launched perpendicular to target (attacker faces 90°).
+    Seekers launch sideways, then must redirect using guidance.
+    Fast turn (180°/s) redirects quickly and hits within endurance.
+    Slow turn (30°/s, 3s endurance) can't correct fast enough and expires.
+
+    Uses narrow firing arc (10°) so seekers launch in ship-facing direction,
+    NOT auto-aimed at target.
+    """
 
     metadata = TestMetadata(
-        test_id="SEEKER-002",
-        category="Seeker Weapons",
-        subcategory="Endurance",
-        name="Seeker Impact - Mid Range (2500px)",
-        summary="Validates seekers successfully reach and impact target at mid range within endurance limit",
+        test_id="SEEKER-TURN-001",
+        category="SeekerWeaponAbility",
+        subcategory="Turn Rate",
+        name="Fast Turn Redirects, Slow Turn Expires",
+        summary="Seeker launched sideways: fast turn redirects and hits, slow turn expires",
         conditions=[
-            "Attacker: Test_Attacker_Seeker360.json",
-            "Target: Test_Target_Stationary.json",
-            "Distance: 2500 pixels",
-            "Seeker Speed: 1000 px/s",
-            "Seeker Endurance: 5.0 seconds (5000px max)",
-            "Time to Impact: ~2.5 seconds (250 ticks)",
-            "Missile Damage: 100 per impact",
-            "Test Duration: 800 ticks (8 seconds)"
+            "Both seekers launched 90° off-axis (narrow arc, attacker faces perpendicular)",
+            f"Baseline: turn_rate={SEEKER_TURN_SLOW}°/s, endurance=3.0s",
+            f"Variant: turn_rate={SEEKER_TURN_FAST}°/s, endurance=5.0s",
+            "Distance: 2000px",
+            "Test Duration: 1000 ticks",
         ],
-        edge_cases=[
-            "Mid range - still comfortably within endurance",
-            "2500px is 50% of maximum seeker travel distance",
-            "Direct flight path to stationary target",
-            "Multiple missiles may be fired during test"
-        ],
-        expected_outcome="Seeker impacts target and deals damage within endurance limit",
-        pass_criteria="damage_dealt > 0",
-        max_ticks=800,
+        edge_cases=["Narrow arc forces launch perpendicular to target direction"],
+        expected_outcome="Fast turn seeker deals damage, slow turn seeker expires.",
+        pass_criteria="variant_damage > 0, baseline_damage == 0",
+        max_ticks=1000,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
-        ui_priority=9,
-        tags=["seeker", "missile", "tracking", "mid-range", "guided"]
+        battle_end_mode="time_based",
+        tags=["seeker", "turn-rate", "comparison"],
     )
 
-    def _collect_extra_results(self, battle_engine):
-        self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
+    baseline_attacker_ship = "Test_Attacker_Seeker_SlowTurn.json"
+    baseline_target_ship = STANDARD_TARGET
+    variant_attacker_ship = "Test_Attacker_Seeker_FastTurn.json"
+    variant_target_ship = STANDARD_TARGET
+    distance = 2000
+
+    def configure_baseline(self, engine):
+        self.attacker.angle = 90.0
+
+    def configure_variant(self, engine):
+        self.attacker.angle = 90.0
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data
-        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
-        if seeker:
-            checks.append(check_exact("Seeker Damage", 100, seeker.projectile_damage))
-            checks.append(check_exact("Seeker Speed", 1000, seeker.projectile_speed))
-            checks.append(check_exact("Seeker Endurance", 5.0, seeker.endurance))
-        # Precondition
-        center_dist = self.attacker.position.distance_to(self.target.position)
-        checks.append(check_approx("Center Distance", 2500.0, center_dist,
-                                   tolerance=0.01, phase="precondition"))
-        # Outcome
-        checks.append(check_true("Damage Dealt", self.damage_dealt > 0,
-                                 actual=self.damage_dealt, phase="outcome"))
+
+        checks.append(check_true(
+            "Fast Turn Seeker Hit",
+            self.variant_damage_dealt > 0,
+            detail=f"damage={self.variant_damage_dealt}",
+            phase="outcome",
+        ))
+
+        checks.append(check_exact(
+            "Slow Turn Seeker No Hit", 0.0, self.baseline_damage_dealt,
+            phase="outcome",
+        ))
+
         return checks
 
 
-class SeekerBeyondRangeExpireScenario(StaticTargetScenario):
-    """
-    SEEKER-003: Seeker Expires Beyond Range
+# =============================================================================
+# SEEKER-DMG-001: Warhead Damage Verification
+# =============================================================================
 
-    Tests that seeker missiles expire due to endurance limit when
-    target is positioned beyond effective range (5000px).
+class SeekerTurnRate180Scenario(ComparisonScenario):
     """
+    SEEKER-TURN-002: 180° Reverse Launch — Known Oscillation Issue
 
-    # Template configuration
-    attacker_ship = "Test_Attacker_Seeker360.json"
-    target_ship = "Test_Target_Stationary.json"
-    distance = 5000
+    Both seekers launched 180° away from target (narrow arc, faces backward).
+    Fast turn should redirect and hit. Slow turn should expire.
+
+    NOTE: This test documents a known oscillation bug in seeker guidance
+    when target is >135° off-boresight. The guidance commits to a turn
+    direction but may oscillate. Test is expected to FAIL until the
+    guidance system is fixed.
+    """
 
     metadata = TestMetadata(
-        test_id="SEEKER-003",
-        category="Seeker Weapons",
-        subcategory="Endurance",
-        name="Seeker Expires - Beyond Range (5000px)",
-        summary="Validates seekers expire due to endurance limit when target is beyond effective reach",
+        test_id="SEEKER-TURN-002",
+        category="SeekerWeaponAbility",
+        subcategory="Turn Rate",
+        name="180° Reverse Launch (Known Oscillation Issue)",
+        summary="Seeker launched directly backwards — tests guidance u-turn capability",
         conditions=[
-            "Attacker: Test_Attacker_Seeker360.json",
-            "Target: Test_Target_Stationary.json",
-            "Distance: 5000 pixels",
-            "Seeker Speed: 1000 px/s",
-            "Seeker Endurance: 5.0 seconds",
-            "Max Travel Distance: 1000 px/s × 5s = 5000px",
-            "Weapon Range: 3000px (may not fire at all)",
-            "Test Duration: 800 ticks (8 seconds)"
+            "Both seekers launched 180° away from target (narrow 1° arc)",
+            f"Baseline: turn_rate={SEEKER_TURN_SLOW}°/s, endurance=3.0s",
+            f"Variant: turn_rate={SEEKER_TURN_FAST}°/s, endurance=5.0s",
+            "Distance: 1000px",
+            "Test Duration: 1000 ticks",
         ],
-        edge_cases=[
-            "Target at exact maximum theoretical seeker range",
-            "Weapon may not fire if target beyond firing range (3000px)",
-            "If fired, seeker should expire just as it reaches target",
-            "Edge case testing endurance limits"
-        ],
-        expected_outcome="Simulation completes, seeker likely expires before impact or doesn't fire",
-        pass_criteria="simulation_completes (ticks_run > 0)",
-        max_ticks=800,
+        edge_cases=["180° off-boresight triggers oscillation prevention code (TURN_COMMITMENT_THRESHOLD_DEG=45)"],
+        expected_outcome="Fast turn seeker should redirect and hit. May fail due to guidance oscillation bug.",
+        pass_criteria="variant_damage > 0, baseline_damage == 0",
+        max_ticks=1000,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
-        ui_priority=7,
-        tags=["seeker", "missile", "endurance-limit", "expire", "edge-case"]
+        battle_end_mode="time_based",
+        tags=["seeker", "turn-rate", "180-reverse", "known-issue", "comparison"],
     )
 
-    def _collect_extra_results(self, battle_engine):
-        self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
+    baseline_attacker_ship = "Test_Attacker_Seeker_SlowTurn.json"
+    baseline_target_ship = STANDARD_TARGET
+    variant_attacker_ship = "Test_Attacker_Seeker_FastTurn.json"
+    variant_target_ship = STANDARD_TARGET
+    distance = 1000
+
+    def configure_baseline(self, engine):
+        self.attacker.angle = 180.0
+
+    def configure_variant(self, engine):
+        self.attacker.angle = 180.0
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data
-        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
-        if seeker:
-            checks.append(check_exact("Seeker Damage", 100, seeker.projectile_damage))
-            checks.append(check_exact("Seeker Speed", 1000, seeker.projectile_speed))
-            checks.append(check_exact("Seeker Endurance", 5.0, seeker.endurance))
-        # Precondition
-        center_dist = self.attacker.position.distance_to(self.target.position)
-        checks.append(check_approx("Center Distance", 5000.0, center_dist,
-                                   tolerance=0.01, phase="precondition"))
-        # Measurement test -- seeker likely expires or doesn't fire at this range
+
+        checks.append(check_true(
+            "Fast Turn Seeker Hit (180° reverse)",
+            self.variant_damage_dealt > 0,
+            detail=f"damage={self.variant_damage_dealt}",
+            phase="outcome",
+        ))
+
+        checks.append(check_exact(
+            "Slow Turn Seeker No Hit (180° reverse)", 0.0, self.baseline_damage_dealt,
+            phase="outcome",
+        ))
+
         return checks
 
 
-class SeekerEdgeCaseRangeScenario(StaticTargetScenario):
+class SeekerDamageComparisonScenario(ComparisonScenario):
     """
-    SEEKER-004: Seeker at Edge Case Range
+    SEEKER-DMG-001: Warhead Damage Scales Correctly
 
-    Tests seeker behavior at edge of effective range (4500px),
-    where endurance limit becomes critical factor.
+    Both seekers impact at close range. Compare HP loss.
+    Low damage (50) vs high damage (200) = 4x ratio.
     """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Seeker360.json"
-    target_ship = "Test_Target_Stationary.json"
-    distance = 4500
 
     metadata = TestMetadata(
-        test_id="SEEKER-004",
-        category="Seeker Weapons",
-        subcategory="Endurance",
-        name="Seeker Impact - Edge Case Range (4500px)",
-        summary="Validates seeker behavior at edge of effective range where endurance is critical",
+        test_id="SEEKER-DMG-001",
+        category="SeekerWeaponAbility",
+        subcategory="Damage",
+        name="Warhead Damage Scales Correctly",
+        summary="Seeker with 4x damage deals 4x hull damage on impact",
         conditions=[
-            "Attacker: Test_Attacker_Seeker360.json",
-            "Target: Test_Target_Stationary.json",
-            "Distance: 4500 pixels",
-            "Seeker Speed: 1000 px/s",
-            "Seeker Endurance: 5.0 seconds",
-            "Time to Impact: ~4.5 seconds (450 ticks)",
-            "Endurance Remaining: ~0.5 seconds",
-            "Weapon Range: 3000px (may not fire)",
-            "Test Duration: 800 ticks (8 seconds)"
+            f"Baseline: damage={SEEKER_DMG_LOW}, single shot at {POINT_BLANK_DISTANCE}px",
+            f"Variant: damage={SEEKER_DMG_HIGH}, single shot at {POINT_BLANK_DISTANCE}px",
+            f"Test Duration: {SEEKER_TEST_TICKS} ticks",
         ],
-        edge_cases=[
-            "Near maximum seeker travel distance (4500px of 5000px max)",
-            "Very tight timing - seeker may barely reach target",
-            "Weapon may not fire if beyond firing range",
-            "Tests endurance mechanics under pressure"
-        ],
-        expected_outcome="Simulation completes, results may vary based on firing range check",
-        pass_criteria="simulation_completes (ticks_run > 0)",
-        max_ticks=800,
+        edge_cases=["Exact damage ratio (no falloff for seekers)"],
+        expected_outcome="Variant deals exactly 4x more damage.",
+        pass_criteria="variant_damage / baseline_damage == 4.0",
+        max_ticks=SEEKER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
-        ui_priority=6,
-        tags=["seeker", "missile", "endurance-limit", "edge-case"]
+        battle_end_mode="time_based",
+        tags=["seeker", "damage", "comparison"],
     )
 
-    def _collect_extra_results(self, battle_engine):
-        self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
+    baseline_attacker_ship = "Test_Attacker_Seeker_Dmg50.json"
+    baseline_target_ship = STANDARD_TARGET
+    variant_attacker_ship = "Test_Attacker_Seeker_Dmg200.json"
+    variant_target_ship = STANDARD_TARGET
+    distance = POINT_BLANK_DISTANCE
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data
-        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
-        if seeker:
-            checks.append(check_exact("Seeker Damage", 100, seeker.projectile_damage))
-            checks.append(check_exact("Seeker Speed", 1000, seeker.projectile_speed))
-            checks.append(check_exact("Seeker Endurance", 5.0, seeker.endurance))
-        # Precondition
-        center_dist = self.attacker.position.distance_to(self.target.position)
-        checks.append(check_approx("Center Distance", 4500.0, center_dist,
-                                   tolerance=0.01, phase="precondition"))
-        # Measurement test -- edge case range, results vary
+
+        checks.append(check_true("Baseline Hit", self.baseline_damage_dealt > 0,
+                                 detail=f"damage={self.baseline_damage_dealt}"))
+        checks.append(check_true("Variant Hit", self.variant_damage_dealt > 0,
+                                 detail=f"damage={self.variant_damage_dealt}"))
+
+        checks.append(check_exact(
+            "Damage Ratio 4x",
+            float(SEEKER_DMG_HIGH) / SEEKER_DMG_LOW,
+            self.variant_damage_dealt / self.baseline_damage_dealt,
+            phase="outcome",
+        ))
+
         return checks
 
 
-# ============================================================================
-# SEEKER TRACKING TESTS
-# ============================================================================
+# =============================================================================
+# SEEKER-HP-001: Higher HP Survives PDC Better
+# =============================================================================
 
-class SeekerTrackingStationaryScenario(StaticTargetScenario):
+class SeekerHPvsPDCScenario(_PDCMixin, ComparisonScenario):
     """
-    SEEKER-TRACK-001: Seeker Tracking Stationary Target
+    SEEKER-HP-001: Missile HP Affects PDC Survivability
 
-    Tests basic seeker tracking and impact against a stationary target.
-    Direct flight path - validates core tracking mechanics.
+    Both fire seekers at a PDC-equipped target.
+    Low HP (1) seekers destroyed by single PDC hit.
+    High HP (10) seekers survive more PDC hits, more impacts.
     """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Seeker360.json"
-    target_ship = "Test_Target_Stationary.json"
-    distance = SEEKER_TRACKING_DISTANCE
 
     metadata = TestMetadata(
-        test_id="SEEKER-TRACK-001",
-        category="Seeker Weapons",
-        subcategory="Tracking",
-        name="Seeker Tracking - Stationary Target (1000px)",
-        summary="Validates basic seeker tracking mechanics with direct flight path to stationary target",
+        test_id="SEEKER-HP-001",
+        category="SeekerWeaponAbility",
+        subcategory="HP",
+        name="Higher HP Survives PDC Better",
+        summary="Seekers with more HP survive point defense and deal more damage",
         conditions=[
-            "Attacker: Test_Attacker_Seeker360.json",
-            "Target: Test_Target_Stationary.json",
-            "Distance: 1000 pixels",
-            "Seeker Speed: 1000 px/s",
-            "Seeker Turn Rate: 90°/sec",
-            "Target: Stationary (no movement)",
-            "Flight Path: Direct/straight line",
-            "Time to Impact: ~1.0 second (100 ticks)",
-            "Test Duration: 600 ticks (6 seconds)"
+            "Target: PDC-equipped ship",
+            "Baseline: seeker HP=1",
+            "Variant: seeker HP=10",
+            f"Distance: {POINT_BLANK_DISTANCE}px",
+            f"Test Duration: {SEEKER_TEST_TICKS} ticks",
         ],
-        edge_cases=[
-            "Simplest tracking scenario - no target movement",
-            "Validates seeker launch and basic guidance",
-            "Should hit efficiently with minimal course adjustments"
-        ],
-        expected_outcome="Seeker tracks directly to target and impacts, dealing damage",
-        pass_criteria="damage_dealt > 0",
-        max_ticks=600,
+        edge_cases=["PDC beam damages seekers in flight"],
+        expected_outcome="High HP seekers deal more total damage.",
+        pass_criteria="variant_damage > baseline_damage",
+        max_ticks=SEEKER_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
-        ui_priority=10,
-        tags=["seeker", "missile", "tracking", "stationary", "guided"]
+        battle_end_mode="time_based",
+        tags=["seeker", "hp", "pdc", "comparison"],
     )
+
+    baseline_attacker_ship = "Test_Attacker_Seeker_LowHP.json"
+    baseline_target_ship = PDC_TARGET
+    variant_attacker_ship = "Test_Attacker_Seeker_HighHP.json"
+    variant_target_ship = PDC_TARGET
+    distance = 400  # Far enough for PDC to have time to intercept seekers in flight
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data
-        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
-        if seeker:
-            checks.append(check_exact("Seeker Damage", 100, seeker.projectile_damage))
-            checks.append(check_exact("Seeker Speed", 1000, seeker.projectile_speed))
-            checks.append(check_exact("Seeker Endurance", 5.0, seeker.endurance))
-        # Precondition
-        center_dist = self.attacker.position.distance_to(self.target.position)
-        checks.append(check_approx("Center Distance", float(SEEKER_TRACKING_DISTANCE), center_dist,
-                                   tolerance=0.01, phase="precondition"))
-        # Outcome
-        checks.append(check_true("Damage Dealt", self.damage_dealt > 0,
-                                 actual=self.damage_dealt, phase="outcome"))
+
+        checks.append(check_true(
+            "High HP Seekers Deal More Damage",
+            self.variant_damage_dealt > self.baseline_damage_dealt,
+            detail=f"variant={self.variant_damage_dealt}, baseline={self.baseline_damage_dealt}",
+            phase="outcome",
+        ))
+
         return checks
 
 
-class SeekerTrackingLinearScenario(StaticTargetScenario):
-    """
-    SEEKER-TRACK-002: Seeker Tracking Linear Moving Target
+# =============================================================================
+# SEEKER-RES-001/002/003: Resource Dependency
+# =============================================================================
 
-    Tests seeker tracking against a target moving in a straight line.
-    Seeker must lead target and adjust trajectory for intercept.
-    """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Seeker360.json"
-    target_ship = "Test_Target_Linear_Slow.json"
-    distance = SEEKER_TRACKING_DISTANCE
-    target_angle = 90  # Moving up
-    target_movement = StraightLineController()
+class SeekerNoAmmoScenario(ComparisonScenario):
+    """SEEKER-RES-001: Seeker with ammo cost but no storage cannot launch."""
 
     metadata = TestMetadata(
-        test_id="SEEKER-TRACK-002",
-        category="Seeker Weapons",
-        subcategory="Tracking",
-        name="Seeker Tracking - Linear Target (1000px)",
-        summary="Validates seeker tracking and intercept mechanics against linearly moving target",
+        test_id="SEEKER-RES-001",
+        category="SeekerWeaponAbility",
+        subcategory="Resource",
+        name="Seeker Stops Without Ammo",
+        summary="Seeker with ammo cost but no ammo storage cannot launch",
         conditions=[
-            "Attacker: Test_Attacker_Seeker360.json",
-            "Target: Test_Target_Linear_Slow.json",
-            "Distance: 1000 pixels",
-            "Seeker Speed: 1000 px/s",
-            "Seeker Turn Rate: 90°/sec",
-            "Target: Linear movement (constant velocity)",
-            "Target Initial Angle: 90° (moving up)",
-            "Test Duration: 600 ticks (6 seconds)"
+            "Baseline: high ammo (100k)", "Variant: no ammo storage",
+            f"Distance: {POINT_BLANK_DISTANCE}px",
+            f"Test Duration: {SEEKER_TEST_TICKS} ticks",
         ],
-        edge_cases=[
-            "Target moves perpendicular to line-of-sight",
-            "Seeker must calculate lead and intercept course",
-            "Tests continuous tracking adjustments",
-            "90°/sec turn rate should be sufficient for slow linear targets"
-        ],
-        expected_outcome="Seeker adjusts course to intercept moving target",
-        pass_criteria="simulation_completes (ticks_run > 0)",
-        max_ticks=600,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
-        ui_priority=9,
-        tags=["seeker", "missile", "tracking", "linear-target", "intercept"]
+        edge_cases=["Weapon exists but cannot afford activation"],
+        expected_outcome="Baseline deals damage, variant deals zero.",
+        pass_criteria="variant_damage == 0",
+        max_ticks=SEEKER_TEST_TICKS, seed=STANDARD_SEED, battle_end_mode="time_based",
+        tags=["seeker", "resource", "ammo", "comparison"],
     )
+
+    baseline_attacker_ship = "Test_Attacker_SeekerRapid_HighAmmo.json"
+    baseline_target_ship = STANDARD_TARGET
+    variant_attacker_ship = "Test_Attacker_SeekerRapid_NoAmmo.json"
+    variant_target_ship = STANDARD_TARGET
+    distance = POINT_BLANK_DISTANCE
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data
-        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
-        if seeker:
-            checks.append(check_exact("Seeker Damage", 100, seeker.projectile_damage))
-            checks.append(check_exact("Seeker Speed", 1000, seeker.projectile_speed))
-            checks.append(check_exact("Seeker Endurance", 5.0, seeker.endurance))
-        # Note: no center distance check -- linear target moves during simulation
-        # Measurement test -- seeker tracks linear target, results vary
+        checks.append(check_true("Baseline Dealt Damage", self.baseline_damage_dealt > 0,
+                                 detail=f"damage={self.baseline_damage_dealt}"))
+        checks.append(check_exact("No Damage Without Ammo", 0.0, self.variant_damage_dealt,
+                                  phase="outcome"))
         return checks
 
 
-class SeekerTrackingOrbitingScenario(StaticTargetScenario):
-    """
-    SEEKER-TRACK-003: Seeker Tracking Orbiting Target
-
-    Tests seeker tracking against a target following a curved/orbiting path.
-    Requires continuous tracking adjustments and curved pursuit.
-    """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Seeker360.json"
-    target_ship = "Test_Target_Orbiting.json"
-    distance = SEEKER_TRACKING_DISTANCE
-    target_movement = CircularOrbitController(direction=1)
+class SeekerLimitedAmmoScenario(ComparisonScenario):
+    """SEEKER-RES-002: Limited ammo causes seeker to stop launching mid-battle."""
 
     metadata = TestMetadata(
-        test_id="SEEKER-TRACK-003",
-        category="Seeker Weapons",
-        subcategory="Tracking",
-        name="Seeker Tracking - Orbiting Target (1000px)",
-        summary="Validates seeker tracking against orbiting target with continuous course corrections",
+        test_id="SEEKER-RES-002",
+        category="SeekerWeaponAbility",
+        subcategory="Resource",
+        name="Seeker Stops At Ammo Depletion",
+        summary="Limited ammo causes seeker to stop launching mid-battle",
         conditions=[
-            "Attacker: Test_Attacker_Seeker360.json",
-            "Target: Test_Target_Orbiting.json",
-            "Distance: 1000 pixels",
-            "Seeker Speed: 1000 px/s",
-            "Seeker Turn Rate: 90°/sec",
-            "Target: Orbiting/curved movement pattern",
-            "Flight Path: Curved pursuit trajectory",
-            "Test Duration: 800 ticks (8 seconds)"
+            "Baseline: high ammo (100k)", "Variant: 100 ammo",
+            f"Distance: {POINT_BLANK_DISTANCE}px",
+            f"Test Duration: {SEEKER_TEST_TICKS} ticks",
         ],
-        edge_cases=[
-            "Target follows curved path - continuous tracking required",
-            "Seeker must constantly adjust heading",
-            "Tests turn rate effectiveness (90°/sec)",
-            "May require multiple tracking cycles to intercept",
-            "Longer test duration to allow for complex pursuit"
-        ],
-        expected_outcome="Seeker follows curved pursuit path, adjusting continuously",
-        pass_criteria="simulation_completes (ticks_run > 0)",
-        max_ticks=800,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
-        ui_priority=8,
-        tags=["seeker", "missile", "tracking", "orbiting", "curved-pursuit"]
+        edge_cases=["Weapon fires until ammo depleted"],
+        expected_outcome="Variant deals less damage.",
+        pass_criteria="variant_damage < baseline_damage",
+        max_ticks=SEEKER_TEST_TICKS, seed=STANDARD_SEED, battle_end_mode="time_based",
+        tags=["seeker", "resource", "ammo", "depletion", "comparison"],
     )
+
+    baseline_attacker_ship = "Test_Attacker_SeekerRapid_HighAmmo.json"
+    baseline_target_ship = STANDARD_TARGET
+    variant_attacker_ship = "Test_Attacker_SeekerRapid_SmallAmmo.json"
+    variant_target_ship = STANDARD_TARGET
+    distance = POINT_BLANK_DISTANCE
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data
-        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
-        if seeker:
-            checks.append(check_exact("Seeker Damage", 100, seeker.projectile_damage))
-            checks.append(check_exact("Seeker Speed", 1000, seeker.projectile_speed))
-            checks.append(check_exact("Seeker Endurance", 5.0, seeker.endurance))
-        # Note: no center distance check -- orbiting target moves during simulation
-        # Measurement test -- curved pursuit, results vary
+        checks.append(check_true("Baseline Dealt Damage", self.baseline_damage_dealt > 0,
+                                 detail=f"damage={self.baseline_damage_dealt}"))
+        checks.append(check_true("Variant Dealt Damage", self.variant_damage_dealt > 0,
+                                 detail=f"damage={self.variant_damage_dealt}"))
+        checks.append(check_true("Limited Ammo Less Damage",
+                                 self.variant_damage_dealt < self.baseline_damage_dealt,
+                                 detail=f"variant={self.variant_damage_dealt}, baseline={self.baseline_damage_dealt}",
+                                 phase="outcome"))
         return checks
 
 
-class SeekerTrackingErraticScenario(StaticTargetScenario):
-    """
-    SEEKER-TRACK-004: Seeker vs Highly Maneuverable Erratic Target
-
-    Tests seeker tracking limits against a small, highly maneuverable
-    target performing erratic evasive maneuvers. Target may out-turn seeker.
-    """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Seeker360.json"
-    target_ship = "Test_Target_Erratic_Small.json"
-    distance = SEEKER_TRACKING_DISTANCE
+class SeekerAmmoControlScenario(ComparisonScenario):
+    """SEEKER-RES-003: Control — identical ammo produces identical results."""
 
     metadata = TestMetadata(
-        test_id="SEEKER-TRACK-004",
-        category="Seeker Weapons",
-        subcategory="Tracking",
-        name="Seeker Tracking - Erratic Small Target (1000px)",
-        summary="Validates seeker tracking against highly maneuverable erratic target that may evade",
+        test_id="SEEKER-RES-003",
+        category="SeekerWeaponAbility",
+        subcategory="Resource",
+        name="Ammo Control (Identical Setups)",
+        summary="Identical seeker + ammo setups produce identical damage",
         conditions=[
-            "Attacker: Test_Attacker_Seeker360.json",
-            "Target: Test_Target_Erratic_Small.json",
-            "Distance: 1000 pixels",
-            "Seeker Speed: 1000 px/s",
-            "Seeker Turn Rate: 90°/sec",
-            "Target: Erratic/evasive maneuvers (high turn rate)",
-            "Target Size: Small (harder to hit)",
-            "Test Duration: 800 ticks (8 seconds)"
+            "Both: high ammo (100k)",
+            f"Distance: {POINT_BLANK_DISTANCE}px",
+            f"Test Duration: {SEEKER_TEST_TICKS} ticks",
         ],
-        edge_cases=[
-            "Target may out-maneuver seeker (turn rate > 90°/sec)",
-            "Erratic movement pattern - unpredictable course",
-            "Small target size reduces hit probability",
-            "Seeker may expire before catching target",
-            "Tests seeker tracking limits and failure modes",
-            "Results may vary - not guaranteed to hit"
-        ],
-        expected_outcome="Seeker attempts to track but may fail to intercept highly maneuverable target",
-        pass_criteria="simulation_completes (ticks_run > 0)",
-        max_ticks=800,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
-        ui_priority=7,
-        tags=["seeker", "missile", "tracking", "erratic", "evasion", "edge-case"]
+        edge_cases=["Control validates comparison infrastructure"],
+        expected_outcome="Both deal identical damage.",
+        pass_criteria="baseline_damage == variant_damage",
+        max_ticks=SEEKER_TEST_TICKS, seed=STANDARD_SEED, battle_end_mode="time_based",
+        tags=["seeker", "resource", "control", "comparison"],
     )
 
-    def custom_setup(self, battle_engine):
-        self.target_movement = ErraticController(
-            center=self.target.position.copy(), max_radius=600,
-            seed=self._effective_seed,
-        )
+    baseline_attacker_ship = "Test_Attacker_SeekerRapid_HighAmmo.json"
+    baseline_target_ship = STANDARD_TARGET
+    variant_attacker_ship = "Test_Attacker_SeekerRapid_HighAmmo.json"
+    variant_target_ship = STANDARD_TARGET
+    distance = POINT_BLANK_DISTANCE
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        # Data
-        seeker = self.get_ability(self.attacker, 'SeekerWeaponAbility')
-        if seeker:
-            checks.append(check_exact("Seeker Damage", 100, seeker.projectile_damage))
-            checks.append(check_exact("Seeker Speed", 1000, seeker.projectile_speed))
-            checks.append(check_exact("Seeker Endurance", 5.0, seeker.endurance))
-        # Note: no center distance check -- erratic target moves during simulation
-        # Measurement test -- erratic targets may evade seekers entirely
+        checks.append(check_true("Baseline Dealt Damage", self.baseline_damage_dealt > 0,
+                                 detail=f"damage={self.baseline_damage_dealt}"))
+        checks.append(check_exact("Same Damage (Control)",
+                                  self.baseline_damage_dealt, self.variant_damage_dealt,
+                                  phase="outcome"))
         return checks
 
 
-# ============================================================================
-# POINT DEFENSE TESTS (PLACEHOLDER - NOT YET IMPLEMENTED)
-# ============================================================================
+# =============================================================================
+# SEEKER-PD-001/002: Point Defense Interaction
+# =============================================================================
 
-class SeekerPointDefenseNoneScenario(StaticTargetScenario):
-    """
-    SEEKER-PD-001: Seeker vs No Point Defense (Baseline)
-
-    Placeholder test for point defense interaction.
-    Tests baseline scenario where target has no PD - all seekers should hit.
-
-    STATUS: SKIPPED - Requires point defense component implementation
-    """
-
-    # Template configuration (not used - scenario is skipped)
-    attacker_ship = "Test_Attacker_Seeker360.json"
-    target_ship = "Test_Target_No_PD.json"  # NOT IMPLEMENTED
-    distance = SEEKER_TRACKING_DISTANCE
-
-    skip_test = True
-    skip_reason = "Requires point defense target ships - not yet implemented"
+class SeekerPDCReducesDamageScenario(_PDCMixin, ComparisonScenario):
+    """SEEKER-PD-001: PDC intercepts some seekers, reducing damage."""
 
     metadata = TestMetadata(
         test_id="SEEKER-PD-001",
-        category="Seeker Weapons",
+        category="SeekerWeaponAbility",
         subcategory="Point Defense",
-        name="Seeker vs No Point Defense (Baseline)",
-        summary="Baseline test - validates all seekers hit when target has no point defense",
+        name="PDC Reduces Seeker Impacts",
+        summary="PDC intercepts some seekers, reducing damage vs undefended target",
         conditions=[
-            "Attacker: Test_Attacker_Seeker360.json",
-            "Target: Test_Target_No_PD.json (NOT IMPLEMENTED)",
-            "Distance: 1000 pixels",
-            "Target Point Defense: None (0 PD weapons)",
-            "Expected: All missiles hit target",
-            "Test Duration: 600 ticks (6 seconds)"
+            "Baseline: seekers vs undefended target",
+            "Variant: seekers vs PDC-equipped target",
+            f"Distance: {POINT_BLANK_DISTANCE}px",
+            f"Test Duration: {SEEKER_TEST_TICKS} ticks",
         ],
-        edge_cases=[
-            "Baseline scenario for PD effectiveness comparison",
-            "No interception - all seekers reach target",
-            "PLACEHOLDER: Requires PD target ship implementation"
-        ],
-        expected_outcome="All seekers hit target without interception",
-        pass_criteria="SKIPPED - requires_point_defense_implementation",
-        max_ticks=600,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
-        ui_priority=5,
-        tags=["seeker", "missile", "point-defense", "baseline", "placeholder", "not-implemented"]
+        edge_cases=["PDC beam fires at incoming seekers"],
+        expected_outcome="PDC target takes less damage.",
+        pass_criteria="variant_damage < baseline_damage",
+        max_ticks=SEEKER_TEST_TICKS, seed=STANDARD_SEED, battle_end_mode="time_based",
+        tags=["seeker", "pdc", "point-defense", "comparison"],
     )
 
+    baseline_attacker_ship = "Test_Attacker_Seeker_LowHP.json"
+    baseline_target_ship = STANDARD_TARGET
+    variant_attacker_ship = "Test_Attacker_Seeker_LowHP.json"
+    variant_target_ship = PDC_TARGET
+    distance = 400  # Give PDC time to intercept seekers in flight
 
-class SeekerPointDefenseSingleScenario(StaticTargetScenario):
-    """
-    SEEKER-PD-002: Seeker vs Single Point Defense
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        checks.append(check_true("Undefended Took Damage", self.baseline_damage_dealt > 0,
+                                 detail=f"damage={self.baseline_damage_dealt}"))
+        checks.append(check_true("PDC Reduced Damage",
+                                 self.variant_damage_dealt < self.baseline_damage_dealt,
+                                 detail=f"variant={self.variant_damage_dealt}, baseline={self.baseline_damage_dealt}",
+                                 phase="outcome"))
+        return checks
 
-    Placeholder test for single PD weapon interaction.
-    Tests seeker interception rate with one PD weapon.
 
-    STATUS: SKIPPED - Requires point defense component implementation
-    """
-
-    # Template configuration (not used - scenario is skipped)
-    attacker_ship = "Test_Attacker_Seeker360.json"
-    target_ship = "Test_Target_Single_PD.json"  # NOT IMPLEMENTED
-    distance = SEEKER_TRACKING_DISTANCE
-
-    skip_test = True
-    skip_reason = "Requires point defense target ships - not yet implemented"
+class SeekerDefenseVsPDCScenario(_PDCMixin, ComparisonScenario):
+    """SEEKER-PD-002: Higher to_hit_defense makes seekers harder to intercept."""
 
     metadata = TestMetadata(
         test_id="SEEKER-PD-002",
-        category="Seeker Weapons",
+        category="SeekerWeaponAbility",
         subcategory="Point Defense",
-        name="Seeker vs Single Point Defense",
-        summary="Tests seeker interception rate against target with single point defense weapon",
+        name="to_hit_defense Reduces PDC Accuracy",
+        summary="Seekers with higher defense survive PDC better, dealing more damage",
         conditions=[
-            "Attacker: Test_Attacker_Seeker360.json",
-            "Target: Test_Target_Single_PD.json (NOT IMPLEMENTED)",
-            "Distance: 1000 pixels",
-            "Target Point Defense: 1 PD weapon",
-            "Expected: Some missiles intercepted, some hit",
-            "Test Duration: 600 ticks (6 seconds)"
+            "Baseline: to_hit_defense=0 (easy to hit)",
+            "Variant: to_hit_defense=3.0 (hard to hit)",
+            "Both vs same PDC target",
+            f"Distance: {POINT_BLANK_DISTANCE}px",
+            f"Test Duration: {SEEKER_TEST_TICKS} ticks",
         ],
-        edge_cases=[
-            "PD weapon attempts to intercept incoming seekers",
-            "Success rate depends on PD accuracy and fire rate",
-            "Some missiles should still reach target",
-            "PLACEHOLDER: Requires PD target ship implementation"
-        ],
-        expected_outcome="Partial interception - some seekers destroyed, some hit target",
-        pass_criteria="SKIPPED - requires_point_defense_implementation",
-        max_ticks=600,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
-        ui_priority=4,
-        tags=["seeker", "missile", "point-defense", "interception", "placeholder", "not-implemented"]
+        edge_cases=["to_hit_defense feeds into sigmoid as defense_score on the projectile"],
+        expected_outcome="High defense seekers deal more damage.",
+        pass_criteria="variant_damage > baseline_damage",
+        max_ticks=SEEKER_TEST_TICKS, seed=STANDARD_SEED, battle_end_mode="time_based",
+        tags=["seeker", "pdc", "to-hit-defense", "comparison"],
     )
 
+    baseline_attacker_ship = "Test_Attacker_Seeker_LowDefense.json"
+    baseline_target_ship = PDC_TARGET
+    variant_attacker_ship = "Test_Attacker_Seeker_HighDefense.json"
+    variant_target_ship = PDC_TARGET
+    distance = 400  # Give PDC time to intercept seekers in flight
 
-class SeekerPointDefenseTripleScenario(StaticTargetScenario):
-    """
-    SEEKER-PD-003: Seeker vs Triple Point Defense
-
-    Placeholder test for multiple PD weapon interaction.
-    Tests seeker interception rate with three PD weapons.
-
-    STATUS: SKIPPED - Requires point defense component implementation
-    """
-
-    # Template configuration (not used - scenario is skipped)
-    attacker_ship = "Test_Attacker_Seeker360.json"
-    target_ship = "Test_Target_Triple_PD.json"  # NOT IMPLEMENTED
-    distance = SEEKER_TRACKING_DISTANCE
-
-    skip_test = True
-    skip_reason = "Requires point defense target ships - not yet implemented"
-
-    metadata = TestMetadata(
-        test_id="SEEKER-PD-003",
-        category="Seeker Weapons",
-        subcategory="Point Defense",
-        name="Seeker vs Triple Point Defense",
-        summary="Tests seeker interception rate against target with three point defense weapons",
-        conditions=[
-            "Attacker: Test_Attacker_Seeker360.json",
-            "Target: Test_Target_Triple_PD.json (NOT IMPLEMENTED)",
-            "Distance: 1000 pixels",
-            "Target Point Defense: 3 PD weapons",
-            "Expected: High interception rate, few missiles hit",
-            "Test Duration: 600 ticks (6 seconds)"
-        ],
-        edge_cases=[
-            "Multiple PD weapons create overlapping fields of fire",
-            "High interception rate expected",
-            "Few or no missiles may reach target",
-            "Tests effectiveness of layered point defense",
-            "PLACEHOLDER: Requires PD target ship implementation"
-        ],
-        expected_outcome="High interception rate - most seekers destroyed before impact",
-        pass_criteria="SKIPPED - requires_point_defense_implementation",
-        max_ticks=600,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
-        ui_priority=3,
-        tags=["seeker", "missile", "point-defense", "layered-defense", "placeholder", "not-implemented"]
-    )
-
-
-# ============================================================================
-# EXPORT ALL SCENARIOS
-# ============================================================================
-
-__all__ = [
-    # Endurance/Lifetime Tests
-    'SeekerCloseRangeImpactScenario',
-    'SeekerMidRangeImpactScenario',
-    'SeekerBeyondRangeExpireScenario',
-    'SeekerEdgeCaseRangeScenario',
-
-    # Tracking Tests
-    'SeekerTrackingStationaryScenario',
-    'SeekerTrackingLinearScenario',
-    'SeekerTrackingOrbitingScenario',
-    'SeekerTrackingErraticScenario',
-
-    # Point Defense Tests (Placeholder)
-    'SeekerPointDefenseNoneScenario',
-    'SeekerPointDefenseSingleScenario',
-    'SeekerPointDefenseTripleScenario',
-]
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        checks.append(check_true("High Defense Seekers Deal More",
+                                 self.variant_damage_dealt > self.baseline_damage_dealt,
+                                 detail=f"variant={self.variant_damage_dealt}, baseline={self.baseline_damage_dealt}",
+                                 phase="outcome"))
+        return checks

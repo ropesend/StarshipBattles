@@ -26,7 +26,7 @@ Scenario files are auto-discovered by `run_tests.py` — any file matching
 |------|--------|-------|-------------|
 | `beam_scenarios.py` | BeamWeapon | 23 | Accuracy at ranges, moving targets, HT precision, resource |
 | `projectile_scenarios.py` | Projectile | 14 | Stationary/moving targets, damage consistency, resource |
-| `seeker_scenarios.py` | Seeker | 11 | Endurance, tracking, point defense (3 skipped) |
+| `seeker_scenarios.py` | Seeker | 10 | Speed, endurance, turn rate, damage, HP, resource, PDC |
 | `modifier_scenarios.py` | Modifiers | 6 | Damage, range, reload, thrust, accuracy, arc |
 | `propulsion_scenarios.py` | Propulsion | 9 | Engine physics, thruster rotation, mass effects |
 | `resource_scenarios.py` | Resources | 9 | Fuel, energy, ammo consumption/depletion |
