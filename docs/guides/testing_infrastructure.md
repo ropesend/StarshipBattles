@@ -167,8 +167,8 @@ The `simulation_tests/` directory has its own `pytest.ini` and is **excluded** f
 ## Running Tests
 
 ```bash
-# Full suite with parallelism (CLI: 12 workers, VS Code: 4)
-pytest tests/ -n 12
+# Full suite with sharded parallel runner (auto-detects CPU count)
+python scripts/test_sharded.py
 
 # Incremental (only tests affected by changes)
 pytest tests/ --testmon

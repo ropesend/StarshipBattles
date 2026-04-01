@@ -368,6 +368,9 @@ class BuildQueueScreen:
         elif event.ui_element == panels.btn_category_fighter:
             self.controller.set_category("fighter")
             self._refresh_items_list()
+        elif event.ui_element == panels.btn_category_drop_pod:
+            self.controller.set_category("drop_pod")
+            self._refresh_items_list()
 
         # Close button
         elif event.ui_element == panels.btn_close:

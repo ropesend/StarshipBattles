@@ -176,7 +176,7 @@ class ModifierLogic:
         
         # Smart floor logic (Size Mount special behavior)
         if smart_floor and direction < 0 and current <= step:
-             return max(min_val, 1)
+             return min_val
 
         if direction < 0:
             # Decrement

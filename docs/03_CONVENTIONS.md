@@ -249,7 +249,7 @@ Standard fixture names from root conftest:
 ```bash
 pytest tests/ --testmon              # Incremental (fast, runs only affected tests)
 pytest tests/path/to/test.py         # Targeted single file
-pytest tests/ -n 12                  # Full suite with parallel workers
+python scripts/test_sharded.py        # Full suite with sharded parallel runner
 pytest tests/ --cov=game -n 12       # Full suite with coverage
 ```
 

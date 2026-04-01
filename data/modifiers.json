@@ -65,11 +65,11 @@
         {
             "id": "simple_size_mount",
             "name": "Size Mount",
-            "description": "Multiplies Size/Stats (1x-512x)",
+            "description": "Multiplies Size/Stats (0.1x-1024x)",
             "param": {
                 "name": "Scale",
                 "type": "linear",
-                "min": 1,
+                "min": 0.1,
                 "max": 1024,
                 "default": 1
             },
@@ -88,7 +88,7 @@
                 },
                 {
                     "stat": "cost_mult",
-                    "formula": "param"
+                    "formula": "param ^ 0.75"
                 },
                 {
                     "stat": "thrust_mult",
@@ -120,6 +120,22 @@
                 },
                 {
                     "stat": "consumption_mult",
+                    "formula": "param"
+                },
+                {
+                    "stat": "harvest_rate_mult",
+                    "formula": "param"
+                },
+                {
+                    "stat": "local_storage_mult",
+                    "formula": "param"
+                },
+                {
+                    "stat": "production_rate_mult",
+                    "formula": "param"
+                },
+                {
+                    "stat": "planetary_yard_rate_mult",
                     "formula": "param"
                 }
             ]

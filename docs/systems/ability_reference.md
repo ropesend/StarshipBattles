@@ -739,6 +739,8 @@ Enables resource harvesting on planets.
 
 **Stat Bindings:** None
 
+**Size mount scaling:** `base_harvest_rate` is multiplied by the component's `simple_size_mount` value at runtime by `HarvestingEngine` (via `modifier_resolver.resolve_size_multiplier()`). At size 0.2, a harvester with rate 100 harvests at 20/turn.
+
 ---
 
 ### LocalStorage
@@ -761,6 +763,8 @@ Local colony resource storage capacity.
 | `capacity` | float | Yes | Storage capacity |
 
 **Stat Bindings:** Uses `storage_mult` modifier
+
+**Size mount scaling:** `capacity` is multiplied by the component's `simple_size_mount` value at runtime by `HarvestingEngine._collect_storage_from_facility()`. At size 0.2, a 10000 capacity vault stores 2000.
 
 ---
 

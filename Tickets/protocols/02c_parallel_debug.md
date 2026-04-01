@@ -162,7 +162,7 @@ When an implementation agent completes:
 1. Read the agent's result (success/failure, worktree path, branch name).
 2. **If SUCCESS:**
    a. Merge the worker's branch into the current branch: `git merge <branch> --no-edit`
-   b. Run full test suite: `pytest tests/ -n 12`
+   b. Run full test suite: `python scripts/test_sharded.py`
    c. **If tests pass:**
       - Update bug ticket status to `[Awaiting Confirmation]` in both the ticket file and `{DASHBOARD}`.
       - Mark bug as `done`.
@@ -314,7 +314,7 @@ proceeding.
 ### Phase 2: Implementation (Green)
 - Modify code to pass the failing test.
 - Run targeted tests: pytest tests/path/to/relevant_tests/ -x
-- Run broader regression: pytest tests/ -n 12 --timeout=120 (in worktree)
+- Run broader regression: python scripts/test_sharded.py (in worktree)
 
 ### Phase 2.5: Post-Fix Integrity Check (MANDATORY)
 1. **Reversion check:** Does your diff undo any recent refactor? If YES → STOP, report BLOCKED.

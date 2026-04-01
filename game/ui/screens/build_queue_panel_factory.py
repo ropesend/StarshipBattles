@@ -58,6 +58,7 @@ class BuildQueuePanels:
     btn_category_ship: ui.UIButton
     btn_category_satellite: ui.UIButton
     btn_category_fighter: ui.UIButton
+    btn_category_drop_pod: ui.UIButton
     resource_icons: Dict[str, pygame.Surface]
 
 
@@ -122,7 +123,7 @@ class BuildQueuePanelFactory:
         queue_panel, queue_header, virtual_table, column_manager, data_source = (
             self._create_build_queue_panel(background)
         )
-        filter_panel, btn_complex, btn_ship, btn_sat, btn_fighter, btn_add, btn_remove = (
+        filter_panel, btn_complex, btn_ship, btn_sat, btn_fighter, btn_drop_pod, btn_add, btn_remove = (
             self._create_filter_panel(background)
         )
         bottom_bar, btn_close = self._create_bottom_bar(background, format_empire_resources)
@@ -149,6 +150,7 @@ class BuildQueuePanelFactory:
             btn_category_ship=btn_ship,
             btn_category_satellite=btn_sat,
             btn_category_fighter=btn_fighter,
+            btn_category_drop_pod=btn_drop_pod,
             resource_icons=self.resource_icons,
         )
 
@@ -405,28 +407,35 @@ class BuildQueuePanelFactory:
             container=panel
         )
 
+        btn_drop_pod = ui.UIButton(
+            relative_rect=pygame.Rect(10, 245, panel_width - 20, 40),
+            text="Drop Pods",
+            manager=self.manager,
+            container=panel
+        )
+
         ui.UITextBox(
-            relative_rect=pygame.Rect(10, 260, panel_width - 20, 30),
+            relative_rect=pygame.Rect(10, 310, panel_width - 20, 30),
             html_text="<b>Actions</b>",
             manager=self.manager,
             container=panel
         )
 
         btn_add = ui.UIButton(
-            relative_rect=pygame.Rect(10, 295, panel_width - 20, 40),
+            relative_rect=pygame.Rect(10, 345, panel_width - 20, 40),
             text="Add to Queue",
             manager=self.manager,
             container=panel
         )
 
         btn_remove = ui.UIButton(
-            relative_rect=pygame.Rect(10, 345, panel_width - 20, 40),
+            relative_rect=pygame.Rect(10, 395, panel_width - 20, 40),
             text="Remove Selected",
             manager=self.manager,
             container=panel
         )
 
-        return panel, btn_complex, btn_ship, btn_satellite, btn_fighter, btn_add, btn_remove
+        return panel, btn_complex, btn_ship, btn_satellite, btn_fighter, btn_drop_pod, btn_add, btn_remove
 
     def _create_bottom_bar(self, container: ui.UIPanel, format_empire_resources):
         """Create bottom bar with close button and info.

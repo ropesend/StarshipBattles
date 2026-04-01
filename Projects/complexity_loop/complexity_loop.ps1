@@ -619,7 +619,7 @@ while ($state.current_cycle -lt $MAX_CYCLES) {
     git add -A
     git commit -m "[$projectId] Post-review checkpoint - Automated" --allow-empty 2>$null
 
-    $testOutput = & pytest tests/ -n 12 "--tb=no" -q 2>&1 | Out-String
+    $testOutput = & python scripts/test_sharded.py 2>&1 | Out-String
     $testExitCode = $LASTEXITCODE
 
     if ($testExitCode -ne 0) {

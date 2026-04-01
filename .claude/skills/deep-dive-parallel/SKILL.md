@@ -127,7 +127,7 @@ When a ticket is approved:
 When a teammate reports implementation complete:
 1. **Verify** the worktree branch name matches expected pattern.
 2. Merge the branch: `git merge <branch> --no-edit`
-3. Run tests: `pytest tests/ -n 12`
+3. Run tests: `python scripts/test_sharded.py`
 4. If tests pass:
    - Update `{ACTIVE_DIR}/{PREFIX}-{ID}.md`: set status to `[Awaiting Confirmation]`.
    - Update `{DASHBOARD}` with new status.
@@ -170,7 +170,7 @@ The loop ends when all tickets are in terminal states: `done`, `skipped`, `block
 
 - **NEVER** allow two teammates to edit the same file concurrently.
 - **ALWAYS** verify worktree branch before merging (Windows worktree issues).
-- **ALWAYS** run `pytest tests/ -n 12` after each merge (one at a time).
+- **ALWAYS** run `python scripts/test_sharded.py` after each merge (one at a time).
 - **ALWAYS** present investigation findings to user before implementation (no auto-approval).
 - **ALWAYS** prefix all question relays with `[{PREFIX}-{ID}]` so the user knows which ticket.
 - **ALWAYS** update `{DASHBOARD}` after each successful merge.

@@ -622,3 +622,173 @@ def get_construction_rows(ship):
         rows.append(row)
 
     return rows
+
+
+# --- Strategic Ability Helpers ---
+
+def _get_strategic_abilities(ship):
+    """Collect strategic ability data from all components on a ship.
+
+    Returns dict with keys: harvesters, storage, has_planetary_yard,
+    has_space_shipyard, shipyard_info, staging_capacity.
+    """
+    harvesters = {}  # resource_type -> total rate
+    storage = {}  # resource_type -> total capacity
+    has_planetary_yard = False
+    has_space_shipyard = False
+    shipyard_info = {}  # production_rate, max_mass, bonus
+    staging_capacity = 0.0
+
+    for layer_type in ship.layers:
+        layer = ship.layers[layer_type]
+        for comp in layer.components:
+            for ability in comp.ability_instances:
+                cls_name = type(ability).__name__
+
+                if cls_name == 'ResourceHarvesterAbility':
+                    res = ability.resource_type
+                    rate = ability.base_harvest_rate
+                    harvesters[res] = harvesters.get(res, 0.0) + rate
+
+                elif cls_name == 'LocalStorageAbility':
+                    res = ability.resource_type
+                    cap = ability.capacity
+                    storage[res] = storage.get(res, 0.0) + cap
+
+                elif cls_name == 'PlanetaryYardAbility':
+                    has_planetary_yard = True
+
+                elif cls_name == 'SpaceShipyardAbility':
+                    has_space_shipyard = True
+                    shipyard_info = {
+                        'bonus': ability.construction_speed_bonus,
+                        'max_mass': ability.max_ship_mass,
+                        'rates': ability.production_rates,
+                    }
+
+                elif cls_name == 'StagingYardAbility':
+                    staging_capacity += ability.capacity_mass
+
+    return {
+        'harvesters': harvesters,
+        'storage': storage,
+        'has_planetary_yard': has_planetary_yard,
+        'has_space_shipyard': has_space_shipyard,
+        'shipyard_info': shipyard_info,
+        'staging_capacity': staging_capacity,
+    }
+
+
+def get_strategic_rows(ship):
+    """Generate stat rows for the Strategic/Colony section.
+
+    Only returns rows for abilities the ship actually has.
+    """
+    info = _get_strategic_abilities(ship)
+    rows = []
+
+    LABEL_ABBREV = {
+        "metals": "Metals",
+        "organics": "Organics",
+        "vapors": "Vapors",
+        "radioactives": "Radact",
+        "exotics": "Exotics",
+    }
+
+    # Harvest rates
+    if info['harvesters']:
+        for res, rate in sorted(info['harvesters'].items()):
+            def rate_getter(ship, r=res):
+                data = _get_strategic_abilities(ship)
+                return data['harvesters'].get(r, 0.0)
+
+            rows.append(StatDefinition(
+                id=f"harvest_{res}",
+                label=f"Harv {LABEL_ABBREV.get(res, res)}",
+                getter=rate_getter,
+                formatter="{:.1f}",
+                unit="/turn"
+            ))
+
+    # Storage capacities
+    if info['storage']:
+        for res, cap in sorted(info['storage'].items()):
+            def cap_getter(ship, r=res):
+                data = _get_strategic_abilities(ship)
+                return data['storage'].get(r, 0.0)
+
+            rows.append(StatDefinition(
+                id=f"storage_{res}",
+                label=f"Stor {LABEL_ABBREV.get(res, res)}",
+                getter=cap_getter,
+                formatter="{:,.0f}",
+                unit=""
+            ))
+
+    # Planetary Yard
+    if info['has_planetary_yard']:
+        def yard_getter(ship):
+            data = _get_strategic_abilities(ship)
+            return 1.0 if data['has_planetary_yard'] else 0.0
+
+        rows.append(StatDefinition(
+            id="planetary_yard",
+            label="Planet Yard",
+            getter=yard_getter,
+            formatter=lambda v: "Yes" if v > 0 else "No",
+            unit=""
+        ))
+
+    # Space Shipyard
+    if info['has_space_shipyard']:
+        def shipyard_getter(ship):
+            data = _get_strategic_abilities(ship)
+            si = data['shipyard_info']
+            return si.get('bonus', 1.0) if si else 0.0
+
+        rows.append(StatDefinition(
+            id="space_shipyard",
+            label="Shipyard",
+            getter=shipyard_getter,
+            formatter=lambda v: f"{v:.1f}x" if v > 0 else "No",
+            unit=""
+        ))
+
+        def max_mass_getter(ship):
+            data = _get_strategic_abilities(ship)
+            si = data['shipyard_info']
+            return si.get('max_mass', 0) if si else 0
+
+        rows.append(StatDefinition(
+            id="shipyard_max_mass",
+            label="Max Build Mass",
+            getter=max_mass_getter,
+            formatter="{:,.0f}",
+            unit="kg"
+        ))
+
+    # Staging Yard
+    if info['staging_capacity'] > 0:
+        def staging_getter(ship):
+            data = _get_strategic_abilities(ship)
+            return data['staging_capacity']
+
+        rows.append(StatDefinition(
+            id="staging_capacity",
+            label="Staging Cap",
+            getter=staging_getter,
+            formatter="{:,.0f}",
+            unit="mass"
+        ))
+
+    return rows
+
+
+def has_strategic_abilities(ship) -> bool:
+    """Check if a ship has any strategic abilities worth displaying."""
+    info = _get_strategic_abilities(ship)
+    return bool(
+        info['harvesters'] or info['storage'] or
+        info['has_planetary_yard'] or info['has_space_shipyard'] or
+        info['staging_capacity'] > 0
+    )

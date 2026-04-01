@@ -174,8 +174,8 @@ pytest tests/unit/ -v
 # Simulation tests only
 pytest simulation_tests/tests/ -v -m simulation
 
-# Parallel execution (12 workers for CLI, 4 for VS Code Test Explorer)
-pytest tests/ -n 12
+# Parallel execution (sharded runner, auto-detects CPU count)
+python scripts/test_sharded.py
 
 # Specific test
 pytest simulation_tests/tests/test_beam_weapons.py::TestBeamAccuracy::test_BEAM360_001 -v

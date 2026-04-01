@@ -86,7 +86,7 @@ docs/
 ## Quick Reference
 
 - **Test baseline:** 7353 tests, 0 failures
-- **Test command:** `pytest tests/ -n 12`
+- **Test command:** `python scripts/test_sharded.py`
 - **Minimum resolution:** 2560x1600 (optimized for 4K: 3840x2160)
 - **Python:** 3.x with Pygame, Pytest, pytest-xdist
 - **Historical/archived docs:** `Projects/_archive/` (not in docs/ — do not read for current info)
