@@ -307,9 +307,13 @@ class StrategyDetailFormatter:
             production_rates=production_rates
         )
 
-        # Show Build Yard and Planet Orders buttons for owned planets
+        # Show Build Yard button only if planet has PlanetaryYard or SpaceShipyard
         if obj.owner_id == current_empire_id:
-            self.btn_build_yard.show()
+            from game.strategy.engine.production_engine import _colony_has_planetary_yard
+            from game.core.registry import RegistryManager
+            has_yard = _colony_has_planetary_yard(obj, RegistryManager.instance()) or obj.has_space_shipyard
+            if has_yard:
+                self.btn_build_yard.show()
             if self.btn_planet_orders:
                 self.btn_planet_orders.show()  # PROJ-238
 

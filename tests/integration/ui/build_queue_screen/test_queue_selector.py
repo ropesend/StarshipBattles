@@ -92,6 +92,13 @@ def build_queue_screen(mock_design_library, mock_design_loader, mock_registries)
     )
     planet.owner_id = 1
     planet.id = 100
+    # Add PlanetaryYard facility so base queue source is created
+    from game.strategy.data.planet import PlanetaryFacility
+    yard = PlanetaryFacility(
+        instance_id="yard_test", design_id="colony_hub", name="Colony Hub",
+        design_data={"layers": {"CORE": [{"id": "hub", "abilities": {"PlanetaryYard": True}}]}},
+    )
+    planet.facilities = [yard]
 
     empire = Empire(1, "Test Empire", (255, 0, 0))
     galaxy = MockGalaxy()
@@ -210,6 +217,13 @@ def test_multiple_queue_sources_create_buttons():
     planet.owner_id = 1
     planet.id = 100
 
+    # Add PlanetaryYard facility so the base construction queue source is created
+    yard = PlanetaryFacility(
+        instance_id="yard_test", design_id="colony_hub", name="Colony Hub",
+        design_data={"layers": {"CORE": [{"id": "hub", "abilities": {"PlanetaryYard": True}}]}},
+    )
+    planet.facilities.append(yard)
+
     # Add a shipyard facility so there are 2 queue sources
     shipyard = PlanetaryFacility(
         instance_id="shipyard-1",
@@ -272,6 +286,11 @@ def test_multi_select_sets_active_to_none():
     )
     planet.owner_id = 1
     planet.id = 100
+    from game.strategy.data.planet import PlanetaryFacility
+    planet.facilities = [PlanetaryFacility(
+        instance_id="yard_multi", design_id="hub", name="Hub",
+        design_data={"layers": {"CORE": [{"id": "h", "abilities": {"PlanetaryYard": True}}]}},
+    )]
 
     empire = Empire(1, "Test Empire", (255, 0, 0))
     galaxy = MockGalaxy()
@@ -346,6 +365,11 @@ def test_queue_display_shows_active_source_items():
     )
     planet.owner_id = 1
     planet.id = 100
+    from game.strategy.data.planet import PlanetaryFacility
+    planet.facilities = [PlanetaryFacility(
+        instance_id="yard_disp", design_id="hub", name="Hub",
+        design_data={"layers": {"CORE": [{"id": "h", "abilities": {"PlanetaryYard": True}}]}},
+    )]
 
     empire = Empire(1, "Test Empire", (255, 0, 0))
     galaxy = MockGalaxy()

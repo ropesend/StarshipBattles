@@ -360,6 +360,13 @@ def test_add_ship_to_queue_with_shipyard(mock_design_library, mock_design_loader
     planet.owner_id = 1
     planet.id = 100
 
+    # Add PlanetaryYard facility so the base construction queue source is created
+    yard = PlanetaryFacility(
+        instance_id="yard_test", design_id="colony_hub", name="Colony Hub",
+        design_data={"layers": {"CORE": [{"id": "hub", "abilities": {"PlanetaryYard": True}}]}},
+    )
+    planet.facilities.append(yard)
+
     # Add shipyard facility BEFORE creating screen
     shipyard = PlanetaryFacility(
         instance_id="test-shipyard-1",

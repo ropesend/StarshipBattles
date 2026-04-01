@@ -6,7 +6,7 @@ import pytest
 import pygame
 import pygame_gui
 from unittest.mock import MagicMock
-from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
 from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.core.validation import ValidationResult
@@ -181,6 +181,13 @@ def build_queue_screen(mock_design_library, mock_design_loader, mock_registries)
     )
     planet.owner_id = 1
     planet.id = 100
+
+    # Add PlanetaryYard facility so the base construction queue source is created
+    yard = PlanetaryFacility(
+        instance_id="yard_test", design_id="colony_hub", name="Colony Hub",
+        design_data={"layers": {"CORE": [{"id": "hub", "abilities": {"PlanetaryYard": True}}]}},
+    )
+    planet.facilities.append(yard)
 
     # Create mock galaxy with planet
     empire = Empire(1, "Test Empire", (255, 0, 0))

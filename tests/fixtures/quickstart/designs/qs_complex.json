@@ -30,6 +30,19 @@
                 ]
             },
             {
+                "id": "planetary_yard_module",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
                 "id": "crew_quarters",
                 "modifiers": [
                     {

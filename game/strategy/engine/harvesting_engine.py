@@ -32,11 +32,12 @@ if TYPE_CHECKING:
     from game.strategy.data.planet import Planet, PlanetaryFacility
 
 
-def get_harvester_info(comp, registries: Optional[GameRegistries] = None) -> Optional[dict]:
+def get_harvester_info(comp, registries: Optional[GameRegistries] = None):
     """Extract ResourceHarvester info from a component entry.
 
     Supports:
     - Dict with inline abilities: {"id": "x", "abilities": {"ResourceHarvester": {...}}}
+    - List of dicts: {"id": "x", "abilities": {"ResourceHarvester": [{...}, {...}]}}
     - Plain string ID: resolved via registries
 
     Args:
@@ -44,12 +45,12 @@ def get_harvester_info(comp, registries: Optional[GameRegistries] = None) -> Opt
         registries: Optional GameRegistries for component lookup
 
     Returns:
-        Dict with 'resource_type' and 'base_harvest_rate', or None
+        Dict, list of dicts, or None
     """
     if isinstance(comp, dict):
         abilities = comp.get('abilities', {})
         harvester_data = abilities.get('ResourceHarvester')
-        if isinstance(harvester_data, dict):
+        if isinstance(harvester_data, (dict, list)):
             return harvester_data
         # Also check by component ID via registry
         comp_id = comp.get('id')
@@ -60,7 +61,7 @@ def get_harvester_info(comp, registries: Optional[GameRegistries] = None) -> Opt
     return None
 
 
-def get_harvester_from_registry(comp_id: str, registries: GameRegistries) -> Optional[dict]:
+def get_harvester_from_registry(comp_id: str, registries: GameRegistries):
     """Get harvester ability from the component registry.
 
     Args:
@@ -68,14 +69,14 @@ def get_harvester_from_registry(comp_id: str, registries: GameRegistries) -> Opt
         registries: GameRegistries for component lookup
 
     Returns:
-        Dict with harvester info or None
+        Dict, list of dicts, or None
     """
     comp_def = registries.components.get(comp_id)
     if comp_def is None:
         return None
     abilities = get_component_abilities(comp_def)
     harvester_data = abilities.get('ResourceHarvester')
-    if isinstance(harvester_data, dict):
+    if isinstance(harvester_data, (dict, list)):
         return harvester_data
     return None
 
@@ -163,32 +164,38 @@ class HarvestingEngine(IHarvestingEngine):
     ) -> None:
         """Scan a facility's components for LocalStorage abilities."""
         for comp in iter_components(facility.design_data):
-            storage_info = self._get_storage_info(comp)
-            if storage_info is not None:
-                resource_type = storage_info.get('resource_type', '')
-                capacity = storage_info.get('capacity', 0.0)
+            storage_entries = self._get_storage_info(comp)
+            if storage_entries is None:
+                continue
+            # Normalize to list (single dict or list of dicts)
+            if isinstance(storage_entries, dict):
+                storage_entries = [storage_entries]
+            for entry in storage_entries:
+                resource_type = entry.get('resource_type', '')
+                capacity = entry.get('capacity', 0.0)
                 if resource_type and capacity > 0:
                     storage_totals[resource_type] = (
                         storage_totals.get(resource_type, 0.0) + capacity
                     )
 
-    def _get_storage_info(self, comp) -> Optional[dict]:
+    def _get_storage_info(self, comp):
         """Extract LocalStorage info from a component entry.
 
         Supports:
         - Dict with inline abilities: {"id": "x", "abilities": {"LocalStorage": {...}}}
+        - List of dicts: {"id": "x", "abilities": {"LocalStorage": [{...}, {...}]}}
         - Plain string ID: resolved via registries
 
         Args:
             comp: Component entry from design_data layers (dict or str)
 
         Returns:
-            Dict with 'resource_type' and 'capacity', or None
+            Dict, list of dicts, or None
         """
         if isinstance(comp, dict):
             abilities = comp.get('abilities', {})
             storage_data = abilities.get('LocalStorage')
-            if isinstance(storage_data, dict):
+            if isinstance(storage_data, (dict, list)):
                 return storage_data
             # Also check by component ID via registry
             comp_id = comp.get('id')
@@ -198,21 +205,21 @@ class HarvestingEngine(IHarvestingEngine):
             return self._get_storage_from_registry(comp)
         return None
 
-    def _get_storage_from_registry(self, comp_id: str) -> Optional[dict]:
+    def _get_storage_from_registry(self, comp_id: str):
         """Get storage ability from the component registry.
 
         Args:
             comp_id: Component identifier to look up
 
         Returns:
-            Dict with storage info or None
+            Dict, list of dicts, or None
         """
         comp_def = self._registries.components.get(comp_id)
         if comp_def is None:
             return None
         abilities = get_component_abilities(comp_def)
         storage_data = abilities.get('LocalStorage')
-        if isinstance(storage_data, dict):
+        if isinstance(storage_data, (dict, list)):
             return storage_data
         return None
 
@@ -252,8 +259,13 @@ class HarvestingEngine(IHarvestingEngine):
             tick_fraction: Fraction of per-turn harvest to extract
         """
         for comp in iter_components(facility.design_data):
-            harvester_info = get_harvester_info(comp, self._registries)
-            if harvester_info is not None:
+            harvester_data = get_harvester_info(comp, self._registries)
+            if harvester_data is None:
+                continue
+            # Normalize to list (single dict or list of dicts)
+            if isinstance(harvester_data, dict):
+                harvester_data = [harvester_data]
+            for harvester_info in harvester_data:
                 self._harvest_resource(
                     harvester_info, colony, tick_fraction
                 )
