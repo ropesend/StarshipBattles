@@ -1,0 +1,7 @@
+{
+  "_metadata": {"_schema_version": "1.0", "_data_version": "1.0", "_description": "Target with shield (200) but no SRA"},
+  "name": "Test Target Shield NoSRA", "color": [0, 0, 255], "team_id": 2, "ship_class": "TestS_2L", "theme_id": "Federation", "ai_strategy": "test_do_nothing",
+  "layers": {"CORE": [{"id": "test_hull_extreme_hp"}, {"id": "test_shield_200"}], "ARMOR": []},
+  "_test_notes": "Shield (200 HP) only, no SRA. Baseline for SRA-001.",
+  "expected_stats": {"mass": 400.0}
+}

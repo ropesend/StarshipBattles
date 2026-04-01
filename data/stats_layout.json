@@ -199,7 +199,7 @@
                     "label": "Dm Ignr"
                 },
                 {
-                    "id": "crystalline_armor",
+                    "id": "shield_regenerating_armor",
                     "label": "Rgn/Hit",
                     "unit": "/hit",
                     "formatter": "fmt_decimal"

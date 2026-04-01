@@ -183,8 +183,8 @@
             }
         },
         {
-            "id": "crystalline_armor",
-            "name": "Crystalline Armor",
+            "id": "shield_regenerating_armor",
+            "name": "Shield Regenerating Armor",
             "type": "Armor",
             "mass": "=40 * (ship_class_mass / 1000)",
             "hp": 200,
@@ -197,9 +197,9 @@
             "sprite_index": 15,
             "abilities": {
                 "Armor": true,
-                "CrystallineArmor": {
+                "ShieldRegeneratingArmor": {
                     "value": "=10 * (ship_class_mass / 1000)**(1/3)",
-                    "stack_group": "Crystalline"
+                    "stack_group": "SRA"
                 }
             },
             "modifiers": [],

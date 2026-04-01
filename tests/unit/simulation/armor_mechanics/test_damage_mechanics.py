@@ -37,7 +37,7 @@ class TestShieldInteraction:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 0
-        ship.crystalline_armor = 0
+        ship.shield_regenerating_armor = 0
         ship.current_shields = 50
         ship.max_shields = 100
         ship.hp = 100
@@ -59,7 +59,7 @@ class TestShieldInteraction:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 0
-        ship.crystalline_armor = 0
+        ship.shield_regenerating_armor = 0
         ship.current_shields = 20
         ship.max_shields = 100
         ship.hp = 100
@@ -94,7 +94,7 @@ class TestArmorEdgeCases:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 10
-        ship.crystalline_armor = 10
+        ship.shield_regenerating_armor = 10
         ship.current_shields = 50
         ship.max_shields = 100
         ship.hp = 100
@@ -115,7 +115,7 @@ class TestArmorEdgeCases:
         ship = MagicMock()
         ship.is_alive = False  # Dead
         ship.emissive_armor = 10
-        ship.crystalline_armor = 10
+        ship.shield_regenerating_armor = 10
         ship.current_shields = 50
         ship.max_shields = 100
         ship.hp = 100
@@ -134,7 +134,7 @@ class TestArmorEdgeCases:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 1000000
-        ship.crystalline_armor = 0
+        ship.shield_regenerating_armor = 0
         ship.current_shields = 0
         ship.max_shields = 0
         ship.hp = 100
@@ -155,7 +155,7 @@ class TestArmorEdgeCases:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = -10  # Invalid value - skipped by ea > 0 check
-        ship.crystalline_armor = 0
+        ship.shield_regenerating_armor = 0
         ship.current_shields = 0
         ship.max_shields = 0
         ship.hp = 100
@@ -255,7 +255,7 @@ class TestLayerDamageDistribution:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 0
-        ship.crystalline_armor = 0
+        ship.shield_regenerating_armor = 0
         ship.current_shields = 0
         ship.max_shields = 0
         ship.hp = 100
@@ -290,7 +290,7 @@ class TestLayerDamageDistribution:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 0
-        ship.crystalline_armor = 0
+        ship.shield_regenerating_armor = 0
         ship.current_shields = 0
         ship.max_shields = 0
         ship.hp = 100

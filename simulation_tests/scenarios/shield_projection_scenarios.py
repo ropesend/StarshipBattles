@@ -5,7 +5,7 @@ These tests validate the ShieldProjection ability using A/B comparison
 battles.  Each test compares a shielded target against an unshielded
 baseline to prove the shield caused the observed protection.
 
-Damage pipeline: Emissive Armor -> Crystalline Armor -> Shields -> Hull.
+Damage pipeline: Shields -> Emissive Armor -> ShieldRegeneratingArmor -> Hull.
 Shield absorption: absorbed = min(current_shields, damage).
 If damage exceeds remaining shields, overflow hits hull in the same event.
 

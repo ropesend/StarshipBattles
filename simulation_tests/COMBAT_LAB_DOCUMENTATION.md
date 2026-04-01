@@ -97,7 +97,9 @@ Starship Battles/
 │       ├── shield_projection_scenarios.py # ShieldProjection (SHIELD-PROJ-001 to 007+)
 │       ├── shield_regen_scenarios.py   # ShieldRegeneration (SHIELD-REGEN-001 to 006)
 │       ├── armor_layer_scenarios.py    # ArmorLayer (ARMOR-LAYER-001 to 003)
-│       └── emissive_armor_scenarios.py # EmissiveArmor (EMISSIVE-001 to 005)
+│       ├── emissive_armor_scenarios.py # EmissiveArmor (EMISSIVE-001 to 005)
+│       ├── cnc_scenarios.py           # CommandAndControl (CNC-001 to 005)
+│       └── sra_scenarios.py           # ShieldRegeneratingArmor (SRA-001 to 005)
 ```
 
 ---

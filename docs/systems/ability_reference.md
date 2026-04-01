@@ -253,7 +253,7 @@ Provides evasion/defense bonus for to-hit calculations.
 | Layer | COMBAT |
 | Base Class | `StaticValueAbility` |
 
-Flat damage reduction per hit (damage ignored). First in the damage pipeline: EmissiveArmor > Crystalline Armor > Shields > Hull.
+Flat damage reduction per hit (damage ignored). Damage pipeline: Shields → EmissiveArmor → ShieldRegeneratingArmor → Hull.
 
 **Data Format:** Scalar (integer, damage points ignored)
 

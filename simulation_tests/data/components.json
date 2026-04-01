@@ -1605,6 +1605,90 @@
           "accuracy_falloff": 0
         }
       }
+    },
+    {
+      "id": "test_beam_50dmg_guaranteed",
+      "name": "Test Beam (50 Damage, Guaranteed Hit)",
+      "type": "Weapon",
+      "mass": 0, "hp": 20, "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 50, "range": 1000, "reload": 0.0,
+          "firing_arc": 360, "base_accuracy": 10.0, "accuracy_falloff": 0
+        }
+      }
+    },
+    {
+      "_comment": "=== SHIELD REGENERATING ARMOR (SRA) TEST COMPONENTS ===",
+      "id": "test_sra_15",
+      "name": "Test SRA (15, Group A)",
+      "type": "Armor",
+      "mass": 0,
+      "hp": 100,
+      "sprite_index": 14,
+      "abilities": {
+        "Armor": true,
+        "ShieldRegeneratingArmor": {"value": 15, "stack_group": "SRA_A"}
+      }
+    },
+    {
+      "id": "test_sra_15_group_b",
+      "name": "Test SRA (15, Group B)",
+      "type": "Armor",
+      "mass": 0,
+      "hp": 100,
+      "sprite_index": 14,
+      "abilities": {
+        "Armor": true,
+        "ShieldRegeneratingArmor": {"value": 15, "stack_group": "SRA_B"}
+      }
+    },
+    {
+      "id": "test_sra_15_destructible",
+      "name": "Test SRA (15, Low HP)",
+      "type": "Armor",
+      "mass": 0,
+      "hp": 50,
+      "sprite_index": 14,
+      "abilities": {
+        "Armor": true,
+        "ShieldRegeneratingArmor": {"value": 15, "stack_group": "SRA_A"}
+      }
+    },
+    {
+      "id": "test_sra_15_indestructible",
+      "name": "Test SRA (15, 1B HP, Group A)",
+      "type": "Armor",
+      "mass": 0,
+      "hp": 1000000000,
+      "sprite_index": 14,
+      "abilities": {
+        "Armor": true,
+        "ShieldRegeneratingArmor": {"value": 15, "stack_group": "SRA_A"}
+      }
+    },
+    {
+      "id": "test_sra_15_indestructible_b",
+      "name": "Test SRA (15, 1B HP, Group B)",
+      "type": "Armor",
+      "mass": 0,
+      "hp": 1000000000,
+      "sprite_index": 14,
+      "abilities": {
+        "Armor": true,
+        "ShieldRegeneratingArmor": {"value": 15, "stack_group": "SRA_B"}
+      }
+    },
+    {
+      "id": "test_shield_10",
+      "name": "Test Shield (10 HP, No Resource)",
+      "type": "Shield",
+      "mass": 0,
+      "hp": 50,
+      "sprite_index": 16,
+      "abilities": {
+        "ShieldProjection": 10
+      }
     }
   ]
 }

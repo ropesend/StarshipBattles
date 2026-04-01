@@ -2,12 +2,10 @@
 EmissiveArmor Test Scenarios (EMISSIVE-001 to EMISSIVE-005)
 
 These tests validate the EmissiveArmor ability using A/B comparison
-battles. EmissiveArmor provides flat damage reduction per hit — each
-incoming hit is reduced by the armor value before any other damage
-processing (shields, hull).
+battles. EmissiveArmor provides flat damage reduction per hit on
+damage that overflows past shields.
 
-Damage pipeline position: EmissiveArmor is applied FIRST, before
-CrystallineArmor, Shields, and Hull layers.
+Damage pipeline: Shields → EmissiveArmor → ShieldRegeneratingArmor → Hull.
 
 Stacking: intra-group MAX, inter-group SUM (standard ability stacking).
 Two EmissiveArmor(5) in the same stack_group = MAX(5,5) = 5.

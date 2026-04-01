@@ -133,7 +133,7 @@ class ShipStatsCalculator:
             ship.layers[LayerType.ARMOR].max_hp_pool = 0
             
         ship.emissive_armor = 0
-        ship.crystalline_armor = 0
+        ship.shield_regenerating_armor = 0
         
         # Maneuvering Points (Raw Thrust/Turning Capability unrelated to mass)
         ship.total_maneuver_points = 0
@@ -168,7 +168,7 @@ class ShipStatsCalculator:
         """Phase 5: Calculate to-hit, defense scores, and finalize resources.
 
         Computes defense score (size + maneuver + ECM), offensive modifiers,
-        emissive/crystalline armor, repair rate, ammo generation, and initializes resources.
+        emissive/shield regenerating armor, repair rate, ammo generation, and initializes resources.
         """
         # New Logit-Score System:
         # Defense Score (Higher = Harder to Hit). Is SUBTRACTED from Accuracy.
@@ -208,11 +208,12 @@ class ShipStatsCalculator:
 
         ship.baseline_to_hit_offense = attack_mods
 
-        # Emissive Armor (Max Stacking)
-        ship.emissive_armor = self._get_ability_total(component_pool, 'EmissiveArmor')
+        # Armor abilities — only from active components (destroyed armor has no effect)
+        active_pool = [c for c in component_pool if c.is_active]
+        ship.emissive_armor = self._get_ability_total(active_pool, 'EmissiveArmor')
 
-        # Crystalline Armor (Max Stacking)
-        ship.crystalline_armor = self._get_ability_total(component_pool, 'CrystallineArmor')
+        # Shield Regenerating Armor (Max Stacking)
+        ship.shield_regenerating_armor = self._get_ability_total(active_pool, 'ShieldRegeneratingArmor')
 
         # Ship Repair (SumStacking)
         ship.repair_rate = self._get_ability_total(component_pool, 'ShipRepair')

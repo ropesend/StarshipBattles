@@ -121,6 +121,11 @@ SEEKER_ENDURANCE_TEST_DISTANCE = 3000  # px — within long endurance, beyond sh
 CNC_TEST_TICKS = 500
 CNC_BRIDGE_HP = 50          # Destructible bridge HP (in ARMOR layer, hit first)
 
+# ShieldRegeneratingArmor (SRA) test constants
+SRA_TEST_TICKS = 1000
+SRA_VALUE = 15              # Absorption + shield recharge per hit
+SRA_SMALL_SHIELD_CAP = 10   # For cap test (SRA recharges 15 but shield max=10)
+
 # EmissiveArmor test constants
 EMISSIVE_TEST_TICKS = 500
 EMISSIVE_ARMOR_VALUE = 5           # Flat damage reduction from test_emissive_armor_5

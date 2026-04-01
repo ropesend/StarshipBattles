@@ -109,7 +109,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         
         # To-Hit stats (total_defense_score initialized below with other combat stats)
         self.emissive_armor = 0
-        self.crystalline_armor = 0
+        self.shield_regenerating_armor = 0
         
         # Shield Stats (Still specific for now)
         self.max_shields: int = 0
@@ -311,7 +311,12 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         for comp in self.get_all_components():
             if comp.is_active:
                 comp.update()
-        
+
+        # 2b. Recalculate stats after component updates so that operational
+        # status changes (e.g., shield losing energy) are reflected in ship
+        # stats (max_shields, current_shields) before damage is processed.
+        self.recalculate_stats()
+
         # 3. Physics (Thrust calc handling operational engines)
         # Note: update_physics_movement() handles all arcade physics:
         # - Acceleration/deceleration toward target speed

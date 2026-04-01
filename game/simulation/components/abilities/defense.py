@@ -72,3 +72,12 @@ class EmissiveArmor(StaticValueAbility):
     ui_color = HINT_ACCURACY
     ui_format = '{}'
     int_result = True
+
+
+class ShieldRegeneratingArmor(StaticValueAbility):
+    """Absorbs overflow damage and recharges shields by the absorbed amount."""
+
+    ui_label = 'Shld Regen'
+    ui_color = HINT_SHIELD_REGEN
+    ui_format = '{}'
+    int_result = True

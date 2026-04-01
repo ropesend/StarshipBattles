@@ -109,6 +109,7 @@ compare measured outcomes.
 | **ArmorLayer** | `armor_layer_scenarios.py` | ARMOR-LAYER-001 to 003 | Complete (3 tests) |
 | **EmissiveArmor** | `emissive_armor_scenarios.py` | EMISSIVE-001 to 005 | Complete (5 tests) |
 | **CommandAndControl** | `cnc_scenarios.py` | CNC-001 to 005 | Complete (5 tests) |
+| **ShieldRegeneratingArmor** | `sra_scenarios.py` | SRA-001 to 005 | Complete (5 tests) |
 
 ### Weapon & System Tests (Original Pattern)
 
@@ -160,7 +161,7 @@ flight when the test ends are excluded from the hit/miss count.
 | **Engine Physics** | 5 tests | Acceleration, max speed, dual engines, thrust/mass |
 | **Thruster Physics** | 4 tests | Turn rate, rotation, dual thrusters, mass effects |
 
-#### Seeker Weapon Tests (10 tests)
+#### Seeker Weapon Tests (11 tests)
 
 Test IDs: `SEEKER-SPEED-XXX`, `SEEKER-ENDUR-XXX`, `SEEKER-TURN-XXX`, `SEEKER-DMG-XXX`, `SEEKER-HP-XXX`, `SEEKER-RES-XXX`, `SEEKER-PD-XXX`.
 
@@ -545,6 +546,7 @@ Starship Battles/
         ├── armor_layer_scenarios.py         # ArmorLayer (ARMOR-LAYER-001 to 003)
         ├── emissive_armor_scenarios.py     # EmissiveArmor (EMISSIVE-001 to 005)
         ├── cnc_scenarios.py                # CommandAndControl (CNC-001 to 005)
+        ├── sra_scenarios.py                # ShieldRegeneratingArmor (SRA-001 to 005)
         │
         │   # Weapon/system-level tests (include resource dependency tests)
         ├── beam_scenarios.py                # BeamWeapon (BEAMWEAPON-*, BEAMWEAPON-RES-*)

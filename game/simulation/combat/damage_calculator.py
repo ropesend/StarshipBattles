@@ -30,10 +30,10 @@ class DamageCalculator:
         """
         Apply damage to the ship.
 
-        Processes damage through:
-        1. Emissive armor (flat reduction)
-        2. Crystalline armor (absorption + shield recharge)
-        3. Shields
+        Damage pipeline:
+        1. Shields (absorb from shield pool)
+        2. Emissive armor (flat reduction on overflow)
+        3. Shield Regenerating Armor (absorb overflow + recharge shields)
         4. Hull layers (outer to inner)
 
         Args:
@@ -43,36 +43,38 @@ class DamageCalculator:
         if not ship.is_alive:
             return
 
-        # Apply Emissive Armor Reduction (Flat reduction per hit)
-        ea = ship.emissive_armor
-        if ea > 0:
-            damage_amount = max(0, damage_amount - ea)
-            if damage_amount <= 0:
+        remaining_damage = damage_amount
+
+        # 1. Shield Absorption (first line of defense)
+        if ship.current_shields > 0:
+            absorbed = min(ship.current_shields, remaining_damage)
+            ship.current_shields -= absorbed
+            remaining_damage -= absorbed
+            if remaining_damage <= 0:
                 return
 
-        # Apply Crystalline Armor (Absorb and Recharge Shields)
-        ca = ship.crystalline_armor
-        if ca > 0 and damage_amount > 0:
-            absorption = min(ca, damage_amount)
-            damage_amount -= absorption
+        # 2. Emissive Armor (flat reduction on shield overflow)
+        ea = ship.emissive_armor
+        if ea > 0:
+            remaining_damage = max(0, remaining_damage - ea)
+            if remaining_damage <= 0:
+                return
 
-            # Recharge shields
+        # 3. Shield Regenerating Armor (absorb overflow + recharge shields)
+        sra = ship.shield_regenerating_armor
+        if sra > 0 and remaining_damage > 0:
+            absorption = min(sra, remaining_damage)
+            remaining_damage -= absorption
+
+            # Recharge shields by absorbed amount (capped at max)
             if ship.max_shields > 0:
                 ship.current_shields = min(
                     ship.max_shields,
                     ship.current_shields + absorption
                 )
 
-            if damage_amount <= 0:
+            if remaining_damage <= 0:
                 return
-
-        remaining_damage = damage_amount
-
-        # Shield Absorption
-        if ship.current_shields > 0:
-            absorbed = min(ship.current_shields, remaining_damage)
-            ship.current_shields -= absorbed
-            remaining_damage -= absorbed
 
         # Dynamic Layer Order: Sort by radius_pct descending (Outermost first)
         sorted_layers = sorted(

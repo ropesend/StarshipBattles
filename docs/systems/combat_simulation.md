@@ -107,7 +107,7 @@ Ship extends `PhysicsBody` (position, velocity, angle) and `ShipPhysicsMixin` (a
 - `resources: ResourceRegistry` -- fuel, ammo, energy pools
 - `is_alive`, `is_derelict` -- survival state (derelict = no operational weapons AND no engines)
 - `current_target`, `secondary_targets`, `max_targets` -- targeting
-- Defense stats: `emissive_armor`, `crystalline_armor`, `current_shields`, `max_shields`
+- Defense stats: `emissive_armor`, `shield_regenerating_armor`, `current_shields`, `max_shields`
 - Offense: `baseline_to_hit_offense`, `total_defense_score`
 
 **Initialization:** Requires `registries: GameRegistries` (strict DI, PROJ-50).
@@ -156,14 +156,14 @@ Damage flows through 4 layers in order:
 Incoming Damage
     │
     ▼
-[1] Emissive Armor ─── Flat reduction per hit (ship.emissive_armor)
-    │                   damage = max(0, damage - ea)
+[1] Shields ─────────── Absorbs from shield pool (ship.current_shields)
+    │                   First line of defense
     ▼
-[2] Crystalline Armor ─ Absorbs up to `ca` damage, recharges shields
-    │                   by absorbed amount
+[2] Emissive Armor ─── Flat reduction on overflow (ship.emissive_armor)
+    │                   damage = max(0, remaining - ea)
     ▼
-[3] Shields ─────────── Absorbs remaining damage from shield pool
-    │                   (ship.current_shields)
+[3] Shield Regenerating Armor ─ Absorbs overflow, recharges shields
+    │                   by absorbed amount (capped at max_shields)
     ▼
 [4] Hull Layers ─────── Distributes to components sorted by radius_pct
                         (outermost first: ARMOR → OUTER → INNER → CORE → HULL)

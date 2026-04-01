@@ -279,7 +279,7 @@ class TestCombatFlow:
         assert attacks[0].owner == ship
 
     def test_special_armor_interactions(self, fresh_registries):
-        """Test Emissive and Crystalline Armor logic."""
+        """Test Emissive and Shield Regenerating Armor logic."""
         from game.simulation.entities.ship import Ship
         ship = Ship("Tank", 0,0, (255,255,255), registries=fresh_registries)
 
@@ -320,26 +320,23 @@ class TestCombatFlow:
         ship.combat_engine.take_damage(4)
         assert c.current_hp == prev_hp
 
-        # 2. Crystalline Armor (Absorb + Shield Recharge)
+        # 2. Shield Regenerating Armor (Absorb + Shield Recharge)
         # This test sets shield values directly without ShieldProjection components.
         # Disable recalculate_stats so damage_calculator doesn't zero out shields.
         ship.recalculate_stats = lambda: None
         ship.emissive_armor = 0
-        ship.crystalline_armor = 10
+        ship.shield_regenerating_armor = 10
         ship.max_shields = 100
-        ship.current_shields = 50
+        ship.current_shields = 5  # Low shields so damage overflows to SRA
 
-        # Take 20 damage
-        # Absorb min(10, 20) = 10
-        # Shields += 10 -> 60
-        # Remaining Damage = 10
-        # Shield Absorption: min(60, 10) = 10 absorbed
-        # Shields -= 10 -> 50
-        # Remaining Damage = 0
-        # Component HP untouched
+        # Take 20 damage (new pipeline: Shields -> Emissive -> SRA -> Hull)
+        # Shields absorb 5: remaining=15, shields=0
+        # Emissive=0 (skip)
+        # SRA absorbs min(10,15)=10: remaining=5, shields+=10 -> shields=10
+        # Remaining 5 damage hits hull component
 
         prev_hp = c.current_hp
         ship.combat_engine.take_damage(20)
 
-        assert ship.current_shields == 50
-        assert c.current_hp == prev_hp
+        assert ship.current_shields == 10
+        assert c.current_hp == prev_hp - 5

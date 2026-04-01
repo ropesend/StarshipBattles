@@ -143,7 +143,7 @@ class ICombatShip(Protocol):
         ...
 
     @property
-    def crystalline_armor(self) -> int:
+    def shield_regenerating_armor(self) -> int:
         """Crystalline armor value (projectile damage reduction)."""
         ...
 

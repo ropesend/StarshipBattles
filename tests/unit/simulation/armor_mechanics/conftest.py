@@ -9,7 +9,7 @@ def mock_ship_with_emissive():
     ship = MagicMock()
     ship.is_alive = True
     ship.emissive_armor = 15  # Ignores first 15 damage
-    ship.crystalline_armor = 0
+    ship.shield_regenerating_armor = 0
     ship.current_shields = 0
     ship.max_shields = 0
     ship.hp = 100
@@ -25,7 +25,7 @@ def mock_ship_base():
     ship = MagicMock()
     ship.is_alive = True
     ship.emissive_armor = 0
-    ship.crystalline_armor = 0
+    ship.shield_regenerating_armor = 0
     ship.current_shields = 0
     ship.max_shields = 0
     ship.hp = 100

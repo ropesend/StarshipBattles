@@ -19,6 +19,7 @@ Scenario files are auto-discovered by `run_tests.py` — any file matching
 | `armor_layer_scenarios.py` | ArmorLayer | 3 | Layer damage flow, overflow to CORE, stacking |
 | `emissive_armor_scenarios.py` | EmissiveArmor | 5 | Damage reduction, stacking (same/diff group), negative |
 | `cnc_scenarios.py` | CommandAndControl | 5 | Beam/proj/shield/engine disabled without C&C, bridge destruction |
+| `sra_scenarios.py` | ShieldRegeneratingArmor | 5 | Shield recharge, cap, destruction, stacking |
 
 ### Weapon & System Tests
 
@@ -26,7 +27,7 @@ Scenario files are auto-discovered by `run_tests.py` — any file matching
 |------|--------|-------|-------------|
 | `beam_scenarios.py` | BeamWeapon | 23 | Accuracy at ranges, moving targets, HT precision, resource |
 | `projectile_scenarios.py` | Projectile | 14 | Stationary/moving targets, damage consistency, resource |
-| `seeker_scenarios.py` | Seeker | 10 | Speed, endurance, turn rate, damage, HP, resource, PDC |
+| `seeker_scenarios.py` | Seeker | 11 | Speed, endurance, turn rate (×2), damage, HP, resource, PDC |
 | `modifier_scenarios.py` | Modifiers | 6 | Damage, range, reload, thrust, accuracy, arc |
 | `propulsion_scenarios.py` | Propulsion | 9 | Engine physics, thruster rotation, mass effects |
 | `resource_scenarios.py` | Resources | 9 | Fuel, energy, ammo consumption/depletion |

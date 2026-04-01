@@ -380,7 +380,7 @@
                 ]
             },
             {
-                "id": "crystalline_armor",
+                "id": "shield_regenerating_armor",
                 "modifiers": [
                     {
                         "id": "simple_size_mount",

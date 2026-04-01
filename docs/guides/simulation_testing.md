@@ -910,7 +910,7 @@ Weapon-level resource dependency tests also exist within their weapon files:
 |---------|----------|-------|
 | `ShieldRegeneration` | **Complete** | `shield_regen_scenarios.py` (SHIELD-REGEN-001 to 006) |
 | `EmissiveArmor` | **Complete** | `emissive_armor_scenarios.py` (EMISSIVE-001 to 005) |
-| `CrystallineArmor` | Medium | Absorption + shield recharge interaction |
+| `ShieldRegeneratingArmor` | Medium | Absorption + shield recharge interaction |
 | `PointDefense` | High | Flesh out SEEKER-PD-001/002/003 placeholders |
 | `VehicleLaunch` | Low | Carrier/hangar launch cycle and capacity |
 

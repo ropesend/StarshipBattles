@@ -33,7 +33,7 @@ class TestEmissiveArmorReduction:
     """Tests for emissive armor damage reduction."""
 
     def test_emissive_armor_reduces_damage(self):
-        """Emissive armor reduces incoming damage."""
+        """Emissive armor reduces overflow damage after shields."""
         from game.simulation.combat.damage_calculator import DamageCalculator
 
         calculator = DamageCalculator()
@@ -41,21 +41,24 @@ class TestEmissiveArmorReduction:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 5
-        ship.crystalline_armor = 0
-        ship.current_shields = 100
-        ship.max_shields = 100
-        ship.layers = {}
+        ship.shield_regenerating_armor = 0
+        ship.current_shields = 0  # No shields so emissive is tested
+        ship.max_shields = 0
+        ship.layers = {
+            LayerType.OUTER: LayerData(radius_pct=0.8, components=[]),
+        }
         ship.recalculate_stats = MagicMock()
         ship.update_derelict_status = MagicMock()
 
-        # 10 damage - 5 emissive = 5 remaining
-        # Shields absorb 5: 100 - 5 = 95
+        # Pipeline: shields=0 (skip), emissive reduces 10-5=5, SRA=0 (skip), hull=empty
+        # 5 remaining damage passes through empty layers
         calculator.apply_damage(ship, 10)
 
-        assert ship.current_shields == 95
+        # Shields unchanged (were 0)
+        assert ship.current_shields == 0
 
     def test_emissive_armor_blocks_all_when_greater(self):
-        """Emissive armor blocks all damage when greater than damage."""
+        """Emissive armor blocks all overflow when greater than remaining damage."""
         from game.simulation.combat.damage_calculator import DamageCalculator
 
         calculator = DamageCalculator()
@@ -63,25 +66,26 @@ class TestEmissiveArmorReduction:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 10
-        ship.crystalline_armor = 0
-        ship.current_shields = 100
+        ship.shield_regenerating_armor = 0
+        ship.current_shields = 0  # No shields so emissive is tested
+        ship.max_shields = 0
         ship.recalculate_stats = MagicMock()
         ship.update_derelict_status = MagicMock()
 
-        # 5 damage fully blocked by 10 emissive armor
+        # Pipeline: shields=0 (skip), emissive blocks all 5 (10>5), early return
         calculator.apply_damage(ship, 5)
 
-        # No damage reached ship, methods not called
+        # No damage reached hull, methods not called
         ship.recalculate_stats.assert_not_called()
         ship.update_derelict_status.assert_not_called()
-        assert ship.current_shields == 100
+        assert ship.current_shields == 0
 
 
-class TestCrystallineArmorAbsorption:
-    """Tests for crystalline armor absorption and shield recharge."""
+class TestShieldRegeneratingArmorAbsorption:
+    """Tests for shield regenerating armor absorption and shield recharge."""
 
-    def test_crystalline_armor_absorbs_and_recharges(self):
-        """Crystalline armor absorbs damage and recharges shields."""
+    def test_shield_regenerating_armor_absorbs_and_recharges(self):
+        """Crystalline armor absorbs overflow and recharges shields."""
         from game.simulation.combat.damage_calculator import DamageCalculator
 
         calculator = DamageCalculator()
@@ -89,21 +93,24 @@ class TestCrystallineArmorAbsorption:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 0
-        ship.crystalline_armor = 10
-        ship.current_shields = 50
+        ship.shield_regenerating_armor = 10
+        ship.current_shields = 5  # Low shields so damage overflows to SRA
         ship.max_shields = 100
         ship.layers = {}
         ship.recalculate_stats = MagicMock()
         ship.update_derelict_status = MagicMock()
 
-        # 20 damage
-        # Crystalline absorbs 10, recharges shields: 50 + 10 = 60
-        # Remaining 10 damage absorbed by shields: 60 - 10 = 50
+        # 20 damage:
+        # Shields absorb 5: remaining=15, shields=0
+        # Emissive=0 (skip)
+        # SRA absorbs min(10,15)=10: remaining=5, shields+=10 -> shields=10
+        # No hull layers, remaining=5
+        # Callbacks called (5 < 20)
         calculator.apply_damage(ship, 20)
 
-        assert ship.current_shields == 50
+        assert ship.current_shields == 10
 
-    def test_crystalline_armor_caps_shield_recharge(self):
+    def test_shield_regenerating_armor_caps_shield_recharge(self):
         """Crystalline armor shield recharge is capped at max shields."""
         from game.simulation.combat.damage_calculator import DamageCalculator
 
@@ -112,20 +119,21 @@ class TestCrystallineArmorAbsorption:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 0
-        ship.crystalline_armor = 20
-        ship.current_shields = 95
-        ship.max_shields = 100
+        ship.shield_regenerating_armor = 20
+        ship.current_shields = 5  # Low shields so damage overflows to SRA
+        ship.max_shields = 10  # Low max to test cap
         ship.layers = {}
         ship.recalculate_stats = MagicMock()
         ship.update_derelict_status = MagicMock()
 
-        # 30 damage
-        # Crystalline absorbs 20, would recharge 20 but capped at max
-        # Shields would go 95 + 20 = 115 -> capped at 100
-        # Remaining 10 damage: 100 - 10 = 90
+        # 30 damage:
+        # Shields absorb 5: remaining=25, shields=0
+        # Emissive=0 (skip)
+        # SRA absorbs min(20,25)=20: remaining=5, shields += 20 -> 20, capped at 10
+        # No hull layers
         calculator.apply_damage(ship, 30)
 
-        assert ship.current_shields == 90
+        assert ship.current_shields == 10
 
 
 class TestShieldAbsorption:
@@ -140,7 +148,7 @@ class TestShieldAbsorption:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 0
-        ship.crystalline_armor = 0
+        ship.shield_regenerating_armor = 0
         ship.current_shields = 100
         ship.max_shields = 100
         ship.layers = {}
@@ -160,7 +168,7 @@ class TestShieldAbsorption:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 0
-        ship.crystalline_armor = 0
+        ship.shield_regenerating_armor = 0
         ship.current_shields = 30
         ship.max_shields = 100
         ship.layers = {}
@@ -196,7 +204,7 @@ class TestLayerDamage:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 0
-        ship.crystalline_armor = 0
+        ship.shield_regenerating_armor = 0
         ship.current_shields = 0  # No shields
         ship.max_shields = 0
         ship.layers = {
@@ -241,7 +249,7 @@ class TestLayerDamage:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 0
-        ship.crystalline_armor = 0
+        ship.shield_regenerating_armor = 0
         ship.current_shields = 0
         ship.max_shields = 0
         ship.layers = {
@@ -284,18 +292,27 @@ class TestDamageCallbacks:
     """Tests for post-damage callbacks."""
 
     def test_recalculate_stats_called_on_damage(self):
-        """recalculate_stats is called when damage is applied."""
+        """recalculate_stats is called when damage reaches hull layers."""
         from game.simulation.combat.damage_calculator import DamageCalculator
 
         calculator = DamageCalculator()
 
+        comp = MagicMock()
+        comp.current_hp = 100
+        comp.max_hp = 100
+        def take_damage(amount):
+            comp.current_hp = max(0, comp.current_hp - amount)
+        comp.take_damage = take_damage
+
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 0
-        ship.crystalline_armor = 0
-        ship.current_shields = 100
-        ship.max_shields = 100
-        ship.layers = {}
+        ship.shield_regenerating_armor = 0
+        ship.current_shields = 0  # No shields so damage reaches hull
+        ship.max_shields = 0
+        ship.layers = {
+            LayerType.OUTER: LayerData(radius_pct=0.8, components=[comp])
+        }
         ship.recalculate_stats = MagicMock()
         ship.update_derelict_status = MagicMock()
 
@@ -342,7 +359,7 @@ def mock_ship():
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 0
-        ship.crystalline_armor = 0
+        ship.shield_regenerating_armor = 0
         ship.current_shields = 0
         ship.max_shields = 0
         ship.layers = layers
@@ -809,53 +826,56 @@ class TestDamageLayerDirectMethod:
 
 
 class TestCombinedArmorScenarios:
-    """Tests for combined emissive and crystalline armor scenarios."""
+    """Tests for combined emissive and shield regenerating armor scenarios."""
 
-    def test_emissive_then_crystalline_armor(self, damage_calculator, mock_ship):
-        """Emissive armor reduces damage before crystalline armor absorbs."""
+    def test_emissive_then_shield_regenerating_armor(self, damage_calculator, mock_ship):
+        """Shields absorb first, then emissive reduces overflow, then SRA absorbs rest."""
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 10  # Reduces 10 flat
-        ship.crystalline_armor = 15  # Absorbs up to 15
-        ship.current_shields = 50
+        ship.shield_regenerating_armor = 15  # Absorbs up to 15
+        ship.current_shields = 5  # Low shields so damage overflows
         ship.max_shields = 100
         ship.layers = {}
         ship.recalculate_stats = MagicMock()
         ship.update_derelict_status = MagicMock()
 
         # 30 damage:
-        # - Emissive reduces: 30 - 10 = 20 remaining
-        # - Crystalline absorbs 15, shields go 50 + 15 = 65, remaining = 5
-        # - Shields absorb 5: 65 - 5 = 60
+        # Shields absorb 5: remaining=25, shields=0
+        # Emissive reduces: 25-10=15 remaining
+        # SRA absorbs min(15,15)=15: remaining=0, shields+=15 -> shields=15
         damage_calculator.apply_damage(ship, 30)
 
-        assert ship.current_shields == 60
+        assert ship.current_shields == 15
 
     def test_emissive_blocks_before_crystalline_activates(
         self, damage_calculator, mock_ship
     ):
-        """If emissive blocks all damage, crystalline doesn't activate."""
+        """If emissive blocks all overflow after shields, crystalline doesn't activate."""
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 20
-        ship.crystalline_armor = 10
-        ship.current_shields = 50
+        ship.shield_regenerating_armor = 10
+        ship.current_shields = 0  # No shields so emissive is tested
         ship.max_shields = 100
         ship.layers = {}
         ship.recalculate_stats = MagicMock()
         ship.update_derelict_status = MagicMock()
 
-        # 15 damage fully blocked by emissive (20)
+        # 15 damage:
+        # Shields=0 (skip)
+        # Emissive blocks all 15 (20>15), early return
+        # Crystalline never activated
         damage_calculator.apply_damage(ship, 15)
 
         # Shields unchanged - crystalline never activated
-        assert ship.current_shields == 50
+        assert ship.current_shields == 0
 
 
-class TestCrystallineArmorEdgeCases:
-    """Additional edge cases for crystalline armor."""
+class TestShieldRegeneratingArmorEdgeCases:
+    """Additional edge cases for shield regenerating armor."""
 
-    def test_crystalline_armor_with_zero_max_shields(
+    def test_shield_regenerating_armor_with_zero_max_shields(
         self, damage_calculator, mock_component, mock_ship
     ):
         """Crystalline armor works but can't recharge shields with zero max."""
@@ -863,7 +883,7 @@ class TestCrystallineArmorEdgeCases:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 0
-        ship.crystalline_armor = 20
+        ship.shield_regenerating_armor = 20
         ship.current_shields = 0
         ship.max_shields = 0  # No shields equipped
         ship.layers = {
@@ -880,26 +900,27 @@ class TestCrystallineArmorEdgeCases:
         assert ship.current_shields == 0
         assert comp.current_hp == 70
 
-    def test_crystalline_armor_partial_absorption(
+    def test_shield_regenerating_armor_partial_absorption(
         self, damage_calculator, mock_ship
     ):
-        """Crystalline armor absorbs less than full capacity with small damage."""
+        """Crystalline armor absorbs less than full capacity with small overflow."""
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 0
-        ship.crystalline_armor = 50  # Large capacity
-        ship.current_shields = 20
+        ship.shield_regenerating_armor = 50  # Large capacity
+        ship.current_shields = 0  # No shields so damage reaches SRA
         ship.max_shields = 100
         ship.layers = {}
         ship.recalculate_stats = MagicMock()
         ship.update_derelict_status = MagicMock()
 
         # 30 damage:
-        # - Crystalline absorbs all 30, shields go 20 + 30 = 50
-        # - No remaining damage
+        # Shields=0 (skip)
+        # Emissive=0 (skip)
+        # SRA absorbs min(50,30)=30: remaining=0, shields+=30 -> shields=30
         damage_calculator.apply_damage(ship, 30)
 
-        assert ship.current_shields == 50
+        assert ship.current_shields == 30
 
 
 class TestNegativeDamageHandling:
@@ -1010,7 +1031,7 @@ class TestShieldDamageEdgeCases:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 0
-        ship.crystalline_armor = 0
+        ship.shield_regenerating_armor = 0
         ship.current_shields = 25
         ship.max_shields = 100
         ship.layers = {
@@ -1033,7 +1054,7 @@ class TestShieldDamageEdgeCases:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 0
-        ship.crystalline_armor = 0
+        ship.shield_regenerating_armor = 0
         ship.current_shields = 10
         ship.max_shields = 100
         ship.layers = {
@@ -1059,7 +1080,7 @@ class TestDamageCallbackConditions:
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 100
-        ship.crystalline_armor = 0
+        ship.shield_regenerating_armor = 0
         ship.current_shields = 50
         ship.max_shields = 100
         ship.layers = {}
@@ -1071,25 +1092,25 @@ class TestDamageCallbackConditions:
         ship.recalculate_stats.assert_not_called()
         ship.update_derelict_status.assert_not_called()
 
-    def test_callbacks_called_even_with_zero_remaining_damage(
+    def test_callbacks_not_called_when_shields_absorb_all(
         self, damage_calculator, mock_ship
     ):
-        """Callbacks called when damage was applied, even if fully absorbed."""
+        """Callbacks NOT called when shields fully absorb damage (early return)."""
         ship = MagicMock()
         ship.is_alive = True
         ship.emissive_armor = 0
-        ship.crystalline_armor = 0
+        ship.shield_regenerating_armor = 0
         ship.current_shields = 100
         ship.max_shields = 100
         ship.layers = {}
         ship.recalculate_stats = MagicMock()
         ship.update_derelict_status = MagicMock()
 
-        # Damage absorbed by shields triggers callbacks
+        # Shields absorb all 50, early return before callbacks
         damage_calculator.apply_damage(ship, 50)
 
-        ship.recalculate_stats.assert_called_once()
-        ship.update_derelict_status.assert_called_once()
+        ship.recalculate_stats.assert_not_called()
+        ship.update_derelict_status.assert_not_called()
 
 
 class TestComponentDamageDistributionEdgeCases:

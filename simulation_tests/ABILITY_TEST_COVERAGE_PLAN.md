@@ -1,7 +1,7 @@
 > **Status: In Progress**
 > Scenario classes live in `simulation_tests/scenarios/*_scenarios.py` and are
 > run via `python -m simulation_tests.run_tests`.
-> Current baseline: **107 passed, 2 failed (RESOURCE-002 game bug, SEEKER-TURN-002 known oscillation), 0 skipped (109 total)**.
+> Current baseline: **112 passed, 2 failed (RESOURCE-002 game bug, SEEKER-TURN-002 known oscillation), 0 skipped (114 total)**.
 > Note: `defense_scenarios.py` was deleted — its 8 tests were redundant with
 > dedicated ability files or replaced by the EmissiveArmor category.
 
@@ -130,7 +130,7 @@ ability under test.
 3. **Phase 3** (Complete → Deleted): Shield/Armor/ECM/Sensor tests — `defense_scenarios.py` (redundant, replaced by ability-specific files)
 4. **Phase 4** (Complete): Stat modifier tests — 6 scenarios in `modifier_scenarios.py`
 5. **Phase 5** (Complete): Projectile weapon tests — 14 scenarios in `projectile_scenarios.py`
-6. **Phase 6** (Rewritten): Seeker weapon tests — 10 ComparisonScenario tests in `seeker_scenarios.py`
+6. **Phase 6** (Rewritten): Seeker weapon tests — 11 ComparisonScenario tests in `seeker_scenarios.py`
 7. **Phase 7** (Complete): Resource system tests — 9 scenarios in `resource_scenarios.py`
 
 ### Completed (ability-specific categories using ComparisonScenario)
@@ -153,10 +153,10 @@ ability under test.
 
 14. **CommandAndControl** (Complete): 5 scenarios in `cnc_scenarios.py`
 
+15. **ShieldRegeneratingArmor** (Complete): 5 scenarios in `sra_scenarios.py`
+
 ### Pending (ability-specific categories)
-13. **Point Defense**: Flesh out SEEKER-PD-001/002/003
-14. **VehicleLaunch**: Carrier/hangar tests
-15. **CrystallineArmor**: Absorption + shield recharge interaction
+16. **VehicleLaunch**: Carrier/hangar tests
 
 ---
 

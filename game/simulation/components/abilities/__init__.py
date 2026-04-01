@@ -42,6 +42,7 @@ from .defense import (
     ToHitAttackModifier,
     ToHitDefenseModifier,
     EmissiveArmor,
+    ShieldRegeneratingArmor,
 )
 
 # Crew abilities
@@ -95,6 +96,7 @@ ABILITY_REGISTRY = {
     "ToHitAttackModifier": ToHitAttackModifier,
     "ToHitDefenseModifier": ToHitDefenseModifier,
     "EmissiveArmor": EmissiveArmor,
+    "ShieldRegeneratingArmor": ShieldRegeneratingArmor,
     "Armor": lambda c, d: Ability(c, d),  # Dummy ability for tag/existence checks
     "RequiresCommandAndControl": RequiresCommandAndControl,
     "RequiresCombatMovement": RequiresCombatMovement,
