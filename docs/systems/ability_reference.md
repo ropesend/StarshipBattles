@@ -406,7 +406,7 @@ Consumes resources (fuel, ammo, energy) based on a trigger type.
 |-----------|------|----------|-------------|
 | `resource` | string | Yes | Resource type to consume (fuel, ammo, energy) |
 | `amount` | float | Yes | Consumption amount per trigger |
-| `trigger` | string | Yes | `"constant"` (per-tick), `"activation"` (per-use), or `"strategic_per_hex"` (per-hex movement) |
+| `trigger` | string | Yes | `"constant"` (per-tick), `"activation"` (per-use), `"strategic_per_hex"` (per-hex movement), or `"per_turn"` (per-turn strategic cost) |
 
 **Stat Bindings:**
 
@@ -692,7 +692,7 @@ Marker — hull provides structural integrity for the ship.
 
 ## Colonization
 
-### ColonizePlanet (DEPRECATED)
+### ColonizePlanet
 
 | Field | Value |
 |-------|-------|
@@ -702,15 +702,15 @@ Marker — hull provides structural integrity for the ship.
 | Layer | STRATEGIC |
 | Base Class | `Ability` |
 
-**DEPRECATED in Phase 2 Colonization Rework.** Colony pods are now cargo items carried in a `colony_pod_bay` component (which uses `CargoStorage` ability). The old `ColonizePlanet` ability on individual pod components is no longer used for validation or execution. Colony pod detection now scans `ship.cargo_contents` for items matching the `colony_pod_<type>` naming convention.
+Marks a ship component as providing colonization capability for a planet type.
 
-**New colonization flow:**
-1. Ship has `colony_pod_bay` component (provides `CargoStorage` for all pod types)
-2. Colony pod loaded as cargo: `cargo_contents["colony_pod_continental"] = 1`
-3. `ColonizeValidator` checks fleet cargo for matching `colony_pod_<planet_type>` items
-4. `OrderProcessor.process_colonize()` consumes the pod from cargo (ship stays in fleet)
-
-**Valid cargo pod types:** colony_pod_continental, colony_pod_arid, colony_pod_pelagic, colony_pod_magma, colony_pod_cryoplanet, colony_pod_barren, colony_pod_jovian, colony_pod_ice_giant, colony_pod_chthonian, colony_pod_ice_dwarf, colony_pod_planetoid
+**Phase 3 Colonization Flow (Drop Pod system):**
+1. Drop pods are designed in the workshop and built at colonies (see Drop Pod section in `resource_system.md`)
+2. Colony ship loads drop pods from the planet staging yard into `ship.carried_items`
+3. Drop pods are **universal** -- any drop pod works on any planet type
+4. `ColonizeValidator` checks `ship.carried_items` for entries with `vehicle_type='drop_pod'`
+5. `OrderProcessor._deploy_drop_pod()` removes the pod from `carried_items` and creates a `PlanetaryFacility` using the pod's full `design_data`
+6. Colony ship stays in fleet (not consumed)
 
 **Stat Bindings:** None
 
@@ -761,6 +761,51 @@ Local colony resource storage capacity.
 | `capacity` | float | Yes | Storage capacity |
 
 **Stat Bindings:** Uses `storage_mult` modifier
+
+---
+
+### StagingYard
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `StagingYard` |
+| Class | `StagingYardAbility` |
+| Source | `harvester.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Planet-side storage for constructed items (fighters, drop pods). Each instance adds
+mass capacity. Multiple staging yard facilities stack additively.
+
+**Data Format:** Scalar or Dict
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `capacity_mass` | float | Yes | Mass capacity for stored vehicles |
+
+Scalar format: `5000` is interpreted as `capacity_mass = 5000`.
+
+**Stat Bindings:** None
+
+---
+
+### PlanetaryYard
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `PlanetaryYard` |
+| Class | `PlanetaryYardAbility` |
+| Source | `harvester.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Marker ability -- required for a colony's base construction queue. A colony must
+have at least one operational facility with this ability to build complexes. The
+starter facility (deployed from a drop pod during colonization) provides this.
+
+**Data Format:** Boolean (`true`)
+
+**Stat Bindings:** None
 
 ---
 
@@ -997,6 +1042,8 @@ Self-Destruct Device. Schedules ship for destruction.
 | `ColonizePlanet` | ColonizePlanet | Colonization |
 | `ResourceHarvester` | ResourceHarvesterAbility | Harvester |
 | `LocalStorage` | LocalStorageAbility | Harvester |
+| `StagingYard` | StagingYardAbility | Harvester |
+| `PlanetaryYard` | PlanetaryYardAbility | Harvester |
 | `SpaceShipyard` | SpaceShipyardAbility | Harvester |
 | `PlanetaryShield` | PlanetaryShieldAbility | Planetary |
 | `PlanetaryEnergyGenerator` | PlanetaryEnergyGeneratorAbility | Planetary |

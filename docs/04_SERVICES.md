@@ -560,7 +560,7 @@ cmd = CargoTransferService.build_transfer_command(
 
 **Location:** `game/strategy/services/design_cost_calculator.py`
 
-**Purpose:** Centralized calculator for design resource costs. Resolves component costs from the registry via Ship loading, handling formula-based values and modifier multipliers.
+**Purpose:** Centralized calculator for design resource costs. Resolves component costs from the registry via Ship loading, handling formula-based values and modifier multipliers. Applies the vehicle class `cost_multiplier` from `vehicleclasses.json` (e.g., Drop Pods use 5x).
 
 **Dependencies:** None (all methods are `@staticmethod`). Accepts `GameRegistries` as a method parameter.
 
@@ -568,7 +568,8 @@ cmd = CargoTransferService.build_transfer_command(
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `calculate_total_cost` | `(design_data, registries) -> Dict[str, float]` | Calculate total resource cost; tries inline costs first, then Ship loading from registry |
+| `calculate_total_cost` | `(design_data, registries) -> Dict[str, float]` | Calculate total resource cost; tries inline costs first, then Ship loading from registry. Applies `cost_multiplier` from vehicle class definition. |
+| `_apply_cost_multiplier` | `(base_cost, design_data, registries) -> Dict[str, float]` | Internal: looks up `cost_multiplier` from `vehicleclasses.json` via the design's `ship_class` and multiplies all resource costs. Default multiplier is 1.0. |
 
 **Usage:**
 ```python

@@ -165,8 +165,10 @@ PROJ-233: Spawning logic is in `ProductionSpawner`, a separate class from `Produ
 | Item Type | Build Context | Spawner Method | Result |
 |-----------|---------------|----------------|--------|
 | Complex | Planet base queue | `_create_and_place_facility()` | `PlanetaryFacility` on planet |
-| Ship/Fighter/Satellite | Planet shipyard | `_spawn_ship()` | New `Fleet` at planet |
-| Ship/Fighter/Satellite | Fleet yard | `_spawn_fleet_ship()` | Added to existing fleet |
+| Ship/Satellite | Planet shipyard | `_spawn_ship()` | New `Fleet` at planet |
+| Fighter | Planet shipyard | `_spawn_to_staging_yard()` | Planet staging yard |
+| Drop Pod | Planet base queue | `_spawn_to_staging_yard()` | Planet staging yard |
+| Ship/Satellite | Fleet yard | `_spawn_fleet_ship()` | Added to existing fleet |
 | Complex | Fleet yard | `_spawn_fleet_complex()` | `PlanetaryFacility` on planet at fleet's hex |
 
 ### Complex Spawning (`_create_and_place_facility` / `_spawn_fleet_complex`)

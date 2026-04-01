@@ -129,7 +129,7 @@ All sub-engines are dependency-injected: `registries` is a **required** keyword-
 
 | Phase | Engine | Description |
 |-------|--------|-------------|
-| 0 | `HarvestingEngine` | Planetary resource extraction to planet.stockpile (1/100th per tick) |
+| 0 | `HarvestingEngine` | Planetary resource extraction to planet.stockpile (1/100th per tick). Also aggregates `StagingYard` capacity per colony into `colony.max_staging_mass`. |
 | 0b | `ConsumableManagementEngine` | Per-turn resource consumption (1/100th per tick) |
 | 0c | `ResupplyEngine` | Fuel generation at facilities |
 | 0c1 | `PlanetEnergyEngine` | Planet energy generation, consumption, auto-deactivation |

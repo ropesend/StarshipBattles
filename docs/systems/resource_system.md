@@ -116,8 +116,9 @@ ResourceCatalog (loaded once at startup)
        +-- Planet Generation: astrophysics.json affinities determine
        |   which resources appear in planet deposits
        |
-       +-- Colonization: Colony Hub (starter complex) placed on planet
-       |   with PlanetaryYard + basic harvesters + storage + seed resources
+       +-- Colonization: Drop pod deployed from ship.carried_items as
+       |   PlanetaryFacility (full player-designed complex with PlanetaryYard,
+       |   harvesters, storage, etc.) + seed resources
        |
        +-- Harvesting: ResourceHarvesterAbility extracts from deposits
        |   into planet.stockpile (local storage)
@@ -178,6 +179,44 @@ processes these each tick (1/100th of per-turn cost per tick).
 When a ship's per-turn resource is depleted, the consuming components are
 automatically disabled. The `is_operational` field on `ShipInstance` and
 `PlanetaryFacility` can also be used to manually disable entities.
+
+## Drop Pods
+
+Drop Pods are a vehicle type designed for planetary colonization. They bridge the
+workshop, production, and colonization systems.
+
+### Design and Construction
+
+- **Vehicle type:** `Drop Pod` (classes: Small/Medium/Large/Heavy, max mass 1000-8000)
+- **Cost multiplier:** 5x (applied by `DesignCostCalculator._apply_cost_multiplier()` from `vehicleclasses.json`)
+- **Layer config:** `Planetary_Complex` (uses complex component slots)
+- Designed in the workshop like any other vehicle, using complex-type components
+  (harvesters, storage, planetary yard, energy generators, etc.)
+
+### Production and Staging
+
+- Built at colonies via the base construction queue (same as complexes)
+- On completion, `ProductionSpawner._spawn_to_staging_yard()` places the finished
+  pod into the planet's staging yard (not into a fleet)
+- The staging yard is a mass-limited buffer on the planet, sized by
+  `StagingYardAbility` on colony facilities
+
+### Loading and Transport
+
+- Colony ships load drop pods from the staging yard as **carried items**
+- Stored in `ship.carried_items` as structured cargo preserving the full design data:
+  ```python
+  {"design_id": "...", "name": "...", "vehicle_type": "drop_pod", "design_data": {...}, "mass": ...}
+  ```
+- Each carried item retains all component choices the player made in the workshop
+
+### Deployment during Colonization
+
+- `ColonizeValidator` checks `ship.carried_items` for entries with `vehicle_type='drop_pod'`
+- Drop pods are **universal** -- any drop pod works on any planet type
+- `OrderProcessor._deploy_drop_pod()` removes the pod from `carried_items` and
+  creates a `PlanetaryFacility` using its full `design_data`
+- The colony ship stays in the fleet (it is not consumed)
 
 ## Migration Status
 
