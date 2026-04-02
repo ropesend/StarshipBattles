@@ -522873,183 +522873,6 @@
   ],
   "SEEKER-DMG-001": [
     {
-      "timestamp": "2026-03-31T16:57:32.515265",
-      "ticks_run": 500,
-      "passed": true,
-      "metrics": {
-        "test_id": "SEEKER-DMG-001",
-        "baseline_attacker_total_shots_fired": 1,
-        "baseline_attacker_weapons": [
-          {
-            "name": "Test Seeker (50 Damage)",
-            "type": "SeekerWeaponAbility",
-            "shots_fired": 1,
-            "shots_hit": 1
-          }
-        ],
-        "baseline_attacker_in_flight": 0,
-        "baseline_attacker_resolved_shots": 1,
-        "baseline_attacker_resolved_hits": 1,
-        "baseline_target_total_shots_fired": 0,
-        "baseline_target_weapons": [],
-        "baseline_target_in_flight": 0,
-        "baseline_target_resolved_shots": 0,
-        "baseline_target_resolved_hits": 0,
-        "baseline_damage_dealt": 50.0,
-        "baseline_initial_hp": 1000000100,
-        "baseline_final_hp": 1000000050.0,
-        "baseline_ticks": 500,
-        "variant_damage_dealt": 200.0,
-        "variant_initial_hp": 1000000100,
-        "variant_final_hp": 999999900.0,
-        "variant_ticks": 500,
-        "ticks_run": 500,
-        "variant_attacker_total_shots_fired": 1,
-        "variant_attacker_weapons": [
-          {
-            "name": "Test Seeker (200 Damage)",
-            "type": "SeekerWeaponAbility",
-            "shots_fired": 1,
-            "shots_hit": 1
-          }
-        ],
-        "variant_attacker_in_flight": 0,
-        "variant_attacker_resolved_shots": 1,
-        "variant_attacker_resolved_hits": 1,
-        "variant_target_total_shots_fired": 0,
-        "variant_target_weapons": [],
-        "variant_target_in_flight": 0,
-        "variant_target_resolved_shots": 0,
-        "variant_target_resolved_hits": 0,
-        "validation": {
-          "passed": true,
-          "failed_phase": null,
-          "summary": {
-            "data": {
-              "total": 0,
-              "passed": 0,
-              "failed": 0
-            },
-            "precondition": {
-              "total": 4,
-              "passed": 4,
-              "failed": 0
-            },
-            "outcome": {
-              "total": 1,
-              "passed": 1,
-              "failed": 0
-            }
-          },
-          "checks": [
-            {
-              "phase": "precondition",
-              "name": "Baseline Ticks",
-              "expected": 500,
-              "actual": 500,
-              "passed": true,
-              "detail": "expected=500, actual=500"
-            },
-            {
-              "phase": "precondition",
-              "name": "Variant Ticks",
-              "expected": 500,
-              "actual": 500,
-              "passed": true,
-              "detail": "expected=500, actual=500"
-            },
-            {
-              "phase": "precondition",
-              "name": "Baseline Hit",
-              "expected": true,
-              "actual": true,
-              "passed": true,
-              "detail": "damage=50.0"
-            },
-            {
-              "phase": "precondition",
-              "name": "Variant Hit",
-              "expected": true,
-              "actual": true,
-              "passed": true,
-              "detail": "damage=200.0"
-            },
-            {
-              "phase": "outcome",
-              "name": "Damage Ratio 4x",
-              "expected": 4.0,
-              "actual": 4.0,
-              "passed": true,
-              "detail": "expected=4.0, actual=4.0"
-            }
-          ]
-        },
-        "duration_real": 0.013683557510375977,
-        "ticks": 500
-      },
-      "validation_summary": {
-        "pass": 5,
-        "fail": 0,
-        "warn": 0,
-        "info": 0
-      },
-      "validation_results": [
-        {
-          "name": "Baseline Ticks",
-          "status": "PASS",
-          "expected": 500,
-          "actual": 500,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "precondition",
-          "detail": "expected=500, actual=500"
-        },
-        {
-          "name": "Variant Ticks",
-          "status": "PASS",
-          "expected": 500,
-          "actual": 500,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "precondition",
-          "detail": "expected=500, actual=500"
-        },
-        {
-          "name": "Baseline Hit",
-          "status": "PASS",
-          "expected": true,
-          "actual": true,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "precondition",
-          "detail": "damage=50.0"
-        },
-        {
-          "name": "Variant Hit",
-          "status": "PASS",
-          "expected": true,
-          "actual": true,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "precondition",
-          "detail": "damage=200.0"
-        },
-        {
-          "name": "Damage Ratio 4x",
-          "status": "PASS",
-          "expected": 4.0,
-          "actual": 4.0,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "outcome",
-          "detail": "expected=4.0, actual=4.0"
-        }
-      ],
-      "initial_state_file": null,
-      "final_state_file": null,
-      "seed": null
-    },
-    {
       "timestamp": "2026-03-31T17:19:00.146928",
       "ticks_run": 500,
       "passed": true,
@@ -524579,6 +524402,183 @@
         },
         "duration_real": 0.2428724765777588,
         "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 5,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Baseline Ticks",
+          "status": "PASS",
+          "expected": 500,
+          "actual": 500,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "expected=500, actual=500"
+        },
+        {
+          "name": "Variant Ticks",
+          "status": "PASS",
+          "expected": 500,
+          "actual": 500,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "expected=500, actual=500"
+        },
+        {
+          "name": "Baseline Hit",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "damage=50.0"
+        },
+        {
+          "name": "Variant Hit",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "damage=200.0"
+        },
+        {
+          "name": "Damage Ratio 4x",
+          "status": "PASS",
+          "expected": 4.0,
+          "actual": 4.0,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "expected=4.0, actual=4.0"
+        }
+      ],
+      "initial_state_file": null,
+      "final_state_file": null,
+      "seed": null
+    },
+    {
+      "timestamp": "2026-04-01T21:07:20.346059",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "SEEKER-DMG-001",
+        "baseline_attacker_total_shots_fired": 1,
+        "baseline_attacker_weapons": [
+          {
+            "name": "Test Seeker (50 Damage)",
+            "type": "SeekerWeaponAbility",
+            "shots_fired": 1,
+            "shots_hit": 1
+          }
+        ],
+        "baseline_attacker_in_flight": 0,
+        "baseline_attacker_resolved_shots": 1,
+        "baseline_attacker_resolved_hits": 1,
+        "baseline_target_total_shots_fired": 0,
+        "baseline_target_weapons": [],
+        "baseline_target_in_flight": 0,
+        "baseline_target_resolved_shots": 0,
+        "baseline_target_resolved_hits": 0,
+        "ticks_run": 500,
+        "ticks": 501,
+        "baseline_damage_dealt": 50.0,
+        "baseline_initial_hp": 1000000100,
+        "baseline_final_hp": 1000000050.0,
+        "baseline_ticks": 500,
+        "variant_damage_dealt": 200.0,
+        "variant_initial_hp": 1000000100,
+        "variant_final_hp": 999999900.0,
+        "variant_ticks": 500,
+        "variant_attacker_total_shots_fired": 1,
+        "variant_attacker_weapons": [
+          {
+            "name": "Test Seeker (200 Damage)",
+            "type": "SeekerWeaponAbility",
+            "shots_fired": 1,
+            "shots_hit": 1
+          }
+        ],
+        "variant_attacker_in_flight": 0,
+        "variant_attacker_resolved_shots": 1,
+        "variant_attacker_resolved_hits": 1,
+        "variant_target_total_shots_fired": 0,
+        "variant_target_weapons": [],
+        "variant_target_in_flight": 0,
+        "variant_target_resolved_shots": 0,
+        "variant_target_resolved_hits": 0,
+        "validation": {
+          "passed": true,
+          "failed_phase": null,
+          "summary": {
+            "data": {
+              "total": 0,
+              "passed": 0,
+              "failed": 0
+            },
+            "precondition": {
+              "total": 4,
+              "passed": 4,
+              "failed": 0
+            },
+            "outcome": {
+              "total": 1,
+              "passed": 1,
+              "failed": 0
+            }
+          },
+          "checks": [
+            {
+              "phase": "precondition",
+              "name": "Baseline Ticks",
+              "expected": 500,
+              "actual": 500,
+              "passed": true,
+              "detail": "expected=500, actual=500"
+            },
+            {
+              "phase": "precondition",
+              "name": "Variant Ticks",
+              "expected": 500,
+              "actual": 500,
+              "passed": true,
+              "detail": "expected=500, actual=500"
+            },
+            {
+              "phase": "precondition",
+              "name": "Baseline Hit",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "damage=50.0"
+            },
+            {
+              "phase": "precondition",
+              "name": "Variant Hit",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "damage=200.0"
+            },
+            {
+              "phase": "outcome",
+              "name": "Damage Ratio 4x",
+              "expected": 4.0,
+              "actual": 4.0,
+              "passed": true,
+              "detail": "expected=4.0, actual=4.0"
+            }
+          ]
+        },
+        "passed": true
       },
       "validation_summary": {
         "pass": 5,

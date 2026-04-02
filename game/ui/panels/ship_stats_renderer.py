@@ -330,23 +330,19 @@ def draw_ship_combat_stats(surface, ship: 'ICombatShip', x_indent, y, font):
     surface.blit(text, (x_indent, y))
     y += UIConfig.ELEMENT_SPACING
 
-    # Target
-    target_name = "None"
-    if ship.current_target and ship.current_target.is_alive:
-        target_name = getattr(ship.current_target, 'name', getattr(ship.current_target, 'type', 'Target').title())
+    # Target (uses DTO string fields, not entity references)
+    target_name = ship.current_target_name or "None"
     text = font.render(f"Target: {target_name}", True, TEXT_SECONDARY)
     surface.blit(text, (x_indent, y))
     y += 18
 
-    # Secondary Targets
-    sec_targets = ship.secondary_targets
-    if sec_targets:
-        for i, st in enumerate(sec_targets):
-            if st.is_alive:
-                st_name = getattr(st, 'name', getattr(st, 'type', 'Target').title())
-                text = font.render(f"  T{i+2}: {st_name}", True, TEXT_MUTED)
-                surface.blit(text, (x_indent, y))
-                y += UIConfig.ELEMENT_SPACING
+    # Secondary Targets (uses DTO name list)
+    sec_target_names = ship.secondary_target_names
+    if sec_target_names:
+        for i, st_name in enumerate(sec_target_names):
+            text = font.render(f"  T{i+2}: {st_name}", True, TEXT_MUTED)
+            surface.blit(text, (x_indent, y))
+            y += UIConfig.ELEMENT_SPACING
 
     # Targeting Cap
     max_targets = ship.max_targets

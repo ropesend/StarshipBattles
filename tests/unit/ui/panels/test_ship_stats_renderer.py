@@ -346,3 +346,45 @@ class TestResourceOrderPriority:
         from game.ui.panels.ship_stats_renderer import RESOURCE_ORDER_PRIORITY
 
         assert RESOURCE_ORDER_PRIORITY["ammo"] == 2
+
+
+# --- draw_ship_combat_stats DTO Compatibility Tests ---
+
+class TestDrawShipCombatStatsDTO:
+    """Regression: draw_ship_combat_stats must work with ShipDTO, not raw Ship."""
+
+    def test_combat_stats_uses_dto_target_fields(self):
+        """draw_ship_combat_stats should use current_target_name, not current_target."""
+        from game.ui.panels.ship_stats_renderer import draw_ship_combat_stats
+
+        surface = pygame.Surface((400, 600))
+        font = pygame.font.SysFont(None, 14)
+
+        # Create a mock that mimics ShipDTO — has current_target_name but NOT current_target
+        ship = MagicMock(spec=[
+            'current_target_name', 'secondary_target_names', 'max_targets',
+            'current_shields', 'max_shields', 'current_speed', 'max_speed',
+            'total_thrust', 'mass', 'turn_speed', 'total_shots_fired',
+            'crew_required', 'crew_onboard', 'emissive_armor',
+            'total_defense_score', 'baseline_to_hit_offense',
+        ])
+        ship.current_target_name = "Enemy Ship"
+        ship.secondary_target_names = ["Target 2"]
+        ship.max_targets = 2
+        ship.current_shields = 50.0
+        ship.max_shields = 100.0
+        ship.current_speed = 10.0
+        ship.max_speed = 20.0
+        ship.total_thrust = 500.0
+        ship.mass = 400.0
+        ship.turn_speed = 90.0
+        ship.total_shots_fired = 5
+        ship.crew_required = 10
+        ship.crew_onboard = 10
+        ship.emissive_armor = 0
+        ship.total_defense_score = 1.5
+        ship.baseline_to_hit_offense = 0.0
+
+        # Should not raise AttributeError about current_target
+        result_y = draw_ship_combat_stats(surface, ship, 10, 10, font)
+        assert result_y > 10
