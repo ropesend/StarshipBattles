@@ -142,11 +142,9 @@ def mock_ship():
 
 
 @pytest.fixture
-def design_report_panel(mock_ship):
+def design_report_panel(mock_ship, ui_manager):
     """Create DesignReportPanel for testing."""
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
+    manager = ui_manager
 
     # Panel height must be larger than portrait (730px) + stats area
     # Production uses screen_height - 90 (~678 on 768 screen)
@@ -168,8 +166,6 @@ def design_report_panel(mock_ship):
     )
 
     yield panel
-
-    pygame.quit()
 
 
 def test_design_report_panel_initializes(design_report_panel):
@@ -413,11 +409,9 @@ def test_multiple_ship_updates(design_report_panel, mock_ship):
     assert design_report_panel.current_ship == ship2
 
 
-def test_panel_integrates_with_container(mock_ship):
+def test_panel_integrates_with_container(mock_ship, ui_manager):
     """Test that panel properly integrates with a parent container."""
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
+    manager = ui_manager
 
     panel_height = 1500  # Must be large enough for portrait (730px) + stats
 
@@ -441,14 +435,10 @@ def test_panel_integrates_with_container(mock_ship):
     assert panel._stats_panel is not None
     assert panel._stats_panel.stats_scroll is not None
 
-    pygame.quit()
 
-
-def test_panel_handles_ship_with_minimal_stats():
+def test_panel_handles_ship_with_minimal_stats(ui_manager):
     """Test that panel handles ship with minimal/missing stats gracefully."""
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
+    manager = ui_manager
 
     panel_height = 1500  # Must be large enough for portrait + stats
 
@@ -473,5 +463,3 @@ def test_panel_handles_ship_with_minimal_stats():
     # Should not crash
     panel.update_design(minimal_ship)
     assert panel.current_ship == minimal_ship
-
-    pygame.quit()

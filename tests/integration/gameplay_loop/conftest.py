@@ -9,10 +9,28 @@ import pytest
 from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.game_config import GameConfig, PlayerConfig
 from game.strategy.engine.turn_engine import TurnEngine
+from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 from game.core.hex_math import HexCoord
 from game.strategy.data.galaxy import Galaxy
+
+
+class InstantBattleResolver(IBattleResolver):
+    """Battle resolver that instantly declares team 0 the winner.
+
+    Skips the full simulation, returning an immediate result where
+    team 0 keeps all ships and team 1 loses everything.
+    """
+
+    def resolve_battle(self, fleet1, fleet2, seed=None, registries=None,
+                       environmental_effects=None):
+        return BattleResult(
+            winner=0,
+            tick_count=1,
+            team0_survivors=list(fleet1.battle.to_battle_ships(team_id=0, registries=registries)),
+            team1_survivors=[],
+        )
 
 
 @pytest.fixture
@@ -37,8 +55,14 @@ def game_session(minimal_config):
 
 @pytest.fixture
 def turn_engine(fresh_registries):
-    """Create a standalone turn engine for isolated tests."""
-    return TurnEngine(registries=fresh_registries)
+    """Create a standalone turn engine for isolated tests.
+
+    Uses InstantBattleResolver to avoid running full combat simulations.
+    """
+    return TurnEngine(
+        battle_resolver=InstantBattleResolver(),
+        registries=fresh_registries,
+    )
 
 
 @pytest.fixture

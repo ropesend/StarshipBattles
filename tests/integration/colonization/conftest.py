@@ -10,6 +10,7 @@ import pytest
 import random
 
 from game.strategy.engine.turn_engine import TurnEngine
+from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.galaxy import Galaxy
@@ -18,6 +19,23 @@ from game.strategy.data.ship_instance import ShipInstance
 
 # Fixed seed for deterministic galaxy generation
 GALAXY_SEED = 42
+
+
+class InstantBattleResolver(IBattleResolver):
+    """Battle resolver that instantly declares team 0 the winner.
+
+    Skips the full simulation, returning an immediate result where
+    team 0 keeps all ships and team 1 loses everything.
+    """
+
+    def resolve_battle(self, fleet1, fleet2, seed=None, registries=None,
+                       environmental_effects=None):
+        return BattleResult(
+            winner=0,
+            tick_count=1,
+            team0_survivors=list(fleet1.battle.to_battle_ships(team_id=0, registries=registries)),
+            team1_survivors=[],
+        )
 
 
 def make_colony_ship_for_planet(planet, owner_id: int, registries=None) -> ShipInstance:
@@ -69,8 +87,12 @@ def turn_engine(fresh_registries):
     """Create a standalone turn engine with DI registries.
 
     PROJ-50 Phase 8: Uses fresh_registries for strict DI compliance.
+    Uses InstantBattleResolver to avoid running full combat simulations.
     """
-    return TurnEngine(registries=fresh_registries)
+    return TurnEngine(
+        battle_resolver=InstantBattleResolver(),
+        registries=fresh_registries,
+    )
 
 
 @pytest.fixture

@@ -1,6 +1,5 @@
 """Tests for fleet build button visibility in strategy UI (PROJ-67 Phase 5)."""
 import pytest
-import pygame
 from unittest.mock import MagicMock, patch
 
 from game.ui.screens.strategy_ui import StrategyUI
@@ -58,9 +57,7 @@ class MockScene:
 
 
 @pytest.fixture
-def strategy_ui():
-    pygame.init()
-    pygame.display.set_mode((800, 600))
+def strategy_ui(ui_manager):
     scene = MockScene()
     ui = StrategyUI(scene, 800, 600)
     return ui
@@ -205,13 +202,11 @@ class TestMoveBlockingWhileBuilding:
 class TestFleetOrdersWindowBuildDisplay:
     """Tests for BUILD order display in FleetOrdersWindow."""
 
-    def test_build_order_description(self):
+    def test_build_order_description(self, ui_manager):
         """Test that BUILD order shows correct description."""
         from game.ui.screens.fleet_orders_window import FleetOrdersWindow
         from game.core.hex_math import HexCoord
-
-        pygame.init()
-        pygame.display.set_mode((800, 600))
+        import pygame
 
         # Create fleet with BUILD order and queue items
         fleet = Fleet(1, 0, HexCoord(0, 0))
@@ -221,13 +216,10 @@ class TestFleetOrdersWindowBuildDisplay:
             {'design_id': 'frigate', 'turns_remaining': 5}
         ]
 
-        # Create mock manager (minimal)
-        import pygame_gui
-        manager = pygame_gui.UIManager((800, 600))
         rect = pygame.Rect(100, 100, 400, 300)
 
         # Create window
-        window = FleetOrdersWindow(rect, manager, fleet)
+        window = FleetOrdersWindow(rect, ui_manager, fleet)
 
         # Get order description
         desc = window._get_order_description(fleet.orders[0])

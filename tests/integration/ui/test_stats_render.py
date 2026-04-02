@@ -10,7 +10,6 @@ fragile module monkey-patching + importlib.reload() that contaminated other test
 
 import pytest
 import pygame
-import pygame_gui
 from unittest.mock import MagicMock
 
 from game.simulation.entities.ship import Ship
@@ -21,11 +20,9 @@ from game.ui.services.vehicle_class_service import VehicleClassService
 class TestStatsRender:
 
     @pytest.fixture(autouse=True)
-    def setup(self, fresh_registries):
+    def setup(self, fresh_registries, ui_manager):
         """Set up real pygame + pygame_gui environment and a mock builder."""
-        pygame.init()
-        screen = pygame.display.set_mode((1024, 768))
-        self.manager = pygame_gui.UIManager((1024, 768))
+        self.manager = ui_manager
 
         self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), registries=fresh_registries)
 
@@ -39,8 +36,6 @@ class TestStatsRender:
         self.vehicle_class_service = VehicleClassService(fresh_registries)
 
         yield
-
-        pygame.quit()
 
     def test_stats_panel_creation_and_update(self):
         """BuilderRightPanel creates expected stat rows and updates without error."""

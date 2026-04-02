@@ -5,7 +5,6 @@ This test verifies that HTML formatting is properly rendered instead of being di
 """
 
 import pytest
-import pygame
 import pygame_gui
 from unittest.mock import MagicMock, patch
 from game.strategy.data.planet import Planet, PlanetType
@@ -71,16 +70,14 @@ def mock_design_loader():
 
 
 @pytest.fixture
-def build_queue_screen(mock_design_library, mock_design_loader, mock_registries):
+def build_queue_screen(ui_manager, mock_design_library, mock_design_loader, mock_registries):
     """Create BuildQueueScreen for testing.
 
     PROJ-40: Updated to use DI injection for dependencies.
     PROJ-109: Updated to provide required hex_coord, galaxy, empire parameters.
     PROJ-211: Updated to pass registries for DI.
     """
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
+    manager = ui_manager
 
     hex_coord = HexCoord(5, 5)
     # Create test planet
@@ -129,8 +126,6 @@ def build_queue_screen(mock_design_library, mock_design_loader, mock_registries)
     )
 
     yield bq_screen
-
-    pygame.quit()
 
 
 def test_planet_report_panel_exists(build_queue_screen):

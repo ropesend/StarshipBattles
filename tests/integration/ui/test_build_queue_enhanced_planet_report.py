@@ -89,11 +89,9 @@ def test_planet():
 
 
 @pytest.fixture
-def planet_report_panel(test_planet, mock_design_library):
+def planet_report_panel(test_planet, mock_design_library, ui_manager):
     """Create PlanetReportPanel for testing."""
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
+    manager = ui_manager
 
     # Create container panel
     container = pygame_gui.elements.UIPanel(
@@ -111,8 +109,6 @@ def planet_report_panel(test_planet, mock_design_library):
     )
 
     yield panel
-
-    pygame.quit()
 
 
 def test_planet_report_panel_initializes(planet_report_panel):
@@ -260,11 +256,9 @@ def test_get_height_required_returns_valid_height(planet_report_panel):
     assert height <= 600, f"Required height should not exceed 600px, got {height}"
 
 
-def test_panel_works_with_no_atmosphere(test_planet, mock_design_library):
+def test_panel_works_with_no_atmosphere(test_planet, mock_design_library, ui_manager):
     """Test that panel handles planet with no atmosphere gracefully."""
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))  # Need display mode for pygame.Surface.convert_alpha()
-    manager = pygame_gui.UIManager((1024, 768))
+    manager = ui_manager
 
     # Create planet with no atmosphere
     test_planet.atmosphere = {}
@@ -284,14 +278,11 @@ def test_panel_works_with_no_atmosphere(test_planet, mock_design_library):
     )
 
     assert panel is not None
-    pygame.quit()
 
 
-def test_panel_integrates_with_container(test_planet, mock_design_library):
+def test_panel_integrates_with_container(test_planet, mock_design_library, ui_manager):
     """Test that panel properly integrates with a parent container."""
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))  # Need display mode for pygame.Surface.convert_alpha()
-    manager = pygame_gui.UIManager((1024, 768))
+    manager = ui_manager
 
     container = pygame_gui.elements.UIPanel(
         relative_rect=pygame.Rect(10, 10, 500, 350),
@@ -311,14 +302,10 @@ def test_panel_integrates_with_container(test_planet, mock_design_library):
     assert panel.detail_text is not None
     assert panel.graph is not None
 
-    pygame.quit()
 
-
-def test_portrait_surface_at_init(test_planet, mock_design_library):
+def test_portrait_surface_at_init(test_planet, mock_design_library, ui_manager):
     """Test passing portrait_surface at initialization."""
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
+    manager = ui_manager
 
     # Create a test portrait surface
     portrait = pygame.Surface((150, 150))
@@ -337,14 +324,10 @@ def test_portrait_surface_at_init(test_planet, mock_design_library):
     # Verify no crash, panel created successfully
     assert panel.planet == test_planet
 
-    pygame.quit()
 
-
-def test_show_complexes_false(test_planet, mock_design_library):
+def test_show_complexes_false(test_planet, mock_design_library, ui_manager):
     """Test panel with complexes list hidden."""
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
+    manager = ui_manager
 
     from game.ui.panels.planet_report_panel import PlanetReportPanel
     panel = PlanetReportPanel(
@@ -361,8 +344,6 @@ def test_show_complexes_false(test_planet, mock_design_library):
     # Verify panel still functions (info text wider)
     assert panel.detail_text is not None
 
-    pygame.quit()
-
 
 # ============================================================================
 # PROJ-82: Resource Grid Tests
@@ -377,11 +358,9 @@ def test_resource_grid_exists(planet_report_panel):
     assert len(planet_report_panel._resource_grid_items) > 0
 
 
-def test_resource_grid_shows_all_resources(test_planet, mock_design_library):
+def test_resource_grid_shows_all_resources(test_planet, mock_design_library, ui_manager):
     """Test that resource grid shows all 5 resource icons."""
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
+    manager = ui_manager
 
     from game.ui.panels.planet_report_panel import PlanetReportPanel
     panel = PlanetReportPanel(
@@ -401,14 +380,10 @@ def test_resource_grid_shows_all_resources(test_planet, mock_design_library):
     assert "energy" in panel._resource_icons
     assert "ammo" in panel._resource_icons
 
-    pygame.quit()
 
-
-def test_resource_grid_with_production(test_planet, mock_design_library):
+def test_resource_grid_with_production(test_planet, mock_design_library, ui_manager):
     """Test that panel accepts production_rates parameter."""
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
+    manager = ui_manager
 
     from game.ui.panels.planet_report_panel import PlanetReportPanel
     production_rates = {"metals": 100.0, "organics": 50.0}
@@ -424,14 +399,10 @@ def test_resource_grid_with_production(test_planet, mock_design_library):
     assert panel.production_rates == production_rates
     assert panel.resource_panel is not None
 
-    pygame.quit()
 
-
-def test_resource_grid_no_production(test_planet, mock_design_library):
+def test_resource_grid_no_production(test_planet, mock_design_library, ui_manager):
     """Test that panel works without production_rates parameter."""
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
+    manager = ui_manager
 
     from game.ui.panels.planet_report_panel import PlanetReportPanel
     panel = PlanetReportPanel(
@@ -445,14 +416,10 @@ def test_resource_grid_no_production(test_planet, mock_design_library):
     assert panel.production_rates == {}
     assert panel.resource_panel is not None
 
-    pygame.quit()
 
-
-def test_resource_grid_updates_on_planet_change(test_planet, mock_design_library):
+def test_resource_grid_updates_on_planet_change(test_planet, mock_design_library, ui_manager):
     """Test that resource grid updates when planet changes."""
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
+    manager = ui_manager
 
     from game.ui.panels.planet_report_panel import PlanetReportPanel
     panel = PlanetReportPanel(
@@ -494,14 +461,10 @@ def test_resource_grid_updates_on_planet_change(test_planet, mock_design_library
     # Grid items should still exist
     assert len(panel._resource_grid_items) > 0
 
-    pygame.quit()
 
-
-def test_resource_panel_no_resources(mock_design_library):
+def test_resource_panel_no_resources(mock_design_library, ui_manager):
     """Test that panel handles planet with empty resources dict."""
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
+    manager = ui_manager
 
     # Create planet with empty resources
     empty_planet = Planet(
@@ -535,8 +498,6 @@ def test_resource_panel_no_resources(mock_design_library):
     # Should not crash, grid should still exist with zero values
     assert panel.resource_panel is not None
     assert len(panel._resource_grid_items) > 0
-
-    pygame.quit()
 
 
 def test_resource_icons_loaded(planet_report_panel):

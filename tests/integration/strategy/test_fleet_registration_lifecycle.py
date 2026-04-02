@@ -18,7 +18,21 @@ from game.strategy.engine.order_processor import OrderProcessor
 from game.strategy.engine.game_config import GameConfig, PlayerConfig
 from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
+from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 from tests.conftest import make_mock_ship_instance
+
+
+class InstantBattleResolver(IBattleResolver):
+    """Battle resolver that instantly declares team 0 the winner."""
+
+    def resolve_battle(self, fleet1, fleet2, seed=None, registries=None,
+                       environmental_effects=None):
+        return BattleResult(
+            winner=0,
+            tick_count=1,
+            team0_survivors=list(fleet1.battle.to_battle_ships(team_id=0, registries=registries)),
+            team1_survivors=[],
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -130,8 +144,11 @@ class TestCombatUnregistersDestroyedFleet:
         _assert_registered(galaxy, fleet1)
         _assert_registered(galaxy, fleet2)
 
-        # Resolve combat using registries for the battle resolver
-        engine = ConflictResolutionEngine(registries=fresh_registries)
+        # Resolve combat using instant resolver to skip full simulation
+        engine = ConflictResolutionEngine(
+            battle_resolver=InstantBattleResolver(),
+            registries=fresh_registries,
+        )
         result = engine.resolve_all_conflicts([emp1, emp2], galaxy)
 
         # Exactly one fleet should have been destroyed

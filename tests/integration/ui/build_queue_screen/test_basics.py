@@ -3,8 +3,6 @@ Tests for BuildQueueScreen basic functionality.
 """
 
 import pytest
-import pygame
-import pygame_gui
 from unittest.mock import MagicMock, patch
 from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
 from game.core.hex_math import HexCoord
@@ -227,16 +225,14 @@ def test_bottom_bar_exists(build_queue_screen):
     assert build_queue_screen.panels.btn_close is not None
 
 
-def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_loader, mock_registries):
+def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_loader, mock_registries, ui_manager):
     """Test that BuildQueueScreen handles None savegame_path without crashing.
 
     PROJ-40: Updated to use DI injection for dependencies.
     PROJ-109: Updated to provide required hex_coord, galaxy, empire parameters.
     PROJ-211: Updated to pass registries for DI.
     """
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
+    manager = ui_manager
 
     hex_coord = HexCoord(5, 5)
     # Create test planet
@@ -287,8 +283,6 @@ def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_lo
     assert screen_obj is not None
     assert screen_obj.design_library is not None
 
-    pygame.quit()
-
 
 def test_add_to_queue_defaults_to_1_turn(build_queue_screen):
     """Test that new items default to 1 turn build time."""
@@ -322,7 +316,7 @@ def test_drag_item_uses_1_turn_default(build_queue_screen):
     assert turns == 1
 
 
-def test_add_ship_to_queue_with_shipyard(mock_design_library, mock_design_loader, mock_registries):
+def test_add_ship_to_queue_with_shipyard(mock_design_library, mock_design_loader, mock_registries, ui_manager):
     """Test that ships can be added when planet has a shipyard facility.
 
     Regression test for BUG-24: Ships couldn't be added to build queue
@@ -332,13 +326,9 @@ def test_add_ship_to_queue_with_shipyard(mock_design_library, mock_design_loader
     for ships is created at initialization time.
     PROJ-211: Updated to pass registries for DI.
     """
-    import pygame
-    import pygame_gui
     from game.ui.screens.build_queue_screen import BuildQueueScreen
 
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
+    manager = ui_manager
 
     hex_coord = HexCoord(5, 5)
     planet = Planet(
@@ -426,8 +416,6 @@ def test_add_ship_to_queue_with_shipyard(mock_design_library, mock_design_loader
         "Ship should be added to shipyard queue when shipyard exists"
     assert shipyard_source.construction_queue[-1]["type"] == "ship"
     assert shipyard_source.construction_queue[-1]["design_id"] == "test_frigate"
-
-    pygame.quit()
 
 
 def test_add_ship_fails_without_shipyard(build_queue_screen):
