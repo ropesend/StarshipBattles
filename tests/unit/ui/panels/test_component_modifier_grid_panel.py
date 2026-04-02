@@ -289,14 +289,7 @@ class TestUpdateComponent:
 class TestDraw:
     """Tests for draw method."""
 
-    @pytest.fixture
-    def init_pygame(self):
-        """Initialize pygame."""
-        pygame.init()
-        yield
-        pygame.quit()
-
-    def test_draw_calls_grid_draw(self, init_pygame):
+    def test_draw_calls_grid_draw(self):
         """draw calls modifier_grid.draw when visible."""
         from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
 
@@ -312,7 +305,7 @@ class TestDraw:
 
         panel.modifier_grid.draw.assert_called_once_with(screen)
 
-    def test_draw_skips_when_hidden(self, init_pygame):
+    def test_draw_skips_when_hidden(self):
         """draw skips grid.draw when panel hidden."""
         from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
 

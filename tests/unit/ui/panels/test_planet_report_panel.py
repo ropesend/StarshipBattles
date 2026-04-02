@@ -303,14 +303,7 @@ class TestResourceGrid:
 class TestPortrait:
     """Tests for planet portrait generation."""
 
-    @pytest.fixture
-    def init_pygame(self):
-        """Initialize pygame for surface operations."""
-        pygame.init()
-        yield
-        pygame.quit()
-
-    def test_portrait_uses_provided_surface(self, init_pygame):
+    def test_portrait_uses_provided_surface(self):
         """_update_portrait uses provided portrait_surface."""
         from game.ui.panels.planet_report_panel import PlanetReportPanel
 
@@ -325,7 +318,7 @@ class TestPortrait:
 
         panel.portrait_image.set_image.assert_called_once()
 
-    def test_portrait_generates_placeholder(self, init_pygame):
+    def test_portrait_generates_placeholder(self):
         """_update_portrait generates placeholder when no surface."""
         from game.ui.panels.planet_report_panel import PlanetReportPanel
 

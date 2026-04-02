@@ -381,14 +381,7 @@ class TestClearElements:
 class TestImageScaling:
     """Tests for image scaling helper."""
 
-    @pytest.fixture
-    def init_pygame(self):
-        """Initialize pygame for surface operations."""
-        pygame.init()
-        yield
-        pygame.quit()
-
-    def test_scaled_image_returns_surface(self, init_pygame):
+    def test_scaled_image_returns_surface(self):
         """_get_scaled_image returns a pygame Surface."""
         from game.ui.panels.ship_detail_panel import ShipDetailPanel
 
@@ -400,7 +393,7 @@ class TestImageScaling:
 
         assert isinstance(result, pygame.Surface)
 
-    def test_scaled_image_correct_size(self, init_pygame):
+    def test_scaled_image_correct_size(self):
         """_get_scaled_image returns surface of target size."""
         from game.ui.panels.ship_detail_panel import ShipDetailPanel
 
@@ -412,7 +405,7 @@ class TestImageScaling:
 
         assert result.get_size() == (120, 120)
 
-    def test_scaled_image_none_returns_placeholder(self, init_pygame):
+    def test_scaled_image_none_returns_placeholder(self):
         """_get_scaled_image with None returns placeholder surface."""
         from game.ui.panels.ship_detail_panel import ShipDetailPanel
 

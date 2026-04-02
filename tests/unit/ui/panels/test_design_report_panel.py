@@ -418,14 +418,7 @@ class TestUpdateDesign:
 class TestUpdatePortrait:
     """Tests for portrait image generation."""
 
-    @pytest.fixture
-    def init_pygame(self):
-        """Initialize pygame for surface operations."""
-        pygame.init()
-        yield
-        pygame.quit()
-
-    def test_portrait_loads_from_file(self, init_pygame):
+    def test_portrait_loads_from_file(self):
         """_update_portrait attempts to load from file paths."""
         from game.ui.panels.design_report_panel import DesignReportPanel
 
@@ -442,7 +435,7 @@ class TestUpdatePortrait:
         # Should still call set_image with fallback
         panel.portrait_image.set_image.assert_called_once()
 
-    def test_portrait_uses_fallback(self, init_pygame):
+    def test_portrait_uses_fallback(self):
         """_update_portrait creates fallback when no image found."""
         from game.ui.panels.design_report_panel import DesignReportPanel
 

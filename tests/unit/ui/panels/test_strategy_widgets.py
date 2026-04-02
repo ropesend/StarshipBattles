@@ -50,20 +50,13 @@ def _make_mock_planet():
 class TestDataGraphInit:
     """Tests for DataGraph base class initialization."""
 
-    @pytest.fixture
-    def init_pygame(self):
-        """Initialize pygame for surface operations."""
-        pygame.init()
-        yield
-        pygame.quit()
-
     def test_graph_can_be_imported(self):
         """DataGraph can be imported."""
         from game.ui.panels.strategy_widgets import DataGraph
 
         assert DataGraph is not None
 
-    def test_graph_stores_dimensions(self, init_pygame):
+    def test_graph_stores_dimensions(self):
         """DataGraph stores width and height."""
         from game.ui.panels.strategy_widgets import DataGraph
 
@@ -72,7 +65,7 @@ class TestDataGraphInit:
         assert graph.width == 200
         assert graph.height == 150
 
-    def test_graph_stores_bg_color(self, init_pygame):
+    def test_graph_stores_bg_color(self):
         """DataGraph stores bg_color."""
         from game.ui.panels.strategy_widgets import DataGraph
 
@@ -80,7 +73,7 @@ class TestDataGraphInit:
 
         assert graph.bg_color == (50, 60, 70)
 
-    def test_graph_default_bg_color(self, init_pygame):
+    def test_graph_default_bg_color(self):
         """DataGraph has default bg_color."""
         from game.ui.panels.strategy_widgets import DataGraph
 
@@ -89,7 +82,7 @@ class TestDataGraphInit:
         from game.ui.colors import BG_PANEL_DARK
         assert graph.bg_color == BG_PANEL_DARK
 
-    def test_graph_creates_surface(self, init_pygame):
+    def test_graph_creates_surface(self):
         """DataGraph creates surface of correct size."""
         from game.ui.panels.strategy_widgets import DataGraph
 
@@ -98,7 +91,7 @@ class TestDataGraphInit:
         assert isinstance(graph.surface, pygame.Surface)
         assert graph.surface.get_size() == (200, 150)
 
-    def test_graph_clear_fills_bg(self, init_pygame):
+    def test_graph_clear_fills_bg(self):
         """DataGraph.clear fills surface with bg_color."""
         from game.ui.panels.strategy_widgets import DataGraph
 
@@ -110,7 +103,7 @@ class TestDataGraphInit:
         color = graph.surface.get_at((50, 50))
         assert (color.r, color.g, color.b) == (100, 100, 100)
 
-    def test_graph_clear_draws_border(self, init_pygame):
+    def test_graph_clear_draws_border(self):
         """DataGraph.clear draws border rectangle."""
         from game.ui.panels.strategy_widgets import DataGraph
 
@@ -153,14 +146,7 @@ class TestSpectrumGraphInit:
 class TestSpectrumGraphRender:
     """Tests for SpectrumGraph rendering."""
 
-    @pytest.fixture
-    def init_pygame(self):
-        """Initialize pygame for rendering."""
-        pygame.init()
-        yield
-        pygame.quit()
-
-    def test_render_returns_surface(self, init_pygame):
+    def test_render_returns_surface(self):
         """SpectrumGraph.render returns pygame Surface."""
         from game.ui.panels.strategy_widgets import SpectrumGraph
 
@@ -171,7 +157,7 @@ class TestSpectrumGraphRender:
 
         assert isinstance(result, pygame.Surface)
 
-    def test_render_handles_no_spectrum(self, init_pygame):
+    def test_render_handles_no_spectrum(self):
         """SpectrumGraph.render handles star without spectrum."""
         from game.ui.panels.strategy_widgets import SpectrumGraph
 
@@ -182,7 +168,7 @@ class TestSpectrumGraphRender:
 
         assert isinstance(result, pygame.Surface)
 
-    def test_render_handles_zero_values(self, init_pygame):
+    def test_render_handles_zero_values(self):
         """SpectrumGraph.render handles all-zero spectrum."""
         from game.ui.panels.strategy_widgets import SpectrumGraph
 
@@ -197,7 +183,7 @@ class TestSpectrumGraphRender:
 
         assert isinstance(result, pygame.Surface)
 
-    def test_render_vertical_mode(self, init_pygame):
+    def test_render_vertical_mode(self):
         """SpectrumGraph.render handles vertical mode."""
         from game.ui.panels.strategy_widgets import SpectrumGraph
 
@@ -249,14 +235,7 @@ class TestAtmosphereGraphInit:
 class TestAtmosphereGraphRender:
     """Tests for AtmosphereGraph rendering."""
 
-    @pytest.fixture
-    def init_pygame(self):
-        """Initialize pygame for rendering."""
-        pygame.init()
-        yield
-        pygame.quit()
-
-    def test_render_returns_surface(self, init_pygame):
+    def test_render_returns_surface(self):
         """AtmosphereGraph.render returns pygame Surface."""
         from game.ui.panels.strategy_widgets import AtmosphereGraph
 
@@ -267,7 +246,7 @@ class TestAtmosphereGraphRender:
 
         assert isinstance(result, pygame.Surface)
 
-    def test_render_handles_empty_atmosphere(self, init_pygame):
+    def test_render_handles_empty_atmosphere(self):
         """AtmosphereGraph.render handles empty atmosphere dict."""
         from game.ui.panels.strategy_widgets import AtmosphereGraph
 
@@ -279,7 +258,7 @@ class TestAtmosphereGraphRender:
 
         assert isinstance(result, pygame.Surface)
 
-    def test_render_handles_none_atmosphere(self, init_pygame):
+    def test_render_handles_none_atmosphere(self):
         """AtmosphereGraph.render handles None atmosphere."""
         from game.ui.panels.strategy_widgets import AtmosphereGraph
 
@@ -291,7 +270,7 @@ class TestAtmosphereGraphRender:
 
         assert isinstance(result, pygame.Surface)
 
-    def test_render_vertical_mode(self, init_pygame):
+    def test_render_vertical_mode(self):
         """AtmosphereGraph.render handles vertical mode."""
         from game.ui.panels.strategy_widgets import AtmosphereGraph
 
@@ -302,7 +281,7 @@ class TestAtmosphereGraphRender:
 
         assert isinstance(result, pygame.Surface)
 
-    def test_render_shows_top_6_gases(self, init_pygame):
+    def test_render_shows_top_6_gases(self):
         """AtmosphereGraph.render limits to top 6 gases."""
         from game.ui.panels.strategy_widgets import AtmosphereGraph
 
@@ -323,7 +302,7 @@ class TestAtmosphereGraphRender:
 
         assert isinstance(result, pygame.Surface)
 
-    def test_render_pressure_formatting_kpa(self, init_pygame):
+    def test_render_pressure_formatting_kpa(self):
         """AtmosphereGraph formats large pressures as kPa."""
         from game.ui.panels.strategy_widgets import AtmosphereGraph
 
@@ -375,14 +354,7 @@ class TestLogarithmicScale:
 class TestSurfaceSizes:
     """Tests for surface size handling."""
 
-    @pytest.fixture
-    def init_pygame(self):
-        """Initialize pygame."""
-        pygame.init()
-        yield
-        pygame.quit()
-
-    def test_small_surface(self, init_pygame):
+    def test_small_surface(self):
         """Graphs handle small surface sizes."""
         from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
 
@@ -396,7 +368,7 @@ class TestSurfaceSizes:
         spectrum.render(star)
         atmosphere.render(planet)
 
-    def test_large_surface(self, init_pygame):
+    def test_large_surface(self):
         """Graphs handle large surface sizes."""
         from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
 

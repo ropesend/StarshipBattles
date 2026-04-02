@@ -8,8 +8,7 @@ from game.simulation.entities.ship import Ship
 
 @pytest.fixture
 def pygame_window(fresh_registries):
-    pygame.init()
-    # Create a hidden window for UI Manager
+    # Use the display already initialized by enforce_headless / conftest pygame_display_reset
     window = pygame.display.set_mode((1200, 800), flags=pygame.HIDDEN)
 
     # Ensure vehicle_classes populated
@@ -20,8 +19,6 @@ def pygame_window(fresh_registries):
 
     # CRITICAL: Clean up ALL mocks first (prevents mock object pollution)
     patch.stopall()
-
-    pygame.quit()
 
 
 class TestBuilderImprovements:
