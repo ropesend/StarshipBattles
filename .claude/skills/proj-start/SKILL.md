@@ -35,9 +35,9 @@ Adopt the **Project Architect** persona.
    Do NOT create project files manually. The script ensures proper directory structure.
 4. **MANDATORY:** Run full test suite to establish baseline:
    ```bash
-   pytest tests/
+   python scripts/test_sharded.py
    ```
-   All tests must pass before proceeding. This also initializes testmon.
+   All tests must pass before proceeding.
 5. Perform deep code review of relevant areas
 6. **Cross-reference code against `docs/` — flag any discrepancies to the user**
 7. Ask clarifying questions

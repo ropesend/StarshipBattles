@@ -208,7 +208,7 @@ If the fix changes any pattern, architecture, or convention documented in `docs/
 
 ### Step 1: Full Test Suite
 
-Run: `pytest tests/ -n 12`
+Run: `python scripts/test_sharded.py`
 
 All tests must pass (baseline: 7353+). If any tests fail:
 - Diagnose the failures — they may reveal additional code that needs the same fix

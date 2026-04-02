@@ -105,7 +105,7 @@ When an implementation agent returns:
 1. Read the result (status, worktree path, branch name).
 2. **If SUCCESS:**
    a. Merge the branch: `git merge <branch> --no-edit`
-   b. Run tests: `pytest tests/ -n 12`
+   b. Run tests: `python scripts/test_sharded.py`
    c. If tests pass:
       - Read and update `{ACTIVE_DIR}/BUG-{ID}.md`: set status to `[Awaiting Confirmation]`.
       - Update `{DASHBOARD}`: set bug status to `[Awaiting Confirmation]`.
@@ -147,7 +147,7 @@ When the loop terminates:
 
 - **NEVER** launch two implementation agents that could edit the same file.
 - **ALWAYS** use `isolation: "worktree"` for implementation agents.
-- **ALWAYS** run `pytest tests/ -n 12` after each merge (one at a time).
+- **ALWAYS** run `python scripts/test_sharded.py` after each merge (one at a time).
 - **ALWAYS** present research to user before implementation (no auto-approval).
 - **ALWAYS** update `{DASHBOARD}` after each successful merge.
 - If context usage reaches ~80%, follow the Handoff Rule from the protocol.

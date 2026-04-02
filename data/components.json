@@ -426,7 +426,8 @@
             "hp": 60,
             "allowed_vehicle_types": [
                 "Ship",
-                "Planetary Complex"
+                "Planetary Complex",
+                "Drop Pod"
             ],
             "sprite_index": 5,
             "abilities": {
@@ -447,7 +448,8 @@
             "hp": 40,
             "allowed_vehicle_types": [
                 "Ship",
-                "Planetary Complex"
+                "Planetary Complex",
+                "Drop Pod"
             ],
             "sprite_index": 4,
             "abilities": {

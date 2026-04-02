@@ -194,7 +194,10 @@ class DesignStatsPanel:
         Args:
             ship: Ship object for dynamic sections (logistics, layers)
         """
-        from game.ui.screens.builder.stats_config import STATS_CONFIG, get_logistics_rows, get_construction_rows
+        from game.ui.screens.builder.stats_config import (
+            STATS_CONFIG, get_logistics_rows, get_construction_rows,
+            get_strategic_rows, has_strategic_abilities,
+        )
 
         # Calculate two-column layout
         list_w = self.stats_scroll.get_container().get_rect().width
@@ -211,13 +214,19 @@ class DesignStatsPanel:
         # Start Y inside container
         start_y = 10
 
+        # Determine vehicle type for intelligent section visibility
+        vehicle_type = getattr(ship, 'vehicle_type', 'Ship')
+        is_combat_type = vehicle_type not in ("Planetary Complex", "Drop Pod")
+
         # === Column 1: Main, Maneuvering, Shields, Armor, Layers, Targeting ===
         y = start_y
 
         y = self._build_section("Main Systems", STATS_CONFIG.get('main', []), col1_x, y, col_w)
-        y = self._build_section("Maneuvering", STATS_CONFIG.get('maneuvering', []), col1_x, y, col_w)
-        y = self._build_section("Shields", STATS_CONFIG.get('shields', []), col1_x, y, col_w)
-        y = self._build_section("Armor", STATS_CONFIG.get('armor', []), col1_x, y, col_w)
+
+        if is_combat_type:
+            y = self._build_section("Maneuvering", STATS_CONFIG.get('maneuvering', []), col1_x, y, col_w)
+            y = self._build_section("Shields", STATS_CONFIG.get('shields', []), col1_x, y, col_w)
+            y = self._build_section("Armor", STATS_CONFIG.get('armor', []), col1_x, y, col_w)
 
         # Layers (Special Case: Dynamic) - Inserted under Armor
         UILabel(pygame.Rect(col1_x, y, col_w, 20), "Layers",
@@ -233,10 +242,12 @@ class DesignStatsPanel:
             y += 22
         y += 10
 
-        y = self._build_section("Targeting", STATS_CONFIG.get('targeting', []), col1_x, y, col_w)
+        if is_combat_type:
+            y = self._build_section("Targeting", STATS_CONFIG.get('targeting', []), col1_x, y, col_w)
+
         col1_max_y = y
 
-        # === Column 2: Logistics, Crew, Fighter, Build Cost ===
+        # === Column 2: Logistics, Crew, Fighter, Build Cost, Strategic ===
         y = start_y
 
         # Dynamic Logistics
@@ -245,11 +256,19 @@ class DesignStatsPanel:
         y = self._build_section("Logistics", log_rows, col2_x, y, col_w)
 
         y = self._build_section("Crew Logistics", STATS_CONFIG.get('crewlogistics', []), col2_x, y, col_w)
-        y = self._build_section("Ftr Support", STATS_CONFIG.get('fightersupport', []), col2_x, y, col_w)
+
+        if is_combat_type and vehicle_type == 'Ship':
+            y = self._build_section("Ftr Support", STATS_CONFIG.get('fightersupport', []), col2_x, y, col_w)
 
         # Build Cost (construction resources)
         construction_rows = get_construction_rows(ship)
         y = self._build_section("Build Cost", construction_rows, col2_x, y, col_w)
+
+        # Strategic abilities (harvesters, storage, yards)
+        if has_strategic_abilities(ship):
+            strategic_rows = get_strategic_rows(ship)
+            if strategic_rows:
+                y = self._build_section("Colony / Strategic", strategic_rows, col2_x, y, col_w)
 
         col2_max_y = y
 

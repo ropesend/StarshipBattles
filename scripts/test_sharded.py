@@ -4,7 +4,7 @@ Sharded test runner: splits the test suite into N independent single-threaded
 pytest processes for true parallel execution on multi-core machines.
 
 Usage:
-    python test_sharded.py              # 16 shards (default)
+    python test_sharded.py              # auto-detect shards (= CPU count)
     python test_sharded.py --shards 8   # custom shard count
     python test_sharded.py --verbose     # show per-shard test lists
 
@@ -15,6 +15,7 @@ by estimated execution time using a greedy least-loaded-bin algorithm.
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -276,7 +277,8 @@ def save_durations(all_durations):
 
 def main():
     parser = argparse.ArgumentParser(description="Sharded test runner")
-    parser.add_argument("--shards", type=int, default=16, help="Number of shards (default: 16)")
+    cpu_count = os.cpu_count() or 4
+    parser.add_argument("--shards", type=int, default=cpu_count, help=f"Number of shards (default: {cpu_count}, auto-detected from CPU count)")
     parser.add_argument("--verbose", action="store_true", help="Show per-shard test lists")
     args = parser.parse_args()
 

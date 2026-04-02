@@ -13,7 +13,7 @@
       "hp_mult": 2.0,
       "damage_mult": 2.0,
       "range_mult": 1.0,
-      "cost_mult": 2.0,
+      "cost_mult": 1.681792830507429,
       "thrust_mult": 2.0,
       "turn_mult": 2.0,
       "strategic_mult": 2.0,

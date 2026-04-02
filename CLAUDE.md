@@ -202,7 +202,7 @@ Projects are organized in `Projects/active_projects/PROJ-XX/`:
 5. **Run tests** — Verify they pass
 6. **Refactor** — Clean up while tests stay green
 7. **Update docs** — If behavior/architecture/patterns changed (Rule 2)
-8. **Run full suite** — `pytest tests/ -n 12` before committing
+8. **Run full suite** — `python scripts/test_sharded.py` before committing
 
 **Test commands:**
 ```bash
@@ -212,8 +212,8 @@ pytest tests/ --testmon
 # Targeted
 pytest tests/path/to/test.py
 
-# Full suite (use -n 12 for xdist parallelism)
-pytest tests/ -n 12
+# Full suite (sharded parallel runner, auto-detects CPU count)
+python scripts/test_sharded.py
 
 # With coverage
 pytest tests/ --cov=game -n 12

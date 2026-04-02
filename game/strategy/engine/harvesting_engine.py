@@ -23,6 +23,7 @@ import logging
 from game.core.registry import GameRegistries
 from game.core.patterns.layer_iterator import iter_components
 from game.strategy.services.component_inspector import get_component_abilities
+from game.strategy.services.modifier_resolver import resolve_size_multiplier
 
 logger = logging.getLogger(__name__)
 from game.strategy.interfaces.engines import IHarvestingEngine
@@ -211,9 +212,10 @@ class HarvestingEngine(IHarvestingEngine):
             # Normalize to list (single dict or list of dicts)
             if isinstance(storage_entries, dict):
                 storage_entries = [storage_entries]
+            size_mult = resolve_size_multiplier(comp)
             for entry in storage_entries:
                 resource_type = entry.get('resource_type', '')
-                capacity = entry.get('capacity', 0.0)
+                capacity = entry.get('capacity', 0.0) * size_mult
                 if resource_type and capacity > 0:
                     storage_totals[resource_type] = (
                         storage_totals.get(resource_type, 0.0) + capacity
@@ -306,9 +308,11 @@ class HarvestingEngine(IHarvestingEngine):
             # Normalize to list (single dict or list of dicts)
             if isinstance(harvester_data, dict):
                 harvester_data = [harvester_data]
+            size_mult = resolve_size_multiplier(comp)
             for harvester_info in harvester_data:
                 self._harvest_resource(
-                    harvester_info, colony, tick_fraction
+                    harvester_info, colony, tick_fraction,
+                    size_multiplier=size_mult
                 )
 
     def _get_harvester_info(self, comp) -> Optional[dict]:
@@ -344,6 +348,7 @@ class HarvestingEngine(IHarvestingEngine):
         harvester_info: dict,
         colony: 'Planet',
         tick_fraction: float = 1.0,
+        size_multiplier: float = 1.0,
     ) -> None:
         """Execute one harvester's resource extraction.
 
@@ -351,6 +356,7 @@ class HarvestingEngine(IHarvestingEngine):
             harvester_info: Dict with 'resource_type' and 'base_harvest_rate'
             colony: Planet being harvested (resources deposited to colony.stockpile)
             tick_fraction: Fraction of per-turn harvest to extract (1.0 = full turn, 0.01 = one tick)
+            size_multiplier: Size mount scaling factor (e.g., 0.2 for 20% size)
         """
         resource_type = harvester_info.get('resource_type', '')
         base_rate = harvester_info.get('base_harvest_rate', 0.0)
@@ -369,8 +375,8 @@ class HarvestingEngine(IHarvestingEngine):
         if quality <= 0 or quantity <= 0:
             return
 
-        # Calculate harvest amount (scaled by tick_fraction for per-tick operation)
-        harvest = base_rate * quality * tick_fraction
+        # Calculate harvest amount (scaled by size_multiplier and tick_fraction)
+        harvest = base_rate * size_multiplier * quality * tick_fraction
         actual_harvest = min(harvest, quantity)
 
         # Deduct from planet

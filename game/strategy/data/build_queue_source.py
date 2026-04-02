@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from game.core.json_utils import load_json
+from game.strategy.services.modifier_resolver import resolve_size_multiplier
 
 if TYPE_CHECKING:
     from game.strategy.data.planet import PlanetaryFacility
@@ -82,7 +83,7 @@ def _get_facility_production_rates(facility: 'PlanetaryFacility') -> Dict[str, f
 
     Reads production_rates from the SpaceShipyard ability data if present,
     otherwise falls back to default rates. Applies construction_speed_bonus
-    as a multiplier to all rates.
+    and size_mount scaling as multipliers to all rates.
 
     Args:
         facility: The planetary facility to check.
@@ -99,16 +100,52 @@ def _get_facility_production_rates(facility: 'PlanetaryFacility') -> Dict[str, f
                 shipyard_data = abilities.get("SpaceShipyard", {})
                 if isinstance(shipyard_data, dict):
                     bonus = shipyard_data.get("construction_speed_bonus", 1.0)
+                    size_mult = resolve_size_multiplier(comp)
                     # Check for explicit production_rates in ability data
                     explicit_rates = shipyard_data.get("production_rates", {})
                     if explicit_rates:
-                        # Apply bonus to explicit rates
-                        return {res: rate * bonus for res, rate in explicit_rates.items()}
+                        # Apply bonus and size scaling to explicit rates
+                        return {res: rate * bonus * size_mult for res, rate in explicit_rates.items()}
                     # Fall back to default space_shipyard rates with bonus
                     base_rates = get_default_production_rates("space_shipyard")
-                    return {res: rate * bonus for res, rate in base_rates.items()}
+                    return {res: rate * bonus * size_mult for res, rate in base_rates.items()}
     # Default if no SpaceShipyard ability found
     return get_default_production_rates("space_shipyard")
+
+
+def _get_planetary_yard_size_multiplier(planet, registries=None) -> float:
+    """Find the size_mount multiplier of the PlanetaryYard component on a planet.
+
+    Scans all operational facilities for a PlanetaryYard ability and returns
+    the size_mount value from the component that provides it.
+
+    Args:
+        planet: Planet with facilities to scan.
+        registries: Optional GameRegistries for component lookup.
+
+    Returns:
+        Size multiplier (default 1.0 if no modifier or no PlanetaryYard found).
+    """
+    from game.core.patterns.layer_iterator import iter_components
+    from game.strategy.services.component_inspector import get_component_abilities
+
+    for facility in planet.facilities:
+        if not getattr(facility, 'is_operational', True):
+            continue
+        for comp in iter_components(facility.design_data):
+            if isinstance(comp, dict):
+                abilities = comp.get('abilities', {})
+                if 'PlanetaryYard' in abilities:
+                    return resolve_size_multiplier(comp)
+                # Check registry
+                comp_id = comp.get('id')
+                if comp_id and registries is not None:
+                    comp_def = registries.components.get(comp_id)
+                    if comp_def:
+                        reg_abilities = get_component_abilities(comp_def)
+                        if 'PlanetaryYard' in reg_abilities:
+                            return resolve_size_multiplier(comp)
+    return 1.0
 
 
 def estimate_build_turns(total_cost: Dict[str, float],
@@ -174,7 +211,11 @@ def get_production_rate_for_queue(entity, queue_id: Optional[str]) -> Dict[str, 
                 break
 
     # Default: planetary yard rate (for base queue / complexes)
-    return get_default_production_rates("planetary_yard")
+    base_rates = get_default_production_rates("planetary_yard")
+    if hasattr(entity, 'facilities'):
+        yard_size_mult = _get_planetary_yard_size_multiplier(entity)
+        return {res: rate * yard_size_mult for res, rate in base_rates.items()}
+    return base_rates
 
 
 def _collect_planet_sources(planet, sources: List[BuildQueueSource]) -> None:
@@ -190,7 +231,11 @@ def _collect_planet_sources(planet, sources: List[BuildQueueSource]) -> None:
     # Base queue (complexes only) — only if colony has PlanetaryYard facility
     from game.strategy.engine.production_engine import _colony_has_planetary_yard
     from game.core.registry import RegistryManager
-    if _colony_has_planetary_yard(planet, RegistryManager.instance()):
+    regs = RegistryManager.instance()
+    if _colony_has_planetary_yard(planet, regs):
+        base_rates = get_default_production_rates("planetary_yard")
+        yard_size_mult = _get_planetary_yard_size_multiplier(planet, regs)
+        scaled_rates = {res: rate * yard_size_mult for res, rate in base_rates.items()}
         sources.append(BuildQueueSource(
             queue_id=f"planet_{planet.id}_base",
             display_name=f"{planet.name} - Planetary Yard",
@@ -199,7 +244,7 @@ def _collect_planet_sources(planet, sources: List[BuildQueueSource]) -> None:
             can_build_ships=False,
             can_build_complexes=True,
             context_type="planet",
-            build_rate=get_default_production_rates("planetary_yard"),
+            build_rate=scaled_rates,
             planet_id=planet.id,
         ))
 

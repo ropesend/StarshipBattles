@@ -141,9 +141,11 @@ Items can complete mid-turn when their full resource cost is consumed. Multiple 
 ### Production Rates
 
 Production rates are per-turn (divided by 100 for per-tick). Rates come from `BuildQueueSource`:
-- `"planetary_yard"` -- default rate for base colony queue
-- Per-facility rates for shipyard queues
+- `"planetary_yard"` -- default rate for base colony queue, scaled by PlanetaryYard component's `simple_size_mount` modifier
+- Per-facility rates for shipyard queues, scaled by SpaceShipyard component's `simple_size_mount` modifier
 - `"fleet_space_yard"` -- rate for fleet construction, multiplied by yard count
+
+**Size mount scaling:** Production rates are multiplied by the `simple_size_mount` modifier value on the yard component. A planetary yard at size 0.2 produces at 20% of the base rate (e.g., 400/resource/turn instead of 2000). Resolution is handled by `modifier_resolver.resolve_size_multiplier()` in `game/strategy/services/modifier_resolver.py`.
 
 ### Constants
 

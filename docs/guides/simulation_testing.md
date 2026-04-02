@@ -183,8 +183,8 @@ python -m simulation_tests.run_tests BEAMWEAPON-001
 # Skip high-tick simulation tests
 python -m simulation_tests.run_tests --fast
 
-# Parallel execution (12 workers for CLI, 4 for VS Code Test Explorer)
-pytest tests/ -n 12
+# Parallel execution (sharded runner, auto-detects CPU count)
+python scripts/test_sharded.py
 
 # With coverage
 pytest tests/ --cov=game --cov-report=html

@@ -32,7 +32,7 @@ AddToQueueCallback = Callable[[int, str, str, str, Optional[int], Optional[int],
 
 # Category-to-build-capability mapping
 _SHIP_CATEGORIES = {"ship", "satellite", "fighter"}
-_COMPLEX_CATEGORIES = {"complex"}
+_COMPLEX_CATEGORIES = {"complex", "drop_pod"}
 
 
 class BuildQueueController:
@@ -147,7 +147,8 @@ class BuildQueueController:
             "complex": "Planetary Complex",
             "ship": "Ship",
             "satellite": "Satellite",
-            "fighter": "Fighter"
+            "fighter": "Fighter",
+            "drop_pod": "Drop Pod"
         }
 
         target_type = type_map.get(category, "Ship")

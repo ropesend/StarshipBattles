@@ -153,7 +153,7 @@ class DesignSelectorWindow(UIWindow):
         )
         y_offset += 30
 
-        type_options = ["All Types", "Ship", "Fighter", "Satellite", "Planetary Complex"]
+        type_options = ["All Types", "Ship", "Fighter", "Satellite", "Planetary Complex", "Drop Pod"]
         self.type_dropdown = UIDropDownMenu(
             options_list=type_options,
             starting_option="All Types",

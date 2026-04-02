@@ -1,0 +1,58 @@
+{
+    "name": "Colony Drop Pod",
+    "vehicle_type": "Drop Pod",
+    "ship_class": "Drop Pod (Small)",
+    "layers": {
+        "CORE": [
+            {"id": "central_complex_command", "modifiers": [
+                {"id": "simple_size_mount", "value": 1.0}
+            ]},
+            {"id": "crew_quarters", "modifiers": [
+                {"id": "simple_size_mount", "value": 0.2}
+            ]},
+            {"id": "life_support", "modifiers": [
+                {"id": "simple_size_mount", "value": 0.2}
+            ]},
+            {"id": "planetary_yard_module", "modifiers": [
+                {"id": "simple_size_mount", "value": 0.2}
+            ]},
+            {"id": "metal_harvester", "modifiers": [
+                {"id": "simple_size_mount", "value": 0.2}
+            ]},
+            {"id": "organic_harvester", "modifiers": [
+                {"id": "simple_size_mount", "value": 0.2}
+            ]},
+            {"id": "vapor_harvester", "modifiers": [
+                {"id": "simple_size_mount", "value": 0.2}
+            ]},
+            {"id": "radioactive_harvester", "modifiers": [
+                {"id": "simple_size_mount", "value": 0.2}
+            ]},
+            {"id": "exotic_harvester", "modifiers": [
+                {"id": "simple_size_mount", "value": 0.2}
+            ]},
+            {"id": "resource_vault_metals", "modifiers": [
+                {"id": "simple_size_mount", "value": 0.2}
+            ]},
+            {"id": "resource_vault_organics", "modifiers": [
+                {"id": "simple_size_mount", "value": 0.2}
+            ]},
+            {"id": "resource_vault_vapors", "modifiers": [
+                {"id": "simple_size_mount", "value": 0.2}
+            ]},
+            {"id": "resource_vault_radioactives", "modifiers": [
+                {"id": "simple_size_mount", "value": 0.2}
+            ]},
+            {"id": "resource_vault_exotics", "modifiers": [
+                {"id": "simple_size_mount", "value": 0.2}
+            ]}
+        ]
+    },
+    "initial_stockpile": {
+        "metals": 200,
+        "organics": 100,
+        "vapors": 50,
+        "radioactives": 50,
+        "exotics": 25
+    }
+}
