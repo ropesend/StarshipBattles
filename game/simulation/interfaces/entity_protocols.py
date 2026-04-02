@@ -71,6 +71,11 @@ class ICombatShip(Protocol):
         ...
 
     @property
+    def vehicle_type(self) -> str:
+        """Vehicle type from class definition (e.g., 'Ship', 'Fighter', 'Satellite')."""
+        ...
+
+    @property
     def angle(self) -> float:
         """Current facing angle in degrees."""
         ...

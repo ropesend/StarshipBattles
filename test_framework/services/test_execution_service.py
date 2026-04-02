@@ -181,7 +181,7 @@ class TestExecutionService:
             scenario.results['ticks'] = tick_count  # Alias for consistency with runner
 
             # Log test execution (for UI vs headless comparison)
-            self.runner._log_test_execution(scenario, headless=True)
+            self.runner.log_test_execution(scenario, headless=True)
 
             return {
                 'passed': scenario.passed,

@@ -237,7 +237,8 @@ No hardcoded fuel/energy/ammo assumptions in the combat simulation layer.
 
 - `select_target(ship, candidates)` -- filters dead/friendly, returns closest enemy
 - `find_valid_target(ship, primary, secondaries, comp, weapon_ab)` -- validates
-  per-weapon constraints (range, arc, PDC vs missile, seeker range)
+  per-weapon constraints (range, arc, PDC vs missile/fighter, seeker range).
+  PDC weapons can only target missiles and fighters (detected via `vehicle_type == 'Fighter'`)
 - `calculate_firing_solution(ship, comp, target)` -- beam: direct aim; projectile/seeker:
   lead calculation via `solve_lead()` (quadratic intercept formula)
 - `solve_lead(pos, vel, t_pos, t_vel, p_speed)` -- returns intercept time t > 0

@@ -14,6 +14,7 @@ from unittest.mock import MagicMock
 
 from game.simulation.entities.projectile import Projectile
 from game.core.constants import AttackType
+from game.core.math import Vector2 as CoreVector2
 
 
 # =============================================================================
@@ -80,6 +81,43 @@ class TestTurnDirectionCommitment:
         non_zero = [d for d in turn_directions if d != 0]
         if non_zero:
             assert all(d == non_zero[0] for d in non_zero)
+
+    def test_reverse_direction_missile_turns_around(self, mock_owner, mock_target):
+        """Missile heading AWAY from target should U-turn and approach it.
+
+        This is the SEEKER-TURN-002 root cause: weapon_firing_system creates
+        velocity as game.core.math.Vector2, whose angle_to() is wrong for
+        direction comparison. We use CoreVector2 here to match real game behavior.
+        """
+        mock_target.position = pygame.math.Vector2(1000, 0)
+
+        # Use game.core.math.Vector2 for velocity — matches weapon_firing_system
+        proj = Projectile(
+            owner=mock_owner,
+            position=pygame.math.Vector2(0, 0),
+            velocity=CoreVector2(-100, 0),  # Moving LEFT, away from target
+            damage=50,
+            range_val=100000,
+            endurance=100.0,
+            proj_type='missile',
+            turn_rate=180,  # Fast turn rate
+            max_speed=100,
+            target=mock_target,
+            hp=5
+        )
+
+        initial_distance = (mock_target.position - proj.position).length()
+
+        # Run 200 ticks — enough for a fast-turning missile to U-turn
+        for _ in range(200):
+            if proj.is_alive:
+                proj.update()
+
+        final_distance = (mock_target.position - proj.position).length()
+        assert final_distance < initial_distance, (
+            f"Missile should approach target after U-turn, but distance went "
+            f"from {initial_distance:.0f} to {final_distance:.0f}"
+        )
 
     def test_commitment_near_180_degrees(self, mock_owner, mock_target):
         """Commitment should activate when target is generally behind (>135°)."""

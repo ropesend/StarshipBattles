@@ -1,7 +1,7 @@
 # Starship Battles Documentation
 
 > **Audience:** LLM agents (Claude Code, automated workers). Optimized for machine readability.
-> **Last verified:** 2026-03-14 against 429 source files, 7353 tests.
+> **Last verified:** 2026-03-31 against 429 source files, 14103 tests.
 
 ---
 
@@ -33,7 +33,7 @@
 | System | Document | Covers |
 |--------|----------|--------|
 | Combat/Simulation | [combat_simulation.md](systems/combat_simulation.md) | Battle modes, damage pipeline, ship architecture, abilities |
-| Abilities | [ability_reference.md](systems/ability_reference.md) | All 39 component abilities: registry keys, parameters, stat bindings |
+| Abilities | [ability_reference.md](systems/ability_reference.md) | All 41 component abilities: registry keys, parameters, stat bindings |
 | Strategy/Turn Engine | [strategy_layer.md](systems/strategy_layer.md) | Facade, command dispatch, turn engine, fleet delegates, events |
 | AI | [ai_system.md](systems/ai_system.md) | Behaviors, strategy manager, target evaluator, adapters |
 | Research | [research_system.md](systems/research_system.md) | Tech tree, research tracker, leaky bucket algorithm |
@@ -74,7 +74,7 @@ docs/
 │   └── testing_infrastructure.md  DI fixtures, conftest, test helpers
 │
 └── systems/                     # Domain-specific architecture
-    ├── ability_reference.md       All 39 abilities: keys, parameters, stat bindings
+    ├── ability_reference.md       All 41 abilities: keys, parameters, stat bindings
     ├── combat_simulation.md       Battle orchestration, damage pipeline
     ├── strategy_layer.md          Facade, turn engine, commands, events
     ├── ai_system.md               AI behaviors, targeting, adapters
@@ -85,7 +85,7 @@ docs/
 
 ## Quick Reference
 
-- **Test baseline:** 7353 tests, 0 failures
+- **Test baseline:** 14103 tests, 0 failures
 - **Test command:** `python scripts/test_sharded.py`
 - **Minimum resolution:** 2560x1600 (optimized for 4K: 3840x2160)
 - **Python:** 3.x with Pygame, Pytest, pytest-xdist

@@ -248,6 +248,21 @@ def normalize_angle(angle: float) -> float:
     return angle
 
 
+def signed_angle_between(a: 'Vector2', b: 'Vector2') -> float:
+    """
+    Signed angle to rotate direction vector *a* onto direction vector *b*.
+
+    Uses cross/dot product — correct for direction-to-direction comparison.
+    Positive = counter-clockwise, negative = clockwise.
+
+    Returns:
+        Angle in degrees in the range (-180, 180].
+    """
+    cross = a.x * b.y - a.y * b.x
+    dot = a.x * b.x + a.y * b.y
+    return _math.degrees(_math.atan2(cross, dot))
+
+
 def angle_diff(from_angle: float, to_angle: float) -> float:
     """
     Calculate the shortest angular difference between two angles.

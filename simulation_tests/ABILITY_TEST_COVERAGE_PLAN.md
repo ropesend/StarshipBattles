@@ -1,7 +1,7 @@
 > **Status: In Progress**
 > Scenario classes live in `simulation_tests/scenarios/*_scenarios.py` and are
 > run via `python -m simulation_tests.run_tests`.
-> Current baseline: **112 passed, 2 failed (RESOURCE-002 game bug, SEEKER-TURN-002 known oscillation), 0 skipped (114 total)**.
+> Current baseline: **113 passed, 1 failed (RESOURCE-002 game bug), 0 skipped (114 total)**.
 > Note: `defense_scenarios.py` was deleted — its 8 tests were redundant with
 > dedicated ability files or replaced by the EmissiveArmor category.
 

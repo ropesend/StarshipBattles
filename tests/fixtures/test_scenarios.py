@@ -186,7 +186,7 @@ def create_mock_test_runner() -> Mock:
     runner.engine = Mock()
     runner.load_data_for_scenario = Mock()
     runner.run_scenario = Mock()
-    runner._log_test_execution = Mock()
+    runner.log_test_execution = Mock()
 
     return runner
 

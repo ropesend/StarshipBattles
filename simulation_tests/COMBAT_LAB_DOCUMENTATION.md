@@ -46,7 +46,7 @@ Starship Battles/
 ├── game/
 │   └── ui/
 │       └── screens/
-│           └── test_lab_screen.py      # Combat Lab UI (pygame)
+│           └── test_lab/screen.py      # Combat Lab UI (pygame)
 │
 ├── test_framework/
 │   ├── registry.py                     # TestRegistry - scenario discovery
@@ -111,7 +111,7 @@ Starship Battles/
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                            COMBAT LAB UI                                     │
-│                    (game/ui/screens/test_lab_screen.py)                     │
+│                    (game/ui/screens/test_lab/screen.py)                     │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
 │  │  Category   │  │    Test     │  │    Test     │  │   Results   │        │
 │  │   Browser   │  │   Browser   │  │   Details   │  │   Panel     │        │

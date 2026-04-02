@@ -1186,6 +1186,44 @@ class ComparisonScenario(TestScenario):
         if hasattr(self, '_collect_extra_results'):
             self._collect_extra_results(engine)
 
+    def _run_validation(self, engine):
+        """
+        Override base _run_validation for visual baseline mode.
+
+        In visual baseline mode only baseline results exist — calling
+        validate() would crash because variant attributes are absent.
+        Collect results and return a baseline-only precondition report.
+        """
+        if self._visual_baseline:
+            self.collect_results(engine)
+            checks = self._template_preconditions()
+            from simulation_tests.scenarios.validation import ValidationReport
+            report = ValidationReport(checks=checks)
+            self.results['validation'] = report.to_dict()
+            self.results['validation_results'] = [
+                {
+                    'name': c.name,
+                    'status': 'PASS' if c.passed else 'FAIL',
+                    'expected': c.expected,
+                    'actual': c.actual,
+                    'p_value': None,
+                    'tolerance': None,
+                    'phase': c.phase,
+                    'detail': c.detail,
+                }
+                for c in checks
+            ]
+            summary = report.summary()
+            self.results['validation_summary'] = {
+                'pass': sum(s['passed'] for s in summary.values()),
+                'fail': sum(s['failed'] for s in summary.values()),
+                'warn': 0,
+                'info': 0,
+            }
+            self.results['has_validation_failures'] = not report.passed
+            return report
+        return super()._run_validation(engine)
+
     def _template_preconditions(self):
         """
         Return automatic precondition checks for ComparisonScenario.

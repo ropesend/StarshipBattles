@@ -859,3 +859,104 @@ class TestEdgeCasesAndBoundaries:
             ship, primary, [], weapon, weapon_ab
         )
         assert target is primary
+
+
+class TestPDCFighterDetection:
+    """Tests for PDC fighter detection using vehicle_type instead of ship_class string matching."""
+
+    def _make_ship_mock(self, team_id=0, position=None):
+        """Create a basic ship mock for the shooter."""
+        ship = MagicMock()
+        ship.team_id = team_id
+        ship.position = position or Vector2(0, 0)
+        ship.velocity = Vector2(0, 0)
+        ship.angle = 0
+        return ship
+
+    def _make_pdc_weapon(self):
+        """Create a PDC weapon mock with valid firing solution."""
+        weapon = MagicMock()
+        weapon.has_ability = lambda name: name == 'ProjectileWeaponAbility'
+        weapon.has_pdc_ability = MagicMock(return_value=True)
+
+        proj_ab = MagicMock()
+        proj_ab.projectile_speed = 500
+        weapon.get_ability = lambda name: proj_ab
+
+        weapon_ab = MagicMock()
+        weapon_ab.check_firing_solution = MagicMock(return_value=True)
+        return weapon, weapon_ab
+
+    def _make_candidate(self, team_id=1, vehicle_type="Ship", ship_class="Frigate"):
+        """Create a candidate target mock with vehicle_type."""
+        candidate = MagicMock()
+        candidate.is_alive = True
+        candidate.team_id = team_id
+        candidate.position = Vector2(100, 0)
+        candidate.velocity = Vector2(0, 0)
+        candidate.type = 'ship'  # Not a missile
+        candidate.vehicle_type = vehicle_type
+        candidate.ship_class = ship_class
+        return candidate
+
+    def test_pdc_targets_fighter_by_vehicle_type(self):
+        """PDC weapon can target a fighter identified by vehicle_type='Fighter'."""
+        from game.simulation.combat.targeting_system import TargetingSystem
+
+        system = TargetingSystem()
+        ship = self._make_ship_mock()
+        weapon, weapon_ab = self._make_pdc_weapon()
+
+        fighter = self._make_candidate(vehicle_type="Fighter", ship_class="Fighter (Small)")
+
+        target = system.find_valid_target(ship, fighter, [], weapon, weapon_ab)
+        assert target is fighter
+
+    def test_pdc_rejects_regular_ship(self):
+        """PDC weapon cannot target a regular ship (vehicle_type='Ship')."""
+        from game.simulation.combat.targeting_system import TargetingSystem
+
+        system = TargetingSystem()
+        ship = self._make_ship_mock()
+        weapon, weapon_ab = self._make_pdc_weapon()
+
+        cruiser = self._make_candidate(vehicle_type="Ship", ship_class="Cruiser")
+
+        target = system.find_valid_target(ship, cruiser, [], weapon, weapon_ab)
+        assert target is None
+
+    def test_pdc_detects_fighter_without_fighter_in_class_name(self):
+        """PDC targets a fighter even if ship_class doesn't contain 'Fighter' string.
+
+        This is the key test: vehicle_type is the canonical way to identify fighters,
+        not string matching on ship_class.
+        """
+        from game.simulation.combat.targeting_system import TargetingSystem
+
+        system = TargetingSystem()
+        ship = self._make_ship_mock()
+        weapon, weapon_ab = self._make_pdc_weapon()
+
+        # vehicle_type="Fighter" but ship_class has no 'Fighter' substring
+        fighter = self._make_candidate(vehicle_type="Fighter", ship_class="Interceptor")
+
+        target = system.find_valid_target(ship, fighter, [], weapon, weapon_ab)
+        assert target is fighter
+
+    def test_pdc_rejects_ship_with_fighter_in_class_name(self):
+        """PDC does NOT target a ship just because ship_class contains 'Fighter'.
+
+        A ship with vehicle_type='Ship' should not be targeted by PDC even if
+        the class name happens to contain 'Fighter'.
+        """
+        from game.simulation.combat.targeting_system import TargetingSystem
+
+        system = TargetingSystem()
+        ship = self._make_ship_mock()
+        weapon, weapon_ab = self._make_pdc_weapon()
+
+        # vehicle_type="Ship" but ship_class contains 'Fighter'
+        not_a_fighter = self._make_candidate(vehicle_type="Ship", ship_class="Fighter-Carrier")
+
+        target = system.find_valid_target(ship, not_a_fighter, [], weapon, weapon_ab)
+        assert target is None

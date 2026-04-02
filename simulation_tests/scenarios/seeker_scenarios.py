@@ -249,22 +249,17 @@ class SeekerTurnRateComparisonScenario(ComparisonScenario):
 
 class SeekerTurnRate180Scenario(ComparisonScenario):
     """
-    SEEKER-TURN-002: 180° Reverse Launch — Known Oscillation Issue
+    SEEKER-TURN-002: 180° Reverse Launch
 
     Both seekers launched 180° away from target (narrow arc, faces backward).
     Fast turn should redirect and hit. Slow turn should expire.
-
-    NOTE: This test documents a known oscillation bug in seeker guidance
-    when target is >135° off-boresight. The guidance commits to a turn
-    direction but may oscillate. Test is expected to FAIL until the
-    guidance system is fixed.
     """
 
     metadata = TestMetadata(
         test_id="SEEKER-TURN-002",
         category="SeekerWeaponAbility",
         subcategory="Turn Rate",
-        name="180° Reverse Launch (Known Oscillation Issue)",
+        name="180° Reverse Launch",
         summary="Seeker launched directly backwards — tests guidance u-turn capability",
         conditions=[
             "Both seekers launched 180° away from target (narrow 1° arc)",
@@ -273,13 +268,13 @@ class SeekerTurnRate180Scenario(ComparisonScenario):
             "Distance: 1000px",
             "Test Duration: 1000 ticks",
         ],
-        edge_cases=["180° off-boresight triggers oscillation prevention code (TURN_COMMITMENT_THRESHOLD_DEG=45)"],
-        expected_outcome="Fast turn seeker should redirect and hit. May fail due to guidance oscillation bug.",
+        edge_cases=["180° off-boresight — commitment logic prevents floating-point sign flips"],
+        expected_outcome="Fast turn seeker redirects and hits. Slow turn seeker expires before reaching target.",
         pass_criteria="variant_damage > 0, baseline_damage == 0",
         max_ticks=1000,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
-        tags=["seeker", "turn-rate", "180-reverse", "known-issue", "comparison"],
+        tags=["seeker", "turn-rate", "180-reverse", "comparison"],
     )
 
     baseline_attacker_ship = "Test_Attacker_Seeker_SlowTurn.json"

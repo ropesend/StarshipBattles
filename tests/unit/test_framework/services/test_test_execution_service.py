@@ -150,7 +150,7 @@ class TestRunHeadless:
         service = TestExecutionService()
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
-        service.runner._log_test_execution = Mock()
+        service.runner.log_test_execution = Mock()
 
         # Make battle end after 100 ticks
         mock_battle_engine.is_battle_over = Mock(side_effect=[False] * 99 + [True])
@@ -174,7 +174,7 @@ class TestRunHeadless:
         mock_test_scenario.max_ticks = 50
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
-        service.runner._log_test_execution = Mock()
+        service.runner.log_test_execution = Mock()
 
         result = service.run_headless(sample_scenario_info, mock_battle_engine)
 
@@ -192,7 +192,7 @@ class TestRunHeadless:
         mock_test_scenario.max_ticks = 10
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
-        service.runner._log_test_execution = Mock()
+        service.runner.log_test_execution = Mock()
 
         result = service.run_headless(sample_scenario_info, mock_battle_engine)
 
@@ -209,7 +209,7 @@ class TestRunHeadless:
         mock_test_scenario.max_ticks = 250
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
-        service.runner._log_test_execution = Mock()
+        service.runner.log_test_execution = Mock()
 
         progress_callback = Mock()
         result = service.run_headless(
@@ -234,7 +234,7 @@ class TestRunHeadless:
         mock_test_scenario.max_ticks = 1000
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
-        service.runner._log_test_execution = Mock()
+        service.runner.log_test_execution = Mock()
 
         # Battle ends at tick 50
         mock_battle_engine.is_battle_over = Mock(side_effect=[False] * 49 + [True])
@@ -254,7 +254,7 @@ class TestRunHeadless:
         mock_test_scenario.max_ticks = 10
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
-        service.runner._log_test_execution = Mock()
+        service.runner.log_test_execution = Mock()
 
         result = service.run_headless(sample_scenario_info, mock_battle_engine)
 
@@ -273,11 +273,11 @@ class TestRunHeadless:
         mock_test_scenario.max_ticks = 10
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
-        service.runner._log_test_execution = Mock()
+        service.runner.log_test_execution = Mock()
 
         result = service.run_headless(sample_scenario_info, mock_battle_engine)
 
-        service.runner._log_test_execution.assert_called_once_with(mock_test_scenario, headless=True)
+        service.runner.log_test_execution.assert_called_once_with(mock_test_scenario, headless=True)
 
     def test_run_headless_clears_engine(
         self,
@@ -289,7 +289,7 @@ class TestRunHeadless:
         service = TestExecutionService()
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
-        service.runner._log_test_execution = Mock()
+        service.runner.log_test_execution = Mock()
 
         result = service.run_headless(sample_scenario_info, mock_battle_engine)
 
@@ -305,7 +305,7 @@ class TestRunHeadless:
         service = TestExecutionService()
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
-        service.runner._log_test_execution = Mock()
+        service.runner.log_test_execution = Mock()
 
         result = service.run_headless(sample_scenario_info, mock_battle_engine)
 
@@ -321,7 +321,7 @@ class TestRunHeadless:
         service = TestExecutionService()
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
-        service.runner._log_test_execution = Mock()
+        service.runner.log_test_execution = Mock()
 
         result = service.run_headless(sample_scenario_info, mock_battle_engine)
 
@@ -337,7 +337,7 @@ class TestRunHeadless:
         service = TestExecutionService()
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
-        service.runner._log_test_execution = Mock()
+        service.runner.log_test_execution = Mock()
 
         # Make test fail via _run_validation
         failed_report = Mock()
@@ -383,7 +383,7 @@ class TestRunHeadless:
         mock_test_scenario.max_ticks = 100
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
-        service.runner._log_test_execution = Mock()
+        service.runner.log_test_execution = Mock()
 
         result = service.run_headless(sample_scenario_info, mock_battle_engine)
 
@@ -400,7 +400,7 @@ class TestRunHeadless:
         service = TestExecutionService()
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
-        service.runner._log_test_execution = Mock()
+        service.runner.log_test_execution = Mock()
 
         # Add some test results
         mock_test_scenario.results = {'damage_dealt': 150, 'hit_count': 10}

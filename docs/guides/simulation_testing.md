@@ -171,14 +171,20 @@ pytest tests/ --testmon
 # Unit tests only
 pytest tests/unit/ -v
 
-# Simulation tests only
-pytest simulation_tests/tests/ -v -m simulation
+# Simulation tests (auto-discovers *_scenarios.py files)
+python -m simulation_tests.run_tests
+
+# Filter simulation tests by ID prefix
+python -m simulation_tests.run_tests BEAMWEAPON
+
+# Run a specific simulation test
+python -m simulation_tests.run_tests BEAMWEAPON-001
+
+# Skip high-tick simulation tests
+python -m simulation_tests.run_tests --fast
 
 # Parallel execution (sharded runner, auto-detects CPU count)
 python scripts/test_sharded.py
-
-# Specific test
-pytest simulation_tests/tests/test_beam_weapons.py::TestBeamAccuracy::test_BEAM360_001 -v
 
 # With coverage
 pytest tests/ --cov=game --cov-report=html
@@ -197,14 +203,14 @@ pytest tests/ --cov=game --cov-report=html
 +------------------+-------------------+------------------+
                    |                   |
           +--------v--------+  +-------v---------+
-          |     Pytest      |  |   Combat Lab    |
+          |   run_tests.py  |  |   Combat Lab    |
           |   (Headless)    |  |    (Visual)     |
           |                 |  |                 |
           | TestScenario ---+--+--- TestScenario |
           +-----------------+  +-----------------+
 ```
 
-Both environments use the exact same `BattleEngine` code. The only difference is `headless=True` (pytest) vs `headless=False` (Combat Lab).
+Both environments use the exact same `BattleEngine` code. The only difference is `headless=True` (run_tests CLI) vs `headless=False` (Combat Lab).
 
 ### TestScenario Class
 
@@ -390,7 +396,7 @@ max_speed:
 
 **8. Store results BEFORE calling `super().validate()`** (see Troubleshooting, Issue 3).
 
-**9. Create the pytest wrapper** in `simulation_tests/tests/`.
+**9. Run the test** via `python -m simulation_tests.run_tests <TEST_ID>` (scenario files in `simulation_tests/scenarios/` are auto-discovered).
 
 ### Component Mass Convention
 
@@ -692,22 +698,17 @@ class BEAM360_001_LowAccPointBlank(TestScenario):
         return damage > 0
 ```
 
-2. **Create pytest wrapper** in `simulation_tests/tests/test_<category>.py`:
+2. **Run the test** via the CLI runner (auto-discovers scenario files):
 
-```python
-import pytest
-from test_framework.runner import TestRunner
-from simulation_tests.scenarios.beam_scenarios import BEAM360_001_LowAccPointBlank
+```bash
+# Run the specific test by ID
+python -m simulation_tests.run_tests BEAM360-001
 
-@pytest.mark.simulation
-class TestBeamAccuracy:
-    @pytest.fixture(autouse=True)
-    def setup(self, isolated_registry):
-        self.runner = TestRunner()
+# Run all tests in the category
+python -m simulation_tests.run_tests BEAM360
 
-    def test_BEAM360_001_low_acc_point_blank(self):
-        scenario = self.runner.run_scenario(BEAM360_001_LowAccPointBlank, headless=True)
-        assert scenario.passed, f"Test failed: {scenario.results}"
+# Run all simulation tests
+python -m simulation_tests.run_tests
 ```
 
 3. **Delete the old test** after confirming the new one passes.
