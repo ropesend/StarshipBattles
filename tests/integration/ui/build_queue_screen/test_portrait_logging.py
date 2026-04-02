@@ -4,7 +4,6 @@ Tests for portrait loading error logging (ERR-011).
 
 import pytest
 import pygame
-import pygame_gui
 import logging
 from unittest.mock import MagicMock, patch
 from game.strategy.data.planet import Planet, PlanetType
@@ -43,11 +42,9 @@ class TestBuildQueuePortraitLogging:
     PROJ-40: Updated to use DI injection for dependencies.
     """
 
-    def test_portrait_load_failure_logs_warning(self, caplog, mock_design_library, mock_design_loader, mock_registries):
+    def test_portrait_load_failure_logs_warning(self, caplog, mock_design_library, mock_design_loader, mock_registries, ui_manager):
         """Portrait loading failure should log warning with path context."""
-        pygame.init()
-        screen = pygame.display.set_mode((1024, 768))
-        manager = pygame_gui.UIManager((1024, 768))
+        manager = ui_manager
 
         hex_coord = HexCoord(5, 5)
         # Create test planet
@@ -116,13 +113,9 @@ class TestBuildQueuePortraitLogging:
         assert 'portrait' in warning_text.lower() or 'load' in warning_text.lower(), \
             f"Warning should mention portrait load failure. Got: {warning_text}"
 
-        pygame.quit()
-
-    def test_portrait_placeholder_fallback_no_spam(self, caplog, mock_design_library, mock_design_loader, mock_registries):
+    def test_portrait_placeholder_fallback_no_spam(self, caplog, mock_design_library, mock_design_loader, mock_registries, ui_manager):
         """When no portrait exists, fallback to placeholder without log spam."""
-        pygame.init()
-        screen = pygame.display.set_mode((1024, 768))
-        manager = pygame_gui.UIManager((1024, 768))
+        manager = ui_manager
 
         hex_coord = HexCoord(5, 5)
         planet = Planet(
@@ -185,5 +178,3 @@ class TestBuildQueuePortraitLogging:
                                     and 'resource' not in r.message.lower()]
         assert len(design_portrait_warnings) == 0, \
             "Should not spam warnings when design portraits simply don't exist"
-
-        pygame.quit()

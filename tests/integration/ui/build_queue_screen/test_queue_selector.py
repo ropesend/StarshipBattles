@@ -10,8 +10,6 @@ Tests cover:
 """
 
 import pytest
-import pygame
-import pygame_gui
 from unittest.mock import MagicMock
 from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
 from game.core.hex_math import HexCoord
@@ -67,11 +65,9 @@ def mock_design_loader():
 
 
 @pytest.fixture
-def build_queue_screen(mock_design_library, mock_design_loader, mock_registries):
+def build_queue_screen(ui_manager, mock_design_library, mock_design_loader, mock_registries):
     """Create BuildQueueScreen for testing queue selector."""
-    pygame.init()
-    screen = pygame.display.set_mode((1920, 1080))
-    manager = pygame_gui.UIManager((1920, 1080))
+    manager = ui_manager
 
     hex_coord = HexCoord(5, 5)
     planet = Planet(
@@ -123,7 +119,6 @@ def build_queue_screen(mock_design_library, mock_design_loader, mock_registries)
 
     manager.update(0.1)
     yield bq_screen
-    pygame.quit()
 
 
 # --- Panel existence tests ---
@@ -191,11 +186,9 @@ def test_on_queue_toggled_prevents_empty_selection(build_queue_screen):
 
 # --- Multi-source tests (simulated) ---
 
-def test_multiple_queue_sources_create_buttons():
+def test_multiple_queue_sources_create_buttons(ui_manager):
     """Test that multiple queue sources create multiple selector buttons."""
-    pygame.init()
-    screen = pygame.display.set_mode((1920, 1080))
-    manager = pygame_gui.UIManager((1920, 1080))
+    manager = ui_manager
 
     hex_coord = HexCoord(5, 5)
     planet = Planet(
@@ -258,14 +251,10 @@ def test_multiple_queue_sources_create_buttons():
     assert len(bq.queue_sources) == 2
     assert len(bq._queue_selector.buttons) == 2
 
-    pygame.quit()
 
-
-def test_multi_select_sets_active_to_none():
+def test_multi_select_sets_active_to_none(ui_manager):
     """Test that selecting multiple queues sets active_queue_source to None."""
-    pygame.init()
-    screen = pygame.display.set_mode((1920, 1080))
-    manager = pygame_gui.UIManager((1920, 1080))
+    manager = ui_manager
 
     hex_coord = HexCoord(5, 5)
     planet = Planet(
@@ -337,14 +326,10 @@ def test_multi_select_sets_active_to_none():
     assert len(bq.selected_queue_indices) == 1
     assert bq.active_queue_source is bq.queue_sources[0]
 
-    pygame.quit()
 
-
-def test_queue_display_shows_active_source_items():
+def test_queue_display_shows_active_source_items(ui_manager):
     """Test that queue display shows items from the active queue source."""
-    pygame.init()
-    screen = pygame.display.set_mode((1920, 1080))
-    manager = pygame_gui.UIManager((1920, 1080))
+    manager = ui_manager
 
     hex_coord = HexCoord(5, 5)
     planet = Planet(
@@ -399,8 +384,6 @@ def test_queue_display_shows_active_source_items():
 
     # PROJ-221: VirtualTable manages queue display - verify data source has correct count
     assert bq.panels.data_source.get_row_count() == 1
-
-    pygame.quit()
 
 
 def test_queue_selector_has_queue_source_index_tags(build_queue_screen):

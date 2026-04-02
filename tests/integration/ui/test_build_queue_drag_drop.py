@@ -127,16 +127,14 @@ def mock_design_loader():
 
 
 @pytest.fixture
-def build_queue_screen(mock_design_library, mock_design_loader, mock_registries):
+def build_queue_screen(mock_design_library, mock_design_loader, mock_registries, ui_manager):
     """Create BuildQueueScreen for testing.
 
     PROJ-40: Updated to use DI injection.
     PROJ-109: Updated to provide required hex_coord, galaxy, empire parameters.
     PROJ-211: Updated to pass registries for DI.
     """
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
+    manager = ui_manager
 
     hex_coord = HexCoord(5, 5)
     planet = Planet(
@@ -181,7 +179,6 @@ def build_queue_screen(mock_design_library, mock_design_loader, mock_registries)
     manager.update(0.1)
 
     yield bq_screen
-    pygame.quit()
 
 def test_drag_start(build_queue_screen):
     """Test that clicking a design button starts a drag."""

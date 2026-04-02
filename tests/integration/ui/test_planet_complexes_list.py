@@ -90,23 +90,17 @@ def mock_planet_with_complexes():
 
 
 @pytest.fixture
-def planet_report_with_complexes(mock_planet_with_complexes):
+def planet_report_with_complexes(mock_planet_with_complexes, ui_manager):
     """Create PlanetReportPanel with complexes."""
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
-
     from game.ui.panels.planet_report_panel import PlanetReportPanel
     panel = PlanetReportPanel(
-        manager=manager,
+        manager=ui_manager,
         rect=pygame.Rect(0, 0, 580, 350),
         planet=mock_planet_with_complexes,
         container=None
     )
 
     yield panel
-
-    pygame.quit()
 
 
 def test_complexes_container_exists(planet_report_with_complexes):
@@ -175,12 +169,8 @@ def test_single_complex_no_count(planet_report_with_complexes):
     assert "x" not in power_labels[0], f"Single Power Plant should not show count, got: {power_labels[0]}"
 
 
-def test_empty_planet_shows_none():
+def test_empty_planet_shows_none(ui_manager):
     """Test that planet with no complexes shows 'None' message."""
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
-
     # Create planet with no facilities
     planet = Planet(
         name="Empty Planet",
@@ -205,7 +195,7 @@ def test_empty_planet_shows_none():
 
     from game.ui.panels.planet_report_panel import PlanetReportPanel
     panel = PlanetReportPanel(
-        manager=manager,
+        manager=ui_manager,
         rect=pygame.Rect(0, 0, 580, 350),
         planet=planet,
         container=None
@@ -216,15 +206,9 @@ def test_empty_planet_shows_none():
     assert len(labels) == 1, "Should have one label"
     assert labels[0].text == "None", f"Should show 'None', got: {labels[0].text}"
 
-    pygame.quit()
 
-
-def test_update_planet_refreshes_complexes_list():
+def test_update_planet_refreshes_complexes_list(ui_manager):
     """Test that update_planet refreshes the complexes list."""
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
-
     # Start with empty planet
     planet1 = Planet(
         name="Planet 1",
@@ -249,7 +233,7 @@ def test_update_planet_refreshes_complexes_list():
 
     from game.ui.panels.planet_report_panel import PlanetReportPanel
     panel = PlanetReportPanel(
-        manager=manager,
+        manager=ui_manager,
         rect=pygame.Rect(0, 0, 580, 350),
         planet=planet1,
         container=None
@@ -296,15 +280,9 @@ def test_update_planet_refreshes_complexes_list():
     assert len(updated_labels) == 1
     assert "Factory" in updated_labels[0].text
 
-    pygame.quit()
 
-
-def test_complexes_list_is_scrollable():
+def test_complexes_list_is_scrollable(ui_manager):
     """Test that complexes list can handle many items with scrolling."""
-    pygame.init()
-    screen = pygame.display.set_mode((1024, 768))
-    manager = pygame_gui.UIManager((1024, 768))
-
     # Create planet with many different complexes
     planet = Planet(
         name="Industrial Hub",
@@ -339,7 +317,7 @@ def test_complexes_list_is_scrollable():
 
     from game.ui.panels.planet_report_panel import PlanetReportPanel
     panel = PlanetReportPanel(
-        manager=manager,
+        manager=ui_manager,
         rect=pygame.Rect(0, 0, 580, 350),
         planet=planet,
         container=None
@@ -351,5 +329,3 @@ def test_complexes_list_is_scrollable():
 
     # Container should be scrollable
     assert isinstance(panel.complexes_container, pygame_gui.elements.UIScrollingContainer)
-
-    pygame.quit()

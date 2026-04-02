@@ -56,7 +56,7 @@ def single_queue_source():
 
 def test_mouse_down_returns_false_in_multi_select(drag_handler):
     """Test that handle_mouse_down returns False in multi-select mode."""
-    pygame.init()
+
     event = pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=(100, 100))
     items_scrollable = MagicMock()
     items_scrollable.get_container.return_value.elements = []
@@ -66,24 +66,24 @@ def test_mouse_down_returns_false_in_multi_select(drag_handler):
         multi_select_active=True
     )
     assert result is False
-    pygame.quit()
+
 
 
 def test_mouse_motion_returns_false_in_multi_select(drag_handler):
     """Test that handle_mouse_motion returns False in multi-select mode."""
-    pygame.init()
+
     event = pygame.event.Event(pygame.MOUSEMOTION, pos=(100, 100),
                                 rel=(5, 5), buttons=(1, 0, 0))
     result = drag_handler.handle_mouse_motion(
         event, [], multi_select_active=True
     )
     assert result is False
-    pygame.quit()
+
 
 
 def test_mouse_up_returns_none_in_multi_select(drag_handler):
     """Test that handle_mouse_up returns None and clears drag in multi-select."""
-    pygame.init()
+
     event = pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=(100, 100))
     build_queue_panel = MagicMock()
     queue_scrollable = MagicMock()
@@ -93,14 +93,14 @@ def test_mouse_up_returns_none_in_multi_select(drag_handler):
         multi_select_active=True
     )
     assert result is None
-    pygame.quit()
+
 
 
 # --- Single-select queue source tests ---
 
 def test_mouse_motion_pops_from_queue_source(drag_handler, single_queue_source):
     """Test that dragging from queue pops from the active queue source's queue."""
-    pygame.init()
+
 
     # Set up pending drag state (simulating mouse down on queue item)
     drag_handler.drag_start_pos = (100, 100)
@@ -122,12 +122,12 @@ def test_mouse_motion_pops_from_queue_source(drag_handler, single_queue_source):
     assert len(single_queue_source.construction_queue) == 1
     assert single_queue_source.construction_queue[0]["design_id"] == "item_B"
 
-    pygame.quit()
+
 
 
 def test_mouse_up_drops_into_queue_source(drag_handler, single_queue_source):
     """Test that dropping calls on_add_to_queue with correct data."""
-    pygame.init()
+
 
     # Set up dragged item
     drag_handler.dragged_item = {
@@ -160,4 +160,4 @@ def test_mouse_up_drops_into_queue_source(drag_handler, single_queue_source):
     # Drag should be cleared
     assert drag_handler.dragged_item is None
 
-    pygame.quit()
+
