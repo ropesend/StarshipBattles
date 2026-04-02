@@ -114,28 +114,9 @@ class MyBeamPointBlankTest(StaticTargetScenario):
         return checks
 ```
 
-**Pytest wrapper**: `simulation_tests/tests/test_my_beam.py`
-
-```python
-"""Pytest wrapper for MyBeamPointBlankTest."""
-
-import pytest
-from test_framework.runner import TestRunner
-from simulation_tests.scenarios.my_beam_test import MyBeamPointBlankTest
-
-
-@pytest.mark.simulation
-class TestMyBeam:
-    @pytest.fixture(autouse=True)
-    def setup(self, isolated_registry):
-        self.runner = TestRunner()
-
-    def test_MYTEST_001(self):
-        result = self.runner.run_scenario(MyBeamPointBlankTest, headless=True)
-        assert result.passed, f"Failed: {result.results.get('validation')}"
-```
-
 ## Running Tests
+
+Scenario files in `simulation_tests/scenarios/` are auto-discovered by `run_tests.py` (it globs `*_scenarios.py`). No wrapper needed -- just create your scenario file and run:
 
 ```bash
 # Run all simulation tests
@@ -147,11 +128,14 @@ python -m simulation_tests.run_tests MYTEST
 # Run specific test
 python -m simulation_tests.run_tests MYTEST-001
 
+# Skip high-tick tests (fast mode)
+python -m simulation_tests.run_tests --fast
+
 # List all registered tests
 python -m simulation_tests.run_tests --list
 
-# Run via pytest
-pytest simulation_tests/tests/test_my_beam.py -v
+# Skip writing to test_history.json
+python -m simulation_tests.run_tests --no-history
 ```
 
 ## Key Points

@@ -265,6 +265,28 @@ Flat damage reduction per hit (damage ignored). Damage pipeline: Shields → Emi
 
 ---
 
+### ShieldRegeneratingArmor
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `ShieldRegeneratingArmor` |
+| Class | `ShieldRegeneratingArmor` |
+| Source | `defense.py` |
+| Layer | COMBAT |
+| Base Class | `StaticValueAbility` |
+
+Absorbs overflow damage (after shields and emissive armor) and recharges shields by the absorbed amount. Damage pipeline: Shields → EmissiveArmor → ShieldRegeneratingArmor → Hull. Only aggregates from active (non-destroyed) armor components.
+
+**Data Format:** Scalar (integer, absorption capacity per hit)
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| value | int | Yes | Damage absorption capacity per hit |
+
+**Stat Bindings:** None (static value, not modified)
+
+---
+
 ### Armor
 
 | Field | Value |
@@ -861,49 +883,26 @@ Planetary shield protection against superweapons.
 
 ---
 
-### PlanetaryEnergyGenerator
+### StrategicResourceGeneration
 
 | Field | Value |
 |-------|-------|
-| Registry Key | `PlanetaryEnergyGenerator` |
-| Class | `PlanetaryEnergyGeneratorAbility` |
+| Registry Key | `StrategicResourceGeneration` |
+| Class | `StrategicResourceGenerationAbility` |
 | Source | `planetary.py` |
 | Layer | STRATEGIC |
 | Base Class | `Ability` |
 
-Generates energy for planetary systems.
+Generates resources per turn on the strategy layer. Each instance generates a specific resource type at a given rate per turn (spread across 100 ticks). Works on any entity with facilities (planets, space stations, ships). Separate from combat `ResourceGeneration` which operates per second.
 
-**Data Format:** Scalar or Dict
+Replaces the old `PlanetaryEnergyGenerator` (PROJ-238). Old `PlanetaryEnergyStorage` was also removed — reuse combat `ResourceStorage` instead.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `generation_rate` | float | Yes | Energy generated per turn |
+**Data Format:** Dict
 
-Scalar format: `10.0` is interpreted as `generation_rate = 10.0`.
-
-**Stat Bindings:** None
-
----
-
-### PlanetaryEnergyStorage
-
-| Field | Value |
-|-------|-------|
-| Registry Key | `PlanetaryEnergyStorage` |
-| Class | `PlanetaryEnergyStorageAbility` |
-| Source | `planetary.py` |
-| Layer | STRATEGIC |
-| Base Class | `Ability` |
-
-Provides energy storage capacity for a planet.
-
-**Data Format:** Scalar or Dict
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `capacity` | float | Yes | Energy storage capacity |
-
-Scalar format: `1000.0` is interpreted as `capacity = 1000.0`.
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `resource` | string | Yes | `""` | Resource type identifier (e.g. from resources.json) |
+| `generation_rate` | float | No | 0.0 | Amount produced per turn |
 
 **Stat Bindings:** None
 
@@ -1022,6 +1021,7 @@ Self-Destruct Device. Schedules ship for destruction.
 | `ToHitAttackModifier` | ToHitAttackModifier | Defense |
 | `ToHitDefenseModifier` | ToHitDefenseModifier | Defense |
 | `EmissiveArmor` | EmissiveArmor | Defense |
+| `ShieldRegeneratingArmor` | ShieldRegeneratingArmor | Defense |
 | `Armor` | Ability (lambda) | Defense |
 | `CombatPropulsion` | CombatPropulsion | Propulsion |
 | `ManeuveringThruster` | ManeuveringThruster | Propulsion |
@@ -1046,8 +1046,7 @@ Self-Destruct Device. Schedules ship for destruction.
 | `PlanetaryYard` | PlanetaryYardAbility | Harvester |
 | `SpaceShipyard` | SpaceShipyardAbility | Harvester |
 | `PlanetaryShield` | PlanetaryShieldAbility | Planetary |
-| `PlanetaryEnergyGenerator` | PlanetaryEnergyGeneratorAbility | Planetary |
-| `PlanetaryEnergyStorage` | PlanetaryEnergyStorageAbility | Planetary |
+| `StrategicResourceGeneration` | StrategicResourceGenerationAbility | Planetary |
 | `DestroyPlanet` | DestroyPlanet | Superweapons |
 | `DestroyStar` | DestroyStar | Superweapons |
 | `OpenWarpPoint` | OpenWarpPoint | Superweapons |

@@ -165,7 +165,7 @@ class TargetingSystem:
             # - PDC weapons can only fire at missiles and fighters
             is_pdc = comp.has_pdc_ability()
             is_missile = is_projectile(candidate) and candidate.type == AttackType.MISSILE
-            is_fighter = hasattr(candidate, 'ship_class') and 'Fighter' in str(getattr(candidate, 'ship_class', ''))
+            is_fighter = getattr(candidate, 'vehicle_type', '') == 'Fighter'
 
             if is_missile and not is_pdc:
                 continue  # Non-PDC cannot target missiles

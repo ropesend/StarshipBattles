@@ -1,3 +1,9 @@
+# DEPRECATED: This scenario uses the legacy CombatScenario base class (no metadata,
+# no 3-phase validation system). It is superseded by the modern simulation_tests
+# framework in simulation_tests/scenarios/. It is not discovered by the Combat Lab
+# UI or modern test registry, but can still be run manually via test_framework/runner.py.
+# Prefer creating new scenarios in simulation_tests/scenarios/ instead.
+
 from test_framework.scenario import CombatScenario
 from game.simulation.components.component import create_component
 from game.core.constants import LayerType

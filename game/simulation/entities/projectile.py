@@ -1,5 +1,5 @@
 import logging
-from game.core.math import Vector2, normalize_angle
+from game.core.math import Vector2, signed_angle_between
 from game.engine.physics import PhysicsBody
 from game.core.event_logging import log_event
 from game.core.constants import AttackType
@@ -158,7 +158,7 @@ class Projectile(PhysicsBody):
                 desired_dir = desired_vec.normalize()
                 current_dir = p_vel.normalize() if p_vel.length() > 0 else Vector2(1, 0)
                 
-                angle_diff = normalize_angle(current_dir.angle_to(desired_dir))
+                angle_diff = signed_angle_between(current_dir, desired_dir)
                     
                 # Turn rate is degrees per second, convert to degrees per tick
                 max_turn_step = self.turn_rate * PhysicsConfig.TICK_RATE
@@ -168,9 +168,9 @@ class Projectile(PhysicsBody):
                 else:
                     rotation = angle_diff
                 
-                # Commit to turn direction near ±180° to prevent oscillation
-                # When target is behind us, angle_to can flip between +179 and -180
-                # causing flip-flop turning. Lock to previous direction instead.
+                # Safety net: commit to turn direction near ±180° to prevent
+                # floating-point sign flips. signed_angle_between is stable,
+                # but at exactly 180° tiny perturbations could flip the sign.
                 if abs(abs(angle_diff) - 180) < TURN_COMMITMENT_THRESHOLD_DEG:
                     if self.last_turn_direction != 0:
                         rotation = abs(rotation) * self.last_turn_direction

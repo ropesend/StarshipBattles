@@ -352,8 +352,12 @@ class BattleEngine:
         if ship in self.ships:
             self.ships.remove(ship)
 
-            # Remove associated AI controller
-            # Note: ai.ship is a ShipControllableAdapter, need to unwrap via .ship property
+            # Remove associated AI controller.
+            # Adapter unwrap: ai.ship is a ShipControllableAdapter (the facade
+            # that AIController interacts with), and ai.ship.ship is the underlying
+            # Ship entity. We compare the unwrapped Ship to find the matching controller.
+            # O(n) scan is fine — fleet sizes are small. Safe to remove-during-iterate
+            # because we break immediately after the removal.
             for ai in self.ai_controllers:
                 if ai.ship.ship == ship:
                     self.ai_controllers.remove(ai)

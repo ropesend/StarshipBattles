@@ -7,7 +7,7 @@ angle_to, and as_int_tuple methods.
 import math
 import pytest
 
-from game.core.math import Vector2, angle_from_vector
+from game.core.math import Vector2, angle_from_vector, signed_angle_between
 
 
 class TestVector2Indexing:
@@ -184,3 +184,40 @@ class TestAngleFromVector:
         """Result should always be in [0, 360)."""
         result = angle_from_vector(-1, -0.001)
         assert 0 <= result < 360
+
+
+class TestSignedAngleBetween:
+    """Tests for signed_angle_between() — signed angle from direction A to B."""
+
+    def test_parallel_vectors_zero(self):
+        """Same direction → 0°."""
+        assert signed_angle_between(Vector2(1, 0), Vector2(1, 0)) == pytest.approx(0.0)
+
+    def test_antiparallel_right_to_left(self):
+        """(1,0) to (-1,0) → 180°."""
+        result = signed_angle_between(Vector2(1, 0), Vector2(-1, 0))
+        assert abs(result) == pytest.approx(180.0)
+
+    def test_antiparallel_left_to_right(self):
+        """(-1,0) to (1,0) → 180° (the SEEKER-TURN-002 case)."""
+        result = signed_angle_between(Vector2(-1, 0), Vector2(1, 0))
+        assert abs(result) == pytest.approx(180.0)
+
+    def test_90_degrees_counterclockwise(self):
+        """(1,0) to (0,1) → +90°."""
+        assert signed_angle_between(Vector2(1, 0), Vector2(0, 1)) == pytest.approx(90.0)
+
+    def test_90_degrees_clockwise(self):
+        """(1,0) to (0,-1) → -90°."""
+        assert signed_angle_between(Vector2(1, 0), Vector2(0, -1)) == pytest.approx(-90.0)
+
+    def test_45_degrees(self):
+        """(1,0) to (1,1) normalized → +45°."""
+        b = Vector2(1, 1).normalize()
+        assert signed_angle_between(Vector2(1, 0), b) == pytest.approx(45.0, abs=0.01)
+
+    def test_small_angle(self):
+        """Nearly parallel → small positive angle."""
+        b = Vector2(1, 0.01).normalize()
+        result = signed_angle_between(Vector2(1, 0), b)
+        assert 0 < result < 2  # Small positive
