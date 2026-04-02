@@ -4,6 +4,7 @@ UI test configuration and shared fixtures.
 This conftest provides:
 1. Pre-imports game.ui submodules in deterministic order (race condition prevention)
 2. pygame_display_reset fixture for UI-specific display handling
+3. Cached UIManager fixture to avoid expensive per-test recreation
 
 Note: Basic pygame initialization is handled by enforce_headless in root conftest.py.
 Test isolation (cleanup) is handled by reset_game_state in root conftest.py.
@@ -18,6 +19,48 @@ from tests.fixtures.paths import (
     unit_test_data_dir,
     assets_dir,
 )  # noqa: F401
+
+
+# Module-level cache for UIManager reuse across tests.
+_cached_ui_manager = None
+_cached_display_id = None
+
+
+def _get_or_create_ui_manager():
+    """Return a valid pygame_gui.UIManager, creating one only if needed.
+
+    Rebuilds if pygame was reinitialized (display surface changed)
+    since the last call. This handles external pygame.quit() calls
+    from tests that destroy and recreate the display.
+    """
+    import pygame
+    import pygame_gui
+
+    global _cached_ui_manager, _cached_display_id
+
+    if not pygame.get_init():
+        pygame.init()
+    if not pygame.display.get_surface():
+        pygame.display.set_mode((1440, 900), pygame.NOFRAME)
+
+    current_display_id = id(pygame.display.get_surface())
+    if _cached_ui_manager is None or _cached_display_id != current_display_id:
+        _cached_ui_manager = pygame_gui.UIManager((1440, 900))
+        _cached_display_id = current_display_id
+
+    return _cached_ui_manager
+
+
+@pytest.fixture
+def ui_manager():
+    """Provide a clean UIManager for each test.
+
+    Uses a cached manager to avoid expensive re-creation (theme parsing,
+    font loading ~0.3-0.5s). Clears all widgets so each test starts fresh.
+    """
+    manager = _get_or_create_ui_manager()
+    manager.clear_and_reset()
+    return manager
 
 
 def pytest_configure(config):

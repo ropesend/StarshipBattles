@@ -2,9 +2,9 @@
 
 PROJ-111 Phase 3 Task 3.1: BattleScreen Extended Coverage
 """
+import copy
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
-import sys
+from unittest.mock import MagicMock, patch
 import pygame
 
 from game.ui.screens.battle_screen import (
@@ -16,11 +16,35 @@ from game.simulation.components.component import create_component
 from game.core.constants import LayerType
 
 
+def _build_ship(name, x, y, color, registries):
+    """Build a ship with standard components and calculated stats."""
+    ship = Ship(name, x, y, color, registries=registries)
+    ship.add_component(create_component('bridge', registries=registries), LayerType.CORE)
+    ship.add_component(create_component('crew_quarters', registries=registries), LayerType.CORE)
+    ship.add_component(create_component('life_support', registries=registries), LayerType.CORE)
+    ship.add_component(create_component('standard_engine', registries=registries), LayerType.OUTER)
+    ship.recalculate_stats()
+    return ship
+
+
+@pytest.fixture(scope="module")
+def ship_templates(session_registries):
+    """Module-scoped ship templates built once, deepcopied per test.
+
+    Building ships with create_component + recalculate_stats is expensive.
+    This fixture creates them once per module; tests deepcopy as needed.
+    """
+    ship1 = _build_ship("Ship1", 0, 0, (0, 0, 255), session_registries)
+    ship2 = _build_ship("Ship2", 1000, 0, (255, 0, 0), session_registries)
+    ship3 = _build_ship("Ship3", 500, 500, (0, 255, 0), session_registries)
+    return ship1, ship2, ship3
+
+
 class TestBattleScreenSimulationLifecycle:
     """Test BattleScreen simulation lifecycle methods."""
 
     @pytest.fixture(autouse=True)
-    def setup_scene(self, fresh_registries):
+    def setup_scene(self, ship_templates, fresh_registries):
         """Set up BattleScreen with mocked BattleUI."""
         with patch('game.ui.screens.battle_screen.BattleUI') as MockUI:
             self.scene = BattleScreen(800, 600)
@@ -32,20 +56,8 @@ class TestBattleScreenSimulationLifecycle:
             self.scene.ui.seeker_panel.rect = MagicMock()
             self.scene.ui.seeker_panel.rect.width = 300
 
-            # Create test ships
-            self.ship1 = Ship("Ship1", 0, 0, (0, 0, 255), registries=fresh_registries)
-            self.ship1.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
-            self.ship1.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
-            self.ship1.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
-            self.ship1.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
-            self.ship1.recalculate_stats()
-
-            self.ship2 = Ship("Ship2", 1000, 0, (255, 0, 0), registries=fresh_registries)
-            self.ship2.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
-            self.ship2.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
-            self.ship2.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
-            self.ship2.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
-            self.ship2.recalculate_stats()
+            self.ship1 = copy.deepcopy(ship_templates[0])
+            self.ship2 = copy.deepcopy(ship_templates[1])
 
             self.fresh_registries = fresh_registries
             yield
@@ -142,26 +154,15 @@ class TestBattleScreenWinLossDetection:
     """Test BattleScreen win/loss detection logic."""
 
     @pytest.fixture(autouse=True)
-    def setup_scene(self, fresh_registries):
+    def setup_scene(self, ship_templates, fresh_registries):
         """Set up BattleScreen with ships."""
         with patch('game.ui.screens.battle_screen.BattleUI') as MockUI:
             self.scene = BattleScreen(800, 600)
             self.scene.ui = MockUI.return_value
             self.scene.ui.show_overlay = False
 
-            self.ship1 = Ship("Ship1", 0, 0, (0, 0, 255), registries=fresh_registries)
-            self.ship1.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
-            self.ship1.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
-            self.ship1.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
-            self.ship1.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
-            self.ship1.recalculate_stats()
-
-            self.ship2 = Ship("Ship2", 1000, 0, (255, 0, 0), registries=fresh_registries)
-            self.ship2.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
-            self.ship2.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
-            self.ship2.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
-            self.ship2.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
-            self.ship2.recalculate_stats()
+            self.ship1 = copy.deepcopy(ship_templates[0])
+            self.ship2 = copy.deepcopy(ship_templates[1])
 
             self.fresh_registries = fresh_registries
             yield
@@ -184,15 +185,10 @@ class TestBattleScreenWinLossDetection:
 
         assert self.scene.get_winner() == 0
 
-    def test_is_battle_over_with_partial_deaths(self):
+    def test_is_battle_over_with_partial_deaths(self, ship_templates):
         """Test is_battle_over() with some ships dead but not all."""
-        # Create additional ships
-        ship3 = Ship("Ship3", 500, 0, (0, 0, 255), registries=self.fresh_registries)
-        ship3.add_component(create_component('bridge', registries=self.fresh_registries), LayerType.CORE)
-        ship3.add_component(create_component('crew_quarters', registries=self.fresh_registries), LayerType.CORE)
-        ship3.add_component(create_component('life_support', registries=self.fresh_registries), LayerType.CORE)
-        ship3.add_component(create_component('standard_engine', registries=self.fresh_registries), LayerType.OUTER)
-        ship3.recalculate_stats()
+        # Create additional ship from template
+        ship3 = copy.deepcopy(ship_templates[2])
 
         self.scene.start([self.ship1, ship3], [self.ship2], headless=True)
 
@@ -217,7 +213,7 @@ class TestBattleScreenEventHandling:
     """Test BattleScreen event handling."""
 
     @pytest.fixture(autouse=True)
-    def setup_scene(self, fresh_registries):
+    def setup_scene(self, ship_templates):
         """Set up BattleScreen with mocked UI."""
         with patch('game.ui.screens.battle_screen.BattleUI') as MockUI:
             self.scene = BattleScreen(800, 600)
@@ -226,19 +222,8 @@ class TestBattleScreenEventHandling:
             self.scene.ui.handle_click = MagicMock(return_value=False)
             self.scene.ui.handle_scroll = MagicMock()
 
-            self.ship1 = Ship("Ship1", 0, 0, (0, 0, 255), registries=fresh_registries)
-            self.ship1.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
-            self.ship1.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
-            self.ship1.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
-            self.ship1.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
-            self.ship1.recalculate_stats()
-
-            self.ship2 = Ship("Ship2", 1000, 0, (255, 0, 0), registries=fresh_registries)
-            self.ship2.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
-            self.ship2.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
-            self.ship2.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
-            self.ship2.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
-            self.ship2.recalculate_stats()
+            self.ship1 = copy.deepcopy(ship_templates[0])
+            self.ship2 = copy.deepcopy(ship_templates[1])
 
             yield
 
@@ -387,26 +372,15 @@ class TestBattleScreenCameraInput:
     """Test that battle screen processes camera input (panning, arrow keys) each frame."""
 
     @pytest.fixture(autouse=True)
-    def setup_scene(self, fresh_registries):
+    def setup_scene(self, ship_templates):
         """Set up BattleScreen with mocked UI."""
         with patch('game.ui.screens.battle_screen.BattleUI') as MockUI:
             self.scene = BattleScreen(800, 600)
             self.scene.ui = MockUI.return_value
             self.scene.ui.show_overlay = False
 
-            self.ship1 = Ship("Ship1", 0, 0, (0, 0, 255), registries=fresh_registries)
-            self.ship1.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
-            self.ship1.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
-            self.ship1.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
-            self.ship1.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
-            self.ship1.recalculate_stats()
-
-            self.ship2 = Ship("Ship2", 1000, 0, (255, 0, 0), registries=fresh_registries)
-            self.ship2.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
-            self.ship2.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
-            self.ship2.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
-            self.ship2.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
-            self.ship2.recalculate_stats()
+            self.ship1 = copy.deepcopy(ship_templates[0])
+            self.ship2 = copy.deepcopy(ship_templates[1])
 
             yield
 
@@ -479,7 +453,8 @@ class TestBattleScreenCameraInput:
         """Headless mode skips camera input processing entirely."""
         self.scene.start([self.ship1], [self.ship2], headless=True)
 
-        with patch.object(self.scene.camera, 'update_input') as mock_input:
+        with patch.object(self.scene.camera, 'update_input') as mock_input, \
+             patch.object(self.scene, '_run_single_tick'):
             self.scene.update(0.016)
 
             mock_input.assert_not_called()
@@ -489,26 +464,15 @@ class TestBattleScreenTickMechanics:
     """Test BattleScreen tick mechanics and accumulator."""
 
     @pytest.fixture(autouse=True)
-    def setup_scene(self, fresh_registries):
+    def setup_scene(self, ship_templates):
         """Set up BattleScreen with mocked UI."""
         with patch('game.ui.screens.battle_screen.BattleUI') as MockUI:
             self.scene = BattleScreen(800, 600)
             self.scene.ui = MockUI.return_value
             self.scene.ui.show_overlay = False
 
-            self.ship1 = Ship("Ship1", 0, 0, (0, 0, 255), registries=fresh_registries)
-            self.ship1.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
-            self.ship1.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
-            self.ship1.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
-            self.ship1.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
-            self.ship1.recalculate_stats()
-
-            self.ship2 = Ship("Ship2", 1000, 0, (255, 0, 0), registries=fresh_registries)
-            self.ship2.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
-            self.ship2.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
-            self.ship2.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
-            self.ship2.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
-            self.ship2.recalculate_stats()
+            self.ship1 = copy.deepcopy(ship_templates[0])
+            self.ship2 = copy.deepcopy(ship_templates[1])
 
             yield
 
@@ -641,33 +605,16 @@ class TestBattleScreenCycleFocus:
     """Test BattleScreen cycle focus ship functionality."""
 
     @pytest.fixture(autouse=True)
-    def setup_scene(self, fresh_registries):
+    def setup_scene(self, ship_templates):
         """Set up BattleScreen with multiple ships."""
         with patch('game.ui.screens.battle_screen.BattleUI') as MockUI:
             self.scene = BattleScreen(800, 600)
             self.scene.ui = MockUI.return_value
             self.scene.ui.show_overlay = False
 
-            self.ship1 = Ship("Ship1", 0, 0, (0, 0, 255), registries=fresh_registries)
-            self.ship1.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
-            self.ship1.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
-            self.ship1.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
-            self.ship1.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
-            self.ship1.recalculate_stats()
-
-            self.ship2 = Ship("Ship2", 1000, 0, (255, 0, 0), registries=fresh_registries)
-            self.ship2.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
-            self.ship2.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
-            self.ship2.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
-            self.ship2.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
-            self.ship2.recalculate_stats()
-
-            self.ship3 = Ship("Ship3", 500, 500, (0, 255, 0), registries=fresh_registries)
-            self.ship3.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
-            self.ship3.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
-            self.ship3.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
-            self.ship3.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
-            self.ship3.recalculate_stats()
+            self.ship1 = copy.deepcopy(ship_templates[0])
+            self.ship2 = copy.deepcopy(ship_templates[1])
+            self.ship3 = copy.deepcopy(ship_templates[2])
 
             yield
 

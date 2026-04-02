@@ -8,14 +8,6 @@ import pygame
 
 
 @pytest.fixture
-def mock_pygame_init():
-    """Initialize pygame for Surface creation."""
-    pygame.init()
-    yield
-    pygame.quit()
-
-
-@pytest.fixture
 def mock_design_library():
     """Create mock DesignLibrary."""
     library = Mock()
@@ -43,8 +35,7 @@ class TestResourceIconLoading:
     """Tests for load_resource_icons() method."""
 
     def test_load_resource_icons_returns_all_five_resources(
-        self, portrait_loader, mock_pygame_init
-    ):
+        self, portrait_loader):
         """load_resource_icons returns dict with all 5 resource types."""
         icons = portrait_loader.load_resource_icons(icon_size=20)
 
@@ -55,8 +46,7 @@ class TestResourceIconLoading:
             assert resource in icons
 
     def test_load_resource_icons_returns_surfaces(
-        self, portrait_loader, mock_pygame_init
-    ):
+        self, portrait_loader):
         """load_resource_icons returns pygame.Surface for each resource."""
         icons = portrait_loader.load_resource_icons(icon_size=20)
 
@@ -64,8 +54,7 @@ class TestResourceIconLoading:
             assert isinstance(surface, pygame.Surface), f"{resource} should be Surface"
 
     def test_load_resource_icons_respects_icon_size(
-        self, portrait_loader, mock_pygame_init
-    ):
+        self, portrait_loader):
         """load_resource_icons scales icons to requested size."""
         # Test with custom size
         icons = portrait_loader.load_resource_icons(icon_size=32)
@@ -75,8 +64,7 @@ class TestResourceIconLoading:
             assert surface.get_height() == 32, f"{resource} height should be 32"
 
     def test_load_resource_icons_default_size_is_20(
-        self, portrait_loader, mock_pygame_init
-    ):
+        self, portrait_loader):
         """load_resource_icons uses 20 as default icon size."""
         icons = portrait_loader.load_resource_icons()
 
@@ -85,8 +73,7 @@ class TestResourceIconLoading:
             assert surface.get_height() == 20, f"{resource} default height should be 20"
 
     def test_load_resource_icons_fallback_on_missing_file(
-        self, mock_design_library, mock_session, mock_pygame_init
-    ):
+        self, mock_design_library, mock_session):
         """load_resource_icons creates fallback surfaces when files missing."""
         from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
 

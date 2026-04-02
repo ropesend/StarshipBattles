@@ -1,6 +1,5 @@
 import pytest
 from unittest.mock import MagicMock, patch
-import pygame
 from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
 from game.simulation.components.component import Component
@@ -9,9 +8,7 @@ from game.simulation.components.component import Component
 class TestSelectionRefinements:
     @pytest.fixture(autouse=True)
     def setup(self, fresh_registries):
-        pygame.init()
-        # Initialize display for pygame_gui
-        pygame.display.set_mode((800, 600), flags=pygame.HIDDEN)
+        # Display already initialized by enforce_headless / conftest pygame_display_reset
 
         # Mocking Builder with minimal dependencies
         # PROJ-211: registries is now required
@@ -56,7 +53,6 @@ class TestSelectionRefinements:
 
         # Cleanup
         patch.stopall()
-        pygame.quit()
 
     def test_homogeneity_enforcement(self):
         """Test that selection is restricted to identical component types."""

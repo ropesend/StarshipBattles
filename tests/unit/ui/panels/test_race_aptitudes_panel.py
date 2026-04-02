@@ -16,19 +16,6 @@ class TestRaceAptitudesPanel:
     """Test RaceAptitudesPanel class."""
 
     @pytest.fixture
-    def pygame_init(self):
-        """Initialize pygame for UI tests."""
-        pygame.init()
-        pygame.display.set_mode((800, 600))
-        yield
-        pygame.quit()
-
-    @pytest.fixture
-    def ui_manager(self, pygame_init):
-        """Create UI manager."""
-        return pygame_gui.UIManager((800, 600))
-
-    @pytest.fixture
     def panel(self, ui_manager):
         """Create parent panel."""
         return pygame_gui.elements.UIPanel(
@@ -207,17 +194,6 @@ class TestRaceAptitudesPanel:
 
 class TestRaceAptitudesPanelIntegration:
     """Integration tests for aptitudes panel."""
-
-    @pytest.fixture
-    def pygame_init(self):
-        pygame.init()
-        pygame.display.set_mode((800, 600))
-        yield
-        pygame.quit()
-
-    @pytest.fixture
-    def ui_manager(self, pygame_init):
-        return pygame_gui.UIManager((800, 600))
 
     @pytest.fixture
     def panel(self, ui_manager):
