@@ -27,6 +27,50 @@ PROJECT_ROOT = Path(__file__).parent.parent
 DURATIONS_FILE = PROJECT_ROOT / ".test_durations.json"
 SHARD_RESULTS_DIR = PROJECT_ROOT / ".pytest_cache" / "shard_results"
 
+
+def _physical_core_count():
+    """Return the number of physical CPU cores (not logical/hyperthreaded)."""
+    try:
+        if sys.platform == "win32":
+            result = subprocess.run(
+                ["powershell", "-Command",
+                 "(Get-CimInstance Win32_Processor).NumberOfCores"],
+                capture_output=True, text=True, timeout=10,
+            )
+            if result.returncode == 0 and result.stdout.strip().isdigit():
+                return int(result.stdout.strip())
+        else:
+            result = subprocess.run(
+                ["nproc", "--all"],
+                capture_output=True, text=True, timeout=10,
+            )
+            if result.returncode == 0 and result.stdout.strip().isdigit():
+                # nproc returns logical count; /proc/cpuinfo is more reliable
+                # but as a fallback, halve os.cpu_count if it looks hyperthreaded
+                pass
+            # Try reading from /proc/cpuinfo
+            cpuinfo = Path("/proc/cpuinfo")
+            if cpuinfo.exists():
+                cores = set()
+                phys_id = core_id = None
+                for line in cpuinfo.read_text().splitlines():
+                    if line.startswith("physical id"):
+                        phys_id = line.split(":")[1].strip()
+                    elif line.startswith("core id"):
+                        core_id = line.split(":")[1].strip()
+                    if phys_id is not None and core_id is not None:
+                        cores.add((phys_id, core_id))
+                        phys_id = core_id = None
+                if cores:
+                    return len(cores)
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        pass
+    # Fallback: assume hyperthreading (2 threads per core)
+    logical = os.cpu_count()
+    if logical and logical > 1:
+        return max(1, logical // 2)
+    return 4
+
 # ---------------------------------------------------------------------------
 # Test collection
 # ---------------------------------------------------------------------------
@@ -277,8 +321,8 @@ def save_durations(all_durations):
 
 def main():
     parser = argparse.ArgumentParser(description="Sharded test runner")
-    cpu_count = os.cpu_count() or 4
-    parser.add_argument("--shards", type=int, default=cpu_count, help=f"Number of shards (default: {cpu_count}, auto-detected from CPU count)")
+    physical_cores = _physical_core_count()
+    parser.add_argument("--shards", type=int, default=physical_cores, help=f"Number of shards (default: {physical_cores}, auto-detected physical cores)")
     parser.add_argument("--verbose", action="store_true", help="Show per-shard test lists")
     args = parser.parse_args()
 
