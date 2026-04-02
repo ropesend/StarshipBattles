@@ -195,6 +195,7 @@ class SameGroupDoesNotStackScenario(ComparisonScenario):
     variant_attacker_ship = "Test_Attacker_Beam360_Low_2xSensorA.json"
     variant_target_ship = "Test_Target_Stationary.json"
     distance = MID_RANGE_DISTANCE
+    expect_different_damage = False  # Same-group MAX means identical damage
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()

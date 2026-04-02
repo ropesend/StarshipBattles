@@ -557,6 +557,10 @@ class ProjectileErraticLargeTargetScenario(StaticTargetScenario):
                                  actual=f"{hit_rate:.1%} ({hits}/{resolved})",
                                  phase="outcome",
                                  detail="large target should be hit consistently despite erratic movement"))
+        checks.append(check_true("Hit Rate <= 100%", hit_rate <= 1.00,
+                                 actual=f"{hit_rate:.1%}",
+                                 phase="outcome",
+                                 detail="hit rate must be a valid fraction"))
         return checks
 
 
@@ -884,7 +888,7 @@ class ProjectileDamageLongRangeScenario(StaticTargetScenario):
 # These ComparisonScenarios prove projectile weapons with
 # ResourceConsumption(ammo) stop firing when ammo depletes.
 
-PROJ_RES_TEST_TICKS = 1000
+PROJ_RES_TEST_TICKS = 500
 PROJ_RES_ATTACKER_FULL = "Test_Attacker_ProjRapid_HighAmmo.json"
 PROJ_RES_ATTACKER_HALF = "Test_Attacker_ProjRapid_HalfAmmo.json"
 PROJ_RES_ATTACKER_NONE = "Test_Attacker_ProjRapid_NoAmmo.json"
@@ -965,8 +969,8 @@ class ProjectileStopsAtHalfAmmoScenario(ComparisonScenario):
     """
     PROJECTILE-RES-002: Projectile Stops At 50% Ammo
 
-    Battle A: Projectile + 100k ammo (fires all 1000 ticks)
-    Battle B: Projectile + 500 ammo (fires ~500 ticks then stops)
+    Battle A: Projectile + 100k ammo (fires all 500 ticks)
+    Battle B: Projectile + 250 ammo (fires ~250 ticks then stops)
 
     Proves that a projectile weapon fires until ammo depletes, then stops.
     """
@@ -976,10 +980,10 @@ class ProjectileStopsAtHalfAmmoScenario(ComparisonScenario):
         category="ProjectileWeaponAbility",
         subcategory="Resource Dependency",
         name="Projectile Stops At 50% Ammo",
-        summary="Projectile fires ~500 shots with 500 ammo then stops",
+        summary="Projectile fires ~250 shots with 250 ammo then stops",
         conditions=[
             f"Attacker (full ammo): {PROJ_RES_ATTACKER_FULL}",
-            f"Attacker (half ammo): {PROJ_RES_ATTACKER_HALF} (500 ammo = 500 shots)",
+            f"Attacker (half ammo): {PROJ_RES_ATTACKER_HALF} (250 ammo = 250 shots)",
             f"Target: {PROJ_RES_TARGET} (stationary, extreme HP armor)",
             f"Distance: {POINT_BLANK_DISTANCE} pixels",
             f"Test Duration: {PROJ_RES_TEST_TICKS} ticks",
@@ -988,8 +992,8 @@ class ProjectileStopsAtHalfAmmoScenario(ComparisonScenario):
             "Weapon fires until ammo runs out, then silently stops",
             "Damage should be roughly half of full-ammo baseline",
         ],
-        expected_outcome="Half-ammo attacker fires ~500 shots (~half of baseline).",
-        pass_criteria="variant damage < baseline, variant shots ≈ 500",
+        expected_outcome="Half-ammo attacker fires ~250 shots (~half of baseline).",
+        pass_criteria="variant damage < baseline, variant shots ≈ 250",
         max_ticks=PROJ_RES_TEST_TICKS,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
@@ -1028,10 +1032,19 @@ class ProjectileStopsAtHalfAmmoScenario(ComparisonScenario):
             phase="outcome",
         ))
 
-        # Outcome: half-ammo fired approximately 500 shots
+        # Outcome: half-ammo fired approximately 250 shots
         variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        baseline_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
         checks.append(check_exact(
-            "Half-Ammo Shots Fired", 500, variant_shots,
+            "Half-Ammo Shots Fired", 250, variant_shots,
+            phase="outcome",
+        ))
+
+        # Outcome: half-ammo fired fewer shots than full-ammo baseline
+        checks.append(check_true(
+            "Half-Ammo Fired Fewer Shots",
+            variant_shots < baseline_shots,
+            detail=f"variant={variant_shots}, baseline={baseline_shots}",
             phase="outcome",
         ))
 

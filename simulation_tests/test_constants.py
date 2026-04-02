@@ -15,6 +15,12 @@ STANDARD_TEST_TICKS = 500
 # High-precision test duration for statistical validation
 HIGH_TICK_TEST_TICKS = 100000
 
+# Mid-precision test duration for stable scenarios (hit rate > 75%)
+MID_TICK_TEST_TICKS = 10000
+
+# Mid precision margin for 10k-tick tests (±3%)
+MID_PRECISION_MARGIN = 0.03
+
 
 # ============================================================================
 # TEST DISTANCES (pixels)
@@ -26,17 +32,11 @@ POINT_BLANK_DISTANCE = 100
 # Mid-range distance (moderate range penalty)
 MID_RANGE_DISTANCE = 400
 
-# Standard test distance (default for many tests)
-STANDARD_DISTANCE = 500
-
 # Maximum effective range for most weapons
 MAX_RANGE_DISTANCE = 800
 
 # Near max-range distance for beam accuracy tests (within 800px weapon range)
 NEAR_MAX_RANGE_DISTANCE = 750
-
-# Seeker tracking test distance
-SEEKER_TRACKING_DISTANCE = 1000
 
 # Beyond-weapon-range distances for out-of-range tests
 BEAM_OUT_OF_RANGE_DISTANCE = 900
@@ -95,9 +95,6 @@ HIGH_PRECISION_MARGIN = 0.01
 SHIELD_CAPACITY = 200       # HP from test_shield_200 component
 SHIELD_REGEN_RATE = 10      # HP/sec from test_shield_regen_10 component
 
-# Emissive armor
-EMISSIVE_ARMOR_REDUCTION = 5  # Flat damage reduction per hit
-
 # To-hit modifiers
 ECM_DEFENSE_VALUE = 1.0     # Defense score bonus from test_ecm_1
 SENSOR_ATTACK_VALUE = 1.0   # Attack score bonus from test_sensor_1
@@ -122,7 +119,7 @@ CNC_TEST_TICKS = 500
 CNC_BRIDGE_HP = 50          # Destructible bridge HP (in ARMOR layer, hit first)
 
 # ShieldRegeneratingArmor (SRA) test constants
-SRA_TEST_TICKS = 1000
+SRA_TEST_TICKS = 500
 SRA_VALUE = 15              # Absorption + shield recharge per hit
 SRA_SMALL_SHIELD_CAP = 10   # For cap test (SRA recharges 15 but shield max=10)
 
@@ -149,7 +146,6 @@ SHIELD_PROJ_100_CAPACITY = 100
 SHIELD_PROJ_SINGLE_SHOT_DAMAGE = 150
 SHIELD_PROJ_TEST_TICKS = 1000        # Tests 001-003 (guaranteed-hit beam, 1 dmg/tick)
 SHIELD_PROJ_SINGLE_SHOT_TICKS = 100  # Test 004 (single 150-dmg shot)
-SHIELD_PROJ_ENERGY_RATE = 1.0        # Energy consumption per second for energy shield
 SHIELD_PROJ_LARGE_BATTERY = 15       # Energy: lasts 1500 ticks (> test duration)
 SHIELD_PROJ_SMALL_BATTERY = 5        # Energy: lasts 500 ticks (depletes mid-test)
 

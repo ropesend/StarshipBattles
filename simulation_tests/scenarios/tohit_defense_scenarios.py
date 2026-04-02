@@ -198,6 +198,7 @@ class ECMSameGroupDoesNotStackScenario(ComparisonScenario):
     variant_attacker_ship = TOHIT_DEF_ATTACKER
     variant_target_ship = "Test_Target_ECM_2xGroupA.json"
     distance = MID_RANGE_DISTANCE
+    expect_different_damage = False  # Same-group MAX means identical damage
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()

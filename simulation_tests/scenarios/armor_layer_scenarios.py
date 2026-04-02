@@ -103,6 +103,7 @@ class ArmorAbsorbsAllScenario(ComparisonScenario):
     variant_attacker_ship = ARMOR_ATTACKER
     variant_target_ship = "Test_Target_Armor_1B_Hull.json"
     distance = POINT_BLANK_DISTANCE
+    expect_different_damage = False  # Same total damage, different layer distribution
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
@@ -186,6 +187,7 @@ class ArmorDepletesOverflowScenario(ComparisonScenario):
     variant_attacker_ship = ARMOR_ATTACKER
     variant_target_ship = "Test_Target_Armor_100_Hull.json"
     distance = POINT_BLANK_DISTANCE
+    expect_different_damage = False  # Same total damage, different layer distribution
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
@@ -284,6 +286,7 @@ class ArmorStackingScenario(ComparisonScenario):
     variant_attacker_ship = ARMOR_ATTACKER
     variant_target_ship = "Test_Target_Armor_2x100_Hull.json"
     distance = POINT_BLANK_DISTANCE
+    expect_different_damage = False  # Same total damage, different layer distribution
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()

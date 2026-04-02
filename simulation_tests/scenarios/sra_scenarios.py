@@ -286,6 +286,7 @@ class SRASameGroupNoStackScenario(ComparisonScenario):
     variant_attacker_ship = ATTACKER_50DMG
     variant_target_ship = "Test_Target_SRA_2x_SameGroup.json"
     distance = POINT_BLANK_DISTANCE
+    expect_different_damage = False  # Same-group MAX means identical damage
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()

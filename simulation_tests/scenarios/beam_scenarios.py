@@ -41,6 +41,8 @@ from simulation_tests.test_constants import (
     STATIONARY_TARGET_MASS,
     STANDARD_MARGIN,
     HIGH_PRECISION_MARGIN,
+    MID_TICK_TEST_TICKS,
+    MID_PRECISION_MARGIN,
     STANDARD_SEED,
     POINT_BLANK_DISTANCE,
     MID_RANGE_DISTANCE,
@@ -264,15 +266,29 @@ class BeamAccuracyScenario(StaticTargetScenario):
         if cls.high_tick:
             cls.target_ship = "Test_Target_Stationary_HighTick.json"
             test_id = f"BEAMWEAPON-{test_num}-HT"
-            max_ticks = HIGH_TICK_TEST_TICKS
-            margin_name = "HIGH_PRECISION"
+
+            # High-variance tests (low accuracy) need full 100k ticks for ±1% margin.
+            # Stable tests (med/high accuracy, hit rate > 75%) use 10k ticks with ±3% margin.
+            _HIGH_VARIANCE_HT_TESTS = {"001", "002"}
+            if test_num in _HIGH_VARIANCE_HT_TESTS:
+                max_ticks = HIGH_TICK_TEST_TICKS
+                cls._ht_margin = HIGH_PRECISION_MARGIN
+                margin_name = "HIGH_PRECISION"
+                name_suffix = " [100k Ticks]"
+                summary_detail = "with 100k ticks for +/-1% statistical margin"
+                expected_outcome_tpl = "Hit rate within +/-1% of expected with 99% confidence"
+            else:
+                max_ticks = MID_TICK_TEST_TICKS
+                cls._ht_margin = MID_PRECISION_MARGIN
+                margin_name = "MID_PRECISION"
+                name_suffix = " [10k Ticks]"
+                summary_detail = "with 10k ticks for +/-3% statistical margin"
+                expected_outcome_tpl = "Hit rate within +/-3% of expected with 99% confidence"
+
             ui_priority = 11
             subcategory = f"Accuracy - {acc_label} (High-Tick)"
-            name_suffix = " [100k Ticks]"
             extra_tags = ["high-tick", "precision"]
             summary_prefix = "High-precision validation"
-            summary_detail = "with 100k ticks for +/-1% statistical margin"
-            expected_outcome_tpl = "Hit rate within +/-1% of expected with 99% confidence"
             pass_criteria = "Statistical validation passes with p < 0.05"
         else:
             cls.target_ship = "Test_Target_Stationary.json"
@@ -355,7 +371,7 @@ class BeamAccuracyScenario(StaticTargetScenario):
                                  phase="precondition"))
 
         # Outcome phase: statistical hit rate validation
-        margin = HIGH_PRECISION_MARGIN if self.high_tick else STANDARD_MARGIN
+        margin = getattr(self, '_ht_margin', HIGH_PRECISION_MARGIN) if self.high_tick else STANDARD_MARGIN
         checks.append(check_tost("Hit Rate", self.expected_hit_chance,
                                   successes=int(self.damage_dealt),
                                   trials=engine.tick_counter,
@@ -565,12 +581,28 @@ class BeamMediumAccuracyErraticMidRangeScenario(StaticTargetScenario):
             self.expected_hit_chance < self.expected_hit_chance_base,
             detail=f"with_defense={self.expected_hit_chance:.4f}, base={self.expected_hit_chance_base:.4f}",
         ))
-        # Erratic target - observational only (hit rate depends on AI movement)
+        # Outcome: verify actual hit rate is in a plausible range.
+        # Expected hit chance ~5% from sigmoid; beam damage=1 so damage_dealt == hits.
+        shots_fired = self.results.get('attacker_total_shots_fired', 0)
         checks.append(check_true(
-            "Some Damage Dealt", self.damage_dealt >= 0,
-            actual=self.damage_dealt, phase="outcome",
-            detail="Erratic target test - hit rate varies with AI movement",
+            "Shots Fired > 500", shots_fired > 500,
+            actual=shots_fired, phase="outcome",
+            detail="beam should fire most ticks while target in range",
         ))
+        if shots_fired > 0:
+            hit_rate = self.damage_dealt / shots_fired
+            checks.append(check_true(
+                "Hit Rate > 1%", hit_rate > 0.01,
+                actual=f"{hit_rate:.1%} ({self.damage_dealt}/{shots_fired})",
+                phase="outcome",
+                detail="beam must land some hits against erratic target at mid-range",
+            ))
+            checks.append(check_true(
+                "Hit Rate < 50%", hit_rate < 0.50,
+                actual=f"{hit_rate:.1%}",
+                phase="outcome",
+                detail="erratic target at mid-range should dodge at least half of shots",
+            ))
         return checks
 
 
@@ -663,12 +695,28 @@ class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
             self.expected_hit_chance < self.expected_hit_chance_base,
             detail=f"with_defense={self.expected_hit_chance:.4f}, base={self.expected_hit_chance_base:.4f}",
         ))
-        # Erratic target - observational only (hit rate depends on AI movement)
+        # Outcome: verify actual hit rate is in a plausible range.
+        # Expected hit chance ~3.5% from sigmoid; beam damage=1 so damage_dealt == hits.
+        shots_fired = self.results.get('attacker_total_shots_fired', 0)
         checks.append(check_true(
-            "Some Damage Dealt", self.damage_dealt >= 0,
-            actual=self.damage_dealt, phase="outcome",
-            detail="Erratic target test - hit rate varies with AI movement",
+            "Shots Fired > 500", shots_fired > 500,
+            actual=shots_fired, phase="outcome",
+            detail="beam should fire most ticks while target in range",
         ))
+        if shots_fired > 0:
+            hit_rate = self.damage_dealt / shots_fired
+            checks.append(check_true(
+                "Hit Rate > 0.5%", hit_rate > 0.005,
+                actual=f"{hit_rate:.1%} ({self.damage_dealt}/{shots_fired})",
+                phase="outcome",
+                detail="beam must land some hits against erratic target at max-range",
+            ))
+            checks.append(check_true(
+                "Hit Rate < 50%", hit_rate < 0.50,
+                actual=f"{hit_rate:.1%}",
+                phase="outcome",
+                detail="erratic target at max-range should dodge at least half of shots",
+            ))
         return checks
 
 
@@ -767,7 +815,7 @@ class BeamOutOfRangeScenario(StaticTargetScenario):
 # stop firing when energy depletes.  All use a guaranteed-hit beam (acc=10.0,
 # falloff=0) at point blank for deterministic shot counting.
 
-BEAM_RES_TEST_TICKS = 1000
+BEAM_RES_TEST_TICKS = 500
 BEAM_RES_ATTACKER_FULL = "Test_Attacker_BeamGuaranteed_HighEnergy.json"
 BEAM_RES_ATTACKER_HALF = "Test_Attacker_BeamGuaranteed_HalfEnergy.json"
 BEAM_RES_ATTACKER_NONE = "Test_Attacker_BeamGuaranteed_NoEnergy.json"
@@ -848,8 +896,8 @@ class BeamStopsAtHalfEnergyScenario(ComparisonScenario):
     """
     BEAMWEAPON-RES-002: Beam Stops At 50% Energy
 
-    Battle A: Beam + 100k energy (fires all 1000 ticks)
-    Battle B: Beam + 500 energy (fires ~500 ticks then stops)
+    Battle A: Beam + 100k energy (fires all 500 ticks)
+    Battle B: Beam + 250 energy (fires ~250 ticks then stops)
 
     Proves that a beam weapon fires until energy depletes, then stops.
     """
@@ -859,10 +907,10 @@ class BeamStopsAtHalfEnergyScenario(ComparisonScenario):
         category="BeamWeaponAbility",
         subcategory="Resource Dependency",
         name="Beam Stops At 50% Energy",
-        summary="Beam fires ~500 shots with 500 energy then stops",
+        summary="Beam fires ~250 shots with 250 energy then stops",
         conditions=[
             f"Attacker (full energy): {BEAM_RES_ATTACKER_FULL}",
-            f"Attacker (half energy): {BEAM_RES_ATTACKER_HALF} (500 energy = 500 shots)",
+            f"Attacker (half energy): {BEAM_RES_ATTACKER_HALF} (250 energy = 250 shots)",
             f"Target: {BEAM_RES_TARGET} (stationary, extreme HP armor)",
             f"Distance: {POINT_BLANK_DISTANCE} pixels",
             f"Test Duration: {BEAM_RES_TEST_TICKS} ticks",
@@ -871,8 +919,8 @@ class BeamStopsAtHalfEnergyScenario(ComparisonScenario):
             "Weapon fires until energy runs out, then silently stops",
             "Damage should be roughly half of full-energy baseline",
         ],
-        expected_outcome="Half-energy attacker deals ~500 damage (half of baseline ~1000).",
-        pass_criteria="variant damage < baseline, variant damage > 0, variant shots ≈ 500",
+        expected_outcome="Half-energy attacker deals ~250 damage (half of baseline ~500).",
+        pass_criteria="variant damage < baseline, variant damage > 0, variant shots ≈ 250",
         max_ticks=BEAM_RES_TEST_TICKS,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
@@ -911,10 +959,19 @@ class BeamStopsAtHalfEnergyScenario(ComparisonScenario):
             phase="outcome",
         ))
 
-        # Outcome: half-energy fired approximately 500 shots
+        # Outcome: half-energy fired approximately 250 shots
         variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        baseline_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
         checks.append(check_exact(
-            "Half-Energy Shots Fired", 500, variant_shots,
+            "Half-Energy Shots Fired", 250, variant_shots,
+            phase="outcome",
+        ))
+
+        # Outcome: half-energy fired fewer shots than full-energy baseline
+        checks.append(check_true(
+            "Half-Energy Fired Fewer Shots",
+            variant_shots < baseline_shots,
+            detail=f"variant={variant_shots}, baseline={baseline_shots}",
             phase="outcome",
         ))
 

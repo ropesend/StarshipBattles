@@ -973,6 +973,7 @@ class ComparisonScenario(TestScenario):
     attacker_angle: float = 0.0
     target_angle: float = 0.0
     force_fire: bool = True
+    expect_different_damage: bool = True  # Set False when comparison is about damage *distribution*, not total
 
     # Visual Baseline mode — set by the Combat Lab UI to render the baseline
     # battle instead of the variant.  When True, setup() puts the baseline
@@ -1228,20 +1229,55 @@ class ComparisonScenario(TestScenario):
         """
         Return automatic precondition checks for ComparisonScenario.
 
-        In Visual Baseline mode, only checks that the baseline ran.
-        In normal mode, checks that both battles ran the expected number of ticks.
+        Validates setup correctness:
+        - Both battles ran the expected number of ticks
+        - Both targets were loaded (initial HP > 0)
+        - Baseline and variant produced different results (when configs differ)
+
+        In Visual Baseline mode, only checks baseline.
         """
-        from simulation_tests.scenarios.validation import check_exact
+        from simulation_tests.scenarios.validation import check_exact, check_true
         checks = []
+
+        # Verify baseline battle ran full duration
         checks.append(check_exact(
             "Baseline Ticks", self.max_ticks, self.baseline_ticks,
             phase="precondition",
         ))
+        # Verify baseline target was loaded
+        checks.append(check_true(
+            "Baseline Target Loaded",
+            self.baseline_initial_hp > 0,
+            detail=f"initial_hp={self.baseline_initial_hp}",
+            phase="precondition",
+        ))
+
         if not self._visual_baseline:
+            # Verify variant battle ran full duration
             checks.append(check_exact(
                 "Variant Ticks", self.max_ticks, self.variant_ticks,
                 phase="precondition",
             ))
+            # Verify variant target was loaded
+            checks.append(check_true(
+                "Variant Target Loaded",
+                self.variant_initial_hp > 0,
+                detail=f"initial_hp={self.variant_initial_hp}",
+                phase="precondition",
+            ))
+            # Verify battles are not accidentally identical
+            # (only when ship configs differ AND test expects different total damage)
+            if self.expect_different_damage and (
+                self.baseline_target_ship != self.variant_target_ship or
+                self.baseline_attacker_ship != self.variant_attacker_ship
+            ):
+                checks.append(check_true(
+                    "Battles Produced Different Results",
+                    self.baseline_damage_dealt != self.variant_damage_dealt or
+                    self.baseline_ticks != self.variant_ticks,
+                    detail=f"baseline_dmg={self.baseline_damage_dealt}, variant_dmg={self.variant_damage_dealt}",
+                    phase="precondition",
+                ))
         return checks
 
     def verify(self, battle_engine) -> bool:

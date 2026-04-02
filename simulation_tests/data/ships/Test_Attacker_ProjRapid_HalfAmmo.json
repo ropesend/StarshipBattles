@@ -2,7 +2,7 @@
   "_metadata": {
     "_schema_version": "1.0",
     "_data_version": "1.0",
-    "_description": "Rapid projectile (1 ammo/shot) + 500 ammo magazine (depletes at tick ~500)"
+    "_description": "Rapid projectile (1 ammo/shot) + 250 ammo magazine (depletes at tick ~250)"
   },
   "name": "Test Attacker Proj Rapid + Half Ammo",
   "color": [255, 0, 0],
@@ -13,10 +13,10 @@
   "layers": {
     "CORE": [
       {"id": "test_proj_rapid"},
-      {"id": "test_storage_ammo_500"}
+      {"id": "test_storage_ammo_250"}
     ],
     "ARMOR": []
   },
-  "_test_notes": "Rapid projectile + 500 ammo. Fires ~500 shots then stops. For PROJECTILE-RES-002.",
+  "_test_notes": "Rapid projectile + 250 ammo. Fires ~250 shots then stops. For PROJECTILE-RES-002.",
   "expected_stats": {"mass": 400.0}
 }

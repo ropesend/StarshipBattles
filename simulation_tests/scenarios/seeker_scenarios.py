@@ -101,6 +101,17 @@ class SeekerSpeedComparisonScenario(ComparisonScenario):
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
 
+        baseline_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
+        variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        checks.append(check_true(
+            "Baseline Attacker Fired", baseline_shots >= 1,
+            detail=f"shots={baseline_shots}", phase="precondition",
+        ))
+        checks.append(check_true(
+            "Variant Attacker Fired", variant_shots >= 1,
+            detail=f"shots={variant_shots}", phase="precondition",
+        ))
+
         checks.append(check_true(
             "Fast Seeker Hit",
             self.variant_damage_dealt > 0,
@@ -158,6 +169,17 @@ class SeekerEnduranceComparisonScenario(ComparisonScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+
+        baseline_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
+        variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        checks.append(check_true(
+            "Baseline Attacker Fired", baseline_shots >= 1,
+            detail=f"shots={baseline_shots}", phase="precondition",
+        ))
+        checks.append(check_true(
+            "Variant Attacker Fired", variant_shots >= 1,
+            detail=f"shots={variant_shots}", phase="precondition",
+        ))
 
         checks.append(check_true(
             "Long Endurance Seeker Hit",
@@ -228,6 +250,17 @@ class SeekerTurnRateComparisonScenario(ComparisonScenario):
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
 
+        baseline_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
+        variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        checks.append(check_true(
+            "Baseline Attacker Fired", baseline_shots >= 1,
+            detail=f"shots={baseline_shots}", phase="precondition",
+        ))
+        checks.append(check_true(
+            "Variant Attacker Fired", variant_shots >= 1,
+            detail=f"shots={variant_shots}", phase="precondition",
+        ))
+
         checks.append(check_true(
             "Fast Turn Seeker Hit",
             self.variant_damage_dealt > 0,
@@ -292,6 +325,17 @@ class SeekerTurnRate180Scenario(ComparisonScenario):
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
 
+        baseline_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
+        variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        checks.append(check_true(
+            "Baseline Attacker Fired", baseline_shots >= 1,
+            detail=f"shots={baseline_shots}", phase="precondition",
+        ))
+        checks.append(check_true(
+            "Variant Attacker Fired", variant_shots >= 1,
+            detail=f"shots={variant_shots}", phase="precondition",
+        ))
+
         checks.append(check_true(
             "Fast Turn Seeker Hit (180° reverse)",
             self.variant_damage_dealt > 0,
@@ -343,6 +387,17 @@ class SeekerDamageComparisonScenario(ComparisonScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+
+        baseline_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
+        variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        checks.append(check_true(
+            "Baseline Attacker Fired", baseline_shots >= 1,
+            detail=f"shots={baseline_shots}", phase="precondition",
+        ))
+        checks.append(check_true(
+            "Variant Attacker Fired", variant_shots >= 1,
+            detail=f"shots={variant_shots}", phase="precondition",
+        ))
 
         checks.append(check_true("Baseline Hit", self.baseline_damage_dealt > 0,
                                  detail=f"damage={self.baseline_damage_dealt}"))
@@ -402,6 +457,17 @@ class SeekerHPvsPDCScenario(_PDCMixin, ComparisonScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+
+        baseline_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
+        variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        checks.append(check_true(
+            "Baseline Attacker Fired", baseline_shots >= 1,
+            detail=f"shots={baseline_shots}", phase="precondition",
+        ))
+        checks.append(check_true(
+            "Variant Attacker Fired", variant_shots >= 1,
+            detail=f"shots={variant_shots}", phase="precondition",
+        ))
 
         checks.append(check_true(
             "High HP Seekers Deal More Damage",

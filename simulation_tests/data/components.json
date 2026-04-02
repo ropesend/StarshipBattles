@@ -1324,6 +1324,28 @@
       }
     },
     {
+      "id": "test_storage_energy_250",
+      "name": "Test Battery (250 energy)",
+      "type": "Tank",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 19,
+      "abilities": {
+        "ResourceStorage": [{"resource": "energy", "amount": 250}]
+      }
+    },
+    {
+      "id": "test_storage_ammo_250",
+      "name": "Test Magazine (250 ammo)",
+      "type": "Tank",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 19,
+      "abilities": {
+        "ResourceStorage": [{"resource": "ammo", "amount": 250}]
+      }
+    },
+    {
       "id": "test_storage_energy_500",
       "name": "Test Battery (500 energy)",
       "type": "Tank",

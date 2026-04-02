@@ -268,6 +268,7 @@ class CNCEngineDisabledScenario(ComparisonScenario):
     variant_attacker_ship = "Test_Engine_NoCNC.json"
     variant_target_ship = STANDARD_TARGET
     distance = POINT_BLANK_DISTANCE
+    expect_different_damage = False  # Tests engine stats, not damage
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()

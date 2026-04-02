@@ -104,3 +104,80 @@ class TestComparisonVisualBaselineCrash:
         assert report is not None
         # validate() accessed variant_damage_dealt=75 > 0, so check passes
         assert report.passed
+
+
+class TestTemplatePreconditions:
+    """Tests for the strengthened _template_preconditions() in ComparisonScenario."""
+
+    def _make_scenario(self, **overrides):
+        """Create a _DummyComparisonScenario with sensible defaults."""
+        scenario = _DummyComparisonScenario()
+        scenario._visual_baseline = False
+        scenario.baseline_ticks = 10
+        scenario.variant_ticks = 10
+        scenario.baseline_initial_hp = 1000.0
+        scenario.variant_initial_hp = 1000.0
+        scenario.baseline_damage_dealt = 50.0
+        scenario.variant_damage_dealt = 75.0
+        for key, value in overrides.items():
+            setattr(scenario, key, value)
+        return scenario
+
+    def test_template_preconditions_checks_target_loaded(self):
+        """When both targets have HP > 0, all precondition checks pass."""
+        scenario = self._make_scenario()
+        checks = scenario._template_preconditions()
+        assert all(c.passed for c in checks), (
+            f"Expected all checks to pass, got: "
+            f"{[(c.name, c.passed) for c in checks]}"
+        )
+
+    def test_template_preconditions_catches_zero_hp_target(self):
+        """When variant target has 0 HP, the 'Variant Target Loaded' check fails."""
+        scenario = self._make_scenario(variant_initial_hp=0)
+        checks = scenario._template_preconditions()
+        variant_loaded = [c for c in checks if c.name == "Variant Target Loaded"]
+        assert len(variant_loaded) == 1
+        assert not variant_loaded[0].passed
+
+    def test_template_preconditions_catches_identical_results(self):
+        """When different ship configs produce identical damage, precondition fails."""
+        scenario = self._make_scenario(
+            baseline_damage_dealt=50.0,
+            variant_damage_dealt=50.0,
+            # Different ship configs (variant_target differs from baseline_target)
+            baseline_target_ship="Ship_A.json",
+            variant_target_ship="Ship_B.json",
+        )
+        checks = scenario._template_preconditions()
+        diff_check = [c for c in checks if c.name == "Battles Produced Different Results"]
+        assert len(diff_check) == 1
+        assert not diff_check[0].passed
+
+    def test_template_preconditions_skips_identical_check_same_ships(self):
+        """When baseline and variant use same ships, 'Different Results' check is not added."""
+        scenario = self._make_scenario(
+            baseline_damage_dealt=50.0,
+            variant_damage_dealt=50.0,
+            # Same ship configs on both sides
+            baseline_target_ship="Same_Ship.json",
+            variant_target_ship="Same_Ship.json",
+            baseline_attacker_ship="Same_Attacker.json",
+            variant_attacker_ship="Same_Attacker.json",
+        )
+        checks = scenario._template_preconditions()
+        diff_check = [c for c in checks if c.name == "Battles Produced Different Results"]
+        assert len(diff_check) == 0
+
+    def test_template_preconditions_skips_identical_check_when_opted_out(self):
+        """When expect_different_damage=False, 'Different Results' check is not added."""
+        scenario = self._make_scenario(
+            baseline_damage_dealt=50.0,
+            variant_damage_dealt=50.0,
+            baseline_target_ship="Ship_A.json",
+            variant_target_ship="Ship_B.json",
+            expect_different_damage=False,
+        )
+        checks = scenario._template_preconditions()
+        diff_check = [c for c in checks if c.name == "Battles Produced Different Results"]
+        assert len(diff_check) == 0

@@ -698,6 +698,7 @@ class ShieldWithoutEnergyScenario(ComparisonScenario):
     variant_attacker_ship = SHIELD_ATTACKER
     variant_target_ship = "Test_Target_Shield_100_NoBattery.json"
     distance = POINT_BLANK_DISTANCE
+    expect_different_damage = False  # Energy-starved shields = same as unshielded
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
@@ -853,6 +854,7 @@ class ShieldWithoutMetalsNoProtection(ComparisonScenario):
     variant_attacker_ship = SHIELD_ATTACKER
     variant_target_ship = SHIELD_METALS_TARGET_NONE
     distance = POINT_BLANK_DISTANCE
+    expect_different_damage = False  # Resource-starved shields = same as unshielded
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()

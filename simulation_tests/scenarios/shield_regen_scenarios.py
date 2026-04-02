@@ -345,6 +345,7 @@ class RegenWithFullEnergyScenario(ComparisonScenario):
     variant_attacker_ship = REGEN_ATTACKER
     variant_target_ship = "Test_Target_Shield_Regen_5_Free.json"
     distance = POINT_BLANK_DISTANCE
+    expect_different_damage = False  # Energy-starved regen = same damage as free regen
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
@@ -417,6 +418,7 @@ class RegenWithNoEnergyScenario(ComparisonScenario):
     variant_attacker_ship = REGEN_ATTACKER
     variant_target_ship = "Test_Target_Shield_NoRegen.json"
     distance = POINT_BLANK_DISTANCE
+    expect_different_damage = False  # Energy-starved regen = same as no regen
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
