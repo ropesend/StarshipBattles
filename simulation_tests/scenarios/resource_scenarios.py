@@ -32,7 +32,7 @@ Expected Values Architecture:
 
 from game.simulation.physics_constants import K_SPEED
 from simulation_tests.scenarios import TestMetadata
-from simulation_tests.scenarios.templates import ResourceScenario
+from simulation_tests.scenarios.templates import ComparisonScenario, ResourceScenario
 from simulation_tests.scenarios.validation import check_exact, check_approx, check_true
 
 
@@ -174,6 +174,22 @@ RES008_MAX_TICKS = 100
 RES008_EXPECTED_LAUNCHES = RES008_MAX_TICKS  # 100
 RES008_EXPECTED_AMMO_CONSUMED = RES008_EXPECTED_LAUNCHES * RES008_AMMO_PER_LAUNCH  # 100
 RES008_EXPECTED_FINAL_AMMO = RES008_INITIAL_AMMO - RES008_EXPECTED_AMMO_CONSUMED  # 99,900
+
+# -----------------------------------------------------------------------------
+# RESOURCE-009: Energy Contention — Beam + Shield Regen Share Pool
+# Baseline: Beam (1 energy/shot) + 100k battery → fires all 500 ticks
+# Variant: Beam (1 energy/shot) + regen (5 energy/sec) + 250 battery
+#   Total consumption: 100/sec (beam) + 5/sec (regen) = 105/sec = 1.05/tick
+#   Battery depletes at ~tick 238. Beam stops firing.
+# Expected: variant fires fewer shots than baseline
+# -----------------------------------------------------------------------------
+RES009_BASELINE_SHIP = "Test_Attacker_BeamEnergy_HighBattery.json"
+RES009_VARIANT_SHIP = "Test_Attacker_BeamEnergy_Regen_LimitedBattery.json"
+RES009_MAX_TICKS = 500
+RES009_VARIANT_BATTERY = 250.0
+RES009_BEAM_ENERGY_PER_TICK = 1.0     # 1 energy per shot, fires every tick
+RES009_REGEN_ENERGY_PER_SEC = 5.0     # constant drain
+RES009_TOTAL_ENERGY_PER_SEC = 100.0 + RES009_REGEN_ENERGY_PER_SEC  # 105/sec
 
 
 # ============================================================================
@@ -715,6 +731,105 @@ class SeekerAmmoConsumptionScenario(ResourceScenario):
 
 
 # ============================================================================
+# RESOURCE CONTENTION TESTS
+# ============================================================================
+
+class EnergyContentionBeamRegenScenario(ComparisonScenario):
+    """
+    RESOURCE-009: Shield Regen + Beam Both Consume Energy From Same Pool
+
+    Battle A: Beam (1 energy/shot, fires every tick) + 100k battery → fires all 500 ticks
+    Battle B: Beam (1 energy/shot) + shield regen (5 energy/sec) + 250 battery
+              Total: 105 energy/sec. Battery depletes at ~tick 238. Beam stops.
+
+    When energy runs out, BOTH systems stop. The variant fires fewer shots because
+    the shield regen competes for the same energy pool, depleting it faster.
+    """
+
+    metadata = TestMetadata(
+        test_id="RESOURCE-009",
+        category="Resource System",
+        subcategory="Contention",
+        name="Energy Contention — Beam + Shield Regen Share Pool",
+        summary="Beam and shield regen competing for limited energy causes earlier weapon shutdown",
+        conditions=[
+            f"Baseline: {RES009_BASELINE_SHIP} (beam + 100k battery, fires all {RES009_MAX_TICKS} ticks)",
+            f"Variant: {RES009_VARIANT_SHIP} (beam + regen + {RES009_VARIANT_BATTERY} battery)",
+            f"Beam: 1 energy/shot (activation trigger), fires every tick = 100 energy/sec",
+            f"Regen: {RES009_REGEN_ENERGY_PER_SEC} energy/sec (constant drain)",
+            f"Total variant drain: {RES009_TOTAL_ENERGY_PER_SEC} energy/sec",
+            "Target: Test_Target_Stationary.json (stationary, extreme HP)",
+            f"Distance: 100 pixels (point blank)",
+            f"Test Duration: {RES009_MAX_TICKS} ticks",
+        ],
+        edge_cases=[
+            "Two systems (beam + regen) share the same energy pool",
+            "Constant drain (regen) + activation drain (beam) deplete pool faster",
+            "After energy depletes, beam cannot fire (activation cost check fails)",
+        ],
+        expected_outcome="Variant fires fewer shots than baseline because energy is shared "
+                         "with shield regen and depletes early.",
+        pass_criteria="variant_damage_dealt < baseline_damage_dealt, both > 0",
+        max_ticks=RES009_MAX_TICKS,
+        seed=42,
+        battle_end_mode="time_based",
+        tags=["resource", "energy", "contention", "beam", "shield-regen", "comparison"],
+    )
+
+    baseline_attacker_ship = RES009_BASELINE_SHIP
+    baseline_target_ship = "Test_Target_Stationary.json"
+    variant_attacker_ship = RES009_VARIANT_SHIP
+    variant_target_ship = "Test_Target_Stationary.json"
+    distance = 100
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Precondition: baseline fired all ticks (plenty of energy)
+        baseline_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
+        checks.append(check_true(
+            "Baseline Fired Extensively",
+            baseline_shots >= RES009_MAX_TICKS * 0.9,
+            detail=f"baseline_shots={baseline_shots}, expected~={RES009_MAX_TICKS}",
+        ))
+
+        # Precondition: variant also fired (had some energy)
+        variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        checks.append(check_true(
+            "Variant Fired Some Shots",
+            variant_shots > 0,
+            detail=f"variant_shots={variant_shots}",
+        ))
+
+        # Precondition: variant energy depleted
+        variant_energy = self.attacker.resources.get_resource("energy")
+        checks.append(check_true(
+            "Variant Energy Depleted",
+            variant_energy is not None and variant_energy.current_value < 1.0,
+            detail=f"energy={variant_energy.current_value if variant_energy else 'N/A'}",
+        ))
+
+        # Outcome: variant fired fewer shots (energy contention)
+        checks.append(check_true(
+            "Contention Reduced Shots Fired",
+            variant_shots < baseline_shots,
+            detail=f"variant={variant_shots}, baseline={baseline_shots}, "
+                   f"reduction={baseline_shots - variant_shots}",
+            phase="outcome",
+        ))
+
+        # Outcome: variant dealt less damage
+        checks.append(check_true(
+            "Contention Reduced Damage",
+            self.variant_damage_dealt < self.baseline_damage_dealt,
+            detail=f"variant_dmg={self.variant_damage_dealt}, baseline_dmg={self.baseline_damage_dealt}",
+            phase="outcome",
+        ))
+
+        return checks
+
+
+# ============================================================================
 # EXPORT ALL SCENARIOS
 # ============================================================================
 
@@ -730,5 +845,7 @@ __all__ = [
     # Ammo tests
     'ProjectileAmmoConsumptionScenario',
     'ProjectileAmmoDepletionScenario',
-    'SeekerAmmoConsumptionScenario'
+    'SeekerAmmoConsumptionScenario',
+    # Contention tests
+    'EnergyContentionBeamRegenScenario',
 ]

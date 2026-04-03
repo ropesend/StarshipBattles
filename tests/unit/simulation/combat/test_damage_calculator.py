@@ -934,10 +934,28 @@ class TestNegativeDamageHandling:
         ship = mock_ship({
             LayerType.OUTER: LayerData(radius_pct=0.8, components=[comp])
         })
+        ship.current_shields = 100.0
 
         # Negative damage - should not modify anything
         damage_calculator.apply_damage(ship, -10)
 
+        assert comp.current_hp == 50
+        assert ship.current_shields == 100.0  # Shields must not heal
+        ship.recalculate_stats.assert_not_called()
+
+    def test_zero_damage_does_not_modify_shields(
+        self, damage_calculator, mock_component, mock_ship
+    ):
+        """Zero damage should not modify shield state."""
+        comp = mock_component(current_hp=50)
+        ship = mock_ship({
+            LayerType.OUTER: LayerData(radius_pct=0.8, components=[comp])
+        })
+        ship.current_shields = 50.0
+
+        damage_calculator.apply_damage(ship, 0)
+
+        assert ship.current_shields == 50.0
         assert comp.current_hp == 50
         ship.recalculate_stats.assert_not_called()
 

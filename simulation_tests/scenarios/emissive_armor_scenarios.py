@@ -30,6 +30,7 @@ from simulation_tests.test_constants import (
     EMISSIVE_TEST_TICKS,
     EMISSIVE_ARMOR_VALUE,
     EMISSIVE_HIGH_BEAM_DAMAGE,
+    EMISSIVE_EXACT_BEAM_DAMAGE,
 )
 
 
@@ -427,6 +428,150 @@ class EmissiveNegativeValueScenario(ComparisonScenario):
         checks.append(check_exact(
             "Damage Increase Ratio",
             expected_ratio, actual_ratio,
+            phase="outcome",
+        ))
+
+        return checks
+
+
+# =============================================================================
+# EMISSIVE-006: Three Components Same Group Still MAX
+# =============================================================================
+
+class EmissiveThreeSameGroupScenario(ComparisonScenario):
+    """
+    EMISSIVE-006: Three Components Same Group Still MAX (Intra-Group MAX)
+
+    Battle A: 1x EmissiveArmor(5, group_a) → 5 reduction
+    Battle B: 3x EmissiveArmor(5, group_a) → MAX(5,5,5) = still 5
+
+    Three components in the same stack_group produce the same protection
+    as one. Both targets should take identical damage.
+    """
+
+    metadata = TestMetadata(
+        test_id="EMISSIVE-006",
+        category="EmissiveArmor",
+        subcategory="Stacking",
+        name="Three Same-Group Components Do Not Stack",
+        summary="Three EmissiveArmor in same stack_group = MAX (no extra benefit over one)",
+        conditions=[
+            f"Attacker: {ATTACKER_10DMG} ({EMISSIVE_HIGH_BEAM_DAMAGE} dmg, guaranteed hit)",
+            "Target (1x armor): Test_Target_EmissiveArmor_GroupA.json (1x EmissiveArmor 5, group_a)",
+            "Target (3x same group): Test_Target_EmissiveArmor_3x_SameGroup.json (3x EmissiveArmor 5, all group_a)",
+            f"Distance: {POINT_BLANK_DISTANCE} pixels",
+            f"Test Duration: {EMISSIVE_TEST_TICKS} ticks",
+        ],
+        edge_cases=[
+            "Intra-group MAX: three identical values in same group = no extra benefit",
+            "Extends EMISSIVE-003 (2x) to 3 components",
+        ],
+        expected_outcome="Both targets take identical damage (3x same group = 1x).",
+        pass_criteria="baseline_damage_dealt == variant_damage_dealt",
+        max_ticks=EMISSIVE_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["emissive-armor", "stacking", "same-group", "three-component", "comparison"],
+    )
+
+    baseline_attacker_ship = ATTACKER_10DMG
+    baseline_target_ship = "Test_Target_EmissiveArmor_GroupA.json"
+    variant_attacker_ship = ATTACKER_10DMG
+    variant_target_ship = "Test_Target_EmissiveArmor_3x_SameGroup.json"
+    distance = POINT_BLANK_DISTANCE
+    expect_different_damage = False  # Same-group MAX means identical damage
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Data: verify variant has same emissive armor value (MAX = 5)
+        checks.append(check_exact(
+            "Variant Emissive Armor", EMISSIVE_ARMOR_VALUE,
+            self.target.emissive_armor,
+        ))
+
+        # Precondition: both took damage
+        checks.append(check_true(
+            "Baseline Took Damage",
+            self.baseline_damage_dealt > 0,
+            detail=f"damage={self.baseline_damage_dealt}",
+        ))
+
+        # Outcome: identical damage (same group MAX = no extra benefit)
+        checks.append(check_exact(
+            "Same Damage (3x No Stack Benefit)",
+            self.baseline_damage_dealt, self.variant_damage_dealt,
+            phase="outcome",
+        ))
+
+        return checks
+
+
+# =============================================================================
+# EMISSIVE-007: Damage Exactly Equals Emissive Value
+# =============================================================================
+
+class EmissiveExactDamageBlockScenario(ComparisonScenario):
+    """
+    EMISSIVE-007: Damage Exactly Equals Emissive Value → 0 Hull Damage
+
+    Battle A: Target without emissive armor — all 5-dmg hits land
+    Battle B: Target with EmissiveArmor(5) — 5-dmg hits reduced to 0
+
+    EmissiveArmor(5) subtracts 5 from each hit. A 5-damage beam hit
+    becomes max(0, 5-5) = 0 damage. This is the boundary condition.
+    """
+
+    metadata = TestMetadata(
+        test_id="EMISSIVE-007",
+        category="EmissiveArmor",
+        subcategory="Boundary",
+        name="Damage Exactly Equals Emissive Value",
+        summary=f"EmissiveArmor({EMISSIVE_ARMOR_VALUE}) blocks {EMISSIVE_EXACT_BEAM_DAMAGE}-damage hits exactly (boundary case)",
+        conditions=[
+            f"Attacker: Test_Attacker_Beam_5dmg_Guaranteed.json ({EMISSIVE_EXACT_BEAM_DAMAGE} dmg, guaranteed hit)",
+            f"Target (no armor): {NO_ARMOR_TARGET} (extreme HP, no emissive armor)",
+            f"Target (with armor): {EMISSIVE_TARGET} (EmissiveArmor {EMISSIVE_ARMOR_VALUE})",
+            f"Distance: {POINT_BLANK_DISTANCE} pixels",
+            f"Test Duration: {EMISSIVE_TEST_TICKS} ticks",
+        ],
+        edge_cases=[
+            f"{EMISSIVE_EXACT_BEAM_DAMAGE} damage == {EMISSIVE_ARMOR_VALUE} armor → damage reduced to exactly 0",
+            "Boundary condition: not less than, not greater than, exactly equal",
+        ],
+        expected_outcome="Variant takes zero damage. Baseline takes full damage.",
+        pass_criteria="variant_damage_dealt == 0, baseline_damage_dealt > 0",
+        max_ticks=EMISSIVE_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["emissive-armor", "boundary", "exact-match", "comparison"],
+    )
+
+    baseline_attacker_ship = "Test_Attacker_Beam_5dmg_Guaranteed.json"
+    baseline_target_ship = NO_ARMOR_TARGET
+    variant_attacker_ship = "Test_Attacker_Beam_5dmg_Guaranteed.json"
+    variant_target_ship = EMISSIVE_TARGET
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Data: verify emissive armor value
+        checks.append(check_exact(
+            "Emissive Armor Value", EMISSIVE_ARMOR_VALUE,
+            self.target.emissive_armor,
+        ))
+
+        # Precondition: baseline took damage (beam fired)
+        checks.append(check_true(
+            "Baseline Took Damage",
+            self.baseline_damage_dealt > 0,
+            detail=f"damage={self.baseline_damage_dealt}",
+        ))
+
+        # Outcome: variant took zero damage (damage == armor, boundary case)
+        checks.append(check_exact(
+            "Zero Damage At Boundary", 0.0, self.variant_damage_dealt,
             phase="outcome",
         ))
 

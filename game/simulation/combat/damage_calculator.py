@@ -43,6 +43,9 @@ class DamageCalculator:
         if not ship.is_alive:
             return
 
+        if damage_amount <= 0:
+            return
+
         remaining_damage = damage_amount
 
         # 1. Shield Absorption (first line of defense)

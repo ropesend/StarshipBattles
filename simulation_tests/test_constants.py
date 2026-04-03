@@ -127,6 +127,7 @@ SRA_SMALL_SHIELD_CAP = 10   # For cap test (SRA recharges 15 but shield max=10)
 EMISSIVE_TEST_TICKS = 500
 EMISSIVE_ARMOR_VALUE = 5           # Flat damage reduction from test_emissive_armor_5
 EMISSIVE_HIGH_BEAM_DAMAGE = 10     # Beam damage that exceeds armor value
+EMISSIVE_EXACT_BEAM_DAMAGE = 5     # Beam damage that exactly equals armor value
 
 # Armor Layer test category
 ARMOR_LAYER_TEST_TICKS = 500
@@ -136,6 +137,7 @@ ARMOR_LAYER_100_HP = 100
 # ShieldRegeneration test category
 SHIELD_REGEN_TEST_TICKS = 500
 SHIELD_REGEN_RATE_200 = 200.0    # HP/sec (regen > damage)
+SHIELD_REGEN_RATE_100 = 100.0    # HP/sec (regen == damage at 1 dmg/tick = 100 dmg/sec)
 SHIELD_REGEN_RATE_5 = 5.0        # HP/sec (resource variant, matches test_shield_regen)
 SHIELD_REGEN_ENERGY_COST = 5.0   # Energy/sec cost on test_shield_regen
 SHIELD_REGEN_SMALL_BATTERY = 25  # Energy units (lasts ~500 ticks at 5/sec cost)

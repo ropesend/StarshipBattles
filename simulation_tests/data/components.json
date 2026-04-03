@@ -1629,6 +1629,18 @@
       }
     },
     {
+      "id": "test_beam_30dmg_guaranteed",
+      "name": "Test Beam (30 Damage, Guaranteed Hit)",
+      "type": "Weapon",
+      "mass": 0, "hp": 20, "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 30, "range": 1000, "reload": 0.0,
+          "firing_arc": 360, "base_accuracy": 10.0, "accuracy_falloff": 0
+        }
+      }
+    },
+    {
       "id": "test_beam_50dmg_guaranteed",
       "name": "Test Beam (50 Damage, Guaranteed Hit)",
       "type": "Weapon",
@@ -1710,6 +1722,36 @@
       "sprite_index": 16,
       "abilities": {
         "ShieldProjection": 10
+      }
+    },
+    {
+      "_comment": "=== PHASE C/D EDGE CASE TEST COMPONENTS ===",
+      "id": "test_beam_5dmg_guaranteed",
+      "name": "Test Beam (5 Damage, Guaranteed Hit)",
+      "type": "Weapon",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 5,
+          "range": 1000,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 10.0,
+          "accuracy_falloff": 0
+        }
+      }
+    },
+    {
+      "id": "test_shield_regen_100",
+      "name": "Test Shield Regen (100/sec, No Resource)",
+      "type": "ShieldRegenerator",
+      "mass": 0,
+      "hp": 50,
+      "sprite_index": 18,
+      "abilities": {
+        "ShieldRegeneration": 100
       }
     }
   ]

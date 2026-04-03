@@ -423,3 +423,104 @@ class CNCBridgeDestroyedScenario(ComparisonScenario):
         ))
 
         return checks
+
+
+# =============================================================================
+# CNC-006: Bridge Redundancy — Two Bridges Survive Single Destruction
+# =============================================================================
+
+class CNCBridgeRedundancyScenario(ComparisonScenario):
+    """
+    CNC-006: Bridge Redundancy
+
+    Both ships have a C&C beam in CORE and bridges in ARMOR.
+    An enemy fires at each ship.
+
+    Battle A: Single bridge (50 HP) in ARMOR → destroyed at ~tick 50,
+              beam loses C&C and stops firing
+    Battle B: Two bridges (50 HP each) in ARMOR → first destroyed at ~tick 50,
+              but second bridge still provides C&C → beam keeps firing
+              until second bridge destroyed at ~tick 100
+
+    The dual-bridge ship should deal more total damage because it maintains
+    C&C for longer.
+    """
+
+    metadata = TestMetadata(
+        test_id="CNC-006",
+        category="CommandAndControl",
+        subcategory="Redundancy",
+        name="Bridge Redundancy — Second Bridge Maintains C&C",
+        summary="Two bridges provide redundancy: destroying one does not disable C&C-dependent weapons",
+        conditions=[
+            f"Enemy: {DURABLE_ATTACKER} (fires at both test ships)",
+            "Ship (1 bridge): Test_Attacker_Beam_CNC_WeakBridge.json (1x 50 HP bridge in ARMOR)",
+            "Ship (2 bridges): Test_Attacker_Beam_CNC_DualBridge.json (2x 50 HP bridge in ARMOR)",
+            f"Distance: {POINT_BLANK_DISTANCE} pixels",
+            f"Test Duration: {CNC_TEST_TICKS} ticks",
+        ],
+        edge_cases=[
+            f"First bridge ({CNC_BRIDGE_HP} HP) destroyed at ~tick {CNC_BRIDGE_HP}",
+            "Second bridge provides C&C continuity after first is destroyed",
+            "Dual-bridge ship fires for ~100 ticks vs single-bridge ~50 ticks",
+        ],
+        expected_outcome="Dual-bridge variant deals more damage than single-bridge baseline "
+                         "because C&C is maintained longer.",
+        pass_criteria="variant_damage_dealt > baseline_damage_dealt, both > 0",
+        max_ticks=CNC_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["cnc", "command-control", "redundancy", "bridge", "comparison"],
+    )
+
+    baseline_attacker_ship = DURABLE_ATTACKER
+    baseline_target_ship = "Test_Attacker_Beam_CNC_WeakBridge.json"
+    variant_attacker_ship = DURABLE_ATTACKER
+    variant_target_ship = "Test_Attacker_Beam_CNC_DualBridge.json"
+    distance = POINT_BLANK_DISTANCE
+    force_fire = True
+
+    def configure_baseline(self, engine):
+        """Set up mutual targeting so CNC ship fires back."""
+        self.target.current_target = self.attacker
+
+    def configure_variant(self, engine):
+        """Set up mutual targeting so CNC ship fires back."""
+        self.target.current_target = self.attacker
+
+    def update(self, battle_engine):
+        """Force both attacker AND target to fire each tick."""
+        if self.attacker and self.attacker.is_alive:
+            self.attacker.comp_trigger_pulled = True
+        if self.target and self.target.is_alive:
+            self.target.comp_trigger_pulled = True
+        self._track_tick(battle_engine.tick_counter)
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Precondition: single-bridge ship fired some shots before bridge died
+        baseline_shots = self.results.get('baseline_target_total_shots_fired', 0)
+        checks.append(check_true(
+            "Single Bridge Ship Fired",
+            baseline_shots > 0,
+            detail=f"baseline_shots={baseline_shots}",
+        ))
+
+        # Precondition: dual-bridge ship also fired
+        variant_shots = self.results.get('variant_target_total_shots_fired', 0)
+        checks.append(check_true(
+            "Dual Bridge Ship Fired",
+            variant_shots > 0,
+            detail=f"variant_shots={variant_shots}",
+        ))
+
+        # Outcome: dual-bridge ship fired more shots (C&C lasted longer)
+        checks.append(check_true(
+            "Dual Bridge Fired More Shots",
+            variant_shots > baseline_shots,
+            detail=f"variant_shots={variant_shots}, baseline_shots={baseline_shots}",
+            phase="outcome",
+        ))
+
+        return checks

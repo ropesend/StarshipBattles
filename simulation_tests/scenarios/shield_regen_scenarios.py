@@ -33,6 +33,7 @@ from simulation_tests.test_constants import (
     SHIELD_REGEN_RATE,
     SHIELD_REGEN_TEST_TICKS,
     SHIELD_REGEN_RATE_200,
+    SHIELD_REGEN_RATE_100,
     SHIELD_REGEN_RATE_5,
     SHIELD_REGEN_ENERGY_COST,
     SHIELD_REGEN_SMALL_BATTERY,
@@ -518,6 +519,87 @@ class RegenStopsMidBattleScenario(ComparisonScenario):
             "Energy Depletion Increased Hull Damage",
             self.variant_damage_dealt > self.baseline_damage_dealt,
             detail=f"variant={self.variant_damage_dealt}, baseline={self.baseline_damage_dealt}",
+            phase="outcome",
+        ))
+
+        return checks
+
+
+# =============================================================================
+# SHIELD-REGEN-007: Regen Rate Equals Damage Rate — Stable Shields
+# =============================================================================
+
+class RegenEqualsDamageRateScenario(ComparisonScenario):
+    """
+    SHIELD-REGEN-007: Regen Rate Equals Damage Rate — Stable Shields
+
+    Battle A: Target with 200 HP shield, NO regen → shield depletes at tick 200
+    Battle B: Target with 200 HP shield + 100/sec regen → regen matches damage
+
+    At 1 dmg/tick (100 dmg/sec), regen = 100/sec = 1.0/tick = damage rate.
+    Net drain = 0. Shields should never deplete, hull takes zero damage.
+    This is the exact boundary between "shields deplete" and "shields hold".
+    """
+
+    metadata = TestMetadata(
+        test_id="SHIELD-REGEN-007",
+        category="ShieldRegeneration",
+        subcategory="Boundary",
+        name="Regen Rate Equals Damage Rate — Stable Shields",
+        summary="When regen exactly matches incoming damage rate, shields hold indefinitely",
+        conditions=[
+            f"Attacker: {REGEN_ATTACKER} (1 dmg, guaranteed hit, fires every tick = 100 dmg/sec)",
+            f"Target (no regen): Test_Target_Shield_NoRegen.json (200 HP shield, no regen)",
+            f"Target (exact regen): Test_Target_Shield_Regen_100.json "
+            f"(200 HP shield + {SHIELD_REGEN_RATE_100}/sec regen)",
+            f"Distance: {POINT_BLANK_DISTANCE} pixels (point blank)",
+            f"Test Duration: {SHIELD_REGEN_TEST_TICKS} ticks",
+        ],
+        edge_cases=[
+            f"Regen rate ({SHIELD_REGEN_RATE_100}/sec = 1.0/tick) exactly equals damage rate (1/tick)",
+            "Boundary condition: net drain = 0, shields hold at starting value",
+        ],
+        expected_outcome="Variant takes zero hull damage. Baseline shield depletes and hull takes damage.",
+        pass_criteria="variant_damage_dealt == 0, baseline_damage_dealt > 0, variant shields > 0",
+        max_ticks=SHIELD_REGEN_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["shield", "regen", "boundary", "exact-match", "shield-regeneration", "comparison"],
+    )
+
+    baseline_attacker_ship = REGEN_ATTACKER
+    baseline_target_ship = "Test_Target_Shield_NoRegen.json"
+    variant_attacker_ship = REGEN_ATTACKER
+    variant_target_ship = "Test_Target_Shield_Regen_100.json"
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Data: verify regen rate on variant
+        checks.append(check_exact(
+            "Variant Regen Rate", SHIELD_REGEN_RATE_100,
+            self.target.shield_regen_rate,
+        ))
+
+        # Precondition: baseline took hull damage (proves beam is firing)
+        checks.append(check_true(
+            "Baseline Took Hull Damage",
+            self.baseline_damage_dealt > 0,
+            detail=f"damage={self.baseline_damage_dealt}",
+        ))
+
+        # Outcome: variant hull took zero damage (regen == damage rate)
+        checks.append(check_exact(
+            "Zero Hull Damage (Regen == Damage)", 0.0, self.variant_damage_dealt,
+            phase="outcome",
+        ))
+
+        # Outcome: variant shields still up
+        checks.append(check_true(
+            "Shields Still Active",
+            self.target.current_shields > 0,
+            detail=f"shields={self.target.current_shields}/{self.target.max_shields}",
             phase="outcome",
         ))
 

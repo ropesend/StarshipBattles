@@ -50,6 +50,7 @@ TOHIT_ATK_BASELINE_HIT_RATE = 0.3606       # sigmoid(0.5 - 0.7411 - 0.332)
 TOHIT_ATK_SENSOR_HIT_RATE = 0.6052         # sigmoid(0.5 + 1.0 - 0.7411 - 0.332)
 TOHIT_ATK_DOUBLE_SENSOR_HIT_RATE = 0.8065  # sigmoid(0.5 + 2.0 - 0.7411 - 0.332)
 TOHIT_ATK_PENALTY_HIT_RATE = 0.2549        # sigmoid(0.5 - 0.5 - 0.7411 - 0.332)
+TOHIT_ATK_MIXED_HIT_RATE = 0.4274          # sigmoid(0.5 + 1.0 - 0.5 - 0.7411 - 0.332) net +0.5
 
 
 # =============================================================================
@@ -382,6 +383,96 @@ class NegativeModifierReducesAccuracyScenario(ComparisonScenario):
         checks.append(check_tost(
             "Variant Hit Rate (penalty)",
             TOHIT_ATK_PENALTY_HIT_RATE,
+            int(self.variant_damage_dealt),
+            variant_shots,
+            margin=STANDARD_MARGIN,
+            phase="outcome",
+        ))
+
+        return checks
+
+
+# =============================================================================
+# TOHIT-ATK-005: Mixed Positive + Negative Modifiers (Net Positive)
+# =============================================================================
+
+class MixedModifiersNetPositiveScenario(ComparisonScenario):
+    """
+    TOHIT-ATK-005: Sensor + Negative Modifier → Net Effect
+
+    Battle A: Low accuracy beam, no modifier → ~36% hit rate
+    Battle B: Low accuracy beam + sensor_a(+1.0) + penalty(-0.5) → ~43% hit rate
+
+    Sensor (group sensors_a) and penalty (no group = own group) are in
+    different stacking groups, so they SUM: 1.0 + (-0.5) = +0.5 net.
+    The net positive modifier should increase hit rate vs baseline.
+    """
+
+    metadata = TestMetadata(
+        test_id="TOHIT-ATK-005",
+        category="ToHitAttackModifier",
+        subcategory="Mixed Modifiers",
+        name="Mixed Positive + Negative Modifiers",
+        summary="Sensor(+1.0) + penalty(-0.5) = net +0.5 → higher hit rate than baseline",
+        conditions=[
+            "Attacker (no modifier): Test_Attacker_Beam360_Low.json",
+            "Attacker (mixed): Test_Attacker_Beam360_Low_SensorA_Penalty.json "
+            "(+1.0 sensor_a, -0.5 penalty = net +0.5)",
+            "Target: Test_Target_Stationary.json (stationary, no defense modifiers)",
+            f"Distance: {MID_RANGE_DISTANCE} pixels (mid range)",
+            f"Test Duration: {TOHIT_ATK_TEST_TICKS} ticks per battle",
+        ],
+        edge_cases=[
+            "Positive and negative modifiers in different groups SUM correctly",
+            "Net modifier is positive (+0.5), so variant still outperforms baseline",
+        ],
+        expected_outcome=f"Baseline ~{TOHIT_ATK_BASELINE_HIT_RATE:.0%}, "
+                         f"Variant ~{TOHIT_ATK_MIXED_HIT_RATE:.0%} (net +0.5 helps)",
+        pass_criteria="variant_damage > baseline_damage, hit rate matches sigmoid prediction",
+        max_ticks=TOHIT_ATK_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["tohit", "sensor", "penalty", "mixed-modifier", "comparison"],
+    )
+
+    baseline_attacker_ship = "Test_Attacker_Beam360_Low.json"
+    baseline_target_ship = "Test_Target_Stationary.json"
+    variant_attacker_ship = "Test_Attacker_Beam360_Low_SensorA_Penalty.json"
+    variant_target_ship = "Test_Target_Stationary.json"
+    distance = MID_RANGE_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Data: verify variant has both modifiers (net = +0.5)
+        checks.append(check_true(
+            "Variant Has Net Positive Modifier",
+            self.attacker.baseline_to_hit_offense > 0,
+            detail=f"baseline_to_hit_offense={self.attacker.baseline_to_hit_offense}",
+        ))
+
+        # Precondition: both battles dealt damage
+        checks.append(check_true(
+            "Baseline Dealt Damage",
+            self.baseline_damage_dealt > 0,
+            detail=f"damage={self.baseline_damage_dealt}",
+        ))
+
+        # Outcome: mixed modifier (net positive) increases damage vs no modifier
+        checks.append(check_true(
+            "Net Positive Modifier Increases Damage",
+            self.variant_damage_dealt > self.baseline_damage_dealt,
+            detail=f"baseline={self.baseline_damage_dealt}, "
+                   f"variant={self.variant_damage_dealt}, "
+                   f"delta=+{self.variant_damage_dealt - self.baseline_damage_dealt}",
+            phase="outcome",
+        ))
+
+        # Statistical: variant hit rate matches net +0.5 expectation
+        variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        checks.append(check_tost(
+            "Variant Hit Rate (mixed +0.5)",
+            TOHIT_ATK_MIXED_HIT_RATE,
             int(self.variant_damage_dealt),
             variant_shots,
             margin=STANDARD_MARGIN,

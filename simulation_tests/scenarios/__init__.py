@@ -51,7 +51,8 @@ from simulation_tests.scenarios.resource_scenarios import (
     BeamEnergyRegenerationScenario,
     ProjectileAmmoConsumptionScenario,
     ProjectileAmmoDepletionScenario,
-    SeekerAmmoConsumptionScenario
+    SeekerAmmoConsumptionScenario,
+    EnergyContentionBeamRegenScenario,
 )
 from simulation_tests.scenarios.modifier_scenarios import (
     DamageMultiplierScenario,
@@ -79,6 +80,7 @@ from simulation_tests.scenarios.cnc_scenarios import (
     CNCShieldDisabledScenario,
     CNCEngineDisabledScenario,
     CNCBridgeDestroyedScenario,
+    CNCBridgeRedundancyScenario,
 )
 from simulation_tests.scenarios.armor_layer_scenarios import (
     ArmorAbsorbsAllScenario,
@@ -91,6 +93,8 @@ from simulation_tests.scenarios.emissive_armor_scenarios import (
     EmissiveSameGroupNoStackScenario,
     EmissiveDiffGroupStackScenario,
     EmissiveNegativeValueScenario,
+    EmissiveThreeSameGroupScenario,
+    EmissiveExactDamageBlockScenario,
 )
 from simulation_tests.scenarios.shield_regen_scenarios import (
     RegenReducesNetDamageScenario,
@@ -99,6 +103,7 @@ from simulation_tests.scenarios.shield_regen_scenarios import (
     RegenWithFullEnergyScenario,
     RegenWithNoEnergyScenario,
     RegenStopsMidBattleScenario,
+    RegenEqualsDamageRateScenario,
 )
 from simulation_tests.scenarios.tohit_defense_scenarios import (
     ECMReducesHitRateComparisonScenario,
@@ -111,6 +116,15 @@ from simulation_tests.scenarios.tohit_attack_scenarios import (
     SameGroupDoesNotStackScenario,
     DifferentGroupsStackScenario,
     NegativeModifierReducesAccuracyScenario,
+    MixedModifiersNetPositiveScenario,
+)
+from simulation_tests.scenarios.damage_pipeline_scenarios import (
+    PipelineShieldEmissiveScenario,
+    PipelineShieldSRAScenario,
+    PipelineEmissiveSRAScenario,
+    PipelineFullVsNoneScenario,
+    PipelineFullRegenScenario,
+    PipelineSRAOverflowScenario,
 )
 from simulation_tests.scenarios.propulsion_scenarios import (
     PropEngineAccelerationScenario,
@@ -143,6 +157,7 @@ __all__ = [
     'ProjectileAmmoConsumptionScenario',
     'ProjectileAmmoDepletionScenario',
     'SeekerAmmoConsumptionScenario',
+    'EnergyContentionBeamRegenScenario',
     # Modifier scenarios
     'DamageMultiplierScenario',
     'RangeMultiplierScenario',
@@ -177,12 +192,15 @@ __all__ = [
     'CNCShieldDisabledScenario',
     'CNCEngineDisabledScenario',
     'CNCBridgeDestroyedScenario',
+    'CNCBridgeRedundancyScenario',
     # EmissiveArmor scenarios
     'EmissiveBlocksLowDamageScenario',
     'EmissiveReducesHighDamageScenario',
     'EmissiveSameGroupNoStackScenario',
     'EmissiveDiffGroupStackScenario',
     'EmissiveNegativeValueScenario',
+    'EmissiveThreeSameGroupScenario',
+    'EmissiveExactDamageBlockScenario',
     # ArmorLayer scenarios
     'ArmorAbsorbsAllScenario',
     'ArmorDepletesOverflowScenario',
@@ -194,6 +212,7 @@ __all__ = [
     'RegenWithFullEnergyScenario',
     'RegenWithNoEnergyScenario',
     'RegenStopsMidBattleScenario',
+    'RegenEqualsDamageRateScenario',
     # ToHitDefenseModifier scenarios
     'ECMReducesHitRateComparisonScenario',
     'ECMSameGroupDoesNotStackScenario',
@@ -204,4 +223,12 @@ __all__ = [
     'SameGroupDoesNotStackScenario',
     'DifferentGroupsStackScenario',
     'NegativeModifierReducesAccuracyScenario',
+    'MixedModifiersNetPositiveScenario',
+    # DamagePipeline scenarios
+    'PipelineShieldEmissiveScenario',
+    'PipelineShieldSRAScenario',
+    'PipelineEmissiveSRAScenario',
+    'PipelineFullVsNoneScenario',
+    'PipelineFullRegenScenario',
+    'PipelineSRAOverflowScenario',
 ]
