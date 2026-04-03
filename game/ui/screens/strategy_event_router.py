@@ -202,7 +202,7 @@ class StrategyEventRouter:
         from game.ui.utils import create_centered_rect
 
         ui = self.ui
-        scene = self.scene
+        scene = ui.scene
 
         # Get race config for species ideal button
         race_config = None
