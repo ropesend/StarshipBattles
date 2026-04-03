@@ -2064,7 +2064,7 @@
             "abilities": {
                 "LocalStorage": {
                     "resource_type": "metals",
-                    "capacity": 10000.0
+                    "capacity": 100000.0
                 },
                 "StructuralIntegrity": true,
                 "CrewRequired": 10
@@ -2090,7 +2090,7 @@
             "abilities": {
                 "LocalStorage": {
                     "resource_type": "organics",
-                    "capacity": 10000.0
+                    "capacity": 100000.0
                 },
                 "StructuralIntegrity": true,
                 "CrewRequired": 10
@@ -2116,7 +2116,7 @@
             "abilities": {
                 "LocalStorage": {
                     "resource_type": "vapors",
-                    "capacity": 10000.0
+                    "capacity": 100000.0
                 },
                 "StructuralIntegrity": true,
                 "CrewRequired": 10
@@ -2142,7 +2142,7 @@
             "abilities": {
                 "LocalStorage": {
                     "resource_type": "radioactives",
-                    "capacity": 5000.0
+                    "capacity": 50000.0
                 },
                 "StructuralIntegrity": true,
                 "CrewRequired": 15
@@ -2169,7 +2169,7 @@
             "abilities": {
                 "LocalStorage": {
                     "resource_type": "exotics",
-                    "capacity": 2500.0
+                    "capacity": 25000.0
                 },
                 "StructuralIntegrity": true,
                 "CrewRequired": 20
@@ -2199,11 +2199,11 @@
                     "construction_speed_bonus": 1.0,
                     "max_ship_mass": 100000,
                     "production_rates": {
-                        "metals": 3000,
-                        "organics": 3000,
-                        "radioactives": 3000,
-                        "vapors": 3000,
-                        "exotics": 3000
+                        "metals": 30000,
+                        "organics": 30000,
+                        "radioactives": 30000,
+                        "vapors": 30000,
+                        "exotics": 30000
                     }
                 },
                 "CrewRequired": 100
@@ -2599,10 +2599,15 @@
             "type": "Infrastructure",
             "mass": 200,
             "hp": 300,
-            "allowed_vehicle_types": ["Planetary Complex", "Drop Pod"],
+            "allowed_vehicle_types": [
+                "Planetary Complex",
+                "Drop Pod"
+            ],
             "sprite_index": 242,
             "abilities": {
-                "StagingYard": {"capacity_mass": 2000},
+                "StagingYard": {
+                    "capacity_mass": 2000
+                },
                 "CrewRequired": 10
             },
             "major_classification": "Infrastructure",
@@ -2617,10 +2622,15 @@
             "type": "Infrastructure",
             "mass": 500,
             "hp": 600,
-            "allowed_vehicle_types": ["Planetary Complex", "Drop Pod"],
+            "allowed_vehicle_types": [
+                "Planetary Complex",
+                "Drop Pod"
+            ],
             "sprite_index": 243,
             "abilities": {
-                "StagingYard": {"capacity_mass": 10000},
+                "StagingYard": {
+                    "capacity_mass": 10000
+                },
                 "CrewRequired": 30
             },
             "major_classification": "Infrastructure",
@@ -2636,7 +2646,10 @@
             "type": "Infrastructure",
             "mass": 200,
             "hp": 300,
-            "allowed_vehicle_types": ["Planetary Complex", "Drop Pod"],
+            "allowed_vehicle_types": [
+                "Planetary Complex",
+                "Drop Pod"
+            ],
             "sprite_index": 241,
             "abilities": {
                 "PlanetaryYard": true,
