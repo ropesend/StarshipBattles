@@ -42,7 +42,7 @@ class DummyProjectile:
     def update(self):
         self.position = self.position + self.velocity
 
-    def take_damage(self, amount):
+    def take_damage(self, amount, **kwargs):
         self.is_alive = False
 
 
@@ -298,7 +298,8 @@ class TestShipCollisions:
         manager.update(mock_grid)
 
         # Verify damage was applied
-        mock_ship.combat_engine.take_damage.assert_called_with(20)
+        mock_ship.combat_engine.take_damage.assert_called()
+        assert mock_ship.combat_engine.take_damage.call_args[0][0] == 20
         # Verify projectile is marked as hit
         assert mock_projectile.is_alive is False
         assert mock_projectile.status == 'hit'
@@ -357,7 +358,8 @@ class TestShipCollisions:
         manager.add_projectile(proj)
         manager.update(mock_grid)
 
-        ship.combat_engine.take_damage.assert_called_with(15)
+        ship.combat_engine.take_damage.assert_called()
+        assert ship.combat_engine.take_damage.call_args[0][0] == 15
 
     def test_collision_with_moving_ship(self, manager, mock_grid):
         """Projectile hits moving ship (dynamic collision)."""
@@ -392,7 +394,8 @@ class TestShipCollisions:
         manager.add_projectile(proj)
         manager.update(mock_grid)
 
-        ship.combat_engine.take_damage.assert_called_with(25)
+        ship.combat_engine.take_damage.assert_called()
+        assert ship.combat_engine.take_damage.call_args[0][0] == 25
 
     def test_miss_when_outside_collision_radius(self, manager, mock_grid):
         """Projectile misses ship when outside collision radius."""
@@ -433,7 +436,8 @@ class TestDamageCalculation:
         manager.add_projectile(mock_projectile)
         manager.update(mock_grid)
 
-        mock_ship.combat_engine.take_damage.assert_called_with(42)
+        mock_ship.combat_engine.take_damage.assert_called()
+        assert mock_ship.combat_engine.take_damage.call_args[0][0] == 42
 
     def test_uses_weapon_damage_formula_when_available(self, manager, mock_ship, mock_grid):
         """Uses weapon ability's get_damage when available."""
@@ -462,7 +466,8 @@ class TestDamageCalculation:
 
         # Should call weapon ability's get_damage with distance
         weapon_ability.get_damage.assert_called_with(100)
-        mock_ship.combat_engine.take_damage.assert_called_with(35)
+        mock_ship.combat_engine.take_damage.assert_called()
+        assert mock_ship.combat_engine.take_damage.call_args[0][0] == 35
 
     def test_weapon_hit_counter_incremented(self, manager, mock_ship, mock_grid):
         """Source weapon's shots_hit counter is incremented on hit."""
@@ -525,7 +530,8 @@ class TestMissileInterception:
         # Patch take_damage to verify it was called
         with patch.object(target_missile, 'take_damage') as mock_take_damage:
             manager.update(mock_grid)
-            mock_take_damage.assert_called_with(50)
+            mock_take_damage.assert_called()
+            assert mock_take_damage.call_args[0][0] == 50
 
     def test_non_missile_does_not_intercept(self, manager, mock_grid):
         """Non-missile projectiles do not intercept other projectiles."""
@@ -916,7 +922,8 @@ class TestProjectileManagerAdditionalEdgeCases:
         manager.update(mock_grid)
 
         # Should fall back to static damage
-        mock_ship.combat_engine.take_damage.assert_called_with(25)
+        mock_ship.combat_engine.take_damage.assert_called()
+        assert mock_ship.combat_engine.take_damage.call_args[0][0] == 25
         assert weapon.shots_hit == 1
 
     # DELETED: test_weapon_ability_without_get_damage_method
@@ -1004,7 +1011,8 @@ class TestProjectileManagerAdditionalEdgeCases:
         manager.update(mock_grid)
 
         # Should hit the ship
-        mock_ship.combat_engine.take_damage.assert_called_with(15)
+        mock_ship.combat_engine.take_damage.assert_called()
+        assert mock_ship.combat_engine.take_damage.call_args[0][0] == 15
 
     def test_get_active_projectiles_returns_copy_safe_list(self, manager):
         """get_active_projectiles() returns internal list reference."""
@@ -1147,8 +1155,10 @@ class TestBatchUpdateMultipleHits:
         manager.update(mock_grid)
 
         # Both ships should receive damage
-        ship1.combat_engine.take_damage.assert_called_with(20)
-        ship2.combat_engine.take_damage.assert_called_with(30)
+        ship1.combat_engine.take_damage.assert_called()
+        assert ship1.combat_engine.take_damage.call_args[0][0] == 20
+        ship2.combat_engine.take_damage.assert_called()
+        assert ship2.combat_engine.take_damage.call_args[0][0] == 30
         # Both projectiles should be marked hit
         assert proj1.is_alive is False
         assert proj2.is_alive is False
@@ -1522,7 +1532,8 @@ class TestBatchUpdateWithHitsAndDeaths:
         manager.update(mock_grid)
 
         # First hit, second survives
-        ship.combat_engine.take_damage.assert_called_once_with(20)
+        ship.combat_engine.take_damage.assert_called_once()
+        assert ship.combat_engine.take_damage.call_args[0][0] == 20
         active = manager.get_active_projectiles()
         assert len(active) == 1
         assert proj2 in active

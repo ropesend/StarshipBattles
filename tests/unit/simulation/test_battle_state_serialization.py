@@ -628,7 +628,7 @@ class TestBattleStateSerialization:
             max_ticks=10000,
             ships={},
             projectiles=[],
-            end_mode="HP_BASED",
+            end_condition_data={"type": "team_eliminated"},
             allow_retreat=False,
             allow_reinforcements=False,
             created_at="2024-01-01T12:00:00",
@@ -691,7 +691,7 @@ class TestBattleStateSerialization:
                 "ship-beta": ship2,
             },
             projectiles=[],
-            end_mode="HP_BASED",
+            end_condition_data={"type": "team_eliminated"},
             allow_retreat=True,
             allow_reinforcements=False,
             created_at="2024-01-15T14:30:00",
@@ -753,7 +753,7 @@ class TestBattleStateSerialization:
             max_ticks=50000,
             ships={"ship-001": ship1},
             projectiles=[proj1],
-            end_mode="HP_BASED",
+            end_condition_data={"type": "team_eliminated"},
             allow_retreat=True,
             allow_reinforcements=True,
             created_at="2024-02-01T10:00:00",
@@ -766,7 +766,7 @@ class TestBattleStateSerialization:
 
         expected_fields = [
             "version", "battle_id", "seed", "tick_count", "max_ticks",
-            "ships", "projectiles", "end_mode", "allow_retreat",
+            "ships", "projectiles", "end_condition_data", "allow_retreat",
             "allow_reinforcements", "created_at", "mode",
         ]
         for field in expected_fields:
@@ -784,7 +784,7 @@ class TestBattleStateSerialization:
         assert restored.max_ticks == empty_battle_state.max_ticks
         assert restored.ships == {}
         assert restored.projectiles == []
-        assert restored.end_mode == empty_battle_state.end_mode
+        assert restored.end_condition_data == empty_battle_state.end_condition_data
         assert restored.allow_retreat == empty_battle_state.allow_retreat
         assert restored.allow_reinforcements == empty_battle_state.allow_reinforcements
         assert restored.created_at == empty_battle_state.created_at
@@ -872,7 +872,7 @@ class TestBattleStateSerialization:
         assert restored.max_ticks is None
         assert restored.ships == {}
         assert restored.projectiles == []
-        assert restored.end_mode == "HP_BASED"
+        assert restored.end_condition_data == {"type": "team_eliminated"}
         assert restored.allow_retreat is False
         assert restored.allow_reinforcements is False
         assert restored.created_at == ""

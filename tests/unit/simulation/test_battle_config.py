@@ -6,7 +6,7 @@ Tests BattleMode enum and BattleConfig dataclass.
 import pytest
 
 from game.simulation.battle_config import BattleMode, BattleConfig
-from game.simulation.systems.battle_end_conditions import BattleEndMode
+from game.simulation.systems.battle_end_conditions import TeamEliminatedCondition, TickLimitCondition
 from game.core.constants import SimulationConstants
 
 
@@ -43,10 +43,10 @@ class TestBattleConfigDefaults:
         config = BattleConfig()
         assert config.mode == BattleMode.MANUAL
 
-    def test_default_max_ticks(self):
-        """Default max_ticks matches SimulationConstants."""
+    def test_default_absolute_max_ticks(self):
+        """Default absolute_max_ticks matches SimulationConstants."""
         config = BattleConfig()
-        assert config.max_ticks == SimulationConstants.DEFAULT_MAX_TICKS
+        assert config.absolute_max_ticks == SimulationConstants.ABSOLUTE_MAX_TICKS
 
     def test_default_headless_false(self):
         """headless defaults to False."""
@@ -68,10 +68,10 @@ class TestBattleConfigDefaults:
         config = BattleConfig()
         assert config.allow_reinforcements is False
 
-    def test_default_end_mode(self):
-        """end_mode defaults to HP_BASED."""
+    def test_default_end_condition(self):
+        """end_condition defaults to TeamEliminatedCondition."""
         config = BattleConfig()
-        assert config.end_mode == BattleEndMode.HP_BASED
+        assert isinstance(config.end_condition, TeamEliminatedCondition)
 
     def test_default_seed_none(self):
         """seed defaults to None."""
@@ -111,10 +111,10 @@ class TestBattleConfigCustomValues:
         config = BattleConfig(seed=42)
         assert config.seed == 42
 
-    def test_custom_max_ticks(self):
-        """max_ticks can be overridden."""
-        config = BattleConfig(max_ticks=5000)
-        assert config.max_ticks == 5000
+    def test_custom_absolute_max_ticks(self):
+        """absolute_max_ticks can be overridden."""
+        config = BattleConfig(absolute_max_ticks=5000)
+        assert config.absolute_max_ticks == 5000
 
     def test_custom_mode(self):
         """mode can be set to any BattleMode."""

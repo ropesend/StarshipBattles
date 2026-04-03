@@ -603,7 +603,7 @@ class Game:
         self.active_scene.handle_resize(w, h)
 
     def _handle_battle_action(self, action: str, **kwargs):
-        """Handle scene actions from BattleScreen."""
+        """Handle scene actions from BattleScreen or BattleResultsScreen."""
         if action == "return_to_test_lab":
             logger.debug("Returning to Combat Lab from test")
             self.battle_scene.test_mode = False
@@ -615,6 +615,16 @@ class Game:
                 self.start_test_lab()
             else:
                 self.start_battle_setup(preserve_teams=True)
+        elif action == "show_results":
+            results = kwargs.get("results")
+            if results:
+                from game.ui.screens.battle_results_screen import BattleResultsScreen
+                results_screen = BattleResultsScreen(
+                    self.width, self.height, results,
+                    scene_callback=self._handle_battle_action,
+                )
+                self.active_scene = results_screen
+                logger.info("Showing battle results screen")
 
     def _handle_strategy_action(self, action: str, **kwargs):
         """Handle scene actions from StrategyScreen."""

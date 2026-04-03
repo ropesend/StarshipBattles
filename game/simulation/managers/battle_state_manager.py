@@ -12,7 +12,7 @@ from typing import Dict, Optional, List, Tuple, Any, TYPE_CHECKING
 from game.core.exceptions import StateException, ValidationException
 from game.core.error_codes import ErrorCode
 from game.simulation.battle_state import BattleState
-from game.simulation.systems.battle_end_conditions import BattleEndMode
+from game.simulation.systems.battle_end_conditions import end_condition_from_dict
 from game.simulation.battle_config import BattleConfig, BattleMode
 
 if TYPE_CHECKING:
@@ -88,11 +88,13 @@ class BattleStateManager:
                 context={"mode_value": state.mode}
             ) from e
 
+        # Restore end condition from serialized dict
+        end_condition = end_condition_from_dict(state.end_condition_data)
+
         return BattleConfig(
             mode=mode,
             seed=state.seed,
-            max_ticks=state.max_ticks or 100000,
-            end_mode=BattleEndMode[state.end_mode],
+            end_condition=end_condition,
             allow_retreat=state.allow_retreat,
             allow_reinforcements=state.allow_reinforcements,
         )

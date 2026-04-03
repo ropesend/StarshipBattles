@@ -186,7 +186,8 @@ class TestBeamRaycastingEdgeCases:
             collision_system.process_beam_attack(attack, recent_beams)
 
         # Tangent hit counts as hit - one intersection point
-        target.combat_engine.take_damage.assert_called_with(15)
+        target.combat_engine.take_damage.assert_called_once()
+        assert target.combat_engine.take_damage.call_args[0][0] == 15
 
     def test_beam_weapon_target_behind_origin(self, collision_system):
         """Test edge case: target behind ray origin (negative t values).
@@ -438,7 +439,8 @@ class TestBeamRaycastingGeometry:
         assert call_args[0][2] == 5.0   # defense_score
 
         # Verify damage was applied
-        target.combat_engine.take_damage.assert_called_once_with(75)
+        target.combat_engine.take_damage.assert_called_once()
+        assert target.combat_engine.take_damage.call_args[0][0] == 75
 
 
 # =============================================================================

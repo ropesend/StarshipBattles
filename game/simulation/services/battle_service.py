@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Any, Dict, TYPE_CHECKING
 
 from game.simulation.systems.battle_engine import BattleEngine, BattleLogger
-from game.simulation.systems.battle_end_conditions import BattleEndCondition, BattleEndMode
+from game.simulation.systems.battle_end_conditions import IEndCondition, TeamEliminatedCondition
 from game.core.exceptions import ValidationException, StateException
 
 logger = logging.getLogger(__name__)
@@ -176,15 +176,15 @@ class BattleService:
 
     def start_battle(
         self,
-        end_mode: BattleEndMode = BattleEndMode.HP_BASED,
-        max_ticks: Optional[int] = None
+        end_condition: Optional[IEndCondition] = None,
+        absolute_max_ticks: Optional[int] = None
     ) -> BattleServiceResult:
         """
         Start the battle simulation.
 
         Args:
-            end_mode: Battle end condition mode
-            max_ticks: Maximum ticks for time-based battles
+            end_condition: Battle end condition (default: TeamEliminatedCondition)
+            absolute_max_ticks: Safety ceiling for max ticks
 
         Returns:
             BattleServiceResult indicating success/failure
@@ -203,17 +203,13 @@ class BattleService:
             errors.append("Cannot start battle with no ships")
             return BattleServiceResult(success=False, errors=errors)
 
-        # Create end condition
-        end_condition = BattleEndCondition(mode=end_mode)
-        if max_ticks is not None:
-            end_condition.max_ticks = max_ticks
-
-        # Start the engine
+        # Start the engine with the condition (or default)
         self._engine.start(
             team1_ships=self._team0_ships,
             team2_ships=self._team1_ships,
             seed=self._seed,
-            end_condition=end_condition
+            end_condition=end_condition,
+            absolute_max_ticks=absolute_max_ticks
         )
         self._is_started = True
 

@@ -53,18 +53,21 @@ Example:
 import logging
 import os
 import random
-from typing import List, Optional, Tuple, Dict, Any, TYPE_CHECKING
+from typing import List, Optional, Dict, Any, TYPE_CHECKING
 
 from game.core.math import Vector2
 from game.core.paths import Paths
 
 logger = logging.getLogger(__name__)
 from game.engine.spatial import SpatialGrid
-from game.core.constants import AttackType
+from game.core.constants import AttackType, SimulationConstants
 from game.core.config import PhysicsConfig, BattleTuning
 from game.simulation.projectile_manager import ProjectileManager
 from game.engine.collision import CollisionSystem
-from game.simulation.systems.battle_end_conditions import BattleEndCondition, BattleEndMode
+from game.simulation.systems.battle_end_conditions import (
+    IEndCondition,
+    TeamEliminatedCondition,
+)
 
 from game.simulation.entities.projectile import Projectile
 from game.simulation.entities.ship import Ship
@@ -190,8 +193,13 @@ class BattleEngine:
         self.tick_counter: int = 0
         self.winner: Optional[int] = None
 
-        # Battle end condition (default: HP-based)
-        self.end_condition: BattleEndCondition = BattleEndCondition(mode=BattleEndMode.HP_BASED)
+        # Battle end condition (default: team eliminated)
+        self.end_condition: IEndCondition = TeamEliminatedCondition()
+        self._absolute_max_ticks: int = SimulationConstants.ABSOLUTE_MAX_TICKS
+
+        # Combat event bus (one per battle)
+        from game.simulation.combat.combat_events import CombatEventBus
+        self.combat_events = CombatEventBus()
 
         # Use provided logger or create a default one (disabled by default to avoid side effects unless requested)
         self.logger = logger if logger else BattleLogger(enabled=False)
@@ -211,7 +219,8 @@ class BattleEngine:
         team1_ships: List['Ship'],
         team2_ships: List['Ship'],
         seed: Optional[int] = None,
-        end_condition: Optional[BattleEndCondition] = None,
+        end_condition: Optional[IEndCondition] = None,
+        absolute_max_ticks: Optional[int] = None,
         ai_controllers: Optional[List['IAIController']] = None
     ) -> None:
         """
@@ -221,7 +230,8 @@ class BattleEngine:
             team1_ships: List of ships for team 0
             team2_ships: List of ships for team 1
             seed: Random seed for deterministic battles
-            end_condition: Battle end condition (default: HP_BASED)
+            end_condition: Battle end condition (default: TeamEliminatedCondition)
+            absolute_max_ticks: Safety ceiling (default: SimulationConstants.ABSOLUTE_MAX_TICKS)
             ai_controllers: Pre-created AI controllers from BattleOrchestrator.
                 If provided, uses these instead of creating controllers internally.
                 This supports proper layer boundaries (PROJ-17).
@@ -236,11 +246,10 @@ class BattleEngine:
         self.tick_counter = 0
         self.winner = None
 
-        # Set end condition (default to HP_BASED if not provided)
-        if end_condition is not None:
-            self.end_condition = end_condition
-        else:
-            self.end_condition = BattleEndCondition(mode=BattleEndMode.HP_BASED)
+        # Set end condition
+        self.end_condition = end_condition if end_condition is not None else TeamEliminatedCondition()
+        if absolute_max_ticks is not None:
+            self._absolute_max_ticks = absolute_max_ticks
 
         # Handle single ship args (though type hint implies lists)
         if not isinstance(team1_ships, list): team1_ships = [team1_ships]
@@ -273,6 +282,10 @@ class BattleEngine:
                 code=ErrorCode.MISSING_DEPENDENCY.value,
                 context={"missing": "ai_controllers and ai_factory", "operation": "start"}
             )
+
+        # Wire combat event bus to each ship's combat engine
+        for s in self.ships:
+            s.combat_engine._event_bus = self.combat_events
 
         # Run initial component update cycle so requirement-based abilities
         # (like RequiresCommandAndControl) can mark components non-operational
@@ -502,151 +515,16 @@ class BattleEngine:
         """
         Check if battle should end based on configured end condition.
 
+        The safety ceiling (absolute_max_ticks) is checked first, then
+        the composable end condition is evaluated.
+
         Returns:
             True if battle should end, False otherwise
-
-        End Condition Modes:
-            TIME_BASED: End after max_ticks reached
-            HP_BASED: End when any team has 0 alive ships
-            CAPABILITY_BASED: End when any team can't fight/move
-            MANUAL: Never end automatically (but respects absolute ceiling)
-            ESCAPE_BASED: End when ships exceed escape_radius from origin
-
-        Note: All modes respect absolute_max_ticks as a safety ceiling.
         """
-
-        # ABSOLUTE CEILING: Always check first as safety net
-        if self.tick_counter >= self.end_condition.absolute_max_ticks:
+        # Safety ceiling always checked first
+        if self.tick_counter >= self._absolute_max_ticks:
             return True
-
-        # TIME_BASED: Check tick count
-        if self.end_condition.mode == BattleEndMode.TIME_BASED:
-            if self.end_condition.max_ticks is not None:
-                return self.tick_counter >= self.end_condition.max_ticks
-            return False  # No max_ticks set, never end
-
-        # MANUAL: Never end automatically (but absolute ceiling still applies)
-        if self.end_condition.mode == BattleEndMode.MANUAL:
-            return False
-
-        # HP_BASED: Check alive ships (optionally excluding derelict)
-        if self.end_condition.mode == BattleEndMode.HP_BASED:
-            team0_alive, team1_alive = self._count_alive_teams()
-            return team0_alive == 0 or team1_alive == 0
-
-        # CAPABILITY_BASED: Check if any team can't fight
-        if self.end_condition.mode == BattleEndMode.CAPABILITY_BASED:
-            team1_capable = self._team_has_combat_capability(0)
-            team2_capable = self._team_has_combat_capability(1)
-            return not team1_capable or not team2_capable
-
-        # ESCAPE_BASED: Check if ships have escaped beyond radius
-        if self.end_condition.mode == BattleEndMode.ESCAPE_BASED:
-            return self._check_escape_condition()
-
-        # Fallback (should never reach here)
-        return False
-
-    def _count_alive_teams(self) -> Tuple[int, int]:
-        """
-        Count alive ships per team, respecting derelict settings.
-
-        Uses the current end_condition.check_derelict flag to determine
-        whether derelict ships count as alive. This ensures consistent
-        counting between is_battle_over() and get_winner().
-
-        Returns:
-            Tuple of (team0_alive, team1_alive) counts
-        """
-        check_derelict = self.end_condition.check_derelict
-        team0_alive = sum(
-            1 for s in self.ships
-            if s.team_id == 0 and s.is_alive
-            and (not check_derelict or not s.is_derelict)
-        )
-        team1_alive = sum(
-            1 for s in self.ships
-            if s.team_id == 1 and s.is_alive
-            and (not check_derelict or not s.is_derelict)
-        )
-        return team0_alive, team1_alive
-
-    def _check_escape_condition(self) -> bool:
-        """
-        Check if escape condition is met.
-
-        Returns:
-            True if escape condition triggered, False otherwise
-
-        Logic:
-            - If escape_team is set, only check ships from that team
-            - If escape_all_ships is True, ALL alive ships must be outside radius
-            - If escape_all_ships is False, ANY alive ship outside radius triggers
-            - Dead ships are ignored
-            - Distance is Euclidean distance from origin (0, 0)
-        """
-        escape_radius = self.end_condition.escape_radius
-        if escape_radius is None:
-            return False  # No radius set, can't escape
-
-        escape_team = self.end_condition.escape_team
-        escape_all = self.end_condition.escape_all_ships
-
-        # Get ships to check (filtered by team if specified)
-        ships_to_check = [
-            s for s in self.ships
-            if s.is_alive and (escape_team is None or s.team_id == escape_team)
-        ]
-
-        if not ships_to_check:
-            return False  # No ships to check
-
-        if escape_all:
-            # All ships must be outside radius
-            return all(
-                s.position.length() > escape_radius
-                for s in ships_to_check
-            )
-        else:
-            # Any ship outside radius triggers escape
-            return any(
-                s.position.length() > escape_radius
-                for s in ships_to_check
-            )
-
-    def _team_has_combat_capability(self, team_id: int) -> bool:
-        """
-        Check if team has any ships that can fight or move.
-
-        A team has combat capability if ANY ship on that team:
-        - Is alive AND
-        - Has operational weapons OR movement capability
-
-        Args:
-            team_id: Team to check (0 or 1)
-
-        Returns:
-            True if team has at least one capable ship, False otherwise
-        """
-        for ship in self.ships:
-            if ship.team_id != team_id or not ship.is_alive:
-                continue
-
-            # Check for operational weapons
-            has_weapons = any(
-                comp.is_operational and comp.type == "Weapon"
-                for comp in ship.get_all_components()
-            )
-
-            # Check for movement capability
-            has_engines = ship.total_thrust > 0
-            has_thrusters = ship.turn_speed > 0
-
-            # If ship has weapons OR movement, team is still capable
-            if has_weapons or has_engines or has_thrusters:
-                return True
-
-        return False
+        return self.end_condition.is_met(self.ships, self.tick_counter)
 
     def get_winner(self) -> int:
         """
@@ -661,7 +539,8 @@ class BattleEngine:
             1: Team 1 wins (team 0 has no alive ships)
             -1: Draw (both teams have alive ships, or both eliminated)
         """
-        team0_alive, team1_alive = self._count_alive_teams()
+        team0_alive = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
+        team1_alive = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
         if team0_alive > 0 and team1_alive == 0:
             return 0
         elif team1_alive > 0 and team0_alive == 0:

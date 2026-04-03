@@ -25,6 +25,11 @@ from game.simulation.services import BattleService
 from game.ui.services.battle_ui_service import BattleUIService
 # PROJ-126: Import AI factory from AI layer (UI can depend on AI)
 from game.ai.ai_factory import AIControllerFactory
+from game.ui.effects.hit_effects import (
+    HitEffect, HitEffectType, create_hit_effect,
+    update_effects, draw_effects, MAX_ACTIVE_EFFECTS,
+)
+from game.simulation.combat.combat_events import CombatEventType, CombatEvent
 from game.ui.fonts import get_font
 from game.ui.colors import (
     BG_BATTLE, PROJECTILE_STANDARD, HUD_TEXT, HUD_ZOOM_TEXT,
@@ -117,6 +122,9 @@ class BattleScreen:
         self.test_tick_count = 0  # Track ticks for max_ticks limit
         self.test_completed = False  # Flag indicating test has finished
 
+        # Visual hit effects
+        self.hit_effects: list = []
+
         # Font for HUD (no lazy-init needed - get_font() is cached)
         self._hud_font = get_font(20)
 
@@ -163,7 +171,11 @@ class BattleScreen:
 
         # Reset visual state
         self.beams = []
+        self.hit_effects = []
         self.sim_tick_counter = 0
+
+        # Subscribe to combat events for visual effects
+        self._subscribe_combat_events()
 
         # Get mode from controller config
         config = controller.config
@@ -274,10 +286,14 @@ class BattleScreen:
         self._battle_service.start_battle()
 
         self.beams = []
+        self.hit_effects = []
         self.sim_tick_counter = 0
         self.test_mode = test_mode
         self.test_scenario = test_scenario
         self.test_tick_count = 0
+
+        # Subscribe to combat events for visual effects
+        self._subscribe_combat_events()
 
         # Reset UI
         self.ui.expanded_ships = set()
@@ -321,11 +337,7 @@ class BattleScreen:
             if isinstance(result, tuple) and result[0] == "focus_ship":
                 self.camera.target = result[1]
             elif result == "end_battle":
-                self._battle_service.reset()
-                if self.test_mode:
-                    self._trigger_return_to_test_lab()
-                else:
-                    self._trigger_return_to_setup()
+                self._show_results()
             elif not result and event.button == 1:
                 self.camera.target = None
         elif event.type == pygame.MOUSEWHEEL:
@@ -488,11 +500,14 @@ class BattleScreen:
                 self.beams.append(b_visual)
 
     def _update_visual_effects(self, dt: float):
-        """Update visual effects like beams and camera."""
+        """Update visual effects like beams, hit effects, and camera."""
         # Update Beams
         for b in self.beams:
             b['timer'] -= dt
         self.beams = [b for b in self.beams if b['timer'] > 0]
+
+        # Update hit effects
+        self.hit_effects = update_effects(self.hit_effects, dt)
 
         # Process camera input (middle-mouse pan, arrow keys)
         # WASD disabled to avoid conflicts with speed/pause keys
@@ -508,6 +523,14 @@ class BattleScreen:
             self.current_tick_rate = self.tick_rate_count
             self.tick_rate_count = 0
             self.tick_rate_timer = 0.0
+
+    def _show_results(self):
+        """Extract results and transition to results screen."""
+        from game.ui.screens.battle_results_data import extract_battle_results
+        results = extract_battle_results(self.engine, is_test_mode=self.test_mode)
+        self._battle_service.reset()
+        if self.scene_callback:
+            self.scene_callback("show_results", results=results)
 
     def _trigger_return_to_setup(self):
         """Trigger return to setup via scene_callback."""
@@ -539,6 +562,34 @@ class BattleScreen:
         new_idx = (current_idx + direction) % len(alive_ships)
         self.camera.target = alive_ships[new_idx]
 
+
+    # === Combat Event Handlers (Visual Effects) ===
+
+    def _subscribe_combat_events(self):
+        """Subscribe to combat events on the engine's event bus."""
+        bus = self.engine.combat_events
+        bus.subscribe(CombatEventType.SHIELD_HIT, self._on_shield_hit)
+        bus.subscribe(CombatEventType.COMPONENT_HIT, self._on_component_hit)
+        bus.subscribe(CombatEventType.COMPONENT_DESTROYED, self._on_component_destroyed)
+        bus.subscribe(CombatEventType.SHIP_DESTROYED, self._on_ship_destroyed)
+
+    def _add_hit_effect(self, effect_type: HitEffectType, ship):
+        """Create and add a hit effect, respecting the cap."""
+        if len(self.hit_effects) >= MAX_ACTIVE_EFFECTS:
+            return
+        self.hit_effects.append(create_hit_effect(effect_type, ship))
+
+    def _on_shield_hit(self, event: CombatEvent):
+        self._add_hit_effect(HitEffectType.SHIELD_HIT, event.target_ship)
+
+    def _on_component_hit(self, event: CombatEvent):
+        self._add_hit_effect(HitEffectType.ARMOR_HIT, event.target_ship)
+
+    def _on_component_destroyed(self, event: CombatEvent):
+        self._add_hit_effect(HitEffectType.COMPONENT_DESTROYED, event.target_ship)
+
+    def _on_ship_destroyed(self, event: CombatEvent):
+        self._add_hit_effect(HitEffectType.SHIP_DESTROYED, event.target_ship)
 
     def is_battle_over(self):
         """Check if the battle has ended."""
@@ -582,7 +633,10 @@ class BattleScreen:
             start = self.camera.world_to_screen(b['start'])
             end = self.camera.world_to_screen(b['end'])
             pygame.draw.line(screen, b['color'], start, end, 3)
-        
+
+        # Draw hit effects
+        draw_effects(self.hit_effects, screen, self.camera)
+
         # 3. UI Overlays
         if self.ui.show_overlay:
             self.ui.draw_debug_overlay(screen)

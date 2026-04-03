@@ -118,7 +118,13 @@ class CollisionSystem:
                         # Handle both Ship targets (have combat_engine) and
                         # Projectile targets (PDC shooting at missiles)
                         if hasattr(target, 'combat_engine'):
-                            target.combat_engine.take_damage(damage)
+                            from game.simulation.combat.combat_events import DamageContext
+                            ctx = DamageContext(
+                                attacker=source_ship,
+                                source_weapon=beam_comp,
+                                damage_type="beam",
+                            )
+                            target.combat_engine.take_damage(damage, context=ctx)
                         elif hasattr(target, 'take_damage'):
                             target.take_damage(damage)
                         end_pos = start_pos + direction * hit_dist
@@ -151,19 +157,23 @@ class CollisionSystem:
                 # PROJ-40/NEW-AI-004: Use getattr with default for safe HP access
                 hp_rammer = getattr(s, 'hp', 100)
                 hp_target = getattr(target, 'hp', 100)
-                
+
+                from game.simulation.combat.combat_events import DamageContext
+                rammer_ctx = DamageContext(attacker=target, damage_type="ramming")
+                target_ctx = DamageContext(attacker=s, damage_type="ramming")
+
                 msg = ""
                 if hp_rammer < hp_target:
-                    s.combat_engine.take_damage(hp_rammer + BattleTuning.GUARANTEED_KILL_DAMAGE)
-                    target.combat_engine.take_damage(hp_rammer * BattleTuning.RAMMING_DAMAGE_FACTOR)
+                    s.combat_engine.take_damage(hp_rammer + BattleTuning.GUARANTEED_KILL_DAMAGE, context=rammer_ctx)
+                    target.combat_engine.take_damage(hp_rammer * BattleTuning.RAMMING_DAMAGE_FACTOR, context=target_ctx)
                     msg = f"Ramming: {s.name} destroyed by {target.name}!"
                 elif hp_target < hp_rammer:
-                    target.combat_engine.take_damage(hp_target + BattleTuning.GUARANTEED_KILL_DAMAGE)
-                    s.combat_engine.take_damage(hp_target * BattleTuning.RAMMING_DAMAGE_FACTOR)
+                    target.combat_engine.take_damage(hp_target + BattleTuning.GUARANTEED_KILL_DAMAGE, context=target_ctx)
+                    s.combat_engine.take_damage(hp_target * BattleTuning.RAMMING_DAMAGE_FACTOR, context=rammer_ctx)
                     msg = f"Ramming: {target.name} destroyed by {s.name}!"
                 else:
-                    s.combat_engine.take_damage(hp_rammer + BattleTuning.GUARANTEED_KILL_DAMAGE)
-                    target.combat_engine.take_damage(hp_target + BattleTuning.GUARANTEED_KILL_DAMAGE)
+                    s.combat_engine.take_damage(hp_rammer + BattleTuning.GUARANTEED_KILL_DAMAGE, context=rammer_ctx)
+                    target.combat_engine.take_damage(hp_target + BattleTuning.GUARANTEED_KILL_DAMAGE, context=target_ctx)
                     msg = f"Ramming: Mutual destruction!"
                 
                 if logger:

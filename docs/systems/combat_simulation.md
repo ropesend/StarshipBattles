@@ -17,7 +17,7 @@ All operations return `BattleServiceResult` (success/errors/warnings/engine ref)
 Lifecycle:
 1. `create_battle(seed, enable_logging, ai_factory)` -- creates BattleEngine
 2. `add_ship(ship, team_id)` -- registers ships to teams (0 or 1)
-3. `start_battle(end_mode, max_ticks)` -- initializes engine, creates AI controllers
+3. `start_battle(end_condition, absolute_max_ticks)` -- initializes engine, creates AI controllers
 4. `update()` or `run_ticks(count)` -- advances simulation
 5. `is_battle_over()` / `get_winner()` -- query outcome
 6. `reset()` -- cleanup
@@ -43,16 +43,51 @@ BattleEngine owns the simulation state: ships, AI controllers, projectiles, spat
 | 5 | Process ramming collisions (kamikaze ships) |
 | 6 | Update projectiles (movement, hit detection, expiration) |
 
-**End condition modes** (`BattleEndMode`):
-- `HP_BASED` -- ends when all ships on one team are dead (default)
-- `TIME_BASED` -- ends after max_ticks reached
-- `CAPABILITY_BASED` -- ends when a team cannot fight or move
-- `MANUAL` -- never ends automatically
-- `ESCAPE_BASED` -- ends when ships exceed escape_radius from origin
+**End conditions** (composable via `IEndCondition` protocol):
 
-All modes respect `absolute_max_ticks` as a safety ceiling.
+Leaf conditions:
+- `TeamEliminatedCondition` -- ends when all ships on one team are dead (default)
+- `TickLimitCondition` -- ends after max_ticks reached
+- `TeamIncapacitatedCondition` -- ends when a team cannot fight or move
+- `NeverCondition` -- never ends automatically
+- `EscapeCondition` -- ends when ships escape beyond radius from arena center
+- `ShipDestroyedCondition` -- ends when a named ship is destroyed
+
+Composite conditions:
+- `AnyCondition([...])` -- OR: first child met triggers end
+- `AllCondition([...])` -- AND: all children must be met
+
+All conditions are serializable via `to_dict()` / `end_condition_from_dict()`.
+Safety ceiling (`absolute_max_ticks`) is enforced by `BattleEngine` independently.
 
 **Winner determination:** `get_winner()` returns 0, 1, or -1 (draw).
+
+**Combat Event System** (`game/simulation/combat/combat_events.py`):
+
+`CombatEventBus` on `BattleEngine` emits events during damage resolution:
+- `SHIELD_HIT` -- shield absorbed damage
+- `ARMOR_ABSORBED` -- emissive armor or SRA absorbed damage
+- `COMPONENT_HIT` -- hull component took damage
+- `COMPONENT_DESTROYED` -- component HP reached 0
+- `SHIP_DESTROYED` -- ship was killed
+- `SHIP_DERELICT` -- ship became derelict
+
+Each event carries a `DamageContext` with attacker identity (ship, weapon, damage type).
+Event detail levels (`MINIMAL`, `NORMAL`, `DETAILED`) control granularity for performance.
+
+**Visual Hit Effects** (`game/ui/effects/hit_effects.py`):
+
+`BattleScreen` subscribes to combat events and creates timer-based visual effects:
+- Shield hit: cyan concentric circles (0.2s)
+- Armor/component hit: orange expanding circle + radiating lines (0.15s)
+- Component destroyed: larger orange burst (0.25s)
+- Ship destroyed: white flash + expanding ring (0.4s)
+
+**Battle Results Screen** (`game/ui/screens/battle_results_screen.py`):
+
+Full-screen IScene showing post-battle statistics. Data extracted via
+`extract_battle_results()` in `battle_results_data.py`. Two-column layout
+with per-ship HP bars, weapon accuracy tables, and team summaries.
 
 ---
 

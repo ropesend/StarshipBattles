@@ -302,14 +302,19 @@ class TestEndBattleInTestMode:
             screen.test_mode = True
             screen.test_completed = True
             screen.test_scenario = Mock()
+            mock_engine = Mock()
+            mock_engine.ships = []
+            mock_engine.tick_counter = 0
+            mock_engine.get_winner.return_value = -1
             screen._battle_service = Mock()
+            screen._battle_service.get_engine.return_value = mock_engine
             screen.ui = Mock()
             screen.camera = Mock()
             screen.screen_height = 2160
             return screen
 
-    def test_end_battle_in_test_mode_routes_to_test_lab(self, battle_screen):
-        """'end_battle' in test_mode should call return_to_test_lab, not return_to_setup."""
+    def test_end_battle_routes_to_results_screen(self, battle_screen):
+        """'end_battle' should call scene_callback with 'show_results'."""
         battle_screen.ui.handle_click.return_value = "end_battle"
 
         event = Mock()
@@ -319,11 +324,13 @@ class TestEndBattleInTestMode:
 
         battle_screen.handle_event(event)
 
-        battle_screen.scene_callback.assert_called_once_with("return_to_test_lab")
+        battle_screen.scene_callback.assert_called_once()
+        call_args = battle_screen.scene_callback.call_args
+        assert call_args[0][0] == "show_results"
+        assert "results" in call_args[1]
 
-    def test_end_battle_not_in_test_mode_routes_to_setup(self, battle_screen):
-        """'end_battle' outside test_mode should still call return_to_setup."""
-        battle_screen.test_mode = False
+    def test_end_battle_results_include_test_mode(self, battle_screen):
+        """Results passed to show_results should reflect test_mode."""
         battle_screen.ui.handle_click.return_value = "end_battle"
 
         event = Mock()
@@ -333,7 +340,8 @@ class TestEndBattleInTestMode:
 
         battle_screen.handle_event(event)
 
-        battle_screen.scene_callback.assert_called_once_with("return_to_setup")
+        results = battle_screen.scene_callback.call_args[1]["results"]
+        assert results.is_test_mode is True
 
 
 class TestBattleScreenDrawsInTestMode:
@@ -353,6 +361,7 @@ class TestBattleScreenDrawsInTestMode:
             screen._battle_service.get_engine.return_value.ships = []
             screen._battle_service.get_engine.return_value.projectiles = []
             screen.beams = []
+            screen.hit_effects = []
             screen.camera = Mock()
             screen.ui = Mock()
             screen.ui.show_overlay = False

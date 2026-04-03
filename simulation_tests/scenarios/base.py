@@ -460,28 +460,16 @@ class TestScenario(CombatScenario):
                               end_condition=end_condition)
         """
         from game.simulation.systems.battle_end_conditions import (
-            BattleEndCondition, BattleEndMode
+            TickLimitCondition,
+            end_condition_from_dict,
         )
 
-        # Convert string mode to enum
-        try:
-            mode = BattleEndMode(self.metadata.battle_end_mode)
-        except ValueError:
-            raise ValueError(
-                f"Invalid battle_end_mode '{self.metadata.battle_end_mode}'. "
-                f"Valid modes: {[m.value for m in BattleEndMode]}"
-            )
+        # If metadata has an explicit end_condition dict, use it
+        if hasattr(self.metadata, 'end_condition') and self.metadata.end_condition is not None:
+            return end_condition_from_dict(self.metadata.end_condition)
 
-        # Create condition with appropriate parameters
-        return BattleEndCondition(
-            mode=mode,
-            max_ticks=self.metadata.max_ticks if mode == BattleEndMode.TIME_BASED else None,
-            check_derelict=self.metadata.battle_end_check_derelict,
-            absolute_max_ticks=self.metadata.absolute_max_ticks,
-            escape_radius=self.metadata.escape_radius,
-            escape_team=self.metadata.escape_team,
-            escape_all_ships=self.metadata.escape_all_ships
-        )
+        # Default for tests: time-based (run for full duration)
+        return TickLimitCondition(max_ticks=self.metadata.max_ticks)
 
     def setup(self, battle_engine):
         """

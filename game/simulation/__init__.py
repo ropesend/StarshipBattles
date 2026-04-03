@@ -39,7 +39,18 @@ from game.simulation.components.component import Component, create_component
 
 # Battle system
 from game.simulation.systems.battle_engine import BattleEngine, BattleLogger
-from game.simulation.systems.battle_end_conditions import BattleEndMode, BattleEndCondition
+from game.simulation.systems.battle_end_conditions import (
+    IEndCondition,
+    TickLimitCondition,
+    TeamEliminatedCondition,
+    TeamIncapacitatedCondition,
+    EscapeCondition,
+    ShipDestroyedCondition,
+    NeverCondition,
+    AnyCondition,
+    AllCondition,
+    end_condition_from_dict,
+)
 
 # Services
 from game.simulation.services.battle_service import BattleService, BattleServiceResult
@@ -61,8 +72,10 @@ __all__ = [
     # Battle system
     'BattleEngine',
     'BattleLogger',
-    'BattleEndMode',
-    'BattleEndCondition',
+    'IEndCondition',
+    'TeamEliminatedCondition',
+    'TickLimitCondition',
+    'end_condition_from_dict',
     # Services
     'BattleService',
     'BattleServiceResult',

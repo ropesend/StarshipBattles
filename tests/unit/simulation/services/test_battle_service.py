@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch, MagicMock
 
 from game.simulation.services.battle_service import BattleService, BattleServiceResult
 from game.simulation.entities.ship import Ship
-from game.simulation.systems.battle_end_conditions import BattleEndMode
+from game.simulation.systems.battle_end_conditions import TickLimitCondition
 from game.ai.ai_factory import AIControllerFactory
 
 
@@ -359,23 +359,23 @@ class TestBattleServiceStartBattle:
         state = service.get_battle_state()
         assert state['is_started'] is True
 
-    def test_start_battle_with_end_mode(self, service, team0_ship, team1_ship):
-        """start_battle() accepts end condition mode."""
+    def test_start_battle_with_end_condition(self, service, team0_ship, team1_ship):
+        """start_battle() accepts end condition."""
         service.create_battle()
         service.add_ship(team0_ship, team_id=0)
         service.add_ship(team1_ship, team_id=1)
 
-        result = service.start_battle(end_mode=BattleEndMode.TIME_BASED, max_ticks=1000)
+        result = service.start_battle(end_condition=TickLimitCondition(max_ticks=1000))
 
         assert result.success is True
 
-    def test_start_battle_with_max_ticks(self, service, team0_ship, team1_ship):
-        """start_battle() accepts max_ticks for time-based battles."""
+    def test_start_battle_with_absolute_max_ticks(self, service, team0_ship, team1_ship):
+        """start_battle() accepts absolute_max_ticks safety ceiling."""
         service.create_battle()
         service.add_ship(team0_ship, team_id=0)
         service.add_ship(team1_ship, team_id=1)
 
-        result = service.start_battle(max_ticks=500)
+        result = service.start_battle(absolute_max_ticks=500)
 
         assert result.success is True
 

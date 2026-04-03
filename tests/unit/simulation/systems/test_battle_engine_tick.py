@@ -13,7 +13,11 @@ from unittest.mock import Mock, MagicMock, patch, call
 import pygame
 
 from game.simulation.systems.battle_engine import BattleEngine
-from game.simulation.systems.battle_end_conditions import BattleEndMode, BattleEndCondition
+from game.simulation.systems.battle_end_conditions import (
+    TeamEliminatedCondition,
+    TickLimitCondition,
+    NeverCondition,
+)
 from game.core.constants import AttackType
 from game.core.exceptions import ValidationException
 
@@ -97,7 +101,7 @@ def battle_engine():
         engine.ships = []
         engine.ai_controllers = []
         engine.tick_counter = 0
-        engine.end_condition = BattleEndCondition(mode=BattleEndMode.HP_BASED)
+        engine.end_condition = TeamEliminatedCondition()
         engine.recent_beams = []
         return engine
 
@@ -145,12 +149,11 @@ class TestTickCounterIncrement:
 
     def test_tick_counter_not_incremented_when_battle_over(self, battle_engine):
         """tick_counter should NOT increment if battle is already over."""
-        # Set up battle-over condition (no ships)
+        # Set up battle-over condition (tick limit reached)
         battle_engine.ships = []
         battle_engine.tick_counter = 100
-        battle_engine.end_condition = BattleEndCondition(mode=BattleEndMode.HP_BASED)
+        battle_engine.end_condition = TickLimitCondition(max_ticks=100)
 
-        # Manually mark as over by having no ships (HP_BASED will trigger)
         assert battle_engine.is_battle_over() is True
 
         engine_tick_before = battle_engine.tick_counter
@@ -176,10 +179,7 @@ class TestEarlyReturnWhenBattleOver:
         """update() should return immediately if is_battle_over() is True."""
         # Set up time-based end condition
         battle_engine.ships = [mock_ship]
-        battle_engine.end_condition = BattleEndCondition(
-            mode=BattleEndMode.TIME_BASED,
-            max_ticks=10
-        )
+        battle_engine.end_condition = TickLimitCondition(max_ticks=10)
         battle_engine.tick_counter = 10  # At limit
 
         # Verify battle is over
@@ -198,10 +198,7 @@ class TestEarlyReturnWhenBattleOver:
     ):
         """No systems should be updated when battle is over."""
         engine = battle_engine_with_ships
-        engine.end_condition = BattleEndCondition(
-            mode=BattleEndMode.TIME_BASED,
-            max_ticks=5
-        )
+        engine.end_condition = TickLimitCondition(max_ticks=5)
         engine.tick_counter = 5  # At limit
 
         # Track calls
@@ -243,7 +240,8 @@ class TestRecentBeamsCleared:
 
     def test_recent_beams_not_cleared_when_battle_over(self, battle_engine):
         """recent_beams should NOT be cleared when battle is already over."""
-        battle_engine.ships = []  # No ships = battle over
+        battle_engine.ships = []
+        battle_engine.end_condition = TickLimitCondition(max_ticks=0)
         battle_engine.recent_beams = [{'test': 'data'}]
 
         battle_engine.update()
@@ -305,7 +303,7 @@ class TestGridUpdate:
 
         battle_engine.ships = [mock_ship, mock_ship_team1, ship_team1_extra]
         battle_engine.ai_controllers = []
-        battle_engine.end_condition = BattleEndCondition(mode=BattleEndMode.MANUAL)
+        battle_engine.end_condition = NeverCondition()
 
         # Track inserts by wrapping the original insert
         insert_calls = []
@@ -667,12 +665,14 @@ class TestEdgeCases:
         """update() should handle empty ships list gracefully."""
         battle_engine.ships = []
         battle_engine.ai_controllers = []
+        battle_engine.end_condition = NeverCondition()
 
         # Should not raise
         battle_engine.update()
 
-        # But battle is over (HP_BASED with no ships)
-        assert battle_engine.is_battle_over() is True
+        # NeverCondition doesn't end automatically, but no ships means
+        # tick still advances (battle is NOT over with NeverCondition)
+        assert battle_engine.is_battle_over() is False
 
     def test_no_ai_controllers_update_completes(self, battle_engine, mock_ship):
         """update() should handle empty AI controller list."""
@@ -680,7 +680,7 @@ class TestEdgeCases:
         battle_engine.ai_controllers = []
 
         # Make sure battle doesn't end immediately
-        battle_engine.end_condition = BattleEndCondition(mode=BattleEndMode.MANUAL)
+        battle_engine.end_condition = NeverCondition()
 
         # Should not raise
         battle_engine.update()
@@ -740,10 +740,7 @@ class TestEdgeCases:
     def test_rapid_succession_ticks(self, battle_engine_with_ships):
         """Many rapid ticks should work correctly."""
         engine = battle_engine_with_ships
-        engine.end_condition = BattleEndCondition(
-            mode=BattleEndMode.TIME_BASED,
-            max_ticks=1000
-        )
+        engine.end_condition = TickLimitCondition(max_ticks=1000)
 
         for _ in range(100):
             engine.update()

@@ -350,7 +350,8 @@ class TestBattleScreenEventHandling:
 
         self.scene.handle_event(event)
 
-        callback.assert_called_with("return_to_setup")
+        callback.assert_called_once()
+        assert callback.call_args[0][0] == "show_results"
 
     def test_handle_event_left_click_clears_camera_target(self):
         """Test handle_event() left click with no UI hit clears camera target."""

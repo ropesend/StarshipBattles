@@ -2,20 +2,26 @@
 DamageCalculator - Extracted damage logic from ShipCombatEngine.
 
 This class handles all damage-related operations:
-- Emissive armor reduction
-- Crystalline armor absorption and shield recharge
 - Shield absorption
+- Emissive armor reduction
+- Shield Regenerating Armor absorption and shield recharge
 - Hull layer damage distribution
+
+Emits combat events at each pipeline stage when an event bus is provided.
 
 Part of PROJ-44 Phase 5: ShipCombatEngine Decomposition.
 """
 import random
-from typing import TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 from game.core.constants import LayerType
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
+    from game.simulation.combat.combat_events import (
+        CombatEventBus,
+        DamageContext,
+    )
 
 
 class DamageCalculator:
@@ -26,7 +32,13 @@ class DamageCalculator:
     applying damage to ships through various defensive layers.
     """
 
-    def apply_damage(self, ship: 'Ship', damage_amount: float) -> None:
+    def apply_damage(
+        self,
+        ship: 'Ship',
+        damage_amount: float,
+        context: Optional['DamageContext'] = None,
+        event_bus: Optional['CombatEventBus'] = None
+    ) -> None:
         """
         Apply damage to the ship.
 
@@ -39,6 +51,8 @@ class DamageCalculator:
         Args:
             ship: The ship to apply damage to
             damage_amount: Amount of damage to apply
+            context: Attacker identity for event emission
+            event_bus: Event bus for combat events
         """
         if not ship.is_alive:
             return
@@ -47,19 +61,46 @@ class DamageCalculator:
             return
 
         remaining_damage = damage_amount
+        was_derelict = ship.is_derelict
 
         # 1. Shield Absorption (first line of defense)
         if ship.current_shields > 0:
             absorbed = min(ship.current_shields, remaining_damage)
             ship.current_shields -= absorbed
             remaining_damage -= absorbed
+
+            if event_bus and absorbed > 0:
+                from game.simulation.combat.combat_events import (
+                    CombatEvent, CombatEventType,
+                )
+                event_bus.emit(CombatEvent(
+                    event_type=CombatEventType.SHIELD_HIT,
+                    target_ship=ship,
+                    damage_amount=absorbed,
+                    context=context,
+                    shield_remaining=ship.current_shields,
+                ))
+
             if remaining_damage <= 0:
                 return
 
         # 2. Emissive Armor (flat reduction on shield overflow)
         ea = ship.emissive_armor
         if ea > 0:
+            ea_absorbed = min(ea, remaining_damage)
             remaining_damage = max(0, remaining_damage - ea)
+
+            if event_bus and ea_absorbed > 0:
+                from game.simulation.combat.combat_events import (
+                    CombatEvent, CombatEventType,
+                )
+                event_bus.emit(CombatEvent(
+                    event_type=CombatEventType.ARMOR_ABSORBED,
+                    target_ship=ship,
+                    damage_amount=ea_absorbed,
+                    context=context,
+                ))
+
             if remaining_damage <= 0:
                 return
 
@@ -76,6 +117,17 @@ class DamageCalculator:
                     ship.current_shields + absorption
                 )
 
+            if event_bus and absorption > 0:
+                from game.simulation.combat.combat_events import (
+                    CombatEvent, CombatEventType,
+                )
+                event_bus.emit(CombatEvent(
+                    event_type=CombatEventType.ARMOR_ABSORBED,
+                    target_ship=ship,
+                    damage_amount=absorption,
+                    context=context,
+                ))
+
             if remaining_damage <= 0:
                 return
 
@@ -89,17 +141,32 @@ class DamageCalculator:
         for ltype, layer_data in sorted_layers:
             if remaining_damage <= 0:
                 break
-            remaining_damage = self._damage_layer(ship, ltype, remaining_damage)
+            remaining_damage = self._damage_layer(
+                ship, ltype, remaining_damage, context, event_bus
+            )
 
         if remaining_damage < damage_amount:
             ship.recalculate_stats()
             ship.update_derelict_status()
 
+            # Emit derelict event if status changed
+            if event_bus and not was_derelict and ship.is_derelict:
+                from game.simulation.combat.combat_events import (
+                    CombatEvent, CombatEventType,
+                )
+                event_bus.emit(CombatEvent(
+                    event_type=CombatEventType.SHIP_DERELICT,
+                    target_ship=ship,
+                    context=context,
+                ))
+
     def _damage_layer(
         self,
         ship: 'Ship',
         layer_type: LayerType,
-        damage: float
+        damage: float,
+        context: Optional['DamageContext'] = None,
+        event_bus: Optional['CombatEventBus'] = None
     ) -> float:
         """
         Apply damage to a specific layer.
@@ -110,6 +177,8 @@ class DamageCalculator:
             ship: The ship being damaged
             layer_type: The layer to damage
             damage: Amount of damage to apply
+            context: Attacker identity for events
+            event_bus: Event bus for combat events
 
         Returns:
             Remaining damage after layer absorption
@@ -130,5 +199,28 @@ class DamageCalculator:
             damage_absorbed = min(target.current_hp, damage)
             target.take_damage(damage_absorbed)
             damage -= damage_absorbed
+
+            if event_bus:
+                from game.simulation.combat.combat_events import (
+                    CombatEvent, CombatEventType,
+                )
+                if target.current_hp <= 0:
+                    event_bus.emit(CombatEvent(
+                        event_type=CombatEventType.COMPONENT_DESTROYED,
+                        target_ship=ship,
+                        damage_amount=damage_absorbed,
+                        context=context,
+                        component=target,
+                        layer_type=layer_type,
+                    ))
+                else:
+                    event_bus.emit(CombatEvent(
+                        event_type=CombatEventType.COMPONENT_HIT,
+                        target_ship=ship,
+                        damage_amount=damage_absorbed,
+                        context=context,
+                        component=target,
+                        layer_type=layer_type,
+                    ))
 
         return damage

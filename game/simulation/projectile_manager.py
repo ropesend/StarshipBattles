@@ -143,7 +143,13 @@ class ProjectileManager:
             if weapon_ab is not None:
                 damage = weapon_ab.get_damage(hit_dist)
 
-        target_ship.combat_engine.take_damage(damage)
+        from game.simulation.combat.combat_events import DamageContext
+        ctx = DamageContext(
+            attacker=p.owner,
+            source_weapon=p.source_weapon,
+            damage_type="projectile",
+        )
+        target_ship.combat_engine.take_damage(damage, context=ctx)
 
     def _check_missile_interception(self, p) -> bool:
         """

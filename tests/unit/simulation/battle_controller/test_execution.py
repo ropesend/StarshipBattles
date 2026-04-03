@@ -33,8 +33,8 @@ class TestBattleControllerStart:
         controller.start()
 
         mock_service.start_battle.assert_called_once_with(
-            end_mode=basic_config.end_mode,
-            max_ticks=basic_config.max_ticks
+            end_condition=basic_config.end_condition,
+            absolute_max_ticks=basic_config.absolute_max_ticks
         )
 
     def test_start_sets_is_started_on_success(self, controller, basic_config, mock_service):
@@ -183,30 +183,41 @@ class TestBattleControllerRunHeadless:
         # Should have called update 4 times (stopped when is_battle_over became True)
         assert mock_service.update.call_count == 4
 
-    def test_run_headless_respects_max_ticks(self, controller, mock_service):
-        """run_headless stops at max_ticks limit."""
-        config = BattleConfig(mode=BattleMode.MANUAL, max_ticks=10)
+    def test_run_headless_stops_when_battle_over(self, controller, mock_service):
+        """run_headless stops when is_battle_over returns True."""
+        config = BattleConfig(mode=BattleMode.MANUAL)
         controller.configure(config)
         controller.start()
 
-        # Battle never ends naturally
-        mock_service.is_battle_over.return_value = False
+        # Battle ends after 10 ticks
+        call_count = 0
+        def side_effect():
+            nonlocal call_count
+            call_count += 1
+            return call_count >= 10
+        mock_service.is_battle_over.side_effect = side_effect
 
         controller.run_headless()
 
-        assert mock_service.update.call_count == 10
+        assert mock_service.update.call_count == 9
 
     def test_run_headless_calls_progress_callback(self, controller, mock_service):
         """run_headless calls progress callback every 100 ticks."""
-        config = BattleConfig(mode=BattleMode.MANUAL, max_ticks=250)
+        config = BattleConfig(mode=BattleMode.MANUAL, absolute_max_ticks=250)
         controller.configure(config)
         controller.start()
 
-        mock_service.is_battle_over.return_value = False
+        # Battle ends after 250 ticks
+        call_count = 0
+        def side_effect():
+            nonlocal call_count
+            call_count += 1
+            return call_count >= 250
+        mock_service.is_battle_over.side_effect = side_effect
 
         progress_calls = []
-        def track_progress(tick, max_ticks):
-            progress_calls.append((tick, max_ticks))
+        def track_progress(tick, absolute_max):
+            progress_calls.append((tick, absolute_max))
 
         controller.run_headless(progress_callback=track_progress)
 
@@ -216,15 +227,21 @@ class TestBattleControllerRunHeadless:
 
     def test_run_headless_processes_retreats_when_enabled(self, controller, mock_service):
         """run_headless processes retreats each tick when enabled."""
-        config = BattleConfig(mode=BattleMode.MANUAL, max_ticks=5, allow_retreat=True)
+        config = BattleConfig(mode=BattleMode.MANUAL, allow_retreat=True)
         controller.configure(config)
         controller.start()
 
-        mock_service.is_battle_over.return_value = False
+        # Battle ends after 5 ticks
+        call_count = 0
+        def side_effect():
+            nonlocal call_count
+            call_count += 1
+            return call_count >= 5
+        mock_service.is_battle_over.side_effect = side_effect
 
         with patch.object(controller, '_update_retreats') as mock_retreats:
             controller.run_headless()
-            assert mock_retreats.call_count == 5
+            assert mock_retreats.call_count == 4
 
     def test_run_headless_returns_results(self, controller, basic_config, mock_service):
         """run_headless returns BattleServiceResults."""

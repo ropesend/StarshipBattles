@@ -9,10 +9,7 @@ TDD tests for TestMetadata supporting:
 import pytest
 
 from simulation_tests.scenarios.base import TestMetadata, TestScenario
-from game.simulation.systems.battle_end_conditions import (
-    BattleEndMode,
-    BattleEndCondition,
-)
+from game.simulation.systems.battle_end_conditions import TickLimitCondition
 from game.core.constants import SimulationConstants
 
 
@@ -176,7 +173,7 @@ class TestCreateEndCondition:
     """Tests for TestScenario._create_end_condition() helper."""
 
     def test_creates_time_based_condition(self):
-        """_create_end_condition should create TIME_BASED condition."""
+        """_create_end_condition should create TickLimitCondition."""
         scenario = MockScenario()
         scenario.metadata = TestMetadata(
             test_id="TEST-001",
@@ -194,11 +191,11 @@ class TestCreateEndCondition:
 
         condition = scenario._create_end_condition()
 
-        assert condition.mode == BattleEndMode.TIME_BASED
+        assert isinstance(condition, TickLimitCondition)
         assert condition.max_ticks == 500
 
-    def test_creates_escape_based_condition(self):
-        """_create_end_condition should create ESCAPE_BASED condition."""
+    def test_creates_default_tick_limit_condition(self):
+        """_create_end_condition should create TickLimitCondition with default max_ticks."""
         scenario = MockScenario()
         scenario.metadata = TestMetadata(
             test_id="TEST-001",
@@ -210,57 +207,9 @@ class TestCreateEndCondition:
             edge_cases=[],
             expected_outcome="Pass",
             pass_criteria="True",
-            battle_end_mode="escape",
-            escape_radius=5000.0,
-            escape_team=1,
-            escape_all_ships=True
         )
 
         condition = scenario._create_end_condition()
 
-        assert condition.mode == BattleEndMode.ESCAPE_BASED
-        assert condition.escape_radius == 5000.0
-        assert condition.escape_team == 1
-        assert condition.escape_all_ships is True
-
-    def test_passes_absolute_max_ticks(self):
-        """_create_end_condition should pass absolute_max_ticks."""
-        scenario = MockScenario()
-        scenario.metadata = TestMetadata(
-            test_id="TEST-001",
-            category="Test",
-            subcategory="Unit",
-            name="Test",
-            summary="Test",
-            conditions=[],
-            edge_cases=[],
-            expected_outcome="Pass",
-            pass_criteria="True",
-            battle_end_mode="manual",
-            absolute_max_ticks=100_000
-        )
-
-        condition = scenario._create_end_condition()
-
-        assert condition.mode == BattleEndMode.MANUAL
-        assert condition.absolute_max_ticks == 100_000
-
-    def test_default_absolute_max_ticks_from_constants(self):
-        """_create_end_condition should use constants default for absolute_max_ticks."""
-        scenario = MockScenario()
-        scenario.metadata = TestMetadata(
-            test_id="TEST-001",
-            category="Test",
-            subcategory="Unit",
-            name="Test",
-            summary="Test",
-            conditions=[],
-            edge_cases=[],
-            expected_outcome="Pass",
-            pass_criteria="True",
-            battle_end_mode="hp_based"
-        )
-
-        condition = scenario._create_end_condition()
-
-        assert condition.absolute_max_ticks == SimulationConstants.ABSOLUTE_MAX_TICKS
+        assert isinstance(condition, TickLimitCondition)
+        assert condition.max_ticks == 1000  # Default from TestMetadata

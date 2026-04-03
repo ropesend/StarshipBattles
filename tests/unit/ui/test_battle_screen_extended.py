@@ -37,4 +37,5 @@ class TestBattleScreenExtended:
         }
 
         scene.engine.collision_system.process_beam_attack(beam, scene.engine.recent_beams)
-        ship.combat_engine.take_damage.assert_called_with(25)
+        ship.combat_engine.take_damage.assert_called()
+        assert ship.combat_engine.take_damage.call_args[0][0] == 25

@@ -44,7 +44,8 @@ class TestDamageCalculation:
         projectile_manager.update(mock_grid)
 
         # Should use weapon formula damage (75), not base damage (50)
-        mock_target_ship.combat_engine.take_damage.assert_called_with(75)
+        mock_target_ship.combat_engine.take_damage.assert_called_once()
+        assert mock_target_ship.combat_engine.take_damage.call_args[0][0] == 75
 
     def test_no_source_weapon_uses_base_damage(self, projectile_manager, mock_grid, mock_target_ship):
         """Without source weapon, should use base damage."""
@@ -66,7 +67,8 @@ class TestDamageCalculation:
         projectile_manager.add_projectile(proj)
         projectile_manager.update(mock_grid)
 
-        mock_target_ship.combat_engine.take_damage.assert_called_with(35)
+        mock_target_ship.combat_engine.take_damage.assert_called_once()
+        assert mock_target_ship.combat_engine.take_damage.call_args[0][0] == 35
 
 
 # =============================================================================

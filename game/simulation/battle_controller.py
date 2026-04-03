@@ -20,7 +20,7 @@ from game.core.exceptions import StateException, ValidationException
 from game.core.error_codes import ErrorCode
 from game.simulation.services.battle_service import BattleService, BattleServiceResult
 from game.simulation.battle_state import BattleState, BattleResults, ShipState
-from game.simulation.systems.battle_end_conditions import BattleEndCondition, BattleEndMode
+from game.simulation.systems.battle_end_conditions import IEndCondition
 from game.simulation.managers.retreat_manager import (
     RetreatManager,
     RetreatMethod,
@@ -189,8 +189,8 @@ class BattleController:
             return BattleServiceResult(success=False, errors=["Battle already started"])
 
         result = self._service.start_battle(
-            end_mode=self._config.end_mode,
-            max_ticks=self._config.max_ticks
+            end_condition=self._config.end_condition,
+            absolute_max_ticks=self._config.absolute_max_ticks
         )
 
         if result.success:
@@ -259,7 +259,6 @@ class BattleController:
             )
 
         tick = 0
-        max_ticks = self._config.max_ticks
 
         while not self.is_battle_over():
             # Update retreat states if allowed by mode or config
@@ -272,12 +271,7 @@ class BattleController:
 
             # Progress callback
             if progress_callback and tick % 100 == 0:
-                progress_callback(tick, max_ticks)
-
-            # Safety limit
-            if tick >= max_ticks:
-                logger.warning(f"Battle reached max ticks limit: {max_ticks}")
-                break
+                progress_callback(tick, self._config.absolute_max_ticks)
 
         return self.get_results()
 
@@ -478,8 +472,8 @@ class BattleController:
 
             # Start battle
             self._service.start_battle(
-                end_mode=self._config.end_mode,
-                max_ticks=self._config.max_ticks
+                end_condition=self._config.end_condition,
+                absolute_max_ticks=self._config.absolute_max_ticks
             )
 
             # Set tick counter to match saved state

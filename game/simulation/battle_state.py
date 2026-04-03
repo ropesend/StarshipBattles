@@ -592,7 +592,7 @@ class BattleState:
     projectiles: List[ProjectileState] = field(default_factory=list)
 
     # Configuration
-    end_mode: str = "HP_BASED"
+    end_condition_data: Dict[str, Any] = field(default_factory=lambda: {"type": "team_eliminated"})
     allow_retreat: bool = False
     allow_reinforcements: bool = False
 
@@ -609,7 +609,7 @@ class BattleState:
             'max_ticks': self.max_ticks,
             'ships': {sid: s.to_dict() for sid, s in self.ships.items()},
             'projectiles': [p.to_dict() for p in self.projectiles],
-            'end_mode': self.end_mode,
+            'end_condition_data': self.end_condition_data,
             'allow_retreat': self.allow_retreat,
             'allow_reinforcements': self.allow_reinforcements,
             'created_at': self.created_at,
@@ -638,7 +638,7 @@ class BattleState:
             max_ticks=data.get('max_ticks'),
             ships=ships,
             projectiles=projectiles,
-            end_mode=data.get('end_mode', 'HP_BASED'),
+            end_condition_data=data.get('end_condition_data', {"type": "team_eliminated"}),
             allow_retreat=data.get('allow_retreat', False),
             allow_reinforcements=data.get('allow_reinforcements', False),
             created_at=data.get('created_at', ''),
@@ -697,24 +697,19 @@ class BattleState:
             if proj.is_alive:
                 projectiles.append(ProjectileState.from_projectile(proj, ship_id_map))
 
-        # Get end mode - BattleEngine.end_condition is always initialized
-        end_mode = "HP_BASED"
+        # Serialize end condition
+        end_condition_data = {"type": "team_eliminated"}
         if engine.end_condition is not None:
-            end_mode = engine.end_condition.mode.name
-
-        max_ticks = None
-        if engine.end_condition is not None:
-            max_ticks = engine.end_condition.max_ticks
+            end_condition_data = engine.end_condition.to_dict()
 
         return cls(
             version="1.0",
             battle_id=battle_id,
             seed=seed,
             tick_count=engine.tick_counter,
-            max_ticks=max_ticks,
             ships=ships,
             projectiles=projectiles,
-            end_mode=end_mode,
+            end_condition_data=end_condition_data,
             allow_retreat=allow_retreat,
             allow_reinforcements=allow_reinforcements,
             created_at=datetime.now().isoformat(),

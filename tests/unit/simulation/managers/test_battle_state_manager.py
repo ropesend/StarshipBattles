@@ -95,8 +95,7 @@ class TestBattleStateManagerRestore:
         mock_state = Mock()
         mock_state.mode = "manual"
         mock_state.seed = 12345
-        mock_state.max_ticks = 10000
-        mock_state.end_mode = "HP_BASED"
+        mock_state.end_condition_data = {"type": "team_eliminated"}
         mock_state.allow_retreat = False
         mock_state.allow_reinforcements = False
 
@@ -104,7 +103,6 @@ class TestBattleStateManagerRestore:
 
         assert config is not None
         assert config.seed == 12345
-        assert config.max_ticks == 10000
         assert config.allow_retreat is False
 
     def test_restore_state_handles_strategy_mode(self, state_manager):
@@ -112,8 +110,7 @@ class TestBattleStateManagerRestore:
         mock_state = Mock()
         mock_state.mode = "strategy"
         mock_state.seed = 42
-        mock_state.max_ticks = 50000
-        mock_state.end_mode = "HP_BASED"
+        mock_state.end_condition_data = {"type": "team_eliminated"}
         mock_state.allow_retreat = True
         mock_state.allow_reinforcements = True
 
@@ -122,19 +119,18 @@ class TestBattleStateManagerRestore:
         assert config.allow_retreat is True
         assert config.allow_reinforcements is True
 
-    def test_restore_state_handles_missing_max_ticks(self, state_manager):
-        """restore_state handles missing max_ticks."""
+    def test_restore_state_handles_missing_seed(self, state_manager):
+        """restore_state handles None seed."""
         mock_state = Mock()
         mock_state.mode = "manual"
         mock_state.seed = None
-        mock_state.max_ticks = None
-        mock_state.end_mode = "HP_BASED"
+        mock_state.end_condition_data = {"type": "team_eliminated"}
         mock_state.allow_retreat = False
         mock_state.allow_reinforcements = False
 
         config = state_manager.restore_config_from_state(mock_state)
 
-        assert config.max_ticks == 100000  # Default
+        assert config.seed is None
 
     def test_restore_state_raises_on_invalid_mode(self, state_manager):
         """restore_state raises on invalid mode."""

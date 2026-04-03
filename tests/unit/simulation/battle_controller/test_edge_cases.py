@@ -162,7 +162,7 @@ class TestLoadStateEdgeCases:
         mock_state.mode = "manual"
         mock_state.seed = 12345
         mock_state.max_ticks = 10000
-        mock_state.end_mode = "HP_BASED"
+        mock_state.end_condition_data = {"type": "team_eliminated"}
         mock_state.allow_retreat = False
         mock_state.allow_reinforcements = False
         mock_state.ships = {}  # Empty dict, not Mock
@@ -189,7 +189,7 @@ class TestLoadStateEdgeCases:
         mock_state.mode = "manual"
         mock_state.seed = 12345
         mock_state.max_ticks = 10000
-        mock_state.end_mode = "HP_BASED"
+        mock_state.end_condition_data = {"type": "team_eliminated"}
         mock_state.allow_retreat = False
         mock_state.allow_reinforcements = False
         mock_state.ships = {}  # Empty dict, not Mock
@@ -217,7 +217,7 @@ class TestLoadStateEdgeCases:
         mock_state.mode = "manual"
         mock_state.seed = 12345
         mock_state.max_ticks = 10000
-        mock_state.end_mode = "HP_BASED"
+        mock_state.end_condition_data = {"type": "team_eliminated"}
         mock_state.allow_retreat = False
         mock_state.allow_reinforcements = False
         mock_state.ships = {"ship-uuid-123": mock_ship_state}
@@ -238,7 +238,7 @@ class TestLoadStateEdgeCases:
         mock_state.mode = "manual"
         mock_state.seed = 12345
         mock_state.max_ticks = 10000
-        mock_state.end_mode = "HP_BASED"
+        mock_state.end_condition_data = {"type": "team_eliminated"}
         mock_state.allow_retreat = False
         mock_state.allow_reinforcements = False
         mock_state.ships = {}

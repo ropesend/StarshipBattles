@@ -8,7 +8,7 @@ from game.simulation.battle_controller import (
     BattleMode,
 )
 from game.simulation.managers.retreat_manager import RetreatState
-from game.simulation.systems.battle_end_conditions import BattleEndMode
+from game.simulation.systems.battle_end_conditions import TeamEliminatedCondition
 
 
 class TestBattleMode:
@@ -31,8 +31,8 @@ class TestBattleConfig:
 
         assert config.mode == BattleMode.MANUAL
         assert config.seed is None
-        assert config.max_ticks == 100000
-        assert config.end_mode == BattleEndMode.HP_BASED
+        assert config.absolute_max_ticks == 1000000
+        assert isinstance(config.end_condition, TeamEliminatedCondition)
         assert config.headless is False
         assert config.start_paused is False
         assert config.enable_logging is True
@@ -44,14 +44,14 @@ class TestBattleConfig:
         config = BattleConfig(
             mode=BattleMode.STRATEGY,
             seed=42,
-            max_ticks=5000,
+            absolute_max_ticks=5000,
             headless=True,
             allow_retreat=True,
         )
 
         assert config.mode == BattleMode.STRATEGY
         assert config.seed == 42
-        assert config.max_ticks == 5000
+        assert config.absolute_max_ticks == 5000
         assert config.headless is True
         assert config.allow_retreat is True
 

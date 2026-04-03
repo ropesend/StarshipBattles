@@ -6,10 +6,12 @@ Other modules can now import these without importing the full BattleController.
 """
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, Tuple, Any
+from typing import Optional, Tuple, Any, TYPE_CHECKING
 
-from game.simulation.systems.battle_end_conditions import BattleEndMode
 from game.core.constants import SimulationConstants
+
+if TYPE_CHECKING:
+    from game.simulation.systems.battle_end_conditions import IEndCondition
 
 # PROJ-113: Removed TYPE_CHECKING import from test_framework to fix layer violation.
 # CombatScenario type hint replaced with Any - test_framework is not part of game layers.
@@ -23,13 +25,18 @@ class BattleMode(Enum):
     HYPOTHETICAL = "hypothetical"  # Planning simulations (isolated)
 
 
+def _default_end_condition() -> 'IEndCondition':
+    from game.simulation.systems.battle_end_conditions import TeamEliminatedCondition
+    return TeamEliminatedCondition()
+
+
 @dataclass
 class BattleConfig:
     """Configuration for a battle instance."""
     mode: BattleMode = BattleMode.MANUAL
     seed: Optional[int] = None
-    max_ticks: int = SimulationConstants.DEFAULT_MAX_TICKS
-    end_mode: BattleEndMode = BattleEndMode.HP_BASED
+    end_condition: Any = field(default_factory=_default_end_condition)
+    absolute_max_ticks: int = SimulationConstants.ABSOLUTE_MAX_TICKS
 
     # Mode-specific options
     headless: bool = False

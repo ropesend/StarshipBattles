@@ -47,6 +47,7 @@ class ShipCombatEngine:
             ship: The ship this engine controls combat for
         """
         self._ship = ship
+        self._event_bus = None  # Set by BattleEngine after start()
 
         # Initialize shared subsystems on first use
         if ShipCombatEngine._targeting_system is None:
@@ -143,16 +144,31 @@ class ShipCombatEngine:
     # Delegated Methods - Damage
     # =========================================================================
 
-    def take_damage(self, damage_amount: float) -> None:
+    def take_damage(self, damage_amount: float, context=None) -> None:
         """
         Apply damage to the ship.
 
-        Delegates to DamageCalculator.
+        Delegates to DamageCalculator. Detects ship death and emits
+        SHIP_DESTROYED event if the ship was killed by this damage.
 
         Args:
             damage_amount: Amount of damage to apply
+            context: Optional DamageContext with attacker identity
         """
-        self._damage_calculator.apply_damage(self._ship, damage_amount)
+        was_alive = self._ship.is_alive
+        self._damage_calculator.apply_damage(
+            self._ship, damage_amount, context, self._event_bus
+        )
+        if was_alive and not self._ship.is_alive and self._event_bus:
+            from game.simulation.combat.combat_events import (
+                CombatEvent, CombatEventType,
+            )
+            self._event_bus.emit(CombatEvent(
+                event_type=CombatEventType.SHIP_DESTROYED,
+                target_ship=self._ship,
+                context=context,
+                was_lethal=True,
+            ))
 
     # =========================================================================
     # Combat Cooldowns (kept in engine as ship-specific state management)

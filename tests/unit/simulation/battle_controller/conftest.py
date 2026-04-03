@@ -62,5 +62,5 @@ def basic_config():
     return BattleConfig(
         mode=BattleMode.MANUAL,
         seed=12345,
-        max_ticks=10000,
+        absolute_max_ticks=10000,
     )

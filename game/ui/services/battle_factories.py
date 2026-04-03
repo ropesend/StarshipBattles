@@ -130,7 +130,6 @@ def create_test_battle(
         seed=seed,
         headless=headless,
         test_scenario=scenario,
-        max_ticks=scenario.max_ticks,
     )
 
     return _create_controller_with_config(config)
