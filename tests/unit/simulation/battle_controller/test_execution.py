@@ -129,19 +129,6 @@ class TestBattleControllerUpdate:
             controller.update()
             mock_update_retreats.assert_not_called()
 
-    def test_update_calls_completion_callback_when_over(self, controller, basic_config, mock_service):
-        """update calls completion callback when battle ends."""
-        controller.configure(basic_config)
-        controller.start()
-
-        callback = Mock()
-        controller.set_on_battle_complete(callback)
-
-        mock_service.is_battle_over.return_value = True
-        controller.update()
-
-        callback.assert_called_once()
-
     def test_update_returns_service_result(self, controller, basic_config, mock_service):
         """update returns the result from service."""
         controller.configure(basic_config)

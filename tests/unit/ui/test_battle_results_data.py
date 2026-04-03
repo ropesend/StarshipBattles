@@ -75,12 +75,12 @@ class TestExtractBattleResults:
         ship2 = _make_ship(name="Beta", team_id=1, is_alive=False, hp=0, max_hp=100)
         engine = _make_engine(ships=[ship1, ship2], tick_counter=500, winner=0)
 
-        results = extract_battle_results(engine, is_test_mode=False)
+        results = extract_battle_results(engine, return_destination="battle_setup")
 
         assert isinstance(results, BattleResults)
         assert results.winner == 0
         assert results.tick_count == 500
-        assert results.is_test_mode is False
+        assert results.return_destination == "battle_setup"
         assert len(results.ships) == 2
         assert len(results.teams) == 2
 
@@ -93,7 +93,7 @@ class TestExtractBattleResults:
         )
         engine = _make_engine(ships=[ship])
 
-        results = extract_battle_results(engine, is_test_mode=False)
+        results = extract_battle_results(engine, return_destination="battle_setup")
 
         sr = results.ships[0]
         assert sr.name == "Alpha"
@@ -115,7 +115,7 @@ class TestExtractBattleResults:
         ship = _make_ship(weapons=[weapon])
         engine = _make_engine(ships=[ship])
 
-        results = extract_battle_results(engine, is_test_mode=False)
+        results = extract_battle_results(engine, return_destination="battle_setup")
 
         ws = results.ships[0].weapons[0]
         assert ws.accuracy == 0.0
@@ -129,7 +129,7 @@ class TestExtractBattleResults:
         ]
         engine = _make_engine(ships=ships)
 
-        results = extract_battle_results(engine, is_test_mode=False)
+        results = extract_battle_results(engine, return_destination="battle_setup")
 
         team0 = results.teams[0]
         assert team0.total_ships == 3
@@ -151,7 +151,7 @@ class TestExtractBattleResults:
         ]
         engine = _make_engine(ships=ships)
 
-        results = extract_battle_results(engine, is_test_mode=False)
+        results = extract_battle_results(engine, return_destination="battle_setup")
 
         team0 = results.teams[0]
         assert team0.total_shots_fired == 150
@@ -165,22 +165,22 @@ class TestExtractBattleResults:
         ]
         engine = _make_engine(ships=ships, winner=-1)
 
-        results = extract_battle_results(engine, is_test_mode=False)
+        results = extract_battle_results(engine, return_destination="battle_setup")
         assert results.winner == -1
 
-    def test_test_mode_flag(self):
+    def test_return_destination_passed_through(self):
         engine = _make_engine(ships=[])
-        results = extract_battle_results(engine, is_test_mode=True)
-        assert results.is_test_mode is True
+        results = extract_battle_results(engine, return_destination="test_lab")
+        assert results.return_destination == "test_lab"
 
     def test_duration_seconds(self):
         engine = _make_engine(ships=[], tick_counter=1000)
-        results = extract_battle_results(engine, is_test_mode=False)
+        results = extract_battle_results(engine, return_destination="battle_setup")
         # Default tick rate is 0.01, so 1000 ticks = 10 seconds
         assert results.duration_seconds == pytest.approx(10.0)
 
     def test_empty_battle(self):
         engine = _make_engine(ships=[], tick_counter=0, winner=-1)
-        results = extract_battle_results(engine, is_test_mode=False)
+        results = extract_battle_results(engine, return_destination="battle_setup")
         assert len(results.ships) == 0
         assert len(results.teams) == 0

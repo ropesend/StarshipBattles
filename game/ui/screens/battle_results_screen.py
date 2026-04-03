@@ -99,10 +99,8 @@ class BattleResultsScreen:
 
     def _trigger_return(self):
         if self.scene_callback:
-            if self.results.is_test_mode:
-                self.scene_callback("return_to_test_lab")
-            else:
-                self.scene_callback("return_to_setup")
+            self.scene_callback("return_to_destination",
+                                destination=self.results.return_destination)
 
     def update(self, dt: float):
         """Update (IScene protocol). No animations needed."""
@@ -261,7 +259,12 @@ class BattleResultsScreen:
 
     def _draw_footer(self, screen, w, h):
         """Draw the return button."""
-        btn_text = "Return to Combat Lab" if self.results.is_test_mode else "Return to Battle Setup"
+        _RETURN_TEXT = {
+            "test_lab": "Return to Combat Lab",
+            "battle_setup": "Return to Battle Setup",
+            "strategy": "Return to Strategy Map",
+        }
+        btn_text = _RETURN_TEXT.get(self.results.return_destination, "Return")
         btn_w = 320
         btn_h = 45
         btn_x = (w - btn_w) // 2

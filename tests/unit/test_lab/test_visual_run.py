@@ -299,15 +299,21 @@ class TestEndBattleInTestMode:
         with patch.object(BattleScreen, '__init__', lambda self, *a, **kw: None):
             screen = BattleScreen.__new__(BattleScreen)
             screen.scene_callback = Mock()
-            screen.test_mode = True
-            screen.test_completed = True
-            screen.test_scenario = Mock()
             mock_engine = Mock()
             mock_engine.ships = []
             mock_engine.tick_counter = 0
             mock_engine.get_winner.return_value = -1
             screen._battle_service = Mock()
             screen._battle_service.get_engine.return_value = mock_engine
+            # Set up controller with config
+            from game.simulation.battle_config import BattleConfig, BattleMode, ReturnDestination
+            mock_controller = Mock()
+            mock_controller.config = BattleConfig(
+                mode=BattleMode.TEST,
+                return_destination=ReturnDestination.TEST_LAB,
+                show_results=True,
+            )
+            screen._controller = mock_controller
             screen.ui = Mock()
             screen.camera = Mock()
             screen.screen_height = 2160
@@ -329,8 +335,8 @@ class TestEndBattleInTestMode:
         assert call_args[0][0] == "show_results"
         assert "results" in call_args[1]
 
-    def test_end_battle_results_include_test_mode(self, battle_screen):
-        """Results passed to show_results should reflect test_mode."""
+    def test_end_battle_results_have_correct_destination(self, battle_screen):
+        """Results passed to show_results should have test_lab destination."""
         battle_screen.ui.handle_click.return_value = "end_battle"
 
         event = Mock()
@@ -341,7 +347,7 @@ class TestEndBattleInTestMode:
         battle_screen.handle_event(event)
 
         results = battle_screen.scene_callback.call_args[1]["results"]
-        assert results.is_test_mode is True
+        assert results.return_destination == "test_lab"
 
 
 class TestBattleScreenDrawsInTestMode:

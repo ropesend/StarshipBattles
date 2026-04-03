@@ -225,18 +225,16 @@ class BattleController:
         if not self._is_started:
             return BattleServiceResult(success=False, errors=["Battle not started"])
 
+        # Temporary: per-tick callback for test scenarios (until AI strategy migration)
+        if self._config and self._config.per_tick_callback:
+            self._config.per_tick_callback(self._service.get_engine())
+
         # Update retreat states if allowed by mode or config
         if self._retreat_allowed():
             self._update_retreats()
 
         # Run one tick
-        result = self._service.update()
-
-        # Check for completion
-        if self.is_battle_over() and self._on_battle_complete:
-            self._on_battle_complete(self.get_results())
-
-        return result
+        return self._service.update()
 
     def run_headless(
         self,
@@ -261,12 +259,8 @@ class BattleController:
         tick = 0
 
         while not self.is_battle_over():
-            # Update retreat states if allowed by mode or config
-            if self._retreat_allowed():
-                self._update_retreats()
-
-            # Run one tick
-            self._service.update()
+            # Use self.update() so per_tick_callback and retreat logic both run
+            self.update()
             tick += 1
 
             # Progress callback

@@ -13,16 +13,24 @@ from game.core.constants import SimulationConstants
 if TYPE_CHECKING:
     from game.simulation.systems.battle_end_conditions import IEndCondition
 
-# PROJ-113: Removed TYPE_CHECKING import from test_framework to fix layer violation.
-# CombatScenario type hint replaced with Any - test_framework is not part of game layers.
-
 
 class BattleMode(Enum):
-    """Types of battle execution modes."""
+    """Types of battle execution modes.
+
+    Used as a label for logging and UI display, NOT as a behavior switch.
+    All battle behavior is configured through BattleConfig fields.
+    """
     MANUAL = "manual"           # Battle Setup screen
     TEST = "test"               # Combat Lab
     STRATEGY = "strategy"       # Strategy layer fleet combat
     HYPOTHETICAL = "hypothetical"  # Planning simulations (isolated)
+
+
+class ReturnDestination(Enum):
+    """Where to navigate after the battle ends."""
+    BATTLE_SETUP = "battle_setup"
+    TEST_LAB = "test_lab"
+    STRATEGY = "strategy"
 
 
 def _default_end_condition() -> 'IEndCondition':
@@ -32,27 +40,43 @@ def _default_end_condition() -> 'IEndCondition':
 
 @dataclass
 class BattleConfig:
-    """Configuration for a battle instance."""
+    """Configuration for a battle instance.
+
+    The battle simulator is a pure engine — it receives ships, runs the
+    simulation, and reports results. BattleConfig contains ONLY data
+    that the simulator needs. Caller-specific concerns (test validation,
+    fleet updates) are handled by the caller after the battle.
+    """
     mode: BattleMode = BattleMode.MANUAL
     seed: Optional[int] = None
     end_condition: Any = field(default_factory=_default_end_condition)
     absolute_max_ticks: int = SimulationConstants.ABSOLUTE_MAX_TICKS
 
-    # Mode-specific options
+    # Entry/exit
+    return_destination: ReturnDestination = ReturnDestination.BATTLE_SETUP
+    show_results: bool = True
+
+    # Simulation options
     headless: bool = False
     start_paused: bool = False
     enable_logging: bool = True
+
+    # Battle features — available to ALL modes
     allow_retreat: bool = False
     allow_reinforcements: bool = False
+    environmental_effects: Optional[Any] = None
 
-    # For test mode (CombatScenario from test_framework)
-    test_scenario: Optional[Any] = None
+    # Temporary: per-tick callback for test scenarios that inject AI commands.
+    # Will be removed when test scenarios migrate to AI strategy assignments.
+    per_tick_callback: Optional[Any] = None
 
-    # For strategy mode
-    source_fleets: Optional[Tuple[Any, Any]] = None
+    # Ship isolation (clone ships to prevent mutation of originals)
+    isolated: bool = True
 
-    # For hypothetical mode
-    isolated: bool = True  # Never mutate source ships
+    # Caller metadata — stored on config for callers to read back after battle.
+    # The simulator does NOT use these fields.
+    test_scenario: Optional[Any] = None   # Combat Lab: scenario with validate()
+    source_fleets: Optional[Tuple[Any, Any]] = None  # Strategy: fleet references
 
     # Map bounds for retreat calculations
     map_bounds: Tuple[float, float, float, float] = (

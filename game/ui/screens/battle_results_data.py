@@ -58,15 +58,18 @@ class BattleResults:
     duration_seconds: float
     teams: List[TeamSummary]
     ships: List[ShipResult]
-    is_test_mode: bool
+    return_destination: str = "battle_setup"
 
 
-def extract_battle_results(engine: Any, is_test_mode: bool) -> BattleResults:
+def extract_battle_results(
+    engine: Any,
+    return_destination: str = "battle_setup"
+) -> BattleResults:
     """Extract battle results from engine state.
 
     Args:
         engine: BattleEngine instance with completed battle
-        is_test_mode: Whether this was a Combat Lab test
+        return_destination: Where to navigate after results screen
 
     Returns:
         BattleResults with all ship and team statistics
@@ -103,7 +106,7 @@ def extract_battle_results(engine: Any, is_test_mode: bool) -> BattleResults:
         duration_seconds=engine.tick_counter * PhysicsConfig.TICK_RATE,
         teams=teams,
         ships=ship_results,
-        is_test_mode=is_test_mode,
+        return_destination=return_destination,
     )
 
 

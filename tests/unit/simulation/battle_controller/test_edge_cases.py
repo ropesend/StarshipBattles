@@ -344,33 +344,14 @@ class TestCallbackEdgeCases:
 
         callback.assert_not_called()
 
-    def test_completion_callback_receives_results(self, controller, basic_config, mock_service):
-        """Completion callback receives BattleResults object."""
+    def test_update_delegates_to_service(self, controller, basic_config, mock_service):
+        """update() delegates to service.update()."""
         controller.configure(basic_config)
         controller.start()
 
-        callback = Mock()
-        controller.set_on_battle_complete(callback)
+        controller.update()
 
-        mock_engine = Mock()
-        mock_engine.ships = []
-        mock_engine.projectiles = []
-        mock_engine.tick_counter = 100
-        mock_service.get_engine.return_value = mock_engine
-        mock_service.is_battle_over.return_value = True
-        mock_service.get_winner.return_value = 0
-
-        with patch('game.simulation.battle_controller.BattleState') as MockState:
-            mock_state = Mock()
-            mock_state.ships = {}
-            MockState.capture_from_engine.return_value = mock_state
-
-            controller.update()
-
-            callback.assert_called_once()
-            results = callback.call_args[0][0]
-            assert hasattr(results, 'winner')
-            assert hasattr(results, 'tick_count')
+        mock_service.update.assert_called_once()
 
     def test_escaped_callback_set_on_retreat_manager(self, controller, mock_service):
         """On_ship_escaped callback is passed to retreat manager."""

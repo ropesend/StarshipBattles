@@ -10,13 +10,10 @@ from game.core.constants import AttackType
 
 logger = logging.getLogger(__name__)
 from game.ui.config import UIConfig
-from game.ui.fonts import get_font
 from game.ui.panels.battle_panels import ShipStatsPanel, SeekerMonitorPanel, BattleControlPanel
 from game.ui.colors import (
     GRID_BG_BATTLE, DEBUG_TARGET_LINE, DEBUG_WEAPON_RANGE, DEBUG_AIM_POINT,
-    DEBUG_FIRING_ARC, BTN_RETURN_BG, BTN_RETURN_HOVER, WHITE,
-    TEST_COMPLETE_PASSED, TEST_COMPLETE_FAILED, TEST_COMPLETE_NEUTRAL,
-    RESULT_WIN, RESULT_DRAW, BLACK
+    DEBUG_FIRING_ARC,
 )
 
 class BattleUI:
@@ -84,32 +81,10 @@ class BattleUI:
         self.seeker_panel.draw(screen)
         self.control_panel.draw(screen)
 
-        # Draw "Return to Combat Lab" button if battle is over in test mode
-        if self.scene.is_battle_over():
-            logger.debug(f"Battle is over. test_mode={self.scene.test_mode}")
-            if self.scene.test_mode:
-                self._draw_return_button(screen)
-            else:
-                logger.debug(f"Not drawing Combat Lab button because test_mode=False")
-
     def handle_click(self, mx, my, button):
         """Handle mouse clicks. Returns True if click was handled."""
 
-        logger.debug(f"BattleUI.handle_click at ({mx}, {my})")
-        logger.debug(f"test_mode={self.scene.test_mode}, battle_over={self.scene.is_battle_over()}")
-
-        # Check "Return to Combat Lab" button first (highest priority)
-        if self.scene.test_mode and self.scene.is_battle_over():
-            button_rect = self._get_return_button_rect()
-            logger.debug(f"Return button rect: {button_rect}")
-            if button_rect.collidepoint(mx, my):
-                logger.debug(f"Return to Combat Lab button clicked!")
-                return "end_battle"  # Route through results screen
-            else:
-                logger.debug(f"Click was not on return button")
-
-        # Control Panel (Buttons usually top priority or overlay)
-        # Check control panel first (e.g. End Battle button)
+        # Control Panel (End Battle / View Results button)
         res = self.control_panel.handle_click(mx, my)
         if res:
             return res
@@ -229,73 +204,3 @@ class BattleUI:
                     # Arc drawing can fail with invalid rect dimensions (e.g., negative or zero)
                     logger.debug(f"Arc drawing failed for ship {s.name}: {e}")
 
-    def _get_return_button_rect(self):
-        """Get the rect for the Return to Combat Lab button."""
-        button_width = 300
-        button_height = 60
-        x = (self.width - button_width) // 2
-        y = (self.height - button_height) // 2
-        return pygame.Rect(x, y, button_width, button_height)
-
-    def _draw_return_button(self, screen):
-        """Draw the Return to Combat Lab button (shown when test completes)."""
-        logger.debug(f"Drawing Return to Combat Lab button (test_mode={self.scene.test_mode}, battle_over={self.scene.is_battle_over()})")
-        button_rect = self._get_return_button_rect()
-
-        # Check hover state
-        mx, my = pygame.mouse.get_pos()
-        is_hovered = button_rect.collidepoint(mx, my)
-
-        # Draw button
-        color = BTN_RETURN_HOVER if is_hovered else BTN_RETURN_BG
-        pygame.draw.rect(screen, color, button_rect, border_radius=8)
-        pygame.draw.rect(screen, WHITE, button_rect, 3, border_radius=8)
-
-        # Draw text
-        font = get_font(28, bold=True)
-        text = font.render("Return to Combat Lab", True, WHITE)
-        text_rect = text.get_rect(center=button_rect.center)
-        screen.blit(text, text_rect)
-
-        # Draw "TEST COMPLETE" indicator above button
-        complete_font = get_font(56, bold=True)
-
-        # Color based on test pass/fail
-        if hasattr(self.scene, 'test_scenario') and self.scene.test_scenario:
-            if self.scene.test_scenario.passed:
-                complete_text = "TEST COMPLETE - PASSED"
-                complete_color = TEST_COMPLETE_PASSED
-            else:
-                complete_text = "TEST COMPLETE - FAILED"
-                complete_color = TEST_COMPLETE_FAILED
-        else:
-            complete_text = "TEST COMPLETE"
-            complete_color = TEST_COMPLETE_NEUTRAL
-
-        complete_surface = complete_font.render(complete_text, True, complete_color)
-        complete_rect = complete_surface.get_rect(center=(button_rect.centerx, button_rect.top - 120))
-
-        # Draw background for text
-        bg_rect = complete_rect.inflate(40, 20)
-        pygame.draw.rect(screen, (*BLACK, 200), bg_rect, border_radius=10)
-        pygame.draw.rect(screen, complete_color, bg_rect, 3, border_radius=10)
-        screen.blit(complete_surface, complete_rect)
-
-        # Draw battle result above button
-        winner = self.scene.get_winner()
-        result_text = ""
-        result_color = WHITE
-        if winner == 0:
-            result_text = "TEAM 0 WINS!"
-            result_color = RESULT_WIN
-        elif winner == 1:
-            result_text = "TEAM 1 WINS!"
-            result_color = RESULT_WIN
-        else:
-            result_text = "DRAW!"
-            result_color = RESULT_DRAW
-
-        result_font = get_font(48, bold=True)
-        result_surface = result_font.render(result_text, True, result_color)
-        result_rect = result_surface.get_rect(center=(button_rect.centerx, button_rect.top - 60))
-        screen.blit(result_surface, result_rect)

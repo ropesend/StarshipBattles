@@ -509,10 +509,12 @@ class Game:
         logger.debug("Race setup cancelled")
 
     def start_battle(self, team1_ships, team2_ships, headless=False):
-        """Start a battle with the given ships."""
+        """Start a battle with the given ships using unified controller flow."""
+        from game.ui.services.battle_factories import create_manual_battle
         if self.battle_scene.screen_width != self.width or self.battle_scene.screen_height != self.height:
             self.battle_scene.handle_resize(self.width, self.height)
-        self.battle_scene.start(team1_ships, team2_ships, headless=headless)
+        controller = create_manual_battle(team1_ships, team2_ships, headless=headless)
+        self.battle_scene.start_battle(controller)
         self._switch_scene(GameState.BATTLE, self.battle_scene)
 
     def run(self):
@@ -603,19 +605,12 @@ class Game:
         self.active_scene.handle_resize(w, h)
 
     def _handle_battle_action(self, action: str, **kwargs):
-        """Handle scene actions from BattleScreen or BattleResultsScreen."""
-        if action == "return_to_test_lab":
-            logger.debug("Returning to Combat Lab from test")
-            self.battle_scene.test_mode = False
-            self.test_lab_scene.reset_selection()
-            self.start_test_lab()
-        elif action == "return_to_setup":
-            logger.debug("Returning to battle setup")
-            if self.return_state == GameState.TEST_LAB:
-                self.start_test_lab()
-            else:
-                self.start_battle_setup(preserve_teams=True)
-        elif action == "show_results":
+        """Handle scene actions from BattleScreen or BattleResultsScreen.
+
+        Unified routing: all battle exits go through 'show_results' or
+        'return_to_destination'. The destination is data, not code branches.
+        """
+        if action == "show_results":
             results = kwargs.get("results")
             if results:
                 from game.ui.screens.battle_results_screen import BattleResultsScreen
@@ -625,6 +620,25 @@ class Game:
                 )
                 self.active_scene = results_screen
                 logger.info("Showing battle results screen")
+        elif action == "return_to_destination":
+            dest = kwargs.get("destination", "battle_setup")
+            self._return_to(dest)
+        # Legacy actions (kept temporarily for callers not yet migrated)
+        elif action == "return_to_test_lab":
+            self._return_to("test_lab")
+        elif action == "return_to_setup":
+            self._return_to("battle_setup")
+
+    def _return_to(self, destination: str):
+        """Navigate to the specified destination after a battle."""
+        logger.debug(f"Returning to: {destination}")
+        if destination == "test_lab":
+            self.test_lab_scene.reset_selection()
+            self.start_test_lab()
+        elif destination == "battle_setup":
+            self.start_battle_setup(preserve_teams=True)
+        elif destination == "strategy":
+            self._switch_scene(GameState.STRATEGY, self.strategy_scene)
 
     def _handle_strategy_action(self, action: str, **kwargs):
         """Handle scene actions from StrategyScreen."""

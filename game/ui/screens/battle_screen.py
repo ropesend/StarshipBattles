@@ -128,7 +128,46 @@ class BattleScreen:
         # Font for HUD (no lazy-init needed - get_font() is cached)
         self._hud_font = get_font(20)
 
-    # === Controller Integration ===
+    # === Unified Entry Point ===
+
+    def start_battle(self, controller: 'BattleController') -> None:
+        """Start a battle using a configured BattleController.
+
+        This is the SINGLE entry point for all battle modes. The controller
+        must be fully configured and started before calling this method.
+
+        Args:
+            controller: Configured and started BattleController
+        """
+        self._controller = controller
+        self._battle_service = controller.service
+        self._ui_service = BattleUIService(self._battle_service)
+
+        # Reset visual state
+        self.beams = []
+        self.hit_effects = []
+        self.sim_tick_counter = 0
+        self.sim_speed_multiplier = 1.0
+        self._accumulator = 0.0
+
+        config = controller.config
+        self.sim_paused = config.start_paused if config else False
+
+        # Subscribe to combat events for visual effects
+        self._subscribe_combat_events()
+
+        # Reset UI
+        self.ui.expanded_ships = set()
+        self.ui.stats_scroll_offset = 0
+
+        # Fit camera to ships
+        headless = config.headless if config else False
+        if not headless and self.ships:
+            self.camera.fit_objects(self.ships)
+
+        logger.info(f"Battle started via unified entry: {len(self.ships)} ships")
+
+    # === Legacy Controller Integration (to be removed) ===
 
     def set_controller(self, controller: 'BattleController') -> None:
         """
@@ -337,7 +376,7 @@ class BattleScreen:
             if isinstance(result, tuple) and result[0] == "focus_ship":
                 self.camera.target = result[1]
             elif result == "end_battle":
-                self._show_results()
+                self._on_battle_ended()
             elif not result and event.button == 1:
                 self.camera.target = None
         elif event.type == pygame.MOUSEWHEEL:
@@ -384,18 +423,10 @@ class BattleScreen:
         for _ in range(1000):
             self._run_single_tick()
 
-            tick_limit_reached = self.sim_tick_counter >= 3000000
-
-            if self.is_battle_over() or tick_limit_reached:
+            if self.is_battle_over():
                 self.print_headless_summary()
                 self.engine.shutdown()
-                self.headless_mode = False
-
-                if self.test_mode:
-                    logger.debug("Headless test complete, returning to Combat Lab")
-                    self._trigger_return_to_test_lab()
-                else:
-                    self._trigger_return_to_setup()
+                self._on_battle_ended()
                 return
 
         # Progress indicator
@@ -449,55 +480,22 @@ class BattleScreen:
 
     def _run_single_tick(self):
         """Run a single simulation tick."""
-        # Check if test scenario has completed
-        if self.test_mode and self.test_scenario and not self.test_completed:
-            self.test_tick_count += 1
+        if self.engine.is_battle_over():
+            return
 
-            # Call scenario's update method
-            self.test_scenario.update(self.engine)
-
-            # Check if test should end (engine handles all end conditions)
-            if self.engine.is_battle_over():
-                # Test complete - verify results and populate results dict
-                logger.debug(f"Test complete! ticks={self.test_tick_count}")
-
-                # Populate results dict (similar to headless mode)
-                if not hasattr(self.test_scenario, 'results') or not self.test_scenario.results:
-                    self.test_scenario.results = {}
-                self.test_scenario.results['ticks_run'] = self.test_tick_count
-                self.test_scenario.results['ticks'] = self.test_tick_count  # Alias for consistency
-
-                # Validate results (new system) or verify (legacy fallback)
-                try:
-                    report = self.test_scenario._run_validation(self.engine)
-                    self.test_scenario.passed = report.passed
-                except NotImplementedError:
-                    self.test_scenario.passed = self.test_scenario.verify(self.engine)
-                logger.debug(f"Test {'PASSED' if self.test_scenario.passed else 'FAILED'}")
-                logger.debug(f"Results populated: {list(self.test_scenario.results.keys())}")
-
-                # Log test execution (for UI vs headless comparison)
-                try:
-                    from test_framework.runner import TestRunner
-                    runner = TestRunner()
-                    runner.log_test_execution(self.test_scenario, headless=False)
-                except (ImportError, AttributeError, OSError) as e:
-                    logger.warning(f"Failed to log UI test execution: {e}")
-
-                # Signal test completion (keep scenario reference for results retrieval)
-                self.test_completed = True
-                return  # Don't update engine anymore
-
-        if not self.engine.is_battle_over():
-            self.sim_tick_counter = self.engine.tick_counter + 1  # Sync tick counter
-            # Delegated Update
+        # Delegate to controller if available, else direct engine update
+        if self._controller:
+            self._controller.update()
+        else:
             self.engine.update()
 
-            # Sync Beams for Visuals
-            for b in self.engine.recent_beams:
-                b_visual = b.copy()
-                b_visual['timer'] = 0.15
-                self.beams.append(b_visual)
+        self.sim_tick_counter = self.engine.tick_counter
+
+        # Sync Beams for Visuals
+        for b in self.engine.recent_beams:
+            b_visual = b.copy()
+            b_visual['timer'] = 0.15
+            self.beams.append(b_visual)
 
     def _update_visual_effects(self, dt: float):
         """Update visual effects like beams, hit effects, and camera."""
@@ -524,13 +522,28 @@ class BattleScreen:
             self.tick_rate_count = 0
             self.tick_rate_timer = 0.0
 
-    def _show_results(self):
-        """Extract results and transition to results screen."""
+    def _on_battle_ended(self):
+        """Unified exit path for all battle modes.
+
+        Routes to results screen or directly to destination based on config.
+        """
         from game.ui.screens.battle_results_data import extract_battle_results
-        results = extract_battle_results(self.engine, is_test_mode=self.test_mode)
-        self._battle_service.reset()
-        if self.scene_callback:
-            self.scene_callback("show_results", results=results)
+
+        config = self._controller.config if self._controller else None
+        dest = config.return_destination.value if config else "battle_setup"
+        show = config.show_results if config else True
+
+        if show:
+            results = extract_battle_results(self.engine, return_destination=dest)
+            self._battle_service.reset()
+            if self.scene_callback:
+                self.scene_callback("show_results",
+                    results=results,
+                    return_destination=dest)
+        else:
+            self._battle_service.reset()
+            if self.scene_callback:
+                self.scene_callback("return_to_destination", destination=dest)
 
     def _trigger_return_to_setup(self):
         """Trigger return to setup via scene_callback."""
