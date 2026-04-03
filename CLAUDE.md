@@ -296,8 +296,7 @@ When faced with choices, prefer:
 - **CLI parallel workers:** 12 (`-n 12`)
 - **VS Code Test Explorer:** Use 4 workers (higher breaks the integrated test panel)
 - **Test monitor:** `--testmon` for incremental runs
-- **Baseline:** 14084 passed, 0 skipped
-- **Simulation test baseline:** 118 passed, 1 failed (RESOURCE-002), 0 skipped (119 total)
+- **Baseline:** 14103 passed, 0 skipped
 
 ---
 
