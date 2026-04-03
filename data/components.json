@@ -2869,8 +2869,8 @@
             }
         },
         {
-            "id": "planetary_shield_generator",
-            "name": "Planetary Shield Generator",
+            "id": "geologic_stabilizer_sector",
+            "name": "Sector Geologic Stabilizer",
             "type": "PlanetaryDefense",
             "mass": 500,
             "hp": 300,
@@ -2880,12 +2880,11 @@
             ],
             "sprite_index": 0,
             "abilities": {
-                "PlanetaryShield": {
+                "GeologicStabilizer": {
                     "energy_drain_rate": 25.0,
                     "activation_time": 50,
                     "deactivation_time": 10,
-                    "shield_hp": 0,
-                    "shield_regen": 0
+                    "scope": "sector"
                 }
             },
             "major_classification": "Defense",
@@ -2894,6 +2893,258 @@
                 "exotics": 200,
                 "radioactives": 100
             }
+        },
+        {
+            "id": "geologic_stabilizer_system",
+            "name": "System Geologic Stabilizer",
+            "type": "PlanetaryDefense",
+            "mass": 800,
+            "hp": 500,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 0,
+            "abilities": {
+                "GeologicStabilizer": {
+                    "energy_drain_rate": 50.0,
+                    "activation_time": 75,
+                    "deactivation_time": 15,
+                    "scope": "system"
+                }
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "metals": 1000,
+                "exotics": 500,
+                "radioactives": 300,
+                "vapors": 200
+            }
+        },
+        {
+            "id": "harvest_booster_metals_planet",
+            "name": "Metals Refinery (Planet)",
+            "type": "ResourceBooster",
+            "mass": 300,
+            "hp": 200,
+            "allowed_vehicle_types": ["Planetary Complex", "Drop Pod"],
+            "sprite_index": 0,
+            "abilities": {
+                "ResourceHarvestBooster": {
+                    "resource_type": "metals",
+                    "multiplier": 1.5,
+                    "scope": "planet",
+                    "stack_group": "harvest_boost_metals_planet"
+                }
+            },
+            "major_classification": "Production",
+            "resource_cost": {"metals": 800, "organics": 100, "vapors": 200}
+        },
+        {
+            "id": "harvest_booster_organics_planet",
+            "name": "Organics Refinery (Planet)",
+            "type": "ResourceBooster",
+            "mass": 300,
+            "hp": 200,
+            "allowed_vehicle_types": ["Planetary Complex", "Drop Pod"],
+            "sprite_index": 0,
+            "abilities": {
+                "ResourceHarvestBooster": {
+                    "resource_type": "organics",
+                    "multiplier": 1.5,
+                    "scope": "planet",
+                    "stack_group": "harvest_boost_organics_planet"
+                }
+            },
+            "major_classification": "Production",
+            "resource_cost": {"metals": 600, "organics": 300, "vapors": 200}
+        },
+        {
+            "id": "harvest_booster_vapors_planet",
+            "name": "Vapors Refinery (Planet)",
+            "type": "ResourceBooster",
+            "mass": 300,
+            "hp": 200,
+            "allowed_vehicle_types": ["Planetary Complex", "Drop Pod"],
+            "sprite_index": 0,
+            "abilities": {
+                "ResourceHarvestBooster": {
+                    "resource_type": "vapors",
+                    "multiplier": 1.5,
+                    "scope": "planet",
+                    "stack_group": "harvest_boost_vapors_planet"
+                }
+            },
+            "major_classification": "Production",
+            "resource_cost": {"metals": 700, "organics": 100, "vapors": 400}
+        },
+        {
+            "id": "harvest_booster_radioactives_planet",
+            "name": "Radioactives Refinery (Planet)",
+            "type": "ResourceBooster",
+            "mass": 400,
+            "hp": 250,
+            "allowed_vehicle_types": ["Planetary Complex", "Drop Pod"],
+            "sprite_index": 0,
+            "abilities": {
+                "ResourceHarvestBooster": {
+                    "resource_type": "radioactives",
+                    "multiplier": 1.5,
+                    "scope": "planet",
+                    "stack_group": "harvest_boost_radioactives_planet"
+                }
+            },
+            "major_classification": "Production",
+            "resource_cost": {"metals": 900, "radioactives": 400, "vapors": 200}
+        },
+        {
+            "id": "harvest_booster_exotics_planet",
+            "name": "Exotics Refinery (Planet)",
+            "type": "ResourceBooster",
+            "mass": 500,
+            "hp": 300,
+            "allowed_vehicle_types": ["Planetary Complex", "Drop Pod"],
+            "sprite_index": 0,
+            "abilities": {
+                "ResourceHarvestBooster": {
+                    "resource_type": "exotics",
+                    "multiplier": 1.5,
+                    "scope": "planet",
+                    "stack_group": "harvest_boost_exotics_planet"
+                }
+            },
+            "major_classification": "Production",
+            "resource_cost": {"metals": 1200, "exotics": 300, "radioactives": 200, "vapors": 300}
+        },
+        {
+            "id": "harvest_booster_metals_system",
+            "name": "Metals Processing Hub (System)",
+            "type": "ResourceBooster",
+            "mass": 600,
+            "hp": 400,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "ResourceHarvestBooster": {
+                    "resource_type": "metals",
+                    "multiplier": 1.3,
+                    "scope": "system",
+                    "stack_group": "harvest_boost_metals_system"
+                }
+            },
+            "major_classification": "Production",
+            "resource_cost": {"metals": 1500, "organics": 200, "vapors": 400, "exotics": 100}
+        },
+        {
+            "id": "harvest_booster_organics_system",
+            "name": "Organics Processing Hub (System)",
+            "type": "ResourceBooster",
+            "mass": 600,
+            "hp": 400,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "ResourceHarvestBooster": {
+                    "resource_type": "organics",
+                    "multiplier": 1.3,
+                    "scope": "system",
+                    "stack_group": "harvest_boost_organics_system"
+                }
+            },
+            "major_classification": "Production",
+            "resource_cost": {"metals": 1200, "organics": 600, "vapors": 400, "exotics": 100}
+        },
+        {
+            "id": "harvest_booster_vapors_system",
+            "name": "Vapors Processing Hub (System)",
+            "type": "ResourceBooster",
+            "mass": 600,
+            "hp": 400,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "ResourceHarvestBooster": {
+                    "resource_type": "vapors",
+                    "multiplier": 1.3,
+                    "scope": "system",
+                    "stack_group": "harvest_boost_vapors_system"
+                }
+            },
+            "major_classification": "Production",
+            "resource_cost": {"metals": 1400, "organics": 200, "vapors": 800, "exotics": 100}
+        },
+        {
+            "id": "harvest_booster_radioactives_system",
+            "name": "Radioactives Processing Hub (System)",
+            "type": "ResourceBooster",
+            "mass": 700,
+            "hp": 450,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "ResourceHarvestBooster": {
+                    "resource_type": "radioactives",
+                    "multiplier": 1.3,
+                    "scope": "system",
+                    "stack_group": "harvest_boost_radioactives_system"
+                }
+            },
+            "major_classification": "Production",
+            "resource_cost": {"metals": 1800, "radioactives": 800, "vapors": 400, "exotics": 200}
+        },
+        {
+            "id": "harvest_booster_exotics_system",
+            "name": "Exotics Processing Hub (System)",
+            "type": "ResourceBooster",
+            "mass": 800,
+            "hp": 500,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "ResourceHarvestBooster": {
+                    "resource_type": "exotics",
+                    "multiplier": 1.3,
+                    "scope": "system",
+                    "stack_group": "harvest_boost_exotics_system"
+                }
+            },
+            "major_classification": "Production",
+            "resource_cost": {"metals": 2000, "exotics": 600, "radioactives": 400, "vapors": 500}
+        },
+        {
+            "id": "build_rate_booster_sector",
+            "name": "Sector Construction Accelerator",
+            "type": "ProductionBooster",
+            "mass": 400,
+            "hp": 300,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "BuildRateBooster": {
+                    "multiplier": 1.25,
+                    "scope": "sector",
+                    "stack_group": "build_boost_sector"
+                }
+            },
+            "major_classification": "Production",
+            "resource_cost": {"metals": 1000, "organics": 200, "vapors": 300, "exotics": 150}
+        },
+        {
+            "id": "build_rate_booster_system",
+            "name": "System Construction Accelerator",
+            "type": "ProductionBooster",
+            "mass": 700,
+            "hp": 500,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "BuildRateBooster": {
+                    "multiplier": 1.1,
+                    "scope": "system",
+                    "stack_group": "build_boost_system"
+                }
+            },
+            "major_classification": "Production",
+            "resource_cost": {"metals": 1500, "organics": 300, "vapors": 500, "radioactives": 200, "exotics": 250}
         }
     ]
 }

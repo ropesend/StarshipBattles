@@ -156,13 +156,13 @@ class SuperweaponOrderProcessor:
             fleet.pop_order()
             return SuperweaponResult(success=False, message="No target planet")
 
-        # PROJ-237: Check for active planetary shield
-        if getattr(target_planet, 'shield_active', False) is True:
-            logger.info(f"Planet {target_planet.name} protected by planetary shield, canceling IMPLODE_PLANET")
+        # Check for geologic stabilizer protection (replaces old shield_active check)
+        if self._is_planet_stabilized(target_planet, galaxy, empires):
+            logger.info(f"Planet {target_planet.name} protected by geologic stabilizer, canceling IMPLODE_PLANET")
             fleet.pop_order()
             return SuperweaponResult(
                 success=False,
-                message=f"Planet {target_planet.name} is protected by a planetary shield"
+                message=f"Planet {target_planet.name} is protected by a geologic stabilizer"
             )
 
         # Find ship with DestroyPlanet ability
@@ -665,3 +665,31 @@ class SuperweaponOrderProcessor:
             fleet_consumed=fleet_consumed,
             message=f"{len(ships_to_remove)} ships self-destructed"
         )
+
+    def _is_planet_stabilized(
+        self, target_planet, galaxy, empires: List['Empire']
+    ) -> bool:
+        """Check if a planet is protected by any active GeologicStabilizer.
+
+        Scans for stabilizers at PLANET, SECTOR, and SYSTEM scope from any
+        empire's facilities. A stabilizer on any empire's colony can protect
+        any planet in its scope.
+
+        Args:
+            target_planet: The planet being targeted by a superweapon.
+            galaxy: Galaxy for spatial queries.
+            empires: All empires to scan for stabilizers.
+
+        Returns:
+            True if any active stabilizer protects this planet.
+        """
+        from game.strategy.services.strategic_ability_scanner import find_abilities_in_scope
+
+        for empire in empires:
+            for scope in ["planet", "sector", "system"]:
+                stabilizers = find_abilities_in_scope(
+                    "GeologicStabilizer", target_planet, galaxy, empire, scope
+                )
+                if stabilizers:
+                    return True
+        return False

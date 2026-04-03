@@ -69,7 +69,10 @@ from .weapons import (
 from .harvester import ResourceHarvesterAbility, SpaceShipyardAbility, LocalStorageAbility, PlanetaryYardAbility, StagingYardAbility
 
 # Planetary abilities (PROJ-237)
-from .planetary import PlanetaryShieldAbility, StrategicResourceGenerationAbility
+from .planetary import (
+    PlanetaryShieldAbility, StrategicResourceGenerationAbility,
+    GeologicStabilizerAbility, ResourceHarvestBoosterAbility, BuildRateBoosterAbility,
+)
 
 # --- Registry ---
 
@@ -110,6 +113,9 @@ ABILITY_REGISTRY = {
     # Planetary & strategic abilities (PROJ-237/238)
     "PlanetaryShield": PlanetaryShieldAbility,
     "StrategicResourceGeneration": StrategicResourceGenerationAbility,
+    "GeologicStabilizer": GeologicStabilizerAbility,
+    "ResourceHarvestBooster": ResourceHarvestBoosterAbility,
+    "BuildRateBooster": BuildRateBoosterAbility,
     # Superweapon abilities
     "DestroyPlanet": DestroyPlanet,
     "DestroyStar": DestroyStar,
@@ -186,6 +192,9 @@ __all__ = [
     # Planetary & strategic (PROJ-237/238)
     'PlanetaryShieldAbility',
     'StrategicResourceGenerationAbility',
+    'GeologicStabilizerAbility',
+    'ResourceHarvestBoosterAbility',
+    'BuildRateBoosterAbility',
     # Superweapons
     'DestroyPlanet',
     'DestroyStar',

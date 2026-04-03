@@ -125,10 +125,10 @@ class TestHarvestingIntegration:
 
         # Should be called 100 times (once per tick)
         assert mock_harvesting.process_harvesting_tick.call_count == 100
-        # Each call should have (tick, [empire])
+        # Each call should have (tick, [empire], galaxy)
         for call in mock_harvesting.process_harvesting_tick.call_args_list:
-            tick, empires = call[0]
-            assert empires == [empire]
+            args = call[0]
+            assert args[1] == [empire]  # empires is second arg
 
     def test_harvesting_extracts_resources_end_to_end(self, fresh_registries):
         """Full E2E: facility harvests from planet into colony stockpile."""
@@ -172,7 +172,7 @@ class TestHarvestingIntegration:
         production_ticks = []
 
         mock_harvesting = MagicMock()
-        mock_harvesting.process_harvesting_tick.side_effect = lambda t, e: harvesting_ticks.append(t)
+        mock_harvesting.process_harvesting_tick.side_effect = lambda t, e, g=None: harvesting_ticks.append(t)
 
         mocks = _make_mock_engines()
         mocks['production_engine'].process_construction_tick.side_effect = lambda t, e, g, **kw: production_ticks.append(t)
