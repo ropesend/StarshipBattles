@@ -317,7 +317,7 @@ class TestOpenWarpPointIntegration:
         # Process the superweapon order
         processor = SuperweaponOrderProcessor()
         result = processor.process_open_warp_point(
-            fleet, empire, galaxy, component_registry
+            fleet, empire, galaxy, component_registry=component_registry
         )
 
         # Verify result
@@ -389,7 +389,7 @@ class TestCloseWarpPointIntegration:
         # Process the superweapon order
         processor = SuperweaponOrderProcessor()
         result = processor.process_close_warp_point(
-            fleet, empire, galaxy, component_registry
+            fleet, empire, galaxy, component_registry=component_registry
         )
 
         # Verify result

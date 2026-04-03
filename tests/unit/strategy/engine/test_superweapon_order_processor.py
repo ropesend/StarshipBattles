@@ -401,7 +401,7 @@ class TestProcessOpenWarpPoint:
 
         # Act
         processor.process_open_warp_point(
-            mock_fleet, empire, mock_galaxy, component_registry
+            mock_fleet, empire, mock_galaxy, component_registry=component_registry
         )
 
         # Assert - both systems should have warp points added
@@ -445,7 +445,7 @@ class TestProcessOpenWarpPoint:
 
         # Act
         processor.process_open_warp_point(
-            mock_fleet, empire, mock_galaxy, component_registry
+            mock_fleet, empire, mock_galaxy, component_registry=component_registry
         )
 
         # Assert — ship should NOT be removed
@@ -484,7 +484,7 @@ class TestProcessCloseWarpPoint:
 
         # Act
         processor.process_close_warp_point(
-            mock_fleet, empire, mock_galaxy, component_registry
+            mock_fleet, empire, mock_galaxy, component_registry=component_registry
         )
 
         # Assert
@@ -519,7 +519,7 @@ class TestProcessCloseWarpPoint:
 
         # Act
         processor.process_close_warp_point(
-            mock_fleet, empire, mock_galaxy, component_registry
+            mock_fleet, empire, mock_galaxy, component_registry=component_registry
         )
 
         # Assert — ship should NOT be removed
@@ -555,7 +555,7 @@ class TestProcessCloseWarpPoint:
 
         # Act
         result = processor.process_close_warp_point(
-            mock_fleet, empire, mock_galaxy, component_registry
+            mock_fleet, empire, mock_galaxy, component_registry=component_registry
         )
 
         # Assert — order rejected, warp link NOT removed
@@ -1054,7 +1054,7 @@ class TestNoShipFallback:
         with patch('game.strategy.engine.superweapon_order_processor.SuperweaponValidator.find_ship_with_ability', return_value=None), \
              patch('game.strategy.engine.superweapon_order_processor.get_system_at_hex', return_value=mock_system):
             result = processor.process_open_warp_point(
-                mock_fleet, empire, mock_galaxy, component_registry
+                mock_fleet, empire, mock_galaxy, component_registry=component_registry
             )
 
         # Assert

@@ -691,10 +691,10 @@ class OrderProcessor:
                 fleet, empire, galaxy, empires or [], component_registry
             ),
             OrderType.OPEN_WARP_POINT: lambda: proc.process_open_warp_point(
-                fleet, empire, galaxy, component_registry
+                fleet, empire, galaxy, empires or [], component_registry
             ),
             OrderType.CLOSE_WARP_POINT: lambda: proc.process_close_warp_point(
-                fleet, empire, galaxy, component_registry
+                fleet, empire, galaxy, empires or [], component_registry
             ),
             OrderType.CREATE_DYSON_SPHERE: lambda: proc.process_create_dyson_sphere(
                 fleet, empire, galaxy, empires or [], component_registry

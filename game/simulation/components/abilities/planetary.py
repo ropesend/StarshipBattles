@@ -175,6 +175,112 @@ class GeologicStabilizerAbility(Ability):
         ]
 
 
+class StellarStabilizerAbility(Ability):
+    """Prevents star-destroying superweapons (DestroyStar, CreateDysonSphere) within scope.
+
+    When active, blocks STELLERATE_STAR and CREATE_DYSON_SPHERE superweapon orders
+    from affecting any star in the system. Requires energy and manual activation.
+
+    Data fields:
+        energy_drain_rate: Energy consumed per turn while active
+        activation_time: Ticks required to activate
+        deactivation_time: Ticks required to deactivate
+    """
+
+    layer = AbilityLayer.STRATEGIC
+    allowed_scopes = [AbilityScope.SECTOR, AbilityScope.SYSTEM]
+    default_scope = AbilityScope.SYSTEM
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []
+
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+
+        if isinstance(data, dict):
+            self.energy_drain_rate = data.get("energy_drain_rate", 0.0)
+            self.activation_time = data.get("activation_time", 1)
+            self.deactivation_time = data.get("deactivation_time", 1)
+        else:
+            self.energy_drain_rate = 0.0
+            self.activation_time = 1
+            self.deactivation_time = 1
+
+    def get_primary_value(self) -> float:
+        return self.energy_drain_rate
+
+    def get_ui_rows(self) -> List[Dict[str, str]]:
+        return [
+            {
+                'label': 'Energy Drain',
+                'value': f'{self.energy_drain_rate:.1f}/turn',
+                'color_hint': HINT_WARP_ENERGY
+            },
+            {
+                'label': 'Scope',
+                'value': self.scope.value.replace('_', ' ').title(),
+                'color_hint': HINT_SHIELD_CAP
+            },
+            {
+                'label': 'Activation',
+                'value': f'{self.activation_time} ticks',
+                'color_hint': HINT_DEFAULT
+            },
+        ]
+
+
+class WarpFieldStabilizerAbility(Ability):
+    """Prevents warp point creation and destruction within scope.
+
+    When active, blocks OPEN_WARP_POINT and CLOSE_WARP_POINT superweapon orders
+    from affecting the system. Requires energy and manual activation.
+
+    Data fields:
+        energy_drain_rate: Energy consumed per turn while active
+        activation_time: Ticks required to activate
+        deactivation_time: Ticks required to deactivate
+    """
+
+    layer = AbilityLayer.STRATEGIC
+    allowed_scopes = [AbilityScope.SECTOR, AbilityScope.SYSTEM]
+    default_scope = AbilityScope.SYSTEM
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []
+
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+
+        if isinstance(data, dict):
+            self.energy_drain_rate = data.get("energy_drain_rate", 0.0)
+            self.activation_time = data.get("activation_time", 1)
+            self.deactivation_time = data.get("deactivation_time", 1)
+        else:
+            self.energy_drain_rate = 0.0
+            self.activation_time = 1
+            self.deactivation_time = 1
+
+    def get_primary_value(self) -> float:
+        return self.energy_drain_rate
+
+    def get_ui_rows(self) -> List[Dict[str, str]]:
+        return [
+            {
+                'label': 'Energy Drain',
+                'value': f'{self.energy_drain_rate:.1f}/turn',
+                'color_hint': HINT_WARP_ENERGY
+            },
+            {
+                'label': 'Scope',
+                'value': self.scope.value.replace('_', ' ').title(),
+                'color_hint': HINT_SHIELD_CAP
+            },
+            {
+                'label': 'Activation',
+                'value': f'{self.activation_time} ticks',
+                'color_hint': HINT_DEFAULT
+            },
+        ]
+
+
 class ResourceHarvestBoosterAbility(Ability):
     """Increases resource harvesting rate for a specific resource within scope.
 
