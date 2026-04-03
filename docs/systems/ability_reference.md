@@ -942,6 +942,142 @@ Replaces the old `PlanetaryEnergyGenerator` (PROJ-238). Old `PlanetaryEnergyStor
 
 ---
 
+### GeologicStabilizer
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `GeologicStabilizer` |
+| Class | `GeologicStabilizerAbility` |
+| Source | `planetary.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Prevents planet-destroying superweapons (IMPLODE_PLANET) within scope. Requires energy and manual activation.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `energy_drain_rate` | float | No | 0.0 | Energy per turn while active |
+| `activation_time` | int | No | 1 | Ticks to activate |
+| `deactivation_time` | int | No | 1 | Ticks to deactivate |
+| `scope` | string | No | `"sector"` | Protection range: planet, sector, system |
+
+**Allowed Scopes:** PLANET, SECTOR, SYSTEM
+
+**Stat Bindings:** None
+
+**Size mount scaling:** Production rates from `production_rates.json` are multiplied by the PlanetaryYard component's `simple_size_mount` value at runtime.
+
+---
+
+### StellarStabilizer
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `StellarStabilizer` |
+| Class | `StellarStabilizerAbility` |
+| Source | `planetary.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Prevents star-destroying superweapons (STELLERATE_STAR) and Dyson Sphere construction (CREATE_DYSON_SPHERE) within scope. Requires energy and manual activation.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `energy_drain_rate` | float | No | 0.0 | Energy per turn while active |
+| `activation_time` | int | No | 1 | Ticks to activate |
+| `deactivation_time` | int | No | 1 | Ticks to deactivate |
+| `scope` | string | No | `"system"` | Protection range: sector, system |
+
+**Allowed Scopes:** SECTOR, SYSTEM
+
+**Stat Bindings:** None
+
+---
+
+### WarpFieldStabilizer
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `WarpFieldStabilizer` |
+| Class | `WarpFieldStabilizerAbility` |
+| Source | `planetary.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Prevents warp point creation (OPEN_WARP_POINT) and destruction (CLOSE_WARP_POINT) within scope. Requires energy and manual activation.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `energy_drain_rate` | float | No | 0.0 | Energy per turn while active |
+| `activation_time` | int | No | 1 | Ticks to activate |
+| `deactivation_time` | int | No | 1 | Ticks to deactivate |
+| `scope` | string | No | `"system"` | Protection range: sector, system |
+
+**Allowed Scopes:** SECTOR, SYSTEM
+
+**Stat Bindings:** None
+
+---
+
+### ResourceHarvestBooster
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `ResourceHarvestBooster` |
+| Class | `ResourceHarvestBoosterAbility` |
+| Source | `planetary.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Increases resource harvesting rate for a specific resource within scope. Multiplies `base_harvest_rate` of matching ResourceHarvester abilities.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `resource_type` | string | No | `""` | Resource to boost (e.g., "metals") |
+| `multiplier` | float | No | 1.0 | Harvest rate multiplier (e.g., 1.5 for 50% boost) |
+| `scope` | string | No | `"planet"` | Effect range |
+| `stack_group` | string | No | None | Stacking group (intra-group MAX, inter-group MULTIPLY) |
+
+**Allowed Scopes:** SELF, PLANET, SECTOR, SYSTEM, EMPIRE, ALLIED_EMPIRE
+
+**Stat Bindings:** None
+
+---
+
+### BuildRateBooster
+
+| Field | Value |
+|-------|-------|
+| Registry Key | `BuildRateBooster` |
+| Class | `BuildRateBoosterAbility` |
+| Source | `planetary.py` |
+| Layer | STRATEGIC |
+| Base Class | `Ability` |
+
+Increases construction/production rate within scope. Multiplies all build queue production rates.
+
+**Data Format:** Dict
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `multiplier` | float | No | 1.0 | Build rate multiplier (e.g., 1.25 for 25% faster) |
+| `scope` | string | No | `"sector"` | Effect range |
+| `stack_group` | string | No | None | Stacking group |
+
+**Allowed Scopes:** SELF, PLANET, SECTOR, SYSTEM, EMPIRE, ALLIED_EMPIRE
+
+**Stat Bindings:** None
+
+---
+
 ## Superweapons
 
 All superweapons share the same structure: boolean or dict with optional `action_time`. All are STRATEGIC layer, SELF scope only.
@@ -1081,6 +1217,11 @@ Self-Destruct Device. Schedules ship for destruction.
 | `SpaceShipyard` | SpaceShipyardAbility | Harvester |
 | `PlanetaryShield` | PlanetaryShieldAbility | Planetary |
 | `StrategicResourceGeneration` | StrategicResourceGenerationAbility | Planetary |
+| `GeologicStabilizer` | GeologicStabilizerAbility | Planetary |
+| `StellarStabilizer` | StellarStabilizerAbility | Planetary |
+| `WarpFieldStabilizer` | WarpFieldStabilizerAbility | Planetary |
+| `ResourceHarvestBooster` | ResourceHarvestBoosterAbility | Planetary |
+| `BuildRateBooster` | BuildRateBoosterAbility | Planetary |
 | `DestroyPlanet` | DestroyPlanet | Superweapons |
 | `DestroyStar` | DestroyStar | Superweapons |
 | `OpenWarpPoint` | OpenWarpPoint | Superweapons |

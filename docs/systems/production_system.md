@@ -13,8 +13,8 @@ Players design items in the Workshop (ships, complexes, satellites, fighters), q
 | Context | Queue Source | Can Build | Production Rate | Requirement |
 |---------|-------------|-----------|-----------------|-------------|
 | Planet base queue | `planet.construction_queue` | Complexes only | `planetary_yard` (2000/resource/turn) | Facility with `PlanetaryYard` ability |
-| Planet shipyard facility | `facility.construction_queue` | Ships + complexes | Per-facility rate (default 3000, with bonus) | `SpaceShipyard` ability on facility |
-| Fleet space yard | `fleet.construction_queue` | Ships + complexes | `fleet_space_yard` × yard count | `SpaceShipyard` ability on fleet ship |
+| Planet shipyard facility | `facility.construction_queue` | Ships + complexes | Per-facility rate (default 30000, with bonus) | `SpaceShipyard` ability on facility |
+| Fleet space yard | `fleet.construction_queue` | Ships + complexes | `space_shipyard` rate × yard count | `SpaceShipyard` ability on fleet ship |
 
 ### User Workflow
 
@@ -216,7 +216,7 @@ Six components restricted to `"Planetary Complex"` vehicle type, defined in `dat
 Full-screen UI with three panels:
 - **Items List** (left) -- available designs filtered by category
 - **Build Queue** (center) -- VirtualTable displaying order, item name, turns, per-turn spend, and remaining cost columns (PROJ-221)
-- **Filter Panel** (right) -- category buttons (Complexes, Ships, Satellites, Fighters) plus Add/Remove
+- **Filter Panel** (right) -- category buttons (Complexes, Ships, Satellites, Fighters, Drop Pods) plus Add/Remove
 
 Accessed from the strategy screen via the "Build Yard" button on owned planets.
 

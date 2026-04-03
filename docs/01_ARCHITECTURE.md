@@ -62,7 +62,7 @@ Six layers with strict downward-only dependency flow:
 |-----------------------|-------------|
 | `math.py`             | Vector2, clamp, lerp, angle_diff |
 | `hex_math.py`         | HexCoord axial coordinate system for galaxy map |
-| `config.py`           | DisplayConfig, AIConfig, PhysicsConfig, BattleConfig |
+| `config.py`           | DisplayConfig, AIConfig, PhysicsConfig, BattleTuning |
 | `constants.py`        | GameState, LayerType, AttackType, LayerDefaults, CombatConstants |
 | `protocols.py`        | All cross-layer Protocol definitions (see Protocols section) |
 | `registry.py`         | GameRegistries container, RegistryManager singleton, DI providers |
@@ -77,6 +77,7 @@ Six layers with strict downward-only dependency flow:
 | `singleton.py`        | SingletonMeta metaclass |
 | `profiling.py`        | Profiler, profile_action for performance |
 | `strategy_metadata.py`| Strategy-layer metadata types |
+| `string_utils.py`     | String utility functions |
 | `validation_helpers.py`| Validation helper utilities |
 | `patterns/`           | `layer_iterator.py` -- generic layer iteration pattern |
 
@@ -101,7 +102,7 @@ Six layers with strict downward-only dependency flow:
 | `managers/`      | BattleStateManager, RetreatManager |
 | `interfaces/`    | Simulation-internal protocols: IAIController, IAbility, IWeaponAbility, IComponent, ICombatShip, etc. |
 | `validation/`    | ShipDesignValidator |
-| (root modules)  | BattleState, BattleConfig/BattleMode, BattleController, FormulaSystem, ProjectileManager |
+| (root modules)  | BattleState, BattleTuning/BattleMode, BattleController, FormulaSystem, ProjectileManager |
 
 ### `game/strategy/` -- 4X strategy layer
 
@@ -109,7 +110,7 @@ Six layers with strict downward-only dependency flow:
 |-----------------|-------------|
 | `data/`         | Domain entities (notable modules): Fleet, ShipInstance, Empire, Galaxy, Planet, Stars, Storm, Pathfinding, plus fleet delegates (`fleet_battle_adapter.py`, `fleet_capability_calculator.py`, `fleet_consumable_aggregator.py`), ShipInstance delegates (`ship_instance_bridge.py`, `ship_instance_serializer.py`, `ship_consumable_manager.py`, `ship_cargo_manager.py`, `ship_display_formatter.py`), and data-driven configs (`classification_config.py`, `resource_generation_config.py`, `star_generation_config.py`, `orbital_generation_config.py`) |
 | `engine/`       | Turn processing: TurnEngine, GameSession, GameConfig, GameInitializer, Commands, CommandHandlers, OrderProcessor, plus sub-engines (movement, conflict, harvesting, production + ProductionSpawner, population, economy, resupply, action execution, planet action execution, planet energy, environmental hazards), and shared utilities (`production_math.py`, `construction_forecast.py`) |
-| `services/`     | ShipStatsCalculator, FleetSpeedCalculator, FleetNavigationService, ComponentInspector, DesignCostCalculator, CargoTransferService, AreaEffectManager, ActionTimeResolver, FleetCargoProjector |
+| `services/`     | ShipStatsCalculator, FleetSpeedCalculator, FleetNavigationService, ComponentInspector, DesignCostCalculator, CargoTransferService, AreaEffectManager, ActionTimeResolver, FleetCargoProjector, ModifierResolver, StrategicAbilityScanner |
 | `facade/`       | StrategySessionFacade (UI-to-engine communication) |
 | `facade/dto/`   | Read-only DTOs: FleetInfo, SystemInfo, PlanetInfo, EmpireInfo |
 | `interfaces/`   | IBattleResolver, BattleResult (strategy-layer battle DTO) |
@@ -164,7 +165,7 @@ Six layers with strict downward-only dependency flow:
 
 Exports defined in each package's `__init__.py` via `__all__`.
 
-### `game.core` (43 exports)
+### `game.core` (42 exports)
 
 - **Exceptions:** GameException, StateException, FrozenStateException, ValidationException, ResourceException, MissingResourceException, PersistenceException, SimulationException, ComponentException, FormulaException
 - **Error Codes:** ErrorCode
@@ -174,7 +175,7 @@ Exports defined in each package's `__init__.py` via `__all__`.
 - **Resources:** ResourceCatalog, ResourceDefinition
 - **Event Logging:** log_event, set_event_handler, get_event_handler
 - **Validation:** ValidationResult, IValidationRule
-- **Configuration:** DisplayConfig, AIConfig, PhysicsConfig, BattleConfig
+- **Configuration:** DisplayConfig, AIConfig, PhysicsConfig, BattleTuning
 - **Paths:** Paths
 - **Protocols:** IRegistryProvider, IFleet, IPlanet, ICombatant, is_fleet, is_planet, is_combatant
 
@@ -182,11 +183,11 @@ Exports defined in each package's `__init__.py` via `__all__`.
 
 PhysicsBody, CollisionSystem, SpatialGrid
 
-### `game.simulation` (12 exports)
+### `game.simulation` (14 exports)
 
-Ship, ShipSerializer, Component, create_component, BattleEngine, BattleLogger, BattleEndMode, BattleEndCondition, BattleService, BattleServiceResult, BattleState, ShipDesignValidator
+Ship, ShipSerializer, Component, create_component, BattleEngine, BattleLogger, IEndCondition, TeamEliminatedCondition, TickLimitCondition, end_condition_from_dict, BattleService, BattleServiceResult, BattleState, ShipDesignValidator
 
-### `game.strategy` (15 exports)
+### `game.strategy` (16 exports)
 
 Fleet, ShipInstance, OrderType, Order, HexCoord, TurnEngine, GameSession, GameConfig, StrategySessionFacade, FleetInfo, SystemInfo, PlanetInfo, EmpireInfo, IBattleResolver, BattleResult
 
