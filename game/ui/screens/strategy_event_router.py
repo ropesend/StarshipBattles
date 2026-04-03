@@ -185,11 +185,52 @@ class StrategyEventRouter:
             obj = ui.current_selection
             if obj and is_planet(obj):
                 ui.open_orders_window(obj, entity_type="planet")
+        elif event.ui_element == getattr(ui, 'btn_atmosphere', None):
+            obj = ui.current_selection
+            if obj and is_planet(obj):
+                self._open_atmosphere_editor(obj)
         elif event.ui_element == ui.btn_fleet_report:
             obj = ui.current_selection
             if obj and is_fleet(obj):
                 ui.open_fleet_report_window(obj)
         # NOTE: btn_build_yard is handled in strategy_input_handler.py - do not duplicate here
+
+    def _open_atmosphere_editor(self, planet) -> None:
+        """Open atmosphere target editor for a planet."""
+        from game.ui.screens.atmosphere_target_editor import AtmosphereTargetEditor
+        from game.strategy.engine.commands import SetAtmosphereTargetCommand
+        from game.ui.utils import create_centered_rect
+
+        ui = self.ui
+        scene = ui.scene
+
+        # Get race config for species ideal button
+        race_config = None
+        try:
+            empire = scene.session.get_empire(planet.owner_id)
+            if empire and hasattr(empire, 'race_config'):
+                race_config = empire.race_config
+            elif empire:
+                from game.strategy.systems.race_library import RaceLibrary
+                race_lib = RaceLibrary()
+                race_id = getattr(empire, 'race_id', None)
+                if race_id:
+                    race_config = race_lib.get_race(race_id)
+        except Exception:
+            pass
+
+        def on_apply(planet_id, target):
+            cmd = SetAtmosphereTargetCommand(planet_id=planet_id, atmosphere_target=target)
+            scene.facade.handle_command(cmd)
+
+        rect = create_centered_rect(700, 500, ui.width, ui.height)
+        AtmosphereTargetEditor(
+            rect=rect,
+            manager=ui.manager,
+            planet=planet,
+            on_apply_callback=on_apply,
+            race_config=race_config,
+        )
 
     def _handle_colonize_button(self) -> None:
         """Handle the Colonize button press.

@@ -102,6 +102,10 @@ class StrategyDetailFormatter:
         return self._widgets.get('btn_planet_orders')
 
     @property
+    def btn_atmosphere(self):
+        return self._widgets.get('btn_atmosphere')
+
+    @property
     def btn_orders(self):
         return self._widgets['btn_orders']
 
@@ -195,6 +199,8 @@ class StrategyDetailFormatter:
         self.btn_build_yard.hide()
         if self.btn_planet_orders:
             self.btn_planet_orders.hide()  # PROJ-238
+        if self.btn_atmosphere:
+            self.btn_atmosphere.hide()
         self.btn_orders.hide()
         self.btn_fleet_report.hide()
         self.btn_build_fleet.hide()
@@ -316,6 +322,8 @@ class StrategyDetailFormatter:
                 self.btn_build_yard.show()
             if self.btn_planet_orders:
                 self.btn_planet_orders.show()  # PROJ-238
+            if self.btn_atmosphere:
+                self.btn_atmosphere.show()
 
     def _format_sector_environment(self, obj) -> str:
         """Format sector environment details."""

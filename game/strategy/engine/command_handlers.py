@@ -1059,9 +1059,11 @@ def create_default_registry() -> CommandHandlerRegistry:
         IssuePlanetOrderCommandHandler,
         ClearPlanetOrdersCommandHandler,
         DeletePlanetOrderCommandHandler,
+        SetAtmosphereTargetCommandHandler,
     )
     registry.register('IssuePlanetOrderCommand', IssuePlanetOrderCommandHandler())
     registry.register('ClearPlanetOrdersCommand', ClearPlanetOrdersCommandHandler())
     registry.register('DeletePlanetOrderCommand', DeletePlanetOrderCommandHandler())
+    registry.register('SetAtmosphereTargetCommand', SetAtmosphereTargetCommandHandler())
 
     return registry

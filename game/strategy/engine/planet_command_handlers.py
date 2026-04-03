@@ -125,3 +125,24 @@ class DeletePlanetOrderCommandHandler:
         removed = planet.orders.pop(cmd.order_index)
         logger.info(f"Planet {planet.name}: removed order {removed.type.name} at index {cmd.order_index}")
         return ValidationResult.success()
+
+
+class SetAtmosphereTargetCommandHandler:
+    """Handler for SetAtmosphereTargetCommand."""
+
+    def execute(self, session: 'GameSession', cmd: 'SetAtmosphereTargetCommand') -> ValidationResult:
+        from game.strategy.engine.command_handlers import BaseCommandHandler
+
+        planet, error = BaseCommandHandler._resolve_planet(session, cmd.planet_id)
+        if error:
+            return error
+
+        if planet.owner_id != session.player_empire.id:
+            return ValidationResult.error("Planet does not belong to this empire.")
+
+        planet.atmosphere_target = dict(cmd.atmosphere_target)
+        if cmd.atmosphere_target:
+            logger.info(f"Planet {planet.name}: atmosphere target set ({len(cmd.atmosphere_target)} gases)")
+        else:
+            logger.info(f"Planet {planet.name}: atmosphere target cleared")
+        return ValidationResult.success()
