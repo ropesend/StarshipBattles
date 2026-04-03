@@ -34,6 +34,9 @@ class DesignMetadata:
     is_obsolete: bool = False
     times_built: int = 0
 
+    # Validity
+    mass_valid: bool = True  # False if design exceeds mass budget
+
     # Thumbnail data (optional)
     theme_id: str = ""
 
@@ -51,7 +54,8 @@ class DesignMetadata:
             "last_modified": self.last_modified,
             "is_obsolete": self.is_obsolete,
             "times_built": self.times_built,
-            "theme_id": self.theme_id
+            "theme_id": self.theme_id,
+            "mass_valid": self.mass_valid
         }
 
     @classmethod
@@ -77,7 +81,8 @@ class DesignMetadata:
             last_modified=data.get("last_modified", ""),
             is_obsolete=data.get("is_obsolete", False),
             times_built=data.get("times_built", 0),
-            theme_id=data.get("theme_id", "")
+            theme_id=data.get("theme_id", ""),
+            mass_valid=data.get("mass_valid", True)
         )
 
     @classmethod
@@ -96,9 +101,10 @@ class DesignMetadata:
         vehicle_type = data.get("vehicle_type", "Ship")
         theme_id = data.get("theme_id", "")
 
-        # Mass is stored in expected_stats
+        # Mass and validity stored in expected_stats
         expected_stats = data.get("expected_stats", {})
         mass = expected_stats.get("mass", 0.0)
+        mass_valid = expected_stats.get("mass_valid", True)
 
         # Calculate combat power (simplified metric)
         combat_power = cls._calculate_combat_power(data)
@@ -126,6 +132,7 @@ class DesignMetadata:
             last_modified=last_modified,
             is_obsolete=embedded_metadata.get("is_obsolete", False),
             times_built=embedded_metadata.get("times_built", 0),
+            mass_valid=mass_valid,
             theme_id=theme_id
         )
 
@@ -156,6 +163,7 @@ class DesignMetadata:
             last_modified=now,
             is_obsolete=False,
             times_built=0,
+            mass_valid=getattr(ship, 'mass_limits_ok', True),
             theme_id=ship.theme_id  # Ship always has theme_id
         )
 

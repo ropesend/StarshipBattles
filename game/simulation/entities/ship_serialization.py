@@ -68,6 +68,7 @@ class ShipSerializer:
                     "armor_hp_pool": ship.layers[LayerType.ARMOR].max_hp_pool if LayerType.ARMOR in ship.layers else 0,
                     "warp_max_tonnage": ship.warp_max_tonnage,
                     "warp_energy_cost": ship.warp_energy_cost,
+                    "mass_valid": ship.mass_limits_ok,
                 }
             }
 

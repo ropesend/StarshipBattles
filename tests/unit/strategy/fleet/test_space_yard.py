@@ -89,7 +89,7 @@ class TestFleetHasSpaceShipyard:
 
     @pytest.fixture
     def make_ship_with_yard(self, fresh_registries):
-        """Factory for creating ship with fleet_space_yard component."""
+        """Factory for creating ship with space_shipyard component."""
         from game.strategy.data.ship_instance import ShipInstance
 
         def _make(name="Yard Ship", has_yard=True, is_combat_capable=True):
@@ -105,7 +105,7 @@ class TestFleetHasSpaceShipyard:
                     'vehicle_type': 'Ship',
                     'layers': {
                         'core': [
-                            {'id': 'fleet_space_yard', 'name': 'Fleet Space Yard'}
+                            {'id': 'space_shipyard', 'name': 'Fleet Space Yard'}
                         ]
                     }
                 }
@@ -193,7 +193,7 @@ class TestFleetCanBuildType:
 
     @pytest.fixture
     def make_ship_with_yard(self, fresh_registries):
-        """Factory for creating ship with fleet_space_yard component."""
+        """Factory for creating ship with space_shipyard component."""
         from game.strategy.data.ship_instance import ShipInstance
 
         def _make(name="Yard Ship", has_yard=True, is_combat_capable=True):
@@ -208,7 +208,7 @@ class TestFleetCanBuildType:
                     'vehicle_type': 'Ship',
                     'layers': {
                         'core': [
-                            {'id': 'fleet_space_yard', 'name': 'Fleet Space Yard'}
+                            {'id': 'space_shipyard', 'name': 'Fleet Space Yard'}
                         ]
                     }
                 }
@@ -292,7 +292,7 @@ class TestFleetSpaceShipyardCount:
             mock.name = name
             mock.is_combat_capable.return_value = is_combat_capable
             mock._registries = fresh_registries  # PROJ-211: DI compliance
-            components = [{'id': 'fleet_space_yard'} for _ in range(yard_count)]
+            components = [{'id': 'space_shipyard'} for _ in range(yard_count)]
             components.append({'id': 'reactor'})  # Non-yard component
             mock.design_data = {
                 'name': name,
@@ -312,7 +312,7 @@ class TestFleetSpaceShipyardCount:
         assert basic_fleet.capabilities.space_shipyard_count == 1
 
     def test_fleet_with_two_yards_on_one_ship(self, basic_fleet, make_yard_ship):
-        """Ship with 2 fleet_space_yard components counts 2 (BUG-79 core case, PROJ-210: via capabilities)."""
+        """Ship with 2 space_shipyard components counts 2 (BUG-79 core case, PROJ-210: via capabilities)."""
         basic_fleet.ships.append(make_yard_ship(yard_count=2))
         assert basic_fleet.capabilities.space_shipyard_count == 2
 

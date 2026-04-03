@@ -16,7 +16,7 @@ class TestFleetInfoBuildFields:
 
     @pytest.fixture
     def make_ship_with_yard(self, fresh_registries):
-        """Factory for creating ship with fleet_space_yard component."""
+        """Factory for creating ship with space_shipyard component."""
         def _make(name="Yard Ship"):
             mock = MagicMock()
             mock.name = name
@@ -33,7 +33,7 @@ class TestFleetInfoBuildFields:
                 'ship_class': 'Support',
                 'vehicle_type': 'Ship',
                 'layers': {
-                    'core': [{'id': 'fleet_space_yard', 'name': 'Fleet Space Yard'}]
+                    'core': [{'id': 'space_shipyard', 'name': 'Fleet Space Yard'}]
                 }
             }
             return mock

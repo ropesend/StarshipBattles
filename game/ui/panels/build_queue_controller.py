@@ -154,7 +154,7 @@ class BuildQueueController:
         target_type = type_map.get(category, "Ship")
         logger.debug(f"BuildQueue: Filtering for category '{category}' (vehicle_type='{target_type}')")
 
-        filtered = [d for d in all_designs if d.vehicle_type == target_type]
+        filtered = [d for d in all_designs if d.vehicle_type == target_type and d.mass_valid]
         logger.debug(f"BuildQueue: Found {len(filtered)} designs matching category '{category}'")
 
         if filtered:

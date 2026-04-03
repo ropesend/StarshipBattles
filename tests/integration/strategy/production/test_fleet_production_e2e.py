@@ -127,14 +127,14 @@ class TestFleetProductionE2E:
         engine = ProductionEngine(registries=fresh_registries)
 
         # Create fleet with space yard capability
-        # At 30/tick fleet yard rate, 6000 Metals = 200 ticks = 2 turns
+        # At 300/tick fleet yard rate, 60000 Metals = 200 ticks = 2 turns
         fleet = Fleet(1, 0, HexCoord(5, 5))
         fleet.construction_queue = [
             {
                 "design_id": "test_fighter",
                 "type": "ship",
                 "turns_remaining": 2,
-                "total_cost": {"metals": 6000.0},
+                "total_cost": {"metals": 60000.0},
                 "resources_consumed": {"metals": 0.0}
             }
         ]
@@ -302,7 +302,7 @@ class TestFleetProductionE2E:
                 "design_id": "test_factory",
                 "type": "complex",
                 "turns_remaining": 3,
-                "total_cost": {"metals": 9000.0},
+                "total_cost": {"metals": 90000.0},
                 "resources_consumed": {"metals": 0.0}
             }
         ]
@@ -377,35 +377,35 @@ class TestFleetProductionMultiQueue:
         # At 30/tick fleet yard rate:
         # ship_a: 3000 Metals = 100 ticks = 1 turn
         # ship_b: 6000 Metals = 200 ticks = 2 turns
-        # ship_c: 3000 Metals = 100 ticks = 1 turn
+        # ship_c: 30000 Metals = 100 ticks = 1 turn
         fleet = Fleet(1, 0, HexCoord(5, 5))
         fleet.construction_queue = [
             {
                 "design_id": "ship_a",
                 "type": "ship",
                 "turns_remaining": 1,
-                "total_cost": {"metals": 3000.0},
+                "total_cost": {"metals": 30000.0},
                 "resources_consumed": {"metals": 0.0}
             },
             {
                 "design_id": "ship_b",
                 "type": "ship",
                 "turns_remaining": 2,
-                "total_cost": {"metals": 6000.0},
+                "total_cost": {"metals": 60000.0},
                 "resources_consumed": {"metals": 0.0}
             },
             {
                 "design_id": "ship_c",
                 "type": "ship",
                 "turns_remaining": 1,
-                "total_cost": {"metals": 3000.0},
+                "total_cost": {"metals": 30000.0},
                 "resources_consumed": {"metals": 0.0}
             },
         ]
         fleet.orders = [FleetOrder(OrderType.BUILD)]
 
         # Add a cargo ship carrying construction resources
-        fleet.ships.append(_make_cargo_ship({"metals": 100000}))
+        fleet.ships.append(_make_cargo_ship({"metals": 1000000}))
 
         empire = MagicMock()
         empire.id = 0

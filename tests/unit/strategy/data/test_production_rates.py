@@ -21,9 +21,9 @@ class TestProductionRatesJson:
         assert production_rates is not None
         assert isinstance(production_rates, dict)
 
-    def test_all_three_yard_types_present(self, production_rates: dict) -> None:
-        """Verify all three yard types are defined."""
-        expected_yards = {"planetary_yard", "space_shipyard", "fleet_space_yard"}
+    def test_both_yard_types_present(self, production_rates: dict) -> None:
+        """Verify both yard types are defined."""
+        expected_yards = {"planetary_yard", "space_shipyard"}
         assert set(production_rates.keys()) == expected_yards
 
     def test_planetary_yard_has_all_resources(self, production_rates: dict) -> None:
@@ -36,25 +36,15 @@ class TestProductionRatesJson:
         expected_resources = {"metals", "organics", "radioactives", "vapors", "exotics"}
         assert set(production_rates["space_shipyard"].keys()) == expected_resources
 
-    def test_fleet_space_yard_has_all_resources(self, production_rates: dict) -> None:
-        """Verify fleet_space_yard has all 5 resource types."""
-        expected_resources = {"metals", "organics", "radioactives", "vapors", "exotics"}
-        assert set(production_rates["fleet_space_yard"].keys()) == expected_resources
-
     def test_planetary_yard_default_rate_is_2000(self, production_rates: dict) -> None:
         """Verify planetary_yard has 2000/turn for all resources."""
         for resource, rate in production_rates["planetary_yard"].items():
             assert rate == 2000, f"Expected 2000 for {resource}, got {rate}"
 
-    def test_space_shipyard_default_rate_is_3000(self, production_rates: dict) -> None:
-        """Verify space_shipyard has 3000/turn for all resources."""
+    def test_space_shipyard_default_rate_is_30000(self, production_rates: dict) -> None:
+        """Verify space_shipyard has 30000/turn for all resources."""
         for resource, rate in production_rates["space_shipyard"].items():
-            assert rate == 3000, f"Expected 3000 for {resource}, got {rate}"
-
-    def test_fleet_space_yard_default_rate_is_3000(self, production_rates: dict) -> None:
-        """Verify fleet_space_yard has 3000/turn for all resources."""
-        for resource, rate in production_rates["fleet_space_yard"].items():
-            assert rate == 3000, f"Expected 3000 for {resource}, got {rate}"
+            assert rate == 30000, f"Expected 30000 for {resource}, got {rate}"
 
     def test_all_rates_are_positive_numbers(self, production_rates: dict) -> None:
         """Verify all rates are positive numeric values."""

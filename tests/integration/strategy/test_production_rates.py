@@ -304,18 +304,11 @@ class TestProductionRatesFromJSON:
         assert rates["metals"] == 2000
 
     def test_space_shipyard_has_default_rates(self):
-        """Space shipyard loads default rates from JSON (3000/turn)."""
+        """Space shipyard loads default rates from JSON (30000/turn)."""
         rates = get_default_production_rates("space_shipyard")
 
-        assert rates["metals"] == 3000
-        assert rates["exotics"] == 3000
-
-    def test_fleet_space_yard_has_default_rates(self):
-        """Fleet space yard loads default rates from JSON (3000/turn)."""
-        rates = get_default_production_rates("fleet_space_yard")
-
-        assert rates["metals"] == 3000
-        assert rates["exotics"] == 3000
+        assert rates["metals"] == 30000
+        assert rates["exotics"] == 30000
 
     def test_unknown_yard_type_returns_empty(self):
         """Unknown yard type returns empty dict."""
@@ -364,5 +357,5 @@ class TestBuildQueueSourceIntegration:
         facility = _make_shipyard_facility(production_rates=None)
         rates = _get_facility_production_rates(facility)
 
-        # Should fall back to space_shipyard defaults (3000)
-        assert rates["metals"] == 3000
+        # Should fall back to space_shipyard defaults (30000)
+        assert rates["metals"] == 30000

@@ -36,20 +36,18 @@ class TestBuilderLogic:
         assert self.ship.mass_limits_ok
 
         # Add a lot more to trigger TOTAL mass limit
-        # Add more to trigger total mass limit.
-        # Since add_component prevents exceeding mass, we expect it to return False eventually.
+        # Mass check no longer blocks placement — all components are accepted.
         added_count = 0
         for _ in range(50):
             if self.ship.add_component(create_component('armor_plate', registries=self.registries), LayerType.ARMOR):
                 added_count += 1
 
-        # Should have stopped adding
-        assert added_count < 50, "Should have been prevented from adding all 50 plates"
+        # All 50 should be added (mass is not a placement blocker)
+        assert added_count == 50, "All plates should be added — mass doesn't block placement"
 
-        # Verify mass is within budget (or close to it if single component pushes slightly over?
-        # actually code checks strictly before adding)
-        assert self.ship.mass <= self.ship.max_mass_budget
-        assert self.ship.mass_limits_ok, "Ship should remain valid via add_component"
+        # Ship should be over mass budget, flagged as invalid
+        assert self.ship.mass > self.ship.max_mass_budget
+        assert not self.ship.mass_limits_ok, "Ship should flag mass_limits_ok=False when over budget"
 
         # Now manually inject a huge component to verify mass_limits_ok handles invalid states (e.g. from loading)
         huge_plate = create_component('armor_plate', registries=self.registries)

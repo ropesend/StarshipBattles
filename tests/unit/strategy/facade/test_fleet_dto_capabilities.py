@@ -110,7 +110,7 @@ class TestFleetInfoCapabilitiesField:
     def test_fleet_info_capabilities_includes_space_shipyard(self, make_ship_with_ability):
         """Test capabilities includes SpaceShipyard for fleet yard."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
-        fleet.ships.append(make_ship_with_ability("Yard Ship", "fleet_space_yard"))
+        fleet.ships.append(make_ship_with_ability("Yard Ship", "space_shipyard"))
 
         info = FleetInfo.from_fleet(fleet)
 
@@ -120,8 +120,8 @@ class TestFleetInfoCapabilitiesField:
         """Test capabilities has no duplicates even with multiple ships."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
         # Add two ships with same ability
-        fleet.ships.append(make_ship_with_ability("Yard 1", "fleet_space_yard"))
-        fleet.ships.append(make_ship_with_ability("Yard 2", "fleet_space_yard"))
+        fleet.ships.append(make_ship_with_ability("Yard 1", "space_shipyard"))
+        fleet.ships.append(make_ship_with_ability("Yard 2", "space_shipyard"))
 
         info = FleetInfo.from_fleet(fleet)
 
@@ -132,7 +132,7 @@ class TestFleetInfoCapabilitiesField:
     def test_fleet_info_capabilities_is_immutable(self, make_ship_with_ability):
         """Test capabilities tuple cannot be modified."""
         fleet = Fleet("f1", 0, HexCoord(0, 0))
-        fleet.ships.append(make_ship_with_ability("Yard Ship", "fleet_space_yard"))
+        fleet.ships.append(make_ship_with_ability("Yard Ship", "space_shipyard"))
 
         info = FleetInfo.from_fleet(fleet)
 

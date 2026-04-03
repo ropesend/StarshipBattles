@@ -209,7 +209,7 @@ class ProductionEngine:
     def _resolve_fleet_production_rate(self, fleet) -> Dict[str, float]:
         """Calculate combined production rate for a fleet's space yards."""
         yard_count = fleet.capabilities.space_shipyard_count
-        base_rate = get_default_production_rates("fleet_space_yard")
+        base_rate = get_default_production_rates("space_shipyard")
         return {k: v * yard_count for k, v in base_rate.items()}
 
     def _process_queue_tick_dynamic(

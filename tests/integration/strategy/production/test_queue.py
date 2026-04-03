@@ -111,14 +111,14 @@ class TestShipyardRequirement:
         temp_dir = production_setup['temp_dir']
 
         # Add shipyard with ship in facility queue
-        # At 30/tick shipyard rate, 9000 Metals = 300 ticks = 3 turns
+        # At 300/tick shipyard rate, 90000 Metals = 300 ticks = 3 turns
         shipyard = _make_shipyard()
         shipyard.construction_queue = [
             {
                 "design_id": "test_ship",
                 "type": "ship",
                 "turns_remaining": 3,
-                "total_cost": {"metals": 9000.0},
+                "total_cost": {"metals": 90000.0},
                 "resources_consumed": {"metals": 0.0}
             }
         ]
@@ -126,7 +126,7 @@ class TestShipyardRequirement:
 
         # Process turn - should make progress
         _process_one_turn(engine, empires, save_path=temp_dir)
-        # After 100 ticks at 30/tick = 3000 consumed
+        # After 100 ticks at 300/tick = 30000 consumed
         assert shipyard.construction_queue[0]["resources_consumed"]["metals"] > 0
 
         # Remove shipyard facility
@@ -148,14 +148,14 @@ class TestShipyardRequirement:
         _process_one_turn(engine, empires, save_path=temp_dir)
 
         # Add shipyard facility with ship in its queue
-        # At 30/tick shipyard rate, 6000 Metals = 200 ticks = 2 turns
+        # At 300/tick shipyard rate, 60000 Metals = 200 ticks = 2 turns
         shipyard = _make_shipyard()
         shipyard.construction_queue = [
             {
                 "design_id": "test_ship",
                 "type": "ship",
                 "turns_remaining": 2,
-                "total_cost": {"metals": 6000.0},
+                "total_cost": {"metals": 60000.0},
                 "resources_consumed": {"metals": 0.0}
             }
         ]
@@ -163,7 +163,7 @@ class TestShipyardRequirement:
 
         # Process turn - should now progress
         _process_one_turn(engine, empires, save_path=temp_dir)
-        # After 100 ticks at 30/tick = 3000 consumed (half of 6000)
+        # After 100 ticks at 300/tick = 30000 consumed (half of 60000)
         assert shipyard.construction_queue[0]["resources_consumed"]["metals"] > 0
 
     def test_complex_builds_without_shipyard(self, production_setup):

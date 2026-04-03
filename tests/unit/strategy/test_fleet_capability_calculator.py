@@ -36,13 +36,13 @@ class TestShipHasSpaceyard:
     which is required after fallback removal.
     """
 
-    def test_ship_has_spaceyard_with_fleet_space_yard_component(self, fresh_registries):
-        """Ship with fleet_space_yard component returns True."""
+    def test_ship_has_spaceyard_with_space_shipyard_component(self, fresh_registries):
+        """Ship with space_shipyard component returns True."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
 
         ship = make_ship_instance(
             name="Yard Ship",
-            design_data={"layers": {"hull": [{"id": "fleet_space_yard"}]}},
+            design_data={"layers": {"hull": [{"id": "space_shipyard"}]}},
             registries=fresh_registries
         )
         assert FleetCapabilityCalculator.ship_has_spaceyard(ship) is True
@@ -110,7 +110,7 @@ class TestFleetCapabilityCalculator:
         assert calc.has_space_shipyard is False
 
     def test_has_space_shipyard_with_yard_component(self, fresh_registries):
-        """Fleet with fleet_space_yard component has space shipyard."""
+        """Fleet with space_shipyard component has space shipyard."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
         from game.strategy.data.fleet import Fleet
         from game.core.hex_math import HexCoord
@@ -120,7 +120,7 @@ class TestFleetCapabilityCalculator:
             name="Yard Ship",
             design_data={
                 "layers": {
-                    "hull": [{"id": "fleet_space_yard"}]
+                    "hull": [{"id": "space_shipyard"}]
                 }
             },
             registries=fresh_registries
@@ -194,7 +194,7 @@ class TestFleetCapabilityCalculator:
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(
             name="Yard Ship",
-            design_data={"layers": {"hull": [{"id": "fleet_space_yard"}]}},
+            design_data={"layers": {"hull": [{"id": "space_shipyard"}]}},
             registries=fresh_registries
         )
         fleet.add_ship(ship)
@@ -213,7 +213,7 @@ class TestFleetCapabilityCalculator:
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(
             name="Yard Ship",
-            design_data={"layers": {"hull": [{"id": "fleet_space_yard"}]}},
+            design_data={"layers": {"hull": [{"id": "space_shipyard"}]}},
             registries=fresh_registries
         )
         fleet.add_ship(ship)
@@ -487,7 +487,7 @@ class TestFleetCapabilityCalculatorDelegation:
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(
             name="Yard Ship",
-            design_data={"layers": {"hull": [{"id": "fleet_space_yard"}]}},
+            design_data={"layers": {"hull": [{"id": "space_shipyard"}]}},
             registries=fresh_registries
         )
         fleet.add_ship(ship)
@@ -502,7 +502,7 @@ class TestFleetCapabilityCalculatorDelegation:
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(
             name="Yard Ship",
-            design_data={"layers": {"hull": [{"id": "fleet_space_yard"}]}},
+            design_data={"layers": {"hull": [{"id": "space_shipyard"}]}},
             registries=fresh_registries
         )
         fleet.add_ship(ship)

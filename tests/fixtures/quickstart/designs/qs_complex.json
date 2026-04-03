@@ -1,6 +1,6 @@
 {
     "name": "QS Complex",
-    "ship_class": "Planetary Complex (Tier 1)",
+    "ship_class": "Planetary Complex (Tier 2)",
     "vehicle_type": "Planetary Complex",
     "theme_id": "Federation",
     "team_id": 0,
@@ -279,7 +279,7 @@
         "ammo": 0.0
     },
     "expected_stats": {
-        "max_hp": 2400,
+        "max_hp": 2667,
         "max_fuel": 0.0,
         "max_energy": 0.0,
         "max_ammo": 0.0,
@@ -287,7 +287,7 @@
         "acceleration_rate": 0.0,
         "turn_speed": 0.0,
         "total_thrust": 0,
-        "mass": 1000.0,
+        "mass": 1301.0,
         "armor_hp_pool": 0
     },
     "_metadata": {
