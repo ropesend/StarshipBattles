@@ -118,8 +118,11 @@ class Planet:
     energy_capacity: float = 0.0     # Max (recalculated from batteries each tick)
     energy_generation: float = 0.0   # Rate (recalculated from generators each tick)
 
-    # Shield state (PROJ-237)
+    # Shield state (PROJ-237) — backward-compatible property below
     shield_active: bool = False      # Whether planetary shield is currently active
+
+    # Generic activatable abilities state
+    active_abilities: Dict[str, bool] = field(default_factory=dict)
 
     # Order queue (PROJ-238: renamed from planet_orders, unified with Fleet.orders)
     orders: List['Order'] = field(default_factory=list)
@@ -136,6 +139,14 @@ class Planet:
 
     def __hash__(self):
         return hash((self.name, self.location, self.orbit_distance))
+
+    def is_ability_active(self, ability_key: str) -> bool:
+        """Check if an activatable strategic ability is active on this planet."""
+        return self.active_abilities.get(ability_key, False)
+
+    def set_ability_active(self, ability_key: str, active: bool):
+        """Set an activatable strategic ability's state on this planet."""
+        self.active_abilities[ability_key] = active
 
     @property
     def occupied_hexes(self) -> FrozenSet[HexCoord]:
@@ -399,6 +410,7 @@ class Planet:
             'energy_capacity': self.energy_capacity,
             'energy_generation': self.energy_generation,
             'shield_active': self.shield_active,
+            'active_abilities': dict(self.active_abilities),
             'orders': [o.to_dict() for o in self.orders],
         }
 
@@ -505,6 +517,7 @@ class Planet:
             energy_capacity=data.get('energy_capacity', 0.0),
             energy_generation=data.get('energy_generation', 0.0),
             shield_active=data.get('shield_active', False),
+            active_abilities=data.get('active_abilities', {}),
             orders=_deserialize_planet_orders(data.get('orders', data.get('planet_orders', []))),
         )
 

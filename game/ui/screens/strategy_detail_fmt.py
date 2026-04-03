@@ -154,6 +154,15 @@ def format_planet_info(planet: IPlanet) -> str:
             status = "Active" if shield_val else "Inactive"
             text += f"<br><b>Planetary Shield:</b> {status}"
 
+    # Show activatable ability status (stabilizers)
+    facilities = getattr(planet, 'facilities', None)
+    if isinstance(facilities, list) and facilities:
+        for ability_key, display_name in _ACTIVATABLE_DISPLAY_NAMES.items():
+            if _planet_has_ability_facility(planet, ability_key):
+                active = getattr(planet, 'active_abilities', {}).get(ability_key, False)
+                status = "Active" if active else "Inactive"
+                text += f"<br><b>{display_name}:</b> {status}"
+
     # Resources are displayed in the dedicated resource grid panel (PROJ-82)
     return text
 
@@ -192,6 +201,63 @@ def _planet_has_shield_facility(planet) -> bool:
     return False
 
 
+def _get_system_ability_status(system) -> dict:
+    """Scan all planets in a system for activatable abilities and their status.
+
+    Returns dict mapping ability_key -> bool (True if active on any planet).
+    Only includes abilities that have facilities present.
+    """
+    result = {}
+    planets = getattr(system, 'planets', [])
+    if not isinstance(planets, list):
+        return result
+    for planet in planets:
+        for ability_key in _ACTIVATABLE_DISPLAY_NAMES:
+            if _planet_has_ability_facility(planet, ability_key):
+                active = getattr(planet, 'active_abilities', {}).get(ability_key, False)
+                # If any planet has it active, mark as active for the system
+                if ability_key not in result:
+                    result[ability_key] = active
+                elif active:
+                    result[ability_key] = True
+    return result
+
+
+_ACTIVATABLE_DISPLAY_NAMES = {
+    'GeologicStabilizer': 'Geologic Stabilizer',
+    'StellarStabilizer': 'Stellar Stabilizer',
+    'WarpFieldStabilizer': 'Warp Field Stabilizer',
+}
+
+
+def _planet_has_ability_facility(planet, ability_key: str) -> bool:
+    """Check if a planet has any facility with a specific ability."""
+    from game.core.patterns.layer_iterator import iter_components
+    from game.strategy.services.component_inspector import get_component_abilities
+    from game.core.registry import get_default_registry_provider
+
+    component_registry = None
+    try:
+        provider = get_default_registry_provider()
+        component_registry = provider.get_components()
+    except Exception:
+        pass
+
+    for facility in getattr(planet, 'facilities', []):
+        design_data = getattr(facility, 'design_data', None)
+        if not isinstance(design_data, dict):
+            continue
+        for comp in iter_components(design_data):
+            if isinstance(comp, dict) and ability_key in comp.get('abilities', {}):
+                return True
+            comp_id = comp.get('id', '') if isinstance(comp, dict) else str(comp)
+            if comp_id and component_registry:
+                comp_def = component_registry.get(comp_id)
+                if comp_def and ability_key in get_component_abilities(comp_def):
+                    return True
+    return False
+
+
 def format_star_system_info(system) -> str:
     """
     Format star system information as HTML.
@@ -212,6 +278,14 @@ def format_star_system_info(system) -> str:
         text += f"<b>Stars:</b> {len(system.stars)}<br>"
     else:
         text = f"<b>System:</b> {system.name}<br>(Empty System)"
+
+    # Show system-wide stabilizer status
+    _system_abilities = _get_system_ability_status(system)
+    for ability_key, display_name in _ACTIVATABLE_DISPLAY_NAMES.items():
+        if ability_key in _system_abilities:
+            status = "Active" if _system_abilities[ability_key] else "Inactive"
+            text += f"<br><b>{display_name}:</b> {status}"
+
     return text
 
 

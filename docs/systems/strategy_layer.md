@@ -103,6 +103,9 @@ Factory: `create_default_registry()` registers all handlers.
 | `AddToConstructionQueueCommand` | `AddToConstructionQueueCommandHandler` | Add item to build queue |
 | `RemoveFromConstructionQueueCommand` | `RemoveFromConstructionQueueCommandHandler` | Remove queue item |
 | `ReorderConstructionQueueCommand` | `ReorderConstructionQueueCommandHandler` | Move queue item |
+| `IssuePlanetOrderCommand` | `IssuePlanetOrderCommandHandler` | Issue planet action order (shield, stabilizer) |
+| `ClearPlanetOrdersCommand` | `ClearPlanetOrdersCommandHandler` | Clear planet orders |
+| `DeletePlanetOrderCommand` | `DeletePlanetOrderCommandHandler` | Remove specific planet order |
 | Superweapon commands (11 total) | `superweapon_command_handlers.py` | Implode planet, stellerate star, warp points, dyson sphere, self-destruct |
 
 ### Shared Helpers
@@ -300,13 +303,15 @@ components. See Pattern 3 in `02_PATTERNS.md` for the registry lookup requiremen
 ```
 SHIP_BUILT, COMPLEX_BUILT, COLONY_FOUNDED, COMBAT_RESOLVED,
 PLANET_DESTROYED, STAR_DESTROYED, WARP_POINT_OPENED, WARP_POINT_CLOSED,
-DYSON_SPHERE_CREATED, SHIPS_SELF_DESTRUCTED
+DYSON_SPHERE_CREATED, SHIPS_SELF_DESTRUCTED, RESOURCE_SHORTAGE,
+FLEET_JOINED, FLEET_JOIN_REDIRECTED, FLEET_JOIN_CANCELLED,
+SHIELD_ACTIVATED, SHIELD_DEACTIVATED, SHIELD_AUTO_DEACTIVATED
 ```
 
 ### EventCategory Enum
 
 ```
-PRODUCTION, COLONIES, COMBAT, SUPERWEAPONS, FLEET_OPERATIONS, ALL
+PRODUCTION, COLONIES, COMBAT, SUPERWEAPONS, FLEET_OPERATIONS, PLANET_OPERATIONS, ALL
 ```
 
 ### Event Dataclass

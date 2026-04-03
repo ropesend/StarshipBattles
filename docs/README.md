@@ -1,7 +1,7 @@
 # Starship Battles Documentation
 
 > **Audience:** LLM agents (Claude Code, automated workers). Optimized for machine readability.
-> **Last verified:** 2026-04-02 against 429 source files, 14084 tests.
+> **Last verified:** 2026-04-03 against 473 source files, 14330 tests.
 
 ---
 
@@ -14,7 +14,7 @@
 | # | Document | What you learn |
 |---|----------|---------------|
 | 1 | [01_ARCHITECTURE.md](01_ARCHITECTURE.md) | Layer structure, package APIs, protocols, data flow |
-| 2 | [02_PATTERNS.md](02_PATTERNS.md) | 14 design patterns with file locations and code examples |
+| 2 | [02_PATTERNS.md](02_PATTERNS.md) | 17 design patterns with file locations and code examples |
 | 3 | [03_CONVENTIONS.md](03_CONVENTIONS.md) | Naming, file organization, imports, testing conventions |
 
 ### Step 2: Task-specific (read based on what you're doing)
@@ -33,7 +33,7 @@
 | System | Document | Covers |
 |--------|----------|--------|
 | Combat/Simulation | [combat_simulation.md](systems/combat_simulation.md) | Battle modes, damage pipeline, ship architecture, abilities |
-| Abilities | [ability_reference.md](systems/ability_reference.md) | All 41 component abilities: registry keys, parameters, stat bindings |
+| Abilities | [ability_reference.md](systems/ability_reference.md) | All 46 component abilities: registry keys, parameters, stat bindings |
 | Strategy/Turn Engine | [strategy_layer.md](systems/strategy_layer.md) | Facade, command dispatch, turn engine, fleet delegates, events |
 | AI | [ai_system.md](systems/ai_system.md) | Behaviors, strategy manager, target evaluator, adapters |
 | Research | [research_system.md](systems/research_system.md) | Tech tree, research tracker, leaky bucket algorithm |
@@ -59,7 +59,7 @@
 docs/
 ├── README.md                    <- You are here
 ├── 01_ARCHITECTURE.md           # Layers, packages, APIs, protocols, data flow
-├── 02_PATTERNS.md               # 14 design patterns (Singleton, DI, Facade, CQRS, etc.)
+├── 02_PATTERNS.md               # 17 design patterns (Singleton, DI, Facade, CQRS, etc.)
 ├── 03_CONVENTIONS.md            # Naming, file org, imports, test conventions
 ├── 04_SERVICES.md               # Service layer API reference
 ├── 05_ERROR_HANDLING.md         # Exceptions, error codes, logging
@@ -85,7 +85,7 @@ docs/
 
 ## Quick Reference
 
-- **Test baseline:** 14084 tests, 0 failures
+- **Test baseline:** 14330 tests, 0 failures
 - **Test command:** `python scripts/test_sharded.py`
 - **Minimum resolution:** 2560x1600 (optimized for 4K: 3840x2160)
 - **Python:** 3.x with Pygame, Pytest, pytest-xdist

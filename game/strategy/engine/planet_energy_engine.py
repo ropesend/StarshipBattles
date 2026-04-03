@@ -95,6 +95,22 @@ def get_shield_info(comp, registries: Optional[GameRegistries] = None) -> Option
     return None
 
 
+def get_activatable_ability_info(comp, ability_key: str, registries=None) -> Optional[dict]:
+    """Extract info for any activatable ability (one with energy_drain_rate).
+
+    Generic helper that works for GeologicStabilizer, StellarStabilizer,
+    WarpFieldStabilizer, and any future activatable ability.
+
+    Returns:
+        Dict with ability data if found, or None.
+    """
+    abilities = _extract_abilities(comp, registries)
+    data = abilities.get(ability_key)
+    if isinstance(data, dict):
+        return data
+    return None
+
+
 def _extract_abilities(comp, registries: Optional[GameRegistries] = None) -> dict:
     """Extract abilities dict from a component entry (inline or registry lookup)."""
     if isinstance(comp, dict):
@@ -111,6 +127,29 @@ def _extract_abilities(comp, registries: Optional[GameRegistries] = None) -> dic
         if comp_def is not None:
             return get_component_abilities(comp_def)
     return {}
+
+
+# Activatable strategic abilities that drain energy (beyond PlanetaryShield)
+_ACTIVATABLE_ABILITIES = [
+    'GeologicStabilizer',
+    'StellarStabilizer',
+    'WarpFieldStabilizer',
+]
+
+
+def _is_ability_active(planet, ability_key: str) -> bool:
+    """Check if an activatable ability is active on a planet."""
+    active_dict = getattr(planet, 'active_abilities', {})
+    if isinstance(active_dict, dict):
+        return active_dict.get(ability_key, False)
+    return False
+
+
+def _set_ability_active(planet, ability_key: str, active: bool):
+    """Set an activatable ability's active state on a planet."""
+    if not hasattr(planet, 'active_abilities'):
+        planet.active_abilities = {}
+    planet.active_abilities[ability_key] = active
 
 
 class PlanetEnergyEngine:
@@ -159,6 +198,7 @@ class PlanetEnergyEngine:
         new_generation = 0.0
         total_drain = 0.0
         has_shield_facility = False
+        _active_facilities = {}  # ability_key -> True if facility exists
 
         for facility in planet.facilities:
             if not facility.is_operational:
@@ -181,6 +221,14 @@ class PlanetEnergyEngine:
                     if planet.shield_active:
                         total_drain += shield_info_data.get('energy_drain_rate', 0.0)
 
+                # Check for other activatable abilities (stabilizers)
+                for ability_key in _ACTIVATABLE_ABILITIES:
+                    info = get_activatable_ability_info(comp, ability_key, self._registries)
+                    if info is not None:
+                        _active_facilities[ability_key] = True
+                        if _is_ability_active(planet, ability_key):
+                            total_drain += info.get('energy_drain_rate', 0.0)
+
         planet.energy_capacity = new_capacity
         planet.energy_generation = new_generation
 
@@ -188,20 +236,23 @@ class PlanetEnergyEngine:
         if new_generation > 0:
             planet.energy += new_generation / 100.0
 
-        # 3. Consume energy for active shield (1/100th per tick)
-        if planet.shield_active and total_drain > 0:
+        # 3. Consume energy for active abilities (1/100th per tick)
+        if total_drain > 0:
             drain_per_tick = total_drain / 100.0
             if planet.energy >= drain_per_tick:
                 planet.energy -= drain_per_tick
             else:
-                # Insufficient energy — auto-deactivate shield
+                # Insufficient energy — auto-deactivate all active energy-draining abilities
                 planet.energy = 0.0
-                planet.shield_active = False
-                # Deactivate component states on shield facilities
-                self._deactivate_shield_components(planet)
-                logger.info(
-                    f"Planet {planet.name}: shield auto-deactivated (energy depleted)"
-                )
+                if planet.shield_active:
+                    planet.shield_active = False
+                    self._deactivate_shield_components(planet)
+                    logger.info(f"Planet {planet.name}: shield auto-deactivated (energy depleted)")
+                for ability_key in _ACTIVATABLE_ABILITIES:
+                    if _is_ability_active(planet, ability_key):
+                        _set_ability_active(planet, ability_key, False)
+                        self._deactivate_ability_components(planet, ability_key)
+                        logger.info(f"Planet {planet.name}: {ability_key} auto-deactivated (energy depleted)")
 
         # 4. If shield facility was destroyed while shield was active, deactivate
         if planet.shield_active and not has_shield_facility:
@@ -209,6 +260,12 @@ class PlanetEnergyEngine:
             logger.info(
                 f"Planet {planet.name}: shield deactivated (facility destroyed)"
             )
+
+        # 4b. If activatable ability facility destroyed while active, deactivate
+        for ability_key in _ACTIVATABLE_ABILITIES:
+            if _is_ability_active(planet, ability_key) and not _active_facilities.get(ability_key, False):
+                _set_ability_active(planet, ability_key, False)
+                logger.info(f"Planet {planet.name}: {ability_key} deactivated (facility destroyed)")
 
         # 5. Clamp energy to [0, capacity]
         if new_capacity > 0:
@@ -222,6 +279,16 @@ class PlanetEnergyEngine:
             for comp in iter_components(facility.design_data):
                 shield_info_data = get_shield_info(comp, self._registries)
                 if shield_info_data is not None:
+                    comp_id = comp.get('id', '') if isinstance(comp, dict) else str(comp)
+                    if comp_id:
+                        facility.set_component_active(comp_id, False)
+
+    def _deactivate_ability_components(self, planet: 'Planet', ability_key: str) -> None:
+        """Deactivate all components providing a specific ability on a planet."""
+        for facility in planet.facilities:
+            for comp in iter_components(facility.design_data):
+                info = get_activatable_ability_info(comp, ability_key, self._registries)
+                if info is not None:
                     comp_id = comp.get('id', '') if isinstance(comp, dict) else str(comp)
                     if comp_id:
                         facility.set_component_active(comp_id, False)

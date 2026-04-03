@@ -2921,6 +2921,54 @@
             }
         },
         {
+            "id": "stellar_stabilizer",
+            "name": "Stellar Stabilizing Shield",
+            "type": "PlanetaryDefense",
+            "mass": 1000,
+            "hp": 500,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "StellarStabilizer": {
+                    "energy_drain_rate": 250.0,
+                    "activation_time": 100,
+                    "deactivation_time": 20,
+                    "scope": "system"
+                }
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "metals": 2000,
+                "exotics": 800,
+                "radioactives": 500,
+                "vapors": 400
+            }
+        },
+        {
+            "id": "warp_field_stabilizer",
+            "name": "Warp Field Stabilizer",
+            "type": "PlanetaryDefense",
+            "mass": 800,
+            "hp": 400,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "WarpFieldStabilizer": {
+                    "energy_drain_rate": 150.0,
+                    "activation_time": 75,
+                    "deactivation_time": 15,
+                    "scope": "system"
+                }
+            },
+            "major_classification": "Defense",
+            "resource_cost": {
+                "metals": 1500,
+                "exotics": 600,
+                "radioactives": 300,
+                "vapors": 300
+            }
+        },
+        {
             "id": "harvest_booster_metals_planet",
             "name": "Metals Refinery (Planet)",
             "type": "ResourceBooster",
