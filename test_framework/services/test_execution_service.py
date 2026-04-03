@@ -53,31 +53,26 @@ class TestExecutionService:
             self.runner.load_data_for_scenario(scenario)
             logger.debug(f" Test data loaded successfully")
 
-            # Clear battle engine
-            logger.debug(f" Clearing battle engine")
-            battle_scene.engine.start([], [])
+            # Use unified controller flow
+            from game.simulation.battle_config import BattleConfig, BattleMode, ReturnDestination
+            from game.simulation.battle_controller import BattleController
+            from game.ai.ai_factory import AIControllerFactory
 
-            # Setup scenario
-            logger.debug(f" Calling scenario.setup()")
-            scenario.setup(battle_scene.engine)
-            logger.debug(f" Scenario setup complete")
+            config = BattleConfig(
+                mode=BattleMode.TEST,
+                start_paused=True,
+                return_destination=ReturnDestination.TEST_LAB,
+                show_results=True,
+                test_scenario=scenario,
+            )
+            controller = BattleController(ai_factory=AIControllerFactory())
+            controller.configure(config)
 
-            # Configure battle scene for test mode
-            logger.debug(f" Configuring battle scene for test mode")
-            logger.debug(f" BEFORE: test_mode={battle_scene.test_mode}")
-            battle_scene.headless_mode = False
-            battle_scene.sim_paused = True  # Start paused
-            battle_scene.test_mode = True   # Enable test mode
-            battle_scene.test_scenario = scenario  # Pass scenario for update() calls
-            battle_scene.test_tick_count = 0  # Reset tick counter
-            battle_scene.test_completed = False  # Reset completed flag
-            logger.debug(f" AFTER: test_mode={battle_scene.test_mode}")
-            logger.debug(f" Battle scene configured (paused=True, test_mode=True, scenario={scenario.metadata.test_id})")
+            scenario.setup(controller.service.get_engine())
+            controller._is_started = True
 
-            # Fit camera to ships
-            if battle_scene.engine.ships:
-                battle_scene.camera.fit_objects(battle_scene.engine.ships)
-                logger.debug(f" Camera fitted to ships")
+            battle_scene.start_battle(controller)
+            logger.debug(f" Battle started via controller (scenario={scenario.metadata.test_id})")
 
             # Switch to battle state
             from game.core.constants import GameState

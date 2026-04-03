@@ -88,7 +88,6 @@ class StaticTargetScenario(TestScenario):
     # Optional configuration
     attacker_angle: float = 0.0  # Default: facing right
     target_angle: float = 0.0
-    target_movement = None  # Optional movement controller (StraightLineController, etc.)
     verify_damage_dealt: bool = False  # If True, auto-verify damage > 0
     force_fire: bool = True  # If True, auto-trigger weapon each tick
 
@@ -165,18 +164,9 @@ class StaticTargetScenario(TestScenario):
             self.custom_setup(battle_engine)
 
     def update(self, battle_engine):
-        """
-        Per-tick update. AI handles firing via strategies.
-        Target movement controllers still applied here until AI migration is complete.
-        """
+        """Per-tick update. AI handles firing and movement via strategies."""
         if self.skip_test:
             return
-
-        # Apply target movement controller if configured (temporary — will migrate to AI)
-        if self.target_movement and self.target and self.target.is_alive:
-            self.target_movement.update(self.target)
-
-        # Position tracking (no-op when track_positions is False)
         self._track_tick(battle_engine.tick_counter)
 
     def collect_results(self, engine):

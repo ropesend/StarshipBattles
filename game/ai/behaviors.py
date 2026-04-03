@@ -65,6 +65,7 @@ from typing import Any, Dict, Optional
 
 from game.core.config import AIConfig, PhysicsConfig
 from game.core.math import Vector2, angle_diff as calc_angle_diff
+import math
 from game.ai.protocols import IFormationMaster
 
 
@@ -442,14 +443,20 @@ class RotateOnlyBehavior(AIBehavior):
 
 
 class ErraticBehavior(AIBehavior):
-    """Random direction changes at random intervals."""
-    
+    """Random direction changes at random intervals.
+
+    Supports optional leash constraint: if leash_radius is set in the
+    movement policy, the ship steers back toward its starting position
+    when it drifts beyond that radius.
+    """
+
     def __init__(self, controller: Any) -> None:
         super().__init__(controller)
         self.direction_timer: float = 0.0
         self.current_direction: int = 1
         self.next_change_interval: float = 1.0
-        
+        self._leash_center: Optional[Any] = None
+
     def enter(self) -> None:
         self.direction_timer = 0.0
         self.current_direction = random.choice([-1, 1])
@@ -457,27 +464,51 @@ class ErraticBehavior(AIBehavior):
             AIConfig.ERRATIC_TURN_INTERVAL_MIN,
             AIConfig.ERRATIC_TURN_INTERVAL_MAX
         )
+        # Capture starting position as leash center
+        pos = self.controller.ship.get_position()
+        self._leash_center = (pos.x, pos.y)
 
     def update(self, target: Any, strategy: Dict[str, Any]) -> None:
+        ship = self.controller.ship
+
+        # Leash check: steer back if too far from start
+        leash_radius = strategy.get('leash_radius', 0)
+        if leash_radius > 0 and self._leash_center:
+            pos = ship.get_position()
+            dx = pos.x - self._leash_center[0]
+            dy = pos.y - self._leash_center[1]
+            dist_sq = dx * dx + dy * dy
+            if dist_sq > leash_radius * leash_radius:
+                # Steer back toward center
+                to_cx = self._leash_center[0] - pos.x
+                to_cy = self._leash_center[1] - pos.y
+                target_angle = math.degrees(math.atan2(to_cy, to_cx)) % 360
+                ship_angle = ship.get_rotation() % 360
+                diff = (target_angle - ship_angle + 180) % 360 - 180
+                if abs(diff) > 2.0:  # Dead band to prevent jitter
+                    ship.rotate(1 if diff > 0 else -1)
+                ship.thrust_forward()
+                return
+
         # Update timer
         self.direction_timer += PhysicsConfig.TICK_RATE
 
         # Check if it's time to change direction
         min_interval = strategy.get('turn_interval_min', AIConfig.ERRATIC_TURN_INTERVAL_MIN)
         max_interval = strategy.get('turn_interval_max', AIConfig.ERRATIC_TURN_INTERVAL_MAX)
-        
+
         if self.direction_timer >= self.next_change_interval:
             # Change direction randomly
             self.current_direction = random.choice([-1, 0, 1])
             self.next_change_interval = random.uniform(min_interval, max_interval)
             self.direction_timer = 0.0
-        
+
         # Apply rotation if not going straight
         if self.current_direction != 0:
-            self.controller.ship.rotate(self.current_direction)
-        
+            ship.rotate(self.current_direction)
+
         # Always thrust forward
-        self.controller.ship.thrust_forward()
+        ship.thrust_forward()
 
 
 class OrbitBehavior(AIBehavior):

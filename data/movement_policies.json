@@ -87,6 +87,13 @@
             "engage_distance": "max_range",
             "retreat_hp_threshold": 0.0,
             "avoid_collisions": false
+        },
+        "test_erratic_leashed": {
+            "behavior": "erratic",
+            "engage_distance": "max_range",
+            "retreat_hp_threshold": 0.0,
+            "avoid_collisions": false,
+            "leash_radius": 1000
         }
     }
 }

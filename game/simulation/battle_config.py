@@ -66,10 +66,6 @@ class BattleConfig:
     allow_reinforcements: bool = False
     environmental_effects: Optional[Any] = None
 
-    # Temporary: per-tick callback for test scenarios that inject AI commands.
-    # Will be removed when test scenarios migrate to AI strategy assignments.
-    per_tick_callback: Optional[Any] = None
-
     # Ship isolation (clone ships to prevent mutation of originals)
     isolated: bool = True
 

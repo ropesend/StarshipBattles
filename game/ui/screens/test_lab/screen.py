@@ -408,37 +408,38 @@ class TestLabScreen:
     def _ensure_engine(self):
         """Ensure battle engine exists (create if needed)."""
         if self.game.battle_scene.engine is None:
+            from game.ai.ai_factory import AIControllerFactory
             self.game.battle_scene._battle_service.create_battle(
-                ai_factory=self.game.battle_scene._ai_factory
+                ai_factory=AIControllerFactory()
             )
 
     def _switch_to_battle(self, scenario):
-        """Configure battle scene for visual test mode and request transition.
+        """Configure battle via controller and request scene transition.
 
-        Sets up the battle scene for test mode, then delegates the actual
-        scene transition to app.py via scene_callback (PROJ-65 pattern).
+        Uses the unified controller flow: creates BattleConfig, configures
+        a BattleController, runs scenario.setup(), then hands the controller
+        to BattleScreen.start_battle().
         """
-        engine = self.game.battle_scene.engine
+        from game.simulation.battle_config import BattleConfig, BattleMode, ReturnDestination
+        from game.simulation.battle_controller import BattleController
+        from game.ai.ai_factory import AIControllerFactory
 
-        # Clear and setup engine
-        engine.start([], [])
-        scenario.setup(engine)
+        config = BattleConfig(
+            mode=BattleMode.TEST,
+            start_paused=True,
+            return_destination=ReturnDestination.TEST_LAB,
+            show_results=True,
+            test_scenario=scenario,
+        )
+        controller = BattleController(ai_factory=AIControllerFactory())
+        controller.configure(config)
 
-        # Configure battle scene for test mode
-        self.game.battle_scene.headless_mode = False
-        self.game.battle_scene.sim_paused = True  # Start paused
-        self.game.battle_scene.test_mode = True
-        self.game.battle_scene.test_scenario = scenario
-        self.game.battle_scene.test_tick_count = 0
-        self.game.battle_scene.test_completed = False
+        # Scenario sets up ships, positions, AI strategies, and starts engine
+        scenario.setup(controller.service.get_engine())
+        controller._is_started = True  # Engine already started by scenario.setup()
 
-        # Fit camera to ships
-        ships = engine.ships
-        if ships:
-            self.game.battle_scene.camera.fit_objects(ships)
-            self.game.battle_scene.camera.target_zoom = self.game.battle_scene.camera.zoom
+        self.game.battle_scene.start_battle(controller)
 
-        # Request scene transition via callback (app.py manages active_scene)
         if self.scene_callback:
             self.scene_callback("start_test_battle", scenario=scenario)
 

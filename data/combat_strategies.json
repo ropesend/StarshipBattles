@@ -78,6 +78,12 @@
             "description": "Random direction changes. Stress testing.",
             "targeting_policy": "standard",
             "movement_policy": "test_erratic"
+        },
+        "test_erratic_leashed": {
+            "name": "Test: Erratic Leashed",
+            "description": "Random movement with leash constraint. For accuracy testing.",
+            "targeting_policy": "standard",
+            "movement_policy": "test_erratic_leashed"
         }
     }
 }

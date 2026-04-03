@@ -39,7 +39,6 @@ import pygame
 from simulation_tests.scenarios import TestMetadata
 from simulation_tests.scenarios.templates import StaticTargetScenario, ComparisonScenario
 from simulation_tests.scenarios.validation import check_exact, check_approx, check_true
-from simulation_tests.scenarios.movement import StraightLineController, ErraticController
 from simulation_tests.test_constants import (
     STANDARD_TEST_TICKS,
     STANDARD_SEED,
@@ -204,12 +203,12 @@ class ProjectileLinearSlowTargetScenario(StaticTargetScenario):
     attacker_ship = "Test_Attacker_Proj360.json"
     target_ship = "Test_Target_Linear_Slow.json"
     distance = 1204  # Initial center-to-center distance from (0,0) to (100,-1200)
-    target_movement = StraightLineController()
 
     def custom_setup(self, battle_engine):
         """Position target out of range, heading upward through engagement zone."""
         self.target.position = pygame.math.Vector2(100, -1200)
         self.target.angle = 90
+        self.target.ai_strategy = 'test_straight_line'
 
     def _collect_extra_results(self, engine):
         """Store hit tracking with resolved stats (excluding in-flight)."""
@@ -309,12 +308,12 @@ class ProjectileLinearFastTargetScenario(StaticTargetScenario):
     attacker_ship = "Test_Attacker_Proj360.json"
     target_ship = "Test_Target_Linear_Fast.json"
     distance = 1204  # Initial center-to-center distance from (0,0) to (100,-1200)
-    target_movement = StraightLineController()
 
     def custom_setup(self, battle_engine):
         """Position target out of range, heading upward through engagement zone."""
         self.target.position = pygame.math.Vector2(100, -1200)
         self.target.angle = 90
+        self.target.ai_strategy = 'test_straight_line'
 
     def _collect_extra_results(self, engine):
         """Store hit tracking with resolved stats (excluding in-flight)."""
@@ -415,10 +414,7 @@ class ProjectileErraticSmallTargetScenario(StaticTargetScenario):
 
     def custom_setup(self, battle_engine):
         self._tracking_weapon_range = 1000
-        self.target_movement = ErraticController(
-            center=self.target.position.copy(), max_radius=1000,
-            seed=self._effective_seed,
-        )
+        self.target.ai_strategy = 'test_erratic_leashed'
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
@@ -513,10 +509,7 @@ class ProjectileErraticLargeTargetScenario(StaticTargetScenario):
 
     def custom_setup(self, battle_engine):
         self._tracking_weapon_range = 1000
-        self.target_movement = ErraticController(
-            center=self.target.position.copy(), max_radius=1000,
-            seed=self._effective_seed,
-        )
+        self.target.ai_strategy = 'test_erratic_leashed'
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()

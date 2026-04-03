@@ -225,78 +225,45 @@ class BattleScreen:
     def start(self, team1_ships, team2_ships, seed=None, headless=False, start_paused=False, test_mode=False, test_scenario=None):
         """Start a battle between two teams.
 
+        Convenience method that creates a BattleController internally and
+        delegates to start_battle(). Production callers should use
+        start_battle(controller) directly for full control.
+
         Args:
             team1_ships: List of ships for team 0
             team2_ships: List of ships for team 1
             seed: Random seed for deterministic battles
             headless: Run without rendering
-            start_paused: Start with simulation paused (useful for tests)
-            test_mode: Running from Combat Lab (shows return button when done)
+            start_paused: Start with simulation paused
+            test_mode: Running from Combat Lab
             test_scenario: The TestScenario instance (if running from Combat Lab)
         """
-        self.headless_mode = headless
-        self.headless_start_time = None
-        if headless:
-            self.headless_start_time = time.time()
-            logger.info("=== STARTING HEADLESS BATTLE ===")
+        from game.simulation.battle_config import BattleConfig, BattleMode, ReturnDestination
+        from game.simulation.battle_controller import BattleController
 
-        # Use BattleService to set up and start the battle
-        # PROJ-126: Reuse same AI factory instance
-        self._battle_service.create_battle(seed=seed, enable_logging=True, ai_factory=self._ai_factory)
+        mode = BattleMode.TEST if test_mode else BattleMode.MANUAL
+        dest = ReturnDestination.TEST_LAB if test_mode else ReturnDestination.BATTLE_SETUP
 
-        # Update UI service reference (PROJ-43)
-        self._ui_service = BattleUIService(self._battle_service)
+        config = BattleConfig(
+            mode=mode,
+            seed=seed,
+            headless=headless,
+            start_paused=start_paused,
+            return_destination=dest,
+            test_scenario=test_scenario,
+        )
 
-        # Add ships to teams via service
+        controller = BattleController(ai_factory=self._ai_factory)
+        controller.configure(config)
+
         for ship in team1_ships:
-            self._battle_service.add_ship(ship, team_id=0)
+            controller.add_ships([ship], team_id=0)
         for ship in team2_ships:
-            self._battle_service.add_ship(ship, team_id=1)
+            controller.add_ships([ship], team_id=1)
 
-        # Start the battle
-        self._battle_service.start_battle()
+        controller.start()
 
-        self.beams = []
-        self.hit_effects = []
-        self.sim_tick_counter = 0
-        self.test_mode = test_mode
-        self.test_scenario = test_scenario
-        self.test_tick_count = 0
-
-        # Subscribe to combat events for visual effects
-        self._subscribe_combat_events()
-
-        # Reset UI
-        self.ui.expanded_ships = set()
-        self.ui.stats_scroll_offset = 0
-
-        self.sim_speed_multiplier = 1.0  # Reset speed on new battle
-        self.sim_paused = start_paused  # Set initial pause state
-
-        if not headless:
-            self.camera.fit_objects(self.ships)
-
-        # DEBUG LOGGING: Check for initial derelict status
-        for s in self.ships:
-            fuel = s.resources.get_value("fuel")
-            status_msg = f"Ship '{s.name}' (Team {s.team_id}): HP={s.hp}/{s.max_hp} Mass={s.mass} Thrust={s.total_thrust} Fuel={fuel} TurnSpeed={s.turn_speed:.2f} MaxSpeed={s.max_speed:.2f} Derelict={s.is_derelict}"
-            self.engine.logger.log(status_msg)
-            logger.info(status_msg)
-
-            if s.is_derelict:
-                warn_msg = f"CRITICAL WARNING: Ship {s.name} is DERELICT on start! (Bridge? Engines? LifeSupport? Power?)"
-                self.engine.logger.log(warn_msg)
-                logger.warning(warn_msg)
-
-            if s.total_thrust <= 0:
-                warn_msg = f"WARNING: {s.name} has NO THRUST!"
-                self.engine.logger.log(warn_msg)
-                logger.warning(warn_msg)
-
-            if s.turn_speed <= 0.01:
-                warn_msg = f"WARNING: {s.name} has LOW/NO TURN SPEED ({s.turn_speed:.4f})! Mass too high for thrusters?"
-                self.engine.logger.log(warn_msg)
-                logger.warning(warn_msg)
+        self.start_battle(controller)
 
     def handle_event(self, event):
         """Handle a single pygame event (IScene protocol)."""

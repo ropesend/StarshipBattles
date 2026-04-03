@@ -225,10 +225,6 @@ class BattleController:
         if not self._is_started:
             return BattleServiceResult(success=False, errors=["Battle not started"])
 
-        # Temporary: per-tick callback for test scenarios (until AI strategy migration)
-        if self._config and self._config.per_tick_callback:
-            self._config.per_tick_callback(self._service.get_engine())
-
         # Update retreat states if allowed by mode or config
         if self._retreat_allowed():
             self._update_retreats()

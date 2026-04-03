@@ -31,6 +31,8 @@ class TestRunVisual:
         mock_test_scenario
     ):
         """Test successful visual test execution."""
+        from game.simulation.battle_config import BattleMode
+
         service = TestExecutionService()
 
         # Mock scenario class to return test scenario instance
@@ -42,11 +44,14 @@ class TestRunVisual:
         success = service.run_visual(sample_scenario_info, mock_battle_screen, mock_game)
 
         assert success is True
-        mock_test_scenario.setup.assert_called_once_with(mock_battle_screen.engine)
-        assert mock_battle_screen.test_mode is True
-        assert mock_battle_screen.sim_paused is True
-        assert mock_battle_screen.headless_mode is False
-        assert mock_battle_screen.test_scenario is mock_test_scenario
+        # Scenario setup is called with the controller's engine, not the mock screen engine
+        mock_test_scenario.setup.assert_called_once()
+        # start_battle should be called with a BattleController
+        mock_battle_screen.start_battle.assert_called_once()
+        controller = mock_battle_screen.start_battle.call_args[0][0]
+        assert controller.config.mode == BattleMode.TEST
+        assert controller.config.start_paused is True
+        assert controller.config.test_scenario is mock_test_scenario
 
     def test_run_visual_loads_data(
         self,
@@ -64,42 +69,41 @@ class TestRunVisual:
 
         service.runner.load_data_for_scenario.assert_called_once_with(mock_test_scenario)
 
-    def test_run_visual_clears_engine(
+    def test_run_visual_uses_controller_engine(
         self,
         mock_game,
         mock_battle_screen,
         sample_scenario_info,
         mock_test_scenario
     ):
-        """Test that run_visual clears battle engine before setup."""
+        """Test that run_visual creates a controller with its own engine."""
         service = TestExecutionService()
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
 
         service.run_visual(sample_scenario_info, mock_battle_screen, mock_game)
 
-        mock_battle_screen.engine.start.assert_called_once_with([], [])
+        # The controller creates its own engine; start_battle receives it
+        mock_battle_screen.start_battle.assert_called_once()
+        controller = mock_battle_screen.start_battle.call_args[0][0]
+        assert controller.service.get_engine() is not None
 
-    def test_run_visual_fits_camera(
+    def test_run_visual_delegates_camera_to_start_battle(
         self,
         mock_game,
         mock_battle_screen,
         sample_scenario_info,
         mock_test_scenario
     ):
-        """Test that camera is fitted to ships."""
+        """Test that camera fitting is handled by start_battle, not directly."""
         service = TestExecutionService()
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
 
-        # Add mock ships
-        mock_ship1 = Mock()
-        mock_ship2 = Mock()
-        mock_battle_screen.engine.ships = [mock_ship1, mock_ship2]
-
         service.run_visual(sample_scenario_info, mock_battle_screen, mock_game)
 
-        mock_battle_screen.camera.fit_objects.assert_called_once_with([mock_ship1, mock_ship2])
+        # Camera fitting is now internal to start_battle; just verify start_battle was called
+        mock_battle_screen.start_battle.assert_called_once()
 
     def test_run_visual_switches_to_battle_state(
         self,
