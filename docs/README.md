@@ -1,7 +1,7 @@
 # Starship Battles Documentation
 
 > **Audience:** LLM agents (Claude Code, automated workers). Optimized for machine readability.
-> **Last verified:** 2026-04-03 against 473 source files, 14330 tests.
+> **Last verified:** 2026-04-03 against 473 source files, 13986 tests.
 
 ---
 

@@ -127,6 +127,21 @@ Singleton (`SingletonMeta`) that loads and resolves combat strategies from JSON 
 
 Ships reference a strategy by ID string (e.g., `'standard_ranged'`, `'aggressive'`) via `ship.ai_strategy`. The controller resolves this each tick.
 
+### Test Strategies
+
+Predefined strategies for Combat Lab scenarios that replace manual per-tick commands:
+
+| Strategy ID | Behavior | Purpose |
+|-------------|----------|---------|
+| `test_stationary_fire` | `stationary_fire` | Stay still, fire at targets. Replaces `comp_trigger_pulled = True` |
+| `test_do_nothing` | `do_nothing` | No movement, no firing. For static targets |
+| `test_straight_line` | `straight_line` | Full thrust in facing direction. Replaces `thrust_forward()` |
+| `test_rotate_right` | `rotate_only` (dir=1) | Clockwise rotation. Replaces `rotate(1)` |
+| `test_rotate_left` | `rotate_only` (dir=-1) | Counter-clockwise rotation. Replaces `rotate(-1)` |
+| `test_erratic` | `erratic` | Random direction changes. Stress testing |
+
+The AI controller runs these behaviors even without an enemy target (for propulsion tests with no opponents). No-target behaviors: `straight_line`, `rotate_only`, `erratic`, `do_nothing`, `stationary_fire`.
+
 **Thread safety:** Data loading is protected by a lock (double-checked locking). Once loaded, reads are lock-free. `clear()` and `reset()` are test-only and not thread-safe.
 
 ---

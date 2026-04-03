@@ -65,7 +65,7 @@ class BattleServiceResult:
 | `create_battle` | `(seed: Optional[int], enable_logging: bool, ai_factory: Optional[IAIControllerFactory] = None) -> BattleServiceResult` | Create a new battle instance with optional seed, logging, and AI factory |
 | `add_ship` | `(ship: Ship, team_id: int) -> BattleServiceResult` | Add a ship to team 0 or 1 (before start only) |
 | `remove_ship` | `(ship: Ship) -> BattleServiceResult` | Remove a ship from the battle (before start only) |
-| `start_battle` | `(end_mode: BattleEndMode, max_ticks: Optional[int]) -> BattleServiceResult` | Start the simulation with the given end condition |
+| `start_battle` | `(end_condition: Optional[IEndCondition], absolute_max_ticks: Optional[int]) -> BattleServiceResult` | Start the simulation with the given end condition |
 | `update` | `() -> BattleServiceResult` | Run one simulation tick |
 | `run_ticks` | `(count: int) -> BattleServiceResult` | Run multiple ticks (stops early if battle ends) |
 | `is_battle_over` | `() -> bool` | Check if the battle has ended |
@@ -79,7 +79,9 @@ class BattleServiceResult:
 **Usage:**
 ```python
 from game.simulation.services.battle_service import BattleService
-from game.simulation.systems.battle_end_conditions import BattleEndMode
+from game.simulation.systems.battle_end_conditions import (
+    TeamEliminatedCondition, TickLimitCondition, AnyCondition,
+)
 
 service = BattleService()
 result = service.create_battle(seed=42, enable_logging=True)
@@ -87,12 +89,17 @@ result = service.create_battle(seed=42, enable_logging=True)
 service.add_ship(ship1, team_id=0)
 service.add_ship(ship2, team_id=1)
 
-service.start_battle(end_mode=BattleEndMode.HP_BASED)
+# Simple: end when a team is eliminated (default)
+service.start_battle()
+
+# Or composable: end when eliminated OR after 10,000 ticks
+service.start_battle(end_condition=AnyCondition([
+    TeamEliminatedCondition(),
+    TickLimitCondition(max_ticks=10000),
+]))
 
 while not service.is_battle_over():
     service.update()
-    state = service.get_battle_state()
-    print(f"Tick {state['tick_count']}: {len(state['team_0_ships'])} vs {len(state['team_1_ships'])}")
 
 winner = service.get_winner()
 service.reset()
