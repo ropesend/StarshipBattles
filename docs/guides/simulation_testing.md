@@ -49,6 +49,9 @@ simulation_tests/                    # Simulation-specific test ecosystem
 │   ├── shield_regen_scenarios.py    # ShieldRegeneration
 │   ├── armor_layer_scenarios.py     # ArmorLayer
 │   ├── emissive_armor_scenarios.py  # EmissiveArmor
+│   ├── cnc_scenarios.py             # CommandAndControl
+│   ├── sra_scenarios.py             # ShieldRegeneratingArmor
+│   ├── damage_pipeline_scenarios.py # Integration Tests (multi-component defense)
 │   └── example_beam_test.py         # Example scenario for reference
 ├── tests/                           # Pytest wrappers for scenarios
 │   ├── test_beam_weapons.py

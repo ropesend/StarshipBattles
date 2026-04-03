@@ -175,9 +175,22 @@ Within each layer, components are selected by **weighted random** based on
 current HP. Damage absorbed = min(component.current_hp, remaining_damage).
 Components with more HP are more likely to be hit.
 
+**Note:** `apply_damage()` returns immediately for zero or negative damage
+values to prevent invalid state changes (e.g., negative damage healing shields).
+
 After damage is applied:
 - `ship.recalculate_stats()` -- updates derived stats (skips non-operational components)
 - `ship.update_derelict_status()` -- functional check: ship is derelict when it has no operational weapons AND no operational engines
+
+### Pipeline Validation
+
+The damage pipeline is validated by integration tests in
+`simulation_tests/scenarios/damage_pipeline_scenarios.py`:
+- PIPELINE-001 through PIPELINE-005: Pairwise and full pipeline combinations
+- PIPELINE-007: SRA recharge cap overflow (excess recharge above max_shields is wasted)
+
+Individual defense stages are also tested in isolation by their respective
+ability test categories (SHIELD-PROJ-*, EMISSIVE-*, SRA-*).
 
 ### Component Operational Status and Stats
 

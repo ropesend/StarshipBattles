@@ -25,6 +25,36 @@ Data format conventions:
 
 ---
 
+## Stacking Rules
+
+All numeric abilities follow a two-phase aggregation model when multiple
+components provide the same ability:
+
+### Phase 1: Intra-Group MAX
+Components with the same `stack_group` value are reduced to their **maximum**.
+Redundant components in the same group provide no additional benefit.
+
+Example: Two sensors with `stack_group: "sensors_a"` and values [1.0, 0.5] → result is 1.0.
+
+### Phase 2: Inter-Group SUM  
+After intra-group reduction, values from **different** groups are **summed**.
+Diverse components from different groups stack additively.
+
+Example: Sensor group_a (1.0) + Sensor group_b (0.5) → total 1.5.
+
+### No Stack Group
+Components without an explicit `stack_group` each form their own group
+(keyed by the component object). Multiple such components SUM together.
+
+### Validation
+Stacking behavior is validated by simulation tests:
+- Same-group MAX: EMISSIVE-003, SRA-004, TOHIT-ATK-002, TOHIT-DEF-002
+- Different-group SUM: EMISSIVE-004, SRA-005, TOHIT-ATK-003, TOHIT-DEF-003
+- Three-component same-group: EMISSIVE-006
+- Mixed positive + negative: TOHIT-ATK-005
+
+---
+
 ## Weapons
 
 ### WeaponAbility

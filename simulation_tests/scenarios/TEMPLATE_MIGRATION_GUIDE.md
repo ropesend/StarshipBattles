@@ -382,6 +382,52 @@ turn_right = False                # Auto-turn right
 - `self.start_velocity`, `self.final_velocity` - Vector2
 - `self.distance_traveled`, `self.velocity_change`, `self.angle_change`
 
+### ComparisonScenario
+
+A/B comparison template that runs two separate battles — a baseline and a variant
+— then compares their measured outcomes.
+
+**How it works:**
+1. `setup()` runs the baseline battle internally on a private engine
+2. The variant battle runs on the runner's engine (visible in Combat Lab)
+3. `collect_results()` stores measurements from both battles
+4. `validate()` compares baseline vs variant outcomes
+
+**Required Configuration:**
+```python
+class MyAbilityTest(ComparisonScenario):
+    metadata = TestMetadata(...)
+    
+    baseline_attacker_ship = "Test_Attacker.json"
+    baseline_target_ship = "Test_Target_NoAbility.json"
+    variant_attacker_ship = "Test_Attacker.json"
+    variant_target_ship = "Test_Target_WithAbility.json"
+    distance = 400
+```
+
+**Optional Configuration:**
+- `force_fire: bool = True` — auto-fire weapons each tick
+- `attacker_angle: float = 0.0` — attacker rotation
+- `expect_different_damage: bool = True` — set False for stacking tests where identical damage is expected
+
+**Measurement Attributes (set by collect_results):**
+- `baseline_damage_dealt`, `variant_damage_dealt`
+- `baseline_initial_hp`, `variant_initial_hp`
+- `baseline_final_hp`, `variant_final_hp`
+- `baseline_ticks`, `variant_ticks`
+
+**Hooks:**
+- `configure_baseline(engine)` — customize after baseline ships loaded
+- `configure_variant(engine)` — customize after variant ships loaded
+
+**Template Preconditions (automatic):**
+- Both battles ran full duration (ticks == max_ticks)
+- Both targets loaded (initial_hp > 0)
+- Battles produced different results (when ship configs differ)
+
+**Used by:** All ability-specific tests (ToHit*, Shield*, Emissive*, CNC, SRA),
+resource comparison tests, and damage pipeline integration tests.
+
 ## Migration Checklist
 
 For each scenario to migrate:

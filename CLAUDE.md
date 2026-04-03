@@ -297,6 +297,7 @@ When faced with choices, prefer:
 - **VS Code Test Explorer:** Use 4 workers (higher breaks the integrated test panel)
 - **Test monitor:** `--testmon` for incremental runs
 - **Baseline:** 14103 passed, 0 skipped
+- **Simulation test baseline:** 118 passed, 1 failed (RESOURCE-002), 0 skipped (119 total)
 
 ---
 

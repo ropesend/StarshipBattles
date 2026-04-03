@@ -149,7 +149,10 @@ python -m simulation_tests.run_tests --no-history
 
 ## See Also
 
-- `templates.py` -- All available templates (StaticTargetScenario, DuelScenario, PropulsionScenario, ResourceScenario)
+- `templates.py` -- All available templates (StaticTargetScenario, DuelScenario, PropulsionScenario, ResourceScenario, ComparisonScenario)
+- `ComparisonScenario` -- A/B comparison: runs baseline + variant battles, compares outcomes.
+  Used by ability-specific tests (ToHit*, Shield*, Emissive*, CNC, SRA, Pipeline).
+  See `templates.py` for configuration attributes.
 - `beam_scenarios.py` -- Production examples using the parametrized `BeamAccuracyScenario` pattern
 - `validation.py` -- Check, ValidationReport, and all check functions
 - `../test_constants.py` -- Centralized constants (margins, distances, weapon stats)
