@@ -243,7 +243,8 @@ class MyTest(TestScenario):
         pass
 
     def update(self, battle_engine):
-        """Optional: per-tick logic (e.g., force weapon firing)."""
+        """Optional: per-tick logic (target movement controllers only).
+        Firing and thrust are handled by AI strategies assigned in setup()."""
         pass
 
     def validate(self, battle_engine):
@@ -452,20 +453,24 @@ class BeamRangeTest(TestScenario):
         target = self._load_ship('Test_Target_Stationary.json')
         attacker.position = pygame.math.Vector2(0, 0)
         target.position = pygame.math.Vector2(400, 0)
+        # AI strategies handle firing and movement
+        attacker.ai_strategy = 'test_stationary_fire'
+        target.ai_strategy = 'test_do_nothing'
         self.initial_target_hp = target.hp
         battle_engine.start([attacker], [target], seed=self.metadata.seed)
-        attacker.current_target = target
         self.attacker = attacker
         self.target = target
-
-    def update(self, battle_engine):
-        self.attacker.comp_trigger_pulled = True
 
     def validate(self, battle_engine):
         damage = self.initial_target_hp - self.target.hp
         self.results['damage_dealt'] = damage
         return damage > 0
 ```
+
+**Note:** Test scenarios assign AI strategies (`test_stationary_fire`, `test_do_nothing`,
+`test_straight_line`, `test_rotate_right`, `test_rotate_left`, `test_erratic`) instead of
+manually setting `comp_trigger_pulled` or calling `thrust_forward()` in `update()`.
+The AI controller handles firing and movement commands.
 
 ### Pattern 2: Resource Consumption Tests
 
@@ -686,14 +691,12 @@ class BEAM360_001_LowAccPointBlank(TestScenario):
         target = self._load_ship('Test_Target_Stationary.json')
         attacker.position = pygame.math.Vector2(0, 0)
         target.position = pygame.math.Vector2(50, 0)
+        attacker.ai_strategy = 'test_stationary_fire'
+        target.ai_strategy = 'test_do_nothing'
         self.initial_target_hp = target.hp
         battle_engine.start([attacker], [target], seed=self.metadata.seed)
-        attacker.current_target = target
         self.attacker = attacker
         self.target = target
-
-    def update(self, battle_engine):
-        self.attacker.comp_trigger_pulled = True
 
     def validate(self, battle_engine):
         damage = self.initial_target_hp - self.target.hp
