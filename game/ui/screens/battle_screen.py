@@ -152,6 +152,7 @@ class BattleScreen:
 
         config = controller.config
         self.sim_paused = config.start_paused if config else False
+        self.headless_mode = config.headless if config else False
 
         # Subscribe to combat events for visual effects
         self._subscribe_combat_events()

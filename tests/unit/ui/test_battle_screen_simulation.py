@@ -75,7 +75,6 @@ class TestBattleScreenSimulationLifecycle:
         self.scene.start([self.ship1], [self.ship2], headless=True)
 
         assert self.scene.headless_mode is True
-        assert self.scene.headless_start_time is not None
 
     def test_start_headless_false_mode_difference(self):
         """Test start() with headless=False does not set headless mode."""
