@@ -440,7 +440,7 @@ class TurnEngine:
         # --- Phase 0: Harvesting (1/100th per tick) ---
         if tick == 1:
             self._log_empire_state(empires, "TURN START tick=1")
-        self._time_phase('harvesting', self.harvesting_engine.process_harvesting_tick, tick, empires)
+        self._time_phase('harvesting', self.harvesting_engine.process_harvesting_tick, tick, empires, galaxy)
 
         # --- Phase 0b: Per-turn Resource Consumption ---
         self._time_phase('resources', self.resource_engine.process_per_turn_consumption, tick, empires)

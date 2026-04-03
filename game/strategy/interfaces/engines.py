@@ -374,7 +374,8 @@ class IHarvestingEngine(ABC):
     def process_harvesting_tick(
         self,
         tick: int,
-        empires: List
+        empires: List,
+        galaxy=None
     ) -> None:
         """
         Process resource harvesting for one tick (1/100th of turn).

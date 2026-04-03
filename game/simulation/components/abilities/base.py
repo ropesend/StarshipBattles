@@ -31,6 +31,8 @@ class AbilityScope(Enum):
     SYSTEM: All entities in the star system
     ALLIED_SYSTEM: Allied entities in the star system
     PLANET: Planet-wide effect (for planetary shields, sensors, etc.)
+    EMPIRE: All colonies belonging to the owning player
+    ALLIED_EMPIRE: All colonies of the owning player and their allies
     """
     SELF = "self"
     SECTOR = "sector"
@@ -38,6 +40,8 @@ class AbilityScope(Enum):
     SYSTEM = "system"
     ALLIED_SYSTEM = "allied_system"
     PLANET = "planet"
+    EMPIRE = "empire"
+    ALLIED_EMPIRE = "allied_empire"
 
 
 class Ability:

@@ -30,7 +30,7 @@ def _shield_design():
         "layers": {
             "OUTER": [
                 {
-                    "id": "planetary_shield_generator",
+                    "id": "geologic_stabilizer_sector",
                     "abilities": {
                         "PlanetaryShield": {
                             "energy_drain_rate": 25.0,

@@ -107,8 +107,9 @@ class HarvestingEngine(IHarvestingEngine):
                        abilities from plain string IDs in design_data.
         """
         self._registries = registries
+        self._galaxy = None
 
-    def process_harvesting_tick(self, tick: int, empires: List) -> None:
+    def process_harvesting_tick(self, tick: int, empires: List, galaxy=None) -> None:
         """
         Process resource harvesting for one tick (1/100th of turn).
 
@@ -121,7 +122,9 @@ class HarvestingEngine(IHarvestingEngine):
         Args:
             tick: Current tick number (1-100)
             empires: List of Empire objects to process
+            galaxy: Optional Galaxy for scoped ability queries (harvest boosters)
         """
+        self._galaxy = galaxy
         self.recalculate_storage(empires)
         for empire in empires:
             self._process_empire(empire, tick_fraction=0.01)
@@ -274,25 +277,27 @@ class HarvestingEngine(IHarvestingEngine):
             tick_fraction: Fraction of per-turn harvest to extract (1.0 = full turn, 0.01 = one tick)
         """
         for colony in empire.colonies:
-            self._process_colony(colony, tick_fraction)
+            self._process_colony(colony, tick_fraction, empire=empire)
 
-    def _process_colony(self, colony: 'Planet', tick_fraction: float = 1.0) -> None:
+    def _process_colony(self, colony: 'Planet', tick_fraction: float = 1.0, empire=None) -> None:
         """Process harvesting for a single colony.
 
         Args:
             colony: Colony to process (resources deposited to colony.stockpile)
             tick_fraction: Fraction of per-turn harvest to extract
+            empire: Empire that owns this colony (for scoped booster queries)
         """
         for facility in colony.facilities:
             if not facility.is_operational:
                 continue
-            self._process_facility(facility, colony, tick_fraction)
+            self._process_facility(facility, colony, tick_fraction, empire=empire)
 
     def _process_facility(
         self,
         facility: 'PlanetaryFacility',
         colony: 'Planet',
         tick_fraction: float = 1.0,
+        empire=None,
     ) -> None:
         """Scan a facility's components for ResourceHarvester abilities.
 
@@ -300,6 +305,7 @@ class HarvestingEngine(IHarvestingEngine):
             facility: Facility to scan
             colony: Colony containing the facility (resources deposited to colony.stockpile)
             tick_fraction: Fraction of per-turn harvest to extract
+            empire: Empire that owns this colony (for scoped booster queries)
         """
         for comp in iter_components(facility.design_data):
             harvester_data = get_harvester_info(comp, self._registries)
@@ -312,8 +318,42 @@ class HarvestingEngine(IHarvestingEngine):
             for harvester_info in harvester_data:
                 self._harvest_resource(
                     harvester_info, colony, tick_fraction,
-                    size_multiplier=size_mult
+                    size_multiplier=size_mult,
+                    empire=empire
                 )
+
+    def _get_harvest_booster_mult(self, colony, resource_type, empire) -> float:
+        """Aggregate ResourceHarvestBooster multipliers affecting this colony.
+
+        Uses the strategic ability scanner to find all boosters at each scope
+        that match the resource type, then aggregates with two-phase stacking.
+
+        Args:
+            colony: The colony being harvested.
+            resource_type: Resource type to match boosters for.
+            empire: Empire owning the colony.
+
+        Returns:
+            Combined multiplier (1.0 if no boosters).
+        """
+        if empire is None or self._galaxy is None:
+            return 1.0
+
+        from game.strategy.services.strategic_ability_scanner import (
+            find_abilities_in_scope, aggregate_multipliers,
+        )
+
+        all_boosters = []
+        for scope in ["planet", "sector", "system", "empire"]:
+            entries = find_abilities_in_scope(
+                "ResourceHarvestBooster", colony, self._galaxy, empire, scope,
+                registries=self._registries,
+            )
+            for entry in entries:
+                if entry.get("resource_type") == resource_type:
+                    all_boosters.append(entry)
+
+        return aggregate_multipliers(all_boosters)
 
     def _get_harvester_info(self, comp) -> Optional[dict]:
         """Extract ResourceHarvester info from a component entry.
@@ -349,6 +389,7 @@ class HarvestingEngine(IHarvestingEngine):
         colony: 'Planet',
         tick_fraction: float = 1.0,
         size_multiplier: float = 1.0,
+        empire=None,
     ) -> None:
         """Execute one harvester's resource extraction.
 
@@ -357,6 +398,7 @@ class HarvestingEngine(IHarvestingEngine):
             colony: Planet being harvested (resources deposited to colony.stockpile)
             tick_fraction: Fraction of per-turn harvest to extract (1.0 = full turn, 0.01 = one tick)
             size_multiplier: Size mount scaling factor (e.g., 0.2 for 20% size)
+            empire: Empire owning the colony (for scoped booster queries)
         """
         resource_type = harvester_info.get('resource_type', '')
         base_rate = harvester_info.get('base_harvest_rate', 0.0)
@@ -375,8 +417,9 @@ class HarvestingEngine(IHarvestingEngine):
         if quality <= 0 or quantity <= 0:
             return
 
-        # Calculate harvest amount (scaled by size_multiplier and tick_fraction)
-        harvest = base_rate * size_multiplier * quality * tick_fraction
+        # Calculate harvest amount (scaled by size, boosters, and tick_fraction)
+        booster_mult = self._get_harvest_booster_mult(colony, resource_type, empire)
+        harvest = base_rate * size_multiplier * booster_mult * quality * tick_fraction
         actual_harvest = min(harvest, quantity)
 
         # Deduct from planet

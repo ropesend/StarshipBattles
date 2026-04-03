@@ -78,6 +78,39 @@ class BuildQueueSource:
     planet_id: Optional[int] = None
 
 
+def get_build_rate_booster_mult(planet, galaxy=None, empire=None, registries=None) -> float:
+    """Aggregate BuildRateBooster multipliers affecting a planet.
+
+    Scans for BuildRateBooster abilities at sector and system scope
+    and returns the combined multiplier using two-phase stacking.
+
+    Args:
+        planet: Planet to check for boosters.
+        galaxy: Galaxy for spatial queries (optional).
+        empire: Empire owning the planet (optional).
+        registries: GameRegistries (optional).
+
+    Returns:
+        Combined build rate multiplier (1.0 if no boosters).
+    """
+    if galaxy is None or empire is None:
+        return 1.0
+
+    from game.strategy.services.strategic_ability_scanner import (
+        find_abilities_in_scope, aggregate_multipliers,
+    )
+
+    all_boosters = []
+    for scope in ["planet", "sector", "system", "empire"]:
+        entries = find_abilities_in_scope(
+            "BuildRateBooster", planet, galaxy, empire, scope,
+            registries=registries,
+        )
+        all_boosters.extend(entries)
+
+    return aggregate_multipliers(all_boosters)
+
+
 def _get_facility_production_rates(facility: 'PlanetaryFacility') -> Dict[str, float]:
     """Extract per-resource production rates from a shipyard facility's design_data.
 
@@ -218,7 +251,7 @@ def get_production_rate_for_queue(entity, queue_id: Optional[str]) -> Dict[str, 
     return base_rates
 
 
-def _collect_planet_sources(planet, sources: List[BuildQueueSource]) -> None:
+def _collect_planet_sources(planet, sources: List[BuildQueueSource], galaxy=None, empire=None) -> None:
     """Collect build queue sources from a single planet.
 
     Adds the base planetary yard queue and any shipyard facility queues
@@ -227,6 +260,8 @@ def _collect_planet_sources(planet, sources: List[BuildQueueSource]) -> None:
     Args:
         planet: Planet instance to collect queues from.
         sources: List to append BuildQueueSource objects to.
+        galaxy: Optional Galaxy for booster queries.
+        empire: Optional Empire for booster queries.
     """
     # Base queue (complexes only) — only if colony has PlanetaryYard facility
     from game.strategy.engine.production_engine import _colony_has_planetary_yard
@@ -235,7 +270,8 @@ def _collect_planet_sources(planet, sources: List[BuildQueueSource]) -> None:
     if _colony_has_planetary_yard(planet, regs):
         base_rates = get_default_production_rates("planetary_yard")
         yard_size_mult = _get_planetary_yard_size_multiplier(planet, regs)
-        scaled_rates = {res: rate * yard_size_mult for res, rate in base_rates.items()}
+        build_booster = get_build_rate_booster_mult(planet, galaxy, empire, regs)
+        scaled_rates = {res: rate * yard_size_mult * build_booster for res, rate in base_rates.items()}
         sources.append(BuildQueueSource(
             queue_id=f"planet_{planet.id}_base",
             display_name=f"{planet.name} - Planetary Yard",
@@ -250,9 +286,12 @@ def _collect_planet_sources(planet, sources: List[BuildQueueSource]) -> None:
 
     # Shipyard facility queues
     shipyard_index = 0
+    build_booster = get_build_rate_booster_mult(planet, galaxy, empire, regs) if galaxy and empire else 1.0
     for facility in planet.facilities:
         if facility.is_shipyard:
             shipyard_index += 1
+            fac_rates = _get_facility_production_rates(facility)
+            boosted_rates = {res: rate * build_booster for res, rate in fac_rates.items()}
             sources.append(BuildQueueSource(
                 queue_id=facility.instance_id,
                 display_name=f"{planet.name} - Shipyard {shipyard_index}",
@@ -261,7 +300,7 @@ def _collect_planet_sources(planet, sources: List[BuildQueueSource]) -> None:
                 can_build_ships=True,
                 can_build_complexes=True,
                 context_type="planet",
-                build_rate=_get_facility_production_rates(facility),
+                build_rate=boosted_rates,
                 planet_id=planet.id,
             ))
 
@@ -315,7 +354,7 @@ def collect_build_queues_at_hex(hex_coord, galaxy, empire) -> List[BuildQueueSou
     for planet in galaxy.get_planets_at_global_hex(hex_coord):
         if planet.owner_id != empire.id:
             continue
-        _collect_planet_sources(planet, sources)
+        _collect_planet_sources(planet, sources, galaxy=galaxy, empire=empire)
 
     # Fleet queues (one entry per space yard component)
     for fleet in empire.fleets:

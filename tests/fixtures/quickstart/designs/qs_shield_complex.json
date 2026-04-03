@@ -59,7 +59,7 @@
         "INNER": [],
         "OUTER": [
             {
-                "id": "planetary_shield_generator",
+                "id": "geologic_stabilizer_sector",
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
