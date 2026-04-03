@@ -92,14 +92,15 @@ Starship Battles/
 │       ├── propulsion_scenarios.py     # Movement/physics tests
 │       ├── resource_scenarios.py       # Energy/ammo tests
 │       │   # Ability-specific categories (one file per ability)
-│       ├── tohit_attack_scenarios.py   # ToHitAttackModifier (TOHIT-ATK-001 to 004)
+│       ├── tohit_attack_scenarios.py   # ToHitAttackModifier (TOHIT-ATK-001 to 005)
 │       ├── tohit_defense_scenarios.py  # ToHitDefenseModifier (TOHIT-DEF-001 to 004)
 │       ├── shield_projection_scenarios.py # ShieldProjection (SHIELD-PROJ-001 to 007+)
-│       ├── shield_regen_scenarios.py   # ShieldRegeneration (SHIELD-REGEN-001 to 006)
+│       ├── shield_regen_scenarios.py   # ShieldRegeneration (SHIELD-REGEN-001 to 007)
 │       ├── armor_layer_scenarios.py    # ArmorLayer (ARMOR-LAYER-001 to 003)
-│       ├── emissive_armor_scenarios.py # EmissiveArmor (EMISSIVE-001 to 005)
-│       ├── cnc_scenarios.py           # CommandAndControl (CNC-001 to 005)
-│       └── sra_scenarios.py           # ShieldRegeneratingArmor (SRA-001 to 005)
+│       ├── emissive_armor_scenarios.py # EmissiveArmor (EMISSIVE-001 to 007)
+│       ├── cnc_scenarios.py           # CommandAndControl (CNC-001 to 006)
+│       ├── sra_scenarios.py           # ShieldRegeneratingArmor (SRA-001 to 005)
+│       └── damage_pipeline_scenarios.py # DamagePipeline (PIPELINE-001 to 005, 007)
 ```
 
 ---

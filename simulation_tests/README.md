@@ -102,14 +102,33 @@ compare measured outcomes.
 
 | Category | File | Tests | Status |
 |----------|------|-------|--------|
-| **ToHitAttackModifier** | `tohit_attack_scenarios.py` | TOHIT-ATK-001 to 004 | Complete (4 tests) |
+| **ToHitAttackModifier** | `tohit_attack_scenarios.py` | TOHIT-ATK-001 to 005 | Complete (5 tests) |
 | **ToHitDefenseModifier** | `tohit_defense_scenarios.py` | TOHIT-DEF-001 to 004 | Complete (4 tests) |
 | **ShieldProjection** | `shield_projection_scenarios.py` | SHIELD-PROJ-001 to 007, 005B, METALS-001/002 | Complete (10 tests) |
-| **ShieldRegeneration** | `shield_regen_scenarios.py` | SHIELD-REGEN-001 to 006 | Complete (6 tests) |
+| **ShieldRegeneration** | `shield_regen_scenarios.py` | SHIELD-REGEN-001 to 007 | Complete (7 tests) |
 | **ArmorLayer** | `armor_layer_scenarios.py` | ARMOR-LAYER-001 to 003 | Complete (3 tests) |
-| **EmissiveArmor** | `emissive_armor_scenarios.py` | EMISSIVE-001 to 005 | Complete (5 tests) |
-| **CommandAndControl** | `cnc_scenarios.py` | CNC-001 to 005 | Complete (5 tests) |
+| **EmissiveArmor** | `emissive_armor_scenarios.py` | EMISSIVE-001 to 007 | Complete (7 tests) |
+| **CommandAndControl** | `cnc_scenarios.py` | CNC-001 to 006 | Complete (6 tests) |
 | **ShieldRegeneratingArmor** | `sra_scenarios.py` | SRA-001 to 005 | Complete (5 tests) |
+| **DamagePipeline** | `damage_pipeline_scenarios.py` | PIPELINE-001 to 005, 007 | Complete (6 tests) |
+
+#### Damage Pipeline Integration Tests (6 tests)
+
+Test IDs: `PIPELINE-XXX`.
+
+| Subcategory | Tests | Description |
+|-------------|-------|-------------|
+| **Shield + Emissive** | 1 test | Emissive reduces overflow after shields deplete |
+| **Shield + SRA** | 1 test | SRA absorbs overflow and recharges shields in a cycle |
+| **Emissive + SRA** | 1 test | Sequential reduction: emissive first, then SRA |
+| **Full Pipeline** | 1 test | Shield + Emissive + SRA vs no defenses |
+| **Full + Regen** | 1 test | Regen extends full pipeline protection |
+| **SRA Cap Overflow** | 1 test | SRA recharge capped at max_shields; excess wasted |
+
+Pipeline tests validate that the damage stages (Shields → Emissive Armor →
+Shield Regenerating Armor → Hull Layers) work correctly when multiple defenses
+are active simultaneously. Each test uses ComparisonScenario to compare a
+defended target against a baseline.
 
 ### Weapon & System Tests (Original Pattern)
 
@@ -539,14 +558,15 @@ Starship Battles/
         ├── movement.py                      # StraightLine, CircularOrbit, Erratic controllers
         │
         │   # Ability-specific categories (one file per ability)
-        ├── tohit_attack_scenarios.py        # ToHitAttackModifier (TOHIT-ATK-001 to 004)
+        ├── tohit_attack_scenarios.py        # ToHitAttackModifier (TOHIT-ATK-001 to 005)
         ├── tohit_defense_scenarios.py       # ToHitDefenseModifier (TOHIT-DEF-001 to 004)
         ├── shield_projection_scenarios.py   # ShieldProjection (SHIELD-PROJ-001 to 007, 005B, METALS)
-        ├── shield_regen_scenarios.py        # ShieldRegeneration (SHIELD-REGEN-001 to 006)
+        ├── shield_regen_scenarios.py        # ShieldRegeneration (SHIELD-REGEN-001 to 007)
         ├── armor_layer_scenarios.py         # ArmorLayer (ARMOR-LAYER-001 to 003)
-        ├── emissive_armor_scenarios.py     # EmissiveArmor (EMISSIVE-001 to 005)
-        ├── cnc_scenarios.py                # CommandAndControl (CNC-001 to 005)
+        ├── emissive_armor_scenarios.py     # EmissiveArmor (EMISSIVE-001 to 007)
+        ├── cnc_scenarios.py                # CommandAndControl (CNC-001 to 006)
         ├── sra_scenarios.py                # ShieldRegeneratingArmor (SRA-001 to 005)
+        ├── damage_pipeline_scenarios.py    # DamagePipeline Integration (PIPELINE-001 to 005, 007)
         │
         │   # Weapon/system-level tests (include resource dependency tests)
         ├── beam_scenarios.py                # BeamWeapon (BEAMWEAPON-*, BEAMWEAPON-RES-*)

@@ -1,7 +1,7 @@
 > **Status: In Progress**
 > Scenario classes live in `simulation_tests/scenarios/*_scenarios.py` and are
 > run via `python -m simulation_tests.run_tests`.
-> Current baseline: **113 passed, 1 failed (RESOURCE-002 game bug), 0 skipped (114 total)**.
+> Current baseline: **118 passed, 1 failed (RESOURCE-002 game bug), 0 skipped (119 total)**.
 > Note: `defense_scenarios.py` was deleted — its 8 tests were redundant with
 > dedicated ability files or replaced by the EmissiveArmor category.
 
@@ -89,15 +89,15 @@ ability under test.
 | Ability | Test File | Status | Tests |
 |---------|-----------|--------|-------|
 | `ShieldProjection` | `shield_projection_scenarios.py` | **Complete** (10 tests) | SHIELD-PROJ-001 to 007, 005B, METALS-001/002 |
-| `ShieldRegeneration` | `shield_regen_scenarios.py` | **Complete** (6 tests) | SHIELD-REGEN-001 to 006 |
+| `ShieldRegeneration` | `shield_regen_scenarios.py` | **Complete** (7 tests) | SHIELD-REGEN-001 to 007 |
 | `ToHitDefenseModifier` | `tohit_defense_scenarios.py` | **Complete** (4 tests) | TOHIT-DEF-001/002/003/004 |
 | `ArmorLayer` | `armor_layer_scenarios.py` | **Complete** (3 tests) | ARMOR-LAYER-001 to 003 |
-| `EmissiveArmor` | `emissive_armor_scenarios.py` | **Complete** (5 tests) | EMISSIVE-001 to 005 |
+| `EmissiveArmor` | `emissive_armor_scenarios.py` | **Complete** (7 tests) | EMISSIVE-001 to 007 |
 
 ### Category E: Combat Modifiers (1 ability)
 | Ability | Test File | Status | Tests |
 |---------|-----------|--------|-------|
-| `ToHitAttackModifier` | `tohit_attack_scenarios.py` | **Complete** (4 tests) | TOHIT-ATK-001/002/003/004 |
+| `ToHitAttackModifier` | `tohit_attack_scenarios.py` | **Complete** (5 tests) | TOHIT-ATK-001/002/003/004/005 |
 
 ### Category F: Carrier Operations (1 ability)
 | Ability | What to Test | Priority |
@@ -134,14 +134,14 @@ ability under test.
 7. **Phase 7** (Complete): Resource system tests — 9 scenarios in `resource_scenarios.py`
 
 ### Completed (ability-specific categories using ComparisonScenario)
-8. **ToHitAttackModifier** (Complete): 4 scenarios in `tohit_attack_scenarios.py`
+8. **ToHitAttackModifier** (Complete): 5 scenarios in `tohit_attack_scenarios.py`
 9. **ToHitDefenseModifier** (Complete): 4 scenarios in `tohit_defense_scenarios.py`
 10. **ShieldProjection** (Complete): 10 scenarios in `shield_projection_scenarios.py`
 
 ### Completed (ability-specific categories, continued)
-11. **ShieldRegeneration** (Complete): 6 scenarios in `shield_regen_scenarios.py`
+11. **ShieldRegeneration** (Complete): 7 scenarios in `shield_regen_scenarios.py`
 12. **ArmorLayer** (Complete): 3 scenarios in `armor_layer_scenarios.py`
-13. **EmissiveArmor** (Complete): 5 scenarios in `emissive_armor_scenarios.py`
+13. **EmissiveArmor** (Complete): 7 scenarios in `emissive_armor_scenarios.py`
 
 ### Cleanup
 - Deleted `defense_scenarios.py` — 8 tests removed (SHIELD-001/002/003, ECM-001, SENSOR-001/002, ARMOR-001/002)
@@ -151,12 +151,14 @@ ability under test.
   - SENSOR-001/002 redundant with TOHIT-ATK-001
   - ARMOR-001/002 replaced by EMISSIVE-001 to 005 (better tests with ComparisonScenario + stacking)
 
-14. **CommandAndControl** (Complete): 5 scenarios in `cnc_scenarios.py`
+14. **CommandAndControl** (Complete): 6 scenarios in `cnc_scenarios.py`
 
 15. **ShieldRegeneratingArmor** (Complete): 5 scenarios in `sra_scenarios.py`
 
+16. **DamagePipeline** (Complete): 6 scenarios in `damage_pipeline_scenarios.py`
+
 ### Pending (ability-specific categories)
-16. **VehicleLaunch**: Carrier/hangar tests
+17. **VehicleLaunch**: Carrier/hangar tests
 
 ---
 
