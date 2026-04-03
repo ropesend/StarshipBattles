@@ -56,6 +56,7 @@ class StrategyWidgets:
     btn_colonize: Any = None
     btn_build_yard: Any = None
     btn_planet_orders: Any = None  # PROJ-238
+    btn_atmosphere: Any = None  # Atmosphere target editor
     btn_orders: Any = None
     btn_fleet_report: Any = None
     btn_build_fleet: Any = None
@@ -349,6 +350,14 @@ def create_strategy_panels(
     widgets.btn_planet_orders = pygame_gui.elements.UIButton(
         relative_rect=pygame.Rect(80, rect_detail.height - 50, 120, 40),
         text="Orders",
+        manager=manager,
+        container=widgets.detail_panel,
+        visible=0
+    )
+
+    widgets.btn_atmosphere = pygame_gui.elements.UIButton(
+        relative_rect=pygame.Rect(80, rect_detail.height - 95, 120, 40),
+        text="Atmosphere",
         manager=manager,
         container=widgets.detail_panel,
         visible=0

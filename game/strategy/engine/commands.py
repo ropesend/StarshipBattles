@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Dict, Optional, List
 from enum import Enum, auto
 
 from game.core.hex_math import HexCoord
@@ -399,3 +399,10 @@ class DeletePlanetOrderCommand(Command):
     """Command to remove a specific order from a planet's order queue."""
     planet_id: int
     order_index: int
+
+
+@dataclass
+class SetAtmosphereTargetCommand(Command):
+    """Command to set or clear a planet's atmosphere modification target."""
+    planet_id: int
+    atmosphere_target: Dict[str, float]  # gas formula -> target Pa (empty dict = clear)
