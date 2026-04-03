@@ -622,7 +622,7 @@ class TestShipStatsPanelGetExpandedHeight:
 
         ship = MagicMock()
         ship.max_shields = 0
-        ship.get_all_components.return_value = [MagicMock(), MagicMock(), MagicMock()]
+        ship.components = [MagicMock(), MagicMock(), MagicMock()]
 
         height = panel.get_expanded_height(ship)
 

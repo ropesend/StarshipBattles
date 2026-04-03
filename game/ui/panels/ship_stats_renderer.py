@@ -25,7 +25,7 @@ from game.ui.colors import (
     CREW_LOW
 )
 from game.ui.utils.formatters import get_damage_color
-from game.core.constants import CombatConstants, LayerType
+from game.core.constants import CombatConstants
 
 
 # Define standard colors for known resources (fallback to gray)
@@ -371,14 +371,9 @@ def draw_ship_weapons(surface, ship: 'ICombatShip', x_indent, y, panel_w, font):
     surface.blit(text, (x_indent, y))
     y += 18
 
-    for layer_type in [LayerType.OUTER, LayerType.INNER, LayerType.CORE]:
-        layer = ship.layers.get(layer_type)
-        if not layer:
-            continue
-
-        for comp in layer.components:
-            if comp.has_ability('WeaponAbility'):
-                y = draw_weapon_entry(surface, comp, x_indent, y, panel_w, font)
+    for comp in ship.components:
+        if comp.has_weapon:
+            y = draw_weapon_entry(surface, comp, x_indent, y, panel_w, font)
 
     return y + 8
 
@@ -400,14 +395,8 @@ def draw_ship_components(surface, ship: 'ICombatShip', x_indent, y, font):
     surface.blit(text, (x_indent, y))
     y += UIConfig.ELEMENT_SPACING
 
-    for layer_type in [LayerType.ARMOR, LayerType.OUTER, LayerType.INNER, LayerType.CORE]:
-        layer = ship.layers.get(layer_type)
-        if not layer:
-            continue
-
-        for comp in layer.components:
-            if comp.has_ability('WeaponAbility'):
-                continue
+    for comp in ship.components:
+        if not comp.has_weapon:
             y = draw_component_entry(surface, comp, x_indent, y, font)
 
     return y + 5

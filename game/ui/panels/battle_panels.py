@@ -199,7 +199,7 @@ class ShipStatsPanel(BattlePanel):
         base_height = 146
         if ship.max_shields > 0:
             base_height += 16
-        comp_count = len(ship.get_all_components())
+        comp_count = len(ship.components)
         comp_height = comp_count * 14
         return base_height + comp_height + 5
 
