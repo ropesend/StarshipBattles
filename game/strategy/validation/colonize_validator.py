@@ -59,22 +59,9 @@ class ColonizeValidator:
                     code="NO_CANDIDATES"
                 )
 
-            # Check fleet has a drop pod
-            if not ColonizeValidator.fleet_has_drop_pod(fleet):
-                return ValidationResult.error(
-                    "No drop pod carried by any ship in fleet.",
-                    code="NO_COLONY_POD"
-                )
-
-            # Check chain limits
-            if not skip_chain_check:
-                available = ColonizeValidator.count_drop_pods(fleet)
-                committed = ColonizeValidator.count_committed_colonize_orders(fleet)
-                if committed >= available:
-                    return ValidationResult.error(
-                        "All drop pods already assigned to colonize orders.",
-                        code="COLONY_POD_EXHAUSTED"
-                    )
+            pod_error = ColonizeValidator._validate_drop_pod_availability(fleet, skip_chain_check)
+            if pod_error:
+                return pod_error
 
             return ValidationResult.success()
 
@@ -92,22 +79,9 @@ class ColonizeValidator:
                     code="WRONG_LOCATION"
                 )
 
-            # Check fleet has a drop pod
-            if not ColonizeValidator.fleet_has_drop_pod(fleet):
-                return ValidationResult.error(
-                    "No drop pod carried by any ship in fleet.",
-                    code="NO_COLONY_POD"
-                )
-
-            # Check chain limits
-            if not skip_chain_check:
-                available = ColonizeValidator.count_drop_pods(fleet)
-                committed = ColonizeValidator.count_committed_colonize_orders(fleet)
-                if committed >= available:
-                    return ValidationResult.error(
-                        "All drop pods already assigned to colonize orders.",
-                        code="COLONY_POD_EXHAUSTED"
-                    )
+            pod_error = ColonizeValidator._validate_drop_pod_availability(fleet, skip_chain_check)
+            if pod_error:
+                return pod_error
 
             return ValidationResult.success()
 
@@ -119,6 +93,30 @@ class ColonizeValidator:
                 if item.get('vehicle_type') == 'drop_pod':
                     return True
         return False
+
+    @staticmethod
+    def _validate_drop_pod_availability(fleet: 'Fleet', skip_chain_check: bool = False):
+        """Check drop pod availability and chain limits.
+
+        Returns:
+            ValidationResult with error if no pod available, or None if OK.
+        """
+        if not ColonizeValidator.fleet_has_drop_pod(fleet):
+            return ValidationResult.error(
+                "No drop pod carried by any ship in fleet.",
+                code="NO_COLONY_POD"
+            )
+
+        if not skip_chain_check:
+            available = ColonizeValidator.count_drop_pods(fleet)
+            committed = ColonizeValidator.count_committed_colonize_orders(fleet)
+            if committed >= available:
+                return ValidationResult.error(
+                    "All drop pods already assigned to colonize orders.",
+                    code="COLONY_POD_EXHAUSTED"
+                )
+
+        return None
 
     @staticmethod
     def count_drop_pods(fleet: 'Fleet') -> int:

@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.strategy.data.planet import Planet
-    from game.strategy.data.planet_order_types import PlanetOrder
+    from game.strategy.data.order_types import Order as PlanetOrder
     from game.strategy.data.empire import Empire
 
 

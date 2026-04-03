@@ -8,7 +8,7 @@ import pytest
 
 from game.core.hex_math import HexCoord
 from game.strategy.data.order_types import OrderType, FleetOrder
-from game.strategy.data.fleet_order_serializer import FleetOrderSerializer
+from game.strategy.data.order_serializer import FleetOrderSerializer
 
 
 class TestFleetOrderHexCoordTarget:

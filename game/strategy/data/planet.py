@@ -387,16 +387,7 @@ class Planet:
             'staging_yard': list(self.staging_yard),
             'max_staging_mass': self.max_staging_mass,
             'facilities': [
-                {
-                    'instance_id': f.instance_id,
-                    'design_id': f.design_id,
-                    'name': f.name,
-                    'design_data': f.design_data,
-                    'is_operational': f.is_operational,
-                    'construction_queue': list(f.construction_queue),
-                    'consumable_levels': f.consumable_levels.copy(),
-                    'component_states': f.component_states.copy() if f.component_states else {},
-                } for f in self.facilities
+                f.to_dict() for f in self.facilities
             ],
             'populations': [
                 {

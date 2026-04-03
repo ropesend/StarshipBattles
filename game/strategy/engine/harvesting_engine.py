@@ -166,7 +166,6 @@ class HarvestingEngine(IHarvestingEngine):
 
     def _collect_staging_capacity(self, facility: 'PlanetaryFacility') -> float:
         """Sum StagingYard capacity from a facility's components."""
-        from game.core.patterns.layer_iterator import iter_components
         total = 0.0
         for comp in iter_components(facility.design_data):
             staging_info = self._get_staging_info(comp)
@@ -354,34 +353,6 @@ class HarvestingEngine(IHarvestingEngine):
                     all_boosters.append(entry)
 
         return aggregate_multipliers(all_boosters)
-
-    def _get_harvester_info(self, comp) -> Optional[dict]:
-        """Extract ResourceHarvester info from a component entry.
-
-        Delegates to module-level get_harvester_info() function.
-
-        Args:
-            comp: Component entry from design_data layers (dict or str)
-
-        Returns:
-            Dict with 'resource_type' and 'base_harvest_rate', or None
-        """
-        return get_harvester_info(comp, self._registries)
-
-    def _get_harvester_from_registry(self, comp_id: str) -> Optional[dict]:
-        """Look up harvester ability from the component registry.
-
-        Delegates to module-level get_harvester_from_registry() function.
-
-        Args:
-            comp_id: Component identifier to look up
-
-        Returns:
-            Dict with harvester info or None
-        """
-        if self._registries is None:
-            return None
-        return get_harvester_from_registry(comp_id, self._registries)
 
     def _harvest_resource(
         self,
