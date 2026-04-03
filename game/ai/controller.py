@@ -308,11 +308,16 @@ class AIController:
         else:
             self.ship.set_secondary_targets([])
 
+        # No-target handling: still execute movement-only behaviors
         if not target and not self.ship.is_in_formation():
             self.ship.set_trigger_pulled(False)
-            return
-
-        self.ship.set_trigger_pulled(True)
+            # Check if the behavior can run without a target
+            behavior_key = movement_policy.get('behavior', 'kite')
+            _NO_TARGET_BEHAVIORS = {'straight_line', 'rotate_only', 'erratic', 'do_nothing'}
+            if behavior_key not in _NO_TARGET_BEHAVIORS:
+                return
+        else:
+            self.ship.set_trigger_pulled(True)
 
         # Satellite Exception
         if self.ship.get_vehicle_type() == 'Satellite':
@@ -342,7 +347,9 @@ class AIController:
             # Merge movement policy with strategy definition for fire_while_retreating etc.
             behavior_context = dict(movement_policy)
             behavior_context.update(resolved.get('definition', {}))
-            if target or self.current_behavior == self.behaviors.get('formation'):
+            # Only run behavior if target exists OR behavior doesn't need one
+            _NO_TARGET_BEHAVIORS = {'straight_line', 'rotate_only', 'erratic', 'do_nothing', 'stationary_fire'}
+            if target or behavior_key in _NO_TARGET_BEHAVIORS:
                 self.current_behavior.update(target, behavior_context)
 
     def _handle_formation_master(self):

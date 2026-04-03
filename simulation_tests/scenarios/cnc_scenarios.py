@@ -352,20 +352,12 @@ class CNCBridgeDestroyedScenario(ComparisonScenario):
     force_fire = True
 
     def configure_baseline(self, engine):
-        """Set up mutual targeting so CNC ship fires back."""
-        self.target.current_target = self.attacker
+        """Set target to also fire (mutual combat)."""
+        self.target.ai_strategy = 'test_stationary_fire'
 
     def configure_variant(self, engine):
-        """Set up mutual targeting so CNC ship fires back."""
-        self.target.current_target = self.attacker
-
-    def update(self, battle_engine):
-        """Force both attacker AND target to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-        if self.target and self.target.is_alive:
-            self.target.comp_trigger_pulled = True
-        self._track_tick(battle_engine.tick_counter)
+        """Set target to also fire (mutual combat)."""
+        self.target.ai_strategy = 'test_stationary_fire'
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
@@ -481,20 +473,12 @@ class CNCBridgeRedundancyScenario(ComparisonScenario):
     force_fire = True
 
     def configure_baseline(self, engine):
-        """Set up mutual targeting so CNC ship fires back."""
-        self.target.current_target = self.attacker
+        """Set target to also fire (mutual combat)."""
+        self.target.ai_strategy = 'test_stationary_fire'
 
     def configure_variant(self, engine):
-        """Set up mutual targeting so CNC ship fires back."""
-        self.target.current_target = self.attacker
-
-    def update(self, battle_engine):
-        """Force both attacker AND target to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-        if self.target and self.target.is_alive:
-            self.target.comp_trigger_pulled = True
-        self._track_tick(battle_engine.tick_counter)
+        """Set target to also fire (mutual combat)."""
+        self.target.ai_strategy = 'test_stationary_fire'
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()

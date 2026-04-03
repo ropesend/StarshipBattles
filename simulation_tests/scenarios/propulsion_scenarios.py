@@ -433,19 +433,17 @@ class PropThrustMassRatioScenario(TestScenario):
                           seed=self.metadata.seed,
                           end_condition=end_condition)
 
+        # Assign AI strategies for thrust
+        self.low_mass.ai_strategy = 'test_straight_line'
+        self.med_mass.ai_strategy = 'test_straight_line'
+        self.high_mass.ai_strategy = 'test_straight_line'
+
         # Store initial state
         self.initial_positions = {
             'low': self.low_mass.position.copy(),
             'med': self.med_mass.position.copy(),
             'high': self.high_mass.position.copy()
         }
-
-    def update(self, battle_engine):
-        """Called every tick during simulation."""
-        # Apply thrust to all ships
-        self.low_mass.thrust_forward()
-        self.med_mass.thrust_forward()
-        self.high_mass.thrust_forward()
 
     def collect_results(self, engine):
         """Populate measurement attributes for the three ships."""
@@ -824,19 +822,16 @@ class PropMassAffectsTurnRateScenario(TestScenario):
         # Create end condition
         end_condition = self._create_end_condition()
 
+        # Assign AI strategies for rotation (clockwise)
+        self.low_mass_ship.ai_strategy = 'test_rotate_right'
+        self.high_mass_ship.ai_strategy = 'test_rotate_right'
+
         # Start battle with both ships on same team
         battle_engine.start(
             [self.low_mass_ship, self.high_mass_ship], [],
             seed=self.metadata.seed,
             end_condition=end_condition
         )
-
-    def update(self, battle_engine):
-        """Apply turn commands to both ships."""
-        if self.low_mass_ship.is_alive:
-            self.low_mass_ship.rotate(1)  # clockwise
-        if self.high_mass_ship.is_alive:
-            self.high_mass_ship.rotate(1)  # clockwise
 
     def collect_results(self, engine):
         """Populate measurement attributes for the two ships."""

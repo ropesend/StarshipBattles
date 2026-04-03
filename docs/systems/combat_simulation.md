@@ -6,12 +6,59 @@ System documentation for the real-time combat simulation layer.
 
 ## 1. Battle Orchestration
 
-**Entry point:** `game/simulation/services/battle_service.py` -- `BattleService`
-**Core engine:** `game/simulation/systems/battle_engine.py` -- `BattleEngine`
+### Unified Entry/Exit Flow
 
-### BattleService (UI Abstraction)
+The battle simulator is a **pure engine**: it receives ships in any state, runs the
+simulation, and reports ALL results. It does NOT know about test scenarios, fleet
+updates, or pass/fail validation — callers analyze the output.
 
-BattleService provides a clean interface between UI screens and BattleEngine.
+**Architecture layers:**
+```
+Caller (Battle Setup / Combat Lab / Strategy Layer)
+  → BattleController (orchestrator)
+    → BattleService (abstraction)
+      → BattleEngine (core tick loop)
+```
+
+**Unified entry** — all modes use ONE path:
+```python
+controller = BattleController(ai_factory=AIControllerFactory())
+controller.configure(BattleConfig(
+    end_condition=...,                           # Composable IEndCondition
+    return_destination=ReturnDestination.TEST_LAB, # Where to go after battle
+    show_results=True,                           # Show results screen?
+    start_paused=True,                           # Start paused?
+))
+controller.add_ships(team1_ships, team_id=0)
+controller.add_ships(team2_ships, team_id=1)
+controller.start()
+battle_screen.start_battle(controller)  # ONE entry point
+```
+
+**Unified exit** — all modes use ONE path:
+- Battle ends → `BattleScreen._on_battle_ended()` 
+- If `show_results=True`: extracts results → `BattleResultsScreen` → user clicks Return
+- If `show_results=False`: returns directly to destination
+- `app.py._return_to(destination)` routes to the correct scene
+
+**`ReturnDestination`** enum (`game/simulation/battle_config.py`):
+- `BATTLE_SETUP` — return to battle setup screen
+- `TEST_LAB` — return to Combat Lab
+- `STRATEGY` — return to strategy map
+
+### BattleConfig (`game/simulation/battle_config.py`)
+
+Data-only configuration. The `BattleMode` enum is a label for logging, not a behavior switch.
+All behavior differences are expressed through config fields.
+
+Key fields: `mode`, `seed`, `end_condition`, `return_destination`, `show_results`,
+`headless`, `start_paused`, `allow_retreat`, `allow_reinforcements`, `per_tick_callback`.
+
+### BattleService (Low-Level Abstraction)
+
+**File:** `game/simulation/services/battle_service.py`
+
+Provides a clean interface between UI screens and BattleEngine.
 All operations return `BattleServiceResult` (success/errors/warnings/engine ref).
 
 Lifecycle:
@@ -23,6 +70,8 @@ Lifecycle:
 6. `reset()` -- cleanup
 
 ### BattleEngine (Tick Loop)
+
+**File:** `game/simulation/systems/battle_engine.py`
 
 BattleEngine owns the simulation state: ships, AI controllers, projectiles, spatial grid.
 
