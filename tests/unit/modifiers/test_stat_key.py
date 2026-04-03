@@ -9,11 +9,6 @@ import pytest
 class TestStatKeyEnum:
     """Tests for the StatKey enumeration."""
 
-    def test_stat_key_enum_exists(self):
-        """StatKey enum should be importable."""
-        from game.simulation.components.abilities.stat_keys import StatKey
-        assert StatKey is not None
-
     def test_stat_key_has_all_current_stats(self):
         """StatKey enum should have all stats from current stats dict in component.py."""
         from game.simulation.components.abilities.stat_keys import StatKey

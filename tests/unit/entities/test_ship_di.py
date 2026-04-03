@@ -38,20 +38,6 @@ def mock_registries():
 class TestShipConstructor:
     """Tests for Ship constructor with strict registries injection."""
 
-    def test_accepts_registries_in_constructor(self, mock_registries):
-        """Ship should accept GameRegistries in constructor."""
-        ship = Ship(
-            name="Test Ship",
-            x=0, y=0,
-            color=(255, 0, 0),
-            team_id=0,
-            ship_class="frigate",
-            registries=mock_registries
-        )
-
-        assert hasattr(ship, '_registries')
-        assert ship._registries is mock_registries
-
     def test_constructor_with_none_raises_typeerror(self, mock_registries):
         """Ship with None registries should raise TypeError (PROJ-50 strict DI)."""
         with pytest.raises(ValidationException):

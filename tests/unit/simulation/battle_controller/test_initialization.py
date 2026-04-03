@@ -28,13 +28,10 @@ class TestBattleControllerInit:
         assert controller._is_started is False
         assert controller._config is None
 
-    def test_init_empty_tracking_dicts(self, controller):
-        """Controller starts with empty tracking dictionaries."""
+    def test_init_default_state(self, controller):
+        """Controller starts with empty tracking dicts and no callbacks."""
         assert controller._ship_id_map == {}
         assert controller._retreat_manager is None
-
-    def test_init_callbacks_are_none(self, controller):
-        """Controller starts with no callbacks."""
         assert controller._on_battle_complete is None
         assert controller._on_ship_destroyed is None
         assert controller._on_ship_escaped is None

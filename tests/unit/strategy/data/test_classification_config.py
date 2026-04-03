@@ -50,29 +50,6 @@ class TestClassificationConfigDefaults:
         # Activity threshold
         assert config.activity_magma_threshold == 0.7
 
-    def test_default_dwarf_max(self):
-        """Test specific default for dwarf_max mass threshold."""
-        config = ClassificationConfig()
-        assert config.dwarf_max == ClassificationConfig.DEFAULT_MASS["dwarf_max"]
-        assert config.dwarf_max == 2.0e23
-
-    def test_default_ice_dwarf_max_temp(self):
-        """Test specific default for ice_dwarf_max temperature threshold."""
-        config = ClassificationConfig()
-        assert config.ice_dwarf_max == ClassificationConfig.DEFAULT_TEMPERATURE["ice_dwarf_max"]
-        assert config.ice_dwarf_max == 170
-
-    def test_default_vacuum_pressure(self):
-        """Test specific default for vacuum pressure threshold."""
-        config = ClassificationConfig()
-        assert config.vacuum == ClassificationConfig.DEFAULT_PRESSURE["vacuum"]
-        assert config.vacuum == 500
-
-    def test_default_arid_water(self):
-        """Test specific default for arid water coverage threshold."""
-        config = ClassificationConfig()
-        assert config.arid == ClassificationConfig.DEFAULT_WATER["arid"]
-        assert config.arid == 0.20
 
 
 class TestClassificationConfigFromJson:

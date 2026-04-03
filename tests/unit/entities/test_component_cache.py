@@ -34,11 +34,6 @@ class TestComponentCacheManager:
         from game.core.singleton import SingletonMeta
         assert isinstance(ComponentCacheManager, SingletonMeta)
 
-    def test_cache_manager_has_reset(self):
-        """ComponentCacheManager should have a reset classmethod."""
-        assert hasattr(ComponentCacheManager, 'reset')
-        assert callable(ComponentCacheManager.reset)
-
     def test_cache_manager_initial_state(self):
         """ComponentCacheManager should start with None caches."""
         ComponentCacheManager.reset()

@@ -187,7 +187,7 @@ pytest tests/ --cov=game -n 12
 pytest tests/ -k "test_shield_absorb" -n 0
 ```
 
-Default `pytest.ini` settings: `testpaths = tests`, `addopts = -n 4`, simulation_tests excluded.
+Default `pytest.ini` settings: `testpaths = tests`, `addopts = -n 4 --ignore=Refactoring --ignore-glob=*.txt --ignore=simulation_tests --junitxml=./.pytest_cache/test-results.xml`.
 
 ---
 

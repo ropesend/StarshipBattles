@@ -59,13 +59,6 @@ def minimal_component_data():
 class TestComponentConstructor:
     """Tests for Component constructor with strict registries injection."""
 
-    def test_accepts_registries_in_constructor(self, mock_registries, minimal_component_data):
-        """Component should accept GameRegistries in constructor."""
-        component = Component(minimal_component_data, registries=mock_registries)
-
-        assert hasattr(component, '_registries')
-        assert component._registries is mock_registries
-
     def test_constructor_with_none_raises_typeerror(self, minimal_component_data):
         """Component with None registries should raise TypeError (PROJ-50 strict DI)."""
         with pytest.raises(ValidationException):

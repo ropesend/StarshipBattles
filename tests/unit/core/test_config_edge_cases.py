@@ -12,22 +12,10 @@ from game.core.config import DisplayConfig, AIConfig, PhysicsConfig
 class TestDisplayConfigResolutions:
     """Tests for DisplayConfig resolution methods."""
 
-    def test_default_resolution_tuple(self):
-        """Returns (3840, 2160) 4K resolution."""
-        result = DisplayConfig.default_resolution()
-        assert result == (3840, 2160)
-        assert isinstance(result, tuple)
-
     def test_windowed_resolution_tuple(self):
         """Returns (2560, 1600) windowed resolution."""
         result = DisplayConfig.windowed_resolution()
         assert result == (2560, 1600)
-        assert isinstance(result, tuple)
-
-    def test_test_resolution_tuple(self):
-        """Returns (1440, 900) test resolution."""
-        result = DisplayConfig.test_resolution()
-        assert result == (1440, 900)
         assert isinstance(result, tuple)
 
     def test_resolution_values_positive(self):

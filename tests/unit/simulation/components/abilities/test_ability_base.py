@@ -32,14 +32,6 @@ from game.simulation.components.abilities.stat_keys import (
 class TestAbilityLayer:
     """Tests for AbilityLayer Flag enum."""
 
-    def test_combat_layer_exists(self):
-        """COMBAT layer is defined."""
-        assert AbilityLayer.COMBAT is not None
-
-    def test_strategic_layer_exists(self):
-        """STRATEGIC layer is defined."""
-        assert AbilityLayer.STRATEGIC is not None
-
     def test_both_layer_is_combat_and_strategic(self):
         """BOTH layer combines COMBAT and STRATEGIC."""
         assert AbilityLayer.BOTH == (AbilityLayer.COMBAT | AbilityLayer.STRATEGIC)

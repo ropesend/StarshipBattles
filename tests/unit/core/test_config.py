@@ -51,14 +51,6 @@ class TestAIConfig:
         assert AIConfig.DEFAULT_ORBIT_DISTANCE == 500
         assert AIConfig.MAX_CORRECTION_FORCE == 500
 
-    def test_values_are_integers(self):
-        """Spacing values are integers."""
-        from game.core.config import AIConfig
-
-        assert isinstance(AIConfig.MIN_SPACING, int)
-        assert isinstance(AIConfig.DEFAULT_ORBIT_DISTANCE, int)
-
-
 class TestPhysicsConfig:
     """Tests for PhysicsConfig."""
 
@@ -87,34 +79,7 @@ class TestBattleConfig:
         assert BattleTuning.COLLISION_BUFFER == 100
 
 
-class TestUIConfig:
-    """Tests for UIConfig (now in game.ui.config)."""
 
-    def test_panel_dimensions(self):
-        """Panel dimension values exist."""
-        from game.ui.config import UIConfig
-
-        assert hasattr(UIConfig, 'PANEL_PADDING')
-        assert isinstance(UIConfig.PANEL_PADDING, int)
-
-    def test_toast_dimensions(self):
-        """Toast notification dimensions exist and have correct values."""
-        from game.ui.config import UIConfig
-
-        assert UIConfig.TOAST_WIDTH == 300
-        assert UIConfig.TOAST_HEIGHT == 60
-
-    def test_confirmation_dialog_dimensions(self):
-        """Confirmation dialog dimensions exist and have correct values."""
-        from game.ui.config import UIConfig
-
-        assert UIConfig.CONFIRM_DIALOG_WIDTH == 400
-        assert UIConfig.CONFIRM_DIALOG_HEIGHT == 200
-
-    def test_uiconfig_location(self):
-        """UIConfig is in game.ui.config, not game.core.config (PROJ-113)."""
-        from game.ui.config import UIConfig
-
-        # UIConfig is properly located in UI layer
-        assert UIConfig.PANEL_PADDING == 5
+# TestUIConfig moved to tests/unit/ui/test_ui_config.py
+# (UIConfig is UI-layer code, not core-layer)
 

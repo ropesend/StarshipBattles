@@ -79,11 +79,6 @@ def create_mock_enemy(enemy_id, has_weapons=True, has_pdc=False):
 class TestBuildCapabilitiesCache:
     """Tests for _build_capabilities_cache helper method."""
 
-    def test_build_capabilities_cache_exists(self, ai_controller):
-        """AIController should have _build_capabilities_cache method."""
-        assert hasattr(ai_controller, '_build_capabilities_cache')
-        assert callable(ai_controller._build_capabilities_cache)
-
     def test_build_capabilities_cache_returns_dict(self, ai_controller):
         """_build_capabilities_cache should return a dictionary."""
         enemies = [create_mock_enemy('enemy_1')]

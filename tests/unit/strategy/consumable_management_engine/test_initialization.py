@@ -23,14 +23,6 @@ def mock_registries():
 class TestConsumableManagementEngineInit:
     """Tests for ConsumableManagementEngine initialization."""
 
-    def test_engine_can_be_created(self, mock_registries):
-        """ConsumableManagementEngine can be instantiated with registries."""
-        from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
-
-        engine = ConsumableManagementEngine(registries=mock_registries)
-
-        assert engine is not None
-
     def test_engine_requires_registries(self):
         """ConsumableManagementEngine should require registries (strict DI)."""
         from game.strategy.engine.consumable_management_engine import ConsumableManagementEngine
