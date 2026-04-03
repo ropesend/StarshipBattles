@@ -3193,6 +3193,98 @@
             },
             "major_classification": "Production",
             "resource_cost": {"metals": 1500, "organics": 300, "vapors": 500, "radioactives": 200, "exotics": 250}
+        },
+        {
+            "id": "atmosphere_modifier",
+            "name": "Atmosphere Processor",
+            "type": "Terraforming",
+            "mass": 500,
+            "hp": 300,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "AtmosphereModifier": {
+                    "modification_rate": 1e12
+                },
+                "CrewRequired": 50
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {"metals": 800, "organics": 200, "vapors": 300, "exotics": 100}
+        },
+        {
+            "id": "quality_improver_metals",
+            "name": "Metals Enrichment Facility",
+            "type": "QualityImprovement",
+            "mass": 400,
+            "hp": 300,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "QualityImprovement": {"resource_type": "metals", "improvement_rate": 0.1},
+                "CrewRequired": 30
+            },
+            "major_classification": "Production",
+            "resource_cost": {"metals": 600, "organics": 100, "vapors": 200}
+        },
+        {
+            "id": "quality_improver_organics",
+            "name": "Organics Enrichment Facility",
+            "type": "QualityImprovement",
+            "mass": 400,
+            "hp": 300,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "QualityImprovement": {"resource_type": "organics", "improvement_rate": 0.1},
+                "CrewRequired": 30
+            },
+            "major_classification": "Production",
+            "resource_cost": {"metals": 500, "organics": 300, "vapors": 200}
+        },
+        {
+            "id": "quality_improver_vapors",
+            "name": "Vapors Enrichment Facility",
+            "type": "QualityImprovement",
+            "mass": 400,
+            "hp": 300,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "QualityImprovement": {"resource_type": "vapors", "improvement_rate": 0.1},
+                "CrewRequired": 30
+            },
+            "major_classification": "Production",
+            "resource_cost": {"metals": 600, "organics": 100, "vapors": 400}
+        },
+        {
+            "id": "quality_improver_radioactives",
+            "name": "Radioactives Enrichment Facility",
+            "type": "QualityImprovement",
+            "mass": 400,
+            "hp": 300,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "QualityImprovement": {"resource_type": "radioactives", "improvement_rate": 0.1},
+                "CrewRequired": 30
+            },
+            "major_classification": "Production",
+            "resource_cost": {"metals": 700, "radioactives": 300, "vapors": 200}
+        },
+        {
+            "id": "quality_improver_exotics",
+            "name": "Exotics Enrichment Facility",
+            "type": "QualityImprovement",
+            "mass": 500,
+            "hp": 350,
+            "allowed_vehicle_types": ["Planetary Complex"],
+            "sprite_index": 0,
+            "abilities": {
+                "QualityImprovement": {"resource_type": "exotics", "improvement_rate": 0.1},
+                "CrewRequired": 40
+            },
+            "major_classification": "Production",
+            "resource_cost": {"metals": 1000, "exotics": 200, "radioactives": 200, "vapors": 300}
         }
     ]
 }

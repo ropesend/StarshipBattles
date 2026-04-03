@@ -124,6 +124,9 @@ class Planet:
     # Generic activatable abilities state
     active_abilities: Dict[str, bool] = field(default_factory=dict)
 
+    # Atmosphere modification target (gas formula -> target Pa)
+    atmosphere_target: Dict[str, float] = field(default_factory=dict)
+
     # Order queue (PROJ-238: renamed from planet_orders, unified with Fleet.orders)
     orders: List['Order'] = field(default_factory=list)
 
@@ -411,6 +414,7 @@ class Planet:
             'energy_generation': self.energy_generation,
             'shield_active': self.shield_active,
             'active_abilities': dict(self.active_abilities),
+            'atmosphere_target': dict(self.atmosphere_target),
             'orders': [o.to_dict() for o in self.orders],
         }
 
@@ -518,6 +522,7 @@ class Planet:
             energy_generation=data.get('energy_generation', 0.0),
             shield_active=data.get('shield_active', False),
             active_abilities=data.get('active_abilities', {}),
+            atmosphere_target=data.get('atmosphere_target', {}),
             orders=_deserialize_planet_orders(data.get('orders', data.get('planet_orders', []))),
         )
 

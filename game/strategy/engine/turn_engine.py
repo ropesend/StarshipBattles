@@ -377,6 +377,12 @@ class TurnEngine:
         self.population_engine.process_population_growth(empires)
         pop_time = time.perf_counter() - t0
 
+        # 3. Quality Improvement + Atmosphere Modification (once per turn)
+        from game.strategy.engine.quality_engine import QualityEngine
+        from game.strategy.engine.atmosphere_engine import AtmosphereEngine
+        QualityEngine().process_quality_improvement(empires)
+        AtmosphereEngine().process_atmosphere(empires)
+
         total_time = time.perf_counter() - turn_start
         logger.warning(
             "TURN PERF: total=%.3fs | harvesting=%.3fs "

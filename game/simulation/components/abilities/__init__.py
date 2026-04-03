@@ -73,6 +73,7 @@ from .planetary import (
     PlanetaryShieldAbility, StrategicResourceGenerationAbility,
     GeologicStabilizerAbility, StellarStabilizerAbility, WarpFieldStabilizerAbility,
     ResourceHarvestBoosterAbility, BuildRateBoosterAbility,
+    AtmosphereModifierAbility, QualityImprovementAbility,
 )
 
 # --- Registry ---
@@ -119,6 +120,8 @@ ABILITY_REGISTRY = {
     "WarpFieldStabilizer": WarpFieldStabilizerAbility,
     "ResourceHarvestBooster": ResourceHarvestBoosterAbility,
     "BuildRateBooster": BuildRateBoosterAbility,
+    "AtmosphereModifier": AtmosphereModifierAbility,
+    "QualityImprovement": QualityImprovementAbility,
     # Superweapon abilities
     "DestroyPlanet": DestroyPlanet,
     "DestroyStar": DestroyStar,
@@ -200,6 +203,8 @@ __all__ = [
     'WarpFieldStabilizerAbility',
     'ResourceHarvestBoosterAbility',
     'BuildRateBoosterAbility',
+    'AtmosphereModifierAbility',
+    'QualityImprovementAbility',
     # Superweapons
     'DestroyPlanet',
     'DestroyStar',

@@ -377,3 +377,87 @@ class BuildRateBoosterAbility(Ability):
                 'color_hint': HINT_SHIELD_CAP
             },
         ]
+
+
+class AtmosphereModifierAbility(Ability):
+    """Modifies a planet's atmosphere toward target gas compositions.
+
+    Slowly adds or removes atmospheric gases each turn. The rate is in kg of
+    gas that can be processed per turn. Conversion to pressure change depends
+    on the planet's surface area and gravity.
+
+    Data fields:
+        modification_rate: kg of atmosphere that can be added/removed per turn
+    """
+
+    layer = AbilityLayer.STRATEGIC
+    allowed_scopes = [AbilityScope.SELF]
+    default_scope = AbilityScope.SELF
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []
+
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+
+        if isinstance(data, dict):
+            self.modification_rate = data.get("modification_rate", 0.0)
+        else:
+            self.modification_rate = 0.0
+
+    def get_primary_value(self) -> float:
+        return self.modification_rate
+
+    def get_ui_rows(self) -> List[Dict[str, str]]:
+        return [
+            {
+                'label': 'Modification Rate',
+                'value': f'{self.modification_rate:.2e} kg/turn',
+                'color_hint': HINT_COLONIZE
+            },
+        ]
+
+
+class QualityImprovementAbility(Ability):
+    """Permanently improves resource deposit quality on a planet.
+
+    Each turn, adds improvement_rate to the quality value of the specified
+    resource on the planet. The change is permanent — it persists even if
+    the facility is later removed. Quality caps at 100.
+
+    Data fields:
+        resource_type: Which resource to improve (e.g., "metals")
+        improvement_rate: Quality increase per turn (e.g., 0.1)
+    """
+
+    layer = AbilityLayer.STRATEGIC
+    allowed_scopes = [AbilityScope.SELF]
+    default_scope = AbilityScope.SELF
+
+    STAT_BINDINGS: List[AbilityStatBinding] = []
+
+    def __init__(self, component, data: Dict[str, Any]):
+        super().__init__(component, data)
+
+        if isinstance(data, dict):
+            self.resource_type = data.get("resource_type", "")
+            self.improvement_rate = data.get("improvement_rate", 0.0)
+        else:
+            self.resource_type = ""
+            self.improvement_rate = 0.0
+
+    def get_primary_value(self) -> float:
+        return self.improvement_rate
+
+    def get_ui_rows(self) -> List[Dict[str, str]]:
+        return [
+            {
+                'label': 'Resource',
+                'value': self.resource_type.title(),
+                'color_hint': HINT_COLONIZE
+            },
+            {
+                'label': 'Improvement',
+                'value': f'+{self.improvement_rate:.1f}/turn',
+                'color_hint': HINT_ACCURACY
+            },
+        ]
