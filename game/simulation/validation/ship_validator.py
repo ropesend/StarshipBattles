@@ -404,7 +404,6 @@ class ShipDesignValidator:
             ExclusiveGroupRule(),
             MountDependencyRule(),
             LayerRestrictionDefinitionRule(),
-            MassBudgetRule()
         ]
         self.design_rules: List[ValidationRule] = [
             ClassRequirementsRule(registries=registries),

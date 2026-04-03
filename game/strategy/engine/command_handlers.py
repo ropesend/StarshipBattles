@@ -832,7 +832,12 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
             if cmd.index < 0 or cmd.index > len(queue):
                 return ValidationResult.error(f"Invalid queue index: {cmd.index}")
 
-        # 4. Calculate design cost (PROJ-213: fix empty total_cost bug)
+        # 4. Check design validity (mass budget)
+        design_valid = self._check_design_valid(session, entity, cmd.design_id)
+        if not design_valid:
+            return ValidationResult.error("Design exceeds mass budget and cannot be built.")
+
+        # 5. Calculate design cost (PROJ-213: fix empty total_cost bug)
         total_cost = self._load_design_cost(session, entity, cmd.design_id)
 
         # 5. Pre-calculate initial turns estimate (BUG-96)
@@ -864,6 +869,28 @@ class AddToConstructionQueueCommandHandler(BaseCommandHandler):
             logger.info(f"GameSession: Appended {cmd.design_id} to {cmd.entity_type} {cmd.entity_id} queue")
 
         return ValidationResult.success()
+
+    def _check_design_valid(self, session: 'GameSession', entity, design_id: str) -> bool:
+        """Check if a design is valid for construction (within mass budget).
+
+        Args:
+            session: Game session for save_path.
+            entity: Planet or Fleet with owner_id.
+            design_id: ID of the design to check.
+
+        Returns:
+            True if the design is valid, False if it exceeds mass budget.
+        """
+        try:
+            empire_id = getattr(entity, 'owner_id', 0)
+            library = DesignLibrary(session.save_path, empire_id)
+            design_data = library.load_design_data(design_id)
+            if design_data is None:
+                return True  # Can't validate, allow by default
+            expected_stats = design_data.get('expected_stats', {})
+            return expected_stats.get('mass_valid', True)
+        except (OSError, ValueError, KeyError):
+            return True  # Can't validate, allow by default
 
     def _load_design_cost(self, session: 'GameSession', entity, design_id: str) -> Dict[str, float]:
         """Load design data and calculate total resource cost.

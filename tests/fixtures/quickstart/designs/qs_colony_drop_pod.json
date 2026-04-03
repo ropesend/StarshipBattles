@@ -2,6 +2,10 @@
     "name": "Colony Drop Pod",
     "vehicle_type": "Drop Pod",
     "ship_class": "Drop Pod (Small)",
+    "theme_id": "Federation",
+    "team_id": 0,
+    "color": [100, 100, 255],
+    "ai_strategy": "standard_ranged",
     "layers": {
         "CORE": [
             {"id": "central_complex_command", "modifiers": [
@@ -54,5 +58,21 @@
         "vapors": 50,
         "radioactives": 50,
         "exotics": 25
+    },
+    "expected_stats": {
+        "max_hp": 1390,
+        "max_fuel": 0.0,
+        "max_energy": 0.0,
+        "max_ammo": 0.0,
+        "max_speed": 0,
+        "acceleration_rate": 0.0,
+        "turn_speed": 0.0,
+        "total_thrust": 0,
+        "mass": 540.0,
+        "armor_hp_pool": 0
+    },
+    "_metadata": {
+        "is_obsolete": false,
+        "times_built": 0
     }
 }

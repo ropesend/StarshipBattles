@@ -372,14 +372,14 @@ class TestParallelShipyardE2E:
 
         # Add two shipyard facilities with separate queues
         # yard1: 6000 Metals at 30/tick = 200 ticks = 2 turns
-        # yard2: 3000 Metals at 30/tick = 100 ticks = 1 turn
+        # yard2: 30000 Metals at 300/tick = 100 ticks = 1 turn
         yard1 = _make_shipyard("shipyard_1")
         yard1.construction_queue = [
             {
                 "design_id": "test_ship",
                 "type": "ship",
                 "turns_remaining": 2,
-                "total_cost": {"metals": 6000.0},
+                "total_cost": {"metals": 60000.0},
                 "resources_consumed": {"metals": 0.0}
             }
         ]
@@ -389,7 +389,7 @@ class TestParallelShipyardE2E:
                 "design_id": "test_ship",
                 "type": "ship",
                 "turns_remaining": 1,
-                "total_cost": {"metals": 3000.0},
+                "total_cost": {"metals": 30000.0},
                 "resources_consumed": {"metals": 0.0}
             }
         ]
@@ -400,7 +400,7 @@ class TestParallelShipyardE2E:
         # Turn 1: yard2 completes (1 turn), yard1 partially consumed
         _process_one_turn(engine, empires, save_path=temp_dir)
 
-        # yard1 should still have item (consumed 3000/6000)
+        # yard1 should still have item (consumed 30000/60000)
         assert len(yard1.construction_queue) == 1
         assert yard1.construction_queue[0]["resources_consumed"]["metals"] > 0
         # yard2 should be empty

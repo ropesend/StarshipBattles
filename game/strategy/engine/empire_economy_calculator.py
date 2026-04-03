@@ -244,7 +244,7 @@ class EmpireEconomyCalculator:
             if not hasattr(fleet, 'capabilities') or not fleet.capabilities.has_space_shipyard:
                 continue
             yard_count = fleet.capabilities.space_shipyard_count
-            base_rate = get_default_production_rates("fleet_space_yard")
+            base_rate = get_default_production_rates("space_shipyard")
             total_rate = {k: v * yard_count for k, v in base_rate.items()}
             _accumulate(fleet.construction_queue, total_rate)
 

@@ -322,9 +322,9 @@ class TestTickConsumption:
 
         engine.process_construction_tick(1, [empire], None)
 
-        # Shipyard rate = 3000/turn = 30/tick
-        assert item["resources_consumed"]["metals"] == pytest.approx(30.0)
-        assert colony.stockpile["metals"] == pytest.approx(970.0)
+        # Shipyard rate = 30000/turn = 300/tick
+        assert item["resources_consumed"]["metals"] == pytest.approx(300.0)
+        assert colony.stockpile["metals"] == pytest.approx(700.0)
 
     def test_multiple_resources_all_consumed(self):
         """All resources consumed from stockpile at production rate per tick.

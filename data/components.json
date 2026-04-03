@@ -2187,9 +2187,10 @@
             "id": "space_shipyard",
             "name": "Space Shipyard",
             "type": "SpaceShipyard",
-            "mass": 500,
-            "hp": 1000,
+            "mass": 600,
+            "hp": 800,
             "allowed_vehicle_types": [
+                "Ship",
                 "Planetary Complex",
                 "Drop Pod"
             ],
@@ -2204,39 +2205,6 @@
                         "radioactives": 30000,
                         "vapors": 30000,
                         "exotics": 30000
-                    }
-                },
-                "CrewRequired": 100
-            },
-            "major_classification": "Production",
-            "resource_cost": {
-                "metals": 500,
-                "organics": 100,
-                "vapors": 50,
-                "radioactives": 200,
-                "exotics": 100
-            }
-        },
-        {
-            "id": "fleet_space_yard",
-            "name": "Fleet Space Yard",
-            "type": "SpaceShipyard",
-            "mass": 600,
-            "hp": 800,
-            "allowed_vehicle_types": [
-                "Ship"
-            ],
-            "sprite_index": 205,
-            "abilities": {
-                "SpaceShipyard": {
-                    "construction_speed_bonus": 1.0,
-                    "max_ship_mass": 100000,
-                    "production_rates": {
-                        "metals": 3000,
-                        "organics": 3000,
-                        "radioactives": 3000,
-                        "vapors": 3000,
-                        "exotics": 3000
                     }
                 },
                 "CrewRequired": 150

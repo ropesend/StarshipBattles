@@ -405,7 +405,14 @@ class DesignStatsPanel:
         # Update requirements (Left)
         missing_reqs = ship.get_missing_requirements()
         if not ship.mass_limits_ok:
-            missing_reqs.append("⚠ Over mass limit")
+            if ship.mass > ship.max_mass_budget:
+                over_by = ship.mass - ship.max_mass_budget
+                missing_reqs.append(f"Design over mass by {over_by:.0f}kg")
+            for lt, status in getattr(ship, 'layer_status', {}).items():
+                if not status.get('ok', True):
+                    layer_mass = status.get('mass', 0)
+                    limit = status.get('limit', 0) * ship.max_mass_budget
+                    missing_reqs.append(f"{lt.name} over by {layer_mass - limit:.0f}kg")
 
         full_list_req = []
         for req in missing_reqs:

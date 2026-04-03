@@ -42,7 +42,7 @@ def get_default_production_rates(yard_type: str) -> Dict[str, float]:
     """Get default per-resource production rates for a yard type.
 
     Args:
-        yard_type: One of "planetary_yard", "space_shipyard", "fleet_space_yard".
+        yard_type: One of "planetary_yard", "space_shipyard".
 
     Returns:
         Dict mapping resource name to max units per turn.
@@ -199,7 +199,7 @@ def get_production_rate_for_queue(entity, queue_id: Optional[str]) -> Dict[str, 
 
     if isinstance(entity, Fleet):
         yard_count = getattr(entity.capabilities, 'space_shipyard_count', 1)
-        base_rate = get_default_production_rates("fleet_space_yard")
+        base_rate = get_default_production_rates("space_shipyard")
         return {k: v * max(1, yard_count) for k, v in base_rate.items()}
 
     # Planet: check if queue_id points to a shipyard facility
@@ -287,7 +287,7 @@ def _collect_fleet_sources(fleet, sources: List[BuildQueueSource]) -> None:
             can_build_ships=True,
             can_build_complexes=True,
             context_type="fleet",
-            build_rate=get_default_production_rates("fleet_space_yard"),
+            build_rate=get_default_production_rates("space_shipyard"),
             planet_id=None,
         ))
 

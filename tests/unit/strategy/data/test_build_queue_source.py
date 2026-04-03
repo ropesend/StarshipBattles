@@ -27,12 +27,12 @@ EXPECTED_PLANETARY_RATES = {
     "vapors": 2000, "exotics": 2000
 }
 EXPECTED_SHIPYARD_RATES = {
-    "metals": 3000, "organics": 3000, "radioactives": 3000,
-    "vapors": 3000, "exotics": 3000
+    "metals": 30000, "organics": 30000, "radioactives": 30000,
+    "vapors": 30000, "exotics": 30000
 }
 EXPECTED_FLEET_RATES = {
-    "metals": 3000, "organics": 3000, "radioactives": 3000,
-    "vapors": 3000, "exotics": 3000
+    "metals": 30000, "organics": 30000, "radioactives": 30000,
+    "vapors": 30000, "exotics": 30000
 }
 
 
@@ -114,14 +114,14 @@ def _make_non_shipyard_facility(instance_id="fac-001") -> PlanetaryFacility:
 def _make_fleet_with_yard(fleet_id=100, owner_id=0, location=HexCoord(5, 5)) -> Fleet:
     """Create a fleet with a space yard ship."""
     fleet = Fleet(fleet_id=fleet_id, owner_id=owner_id, location=location, speed=5.0)
-    # Add a mock ship with fleet_space_yard component
+    # Add a mock ship with space_shipyard component
     ship = MagicMock()
     ship.name = "Yard Ship"
     ship.is_combat_capable.return_value = True
     ship.design_data = {
         "layers": {
             "hull": [
-                {"id": "fleet_space_yard", "abilities": {"SpaceShipyard": {}}}
+                {"id": "space_shipyard", "abilities": {"SpaceShipyard": {}}}
             ]
         }
     }
@@ -420,7 +420,7 @@ class TestCollectAllBuildQueuesForEmpire:
         assert sources[1].can_build_complexes is True
         assert sources[1].construction_queue is yard.construction_queue
 
-    def test_collect_all_build_queues_with_fleet_space_yard(self):
+    def test_collect_all_build_queues_with_space_shipyard(self):
         """Fleet with space yard returns a fleet source."""
         fleet = _make_fleet_with_yard(fleet_id=555, owner_id=0, location=HexCoord(3, 3))
         empire = _make_empire(empire_id=0, fleets=[fleet])
@@ -658,14 +658,9 @@ class TestGetDefaultProductionRates:
         assert rates == EXPECTED_PLANETARY_RATES
 
     def test_space_shipyard_rates(self):
-        """space_shipyard returns 3000 for all resources."""
+        """space_shipyard returns 30000 for all resources."""
         rates = get_default_production_rates("space_shipyard")
         assert rates == EXPECTED_SHIPYARD_RATES
-
-    def test_fleet_space_yard_rates(self):
-        """fleet_space_yard returns 3000 for all resources."""
-        rates = get_default_production_rates("fleet_space_yard")
-        assert rates == EXPECTED_FLEET_RATES
 
     def test_unknown_yard_type_returns_empty(self):
         """Unknown yard type returns empty dict."""
@@ -786,7 +781,7 @@ class TestGetProductionRateForQueue:
         assert rate == expected
 
     def test_fleet_returns_fleet_yard_rate(self):
-        """Fleet returns fleet_space_yard rate."""
+        """Fleet returns space_shipyard rate."""
         fleet = _make_fleet_with_yard()
         rate = get_production_rate_for_queue(fleet, None)
         assert rate == EXPECTED_FLEET_RATES

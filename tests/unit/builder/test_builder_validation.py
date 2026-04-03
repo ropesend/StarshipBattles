@@ -182,9 +182,10 @@ class TestBuilderValidation:
             comp2 = self.create_component(mass=40)
             assert self.ship.add_component(comp2, LayerType.INNER), "Should allow exact match of mass budget"
 
-            # Add component of mass 1 (Total 101 > Limit)
+            # Add component of mass 1 (Total 101 > Limit) — placement allowed, mass warning shown
             comp3 = self.create_component(mass=1)
-            assert not self.ship.add_component(comp3, LayerType.INNER), "Should reject mass exceeding budget"
+            assert self.ship.add_component(comp3, LayerType.INNER), "Should allow placement even over mass budget"
+            assert not self.ship.mass_limits_ok, "Should flag mass_limits_ok as False"
         finally:
             # Restore original vehicle_classes
             self.registries.vehicle_classes.clear()

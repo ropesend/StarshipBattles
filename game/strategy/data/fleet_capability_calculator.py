@@ -98,7 +98,7 @@ class FleetCapabilityCalculator:
         Check if fleet has an operational space shipyard.
 
         Returns True if any combat-capable ship has a component with
-        SpaceShipyard ability (e.g., fleet_space_yard component).
+        SpaceShipyard ability (e.g., space_shipyard component).
         """
         return self.space_shipyard_count > 0
 

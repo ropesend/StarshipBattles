@@ -38,9 +38,9 @@ class TestStaticMethodsUseShipRegistries:
         """ship_has_spaceyard uses ship._registries.components when available."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
 
-        # Create registry with fleet_space_yard having SpaceShipyard ability
+        # Create registry with space_shipyard having SpaceShipyard ability
         component_registry = {
-            'fleet_space_yard': {
+            'space_shipyard': {
                 'abilities': {'SpaceShipyard': {}}
             }
         }
@@ -48,7 +48,7 @@ class TestStaticMethodsUseShipRegistries:
 
         ship = make_ship_instance_with_registries(
             name="Yard Ship",
-            design_data={"layers": {"hull": [{"id": "fleet_space_yard"}]}},
+            design_data={"layers": {"hull": [{"id": "space_shipyard"}]}},
             registries=registries
         )
 
@@ -60,12 +60,12 @@ class TestStaticMethodsUseShipRegistries:
         """ship_has_spaceyard returns False when ship's registry doesn't have component."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
 
-        # Empty registry - fleet_space_yard not defined
+        # Empty registry - space_shipyard not defined
         registries = create_mock_registries({})
 
         ship = make_ship_instance_with_registries(
             name="Yard Ship",
-            design_data={"layers": {"hull": [{"id": "fleet_space_yard"}]}},
+            design_data={"layers": {"hull": [{"id": "space_shipyard"}]}},
             registries=registries
         )
 
@@ -85,7 +85,7 @@ class TestFleetCapabilityCalculatorDI:
 
         # Create component registry with SpaceShipyard ability
         component_registry = {
-            'fleet_space_yard': {
+            'space_shipyard': {
                 'abilities': {'SpaceShipyard': {}}
             }
         }
@@ -100,7 +100,7 @@ class TestFleetCapabilityCalculatorDI:
             design_id="design-1",
             name="Yard Ship",
             owner_id=0,
-            design_data={"layers": {"hull": [{"id": "fleet_space_yard"}]}}
+            design_data={"layers": {"hull": [{"id": "space_shipyard"}]}}
         )
         ship._registries = fresh_registries
         fleet.add_ship(ship)
@@ -118,7 +118,7 @@ class TestFleetCapabilityCalculatorDI:
 
         # Create test registries
         registries = GameRegistries(
-            components={'fleet_space_yard': {'abilities': {'SpaceShipyard': {}}}},
+            components={'space_shipyard': {'abilities': {'SpaceShipyard': {}}}},
             modifiers={},
             vehicle_classes={},
             resources={}
@@ -135,7 +135,7 @@ class TestFleetCapabilityCalculatorDI:
                 'design_id': 'design-1',
                 'name': 'Yard Ship',
                 'owner_id': 0,
-                'design_data': {'layers': {'hull': [{'id': 'fleet_space_yard'}]}},
+                'design_data': {'layers': {'hull': [{'id': 'space_shipyard'}]}},
                 'current_hp': 100,
                 'max_hp': 100,
                 'status': 'operational',
