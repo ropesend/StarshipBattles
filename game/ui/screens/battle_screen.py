@@ -112,15 +112,15 @@ class BattleScreen:
         # Accumulator for time-accurate simulation (moved from Game)
         self._accumulator = 0.0
 
-        # Headless mode
+        # Legacy state — kept as instance vars for backward compatibility
+        # with Combat Lab code that still sets them directly.
+        # Will be fully removed when Combat Lab migrates to controller flow.
         self.headless_mode = False
         self.headless_start_time = None
-
-        # Test mode (Combat Lab)
-        self.test_mode = False  # Set to True when running from Combat Lab
-        self.test_scenario = None  # The scenario being run (if in test mode)
-        self.test_tick_count = 0  # Track ticks for max_ticks limit
-        self.test_completed = False  # Flag indicating test has finished
+        self.test_mode = False
+        self.test_scenario = None
+        self.test_tick_count = 0
+        self.test_completed = False
 
         # Visual hit effects
         self.hit_effects: list = []
@@ -167,77 +167,9 @@ class BattleScreen:
 
         logger.info(f"Battle started via unified entry: {len(self.ships)} ships")
 
-    # === Legacy Controller Integration (to be removed) ===
-
-    def set_controller(self, controller: 'BattleController') -> None:
-        """
-        Set the BattleController for unified battle orchestration.
-
-        When a controller is set, the scene delegates battle management
-        to the controller instead of using BattleService directly.
-
-        Args:
-            controller: Configured BattleController instance
-        """
-        self._controller = controller
-        # Sync battle service reference and UI service
-        if controller:
-            self._battle_service = controller.service
-            self._ui_service = BattleUIService(self._battle_service)
-
     def get_controller(self) -> Optional['BattleController']:
         """Get the current BattleController (if any)."""
         return self._controller
-
-    def start_with_controller(
-        self,
-        controller: 'BattleController',
-        start_paused: bool = False
-    ) -> None:
-        """
-        Start a battle using a pre-configured BattleController.
-
-        This is the preferred way to start battles for strategy and
-        hypothetical modes.
-
-        Args:
-            controller: Configured and started BattleController
-            start_paused: Whether to start paused
-        """
-        self._controller = controller
-        self._battle_service = controller.service
-        self._ui_service = BattleUIService(self._battle_service)
-
-        # Reset visual state
-        self.beams = []
-        self.hit_effects = []
-        self.sim_tick_counter = 0
-
-        # Subscribe to combat events for visual effects
-        self._subscribe_combat_events()
-
-        # Get mode from controller config
-        config = controller.config
-        if config:
-            self.headless_mode = config.headless
-            self.test_mode = config.mode.value == "test"
-            self.test_scenario = config.test_scenario
-
-        self.test_tick_count = 0
-        self.test_completed = False
-
-        # Reset UI
-        self.ui.expanded_ships = set()
-        self.ui.stats_scroll_offset = 0
-
-        self.sim_speed_multiplier = 1.0
-        self.sim_paused = start_paused
-
-        # Fit camera to ships
-        if not self.headless_mode and self.ships:
-            self.camera.fit_objects(self.ships)
-
-        logger.info(f"Battle started via controller: {len(self.ships)} ships")
 
     @property
     def engine(self):

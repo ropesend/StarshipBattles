@@ -153,8 +153,12 @@ class StaticTargetScenario(TestScenario):
                           seed=seed_to_use,
                           end_condition=end_condition)
 
-        # Set target
-        self.attacker.current_target = self.target
+        # Assign AI strategies (AI handles firing)
+        if self.force_fire:
+            self.attacker.ai_strategy = 'test_stationary_fire'
+        else:
+            self.attacker.ai_strategy = 'test_do_nothing'
+        self.target.ai_strategy = 'test_do_nothing'
 
         # Call custom setup hook if defined
         if hasattr(self, 'custom_setup'):
@@ -162,24 +166,15 @@ class StaticTargetScenario(TestScenario):
 
     def update(self, battle_engine):
         """
-        Standard update for static target scenarios.
-        Forces attacker to fire each tick (if force_fire=True).
-        Subclasses can override for custom behavior.
+        Per-tick update. AI handles firing via strategies.
+        Target movement controllers still applied here until AI migration is complete.
         """
         if self.skip_test:
             return
 
-        if self.force_fire:
-            if self.attacker and self.attacker.is_alive:
-                self.attacker.comp_trigger_pulled = True
-
-        # Apply target movement controller if configured
+        # Apply target movement controller if configured (temporary — will migrate to AI)
         if self.target_movement and self.target and self.target.is_alive:
             self.target_movement.update(self.target)
-
-        # Call custom update hook if defined
-        if hasattr(self, 'custom_update'):
-            self.custom_update(battle_engine)
 
         # Position tracking (no-op when track_positions is False)
         self._track_tick(battle_engine.tick_counter)
@@ -375,10 +370,13 @@ class DuelScenario(TestScenario):
                           seed=self.metadata.seed,
                           end_condition=end_condition)
 
-        # Set mutual targeting
-        if self.auto_target:
-            self.ship1.current_target = self.ship2
-            self.ship2.current_target = self.ship1
+        # Assign AI strategies (AI handles firing)
+        if self.force_fire:
+            self.ship1.ai_strategy = 'test_stationary_fire'
+            self.ship2.ai_strategy = 'test_stationary_fire'
+        else:
+            self.ship1.ai_strategy = 'test_do_nothing'
+            self.ship2.ai_strategy = 'test_do_nothing'
 
         # Call custom setup hook if defined
         if hasattr(self, 'custom_setup'):
@@ -386,19 +384,9 @@ class DuelScenario(TestScenario):
 
     def update(self, battle_engine):
         """
-        Standard update for duel scenarios.
-        Forces both ships to fire each tick (if force_fire=True).
-        Subclasses can override for custom behavior.
+        Per-tick update. AI handles firing via strategies.
+        Only custom hooks and tracking remain.
         """
-        if self.force_fire:
-            if self.ship1 and self.ship1.is_alive:
-                self.ship1.comp_trigger_pulled = True
-            if self.ship2 and self.ship2.is_alive:
-                self.ship2.comp_trigger_pulled = True
-
-        # Call custom update hook if defined
-        if hasattr(self, 'custom_update'):
-            self.custom_update(battle_engine)
 
         self._track_tick(battle_engine.tick_counter)
 
@@ -556,29 +544,25 @@ class PropulsionScenario(TestScenario):
         self.expected_max_speed = (self.ship.total_thrust * K_SPEED) / self.ship.mass
         self.expected_acceleration_rate = (self.ship.total_thrust * K_THRUST) / (self.ship.mass ** 2)
 
+        # Assign AI strategy based on thrust/turn configuration
+        if self.thrust_forward and not self.turn_left and not self.turn_right:
+            self.ship.ai_strategy = 'test_straight_line'
+        elif self.turn_right:
+            self.ship.ai_strategy = 'test_rotate_right'
+        elif self.turn_left:
+            self.ship.ai_strategy = 'test_rotate_left'
+        else:
+            self.ship.ai_strategy = 'test_do_nothing'
+
         # Call custom setup hook if defined
         if hasattr(self, 'custom_setup'):
             self.custom_setup(battle_engine)
 
     def update(self, battle_engine):
         """
-        Standard update for propulsion scenarios.
-        Applies configured thrust/turn commands each tick.
-        Subclasses can override for custom behavior.
+        Per-tick update. AI handles thrust/rotation via strategies.
+        Only custom hooks and tracking remain.
         """
-        if self.ship and self.ship.is_alive:
-            if self.thrust_forward:
-                self.ship.thrust_forward()
-            if self.thrust_backward:
-                self.ship.thrust_backward()
-            if self.turn_left:
-                self.ship.rotate(-1)  # -1 = counter-clockwise/left
-            if self.turn_right:
-                self.ship.rotate(1)  # 1 = clockwise/right
-
-        # Call custom update hook if defined
-        if hasattr(self, 'custom_update'):
-            self.custom_update(battle_engine)
 
         self._track_tick(battle_engine.tick_counter)
 
@@ -813,9 +797,18 @@ class ResourceScenario(TestScenario):
                            seed=seed_to_use,
                            end_condition=end_condition)
 
-        # Set targeting if target exists
+        # Assign AI strategies
+        if self.thrust_forward and self.force_fire:
+            self.ship.ai_strategy = 'test_straight_line'  # thrust + AI fires at target
+        elif self.thrust_forward:
+            self.ship.ai_strategy = 'test_straight_line'
+        elif self.force_fire:
+            self.ship.ai_strategy = 'test_stationary_fire'
+        else:
+            self.ship.ai_strategy = 'test_do_nothing'
+
         if self.target is not None:
-            self.ship.current_target = self.target
+            self.target.ai_strategy = 'test_do_nothing'
 
         # Call custom setup hook if defined
         if hasattr(self, 'custom_setup'):
@@ -823,19 +816,9 @@ class ResourceScenario(TestScenario):
 
     def update(self, battle_engine):
         """
-        Standard update for resource scenarios.
-
-        Applies thrust and/or fires weapon each tick based on configuration.
+        Per-tick update. AI handles thrust/firing via strategies.
+        Only custom hooks and tracking remain.
         """
-        if self.ship and self.ship.is_alive:
-            if self.thrust_forward:
-                self.ship.thrust_forward()
-            if self.force_fire:
-                self.ship.comp_trigger_pulled = True
-
-        # Call custom update hook if defined
-        if hasattr(self, 'custom_update'):
-            self.custom_update(battle_engine)
 
         self._track_tick(battle_engine.tick_counter)
 
@@ -1044,13 +1027,19 @@ class ComparisonScenario(TestScenario):
 
         self.initial_hp = self.target.hp
 
+        # Assign AI strategies
+        if self.force_fire:
+            self.attacker.ai_strategy = 'test_stationary_fire'
+        else:
+            self.attacker.ai_strategy = 'test_do_nothing'
+        self.target.ai_strategy = 'test_do_nothing'
+
         end_condition = self._create_end_condition()
         engine.start(
             [self.attacker], [self.target],
             seed=self._effective_seed,
             end_condition=end_condition,
         )
-        self.attacker.current_target = self.target
 
     def _run_baseline_battle(self):
         """
@@ -1079,10 +1068,8 @@ class ComparisonScenario(TestScenario):
 
         self.configure_baseline(baseline_engine)
 
-        # Run simulation loop
+        # Run simulation loop (AI handles firing via strategies assigned in _setup_battle)
         for tick in range(self.max_ticks):
-            if self.force_fire and baseline_attacker.is_alive:
-                baseline_attacker.comp_trigger_pulled = True
             baseline_engine.update()
             if baseline_engine.is_battle_over():
                 break
@@ -1123,13 +1110,8 @@ class ComparisonScenario(TestScenario):
 
     def update(self, battle_engine):
         """
-        Per-tick update for the active battle (variant or visual baseline).
-
-        Forces attacker to fire each tick if force_fire is True.
+        Per-tick update for the active battle. AI handles firing via strategies.
         """
-        if self.force_fire and self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
         self._track_tick(battle_engine.tick_counter)
 
     def collect_results(self, engine):

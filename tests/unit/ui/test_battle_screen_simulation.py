@@ -560,46 +560,42 @@ class TestBattleScreenControllerIntegration:
             self.fresh_registries = fresh_registries
             yield
 
-    def test_set_controller_updates_service_references(self):
-        """Test set_controller() updates battle service and UI service."""
-        mock_controller = MagicMock()
-        mock_service = MagicMock()
-        mock_controller.service = mock_service
-
-        self.scene.set_controller(mock_controller)
-
-        assert self.scene._controller == mock_controller
-        assert self.scene._battle_service == mock_service
-
-    def test_get_controller_returns_current_controller(self):
-        """Test get_controller() returns current controller."""
-        mock_controller = MagicMock()
-        mock_controller.service = MagicMock()
-
-        self.scene.set_controller(mock_controller)
-
-        assert self.scene.get_controller() == mock_controller
-
-    def test_start_with_controller_initializes_from_config(self):
-        """Test start_with_controller() initializes from controller config."""
+    def test_start_battle_sets_controller_and_service(self):
+        """Test start_battle() sets controller and service references."""
         mock_controller = MagicMock()
         mock_service = MagicMock()
         mock_controller.service = mock_service
         mock_controller.config = MagicMock()
         mock_controller.config.headless = False
-        mock_controller.config.mode.value = "manual"
-        mock_controller.config.test_scenario = None
+        mock_controller.config.start_paused = True
 
-        # Mock empty ships list
         mock_engine = MagicMock()
         mock_engine.ships = []
+        mock_engine.combat_events = MagicMock()
         mock_service.get_engine.return_value = mock_engine
 
-        self.scene.start_with_controller(mock_controller, start_paused=True)
+        self.scene.start_battle(mock_controller)
 
         assert self.scene._controller == mock_controller
+        assert self.scene._battle_service == mock_service
         assert self.scene.sim_paused is True
-        assert self.scene.headless_mode is False
+
+    def test_get_controller_returns_current_controller(self):
+        """Test get_controller() returns current controller."""
+        mock_controller = MagicMock()
+        mock_controller.service = MagicMock()
+        mock_controller.config = MagicMock()
+        mock_controller.config.headless = False
+        mock_controller.config.start_paused = False
+
+        mock_engine = MagicMock()
+        mock_engine.ships = []
+        mock_engine.combat_events = MagicMock()
+        mock_controller.service.get_engine.return_value = mock_engine
+
+        self.scene.start_battle(mock_controller)
+
+        assert self.scene.get_controller() == mock_controller
 
 
 class TestBattleScreenCycleFocus:

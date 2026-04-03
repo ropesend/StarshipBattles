@@ -42,6 +42,42 @@
             "description": "Avoid damage, stay far back.",
             "targeting_policy": "self_defense",
             "movement_policy": "hold_position"
+        },
+        "test_stationary_fire": {
+            "name": "Test: Stationary Fire",
+            "description": "Stay still, fire weapons. For combat testing.",
+            "targeting_policy": "standard",
+            "movement_policy": "test_stationary"
+        },
+        "test_do_nothing": {
+            "name": "Test: Do Nothing",
+            "description": "No movement, no firing. For static targets.",
+            "targeting_policy": "standard",
+            "movement_policy": "test_do_nothing"
+        },
+        "test_straight_line": {
+            "name": "Test: Straight Line",
+            "description": "Full thrust in facing direction, fire weapons.",
+            "targeting_policy": "standard",
+            "movement_policy": "test_straight_line"
+        },
+        "test_rotate_right": {
+            "name": "Test: Rotate Right",
+            "description": "Continuous clockwise rotation, no thrust.",
+            "targeting_policy": "standard",
+            "movement_policy": "test_rotate_right"
+        },
+        "test_rotate_left": {
+            "name": "Test: Rotate Left",
+            "description": "Continuous counter-clockwise rotation, no thrust.",
+            "targeting_policy": "standard",
+            "movement_policy": "test_rotate_left"
+        },
+        "test_erratic": {
+            "name": "Test: Erratic",
+            "description": "Random direction changes. Stress testing.",
+            "targeting_policy": "standard",
+            "movement_policy": "test_erratic"
         }
     }
 }

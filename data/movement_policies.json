@@ -49,6 +49,44 @@
             "engage_distance": "max_range",
             "retreat_hp_threshold": 1.0,
             "avoid_collisions": true
+        },
+        "test_stationary": {
+            "behavior": "stationary_fire",
+            "engage_distance": "max_range",
+            "retreat_hp_threshold": 0.0,
+            "avoid_collisions": false
+        },
+        "test_do_nothing": {
+            "behavior": "do_nothing",
+            "engage_distance": "max_range",
+            "retreat_hp_threshold": 0.0,
+            "avoid_collisions": false
+        },
+        "test_straight_line": {
+            "behavior": "straight_line",
+            "engage_distance": "max_range",
+            "retreat_hp_threshold": 0.0,
+            "avoid_collisions": false
+        },
+        "test_rotate_right": {
+            "behavior": "rotate_only",
+            "engage_distance": "max_range",
+            "retreat_hp_threshold": 0.0,
+            "avoid_collisions": false,
+            "rotation_direction": 1
+        },
+        "test_rotate_left": {
+            "behavior": "rotate_only",
+            "engage_distance": "max_range",
+            "retreat_hp_threshold": 0.0,
+            "avoid_collisions": false,
+            "rotation_direction": -1
+        },
+        "test_erratic": {
+            "behavior": "erratic",
+            "engage_distance": "max_range",
+            "retreat_hp_threshold": 0.0,
+            "avoid_collisions": false
         }
     }
 }

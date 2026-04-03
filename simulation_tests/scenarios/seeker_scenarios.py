@@ -47,14 +47,15 @@ PDC_TARGET = "Test_Target_PDC.json"
 
 
 class _PDCMixin:
-    """Mixin to force PDC target to fire each tick (its AI is test_do_nothing)."""
+    """Mixin to force PDC target to fire (AI strategy handles it)."""
 
-    def update(self, battle_engine):
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-        if self.target and self.target.is_alive:
-            self.target.comp_trigger_pulled = True
-        self._track_tick(battle_engine.tick_counter)
+    def configure_baseline(self, engine):
+        """Set target to also fire (PDC defense)."""
+        self.target.ai_strategy = 'test_stationary_fire'
+
+    def configure_variant(self, engine):
+        """Set target to also fire (PDC defense)."""
+        self.target.ai_strategy = 'test_stationary_fire'
 
 
 # =============================================================================
