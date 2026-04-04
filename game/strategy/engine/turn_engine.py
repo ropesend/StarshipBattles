@@ -380,8 +380,8 @@ class TurnEngine:
         # 3. Quality Improvement + Atmosphere Modification (once per turn)
         from game.strategy.engine.quality_engine import QualityEngine
         from game.strategy.engine.atmosphere_engine import AtmosphereEngine
-        QualityEngine().process_quality_improvement(empires)
-        AtmosphereEngine().process_atmosphere(empires)
+        QualityEngine(registries=self._registries).process_quality_improvement(empires)
+        AtmosphereEngine(registries=self._registries).process_atmosphere(empires)
 
         total_time = time.perf_counter() - turn_start
         logger.warning(

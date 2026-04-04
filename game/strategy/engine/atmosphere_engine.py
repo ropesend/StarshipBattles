@@ -21,6 +21,9 @@ logger = logging.getLogger(__name__)
 class AtmosphereEngine:
     """Engine for processing per-turn atmosphere modification."""
 
+    def __init__(self, registries=None):
+        self._registries = registries
+
     def process_atmosphere(self, empires: List) -> None:
         """Process atmosphere modification for all empires.
 
@@ -123,7 +126,7 @@ class AtmosphereEngine:
     def _extract_atmo_modifier(self, comp):
         """Extract AtmosphereModifier ability data from a component entry."""
         from game.strategy.services.component_inspector import extract_abilities_from_component
-        abilities = extract_abilities_from_component(comp)
+        abilities = extract_abilities_from_component(comp, self._registries)
         data = abilities.get('AtmosphereModifier')
         if isinstance(data, (dict, list)):
             return data
