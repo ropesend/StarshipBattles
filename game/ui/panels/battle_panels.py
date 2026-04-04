@@ -196,11 +196,11 @@ class ShipStatsPanel(BattlePanel):
         return y
 
     def get_expanded_height(self, ship):
-        base_height = 146
+        base_height = 180
         if ship.max_shields > 0:
-            base_height += 16
+            base_height += 20
         comp_count = len(ship.components)
-        comp_height = comp_count * 14
+        comp_height = comp_count * 20
         return base_height + comp_height + 5
 
     @profile_action("Battle: ShipStats Click")

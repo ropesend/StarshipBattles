@@ -142,7 +142,7 @@ def draw_ship_resources(surface, ship: 'ICombatShip', x_indent, y, bar_w, bar_h,
 
             text = font.render(f"{label}: {int(res.current_value)}/{int(res.max_value)}", True, TEXT_SECONDARY)
             surface.blit(text, (x_indent, y))
-            draw_stat_bar(surface, x_indent + 100, y, bar_w, bar_h, pct, color)
+            draw_stat_bar(surface, x_indent + 300, y, bar_w, bar_h, pct, color)
             y += UIConfig.ELEMENT_SPACING
 
     return y
@@ -167,27 +167,27 @@ def draw_weapon_entry(surface, comp, x_indent, y, panel_w, font):
         c_color = WEAPON_INACTIVE_STATUS
 
     name_str = comp.name
-    if len(name_str) > 12:
-        name_str = name_str[:12] + ".."
+    if len(name_str) > 25:
+        name_str = name_str[:25] + ".."
 
     c_text = font.render(name_str, True, c_color)
     surface.blit(c_text, (x_indent + 5, y))
 
     hp_text = f"{int(comp.current_hp)}/{int(comp.max_hp)}"
     hp_val = font.render(hp_text, True, c_color)
-    surface.blit(hp_val, (x_indent + 95, y))
+    surface.blit(hp_val, (x_indent + 200, y))
 
     hp_pct = comp.current_hp / comp.max_hp
     hp_col = get_hp_bar_color(hp_pct, comp.is_active)
     if comp.is_active and hp_pct < 0.5:
         hp_col = HP_DAMAGED
 
-    draw_stat_bar(surface, x_indent + 160, y, 60, 8, hp_pct, hp_col)
+    draw_stat_bar(surface, x_indent + 420, y, 120, 8, hp_pct, hp_col)
 
     status_text, status_color = get_component_status_display(comp)
     if status_text:
         st = font.render(status_text, True, status_color)
-        surface.blit(st, (x_indent + 230, y))
+        surface.blit(st, (x_indent + 560, y))
 
     stats_str = f"S:{getattr(comp, 'shots_fired', 0)} H:{getattr(comp, 'shots_hit', 0)}"
     s_text = font.render(stats_str, True, WEAPON_STATS_TEXT)
@@ -218,23 +218,23 @@ def draw_component_entry(surface, comp, x_indent, y, font):
         color = COMPONENT_INACTIVE_BG
         bar_color = COMPONENT_INACTIVE_BG
 
-    name = comp.name[:10] + ".." if len(comp.name) > 12 else comp.name
+    name = comp.name[:23] + ".." if len(comp.name) > 25 else comp.name
     hp_text = f"{int(comp.current_hp)}/{int(comp.max_hp)}"
 
     text = font.render(name, True, color)
     surface.blit(text, (x_indent + 5, y))
 
     hp_val = font.render(hp_text, True, color)
-    surface.blit(hp_val, (x_indent + 95, y))
+    surface.blit(hp_val, (x_indent + 200, y))
 
-    draw_stat_bar(surface, x_indent + 160, y, 60, 8, hp_pct, bar_color)
+    draw_stat_bar(surface, x_indent + 420, y, 120, 8, hp_pct, bar_color)
 
     status_text, status_color = get_component_status_display(comp)
     if status_text:
         stat_render = font.render(status_text, True, status_color)
-        surface.blit(stat_render, (x_indent + 230, y))
+        surface.blit(stat_render, (x_indent + 560, y))
 
-    return y + 14
+    return y + UIConfig.ELEMENT_SPACING
 
 
 def draw_ship_info_header(surface, ship, x_indent, y, font):
@@ -283,7 +283,7 @@ def draw_ship_vitals(surface, ship: 'ICombatShip', x_indent, y, bar_w, bar_h, fo
         shield_pct = ship.current_shields / ship.max_shields
         text = font.render(f"Shield: {int(ship.current_shields)}/{int(ship.max_shields)}", True, TEXT_SECONDARY)
         surface.blit(text, (x_indent, y))
-        draw_stat_bar(surface, x_indent + 100, y, bar_w, bar_h, shield_pct, RESOURCE_SHIELD)
+        draw_stat_bar(surface, x_indent + 300, y, bar_w, bar_h, shield_pct, RESOURCE_SHIELD)
         y += UIConfig.ELEMENT_SPACING
 
     # HP
@@ -291,7 +291,7 @@ def draw_ship_vitals(surface, ship: 'ICombatShip', x_indent, y, bar_w, bar_h, fo
     hp_color = HP_HEALTHY if hp_pct > 0.5 else (HP_DAMAGED if hp_pct > 0.2 else HP_CRITICAL)
     text = font.render(f"HP: {int(ship.hp)}/{int(ship.max_hp)}", True, TEXT_SECONDARY)
     surface.blit(text, (x_indent, y))
-    draw_stat_bar(surface, x_indent + 100, y, bar_w, bar_h, hp_pct, hp_color)
+    draw_stat_bar(surface, x_indent + 300, y, bar_w, bar_h, hp_pct, hp_color)
     y += UIConfig.ELEMENT_SPACING
 
     return y
@@ -348,7 +348,7 @@ def draw_ship_combat_stats(surface, ship: 'ICombatShip', x_indent, y, font):
     max_targets = ship.max_targets
     cap_text = "Single" if max_targets == CombatConstants.DEFAULT_MAX_TARGETS else f"Multi ({max_targets})"
     text = font.render(f"Sys: {cap_text}", True, TEXT_MUTED)
-    surface.blit(text, (x_indent + 200, y - 18))
+    surface.blit(text, (x_indent + 400, y - 18))
 
     return y
 

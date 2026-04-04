@@ -600,8 +600,8 @@ class TestShipStatsPanelGetExpandedHeight:
 
         height = panel.get_expanded_height(ship)
 
-        # Base height 146, no shield (+0), no components (+0), +5 padding
-        assert height == 146 + 5
+        # Base 180, no shield, no components, +5 padding
+        assert height == 180 + 5
 
     def test_get_expanded_height_with_shields(self):
         """Test get_expanded_height() for ship with shields."""
@@ -613,8 +613,8 @@ class TestShipStatsPanelGetExpandedHeight:
 
         height = panel.get_expanded_height(ship)
 
-        # Base height 146, shield (+16), no components (+0), +5 padding
-        assert height == 146 + 16 + 5
+        # Base 180, shield (+20), no components, +5 padding
+        assert height == 180 + 20 + 5
 
     def test_get_expanded_height_with_components(self):
         """Test get_expanded_height() for ship with components."""
@@ -626,5 +626,5 @@ class TestShipStatsPanelGetExpandedHeight:
 
         height = panel.get_expanded_height(ship)
 
-        # Base height 146, no shield (+0), 3 components * 14 = 42, +5 padding
-        assert height == 146 + 42 + 5
+        # Base 180, no shield, 3 components * 20 = 60, +5 padding
+        assert height == 180 + 60 + 5

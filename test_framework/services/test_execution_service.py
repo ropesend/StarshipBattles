@@ -70,6 +70,7 @@ class TestExecutionService:
 
             scenario.setup(controller.service.get_engine())
             controller._is_started = True
+            controller.service._is_started = True
 
             battle_scene.start_battle(controller)
             logger.debug(f" Battle started via controller (scenario={scenario.metadata.test_id})")

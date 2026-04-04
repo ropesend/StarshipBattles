@@ -535423,215 +535423,6 @@
   ],
   "CNC-005": [
     {
-      "timestamp": "2026-04-01T22:06:57.715837",
-      "ticks_run": 500,
-      "passed": true,
-      "metrics": {
-        "test_id": "CNC-005",
-        "baseline_attacker_total_shots_fired": 500,
-        "baseline_attacker_weapons": [
-          {
-            "name": "Test Beam (1 Damage, Guaranteed Hit)",
-            "type": "BeamWeaponAbility",
-            "shots_fired": 500,
-            "shots_hit": 500
-          }
-        ],
-        "baseline_attacker_in_flight": 0,
-        "baseline_attacker_resolved_shots": 500,
-        "baseline_attacker_resolved_hits": 500,
-        "baseline_target_total_shots_fired": 500,
-        "baseline_target_weapons": [
-          {
-            "name": "Test Beam (1 Damage, Guaranteed Hit, Requires C&C)",
-            "type": "BeamWeaponAbility",
-            "shots_fired": 500,
-            "shots_hit": 500
-          }
-        ],
-        "baseline_target_in_flight": 0,
-        "baseline_target_resolved_shots": 500,
-        "baseline_target_resolved_hits": 500,
-        "baseline_damage_dealt": 500.0,
-        "baseline_initial_hp": 1000000120,
-        "baseline_final_hp": 999999620.0,
-        "baseline_ticks": 500,
-        "variant_damage_dealt": 170,
-        "variant_initial_hp": 170,
-        "variant_final_hp": 0,
-        "variant_ticks": 500,
-        "ticks_run": 500,
-        "variant_attacker_total_shots_fired": 500,
-        "variant_attacker_weapons": [
-          {
-            "name": "Test Beam (1 Damage, Guaranteed Hit)",
-            "type": "BeamWeaponAbility",
-            "shots_fired": 500,
-            "shots_hit": 500
-          }
-        ],
-        "variant_attacker_in_flight": 0,
-        "variant_attacker_resolved_shots": 500,
-        "variant_attacker_resolved_hits": 500,
-        "variant_target_total_shots_fired": 25,
-        "variant_target_weapons": [
-          {
-            "name": "Test Beam (1 Damage, Guaranteed Hit, Requires C&C)",
-            "type": "BeamWeaponAbility",
-            "shots_fired": 25,
-            "shots_hit": 25
-          }
-        ],
-        "variant_target_in_flight": 0,
-        "variant_target_resolved_shots": 25,
-        "variant_target_resolved_hits": 25,
-        "validation": {
-          "passed": true,
-          "failed_phase": null,
-          "summary": {
-            "data": {
-              "total": 0,
-              "passed": 0,
-              "failed": 0
-            },
-            "precondition": {
-              "total": 3,
-              "passed": 3,
-              "failed": 0
-            },
-            "outcome": {
-              "total": 3,
-              "passed": 3,
-              "failed": 0
-            }
-          },
-          "checks": [
-            {
-              "phase": "precondition",
-              "name": "Baseline Ticks",
-              "expected": 500,
-              "actual": 500,
-              "passed": true,
-              "detail": "expected=500, actual=500"
-            },
-            {
-              "phase": "precondition",
-              "name": "Variant Ticks",
-              "expected": 500,
-              "actual": 500,
-              "passed": true,
-              "detail": "expected=500, actual=500"
-            },
-            {
-              "phase": "precondition",
-              "name": "Variant Bridge Destroyed",
-              "expected": true,
-              "actual": true,
-              "passed": true,
-              "detail": "bridge_alive=False"
-            },
-            {
-              "phase": "outcome",
-              "name": "CNC Ship Fired Before Bridge Lost",
-              "expected": true,
-              "actual": true,
-              "passed": true,
-              "detail": "attacker_damage_taken=25.0"
-            },
-            {
-              "phase": "outcome",
-              "name": "Weak Bridge Ship Fired Fewer Shots",
-              "expected": true,
-              "actual": true,
-              "passed": true,
-              "detail": "variant_shots=25, baseline_shots=500"
-            },
-            {
-              "phase": "outcome",
-              "name": "Strong Bridge Ship Fired Full Test",
-              "expected": true,
-              "actual": true,
-              "passed": true,
-              "detail": "baseline_shots=500"
-            }
-          ]
-        },
-        "duration_real": 0.40961670875549316,
-        "ticks": 500
-      },
-      "validation_summary": {
-        "pass": 6,
-        "fail": 0,
-        "warn": 0,
-        "info": 0
-      },
-      "validation_results": [
-        {
-          "name": "Baseline Ticks",
-          "status": "PASS",
-          "expected": 500,
-          "actual": 500,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "precondition",
-          "detail": "expected=500, actual=500"
-        },
-        {
-          "name": "Variant Ticks",
-          "status": "PASS",
-          "expected": 500,
-          "actual": 500,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "precondition",
-          "detail": "expected=500, actual=500"
-        },
-        {
-          "name": "Variant Bridge Destroyed",
-          "status": "PASS",
-          "expected": true,
-          "actual": true,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "precondition",
-          "detail": "bridge_alive=False"
-        },
-        {
-          "name": "CNC Ship Fired Before Bridge Lost",
-          "status": "PASS",
-          "expected": true,
-          "actual": true,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "outcome",
-          "detail": "attacker_damage_taken=25.0"
-        },
-        {
-          "name": "Weak Bridge Ship Fired Fewer Shots",
-          "status": "PASS",
-          "expected": true,
-          "actual": true,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "outcome",
-          "detail": "variant_shots=25, baseline_shots=500"
-        },
-        {
-          "name": "Strong Bridge Ship Fired Full Test",
-          "status": "PASS",
-          "expected": true,
-          "actual": true,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "outcome",
-          "detail": "baseline_shots=500"
-        }
-      ],
-      "initial_state_file": null,
-      "final_state_file": null,
-      "seed": null
-    },
-    {
       "timestamp": "2026-04-02T06:07:41.917021",
       "ticks_run": 500,
       "passed": true,
@@ -537889,6 +537680,269 @@
       "initial_state_file": null,
       "final_state_file": null,
       "seed": null
+    },
+    {
+      "timestamp": "2026-04-03T19:44:55.885809",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "CNC-005",
+        "baseline_attacker_total_shots_fired": 500,
+        "baseline_attacker_weapons": [
+          {
+            "name": "Test Beam (1 Damage, Guaranteed Hit)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 500,
+            "shots_hit": 500
+          }
+        ],
+        "baseline_attacker_in_flight": 0,
+        "baseline_attacker_resolved_shots": 500,
+        "baseline_attacker_resolved_hits": 500,
+        "baseline_target_total_shots_fired": 500,
+        "baseline_target_weapons": [
+          {
+            "name": "Test Beam (1 Damage, Guaranteed Hit, Requires C&C)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 500,
+            "shots_hit": 500
+          }
+        ],
+        "baseline_target_in_flight": 0,
+        "baseline_target_resolved_shots": 500,
+        "baseline_target_resolved_hits": 500,
+        "baseline_damage_dealt": 500.0,
+        "baseline_initial_hp": 1000000120,
+        "baseline_final_hp": 999999620.0,
+        "baseline_ticks": 500,
+        "variant_damage_dealt": 170,
+        "variant_initial_hp": 170,
+        "variant_final_hp": 0,
+        "variant_ticks": 500,
+        "ticks_run": 500,
+        "variant_attacker_total_shots_fired": 500,
+        "variant_attacker_weapons": [
+          {
+            "name": "Test Beam (1 Damage, Guaranteed Hit)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 500,
+            "shots_hit": 500
+          }
+        ],
+        "variant_attacker_in_flight": 0,
+        "variant_attacker_resolved_shots": 500,
+        "variant_attacker_resolved_hits": 500,
+        "variant_target_total_shots_fired": 25,
+        "variant_target_weapons": [
+          {
+            "name": "Test Beam (1 Damage, Guaranteed Hit, Requires C&C)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 25,
+            "shots_hit": 25
+          }
+        ],
+        "variant_target_in_flight": 0,
+        "variant_target_resolved_shots": 25,
+        "variant_target_resolved_hits": 25,
+        "validation": {
+          "passed": true,
+          "failed_phase": null,
+          "summary": {
+            "data": {
+              "total": 0,
+              "passed": 0,
+              "failed": 0
+            },
+            "precondition": {
+              "total": 6,
+              "passed": 6,
+              "failed": 0
+            },
+            "outcome": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0
+            }
+          },
+          "checks": [
+            {
+              "phase": "precondition",
+              "name": "Baseline Ticks",
+              "expected": 500,
+              "actual": 500,
+              "passed": true,
+              "detail": "expected=500, actual=500"
+            },
+            {
+              "phase": "precondition",
+              "name": "Baseline Target Loaded",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "initial_hp=1000000120"
+            },
+            {
+              "phase": "precondition",
+              "name": "Variant Ticks",
+              "expected": 500,
+              "actual": 500,
+              "passed": true,
+              "detail": "expected=500, actual=500"
+            },
+            {
+              "phase": "precondition",
+              "name": "Variant Target Loaded",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "initial_hp=170"
+            },
+            {
+              "phase": "precondition",
+              "name": "Battles Produced Different Results",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "baseline_dmg=500.0, variant_dmg=170"
+            },
+            {
+              "phase": "precondition",
+              "name": "Variant Bridge Destroyed",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "bridge_alive=False"
+            },
+            {
+              "phase": "outcome",
+              "name": "CNC Ship Fired Before Bridge Lost",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "attacker_damage_taken=25.0"
+            },
+            {
+              "phase": "outcome",
+              "name": "Weak Bridge Ship Fired Fewer Shots",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "variant_shots=25, baseline_shots=500"
+            },
+            {
+              "phase": "outcome",
+              "name": "Strong Bridge Ship Fired Full Test",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "baseline_shots=500"
+            }
+          ]
+        },
+        "duration_real": 0.4050421714782715,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 9,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Baseline Ticks",
+          "status": "PASS",
+          "expected": 500,
+          "actual": 500,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "expected=500, actual=500"
+        },
+        {
+          "name": "Baseline Target Loaded",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "initial_hp=1000000120"
+        },
+        {
+          "name": "Variant Ticks",
+          "status": "PASS",
+          "expected": 500,
+          "actual": 500,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "expected=500, actual=500"
+        },
+        {
+          "name": "Variant Target Loaded",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "initial_hp=170"
+        },
+        {
+          "name": "Battles Produced Different Results",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "baseline_dmg=500.0, variant_dmg=170"
+        },
+        {
+          "name": "Variant Bridge Destroyed",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "bridge_alive=False"
+        },
+        {
+          "name": "CNC Ship Fired Before Bridge Lost",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "attacker_damage_taken=25.0"
+        },
+        {
+          "name": "Weak Bridge Ship Fired Fewer Shots",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "variant_shots=25, baseline_shots=500"
+        },
+        {
+          "name": "Strong Bridge Ship Fired Full Test",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "baseline_shots=500"
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\CNC-005_2026-04-03T19-44-55-480767_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\CNC-005_2026-04-03T19-44-55-480767_final.json",
+      "seed": 478163327
     }
   ],
   "BEAMWEAPON-001-HT": [
@@ -577275,6 +577329,251 @@
       "initial_state_file": null,
       "final_state_file": null,
       "seed": null
+    },
+    {
+      "timestamp": "2026-04-03T19:45:18.525218",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "CNC-006",
+        "baseline_attacker_total_shots_fired": 500,
+        "baseline_attacker_weapons": [
+          {
+            "name": "Test Beam (1 Damage, Guaranteed Hit)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 500,
+            "shots_hit": 500
+          }
+        ],
+        "baseline_attacker_in_flight": 0,
+        "baseline_attacker_resolved_shots": 500,
+        "baseline_attacker_resolved_hits": 500,
+        "baseline_target_total_shots_fired": 25,
+        "baseline_target_weapons": [
+          {
+            "name": "Test Beam (1 Damage, Guaranteed Hit, Requires C&C)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 25,
+            "shots_hit": 25
+          }
+        ],
+        "baseline_target_in_flight": 0,
+        "baseline_target_resolved_shots": 25,
+        "baseline_target_resolved_hits": 25,
+        "baseline_damage_dealt": 170,
+        "baseline_initial_hp": 170,
+        "baseline_final_hp": 0,
+        "baseline_ticks": 500,
+        "variant_damage_dealt": 220,
+        "variant_initial_hp": 220,
+        "variant_final_hp": 0,
+        "variant_ticks": 500,
+        "ticks_run": 500,
+        "variant_attacker_total_shots_fired": 500,
+        "variant_attacker_weapons": [
+          {
+            "name": "Test Beam (1 Damage, Guaranteed Hit)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 500,
+            "shots_hit": 500
+          }
+        ],
+        "variant_attacker_in_flight": 0,
+        "variant_attacker_resolved_shots": 500,
+        "variant_attacker_resolved_hits": 500,
+        "variant_target_total_shots_fired": 57,
+        "variant_target_weapons": [
+          {
+            "name": "Test Beam (1 Damage, Guaranteed Hit, Requires C&C)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 57,
+            "shots_hit": 57
+          }
+        ],
+        "variant_target_in_flight": 0,
+        "variant_target_resolved_shots": 57,
+        "variant_target_resolved_hits": 57,
+        "validation": {
+          "passed": true,
+          "failed_phase": null,
+          "summary": {
+            "data": {
+              "total": 0,
+              "passed": 0,
+              "failed": 0
+            },
+            "precondition": {
+              "total": 7,
+              "passed": 7,
+              "failed": 0
+            },
+            "outcome": {
+              "total": 1,
+              "passed": 1,
+              "failed": 0
+            }
+          },
+          "checks": [
+            {
+              "phase": "precondition",
+              "name": "Baseline Ticks",
+              "expected": 500,
+              "actual": 500,
+              "passed": true,
+              "detail": "expected=500, actual=500"
+            },
+            {
+              "phase": "precondition",
+              "name": "Baseline Target Loaded",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "initial_hp=170"
+            },
+            {
+              "phase": "precondition",
+              "name": "Variant Ticks",
+              "expected": 500,
+              "actual": 500,
+              "passed": true,
+              "detail": "expected=500, actual=500"
+            },
+            {
+              "phase": "precondition",
+              "name": "Variant Target Loaded",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "initial_hp=220"
+            },
+            {
+              "phase": "precondition",
+              "name": "Battles Produced Different Results",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "baseline_dmg=170, variant_dmg=220"
+            },
+            {
+              "phase": "precondition",
+              "name": "Single Bridge Ship Fired",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "baseline_shots=25"
+            },
+            {
+              "phase": "precondition",
+              "name": "Dual Bridge Ship Fired",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "variant_shots=57"
+            },
+            {
+              "phase": "outcome",
+              "name": "Dual Bridge Fired More Shots",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "variant_shots=57, baseline_shots=25"
+            }
+          ]
+        },
+        "duration_real": 0.48660945892333984,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 8,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Baseline Ticks",
+          "status": "PASS",
+          "expected": 500,
+          "actual": 500,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "expected=500, actual=500"
+        },
+        {
+          "name": "Baseline Target Loaded",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "initial_hp=170"
+        },
+        {
+          "name": "Variant Ticks",
+          "status": "PASS",
+          "expected": 500,
+          "actual": 500,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "expected=500, actual=500"
+        },
+        {
+          "name": "Variant Target Loaded",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "initial_hp=220"
+        },
+        {
+          "name": "Battles Produced Different Results",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "baseline_dmg=170, variant_dmg=220"
+        },
+        {
+          "name": "Single Bridge Ship Fired",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "baseline_shots=25"
+        },
+        {
+          "name": "Dual Bridge Ship Fired",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "variant_shots=57"
+        },
+        {
+          "name": "Dual Bridge Fired More Shots",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "variant_shots=57, baseline_shots=25"
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\CNC-006_2026-04-03T19-45-18-038609_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\CNC-006_2026-04-03T19-45-18-038609_final.json",
+      "seed": 1422331944
     }
   ],
   "EMISSIVE-006": [
