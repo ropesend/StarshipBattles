@@ -239,7 +239,7 @@ class ProductionSpawner:
         """
         design_data = item.get('design_data')
         if not design_data:
-            design_data = self._load_design(design_id, empire.id, save_path)
+            design_data = self._load_design(design_id, empire, save_path)
         if not design_data:
             logger.warning(f"Cannot spawn to staging yard: design '{design_id}' not found")
             return
@@ -251,8 +251,11 @@ class ProductionSpawner:
             for comp in iter_components(design_data):
                 if isinstance(comp, dict):
                     comp_id = comp.get('id', '')
-                    comp_def = self._registries.components.get(comp_id, {})
-                    total_mass += comp_def.get('mass', comp.get('mass', 0))
+                    comp_def = self._registries.components.get(comp_id)
+                    if comp_def is not None:
+                        total_mass += getattr(comp_def, 'mass', 0)
+                    else:
+                        total_mass += comp.get('mass', 0)
 
         staging_item = {
             'design_id': design_id,
