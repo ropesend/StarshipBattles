@@ -169,15 +169,34 @@ class ClickModeDispatcher:
             if result and result.get('type') == 'prompt':
                 # Capture fleet reference for callback
                 fleet_ref = self.scene.selected_fleet
+                target_hex = result.get('target_hex')
 
-                def on_selected(planet):
+                def on_planet_and_amounts(planet, pop_amount, cargo_amounts):
+                    """Issue colonize mission with amounts from dialog."""
                     self.scene._colonization.queue_colonize_mission(
-                        result['target_hex'], planet, fleet_ref
+                        target_hex, planet, fleet_ref,
+                        population_amount=pop_amount,
+                        cargo_amounts=cargo_amounts,
                     )
                     if self.scene.selected_fleet == fleet_ref:
                         self.scene.on_ui_selection(self.scene.selected_fleet)
 
-                self.scene.ui.prompt_planet_selection(result['planets'], on_selected)
+                def on_planet_selected(planet):
+                    """After planet selection, open colonize dialog for amounts."""
+                    passenger_cap, cargo_caps = self.scene._colonization.get_fleet_capacities(fleet_ref)
+
+                    def on_confirmed(pop_amount, cargo_amounts):
+                        on_planet_and_amounts(planet, pop_amount, cargo_amounts)
+
+                    self.scene.ui.open_colonize_dialog(
+                        planet.name, passenger_cap, cargo_caps, on_confirmed
+                    )
+
+                planets = result['planets']
+                if len(planets) == 1:
+                    on_planet_selected(planets[0])
+                else:
+                    self.scene.ui.prompt_planet_selection(planets, on_planet_selected)
 
             elif result and result.get('type') == 'success':
                 self.scene.on_ui_selection(self.scene.selected_fleet)

@@ -154,9 +154,9 @@ class TestColonizeProcessing:
     def component_registry(self):
         """Component registry with colony pod definitions."""
         return {
-            'continental_colony_pod': {
-                'id': 'continental_colony_pod',
-                'abilities': {'ColonizePlanet': 'CONTINENTAL'}
+            'colony_pod': {
+                'id': 'colony_pod',
+                'abilities': {'ColonizePlanet': True}
             },
         }
 

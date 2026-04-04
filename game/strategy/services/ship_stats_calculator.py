@@ -123,6 +123,7 @@ class ShipStatsCalculator:
         total_hp = 0.0
         resource_storage: Dict[str, float] = {}
         cargo_storage: Dict[str, float] = {}
+        pod_storage_mass = 0.0
         resource_consumption_per_hex: Dict[str, float] = {}
         resource_consumption_per_turn: Dict[str, float] = {}
         warp_resource_costs: Dict[str, float] = {}
@@ -205,6 +206,11 @@ class ShipStatsCalculator:
                 abilities, effectiveness, capacity_mult, formula_context, cargo_storage
             )
 
+            # Pod Storage - mass-based capacity for carried_items (drop pods)
+            pod_storage_mass += self._accumulate_pod_storage(
+                abilities, effectiveness, capacity_mult, formula_context
+            )
+
             # Strategic Movement - degrades with damage
             total_strategic_movement += self._accumulate_movement(
                 abilities, effectiveness, formula_context, multipliers
@@ -234,6 +240,7 @@ class ShipStatsCalculator:
             # New generic fields
             'resource_storage': resource_storage,
             'cargo_storage': cargo_storage,
+            'pod_storage_mass': pod_storage_mass,
             'resource_consumption_per_hex': resource_consumption_per_hex,
             'resource_consumption_per_turn': resource_consumption_per_turn,
             'warp_resource_costs': warp_resource_costs,
@@ -471,6 +478,33 @@ class ShipStatsCalculator:
             cargo_dict[cargo_type] = (
                 cargo_dict.get(cargo_type, 0) + capacity * effectiveness
             )
+
+    @staticmethod
+    def _accumulate_pod_storage(
+        abilities: Dict[str, Any],
+        effectiveness: float,
+        capacity_mult: float,
+        formula_context: Dict[str, Any],
+    ) -> float:
+        """Accumulate PodStorage mass capacity from component abilities.
+
+        PodStorage follows the same pattern as planet StagingYard:
+        mass-based capacity limiting how many drop pods a ship can carry.
+
+        Returns:
+            Total pod storage mass capacity from this component.
+        """
+        total = 0.0
+        pod_data = abilities.get('PodStorage')
+        if pod_data is None:
+            return 0.0
+        if isinstance(pod_data, dict):
+            capacity = ShipStatsCalculator._evaluate_value(
+                pod_data.get('capacity_mass', 0), 0, formula_context
+            )
+            capacity *= capacity_mult
+            total += capacity * effectiveness
+        return total
 
     def _accumulate_movement(
         self,

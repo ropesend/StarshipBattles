@@ -453,9 +453,9 @@ class TestColonyFoundedEvent:
     def _make_component_registry(self):
         """Create component registry for tests."""
         return {
-            'continental_colony_pod': {
-                'id': 'continental_colony_pod',
-                'abilities': {'ColonizePlanet': 'CONTINENTAL'}
+            'colony_pod': {
+                'id': 'colony_pod',
+                'abilities': {'ColonizePlanet': True}
             },
         }
 

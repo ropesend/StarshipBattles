@@ -169,17 +169,17 @@ def make_combat_ship(name: str, owner_id: int, registries=None) -> ShipInstance:
 def component_registry():
     """Component registry with colony pod definitions for all planet types."""
     return {
-        'ice_dwarf_colony_pod': {
-            'id': 'ice_dwarf_colony_pod',
-            'abilities': {'ColonizePlanet': 'ICE_DWARF'}
+        'colony_pod': {
+            'id': 'colony_pod',
+            'abilities': {'ColonizePlanet': True}
         },
-        'continental_colony_pod': {
-            'id': 'continental_colony_pod',
-            'abilities': {'ColonizePlanet': 'CONTINENTAL'}
+        'colony_pod': {
+            'id': 'colony_pod',
+            'abilities': {'ColonizePlanet': True}
         },
-        'arid_colony_pod': {
-            'id': 'arid_colony_pod',
-            'abilities': {'ColonizePlanet': 'ARID'}
+        'colony_pod': {
+            'id': 'colony_pod',
+            'abilities': {'ColonizePlanet': True}
         },
         'laser_cannon': {
             'id': 'laser_cannon',
@@ -590,14 +590,9 @@ class TestUIFiltering:
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(colony_ship)
 
-        # Get available pods
-        available_pods = ColonizeValidator.get_available_colony_pods(
-            fleet, component_registry
-        )
-
-        # Phase 3: Returns {'drop_pod': N} -- pods are universal
-        assert "drop_pod" in available_pods
-        assert available_pods["drop_pod"] == 1
+        # Count available pods (universal — any pod works on any planet)
+        available_pods = ColonizeValidator.count_drop_pods(fleet)
+        assert available_pods == 1
 
         # Validate ice planet - should succeed (has drop pod)
         ice_result = ColonizeValidator.validate(
@@ -633,20 +628,20 @@ class TestUIFiltering:
         fleet.ships.append(colony_ship2)
 
         # Before any orders
-        available = ColonizeValidator.get_available_colony_pods(fleet, component_registry)
-        committed = ColonizeValidator.get_committed_colony_pods(fleet)
-        assert available.get("drop_pod", 0) == 2
-        assert committed.get("drop_pod", 0) == 0
+        available = ColonizeValidator.count_drop_pods(fleet)
+        committed = ColonizeValidator.count_committed_colonize_orders(fleet)
+        assert available == 2
+        assert committed == 0
 
         # Queue 1 colonization
         fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice1))
 
         # After 1 order
-        committed_after = ColonizeValidator.get_committed_colony_pods(fleet)
-        assert committed_after.get("drop_pod", 0) == 1
+        committed_after = ColonizeValidator.count_committed_colonize_orders(fleet)
+        assert committed_after == 1
 
         # Remaining = available - committed = 2 - 1 = 1
-        remaining = available.get("drop_pod", 0) - committed_after.get("drop_pod", 0)
+        remaining = available - committed_after
         assert remaining == 1
 
 
@@ -692,8 +687,8 @@ class TestEdgeCases:
         fleet = Fleet(1, 1, HexCoord(10, 10))
 
         # Get available pods - should be zero
-        available = ColonizeValidator.get_available_colony_pods(fleet, component_registry)
-        assert available == {"drop_pod": 0}
+        available = ColonizeValidator.count_drop_pods(fleet)
+        assert available == 0
 
         # Validate - should fail
         result = ColonizeValidator.validate(

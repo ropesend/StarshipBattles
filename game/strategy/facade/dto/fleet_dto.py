@@ -94,6 +94,11 @@ class FleetInfo:
     # Cargo resource amounts and capacities (all resource types)
     cargo_resources: Tuple[Tuple[str, int], ...] = field(default_factory=tuple)
     cargo_capacities: Tuple[Tuple[str, int], ...] = field(default_factory=tuple)
+    # Carried items summary: tuple of (name, vehicle_type, mass, count)
+    carried_items_summary: Tuple[Tuple[str, str, float, int], ...] = field(default_factory=tuple)
+    # Pod storage capacity and usage
+    pod_storage_capacity: float = 0.0
+    pod_storage_used: float = 0.0
 
     @classmethod
     def from_fleet(cls, fleet: 'Fleet') -> 'FleetInfo':
@@ -129,10 +134,18 @@ class FleetInfo:
             target_description = ""
 
             if order.type.name in ("MOVE", "COLONIZE"):
-                # Target is a HexCoord or Planet
+                # Target is a HexCoord, Planet, or dict with planet
                 if isinstance(order.target, HexCoord):
                     target_hex = order.target
                     target_description = f"({order.target.q}, {order.target.r})"
+                elif isinstance(order.target, dict) and 'planet' in order.target:
+                    # Dict target with population/cargo amounts
+                    planet_obj = order.target['planet']
+                    if planet_obj:
+                        target_description = planet_obj.name
+                        target_hex = planet_obj.location
+                    else:
+                        target_description = "Any Planet"
                 elif isinstance(order.target, Planet):
                     # Planet target - has name and location
                     target_description = order.target.name
@@ -199,4 +212,23 @@ class FleetInfo:
                 for res in ("metals", "organics", "vapors", "radioactives", "exotics",
                             "fuel", "energy", "ammo")
             ),
+            carried_items_summary=cls._aggregate_carried_items(fleet),
+            pod_storage_capacity=fleet.resources.get_fleet_pod_capacity(),
+            pod_storage_used=fleet.resources.get_fleet_pod_mass_used(),
+        )
+
+    @staticmethod
+    def _aggregate_carried_items(fleet: 'Fleet') -> Tuple[Tuple[str, str, float, int], ...]:
+        """Aggregate carried items across all ships by (name, vehicle_type, mass)."""
+        counts: dict = {}
+        for ship in fleet.ships:
+            for item in getattr(ship, 'carried_items', []):
+                name = item.get('name', 'Unknown')
+                vtype = item.get('vehicle_type', 'unknown')
+                mass = item.get('mass', 0.0)
+                key = (name, vtype, mass)
+                counts[key] = counts.get(key, 0) + 1
+        return tuple(
+            (name, vtype, mass, count)
+            for (name, vtype, mass), count in counts.items()
         )

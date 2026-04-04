@@ -364,6 +364,9 @@ class TransferDialog(UIWindow):
                 'target_amt': target_amounts.get(species_key, 0),
             })
 
+        # Add staging yard / carried items (drop pods) rows
+        self._add_pod_rows(source_obj, target_obj)
+
         # Render visible rows (apply filter)
         y = 5
         for row in self._row_data:
@@ -377,6 +380,48 @@ class TransferDialog(UIWindow):
         total_h = max(y + 10, 100)
         container_w = self.grid_container.relative_rect.width - 20
         self.grid_container.set_scrollable_area_dimensions((container_w, total_h))
+
+    def _add_pod_rows(self, source_obj, target_obj):
+        """Add rows for staging yard / carried items (drop pods).
+
+        Pods are discrete items transferred 1 at a time between
+        planet.staging_yard and ship.carried_items via the drop_pod cargo type.
+        """
+        from game.strategy.facade.dto.fleet_dto import FleetInfo
+        from game.strategy.facade.dto.planet_dto import PlanetInfo
+
+        # Collect pod items from both sides
+        pod_names_seen = set()
+
+        # Source pods
+        source_pods: Dict[str, int] = {}
+        if isinstance(source_obj, PlanetInfo):
+            for name, vtype, mass, count in getattr(source_obj, 'staging_yard_summary', ()):
+                source_pods[name] = source_pods.get(name, 0) + count
+                pod_names_seen.add(name)
+        elif isinstance(source_obj, FleetInfo):
+            for name, vtype, mass, count in getattr(source_obj, 'carried_items_summary', ()):
+                source_pods[name] = source_pods.get(name, 0) + count
+                pod_names_seen.add(name)
+
+        # Target pods
+        target_pods: Dict[str, int] = {}
+        if isinstance(target_obj, PlanetInfo):
+            for name, vtype, mass, count in getattr(target_obj, 'staging_yard_summary', ()):
+                target_pods[name] = target_pods.get(name, 0) + count
+                pod_names_seen.add(name)
+        elif isinstance(target_obj, FleetInfo):
+            for name, vtype, mass, count in getattr(target_obj, 'carried_items_summary', ()):
+                target_pods[name] = target_pods.get(name, 0) + count
+                pod_names_seen.add(name)
+
+        for pod_name in sorted(pod_names_seen):
+            self._row_data.append({
+                'cargo_key': f'drop_pod:{pod_name}',
+                'display_name': pod_name,
+                'source_amt': source_pods.get(pod_name, 0),
+                'target_amt': target_pods.get(pod_name, 0),
+            })
 
     def _add_row(self, y: int, cargo_key: str, display_name: str,
                  source_amt: int, target_amt: int):
@@ -530,7 +575,10 @@ class TransferDialog(UIWindow):
                 continue
 
             # Parse cargo key
-            if cargo_key.startswith('passengers_'):
+            if cargo_key.startswith('drop_pod:'):
+                cargo_type = 'drop_pod'
+                species_id = cargo_key[len('drop_pod:'):]  # pod name as qualifier
+            elif cargo_key.startswith('passengers_'):
                 cargo_type = 'passengers'
                 species_id = cargo_key[len('passengers_'):]
             elif cargo_key == 'passengers':

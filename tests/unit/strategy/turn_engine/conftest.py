@@ -62,7 +62,7 @@ def mock_fleet():
     # PROJ-55: Add design_data with colony pod for CONTINENTAL planet type
     mock_ship.design_data = {
         'layers': {
-            'HULL': [{'id': 'continental_colony_pod'}]
+            'HULL': [{'id': 'colony_pod'}]
         }
     }
     fleet.ships = [mock_ship]

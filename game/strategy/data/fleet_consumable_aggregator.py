@@ -246,6 +246,16 @@ class FleetConsumableAggregator:
             'warp_resource_costs': self.get_warp_resource_costs(),
         }
 
+    # --- Pod Storage Methods ---
+
+    def get_fleet_pod_capacity(self) -> float:
+        """Get total pod storage mass capacity across all ships in fleet."""
+        return sum(ship.get_pod_storage_capacity() for ship in self._fleet.ships)
+
+    def get_fleet_pod_mass_used(self) -> float:
+        """Get total mass of carried items across all ships in fleet."""
+        return sum(ship.get_pod_storage_used() for ship in self._fleet.ships)
+
     # --- Cargo Methods ---
 
     def get_fleet_cargo_capacity(self, cargo_type: str) -> int:

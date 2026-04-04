@@ -110,8 +110,8 @@ def _make_ship_with_colony_pod(
 def _make_component_registry() -> dict:
     """Create component registry with colony pod definitions for CONTINENTAL planets."""
     return {
-        "colony_pod_continental": {
-            "id": "colony_pod_continental",
+        "colony_pod": {
+            "id": "colony_pod",
             "abilities": {"ColonizePlanet": "CONTINENTAL"}
         },
         "passenger_quarters": {

@@ -554,6 +554,27 @@ class StrategyWindowManager:
         # Use PlanetSelectionWindow (PROJ-54 - now uses PlanetReportPanel internally)
         self.planet_selection_window = PlanetSelectionWindow(rect, self.manager, planets, on_select)
 
+    def open_colonize_dialog(self, planet_name, passenger_capacity, cargo_capacities, on_confirm):
+        """Open the colonization population/cargo dialog.
+
+        Args:
+            planet_name: Name of planet being colonized.
+            passenger_capacity: Fleet's max passenger capacity.
+            cargo_capacities: Dict of resource_type -> fleet capacity.
+            on_confirm: Callback(population_amount, cargo_amounts).
+        """
+        from game.ui.screens.colonize_dialog import ColonizeDialog
+
+        width = 620
+        height = 450
+        x = (self.width - width) / 2
+        y = (self.height - height) / 2
+        rect = pygame.Rect(x, y, width, height)
+        self.colonize_dialog = ColonizeDialog(
+            rect, self.manager, planet_name,
+            passenger_capacity, cargo_capacities, on_confirm
+        )
+
     # =========================================================================
     # System Selection Prompt (PROJ-138)
     # =========================================================================

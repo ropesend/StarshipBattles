@@ -188,14 +188,7 @@ class TestQuickstartDesignSpecificContent:
         assert data["vehicle_type"] == "Ship"
 
 
-COLONY_PLANET_TYPES = [
-    "CONTINENTAL", "ARID", "PELAGIC", "MAGMA", "CRYOPLANET",
-    "BARREN", "JOVIAN", "ICE_GIANT", "CHTHONIAN", "ICE_DWARF", "PLANETOID",
-]
-
-COLONY_DESIGN_FILES = [
-    f"qs_colony_{pt.lower()}.json" for pt in COLONY_PLANET_TYPES
-]
+COLONY_DESIGN_FILE = "qs_colony_ship.json"
 
 SUPERWEAPON_DESIGNS = {
     "qs_planet_destroyer.json": "DestroyPlanet",
@@ -207,45 +200,33 @@ SUPERWEAPON_DESIGNS = {
 
 
 class TestColonyShipDesigns:
-    """Tests for colony ship design fixtures."""
+    """Tests for the universal colony ship design fixture."""
 
-    def test_all_colony_designs_exist(self, quickstart_designs_dir):
-        """All 11 colony ship designs should exist."""
-        for filename in COLONY_DESIGN_FILES:
-            assert (quickstart_designs_dir / filename).exists(), \
-                f"Missing colony design: {filename}"
+    def test_colony_design_exists(self, quickstart_designs_dir):
+        """Universal colony ship design should exist."""
+        assert (quickstart_designs_dir / COLONY_DESIGN_FILE).exists(), \
+            f"Missing colony design: {COLONY_DESIGN_FILE}"
 
-    @pytest.mark.parametrize("filename", COLONY_DESIGN_FILES)
-    def test_colony_ship_has_colony_pod(self, filename, quickstart_designs_dir, quickstart_ship_data, fresh_registries):
-        """Each colony ship should have a colony pod bay and pre-loaded cargo."""
-        data = load_json(str(quickstart_designs_dir / filename))
+    def test_colony_ship_has_pod_storage(self, quickstart_designs_dir, quickstart_ship_data, fresh_registries):
+        """Colony ship should have a colony_pod_bay with PodStorage ability."""
+        data = load_json(str(quickstart_designs_dir / COLONY_DESIGN_FILE))
+        ship = Ship.from_dict(data, registries=fresh_registries)
+        all_comps = ship.get_all_components()
+        has_pod_bay = any(c.id == "colony_pod_bay" for c in all_comps)
+        assert has_pod_bay, "Colony ship should have a colony_pod_bay component"
 
-        # Phase 2: Colony pod bay provides CargoStorage for pod types
+    def test_colony_ship_has_passenger_quarters(self, quickstart_designs_dir, quickstart_ship_data, fresh_registries):
+        """Colony ship should have passenger capacity."""
+        data = load_json(str(quickstart_designs_dir / COLONY_DESIGN_FILE))
         ship = Ship.from_dict(data, registries=fresh_registries)
         all_comps = ship.get_all_components()
         has_cargo = any(c.has_ability("CargoStorage") for c in all_comps)
-        assert has_cargo, f"{filename} should have a colony_pod_bay with CargoStorage"
+        assert has_cargo, "Colony ship should have CargoStorage (passengers)"
 
-        # Design should have pre-loaded cargo with a colony pod
-        cargo = data.get("cargo", {})
-        has_pod = any(k.startswith("colony_pod_") for k in cargo)
-        assert has_pod, f"{filename} should have pre-loaded colony pod cargo"
-
-    @pytest.mark.parametrize("filename", COLONY_DESIGN_FILES)
-    def test_colony_ship_has_passenger_quarters(self, filename, quickstart_designs_dir, quickstart_ship_data, fresh_registries):
-        """Each colony ship should have passenger capacity."""
-        data = load_json(str(quickstart_designs_dir / filename))
-        ship = Ship.from_dict(data, registries=fresh_registries)
-
-        all_comps = ship.get_all_components()
-        has_cargo = any(c.has_ability("CargoStorage") for c in all_comps)
-        assert has_cargo, f"{filename} should have CargoStorage (passengers)"
-
-    @pytest.mark.parametrize("filename", COLONY_DESIGN_FILES)
-    def test_colony_ship_is_destroyer_class(self, filename, quickstart_designs_dir):
-        """Each colony ship should be Destroyer class."""
-        data = load_json(str(quickstart_designs_dir / filename))
-        assert data["ship_class"] == "Destroyer", f"{filename} should be Destroyer class"
+    def test_colony_ship_is_destroyer_class(self, quickstart_designs_dir):
+        """Colony ship should be Destroyer class."""
+        data = load_json(str(quickstart_designs_dir / COLONY_DESIGN_FILE))
+        assert data["ship_class"] == "Destroyer"
 
 
 class TestGeneralPurposeShipDesign:

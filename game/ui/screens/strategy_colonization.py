@@ -104,11 +104,9 @@ class ColonizationSystem:
             logger.debug("No colonizable planets at fleet location (Validation Failed).")
             return None
 
-        # PROJ-55: Filter by available colony pods
+        # Check fleet has available drop pods (universal — any pod works on any planet)
         remaining_pods = self.facade.get_fleet_remaining_pods(fleet.id)
-
-        # If no remaining pods, return informative message
-        if not remaining_pods:
+        if remaining_pods.get('drop_pod', 0) <= 0:
             logger.debug("No colony pods available in fleet.")
             return {
                 'type': 'no_targets',
@@ -116,45 +114,31 @@ class ColonizationSystem:
                 'remaining_pods': remaining_pods,
             }
 
-        # Filter planets by available pod types
-        pod_filtered_planets = []
-        for p in valid_planets:
-            planet_type_str = p.planet_type.name
-            if planet_type_str in remaining_pods:
-                pod_filtered_planets.append(p)
+        # Return candidates for UI to open colonize dialog (or planet selection if multiple)
+        return {
+            'type': 'prompt',
+            'planets': valid_planets,
+            'fleet': fleet,
+        }
 
-        # If no planets match available pods
-        if not pod_filtered_planets:
-            pod_types = ", ".join(remaining_pods.keys())
-            logger.debug(f"No colonizable planets for available pods ({pod_types}).")
-            return {
-                'type': 'no_targets',
-                'message': f'No colonizable planets for available pods ({pod_types})',
-                'remaining_pods': remaining_pods,
-            }
-
-        if len(pod_filtered_planets) == 1:
-            return self.issue_colonize_order(fleet, pod_filtered_planets[0])
-        else:
-            # Return context for UI to prompt selection
-            return {
-                'type': 'prompt',
-                'planets': pod_filtered_planets,
-                'fleet': fleet,
-            }
-
-    def issue_colonize_order(self, fleet, planet):
+    def issue_colonize_order(self, fleet, planet, population_amount=None, cargo_amounts=None):
         """
         Issue colonize command via facade.
 
         Args:
             fleet: Fleet to colonize with
             planet: Planet to colonize
+            population_amount: Specific population to drop (None = all)
+            cargo_amounts: Dict of resource amounts to drop (None = all)
 
         Returns:
             dict with result type and details
         """
-        cmd = IssueColonizeCommand(fleet.id, planet.id)
+        cmd = IssueColonizeCommand(
+            fleet.id, planet.id,
+            population_amount=population_amount,
+            cargo_amounts=cargo_amounts
+        )
         logger.info(f"Issued IssueColonizeCommand for {planet.name}")
 
         result = self.facade.handle_command(cmd)
@@ -163,6 +147,19 @@ class ColonizationSystem:
             return {'type': 'error', 'message': result.message}
 
         return {'type': 'success', 'fleet': fleet}
+
+    def get_fleet_capacities(self, fleet):
+        """Get fleet cargo capacities for the colonize dialog.
+
+        Returns capacities (not current amounts) since the fleet may load
+        cargo/population during travel before arriving at the colony.
+        """
+        fleet_info = self.facade.get_fleet(fleet.id)
+        if not fleet_info:
+            return 0, {}
+        passenger_cap = fleet_info.passenger_capacity
+        cargo_caps = {res: cap for res, cap in fleet_info.cargo_capacities}
+        return passenger_cap, cargo_caps
 
     def handle_colonize_designation(self, mx, my, fleet):
         """
@@ -203,11 +200,9 @@ class ColonizationSystem:
             logger.debug(f"No colonizable planets at hex {target_hex}.")
             return None
 
-        # PROJ-140: Filter by available colony pods (same pattern as on_colonize_click)
+        # Check fleet has available drop pods (universal — any pod works on any planet)
         remaining_pods = self.facade.get_fleet_remaining_pods(fleet.id)
-
-        # If no remaining pods, return informative message
-        if not remaining_pods:
+        if remaining_pods.get('drop_pod', 0) <= 0:
             logger.debug("No colony pods available in fleet for designation.")
             return {
                 'type': 'no_targets',
@@ -215,30 +210,18 @@ class ColonizationSystem:
                 'remaining_pods': remaining_pods,
             }
 
-        # Filter candidates by available pod types
-        pod_filtered = [p for p in candidates if p.planet_type.name in remaining_pods]
-
-        # If no candidates match available pods
-        if not pod_filtered:
-            pod_types = ", ".join(remaining_pods.keys())
-            logger.debug(f"No colonizable planets for available pods ({pod_types}) at designation.")
-            return {
-                'type': 'no_targets',
-                'message': f'No colonizable planets for available pods ({pod_types})',
-                'remaining_pods': remaining_pods,
-            }
-
-        if len(pod_filtered) == 1:
-            return self.queue_colonize_mission(target_hex, pod_filtered[0], fleet)
+        if len(candidates) == 1:
+            return self.queue_colonize_mission(target_hex, candidates[0], fleet)
         else:
             return {
                 'type': 'prompt',
-                'planets': pod_filtered,
+                'planets': candidates,
                 'target_hex': target_hex,
                 'fleet': fleet,
             }
 
-    def queue_colonize_mission(self, target_hex, planet, fleet):
+    def queue_colonize_mission(self, target_hex, planet, fleet,
+                               population_amount=None, cargo_amounts=None):
         """
         Queue MOVE + COLONIZE orders for a colonization mission via facade.
 
@@ -255,7 +238,11 @@ class ColonizationSystem:
 
         # Handle planet=None (colonize any available planet when arriving)
         planet_id = planet.id if planet else None
-        cmd = QueueColonizeMissionCommand(fleet.id, target_hex, planet_id)
+        cmd = QueueColonizeMissionCommand(
+            fleet.id, target_hex, planet_id,
+            population_amount=population_amount,
+            cargo_amounts=cargo_amounts,
+        )
         result = self.facade.handle_command(cmd)
 
         if result.is_valid:

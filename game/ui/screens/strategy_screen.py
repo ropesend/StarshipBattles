@@ -252,18 +252,35 @@ class StrategyScreen:
         """Handle colonize action."""
         result = self._colonization.on_colonize_click(self.selected_fleet)
         if result and result.get('type') == 'prompt':
-            self.ui.prompt_planet_selection(
-                result['planets'],
-                lambda p: self._on_colonize_planet_selected(p)
-            )
+            planets = result['planets']
+            if len(planets) == 1:
+                # Single planet — skip selection, go straight to colonize dialog
+                self._on_colonize_planet_selected(planets[0])
+            else:
+                self.ui.prompt_planet_selection(
+                    planets,
+                    lambda p: self._on_colonize_planet_selected(p)
+                )
         elif result and result.get('type') == 'success':
             self.on_ui_selection(self.selected_fleet)
 
     def _on_colonize_planet_selected(self, planet):
-        """Handle planet selection from colonize prompt."""
-        result = self._colonization.issue_colonize_order(self.selected_fleet, planet)
-        if result and result.get('type') == 'success':
-            self.on_ui_selection(self.selected_fleet)
+        """Handle planet selection — open colonize dialog for population/cargo amounts."""
+        fleet = self.selected_fleet
+        passenger_cap, cargo_caps = self._colonization.get_fleet_capacities(fleet)
+
+        def on_colonize_confirmed(population_amount, cargo_amounts):
+            result = self._colonization.issue_colonize_order(
+                fleet, planet,
+                population_amount=population_amount,
+                cargo_amounts=cargo_amounts,
+            )
+            if result and result.get('type') == 'success':
+                self.on_ui_selection(fleet)
+
+        self.ui.open_colonize_dialog(
+            planet.name, passenger_cap, cargo_caps, on_colonize_confirmed
+        )
 
     def request_colonize_order(self, fleet, planet=None):
         """Handle colonize request from UI."""
