@@ -81,11 +81,11 @@ def _make_shipyard_facility():
 class TestShipBuiltEvent:
     """ProductionEngine emits ship_built event when a ship is spawned."""
 
-    def test_spawn_ship_emits_ship_built_event(self):
+    def test_spawn_ship_emits_ship_built_event(self, fresh_registries):
         """_spawn_ship() calls log_event with ship_built type."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         empire = _make_mock_empire()
         planet = _make_mock_planet()
         galaxy = _make_mock_galaxy()
@@ -118,11 +118,11 @@ class TestShipBuiltEvent:
         assert "Scout Ship" in kw["message"]
         assert "Alpha Prime" in kw["message"]
 
-    def test_spawn_ship_event_includes_details(self):
+    def test_spawn_ship_event_includes_details(self, fresh_registries):
         """ship_built event includes design_id, planet_id, fleet_id."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         empire = _make_mock_empire()
         planet = _make_mock_planet(planet_id=42, name="Beta")
         galaxy = _make_mock_galaxy()
@@ -151,11 +151,11 @@ class TestShipBuiltEvent:
         assert kw["design_id"] == "cruiser_design"
         assert kw["planet_id"] == 42
 
-    def test_spawn_ship_no_event_when_no_save_path(self):
+    def test_spawn_ship_no_event_when_no_save_path(self, fresh_registries):
         """No event emitted when save_path is None (ship not actually spawned)."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         empire = _make_mock_empire()
         planet = _make_mock_planet()
         galaxy = _make_mock_galaxy()
@@ -167,11 +167,11 @@ class TestShipBuiltEvent:
 
         assert len(calls) == 0
 
-    def test_spawn_ship_no_event_when_design_not_found(self):
+    def test_spawn_ship_no_event_when_design_not_found(self, fresh_registries):
         """No event emitted when design data can't be loaded."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         empire = _make_mock_empire()
         planet = _make_mock_planet()
         galaxy = _make_mock_galaxy()
@@ -197,12 +197,12 @@ class TestShipBuiltEvent:
 class TestFleetShipBuiltEvent:
     """ProductionEngine emits ship_built event for fleet yard production."""
 
-    def test_spawn_fleet_ship_emits_ship_built_event(self):
+    def test_spawn_fleet_ship_emits_ship_built_event(self, fresh_registries):
         """_spawn_fleet_ship() calls log_event with ship_built type."""
         from game.strategy.engine.production_engine import ProductionEngine
         from game.strategy.data.fleet import Fleet
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         empire = _make_mock_empire()
         fleet = MagicMock(spec=Fleet)
         fleet.id = 7
@@ -233,12 +233,12 @@ class TestFleetShipBuiltEvent:
         assert "Fighter" in kw["message"]
         assert kw["location_hex"] == [5, -3]
 
-    def test_spawn_fleet_ship_no_event_when_no_save_path(self):
+    def test_spawn_fleet_ship_no_event_when_no_save_path(self, fresh_registries):
         """No event when save_path is None."""
         from game.strategy.engine.production_engine import ProductionEngine
         from game.strategy.data.fleet import Fleet
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         empire = _make_mock_empire()
         fleet = MagicMock(spec=Fleet)
         fleet.id = 7
@@ -259,11 +259,11 @@ class TestFleetShipBuiltEvent:
 class TestComplexBuiltEvent:
     """ProductionEngine emits complex_built event when a complex is spawned."""
 
-    def test_spawn_complex_emits_complex_built_event(self):
+    def test_spawn_complex_emits_complex_built_event(self, fresh_registries):
         """_spawn_complex() calls log_event with complex_built type."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         empire = _make_mock_empire()
         planet = _make_mock_planet(name="Gamma Station")
 
@@ -285,11 +285,11 @@ class TestComplexBuiltEvent:
         assert "Mining Complex" in kw["message"]
         assert "Gamma Station" in kw["message"]
 
-    def test_spawn_complex_event_includes_details(self):
+    def test_spawn_complex_event_includes_details(self, fresh_registries):
         """complex_built event includes design_id and planet_id."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         empire = _make_mock_empire()
         planet = _make_mock_planet(planet_id=99, name="Delta")
 
@@ -307,11 +307,11 @@ class TestComplexBuiltEvent:
         assert kw["design_id"] == "shipyard_design"
         assert kw["planet_id"] == 99
 
-    def test_spawn_complex_emits_event_even_without_save_path(self):
+    def test_spawn_complex_emits_event_even_without_save_path(self, fresh_registries):
         """Complex still gets created (empty design data) and event emitted."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         empire = _make_mock_empire()
         planet = _make_mock_planet()
 
@@ -334,13 +334,13 @@ class TestComplexBuiltEvent:
 class TestFleetComplexBuiltEvent:
     """ProductionEngine emits complex_built event for fleet yard complex production."""
 
-    def test_spawn_fleet_complex_emits_complex_built_event(self):
+    def test_spawn_fleet_complex_emits_complex_built_event(self, fresh_registries):
         """_spawn_fleet_complex() calls log_event with complex_built type."""
         from game.strategy.engine.production_engine import ProductionEngine
         from game.strategy.data.fleet import Fleet
         from game.core.hex_math import HexCoord
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         empire = _make_mock_empire()
         fleet = MagicMock(spec=Fleet)
         fleet.id = 9
@@ -371,12 +371,12 @@ class TestFleetComplexBuiltEvent:
         assert kw["design_id"] == "refinery_design"
         assert kw["planet_id"] == 42
 
-    def test_spawn_fleet_complex_no_event_when_no_galaxy(self):
+    def test_spawn_fleet_complex_no_event_when_no_galaxy(self, fresh_registries):
         """No event emitted when galaxy is None."""
         from game.strategy.engine.production_engine import ProductionEngine
         from game.strategy.data.fleet import Fleet
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         empire = _make_mock_empire()
         fleet = MagicMock(spec=Fleet)
         fleet.id = 9
@@ -388,13 +388,13 @@ class TestFleetComplexBuiltEvent:
 
         assert len(calls) == 0
 
-    def test_spawn_fleet_complex_no_event_when_no_planet_at_hex(self):
+    def test_spawn_fleet_complex_no_event_when_no_planet_at_hex(self, fresh_registries):
         """No event emitted when fleet is not at a planet hex."""
         from game.strategy.engine.production_engine import ProductionEngine
         from game.strategy.data.fleet import Fleet
         from game.core.hex_math import HexCoord
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         empire = _make_mock_empire()
         fleet = MagicMock(spec=Fleet)
         fleet.id = 9
@@ -763,12 +763,12 @@ class TestCombatResolvedEvent:
 class TestProductionEventLocationEnrichment:
     """Production events include system_name and local_hex fields (PROJ-215)."""
 
-    def test_spawn_ship_event_includes_system_name(self):
+    def test_spawn_ship_event_includes_system_name(self, fresh_registries):
         """ship_built event includes system_name from parent system."""
         from game.strategy.engine.production_engine import ProductionEngine
         from game.core.hex_math import HexCoord
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         empire = _make_mock_empire()
         planet = _make_mock_planet()
         planet.location = HexCoord(2, 3)
@@ -804,12 +804,12 @@ class TestProductionEventLocationEnrichment:
         assert kw["system_name"] == "Sol"
         assert kw["local_hex"] == [2, 3]
 
-    def test_spawn_ship_event_empty_system_name_when_no_system(self):
+    def test_spawn_ship_event_empty_system_name_when_no_system(self, fresh_registries):
         """ship_built event has empty system_name when no parent system found."""
         from game.strategy.engine.production_engine import ProductionEngine
         from game.core.hex_math import HexCoord
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         empire = _make_mock_empire()
         planet = _make_mock_planet()
         planet.location = HexCoord(2, 3)
@@ -839,12 +839,12 @@ class TestProductionEventLocationEnrichment:
         assert kw["system_name"] == ""
         assert kw["local_hex"] is None
 
-    def test_spawn_complex_event_includes_system_name_and_local_hex(self):
+    def test_spawn_complex_event_includes_system_name_and_local_hex(self, fresh_registries):
         """complex_built event includes system_name and local_hex."""
         from game.strategy.engine.production_engine import ProductionEngine
         from game.core.hex_math import HexCoord
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         empire = _make_mock_empire()
         planet = _make_mock_planet()
         planet.location = HexCoord(1, -2)
@@ -865,12 +865,12 @@ class TestProductionEventLocationEnrichment:
         assert kw["system_name"] == "Alpha Centauri"
         assert kw["local_hex"] == [1, -2]
 
-    def test_spawn_fleet_ship_event_has_empty_system_name(self):
+    def test_spawn_fleet_ship_event_has_empty_system_name(self, fresh_registries):
         """Fleet production (deep space) has empty system_name and local_hex=None."""
         from game.strategy.engine.production_engine import ProductionEngine
         from game.strategy.data.fleet import Fleet
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         empire = _make_mock_empire()
         fleet = MagicMock(spec=Fleet)
         fleet.id = 7

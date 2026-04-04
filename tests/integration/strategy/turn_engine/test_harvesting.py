@@ -144,7 +144,7 @@ class TestHarvestingIntegration:
         empire.add_colony(planet)
 
         mocks = _make_mock_engines()
-        harvesting = HarvestingEngine()
+        harvesting = HarvestingEngine(registries=fresh_registries)
 
         engine = TurnEngine(
             registries=fresh_registries,
@@ -234,7 +234,7 @@ class TestHarvestingIntegration:
         empire.add_colony(planet)
 
         mocks = _make_mock_engines()
-        harvesting = HarvestingEngine()
+        harvesting = HarvestingEngine(registries=fresh_registries)
 
         engine = TurnEngine(
             registries=fresh_registries,

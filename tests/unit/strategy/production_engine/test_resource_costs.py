@@ -116,11 +116,7 @@ class TestDesignCostCalculation:
         assert cost == {}
 
     def test_registries_required(self):
-        """Engine without registries returns empty cost."""
-        engine = ProductionEngine(registries=None)
-        design = _make_design_data()
-
-        cost = engine._calculate_design_cost(design)
-
-        # Returns empty when registries not provided
-        assert cost == {}
+        """Engine raises ValidationException when registries is None."""
+        from game.core.exceptions import ValidationException
+        with pytest.raises(ValidationException):
+            ProductionEngine(registries=None)

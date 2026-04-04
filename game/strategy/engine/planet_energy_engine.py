@@ -165,7 +165,23 @@ class PlanetEnergyEngine:
     # The resource type used for planetary energy. Configurable if needed.
     ENERGY_RESOURCE = "energy"
 
-    def __init__(self, *, registries: Optional[GameRegistries] = None):
+    def __init__(self, *, registries: GameRegistries):
+        """Initialize planet energy engine.
+
+        Args:
+            registries: GameRegistries for component ability lookup. Required.
+
+        Raises:
+            ValidationException: If registries is None.
+        """
+        if registries is None:
+            from game.core.exceptions import ValidationException
+            from game.core.error_codes import ErrorCode
+            raise ValidationException(
+                "registries is required for PlanetEnergyEngine",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "PlanetEnergyEngine", "parameter": "registries"}
+            )
         self._registries = registries
 
     def process_energy_tick(self, tick: int, empires: List) -> None:

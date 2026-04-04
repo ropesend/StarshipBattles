@@ -11,8 +11,8 @@ from game.strategy.events.event_types import EventType, EventCategory
 
 class TestProductionEngineRefactor:
     @pytest.fixture
-    def engine(self):
-        return ProductionEngine()
+    def engine(self, fresh_registries):
+        return ProductionEngine(registries=fresh_registries)
 
     @pytest.fixture
     def mock_empire(self):
@@ -135,8 +135,8 @@ class TestProductionEngineEdgeCases:
     """PROJ-209 Phase 2: Test coverage for edge cases (AR-01, TC-001, TC-002, TC-005, TC-009)."""
 
     @pytest.fixture
-    def engine(self):
-        return ProductionEngine()
+    def engine(self, fresh_registries):
+        return ProductionEngine(registries=fresh_registries)
 
     @pytest.fixture
     def mock_empire(self):
@@ -302,8 +302,8 @@ class TestResourceShortageEventLogging:
     """FEAT-09: Test that RESOURCE_SHORTAGE events are logged when production pauses."""
 
     @pytest.fixture
-    def engine(self):
-        return ProductionEngine()
+    def engine(self, fresh_registries):
+        return ProductionEngine(registries=fresh_registries)
 
     @pytest.fixture
     def empire(self):

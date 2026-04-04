@@ -99,9 +99,9 @@ def _shield_design(energy_drain_rate=25.0):
 class TestPlanetEnergyEngine:
     """Tests for PlanetEnergyEngine."""
 
-    def test_energy_generation_increases_energy(self):
+    def test_energy_generation_increases_energy(self, fresh_registries):
         """Generator produces energy each tick."""
-        engine = PlanetEnergyEngine()
+        engine = PlanetEnergyEngine(registries=fresh_registries)
         facility = _make_facility(_generator_design(generation_rate=100.0))
         battery = _make_facility(_battery_design(capacity=5000.0))
         planet = _make_planet(facilities=[facility, battery])
@@ -113,9 +113,9 @@ class TestPlanetEnergyEngine:
         assert planet.energy_capacity == 5000.0
         assert planet.energy_generation == 100.0
 
-    def test_energy_capped_at_capacity(self):
+    def test_energy_capped_at_capacity(self, fresh_registries):
         """Energy cannot exceed battery capacity."""
-        engine = PlanetEnergyEngine()
+        engine = PlanetEnergyEngine(registries=fresh_registries)
         battery = _make_facility(_battery_design(capacity=10.0))
         generator = _make_facility(_generator_design(generation_rate=100.0))
         planet = _make_planet(facilities=[generator, battery])
@@ -126,9 +126,9 @@ class TestPlanetEnergyEngine:
 
         assert planet.energy == 10.0  # Clamped to capacity
 
-    def test_no_generators_no_energy(self):
+    def test_no_generators_no_energy(self, fresh_registries):
         """Planet with no generators stays at zero energy."""
-        engine = PlanetEnergyEngine()
+        engine = PlanetEnergyEngine(registries=fresh_registries)
         battery = _make_facility(_battery_design(capacity=5000.0))
         planet = _make_planet(facilities=[battery])
         empire = _make_empire(colonies=[planet])
@@ -138,9 +138,9 @@ class TestPlanetEnergyEngine:
         assert planet.energy == 0.0
         assert planet.energy_capacity == 5000.0
 
-    def test_shield_drains_energy(self):
+    def test_shield_drains_energy(self, fresh_registries):
         """Active shield consumes energy each tick."""
-        engine = PlanetEnergyEngine()
+        engine = PlanetEnergyEngine(registries=fresh_registries)
         battery = _make_facility(_battery_design(capacity=5000.0))
         shield = _make_facility(_shield_design(energy_drain_rate=50.0))
         planet = _make_planet(facilities=[battery, shield])
@@ -153,9 +153,9 @@ class TestPlanetEnergyEngine:
         # Drain: 50.0 / 100 = 0.5 per tick
         assert planet.energy == pytest.approx(99.5)
 
-    def test_shield_auto_deactivates_on_energy_depletion(self):
+    def test_shield_auto_deactivates_on_energy_depletion(self, fresh_registries):
         """Shield auto-deactivates when energy runs out."""
-        engine = PlanetEnergyEngine()
+        engine = PlanetEnergyEngine(registries=fresh_registries)
         battery = _make_facility(_battery_design(capacity=5000.0))
         shield = _make_facility(_shield_design(energy_drain_rate=50.0))
         planet = _make_planet(facilities=[battery, shield])
@@ -168,9 +168,9 @@ class TestPlanetEnergyEngine:
         assert planet.shield_active is False
         assert planet.energy == 0.0
 
-    def test_shield_deactivates_when_facility_destroyed(self):
+    def test_shield_deactivates_when_facility_destroyed(self, fresh_registries):
         """Shield deactivates if shield facility is removed."""
-        engine = PlanetEnergyEngine()
+        engine = PlanetEnergyEngine(registries=fresh_registries)
         battery = _make_facility(_battery_design(capacity=5000.0))
         # No shield facility — but shield_active is True (facility was destroyed)
         planet = _make_planet(facilities=[battery])
@@ -182,9 +182,9 @@ class TestPlanetEnergyEngine:
 
         assert planet.shield_active is False
 
-    def test_multiple_generators_stack(self):
+    def test_multiple_generators_stack(self, fresh_registries):
         """Multiple generators' rates are summed."""
-        engine = PlanetEnergyEngine()
+        engine = PlanetEnergyEngine(registries=fresh_registries)
         gen1 = _make_facility(_generator_design(generation_rate=50.0))
         gen2 = _make_facility(_generator_design(generation_rate=30.0))
         battery = _make_facility(_battery_design(capacity=5000.0))
@@ -196,9 +196,9 @@ class TestPlanetEnergyEngine:
         assert planet.energy_generation == 80.0
         assert planet.energy == pytest.approx(0.8)  # 80 / 100
 
-    def test_multiple_batteries_stack(self):
+    def test_multiple_batteries_stack(self, fresh_registries):
         """Multiple batteries' capacities are summed."""
-        engine = PlanetEnergyEngine()
+        engine = PlanetEnergyEngine(registries=fresh_registries)
         bat1 = _make_facility(_battery_design(capacity=3000.0))
         bat2 = _make_facility(_battery_design(capacity=2000.0))
         planet = _make_planet(facilities=[bat1, bat2])
@@ -208,9 +208,9 @@ class TestPlanetEnergyEngine:
 
         assert planet.energy_capacity == 5000.0
 
-    def test_non_operational_facility_ignored(self):
+    def test_non_operational_facility_ignored(self, fresh_registries):
         """Non-operational facilities don't contribute energy."""
-        engine = PlanetEnergyEngine()
+        engine = PlanetEnergyEngine(registries=fresh_registries)
         gen = _make_facility(_generator_design(generation_rate=100.0), is_operational=False)
         battery = _make_facility(_battery_design(capacity=5000.0))
         planet = _make_planet(facilities=[gen, battery])
@@ -221,9 +221,9 @@ class TestPlanetEnergyEngine:
         assert planet.energy_generation == 0.0
         assert planet.energy == 0.0
 
-    def test_no_batteries_means_zero_capacity(self):
+    def test_no_batteries_means_zero_capacity(self, fresh_registries):
         """Without batteries, energy capacity is zero and energy is clamped."""
-        engine = PlanetEnergyEngine()
+        engine = PlanetEnergyEngine(registries=fresh_registries)
         gen = _make_facility(_generator_design(generation_rate=100.0))
         planet = _make_planet(facilities=[gen])
         planet.energy = 50.0  # Leftover from before batteries were destroyed
@@ -234,9 +234,9 @@ class TestPlanetEnergyEngine:
         assert planet.energy_capacity == 0.0
         assert planet.energy == 0.0  # Clamped to 0 (no storage)
 
-    def test_generation_and_drain_balance(self):
+    def test_generation_and_drain_balance(self, fresh_registries):
         """Shield drains and generator produces in same tick."""
-        engine = PlanetEnergyEngine()
+        engine = PlanetEnergyEngine(registries=fresh_registries)
         gen = _make_facility(_generator_design(generation_rate=50.0))
         battery = _make_facility(_battery_design(capacity=5000.0))
         shield = _make_facility(_shield_design(energy_drain_rate=50.0))
@@ -250,9 +250,9 @@ class TestPlanetEnergyEngine:
         # Generation: +0.5, Drain: -0.5, Net: 0
         assert planet.energy == pytest.approx(100.0)
 
-    def test_empty_planet_no_error(self):
+    def test_empty_planet_no_error(self, fresh_registries):
         """Planet with no facilities processes without error."""
-        engine = PlanetEnergyEngine()
+        engine = PlanetEnergyEngine(registries=fresh_registries)
         planet = _make_planet(facilities=[])
         empire = _make_empire(colonies=[planet])
 

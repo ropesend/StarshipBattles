@@ -118,15 +118,23 @@ class ProductionEngine:
     - ticks_in_current_turn: int - Tick counter within current turn
     """
 
-    def __init__(self, registries: Optional['GameRegistries'] = None):
+    def __init__(self, *, registries: 'GameRegistries'):
         """Initialize the production engine.
 
-        PROJ-211: Added registries parameter for DI compliance.
-        PROJ-233: Added ProductionSpawner for spawn delegation.
-
         Args:
-            registries: Optional GameRegistries for ship creation.
+            registries: GameRegistries for ship creation. Required.
+
+        Raises:
+            ValidationException: If registries is None.
         """
+        if registries is None:
+            from game.core.exceptions import ValidationException
+            from game.core.error_codes import ErrorCode
+            raise ValidationException(
+                "registries is required for ProductionEngine",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "ProductionEngine", "parameter": "registries"}
+            )
         self._registries = registries
         self._spawner = ProductionSpawner(registries=registries)
 

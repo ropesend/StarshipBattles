@@ -235,8 +235,8 @@ def _make_economy_turn_engine(registries):
     return TurnEngine(
         registries=registries,
         **mocks,
-        harvesting_engine=HarvestingEngine(),
-        production_engine=ProductionEngine(),
+        harvesting_engine=HarvestingEngine(registries=registries),
+        production_engine=ProductionEngine(registries=registries),
     )
 
 

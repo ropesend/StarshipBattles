@@ -99,13 +99,24 @@ class HarvestingEngine(IHarvestingEngine):
     - Registry lookup: plain string component ID resolved via registries
     """
 
-    def __init__(self, *, registries: Optional[GameRegistries] = None):
+    def __init__(self, *, registries: GameRegistries):
         """Initialize the harvesting engine.
 
         Args:
-            registries: Optional GameRegistries for resolving component
-                       abilities from plain string IDs in design_data.
+            registries: GameRegistries for resolving component abilities.
+                       Required — no fallback.
+
+        Raises:
+            ValidationException: If registries is None.
         """
+        if registries is None:
+            from game.core.exceptions import ValidationException
+            from game.core.error_codes import ErrorCode
+            raise ValidationException(
+                "registries is required for HarvestingEngine",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "HarvestingEngine", "parameter": "registries"}
+            )
         self._registries = registries
         self._galaxy = None
 
