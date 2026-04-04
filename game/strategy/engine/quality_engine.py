@@ -22,6 +22,9 @@ QUALITY_CAP = 100.0
 class QualityEngine:
     """Engine for processing per-turn resource quality improvement."""
 
+    def __init__(self, registries=None):
+        self._registries = registries
+
     def process_quality_improvement(self, empires: List) -> None:
         """Process quality improvement for all empires.
 
@@ -75,7 +78,7 @@ class QualityEngine:
     def _extract_quality_improvement(self, comp):
         """Extract QualityImprovement ability data from a component entry."""
         from game.strategy.services.component_inspector import extract_abilities_from_component
-        abilities = extract_abilities_from_component(comp)
+        abilities = extract_abilities_from_component(comp, self._registries)
         data = abilities.get('QualityImprovement')
         if isinstance(data, (dict, list)):
             return data

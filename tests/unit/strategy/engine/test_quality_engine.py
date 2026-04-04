@@ -125,3 +125,34 @@ class TestQualityEngine:
         engine.process_quality_improvement([empire])
         # No crash, organics unchanged
         assert planet.deposits["organics"]["quality"] == pytest.approx(40.0)
+
+    def test_component_by_id_with_registries(self):
+        """Components referenced by ID should work when registries are provided."""
+        from game.core.registry import GameRegistries
+        from game.simulation.components.component import load_components_data, load_modifiers_data
+        from game.simulation.entities.ship_loader import load_vehicle_classes_data
+
+        minimal = GameRegistries(components={}, modifiers={}, vehicle_classes={}, resources={})
+        registries = GameRegistries(
+            components=load_components_data(registries=minimal),
+            modifiers=load_modifiers_data(),
+            vehicle_classes=load_vehicle_classes_data(),
+            resources={}
+        )
+
+        # Facility with component by ID only (no inline abilities)
+        facility = MockFacility(design_data={
+            "layers": {"CORE": [
+                {"id": "quality_improver_metals", "modifiers": []}
+            ]}
+        })
+        planet = MockPlanet(
+            deposits={"metals": {"quantity": 5000, "quality": 50.0}},
+            facilities=[facility]
+        )
+        empire = MockEmpire(colonies=[planet])
+
+        engine = QualityEngine(registries=registries)
+        engine.process_quality_improvement([empire])
+
+        assert planet.deposits["metals"]["quality"] == pytest.approx(50.1)
