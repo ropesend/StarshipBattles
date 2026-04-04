@@ -554,6 +554,27 @@ class StrategyWindowManager:
         # Use PlanetSelectionWindow (PROJ-54 - now uses PlanetReportPanel internally)
         self.planet_selection_window = PlanetSelectionWindow(rect, self.manager, planets, on_select)
 
+    def open_planet_abilities_window(self, planet) -> None:
+        """Open the planet abilities management window."""
+        from game.ui.screens.planet_abilities_window import PlanetAbilitiesWindow
+        from game.core.registry import get_default_registry_provider
+
+        component_registry = None
+        try:
+            provider = get_default_registry_provider()
+            component_registry = provider.get_components()
+        except Exception:
+            pass
+
+        width = 540
+        height = 300
+        x = (self.width - width) / 2
+        y = (self.height - height) / 2
+        rect = pygame.Rect(x, y, width, height)
+        self.planet_abilities_window = PlanetAbilitiesWindow(
+            rect, self.manager, planet, self.scene.facade, component_registry
+        )
+
     # =========================================================================
     # System Selection Prompt (PROJ-138)
     # =========================================================================

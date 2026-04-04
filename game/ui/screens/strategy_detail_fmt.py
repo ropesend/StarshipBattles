@@ -147,20 +147,16 @@ def format_planet_info(planet: IPlanet) -> str:
         energy_pct = (energy_val / energy_cap * 100) if energy_cap > 0 else 0
         text += f"<br><b>Energy:</b> {energy_val:.0f} / {energy_cap:.0f} ({energy_pct:.0f}%)"
 
-    shield_val = getattr(planet, 'shield_active', None)
-    if isinstance(shield_val, bool) and hasattr(planet, 'facilities'):
-        has_shield = _planet_has_shield_facility(planet)
-        if has_shield:
-            status = "Active" if shield_val else "Inactive"
-            text += f"<br><b>Planetary Shield:</b> {status}"
-
-    # Show activatable ability status (stabilizers)
+    # Show all toggleable ability statuses with tick progress
+    _ALL_TOGGLEABLE = {
+        'PlanetaryShield': 'Planetary Shield',
+        **_ACTIVATABLE_DISPLAY_NAMES,
+    }
     facilities = getattr(planet, 'facilities', None)
     if isinstance(facilities, list) and facilities:
-        for ability_key, display_name in _ACTIVATABLE_DISPLAY_NAMES.items():
+        for ability_key, display_name in _ALL_TOGGLEABLE.items():
             if _planet_has_ability_facility(planet, ability_key):
-                active = getattr(planet, 'active_abilities', {}).get(ability_key, False)
-                status = "Active" if active else "Inactive"
+                status = _get_ability_status_text(planet, ability_key)
                 text += f"<br><b>{display_name}:</b> {status}"
 
     # Resources are displayed in the dedicated resource grid panel (PROJ-82)
@@ -228,6 +224,35 @@ _ACTIVATABLE_DISPLAY_NAMES = {
     'StellarStabilizer': 'Stellar Stabilizer',
     'WarpFieldStabilizer': 'Warp Field Stabilizer',
 }
+
+
+def _get_ability_status_text(planet, ability_name: str) -> str:
+    """Get display status for a toggleable ability including tick progress."""
+    from game.strategy.data.order_types import OrderType
+
+    active_abilities = getattr(planet, 'active_abilities', {})
+    is_active = active_abilities.get(ability_name, False)
+    if ability_name == 'PlanetaryShield':
+        is_active = is_active or getattr(planet, 'shield_active', False)
+
+    # Check for pending activation/deactivation orders
+    for order in getattr(planet, 'orders', []):
+        target = order.target if isinstance(order.target, dict) else {}
+        order_ability = target.get('ability_name', '')
+
+        if order.type == OrderType.ACTIVATE_ABILITY and order_ability == ability_name:
+            return f"Activating ({order.execution_progress} ticks)"
+        if order.type == OrderType.DEACTIVATE_ABILITY and order_ability == ability_name:
+            return f"Deactivating ({order.execution_progress} ticks)"
+
+        # Legacy shield orders
+        if ability_name == 'PlanetaryShield':
+            if order.type == OrderType.ACTIVATE_SHIELD:
+                return f"Activating ({order.execution_progress} ticks)"
+            if order.type == OrderType.DEACTIVATE_SHIELD:
+                return f"Deactivating ({order.execution_progress} ticks)"
+
+    return "Active" if is_active else "Inactive"
 
 
 def _planet_has_ability_facility(planet, ability_key: str) -> bool:

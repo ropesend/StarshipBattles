@@ -110,6 +110,90 @@ class PlanetOrderValidator:
         return ValidationResult.success()
 
 
+    @staticmethod
+    def validate_activate_ability(
+        planet: 'Planet',
+        facility_instance_id: str,
+        ability_name: str,
+        component_registry: Optional[Dict[str, Any]] = None,
+    ) -> ValidationResult:
+        """Validate that a generic ability activation order can be issued."""
+        facility = None
+        for f in planet.facilities:
+            if f.instance_id == facility_instance_id:
+                facility = f
+                break
+
+        if facility is None:
+            return ValidationResult.error("Facility not found on planet.")
+
+        if not facility.is_operational:
+            return ValidationResult.error("Facility is not operational.")
+
+        if not _facility_has_ability(facility, ability_name, component_registry):
+            return ValidationResult.error(f"Facility does not have {ability_name}.")
+
+        # Check ability is not already active
+        active_abilities = getattr(planet, 'active_abilities', {})
+        if active_abilities.get(ability_name, False):
+            return ValidationResult.error(f"{ability_name} is already active.")
+
+        # Check no conflicting activation order already queued
+        from game.strategy.data.order_types import OrderType
+        for order in planet.orders:
+            if order.type == OrderType.ACTIVATE_ABILITY and isinstance(order.target, dict):
+                if order.target.get('ability_name') == ability_name:
+                    return ValidationResult.error(f"{ability_name} activation already queued.")
+            # Legacy shield compat
+            if ability_name == 'PlanetaryShield' and order.type == OrderType.ACTIVATE_SHIELD:
+                return ValidationResult.error(f"{ability_name} activation already queued.")
+
+        return ValidationResult.success()
+
+    @staticmethod
+    def validate_deactivate_ability(
+        planet: 'Planet',
+        facility_instance_id: str,
+        ability_name: str,
+        component_registry: Optional[Dict[str, Any]] = None,
+    ) -> ValidationResult:
+        """Validate that a generic ability deactivation order can be issued."""
+        facility = None
+        for f in planet.facilities:
+            if f.instance_id == facility_instance_id:
+                facility = f
+                break
+
+        if facility is None:
+            return ValidationResult.error("Facility not found on planet.")
+
+        if not facility.is_operational:
+            return ValidationResult.error("Facility is not operational.")
+
+        if not _facility_has_ability(facility, ability_name, component_registry):
+            return ValidationResult.error(f"Facility does not have {ability_name}.")
+
+        # Check ability is active or activating
+        active_abilities = getattr(planet, 'active_abilities', {})
+        is_active = active_abilities.get(ability_name, False)
+        # Legacy shield compat
+        if ability_name == 'PlanetaryShield':
+            is_active = is_active or getattr(planet, 'shield_active', False)
+
+        if not is_active:
+            from game.strategy.data.order_types import OrderType
+            activating = any(
+                (o.type == OrderType.ACTIVATE_ABILITY and isinstance(o.target, dict)
+                 and o.target.get('ability_name') == ability_name)
+                or (ability_name == 'PlanetaryShield' and o.type == OrderType.ACTIVATE_SHIELD)
+                for o in planet.orders
+            )
+            if not activating:
+                return ValidationResult.error(f"{ability_name} is not active.")
+
+        return ValidationResult.success()
+
+
 def _facility_has_ability(
     facility,
     ability_name: str,
