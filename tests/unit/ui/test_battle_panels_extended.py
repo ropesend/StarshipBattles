@@ -159,6 +159,7 @@ class TestShipStatsPanelExtended:
 
         ship = self.create_mock_ship(0, "Expandable")
         self.mock_scene.ui_service.get_ships.return_value = [ship]
+        panel._ship_banner_rects = {"Expandable": (40, 65)}
 
         # Click to expand
         panel.handle_click(10, 50)

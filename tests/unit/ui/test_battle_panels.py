@@ -100,10 +100,8 @@ class TestBattlePanels:
         ship1 = self.create_mock_ship(0, "Hero")
         self.mock_scene.ships = [ship1]
 
-        # Calculate where the click should be
-        # y starts at 10 - scroll(0)
-        # Title "Team 1": y=10. Draws text. y+=30 -> 40.
-        # Ship 1: drawn at 40. Height 25. Range [40, 65).
+        # Pre-populate banner rects (normally done by draw())
+        panel._ship_banner_rects = {"Hero": (40, 65)}
 
         # Test 1: Expand
         handled = panel.handle_click(10, 50)
@@ -120,41 +118,29 @@ class TestBattlePanels:
         """Test that scroll offset shifts the click targets."""
         panel = self.module.ShipStatsPanel(self.mock_scene, 800, 0, 200, 600)
         ship1 = self.create_mock_ship(0, "Hero")
-
-        # Add a second ship to Team 2 to ensure we test deep list items
         ship2 = self.create_mock_ship(1, "Villain")
         self.mock_scene.ships = [ship1, ship2]
 
-        # Initial Logic:
-        # Team 1 Header: 10
-        # Ship 1: 40 [40, 65)
-        # Spacer: 65 -> +45 = 110
-        # Team 2 ships loop logic in handle_click starts at 110.
-        # Ship 2: 110 [110, 135)
+        # Banner rects are recorded in surface coords + scroll offset by draw().
+        # Ship 2 banner at virtual Y [110, 135).
+        panel._ship_banner_rects = {"Hero": (40, 65), "Villain": (110, 135)}
 
-        # Test clicking Ship 2 WITHOUT scroll
+        # Test clicking Ship 2 WITHOUT scroll (click Y=120, rel_y=120+0=120)
         handled = panel.handle_click(10, 120)
         assert handled is True
-        # PROJ-43: expanded_ships now tracks ship IDs (name used as fallback ID)
         assert "Villain" in panel.expanded_ships
         panel.expanded_ships.clear()
 
-        # Test clicking Ship 2 WITH scroll
-        # Set Scroll Offset = 50.
-        # This effectively "moves the view down", so top items move up (negative y).
-        # But handle_click adds scroll_offset to input `my` to get "virtual Y".
-        # So clicking at screen Y=70 should map to Virtual Y=120?
-        # rel_y = 70 + 50 = 120.
-        # This matches the interval [110, 135).
-
+        # Test clicking Ship 2 WITH scroll offset=50
+        # Click at screen Y=70 → rel_y = 70 + 50 = 120 → hits [110, 135)
         panel.scroll.offset = 50
         handled = panel.handle_click(10, 70)
-        assert handled is True, "Click at 70 with scroll 50 should map to 120 and hit ship2"
+        assert handled is True
         assert "Villain" in panel.expanded_ships
 
-        # Verify clicking original screen spot (120) now maps to 170 -> miss
+        # Click at screen Y=120 → rel_y = 120 + 50 = 170 → miss
         panel.expanded_ships.clear()
-        handled = panel.handle_click(10, 120)  # rel_y = 170
+        handled = panel.handle_click(10, 120)
         assert handled is False
 
     def test_seeker_monitor_state(self):
@@ -311,8 +297,10 @@ class TestBattlePanelsDTOIntegration:
         # Configure scene to return ships via ui_service
         self.mock_scene.ui_service.get_ships.return_value = [ship1, ship2]
 
+        # Pre-populate banner rects (normally done by draw())
+        panel._ship_banner_rects = {"ship_001": (40, 65), "ship_002": (200, 225)}
+
         # Simulate clicking on ship1 entry
-        # With DTO-based approach, expanded_ships should contain ship ID
         handled = panel.handle_click(10, 50)
         assert handled is True
 
@@ -328,6 +316,7 @@ class TestBattlePanelsDTOIntegration:
 
         ship1 = self.create_mock_ship_dto("ship_001", 0, "Hero")
         self.mock_scene.ui_service.get_ships.return_value = [ship1]
+        panel._ship_banner_rects = {"ship_001": (40, 65)}
 
         # Trigger a click to force panel to query ships
         panel.handle_click(10, 50)
@@ -341,6 +330,7 @@ class TestBattlePanelsDTOIntegration:
 
         ship1 = self.create_mock_ship_dto("ship_001", 0, "Hero")
         self.mock_scene.ui_service.get_ships.return_value = [ship1]
+        panel._ship_banner_rects = {"ship_001": (40, 65)}
 
         # Expand
         panel.handle_click(10, 50)
@@ -356,6 +346,7 @@ class TestBattlePanelsDTOIntegration:
 
         ship1 = self.create_mock_ship_dto("ship_001", 0, "Hero")
         self.mock_scene.ui_service.get_ships.return_value = [ship1]
+        panel._ship_banner_rects = {"ship_001": (40, 65)}
 
         # Enable shift key
         mock_keys = {self.mock_pygame.K_LSHIFT: True, self.mock_pygame.K_RSHIFT: False}
