@@ -2088,6 +2088,17 @@
         }
       },
       "name": "Test Fleet Sensor (+3 GroupA)"
+    },
+    {
+      "id": "test_bridge_indestructible",
+      "name": "Test Bridge (C&C, 1B HP)",
+      "type": "Bridge",
+      "mass": 0,
+      "hp": 1000000000,
+      "sprite_index": 20,
+      "abilities": {
+        "CommandAndControl": true
+      }
     }
   ]
 }
