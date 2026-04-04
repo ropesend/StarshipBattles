@@ -130,17 +130,17 @@ def make_combat_ship(name: str, owner_id: int) -> ShipInstance:
 def component_registry():
     """Component registry with colony pod definitions for all planet types."""
     return {
-        'ice_dwarf_colony_pod': {
-            'id': 'ice_dwarf_colony_pod',
-            'abilities': {'ColonizePlanet': 'ICE_DWARF'}
+        'colony_pod': {
+            'id': 'colony_pod',
+            'abilities': {'ColonizePlanet': True}
         },
-        'continental_colony_pod': {
-            'id': 'continental_colony_pod',
-            'abilities': {'ColonizePlanet': 'CONTINENTAL'}
+        'colony_pod': {
+            'id': 'colony_pod',
+            'abilities': {'ColonizePlanet': True}
         },
-        'arid_colony_pod': {
-            'id': 'arid_colony_pod',
-            'abilities': {'ColonizePlanet': 'ARID'}
+        'colony_pod': {
+            'id': 'colony_pod',
+            'abilities': {'ColonizePlanet': True}
         },
         'laser_cannon': {
             'id': 'laser_cannon',
@@ -320,13 +320,13 @@ class TestProcessColonizeAnyPlanet:
     def component_registry(self):
         """Component registry with colony pod definitions."""
         return {
-            'ice_dwarf_colony_pod': {
-                'id': 'ice_dwarf_colony_pod',
-                'abilities': {'ColonizePlanet': 'ICE_DWARF'}
+            'colony_pod': {
+                'id': 'colony_pod',
+                'abilities': {'ColonizePlanet': True}
             },
-            'continental_colony_pod': {
-                'id': 'continental_colony_pod',
-                'abilities': {'ColonizePlanet': 'CONTINENTAL'}
+            'colony_pod': {
+                'id': 'colony_pod',
+                'abilities': {'ColonizePlanet': True}
             },
         }
 

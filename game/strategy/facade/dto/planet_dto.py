@@ -57,6 +57,8 @@ class PlanetInfo:
     # Local resource stockpile
     stockpile: Tuple[Tuple[str, float], ...] = field(default_factory=tuple)
     max_stockpile: Tuple[Tuple[str, float], ...] = field(default_factory=tuple)
+    # Staging yard items: tuple of (name, vehicle_type, mass, count)
+    staging_yard_summary: Tuple[Tuple[str, str, float, int], ...] = field(default_factory=tuple)
 
     @classmethod
     def from_planet(cls, planet: 'Planet') -> 'PlanetInfo':
@@ -72,6 +74,20 @@ class PlanetInfo:
         pop_details = tuple(
             (p.race_id, p.count, p.happiness)
             for p in planet.populations
+        )
+
+        # Aggregate staging yard items by name
+        staging_counts: dict = {}
+        staging_yard = getattr(planet, 'staging_yard', None)
+        for item in (staging_yard if isinstance(staging_yard, list) else []):
+            name = item.get('name', 'Unknown')
+            vtype = item.get('vehicle_type', 'unknown')
+            mass = item.get('mass', 0.0)
+            key = (name, vtype, mass)
+            staging_counts[key] = staging_counts.get(key, 0) + 1
+        staging_summary = tuple(
+            (name, vtype, mass, count)
+            for (name, vtype, mass), count in staging_counts.items()
         )
 
         return cls(
@@ -91,4 +107,5 @@ class PlanetInfo:
             shield_active=getattr(planet, 'shield_active', False),
             stockpile=_dict_to_tuple(getattr(planet, 'stockpile', None)),
             max_stockpile=_dict_to_tuple(getattr(planet, 'max_stockpile', None)),
+            staging_yard_summary=staging_summary,
         )

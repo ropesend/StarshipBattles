@@ -115,6 +115,14 @@ class OrderSerializer:
         if target_data.get('type') == 'planet_ref':
             return {'_planet_ref': target_data['id']}
 
+        # Format 3b: Colonize params (planet ref + population/cargo amounts)
+        if target_data.get('type') == 'colonize_params':
+            return {
+                '_colonize_planet_ref': target_data.get('planet_id'),
+                'population': target_data.get('population'),
+                'cargo': target_data.get('cargo'),
+            }
+
         # Format 4: Transfer params (PROJ-68)
         if target_data.get('type') == 'transfer':
             return target_data['value']
@@ -192,6 +200,22 @@ class OrderSerializer:
                         f"Fleet {fleet.id}: Cannot resolve _planet_ref {planet_id} - planet no longer exists, removing order"
                     )
                     orders_to_remove.append(i)
+
+            # Resolve _colonize_planet_ref (COLONIZE with population/cargo amounts)
+            elif '_colonize_planet_ref' in target:
+                planet_id = target['_colonize_planet_ref']
+                resolved_planet = galaxy.get_planet_by_id(planet_id) if planet_id else None
+                if planet_id is not None and resolved_planet is None:
+                    logger.warning(
+                        f"Fleet {fleet.id}: Cannot resolve colonize planet {planet_id}, removing order"
+                    )
+                    orders_to_remove.append(i)
+                else:
+                    order.target = {
+                        'planet': resolved_planet,
+                        'population': target.get('population'),
+                        'cargo': target.get('cargo'),
+                    }
 
         # Remove invalid orders in reverse order to maintain indices
         for i in reversed(orders_to_remove):

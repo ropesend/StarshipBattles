@@ -173,7 +173,16 @@ class OrderProcessor:
         if not order or order.type != OrderType.COLONIZE:
             return ColonizeResult(colonized=False)
 
-        target_planet = order.target
+        # Extract target planet and optional population/cargo amounts
+        raw_target = order.target
+        population_amount = None
+        cargo_amounts = None
+        if isinstance(raw_target, dict):
+            target_planet = raw_target.get('planet')
+            population_amount = raw_target.get('population')
+            cargo_amounts = raw_target.get('cargo')
+        else:
+            target_planet = raw_target
 
         # Validate (skip chain check — we're executing, not adding)
         validation = ColonizeValidator.validate(
@@ -208,13 +217,13 @@ class OrderProcessor:
         fleet.pop_order()
 
         # Transfer passengers from fleet to colony as founding population
-        self._transfer_founding_population(fleet, final_planet, empire)
+        self._transfer_founding_population(fleet, final_planet, empire, population_amount)
 
         # Deploy drop pod as facility on the new colony
         self._deploy_drop_pod(fleet, final_planet)
 
         # Transfer resource cargo from fleet to planet stockpile
-        self._transfer_cargo_resources_to_colony(fleet, final_planet)
+        self._transfer_cargo_resources_to_colony(fleet, final_planet, cargo_amounts)
 
         logger.info(f"OrderProcessor: Colonization successful. {empire.name} claimed {final_planet.name}")
 
@@ -390,6 +399,9 @@ class OrderProcessor:
         """Execute a load operation (colony → fleet)."""
         from game.strategy.data.planet import SpeciesPopulation
 
+        if cargo_type == "drop_pod":
+            return self._load_pod_from_staging_yard(fleet, planet, species_id, amount)
+
         if cargo_type == "passengers":
             # Determine how much to load
             capacity = fleet.resources.get_fleet_cargo_capacity("passengers")
@@ -458,6 +470,9 @@ class OrderProcessor:
         """Execute an unload operation (fleet → colony)."""
         from game.strategy.data.planet import SpeciesPopulation
 
+        if cargo_type == "drop_pod":
+            return self._unload_pod_to_staging_yard(fleet, planet, species_id, amount)
+
         if cargo_type == "passengers":
             # Determine how much to unload
             current_cargo = fleet.resources.get_fleet_cargo_current("passengers")
@@ -506,22 +521,98 @@ class OrderProcessor:
         planet.add_to_stockpile(cargo_type, float(actual_unloaded))
         return actual_unloaded
 
-    def _transfer_cargo_resources_to_colony(self, fleet: Fleet, planet) -> None:
-        """Transfer all resource cargo from fleet to the new colony's stockpile.
+    def _load_pod_from_staging_yard(
+        self, fleet: Fleet, planet, pod_name: str = None, amount: int = 0
+    ) -> int:
+        """Load drop pod(s) from planet staging yard to ship carried_items.
 
-        Moves metals, organics, vapors, radioactives, exotics, fuel, energy, ammo
-        from fleet ship cargo to planet.stockpile.
+        Args:
+            fleet: Fleet to load pods onto.
+            planet: Planet with staging yard.
+            pod_name: Name of pod to load (from species_id field). If None, load any.
+            amount: Number of pods to load (0 = load all that fit).
         """
+        loaded = 0
+        to_load = amount if amount > 0 else len(planet.staging_yard)
 
+        # Iterate staging yard in reverse so we can remove items safely
+        for i in range(len(planet.staging_yard) - 1, -1, -1):
+            if loaded >= to_load:
+                break
+            item = planet.staging_yard[i]
+            if pod_name and item.get('name') != pod_name:
+                continue
+            pod_mass = item.get('mass', 0.0)
+            # Find a ship that can carry this pod
+            target_ship = None
+            for ship in fleet.ships:
+                if ship.can_carry_pod(pod_mass):
+                    target_ship = ship
+                    break
+            if target_ship is None:
+                continue  # No ship has capacity
+            removed = planet.remove_from_staging_yard(i)
+            if removed:
+                target_ship.carried_items.append(removed)
+                loaded += 1
+
+        return loaded
+
+    def _unload_pod_to_staging_yard(
+        self, fleet: Fleet, planet, pod_name: str = None, amount: int = 0
+    ) -> int:
+        """Unload drop pod(s) from ship carried_items to planet staging yard.
+
+        Args:
+            fleet: Fleet to unload pods from.
+            planet: Planet to receive pods.
+            pod_name: Name of pod to unload. If None, unload any.
+            amount: Number of pods to unload (0 = unload all).
+        """
+        unloaded = 0
+        to_unload = amount if amount > 0 else sum(
+            len(getattr(s, 'carried_items', [])) for s in fleet.ships
+        )
+
+        for ship in fleet.ships:
+            if unloaded >= to_unload:
+                break
+            for i in range(len(ship.carried_items) - 1, -1, -1):
+                if unloaded >= to_unload:
+                    break
+                item = ship.carried_items[i]
+                if pod_name and item.get('name') != pod_name:
+                    continue
+                if planet.add_to_staging_yard(item):
+                    ship.carried_items.pop(i)
+                    unloaded += 1
+
+        return unloaded
+
+    def _transfer_cargo_resources_to_colony(
+        self, fleet: Fleet, planet, cargo_amounts: dict = None
+    ) -> None:
+        """Transfer resource cargo from fleet to the new colony's stockpile.
+
+        Args:
+            fleet: Fleet with cargo to transfer.
+            planet: New colony planet.
+            cargo_amounts: Optional dict of resource_type -> amount to transfer.
+                If None, transfers all cargo. Amounts are clamped to available.
+        """
         resource_types = [
             "metals", "organics", "vapors", "radioactives", "exotics",
             "fuel", "energy", "ammo",
         ]
         transferred = {}
         for res in resource_types:
-            amount = fleet.resources.get_fleet_cargo_current(res)
-            if amount > 0:
-                actual = fleet.resources.unload_cargo_from_fleet(res, amount)
+            available = fleet.resources.get_fleet_cargo_current(res)
+            if cargo_amounts is not None:
+                to_transfer = min(cargo_amounts.get(res, 0), available)
+            else:
+                to_transfer = available
+            if to_transfer > 0:
+                actual = fleet.resources.unload_cargo_from_fleet(res, to_transfer)
                 if actual > 0:
                     planet.add_to_stockpile(res, float(actual))
                     transferred[res] = actual
@@ -569,18 +660,17 @@ class OrderProcessor:
         self,
         fleet: Fleet,
         planet: 'Planet',
-        empire: 'Empire'
+        empire: 'Empire',
+        population_amount: int = None
     ) -> int:
         """
         Transfer passengers from fleet to colony as founding population.
-
-        PROJ-68: When colonizing, passengers become the founding population.
-        If no passengers but empire has race_config, seed minimum 100 units.
 
         Args:
             fleet: Fleet that colonized the planet
             planet: Newly colonized planet
             empire: Empire that owns the colony
+            population_amount: Specific number to transfer (None = all passengers)
 
         Returns:
             Number of population units seeded.
@@ -588,14 +678,16 @@ class OrderProcessor:
         from game.strategy.data.planet import SpeciesPopulation
 
         # Get passengers from fleet
-        # Wrap in try/except for mock compatibility in tests
         try:
             passengers = fleet.resources.get_fleet_cargo_current("passengers")
         except (AttributeError, TypeError):
             passengers = 0
 
-        # Determine founding population
-        founding_pop = passengers if isinstance(passengers, int) else 0
+        # Determine founding population — clamp to available
+        if population_amount is not None:
+            founding_pop = min(population_amount, passengers)
+        else:
+            founding_pop = passengers if isinstance(passengers, int) else 0
 
         # If no passengers but empire has race_config, seed minimum
         race_config = empire.race_config
@@ -611,10 +703,10 @@ class OrderProcessor:
         if founding_pop <= 0:
             return 0
 
-        # Unload passengers from fleet (if any)
-        if passengers > 0:
+        # Unload passengers from fleet
+        if founding_pop > 0:
             try:
-                fleet.resources.unload_cargo_from_fleet("passengers", passengers)
+                fleet.resources.unload_cargo_from_fleet("passengers", founding_pop)
             except (AttributeError, TypeError):
                 pass  # Mock fleet, skip unload
 

@@ -91,7 +91,7 @@ class TestTransferCargoResourcesToColony:
         """Colony pod cargo types are not transferred as resources."""
         ship = _make_cargo_ship({
             "metals": 100,
-            "colony_pod_continental": 1,  # Should NOT be transferred
+            "colony_pod": 1,  # Should NOT be transferred
         })
         fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
         fleet.ships.append(ship)
@@ -109,6 +109,6 @@ class TestTransferCargoResourcesToColony:
         processor._transfer_cargo_resources_to_colony(fleet, planet)
 
         assert "metals" in planet.stockpile
-        assert "colony_pod_continental" not in planet.stockpile
+        assert "colony_pod" not in planet.stockpile
         # Pod still in cargo
-        assert ship.cargo_contents.get("colony_pod_continental", 0) == 1
+        assert ship.cargo_contents.get("colony_pod", 0) == 1

@@ -55,7 +55,7 @@ class TestColonizationSystemZone:
         mock_validation_result = MagicMock()
         mock_validation_result.is_valid = True
         mock_facade.can_colonize.return_value = mock_validation_result
-        mock_facade.get_fleet_remaining_pods.return_value = {"DYSON_SPHERE": 1}
+        mock_facade.get_fleet_remaining_pods.return_value = {"drop_pod": 1}
 
         # Create system
         system = ColonizationSystem(mock_scene, mock_facade)

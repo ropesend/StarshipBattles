@@ -504,15 +504,14 @@ class StrategySessionFacade:
     def get_fleet_remaining_pods(self, fleet_id: int) -> dict:
         """Get remaining colony pods for a fleet (available minus committed).
 
-        PROJ-55: Used by UI to filter colonizable planets by available pod types.
-        PROJ-211: Uses session.registries instead of global fallback.
+        Drop pods are universal — any pod works on any planet type.
 
         Args:
             fleet_id: The fleet to check
 
         Returns:
-            Dict mapping planet type string to count of remaining (uncommitted) pods.
-            Example: {"ICE_DWARF": 1, "CONTINENTAL": 0}
+            Dict with 'drop_pod' key mapped to remaining (uncommitted) count.
+            Example: {"drop_pod": 2}
             Returns empty dict if fleet not found.
         """
         from game.strategy.validation.colonize_validator import ColonizeValidator
@@ -521,17 +520,9 @@ class StrategySessionFacade:
         if fleet is None:
             return {}
 
-        # Phase 2: Calculate available and committed pods (cargo-based)
-        available = ColonizeValidator.get_available_colony_pods(fleet)
-        committed = ColonizeValidator.get_committed_colony_pods(fleet)
-
-        # Calculate remaining (include zero values per docstring contract)
-        remaining = {}
-        for planet_type, count in available.items():
-            committed_count = committed.get(planet_type, 0)
-            remaining[planet_type] = count - committed_count
-
-        return remaining
+        available = ColonizeValidator.count_drop_pods(fleet)
+        committed = ColonizeValidator.count_committed_colonize_orders(fleet)
+        return {'drop_pod': available - committed}
 
     # --- Game State Queries (PROJ-208 Phase 4) ---
 

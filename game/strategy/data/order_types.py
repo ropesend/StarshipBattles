@@ -118,6 +118,15 @@ class Order:
             elif isinstance(self.target, Fleet):
                 # Fleet reference - store ID
                 target_data = {'type': 'fleet_ref', 'id': self.target.id}
+            elif isinstance(self.target, dict) and self.type == OrderType.COLONIZE:
+                # COLONIZE with population/cargo amounts — serialize planet ref + amounts
+                planet_obj = self.target.get('planet')
+                target_data = {
+                    'type': 'colonize_params',
+                    'planet_id': planet_obj.id if planet_obj else None,
+                    'population': self.target.get('population'),
+                    'cargo': self.target.get('cargo'),
+                }
             elif isinstance(self.target, dict):
                 # PROJ-238: Dict targets (planet orders, etc.) — store as-is
                 target_data = {'type': 'dict', 'value': self.target}

@@ -276,6 +276,22 @@ class BaseCommandHandler:
         # Fallback to entity's main queue
         return getattr(entity, 'construction_queue', None)
 
+    @staticmethod
+    def _build_colonize_target(planet, cmd):
+        """Build COLONIZE order target — Planet or dict with amounts.
+
+        If population_amount or cargo_amounts are specified on the command,
+        wraps the planet in a dict so process_colonize() can extract the amounts.
+        Otherwise returns the Planet directly for backward compatibility.
+        """
+        if cmd.population_amount is not None or cmd.cargo_amounts is not None:
+            return {
+                'planet': planet,
+                'population': cmd.population_amount,
+                'cargo': cmd.cargo_amounts,
+            }
+        return planet
+
 
 class CommandHandlerRegistry:
     """Registry for command handlers with dispatch capability."""
@@ -341,8 +357,9 @@ class ColonizeCommandHandler(BaseCommandHandler):
                 move_order = Order(OrderType.MOVE, target=planet_global_hex)
                 fleet.add_order(move_order)
 
-            # Ensure we pass the OBJECT to rules
-            order = Order(OrderType.COLONIZE, target=target_planet)
+            # Build colonize target with optional population/cargo amounts
+            colonize_target = self._build_colonize_target(target_planet, cmd)
+            order = Order(OrderType.COLONIZE, target=colonize_target)
             fleet.add_order(order)
             logger.info(f"GameSession: Issued Colonize Order for Fleet {fleet.id}")
 
@@ -499,7 +516,8 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
             return move_result
 
         # 5. Queue COLONIZE order (target=None means "any available planet")
-        colonize_order = Order(OrderType.COLONIZE, target=planet)
+        colonize_target = self._build_colonize_target(planet, cmd)
+        colonize_order = Order(OrderType.COLONIZE, target=colonize_target)
         fleet.add_order(colonize_order)
 
         planet_name = planet.name if planet else "Any Planet"

@@ -2257,52 +2257,9 @@
                 "Ship"
             ],
             "abilities": {
-                "CargoStorage": [
-                    {
-                        "cargo_type": "colony_pod_continental",
-                        "capacity": 1
-                    },
-                    {
-                        "cargo_type": "colony_pod_arid",
-                        "capacity": 1
-                    },
-                    {
-                        "cargo_type": "colony_pod_pelagic",
-                        "capacity": 1
-                    },
-                    {
-                        "cargo_type": "colony_pod_magma",
-                        "capacity": 1
-                    },
-                    {
-                        "cargo_type": "colony_pod_cryoplanet",
-                        "capacity": 1
-                    },
-                    {
-                        "cargo_type": "colony_pod_barren",
-                        "capacity": 1
-                    },
-                    {
-                        "cargo_type": "colony_pod_jovian",
-                        "capacity": 1
-                    },
-                    {
-                        "cargo_type": "colony_pod_ice_giant",
-                        "capacity": 1
-                    },
-                    {
-                        "cargo_type": "colony_pod_chthonian",
-                        "capacity": 1
-                    },
-                    {
-                        "cargo_type": "colony_pod_ice_dwarf",
-                        "capacity": 1
-                    },
-                    {
-                        "cargo_type": "colony_pod_planetoid",
-                        "capacity": 1
-                    }
-                ]
+                "PodStorage": {
+                    "capacity_mass": 2000
+                }
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -2310,229 +2267,22 @@
             }
         },
         {
-            "id": "continental_colony_pod",
-            "name": "Continental Colony Pod",
+            "id": "colony_pod",
+            "name": "Colony Pod",
             "type": "Colony",
             "mass": 500,
             "hp": 300,
             "allowed_vehicle_types": [
-                "Ship"
+                "Drop Pod"
             ],
             "sprite_index": 210,
             "abilities": {
-                "ColonizePlanet": "CONTINENTAL"
+                "ColonizePlanet": true
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
                 "metals": 300,
                 "organics": 200,
-                "vapors": 100
-            }
-        },
-        {
-            "id": "arid_colony_pod",
-            "name": "Arid Colony Pod",
-            "type": "Colony",
-            "mass": 500,
-            "hp": 300,
-            "allowed_vehicle_types": [
-                "Ship"
-            ],
-            "sprite_index": 211,
-            "abilities": {
-                "ColonizePlanet": "ARID"
-            },
-            "major_classification": "Infrastructure",
-            "resource_cost": {
-                "metals": 300,
-                "organics": 200,
-                "vapors": 100
-            }
-        },
-        {
-            "id": "pelagic_colony_pod",
-            "name": "Pelagic Colony Pod",
-            "type": "Colony",
-            "mass": 500,
-            "hp": 300,
-            "allowed_vehicle_types": [
-                "Ship"
-            ],
-            "sprite_index": 212,
-            "abilities": {
-                "ColonizePlanet": "PELAGIC"
-            },
-            "major_classification": "Infrastructure",
-            "resource_cost": {
-                "metals": 300,
-                "organics": 200,
-                "vapors": 100
-            }
-        },
-        {
-            "id": "magma_colony_pod",
-            "name": "Magma Colony Pod",
-            "type": "Colony",
-            "mass": 500,
-            "hp": 300,
-            "allowed_vehicle_types": [
-                "Ship"
-            ],
-            "sprite_index": 213,
-            "abilities": {
-                "ColonizePlanet": "MAGMA"
-            },
-            "major_classification": "Infrastructure",
-            "resource_cost": {
-                "metals": 350,
-                "organics": 150,
-                "vapors": 150,
-                "radioactives": 50
-            }
-        },
-        {
-            "id": "cryoplanet_colony_pod",
-            "name": "Cryoplanet Colony Pod",
-            "type": "Colony",
-            "mass": 500,
-            "hp": 300,
-            "allowed_vehicle_types": [
-                "Ship"
-            ],
-            "sprite_index": 214,
-            "abilities": {
-                "ColonizePlanet": "CRYOPLANET"
-            },
-            "major_classification": "Infrastructure",
-            "resource_cost": {
-                "metals": 350,
-                "organics": 150,
-                "vapors": 150
-            }
-        },
-        {
-            "id": "barren_colony_pod",
-            "name": "Barren Colony Pod",
-            "type": "Colony",
-            "mass": 500,
-            "hp": 300,
-            "allowed_vehicle_types": [
-                "Ship"
-            ],
-            "sprite_index": 215,
-            "abilities": {
-                "ColonizePlanet": "BARREN"
-            },
-            "major_classification": "Infrastructure",
-            "resource_cost": {
-                "metals": 400,
-                "organics": 100,
-                "vapors": 100
-            }
-        },
-        {
-            "id": "jovian_colony_pod",
-            "name": "Jovian Colony Pod",
-            "type": "Colony",
-            "mass": 800,
-            "hp": 400,
-            "allowed_vehicle_types": [
-                "Ship"
-            ],
-            "sprite_index": 216,
-            "abilities": {
-                "ColonizePlanet": "JOVIAN"
-            },
-            "major_classification": "Infrastructure",
-            "resource_cost": {
-                "metals": 500,
-                "organics": 200,
-                "vapors": 200,
-                "radioactives": 100,
-                "exotics": 50
-            }
-        },
-        {
-            "id": "ice_giant_colony_pod",
-            "name": "Ice Giant Colony Pod",
-            "type": "Colony",
-            "mass": 800,
-            "hp": 400,
-            "allowed_vehicle_types": [
-                "Ship"
-            ],
-            "sprite_index": 217,
-            "abilities": {
-                "ColonizePlanet": "ICE_GIANT"
-            },
-            "major_classification": "Infrastructure",
-            "resource_cost": {
-                "metals": 500,
-                "organics": 200,
-                "vapors": 200,
-                "radioactives": 100,
-                "exotics": 50
-            }
-        },
-        {
-            "id": "chthonian_colony_pod",
-            "name": "Chthonian Colony Pod",
-            "type": "Colony",
-            "mass": 800,
-            "hp": 400,
-            "allowed_vehicle_types": [
-                "Ship"
-            ],
-            "sprite_index": 218,
-            "abilities": {
-                "ColonizePlanet": "CHTHONIAN"
-            },
-            "major_classification": "Infrastructure",
-            "resource_cost": {
-                "metals": 600,
-                "organics": 150,
-                "vapors": 150,
-                "radioactives": 150,
-                "exotics": 100
-            }
-        },
-        {
-            "id": "ice_dwarf_colony_pod",
-            "name": "Ice Dwarf Colony Pod",
-            "type": "Colony",
-            "mass": 500,
-            "hp": 300,
-            "allowed_vehicle_types": [
-                "Ship"
-            ],
-            "sprite_index": 219,
-            "abilities": {
-                "ColonizePlanet": "ICE_DWARF"
-            },
-            "major_classification": "Infrastructure",
-            "resource_cost": {
-                "metals": 350,
-                "organics": 150,
-                "vapors": 100
-            }
-        },
-        {
-            "id": "planetoid_colony_pod",
-            "name": "Planetoid Colony Pod",
-            "type": "Colony",
-            "mass": 500,
-            "hp": 300,
-            "allowed_vehicle_types": [
-                "Ship"
-            ],
-            "sprite_index": 220,
-            "abilities": {
-                "ColonizePlanet": "PLANETOID"
-            },
-            "major_classification": "Infrastructure",
-            "resource_cost": {
-                "metals": 300,
-                "organics": 100,
                 "vapors": 100
             }
         },
@@ -2926,7 +2676,9 @@
             "type": "PlanetaryDefense",
             "mass": 1000,
             "hp": 500,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "StellarStabilizer": {
@@ -2950,7 +2702,9 @@
             "type": "PlanetaryDefense",
             "mass": 800,
             "hp": 400,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "WarpFieldStabilizer": {
@@ -2974,7 +2728,10 @@
             "type": "ResourceBooster",
             "mass": 300,
             "hp": 200,
-            "allowed_vehicle_types": ["Planetary Complex", "Drop Pod"],
+            "allowed_vehicle_types": [
+                "Planetary Complex",
+                "Drop Pod"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "ResourceHarvestBooster": {
@@ -2985,7 +2742,11 @@
                 }
             },
             "major_classification": "Production",
-            "resource_cost": {"metals": 800, "organics": 100, "vapors": 200}
+            "resource_cost": {
+                "metals": 800,
+                "organics": 100,
+                "vapors": 200
+            }
         },
         {
             "id": "harvest_booster_organics_planet",
@@ -2993,7 +2754,10 @@
             "type": "ResourceBooster",
             "mass": 300,
             "hp": 200,
-            "allowed_vehicle_types": ["Planetary Complex", "Drop Pod"],
+            "allowed_vehicle_types": [
+                "Planetary Complex",
+                "Drop Pod"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "ResourceHarvestBooster": {
@@ -3004,7 +2768,11 @@
                 }
             },
             "major_classification": "Production",
-            "resource_cost": {"metals": 600, "organics": 300, "vapors": 200}
+            "resource_cost": {
+                "metals": 600,
+                "organics": 300,
+                "vapors": 200
+            }
         },
         {
             "id": "harvest_booster_vapors_planet",
@@ -3012,7 +2780,10 @@
             "type": "ResourceBooster",
             "mass": 300,
             "hp": 200,
-            "allowed_vehicle_types": ["Planetary Complex", "Drop Pod"],
+            "allowed_vehicle_types": [
+                "Planetary Complex",
+                "Drop Pod"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "ResourceHarvestBooster": {
@@ -3023,7 +2794,11 @@
                 }
             },
             "major_classification": "Production",
-            "resource_cost": {"metals": 700, "organics": 100, "vapors": 400}
+            "resource_cost": {
+                "metals": 700,
+                "organics": 100,
+                "vapors": 400
+            }
         },
         {
             "id": "harvest_booster_radioactives_planet",
@@ -3031,7 +2806,10 @@
             "type": "ResourceBooster",
             "mass": 400,
             "hp": 250,
-            "allowed_vehicle_types": ["Planetary Complex", "Drop Pod"],
+            "allowed_vehicle_types": [
+                "Planetary Complex",
+                "Drop Pod"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "ResourceHarvestBooster": {
@@ -3042,7 +2820,11 @@
                 }
             },
             "major_classification": "Production",
-            "resource_cost": {"metals": 900, "radioactives": 400, "vapors": 200}
+            "resource_cost": {
+                "metals": 900,
+                "radioactives": 400,
+                "vapors": 200
+            }
         },
         {
             "id": "harvest_booster_exotics_planet",
@@ -3050,7 +2832,10 @@
             "type": "ResourceBooster",
             "mass": 500,
             "hp": 300,
-            "allowed_vehicle_types": ["Planetary Complex", "Drop Pod"],
+            "allowed_vehicle_types": [
+                "Planetary Complex",
+                "Drop Pod"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "ResourceHarvestBooster": {
@@ -3061,7 +2846,12 @@
                 }
             },
             "major_classification": "Production",
-            "resource_cost": {"metals": 1200, "exotics": 300, "radioactives": 200, "vapors": 300}
+            "resource_cost": {
+                "metals": 1200,
+                "exotics": 300,
+                "radioactives": 200,
+                "vapors": 300
+            }
         },
         {
             "id": "harvest_booster_metals_system",
@@ -3069,7 +2859,9 @@
             "type": "ResourceBooster",
             "mass": 600,
             "hp": 400,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "ResourceHarvestBooster": {
@@ -3080,7 +2872,12 @@
                 }
             },
             "major_classification": "Production",
-            "resource_cost": {"metals": 1500, "organics": 200, "vapors": 400, "exotics": 100}
+            "resource_cost": {
+                "metals": 1500,
+                "organics": 200,
+                "vapors": 400,
+                "exotics": 100
+            }
         },
         {
             "id": "harvest_booster_organics_system",
@@ -3088,7 +2885,9 @@
             "type": "ResourceBooster",
             "mass": 600,
             "hp": 400,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "ResourceHarvestBooster": {
@@ -3099,7 +2898,12 @@
                 }
             },
             "major_classification": "Production",
-            "resource_cost": {"metals": 1200, "organics": 600, "vapors": 400, "exotics": 100}
+            "resource_cost": {
+                "metals": 1200,
+                "organics": 600,
+                "vapors": 400,
+                "exotics": 100
+            }
         },
         {
             "id": "harvest_booster_vapors_system",
@@ -3107,7 +2911,9 @@
             "type": "ResourceBooster",
             "mass": 600,
             "hp": 400,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "ResourceHarvestBooster": {
@@ -3118,7 +2924,12 @@
                 }
             },
             "major_classification": "Production",
-            "resource_cost": {"metals": 1400, "organics": 200, "vapors": 800, "exotics": 100}
+            "resource_cost": {
+                "metals": 1400,
+                "organics": 200,
+                "vapors": 800,
+                "exotics": 100
+            }
         },
         {
             "id": "harvest_booster_radioactives_system",
@@ -3126,7 +2937,9 @@
             "type": "ResourceBooster",
             "mass": 700,
             "hp": 450,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "ResourceHarvestBooster": {
@@ -3137,7 +2950,12 @@
                 }
             },
             "major_classification": "Production",
-            "resource_cost": {"metals": 1800, "radioactives": 800, "vapors": 400, "exotics": 200}
+            "resource_cost": {
+                "metals": 1800,
+                "radioactives": 800,
+                "vapors": 400,
+                "exotics": 200
+            }
         },
         {
             "id": "harvest_booster_exotics_system",
@@ -3145,7 +2963,9 @@
             "type": "ResourceBooster",
             "mass": 800,
             "hp": 500,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "ResourceHarvestBooster": {
@@ -3156,7 +2976,12 @@
                 }
             },
             "major_classification": "Production",
-            "resource_cost": {"metals": 2000, "exotics": 600, "radioactives": 400, "vapors": 500}
+            "resource_cost": {
+                "metals": 2000,
+                "exotics": 600,
+                "radioactives": 400,
+                "vapors": 500
+            }
         },
         {
             "id": "build_rate_booster_sector",
@@ -3164,7 +2989,9 @@
             "type": "ProductionBooster",
             "mass": 400,
             "hp": 300,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "BuildRateBooster": {
@@ -3174,7 +3001,12 @@
                 }
             },
             "major_classification": "Production",
-            "resource_cost": {"metals": 1000, "organics": 200, "vapors": 300, "exotics": 150}
+            "resource_cost": {
+                "metals": 1000,
+                "organics": 200,
+                "vapors": 300,
+                "exotics": 150
+            }
         },
         {
             "id": "build_rate_booster_system",
@@ -3182,7 +3014,9 @@
             "type": "ProductionBooster",
             "mass": 700,
             "hp": 500,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "BuildRateBooster": {
@@ -3192,7 +3026,13 @@
                 }
             },
             "major_classification": "Production",
-            "resource_cost": {"metals": 1500, "organics": 300, "vapors": 500, "radioactives": 200, "exotics": 250}
+            "resource_cost": {
+                "metals": 1500,
+                "organics": 300,
+                "vapors": 500,
+                "radioactives": 200,
+                "exotics": 250
+            }
         },
         {
             "id": "atmosphere_modifier",
@@ -3200,16 +3040,23 @@
             "type": "Terraforming",
             "mass": 500,
             "hp": 300,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
                 "AtmosphereModifier": {
-                    "modification_rate": 1e12
+                    "modification_rate": 1000000000000.0
                 },
                 "CrewRequired": 50
             },
             "major_classification": "Infrastructure",
-            "resource_cost": {"metals": 800, "organics": 200, "vapors": 300, "exotics": 100}
+            "resource_cost": {
+                "metals": 800,
+                "organics": 200,
+                "vapors": 300,
+                "exotics": 100
+            }
         },
         {
             "id": "quality_improver_metals",
@@ -3217,14 +3064,23 @@
             "type": "QualityImprovement",
             "mass": 400,
             "hp": 300,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
-                "QualityImprovement": {"resource_type": "metals", "improvement_rate": 0.1},
+                "QualityImprovement": {
+                    "resource_type": "metals",
+                    "improvement_rate": 0.1
+                },
                 "CrewRequired": 30
             },
             "major_classification": "Production",
-            "resource_cost": {"metals": 600, "organics": 100, "vapors": 200}
+            "resource_cost": {
+                "metals": 600,
+                "organics": 100,
+                "vapors": 200
+            }
         },
         {
             "id": "quality_improver_organics",
@@ -3232,14 +3088,23 @@
             "type": "QualityImprovement",
             "mass": 400,
             "hp": 300,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
-                "QualityImprovement": {"resource_type": "organics", "improvement_rate": 0.1},
+                "QualityImprovement": {
+                    "resource_type": "organics",
+                    "improvement_rate": 0.1
+                },
                 "CrewRequired": 30
             },
             "major_classification": "Production",
-            "resource_cost": {"metals": 500, "organics": 300, "vapors": 200}
+            "resource_cost": {
+                "metals": 500,
+                "organics": 300,
+                "vapors": 200
+            }
         },
         {
             "id": "quality_improver_vapors",
@@ -3247,14 +3112,23 @@
             "type": "QualityImprovement",
             "mass": 400,
             "hp": 300,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
-                "QualityImprovement": {"resource_type": "vapors", "improvement_rate": 0.1},
+                "QualityImprovement": {
+                    "resource_type": "vapors",
+                    "improvement_rate": 0.1
+                },
                 "CrewRequired": 30
             },
             "major_classification": "Production",
-            "resource_cost": {"metals": 600, "organics": 100, "vapors": 400}
+            "resource_cost": {
+                "metals": 600,
+                "organics": 100,
+                "vapors": 400
+            }
         },
         {
             "id": "quality_improver_radioactives",
@@ -3262,14 +3136,23 @@
             "type": "QualityImprovement",
             "mass": 400,
             "hp": 300,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
-                "QualityImprovement": {"resource_type": "radioactives", "improvement_rate": 0.1},
+                "QualityImprovement": {
+                    "resource_type": "radioactives",
+                    "improvement_rate": 0.1
+                },
                 "CrewRequired": 30
             },
             "major_classification": "Production",
-            "resource_cost": {"metals": 700, "radioactives": 300, "vapors": 200}
+            "resource_cost": {
+                "metals": 700,
+                "radioactives": 300,
+                "vapors": 200
+            }
         },
         {
             "id": "quality_improver_exotics",
@@ -3277,14 +3160,24 @@
             "type": "QualityImprovement",
             "mass": 500,
             "hp": 350,
-            "allowed_vehicle_types": ["Planetary Complex"],
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
             "sprite_index": 0,
             "abilities": {
-                "QualityImprovement": {"resource_type": "exotics", "improvement_rate": 0.1},
+                "QualityImprovement": {
+                    "resource_type": "exotics",
+                    "improvement_rate": 0.1
+                },
                 "CrewRequired": 40
             },
             "major_classification": "Production",
-            "resource_cost": {"metals": 1000, "exotics": 200, "radioactives": 200, "vapors": 300}
+            "resource_cost": {
+                "metals": 1000,
+                "exotics": 200,
+                "radioactives": 200,
+                "vapors": 300
+            }
         }
     ]
 }

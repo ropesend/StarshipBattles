@@ -78,7 +78,7 @@ class TestOnColonizeClick:
         mock_facade.can_colonize.return_value = ValidationResult()
         mock_facade.handle_command.return_value = ValidationResult()
         # PROJ-55: Mock pod filtering - must provide pod for planet type
-        mock_facade.get_fleet_remaining_pods.return_value = {'CONTINENTAL': 1}
+        mock_facade.get_fleet_remaining_pods.return_value = {'drop_pod': 1}
 
         system = ColonizationSystem(mock_scene, mock_facade)
 
@@ -421,8 +421,8 @@ class TestFacadeColonyPodMethods:
 class TestOnColonizeClickPodFiltering:
     """Tests for PROJ-55: Filtering planets by available pods."""
 
-    def test_on_colonize_filters_by_available_pods(self):
-        """on_colonize_click only returns planets with matching pods."""
+    def test_on_colonize_shows_all_planets_with_universal_pods(self):
+        """on_colonize_click returns all unowned planets when fleet has universal pods."""
         from game.ui.screens.strategy_colonization import ColonizationSystem
         from enum import Enum
 
@@ -443,7 +443,6 @@ class TestOnColonizeClickPodFiltering:
         mock_cont_planet.planet_type = MockPlanetType.CONTINENTAL
         mock_cont_planet.name = "Earth-like"
 
-        # Fleet only has Continental pod
         mock_fleet = Mock()
         mock_fleet.id = 10
         mock_fleet.location = HexCoord(5, 5)
@@ -457,24 +456,20 @@ class TestOnColonizeClickPodFiltering:
         mock_scene.systems = [mock_star_system]
 
         mock_facade = Mock()
-        # Facade says both are valid (base validation passes)
         mock_facade.can_colonize.return_value = ValidationResult()
         mock_facade.handle_command.return_value = ValidationResult()
-        # But remaining pods only has Continental
-        mock_facade.get_fleet_remaining_pods.return_value = {'CONTINENTAL': 1}
+        # Universal pods — fleet has 1 drop pod
+        mock_facade.get_fleet_remaining_pods.return_value = {'drop_pod': 1}
 
         system = ColonizationSystem(mock_scene, mock_facade)
         system._get_system_at_hex = Mock(return_value=mock_star_system)
 
         result = system.on_colonize_click(mock_fleet)
 
-        # Should return prompt with only Continental planet (Ice Dwarf filtered out)
-        if result['type'] == 'prompt':
-            assert len(result['planets']) == 1
-            assert result['planets'][0].planet_type == MockPlanetType.CONTINENTAL
-        elif result['type'] == 'success':
-            # If only one valid, it auto-colonizes
-            pass
+        # Universal pods: both planets should be valid targets
+        assert result is not None
+        assert result['type'] == 'prompt'
+        assert len(result['planets']) == 2
 
     def test_on_colonize_accounts_for_committed_orders(self):
         """Committed orders reduce available pods for filtering."""
@@ -587,8 +582,8 @@ class TestHandleColonizeDesignationPodFiltering:
         mock_scene.galaxy = None  # No zone lookup
 
         mock_facade = Mock()
-        # Fleet has CONTINENTAL pod only - doesn't match ICE_DWARF planet
-        mock_facade.get_fleet_remaining_pods.return_value = {'CONTINENTAL': 1}
+        # Fleet has no pods
+        mock_facade.get_fleet_remaining_pods.return_value = {'drop_pod': 0}
 
         mock_fleet = Mock()
         mock_fleet.id = 10
@@ -607,8 +602,9 @@ class TestHandleColonizeDesignationPodFiltering:
         finally:
             colonization_module.pixel_to_hex = original_pixel_to_hex
 
-        # Planet should be filtered out - no matching pod
-        assert result is None or result.get('type') == 'no_targets'
+        # No pods available - should return no_targets
+        assert result is not None
+        assert result.get('type') == 'no_targets'
 
     def test_designation_matching_pod_succeeds(self):
         """Designation succeeds when fleet has pod matching planet type."""
@@ -642,7 +638,7 @@ class TestHandleColonizeDesignationPodFiltering:
 
         mock_facade = Mock()
         # Fleet has ICE_DWARF pod - matches planet
-        mock_facade.get_fleet_remaining_pods.return_value = {'ICE_DWARF': 1}
+        mock_facade.get_fleet_remaining_pods.return_value = {'drop_pod': 1}
         mock_facade.handle_command.return_value = ValidationResult()
 
         mock_fleet = Mock()
@@ -757,7 +753,7 @@ class TestHandleColonizeDesignationPodFiltering:
 
         mock_facade = Mock()
         # Fleet has only CONTINENTAL pod
-        mock_facade.get_fleet_remaining_pods.return_value = {'CONTINENTAL': 1}
+        mock_facade.get_fleet_remaining_pods.return_value = {'drop_pod': 1}
         mock_facade.handle_command.return_value = ValidationResult()
 
         mock_fleet = Mock()
@@ -776,10 +772,10 @@ class TestHandleColonizeDesignationPodFiltering:
         finally:
             colonization_module.pixel_to_hex = original_pixel_to_hex
 
-        # Should succeed with CONTINENTAL planet (only one left after filtering)
-        # Single candidate auto-queues mission
+        # Universal pods: both planets are valid, should prompt for selection
         assert result is not None
-        assert result.get('type') == 'success'
+        assert result.get('type') == 'prompt'
+        assert len(result['planets']) == 2
 
 
 class TestPlanetTypeDisplay:
@@ -820,9 +816,7 @@ class TestPlanetTypeDisplay:
         mock_facade = Mock()
         mock_facade.can_colonize.return_value = ValidationResult()
         # Both pod types available
-        mock_facade.get_fleet_remaining_pods.return_value = {
-            'ICE_DWARF': 1, 'CONTINENTAL': 1
-        }
+        mock_facade.get_fleet_remaining_pods.return_value = {'drop_pod': 2}
 
         system = ColonizationSystem(mock_scene, mock_facade)
         system._get_system_at_hex = Mock(return_value=mock_star_system)

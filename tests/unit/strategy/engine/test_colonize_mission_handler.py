@@ -102,14 +102,14 @@ def make_mock_session(fleet, planet=None, component_registry=None):
 def make_component_registry():
     """Create a component registry with colony pod definitions."""
     return {
-        'continental_colony_pod': {
+        'colony_pod': {
             'abilities': {
-                'ColonizePlanet': 'CONTINENTAL'
+                'ColonizePlanet': True
             }
         },
-        'ice_dwarf_colony_pod': {
+        'colony_pod': {
             'abilities': {
-                'ColonizePlanet': 'ICE_DWARF'
+                'ColonizePlanet': True
             }
         },
         'gas_giant_colony_pod': {

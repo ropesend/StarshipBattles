@@ -481,8 +481,8 @@ class TestColonizeValidatorColonyPods:
         assert result.is_valid is False
         assert result.error_code == "NO_COLONY_POD"
 
-    def test_get_available_colony_pods(
-        self, mock_ship_with_ice_dwarf_pod, mock_ship_with_continental_pod, mock_component_registry
+    def test_count_drop_pods(
+        self, mock_ship_with_ice_dwarf_pod, mock_ship_with_continental_pod
     ):
         """Should correctly count available drop pods."""
         from game.strategy.validation import ColonizeValidator
@@ -490,15 +490,14 @@ class TestColonizeValidatorColonyPods:
         fleet = MagicMock()
         fleet.ships = [mock_ship_with_ice_dwarf_pod, mock_ship_with_continental_pod]
 
-        result = ColonizeValidator.get_available_colony_pods(fleet, mock_component_registry)
+        result = ColonizeValidator.count_drop_pods(fleet)
 
-        # Phase 3: Returns {'drop_pod': N} -- pods are universal
-        assert result == {"drop_pod": 2}
+        assert result == 2
 
-    def test_get_available_colony_pods_multiple_same_type(
-        self, mock_ship_with_ice_dwarf_pod, mock_component_registry
+    def test_count_drop_pods_multiple_ships(
+        self, mock_ship_with_ice_dwarf_pod
     ):
-        """Should count multiple drop pods."""
+        """Should count multiple drop pods across ships."""
         from game.strategy.validation import ColonizeValidator
 
         # Create another ship with a drop pod
@@ -508,11 +507,11 @@ class TestColonizeValidatorColonyPods:
         fleet = MagicMock()
         fleet.ships = [mock_ship_with_ice_dwarf_pod, ship2]
 
-        result = ColonizeValidator.get_available_colony_pods(fleet, mock_component_registry)
+        result = ColonizeValidator.count_drop_pods(fleet)
 
-        assert result == {"drop_pod": 2}
+        assert result == 2
 
-    def test_get_committed_colony_pods(self, mock_planet_ice_dwarf, mock_planet_continental):
+    def test_count_committed_colonize_orders(self, mock_planet_ice_dwarf, mock_planet_continental):
         """Should correctly count committed colonize orders."""
         from game.strategy.validation import ColonizeValidator
         from game.strategy.data.order_types import OrderType
@@ -532,10 +531,9 @@ class TestColonizeValidatorColonyPods:
         fleet = MagicMock()
         fleet.orders = [order1, order2, order3]
 
-        result = ColonizeValidator.get_committed_colony_pods(fleet)
+        result = ColonizeValidator.count_committed_colonize_orders(fleet)
 
-        # Phase 3: Returns {'drop_pod': N} -- counts all COLONIZE orders
-        assert result == {"drop_pod": 3}
+        assert result == 3
 
     def test_validate_rejects_overcommitted_pods(
         self, mock_galaxy, mock_planet_ice_dwarf, mock_ship_with_ice_dwarf_pod, mock_component_registry
@@ -1037,19 +1035,19 @@ class TestColonizeValidatorAdvancedEdgeCases:
         assert result.is_valid is False
         assert result.error_code == "NO_COLONY_POD"
 
-    def test_get_committed_empty_orders_list(self):
-        """get_committed_colony_pods handles empty orders list."""
+    def test_count_committed_empty_orders_list(self):
+        """count_committed_colonize_orders handles empty orders list."""
         from game.strategy.validation import ColonizeValidator
 
         fleet = MagicMock()
         fleet.orders = []
 
-        result = ColonizeValidator.get_committed_colony_pods(fleet)
+        result = ColonizeValidator.count_committed_colonize_orders(fleet)
 
-        assert result == {"drop_pod": 0}
+        assert result == 0
 
-    def test_get_committed_skips_non_colonize_orders(self):
-        """get_committed_colony_pods ignores non-COLONIZE orders."""
+    def test_count_committed_skips_non_colonize_orders(self):
+        """count_committed_colonize_orders ignores non-COLONIZE orders."""
         from game.strategy.validation import ColonizeValidator
         from game.strategy.data.order_types import OrderType
 
@@ -1066,13 +1064,12 @@ class TestColonizeValidatorAdvancedEdgeCases:
         fleet = MagicMock()
         fleet.orders = [move_order, colonize_order]
 
-        result = ColonizeValidator.get_committed_colony_pods(fleet)
+        result = ColonizeValidator.count_committed_colonize_orders(fleet)
 
-        # Only counts the COLONIZE order
-        assert result == {"drop_pod": 1}
+        assert result == 1
 
-    def test_get_committed_counts_colonize_with_none_target(self):
-        """get_committed_colony_pods counts COLONIZE orders with target=None."""
+    def test_count_committed_counts_colonize_with_none_target(self):
+        """count_committed_colonize_orders counts COLONIZE orders with target=None."""
         from game.strategy.validation import ColonizeValidator
         from game.strategy.data.order_types import OrderType
 
@@ -1083,24 +1080,23 @@ class TestColonizeValidatorAdvancedEdgeCases:
         fleet = MagicMock()
         fleet.orders = [any_planet_order]
 
-        result = ColonizeValidator.get_committed_colony_pods(fleet)
+        result = ColonizeValidator.count_committed_colonize_orders(fleet)
 
-        # Phase 3: All COLONIZE orders count (pods are universal)
-        assert result == {"drop_pod": 1}
+        assert result == 1
 
-    def test_get_available_empty_ships_list(self, mock_component_registry):
-        """get_available_colony_pods handles empty ships list."""
+    def test_count_drop_pods_empty_ships_list(self):
+        """count_drop_pods handles empty ships list."""
         from game.strategy.validation import ColonizeValidator
 
         fleet = MagicMock()
         fleet.ships = []
 
-        result = ColonizeValidator.get_available_colony_pods(fleet)
+        result = ColonizeValidator.count_drop_pods(fleet)
 
-        assert result == {"drop_pod": 0}
+        assert result == 0
 
-    def test_get_available_ships_without_pods(self, mock_component_registry):
-        """get_available_colony_pods handles ships with no drop pods."""
+    def test_count_drop_pods_ships_without_pods(self):
+        """count_drop_pods handles ships with no drop pods."""
         from game.strategy.validation import ColonizeValidator
 
         ship = MagicMock()
@@ -1109,12 +1105,12 @@ class TestColonizeValidatorAdvancedEdgeCases:
         fleet = MagicMock()
         fleet.ships = [ship]
 
-        result = ColonizeValidator.get_available_colony_pods(fleet)
+        result = ColonizeValidator.count_drop_pods(fleet)
 
-        assert result == {"drop_pod": 0}
+        assert result == 0
 
-    def test_fleet_has_colony_pod_returns_true_with_drop_pod(self, mock_component_registry):
-        """fleet_has_colony_pod returns True when ship has drop pod."""
+    def test_fleet_has_drop_pod_returns_true(self):
+        """fleet_has_drop_pod returns True when ship has drop pod."""
         from game.strategy.validation import ColonizeValidator
 
         ship1 = MagicMock()
@@ -1126,12 +1122,12 @@ class TestColonizeValidatorAdvancedEdgeCases:
         fleet = MagicMock()
         fleet.ships = [ship1, ship2]
 
-        result = ColonizeValidator.fleet_has_colony_pod(fleet, "ICE_DWARF")
+        result = ColonizeValidator.fleet_has_drop_pod(fleet)
 
         assert result is True
 
-    def test_fleet_has_colony_pod_returns_false_without_drop_pod(self, mock_component_registry):
-        """fleet_has_colony_pod returns False when no drop pods."""
+    def test_fleet_has_drop_pod_returns_false(self):
+        """fleet_has_drop_pod returns False when no drop pods."""
         from game.strategy.validation import ColonizeValidator
 
         ship = MagicMock()
@@ -1140,7 +1136,7 @@ class TestColonizeValidatorAdvancedEdgeCases:
         fleet = MagicMock()
         fleet.ships = [ship]
 
-        result = ColonizeValidator.fleet_has_colony_pod(fleet, "ICE_DWARF")
+        result = ColonizeValidator.fleet_has_drop_pod(fleet)
 
         assert result is False
 

@@ -150,18 +150,3 @@ class ColonizeValidator:
                 count += 1
         return count
 
-    # Legacy compatibility aliases
-    @staticmethod
-    def get_available_colony_pods(fleet: 'Fleet', component_registry=None) -> Dict[str, int]:
-        """Legacy: returns drop pod count as {'drop_pod': N}."""
-        return {'drop_pod': ColonizeValidator.count_drop_pods(fleet)}
-
-    @staticmethod
-    def fleet_has_colony_pod(fleet: 'Fleet', planet_type_str: str = None) -> bool:
-        """Legacy: check for drop pod (planet type ignored — pods are universal)."""
-        return ColonizeValidator.fleet_has_drop_pod(fleet)
-
-    @staticmethod
-    def get_committed_colony_pods(fleet: 'Fleet') -> Dict[str, int]:
-        """Legacy: returns committed count as {'drop_pod': N}."""
-        return {'drop_pod': ColonizeValidator.count_committed_colonize_orders(fleet)}

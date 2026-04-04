@@ -37,6 +37,8 @@ class IssueColonizeCommand(Command):
     """Command to issue a colonization order to a fleet."""
     fleet_id: int
     planet_id: Optional[int] = None  # None for 'Any Planet'
+    population_amount: Optional[int] = None  # None = all passengers
+    cargo_amounts: Optional[Dict[str, int]] = None  # None = all cargo
 
 @dataclass
 class IssueMoveCommand(Command):
@@ -79,6 +81,8 @@ class QueueColonizeMissionCommand(Command):
     fleet_id: int
     target_hex: HexCoord
     planet_id: Optional[int] = None  # None for 'colonize any/largest available planet'
+    population_amount: Optional[int] = None  # None = all passengers
+    cargo_amounts: Optional[Dict[str, int]] = None  # None = all cargo
 
 
 @dataclass

@@ -153,7 +153,7 @@
                 ]
             },
             {
-                "id": "continental_colony_pod",
+                "id": "colony_pod_bay",
                 "modifiers": [
                     {
                         "id": "simple_size_mount",
@@ -174,16 +174,16 @@
         "ammo": 0.0
     },
     "expected_stats": {
-        "max_hp": 5924,
+        "max_hp": 5824,
         "max_fuel": 100000.0,
         "max_energy": 2000.0,
         "max_ammo": 0.0,
-        "max_speed": 6.4,
-        "acceleration_rate": 0.155,
+        "max_speed": 7.072762017679559,
+        "acceleration_rate": 0.1905674764142119,
         "turn_speed": 0.0,
         "total_thrust": 1050.0,
         "strategic_movement": 700.0,
-        "mass": 4111.5,
+        "mass": 3711.4213562373097,
         "armor_hp_pool": 0,
         "warp_max_tonnage": 8000,
         "warp_energy_cost": 5000,

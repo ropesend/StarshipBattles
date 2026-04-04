@@ -362,6 +362,24 @@ class ShipInstance:
         """Unload cargo from this ship."""
         return self._cargo_mgr.unload_cargo(cargo_type, amount)
 
+    # --- Pod Storage (mass-based carried_items capacity) ---
+
+    def get_pod_storage_capacity(self) -> float:
+        """Get maximum mass capacity for carried items (drop pods)."""
+        stats = self.get_calculated_stats()
+        return float(stats.get('pod_storage_mass', 0))
+
+    def get_pod_storage_used(self) -> float:
+        """Get total mass of items currently in carried_items."""
+        return sum(item.get('mass', 0.0) for item in self.carried_items)
+
+    def can_carry_pod(self, pod_mass: float) -> bool:
+        """Check if this ship can carry an additional pod of the given mass."""
+        capacity = self.get_pod_storage_capacity()
+        if capacity <= 0:
+            return False
+        return self.get_pod_storage_used() + pod_mass <= capacity
+
     def get_warp_resource_costs(self) -> Dict[str, float]:
         """
         Get all resource costs for a warp jump.
