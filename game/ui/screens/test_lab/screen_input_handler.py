@@ -265,10 +265,12 @@ class TestLabInputHandler:
             self.controller.ui_state.select_test(None)
             return True
 
-        # Check group header clicks (expand/collapse)
+        # Check group header clicks (expand/collapse + filter to group)
         for group, rect in self.viewmodel.group_header_rects.items():
             if rect.collidepoint(mx, my):
                 self.controller.ui_state.toggle_group(group)
+                self.controller.ui_state.select_group(group)
+                self.controller.ui_state.select_test(None)
                 return True
 
         # Check category clicks within expanded groups
