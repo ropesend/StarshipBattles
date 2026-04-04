@@ -2,7 +2,7 @@
   "_metadata": {
     "_schema_version": "1.0",
     "_data_version": "1.0",
-    "_description": "Attacker with 2x destructible bridges in ARMOR + beam in CORE"
+    "_description": "Attacker with 2 bridges: destructible 50 HP in ARMOR + indestructible 1B HP in CORE"
   },
   "name": "Test Attacker Beam CNC DualBridge",
   "color": [255, 0, 0],
@@ -12,14 +12,14 @@
   "ai_strategy": "test_do_nothing",
   "layers": {
     "CORE": [
-      {"id": "test_beam_1dmg_guaranteed_cnc"}
+      {"id": "test_beam_1dmg_guaranteed_cnc"},
+      {"id": "test_bridge_indestructible"}
     ],
     "ARMOR": [
-      {"id": "test_bridge"},
       {"id": "test_bridge"}
     ]
   },
-  "_test_notes": "Two bridges (50 HP each) in ARMOR. After 100 hits both destroyed, beam loses C&C. But first bridge destruction does NOT disable weapons because second bridge still provides C&C. For CNC-006.",
+  "_test_notes": "Two bridges on different layers: 50 HP in ARMOR (destroyed first by incoming fire) + 1B HP in CORE (effectively indestructible). After ARMOR bridge dies, CORE bridge still provides C&C so beam keeps firing. For CNC-006 redundancy test.",
   "expected_stats": {
     "mass": 400.0
   }

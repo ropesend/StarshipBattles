@@ -425,17 +425,18 @@ class CNCBridgeRedundancyScenario(ComparisonScenario):
     """
     CNC-006: Bridge Redundancy
 
-    Both ships have a C&C beam in CORE and bridges in ARMOR.
+    Both ships have a C&C beam in CORE and bridges providing command.
     An enemy fires at each ship.
 
     Battle A: Single bridge (50 HP) in ARMOR → destroyed at ~tick 50,
               beam loses C&C and stops firing
-    Battle B: Two bridges (50 HP each) in ARMOR → first destroyed at ~tick 50,
-              but second bridge still provides C&C → beam keeps firing
-              until second bridge destroyed at ~tick 100
+    Battle B: Two bridges on different layers — 50 HP in ARMOR (destroyed
+              at ~tick 50) + 1B HP indestructible in CORE (survives).
+              After ARMOR bridge dies, CORE bridge still provides C&C
+              so beam keeps firing for the entire test duration.
 
-    The dual-bridge ship should deal more total damage because it maintains
-    C&C for longer.
+    The dual-bridge ship should deal significantly more total damage
+    because C&C is never lost.
     """
 
     metadata = TestMetadata(
@@ -447,14 +448,14 @@ class CNCBridgeRedundancyScenario(ComparisonScenario):
         conditions=[
             f"Enemy: {DURABLE_ATTACKER} (fires at both test ships)",
             "Ship (1 bridge): Test_Attacker_Beam_CNC_WeakBridge.json (1x 50 HP bridge in ARMOR)",
-            "Ship (2 bridges): Test_Attacker_Beam_CNC_DualBridge.json (2x 50 HP bridge in ARMOR)",
+            "Ship (2 bridges): Test_Attacker_Beam_CNC_DualBridge.json (50 HP in ARMOR + 1B HP in CORE)",
             f"Distance: {POINT_BLANK_DISTANCE} pixels",
             f"Test Duration: {CNC_TEST_TICKS} ticks",
         ],
         edge_cases=[
             f"First bridge ({CNC_BRIDGE_HP} HP) destroyed at ~tick {CNC_BRIDGE_HP}",
-            "Second bridge provides C&C continuity after first is destroyed",
-            "Dual-bridge ship fires for ~100 ticks vs single-bridge ~50 ticks",
+            "Indestructible CORE bridge provides C&C continuity after ARMOR bridge destroyed",
+            "Dual-bridge ship fires for entire test vs single-bridge ~50 ticks",
         ],
         expected_outcome="Dual-bridge variant deals more damage than single-bridge baseline "
                          "because C&C is maintained longer.",

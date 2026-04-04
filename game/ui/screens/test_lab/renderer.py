@@ -1025,21 +1025,24 @@ class TestLabRenderer:
         screen.blit(self.small_font.render(header, True, name_color), (x + 15, y))
         y += 17
 
-        # Format values to matching decimal places for visual comparison
-        exp_str = self._format_check_value(expected)
-        act_str = self._format_check_value(actual)
-        exp_str, act_str = self._align_decimals(exp_str, act_str)
+        # Format both values with identical precision
+        exp_str, act_str = self._format_check_pair(expected, actual)
+
+        # Use fixed label width so numbers start at the same X position
+        # "Expected: " and "Actual:   " are padded to same visual width
+        label_x = x + 50
+        value_x = x + 145  # Numbers start here for both lines
 
         # Line 2: Expected value
         if expected is not None:
-            exp_line = f"      Expected: {exp_str}"
-            screen.blit(self.small_font.render(exp_line, True, expected_color), (x + 15, y))
+            screen.blit(self.small_font.render("Expected:", True, expected_color), (label_x, y))
+            screen.blit(self.small_font.render(exp_str, True, expected_color), (value_x, y))
             y += 16
 
         # Line 3: Actual value (color-coded green/red)
         if actual is not None:
-            act_line = f"      Actual:   {act_str}"
-            screen.blit(self.small_font.render(act_line, True, actual_color), (x + 15, y))
+            screen.blit(self.small_font.render("Actual:", True, actual_color), (label_x, y))
+            screen.blit(self.small_font.render(act_str, True, actual_color), (value_x, y))
             y += 16
 
         # Line 4: Detail (if any, e.g. TOST p-value)
@@ -1052,44 +1055,42 @@ class TestLabRenderer:
         return y
 
     @staticmethod
-    def _format_check_value(value) -> str:
-        """Format a check value for display with consistent precision."""
-        if value is None:
-            return "—"
-        if isinstance(value, bool):
-            return str(value)
-        if isinstance(value, float):
-            # Use enough decimals to show meaningful precision
-            if abs(value) >= 1000:
-                return f"{value:,.1f}"
-            elif abs(value) >= 1:
-                return f"{value:.4f}"
-            elif value == 0:
-                return "0.0"
+    def _format_check_pair(expected, actual):
+        """Format expected and actual values with identical precision.
+
+        Both values get the same number of decimal places so they
+        visually align when stacked vertically.
+        """
+        if expected is None and actual is None:
+            return "—", "—"
+
+        # Booleans — no formatting needed
+        if isinstance(expected, bool) or isinstance(actual, bool):
+            return str(expected), str(actual)
+
+        # Both numeric — format to matching decimal places
+        if isinstance(expected, (int, float)) and isinstance(actual, (int, float)):
+            # Determine best precision from whichever has more
+            # meaningful decimals
+            exp_f = float(expected)
+            act_f = float(actual)
+
+            # Pick precision: use more decimals for small values
+            max_abs = max(abs(exp_f), abs(act_f), 1e-12)
+            if max_abs >= 10000:
+                decimals = 1
+            elif max_abs >= 1:
+                decimals = 4
             else:
-                return f"{value:.6f}"
-        return str(value)
+                decimals = 6
 
-    @staticmethod
-    def _align_decimals(exp_str: str, act_str: str):
-        """Pad strings so decimal points align vertically."""
-        if '.' not in exp_str or '.' not in act_str:
-            return exp_str, act_str
+            # If either is an exact integer, still match the other's format
+            fmt = f",.{decimals}f"
+            return format(exp_f, fmt), format(act_f, fmt)
 
-        exp_int, exp_dec = exp_str.split('.', 1)
-        act_int, act_dec = act_str.split('.', 1)
-
-        # Pad decimal parts to same length
-        max_dec = max(len(exp_dec), len(act_dec))
-        exp_dec = exp_dec.ljust(max_dec, '0')
-        act_dec = act_dec.ljust(max_dec, '0')
-
-        # Pad integer parts to same length (right-align)
-        max_int = max(len(exp_int), len(act_int))
-        exp_int = exp_int.rjust(max_int)
-        act_int = act_int.rjust(max_int)
-
-        return f"{exp_int}.{exp_dec}", f"{act_int}.{act_dec}"
+        # Mixed or string types — just stringify
+        return str(expected) if expected is not None else "—", \
+               str(actual) if actual is not None else "—"
 
     def _draw_validation_flag(
         self, screen, x: int, y: int, scenario_info: Dict[str, Any]
