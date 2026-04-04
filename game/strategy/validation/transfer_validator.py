@@ -91,7 +91,7 @@ class TransferValidator:
                     f"Fleet is not at {target.name}'s system.",
                     code="NOT_AT_PLANET"
                 )
-            if target.owner_id is None:
+            if target.owner_id is None and cargo_type != "drop_pod":
                 return ValidationResult.error(
                     f"Planet {target.name} is not colonized.",
                     code="NOT_COLONIZED"
@@ -160,6 +160,32 @@ class TransferValidator:
         projected_cargo: int = None
     ) -> ValidationResult:
         """Validate a load operation (colony -> fleet)."""
+        if cargo_type == "drop_pod":
+            # Validate staging yard has items
+            staging = getattr(planet, 'staging_yard', [])
+            if not isinstance(staging, list):
+                staging = []
+            if not staging:
+                return ValidationResult.error(
+                    f"{planet.name} has no items in staging yard.",
+                    code="NO_STAGING_ITEMS"
+                )
+            # Validate fleet has pod storage capacity
+            try:
+                capacity = fleet.resources.get_fleet_pod_capacity()
+                used = fleet.resources.get_fleet_pod_mass_used()
+                if capacity <= 0 or used >= capacity:
+                    return ValidationResult.error(
+                        "Fleet has no pod storage capacity.",
+                        code="NO_POD_CAPACITY"
+                    )
+            except (AttributeError, TypeError):
+                return ValidationResult.error(
+                    "Fleet has no pod storage capacity.",
+                    code="NO_POD_CAPACITY"
+                )
+            return ValidationResult.success()
+
         # For passengers, check fleet has cargo capacity
         # PROJ-210: Use fleet.resources delegate for cargo operations
         if cargo_type == "passengers":

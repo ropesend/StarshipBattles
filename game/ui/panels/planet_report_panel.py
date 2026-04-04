@@ -31,7 +31,7 @@ from collections import Counter
 
 
 # Height reserved for resource grid at bottom of panel
-RESOURCE_PANEL_HEIGHT = 140
+RESOURCE_PANEL_HEIGHT = 160
 
 
 class PlanetReportPanel:
@@ -412,6 +412,26 @@ class PlanetReportPanel:
                 container=self.resource_panel
             )
             self._resource_grid_items.append(cap_label)
+
+        # Staging yard items row (below resource grid)
+        staging_yard = getattr(self.planet, 'staging_yard', None)
+        if isinstance(staging_yard, list) and staging_yard:
+            # Aggregate by name
+            counts: dict = {}
+            for item in staging_yard:
+                name = item.get('name', 'Unknown')
+                counts[name] = counts.get(name, 0) + 1
+            parts = [f"{name} x{count}" if count > 1 else name
+                     for name, count in counts.items()]
+            staging_text = "Staging: " + ", ".join(parts)
+
+            staging_label = UILabel(
+                relative_rect=pygame.Rect(5, 112, self.resource_panel.relative_rect.width - 10, 16),
+                text=staging_text,
+                manager=self.manager,
+                container=self.resource_panel
+            )
+            self._resource_grid_items.append(staging_label)
 
     def _update_resource_grid(self) -> None:
         """Refresh resource grid values when planet changes."""
