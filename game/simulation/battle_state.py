@@ -583,7 +583,6 @@ class BattleState:
 
     # Timing
     tick_count: int = 0
-    max_ticks: Optional[int] = None
 
     # Ships (keyed by ship_id)
     ships: Dict[str, ShipState] = field(default_factory=dict)
@@ -606,7 +605,6 @@ class BattleState:
             'battle_id': self.battle_id,
             'seed': self.seed,
             'tick_count': self.tick_count,
-            'max_ticks': self.max_ticks,
             'ships': {sid: s.to_dict() for sid, s in self.ships.items()},
             'projectiles': [p.to_dict() for p in self.projectiles],
             'end_condition_data': self.end_condition_data,
@@ -635,7 +633,6 @@ class BattleState:
             battle_id=data.get('battle_id', ''),
             seed=data.get('seed'),
             tick_count=data.get('tick_count', 0),
-            max_ticks=data.get('max_ticks'),
             ships=ships,
             projectiles=projectiles,
             end_condition_data=data.get('end_condition_data', {"type": "team_eliminated"}),

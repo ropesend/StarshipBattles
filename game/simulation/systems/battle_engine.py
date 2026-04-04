@@ -255,24 +255,19 @@ class BattleEngine:
         if not isinstance(team1_ships, list): team1_ships = [team1_ships]
         if not isinstance(team2_ships, list): team2_ships = [team2_ships]
 
+        # Add ships to teams (common to all paths)
+        for s in team1_ships:
+            s.team_id = 0
+            self.ships.append(s)
+        for s in team2_ships:
+            s.team_id = 1
+            self.ships.append(s)
+
         if ai_controllers is not None:
             # PROJ-17: Use pre-created controllers from BattleOrchestrator (proper layer usage)
             self.ai_controllers = list(ai_controllers)
-            for s in team1_ships:
-                s.team_id = 0
-                self.ships.append(s)
-            for s in team2_ships:
-                s.team_id = 1
-                self.ships.append(s)
         elif self._ai_factory is not None:
             # PROJ-43: Use injected factory to create AI controllers
-            for s in team1_ships:
-                s.team_id = 0
-                self.ships.append(s)
-            for s in team2_ships:
-                s.team_id = 1
-                self.ships.append(s)
-            # Create controllers for all ships
             team1_controllers = self._ai_factory.create_for_ships(team1_ships, enemy_team_id=1)
             team2_controllers = self._ai_factory.create_for_ships(team2_ships, enemy_team_id=0)
             self.ai_controllers = team1_controllers + team2_controllers

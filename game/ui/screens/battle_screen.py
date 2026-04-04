@@ -445,23 +445,6 @@ class BattleScreen:
             if self.scene_callback:
                 self.scene_callback("return_to_destination", destination=dest)
 
-    def _trigger_return_to_setup(self):
-        """Trigger return to setup via scene_callback."""
-        if self.scene_callback:
-            self.scene_callback("return_to_setup")
-
-    def _trigger_return_to_test_lab(self):
-        """Trigger return to Combat Lab via scene_callback."""
-        if self.scene_callback:
-            self.scene_callback("return_to_test_lab")
-
-    def trigger_return_to_test_lab(self):
-        """Public method to trigger return to Combat Lab.
-
-        Used by BattleUI when the user clicks the "Return to Combat Lab" button.
-        """
-        self._trigger_return_to_test_lab()
-
     def _cycle_focus_ship(self, direction):
         """Cycle camera focus through alive ships."""
         alive_ships = [s for s in self.engine.ships if s.is_alive]

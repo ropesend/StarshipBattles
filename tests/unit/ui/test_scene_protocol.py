@@ -84,32 +84,31 @@ class TestSceneCallback:
     pygame lifecycle is handled by the autouse pygame_display_reset fixture.
     """
 
-    def test_battle_screen_callback_dispatches_return_to_setup(self):
-        """BattleScreen scene_callback dispatches 'return_to_setup' action."""
+    def test_battle_screen_on_battle_ended_routes_to_results(self):
+        """BattleScreen _on_battle_ended dispatches via scene_callback."""
         callback_received = []
 
         def callback(action, **kwargs):
             callback_received.append((action, kwargs))
 
         from game.ui.screens.battle_screen import BattleScreen
+        from game.simulation.battle_config import BattleConfig, BattleMode, ReturnDestination
+        from game.simulation.battle_controller import BattleController
+        from unittest.mock import Mock, patch
+
         scene = BattleScreen(800, 600, callback)
 
-        scene._trigger_return_to_setup()
+        # Set up a minimal controller with config
+        mock_controller = Mock()
+        mock_config = BattleConfig(
+            mode=BattleMode.MANUAL,
+            return_destination=ReturnDestination.BATTLE_SETUP,
+            show_results=False,
+        )
+        mock_controller.config = mock_config
+        scene._controller = mock_controller
+
+        scene._on_battle_ended()
 
         assert len(callback_received) == 1
-        assert callback_received[0][0] == "return_to_setup"
-
-    def test_battle_screen_callback_dispatches_return_to_test_lab(self):
-        """BattleScreen scene_callback dispatches 'return_to_test_lab' action."""
-        callback_received = []
-
-        def callback(action, **kwargs):
-            callback_received.append((action, kwargs))
-
-        from game.ui.screens.battle_screen import BattleScreen
-        scene = BattleScreen(800, 600, callback)
-
-        scene._trigger_return_to_test_lab()
-
-        assert len(callback_received) == 1
-        assert callback_received[0][0] == "return_to_test_lab"
+        assert callback_received[0][0] == "return_to_destination"

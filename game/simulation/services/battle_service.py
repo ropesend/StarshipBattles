@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Any, Dict, TYPE_CHECKING
 
 from game.simulation.systems.battle_engine import BattleEngine, BattleLogger
-from game.simulation.systems.battle_end_conditions import IEndCondition, TeamEliminatedCondition
+from game.simulation.systems.battle_end_conditions import IEndCondition
 from game.core.exceptions import ValidationException, StateException
 
 logger = logging.getLogger(__name__)

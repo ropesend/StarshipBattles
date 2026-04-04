@@ -62,14 +62,10 @@ class TestApplyResultsToFleets:
 
         mock_handler.apply_results.assert_called_once_with(controller, mock_results)
 
-    def test_apply_results_works_with_source_fleets(self, controller, mock_service):
-        """apply_results_to_fleets works when source_fleets are provided."""
-        mock_fleet1 = Mock()
-        mock_fleet2 = Mock()
-
+    def test_apply_results_works_in_strategy_mode(self, controller, mock_service):
+        """apply_results_to_fleets works in STRATEGY mode."""
         config = BattleConfig(
             mode=BattleMode.STRATEGY,
-            source_fleets=(mock_fleet1, mock_fleet2),
         )
         controller.configure(config)
         controller.start()
@@ -328,21 +324,6 @@ class TestMultipleReconfiguration:
 
 class TestCallbackEdgeCases:
     """Tests for callback edge cases."""
-
-    def test_completion_callback_not_called_when_battle_continues(
-        self, controller, basic_config, mock_service
-    ):
-        """Completion callback is not called when battle is not over."""
-        controller.configure(basic_config)
-        controller.start()
-
-        callback = Mock()
-        controller.set_on_battle_complete(callback)
-
-        mock_service.is_battle_over.return_value = False
-        controller.update()
-
-        callback.assert_not_called()
 
     def test_update_delegates_to_service(self, controller, basic_config, mock_service):
         """update() delegates to service.update()."""

@@ -85,8 +85,6 @@ class BattleController:
         self._mode_handler: Optional[BattleModeHandler] = None
 
         # Callbacks
-        self._on_battle_complete: Optional[Callable[['BattleResults'], None]] = None
-        self._on_ship_destroyed: Optional[Callable[['Ship'], None]] = None
         self._on_ship_escaped: Optional[Callable[['Ship'], None]] = None
 
     # === Configuration ===
@@ -606,14 +604,6 @@ class BattleController:
         logger.info("Battle results applied to fleets via mode handler")
 
     # === Callbacks ===
-
-    def set_on_battle_complete(self, callback: Callable[[BattleResults], None]) -> None:
-        """Set callback for battle completion."""
-        self._on_battle_complete = callback
-
-    def set_on_ship_destroyed(self, callback: Callable[['Ship'], None]) -> None:
-        """Set callback for ship destruction."""
-        self._on_ship_destroyed = callback
 
     def set_on_ship_escaped(self, callback: Callable[['Ship'], None]) -> None:
         """Set callback for ship escape."""

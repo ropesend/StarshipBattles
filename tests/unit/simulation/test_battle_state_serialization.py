@@ -625,7 +625,6 @@ class TestBattleStateSerialization:
             battle_id="battle-empty",
             seed=12345,
             tick_count=0,
-            max_ticks=10000,
             ships={},
             projectiles=[],
             end_condition_data={"type": "team_eliminated"},
@@ -685,7 +684,6 @@ class TestBattleStateSerialization:
             battle_id="battle-001",
             seed=42,
             tick_count=500,
-            max_ticks=100000,
             ships={
                 "ship-alpha": ship1,
                 "ship-beta": ship2,
@@ -750,7 +748,6 @@ class TestBattleStateSerialization:
             battle_id="battle-full",
             seed=99999,
             tick_count=1000,
-            max_ticks=50000,
             ships={"ship-001": ship1},
             projectiles=[proj1],
             end_condition_data={"type": "team_eliminated"},
@@ -765,7 +762,7 @@ class TestBattleStateSerialization:
         result = empty_battle_state.to_dict()
 
         expected_fields = [
-            "version", "battle_id", "seed", "tick_count", "max_ticks",
+            "version", "battle_id", "seed", "tick_count",
             "ships", "projectiles", "end_condition_data", "allow_retreat",
             "allow_reinforcements", "created_at", "mode",
         ]
@@ -781,7 +778,6 @@ class TestBattleStateSerialization:
         assert restored.battle_id == empty_battle_state.battle_id
         assert restored.seed == empty_battle_state.seed
         assert restored.tick_count == empty_battle_state.tick_count
-        assert restored.max_ticks == empty_battle_state.max_ticks
         assert restored.ships == {}
         assert restored.projectiles == []
         assert restored.end_condition_data == empty_battle_state.end_condition_data
@@ -869,7 +865,6 @@ class TestBattleStateSerialization:
         assert restored.battle_id == ""
         assert restored.seed is None
         assert restored.tick_count == 0
-        assert restored.max_ticks is None
         assert restored.ships == {}
         assert restored.projectiles == []
         assert restored.end_condition_data == {"type": "team_eliminated"}
@@ -901,13 +896,6 @@ class TestBattleStateSerialization:
 
         assert restored.seed is None
 
-    def test_max_ticks_none_preserved(self):
-        """None max_ticks should be preserved through round-trip."""
-        state = BattleState(max_ticks=None)
-        data = state.to_dict()
-        restored = BattleState.from_dict(data)
-
-        assert restored.max_ticks is None
 
 
 # =============================================================================
@@ -1213,14 +1201,12 @@ class TestSerializationEdgeCases:
         """Large numeric values should be preserved."""
         state = BattleState(
             tick_count=999999999,
-            max_ticks=1000000000,
             seed=2147483647,  # Max int32
         )
         data = state.to_dict()
         restored = BattleState.from_dict(data)
 
         assert restored.tick_count == 999999999
-        assert restored.max_ticks == 1000000000
         assert restored.seed == 2147483647
 
     def test_float_precision_preserved(self):

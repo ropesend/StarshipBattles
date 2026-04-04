@@ -15,6 +15,10 @@ import random
 from typing import Optional, TYPE_CHECKING
 
 from game.core.constants import LayerType
+from game.simulation.combat.combat_events import (
+    CombatEvent,
+    CombatEventType,
+)
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -70,9 +74,6 @@ class DamageCalculator:
             remaining_damage -= absorbed
 
             if event_bus and absorbed > 0:
-                from game.simulation.combat.combat_events import (
-                    CombatEvent, CombatEventType,
-                )
                 event_bus.emit(CombatEvent(
                     event_type=CombatEventType.SHIELD_HIT,
                     target_ship=ship,
@@ -91,9 +92,6 @@ class DamageCalculator:
             remaining_damage = max(0, remaining_damage - ea)
 
             if event_bus and ea_absorbed > 0:
-                from game.simulation.combat.combat_events import (
-                    CombatEvent, CombatEventType,
-                )
                 event_bus.emit(CombatEvent(
                     event_type=CombatEventType.ARMOR_ABSORBED,
                     target_ship=ship,
@@ -118,9 +116,6 @@ class DamageCalculator:
                 )
 
             if event_bus and absorption > 0:
-                from game.simulation.combat.combat_events import (
-                    CombatEvent, CombatEventType,
-                )
                 event_bus.emit(CombatEvent(
                     event_type=CombatEventType.ARMOR_ABSORBED,
                     target_ship=ship,
@@ -151,9 +146,6 @@ class DamageCalculator:
 
             # Emit derelict event if status changed
             if event_bus and not was_derelict and ship.is_derelict:
-                from game.simulation.combat.combat_events import (
-                    CombatEvent, CombatEventType,
-                )
                 event_bus.emit(CombatEvent(
                     event_type=CombatEventType.SHIP_DERELICT,
                     target_ship=ship,
@@ -201,9 +193,6 @@ class DamageCalculator:
             damage -= damage_absorbed
 
             if event_bus:
-                from game.simulation.combat.combat_events import (
-                    CombatEvent, CombatEventType,
-                )
                 if target.current_hp <= 0:
                     event_bus.emit(CombatEvent(
                         event_type=CombatEventType.COMPONENT_DESTROYED,

@@ -88,10 +88,6 @@ class TestBattleConfigDefaults:
         config = BattleConfig()
         assert config.test_scenario is None
 
-    def test_default_source_fleets_none(self):
-        """source_fleets defaults to None."""
-        config = BattleConfig()
-        assert config.source_fleets is None
 
 
 class TestBattleConfigHypotheticalMode:

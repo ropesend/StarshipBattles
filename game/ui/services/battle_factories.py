@@ -158,7 +158,6 @@ def create_strategy_battle(
         seed=seed,
         headless=True,
         allow_retreat=allow_retreat,
-        source_fleets=(fleet1, fleet2),
     )
 
     return _create_controller_with_config(config)

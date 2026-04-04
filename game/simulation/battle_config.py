@@ -72,7 +72,6 @@ class BattleConfig:
     # Caller metadata — stored on config for callers to read back after battle.
     # The simulator does NOT use these fields.
     test_scenario: Optional[Any] = None   # Combat Lab: scenario with validate()
-    source_fleets: Optional[Tuple[Any, Any]] = None  # Strategy: fleet references
 
     # Map bounds for retreat calculations
     map_bounds: Tuple[float, float, float, float] = (

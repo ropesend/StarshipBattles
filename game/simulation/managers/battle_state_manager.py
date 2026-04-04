@@ -101,13 +101,15 @@ class BattleStateManager:
 
     def extract_ships_from_state(
         self,
-        state: BattleState
+        state: BattleState,
+        registries: Any = None
     ) -> Tuple[List['Ship'], Dict[int, str]]:
         """
         Extract ships and ID mapping from saved state.
 
         Args:
             state: BattleState containing ship states
+            registries: GameRegistries for ship deserialization
 
         Returns:
             Tuple of (list of ships, {id(ship): ship_id} mapping)
@@ -116,7 +118,7 @@ class BattleStateManager:
         id_map = {}
 
         for ship_id, ship_state in state.ships.items():
-            ship = ship_state.to_ship()
+            ship = ship_state.to_ship(registries=registries)
             ships.append(ship)
             id_map[id(ship)] = ship_id
 

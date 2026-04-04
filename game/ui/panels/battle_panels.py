@@ -487,15 +487,7 @@ class BattleControlPanel(BattlePanel):
         team2_alive = sum(1 for s in ships if s.team_id == 1 and s.is_alive and not s.is_derelict)
         sw, sh = screen.get_size()
 
-        # In test mode, defer to the engine's is_battle_over() which respects TIME_BASED mode
-        # This prevents showing victory screen for single-ship tests that need to run for N ticks
-        # BattleScreen always has test_mode (bool) and is_battle_over() method
-        if self.scene.test_mode:
-            # Test mode - use engine's is_battle_over() which handles TIME_BASED correctly
-            is_over = self.scene.is_battle_over()
-        else:
-            # Normal battle - use HP-based check
-            is_over = team1_alive == 0 or team2_alive == 0
+        is_over = self.scene.is_battle_over()
 
         if is_over:
             # Battle Over

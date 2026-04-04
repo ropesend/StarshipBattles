@@ -135,7 +135,6 @@ class SimulationBattleResolver(IBattleResolver):
             seed=battle_seed,
             headless=True,
             allow_retreat=True,
-            source_fleets=(fleet1, fleet2),
         )
 
         controller.configure(config)

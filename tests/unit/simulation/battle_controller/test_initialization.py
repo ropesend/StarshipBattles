@@ -32,8 +32,6 @@ class TestBattleControllerInit:
         """Controller starts with empty tracking dicts and no callbacks."""
         assert controller._ship_id_map == {}
         assert controller._retreat_manager is None
-        assert controller._on_battle_complete is None
-        assert controller._on_ship_destroyed is None
         assert controller._on_ship_escaped is None
 
 

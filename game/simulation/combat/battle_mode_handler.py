@@ -11,7 +11,7 @@ This implements the Strategy pattern to eliminate mode-specific conditionals
 scattered throughout BattleController (CQ-024 Open/Closed violation fix).
 """
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Optional, Tuple
+from typing import TYPE_CHECKING
 
 from game.core.exceptions import ValidationException
 from game.core.error_codes import ErrorCode
@@ -86,18 +86,8 @@ class BattleModeHandler(ABC):
         """
         pass
 
-    @abstractmethod
     def apply_results(self, controller: 'BattleController', results: 'BattleResults') -> None:
-        """
-        Apply battle results after completion.
-
-        For modes with fleet effects (e.g., Strategy), this updates source fleets
-        with battle outcomes. For isolated modes, this is a no-op.
-
-        Args:
-            controller: The BattleController with the battle
-            results: The BattleResults to apply
-        """
+        """Apply post-battle results. Override if mode needs it."""
         pass
 
 
@@ -133,10 +123,6 @@ class ManualBattleModeHandler(BattleModeHandler):
         """Manual mode is visual by default."""
         return False
 
-    def apply_results(self, controller: 'BattleController', results: 'BattleResults') -> None:
-        """Manual mode has no fleet effects."""
-        pass
-
 
 class TestBattleModeHandler(BattleModeHandler):
     """
@@ -170,10 +156,6 @@ class TestBattleModeHandler(BattleModeHandler):
         """Test mode is headless by default."""
         return True
 
-    def apply_results(self, controller: 'BattleController', results: 'BattleResults') -> None:
-        """Test mode has no persistence."""
-        pass
-
 
 class StrategyBattleModeHandler(BattleModeHandler):
     """
@@ -187,13 +169,9 @@ class StrategyBattleModeHandler(BattleModeHandler):
     - Fleet effects (results applied back to source fleets)
     """
 
-    def __init__(self):
-        """Initialize with no source fleets."""
-        self._source_fleets: Optional[Tuple[Any, Any]] = None
-
     def configure(self, controller: 'BattleController', config: 'BattleConfig') -> None:
-        """Store source fleets from config."""
-        self._source_fleets = config.source_fleets
+        """No special configuration needed for strategy mode."""
+        pass
 
     def can_retreat(self) -> bool:
         """Strategy mode allows retreat."""
@@ -210,22 +188,6 @@ class StrategyBattleModeHandler(BattleModeHandler):
     def is_headless_default(self) -> bool:
         """Strategy mode is headless by default."""
         return True
-
-    def apply_results(self, controller: 'BattleController', results: 'BattleResults') -> None:
-        """
-        Apply battle results to source fleets.
-
-        Note: Fleet updates are handled by the strategy layer (ConflictResolutionEngine)
-        which calls Fleet.update_from_battle_results() directly. This method exists for
-        interface compliance but is intentionally a no-op - the strategy layer owns the
-        fleet-update responsibility.
-
-        Args:
-            controller: The BattleController with the battle
-            results: The BattleResults to apply
-        """
-        # Fleet updates handled by strategy layer (ConflictResolutionEngine)
-        pass
 
 
 class HypotheticalBattleModeHandler(BattleModeHandler):
@@ -259,10 +221,6 @@ class HypotheticalBattleModeHandler(BattleModeHandler):
     def is_headless_default(self) -> bool:
         """Hypothetical mode is headless by default."""
         return True
-
-    def apply_results(self, controller: 'BattleController', results: 'BattleResults') -> None:
-        """Hypothetical mode is isolated - no fleet effects."""
-        pass
 
 
 def get_handler_for_mode(mode: BattleMode) -> BattleModeHandler:

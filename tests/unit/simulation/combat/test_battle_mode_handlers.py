@@ -97,12 +97,6 @@ class TestManualBattleModeHandler:
         # Should not raise
         handler.configure(mock_controller, mock_config)
 
-    def test_apply_results_does_nothing(self, handler):
-        """apply_results does nothing for manual mode (no fleet effects)."""
-        mock_controller = Mock()
-        mock_results = Mock()
-        # Should not raise
-        handler.apply_results(mock_controller, mock_results)
 
 
 # === TestBattleModeHandler Tests ===
@@ -141,11 +135,6 @@ class TestTestBattleModeHandler:
         mock_config = Mock()
         handler.configure(mock_controller, mock_config)
 
-    def test_apply_results_does_nothing(self, handler):
-        """apply_results does nothing for test mode (no persistence)."""
-        mock_controller = Mock()
-        mock_results = Mock()
-        handler.apply_results(mock_controller, mock_results)
 
 
 # === StrategyBattleModeHandler Tests ===
@@ -178,33 +167,12 @@ class TestStrategyBattleModeHandler:
         """Strategy mode is headless by default."""
         assert handler.is_headless_default() is True
 
-    def test_configure_stores_source_fleets(self, handler):
-        """Configure stores source fleets from config."""
+    def test_configure_does_nothing(self, handler):
+        """Configure does nothing for strategy mode."""
         mock_controller = Mock()
         mock_config = Mock()
-        mock_fleet1 = Mock()
-        mock_fleet2 = Mock()
-        mock_config.source_fleets = (mock_fleet1, mock_fleet2)
-
+        # Should not raise
         handler.configure(mock_controller, mock_config)
-
-        assert handler._source_fleets == (mock_fleet1, mock_fleet2)
-
-    def test_apply_results_is_noop(self, handler):
-        """apply_results is a no-op (strategy layer handles fleet updates).
-
-        Fleet updates are handled by ConflictResolutionEngine calling
-        Fleet.update_from_battle_results() directly.
-        """
-        mock_controller = Mock()
-        mock_results = Mock()
-
-        # Should work with or without source fleets - always a no-op
-        handler._source_fleets = None
-        handler.apply_results(mock_controller, mock_results)
-
-        handler._source_fleets = (Mock(), Mock())
-        handler.apply_results(mock_controller, mock_results)
 
 
 # === HypotheticalBattleModeHandler Tests ===
@@ -243,11 +211,6 @@ class TestHypotheticalBattleModeHandler:
         mock_config = Mock()
         handler.configure(mock_controller, mock_config)
 
-    def test_apply_results_does_nothing(self, handler):
-        """apply_results does nothing for hypothetical mode (isolated)."""
-        mock_controller = Mock()
-        mock_results = Mock()
-        handler.apply_results(mock_controller, mock_results)
 
 
 # === Handler Factory Tests ===

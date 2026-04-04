@@ -67,6 +67,11 @@ from game.ai.target_evaluator import TargetEvaluator
 from game.ai.strategy_manager import StrategyManager
 from game.ai.combat_utils import get_entity_id, get_hp_percent, is_in_pdc_arc
 
+# Behaviors that can execute without an enemy target
+_NO_TARGET_BEHAVIORS = frozenset({
+    'straight_line', 'rotate_only', 'erratic', 'do_nothing', 'stationary_fire'
+})
+
 class AIController:
     def __init__(self, ship, grid, enemy_team_id):
         self.ship = ship
@@ -313,7 +318,6 @@ class AIController:
             self.ship.set_trigger_pulled(False)
             # Check if the behavior can run without a target
             behavior_key = movement_policy.get('behavior', 'kite')
-            _NO_TARGET_BEHAVIORS = {'straight_line', 'rotate_only', 'erratic', 'do_nothing'}
             if behavior_key not in _NO_TARGET_BEHAVIORS:
                 return
         else:
@@ -348,7 +352,6 @@ class AIController:
             behavior_context = dict(movement_policy)
             behavior_context.update(resolved.get('definition', {}))
             # Only run behavior if target exists OR behavior doesn't need one
-            _NO_TARGET_BEHAVIORS = {'straight_line', 'rotate_only', 'erratic', 'do_nothing', 'stationary_fire'}
             if target or behavior_key in _NO_TARGET_BEHAVIORS:
                 self.current_behavior.update(target, behavior_context)
 

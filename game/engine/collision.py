@@ -50,6 +50,7 @@ import random
 from typing import List, Dict, Any
 
 from game.core.config import BattleTuning
+from game.simulation.combat.combat_events import DamageContext
 
 # Note: Ship type hint uses Any to avoid tight coupling with simulation entities
 
@@ -118,7 +119,6 @@ class CollisionSystem:
                         # Handle both Ship targets (have combat_engine) and
                         # Projectile targets (PDC shooting at missiles)
                         if hasattr(target, 'combat_engine'):
-                            from game.simulation.combat.combat_events import DamageContext
                             ctx = DamageContext(
                                 attacker=source_ship,
                                 source_weapon=beam_comp,
@@ -158,7 +158,6 @@ class CollisionSystem:
                 hp_rammer = getattr(s, 'hp', 100)
                 hp_target = getattr(target, 'hp', 100)
 
-                from game.simulation.combat.combat_events import DamageContext
                 rammer_ctx = DamageContext(attacker=target, damage_type="ramming")
                 target_ctx = DamageContext(attacker=s, damage_type="ramming")
 

@@ -69,20 +69,6 @@ class TestBattleControllerQueryMethods:
 class TestBattleControllerCallbacks:
     """Tests for callback setters."""
 
-    def test_set_on_battle_complete(self, controller):
-        """set_on_battle_complete stores callback."""
-        callback = Mock()
-        controller.set_on_battle_complete(callback)
-
-        assert controller._on_battle_complete is callback
-
-    def test_set_on_ship_destroyed(self, controller):
-        """set_on_ship_destroyed stores callback."""
-        callback = Mock()
-        controller.set_on_ship_destroyed(callback)
-
-        assert controller._on_ship_destroyed is callback
-
     def test_set_on_ship_escaped(self, controller):
         """set_on_ship_escaped stores callback."""
         callback = Mock()
