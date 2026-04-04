@@ -23,7 +23,6 @@ from simulation_tests.logging_config import get_logger
 # Intra-package imports
 from .dialogs import JSONPopup, ConfirmationDialog
 from .data_extractor import TestLabDataExtractor, get_test_data_dir
-from .validation_manager import TestLabValidationManager
 from .panel_manager import TestLabPanelManager
 from .test_executor import TestLabExecutor
 from .viewmodel import TestLabViewModel
@@ -79,11 +78,6 @@ class TestLabScreen:
         # Data extraction helper (ships, components from test scenarios)
         self._data_extractor = TestLabDataExtractor(self.registry)
 
-        # Validation manager (static validation, expected value updates)
-        self._validation_manager = TestLabValidationManager(
-            self.registry, self._data_extractor, lambda: self.all_scenarios
-        )
-
         # Panel manager (factory for ship, component, results panels)
         layout = {
             'header_height': 80,
@@ -124,7 +118,6 @@ class TestLabScreen:
                 'on_run_headless': self._on_run_headless,
                 'on_run_visual_baseline': self._on_run_visual_baseline,
                 'on_run_all': self._on_run_all_tests,
-                'on_update_expected': self._handle_update_expected_values,
                 'create_ship_panels': self._create_ship_panels,
                 'create_results_panel': self._create_results_panel,
                 'prompt_custom_seed': self._prompt_for_custom_seed,
@@ -245,30 +238,9 @@ class TestLabScreen:
         """Extract ship information from test scenario metadata."""
         return self._data_extractor.extract_ships(test_id)
 
-    def _validate_all_scenarios(self):
-        """Validate all test scenarios against component/ship data files."""
-        self._validation_manager.validate_all()
-
-    def _build_validation_context_from_files(self, test_id, metadata):
-        """Build validation context from ship and component JSON files."""
-        return self._validation_manager.build_context_from_files(test_id, metadata)
-
     def _load_component_data(self, component_id):
         """Load component JSON from components.json by ID."""
         return self._data_extractor.load_component(component_id)
-
-    def _handle_update_expected_values(self):
-        """Handle click on Update Expected Values button."""
-        dialog = self._validation_manager.handle_update_expected_values(
-            self.selected_test_id, self.ui_manager,
-            self.game.screen.get_width(), self.game.screen.get_height()
-        )
-        if dialog:
-            self._viewmodel.open_confirmation_dialog(dialog)
-
-    def _apply_metadata_updates(self, changes):
-        """Apply metadata updates to the test scenario file."""
-        self._validation_manager.apply_metadata_updates(changes, self.selected_test_id)
 
     def _create_ship_panels(self, test_id):
         """Create ship panels and component panels for the selected test."""

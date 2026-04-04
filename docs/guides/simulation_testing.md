@@ -1,6 +1,6 @@
 # Simulation Testing Guide
 
-Consolidated guide for the Starship Battles simulation test system. Covers test architecture, the TestScenario pattern, validation, troubleshooting, and migration.
+Consolidated guide for the Starship Battles simulation test system. Covers test architecture, the TestScenario pattern, validation, troubleshooting, and writing new tests.
 
 ---
 
@@ -8,42 +8,41 @@ Consolidated guide for the Starship Battles simulation test system. Covers test 
 
 ### Purpose
 
-Simulation tests validate game mechanics (weapons, propulsion, shields, etc.) by running the BattleEngine in headless mode and checking outcomes against expected values. The same tests can run in both **pytest** (automated, headless) and **Combat Lab** (visual, interactive).
+Simulation tests validate game mechanics (weapons, propulsion, shields, etc.) by running the BattleEngine in headless mode and checking outcomes against expected values. The same tests can run in both the **CLI runner** (headless) and **Combat Lab** (visual, interactive).
 
-### Directory Structure (Verified)
+**Important:** Simulation tests do NOT use pytest. They run via `python -m simulation_tests.run_tests`.
+
+### Directory Structure
 
 ```
-simulation_tests/                    # Simulation-specific test ecosystem
-├── conftest.py                      # Simulation test pytest config
-├── pytest.ini                       # Simulation test settings
+simulation_tests/
+├── run_tests.py                     # CLI test runner (auto-discovery)
 ├── test_constants.py                # Shared constants
 ├── test_history.json                # Historical test run data
-├── coverage_index.py                # Coverage tracking
 ├── logging_config.py                # Logging setup
+├── ABILITY_TEST_COVERAGE_PLAN.md    # Coverage tracking
 ├── data/                            # Test-only data (isolated from production)
 │   ├── components.json              # Test-only components
 │   ├── vehicleclasses.json          # Test hull classes
 │   ├── modifiers.json               # Test modifiers
-│   ├── combat_strategies.json       # Test AI strategies
-│   ├── movement_policies.json       # Test movement policies
-│   ├── targeting_policies.json      # Test targeting policies
-│   ├── ships/                       # ~45 test ship JSON files
+│   ├── ships/                       # Test ship JSON files
 │   ├── ship_templates/              # Base templates for ship generation
 │   ├── schemas/                     # JSON schema validation files
 │   └── schema_validator.py          # Runtime schema validation
 ├── scenarios/                       # TestScenario implementations
-│   ├── base.py                      # Base scenario class
-│   ├── templates.py                 # Reusable scenario templates
-│   ├── validation.py                # Validation helpers
-│   ├── prerun_validation.py         # Pre-run data checks
-│   ├── beam_scenarios.py            # Beam weapon scenarios
-│   ├── projectile_scenarios.py      # Projectile weapon scenarios
-│   ├── seeker_scenarios.py          # Seeker weapon scenarios
-│   ├── propulsion_scenarios.py      # Engine/thruster scenarios
-│   ├── modifier_scenarios.py        # Modifier scenarios
-│   ├── resource_scenarios.py        # Fuel/energy/ammo scenarios
+│   ├── base.py                      # TestScenario + TestMetadata base classes
+│   ├── templates.py                 # 5 reusable scenario templates
+│   ├── validation.py                # Check-based validation system
+│   ├── movement.py                  # Movement controllers
+│   ├── __init__.py                  # Module exports
+│   │   # Weapon scenarios
+│   ├── beam_scenarios.py            # Beam weapon accuracy, resource tests
+│   ├── projectile_scenarios.py      # Projectile weapon tests
+│   ├── seeker_scenarios.py          # Seeker weapon tests
+│   ├── modifier_scenarios.py        # Stat modifier tests
 │   │   # Ability-specific categories
 │   ├── tohit_attack_scenarios.py    # ToHitAttackModifier
+│   ├── tohit_attack_fleet_scenarios.py # ToHitAttackModifier (fleet scope)
 │   ├── tohit_defense_scenarios.py   # ToHitDefenseModifier
 │   ├── shield_projection_scenarios.py # ShieldProjection
 │   ├── shield_regen_scenarios.py    # ShieldRegeneration
@@ -51,147 +50,62 @@ simulation_tests/                    # Simulation-specific test ecosystem
 │   ├── emissive_armor_scenarios.py  # EmissiveArmor
 │   ├── cnc_scenarios.py             # CommandAndControl
 │   ├── sra_scenarios.py             # ShieldRegeneratingArmor
-│   ├── damage_pipeline_scenarios.py # Integration Tests (multi-component defense)
-│   └── example_beam_test.py         # Example scenario for reference
-├── tests/                           # Pytest wrappers for scenarios
-│   ├── test_beam_weapons.py
-│   ├── test_projectile_weapons.py
-│   ├── test_seeker_weapons.py
-│   ├── test_propulsion.py
-│   ├── test_engine_physics.py
-│   ├── test_defense.py
-│   ├── test_modifiers.py
-│   ├── test_resource_consumption.py
-│   ├── test_smoke.py
-│   ├── test_coverage_index.py
-│   └── test_example_scenarios.py
-├── suites/                          # Suite documentation (per ability)
+│   ├── damage_pipeline_scenarios.py # Integration tests (multi-component defense)
+│   │   # System scenarios
+│   ├── propulsion_scenarios.py      # Engine/thruster scenarios
+│   └── resource_scenarios.py        # Fuel/energy/ammo scenarios
+├── battle_states/                   # Captured battle state snapshots
+├── suites/                          # Suite documentation
 │   └── BeamWeaponAbility.md
-├── specs/                           # Test specifications
-│   └── component_test_specifications.md
 ├── utils/                           # Utility helpers
-│   ├── README.md
 │   └── test_log_analyzer.py
 ├── validation/                      # Validation system docs
 │   └── README.md
 └── output/                          # Test output artifacts
-
-test_framework/                      # Shared test framework (used by both pytest and Combat Lab)
-├── runner.py                        # TestRunner - executes scenarios
-├── registry.py                      # TestRegistry - discovers and indexes scenarios
-├── scenario.py                      # CombatScenario base class definition
-├── test_history.py                  # Test history persistence
-├── battle_state_capture.py          # State snapshot utilities
-├── scenarios/                       # Combat Lab visual scenarios
-│   ├── engine_performance.py
-│   ├── gun_accuracy_test.py
-│   ├── range_test.py
-│   └── simple_duel.py
-Note: TestScenario (which extends CombatScenario) lives in `simulation_tests/scenarios/base.py`.
-
-└── services/                        # Service layer for Combat Lab
-    ├── test_execution_service.py
-    ├── test_results_service.py
-    ├── scenario_data_service.py
-    ├── metadata_management_service.py
-    ├── ui_state_service.py
-    └── test_lab_controller.py
-
-tests/                               # General test suite (~7353 tests)
-├── conftest.py                      # Root pytest config
-├── fixtures/                        # Shared fixtures
-│   ├── paths.py                     # Path utilities
-│   ├── ships.py                     # Ship fixtures
-│   ├── components.py                # Component fixtures
-│   ├── battle.py                    # Battle engine fixtures
-│   ├── ai.py                        # AI test fixtures
-│   ├── common.py                    # Common utilities
-│   └── test_scenarios.py            # TestScenario helpers
-├── infrastructure/                  # Test infrastructure
-│   └── session_cache.py             # SessionRegistryCache
-├── unit/                            # Unit tests by module
-│   ├── ai/                          # AI controller tests
-│   ├── builder/                     # Ship builder tests
-│   ├── combat/                      # Combat/weapon tests
-│   ├── entities/                    # Ship/component tests
-│   ├── systems/                     # Physics/system tests
-│   └── ui/                          # UI component tests
-├── simulation/                      # Additional simulation test output
-└── ...                              # integration, regression, strategy, etc.
 ```
 
 **Key isolation rule:** Tests in `simulation_tests/` use ONLY data from `simulation_tests/data/`. Production data in `data/` is never modified by tests.
 
 ---
 
-## 2. Test Infrastructure
+## 2. Running Simulation Tests
 
-### Registry Hydration & SessionRegistryCache
-
-Tests use **Fast Hydration** to avoid repeated disk I/O:
-
-1. `SessionRegistryCache` (in `tests/infrastructure/session_cache.py`) loads all production data once per pytest session.
-2. Each test gets a fresh registry populated from cache (no disk reads).
-3. Registry is cleared after each test for isolation.
-
-This is wired through `conftest.py` and the `isolated_registry` fixture.
-
-### Core Fixtures (tests/fixtures/)
-
-| Fixture | Source | Description |
-|---------|--------|-------------|
-| `project_root` | `paths.py` | Project root directory |
-| `data_dir` | `paths.py` | Production data directory |
-| `test_data_dir` | `paths.py` | Test-specific data directory |
-| `empty_ship` | `ships.py` | Ship with only auto-equipped hull |
-| `basic_ship` | `ships.py` | Ship with bridge and engine |
-| `armed_ship` | `ships.py` | Ship with weapons |
-| `shielded_ship` | `ships.py` | Ship with shields |
-| `fully_equipped_ship` | `ships.py` | Ship with all common component types |
-| `create_test_ship()` | `ships.py` | Factory function for custom ships |
-| `battle_engine` | `battle.py` | Configured BattleEngine instance |
-| `two_ship_battle` | `battle.py` | Engine with two opposing ships |
-
-### Configuration Classes
-
-```python
-from game.core.config import DisplayConfig, AIConfig, PhysicsConfig
-
-resolution = DisplayConfig.test_resolution()  # (1440, 900)
-dt = PhysicsConfig.TICK_RATE                  # 0.01
-spacing = AIConfig.MIN_SPACING                # 150
-```
-
-### Running Tests
+### CLI Runner
 
 ```bash
-# Full test suite
-pytest tests/
-
-# Incremental (fast, using testmon)
-pytest tests/ --testmon
-
-# Unit tests only
-pytest tests/unit/ -v
-
-# Simulation tests (auto-discovers *_scenarios.py files)
+# Run all simulation tests
 python -m simulation_tests.run_tests
 
-# Filter simulation tests by ID prefix
+# Filter by ID prefix
 python -m simulation_tests.run_tests BEAMWEAPON
 
-# Run a specific simulation test
+# Run a specific test
 python -m simulation_tests.run_tests BEAMWEAPON-001
 
-# Skip high-tick simulation tests
+# List all discovered tests
+python -m simulation_tests.run_tests --list
+
+# Skip high-tick (-HT) tests for quick validation
 python -m simulation_tests.run_tests --fast
 
-# Parallel execution (sharded runner, auto-detects CPU count)
-python scripts/test_sharded.py
-
-# With coverage
-pytest tests/ --cov=game --cov-report=html
+# Don't record to test_history.json
+python -m simulation_tests.run_tests --no-history
 ```
+
+### Key Features
+
+- **Auto-discovery**: Globs `scenarios/*_scenarios.py` — new files found automatically
+- **History recording**: CLI runs write to `test_history.json` by default (same file
+  as Combat Lab UI). Pass `--no-history` to skip.
+- **`--fast` mode**: Filters out `-HT` (high-tick 100k) tests for quick validation
+
+### Combat Lab Integration
+
+The Combat Lab UI supports ability-specific test categories:
+- TestRegistry auto-discovers scenarios and groups by category
+- ComparisonScenario tests show three buttons: Visual Run, Headless Run, Visual Baseline
+- Selecting a test auto-selects the most recent run and shows detailed results
+- Test run history persists across sessions (shared with CLI via test_history.json)
 
 ---
 
@@ -219,6 +133,7 @@ Both environments use the exact same `BattleEngine` code. The only difference is
 
 ```python
 from simulation_tests.scenarios import TestScenario, TestMetadata
+from simulation_tests.scenarios.validation import check_exact, check_true
 
 class MyTest(TestScenario):
     metadata = TestMetadata(
@@ -235,7 +150,6 @@ class MyTest(TestScenario):
         seed=42,
         ui_priority=0,
         tags=["accuracy", "close_range"],
-        validation_rules=[...]  # See Validation Rules section
     )
 
     def setup(self, battle_engine):
@@ -247,9 +161,14 @@ class MyTest(TestScenario):
         Firing and thrust are handled by AI strategies assigned in setup()."""
         pass
 
-    def validate(self, battle_engine):
-        """Return True if test passed. Store results in self.results."""
-        return True
+    def validate(self, engine) -> list:
+        """Return list of Check objects for 3-phase validation."""
+        checks = []
+        checks.append(check_true(
+            "Damage dealt", self.damage_dealt > 0,
+            detail=f"damage={self.damage_dealt}", phase="outcome"
+        ))
+        return checks
 ```
 
 ### TestMetadata Fields
@@ -267,84 +186,39 @@ class MyTest(TestScenario):
 | `pass_criteria` | Formal pass/fail criteria string |
 | `max_ticks` | Simulation duration |
 | `seed` | Fixed RNG seed for reproducibility |
+| `battle_end_mode` | `"time_based"`, `"hp_based"`, `"capability"`, `"manual"`, `"escape"` |
 | `tags` | Searchable tags |
-| `validation_rules` | List of validation rule objects |
 
-### Validation Rules
+### Validation System
 
-Four rule types, selected by data type:
+The validation system uses **Check objects** with three phases:
 
-| Data Type | Rule Class | Tolerance | Example |
-|-----------|-----------|-----------|---------|
-| Integers, strings | `ExactMatchRule` | `==` | `ship.mass == 40` |
-| Deterministic floats | `DeterministicMatchRule` | 1e-9 | `max_speed == 312.5` |
-| Bounded values | `RangeRule` | min/max | `0 < velocity < 312.5` |
-| RNG outcomes | `StatisticalTestRule` | p-value | `hit_rate passes binomial (p < 0.05)` |
+1. **data** — Verify component/ship data loaded correctly (damage, range, mass, etc.)
+2. **precondition** — Verify the test setup is correct (target moved, distance correct, etc.)
+3. **outcome** — Verify the measured result matches expectations
+
+#### Check Functions
 
 ```python
 from simulation_tests.scenarios.validation import (
-    ExactMatchRule, DeterministicMatchRule, RangeRule, StatisticalTestRule
+    check_exact, check_approx, check_tost, check_true,
+    Check, ValidationReport,
 )
-
-validation_rules = [
-    ExactMatchRule(name='Ship Mass', path='ship.mass', expected=40),
-
-    DeterministicMatchRule(
-        name='Max Speed', path='ship.max_speed', expected=312.5,
-        description='max_speed = (thrust * K_SPEED) / mass'
-    ),
-
-    RangeRule(name='Final Velocity', path='results.final_velocity', min=0, max=312.5),
-
-    # Two-layer validation for statistical tests:
-    # Layer 1: Verify formula calculation
-    DeterministicMatchRule(
-        name='Expected Hit Chance', path='results.expected_hit_chance',
-        expected=0.5318, description='P = 1/(1+e^-0.1273)'
-    ),
-    # Layer 2: Verify actual outcome
-    StatisticalTestRule(
-        name='Hit Rate', test_type='binomial',
-        expected_probability=0.5318, equivalence_margin=0.06,
-        trials_expr='ticks_run', successes_expr='damage_dealt'
-    ),
-]
 ```
 
-### Validation Context
+| Function | Purpose | Example |
+|----------|---------|---------|
+| `check_exact(name, expected, actual, phase)` | Exact equality | `check_exact("Mass", 400, ship.mass, phase="data")` |
+| `check_approx(name, expected, actual, tolerance, phase)` | Relative tolerance | `check_approx("Distance", 100.0, dist, tolerance=0.001, phase="precondition")` |
+| `check_tost(name, expected_p, successes, trials, margin, phase)` | Statistical TOST test | `check_tost("Hit Rate", 0.53, hits, shots, margin=0.10, phase="outcome")` |
+| `check_true(name, condition, actual, detail, phase)` | Boolean check | `check_true("Fired", shots > 0, detail=f"shots={shots}", phase="precondition")` |
 
-Rules resolve dot-notation paths against a context dict built by `run_validation()`:
+#### ValidationReport
 
-```python
-context = {
-    'test_scenario': self,
-    'battle_engine': battle_engine,
-    'results': {
-        'ticks_run': 100,
-        'initial_velocity_magnitude': 0.0,
-        'final_velocity_magnitude': 156.25,
-        'distance_traveled': 46406.25,
-        # ... scenario-specific results
-    },
-    'metadata': <TestMetadata>,
-    'ship': {  # From _extract_ship_validation_data()
-        'ship': <Ship object>,
-        'mass': 40.0,
-        'hp': 100,
-        'total_thrust': 500.0,
-        'max_speed': 312.5,
-        'acceleration_rate': 781.25,
-        'turn_speed': 0.0,
-    },
-    'attacker': { ... },  # For weapon tests
-}
-```
-
-### Path Naming Convention
-
-- **Tuples** (coordinates): `results.initial_position`, `results.final_velocity`
-- **Scalars** (magnitudes): `results.initial_velocity_magnitude`, `results.final_velocity_magnitude`
-- **Ship attributes**: `ship.mass`, `ship.total_thrust`, `ship.max_speed`
+`validate()` returns `List[Check]`. The runner wraps these in a `ValidationReport`:
+- `report.passed` — True only if ALL checks pass
+- `report.failed_phase` — First phase with failures (helps diagnose root cause)
+- `report.summary()` — Phase-by-phase breakdown
 
 ### TestRegistry (Discovery)
 
@@ -357,8 +231,7 @@ registry = TestRegistry()
 weapon_tests = registry.get_by_category("Weapons")
 beam_tests = registry.get_by_subcategory("Weapons", "Beam Accuracy")
 accuracy_tests = registry.get_by_tag("accuracy")
-test = registry.get_by_id("BEAM360-001")
-categories = registry.get_categories()
+test = registry.get_by_id("BEAMWEAPON-001")
 ```
 
 ---
@@ -369,7 +242,7 @@ categories = registry.get_categories()
 
 **1. Identify the ability under test.** One test = one behavior.
 
-**2. Check the suite document** (`simulation_tests/suites/{AbilityName}.md`) to see what is already covered and what behavior to validate next.
+**2. Check the coverage plan** (`simulation_tests/ABILITY_TEST_COVERAGE_PLAN.md`) to see what is already covered.
 
 **3. Design the simplest possible scenario:**
 - Use the smallest hull that meets requirements (see Standard Hulls below)
@@ -396,11 +269,9 @@ max_speed:
   ```
   Use 2x safety buffer on the calculated minimum.
 
-**7. Define validation rules** covering both formula correctness and outcome correctness.
+**7. Implement `validate(engine) -> List[Check]`** with data, precondition, and outcome checks.
 
-**8. Store results BEFORE calling `super().validate()`** (see Troubleshooting, Issue 3).
-
-**9. Run the test** via `python -m simulation_tests.run_tests <TEST_ID>` (scenario files in `simulation_tests/scenarios/` are auto-discovered).
+**8. Run the test** via `python -m simulation_tests.run_tests <TEST_ID>`.
 
 ### Component Mass Convention
 
@@ -445,26 +316,22 @@ Use `test_` prefix with literal descriptions:
 Position ships at a specific distance and measure accuracy or damage.
 
 ```python
-class BeamRangeTest(TestScenario):
+from simulation_tests.scenarios.validation import check_exact, check_tost, check_true
+
+class BeamRangeTest(StaticTargetScenario):
+    attacker_ship = "Test_Attacker_Beam360_Low.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 400
+
     metadata = TestMetadata(test_id="BEAM-RANGE-001", name="Beam accuracy at 400px", ...)
 
-    def setup(self, battle_engine):
-        attacker = self._load_ship('Test_Attacker_Beam360_Low.json')
-        target = self._load_ship('Test_Target_Stationary.json')
-        attacker.position = pygame.math.Vector2(0, 0)
-        target.position = pygame.math.Vector2(400, 0)
-        # AI strategies handle firing and movement
-        attacker.ai_strategy = 'test_stationary_fire'
-        target.ai_strategy = 'test_do_nothing'
-        self.initial_target_hp = target.hp
-        battle_engine.start([attacker], [target], seed=self.metadata.seed)
-        self.attacker = attacker
-        self.target = target
-
-    def validate(self, battle_engine):
-        damage = self.initial_target_hp - self.target.hp
-        self.results['damage_dealt'] = damage
-        return damage > 0
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        checks.append(check_true(
+            "Damage dealt", self.damage_dealt > 0,
+            detail=f"damage={self.damage_dealt}", phase="outcome"
+        ))
+        return checks
 ```
 
 **Note:** Test scenarios assign AI strategies (`test_stationary_fire`, `test_do_nothing`,
@@ -474,74 +341,25 @@ The AI controller handles firing and movement commands.
 
 ### Pattern 2: Resource Consumption Tests
 
-Track energy, fuel, or ammo usage over time.
+Track energy, fuel, or ammo usage over time using `ResourceScenario`.
 
 ```python
-class EnergyConsumptionTest(TestScenario):
-    metadata = TestMetadata(test_id="ENERGY-001", name="Beam weapon energy consumption", ...)
+class EnergyConsumptionTest(ResourceScenario):
+    ship_file = "Test_Ship_WithEnergy.json"
+    resource_type = "energy"
 
-    def setup(self, battle_engine):
-        self.attacker = self._load_ship('Test_Attacker.json')
-        self.initial_energy = self.attacker.current_energy
-        # ... position ships, start engine
+    metadata = TestMetadata(test_id="RESOURCE-001", ...)
 
-    def validate(self, battle_engine):
-        energy_used = self.initial_energy - self.attacker.current_energy
-        shots_fired = self.results['shots_fired']
-        expected_energy = shots_fired * 10  # 10 energy per shot
-        return abs(energy_used - expected_energy) < (expected_energy * 0.05)
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        checks.append(check_approx(
+            "Energy consumed", expected_consumption, self.value_consumed,
+            tolerance=0.05, phase="outcome"
+        ))
+        return checks
 ```
 
-### Pattern 3: Timing Tests
-
-Track when events occur to validate cooldowns, charge-up times, etc.
-
-```python
-class WeaponCooldownTest(TestScenario):
-    metadata = TestMetadata(test_id="COOLDOWN-001", name="Weapon cooldown timing", ...)
-
-    def setup(self, battle_engine):
-        self.attacker = self._load_ship('Test_Attacker.json')
-        self.shot_ticks = []
-
-    def update(self, battle_engine):
-        weapon = self.attacker.get_component_by_id('Test_Weapon')
-        if weapon.just_fired:
-            self.shot_ticks.append(battle_engine.tick_counter)
-
-    def validate(self, battle_engine):
-        if len(self.shot_ticks) < 2:
-            return False
-        intervals = [self.shot_ticks[i+1] - self.shot_ticks[i]
-                     for i in range(len(self.shot_ticks) - 1)]
-        expected_cooldown = 60  # ticks
-        return all(abs(iv - expected_cooldown) <= 1 for iv in intervals)
-```
-
-### Pattern 4: Multi-Ship Tests
-
-Teams of ships with formation or combined tactics.
-
-```python
-class TeamBattleTest(TestScenario):
-    metadata = TestMetadata(test_id="TEAM-001", name="2v2 team battle", ...)
-
-    def setup(self, battle_engine):
-        a1 = self._load_ship('Team0_Ship1.json')
-        a2 = self._load_ship('Team0_Ship2.json')
-        t1 = self._load_ship('Team1_Ship1.json')
-        t2 = self._load_ship('Team1_Ship2.json')
-        a1.position = pygame.math.Vector2(0, 0)
-        a2.position = pygame.math.Vector2(0, 100)
-        t1.position = pygame.math.Vector2(500, 0)
-        t2.position = pygame.math.Vector2(500, 100)
-        battle_engine.start([a1, a2], [t1, t2], seed=self.metadata.seed)
-
-    def validate(self, battle_engine):
-        return all(ship.is_alive for ship in battle_engine.teams[0])
-```
-
-### Pattern 5: A/B Comparison Tests
+### Pattern 3: A/B Comparison Tests
 
 Compare measured outcomes between a baseline and a variant using `ComparisonScenario`.
 The template runs two separate battles — one internally during `setup()`, one through
@@ -580,26 +398,25 @@ class SensorIncreasesAccuracyScenario(ComparisonScenario):
 - Combat Lab shows three buttons: "Visual Run" (variant), "Headless Run" (both), "Visual Baseline" (baseline)
 - Results dict stores both `baseline_*` and `variant_*` metrics
 
-### Pattern 6: Negative Tests
+### Pattern 4: Negative Tests
 
 Verify that something does NOT happen.
 
 ```python
-class NoEngineStaysStationary(TestScenario):
+class NoEngineStaysStationary(PropulsionScenario):
+    ship_file = "Test_No_Engine.json"
+
     metadata = TestMetadata(test_id="PROP-001b", name="Ship without engine stays stationary", ...)
 
-    def setup(self, battle_engine):
-        self.ship = self._load_ship('Test_No_Engine.json')
-        self.start_pos = pygame.math.Vector2(self.ship.position)
-        # ...
-
-    def validate(self, battle_engine):
-        distance = self.ship.position.distance_to(self.start_pos)
-        self.results['distance_traveled'] = distance
-        return distance == 0.0
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+        checks.append(check_exact(
+            "No movement", 0.0, self.distance_traveled, phase="outcome"
+        ))
+        return checks
 ```
 
-### Pattern 7: Resource Dependency Tests
+### Pattern 5: Resource Dependency Tests
 
 Prove that components with `ResourceConsumption` stop functioning when resources
 deplete.  Test three levels: full resource (control), 50% resource, and no resource.
@@ -608,11 +425,8 @@ deplete.  Test three levels: full resource (control), 50% resource, and no resou
 class BeamStopsWithoutEnergy(ComparisonScenario):
     metadata = TestMetadata(test_id="BEAMWEAPON-RES-001", ...)
 
-    # Baseline: weapon with abundant energy
     baseline_attacker_ship = "Test_Attacker_BeamGuaranteed_HighEnergy.json"
     baseline_target_ship = "Test_Target_Stationary.json"
-
-    # Variant: weapon with NO energy source
     variant_attacker_ship = "Test_Attacker_BeamGuaranteed_NoEnergy.json"
     variant_target_ship = "Test_Target_Stationary.json"
     distance = 100
@@ -635,256 +449,37 @@ class BeamStopsWithoutEnergy(ComparisonScenario):
 
 **Generic resource support:** The resource system is fully data-driven. Any resource
 type defined in `data/resources.json` works — including planetary resources like
-`"metals"`, `"organics"`, etc. The stats aggregation discovers resource types
-dynamically from component abilities. Tests validate this with `BEAMWEAPON-RES-METALS-*`,
+`"metals"`, `"organics"`, etc. Tests validate this with `BEAMWEAPON-RES-METALS-*`,
 `PROJECTILE-RES-METALS-*`, and `SHIELD-PROJ-METALS-*` scenarios.
 
 ---
 
-## 6. Migration Guide
+## 6. Scenario Templates
 
-### What Has Been Migrated
+Five templates extend `TestScenario` and provide automatic setup/collect_results:
 
-The following scenario categories have been implemented using the TestScenario pattern:
+| Template | Purpose | Key Config |
+|----------|---------|------------|
+| `StaticTargetScenario` | One attacker, one stationary target | `attacker_ship`, `target_ship`, `distance` |
+| `DuelScenario` | Two ships engaging | `ship1_file`, `ship2_file`, `distance` |
+| `PropulsionScenario` | Single ship movement/physics | `ship_file`, `thrust_forward`, `turn_left/right` |
+| `ResourceScenario` | Resource consumption/regeneration | `ship_file`, `resource_type` |
+| `ComparisonScenario` | A/B comparison (baseline vs variant) | 4 ship files + `distance` |
 
-| Category | Scenario File | Pytest File | Status |
-|----------|--------------|-------------|--------|
-| Beam Weapons | `beam_scenarios.py` | `test_beam_weapons.py` | Migrated |
-| Projectile Weapons | `projectile_scenarios.py` | `test_projectile_weapons.py` | Migrated |
-| Seeker Weapons | `seeker_scenarios.py` | `test_seeker_weapons.py` | Migrated |
-| Propulsion (Engine) | `propulsion_scenarios.py` | `test_propulsion.py`, `test_engine_physics.py` | Migrated |
-| Defense (Shields/Armor) | *(split into ability-specific files)* | `test_defense.py` | Migrated → split |
-| Modifiers | `modifier_scenarios.py` | `test_modifiers.py` | Migrated |
-| Resource Consumption | `resource_scenarios.py` | `test_resource_consumption.py` | Migrated |
-
-### How to Migrate an Old-Style Test
-
-**Before** (old pytest style):
-
-```python
-@pytest.mark.simulation
-class TestBeamWeapons:
-    def test_low_acc_point_blank(self):
-        attacker = self._load_ship('Test_Attacker_Beam360_Low.json')
-        target = self._load_ship('Test_Target_Stationary.json')
-        result = self._run_battle_and_measure_accuracy(attacker, target, distance=50, ticks=500)
-        assert result['damage_dealt'] > 0
-```
-
-**After** (TestScenario pattern):
-
-1. **Create scenario** in `simulation_tests/scenarios/<category>_scenarios.py`:
-
-```python
-class BEAM360_001_LowAccPointBlank(TestScenario):
-    metadata = TestMetadata(
-        test_id="BEAM360-001", category="Weapons", subcategory="Beam Accuracy",
-        name="Low accuracy beam at point-blank", max_ticks=500, seed=42,
-        summary="Validates low accuracy beam (0.5) hits at 50px range",
-        conditions=["Distance: 50px", "Stationary target"],
-        pass_criteria="Damage dealt > 0",
-        validation_rules=[...]
-    )
-
-    def setup(self, battle_engine):
-        attacker = self._load_ship('Test_Attacker_Beam360_Low.json')
-        target = self._load_ship('Test_Target_Stationary.json')
-        attacker.position = pygame.math.Vector2(0, 0)
-        target.position = pygame.math.Vector2(50, 0)
-        attacker.ai_strategy = 'test_stationary_fire'
-        target.ai_strategy = 'test_do_nothing'
-        self.initial_target_hp = target.hp
-        battle_engine.start([attacker], [target], seed=self.metadata.seed)
-        self.attacker = attacker
-        self.target = target
-
-    def validate(self, battle_engine):
-        damage = self.initial_target_hp - self.target.hp
-        self.results['damage_dealt'] = damage
-        return damage > 0
-```
-
-2. **Run the test** via the CLI runner (auto-discovers scenario files):
-
-```bash
-# Run the specific test by ID
-python -m simulation_tests.run_tests BEAM360-001
-
-# Run all tests in the category
-python -m simulation_tests.run_tests BEAM360
-
-# Run all simulation tests
-python -m simulation_tests.run_tests
-```
-
-3. **Delete the old test** after confirming the new one passes.
-
-### Benefits of Migration
-
-- **Dual execution**: Same test runs in pytest and Combat Lab
-- **Rich metadata**: Self-documenting, searchable, displayable in UI
-- **Auto-discovery**: TestRegistry finds all scenarios automatically
-- **Reproducibility**: Fixed seeds, deterministic validation
-- **Simplified data loading**: `self._load_ship()` handles paths
+All templates auto-collect weapon stats via `_collect_weapon_stats()` and provide
+`_template_preconditions()` for standard data/precondition checks.
 
 ---
 
-## 7. Troubleshooting
+## 7. Ability Test Categories
 
-### Issue: Validation shows "Expected: None, Actual: None"
+### One Category Per Ability
 
-**Root Cause:** The validation rule's `path` does not resolve to the correct attribute.
-
-**Diagnosis steps:**
-1. Check if the path exists in the context dict.
-2. Check if `_extract_ship_validation_data()` in `simulation_tests/scenarios/base.py` includes the needed attribute.
-3. Check if the value is stored in `self.results` BEFORE `run_validation()` is called.
-4. Check if you are using a tuple path instead of a magnitude path.
-
-**Fix:** Update `_extract_ship_validation_data()` to include missing attributes:
-```python
-data = {
-    'mass': ship.mass,
-    'total_thrust': getattr(ship, 'total_thrust', 0.0),
-    'max_speed': getattr(ship, 'max_speed', 0.0),
-    'acceleration_rate': getattr(ship, 'acceleration_rate', 0.0),
-    'turn_speed': getattr(ship, 'turn_speed', 0.0),
-}
-```
-
-### Issue: "bad operand type for abs(): 'tuple'" error
-
-**Root Cause:** Validation path points to a tuple `(x, y)` but the rule expects a float.
-
-**Fix:** Use `_magnitude` suffix for scalar values:
-```python
-# WRONG - this is a tuple (x, y)
-path='results.initial_velocity'
-
-# CORRECT - this is a float
-path='results.initial_velocity_magnitude'
-```
-
-### Issue: Validation runs before results are stored
-
-**Root Cause:** The parent template's `validate()` calls `run_validation()` BEFORE the subclass stores its results.
-
-**Fix:** Store results BEFORE calling `super().validate()`:
-```python
-def validate(self, battle_engine):
-    # 1. Calculate values
-    actual_value = self.ship.some_attribute
-
-    # 2. Store ALL results FIRST
-    self.results['my_expected'] = self.expected_value
-    self.results['my_actual'] = actual_value
-
-    # 3. THEN call parent (which runs validation)
-    try:
-        super().validate(battle_engine)
-    except NotImplementedError:
-        pass
-
-    # 4. Return pass/fail
-    return actual_value == self.expected_value
-```
-
-### Issue: Ship JSON expected_stats mismatch warnings
-
-**Root Cause:** The `expected_stats` values in ship JSON were calculated incorrectly.
-
-**Fix:**
-1. Recalculate using physics formulas with K constants from `physics_constants.py`.
-2. Update the `expected_stats` section with exact (not rounded) values.
-3. Update formula descriptions in `propulsion_details.formulas`.
-
-### Issue: ExactMatchRule fails on float values
-
-**Root Cause:** `ExactMatchRule` uses `==`. While Python `40 == 40.0` is True, floating-point edge cases can fail.
-
-**Fix:** Use `DeterministicMatchRule` for any floating-point values, even integers stored as floats.
-
-### Issue: Ship file not found
-
-**Fix:** Ensure ship files are in `simulation_tests/data/ships/`. Use `self._load_ship('filename.json')` which resolves the path automatically.
-
-### Issue: Test not discovered by TestRegistry
-
-**Check:**
-1. File is in `simulation_tests/scenarios/`
-2. Class extends `TestScenario`
-3. Class has a `metadata` attribute
-4. File name does not start with underscore
-
-### Issue: Test fails in Combat Lab but passes in pytest
-
-This should not happen if tests are written correctly. Check:
-1. Using fixed seed?
-2. Test depends on rendering or timing?
-3. Calling `update()` properly each tick?
-
-### Historical Fixes Log
-
-| Test | Issue | Fix | Date |
-|------|-------|-----|------|
-| PROP-001 | `ship.total_thrust` path returned None | Added propulsion attrs to `_extract_ship_validation_data()` | 2026-01-17 |
-| PROP-001 | `results.initial_velocity` was tuple | Changed to `results.initial_velocity_magnitude` | 2026-01-17 |
-| PROP-003 | Results stored after validation ran | Moved results storage before `super().validate()` | 2026-01-17 |
-| PROP-003 | Ship JSON turn_speed 826.45 vs correct 414.09 | Recalculated with correct K constants | 2026-01-17 |
-| PROP-001b | `results.final_velocity` was tuple | Changed to `results.final_velocity_magnitude` | 2026-01-17 |
-| PROP-003b | `results.final_velocity` was tuple | Changed to `results.final_velocity_magnitude` | 2026-01-17 |
-
----
-
-## 8. Best Practices
-
-### Test Design
-- **One behavior per test.** Each test validates a single specific behavior.
-- **Simplest possible scenario.** Minimal ships, minimal components, minimal ticks.
-- **Zero-mass components.** Only hulls and mass simulators contribute mass.
-- **Fixed seeds.** Every test specifies a seed for reproducibility.
-- **Deterministic first.** Prefer deterministic assertions; use statistical tests only for RNG outcomes.
-
-### Statistical Tests
-- Default: p < 0.001 if achievable within ~1000 ticks.
-- Fallback: p < 0.05 only when p < 0.001 would require excessive tick counts.
-- Always use **two-layer validation**: formula correctness (DeterministicMatchRule) AND outcome correctness (StatisticalTestRule).
-- For High-Tick variants: 100k ticks, epsilon = 0.01.
-
-### Validation Rules
-- Use `ExactMatchRule` for integers and strings.
-- Use `DeterministicMatchRule` for deterministic floats (tolerance 1e-9).
-- Use `RangeRule` for bounded values.
-- Use `StatisticalTestRule` for RNG-based outcomes.
-- Always show formulas and substitutions in descriptions.
-
-### Results & Reporting
-- Store all measured values in `self.results` for detailed reporting.
-- Always include seed and tick count in results.
-- Identify a primary outcome value for summary display (e.g., `final_velocity` for acceleration tests, `damage_dealt` for weapon tests).
-
-### Suite Documents
-- Each ability has a suite doc at `simulation_tests/suites/{AbilityName}.md`.
-- Suite docs list expected behaviors, unexpected behaviors, and a coverage matrix.
-- Update the coverage matrix after implementing each new test.
-
-### Data Isolation
-- Tests use ONLY `simulation_tests/data/` files.
-- Never modify production data in `data/`.
-- Validate data at load time: Assumed vs Live values produce warnings on mismatch.
-
----
-
-## 9. One Category Per Ability (Active Direction)
-
-The test suite is moving toward **one dedicated test category per combat ability**.
-Each category is a scenario file named after the ability (e.g., `tohit_attack_scenarios.py`
-for `ToHitAttackModifier`). Categories use `ComparisonScenario` to run A/B battles
-and compare measured outcomes.
+The test suite uses **one dedicated test category per combat ability**. Each category
+is a scenario file named after the ability (e.g., `tohit_attack_scenarios.py`). Tests
+use `ComparisonScenario` for measured A/B comparisons.
 
 ### Standard Test Set Per Ability
-
-Every ability category should include at minimum:
 
 | Test | What it proves |
 |------|---------------|
@@ -893,39 +488,48 @@ Every ability category should include at minimum:
 | Different-group stacking | Inter-group SUM — diverse components combine additively |
 | Negative value | The ability works bidirectionally (penalty/debuff) |
 
-Additional tests capture ability-specific edge cases (range interactions,
-threshold behaviors, resource coupling, etc.).
-
 ### Completed Ability Categories
 
-| Ability | File | Tests |
-|---------|------|-------|
-| `ToHitAttackModifier` | `tohit_attack_scenarios.py` | TOHIT-ATK-001 to 004 (basic, same-group, diff-group, negative) |
-| `ToHitDefenseModifier` | `tohit_defense_scenarios.py` | TOHIT-DEF-001 to 004 (basic, same-group, diff-group, negative) |
-| `ShieldProjection` | `shield_projection_scenarios.py` | SHIELD-PROJ-001 to 007, 005B, METALS-001/002 (absorption, overflow, stacking, single-hit, energy/metals resource) |
-| `ShieldRegeneration` | `shield_regen_scenarios.py` | SHIELD-REGEN-001 to 006 (basic, regen > damage, stacking, energy resource) |
-| `ArmorLayer` | `armor_layer_scenarios.py` | ARMOR-LAYER-001 to 003 (absorption, overflow to CORE, stacking) |
-| `EmissiveArmor` | `emissive_armor_scenarios.py` | EMISSIVE-001 to 005 (blocks low, reduces high, same-group, diff-group, negative) |
+| Ability | File | Test IDs |
+|---------|------|----------|
+| `ToHitAttackModifier` | `tohit_attack_scenarios.py` | TOHIT-ATK-001 to 005 |
+| `ToHitAttackModifier` (fleet) | `tohit_attack_fleet_scenarios.py` | TOHIT-ATK-FLEET-001 to 004 |
+| `ToHitDefenseModifier` | `tohit_defense_scenarios.py` | TOHIT-DEF-001 to 004 |
+| `ShieldProjection` | `shield_projection_scenarios.py` | SHIELD-PROJ-001 to 007, METALS-001/002 |
+| `ShieldRegeneration` | `shield_regen_scenarios.py` | SHIELD-REGEN-001 to 007 |
+| `ArmorLayer` | `armor_layer_scenarios.py` | ARMOR-LAYER-001 to 003 |
+| `EmissiveArmor` | `emissive_armor_scenarios.py` | EMISSIVE-001 to 007 |
+| `CommandAndControl` | `cnc_scenarios.py` | CNC-001 to 006 |
+| `ShieldRegeneratingArmor` | `sra_scenarios.py` | SRA-001 to 005 |
+| `DamagePipeline` (integration) | `damage_pipeline_scenarios.py` | PIPELINE-001 to 005, 007 |
 
-Weapon-level resource dependency tests also exist within their weapon files:
-- `beam_scenarios.py`: BEAMWEAPON-RES-001 to 003 (energy), BEAMWEAPON-RES-METALS-001/002
-- `projectile_scenarios.py`: PROJECTILE-RES-001 to 003 (ammo), PROJECTILE-RES-METALS-001/002
+### Weapon & System Categories
+
+| Category | File | Test ID Prefix |
+|----------|------|---------------|
+| Beam Weapons | `beam_scenarios.py` | BEAMWEAPON-* |
+| Projectile Weapons | `projectile_scenarios.py` | PROJECTILE-* |
+| Seeker Weapons | `seeker_scenarios.py` | SEEKER-* |
+| Stat Modifiers | `modifier_scenarios.py` | MOD-* |
+| Propulsion | `propulsion_scenarios.py` | PROP-* |
+| Resources | `resource_scenarios.py` | RESOURCE-* |
+
+Weapon-level resource dependency tests exist within weapon files:
+- `beam_scenarios.py`: BEAMWEAPON-RES-* (energy), BEAMWEAPON-RES-METALS-*
+- `projectile_scenarios.py`: PROJECTILE-RES-* (ammo), PROJECTILE-RES-METALS-*
 
 ### Pending Ability Categories
 
 | Ability | Priority | Notes |
 |---------|----------|-------|
-| `ShieldRegeneration` | **Complete** | `shield_regen_scenarios.py` (SHIELD-REGEN-001 to 006) |
-| `EmissiveArmor` | **Complete** | `emissive_armor_scenarios.py` (EMISSIVE-001 to 005) |
-| `ShieldRegeneratingArmor` | Medium | Absorption + shield recharge interaction |
-| `PointDefense` | High | Flesh out SEEKER-PD-001/002/003 placeholders |
+| `PointDefense` | High | Expand SEEKER-PD-001/002 coverage |
 | `VehicleLaunch` | Low | Carrier/hangar launch cycle and capacity |
 
 See `simulation_tests/ABILITY_TEST_COVERAGE_PLAN.md` for the full inventory.
 
 ---
 
-## 10. Stacking Rules Reference
+## 8. Stacking Rules Reference
 
 All numeric abilities use the same two-phase aggregation:
 
@@ -949,7 +553,7 @@ Components without a `stack_group` are each treated as their own group (all stac
 
 ---
 
-## 11. Engine Design Decisions (for test authors)
+## 9. Engine Design Decisions (for test authors)
 
 These engine behaviors affect how tests should be designed:
 
@@ -984,37 +588,71 @@ These engine behaviors affect how tests should be designed:
 
 ---
 
-## 12. CLI Test Runner
+## 10. Best Practices
 
-### Command Line Usage
+### Test Design
+- **One behavior per test.** Each test validates a single specific behavior.
+- **Simplest possible scenario.** Minimal ships, minimal components, minimal ticks.
+- **Zero-mass components.** Only hulls and mass simulators contribute mass.
+- **Fixed seeds.** Every test specifies a seed for reproducibility.
+- **Deterministic first.** Prefer deterministic assertions; use statistical tests only for RNG outcomes.
 
-```bash
-python -m simulation_tests.run_tests                # Run all tests
-python -m simulation_tests.run_tests BEAM           # Filter by ID prefix
-python -m simulation_tests.run_tests PROP-001       # Run specific test
-python -m simulation_tests.run_tests --list         # List all tests
-python -m simulation_tests.run_tests --fast         # Skip high-tick (-HT) tests
-python -m simulation_tests.run_tests --no-history   # Don't record to test_history.json
-```
+### Statistical Tests
+- Default: p < 0.001 if achievable within ~1000 ticks.
+- Fallback: p < 0.05 only when p < 0.001 would require excessive tick counts.
+- For High-Tick variants: 100k ticks, epsilon = 0.01.
 
-### Key Features
+### Validation Checks
+- Use `check_exact` for integers, strings, and exact values.
+- Use `check_approx` for deterministic floats (tolerance 1e-9 or wider).
+- Use `check_tost` for RNG-based outcomes (statistical equivalence).
+- Use `check_true` for boolean conditions with descriptive detail.
+- **Verify ALL assumptions in preconditions** — a pass on a broken test setup is worse than a failure.
 
-- **Auto-discovery**: Globs `scenarios/*_scenarios.py` — new files found automatically
-- **History recording**: CLI runs write to `test_history.json` by default (same file
-  as Combat Lab UI). Pass `--no-history` to skip.
-- **`--fast` mode**: Filters out `-HT` (high-tick 100k) tests for quick validation
+### Results & Reporting
+- Store all measured values in `self.results` for detailed reporting.
+- Always include seed and tick count in results.
+- Identify a primary outcome value for summary display.
 
-### Combat Lab Integration
-
-The Combat Lab UI supports ability-specific test categories:
-- TestRegistry auto-discovers scenarios and groups by category
-- ComparisonScenario tests show three buttons: Visual Run, Headless Run, Visual Baseline
-- Selecting a test auto-selects the most recent run and shows detailed results
-- Test run history persists across sessions (shared with CLI via test_history.json)
+### Data Isolation
+- Tests use ONLY `simulation_tests/data/` files.
+- Never modify production data in `data/`.
+- Validate data at load time: Assumed vs Live values produce warnings on mismatch.
 
 ---
 
-## 13. Future Work
+## 11. Troubleshooting
+
+### Issue: Ship JSON expected_stats mismatch warnings
+
+**Root Cause:** The `expected_stats` values in ship JSON were calculated incorrectly.
+
+**Fix:**
+1. Recalculate using physics formulas with K constants from `physics_constants.py`.
+2. Update the `expected_stats` section with exact (not rounded) values.
+
+### Issue: Ship file not found
+
+**Fix:** Ensure ship files are in `simulation_tests/data/ships/`. Use `self._load_ship('filename.json')` which resolves the path automatically.
+
+### Issue: Test not discovered by runner
+
+**Check:**
+1. File is in `simulation_tests/scenarios/`
+2. File name ends with `_scenarios.py`
+3. Class extends `TestScenario` (or a template)
+4. Class has a `metadata` attribute (not None)
+
+### Issue: Test fails in Combat Lab but passes in CLI
+
+This should not happen if tests are written correctly. Check:
+1. Using fixed seed?
+2. Test depends on rendering or timing?
+3. Calling `update()` properly each tick?
+
+---
+
+## 12. Future Work
 
 ### Pending Ability Categories
 

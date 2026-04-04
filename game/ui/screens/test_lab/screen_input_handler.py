@@ -36,7 +36,6 @@ class TestLabInputHandler:
                 - 'on_run': Run selected test visually
                 - 'on_run_headless': Run selected test headless
                 - 'on_run_all': Run all filtered tests
-                - 'on_update_expected': Handle update expected values
                 - 'create_ship_panels': Create ship panels for test
                 - 'create_results_panel': Create results panel for test
                 - 'prompt_custom_seed': Prompt for custom seed
@@ -375,13 +374,6 @@ class TestLabInputHandler:
         if run_baseline_rect and run_baseline_rect.collidepoint(mx, my):
             self.callbacks['on_run_visual_baseline']()
             return True
-
-        # Check "Update Expected Values" button click
-        if self.viewmodel.update_expected_button_visible:
-            update_rect = self.viewmodel.update_expected_button_rect
-            if update_rect and update_rect.collidepoint(mx, my):
-                self.callbacks['on_update_expected']()
-                return True
 
         return False
 

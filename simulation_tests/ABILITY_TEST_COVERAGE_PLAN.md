@@ -1,7 +1,7 @@
 > **Status: In Progress**
 > Scenario classes live in `simulation_tests/scenarios/*_scenarios.py` and are
 > run via `python -m simulation_tests.run_tests`.
-> Current baseline: **118 passed, 1 failed (RESOURCE-002 game bug), 0 skipped (119 total)**.
+> Use `--list` to see the current test count. Use `--fast` for quick validation.
 > Note: `defense_scenarios.py` was deleted — its 8 tests were redundant with
 > dedicated ability files or replaced by the EmissiveArmor category.
 
@@ -75,9 +75,9 @@ ability under test.
 ### Category B: Weapons (3 types)
 | Ability | Test File | Status | Tests |
 |---------|-----------|--------|-------|
-| `BeamWeaponAbility` | `beam_scenarios.py` | Partial (23 tests: 11 base + 7 high-tick + 5 resource) | BEAMWEAPON-*, BEAMWEAPON-RES-* |
-| `ProjectileWeaponAbility` | `projectile_scenarios.py` | Partial (14 tests: 6 base + 3 damage + 5 resource) | PROJECTILE-*, PROJECTILE-RES-* |
-| `SeekerWeaponAbility` | `seeker_scenarios.py` | **Complete** (11 tests: speed, endurance, turn×2, damage, HP, resource, PDC) | SEEKER-* |
+| `BeamWeaponAbility` | `beam_scenarios.py` | Partial | BEAMWEAPON-*, BEAMWEAPON-RES-* |
+| `ProjectileWeaponAbility` | `projectile_scenarios.py` | Partial | PROJECTILE-*, PROJECTILE-RES-* |
+| `SeekerWeaponAbility` | `seeker_scenarios.py` | **Complete** | SEEKER-* |
 
 ### Category C: Propulsion (2 abilities)
 | Ability | What to Test | Priority |
@@ -88,16 +88,17 @@ ability under test.
 ### Category D: Defense Systems (4 abilities)
 | Ability | Test File | Status | Tests |
 |---------|-----------|--------|-------|
-| `ShieldProjection` | `shield_projection_scenarios.py` | **Complete** (10 tests) | SHIELD-PROJ-001 to 007, 005B, METALS-001/002 |
-| `ShieldRegeneration` | `shield_regen_scenarios.py` | **Complete** (7 tests) | SHIELD-REGEN-001 to 007 |
-| `ToHitDefenseModifier` | `tohit_defense_scenarios.py` | **Complete** (4 tests) | TOHIT-DEF-001/002/003/004 |
-| `ArmorLayer` | `armor_layer_scenarios.py` | **Complete** (3 tests) | ARMOR-LAYER-001 to 003 |
-| `EmissiveArmor` | `emissive_armor_scenarios.py` | **Complete** (7 tests) | EMISSIVE-001 to 007 |
+| `ShieldProjection` | `shield_projection_scenarios.py` | **Complete** | SHIELD-PROJ-001 to 007, METALS-001/002 |
+| `ShieldRegeneration` | `shield_regen_scenarios.py` | **Complete** | SHIELD-REGEN-001 to 007 |
+| `ToHitDefenseModifier` | `tohit_defense_scenarios.py` | **Complete** | TOHIT-DEF-001 to 004 |
+| `ArmorLayer` | `armor_layer_scenarios.py` | **Complete** | ARMOR-LAYER-001 to 003 |
+| `EmissiveArmor` | `emissive_armor_scenarios.py` | **Complete** | EMISSIVE-001 to 007 |
 
 ### Category E: Combat Modifiers (1 ability)
 | Ability | Test File | Status | Tests |
 |---------|-----------|--------|-------|
-| `ToHitAttackModifier` | `tohit_attack_scenarios.py` | **Complete** (5 tests) | TOHIT-ATK-001/002/003/004/005 |
+| `ToHitAttackModifier` | `tohit_attack_scenarios.py` | **Complete** | TOHIT-ATK-001 to 005 |
+| `ToHitAttackModifier` (fleet) | `tohit_attack_fleet_scenarios.py` | **Complete** | TOHIT-ATK-FLEET-001 to 004 |
 
 ### Category F: Carrier Operations (1 ability)
 | Ability | What to Test | Priority |
@@ -111,37 +112,36 @@ ability under test.
 | `LifeSupportCapacity` | Life support limit aggregation | LOW |
 | `CrewRequired` | Crew requirement aggregation | LOW |
 
-### Category H: Marker Abilities (6 abilities)
-| Ability | What to Test | Priority |
-|---------|--------------|----------|
-| `CommandAndControl` | Ship operational check | LOW |
-| `RequiresCommandAndControl` | Dependency validation | LOW |
-| `RequiresCombatMovement` | Dependency validation | LOW |
-| `StructuralIntegrity` | Hull marker presence | LOW |
-| `Armor` | Armor layer component marker | LOW |
+### Category H: Marker Abilities
+| Ability | Test File | Status | Tests |
+|---------|-----------|--------|-------|
+| `CommandAndControl` | `cnc_scenarios.py` | **Complete** | CNC-001 to 006 |
+| `RequiresCommandAndControl` | *(covered by CNC tests)* | **Complete** | *(see CNC-001 to 006)* |
+| `RequiresCombatMovement` | — | LOW | Dependency validation |
+| `StructuralIntegrity` | — | LOW | Hull marker presence |
+| `Armor` | — | LOW | Armor layer component marker |
 
 ---
 
 ## Execution Order
 
 ### Completed (weapon/system-level test files)
-1. **Phase 1** (Complete): Beam weapon tests — 23 scenarios in `beam_scenarios.py`
-2. **Phase 2** (Complete): Propulsion tests — 9 scenarios in `propulsion_scenarios.py`
+1. **Phase 1** (Complete): Beam weapon tests — `beam_scenarios.py`
+2. **Phase 2** (Complete): Propulsion tests — `propulsion_scenarios.py`
 3. **Phase 3** (Complete → Deleted): Shield/Armor/ECM/Sensor tests — `defense_scenarios.py` (redundant, replaced by ability-specific files)
-4. **Phase 4** (Complete): Stat modifier tests — 6 scenarios in `modifier_scenarios.py`
-5. **Phase 5** (Complete): Projectile weapon tests — 14 scenarios in `projectile_scenarios.py`
-6. **Phase 6** (Rewritten): Seeker weapon tests — 11 ComparisonScenario tests in `seeker_scenarios.py`
-7. **Phase 7** (Complete): Resource system tests — 9 scenarios in `resource_scenarios.py`
+4. **Phase 4** (Complete): Stat modifier tests — `modifier_scenarios.py`
+5. **Phase 5** (Complete): Projectile weapon tests — `projectile_scenarios.py`
+6. **Phase 6** (Rewritten): Seeker weapon tests — `seeker_scenarios.py`
+7. **Phase 7** (Complete): Resource system tests — `resource_scenarios.py`
 
 ### Completed (ability-specific categories using ComparisonScenario)
-8. **ToHitAttackModifier** (Complete): 5 scenarios in `tohit_attack_scenarios.py`
-9. **ToHitDefenseModifier** (Complete): 4 scenarios in `tohit_defense_scenarios.py`
-10. **ShieldProjection** (Complete): 10 scenarios in `shield_projection_scenarios.py`
-
-### Completed (ability-specific categories, continued)
-11. **ShieldRegeneration** (Complete): 7 scenarios in `shield_regen_scenarios.py`
-12. **ArmorLayer** (Complete): 3 scenarios in `armor_layer_scenarios.py`
-13. **EmissiveArmor** (Complete): 7 scenarios in `emissive_armor_scenarios.py`
+8. **ToHitAttackModifier** (Complete): `tohit_attack_scenarios.py`
+9. **ToHitAttackModifier fleet** (Complete): `tohit_attack_fleet_scenarios.py`
+10. **ToHitDefenseModifier** (Complete): `tohit_defense_scenarios.py`
+11. **ShieldProjection** (Complete): `shield_projection_scenarios.py`
+12. **ShieldRegeneration** (Complete): `shield_regen_scenarios.py`
+13. **ArmorLayer** (Complete): `armor_layer_scenarios.py`
+14. **EmissiveArmor** (Complete): `emissive_armor_scenarios.py`
 
 ### Cleanup
 - Deleted `defense_scenarios.py` — 8 tests removed (SHIELD-001/002/003, ECM-001, SENSOR-001/002, ARMOR-001/002)
@@ -151,14 +151,14 @@ ability under test.
   - SENSOR-001/002 redundant with TOHIT-ATK-001
   - ARMOR-001/002 replaced by EMISSIVE-001 to 005 (better tests with ComparisonScenario + stacking)
 
-14. **CommandAndControl** (Complete): 6 scenarios in `cnc_scenarios.py`
+15. **CommandAndControl** (Complete): `cnc_scenarios.py`
 
-15. **ShieldRegeneratingArmor** (Complete): 5 scenarios in `sra_scenarios.py`
+16. **ShieldRegeneratingArmor** (Complete): `sra_scenarios.py`
 
-16. **DamagePipeline** (Complete): 6 scenarios in `damage_pipeline_scenarios.py`
+17. **DamagePipeline** (Complete): `damage_pipeline_scenarios.py`
 
-### Pending (ability-specific categories)
-17. **VehicleLaunch**: Carrier/hangar tests
+### Pending
+18. **VehicleLaunch**: Carrier/hangar tests
 
 ---
 
