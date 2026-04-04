@@ -28,6 +28,10 @@ class UIStateService:
         self._seed_mode: str = "random"  # "random", "metadata", "custom"
         self._custom_seed: Optional[int] = None
 
+        # Group tree state (collapsible sidebar)
+        self._expanded_groups: set = set()
+        self._selected_group: Optional[str] = None
+
         # Hover state
         self._category_hover: Optional[str] = None
         self._test_hover: Optional[str] = None
@@ -51,8 +55,38 @@ class UIStateService:
         """
         if self._selected_category != category:
             self._selected_category = category
-            self._selected_test_id = None  # Clear test selection when category changes
+            self._selected_group = None  # Clear group selection
+            self._selected_test_id = None
+            # Auto-expand the group containing this category
+            if category:
+                from test_framework.registry import get_group_for_category
+                group = get_group_for_category(category)
+                self._expanded_groups.add(group)
             self._notify_observers()
+
+    def select_group(self, group: Optional[str]):
+        """Select a group for filtering (shows all tests in group)."""
+        if self._selected_group != group:
+            self._selected_group = group
+            self._selected_category = None  # Clear category selection
+            self._selected_test_id = None
+            self._notify_observers()
+
+    def get_selected_group(self) -> Optional[str]:
+        """Get currently selected group."""
+        return self._selected_group
+
+    def toggle_group(self, group: str):
+        """Toggle expand/collapse of a group in the sidebar."""
+        if group in self._expanded_groups:
+            self._expanded_groups.discard(group)
+        else:
+            self._expanded_groups.add(group)
+        self._notify_observers()
+
+    def is_group_expanded(self, group: str) -> bool:
+        """Check if a group is expanded in the sidebar."""
+        return group in self._expanded_groups
 
     def select_test(self, test_id: Optional[str]):
         """
@@ -103,6 +137,7 @@ class UIStateService:
         """Reset all selection state."""
         self._selected_category = None
         self._selected_test_id = None
+        self._selected_group = None
         self._notify_observers()
 
     def get_selected_category(self) -> Optional[str]:

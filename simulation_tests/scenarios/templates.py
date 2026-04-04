@@ -1055,6 +1055,8 @@ class ComparisonScenario(TestScenario):
         baseline_attacker = self.attacker
         baseline_target = self.target
         baseline_initial_hp = self.initial_hp
+        self._baseline_attacker = baseline_attacker
+        self._baseline_target = baseline_target
 
         self.configure_baseline(baseline_engine)
 

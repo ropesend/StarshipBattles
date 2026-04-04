@@ -185,15 +185,19 @@ class TestLabInputHandler:
         category_x = 20
         category_y = self.header_height + 20
         all_tests_y = category_y + 40
-        all_tests_rect = pygame.Rect(category_x, all_tests_y, 200, 40)
+        all_tests_rect = pygame.Rect(category_x, all_tests_y, 200, 36)
         if all_tests_rect.collidepoint(mx, my):
             self.controller.ui_state.set_category_hover("ALL")
             return
 
-        # Check category hover (starts after "All Tests" button)
-        category_start_y = all_tests_y + 50
-        for i, category in enumerate(categories):
-            rect = pygame.Rect(category_x, category_start_y + i * 50, 200, 40)
+        # Check group header hover
+        for group, rect in self.viewmodel.group_header_rects.items():
+            if rect.collidepoint(mx, my):
+                self.controller.ui_state.set_category_hover(f"GROUP:{group}")
+                return
+
+        # Check category hover within expanded groups
+        for category, rect in self.viewmodel.category_rects.items():
             if rect.collidepoint(mx, my):
                 self.controller.ui_state.set_category_hover(category)
                 return
@@ -241,7 +245,10 @@ class TestLabInputHandler:
 
     def _check_category_clicks(self, mx: int, my: int, categories: list) -> bool:
         """
-        Check clicks on the 'All Tests' button and category list.
+        Check clicks on the 'All Tests' button, group headers, and category tree.
+
+        Uses rects recorded by the renderer in the viewmodel for pixel-perfect
+        click detection.
 
         Returns:
             True if a click was handled.
@@ -249,26 +256,30 @@ class TestLabInputHandler:
         category_x = 20
         category_y = self.header_height + 20
 
-        # Check header offset (40px for "CATEGORIES" header)
+        # Check "All Tests" button
         all_tests_y = category_y + 40
-        all_tests_rect = pygame.Rect(category_x, all_tests_y, 200, 40)
+        all_tests_rect = pygame.Rect(category_x, all_tests_y, 200, 36)
         if all_tests_rect.collidepoint(mx, my):
             self.controller.ui_state.select_category(None)
+            self.controller.ui_state.select_group(None)
             self.controller.ui_state.select_test(None)
             return True
 
-        # Check category click (starts after "All Tests" button)
-        category_start_y = all_tests_y + 50
-        for i, category in enumerate(categories):
-            rect = pygame.Rect(category_x, category_start_y + i * 50, 200, 40)
+        # Check group header clicks (expand/collapse)
+        for group, rect in self.viewmodel.group_header_rects.items():
+            if rect.collidepoint(mx, my):
+                self.controller.ui_state.toggle_group(group)
+                return True
+
+        # Check category clicks within expanded groups
+        for category, rect in self.viewmodel.category_rects.items():
             if rect.collidepoint(mx, my):
                 selected = self.controller.ui_state.get_selected_category()
-                # Toggle category selection
                 if selected == category:
-                    self.controller.ui_state.select_category(None)  # Deselect - show all
+                    self.controller.ui_state.select_category(None)
                 else:
                     self.controller.ui_state.select_category(category)
-                self.controller.ui_state.select_test(None)  # Clear test selection
+                self.controller.ui_state.select_test(None)
                 return True
 
         return False

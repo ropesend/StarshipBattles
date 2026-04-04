@@ -56,6 +56,34 @@ from simulation_tests.logging_config import get_logger, setup_combat_lab_logging
 setup_combat_lab_logging()
 logger = get_logger(__name__)
 
+# Maps each test category to its display group for the collapsible tree sidebar
+CATEGORY_GROUPS = {
+    # Abilities — all ability-specific test categories
+    "BeamWeaponAbility": "Abilities",
+    "ProjectileWeaponAbility": "Abilities",
+    "SeekerWeaponAbility": "Abilities",
+    "Projectile Weapons": "Abilities",
+    "Weapons": "Abilities",
+    "ShieldProjection": "Abilities",
+    "ShieldRegeneration": "Abilities",
+    "EmissiveArmor": "Abilities",
+    "ArmorLayer": "Abilities",
+    "ShieldRegeneratingArmor": "Abilities",
+    "ToHitAttackModifier": "Abilities",
+    "ToHitDefenseModifier": "Abilities",
+    "CommandAndControl": "Abilities",
+    # Standalone groups
+    "Modifiers": "Modifiers",
+    "DamagePipeline": "DamagePipeline",
+    "Propulsion": "Propulsion",
+    "Resource System": "Resource System",
+}
+
+
+def get_group_for_category(category: str) -> str:
+    """Get the display group for a category. Returns 'Other' for unmapped."""
+    return CATEGORY_GROUPS.get(category, "Other")
+
 
 class TestRegistry:
     __test__ = False  # Not a pytest test class
@@ -345,6 +373,38 @@ class TestRegistry:
             if info['metadata'].category == category
         )
         return sorted(subcategories)
+
+    def get_groups(self) -> List[str]:
+        """Get sorted list of unique display groups from registered scenarios."""
+        groups = set(
+            get_group_for_category(info['metadata'].category)
+            for info in self.scenarios.values()
+        )
+        return sorted(groups)
+
+    def get_categories_in_group(self, group: str) -> List[str]:
+        """Get sorted list of categories belonging to a display group."""
+        categories = set(
+            info['metadata'].category
+            for info in self.scenarios.values()
+            if get_group_for_category(info['metadata'].category) == group
+        )
+        return sorted(categories)
+
+    def get_by_group(self, group: str) -> Dict[str, Dict[str, Any]]:
+        """Get all scenarios whose category belongs to a display group."""
+        return {
+            test_id: info
+            for test_id, info in self.scenarios.items()
+            if get_group_for_category(info['metadata'].category) == group
+        }
+
+    def get_group_count(self, group: str) -> int:
+        """Get the number of scenarios in a display group."""
+        return sum(
+            1 for info in self.scenarios.values()
+            if get_group_for_category(info['metadata'].category) == group
+        )
 
     def get_all_tags(self) -> List[str]:
         """

@@ -415,6 +415,13 @@ class BeamLowAccuracyMaxRangeScenario(BeamAccuracyScenario):
     distance_label = "max_range"
 
 
+class BeamLowAccuracyMaxRangeHighTickScenario(BeamAccuracyScenario):
+    """BEAMWEAPON-003-HT: Low Accuracy Beam at Max Range (High-Tick)"""
+    accuracy_level = "low"
+    distance_label = "max_range"
+    high_tick = True
+
+
 # ============================================================================
 # MEDIUM ACCURACY BEAM TESTS (base_accuracy=2.0, falloff=0.001)
 # ============================================================================
@@ -492,231 +499,135 @@ class BeamHighAccuracyMaxRangeHighTickScenario(BeamAccuracyScenario):
 # MOVING TARGET TESTS
 # ============================================================================
 
-class BeamMediumAccuracyErraticMidRangeScenario(StaticTargetScenario):
+class BeamErraticMidRangeComparisonScenario(ComparisonScenario):
     """
-    BEAMWEAPON-009: Medium Accuracy Beam vs Erratic Small Target at Mid-Range
+    BEAMWEAPON-009: Defense Penalty — Erratic vs Stationary at Mid Range
 
-    Tests that target maneuverability adds defense penalty, reducing hit chance
-    against a small erratic target.
+    Compares damage dealt to a stationary target vs an erratic small target
+    at mid range. The erratic target's maneuverability adds a defense penalty,
+    significantly reducing the hit rate.
 
-    Surface distance: 383.92px (center 400px - radius 16.08px for mass=65)
-    Expected hit rate: 4.84%
+    Baseline: Medium accuracy beam vs stationary target at 400px
+    Variant: Same beam vs erratic small target at 400px
     """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Beam360_Med.json"
-    target_ship = "Test_Target_Erratic_Small.json"
-    distance = MID_RANGE_DISTANCE
 
     metadata = TestMetadata(
         test_id="BEAMWEAPON-009",
         category="BeamWeaponAbility",
         subcategory="Moving Targets",
-        name="Medium Accuracy vs Erratic Small - Mid Range (383.9px surface)",
-        summary="Validates that target maneuverability adds defense penalty, reducing hit chance against erratic targets",
+        name="Defense Penalty — Erratic vs Stationary at Mid Range",
+        summary="Erratic target takes less damage than stationary due to maneuverability defense penalty",
         conditions=[
-            "Attacker: Test_Attacker_Beam360_Med.json",
-            "Target: Test_Target_Erratic_Small.json (mass=65, high maneuverability)",
-            "Base Accuracy: 2.0",
-            "Accuracy Falloff: 0.001 per pixel",
-            "Center Distance: 400 pixels",
-            "Target Radius: 16.08 pixels (from mass=65)",
-            "Surface Distance: 400 - 16.08 = 383.92 pixels (actual firing distance)",
-            "Range Penalty: 383.92 * 0.001 = 0.3839",
-            "Defense Penalty: 3.1408 (from mass=65, acc=295.86, turn=238.53)",
-            "Net Score: 2.0 - 0.3839 - 3.1408 = -1.5247",
-            "Sigmoid formula: P = 1/(1+e^1.5247) = 0.0484 (4.84% hit rate)",
-            "Beam Damage: 1 per hit",
-            "Test Duration: 1000 ticks"
+            "Baseline: Med accuracy beam vs stationary target at 400px",
+            "Variant: Same beam vs erratic small target (mass=65) at 400px",
+            "Defense penalty from maneuverability reduces hit rate significantly",
         ],
         edge_cases=[
-            "Target size (small) may provide defense bonus",
-            "Erratic movement pattern increases defense score",
-            "Combined range and defense penalties significantly reduce hit rate"
+            "Small erratic target combines size and movement defense bonuses",
         ],
-        expected_outcome="Reduced hit rate (~5%) due to target maneuverability, some damage dealt",
-        pass_criteria="simulation_completes (ticks_run > 0)",
+        expected_outcome="Erratic target takes significantly less damage than stationary",
+        pass_criteria="variant_damage < baseline_damage, both > 0",
         max_ticks=1000,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=7,
-        tags=["accuracy", "medium-accuracy", "moving-target", "erratic", "beam-weapons"],
+        tags=["accuracy", "defense-penalty", "moving-target", "erratic", "comparison"],
     )
 
-    def custom_setup(self, battle_engine):
-        """Calculate test-specific expected hit chance."""
-        self.expected_hit_chance = compute_beam_hit_chance(
-            self, target_acceleration=295.86, target_turn_speed=238.53
-        )
-        self.expected_hit_chance_base = compute_beam_hit_chance(self)
+    baseline_attacker_ship = "Test_Attacker_Beam360_Med.json"
+    baseline_target_ship = "Test_Target_Stationary.json"
+    variant_attacker_ship = "Test_Attacker_Beam360_Med.json"
+    variant_target_ship = "Test_Target_Erratic_Small.json"
+    distance = MID_RANGE_DISTANCE
+    force_fire = True
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
-        if beam is None:
-            return checks
 
-        # Data phase: verify JSON data loaded correctly
-        checks.append(check_exact("Beam Base Accuracy", BEAM_MED_ACCURACY, beam.base_accuracy))
-        checks.append(check_exact("Beam Accuracy Falloff", BEAM_MED_FALLOFF, beam.accuracy_falloff))
-        checks.append(check_exact("Beam Range", BEAM_MED_RANGE, beam.range))
-        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
-
-        # Precondition phase: verify initial setup distance (target moves during test)
-        target_radius = 40 * ((self.target.mass / 1000) ** (1 / 3))
-        initial_surface_distance = float(self.distance) - target_radius
-        checks.append(check_exact("Initial Center Distance", float(self.distance),
-                                  float(self.distance), phase="precondition"))
-        checks.append(check_approx("Initial Surface Distance", initial_surface_distance,
-                                    initial_surface_distance, tolerance=0.001,
-                                    phase="precondition"))
-        checks.append(check_true("Weapon Range Covers Initial Distance",
-                                 initial_surface_distance <= beam.range,
-                                 detail=f"surface_distance={initial_surface_distance:.2f}, beam.range={beam.range}",
-                                 phase="precondition"))
-
+        # Outcome: erratic target should take less damage than stationary
         checks.append(check_true(
-            "Defense Reduces Hit Chance",
-            self.expected_hit_chance < self.expected_hit_chance_base,
-            detail=f"with_defense={self.expected_hit_chance:.4f}, base={self.expected_hit_chance_base:.4f}",
+            "Erratic Target Takes Less Damage",
+            self.variant_damage_dealt < self.baseline_damage_dealt,
+            detail=f"stationary={self.baseline_damage_dealt}, erratic={self.variant_damage_dealt}",
         ))
-        # Outcome: verify actual hit rate is in a plausible range.
-        # Expected hit chance ~5% from sigmoid; beam damage=1 so damage_dealt == hits.
-        shots_fired = self.results.get('attacker_total_shots_fired', 0)
+        # Both should take some damage (beam is in range)
         checks.append(check_true(
-            "Shots Fired > 500", shots_fired > 500,
-            actual=shots_fired, phase="outcome",
-            detail="beam should fire most ticks while target in range",
+            "Stationary Target Took Damage",
+            self.baseline_damage_dealt > 0,
+            actual=self.baseline_damage_dealt,
         ))
-        if shots_fired > 0:
-            hit_rate = self.damage_dealt / shots_fired
+        checks.append(check_true(
+            "Erratic Target Took Some Damage",
+            self.variant_damage_dealt > 0,
+            actual=self.variant_damage_dealt,
+        ))
+        # Defense penalty should reduce damage by at least 50%
+        if self.baseline_damage_dealt > 0:
+            reduction = 1.0 - (self.variant_damage_dealt / self.baseline_damage_dealt)
             checks.append(check_true(
-                "Hit Rate > 1%", hit_rate > 0.01,
-                actual=f"{hit_rate:.1%} ({self.damage_dealt}/{shots_fired})",
-                phase="outcome",
-                detail="beam must land some hits against erratic target at mid-range",
-            ))
-            checks.append(check_true(
-                "Hit Rate < 50%", hit_rate < 0.50,
-                actual=f"{hit_rate:.1%}",
-                phase="outcome",
-                detail="erratic target at mid-range should dodge at least half of shots",
+                "Defense Penalty Reduces Damage >50%",
+                reduction > 0.5,
+                actual=f"{reduction:.1%}",
+                detail="erratic movement should dodge most shots",
             ))
         return checks
 
 
-class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
+class BeamErraticMaxRangeComparisonScenario(ComparisonScenario):
     """
-    BEAMWEAPON-010: Medium Accuracy Beam vs Erratic Small Target at Max Range
+    BEAMWEAPON-010: Defense Penalty — Erratic vs Stationary at Max Range
 
-    Tests combined effects of range penalty and maneuverability penalty
-    at maximum range.
+    Same as 009 but at near-max range, combining range penalty with
+    maneuverability penalty for maximum difficulty.
 
-    Surface distance: 733.92px (center 750px - radius 16.08px for mass=65)
-    Expected hit rate: 3.47%
+    Baseline: Medium accuracy beam vs stationary target at 750px
+    Variant: Same beam vs erratic small target at 750px
     """
-
-    # Template configuration
-    attacker_ship = "Test_Attacker_Beam360_Med.json"
-    target_ship = "Test_Target_Erratic_Small.json"
-    distance = NEAR_MAX_RANGE_DISTANCE
 
     metadata = TestMetadata(
         test_id="BEAMWEAPON-010",
         category="BeamWeaponAbility",
         subcategory="Moving Targets",
-        name="Medium Accuracy vs Erratic Small - Max Range (733.9px surface)",
-        summary="Validates combined effects of range and maneuverability penalties at maximum range",
+        name="Defense Penalty — Erratic vs Stationary at Max Range",
+        summary="Combined range and maneuverability penalties at near-max range",
         conditions=[
-            "Attacker: Test_Attacker_Beam360_Med.json",
-            "Target: Test_Target_Erratic_Small.json (mass=65, high maneuverability)",
-            "Base Accuracy: 2.0",
-            "Accuracy Falloff: 0.001 per pixel",
-            "Center Distance: 750 pixels (near max range of 800)",
-            "Target Radius: 16.08 pixels (from mass=65)",
-            "Surface Distance: 750 - 16.08 = 733.92 pixels (actual firing distance)",
-            "Range Penalty: 733.92 * 0.001 = 0.7339",
-            "Defense Penalty: 3.1408 (from mass=65, acc=295.86, turn=238.53)",
-            "Net Score: 2.0 - 0.7339 - 3.1408 = -1.8747",
-            "Sigmoid formula: P = 1/(1+e^1.8747) = 0.0347 (3.47% hit rate)",
-            "Beam Damage: 1 per hit",
-            "Test Duration: 1000 ticks"
+            "Baseline: Med accuracy beam vs stationary target at 750px",
+            "Variant: Same beam vs erratic small target (mass=65) at 750px",
+            "Range penalty + defense penalty = very low hit rate on variant",
         ],
         edge_cases=[
-            "Maximum range penalty combined with defense penalty",
-            "Worst-case scenario for hitting a difficult target",
-            "May result in minimal or no damage"
+            "Near-max range already reduces hit rate; defense penalty compounds",
         ],
-        expected_outcome="Low hit rate (~3.5%) due to combined penalties, minimal damage expected",
-        pass_criteria="simulation_completes (ticks_run > 0)",
+        expected_outcome="Erratic target takes much less damage than stationary at max range",
+        pass_criteria="variant_damage < baseline_damage, both >= 0",
         max_ticks=1000,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",
         ui_priority=6,
-        tags=["accuracy", "medium-accuracy", "moving-target", "erratic", "max-range", "beam-weapons"],
+        tags=["accuracy", "defense-penalty", "moving-target", "erratic", "max-range", "comparison"],
     )
 
-    def custom_setup(self, battle_engine):
-        """Calculate test-specific expected hit chance."""
-        self.expected_hit_chance = compute_beam_hit_chance(
-            self, target_acceleration=295.86, target_turn_speed=238.53
-        )
-        self.expected_hit_chance_base = compute_beam_hit_chance(self)
+    baseline_attacker_ship = "Test_Attacker_Beam360_Med.json"
+    baseline_target_ship = "Test_Target_Stationary.json"
+    variant_attacker_ship = "Test_Attacker_Beam360_Med.json"
+    variant_target_ship = "Test_Target_Erratic_Small.json"
+    distance = NEAR_MAX_RANGE_DISTANCE
+    force_fire = True
+    expect_different_damage = True
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_true("Beam Weapon Loaded", beam is not None, phase="precondition"))
-        if beam is None:
-            return checks
 
-        # Data phase: verify JSON data loaded correctly
-        checks.append(check_exact("Beam Base Accuracy", BEAM_MED_ACCURACY, beam.base_accuracy))
-        checks.append(check_exact("Beam Accuracy Falloff", BEAM_MED_FALLOFF, beam.accuracy_falloff))
-        checks.append(check_exact("Beam Range", BEAM_MED_RANGE, beam.range))
-        checks.append(check_exact("Beam Damage", BEAM_MED_DAMAGE, beam.damage))
-
-        # Precondition phase: verify initial setup distance (target moves during test)
-        target_radius = 40 * ((self.target.mass / 1000) ** (1 / 3))
-        initial_surface_distance = float(self.distance) - target_radius
-        checks.append(check_exact("Initial Center Distance", float(self.distance),
-                                  float(self.distance), phase="precondition"))
-        checks.append(check_approx("Initial Surface Distance", initial_surface_distance,
-                                    initial_surface_distance, tolerance=0.001,
-                                    phase="precondition"))
-        checks.append(check_true("Weapon Range Covers Initial Distance",
-                                 initial_surface_distance <= beam.range,
-                                 detail=f"surface_distance={initial_surface_distance:.2f}, beam.range={beam.range}",
-                                 phase="precondition"))
-
+        # Outcome: erratic target should take less damage than stationary
         checks.append(check_true(
-            "Defense Reduces Hit Chance",
-            self.expected_hit_chance < self.expected_hit_chance_base,
-            detail=f"with_defense={self.expected_hit_chance:.4f}, base={self.expected_hit_chance_base:.4f}",
+            "Erratic Target Takes Less Damage",
+            self.variant_damage_dealt < self.baseline_damage_dealt,
+            detail=f"stationary={self.baseline_damage_dealt}, erratic={self.variant_damage_dealt}",
         ))
-        # Outcome: verify actual hit rate is in a plausible range.
-        # Expected hit chance ~3.5% from sigmoid; beam damage=1 so damage_dealt == hits.
-        shots_fired = self.results.get('attacker_total_shots_fired', 0)
+        # Stationary should take some damage (beam is in range at 750px)
         checks.append(check_true(
-            "Shots Fired > 500", shots_fired > 500,
-            actual=shots_fired, phase="outcome",
-            detail="beam should fire most ticks while target in range",
+            "Stationary Target Took Damage",
+            self.baseline_damage_dealt > 0,
+            actual=self.baseline_damage_dealt,
         ))
-        if shots_fired > 0:
-            hit_rate = self.damage_dealt / shots_fired
-            checks.append(check_true(
-                "Hit Rate > 0.5%", hit_rate > 0.005,
-                actual=f"{hit_rate:.1%} ({self.damage_dealt}/{shots_fired})",
-                phase="outcome",
-                detail="beam must land some hits against erratic target at max-range",
-            ))
-            checks.append(check_true(
-                "Hit Rate < 50%", hit_rate < 0.50,
-                actual=f"{hit_rate:.1%}",
-                phase="outcome",
-                detail="erratic target at max-range should dodge at least half of shots",
-            ))
         return checks
 
 

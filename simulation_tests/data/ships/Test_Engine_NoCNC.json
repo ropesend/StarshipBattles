@@ -1,8 +1,8 @@
 {
-  "_metadata": {"_schema_version": "1.0", "_data_version": "1.0", "_description": "Ship with C&C-requiring engine but NO bridge"},
+  "_metadata": {"_schema_version": "1.0", "_data_version": "1.0", "_description": "Ship with C&C-requiring engine but NO bridge. AI tries to thrust but can't."},
   "name": "Test Engine NoCNC",
-  "color": [255, 0, 0], "team_id": 1, "ship_class": "TestS_2L_CNC", "theme_id": "Federation", "ai_strategy": "test_do_nothing",
+  "color": [255, 0, 0], "team_id": 1, "ship_class": "TestS_2L_CNC", "theme_id": "Federation", "ai_strategy": "test_straight_line",
   "layers": {"CORE": [{"id": "test_engine_no_fuel_cnc"}], "ARMOR": []},
-  "_test_notes": "Engine requires C&C but no bridge. Should not accelerate.",
+  "_test_notes": "Engine requires C&C but no bridge. AI tries to thrust forward but engine is non-operational — ship should not move.",
   "expected_stats": {"mass": 400.0}
 }

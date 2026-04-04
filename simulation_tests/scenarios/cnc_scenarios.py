@@ -233,34 +233,43 @@ class CNCShieldDisabledScenario(ComparisonScenario):
 
 class CNCEngineDisabledScenario(ComparisonScenario):
     """
-    CNC-004: Engine Disabled Without C&C
+    CNC-004: Engine Disabled Without C&C — Verified by Movement
 
-    Battle A: Ship with C&C bridge + C&C engine → has thrust, has max_speed
-    Battle B: Ship with C&C engine but NO bridge → engine non-operational, no thrust
+    Both ships have AI strategy 'test_straight_line' (full thrust forward).
 
-    We verify the stats directly: max_speed and total_thrust should be 0
-    when the engine is non-operational.
+    Battle A (baseline): Ship with C&C bridge + C&C engine → accelerates,
+                         moves significant distance over test duration
+    Battle B (variant): Ship with C&C engine but NO bridge → engine
+                        non-operational, thrust commands ignored, ship
+                        stays at starting position
+
+    We verify actual simulation behavior: the baseline ship moves, the
+    variant ship does not. This proves the engine is truly disabled, not
+    just reporting zero stats.
     """
 
     metadata = TestMetadata(
         test_id="CNC-004",
         category="CommandAndControl",
         subcategory="Engine",
-        name="Engine Disabled Without C&C",
-        summary="Engine with RequiresCommandAndControl provides no thrust without bridge",
+        name="Engine Disabled Without C&C — No Movement",
+        summary="Ship without C&C bridge cannot move even when AI commands thrust",
         conditions=[
-            "Ship (with C&C): Test_Engine_CNC.json (bridge + C&C engine)",
-            "Ship (no C&C): Test_Engine_NoCNC.json (C&C engine, NO bridge)",
-            "No combat — just verify stats (thrust, max_speed)",
+            "Baseline: Test_Engine_CNC.json (bridge + engine, AI: straight_line)",
+            "Variant: Test_Engine_NoCNC.json (engine only, no bridge, AI: straight_line)",
+            "Both ships attempt to thrust forward every tick",
             f"Test Duration: {CNC_TEST_TICKS} ticks",
         ],
-        edge_cases=["Engine contributes 0 thrust when non-operational"],
-        expected_outcome="With C&C: thrust > 0. Without C&C: thrust = 0.",
-        pass_criteria="variant total_thrust == 0, baseline total_thrust > 0",
+        edge_cases=[
+            "Engine is non-operational without C&C — thrust commands have no effect",
+            "Ship velocity and position remain at zero",
+        ],
+        expected_outcome="Baseline moves significant distance. Variant stays at origin.",
+        pass_criteria="variant position unchanged, baseline position changed significantly",
         max_ticks=CNC_TEST_TICKS,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
-        tags=["cnc", "command-control", "engine", "comparison"],
+        tags=["cnc", "command-control", "engine", "movement", "comparison"],
     )
 
     baseline_attacker_ship = "Test_Engine_CNC.json"
@@ -268,18 +277,65 @@ class CNCEngineDisabledScenario(ComparisonScenario):
     variant_attacker_ship = "Test_Engine_NoCNC.json"
     variant_target_ship = STANDARD_TARGET
     distance = POINT_BLANK_DISTANCE
-    expect_different_damage = False  # Tests engine stats, not damage
+    expect_different_damage = False  # Tests movement, not damage
+
+    def configure_baseline(self, engine):
+        """Override AI to thrust forward (template sets test_do_nothing)."""
+        self.attacker.ai_strategy = 'test_straight_line'
+
+    def configure_variant(self, engine):
+        """Override AI to thrust forward (template sets test_do_nothing)."""
+        self.attacker.ai_strategy = 'test_straight_line'
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
 
-        # Data: variant should have 0 thrust (engine non-operational)
-        checks.append(check_exact(
-            "No Thrust Without C&C", 0, self.attacker.total_thrust,
+        # Precondition: baseline ship has thrust (C&C active)
+        checks.append(check_true(
+            "Baseline Has Thrust",
+            self._baseline_attacker.total_thrust > 0,
+            actual=self._baseline_attacker.total_thrust,
+            phase="precondition",
         ))
 
+        # Precondition: variant ship has no thrust (no C&C)
         checks.append(check_exact(
-            "No Max Speed Without C&C", 0.0, self.attacker.max_speed,
+            "Variant Has No Thrust",
+            0, self.attacker.total_thrust,
+            phase="precondition",
+        ))
+
+        # Outcome: baseline ship moved (velocity > 0)
+        baseline_speed = self._baseline_attacker.current_speed
+        checks.append(check_true(
+            "Baseline Ship Moved",
+            baseline_speed > 0,
+            actual=f"speed={baseline_speed:.2f}",
+        ))
+
+        # Outcome: baseline ship traveled distance from origin
+        baseline_dist = self._baseline_attacker.position.length()
+        checks.append(check_true(
+            "Baseline Traveled Distance",
+            baseline_dist > 100,
+            actual=f"distance={baseline_dist:.1f}",
+            detail="ship with C&C should move significantly in 500 ticks",
+        ))
+
+        # Outcome: variant ship did NOT move (velocity = 0)
+        variant_speed = self.attacker.current_speed
+        checks.append(check_exact(
+            "Variant Ship Stationary (Speed)",
+            0.0, variant_speed,
+        ))
+
+        # Outcome: variant ship stayed at origin (position unchanged)
+        variant_dist = self.attacker.position.length()
+        checks.append(check_true(
+            "Variant Ship At Origin",
+            variant_dist < 1.0,
+            actual=f"distance={variant_dist:.4f}",
+            detail="ship without C&C should not move at all",
         ))
 
         return checks

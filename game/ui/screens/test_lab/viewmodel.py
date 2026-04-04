@@ -72,6 +72,10 @@ class TestLabViewModel:
         self._update_expected_button_rect: Optional[Any] = None
         self._update_expected_button_visible: bool = False
 
+        # Category tree rects (set by renderer, used by input handler)
+        self.group_header_rects: dict = {}  # group_name -> pygame.Rect
+        self.category_rects: dict = {}      # category_name -> pygame.Rect
+
         # Tag filter rects (set by renderer)
         self._tag_filter_rects: dict = {}
         self._tag_clear_rect: Optional[Any] = None

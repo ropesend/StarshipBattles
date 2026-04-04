@@ -297,12 +297,15 @@ class TestLabScreen:
         self._button_callbacks.update(callbacks)
 
     def _get_filtered_scenarios(self):
-        """Get scenarios filtered by selected category and tags."""
-        # Start with category filter
-        if self.selected_category is None:
-            scenarios = self.all_scenarios
-        else:
+        """Get scenarios filtered by selected category/group and tags."""
+        # Start with category or group filter
+        selected_group = self.controller.ui_state.get_selected_group()
+        if self.selected_category is not None:
             scenarios = self.registry.get_by_category(self.selected_category)
+        elif selected_group is not None:
+            scenarios = self.registry.get_by_group(selected_group)
+        else:
+            scenarios = self.all_scenarios
 
         # Apply tag filters
         active_tags = self.controller.ui_state.get_active_tag_filters()
