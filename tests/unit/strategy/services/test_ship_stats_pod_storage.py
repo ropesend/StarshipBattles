@@ -41,7 +41,7 @@ class TestShipStatsPodStorage:
         stats = service.calculate_stats(design)
 
         assert 'pod_storage_mass' in stats
-        assert stats['pod_storage_mass'] == 2000.0
+        assert stats['pod_storage_mass'] == 5000.0
 
     def test_pod_storage_mass_stacks_from_multiple_bays(self, mock_registries):
         """Multiple PodStorage components should sum their capacity_mass."""
@@ -58,7 +58,7 @@ class TestShipStatsPodStorage:
         service = ShipStatsCalculator(registries=mock_registries)
         stats = service.calculate_stats(design)
 
-        assert stats['pod_storage_mass'] == 4000.0
+        assert stats['pod_storage_mass'] == 10000.0
 
     def test_pod_storage_mass_zero_when_no_bay(self, mock_registries):
         """Ships without PodStorage should have pod_storage_mass == 0."""
@@ -95,5 +95,5 @@ class TestShipStatsPodStorage:
         stats = service.calculate_stats(design, component_damage=component_damage)
 
         # Should be reduced (exact value depends on effectiveness curve)
-        assert stats['pod_storage_mass'] < 2000.0
+        assert stats['pod_storage_mass'] < 5000.0
         assert stats['pod_storage_mass'] > 0

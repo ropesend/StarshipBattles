@@ -306,15 +306,15 @@ class TestColonizeWithMatchingPod:
 class TestColonizeWithWrongPod:
     """Tests for colonization without any drop pod."""
 
-    def test_colonize_without_drop_pod_fails(
+    def test_colonize_without_drop_pod_succeeds_at_command_time(
         self, galaxy_with_ice_planet, component_registry
     ):
         """
-        Phase 3: Colonization fails when fleet has no drop pod at all.
+        Colonization validation succeeds even without drop pod — pod check deferred to execution.
 
         Create Ice Dwarf planet, fleet with only a combat ship (no drop pod).
-        Try to issue colonize command.
-        Assert: Validation fails with NO_COLONY_POD error.
+        Issue colonize command.
+        Assert: Validation succeeds (pod check happens at execution time).
         """
         galaxy, ice_planet = galaxy_with_ice_planet
 
@@ -327,16 +327,14 @@ class TestColonizeWithWrongPod:
         empire = Empire(1, "Player 1", (255, 0, 0))
         empire.fleets.append(fleet)
 
-        # Validate colonization - should fail
+        # Validate colonization - pod check deferred to execution
         result = ColonizeValidator.validate(
             galaxy, fleet, ice_planet,
             component_registry=component_registry
         )
 
-        # Assert: Validation fails with NO_COLONY_POD error
-        assert result.is_valid is False
-        assert result.error_code == "NO_COLONY_POD"
-        assert "drop pod" in result.message.lower()
+        # Pod availability is checked at execution time, not validation time
+        assert result.is_valid is True
 
 
 # =============================================================================
@@ -398,16 +396,15 @@ class TestChainColonization:
         # Fleet stays
         assert fleet in empire.fleets
 
-    def test_chain_exhaustion_prevents_overcommit(
+    def test_chain_exhaustion_succeeds_at_command_time(
         self, galaxy_with_three_ice_planets, component_registry
     ):
         """
-        PROJ-55: Chain validation prevents over-committing pods.
+        Chain validation no longer prevents over-committing pods at command time.
 
         Create 3 Ice Dwarf planets, fleet with 2 Ice Dwarf pod ships.
         Queue 2 colonizations (succeeds).
-        Try to queue 3rd colonization.
-        Assert: Validation fails with COLONY_POD_EXHAUSTED error.
+        Queue 3rd colonization — succeeds at command time (pod check deferred to execution).
         """
         galaxy, ice1, ice2, ice3 = galaxy_with_three_ice_planets
 
@@ -423,16 +420,14 @@ class TestChainColonization:
         fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice1))
         fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice2))
 
-        # Validate 3rd colonization - should fail
+        # Validate 3rd colonization - pod check deferred to execution
         result = ColonizeValidator.validate(
             galaxy, fleet, ice3,
             component_registry=component_registry
         )
 
-        # Assert: Validation fails with COLONY_POD_EXHAUSTED error
-        assert result.is_valid is False
-        assert result.error_code == "COLONY_POD_EXHAUSTED"
-        assert "already assigned" in result.message.lower()
+        # Pod exhaustion is checked at execution time, not validation time
+        assert result.is_valid is True
 
 
 # =============================================================================
@@ -652,11 +647,11 @@ class TestUIFiltering:
 class TestEdgeCases:
     """Edge case tests for colonization system."""
 
-    def test_fleet_with_no_pods_cannot_colonize(
+    def test_fleet_with_no_pods_succeeds_at_command_time(
         self, galaxy_with_ice_planet, component_registry
     ):
         """
-        PROJ-55: Fleet without colony pods cannot colonize.
+        Fleet without colony pods succeeds at validation — pod check deferred to execution.
         """
         galaxy, ice_planet = galaxy_with_ice_planet
 
@@ -666,20 +661,20 @@ class TestEdgeCases:
         fleet = Fleet(1, 1, HexCoord(10, 10))
         fleet.ships.append(combat_ship)
 
-        # Validate - should fail
+        # Validate - pod check deferred to execution time
         result = ColonizeValidator.validate(
             galaxy, fleet, ice_planet,
             component_registry=component_registry
         )
 
-        assert result.is_valid is False
-        assert result.error_code == "NO_COLONY_POD"
+        # Pod availability is checked at execution time, not validation time
+        assert result.is_valid is True
 
-    def test_empty_fleet_cannot_colonize(
+    def test_empty_fleet_succeeds_at_command_time(
         self, galaxy_with_ice_planet, component_registry
     ):
         """
-        Fleet with no ships cannot colonize (edge case).
+        Empty fleet succeeds at validation — pod check deferred to execution.
         """
         galaxy, ice_planet = galaxy_with_ice_planet
 
@@ -690,11 +685,11 @@ class TestEdgeCases:
         available = ColonizeValidator.count_drop_pods(fleet)
         assert available == 0
 
-        # Validate - should fail
+        # Validate - pod check deferred to execution time
         result = ColonizeValidator.validate(
             galaxy, fleet, ice_planet,
             component_registry=component_registry
         )
 
-        assert result.is_valid is False
-        assert result.error_code == "NO_COLONY_POD"
+        # Pod availability is checked at execution time, not validation time
+        assert result.is_valid is True

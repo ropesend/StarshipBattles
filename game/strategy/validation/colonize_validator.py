@@ -58,11 +58,6 @@ class ColonizeValidator:
                     "No colonizable planets at this location.",
                     code="NO_CANDIDATES"
                 )
-
-            pod_error = ColonizeValidator._validate_drop_pod_availability(fleet, skip_chain_check)
-            if pod_error:
-                return pod_error
-
             return ValidationResult.success()
 
         else:
@@ -78,10 +73,6 @@ class ColonizeValidator:
                     f"Planet {target_planet.name} is not at fleet location.",
                     code="WRONG_LOCATION"
                 )
-
-            pod_error = ColonizeValidator._validate_drop_pod_availability(fleet, skip_chain_check)
-            if pod_error:
-                return pod_error
 
             return ValidationResult.success()
 

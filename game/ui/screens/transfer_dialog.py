@@ -545,7 +545,12 @@ class TransferDialog(UIWindow):
 
     def _on_confirm(self):
         """Issue all non-zero transfers as commands."""
+        logger.info(
+            f"TransferDialog._on_confirm: source={self._current_source} "
+            f"target={self._current_target} pending={dict(self.pending_transfers)}"
+        )
         if not self._current_source or not self._current_target:
+            logger.warning("TransferDialog._on_confirm: No source or target, aborting")
             return
 
         # Determine which entity is the fleet
@@ -572,6 +577,7 @@ class TransferDialog(UIWindow):
         orders_issued = 0
         for cargo_key, amount in self.pending_transfers.items():
             if amount == 0:
+                logger.debug(f"TransferDialog: Skipping {cargo_key} (amount=0)")
                 continue
 
             # Parse cargo key
@@ -602,6 +608,12 @@ class TransferDialog(UIWindow):
             # amount=0 means "all" for the engine; otherwise use explicit amount
             transfer_amount = 0 if is_max else int(abs(amount))
 
+            logger.info(
+                f"TransferDialog: Issuing command: fleet={fleet_id} planet={planet_id} "
+                f"cargo={cargo_type} dir={direction} amt={transfer_amount} "
+                f"species={species_id} target_fleet={target_fleet_id}"
+            )
+
             cmd = IssueTransferCommand(
                 fleet_id=fleet_id,
                 planet_id=planet_id,
@@ -615,11 +627,14 @@ class TransferDialog(UIWindow):
             result = self.facade.handle_command(cmd)
             if result.is_valid:
                 orders_issued += 1
+                logger.info(f"TransferDialog: Command accepted for {cargo_type}")
             else:
-                logger.info(f"Transfer failed for {cargo_type}: {result.message}")
+                logger.warning(f"TransferDialog: Command REJECTED for {cargo_type}: {result.message}")
 
         if orders_issued > 0:
             logger.info(f"TransferDialog: {orders_issued} transfer order(s) issued.")
+        else:
+            logger.warning(f"TransferDialog: No orders issued (pending had {len(self.pending_transfers)} entries)")
         self.kill()
 
     def _apply_tooltips(self) -> None:

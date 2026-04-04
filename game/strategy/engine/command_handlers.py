@@ -487,22 +487,8 @@ class ColonizeMissionCommandHandler(BaseCommandHandler):
             if error:
                 return error
 
-            # Phase 3: Validate fleet has a drop pod
-            if not ColonizeValidator.fleet_has_drop_pod(fleet):
-                return ValidationResult.error(
-                    "No drop pod carried by any ship in fleet.",
-                    code="NO_COLONY_POD"
-                )
-
-            # Check chain limits - ensure not over-committed
-            available_count = ColonizeValidator.count_drop_pods(fleet)
-            committed_count = ColonizeValidator.count_committed_colonize_orders(fleet)
-
-            if committed_count >= available_count:
-                return ValidationResult.error(
-                    "All drop pods already assigned to colonize orders.",
-                    code="COLONY_POD_EXHAUSTED"
-                )
+            # Pod availability is validated at execution time, not command time.
+            # The player may load a pod onto the ship before the fleet arrives.
 
         # 3. BUG-70: Always insert LOAD_POPULATION before MOVE/COLONIZE.
         # Colony is resolved at execution time, not command time.
@@ -549,13 +535,14 @@ class TransferCommandHandler(BaseCommandHandler):
         """Handle IssueTransferCommand - creates TRANSFER order for cargo operations."""
         from game.strategy.validation import TransferValidator
 
-        logger.debug(f"TransferCommandHandler: fleet_id={cmd.fleet_id}, planet_id={cmd.planet_id}, cargo_type={cmd.cargo_type}, direction={cmd.direction}, amount={cmd.amount}")
+        logger.info(f"TransferCommandHandler: fleet_id={cmd.fleet_id}, planet_id={cmd.planet_id}, cargo_type={cmd.cargo_type}, direction={cmd.direction}, amount={cmd.amount}, species_id={cmd.species_id}")
 
         # 1. Resolve fleet
         fleet, error = self._resolve_fleet(session, cmd.fleet_id)
         if error:
+            logger.warning(f"TransferCommandHandler: Fleet {cmd.fleet_id} not found")
             return error
-        logger.debug(f"TransferCommandHandler: Fleet {fleet.id} found, location={fleet.location}, ships={len(fleet.ships)}")
+        logger.info(f"TransferCommandHandler: Fleet {fleet.id} resolved, location={fleet.location}")
 
         # 2. Find owning empire (PROJ-204: O(1) lookup via owner_id instead of O(N) loop)
         if fleet.owner_id < 0 or fleet.owner_id >= len(session.empires):

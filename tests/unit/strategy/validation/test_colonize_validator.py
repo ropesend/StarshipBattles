@@ -458,10 +458,10 @@ class TestColonizeValidatorColonyPods:
 
         assert result.is_valid is True
 
-    def test_validate_no_colony_pod_at_all(
+    def test_validate_allows_no_colony_pod_at_command_time(
         self, mock_galaxy, mock_planet_ice_dwarf, mock_ship_without_pod, mock_component_registry
     ):
-        """Validation fails when fleet has no colony pods."""
+        """Validation succeeds even without pods — pod check is at execution time."""
         from game.strategy.validation import ColonizeValidator
 
         fleet = MagicMock()
@@ -478,8 +478,8 @@ class TestColonizeValidatorColonyPods:
             component_registry=mock_component_registry
         )
 
-        assert result.is_valid is False
-        assert result.error_code == "NO_COLONY_POD"
+        # Pod availability is checked at execution time, not validation time
+        assert result.is_valid is True
 
     def test_count_drop_pods(
         self, mock_ship_with_ice_dwarf_pod, mock_ship_with_continental_pod
@@ -535,14 +535,13 @@ class TestColonizeValidatorColonyPods:
 
         assert result == 3
 
-    def test_validate_rejects_overcommitted_pods(
+    def test_validate_allows_overcommitted_pods_at_command_time(
         self, mock_galaxy, mock_planet_ice_dwarf, mock_ship_with_ice_dwarf_pod, mock_component_registry
     ):
-        """Cannot queue colonization when all drop pods are committed."""
+        """Validation succeeds even with overcommitted pods — checked at execution time."""
         from game.strategy.validation import ColonizeValidator
         from game.strategy.data.order_types import OrderType
 
-        # Create an existing colonize order
         existing_order = MagicMock()
         existing_order.type = OrderType.COLONIZE
         existing_order.target = mock_planet_ice_dwarf
@@ -551,10 +550,9 @@ class TestColonizeValidatorColonyPods:
         fleet.id = 1
         fleet.owner_id = 0
         fleet.location = HexCoord(0, 0)
-        fleet.ships = [mock_ship_with_ice_dwarf_pod]  # Only 1 drop pod
-        fleet.orders = [existing_order]  # Already committed
+        fleet.ships = [mock_ship_with_ice_dwarf_pod]
+        fleet.orders = [existing_order]
 
-        # Create a second planet
         another_planet = MagicMock()
         another_planet.name = "Frostworld 2"
         another_planet.owner_id = None
@@ -567,14 +565,13 @@ class TestColonizeValidatorColonyPods:
 
         mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf, another_planet]
 
-        # Try to queue second colonization -- should fail (1 pod, 1 committed)
         result = ColonizeValidator.validate(
             mock_galaxy, fleet, another_planet,
             component_registry=mock_component_registry
         )
 
-        assert result.is_valid is False
-        assert result.error_code == "COLONY_POD_EXHAUSTED"
+        # Pod chain limits checked at execution time, not validation time
+        assert result.is_valid is True
 
     def test_validate_allows_second_pod_when_available(
         self, mock_galaxy, mock_planet_continental, mock_ship_with_ice_dwarf_pod,
@@ -818,7 +815,7 @@ class TestColonizeValidatorAnyPlanetPods:
     def test_any_planet_no_ships_fails(
         self, mock_galaxy, mock_fleet, mock_component_registry
     ):
-        """Any Planet fails when fleet has no ships (no drop pods)."""
+        """Any Planet succeeds even without ships — pod check at execution time."""
         from game.strategy.validation import ColonizeValidator
 
         # Fleet has no ships
@@ -833,8 +830,8 @@ class TestColonizeValidatorAnyPlanetPods:
             component_registry=mock_component_registry
         )
 
-        assert result.is_valid is False
-        assert result.error_code == "NO_COLONY_POD"
+        # Pod check happens at execution time
+        assert result.is_valid is True
 
     def test_any_planet_with_drop_pod_succeeds(
         self, mock_galaxy, mock_fleet, mock_component_registry
@@ -856,10 +853,10 @@ class TestColonizeValidatorAnyPlanetPods:
 
         assert result.is_valid is True
 
-    def test_any_planet_without_drop_pod_fails(
+    def test_any_planet_without_drop_pod_succeeds_at_command_time(
         self, mock_galaxy, mock_fleet
     ):
-        """Any Planet with no drop pods fails."""
+        """Any Planet with no drop pods succeeds at command time — pod check deferred to execution."""
         from game.strategy.validation import ColonizeValidator
 
         # Fleet has ship but no drop pods
@@ -875,13 +872,13 @@ class TestColonizeValidatorAnyPlanetPods:
             mock_galaxy, mock_fleet, None,
         )
 
-        assert result.is_valid is False
-        assert result.error_code == "NO_COLONY_POD"
+        # Pod availability is checked at execution time, not validation time
+        assert result.is_valid is True
 
     def test_any_planet_exhausted_pods_fails(
         self, mock_galaxy, mock_fleet, mock_component_registry
     ):
-        """Any Planet fails if all drop pods are already committed."""
+        """Any Planet succeeds even with exhausted pods — checked at execution time."""
         from game.strategy.validation import ColonizeValidator
         from game.strategy.data.order_types import OrderType
 
@@ -905,8 +902,8 @@ class TestColonizeValidatorAnyPlanetPods:
             component_registry=mock_component_registry
         )
 
-        assert result.is_valid is False
-        assert result.error_code in ("NO_COLONY_POD", "COLONY_POD_EXHAUSTED")
+        # Pod exhaustion checked at execution time
+        assert result.is_valid is True
 
 
 # =============================================================================
@@ -951,8 +948,8 @@ class TestColonizeValidatorAdvancedEdgeCases:
         planet.image_id = ""
         return planet
 
-    def test_skip_chain_check_allows_overcommit(self, mock_component_registry):
-        """skip_chain_check=True allows validation even when pods exhausted."""
+    def test_overcommit_succeeds_at_command_time(self, mock_component_registry):
+        """Validation succeeds even with overcommitted pods — pod check deferred to execution."""
         from game.strategy.validation import ColonizeValidator
         from game.strategy.data.order_types import OrderType
 
@@ -974,21 +971,12 @@ class TestColonizeValidatorAdvancedEdgeCases:
         fleet.ships = [ship]
         fleet.orders = [existing_order]
 
-        # Without skip_chain_check: should fail
-        result_without_skip = ColonizeValidator.validate(
+        # Pod exhaustion is no longer checked at validation time
+        result = ColonizeValidator.validate(
             galaxy, fleet, planet,
             component_registry=mock_component_registry,
-            skip_chain_check=False
         )
-        assert result_without_skip.error_code == "COLONY_POD_EXHAUSTED"
-
-        # With skip_chain_check: should pass
-        result_with_skip = ColonizeValidator.validate(
-            galaxy, fleet, planet,
-            component_registry=mock_component_registry,
-            skip_chain_check=True
-        )
-        assert result_with_skip.is_valid is True
+        assert result.is_valid is True
 
     def test_drop_pod_validates(self, mock_component_registry):
         """Drop pod in carried_items validates for colonization."""
@@ -1012,8 +1000,8 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
         assert result.is_valid is True
 
-    def test_no_drop_pod_does_not_satisfy_requirement(self, mock_component_registry):
-        """Ship without drop pod in carried_items cannot colonize."""
+    def test_no_drop_pod_succeeds_at_command_time(self, mock_component_registry):
+        """Ship without drop pod succeeds at command time — pod check deferred to execution."""
         from game.strategy.validation import ColonizeValidator
 
         galaxy = MagicMock()
@@ -1032,8 +1020,8 @@ class TestColonizeValidatorAdvancedEdgeCases:
 
         result = ColonizeValidator.validate(galaxy, fleet, planet)
 
-        assert result.is_valid is False
-        assert result.error_code == "NO_COLONY_POD"
+        # Pod availability is checked at execution time, not validation time
+        assert result.is_valid is True
 
     def test_count_committed_empty_orders_list(self):
         """count_committed_colonize_orders handles empty orders list."""

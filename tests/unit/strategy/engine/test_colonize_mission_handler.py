@@ -175,8 +175,8 @@ class TestColonizeMissionHandlerPodValidation:
         # Should accept - matching pod type
         assert result.is_valid is True
 
-    def test_mission_rejects_exhausted_pods(self):
-        """Fleet with 1 ICE_DWARF pod and existing order rejects second mission."""
+    def test_mission_accepts_exhausted_pods_at_command_time(self):
+        """Fleet with 1 pod and existing order succeeds — pod check deferred to execution."""
         # Create fleet with 1 ICE_DWARF colony pod
         fleet = Fleet(1, owner_id=1, location=HexCoord(0, 0), speed=10.0)
         fleet.ships = [make_colony_ship("ICE_DWARF", owner_id=1)]
@@ -202,9 +202,8 @@ class TestColonizeMissionHandlerPodValidation:
         handler = ColonizeMissionCommandHandler()
         result = handler.execute(session, cmd)
 
-        # Should reject - pod already committed
-        assert result.is_valid is False
-        assert result.error_code == "COLONY_POD_EXHAUSTED"
+        # Pod availability is checked at execution time, not command time
+        assert result.is_valid is True
 
     def test_mission_with_none_planet_skips_pod_check(self):
         """Fleet with any pod can queue mission to 'any planet' (planet_id=None)."""
@@ -229,8 +228,8 @@ class TestColonizeMissionHandlerPodValidation:
         # Should accept - can't validate without knowing target
         assert result.is_valid is True
 
-    def test_mission_no_pods_fails(self):
-        """Fleet with zero colony pods cannot queue mission to specific planet."""
+    def test_mission_no_pods_succeeds_at_command_time(self):
+        """Fleet with zero colony pods succeeds at command time — pod check deferred to execution."""
         # Create fleet with NO colony pods (just a regular ship)
         fleet = Fleet(1, owner_id=1, location=HexCoord(0, 0), speed=10.0)
         regular_ship = ShipInstance(
@@ -264,6 +263,5 @@ class TestColonizeMissionHandlerPodValidation:
         handler = ColonizeMissionCommandHandler()
         result = handler.execute(session, cmd)
 
-        # Should reject - no colony pods
-        assert result.is_valid is False
-        assert result.error_code == "NO_COLONY_POD"
+        # Pod availability is checked at execution time, not command time
+        assert result.is_valid is True

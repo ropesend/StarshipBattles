@@ -104,17 +104,9 @@ class ColonizationSystem:
             logger.debug("No colonizable planets at fleet location (Validation Failed).")
             return None
 
-        # Check fleet has available drop pods (universal — any pod works on any planet)
-        remaining_pods = self.facade.get_fleet_remaining_pods(fleet.id)
-        if remaining_pods.get('drop_pod', 0) <= 0:
-            logger.debug("No colony pods available in fleet.")
-            return {
-                'type': 'no_targets',
-                'message': 'No colony pods in fleet',
-                'remaining_pods': remaining_pods,
-            }
-
-        # Return candidates for UI to open colonize dialog (or planet selection if multiple)
+        # Return candidates for UI to open colonize dialog (or planet selection if multiple).
+        # Pod availability is checked at execution time, not here — the player may
+        # load a pod onto the ship before the fleet arrives at the target planet.
         return {
             'type': 'prompt',
             'planets': valid_planets,
@@ -200,25 +192,14 @@ class ColonizationSystem:
             logger.debug(f"No colonizable planets at hex {target_hex}.")
             return None
 
-        # Check fleet has available drop pods (universal — any pod works on any planet)
-        remaining_pods = self.facade.get_fleet_remaining_pods(fleet.id)
-        if remaining_pods.get('drop_pod', 0) <= 0:
-            logger.debug("No colony pods available in fleet for designation.")
-            return {
-                'type': 'no_targets',
-                'message': 'No colony pods in fleet',
-                'remaining_pods': remaining_pods,
-            }
-
-        if len(candidates) == 1:
-            return self.queue_colonize_mission(target_hex, candidates[0], fleet)
-        else:
-            return {
-                'type': 'prompt',
-                'planets': candidates,
-                'target_hex': target_hex,
-                'fleet': fleet,
-            }
+        # Pod availability checked at execution time — player may load a pod before arrival.
+        # Always return prompt so the colonize dialog opens for population/cargo amounts.
+        return {
+            'type': 'prompt',
+            'planets': candidates,
+            'target_hex': target_hex,
+            'fleet': fleet,
+        }
 
     def queue_colonize_mission(self, target_hex, planet, fleet,
                                population_amount=None, cargo_amounts=None):

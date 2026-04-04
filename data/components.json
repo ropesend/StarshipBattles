@@ -2258,7 +2258,7 @@
             ],
             "abilities": {
                 "PodStorage": {
-                    "capacity_mass": 2000
+                    "capacity_mass": 5000
                 }
             },
             "major_classification": "Infrastructure",
