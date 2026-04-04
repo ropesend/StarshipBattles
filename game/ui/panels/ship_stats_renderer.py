@@ -353,6 +353,43 @@ def draw_ship_combat_stats(surface, ship: 'ICombatShip', x_indent, y, font):
     return y
 
 
+def draw_fleet_bonuses(surface, ship, x_indent, y, font, aura_manager):
+    """Draw active fleet/system/empire bonuses for a ship.
+
+    Args:
+        surface: Pygame surface to draw on
+        ship: The ship to display bonuses for
+        x_indent: X indentation for drawing
+        y: Starting Y position
+        font: Font for text rendering
+        aura_manager: FleetAuraManager instance
+
+    Returns:
+        Updated Y position after drawing
+    """
+    if aura_manager is None:
+        return y
+
+    bonuses = aura_manager.get_active_bonuses(ship.team_id)
+    if not bonuses:
+        return y
+
+    text = font.render("Fleet Bonuses:", True, AI_STRATEGY_TEXT)
+    surface.blit(text, (x_indent, y))
+    y += 18
+
+    for bonus in bonuses:
+        sign = "+" if bonus['value'] >= 0 else ""
+        ability_short = bonus['ability'].replace('Modifier', '').replace('ToHit', 'ToHit ')
+        line = f"  {sign}{bonus['value']:.1f} {ability_short} ({bonus['source']})"
+        color = HP_HEALTHY if bonus['value'] > 0 else HP_CRITICAL
+        entry = font.render(line, True, color)
+        surface.blit(entry, (x_indent, y))
+        y += UIConfig.ELEMENT_SPACING
+
+    return y + 4
+
+
 def draw_ship_weapons(surface, ship: 'ICombatShip', x_indent, y, panel_w, font):
     """Draw all weapon components for a ship.
 

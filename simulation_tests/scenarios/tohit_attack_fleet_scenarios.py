@@ -132,3 +132,98 @@ class ExternalBattleConditionApplied(TestScenario):
         ))
 
         return checks
+
+
+# =============================================================================
+# TOHIT-ATK-FLEET-003: Same stack group = MAX (not sum)
+# =============================================================================
+
+class FleetSensorSameGroupMax(TestScenario):
+    """TOHIT-ATK-FLEET-003: Two providers with same stack_group → take MAX."""
+
+    metadata = TestMetadata(
+        test_id="TOHIT-ATK-FLEET-003",
+        category="Weapons",
+        subcategory="ToHitAttackModifier",
+        name="Same Stack Group MAX",
+        summary="Two fleet-scope sensors in same stack_group: MAX(+2, +3) = +3, not +5",
+        conditions=["Provider A: +2 FleetSensor group", "Provider B: +3 FleetSensor group"],
+        edge_cases=["Same stack_group should MAX, not sum"],
+        expected_outcome="fleet_attack_bonus == 3.0 (MAX of 2 and 3)",
+        pass_criteria="fleet_attack_bonus == 3.0",
+        max_ticks=5,
+        seed=STANDARD_SEED,
+    )
+
+    def setup(self, battle_engine):
+        provider_a = self._load_ship('Test_FleetSensor_Provider.json')       # +2, FleetSensor group
+        provider_b = self._load_ship('Test_FleetSensor_Provider_3_GroupA.json')  # +3, FleetSensor group
+        target = self._load_ship('Test_Target_Stationary.json')
+
+        provider_a.position = pygame.math.Vector2(0, 0)
+        provider_b.position = pygame.math.Vector2(0, 100)
+        target.position = pygame.math.Vector2(500, 0)
+        provider_a.ai_strategy = 'test_do_nothing'
+        provider_b.ai_strategy = 'test_do_nothing'
+        target.ai_strategy = 'test_do_nothing'
+
+        end_condition = self._create_end_condition()
+        battle_engine.start([provider_a, provider_b], [target],
+                           seed=self.metadata.seed, end_condition=end_condition)
+
+        self.provider_a = provider_a
+        self.provider_b = provider_b
+
+    def validate(self, engine) -> list:
+        checks = []
+        bonus_a = getattr(self.provider_a, 'fleet_attack_bonus', 0.0)
+        bonus_a = bonus_a if isinstance(bonus_a, (int, float)) else 0.0
+        checks.append(check_exact("Same Group MAX (not sum)", 3.0, bonus_a))
+        return checks
+
+
+# =============================================================================
+# TOHIT-ATK-FLEET-004: Different stack groups = SUM
+# =============================================================================
+
+class FleetSensorDiffGroupSum(TestScenario):
+    """TOHIT-ATK-FLEET-004: Two providers with different stack_groups → SUM."""
+
+    metadata = TestMetadata(
+        test_id="TOHIT-ATK-FLEET-004",
+        category="Weapons",
+        subcategory="ToHitAttackModifier",
+        name="Different Stack Groups SUM",
+        summary="Two fleet-scope sensors in different stack_groups: +2 (A) + +1 (B) = +3",
+        conditions=["Provider A: +2 FleetSensor group", "Provider B: +1 FleetSensorB group"],
+        edge_cases=["Different stack_groups should sum"],
+        expected_outcome="fleet_attack_bonus == 3.0 (2 + 1)",
+        pass_criteria="fleet_attack_bonus == 3.0",
+        max_ticks=5,
+        seed=STANDARD_SEED,
+    )
+
+    def setup(self, battle_engine):
+        provider_a = self._load_ship('Test_FleetSensor_Provider.json')        # +2, FleetSensor group
+        provider_b = self._load_ship('Test_FleetSensor_Provider_GroupB.json')  # +1, FleetSensorB group
+        target = self._load_ship('Test_Target_Stationary.json')
+
+        provider_a.position = pygame.math.Vector2(0, 0)
+        provider_b.position = pygame.math.Vector2(0, 100)
+        target.position = pygame.math.Vector2(500, 0)
+        provider_a.ai_strategy = 'test_do_nothing'
+        provider_b.ai_strategy = 'test_do_nothing'
+        target.ai_strategy = 'test_do_nothing'
+
+        end_condition = self._create_end_condition()
+        battle_engine.start([provider_a, provider_b], [target],
+                           seed=self.metadata.seed, end_condition=end_condition)
+
+        self.provider_a = provider_a
+
+    def validate(self, engine) -> list:
+        checks = []
+        bonus = getattr(self.provider_a, 'fleet_attack_bonus', 0.0)
+        bonus = bonus if isinstance(bonus, (int, float)) else 0.0
+        checks.append(check_exact("Different Groups SUM", 3.0, bonus))
+        return checks

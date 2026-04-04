@@ -19,7 +19,7 @@ from game.ui.fonts import get_default_font
 from game.ui.panels.ship_stats_renderer import (
     draw_stat_bar, draw_ship_info_header, draw_ship_vitals,
     draw_ship_resources, draw_ship_combat_stats, draw_ship_weapons,
-    draw_ship_components
+    draw_ship_components, draw_fleet_bonuses
 )
 
 class BattlePanel:
@@ -195,6 +195,10 @@ class ShipStatsPanel(BattlePanel):
 
         # Combat stats (speed, shots, crew, target)
         y = draw_ship_combat_stats(surface, ship, x_indent, y, font)
+
+        # Fleet bonuses (if any active for this ship's team)
+        aura_mgr = getattr(self.scene.engine, 'aura_manager', None) if hasattr(self.scene, 'engine') else None
+        y = draw_fleet_bonuses(surface, ship, x_indent, y, font, aura_mgr)
 
         # Weapons
         y = draw_ship_weapons(surface, ship, x_indent, y, panel_w, font)
