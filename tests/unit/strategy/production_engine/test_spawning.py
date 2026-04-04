@@ -31,11 +31,11 @@ def _make_shipyard(instance_id: str = "yard_1") -> PlanetaryFacility:
 class TestShipSpawning:
     """Tests for _spawn_ship method."""
 
-    def test_spawn_ship_requires_save_path(self, mock_planet, mock_empire, mock_galaxy):
+    def test_spawn_ship_requires_save_path(self, mock_planet, mock_empire, mock_galaxy, fresh_registries):
         """Ship spawning requires save_path for design loading."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
 
         # Should not crash, but should log warning
         with patch('game.strategy.engine.production_spawner.logger') as mock_logger:
@@ -43,11 +43,11 @@ class TestShipSpawning:
 
             mock_logger.warning.assert_called()
 
-    def test_spawn_ship_creates_fleet(self, mock_planet, mock_empire, mock_galaxy):
+    def test_spawn_ship_creates_fleet(self, mock_planet, mock_empire, mock_galaxy, fresh_registries):
         """Ship spawning creates a new fleet."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_class:
             mock_library = MagicMock()
@@ -65,11 +65,11 @@ class TestShipSpawning:
 
                 mock_empire.add_fleet.assert_called()
 
-    def test_spawn_ship_increments_built_count(self, mock_planet, mock_empire, mock_galaxy):
+    def test_spawn_ship_increments_built_count(self, mock_planet, mock_empire, mock_galaxy, fresh_registries):
         """Ship spawning increments design's times_built counter."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_class:
             mock_library = MagicMock()
@@ -91,21 +91,21 @@ class TestShipSpawning:
 class TestComplexSpawning:
     """Tests for _spawn_complex method."""
 
-    def test_spawn_complex_adds_facility(self, mock_planet, mock_empire):
+    def test_spawn_complex_adds_facility(self, mock_planet, mock_empire, fresh_registries):
         """Complex spawning adds facility to planet."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
 
         engine._spawner._create_and_place_facility(mock_planet, "Factory", mock_empire, save_path=None)
 
         assert len(mock_planet.facilities) == 1
 
-    def test_spawn_complex_loads_design_data(self, mock_planet, mock_empire):
+    def test_spawn_complex_loads_design_data(self, mock_planet, mock_empire, fresh_registries):
         """Complex spawning loads design data if save_path provided."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
 
         with patch('game.strategy.engine.production_spawner.DesignLibrary') as mock_lib_class:
             mock_library = MagicMock()
@@ -120,12 +120,12 @@ class TestComplexSpawning:
 class TestSpawnLocation:
     """Tests for spawn location calculation."""
 
-    def test_spawn_location_uses_planet_location(self, mock_planet, mock_empire, mock_galaxy):
+    def test_spawn_location_uses_planet_location(self, mock_planet, mock_empire, mock_galaxy, fresh_registries):
         """Ship spawns at planet's location by default."""
         from game.strategy.engine.production_engine import ProductionEngine
         from game.strategy.data.fleet import Fleet
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         mock_planet.location = HexCoord(10, 20)
         mock_galaxy.get_system_of_planet.return_value = None
 
@@ -149,11 +149,11 @@ class TestSpawnLocation:
                     call_args = mock_fleet_class.call_args[0]
                     assert call_args[2] == HexCoord(10, 20)
 
-    def test_spawn_location_calculates_global_hex(self, mock_planet, mock_empire, mock_galaxy):
+    def test_spawn_location_calculates_global_hex(self, mock_planet, mock_empire, mock_galaxy, fresh_registries):
         """Ship spawns at global hex when system context available."""
         from game.strategy.engine.production_engine import ProductionEngine
 
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         mock_planet.location = HexCoord(2, 3)  # Local coordinates
 
         mock_system = MagicMock()

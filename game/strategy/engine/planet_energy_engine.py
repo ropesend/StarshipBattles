@@ -22,7 +22,6 @@ import logging
 
 from game.core.registry import GameRegistries
 from game.core.patterns.layer_iterator import iter_components
-from game.strategy.services.component_inspector import get_component_abilities
 
 logger = logging.getLogger(__name__)
 
@@ -112,21 +111,12 @@ def get_activatable_ability_info(comp, ability_key: str, registries=None) -> Opt
 
 
 def _extract_abilities(comp, registries: Optional[GameRegistries] = None) -> dict:
-    """Extract abilities dict from a component entry (inline or registry lookup)."""
-    if isinstance(comp, dict):
-        abilities = comp.get('abilities', {})
-        if abilities:
-            return abilities
-        comp_id = comp.get('id')
-        if comp_id and registries is not None:
-            comp_def = registries.components.get(comp_id)
-            if comp_def is not None:
-                return get_component_abilities(comp_def)
-    elif isinstance(comp, str) and registries is not None:
-        comp_def = registries.components.get(comp)
-        if comp_def is not None:
-            return get_component_abilities(comp_def)
-    return {}
+    """Extract abilities dict from a component entry.
+
+    Delegates to the centralized extract_abilities_from_component() in component_inspector.
+    """
+    from game.strategy.services.component_inspector import extract_abilities_from_component
+    return extract_abilities_from_component(comp, registries)
 
 
 # Activatable strategic abilities that drain energy (beyond PlanetaryShield)
@@ -175,7 +165,23 @@ class PlanetEnergyEngine:
     # The resource type used for planetary energy. Configurable if needed.
     ENERGY_RESOURCE = "energy"
 
-    def __init__(self, *, registries: Optional[GameRegistries] = None):
+    def __init__(self, *, registries: GameRegistries):
+        """Initialize planet energy engine.
+
+        Args:
+            registries: GameRegistries for component ability lookup. Required.
+
+        Raises:
+            ValidationException: If registries is None.
+        """
+        if registries is None:
+            from game.core.exceptions import ValidationException
+            from game.core.error_codes import ErrorCode
+            raise ValidationException(
+                "registries is required for PlanetEnergyEngine",
+                code=ErrorCode.MISSING_DEPENDENCY.value,
+                context={"class": "PlanetEnergyEngine", "parameter": "registries"}
+            )
         self._registries = registries
 
     def process_energy_tick(self, tick: int, empires: List) -> None:
@@ -205,29 +211,39 @@ class PlanetEnergyEngine:
                 continue
             for comp in iter_components(facility.design_data):
                 # Check for resource storage
-                storage_info = get_resource_storage_info(comp, resource, self._registries)
-                if storage_info is not None:
-                    new_capacity += storage_info.get('amount', 0.0)
+                # Extract abilities once per component (optimization)
+                abilities = _extract_abilities(comp, self._registries)
+
+                # Check for resource storage
+                storage_entries = abilities.get('ResourceStorage')
+                if storage_entries:
+                    entries = storage_entries if isinstance(storage_entries, list) else [storage_entries]
+                    for entry in entries:
+                        if isinstance(entry, dict) and entry.get('resource') == resource:
+                            new_capacity += entry.get('amount', 0.0)
 
                 # Check for strategic resource generation
-                gen_info = get_strategic_generation_info(comp, resource, self._registries)
-                if gen_info is not None:
-                    new_generation += gen_info.get('generation_rate', 0.0)
+                gen_entries = abilities.get('StrategicResourceGeneration')
+                if gen_entries:
+                    entries = gen_entries if isinstance(gen_entries, list) else [gen_entries]
+                    for entry in entries:
+                        if isinstance(entry, dict) and entry.get('resource') == resource:
+                            new_generation += entry.get('generation_rate', 0.0)
 
                 # Check for shield (to compute drain)
-                shield_info_data = get_shield_info(comp, self._registries)
-                if shield_info_data is not None:
+                shield_data = abilities.get('PlanetaryShield')
+                if isinstance(shield_data, dict):
                     has_shield_facility = True
                     if planet.shield_active:
-                        total_drain += shield_info_data.get('energy_drain_rate', 0.0)
+                        total_drain += shield_data.get('energy_drain_rate', 0.0)
 
                 # Check for other activatable abilities (stabilizers)
                 for ability_key in _ACTIVATABLE_ABILITIES:
-                    info = get_activatable_ability_info(comp, ability_key, self._registries)
-                    if info is not None:
+                    ability_data = abilities.get(ability_key)
+                    if isinstance(ability_data, dict):
                         _active_facilities[ability_key] = True
                         if _is_ability_active(planet, ability_key):
-                            total_drain += info.get('energy_drain_rate', 0.0)
+                            total_drain += ability_data.get('energy_drain_rate', 0.0)
 
         planet.energy_capacity = new_capacity
         planet.energy_generation = new_generation

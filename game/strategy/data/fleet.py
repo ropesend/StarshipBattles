@@ -365,7 +365,7 @@ class Fleet:
             PersistenceException: If required keys missing
         """
         # PROJ-210: Order deserialization delegated to FleetOrderSerializer
-        from game.strategy.data.fleet_order_serializer import FleetOrderSerializer
+        from game.strategy.data.order_serializer import FleetOrderSerializer
 
         require_keys(data, ['id', 'owner_id'], 'Fleet')
 
@@ -430,7 +430,7 @@ class Fleet:
             empires: List of Empire objects containing all fleets
         """
         # PROJ-210: Delegate to FleetOrderSerializer
-        from game.strategy.data.fleet_order_serializer import FleetOrderSerializer
+        from game.strategy.data.order_serializer import FleetOrderSerializer
         FleetOrderSerializer.resolve_order_references(self, galaxy, empires)
 
     def __repr__(self):

@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.strategy.engine.planet_action_engine import PlanetActionEngine
-from game.strategy.data.planet_order_types import PlanetOrder
+from game.strategy.data.order_types import Order as PlanetOrder
 from game.strategy.data.order_types import OrderType
 
 

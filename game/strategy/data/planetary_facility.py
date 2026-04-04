@@ -25,6 +25,19 @@ class PlanetaryFacility:
     # PROJ-237: Per-component state tracking (e.g., shield active/inactive)
     component_states: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize facility to dict for save games."""
+        return {
+            'instance_id': self.instance_id,
+            'design_id': self.design_id,
+            'name': self.name,
+            'design_data': self.design_data,
+            'is_operational': self.is_operational,
+            'construction_queue': list(self.construction_queue),
+            'consumable_levels': self.consumable_levels.copy(),
+            'component_states': self.component_states.copy() if self.component_states else {},
+        }
+
     @classmethod
     def from_dict(cls, data: dict) -> 'PlanetaryFacility':
         """

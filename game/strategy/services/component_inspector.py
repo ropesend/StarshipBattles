@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "get_component_abilities",
+    "extract_abilities_from_component",
     "get_component_type",
     "get_component_threshold",
     "iterate_design_components",
@@ -40,6 +41,52 @@ def get_component_abilities(comp_def: Any) -> Dict[str, Any]:
     if isinstance(comp_def, dict):
         return comp_def.get('abilities', {})
     return getattr(comp_def, 'abilities', {})
+
+
+def extract_abilities_from_component(comp: Any, registries=None) -> Dict[str, Any]:
+    """Extract the abilities dict from a design_data component entry.
+
+    Handles both inline abilities and registry lookup by component ID.
+    This is the single source of truth for extracting abilities from
+    component entries in design_data dicts.
+
+    Args:
+        comp: Component entry from design_data layers (dict or str).
+        registries: Optional - either GameRegistries (with .components attr)
+                    or a plain dict acting as component registry.
+
+    Returns:
+        Dict of abilities keyed by ability name (empty dict if none found).
+    """
+    if isinstance(comp, dict):
+        abilities = comp.get('abilities', {})
+        if abilities:
+            return abilities
+        comp_id = comp.get('id')
+        if comp_id and registries is not None:
+            comp_reg = _get_component_registry(registries)
+            comp_def = comp_reg.get(comp_id) if comp_reg else None
+            if comp_def is not None:
+                return get_component_abilities(comp_def)
+    elif isinstance(comp, str) and registries is not None:
+        comp_reg = _get_component_registry(registries)
+        comp_def = comp_reg.get(comp) if comp_reg else None
+        if comp_def is not None:
+            return get_component_abilities(comp_def)
+    return {}
+
+
+def _get_component_registry(registries) -> Optional[Dict]:
+    """Get the component registry dict from a registries parameter.
+
+    Handles both GameRegistries objects (with .components) and plain dicts
+    used as component registries directly.
+    """
+    if hasattr(registries, 'components'):
+        return registries.components
+    if isinstance(registries, dict):
+        return registries
+    return None
 
 
 def get_component_type(comp_def: Any) -> str:

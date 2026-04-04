@@ -119,7 +119,7 @@ class TestCustomResourcePlanetDeposits:
 class TestCustomResourceHarvesting:
     """Tests for harvesting custom resources from planets."""
 
-    def test_harvest_custom_resource_into_local_stockpile(self):
+    def test_harvest_custom_resource_into_local_stockpile(self, fresh_registries):
         """HarvestingEngine extracts a custom resource into planet stockpile."""
         harvester = _make_harvester_facility("dilithium", base_harvest_rate=100.0)
         planet = create_test_planet(
@@ -133,7 +133,7 @@ class TestCustomResourceHarvesting:
         empire = _make_empire()
         empire.add_colony(planet)
 
-        engine = HarvestingEngine()
+        engine = HarvestingEngine(registries=fresh_registries)
         engine.process_harvesting_tick(1, [empire])
 
         # Planet stockpile should have received some dilithium

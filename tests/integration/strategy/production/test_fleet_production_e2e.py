@@ -166,11 +166,11 @@ class TestFleetProductionE2E:
         assert len(fleet.ships) == initial_ship_count + 1  # Ship spawned
 
     def test_e2e_fleet_at_planet_builds_complex_that_appears_on_planet(
-        self, temp_save_dir, mock_galaxy_at_planet
+        self, temp_save_dir, mock_galaxy_at_planet, fresh_registries
     ):
         """E2E: Fleet at planet → build complex → complex appears on planet."""
         mock_galaxy, mock_planet = mock_galaxy_at_planet
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
 
         # Create fleet at planet hex with space yard
         # At 30/tick fleet yard rate, 100 Metals = 4 ticks, completes in 1 turn
@@ -288,11 +288,11 @@ class TestFleetProductionE2E:
         assert restored_fleet.construction_queue[0]["turns_remaining"] == 5
 
     def test_e2e_complex_pauses_when_fleet_moves_away_from_planet(
-        self, temp_save_dir, mock_galaxy_at_planet
+        self, temp_save_dir, mock_galaxy_at_planet, fresh_registries
     ):
         """E2E: Fleet at planet with complex in queue → fleet moves → complex pauses."""
         mock_galaxy, mock_planet = mock_galaxy_at_planet
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
 
         # Start at planet hex
         # At 30/tick fleet yard rate, 9000 Metals = 300 ticks = 3 turns

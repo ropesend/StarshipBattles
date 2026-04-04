@@ -74,9 +74,9 @@ class QualityEngine:
 
     def _extract_quality_improvement(self, comp):
         """Extract QualityImprovement ability data from a component entry."""
-        if isinstance(comp, dict):
-            abilities = comp.get('abilities', {})
-            data = abilities.get('QualityImprovement')
-            if isinstance(data, (dict, list)):
-                return data
+        from game.strategy.services.component_inspector import extract_abilities_from_component
+        abilities = extract_abilities_from_component(comp)
+        data = abilities.get('QualityImprovement')
+        if isinstance(data, (dict, list)):
+            return data
         return None

@@ -19,7 +19,6 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from game.core.patterns.layer_iterator import iter_components
 from game.strategy.services.component_inspector import (
     iterate_design_components,
-    get_component_abilities,
 )
 from game.strategy.data.order_types import OrderType, PLANET_ACTION_ORDER_TYPES
 
@@ -182,18 +181,9 @@ class ActionTimeResolver:
 
 
 def _get_abilities(comp, component_registry: Optional[Dict[str, Any]] = None) -> dict:
-    """Extract abilities from a component entry (inline or registry)."""
-    if isinstance(comp, dict):
-        abilities = comp.get('abilities', {})
-        if abilities:
-            return abilities
-        comp_id = comp.get('id')
-        if comp_id and component_registry:
-            comp_def = component_registry.get(comp_id)
-            if comp_def:
-                return get_component_abilities(comp_def)
-    elif isinstance(comp, str) and component_registry:
-        comp_def = component_registry.get(comp)
-        if comp_def:
-            return get_component_abilities(comp_def)
-    return {}
+    """Extract abilities from a component entry.
+
+    Delegates to centralized extract_abilities_from_component().
+    """
+    from game.strategy.services.component_inspector import extract_abilities_from_component
+    return extract_abilities_from_component(comp, component_registry)

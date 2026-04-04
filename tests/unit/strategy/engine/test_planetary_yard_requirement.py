@@ -63,9 +63,9 @@ class TestColonyHasPlanetaryYard:
 class TestBaseQueueRequiresPlanetaryYard:
     """Tests that base construction queue only processes with PlanetaryYard."""
 
-    def test_base_queue_blocked_without_yard(self):
+    def test_base_queue_blocked_without_yard(self, fresh_registries):
         """Colony without PlanetaryYard can't process base construction queue."""
-        engine = ProductionEngine()
+        engine = ProductionEngine(registries=fresh_registries)
         empire = MagicMock()
         empire.id = 0
         empire.fleets = []
