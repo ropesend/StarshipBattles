@@ -329,13 +329,23 @@ class OrderProcessor:
                         target = f
                         break
 
-        # Validate
+        # Validate — skip location check for drop_pod (fleet is already at planet via MOVE order)
+        skip_loc = cargo_type == "drop_pod"
+        logger.info(
+            f"OrderProcessor.process_transfer: fleet={fleet.id} cargo={cargo_type} "
+            f"dir={direction} amt={amount} species={species_id} "
+            f"target={getattr(target, 'name', target)} skip_loc={skip_loc}"
+        )
         validation = TransferValidator.validate(
-            galaxy, fleet, target, cargo_type, direction, amount, species_id
+            galaxy, fleet, target, cargo_type, direction, amount, species_id,
+            skip_location_check=skip_loc
         )
 
         if not validation.is_valid:
-            logger.warning(f"OrderProcessor: Transfer failed - {validation.message}")
+            logger.warning(
+                f"OrderProcessor: Transfer failed - {validation.message} "
+                f"(code={validation.error_code})"
+            )
             fleet.pop_order()
             return TransferResult(success=False, message=validation.message)
 
@@ -345,8 +355,10 @@ class OrderProcessor:
 
         if is_planet(target):
             if direction == "load":
+                logger.info(f"OrderProcessor: Executing LOAD {cargo_type} from {target.name}")
                 transferred = self._execute_load(fleet, target, cargo_type, amount, empire, species_id)
             else:  # unload
+                logger.info(f"OrderProcessor: Executing UNLOAD {cargo_type} to {target.name}")
                 transferred = self._execute_unload(fleet, target, cargo_type, amount, empire, species_id)
         elif is_fleet(target):
             transferred = self._execute_fleet_transfer(fleet, target, cargo_type, direction, amount, species_id)
@@ -532,6 +544,11 @@ class OrderProcessor:
             pod_name: Name of pod to load (from species_id field). If None, load any.
             amount: Number of pods to load (0 = load all that fit).
         """
+        logger.info(
+            f"_load_pod_from_staging_yard: planet={planet.name} pod_name={pod_name!r} "
+            f"amount={amount} staging_count={len(planet.staging_yard)} "
+            f"fleet_ships={len(fleet.ships)}"
+        )
         loaded = 0
         to_load = amount if amount > 0 else len(planet.staging_yard)
 
@@ -541,15 +558,28 @@ class OrderProcessor:
                 break
             item = planet.staging_yard[i]
             if pod_name and item.get('name') != pod_name:
+                logger.debug(
+                    f"  Skipping staging item {i}: name={item.get('name')!r} != {pod_name!r}"
+                )
                 continue
             pod_mass = item.get('mass', 0.0)
             # Find a ship that can carry this pod
             target_ship = None
             for ship in fleet.ships:
-                if ship.can_carry_pod(pod_mass):
+                capacity = ship.get_pod_storage_capacity()
+                used = ship.get_pod_storage_used()
+                can = ship.can_carry_pod(pod_mass)
+                logger.debug(
+                    f"  Ship {ship.name}: pod_capacity={capacity} used={used} "
+                    f"can_carry({pod_mass})={can}"
+                )
+                if can:
                     target_ship = ship
                     break
             if target_ship is None:
+                logger.warning(
+                    f"  No ship can carry pod '{item.get('name')}' (mass={pod_mass})"
+                )
                 continue  # No ship has capacity
             removed = planet.remove_from_staging_yard(i)
             if removed:

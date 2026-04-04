@@ -471,8 +471,8 @@ class TestOnColonizeClickPodFiltering:
         assert result['type'] == 'prompt'
         assert len(result['planets']) == 2
 
-    def test_on_colonize_accounts_for_committed_orders(self):
-        """Committed orders reduce available pods for filtering."""
+    def test_on_colonize_ignores_pod_count_at_command_time(self):
+        """Pod count no longer filters planets at command time — deferred to execution."""
         from game.ui.screens.strategy_colonization import ColonizationSystem
         from enum import Enum
 
@@ -511,11 +511,13 @@ class TestOnColonizeClickPodFiltering:
 
         result = system.on_colonize_click(mock_fleet)
 
-        # No valid targets because pod is committed
-        assert result is None or result.get('type') == 'no_targets'
+        # Pod availability is checked at execution time, not command time
+        assert result is not None
+        assert result['type'] == 'prompt'
+        assert len(result['planets']) == 2
 
-    def test_on_colonize_no_pods_returns_informative_message(self):
-        """When fleet has no pods, return informative message."""
+    def test_on_colonize_no_pods_still_prompts(self):
+        """When fleet has no pods, still prompts — pod check deferred to execution."""
         from game.ui.screens.strategy_colonization import ColonizationSystem
 
         mock_planet = Mock()
@@ -543,15 +545,16 @@ class TestOnColonizeClickPodFiltering:
 
         result = system.on_colonize_click(mock_fleet)
 
-        # Should indicate no valid targets
-        assert result is None or result.get('type') == 'no_targets'
+        # Pod availability is checked at execution time — prompt is shown
+        assert result is not None
+        assert result['type'] == 'prompt'
 
 
 class TestHandleColonizeDesignationPodFiltering:
     """Tests for PROJ-140: Pod filtering in handle_colonize_designation()."""
 
-    def test_designation_filters_by_pod_type(self):
-        """Designation filters out planets when fleet lacks matching pod."""
+    def test_designation_ignores_pod_count_at_command_time(self):
+        """Designation no longer filters by pod count — deferred to execution."""
         from game.ui.screens.strategy_colonization import ColonizationSystem
         from game.core.hex_math import HexCoord
         from enum import Enum
@@ -602,9 +605,10 @@ class TestHandleColonizeDesignationPodFiltering:
         finally:
             colonization_module.pixel_to_hex = original_pixel_to_hex
 
-        # No pods available - should return no_targets
+        # Pod availability is checked at execution time — prompt is shown
         assert result is not None
-        assert result.get('type') == 'no_targets'
+        assert result['type'] == 'prompt'
+        assert len(result['planets']) == 1
 
     def test_designation_matching_pod_succeeds(self):
         """Designation succeeds when fleet has pod matching planet type."""
@@ -661,8 +665,8 @@ class TestHandleColonizeDesignationPodFiltering:
         assert result is not None
         assert result.get('type') in ('success', 'prompt')
 
-    def test_designation_no_pods_returns_no_targets(self):
-        """Designation returns no_targets when fleet has no colony pods."""
+    def test_designation_no_pods_still_prompts(self):
+        """Designation prompts even without pods — pod check deferred to execution."""
         from game.ui.screens.strategy_colonization import ColonizationSystem
         from game.core.hex_math import HexCoord
         from enum import Enum
@@ -709,8 +713,9 @@ class TestHandleColonizeDesignationPodFiltering:
         finally:
             colonization_module.pixel_to_hex = original_pixel_to_hex
 
-        # Should return no_targets
-        assert result is None or result.get('type') == 'no_targets'
+        # Pod availability is checked at execution time — prompt is shown
+        assert result is not None
+        assert result['type'] == 'prompt'
 
     def test_designation_mixed_types_filters_correctly(self):
         """Designation filters correctly when multiple planet types exist."""
