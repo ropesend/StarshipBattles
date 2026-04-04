@@ -51,6 +51,16 @@ simulation_tests/
 │   ├── cnc_scenarios.py             # CommandAndControl
 │   ├── sra_scenarios.py             # ShieldRegeneratingArmor
 │   ├── damage_pipeline_scenarios.py # Integration tests (multi-component defense)
+│   │   # Modifier subcategories
+│   ├── mod_damage_scenarios.py      # damage_mult modifier
+│   ├── mod_range_scenarios.py       # range_mult modifier
+│   ├── mod_reload_scenarios.py      # reload_mult modifier
+│   ├── mod_thrust_scenarios.py      # thrust_mult modifier
+│   ├── mod_accuracy_scenarios.py    # accuracy_add modifier
+│   ├── mod_arc_scenarios.py         # arc_set modifier
+│   ├── mod_endurance_scenarios.py   # endurance_mult modifier
+│   ├── mod_consumption_scenarios.py # consumption_mult modifier
+│   ├── mod_stacking_scenarios.py    # Multi-modifier interactions
 │   │   # System scenarios
 │   ├── propulsion_scenarios.py      # Engine/thruster scenarios
 │   └── resource_scenarios.py        # Fuel/energy/ammo scenarios
@@ -510,9 +520,24 @@ use `ComparisonScenario` for measured A/B comparisons.
 | Beam Weapons | `beam_scenarios.py` | BEAMWEAPON-* |
 | Projectile Weapons | `projectile_scenarios.py` | PROJECTILE-* |
 | Seeker Weapons | `seeker_scenarios.py` | SEEKER-* |
-| Stat Modifiers | `modifier_scenarios.py` | MOD-* |
 | Propulsion | `propulsion_scenarios.py` | PROP-* |
 | Resources | `resource_scenarios.py` | RESOURCE-* |
+
+### Stat Modifier Subcategories
+
+Each modifier effect type has a dedicated test file:
+
+| Modifier | File | Test ID Prefix |
+|----------|------|---------------|
+| `damage_mult` | `mod_damage_scenarios.py` | MOD-DMG-* |
+| `range_mult` | `mod_range_scenarios.py` | MOD-RANGE-* |
+| `reload_mult` | `mod_reload_scenarios.py` | MOD-RELOAD-* |
+| `thrust_mult` | `mod_thrust_scenarios.py` | MOD-THRUST-* |
+| `accuracy_add` | `mod_accuracy_scenarios.py` | MOD-ACC-* |
+| `arc_set` | `mod_arc_scenarios.py` | MOD-ARC-* |
+| `endurance_mult` | `mod_endurance_scenarios.py` | MOD-ENDUR-* |
+| `consumption_mult` | `mod_consumption_scenarios.py` | MOD-CONSUME-* |
+| Multi-modifier stacking | `mod_stacking_scenarios.py` | MOD-STACK-* |
 
 Weapon-level resource dependency tests exist within weapon files:
 - `beam_scenarios.py`: BEAMWEAPON-RES-* (energy), BEAMWEAPON-RES-METALS-*

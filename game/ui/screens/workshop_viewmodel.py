@@ -462,6 +462,26 @@ class WorkshopViewModel:
             logger.warning(f"Failed to remove component: {result.errors}")
             return None
 
+    def pick_up_component(self, layer: LayerType, index: int) -> Optional[Component]:
+        """Remove a component for drag-and-drop pick-up.
+
+        Delegates to VehicleDesignService.remove_component() for validated removal,
+        then clears the selection. This is the correct path for the drag-and-drop
+        "pick up" gesture in InteractionController — it must not call
+        ship.remove_component() directly.
+
+        Args:
+            layer: Layer containing the component
+            index: Index of the component to remove
+
+        Returns:
+            The removed component for use as dragged_item, or None if removal failed
+        """
+        removed = self.remove_component(layer, index)
+        if removed is not None:
+            self.clear_selection()
+        return removed
+
     def change_ship_class(self, new_class: str, migrate_components: bool = True) -> bool:
         """
         Change the ship's vehicle class using the service.

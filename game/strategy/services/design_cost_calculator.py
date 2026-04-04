@@ -81,7 +81,7 @@ class DesignCostCalculator:
                     cost = DesignCostCalculator._apply_cost_multiplier(cost, design_data, registries)
                     design_data['total_resource_cost'] = cost
                     return cost
-            except Exception as e:
+            except Exception as e:  # Intentional broad catch: Ship loading is best-effort; inline cost fallback already attempted
                 logger.debug(f"Ship loading failed: {e}")
 
         return {}

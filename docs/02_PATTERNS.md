@@ -508,6 +508,7 @@ View (panels) --[user action]--> ViewModel --[delegates]--> VehicleDesignService
 - Complex UI screens with multiple panels sharing state.
 - The ViewModel is the single source of truth; views are stateless renderers.
 - Always use `VehicleDesignService` (not `ShipBuilderService`) for ship operations.
+- **Ship mutations must go through the ViewModel** (e.g., `viewmodel.remove_component()`), never directly on the Ship object. The ViewModel delegates to `VehicleDesignService` which provides validation and result handling, then emits the appropriate events.
 
 ---
 

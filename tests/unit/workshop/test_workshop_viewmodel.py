@@ -307,3 +307,50 @@ class TestWorkshopViewModel:
         # Hull should remain
         if LayerType.HULL in ship.layers:
             assert len(ship.layers[LayerType.HULL].components) > 0
+
+    # ─────────────────────────────────────────────────────────────────
+    # Remove Component Tests (pick-up-through-viewmodel pattern)
+    # ─────────────────────────────────────────────────────────────────
+
+    def test_remove_component_returns_removed(self, viewmodel_setup, mock_registries):
+        """remove_component returns the removed component on success."""
+        viewmodel, event_bus = viewmodel_setup
+        from game.simulation.entities.ship import Ship, LayerType
+        from game.simulation.components.component import create_component
+
+        ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort", registries=mock_registries)
+        comp = create_component('armor_plate', registries=mock_registries)
+        ship.add_component(comp, LayerType.ARMOR)
+        viewmodel._ship = ship
+        event_bus.clear()
+
+        removed = viewmodel.remove_component(LayerType.ARMOR, 0)
+
+        assert removed is not None
+        assert removed is comp
+
+    def test_remove_component_emits_ship_updated(self, viewmodel_setup, mock_registries):
+        """remove_component emits SHIP_UPDATED event on success."""
+        viewmodel, event_bus = viewmodel_setup
+        from game.simulation.entities.ship import Ship, LayerType
+        from game.simulation.components.component import create_component
+
+        ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort", registries=mock_registries)
+        comp = create_component('armor_plate', registries=mock_registries)
+        ship.add_component(comp, LayerType.ARMOR)
+        viewmodel._ship = ship
+        event_bus.clear()
+
+        viewmodel.remove_component(LayerType.ARMOR, 0)
+
+        events = event_bus.get_events('SHIP_UPDATED')
+        assert len(events) >= 1, "remove_component should emit SHIP_UPDATED"
+
+    def test_remove_component_no_ship_returns_none(self, viewmodel_setup):
+        """remove_component returns None when no ship is set."""
+        viewmodel, event_bus = viewmodel_setup
+        viewmodel._ship = None
+
+        removed = viewmodel.remove_component(None, 0)
+
+        assert removed is None

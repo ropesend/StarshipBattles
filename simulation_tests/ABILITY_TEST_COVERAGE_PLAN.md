@@ -100,6 +100,19 @@ ability under test.
 | `ToHitAttackModifier` | `tohit_attack_scenarios.py` | **Complete** | TOHIT-ATK-001 to 005 |
 | `ToHitAttackModifier` (fleet) | `tohit_attack_fleet_scenarios.py` | **Complete** | TOHIT-ATK-FLEET-001 to 004 |
 
+### Category E2: Stat Modifiers (per-modifier subcategories)
+| Modifier | Test File | Status | Test ID Prefix |
+|----------|-----------|--------|---------------|
+| `damage_mult` | `mod_damage_scenarios.py` | **Complete** | MOD-DMG-* |
+| `range_mult` | `mod_range_scenarios.py` | **Complete** | MOD-RANGE-* |
+| `reload_mult` | `mod_reload_scenarios.py` | **Complete** | MOD-RELOAD-* |
+| `thrust_mult` | `mod_thrust_scenarios.py` | **Complete** | MOD-THRUST-* |
+| `accuracy_add` | `mod_accuracy_scenarios.py` | **Complete** | MOD-ACC-* |
+| `arc_set` | `mod_arc_scenarios.py` | **Complete** | MOD-ARC-* |
+| `endurance_mult` | `mod_endurance_scenarios.py` | **Complete** | MOD-ENDUR-* |
+| `consumption_mult` | `mod_consumption_scenarios.py` | **Complete** | MOD-CONSUME-* |
+| Multi-modifier stacking | `mod_stacking_scenarios.py` | **Complete** | MOD-STACK-* |
+
 ### Category F: Carrier Operations (1 ability)
 | Ability | What to Test | Priority |
 |---------|--------------|----------|
@@ -129,7 +142,7 @@ ability under test.
 1. **Phase 1** (Complete): Beam weapon tests — `beam_scenarios.py`
 2. **Phase 2** (Complete): Propulsion tests — `propulsion_scenarios.py`
 3. **Phase 3** (Complete → Deleted): Shield/Armor/ECM/Sensor tests — `defense_scenarios.py` (redundant, replaced by ability-specific files)
-4. **Phase 4** (Complete): Stat modifier tests — `modifier_scenarios.py`
+4. **Phase 4** (Rewritten): Stat modifier tests — split into 9 subcategory files (`mod_*_scenarios.py`)
 5. **Phase 5** (Complete): Projectile weapon tests — `projectile_scenarios.py`
 6. **Phase 6** (Rewritten): Seeker weapon tests — `seeker_scenarios.py`
 7. **Phase 7** (Complete): Resource system tests — `resource_scenarios.py`

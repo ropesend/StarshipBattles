@@ -89,13 +89,13 @@ class InteractionController:
                                 self.dragged_item.modifiers.append(new_m)
                             self.dragged_item.recalculate_stats()
                         elif self.selected_component == found:
-                            # Pick up
+                            # Pick up — route through ViewModel so VehicleDesignService
+                            # validates the removal and SHIP_UPDATED/SELECTION_CHANGED
+                            # events are emitted automatically.
                             layer, index, comp = found
-                            self.builder.ship.remove_component(layer, index)
-                            self.dragged_item = comp
+                            picked = self.builder.viewmodel.pick_up_component(layer, index)
+                            self.dragged_item = picked if picked is not None else comp
                             self.selected_component = None
-                            self.builder.on_selection_changed(None)
-                            self.builder.update_stats()
                         else:
                             # Select
                             self.selected_component = found
