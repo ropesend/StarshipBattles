@@ -26,5 +26,5 @@ class TestAbilityScopeExtensions:
         assert AbilityScope("allied_system") == AbilityScope.ALLIED_SYSTEM
 
     def test_all_scopes_count(self):
-        """Should have 8 total scopes."""
-        assert len(AbilityScope) == 8
+        """Should have 9 total scopes (including FLEET)."""
+        assert len(AbilityScope) == 9

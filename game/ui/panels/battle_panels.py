@@ -19,7 +19,7 @@ from game.ui.fonts import get_default_font
 from game.ui.panels.ship_stats_renderer import (
     draw_stat_bar, draw_ship_info_header, draw_ship_vitals,
     draw_ship_resources, draw_ship_combat_stats, draw_ship_weapons,
-    draw_ship_components
+    draw_ship_components, draw_fleet_bonuses
 )
 
 class BattlePanel:
@@ -72,6 +72,7 @@ class ShipStatsPanel(BattlePanel):
         self.expanded_ships = set()  # Set of ship IDs (strings)
         self.scroll = ScrollState()
         self.content_height = 0
+        self._ship_banner_rects = {}  # ship_id -> (y_start, y_end) recorded during draw
 
     def _get_ship_id(self, ship) -> str:
         """Get the ship ID for expansion tracking.
@@ -98,6 +99,9 @@ class ShipStatsPanel(BattlePanel):
             self.surface.get_width() != self.rect.width or
             self.surface.get_height() != self.rect.height):
             self.surface = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
+
+        # Clear banner rects for this frame
+        self._ship_banner_rects.clear()
 
         # Draw to surface
         self.surface.fill((0, 0, 0, 0))
@@ -162,6 +166,11 @@ class ShipStatsPanel(BattlePanel):
         pygame.draw.rect(surface, bg_color, (5, y, panel_w - 10, UIConfig.BANNER_HEIGHT))
         name_text = font_name.render(f"{arrow} {ship.name}{status}", True, color)
         surface.blit(name_text, (10, y + 3))
+
+        # Record banner position for click detection (y is in surface coords, add scroll offset)
+        ship_id = self._get_ship_id(ship)
+        self._ship_banner_rects[ship_id] = (y + self.scroll.offset, y + UIConfig.BANNER_HEIGHT + self.scroll.offset)
+
         y += UIConfig.SHIP_ENTRY_HEIGHT
 
         if self._is_expanded(ship):
@@ -187,6 +196,10 @@ class ShipStatsPanel(BattlePanel):
         # Combat stats (speed, shots, crew, target)
         y = draw_ship_combat_stats(surface, ship, x_indent, y, font)
 
+        # Fleet bonuses (if any active for this ship's team)
+        aura_mgr = getattr(self.scene.engine, 'aura_manager', None) if hasattr(self.scene, 'engine') else None
+        y = draw_fleet_bonuses(surface, ship, x_indent, y, font, aura_mgr)
+
         # Weapons
         y = draw_ship_weapons(surface, ship, x_indent, y, panel_w, font)
 
@@ -196,59 +209,37 @@ class ShipStatsPanel(BattlePanel):
         return y
 
     def get_expanded_height(self, ship):
-        base_height = 146
+        base_height = 180
         if ship.max_shields > 0:
-            base_height += 16
+            base_height += 20
         comp_count = len(ship.components)
-        comp_height = comp_count * 14
+        comp_height = comp_count * 20
         return base_height + comp_height + 5
 
     @profile_action("Battle: ShipStats Click")
     def handle_click(self, mx, my):
         """Handle mouse click on the stats panel.
 
-        PROJ-43: Uses _get_ships() for DTO-based access and tracks expansion
-        by ship ID. Returns ("focus_ship", ship_id) for camera focus.
+        Uses banner positions recorded during draw() for pixel-perfect
+        click detection. Shift+click returns ship ID for camera focus.
         """
-        rel_x = mx
         rel_y = my + self.scroll.offset
-
-        # PROJ-43: Use _get_ships() for DTO-based access
-        ships = self._get_ships()
-        team1_ships = [s for s in ships if s.team_id == 0]
-        team2_ships = [s for s in ships if s.team_id == 1]
 
         keys = pygame.key.get_pressed()
         shift_held = keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
 
-        y_pos = 10 + 30  # Initial + header
+        ships = self._get_ships()
 
-        for ship in team1_ships:
-            banner_height = 25
-            if y_pos <= rel_y < y_pos + banner_height:
+        for ship in ships:
+            ship_id = self._get_ship_id(ship)
+            if ship_id not in self._ship_banner_rects:
+                continue
+            y_start, y_end = self._ship_banner_rects[ship_id]
+            if y_start <= rel_y < y_end:
                 if shift_held:
-                    # PROJ-43: Return ship ID for camera focus
-                    return ("focus_ship", self._get_ship_id(ship))
-                # PROJ-43: Use _toggle_expanded() for ID-based tracking
+                    return ("focus_ship", ship_id)
                 self._toggle_expanded(ship)
                 return True
-            y_pos += banner_height
-            if self._is_expanded(ship):
-                y_pos += self.get_expanded_height(ship)
-
-        y_pos += 45
-        for ship in team2_ships:
-            banner_height = 25
-            if y_pos <= rel_y < y_pos + banner_height:
-                if shift_held:
-                    # PROJ-43: Return ship ID for camera focus
-                    return ("focus_ship", self._get_ship_id(ship))
-                # PROJ-43: Use _toggle_expanded() for ID-based tracking
-                self._toggle_expanded(ship)
-                return True
-            y_pos += banner_height
-            if self._is_expanded(ship):
-                y_pos += self.get_expanded_height(ship)
 
         return False
 

@@ -806,8 +806,9 @@ class TestAbilityScopeEdgeCases:
     def test_scope_iteration(self):
         """AbilityScope can be iterated."""
         scopes = list(AbilityScope)
-        assert len(scopes) == 8
+        assert len(scopes) == 9
         assert AbilityScope.SELF in scopes
+        assert AbilityScope.FLEET in scopes
         assert AbilityScope.PLANET in scopes
 
 

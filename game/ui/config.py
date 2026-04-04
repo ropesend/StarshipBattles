@@ -22,7 +22,7 @@ class UIConfig:
 
     # Panel gaps and spacing
     PANEL_GAP: int = 5
-    ELEMENT_SPACING: int = 16
+    ELEMENT_SPACING: int = 20
     INDENT: int = 20
 
     # Toast notification dimensions
@@ -38,14 +38,14 @@ class UIConfig:
     FONT_NAME: int = 22
     FONT_STAT: int = 18
     # Battle screen panel dimensions
-    STATS_PANEL_WIDTH: int = 450
+    STATS_PANEL_WIDTH: int = 900
     SEEKER_PANEL_WIDTH: int = 300
 
     # Strategy screen dimensions
     STRATEGY_SIDEBAR_WIDTH: int = 600
 
     # Progress/stat bar dimensions
-    BAR_WIDTH: int = 120
+    BAR_WIDTH: int = 200
     BAR_HEIGHT: int = 10
     BANNER_HEIGHT: int = 22
 

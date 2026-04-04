@@ -201,6 +201,10 @@ class BattleEngine:
         from game.simulation.combat.combat_events import CombatEventBus
         self.combat_events = CombatEventBus()
 
+        # Fleet aura manager (scoped ability bonuses)
+        from game.simulation.combat.fleet_aura_manager import FleetAuraManager
+        self.aura_manager = FleetAuraManager()
+
         # Use provided logger or create a default one (disabled by default to avoid side effects unless requested)
         self.logger = logger if logger else BattleLogger(enabled=False)
 
@@ -291,6 +295,9 @@ class BattleEngine:
                     comp.update()
             s.recalculate_stats()
             s.update_derelict_status()
+
+        # Initialize fleet aura manager (scoped ability bonuses)
+        self.aura_manager.initialize(self.ships)
 
         # Logging
         self.logger.start_session()
@@ -426,6 +433,9 @@ class BattleEngine:
         for s in self.ships:
             s.update(context=combat_context)
             
+        # 2.5. Update fleet auras (scoped ability bonuses)
+        self.aura_manager.update(self.ships)
+
         # 3. Process Attacks
         new_attacks = []
         for s in alive_ships:

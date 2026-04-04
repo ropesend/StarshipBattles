@@ -985,10 +985,12 @@ class TestLabRenderer:
     def _draw_validation_check_compact(
         self, screen, x: int, y: int, vr: Dict[str, Any]
     ) -> int:
-        """Draw a single validation check as a compact line with pass/fail indicator.
+        """Draw a single validation check with expected/actual on separate lines.
 
-        Format: [symbol] Name: expected=X, actual=Y
-        or:     [symbol] Name: detail string
+        Format:
+            [symbol] Name:
+                Expected: X
+                Actual:   Y   (green if pass, red if fail)
 
         Returns updated y position.
         """
@@ -998,36 +1000,96 @@ class TestLabRenderer:
         actual = vr.get('actual')
         detail = vr.get('detail')
 
-        # Determine symbol and color
+        # Determine symbol and colors
         if status == 'PASS':
-            line_color = TEST_PASS
             symbol = "V"
+            name_color = TEST_PASS
+            actual_color = TEST_PASS
         elif status == 'FAIL':
-            line_color = TEST_FAIL
             symbol = "X"
+            name_color = TEST_FAIL
+            actual_color = TEST_FAIL
         elif status == 'WARN':
-            line_color = theme.STATUS_WARNING
             symbol = "!"
+            name_color = theme.STATUS_WARNING
+            actual_color = theme.STATUS_WARNING
         else:
-            line_color = theme.STATUS_INFO
             symbol = "i"
+            name_color = theme.STATUS_INFO
+            actual_color = theme.STATUS_INFO
 
-        # Build the display string
-        parts = [f"  {symbol} {name}:"]
+        expected_color = (180, 200, 220)  # Light blue-gray for expected values
+
+        # Line 1: Symbol + Name
+        header = f"  {symbol} {name}:"
+        screen.blit(self.small_font.render(header, True, name_color), (x + 15, y))
+        y += 17
+
+        # Format values to matching decimal places for visual comparison
+        exp_str = self._format_check_value(expected)
+        act_str = self._format_check_value(actual)
+        exp_str, act_str = self._align_decimals(exp_str, act_str)
+
+        # Line 2: Expected value
         if expected is not None:
-            parts.append(f"expected={expected},")
+            exp_line = f"      Expected: {exp_str}"
+            screen.blit(self.small_font.render(exp_line, True, expected_color), (x + 15, y))
+            y += 16
+
+        # Line 3: Actual value (color-coded green/red)
         if actual is not None:
-            parts.append(f"actual={actual}")
-        # If there's a detail string (e.g. TOST p-value), append it
+            act_line = f"      Actual:   {act_str}"
+            screen.blit(self.small_font.render(act_line, True, actual_color), (x + 15, y))
+            y += 16
+
+        # Line 4: Detail (if any, e.g. TOST p-value)
         if detail:
-            parts.append(f"({detail})")
+            det_line = f"      {detail}"
+            screen.blit(self.small_font.render(det_line, True, (140, 140, 160)), (x + 15, y))
+            y += 16
 
-        line_text = " ".join(parts)
-        line_surf = self.small_font.render(line_text, True, line_color)
-        screen.blit(line_surf, (x + 15, y))
-        y += 18
-
+        y += 4  # Spacing between checks
         return y
+
+    @staticmethod
+    def _format_check_value(value) -> str:
+        """Format a check value for display with consistent precision."""
+        if value is None:
+            return "—"
+        if isinstance(value, bool):
+            return str(value)
+        if isinstance(value, float):
+            # Use enough decimals to show meaningful precision
+            if abs(value) >= 1000:
+                return f"{value:,.1f}"
+            elif abs(value) >= 1:
+                return f"{value:.4f}"
+            elif value == 0:
+                return "0.0"
+            else:
+                return f"{value:.6f}"
+        return str(value)
+
+    @staticmethod
+    def _align_decimals(exp_str: str, act_str: str):
+        """Pad strings so decimal points align vertically."""
+        if '.' not in exp_str or '.' not in act_str:
+            return exp_str, act_str
+
+        exp_int, exp_dec = exp_str.split('.', 1)
+        act_int, act_dec = act_str.split('.', 1)
+
+        # Pad decimal parts to same length
+        max_dec = max(len(exp_dec), len(act_dec))
+        exp_dec = exp_dec.ljust(max_dec, '0')
+        act_dec = act_dec.ljust(max_dec, '0')
+
+        # Pad integer parts to same length (right-align)
+        max_int = max(len(exp_int), len(act_int))
+        exp_int = exp_int.rjust(max_int)
+        act_int = act_int.rjust(max_int)
+
+        return f"{exp_int}.{exp_dec}", f"{act_int}.{act_dec}"
 
     def _draw_validation_flag(
         self, screen, x: int, y: int, scenario_info: Dict[str, Any]

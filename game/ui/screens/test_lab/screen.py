@@ -329,8 +329,13 @@ class TestLabScreen:
         return filtered
 
     def reset_selection(self):
-        """Clear test selection (called when returning from battle)."""
-        # Store results from completed visual test before clearing
+        """Capture results from visual test and preserve selection.
+
+        Called when returning from battle. Stores test results if the test
+        completed, but keeps the test selected so the user can see the
+        results in the Test Details panel.
+        """
+        # Store results from completed visual test
         if self.selected_test_id and hasattr(self.game.battle_scene, 'test_scenario'):
             scenario = self.game.battle_scene.test_scenario
             # Only capture results if test actually completed (not if user exited early)
@@ -361,8 +366,8 @@ class TestLabScreen:
         if hasattr(self.game.battle_scene, 'test_scenario'):
             self.game.battle_scene.test_scenario = None
 
-        self.selected_test_id = None
-        logger.debug("Test selection cleared")
+        # Keep selected_test_id so the test remains visually selected
+        logger.debug(f"Returned from battle, test selection preserved: {self.selected_test_id}")
 
     def _on_back(self):
         """Return to main menu via scene_callback (PROJ-65 pattern)."""
@@ -437,6 +442,7 @@ class TestLabScreen:
         # Scenario sets up ships, positions, AI strategies, and starts engine
         scenario.setup(controller.service.get_engine())
         controller._is_started = True  # Engine already started by scenario.setup()
+        controller.service._is_started = True  # Service must also know engine is started
 
         self.game.battle_scene.start_battle(controller)
 

@@ -87,10 +87,20 @@ BattleEngine owns the simulation state: ships, AI controllers, projectiles, spat
 |-------|-------------|
 | 1 | Rebuild spatial grid with alive ships + active projectiles |
 | 2 | Update AI controllers (target selection, behavior) |
+| 2.5 | Update fleet auras (recalculate scoped ability bonuses from alive providers) |
 | 3 | Update ships (physics, weapons, abilities, resources) |
 | 4 | Process new attacks: PROJECTILE/MISSILE -> ProjectileManager; BEAM -> CollisionSystem raycast; LAUNCH -> spawn fighter Ship |
 | 5 | Process ramming collisions (kamikaze ships) |
 | 6 | Update projectiles (movement, hit detection, expiration) |
+
+**Fleet Aura System** (`game/simulation/combat/fleet_aura_manager.py`):
+
+`FleetAuraManager` on `BattleEngine` manages abilities with non-SELF scope (fleet, system, empire).
+Initialized at battle start, recalculated every tick. Bonuses removed immediately when provider
+ship is destroyed. Stacking follows two-phase aggregation (same group = MAX, different groups = SUM).
+
+Per-team and global battle conditions can be injected via `BattleConfig.team_modifiers` and
+`BattleConfig.global_modifiers` for external bonuses (sensor arrays, nebula effects, etc.).
 
 **End conditions** (composable via `IEndCondition` protocol):
 

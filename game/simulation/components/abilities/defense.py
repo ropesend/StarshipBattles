@@ -1,6 +1,6 @@
 from typing import List
 
-from .base import SimpleMultiplierAbility, StaticValueAbility
+from .base import SimpleMultiplierAbility, StaticValueAbility, AbilityScope
 from .stat_keys import StatKey, AbilityStatBinding
 from .ui_colors import HINT_SHIELD_CAP, HINT_SHIELD_REGEN, HINT_DAMAGE, HINT_EVASION, HINT_ACCURACY
 
@@ -50,7 +50,15 @@ class ShieldRegeneration(SimpleMultiplierAbility):
 
 
 class ToHitAttackModifier(StaticValueAbility):
-    """Modifier for to-hit attack bonuses."""
+    """Modifier for to-hit attack bonuses.
+
+    Supports fleet/system/empire scope — a single component can provide
+    a to-hit bonus to all friendly ships in the battle group.
+    """
+    allowed_scopes = [
+        AbilityScope.SELF, AbilityScope.FLEET,
+        AbilityScope.SYSTEM, AbilityScope.EMPIRE,
+    ]
 
     ui_label = 'Targeting'
     ui_color = HINT_DAMAGE
@@ -58,7 +66,15 @@ class ToHitAttackModifier(StaticValueAbility):
 
 
 class ToHitDefenseModifier(StaticValueAbility):
-    """Modifier for to-hit defense bonuses."""
+    """Modifier for to-hit defense bonuses.
+
+    Supports fleet/system/empire scope — a single component can provide
+    an evasion bonus to all friendly ships in the battle group.
+    """
+    allowed_scopes = [
+        AbilityScope.SELF, AbilityScope.FLEET,
+        AbilityScope.SYSTEM, AbilityScope.EMPIRE,
+    ]
 
     ui_label = 'Evasion'
     ui_color = HINT_EVASION

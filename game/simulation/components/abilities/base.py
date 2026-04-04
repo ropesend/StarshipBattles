@@ -26,6 +26,7 @@ class AbilityScope(Enum):
     What entities an ability affects.
 
     SELF: Only the owner entity (ship, complex, etc.)
+    FLEET: All ships in the same battle group/fleet
     SECTOR: All entities in the same hex
     ALLIED_SECTOR: Allied entities in the same hex
     SYSTEM: All entities in the star system
@@ -35,6 +36,7 @@ class AbilityScope(Enum):
     ALLIED_EMPIRE: All colonies of the owning player and their allies
     """
     SELF = "self"
+    FLEET = "fleet"
     SECTOR = "sector"
     ALLIED_SECTOR = "allied_sector"
     SYSTEM = "system"

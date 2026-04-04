@@ -240,14 +240,24 @@ Regenerates shields per second.
 | Base Class | `StaticValueAbility` |
 
 Provides sensor/targeting attack bonus for to-hit calculations.
+Supports fleet/system/empire scope — a single component can provide
+a to-hit bonus to all friendly ships in the battle group.
 
-**Data Format:** Scalar (bonus value, positive or negative)
+**Data Format:** Dict with value and optional scope
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | value | float | Yes | Attack bonus (+) or penalty (-) |
+| scope | string | No | `"self"` (default), `"fleet"`, `"system"`, or `"empire"` |
+| stack_group | string | No | Stacking group (same group = MAX, different = SUM) |
+
+**Scope:** `self` (default), `fleet`, `system`, `empire`
+
+**Example:** `{"ToHitAttackModifier": {"value": 2.0, "scope": "fleet", "stack_group": "FleetSensor"}}`
 
 **Stat Bindings:** None (static value, not modified)
+
+**Validation Tests:** TOHIT-ATK-001 to 005 (self scope), TOHIT-ATK-FLEET-001 to 004 (fleet scope)
 
 ---
 
