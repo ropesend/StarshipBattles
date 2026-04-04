@@ -412,7 +412,14 @@ def _format_orders(fleet: IFleet) -> str:
             f_id = order.target.id if is_fleet(order.target) else "?"
             text += f" {i+1}. Join Fleet {f_id}<br>"
         elif order.type == OrderType.COLONIZE:
-            p_name = order.target.name if order.target else 'Unknown'
+            target = order.target
+            if isinstance(target, dict):
+                planet_obj = target.get('planet')
+                p_name = planet_obj.name if planet_obj else 'Any Planet'
+            elif target and hasattr(target, 'name'):
+                p_name = target.name
+            else:
+                p_name = 'Unknown'
             text += f" {i+1}. COLONIZE {p_name}<br>"
         elif order.type == OrderType.BUILD:
             queue = fleet.construction_queue

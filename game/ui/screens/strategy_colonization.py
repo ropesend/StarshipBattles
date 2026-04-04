@@ -140,19 +140,6 @@ class ColonizationSystem:
 
         return {'type': 'success', 'fleet': fleet}
 
-    def get_fleet_capacities(self, fleet):
-        """Get fleet cargo capacities for the colonize dialog.
-
-        Returns capacities (not current amounts) since the fleet may load
-        cargo/population during travel before arriving at the colony.
-        """
-        fleet_info = self.facade.get_fleet(fleet.id)
-        if not fleet_info:
-            return 0, {}
-        passenger_cap = fleet_info.passenger_capacity
-        cargo_caps = {res: cap for res, cap in fleet_info.cargo_capacities}
-        return passenger_cap, cargo_caps
-
     def handle_colonize_designation(self, mx, my, fleet):
         """
         Handle selecting a planet for colonization with movement.

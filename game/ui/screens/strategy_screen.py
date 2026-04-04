@@ -265,22 +265,27 @@ class StrategyScreen:
             self.on_ui_selection(self.selected_fleet)
 
     def _on_colonize_planet_selected(self, planet):
-        """Handle planet selection — open colonize dialog for population/cargo amounts."""
+        """Handle planet selection — issue colonize command, then open transfer dialog.
+
+        The colonize command queues LOAD_POPULATION + MOVE + COLONIZE.
+        The transfer dialog then queues TRANSFER orders that execute after colonization,
+        allowing the player to choose how much population and cargo to leave at the colony.
+        """
         fleet = self.selected_fleet
-        passenger_cap, cargo_caps = self._colonization.get_fleet_capacities(fleet)
-
-        def on_colonize_confirmed(population_amount, cargo_amounts):
-            result = self._colonization.issue_colonize_order(
-                fleet, planet,
-                population_amount=population_amount,
-                cargo_amounts=cargo_amounts,
-            )
-            if result and result.get('type') == 'success':
-                self.on_ui_selection(fleet)
-
-        self.ui.open_colonize_dialog(
-            planet.name, passenger_cap, cargo_caps, on_colonize_confirmed
-        )
+        result = self._colonization.issue_colonize_order(fleet, planet)
+        if result and result.get('type') == 'success':
+            # Open transfer dialog so player can queue unload orders after colonization
+            target_hex = self._facade.get_planet(planet.id)
+            if target_hex:
+                planet_global_hex = None
+                # Find planet's global hex for the transfer dialog
+                for sys in self.systems:
+                    if planet in sys.planets:
+                        planet_global_hex = sys.global_location + planet.location
+                        break
+                if planet_global_hex:
+                    self.ui.open_transfer_dialog(fleet, planet_global_hex)
+            self.on_ui_selection(fleet)
 
     def request_colonize_order(self, fleet, planet=None):
         """Handle colonize request from UI."""

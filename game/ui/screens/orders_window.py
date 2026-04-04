@@ -187,7 +187,14 @@ class OrdersWindow(pygame_gui.elements.UIWindow):
                 return f"MOVE ({t.q}, {t.r})"
             return f"MOVE {t}"
         elif order.type == OrderType.COLONIZE:
-            p_name = order.target.name if is_planet(order.target) else "Unknown"
+            t = order.target
+            if isinstance(t, dict):
+                planet_obj = t.get('planet')
+                p_name = planet_obj.name if planet_obj else 'Any Planet'
+            elif is_planet(t):
+                p_name = t.name
+            else:
+                p_name = 'Unknown'
             return f"COLONIZE {p_name}"
         elif order.type == OrderType.MOVE_TO_FLEET:
             f_id = order.target.id if is_fleet(order.target) else "?"
