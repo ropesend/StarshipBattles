@@ -96,7 +96,10 @@
       "sprite_index": 81,
       "abilities": {
         "ResourceGeneration": [
-          {"resource": "energy", "amount": 100}
+          {
+            "resource": "energy",
+            "amount": 100
+          }
         ]
       }
     },
@@ -108,7 +111,12 @@
       "hp": 20,
       "sprite_index": 20,
       "abilities": {
-        "ResourceStorage": [{"resource": "fuel", "amount": 1000}]
+        "ResourceStorage": [
+          {
+            "resource": "fuel",
+            "amount": 1000
+          }
+        ]
       }
     },
     {
@@ -119,7 +127,12 @@
       "hp": 20,
       "sprite_index": 19,
       "abilities": {
-        "ResourceStorage": [{"resource": "ammo", "amount": 1000}]
+        "ResourceStorage": [
+          {
+            "resource": "ammo",
+            "amount": 1000
+          }
+        ]
       }
     },
     {
@@ -130,7 +143,12 @@
       "hp": 20,
       "sprite_index": 19,
       "abilities": {
-        "ResourceStorage": [{"resource": "energy", "amount": 1000}]
+        "ResourceStorage": [
+          {
+            "resource": "energy",
+            "amount": 1000
+          }
+        ]
       }
     },
     {
@@ -340,7 +358,13 @@
       "sprite_index": 18,
       "abilities": {
         "ShieldRegeneration": 5.0,
-        "ResourceConsumption": [{"resource": "energy", "amount": 5.0, "trigger": "constant"}]
+        "ResourceConsumption": [
+          {
+            "resource": "energy",
+            "amount": 5.0,
+            "trigger": "constant"
+          }
+        ]
       }
     },
     {
@@ -786,7 +810,12 @@
       "hp": 5,
       "sprite_index": 19,
       "abilities": {
-        "ResourceStorage": [{"resource": "energy", "amount": 25}]
+        "ResourceStorage": [
+          {
+            "resource": "energy",
+            "amount": 25
+          }
+        ]
       }
     },
     {
@@ -797,7 +826,12 @@
       "hp": 5,
       "sprite_index": 19,
       "abilities": {
-        "ResourceStorage": [{"resource": "ammo", "amount": 10}]
+        "ResourceStorage": [
+          {
+            "resource": "ammo",
+            "amount": 10
+          }
+        ]
       }
     },
     {
@@ -900,7 +934,11 @@
       "abilities": {
         "CombatPropulsion": 500,
         "ResourceConsumption": [
-          {"resource": "fuel", "amount": 1.0, "trigger": "constant"}
+          {
+            "resource": "fuel",
+            "amount": 1.0,
+            "trigger": "constant"
+          }
         ]
       }
     },
@@ -913,7 +951,10 @@
       "sprite_index": 81,
       "abilities": {
         "ResourceGeneration": [
-          {"resource": "fuel", "amount": 1.0}
+          {
+            "resource": "fuel",
+            "amount": 1.0
+          }
         ]
       }
     },
@@ -925,7 +966,12 @@
       "hp": 5,
       "sprite_index": 20,
       "abilities": {
-        "ResourceStorage": [{"resource": "fuel", "amount": 2.5}]
+        "ResourceStorage": [
+          {
+            "resource": "fuel",
+            "amount": 2.5
+          }
+        ]
       }
     },
     {
@@ -945,7 +991,11 @@
           "accuracy_falloff": 0.0005
         },
         "ResourceConsumption": [
-          {"resource": "energy", "amount": 1, "trigger": "activation"}
+          {
+            "resource": "energy",
+            "amount": 1,
+            "trigger": "activation"
+          }
         ]
       }
     },
@@ -965,7 +1015,11 @@
           "firing_arc": 360
         },
         "ResourceConsumption": [
-          {"resource": "ammo", "amount": 1, "trigger": "activation"}
+          {
+            "resource": "ammo",
+            "amount": 1,
+            "trigger": "activation"
+          }
         ]
       }
     },
@@ -987,7 +1041,11 @@
           "firing_arc": 360
         },
         "ResourceConsumption": [
-          {"resource": "ammo", "amount": 1, "trigger": "activation"}
+          {
+            "resource": "ammo",
+            "amount": 1,
+            "trigger": "activation"
+          }
         ]
       }
     },
@@ -996,12 +1054,19 @@
       "id": "test_seeker_slow",
       "name": "Test Seeker (Slow, 500px/s)",
       "type": "SeekerWeaponAbility",
-      "mass": 0, "hp": 20, "sprite_index": 86,
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 86,
       "abilities": {
         "SeekerWeaponAbility": {
-          "damage": 100, "projectile_damage": 100, "range": 3000,
-          "projectile_speed": 500, "turn_rate": 90, "endurance": 10.0,
-          "reload": 999.0, "firing_arc": 360
+          "damage": 100,
+          "projectile_damage": 100,
+          "range": 3000,
+          "projectile_speed": 500,
+          "turn_rate": 90,
+          "endurance": 10.0,
+          "reload": 999.0,
+          "firing_arc": 360
         }
       }
     },
@@ -1009,12 +1074,19 @@
       "id": "test_seeker_fast",
       "name": "Test Seeker (Fast, 2000px/s)",
       "type": "SeekerWeaponAbility",
-      "mass": 0, "hp": 20, "sprite_index": 86,
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 86,
       "abilities": {
         "SeekerWeaponAbility": {
-          "damage": 100, "projectile_damage": 100, "range": 3000,
-          "projectile_speed": 2000, "turn_rate": 90, "endurance": 10.0,
-          "reload": 999.0, "firing_arc": 360
+          "damage": 100,
+          "projectile_damage": 100,
+          "range": 3000,
+          "projectile_speed": 2000,
+          "turn_rate": 90,
+          "endurance": 10.0,
+          "reload": 999.0,
+          "firing_arc": 360
         }
       }
     },
@@ -1022,12 +1094,19 @@
       "id": "test_seeker_short_endurance",
       "name": "Test Seeker (Endurance 2.0s)",
       "type": "SeekerWeaponAbility",
-      "mass": 0, "hp": 20, "sprite_index": 86,
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 86,
       "abilities": {
         "SeekerWeaponAbility": {
-          "damage": 100, "projectile_damage": 100, "range": 3000,
-          "projectile_speed": 1000, "turn_rate": 90, "endurance": 2.0,
-          "reload": 999.0, "firing_arc": 360
+          "damage": 100,
+          "projectile_damage": 100,
+          "range": 3000,
+          "projectile_speed": 1000,
+          "turn_rate": 90,
+          "endurance": 2.0,
+          "reload": 999.0,
+          "firing_arc": 360
         }
       }
     },
@@ -1035,12 +1114,19 @@
       "id": "test_seeker_long_endurance",
       "name": "Test Seeker (Endurance 5.0s)",
       "type": "SeekerWeaponAbility",
-      "mass": 0, "hp": 20, "sprite_index": 86,
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 86,
       "abilities": {
         "SeekerWeaponAbility": {
-          "damage": 100, "projectile_damage": 100, "range": 5000,
-          "projectile_speed": 1000, "turn_rate": 90, "endurance": 5.0,
-          "reload": 999.0, "firing_arc": 360
+          "damage": 100,
+          "projectile_damage": 100,
+          "range": 5000,
+          "projectile_speed": 1000,
+          "turn_rate": 90,
+          "endurance": 5.0,
+          "reload": 999.0,
+          "firing_arc": 360
         }
       }
     },
@@ -1048,12 +1134,19 @@
       "id": "test_seeker_slow_turn",
       "name": "Test Seeker (Slow Turn 30deg/s, narrow arc)",
       "type": "SeekerWeaponAbility",
-      "mass": 0, "hp": 20, "sprite_index": 86,
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 86,
       "abilities": {
         "SeekerWeaponAbility": {
-          "damage": 100, "projectile_damage": 100, "range": 5000,
-          "projectile_speed": 1000, "turn_rate": 30, "endurance": 3.0,
-          "reload": 999.0, "firing_arc": 10
+          "damage": 100,
+          "projectile_damage": 100,
+          "range": 5000,
+          "projectile_speed": 1000,
+          "turn_rate": 30,
+          "endurance": 3.0,
+          "reload": 999.0,
+          "firing_arc": 10
         }
       }
     },
@@ -1061,12 +1154,19 @@
       "id": "test_seeker_fast_turn",
       "name": "Test Seeker (Fast Turn 180deg/s, narrow arc)",
       "type": "SeekerWeaponAbility",
-      "mass": 0, "hp": 20, "sprite_index": 86,
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 86,
       "abilities": {
         "SeekerWeaponAbility": {
-          "damage": 100, "projectile_damage": 100, "range": 5000,
-          "projectile_speed": 1000, "turn_rate": 180, "endurance": 5.0,
-          "reload": 999.0, "firing_arc": 10
+          "damage": 100,
+          "projectile_damage": 100,
+          "range": 5000,
+          "projectile_speed": 1000,
+          "turn_rate": 180,
+          "endurance": 5.0,
+          "reload": 999.0,
+          "firing_arc": 10
         }
       }
     },
@@ -1074,12 +1174,19 @@
       "id": "test_seeker_dmg_50",
       "name": "Test Seeker (50 Damage)",
       "type": "SeekerWeaponAbility",
-      "mass": 0, "hp": 20, "sprite_index": 86,
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 86,
       "abilities": {
         "SeekerWeaponAbility": {
-          "damage": 50, "projectile_damage": 50, "range": 3000,
-          "projectile_speed": 1000, "turn_rate": 90, "endurance": 5.0,
-          "reload": 999.0, "firing_arc": 360
+          "damage": 50,
+          "projectile_damage": 50,
+          "range": 3000,
+          "projectile_speed": 1000,
+          "turn_rate": 90,
+          "endurance": 5.0,
+          "reload": 999.0,
+          "firing_arc": 360
         }
       }
     },
@@ -1087,12 +1194,19 @@
       "id": "test_seeker_dmg_200",
       "name": "Test Seeker (200 Damage)",
       "type": "SeekerWeaponAbility",
-      "mass": 0, "hp": 20, "sprite_index": 86,
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 86,
       "abilities": {
         "SeekerWeaponAbility": {
-          "damage": 200, "projectile_damage": 200, "range": 3000,
-          "projectile_speed": 1000, "turn_rate": 90, "endurance": 5.0,
-          "reload": 999.0, "firing_arc": 360
+          "damage": 200,
+          "projectile_damage": 200,
+          "range": 3000,
+          "projectile_speed": 1000,
+          "turn_rate": 90,
+          "endurance": 5.0,
+          "reload": 999.0,
+          "firing_arc": 360
         }
       }
     },
@@ -1100,12 +1214,20 @@
       "id": "test_seeker_low_hp",
       "name": "Test Seeker (HP 1)",
       "type": "SeekerWeaponAbility",
-      "mass": 0, "hp": 20, "sprite_index": 86,
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 86,
       "abilities": {
         "SeekerWeaponAbility": {
-          "damage": 100, "projectile_damage": 100, "range": 3000,
-          "projectile_speed": 1000, "turn_rate": 90, "endurance": 5.0,
-          "reload": 0.5, "firing_arc": 360, "projectile_hp": 1
+          "damage": 100,
+          "projectile_damage": 100,
+          "range": 3000,
+          "projectile_speed": 1000,
+          "turn_rate": 90,
+          "endurance": 5.0,
+          "reload": 0.5,
+          "firing_arc": 360,
+          "projectile_hp": 1
         }
       }
     },
@@ -1113,12 +1235,20 @@
       "id": "test_seeker_high_hp",
       "name": "Test Seeker (HP 10)",
       "type": "SeekerWeaponAbility",
-      "mass": 0, "hp": 20, "sprite_index": 86,
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 86,
       "abilities": {
         "SeekerWeaponAbility": {
-          "damage": 100, "projectile_damage": 100, "range": 3000,
-          "projectile_speed": 1000, "turn_rate": 90, "endurance": 5.0,
-          "reload": 0.5, "firing_arc": 360, "projectile_hp": 10
+          "damage": 100,
+          "projectile_damage": 100,
+          "range": 3000,
+          "projectile_speed": 1000,
+          "turn_rate": 90,
+          "endurance": 5.0,
+          "reload": 0.5,
+          "firing_arc": 360,
+          "projectile_hp": 10
         }
       }
     },
@@ -1126,12 +1256,20 @@
       "id": "test_seeker_low_defense",
       "name": "Test Seeker (Defense 0)",
       "type": "SeekerWeaponAbility",
-      "mass": 0, "hp": 20, "sprite_index": 86,
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 86,
       "abilities": {
         "SeekerWeaponAbility": {
-          "damage": 100, "projectile_damage": 100, "range": 3000,
-          "projectile_speed": 1000, "turn_rate": 90, "endurance": 5.0,
-          "reload": 0.5, "firing_arc": 360, "to_hit_defense": 0.0
+          "damage": 100,
+          "projectile_damage": 100,
+          "range": 3000,
+          "projectile_speed": 1000,
+          "turn_rate": 90,
+          "endurance": 5.0,
+          "reload": 0.5,
+          "firing_arc": 360,
+          "to_hit_defense": 0.0
         }
       }
     },
@@ -1139,12 +1277,20 @@
       "id": "test_seeker_high_defense",
       "name": "Test Seeker (Defense 3.0)",
       "type": "SeekerWeaponAbility",
-      "mass": 0, "hp": 20, "sprite_index": 86,
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 86,
       "abilities": {
         "SeekerWeaponAbility": {
-          "damage": 100, "projectile_damage": 100, "range": 3000,
-          "projectile_speed": 1000, "turn_rate": 90, "endurance": 5.0,
-          "reload": 0.5, "firing_arc": 360, "to_hit_defense": 3.0
+          "damage": 100,
+          "projectile_damage": 100,
+          "range": 3000,
+          "projectile_speed": 1000,
+          "turn_rate": 90,
+          "endurance": 5.0,
+          "reload": 0.5,
+          "firing_arc": 360,
+          "to_hit_defense": 3.0
         }
       }
     },
@@ -1152,12 +1298,20 @@
       "id": "test_pdc_beam",
       "name": "Test PDC Beam (Medium Accuracy)",
       "type": "Weapon",
-      "mass": 0, "hp": 20, "sprite_index": 151,
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 151,
       "abilities": {
         "BeamWeaponAbility": {
-          "damage": 2, "range": 500, "reload": 0.1,
-          "firing_arc": 360, "base_accuracy": 2.0, "accuracy_falloff": 0.005,
-          "tags": ["pdc"]
+          "damage": 2,
+          "range": 500,
+          "reload": 0.1,
+          "firing_arc": 360,
+          "base_accuracy": 2.0,
+          "accuracy_falloff": 0.005,
+          "tags": [
+            "pdc"
+          ]
         }
       }
     },
@@ -1169,7 +1323,12 @@
       "hp": 10,
       "sprite_index": 19,
       "abilities": {
-        "ResourceStorage": [{"resource": "energy", "amount": 100}]
+        "ResourceStorage": [
+          {
+            "resource": "energy",
+            "amount": 100
+          }
+        ]
       }
     },
     {
@@ -1180,7 +1339,12 @@
       "hp": 10,
       "sprite_index": 19,
       "abilities": {
-        "ResourceStorage": [{"resource": "ammo", "amount": 100}]
+        "ResourceStorage": [
+          {
+            "resource": "ammo",
+            "amount": 100
+          }
+        ]
       }
     },
     {
@@ -1192,7 +1356,12 @@
       "hp": 10,
       "sprite_index": 19,
       "abilities": {
-        "ResourceStorage": [{"resource": "energy", "amount": 100000}]
+        "ResourceStorage": [
+          {
+            "resource": "energy",
+            "amount": 100000
+          }
+        ]
       }
     },
     {
@@ -1203,7 +1372,12 @@
       "hp": 10,
       "sprite_index": 19,
       "abilities": {
-        "ResourceStorage": [{"resource": "ammo", "amount": 100000}]
+        "ResourceStorage": [
+          {
+            "resource": "ammo",
+            "amount": 100000
+          }
+        ]
       }
     },
     {
@@ -1238,7 +1412,13 @@
       "sprite_index": 16,
       "abilities": {
         "ShieldProjection": 1000000000,
-        "ResourceConsumption": [{"resource": "energy", "amount": 1.0, "trigger": "constant"}]
+        "ResourceConsumption": [
+          {
+            "resource": "energy",
+            "amount": 1.0,
+            "trigger": "constant"
+          }
+        ]
       }
     },
     {
@@ -1261,7 +1441,13 @@
       "sprite_index": 16,
       "abilities": {
         "ShieldProjection": 100,
-        "ResourceConsumption": [{"resource": "energy", "amount": 1.0, "trigger": "constant"}]
+        "ResourceConsumption": [
+          {
+            "resource": "energy",
+            "amount": 1.0,
+            "trigger": "constant"
+          }
+        ]
       }
     },
     {
@@ -1272,7 +1458,12 @@
       "hp": 20,
       "sprite_index": 19,
       "abilities": {
-        "ResourceStorage": [{"resource": "energy", "amount": 15}]
+        "ResourceStorage": [
+          {
+            "resource": "energy",
+            "amount": 15
+          }
+        ]
       }
     },
     {
@@ -1283,7 +1474,12 @@
       "hp": 20,
       "sprite_index": 19,
       "abilities": {
-        "ResourceStorage": [{"resource": "energy", "amount": 5}]
+        "ResourceStorage": [
+          {
+            "resource": "energy",
+            "amount": 5
+          }
+        ]
       }
     },
     {
@@ -1320,7 +1516,13 @@
           "base_accuracy": 10.0,
           "accuracy_falloff": 0
         },
-        "ResourceConsumption": [{"resource": "energy", "amount": 1, "trigger": "activation"}]
+        "ResourceConsumption": [
+          {
+            "resource": "energy",
+            "amount": 1,
+            "trigger": "activation"
+          }
+        ]
       }
     },
     {
@@ -1331,7 +1533,12 @@
       "hp": 20,
       "sprite_index": 19,
       "abilities": {
-        "ResourceStorage": [{"resource": "energy", "amount": 250}]
+        "ResourceStorage": [
+          {
+            "resource": "energy",
+            "amount": 250
+          }
+        ]
       }
     },
     {
@@ -1342,7 +1549,12 @@
       "hp": 20,
       "sprite_index": 19,
       "abilities": {
-        "ResourceStorage": [{"resource": "ammo", "amount": 250}]
+        "ResourceStorage": [
+          {
+            "resource": "ammo",
+            "amount": 250
+          }
+        ]
       }
     },
     {
@@ -1353,7 +1565,12 @@
       "hp": 20,
       "sprite_index": 19,
       "abilities": {
-        "ResourceStorage": [{"resource": "energy", "amount": 500}]
+        "ResourceStorage": [
+          {
+            "resource": "energy",
+            "amount": 500
+          }
+        ]
       }
     },
     {
@@ -1364,7 +1581,12 @@
       "hp": 20,
       "sprite_index": 19,
       "abilities": {
-        "ResourceStorage": [{"resource": "ammo", "amount": 500}]
+        "ResourceStorage": [
+          {
+            "resource": "ammo",
+            "amount": 500
+          }
+        ]
       }
     },
     {
@@ -1375,7 +1597,12 @@
       "hp": 20,
       "sprite_index": 19,
       "abilities": {
-        "ResourceStorage": [{"resource": "metals", "amount": 100000}]
+        "ResourceStorage": [
+          {
+            "resource": "metals",
+            "amount": 100000
+          }
+        ]
       }
     },
     {
@@ -1394,7 +1621,13 @@
           "base_accuracy": 10.0,
           "accuracy_falloff": 0
         },
-        "ResourceConsumption": [{"resource": "metals", "amount": 1, "trigger": "activation"}]
+        "ResourceConsumption": [
+          {
+            "resource": "metals",
+            "amount": 1,
+            "trigger": "activation"
+          }
+        ]
       }
     },
     {
@@ -1412,7 +1645,13 @@
           "reload": 0.0,
           "firing_arc": 360
         },
-        "ResourceConsumption": [{"resource": "metals", "amount": 1, "trigger": "activation"}]
+        "ResourceConsumption": [
+          {
+            "resource": "metals",
+            "amount": 1,
+            "trigger": "activation"
+          }
+        ]
       }
     },
     {
@@ -1424,7 +1663,13 @@
       "sprite_index": 16,
       "abilities": {
         "ShieldProjection": 100,
-        "ResourceConsumption": [{"resource": "metals", "amount": 1.0, "trigger": "constant"}]
+        "ResourceConsumption": [
+          {
+            "resource": "metals",
+            "amount": 1.0,
+            "trigger": "constant"
+          }
+        ]
       }
     },
     {
@@ -1497,7 +1742,10 @@
       "hp": 100,
       "sprite_index": 26,
       "abilities": {
-        "ToHitDefenseModifier": {"value": 1.0, "stack_group": "ecm_a"}
+        "ToHitDefenseModifier": {
+          "value": 1.0,
+          "stack_group": "ecm_a"
+        }
       }
     },
     {
@@ -1508,7 +1756,10 @@
       "hp": 100,
       "sprite_index": 26,
       "abilities": {
-        "ToHitDefenseModifier": {"value": 1.0, "stack_group": "ecm_b"}
+        "ToHitDefenseModifier": {
+          "value": 1.0,
+          "stack_group": "ecm_b"
+        }
       }
     },
     {
@@ -1541,7 +1792,10 @@
       "hp": 100,
       "sprite_index": 25,
       "abilities": {
-        "ToHitAttackModifier": {"value": 1.0, "stack_group": "sensors_a"}
+        "ToHitAttackModifier": {
+          "value": 1.0,
+          "stack_group": "sensors_a"
+        }
       }
     },
     {
@@ -1552,7 +1806,10 @@
       "hp": 100,
       "sprite_index": 25,
       "abilities": {
-        "ToHitAttackModifier": {"value": 1.0, "stack_group": "sensors_b"}
+        "ToHitAttackModifier": {
+          "value": 1.0,
+          "stack_group": "sensors_b"
+        }
       }
     },
     {
@@ -1585,7 +1842,10 @@
       "hp": 100,
       "sprite_index": 14,
       "abilities": {
-        "EmissiveArmor": {"value": 5, "stack_group": "armor_a"}
+        "EmissiveArmor": {
+          "value": 5,
+          "stack_group": "armor_a"
+        }
       }
     },
     {
@@ -1596,7 +1856,10 @@
       "hp": 100,
       "sprite_index": 14,
       "abilities": {
-        "EmissiveArmor": {"value": 5, "stack_group": "armor_b"}
+        "EmissiveArmor": {
+          "value": 5,
+          "stack_group": "armor_b"
+        }
       }
     },
     {
@@ -1607,7 +1870,10 @@
       "hp": 100,
       "sprite_index": 14,
       "abilities": {
-        "EmissiveArmor": {"value": -3, "stack_group": "armor_b"}
+        "EmissiveArmor": {
+          "value": -3,
+          "stack_group": "armor_b"
+        }
       }
     },
     {
@@ -1632,11 +1898,17 @@
       "id": "test_beam_30dmg_guaranteed",
       "name": "Test Beam (30 Damage, Guaranteed Hit)",
       "type": "Weapon",
-      "mass": 0, "hp": 20, "sprite_index": 87,
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 87,
       "abilities": {
         "BeamWeaponAbility": {
-          "damage": 30, "range": 1000, "reload": 0.0,
-          "firing_arc": 360, "base_accuracy": 10.0, "accuracy_falloff": 0
+          "damage": 30,
+          "range": 1000,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 10.0,
+          "accuracy_falloff": 0
         }
       }
     },
@@ -1644,11 +1916,17 @@
       "id": "test_beam_50dmg_guaranteed",
       "name": "Test Beam (50 Damage, Guaranteed Hit)",
       "type": "Weapon",
-      "mass": 0, "hp": 20, "sprite_index": 87,
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 87,
       "abilities": {
         "BeamWeaponAbility": {
-          "damage": 50, "range": 1000, "reload": 0.0,
-          "firing_arc": 360, "base_accuracy": 10.0, "accuracy_falloff": 0
+          "damage": 50,
+          "range": 1000,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 10.0,
+          "accuracy_falloff": 0
         }
       }
     },
@@ -1662,7 +1940,10 @@
       "sprite_index": 14,
       "abilities": {
         "Armor": true,
-        "ShieldRegeneratingArmor": {"value": 15, "stack_group": "SRA_A"}
+        "ShieldRegeneratingArmor": {
+          "value": 15,
+          "stack_group": "SRA_A"
+        }
       }
     },
     {
@@ -1674,7 +1955,10 @@
       "sprite_index": 14,
       "abilities": {
         "Armor": true,
-        "ShieldRegeneratingArmor": {"value": 15, "stack_group": "SRA_B"}
+        "ShieldRegeneratingArmor": {
+          "value": 15,
+          "stack_group": "SRA_B"
+        }
       }
     },
     {
@@ -1686,7 +1970,10 @@
       "sprite_index": 14,
       "abilities": {
         "Armor": true,
-        "ShieldRegeneratingArmor": {"value": 15, "stack_group": "SRA_A"}
+        "ShieldRegeneratingArmor": {
+          "value": 15,
+          "stack_group": "SRA_A"
+        }
       }
     },
     {
@@ -1698,7 +1985,10 @@
       "sprite_index": 14,
       "abilities": {
         "Armor": true,
-        "ShieldRegeneratingArmor": {"value": 15, "stack_group": "SRA_A"}
+        "ShieldRegeneratingArmor": {
+          "value": 15,
+          "stack_group": "SRA_A"
+        }
       }
     },
     {
@@ -1710,7 +2000,10 @@
       "sprite_index": 14,
       "abilities": {
         "Armor": true,
-        "ShieldRegeneratingArmor": {"value": 15, "stack_group": "SRA_B"}
+        "ShieldRegeneratingArmor": {
+          "value": 15,
+          "stack_group": "SRA_B"
+        }
       }
     },
     {
@@ -1753,6 +2046,48 @@
       "abilities": {
         "ShieldRegeneration": 100
       }
+    },
+    {
+      "id": "test_fleet_sensor_2",
+      "type": "Sensor",
+      "mass": 0,
+      "hp": 100,
+      "abilities": {
+        "ToHitAttackModifier": {
+          "value": 2.0,
+          "scope": "fleet",
+          "stack_group": "FleetSensor"
+        }
+      },
+      "name": "Test Fleet Sensor (+2)"
+    },
+    {
+      "id": "test_fleet_sensor_1_groupB",
+      "type": "Sensor",
+      "mass": 0,
+      "hp": 100,
+      "abilities": {
+        "ToHitAttackModifier": {
+          "value": 1.0,
+          "scope": "fleet",
+          "stack_group": "FleetSensorB"
+        }
+      },
+      "name": "Test Fleet Sensor (+1 GroupB)"
+    },
+    {
+      "id": "test_fleet_sensor_3_groupA",
+      "type": "Sensor",
+      "mass": 0,
+      "hp": 100,
+      "abilities": {
+        "ToHitAttackModifier": {
+          "value": 3.0,
+          "scope": "fleet",
+          "stack_group": "FleetSensor"
+        }
+      },
+      "name": "Test Fleet Sensor (+3 GroupA)"
     }
   ]
 }

@@ -66,6 +66,11 @@ class BattleConfig:
     allow_reinforcements: bool = False
     environmental_effects: Optional[Any] = None
 
+    # Battle conditions — per-team and global modifiers applied at battle start.
+    # Each modifier: {"ability": "ToHitAttackModifier", "value": 2.0, "source": "Sensor Array"}
+    team_modifiers: Any = field(default_factory=dict)    # {team_id: [modifier_dicts]}
+    global_modifiers: Any = field(default_factory=list)  # [modifier_dicts] applied to all teams
+
     # Ship isolation (clone ships to prevent mutation of originals)
     isolated: bool = True
 

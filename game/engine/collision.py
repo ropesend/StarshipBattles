@@ -102,13 +102,19 @@ class CollisionSystem:
                     # Get ability for hit chance and damage calculations
                     beam_ab = beam_comp.get_ability('BeamWeaponAbility')
                     
-                    # New Logic: Get Scores
+                    # New Logic: Get Scores (includes fleet aura bonuses)
                     source_ship = attack.get('source')
                     attack_score = 0.0
                     if source_ship and hasattr(source_ship, 'get_total_sensor_score'):
                         attack_score = source_ship.get_total_sensor_score()
-                        
+                        fleet_atk = getattr(source_ship, 'fleet_attack_bonus', None)
+                        if isinstance(fleet_atk, (int, float)):
+                            attack_score += fleet_atk
+
                     defense_score = target.total_defense_score
+                    fleet_def = getattr(target, 'fleet_defense_bonus', None)
+                    if isinstance(fleet_def, (int, float)):
+                        defense_score += fleet_def
                         
                     # Calculate Chance with Sigmoid Logic using ability
                     chance = beam_ab.calculate_hit_chance(hit_dist, attack_score, defense_score)
