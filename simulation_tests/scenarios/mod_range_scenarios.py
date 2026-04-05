@@ -1,5 +1,5 @@
 """
-Range Multiplier Modifier Test Scenarios (MOD-RANGE-001 through MOD-RANGE-005)
+Range Multiplier Modifier Test Scenarios (MOD-RANGE-001 through MOD-RANGE-006)
 
 Test scenarios that validate the range_mult modifier's effect on beam weapon range.
 The test_range_boost modifier uses the formula 2^param (exponential), applied to
@@ -11,9 +11,11 @@ Test Coverage:
 - MOD-RANGE-003: Range boost param=1 (2x), target at 900px (beyond base, within modified)
 - MOD-RANGE-004: Comparison: unmodified (out of range at 1200) vs boosted (in range at 1200)
 - MOD-RANGE-005: Range boost param=1 (2x), target at 1700px (beyond modified range) — no damage
+- MOD-RANGE-006: Range penalty param=0.5 (0.5x), target at 600px — baseline hits, penalty misses
 
 Ship Files:
 - Test_Attacker_Beam_RangeBoost.json — test_beam_med_acc_1dmg + test_range_boost(1), range 800->1600 (2^1=2x)
+- Test_Attacker_Beam_RangePenalty.json — test_beam_med_acc_1dmg + test_range_penalty(0.5), range 800->400
 - Test_Attacker_Beam360_Med.json — test_beam_med_acc_1dmg (no modifier, range=800)
 - Test_Target_Stationary.json — test_armor_extreme_hp (1B HP, stationary)
 """
@@ -464,4 +466,78 @@ class RangeBoostOutOfRangeScenario(StaticTargetScenario):
         checks.append(check_exact(
             "Shots Fired", 0, attacker_shots, phase="outcome",
         ))
+        return checks
+
+
+# ============================================================================
+# MOD-RANGE-006: Range Penalty — Target Beyond Penalized Range
+# ============================================================================
+
+RANGE_PENALTY_SHIP = "Test_Attacker_Beam_RangePenalty.json"
+RANGE_PENALTY_EXPECTED = 400  # 800 * 0.5
+
+
+class RangePenaltyOutOfRangeScenario(ComparisonScenario):
+    """
+    MOD-RANGE-006: Range penalty — target in base range but beyond penalized range.
+
+    Baseline: Unmodified beam (range=800) at 600px — expects damage.
+    Variant: Range-penalized beam (range=400) at 600px — expects 0 damage (out of range).
+    """
+    metadata = TestMetadata(
+        test_id="MOD-RANGE-006",
+        category="RangeMultiplier",
+        subcategory="RangeMultiplier",
+        name="Range penalty 0.5x — target at 600px (beyond penalized range)",
+        summary="Unmodified beam (800px) hits at 600px; penalized beam (400px) cannot reach",
+        conditions=[
+            f"Baseline attacker: {UNMODIFIED_BEAM_SHIP} (test_beam_med_acc_1dmg, no modifier, range={MOD_BASE_BEAM_RANGE})",
+            f"Variant attacker: {RANGE_PENALTY_SHIP} (test_beam_med_acc_1dmg + test_range_penalty(0.5), range={MOD_BASE_BEAM_RANGE}->{RANGE_PENALTY_EXPECTED})",
+            f"Target: {STATIONARY_TARGET} (test_armor_extreme_hp, 1B HP, stationary)",
+            "Distance: 600 pixels (within base range 800, beyond penalized range 400)",
+            "Test Duration: 500 ticks",
+        ],
+        edge_cases=["Penalty halves range; target sits between penalized and base range"],
+        expected_outcome="Baseline deals damage, variant deals 0 damage",
+        pass_criteria="baseline_damage > 0 AND variant_damage == 0",
+        max_ticks=500,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        ui_priority=35,
+        tags=["modifier", "range_mult", "penalty"],
+    )
+
+    baseline_attacker_ship = UNMODIFIED_BEAM_SHIP
+    baseline_target_ship = STATIONARY_TARGET
+    variant_attacker_ship = RANGE_PENALTY_SHIP
+    variant_target_ship = STATIONARY_TARGET
+    distance = 600
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Data: variant beam range should be ~400 (800 * 0.5)
+        variant_beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        checks.append(check_true(
+            "Variant Beam Loaded", variant_beam is not None, phase="data",
+        ))
+        if variant_beam is not None:
+            checks.append(check_approx(
+                "Variant Beam Range", float(RANGE_PENALTY_EXPECTED),
+                variant_beam.range, tolerance=0.001, phase="data",
+            ))
+
+        # Outcome: baseline deals damage (600 < 800)
+        checks.append(check_true(
+            "Baseline Damage Dealt (In Range)",
+            self.baseline_damage_dealt > 0,
+            actual=self.baseline_damage_dealt, phase="outcome",
+        ))
+
+        # Outcome: variant deals 0 damage (600 > 400)
+        checks.append(check_exact(
+            "Variant Damage (Out of Range)", 0,
+            self.variant_damage_dealt, phase="outcome",
+        ))
+
         return checks

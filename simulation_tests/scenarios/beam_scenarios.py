@@ -628,6 +628,12 @@ class BeamErraticMaxRangeComparisonScenario(ComparisonScenario):
             self.baseline_damage_dealt > 0,
             actual=self.baseline_damage_dealt,
         ))
+        # Erratic should also take some damage (weapon still fires)
+        checks.append(check_true(
+            "Erratic Target Took Some Damage",
+            self.variant_damage_dealt > 0,
+            actual=self.variant_damage_dealt,
+        ))
         return checks
 
 

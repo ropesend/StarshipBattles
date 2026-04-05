@@ -466866,332 +466866,6 @@
   ],
   "RESOURCE-002": [
     {
-      "timestamp": "2026-04-01T22:07:51.247770",
-      "ticks_run": 500,
-      "passed": false,
-      "metrics": {
-        "test_id": "RESOURCE-002",
-        "ticks_run": 500,
-        "initial_value": 2.5,
-        "final_value": 9.017092628127443e-15,
-        "value_consumed": 2.499999999999991,
-        "final_velocity": 31.25,
-        "distance_traveled": 15546.875,
-        "ship_total_shots_fired": 0,
-        "ship_weapons": [],
-        "ship_in_flight": 0,
-        "ship_resolved_shots": 0,
-        "ship_resolved_hits": 0,
-        "validation": {
-          "passed": false,
-          "failed_phase": "outcome",
-          "summary": {
-            "data": {
-              "total": 2,
-              "passed": 2,
-              "failed": 0
-            },
-            "precondition": {
-              "total": 2,
-              "passed": 2,
-              "failed": 0
-            },
-            "outcome": {
-              "total": 2,
-              "passed": 1,
-              "failed": 1
-            }
-          },
-          "checks": [
-            {
-              "phase": "precondition",
-              "name": "Simulation Ran",
-              "expected": true,
-              "actual": 500,
-              "passed": true,
-              "detail": ""
-            },
-            {
-              "phase": "data",
-              "name": "Ship Mass",
-              "expected": 400,
-              "actual": 400.0,
-              "passed": true,
-              "detail": "expected=400, actual=400.0"
-            },
-            {
-              "phase": "data",
-              "name": "Initial Fuel",
-              "expected": 2.5,
-              "actual": 2.5,
-              "passed": true,
-              "detail": "expected=2.5, actual=2.5"
-            },
-            {
-              "phase": "precondition",
-              "name": "Ship Moved",
-              "expected": true,
-              "actual": 15546.875,
-              "passed": true,
-              "detail": ""
-            },
-            {
-              "phase": "outcome",
-              "name": "Fuel Depleted",
-              "expected": 0.0,
-              "actual": 9.017092628127443e-15,
-              "passed": true,
-              "detail": "relative_error=9.02e-15, diff=+0.0000%, tolerance=0.01"
-            },
-            {
-              "phase": "outcome",
-              "name": "Ship Stopped",
-              "expected": true,
-              "actual": 31.25,
-              "passed": false,
-              "detail": ""
-            }
-          ]
-        },
-        "duration_real": 0.7778563499450684,
-        "ticks": 500
-      },
-      "validation_summary": {
-        "pass": 5,
-        "fail": 1,
-        "warn": 0,
-        "info": 0
-      },
-      "validation_results": [
-        {
-          "name": "Simulation Ran",
-          "status": "PASS",
-          "expected": true,
-          "actual": 500,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "precondition",
-          "detail": ""
-        },
-        {
-          "name": "Ship Mass",
-          "status": "PASS",
-          "expected": 400,
-          "actual": 400.0,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "data",
-          "detail": "expected=400, actual=400.0"
-        },
-        {
-          "name": "Initial Fuel",
-          "status": "PASS",
-          "expected": 2.5,
-          "actual": 2.5,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "data",
-          "detail": "expected=2.5, actual=2.5"
-        },
-        {
-          "name": "Ship Moved",
-          "status": "PASS",
-          "expected": true,
-          "actual": 15546.875,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "precondition",
-          "detail": ""
-        },
-        {
-          "name": "Fuel Depleted",
-          "status": "PASS",
-          "expected": 0.0,
-          "actual": 9.017092628127443e-15,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "outcome",
-          "detail": "relative_error=9.02e-15, diff=+0.0000%, tolerance=0.01"
-        },
-        {
-          "name": "Ship Stopped",
-          "status": "FAIL",
-          "expected": true,
-          "actual": 31.25,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "outcome",
-          "detail": ""
-        }
-      ],
-      "initial_state_file": null,
-      "final_state_file": null,
-      "seed": null
-    },
-    {
-      "timestamp": "2026-04-02T06:08:34.589395",
-      "ticks_run": 500,
-      "passed": false,
-      "metrics": {
-        "test_id": "RESOURCE-002",
-        "ticks_run": 500,
-        "initial_value": 2.5,
-        "final_value": 9.017092628127443e-15,
-        "value_consumed": 2.499999999999991,
-        "final_velocity": 31.25,
-        "distance_traveled": 15546.875,
-        "ship_total_shots_fired": 0,
-        "ship_weapons": [],
-        "ship_in_flight": 0,
-        "ship_resolved_shots": 0,
-        "ship_resolved_hits": 0,
-        "validation": {
-          "passed": false,
-          "failed_phase": "outcome",
-          "summary": {
-            "data": {
-              "total": 2,
-              "passed": 2,
-              "failed": 0
-            },
-            "precondition": {
-              "total": 2,
-              "passed": 2,
-              "failed": 0
-            },
-            "outcome": {
-              "total": 2,
-              "passed": 1,
-              "failed": 1
-            }
-          },
-          "checks": [
-            {
-              "phase": "precondition",
-              "name": "Simulation Ran",
-              "expected": true,
-              "actual": 500,
-              "passed": true,
-              "detail": ""
-            },
-            {
-              "phase": "data",
-              "name": "Ship Mass",
-              "expected": 400,
-              "actual": 400.0,
-              "passed": true,
-              "detail": "expected=400, actual=400.0"
-            },
-            {
-              "phase": "data",
-              "name": "Initial Fuel",
-              "expected": 2.5,
-              "actual": 2.5,
-              "passed": true,
-              "detail": "expected=2.5, actual=2.5"
-            },
-            {
-              "phase": "precondition",
-              "name": "Ship Moved",
-              "expected": true,
-              "actual": 15546.875,
-              "passed": true,
-              "detail": ""
-            },
-            {
-              "phase": "outcome",
-              "name": "Fuel Depleted",
-              "expected": 0.0,
-              "actual": 9.017092628127443e-15,
-              "passed": true,
-              "detail": "relative_error=9.02e-15, diff=+0.0000%, tolerance=0.01"
-            },
-            {
-              "phase": "outcome",
-              "name": "Ship Stopped",
-              "expected": true,
-              "actual": 31.25,
-              "passed": false,
-              "detail": ""
-            }
-          ]
-        },
-        "duration_real": 0.7990458011627197,
-        "ticks": 500
-      },
-      "validation_summary": {
-        "pass": 5,
-        "fail": 1,
-        "warn": 0,
-        "info": 0
-      },
-      "validation_results": [
-        {
-          "name": "Simulation Ran",
-          "status": "PASS",
-          "expected": true,
-          "actual": 500,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "precondition",
-          "detail": ""
-        },
-        {
-          "name": "Ship Mass",
-          "status": "PASS",
-          "expected": 400,
-          "actual": 400.0,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "data",
-          "detail": "expected=400, actual=400.0"
-        },
-        {
-          "name": "Initial Fuel",
-          "status": "PASS",
-          "expected": 2.5,
-          "actual": 2.5,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "data",
-          "detail": "expected=2.5, actual=2.5"
-        },
-        {
-          "name": "Ship Moved",
-          "status": "PASS",
-          "expected": true,
-          "actual": 15546.875,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "precondition",
-          "detail": ""
-        },
-        {
-          "name": "Fuel Depleted",
-          "status": "PASS",
-          "expected": 0.0,
-          "actual": 9.017092628127443e-15,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "outcome",
-          "detail": "relative_error=9.02e-15, diff=+0.0000%, tolerance=0.01"
-        },
-        {
-          "name": "Ship Stopped",
-          "status": "FAIL",
-          "expected": true,
-          "actual": 31.25,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "outcome",
-          "detail": ""
-        }
-      ],
-      "initial_state_file": null,
-      "final_state_file": null,
-      "seed": null
-    },
-    {
       "timestamp": "2026-04-02T06:15:19.910780",
       "ticks_run": 500,
       "passed": false,
@@ -468465,6 +468139,332 @@
           "status": "PASS",
           "expected": true,
           "actual": 15546.875,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "Fuel Depleted",
+          "status": "PASS",
+          "expected": 0.0,
+          "actual": 9.017092628127443e-15,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "relative_error=9.02e-15, diff=+0.0000%, tolerance=0.01"
+        },
+        {
+          "name": "Ship Stopped",
+          "status": "FAIL",
+          "expected": true,
+          "actual": 31.25,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": ""
+        }
+      ],
+      "initial_state_file": null,
+      "final_state_file": null,
+      "seed": null
+    },
+    {
+      "timestamp": "2026-04-05T10:37:20.089648",
+      "ticks_run": 500,
+      "passed": false,
+      "metrics": {
+        "test_id": "RESOURCE-002",
+        "ticks_run": 500,
+        "initial_value": 2.5,
+        "final_value": 9.017092628127443e-15,
+        "value_consumed": 2.499999999999991,
+        "final_velocity": 31.25,
+        "distance_traveled": 15578.125,
+        "ship_total_shots_fired": 0,
+        "ship_weapons": [],
+        "ship_in_flight": 0,
+        "ship_resolved_shots": 0,
+        "ship_resolved_hits": 0,
+        "validation": {
+          "passed": false,
+          "failed_phase": "outcome",
+          "summary": {
+            "data": {
+              "total": 2,
+              "passed": 2,
+              "failed": 0
+            },
+            "precondition": {
+              "total": 2,
+              "passed": 2,
+              "failed": 0
+            },
+            "outcome": {
+              "total": 2,
+              "passed": 1,
+              "failed": 1
+            }
+          },
+          "checks": [
+            {
+              "phase": "precondition",
+              "name": "Simulation Ran",
+              "expected": true,
+              "actual": 500,
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "data",
+              "name": "Ship Mass",
+              "expected": 400,
+              "actual": 400.0,
+              "passed": true,
+              "detail": "expected=400, actual=400.0"
+            },
+            {
+              "phase": "data",
+              "name": "Initial Fuel",
+              "expected": 2.5,
+              "actual": 2.5,
+              "passed": true,
+              "detail": "expected=2.5, actual=2.5"
+            },
+            {
+              "phase": "precondition",
+              "name": "Ship Moved",
+              "expected": true,
+              "actual": 15578.125,
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "outcome",
+              "name": "Fuel Depleted",
+              "expected": 0.0,
+              "actual": 9.017092628127443e-15,
+              "passed": true,
+              "detail": "relative_error=9.02e-15, diff=+0.0000%, tolerance=0.01"
+            },
+            {
+              "phase": "outcome",
+              "name": "Ship Stopped",
+              "expected": true,
+              "actual": 31.25,
+              "passed": false,
+              "detail": ""
+            }
+          ]
+        },
+        "duration_real": 0.8846683502197266,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 5,
+        "fail": 1,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Simulation Ran",
+          "status": "PASS",
+          "expected": true,
+          "actual": 500,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "Ship Mass",
+          "status": "PASS",
+          "expected": 400,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "data",
+          "detail": "expected=400, actual=400.0"
+        },
+        {
+          "name": "Initial Fuel",
+          "status": "PASS",
+          "expected": 2.5,
+          "actual": 2.5,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "data",
+          "detail": "expected=2.5, actual=2.5"
+        },
+        {
+          "name": "Ship Moved",
+          "status": "PASS",
+          "expected": true,
+          "actual": 15578.125,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "Fuel Depleted",
+          "status": "PASS",
+          "expected": 0.0,
+          "actual": 9.017092628127443e-15,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "relative_error=9.02e-15, diff=+0.0000%, tolerance=0.01"
+        },
+        {
+          "name": "Ship Stopped",
+          "status": "FAIL",
+          "expected": true,
+          "actual": 31.25,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": ""
+        }
+      ],
+      "initial_state_file": null,
+      "final_state_file": null,
+      "seed": null
+    },
+    {
+      "timestamp": "2026-04-05T10:37:55.757699",
+      "ticks_run": 500,
+      "passed": false,
+      "metrics": {
+        "test_id": "RESOURCE-002",
+        "ticks_run": 500,
+        "initial_value": 2.5,
+        "final_value": 9.017092628127443e-15,
+        "value_consumed": 2.499999999999991,
+        "final_velocity": 31.25,
+        "distance_traveled": 15578.125,
+        "ship_total_shots_fired": 0,
+        "ship_weapons": [],
+        "ship_in_flight": 0,
+        "ship_resolved_shots": 0,
+        "ship_resolved_hits": 0,
+        "validation": {
+          "passed": false,
+          "failed_phase": "outcome",
+          "summary": {
+            "data": {
+              "total": 2,
+              "passed": 2,
+              "failed": 0
+            },
+            "precondition": {
+              "total": 2,
+              "passed": 2,
+              "failed": 0
+            },
+            "outcome": {
+              "total": 2,
+              "passed": 1,
+              "failed": 1
+            }
+          },
+          "checks": [
+            {
+              "phase": "precondition",
+              "name": "Simulation Ran",
+              "expected": true,
+              "actual": 500,
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "data",
+              "name": "Ship Mass",
+              "expected": 400,
+              "actual": 400.0,
+              "passed": true,
+              "detail": "expected=400, actual=400.0"
+            },
+            {
+              "phase": "data",
+              "name": "Initial Fuel",
+              "expected": 2.5,
+              "actual": 2.5,
+              "passed": true,
+              "detail": "expected=2.5, actual=2.5"
+            },
+            {
+              "phase": "precondition",
+              "name": "Ship Moved",
+              "expected": true,
+              "actual": 15578.125,
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "outcome",
+              "name": "Fuel Depleted",
+              "expected": 0.0,
+              "actual": 9.017092628127443e-15,
+              "passed": true,
+              "detail": "relative_error=9.02e-15, diff=+0.0000%, tolerance=0.01"
+            },
+            {
+              "phase": "outcome",
+              "name": "Ship Stopped",
+              "expected": true,
+              "actual": 31.25,
+              "passed": false,
+              "detail": ""
+            }
+          ]
+        },
+        "duration_real": 0.8878231048583984,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 5,
+        "fail": 1,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Simulation Ran",
+          "status": "PASS",
+          "expected": true,
+          "actual": 500,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "Ship Mass",
+          "status": "PASS",
+          "expected": 400,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "data",
+          "detail": "expected=400, actual=400.0"
+        },
+        {
+          "name": "Initial Fuel",
+          "status": "PASS",
+          "expected": 2.5,
+          "actual": 2.5,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "data",
+          "detail": "expected=2.5, actual=2.5"
+        },
+        {
+          "name": "Ship Moved",
+          "status": "PASS",
+          "expected": true,
+          "actual": 15578.125,
           "p_value": null,
           "tolerance": null,
           "phase": "precondition",

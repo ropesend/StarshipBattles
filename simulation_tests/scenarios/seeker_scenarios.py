@@ -470,8 +470,17 @@ class SeekerHPvsPDCScenario(_PDCMixin, ComparisonScenario):
             detail=f"shots={variant_shots}", phase="precondition",
         ))
 
+        # Outcome: high HP seekers survive PDC and deal damage
         checks.append(check_true(
-            "High HP Seekers Deal More Damage",
+            "High HP Seekers Deal Damage",
+            self.variant_damage_dealt > 0,
+            detail=f"variant_damage={self.variant_damage_dealt}", phase="outcome",
+        ))
+
+        # Outcome: high HP seekers deal MORE damage than low HP
+        # Low HP(1) seekers may deal 0 (all destroyed by PDC) — that's expected
+        checks.append(check_true(
+            "High HP Survives Better Than Low HP",
             self.variant_damage_dealt > self.baseline_damage_dealt,
             detail=f"variant={self.variant_damage_dealt}, baseline={self.baseline_damage_dealt}",
             phase="outcome",
@@ -557,6 +566,14 @@ class SeekerLimitedAmmoScenario(ComparisonScenario):
                                  self.variant_damage_dealt < self.baseline_damage_dealt,
                                  detail=f"variant={self.variant_damage_dealt}, baseline={self.baseline_damage_dealt}",
                                  phase="outcome"))
+
+        # Outcome: variant fired fewer shots (ammo limited)
+        baseline_shots = self.results.get('baseline_attacker_total_shots_fired', 0)
+        variant_shots = self.results.get('variant_attacker_total_shots_fired', 0)
+        checks.append(check_true("Variant Fired Fewer Shots",
+                                 variant_shots < baseline_shots,
+                                 detail=f"variant={variant_shots}, baseline={baseline_shots}",
+                                 phase="outcome"))
         return checks
 
 
@@ -631,12 +648,19 @@ class SeekerPDCReducesDamageScenario(_PDCMixin, ComparisonScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
-        checks.append(check_true("Undefended Took Damage", self.baseline_damage_dealt > 0,
-                                 detail=f"damage={self.baseline_damage_dealt}"))
+
+        # Precondition: undefended target took damage
+        checks.append(check_true("Undefended Target Took Damage",
+                                 self.baseline_damage_dealt > 0,
+                                 detail=f"damage={self.baseline_damage_dealt}",
+                                 phase="precondition"))
+
+        # Outcome: PDC reduced total damage (may reduce to 0 for HP=1 seekers)
         checks.append(check_true("PDC Reduced Damage",
                                  self.variant_damage_dealt < self.baseline_damage_dealt,
-                                 detail=f"variant={self.variant_damage_dealt}, baseline={self.baseline_damage_dealt}",
+                                 detail=f"pdc_target={self.variant_damage_dealt}, undefended={self.baseline_damage_dealt}",
                                  phase="outcome"))
+
         return checks
 
 
@@ -671,8 +695,18 @@ class SeekerDefenseVsPDCScenario(_PDCMixin, ComparisonScenario):
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
+
+        # Outcome: high defense seekers survive PDC better, deal more damage
+        # Low defense (0) seekers may all get destroyed — that's expected behavior
         checks.append(check_true("High Defense Seekers Deal More",
                                  self.variant_damage_dealt > self.baseline_damage_dealt,
-                                 detail=f"variant={self.variant_damage_dealt}, baseline={self.baseline_damage_dealt}",
+                                 detail=f"high_def={self.variant_damage_dealt}, low_def={self.baseline_damage_dealt}",
                                  phase="outcome"))
+
+        # Outcome: high defense seekers actually dealt some damage
+        checks.append(check_true("High Defense Seekers Reached Target",
+                                 self.variant_damage_dealt > 0,
+                                 detail=f"damage={self.variant_damage_dealt}",
+                                 phase="outcome"))
+
         return checks

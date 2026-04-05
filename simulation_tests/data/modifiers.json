@@ -63,6 +63,27 @@
       "effects": [{ "stat": "consumption_mult", "formula": "param" }]
     },
     {
+      "id": "test_thrust_penalty",
+      "name": "Test Thrust Penalty",
+      "description": "Test modifier: reduces thrust (multiplier < 1.0).",
+      "param": { "name": "Factor", "type": "linear", "min": 0.1, "max": 1.0, "default": 1.0 },
+      "effects": [{ "stat": "thrust_mult", "formula": "param" }]
+    },
+    {
+      "id": "test_range_penalty",
+      "name": "Test Range Penalty",
+      "description": "Test modifier: reduces weapon range (multiplier < 1.0).",
+      "param": { "name": "Factor", "type": "linear", "min": 0.1, "max": 1.0, "default": 1.0 },
+      "effects": [{ "stat": "range_mult", "formula": "param" }]
+    },
+    {
+      "id": "test_consumption_increase",
+      "name": "Test Consumption Increase",
+      "description": "Test modifier: increases resource consumption (multiplier > 1.0).",
+      "param": { "name": "Factor", "type": "linear", "min": 1.0, "max": 10.0, "default": 1.0 },
+      "effects": [{ "stat": "consumption_mult", "formula": "param" }]
+    },
+    {
       "id": "test_damage_penalty",
       "name": "Test Damage Penalty",
       "description": "Test modifier: reduces damage (multiplier < 1.0).",

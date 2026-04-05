@@ -1,11 +1,12 @@
 """
-Consumption Multiplier Modifier Test Scenarios (MOD-CONSUME-001 to MOD-CONSUME-003)
+Consumption Multiplier Modifier Test Scenarios (MOD-CONSUME-001 to MOD-CONSUME-004)
 
 These tests validate that the consumption_mult modifier correctly reduces
 per-shot resource costs for weapons:
 - MOD-CONSUME-001: Modified weapon fires and deals damage (smoke test)
 - MOD-CONSUME-002: Modified weapon deals ~2x more damage than unmodified
 - MOD-CONSUME-003: Modified weapon fires ~2x more shots than unmodified
+- MOD-CONSUME-004: Consumption increase (2x) — weapon fires fewer shots
 
 Key Mechanics:
 - test_consumption_reduction modifier: consumption_mult *= param (0.5)
@@ -17,6 +18,7 @@ Key Mechanics:
 Ship Files:
 - Test_Attacker_Beam_ConsumptionReduction.json — test_beam_rapid_1dmg_energy_consumption (10 energy/shot) + test_consumption_reduction (value=0.5) + test_storage_energy_250
 - Test_Attacker_Beam_ConsumptionBase.json — test_beam_rapid_1dmg_energy_consumption (10 energy/shot) + test_storage_energy_250 (no modifier)
+- Test_Attacker_Beam_ConsumptionIncrease.json — test_beam_rapid_1dmg_energy_consumption (10 energy/shot) + test_consumption_increase (value=2) + test_storage_energy_250
 - Test_Target_Stationary.json — test_armor_extreme_hp (1B HP, stationary)
 """
 
@@ -121,11 +123,10 @@ class ConsumptionModifierSmokeScenario(StaticTargetScenario):
             detail=f"damage_dealt={self.damage_dealt}",
         ))
 
-        # Outcome: modifier is active — fired more than unmodified limit
-        checks.append(check_true(
-            "Modifier Active (Exceeded Unmodified Limit)",
-            self.damage_dealt > BASE_EXPECTED_SHOTS,
-            detail=f"damage_dealt={self.damage_dealt}, unmodified_limit={BASE_EXPECTED_SHOTS}",
+        # Outcome: modifier is active — damage near expected modified shot count
+        checks.append(check_approx(
+            "Damage Near Modified Expectation", float(MODIFIED_EXPECTED_SHOTS),
+            float(self.damage_dealt), tolerance=5,
             phase="outcome",
         ))
 
@@ -310,6 +311,101 @@ class ConsumptionModifierShotsComparisonScenario(ComparisonScenario):
 
 
 # ============================================================================
+# MOD-CONSUME-004: CONSUMPTION INCREASE — WEAPON FIRES FEWER SHOTS
+# ============================================================================
+
+# Consumption increase constants
+INCREASE_MODIFIER_PARAM = 2
+INCREASED_ENERGY_PER_SHOT = BASE_ENERGY_PER_SHOT * INCREASE_MODIFIER_PARAM  # 20.0
+INCREASED_EXPECTED_SHOTS = int(INITIAL_ENERGY / INCREASED_ENERGY_PER_SHOT)  # 12
+INCREASED_SHIP = "Test_Attacker_Beam_ConsumptionIncrease.json"
+
+
+class ConsumptionIncreaseScenario(ComparisonScenario):
+    """
+    MOD-CONSUME-004: Consumption increase — weapon fires fewer shots.
+
+    Compares baseline (no modifier, 10 energy/shot, ~25 shots) vs variant
+    (2x consumption modifier, 20 energy/shot, ~12 shots). Both start with
+    250 energy. The increased consumption means the variant fires roughly
+    half the shots.
+    """
+
+    metadata = TestMetadata(
+        test_id="MOD-CONSUME-004",
+        category="ConsumptionMultiplier",
+        subcategory="ConsumptionMultiplier",
+        name="Consumption Increase — weapon fires fewer shots",
+        summary="2x consumption modifier doubles energy cost, halving shots fired (~12 vs ~25)",
+        conditions=[
+            f"Baseline: {BASE_SHIP} (test_beam_rapid_1dmg_energy_consumption {BASE_ENERGY_PER_SHOT} energy/shot + test_storage_energy_250, no modifier)",
+            f"Variant: {INCREASED_SHIP} (test_beam_rapid_1dmg_energy_consumption + test_consumption_increase value={INCREASE_MODIFIER_PARAM} + test_storage_energy_250)",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Baseline: {INITIAL_ENERGY} / {BASE_ENERGY_PER_SHOT} = ~{BASE_EXPECTED_SHOTS} shots; Variant: {INITIAL_ENERGY} / {INCREASED_ENERGY_PER_SHOT} = ~{INCREASED_EXPECTED_SHOTS} shots",
+            f"Distance: {DISTANCE}px (point blank)",
+        ],
+        edge_cases=[
+            "Both ships identical except for consumption modifier",
+            "250 / 20 = 12.5 — fractional shot means ~12 full shots",
+            "Penalty modifier increases cost rather than reducing it",
+        ],
+        expected_outcome=f"Baseline ~{BASE_EXPECTED_SHOTS} damage, Variant ~{INCREASED_EXPECTED_SHOTS} damage",
+        pass_criteria=f"variant_damage < baseline_damage AND variant_damage ≈ {INCREASED_EXPECTED_SHOTS} AND baseline_damage ≈ {BASE_EXPECTED_SHOTS}",
+        max_ticks=MAX_TICKS,
+        seed=SEED,
+        battle_end_mode="time_based",
+        tags=["modifier", "consumption_mult", "penalty"],
+    )
+
+    baseline_attacker_ship = BASE_SHIP
+    baseline_target_ship = TARGET_SHIP
+    variant_attacker_ship = INCREASED_SHIP
+    variant_target_ship = TARGET_SHIP
+    distance = DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Precondition: both dealt damage
+        checks.append(check_true(
+            "Baseline Dealt Damage",
+            self.baseline_damage_dealt > 0,
+            detail=f"baseline_damage={self.baseline_damage_dealt}",
+            phase="precondition",
+        ))
+        checks.append(check_true(
+            "Variant Dealt Damage",
+            self.variant_damage_dealt > 0,
+            detail=f"variant_damage={self.variant_damage_dealt}",
+            phase="precondition",
+        ))
+
+        # Outcome: variant deals less damage than baseline
+        checks.append(check_true(
+            "Variant Deals Less Damage",
+            self.variant_damage_dealt < self.baseline_damage_dealt,
+            detail=f"variant={self.variant_damage_dealt}, baseline={self.baseline_damage_dealt}",
+            phase="outcome",
+        ))
+
+        # Outcome: variant damage ≈ 12 (250 / 20 = 12.5, truncated to ~12)
+        checks.append(check_approx(
+            "Variant Damage", float(INCREASED_EXPECTED_SHOTS),
+            float(self.variant_damage_dealt), tolerance=3,
+            phase="outcome",
+        ))
+
+        # Outcome: baseline damage ≈ 25
+        checks.append(check_approx(
+            "Baseline Damage", float(BASE_EXPECTED_SHOTS),
+            float(self.baseline_damage_dealt), tolerance=3,
+            phase="outcome",
+        ))
+
+        return checks
+
+
+# ============================================================================
 # EXPORT ALL SCENARIOS
 # ============================================================================
 
@@ -317,4 +413,5 @@ __all__ = [
     'ConsumptionModifierSmokeScenario',
     'ConsumptionModifierDamageComparisonScenario',
     'ConsumptionModifierShotsComparisonScenario',
+    'ConsumptionIncreaseScenario',
 ]

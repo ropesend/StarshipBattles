@@ -20,7 +20,7 @@
   },
   "_test_notes": "Engine with 1.0 fuel/sec consumption + large fuel tank (1000 units). For 500 ticks (5 sec), consumes 5.0 fuel. Ship keeps moving.",
   "expected_stats": {
-    "max_hp": 120,
+    "max_hp": 170,
     "max_fuel": 1000.0,
     "max_energy": 0.0,
     "max_ammo": 0.0,

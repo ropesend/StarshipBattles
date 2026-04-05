@@ -29,7 +29,7 @@ class ShipPhysicsMixin:
         if self.is_thrusting:
             current_total_thrust = self.get_total_ability_value('CombatPropulsion', operational_only=True)
 
-            if self.mass > 0:
+            if current_total_thrust > 0 and self.mass > 0:
                 current_accel = compute_acceleration(current_total_thrust, self.mass)
                 potential_max_speed = compute_max_speed(current_total_thrust, self.mass)
                 target_v = potential_max_speed * self.engine_throttle
@@ -41,11 +41,23 @@ class ShipPhysicsMixin:
                          self.current_speed = target_v
                      else:
                          self.current_speed += step if diff > 0 else -step
-            
+
+                # Store operational acceleration for use during coasting/starvation
+                self._last_operational_accel = current_accel
+            elif self.current_speed > 0:
+                # Engines starved (fuel depleted) — decelerate to stop
+                # Use last known operational acceleration rate for realistic deceleration
+                step = getattr(self, '_last_operational_accel', 0)
+                if step <= 0:
+                    step = compute_acceleration(max(self.total_thrust, 1.0), max(self.mass, 1.0))
+                self.current_speed = max(0, self.current_speed - step)
+
         else:
             # Decelerate toward zero using base acceleration rate
             self.target_speed = 0
             step = self.acceleration_rate
+            if step <= 0:
+                step = getattr(self, '_last_operational_accel', 0)
             diff = 0 - self.current_speed
             if diff != 0:
                 if abs(diff) <= step:

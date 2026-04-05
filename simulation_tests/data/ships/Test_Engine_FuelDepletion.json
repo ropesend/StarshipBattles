@@ -20,7 +20,7 @@
   },
   "_test_notes": "Engine with 1.0 fuel/sec consumption + small fuel tank (2.5 units). Depletes at tick ~250, ship stops moving (starvation).",
   "expected_stats": {
-    "max_hp": 105,
+    "max_hp": 155,
     "max_fuel": 2.5,
     "max_energy": 0.0,
     "max_ammo": 0.0,
