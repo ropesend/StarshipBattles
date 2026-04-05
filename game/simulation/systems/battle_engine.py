@@ -9,7 +9,7 @@ Battle Lifecycle:
        engine = BattleEngine()
 
     2. START: Initialize battle with ships
-       engine.start(team1_ships, team2_ships, seed=42)
+       engine.start(team0_ships, team1_ships, seed=42)
        - Assigns team IDs (0 and 1)
        - Creates AI controller for each ship via injected factory
        - Initializes spatial grid and projectile manager
@@ -220,8 +220,8 @@ class BattleEngine:
 
     def start(
         self,
+        team0_ships: List['Ship'],
         team1_ships: List['Ship'],
-        team2_ships: List['Ship'],
         seed: Optional[int] = None,
         end_condition: Optional[IEndCondition] = None,
         absolute_max_ticks: Optional[int] = None,
@@ -231,8 +231,8 @@ class BattleEngine:
         Initialize battle state with configurable end condition.
 
         Args:
-            team1_ships: List of ships for team 0
-            team2_ships: List of ships for team 1
+            team0_ships: List of ships for team 0
+            team1_ships: List of ships for team 1
             seed: Random seed for deterministic battles
             end_condition: Battle end condition (default: TeamEliminatedCondition)
             absolute_max_ticks: Safety ceiling (default: SimulationConstants.ABSOLUTE_MAX_TICKS)
@@ -256,14 +256,14 @@ class BattleEngine:
             self._absolute_max_ticks = absolute_max_ticks
 
         # Handle single ship args (though type hint implies lists)
+        if not isinstance(team0_ships, list): team0_ships = [team0_ships]
         if not isinstance(team1_ships, list): team1_ships = [team1_ships]
-        if not isinstance(team2_ships, list): team2_ships = [team2_ships]
 
         # Add ships to teams (common to all paths)
-        for s in team1_ships:
+        for s in team0_ships:
             s.team_id = 0
             self.ships.append(s)
-        for s in team2_ships:
+        for s in team1_ships:
             s.team_id = 1
             self.ships.append(s)
 
@@ -272,9 +272,9 @@ class BattleEngine:
             self.ai_controllers = list(ai_controllers)
         elif self._ai_factory is not None:
             # PROJ-43: Use injected factory to create AI controllers
-            team1_controllers = self._ai_factory.create_for_ships(team1_ships, enemy_team_id=1)
-            team2_controllers = self._ai_factory.create_for_ships(team2_ships, enemy_team_id=0)
-            self.ai_controllers = team1_controllers + team2_controllers
+            team0_controllers = self._ai_factory.create_for_ships(team0_ships, enemy_team_id=1)
+            team1_controllers = self._ai_factory.create_for_ships(team1_ships, enemy_team_id=0)
+            self.ai_controllers = team0_controllers + team1_controllers
         else:
             raise ValidationException(
                 "BattleEngine requires AI configuration",
@@ -291,7 +291,7 @@ class BattleEngine:
 
         # Logging
         self.logger.start_session()
-        self.logger.log(f"Battle started: {len(team1_ships)} vs {len(team2_ships)} ships")
+        self.logger.log(f"Battle started: {len(team0_ships)} vs {len(team1_ships)} ships")
 
         self._log_initial_status()
 

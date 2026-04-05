@@ -90,7 +90,7 @@ class BuildQueueScreen:
 
         # Populate queue sources from hex context
         self.queue_sources: List[BuildQueueSource] = collect_build_queues_at_hex(
-            hex_coord, galaxy, empire
+            hex_coord, galaxy, empire, registries=session.registries
         )
 
         # Queue selection state
