@@ -4,6 +4,12 @@ w# Projects Index
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-245 | Spatial Grid Incremental Updates | Planning | 2026-04-05 | 2026-04-05 |
+| PROJ-244 | Team Naming Standardization | Planning | 2026-04-05 | 2026-04-05 |
+| PROJ-243 | Mid-Battle Ship Addition Fix | Planning | 2026-04-05 | 2026-04-05 |
+| PROJ-242 | Unified Formula Evaluation System | Planning | 2026-04-05 | 2026-04-05 |
+| PROJ-241 | Component God Class Decomposition | Planning | 2026-04-05 | 2026-04-05 |
+| PROJ-240 | Ship God Class Decomposition | Planning | 2026-04-05 | 2026-04-05 |
 | PROJ-239 | Strategy Layer Health Remediation | Planning | 2026-04-05 | 2026-04-05 |
 | PROJ-238 | Order System Unification & Planet Orders UI | Planning | 2026-03-29 | 2026-03-29 |
 | PROJ-237 | Planetary Shield, Energy System & Planet Orders Framework | Planning | 2026-03-29 | 2026-03-29 |

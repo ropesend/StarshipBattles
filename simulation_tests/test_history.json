@@ -465054,187 +465054,6 @@
   ],
   "RESOURCE-001": [
     {
-      "timestamp": "2026-04-01T22:07:49.686195",
-      "ticks_run": 500,
-      "passed": true,
-      "metrics": {
-        "test_id": "RESOURCE-001",
-        "ticks_run": 500,
-        "initial_value": 1000.0,
-        "final_value": 994.9900000000046,
-        "value_consumed": 5.009999999995443,
-        "final_velocity": 31.25,
-        "distance_traveled": 15546.875,
-        "ship_total_shots_fired": 0,
-        "ship_weapons": [],
-        "ship_in_flight": 0,
-        "ship_resolved_shots": 0,
-        "ship_resolved_hits": 0,
-        "validation": {
-          "passed": true,
-          "failed_phase": null,
-          "summary": {
-            "data": {
-              "total": 3,
-              "passed": 3,
-              "failed": 0
-            },
-            "precondition": {
-              "total": 2,
-              "passed": 2,
-              "failed": 0
-            },
-            "outcome": {
-              "total": 2,
-              "passed": 2,
-              "failed": 0
-            }
-          },
-          "checks": [
-            {
-              "phase": "precondition",
-              "name": "Simulation Ran",
-              "expected": true,
-              "actual": 500,
-              "passed": true,
-              "detail": ""
-            },
-            {
-              "phase": "data",
-              "name": "Ship Mass",
-              "expected": 400,
-              "actual": 400.0,
-              "passed": true,
-              "detail": "expected=400, actual=400.0"
-            },
-            {
-              "phase": "data",
-              "name": "Initial Fuel",
-              "expected": 1000.0,
-              "actual": 1000.0,
-              "passed": true,
-              "detail": "expected=1000.0, actual=1000.0"
-            },
-            {
-              "phase": "data",
-              "name": "Engine Thrust",
-              "expected": 500,
-              "actual": 500.0,
-              "passed": true,
-              "detail": "expected=500, actual=500.0"
-            },
-            {
-              "phase": "precondition",
-              "name": "Ship Moved",
-              "expected": true,
-              "actual": 31.25,
-              "passed": true,
-              "detail": ""
-            },
-            {
-              "phase": "outcome",
-              "name": "Final Fuel",
-              "expected": 995.0,
-              "actual": 994.9900000000046,
-              "passed": true,
-              "detail": "relative_error=1.01e-05, diff=-0.0010%, tolerance=0.01"
-            },
-            {
-              "phase": "outcome",
-              "name": "Fuel Consumed",
-              "expected": 5.0,
-              "actual": 5.009999999995443,
-              "passed": true,
-              "detail": "relative_error=2.00e-03, diff=+0.2000%, tolerance=0.01"
-            }
-          ]
-        },
-        "duration_real": 0.7754981517791748,
-        "ticks": 500
-      },
-      "validation_summary": {
-        "pass": 7,
-        "fail": 0,
-        "warn": 0,
-        "info": 0
-      },
-      "validation_results": [
-        {
-          "name": "Simulation Ran",
-          "status": "PASS",
-          "expected": true,
-          "actual": 500,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "precondition",
-          "detail": ""
-        },
-        {
-          "name": "Ship Mass",
-          "status": "PASS",
-          "expected": 400,
-          "actual": 400.0,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "data",
-          "detail": "expected=400, actual=400.0"
-        },
-        {
-          "name": "Initial Fuel",
-          "status": "PASS",
-          "expected": 1000.0,
-          "actual": 1000.0,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "data",
-          "detail": "expected=1000.0, actual=1000.0"
-        },
-        {
-          "name": "Engine Thrust",
-          "status": "PASS",
-          "expected": 500,
-          "actual": 500.0,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "data",
-          "detail": "expected=500, actual=500.0"
-        },
-        {
-          "name": "Ship Moved",
-          "status": "PASS",
-          "expected": true,
-          "actual": 31.25,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "precondition",
-          "detail": ""
-        },
-        {
-          "name": "Final Fuel",
-          "status": "PASS",
-          "expected": 995.0,
-          "actual": 994.9900000000046,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "outcome",
-          "detail": "relative_error=1.01e-05, diff=-0.0010%, tolerance=0.01"
-        },
-        {
-          "name": "Fuel Consumed",
-          "status": "PASS",
-          "expected": 5.0,
-          "actual": 5.009999999995443,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "outcome",
-          "detail": "relative_error=2.00e-03, diff=+0.2000%, tolerance=0.01"
-        }
-      ],
-      "initial_state_file": null,
-      "final_state_file": null,
-      "seed": null
-    },
-    {
       "timestamp": "2026-04-02T06:08:32.983845",
       "ticks_run": 500,
       "passed": true,
@@ -466862,33 +466681,31 @@
       "initial_state_file": null,
       "final_state_file": null,
       "seed": null
-    }
-  ],
-  "RESOURCE-002": [
+    },
     {
-      "timestamp": "2026-04-02T06:15:19.910780",
+      "timestamp": "2026-04-05T12:01:28.130458",
       "ticks_run": 500,
-      "passed": false,
+      "passed": true,
       "metrics": {
-        "test_id": "RESOURCE-002",
+        "test_id": "RESOURCE-001",
         "ticks_run": 500,
-        "initial_value": 2.5,
-        "final_value": 9.017092628127443e-15,
-        "value_consumed": 2.499999999999991,
+        "initial_value": 1000.0,
+        "final_value": 994.9900000000046,
+        "value_consumed": 5.009999999995443,
         "final_velocity": 31.25,
-        "distance_traveled": 15546.875,
+        "distance_traveled": 15578.125,
         "ship_total_shots_fired": 0,
         "ship_weapons": [],
         "ship_in_flight": 0,
         "ship_resolved_shots": 0,
         "ship_resolved_hits": 0,
         "validation": {
-          "passed": false,
-          "failed_phase": "outcome",
+          "passed": true,
+          "failed_phase": null,
           "summary": {
             "data": {
-              "total": 2,
-              "passed": 2,
+              "total": 3,
+              "passed": 3,
               "failed": 0
             },
             "precondition": {
@@ -466898,8 +466715,8 @@
             },
             "outcome": {
               "total": 2,
-              "passed": 1,
-              "failed": 1
+              "passed": 2,
+              "failed": 0
             }
           },
           "checks": [
@@ -466922,43 +466739,51 @@
             {
               "phase": "data",
               "name": "Initial Fuel",
-              "expected": 2.5,
-              "actual": 2.5,
+              "expected": 1000.0,
+              "actual": 1000.0,
               "passed": true,
-              "detail": "expected=2.5, actual=2.5"
+              "detail": "expected=1000.0, actual=1000.0"
+            },
+            {
+              "phase": "data",
+              "name": "Engine Thrust",
+              "expected": 500,
+              "actual": 500.0,
+              "passed": true,
+              "detail": "expected=500, actual=500.0"
             },
             {
               "phase": "precondition",
               "name": "Ship Moved",
               "expected": true,
-              "actual": 15546.875,
-              "passed": true,
-              "detail": ""
-            },
-            {
-              "phase": "outcome",
-              "name": "Fuel Depleted",
-              "expected": 0.0,
-              "actual": 9.017092628127443e-15,
-              "passed": true,
-              "detail": "relative_error=9.02e-15, diff=+0.0000%, tolerance=0.01"
-            },
-            {
-              "phase": "outcome",
-              "name": "Ship Stopped",
-              "expected": true,
               "actual": 31.25,
-              "passed": false,
+              "passed": true,
               "detail": ""
+            },
+            {
+              "phase": "outcome",
+              "name": "Final Fuel",
+              "expected": 995.0,
+              "actual": 994.9900000000046,
+              "passed": true,
+              "detail": "relative_error=1.01e-05, diff=-0.0010%, tolerance=0.01"
+            },
+            {
+              "phase": "outcome",
+              "name": "Fuel Consumed",
+              "expected": 5.0,
+              "actual": 5.009999999995443,
+              "passed": true,
+              "detail": "relative_error=2.00e-03, diff=+0.2000%, tolerance=0.01"
             }
           ]
         },
-        "duration_real": 0.7838349342346191,
+        "duration_real": 0.8651700019836426,
         "ticks": 500
       },
       "validation_summary": {
-        "pass": 5,
-        "fail": 1,
+        "pass": 7,
+        "fail": 0,
         "warn": 0,
         "info": 0
       },
@@ -466986,48 +466811,60 @@
         {
           "name": "Initial Fuel",
           "status": "PASS",
-          "expected": 2.5,
-          "actual": 2.5,
+          "expected": 1000.0,
+          "actual": 1000.0,
           "p_value": null,
           "tolerance": null,
           "phase": "data",
-          "detail": "expected=2.5, actual=2.5"
+          "detail": "expected=1000.0, actual=1000.0"
+        },
+        {
+          "name": "Engine Thrust",
+          "status": "PASS",
+          "expected": 500,
+          "actual": 500.0,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "data",
+          "detail": "expected=500, actual=500.0"
         },
         {
           "name": "Ship Moved",
           "status": "PASS",
           "expected": true,
-          "actual": 15546.875,
+          "actual": 31.25,
           "p_value": null,
           "tolerance": null,
           "phase": "precondition",
           "detail": ""
         },
         {
-          "name": "Fuel Depleted",
+          "name": "Final Fuel",
           "status": "PASS",
-          "expected": 0.0,
-          "actual": 9.017092628127443e-15,
+          "expected": 995.0,
+          "actual": 994.9900000000046,
           "p_value": null,
           "tolerance": null,
           "phase": "outcome",
-          "detail": "relative_error=9.02e-15, diff=+0.0000%, tolerance=0.01"
+          "detail": "relative_error=1.01e-05, diff=-0.0010%, tolerance=0.01"
         },
         {
-          "name": "Ship Stopped",
-          "status": "FAIL",
-          "expected": true,
-          "actual": 31.25,
+          "name": "Fuel Consumed",
+          "status": "PASS",
+          "expected": 5.0,
+          "actual": 5.009999999995443,
           "p_value": null,
           "tolerance": null,
           "phase": "outcome",
-          "detail": ""
+          "detail": "relative_error=2.00e-03, diff=+0.2000%, tolerance=0.01"
         }
       ],
-      "initial_state_file": null,
-      "final_state_file": null,
-      "seed": null
-    },
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-001_2026-04-05T12-01-27-265288_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-001_2026-04-05T12-01-27-265288_final.json",
+      "seed": 475339789
+    }
+  ],
+  "RESOURCE-002": [
     {
       "timestamp": "2026-04-02T06:28:01.864889",
       "ticks_run": 500,
@@ -468494,21 +468331,19 @@
       "initial_state_file": null,
       "final_state_file": null,
       "seed": null
-    }
-  ],
-  "RESOURCE-003": [
+    },
     {
-      "timestamp": "2026-04-01T22:07:52.895386",
+      "timestamp": "2026-04-05T12:01:29.860192",
       "ticks_run": 500,
       "passed": true,
       "metrics": {
-        "test_id": "RESOURCE-003",
+        "test_id": "RESOURCE-002",
         "ticks_run": 500,
         "initial_value": 2.5,
-        "final_value": 2.49,
-        "value_consumed": 0.009999999999999787,
-        "final_velocity": 31.25,
-        "distance_traveled": 15546.875,
+        "final_value": 9.017092628127443e-15,
+        "value_consumed": 2.499999999999991,
+        "final_velocity": 0,
+        "distance_traveled": 7781.25,
         "ship_total_shots_fired": 0,
         "ship_weapons": [],
         "ship_in_flight": 0,
@@ -468519,13 +468354,13 @@
           "failed_phase": null,
           "summary": {
             "data": {
-              "total": 3,
-              "passed": 3,
+              "total": 2,
+              "passed": 2,
               "failed": 0
             },
             "precondition": {
-              "total": 1,
-              "passed": 1,
+              "total": 2,
+              "passed": 2,
               "failed": 0
             },
             "outcome": {
@@ -468560,32 +468395,32 @@
               "detail": "expected=2.5, actual=2.5"
             },
             {
-              "phase": "data",
-              "name": "Engine Thrust",
-              "expected": 500,
-              "actual": 500.0,
+              "phase": "precondition",
+              "name": "Ship Moved",
+              "expected": true,
+              "actual": 7781.25,
               "passed": true,
-              "detail": "expected=500, actual=500.0"
+              "detail": ""
             },
             {
               "phase": "outcome",
-              "name": "Fuel Stable",
-              "expected": true,
-              "actual": -0.009999999999999787,
+              "name": "Fuel Depleted",
+              "expected": 0.0,
+              "actual": 9.017092628127443e-15,
               "passed": true,
-              "detail": "fuel_change=-0.0100, threshold=0.5"
+              "detail": "relative_error=9.02e-15, diff=+0.0000%, tolerance=0.01"
             },
             {
               "phase": "outcome",
-              "name": "Ship Moving",
+              "name": "Ship Stopped",
               "expected": true,
-              "actual": 31.25,
+              "actual": 0,
               "passed": true,
               "detail": ""
             }
           ]
         },
-        "duration_real": 0.8287014961242676,
+        "duration_real": 0.8075482845306396,
         "ticks": 500
       },
       "validation_summary": {
@@ -468626,40 +468461,42 @@
           "detail": "expected=2.5, actual=2.5"
         },
         {
-          "name": "Engine Thrust",
-          "status": "PASS",
-          "expected": 500,
-          "actual": 500.0,
-          "p_value": null,
-          "tolerance": null,
-          "phase": "data",
-          "detail": "expected=500, actual=500.0"
-        },
-        {
-          "name": "Fuel Stable",
+          "name": "Ship Moved",
           "status": "PASS",
           "expected": true,
-          "actual": -0.009999999999999787,
+          "actual": 7781.25,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "Fuel Depleted",
+          "status": "PASS",
+          "expected": 0.0,
+          "actual": 9.017092628127443e-15,
           "p_value": null,
           "tolerance": null,
           "phase": "outcome",
-          "detail": "fuel_change=-0.0100, threshold=0.5"
+          "detail": "relative_error=9.02e-15, diff=+0.0000%, tolerance=0.01"
         },
         {
-          "name": "Ship Moving",
+          "name": "Ship Stopped",
           "status": "PASS",
           "expected": true,
-          "actual": 31.25,
+          "actual": 0,
           "p_value": null,
           "tolerance": null,
           "phase": "outcome",
           "detail": ""
         }
       ],
-      "initial_state_file": null,
-      "final_state_file": null,
-      "seed": null
-    },
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-002_2026-04-05T12-01-29-052140_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-002_2026-04-05T12-01-29-052140_final.json",
+      "seed": 946405834
+    }
+  ],
+  "RESOURCE-003": [
     {
       "timestamp": "2026-04-02T06:08:36.265695",
       "ticks_run": 500,
@@ -470126,47 +469963,31 @@
       "initial_state_file": null,
       "final_state_file": null,
       "seed": null
-    }
-  ],
-  "RESOURCE-004": [
+    },
     {
-      "timestamp": "2026-04-01T22:07:53.769471",
-      "ticks_run": 100,
+      "timestamp": "2026-04-05T12:01:31.670506",
+      "ticks_run": 500,
       "passed": true,
       "metrics": {
-        "test_id": "RESOURCE-004",
-        "ticks_run": 100,
-        "initial_value": 100000.0,
-        "final_value": 99900.0,
-        "value_consumed": 100.0,
-        "final_velocity": 0.0,
-        "distance_traveled": 0.0,
-        "damage_dealt": 99.0,
-        "ship_total_shots_fired": 100,
-        "ship_weapons": [
-          {
-            "name": "Test Beam (Rapid Fire, 1 Damage)",
-            "type": "BeamWeaponAbility",
-            "shots_fired": 100,
-            "shots_hit": 100
-          }
-        ],
+        "test_id": "RESOURCE-003",
+        "ticks_run": 500,
+        "initial_value": 2.5,
+        "final_value": 2.49,
+        "value_consumed": 0.009999999999999787,
+        "final_velocity": 31.25,
+        "distance_traveled": 15578.125,
+        "ship_total_shots_fired": 0,
+        "ship_weapons": [],
         "ship_in_flight": 0,
-        "ship_resolved_shots": 100,
-        "ship_resolved_hits": 100,
-        "target_total_shots_fired": 0,
-        "target_weapons": [],
-        "target_in_flight": 0,
-        "target_resolved_shots": 0,
-        "target_resolved_hits": 0,
-        "shots_fired": 100,
+        "ship_resolved_shots": 0,
+        "ship_resolved_hits": 0,
         "validation": {
           "passed": true,
           "failed_phase": null,
           "summary": {
             "data": {
-              "total": 1,
-              "passed": 1,
+              "total": 3,
+              "passed": 3,
               "failed": 0
             },
             "precondition": {
@@ -470185,41 +470006,57 @@
               "phase": "precondition",
               "name": "Simulation Ran",
               "expected": true,
-              "actual": 100,
+              "actual": 500,
               "passed": true,
               "detail": ""
             },
             {
               "phase": "data",
-              "name": "Initial Energy",
-              "expected": 100000.0,
-              "actual": 100000.0,
+              "name": "Ship Mass",
+              "expected": 400,
+              "actual": 400.0,
               "passed": true,
-              "detail": "expected=100000.0, actual=100000.0"
+              "detail": "expected=400, actual=400.0"
+            },
+            {
+              "phase": "data",
+              "name": "Initial Fuel",
+              "expected": 2.5,
+              "actual": 2.5,
+              "passed": true,
+              "detail": "expected=2.5, actual=2.5"
+            },
+            {
+              "phase": "data",
+              "name": "Engine Thrust",
+              "expected": 500,
+              "actual": 500.0,
+              "passed": true,
+              "detail": "expected=500, actual=500.0"
             },
             {
               "phase": "outcome",
-              "name": "Energy Consumed",
-              "expected": 100,
-              "actual": 100.0,
+              "name": "Fuel Stable",
+              "expected": true,
+              "actual": -0.009999999999999787,
               "passed": true,
-              "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+              "detail": "fuel_change=-0.0100, threshold=0.5"
             },
             {
               "phase": "outcome",
-              "name": "Shots Fired",
-              "expected": 100,
-              "actual": 100,
+              "name": "Ship Moving",
+              "expected": true,
+              "actual": 31.25,
               "passed": true,
-              "detail": "expected=100, actual=100"
+              "detail": ""
             }
           ]
         },
-        "duration_real": 0.08785510063171387,
-        "ticks": 100
+        "duration_real": 0.8718147277832031,
+        "ticks": 500
       },
       "validation_summary": {
-        "pass": 4,
+        "pass": 6,
         "fail": 0,
         "warn": 0,
         "info": 0
@@ -470229,47 +470066,69 @@
           "name": "Simulation Ran",
           "status": "PASS",
           "expected": true,
-          "actual": 100,
+          "actual": 500,
           "p_value": null,
           "tolerance": null,
           "phase": "precondition",
           "detail": ""
         },
         {
-          "name": "Initial Energy",
+          "name": "Ship Mass",
           "status": "PASS",
-          "expected": 100000.0,
-          "actual": 100000.0,
+          "expected": 400,
+          "actual": 400.0,
           "p_value": null,
           "tolerance": null,
           "phase": "data",
-          "detail": "expected=100000.0, actual=100000.0"
+          "detail": "expected=400, actual=400.0"
         },
         {
-          "name": "Energy Consumed",
+          "name": "Initial Fuel",
           "status": "PASS",
-          "expected": 100,
-          "actual": 100.0,
+          "expected": 2.5,
+          "actual": 2.5,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "data",
+          "detail": "expected=2.5, actual=2.5"
+        },
+        {
+          "name": "Engine Thrust",
+          "status": "PASS",
+          "expected": 500,
+          "actual": 500.0,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "data",
+          "detail": "expected=500, actual=500.0"
+        },
+        {
+          "name": "Fuel Stable",
+          "status": "PASS",
+          "expected": true,
+          "actual": -0.009999999999999787,
           "p_value": null,
           "tolerance": null,
           "phase": "outcome",
-          "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          "detail": "fuel_change=-0.0100, threshold=0.5"
         },
         {
-          "name": "Shots Fired",
+          "name": "Ship Moving",
           "status": "PASS",
-          "expected": 100,
-          "actual": 100,
+          "expected": true,
+          "actual": 31.25,
           "p_value": null,
           "tolerance": null,
           "phase": "outcome",
-          "detail": "expected=100, actual=100"
+          "detail": ""
         }
       ],
-      "initial_state_file": null,
-      "final_state_file": null,
-      "seed": null
-    },
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-003_2026-04-05T12-01-30-798692_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-003_2026-04-05T12-01-30-798692_final.json",
+      "seed": 828873690
+    }
+  ],
+  "RESOURCE-004": [
     {
       "timestamp": "2026-04-02T06:08:37.157114",
       "ticks_run": 100,
@@ -471538,40 +471397,38 @@
       "initial_state_file": null,
       "final_state_file": null,
       "seed": null
-    }
-  ],
-  "RESOURCE-005": [
+    },
     {
-      "timestamp": "2026-04-01T22:07:54.644671",
+      "timestamp": "2026-04-05T12:01:32.733523",
       "ticks_run": 100,
       "passed": true,
       "metrics": {
-        "test_id": "RESOURCE-005",
+        "test_id": "RESOURCE-004",
         "ticks_run": 100,
-        "initial_value": 25.0,
-        "final_value": 0.0,
-        "value_consumed": 25.0,
+        "initial_value": 100000.0,
+        "final_value": 99900.0,
+        "value_consumed": 100.0,
         "final_velocity": 0.0,
         "distance_traveled": 0.0,
-        "damage_dealt": 25.0,
-        "ship_total_shots_fired": 25,
+        "damage_dealt": 98.0,
+        "ship_total_shots_fired": 100,
         "ship_weapons": [
           {
             "name": "Test Beam (Rapid Fire, 1 Damage)",
             "type": "BeamWeaponAbility",
-            "shots_fired": 25,
-            "shots_hit": 25
+            "shots_fired": 100,
+            "shots_hit": 100
           }
         ],
         "ship_in_flight": 0,
-        "ship_resolved_shots": 25,
-        "ship_resolved_hits": 25,
+        "ship_resolved_shots": 100,
+        "ship_resolved_hits": 100,
         "target_total_shots_fired": 0,
         "target_weapons": [],
         "target_in_flight": 0,
         "target_resolved_shots": 0,
         "target_resolved_hits": 0,
-        "shots_fired": 25,
+        "shots_fired": 100,
         "validation": {
           "passed": true,
           "failed_phase": null,
@@ -471604,30 +471461,30 @@
             {
               "phase": "data",
               "name": "Initial Energy",
-              "expected": 25.0,
-              "actual": 25.0,
+              "expected": 100000.0,
+              "actual": 100000.0,
               "passed": true,
-              "detail": "expected=25.0, actual=25.0"
+              "detail": "expected=100000.0, actual=100000.0"
             },
             {
               "phase": "outcome",
-              "name": "Energy Depleted",
-              "expected": 0.0,
-              "actual": 0.0,
+              "name": "Energy Consumed",
+              "expected": 100,
+              "actual": 100.0,
               "passed": true,
-              "detail": "expected=0.0, actual=0.0"
+              "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
             },
             {
               "phase": "outcome",
               "name": "Shots Fired",
-              "expected": 25,
-              "actual": 25,
+              "expected": 100,
+              "actual": 100,
               "passed": true,
-              "detail": "expected=25, actual=25"
+              "detail": "expected=100, actual=100"
             }
           ]
         },
-        "duration_real": 0.06743431091308594,
+        "duration_real": 0.10114550590515137,
         "ticks": 100
       },
       "validation_summary": {
@@ -471650,38 +471507,40 @@
         {
           "name": "Initial Energy",
           "status": "PASS",
-          "expected": 25.0,
-          "actual": 25.0,
+          "expected": 100000.0,
+          "actual": 100000.0,
           "p_value": null,
           "tolerance": null,
           "phase": "data",
-          "detail": "expected=25.0, actual=25.0"
+          "detail": "expected=100000.0, actual=100000.0"
         },
         {
-          "name": "Energy Depleted",
+          "name": "Energy Consumed",
           "status": "PASS",
-          "expected": 0.0,
-          "actual": 0.0,
+          "expected": 100,
+          "actual": 100.0,
           "p_value": null,
           "tolerance": null,
           "phase": "outcome",
-          "detail": "expected=0.0, actual=0.0"
+          "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
         },
         {
           "name": "Shots Fired",
           "status": "PASS",
-          "expected": 25,
-          "actual": 25,
+          "expected": 100,
+          "actual": 100,
           "p_value": null,
           "tolerance": null,
           "phase": "outcome",
-          "detail": "expected=25, actual=25"
+          "detail": "expected=100, actual=100"
         }
       ],
-      "initial_state_file": null,
-      "final_state_file": null,
-      "seed": null
-    },
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-004_2026-04-05T12-01-32-632377_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-004_2026-04-05T12-01-32-632377_final.json",
+      "seed": 1044859512
+    }
+  ],
+  "RESOURCE-005": [
     {
       "timestamp": "2026-04-02T06:08:38.062929",
       "ticks_run": 100,
@@ -472950,41 +472809,38 @@
       "initial_state_file": null,
       "final_state_file": null,
       "seed": null
-    }
-  ],
-  "RESOURCE-005a": [
+    },
     {
-      "timestamp": "2026-04-01T22:07:55.528481",
+      "timestamp": "2026-04-05T12:01:33.736101",
       "ticks_run": 100,
       "passed": true,
       "metrics": {
-        "test_id": "RESOURCE-005a",
+        "test_id": "RESOURCE-005",
         "ticks_run": 100,
         "initial_value": 25.0,
-        "final_value": 24.0,
-        "value_consumed": 1.0,
+        "final_value": 0.0,
+        "value_consumed": 25.0,
         "final_velocity": 0.0,
         "distance_traveled": 0.0,
-        "damage_dealt": 99.0,
-        "ship_total_shots_fired": 100,
+        "damage_dealt": 24.0,
+        "ship_total_shots_fired": 25,
         "ship_weapons": [
           {
             "name": "Test Beam (Rapid Fire, 1 Damage)",
             "type": "BeamWeaponAbility",
-            "shots_fired": 100,
-            "shots_hit": 100
+            "shots_fired": 25,
+            "shots_hit": 25
           }
         ],
         "ship_in_flight": 0,
-        "ship_resolved_shots": 100,
-        "ship_resolved_hits": 100,
+        "ship_resolved_shots": 25,
+        "ship_resolved_hits": 25,
         "target_total_shots_fired": 0,
         "target_weapons": [],
         "target_in_flight": 0,
         "target_resolved_shots": 0,
         "target_resolved_hits": 0,
-        "shots_fired": 99.0,
-        "energy_change": -1.0,
+        "shots_fired": 25,
         "validation": {
           "passed": true,
           "failed_phase": null,
@@ -473024,23 +472880,23 @@
             },
             {
               "phase": "outcome",
-              "name": "Shots Fired Near Expected",
-              "expected": true,
-              "actual": 99.0,
+              "name": "Energy Depleted",
+              "expected": 0.0,
+              "actual": 0.0,
               "passed": true,
-              "detail": "expected~100, tolerance=5"
+              "detail": "expected=0.0, actual=0.0"
             },
             {
               "phase": "outcome",
-              "name": "Energy Not Depleted",
-              "expected": true,
-              "actual": 24.0,
+              "name": "Shots Fired",
+              "expected": 25,
+              "actual": 25,
               "passed": true,
-              "detail": ""
+              "detail": "expected=25, actual=25"
             }
           ]
         },
-        "duration_real": 0.0955514907836914,
+        "duration_real": 0.07788848876953125,
         "ticks": 100
       },
       "validation_summary": {
@@ -473071,30 +472927,32 @@
           "detail": "expected=25.0, actual=25.0"
         },
         {
-          "name": "Shots Fired Near Expected",
+          "name": "Energy Depleted",
           "status": "PASS",
-          "expected": true,
-          "actual": 99.0,
+          "expected": 0.0,
+          "actual": 0.0,
           "p_value": null,
           "tolerance": null,
           "phase": "outcome",
-          "detail": "expected~100, tolerance=5"
+          "detail": "expected=0.0, actual=0.0"
         },
         {
-          "name": "Energy Not Depleted",
+          "name": "Shots Fired",
           "status": "PASS",
-          "expected": true,
-          "actual": 24.0,
+          "expected": 25,
+          "actual": 25,
           "p_value": null,
           "tolerance": null,
           "phase": "outcome",
-          "detail": ""
+          "detail": "expected=25, actual=25"
         }
       ],
-      "initial_state_file": null,
-      "final_state_file": null,
-      "seed": null
-    },
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-005_2026-04-05T12-01-33-658213_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-005_2026-04-05T12-01-33-658213_final.json",
+      "seed": 1485840625
+    }
+  ],
+  "RESOURCE-005a": [
     {
       "timestamp": "2026-04-02T06:08:38.974824",
       "ticks_run": 100,
@@ -474372,27 +474230,25 @@
       "initial_state_file": null,
       "final_state_file": null,
       "seed": null
-    }
-  ],
-  "RESOURCE-006": [
+    },
     {
-      "timestamp": "2026-04-01T22:07:56.421535",
+      "timestamp": "2026-04-05T12:01:34.822127",
       "ticks_run": 100,
       "passed": true,
       "metrics": {
-        "test_id": "RESOURCE-006",
+        "test_id": "RESOURCE-005a",
         "ticks_run": 100,
-        "initial_value": 100000.0,
-        "final_value": 99900.0,
-        "value_consumed": 100.0,
+        "initial_value": 25.0,
+        "final_value": 24.0,
+        "value_consumed": 1.0,
         "final_velocity": 0.0,
         "distance_traveled": 0.0,
-        "damage_dealt": 100.0,
+        "damage_dealt": 98.0,
         "ship_total_shots_fired": 100,
         "ship_weapons": [
           {
-            "name": "Test Projectile (Rapid Fire)",
-            "type": "ProjectileWeaponAbility",
+            "name": "Test Beam (Rapid Fire, 1 Damage)",
+            "type": "BeamWeaponAbility",
             "shots_fired": 100,
             "shots_hit": 100
           }
@@ -474405,7 +474261,8 @@
         "target_in_flight": 0,
         "target_resolved_shots": 0,
         "target_resolved_hits": 0,
-        "shots_fired": 100,
+        "shots_fired": 98.0,
+        "energy_change": -1.0,
         "validation": {
           "passed": true,
           "failed_phase": null,
@@ -474437,31 +474294,31 @@
             },
             {
               "phase": "data",
-              "name": "Initial Ammo",
-              "expected": 100000.0,
-              "actual": 100000.0,
+              "name": "Initial Energy",
+              "expected": 25.0,
+              "actual": 25.0,
               "passed": true,
-              "detail": "expected=100000.0, actual=100000.0"
+              "detail": "expected=25.0, actual=25.0"
             },
             {
               "phase": "outcome",
-              "name": "Ammo Consumed",
-              "expected": 100,
-              "actual": 100.0,
+              "name": "Shots Fired Near Expected",
+              "expected": true,
+              "actual": 98.0,
               "passed": true,
-              "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+              "detail": "expected~100, tolerance=5"
             },
             {
               "phase": "outcome",
-              "name": "Shots Fired",
-              "expected": 100,
-              "actual": 100,
+              "name": "Energy Not Depleted",
+              "expected": true,
+              "actual": 24.0,
               "passed": true,
-              "detail": "expected=100, actual=100"
+              "detail": ""
             }
           ]
         },
-        "duration_real": 0.09055089950561523,
+        "duration_real": 0.11248373985290527,
         "ticks": 100
       },
       "validation_summary": {
@@ -474482,40 +474339,42 @@
           "detail": ""
         },
         {
-          "name": "Initial Ammo",
+          "name": "Initial Energy",
           "status": "PASS",
-          "expected": 100000.0,
-          "actual": 100000.0,
+          "expected": 25.0,
+          "actual": 25.0,
           "p_value": null,
           "tolerance": null,
           "phase": "data",
-          "detail": "expected=100000.0, actual=100000.0"
+          "detail": "expected=25.0, actual=25.0"
         },
         {
-          "name": "Ammo Consumed",
+          "name": "Shots Fired Near Expected",
           "status": "PASS",
-          "expected": 100,
-          "actual": 100.0,
+          "expected": true,
+          "actual": 98.0,
           "p_value": null,
           "tolerance": null,
           "phase": "outcome",
-          "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          "detail": "expected~100, tolerance=5"
         },
         {
-          "name": "Shots Fired",
+          "name": "Energy Not Depleted",
           "status": "PASS",
-          "expected": 100,
-          "actual": 100,
+          "expected": true,
+          "actual": 24.0,
           "p_value": null,
           "tolerance": null,
           "phase": "outcome",
-          "detail": "expected=100, actual=100"
+          "detail": ""
         }
       ],
-      "initial_state_file": null,
-      "final_state_file": null,
-      "seed": null
-    },
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-005a_2026-04-05T12-01-34-708644_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-005a_2026-04-05T12-01-34-708644_final.json",
+      "seed": 2066184104
+    }
+  ],
+  "RESOURCE-006": [
     {
       "timestamp": "2026-04-02T06:08:39.920314",
       "ticks_run": 100,
@@ -475784,40 +475643,38 @@
       "initial_state_file": null,
       "final_state_file": null,
       "seed": null
-    }
-  ],
-  "RESOURCE-007": [
+    },
     {
-      "timestamp": "2026-04-01T22:07:57.270507",
+      "timestamp": "2026-04-05T12:01:35.856133",
       "ticks_run": 100,
       "passed": true,
       "metrics": {
-        "test_id": "RESOURCE-007",
+        "test_id": "RESOURCE-006",
         "ticks_run": 100,
-        "initial_value": 10.0,
-        "final_value": 0.0,
-        "value_consumed": 10.0,
+        "initial_value": 100000.0,
+        "final_value": 99900.0,
+        "value_consumed": 100.0,
         "final_velocity": 0.0,
         "distance_traveled": 0.0,
-        "damage_dealt": 10.0,
-        "ship_total_shots_fired": 10,
+        "damage_dealt": 100.0,
+        "ship_total_shots_fired": 100,
         "ship_weapons": [
           {
             "name": "Test Projectile (Rapid Fire)",
             "type": "ProjectileWeaponAbility",
-            "shots_fired": 10,
-            "shots_hit": 10
+            "shots_fired": 100,
+            "shots_hit": 100
           }
         ],
         "ship_in_flight": 0,
-        "ship_resolved_shots": 10,
-        "ship_resolved_hits": 10,
+        "ship_resolved_shots": 100,
+        "ship_resolved_hits": 100,
         "target_total_shots_fired": 0,
         "target_weapons": [],
         "target_in_flight": 0,
         "target_resolved_shots": 0,
         "target_resolved_hits": 0,
-        "shots_fired": 10,
+        "shots_fired": 100,
         "validation": {
           "passed": true,
           "failed_phase": null,
@@ -475850,30 +475707,30 @@
             {
               "phase": "data",
               "name": "Initial Ammo",
-              "expected": 10.0,
-              "actual": 10.0,
+              "expected": 100000.0,
+              "actual": 100000.0,
               "passed": true,
-              "detail": "expected=10.0, actual=10.0"
+              "detail": "expected=100000.0, actual=100000.0"
             },
             {
               "phase": "outcome",
-              "name": "Ammo Depleted",
-              "expected": 0.0,
-              "actual": 0.0,
+              "name": "Ammo Consumed",
+              "expected": 100,
+              "actual": 100.0,
               "passed": true,
-              "detail": "expected=0.0, actual=0.0"
+              "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
             },
             {
               "phase": "outcome",
               "name": "Shots Fired",
-              "expected": 10,
-              "actual": 10,
+              "expected": 100,
+              "actual": 100,
               "passed": true,
-              "detail": "expected=10, actual=10"
+              "detail": "expected=100, actual=100"
             }
           ]
         },
-        "duration_real": 0.06385350227355957,
+        "duration_real": 0.10785579681396484,
         "ticks": 100
       },
       "validation_summary": {
@@ -475896,38 +475753,40 @@
         {
           "name": "Initial Ammo",
           "status": "PASS",
-          "expected": 10.0,
-          "actual": 10.0,
+          "expected": 100000.0,
+          "actual": 100000.0,
           "p_value": null,
           "tolerance": null,
           "phase": "data",
-          "detail": "expected=10.0, actual=10.0"
+          "detail": "expected=100000.0, actual=100000.0"
         },
         {
-          "name": "Ammo Depleted",
+          "name": "Ammo Consumed",
           "status": "PASS",
-          "expected": 0.0,
-          "actual": 0.0,
+          "expected": 100,
+          "actual": 100.0,
           "p_value": null,
           "tolerance": null,
           "phase": "outcome",
-          "detail": "expected=0.0, actual=0.0"
+          "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
         },
         {
           "name": "Shots Fired",
           "status": "PASS",
-          "expected": 10,
-          "actual": 10,
+          "expected": 100,
+          "actual": 100,
           "p_value": null,
           "tolerance": null,
           "phase": "outcome",
-          "detail": "expected=10, actual=10"
+          "detail": "expected=100, actual=100"
         }
       ],
-      "initial_state_file": null,
-      "final_state_file": null,
-      "seed": null
-    },
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-006_2026-04-05T12-01-35-748277_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-006_2026-04-05T12-01-35-748277_final.json",
+      "seed": 576026292
+    }
+  ],
+  "RESOURCE-007": [
     {
       "timestamp": "2026-04-02T06:08:40.805547",
       "ticks_run": 100,
@@ -477196,40 +477055,38 @@
       "initial_state_file": null,
       "final_state_file": null,
       "seed": null
-    }
-  ],
-  "RESOURCE-008": [
+    },
     {
-      "timestamp": "2026-04-01T22:07:58.161697",
+      "timestamp": "2026-04-05T12:01:36.852818",
       "ticks_run": 100,
       "passed": true,
       "metrics": {
-        "test_id": "RESOURCE-008",
+        "test_id": "RESOURCE-007",
         "ticks_run": 100,
-        "initial_value": 100000.0,
-        "final_value": 99900.0,
-        "value_consumed": 100.0,
+        "initial_value": 10.0,
+        "final_value": 0.0,
+        "value_consumed": 10.0,
         "final_velocity": 0.0,
         "distance_traveled": 0.0,
-        "damage_dealt": 77.0,
-        "ship_total_shots_fired": 100,
+        "damage_dealt": 10.0,
+        "ship_total_shots_fired": 10,
         "ship_weapons": [
           {
-            "name": "Test Seeker (Rapid Fire)",
-            "type": "SeekerWeaponAbility",
-            "shots_fired": 100,
-            "shots_hit": 77
+            "name": "Test Projectile (Rapid Fire)",
+            "type": "ProjectileWeaponAbility",
+            "shots_fired": 10,
+            "shots_hit": 10
           }
         ],
-        "ship_in_flight": 23,
-        "ship_resolved_shots": 77,
-        "ship_resolved_hits": 77,
+        "ship_in_flight": 0,
+        "ship_resolved_shots": 10,
+        "ship_resolved_hits": 10,
         "target_total_shots_fired": 0,
         "target_weapons": [],
         "target_in_flight": 0,
         "target_resolved_shots": 0,
         "target_resolved_hits": 0,
-        "launches": 100,
+        "shots_fired": 10,
         "validation": {
           "passed": true,
           "failed_phase": null,
@@ -477262,30 +477119,30 @@
             {
               "phase": "data",
               "name": "Initial Ammo",
-              "expected": 100000.0,
-              "actual": 100000.0,
+              "expected": 10.0,
+              "actual": 10.0,
               "passed": true,
-              "detail": "expected=100000.0, actual=100000.0"
+              "detail": "expected=10.0, actual=10.0"
             },
             {
               "phase": "outcome",
-              "name": "Ammo Consumed",
-              "expected": 100,
-              "actual": 100.0,
+              "name": "Ammo Depleted",
+              "expected": 0.0,
+              "actual": 0.0,
               "passed": true,
-              "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+              "detail": "expected=0.0, actual=0.0"
             },
             {
               "phase": "outcome",
-              "name": "Launches",
-              "expected": 100,
-              "actual": 100,
+              "name": "Shots Fired",
+              "expected": 10,
+              "actual": 10,
               "passed": true,
-              "detail": "expected=100, actual=100"
+              "detail": "expected=10, actual=10"
             }
           ]
         },
-        "duration_real": 0.10501241683959961,
+        "duration_real": 0.07547521591186523,
         "ticks": 100
       },
       "validation_summary": {
@@ -477308,38 +477165,40 @@
         {
           "name": "Initial Ammo",
           "status": "PASS",
-          "expected": 100000.0,
-          "actual": 100000.0,
+          "expected": 10.0,
+          "actual": 10.0,
           "p_value": null,
           "tolerance": null,
           "phase": "data",
-          "detail": "expected=100000.0, actual=100000.0"
+          "detail": "expected=10.0, actual=10.0"
         },
         {
-          "name": "Ammo Consumed",
+          "name": "Ammo Depleted",
           "status": "PASS",
-          "expected": 100,
-          "actual": 100.0,
+          "expected": 0.0,
+          "actual": 0.0,
           "p_value": null,
           "tolerance": null,
           "phase": "outcome",
-          "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+          "detail": "expected=0.0, actual=0.0"
         },
         {
-          "name": "Launches",
+          "name": "Shots Fired",
           "status": "PASS",
-          "expected": 100,
-          "actual": 100,
+          "expected": 10,
+          "actual": 10,
           "p_value": null,
           "tolerance": null,
           "phase": "outcome",
-          "detail": "expected=100, actual=100"
+          "detail": "expected=10, actual=10"
         }
       ],
-      "initial_state_file": null,
-      "final_state_file": null,
-      "seed": null
-    },
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-007_2026-04-05T12-01-36-777343_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-007_2026-04-05T12-01-36-777343_final.json",
+      "seed": 113978729
+    }
+  ],
+  "RESOURCE-008": [
     {
       "timestamp": "2026-04-02T06:08:41.714277",
       "ticks_run": 100,
@@ -478608,6 +478467,147 @@
       "initial_state_file": null,
       "final_state_file": null,
       "seed": null
+    },
+    {
+      "timestamp": "2026-04-05T12:01:37.953653",
+      "ticks_run": 100,
+      "passed": true,
+      "metrics": {
+        "test_id": "RESOURCE-008",
+        "ticks_run": 100,
+        "initial_value": 100000.0,
+        "final_value": 99900.0,
+        "value_consumed": 100.0,
+        "final_velocity": 0.0,
+        "distance_traveled": 0.0,
+        "damage_dealt": 77.0,
+        "ship_total_shots_fired": 100,
+        "ship_weapons": [
+          {
+            "name": "Test Seeker (Rapid Fire)",
+            "type": "SeekerWeaponAbility",
+            "shots_fired": 100,
+            "shots_hit": 77
+          }
+        ],
+        "ship_in_flight": 23,
+        "ship_resolved_shots": 77,
+        "ship_resolved_hits": 77,
+        "target_total_shots_fired": 0,
+        "target_weapons": [],
+        "target_in_flight": 0,
+        "target_resolved_shots": 0,
+        "target_resolved_hits": 0,
+        "launches": 100,
+        "validation": {
+          "passed": true,
+          "failed_phase": null,
+          "summary": {
+            "data": {
+              "total": 1,
+              "passed": 1,
+              "failed": 0
+            },
+            "precondition": {
+              "total": 1,
+              "passed": 1,
+              "failed": 0
+            },
+            "outcome": {
+              "total": 2,
+              "passed": 2,
+              "failed": 0
+            }
+          },
+          "checks": [
+            {
+              "phase": "precondition",
+              "name": "Simulation Ran",
+              "expected": true,
+              "actual": 100,
+              "passed": true,
+              "detail": ""
+            },
+            {
+              "phase": "data",
+              "name": "Initial Ammo",
+              "expected": 100000.0,
+              "actual": 100000.0,
+              "passed": true,
+              "detail": "expected=100000.0, actual=100000.0"
+            },
+            {
+              "phase": "outcome",
+              "name": "Ammo Consumed",
+              "expected": 100,
+              "actual": 100.0,
+              "passed": true,
+              "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+            },
+            {
+              "phase": "outcome",
+              "name": "Launches",
+              "expected": 100,
+              "actual": 100,
+              "passed": true,
+              "detail": "expected=100, actual=100"
+            }
+          ]
+        },
+        "duration_real": 0.12343382835388184,
+        "ticks": 100
+      },
+      "validation_summary": {
+        "pass": 4,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Simulation Ran",
+          "status": "PASS",
+          "expected": true,
+          "actual": 100,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": ""
+        },
+        {
+          "name": "Initial Ammo",
+          "status": "PASS",
+          "expected": 100000.0,
+          "actual": 100000.0,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "data",
+          "detail": "expected=100000.0, actual=100000.0"
+        },
+        {
+          "name": "Ammo Consumed",
+          "status": "PASS",
+          "expected": 100,
+          "actual": 100.0,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "relative_error=0.00e+00, diff=+0.0000%, tolerance=0.01"
+        },
+        {
+          "name": "Launches",
+          "status": "PASS",
+          "expected": 100,
+          "actual": 100,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "expected=100, actual=100"
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-008_2026-04-05T12-01-37-830220_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-008_2026-04-05T12-01-37-830220_final.json",
+      "seed": 1828370130
     }
   ],
   "SEEKER-001": [
@@ -589850,6 +589850,273 @@
       "initial_state_file": null,
       "final_state_file": null,
       "seed": null
+    },
+    {
+      "timestamp": "2026-04-05T12:01:39.930629",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "RESOURCE-009",
+        "baseline_attacker_total_shots_fired": 500,
+        "baseline_attacker_weapons": [
+          {
+            "name": "Test Beam (1 Damage, Guaranteed Hit, 1 Energy/Shot)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 500,
+            "shots_hit": 500
+          }
+        ],
+        "baseline_attacker_in_flight": 0,
+        "baseline_attacker_resolved_shots": 500,
+        "baseline_attacker_resolved_hits": 500,
+        "baseline_target_total_shots_fired": 0,
+        "baseline_target_weapons": [],
+        "baseline_target_in_flight": 0,
+        "baseline_target_resolved_shots": 0,
+        "baseline_target_resolved_hits": 0,
+        "baseline_damage_dealt": 500.0,
+        "baseline_initial_hp": 1000000100,
+        "baseline_final_hp": 999999600.0,
+        "baseline_ticks": 500,
+        "variant_damage_dealt": 238.0,
+        "variant_initial_hp": 1000000100,
+        "variant_final_hp": 999999862.0,
+        "variant_ticks": 500,
+        "ticks_run": 500,
+        "variant_attacker_total_shots_fired": 238,
+        "variant_attacker_weapons": [
+          {
+            "name": "Test Beam (1 Damage, Guaranteed Hit, 1 Energy/Shot)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 238,
+            "shots_hit": 238
+          }
+        ],
+        "variant_attacker_in_flight": 0,
+        "variant_attacker_resolved_shots": 238,
+        "variant_attacker_resolved_hits": 238,
+        "variant_target_total_shots_fired": 0,
+        "variant_target_weapons": [],
+        "variant_target_in_flight": 0,
+        "variant_target_resolved_shots": 0,
+        "variant_target_resolved_hits": 0,
+        "validation": {
+          "passed": true,
+          "failed_phase": null,
+          "summary": {
+            "data": {
+              "total": 0,
+              "passed": 0,
+              "failed": 0
+            },
+            "precondition": {
+              "total": 8,
+              "passed": 8,
+              "failed": 0
+            },
+            "outcome": {
+              "total": 2,
+              "passed": 2,
+              "failed": 0
+            }
+          },
+          "checks": [
+            {
+              "phase": "precondition",
+              "name": "Baseline Ticks",
+              "expected": 500,
+              "actual": 500,
+              "passed": true,
+              "detail": "expected=500, actual=500"
+            },
+            {
+              "phase": "precondition",
+              "name": "Baseline Target Loaded",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "initial_hp=1000000100"
+            },
+            {
+              "phase": "precondition",
+              "name": "Variant Ticks",
+              "expected": 500,
+              "actual": 500,
+              "passed": true,
+              "detail": "expected=500, actual=500"
+            },
+            {
+              "phase": "precondition",
+              "name": "Variant Target Loaded",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "initial_hp=1000000100"
+            },
+            {
+              "phase": "precondition",
+              "name": "Battles Produced Different Results",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "baseline_dmg=500.0, variant_dmg=238.0"
+            },
+            {
+              "phase": "precondition",
+              "name": "Baseline Fired Extensively",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "baseline_shots=500, expected~=500"
+            },
+            {
+              "phase": "precondition",
+              "name": "Variant Fired Some Shots",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "variant_shots=238"
+            },
+            {
+              "phase": "precondition",
+              "name": "Variant Energy Depleted",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "energy=0.04999999999890181"
+            },
+            {
+              "phase": "outcome",
+              "name": "Contention Reduced Shots Fired",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "variant=238, baseline=500, reduction=262"
+            },
+            {
+              "phase": "outcome",
+              "name": "Contention Reduced Damage",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "variant_dmg=238.0, baseline_dmg=500.0"
+            }
+          ]
+        },
+        "duration_real": 0.5379660129547119,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 10,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Baseline Ticks",
+          "status": "PASS",
+          "expected": 500,
+          "actual": 500,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "expected=500, actual=500"
+        },
+        {
+          "name": "Baseline Target Loaded",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "initial_hp=1000000100"
+        },
+        {
+          "name": "Variant Ticks",
+          "status": "PASS",
+          "expected": 500,
+          "actual": 500,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "expected=500, actual=500"
+        },
+        {
+          "name": "Variant Target Loaded",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "initial_hp=1000000100"
+        },
+        {
+          "name": "Battles Produced Different Results",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "baseline_dmg=500.0, variant_dmg=238.0"
+        },
+        {
+          "name": "Baseline Fired Extensively",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "baseline_shots=500, expected~=500"
+        },
+        {
+          "name": "Variant Fired Some Shots",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "variant_shots=238"
+        },
+        {
+          "name": "Variant Energy Depleted",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "energy=0.04999999999890181"
+        },
+        {
+          "name": "Contention Reduced Shots Fired",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "variant=238, baseline=500, reduction=262"
+        },
+        {
+          "name": "Contention Reduced Damage",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "variant_dmg=238.0, baseline_dmg=500.0"
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-009_2026-04-05T12-01-39-392663_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-009_2026-04-05T12-01-39-392663_final.json",
+      "seed": 354405236
     }
   ],
   "SHIELD-REGEN-007": [
@@ -601847,6 +602114,275 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-THRUST-004_2026-04-05T06-32-05-002377_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-THRUST-004_2026-04-05T06-32-05-002377_final.json",
       "seed": 478163327
+    }
+  ],
+  "MOD-ACC-005": [
+    {
+      "timestamp": "2026-04-05T11:58:43.308342",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "MOD-ACC-005",
+        "baseline_attacker_total_shots_fired": 500,
+        "baseline_attacker_weapons": [
+          {
+            "name": "Test Beam (Medium Accuracy, 1 Damage)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 500,
+            "shots_hit": 500
+          }
+        ],
+        "baseline_attacker_in_flight": 0,
+        "baseline_attacker_resolved_shots": 500,
+        "baseline_attacker_resolved_hits": 500,
+        "baseline_target_total_shots_fired": 0,
+        "baseline_target_weapons": [],
+        "baseline_target_in_flight": 0,
+        "baseline_target_resolved_shots": 0,
+        "baseline_target_resolved_hits": 0,
+        "baseline_damage_dealt": 366.0,
+        "baseline_initial_hp": 1000000100,
+        "baseline_final_hp": 999999734.0,
+        "baseline_ticks": 500,
+        "variant_damage_dealt": 437.0,
+        "variant_initial_hp": 1000000100,
+        "variant_final_hp": 999999663.0,
+        "variant_ticks": 500,
+        "ticks_run": 500,
+        "variant_attacker_total_shots_fired": 500,
+        "variant_attacker_weapons": [
+          {
+            "name": "Test Beam (Medium Accuracy, 1 Damage)",
+            "type": "BeamWeaponAbility",
+            "shots_fired": 500,
+            "shots_hit": 500
+          }
+        ],
+        "variant_attacker_in_flight": 0,
+        "variant_attacker_resolved_shots": 500,
+        "variant_attacker_resolved_hits": 500,
+        "variant_target_total_shots_fired": 0,
+        "variant_target_weapons": [],
+        "variant_target_in_flight": 0,
+        "variant_target_resolved_shots": 0,
+        "variant_target_resolved_hits": 0,
+        "validation": {
+          "passed": true,
+          "failed_phase": null,
+          "summary": {
+            "data": {
+              "total": 0,
+              "passed": 0,
+              "failed": 0
+            },
+            "precondition": {
+              "total": 7,
+              "passed": 7,
+              "failed": 0
+            },
+            "outcome": {
+              "total": 3,
+              "passed": 3,
+              "failed": 0
+            }
+          },
+          "checks": [
+            {
+              "phase": "precondition",
+              "name": "Baseline Ticks",
+              "expected": 500,
+              "actual": 500,
+              "passed": true,
+              "detail": "expected=500, actual=500"
+            },
+            {
+              "phase": "precondition",
+              "name": "Baseline Target Loaded",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "initial_hp=1000000100"
+            },
+            {
+              "phase": "precondition",
+              "name": "Variant Ticks",
+              "expected": 500,
+              "actual": 500,
+              "passed": true,
+              "detail": "expected=500, actual=500"
+            },
+            {
+              "phase": "precondition",
+              "name": "Variant Target Loaded",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "initial_hp=1000000100"
+            },
+            {
+              "phase": "precondition",
+              "name": "Battles Produced Different Results",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "baseline_dmg=366.0, variant_dmg=437.0"
+            },
+            {
+              "phase": "precondition",
+              "name": "Baseline Dealt Damage",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "damage=366.0"
+            },
+            {
+              "phase": "precondition",
+              "name": "Variant Dealt Damage",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "damage=437.0"
+            },
+            {
+              "phase": "outcome",
+              "name": "Baseline Hit Rate at Long Range",
+              "expected": 0.7206837130352557,
+              "actual": 0.732,
+              "passed": true,
+              "detail": "TOST p=0.0000, observed=0.7320 (366/500), margin=+/-10.00%, bounds=[0.6207, 0.8207]"
+            },
+            {
+              "phase": "outcome",
+              "name": "Variant Hit Rate at Long Range",
+              "expected": 0.8752126261158555,
+              "actual": 0.874,
+              "passed": true,
+              "detail": "TOST p=0.0000, observed=0.8740 (437/500), margin=+/-10.00%, bounds=[0.7752, 0.9752]"
+            },
+            {
+              "phase": "outcome",
+              "name": "Boosted Accuracy Effective at Long Range",
+              "expected": true,
+              "actual": true,
+              "passed": true,
+              "detail": "baseline=366.0, variant=437.0"
+            }
+          ]
+        },
+        "duration_real": 0.40288853645324707,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 10,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Baseline Ticks",
+          "status": "PASS",
+          "expected": 500,
+          "actual": 500,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "expected=500, actual=500"
+        },
+        {
+          "name": "Baseline Target Loaded",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "initial_hp=1000000100"
+        },
+        {
+          "name": "Variant Ticks",
+          "status": "PASS",
+          "expected": 500,
+          "actual": 500,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "expected=500, actual=500"
+        },
+        {
+          "name": "Variant Target Loaded",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "initial_hp=1000000100"
+        },
+        {
+          "name": "Battles Produced Different Results",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "baseline_dmg=366.0, variant_dmg=437.0"
+        },
+        {
+          "name": "Baseline Dealt Damage",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "damage=366.0"
+        },
+        {
+          "name": "Variant Dealt Damage",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "precondition",
+          "detail": "damage=437.0"
+        },
+        {
+          "name": "Baseline Hit Rate at Long Range",
+          "status": "PASS",
+          "expected": 0.7206837130352557,
+          "actual": 0.732,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "TOST p=0.0000, observed=0.7320 (366/500), margin=+/-10.00%, bounds=[0.6207, 0.8207]"
+        },
+        {
+          "name": "Variant Hit Rate at Long Range",
+          "status": "PASS",
+          "expected": 0.8752126261158555,
+          "actual": 0.874,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "TOST p=0.0000, observed=0.8740 (437/500), margin=+/-10.00%, bounds=[0.7752, 0.9752]"
+        },
+        {
+          "name": "Boosted Accuracy Effective at Long Range",
+          "status": "PASS",
+          "expected": true,
+          "actual": true,
+          "p_value": null,
+          "tolerance": null,
+          "phase": "outcome",
+          "detail": "baseline=366.0, variant=437.0"
+        }
+      ],
+      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-ACC-005_2026-04-05T11-58-42-582649_initial.json",
+      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\MOD-ACC-005_2026-04-05T11-58-42-582649_final.json",
+      "seed": 1270632484
     }
   ]
 }
