@@ -10,17 +10,22 @@ PROJ-161: Moved harvesting into per-tick processing.
 
 Turn Phases:
     1. SUBTURN LOOP (100 ticks):
-       - Phase 0:   Harvesting (via HarvestingEngine) - 1/100th per tick
-       - Phase 0b:  Per-turn resources (via ConsumableManagementEngine)
-       - Phase 0c:  Fuel generation at facilities (via ResupplyEngine)
-       - Phase 0d:  Fleet resupply from facilities (via ResupplyEngine)
-       - Phase 0e:  Construction resource consumption (via ProductionEngine)
-       - Phase 1:   Instant orders (via OrderProcessor)
-       - Phase 1.5: Action orders (via ActionExecutionEngine) - COLONIZE, TRANSFER, superweapons
-       - Phase 2:   Calculate moves (via FleetMovementEngine)
-       - Phase 3:   Apply moves (via FleetMovementEngine)
-       - Phase 4:   Combat (via ConflictResolutionEngine)
+       - Phase 0:    Harvesting (via HarvestingEngine) - 1/100th per tick
+       - Phase 0b:   Per-turn resources (via ConsumableManagementEngine)
+       - Phase 0c:   Fuel generation at facilities (via ResupplyEngine)
+       - Phase 0c1:  Planet energy generation/consumption (via PlanetEnergyEngine)
+       - Phase 0d:   Fleet resupply from facilities (via ResupplyEngine)
+       - Phase 0e:   Construction resource consumption (via ProductionEngine)
+       - Phase 0f:   Environmental hazards - storm damage/fuel drain (via EnvironmentalHazardEngine)
+       - Phase 1:    Instant orders (via OrderProcessor)
+       - Phase 1.5:  Action orders (via ActionExecutionEngine) - COLONIZE, TRANSFER, superweapons
+       - Phase 1.6:  Planet action orders (via PlanetActionEngine) - shield activation, etc.
+       - Phase 2:    Calculate moves (via FleetMovementEngine)
+       - Phase 3:    Apply moves (via FleetMovementEngine)
+       - Phase 4:    Combat (via ConflictResolutionEngine)
     2. POPULATION GROWTH (via PopulationEngine)
+    3. QUALITY IMPROVEMENT (via QualityEngine) - once per turn
+    4. ATMOSPHERE MODIFICATION (via AtmosphereEngine) - once per turn
 
 Delegated Engines:
     - FleetMovementEngine: Movement calculation and application

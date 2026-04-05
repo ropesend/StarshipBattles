@@ -31,6 +31,9 @@ DTO types (defined in `game/strategy/facade/dto/` package, with submodules `flee
 - `PlanetInfo` -- planet details (includes `staging_yard_summary`; `shield_active` is now populated from `active_abilities['PlanetaryShield']`)
 - `EmpireInfo` -- empire state
 - `ColonySummary` -- colony overview
+- `FleetOrderInfo` -- order display data (type, target, progress)
+- `ShipInfo` -- ship instance summary for fleet display
+- `WarpPointInfo` -- warp point data (destination, location)
 
 Each DTO has a `from_<domain_object>()` class method for conversion.
 
@@ -106,6 +109,7 @@ Factory: `create_default_registry()` registers all handlers.
 | `IssuePlanetOrderCommand` | `IssuePlanetOrderCommandHandler` | Issue planet action order (shield, stabilizer) |
 | `ClearPlanetOrdersCommand` | `ClearPlanetOrdersCommandHandler` | Clear planet orders |
 | `DeletePlanetOrderCommand` | `DeletePlanetOrderCommandHandler` | Remove specific planet order |
+| `SetAtmosphereTargetCommand` | `SetAtmosphereTargetCommandHandler` | Set atmosphere modification target for planet |
 | Superweapon commands (11 total) | `superweapon_command_handlers.py` | Implode planet, stellerate star, warp points, dyson sphere, self-destruct |
 
 ### Shared Helpers
@@ -147,6 +151,8 @@ All sub-engines are dependency-injected: `registries` is a **required** keyword-
 
 After the 100-tick loop:
 - `PopulationEngine.process_population_growth(empires)`
+- `QualityEngine.process_quality_improvement(empires)` — planetary quality improvement
+- `AtmosphereEngine.process_atmosphere(empires)` — atmosphere modification toward targets
 
 ### Sub-Engine Interfaces
 

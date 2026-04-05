@@ -357,37 +357,6 @@ class DesignLibrary:
 
         return designs
 
-    def delete_design(self, design_id: str, built_designs: Set[str]) -> Tuple[bool, str]:
-        """
-        Delete a design from the library.
-
-        Args:
-            design_id: Design ID to delete
-            built_designs: Set of design IDs that have been built (prevents deletion)
-
-        Returns:
-            Tuple of (success: bool, message: str)
-        """
-        filepath = os.path.join(self.designs_folder, f"{design_id}.json")
-
-        if not os.path.exists(filepath):
-            return False, f"Design not found: {design_id}"
-
-        # Check if design was built
-        if design_id in built_designs:
-            return False, f"Cannot delete design that has been built. Mark as obsolete instead."
-
-        try:
-            os.remove(filepath)
-            return True, f"Deleted design: {design_id}"
-        except PermissionError as e:
-            return False, f"Failed to delete design: Permission denied"
-        except OSError as e:
-            return False, f"Failed to delete design: {str(e)}"
-        except (RuntimeError, IOError) as e:
-            logger.error(f"DesignLibrary: Unexpected error deleting design '{design_id}': {e}")
-            return False, f"Failed to delete design: {str(e)}"
-
     @staticmethod
     def _sanitize_design_id(name: str) -> str:
         """

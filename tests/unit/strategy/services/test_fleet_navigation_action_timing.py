@@ -453,7 +453,7 @@ class TestProjectPathPathfindingFailure:
 
         call_count = 0
 
-        def mock_find_path_selective(galaxy, start, end, fleet=None):
+        def mock_find_path_selective(galaxy, start, end, fleet=None, can_warp=None):
             nonlocal call_count
             call_count += 1
             if end == second_dest:

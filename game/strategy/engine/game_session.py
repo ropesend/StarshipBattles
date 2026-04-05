@@ -162,13 +162,6 @@ class GameSession:
         self.turn_engine.process_turn(self.empires, self.galaxy, self.save_path)
         self.turn_number += 1
 
-    def get_current_player_empire(self, player_index: int) -> Optional['Empire']:
-        """Get the empire object for the current human player index."""
-        if 0 <= player_index < len(self.human_player_ids):
-            p_id = self.human_player_ids[player_index]
-            return next((e for e in self.empires if e.id == p_id), None)
-        return None
-
     def preview_fleet_path(self, fleet: 'Fleet', target_hex: 'HexCoord') -> Optional[List['HexCoord']]:
         """
         Calculate and return the path a fleet would take to target_hex,
