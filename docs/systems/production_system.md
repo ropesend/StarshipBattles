@@ -170,6 +170,8 @@ PROJ-233: Spawning logic is in `ProductionSpawner`, a separate class from `Produ
 | Ship/Satellite | Planet shipyard | `_spawn_ship()` | New `Fleet` at planet |
 | Fighter | Planet shipyard | `_spawn_to_staging_yard()` | Planet staging yard |
 | Drop Pod | Planet base queue | `_spawn_to_staging_yard()` | Planet staging yard |
+
+**Staging yard transfer:** Players transfer pods from staging yard to ships via the Transfer dialog (T key). Pods are discrete `carried_items`, not bulk cargo.
 | Ship/Satellite | Fleet yard | `_spawn_fleet_ship()` | Added to existing fleet |
 | Complex | Fleet yard | `_spawn_fleet_complex()` | `PlanetaryFacility` on planet at fleet's hex |
 
@@ -187,6 +189,16 @@ PROJ-233: Spawning logic is in `ProductionSpawner`, a separate class from `Produ
 3. Planet variant: create new `Fleet` at planet location, add ship, register via `empire.add_fleet()`.
 4. Fleet variant: add ship directly to existing fleet.
 5. Log `SHIP_BUILT` event.
+
+### Mass Calculation
+
+Mass is calculated by `ShipStatsCalculator` (`game/strategy/services/ship_stats_calculator.py`), which is the single source of truth for ship/design mass. The production spawner uses `ShipStatsCalculator`, not inline calculation.
+
+---
+
+## Design Validation
+
+`DesignValidator` (`game/strategy/services/design_validator.py`) validates designs before build queue insertion. Checks crew housing, life support, and component existence. Invalid designs are blocked from the build queue.
 
 ---
 

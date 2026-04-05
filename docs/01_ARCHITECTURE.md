@@ -110,9 +110,9 @@ Six layers with strict downward-only dependency flow:
 |-----------------|-------------|
 | `data/`         | Domain entities (notable modules): Fleet, ShipInstance, Empire, Galaxy, Planet, Stars, Storm, Pathfinding, plus fleet delegates (`fleet_battle_adapter.py`, `fleet_capability_calculator.py`, `fleet_consumable_aggregator.py`), ShipInstance delegates (`ship_instance_bridge.py`, `ship_instance_serializer.py`, `ship_consumable_manager.py`, `ship_cargo_manager.py`, `ship_display_formatter.py`), and data-driven configs (`classification_config.py`, `resource_generation_config.py`, `star_generation_config.py`, `orbital_generation_config.py`) |
 | `engine/`       | Turn processing: TurnEngine, GameSession, GameConfig, GameInitializer, Commands, CommandHandlers, OrderProcessor, plus sub-engines (movement, conflict, harvesting, production + ProductionSpawner, population, economy, resupply, action execution, planet action execution, planet energy, environmental hazards), and shared utilities (`production_math.py`, `construction_forecast.py`) |
-| `services/`     | ShipStatsCalculator, FleetSpeedCalculator, FleetNavigationService, ComponentInspector, DesignCostCalculator, CargoTransferService, AreaEffectManager, ActionTimeResolver, FleetCargoProjector, ModifierResolver, StrategicAbilityScanner |
+| `services/`     | ShipStatsCalculator, FleetSpeedCalculator, FleetNavigationService, ComponentInspector, DesignCostCalculator, DesignValidator, CargoTransferService, AreaEffectManager, ActionTimeResolver, FleetCargoProjector, ModifierResolver, StrategicAbilityScanner |
 | `facade/`       | StrategySessionFacade (UI-to-engine communication) |
-| `facade/dto/`   | Read-only DTOs: FleetInfo, SystemInfo, PlanetInfo, EmpireInfo |
+| `facade/dto/`   | Read-only DTOs: FleetInfo (+ `carried_items_summary`, `pod_storage_capacity`, `pod_storage_used`), SystemInfo, PlanetInfo (+ `staging_yard_summary`), EmpireInfo |
 | `interfaces/`   | IBattleResolver, BattleResult (strategy-layer battle DTO) |
 | `adapters/`     | SimulationBattleResolver (IBattleResolver implementation) |
 | `generation/`   | Galaxy generation: density maps, planet gen, star placement, storm gen |
@@ -243,7 +243,7 @@ All defined in `game/core/protocols.py`. Uses `@runtime_checkable` Protocol clas
 | Protocol      | Distinguishing Properties | TypeGuard |
 |---------------|---------------------------|-----------|
 | IFleet        | ships, orders, location, owner_id, capabilities, resources, battle | is_fleet |
-| IPlanet       | planet_type, deposits, stockpile, max_stockpile, owner_id, populations, facilities, atmosphere, energy, energy_capacity, shield_active | is_planet |
+| IPlanet       | planet_type, deposits, stockpile, max_stockpile, owner_id, populations, facilities, atmosphere, energy, energy_capacity, active_abilities: Dict[str, bool] | is_planet |
 | IOrderable    | orders, get_current_order(), add_order(), pop_order(), clear_orders() | — |
 | IStarSystem   | stars, planets, warp_points, global_location, storms | is_star_system |
 | IEmpire       | id, name, color, colonies, fleets, resource_pool (read-only aggregate) | is_empire |

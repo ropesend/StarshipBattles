@@ -125,7 +125,7 @@ weapons.py        # WeaponAbility, BeamWeaponAbility, etc.
 | Old Name | New Name | Notes |
 |----------|----------|-------|
 | `FleetOrder` | `Order` | `from game.strategy.data.order_types import Order` |
-| `PlanetOrderType` | merged into `OrderType` | `ACTIVATE_SHIELD`, `DEACTIVATE_SHIELD` added |
+| `PlanetOrderType` | merged into `OrderType` | `ACTIVATE_ABILITY`, `DEACTIVATE_ABILITY` added (generic ability toggles) |
 | `FleetOrderProcessor` | `OrderProcessor` | Old module deleted; import from `order_processor.py` |
 | `FleetOrderSerializer` | `OrderSerializer` | Old module deleted; import from `order_serializer.py` |
 | `FleetOrdersWindow` | `OrdersWindow` | Old module deleted; import from `orders_window.py` |
