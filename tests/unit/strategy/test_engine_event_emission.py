@@ -685,7 +685,7 @@ class TestCombatResolvedEvent:
         from game.strategy.data.fleet import Fleet
         from game.core.hex_math import HexCoord
 
-        engine = ConflictResolutionEngine()
+        engine = ConflictResolutionEngine(battle_resolver=MagicMock())
 
         # Empty fleets -> RNG fallback
         f1 = MagicMock(spec=Fleet)

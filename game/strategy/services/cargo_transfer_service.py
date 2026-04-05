@@ -9,9 +9,8 @@ PROJ-162: Extract CargoTransferService from UI Dialogs
 
 from typing import List, Dict, Any, Optional, TYPE_CHECKING, Union
 
-from game.strategy.engine.commands import IssueTransferCommand
-
 if TYPE_CHECKING:
+    from game.strategy.engine.commands import IssueTransferCommand
     from game.core.hex_math import HexCoord
     from game.strategy.facade.dto.fleet_dto import FleetInfo
     from game.strategy.facade.dto.planet_dto import PlanetInfo
@@ -256,6 +255,8 @@ class CargoTransferService:
         if amount >= max_amount:
             amount = 0
 
+        # PROJ-239: Late import to avoid services/→engine/ top-level dependency
+        from game.strategy.engine.commands import IssueTransferCommand
         return IssueTransferCommand(
             fleet_id=fleet_id,
             planet_id=planet_id,

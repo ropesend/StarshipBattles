@@ -22,6 +22,7 @@ import logging
 
 from game.core.registry import GameRegistries
 from game.core.patterns.layer_iterator import iter_components
+from game.strategy.interfaces.engines import IPlanetEnergyEngine
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +143,7 @@ def _set_ability_active(planet, ability_key: str, active: bool):
     planet.active_abilities[ability_key] = active
 
 
-class PlanetEnergyEngine:
+class PlanetEnergyEngine(IPlanetEnergyEngine):
     """
     Engine for processing planetary energy generation and consumption.
 

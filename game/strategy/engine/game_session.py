@@ -69,7 +69,7 @@ class GameSession:
     Owns the Galaxy, Empires, and the Turn Engine.
     Running completely decoupled from the UI/Rendering layer.
     """
-    def __init__(self, config: GameConfig = None):
+    def __init__(self, config: GameConfig = None, ai_factory=None):
         # Use provided config or create default
         if config is None:
             config = GameConfig()
@@ -86,7 +86,9 @@ class GameSession:
         self._registries = self._resolve_registries()
 
         # Engine
-        self.turn_engine = TurnEngine(registries=self._registries)
+        # PROJ-239: ai_factory is passed through to TurnEngine → SimulationBattleResolver.
+        # Callers in the UI/app layer provide it; tests inject mocks.
+        self.turn_engine = TurnEngine(registries=self._registries, ai_factory=ai_factory)
         self._command_registry = create_default_registry()
 
         # Initialization via GameInitializer (PROJ-87 Phase 6)
@@ -261,7 +263,7 @@ class GameSession:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> 'GameSession':
+    def from_dict(cls, data: dict, ai_factory=None) -> 'GameSession':
         """
         Deserialize GameSession from dict.
 
@@ -303,7 +305,12 @@ class GameSession:
         session._registries = GameSession._resolve_registries()
 
         # Initialize turn engine and command registry
-        session.turn_engine = TurnEngine(registries=session._registries)
+        # PROJ-239: ai_factory=None is OK here — TurnEngine will raise if
+        # a battle_resolver is needed but no ai_factory was provided. In practice,
+        # the conflict_engine is lazy-initialized and will only need it during
+        # actual combat. SaveGameService.load_game callers must provide ai_factory
+        # or inject a battle_resolver if combat will occur.
+        session.turn_engine = TurnEngine(registries=session._registries, ai_factory=ai_factory)
         session._command_registry = create_default_registry()
 
         # Restore event log (PROJ-77)

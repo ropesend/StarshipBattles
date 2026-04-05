@@ -19,6 +19,25 @@ if TYPE_CHECKING:
     from game.strategy.data.planet import PlanetaryFacility
 
 
+class _RegistriesFromProvider:
+    """Thin adapter exposing IRegistryProvider as a registries-like object.
+
+    Downstream functions access registries.components, etc. This adapter
+    translates those attribute accesses to get_components() calls.
+    """
+
+    def __init__(self, provider):
+        self._provider = provider
+
+    @property
+    def components(self):
+        return self._provider.get_components()
+
+    @property
+    def modifiers(self):
+        return self._provider.get_modifiers()
+
+
 # Module-level cache for production rates JSON
 _production_rates_cache: Optional[Dict[str, Dict[str, float]]] = None
 
@@ -109,6 +128,49 @@ def get_build_rate_booster_mult(planet, galaxy=None, empire=None, registries=Non
         all_boosters.extend(entries)
 
     return aggregate_multipliers(all_boosters)
+
+
+def colony_has_planetary_yard(colony, registries=None) -> bool:
+    """Check if a colony has an operational facility with PlanetaryYard ability.
+
+    Scans facility design data for the PlanetaryYard ability key.
+
+    PROJ-239: Moved from production_engine.py to eliminate data/→engine/ dependency.
+
+    Args:
+        colony: Planet with facilities to scan.
+        registries: Optional GameRegistries for component lookup.
+
+    Returns:
+        True if the colony has a PlanetaryYard, False otherwise.
+    """
+    from game.core.patterns.layer_iterator import iter_components
+    from game.strategy.services.component_inspector import get_component_abilities
+
+    for facility in colony.facilities:
+        if not facility.is_operational:
+            continue
+        for comp in iter_components(facility.design_data):
+            # Check inline abilities
+            if isinstance(comp, dict):
+                abilities = comp.get('abilities', {})
+                if 'PlanetaryYard' in abilities:
+                    return True
+                # Check registry
+                comp_id = comp.get('id')
+                if comp_id and registries:
+                    comp_def = registries.components.get(comp_id)
+                    if comp_def:
+                        reg_abilities = get_component_abilities(comp_def)
+                        if 'PlanetaryYard' in reg_abilities:
+                            return True
+            elif isinstance(comp, str) and registries:
+                comp_def = registries.components.get(comp)
+                if comp_def:
+                    reg_abilities = get_component_abilities(comp_def)
+                    if 'PlanetaryYard' in reg_abilities:
+                        return True
+    return False
 
 
 def _get_facility_production_rates(facility: 'PlanetaryFacility') -> Dict[str, float]:
@@ -264,10 +326,12 @@ def _collect_planet_sources(planet, sources: List[BuildQueueSource], galaxy=None
         empire: Optional Empire for booster queries.
     """
     # Base queue (complexes only) — only if colony has PlanetaryYard facility
-    from game.strategy.engine.production_engine import _colony_has_planetary_yard
-    from game.core.registry import RegistryManager
-    regs = RegistryManager.instance()
-    if _colony_has_planetary_yard(planet, regs):
+    # PROJ-239: Use local colony_has_planetary_yard instead of engine import.
+    # Use get_default_registry_provider for DI instead of singleton access.
+    from game.core.registry import get_default_registry_provider
+    _provider = get_default_registry_provider()
+    regs = _RegistriesFromProvider(_provider)
+    if colony_has_planetary_yard(planet, regs):
         base_rates = get_default_production_rates("planetary_yard")
         yard_size_mult = _get_planetary_yard_size_multiplier(planet, regs)
         build_booster = get_build_rate_booster_mult(planet, galaxy, empire, regs)

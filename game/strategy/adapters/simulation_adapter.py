@@ -44,14 +44,15 @@ class SimulationBattleResolver(IBattleResolver):
     layer separation (strategy should not import directly from AI layer).
     """
 
-    def __init__(self, ai_factory: Optional['IAIControllerFactory'] = None):
+    def __init__(self, ai_factory: 'IAIControllerFactory'):
         """
         Initialize the battle resolver.
 
         Args:
-            ai_factory: Optional AI controller factory. If None, creates
-                       AIControllerFactory from game.ai (late import to
-                       avoid module-level AI layer dependency).
+            ai_factory: AI controller factory (required). Must be injected
+                       from a layer that can import game.ai (UI or app layer).
+                       PROJ-239: Made required to eliminate AI layer dependency
+                       from the strategy layer.
         """
         self._ai_factory = ai_factory
 
@@ -119,14 +120,8 @@ class SimulationBattleResolver(IBattleResolver):
             )
 
         # Create battle controller
-        # PROJ-147: Use injected factory or create via late import
-        # Late import maintains layer separation at module level while
-        # still allowing default behavior when no factory is injected
-        ai_factory = self._ai_factory
-        if ai_factory is None:
-            from game.ai.ai_factory import AIControllerFactory
-            ai_factory = AIControllerFactory()
-        controller = BattleController(ai_factory=ai_factory)
+        # PROJ-239: ai_factory is always injected (required param)
+        controller = BattleController(ai_factory=self._ai_factory)
 
         # Configure battle
         battle_seed = seed if seed is not None else random.randint(0, 1000000)
