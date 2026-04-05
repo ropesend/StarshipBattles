@@ -134,10 +134,6 @@ class Component:
 
         # Parse abilities from data
         self.abilities = self.data.get('abilities', {})
-        
-
-
-        
         # PERF-ANALYSIS: deepcopy required - abilities dict has nested mutable values
         # (ResourceConsumption lists, ability config dicts). Used to restore original
         # state after runtime modifications.
@@ -147,98 +143,54 @@ class Component:
 
         self.stats = {} # Current stats dictionary (calcualted)
         self.ability_stats = {}  # Stats keyed by ability class name for targeted modifier effects
-        self.modifiers = [] # list of ApplicationModifier
-
-        # Ability Instances (New System)
-        self.ability_instances = []
-        self._ability_index = {}  # PERF: Fast lookup by ability class name
         self._is_operational = True # Tracks if component has resources to operate
 
         # Combat statistics (weapons)
         self.shots_fired = 0
         self.shots_hit = 0
 
-        # Instantiate Abilities
-        self._instantiate_abilities()
-
-        # Lazy-initialized helper managers (PROJ-88)
+        # Helper managers (PROJ-88, PROJ-241)
+        # AbilityManager is eager (abilities needed during construction)
+        # Resource/Health/Modifier managers are lazy-initialized
+        self._ability_mgr: AbilityManager = AbilityManager(self)
         self._resource_mgr: ComponentResourceManager | None = None
         self._health_mgr: ComponentHealthManager | None = None
-
-        # Load default modifiers from data definition
-        # PROJ-50: self._registries is now always required via constructor
-        if 'modifiers' in self.data:
-            mods = self._registries.modifiers
-            for mod_data in self.data['modifiers']:
-                mod_id = mod_data['id']
-                val = mod_data.get('value', None)
-                if mod_id in mods:
-                    mod_def = mods[mod_id]
-                    self.modifiers.append(mod_def.create_modifier(val))
-                else:
-                    logger.warning(f"Component '{self.id}': Modifier '{mod_id}' not found in registry, skipping")
+        self._modifier_mgr: ModifierManager | None = None
                     
-        # Parse Formulas (skip _-prefixed metadata keys like _comment)
-        self.formulas = {}
-        for key, value in self.data.items():
-            if key.startswith('_'):
-                continue
-            if isinstance(value, str) and value.startswith("="):
-                # It's a formula!
-                self.formulas[key] = value[1:] # Store without '='
-                # Initialize base value to something safe? Or keep it as is?
-                # Probably keep undefined or 0 until recalculated? 
-                # Better to set a default if possible, but hard to guess.
-                # If it's mass/hp, 0 is safer than crashing.
-                if key in ['mass', 'hp', 'cost']:
-                     setattr(self, f"base_{key}" if key in ['mass', 'hp'] else key, 0)
-                     if key == 'mass': self.mass = 0
-                     if key == 'hp': 
-                         self.max_hp = 0
-                         self.current_hp = 0
+        # Parse formulas and set safe defaults for formula-driven attributes (PROJ-241)
+        self.formulas = ComponentStatsCalculator.parse_formulas(self.data)
+        ComponentStatsCalculator.apply_formula_defaults(self, self.formulas)
+
+    @property
+    def ability_manager(self) -> AbilityManager:
+        """Ability manager delegate. PROJ-241."""
+        return self._ability_mgr
+
+    @property
+    def ability_instances(self):
+        """Facade: access ability instances through delegate. PROJ-241."""
+        return self._ability_mgr.ability_instances
+
+    @ability_instances.setter
+    def ability_instances(self, value):
+        """Facade: setter for backward compat (test code assigns lists). PROJ-241."""
+        self._ability_mgr._instances = value
 
     def get_abilities(self, ability_name: str):
-        """
-        Get all abilities of a specific type (by registry name).
-        Supports polymorphism if the registry entry is a class.
-
-        PERF: Uses indexed lookup when available, falls back to AbilityManager.
-        """
-        # Fast path: use pre-built index (includes MRO for polymorphism)
-        if ability_name in self._ability_index:
-            return list(self._ability_index[ability_name])  # Return copy
-
-        # Fallback: delegate to AbilityManager (for edge cases)
-        return AbilityManager.get_abilities(ability_name, self.ability_instances)
+        """Get all abilities of a specific type. Delegates to ability_manager."""
+        return self._ability_mgr.get_abilities(ability_name)
 
     def get_ability(self, ability_name: str):
-        """Get first ability of type. Uses indexed lookup when available."""
-        # Fast path: use pre-built index
-        if ability_name in self._ability_index:
-            abilities = self._ability_index[ability_name]
-            return abilities[0] if abilities else None
-
-        # Fallback: delegate to AbilityManager
-        return AbilityManager.get_ability(ability_name, self.ability_instances)
+        """Get first ability of type. Delegates to ability_manager."""
+        return self._ability_mgr.get_ability(ability_name)
 
     def has_ability(self, ability_name: str):
-        """Check if component has ability. Uses indexed lookup when available."""
-        # Fast path: use pre-built index
-        if ability_name in self._ability_index:
-            return len(self._ability_index[ability_name]) > 0
-
-        # Fallback: delegate to AbilityManager
-        return AbilityManager.has_ability(ability_name, self.ability_instances, self.abilities)
+        """Check if component has ability. Delegates to ability_manager."""
+        return self._ability_mgr.has_ability(ability_name)
 
     def has_pdc_ability(self) -> bool:
-        """Check if component has a Point Defense weapon ability.
-
-        Returns True if any ability has 'pdc' in its tags.
-        Delegates to AbilityManager.
-        """
-        return AbilityManager.has_pdc_ability(self.ability_instances)
-
-
+        """Check if component has a Point Defense weapon ability. Delegates to ability_manager."""
+        return self._ability_mgr.has_pdc_ability()
 
     @property
     def resource_manager(self) -> ComponentResourceManager:
@@ -253,6 +205,23 @@ class Component:
         if self._health_mgr is None:
             self._health_mgr = ComponentHealthManager(self)
         return self._health_mgr
+
+    @property
+    def modifier_manager(self) -> ModifierManager:
+        """Lazy-initialized modifier manager. PROJ-241."""
+        if self._modifier_mgr is None:
+            self._modifier_mgr = ModifierManager(self)
+        return self._modifier_mgr
+
+    @property
+    def modifiers(self):
+        """Facade: access modifier list through delegate. PROJ-241."""
+        return self.modifier_manager.modifiers
+
+    @modifiers.setter
+    def modifiers(self, value):
+        """Facade: setter for backward compat during transition. PROJ-241."""
+        self.modifier_manager._modifiers = value
 
     def mark_hp_cache_dirty(self) -> None:
         """Mark HP ratio cache as dirty for recalculation.
@@ -293,30 +262,15 @@ class Component:
         Used by detail panels and capability scanners.
         Delegates to AbilityManager.
         """
-        return AbilityManager.get_ui_rows(self.ability_instances)
+        return self._ability_mgr.get_ui_rows()
 
     def _instantiate_abilities(self):
-        """Instantiate or Sync Ability objects from self.abilities dict.
+        """Re-instantiate and re-index abilities. Delegates to ability_manager.
 
-        Preserves existing instances to maintain runtime state (cooldowns, energy).
-        Delegates to AbilityManager. Also builds index for fast lookup.
+        Called by ComponentStatsCalculator.recalculate to sync ability
+        instances after data changes (e.g., modifier effects on abilities).
         """
-        self.ability_instances = AbilityManager.instantiate_abilities(
-            self.abilities,
-            self.ability_instances,
-            self
-        )
-        # PERF: Build ability index for O(1) lookup by class name
-        self._ability_index = {}
-        for ab in self.ability_instances:
-            # Index by class name and all parent class names (for polymorphism)
-            for cls in ab.__class__.mro():
-                cls_name = cls.__name__
-                if cls_name == 'object':
-                    break
-                if cls_name not in self._ability_index:
-                    self._ability_index[cls_name] = []
-                self._ability_index[cls_name].append(ab)
+        self._ability_mgr.instantiate_and_index()
             
     def update(self):
         """Update component state for one tick (resource consumption, cooldowns).
@@ -372,46 +326,40 @@ class Component:
         return self.resource_manager.get_resource_cost(context)
 
     def add_modifier(self, mod_id, value=None):
-        """Add a modifier to this component. Delegates to ModifierManager."""
-        result = ModifierManager.add_modifier(
-            self.modifiers,
-            mod_id,
-            value,
-            self._registries,
-            self.type_str
-        )
+        """Add a modifier to this component. Delegates to modifier_manager."""
+        result = self.modifier_manager.add_modifier(mod_id, value)
         if result:
             self.recalculate_stats()
         return result
 
     def remove_modifier(self, mod_id):
-        """Remove a modifier from this component. Delegates to ModifierManager."""
-        self.modifiers = ModifierManager.remove_modifier(self.modifiers, mod_id)
+        """Remove a modifier from this component. Delegates to modifier_manager."""
+        self.modifier_manager.remove_modifier(mod_id)
         self.recalculate_stats()
 
     def get_modifier(self, mod_id):
-        """Get a modifier by ID. Delegates to ModifierManager."""
-        return ModifierManager.get_modifier(self.modifiers, mod_id)
+        """Get a modifier by ID. Delegates to modifier_manager."""
+        return self.modifier_manager.get_modifier(mod_id)
 
     def get_all_modifier_effects(self):
         """Get all evaluated effects from all applied modifiers.
 
-        Delegates to ModifierManager.
+        Delegates to modifier_manager.
 
         Returns:
             List[ModifierEffect]: All effects from all modifiers on this component
         """
-        return ModifierManager.get_all_effects(self.modifiers)
+        return self.modifier_manager.get_all_effects()
 
     def get_modifier_stat_summary(self):
         """Get summary grouped by stat with net values and contributors.
 
-        Delegates to ModifierManager.
+        Delegates to modifier_manager.
 
         Returns:
             Dict[str, Dict]: Mapping from stat_key to summary info
         """
-        return ModifierManager.get_stat_summary(self.modifiers)
+        return self.modifier_manager.get_stat_summary()
 
     def recalculate_stats(self, context: dict = None):
         """Recalculate component stats with multiplicative modifier stacking.
@@ -424,18 +372,6 @@ class Component:
                      If not provided, falls back to component.ship reference.
         """
         ComponentStatsCalculator.recalculate(self, context)
-
-    def _reset_and_evaluate_base_formulas(self, context: dict = None):
-        """Reset to base values and evaluate formulas. Delegates to ComponentStatsCalculator."""
-        ComponentStatsCalculator.reset_and_evaluate_formulas(self, context)
-
-    def _calculate_modifier_stats(self):
-        """Calculate modifier stats. Delegates to ComponentStatsCalculator."""
-        return ComponentStatsCalculator.calculate_modifier_stats(self.modifiers, self)
-
-    def _apply_base_stats(self, stats, old_max_hp):
-        """Apply stats to component. Delegates to ComponentStatsCalculator."""
-        ComponentStatsCalculator.apply_base_stats(self, stats, old_max_hp)
 
     def clone(self):
         # Create a new instance with the same data

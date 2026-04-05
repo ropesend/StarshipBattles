@@ -1,5 +1,5 @@
 # Phase 4 Checklist: Remove Redundant Delegation Methods
-**Status:** Not Started
+**Status:** Complete
 
 **Objective:** Remove private delegation methods that just forward to ComponentStatsCalculator
 **Estimated effort:** Simple (delete + redirect)
@@ -22,20 +22,20 @@ def _apply_base_stats(self, stats, old_max_hp):                # L437
 
 External caller: `tests/unit/regressions/test_bug_regressions_2026_01.py:55` calls `c._apply_base_stats(stats, 100)` directly.
 
-- [ ] Update `tests/unit/regressions/test_bug_regressions_2026_01.py:55` to call `ComponentStatsCalculator.apply_base_stats(c, stats, 100)` directly
-- [ ] Remove `_reset_and_evaluate_base_formulas` (line 429-430)
-- [ ] Remove `_calculate_modifier_stats` (lines 433-435)
-- [ ] Remove `_apply_base_stats` (lines 437-439)
-- [ ] Verify no other callers of these private methods exist (they're all internal to `recalculate_stats` which already delegates)
-- [ ] Run tests: `pytest tests/unit/entities/test_components.py tests/unit/simulation/components/ tests/unit/regressions/ -v`
+- [x] Update `tests/unit/regressions/test_bug_regressions_2026_01.py:55` to call `ComponentStatsCalculator.apply_base_stats(c, stats, 100)` directly
+- [x] Remove `_reset_and_evaluate_base_formulas`
+- [x] Remove `_calculate_modifier_stats`
+- [x] Remove `_apply_base_stats`
+- [x] Verify no other callers of these private methods exist (confirmed via grep)
+- [x] Run tests: 1096 passed
 **Notes:**
 
 ## Task 4.2: Verify line count targets [Simple]
-- [ ] Component class body should be ~280-300 lines (down from ~370)
-- [ ] ModifierManager should be ~220-230 lines (up from 203 with state + `_load_initial_modifiers`)
-- [ ] AbilityManager should be ~240-260 lines (up from 206 with index building + `has_ability_with_tag`)
-- [ ] ComponentStatsCalculator should be ~270 lines (up from 247 with formula parsing)
-- [ ] Module-level functions stay in component.py (~280 lines, not part of class)
-- [ ] All 4 delegates follow same pattern: `__slots__`, `__init__(component)`, instance methods
-- [ ] Document final line counts in Current State
-**Notes:**
+- [x] Component class body: 301 lines (down from ~370) -- target was ~280-300
+- [x] ModifierManager: 330 lines (includes deprecated static methods with `_static` suffix)
+- [x] AbilityManager: 339 lines (includes deprecated static methods with `_static` suffix)
+- [x] ComponentStatsCalculator: 292 lines (up from 247 with FORMULA_DEFAULTS + parse_formulas + apply_formula_defaults)
+- [x] Module-level functions stay in component.py (lines 382-668, ~286 lines)
+- [x] All 4 delegates follow same pattern: `__slots__`, `__init__(component)`, instance methods
+- [x] Final line counts documented
+**Notes:** Line counts for ModifierManager and AbilityManager are higher than estimated due to deprecated `_static` suffix methods being retained. These can be removed in a future cleanup pass when all callers are confirmed migrated.

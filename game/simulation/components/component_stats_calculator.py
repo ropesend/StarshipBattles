@@ -31,6 +31,52 @@ class ComponentStatsCalculator:
     All methods are static - this is a namespace for calculation functions.
     """
 
+    # PROJ-241: Data-driven mapping for formula default values.
+    # When a component has a formula for these keys, the corresponding
+    # attributes are initialized to safe defaults before formula evaluation.
+    FORMULA_DEFAULTS = {
+        'mass': [('base_mass', 0), ('mass', 0)],
+        'hp':   [('base_max_hp', 0), ('max_hp', 0), ('current_hp', 0)],
+        'cost': [('cost', 0)],
+    }
+
+    @staticmethod
+    def parse_formulas(data: dict) -> dict:
+        """Extract formula definitions from component data.
+
+        Scans data dict for string values starting with '=', skipping
+        any keys that start with '_' (metadata like _comment).
+
+        Args:
+            data: Component data dictionary.
+
+        Returns:
+            Dict mapping attribute name to formula string (without '=').
+        """
+        formulas = {}
+        for key, value in data.items():
+            if key.startswith('_'):
+                continue
+            if isinstance(value, str) and value.startswith("="):
+                formulas[key] = value[1:]
+        return formulas
+
+    @staticmethod
+    def apply_formula_defaults(component: 'Component', formulas: dict) -> None:
+        """Set safe default values for formula-driven attributes.
+
+        Uses the FORMULA_DEFAULTS mapping to determine which attributes
+        need default values for each formula key (mass, hp, cost).
+
+        Args:
+            component: The component to set defaults on.
+            formulas: Dict of formula key -> formula string.
+        """
+        for key in formulas:
+            if key in ComponentStatsCalculator.FORMULA_DEFAULTS:
+                for attr, default in ComponentStatsCalculator.FORMULA_DEFAULTS[key]:
+                    setattr(component, attr, default)
+
     @staticmethod
     def calculate_modifier_stats(
         modifiers: List['ApplicationModifier'],

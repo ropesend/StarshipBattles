@@ -1,64 +1,114 @@
 """
-ModifierManager - Centralized modifier handling for components.
+ModifierManager - Stateful delegate for component modifier management.
 
 PROJ-44 Phase 4: Extracted from Component god class to reduce complexity.
+PROJ-241: Converted from static namespace to proper stateful delegate
+         matching ComponentHealthManager/ComponentResourceManager pattern.
 
-This module provides utility functions for:
-- Adding/removing modifiers from components
+This module manages:
+- Modifier state (owns the modifiers list)
+- Adding/removing modifiers with restriction checks
 - Querying applied modifiers
 - Aggregating modifier effects
 - Generating stat summaries
 
 Usage:
-    The Component class delegates modifier operations to this manager.
-    Methods are implemented as static methods for flexibility.
+    The Component class creates a ModifierManager delegate that owns the
+    component's modifier list. Component facade properties provide backward
+    compatibility for external callers.
 """
+import logging
 from typing import List, Optional, Dict, Any, TYPE_CHECKING
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
+    from game.simulation.components.component import Component
     from game.simulation.components.component_constants import ApplicationModifier
 
 
 class ModifierManager:
+    """Manages modifiers for a Component as a stateful delegate.
+
+    PROJ-241: Converted from static namespace to proper delegate.
+    Follows the ComponentHealthManager/ComponentResourceManager pattern:
+    - __slots__ for memory efficiency
+    - __init__(component) takes component reference
+    - Instance methods own and operate on internal state
+    - Component provides facade properties for backward compatibility
+
+    The manager owns the _modifiers list and loads initial modifiers
+    from component data during construction.
     """
-    Utility class for modifier operations.
 
-    All methods are static - this is a namespace for modifier-related functions.
-    Component instances own their modifiers list.
-    """
+    __slots__ = ('_component', '_modifiers')
 
-    @staticmethod
-    def add_modifier(
-        modifiers_list: List['ApplicationModifier'],
-        mod_id: str,
-        value: Optional[float],
-        registries: 'GameRegistries',
-        component_type: str = None
-    ) -> bool:
-        """
-        Add a modifier to the modifiers list.
-
-        Checks restrictions and replaces existing modifier with same ID.
+    def __init__(self, component: 'Component'):
+        """Initialize with a component reference and load initial modifiers.
 
         Args:
-            modifiers_list: List of ApplicationModifier to modify (in-place)
-            mod_id: The modifier ID to add
-            value: Optional value for the modifier
-            registries: GameRegistries for modifier lookup
-            component_type: Optional component type string for restriction checks
+            component: The Component instance to manage modifiers for.
+        """
+        self._component = component
+        self._modifiers: List['ApplicationModifier'] = []
+        self._load_initial_modifiers()
 
-        Returns:
-            True if modifier was added, False if not found or restricted
+    def _load_initial_modifiers(self) -> None:
+        """Load default modifiers from component data definition.
+
+        Moved from Component.__init__ (formerly lines 171-180).
+        Reads 'modifiers' from component.data and creates ApplicationModifier
+        instances using the registry.
         """
         from game.simulation.components.component_constants import ApplicationModifier
 
+        component = self._component
+        if 'modifiers' not in component.data:
+            return
+
+        mods = component._registries.modifiers
+        for mod_data in component.data['modifiers']:
+            mod_id = mod_data['id']
+            val = mod_data.get('value', None)
+            if mod_id in mods:
+                mod_def = mods[mod_id]
+                self._modifiers.append(mod_def.create_modifier(val))
+            else:
+                logger.warning(
+                    f"Component '{component.id}': Modifier '{mod_id}' "
+                    f"not found in registry, skipping"
+                )
+
+    @property
+    def modifiers(self) -> List['ApplicationModifier']:
+        """The current list of applied modifiers."""
+        return self._modifiers
+
+    def add_modifier(self, mod_id: str, value: Optional[float] = None) -> bool:
+        """Add a modifier to this component.
+
+        Checks type restrictions and replaces existing modifier with same ID.
+        Uses the component's registries for modifier lookup and type_str
+        for restriction checks.
+
+        Args:
+            mod_id: The modifier ID to add.
+            value: Optional value for the modifier.
+
+        Returns:
+            True if modifier was added, False if not found or restricted.
+        """
+        from game.simulation.components.component_constants import ApplicationModifier
+
+        registries = self._component._registries
         mods = registries.modifiers
         if mod_id not in mods:
             return False
 
         # Check restrictions
         mod_def = mods[mod_id]
+        component_type = self._component.type_str
         if component_type:
             if 'deny_types' in mod_def.restrictions:
                 if component_type in mod_def.restrictions['deny_types']:
@@ -67,88 +117,54 @@ class ModifierManager:
                 if component_type not in mod_def.restrictions['allow_types']:
                     return False
 
-        # Remove existing if any (replace)
-        ModifierManager.remove_modifier_inplace(modifiers_list, mod_id)
+        # Remove existing if any (replace) -- in-place mutation
+        self.remove_modifier(mod_id)
 
         app_mod = ApplicationModifier(mod_def, value)
-        modifiers_list.append(app_mod)
+        self._modifiers.append(app_mod)
         return True
 
-    @staticmethod
-    def remove_modifier(
-        modifiers_list: List['ApplicationModifier'],
-        mod_id: str
-    ) -> List['ApplicationModifier']:
-        """
-        Remove a modifier from the list.
+    def remove_modifier(self, mod_id: str) -> None:
+        """Remove a modifier by ID from the internal list.
+
+        Mutates _modifiers in-place (fixes the old inconsistency where
+        the static remove_modifier returned a new list).
 
         Args:
-            modifiers_list: List of ApplicationModifier
-            mod_id: The modifier ID to remove
+            mod_id: The modifier ID to remove.
+        """
+        self._modifiers[:] = [
+            m for m in self._modifiers if m.definition.id != mod_id
+        ]
+
+    def get_modifier(self, mod_id: str) -> Optional['ApplicationModifier']:
+        """Get a modifier by ID.
+
+        Args:
+            mod_id: The modifier ID to find.
 
         Returns:
-            New list without the specified modifier
+            The matching ApplicationModifier, or None if not found.
         """
-        return [m for m in modifiers_list if m.definition.id != mod_id]
-
-    @staticmethod
-    def remove_modifier_inplace(
-        modifiers_list: List['ApplicationModifier'],
-        mod_id: str
-    ) -> None:
-        """
-        Remove a modifier from the list in-place.
-
-        Args:
-            modifiers_list: List of ApplicationModifier to modify
-            mod_id: The modifier ID to remove
-        """
-        modifiers_list[:] = [m for m in modifiers_list if m.definition.id != mod_id]
-
-    @staticmethod
-    def get_modifier(
-        modifiers_list: List['ApplicationModifier'],
-        mod_id: str
-    ) -> Optional['ApplicationModifier']:
-        """
-        Get a modifier by ID from the list.
-
-        Args:
-            modifiers_list: List of ApplicationModifier
-            mod_id: The modifier ID to find
-
-        Returns:
-            The matching ApplicationModifier, or None if not found
-        """
-        for m in modifiers_list:
+        for m in self._modifiers:
             if m.definition.id == mod_id:
                 return m
         return None
 
-    @staticmethod
-    def get_all_effects(modifiers_list: List['ApplicationModifier']) -> List[Any]:
-        """
-        Get all evaluated effects from all applied modifiers.
-
-        Args:
-            modifiers_list: List of ApplicationModifier
+    def get_all_effects(self) -> List[Any]:
+        """Get all evaluated effects from all applied modifiers.
 
         Returns:
-            List of ModifierEffect from all modifiers
+            List of ModifierEffect from all modifiers.
         """
         all_effects = []
-        for app_mod in modifiers_list:
+        for app_mod in self._modifiers:
             effects = app_mod.definition.evaluate_effects(app_mod.value)
             all_effects.extend(effects)
         return all_effects
 
-    @staticmethod
-    def get_stat_summary(modifiers_list: List['ApplicationModifier']) -> Dict[str, Dict]:
-        """
-        Get summary grouped by stat with net values and contributors.
-
-        Args:
-            modifiers_list: List of ApplicationModifier
+    def get_stat_summary(self) -> Dict[str, Dict]:
+        """Get summary grouped by stat with net values and contributors.
 
         Returns:
             Dict mapping stat_key to:
@@ -168,7 +184,7 @@ class ModifierManager:
         """
         summary: Dict[str, Dict] = {}
 
-        all_effects = ModifierManager.get_all_effects(modifiers_list)
+        all_effects = self.get_all_effects()
 
         for effect in all_effects:
             stat_key = effect.stat_key
@@ -199,5 +215,116 @@ class ModifierManager:
                 entry['net_value'] += effect.value
             elif effect.operation == 'set':
                 entry['net_value'] = effect.value  # Last set wins
+
+        return summary
+
+    # ---- DEPRECATED static methods (kept for Task 1.3 transition) ----
+
+    @staticmethod
+    def add_modifier_static(
+        modifiers_list: List['ApplicationModifier'],
+        mod_id: str,
+        value: Optional[float],
+        registries: 'GameRegistries',
+        component_type: str = None
+    ) -> bool:
+        """DEPRECATED: Use instance add_modifier() instead. Will be removed in Task 1.3."""
+        from game.simulation.components.component_constants import ApplicationModifier
+
+        mods = registries.modifiers
+        if mod_id not in mods:
+            return False
+
+        mod_def = mods[mod_id]
+        if component_type:
+            if 'deny_types' in mod_def.restrictions:
+                if component_type in mod_def.restrictions['deny_types']:
+                    return False
+            if 'allow_types' in mod_def.restrictions:
+                if component_type not in mod_def.restrictions['allow_types']:
+                    return False
+
+        ModifierManager.remove_modifier_inplace(modifiers_list, mod_id)
+
+        app_mod = ApplicationModifier(mod_def, value)
+        modifiers_list.append(app_mod)
+        return True
+
+    @staticmethod
+    def remove_modifier_static(
+        modifiers_list: List['ApplicationModifier'],
+        mod_id: str
+    ) -> List['ApplicationModifier']:
+        """DEPRECATED: Use instance remove_modifier() instead. Will be removed in Task 1.3."""
+        return [m for m in modifiers_list if m.definition.id != mod_id]
+
+    @staticmethod
+    def remove_modifier_inplace(
+        modifiers_list: List['ApplicationModifier'],
+        mod_id: str
+    ) -> None:
+        """Remove a modifier from the list in-place.
+
+        Used internally by add_modifier during the replace step.
+
+        Args:
+            modifiers_list: List of ApplicationModifier to modify.
+            mod_id: The modifier ID to remove.
+        """
+        modifiers_list[:] = [m for m in modifiers_list if m.definition.id != mod_id]
+
+    @staticmethod
+    def get_modifier_static(
+        modifiers_list: List['ApplicationModifier'],
+        mod_id: str
+    ) -> Optional['ApplicationModifier']:
+        """DEPRECATED: Use instance get_modifier() instead. Will be removed in Task 1.3."""
+        for m in modifiers_list:
+            if m.definition.id == mod_id:
+                return m
+        return None
+
+    @staticmethod
+    def get_all_effects_static(modifiers_list: List['ApplicationModifier']) -> List[Any]:
+        """DEPRECATED: Use instance get_all_effects() instead. Will be removed in Task 1.3."""
+        all_effects = []
+        for app_mod in modifiers_list:
+            effects = app_mod.definition.evaluate_effects(app_mod.value)
+            all_effects.extend(effects)
+        return all_effects
+
+    @staticmethod
+    def get_stat_summary_static(modifiers_list: List['ApplicationModifier']) -> Dict[str, Dict]:
+        """DEPRECATED: Use instance get_stat_summary() instead. Will be removed in Task 1.3."""
+        summary: Dict[str, Dict] = {}
+
+        all_effects = ModifierManager.get_all_effects_static(modifiers_list)
+
+        for effect in all_effects:
+            stat_key = effect.stat_key
+
+            if stat_key not in summary:
+                default_value = 1.0 if effect.operation == 'multiply' else 0.0
+                summary[stat_key] = {
+                    'net_value': default_value,
+                    'operation': effect.operation,
+                    'contributors': []
+                }
+
+            entry = summary[stat_key]
+
+            entry['contributors'].append({
+                'modifier_id': effect.source_modifier_id,
+                'modifier_name': effect.source_modifier_name,
+                'value': effect.value,
+                'formula': effect.formula_str
+            })
+
+            if effect.operation == 'multiply':
+                entry['net_value'] *= effect.value
+            elif effect.operation == 'add':
+                entry['net_value'] += effect.value
+            elif effect.operation == 'set':
+                entry['net_value'] = effect.value
 
         return summary

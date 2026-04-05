@@ -1,6 +1,7 @@
 import pytest
 import math
 from game.simulation.components.component import Component
+from game.simulation.components.component_stats_calculator import ComponentStatsCalculator
 from game.core.constants import LayerType
 from game.simulation.components.component_constants import ComponentStatus
 from game.simulation.validation.ship_validator import ResourceDependencyRule
@@ -52,7 +53,7 @@ class TestBugFixRegressions:
 
         # Inject stats and trigger update
         c.stats = stats
-        c._apply_base_stats(stats, 100)  # This triggers ab.recalculate()
+        ComponentStatsCalculator.apply_base_stats(c, stats, 100)  # This triggers ab.recalculate()
 
         # Verify update
         # 10 * 1.0 * 2.5 = 25
