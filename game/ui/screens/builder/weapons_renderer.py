@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import math
 import pygame
-from typing import List, Dict, Any, Optional, TYPE_CHECKING
+from typing import List, Dict, Any, Optional
 
 from game.ui.colors import (
     COLORS, BORDER_LIGHT, WHITE, GRID_BG,
@@ -19,10 +19,6 @@ from game.ui.colors import (
     WEAPON_LABEL, WEAPON_RANGE_LABEL, WEAPON_ARC, DAMAGE_GRADIENT
 )
 from game.ui.fonts import get_font
-
-if TYPE_CHECKING:
-    pass
-
 
 class WeaponsRenderer:
     """
