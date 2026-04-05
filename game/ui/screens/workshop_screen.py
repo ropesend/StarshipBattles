@@ -3,6 +3,7 @@ Design Workshop Screen - MVVM-based ship design editor.
 
 Production version of the ship builder with dependency injection and MVVM architecture.
 """
+import logging
 import os
 from typing import Optional
 
@@ -11,14 +12,10 @@ import pygame_gui
 from pygame_gui.elements import UIPanel, UIButton, UIWindow
 from pygame_gui.windows import UIConfirmationDialog
 
-import logging
-
-from game.ui.fonts import get_font
-
-logger = logging.getLogger(__name__)
 from game.core.profiling import profile_block
 from game.core.constants import LayerType
 from game.core.paths import Paths
+from game.ui.fonts import get_font
 from game.ui.renderer.sprites import SpriteManager
 from game.ui.panels.builder_widgets import ModifierEditorPanel
 from game.ui.assets import ShipThemeManager
@@ -41,6 +38,8 @@ from game.ui.colors import COLORS
 from game.ui.screens.builder.detail_panel import ComponentDetailPanel
 from game.ui.screens.builder.modifier_logic import ModifierLogic
 from game.ui.services.vehicle_class_service import VehicleClassService
+
+logger = logging.getLogger(__name__)
 
 BG_COLOR = COLORS['bg_deep']
 

@@ -1,5 +1,5 @@
 """
-ToHitAttackModifier Test Scenarios (TOHIT-ATK-001 to TOHIT-ATK-004)
+ToHitAttackModifier Test Scenarios (TOHIT-ATK-001 to TOHIT-ATK-005)
 
 These tests validate the ToHitAttackModifier ability using A/B comparison
 battles.  Each test runs a baseline battle (without the modifier) and a

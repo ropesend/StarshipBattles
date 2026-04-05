@@ -130,12 +130,12 @@ class DesignResult:
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `create_ship` | `(name: str, ship_class: str, theme_id: str, x: float, y: float, color: tuple, team_id: int) -> DesignResult` | Create a new ship with given parameters |
+| `create_ship` | `(name: str, ship_class: str, theme_id: str = "Federation", x: float = 0.0, y: float = 0.0, color: tuple = (100,100,255), team_id: int = 0) -> DesignResult` | Create a new ship. Only `name` and `ship_class` are required. |
 | `add_component` | `(ship: Ship, component_id: str, layer: LayerType) -> DesignResult` | Create component from registry ID and add to ship |
 | `add_component_instance` | `(ship: Ship, component: Component, layer: LayerType) -> DesignResult` | Add a pre-constructed component instance to ship |
 | `add_component_bulk` | `(ship: Ship, component_id: str, layer: LayerType, count: int) -> DesignResult` | Add multiple copies of a component |
 | `remove_component` | `(ship: Ship, layer: LayerType, index: int) -> DesignResult` | Remove component by layer and index |
-| `change_class` | `(ship: Ship, new_class: str, migrate_components: bool) -> DesignResult` | Change vehicle class, optionally migrating components |
+| `change_class` | `(ship: Ship, new_class: str, migrate_components: bool = True) -> DesignResult` | Change vehicle class, optionally migrating components (default: migrate) |
 | `validate_design` | `(ship: Ship) -> ValidationResult` | Full design validation |
 | `get_available_components` | `(ship: Ship, layer: LayerType) -> List[str]` | Get component IDs valid for the given layer |
 | `get_layer_info` | `(ship: Ship, layer: LayerType) -> dict` | Get layer details (components, restrictions, radius_pct) |
@@ -445,9 +445,9 @@ FULL_HP_REQUIRED_ABILITIES = {'WarpJump'}  # Must be undamaged to function
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `calculate_stats` | `(design_data: Dict, component_damage: Optional[Dict], component_toggles: Optional[Dict]) -> Dict[str, Any]` | Calculate all ship stats from design data, respecting damage and toggles |
-| `get_component_effectiveness` | `(comp_id: str, comp_def, component_damage: Optional[Dict]) -> float` | Static. Calculate component effectiveness (0.0-1.0) based on damage |
-| `has_warp_capability` | `(ship) -> bool` | Static. Check if a ship has functional warp (tonnage, storage, undamaged drive) |
+| `calculate_stats` | `(design_data: Dict[str, Any], component_damage: Optional[Dict[str, int]] = None, component_toggles: Optional[Dict[str, bool]] = None) -> Dict[str, Any]` | Calculate all ship stats from design data, respecting damage and toggles |
+| `get_component_effectiveness` | `(comp_id: str, comp_def: Any, component_damage: Optional[Dict[str, int]] = None) -> float` | Static. Calculate component effectiveness (0.0-1.0) based on damage |
+| `has_warp_capability` | `(ship: Any) -> bool` | Static. Check if a ship has functional warp (tonnage, storage, undamaged drive) |
 
 **`calculate_stats` return dict:**
 ```python
@@ -455,6 +455,7 @@ FULL_HP_REQUIRED_ABILITIES = {'WarpJump'}  # Must be undamaged to function
     'max_hp': int,                            # Total HP from all components
     'mass': float,                            # Total mass (never degrades with damage)
     'resource_storage': Dict[str, float],     # resource_type -> capacity
+    'pod_storage_mass': float,                # Mass capacity of cargo/drop pods
     'resource_consumption_per_hex': Dict[str, float],   # per-hex costs
     'resource_consumption_per_turn': Dict[str, float],  # per-turn costs
     'warp_resource_costs': Dict[str, float],  # per-warp-jump costs

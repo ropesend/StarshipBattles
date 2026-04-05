@@ -12,7 +12,7 @@
   "ai_strategy": "test_stationary_fire",
   "layers": {
     "CORE": [
-      {"id": "test_beam_guaranteed_1dmg"},
+      {"id": "test_beam_1dmg_guaranteed"},
       {"id": "test_fleet_sensor_2"}
     ],
     "ARMOR": []

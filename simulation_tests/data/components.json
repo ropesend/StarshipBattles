@@ -2099,6 +2099,50 @@
       "abilities": {
         "CommandAndControl": true
       }
+    },
+    {
+      "_comment": "=== MODIFIER TEST COMPONENTS ===",
+      "id": "test_beam_med_acc_1dmg_reload10",
+      "name": "Test Beam (Medium Accuracy, 1 Damage, Reload 0.1s)",
+      "type": "BeamWeaponAbility",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 1,
+          "range": 800,
+          "reload": 0.1,
+          "firing_arc": 360,
+          "base_accuracy": 2.0,
+          "accuracy_falloff": 0.001
+        }
+      }
+    },
+    {
+      "id": "test_beam_rapid_1dmg_energy_consumption",
+      "name": "Test Beam (1 Damage, Guaranteed, Energy Consumption)",
+      "type": "Weapon",
+      "mass": 0,
+      "hp": 20,
+      "sprite_index": 87,
+      "abilities": {
+        "BeamWeaponAbility": {
+          "damage": 1,
+          "range": 800,
+          "reload": 0.0,
+          "firing_arc": 360,
+          "base_accuracy": 100.0,
+          "accuracy_falloff": 0.0
+        },
+        "ResourceConsumption": [
+          {
+            "resource": "energy",
+            "amount": 10,
+            "trigger": "activation"
+          }
+        ]
+      }
     }
   ]
 }

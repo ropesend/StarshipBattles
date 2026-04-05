@@ -1,7 +1,7 @@
 # Starship Battles Documentation
 
 > **Audience:** LLM agents (Claude Code, automated workers). Optimized for machine readability.
-> **Last verified:** 2026-04-03 against 473 source files, 13986 tests.
+> **Last verified:** 2026-04-04 against 473 source files.
 
 ---
 
@@ -85,8 +85,8 @@ docs/
 
 ## Quick Reference
 
-- **Test baseline:** 14330 tests, 0 failures
-- **Test command:** `python scripts/test_sharded.py`
+- **Test command (pytest):** `python scripts/test_sharded.py`
+- **Test command (simulation):** `python -m simulation_tests.run_tests`
 - **Minimum resolution:** 2560x1600 (optimized for 4K: 3840x2160)
 - **Python:** 3.x with Pygame, Pytest, pytest-xdist
 - **Historical/archived docs:** `Projects/_archive/` (not in docs/ — do not read for current info)

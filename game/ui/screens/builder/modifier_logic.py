@@ -35,8 +35,8 @@ class ModifierLogic:
     # Class-level service instance (must be initialized via init_service)
     _component_service = None
 
-    # Modifiers that cannot be removed by the user
-    MANDATORY_MODIFIERS = ['simple_size_mount', 'range_mount', 'facing', 'turret_mount']
+    # Note: Mandatory modifier IDs are defined in ModifierService.MANDATORY_MODIFIERS.
+    # This class determines mandatory modifiers dynamically via get_mandatory_modifiers().
 
     @classmethod
     def init_service(cls, registry_provider: 'IRegistryProvider') -> None:

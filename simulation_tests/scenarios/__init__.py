@@ -54,14 +54,6 @@ from simulation_tests.scenarios.resource_scenarios import (
     SeekerAmmoConsumptionScenario,
     EnergyContentionBeamRegenScenario,
 )
-from simulation_tests.scenarios.modifier_scenarios import (
-    DamageMultiplierScenario,
-    RangeMultiplierScenario,
-    ReloadReductionScenario,
-    ThrustMultiplierScenario,
-    AccuracyBoostScenario,
-    TurretArcSetScenario,
-)
 from simulation_tests.scenarios.shield_projection_scenarios import (
     ShieldAbsorbsDamageComparisonScenario,
     ShieldDepletionOverflowScenario,
@@ -118,6 +110,13 @@ from simulation_tests.scenarios.tohit_attack_scenarios import (
     NegativeModifierReducesAccuracyScenario,
     MixedModifiersNetPositiveScenario,
 )
+from simulation_tests.scenarios.mod_range_scenarios import (
+    RangeBoostInRangeScenario,
+    RangeIdentityScenario,
+    RangeBoostBeyondBaseScenario,
+    RangeBoostComparisonScenario,
+    RangeBoostOutOfRangeScenario,
+)
 from simulation_tests.scenarios.damage_pipeline_scenarios import (
     PipelineShieldEmissiveScenario,
     PipelineShieldSRAScenario,
@@ -125,6 +124,19 @@ from simulation_tests.scenarios.damage_pipeline_scenarios import (
     PipelineFullVsNoneScenario,
     PipelineFullRegenScenario,
     PipelineSRAOverflowScenario,
+)
+from simulation_tests.scenarios.mod_thrust_scenarios import (
+    ModThrustStaticScenario,
+    ModThrustBaselineScenario,
+    ModThrustDynamicVelocityScenario,
+    ModThrustAccelerationScenario,
+)
+from simulation_tests.scenarios.mod_damage_scenarios import (
+    ModDmg001_StandardBoostScenario,
+    ModDmg002_IdentityBoostScenario,
+    ModDmg003_MaxBoostScenario,
+    ModDmg004_BoostVsBaselineScenario,
+    ModDmg005_MaxVsMinScenario,
 )
 from simulation_tests.scenarios.propulsion_scenarios import (
     PropEngineAccelerationScenario,
@@ -159,12 +171,23 @@ __all__ = [
     'SeekerAmmoConsumptionScenario',
     'EnergyContentionBeamRegenScenario',
     # Modifier scenarios
-    'DamageMultiplierScenario',
-    'RangeMultiplierScenario',
-    'ReloadReductionScenario',
-    'ThrustMultiplierScenario',
-    'AccuracyBoostScenario',
-    'TurretArcSetScenario',
+    # Modifier - Thrust Multiplier scenarios
+    'ModThrustStaticScenario',
+    'ModThrustBaselineScenario',
+    'ModThrustDynamicVelocityScenario',
+    'ModThrustAccelerationScenario',
+    # Modifier - Range Multiplier scenarios
+    'RangeBoostInRangeScenario',
+    'RangeIdentityScenario',
+    'RangeBoostBeyondBaseScenario',
+    'RangeBoostComparisonScenario',
+    'RangeBoostOutOfRangeScenario',
+    # Modifier - Damage Multiplier scenarios
+    'ModDmg001_StandardBoostScenario',
+    'ModDmg002_IdentityBoostScenario',
+    'ModDmg003_MaxBoostScenario',
+    'ModDmg004_BoostVsBaselineScenario',
+    'ModDmg005_MaxVsMinScenario',
     # Propulsion scenarios
     'PropEngineAccelerationScenario',
     'PropDualEngineScenario',
