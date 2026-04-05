@@ -13,7 +13,7 @@ Usage:
     Methods are implemented as static methods for flexibility.
 """
 from typing import Dict, List, Any, Optional, TYPE_CHECKING
-from game.simulation.formula_system import safe_evaluate_math_formula
+from game.simulation.formula_system import FormulaEvaluator
 from game.simulation.components.modifiers import (
     apply_modifier_effects,
     get_default_stat_multipliers
@@ -148,7 +148,7 @@ class ComponentStatsCalculator:
 
         # Evaluate Formulas for attributes
         for attr, formula in component.formulas.items():
-            val = safe_evaluate_math_formula(formula, eval_context)
+            val = FormulaEvaluator.safe_evaluate(formula, eval_context)
             if attr == 'mass':
                 component.base_mass = float(val)
                 component.mass = component.base_mass  # Reset to base
@@ -174,7 +174,7 @@ class ComponentStatsCalculator:
         component.evaluated_resource_cost = {}
         for res, amount in raw_costs.items():
             if isinstance(amount, str) and amount.startswith("="):
-                component.evaluated_resource_cost[res] = safe_evaluate_math_formula(
+                component.evaluated_resource_cost[res] = FormulaEvaluator.safe_evaluate(
                     amount[1:], eval_context
                 )
             else:
@@ -195,7 +195,7 @@ class ComponentStatsCalculator:
         def evaluate_recursive(obj, ctx):
             """Recursively evaluate formulas in nested structures."""
             if isinstance(obj, str) and obj.startswith("="):
-                return safe_evaluate_math_formula(obj[1:], ctx)
+                return FormulaEvaluator.safe_evaluate(obj[1:], ctx)
             elif isinstance(obj, dict):
                 for key, sub_val in obj.items():
                     obj[key] = evaluate_recursive(sub_val, ctx)

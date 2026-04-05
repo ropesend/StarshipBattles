@@ -14,10 +14,9 @@ PROJ-45: Error handling updated to raise FormulaException for formula evaluation
 """
 from dataclasses import dataclass
 from typing import Dict, Any, List, Optional
-import math
 import logging
 from game.core.exceptions import FormulaException
-from game.core.error_codes import ErrorCode
+from game.simulation.formula_system import FormulaEvaluator
 
 logger = logging.getLogger(__name__)
 
@@ -115,8 +114,10 @@ class ModifierEffectEvaluator:
 
     @staticmethod
     def evaluate_formula(formula: str, context: Dict[str, float]) -> float:
-        """
-        Evaluate a formula string with the given context.
+        """Evaluate a formula string with the given context.
+
+        Delegates to FormulaEvaluator with modifier-specific context
+        (caret substitution enabled).
 
         Args:
             formula: Formula string like "param ^ 2" or "2 ^ param"
@@ -126,62 +127,12 @@ class ModifierEffectEvaluator:
             Evaluated result as float
 
         Raises:
-            FormulaException: If formula cannot be evaluated (syntax error,
-                undefined variable, or runtime error).
+            FormulaException: If formula cannot be evaluated.
         """
-        original_formula = formula
-
-        # Add math functions to context
-        eval_context = {
-            'ln': math.log,
-            'log': math.log,
-            'log10': math.log10,
-            'sqrt': math.sqrt,
-            'abs': abs,
-            'min': min,
-            'max': max,
-            'pi': math.pi,
-            'e': math.e,
-            **context
-        }
-
-        # Build error context for exceptions
-        error_context = {
-            "formula": original_formula,
-            "available_vars": list(context.keys()) if context else [],
-        }
-
-        try:
-            # Replace ^ with ** for Python
-            formula = formula.replace('^', '**')
-
-            # Evaluate safely
-            result = eval(formula, {"__builtins__": {}}, eval_context)
-            return float(result)
-        except SyntaxError as e:
-            raise FormulaException(
-                f"Syntax error in modifier formula '{original_formula}': {e.msg}",
-                code=ErrorCode.FORMULA_SYNTAX_ERROR.value,
-                context=error_context
-            ) from e
-        except NameError as e:
-            raise FormulaException(
-                f"Undefined variable in modifier formula '{original_formula}': {e}",
-                code=ErrorCode.FORMULA_UNDEFINED_VAR.value,
-                context=error_context
-            ) from e
-        except (ZeroDivisionError, ValueError, ArithmeticError) as e:
-            raise FormulaException(
-                f"Runtime error in modifier formula '{original_formula}': {e}",
-                code=ErrorCode.EVAL_ERROR.value,
-                context=error_context
-            ) from e
-        except Exception as e:  # Intentional broad catch: catch-and-convert to FormulaException for any eval() error
-            raise FormulaException(
-                f"Cannot evaluate modifier formula '{original_formula}': {e}",
-                code=ErrorCode.FORMULA_GENERAL_ERROR.value,
-                context=error_context
-            ) from e
+        result = FormulaEvaluator.evaluate(
+            formula, context, FormulaEvaluator.MODIFIER_CONTEXT
+        )
+        return float(result)
 
     @classmethod
     def evaluate_modifier(
@@ -253,12 +204,9 @@ class ModifierEffectEvaluator:
 
     @classmethod
     def validate_formula(cls, formula: str) -> List[str]:
-        """
-        Validate a formula string without evaluating it.
+        """Validate a formula string without evaluating it.
 
-        Checks for:
-        - Syntax errors
-        - Undefined variables (only 'param' and math functions are allowed)
+        Delegates to FormulaEvaluator with modifier-specific context.
 
         Args:
             formula: Formula string to validate
@@ -266,34 +214,10 @@ class ModifierEffectEvaluator:
         Returns:
             List of error messages (empty if valid)
         """
-        import ast
-
-        errors = []
-
-        # Replace ^ with ** for Python
-        py_formula = formula.replace('^', '**')
-
-        # Allowed names in formulas
-        allowed_names = {
-            'param',
-            'ln', 'log', 'log10', 'sqrt', 'abs', 'min', 'max',
-            'pi', 'e', 'True', 'False'
-        }
-
-        # Parse and check for syntax errors
-        try:
-            tree = ast.parse(py_formula, mode='eval')
-        except SyntaxError as e:
-            errors.append(f"Syntax error in formula '{formula}': {e.msg}")
-            return errors
-
-        # Walk AST to find undefined names
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Name):
-                if node.id not in allowed_names:
-                    errors.append(f"Undefined variable '{node.id}' in formula '{formula}'")
-
-        return errors
+        # Modifier formulas only allow 'param' plus math functions
+        return FormulaEvaluator.validate(
+            formula, ['param'], FormulaEvaluator.MODIFIER_CONTEXT
+        )
 
     @classmethod
     def validate_modifier_definition(cls, mod_def: Dict[str, Any]) -> List[str]:
