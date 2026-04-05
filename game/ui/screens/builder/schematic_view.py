@@ -54,14 +54,6 @@ class SchematicView:
         PIXELS_PER_MASS_ROOT = 7.0 
         return int((ref_mass ** (1/3.0)) * PIXELS_PER_MASS_ROOT)
 
-    def get_component_at(self, pos, ship):
-        """Returns (layer_type, index, component) or None.
-        
-        DISABLED: User requested to stop allowing interaction with components 
-        when clicking on the image of the ship.
-        """
-        return None
-
     def draw(self, screen, ship, show_firing_arcs, selected_component, hovered_component):
         # Draw Background
         pygame.draw.rect(screen, SHIP_VIEW_BG, self.rect)

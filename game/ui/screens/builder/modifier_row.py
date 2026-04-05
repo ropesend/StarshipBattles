@@ -247,12 +247,6 @@ class ModifierControlRow:
                 is_active = True
                 val = mod.value
             
-            # Check mandatory status (Auto-set if needed)
-            if ModifierLogic.is_modifier_mandatory(self.mod_id, component) and not is_active:
-                # Should have been handled by Logic ensure, but visually treat as active
-                # Actually, main panel should ensure logic. 
-                # If we are here and it's mandatory but missing, it's inactive.
-                pass
         else:
             if self.mod_id in template_modifiers:
                 is_active = True
@@ -264,12 +258,6 @@ class ModifierControlRow:
         # 2. Update UI Text/Visuals
         check_char = 'x' if is_active else ' '
         
-        # Readonly check
-        if self.mod_def.readonly or (component and ModifierLogic.is_modifier_mandatory(self.mod_id, component)):
-             # Even if mandatory, we show [x] or [AUTO]?
-             # Let's keep [x] but maybe disable toggle
-             pass
-             
         self.toggle_btn.set_text(f"[{check_char}] {self.mod_def.name}")
 
         # Enable/Disable Controls and update values
