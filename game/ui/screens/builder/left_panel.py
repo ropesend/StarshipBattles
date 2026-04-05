@@ -2,6 +2,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIScrollingContainer, UIDropDownMenu
 from .components import ComponentListItem
+from game.ui.widgets.dropdown_helper import recreate_dropdown
 
 class BuilderLeftPanel:
     def __init__(self, builder, manager, rect, event_bus=None, viewmodel=None):
@@ -158,14 +159,9 @@ class BuilderLeftPanel:
             self.current_type_filter = "All Types"
 
         # Rebuild the filter dropdown
-        y_filters = 40
-        self.filter_type_dropdown.kill()
-        self.filter_type_dropdown = UIDropDownMenu(
-            options_list=self.type_filter_options,
-            starting_option=self.current_type_filter,
-            relative_rect=pygame.Rect(5, y_filters, (self.rect.width // 2) - 10, 30),
-            manager=self.manager,
-            container=self.panel
+        self.filter_type_dropdown = recreate_dropdown(
+            self.filter_type_dropdown, self.type_filter_options,
+            self.current_type_filter, self.manager, container=self.panel
         )
         self.filter_type_dropdown.change_layer(5)
 
@@ -277,14 +273,9 @@ class BuilderLeftPanel:
                 self.current_layer_filter = "All Layers"
                 
             # Recreate dropdown (cleanest way to update options)
-            self.filter_layer_dropdown.kill()
-            y_filters = 40
-            self.filter_layer_dropdown = UIDropDownMenu(
-                options_list=self.layer_filter_options,
-                starting_option=self.current_layer_filter,
-                relative_rect=pygame.Rect((self.rect.width//2)+5, y_filters, (self.rect.width//2)-10, 30),
-                manager=self.manager,
-                container=self.panel
+            self.filter_layer_dropdown = recreate_dropdown(
+                self.filter_layer_dropdown, self.layer_filter_options,
+                self.current_layer_filter, self.manager, container=self.panel
             )
             self.filter_layer_dropdown.change_layer(5)
 

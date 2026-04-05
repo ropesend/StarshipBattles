@@ -14,6 +14,7 @@ from pygame_gui.core import UIElement
 from game.core.strategy_metadata import StrategyMetadataService
 from game.core.string_utils import display_name
 from game.ui.panels.design_stats_panel import DesignStatsPanel
+from game.ui.widgets.dropdown_helper import recreate_dropdown
 
 logger = logging.getLogger(__name__)
 
@@ -152,23 +153,15 @@ class BuilderRightPanel:
         self.name_entry.set_text(s.name)
         
         # Preservation of Rects
-        type_rect = self.vehicle_type_dropdown.relative_rect
-        class_rect = self.class_dropdown.relative_rect
-        ai_rect = self.ai_dropdown.relative_rect
-
-        # Kill old dropdowns
-        self.vehicle_type_dropdown.kill()
-        self.class_dropdown.kill()
-        self.ai_dropdown.kill()
+        # Dropdowns are killed and recreated below via recreate_dropdown
 
         # 2. Recreate Theme (if visible)
         if self.theme_dropdown:
-            theme_rect = self.theme_dropdown.relative_rect
-            self.theme_dropdown.kill()
             theme_options = self.builder.theme_manager.get_available_themes()
             curr_theme = s.theme_id
-            if theme_options and curr_theme not in theme_options: curr_theme = theme_options[0]
-            self.theme_dropdown = UIDropDownMenu(theme_options, curr_theme, theme_rect, manager=self.manager, container=self.panel)
+            self.theme_dropdown = recreate_dropdown(
+                self.theme_dropdown, theme_options, curr_theme, self.manager, container=self.panel
+            )
         
         # 3. Recreate Type (PROJ-43: via VehicleClassService)
         types = self._vehicle_class_service.get_vehicle_types()
@@ -184,7 +177,9 @@ class BuilderRightPanel:
         if curr_type not in types:
             curr_type = types[0]
 
-        self.vehicle_type_dropdown = UIDropDownMenu(types, curr_type, type_rect, manager=self.manager, container=self.panel)
+        self.vehicle_type_dropdown = recreate_dropdown(
+            self.vehicle_type_dropdown, types, curr_type, self.manager, container=self.panel
+        )
 
         # 4. Recreate Class (PROJ-43: via VehicleClassService)
         class_options = self._vehicle_class_service.get_classes_for_type(curr_type)
@@ -199,7 +194,9 @@ class BuilderRightPanel:
             if curr_class in all_classes:
                 curr_class = class_options[0]
 
-        self.class_dropdown = UIDropDownMenu(class_options, curr_class, class_rect, manager=self.manager, container=self.panel)
+        self.class_dropdown = recreate_dropdown(
+            self.class_dropdown, class_options, curr_class, self.manager, container=self.panel
+        )
         
         # 5. Recreate AI
         strategies = StrategyMetadataService.instance().strategies
@@ -220,7 +217,9 @@ class BuilderRightPanel:
         if ai_display is None or ai_display not in ai_options:
             ai_display = ai_options[0]
                 
-        self.ai_dropdown = UIDropDownMenu(ai_options, ai_display, ai_rect, manager=self.manager, container=self.panel)
+        self.ai_dropdown = recreate_dropdown(
+            self.ai_dropdown, ai_options, ai_display, self.manager, container=self.panel
+        )
 
         # 6. Update Portrait
         self.update_portrait_image()
@@ -336,11 +335,8 @@ class BuilderRightPanel:
             new_class: The class to set as selected
             valid_classes: List of valid class names for the dropdown
         """
-        class_rect = self.class_dropdown.relative_rect
-        self.class_dropdown.kill()
-        self.class_dropdown = UIDropDownMenu(
-            valid_classes, new_class, class_rect,
-            manager=self.manager, container=self.panel
+        self.class_dropdown = recreate_dropdown(
+            self.class_dropdown, valid_classes, new_class, self.manager, container=self.panel
         )
 
     def update_vehicle_type_dropdown(self, new_type: str, valid_types: list):
@@ -350,11 +346,8 @@ class BuilderRightPanel:
             new_type: The vehicle type to set as selected
             valid_types: List of valid vehicle types for the dropdown
         """
-        type_rect = self.vehicle_type_dropdown.relative_rect
-        self.vehicle_type_dropdown.kill()
-        self.vehicle_type_dropdown = UIDropDownMenu(
-            valid_types, new_type, type_rect,
-            manager=self.manager, container=self.panel
+        self.vehicle_type_dropdown = recreate_dropdown(
+            self.vehicle_type_dropdown, valid_types, new_type, self.manager, container=self.panel
         )
 
     def update_dropdowns_for_data_reload(self, default_class: str, vehicle_classes: dict):
