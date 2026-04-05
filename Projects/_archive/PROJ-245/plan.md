@@ -1,4 +1,6 @@
-# PROJ-245: Spatial Grid Incremental Updates
+# PROJ-245: Spatial Grid Incremental Updates [SHELVED]
+
+> **SHELVED 2026-04-05:** No profiling data showing the spatial grid rebuild is a performance bottleneck. For typical battles (20-50 ships + projectiles), the full rebuild is ~200 hash operations per tick — trivial. Revisit only if profiling identifies the grid as a bottleneck.
 
 > **WORKING ON THIS PROJECT:**
 > - Run `python Projects/scripts/current_task.py PROJ-245` to see what to do next

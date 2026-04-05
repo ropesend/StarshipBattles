@@ -15,7 +15,7 @@
 |-------|--------|-----------|
 | 1. Complete ModifierManager Extraction | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Extract AbilityIndex into AbilityManager | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Clean Up Component.__init__ and Formula Parsing | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Clean Up Component.__init__ and Formula Parsing | Not Started | [phase_3_checklist.md](phase_3_checklist.md) *(depends on PROJ-242)* |
 | 4. Remove Redundant Delegation Methods | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Update Documentation | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 

@@ -61,6 +61,7 @@ Move these methods from ship.py (line numbers refer to current ship.py before Ph
 - [ ] Add `just_fired_projectiles` as property with getter/setter delegating to combat_manager
 - [ ] Add `comp_trigger_pulled` as property with getter/setter delegating to combat_manager
 - [ ] Add `aim_point` as property with getter/setter delegating to combat_manager
+- [ ] Add `set_event_bus(bus)` facade method that delegates to `combat_manager.combat_engine._event_bus = bus`. This avoids battle_engine.py reaching through 3 delegation levels (`ship.combat_engine._event_bus`).
 - [ ] Remove moved state from `__init__`
 - [ ] Run ship unit tests
 - [ ] Run simulation unit tests
@@ -68,6 +69,17 @@ Move these methods from ship.py (line numbers refer to current ship.py before Ph
 - [ ] Run simulation lab: `python -m simulation_tests.run_tests --fast`
 
 **Notes:**
+
+---
+
+### Task 2.4: Performance checkpoint [Simple]
+**Tests:** `python -m simulation_tests.run_tests --fast`
+
+- [ ] Run simulation tests and note execution time
+- [ ] Compare against baseline (pre-PROJ-240 timing)
+- [ ] If >10% regression, investigate delegation overhead before proceeding to Phase 3
+
+**Notes:** Ship now has 9 delegates. This checkpoint ensures the added indirection doesn't measurably impact simulation performance.
 
 ---
 

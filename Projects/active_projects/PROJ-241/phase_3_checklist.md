@@ -1,6 +1,12 @@
 # Phase 3 Checklist: Clean Up Component.__init__ and Formula Parsing
 **Status:** Not Started
 
+**Dependency:** PROJ-242 (Unified Formula Evaluation) must be complete before starting this phase.
+If PROJ-242 is complete:
+- The vestigial `safe_evaluate_math_formula` import at `component.py` line 62 will already be removed
+- `component_stats_calculator.py` will already import from the unified `FormulaEvaluator`
+- This phase can focus purely on the `FORMULA_DEFAULTS` data-driven mapping
+
 **Objective:** Fix formula parsing fragility and slim down __init__
 **Estimated effort:** Simple (targeted refactor, small blast radius)
 
