@@ -87,7 +87,7 @@ class TestBattleScreenSimulationLifecycle:
         self.scene.camera.fit_objects.assert_called_once()
 
     def test_start_assigns_correct_team_ids(self):
-        """Test start() assigns team_id 0 to team1 and 1 to team2."""
+        """Test start() assigns team_id 0 to team0 and 1 to team1."""
         self.scene.start([self.ship1], [self.ship2], headless=True)
 
         # Ships are added via battle service which sets team_id

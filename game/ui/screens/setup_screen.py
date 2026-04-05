@@ -97,9 +97,9 @@ class BattleSetupScreen:
 
     def get_ships(self):
         """Load and return ships for both teams."""
-        team1_ships = load_ships_from_entries(self.team1, team_id=0, start_x=20000, start_y=30000, facing_angle=0)
-        team2_ships = load_ships_from_entries(self.team2, team_id=1, start_x=80000, start_y=30000, facing_angle=180)
-        return team1_ships, team2_ships
+        team0_ships = load_ships_from_entries(self.team1, team_id=0, start_x=20000, start_y=30000, facing_angle=0)
+        team1_ships = load_ships_from_entries(self.team2, team_id=1, start_x=80000, start_y=30000, facing_angle=180)
+        return team0_ships, team1_ships
 
     def save_setup(self):
         """Open dialog to save current setup to JSON."""
