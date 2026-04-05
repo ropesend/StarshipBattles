@@ -7,7 +7,7 @@ PROJ-86: Extracted from strategy_ui.py to reduce god class size.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Optional
 
 import pygame
 import pygame_gui
@@ -40,8 +40,7 @@ class StrategyDetailFormatter:
         scene: Reference to StrategyScreen for current_empire, galaxy, turn_engine access
         manager: pygame_gui.UIManager for creating UI elements
         detail_panel: UIPanel container for the detail display
-        widgets: Dict of UI widget references (portrait_image, detail_text, etc.)
-        graphs: Dict with spectrum_graph and atmosphere_graph references
+        widgets: StrategyWidgets dataclass with all UI widget references
         graph_rect: pygame.Rect for graph positioning
         screen_size: Tuple of (width, height) for popup positioning
     """
@@ -51,8 +50,7 @@ class StrategyDetailFormatter:
         scene,
         manager: pygame_gui.UIManager,
         detail_panel,
-        widgets: Dict[str, Any],
-        graphs: Dict[str, Any],
+        widgets,
         graph_rect: pygame.Rect,
         screen_size: tuple[int, int],
     ):
@@ -60,7 +58,6 @@ class StrategyDetailFormatter:
         self.manager = manager
         self.detail_panel = detail_panel
         self._widgets = widgets
-        self._graphs = graphs
         self.graph_rect = graph_rect
         self._screen_width, self._screen_height = screen_size
 
@@ -73,61 +70,12 @@ class StrategyDetailFormatter:
     # Widget Accessors
     # =========================================================================
 
-    @property
-    def portrait_image(self):
-        return self._widgets['portrait_image']
-
-    @property
-    def detail_text(self):
-        return self._widgets['detail_text']
-
-    @property
-    def graph_image(self):
-        return self._widgets['graph_image']
-
-    @property
-    def btn_raw_data(self):
-        return self._widgets['btn_raw_data']
-
-    @property
-    def btn_colonize(self):
-        return self._widgets['btn_colonize']
-
-    @property
-    def btn_build_yard(self):
-        return self._widgets['btn_build_yard']
-
-    @property
-    def btn_planet_orders(self):
-        return self._widgets.get('btn_planet_orders')
-
-    @property
-    def btn_atmosphere(self):
-        return self._widgets.get('btn_atmosphere')
-
-    @property
-    def btn_abilities(self):
-        return self._widgets.get('btn_abilities')
-
-    @property
-    def btn_orders(self):
-        return self._widgets['btn_orders']
-
-    @property
-    def btn_fleet_report(self):
-        return self._widgets['btn_fleet_report']
-
-    @property
-    def btn_build_fleet(self):
-        return self._widgets['btn_build_fleet']
-
-    @property
-    def spectrum_graph(self):
-        return self._graphs['spectrum_graph']
-
-    @property
-    def atmosphere_graph(self):
-        return self._graphs['atmosphere_graph']
+    def __getattr__(self, name):
+        """Delegate widget/graph attribute lookups to the stored StrategyWidgets dataclass."""
+        widgets = self.__dict__.get('_widgets')
+        if widgets is not None and hasattr(widgets, name):
+            return getattr(widgets, name)
+        raise AttributeError(f"'StrategyDetailFormatter' object has no attribute '{name}'")
 
     # =========================================================================
     # Thin Wrappers to strategy_detail_fmt
@@ -486,5 +434,5 @@ class StrategyDetailFormatter:
 
     def update_graphs(self, spectrum_graph, atmosphere_graph) -> None:
         """Update graph widget references after resize."""
-        self._graphs['spectrum_graph'] = spectrum_graph
-        self._graphs['atmosphere_graph'] = atmosphere_graph
+        self._widgets.spectrum_graph = spectrum_graph
+        self._widgets.atmosphere_graph = atmosphere_graph

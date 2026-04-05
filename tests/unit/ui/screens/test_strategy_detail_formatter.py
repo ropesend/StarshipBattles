@@ -19,30 +19,18 @@ class TestStrategyDetailFormatterInit:
         scene = Mock()
         manager = Mock()
         detail_panel = Mock()
-        widgets = {
-            'portrait_image': Mock(),
-            'detail_text': Mock(),
-            'graph_image': Mock(),
-            'btn_raw_data': Mock(),
-            'btn_colonize': Mock(),
-            'btn_build_yard': Mock(),
-            'btn_orders': Mock(),
-            'btn_fleet_report': Mock(),
-            'btn_build_fleet': Mock(),
-        }
-        graphs = {'spectrum_graph': Mock(), 'atmosphere_graph': Mock()}
+        widgets = MagicMock()
         graph_rect = pygame.Rect(10, 170, 150, 100)
         screen_size = (1920, 1080)
 
         formatter = StrategyDetailFormatter(
-            scene, manager, detail_panel, widgets, graphs, graph_rect, screen_size
+            scene, manager, detail_panel, widgets, graph_rect, screen_size
         )
 
         assert formatter.scene is scene
         assert formatter.manager is manager
         assert formatter.detail_panel is detail_panel
         assert formatter._widgets is widgets
-        assert formatter._graphs is graphs
         assert formatter.graph_rect == graph_rect
         assert formatter._screen_width == 1920
         assert formatter._screen_height == 1080
@@ -52,15 +40,8 @@ class TestStrategyDetailFormatterInit:
         from game.ui.screens.strategy_detail_formatter import StrategyDetailFormatter
 
         formatter = StrategyDetailFormatter(
-            Mock(), Mock(), Mock(),
-            {
-                'portrait_image': Mock(), 'detail_text': Mock(), 'graph_image': Mock(),
-                'btn_raw_data': Mock(), 'btn_colonize': Mock(), 'btn_build_yard': Mock(),
-                'btn_orders': Mock(), 'btn_fleet_report': Mock(), 'btn_build_fleet': Mock(),
-            },
-            {'spectrum_graph': Mock(), 'atmosphere_graph': Mock()},
-            pygame.Rect(0, 0, 100, 100),
-            (800, 600)
+            Mock(), Mock(), Mock(), MagicMock(),
+            pygame.Rect(0, 0, 100, 100), (800, 600)
         )
 
         assert formatter.current_selection is None
@@ -80,25 +61,11 @@ class TestShowDetailedReport:
         scene.current_empire = Mock()
         scene.current_empire.id = 1
 
-        widgets = {
-            'portrait_image': Mock(),
-            'detail_text': Mock(),
-            'graph_image': Mock(),
-            'btn_raw_data': Mock(),
-            'btn_colonize': Mock(),
-            'btn_build_yard': Mock(),
-            'btn_orders': Mock(),
-            'btn_fleet_report': Mock(),
-            'btn_build_fleet': Mock(),
-        }
-        graphs = {
-            'spectrum_graph': Mock(),
-            'atmosphere_graph': Mock(),
-        }
-        graphs['spectrum_graph'].render = Mock(return_value=pygame.Surface((100, 100)))
+        widgets = MagicMock()
+        widgets.spectrum_graph.render = Mock(return_value=pygame.Surface((100, 100)))
 
         return StrategyDetailFormatter(
-            scene, Mock(), Mock(), widgets, graphs,
+            scene, Mock(), Mock(), widgets,
             pygame.Rect(0, 0, 100, 100), (800, 600)
         )
 
@@ -225,15 +192,8 @@ class TestComputePlanetProduction:
         from game.ui.screens.strategy_detail_formatter import StrategyDetailFormatter
 
         return StrategyDetailFormatter(
-            Mock(), Mock(), Mock(),
-            {
-                'portrait_image': Mock(), 'detail_text': Mock(), 'graph_image': Mock(),
-                'btn_raw_data': Mock(), 'btn_colonize': Mock(), 'btn_build_yard': Mock(),
-                'btn_orders': Mock(), 'btn_fleet_report': Mock(), 'btn_build_fleet': Mock(),
-            },
-            {'spectrum_graph': Mock(), 'atmosphere_graph': Mock()},
-            pygame.Rect(0, 0, 100, 100),
-            (800, 600)
+            Mock(), Mock(), Mock(), MagicMock(),
+            pygame.Rect(0, 0, 100, 100), (800, 600)
         )
 
     def test_unowned_planet_returns_empty(self, formatter):
@@ -340,13 +300,7 @@ class TestShowRawDataPopup:
         from game.ui.screens.strategy_detail_formatter import StrategyDetailFormatter
 
         return StrategyDetailFormatter(
-            Mock(), Mock(), Mock(),
-            {
-                'portrait_image': Mock(), 'detail_text': Mock(), 'graph_image': Mock(),
-                'btn_raw_data': Mock(), 'btn_colonize': Mock(), 'btn_build_yard': Mock(),
-                'btn_orders': Mock(), 'btn_fleet_report': Mock(), 'btn_build_fleet': Mock(),
-            },
-            {'spectrum_graph': Mock(), 'atmosphere_graph': Mock()},
+            Mock(), Mock(), Mock(), MagicMock(),
             pygame.Rect(0, 0, 100, 100),
             (800, 600)
         )
