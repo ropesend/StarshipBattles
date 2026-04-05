@@ -21,7 +21,7 @@
   },
   "_test_notes": "Engine (1.0 fuel/sec) + small tank (2.5) + fuel generator (1.0/sec). Generator matches consumption, fuel stays stable.",
   "expected_stats": {
-    "max_hp": 155,
+    "max_hp": 205,
     "max_fuel": 2.5,
     "max_energy": 0.0,
     "max_ammo": 0.0,

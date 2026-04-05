@@ -30,13 +30,14 @@ class FleetSensorBonusApplied(StaticTargetScenario):
         category="Weapons",
         subcategory="ToHitAttackModifier",
         name="Fleet Sensor Bonus Applied",
-        summary="Ship with fleet-scope ToHitAttackModifier provides bonus to all friendly ships",
-        conditions=["Attacker has fleet-scope +2 ToHitAttack sensor",
-                     "Point-blank range, guaranteed-hit beam"],
-        edge_cases=["Bonus should appear in ship.fleet_attack_bonus"],
-        expected_outcome="fleet_attack_bonus is non-zero on attacker",
-        pass_criteria="fleet_attack_bonus == 2.0",
-        max_ticks=10,
+        summary="Ship with fleet-scope ToHitAttackModifier provides bonus and deals damage",
+        conditions=["Attacker: Test_Attacker_Beam_FleetSensor.json (test_beam_1dmg_guaranteed + fleet_sensor_2)",
+                     "Target: Test_Target_Stationary.json (test_armor_extreme_hp, 1B HP, stationary)",
+                     f"Distance: {POINT_BLANK_DISTANCE}px, {STANDARD_TEST_TICKS} ticks"],
+        edge_cases=["Bonus should appear in ship.fleet_attack_bonus AND weapon should fire"],
+        expected_outcome="fleet_attack_bonus == 2.0 AND damage dealt > 0",
+        pass_criteria="fleet_attack_bonus == 2.0 AND damage_dealt > 0",
+        max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,
     )
 
@@ -59,11 +60,12 @@ class FleetSensorBonusApplied(StaticTargetScenario):
         bonus_val = fleet_bonus if isinstance(fleet_bonus, (int, float)) else 0.0
         checks.append(check_exact("Fleet Attack Bonus Value", 2.0, bonus_val))
 
-        # Outcome: verify bonus is non-zero (firing tested in existing TOHIT-ATK tests)
+        # Outcome: verify weapon actually fired and dealt damage (combat validation)
         checks.append(check_true(
-            "Fleet Bonus Non-Zero",
-            bonus_val > 0,
-            actual=bonus_val,
+            "Damage Dealt (combat validation)",
+            self.damage_dealt > 0,
+            actual=self.damage_dealt,
+            phase="outcome",
         ))
 
         return checks
@@ -81,13 +83,15 @@ class ExternalBattleConditionApplied(TestScenario):
         category="Weapons",
         subcategory="ToHitAttackModifier",
         name="External Battle Condition Applied",
-        summary="Per-team modifier from BattleConfig applies to all ships on that team",
-        conditions=["Team 0 gets +3 ToHitAttack from external source",
-                     "No fleet-scope abilities on ships"],
+        summary="Per-team modifier from BattleConfig applies to all ships and weapon fires",
+        conditions=["Attacker: Test_Attacker_Beam360_Low.json (low accuracy beam)",
+                     "Target: Test_Target_Stationary.json (stationary)",
+                     "Team 0 gets +3 ToHitAttack from external source",
+                     f"Distance: {POINT_BLANK_DISTANCE}px, {STANDARD_TEST_TICKS} ticks"],
         edge_cases=["Bonus persists entire battle (not tied to a ship)"],
-        expected_outcome="Team 0 ships have fleet_attack_bonus == 3.0",
-        pass_criteria="fleet_attack_bonus == 3.0 on team 0 ship",
-        max_ticks=10,
+        expected_outcome="fleet_attack_bonus == 3.0 AND weapon fires and deals damage",
+        pass_criteria="fleet_attack_bonus == 3.0 AND damage_dealt > 0",
+        max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,
     )
 
@@ -120,6 +124,15 @@ class ExternalBattleConditionApplied(TestScenario):
 
         self.attacker = attacker
         self.target = target
+        self._initial_target_hp = target.hp
+
+    def collect_results(self, engine):
+        self.results['ticks_run'] = engine.tick_counter
+        self.results['damage_dealt'] = 0
+        # Measure damage dealt to target
+        if hasattr(self, 'target') and self.target:
+            initial_hp = getattr(self, '_initial_target_hp', 0)
+            self.results['damage_dealt'] = initial_hp - self.target.hp if initial_hp else 0
 
     def validate(self, engine) -> list:
         checks = []
@@ -129,6 +142,15 @@ class ExternalBattleConditionApplied(TestScenario):
             "External Bonus Applied",
             3.0,
             fleet_bonus if isinstance(fleet_bonus, (int, float)) else 0.0,
+        ))
+
+        # Outcome: weapon fired and dealt damage (combat validation)
+        damage = self.results.get('damage_dealt', 0)
+        checks.append(check_true(
+            "Damage Dealt (combat validation)",
+            damage > 0,
+            actual=damage,
+            phase="outcome",
         ))
 
         return checks

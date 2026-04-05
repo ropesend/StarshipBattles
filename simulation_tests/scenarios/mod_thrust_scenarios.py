@@ -1,5 +1,5 @@
 """
-Thrust Multiplier Modifier Test Scenarios (MOD-THRUST-001 through MOD-THRUST-004)
+Thrust Multiplier Modifier Test Scenarios (MOD-THRUST-001 through MOD-THRUST-005)
 
 Dedicated test scenarios for the thrust_mult modifier applied via test_thrust_boost.
 These validate that the modifier correctly scales engine thrust and that all derived
@@ -10,12 +10,15 @@ Ship Files:
   + test_thrust_boost(param=2), thrust 500->1000
 - Test_Engine_1x_MedMass.json — hull_test_m(mass=1000) + 2x mass_sim_1k(mass=1000 each)
   + test_engine_no_fuel(thrust=500), no modifier (baseline), total mass=3000
+- Test_Engine_ThrustPenalty.json — hull_test_s(mass=400) + test_engine_no_fuel(thrust=500)
+  + test_thrust_penalty(param=0.5), thrust 500->250
 
 Test Coverage:
 - MOD-THRUST-001: Static thrust and max_speed after 2x modifier
 - MOD-THRUST-002: Baseline unmodified engine (identity check)
 - MOD-THRUST-003: Dynamic velocity reaches expected speed within 500 ticks
 - MOD-THRUST-004: Derived acceleration_rate is correct with modified thrust
+- MOD-THRUST-005: Penalty halves thrust (0.5x modifier)
 """
 
 from game.simulation.physics_constants import K_SPEED, K_THRUST
@@ -311,6 +314,86 @@ class ModThrustAccelerationScenario(PropulsionScenario):
             "Template Expected Acceleration Matches",
             THRUST_BOOST_ACCEL,
             self.expected_acceleration_rate, tolerance=0.0001,
+            phase="outcome",
+        ))
+        return checks
+
+
+# =============================================================================
+# EXPECTED VALUES FOR THRUST PENALTY TESTS
+# =============================================================================
+
+# Ship: Test_Engine_ThrustPenalty.json
+#   hull_test_s(mass=400) + test_engine_no_fuel(thrust=500) + test_thrust_penalty(param=0.5)
+#   thrust 500 * 0.5 = 250, mass=400
+THRUST_PENALTY_SHIP_FILE = "Test_Engine_ThrustPenalty.json"
+THRUST_PENALTY_MASS = 400
+THRUST_PENALTY_PARAM = 0.5
+THRUST_PENALTY_MODIFIED_THRUST = MOD_BASE_ENGINE_THRUST * THRUST_PENALTY_PARAM  # 250
+THRUST_PENALTY_MAX_SPEED = (THRUST_PENALTY_MODIFIED_THRUST * K_SPEED) / THRUST_PENALTY_MASS  # 15.625
+
+
+# ============================================================================
+# MOD-THRUST-005: Penalty halves thrust
+# ============================================================================
+
+class ModThrustPenaltyScenario(PropulsionScenario):
+    """
+    MOD-THRUST-005: Verify thrust penalty modifier halves total_thrust and max_speed.
+
+    Setup: Engine with thrust_mult=0.5 (param=0.5). Base thrust=500, mass=400.
+    Checks ship.total_thrust == 250, ship.max_speed ~= 15.625, ship reaches that speed.
+    """
+    metadata = TestMetadata(
+        test_id="MOD-THRUST-005",
+        category="ThrustMultiplier",
+        subcategory="ThrustMultiplier",
+        name="Penalty halves thrust",
+        summary="Verify test_thrust_penalty(param=0.5) halves engine thrust from 500 to 250 and max_speed to 15.625",
+        conditions=[
+            f"Ship: {THRUST_PENALTY_SHIP_FILE} (hull_test_s + test_engine_no_fuel + test_thrust_penalty(param={THRUST_PENALTY_PARAM}), mass={THRUST_PENALTY_MASS})",
+            f"Base engine thrust: {MOD_BASE_ENGINE_THRUST}, modified: {THRUST_PENALTY_MODIFIED_THRUST} (x{THRUST_PENALTY_PARAM})",
+            f"Expected max_speed: {THRUST_PENALTY_MAX_SPEED}",
+        ],
+        edge_cases=["Penalty modifier reduces thrust below base value"],
+        expected_outcome=f"ship.total_thrust = {THRUST_PENALTY_MODIFIED_THRUST}, ship.max_speed = {THRUST_PENALTY_MAX_SPEED}",
+        pass_criteria=f"total_thrust == {THRUST_PENALTY_MODIFIED_THRUST} AND max_speed ~= {THRUST_PENALTY_MAX_SPEED} AND reaches near that speed",
+        max_ticks=MOD_THRUST_TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        ui_priority=34,
+        tags=["modifier", "thrust_mult", "penalty"],
+    )
+
+    ship_file = THRUST_PENALTY_SHIP_FILE
+    thrust_forward = True
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Data: verify penalty modifier applied to thrust
+        checks.append(check_exact(
+            "Modified Total Thrust", THRUST_PENALTY_MODIFIED_THRUST,
+            self.ship.total_thrust, phase="data",
+        ))
+        checks.append(check_approx(
+            "Modified Max Speed", THRUST_PENALTY_MAX_SPEED,
+            self.ship.max_speed, tolerance=0.001,
+            phase="data",
+        ))
+
+        # Outcome: ship reaches near expected max speed
+        final_speed = self.final_velocity.length()
+        checks.append(check_true(
+            "Final Speed > 14 (reaches near max speed)",
+            final_speed > 14,
+            actual=final_speed,
+            phase="outcome",
+        ))
+        checks.append(check_true(
+            "Final Speed < 16 (doesn't exceed max)",
+            final_speed < 16,
+            actual=final_speed,
             phase="outcome",
         ))
         return checks

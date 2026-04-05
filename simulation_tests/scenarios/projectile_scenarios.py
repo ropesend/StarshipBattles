@@ -254,6 +254,10 @@ class ProjectileLinearSlowTargetScenario(StaticTargetScenario):
                                  actual=f"{hit_rate:.1%} ({hits}/{resolved})",
                                  phase="outcome",
                                  detail="slow linear target should be hit consistently"))
+        checks.append(check_true("Hit Rate < 100%", hit_rate < 1.0,
+                                 actual=f"{hit_rate:.1%}",
+                                 phase="outcome",
+                                 detail="moving target should cause some misses"))
         return checks
 
 

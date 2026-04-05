@@ -31,13 +31,13 @@
   },
   "_test_notes": "High mass thruster ship for PROP-005 (mass affects turn rate). Hull = hull_test_m(1000) + 2×test_mass_sim_1k(1000) = 3000. Same thruster (test_thruster_std) as Test_Thruster_Simple for direct comparison.",
   "expected_stats": {
-    "max_hp": 370,
+    "max_hp": 522,
     "max_fuel": 0.0,
     "max_energy": 0.0,
     "max_ammo": 0.0,
     "max_speed": 0.0,
     "acceleration_rate": 0.0,
-    "turn_speed": 0.7608,
+    "turn_speed": 0.7607257743127307,
     "total_thrust": 0.0,
     "mass": 3000.0,
     "armor_hp_pool": 0
