@@ -1,388 +1,481 @@
 """
-Multi-Modifier Stacking Scenarios (MOD-STACK-001 through MOD-STACK-004)
+Multi-Modifier Stacking Scenarios (MOD-STACK-001 through MOD-STACK-005)
 
-Dedicated test scenarios for verifying interactions when multiple modifiers
-are applied to the same component.
+Behavioral simulation tests for modifier stacking interactions. When multiple
+modifiers are applied to the same component, they interact according to their
+operation type:
+  - Two 'multiply' modifiers on the SAME stat COMPOUND: 1.5x * 2.0x = 3.0x
+  - Two modifiers on DIFFERENT stats are INDEPENDENT: damage and accuracy
+    don't interfere with each other
+  - Combined effects produce CALCULABLE combat outcomes: total_damage =
+    hits * damage_per_hit, where hits depend on accuracy and damage depends
+    on damage_mult
 
 Ship Files:
-- Test_Attacker_Beam_DualModifier.json — test_beam_med_acc_1dmg + test_damage_boost (value=1.5) + test_damage_boost_b (value=2.0), dmg 1*1.5*2.0=3.0
-- Test_Attacker_Beam_DmgAndAcc.json — test_beam_med_acc_1dmg + test_damage_boost (value=1.5) + test_accuracy_boost (value=2), dmg→1.5 + acc→3.0
-- Test_Attacker_Beam_DamageBoost.json — test_beam_med_acc_1dmg + test_damage_boost (value=1.5), dmg 1→1.5
-- Test_Attacker_Beam360_Med.json — test_beam_med_acc_1dmg (no modifier, baseline)
+- Test_Attacker_Beam_DualModifier.json — test_beam_med_acc_1dmg
+  + test_damage_boost(1.5) + test_damage_boost_b(2.0), dmg 1*1.5*2.0=3.0
+- Test_Attacker_Beam_DmgAndAcc.json — test_beam_med_acc_1dmg
+  + test_damage_boost(1.5) + test_accuracy_boost(2), dmg->1.5 + acc->3.0
+- Test_Attacker_Beam_DamageBoost.json — test_beam_med_acc_1dmg
+  + test_damage_boost(1.5), dmg 1->1.5
+- Test_Attacker_Beam360_Med.json — test_beam_med_acc_1dmg (no modifier)
 - Test_Target_Stationary.json — test_armor_extreme_hp (1B HP, stationary)
 
 Test Coverage:
-- MOD-STACK-001: Two damage multipliers compound (1.5 * 2.0 = 3.0)
-- MOD-STACK-002: Independent modifiers on different stats (damage + accuracy)
-- MOD-STACK-003: Comparison — dual modifier (3.0x) vs single modifier (1.5x)
-- MOD-STACK-004: Comparison — damage+accuracy modifiers vs unmodified at mid-range
+- MOD-STACK-001: Stat gate — compound damage 1.5*2.0=3.0, substantial damage dealt
+- MOD-STACK-002: Independent stats — damage AND accuracy both correct, damage proves both active
+- MOD-STACK-003: Compound ratio — dual(3.0x) vs single(1.5x) = 2.0x damage ratio
+- MOD-STACK-004: Combined effect — dmg+acc at mid-range with calculated expected ratio
+- MOD-STACK-005: Compound vs additive proof — ratio is 3.0x (compound), not 3.5x (additive)
 """
 
 from simulation_tests.scenarios.base import TestMetadata
 from simulation_tests.scenarios.templates import StaticTargetScenario, ComparisonScenario
-from simulation_tests.scenarios.validation import check_exact, check_approx, check_true
+from simulation_tests.scenarios.validation import check_approx, check_true
+from simulation_tests.scenarios.beam_scenarios import (
+    calculate_expected_hit_chance,
+    calculate_defense_score,
+)
 from simulation_tests.test_constants import (
     STANDARD_SEED,
     POINT_BLANK_DISTANCE,
+    MID_RANGE_DISTANCE,
     MODIFIER_TEST_TICKS,
     MOD_BASE_BEAM_DAMAGE,
     MOD_BASE_BEAM_ACCURACY,
     DAMAGE_BOOST_ATTACKER_SHIP,
 )
 
-# Ship filenames
-# test_beam_med_acc_1dmg + test_damage_boost (value=1.5) + test_damage_boost_b (value=2.0), dmg 1*1.5*2.0=3.0
+# =============================================================================
+# COMMON SHIP REFERENCES
+# =============================================================================
+
+# test_beam_med_acc_1dmg + test_damage_boost(1.5) + test_damage_boost_b(2.0), dmg 1*1.5*2.0=3.0
 DUAL_MODIFIER_SHIP = "Test_Attacker_Beam_DualModifier.json"
-# test_beam_med_acc_1dmg + test_damage_boost (value=1.5) + test_accuracy_boost (value=2), dmg→1.5 + acc→3.0
+# test_beam_med_acc_1dmg + test_damage_boost(1.5) + test_accuracy_boost(2), dmg->1.5 + acc->3.0
 DMG_AND_ACC_SHIP = "Test_Attacker_Beam_DmgAndAcc.json"
-# test_beam_med_acc_1dmg + test_damage_boost (value=1.5), dmg 1→1.5
+# test_beam_med_acc_1dmg + test_damage_boost(1.5), dmg 1->1.5
 SINGLE_BOOST_SHIP = DAMAGE_BOOST_ATTACKER_SHIP
 # test_beam_med_acc_1dmg (no modifier, baseline)
-BASELINE_BEAM_SHIP = "Test_Attacker_Beam360_Med.json"
+BASELINE_SHIP = "Test_Attacker_Beam360_Med.json"
 # test_armor_extreme_hp (1B HP, stationary)
-STATIONARY_TARGET = "Test_Target_Stationary.json"
+TARGET_SHIP = "Test_Target_Stationary.json"
 
-# Expected compounded damage: base 1 * 1.5 * 2.0 = 3.0
-DUAL_EXPECTED_DAMAGE = MOD_BASE_BEAM_DAMAGE * 1.5 * 2.0
-# Expected single modifier damage: base 1 * 1.5 = 1.5
-SINGLE_EXPECTED_DAMAGE = MOD_BASE_BEAM_DAMAGE * 1.5
-# Expected accuracy with test_accuracy_boost(2): base 2.0 + (2 * 0.5) = 3.0
-EXPECTED_ACCURACY_WITH_BOOST = MOD_BASE_BEAM_ACCURACY + (2 * 0.5)
-# Expected damage with damage_mult(1.5): 1 * 1.5 = 1.5
-DMGACC_EXPECTED_DAMAGE = MOD_BASE_BEAM_DAMAGE * 1.5
+# =============================================================================
+# STACKING CONSTANTS
+# =============================================================================
 
-# Mid-range distance where accuracy matters more
-MID_RANGE_DISTANCE = 400
+BASE_DAMAGE = MOD_BASE_BEAM_DAMAGE          # 1
+BASE_ACCURACY = MOD_BASE_BEAM_ACCURACY      # 2.0
+ACCURACY_FALLOFF = 0.001                    # from test_beam_med_acc_1dmg
+TARGET_MASS = 400.0
+
+# Compound damage: 1 * 1.5 * 2.0 = 3.0 (NOT 1 * (1.5 + 2.0) = 3.5)
+DUAL_EXPECTED_DAMAGE = BASE_DAMAGE * 1.5 * 2.0     # 3.0
+SINGLE_EXPECTED_DAMAGE = BASE_DAMAGE * 1.5          # 1.5
+ADDITIVE_WOULD_BE = BASE_DAMAGE * (1.5 + 2.0)      # 3.5 (wrong if someone adds instead of compounds)
+
+# Independent stats
+EXPECTED_ACCURACY_WITH_BOOST = BASE_ACCURACY + (2 * 0.5)  # 3.0
+DMGACC_EXPECTED_DAMAGE = BASE_DAMAGE * 1.5                 # 1.5
+
+# Calculated expected combined ratio at mid-range (400px)
+_TARGET_DEFENSE = calculate_defense_score(TARGET_MASS)
+_TARGET_RADIUS = 40.0 * ((TARGET_MASS / 1000.0) ** (1.0 / 3.0))
+_SURFACE_DIST_MID = MID_RANGE_DISTANCE - _TARGET_RADIUS
+
+P_BASELINE_MID = calculate_expected_hit_chance(
+    BASE_ACCURACY, ACCURACY_FALLOFF, _SURFACE_DIST_MID, 0.0, _TARGET_DEFENSE
+)  # ~78.5%
+P_DMGACC_MID = calculate_expected_hit_chance(
+    EXPECTED_ACCURACY_WITH_BOOST, ACCURACY_FALLOFF, _SURFACE_DIST_MID, 0.0, _TARGET_DEFENSE
+)  # ~90.9%
+
+# Combined ratio: (variant_hits * variant_dmg) / (baseline_hits * baseline_dmg)
+# = (P_dmgacc * 1.5) / (P_baseline * 1.0)
+EXPECTED_COMBINED_RATIO = (P_DMGACC_MID * DMGACC_EXPECTED_DAMAGE) / (P_BASELINE_MID * BASE_DAMAGE)
+
+TEST_TICKS = MODIFIER_TEST_TICKS  # 500
+RATIO_TOLERANCE = 0.15
 
 
-# ============================================================================
-# MOD-STACK-001: Two Damage Multipliers Compound
-# ============================================================================
+# =============================================================================
+# MOD-STACK-001: Stat Gate — Compound Damage
+# =============================================================================
 
-class ModStack001_DualDamageCompoundScenario(StaticTargetScenario):
+class ModStack001_CompoundStatGateScenario(StaticTargetScenario):
     """
-    MOD-STACK-001: Verify two multiplicative damage modifiers compound.
+    MOD-STACK-001: Verify two damage multipliers compound correctly.
 
-    Setup: Beam with test_damage_boost(1.5) + test_damage_boost_b(2.0)
-    at point-blank vs stationary target.
-    Data check: beam.damage == 3.0 (base 1 * 1.5 * 2.0)
-    Outcome check: damage_dealt > 0
+    beam.damage == 1 * 1.5 * 2.0 = 3.0 (compound multiply).
+    Weapon fires and deals substantial damage at point-blank.
     """
     metadata = TestMetadata(
         test_id="MOD-STACK-001",
         category="ModifierStacking",
         subcategory="ModifierStacking",
-        name="Dual damage multipliers compound (1.5 * 2.0 = 3.0)",
-        summary="Verify two multiplicative damage modifiers on the same component compound to 3.0x",
+        name="Stat gate — compound damage (1.5 * 2.0 = 3.0)",
+        summary=f"Verify two multiplicative modifiers compound to {DUAL_EXPECTED_DAMAGE} (not {ADDITIVE_WOULD_BE})",
         conditions=[
-            f"Attacker: {DUAL_MODIFIER_SHIP} (test_beam_med_acc_1dmg + test_damage_boost 1.5x + test_damage_boost_b 2.0x)",
-            f"Target: {STATIONARY_TARGET} (test_armor_extreme_hp, 1B HP, stationary)",
-            f"Base beam damage: {MOD_BASE_BEAM_DAMAGE}, expected compounded: {DUAL_EXPECTED_DAMAGE} ({MOD_BASE_BEAM_DAMAGE} * 1.5 * 2.0)",
-            f"Distance: {POINT_BLANK_DISTANCE}px (point blank)",
+            f"Attacker: {DUAL_MODIFIER_SHIP} (test_beam_med_acc_1dmg + test_damage_boost(1.5) + test_damage_boost_b(2.0))",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Expected: {BASE_DAMAGE} * 1.5 * 2.0 = {DUAL_EXPECTED_DAMAGE} (compound), NOT {BASE_DAMAGE} * (1.5+2.0) = {ADDITIVE_WOULD_BE} (additive)",
+            f"Distance: {POINT_BLANK_DISTANCE}px",
         ],
-        edge_cases=["Multiplicative stacking must compound, not add"],
-        expected_outcome=f"beam.damage == {DUAL_EXPECTED_DAMAGE}, damage dealt to target",
-        pass_criteria=f"beam.damage == {DUAL_EXPECTED_DAMAGE} AND damage_dealt > 0",
-        max_ticks=MODIFIER_TEST_TICKS,
+        edge_cases=["Multiplicative stacking compounds, not adds"],
+        expected_outcome=f"beam.damage == {DUAL_EXPECTED_DAMAGE}, damage > 10",
+        pass_criteria=f"damage == {DUAL_EXPECTED_DAMAGE} AND damage > 10",
+        max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
-        tags=["modifier", "stacking"],
+        tags=["modifier", "stacking", "compound"],
     )
 
     attacker_ship = DUAL_MODIFIER_SHIP
-    target_ship = STATIONARY_TARGET
+    target_ship = TARGET_SHIP
     distance = POINT_BLANK_DISTANCE
 
     def custom_setup(self, battle_engine):
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        if beam:
-            self.actual_beam_damage = beam.damage
-        else:
-            self.actual_beam_damage = None
+        self.actual_damage = beam.damage if beam else None
 
-    def _collect_extra_results(self, engine):
-        self.results['base_damage'] = MOD_BASE_BEAM_DAMAGE
-        self.results['modifier_a'] = 1.5
-        self.results['modifier_b'] = 2.0
-        self.results['expected_beam_damage'] = DUAL_EXPECTED_DAMAGE
-        self.results['actual_beam_damage'] = self.actual_beam_damage
+    def _collect_extra_results(self, battle_engine):
+        self.results['expected_damage'] = DUAL_EXPECTED_DAMAGE
+        self.results['actual_damage'] = self.actual_damage
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
 
-        # Precondition: beam weapon loaded
         beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_true(
-            "Beam Weapon Loaded", beam is not None, phase="precondition",
-        ))
+        checks.append(check_true("Beam Loaded", beam is not None, phase="precondition"))
         if beam is None:
             return checks
 
-        # Data: compounded damage
-        checks.append(check_exact(
-            "Base Beam Damage (from JSON)", MOD_BASE_BEAM_DAMAGE,
-            self.results.get('base_damage', 0), phase="data",
-        ))
+        # Data: compound damage correct
         checks.append(check_approx(
-            "Compounded Beam Damage (1.5 * 2.0)", DUAL_EXPECTED_DAMAGE,
-            self.actual_beam_damage or 0.0, tolerance=0.001,
-            phase="data",
+            "Compound Damage (1.5 * 2.0)", DUAL_EXPECTED_DAMAGE,
+            self.actual_damage or 0.0, tolerance=0.001, phase="data",
         ))
 
-        # Outcome: damage was dealt
+        # Outcome: substantial damage dealt
         checks.append(check_true(
-            "Damage Dealt", self.damage_dealt > 0,
-            actual=self.damage_dealt, phase="outcome",
+            "Substantial Damage Dealt", self.damage_dealt > 10,
+            detail=f"damage={self.damage_dealt}", phase="outcome",
         ))
+
         return checks
 
 
-# ============================================================================
-# MOD-STACK-002: Independent Modifiers on Different Stats
-# ============================================================================
+# =============================================================================
+# MOD-STACK-002: Independent Stats — Both Active in Combat
+# =============================================================================
 
-class ModStack002_IndependentStatsScenario(StaticTargetScenario):
+class ModStack002_IndependentStatsScenario(ComparisonScenario):
     """
     MOD-STACK-002: Verify modifiers on different stats are independent.
 
-    Setup: Beam with test_damage_boost(1.5) + test_accuracy_boost(2)
-    at point-blank vs stationary target.
-    Data check: beam.damage == 1.5 AND beam.base_accuracy == 3.0
+    Baseline: unmodified beam (dmg=1, acc=2.0)
+    Variant: beam with damage_boost(1.5) + accuracy_boost(2) (dmg=1.5, acc=3.0)
+
+    At mid-range, the variant should deal more damage from BOTH higher damage
+    per hit AND higher hit rate. This proves both modifiers are active in combat,
+    not just that the attributes were set correctly.
     """
     metadata = TestMetadata(
         test_id="MOD-STACK-002",
         category="ModifierStacking",
         subcategory="ModifierStacking",
-        name="Independent modifiers on different stats",
-        summary="Verify damage_mult and accuracy_add modifiers on the same component apply independently",
+        name="Independent stats — both modifiers active in combat",
+        summary=(
+            f"Damage+accuracy modifiers independently improve combat outcome at {MID_RANGE_DISTANCE}px"
+        ),
         conditions=[
-            f"Attacker: {DMG_AND_ACC_SHIP} (test_beam_med_acc_1dmg + test_damage_boost 1.5x + test_accuracy_boost value=2)",
-            f"Target: {STATIONARY_TARGET} (test_armor_extreme_hp, 1B HP, stationary)",
-            f"Expected damage: {DMGACC_EXPECTED_DAMAGE} ({MOD_BASE_BEAM_DAMAGE} * 1.5)",
-            f"Expected accuracy: {EXPECTED_ACCURACY_WITH_BOOST} ({MOD_BASE_BEAM_ACCURACY} + 2*0.5)",
-            f"Distance: {POINT_BLANK_DISTANCE}px (point blank)",
+            f"Baseline: {BASELINE_SHIP} (test_beam_med_acc_1dmg, dmg={BASE_DAMAGE}, acc={BASE_ACCURACY}, no modifiers)",
+            f"Variant: {DMG_AND_ACC_SHIP} (test_beam_med_acc_1dmg + test_damage_boost(1.5) + test_accuracy_boost(2), dmg={DMGACC_EXPECTED_DAMAGE}, acc={EXPECTED_ACCURACY_WITH_BOOST})",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {MID_RANGE_DISTANCE}px (mid-range, accuracy affects hit rate)",
         ],
         edge_cases=["Modifiers on different stats must not interfere"],
-        expected_outcome=(
-            f"beam.damage == {DMGACC_EXPECTED_DAMAGE}, "
-            f"beam.base_accuracy == {EXPECTED_ACCURACY_WITH_BOOST}"
-        ),
-        pass_criteria=(
-            f"beam.damage == {DMGACC_EXPECTED_DAMAGE} AND "
-            f"beam.base_accuracy == {EXPECTED_ACCURACY_WITH_BOOST}"
-        ),
-        max_ticks=MODIFIER_TEST_TICKS,
+        expected_outcome="Variant deals substantially more damage (higher dmg per hit + more hits)",
+        pass_criteria="variant deals more damage AND both stat values correct",
+        max_ticks=TEST_TICKS,
         seed=STANDARD_SEED,
         battle_end_mode="time_based",
-        tags=["modifier", "stacking"],
+        tags=["modifier", "stacking", "independent"],
     )
 
-    attacker_ship = DMG_AND_ACC_SHIP
-    target_ship = STATIONARY_TARGET
-    distance = POINT_BLANK_DISTANCE
-
-    def custom_setup(self, battle_engine):
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        if beam:
-            self.actual_beam_damage = beam.damage
-            self.actual_beam_accuracy = beam.base_accuracy
-        else:
-            self.actual_beam_damage = None
-            self.actual_beam_accuracy = None
-
-    def _collect_extra_results(self, engine):
-        self.results['base_damage'] = MOD_BASE_BEAM_DAMAGE
-        self.results['base_accuracy'] = MOD_BASE_BEAM_ACCURACY
-        self.results['expected_damage'] = DMGACC_EXPECTED_DAMAGE
-        self.results['expected_accuracy'] = EXPECTED_ACCURACY_WITH_BOOST
-        self.results['actual_beam_damage'] = self.actual_beam_damage
-        self.results['actual_beam_accuracy'] = self.actual_beam_accuracy
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-
-        # Precondition: beam weapon loaded
-        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
-        checks.append(check_true(
-            "Beam Weapon Loaded", beam is not None, phase="precondition",
-        ))
-        if beam is None:
-            return checks
-
-        # Data: damage modified independently
-        checks.append(check_approx(
-            "Modified Beam Damage (1.5x)", DMGACC_EXPECTED_DAMAGE,
-            self.actual_beam_damage or 0.0, tolerance=0.001,
-            phase="data",
-        ))
-
-        # Data: accuracy modified independently
-        checks.append(check_approx(
-            "Modified Beam Accuracy (+1.0 add)", EXPECTED_ACCURACY_WITH_BOOST,
-            self.actual_beam_accuracy or 0.0, tolerance=0.001,
-            phase="data",
-        ))
-
-        return checks
-
-
-# ============================================================================
-# MOD-STACK-003: Dual Modifier (3.0x) vs Single Modifier (1.5x)
-# ============================================================================
-
-class ModStack003_DualVsSingleScenario(ComparisonScenario):
-    """
-    MOD-STACK-003: Compare dual modifier (3.0x dmg) vs single modifier (1.5x dmg).
-
-    Baseline: Beam with test_damage_boost(1.5), damage=1.5.
-    Variant: Beam with test_damage_boost(1.5) + test_damage_boost_b(2.0), damage=3.0.
-    Both fire at point-blank against stationary targets for same duration.
-    Outcome: variant deals approximately 2x more total damage (3.0 / 1.5).
-    """
-    metadata = TestMetadata(
-        test_id="MOD-STACK-003",
-        category="ModifierStacking",
-        subcategory="ModifierStacking",
-        name="Dual modifier (3.0x) vs single modifier (1.5x)",
-        summary="Verify dual damage modifier produces ~2x more damage than single modifier",
-        conditions=[
-            f"Baseline: {SINGLE_BOOST_SHIP} (test_beam_med_acc_1dmg + test_damage_boost 1.5x, damage={SINGLE_EXPECTED_DAMAGE})",
-            f"Variant: {DUAL_MODIFIER_SHIP} (test_beam_med_acc_1dmg + test_damage_boost 1.5x + test_damage_boost_b 2.0x, damage={DUAL_EXPECTED_DAMAGE})",
-            f"Target: {STATIONARY_TARGET} (test_armor_extreme_hp, 1B HP, stationary)",
-            f"Distance: {POINT_BLANK_DISTANCE}px (point blank)",
-        ],
-        edge_cases=[],
-        expected_outcome="Variant deals ~2x more damage than baseline (3.0 / 1.5)",
-        pass_criteria="variant_damage / baseline_damage within 10% of 2.0",
-        max_ticks=MODIFIER_TEST_TICKS,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",
-        tags=["modifier", "stacking"],
-    )
-
-    baseline_attacker_ship = SINGLE_BOOST_SHIP
-    baseline_target_ship = STATIONARY_TARGET
-    variant_attacker_ship = DUAL_MODIFIER_SHIP
-    variant_target_ship = STATIONARY_TARGET
-    distance = POINT_BLANK_DISTANCE
-
-    def validate(self, engine) -> list:
-        checks = self._template_preconditions()
-
-        # Precondition: both battles dealt damage
-        checks.append(check_true(
-            "Baseline Dealt Damage",
-            self.baseline_damage_dealt > 0,
-            detail=f"baseline_damage={self.baseline_damage_dealt}",
-            phase="precondition",
-        ))
-        checks.append(check_true(
-            "Variant Dealt Damage",
-            self.variant_damage_dealt > 0,
-            detail=f"variant_damage={self.variant_damage_dealt}",
-            phase="precondition",
-        ))
-
-        # Outcome: variant deals more damage than baseline
-        checks.append(check_true(
-            "Dual Modifier Deals More Damage",
-            self.variant_damage_dealt > self.baseline_damage_dealt,
-            detail=f"baseline={self.baseline_damage_dealt}, "
-                   f"variant={self.variant_damage_dealt}",
-            phase="outcome",
-        ))
-
-        # Outcome: damage ratio is approximately 2.0x (3.0 / 1.5)
-        if self.baseline_damage_dealt > 0:
-            ratio = self.variant_damage_dealt / self.baseline_damage_dealt
-            expected_ratio = DUAL_EXPECTED_DAMAGE / SINGLE_EXPECTED_DAMAGE
-            checks.append(check_approx(
-                f"Damage Ratio ~{expected_ratio}x", expected_ratio,
-                ratio, tolerance=0.15,
-                phase="outcome",
-            ))
-
-        return checks
-
-
-# ============================================================================
-# MOD-STACK-004: Damage + Accuracy Modifiers vs Unmodified at Mid-Range
-# ============================================================================
-
-class ModStack004_DmgAccVsBaselineScenario(ComparisonScenario):
-    """
-    MOD-STACK-004: Compare damage+accuracy modified beam vs unmodified at mid-range.
-
-    Baseline: Standard medium-accuracy beam (no modifiers) at 400px.
-    Variant: Same beam with test_damage_boost(1.5) + test_accuracy_boost(2) at 400px.
-    At mid-range accuracy matters — the variant should deal more damage due to
-    both higher per-hit damage and higher hit rate.
-    """
-    metadata = TestMetadata(
-        test_id="MOD-STACK-004",
-        category="ModifierStacking",
-        subcategory="ModifierStacking",
-        name="Damage + accuracy modifiers vs unmodified at mid-range",
-        summary=(
-            "Verify combined damage and accuracy modifiers produce more damage "
-            "than unmodified beam at mid-range where accuracy matters"
-        ),
-        conditions=[
-            f"Baseline: {BASELINE_BEAM_SHIP} (test_beam_med_acc_1dmg, damage={MOD_BASE_BEAM_DAMAGE}, accuracy={MOD_BASE_BEAM_ACCURACY}, no modifiers)",
-            f"Variant: {DMG_AND_ACC_SHIP} (test_beam_med_acc_1dmg + test_damage_boost 1.5x + test_accuracy_boost value=2, damage={DMGACC_EXPECTED_DAMAGE}, accuracy={EXPECTED_ACCURACY_WITH_BOOST})",
-            f"Target: {STATIONARY_TARGET} (test_armor_extreme_hp, 1B HP, stationary)",
-            f"Distance: {MID_RANGE_DISTANCE}px (mid-range, accuracy matters)",
-        ],
-        edge_cases=["Mid-range makes accuracy impactful, not just damage"],
-        expected_outcome="Variant deals more total damage (higher hit rate + higher damage per hit)",
-        pass_criteria="variant_damage > baseline_damage",
-        max_ticks=MODIFIER_TEST_TICKS,
-        seed=STANDARD_SEED,
-        battle_end_mode="time_based",
-        tags=["modifier", "stacking"],
-    )
-
-    baseline_attacker_ship = BASELINE_BEAM_SHIP
-    baseline_target_ship = STATIONARY_TARGET
+    baseline_attacker_ship = BASELINE_SHIP
+    baseline_target_ship = TARGET_SHIP
     variant_attacker_ship = DMG_AND_ACC_SHIP
-    variant_target_ship = STATIONARY_TARGET
+    variant_target_ship = TARGET_SHIP
     distance = MID_RANGE_DISTANCE
 
     def validate(self, engine) -> list:
         checks = self._template_preconditions()
 
-        # Precondition: both battles dealt damage
+        # Data: verify both modifiers applied on variant
+        beam = self.get_ability(self.attacker, 'BeamWeaponAbility')
+        if beam:
+            checks.append(check_approx(
+                "Variant Damage", DMGACC_EXPECTED_DAMAGE,
+                beam.damage, tolerance=0.001, phase="data",
+            ))
+            checks.append(check_approx(
+                "Variant Accuracy", EXPECTED_ACCURACY_WITH_BOOST,
+                beam.base_accuracy, tolerance=0.001, phase="data",
+            ))
+
+        # Precondition: both dealt substantial damage
         checks.append(check_true(
-            "Baseline Dealt Damage",
-            self.baseline_damage_dealt > 0,
-            detail=f"baseline_damage={self.baseline_damage_dealt}",
-            phase="precondition",
+            "Baseline Dealt Damage", self.baseline_damage_dealt > 10,
+            detail=f"damage={self.baseline_damage_dealt}", phase="precondition",
         ))
         checks.append(check_true(
-            "Variant Dealt Damage",
-            self.variant_damage_dealt > 0,
-            detail=f"variant_damage={self.variant_damage_dealt}",
-            phase="precondition",
+            "Variant Dealt Damage", self.variant_damage_dealt > 10,
+            detail=f"damage={self.variant_damage_dealt}", phase="precondition",
         ))
 
-        # Outcome: variant deals more damage than baseline
+        # Outcome: variant deals more (both modifiers contributing)
         checks.append(check_true(
-            "Modified Beam Deals More Damage",
+            "Combined Modifiers Increase Damage",
             self.variant_damage_dealt > self.baseline_damage_dealt,
-            detail=f"baseline={self.baseline_damage_dealt}, "
-                   f"variant={self.variant_damage_dealt}",
+            detail=(
+                f"baseline={self.baseline_damage_dealt}, "
+                f"variant={self.variant_damage_dealt}"
+            ),
             phase="outcome",
         ))
 
-        # Outcome: variant should deal meaningfully more (at least 25% more)
-        # given both damage and accuracy advantages
+        return checks
+
+
+# =============================================================================
+# MOD-STACK-003: Compound Ratio — Dual vs Single
+# =============================================================================
+
+class ModStack003_CompoundRatioScenario(ComparisonScenario):
+    """
+    MOD-STACK-003: Prove dual compound modifier produces expected damage ratio.
+
+    Baseline: 1.5x damage (single modifier)
+    Variant: 3.0x damage (two modifiers compounded: 1.5 * 2.0)
+    Expected ratio: 3.0 / 1.5 = 2.0x
+
+    Since both have identical hit rates (same accuracy, same distance),
+    the damage ratio exactly equals the damage-per-hit ratio.
+    """
+    metadata = TestMetadata(
+        test_id="MOD-STACK-003",
+        category="ModifierStacking",
+        subcategory="ModifierStacking",
+        name="Compound ratio — dual(3.0x) vs single(1.5x) = 2.0x",
+        summary=f"Damage ratio ≈ {DUAL_EXPECTED_DAMAGE}/{SINGLE_EXPECTED_DAMAGE} = {DUAL_EXPECTED_DAMAGE / SINGLE_EXPECTED_DAMAGE}x",
+        conditions=[
+            f"Baseline: {SINGLE_BOOST_SHIP} (test_beam_med_acc_1dmg + test_damage_boost(1.5), dmg={SINGLE_EXPECTED_DAMAGE})",
+            f"Variant: {DUAL_MODIFIER_SHIP} (test_beam_med_acc_1dmg + test_damage_boost(1.5) + test_damage_boost_b(2.0), dmg={DUAL_EXPECTED_DAMAGE})",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, 1B HP, stationary)",
+            f"Distance: {POINT_BLANK_DISTANCE}px (identical hit rates)",
+        ],
+        edge_cases=["Ratio is deterministic — same hits, different damage per hit"],
+        expected_outcome=f"Damage ratio ≈ {DUAL_EXPECTED_DAMAGE / SINGLE_EXPECTED_DAMAGE}x",
+        pass_criteria=f"ratio within ±{RATIO_TOLERANCE} of {DUAL_EXPECTED_DAMAGE / SINGLE_EXPECTED_DAMAGE}",
+        max_ticks=TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["modifier", "stacking", "compound", "ratio"],
+    )
+
+    baseline_attacker_ship = SINGLE_BOOST_SHIP
+    baseline_target_ship = TARGET_SHIP
+    variant_attacker_ship = DUAL_MODIFIER_SHIP
+    variant_target_ship = TARGET_SHIP
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Precondition: both dealt substantial damage
+        checks.append(check_true(
+            "Baseline Dealt Damage", self.baseline_damage_dealt > 10,
+            detail=f"damage={self.baseline_damage_dealt}", phase="precondition",
+        ))
+        checks.append(check_true(
+            "Variant Dealt Damage", self.variant_damage_dealt > 10,
+            detail=f"damage={self.variant_damage_dealt}", phase="precondition",
+        ))
+
+        # Outcome: damage ratio matches expected compound ratio
+        expected_ratio = DUAL_EXPECTED_DAMAGE / SINGLE_EXPECTED_DAMAGE  # 2.0
         if self.baseline_damage_dealt > 0:
             ratio = self.variant_damage_dealt / self.baseline_damage_dealt
+            checks.append(check_approx(
+                f"Damage Ratio ≈ {expected_ratio}x", expected_ratio,
+                ratio, tolerance=RATIO_TOLERANCE, phase="outcome",
+            ))
+
+        return checks
+
+
+# =============================================================================
+# MOD-STACK-004: Combined Effect at Mid-Range (Calculated)
+# =============================================================================
+
+class ModStack004_CombinedEffectScenario(ComparisonScenario):
+    """
+    MOD-STACK-004: Prove combined damage+accuracy effect matches calculated expectation.
+
+    At mid-range (400px):
+    - Baseline: dmg=1.0, acc=2.0 → hit_rate ≈ {P_BASELINE_MID:.1%}
+    - Variant: dmg=1.5, acc=3.0 → hit_rate ≈ {P_DMGACC_MID:.1%}
+    - Expected ratio: (variant_hits * 1.5) / (baseline_hits * 1.0) ≈ {EXPECTED_COMBINED_RATIO:.2f}x
+
+    This is the most multifactorial test: damage_mult AND accuracy_add
+    interact through the sigmoid hit-chance formula to produce a combined
+    combat improvement greater than either modifier alone.
+    """
+    metadata = TestMetadata(
+        test_id="MOD-STACK-004",
+        category="ModifierStacking",
+        subcategory="ModifierStacking",
+        name=f"Combined effect at {MID_RANGE_DISTANCE}px — calculated ratio ≈ {EXPECTED_COMBINED_RATIO:.2f}x",
+        summary=(
+            f"Damage(1.5x) + accuracy(+1.0) at {MID_RANGE_DISTANCE}px: "
+            f"expected ratio ≈ {EXPECTED_COMBINED_RATIO:.2f}x "
+            f"(hit rates: {P_BASELINE_MID:.1%} vs {P_DMGACC_MID:.1%}, damage: {BASE_DAMAGE} vs {DMGACC_EXPECTED_DAMAGE})"
+        ),
+        conditions=[
+            f"Baseline: {BASELINE_SHIP} (dmg={BASE_DAMAGE}, acc={BASE_ACCURACY}, hit rate ≈ {P_BASELINE_MID:.4f})",
+            f"Variant: {DMG_AND_ACC_SHIP} (dmg={DMGACC_EXPECTED_DAMAGE}, acc={EXPECTED_ACCURACY_WITH_BOOST}, hit rate ≈ {P_DMGACC_MID:.4f})",
+            f"Target: {TARGET_SHIP} (test_armor_extreme_hp, stationary, mass={TARGET_MASS})",
+            f"Distance: {MID_RANGE_DISTANCE}px, defense_score={_TARGET_DEFENSE:.4f}",
+            f"Combined ratio: ({P_DMGACC_MID:.4f} * {DMGACC_EXPECTED_DAMAGE}) / ({P_BASELINE_MID:.4f} * {BASE_DAMAGE}) = {EXPECTED_COMBINED_RATIO:.4f}",
+        ],
+        edge_cases=[
+            "Tests interaction of two different modifier types through the combat system",
+            "Accuracy boosts hit rate via sigmoid, damage boosts per-hit damage linearly",
+        ],
+        expected_outcome=f"Damage ratio ≈ {EXPECTED_COMBINED_RATIO:.2f}x",
+        pass_criteria=f"ratio within ±{RATIO_TOLERANCE + 0.05} of {EXPECTED_COMBINED_RATIO:.2f}",
+        max_ticks=TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["modifier", "stacking", "combined", "multifactorial"],
+    )
+
+    baseline_attacker_ship = BASELINE_SHIP
+    baseline_target_ship = TARGET_SHIP
+    variant_attacker_ship = DMG_AND_ACC_SHIP
+    variant_target_ship = TARGET_SHIP
+    distance = MID_RANGE_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Precondition: both dealt substantial damage
+        checks.append(check_true(
+            "Baseline Dealt Damage", self.baseline_damage_dealt > 10,
+            detail=f"damage={self.baseline_damage_dealt}", phase="precondition",
+        ))
+        checks.append(check_true(
+            "Variant Dealt Damage", self.variant_damage_dealt > 10,
+            detail=f"damage={self.variant_damage_dealt}", phase="precondition",
+        ))
+
+        # Outcome: combined ratio matches calculated expectation
+        if self.baseline_damage_dealt > 0:
+            ratio = self.variant_damage_dealt / self.baseline_damage_dealt
+            checks.append(check_approx(
+                f"Combined Ratio ≈ {EXPECTED_COMBINED_RATIO:.2f}x",
+                EXPECTED_COMBINED_RATIO,
+                ratio, tolerance=RATIO_TOLERANCE + 0.05, phase="outcome",
+            ))
+
+        return checks
+
+
+# =============================================================================
+# MOD-STACK-005: Compound vs Additive Proof
+# =============================================================================
+
+class ModStack005_CompoundNotAdditiveScenario(ComparisonScenario):
+    """
+    MOD-STACK-005: Prove stacking is COMPOUND (multiply), not ADDITIVE (sum).
+
+    If modifiers compounded: 1 * 1.5 * 2.0 = 3.0 → ratio vs base = 3.0x
+    If modifiers added:      1 * (1.5 + 2.0) = 3.5 → ratio vs base = 3.5x
+
+    By measuring the damage ratio against an unmodified baseline, we can
+    distinguish compound from additive stacking. The ratio should be ≈ 3.0,
+    NOT ≈ 3.5.
+    """
+    metadata = TestMetadata(
+        test_id="MOD-STACK-005",
+        category="ModifierStacking",
+        subcategory="ModifierStacking",
+        name="Compound vs additive — ratio is 3.0x not 3.5x",
+        summary=(
+            f"Dual modifier vs unmodified: ratio ≈ {DUAL_EXPECTED_DAMAGE}x (compound), "
+            f"not ≈ {ADDITIVE_WOULD_BE}x (if additive)"
+        ),
+        conditions=[
+            f"Baseline: {BASELINE_SHIP} (test_beam_med_acc_1dmg, no modifier, dmg={BASE_DAMAGE})",
+            f"Variant: {DUAL_MODIFIER_SHIP} (test_beam_med_acc_1dmg + test_damage_boost(1.5) + test_damage_boost_b(2.0), dmg={DUAL_EXPECTED_DAMAGE})",
+            f"If compound: ratio = {DUAL_EXPECTED_DAMAGE}/{BASE_DAMAGE} = {DUAL_EXPECTED_DAMAGE / BASE_DAMAGE}x",
+            f"If additive: ratio would be {ADDITIVE_WOULD_BE}/{BASE_DAMAGE} = {ADDITIVE_WOULD_BE / BASE_DAMAGE}x",
+        ],
+        edge_cases=[
+            "This test FAILS if someone changes stacking from compound to additive",
+            "Distinguishes 3.0x (correct) from 3.5x (wrong) with tight tolerance",
+        ],
+        expected_outcome=f"Damage ratio ≈ {DUAL_EXPECTED_DAMAGE / BASE_DAMAGE}x (compound)",
+        pass_criteria=f"ratio closer to {DUAL_EXPECTED_DAMAGE}x than {ADDITIVE_WOULD_BE}x",
+        max_ticks=TEST_TICKS,
+        seed=STANDARD_SEED,
+        battle_end_mode="time_based",
+        tags=["modifier", "stacking", "compound_vs_additive"],
+    )
+
+    baseline_attacker_ship = BASELINE_SHIP
+    baseline_target_ship = TARGET_SHIP
+    variant_attacker_ship = DUAL_MODIFIER_SHIP
+    variant_target_ship = TARGET_SHIP
+    distance = POINT_BLANK_DISTANCE
+
+    def validate(self, engine) -> list:
+        checks = self._template_preconditions()
+
+        # Precondition: both dealt substantial damage
+        checks.append(check_true(
+            "Baseline Dealt Damage", self.baseline_damage_dealt > 10,
+            detail=f"damage={self.baseline_damage_dealt}", phase="precondition",
+        ))
+        checks.append(check_true(
+            "Variant Dealt Damage", self.variant_damage_dealt > 10,
+            detail=f"damage={self.variant_damage_dealt}", phase="precondition",
+        ))
+
+        if self.baseline_damage_dealt > 0:
+            ratio = self.variant_damage_dealt / self.baseline_damage_dealt
+            compound_ratio = DUAL_EXPECTED_DAMAGE / BASE_DAMAGE   # 3.0
+            additive_ratio = ADDITIVE_WOULD_BE / BASE_DAMAGE      # 3.5
+
+            # Outcome: ratio matches compound (3.0x), not additive (3.5x)
+            checks.append(check_approx(
+                f"Ratio ≈ {compound_ratio}x (compound)", compound_ratio,
+                ratio, tolerance=RATIO_TOLERANCE, phase="outcome",
+            ))
+
+            # Outcome: ratio is NOT close to additive value
+            distance_to_compound = abs(ratio - compound_ratio)
+            distance_to_additive = abs(ratio - additive_ratio)
             checks.append(check_true(
-                "Meaningful Damage Increase (>1.25x)",
-                ratio > 1.25,
-                detail=f"ratio={ratio:.3f} (baseline={self.baseline_damage_dealt}, "
-                       f"variant={self.variant_damage_dealt})",
+                "Closer to Compound than Additive",
+                distance_to_compound < distance_to_additive,
+                detail=(
+                    f"ratio={ratio:.3f}, "
+                    f"distance_to_compound={distance_to_compound:.3f}, "
+                    f"distance_to_additive={distance_to_additive:.3f}"
+                ),
                 phase="outcome",
             ))
 
